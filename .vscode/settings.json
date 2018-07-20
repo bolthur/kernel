@@ -1,0 +1,11 @@
+{
+  "files.associations": {
+    "*.h": "c",
+    "*.c": "c",
+    "*.S": "asm"
+  },
+  "editor.tabSize": 2,
+  "editor.renderWhitespace": "all",
+  "files.trimTrailingWhitespace": true,
+  "editor.insertSpaces": true
+}

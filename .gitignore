@@ -1,3 +1,8 @@
+
+# ---> Custom
+/build
+*~
+
 # ---> Autotools
 # http://www.gnu.org/software/automake
 
