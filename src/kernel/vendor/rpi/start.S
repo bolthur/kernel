@@ -21,6 +21,9 @@
 
 .global start
 start:
+  // reset multicore environment
+  bl reset_multicore
+
   // setup temporary stack that will be replaced later
   mov sp, #0x8000
 
