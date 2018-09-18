@@ -1,0 +1,13 @@
+{
+  "recommendations": [
+    "maelvalais.autoconf",
+    "bierner.markdown-preview-github-styles",
+    "bierner.markdown-checkbox",
+    "wayou.vscode-todo-highlight",
+    "ms-vscode.cpptools",
+    "mitaki28.vscode-clang",
+    "austin.code-gnu-global",
+    "dan-c-underwood.arm",
+    "zixuanwang.linkerscript"
+  ]
+}
