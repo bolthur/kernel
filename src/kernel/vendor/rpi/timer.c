@@ -49,7 +49,7 @@
 #define SYSTEM_TIMER_2_IRQ ( 1 << 2 )
 #define SYSTEM_TIMER_3_IRQ ( 1 << 3 )
 
-void timer_initialize( void ) {
+void timer_init( void ) {
   // testing timer with led
   mmio_write( GPFSEL4, mmio_read( GPFSEL4 ) | 21 );
 
@@ -94,7 +94,7 @@ void timer_clear( void ) {
   mmio_write( SYSTEM_TIMER_COMPARE_3, mmio_read( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
 
   // flip led
-  // FIXME: Remove or encapsulate within debug flag
+  // FIXME: Replace by using printf
   if ( led ) {
     mmio_write( GPCLR1, ( 1 << 15 ) );
     led = 0;

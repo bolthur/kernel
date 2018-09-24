@@ -1,7 +1,7 @@
 
 SUBDIRS = ${subarch_subdir} .
 
-DIST_SUBDIRS = v7 v8
+DIST_SUBDIRS = v6 v7 v8
 
 AUTOMAKE_OPTIONS = nostdinc
 

@@ -26,7 +26,7 @@
 #include <platform.h>
 
 void kernel_main() {
-  tty_initialize();
+  tty_init();
 
   printf(
     "%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n",
@@ -44,15 +44,15 @@ void kernel_main() {
   );
 
   printf( "Initializing interrupts ... " );
-  interrupt_initialize();
+  irq_init();
   printf( "done!\r\n" );
 
   printf( "Initializing timer ... " );
-  timer_initialize();
+  timer_init();
   printf( "done!\r\n" );
 
   printf( "Enabling interrupts ... " );
-  interrupt_enable();
+  irq_enable();
   printf( "done!\r\n" );
 
   while ( 1 ) {}

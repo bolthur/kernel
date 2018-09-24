@@ -20,7 +20,8 @@
 #ifndef __INTERRUPT__
 #define __INTERRUPT__
 
-void interrupt_initialize( void );
-void interrupt_enable( void );
+void irq_init( void );
+void irq_enable( void );
+void irq_disable( void );
 
 #endif

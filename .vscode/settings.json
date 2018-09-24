@@ -2,7 +2,11 @@
   "files.associations": {
     "*.h": "c",
     "*.c": "c",
-    "*.S": "asm"
+    "*.S": "asm",
+    "*.inc": "c",
+    "chrono": "c",
+    "bitset": "c",
+    "dynamic_bitset": "c"
   },
   "editor.tabSize": 2,
   "editor.renderWhitespace": "all",

@@ -23,6 +23,6 @@
 
 uint32_t boot_parameter_data[ 3 ];
 
-void platform_initialize( void ) {
+void platform_init( void ) {
   // printf( "0x%x - 0x%x - 0x%x\r\n", boot_parameter_data[ 0 ], boot_parameter_data[ 1 ], boot_parameter_data[ 2 ] );
 }

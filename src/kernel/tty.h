@@ -22,7 +22,7 @@
 
 #include <stddef.h>
 
-void tty_initialize( void );
+void tty_init( void );
 void tty_putc( unsigned char );
 void tty_puts( const char * );
 

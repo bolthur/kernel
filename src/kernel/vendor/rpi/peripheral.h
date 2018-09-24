@@ -20,7 +20,7 @@
 #ifndef __VENDOR_RPI_PERIPHERAL__
 #define __VENDOR_RPI_PERIPHERAL__
 
-#if defined( PLATFORM_RPI2 ) || defined( PLATFORM_RPI3 )
+#if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI2_B_REV2 ) || defined( PLATFORM_RPI3_B ) || defined( PLATFORM_RPI3_B_PLUS )
   #define PERIPHERAL_BASE 0x3F000000
 #else
   #define PERIPHERAL_BASE 0x20000000

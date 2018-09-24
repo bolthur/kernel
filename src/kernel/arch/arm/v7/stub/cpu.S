@@ -17,15 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-.section .text
-
-.global arch_start
-.type arch_start, @function
-arch_start:
-  // TODO: Add arch related things here
-
-  // execute kernel main
-  call kernel_main
-
-loop: hlt
-  jmp loop
+.global arch_cpu_reset
+arch_cpu_reset:
+  // check for hypervisor mode and switch back to supervisor mode for rpi2 and rpi3
+  // Return current CPU ID (0..3)
+  cpsid if // Disable IRQ & FIQ
+  mrc p15, 0, r3, c0, c0, 5 // r3 = Multiprocessor Affinity Register (MPIDR)
+  ands r3, #3 // r0 = CPU ID (Bits 0..1)
+  bne _hlt // If (CPU ID != 0) Branch To Infinite Loop (Core ID 1..3)
+  beq _arch_cpu_reset // If equal branch to normal startup
+_hlt:
+  wfe
+  b _hlt
+_arch_cpu_reset:
+  bx lr

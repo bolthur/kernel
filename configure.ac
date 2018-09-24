@@ -15,20 +15,38 @@ AC_CONFIG_HEADERS([config.h])
 AC_ARG_ENABLE([device],
   AC_HELP_STRING([--enable-device], [set target device (default and fallback is pc)]),
   [case "${enableval}" in
-  rpi2_1)
-    DEVICE="rpi2_1"
+  rpi1_a)
+    DEVICE="rpi1_a"
     ;;
-  rpi2_2)
-    DEVICE="rpi2_2"
+  rpi1_a_plus)
+    DEVICE="rpi1_a_plus"
     ;;
-  rpi3)
-    DEVICE="rpi3"
+  rpi1_b)
+    DEVICE="rpi1_b"
     ;;
-  *)
-    DEVICE="pc"
+  rpi1_b_plus)
+    DEVICE="rpi1_b_plus"
+    ;;
+  rpi2_b)
+    DEVICE="rpi2_b"
+    ;;
+  rpi2_b_rev2)
+    DEVICE="rpi2_b_rev2"
+    ;;
+  rpi3_b)
+    DEVICE="rpi3_b"
+    ;;
+  rpi3_b_plus)
+    DEVICE="rpi3_b_plus"
+    ;;
+  rpi_zero)
+    DEVICE="rpi_zero"
+    ;;
+  rpi_zero_w)
+    DEVICE="rpi_zero_w"
     ;;
   esac],
-  [DEVICE="pc"]
+  [DEVICE="rpi2_b"]
 )
 
 # set target and flags
@@ -99,13 +117,10 @@ AC_CONFIG_FILES([
   src/kernel/Makefile
   src/kernel/arch/Makefile
   src/kernel/arch/arm/Makefile
+  src/kernel/arch/arm/v6/Makefile
   src/kernel/arch/arm/v7/Makefile
   src/kernel/arch/arm/v8/Makefile
-  src/kernel/arch/x86/Makefile
-  src/kernel/arch/x86/ia32/Makefile
-  src/kernel/arch/x86/amd64/Makefile
   src/kernel/vendor/Makefile
-  src/kernel/vendor/pc/Makefile
   src/kernel/vendor/rpi/Makefile
   src/libc/Makefile
 ])

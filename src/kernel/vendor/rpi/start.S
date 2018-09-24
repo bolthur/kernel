@@ -22,7 +22,7 @@
 .global start
 start:
   // reset multicore environment
-  bl reset_multicore
+  bl arch_cpu_reset
 
   // setup temporary stack that will be replaced later
   mov sp, #0x8000
@@ -48,7 +48,7 @@ start:
   // load start of boot parameter data into r4
   ldr r4, =boot_parameter_data
 
-  // store boot parameters from r0 - r3 /  at data array
+  // store boot parameters from r0 - r2 /  at data array
   stmia r4!, {r0-r2}
 
   // continue with arch related start

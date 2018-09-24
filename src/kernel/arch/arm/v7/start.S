@@ -24,33 +24,18 @@
 
 .section .text
 
-.global reset_multicore
-reset_multicore:
-  // check for hypervisor mode and switch back to supervisor mode for rpi2 and rpi3
-  // Return current CPU ID (0..3)
-  cpsid if // Disable IRQ & FIQ
-  mrc p15, 0, r0, c0, c0, 5 // r0 = Multiprocessor Affinity Register (MPIDR)
-  ands r0, #3 // r0 = CPU ID (Bits 0..1)
-  bne _hlt // If (CPU ID != 0) Branch To Infinite Loop (Core ID 1..3)
-  beq _reset_multicore // If equal branch to normal startup
-_hlt:
-  wfe
-  b _hlt
-_reset_multicore:
-  bx lr
-
 .global arch_start
 arch_start:
   // Check for HYP mode
-  mrs	r0 , cpsr
-  eor	r0, r0, #0x1A
-  tst	r0, #0x1F
-  bic	r0, r0, #0x1F // clear mode bits
-  orr	r0 , r0 , #( CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT ) // mask IRQ/FIQ bits and set SVC mode
-  bne	2f // branch if not HYP mode
-  orr	r0, r0, #0x100 // mask Abort bit
-  adr	lr, 3f
-  msr	spsr_cxsf, r0
+  mrs r0 , cpsr
+  eor r0, r0, #0x1A
+  tst r0, #0x1F
+  bic r0, r0, #0x1F // clear mode bits
+  orr r0 , r0 , #( CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT ) // mask IRQ/FIQ bits and set SVC mode
+  bne 2f // branch if not HYP mode
+  orr r0, r0, #0x100 // mask Abort bit
+  adr lr, 3f
+  msr spsr_cxsf, r0
   msr ELR_hyp, lr
   eret
 2: msr cpsr_c, r0

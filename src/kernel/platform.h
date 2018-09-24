@@ -20,6 +20,6 @@
 #ifndef __PLATFORM__
 #define __PLATFORM__
 
-extern void platform_initialize( void );
+extern void platform_init( void );
 
 #endif

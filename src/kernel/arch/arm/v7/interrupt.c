@@ -61,7 +61,9 @@ void __attribute__( ( interrupt( "ABORT" ) ) ) data_abort_handler( void ) {
 }
 
 void __attribute__( ( interrupt( "IRQ" ) ) ) irq_handler( void ) {
+  printf( "irq\r\n" );
   if ( timer_pending() ) {
+    printf( "timer fired!" );
     // do something when timer irq is fired!
   }
 
@@ -73,7 +75,7 @@ void __attribute__( ( interrupt( "FIQ" ) ) ) fast_interrupt_handler( void ) {
   printf( "fiq!" );
 }
 
-void interrupt_initialize( void ) {
+void irq_init( void ) {
   // set interrupt vector table
   __asm__ __volatile__( "mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" ( &interrupt_vector_table ) );
 }

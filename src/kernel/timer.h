@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 
-void timer_initialize( void );
+void timer_init( void );
 void timer_clear( void );
 uint32_t timer_pending( void );
 

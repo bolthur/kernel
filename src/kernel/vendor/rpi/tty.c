@@ -21,7 +21,7 @@
 
 #include <vendor/rpi/uart.h>
 
-void tty_initialize( void ) {
+void tty_init( void ) {
   uart_init();
 }
 

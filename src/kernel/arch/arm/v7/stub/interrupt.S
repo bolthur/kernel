@@ -19,9 +19,24 @@
 
 .section .text
 
-.global interrupt_enable
-interrupt_enable:
+.global irq_enable
+irq_enable:
+  cpsie i
+  bx lr
+
+.global irq_disable
+irq_disable:
   mrs r0, cpsr
-  bic r0, r0, #0x80
-  msr cpsr_c, r0
-  mov pc, lr
+  cpsid i
+  bx lr
+
+.global fiq_enable
+fiq_enable:
+  cpsie f
+  bx lr
+
+.global fiq_disable
+fiq_disable:
+  mrs r0, cpsr
+  cpsid f
+  bx lr
