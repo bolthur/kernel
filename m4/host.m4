@@ -81,6 +81,36 @@ AC_DEFUN([MIST_SET_HOST], [
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
       AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
       ;;
+    beagleboard)
+      CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a8 -mfpu=neon-vfpv3 -mfloat-abi=hard"
+      subarch_subdir=v7
+      vendor_subdir=beagleboard
+      AC_DEFINE([ELF32])
+      AC_DEFINE([PLATFORM_BEAGLEBOARD], [1], [Define to 1 for beagleboard platform])
+      AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets.])
+      AC_DEFINE([ARCH_ARM_CORTEX_A8], [1], [Define to 1 for ARM Cortex-A8 targets.])
+      AC_DEFINE([VENDOR_BEAGLEBOARD], [1], [Define to 1 for beagleboard vendor.])
+      ;;
+    n8x0)
+      CFLAGS="${CFLAGS} -march=armv6 -mtune=arm1136jf-s -mfpu=vfp -mfloat-abi=hard"
+      subarch_subdir=v6
+      vendor_subdir=n8x0
+      AC_DEFINE([ELF32])
+      AC_DEFINE([PLATFORM_N8X0], [1], [Define to 1 for n900 platform])
+      AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv7 targets.])
+      AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM1176JF_S targets.])
+      AC_DEFINE([VENDOR_N8X0], [1], [Define to 1 for n900 vendor.])
+      ;;
+    n900)
+      CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a8 -mfpu=neon-vfpv3 -mfloat-abi=hard"
+      subarch_subdir=v7
+      vendor_subdir=n900
+      AC_DEFINE([ELF32])
+      AC_DEFINE([PLATFORM_N900], [1], [Define to 1 for n900 platform])
+      AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets.])
+      AC_DEFINE([ARCH_ARM_CORTEX_A8], [1], [Define to 1 for ARM Cortex-A8 targets.])
+      AC_DEFINE([VENDOR_N900], [1], [Define to 1 for n900 vendor.])
+      ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])
       ;;

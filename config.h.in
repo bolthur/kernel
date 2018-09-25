@@ -6,7 +6,7 @@
 /* Define to 1 for ARM targets. */
 #undef ARCH_ARM
 
-/* Define to 1 for ARM ARM1176JZF-S targets. */
+/* Define to 1 for ARM1176JF_S targets. */
 #undef ARCH_ARM_ARM1176JZF_S
 
 /* Define to 1 for ARM Cortex-A53 targets. */
@@ -15,7 +15,10 @@
 /* Define to 1 for ARM Cortex-A7 targets. */
 #undef ARCH_ARM_CORTEX_A7
 
-/* Define to 1 for ARMv6 targets. */
+/* Define to 1 for ARM Cortex-A8 targets. */
+#undef ARCH_ARM_CORTEX_A8
+
+/* Define to 1 for ARMv7 targets. */
 #undef ARCH_ARM_V6
 
 /* Define to 1 for ARMv7 targets. */
@@ -57,6 +60,15 @@
 /* Keyword for packing structures. */
 #undef PACKED
 
+/* Define to 1 for beagleboard platform */
+#undef PLATFORM_BEAGLEBOARD
+
+/* Define to 1 for n900 platform */
+#undef PLATFORM_N8X0
+
+/* Define to 1 for n900 platform */
+#undef PLATFORM_N900
+
 /* Define to 1 for raspberry pi 1 A platform. */
 #undef PLATFORM_RPI1_A
 
@@ -95,6 +107,15 @@
 
 /* mist-system/kernel target vendor. */
 #undef VENDOR
+
+/* Define to 1 for beagleboard vendor. */
+#undef VENDOR_BEAGLEBOARD
+
+/* Define to 1 for n900 vendor. */
+#undef VENDOR_N8X0
+
+/* Define to 1 for n900 vendor. */
+#undef VENDOR_N900
 
 /* Define to 1 for raspberry pi vendor. */
 #undef VENDOR_RPI

@@ -20,6 +20,9 @@ cd build
 #../configure --host aarch64-none-elf --enable-device=rpi3_b_plus
 #../configure --host arm-none-eabi --enable-device=rpi_zero
 #../configure --host arm-none-eabi --enable-device=rpi_zero_w
+#../configure --host arm-none-eabi --enable-device=beagleboard
+#../configure --host arm-none-eabi --enable-device=n8x0
+#../configure --host arm-none-eabi --enable-device=n900
 ```
 
 ### Building
