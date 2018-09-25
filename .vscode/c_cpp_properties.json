@@ -5,8 +5,8 @@
             "includePath": [
                 "${workspaceRoot}/src/kernel",
                 "${workspaceRoot}/src/libc",
-                "/usr/include",
-                "/usr/local/include"
+                "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
@@ -15,8 +15,8 @@
                     "${workspaceRoot}",
                     "${workspaceRoot}/src/kernel",
                     "${workspaceRoot}/src/libc",
-                    "/usr/include",
-                    "/usr/local/include"
+                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -32,14 +32,8 @@
                 "${workspaceRoot}",
                 "${workspaceRoot}/src/kernel",
                 "${workspaceRoot}/src/libc",
-                "/usr/include/c++/6",
-                "/usr/include/x86_64-linux-gnu/c++/6",
-                "/usr/include/c++/6/backward",
-                "/usr/lib/gcc/x86_64-linux-gnu/6/include",
-                "/usr/local/include",
-                "/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed",
-                "/usr/include/x86_64-linux-gnu",
-                "/usr/include"
+                "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
@@ -48,14 +42,8 @@
                     "${workspaceRoot}",
                     "${workspaceRoot}/src/kernel",
                     "${workspaceRoot}/src/libc",
-                    "/usr/include/c++/6",
-                    "/usr/include/x86_64-linux-gnu/c++/6",
-                    "/usr/include/c++/6/backward",
-                    "/usr/lib/gcc/x86_64-linux-gnu/6/include",
-                    "/usr/local/include",
-                    "/usr/lib/gcc/x86_64-linux-gnu/6/include-fixed",
-                    "/usr/include/x86_64-linux-gnu",
-                    "/usr/include"
+                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -67,7 +55,8 @@
                 "${workspaceRoot}",
                 "${workspaceRoot}/src/kernel",
                 "${workspaceRoot}/src/libc",
-                "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include"
+                "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
             ],
             "defines": [
                 "_DEBUG",
@@ -76,7 +65,8 @@
             "intelliSenseMode": "msvc-x64",
             "browse": {
                 "path": [
-                    "C:/Program Files (x86)/Microsoft Visual Studio 14.0/VC/include/*",
+                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include",
                     "${workspaceRoot}",
                     "${workspaceRoot}/src/kernel",
                     "${workspaceRoot}/src/libc"

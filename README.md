@@ -1,6 +1,6 @@
-# r3s0s
+# MIST
 
-Some introduction, help and decisions about mist system kernel project.
+_MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some introductions, help and decisions about mist project. Originally it was derived from the german word mist, which might be translated as _crap_.
 
 ## Building the project
 
@@ -48,11 +48,35 @@ qemu-system-aarch64 -m 1024 -M raspi2 -cpu cortex-a53 -no-reboot -serial stdio -
 
 Currently the following targets are planned to be supported:
 
-* armv6 ( 32 bit arm rpi 1 and rpi zero )
-* armv7 ( 32 bit arm rpi 2 )
-* armv8 ( 64 bit arm rpi 2 and rpi 3 )
+### Broadcom SoC
 
-## Hardware for testing
+* armv6 ( 32 bit )
+  * RPI A
+  * RPI A+
+  * RPI B
+  * RPI B+
+  * RPI zero
+  * RPI zero w
+
+* armv7-a ( 32 bit )
+  * RPI 2B r.1
+
+* armv8-a ( 64 bit - rpi 2 r.2 and rpi 3 series )
+  * RPI 2B r.2
+  * RPI 3B
+  * RPI 3B+
+
+### Texas Instruments OMAP SoC
+
+* armv6 ( 32 bit - OMAP 2420 )
+  * nokia n800
+  * nokia n810
+
+* armv7-a ( 32 bit - OMAP3530 )
+  * beagle board
+  * nokia n900
+
+## List of real hardware for testing
 
 * Raspberry PI 2 Model B ( rev 1.1 )
 * Raspberry PI 3 Model B
