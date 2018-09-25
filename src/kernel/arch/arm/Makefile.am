@@ -9,4 +9,6 @@ AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top
 AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/libc
 
 noinst_LIBRARIES = libarm.a
-libarm_a_SOURCES =
+libarm_a_SOURCES = \
+  mmio.c \
+  mmio.h

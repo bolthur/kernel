@@ -20,8 +20,8 @@ noinst_PROGRAMS = kernel.zwerg kernel.img
 kernel_zwerg_SOURCES =
 
 kernel_zwerg_DEPENDENCIES = \
-  ${top_builddir}/src/kernel/vendor/rpi/kernel.${subarch_subdir}.ld \
-  ${top_builddir}/src/kernel/vendor/rpi/librpi.a \
+  kernel.${subarch_subdir}.ld \
+  librpi.a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/lib${arch_subdir}.a \
   ${top_builddir}/src/kernel/libkernel.a \

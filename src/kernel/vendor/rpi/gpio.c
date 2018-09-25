@@ -20,7 +20,10 @@
 // arch related includes
 #if defined( ARCH_ARM_V7 )
   #include <arch/arm/v7/delay.h>
-  #include <arch/arm/v7/mmio.h>
+#endif
+
+#if defined( ARCH_ARM )
+  #include <arch/arm/mmio.h>
 #endif
 
 #include <vendor/rpi/gpio.h>

@@ -17,14 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/v7/mmio.h>
+#ifndef __ARCH_ARM_MMIO__
+#define __ARCH_ARM_MMIO__
 
-// Memory-Mapped I/O output
-void __attribute__((optimize(0))) mmio_write( uint32_t reg, uint32_t data ) {
-  *( volatile uint32_t* )reg = data;
-}
+#include <stdint.h>
 
-// Memory-Mapped I/O input
-uint32_t __attribute__((optimize(0))) mmio_read( uint32_t reg ) {
-  return *( volatile uint32_t* )reg;
-}
+extern void mmio_write( uint32_t reg, uint32_t data );
+extern uint32_t mmio_read( uint32_t reg );
+
+#endif

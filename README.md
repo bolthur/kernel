@@ -15,9 +15,9 @@ cd build
 #../configure --host arm-none-eabi --enable-device=rpi1_b
 #../configure --host arm-none-eabi --enable-device=rpi1_b_plus
 ../configure --host arm-none-eabi --enable-device=rpi2_b
-#../configure --host arm-none-eabi --enable-device=rpi2_b_rev2
-#../configure --host arm-none-eabi --enable-device=rpi3_b
-#../configure --host arm-none-eabi --enable-device=rpi3_b_plus
+#../configure --host aarch64-none-elf --enable-device=rpi2_b_rev2
+#../configure --host aarch64-none-elf --enable-device=rpi3_b
+#../configure --host aarch64-none-elf --enable-device=rpi3_b_plus
 #../configure --host arm-none-eabi --enable-device=rpi_zero
 #../configure --host arm-none-eabi --enable-device=rpi_zero_w
 ```

@@ -11,6 +11,4 @@ libv7_a_SOURCES = \
   delay.c \
   delay.h \
   interrupt.c \
-  mmio.c \
-  mmio.h \
   start.S

@@ -1,4 +1,4 @@
-OUTPUT_FORMAT( elf32-littlearm )
+OUTPUT_FORMAT( elf64-littleaarch64 )
 OUTPUT_ARCH( arm )
 
 ENTRY( start )
