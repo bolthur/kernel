@@ -24,32 +24,55 @@ start:
   // reset multicore environment
   bl arch_cpu_reset
 
-  // setup temporary stack that will be replaced later
-  mov sp, #0x8000
+  #if defined(ELF32)
+    // setup temporary stack that will be replaced later
+    ldr r4, =start
+    mov sp, r4
 
-  // clear out bss
-  ldr r4, =__bss_start
-  ldr r9, =__bss_end
-  mov r5, #0
-  mov r6, #0
-  mov r7, #0
-  mov r8, #0
+    // clear out bss
+    ldr r4, =__bss_start
+    ldr r9, =__bss_end
+    mov r5, #0
+    mov r6, #0
+    mov r7, #0
+    mov r8, #0
+  #elif defined(ELF64)
+    #error "ELF64 not yet supported!"
+  #else
+    #error "No valid format set. Valid formats are ELF32 and ELF64"
+  #endif
 
   b .test
 
 .loop:
   // this does 4x4 = 16 byte stores at once
-  stmia r4!, {r5-r8}  // the '!' increments r4 but only after ('ia') the store
+  #if defined(ELF32)
+    stmia r4!, {r5-r8}  // the '!' increments r4 but only after ('ia') the store
+  #elif defined(ELF64)
+    #error "ELF64 not yet supported!"
+  #else
+    #error "No valid format set. Valid formats are ELF32 and ELF64"
+  #endif
 
 .test:
-  cmp r4, r9
+  #if defined(ELF32)
+    cmp r4, r9
+  #elif defined(ELF64)
+    #error "ELF64 not yet supported!"
+  #else
+    #error "No valid format set. Valid formats are ELF32 and ELF64"
+  #endif
   blo .loop
 
-  // load start of boot parameter data into r4
-  ldr r4, =boot_parameter_data
-
   // store boot parameters from r0 - r2 /  at data array
-  stmia r4!, {r0-r2}
+  #if defined(ELF32)
+    ldr r4, =boot_parameter_data
+    stmia r4!, {r0-r2}
+  #elif defined(ELF64)
+    #error "ELF64 not yet supported!"
+  #else
+    #error "No valid format set. Valid formats are ELF32 and ELF64"
+  #endif
 
   // continue with arch related start
   b arch_start

@@ -22,10 +22,10 @@
 
 // arch related includes
 #if defined( ARCH_ARM_V7 )
-  #include <arch/arm/v7/delay.h>
 #endif
 
 #if defined( ARCH_ARM )
+  #include <arch/arm/delay.h>
   #include <arch/arm/mmio.h>
 #endif
 

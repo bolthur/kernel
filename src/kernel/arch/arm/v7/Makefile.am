@@ -8,7 +8,5 @@ noinst_LIBRARIES = libv7.a
 libv7_a_SOURCES = \
   stub/cpu.S \
   stub/interrupt.S \
-  delay.c \
-  delay.h \
   interrupt.c \
   start.S

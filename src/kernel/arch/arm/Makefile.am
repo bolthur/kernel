@@ -10,5 +10,7 @@ AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(
 
 noinst_LIBRARIES = libarm.a
 libarm_a_SOURCES = \
+  delay.c \
+  delay.h \
   mmio.c \
   mmio.h

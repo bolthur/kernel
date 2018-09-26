@@ -10,12 +10,13 @@ AC_DEFUN([MIST_SET_HOST], [
     host_bfd=elf32-littlearm
     copy_flags="-I ${host_bfd} -O ${host_bfd}"
     AC_DEFINE([ARCH_ARM], [1], [Define to 1 for ARM targets.])
+    AC_DEFINE([ELF32], [1])
+
     case "${DEVICE}" in
     rpi1_a)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=rpi
-      AC_DEFINE([ELF32])
       AC_DEFINE([PLATFORM_RPI1_A], [1], [Define to 1 for raspberry pi 1 A platform.])
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets.])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
@@ -25,7 +26,6 @@ AC_DEFUN([MIST_SET_HOST], [
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=rpi
-      AC_DEFINE([ELF32])
       AC_DEFINE([PLATFORM_RPI1_A_PLUS], [1], [Define to 1 for raspberry pi 1 A+ platform.])
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets.])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
@@ -35,7 +35,6 @@ AC_DEFUN([MIST_SET_HOST], [
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=rpi
-      AC_DEFINE([ELF32])
       AC_DEFINE([PLATFORM_RPI1_B], [1], [Define to 1 for raspberry pi 1 B platform.])
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets.])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
@@ -45,7 +44,6 @@ AC_DEFUN([MIST_SET_HOST], [
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=rpi
-      AC_DEFINE([ELF32])
       AC_DEFINE([PLATFORM_RPI1_B_PLUS], [1], [Define to 1 for raspberry pi 1 B+ platform.])
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets.])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
@@ -75,7 +73,6 @@ AC_DEFUN([MIST_SET_HOST], [
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=rpi
-      AC_DEFINE([ELF32])
       AC_DEFINE([PLATFORM_RPI_ZERO_W], [1], [Define to 1 for raspberry pi zero platform.])
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets.])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
@@ -85,7 +82,6 @@ AC_DEFUN([MIST_SET_HOST], [
       CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a8 -mfpu=neon-vfpv3 -mfloat-abi=hard"
       subarch_subdir=v7
       vendor_subdir=beagleboard
-      AC_DEFINE([ELF32])
       AC_DEFINE([PLATFORM_BEAGLEBOARD], [1], [Define to 1 for beagleboard platform])
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets.])
       AC_DEFINE([ARCH_ARM_CORTEX_A8], [1], [Define to 1 for ARM Cortex-A8 targets.])
@@ -95,7 +91,6 @@ AC_DEFUN([MIST_SET_HOST], [
       CFLAGS="${CFLAGS} -march=armv6 -mtune=arm1136jf-s -mfpu=vfp -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=n8x0
-      AC_DEFINE([ELF32])
       AC_DEFINE([PLATFORM_N8X0], [1], [Define to 1 for n900 platform])
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv7 targets.])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM1176JF_S targets.])
@@ -105,7 +100,6 @@ AC_DEFUN([MIST_SET_HOST], [
       CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a8 -mfpu=neon-vfpv3 -mfloat-abi=hard"
       subarch_subdir=v7
       vendor_subdir=n900
-      AC_DEFINE([ELF32])
       AC_DEFINE([PLATFORM_N900], [1], [Define to 1 for n900 platform])
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets.])
       AC_DEFINE([ARCH_ARM_CORTEX_A8], [1], [Define to 1 for ARM Cortex-A8 targets.])
@@ -121,13 +115,13 @@ AC_DEFUN([MIST_SET_HOST], [
     host_bfd=elf64-littleaarch64
     copy_flags="-I ${host_bfd} -O ${host_bfd}"
     AC_DEFINE([ARCH_ARM], [1], [Define to 1 for ARM targets.])
+    AC_DEFINE([ELF64], [1])
     case "${DEVICE}" in
     rpi2_b_rev2)
       # -mfpu=fp-armv8 -mfloat-abi=hard
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
       subarch_subdir=v8
       vendor_subdir=rpi
-      AC_DEFINE([ELF64])
       AC_DEFINE([PLATFORM_RPI2_B_REV2], [1], [Define to 1 for raspberry pi 2 B rev. 2 platform])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv7 targets.])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets.])
@@ -138,7 +132,6 @@ AC_DEFUN([MIST_SET_HOST], [
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
       subarch_subdir=v8
       vendor_subdir=rpi
-      AC_DEFINE([ELF64])
       AC_DEFINE([PLATFORM_RPI3_B], [1], [Define to 1 for raspberry pi 3 B platform])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets.])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets.])
@@ -149,7 +142,6 @@ AC_DEFUN([MIST_SET_HOST], [
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
       subarch_subdir=v8
       vendor_subdir=rpi
-      AC_DEFINE([ELF64])
       AC_DEFINE([PLATFORM_RPI3_B_PLUS], [1], [Define to 1 for raspberry pi 3 B+ platform])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets.])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets.])

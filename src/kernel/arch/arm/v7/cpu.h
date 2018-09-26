@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __ARCH_ARM_V7_DELAY__
-#define __ARCH_ARM_V7_DELAY__
+#ifndef __ARCH_ARM_V7_CPU__
+#define __ARCH_ARM_V7_CPU__
 
 #define CPSR_MODE_USER 0x10
 #define CPSR_MODE_FIQ 0x11

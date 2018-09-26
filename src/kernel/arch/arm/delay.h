@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __ARCH_ARM_V7_DELAY__
-#define __ARCH_ARM_V7_DELAY__
+#ifndef __ARCH_ARM_DELAY__
+#define __ARCH_ARM_DELAY__
 
 #include <stdint.h>
 
