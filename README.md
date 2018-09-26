@@ -32,11 +32,26 @@ cd build
 make clean && make
 ```
 
+### Real hardware
+
+Getting some output on real hardware, like debug output is done via serial. In case of raspberry pi it is UART0. So to get execution output, you'll need an TTL-RS232 to USB convert cable. When that is existing, wire it up like on the following [page](https://blog.christophersmart.com/2016/10/27/building-and-booting-upstream-linux-and-u-boot-for-raspberry-pi-23-arm-boards/) and connect it to the development machine. The most simple way to get the serial output is using screen with the connected usb to serial.
+
+```bash
+# Connect to usb tty port via screen
+screen /dev/ttyUSB0 115200
+
+# Exit tty screen session
+Ctrl+a Shift+A y
+```
+
 ### Emulation
 
 Emulation of the kernel project with qemu during development. When kernel debugging is necessary, add the parameter shorthand `-s` or the long version `-gdb tcp:1234` to qemu call.
 
 ```bash
+# raspberry pi 1 kernel emulation
+qemu-system-arm -m 256 -M versatilepb -cpu arm1176 -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel.zwerg
+
 # raspberry pi 2.1 kernel emulation
 qemu-system-arm -m 1024 -M raspi2 -cpu cortex-a7 -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel.zwerg
 
