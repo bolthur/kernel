@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __VENDOR_RPI_GPIO__
-#define __VENDOR_RPI_GPIO__
+#ifndef __KERNEL_VENDOR_RPI_GPIO__
+#define __KERNEL_VENDOR_RPI_GPIO__
 
 #include <vendor/rpi/peripheral.h>
 

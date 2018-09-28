@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __INTERRUPT__
-#define __INTERRUPT__
+#ifndef __KERNEL_INTERRUPT__
+#define __KERNEL_INTERRUPT__
 
 void irq_init( void );
 void irq_enable( void );

@@ -17,11 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_ARCH_ARM_DELAY__
-#define __KERNEL_ARCH_ARM_DELAY__
+#ifndef __KERNEL_SERIAL__
+#define __KERNEL_SERIAL__
 
 #include <stdint.h>
 
-extern void delay( uint32_t count );
+void serial_init( void );
+void serial_putc( uint8_t c );
+uint8_t serial_getc( void );
+void serial_flush( void );
 
 #endif

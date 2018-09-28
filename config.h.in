@@ -27,6 +27,9 @@
 /* Define to 1 for ARMv8 targets. */
 #undef ARCH_ARM_V8
 
+/* Set to 1 to enable debug mode. */
+#undef DEBUG
+
 /* Define to 1 for 32 bit ELF targets. */
 #undef ELF32
 
@@ -35,6 +38,9 @@
 
 /* Define set for libc to compile differently. */
 #undef IS_KERNEL
+
+/* Set to 1 to enable kernel output mode. */
+#undef KERNEL_DEBUG_PRINT
 
 /* Name of package */
 #undef PACKAGE

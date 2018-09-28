@@ -13,7 +13,7 @@ AM_INIT_AUTOMAKE([foreign 1.7])
 AC_CONFIG_HEADERS([config.h])
 
 AC_ARG_ENABLE([device],
-  AC_HELP_STRING([--enable-device], [set target device (default and fallback is pc)]),
+  AC_HELP_STRING([--enable-device], [set target device (default and fallback is rpi2_b)]),
   [case "${enableval}" in
   rpi1_a)
     DEVICE="rpi1_a"
@@ -58,16 +58,16 @@ AC_ARG_ENABLE([device],
   [DEVICE="rpi2_b"]
 )
 
-# set target and flags
-MIST_SET_HOST
-
 AC_ARG_ENABLE([debug],
-  AC_HELP_STRING([--enable-debug], [generate debug symbols (default is NO)]),
-  [CFLAGS="${CFLAGS} -g"]
+  AC_HELP_STRING([--enable-debug], [enable debug mode with debug symbols (default: off)])
+)
+
+AC_ARG_ENABLE([kernel-print],
+  AC_HELP_STRING([--enable-kernel-print], [enable kernel print (default: off)])
 )
 
 AC_ARG_ENABLE([opt],
-  AC_HELP_STRING([--disable-opt], [optimize code (default is YES)]),
+  AC_HELP_STRING([--disable-opt], [disable code optimization (default: on)]),
   [case "${enableval}" in
   no | 0)
     CFLAGS="${CFLAGS} -O0"
@@ -87,6 +87,9 @@ AC_ARG_ENABLE([opt],
   esac],
   [CFLAGS="${CFLAGS} -O2"]
 )
+
+# set target and flags
+MIST_SET_HOST
 
 # set normal flags
 MIST_SET_FLAGS

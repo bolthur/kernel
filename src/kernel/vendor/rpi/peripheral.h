@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __VENDOR_RPI_PERIPHERAL__
-#define __VENDOR_RPI_PERIPHERAL__
+#ifndef __KERNEL_VENDOR_RPI_PERIPHERAL__
+#define __KERNEL_VENDOR_RPI_PERIPHERAL__
 
 #if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI2_B_REV2 ) || defined( PLATFORM_RPI3_B ) || defined( PLATFORM_RPI3_B_PLUS )
   #define PERIPHERAL_BASE 0x3F000000

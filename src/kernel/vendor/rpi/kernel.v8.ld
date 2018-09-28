@@ -3,7 +3,7 @@ OUTPUT_ARCH( arm )
 
 ENTRY( start )
 
-GROUP( ../../arch/arm/v8/libv8.a ../../arch/arm/libarm.a ../../libkernel.a librpi.a ../../../libc/libc.a )
+GROUP( ../../arch/arm/v8/libv8.a ../../arch/arm/libarm.a ../../libkernel.a ../libvendor.a librpi.a ../../../libc/libc.a )
 INPUT( libgcc.a )
 
 SECTIONS {

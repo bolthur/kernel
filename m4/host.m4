@@ -3,6 +3,20 @@ AC_DEFUN([MIST_SET_HOST], [
   AH_TEMPLATE([ELF32], [Define to 1 for 32 bit ELF targets.])
   AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets.])
   AC_DEFINE([IS_KERNEL], [1], [Define set for libc to compile differently.])
+  AH_TEMPLATE([DEBUG], [Set to 1 to enable debug mode.])
+  AH_TEMPLATE([KERNEL_DEBUG_PRINT], [Set to 1 to enable kernel output mode.])
+
+  # Test possibe enable debug parameter
+  AS_IF([test "x$enable_debug" == "xyes"], [
+    CFLAGS="${CFLAGS} -g"
+    AC_DEFINE([DEBUG], [1])
+  ])
+
+  # Test possibe enable kernel output parameter
+  AS_IF([test "x$enable_kernel_print" == "xyes"], [
+    CFLAGS="${CFLAGS} -g"
+    AC_DEFINE([KERNEL_DEBUG_PRINT], [1])
+  ])
 
   case "${host_cpu}" in
   arm)

@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TTY__
-#define __TTY__
+#ifndef __KERNEL_TTY__
+#define __KERNEL_TTY__
 
 #include <stddef.h>
 

@@ -20,20 +20,25 @@
 // default includes
 #include <stddef.h>
 
-// arch related includes
+// specific architecture related
 #if defined( ARCH_ARM_V7 )
 #endif
 
+// common architecture related
 #if defined( ARCH_ARM )
   #include <arch/arm/delay.h>
   #include <arch/arm/mmio.h>
 #endif
 
-// platform related includes
+// specific platform related
 #include <vendor/rpi/gpio.h>
-#include <vendor/rpi/uart.h>
 
-void uart_init( void ) {
+// common vendor related
+
+// normal
+#include <serial.h>
+
+void serial_init( void ) {
   // Disable UART0.
   mmio_write( UARTCR, 0 );
 
@@ -79,8 +84,23 @@ void uart_init( void ) {
   mmio_write( UARTCR, ( 1 << 0 ) | ( 1 << 8 ) | ( 1 << 9 ) );
 }
 
-void uart_putc( uint8_t c ) {
+void serial_putc( uint8_t c ) {
   // Wait for UART to become ready to transmit.
   while ( 0 != ( mmio_read( UARTFR ) & ( 1 << 5 ) ) ) { }
   mmio_write( UARTDR, ( uint32_t ) c );
+}
+
+uint8_t serial_getc( void ) {
+  // Wait for UART to become ready for read
+  while ( mmio_read( UARTFR ) & ( 1 << 4 ) ) { }
+
+  // return data
+  return ( uint8_t )mmio_read( UARTDR );
+}
+
+void serial_flush( void ) {
+  // read from uart until as long as something is existing to flush
+  while ( ! ( mmio_read( UARTFR ) & ( 1 << 4 ) ) ) {
+    serial_getc();
+  }
 }

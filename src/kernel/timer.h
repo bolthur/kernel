@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __TIMER__
-#define __TIMER__
+#ifndef __KERNEL_TIMER__
+#define __KERNEL_TIMER__
 
 #include <stdint.h>
 

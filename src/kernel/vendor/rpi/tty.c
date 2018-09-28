@@ -18,19 +18,29 @@
  */
 
 #include <tty.h>
-
-#include <vendor/rpi/uart.h>
+#include <serial.h>
 
 void tty_init( void ) {
-  uart_init();
+  // FIXME: Move serial init to kernel main or some other better place
+  serial_init();
 }
 
 void tty_putc( unsigned char c ) {
-  uart_putc( c );
+  #ifdef KERNEL_DEBUG_PRINT
+    serial_putc( c );
+  #else
+    // mark as unused to prevent warning
+    ( void )c;
+  #endif
 }
 
 void tty_puts( const char *str ) {
-  for ( size_t i = 0; str[ i ] != '\0'; i++ ) {
-    tty_putc( ( unsigned char )str[ i ] );
-  }
+  #ifdef KERNEL_DEBUG_PRINT
+    for ( size_t i = 0; str[ i ] != '\0'; i++ ) {
+      tty_putc( ( unsigned char )str[ i ] );
+    }
+  #else
+    // mark as unused to prevent warning
+    ( void )str;
+  #endif
 }

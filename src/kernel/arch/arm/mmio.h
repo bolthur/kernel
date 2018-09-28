@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __ARCH_ARM_MMIO__
-#define __ARCH_ARM_MMIO__
+#ifndef __KERNEL_ARCH_ARM_MMIO__
+#define __KERNEL_ARCH_ARM_MMIO__
 
 #include <stdint.h>
 

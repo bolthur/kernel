@@ -24,36 +24,39 @@
 #include <interrupt.h>
 #include <timer.h>
 #include <platform.h>
+#include <debug.h>
+#include <serial.h>
 
 void kernel_main() {
+  // enable tty for output
   tty_init();
 
   printf(
-    "%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n",
+    "%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n",
     " ______     __         __         ______     ______        __    __     __     ______     ______  ",
     "/\\  __ \\   /\\ \\       /\\ \\       /\\  ___\\   /\\  ___\\      /\\ \"-./  \\   /\\ \\   /\\  ___\\   /\\__  _\\ ",
     "\\ \\  __ \\  \\ \\ \\____  \\ \\ \\____  \\ \\  __\\   \\ \\___  \\     \\ \\ \\-./\\ \\  \\ \\ \\  \\ \\___  \\  \\/_/\\ \\/ ",
     " \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_____\\  \\ \\_____\\  \\/\\_____\\     \\ \\_\\ \\ \\_\\  \\ \\_\\  \\/\\_____\\    \\ \\_\\ ",
-    "  \\/_/\\/_/   \\/_____/   \\/_____/   \\/_____/   \\/_____/      \\/_/  \\/_/   \\/_/   \\/_____/     \\/_/ ",
-    "mist-system/kernel booting!"
+    "  \\/_/\\/_/   \\/_____/   \\/_____/   \\/_____/   \\/_____/      \\/_/  \\/_/   \\/_/   \\/_____/     \\/_/ "
   );
 
-  printf(
-    "Hex test: 0x%08x\r\nHex test: 0x%8x\r\nNumber test: %d - %i = %d\r\nSecond number test: %u\r\n",
-    0xBAD, 0xBAD, 10, 20, -10, -10
-  );
-
-  printf( "Initializing interrupts ... " );
+  // Setup irq
+  printf( "[mist-system/kernel -> irq  ] initialize ...\r\n" );
   irq_init();
-  printf( "done!\r\n" );
 
-  printf( "Initializing timer ... " );
+  // Setup timer
+  printf( "[mist-system/kernel -> timer] initialize ...\r\n" );
   timer_init();
-  printf( "done!\r\n" );
 
-  printf( "Enabling interrupts ... " );
+  // Enable irq
+  printf( "[mist-system/kernel -> irq  ] enable ...\r\n" );
   irq_enable();
-  printf( "done!\r\n" );
+
+  // Setup debug if enables
+  #ifdef DEBUG
+    printf( "[mist-system/kernel -> debug] initialize ...\r\n" );
+    debug_init();
+  #endif
 
   while ( 1 ) {}
 }

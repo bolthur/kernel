@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __ARCH_ARM_V7_CPU__
-#define __ARCH_ARM_V7_CPU__
+#ifndef __KERNEL_ARCH_ARM_V7_CPU__
+#define __KERNEL_ARCH_ARM_V7_CPU__
 
 #define CPSR_MODE_USER 0x10
 #define CPSR_MODE_FIQ 0x11
@@ -32,5 +32,18 @@
 #define CPSR_IRQ_INHIBIT 0x80
 #define CPSR_FIQ_INHIBIT 0x40
 #define CPSR_THUMB 0x20
+
+#ifndef ASSEMBLER_FILE
+#include <stdint.h>
+
+typedef struct cpu_register {
+  uint32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10; /* general purpose register */
+  uint32_t fp; /* r11 = frame pointer */
+  uint32_t ip; /* r12 = intraprocess scratch */
+  uint32_t sp; /* r13 = stack pointer */
+  uint32_t lr; /* r14 = link register */
+  uint32_t pc; /* r15 = program counter */
+} cpu_register_t;
+#endif
 
 #endif

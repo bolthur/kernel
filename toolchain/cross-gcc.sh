@@ -7,6 +7,7 @@ PKG_GMP="6.1.0"
 PKG_MPFR="3.1.4"
 PKG_MPC="1.0.3"
 PKG_ISL="0.18"
+PKG_GDB="8.2"
 
 # Get directory path
 BASEDIR="$( cd "$( dirname "$0" )" && pwd )"
@@ -26,8 +27,10 @@ cd "$BASEDIR/src"
 # Create build directories
 mkdir -p "$BASEDIR/build/binutils-arm-aarch32"
 mkdir -p "$BASEDIR/build/gcc-arm-aarch32"
+mkdir -p "$BASEDIR/build/gdb-arm-aarch32"
 mkdir -p "$BASEDIR/build/binutils-arm-aarch64"
 mkdir -p "$BASEDIR/build/gcc-arm-aarch64"
+mkdir -p "$BASEDIR/build/gdb-arm-aarch64"
 
 # mac related special
 if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -165,7 +168,7 @@ if [ ! -f gcc-$PKG_GCC.tar.gz ]; then
   wget "https://ftp.gnu.org/gnu/gcc/gcc-${PKG_GCC}/gcc-${PKG_GCC}.tar.gz"
   tar -xzf gcc-${PKG_GCC}.tar.gz
 
-  # Build bingccutils for aarch32
+  # Build gcc for aarch32
   export TARGET=arm-none-eabi
   cd "$BASEDIR/build/gcc-arm-aarch32"
   if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -193,7 +196,7 @@ if [ ! -f gcc-$PKG_GCC.tar.gz ]; then
   make install-gcc
   make install-target-libgcc
 
-  # Build bingccutils for aarch64
+  # Build gcc for aarch64
   export TARGET=aarch64-none-elf
   cd "$BASEDIR/build/gcc-arm-aarch64"
   if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -220,5 +223,49 @@ if [ ! -f gcc-$PKG_GCC.tar.gz ]; then
   make all-target-libgcc -j${CPU_COUNT}
   make install-gcc
   make install-target-libgcc
+  cd "$BASEDIR/src"
+fi
+
+
+## Download gcc and extract
+if [ ! -f gdb-$PKG_GDB.tar.gz ]; then
+  wget "https://ftp.gnu.org/gnu/gdb/gdb-${PKG_GDB}.tar.gz"
+  tar -xzf gdb-${PKG_GDB}.tar.gz
+
+  # Build gdb for aarch32
+  export TARGET=arm-none-eabi
+  cd "$BASEDIR/build/gdb-arm-aarch32"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    ../../src/gdb-$PKG_GDB/configure \
+      --target=$TARGET \
+      --prefix="$PREFIX" \
+      --with-gmp="$PREFIX" \
+      --with-mpfr="$PREFIX" \
+      --with-mpc="$PREFIX" \
+  else
+    ../../src/gdb-$PKG_GDB/configure \
+      --target=$TARGET \
+      --prefix="$PREFIX"
+  fi
+  make all -j${CPU_COUNT}
+  make install
+
+  # Build gdb for aarch64
+  export TARGET=aarch64-none-elf
+  cd "$BASEDIR/build/gdb-arm-aarch64"
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    ../../src/gdb-$PKG_GDB/configure \
+      --target=$TARGET \
+      --prefix="$PREFIX" \
+      --with-gmp="$PREFIX" \
+      --with-mpfr="$PREFIX" \
+      --with-mpc="$PREFIX" \
+  else
+    ../../src/gdb-$PKG_GDB/configure \
+      --target=$TARGET \
+      --prefix="$PREFIX"
+  fi
+  make all -j${CPU_COUNT}
+  make install
   cd "$BASEDIR/src"
 fi

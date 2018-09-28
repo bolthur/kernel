@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __PLATFORM__
-#define __PLATFORM__
+#ifndef __KERNEL_PLATFORM__
+#define __KERNEL_PLATFORM__
 
 extern void platform_init( void );
 

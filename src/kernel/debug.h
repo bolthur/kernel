@@ -17,12 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __VENDOR_RPI_UART__
-#define __VENDOR_RPI_UART__
+#ifndef __KERNEL_DEBUG__
+#define __KERNEL_DEBUG__
 
-#include <stdint.h>
-
-void uart_init( void );
-void uart_putc( uint8_t c );
+void debug_init( void );
 
 #endif

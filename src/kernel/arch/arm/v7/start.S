@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define ASSEMBLER_FILE 1
+
 #include <arch/arm/v7/cpu.h>
 
 .arch_extension sec

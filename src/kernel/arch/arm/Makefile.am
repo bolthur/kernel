@@ -1,5 +1,5 @@
 
-SUBDIRS = ${subarch_subdir} .
+SUBDIRS = . ${subarch_subdir}
 
 DIST_SUBDIRS = v6 v7 v8
 
