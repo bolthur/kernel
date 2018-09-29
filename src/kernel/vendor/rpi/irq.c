@@ -1,7 +1,7 @@
 
 /**
  * mist-system/kernel
- * Copyright (C) 2017 mist-system project.
+ * Copyright (C) 2017 - 2018 mist-system project.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,26 +17,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-.section .text
+#include <stdint.h>
+#include <stdbool.h>
 
-.global irq_enable
-irq_enable:
-  cpsie i
-  bx lr
-
-.global irq_disable
-irq_disable:
-  mrs r0, cpsr
-  cpsid i
-  bx lr
-
-.global fiq_enable
-fiq_enable:
-  cpsie f
-  bx lr
-
-.global fiq_disable
-fiq_disable:
-  mrs r0, cpsr
-  cpsid f
-  bx lr
+bool irq_validate_number( uint8_t num ) {
+  return ! (
+    num != 29 && num != 43
+    && num != 45 && num != 46
+    && num != 48 && num != 49
+    && num != 50 && num != 51
+    && num != 52 && num != 53
+    && num != 54 && num != 55
+    && num != 57
+  );
+}

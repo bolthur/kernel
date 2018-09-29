@@ -1,7 +1,7 @@
 
 /**
  * mist-system/kernel
- * Copyright (C) 2017 mist-system project.
+ * Copyright (C) 2017 - 2018 mist-system project.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,7 +19,9 @@
 
 #include <stdio.h>
 
-#include <timer.h>
+#include <isrs.h>
+#include <irq.h>
+#include <panic.h>
 
 static void __attribute__( ( naked, aligned( 32 ) ) ) interrupt_vector_table( void ) {
   __asm__ __volatile__(
@@ -35,47 +37,47 @@ static void __attribute__( ( naked, aligned( 32 ) ) ) interrupt_vector_table( vo
 }
 
 void __attribute__( ( interrupt( "ABORT" ) ) ) reset_handler( void ) {
-  printf( "reset!" );
+  PANIC( "reset" );
 }
 
 void __attribute__( ( interrupt( "UNDEF" ) ) ) undefined_instruction_handler( void ) {
-  printf( "undefined!" );
-  while( 1 ) {
-    // stop further executions
-  }
+  PANIC( "undefined" );
 }
 
 void __attribute__( ( interrupt( "SWI" ) ) ) software_interrupt_handler( void ) {
-  printf( "\r\nswi handler kicks in!\r\n" );
+  // FIXME: Get swi num, check for mapped swi handler and call it
+  PANIC( "swi handler kicks in" );
   /*while( 1 ) {
     // stop further executions
   }*/
 }
 
 void __attribute__( ( interrupt( "ABORT" ) ) ) prefetch_abort_handler( void ) {
-  printf( "prefetch abort!" );
+  PANIC( "prefetch abort" );
 }
 
 void __attribute__( ( interrupt( "ABORT" ) ) ) data_abort_handler( void ) {
-  printf( "data abort!" );
+  PANIC( "data abort" );
 }
 
 void __attribute__( ( interrupt( "IRQ" ) ) ) irq_handler( void ) {
-  printf( "irq\r\n" );
-  if ( timer_pending() ) {
+  PANIC( "irq" );
+  // FIXME: Get irq, check for mapped irq handler and call it
+  /*if ( timer_pending() ) {
     printf( "timer fired!" );
     // do something when timer irq is fired!
   }
 
   // reset timer if necessary
-  timer_clear();
+  timer_clear();*/
 }
 
 void __attribute__( ( interrupt( "FIQ" ) ) ) fast_interrupt_handler( void ) {
-  printf( "fiq!" );
+  // FIXME: Get fiq, check for mapped irq handler and call it
+  PANIC( "fiq" );
 }
 
-void irq_init( void ) {
+void ivt_init( void ) {
   // set interrupt vector table
   __asm__ __volatile__( "mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" ( &interrupt_vector_table ) );
 }

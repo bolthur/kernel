@@ -17,14 +17,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/mmio.h>
+#include <stdio.h>
+#include <stdint.h>
 
-// Memory-Mapped I/O output
-void __attribute__((optimize(0))) mmio_write( uint32_t reg, uint32_t data ) {
-  *( volatile uint32_t* )( (uintptr_t)reg ) = data;
+#include <irq.h>
+
+void panic(const char *message, const char *file, uint32_t line) {
+  // disable interrupts
+  irq_disable();
+
+  // print panic
+  printf("PANIC(%s) at %s:%d\r\n", message, file, line);
+
+  // loop endless
+  while ( 1 ) {}
 }
 
-// Memory-Mapped I/O input
-uint32_t __attribute__((optimize(0))) mmio_read( uint32_t reg ) {
-  return *( volatile uint32_t* )( ( uintptr_t )reg );
+void panic_assert(const char *file, uint32_t line, const char *desc) {
+  // disable interrupts
+  irq_disable();
+
+  // print panic
+  printf("ASSERTION-FAILED(%s) at %s:%d\r\n", desc, file, line);
+
+  // loop endless
+  while ( 1 ) {}
 }

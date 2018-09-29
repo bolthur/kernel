@@ -1,7 +1,7 @@
 
 /**
  * mist-system/kernel
- * Copyright (C) 2017 mist-system project.
+ * Copyright (C) 2017 - 2018 mist-system project.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_INTERRUPT__
-#define __KERNEL_INTERRUPT__
+#include <stdio.h>
+#include <stdbool.h>
 
-void irq_init( void );
-void irq_enable( void );
-void irq_disable( void );
+#include <arch/arm/ivt.h>
 
-#endif
+void isrs_init( void ) {
+  ivt_init();
+}

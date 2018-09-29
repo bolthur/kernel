@@ -9,8 +9,14 @@ noinst_LIBRARIES = libkernel.a
 libkernel_a_SOURCES = \
   debug.c \
   debug.h \
-  interrupt.h \
+  isrs.h \
+  isrs.c \
+  irq.h \
+  irq.c \
+  irq.h \
   main.c \
+  panic.c \
+  panic.h \
   platform.h \
   serial.h \
   timer.h \

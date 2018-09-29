@@ -8,6 +8,7 @@
     "mitaki28.vscode-clang",
     "austin.code-gnu-global",
     "dan-c-underwood.arm",
-    "zixuanwang.linkerscript"
+    "zixuanwang.linkerscript",
+    "cschlosser.doxdocgen"
   ]
 }

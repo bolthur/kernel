@@ -1,7 +1,7 @@
 
 /**
  * mist-system/kernel
- * Copyright (C) 2017 mist-system project.
+ * Copyright (C) 2017 - 2018 mist-system project.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by

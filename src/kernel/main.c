@@ -1,7 +1,7 @@
 
 /**
  * mist-system/kernel
- * Copyright (C) 2017 mist-system project.
+ * Copyright (C) 2017 - 2018 mist-system project.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,7 +21,8 @@
 #include <stdint.h>
 
 #include <tty.h>
-#include <interrupt.h>
+#include <irq.h>
+#include <isrs.h>
 #include <timer.h>
 #include <platform.h>
 #include <debug.h>
@@ -40,23 +41,25 @@ void kernel_main() {
     "  \\/_/\\/_/   \\/_____/   \\/_____/   \\/_____/   \\/_____/      \\/_/  \\/_/   \\/_/   \\/_____/     \\/_/ "
   );
 
-  // Setup irq
-  printf( "[mist-system/kernel -> irq  ] initialize ...\r\n" );
-  irq_init();
+  // Setup isrs
+  printf( "[mist-system/kernel -> isrs] initialize ...\r\n" );
+  isrs_init();
 
   // Setup timer
   printf( "[mist-system/kernel -> timer] initialize ...\r\n" );
   timer_init();
-
-  // Enable irq
-  printf( "[mist-system/kernel -> irq  ] enable ...\r\n" );
-  irq_enable();
 
   // Setup debug if enables
   #ifdef DEBUG
     printf( "[mist-system/kernel -> debug] initialize ...\r\n" );
     debug_init();
   #endif
+
+  // Setup irq
+  printf( "[mist-system/kernel -> irq] initialize ...\r\n" );
+  irq_init();
+
+  asm("swi 3");
 
   while ( 1 ) {}
 }

@@ -17,14 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/mmio.h>
+#include <stdint.h>
 
-// Memory-Mapped I/O output
-void __attribute__((optimize(0))) mmio_write( uint32_t reg, uint32_t data ) {
-  *( volatile uint32_t* )( (uintptr_t)reg ) = data;
-}
+#include <isrs.h>
 
-// Memory-Mapped I/O input
-uint32_t __attribute__((optimize(0))) mmio_read( uint32_t reg ) {
-  return *( volatile uint32_t* )( ( uintptr_t )reg );
+void isrs_register_handler( uint8_t num, isrs_callback_t func ) {
+  ( void )num;
+  ( void )func;
 }

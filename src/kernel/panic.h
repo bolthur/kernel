@@ -17,14 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/mmio.h>
+#ifndef __KERNEL_PANIC__
+#define __KERNEL_PANIC__
 
-// Memory-Mapped I/O output
-void __attribute__((optimize(0))) mmio_write( uint32_t reg, uint32_t data ) {
-  *( volatile uint32_t* )( (uintptr_t)reg ) = data;
-}
+#include <stdint.h>
 
-// Memory-Mapped I/O input
-uint32_t __attribute__((optimize(0))) mmio_read( uint32_t reg ) {
-  return *( volatile uint32_t* )( ( uintptr_t )reg );
-}
+#define PANIC( msg ) panic( msg, __FILE__, __LINE__ );
+#define ASSERT( b ) ( b ? (void)0 : panic_assert( __FILE__, __LINE__, #b ) );
+
+void panic(const char *message, const char *file, uint32_t line);
+void panic_assert(const char *file, uint32_t line, const char *desc);
+
+#endif

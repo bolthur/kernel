@@ -17,14 +17,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/mmio.h>
+#include <irq.h>
 
-// Memory-Mapped I/O output
-void __attribute__((optimize(0))) mmio_write( uint32_t reg, uint32_t data ) {
-  *( volatile uint32_t* )( (uintptr_t)reg ) = data;
+void irq_init( void ) {
+  irq_enable();
 }
 
-// Memory-Mapped I/O input
-uint32_t __attribute__((optimize(0))) mmio_read( uint32_t reg ) {
-  return *( volatile uint32_t* )( ( uintptr_t )reg );
+void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
+  ( void )num;
+  ( void )func;
+  ( void )fast;
 }

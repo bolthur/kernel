@@ -11,6 +11,7 @@ librpi_a_SOURCES = \
   serial.c \
   gpio.h \
   gpio.c \
+  irq.c \
   peripheral.h \
   platform.c \
   start.S \

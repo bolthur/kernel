@@ -12,5 +12,6 @@ noinst_LIBRARIES = libarm.a
 libarm_a_SOURCES = \
   delay.c \
   delay.h \
+  ivt.h \
   mmio.c \
   mmio.h
