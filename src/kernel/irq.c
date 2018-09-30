@@ -18,9 +18,15 @@
  */
 
 #include <irq.h>
+#include <stddef.h>
 
 void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
   ( void )num;
   ( void )func;
   ( void )fast;
+}
+
+irq_callback_t irq_get_handler( uint8_t num ) {
+  ( void ) num;
+  return NULL;
 }

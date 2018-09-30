@@ -20,6 +20,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <arch/arm/mmio.h>
+#include <vendor/rpi/gpio.h>
+
 bool irq_validate_number( uint8_t num ) {
   return ! (
     num != 29 && num != 43
@@ -30,4 +33,25 @@ bool irq_validate_number( uint8_t num ) {
     && num != 54 && num != 55
     && num != 57
   );
+}
+
+int8_t irq_get_pending( void ) {
+  uint32_t pending1 = mmio_read( INTERRUPT_IRQ_PENDING_1 );
+  uint32_t pending2 = mmio_read( INTERRUPT_IRQ_PENDING_2 );
+
+  for ( int8_t i = 0; i < 32; ++i ) {
+    int32_t check_bit = ( 1 << i );
+
+    // check first pending register
+    if ( pending1 && check_bit ) {
+      return i;
+    }
+
+    // check second pending register
+    if ( pending2 && check_bit ) {
+      return i + 32;
+    }
+  }
+
+  return -1;
 }

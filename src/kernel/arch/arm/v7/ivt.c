@@ -18,6 +18,7 @@
  */
 
 #include <stdio.h>
+#include <stddef.h>
 
 #include <isrs.h>
 #include <irq.h>
@@ -47,9 +48,6 @@ void __attribute__( ( interrupt( "UNDEF" ) ) ) undefined_instruction_handler( vo
 void __attribute__( ( interrupt( "SWI" ) ) ) software_interrupt_handler( void ) {
   // FIXME: Get swi num, check for mapped swi handler and call it
   PANIC( "swi handler kicks in" );
-  /*while( 1 ) {
-    // stop further executions
-  }*/
 }
 
 void __attribute__( ( interrupt( "ABORT" ) ) ) prefetch_abort_handler( void ) {
@@ -61,8 +59,22 @@ void __attribute__( ( interrupt( "ABORT" ) ) ) data_abort_handler( void ) {
 }
 
 void __attribute__( ( interrupt( "IRQ" ) ) ) irq_handler( void ) {
-  PANIC( "irq" );
   // FIXME: Get irq, check for mapped irq handler and call it
+  // FIXME: Push registers r0 - r12 with lr
+
+  // get pending interrupt
+  int8_t irq = irq_get_pending();
+  ASSERT( -1 != irq && 0 <= irq );
+
+  // get bound interrupt handler
+  irq_callback_t cb = irq_get_handler( irq );
+  ASSERT( NULL != cb );
+
+  // FIXME: Execute callback with registers
+  cb( irq, NULL );
+
+  // additional panic
+  PANIC( "irq" );
   /*if ( timer_pending() ) {
     printf( "timer fired!" );
     // do something when timer irq is fired!
@@ -74,6 +86,20 @@ void __attribute__( ( interrupt( "IRQ" ) ) ) irq_handler( void ) {
 
 void __attribute__( ( interrupt( "FIQ" ) ) ) fast_interrupt_handler( void ) {
   // FIXME: Get fiq, check for mapped irq handler and call it
+  // FIXME: Push registers r0 - r7 with lr
+
+  // get pending interrupt
+  int8_t irq = irq_get_pending();
+  ASSERT( -1 != irq && 0 <= irq );
+
+  // get bound interrupt handler
+  irq_callback_t cb = irq_get_handler( irq );
+  ASSERT( NULL != cb );
+
+  // FIXME: Execute callback with registers
+  cb( irq, NULL );
+
+  // additional panic!
   PANIC( "fiq" );
 }
 

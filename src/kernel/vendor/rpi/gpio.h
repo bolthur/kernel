@@ -142,6 +142,4 @@ enum {
   SYSTEM_TIMER_COMPARE_3 = ( SYSTEM_TIMER_BASE + 0x18 ),
 };
 
-void gpio_init( void );
-
 #endif

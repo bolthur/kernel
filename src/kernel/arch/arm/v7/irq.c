@@ -22,9 +22,3 @@
 void irq_init( void ) {
   irq_enable();
 }
-
-void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
-  ( void )num;
-  ( void )func;
-  ( void )fast;
-}

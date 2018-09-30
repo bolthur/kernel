@@ -30,5 +30,7 @@ void irq_enable( void );
 void irq_disable( void );
 bool irq_validate_number( uint8_t num );
 void irq_register_handler( uint8_t num, irq_callback_t func, bool fast );
+int8_t irq_get_pending( void );
+irq_callback_t irq_get_handler( uint8_t num );
 
 #endif

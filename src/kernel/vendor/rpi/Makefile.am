@@ -10,7 +10,6 @@ noinst_LIBRARIES = librpi.a
 librpi_a_SOURCES = \
   serial.c \
   gpio.h \
-  gpio.c \
   irq.c \
   peripheral.h \
   platform.c \
