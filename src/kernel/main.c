@@ -59,7 +59,7 @@ void kernel_main() {
   printf( "[mist-system/kernel -> irq] initialize ...\r\n" );
   irq_init();
 
-  asm("swi 3");
+  // asm("swi 3");
 
   while ( 1 ) {}
 }

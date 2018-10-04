@@ -52,8 +52,28 @@
 #define SYSTEM_TIMER_2_IRQ ( 1 << 2 )
 #define SYSTEM_TIMER_3_IRQ ( 1 << 3 )
 
+#define CORE0_TIMER_IRQCNTL 0x40000040
+#define CORE0_IRQ_SOURCE 0x40000060
+
 void timer_init( void ) {
-  // testing timer with led
+  uint32_t cntfrq, cntv_val, cntv_ctl;
+  asm volatile( "mrc p15, 0, %0, c14, c0, 0" : "=r"( cntfrq ) );
+  printf( "0x%8x\r\n%d\r\n", cntfrq, cntfrq );
+
+  // write_cntv_tval(cntfrq);
+  // clear cntv interrupt and set next 1 sec timer.
+  asm volatile( "mcr p15, 0, %0, c14, c3, 0" :: "r"( cntfrq ) );
+
+  // read_cntv_tval
+  asm volatile ( "mrc p15, 0, %0, c14, c3, 0" : "=r"( cntv_val ) );
+  printf( "0x%8x\r\n", cntv_val );
+  mmio_write( CORE0_TIMER_IRQCNTL, 0x08 );
+
+  // enable cntv
+  cntv_ctl = 1;
+  asm volatile ( "mcr p15, 0, %0, c14, c3, 1" :: "r"( cntv_ctl ) ); // write CNTV_CTL
+
+  /*// testing timer with led
   mmio_write( GPFSEL4, mmio_read( GPFSEL4 ) | 21 );
 
   // set compare
@@ -76,11 +96,15 @@ void timer_init( void ) {
   irq_line &= ~( SYSTEM_TIMER_3_IRQ );
 
   // overwrite
-  mmio_write( INTERRUPT_IRQ_PENDING_1, irq_line );
+  mmio_write( INTERRUPT_IRQ_PENDING_1, irq_line );*/
 }
 
 uint32_t timer_pending( void ) {
-  return mmio_read( SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
+  // return mmio_read( SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
+
+  uint32_t tmp;
+  tmp = mmio_read(CORE0_IRQ_SOURCE);
+  return tmp & 0x08;
 }
 
 void timer_clear( void ) {
@@ -90,11 +114,11 @@ void timer_clear( void ) {
     return;
   }
 
-  // clear timer match bit
+  /*// clear timer match bit
   mmio_write( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
 
   // set compare again
-  mmio_write( SYSTEM_TIMER_COMPARE_3, mmio_read( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
+  mmio_write( SYSTEM_TIMER_COMPARE_3, mmio_read( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );*/
 
   // flip led
   // FIXME: Replace by using printf
@@ -105,4 +129,7 @@ void timer_clear( void ) {
     mmio_write( GPSET1, ( 1 << 15 ) );
     led = 1;
   }
+
+  // write cntcval
+  asm volatile ("mcr p15, 0, %0, c14, c3, 0" :: "r"( 0 ) );
 }

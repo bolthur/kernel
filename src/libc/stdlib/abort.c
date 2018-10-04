@@ -20,16 +20,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#if defined( IS_KERNEL )
+  #include <panic.h>
+#endif
+
 __attribute__((noreturn))
 void abort( void ) {
   #if defined( IS_KERNEL )
-    // ToDo: Add proper kernel panic!
-    printf( "kernel: panic: abort()\n" );
+    PANIC( "abort()\n" );
   #else
-    // ToDo: Abnormally terminate the process as if by SIGABRT.
-	  printf( "abort()\n" );
+    exit( 1 );
   #endif
 
-  while ( 1 ) {}
   __builtin_unreachable();
 }

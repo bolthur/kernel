@@ -73,7 +73,7 @@ int printf( const char* restrict format, ... ) {
       }
 
       if ( maxrem < amount ) {
-        // TODO: Set errno to EOVERFLOW.
+        // FIXME: Set errno to EOVERFLOW.
         return -1;
       }
 
@@ -104,7 +104,7 @@ int printf( const char* restrict format, ... ) {
         c = ( char )va_arg( parameters, int );
 
         if ( ! maxrem ) {
-          // TODO: Set errno to EOVERFLOW.
+          // FIXME: Set errno to EOVERFLOW.
           return -1;
         }
 
@@ -121,7 +121,7 @@ int printf( const char* restrict format, ... ) {
         len = strlen( str );
 
         if ( maxrem < len ) {
-          // TODO: Set errno to EOVERFLOW.
+          // FIXME: Set errno to EOVERFLOW.
           return -1;
         }
 
@@ -144,7 +144,7 @@ int printf( const char* restrict format, ... ) {
         len = strlen( p );
 
         if ( maxrem < len ) {
-          // TODO: Set errno to EOVERFLOW
+          // FIXME: Set errno to EOVERFLOW
           return -1;
         }
 
@@ -167,7 +167,7 @@ int printf( const char* restrict format, ... ) {
         len = strlen( p );
 
         if ( maxrem < len ) {
-          // TODO: Set errno to EOVERFLOW
+          // FIXME: Set errno to EOVERFLOW
           return -1;
         }
 
@@ -191,7 +191,7 @@ int printf( const char* restrict format, ... ) {
         len = strlen( p );
 
         if ( maxrem < len ) {
-          // TODO: Set errno to EOVERFLOW
+          // FIXME: Set errno to EOVERFLOW
           return -1;
         }
 
@@ -208,7 +208,7 @@ int printf( const char* restrict format, ... ) {
         len = strlen(format);
 
         if (maxrem < len) {
-          // TODO: Set errno to EOVERFLOW.
+          // FIXME: Set errno to EOVERFLOW.
           return -1;
         }
 

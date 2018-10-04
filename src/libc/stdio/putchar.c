@@ -28,7 +28,7 @@ int putchar( int ic ) {
     char c = ( char ) ic;
     tty_putc( c );
   #else
-    // TODO: Implement stdio and the write system call.
+    // FIXME: Implement stdio and the write system call.
   #endif
 
   return ic;

@@ -10,6 +10,7 @@ libc_a_SOURCES = \
   stdio/putchar.c \
   stdio/puts.c \
   stdlib/abort.c \
+  stdlib/exit.c \
   stdlib/itoa.c \
   stdlib/utoa.c \
   string/memcmp.c \

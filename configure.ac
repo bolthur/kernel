@@ -12,6 +12,8 @@ AC_CONFIG_SRCDIR([src/kernel/main.c])
 AM_INIT_AUTOMAKE([foreign 1.7])
 AC_CONFIG_HEADERS([config.h])
 
+AC_LANG([C])
+
 AC_ARG_ENABLE([device],
   AC_HELP_STRING([--enable-device], [set target device (default and fallback is rpi2_b)]),
   [case "${enableval}" in

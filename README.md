@@ -57,7 +57,7 @@ Getting some debug-print on real hardware, like debug debug-print is done via se
 screen /dev/ttyUSB0 115200
 
 # Exit tty screen session
-Ctrl+a Shift+A y
+Ctrl+a Shift+k y
 ```
 
 ### Emulation

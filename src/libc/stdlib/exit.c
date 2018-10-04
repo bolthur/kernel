@@ -17,23 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIBC_STDLIB__
-#define __LIBC_STDLIB__
-
-#include <sys/cdefs.h>
+#include <stdlib.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void abort( void );
-void exit( int32_t status );
-char *itoa( int32_t, char *, int32_t );
-char *utoa( uint32_t, char *, int32_t );
-
-#ifdef __cplusplus
+__attribute__((noreturn))
+void exit( int32_t status ) {
+  // FIXME: Implement exit system call
+  ( void )status;
+  while ( 1 ) {}
+  __builtin_unreachable();
 }
-#endif
-
-#endif
