@@ -24,6 +24,8 @@
 #include <irq.h>
 #include <panic.h>
 
+#include <arch/arm/v7/cpu.h>
+
 static void __attribute__( ( naked, aligned( 32 ) ) ) interrupt_vector_table( void ) {
   asm volatile(
     "b start\n" // reset
@@ -59,8 +61,10 @@ void __attribute__( ( interrupt( "ABORT" ) ) ) data_abort_handler( void ) {
 }
 
 void __attribute__( ( interrupt( "IRQ" ) ) ) irq_handler( void ) {
-  // FIXME: Get irq, check for mapped irq handler and call it
-  // FIXME: Push registers r0 - r12 with lr
+  // FIXME: Use fix register for ldmia and save variable before to get complete state
+  // FIXME: Get inline assembly to work correctly
+  cpu_register_t status;
+  // asm volatile ( "ldmia %0, {r0-r15}" :: "r" ( &status ) );
 
   // get pending interrupt
   int8_t irq = irq_get_pending( false );
@@ -70,12 +74,15 @@ void __attribute__( ( interrupt( "IRQ" ) ) ) irq_handler( void ) {
   irq_callback_t cb = irq_get_handler( irq, false );
   ASSERT( NULL != cb );
 
-  // FIXME: Execute callback with registers
-  cb( irq, NULL );
+  // Execute callback with registers
+  cb( irq, &status );
 }
 
 void __attribute__( ( interrupt( "FIQ" ) ) ) fast_interrupt_handler( void ) {
-  // FIXME: Push registers r0 - r7 with lr
+  // FIXME: Use fix register for ldmia and save variable before to get complete state
+  // FIXME: Get inline assembly to work correctly
+  cpu_register_t status;
+  // asm volatile ( "ldmia %0, {r0-r15}" :: "r" ( &status ) );
 
   // get pending interrupt
   int8_t irq = irq_get_pending( true );
@@ -85,8 +92,8 @@ void __attribute__( ( interrupt( "FIQ" ) ) ) fast_interrupt_handler( void ) {
   irq_callback_t cb = irq_get_handler( irq, true );
   ASSERT( NULL != cb );
 
-  // FIXME: Execute callback with registers
-  cb( irq, NULL );
+  // Execute callback with registers
+  cb( irq, &status );
 }
 
 void ivt_init( void ) {
