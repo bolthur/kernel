@@ -36,7 +36,7 @@
 #ifndef ASSEMBLER_FILE
 #include <stdint.h>
 
-typedef struct cpu_register {
+typedef struct {
   uint32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10; /* general purpose register */
   uint32_t fp; /* r11 = frame pointer */
   uint32_t ip; /* r12 = intraprocess scratch */

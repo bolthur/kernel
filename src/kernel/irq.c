@@ -17,16 +17,53 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <irq.h>
 #include <stddef.h>
 
+#include <irq.h>
+#include <panic.h>
+
 void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
-  ( void )num;
-  ( void )func;
-  ( void )fast;
+  // normal irq
+  if ( ! fast ) {
+    // validate irq number
+    ASSERT( irq_validate_number( num ) );
+
+    // check for empty
+    ASSERT( ! irq_callback_map[ num ] );
+
+    // map handler
+    irq_callback_map[ num ] = func;
+
+    return;
+  }
+
+  // validate irq number
+  ASSERT( irq_validate_number( num ) );
+
+  // check for empty
+  ASSERT( ! fast_irq_callback_map[ num ] );
+
+  // map handler
+  fast_irq_callback_map[ num ] = func;
 }
 
-irq_callback_t irq_get_handler( uint8_t num ) {
-  ( void ) num;
-  return NULL;
+irq_callback_t irq_get_handler( uint8_t num, bool fast ) {
+  // normal irq
+  if ( ! fast ) {
+    // validate irq number
+    ASSERT( irq_validate_number( num ) );
+
+    // return handler
+    return ! irq_callback_map[ num ]
+      ? NULL
+      : irq_callback_map[ num ];
+  }
+
+  // validate irq number
+  ASSERT( irq_validate_number( num ) );
+
+  // return handler
+  return ! fast_irq_callback_map[ num ]
+    ? NULL
+    : fast_irq_callback_map[ num ];
 }

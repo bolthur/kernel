@@ -21,7 +21,12 @@
 #include <stdio.h>
 
 // arch related includes
-#if defined( ARCH_ARM_V7 )
+#if defined( ARCH_ARM_V6 )
+  #include <arch/arm/v6/cpu.h>
+#elif defined( ARCH_ARM_V7 )
+  #include <arch/arm/v7/cpu.h>
+#else
+  #error "Architecture not supported!"
 #endif
 
 #if defined( ARCH_ARM )
@@ -30,6 +35,7 @@
 #endif
 
 #include <timer.h>
+#include <irq.h>
 #include <vendor/rpi/gpio.h>
 
 
@@ -52,13 +58,53 @@
 #define SYSTEM_TIMER_2_IRQ ( 1 << 2 )
 #define SYSTEM_TIMER_3_IRQ ( 1 << 3 )
 
-#define CORE0_TIMER_IRQCNTL 0x40000040
-#define CORE0_IRQ_SOURCE 0x40000060
+/*uint32_t timer_pending( void ) {
+  // return mmio_read( SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
+
+  uint32_t tmp;
+  tmp = mmio_read(CORE0_IRQ_SOURCE);
+  return tmp & 0x08;
+}*/
+
+void timer_clear( uint8_t num, void *_cpu ) {
+  cpu_register_t *cpu = ( cpu_register_t * )_cpu;
+
+  ( void )num;
+  ( void )_cpu;
+  ( void )cpu;
+
+  static int32_t led = 1;
+
+  /*if ( ! timer_pending() ) {
+    return;
+  }*/
+
+  printf( "timer_clear()\r\n" );
+
+  /*// clear timer match bit
+  mmio_write( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
+
+  // set compare again
+  mmio_write( SYSTEM_TIMER_COMPARE_3, mmio_read( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );*/
+
+  // flip led
+  // FIXME: Replace by using printf
+  if ( led ) {
+    mmio_write( GPCLR1, ( 1 << 15 ) );
+    led = 0;
+  } else {
+    mmio_write( GPSET1, ( 1 << 15 ) );
+    led = 1;
+  }
+
+  // write cntcval
+  asm volatile ("mcr p15, 0, %0, c14, c3, 0" :: "r"( 0 ) );
+}
 
 void timer_init( void ) {
   uint32_t cntfrq, cntv_val, cntv_ctl;
   asm volatile( "mrc p15, 0, %0, c14, c0, 0" : "=r"( cntfrq ) );
-  printf( "0x%8x\r\n%d\r\n", cntfrq, cntfrq );
+  printf( "CNTFRQ: 0x%08x\r\n", cntfrq, cntfrq );
 
   // write_cntv_tval(cntfrq);
   // clear cntv interrupt and set next 1 sec timer.
@@ -66,12 +112,14 @@ void timer_init( void ) {
 
   // read_cntv_tval
   asm volatile ( "mrc p15, 0, %0, c14, c3, 0" : "=r"( cntv_val ) );
-  printf( "0x%8x\r\n", cntv_val );
-  mmio_write( CORE0_TIMER_IRQCNTL, 0x08 );
+  printf( "CNTV_VAL: 0x%08x\r\n", cntv_val );
+  mmio_write( CORE0_TIMER_IRQCNTL, ( 1 << 3 ) );
 
   // enable cntv
   cntv_ctl = 1;
   asm volatile ( "mcr p15, 0, %0, c14, c3, 1" :: "r"( cntv_ctl ) ); // write CNTV_CTL
+
+  irq_register_handler( ( 1 << 3 ), timer_clear, false );
 
   /*// testing timer with led
   mmio_write( GPFSEL4, mmio_read( GPFSEL4 ) | 21 );
@@ -97,39 +145,4 @@ void timer_init( void ) {
 
   // overwrite
   mmio_write( INTERRUPT_IRQ_PENDING_1, irq_line );*/
-}
-
-uint32_t timer_pending( void ) {
-  // return mmio_read( SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
-
-  uint32_t tmp;
-  tmp = mmio_read(CORE0_IRQ_SOURCE);
-  return tmp & 0x08;
-}
-
-void timer_clear( void ) {
-  static int32_t led = 1;
-
-  if ( ! timer_pending() ) {
-    return;
-  }
-
-  /*// clear timer match bit
-  mmio_write( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
-
-  // set compare again
-  mmio_write( SYSTEM_TIMER_COMPARE_3, mmio_read( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );*/
-
-  // flip led
-  // FIXME: Replace by using printf
-  if ( led ) {
-    mmio_write( GPCLR1, ( 1 << 15 ) );
-    led = 0;
-  } else {
-    mmio_write( GPSET1, ( 1 << 15 ) );
-    led = 1;
-  }
-
-  // write cntcval
-  asm volatile ("mcr p15, 0, %0, c14, c3, 0" :: "r"( 0 ) );
 }

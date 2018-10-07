@@ -29,5 +29,11 @@ SECTIONS {
     *(.bss)
     __bss_end = .;
   }
+
+  .bugtable BLOCK( 4K ): ALIGN( 4K ) {
+    __bug_start = . ;
+    *(.bugtable)
+    __bug_end = . ;
+  }
   __kernel_end = .;
 }

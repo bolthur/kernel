@@ -20,6 +20,23 @@
 #ifndef __KERNEL_DEBUG__
 #define __KERNEL_DEBUG__
 
+#include <stdint.h>
+
+#ifdef ARCH_ARM
+  #include <arch/arm/debug.h>
+#else
+  #error "Debug defines not available"
+#endif
+
+typedef struct {
+  const char *filename;
+  uint32_t line;
+  uint64_t addr;
+  const char *msg;
+} bug_entry_t;
+
+#define BUG_ON( cond, msg ) ( cond ? BUG( msg ) : ( void )0 );
+
 void debug_init( void );
 
 #endif

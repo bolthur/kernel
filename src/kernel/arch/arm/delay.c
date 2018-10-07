@@ -20,7 +20,7 @@
 #include "delay.h"
 
 void __attribute__((optimize(0))) delay( uint32_t count ) {
-  __asm__ volatile(
+  asm volatile(
     "__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n": "=r" ( count ): [ count ] "0" ( count ) : "cc"
   );
 }

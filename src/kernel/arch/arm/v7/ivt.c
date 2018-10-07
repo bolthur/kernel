@@ -25,7 +25,7 @@
 #include <panic.h>
 
 static void __attribute__( ( naked, aligned( 32 ) ) ) interrupt_vector_table( void ) {
-  __asm__ __volatile__(
+  asm volatile(
     "b start\n" // reset
     "b undefined_instruction_handler\n" // undefined instruction
     "b software_interrupt_handler\n" // software interrupt
@@ -63,47 +63,33 @@ void __attribute__( ( interrupt( "IRQ" ) ) ) irq_handler( void ) {
   // FIXME: Push registers r0 - r12 with lr
 
   // get pending interrupt
-  int8_t irq = irq_get_pending();
+  int8_t irq = irq_get_pending( false );
   ASSERT( -1 != irq && 0 <= irq );
 
   // get bound interrupt handler
-  irq_callback_t cb = irq_get_handler( irq );
+  irq_callback_t cb = irq_get_handler( irq, false );
   ASSERT( NULL != cb );
 
   // FIXME: Execute callback with registers
   cb( irq, NULL );
-
-  // additional panic
-  PANIC( "irq" );
-  /*if ( timer_pending() ) {
-    printf( "timer fired!" );
-    // do something when timer irq is fired!
-  }
-
-  // reset timer if necessary
-  timer_clear();*/
 }
 
 void __attribute__( ( interrupt( "FIQ" ) ) ) fast_interrupt_handler( void ) {
-  // FIXME: Get fiq, check for mapped irq handler and call it
   // FIXME: Push registers r0 - r7 with lr
 
   // get pending interrupt
-  int8_t irq = irq_get_pending();
+  int8_t irq = irq_get_pending( true );
   ASSERT( -1 != irq && 0 <= irq );
 
   // get bound interrupt handler
-  irq_callback_t cb = irq_get_handler( irq );
+  irq_callback_t cb = irq_get_handler( irq, true );
   ASSERT( NULL != cb );
 
   // FIXME: Execute callback with registers
   cb( irq, NULL );
-
-  // additional panic!
-  PANIC( "fiq" );
 }
 
 void ivt_init( void ) {
   // set interrupt vector table
-  __asm__ __volatile__( "mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" ( &interrupt_vector_table ) );
+  asm volatile( "mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" ( &interrupt_vector_table ) );
 }

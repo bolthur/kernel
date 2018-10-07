@@ -21,16 +21,18 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include <irq.h>
+#include <panic.h>
 #include <arch/arm/mmio.h>
 #include <vendor/rpi/gpio.h>
 
-
-#define TMP_CORE0_TIMER_IRQCNTL 0x40000040
-#define TMP_CORE0_IRQ_SOURCE 0x40000060
+irq_callback_t irq_callback_map[ 64 ];
+irq_callback_t fast_irq_callback_map[ 72 ];
 
 bool irq_validate_number( uint8_t num ) {
   return ! (
-    num != 29 && num != 43
+    num != 1 && num != 8
+    && num != 29 && num != 43
     && num != 45 && num != 46
     && num != 48 && num != 49
     && num != 50 && num != 51
@@ -40,25 +42,34 @@ bool irq_validate_number( uint8_t num ) {
   );
 }
 
-int8_t irq_get_pending( void ) {
-  uint32_t pending1 = mmio_read( INTERRUPT_IRQ_PENDING_1 );
-  uint32_t pending2 = mmio_read( INTERRUPT_IRQ_PENDING_2 );
-  uint32_t tmp = mmio_read( TMP_CORE0_IRQ_SOURCE );
+int8_t irq_get_pending( bool fast ) {
+  // normal irq
+  if ( ! fast ) {
+    uint32_t pending1 = mmio_read( INTERRUPT_IRQ_PENDING_1 );
+    uint32_t pending2 = mmio_read( INTERRUPT_IRQ_PENDING_2 );
 
-  printf( "0x%08x", tmp );
-
-  for ( int8_t i = 0; i < 32; ++i ) {
-    int32_t check_bit = ( 1 << i );
-
-    // check first pending register
-    if ( pending1 && check_bit ) {
-      return i;
+    uint32_t core0_irq_source = mmio_read( CORE0_IRQ_SOURCE );
+    if ( core0_irq_source && 0x08 ) {
+      return 8;
     }
 
-    // check second pending register
-    if ( pending2 && check_bit ) {
-      return i + 32;
+    for ( int8_t i = 0; i < 32; ++i ) {
+      int32_t check_bit = ( 1 << i );
+
+      // check first pending register
+      if ( pending1 && check_bit ) {
+        return i;
+      }
+
+      // check second pending register
+      if ( pending2 && check_bit ) {
+        return i + 32;
+      }
     }
+  }
+
+  if ( fast ) {
+    PANIC( "Fast interrupts not yet completely supported!" );
   }
 
   return -1;

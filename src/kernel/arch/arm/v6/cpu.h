@@ -17,11 +17,18 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_TIMER__
-#define __KERNEL_TIMER__
+#ifndef __KERNEL_ARCH_ARM_V6_CPU__
+#define __KERNEL_ARCH_ARM_V6_CPU__
 
 #include <stdint.h>
 
-void timer_init( void );
+typedef struct {
+  uint32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10; /* general purpose register */
+  uint32_t fp; /* r11 = frame pointer */
+  uint32_t ip; /* r12 = intraprocess scratch */
+  uint32_t sp; /* r13 = stack pointer */
+  uint32_t lr; /* r14 = link register */
+  uint32_t pc; /* r15 = program counter */
+} cpu_register_t;
 
 #endif

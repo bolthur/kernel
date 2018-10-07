@@ -17,11 +17,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_TIMER__
-#define __KERNEL_TIMER__
+#ifndef __KERNEL_ARCH_ARM_DEBUG__
+#define __KERNEL_ARCH_ARM_DEBUG__
 
 #include <stdint.h>
 
-void timer_init( void );
+// FIXME: Move into function
+#define BUG( __msg ) ( { \
+  asm volatile( \
+    "1: .word	0xffffffff\n" \
+      ".pushsection .bugtable, \"a\"\n" \
+      ".word	%c0\n" \
+      ".word	%c1\n" \
+      ".word	1b\n" \
+      ".word	%c2\n" \
+      ".popsection" :: \
+      "i"( __FILE__ ), \
+      "i"( __LINE__ ), \
+      "i"( __msg ) \
+  ); \
+} )
+
+// FIXME: Move into function
+#define BREAKPOINT() asm("swi 3");
 
 #endif

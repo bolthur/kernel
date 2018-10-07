@@ -10,6 +10,7 @@ noinst_LIBRARIES = libv7.a
 libv7_a_SOURCES = \
   stub/cpu.S \
   stub/irq.S \
+  cpu.h \
   irq.c \
   isrs.c \
   ivt.c \
