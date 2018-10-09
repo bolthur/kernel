@@ -67,7 +67,7 @@
 }*/
 
 void timer_clear( uint8_t num, void *_cpu ) {
-  cpu_register_t *cpu = ( cpu_register_t * )_cpu;
+  cpu_register_context_t *cpu = ( cpu_register_context_t * )_cpu;
 
   ( void )num;
   ( void )_cpu;
@@ -98,7 +98,8 @@ void timer_clear( uint8_t num, void *_cpu ) {
   }
 
   // write cntcval
-  asm volatile ("mcr p15, 0, %0, c14, c3, 0" :: "r"( 0 ) );
+  // necessary to prevent nested interrupts
+  asm volatile ("mcr p15, 0, %0, c14, c3, 0" :: "r"( 50000000 ) );
 }
 
 void timer_init( void ) {

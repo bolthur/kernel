@@ -55,4 +55,10 @@ SECTIONS {
     __bug_end = . ;
   }
   __kernel_end = .;
+
+  /DISCARD/ : {
+    *(.comment*)
+    *(.ARM*)
+    *(.note*)
+  }
 }

@@ -26,45 +26,80 @@
 
 #include <arch/arm/v7/cpu.h>
 
+/**
+ * @brief interrupt vector table aligned according to manual
+ */
 static void __attribute__( ( naked, aligned( 32 ) ) ) interrupt_vector_table( void ) {
   asm volatile(
     "b start\n" // reset
-    "b undefined_instruction_handler\n" // undefined instruction
-    "b software_interrupt_handler\n" // software interrupt
-    "b prefetch_abort_handler\n" // prefetch abort
-    "b data_abort_handler\n" // data abort
-    "b reset_handler\n" // unused
-    "b irq_handler\n" // irq
-    "b fast_interrupt_handler\n" // fiq
+    "b _undefined_instruction_handler\n" // undefined instruction
+    "b _software_interrupt_handler\n" // software interrupt
+    "b _prefetch_abort_handler\n" // prefetch abort
+    "b _data_abort_handler\n" // data abort
+    "b _unused_handler\n" // unused
+    "b _irq_handler\n" // irq
+    "b _fast_interrupt_handler\n" // fiq
   );
 }
 
-void __attribute__( ( interrupt( "ABORT" ) ) ) reset_handler( void ) {
-  PANIC( "reset" );
+/**
+ * @brief Unused exception handler
+ *
+ * @param status current register context
+ */
+void unused_handler( cpu_register_context_t *status ) {
+  dump_register( status );
+  PANIC( "unused" );
 }
 
-void __attribute__( ( interrupt( "UNDEF" ) ) ) undefined_instruction_handler( void ) {
+/**
+ * @brief Undefined instruction exception handler
+ *
+ * @param status current register context
+ */
+void undefined_instruction_handler( cpu_register_context_t *status ) {
+  dump_register( status );
   PANIC( "undefined" );
 }
 
-void __attribute__( ( interrupt( "SWI" ) ) ) software_interrupt_handler( void ) {
+/**
+ * @brief Software interrupt exception handler
+ *
+ * @param status current register context
+ */
+void software_interrupt_handler( cpu_register_context_t *status ) {
+  dump_register( status );
   // FIXME: Get swi num, check for mapped swi handler and call it
   PANIC( "swi handler kicks in" );
 }
 
-void __attribute__( ( interrupt( "ABORT" ) ) ) prefetch_abort_handler( void ) {
+/**
+ * @brief Prefetch abort exception handler
+ *
+ * @param status current register context
+ */
+void prefetch_abort_handler( cpu_register_context_t *status ) {
+  dump_register( status );
   PANIC( "prefetch abort" );
 }
 
-void __attribute__( ( interrupt( "ABORT" ) ) ) data_abort_handler( void ) {
+/**
+ * @brief Data abort exception handler
+ *
+ * @param status current register context
+ */
+void data_abort_handler( cpu_register_context_t *status ) {
+  dump_register( status );
   PANIC( "data abort" );
 }
 
-void __attribute__( ( interrupt( "IRQ" ) ) ) irq_handler( void ) {
-  // FIXME: Use fix register for ldmia and save variable before to get complete state
-  // FIXME: Get inline assembly to work correctly
-  cpu_register_t status;
-  // asm volatile ( "ldmia %0, {r0-r15}" :: "r" ( &status ) );
+/**
+ * @brief Interrupt request exception handler
+ *
+ * @param status current register context
+ */
+void irq_handler( cpu_register_context_t *status ) {
+  dump_register( status );
 
   // get pending interrupt
   int8_t irq = irq_get_pending( false );
@@ -78,11 +113,13 @@ void __attribute__( ( interrupt( "IRQ" ) ) ) irq_handler( void ) {
   cb( irq, &status );
 }
 
-void __attribute__( ( interrupt( "FIQ" ) ) ) fast_interrupt_handler( void ) {
-  // FIXME: Use fix register for ldmia and save variable before to get complete state
-  // FIXME: Get inline assembly to work correctly
-  cpu_register_t status;
-  // asm volatile ( "ldmia %0, {r0-r15}" :: "r" ( &status ) );
+/**
+ * @brief Fast interrupt request exception handler
+ *
+ * @param status current register context
+ */
+void fast_interrupt_handler( cpu_register_context_t *status ) {
+  dump_register( status );
 
   // get pending interrupt
   int8_t irq = irq_get_pending( true );
@@ -96,7 +133,9 @@ void __attribute__( ( interrupt( "FIQ" ) ) ) fast_interrupt_handler( void ) {
   cb( irq, &status );
 }
 
+/**
+ * @brief Method to initialize interrupt vector table
+ */
 void ivt_init( void ) {
-  // set interrupt vector table
   asm volatile( "mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" ( &interrupt_vector_table ) );
 }

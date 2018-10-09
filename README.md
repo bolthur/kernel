@@ -9,6 +9,8 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
 * Fire timer event, when timer irq handler has been triggered
 * Add gdb stub for debugging on remote device via serial port
 * Find better place for `serial_init` than `tty_init`
+* Finish debug launch.json when remote debugging is possible
+* Create a draft for build system with vendor driver/app packaging
 
 ## Building the project
 

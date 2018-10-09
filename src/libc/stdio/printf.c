@@ -136,8 +136,9 @@ int printf( const char* restrict format, ... ) {
       case 'i':
         n = va_arg( parameters, int32_t );
         if ( ! n ) {
+          n = 0;
           // Set errno to EOVERFLOW
-          return -1;
+          // return -1;
         }
 
         p = itoa( n, buf, 10 );
@@ -159,8 +160,9 @@ int printf( const char* restrict format, ... ) {
       case 'u':
         un = va_arg( parameters, uint32_t );
         if ( ! n ) {
+          n = 0;
           // Set errno to EOVERFLOW
-          return -1;
+          // return -1;
         }
 
         p = utoa( un, buf, 10 );
@@ -183,8 +185,9 @@ int printf( const char* restrict format, ... ) {
       case 'X': // for testing
         n = va_arg( parameters, int32_t );
         if ( ! n ) {
+          n = 0;
           // Set errno to EOVERFLOW
-          return -1;
+          // return -1;
         }
 
         p = itoa( n, buf, 16 );

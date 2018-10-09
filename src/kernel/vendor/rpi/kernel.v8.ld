@@ -56,10 +56,9 @@ SECTIONS {
   }
   __kernel_end = .;
 
-  /*
   /DISCARD/ : {
     *(.comment*)
     *(.ARM*)
     *(.note*)
-  }*/
+  }
 }
