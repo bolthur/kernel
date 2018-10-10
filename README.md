@@ -5,11 +5,19 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
 ## Things to be done
 
 * Add irq and isrs register handling
-* Add event system with register/unregister
-* Fire timer event, when timer irq handler has been triggered
+  * ~~Get irq with cpu mode switch and register dump working~~
+  * Merge irq functions with isrs functions where possible
+  * Prohibit mapping of interrupt routines
+* Add event system with `register` and `unregister`
+  * Provide map of events for `irq`, `fiq`, `swi`
+  * Fire events for `irq`, `fiq`, `swi`
+* Memory management
+  * Add physical memory management
+  * Add virtual memory management
+* Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
 * Add gdb stub for debugging on remote device via serial port
-* Find better place for `serial_init` than `tty_init`
-* Finish debug launch.json when remote debugging is possible
+  * Find better place for `serial_init` than `tty_init`
+  * Finish debug launch.json when remote debugging is possible
 * Create a draft for build system with vendor driver/app packaging
 
 ## Building the project

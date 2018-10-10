@@ -58,6 +58,12 @@ arch_start:
   // setup undefined mode stack
   msr cpsr_c, #( CPSR_MODE_UNDEFINED | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
   ldr sp, =stack_undefined_mode
+  // setup hypervisor mode stack
+  msr cpsr_c, #( CPSR_MODE_HYPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
+  ldr sp, =stack_hypervisor_mode
+  // setup monitor mode stack
+  msr cpsr_c, #( CPSR_MODE_MONITOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
+  ldr sp, =stack_monitor_mode
   // setup supervisor mode stack
   msr cpsr_c, #( CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
   ldr sp, =stack_supervisor_mode
@@ -99,3 +105,11 @@ stack_system_mode:
 // supervisor mode stack
 .space 8192
 stack_supervisor_mode:
+
+// hypervisor mode stack
+.space 8192
+stack_hypervisor_mode:
+
+// monitor mode stack
+.space 8192
+stack_monitor_mode:

@@ -24,7 +24,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
+#if defined( __cplusplus )
 extern "C" {
 #endif
 
@@ -35,7 +35,7 @@ void* memset( void*, int, size_t );
 size_t strlen( const char* );
 char *strrev( char * );
 
-#ifdef __cplusplus
+#if defined( __cplusplus )
 }
 #endif
 

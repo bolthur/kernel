@@ -20,7 +20,6 @@
 #include <stdio.h>
 #include <stddef.h>
 
-#include <isrs.h>
 #include <irq.h>
 #include <panic.h>
 

@@ -50,7 +50,7 @@ void kernel_main() {
   timer_init();
 
   // Setup debug if enables
-  #ifdef DEBUG
+  #if defined( DEBUG )
     printf( "[mist-system/kernel -> debug] initialize ...\r\n" );
     debug_init();
   #endif

@@ -80,6 +80,10 @@ void serial_init( void ) {
   // Mask all interrupts.
   mmio_write( UARTIMSC, ( 1 << 1 ) | ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 ) | ( 1 << 7 ) | ( 1 << 8 ) | ( 1 << 9 ) | ( 1 << 10 ) );
 
+  #if defined( DEBUG )
+    // FIXME: Route uart interrupt as FIQ
+  #endif
+
   // Enable UART0, receive & transfer part of UART.
   mmio_write( UARTCR, ( 1 << 0 ) | ( 1 << 8 ) | ( 1 << 9 ) );
 }

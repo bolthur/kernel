@@ -23,7 +23,7 @@
 #include <stdint.h>
 
 // FIXME: Remove, when defines have been written to functions
-#ifdef ARCH_ARM
+#if defined( ARCH_ARM )
   #include <arch/arm/debug.h>
 #else
   #error "Debug defines not available"

@@ -22,8 +22,9 @@
 
 #include <sys/cdefs.h>
 #include <stdint.h>
+#include <stddef.h>
 
-#ifdef __cplusplus
+#if defined( __cplusplus )
 extern "C" {
 #endif
 
@@ -32,7 +33,12 @@ void exit( int32_t status );
 char *itoa( int32_t, char *, int32_t );
 char *utoa( uint32_t, char *, int32_t );
 
-#ifdef __cplusplus
+void free( void *ptr );
+void *calloc( size_t nitems, size_t size );
+void *malloc( size_t size );
+void *realloc( void *ptr, size_t size );
+
+#if defined( __cplusplus )
 }
 #endif
 

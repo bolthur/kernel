@@ -17,30 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <tty.h>
-#include <serial.h>
+#include <stdlib.h>
 
-void tty_init( void ) {
-  // FIXME: Move serial init to kernel main or some other better place
-  serial_init();
-}
+#if defined( IS_KERNEL )
+  #include <panic.h>
+#endif
 
-void tty_putc( unsigned char c ) {
-  #if defined( KERNEL_DEBUG_PRINT )
-    serial_putc( c );
+void *malloc( size_t size ) {
+  // mark parameter as unused
+  ( void )size;
+
+  #if defined( IS_KERNEL )
+    PANIC( "malloc not yet implemented!" );
   #else
-    // mark as unused to prevent warning
-    ( void )c;
+    abort();
   #endif
-}
 
-void tty_puts( const char *str ) {
-  #if defined( KERNEL_DEBUG_PRINT )
-    for ( size_t i = 0; str[ i ] != '\0'; i++ ) {
-      tty_putc( ( unsigned char )str[ i ] );
-    }
-  #else
-    // mark as unused to prevent warning
-    ( void )str;
-  #endif
+  return NULL;
 }

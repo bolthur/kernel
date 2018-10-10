@@ -10,8 +10,12 @@ libc_a_SOURCES = \
   stdio/putchar.c \
   stdio/puts.c \
   stdlib/abort.c \
+  stdlib/calloc.c \
   stdlib/exit.c \
+  stdlib/free.c \
   stdlib/itoa.c \
+  stdlib/malloc.c \
+  stdlib/realloc.c \
   stdlib/utoa.c \
   string/memcmp.c \
   string/memcpy.c \
