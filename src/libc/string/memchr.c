@@ -17,29 +17,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIBC_STDLIB__
-#define __LIBC_STDLIB__
-
-#include <sys/cdefs.h>
-#include <stdint.h>
+#include <string.h>
 #include <stddef.h>
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
+void *memchr( const void *src, int c, size_t n ) {
+  uint8_t *p = ( uint8_t * )src;
+  uint8_t *e = p + n;
 
-void abort( void );
-void exit( int32_t );
-char *itoa( int32_t, char*, int32_t );
-char *utoa( uint32_t, char*, int32_t );
+  while ( p < e ) {
+    if ( *p == ( uint8_t )c ) {
+      return ( void * )p;
+    }
 
-void free( void* );
-void *calloc( size_t, size_t );
-void *malloc( size_t );
-void *realloc( void*, size_t );
+    p++;
+  }
 
-#if defined( __cplusplus )
+  return NULL;
 }
-#endif
-
-#endif

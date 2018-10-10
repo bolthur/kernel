@@ -17,6 +17,7 @@ libc_a_SOURCES = \
   stdlib/malloc.c \
   stdlib/realloc.c \
   stdlib/utoa.c \
+  string/memchr.c \
   string/memcmp.c \
   string/memcpy.c \
   string/memmove.c \
