@@ -105,7 +105,7 @@ void timer_clear( uint8_t num, void *_cpu ) {
 void timer_init( void ) {
   uint32_t cntfrq, cntv_val, cntv_ctl;
   asm volatile( "mrc p15, 0, %0, c14, c0, 0" : "=r"( cntfrq ) );
-  printf( "CNTFRQ: 0x%08x\r\n", cntfrq, cntfrq );
+  //printf( "CNTFRQ: 0x%08x\r\n", cntfrq, cntfrq );
 
   // write_cntv_tval(cntfrq);
   // clear cntv interrupt and set next 1 sec timer.
@@ -113,7 +113,7 @@ void timer_init( void ) {
 
   // read_cntv_tval
   asm volatile ( "mrc p15, 0, %0, c14, c3, 0" : "=r"( cntv_val ) );
-  printf( "CNTV_VAL: 0x%08x\r\n", cntv_val );
+  //printf( "CNTV_VAL: 0x%08x\r\n", cntv_val );
   mmio_write( CORE0_TIMER_IRQCNTL, ( 1 << 3 ) );
 
   // enable cntv

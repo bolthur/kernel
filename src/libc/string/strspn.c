@@ -17,8 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <irq.h>
+#include <string.h>
+#include <stdlib.h>
 
-void irq_init( void ) {
-  irq_enable();
+#if defined( IS_KERNEL )
+  #include <panic.h>
+#endif
+
+// FIXME: Add logic
+size_t strspn( const char *str1, const char *str2 ) {
+  // mark parameter as unused
+  ( void )str1;
+  ( void )str2;
+
+  #if defined( IS_KERNEL )
+    PANIC( "strspn not yet implemented!" );
+  #else
+    abort();
+  #endif
+
+  return 0;
 }

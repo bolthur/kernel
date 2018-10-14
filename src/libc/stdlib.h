@@ -23,20 +23,56 @@
 #include <sys/cdefs.h>
 #include <stdint.h>
 #include <stddef.h>
+#include <inttypes.h>
+
+#define RAND_MAX 32767
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-void abort( void );
-void exit( int32_t );
-char *itoa( int32_t, char*, int32_t );
-char *utoa( uint32_t, char*, int32_t );
+typedef struct {
+  int quot;
+  int rem;
+} div_t;
 
-void free( void* );
+typedef struct {
+  long int quot;
+  long int rem;
+} ldiv_t;
+
+void abort( void );
+double atof( const char* );
+int abs( int );
+int atexit( void ( *func )( void ) );
+double atof( const char* );
+int atoi( const char* );
+long int atol( const char* );
+void *bsearch( const void*, const void*, size_t, size_t, int ( *compare )( const void*, const void* ) );
 void *calloc( size_t, size_t );
+div_t div ( int, int );
+void exit( int32_t );
+void free( void* );
+char *getenv( const char* );
+imaxdiv_t imaxdiv( intmax_t, intmax_t );
+char *itoa( int32_t, char*, int32_t );
+long int labs( long int );
+ldiv_t ldiv ( long int, long int );
 void *malloc( size_t );
+int mblen( const char*, size_t );
+size_t mbstowcs( wchar_t*, const char*, size_t );
+int mbtowc( wchar_t*, const char*, size_t );
+void qsort( void *, size_t, size_t, int ( *compare )( const void *, const void* ) );
+int rand( void );
 void *realloc( void*, size_t );
+void srand( unsigned int );
+double strtod( const char*, char** );
+long int strtol( const char*, char**, int );
+unsigned long int strtoul( const char*, char**, int );
+int system( const char* );
+char *utoa( uint32_t, char*, int32_t );
+size_t wcstombs( char*, const wchar_t*, size_t );
+int wctomb( char*, wchar_t );
 
 #if defined( __cplusplus )
 }

@@ -41,25 +41,51 @@ void kernel_main() {
     "  \\/_/\\/_/   \\/_____/   \\/_____/   \\/_____/   \\/_____/      \\/_/  \\/_/   \\/_/   \\/_____/     \\/_/ "
   );
 
+  // FIXME: Find correct place if necessary
+  printf( "[mist-system/kernel -> platform] initialize ... " );
+  platform_init();
+  printf( "done!\r\n" );
+
   // Setup isrs
-  printf( "[mist-system/kernel -> isrs] initialize ...\r\n" );
+  printf( "[mist-system/kernel -> isrs] initialize ... " );
   isrs_init();
+  printf( "done!\r\n" );
 
-  // Setup timer
-  printf( "[mist-system/kernel -> timer] initialize ...\r\n" );
-  timer_init();
+  // Setup memory management
+  printf( "[mist-system/kernel -> memory] initialize ... [" );
+  // FIXME: Setup physical memory management
+  printf( " physical, " );
+  // FIXME: Setup virtual memory management
+  printf( " virtual, " );
+  // FIXME: Setup heap
+  printf( " heap ] " );
+  printf( "done!\r\n" );
 
-  // Setup debug if enables
+  // FIXME: Setup event system
+  printf( "[mist-system/kernel -> event] initialize ... " );
+  printf( "done!\r\n" );
+
+  // Setup debug if enabled
   #if defined( DEBUG )
-    printf( "[mist-system/kernel -> debug] initialize ...\r\n" );
+    printf( "[mist-system/kernel -> debug] initialize ... " );
     debug_init();
+    printf( "done!\r\n" );
   #endif
 
-  // Setup irq
-  printf( "[mist-system/kernel -> irq] initialize ...\r\n" );
-  irq_init();
+  // Setup timer
+  printf( "[mist-system/kernel -> timer] initialize ... " );
+  timer_init();
+  printf( "done!\r\n" );
 
-  // asm("swi 3");
+  // Setup irq
+  printf( "[mist-system/kernel -> irq] enable ... " );
+  irq_enable();
+  printf( "done!\r\n" );
+
+  // Debug breakpoint to kickstart remote gdb
+  #if defined( DEBUG )
+    debug_breakpoint();
+  #endif
 
   while ( 1 ) {}
 }

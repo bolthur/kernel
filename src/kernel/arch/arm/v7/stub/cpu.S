@@ -31,3 +31,33 @@ _hlt:
   b _hlt
 _arch_cpu_reset:
   bx lr
+
+// FIXME: Add logic
+.global invalidate_l1_cache
+invalidate_l1_cache:
+  bx lr
+
+// FIXME: Add logic
+.global start_l1_cache
+start_l1_cache:
+  bx lr
+
+// FIXME: Add logic
+.global stop_l1_cache
+stop_l1_cache:
+  bx lr
+
+// FIXME: Add logic
+.global invalidate_l2_cache
+invalidate_l2_cache:
+  bx lr
+
+// FIXME: Add logic
+.global start_l2_cache
+start_l2_cache:
+  bx lr
+
+// FIXME: Add logic
+.global stop_l2_cache
+stop_l2_cache:
+  bx lr

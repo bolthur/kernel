@@ -23,6 +23,7 @@
   #include <panic.h>
 #endif
 
+// FIXME: Add logic
 void *malloc( size_t size ) {
   // mark parameter as unused
   ( void )size;

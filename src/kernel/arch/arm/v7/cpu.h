@@ -52,6 +52,14 @@ typedef union {
   } reg;
 } __attribute__((__packed__)) cpu_register_context_t;
 
+void invalidate_l1_cache( void );
+void start_l1_cache( void );
+void stop_l1_cache ( void );
+
+void invalidate_l2_cache( void );
+void start_l2_cache( void );
+void stop_l2_cache( void );
+
 void dump_register( cpu_register_context_t *context );
 #endif
 

@@ -34,7 +34,4 @@
           "i"(__msg)); \
 }
 
-// FIXME: Move into function
-#define BREAKPOINT() asm("swi 3");
-
 #endif

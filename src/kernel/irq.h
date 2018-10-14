@@ -27,7 +27,6 @@ typedef void (*irq_callback_t)(uint8_t irq, void *reg);
 extern irq_callback_t irq_callback_map[];
 extern irq_callback_t fast_irq_callback_map[];
 
-void irq_init( void );
 void irq_enable( void );
 void irq_disable( void );
 bool irq_validate_number( uint8_t num );

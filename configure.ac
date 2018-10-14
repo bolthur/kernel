@@ -140,6 +140,7 @@ AC_CONFIG_FILES([
   src/kernel/vendor/n900/Makefile
   src/kernel/vendor/rpi/Makefile
   src/libc/Makefile
+  src/libavl/Makefile
 ])
 
 AC_OUTPUT

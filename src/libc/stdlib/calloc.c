@@ -23,6 +23,7 @@
   #include <panic.h>
 #endif
 
+// FIXME: Add logic
 void *calloc( size_t nitems, size_t size ) {
   // mark parameter as unused
   ( void )nitems;

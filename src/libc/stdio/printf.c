@@ -45,7 +45,7 @@ bool print( const char* data, size_t length, int32_t pad0, int32_t pad ) {
   return true;
 }
 
-int printf( const char* restrict format, ... ) {
+int printf( const char* __restrict format, ... ) {
   va_list parameters;
   va_start( parameters, format );
 

@@ -5,11 +5,12 @@ DIST_SUBDIRS = v6 v7 v8
 
 AUTOMAKE_OPTIONS = nostdinc
 
-AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/libc
-AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/libc
+AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/libc -I$(top_srcdir)/src/libavl
+AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/libc -I$(top_srcdir)/src/libavl
 
 noinst_LIBRARIES = libarm.a
 libarm_a_SOURCES = \
+  debug.c \
   debug.h \
   delay.c \
   delay.h \

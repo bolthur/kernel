@@ -39,5 +39,6 @@ typedef struct {
 #define BUG_ON( cond, msg ) ( cond ? BUG( msg ) : ( void )0 );
 
 void debug_init( void );
+void debug_breakpoint( void );
 
 #endif
