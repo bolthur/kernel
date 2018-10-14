@@ -33,7 +33,9 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
 Initial necessary commands after checkout:
 
 ```bash
-aclocal
+aclocal -I m4
+autoheader
+automake --foreign --add-missing
 autoconf
 ```
 
