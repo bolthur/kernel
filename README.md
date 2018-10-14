@@ -28,6 +28,21 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
 
 ## Building the project
 
+### Autotools related
+
+Initial necessary commands after checkout:
+
+```bash
+aclocal
+autoconf
+```
+
+Necessary commands after adding new files:
+
+```bash
+autoreconf -i
+```
+
 ### Configuring
 
 ```bash
