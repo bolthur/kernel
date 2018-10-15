@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-int vfprintf( FILE *stream, const char *format, va_list arg ) {
+int vfprintf( FILE* restrict stream, const char* restrict format, va_list arg ) {
   // mark parameter as unused
   ( void )stream;
   ( void )format;

@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-size_t strspn( const char *str1, const char *str2 ) {
+size_t strspn( const char* str1, const char* str2 ) {
   // mark parameter as unused
   ( void )str1;
   ( void )str2;

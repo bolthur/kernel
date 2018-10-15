@@ -24,17 +24,13 @@
   #include <panic.h>
 #endif
 
-// FIXME: Add logic
-int fprintf( FILE *stream, const char *format, ... ) {
-  // mark parameter as unused
-  ( void )stream;
-  ( void )format;
+int fprintf( FILE* restrict stream, const char* restrict format, ... ) {
+  va_list parameters;
+  int ret_val;
 
-  #if defined( IS_KERNEL )
-    PANIC( "fprintf not yet implemented!" );
-  #else
-    abort();
-  #endif
+  va_start( parameters, format );
+  ret_val = vfprintf( stream, format, parameters );
+  va_end( parameters );
 
-  return -1;
+  return ret_val;
 }

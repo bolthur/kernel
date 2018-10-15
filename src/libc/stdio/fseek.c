@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-int fseek( FILE *stream, long int offset, int whence ) {
+int fseek( FILE* stream, long int offset, int whence ) {
   // mark parameter as unused
   ( void )stream;
   ( void )offset;

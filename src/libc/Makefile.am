@@ -18,7 +18,12 @@ libc_a_SOURCES = \
   stdio/putchar.c \
   stdio/puts.c \
   stdio/setbuf.c \
+  stdio/snprintf.c \
+  stdio/sprintf.c \
   stdio/vfprintf.c \
+  stdio/vprintf.c \
+  stdio/vsnprintf.c \
+  stdio/vsprintf.c \
   stdlib/abort.c \
   stdlib/abs.c \
   stdlib/atexit.c \

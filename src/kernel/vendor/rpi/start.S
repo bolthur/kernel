@@ -19,9 +19,6 @@
 
 .section .text.boot
 
-// forward declaration for save of parameter
-.extern boot_parameter_data
-
 .global start
 start:
   // reset multicore environment
@@ -66,20 +63,5 @@ start:
     #error "No valid format set. Valid formats are ELF32 and ELF64"
   #endif
   blo .loop
-  b .start_continue
-
-.start_continue:
-  // FIXME: Test whether that works on real machine, because with qemu it's 0
-  // FIXME: May be not necessary as of all informations can also be queried from mbox
-  // store boot parameters from r0 - r2 /  at data array
-  #if defined(ELF32)
-    ldr r4, =boot_parameter_data
-    stmia r4!, {r0-r2}
-  #elif defined(ELF64)
-    #error "ELF64 not yet supported!"
-  #else
-    #error "No valid format set. Valid formats are ELF32 and ELF64"
-  #endif
-
   // continue with arch related start
   b arch_start

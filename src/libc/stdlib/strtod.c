@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-double strtod( const char *str, char **end ) {
+double strtod( const char* restrict str, char** restrict end ) {
   // mark parameter as unused
   ( void )str;
   ( void )end;

@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-int fflush( FILE *stream ) {
+int fflush( FILE* stream ) {
   // mark parameter as unused
   ( void )stream;
 

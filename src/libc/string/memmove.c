@@ -20,9 +20,9 @@
 #include <string.h>
 #include <stdint.h>
 
-void *memmove( void *dstptr, const void *srcptr, size_t size ) {
-  uint8_t *dst = ( uint8_t * )dstptr;
-  const uint8_t *src = ( const uint8_t * )srcptr;
+void *memmove( void* dstptr, const void* srcptr, size_t size ) {
+  uint8_t* dst = ( uint8_t* )dstptr;
+  const uint8_t* src = ( const uint8_t* )srcptr;
 
   if ( dst < src ) {
     for ( size_t i = 0; i < size; i++ ) {

@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-char *strpbrk( const char *str1, const char *str2 ) {
+char *strpbrk( const char* str1, const char* str2 ) {
   // mark parameter as unused
   ( void )str1;
   ( void )str2;

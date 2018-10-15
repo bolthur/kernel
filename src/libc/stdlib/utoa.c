@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <string.h>
 
-char *utoa( uint32_t value, char *buffer, int32_t radix ) {
+char *utoa( uint32_t value, char* buffer, int32_t radix ) {
   char *p = buffer;
   unsigned uv = value;
 

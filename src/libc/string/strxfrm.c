@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-size_t strxfrm(char *dest, const char *src, size_t n ) {
+size_t strxfrm( char* dest, const char* src, size_t n ) {
   // mark parameter as unused
   ( void )dest;
   ( void )src;

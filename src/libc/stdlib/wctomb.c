@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-int wctomb( char *str, wchar_t wchar ) {
+int wctomb( char* str, wchar_t wchar ) {
   // mark parameter as unused
   ( void )str;
   ( void )wchar;

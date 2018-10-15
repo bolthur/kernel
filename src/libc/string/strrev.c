@@ -20,9 +20,9 @@
 #include <string.h>
 #include <stdint.h>
 
-char *strrev( char *str ) {
-  char *p1 = str;
-  char *p2 = ( char * )( str + strlen( str ) - 1 );
+char *strrev( char* str ) {
+  char* p1 = str;
+  char* p2 = ( char* )( str + strlen( str ) - 1 );
 
   while ( p1 < p2 ) {
     char tmp = *p1;

@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-char *strcpy( char * __restrict dest, const char * __restrict src ) {
+char *strcpy( char* restrict dest, const char* restrict src ) {
   // mark parameter as unused
   ( void )dest;
   ( void )src;

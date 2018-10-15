@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-void free( void *ptr ) {
+void free( void* ptr ) {
   // mark parameter as unused
   ( void )ptr;
 

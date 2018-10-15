@@ -17,24 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
+#ifndef __KERNEL_VENDOR_RPI_MAILBOX__
+#define __KERNEL_VENDOR_RPI_MAILBOX__
 
-#if defined( IS_KERNEL )
-  #include <panic.h>
+#include <stdint.h>
+
+uint32_t mailbox_read( uint8_t );
+void mailbox_write( uint8_t, uint32_t );
+
 #endif
-
-// FIXME: Add logic
-int mbtowc( wchar_t* pwc, const char* str, size_t n ) {
-  // mark parameter as unused
-  ( void )pwc;
-  ( void )str;
-  ( void )n;
-
-  #if defined( IS_KERNEL )
-    PANIC( "mbtowc not yet implemented!" );
-  #else
-    abort();
-  #endif
-
-  return -1;
-}

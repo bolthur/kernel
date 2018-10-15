@@ -28,6 +28,9 @@
 #include <debug.h>
 #include <serial.h>
 
+#if defined(__cplusplus)
+extern "C" /* Use C linkage for kernel_main. */
+#endif
 void kernel_main() {
   // enable tty for output
   tty_init();
@@ -42,9 +45,9 @@ void kernel_main() {
   );
 
   // FIXME: Find correct place if necessary
-  printf( "[mist-system/kernel -> platform] initialize ... " );
+  /*printf( "[mist-system/kernel -> platform] initialize ... " );
   platform_init();
-  printf( "done!\r\n" );
+  printf( "done!\r\n" );*/
 
   // Setup isrs
   printf( "[mist-system/kernel -> isrs] initialize ... " );

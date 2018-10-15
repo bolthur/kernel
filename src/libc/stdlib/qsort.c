@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-void qsort( void *base, size_t items, size_t size, int ( *compare )( const void *, const void* ) ) {
+void qsort( void* base, size_t items, size_t size, int ( *compare )( const void*, const void* ) ) {
   // mark parameter as unused
   ( void )base;
   ( void )items;

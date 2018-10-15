@@ -17,24 +17,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
+#include <panic.h>
+#include <vendor/rpi/mailbox.h>
 
-#if defined( IS_KERNEL )
-  #include <panic.h>
-#endif
-
-// FIXME: Add logic
-int mbtowc( wchar_t* pwc, const char* str, size_t n ) {
+// FIXME: Add logic!
+uint32_t mailbox_read( uint8_t channel ) {
   // mark parameter as unused
-  ( void )pwc;
-  ( void )str;
-  ( void )n;
+  ( void )channel;
 
-  #if defined( IS_KERNEL )
-    PANIC( "mbtowc not yet implemented!" );
-  #else
-    abort();
-  #endif
+  // panic until implementation is existing
+  PANIC( "mailbox_read not yet implemented!" );
 
+  // dummy return
   return -1;
+}
+
+// FIXME: Add logic!
+void mailbox_write( uint8_t channel, uint32_t data ) {
+  // mark parameter as unused
+  ( void )channel;
+  ( void )data;
+
+  // panic until implementation is existing
+  PANIC( "mailbox_write not yet implemented!" );
 }

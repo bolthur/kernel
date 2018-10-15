@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <string.h>
 
-char *itoa( int32_t value, char *buffer, int32_t radix ) {
+char *itoa( int32_t value, char* buffer, int32_t radix ) {
   char *p = buffer;
   unsigned uv = value;
   int32_t sign = ( 10 == radix && 0 > value ) ? 1 : 0;

@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-void *realloc( void *ptr, size_t size ) {
+void *realloc( void* ptr, size_t size ) {
   // mark parameter as unused
   ( void )ptr;
   ( void )size;

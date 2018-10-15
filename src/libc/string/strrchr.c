@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-char *strrchr( const char *str, int c ) {
+char *strrchr( const char* str, int c ) {
   // mark parameter as unused
   ( void )str;
   ( void )c;

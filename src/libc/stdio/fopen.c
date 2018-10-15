@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-FILE* fopen( const char *filename, const char *mode ) {
+FILE* fopen( const char* filename, const char* mode ) {
   // mark parameter as unused
   ( void )filename;
   ( void )mode;

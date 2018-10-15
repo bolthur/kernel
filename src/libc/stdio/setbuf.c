@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-void setbuf( FILE *stream, char *buffer ) {
+void setbuf( FILE* stream, char* buffer ) {
   // mark parameter as unused
   ( void )stream;
   ( void )buffer;

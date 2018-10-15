@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-int system( const char *cmd ) {
+int system( const char* cmd ) {
   // mark parameter as unused
   ( void )cmd;
 

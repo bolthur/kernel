@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-void *bsearch( const void *key, const void *base, size_t nitems, size_t size, int ( *compare )( const void*, const void* ) ) {
+void *bsearch( const void* key, const void* base, size_t nitems, size_t size, int ( *compare )( const void*, const void* ) ) {
   // mark parameter as unused
   ( void )key;
   ( void )base;

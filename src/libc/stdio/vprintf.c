@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #if defined( IS_KERNEL )
@@ -24,14 +25,13 @@
 #endif
 
 // FIXME: Add logic
-int mbtowc( wchar_t* pwc, const char* str, size_t n ) {
+int vprintf( const char* restrict format, va_list arg ) {
   // mark parameter as unused
-  ( void )pwc;
-  ( void )str;
-  ( void )n;
+  ( void )format;
+  ( void )arg;
 
   #if defined( IS_KERNEL )
-    PANIC( "mbtowc not yet implemented!" );
+    PANIC( "vprintf not yet implemented!" );
   #else
     abort();
   #endif

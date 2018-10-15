@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-long int strtol( const char *str, char **end, int base ) {
+long int strtol( const char* restrict str, char** restrict end, int base ) {
   // mark parameter as unused
   ( void )str;
   ( void )end;

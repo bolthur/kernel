@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-char *strstr( const char *haystack, const char *needle ) {
+char *strstr( const char* haystack, const char* needle ) {
   // mark parameter as unused
   ( void )haystack;
   ( void )needle;

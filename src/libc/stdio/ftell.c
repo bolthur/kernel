@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-long int ftell( FILE *stream ) {
+long int ftell( FILE* stream ) {
   // mark parameter as unused
   ( void )stream;
 

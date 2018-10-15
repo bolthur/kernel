@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-int execvp( const char *file, char* const argv[] ){
+int execvp( const char* file, char* const argv[] ){
   // mark parameter as unused
   ( void )file;
   ( void )argv;

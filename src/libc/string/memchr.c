@@ -20,9 +20,9 @@
 #include <string.h>
 #include <stddef.h>
 
-void *memchr( const void *src, int c, size_t n ) {
-  uint8_t *p = ( uint8_t * )src;
-  uint8_t *e = p + n;
+void *memchr( const void* src, int c, size_t n ) {
+  uint8_t* p = ( uint8_t* )src;
+  uint8_t* e = p + n;
 
   while ( p < e ) {
     if ( *p == ( uint8_t )c ) {

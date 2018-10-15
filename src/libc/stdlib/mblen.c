@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-int mblen( const char *str, size_t n ) {
+int mblen( const char* str, size_t n ) {
   // mark parameter as unused
   ( void )str;
   ( void )n;

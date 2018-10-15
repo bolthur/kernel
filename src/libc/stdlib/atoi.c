@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-int atoi( const char *str ) {
+int atoi( const char* str ) {
   // mark parameter as unused
   ( void )str;
 

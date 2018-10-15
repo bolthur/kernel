@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-char *getenv( const char *name ) {
+char *getenv( const char* name ) {
   // mark parameter as unused
   ( void )name;
 

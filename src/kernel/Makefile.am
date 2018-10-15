@@ -7,6 +7,7 @@ AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(
 
 noinst_LIBRARIES = libkernel.a
 libkernel_a_SOURCES = \
+  barrier.h \
   debug.c \
   debug.h \
   event.c \

@@ -21,10 +21,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-uint32_t boot_parameter_data[ 3 ];
-
 void platform_init( void ) {
-  printf( "0x%08x - 0x%08x - 0x%08x", boot_parameter_data[ 0 ], boot_parameter_data[ 1 ], boot_parameter_data[ 2 ] );
   // FIXME: Load firmware revision, board model, board revision, board serial from mailbox
   // FIXME: Load memory information from mailbox regarding arm and gpu and populate memory map
 }

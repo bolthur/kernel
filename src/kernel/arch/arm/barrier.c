@@ -17,24 +17,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
+#include <barrier.h>
 
-#if defined( IS_KERNEL )
-  #include <panic.h>
-#endif
+void __attribute__(( optimize( "O0" ) )) barrier_data_mem( void ) {
+  asm volatile ( "mcr p15, #0, %[zero], c7, c10, #5" : : [ zero ] "r" ( 0 ) );
+}
 
-// FIXME: Add logic
-int mbtowc( wchar_t* pwc, const char* str, size_t n ) {
-  // mark parameter as unused
-  ( void )pwc;
-  ( void )str;
-  ( void )n;
+void __attribute__(( optimize( "O0" ) )) barrier_data_sync( void ) {
+  asm volatile ( "mcr p15, #0, %[zero], c7, c10, #4" : : [ zero ] "r" ( 0 ) );
+}
 
-  #if defined( IS_KERNEL )
-    PANIC( "mbtowc not yet implemented!" );
-  #else
-    abort();
-  #endif
-
-  return -1;
+void __attribute__(( optimize( "O0" ) )) barrier_flush_cache( void ) {
+  asm volatile ( "mcr p15, #0, %[zero], c7, c14, #0" : : [ zero ] "r" ( 0 ) );
 }

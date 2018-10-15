@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-int strncmp( const char *str1, const char *str2, size_t n ) {
+int strncmp( const char* str1, const char* str2, size_t n ) {
   // mark parameter as unused
   ( void )str1;
   ( void )str2;

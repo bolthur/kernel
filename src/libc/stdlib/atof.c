@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-double atof( const char *str ) {
+double atof( const char* str ) {
   // mark parameter as unused
   ( void )str;
 

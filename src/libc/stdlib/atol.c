@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-long int atol( const char *str ) {
+long int atol( const char* str ) {
   // mark parameter as unused
   ( void )str;
 

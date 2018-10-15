@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-size_t fwrite( const void *ptr, size_t size, size_t nmemb, FILE *stream ) {
+size_t fwrite( const void* ptr, size_t size, size_t nmemb, FILE* stream ) {
   // mark parameter as unused
   ( void )ptr;
   ( void )size;

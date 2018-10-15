@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-int execve( const char *path, char* const argv[], char* const envp[] ) {
+int execve( const char* path, char* const argv[], char* const envp[] ) {
   // mark parameter as unused
   ( void )path;
   ( void )argv;

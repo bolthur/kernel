@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-char *strtok( char *str, const char *delim ) {
+char *strtok( char* str, const char* delim ) {
   // mark parameter as unused
   ( void )str;
   ( void )delim;

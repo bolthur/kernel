@@ -25,7 +25,7 @@
 #endif
 
 // FIXME: Add logic
-int fclose( FILE *stream ) {
+int fclose( FILE* stream ) {
   // mark parameter as unused
   ( void )stream;
 

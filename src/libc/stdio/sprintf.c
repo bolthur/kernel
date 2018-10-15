@@ -17,24 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #if defined( IS_KERNEL )
   #include <panic.h>
 #endif
 
-// FIXME: Add logic
-int mbtowc( wchar_t* pwc, const char* str, size_t n ) {
-  // mark parameter as unused
-  ( void )pwc;
-  ( void )str;
-  ( void )n;
+int sprintf( char* restrict str, const char* restrict format, ... ) {
+  va_list parameters;
+  int ret_val;
 
-  #if defined( IS_KERNEL )
-    PANIC( "mbtowc not yet implemented!" );
-  #else
-    abort();
-  #endif
-
-  return -1;
+  va_start( parameters, format );
+  ret_val = vsprintf( str, format, parameters );
+  va_end( parameters );
+  return ret_val;
 }

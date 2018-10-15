@@ -4,6 +4,8 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
 
 ## Things to be done
 
+* [ ] Group libraries within lib as parent directory, e.g. `lib/c` or `lib/avl`
+* [ ] Think and read about memory barriers for rpi
 * [ ] Add irq and isrs register handling
   * [x] Get irq with cpu mode switch and register dump working
   * [ ] Merge irq functions with isrs functions where possible

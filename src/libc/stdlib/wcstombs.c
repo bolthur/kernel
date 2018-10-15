@@ -24,7 +24,7 @@
 #endif
 
 // FIXME: Add logic
-size_t wcstombs( char *str, const wchar_t *pwcs, size_t n ) {
+size_t wcstombs( char* str, const wchar_t* pwcs, size_t n ) {
   // mark parameter as unused
   ( void )str;
   ( void )pwcs;
