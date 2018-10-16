@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Helper to stop all cpus except the first one during startup
 .global arch_cpu_reset
 arch_cpu_reset:
   // check for hypervisor mode and switch back to supervisor mode for rpi2 and rpi3

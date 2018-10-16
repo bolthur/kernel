@@ -24,7 +24,7 @@
 
 .global start
 start:
-  // reset multicore environment
+  // reset cpu depending on arch
   bl arch_cpu_reset
 
   #if defined(ELF32)
