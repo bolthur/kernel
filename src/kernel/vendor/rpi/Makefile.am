@@ -8,11 +8,14 @@ AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(
 
 noinst_LIBRARIES = librpi.a
 librpi_a_SOURCES = \
+  atag.c \
+  atag.h \
   gpio.h \
   irq.c \
   mailbox.c \
   mailbox.h \
   platform.c \
+  platform.h \
   peripheral.h \
   serial.c \
   start.S \
@@ -37,6 +40,7 @@ kernel_zwerg_LDFLAGS = \
   -Wl,-Map,kernel.map \
   -Wl,-u,Entry
 
+// FIXME: Add conditional copy by device
 kernel_img_SOURCES =
 kernel.img$(EXEEXT): ${top_builddir}/src/kernel/vendor/rpi/kernel.zwerg
 	$(MIST_OBJCOPY) --only-keep-debug ${top_builddir}/src/kernel/vendor/rpi/kernel.zwerg ${top_builddir}/src/kernel/vendor/rpi/kernel.sym

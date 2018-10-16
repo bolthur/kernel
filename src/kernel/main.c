@@ -45,9 +45,9 @@ void kernel_main() {
   );
 
   // FIXME: Find correct place if necessary
-  /*printf( "[mist-system/kernel -> platform] initialize ... " );
+  printf( "[mist-system/kernel -> platform] initialize ... " );
   platform_init();
-  printf( "done!\r\n" );*/
+  printf( "done!\r\n" );
 
   // Setup isrs
   printf( "[mist-system/kernel -> isrs] initialize ... " );

@@ -5,7 +5,7 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
 ## Things to be done
 
 * [ ] Group libraries within lib as parent directory, e.g. `lib/c` or `lib/avl`
-* [ ] Think and read about memory barriers for rpi
+* [x] Add memory barriers for arm
 * [ ] Add irq and isrs register handling
   * [x] Get irq with cpu mode switch and register dump working
   * [ ] Merge irq functions with isrs functions where possible
@@ -14,7 +14,7 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
   * [ ] Provide map of events for `irq`, `fiq`, `swi`
   * [ ] Fire events for `irq`, `fiq`, `swi`
 * [ ] Memory management
-  * [ ] Store physical memory map per vendor
+  * [ ] Gather rpi memory from mailbox ( store physical memory map generally per vendor )
   * [ ] Add physical memory management
   * [ ] Add virtual memory management
   * [ ] Add heap management
@@ -27,6 +27,10 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
   * [ ] Find better place for `serial_init` than `tty_init`
   * [ ] Finish debug launch.json when remote debugging is possible
 * [ ] Create a draft for build system with vendor driver/app packaging
+* [ ] Documentation ( man pages or markdown )
+  * [ ] Getting started after checkout
+  * [ ] Cross compiler toolchain
+  * [ ] Configuring target overview
 
 ## Building the project
 

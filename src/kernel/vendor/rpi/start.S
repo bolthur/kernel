@@ -17,6 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// forward declaration for save of parameter
+.extern boot_parameter_data
+
 .section .text.boot
 
 .global start
@@ -63,5 +66,16 @@ start:
     #error "No valid format set. Valid formats are ELF32 and ELF64"
   #endif
   blo .loop
+
+  // store boot parameters from r0 - r2 /  at data array ( only set on real device )
+  #if defined(ELF32)
+    ldr r4, =boot_parameter_data
+    stmia r4!, {r0-r2}
+  #elif defined(ELF64)
+    #error "ELF64 not yet supported!"
+  #else
+    #error "No valid format set. Valid formats are ELF32 and ELF64"
+  #endif
+
   // continue with arch related start
   b arch_start

@@ -17,22 +17,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// default includes
+#ifndef __KERNEL_VENDOR_RPI_PLATFORM__
+#define __KERNEL_VENDOR_RPI_PLATFORM__
+
 #include <stdint.h>
-#include <stdio.h>
 
-#include <vendor/rpi/atag.h>
-#include <vendor/rpi/platform.h>
+typedef struct {
+  uint32_t zero;
+  uint32_t machine;
+  uint32_t atag;
+} boot_parameter_data_t;
 
-boot_parameter_data_t boot_parameter_data;
-
-void platform_init( void ) {
-  printf( "0x%08x - 0x%08x - 0x%08x",
-    boot_parameter_data.zero,
-    boot_parameter_data.machine,
-    boot_parameter_data.atag );
-
-  atag_parse( boot_parameter_data.atag );
-  // FIXME: Load firmware revision, board model, board revision, board serial from mailbox
-  // FIXME: Load memory information from mailbox regarding arm and gpu and populate memory map
-}
+#endif
