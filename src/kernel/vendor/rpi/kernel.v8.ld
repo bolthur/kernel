@@ -28,8 +28,10 @@ GROUP(
   ../../libkernel.a
   ../libvendor.a
   librpi.a
-  ../../../libc/libc.a
   ../../../libavl/libavl.a
+  ../../../libc/libc.a
+  ../../../libfdt/libfdt.a
+  ../../../libtar/libtar.a
 )
 INPUT( libgcc.a )
 

@@ -3,8 +3,8 @@ SUBDIRS = .
 
 AUTOMAKE_OPTIONS = nostdinc subdir-objects
 
-AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/libc -I$(top_srcdir)/src/libavl
-AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/libc -I$(top_srcdir)/src/libavl
+AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/libc -I$(top_srcdir)/src/libavl -I$(top_srcdir)/src/libfdt -I$(top_srcdir)/src/libtar
+AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/libc -I$(top_srcdir)/src/libavl -I$(top_srcdir)/src/libfdt -I$(top_srcdir)/src/libtar
 
 noinst_LIBRARIES = librpi.a
 librpi_a_SOURCES = \
@@ -30,9 +30,10 @@ kernel_zwerg_DEPENDENCIES = \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/lib${arch_subdir}.a \
   ${top_builddir}/src/kernel/libkernel.a \
-  ${top_builddir}/src/libc/libc.a \
   ${top_builddir}/src/libavl/libavl.a \
-  ${top_builddir}/scripts/dtc/libfdt/libfdt.a
+  ${top_builddir}/src/libc/libc.a \
+  ${top_builddir}/src/libfdt/libfdt.a \
+  ${top_builddir}/src/libtar/libtar.a
 
 kernel_zwerg_LDFLAGS = \
   -T $(top_srcdir)/src/kernel/vendor/rpi/kernel.${subarch_subdir}.ld \

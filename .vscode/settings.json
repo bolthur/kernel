@@ -19,7 +19,9 @@
     "__locale": "c",
     "array": "c",
     "iterator": "c",
-    "vector": "c"
+    "vector": "c",
+    "typeindex": "c",
+    "typeinfo": "c"
   },
   "editor.tabSize": 2,
   "editor.renderWhitespace": "all",

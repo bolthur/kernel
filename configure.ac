@@ -1,7 +1,7 @@
 
 AC_PREREQ(2.57)
 AC_INIT([myst-system-kernel], [0.1], [bug-kernel@myst-system.org])
-AC_COPYRIGHT(copyright 2018 mist system)
+AC_COPYRIGHT(copyright 2017 - 2018 mist system)
 
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_AUX_DIR([config])
@@ -139,9 +139,10 @@ AC_CONFIG_FILES([
   src/kernel/vendor/n8x0/Makefile
   src/kernel/vendor/n900/Makefile
   src/kernel/vendor/rpi/Makefile
-  src/libc/Makefile
   src/libavl/Makefile
-  scripts/dtc/libfdt/Makefile
+  src/libc/Makefile
+  src/libfdt/Makefile
+  src/libtar/Makefile
 ])
 
 AC_OUTPUT

@@ -4,19 +4,21 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
 
 ## Things to be done
 
-* [ ] Group libraries within lib as parent directory, e.g. `lib/c` or `lib/avl`
-* [x] Add memory barriers for arm
-* [ ] ATAG/Device tree
-  * [ ] Add parse of atag
+* [x] Add memory barriers for arm necessary for e.g. mailbox on rpi
+* [ ] Libraries
+  * [ ] libfdt
+  * [ ] libavl
+* [ ] Device tree
+  * [ ] Remove atag parsing
   * [ ] Add parse of device tree
-  * [ ] Dynamically switch between device tree and atag
+  * [ ] Panic, when there is no device tree
 * [ ] Add irq and isrs register handling
   * [x] Get irq with cpu mode switch and register dump working
   * [ ] Merge irq functions with isrs functions where possible
   * [ ] Prohibit mapping of interrupt routines
-* [ ] Add event system with `register` and `unregister`
-  * [ ] Provide map of events for `irq`, `fiq`, `swi`
-  * [ ] Fire events for `irq`, `fiq`, `swi`
+  * [ ] Add event system with `register` and `unregister`
+    * [ ] Provide map of events for `irq`, `fiq`, `swi`
+    * [ ] Fire events for `irq`, `fiq`, `swi`
 * [ ] Memory management
   * [ ] Gather rpi memory from mailbox ( store physical memory map generally per vendor )
   * [ ] Add physical memory management
@@ -24,8 +26,10 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
   * [ ] Add heap management
   * [ ] Consider peripherals per board within mmu as not cachable
   * [ ] Enable CPU caches
+* [ ] initrd and vfs
+  * [ ] Add parse of some custom initrd.tar
+  * [ ] Add virtual file system for initrd
 * [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
-* [ ] Provide kernel implementation for `libavl`
 * [ ] Add gdb stub for debugging on remote device via serial port
   * [ ] Use dynamic memory allocation
   * [ ] Find better place for `serial_init` than `tty_init`
