@@ -1,0 +1,29 @@
+[none]
+# Enable for 64bit systems like rpi2 rev 2
+arm_64bit=1
+
+[pi3]
+# Necessary pi 3 and pi 3+ configurations to get uart like on before
+dtoverlay=pi3-disable-bt
+# Enable for 64bit systems like rpi2 rev 2 or rpi3
+arm_64bit=1
+
+[pi0]
+# Necessary pi zero and pi zero w configurations to get uart like before
+dtoverlay=pi3-disable-bt
+
+[all]
+# uart init
+init_uart_baud=115200
+init_uart_clock=3000000
+
+# set kernel to load ( commented out due to correct build )
+# kernel=kernel7.img
+
+# disable device tree to use atags if wanted
+device_tree=
+
+# Set gpu memory
+gpu_mem_256=64
+gpu_mem_512=64
+gpu_mem_1024=64

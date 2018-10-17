@@ -20,17 +20,10 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include <vendor/rpi/atag.h>
+#include <arch/arm/atag.h>
 
 void atag_parse( uint32_t addr ) {
-  atag_t *current;
-
-  // start at atag address
-  if ( addr != 0 ) {
-    current = ( atag_t* )addr;
-  } else {
-    current = ( atag_t* )ATAG_ADDR;
-  }
+  atag_t *current = ( atag_t* )addr;
 
   printf( "\r\n" );
 

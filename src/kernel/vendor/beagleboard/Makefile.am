@@ -19,7 +19,8 @@ kernel_zwerg_DEPENDENCIES = \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/lib${arch_subdir}.a \
   ${top_builddir}/src/kernel/libkernel.a \
   ${top_builddir}/src/libc/libc.a \
-  ${top_builddir}/src/libavl/libavl.a
+  ${top_builddir}/src/libavl/libavl.a \
+  ${top_builddir}/scripts/dtc/libfdt/libfdt.a
 
 kernel_zwerg_LDFLAGS = \
   -T $(top_srcdir)/src/kernel/vendor/rpi/kernel.${subarch_subdir}.ld \

@@ -17,12 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_VENDOR_RPI_ATAG__
-#define __KERNEL_VENDOR_RPI_ATAG__
+#ifndef __KERNEL_ARCH_ARM_ATAG__
+#define __KERNEL_ARCH_ARM_ATAG__
 
 #include <stdint.h>
-
-#define ATAG_ADDR 0x00000100
 
 #define ATAG_NONE 0x00000000
 #define ATAG_CORE 0x54410001

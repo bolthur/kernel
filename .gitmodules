@@ -1,0 +1,3 @@
+[submodule "scripts/dtc"]
+	path = scripts/dtc
+	url = ssh://git@git.code0.xyz:222/mist/dtc.git

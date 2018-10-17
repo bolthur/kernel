@@ -8,8 +8,6 @@ AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(
 
 noinst_LIBRARIES = librpi.a
 librpi_a_SOURCES = \
-  atag.c \
-  atag.h \
   gpio.h \
   irq.c \
   mailbox.c \
@@ -33,16 +31,16 @@ kernel_zwerg_DEPENDENCIES = \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/lib${arch_subdir}.a \
   ${top_builddir}/src/kernel/libkernel.a \
   ${top_builddir}/src/libc/libc.a \
-  ${top_builddir}/src/libavl/libavl.a
+  ${top_builddir}/src/libavl/libavl.a \
+  ${top_builddir}/scripts/dtc/libfdt/libfdt.a
 
 kernel_zwerg_LDFLAGS = \
   -T $(top_srcdir)/src/kernel/vendor/rpi/kernel.${subarch_subdir}.ld \
   -Wl,-Map,kernel.map \
   -Wl,-u,Entry
 
-// FIXME: Add conditional copy by device
 kernel_img_SOURCES =
 kernel.img$(EXEEXT): ${top_builddir}/src/kernel/vendor/rpi/kernel.zwerg
-	$(MIST_OBJCOPY) --only-keep-debug ${top_builddir}/src/kernel/vendor/rpi/kernel.zwerg ${top_builddir}/src/kernel/vendor/rpi/kernel.sym
+	$(MIST_OBJCOPY) --only-keep-debug ${top_builddir}/src/kernel/vendor/rpi/kernel.zwerg ${top_builddir}/src/kernel/vendor/rpi/${output_name}.sym
 	$(MIST_OBJCOPY) --strip-debug ${top_builddir}/src/kernel/vendor/rpi/kernel.zwerg
-	$(MIST_OBJCOPY) ${top_builddir}/src/kernel/vendor/rpi/kernel.zwerg -O binary ${top_builddir}/src/kernel/vendor/rpi/kernel.img
+	$(MIST_OBJCOPY) ${top_builddir}/src/kernel/vendor/rpi/kernel.zwerg -O binary ${top_builddir}/src/kernel/vendor/rpi/${output_name}.img

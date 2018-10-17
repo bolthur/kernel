@@ -141,6 +141,7 @@ AC_CONFIG_FILES([
   src/kernel/vendor/rpi/Makefile
   src/libc/Makefile
   src/libavl/Makefile
+  scripts/dtc/libfdt/Makefile
 ])
 
 AC_OUTPUT

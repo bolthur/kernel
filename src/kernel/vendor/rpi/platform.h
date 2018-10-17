@@ -22,6 +22,8 @@
 
 #include <stdint.h>
 
+#define PLATFORM_ATAG_FALLBACK_ADDR 0x00000100
+
 typedef struct {
   uint32_t zero;
   uint32_t machine;

@@ -21,7 +21,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <vendor/rpi/atag.h>
+// #include <libfdt.h>
+#include <arch/arm/atag.h>
 #include <vendor/rpi/platform.h>
 
 boot_parameter_data_t boot_parameter_data;
@@ -32,7 +33,14 @@ void platform_init( void ) {
     boot_parameter_data.machine,
     boot_parameter_data.atag );
 
-  atag_parse( boot_parameter_data.atag );
+  // check first fdt
+  // fdt_check_header( (void*)0 );
+
+  atag_parse(
+    0 != boot_parameter_data.atag
+      ? boot_parameter_data.atag
+      : PLATFORM_ATAG_FALLBACK_ADDR
+  );
   // FIXME: Load firmware revision, board model, board revision, board serial from mailbox
   // FIXME: Load memory information from mailbox regarding arm and gpu and populate memory map
 }

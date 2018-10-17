@@ -1,7 +1,0 @@
-init_uart_baud=115200
-init_uart_clock=3000000
-kernel=kernel7.img
-device_tree=
-gpu_mem_256
-gpu_mem_512
-gpu_mem_1024
