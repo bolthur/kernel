@@ -26,7 +26,12 @@
 extern "C" {
 #endif
 
-// FIXME: TODO!
+uint8_t uint8_little_to_big( const void* );
+uint16_t uint16_little_to_big( const void* );
+uint32_t uint32_little_to_big( const void* );
+uint64_t uint64_little_to_big( const void* );
+float float_little_to_big( const void* );
+double double_little_to_big( const void* );
 
 #if defined( __cplusplus )
 }

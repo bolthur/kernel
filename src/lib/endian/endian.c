@@ -17,4 +17,60 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+
 #include "endian.h"
+
+static void swap_bytes( const void *src, size_t n ) {
+  if ( 0 >= n ) {
+    return;
+  }
+
+  char *p = ( char* )src;
+  size_t low, high;
+
+  for ( low = 0, high = n - 1; high > low; low++, high-- ) {
+    char tmp = p[ low ];
+    p[ low ] = p[ high ];
+    p[ high ] = tmp;
+  }
+}
+
+uint8_t uint8_little_to_big( const void* src ) {
+  return *( uint8_t* )src;
+}
+
+uint16_t uint16_little_to_big( const void* src ) {
+  uint16_t val;
+  memcpy( &val, src, sizeof( uint16_t ) );
+  swap_bytes( &val, sizeof( uint16_t ) );
+  return val;
+}
+
+uint32_t uint32_little_to_big( const void* src ) {
+  uint32_t val;
+  memcpy( &val, src, sizeof( uint32_t ) );
+  swap_bytes( &val, sizeof( uint32_t ) );
+  return val;
+}
+
+uint64_t uint64_little_to_big( const void* src ) {
+  uint64_t val;
+  memcpy( &val, src, sizeof( uint64_t ) );
+  swap_bytes( &val, sizeof( uint64_t ) );
+  return val;
+}
+
+float float_little_to_big( const void* src ) {
+  float val;
+  memcpy( &val, src, sizeof( float ) );
+  swap_bytes( &val, sizeof( float ) );
+  return val;
+}
+
+double double_little_to_big( const void* src ) {
+  double val;
+  memcpy( &val, src, sizeof( double ) );
+  swap_bytes( &val, sizeof( double ) );
+  return val;
+}

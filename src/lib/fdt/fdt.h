@@ -24,6 +24,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+#include <endian.h>
+
 #define FDT_MAGIC 0xd00dfeed
 
 #define FDT_BEGIN_NODE 0x00000001
@@ -31,6 +33,17 @@
 #define FDT_PROP_NODE 0x00000003
 #define FDT_NOP 0x00000004
 #define FDT_END 0x00000009
+
+#define FDT_MIN_VERSION 0x02
+#define FDT_MAX_VERSION 0x11
+
+#define GET_HEADER_FIELD( address, attribute ) \
+  __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__ \
+    ? uint32_little_to_big( &( ( fdt_header_t* )address )->attribute ) \
+    : ( __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__ \
+      ? ( ( fdt_header_t* )address )->attribute \
+      : -1 \
+    );
 
 #if defined( __cplusplus )
 extern "C" {

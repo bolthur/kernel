@@ -20,43 +20,73 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
+#include <limits.h>
+
+#include <endian.h>
 
 #include "fdt.h"
 
-bool fdt_check_header( const void* address ) {
-  // size_t header_size;
-  fdt_header_t *header = ( fdt_header_t* )address;
+static inline uint32_t fdt_header_size( uint32_t version ) {
+  uint32_t size = 7 * sizeof( uint32_t );
 
-  printf( "0x%08x\r\n", header->magic );
+  if ( version > 1 && version <= 2 ) {
+    size += sizeof( uint32_t );
+  }
+
+  if (
+    version > 2
+    && (
+      version <= 3
+      || version <= 16
+    )
+  ) {
+    size += sizeof( uint32_t );
+  }
+
+  if ( version > 16 ) {
+    size += sizeof( uint32_t );
+  }
+
+  return size;
+}
+
+bool fdt_check_header( const void* address ) {
   // check magic number
-  if ( FDT_MAGIC != header->magic ) {
+  uint32_t magic = GET_HEADER_FIELD( address, magic );
+  uint32_t version = GET_HEADER_FIELD( address, version );
+  uint32_t totalsize = GET_HEADER_FIELD( address, totalsize );
+  uint32_t last_comp_version = GET_HEADER_FIELD( address, last_comp_version );
+  uint32_t header_size = fdt_header_size( version );
+
+  // check magic
+  if ( FDT_MAGIC != magic ) {
     return false;
   }
 
-  // FIXME: determine header size
-  // FIXME: Check version
+  // Check version
+  if (
+    version < FDT_MIN_VERSION
+    || last_comp_version > FDT_MAX_VERSION
+    || version < last_comp_version
+  ) {
+    return false;
+  }
 
-  // FIXME: Check total size to be greater than header size
-  // FIXME: Check for total size smaller than max integer
+  // Check total size to be greater than header size
+  if ( totalsize < header_size ) {
+    return false;
+  }
+
+  // Check for total size smaller than max integer
+  if ( totalsize > INT_MAX ) {
+    return false;
+  }
 
   // FIXME: Check bounds of off_mem_rsvmap block
   // FIXME: Check bounds of off_dt_struct block
   // FIXME: Check bounds of off_dt_strings block
 
   return true;
-
-/*	if (fdt_magic(fdt) != FDT_MAGIC)
-		return -FDT_ERR_BADMAGIC;
-	hdrsize = fdt_header_size(fdt);
-	if ((fdt_version(fdt) < FDT_FIRST_SUPPORTED_VERSION)
-	    || (fdt_last_comp_version(fdt) > FDT_LAST_SUPPORTED_VERSION))
-		return -FDT_ERR_BADVERSION;
-	if (fdt_version(fdt) < fdt_last_comp_version(fdt))
-		return -FDT_ERR_BADVERSION;
-
-	if ((fdt_totalsize(fdt) < hdrsize)
-	    || (fdt_totalsize(fdt) > INT_MAX))
-		return -FDT_ERR_TRUNCATED;*/
 
 	/* Bounds check memrsv block */
 	/*if (!check_off_(hdrsize, fdt_totalsize(fdt), fdt_off_mem_rsvmap(fdt)))
