@@ -28,10 +28,10 @@ GROUP(
   ../../libkernel.a
   ../libvendor.a
   librpi.a
-  ../../../libavl/libavl.a
-  ../../../libc/libc.a
-  ../../../libfdt/libfdt.a
-  ../../../libtar/libtar.a
+  ../../../lib/avl/libavl.a
+  ../../../lib/stdc/libstdc.a
+  ../../../lib/fdt/libfdt.a
+  ../../../lib/tar/libtar.a
 )
 INPUT( libgcc.a )
 
@@ -64,11 +64,11 @@ SECTIONS {
     *(.bugtable)
     __bug_end = . ;
   }
-  __kernel_end = .;
 
-  /DISCARD/ : {
-    *(.comment*)
-    *(.ARM*)
-    *(.note*)
+  .ARM.exidx BLOCK( 4K ): ALIGN( 4K ) {
+    __exidx_start = .;
+    *(.ARM.exidx*)
+    __exidx_end = .;
   }
+  __kernel_end = .;
 }

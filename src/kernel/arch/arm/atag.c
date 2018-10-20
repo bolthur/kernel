@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#include <panic.h>
 #include <arch/arm/atag.h>
 
 void atag_parse( uint32_t addr ) {
@@ -73,11 +74,35 @@ void atag_parse( uint32_t addr ) {
       case ATAG_CMDLINE:
         printf( "cmdline: %s", &current->cmdline.line[ 0 ] );
         break;
+
+      default:
+        PANIC( "Unknown tag" );
     }
 
     // next atag
     current = atag_next( current );
   }
+}
+
+bool atag_check( const void* addr ) {
+  // access atag at memory
+  atag_t *current = ( atag_t* )addr;
+  bool valid = false;
+
+  // loop through until first valid atag
+  while( current ) {
+    // found an atag? => set flag and break loop
+    if ( ATAG_NONE != current->tag ) {
+      valid = true;
+      break;
+    }
+
+    // next atag
+    current = atag_next( current );
+  }
+
+  // return state
+  return valid;
 }
 
 atag_t *atag_next( const atag_t *current ) {

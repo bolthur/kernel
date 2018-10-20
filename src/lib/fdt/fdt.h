@@ -21,8 +21,10 @@
 #define __LIBFDT__
 
 #include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 
-#define FDT_MAGIC 0xd00dfeed;
+#define FDT_MAGIC 0xd00dfeed
 
 #define FDT_BEGIN_NODE 0x00000001
 #define FDT_END_NODE 0x00000002
@@ -58,6 +60,8 @@ typedef struct {
   uint32_t nameoff;
   char data[];
 } fdt_property_t;
+
+bool fdt_check_header( const void* );
 
 #if defined( __cplusplus )
 }

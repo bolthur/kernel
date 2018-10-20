@@ -139,10 +139,11 @@ AC_CONFIG_FILES([
   src/kernel/vendor/n8x0/Makefile
   src/kernel/vendor/n900/Makefile
   src/kernel/vendor/rpi/Makefile
-  src/libavl/Makefile
-  src/libc/Makefile
-  src/libfdt/Makefile
-  src/libtar/Makefile
+  src/lib/Makefile
+  src/lib/avl/Makefile
+  src/lib/stdc/Makefile
+  src/lib/fdt/Makefile
+  src/lib/tar/Makefile
 ])
 
 AC_OUTPUT

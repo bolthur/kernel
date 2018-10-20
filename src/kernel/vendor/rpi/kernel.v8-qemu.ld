@@ -17,13 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-OUTPUT_FORMAT( elf32-littlearm )
+OUTPUT_FORMAT( elf64-littleaarch64 )
 OUTPUT_ARCH( arm )
 
 ENTRY( start )
 
 GROUP(
-  ../../arch/arm/v6/libv6.a
+  ../../arch/arm/v8/libv8.a
   ../../arch/arm/libarm.a
   ../../libkernel.a
   ../libvendor.a
@@ -36,7 +36,7 @@ GROUP(
 INPUT( libgcc.a )
 
 SECTIONS {
-  . = 0x8000;
+  . = 0x10000;
   __kernel_start = .;
 
   .text BLOCK( 4K ): ALIGN( 4K ) {

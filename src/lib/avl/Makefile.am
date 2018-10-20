@@ -1,25 +1,10 @@
 
-SUBDIRS = . arch vendor
-AUTOMAKE_OPTIONS = nostdinc
+AUTOMAKE_OPTIONS = nostdinc subdir-objects
 
 AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/lib/stdc -I$(top_srcdir)/src/lib/avl -I$(top_srcdir)/src/lib/fdt -I$(top_srcdir)/src/lib/tar
 AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/lib/stdc -I$(top_srcdir)/src/lib/avl -I$(top_srcdir)/src/lib/fdt -I$(top_srcdir)/src/lib/tar
 
-noinst_LIBRARIES = libkernel.a
-libkernel_a_SOURCES = \
-  barrier.h \
-  debug.c \
-  debug.h \
-  event.c \
-  event.h \
-  irq.h \
-  irq.c \
-  isrs.c \
-  isrs.h \
-  main.c \
-  panic.c \
-  panic.h \
-  platform.h \
-  serial.h \
-  timer.h \
-  tty.h
+noinst_LIBRARIES = libavl.a
+libavl_a_SOURCES = \
+  libavl.c \
+  libavl.h

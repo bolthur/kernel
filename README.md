@@ -5,9 +5,12 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
 ## Things to be done
 
 * [x] Add memory barriers for arm necessary for e.g. mailbox on rpi
+* [ ] Rework recursive autotools behaviour to non recursive
 * [ ] Libraries
-  * [ ] libfdt
-  * [ ] libavl
+  * [ ] Think about merge of compiler library `libgcc.a` and local `libstdc.a`
+  * [ ] `libfdt.a`
+  * [ ] `libavl.a`
+  * [ ] `libtar.a`
 * [ ] Device tree
   * [ ] Remove atag parsing
   * [ ] Add parse of device tree
@@ -118,13 +121,13 @@ Emulation of the kernel project with qemu during development may be done at all 
 
 ```bash
 # raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -m 1024 -M raspi2 -cpu cortex-a7 -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel.zwerg
+qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel_qemu -dtb ../src/kernel/vendor/rpi/device/bcm2709-rpi-2-b.dtb
 
-# raspberry pi 2B rev 2 kernel emulation
-qemu-system-aarch64 -m 1024 -M raspi2 -cpu cortex-a53 -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel.zwerg
+# raspberry pi 2B rev 2 kernel emulation ( to be tested )
+qemu-system-aarch64 -m 1024 -M raspi2 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel_qemu -dtb ../src/kernel/vendor/rpi/device/bcm2709-rpi-2-b.dtb
 
 # raspberry pi 3B and 3B+ kernel emulation
-qemu-system-aarch64 -m 1024 -M raspi2 -cpu cortex-a53 -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel.zwerg
+qemu-system-aarch64 -m 1024 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel_qemu -dtb ../src/kernel/vendor/rpi/device/bcm2710-rpi-3-b.dtb
 ```
 
 ## Planned support

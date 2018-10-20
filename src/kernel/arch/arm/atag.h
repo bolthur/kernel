@@ -21,6 +21,7 @@
 #define __KERNEL_ARCH_ARM_ATAG__
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define ATAG_NONE 0x00000000
 #define ATAG_CORE 0x54410001
@@ -115,6 +116,7 @@ typedef struct {
 } atag_t;
 
 void atag_parse( uint32_t );
+bool atag_check( const void* );
 atag_t *atag_next( const atag_t* );
 
 #endif

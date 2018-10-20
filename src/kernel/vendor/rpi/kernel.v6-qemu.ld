@@ -36,7 +36,7 @@ GROUP(
 INPUT( libgcc.a )
 
 SECTIONS {
-  . = 0x8000;
+  . = 0x10000;
   __kernel_start = .;
 
   .text BLOCK( 4K ): ALIGN( 4K ) {

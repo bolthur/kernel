@@ -24,10 +24,18 @@
 
 #define PLATFORM_ATAG_FALLBACK_ADDR 0x00000100
 
+enum {
+  PLATFORM_USE_SOURCE_NONE = 0,
+  PLATFORM_USE_SOURCE_ATAG_V1,
+  PLATFORM_USE_SOURCE_ATAG_V2,
+  PLATFORM_USE_SOURCE_DEVICE_TREE_V1,
+  PLATFORM_USE_SOURCE_DEVICE_TREE_V2
+};
+
 typedef struct {
   uint32_t zero;
   uint32_t machine;
   uint32_t atag;
-} boot_parameter_data_t;
+} platform_boot_parameter_t;
 
 #endif

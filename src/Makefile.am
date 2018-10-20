@@ -1,2 +1,2 @@
 
-SUBDIRS = libc libavl libfdt libtar kernel
+SUBDIRS = lib kernel

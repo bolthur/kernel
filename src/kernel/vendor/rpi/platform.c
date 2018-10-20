@@ -21,21 +21,59 @@
 #include <stdint.h>
 #include <stdio.h>
 
-// #include <libfdt.h>
+#include <fdt.h>
+
+#include <panic.h>
 #include <arch/arm/atag.h>
 #include <vendor/rpi/platform.h>
 
-boot_parameter_data_t boot_parameter_data;
+platform_boot_parameter_t boot_parameter_data;
 
+// FIXME: Drop atag check and rely on device tree
 void platform_init( void ) {
-  printf( "0x%08x - 0x%08x - 0x%08x",
+  printf( "\r\n0x%08x - 0x%08x - 0x%08x\r\n",
     boot_parameter_data.zero,
     boot_parameter_data.machine,
     boot_parameter_data.atag );
 
-  // FIXME: Check for device tree at address 0
+  // atag address passed to kernel ( may be zero on newer
+  // firmware, so we set to fallback in that case )
+  uint32_t atag_address = 0 == boot_parameter_data.atag
+    ? PLATFORM_ATAG_FALLBACK_ADDR
+    : boot_parameter_data.atag;
+
+  uint32_t source_type = PLATFORM_USE_SOURCE_NONE;
+  intptr_t source_address = -1;
+
   // FIXME: Check for device tree at atag address
+  // FIXME: Check for device tree at address 0
+  // FIXME: Check for atags at atag address
+  // FIXME: Check for atags at address 0
   // FIXME: Panic, when there is no device tree
+
+  // Check for device tree at address 0
+  if ( fdt_check_header( ( const void* )0 ) ) {
+    source_type = PLATFORM_USE_SOURCE_DEVICE_TREE_V1;
+    printf( "device tree1\r\n" );
+  // check for atag at passed address
+  } else if ( fdt_check_header( ( const void* )atag_address ) ) {
+    source_type = PLATFORM_USE_SOURCE_DEVICE_TREE_V2;
+    source_address = atag_address;
+    printf( "device tree2\r\n" );
+  // Check for atag at address 0
+  } else if ( atag_check( ( const void* )0 ) ) {
+    source_type = PLATFORM_USE_SOURCE_ATAG_V1;
+    printf( "atag1\r\n" );
+  // check for atag at passed address
+  } else if ( atag_check( ( const void* )atag_address ) ) {
+    source_type = PLATFORM_USE_SOURCE_ATAG_V2;
+    source_address = atag_address;
+    printf( "atag2\r\n" );
+  }
+
+  // assert platform source and address
+  ASSERT( PLATFORM_USE_SOURCE_NONE != source_type );
+  ASSERT( -1 != source_address );
 
   atag_parse(
     0 != boot_parameter_data.atag
