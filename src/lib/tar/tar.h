@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIBFDT__
-#define __LIBFDT__
+#ifndef __LIBTAR__
+#define __LIBTAR__
 
 #include <stdint.h>
 

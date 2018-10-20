@@ -141,8 +141,9 @@ AC_CONFIG_FILES([
   src/kernel/vendor/rpi/Makefile
   src/lib/Makefile
   src/lib/avl/Makefile
-  src/lib/stdc/Makefile
+  src/lib/endian/Makefile
   src/lib/fdt/Makefile
+  src/lib/stdc/Makefile
   src/lib/tar/Makefile
 ])
 

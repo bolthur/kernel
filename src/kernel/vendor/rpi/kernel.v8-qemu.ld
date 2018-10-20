@@ -29,6 +29,7 @@ GROUP(
   ../libvendor.a
   librpi.a
   ../../../lib/avl/libavl.a
+  ../../../lib/endian/libendian.a
   ../../../lib/stdc/libstdc.a
   ../../../lib/fdt/libfdt.a
   ../../../lib/tar/libtar.a

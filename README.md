@@ -11,6 +11,7 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
   * [ ] `libfdt.a`
   * [ ] `libavl.a`
   * [ ] `libtar.a`
+  * [ ] Add generic library for atag parsing
 * [ ] Device tree
   * [ ] Remove atag parsing
   * [ ] Add parse of device tree

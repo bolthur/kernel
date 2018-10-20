@@ -17,23 +17,4 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-
-#include "tar.h"
-
-uint32_t tar_get_size( const char* in ) {
-  uint32_t size = -1;
-
-  // calculate size
-  for (
-    uint32_t loop = 11,
-    count = 1;
-    loop > 0;
-    loop--, count *= 8
-  ) {
-    size += ( ( in[ loop - 1 ] - '0' ) * count );
-  }
-
-  // return calculated
-  return size;
-}
+#include "endian.h"

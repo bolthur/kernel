@@ -21,17 +21,15 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <fdt.h>
+#include "fdt.h"
 
 bool fdt_check_header( const void* address ) {
   // size_t header_size;
-  fdt_header_t header;
+  fdt_header_t *header = ( fdt_header_t* )address;
 
-  // get header
-  memcpy( &header, address, sizeof( header ) );
-
+  printf( "0x%08x\r\n", header->magic );
   // check magic number
-  if ( FDT_MAGIC != header.magic ) {
+  if ( FDT_MAGIC != header->magic ) {
     return false;
   }
 

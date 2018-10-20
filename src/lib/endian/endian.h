@@ -17,23 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef __LIBENDIAN__
+#define __LIBENDIAN__
+
 #include <stdint.h>
 
-#include "tar.h"
+#if defined( __cplusplus )
+extern "C" {
+#endif
 
-uint32_t tar_get_size( const char* in ) {
-  uint32_t size = -1;
+// FIXME: TODO!
 
-  // calculate size
-  for (
-    uint32_t loop = 11,
-    count = 1;
-    loop > 0;
-    loop--, count *= 8
-  ) {
-    size += ( ( in[ loop - 1 ] - '0' ) * count );
-  }
-
-  // return calculated
-  return size;
+#if defined( __cplusplus )
 }
+#endif
+
+#endif
