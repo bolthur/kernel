@@ -17,24 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIBENDIAN__
-#define __LIBENDIAN__
+#include <arch/arm/fdt.h>
 
-#include <stdint.h>
-
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
-uint8_t uint8_little_to_big( const void* );
-uint16_t uint16_little_to_big( const void* );
-uint32_t uint32_little_to_big( const void* );
-uint64_t uint64_little_to_big( const void* );
-float float_little_to_big( const void* );
-double double_little_to_big( const void* );
-
-#if defined( __cplusplus )
+void fdt_parse( const void* address ) {
+  ( void )address;
 }
-#endif
-
-#endif

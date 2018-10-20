@@ -115,7 +115,7 @@ typedef struct {
   };
 } atag_t;
 
-void atag_parse( uint32_t );
+void atag_parse( const void* );
 bool atag_check( const void* );
 atag_t *atag_next( const atag_t* );
 

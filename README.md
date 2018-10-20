@@ -8,7 +8,6 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
 * [ ] Rework recursive autotools behaviour to non recursive
 * [ ] Libraries
   * [ ] Think about merge of compiler library `libgcc.a` and local `libstdc.a`
-  * [ ] `libfdt.a`
   * [ ] `libavl.a`
   * [ ] `libtar.a`
   * [ ] Add generic library for atag parsing
@@ -80,8 +79,6 @@ cd build
 ../configure --host arm-none-eabi --enable-device=rpi_zero --enable-debug --enable-kernel-print
 ../configure --host arm-none-eabi --enable-device=rpi_zero_w --enable-debug --enable-kernel-print
 ../configure --host arm-none-eabi --enable-device=beagleboard --enable-debug --enable-kernel-print
-../configure --host arm-none-eabi --enable-device=n8x0 --enable-debug --enable-kernel-print
-../configure --host arm-none-eabi --enable-device=n900 --enable-debug --enable-kernel-print
 ```
 
 ### Building
@@ -155,13 +152,13 @@ Currently the following targets are planned to be supported:
 
 ### Texas Instruments OMAP SoC
 
-* armv6 ( 32 bit - OMAP 2420 )
-  * nokia n800
-  * nokia n810
+* ~~armv6 ( 32 bit - OMAP 2420 )~~
+  * ~~nokia n800~~
+  * ~~nokia n810~~
 
 * armv7-a ( 32 bit - OMAP3530 )
   * beagle board
-  * nokia n900
+  * ~~nokia n900~~
 
 ## List of real hardware for testing
 

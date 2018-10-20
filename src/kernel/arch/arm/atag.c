@@ -23,7 +23,7 @@
 #include <panic.h>
 #include <arch/arm/atag.h>
 
-void atag_parse( uint32_t addr ) {
+void atag_parse( const void *addr ) {
   atag_t *current = ( atag_t* )addr;
 
   printf( "\r\n" );

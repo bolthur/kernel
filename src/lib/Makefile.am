@@ -1,2 +1,2 @@
 
-SUBDIRS = stdc avl endian fdt tar
+SUBDIRS = stdc avl tar

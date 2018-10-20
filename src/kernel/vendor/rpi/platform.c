@@ -21,10 +21,17 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <fdt.h>
+// external libraries
+#include <libfdt.h>
 
+// kernel related
 #include <panic.h>
+
+// arch related
 #include <arch/arm/atag.h>
+#include <arch/arm/fdt.h>
+
+// platform related
 #include <vendor/rpi/platform.h>
 
 platform_boot_parameter_t boot_parameter_data;
@@ -45,15 +52,10 @@ void platform_init( void ) {
   uint32_t source_type = PLATFORM_USE_SOURCE_NONE;
   intptr_t source_address = -1;
 
-  // FIXME: Check for device tree at atag address
-  // FIXME: Check for device tree at address 0
-  // FIXME: Check for atags at atag address
-  // FIXME: Check for atags at address 0
-  // FIXME: Panic, when there is no device tree
-
   // Check for device tree at address 0
   if ( fdt_check_header( ( const void* )0 ) ) {
     source_type = PLATFORM_USE_SOURCE_DEVICE_TREE_V1;
+    source_address = 0;
     printf( "device tree1\r\n" );
   // check for atag at passed address
   } else if ( fdt_check_header( ( const void* )atag_address ) ) {
@@ -63,6 +65,7 @@ void platform_init( void ) {
   // Check for atag at address 0
   } else if ( atag_check( ( const void* )0 ) ) {
     source_type = PLATFORM_USE_SOURCE_ATAG_V1;
+    source_address = 0;
     printf( "atag1\r\n" );
   // check for atag at passed address
   } else if ( atag_check( ( const void* )atag_address ) ) {
@@ -75,11 +78,19 @@ void platform_init( void ) {
   ASSERT( PLATFORM_USE_SOURCE_NONE != source_type );
   ASSERT( -1 != source_address );
 
-  atag_parse(
-    0 != boot_parameter_data.atag
-      ? boot_parameter_data.atag
-      : PLATFORM_ATAG_FALLBACK_ADDR
-  );
+  // parse atag/device tree
+  switch ( source_type ) {
+    case PLATFORM_USE_SOURCE_ATAG_V1:
+    case PLATFORM_USE_SOURCE_ATAG_V2:
+      atag_parse( ( const void* )source_address );
+      break;
+
+    case PLATFORM_USE_SOURCE_DEVICE_TREE_V1:
+    case PLATFORM_USE_SOURCE_DEVICE_TREE_V2:
+      fdt_parse( ( const void* )source_address );
+      break;
+  }
+
   // FIXME: Load firmware revision, board model, board revision, board serial from mailbox
   // FIXME: Load memory information from mailbox regarding arm and gpu and populate memory map
 }

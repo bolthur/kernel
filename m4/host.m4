@@ -25,6 +25,7 @@ AC_DEFUN([MIST_SET_HOST], [
     copy_flags="-I ${host_bfd} -O ${host_bfd}"
     output_img=kernel.img
     output_sym=kernel.sym
+    cflags_libfdt="-nostdlib -nostartfiles -ffreestanding -Wall -Wextra -Wshadow -std=gnu99 -I. -I./../../src/lib/stdc/ -Wno-error"
     AC_DEFINE([ARCH_ARM], [1], [Define to 1 for ARM targets.])
     AC_DEFINE([ELF32], [1])
 
@@ -40,6 +41,7 @@ AC_DEFUN([MIST_SET_HOST], [
       ;;
     rpi1_a_plus)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
+      cflags_libfdt="${cflags_libfdt} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=rpi
       AC_DEFINE([PLATFORM_RPI1_A_PLUS], [1], [Define to 1 for raspberry pi 1 A+ platform.])
@@ -49,6 +51,7 @@ AC_DEFUN([MIST_SET_HOST], [
       ;;
     rpi1_b)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
+      cflags_libfdt="${cflags_libfdt} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=rpi
       AC_DEFINE([PLATFORM_RPI1_B], [1], [Define to 1 for raspberry pi 1 B platform.])
@@ -58,6 +61,7 @@ AC_DEFUN([MIST_SET_HOST], [
       ;;
     rpi1_b_plus)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
+      cflags_libfdt="${cflags_libfdt} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=rpi
       AC_DEFINE([PLATFORM_RPI1_B_PLUS], [1], [Define to 1 for raspberry pi 1 B+ platform.])
@@ -67,6 +71,7 @@ AC_DEFUN([MIST_SET_HOST], [
       ;;
     rpi2_b)
       CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a7 -mfpu=vfpv4 -mfloat-abi=hard"
+      cflags_libfdt="${cflags_libfdt} -march=armv7-a -mtune=cortex-a7 -mfpu=vfpv4 -mfloat-abi=hard"
       subarch_subdir=v7
       vendor_subdir=rpi
       output_img=kernel7.img
@@ -79,6 +84,7 @@ AC_DEFUN([MIST_SET_HOST], [
       ;;
     rpi_zero)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
+      cflags_libfdt="${cflags_libfdt} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=rpi
       AC_DEFINE([ELF32])
@@ -89,6 +95,7 @@ AC_DEFUN([MIST_SET_HOST], [
       ;;
     rpi_zero_w)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
+      cflags_libfdt="${cflags_libfdt} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=rpi
       AC_DEFINE([PLATFORM_RPI_ZERO_W], [1], [Define to 1 for raspberry pi zero platform.])
@@ -98,30 +105,13 @@ AC_DEFUN([MIST_SET_HOST], [
       ;;
     beagleboard)
       CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a8 -mfpu=neon-vfpv3 -mfloat-abi=hard"
+      cflags_libfdt="${cflags_libfdt} -march=armv7-a -mtune=cortex-a8 -mfpu=neon-vfpv3 -mfloat-abi=hard"
       subarch_subdir=v7
       vendor_subdir=beagleboard
       AC_DEFINE([PLATFORM_BEAGLEBOARD], [1], [Define to 1 for beagleboard platform])
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets.])
       AC_DEFINE([ARCH_ARM_CORTEX_A8], [1], [Define to 1 for ARM Cortex-A8 targets.])
       AC_DEFINE([VENDOR_BEAGLEBOARD], [1], [Define to 1 for beagleboard vendor.])
-      ;;
-    n8x0)
-      CFLAGS="${CFLAGS} -march=armv6 -mtune=arm1136jf-s -mfpu=vfp -mfloat-abi=hard"
-      subarch_subdir=v6
-      vendor_subdir=n8x0
-      AC_DEFINE([PLATFORM_N8X0], [1], [Define to 1 for n900 platform])
-      AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv7 targets.])
-      AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM1176JF_S targets.])
-      AC_DEFINE([VENDOR_N8X0], [1], [Define to 1 for n900 vendor.])
-      ;;
-    n900)
-      CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a8 -mfpu=neon-vfpv3 -mfloat-abi=hard"
-      subarch_subdir=v7
-      vendor_subdir=n900
-      AC_DEFINE([PLATFORM_N900], [1], [Define to 1 for n900 platform])
-      AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets.])
-      AC_DEFINE([ARCH_ARM_CORTEX_A8], [1], [Define to 1 for ARM Cortex-A8 targets.])
-      AC_DEFINE([VENDOR_N900], [1], [Define to 1 for n900 vendor.])
       ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])
@@ -138,6 +128,7 @@ AC_DEFUN([MIST_SET_HOST], [
     rpi2_b_rev2)
       # -mfpu=fp-armv8 -mfloat-abi=hard
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
+      cflags_libfdt="${cflags_libfdt} -march=armv8-a -mtune=cortex-a53"
       subarch_subdir=v8
       vendor_subdir=rpi
       # should be may be kernel8
@@ -151,6 +142,7 @@ AC_DEFUN([MIST_SET_HOST], [
     rpi3_b)
       # -mfpu=fp-armv8 -mfloat-abi=hard
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
+      cflags_libfdt="${cflags_libfdt} -march=armv8-a -mtune=cortex-a53"
       subarch_subdir=v8
       vendor_subdir=rpi
       output_img=kernel8.img
@@ -163,6 +155,7 @@ AC_DEFUN([MIST_SET_HOST], [
     rpi3_b_plus)
       # -mfpu=fp-armv8 -mfloat-abi=hard
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
+      cflags_libfdt="${cflags_libfdt} -march=armv8-a -mtune=cortex-a53"
       subarch_subdir=v8
       vendor_subdir=rpi
       output_img=kernel8.img
@@ -191,6 +184,7 @@ AC_DEFUN([MIST_SET_HOST], [
   AC_SUBST(output_sym)
   AC_SUBST(host_bfd)
   AC_SUBST(copy_flags)
+  AC_SUBST(cflags_libfdt)
 ])
 
 AC_DEFUN([MIST_SET_FLAGS], [

@@ -5,8 +5,8 @@ DIST_SUBDIRS = v6 v7 v8
 
 AUTOMAKE_OPTIONS = nostdinc
 
-AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/lib/stdc -I$(top_srcdir)/src/lib/avl -I$(top_srcdir)/src/lib/fdt -I$(top_srcdir)/src/lib/tar -I$(top_srcdir)/src/lib/endian
-AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/lib/stdc -I$(top_srcdir)/src/lib/avl -I$(top_srcdir)/src/lib/fdt -I$(top_srcdir)/src/lib/tar -I$(top_srcdir)/src/lib/endian
+AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/lib/stdc
+AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/lib/stdc
 
 noinst_LIBRARIES = libarm.a
 libarm_a_SOURCES = \
@@ -17,6 +17,8 @@ libarm_a_SOURCES = \
   debug.h \
   delay.c \
   delay.h \
+  fdt.c \
+  fdt.h \
   ivt.h \
   mmio.c \
   mmio.h

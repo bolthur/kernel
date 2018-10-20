@@ -29,12 +29,13 @@ GROUP(
   ../libvendor.a
   librpi.a
   ../../../lib/avl/libavl.a
-  ../../../lib/endian/libendian.a
   ../../../lib/stdc/libstdc.a
-  ../../../lib/fdt/libfdt.a
   ../../../lib/tar/libtar.a
+  libfdt.a
 )
-INPUT( libgcc.a )
+INPUT(
+  libgcc.a
+)
 
 SECTIONS {
   . = 0x8000;
