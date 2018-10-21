@@ -24,17 +24,10 @@
   #include <panic.h>
 #endif
 
-// FIXME: Add logic
 int strcmp( const char* str1, const char* str2 ) {
-  // mark parameter as unused
-  ( void )str1;
-  ( void )str2;
-
-  #if defined( IS_KERNEL )
-    PANIC( "strcmp not yet implemented!" );
-  #else
-    abort();
-  #endif
-
-  return 0;
+  while ( *str1 && ( *str1 == *str2 ) ) {
+    str1++;
+    str2++;
+  }
+  return *( const unsigned char* )str1 - *( const unsigned char* )str2;
 }

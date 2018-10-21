@@ -24,18 +24,18 @@
   #include <panic.h>
 #endif
 
-// FIXME: Add logic
 char *strncpy( char * restrict dest, const char * restrict src, size_t n ) {
-  // mark parameter as unused
-  ( void )dest;
-  ( void )src;
-  ( void )n;
+  if ( dest == NULL ) {
+    return NULL;
+  }
 
-  #if defined( IS_KERNEL )
-    PANIC( "strncpy not yet implemented!" );
-  #else
-    abort();
-  #endif
+  char *tmp = dest;
+  while( *src && n-- ) {
+    *dest = *src;
+    dest++;
+    src++;
+  }
+  *dest = '\0';
 
-  return dest;
+  return tmp;
 }

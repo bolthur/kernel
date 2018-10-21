@@ -22,6 +22,6 @@
 
 #include <arch/arm/ivt.h>
 
-void isrs_init( void ) {
+void irq_init( void ) {
   ivt_init();
 }

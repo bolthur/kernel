@@ -74,3 +74,7 @@ int8_t irq_get_pending( bool fast ) {
 
   return -1;
 }
+
+void irq_setup_event( void ) {
+  // FIXME: Setup events
+}

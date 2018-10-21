@@ -17,7 +17,7 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
   * [ ] Panic, when there is no device tree
 * [ ] Add irq and isrs register handling
   * [x] Get irq with cpu mode switch and register dump working
-  * [ ] Merge irq functions with isrs functions where possible
+  * [x] Merge irq functions with isrs functions where possible
   * [ ] Prohibit mapping of interrupt routines
   * [ ] Add event system with `register` and `unregister`
     * [ ] Provide map of events for `irq`, `fiq`, `swi`

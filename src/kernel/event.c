@@ -17,7 +17,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+
+#include <irq.h>
 #include <event.h>
+#include <panic.h>
+
+static const char* event_list[] = { "timer", "serial" };
+static event_callback_map_t map[ MAX_BOUND_EVENT ];
+static uint32_t last_entry = 0;
 
 void event_init() {
+  // initialize map with 0
+  memset( ( void* )&map, 0, sizeof( event_callback_map_t ) * MAX_BOUND_EVENT );
+
+  // init irq events
+  irq_setup_event();
+}
+
+// FIXME: Make variable amount of handlers possible
+void event_bind_handler( event_type_t type, event_callback_t callback ) {
+  // check for not to much event and valid event name
+  ASSERT( last_entry < MAX_BOUND_EVENT );
+
+  // copy name with restriction and set callback
+  strncpy( ( char* )&map[ last_entry ].event, event_list[ type ], MAX_EVENT_NAME );
+  map[ last_entry ].map[ 0 ] = callback;
+
+  // increase last entry
+  last_entry += 1;
+}
+
+void event_unbind_handler( event_type_t type, event_callback_t callback ) {
+  ( void )type;
+  ( void )callback;
+  PANIC( "event unbind not yet supported" );
 }

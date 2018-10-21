@@ -27,11 +27,15 @@ typedef void (*irq_callback_t)(uint8_t irq, void *reg);
 extern irq_callback_t irq_callback_map[];
 extern irq_callback_t fast_irq_callback_map[];
 
-void irq_enable( void );
 void irq_disable( void );
-bool irq_validate_number( uint8_t num );
-void irq_register_handler( uint8_t num, irq_callback_t func, bool fast );
-int8_t irq_get_pending( bool fast );
+void irq_enable( void );
 irq_callback_t irq_get_handler( uint8_t num, bool fast );
+int8_t irq_get_pending( bool fast );
+void irq_init( void );
+void irq_setup_event( void );
+
+// FIXME: Remove when event system is active
+void irq_register_handler( uint8_t num, irq_callback_t func, bool fast );
+bool irq_validate_number( uint8_t num );
 
 #endif

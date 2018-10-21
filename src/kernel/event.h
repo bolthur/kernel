@@ -17,9 +17,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdint.h>
+
+#define MAX_BOUND_EVENT 25
+#define MAX_EVENT_NAME 25
+#define MAX_EVENT_CALLBACK 1
+
 #ifndef __KERNEL_EVENT__
 #define __KERNEL_EVENT__
 
+typedef enum {
+  EVENT_TIMER,
+  EVENT_SERIAL
+} event_type_t;
+
+typedef void ( *event_callback_t )( void *reg );
+
+typedef struct {
+  char event[ MAX_EVENT_NAME ];
+  event_callback_t map[ MAX_EVENT_CALLBACK ];
+} event_callback_map_t;
+
+void event_bind_handler( event_type_t, event_callback_t );
 void event_init();
+void event_unbind_handler( event_type_t, event_callback_t );
 
 #endif

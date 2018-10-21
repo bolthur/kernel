@@ -36,6 +36,7 @@
 
 #include <timer.h>
 #include <irq.h>
+#include <event.h>
 #include <vendor/rpi/gpio.h>
 
 
@@ -102,6 +103,10 @@ void timer_clear( uint8_t num, void *_cpu ) {
   asm volatile ("mcr p15, 0, %0, c14, c3, 0" :: "r"( 50000000 ) );
 }
 
+void timer_clear2( void *_cpu ) {
+  timer_clear( 1, _cpu );
+}
+
 void timer_init( void ) {
   uint32_t cntfrq, cntv_val, cntv_ctl;
   asm volatile( "mrc p15, 0, %0, c14, c0, 0" : "=r"( cntfrq ) );
@@ -121,6 +126,7 @@ void timer_init( void ) {
   asm volatile ( "mcr p15, 0, %0, c14, c3, 1" :: "r"( cntv_ctl ) ); // write CNTV_CTL
 
   irq_register_handler( ( 1 << 3 ), timer_clear, false );
+  event_bind_handler( EVENT_TIMER, timer_clear2 );
 
   /*// testing timer with led
   mmio_write( GPFSEL4, mmio_read( GPFSEL4 ) | 21 );

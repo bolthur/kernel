@@ -21,8 +21,8 @@
 #include <stdint.h>
 
 #include <tty.h>
+#include <event.h>
 #include <irq.h>
-#include <isrs.h>
 #include <timer.h>
 #include <platform.h>
 #include <debug.h>
@@ -49,9 +49,9 @@ void kernel_main() {
   platform_init();
   printf( "done!\r\n" );
 
-  // Setup isrs
-  printf( "[mist-system/kernel -> isrs] initialize ... " );
-  isrs_init();
+  // Setup irq
+  printf( "[mist-system/kernel -> irq] initialize ... " );
+  irq_init();
   printf( "done!\r\n" );
 
   // Setup memory management
@@ -66,6 +66,7 @@ void kernel_main() {
 
   // FIXME: Setup event system
   printf( "[mist-system/kernel -> event] initialize ... " );
+  event_init();
   printf( "done!\r\n" );
 
   // Setup debug if enabled
