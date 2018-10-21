@@ -5,8 +5,8 @@ DIST_SUBDIRS = v6 v7 v8
 
 AUTOMAKE_OPTIONS = nostdinc
 
-AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/lib/stdc
-AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/lib/stdc
+AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/lib/stdc -I$(top_srcdir)/external/dtc/libfdt
+AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/lib/stdc -I$(top_srcdir)/external/dtc/libfdt
 
 noinst_LIBRARIES = libarm.a
 libarm_a_SOURCES = \

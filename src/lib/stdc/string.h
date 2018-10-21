@@ -44,6 +44,7 @@ size_t strlen( const char*);
 char *strncat( char* restrict, const char * restrict, size_t );
 int strncmp( const char*, const char*, size_t );
 char *strncpy( char* restrict, const char* restrict, size_t );
+size_t strnlen( const char*, size_t );
 char *strpbrk( const char*, const char * );
 char *strrchr( const char*, int );
 char *strrev( char* );

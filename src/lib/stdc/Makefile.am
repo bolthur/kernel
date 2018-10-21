@@ -71,6 +71,7 @@ libstdc_a_SOURCES = \
   string/strncat.c \
   string/strncmp.c \
   string/strncpy.c \
+  string/strnlen.c \
   string/strpbrk.c \
   string/strrchr.c \
   string/strrev.c \

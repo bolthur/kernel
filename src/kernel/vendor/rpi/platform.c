@@ -53,12 +53,12 @@ void platform_init( void ) {
   intptr_t source_address = -1;
 
   // Check for device tree at address 0
-  if ( fdt_check_header( ( const void* )0 ) ) {
+  if ( 0 == fdt_check_header( ( const void* )0 ) ) {
     source_type = PLATFORM_USE_SOURCE_DEVICE_TREE_V1;
     source_address = 0;
     printf( "device tree1\r\n" );
   // check for atag at passed address
-  } else if ( fdt_check_header( ( const void* )atag_address ) ) {
+  } else if ( 0 == fdt_check_header( ( const void* )atag_address ) ) {
     source_type = PLATFORM_USE_SOURCE_DEVICE_TREE_V2;
     source_address = atag_address;
     printf( "device tree2\r\n" );

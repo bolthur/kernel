@@ -17,11 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include <string.h>
 
-#include <libfdt.h>
+size_t strnlen( const char* str, size_t max ) {
+  const char *end = memchr( str, '\0', max );
 
-#include <arch/arm/fdt.h>
-
-void fdt_parse( const void* address ) {
+  return end
+    ? ( size_t )( end - str )
+    : max;
 }

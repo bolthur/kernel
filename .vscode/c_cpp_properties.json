@@ -4,7 +4,11 @@
             "name": "Mac",
             "includePath": [
                 "${workspaceRoot}/src/kernel",
-                "${workspaceRoot}/src/libc",
+                "${workspaceRoot}/src/lib/stdc",
+                "${workspaceRoot}/src/lib/tar",
+                "${workspaceRoot}/src/lib/avl",
+                "${workspaceRoot}/external/dtc",
+                "${workspaceRoot}/external/dtc/libfdt",
                 "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
                 "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
             ],
@@ -12,9 +16,12 @@
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
-                    "${workspaceRoot}",
                     "${workspaceRoot}/src/kernel",
-                    "${workspaceRoot}/src/libc",
+                    "${workspaceRoot}/src/lib/stdc",
+                    "${workspaceRoot}/src/lib/tar",
+                    "${workspaceRoot}/src/lib/avl",
+                    "${workspaceRoot}/external/dtc",
+                    "${workspaceRoot}/external/dtc/libfdt",
                     "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
                     "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
                 ],
@@ -29,9 +36,12 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceRoot}",
                 "${workspaceRoot}/src/kernel",
-                "${workspaceRoot}/src/libc",
+                "${workspaceRoot}/src/lib/stdc",
+                "${workspaceRoot}/src/lib/tar",
+                "${workspaceRoot}/src/lib/avl",
+                "${workspaceRoot}/external/dtc",
+                "${workspaceRoot}/external/dtc/libfdt",
                 "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
                 "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
             ],
@@ -39,9 +49,12 @@
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
-                    "${workspaceRoot}",
                     "${workspaceRoot}/src/kernel",
-                    "${workspaceRoot}/src/libc",
+                    "${workspaceRoot}/src/lib/stdc",
+                    "${workspaceRoot}/src/lib/tar",
+                    "${workspaceRoot}/src/lib/avl",
+                    "${workspaceRoot}/external/dtc",
+                    "${workspaceRoot}/external/dtc/libfdt",
                     "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
                     "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
                 ],
@@ -52,9 +65,12 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceRoot}",
                 "${workspaceRoot}/src/kernel",
-                "${workspaceRoot}/src/libc",
+                "${workspaceRoot}/src/lib/stdc",
+                "${workspaceRoot}/src/lib/tar",
+                "${workspaceRoot}/src/lib/avl",
+                "${workspaceRoot}/external/dtc",
+                "${workspaceRoot}/external/dtc/libfdt",
                 "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
                 "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
             ],
@@ -65,11 +81,14 @@
             "intelliSenseMode": "msvc-x64",
             "browse": {
                 "path": [
-                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include",
-                    "${workspaceRoot}",
                     "${workspaceRoot}/src/kernel",
-                    "${workspaceRoot}/src/libc"
+                    "${workspaceRoot}/src/lib/stdc",
+                    "${workspaceRoot}/src/lib/tar",
+                    "${workspaceRoot}/src/lib/avl",
+                    "${workspaceRoot}/external/dtc",
+                    "${workspaceRoot}/external/dtc/libfdt",
+                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
