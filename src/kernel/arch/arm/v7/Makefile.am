@@ -13,6 +13,5 @@ libv7_a_SOURCES = \
   stub/ivt.S \
   cpu.c \
   cpu.h \
-  irq.c \
   ivt.c \
   start.S

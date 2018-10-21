@@ -19,6 +19,7 @@ libarm_a_SOURCES = \
   delay.h \
   fdt.c \
   fdt.h \
+  irq.c \
   ivt.h \
   mmio.c \
   mmio.h
