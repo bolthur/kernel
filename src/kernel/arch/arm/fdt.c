@@ -24,4 +24,8 @@
 #include <arch/arm/fdt.h>
 
 void fdt_parse( const void* address ) {
+  ( void ) address;
+
+  // FIXME: Parse flattened device tree "soc" section
+  // FIXME: Collect memory regions that can be used for later mmu
 }

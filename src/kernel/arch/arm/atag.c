@@ -75,6 +75,10 @@ void atag_parse( const void *addr ) {
         printf( "cmdline: %s", &current->cmdline.line[ 0 ] );
         break;
 
+      case ATAG_NONE:
+        printf( "ATAG end!" );
+        break;
+
       default:
         PANIC( "Unknown tag" );
     }
