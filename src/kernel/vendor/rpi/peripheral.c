@@ -17,12 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_VENDOR_RPI_PERIPHERAL__
-#define __KERNEL_VENDOR_RPI_PERIPHERAL__
-
 #include <stdint.h>
 
-void peripheral_base_set( uint32_t );
-uint32_t peripheral_base_get( void );
+#include <vendor/rpi/peripheral.h>
 
+// initial setup of peripheral base
+#if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI2_B_REV2 ) || defined( PLATFORM_RPI3_B ) || defined( PLATFORM_RPI3_B_PLUS )
+  uint32_t peripheral_base = 0x3F000000;
+#else
+  uint32_t peripheral_base = 0x20000000;
 #endif
+
+void peripheral_base_set( uint32_t addr ) {
+  peripheral_base = addr;
+}
+
+uint32_t peripheral_base_get( void ) {
+  return peripheral_base;
+}

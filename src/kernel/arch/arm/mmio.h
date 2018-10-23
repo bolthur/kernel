@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 
-extern void mmio_write( uint32_t reg, uint32_t data );
-extern uint32_t mmio_read( uint32_t reg );
+void mmio_write( uint32_t, uint32_t );
+uint32_t mmio_read( uint32_t );
 
 #endif

@@ -4,6 +4,35 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
 
 ## Things to be done
 
+* [x] Cleanup current code mess
+  * [x] Move memory barrier header to arm as it is arm related
+  * [x] Change peripheral base from constant to function due to later virtual remap
+  * [ ] Strip out ATAG and flat device tree parsing into library
+  * [ ] Prefix folders used by automake with an underscore
+* [x] Serial output done within `kernel/vendor/{vendor}`
+* [x] TTY for printing debug messages done within `kernel/vendor/{vendor}`
+  * [x] printf implementation for kernel environment
+* [x] Interrupt requests and fast interrupts
+* [ ] Memory management
+  * [ ] Transform kernel to higher half with initial mmu ( kernel load address at 0xC0008000 / 0xC0080000 )
+    * [ ] Lay initial startup setting up paging within `kernel/arch/{architecture}/{sub architecture}`
+    * [ ] Call vendor related startup code
+    * [ ] Check exception handler after higher half init
+  * [ ] Physical memory management
+    * [ ] Get max memory from vendor
+    * [ ] Generic physical handling done within `kernel` via memory bitmap
+  * [ ] Virtual memory management done within `kernel/arch/{architecture}/{sub architecture}`
+  * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code
+* [ ] Event system for mapping service routines `Needs to be planned`
+  * [ ] ~~Generic code for `register` and `unregister` an event done within `kernel`~~
+  * [ ] ~~Vendor related mapping~~
+    * [ ] ~~Interrupt requests~~
+    * [ ] ~~Fast interrupt requests~~
+    * [ ] ~~Software interrupts~~
+* [ ] Remote debugging support via GDB and serial
+
+## Unordered list of things to be done and ideas
+
 * [x] Add memory barriers for arm necessary for e.g. mailbox on rpi
 * [ ] Rework recursive autotools behaviour to non recursive
 * [ ] Libraries

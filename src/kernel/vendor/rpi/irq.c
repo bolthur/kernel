@@ -25,6 +25,7 @@
 #include <panic.h>
 #include <arch/arm/mmio.h>
 #include <vendor/rpi/gpio.h>
+#include <vendor/rpi/peripheral.h>
 
 irq_callback_t irq_callback_map[ 64 ];
 irq_callback_t fast_irq_callback_map[ 72 ];
@@ -43,10 +44,12 @@ bool irq_validate_number( uint8_t num ) {
 }
 
 int8_t irq_get_pending( bool fast ) {
+  uint32_t base = peripheral_base_get();
+
   // normal irq
   if ( ! fast ) {
-    uint32_t pending1 = mmio_read( INTERRUPT_IRQ_PENDING_1 );
-    uint32_t pending2 = mmio_read( INTERRUPT_IRQ_PENDING_2 );
+    uint32_t pending1 = mmio_read( base + INTERRUPT_IRQ_PENDING_1 );
+    uint32_t pending2 = mmio_read( base + INTERRUPT_IRQ_PENDING_2 );
 
     uint32_t core0_irq_source = mmio_read( CORE0_IRQ_SOURCE );
     if ( core0_irq_source && 0x08 ) {

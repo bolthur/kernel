@@ -13,6 +13,7 @@ libarm_a_SOURCES = \
   atag.c \
   atag.h \
   barrier.c \
+  barrier.h \
   debug.c \
   debug.h \
   delay.c \

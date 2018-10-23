@@ -15,6 +15,7 @@ librpi_a_SOURCES = \
   mailbox.h \
   platform.c \
   platform.h \
+  peripheral.c \
   peripheral.h \
   serial.c \
   start.S \

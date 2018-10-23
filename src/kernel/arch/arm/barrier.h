@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_BARRIER__
-#define __KERNEL_BARRIER__
+#ifndef __KERNEL_ARCH_ARM_BARRIER__
+#define __KERNEL_ARCH_ARM_BARRIER__
 
 #include <stdint.h>
 
