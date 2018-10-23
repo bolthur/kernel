@@ -21,7 +21,7 @@
 #include <stdint.h>
 
 #include <panic.h>
-#include <arch/arm/atag.h>
+#include <_arch/_arm/atag.h>
 
 void atag_parse( const void *addr ) {
   atag_t *current = ( atag_t* )addr;

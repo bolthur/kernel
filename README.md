@@ -8,7 +8,7 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
   * [x] Move memory barrier header to arm as it is arm related
   * [x] Change peripheral base from constant to function due to later virtual remap
   * [ ] Strip out ATAG and flat device tree parsing into library
-  * [ ] Prefix folders used by automake with an underscore
+  * [x] Prefix folders used by automake with an underscore
 * [x] Serial output done within `kernel/vendor/{vendor}`
 * [x] TTY for printing debug messages done within `kernel/vendor/{vendor}`
   * [x] printf implementation for kernel environment

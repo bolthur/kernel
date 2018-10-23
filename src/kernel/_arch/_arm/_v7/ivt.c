@@ -23,7 +23,7 @@
 #include <irq.h>
 #include <panic.h>
 
-#include <arch/arm/v7/cpu.h>
+#include <_arch/_arm/_v7/cpu.h>
 
 /**
  * @brief interrupt vector table aligned according to manual

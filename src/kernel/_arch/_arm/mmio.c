@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/mmio.h>
+#include <_arch/_arm/mmio.h>
 
 // Memory-Mapped I/O output
 void __attribute__(( optimize( "O0" ) )) mmio_write( uint32_t reg, uint32_t data ) {

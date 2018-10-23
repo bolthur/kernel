@@ -18,7 +18,7 @@
  */
 
 #include <panic.h>
-#include <vendor/rpi/mailbox.h>
+#include <_vendor/_rpi/mailbox.h>
 
 // FIXME: Add logic!
 uint32_t mailbox_read( uint8_t channel ) {

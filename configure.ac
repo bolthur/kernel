@@ -123,14 +123,14 @@ AC_CONFIG_FILES([
   Makefile
   src/Makefile
   src/kernel/Makefile
-  src/kernel/arch/Makefile
-  src/kernel/arch/arm/Makefile
-  src/kernel/arch/arm/v6/Makefile
-  src/kernel/arch/arm/v7/Makefile
-  src/kernel/arch/arm/v8/Makefile
-  src/kernel/vendor/Makefile
-  src/kernel/vendor/beagleboard/Makefile
-  src/kernel/vendor/rpi/Makefile
+  src/kernel/_arch/Makefile
+  src/kernel/_arch/_arm/Makefile
+  src/kernel/_arch/_arm/_v6/Makefile
+  src/kernel/_arch/_arm/_v7/Makefile
+  src/kernel/_arch/_arm/_v8/Makefile
+  src/kernel/_vendor/Makefile
+  src/kernel/_vendor/_beagleboard/Makefile
+  src/kernel/_vendor/_rpi/Makefile
   src/lib/Makefile
   src/lib/avl/Makefile
   src/lib/stdc/Makefile

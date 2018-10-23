@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/barrier.h>
+#include <_arch/_arm/barrier.h>
 
 void __attribute__(( optimize( "O0" ) )) barrier_data_mem( void ) {
   asm volatile ( "mcr p15, #0, %[zero], c7, c10, #5" : : [ zero ] "r" ( 0 ) );

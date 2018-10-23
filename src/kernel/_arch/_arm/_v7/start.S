@@ -19,7 +19,7 @@
 
 #define ASSEMBLER_FILE 1
 
-#include <arch/arm/v7/cpu.h>
+#include <_arch/_arm/_v7/cpu.h>
 
 .arch_extension sec
 .arch_extension virt

@@ -23,9 +23,9 @@
 
 #include <irq.h>
 #include <panic.h>
-#include <arch/arm/mmio.h>
-#include <vendor/rpi/gpio.h>
-#include <vendor/rpi/peripheral.h>
+#include <_arch/_arm/mmio.h>
+#include <_vendor/_rpi/gpio.h>
+#include <_vendor/_rpi/peripheral.h>
 
 irq_callback_t irq_callback_map[ 64 ];
 irq_callback_t fast_irq_callback_map[ 72 ];

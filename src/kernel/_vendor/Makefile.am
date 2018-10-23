@@ -1,7 +1,7 @@
 
 SUBDIRS = . ${vendor_subdir}
 
-DIST_SUBDIRS = beagleboard rpi
+DIST_SUBDIRS = _beagleboard _rpi
 
 AUTOMAKE_OPTIONS = nostdinc
 

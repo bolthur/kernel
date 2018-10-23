@@ -20,7 +20,7 @@
 #ifndef __KERNEL_VENDOR_RPI_GPIO__
 #define __KERNEL_VENDOR_RPI_GPIO__
 
-#include <vendor/rpi/peripheral.h>
+#include <_vendor/_rpi/peripheral.h>
 
 #if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI2_B_REV2 ) || defined( PLATFORM_RPI3_B ) || defined( PLATFORM_RPI3_B_PLUS )
   #define CORE0_TIMER_IRQCNTL 0x40000040

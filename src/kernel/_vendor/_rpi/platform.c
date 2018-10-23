@@ -28,11 +28,11 @@
 #include <panic.h>
 
 // arch related
-#include <arch/arm/atag.h>
-#include <arch/arm/fdt.h>
+#include <_arch/_arm/atag.h>
+#include <_arch/_arm/fdt.h>
 
 // platform related
-#include <vendor/rpi/platform.h>
+#include <_vendor/_rpi/platform.h>
 
 platform_boot_parameter_t boot_parameter_data;
 

@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <arch/arm/ivt.h>
+#include <_arch/_arm/ivt.h>
 
 void irq_init( void ) {
   ivt_init();

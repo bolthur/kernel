@@ -21,7 +21,7 @@
 
 #include <libfdt.h>
 
-#include <arch/arm/fdt.h>
+#include <_arch/_arm/fdt.h>
 
 void fdt_parse( const void* address ) {
   ( void ) address;

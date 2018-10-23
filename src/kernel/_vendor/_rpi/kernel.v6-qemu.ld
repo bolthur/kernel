@@ -23,8 +23,8 @@ OUTPUT_ARCH( arm )
 ENTRY( start )
 
 GROUP(
-  ../../arch/arm/v6/libv6.a
-  ../../arch/arm/libarm.a
+  ../../_arch/_arm/_v6/libv6.a
+  ../../_arch/_arm/libarm.a
   ../../libkernel.a
   ../libvendor.a
   librpi.a

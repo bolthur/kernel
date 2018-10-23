@@ -24,7 +24,7 @@
 
 // FIXME: Remove, when defines have been written to functions
 #if defined( ARCH_ARM )
-  #include <arch/arm/debug.h>
+  #include <_arch/_arm/debug.h>
 #else
   #error "Debug defines not available"
 #endif

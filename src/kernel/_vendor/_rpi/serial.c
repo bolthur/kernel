@@ -26,13 +26,13 @@
 
 // common architecture related
 #if defined( ARCH_ARM )
-  #include <arch/arm/delay.h>
-  #include <arch/arm/mmio.h>
+  #include <_arch/_arm/delay.h>
+  #include <_arch/_arm/mmio.h>
 #endif
 
 // specific platform related
-#include <vendor/rpi/peripheral.h>
-#include <vendor/rpi/gpio.h>
+#include <_vendor/_rpi/peripheral.h>
+#include <_vendor/_rpi/gpio.h>
 
 // common vendor related
 
