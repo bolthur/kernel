@@ -14,14 +14,16 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
   * [x] printf implementation for kernel environment
 * [x] Interrupt requests and fast interrupts
 * [ ] Memory management
-  * [ ] Transform kernel to higher half with initial mmu ( kernel load address at 0xC0008000 / 0xC0080000 )
-    * [ ] Lay initial startup setting up paging within `kernel/arch/{architecture}/{sub architecture}`
-    * [ ] Call vendor related startup code
-    * [ ] Check exception handler after higher half init
   * [ ] Physical memory management
     * [ ] Get max memory from vendor
+      * [ ] Gather rpi memory from mailbox ( store physical memory map generally per vendor )
+      * [ ] Initialize memory bitmap within vendor
     * [ ] Generic physical handling done within `kernel` via memory bitmap
   * [ ] Virtual memory management done within `kernel/arch/{architecture}/{sub architecture}`
+  * [ ] Add relocation of kernel to higher half after mmu setup
+    * [ ] kernel load address
+      * [ ] `0xC0008000` for 32bit
+      * [ ] `0xffffff0000080000` for 64bit
   * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code
 * [ ] Event system for mapping service routines `Needs to be planned`
   * [ ] ~~Generic code for `register` and `unregister` an event done within `kernel`~~
@@ -37,13 +39,16 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
 * [ ] Rework recursive autotools behaviour to non recursive
 * [ ] Libraries
   * [ ] Think about merge of compiler library `libgcc.a` and local `libstdc.a`
-  * [ ] `libavl.a`
-  * [ ] `libtar.a`
-  * [ ] Add generic library for atag parsing
+  * [ ] `libavl.a` -> avl tree library
+  * [ ] `libtar.a` -> tar library
 * [ ] Device tree
-  * [ ] Remove atag parsing
-  * [ ] Add parse of device tree
-  * [ ] Panic, when there is no device tree
+  * [ ] Add own device tree library
+  * [ ] Add parse of device tree when compiled in via option
+  * [ ] Debug output, when no device tree has been found
+* [ ] ATAGs
+  * [ ] Add own atag library
+  * [ ] Add parse of atag when compiled in via option
+  * [ ] Debug output, when no atag has been passed
 * [ ] Add irq and isrs register handling
   * [x] Get irq with cpu mode switch and register dump working
   * [x] Merge irq functions with isrs functions where possible
@@ -52,7 +57,6 @@ _MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some int
     * [ ] Provide map of events for `irq`, `fiq`, `swi`
     * [ ] Fire events for `irq`, `fiq`, `swi`
 * [ ] Memory management
-  * [ ] Gather rpi memory from mailbox ( store physical memory map generally per vendor )
   * [ ] Add physical memory management
   * [ ] Add virtual memory management
   * [ ] Add heap management
@@ -107,7 +111,6 @@ cd build
 ../configure --host aarch64-none-elf --enable-device=rpi3_b_plus --enable-debug --enable-kernel-print
 ../configure --host arm-none-eabi --enable-device=rpi_zero --enable-debug --enable-kernel-print
 ../configure --host arm-none-eabi --enable-device=rpi_zero_w --enable-debug --enable-kernel-print
-../configure --host arm-none-eabi --enable-device=beagleboard --enable-debug --enable-kernel-print
 ```
 
 ### Building
@@ -120,6 +123,7 @@ make clean && make
 ### Remote debugging
 
 For remote debugging configure the kernel with `--enable-debug`, rebuild and copy it to remote device. After that, depending on the remote arch, execute one of the following commands
+
 ```bash
 ### debug 32 bit arm device
 ../toolchain/opt/cross/bin/arm-none-eabi-gdb -b 115200 --tty=/dev/ttyUSB0 ./src/kernel/vendor/rpi/kernel.zwerg ./src/kernel/vendor/rpi/kernel.map
@@ -178,16 +182,6 @@ Currently the following targets are planned to be supported:
   * RPI 2B r.2
   * RPI 3B
   * RPI 3B+
-
-### Texas Instruments OMAP SoC
-
-* ~~armv6 ( 32 bit - OMAP 2420 )~~
-  * ~~nokia n800~~
-  * ~~nokia n810~~
-
-* armv7-a ( 32 bit - OMAP3530 )
-  * beagle board
-  * ~~nokia n900~~
 
 ## List of real hardware for testing
 

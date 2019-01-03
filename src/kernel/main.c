@@ -44,7 +44,7 @@ void kernel_main() {
     "  \\/_/\\/_/   \\/_____/   \\/_____/   \\/_____/   \\/_____/      \\/_/  \\/_/   \\/_/   \\/_____/     \\/_/ "
   );
 
-  // FIXME: Find correct place if necessary
+  // Setup platform related parts
   printf( "[mist-system/kernel -> platform] initialize ... " );
   platform_init();
   printf( "done!\r\n" );

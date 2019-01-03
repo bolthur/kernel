@@ -22,7 +22,37 @@
 
 #include <stdint.h>
 
-uint32_t mailbox_read( uint8_t );
-void mailbox_write( uint8_t, uint32_t );
+#include <_vendor/_rpi/peripheral.h>
+
+#define MAILBOX_OFFSET 0xB880
+
+typedef enum {
+  MAILBOX0_POWER_MANAGEMENT = 0,
+  MAILBOX0_FRAMEBUFFER,
+  MAILBOX0_VIRTUAL_UART,
+  MAILBOX0_VCHIQ,
+  MAILBOX0_LEDS,
+  MAILBOX0_BUTTONS,
+  MAILBOX0_TOUCHSCREEN,
+  MAILBOX0_UNUSED,
+  MAILBOX0_TAGS_ARM_TO_VC,
+  MAILBOX0_TAGS_VC_TO_ARM,
+} mailbox0_channel_t;
+
+#define MAILBOX_FULL 0x80000000
+#define MAILBOX_EMPTY 0x40000000
+
+typedef struct {
+  volatile uint32_t read;
+  volatile uint32_t reserved_1[ ( ( 0x90 - 0x80 ) / 4 ) - 1 ];
+  volatile uint32_t poll;
+  volatile uint32_t sender;
+  volatile uint32_t status;
+  volatile uint32_t configuration;
+  volatile uint32_t write;
+} mailbox_t;
+
+uint32_t mailbox_read( mailbox0_channel_t );
+void mailbox_write( mailbox0_channel_t, uint32_t );
 
 #endif

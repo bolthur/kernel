@@ -11,6 +11,8 @@ noinst_LIBRARIES = librpi.a libfdt.a
 librpi_a_SOURCES = \
   gpio.h \
   irq.c \
+  mailbox-property.c \
+  mailbox-property.h \
   mailbox.c \
   mailbox.h \
   platform.c \

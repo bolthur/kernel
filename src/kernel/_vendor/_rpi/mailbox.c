@@ -17,27 +17,62 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <panic.h>
+#include <stdbool.h>
+#include <_arch/_arm/barrier.h>
 #include <_vendor/_rpi/mailbox.h>
+#include <_vendor/_rpi/peripheral.h>
 
-// FIXME: Add logic!
-uint32_t mailbox_read( uint8_t channel ) {
-  // mark parameter as unused
-  ( void )channel;
+uint32_t mailbox_read( mailbox0_channel_t channel ) {
+  // data and count
+  uint32_t value = 0;
+  uint32_t count = 0;
 
-  // panic until implementation is existing
-  PANIC( "mailbox_read not yet implemented!" );
+  // get mailbox address
+  volatile mailbox_t *mbox0 = ( mailbox_t* )( peripheral_base_get() + MAILBOX_OFFSET );
 
-  // dummy return
-  return -1;
+  while( ( value & 0xF ) != channel ) {
+    // wait while mailbox is empty
+    while( mbox0->status & MAILBOX_EMPTY ) {
+      // flush cache
+      barrier_flush_cache();
+
+      // break if it takes to much time
+      if ( count++ > ( 1 << 25 ) ) {
+        return 0xffffffff;
+      }
+    }
+
+    // data memory barrier clear
+    barrier_data_mem();
+
+    // extract read value
+    value = mbox0->read;
+
+    // data memory barrier clear
+    barrier_data_mem();
+  }
+
+  // return value without channel information
+  return value >> 4;
 }
 
-// FIXME: Add logic!
-void mailbox_write( uint8_t channel, uint32_t data ) {
-  // mark parameter as unused
-  ( void )channel;
-  ( void )data;
+void mailbox_write( mailbox0_channel_t channel, uint32_t data ) {
+  // add channel number at the lower 4 bit
+  data &= ~0xF;
+  data |= channel;
 
-  // panic until implementation is existing
-  PANIC( "mailbox_write not yet implemented!" );
+  // get mailbox address
+  volatile mailbox_t *mbox0 = ( mailbox_t* )( peripheral_base_get() + MAILBOX_OFFSET );
+
+  // wait for mailbox to be ready
+  while( ( mbox0->status & MAILBOX_FULL ) != 0 ) {
+    // flush cache
+    barrier_flush_cache();
+  }
+
+  // data memory barrier clear
+  barrier_data_mem();
+
+  // write data to mailbox
+  mbox0->write = data;
 }

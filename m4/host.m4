@@ -103,16 +103,6 @@ AC_DEFUN([MIST_SET_HOST], [
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
       AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
       ;;
-    beagleboard)
-      CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a8 -mfpu=neon-vfpv3 -mfloat-abi=hard"
-      cflags_libfdt="${cflags_libfdt} -march=armv7-a -mtune=cortex-a8 -mfpu=neon-vfpv3 -mfloat-abi=hard"
-      subarch_subdir=_v7
-      vendor_subdir=_beagleboard
-      AC_DEFINE([PLATFORM_BEAGLEBOARD], [1], [Define to 1 for beagleboard platform])
-      AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets.])
-      AC_DEFINE([ARCH_ARM_CORTEX_A8], [1], [Define to 1 for ARM Cortex-A8 targets.])
-      AC_DEFINE([VENDOR_BEAGLEBOARD], [1], [Define to 1 for beagleboard vendor.])
-      ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])
       ;;

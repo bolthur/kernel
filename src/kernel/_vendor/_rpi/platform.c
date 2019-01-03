@@ -33,12 +33,13 @@
 
 // platform related
 #include <_vendor/_rpi/platform.h>
+#include <_vendor/_rpi/mailbox-property.h>
 
 platform_boot_parameter_t boot_parameter_data;
 
 // FIXME: Drop atag check and rely on device tree
 void platform_init( void ) {
-  printf( "\r\n0x%08x - 0x%08x - 0x%08x\r\n",
+  /*printf( "\r\n0x%08x - 0x%08x - 0x%08x\r\n",
     boot_parameter_data.zero,
     boot_parameter_data.machine,
     boot_parameter_data.atag );
@@ -89,7 +90,25 @@ void platform_init( void ) {
     case PLATFORM_USE_SOURCE_DEVICE_TREE_V2:
       fdt_parse( ( const void* )source_address );
       break;
-  }
+  }*/
+
+  // Get arm memory
+  mailbox_property_init();
+  mailbox_property_add_tag( TAG_GET_ARM_MEMORY );
+  mailbox_property_add_tag( TAG_GET_VC_MEMORY );
+  mailbox_property_process();
+
+  rpi_mailbox_property_t *buffer = mailbox_property_get( TAG_GET_ARM_MEMORY );
+  printf ( "buffer->byte_length: %d\n", buffer->byte_length );
+  printf ( "buffer->data.buffer_32[ 0 ]: 0x%08x\n", buffer->data.buffer_32[ 0 ] );
+  printf ( "buffer->data.buffer_32[ 1 ]: 0x%08x\n", buffer->data.buffer_32[ 1 ] );
+  printf ( "buffer->tag: 0x%08x\n", buffer->tag );
+
+  buffer = mailbox_property_get( TAG_GET_VC_MEMORY );
+  printf ( "buffer->byte_length: %d\n", buffer->byte_length );
+  printf ( "buffer->data.buffer_32[ 0 ]: 0x%08x\n", buffer->data.buffer_32[ 0 ] );
+  printf ( "buffer->data.buffer_32[ 1 ]: 0x%08x\n", buffer->data.buffer_32[ 1 ] );
+  printf ( "buffer->tag: 0x%08x\n", buffer->tag );
 
   // FIXME: Load firmware revision, board model, board revision, board serial from mailbox
   // FIXME: Load memory information from mailbox regarding arm and gpu and populate memory map

@@ -47,9 +47,6 @@ AC_ARG_ENABLE([device],
   rpi_zero_w)
     DEVICE="rpi_zero_w"
     ;;
-  beagleboard)
-    DEVICE="beagleboard"
-    ;;
   esac],
   [DEVICE="rpi2_b"]
 )
@@ -129,7 +126,6 @@ AC_CONFIG_FILES([
   src/kernel/_arch/_arm/_v7/Makefile
   src/kernel/_arch/_arm/_v8/Makefile
   src/kernel/_vendor/Makefile
-  src/kernel/_vendor/_beagleboard/Makefile
   src/kernel/_vendor/_rpi/Makefile
   src/lib/Makefile
   src/lib/avl/Makefile
