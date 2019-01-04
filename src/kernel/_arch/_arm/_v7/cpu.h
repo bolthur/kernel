@@ -39,6 +39,10 @@
 #ifndef ASSEMBLER_FILE
 #include <stdint.h>
 
+#if defined( __cplusplus )
+extern "C" {
+#endif
+
 typedef union {
   uint32_t storage[ 17 ];
   struct {
@@ -61,6 +65,11 @@ void start_l2_cache( void );
 void stop_l2_cache( void );
 
 void dump_register( cpu_register_context_t *context );
+
+#if defined( __cplusplus )
+}
+#endif
+
 #endif
 
 #endif

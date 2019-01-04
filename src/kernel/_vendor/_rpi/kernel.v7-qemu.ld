@@ -31,7 +31,6 @@ GROUP(
   ../../../lib/avl/libavl.a
   ../../../lib/stdc/libstdc.a
   ../../../lib/tar/libtar.a
-  libfdt.a
 )
 INPUT(
   libgcc.a

@@ -28,6 +28,9 @@
 #include <debug.h>
 #include <serial.h>
 
+/**
+ * @brief Kernel main function
+ */
 #if defined(__cplusplus)
 extern "C" /* Use C linkage for kernel_main. */
 #endif

@@ -24,6 +24,10 @@
 
 #define PLATFORM_ATAG_FALLBACK_ADDR 0x00000100
 
+#if defined( __cplusplus )
+extern "C" {
+#endif
+
 enum {
   PLATFORM_USE_SOURCE_NONE = 0,
   PLATFORM_USE_SOURCE_ATAG_V1,
@@ -37,5 +41,9 @@ typedef struct {
   uint32_t machine;
   uint32_t atag;
 } platform_boot_parameter_t;
+
+#if defined( __cplusplus )
+}
+#endif
 
 #endif

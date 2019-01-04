@@ -20,7 +20,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-// arch related includes
 #if defined( ARCH_ARM_V6 )
   #include <_arch/_arm/_v6/cpu.h>
 #elif defined( ARCH_ARM_V7 )
@@ -67,6 +66,12 @@
   return tmp & 0x08;
 }*/
 
+/**
+ * @brief Clear timer callback
+ *
+ * @param num Timer interrupt number
+ * @param _cpu CPU register dump
+ */
 void timer_clear( uint8_t num, void *_cpu ) {
   cpu_register_context_t *cpu = ( cpu_register_context_t * )_cpu;
 
@@ -103,10 +108,18 @@ void timer_clear( uint8_t num, void *_cpu ) {
   asm volatile ("mcr p15, 0, %0, c14, c3, 0" :: "r"( 50000000 ) );
 }
 
+/**
+ * @brief Timer clear function
+ *
+ * @param _cpu Pointer to cpu structure (register dump)
+ */
 void timer_clear2( void *_cpu ) {
   timer_clear( 1, _cpu );
 }
 
+/**
+ * @brief Initialize timer
+ */
 void timer_init( void ) {
   uint32_t cntfrq, cntv_val, cntv_ctl;
   asm volatile( "mrc p15, 0, %0, c14, c0, 0" : "=r"( cntfrq ) );

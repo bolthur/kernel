@@ -7,7 +7,7 @@ AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top
 AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/src/kernel -I$(top_srcdir)/src/lib/stdc -I$(top_srcdir)/external/dtc/libfdt
 
 # rpi library
-noinst_LIBRARIES = librpi.a libfdt.a
+noinst_LIBRARIES = librpi.a
 librpi_a_SOURCES = \
   gpio.h \
   irq.c \
@@ -24,12 +24,6 @@ librpi_a_SOURCES = \
   timer.c \
   tty.c
 
-libfdt_a_SOURCES =
-libfdt.a$(EXEEXT):
-	make --directory=${abs_srcdir}/../../../../external/dtc -f ${abs_srcdir}/../../../../external/dtc/Makefile clean
-	PATH="$(PATH)" CC=$(CC) AR=$(AR) CFLAGS="$(cflags_libfdt)" make --directory=${abs_srcdir}/../../../../external/dtc -f ${abs_srcdir}/../../../../external/dtc/Makefile libfdt
-	cp ${abs_srcdir}/../../../../external/dtc/libfdt/libfdt.a libfdt.a
-
 # no installable programs
 noinst_PROGRAMS = kernel.zwerg kernel.qemu kernel_qemu.bin ${output_img}
 
@@ -38,7 +32,6 @@ kernel_qemu_SOURCES =
 kernel_qemu_DEPENDENCIES = \
   kernel.$(strip $(subst _,,$(subarch_subdir)))-qemu.ld \
   librpi.a \
-  libfdt.a \
   ${top_builddir}/src/kernel/_vendor/libvendor.a \
   ${top_builddir}/src/kernel/_arch/${arch_subdir}/${subarch_subdir}/lib$(strip $(subst _,,$(subarch_subdir))).a \
   ${top_builddir}/src/kernel/_arch/${arch_subdir}/lib$(strip $(subst _,,$(arch_subdir))).a \
@@ -56,7 +49,6 @@ kernel_zwerg_SOURCES =
 kernel_zwerg_DEPENDENCIES = \
   kernel.$(strip $(subst _,,$(subarch_subdir))).ld \
   librpi.a \
-  libfdt.a \
   ${top_builddir}/src/kernel/_vendor/libvendor.a \
   ${top_builddir}/src/kernel/_arch/${arch_subdir}/${subarch_subdir}/lib$(strip $(subst _,,$(subarch_subdir))).a \
   ${top_builddir}/src/kernel/_arch/${arch_subdir}/lib$(strip $(subst _,,$(arch_subdir))).a \

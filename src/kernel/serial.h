@@ -22,9 +22,17 @@
 
 #include <stdint.h>
 
+#if defined( __cplusplus )
+extern "C" {
+#endif
+
 void serial_init( void );
 void serial_putc( uint8_t c );
 uint8_t serial_getc( void );
 void serial_flush( void );
+
+#if defined( __cplusplus )
+}
+#endif
 
 #endif

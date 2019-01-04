@@ -18,7 +18,6 @@
  */
 
 #include <stdint.h>
-
 #include <_vendor/_rpi/peripheral.h>
 
 // initial setup of peripheral base
@@ -28,10 +27,20 @@
   uint32_t peripheral_base = 0x20000000;
 #endif
 
+/**
+ * @brief Method to set peripheral base address
+ *
+ * @param addr Address to set peripheral base
+ */
 void peripheral_base_set( uint32_t addr ) {
   peripheral_base = addr;
 }
 
+/**
+ * @brief Method to get peripheral base address
+ *
+ * @return uint32_t Peripheral base address
+ */
 uint32_t peripheral_base_get( void ) {
   return peripheral_base;
 }

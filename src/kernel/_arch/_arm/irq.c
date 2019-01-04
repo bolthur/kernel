@@ -22,6 +22,9 @@
 
 #include <_arch/_arm/ivt.h>
 
+/**
+ * @brief Initialize interrupt requests
+ */
 void irq_init( void ) {
   ivt_init();
 }

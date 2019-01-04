@@ -19,6 +19,11 @@
 
 #include "delay.h"
 
+/**
+ * @brief Delay function by given amount of cpu cycles
+ *
+ * @param count Amount of cycles to delay
+ */
 void __attribute__(( optimize( "O0" ) )) delay( uint32_t count ) {
   asm volatile(
     "__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n": "=r" ( count ): [ count ] "0" ( count ) : "cc"

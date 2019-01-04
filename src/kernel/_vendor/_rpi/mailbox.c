@@ -22,6 +22,12 @@
 #include <_vendor/_rpi/mailbox.h>
 #include <_vendor/_rpi/peripheral.h>
 
+/**
+ * @brief Function for reading mailbox
+ *
+ * @param channel Function to read via mailbox
+ * @return uint32_t value from mailbox function or 0xffffffff
+ */
 uint32_t mailbox_read( mailbox0_channel_t channel ) {
   // data and count
   uint32_t value = 0;
@@ -56,6 +62,12 @@ uint32_t mailbox_read( mailbox0_channel_t channel ) {
   return value >> 4;
 }
 
+/**
+ * @brief Function for writing to mailbox
+ *
+ * @param channel Function to use via mailbox
+ * @param data Data to write depending on function
+ */
 void mailbox_write( mailbox0_channel_t channel, uint32_t data ) {
   // add channel number at the lower 4 bit
   data &= ~0xF;

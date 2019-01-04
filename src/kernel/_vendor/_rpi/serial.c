@@ -17,28 +17,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// default includes
 #include <stddef.h>
 
-// specific architecture related
 #if defined( ARCH_ARM_V7 )
 #endif
 
-// common architecture related
 #if defined( ARCH_ARM )
   #include <_arch/_arm/delay.h>
   #include <_arch/_arm/mmio.h>
 #endif
 
-// specific platform related
 #include <_vendor/_rpi/peripheral.h>
 #include <_vendor/_rpi/gpio.h>
-
-// common vendor related
-
-// normal
 #include <serial.h>
 
+/**
+ * @brief Initialize serial port
+ */
 void serial_init( void ) {
   uint32_t base = peripheral_base_get();
 
@@ -91,6 +86,11 @@ void serial_init( void ) {
   mmio_write( base + UARTCR, ( 1 << 0 ) | ( 1 << 8 ) | ( 1 << 9 ) );
 }
 
+/**
+ * @brief Put character to serial
+ *
+ * @param c character to put
+ */
 void serial_putc( uint8_t c ) {
   uint32_t base = peripheral_base_get();
 
@@ -99,6 +99,11 @@ void serial_putc( uint8_t c ) {
   mmio_write( base + UARTDR, ( uint32_t ) c );
 }
 
+/**
+ * @brief Get character from serial
+ *
+ * @return uint8_t Character from serial
+ */
 uint8_t serial_getc( void ) {
   uint32_t base = peripheral_base_get();
 
@@ -109,6 +114,9 @@ uint8_t serial_getc( void ) {
   return ( uint8_t )mmio_read( base + UARTDR );
 }
 
+/**
+ * @brief Flush serial
+ */
 void serial_flush( void ) {
   uint32_t base = peripheral_base_get();
 

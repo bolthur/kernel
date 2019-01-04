@@ -19,9 +19,15 @@
 
 #include <stdio.h>
 #include <stdint.h>
-
 #include <irq.h>
 
+/**
+ * @brief Panic method
+ *
+ * @param message Message to print
+ * @param file File that invoked the panic
+ * @param line Line where panic was called
+ */
 void panic(const char *message, const char *file, uint32_t line) {
   // disable interrupts
   irq_disable();
@@ -33,6 +39,13 @@ void panic(const char *message, const char *file, uint32_t line) {
   while ( 1 ) {}
 }
 
+/**
+ * @brief Panic assertion
+ *
+ * @param file File that invoked the panic assert
+ * @param line Line where function was called
+ * @param desc Additional description
+ */
 void panic_assert(const char *file, uint32_t line, const char *desc) {
   // disable interrupts
   irq_disable();

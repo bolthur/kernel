@@ -18,10 +18,16 @@
  */
 
 #include <stddef.h>
-
 #include <irq.h>
 #include <panic.h>
 
+/**
+ * @brief Register IRQ handler
+ *
+ * @param num IRQ/FIQ to bind
+ * @param func Callback to bind
+ * @param fast flag to bind FIQ
+ */
 void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
   // normal irq
   if ( ! fast ) {
@@ -47,6 +53,13 @@ void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
   fast_irq_callback_map[ num ] = func;
 }
 
+/**
+ * @brief Get IRQ/FIQ by number
+ *
+ * @param num IRQ/FIQ number
+ * @param fast Flag to determine FIQ
+ * @return irq_callback_t Bound callback or NULL
+ */
 irq_callback_t irq_get_handler( uint8_t num, bool fast ) {
   // normal irq
   if ( ! fast ) {

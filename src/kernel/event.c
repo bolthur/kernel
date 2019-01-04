@@ -25,10 +25,24 @@
 #include <event.h>
 #include <panic.h>
 
+/**
+ * @brief Event list containing valid events
+ */
 static const char* event_list[] = { "timer", "serial" };
+
+/**
+ * @brief Event callback map
+ */
 static event_callback_map_t map[ MAX_BOUND_EVENT ];
+
+/**
+ * @brief Last bound entry
+ */
 static uint32_t last_entry = 0;
 
+/**
+ * @brief Initialize events
+ */
 void event_init() {
   // initialize map with 0
   memset( ( void* )&map, 0, sizeof( event_callback_map_t ) * MAX_BOUND_EVENT );
@@ -37,7 +51,14 @@ void event_init() {
   irq_setup_event();
 }
 
-// FIXME: Make variable amount of handlers possible
+/**
+ * @brief Bind event handler
+ *
+ * @param type Event handler type
+ * @param callback Callback to bind
+ *
+ * @todo Make variable amount of handlers possible
+ */
 void event_bind_handler( event_type_t type, event_callback_t callback ) {
   // check for not to much event and valid event name
   ASSERT( last_entry < MAX_BOUND_EVENT );
@@ -50,6 +71,14 @@ void event_bind_handler( event_type_t type, event_callback_t callback ) {
   last_entry += 1;
 }
 
+/**
+ * @brief Unbind event handler
+ *
+ * @param type Event handler type
+ * @param callback Callback to bind
+ *
+ * @todo Add function logic
+ */
 void event_unbind_handler( event_type_t type, event_callback_t callback ) {
   ( void )type;
   ( void )callback;

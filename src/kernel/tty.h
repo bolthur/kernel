@@ -22,8 +22,16 @@
 
 #include <stddef.h>
 
+#if defined( __cplusplus )
+extern "C" {
+#endif
+
 void tty_init( void );
 void tty_putc( unsigned char );
 void tty_puts( const char * );
+
+#if defined( __cplusplus )
+}
+#endif
 
 #endif

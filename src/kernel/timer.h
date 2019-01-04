@@ -22,6 +22,14 @@
 
 #include <stdint.h>
 
+#if defined( __cplusplus )
+extern "C" {
+#endif
+
 void timer_init( void );
+
+#if defined( __cplusplus )
+}
+#endif
 
 #endif

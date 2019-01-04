@@ -17,15 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
 #include <tty.h>
 #include <serial.h>
 
+/**
+ * @brief Initialize TTY
+ */
 void tty_init( void ) {
   // FIXME: Move serial init to kernel main or some other better place
   serial_init();
 }
 
-void tty_putc( unsigned char c ) {
+/**
+ * @brief Print character to TTY
+ *
+ * @param c Character to print
+ */
+void tty_putc( uint8_t c ) {
   #if defined( KERNEL_DEBUG_PRINT )
     serial_putc( c );
   #else
@@ -34,6 +43,11 @@ void tty_putc( unsigned char c ) {
   #endif
 }
 
+/**
+ * @brief Put string to TTY
+ *
+ * @param str String to put to TTY
+ */
 void tty_puts( const char *str ) {
   #if defined( KERNEL_DEBUG_PRINT )
     for ( size_t i = 0; str[ i ] != '\0'; i++ ) {

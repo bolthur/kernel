@@ -1,3 +1,0 @@
-[submodule "external/dtc"]
-	path = external/dtc
-	url = ssh://git@git.code0.xyz:222/mist/external-dtc.git

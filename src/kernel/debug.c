@@ -20,5 +20,8 @@
 #include <debug.h>
 #include <serial.h>
 
+/**
+ * @brief Initialize debugging
+ */
 void debug_init( void ) {
 }

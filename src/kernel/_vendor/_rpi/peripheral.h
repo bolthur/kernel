@@ -22,7 +22,15 @@
 
 #include <stdint.h>
 
+#if defined( __cplusplus )
+extern "C" {
+#endif
+
 void peripheral_base_set( uint32_t );
 uint32_t peripheral_base_get( void );
+
+#if defined( __cplusplus )
+}
+#endif
 
 #endif

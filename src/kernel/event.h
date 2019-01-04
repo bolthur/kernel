@@ -26,6 +26,10 @@
 #ifndef __KERNEL_EVENT__
 #define __KERNEL_EVENT__
 
+#if defined( __cplusplus )
+extern "C" {
+#endif
+
 typedef enum {
   EVENT_TIMER,
   EVENT_SERIAL
@@ -41,5 +45,9 @@ typedef struct {
 void event_bind_handler( event_type_t, event_callback_t );
 void event_init();
 void event_unbind_handler( event_type_t, event_callback_t );
+
+#if defined( __cplusplus )
+}
+#endif
 
 #endif

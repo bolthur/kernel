@@ -23,10 +23,19 @@
 #include <_vendor/_rpi/mailbox.h>
 #include <_vendor/_rpi/mailbox-property.h>
 
-// property tag buffer that has to be aligned to 16 byte boundary
+/**
+ * @brief property tag buffer, that has to be aligned to 16 byte boundary
+ */
 static int32_t ptb[ 8192 ] __attribute__((aligned(16)));
+
+/**
+ * @brief property tag buffer index
+ */
 static int32_t ptb_index = 0;
 
+/**
+ * @brief Initialize mailbox property process
+ */
 void mailbox_property_init( void ) {
   // Add startup size
   ptb[ PT_OSIZE ] = 12;
@@ -41,6 +50,12 @@ void mailbox_property_init( void ) {
   ptb[ ptb_index ] = 0;
 }
 
+/**
+ * @brief Add tag to mailbox property process
+ *
+ * @param tag Tag to add
+ * @param ... Further data depending on tag to be added
+ */
 void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
   va_list vl;
   va_start( vl, tag );
@@ -153,6 +168,11 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
   va_end( vl );
 }
 
+/**
+ * @brief Execute mailbox property process
+ *
+ * @return uint32_t mailbox read result after write
+ */
 uint32_t mailbox_property_process( void ) {
   uint32_t result;
 
@@ -185,7 +205,14 @@ uint32_t mailbox_property_process( void ) {
   return result;
 }
 
-// FIXME: Change static property to use malloc if available
+/**
+ * @brief Read tag from previous executed mailbox property process
+ *
+ * @param tag tag to read from mailbox property process
+ * @return rpi_mailbox_property_t* Pointer to structure of tag or NULL
+ *
+ * @todo Change static property to use malloc if available
+ */
 rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
   // property structure for return and tag buffer
   static rpi_mailbox_property_t property;

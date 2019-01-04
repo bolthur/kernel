@@ -20,16 +20,29 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-
 #include <irq.h>
 #include <panic.h>
 #include <_arch/_arm/mmio.h>
 #include <_vendor/_rpi/gpio.h>
 #include <_vendor/_rpi/peripheral.h>
 
+/**
+ * @brief IRQ callback map
+ */
 irq_callback_t irq_callback_map[ 64 ];
+
+/**
+ * @brief FIQ callback map
+ */
 irq_callback_t fast_irq_callback_map[ 72 ];
 
+/**
+ * @brief Helper to validate irq number
+ *
+ * @param num number to validate
+ * @return true if irq is valid
+ * @return false if irq is invalid
+ */
 bool irq_validate_number( uint8_t num ) {
   return ! (
     num != 1 && num != 8
@@ -43,6 +56,12 @@ bool irq_validate_number( uint8_t num ) {
   );
 }
 
+/**
+ * @brief Get pending irq
+ *
+ * @param fast use fast interrupts
+ * @return int8_t pending interrupt number
+ */
 int8_t irq_get_pending( bool fast ) {
   uint32_t base = peripheral_base_get();
 
@@ -78,6 +97,10 @@ int8_t irq_get_pending( bool fast ) {
   return -1;
 }
 
+/**
+ * @brief Setup IRQ events
+ *
+ * @todo Setup events
+ */
 void irq_setup_event( void ) {
-  // FIXME: Setup events
 }

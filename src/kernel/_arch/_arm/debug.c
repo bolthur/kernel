@@ -19,6 +19,9 @@
 
 #include <debug.h>
 
+/**
+ * @brief Debug breakpoint halt
+ */
 void debug_breakpoint( void ) {
   asm volatile( "swi 3" );
 }

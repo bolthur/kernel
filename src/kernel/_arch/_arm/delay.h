@@ -22,6 +22,14 @@
 
 #include <stdint.h>
 
-extern void delay( uint32_t count );
+#if defined( __cplusplus )
+extern "C" {
+#endif
+
+void delay( uint32_t count );
+
+#if defined( __cplusplus )
+}
+#endif
 
 #endif
