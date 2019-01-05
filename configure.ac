@@ -1,7 +1,7 @@
 
 AC_PREREQ(2.57)
-AC_INIT([myst-system-kernel], [0.1], [bug-kernel@myst-system.org])
-AC_COPYRIGHT(copyright 2017 - 2018 mist system)
+AC_INIT([bolthur-kernel], [0.1], [bug-kernel@bolthur.org])
+AC_COPYRIGHT(Copyright (C) 2017 - 2019 bolthur)
 
 AC_CONFIG_SRCDIR([src/main.c])
 AC_CONFIG_AUX_DIR([config])
@@ -82,10 +82,10 @@ AC_ARG_ENABLE([opt],
 )
 
 # set target and flags
-MIST_SET_HOST
+BOLTHUR_SET_HOST
 
 # set normal flags
-MIST_SET_FLAGS
+BOLTHUR_SET_FLAGS
 
 # extend path with local toolchain
 srcdir2=`readlink -f $srcdir`
@@ -104,7 +104,7 @@ AM_PROG_AS
 AC_PROG_RANLIB
 AM_PROG_AR
 AC_PROG_CXX
-MIST_PROG_OBJCOPY
+BOLTHUR_PROG_OBJCOPY
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

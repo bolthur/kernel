@@ -1,6 +1,6 @@
-# MIST
+# bolthur kernel
 
-_MIST_ is a recursive acronym for "MIST is somehow terrible". Below are some introductions, help and decisions about mist project. Originally it was derived from the german word mist, which might be translated as _crap_.
+bolthur kernel project. Below are some introductions, help and decisions about bolthur kernel project.
 
 ## Things to be done
 

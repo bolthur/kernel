@@ -1,5 +1,5 @@
 
-AC_DEFUN([MIST_SET_HOST], [
+AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([ELF32], [Define to 1 for 32 bit ELF targets.])
   AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets.])
   AC_DEFINE([IS_KERNEL], [1], [Define set for libc to compile differently.])
@@ -164,9 +164,9 @@ AC_DEFUN([MIST_SET_HOST], [
     AC_MSG_ERROR([unsupported host CPU])
     ;;
   esac
-  AC_DEFINE_UNQUOTED([ARCH], [${arch_subdir}], [mist-system/kernel target architecture.])
-  AC_DEFINE_UNQUOTED([SUBARCH], [${subarch_subdir}], [mist-system/kernel target subarchitecture.])
-  AC_DEFINE_UNQUOTED([VENDOR], [${vendor_subdir}], [mist-system/kernel target vendor.])
+  AC_DEFINE_UNQUOTED([ARCH], [${arch_subdir}], [bolthur/kernel target architecture.])
+  AC_DEFINE_UNQUOTED([SUBARCH], [${subarch_subdir}], [bolthur/kernel target subarchitecture.])
+  AC_DEFINE_UNQUOTED([VENDOR], [${vendor_subdir}], [bolthur/kernel target vendor.])
   AC_SUBST(arch_subdir)
   AC_SUBST(subarch_subdir)
   AC_SUBST(vendor_subdir)
@@ -177,13 +177,13 @@ AC_DEFUN([MIST_SET_HOST], [
   AC_SUBST(cflags_libfdt)
 ])
 
-AC_DEFUN([MIST_SET_FLAGS], [
+AC_DEFUN([BOLTHUR_SET_FLAGS], [
   CFLAGS="${CFLAGS} -ffreestanding -Wall -Wextra -Werror -Wpedantic -nodefaultlibs"
   LDFLAGS="${LDFLAGS} -nostdlib -fno-exceptions"
 ])
 
-AC_DEFUN([MIST_PROG_OBJCOPY], [
-  AC_CHECK_TOOL([MIST_OBJCOPY], [objcopy])
+AC_DEFUN([BOLTHUR_PROG_OBJCOPY], [
+  AC_CHECK_TOOL([BOLTHUR_OBJCOPY], [objcopy])
   AC_CACHE_CHECK([whether objcopy generates $host_bfd],
     [ac_cv_objcopy_supports_host_bfd],
     [if test "$NOS_OBJCOPY" --info 2>&1 < /dev/null | grep "$host_bfd" > /dev/null; then

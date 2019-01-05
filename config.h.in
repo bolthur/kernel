@@ -1,6 +1,6 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* mist-system/kernel target architecture. */
+/* bolthur/kernel target architecture. */
 #undef ARCH
 
 /* Define to 1 for ARM targets. */
@@ -96,10 +96,10 @@
 /* Keyword for section placement. */
 #undef SECTION
 
-/* mist-system/kernel target subarchitecture. */
+/* bolthur/kernel target subarchitecture. */
 #undef SUBARCH
 
-/* mist-system/kernel target vendor. */
+/* bolthur/kernel target vendor. */
 #undef VENDOR
 
 /* Define to 1 for raspberry pi vendor. */

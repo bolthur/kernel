@@ -1,7 +1,7 @@
 
 /**
- * mist-system/kernel
- * Copyright (C) 2017 - 2018 mist-system project.
+ * bolthur/kernel
+ * Copyright (C) 2017 - 2018 bolthur project.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,6 +20,6 @@
 #ifndef __LIBC_SYS_CDEFS__
 #define __LIBC_SYS_CDEFS__
 
-#define __mist_system_libc 1
+#define __bolthur_system_libc 1
 
 #endif

@@ -1,7 +1,7 @@
 
 /**
- * mist-system/kernel
- * Copyright (C) 2017 - 2018 mist-system project.
+ * bolthur/kernel
+ * Copyright (C) 2017 - 2019 bolthur project.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -38,27 +38,18 @@ void kernel_main() {
   // enable tty for output
   tty_init();
 
-  printf(
-    "%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n",
-    " ______     __         __         ______     ______        __    __     __     ______     ______  ",
-    "/\\  __ \\   /\\ \\       /\\ \\       /\\  ___\\   /\\  ___\\      /\\ \"-./  \\   /\\ \\   /\\  ___\\   /\\__  _\\ ",
-    "\\ \\  __ \\  \\ \\ \\____  \\ \\ \\____  \\ \\  __\\   \\ \\___  \\     \\ \\ \\-./\\ \\  \\ \\ \\  \\ \\___  \\  \\/_/\\ \\/ ",
-    " \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_____\\  \\ \\_____\\  \\/\\_____\\     \\ \\_\\ \\ \\_\\  \\ \\_\\  \\/\\_____\\    \\ \\_\\ ",
-    "  \\/_/\\/_/   \\/_____/   \\/_____/   \\/_____/   \\/_____/      \\/_/  \\/_/   \\/_/   \\/_____/     \\/_/ "
-  );
-
   // Setup platform related parts
-  printf( "[mist-system/kernel -> platform] initialize ... " );
+  printf( "[bolthur/kernel -> platform] initialize ... " );
   platform_init();
   printf( "done!\r\n" );
 
   // Setup irq
-  printf( "[mist-system/kernel -> irq] initialize ... " );
+  printf( "[bolthur/kernel -> irq] initialize ... " );
   irq_init();
   printf( "done!\r\n" );
 
   // Setup memory management
-  printf( "[mist-system/kernel -> memory] initialize ... [" );
+  printf( "[bolthur/kernel -> memory] initialize ... [" );
   // FIXME: Setup physical memory management
   printf( " physical, " );
   // FIXME: Setup virtual memory management
@@ -68,24 +59,24 @@ void kernel_main() {
   printf( "done!\r\n" );
 
   // FIXME: Setup event system
-  printf( "[mist-system/kernel -> event] initialize ... " );
+  printf( "[bolthur/kernel -> event] initialize ... " );
   event_init();
   printf( "done!\r\n" );
 
   // Setup debug if enabled
   #if defined( DEBUG )
-    printf( "[mist-system/kernel -> debug] initialize ... " );
+    printf( "[bolthur/kernel -> debug] initialize ... " );
     debug_init();
     printf( "done!\r\n" );
   #endif
 
   // Setup timer
-  printf( "[mist-system/kernel -> timer] initialize ... " );
+  printf( "[bolthur/kernel -> timer] initialize ... " );
   timer_init();
   printf( "done!\r\n" );
 
   // Setup irq
-  printf( "[mist-system/kernel -> irq] enable ... " );
+  printf( "[bolthur/kernel -> irq] enable ... " );
   irq_enable();
   printf( "done!\r\n" );
 
