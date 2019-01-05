@@ -17,36 +17,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_DEBUG__
-#define __KERNEL_DEBUG__
+#include <arch/arm/barrier.h>
 
-#include <stdint.h>
-
-// FIXME: Remove, when defines have been written to functions
-#if defined( ARCH_ARM )
-  #include <arch/arm/debug.h>
-#else
-  #error "Debug defines not available"
-#endif
-
-#define BUG_ON( cond, msg ) ( cond ? BUG( msg ) : ( void )0 );
-
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
-typedef struct {
-  const char *filename;
-  uint32_t line;
-  uint64_t addr;
-  const char *msg;
-} bug_entry_t;
-
-void debug_init( void );
-void debug_breakpoint( void );
-
-#if defined( __cplusplus )
+/**
+ * @brief Data memory barrier invalidation
+ */
+void __attribute__(( optimize( "O0" ) )) barrier_data_mem( void ) {
+  asm volatile ( "mcr p15, #0, %[zero], c7, c10, #5" : : [ zero ] "r" ( 0 ) );
 }
-#endif
 
-#endif
+/**
+ * @brief Data sync barrier invalidation
+ */
+void __attribute__(( optimize( "O0" ) )) barrier_data_sync( void ) {
+  asm volatile ( "mcr p15, #0, %[zero], c7, c10, #4" : : [ zero ] "r" ( 0 ) );
+}
+
+/**
+ * @brief Flush cache
+ */
+void __attribute__(( optimize( "O0" ) )) barrier_flush_cache( void ) {
+  asm volatile ( "mcr p15, #0, %[zero], c7, c14, #0" : : [ zero ] "r" ( 0 ) );
+}

@@ -17,36 +17,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_DEBUG__
-#define __KERNEL_DEBUG__
-
 #include <stdint.h>
+#include <vendor/rpi/peripheral.h>
 
-// FIXME: Remove, when defines have been written to functions
-#if defined( ARCH_ARM )
-  #include <arch/arm/debug.h>
+// initial setup of peripheral base
+#if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI2_B_REV2 ) || defined( PLATFORM_RPI3_B ) || defined( PLATFORM_RPI3_B_PLUS )
+  uint32_t peripheral_base = 0x3F000000;
 #else
-  #error "Debug defines not available"
+  uint32_t peripheral_base = 0x20000000;
 #endif
 
-#define BUG_ON( cond, msg ) ( cond ? BUG( msg ) : ( void )0 );
-
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
-typedef struct {
-  const char *filename;
-  uint32_t line;
-  uint64_t addr;
-  const char *msg;
-} bug_entry_t;
-
-void debug_init( void );
-void debug_breakpoint( void );
-
-#if defined( __cplusplus )
+/**
+ * @brief Method to set peripheral base address
+ *
+ * @param addr Address to set peripheral base
+ */
+void peripheral_base_set( uint32_t addr ) {
+  peripheral_base = addr;
 }
-#endif
 
-#endif
+/**
+ * @brief Method to get peripheral base address
+ *
+ * @return uint32_t Peripheral base address
+ */
+uint32_t peripheral_base_get( void ) {
+  return peripheral_base;
+}

@@ -17,36 +17,24 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_DEBUG__
-#define __KERNEL_DEBUG__
+#include <arch/arm/mmio.h>
 
-#include <stdint.h>
-
-// FIXME: Remove, when defines have been written to functions
-#if defined( ARCH_ARM )
-  #include <arch/arm/debug.h>
-#else
-  #error "Debug defines not available"
-#endif
-
-#define BUG_ON( cond, msg ) ( cond ? BUG( msg ) : ( void )0 );
-
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
-typedef struct {
-  const char *filename;
-  uint32_t line;
-  uint64_t addr;
-  const char *msg;
-} bug_entry_t;
-
-void debug_init( void );
-void debug_breakpoint( void );
-
-#if defined( __cplusplus )
+/**
+ * @brief Write to memory mapped I/O
+ *
+ * @param reg register/address to write to
+ * @param data data to write
+ */
+void __attribute__(( optimize( "O0" ) )) mmio_write( uint32_t reg, uint32_t data ) {
+  *( volatile uint32_t* )( (uintptr_t)reg ) = data;
 }
-#endif
 
-#endif
+/**
+ * @brief Read from memory mapped I/O
+ *
+ * @param reg register/address to read
+ * @return uint32_t data from memory mapped I/O
+ */
+uint32_t __attribute__(( optimize( "O0" ) )) mmio_read( uint32_t reg ) {
+  return *( volatile uint32_t* )( ( uintptr_t )reg );
+}
