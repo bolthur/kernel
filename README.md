@@ -130,10 +130,10 @@ For remote debugging configure the kernel with `--enable-debug`, rebuild and cop
 
 ```bash
 ### debug 32 bit arm device
-../toolchain/opt/cross/bin/arm-none-eabi-gdb -b 115200 --tty=/dev/ttyUSB0 ./kernel/vendor/rpi/kernel.zwerg ./kernel/vendor/rpi/kernel.map
+../scripts/opt/cross/bin/arm-none-eabi-gdb -b 115200 --tty=/dev/ttyUSB0 ./kernel/vendor/rpi/kernel.zwerg ./kernel/vendor/rpi/kernel.map
 
 ### debug 64 bit arm device
-../toolchain/opt/cross/bin/aarch64-none-elf-gdb -b 115200 --tty=/dev/ttyUSB0 ./kernel/vendor/rpi/kernel.zwerg ./kernel/vendor/rpi/kernel.map
+../scripts/opt/cross/bin/aarch64-none-elf-gdb -b 115200 --tty=/dev/ttyUSB0 ./kernel/vendor/rpi/kernel.zwerg ./kernel/vendor/rpi/kernel.map
 ```
 
 ### Real hardware
