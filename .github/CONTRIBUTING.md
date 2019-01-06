@@ -22,7 +22,7 @@ To setup for making changes you'll need to take a few steps, which we've outline
 
 1. Fork repository [bolthur/kernel](https://github.com/bolthur/kernel). If you're not sure how to fork the repository, GitHub has a [guid](https://help.github.com/articles/fork-a-repo/) for the process and checkout the fork.
 
-2. Setup cross compilation environment. Easiest way to achieve that is to execute the shell script `toolchain/cross-gcc.sh`.
+2. Setup cross compilation environment. Easiest way to achieve that is to execute the shell script `scripts/cross-gcc.sh`.
 
 3. Prepare checkout for compilation by executing the following commands:
 

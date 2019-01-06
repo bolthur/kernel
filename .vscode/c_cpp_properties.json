@@ -7,8 +7,8 @@
                 "${workspaceRoot}/lib/stdc",
                 "${workspaceRoot}/lib/tar",
                 "${workspaceRoot}/lib/avl",
-                "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-                "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
+                "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
@@ -18,8 +18,8 @@
                     "${workspaceRoot}/lib/stdc",
                     "${workspaceRoot}/lib/tar",
                     "${workspaceRoot}/lib/avl",
-                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
+                    "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                    "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -36,8 +36,8 @@
                 "${workspaceRoot}/lib/stdc",
                 "${workspaceRoot}/lib/tar",
                 "${workspaceRoot}/lib/avl",
-                "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-                "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
+                "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
@@ -47,8 +47,8 @@
                     "${workspaceRoot}/lib/stdc",
                     "${workspaceRoot}/lib/tar",
                     "${workspaceRoot}/lib/avl",
-                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
+                    "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                    "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -61,8 +61,8 @@
                 "${workspaceRoot}/lib/stdc",
                 "${workspaceRoot}/lib/tar",
                 "${workspaceRoot}/lib/avl",
-                "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-                "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
+                "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
             ],
             "defines": [
                 "_DEBUG",
@@ -75,8 +75,8 @@
                     "${workspaceRoot}/lib/stdc",
                     "${workspaceRoot}/lib/tar",
                     "${workspaceRoot}/lib/avl",
-                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-                    "${workspaceRoot}/toolchain/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
+                    "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+                    "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""

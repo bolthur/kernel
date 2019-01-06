@@ -89,8 +89,8 @@ BOLTHUR_SET_FLAGS
 
 # extend path with local toolchain
 srcdir2=`readlink -f $srcdir`
-PATH="${srcdir2}/toolchain/opt/cross/bin:${PATH}"
-AC_SUBST(PATH, "${srcdir2}/toolchain/opt/cross/bin:${PATH}")
+PATH="${srcdir2}/scripts/opt/cross/bin:${PATH}"
+AC_SUBST(PATH, "${srcdir2}/scripts/opt/cross/bin:${PATH}")
 
 # conftest
 AC_LANG_CONFTEST([AC_LANG_SOURCE([[const char hw[] = "Hello, World\n";]])])

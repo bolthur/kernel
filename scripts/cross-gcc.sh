@@ -227,45 +227,45 @@ if [ ! -f gcc-$PKG_GCC.tar.gz ]; then
 fi
 
 
-## Download gcc and extract
-if [ ! -f gdb-$PKG_GDB.tar.gz ]; then
-  wget "https://ftp.gnu.org/gnu/gdb/gdb-${PKG_GDB}.tar.gz"
-  tar -xzf gdb-${PKG_GDB}.tar.gz
-
-  # Build gdb for aarch32
-  export TARGET=arm-none-eabi
-  cd "$BASEDIR/build/gdb-arm-aarch32"
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    ../../src/gdb-$PKG_GDB/configure \
-      --target=$TARGET \
-      --prefix="$PREFIX" \
-      --with-gmp="$PREFIX" \
-      --with-mpfr="$PREFIX" \
-      --with-mpc="$PREFIX" \
-  else
-    ../../src/gdb-$PKG_GDB/configure \
-      --target=$TARGET \
-      --prefix="$PREFIX"
-  fi
-  make all -j${CPU_COUNT}
-  make install
-
-  # Build gdb for aarch64
-  export TARGET=aarch64-none-elf
-  cd "$BASEDIR/build/gdb-arm-aarch64"
-  if [[ "$OSTYPE" == "darwin"* ]]; then
-    ../../src/gdb-$PKG_GDB/configure \
-      --target=$TARGET \
-      --prefix="$PREFIX" \
-      --with-gmp="$PREFIX" \
-      --with-mpfr="$PREFIX" \
-      --with-mpc="$PREFIX" \
-  else
-    ../../src/gdb-$PKG_GDB/configure \
-      --target=$TARGET \
-      --prefix="$PREFIX"
-  fi
-  make all -j${CPU_COUNT}
-  make install
-  cd "$BASEDIR/src"
-fi
+## Download gdb and extract
+#if [ ! -f gdb-$PKG_GDB.tar.gz ]; then
+#  wget "https://ftp.gnu.org/gnu/gdb/gdb-${PKG_GDB}.tar.gz"
+#  tar -xzf gdb-${PKG_GDB}.tar.gz
+#
+#  # Build gdb for aarch32
+#  export TARGET=arm-none-eabi
+#  cd "$BASEDIR/build/gdb-arm-aarch32"
+#  if [[ "$OSTYPE" == "darwin"* ]]; then
+#    ../../src/gdb-$PKG_GDB/configure \
+#      --target=$TARGET \
+#      --prefix="$PREFIX" \
+#      --with-gmp="$PREFIX" \
+#      --with-mpfr="$PREFIX" \
+#      --with-mpc="$PREFIX" \
+#  else
+#    ../../src/gdb-$PKG_GDB/configure \
+#      --target=$TARGET \
+#      --prefix="$PREFIX"
+#  fi
+#  make all -j${CPU_COUNT}
+#  make install
+#
+#  # Build gdb for aarch64
+#  export TARGET=aarch64-none-elf
+#  cd "$BASEDIR/build/gdb-arm-aarch64"
+#  if [[ "$OSTYPE" == "darwin"* ]]; then
+#    ../../src/gdb-$PKG_GDB/configure \
+#      --target=$TARGET \
+#      --prefix="$PREFIX" \
+#      --with-gmp="$PREFIX" \
+#      --with-mpfr="$PREFIX" \
+#      --with-mpc="$PREFIX" \
+#  else
+#    ../../src/gdb-$PKG_GDB/configure \
+#      --target=$TARGET \
+#      --prefix="$PREFIX"
+#  fi
+#  make all -j${CPU_COUNT}
+#  make install
+#  cd "$BASEDIR/src"
+#fi

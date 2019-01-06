@@ -6,7 +6,7 @@
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceRoot}/build/kernel/vendor/rpi/kernel.zwerg",
-      "miDebuggerPath": "${workspaceRoot}/toolchain/opt/cross/bin/arm-none-eabi-gdb",
+      "miDebuggerPath": "${workspaceRoot}/scripts/opt/cross/bin/arm-none-eabi-gdb",
       "MIMode": "gdb",
       "cwd": "${workspaceRoot}/build/kernel/vendor/rpi/",
       "setupCommands": [

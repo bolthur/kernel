@@ -13,7 +13,10 @@ bolthur kernel project. Below are some introductions, help and decisions about b
 * [x] TTY for printing debug messages done within `kernel/vendor/{vendor}`
   * [x] printf implementation for kernel environment
 * [x] Interrupt requests and fast interrupts
-* [x] Reorder code and move source files out of folder `src`
+* [ ] Reorder code
+  * [x] Move source files out of folder `src`
+  * [ ] Restructore code
+* [ ] Evaluate switch from custom cross compiler toolchain to llvm
 * [ ] Memory management
   * [ ] Physical memory management
     * [ ] Get max memory from vendor
