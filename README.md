@@ -7,12 +7,13 @@ bolthur kernel project. Below are some introductions, help and decisions about b
 * [x] Cleanup current code mess
   * [x] Move memory barrier header to arm as it is arm related
   * [x] Change peripheral base from constant to function due to later virtual remap
-  * [ ] Strip out ATAG and flat device tree parsing into library
+  * [x] Strip out ATAG and flat device tree parsing into library
   * [x] Prefix folders used by automake with an underscore
 * [x] Serial output done within `kernel/vendor/{vendor}`
 * [x] TTY for printing debug messages done within `kernel/vendor/{vendor}`
   * [x] printf implementation for kernel environment
 * [x] Interrupt requests and fast interrupts
+* [x] Reorder code and move source files out of folder `src`
 * [ ] Memory management
   * [ ] Physical memory management
     * [ ] Get max memory from vendor
@@ -126,10 +127,10 @@ For remote debugging configure the kernel with `--enable-debug`, rebuild and cop
 
 ```bash
 ### debug 32 bit arm device
-../toolchain/opt/cross/bin/arm-none-eabi-gdb -b 115200 --tty=/dev/ttyUSB0 ./src/kernel/vendor/rpi/kernel.zwerg ./src/kernel/vendor/rpi/kernel.map
+../toolchain/opt/cross/bin/arm-none-eabi-gdb -b 115200 --tty=/dev/ttyUSB0 ./kernel/vendor/rpi/kernel.zwerg ./kernel/vendor/rpi/kernel.map
 
 ### debug 64 bit arm device
-../toolchain/opt/cross/bin/aarch64-none-elf-gdb -b 115200 --tty=/dev/ttyUSB0 ./src/kernel/vendor/rpi/kernel.zwerg ./src/kernel/vendor/rpi/kernel.map
+../toolchain/opt/cross/bin/aarch64-none-elf-gdb -b 115200 --tty=/dev/ttyUSB0 ./kernel/vendor/rpi/kernel.zwerg ./kernel/vendor/rpi/kernel.map
 ```
 
 ### Real hardware
@@ -152,13 +153,13 @@ Emulation of the kernel project with qemu during development may be done at all 
 
 ```bash
 # raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel_qemu -dtb ../src/kernel/vendor/rpi/device/bcm2709-rpi-2-b.dtb
+qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./kernel/vendor/rpi/kernel_qemu -dtb ../kernel/vendor/rpi/device/bcm2709-rpi-2-b.dtb
 
 # raspberry pi 2B rev 2 kernel emulation ( to be tested )
-qemu-system-aarch64 -m 1024 -M raspi2 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel_qemu -dtb ../src/kernel/vendor/rpi/device/bcm2709-rpi-2-b.dtb
+qemu-system-aarch64 -m 1024 -M raspi2 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./kernel/vendor/rpi/kernel_qemu -dtb ../kernel/vendor/rpi/device/bcm2709-rpi-2-b.dtb
 
 # raspberry pi 3B and 3B+ kernel emulation
-qemu-system-aarch64 -m 1024 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel_qemu -dtb ../src/kernel/vendor/rpi/device/bcm2710-rpi-3-b.dtb
+qemu-system-aarch64 -m 1024 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./kernel/vendor/rpi/kernel_qemu -dtb ../kernel/vendor/rpi/device/bcm2710-rpi-3-b.dtb
 ```
 
 ## Planned support

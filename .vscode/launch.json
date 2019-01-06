@@ -5,16 +5,16 @@
       "name": "aarch32-rpi-remote-debug",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceRoot}/build/src/kernel/vendor/rpi/kernel.zwerg",
+      "program": "${workspaceRoot}/build/kernel/vendor/rpi/kernel.zwerg",
       "miDebuggerPath": "${workspaceRoot}/toolchain/opt/cross/bin/arm-none-eabi-gdb",
       "MIMode": "gdb",
-      "cwd": "${workspaceRoot}/build/src/kernel/vendor/rpi/",
+      "cwd": "${workspaceRoot}/build/kernel/vendor/rpi/",
       "setupCommands": [
         {
           "text": "set print pretty on"
         },
         {
-          "text": "file ${workspaceRoot}/build/src/kernel/vendor/rpi/kernel.sym"
+          "text": "file ${workspaceRoot}/build/kernel/vendor/rpi/kernel.sym"
         },
         {
           "text": "set architecture arm"

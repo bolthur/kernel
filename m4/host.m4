@@ -25,7 +25,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
     copy_flags="-I ${host_bfd} -O ${host_bfd}"
     output_img=kernel.img
     output_sym=kernel.sym
-    cflags_libfdt="-nostdlib -nostartfiles -ffreestanding -Wall -Wextra -Wshadow -std=gnu99 -I. -I./../../src/lib/stdc/ -Wno-error"
+    cflags_libfdt="-nostdlib -nostartfiles -ffreestanding -Wall -Wextra -Wshadow -std=gnu99 -I. -I./../../lib/stdc/ -Wno-error"
     AC_DEFINE([ARCH_ARM], [1], [Define to 1 for ARM targets.])
     AC_DEFINE([ELF32], [1])
 

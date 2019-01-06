@@ -3,12 +3,12 @@ AC_PREREQ(2.57)
 AC_INIT([bolthur-kernel], [0.1], [bug-kernel@bolthur.org])
 AC_COPYRIGHT(Copyright (C) 2017 - 2019 bolthur)
 
-AC_CONFIG_SRCDIR([src/main.c])
+AC_CONFIG_SRCDIR([main.c])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_CANONICAL_HOST
-AC_CONFIG_SRCDIR([src/kernel/main.c])
+AC_CONFIG_SRCDIR([kernel/main.c])
 AM_INIT_AUTOMAKE([foreign 1.7])
 AC_CONFIG_HEADERS([config.h])
 
@@ -118,19 +118,18 @@ AC_DEFINE_UNQUOTED([SECTION(x)], [__attribute__((section(x)))], [Keyword for sec
 
 AC_CONFIG_FILES([
   Makefile
-  src/Makefile
-  src/kernel/Makefile
-  src/kernel/arch/Makefile
-  src/kernel/arch/arm/Makefile
-  src/kernel/arch/arm/v6/Makefile
-  src/kernel/arch/arm/v7/Makefile
-  src/kernel/arch/arm/v8/Makefile
-  src/kernel/vendor/Makefile
-  src/kernel/vendor/rpi/Makefile
-  src/lib/Makefile
-  src/lib/avl/Makefile
-  src/lib/stdc/Makefile
-  src/lib/tar/Makefile
+  kernel/Makefile
+  kernel/arch/Makefile
+  kernel/arch/arm/Makefile
+  kernel/arch/arm/v6/Makefile
+  kernel/arch/arm/v7/Makefile
+  kernel/arch/arm/v8/Makefile
+  kernel/vendor/Makefile
+  kernel/vendor/rpi/Makefile
+  lib/Makefile
+  lib/avl/Makefile
+  lib/stdc/Makefile
+  lib/tar/Makefile
 ])
 
 AC_OUTPUT
