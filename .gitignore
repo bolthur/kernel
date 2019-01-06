@@ -1,7 +1,8 @@
 
 # ---> Custom
 /build
-/config
+config/**/*
+!config/.gitkeep
 *~
 toolchain/**/*
 !toolchain/cross-gcc.sh
