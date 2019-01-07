@@ -178,7 +178,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
 ])
 
 AC_DEFUN([BOLTHUR_SET_FLAGS], [
-  CFLAGS="${CFLAGS} -ffreestanding -Wall -Wextra -Werror -Wpedantic -Wconversion -std=c11 -nodefaultlibs"
+  CFLAGS="${CFLAGS} -ffreestanding -Wall -Wextra -Werror -Wpedantic -Wconversion -std=c18 -nodefaultlibs"
   LDFLAGS="${LDFLAGS} -nostdlib -fno-exceptions"
 ])
 
