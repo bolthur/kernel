@@ -29,7 +29,7 @@ bool print( const char* data, size_t length, int32_t pad0, int32_t pad ) {
   const unsigned char* bytes = ( const unsigned char * )data;
 
   // print padding if set
-  for ( size_t i = 0; pad > 0 && i < ( pad - length ); i++ ) {
+  for ( size_t i = 0; pad > 0 && i < ( ( size_t )pad - length ); i++ ) {
     if ( putchar( pad0 ? '0' : ' ' ) == EOF ) {
       return false;
     }
@@ -46,20 +46,10 @@ bool print( const char* data, size_t length, int32_t pad0, int32_t pad ) {
 }
 
 int printf( const char* restrict format, ... ) {
-  /*
-  Correct implementation
-  va_list parameters;
-  int ret_val;
-
-  va_start( parameters, format );
-  ret_val = vprintf( format, parameters );
-  va_end( parameters );
-  return ret_val;*/
-
   va_list parameters;
   va_start( parameters, format );
 
-  int32_t written = 0;
+  uint32_t written = 0;
   size_t maxrem, amount, len;
   char c, buf[ 30 ];
   int32_t n;
@@ -235,5 +225,5 @@ int printf( const char* restrict format, ... ) {
   }
 
   va_end( parameters );
-  return written;
+  return ( int )written;
 }

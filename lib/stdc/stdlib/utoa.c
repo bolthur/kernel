@@ -27,9 +27,13 @@ char *utoa( uint32_t value, char* buffer, int32_t radix ) {
 
   // divide until we reach 0 as result
   do {
-    int remainder = uv % radix;
-    *p++ = ( remainder < 10 ) ? remainder + '0' : remainder + 'a' - 10;
-  } while ( uv /= radix );
+    int remainder = ( int )( uv % ( unsigned )radix );
+    *p++ = ( char )(
+      ( remainder < 10 )
+        ? remainder + '0'
+        : remainder + 'a' - 10
+    );
+  } while ( uv /= ( unsigned )radix );
 
   // terminate buffer
   *p = 0;

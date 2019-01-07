@@ -105,11 +105,11 @@ void irq_handler( cpu_register_context_t *status ) {
   ASSERT( -1 != irq && 0 <= irq );
 
   // get bound interrupt handler
-  irq_callback_t cb = irq_get_handler( irq, false );
+  irq_callback_t cb = irq_get_handler( ( uint8_t )irq, false );
   ASSERT( NULL != cb );
 
   // Execute callback with registers
-  cb( irq, &status );
+  cb( ( uint8_t )irq, &status );
 }
 
 /**
@@ -125,11 +125,11 @@ void fast_interrupt_handler( cpu_register_context_t *status ) {
   ASSERT( -1 != irq && 0 <= irq );
 
   // get bound interrupt handler
-  irq_callback_t cb = irq_get_handler( irq, true );
+  irq_callback_t cb = irq_get_handler( ( uint8_t )irq, true );
   ASSERT( NULL != cb );
 
   // Execute callback with registers
-  cb( irq, &status );
+  cb( ( uint8_t )irq, &status );
 }
 
 /**

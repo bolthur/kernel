@@ -36,5 +36,5 @@ size_t mbstowcs( wchar_t* pwcs, const char* str, size_t n ) {
     abort();
   #endif
 
-  return -1;
+  return 0;
 }

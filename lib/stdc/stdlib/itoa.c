@@ -20,23 +20,28 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 
 char *itoa( int32_t value, char* buffer, int32_t radix ) {
   char *p = buffer;
-  unsigned uv = value;
-  int32_t sign = ( 10 == radix && 0 > value ) ? 1 : 0;
+  unsigned uv;
+  bool sign = ( 10 == radix && 0 > value ) ? true : false;
 
   if ( sign ) {
-    uv = -value;
+    uv = ( unsigned )-value;
   } else {
     uv = ( unsigned )value;
   }
 
   // divide until we reach 0 as result
   do {
-    int remainder = uv % radix;
-    *p++ = ( remainder < 10 ) ? remainder + '0' : remainder + 'a' - 10;
-  } while ( uv /= radix );
+    int remainder = ( int )( uv % ( unsigned )radix );
+    *p++ = ( char )(
+      ( remainder < 10 )
+        ? remainder + '0'
+        : remainder + 'a' - 10
+    );
+  } while ( uv /= ( unsigned )radix );
 
   // add sign
   if ( sign ) {

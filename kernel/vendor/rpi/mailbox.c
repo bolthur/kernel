@@ -70,7 +70,7 @@ uint32_t mailbox_read( mailbox0_channel_t channel ) {
  */
 void mailbox_write( mailbox0_channel_t channel, uint32_t data ) {
   // add channel number at the lower 4 bit
-  data &= ~0xF;
+  data = ( uint32_t )( ( int32_t )data & ~0xF );
   data |= channel;
 
   // get mailbox address

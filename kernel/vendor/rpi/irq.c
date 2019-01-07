@@ -85,7 +85,7 @@ int8_t irq_get_pending( bool fast ) {
 
       // check second pending register
       if ( pending2 && check_bit ) {
-        return i + 32;
+        return ( int8_t )( i + 32 );
       }
     }
   }

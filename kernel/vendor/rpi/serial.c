@@ -42,9 +42,9 @@ void serial_init( void ) {
 
   // Setup the GPIO pin 14 && 15
   uint32_t ra = mmio_read( base + GPFSEL1 );
-  ra &= ~( 7 << 12 );
+  ra = ( uint32_t )( ( int32_t ) ra & ~( 7 << 12 ) );
   ra |= 4 << 12;
-  ra &= ~( 7 << 15 );
+  ra = ( uint32_t )( ( int32_t ) ra & ~( 7 << 15 ) );
   ra |= 4 << 15;
   mmio_write( base + GPFSEL1, ra );
 

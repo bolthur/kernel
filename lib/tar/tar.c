@@ -22,7 +22,7 @@
 #include "tar.h"
 
 uint32_t tar_get_size( const char* in ) {
-  uint32_t size = -1;
+  uint32_t size = 0;
 
   // calculate size
   for (
@@ -31,7 +31,7 @@ uint32_t tar_get_size( const char* in ) {
     loop > 0;
     loop--, count *= 8
   ) {
-    size += ( ( in[ loop - 1 ] - '0' ) * count );
+    size += ( ( uint32_t )( in[ loop - 1 ] - '0' ) * count );
   }
 
   // return calculated
