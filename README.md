@@ -13,10 +13,10 @@ bolthur kernel project. Below are some introductions, help and decisions about b
 * [x] TTY for printing debug messages done within `kernel/vendor/{vendor}`
   * [x] printf implementation for kernel environment
 * [x] Interrupt requests and fast interrupts
+* [x] Add memory barriers for arm necessary for e.g. mailbox on rpi
 * [ ] Reorder code
   * [x] Move source files out of folder `src`
   * [ ] Restructore code
-* [ ] Evaluate switch from custom cross compiler toolchain to llvm
 * [ ] Memory management
   * [ ] Physical memory management
     * [ ] Get max memory from vendor
@@ -39,7 +39,7 @@ bolthur kernel project. Below are some introductions, help and decisions about b
 
 ## Unordered list of things to be done and ideas
 
-* [x] Add memory barriers for arm necessary for e.g. mailbox on rpi
+* [ ] Evaluate switch from custom cross compiler toolchain to llvm
 * [ ] Rework recursive autotools behaviour to non recursive
 * [ ] Libraries
   * [ ] Think about merge of compiler library `libgcc.a` and local `libstdc.a`

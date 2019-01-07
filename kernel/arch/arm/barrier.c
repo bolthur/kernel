@@ -21,21 +21,23 @@
 
 /**
  * @brief Data memory barrier invalidation
+ * @todo Replace by inline assembly command dmb
  */
 void __attribute__(( optimize( "O0" ) )) barrier_data_mem( void ) {
-  asm volatile ( "mcr p15, #0, %[zero], c7, c10, #5" : : [ zero ] "r" ( 0 ) );
+  __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c10, #5" : : [ zero ] "r" ( 0 ) );
 }
 
 /**
  * @brief Data sync barrier invalidation
+ * @todo Replace by inline assembly command dsb
  */
 void __attribute__(( optimize( "O0" ) )) barrier_data_sync( void ) {
-  asm volatile ( "mcr p15, #0, %[zero], c7, c10, #4" : : [ zero ] "r" ( 0 ) );
+  __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c10, #4" : : [ zero ] "r" ( 0 ) );
 }
 
 /**
  * @brief Flush cache
  */
 void __attribute__(( optimize( "O0" ) )) barrier_flush_cache( void ) {
-  asm volatile ( "mcr p15, #0, %[zero], c7, c14, #0" : : [ zero ] "r" ( 0 ) );
+  __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c14, #0" : : [ zero ] "r" ( 0 ) );
 }

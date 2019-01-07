@@ -105,7 +105,7 @@ void timer_clear( uint8_t num, void *_cpu ) {
 
   // write cntcval
   // necessary to prevent nested interrupts
-  asm volatile ("mcr p15, 0, %0, c14, c3, 0" :: "r"( 50000000 ) );
+  __asm__ __volatile__ ("mcr p15, 0, %0, c14, c3, 0" :: "r"( 50000000 ) );
 }
 
 /**
@@ -122,21 +122,21 @@ void timer_clear2( void *_cpu ) {
  */
 void timer_init( void ) {
   uint32_t cntfrq, cntv_val, cntv_ctl;
-  asm volatile( "mrc p15, 0, %0, c14, c0, 0" : "=r"( cntfrq ) );
+  __asm__ __volatile__( "mrc p15, 0, %0, c14, c0, 0" : "=r"( cntfrq ) );
   //printf( "CNTFRQ: 0x%08x\r\n", cntfrq, cntfrq );
 
   // write_cntv_tval(cntfrq);
   // clear cntv interrupt and set next 1 sec timer.
-  asm volatile( "mcr p15, 0, %0, c14, c3, 0" :: "r"( cntfrq ) );
+  __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 0" :: "r"( cntfrq ) );
 
   // read_cntv_tval
-  asm volatile ( "mrc p15, 0, %0, c14, c3, 0" : "=r"( cntv_val ) );
+  __asm__ __volatile__ ( "mrc p15, 0, %0, c14, c3, 0" : "=r"( cntv_val ) );
   //printf( "CNTV_VAL: 0x%08x\r\n", cntv_val );
   mmio_write( CORE0_TIMER_IRQCNTL, ( 1 << 3 ) );
 
   // enable cntv
   cntv_ctl = 1;
-  asm volatile ( "mcr p15, 0, %0, c14, c3, 1" :: "r"( cntv_ctl ) ); // write CNTV_CTL
+  __asm__ __volatile__ ( "mcr p15, 0, %0, c14, c3, 1" :: "r"( cntv_ctl ) ); // write CNTV_CTL
 
   irq_register_handler( ( 1 << 3 ), timer_clear, false );
   event_bind_handler( EVENT_TIMER, timer_clear2 );

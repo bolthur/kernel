@@ -24,7 +24,7 @@
 
 // FIXME: Move into function
 #define BUG(__msg) { \
-  asm volatile("1: .word	0xffffffff\n" \
+  __asm__ __volatile__("1: .word	0xffffffff\n" \
           ".pushsection .bugtable, \"a\"\n" \
           ".word	%c0\n" \
           ".word	%c1\n" \

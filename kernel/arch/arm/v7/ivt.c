@@ -29,7 +29,7 @@
  * @brief interrupt vector table aligned according to manual
  */
 static void __attribute__( ( naked, aligned( 32 ) ) ) interrupt_vector_table( void ) {
-  asm volatile(
+  __asm__ __volatile__(
     "b start\n" // reset
     "b _undefined_instruction_handler\n" // undefined instruction
     "b _software_interrupt_handler\n" // software interrupt
@@ -136,5 +136,5 @@ void fast_interrupt_handler( cpu_register_context_t *status ) {
  * @brief Method to initialize interrupt vector table
  */
 void ivt_init( void ) {
-  asm volatile( "mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" ( &interrupt_vector_table ) );
+  __asm__ __volatile__( "mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" ( &interrupt_vector_table ) );
 }

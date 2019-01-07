@@ -71,7 +71,7 @@ int8_t irq_get_pending( bool fast ) {
     uint32_t pending2 = mmio_read( base + INTERRUPT_IRQ_PENDING_2 );
 
     uint32_t core0_irq_source = mmio_read( CORE0_IRQ_SOURCE );
-    if ( core0_irq_source && 0x08 ) {
+    if ( core0_irq_source & 0x08 ) {
       return 8;
     }
 
