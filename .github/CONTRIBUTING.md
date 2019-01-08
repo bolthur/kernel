@@ -42,8 +42,7 @@ Once the repository has been checked out and everything has been prepared includ
 Short branch breakdown
 
 - `master` - Make your change at the `master` branch in case that it is an *urgent* hotfix
-- `dev` - Make your change at the `dev` branch, when it's a *non-urgent* bugfix or some backwards-compatible feature.
-- `next` - Make your change at the `next` branch, when it leads to a breaking change and is not backwards-compatible.
+- `develop` - Make your change at the `develop` branch, when it's a *non-urgent* bugfix or feature.
 
 The change should be made directly to the correct branch within your fork or to a branch branched from the correct branch listed above.
 

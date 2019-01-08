@@ -29,28 +29,39 @@ bolthur kernel project. Below are some introductions, help and decisions about b
       * [ ] `0xC0008000` for 32bit
       * [ ] `0xffffff0000080000` for 64bit
   * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code
+  * [ ] Consider peripherals per board within mmu as not cachable
+  * [ ] Enable CPU caches
 * [ ] Event system for mapping service routines `Needs to be planned`
   * [ ] ~~Generic code for `register` and `unregister` an event done within `kernel`~~
   * [ ] ~~Vendor related mapping~~
     * [ ] ~~Interrupt requests~~
     * [ ] ~~Fast interrupt requests~~
     * [ ] ~~Software interrupts~~
-* [ ] Remote debugging support via GDB and serial
+* [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
+* [ ] Add gdb stub for debugging on remote device via serial port
+  * [ ] Use dynamic memory allocation
+  * [ ] Find better place for `serial_init` than `tty_init`
+  * [ ] Finish debug launch.json when remote debugging is possible
 
 ## Unordered list of things to be done and ideas
 
 * [ ] Evaluate switch from custom cross compiler toolchain to llvm
-* [ ] Rework recursive autotools behaviour to non recursive
-* [ ] Libraries
-  * [ ] Think about merge of compiler library `libgcc.a` and local `libstdc.a`
-  * [ ] `libavl.a` -> avl tree library
-  * [ ] `libtar.a` -> tar library
+  * [ ] Check remote debugging capabilities
+* [ ] AVL tree
+  * [ ] Add generic avl tree library
+  * [ ] Implement heap management using avl tree library
+* [ ] TAR
+  * [ ] Add generic tar library for reading tar files
+  * [ ] Add initial ramdisk during boot which should be a simple tar file
+  * [ ] Add parsing of initial ramdisk containing drivers or programs for startup
 * [ ] Device tree
-  * [ ] Add own device tree library
+  * [ ] Add device tree library
+  * [ ] Extend automake by option for use device tree
   * [ ] Add parse of device tree when compiled in via option
   * [ ] Debug output, when no device tree has been found
-* [ ] ATAGs
+* [ ] ATAG
   * [ ] Add own atag library
+  * [ ] Extend automake by option for use atag
   * [ ] Add parse of atag when compiled in via option
   * [ ] Debug output, when no atag has been passed
 * [ ] Add irq and isrs register handling
@@ -60,21 +71,9 @@ bolthur kernel project. Below are some introductions, help and decisions about b
   * [ ] Add event system with `register` and `unregister`
     * [ ] Provide map of events for `irq`, `fiq`, `swi`
     * [ ] Fire events for `irq`, `fiq`, `swi`
-* [ ] Memory management
-  * [ ] Add physical memory management
-  * [ ] Add virtual memory management
-  * [ ] Add heap management
-  * [ ] Consider peripherals per board within mmu as not cachable
-  * [ ] Enable CPU caches
-* [ ] initrd and vfs
-  * [ ] Add parse of some custom initrd.tar
-  * [ ] Add virtual file system for initrd
-* [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
-* [ ] Add gdb stub for debugging on remote device via serial port
-  * [ ] Use dynamic memory allocation
-  * [ ] Find better place for `serial_init` than `tty_init`
-  * [ ] Finish debug launch.json when remote debugging is possible
+* [ ] Add virtual file system for initrd
 * [ ] Create a draft for build system with vendor driver/app packaging
+  * [ ] Per vendor initial ramdisk creation
 * [ ] Documentation ( man pages or markdown )
   * [ ] Getting started after checkout
   * [ ] Cross compiler toolchain

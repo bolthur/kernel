@@ -28,7 +28,9 @@ GROUP(
   ../../libkernel.a
   ../libvendor.a
   librpi.a
+  ../../../lib/atag/libatag.a
   ../../../lib/avl/libavl.a
+  ../../../lib/fdt/libfdt.a
   ../../../lib/stdc/libstdc.a
   ../../../lib/tar/libtar.a
 )

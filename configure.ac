@@ -127,7 +127,9 @@ AC_CONFIG_FILES([
   kernel/vendor/Makefile
   kernel/vendor/rpi/Makefile
   lib/Makefile
+  lib/atag/Makefile
   lib/avl/Makefile
+  lib/fdt/Makefile
   lib/stdc/Makefile
   lib/tar/Makefile
 ])
