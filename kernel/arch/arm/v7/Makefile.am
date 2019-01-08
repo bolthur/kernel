@@ -11,6 +11,7 @@ libv7_a_SOURCES = \
   stub/cpu.S \
   stub/irq.S \
   stub/ivt.S \
+  barrier.c \
   cpu.c \
   cpu.h \
   ivt.c \

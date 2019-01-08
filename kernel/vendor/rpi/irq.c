@@ -61,6 +61,8 @@ bool irq_validate_number( uint8_t num ) {
  *
  * @param fast use fast interrupts
  * @return int8_t pending interrupt number
+ *
+ * @todo add code for checking for fast interrupts
  */
 int8_t irq_get_pending( bool fast ) {
   uint32_t base = peripheral_base_get();
@@ -88,9 +90,9 @@ int8_t irq_get_pending( bool fast ) {
         return ( int8_t )( i + 32 );
       }
     }
-  }
 
-  if ( fast ) {
+  // fast interrupt handling
+  } else if ( fast ) {
     PANIC( "Fast interrupts not yet completely supported!" );
   }
 

@@ -20,8 +20,15 @@
 #include <arch/arm/barrier.h>
 
 /**
- * @brief Flush cache
+ * @brief Data memory barrier invalidation
  */
-void __attribute__(( optimize( "O0" ) )) barrier_flush_cache( void ) {
-  __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c14, #0" : : [ zero ] "r" ( 0 ) );
+void __attribute__(( optimize( "O0" ) )) barrier_data_mem( void ) {
+  __asm__ __volatile__ ( "dmb" );
+}
+
+/**
+ * @brief Data sync barrier invalidation
+ */
+void __attribute__(( optimize( "O0" ) )) barrier_data_sync( void ) {
+  __asm__ __volatile__ ( "dsb" );
 }
