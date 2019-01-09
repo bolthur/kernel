@@ -17,23 +17,43 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#ifndef __LIBAVL_AVL__
+#define __LIBAVL_AVL__
 
-#if defined( IS_KERNEL )
-  #include <panic.h>
+#include <stdint.h>
+#include <stddef.h>
+
+#if defined( __cplusplus )
+extern "C" {
 #endif
 
-#include "libavl.h"
+// forward declarations
+typedef struct avl_node avl_node_t;
 
-avl_tree_t *avl_create( avl_compare_func_t *func, void *param ) {
-  ( void )func;
-  ( void )param;
+// type declarations
+typedef int avl_compare_func_t( const void *avl_a, const void *avl_b, void *avl_param );
 
-  #if defined( IS_KERNEL )
-    PANIC( "avl_create not yet implemented!" );
-  #else
-    abort();
-  #endif
+typedef struct avl_node {
+  void *data;
 
-  return NULL;
+  int8_t balance;
+
+  avl_node_t *left;
+  avl_node_t *right;
+} avl_node_t;
+
+typedef struct avl_tree {
+  avl_node_t *root;
+  avl_compare_func_t *compare;
+  void *param;
+  // alloc
+  size_t count;
+} avl_tree_t;
+
+avl_tree_t *avl_create(avl_compare_func_t*, void *);
+
+#if defined( __cplusplus )
 }
+#endif
+
+#endif

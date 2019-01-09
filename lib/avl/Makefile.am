@@ -6,5 +6,5 @@ AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel -I$(top_
 
 noinst_LIBRARIES = libavl.a
 libavl_a_SOURCES = \
-  libavl.c \
-  libavl.h
+  avl.c \
+  avl.h
