@@ -18,7 +18,8 @@
  */
 
 #include <stdio.h>
-#include <arch/arm/v7/cpu.h>
+
+#include "arch/arm/v7/cpu.h"
 
 /**
  * @brief Method for dumping cpu registers

@@ -23,13 +23,14 @@
 #endif
 
 #if defined( ARCH_ARM )
-  #include <arch/arm/delay.h>
-  #include <arch/arm/mmio.h>
+  #include "arch/arm/delay.h"
+  #include "arch/arm/mmio.h"
 #endif
 
-#include <vendor/rpi/peripheral.h>
-#include <vendor/rpi/gpio.h>
-#include <serial.h>
+#include "vendor/rpi/peripheral.h"
+#include "vendor/rpi/gpio.h"
+
+#include "kernel/serial.h"
 
 /**
  * @brief Initialize serial port

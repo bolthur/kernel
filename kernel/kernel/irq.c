@@ -18,8 +18,9 @@
  */
 
 #include <stddef.h>
-#include <irq.h>
-#include <panic.h>
+
+#include "kernel/irq.h"
+#include "kernel/panic.h"
 
 /**
  * @brief Register IRQ handler

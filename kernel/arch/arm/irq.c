@@ -20,7 +20,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include <arch/arm/ivt.h>
+#include "arch/arm/ivt.h"
 
 /**
  * @brief Initialize interrupt requests

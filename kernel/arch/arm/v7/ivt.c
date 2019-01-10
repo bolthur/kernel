@@ -20,10 +20,10 @@
 #include <stdio.h>
 #include <stddef.h>
 
-#include <irq.h>
-#include <panic.h>
+#include "kernel/irq.h"
+#include "kernel/panic.h"
 
-#include <arch/arm/v7/cpu.h>
+#include "arch/arm/v7/cpu.h"
 
 /**
  * @brief interrupt vector table aligned according to manual

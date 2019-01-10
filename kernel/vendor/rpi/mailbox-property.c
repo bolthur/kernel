@@ -20,8 +20,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <vendor/rpi/mailbox.h>
-#include <vendor/rpi/mailbox-property.h>
+
+#include "vendor/rpi/mailbox.h"
+#include "vendor/rpi/mailbox-property.h"
 
 /**
  * @brief property tag buffer, that has to be aligned to 16 byte boundary

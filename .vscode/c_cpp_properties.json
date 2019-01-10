@@ -3,10 +3,10 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceRoot}/kernel",
-                "${workspaceRoot}/lib/stdc",
-                "${workspaceRoot}/lib/tar",
-                "${workspaceRoot}/lib/avl",
+                "${workspaceRoot}/kernel/include",
+                "${workspaceRoot}/lib/stdc/include",
+                "${workspaceRoot}/lib/tar/include",
+                "${workspaceRoot}/lib/avl/include",
                 "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
                 "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
             ],
@@ -14,10 +14,10 @@
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
-                    "${workspaceRoot}/kernel",
-                    "${workspaceRoot}/lib/stdc",
-                    "${workspaceRoot}/lib/tar",
-                    "${workspaceRoot}/lib/avl",
+                    "${workspaceRoot}/kernel/include",
+                    "${workspaceRoot}/lib/stdc/include",
+                    "${workspaceRoot}/lib/tar/include",
+                    "${workspaceRoot}/lib/avl/include",
                     "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
                     "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
                 ],
@@ -32,10 +32,10 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceRoot}/kernel",
-                "${workspaceRoot}/lib/stdc",
-                "${workspaceRoot}/lib/tar",
-                "${workspaceRoot}/lib/avl",
+                "${workspaceRoot}/kernel/include",
+                "${workspaceRoot}/lib/stdc/include",
+                "${workspaceRoot}/lib/tar/include",
+                "${workspaceRoot}/lib/avl/include",
                 "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
                 "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
             ],
@@ -43,10 +43,10 @@
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
-                    "${workspaceRoot}/kernel",
-                    "${workspaceRoot}/lib/stdc",
-                    "${workspaceRoot}/lib/tar",
-                    "${workspaceRoot}/lib/avl",
+                    "${workspaceRoot}/kernel/include",
+                    "${workspaceRoot}/lib/stdc/include",
+                    "${workspaceRoot}/lib/tar/include",
+                    "${workspaceRoot}/lib/avl/include",
                     "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
                     "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
                 ],
@@ -57,10 +57,10 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceRoot}/kernel",
-                "${workspaceRoot}/lib/stdc",
-                "${workspaceRoot}/lib/tar",
-                "${workspaceRoot}/lib/avl",
+                "${workspaceRoot}/kernel/include",
+                "${workspaceRoot}/lib/stdc/include",
+                "${workspaceRoot}/lib/tar/include",
+                "${workspaceRoot}/lib/avl/include",
                 "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
                 "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
             ],
@@ -71,10 +71,10 @@
             "intelliSenseMode": "msvc-x64",
             "browse": {
                 "path": [
-                    "${workspaceRoot}/kernel",
-                    "${workspaceRoot}/lib/stdc",
-                    "${workspaceRoot}/lib/tar",
-                    "${workspaceRoot}/lib/avl",
+                    "${workspaceRoot}/kernel/include",
+                    "${workspaceRoot}/lib/stdc/include",
+                    "${workspaceRoot}/lib/tar/include",
+                    "${workspaceRoot}/lib/avl/include",
                     "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
                     "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
                 ],

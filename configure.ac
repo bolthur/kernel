@@ -8,7 +8,7 @@ AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_CANONICAL_HOST
-AC_CONFIG_SRCDIR([kernel/main.c])
+AC_CONFIG_SRCDIR([kernel/kernel/main.c])
 AM_INIT_AUTOMAKE([foreign 1.7])
 AC_CONFIG_HEADERS([config.h])
 
@@ -119,6 +119,7 @@ AC_DEFINE_UNQUOTED([SECTION(x)], [__attribute__((section(x)))], [Keyword for sec
 AC_CONFIG_FILES([
   Makefile
   kernel/Makefile
+  kernel/kernel/Makefile
   kernel/arch/Makefile
   kernel/arch/arm/Makefile
   kernel/arch/arm/v6/Makefile

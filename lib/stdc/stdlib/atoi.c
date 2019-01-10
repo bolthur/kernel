@@ -20,7 +20,7 @@
 #include <stdlib.h>
 
 #if defined( IS_KERNEL )
-  #include <panic.h>
+  #include "kernel/panic.h"
 #endif
 
 // FIXME: Add logic

@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <debug.h>
-#include <serial.h>
+#include "kernel/debug.h"
+#include "kernel/serial.h"
 
 /**
  * @brief Initialize debugging

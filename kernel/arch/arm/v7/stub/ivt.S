@@ -18,7 +18,7 @@
  */
 
 #define ASSEMBLER_FILE 1
-#include <arch/arm/v7/cpu.h>
+#include "arch/arm/v7/cpu.h"
 
 .section .text
 

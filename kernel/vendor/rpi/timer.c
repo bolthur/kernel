@@ -21,22 +21,23 @@
 #include <stdio.h>
 
 #if defined( ARCH_ARM_V6 )
-  #include <arch/arm/v6/cpu.h>
+  #include "arch/arm/v6/cpu.h"
 #elif defined( ARCH_ARM_V7 )
-  #include <arch/arm/v7/cpu.h>
+  #include "arch/arm/v7/cpu.h"
 #else
   #error "Architecture not supported!"
 #endif
 
 #if defined( ARCH_ARM )
-  #include <arch/arm/delay.h>
-  #include <arch/arm/mmio.h>
+  #include "arch/arm/delay.h"
+  #include "arch/arm/mmio.h"
 #endif
 
-#include <timer.h>
-#include <irq.h>
-#include <event.h>
-#include <vendor/rpi/gpio.h>
+#include "vendor/rpi/gpio.h"
+
+#include "kernel/timer.h"
+#include "kernel/irq.h"
+#include "kernel/event.h"
 
 
 // free running counter incrementing at 1 MHz => Increments each microsecond

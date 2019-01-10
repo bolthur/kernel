@@ -3,22 +3,17 @@ SUBDIRS = .
 
 AUTOMAKE_OPTIONS = nostdinc subdir-objects
 
-AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel -I$(top_srcdir)/lib/stdc
-AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel -I$(top_srcdir)/lib/stdc
+AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel/include -I$(top_srcdir)/lib/stdc/include
+AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel/include -I$(top_srcdir)/lib/stdc/include
 
 # rpi library
 noinst_LIBRARIES = librpi.a
 librpi_a_SOURCES = \
-  gpio.h \
   irq.c \
   mailbox-property.c \
-  mailbox-property.h \
   mailbox.c \
-  mailbox.h \
   platform.c \
-  platform.h \
   peripheral.c \
-  peripheral.h \
   serial.c \
   start.S \
   timer.c \
@@ -32,10 +27,9 @@ kernel_zwerg_SOURCES =
 kernel_zwerg_DEPENDENCIES = \
   kernel.$(subarch_subdir).ld \
   librpi.a \
-  ${top_builddir}/kernel/vendor/libvendor.a \
   ${top_builddir}/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
-  ${top_builddir}/kernel/libkernel.a \
+  ${top_builddir}/kernel/kernel/libkernel.a \
   ${top_builddir}/lib/atag/libatag.a \
   ${top_builddir}/lib/avl/libavl.a \
   ${top_builddir}/lib/fdt/libfdt.a \

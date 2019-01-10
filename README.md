@@ -14,9 +14,9 @@ bolthur kernel project. Below are some introductions, help and decisions about b
   * [x] printf implementation for kernel environment
 * [x] Interrupt requests and fast interrupts
 * [x] Add memory barriers for arm necessary for e.g. mailbox on rpi
-* [ ] Reorder code
+* [x] Restructure
   * [x] Move source files out of folder `src`
-  * [ ] Restructore code
+  * [x] Restructore code
 * [ ] Memory management
   * [ ] Physical memory management
     * [ ] Get max memory from vendor

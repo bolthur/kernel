@@ -1,8 +1,8 @@
 
 AUTOMAKE_OPTIONS = nostdinc subdir-objects
 
-AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel -I$(top_srcdir)/lib/stdc
-AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel -I$(top_srcdir)/lib/stdc
+AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel/include -I$(top_srcdir)/lib/stdc/include
+AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel/include -I$(top_srcdir)/lib/stdc/include
 
 noinst_LIBRARIES = libstdc.a
 libstdc_a_SOURCES = \
@@ -79,16 +79,7 @@ libstdc_a_SOURCES = \
   string/strstr.c \
   string/strtok.c \
   string/strxfrm.c \
-  sys/cdefs.h \
-  sys/types.h \
   unistd/execv.c \
   unistd/execve.c \
   unistd/execvp.c \
-  unistd/fork.c \
-  errno.h \
-  inttypes.h \
-  stdio.h \
-  stdlib.h \
-  string.h \
-  time.h \
-  unistd.h
+  unistd/fork.c

@@ -21,9 +21,9 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include <irq.h>
-#include <event.h>
-#include <panic.h>
+#include "kernel/irq.h"
+#include "kernel/event.h"
+#include "kernel/panic.h"
 
 /**
  * @brief Event list containing valid events

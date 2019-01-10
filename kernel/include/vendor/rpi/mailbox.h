@@ -17,33 +17,47 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_DEBUG__
-#define __KERNEL_DEBUG__
+#ifndef __KERNEL_VENDOR_RPI_MAILBOX__
+#define __KERNEL_VENDOR_RPI_MAILBOX__
 
 #include <stdint.h>
 
-// FIXME: Remove, when defines have been written to functions
-#if defined( ARCH_ARM )
-  #include <arch/arm/debug.h>
-#else
-  #error "Debug defines not available"
-#endif
+#include "vendor/rpi/peripheral.h"
 
-#define BUG_ON( cond, msg ) ( cond ? BUG( msg ) : ( void )0 );
+#define MAILBOX_OFFSET 0xB880
+
+#define MAILBOX_FULL 0x80000000
+#define MAILBOX_EMPTY 0x40000000
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-typedef struct {
-  const char *filename;
-  uint32_t line;
-  uint64_t addr;
-  const char *msg;
-} bug_entry_t;
+typedef enum {
+  MAILBOX0_POWER_MANAGEMENT = 0,
+  MAILBOX0_FRAMEBUFFER,
+  MAILBOX0_VIRTUAL_UART,
+  MAILBOX0_VCHIQ,
+  MAILBOX0_LEDS,
+  MAILBOX0_BUTTONS,
+  MAILBOX0_TOUCHSCREEN,
+  MAILBOX0_UNUSED,
+  MAILBOX0_TAGS_ARM_TO_VC,
+  MAILBOX0_TAGS_VC_TO_ARM,
+} mailbox0_channel_t;
 
-void debug_init( void );
-void debug_breakpoint( void );
+typedef struct {
+  volatile uint32_t read;
+  volatile uint32_t reserved_1[ ( ( 0x90 - 0x80 ) / 4 ) - 1 ];
+  volatile uint32_t poll;
+  volatile uint32_t sender;
+  volatile uint32_t status;
+  volatile uint32_t configuration;
+  volatile uint32_t write;
+} mailbox_t;
+
+uint32_t mailbox_read( mailbox0_channel_t );
+void mailbox_write( mailbox0_channel_t, uint32_t );
 
 #if defined( __cplusplus )
 }

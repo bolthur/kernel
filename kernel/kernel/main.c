@@ -20,13 +20,13 @@
 #include <stdio.h>
 #include <stdint.h>
 
-#include <tty.h>
-#include <event.h>
-#include <irq.h>
-#include <timer.h>
-#include <platform.h>
-#include <debug.h>
-#include <serial.h>
+#include "kernel/tty.h"
+#include "kernel/event.h"
+#include "kernel/irq.h"
+#include "kernel/timer.h"
+#include "kernel/platform.h"
+#include "kernel/debug.h"
+#include "kernel/serial.h"
 
 /**
  * @brief Kernel main function

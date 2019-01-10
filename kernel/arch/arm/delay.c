@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "delay.h"
+#include "arch/arm/delay.h"
 
 /**
  * @brief Delay function by given amount of cpu cycles

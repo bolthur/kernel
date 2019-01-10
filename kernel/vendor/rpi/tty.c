@@ -18,8 +18,9 @@
  */
 
 #include <stdlib.h>
-#include <tty.h>
-#include <serial.h>
+
+#include "kernel/tty.h"
+#include "kernel/serial.h"
 
 /**
  * @brief Initialize TTY

@@ -18,7 +18,8 @@
  */
 
 #include <stdint.h>
-#include <vendor/rpi/peripheral.h>
+
+#include "vendor/rpi/peripheral.h"
 
 // initial setup of peripheral base
 #if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI2_B_REV2 ) || defined( PLATFORM_RPI3_B ) || defined( PLATFORM_RPI3_B_PLUS )

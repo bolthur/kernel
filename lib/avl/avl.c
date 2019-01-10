@@ -20,7 +20,7 @@
 #include <string.h>
 
 #if defined( IS_KERNEL )
-  #include <panic.h>
+  #include "kernel/panic.h"
 #endif
 
 #include "avl.h"

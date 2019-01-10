@@ -20,7 +20,7 @@
 #include <stdio.h>
 
 #if defined( IS_KERNEL )
-#include <tty.h>
+  #include "kernel/tty.h"
 #endif
 
 int putchar( int ic ) {

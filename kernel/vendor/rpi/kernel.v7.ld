@@ -25,9 +25,8 @@ ENTRY( start )
 GROUP(
   ../../arch/arm/v7/libv7.a
   ../../arch/arm/libarm.a
-  ../../libkernel.a
-  ../libvendor.a
-  librpi.a
+  ../../kernel/libkernel.a
+  ../../vendor/rpi/librpi.a
   ../../../lib/atag/libatag.a
   ../../../lib/avl/libavl.a
   ../../../lib/fdt/libfdt.a

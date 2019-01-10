@@ -21,7 +21,7 @@
 #include <stdlib.h>
 
 #if defined( IS_KERNEL )
-  #include <panic.h>
+  #include "kernel/panic.h"
 #endif
 
 int snprintf( char* restrict str, size_t size, const char* restrict format, ... ) {

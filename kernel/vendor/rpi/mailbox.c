@@ -18,9 +18,10 @@
  */
 
 #include <stdbool.h>
-#include <arch/arm/barrier.h>
-#include <vendor/rpi/mailbox.h>
-#include <vendor/rpi/peripheral.h>
+
+#include "arch/arm/barrier.h"
+#include "vendor/rpi/mailbox.h"
+#include "vendor/rpi/peripheral.h"
 
 /**
  * @brief Function for reading mailbox

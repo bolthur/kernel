@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/mmio.h>
+#include "arch/arm/mmio.h"
 
 /**
  * @brief Write to memory mapped I/O

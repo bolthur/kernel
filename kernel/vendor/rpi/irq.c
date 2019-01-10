@@ -20,11 +20,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <irq.h>
-#include <panic.h>
-#include <arch/arm/mmio.h>
-#include <vendor/rpi/gpio.h>
-#include <vendor/rpi/peripheral.h>
+
+#include "kernel/irq.h"
+#include "kernel/panic.h"
+
+#include "arch/arm/mmio.h"
+#include "vendor/rpi/gpio.h"
+#include "vendor/rpi/peripheral.h"
 
 /**
  * @brief IRQ callback map

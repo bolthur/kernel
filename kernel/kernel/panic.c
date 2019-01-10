@@ -19,7 +19,8 @@
 
 #include <stdio.h>
 #include <stdint.h>
-#include <irq.h>
+
+#include "kernel/irq.h"
 
 /**
  * @brief Panic method
