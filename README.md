@@ -24,24 +24,39 @@ bolthur kernel project. Below are some introductions, help and decisions about b
       * [ ] Initialize memory bitmap within vendor
     * [ ] Generic physical handling done within `kernel` via memory bitmap
   * [ ] Virtual memory management done within `kernel/arch/{architecture}/{sub architecture}`
+  * [ ] Add smp enable flag to autotools as option
+  * [ ] Prepare virtual memory management per core if smp is active
+  * [ ] Specify cores per vendor via autotools
   * [ ] Add relocation of kernel to higher half after mmu setup
     * [ ] kernel load address
       * [ ] `0xC0008000` for 32bit
       * [ ] `0xffffff0000080000` for 64bit
   * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code
-  * [ ] Consider peripherals per board within mmu as not cachable
-  * [ ] Enable CPU caches
+  * [ ] Consider peripherals per vendor within mmu as not cachable
+  * [ ] Consider and enable CPU related caches
+* [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
 * [ ] Event system for mapping service routines `Needs to be planned`
   * [ ] ~~Generic code for `register` and `unregister` an event done within `kernel`~~
   * [ ] ~~Vendor related mapping~~
     * [ ] ~~Interrupt requests~~
     * [ ] ~~Fast interrupt requests~~
     * [ ] ~~Software interrupts~~
-* [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
+* [ ] Add irq and isrs register handling
+  * [x] Get irq with cpu mode switch and register dump working
+  * [x] Merge irq functions with isrs functions where possible
+  * [ ] Prohibit mapping of interrupt routines
+  * [ ] Add event system with `register` and `unregister`
+    * [ ] Provide map of events for `irq`, `fiq`, `swi`
+    * [ ] Fire events for `irq`, `fiq`, `swi`
 * [ ] Add gdb stub for debugging on remote device via serial port
   * [ ] Use dynamic memory allocation
   * [ ] Find better place for `serial_init` than `tty_init`
   * [ ] Finish debug launch.json when remote debugging is possible
+* [ ] TAR
+  * [ ] Add generic tar library for reading tar files
+  * [ ] Add initial ramdisk during boot which should be a simple tar file
+  * [ ] Add parsing of initial ramdisk containing drivers or programs for startup
+* [ ] Add virtual file system for initrd
 
 ## Unordered list of things to be done and ideas
 
@@ -50,10 +65,6 @@ bolthur kernel project. Below are some introductions, help and decisions about b
 * [ ] AVL tree
   * [ ] Add generic avl tree library
   * [ ] Implement heap management using avl tree library
-* [ ] TAR
-  * [ ] Add generic tar library for reading tar files
-  * [ ] Add initial ramdisk during boot which should be a simple tar file
-  * [ ] Add parsing of initial ramdisk containing drivers or programs for startup
 * [ ] Device tree
   * [ ] Add device tree library
   * [ ] Extend automake by option for use device tree
@@ -64,14 +75,6 @@ bolthur kernel project. Below are some introductions, help and decisions about b
   * [ ] Extend automake by option for use atag
   * [ ] Add parse of atag when compiled in via option
   * [ ] Debug output, when no atag has been passed
-* [ ] Add irq and isrs register handling
-  * [x] Get irq with cpu mode switch and register dump working
-  * [x] Merge irq functions with isrs functions where possible
-  * [ ] Prohibit mapping of interrupt routines
-  * [ ] Add event system with `register` and `unregister`
-    * [ ] Provide map of events for `irq`, `fiq`, `swi`
-    * [ ] Fire events for `irq`, `fiq`, `swi`
-* [ ] Add virtual file system for initrd
 * [ ] Create a draft for build system with vendor driver/app packaging
   * [ ] Per vendor initial ramdisk creation
 * [ ] Documentation ( man pages or markdown )

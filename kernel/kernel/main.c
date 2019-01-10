@@ -43,24 +43,24 @@ void kernel_main() {
   platform_init();
   printf( "done!\r\n" );
 
-  // Setup irq
-  printf( "[bolthur/kernel -> irq] initialize ... " );
-  irq_init();
-  printf( "done!\r\n" );
-
   // Setup memory management
   printf( "[bolthur/kernel -> memory] initialize ... [" );
-  // FIXME: Setup physical memory management
+  // Setup physical memory management
   printf( " physical, " );
-  // FIXME: Setup virtual memory management
+  // Setup virtual memory management
   printf( " virtual, " );
-  // FIXME: Setup heap
+  // Setup heap
   printf( " heap ] " );
   printf( "done!\r\n" );
 
-  // FIXME: Setup event system
+  // Setup event system
   printf( "[bolthur/kernel -> event] initialize ... " );
   event_init();
+  printf( "done!\r\n" );
+
+  // Setup irq
+  printf( "[bolthur/kernel -> irq] initialize ... " );
+  irq_init();
   printf( "done!\r\n" );
 
   // Setup debug if enabled
