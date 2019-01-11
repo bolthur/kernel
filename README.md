@@ -1,6 +1,8 @@
-# bolthur kernel
+# bolthur kernel [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE) [![Code of Conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg?style=flat)](./.github/CODE_OF_CONDUCT.md) [![Contribution Guide](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](./.github/CONTRIBUTING.md) ![version](https://img.shields.io/badge/version-none-blue.svg?maxAge=2592000)
 
-bolthur kernel project. Below are some introductions, help and decisions about bolthur kernel project.
+bolthur kernel project.
+
+_Copyright (C) 2017 - 2019 bolthur project_
 
 ## Things to be done
 
@@ -31,56 +33,50 @@ bolthur kernel project. Below are some introductions, help and decisions about b
     * [ ] kernel load address
       * [ ] `0xC0008000` for 32bit
       * [ ] `0xffffff0000080000` for 64bit
-  * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code
   * [ ] Consider peripherals per vendor within mmu as not cachable
   * [ ] Consider and enable CPU related caches
-* [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
+* [ ] AVL tree
+  * [ ] Add generic avl tree library
+* [ ] Memory management
+  * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code with avl tree
+* [ ] Enhance libc for further kernel development
+  * [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
 * [ ] Event system for mapping service routines `Needs to be planned`
-  * [ ] ~~Generic code for `register` and `unregister` an event done within `kernel`~~
-  * [ ] ~~Vendor related mapping~~
-    * [ ] ~~Interrupt requests~~
-    * [ ] ~~Fast interrupt requests~~
-    * [ ] ~~Software interrupts~~
 * [ ] Add irq and isrs register handling
   * [x] Get irq with cpu mode switch and register dump working
   * [x] Merge irq functions with isrs functions where possible
-  * [ ] Prohibit mapping of interrupt routines
-  * [ ] Add event system with `register` and `unregister`
-    * [ ] Provide map of events for `irq`, `fiq`, `swi`
-    * [ ] Fire events for `irq`, `fiq`, `swi`
+  * [ ] Prohibit direct mapping of interrupt routines
+  * [ ] Integrate irq/fiq into event system to allow timer handler and more
 * [ ] Add gdb stub for debugging on remote device via serial port
-  * [ ] Use dynamic memory allocation
+  * [ ] Rework existing unfinished remote debugging code
   * [ ] Find better place for `serial_init` than `tty_init`
+  * [ ] Finalize remote debugging integration
   * [ ] Finish debug launch.json when remote debugging is possible
 * [ ] TAR
   * [ ] Add generic tar library for reading tar files
   * [ ] Add initial ramdisk during boot which should be a simple tar file
   * [ ] Add parsing of initial ramdisk containing drivers or programs for startup
 * [ ] Add virtual file system for initrd
-
-## Unordered list of things to be done and ideas
-
-* [ ] Evaluate switch from custom cross compiler toolchain to llvm
-  * [ ] Check remote debugging capabilities
-* [ ] AVL tree
-  * [ ] Add generic avl tree library
-  * [ ] Implement heap management using avl tree library
 * [ ] Device tree
   * [ ] Add device tree library
   * [ ] Extend automake by option for use device tree
   * [ ] Add parse of device tree when compiled in via option
-  * [ ] Debug output, when no device tree has been found
+  * [ ] Debug output, when no device tree has been found and use kernel defaults
 * [ ] ATAG
-  * [ ] Add own atag library
+  * [ ] Add atag library
   * [ ] Extend automake by option for use atag
   * [ ] Add parse of atag when compiled in via option
-  * [ ] Debug output, when no atag has been passed
-* [ ] Create a draft for build system with vendor driver/app packaging
-  * [ ] Per vendor initial ramdisk creation
+  * [ ] Debug output, when no atag has been passed and use kernel defaults
 * [ ] Documentation ( man pages or markdown )
   * [ ] Getting started after checkout
   * [ ] Cross compiler toolchain
   * [ ] Configuring target overview
+
+## Different projects not kernel related
+
+* [ ] Create a draft for "build" system to create ready to boot images with vendor driver/app packaging
+  * [ ] Per vendor initial ramdisk creation
+* [ ] Move existing libraries into separate repositories and link them to kernel via git submodule
 
 ## Building the project
 
