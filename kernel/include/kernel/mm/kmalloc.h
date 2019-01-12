@@ -23,6 +23,8 @@
 #ifndef __KERNEL_MM_KMALLOC__
 #define __KERNEL_MM_KMALLOC__
 
-uint32_t kmalloc( size_t size );
+#define KMALLOC_ALIGNED 0x1
+
+void* kmalloc( size_t size, uint32_t *phys, uint32_t flags );
 
 #endif

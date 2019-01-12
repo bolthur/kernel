@@ -18,9 +18,9 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <stddef.h>
 
-#include "kernel/mm/kmalloc.h"
 #include "kernel/mm/pmm.h"
 
 #include "arch/arm/mm/pmm.h"
@@ -78,7 +78,7 @@ void pmm_init_vendor( void ) {
   pmm_bitmap_length = memory_amount / PMM_PAGE_SIZE / ( sizeof( pmm_bitmap_length ) * 8 );
 
   // prepare bitmap
-  pmm_bitmap = ( uintptr_t* ) kmalloc( pmm_bitmap_length );
+  pmm_bitmap = ( uintptr_t* ) malloc( pmm_bitmap_length );
 
   // debug output
   #if defined( DEBUG )

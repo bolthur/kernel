@@ -17,24 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
+#include <stdbool.h>
 
-#if defined( IS_KERNEL )
-  #include "kernel/mm/kmalloc.h"
-#endif
+#include "kernel/mm/heap.h"
 
 /**
- * @brief malloc
- *
- * @param size amount to allocate
- * @return void* allocated address
- *
- * @todo Implement non kernel related
+ * @brief heap initialized flag
  */
-void *malloc( size_t size ) {
-  #if defined( IS_KERNEL )
-    return kmalloc( size, NULL, 0 );
-  #else
-    return NULL;
-  #endif
-}
+bool heap_initialized = false;
