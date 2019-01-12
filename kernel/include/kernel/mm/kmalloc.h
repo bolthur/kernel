@@ -18,27 +18,11 @@
  */
 
 #include <stdint.h>
-#include <stdio.h>
+#include <stddef.h>
 
-#include "kernel/panic.h"
+#ifndef __KERNEL_MM_KMALLOC__
+#define __KERNEL_MM_KMALLOC__
 
-#include "vendor/rpi/platform.h"
-#include "vendor/rpi/mailbox-property.h"
+uint32_t kmalloc( size_t size );
 
-/**
- * @brief Boot parameter data set during startup
- */
-platform_boot_parameter_t boot_parameter_data;
-
-/**
- * @brief Platform depending initialization routine
- */
-void platform_init( void ) {
-  // FIXME: Load firmware revision, board model, board revision, board serial from mailbox
-  /*mailbox_property_init();
-  mailbox_property_add_tag( TAG_GET_BOARD_MODEL );
-  mailbox_property_add_tag( TAG_GET_BOARD_REVISION );
-  mailbox_property_add_tag( TAG_GET_FIRMWARE_VERSION );
-  mailbox_property_add_tag( TAG_GET_BOARD_SERIAL );
-  mailbox_property_process();*/
-}
+#endif

@@ -18,27 +18,31 @@
  */
 
 #include <stdint.h>
-#include <stdio.h>
-
-#include "kernel/panic.h"
-
-#include "vendor/rpi/platform.h"
-#include "vendor/rpi/mailbox-property.h"
+#include <stddef.h>
 
 /**
- * @brief Boot parameter data set during startup
+ * @brief External kernel start defined within linker
  */
-platform_boot_parameter_t boot_parameter_data;
+extern uint32_t __kernel_start;
 
 /**
- * @brief Platform depending initialization routine
+ * @brief External kernel end defined within linker
  */
-void platform_init( void ) {
-  // FIXME: Load firmware revision, board model, board revision, board serial from mailbox
-  /*mailbox_property_init();
-  mailbox_property_add_tag( TAG_GET_BOARD_MODEL );
-  mailbox_property_add_tag( TAG_GET_BOARD_REVISION );
-  mailbox_property_add_tag( TAG_GET_FIRMWARE_VERSION );
-  mailbox_property_add_tag( TAG_GET_BOARD_SERIAL );
-  mailbox_property_process();*/
+extern uint32_t __kernel_end;
+
+/**
+ * @brief placement address starting at kernel end
+ */
+uint32_t placement_address = ( uint32_t )&__kernel_end;
+
+/**
+ * @brief Simple kmalloc
+ *
+ * @param size amount of bytes to get
+ * @return uint32_t start address of aligned memory
+ */
+uint32_t kmalloc( size_t size ) {
+  uint32_t tmp = placement_address;
+  placement_address += size;
+  return tmp;
 }

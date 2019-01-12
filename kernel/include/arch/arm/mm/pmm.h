@@ -18,27 +18,10 @@
  */
 
 #include <stdint.h>
-#include <stdio.h>
 
-#include "kernel/panic.h"
+#ifndef __KERNEL_ARCH_ARM_MM_PMM__
+#define __KERNEL_ARCH_ARM_MM_PMM__
 
-#include "vendor/rpi/platform.h"
-#include "vendor/rpi/mailbox-property.h"
+#define PMM_PAGE_SIZE 0x1000
 
-/**
- * @brief Boot parameter data set during startup
- */
-platform_boot_parameter_t boot_parameter_data;
-
-/**
- * @brief Platform depending initialization routine
- */
-void platform_init( void ) {
-  // FIXME: Load firmware revision, board model, board revision, board serial from mailbox
-  /*mailbox_property_init();
-  mailbox_property_add_tag( TAG_GET_BOARD_MODEL );
-  mailbox_property_add_tag( TAG_GET_BOARD_REVISION );
-  mailbox_property_add_tag( TAG_GET_FIRMWARE_VERSION );
-  mailbox_property_add_tag( TAG_GET_BOARD_SERIAL );
-  mailbox_property_process();*/
-}
+#endif

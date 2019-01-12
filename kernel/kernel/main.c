@@ -27,6 +27,7 @@
 #include "kernel/platform.h"
 #include "kernel/debug.h"
 #include "kernel/serial.h"
+#include "kernel/mm/pmm.h"
 
 /**
  * @brief Kernel main function
@@ -47,6 +48,7 @@ void kernel_main() {
   printf( "[bolthur/kernel -> memory] initialize ... [" );
   // Setup physical memory management
   printf( " physical, " );
+  pmm_init();
   // Setup virtual memory management
   printf( " virtual, " );
   // Setup heap

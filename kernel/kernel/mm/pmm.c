@@ -17,28 +17,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stdio.h>
+#include <stddef.h>
 
-#include "kernel/panic.h"
-
-#include "vendor/rpi/platform.h"
-#include "vendor/rpi/mailbox-property.h"
+#include "kernel/mm/pmm.h"
 
 /**
- * @brief Boot parameter data set during startup
+ * @brief Physical bitmap
  */
-platform_boot_parameter_t boot_parameter_data;
+uintptr_t *pmm_bitmap;
 
 /**
- * @brief Platform depending initialization routine
+ * @brief pmm bitmap length set by vendor
  */
-void platform_init( void ) {
-  // FIXME: Load firmware revision, board model, board revision, board serial from mailbox
-  /*mailbox_property_init();
-  mailbox_property_add_tag( TAG_GET_BOARD_MODEL );
-  mailbox_property_add_tag( TAG_GET_BOARD_REVISION );
-  mailbox_property_add_tag( TAG_GET_FIRMWARE_VERSION );
-  mailbox_property_add_tag( TAG_GET_BOARD_SERIAL );
-  mailbox_property_process();*/
+size_t pmm_bitmap_length;
+
+/**
+ * @brief Initialize physical memory manager
+ */
+void pmm_init( void ) {
+  // execute vendor initialization first
+  pmm_init_vendor();
+
+  // FIXME: Reserve physical between kernel start and kernel end
 }
