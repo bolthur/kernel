@@ -37,7 +37,7 @@ void tty_init( void ) {
  * @param c Character to print
  */
 void tty_putc( uint8_t c ) {
-  #if defined( KERNEL_DEBUG_PRINT )
+  #if defined( DEBUG )
     serial_putc( c );
   #else
     // mark as unused to prevent warning
@@ -51,7 +51,7 @@ void tty_putc( uint8_t c ) {
  * @param str String to put to TTY
  */
 void tty_puts( const char *str ) {
-  #if defined( KERNEL_DEBUG_PRINT )
+  #if defined( DEBUG )
     for ( size_t i = 0; str[ i ] != '\0'; i++ ) {
       tty_putc( ( unsigned char )str[ i ] );
     }

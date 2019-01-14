@@ -55,10 +55,6 @@ AC_ARG_ENABLE([debug],
   AC_HELP_STRING([--enable-debug], [enable debug mode with debug symbols (default: off)])
 )
 
-AC_ARG_ENABLE([kernel-print],
-  AC_HELP_STRING([--enable-kernel-print], [enable kernel print (default: off)])
-)
-
 AC_ARG_ENABLE([opt],
   AC_HELP_STRING([--disable-opt], [disable code optimization (default: on)]),
   [case "${enableval}" in

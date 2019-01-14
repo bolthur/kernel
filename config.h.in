@@ -36,9 +36,6 @@
 /* Define set for libc to compile differently. */
 #undef IS_KERNEL
 
-/* Set to 1 to enable kernel output mode. */
-#undef KERNEL_DEBUG_PRINT
-
 /* Name of package */
 #undef PACKAGE
 

@@ -11,10 +11,10 @@
   * [x] printf implementation for kernel environment
 * [x] Interrupt requests and fast interrupts
 * [x] Add memory barriers for arm necessary for e.g. mailbox on rpi
-* [ ] Restructure
+* [x] Restructure
   * [x] Move source files out of folder `src`
   * [x] Restructore code
-  * [ ] Merge defines `KERNEL_DEBUG_PRINT` and `DEBUG`
+  * [x] Merge defines `KERNEL_DEBUG_PRINT` and `DEBUG`
 * [ ] Memory management
   * [ ] Physical memory management
     * [ ] Get max memory from vendor
