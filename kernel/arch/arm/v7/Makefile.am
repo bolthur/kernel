@@ -8,10 +8,10 @@ AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel/include 
 
 noinst_LIBRARIES = libv7.a
 libv7_a_SOURCES = \
-  stub/cpu.S \
-  stub/irq.S \
-  stub/ivt.S \
+  cpu/stub/cpu.S \
+  cpu/cpu.c \
+  interrupt/stub/irq.S \
+  interrupt/stub/ivt.S \
+  interrupt/ivt.c \
   barrier.c \
-  cpu.c \
-  ivt.c \
   start.S
