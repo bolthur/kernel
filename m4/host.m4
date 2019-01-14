@@ -2,9 +2,12 @@
 AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([ELF32], [Define to 1 for 32 bit ELF targets.])
   AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets.])
-  AC_DEFINE([IS_KERNEL], [1], [Define set for libc to compile differently.])
+  AH_TEMPLATE([SMP_ENABLED], [Define to 1 for SMP capable hosts])
   AH_TEMPLATE([DEBUG], [Set to 1 to enable debug mode.])
   AH_TEMPLATE([KERNEL_DEBUG_PRINT], [Set to 1 to enable kernel output mode.])
+
+  # Define for kernel mode
+  AC_DEFINE([IS_KERNEL], [1], [Define set for libc to compile differently.])
 
   # Test possibe enable debug parameter
   AS_IF([test "x$enable_debug" == "xyes"], [
@@ -76,6 +79,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets.])
       AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets.])
       AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
+      AC_DEFINE([SMP_ENABLED], [1])
       ;;
     rpi_zero)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
@@ -120,6 +124,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv7 targets.])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets.])
       AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
+      AC_DEFINE([SMP_ENABLED], [1])
       ;;
     rpi3_b)
       # -mfpu=fp-armv8 -mfloat-abi=hard
@@ -132,6 +137,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets.])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets.])
       AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
+      AC_DEFINE([SMP_ENABLED], [1])
       ;;
     rpi3_b_plus)
       # -mfpu=fp-armv8 -mfloat-abi=hard
@@ -144,6 +150,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets.])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets.])
       AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
+      AC_DEFINE([SMP_ENABLED], [1])
       ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])

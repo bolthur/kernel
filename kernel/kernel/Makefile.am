@@ -9,8 +9,7 @@ AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel/include 
 noinst_LIBRARIES = libkernel.a
 libkernel_a_SOURCES = \
   mm/heap.c \
-  mm/kmalloc.c \
-  mm/pmm.c \
+  mm/phys.c \
   debug.c \
   event.c \
   irq.c \

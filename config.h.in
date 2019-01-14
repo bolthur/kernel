@@ -96,6 +96,9 @@
 /* Keyword for section placement. */
 #undef SECTION
 
+/* Define to 1 for SMP capable hosts */
+#undef SMP_ENABLED
+
 /* bolthur/kernel target subarchitecture. */
 #undef SUBARCH
 

@@ -1,20 +1,21 @@
 
 /**
- * bolthur/kernel
  * Copyright (C) 2017 - 2019 bolthur project.
  *
- * This program is free software: you can redistribute it and/or modify
+ * This file is part of bolthur/kernel.
+ *
+ * bolthur/kernel is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful,
+ * bolthur/kernel is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 #include <stdio.h>
@@ -27,7 +28,7 @@
 #include "kernel/platform.h"
 #include "kernel/debug.h"
 #include "kernel/serial.h"
-#include "kernel/mm/pmm.h"
+#include "kernel/mm/phys.h"
 
 /**
  * @brief Kernel main function
@@ -48,7 +49,7 @@ void kernel_main() {
   printf( "[bolthur/kernel -> memory] initialize ... [" );
   // Setup physical memory management
   printf( " physical, " );
-  pmm_init();
+  phys_init();
   // Setup virtual memory management
   printf( " virtual, " );
   // Setup heap
