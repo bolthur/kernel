@@ -29,9 +29,9 @@
 #include "vendor/rpi/mailbox-property.h"
 
 /**
- * @brief Initialize physical memory manager
+ * @brief Initialize physical memory manager for rpi
  */
-void phys_init_vendor( void ) {
+void phys_init( void ) {
   // Get arm memory
   mailbox_property_init();
   mailbox_property_add_tag( TAG_GET_ARM_MEMORY );
@@ -93,4 +93,17 @@ void phys_init_vendor( void ) {
     printf( "content of __kernel_end: 0x%08x\r\n", &__kernel_end );
     printf( "content of placement address: 0x%08x\r\n", placement_address );
   #endif
+
+  // determine start and end
+  uintptr_t start = 0;
+  uintptr_t end = placement_address + placement_address %PHYS_PAGE_SIZE;
+
+  // map from start to end addresses as used
+  while( start < end ) {
+    // mark used
+    phys_mark_page_used( start );
+
+    // get next page
+    start += PHYS_PAGE_SIZE;
+  }
 }

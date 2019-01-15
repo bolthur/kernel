@@ -17,10 +17,10 @@
   * [x] Merge defines `KERNEL_DEBUG_PRINT` and `DEBUG`
 * [ ] Memory management
   * [ ] Physical memory management
-    * [ ] Get max memory from vendor
-      * [ ] Gather rpi memory from mailbox ( store physical memory map generally per vendor )
-      * [ ] Initialize memory bitmap within vendor
-    * [ ] Generic physical handling done within `kernel` via memory bitmap
+    * [x] Get max memory from vendor
+      * [x] Gather rpi memory from mailbox ( store physical memory map generally per vendor )
+    * [x] Setup memory bitmap within vendor
+    * [ ] Mark physical peripheral address areas per vendor as used
   * [ ] Virtual memory management done within `kernel/arch/{architecture}/{sub architecture}`
   * [ ] Add smp enable flag to autotools as option
   * [ ] Prepare virtual memory management per core if smp is active

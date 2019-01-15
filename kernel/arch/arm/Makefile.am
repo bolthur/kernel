@@ -10,6 +10,7 @@ AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel/include 
 
 noinst_LIBRARIES = libarm.a
 libarm_a_SOURCES = \
+  mm/phys.c \
   barrier.c \
   debug.c \
   delay.c \

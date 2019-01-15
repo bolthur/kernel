@@ -26,11 +26,13 @@
 
 extern uintptr_t *phys_bitmap;
 extern size_t phys_bitmap_length;
-extern uint32_t placement_address;
-extern uint32_t __kernel_start;
-extern uint32_t __kernel_end;
+extern uintptr_t placement_address;
+extern uintptr_t __kernel_start;
+extern uintptr_t __kernel_end;
 
 void phys_init( void );
-void phys_init_vendor( void );
+
+void phys_mark_page_used( uintptr_t );
+void phys_mark_page_free( uintptr_t );
 
 #endif

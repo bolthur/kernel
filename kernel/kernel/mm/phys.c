@@ -35,14 +35,4 @@ size_t phys_bitmap_length;
 /**
  * @brief placement address starting at kernel end
  */
-uint32_t placement_address = ( uint32_t )&__kernel_end;
-
-/**
- * @brief Initialize physical memory manager
- */
-void phys_init( void ) {
-  // execute vendor initialization first
-  phys_init_vendor();
-
-  // FIXME: Reserve physical memory between __kernel_start and __kernel_end
-}
+uintptr_t placement_address = ( uintptr_t )&__kernel_end;
