@@ -59,7 +59,6 @@ int vprintf( const char* restrict, va_list );
 int vsnprintf( char* restrict, size_t, const char* restrict, va_list );
 int vsprintf( char*, const char* restrict, va_list );
 
-
 #if defined( __cplusplus )
 }
 #endif

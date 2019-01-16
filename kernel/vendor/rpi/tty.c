@@ -25,6 +25,8 @@
 
 /**
  * @brief Initialize TTY
+ *
+ * @todo check and revise
  */
 void tty_init( void ) {
   // FIXME: Move serial init to kernel main or some other better place
@@ -35,6 +37,8 @@ void tty_init( void ) {
  * @brief Print character to TTY
  *
  * @param c Character to print
+ *
+ * @todo check and revise
  */
 void tty_putc( uint8_t c ) {
   #if defined( DEBUG )
@@ -49,6 +53,8 @@ void tty_putc( uint8_t c ) {
  * @brief Put string to TTY
  *
  * @param str String to put to TTY
+ *
+ * @todo check and revise
  */
 void tty_puts( const char *str ) {
   #if defined( DEBUG )

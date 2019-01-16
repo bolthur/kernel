@@ -24,9 +24,11 @@
 
 // initial setup of peripheral base
 #if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI2_B_REV2 ) || defined( PLATFORM_RPI3_B ) || defined( PLATFORM_RPI3_B_PLUS )
-  uint32_t peripheral_base = 0x3F000000;
+  uintptr_t peripheral_base = 0x3F000000;
+  uintptr_t peripheral_size = 0xFFFFFF;
 #else
-  uint32_t peripheral_base = 0x20000000;
+  uintptr_t peripheral_base = 0x20000000;
+  uintptr_t peripheral_size = 0xFFFFFF;
 #endif
 
 /**
@@ -34,15 +36,24 @@
  *
  * @param addr Address to set peripheral base
  */
-void peripheral_base_set( uint32_t addr ) {
+void peripheral_base_set( uintptr_t addr ) {
   peripheral_base = addr;
 }
 
 /**
  * @brief Method to get peripheral base address
  *
- * @return uint32_t Peripheral base address
+ * @return uintptr_t Peripheral base address
  */
-uint32_t peripheral_base_get( void ) {
+uintptr_t peripheral_base_get( void ) {
   return peripheral_base;
+}
+
+/**
+ * @brief Method to get peripheral base address
+ *
+ * @return uintptr_t Peripheral base address
+ */
+uintptr_t peripheral_end_get( void ) {
+  return peripheral_base + peripheral_size;
 }

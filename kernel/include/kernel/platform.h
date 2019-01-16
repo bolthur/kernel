@@ -26,6 +26,7 @@ extern "C" {
 #endif
 
 extern void platform_init( void );
+extern void platform_fb_test( void );
 
 #if defined( __cplusplus )
 }

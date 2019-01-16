@@ -25,6 +25,8 @@
 
 /**
  * @brief Initialize interrupt requests
+ *
+ * @todo check and revise
  */
 void irq_init( void ) {
   ivt_init();

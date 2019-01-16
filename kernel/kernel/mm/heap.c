@@ -24,5 +24,7 @@
 
 /**
  * @brief heap initialized flag
+ *
+ * @todo check and revise
  */
 bool heap_initialized = false;

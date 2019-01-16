@@ -26,6 +26,7 @@
 #include "kernel/mm/phys.h"
 #include "arch/arm/mm/phys.h"
 #include "vendor/rpi/platform.h"
+#include "vendor/rpi/peripheral.h"
 #include "vendor/rpi/mailbox-property.h"
 
 /**
@@ -97,6 +98,19 @@ void phys_init( void ) {
   // determine start and end
   uintptr_t start = 0;
   uintptr_t end = placement_address + placement_address %PHYS_PAGE_SIZE;
+
+  // map from start to end addresses as used
+  while( start < end ) {
+    // mark used
+    phys_mark_page_used( start );
+
+    // get next page
+    start += PHYS_PAGE_SIZE;
+  }
+
+  // set start and end for peripherals
+  start = peripheral_base_get();
+  end = peripheral_end_get() + 1;
 
   // map from start to end addresses as used
   while( start < end ) {

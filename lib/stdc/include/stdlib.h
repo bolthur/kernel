@@ -54,6 +54,7 @@ void *calloc( size_t, size_t );
 div_t div ( int, int );
 void exit( int32_t );
 void free( void* );
+char *ftoa( float, char*, int32_t );
 char *getenv( const char* );
 imaxdiv_t imaxdiv( intmax_t, intmax_t );
 char *itoa( int32_t, char*, int32_t );

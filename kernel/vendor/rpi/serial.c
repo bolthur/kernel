@@ -35,6 +35,8 @@
 
 /**
  * @brief Initialize serial port
+ *
+ * @todo check and revise
  */
 void serial_init( void ) {
   uint32_t base = peripheral_base_get();
@@ -92,6 +94,8 @@ void serial_init( void ) {
  * @brief Put character to serial
  *
  * @param c character to put
+ *
+ * @todo check and revise
  */
 void serial_putc( uint8_t c ) {
   uint32_t base = peripheral_base_get();
@@ -105,6 +109,8 @@ void serial_putc( uint8_t c ) {
  * @brief Get character from serial
  *
  * @return uint8_t Character from serial
+ *
+ * @todo check and revise
  */
 uint8_t serial_getc( void ) {
   uint32_t base = peripheral_base_get();
@@ -118,6 +124,8 @@ uint8_t serial_getc( void ) {
 
 /**
  * @brief Flush serial
+ *
+ * @todo check and revise
  */
 void serial_flush( void ) {
   uint32_t base = peripheral_base_get();

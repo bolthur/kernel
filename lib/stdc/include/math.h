@@ -18,13 +18,19 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernel/debug.h"
+#ifndef __LIBC_MATH__
+#define __LIBC_MATH__
 
-/**
- * @brief Debug breakpoint halt
- *
- * @todo check and revise
- */
-void debug_breakpoint( void ) {
-  __asm__ __volatile__( "swi 3" );
+#if defined( __cplusplus )
+extern "C" {
+#endif
+
+double pow( double, double );
+float powf( float, float );
+long double powl( long double, long double );
+
+#if defined( __cplusplus )
 }
+#endif
+
+#endif

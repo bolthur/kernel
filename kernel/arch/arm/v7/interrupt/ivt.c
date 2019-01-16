@@ -28,6 +28,8 @@
 
 /**
  * @brief interrupt vector table aligned according to manual
+ *
+ * @todo check and revise
  */
 static void __attribute__( ( naked, aligned( 32 ) ) ) interrupt_vector_table( void ) {
   __asm__ __volatile__(
@@ -46,6 +48,8 @@ static void __attribute__( ( naked, aligned( 32 ) ) ) interrupt_vector_table( vo
  * @brief Unused exception handler
  *
  * @param status current register context
+ *
+ * @todo check and revise
  */
 void unused_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -56,6 +60,8 @@ void unused_handler( cpu_register_context_t *status ) {
  * @brief Undefined instruction exception handler
  *
  * @param status current register context
+ *
+ * @todo check and revise
  */
 void undefined_instruction_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -66,6 +72,8 @@ void undefined_instruction_handler( cpu_register_context_t *status ) {
  * @brief Software interrupt exception handler
  *
  * @param status current register context
+ *
+ * @todo check and revise
  */
 void software_interrupt_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -77,6 +85,8 @@ void software_interrupt_handler( cpu_register_context_t *status ) {
  * @brief Prefetch abort exception handler
  *
  * @param status current register context
+ *
+ * @todo check and revise
  */
 void prefetch_abort_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -87,6 +97,8 @@ void prefetch_abort_handler( cpu_register_context_t *status ) {
  * @brief Data abort exception handler
  *
  * @param status current register context
+ *
+ * @todo check and revise
  */
 void data_abort_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -97,6 +109,8 @@ void data_abort_handler( cpu_register_context_t *status ) {
  * @brief Interrupt request exception handler
  *
  * @param status current register context
+ *
+ * @todo check and revise
  */
 void irq_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -117,6 +131,8 @@ void irq_handler( cpu_register_context_t *status ) {
  * @brief Fast interrupt request exception handler
  *
  * @param status current register context
+ *
+ * @todo check and revise
  */
 void fast_interrupt_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -135,6 +151,8 @@ void fast_interrupt_handler( cpu_register_context_t *status ) {
 
 /**
  * @brief Method to initialize interrupt vector table
+ *
+ * @todo check and revise
  */
 void ivt_init( void ) {
   __asm__ __volatile__( "mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" ( &interrupt_vector_table ) );

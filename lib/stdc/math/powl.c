@@ -18,13 +18,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernel/debug.h"
+#include <stdlib.h>
 
-/**
- * @brief Debug breakpoint halt
- *
- * @todo check and revise
- */
-void debug_breakpoint( void ) {
-  __asm__ __volatile__( "swi 3" );
+#if defined( IS_KERNEL )
+  #include "kernel/panic.h"
+#endif
+
+long double powl( long double x, long double y ) {
+  ( void )x;
+  ( void )y;
+
+  #if defined( IS_KERNEL )
+    PANIC( "fwrite not yet implemented!" );
+  #else
+    abort();
+  #endif
+
+  return 0.0;
 }

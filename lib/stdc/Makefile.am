@@ -6,6 +6,9 @@ AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel/include 
 
 noinst_LIBRARIES = libstdc.a
 libstdc_a_SOURCES = \
+  math/pow.c \
+  math/powf.c \
+  math/powl.c \
   stdio/fclose.c \
   stdio/fflush.c \
   stdio/fopen.c \
@@ -35,6 +38,7 @@ libstdc_a_SOURCES = \
   stdlib/div.c \
   stdlib/exit.c \
   stdlib/free.c \
+  stdlib/ftoa.c \
   stdlib/getenv.c \
   stdlib/imaxdiv.c \
   stdlib/itoa.c \

@@ -18,13 +18,23 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernel/debug.h"
+#include <stdlib.h>
 
-/**
- * @brief Debug breakpoint halt
- *
- * @todo check and revise
- */
-void debug_breakpoint( void ) {
-  __asm__ __volatile__( "swi 3" );
+#if defined( IS_KERNEL )
+  #include "kernel/panic.h"
+#endif
+
+// FIXME: Add logic
+char *ftoa( float num, char* str, int32_t precision ) {
+  ( void )num;
+  ( void )str;
+  ( void )precision;
+
+  #if defined( IS_KERNEL )
+    PANIC( "free not yet implemented!" );
+  #else
+    abort();
+  #endif
+
+  return str;
 }

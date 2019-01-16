@@ -24,6 +24,8 @@
  * @brief Delay function by given amount of cpu cycles
  *
  * @param count Amount of cycles to delay
+ *
+ * @todo check and revise
  */
 void __attribute__(( optimize( "O0" ) )) delay( uint32_t count ) {
   __asm__ __volatile__(

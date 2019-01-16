@@ -29,6 +29,8 @@
  * @param num IRQ/FIQ to bind
  * @param func Callback to bind
  * @param fast flag to bind FIQ
+ *
+ * @todo check and revise
  */
 void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
   // normal irq
@@ -61,6 +63,8 @@ void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
  * @param num IRQ/FIQ number
  * @param fast Flag to determine FIQ
  * @return irq_callback_t Bound callback or NULL
+ *
+ * @todo check and revise
  */
 irq_callback_t irq_get_handler( uint8_t num, bool fast ) {
   // normal irq

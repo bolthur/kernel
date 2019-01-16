@@ -31,11 +31,15 @@
 
 /**
  * @brief IRQ callback map
+ *
+ * @todo check and revise
  */
 irq_callback_t irq_callback_map[ 64 ];
 
 /**
  * @brief FIQ callback map
+ *
+ * @todo check and revise
  */
 irq_callback_t fast_irq_callback_map[ 72 ];
 
@@ -45,6 +49,8 @@ irq_callback_t fast_irq_callback_map[ 72 ];
  * @param num number to validate
  * @return true if irq is valid
  * @return false if irq is invalid
+ *
+ * @todo check and revise
  */
 bool irq_validate_number( uint8_t num ) {
   return ! (
@@ -66,6 +72,7 @@ bool irq_validate_number( uint8_t num ) {
  * @return int8_t pending interrupt number
  *
  * @todo add code for checking for fast interrupts
+ * @todo check and revise
  */
 int8_t irq_get_pending( bool fast ) {
   uint32_t base = peripheral_base_get();
@@ -106,6 +113,7 @@ int8_t irq_get_pending( bool fast ) {
  * @brief Setup IRQ events
  *
  * @todo Setup events
+ * @todo check and revise
  */
 void irq_setup_event( void ) {
 }

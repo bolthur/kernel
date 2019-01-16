@@ -27,8 +27,9 @@
 extern "C" {
 #endif
 
-void peripheral_base_set( uint32_t );
-uint32_t peripheral_base_get( void );
+void peripheral_base_set( uintptr_t );
+uintptr_t peripheral_base_get( void );
+uintptr_t peripheral_end_get( void );
 
 #if defined( __cplusplus )
 }

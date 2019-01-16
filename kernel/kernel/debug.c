@@ -23,6 +23,8 @@
 
 /**
  * @brief Initialize debugging
+ *
+ * @todo check and revise
  */
 void debug_init( void ) {
 }

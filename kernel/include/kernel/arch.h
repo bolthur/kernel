@@ -18,13 +18,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernel/debug.h"
+#ifndef __KERNEL_ARCH_ARM_FPU__
+#define __KERNEL_ARCH_ARM_FPU__
 
-/**
- * @brief Debug breakpoint halt
- *
- * @todo check and revise
- */
-void debug_breakpoint( void ) {
-  __asm__ __volatile__( "swi 3" );
+#if defined( __cplusplus )
+extern "C" {
+#endif
+
+void arch_init( void );
+
+#if defined( __cplusplus )
 }
+#endif
+
+#endif

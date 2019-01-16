@@ -20,7 +20,9 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <stdlib.h>
 
+#include "kernel/arch.h"
 #include "kernel/tty.h"
 #include "kernel/event.h"
 #include "kernel/irq.h"
@@ -39,6 +41,11 @@ extern "C" /* Use C linkage for kernel_main. */
 void kernel_main() {
   // enable tty for output
   tty_init();
+
+  // Setup arch related parts
+  printf( "[bolthur/kernel -> arch] initialize ... " );
+  arch_init();
+  printf( "done!\r\n" );
 
   // Setup platform related parts
   printf( "[bolthur/kernel -> platform] initialize ... " );
@@ -82,6 +89,8 @@ void kernel_main() {
   printf( "[bolthur/kernel -> irq] enable ... " );
   irq_enable();
   printf( "done!\r\n" );
+
+  platform_fb_test();
 
   // Debug breakpoint to kickstart remote gdb
   #if defined( DEBUG )

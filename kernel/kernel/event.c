@@ -28,21 +28,29 @@
 
 /**
  * @brief Event list containing valid events
+ *
+ * @todo check and revise
  */
 static const char* event_list[] = { "timer", "serial" };
 
 /**
  * @brief Event callback map
+ *
+ * @todo check and revise
  */
 static event_callback_map_t map[ MAX_BOUND_EVENT ];
 
 /**
  * @brief Last bound entry
+ *
+ * @todo check and revise
  */
 static uint32_t last_entry = 0;
 
 /**
  * @brief Initialize events
+ *
+ * @todo check and revise
  */
 void event_init() {
   // initialize map with 0
@@ -59,6 +67,7 @@ void event_init() {
  * @param callback Callback to bind
  *
  * @todo Make variable amount of handlers possible
+ * @todo check and revise
  */
 void event_bind_handler( event_type_t type, event_callback_t callback ) {
   // check for not to much event and valid event name
@@ -79,6 +88,7 @@ void event_bind_handler( event_type_t type, event_callback_t callback ) {
  * @param callback Callback to bind
  *
  * @todo Add function logic
+ * @todo check and revise
  */
 void event_unbind_handler( event_type_t type, event_callback_t callback ) {
   ( void )type;

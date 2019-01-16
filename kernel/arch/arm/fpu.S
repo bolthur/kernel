@@ -18,13 +18,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernel/debug.h"
-
 /**
- * @brief Debug breakpoint halt
+ * @brief Method to enable floating point unit
  *
  * @todo check and revise
  */
-void debug_breakpoint( void ) {
-  __asm__ __volatile__( "swi 3" );
-}
+.global fpu_enable
+fpu_enable:
+  mrc p15, 0, r0, c1, c0, 2
+  orr r0, r0, #0x300000 // single precision
+  orr r0, r0, #0xC00000 // double precision
+  mcr p15, 0, r0, c1, c0, 2
+  mov r0, #0x40000000
+  fmxr fpexc, r0
+  bx lr

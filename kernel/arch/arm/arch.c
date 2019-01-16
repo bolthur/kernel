@@ -18,13 +18,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernel/debug.h"
+#include "arch/arm/fpu.h"
 
 /**
- * @brief Debug breakpoint halt
- *
- * @todo check and revise
+ * @brief Method to initialize architecture related code
  */
-void debug_breakpoint( void ) {
-  __asm__ __volatile__( "swi 3" );
+void arch_init( void ) {
+  fpu_enable();
 }

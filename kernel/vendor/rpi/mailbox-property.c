@@ -26,17 +26,25 @@
 #include "vendor/rpi/mailbox-property.h"
 
 /**
- * @brief property tag buffer, that has to be aligned to 16 byte boundary
+ * @brief property tag buffer, which needs to be aligned to 16 byte boundary
+ *
+ * @todo check and revise
+ * @todo size down property tag buffer
+ * @todo create own type for property tag buffer
  */
-static int32_t ptb[ 8192 ] __attribute__((aligned(16)));
+static int32_t ptb[ 8192 ] __attribute__( ( aligned( 16 ) ) );
 
 /**
  * @brief property tag buffer index
+ *
+ * @todo check and revise
  */
 static int32_t ptb_index = 0;
 
 /**
  * @brief Initialize mailbox property process
+ *
+ * @todo check and revise
  */
 void mailbox_property_init( void ) {
   // Add startup size
@@ -57,6 +65,8 @@ void mailbox_property_init( void ) {
  *
  * @param tag Tag to add
  * @param ... Further data depending on tag to be added
+ *
+ * @todo check and revise
  */
 void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
   va_list vl;
@@ -174,6 +184,8 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
  * @brief Execute mailbox property process
  *
  * @return uint32_t mailbox read result after write
+ *
+ * @todo check and revise
  */
 uint32_t mailbox_property_process( void ) {
   uint32_t result;
@@ -199,7 +211,7 @@ uint32_t mailbox_property_process( void ) {
   // debug output
   #if defined( DEBUG )
     for ( int32_t i = 0; i < ( ptb[ PT_OSIZE ] >> 2 ); i++ ) {
-      printf( "Response: %3d %8x\r\n", i, ptb[ i ] );
+      printf( "Response: %3d %08x\r\n", i, ptb[ i ] );
     }
   #endif
 
@@ -214,6 +226,7 @@ uint32_t mailbox_property_process( void ) {
  * @return rpi_mailbox_property_t* Pointer to structure of tag or NULL
  *
  * @todo Change static property to use malloc if available
+ * @todo check and revise
  */
 rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
   // property structure for return and tag buffer
@@ -229,7 +242,7 @@ rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
   while( index < ( ptb[ PT_OSIZE ] >> 2 ) ) {
     // debug output
     #if defined( DEBUG )
-      printf( "testing tag: [ %d ] %8x\r\n", index, ptb[ index ] );
+      printf( "testing tag: [ %d ] %08x\r\n", index, ptb[ index ] );
     #endif
 
     // test tag

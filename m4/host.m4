@@ -167,8 +167,17 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
 ])
 
 AC_DEFUN([BOLTHUR_SET_FLAGS], [
-  CFLAGS="${CFLAGS} -ffreestanding -Wall -Wextra -Werror -Wpedantic -Wconversion -std=c18 -nodefaultlibs"
+  CFLAGS="${CFLAGS} -ffreestanding -Wall -Wextra -Werror -Wpedantic -Wconversion -nodefaultlibs"
   LDFLAGS="${LDFLAGS} -nostdlib -fno-exceptions"
+
+  case "${build_os}" in
+    darwin*)
+      CFLAGS="${CFLAGS} -std=c11"
+      ;;
+    *)
+      CFLAGS="${CFLAGS} -std=c18"
+      ;;
+  esac
 ])
 
 AC_DEFUN([BOLTHUR_PROG_OBJCOPY], [
