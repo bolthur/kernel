@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 bool print( const char* data, size_t length, int32_t pad0, int32_t pad ) {
   const unsigned char* bytes = ( const unsigned char * )data;
@@ -56,7 +57,7 @@ int printf( const char* restrict format, ... ) {
   int32_t n;
   uint32_t un;
   char *p;
-  int32_t pad, pad0;
+  int32_t pad, pad0, radix;
 
   while ( *format != '\0' ) {
     maxrem = INT_MAX - written;
@@ -133,8 +134,51 @@ int printf( const char* restrict format, ... ) {
         written += len;
         break;
 
+      case 'u':
+      case 'p':
+        if ( 'p' == *format ) {
+          un = ( uintptr_t )va_arg( parameters, void* );
+          radix = 16;
+        } else {
+          un = va_arg( parameters, uint32_t );
+          radix = 10;
+        }
+
+        if ( ! n ) {
+          n = 0;
+          // Set errno to EOVERFLOW
+          // return -1;
+        }
+
+        p = utoa( un, buf, radix, false );
+        len = strlen( p );
+
+        if ( maxrem < len ) {
+          // FIXME: Set errno to EOVERFLOW
+          return -1;
+        }
+
+        if ( ! print( p, len, pad0, pad ) ) {
+          return -1;
+        }
+
+        format++;
+        written += len;
+        break;
+
+      case 'x':
+      case 'X':
       case 'd':
       case 'i':
+      case 'o':
+        if ( 'd' == *format || 'i' == *format ) {
+          radix = 10;
+        } else if ( 'o' == *format ) {
+          radix = 8;
+        } else {
+          radix = 16;
+        }
+
         n = va_arg( parameters, int32_t );
         if ( ! n ) {
           n = 0;
@@ -142,7 +186,7 @@ int printf( const char* restrict format, ... ) {
           // return -1;
         }
 
-        p = itoa( n, buf, 10 );
+        p = itoa( n, buf, radix, 'X' == *format );
         len = strlen( p );
 
         if ( maxrem < len ) {
@@ -158,53 +202,20 @@ int printf( const char* restrict format, ... ) {
         written += len;
         break;
 
-      case 'u':
-        un = va_arg( parameters, uint32_t );
-        if ( ! n ) {
-          n = 0;
-          // Set errno to EOVERFLOW
-          // return -1;
-        }
-
-        p = utoa( un, buf, 10 );
-        len = strlen( p );
-
-        if ( maxrem < len ) {
-          // FIXME: Set errno to EOVERFLOW
-          return -1;
-        }
-
-        if ( ! print( p, len, pad0, pad ) ) {
-          return -1;
-        }
-
-        format++;
-        written += len;
+      case 'f':
+      case 'F':
         break;
 
-      case 'x': // for testing
-      case 'X': // for testing
-        n = va_arg( parameters, int32_t );
-        if ( ! n ) {
-          n = 0;
-          // Set errno to EOVERFLOW
-          // return -1;
-        }
+      case 'e':
+      case 'E':
+        break;
 
-        p = itoa( n, buf, 16 );
-        len = strlen( p );
+      case 'g':
+      case 'G':
+        break;
 
-        if ( maxrem < len ) {
-          // FIXME: Set errno to EOVERFLOW
-          return -1;
-        }
-
-        if ( ! print( p, len, pad0, pad ) ) {
-          return -1;
-        }
-
-        format++;
-        written += len;
+      case 'a':
+      case 'A':
         break;
 
       default:

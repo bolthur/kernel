@@ -23,7 +23,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-char *itoa( int32_t value, char* buffer, int32_t radix ) {
+char *itoa( int32_t value, char* buffer, int32_t radix, bool uppercase ) {
   char *p = buffer;
   unsigned uv;
   bool sign = ( 10 == radix && 0 > value ) ? true : false;
@@ -40,7 +40,7 @@ char *itoa( int32_t value, char* buffer, int32_t radix ) {
     *p++ = ( char )(
       ( remainder < 10 )
         ? remainder + '0'
-        : remainder + 'a' - 10
+        : remainder + ( ! uppercase ? 'a' : 'A' ) - 10
     );
   } while ( uv /= ( unsigned )radix );
 

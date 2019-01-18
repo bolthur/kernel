@@ -21,8 +21,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdbool.h>
 
-char *utoa( uint32_t value, char* buffer, int32_t radix ) {
+char *utoa( uint32_t value, char* buffer, int32_t radix, bool uppercase ) {
   char *p = buffer;
   unsigned uv = value;
 
@@ -32,7 +33,7 @@ char *utoa( uint32_t value, char* buffer, int32_t radix ) {
     *p++ = ( char )(
       ( remainder < 10 )
         ? remainder + '0'
-        : remainder + 'a' - 10
+        : remainder + ( ! uppercase ? 'a' : 'A' ) - 10
     );
   } while ( uv /= ( unsigned )radix );
 

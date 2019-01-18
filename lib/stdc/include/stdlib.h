@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <inttypes.h>
+#include <stdbool.h>
 
 #define RAND_MAX 32767
 
@@ -57,7 +58,7 @@ void free( void* );
 char *ftoa( float, char*, int32_t );
 char *getenv( const char* );
 imaxdiv_t imaxdiv( intmax_t, intmax_t );
-char *itoa( int32_t, char*, int32_t );
+char *itoa( int32_t, char*, int32_t, bool );
 long int labs( long int );
 ldiv_t ldiv ( long int, long int );
 void *malloc( size_t );
@@ -72,7 +73,7 @@ double strtod( const char* restrict, char** restrict );
 long int strtol( const char* restrict, char** restrict, int );
 unsigned long int strtoul( const char* restrict, char** restrict, int );
 int system( const char* );
-char *utoa( uint32_t, char*, int32_t );
+char *utoa( uint32_t, char*, int32_t, bool );
 size_t wcstombs( char*, const wchar_t*, size_t );
 int wctomb( char*, wchar_t );
 

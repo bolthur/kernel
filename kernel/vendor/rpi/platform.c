@@ -98,7 +98,7 @@ void platform_fb_test( void ) {
 
   if ( ( mp = mailbox_property_get( TAG_ALLOCATE_BUFFER ) ) ) {
     fb = ( uint8_t* )mp->data.buffer_32[ 0 ];
-    printf( "Framebuffer address: 0x%08x\r\n", ( uintptr_t )fb );
+    printf( "Framebuffer address: 0x%08p\r\n", fb );
   }
 
   /* Never exit as there is no OS to exit to! */
