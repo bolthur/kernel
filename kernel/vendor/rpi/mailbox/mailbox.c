@@ -21,7 +21,7 @@
 #include <stdbool.h>
 
 #include "arch/arm/barrier.h"
-#include "vendor/rpi/mailbox.h"
+#include "vendor/rpi/mailbox/mailbox.h"
 #include "vendor/rpi/peripheral.h"
 
 /**

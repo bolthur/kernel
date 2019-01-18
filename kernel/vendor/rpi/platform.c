@@ -24,7 +24,7 @@
 #include "kernel/panic.h"
 
 #include "vendor/rpi/platform.h"
-#include "vendor/rpi/mailbox-property.h"
+#include "vendor/rpi/mailbox/property.h"
 
 /**
  * @brief Boot parameter data set during startup

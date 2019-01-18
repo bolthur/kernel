@@ -18,16 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernel/arch.h"
-#include "arch/arm/fpu.h"
+#include "arch/arm/v7/cpu.h"
 
-/**
- * @brief Method to initialize architecture related code
- */
-void arch_init( void ) {
-  // execute sub arch
-  arch_sub_init();
-
-  // enable floating point unit
-  fpu_enable();
+void arch_sub_init( void ) {
+  // perform sub arch initialization like enable l1 cache
 }

@@ -26,7 +26,7 @@
 .global start
 start:
   // reset cpu depending on arch
-  bl arch_cpu_reset
+  bl cpu_arch_reset
 
   #if defined(ELF32)
     // setup temporary stack that will be replaced later

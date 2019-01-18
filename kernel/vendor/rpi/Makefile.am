@@ -9,10 +9,10 @@ AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel/include 
 # rpi library
 noinst_LIBRARIES = librpi.a
 librpi_a_SOURCES = \
+  mailbox/mailbox.c \
+  mailbox/property.c \
   mm/phys.c \
   irq.c \
-  mailbox-property.c \
-  mailbox.c \
   platform.c \
   peripheral.c \
   serial.c \

@@ -27,7 +27,7 @@
 #include "arch/arm/mm/phys.h"
 #include "vendor/rpi/platform.h"
 #include "vendor/rpi/peripheral.h"
-#include "vendor/rpi/mailbox-property.h"
+#include "vendor/rpi/mailbox/property.h"
 
 /**
  * @brief Initialize physical memory manager for rpi

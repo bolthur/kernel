@@ -126,6 +126,40 @@ typedef enum {
   T_OVALUE = 3,
 } rpi_tag_offset_t;
 
+typedef enum {
+  TAG_CLOCK_RESERVED = 0,
+  TAG_CLOCK_EMMC,
+  TAG_CLOCK_UART,
+  TAG_CLOCK_ARM,
+  TAG_CLOCK_CORE,
+  TAG_CLOCK_V3D,
+  TAG_CLOCK_H264,
+  TAG_CLOCK_ISP,
+  TAG_CLOCK_SDRAM,
+  TAG_CLOCK_PIXEL,
+  TAG_CLOCK_PWM,
+} rpi_tag_clock_id_t;
+
+typedef enum {
+  TAG_POWER_SDCARD = 0,
+  TAG_POWER_UART0,
+  TAG_POWER_UART1,
+  TAG_POWER_USB_HCD,
+  TAG_POWER_I2C0,
+  TAG_POWER_I2C1,
+  TAG_POWER_I2C2,
+  TAG_POWER_SPI,
+  TAG_POWER_CCP2TX,
+} rpi_tag_power_device_id_t;
+
+typedef enum {
+  TAG_VOLTAGE_RESERVED = 0,
+  TAG_VOLTAGE_CORE,
+  TAG_VOLTAGE_SDRAM_C,
+  TAG_VOLTAGE_SDRAM_P,
+  TAG_VOLTAGE_SDRAM_I,
+} rpi_tag_voltage_id_t;
+
 typedef struct {
   int32_t tag;
   int32_t byte_length;

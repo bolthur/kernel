@@ -19,19 +19,19 @@
  */
 
 // Helper to stop all cpus except the first one during startup
-.global arch_cpu_reset
-arch_cpu_reset:
+.global cpu_arch_reset
+cpu_arch_reset:
   // check for hypervisor mode and switch back to supervisor mode for rpi2 and rpi3
   // Return current CPU ID (0..3)
   cpsid if // Disable IRQ & FIQ
   mrc p15, 0, r3, c0, c0, 5 // r3 = Multiprocessor Affinity Register (MPIDR)
   ands r3, #3 // r0 = CPU ID (Bits 0..1)
   bne _hlt // If (CPU ID != 0) Branch To Infinite Loop (Core ID 1..3)
-  beq _arch_cpu_reset // If equal branch to normal startup
+  beq _cpu_arch_reset // If equal branch to normal startup
 _hlt:
   wfe
   b _hlt
-_arch_cpu_reset:
+_cpu_arch_reset:
   bx lr
 
 // FIXME: Add logic

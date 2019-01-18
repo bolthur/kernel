@@ -13,5 +13,6 @@ libv7_a_SOURCES = \
   interrupt/stub/irq.S \
   interrupt/stub/ivt.S \
   interrupt/ivt.c \
+  arch.c \
   barrier.c \
   start.S
