@@ -18,48 +18,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
+#include <stddef.h>
+#include <stdio.h>
 
-#include "kernel/serial.h"
-#include "vendor/rpi/framebuffer.h"
+#include "kernel/mm/virt.h"
+#include "kernel/panic.h"
+#include "arch/arm/mm/phys.h"
 
-/**
- * @brief Initialize TTY
- */
-void tty_init( void ) {
-  #if defined( KERNEL_PRINT ) && ! defined( SERIAL_TTY )
-    framebuffer_init();
-  #endif
+void virt_init( void ) {
 }
 
 /**
- * @brief Print character to TTY
+ * @brief
  *
- * @param c Character to print
+ * @param page_table pointer to page table structure
+ * @param vaddr pointer to virtual address
+ * @param paddr pointer to physical address
+ * @param flags flags used for mapping
  */
-void tty_putc( uint8_t c ) {
-  #if defined( KERNEL_PRINT )
-    #if defined( SERIAL_TTY )
-      serial_putc( c );
-    #else
-      framebuffer_putc( c );
-    #endif
-  #else
-    ( void )c;
-  #endif
-}
-
-/**
- * @brief Put string to TTY
- *
- * @param str String to put to TTY
- */
-void tty_puts( const char *str ) {
-  #if defined( KERNEL_PRINT )
-    for ( size_t i = 0; str[ i ] != '\0'; i++ ) {
-      tty_putc( ( unsigned char )str[ i ] );
-    }
-  #else
-    ( void )str;
-  #endif
+void virt_map_address( void* page_table, void* vaddr, void* paddr, uint32_t flags ) {
+  // mark parameter as unused
+  ( void )page_table;
+  ( void )vaddr;
+  ( void )paddr;
+  ( void )flags;
 }

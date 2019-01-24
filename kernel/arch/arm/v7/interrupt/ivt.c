@@ -62,6 +62,7 @@ void unused_handler( cpu_register_context_t *status ) {
  * @param status current register context
  *
  * @todo check and revise
+ * @todo check for fpu exception and reset exception bit
  */
 void undefined_instruction_handler( cpu_register_context_t *status ) {
   dump_register( status );

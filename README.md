@@ -34,6 +34,7 @@ Currently the following targets are planned to be supported:
 
 * Raspberry PI 2 Model B ( rev 1.1 )
 * Raspberry PI 3 Model B
+* Raspberry PI Zero W
 
 ## Building the project
 
@@ -42,13 +43,10 @@ Currently the following targets are planned to be supported:
 Initial necessary commands after checkout:
 
 ```bash
-aclocal -I m4
-autoheader
-automake --foreign --add-missing
-autoconf
+./autogen.sh
 ```
 
-Necessary commands after adding new files:
+Necessary commands after adding new files to autotools executed within project root:
 
 ```bash
 autoreconf -i
@@ -60,17 +58,16 @@ autoreconf -i
 mkdir build
 cd build
 ### configure with one of the following commands
-../configure --host arm-none-eabi --enable-device=rpi1_a --enable-debug --enable-kernel-print
-../configure --host arm-none-eabi --enable-device=rpi1_a_plus --enable-debug --enable-kernel-print
-../configure --host arm-none-eabi --enable-device=rpi1_b --enable-debug --enable-kernel-print
-../configure --host arm-none-eabi --enable-device=rpi1_b_plus --enable-debug --enable-kernel-print
-../configure --host arm-none-eabi --enable-device=rpi2_b --enable-debug --enable-kernel-print
-../configure --host aarch64-none-elf --enable-device=rpi2_b_rev2 --enable-debug --enable-kernel-print
-../configure --host aarch64-none-elf --enable-device=rpi3_b --enable-debug --enable-kernel-print
-../configure --host aarch64-none-elf --enable-device=rpi3_b_plus --enable-debug --enable-kernel-print
-../configure --host arm-none-eabi --enable-device=rpi_zero --enable-debug --enable-kernel-print
-../configure --host arm-none-eabi --enable-device=rpi_zero_w --enable-debug --enable-kernel-print
+../configure --host arm-none-eabi --enable-device=rpi2_b_rev1 --enable-debug --enable-output
+../configure --host aarch64-none-elf --enable-device=rpi3_b --enable-debug --enable-output
+../configure --host arm-none-eabi --enable-device=rpi_zero_w --enable-debug --enable-output
 ```
+
+Possible additional parameters to `--host` and `--enable-device`:
+
+* `--enable-debug` enables remote debugging mode
+* `--enable-output` enables kernel output
+* `--enable-serial-tty` switch from framebuffer output to serial output
 
 ### Building
 
@@ -111,11 +108,8 @@ Emulation of the kernel project with qemu during development may be done at all 
 
 ```bash
 # raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./kernel/vendor/rpi/kernel_qemu -dtb ../kernel/vendor/rpi/device/bcm2709-rpi-2-b.dtb
+qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./kernel/vendor/rpi/kernel.zwerg
 
-# raspberry pi 2B rev 2 kernel emulation ( to be tested )
-qemu-system-aarch64 -m 1024 -M raspi2 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./kernel/vendor/rpi/kernel_qemu -dtb ../kernel/vendor/rpi/device/bcm2709-rpi-2-b.dtb
-
-# raspberry pi 3B and 3B+ kernel emulation
-qemu-system-aarch64 -m 1024 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./kernel/vendor/rpi/kernel_qemu -dtb ../kernel/vendor/rpi/device/bcm2710-rpi-3-b.dtb
+# raspberry pi 3B kernel emulation
+qemu-system-aarch64 -m 1024 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./kernel/vendor/rpi/kernel.zwerg
 ```

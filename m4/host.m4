@@ -1,17 +1,32 @@
 
 AC_DEFUN([BOLTHUR_SET_HOST], [
-  AH_TEMPLATE([ELF32], [Define to 1 for 32 bit ELF targets.])
-  AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets.])
+  AH_TEMPLATE([ELF32], [Define to 1 for 32 bit ELF targets])
+  AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets])
+  AH_TEMPLATE([DEBUG], [Set to 1 to enable debug mode])
   AH_TEMPLATE([SMP_ENABLED], [Define to 1 for SMP capable hosts])
-  AH_TEMPLATE([DEBUG], [Set to 1 to enable debug mode.])
+  AH_TEMPLATE([FPU_ENABLED], [Define to 1 for host with hardware FPU])
+  AH_TEMPLATE([ARCH_ARM], [Define to 1 for ARM targets])
+  AH_TEMPLATE([VENDOR_RPI], [Define to 1 for raspberry pi vendor])
+  AH_TEMPLATE([SERIAL_TTY], [Define to 1 for output via serial])
+  AH_TEMPLATE([KERNEL_PRINT], [Define to 1 to enable kernel print])
 
   # Define for kernel mode
-  AC_DEFINE([IS_KERNEL], [1], [Define set for libc to compile differently.])
+  AC_DEFINE([IS_KERNEL], [1], [Define set for libc to compile differently])
 
   # Test possibe enable debug parameter
   AS_IF([test "x$enable_debug" == "xyes"], [
     CFLAGS="${CFLAGS} -g"
     AC_DEFINE([DEBUG], [1])
+  ])
+
+  # Test possible serial tty activation
+  AS_IF([test "x$enable_serial_tty" == "xyes"], [
+    AC_DEFINE([SERIAL_TTY], [1])
+  ])
+
+  # Test for general output enable
+  AS_IF([test "x$enable_output" == "xyes"], [
+    AC_DEFINE([KERNEL_PRINT], [1])
   ])
 
   case "${host_cpu}" in
@@ -21,77 +36,33 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
     copy_flags="-I ${host_bfd} -O ${host_bfd}"
     output_img=kernel.img
     output_sym=kernel.sym
-    AC_DEFINE([ARCH_ARM], [1], [Define to 1 for ARM targets.])
+    AC_DEFINE([ARCH_ARM], [1])
     AC_DEFINE([ELF32], [1])
 
     case "${DEVICE}" in
-    rpi1_a)
-      CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
-      subarch_subdir=v6
-      vendor_subdir=rpi
-      AC_DEFINE([PLATFORM_RPI1_A], [1], [Define to 1 for raspberry pi 1 A platform.])
-      AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets.])
-      AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
-      AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
-      ;;
-    rpi1_a_plus)
-      CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
-      subarch_subdir=v6
-      vendor_subdir=rpi
-      AC_DEFINE([PLATFORM_RPI1_A_PLUS], [1], [Define to 1 for raspberry pi 1 A+ platform.])
-      AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets.])
-      AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
-      AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
-      ;;
-    rpi1_b)
-      CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
-      subarch_subdir=v6
-      vendor_subdir=rpi
-      AC_DEFINE([PLATFORM_RPI1_B], [1], [Define to 1 for raspberry pi 1 B platform.])
-      AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets.])
-      AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
-      AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
-      ;;
-    rpi1_b_plus)
-      CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
-      subarch_subdir=v6
-      vendor_subdir=rpi
-      AC_DEFINE([PLATFORM_RPI1_B_PLUS], [1], [Define to 1 for raspberry pi 1 B+ platform.])
-      AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets.])
-      AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
-      AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
-      ;;
-    rpi2_b)
-      CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a7 -mfpu=vfpv4 -mfloat-abi=hard"
+    rpi2_b_rev1)
+      CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv3 -mfloat-abi=hard"
       subarch_subdir=v7
       vendor_subdir=rpi
       output_img=kernel7.img
       output_sym=kernel7.sym
       AC_DEFINE([ELF32])
       AC_DEFINE([PLATFORM_RPI2_B], [1], [Define to 1 for raspberry pi 2 B platform])
-      AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets.])
-      AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets.])
-      AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
+      AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets])
+      AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets])
+      AC_DEFINE([VENDOR_RPI], [1])
       AC_DEFINE([SMP_ENABLED], [1])
-      ;;
-    rpi_zero)
-      CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
-      subarch_subdir=v6
-      vendor_subdir=rpi
-      AC_DEFINE([ELF32])
-      AC_DEFINE([PLATFORM_RPI_ZERO], [1], [Define to 1 for raspberry pi 1 platform.])
-      AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets.])
-      AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
-      AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
+      AC_DEFINE([FPU_ENABLED], [1])
       ;;
     rpi_zero_w)
-      CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfp -mfloat-abi=hard"
+      CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=rpi
-      AC_DEFINE([PLATFORM_RPI_ZERO_W], [1], [Define to 1 for raspberry pi zero platform.])
-      AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets.])
-      AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets.])
-      AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
+      AC_DEFINE([PLATFORM_RPI_ZERO_W], [1], [Define to 1 for raspberry pi zero platform])
+      AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets])
+      AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets])
+      AC_DEFINE([VENDOR_RPI], [1])
+      AC_DEFINE([FPU_ENABLED], [1])
       ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])
@@ -102,48 +73,21 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
     arch_subdir=arm
     host_bfd=elf64-littleaarch64
     copy_flags="-I ${host_bfd} -O ${host_bfd}"
-    AC_DEFINE([ARCH_ARM], [1], [Define to 1 for ARM targets.])
+    AC_DEFINE([ARCH_ARM], [1])
     AC_DEFINE([ELF64], [1])
     case "${DEVICE}" in
-    rpi2_b_rev2)
-      # -mfpu=fp-armv8 -mfloat-abi=hard
-      CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
-      subarch_subdir=v8
-      vendor_subdir=rpi
-      # should be may be kernel8
-      output_img=kernel7.img
-      output_sym=kernel7.sym
-      AC_DEFINE([PLATFORM_RPI2_B_REV2], [1], [Define to 1 for raspberry pi 2 B rev. 2 platform])
-      AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv7 targets.])
-      AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets.])
-      AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
-      AC_DEFINE([SMP_ENABLED], [1])
-      ;;
     rpi3_b)
-      # -mfpu=fp-armv8 -mfloat-abi=hard
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
       subarch_subdir=v8
       vendor_subdir=rpi
       output_img=kernel8.img
       output_sym=kernel8.sym
       AC_DEFINE([PLATFORM_RPI3_B], [1], [Define to 1 for raspberry pi 3 B platform])
-      AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets.])
-      AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets.])
-      AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
+      AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
+      AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
+      AC_DEFINE([VENDOR_RPI], [1])
       AC_DEFINE([SMP_ENABLED], [1])
-      ;;
-    rpi3_b_plus)
-      # -mfpu=fp-armv8 -mfloat-abi=hard
-      CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
-      subarch_subdir=v8
-      vendor_subdir=rpi
-      output_img=kernel8.img
-      output_sym=kernel8.sym
-      AC_DEFINE([PLATFORM_RPI3_B_PLUS], [1], [Define to 1 for raspberry pi 3 B+ platform])
-      AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets.])
-      AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets.])
-      AC_DEFINE([VENDOR_RPI], [1], [Define to 1 for raspberry pi vendor.])
-      AC_DEFINE([SMP_ENABLED], [1])
+      AC_DEFINE([FPU_ENABLED], [1])
       ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])
@@ -154,9 +98,9 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
     AC_MSG_ERROR([unsupported host CPU])
     ;;
   esac
-  AC_DEFINE_UNQUOTED([ARCH], [${arch_subdir}], [bolthur/kernel target architecture.])
-  AC_DEFINE_UNQUOTED([SUBARCH], [${subarch_subdir}], [bolthur/kernel target subarchitecture.])
-  AC_DEFINE_UNQUOTED([VENDOR], [${vendor_subdir}], [bolthur/kernel target vendor.])
+  AC_DEFINE_UNQUOTED([ARCH], [${arch_subdir}], [bolthur/kernel target architecture])
+  AC_DEFINE_UNQUOTED([SUBARCH], [${subarch_subdir}], [bolthur/kernel target subarchitecture])
+  AC_DEFINE_UNQUOTED([VENDOR], [${vendor_subdir}], [bolthur/kernel target vendor])
   AC_SUBST(arch_subdir)
   AC_SUBST(subarch_subdir)
   AC_SUBST(vendor_subdir)
@@ -167,17 +111,8 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
 ])
 
 AC_DEFUN([BOLTHUR_SET_FLAGS], [
-  CFLAGS="${CFLAGS} -ffreestanding -Wall -Wextra -Werror -Wpedantic -Wconversion -nodefaultlibs"
+  CFLAGS="${CFLAGS} -ffreestanding -Wall -Wextra -Werror -Wpedantic -Wconversion -nodefaultlibs -std=c18"
   LDFLAGS="${LDFLAGS} -nostdlib -fno-exceptions"
-
-  case "${build_os}" in
-    darwin*)
-      CFLAGS="${CFLAGS} -std=c11"
-      ;;
-    *)
-      CFLAGS="${CFLAGS} -std=c18"
-      ;;
-  esac
 ])
 
 AC_DEFUN([BOLTHUR_PROG_OBJCOPY], [

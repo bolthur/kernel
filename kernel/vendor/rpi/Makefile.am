@@ -12,6 +12,8 @@ librpi_a_SOURCES = \
   mailbox/mailbox.c \
   mailbox/property.c \
   mm/phys.c \
+  font.c \
+  framebuffer.c \
   irq.c \
   platform.c \
   peripheral.c \

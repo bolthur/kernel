@@ -6,6 +6,11 @@ AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/kernel/include 
 
 noinst_LIBRARIES = libstdc.a
 libstdc_a_SOURCES = \
+  ctype/isalpha.c \
+  ctype/isdigit.c \
+  ctype/islower.c \
+  ctype/isspace.c \
+  ctype/isupper.c \
   math/pow.c \
   math/powf.c \
   math/powl.c \

@@ -17,42 +17,29 @@ AC_LANG([C])
 AC_ARG_ENABLE([device],
   AC_HELP_STRING([--enable-device], [set target device (default and fallback is rpi2_b)]),
   [case "${enableval}" in
-  rpi1_a)
-    DEVICE="rpi1_a"
-    ;;
-  rpi1_a_plus)
-    DEVICE="rpi1_a_plus"
-    ;;
-  rpi1_b)
-    DEVICE="rpi1_b"
-    ;;
-  rpi1_b_plus)
-    DEVICE="rpi1_b_plus"
-    ;;
-  rpi2_b)
-    DEVICE="rpi2_b"
-    ;;
-  rpi2_b_rev2)
-    DEVICE="rpi2_b_rev2"
+  rpi2_b_rev1)
+    DEVICE="rpi2_b_rev1"
     ;;
   rpi3_b)
     DEVICE="rpi3_b"
-    ;;
-  rpi3_b_plus)
-    DEVICE="rpi3_b_plus"
-    ;;
-  rpi_zero)
-    DEVICE="rpi_zero"
     ;;
   rpi_zero_w)
     DEVICE="rpi_zero_w"
     ;;
   esac],
-  [DEVICE="rpi2_b"]
+  [DEVICE="rpi2_b_rev1"]
 )
 
 AC_ARG_ENABLE([debug],
   AC_HELP_STRING([--enable-debug], [enable debug mode with debug symbols (default: off)])
+)
+
+AC_ARG_ENABLE([output],
+  AC_HELP_STRING([--enable-output], [enable kernel output (default: off)])
+)
+
+AC_ARG_ENABLE([serial-tty],
+  AC_HELP_STRING([--enable-serial-tty], [switch kernel tty output to serial only (default: off)])
 )
 
 AC_ARG_ENABLE([opt],
@@ -84,15 +71,11 @@ BOLTHUR_SET_HOST
 BOLTHUR_SET_FLAGS
 
 # extend path with local toolchain
-srcdir2=`readlink -f $srcdir`
-PATH="${srcdir2}/scripts/opt/cross/bin:${PATH}"
-AC_SUBST(PATH, "${srcdir2}/scripts/opt/cross/bin:${PATH}")
+PATH="${ac_abs_confdir}/scripts/opt/cross/bin:${PATH}"
+AC_SUBST(PATH, "${ac_abs_confdir}/scripts/opt/cross/bin:${PATH}")
 
 # conftest
 AC_LANG_CONFTEST([AC_LANG_SOURCE([[const char hw[] = "Hello, World\n";]])])
-
-# set cc to clang
-AC_PROG_CC([gcc])
 
 # checks for programs
 AC_PROG_CC

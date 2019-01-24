@@ -1,40 +1,46 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
-/* bolthur/kernel target architecture. */
+/* bolthur/kernel target architecture */
 #undef ARCH
 
-/* Define to 1 for ARM targets. */
+/* Define to 1 for ARM targets */
 #undef ARCH_ARM
 
-/* Define to 1 for ARM ARM1176JZF-S targets. */
+/* Define to 1 for ARM ARM1176JZF-S targets */
 #undef ARCH_ARM_ARM1176JZF_S
 
-/* Define to 1 for ARM Cortex-A53 targets. */
+/* Define to 1 for ARM Cortex-A53 targets */
 #undef ARCH_ARM_CORTEX_A53
 
-/* Define to 1 for ARM Cortex-A7 targets. */
+/* Define to 1 for ARM Cortex-A7 targets */
 #undef ARCH_ARM_CORTEX_A7
 
-/* Define to 1 for ARMv6 targets. */
+/* Define to 1 for ARMv6 targets */
 #undef ARCH_ARM_V6
 
-/* Define to 1 for ARMv7 targets. */
+/* Define to 1 for ARMv7 targets */
 #undef ARCH_ARM_V7
 
-/* Define to 1 for ARMv8 targets. */
+/* Define to 1 for ARMv8 targets */
 #undef ARCH_ARM_V8
 
-/* Set to 1 to enable debug mode. */
+/* Set to 1 to enable debug mode */
 #undef DEBUG
 
-/* Define to 1 for 32 bit ELF targets. */
+/* Define to 1 for 32 bit ELF targets */
 #undef ELF32
 
-/* Define to 1 for 64 bit ELF targets. */
+/* Define to 1 for 64 bit ELF targets */
 #undef ELF64
 
-/* Define set for libc to compile differently. */
+/* Define to 1 for host with hardware FPU */
+#undef FPU_ENABLED
+
+/* Define set for libc to compile differently */
 #undef IS_KERNEL
+
+/* Define to 1 to enable kernel print */
+#undef KERNEL_PRINT
 
 /* Name of package */
 #undef PACKAGE
@@ -60,49 +66,31 @@
 /* Keyword for packing structures. */
 #undef PACKED
 
-/* Define to 1 for raspberry pi 1 A platform. */
-#undef PLATFORM_RPI1_A
-
-/* Define to 1 for raspberry pi 1 A+ platform. */
-#undef PLATFORM_RPI1_A_PLUS
-
-/* Define to 1 for raspberry pi 1 B platform. */
-#undef PLATFORM_RPI1_B
-
-/* Define to 1 for raspberry pi 1 B+ platform. */
-#undef PLATFORM_RPI1_B_PLUS
-
 /* Define to 1 for raspberry pi 2 B platform */
 #undef PLATFORM_RPI2_B
-
-/* Define to 1 for raspberry pi 2 B rev. 2 platform */
-#undef PLATFORM_RPI2_B_REV2
 
 /* Define to 1 for raspberry pi 3 B platform */
 #undef PLATFORM_RPI3_B
 
-/* Define to 1 for raspberry pi 3 B+ platform */
-#undef PLATFORM_RPI3_B_PLUS
-
-/* Define to 1 for raspberry pi 1 platform. */
-#undef PLATFORM_RPI_ZERO
-
-/* Define to 1 for raspberry pi zero platform. */
+/* Define to 1 for raspberry pi zero platform */
 #undef PLATFORM_RPI_ZERO_W
 
 /* Keyword for section placement. */
 #undef SECTION
 
+/* Define to 1 for output via serial */
+#undef SERIAL_TTY
+
 /* Define to 1 for SMP capable hosts */
 #undef SMP_ENABLED
 
-/* bolthur/kernel target subarchitecture. */
+/* bolthur/kernel target subarchitecture */
 #undef SUBARCH
 
-/* bolthur/kernel target vendor. */
+/* bolthur/kernel target vendor */
 #undef VENDOR
 
-/* Define to 1 for raspberry pi vendor. */
+/* Define to 1 for raspberry pi vendor */
 #undef VENDOR_RPI
 
 /* Version number of package */

@@ -15,17 +15,20 @@
   * [x] Move source files out of folder `src`
   * [x] Restructore code
   * [x] Merge defines `KERNEL_DEBUG_PRINT` and `DEBUG`
+  * [x] Reduce devices within `m4/host.m4` and `configure.ac` to existing hardware
+  * [x] Provide `autogen.sh` for simple startup after checkout / download
 * [x] Memory management
   * [x] Physical memory management
     * [x] Get max memory from vendor ( store physical memory map generally per vendor )
     * [x] Setup memory bitmap within vendor
     * [x] Mark physical peripheral address areas per vendor as used
-* [ ] Event system for mapping service routines `Needs to be planned`
 * [ ] Add irq and isrs register handling
   * [x] Get irq with cpu mode switch and register dump working
   * [x] Merge irq functions with isrs functions where possible
-  * [ ] Prohibit direct mapping of interrupt routines
-  * [ ] Integrate irq/fiq into event system to allow timer handler and more
+  * [ ] Check and revise if necessary
+* [ ] FPU
+  * [x] Check and revise fpu code
+  * [ ] Check and remove direct floating point usage within kernel except saving of floating point registers
 * [ ] Memory management
   * [ ] Virtual memory management done within `kernel/arch/{architecture}/{sub architecture}`
   * [ ] Add smp enable flag to autotools as option
@@ -43,8 +46,20 @@
   * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code with avl tree
 * [ ] Enhance libc for further kernel development
   * [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
+* [ ] Add multitasking
+* [ ] Add syscalls handling via `swi`
+* [ ] FPU
+  * [ ] Enable fpu only per thread/process when fpu exception has been thrown
+  * [ ] Extend push of registers during exception to consider also fpu registers
+  * [ ] Extend undefined exception to check for fpu error with clear of flag
+* [ ] Add multithreading
+* [ ] Add SMP support
+  * [ ] Determine current running core within exceptions
+  * [ ] Extend irq check to check corresponding cpu interrupt registers
+  * [ ] ...
 * [ ] TTY changes
-  * [ ] Check for using framebuffer as default tty
+  * [ ] Use framebuffer as default tty
+  * [x] Add switch to use serial tty for debug output
   * [ ] Use serial only for remote debugging
 * [ ] Add gdb stub for debugging on remote device via serial port
   * [ ] Rework existing unfinished remote debugging code
@@ -70,10 +85,8 @@
     * [ ] Find initrd via ATAG/device tree and extend placement address if necessary
     * [ ] Mark initrd within RAM as used
   * [ ] Add generic vfs implementation using tar initrd
-* [ ] libc
-  * [ ] Add enable of floating point unit to kernel
-  * [ ] Add math functions `pow`, `powf`, `powl`
-  * [ ] Complete printf placeholders according to standard
+  * [ ] Check for executable elf programs and execute them
+* [ ] Rename `libstdc` to `libstdk` or `libk` and remove everything that's not kernel related
 * [ ] Documentation ( man pages or markdown )
   * [ ] Getting started after checkout
   * [ ] Cross compiler toolchain
@@ -83,4 +96,7 @@
 
 * [ ] Create a draft for "build" system to create ready to boot images with vendor driver/app packaging
   * [ ] Per vendor initial ramdisk creation
-* [ ] Move existing libraries into separate repositories and link them to kernel via git submodule
+* [ ] Move existing libraries into separate repositories and link them to kernel via git submodule if not kernel related
+* [ ] Create repository for building ported applications and libraries
+  * [ ] Add newlib with patch for compilation
+  * [ ] Add glibc with patch for compilation

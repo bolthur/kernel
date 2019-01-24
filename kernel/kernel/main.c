@@ -39,6 +39,11 @@
 extern "C" /* Use C linkage for kernel_main. */
 #endif
 void kernel_main() {
+  // Initialize serial for debugging if enabled
+  #if defined( DEBUG ) || defined( SERIAL_TTY )
+    serial_init();
+  #endif
+
   // enable tty for output
   tty_init();
 
