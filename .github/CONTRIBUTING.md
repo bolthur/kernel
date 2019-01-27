@@ -1,12 +1,12 @@
 # How to contribute
 
-It's important to us that you feel you can contribute towards the evolution of coset framework. This can take many forms: from helping to fix bugs or improve the docs, to adding in new features to the source. This guide should help you in making that process as smooth as possible.
+It's important to us that you feel you can contribute towards the evolution of bolthur/kernel. This can take many forms: from helping to fix bugs or improve the docs, to adding in new features to the source. This guide should help you in making that process as smooth as possible.
 
 Before contributing, please read the [Code of Conduct](CODE_OF_CONDUCT.md) which is adapted from [Contributor Covenant, version 1.4](https://www.contributor-covenant.org/version/1/4).
 
 ## Reporting issues
 
-To report a bug, request a feature or simply ask a question, make use of GiHub Issues section for [Issues](https://github.com/Dreaded-Gnu/coset/issues). When submitting an issue please take care of the following stepsÖ
+To report a bug, request a feature or simply ask a question, make use of GiHub Issues section for [Issues](https://github.com/bolthur/kernel/issues). When submitting an issue please take care of the following stepsÖ
 
 1. **Search for already existing issues.** Your question or bug may already have been answered or fixed. Be sure to search issues first before putting in a duplicate issue.
 
