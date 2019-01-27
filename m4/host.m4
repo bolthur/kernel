@@ -9,6 +9,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([VENDOR_RPI], [Define to 1 for raspberry pi vendor])
   AH_TEMPLATE([SERIAL_TTY], [Define to 1 for output via serial])
   AH_TEMPLATE([KERNEL_PRINT], [Define to 1 to enable kernel print])
+  AH_TEMPLATE([DEBUG_MM_PHYS], [Define to 1 to enable output of physical memory manager])
 
   # Define for kernel mode
   AC_DEFINE([IS_KERNEL], [1], [Define set for libc to compile differently])
@@ -27,6 +28,11 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   # Test for general output enable
   AS_IF([test "x$enable_output" == "xyes"], [
     AC_DEFINE([KERNEL_PRINT], [1])
+  ])
+
+  # Test for physical memory manager output
+  AS_IF([test "x$enable_output_mm_phys" == "xyes"], [
+    AC_DEFINE([DEBUG_MM_PHYS], [1])
   ])
 
   case "${host_cpu}" in

@@ -42,6 +42,10 @@ AC_ARG_ENABLE([serial-tty],
   AC_HELP_STRING([--enable-serial-tty], [switch kernel tty output to serial only (default: off)])
 )
 
+AC_ARG_ENABLE([output-mm-phys],
+  AC_HELP_STRING([--enable-output-mm-phys], [Enables output of physical memory mapping routines (default: off)])
+)
+
 AC_ARG_ENABLE([opt],
   AC_HELP_STRING([--disable-opt], [disable code optimization (default: on)]),
   [case "${enableval}" in

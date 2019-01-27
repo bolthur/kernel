@@ -27,6 +27,9 @@
 /* Set to 1 to enable debug mode */
 #undef DEBUG
 
+/* Define to 1 to enable output of physical memory manager */
+#undef DEBUG_MM_PHYS
+
 /* Define to 1 for 32 bit ELF targets */
 #undef ELF32
 

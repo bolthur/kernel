@@ -23,12 +23,11 @@
 #ifndef __KERNEL_VENDOR_RPI_FRAMEBUFFER__
 #define __KERNEL_VENDOR_RPI_FRAMEBUFFER__
 
-#define FRAMEBUFFER_SCREEN_WIDTH 640
-#define FRAMEBUFFER_SCREEN_HEIGHT 480
+#define FRAMEBUFFER_SCREEN_WIDTH 1024
+#define FRAMEBUFFER_SCREEN_HEIGHT 768
 #define FRAMEBUFFER_SCREEN_DEPTH 32 // supported: 16, 24, 32
 
 void framebuffer_init( void );
-void framebuffer_put_pixel( int32_t, int32_t, uint8_t, uint8_t, uint8_t, uint8_t );
 void framebuffer_putc( uint8_t );
 
 #endif

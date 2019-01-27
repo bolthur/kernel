@@ -47,10 +47,10 @@ void phys_init( void ) {
 
   // debug output
   #if defined( DEBUG )
-    printf ( "buffer->byte_length: %d\n", buffer->byte_length );
-    printf ( "buffer->data.buffer_32[ 0 ]: 0x%08x\n", buffer->data.buffer_32[ 0 ] );
-    printf ( "buffer->data.buffer_32[ 1 ]: 0x%08x\n", buffer->data.buffer_32[ 1 ] );
-    printf ( "buffer->tag: 0x%08x\n", buffer->tag );
+    printf ( "buffer->byte_length: %d\r\n", buffer->byte_length );
+    printf ( "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n", buffer->data.buffer_32[ 0 ] );
+    printf ( "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n", buffer->data.buffer_32[ 1 ] );
+    printf ( "buffer->tag: 0x%08x\r\n", buffer->tag );
   #endif
 
   // increase amount by arm amount
@@ -66,10 +66,10 @@ void phys_init( void ) {
 
   // debug output
   #if defined( DEBUG )
-    printf ( "buffer->byte_length: %d\n", buffer->byte_length );
-    printf ( "buffer->data.buffer_32[ 0 ]: 0x%08x\n", buffer->data.buffer_32[ 0 ] );
-    printf ( "buffer->data.buffer_32[ 1 ]: 0x%08x\n", buffer->data.buffer_32[ 1 ] );
-    printf ( "buffer->tag: 0x%08x\n", buffer->tag );
+    printf ( "buffer->byte_length: %d\r\n", buffer->byte_length );
+    printf ( "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n", buffer->data.buffer_32[ 0 ] );
+    printf ( "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n", buffer->data.buffer_32[ 1 ] );
+    printf ( "buffer->tag: 0x%08x\r\n", buffer->tag );
   #endif
 
   // increase amount by video core amount

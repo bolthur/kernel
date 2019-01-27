@@ -68,6 +68,7 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-debug` enables remote debugging mode
 * `--enable-output` enables kernel output
 * `--enable-serial-tty` switch from framebuffer output to serial output
+* `--enable-output-mm-phys` activate output of physical memory manager ( slows down kernel totally )
 
 ### Building
 

@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <stdio.h>
 
@@ -88,7 +89,7 @@ void framebuffer_init( void ) {
  * @param b blue value
  * @param a alpha value
  */
-void framebuffer_put_pixel(
+static void put_pixel(
   int32_t x, int32_t y, uint8_t r, uint8_t g, uint8_t b, uint8_t a
 ) {
   int pixel_offset = ( x * ( bpp >> 3 ) ) + ( y * pitch );
@@ -119,6 +120,31 @@ void framebuffer_put_pixel(
 }
 
 /**
+ * @brief Internal method to scroll up if end has been reached
+ */
+static void scroll( void ) {
+  uint32_t row_size = (uint32_t)( FONT_HEIGHT * pitch );
+  uint32_t src = ( uint32_t )( address + row_size );
+
+  // move memory up
+  // FIXME: Why multiplied by two? It's a result of trial and error :|
+  memmove(
+    ( void* )address,
+    ( void* )src,
+    ( FRAMEBUFFER_SCREEN_HEIGHT / FONT_HEIGHT - 1 ) * row_size * 2
+  );
+
+  // erase last line
+  memset(
+    ( void* )( address + ( ( FRAMEBUFFER_SCREEN_HEIGHT / FONT_HEIGHT ) * row_size ) ),
+    0,
+    row_size
+  );
+
+  x = 0;
+}
+
+/**
  * @brief Print character to framebuffer
  *
  * @param c character to print
@@ -141,8 +167,7 @@ void framebuffer_putc( uint8_t c ) {
 
     case '\n':
       if ( y + FONT_HEIGHT > height ) {
-        // FIXME: Add handle for height limit reached
-        for(;;);
+        scroll();
       } else {
         y += FONT_HEIGHT;
       }
@@ -158,13 +183,14 @@ void framebuffer_putc( uint8_t c ) {
         x = 0;
 
         if ( y + FONT_HEIGHT > height ) {
-          // FIXME: Add handle for height limit reached
-          for(;;);
+          scroll();
         } else {
           y += FONT_HEIGHT;
         }
 
         x += off;
+      } else {
+        x += TAB_WIDTH;
       }
       break;
 
@@ -179,8 +205,7 @@ void framebuffer_putc( uint8_t c ) {
         x = 0;
 
         if ( y + FONT_HEIGHT > height ) {
-          // FIXME: Add handle for height limit reached
-          for(;;);
+          scroll();
         } else {
           y += 8;
         }
@@ -189,10 +214,11 @@ void framebuffer_putc( uint8_t c ) {
       // get bitmap to render
       bitmap = font8x8_basic[ c ];
 
+      // Render character
       for ( int32_t char_x = 0; char_x < FONT_WIDTH; char_x++ ) {
         for ( int32_t char_y = 0; char_y < FONT_HEIGHT; char_y++ ) {
           set = ( bitmap[ char_x ] & 1 << char_y );
-          framebuffer_put_pixel(
+          put_pixel(
             x + char_y,
             y + char_x,
             set ? 0xff : 0,
