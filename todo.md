@@ -58,9 +58,10 @@
   * [ ] Extend irq check to check corresponding cpu interrupt registers
   * [ ] ...
 * [ ] TTY changes
-  * [ ] Use framebuffer as default tty
   * [x] Add switch to use serial tty for debug output
-  * [ ] Use serial only for remote debugging
+  * [x] Get text printing via framebuffer to work
+  * [x] Use framebuffer as default tty
+  * [ ] Finalize console implementation for framebuffer
 * [ ] Add gdb stub for debugging on remote device via serial port
   * [ ] Rework existing unfinished remote debugging code
   * [ ] Find better place for `serial_init` than `tty_init`

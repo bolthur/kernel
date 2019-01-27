@@ -47,6 +47,9 @@ void kernel_main() {
   // enable tty for output
   tty_init();
 
+  printf("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
+  for(;;);
+
   // Setup arch related parts
   printf( "[bolthur/kernel -> arch] initialize ... " );
   arch_init();

@@ -21,7 +21,10 @@
 #include <stdlib.h>
 
 #include "kernel/serial.h"
+#include "vendor/rpi/font.h"
 #include "vendor/rpi/framebuffer.h"
+
+static uint8_t console[ FRAMEBUFFER_SCREEN_WIDTH / FONT_WIDTH ][ FRAMEBUFFER_SCREEN_HEIGHT / FONT_HEIGHT ] = {0};
 
 /**
  * @brief Initialize TTY
@@ -38,6 +41,8 @@ void tty_init( void ) {
  * @param c Character to print
  */
 void tty_putc( uint8_t c ) {
+  ( void )console;
+
   #if defined( KERNEL_PRINT )
     #if defined( SERIAL_TTY )
       serial_putc( c );

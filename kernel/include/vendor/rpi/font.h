@@ -20,15 +20,22 @@
 
 #include <stdint.h>
 
-#ifndef __KERNEL_VENDOR_RPI_FRAMEBUFFER__
-#define __KERNEL_VENDOR_RPI_FRAMEBUFFER__
+#ifndef __KERNEL_VENDOR_RPI_FONT__
+#define __KERNEL_VENDOR_RPI_FONT__
 
-#define FRAMEBUFFER_SCREEN_WIDTH 640
-#define FRAMEBUFFER_SCREEN_HEIGHT 480
-#define FRAMEBUFFER_SCREEN_DEPTH 32 // supported: 16, 24, 32
+#if defined( __cplusplus )
+extern "C" {
+#endif
 
-void framebuffer_init( void );
-void framebuffer_put_pixel( int32_t, int32_t, uint8_t, uint8_t, uint8_t, uint8_t );
-void framebuffer_putc( uint8_t );
+#define FONT_HEIGHT 8
+#define FONT_WIDTH 8
+
+#define TAB_WIDTH 8
+
+extern uint8_t font8x8_basic[ 128 ][ 8 ];
+
+#if defined( __cplusplus )
+}
+#endif
 
 #endif
