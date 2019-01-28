@@ -44,7 +44,7 @@ void framebuffer_init( void ) {
 
   // Initialize framebuffer
   mailbox_property_init();
-  mailbox_property_add_tag( TAG_ALLOCATE_BUFFER );
+  mailbox_property_add_tag( TAG_ALLOCATE_BUFFER, 16 );
   mailbox_property_add_tag( TAG_SET_PHYSICAL_SIZE, FRAMEBUFFER_SCREEN_WIDTH, FRAMEBUFFER_SCREEN_HEIGHT );
   mailbox_property_add_tag( TAG_SET_VIRTUAL_SIZE, FRAMEBUFFER_SCREEN_WIDTH, FRAMEBUFFER_SCREEN_HEIGHT * 2 );
   mailbox_property_add_tag( TAG_SET_DEPTH, FRAMEBUFFER_SCREEN_DEPTH );
@@ -97,22 +97,20 @@ static void put_pixel(
   // Render bitmap retrieved above
   if ( bpp == 32 ) {
     // Four bytes to write
-    address[ pixel_offset++ ] = r;
-    address[ pixel_offset++ ] = g;
-    address[ pixel_offset++ ] = b;
-    address[ pixel_offset++ ] = a;
+    *( uint32_t* )&address[ pixel_offset ] = ( uint32_t ) (
+      ( ( r << 24 ) + ( g << 16 ) + ( b << 8 ) + a ) >> 8
+    );
   } else if ( bpp == 24 ) {
     // Three bytes to write
-    address[ pixel_offset++ ] = r;
-    address[ pixel_offset++ ] = g;
-    address[ pixel_offset++ ] = b;
+    *( uint32_t* )&address[ pixel_offset ] = ( uint32_t ) (
+      ( uint32_t )( ( r << 24 ) + ( g << 16 ) + ( b << 8 ) )
+      | ( *( uint32_t* )&address[ pixel_offset ] & 0x000000FF )
+    );
   } else if ( bpp == 16 ) {
     // Two bytes to write
     // Bit pack RGB565 into the 16-bit pixel offset
     *( uint16_t* )&address[ pixel_offset ] = ( uint16_t )(
-      ( r >> 3 ) << 11
-      | ( g >> 2 ) << 5
-      | ( b >> 3 )
+      ( r >> 3 ) << 11 | ( g >> 2 ) << 5 | ( b >> 3 )
     );
   } else {
     // FIXME: Add palette mode.
@@ -125,21 +123,20 @@ static void put_pixel(
 static void scroll( void ) {
   uint32_t row_size = (uint32_t)( FONT_HEIGHT * pitch );
   uint32_t src = ( uint32_t )( address + row_size );
+  uint32_t max_y = FRAMEBUFFER_SCREEN_HEIGHT / FONT_HEIGHT;
+
+  // check for scrolling is really necessary
+  if ( y + FONT_HEIGHT < height ) {
+    // no scrolling necessary, so just increment y
+    y += FONT_HEIGHT;
+    return;
+  }
 
   // move memory up
-  // FIXME: Why multiplied by two? It's a result of trial and error :|
-  memmove(
-    ( void* )address,
-    ( void* )src,
-    ( FRAMEBUFFER_SCREEN_HEIGHT / FONT_HEIGHT - 1 ) * row_size * 2
-  );
+  memmove( ( void* )address, ( void* )src, max_y * row_size );
 
   // erase last line
-  memset(
-    ( void* )( address + ( ( FRAMEBUFFER_SCREEN_HEIGHT / FONT_HEIGHT ) * row_size ) ),
-    0,
-    row_size
-  );
+  memset( ( void* )( address + ( max_y * row_size ) ), 0, row_size );
 
   x = 0;
 }
@@ -166,31 +163,22 @@ void framebuffer_putc( uint8_t c ) {
       break;
 
     case '\n':
-      if ( y + FONT_HEIGHT > height ) {
-        scroll();
-      } else {
-        y += FONT_HEIGHT;
-      }
+      scroll();
       break;
 
     case '\t':
       off = TAB_WIDTH;
       if ( x + off > width ) {
         // determine remaining spaces
-        off = width - x + off;
+        off = x + off - width;
 
-        // set x to zero and increment line
-        x = 0;
+        // scroll if necessary
+        scroll();
 
-        if ( y + FONT_HEIGHT > height ) {
-          scroll();
-        } else {
-          y += FONT_HEIGHT;
-        }
-
+        // add remaining offset
         x += off;
       } else {
-        x += TAB_WIDTH;
+        x += off;
       }
       break;
 
@@ -202,13 +190,7 @@ void framebuffer_putc( uint8_t c ) {
 
       // check whether line break is necessary
       if ( x + FONT_WIDTH > width ) {
-        x = 0;
-
-        if ( y + FONT_HEIGHT > height ) {
-          scroll();
-        } else {
-          y += 8;
-        }
+        scroll();
       }
 
       // get bitmap to render

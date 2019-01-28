@@ -26,9 +26,9 @@
   * [x] Get irq with cpu mode switch and register dump working
   * [x] Merge irq functions with isrs functions where possible
   * [ ] Check and revise if necessary
-* [ ] FPU
+* [x] FPU
   * [x] Check and revise fpu code
-  * [ ] Check and remove direct floating point usage within kernel except saving of floating point registers
+  * [x] Check and remove direct floating point usage within kernel except saving of floating point registers
 * [ ] Memory management
   * [ ] Virtual memory management done within `kernel/arch/{architecture}/{sub architecture}`
   * [ ] Add smp enable flag to autotools as option
@@ -39,13 +39,19 @@
       * [ ] `0xC0008000` for 32bit
       * [ ] `0xffffff0000080000` for 64bit
   * [ ] Consider peripherals per vendor within mmu as not cachable
-  * [ ] Consider and enable CPU related caches
+  * [ ] Consider and enable CPU related caches for performance
 * [ ] AVL tree
   * [ ] Add generic avl tree library
 * [ ] Memory management
   * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code with avl tree
-* [ ] Enhance libc for further kernel development
+* [ ] `libc` rework for further kernel development
+  * [ ] Rename to `libk` and remove all non kernel related parts
   * [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
+* [ ] Add gdb stub for debugging on remote device via serial port
+  * [ ] Rework existing unfinished remote debugging code
+  * [ ] Find better place for `serial_init` than `tty_init`
+  * [ ] Finalize remote debugging integration
+  * [ ] Finish debug launch.json when remote debugging is possible
 * [ ] Add multitasking
 * [ ] Add syscalls handling via `swi`
 * [ ] FPU
@@ -57,20 +63,26 @@
   * [ ] Determine current running core within exceptions
   * [ ] Extend irq check to check corresponding cpu interrupt registers
   * [ ] ...
-* [ ] TTY changes
+* [x] TTY changes
   * [x] Add switch to use serial tty for debug output
   * [x] Get text printing via framebuffer to work
   * [x] Use framebuffer as default tty
-  * [ ] Finalize console implementation for framebuffer
-* [ ] Add gdb stub for debugging on remote device via serial port
-  * [ ] Rework existing unfinished remote debugging code
-  * [ ] Find better place for `serial_init` than `tty_init`
-  * [ ] Finalize remote debugging integration
-  * [ ] Finish debug launch.json when remote debugging is possible
+  * [x] Finalize console implementation for framebuffer
 * [ ] TAR
   * [ ] Add generic tar library for reading tar files
   * [ ] Add initial ramdisk during boot which should be a simple tar file
   * [ ] Add parsing of initial ramdisk containing drivers or programs for startup
+* [ ] Add virtual file system for initrd
+  * [ ] RPI related
+    * [ ] Determine one of the two options to choose, or support both ( via config.txt )
+      * [ ] Handle initrd to be added after kernel
+      * [ ] Handle initrd loaded to fixed address set per board
+    * [ ] Extend memory management
+      * [ ] Mark initrd within physical memory manager as used
+      * [ ] Check and extend virtual memory management if necessary
+  * [ ] Add generic vfs implementation using tar initrd
+* [ ] Add parsinf of ELF files
+  * [ ] Check for executable elf programs within initrd and execute them
 * [ ] Device tree
   * [ ] Add device tree library
   * [ ] Extend automake by option for use device tree
@@ -81,13 +93,6 @@
   * [ ] Extend automake by option for use atag
   * [ ] Add parse of atag when compiled in via option
   * [ ] Debug output, when no atag has been passed and use kernel defaults
-* [ ] Add virtual file system for initrd
-  * [ ] Extend rpi memory management
-    * [ ] Find initrd via ATAG/device tree and extend placement address if necessary
-    * [ ] Mark initrd within RAM as used
-  * [ ] Add generic vfs implementation using tar initrd
-  * [ ] Check for executable elf programs and execute them
-* [ ] Rename `libstdc` to `libstdk` or `libk` and remove everything that's not kernel related
 * [ ] Documentation ( man pages or markdown )
   * [ ] Getting started after checkout
   * [ ] Cross compiler toolchain
@@ -97,7 +102,7 @@
 
 * [ ] Create a draft for "build" system to create ready to boot images with vendor driver/app packaging
   * [ ] Per vendor initial ramdisk creation
-* [ ] Move existing libraries into separate repositories and link them to kernel via git submodule if not kernel related
+* [ ] Move libraries `lib/tar`, `lib/avl`, `lib/atag` and `lib/fdt` into separate repositories and link them to kernel via git submodule if kernel related
 * [ ] Create repository for building ported applications and libraries
   * [ ] Add newlib with patch for compilation
   * [ ] Add glibc with patch for compilation

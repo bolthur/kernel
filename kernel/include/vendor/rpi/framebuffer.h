@@ -25,7 +25,7 @@
 
 #define FRAMEBUFFER_SCREEN_WIDTH 1024
 #define FRAMEBUFFER_SCREEN_HEIGHT 768
-#define FRAMEBUFFER_SCREEN_DEPTH 32 // supported: 16, 24, 32
+#define FRAMEBUFFER_SCREEN_DEPTH 16 // supported: 16, 24, 32
 
 void framebuffer_init( void );
 void framebuffer_putc( uint8_t );

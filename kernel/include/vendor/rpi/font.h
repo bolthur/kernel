@@ -30,7 +30,7 @@ extern "C" {
 #define FONT_HEIGHT 8
 #define FONT_WIDTH 8
 
-#define TAB_WIDTH 8
+#define TAB_WIDTH FONT_WIDTH * 4
 
 extern uint8_t font8x8_basic[ 128 ][ 8 ];
 
