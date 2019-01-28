@@ -18,9 +18,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_ARCH_ARM_MM_PHYS__
-#define __KERNEL_ARCH_ARM_MM_PHYS__
+#include <stddef.h>
+#include <stdio.h>
 
-#define PHYS_PAGE_SIZE 0x1000
+#include "kernel/panic.h"
+#include "kernel/mm/virt.h"
+#include "arch/arm/mm/phys.h"
+#include "arch/arm/mm/virt.h"
+#include "arch/arm/v7/mm/virt.h"
 
-#endif
+/**
+ * @brief Initialize virtual memory management
+ */
+void virt_init( void ) {
+}

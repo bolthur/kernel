@@ -93,6 +93,7 @@
   * [ ] Extend automake by option for use atag
   * [ ] Add parse of atag when compiled in via option
   * [ ] Debug output, when no atag has been passed and use kernel defaults
+* [ ] Check and revise kernel to work with all optimization levels
 * [ ] Documentation ( man pages or markdown )
   * [ ] Getting started after checkout
   * [ ] Cross compiler toolchain

@@ -37,6 +37,10 @@
 
 #define STACK_FRAME_SIZE 68
 
+#define SYS_CTRL_REG_ENABLE_DATA_CACHE 0x1 << 2
+#define SYS_CTRL_REG_ENABLE_BRANCH_PREDICTION 0x1 << 11
+#define SYS_CTRL_REG_ENABLE_INSTRUCTION_CACHE 0x1 << 12
+
 #ifndef ASSEMBLER_FILE
 #include <stdint.h>
 
@@ -57,13 +61,9 @@ typedef union {
   } reg;
 } __attribute__((__packed__)) cpu_register_context_t;
 
-void invalidate_l1_cache( void );
-void start_l1_cache( void );
-void stop_l1_cache ( void );
-
-void invalidate_l2_cache( void );
-void start_l2_cache( void );
-void stop_l2_cache( void );
+void cpu_invalidate_cache( void );
+void cpu_disable_cache( void );
+void cpu_enable_cache( void );
 
 void dump_register( cpu_register_context_t *context );
 

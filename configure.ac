@@ -79,7 +79,7 @@ PATH="${ac_abs_confdir}/scripts/opt/cross/bin:${PATH}"
 AC_SUBST(PATH, "${ac_abs_confdir}/scripts/opt/cross/bin:${PATH}")
 
 # conftest
-AC_LANG_CONFTEST([AC_LANG_SOURCE([[const char hw[] = "Hello, World\n";]])])
+AC_LANG_CONFTEST([AC_LANG_SOURCE([[const char hw[] = "Hello, World\r\n";]])])
 
 # checks for programs
 AC_PROG_CC

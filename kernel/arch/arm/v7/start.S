@@ -30,11 +30,11 @@
 .global arch_start
 arch_start:
   // Check for HYP mode
-  mrs r0 , cpsr
+  mrs r0, cpsr
   eor r0, r0, #0x1A
   tst r0, #0x1F
   bic r0, r0, #0x1F // clear mode bits
-  orr r0 , r0 , #( CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT ) // mask IRQ/FIQ bits and set SVC mode
+  orr r0, r0, #( CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT ) // mask IRQ/FIQ bits and set SVC mode
   bne 2f // branch if not HYP mode
   orr r0, r0, #0x100 // mask Abort bit
   adr lr, 3f

@@ -21,12 +21,11 @@
 #include <stddef.h>
 #include <stdio.h>
 
-#include "kernel/mm/virt.h"
 #include "kernel/panic.h"
+#include "kernel/mm/virt.h"
 #include "arch/arm/mm/phys.h"
-
-void virt_init( void ) {
-}
+#include "arch/arm/mm/virt.h"
+#include "arch/arm/v7/mm/virt.h"
 
 /**
  * @brief

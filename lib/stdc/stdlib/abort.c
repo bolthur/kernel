@@ -28,7 +28,7 @@
 __attribute__((noreturn))
 void abort( void ) {
   #if defined( IS_KERNEL )
-    PANIC( "abort()\n" );
+    PANIC( "abort()" );
   #else
     exit( 1 );
   #endif

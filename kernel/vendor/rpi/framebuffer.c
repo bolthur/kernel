@@ -46,7 +46,7 @@ void framebuffer_init( void ) {
   mailbox_property_init();
   mailbox_property_add_tag( TAG_ALLOCATE_BUFFER, 16 );
   mailbox_property_add_tag( TAG_SET_PHYSICAL_SIZE, FRAMEBUFFER_SCREEN_WIDTH, FRAMEBUFFER_SCREEN_HEIGHT );
-  mailbox_property_add_tag( TAG_SET_VIRTUAL_SIZE, FRAMEBUFFER_SCREEN_WIDTH, FRAMEBUFFER_SCREEN_HEIGHT * 2 );
+  mailbox_property_add_tag( TAG_SET_VIRTUAL_SIZE, FRAMEBUFFER_SCREEN_WIDTH, FRAMEBUFFER_SCREEN_HEIGHT );
   mailbox_property_add_tag( TAG_SET_DEPTH, FRAMEBUFFER_SCREEN_DEPTH );
   mailbox_property_add_tag( TAG_SET_PIXEL_ORDER, 0 );
   mailbox_property_add_tag( TAG_SET_VIRTUAL_OFFSET, 0, 0 );
@@ -147,6 +147,9 @@ static void scroll( void ) {
  * @param c character to print
  */
 void framebuffer_putc( uint8_t c ) {
+  // FIXME: There seems to be a bug here, when printing over line end where it shall scroll down
+  // Bug is visible with a resolution of 800x600 and enabled phys memory management output
+
   // Don't print anything if not initialized
   if ( ! initialized ) {
     return;

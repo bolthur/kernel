@@ -21,5 +21,6 @@
 #include "arch/arm/v7/cpu.h"
 
 void arch_sub_init( void ) {
-  // perform sub arch initialization like enable l1 cache
+  // enable caching
+  cpu_enable_cache();
 }

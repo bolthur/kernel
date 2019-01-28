@@ -18,6 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define ASSEMBLER_FILE 1
+
+#include "arch/arm/v7/cpu.h"
+
 // Helper to stop all cpus except the first one during startup
 .global cpu_arch_reset
 cpu_arch_reset:
@@ -35,31 +39,25 @@ _cpu_arch_reset:
   bx lr
 
 // FIXME: Add logic
-.global invalidate_l1_cache
-invalidate_l1_cache:
+.global cpu_invalidate_cache
+cpu_invalidate_cache:
   bx lr
 
 // FIXME: Add logic
-.global start_l1_cache
-start_l1_cache:
+.global cpu_disable_cache
+cpu_disable_cache:
   bx lr
 
-// FIXME: Add logic
-.global stop_l1_cache
-stop_l1_cache:
-  bx lr
+.global cpu_enable_cache
+cpu_enable_cache:
+  // read system control register into r0
+  mrc p15, 0, r0, c1, c0, 0
 
-// FIXME: Add logic
-.global invalidate_l2_cache
-invalidate_l2_cache:
-  bx lr
+  // enable caches and branch prediction
+  orr r0, #SYS_CTRL_REG_ENABLE_DATA_CACHE
+  orr r0, #SYS_CTRL_REG_ENABLE_BRANCH_PREDICTION
+  orr r0, #SYS_CTRL_REG_ENABLE_INSTRUCTION_CACHE
 
-// FIXME: Add logic
-.global start_l2_cache
-start_l2_cache:
-  bx lr
-
-// FIXME: Add logic
-.global stop_l2_cache
-stop_l2_cache:
+  // push back to system control register
+  mcr p15, 0, r0, c1, c0, 0
   bx lr

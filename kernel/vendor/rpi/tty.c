@@ -28,7 +28,7 @@
  * @brief Initialize TTY
  */
 void tty_init( void ) {
-  #if defined( KERNEL_PRINT ) && ! defined( SERIAL_TTY )
+  #if defined( KERNEL_PRINT )
     framebuffer_init();
   #endif
 }
@@ -40,11 +40,13 @@ void tty_init( void ) {
  */
 void tty_putc( uint8_t c ) {
   #if defined( KERNEL_PRINT )
+    // print also to serial if enabled
     #if defined( SERIAL_TTY )
       serial_putc( c );
-    #else
-      framebuffer_putc( c );
     #endif
+
+    // print to framebuffer
+    framebuffer_putc( c );
   #else
     ( void )c;
   #endif
