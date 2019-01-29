@@ -19,8 +19,5 @@
  */
 
 int isupper( int c ) {
-  return (
-    'A' <= c
-    && 'Z' >= c
-  );
+  return 'A' <= c && 'Z' >= c;
 }

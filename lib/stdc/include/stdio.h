@@ -21,43 +21,15 @@
 #ifndef __LIBC_STDIO__
 #define __LIBC_STDIO__
 
-#include <sys/cdefs.h>
-#include <stdint.h>
-#include <stddef.h>
-#include <stdarg.h>
-
 #define EOF ( -1 )
-#define SEEK_SET 0
-
-typedef struct {
-  int unused;
-} FILE;
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-extern FILE* stderr;
-#define stderr stderr
-
-int fclose( FILE* );
-int fflush( FILE* );
-FILE* fopen( const char*, const char* );
-int fprintf( FILE*, const char* restrict, ... );
-size_t fread( void*, size_t, size_t, FILE* );
-int fseek( FILE*, long int, int );
-long int ftell( FILE* );
-size_t fwrite( const void*, size_t, size_t, FILE* );
 int printf( const char* restrict, ... );
 int putchar( int );
 int puts( const char* );
-void setbuf( FILE*, char* );
-int snprintf( char* restrict, size_t, const char* restrict, ... );
-int sprintf(char *, const char* restrict, ...);
-int vfprintf( FILE*, const char* restrict, va_list );
-int vprintf( const char* restrict, va_list );
-int vsnprintf( char* restrict, size_t, const char* restrict, va_list );
-int vsprintf( char*, const char* restrict, va_list );
 
 #if defined( __cplusplus )
 }

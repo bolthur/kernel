@@ -43,7 +43,7 @@ void phys_mark_page_used( uintptr_t address ) {
   phys_bitmap[ index ] |= ( uintptr_t )( 0x1 << offset );
 
   // debug output
-  #if defined( DEBUG_MM_PHYS )
+  #if defined( PRINT_MM_PHYS )
     printf(
       "[ phys mark used ]: frame: %06i, index: %04i, offset: %02i, address: 0x%08x, phys_bitmap[ %04d ]: 0x%08x\r\n",
       frame, index, offset, address, index, phys_bitmap[ index ]
@@ -66,7 +66,7 @@ void phys_mark_page_free( uintptr_t address ) {
   phys_bitmap[ index ] &= ( uintptr_t )( ~( 0x1 << offset ) );
 
   // debug output
-  #if defined( DEBUG_MM_PHYS )
+  #if defined( PRINT_MM_PHYS )
     printf(
       "[ phys mark used ]: frame: %06i, index: %04i, offset: %02i, address: 0x%08x, phys_bitmap[ %04d ]: 0x%08x\r\n",
       frame, index, offset, address, index, phys_bitmap[ index ]

@@ -18,19 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-
-#if defined( IS_KERNEL )
-  #include "kernel/tty.h"
-#endif
+#include <stdint.h>
+#include "kernel/tty.h"
 
 int putchar( int ic ) {
-  #if defined( IS_KERNEL )
-    char c = ( char ) ic;
-    tty_putc( c );
-  #else
-    // FIXME: Implement stdio and the write system call.
-  #endif
-
+  tty_putc( ( uint8_t )ic );
   return ic;
 }

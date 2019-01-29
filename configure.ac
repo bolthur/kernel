@@ -46,6 +46,18 @@ AC_ARG_ENABLE([output-mm-phys],
   AC_HELP_STRING([--enable-output-mm-phys], [Enables output of physical memory mapping routines (default: off)])
 )
 
+AC_ARG_ENABLE([output-mm-virt],
+  AC_HELP_STRING([--enable-output-mm-phys], [Enables output of virtual memory mapping routines (default: off)])
+)
+
+AC_ARG_ENABLE([output-mm-heap],
+  AC_HELP_STRING([--enable-output-mm-phys], [Enables output of kernel heap routines (default: off)])
+)
+
+AC_ARG_ENABLE([output-mailbox],
+  AC_HELP_STRING([--enable-output-mailbox], [Enables output of mailbox functions (default: off)])
+)
+
 AC_ARG_ENABLE([opt],
   AC_HELP_STRING([--disable-opt], [disable code optimization (default: on)]),
   [case "${enableval}" in

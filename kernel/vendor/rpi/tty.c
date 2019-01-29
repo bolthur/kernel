@@ -51,18 +51,3 @@ void tty_putc( uint8_t c ) {
     ( void )c;
   #endif
 }
-
-/**
- * @brief Put string to TTY
- *
- * @param str String to put to TTY
- */
-void tty_puts( const char *str ) {
-  #if defined( KERNEL_PRINT )
-    for ( size_t i = 0; str[ i ] != '\0'; i++ ) {
-      tty_putc( ( unsigned char )str[ i ] );
-    }
-  #else
-    ( void )str;
-  #endif
-}

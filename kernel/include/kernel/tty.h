@@ -21,15 +21,14 @@
 #ifndef __KERNEL_TTY__
 #define __KERNEL_TTY__
 
-#include <stddef.h>
+#include <stdint.h>
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
 void tty_init( void );
-void tty_putc( unsigned char );
-void tty_puts( const char * );
+void tty_putc( uint8_t );
 
 #if defined( __cplusplus )
 }

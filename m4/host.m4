@@ -4,12 +4,17 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets])
   AH_TEMPLATE([DEBUG], [Set to 1 to enable debug mode])
   AH_TEMPLATE([SMP_ENABLED], [Define to 1 for SMP capable hosts])
+  AH_TEMPLATE([SMP_CORE_NUMBER], [Define to amount of smp cores])
   AH_TEMPLATE([FPU_ENABLED], [Define to 1 for host with hardware FPU])
+  AH_TEMPLATE([IS_HIGHER_HALF], [Define to 1 when kernel is higher half])
   AH_TEMPLATE([ARCH_ARM], [Define to 1 for ARM targets])
   AH_TEMPLATE([VENDOR_RPI], [Define to 1 for raspberry pi vendor])
   AH_TEMPLATE([SERIAL_TTY], [Define to 1 for output via serial])
   AH_TEMPLATE([KERNEL_PRINT], [Define to 1 to enable kernel print])
-  AH_TEMPLATE([DEBUG_MM_PHYS], [Define to 1 to enable output of physical memory manager])
+  AH_TEMPLATE([PRINT_MM_PHYS], [Define to 1 to enable output of physical memory manager])
+  AH_TEMPLATE([PRINT_MM_VIRT], [Define to 1 to enable output of virtual memory manager])
+  AH_TEMPLATE([PRINT_MM_HEAP], [Define to 1 to enable output of kernel heap])
+  AH_TEMPLATE([PRINT_MAILBOX], [Define to 1 to enable output of mailbox])
 
   # Define for kernel mode
   AC_DEFINE([IS_KERNEL], [1], [Define set for libc to compile differently])
@@ -32,7 +37,22 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
 
   # Test for physical memory manager output
   AS_IF([test "x$enable_output_mm_phys" == "xyes"], [
-    AC_DEFINE([DEBUG_MM_PHYS], [1])
+    AC_DEFINE([PRINT_MM_PHYS], [1])
+  ])
+
+  # Test for virtual memory manager output
+  AS_IF([test "x$enable_output_mm_virt" == "xyes"], [
+    AC_DEFINE([PRINT_MM_VIRT], [1])
+  ])
+
+  # Test for kernel heap output
+  AS_IF([test "x$enable_output_mm_heap" == "xyes"], [
+    AC_DEFINE([PRINT_MM_HEAP], [1])
+  ])
+
+  # Test for mailbox output
+  AS_IF([test "x$enable_output_mailbox" == "xyes"], [
+    AC_DEFINE([PRINT_MAILBOX], [1])
   ])
 
   case "${host_cpu}" in
@@ -58,7 +78,9 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets])
       AC_DEFINE([VENDOR_RPI], [1])
       AC_DEFINE([SMP_ENABLED], [1])
+      AC_DEFINE([SMP_CORE_NUMBER], [4])
       AC_DEFINE([FPU_ENABLED], [1])
+      AC_DEFINE([IS_HIGHER_HALF], [1])
       ;;
     rpi_zero_w)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
@@ -69,6 +91,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets])
       AC_DEFINE([VENDOR_RPI], [1])
       AC_DEFINE([FPU_ENABLED], [1])
+      AC_DEFINE([IS_HIGHER_HALF], [1])
       ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])
@@ -93,7 +116,9 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([VENDOR_RPI], [1])
       AC_DEFINE([SMP_ENABLED], [1])
+      AC_DEFINE([SMP_CORE_NUMBER], [4])
       AC_DEFINE([FPU_ENABLED], [1])
+      AC_DEFINE([IS_HIGHER_HALF], [1])
       ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])

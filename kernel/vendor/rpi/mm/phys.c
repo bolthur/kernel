@@ -46,7 +46,7 @@ void phys_init( void ) {
   rpi_mailbox_property_t *buffer = mailbox_property_get( TAG_GET_ARM_MEMORY );
 
   // debug output
-  #if defined( DEBUG )
+  #if defined( PRINT_MM_PHYS )
     printf ( "buffer->byte_length: %d\r\n", buffer->byte_length );
     printf ( "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n", buffer->data.buffer_32[ 0 ] );
     printf ( "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n", buffer->data.buffer_32[ 1 ] );
@@ -57,7 +57,7 @@ void phys_init( void ) {
   memory_amount = ( uint32_t )buffer->data.buffer_32[ 1 ];
 
   // debug output
-  #if defined( DEBUG )
+  #if defined( PRINT_MM_PHYS )
     printf( "memory amount: 0x%8x\r\n", memory_amount );
   #endif
 
@@ -65,7 +65,7 @@ void phys_init( void ) {
   buffer = mailbox_property_get( TAG_GET_VC_MEMORY );
 
   // debug output
-  #if defined( DEBUG )
+  #if defined( PRINT_MM_PHYS )
     printf ( "buffer->byte_length: %d\r\n", buffer->byte_length );
     printf ( "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n", buffer->data.buffer_32[ 0 ] );
     printf ( "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n", buffer->data.buffer_32[ 1 ] );
@@ -86,7 +86,7 @@ void phys_init( void ) {
   memset( phys_bitmap, 0, sizeof( phys_bitmap_length ) * phys_bitmap_length );
 
   // debug output
-  #if defined( DEBUG )
+  #if defined( PRINT_MM_PHYS )
     printf( "total memory amount: 0x%8x\r\n", memory_amount );
     printf( "bitmap length: %d\r\n", phys_bitmap_length );
     printf( "phys bitmap address: 0x%08x\r\n", phys_bitmap );

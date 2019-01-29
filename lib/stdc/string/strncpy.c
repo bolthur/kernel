@@ -21,10 +21,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-#if defined( IS_KERNEL )
-  #include "kernel/panic.h"
-#endif
-
 char *strncpy( char * restrict dest, const char * restrict src, size_t n ) {
   if ( dest == NULL ) {
     return NULL;

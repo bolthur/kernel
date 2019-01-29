@@ -202,22 +202,6 @@ int printf( const char* restrict format, ... ) {
         written += len;
         break;
 
-      case 'f':
-      case 'F':
-        break;
-
-      case 'e':
-      case 'E':
-        break;
-
-      case 'g':
-      case 'G':
-        break;
-
-      case 'a':
-      case 'A':
-        break;
-
       default:
         format = format_begun_at;
         len = strlen(format);

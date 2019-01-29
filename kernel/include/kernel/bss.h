@@ -18,22 +18,32 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
+#include <stdint.h>
 
-#if defined( IS_KERNEL )
-  #include "kernel/panic.h"
+#ifndef __KERNEL_BSS__
+#define __KERNEL_BSS__
+
+#if defined( __cplusplus )
+extern "C" {
 #endif
 
-// FIXME: Add logic
-int atexit( void ( *func )( void ) ) {
-  // mark parameter as unused
-  ( void )func;
+// type definition for bss fields
+#if defined( ELF32 )
+  typedef uint32_t bss_type_t;
+#elif defined( ELF64 )
+  typedef uint64_t bss_type_t;
+#else
+  typedef uint8_t bss_type_t;
+#endif
 
-  #if defined( IS_KERNEL )
-    PANIC( "atexit not yet implemented!" );
-  #else
-    abort();
-  #endif
+// bss fields from linker script
+extern bss_type_t __bss_start;
+extern bss_type_t __bss_end;
 
-  return -1;
+void bss_clear( void );
+
+#if defined( __cplusplus )
 }
+#endif
+
+#endif

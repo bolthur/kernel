@@ -25,54 +25,35 @@
 
 .global start
 start:
-  // reset cpu depending on arch
-  bl cpu_arch_reset
+  // reset cpu when smp is enabled
+  #if defined( SMP_ENABLED )
+    bl cpu_smp_reset
+  #endif
 
-  #if defined(ELF32)
-    // setup temporary stack that will be replaced later
+  // setup initial mmu for higher half
+  #if defined( IS_HIGHER_HALF )
+    // #error "Higher half not yet supported!"
+  #endif
+
+  #if defined( ELF32 )
+    // FIXME: transform virtual to physical for higher half
+    // setup temporary stack, which is going to be replaced later
     ldr r4, =start
     mov sp, r4
-
-    // clear out bss
-    ldr r4, =__bss_start
-    ldr r9, =__bss_end
-    mov r5, #0
-    mov r6, #0
-    mov r7, #0
-    mov r8, #0
-  #elif defined(ELF64)
+  #elif defined( ELF64 )
     #error "ELF64 not yet supported!"
   #else
     #error "No valid format set. Valid formats are ELF32 and ELF64"
   #endif
 
-  b .test
-
-.loop:
-  // this does 4x4 = 16 byte stores at once
-  #if defined(ELF32)
-    stmia r4!, {r5-r8}  // the '!' increments r4 but only after ('ia') the store
-  #elif defined(ELF64)
-    #error "ELF64 not yet supported!"
-  #else
-    #error "No valid format set. Valid formats are ELF32 and ELF64"
-  #endif
-
-.test:
-  #if defined(ELF32)
-    cmp r4, r9
-  #elif defined(ELF64)
-    #error "ELF64 not yet supported!"
-  #else
-    #error "No valid format set. Valid formats are ELF32 and ELF64"
-  #endif
-  blo .loop
+  // clear bss section
+  bl bss_clear
 
   // store boot parameters from r0 - r2 /  at data array ( only set on real device )
-  #if defined(ELF32)
+  #if defined( ELF32 )
     ldr r4, =boot_parameter_data
     stmia r4!, {r0-r2}
-  #elif defined(ELF64)
+  #elif defined( ELF64 )
     #error "ELF64 not yet supported!"
   #else
     #error "No valid format set. Valid formats are ELF32 and ELF64"

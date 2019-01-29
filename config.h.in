@@ -27,9 +27,6 @@
 /* Set to 1 to enable debug mode */
 #undef DEBUG
 
-/* Define to 1 to enable output of physical memory manager */
-#undef DEBUG_MM_PHYS
-
 /* Define to 1 for 32 bit ELF targets */
 #undef ELF32
 
@@ -38,6 +35,9 @@
 
 /* Define to 1 for host with hardware FPU */
 #undef FPU_ENABLED
+
+/* Define to 1 when kernel is higher half */
+#undef IS_HIGHER_HALF
 
 /* Define set for libc to compile differently */
 #undef IS_KERNEL
@@ -78,11 +78,26 @@
 /* Define to 1 for raspberry pi zero platform */
 #undef PLATFORM_RPI_ZERO_W
 
+/* Define to 1 to enable output of mailbox */
+#undef PRINT_MAILBOX
+
+/* Define to 1 to enable output of kernel heap */
+#undef PRINT_MM_HEAP
+
+/* Define to 1 to enable output of physical memory manager */
+#undef PRINT_MM_PHYS
+
+/* Define to 1 to enable output of virtual memory manager */
+#undef PRINT_MM_VIRT
+
 /* Keyword for section placement. */
 #undef SECTION
 
 /* Define to 1 for output via serial */
 #undef SERIAL_TTY
+
+/* Define to amount of smp cores */
+#undef SMP_CORE_NUMBER
 
 /* Define to 1 for SMP capable hosts */
 #undef SMP_ENABLED

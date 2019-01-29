@@ -18,9 +18,19 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIBC_SYS_CDEFS__
-#define __LIBC_SYS_CDEFS__
+#include "kernel/bss.h"
 
-#define __bolthur_system_libc 1
+void bss_clear( void ) {
+  bss_type_t *start = ( bss_type_t* )&__bss_start;
+  bss_type_t *end = ( bss_type_t* )&__bss_end;
 
-#endif
+  // FIXME: Translate to physical when higher half is enabled
+  #if defined( IS_HIGHER_HALF )
+  #else
+  #endif
+
+  // loop through bss end and overwrite with zero
+  while( start < end ) {
+    *start++ = 0;
+  }
+}

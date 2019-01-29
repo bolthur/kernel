@@ -30,14 +30,14 @@
   * [x] Check and revise fpu code
   * [x] Check and remove direct floating point usage within kernel except saving of floating point registers
 * [ ] Memory management
-  * [ ] Virtual memory management done within `kernel/arch/{architecture}/{sub architecture}`
-  * [ ] Add smp enable flag to autotools as option
-  * [ ] Prepare virtual memory management per core if smp is active
-  * [ ] Specify cores per vendor via autotools
-  * [ ] Add relocation of kernel to higher half after mmu setup
-    * [ ] kernel load address
-      * [ ] `0xC0008000` for 32bit
-      * [ ] `0xffffff0000080000` for 64bit
+  * [x] Add higher half define via vendor autotools
+  * [ ] Add creation of initial mmu, when higher half is enabled with virtual entry from linker script
+  * [ ] Check and revise stack setup for interrupt vector table
+  * [ ] Move static naked aligned function `interrupt_vector_table` into assembler stub with correct section
+  * [ ] Add normal setup of mmu during startup of kernel splitted to folders listed below
+    * [ ] `kernel/arch/{architecture}/mm`
+    * [ ] `kernel/arch/{architecture}/{sub architecture}/mm`
+    * [ ] `vendor/{vendor}/mm`
   * [ ] Consider peripherals per vendor within mmu as not cachable
   * [ ] Consider and enable CPU related caches for performance
 * [ ] AVL tree
@@ -53,13 +53,18 @@
   * [ ] Finalize remote debugging integration
   * [ ] Finish debug launch.json when remote debugging is possible
 * [ ] Add multitasking
-* [ ] Add syscalls handling via `swi`
+* [ ] Implement syscall handling via `swi`
 * [ ] FPU
-  * [ ] Enable fpu only per thread/process when fpu exception has been thrown
+  * [ ] Enable fpu only per process when fpu exception has been thrown
   * [ ] Extend push of registers during exception to consider also fpu registers
   * [ ] Extend undefined exception to check for fpu error with clear of flag
 * [ ] Add multithreading
 * [ ] Add SMP support
+  * [x] Add smp define per vendor via autotools
+  * [x] Add smp core amount define per vendor via autotools
+  * [ ] Memory management
+    * [ ] Prepare virtual memory management per core if smp is active
+    * [ ] Specify cores per vendor via autotools
   * [ ] Determine current running core within exceptions
   * [ ] Extend irq check to check corresponding cpu interrupt registers
   * [ ] ...
@@ -81,7 +86,7 @@
       * [ ] Mark initrd within physical memory manager as used
       * [ ] Check and extend virtual memory management if necessary
   * [ ] Add generic vfs implementation using tar initrd
-* [ ] Add parsinf of ELF files
+* [ ] Add parsing of ELF files
   * [ ] Check for executable elf programs within initrd and execute them
 * [ ] Device tree
   * [ ] Add device tree library
@@ -94,6 +99,10 @@
   * [ ] Add parse of atag when compiled in via option
   * [ ] Debug output, when no atag has been passed and use kernel defaults
 * [ ] Check and revise kernel to work with all optimization levels
+* [ ] Support further platforms
+  * [ ] Test and fix rpi 2 rev. 1 support with real hardware
+  * [ ] Add rpi zero support ( armv6 32 bit only with one cpu )
+  * [ ] Add rpi 3 support ( armv8 64 bit only with smp )
 * [ ] Documentation ( man pages or markdown )
   * [ ] Getting started after checkout
   * [ ] Cross compiler toolchain

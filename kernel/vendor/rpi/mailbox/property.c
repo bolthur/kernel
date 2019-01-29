@@ -195,7 +195,7 @@ uint32_t mailbox_property_process( void ) {
   ptb[ PT_OREQUEST_OR_RESPONSE ] = 0;
 
   // debug output
-  #if defined( DEBUG )
+  #if defined( PRINT_MAILBOX )
     printf( "%s Length: %d\r\n", __func__, ptb[ PT_OSIZE ] );
     for ( int32_t i = 0; i < ( ptb[ PT_OSIZE ] >> 2 ); i++ ) {
       printf( "Request: %3d %8x\r\n", i, ptb[ i ] );
@@ -209,7 +209,7 @@ uint32_t mailbox_property_process( void ) {
   result = mailbox_read( MAILBOX0_TAGS_ARM_TO_VC );
 
   // debug output
-  #if defined( DEBUG )
+  #if defined( PRINT_MAILBOX )
     for ( int32_t i = 0; i < ( ptb[ PT_OSIZE ] >> 2 ); i++ ) {
       printf( "Response: %3d %08x\r\n", i, ptb[ i ] );
     }
@@ -241,7 +241,7 @@ rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
 
   while( index < ( ptb[ PT_OSIZE ] >> 2 ) ) {
     // debug output
-    #if defined( DEBUG )
+    #if defined( PRINT_MAILBOX )
       printf( "testing tag: [ %d ] %08x\r\n", index, ptb[ index ] );
     #endif
 

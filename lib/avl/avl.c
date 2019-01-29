@@ -18,23 +18,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-
-#if defined( IS_KERNEL )
-  #include "kernel/panic.h"
-#endif
-
 #include "avl.h"
 
 avl_tree_t *avl_create( avl_compare_func_t *func, void *param ) {
   ( void )func;
   ( void )param;
-
-  #if defined( IS_KERNEL )
-    PANIC( "avl_create not yet implemented!" );
-  #else
-    abort();
-  #endif
 
   return NULL;
 }

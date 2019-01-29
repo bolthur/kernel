@@ -58,7 +58,7 @@ typedef struct {
   char filename_prefix[ 155 ];
 } tar_header_t;
 
-uint32_t tar_get_size( const char* );
+uint32_t tar_get_size( const uint8_t* );
 
 #if defined( __cplusplus )
 }
