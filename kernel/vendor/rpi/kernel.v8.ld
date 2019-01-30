@@ -38,40 +38,48 @@ INPUT(
   libgcc.a
 )
 
+KERNEL_VMA = 0xffffffff80080000;
+KERNEL_OFFSET = 0xffffffff80000000;
+
 SECTIONS {
-  . = 0x80000;
+  . = KERNEL_VMA;
   __kernel_start = .;
 
-  .text BLOCK( 4K ): ALIGN( 4K ) {
+  .text ALIGN( 4K ) : AT( ADDR( .text ) - KERNEL_OFFSET ) {
     KEEP( *( .text.boot ) )
     *( .text )
   }
 
-  .rodata BLOCK( 4K ): ALIGN( 4K ) {
+  .ARM.exidx ALIGN( 4K ) : AT( ADDR( .ARM.exidx ) - KERNEL_OFFSET ) {
+    __exidx_start = .;
+    *(.ARM.exidx*)
+    __exidx_end = .;
+  }
+
+  .rodata ALIGN( 4K ) : AT( ADDR( .rodata ) - KERNEL_OFFSET ) {
     *(.rodata)
   }
 
-  .data BLOCK( 4K ): ALIGN( 4K ) {
+  .data ALIGN( 4K ) : AT( ADDR( .data ) - KERNEL_OFFSET ) {
     *(.data)
   }
 
-  .bss BLOCK( 4K ): ALIGN( 4K ) {
+  .bss ALIGN( 4K ) : AT( ADDR( .bss ) - KERNEL_OFFSET ) {
     __bss_start = .;
     *(COMMON)
     *(.bss)
     __bss_end = .;
   }
 
-  .bugtable BLOCK( 4K ): ALIGN( 4K ) {
+  .bugtable ALIGN( 4K ) : AT( ADDR( .bugtable ) - KERNEL_OFFSET ) {
     __bug_start = . ;
     *(.bugtable)
     __bug_end = . ;
   }
 
-  .ARM.exidx BLOCK( 4K ): ALIGN( 4K ) {
-    __exidx_start = .;
-    *(.ARM.exidx*)
-    __exidx_end = .;
-  }
   __kernel_end = .;
+
+  /DISCARD/ : {
+    *(.comment)
+  }
 }

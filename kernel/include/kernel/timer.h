@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_TIMER__
+#if ! defined( __KERNEL_TIMER__ )
 #define __KERNEL_TIMER__
 
 #include <stdint.h>

@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-#ifndef __KERNEL_VENDOR_RPI_FRAMEBUFFER__
+#if ! defined( __KERNEL_VENDOR_RPI_FRAMEBUFFER__ )
 #define __KERNEL_VENDOR_RPI_FRAMEBUFFER__
 
 #define FRAMEBUFFER_SCREEN_WIDTH 1024

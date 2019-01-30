@@ -25,6 +25,16 @@
 
 .global start
 start:
+  // setup temporary stack
+  // FIXME: transform virtual to physical for higher half
+  #if defined( ELF32 )
+    ldr r4, =start
+    mov sp, r4
+  #elif defined( ELF64 )
+    ldr x4, =start
+    mov sp, x4
+  #endif
+
   // reset cpu when smp is enabled
   #if defined( SMP_ENABLED )
     bl cpu_smp_reset
@@ -35,28 +45,16 @@ start:
     // #error "Higher half not yet supported!"
   #endif
 
-  #if defined( ELF32 )
-    // FIXME: transform virtual to physical for higher half
-    // setup temporary stack, which is going to be replaced later
-    ldr r4, =start
-    mov sp, r4
-  #elif defined( ELF64 )
-    #error "ELF64 not yet supported!"
-  #else
-    #error "No valid format set. Valid formats are ELF32 and ELF64"
-  #endif
-
   // clear bss section
   bl bss_clear
 
-  // store boot parameters from r0 - r2 /  at data array ( only set on real device )
+  // store rpi boot parameters passed with first three registers at data array
   #if defined( ELF32 )
     ldr r4, =boot_parameter_data
     stmia r4!, {r0-r2}
   #elif defined( ELF64 )
-    #error "ELF64 not yet supported!"
-  #else
-    #error "No valid format set. Valid formats are ELF32 and ELF64"
+    ldr x4, =boot_parameter_data
+    stmia x4!, {x0-x2}
   #endif
 
   // continue with arch related start

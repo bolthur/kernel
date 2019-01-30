@@ -18,21 +18,23 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIBC_CTYPE__ )
-#define __LIBC_CTYPE__
+#if ! defined( __KERNEL_ARCH_ARM_STACK__ )
+#define __KERNEL_ARCH_ARM_STACK__
+
+#define STACK_SIZE 0x1000
+
+#if ! defined( ASSEMBLER_FILE )
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-int isspace( int );
-int isdigit( int );
-int islower( int );
-int isalpha( int );
-int isupper( int );
+// area for not assembly related content
 
 #if defined( __cplusplus )
 }
+#endif
+
 #endif
 
 #endif

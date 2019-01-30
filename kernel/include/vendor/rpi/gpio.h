@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_VENDOR_RPI_GPIO__
+#if ! defined( __KERNEL_VENDOR_RPI_GPIO__ )
 #define __KERNEL_VENDOR_RPI_GPIO__
 
 #include "vendor/rpi/peripheral.h"

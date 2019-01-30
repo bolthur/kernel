@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_ARCH_ARM_V7_CPU__
+#if ! defined( __KERNEL_ARCH_ARM_V7_CPU__ )
 #define __KERNEL_ARCH_ARM_V7_CPU__
 
 #define CPSR_MODE_USER 0x10
@@ -41,7 +41,7 @@
 #define SYS_CTRL_REG_ENABLE_BRANCH_PREDICTION 0x1 << 11
 #define SYS_CTRL_REG_ENABLE_INSTRUCTION_CACHE 0x1 << 12
 
-#ifndef ASSEMBLER_FILE
+#if ! defined( ASSEMBLER_FILE )
 #include <stdint.h>
 
 #if defined( __cplusplus )

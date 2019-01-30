@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIBC_INTTYPES__
+#if ! defined( __LIBC_INTTYPES__ )
 #define __LIBC_INTTYPES__
 
 #include <sys/cdefs.h>

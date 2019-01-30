@@ -119,30 +119,35 @@
 .extern irq_handler
 .extern fast_interrupt_handler
 
-.global _undefined_instruction_handler
 _undefined_instruction_handler:
   ex_handler #4, undefined_instruction_handler, CPSR_MODE_SUPERVISOR
 
-.global _software_interrupt_handler
 _software_interrupt_handler:
   ex_handler #4, software_interrupt_handler, CPSR_MODE_SUPERVISOR
 
-.global _prefetch_abort_handler
 _prefetch_abort_handler:
   ex_handler #4, prefetch_abort_handler, CPSR_MODE_SUPERVISOR
 
-.global _data_abort_handler
 _data_abort_handler:
   ex_handler #8, data_abort_handler, CPSR_MODE_SUPERVISOR
 
-.global _unused_handler
 _unused_handler:
   ex_handler #8, unused_handler, CPSR_MODE_SUPERVISOR
 
-.global _irq_handler
 _irq_handler:
   ex_handler #4, irq_handler, CPSR_MODE_SUPERVISOR
 
-.global _fast_interrupt_handler
 _fast_interrupt_handler:
   ex_handler #4, fast_interrupt_handler, CPSR_MODE_SUPERVISOR
+
+.global interrupt_vector_table
+.balign 32
+interrupt_vector_table:
+  b start // reset
+  b _undefined_instruction_handler // undefined instruction
+  b _software_interrupt_handler // software interrupt
+  b _prefetch_abort_handler // prefetch abort
+  b _data_abort_handler // data abort
+  b _unused_handler // unused
+  b _irq_handler // irq
+  b _fast_interrupt_handler // fiq

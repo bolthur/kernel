@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-#ifndef __KERNEL_VENDOR_RPI_FONT__
+#if ! defined( __KERNEL_VENDOR_RPI_FONT__ )
 #define __KERNEL_VENDOR_RPI_FONT__
 
 #if defined( __cplusplus )

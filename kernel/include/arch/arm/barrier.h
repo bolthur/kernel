@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_ARCH_ARM_BARRIER__
+#if ! defined( __KERNEL_ARCH_ARM_BARRIER__ )
 #define __KERNEL_ARCH_ARM_BARRIER__
 
 #include <stdint.h>

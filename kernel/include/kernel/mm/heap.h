@@ -20,7 +20,7 @@
 
 #include <stdbool.h>
 
-#ifndef __KERNEL_MM_HEAP__
+#if ! defined( __KERNEL_MM_HEAP__ )
 #define __KERNEL_MM_HEAP__
 
 extern bool heap_initialized;

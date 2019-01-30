@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIBAVL_AVL__
+#if ! defined( __LIBAVL_AVL__ )
 #define __LIBAVL_AVL__
 
 #include <stdint.h>

@@ -18,6 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "kernel/entry.h"
 #include "kernel/bss.h"
 
 void bss_clear( void ) {
@@ -26,7 +27,8 @@ void bss_clear( void ) {
 
   // FIXME: Translate to physical when higher half is enabled
   #if defined( IS_HIGHER_HALF )
-  #else
+    start -= KERNEL_OFFSET;
+    end -= KERNEL_OFFSET;
   #endif
 
   // loop through bss end and overwrite with zero

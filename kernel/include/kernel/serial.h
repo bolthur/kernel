@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_SERIAL__
+#if ! defined( __KERNEL_SERIAL__ )
 #define __KERNEL_SERIAL__
 
 #include <stdint.h>

@@ -18,21 +18,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
+#define ASSEMBLER_FILE 1
 
-#if defined( IS_KERNEL )
-  #include "kernel/panic.h"
-#endif
+#include "arch/arm/stack.h"
 
-double pow( double x, double y ) {
-  ( void )x;
-  ( void )y;
-
-  #if defined( IS_KERNEL )
-    PANIC( "fwrite not yet implemented!" );
-  #else
-    abort();
-  #endif
-
-  return 0.0;
-}
+// align stacks 32 bit
+.comm stack_irq_mode, STACK_SIZE, 32
+.comm stack_fiq_mode, STACK_SIZE, 32
+.comm stack_abort_mode, STACK_SIZE, 32
+.comm stack_undefined_mode, STACK_SIZE, 32
+.comm stack_system_mode, STACK_SIZE, 32
+.comm stack_supervisor_mode, STACK_SIZE, 32
+.comm stack_hypervisor_mode, STACK_SIZE, 32
+.comm stack_monitor_mode, STACK_SIZE, 32

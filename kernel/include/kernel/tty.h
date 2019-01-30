@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_TTY__
+#if ! defined( __KERNEL_TTY__ )
 #define __KERNEL_TTY__
 
 #include <stdint.h>

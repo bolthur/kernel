@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIBTAR__
+#if ! defined( __LIBTAR__ )
 #define __LIBTAR__
 
 #include <stdint.h>

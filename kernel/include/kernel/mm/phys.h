@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#ifndef __KERNEL_MM_PHYS__
+#if ! defined( __KERNEL_MM_PHYS__ )
 #define __KERNEL_MM_PHYS__
 
 extern uintptr_t *phys_bitmap;

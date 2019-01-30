@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_IRQ__
+#if ! defined( __KERNEL_IRQ__ )
 #define __KERNEL_IRQ__
 
 #include <stdint.h>

@@ -18,21 +18,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIBC_CTYPE__ )
-#define __LIBC_CTYPE__
+#if ! defined( __KERNEL_ARCH_ARM_V7_INTERRUPT_IVT__ )
+#define __KERNEL_ARCH_ARM_V7_INTERRUPT_IVT__
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
-int isspace( int );
-int isdigit( int );
-int islower( int );
-int isalpha( int );
-int isupper( int );
-
-#if defined( __cplusplus )
-}
-#endif
+void interrupt_vector_table( void );
 
 #endif

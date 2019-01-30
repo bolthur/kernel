@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIBC_STRING__
+#if ! defined( __LIBC_STRING__ )
 #define __LIBC_STRING__
 
 #include <stddef.h>

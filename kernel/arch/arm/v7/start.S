@@ -21,6 +21,7 @@
 #define ASSEMBLER_FILE 1
 
 #include "arch/arm/v7/cpu.h"
+#include "arch/arm/stack.h"
 
 .arch_extension sec
 .arch_extension virt
@@ -43,31 +44,53 @@ arch_start:
   eret
 2: msr cpsr_c, r0
 3:
-
   // setup irq mode stack
   msr cpsr_c, #( CPSR_MODE_IRQ | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr sp, =stack_irq_mode
+  ldr r0, =stack_irq_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
+
   // setup fiq mode stack
   msr cpsr_c, #( CPSR_MODE_FIQ | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr sp, =stack_fiq_mode
+  ldr r0, =stack_fiq_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
+
   // setup abort mode stack
   msr cpsr_c, #( CPSR_MODE_ABORT | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr sp, =stack_abort_mode
+  ldr r0, =stack_abort_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
+
   // setup system mode stack
   msr cpsr_c, #( CPSR_MODE_SYSTEM | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr sp, =stack_system_mode
+  ldr r0, =stack_system_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
+
   // setup undefined mode stack
   msr cpsr_c, #( CPSR_MODE_UNDEFINED | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr sp, =stack_undefined_mode
+  ldr r0, =stack_undefined_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
+
   // setup hypervisor mode stack
   msr cpsr_c, #( CPSR_MODE_HYPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr sp, =stack_hypervisor_mode
+  ldr r0, =stack_hypervisor_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
+
   // setup monitor mode stack
   msr cpsr_c, #( CPSR_MODE_MONITOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr sp, =stack_monitor_mode
+  ldr r0, =stack_monitor_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
+
   // setup supervisor mode stack
   msr cpsr_c, #( CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr sp, =stack_supervisor_mode
+  ldr r0, =stack_supervisor_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
 
   // branch and link to kernel main entry
   ldr r3, =kernel_main
@@ -76,41 +99,3 @@ arch_start:
 halt:
   wfe // equivalent of x86 HLT instruction
   b halt
-
-// data section
-.section .bss
-
-// align stacks 32 bit
-.balign 4
-
-// irq mode stack
-.space 8192
-stack_irq_mode:
-
-// fiq mode stack
-.space 8192
-stack_fiq_mode:
-
-// abort mode stack
-.space 8192
-stack_abort_mode:
-
-// undefined mode stack
-.space 8192
-stack_undefined_mode:
-
-// system mode stack
-.space 8192
-stack_system_mode:
-
-// supervisor mode stack
-.space 8192
-stack_supervisor_mode:
-
-// hypervisor mode stack
-.space 8192
-stack_hypervisor_mode:
-
-// monitor mode stack
-.space 8192
-stack_monitor_mode:

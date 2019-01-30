@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_ARCH_ARM_FPU__
+#if ! defined( __KERNEL_ARCH_ARM_FPU__ )
 #define __KERNEL_ARCH_ARM_FPU__
 
 #if defined( __cplusplus )

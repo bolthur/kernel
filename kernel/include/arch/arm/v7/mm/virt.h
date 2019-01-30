@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_ARCH_ARM_V7_MM_VIRT__
+#if ! defined( __KERNEL_ARCH_ARM_V7_MM_VIRT__ )
 #define __KERNEL_ARCH_ARM_V7_MM_VIRT__
 
 #endif

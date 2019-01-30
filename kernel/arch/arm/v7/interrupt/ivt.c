@@ -23,26 +23,8 @@
 
 #include "kernel/irq.h"
 #include "kernel/panic.h"
-
 #include "arch/arm/v7/cpu.h"
-
-/**
- * @brief interrupt vector table aligned according to manual
- *
- * @todo check and revise
- */
-static void __attribute__( ( naked, aligned( 32 ) ) ) interrupt_vector_table( void ) {
-  __asm__ __volatile__(
-    "b start\n" // reset
-    "b _undefined_instruction_handler\n" // undefined instruction
-    "b _software_interrupt_handler\n" // software interrupt
-    "b _prefetch_abort_handler\n" // prefetch abort
-    "b _data_abort_handler\n" // data abort
-    "b _unused_handler\n" // unused
-    "b _irq_handler\n" // irq
-    "b _fast_interrupt_handler\n" // fiq
-  );
-}
+#include "arch/arm/v7/interrupt/ivt.h"
 
 /**
  * @brief Unused exception handler

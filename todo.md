@@ -31,15 +31,18 @@
   * [x] Check and remove direct floating point usage within kernel except saving of floating point registers
 * [ ] Memory management
   * [x] Add higher half define via vendor autotools
+  * [x] Move static naked aligned function `interrupt_vector_table` into assembler stub
+  * [x] Move stack creation into own assembly stub
   * [ ] Add creation of initial mmu, when higher half is enabled with virtual entry from linker script
-  * [ ] Check and revise stack setup for interrupt vector table
-  * [ ] Move static naked aligned function `interrupt_vector_table` into assembler stub with correct section
+  * [ ] Ensure that kernel with no higher half define still works as expected
+  * [ ] Check and revise stack setup for interrupt vector table regarding possible higher half
   * [ ] Add normal setup of mmu during startup of kernel splitted to folders listed below
     * [ ] `kernel/arch/{architecture}/mm`
     * [ ] `kernel/arch/{architecture}/{sub architecture}/mm`
     * [ ] `vendor/{vendor}/mm`
   * [ ] Consider peripherals per vendor within mmu as not cachable
   * [ ] Consider and enable CPU related caches for performance
+* [ ] Ensure that kernel works still on real hardware also
 * [ ] AVL tree
   * [ ] Add generic avl tree library
 * [ ] Memory management
@@ -98,11 +101,14 @@
   * [ ] Extend automake by option for use atag
   * [ ] Add parse of atag when compiled in via option
   * [ ] Debug output, when no atag has been passed and use kernel defaults
-* [ ] Check and revise kernel to work with all optimization levels
+* [ ] Autotools / Compilation
+  * [ ] Check and revise kernel to work with all optimization levels
+  * [x] Check autotools setup to get compilation with more than one core to work
 * [ ] Support further platforms
   * [ ] Test and fix rpi 2 rev. 1 support with real hardware
   * [ ] Add rpi zero support ( armv6 32 bit only with one cpu )
-  * [ ] Add rpi 3 support ( armv8 64 bit only with smp )
+  * [ ] Add rpi 3 support ( armv8 64 bit with smp )
+  * [ ] Add rpi 3 support ( armv8 32 bit with smp )
 * [ ] Documentation ( man pages or markdown )
   * [ ] Getting started after checkout
   * [ ] Cross compiler toolchain

@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-#ifndef __KERNEL_BSS__
+#if ! defined( __KERNEL_BSS__ )
 #define __KERNEL_BSS__
 
 #if defined( __cplusplus )
@@ -32,13 +32,11 @@ extern "C" {
   typedef uint32_t bss_type_t;
 #elif defined( ELF64 )
   typedef uint64_t bss_type_t;
-#else
-  typedef uint8_t bss_type_t;
 #endif
 
 // bss fields from linker script
-extern bss_type_t __bss_start;
-extern bss_type_t __bss_end;
+bss_type_t __bss_start;
+bss_type_t __bss_end;
 
 void bss_clear( void );
 

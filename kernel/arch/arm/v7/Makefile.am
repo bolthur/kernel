@@ -16,4 +16,5 @@ libv7_a_SOURCES = \
   mm/virt.c \
   arch.c \
   barrier.c \
+  stack.S \
   start.S

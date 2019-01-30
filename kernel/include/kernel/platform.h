@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_PLATFORM__
+#if ! defined( __KERNEL_PLATFORM__ )
 #define __KERNEL_PLATFORM__
 
 #if defined( __cplusplus )

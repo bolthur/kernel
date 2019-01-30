@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_PANIC__
+#if ! defined( __KERNEL_PANIC__ )
 #define __KERNEL_PANIC__
 
 #include <stdint.h>

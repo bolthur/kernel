@@ -23,6 +23,19 @@ librpi_a_SOURCES = \
   timer.c \
   tty.c
 
+# built sources determining things to be built first
+BUILT_SOURCES = \
+  librpi.a \
+  ${top_builddir}/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
+  ${top_builddir}/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
+  ${top_builddir}/kernel/kernel/libkernel.a \
+  ${top_builddir}/lib/atag/libatag.a \
+  ${top_builddir}/lib/avl/libavl.a \
+  ${top_builddir}/lib/fdt/libfdt.a \
+  ${top_builddir}/lib/stdc/libstdc.a \
+  ${top_builddir}/lib/tar/libtar.a \
+  kernel.zwerg
+
 # no installable programs
 noinst_PROGRAMS = kernel.zwerg ${output_img}
 
@@ -45,18 +58,21 @@ kernel_zwerg_LDFLAGS = \
   -Wl,-u,Entry
 
 EXTRA_PROGRAMS = kernel.img kernel7.img kernel8.img
+kernel_img_DEPENDENCIES = kernel.zwerg
 kernel_img_SOURCES =
 kernel.img$(EXEEXT): ${top_builddir}/kernel/vendor/rpi/kernel.zwerg
 	$(BOLTHUR_OBJCOPY) --only-keep-debug ${top_builddir}/kernel/vendor/rpi/kernel.zwerg ${top_builddir}/kernel/vendor/rpi/${output_sym}
 	$(BOLTHUR_OBJCOPY) --strip-debug ${top_builddir}/kernel/vendor/rpi/kernel.zwerg
 	$(BOLTHUR_OBJCOPY) ${top_builddir}/kernel/vendor/rpi/kernel.zwerg -O binary ${top_builddir}/kernel/vendor/rpi/${output_img}
 
+kernel7_img_DEPENDENCIES = kernel.zwerg
 kernel7_img_SOURCES =
 kernel7.img$(EXEEXT): ${top_builddir}/kernel/vendor/rpi/kernel.zwerg
 	$(BOLTHUR_OBJCOPY) --only-keep-debug ${top_builddir}/kernel/vendor/rpi/kernel.zwerg ${top_builddir}/kernel/vendor/rpi/${output_sym}
 	$(BOLTHUR_OBJCOPY) --strip-debug ${top_builddir}/kernel/vendor/rpi/kernel.zwerg
 	$(BOLTHUR_OBJCOPY) ${top_builddir}/kernel/vendor/rpi/kernel.zwerg -O binary ${top_builddir}/kernel/vendor/rpi/${output_img}
 
+kernel8_img_DEPENDENCIES = kernel.zwerg
 kernel8_img_SOURCES =
 kernel8.img$(EXEEXT): ${top_builddir}/kernel/vendor/rpi/kernel.zwerg
 	$(BOLTHUR_OBJCOPY) --only-keep-debug ${top_builddir}/kernel/vendor/rpi/kernel.zwerg ${top_builddir}/kernel/vendor/rpi/${output_sym}

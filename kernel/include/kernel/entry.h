@@ -18,18 +18,24 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIBC_CTYPE__ )
-#define __LIBC_CTYPE__
+#include <stdint.h>
+
+#if ! defined( __KERNEL_ENTRY__ )
+#define __KERNEL_ENTRY__
 
 #if defined( __cplusplus )
 extern "C" {
 #endif
 
-int isspace( int );
-int isdigit( int );
-int islower( int );
-int isalpha( int );
-int isupper( int );
+// type definition for bss fields
+#if defined( ELF32 )
+  typedef uint32_t entry_type_t;
+#elif defined( ELF64 )
+  typedef uint64_t entry_type_t;
+#endif
+
+// bss fields from linker script
+entry_type_t KERNEL_OFFSET;
 
 #if defined( __cplusplus )
 }

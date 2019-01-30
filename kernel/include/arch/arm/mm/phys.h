@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_ARCH_ARM_MM_PHYS__
+#if ! defined( __KERNEL_ARCH_ARM_MM_PHYS__ )
 #define __KERNEL_ARCH_ARM_MM_PHYS__
 
 #define PHYS_PAGE_SIZE 0x1000

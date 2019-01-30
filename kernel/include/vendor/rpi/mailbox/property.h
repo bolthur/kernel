@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_VENDOR_RPI_MAILBOX_PROPERTY__
+#if ! defined( __KERNEL_VENDOR_RPI_MAILBOX_PROPERTY__ )
 #define __KERNEL_VENDOR_RPI_MAILBOX_PROPERTY__
 
 #include <stdint.h>

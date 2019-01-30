@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_DEBUG__
+#if ! defined( __KERNEL_DEBUG__ )
 #define __KERNEL_DEBUG__
 
 #include <stdint.h>

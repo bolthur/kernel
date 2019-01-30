@@ -24,7 +24,7 @@
 #define MAX_EVENT_NAME 25
 #define MAX_EVENT_CALLBACK 1
 
-#ifndef __KERNEL_EVENT__
+#if ! defined( __KERNEL_EVENT__ )
 #define __KERNEL_EVENT__
 
 #if defined( __cplusplus )

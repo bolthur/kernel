@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIBC_STDIO__
+#if ! defined( __LIBC_STDIO__ )
 #define __LIBC_STDIO__
 
 #define EOF ( -1 )

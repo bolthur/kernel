@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __KERNEL_VENDOR_RPI_PLATFORM__
+#if ! defined( __KERNEL_VENDOR_RPI_PLATFORM__ )
 #define __KERNEL_VENDOR_RPI_PLATFORM__
 
 #include <stdint.h>

@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-#ifndef __KERNEL_MM_VIRT__
+#if ! defined( __KERNEL_MM_VIRT__ )
 #define __KERNEL_MM_VIRT__
 
 void virt_init( void );
