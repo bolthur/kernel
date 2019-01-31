@@ -40,6 +40,7 @@
     * [ ] `kernel/arch/{architecture}/mm`
     * [ ] `kernel/arch/{architecture}/{sub architecture}/mm`
     * [ ] `vendor/{vendor}/mm`
+  * [ ] Check for page address extension is usable and use it
   * [ ] Consider peripherals per vendor within mmu as not cachable
   * [ ] Consider and enable CPU related caches for performance
 * [ ] Ensure that kernel works still on real hardware also

@@ -18,6 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define ASSEMBLER_FILE 1
+
+#include "kernel/entry.h"
+
 // forward declaration for save of parameter
 .extern boot_parameter_data
 
@@ -26,36 +30,42 @@
 .global start
 start:
   // setup temporary stack
-  // FIXME: transform virtual to physical for higher half
-  #if defined( ELF32 )
-    ldr r4, =start
-    mov sp, r4
-  #elif defined( ELF64 )
-    ldr x4, =start
-    mov sp, x4
-  #endif
+  ldr r4, =start - KERNEL_OFFSET
+  mov sp, r4
 
   // reset cpu when smp is enabled
   #if defined( SMP_ENABLED )
-    bl cpu_smp_reset
-  #endif
-
-  // setup initial mmu for higher half
-  #if defined( IS_HIGHER_HALF )
-    // #error "Higher half not yet supported!"
+    // get address of smp reset code
+    ldr r4, =cpu_smp_reset - KERNEL_OFFSET
+    // execute function
+    blx r4
   #endif
 
   // clear bss section
-  bl bss_clear
+  ldr r4, =bss_clear - KERNEL_OFFSET
+  // execute function
+  blx r4
+
+  // hyp mode fix
+  // ldr r4, =hyp_mode_fix - KERNEL_OFFSET
+  // execute function
+  // blx r4
+
+  // setup initial mmu for higher half
+  #if defined( IS_HIGHER_HALF )
+    // get address of function
+    // ldr r4, =virt_setup_initial - KERNEL_OFFSET
+    // execute function
+    // blx r4
+
+    // reset stack again
+    // ldr r4, =start
+    // mov sp, r4
+  #endif
 
   // store rpi boot parameters passed with first three registers at data array
-  #if defined( ELF32 )
-    ldr r4, =boot_parameter_data
-    stmia r4!, {r0-r2}
-  #elif defined( ELF64 )
-    ldr x4, =boot_parameter_data
-    stmia x4!, {x0-x2}
-  #endif
+  ldr r4, =boot_parameter_data
+  stmia r4!, {r0-r2}
 
   // continue with arch related start
   b arch_start

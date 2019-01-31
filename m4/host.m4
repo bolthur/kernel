@@ -59,9 +59,9 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   arm)
     arch_subdir=arm
     host_bfd=elf32-littlearm
-    copy_flags="-I ${host_bfd} -O ${host_bfd}"
     output_img=kernel.img
     output_sym=kernel.sym
+    executable_format=32
     AC_DEFINE([ARCH_ARM], [1])
     AC_DEFINE([ELF32], [1])
 
@@ -93,6 +93,21 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([FPU_ENABLED], [1])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       ;;
+    rpi3_b)
+      CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv3 -mfloat-abi=hard"
+      subarch_subdir=v8
+      vendor_subdir=rpi
+      output_img=kernel8.img
+      output_sym=kernel8.sym
+      AC_DEFINE([PLATFORM_RPI3_B], [1], [Define to 1 for raspberry pi 3 B platform])
+      AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
+      AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
+      AC_DEFINE([VENDOR_RPI], [1])
+      AC_DEFINE([SMP_ENABLED], [1])
+      AC_DEFINE([SMP_CORE_NUMBER], [4])
+      AC_DEFINE([FPU_ENABLED], [1])
+      AC_DEFINE([IS_HIGHER_HALF], [1])
+      ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])
       ;;
@@ -101,9 +116,10 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   aarch64)
     arch_subdir=arm
     host_bfd=elf64-littleaarch64
-    copy_flags="-I ${host_bfd} -O ${host_bfd}"
+    executable_format=32
     AC_DEFINE([ARCH_ARM], [1])
     AC_DEFINE([ELF64], [1])
+
     case "${DEVICE}" in
     rpi3_b)
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
@@ -129,6 +145,9 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
     AC_MSG_ERROR([unsupported host CPU])
     ;;
   esac
+
+  copy_flags="-I ${host_bfd} -O ${host_bfd}"
+
   AC_DEFINE_UNQUOTED([ARCH], [${arch_subdir}], [bolthur/kernel target architecture])
   AC_DEFINE_UNQUOTED([SUBARCH], [${subarch_subdir}], [bolthur/kernel target subarchitecture])
   AC_DEFINE_UNQUOTED([VENDOR], [${vendor_subdir}], [bolthur/kernel target vendor])
@@ -139,6 +158,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AC_SUBST(output_sym)
   AC_SUBST(host_bfd)
   AC_SUBST(copy_flags)
+  AC_SUBST(executable_format)
 ])
 
 AC_DEFUN([BOLTHUR_SET_FLAGS], [

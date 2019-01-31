@@ -18,10 +18,23 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-
 #if ! defined( __KERNEL_ENTRY__ )
 #define __KERNEL_ENTRY__
+
+// FIXME: Find a better place
+#if defined( IS_HIGHER_HALF )
+  #if defined( ELF32 )
+    #define KERNEL_OFFSET 0 // 0xC0000000
+  #elif defined( ELF64 )
+    #define KERNEL_OFFSET 0 // 0xffffffff80000000
+  #endif
+#else
+  #define KERNEL_OFFSET 0
+#endif
+
+#if ! defined( ASSEMBLER_FILE )
+
+#include <stdint.h>
 
 #if defined( __cplusplus )
 extern "C" {
@@ -34,11 +47,10 @@ extern "C" {
   typedef uint64_t entry_type_t;
 #endif
 
-// bss fields from linker script
-entry_type_t KERNEL_OFFSET;
-
 #if defined( __cplusplus )
 }
+#endif
+
 #endif
 
 #endif

@@ -19,7 +19,7 @@ librpi_a_SOURCES = \
   platform.c \
   peripheral.c \
   serial.c \
-  start.S \
+  start.$(executable_format).S \
   timer.c \
   tty.c
 
@@ -42,7 +42,7 @@ noinst_PROGRAMS = kernel.zwerg ${output_img}
 # Normal kernel building for physical device
 kernel_zwerg_SOURCES =
 kernel_zwerg_DEPENDENCIES = \
-  kernel.$(subarch_subdir).ld \
+  kernel.$(subarch_subdir).$(executable_format).ld \
   librpi.a \
   ${top_builddir}/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
@@ -53,7 +53,7 @@ kernel_zwerg_DEPENDENCIES = \
   ${top_builddir}/lib/stdc/libstdc.a \
   ${top_builddir}/lib/tar/libtar.a
 kernel_zwerg_LDFLAGS = \
-  -T $(top_srcdir)/kernel/vendor/rpi/kernel.$(subarch_subdir).ld \
+  -T $(top_srcdir)/kernel/vendor/rpi/kernel.$(subarch_subdir).$(executable_format).ld \
   -Wl,-Map,kernel.map \
   -Wl,-u,Entry
 

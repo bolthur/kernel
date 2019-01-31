@@ -15,7 +15,7 @@ AC_CONFIG_HEADERS([config.h])
 AC_LANG([C])
 
 AC_ARG_ENABLE([device],
-  AC_HELP_STRING([--enable-device], [set target device (default and fallback is rpi2_b)]),
+  AC_HELP_STRING([--enable-device], [set target device (default and fallback is rpi2_b_rev1)]),
   [case "${enableval}" in
   rpi2_b_rev1)
     DEVICE="rpi2_b_rev1"

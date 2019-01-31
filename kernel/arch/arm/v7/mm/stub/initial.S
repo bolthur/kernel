@@ -18,10 +18,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_ARCH_ARM_V7_MM_VIRT__ )
-#define __KERNEL_ARCH_ARM_V7_MM_VIRT__
+#define ASSEMBLER_FILE 1
 
-#define VIRT_INITIAL_PAGE_DIRECTORY_SIZE 0x4000
-#define VIRT_INITIAL_PAGE_TABLE_SIZE 0x1000
+#include "kernel/entry.h"
+#include "arch/arm/v7/mm/virt.h"
 
+#if defined( IS_HIGHER_HALF )
+  // reserve initial page directory and page table aligned by power of 2
+  .comm initial_page_directory, VIRT_INITIAL_PAGE_DIRECTORY_SIZE, 2
+  .comm initial_page_table, VIRT_INITIAL_PAGE_TABLE_SIZE, 2
+
+  .global virt_setup_initial
+  virt_setup_initial:
+    bx lr
 #endif
