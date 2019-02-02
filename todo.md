@@ -33,14 +33,17 @@
   * [x] Add higher half define via vendor autotools
   * [x] Move static naked aligned function `interrupt_vector_table` into assembler stub
   * [x] Move stack creation into own assembly stub
-  * [ ] Add creation of initial mmu, when higher half is enabled with virtual entry from linker script
+  * [ ] Add creation of initial mmu during startup of vendor
+    * [ ] Create assembly stub for initial identity mapping
+    * [ ] Extend assembly stub for initial identity mapping by higher half mapping if set
   * [ ] Ensure that kernel with no higher half define still works as expected
   * [ ] Check and revise stack setup for interrupt vector table regarding possible higher half
   * [ ] Add normal setup of mmu during startup of kernel splitted to folders listed below
     * [ ] `kernel/arch/{architecture}/mm`
     * [ ] `kernel/arch/{architecture}/{sub architecture}/mm`
     * [ ] `vendor/{vendor}/mm`
-  * [ ] Check for page address extension is usable and use it
+  * [ ] Check for address extension within mmu is available, use it
+  * [ ] Check for further splitting of entry point ( separation between 32bit and 64bit ) is necessary
   * [ ] Consider peripherals per vendor within mmu as not cachable
   * [ ] Consider and enable CPU related caches for performance
 * [ ] Ensure that kernel works still on real hardware also

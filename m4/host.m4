@@ -94,7 +94,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([IS_HIGHER_HALF], [1])
       ;;
     rpi3_b)
-      CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv3 -mfloat-abi=hard"
+      CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard"
       subarch_subdir=v8
       vendor_subdir=rpi
       output_img=kernel8.img

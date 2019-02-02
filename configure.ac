@@ -113,6 +113,16 @@ AC_DEFINE_UNQUOTED([SECTION(x)], [__attribute__((section(x)))], [Keyword for sec
 
 AC_CONFIG_FILES([
   Makefile
+  font/Makefile
+  boot/Makefile
+  boot/kernel/Makefile
+  boot/arch/Makefile
+  boot/arch/arm/Makefile
+  boot/arch/arm/v6/Makefile
+  boot/arch/arm/v7/Makefile
+  boot/arch/arm/v8/Makefile
+  boot/vendor/Makefile
+  boot/vendor/rpi/Makefile
   kernel/Makefile
   kernel/kernel/Makefile
   kernel/arch/Makefile

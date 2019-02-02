@@ -13,7 +13,6 @@ librpi_a_SOURCES = \
   mailbox/property.c \
   mm/phys.c \
   mm/virt.c \
-  font.c \
   framebuffer.c \
   irq.c \
   platform.c \
@@ -25,6 +24,11 @@ librpi_a_SOURCES = \
 
 # built sources determining things to be built first
 BUILT_SOURCES = \
+  ${top_builddir}/boot/vendor/${vendor_subdir}/librpi.a \
+  ${top_builddir}/boot/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
+  ${top_builddir}/boot/arch/${arch_subdir}/lib$(arch_subdir).a \
+  ${top_builddir}/boot/kernel/libkernel.a \
+  ${top_builddir}/font/libfont.a \
   librpi.a \
   ${top_builddir}/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
@@ -43,6 +47,11 @@ noinst_PROGRAMS = kernel.zwerg ${output_img}
 kernel_zwerg_SOURCES =
 kernel_zwerg_DEPENDENCIES = \
   kernel.$(subarch_subdir).$(executable_format).ld \
+  ${top_builddir}/boot/vendor/${vendor_subdir}/librpi.a \
+  ${top_builddir}/boot/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
+  ${top_builddir}/boot/arch/${arch_subdir}/lib$(arch_subdir).a \
+  ${top_builddir}/boot/kernel/libkernel.a \
+  ${top_builddir}/font/libfont.a \
   librpi.a \
   ${top_builddir}/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \

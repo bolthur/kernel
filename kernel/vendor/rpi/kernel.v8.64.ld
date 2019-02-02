@@ -24,10 +24,15 @@ OUTPUT_ARCH( arm )
 ENTRY( start )
 
 GROUP(
-  ../../arch/arm/v8/libv8.a
-  ../../arch/arm/libarm.a
-  ../../kernel/libkernel.a
-  ../../vendor/rpi/librpi.a
+  ../../../font/libfont.a
+  ../../../boot/arch/arm/v8/libv8.a
+  ../../../boot/arch/arm/libarm.a
+  ../../../boot/kernel/libkernel.a
+  ../../../boot/vendor/rpi/librpi.a
+  ../../../kernel/arch/arm/v8/libv8.a
+  ../../../kernel/arch/arm/libarm.a
+  ../../../kernel/kernel/libkernel.a
+  ../../../kernel/vendor/rpi/librpi.a
   ../../../lib/atag/libatag.a
   ../../../lib/avl/libavl.a
   ../../../lib/fdt/libfdt.a

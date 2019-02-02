@@ -27,8 +27,8 @@
 
 .section .text.boot
 
-.global start
-start:
+.global start2
+start2:
   // setup temporary stack
   ldr r4, =start - KERNEL_OFFSET
   mov sp, r4
