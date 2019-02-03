@@ -21,7 +21,7 @@
 OUTPUT_FORMAT( elf64-littleaarch64 )
 OUTPUT_ARCH( arm )
 
-ENTRY( start )
+ENTRY( boot_start )
 
 GROUP(
   ../../../font/libfont.a
@@ -55,8 +55,8 @@ SECTIONS {
     *( .text.boot )
   }
 
-  .data.boot : ALIGN( 4K ) {
-    *( .data.boot )
+  .boot.data : ALIGN( 4K ) {
+    *( .boot.data )
   }
 
   . += KERNEL_OFFSET;

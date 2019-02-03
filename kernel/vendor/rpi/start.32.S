@@ -23,12 +23,12 @@
 #include "kernel/entry.h"
 
 // forward declaration for save of parameter
-.extern boot_parameter_data
+.extern loader_parameter_data
 
 .section .text.boot
 
-.global start2
-start2:
+.global start
+start:
   // setup temporary stack
   ldr r4, =start - KERNEL_OFFSET
   mov sp, r4
@@ -64,7 +64,7 @@ start2:
   #endif
 
   // store rpi boot parameters passed with first three registers at data array
-  ldr r4, =boot_parameter_data
+  ldr r4, =loader_parameter_data
   stmia r4!, {r0-r2}
 
   // continue with arch related start

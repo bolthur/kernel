@@ -74,6 +74,10 @@
 #define GPPUDCLK0 ( GPIO_BASE + 0x98 ) // pin pull up/down enable clock 0
 #define GPPUDCLK1 ( GPIO_BASE + 0x9C ) // pin pull up/down enable clock 1
 
+#define MAILBOX_BASE ( PERI_BASE + 0xB880 )
+#define MAILBOX_FULL 0x80000000
+#define MAILBOX_EMPTY 0x40000000
+
 #define CPSR_MODE_USER 0x10
 #define CPSR_MODE_FIQ 0x11
 #define CPSR_MODE_IRQ 0x12
@@ -94,6 +98,10 @@
 #define SYS_CTRL_REG_ENABLE_BRANCH_PREDICTION 0x1 << 11
 #define SYS_CTRL_REG_ENABLE_INSTRUCTION_CACHE 0x1 << 12
 
+#define PAGE_SIZE 0x1000
+#define VIRT_INITIAL_PAGE_DIRECTORY_SIZE 0x4000
+#define VIRT_INITIAL_PAGE_TABLE_SIZE 0x1000
+
 #include "kernel/entry.h"
 
 .section .text.boot
@@ -101,8 +109,8 @@
 .arch_extension sec
 .arch_extension virt
 
-.global start
-start:
+.global boot_start
+boot_start:
   // setup temporary stack
   ldr r4, =start
   mov sp, r4
@@ -215,8 +223,41 @@ start:
 
   // write character
   ldr r0, =UART0_DR
+  mov r1, #( 'a' )
+  bl put32
+
+  // get max memory from vendor
+  bl get_max_mem
+  mov r0, r5
+
+8:
+  // wait until ready
+  ldr r0, =UART0_FR
+  bl get32
+  ands r0, #( 1 << 5 )
+  bne 8b
+
+  // write character
+  ldr r0, =UART0_DR
+  mov r1, #( 'b' )
+  bl put32
+
+  bl boot_create_mmu
+
+10:
+  // wait until ready
+  ldr r0, =UART0_FR
+  bl get32
+  ands r0, #( 1 << 5 )
+  bne 10b
+
+  // write character
+  ldr r0, =UART0_DR
   mov r1, #( 'c' )
   bl put32
+
+  ldr r0, =start
+  blx r0
 
 halt:
   wfe // equivalent of x86 HLT instruction
@@ -229,3 +270,26 @@ put32:
 get32:
   ldr r0, [ r0 ]
   bx lr
+
+// TODO: Get memory from mailbox
+.global get_max_mem
+get_max_mem:
+  mov r0, #0x40000000
+  bx lr
+
+.section .data.boot
+.align 4
+memory_info_request:
+  .int 52 // size
+  .int 0 // request
+  .int 0x10005 // arm memory
+  .int 8 // response buffer
+  .int 0 // request
+  .int 0 // buffer 1
+  .int 0 // buffer 2
+  .int 0x10006 // vc memory
+  .int 8 // response buffer
+  .int 0 // request
+  .int 0 // buffer 1
+  .int 0 // buffer 2
+  .int 0 // terminate

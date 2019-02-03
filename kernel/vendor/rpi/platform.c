@@ -29,7 +29,7 @@
 /**
  * @brief Boot parameter data set during startup
  */
-platform_boot_parameter_t boot_parameter_data;
+platform_loader_parameter_t loader_parameter_data;
 
 /**
  * @brief Platform depending initialization routine
