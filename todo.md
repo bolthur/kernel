@@ -34,8 +34,9 @@
   * [x] Move static naked aligned function `interrupt_vector_table` into assembler stub
   * [x] Move stack creation into own assembly stub
   * [ ] Add creation of initial mmu during startup of vendor
-    * [ ] Create assembly stub for initial identity mapping
-    * [ ] Extend assembly stub for initial identity mapping by higher half mapping if set
+    * [x] Create first version of higher half mapping within `boot`
+    * [ ] Extend initial mapping by fetching memory via mailbox within rpi vendor
+    * [ ] Cleanup initial mapping within `boot`
   * [ ] Ensure that kernel with no higher half define still works as expected
   * [ ] Check and revise stack setup for interrupt vector table regarding possible higher half
   * [ ] Add normal setup of mmu during startup of kernel splitted to folders listed below
@@ -46,6 +47,7 @@
   * [ ] Check for further splitting of entry point ( separation between 32bit and 64bit ) is necessary
   * [ ] Consider peripherals per vendor within mmu as not cachable
   * [ ] Consider and enable CPU related caches for performance
+* [ ] Add gpl font as hex array and replace current used one
 * [ ] Ensure that kernel works still on real hardware also
 * [ ] AVL tree
   * [ ] Add generic avl tree library

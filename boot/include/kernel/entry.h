@@ -18,10 +18,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_ENTRY__ )
-#define __KERNEL_ENTRY__
+#if ! defined( __BOOT_KERNEL_ENTRY__ )
+#define __BOOT_KERNEL_ENTRY__
 
-// FIXME: Find a better place
 #if defined( IS_HIGHER_HALF )
   #if defined( ELF32 )
     #define KERNEL_OFFSET 0xC0000000

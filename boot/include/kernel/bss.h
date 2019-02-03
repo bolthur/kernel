@@ -18,21 +18,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernel/entry.h"
-#include "kernel/bss.h"
+#include <stdint.h>
 
-void bss_clear( void ) {
-  bss_type_t *start = ( bss_type_t* )&__bss_start;
-  bss_type_t *end = ( bss_type_t* )&__bss_end;
+#if ! defined( __BOOT_KERNEL_BSS__ )
+#define __BOOT_KERNEL_BSS__
 
-  // FIXME: Translate to physical when higher half is enabled
-  #if defined( IS_HIGHER_HALF )
-    start -= KERNEL_OFFSET;
-    end -= KERNEL_OFFSET;
-  #endif
+#if defined( __cplusplus )
+extern "C" {
+#endif
 
-  // loop through bss end and overwrite with zero
-  while( start < end ) {
-    *start++ = 0;
-  }
+// type definition for bss fields
+#if defined( ELF32 )
+  typedef uint32_t bss_type_t;
+#elif defined( ELF64 )
+  typedef uint64_t bss_type_t;
+#endif
+
+// bss fields from linker script
+bss_type_t __bss_start;
+bss_type_t __bss_end;
+
+#if defined( __cplusplus )
 }
+#endif
+
+#endif

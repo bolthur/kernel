@@ -112,7 +112,7 @@
 .global boot_start
 boot_start:
   // setup temporary stack
-  ldr r4, =start
+  ldr r4, =boot_start
   mov sp, r4
 
   // Return current CPU ID (0..3)
@@ -140,6 +140,8 @@ boot_start:
   eret
 3: msr cpsr_c, r0
 4:
+  // clear bss section
+  bl boot_bss_clear
 
   // Disable uart 0
   ldr r0, =UART0_CR
@@ -256,8 +258,14 @@ boot_start:
   mov r1, #( 'c' )
   bl put32
 
+  // load higher half start
   ldr r0, =start
-  blx r0
+
+  // set stack
+  mov sp, r0
+
+  // set program counter
+  mov pc, r0
 
 halt:
   wfe // equivalent of x86 HLT instruction

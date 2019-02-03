@@ -18,4 +18,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define ASSEMBLER_FILE 1
+#include "kernel/entry.h"
+#include "kernel/bss.h"
+
+void __attribute__( ( section( ".text.boot" ) ) ) boot_bss_clear( void ) {
+  bss_type_t *start = ( bss_type_t* )&__bss_start;
+  bss_type_t *end = ( bss_type_t* )&__bss_end;
+
+  // FIXME: Translate to physical when higher half is enabled
+  #if defined( IS_HIGHER_HALF )
+    start -= KERNEL_OFFSET;
+    end -= KERNEL_OFFSET;
+  #endif
+
+  // loop through bss end and overwrite with zero
+  while( start < end ) {
+    *start++ = 0;
+  }
+}

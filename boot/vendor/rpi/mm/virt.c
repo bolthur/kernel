@@ -52,6 +52,11 @@ void __attribute__( ( section( ".text.boot" ) ) ) boot_create_mmu( void ) {
     page_table[ x + ( KERNEL_OFFSET >> 20 ) ] = x << 20 | ( 3 << 10 ) | 0x12;
   }
 
+  // map cpu peripheral space
+  for ( x = 1024; x < 1025; x += 0x100000 ) {
+    page_table[ x ] = x << 20 | ( 3 << 10 ) | 0x12;
+  }
+
   // Copy the page table address to cp15
   __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 0" : : "r" ( page_table ) : "memory" );
   // Set the access control to all-supervisor
