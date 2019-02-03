@@ -43,15 +43,26 @@ INPUT(
   libgcc.a
 )
 
-KERNEL_VMA = 0xC0008000;
+KERNEL_LMA = 0x8000;
 KERNEL_OFFSET = 0xC0000000;
 
 SECTIONS {
-  . = KERNEL_VMA;
-  __kernel_start = .;
+  . = KERNEL_LMA;
+  __kernel_start = . + KERNEL_OFFSET;
 
+  /* boot kernel sections */
+  .text.boot : ALIGN( 4K ) {
+    *( .text.boot )
+  }
+
+  .data.boot : ALIGN( 4K ) {
+    *( .data.boot )
+  }
+
+  . += KERNEL_OFFSET;
+
+  /* higher half kernel sections */
   .text ALIGN( 4K ) : AT( ADDR( .text ) - KERNEL_OFFSET ) {
-    KEEP( *( .text.boot ) )
     *( .text )
   }
 
