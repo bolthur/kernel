@@ -28,8 +28,8 @@
 .global start
 start:
   // store rpi boot parameters passed with first three registers at data array
-  ldr r4, =loader_parameter_data
-  stmia r4!, {r0-r2}
+  ldr r3, =loader_parameter_data
+  stmia r3!, {r0-r2}
 
   // continue with arch related start
   b arch_start

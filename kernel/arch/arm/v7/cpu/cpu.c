@@ -37,7 +37,7 @@ void dump_register( cpu_register_context_t *context ) {
     "r6: 0x%08x\tr7: 0x%08x\tr8: 0x%08x\r\n"\
     "r9: 0x%08x\tr10: 0x%08x\tfp: 0x%08x\r\n"\
     "ip: 0x%08x\tsp: 0x%08x\tlr: 0x%08x\r\n"\
-    "pc: 0x%08x\tspsr: 0x08%x\r\n",
+    "pc: 0x%08x\tspsr: 0x%08x\r\n",
     context->reg.r0, context->reg.r1, context->reg.r2,
     context->reg.r3, context->reg.r4, context->reg.r5,
     context->reg.r6, context->reg.r7, context->reg.r8,

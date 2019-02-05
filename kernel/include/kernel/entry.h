@@ -18,27 +18,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
+#if ! defined( __KERNEL_ENTRY__ )
+#define __KERNEL_ENTRY__
 
-#include "kernel/entry.h"
-#include "kernel/mm/phys.h"
-
-/**
- * @brief Physical bitmap
- */
-uintptr_t *phys_bitmap;
-
-/**
- * @brief physical bitmap length set by vendor
- */
-size_t phys_bitmap_length;
-
-/**
- * @brief placement address starting at kernel end
- */
 #if defined( IS_HIGHER_HALF )
-  uintptr_t placement_address = ( uintptr_t )&__kernel_end - KERNEL_OFFSET;
+  #if defined( ELF32 )
+    #define KERNEL_OFFSET 0xC0000000
+  #elif defined( ELF64 )
+    #define KERNEL_OFFSET 0xffffffff80000000
+  #endif
 #else
-  uintptr_t placement_address = ( uintptr_t )&__kernel_end;
+  #define KERNEL_OFFSET 0
 #endif
 
+#endif

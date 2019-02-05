@@ -95,9 +95,12 @@ void phys_init( void ) {
     printf( "content of placement address: 0x%08x\r\n", placement_address );
   #endif
 
-  // determine start and end
+  // determine start and end for kernel mapping
   uintptr_t start = 0;
-  uintptr_t end = placement_address + placement_address %PHYS_PAGE_SIZE;
+  uintptr_t end = placement_address + placement_address % PHYS_PAGE_SIZE;
+
+  // adjust placement address
+  placement_address = end;
 
   // map from start to end addresses as used
   while( start < end ) {

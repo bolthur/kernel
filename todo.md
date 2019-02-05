@@ -33,11 +33,11 @@
   * [x] Add higher half define via vendor autotools
   * [x] Move static naked aligned function `interrupt_vector_table` into assembler stub
   * [x] Move stack creation into own assembly stub
-  * [ ] Add creation of initial mmu during startup of vendor
+  * [x] Add creation of initial mmu during startup of vendor
     * [x] Create first version of higher half mapping within `boot`
-    * [ ] Extend initial mapping by fetching memory via mailbox within rpi vendor
-    * [ ] Cleanup initial mapping within `boot`
-  * [ ] Ensure that kernel with no higher half define still works as expected
+    * [x] Map up to max possible memory via vendor define
+    * [x] Cleanup initial mapping within `boot`
+  * [ ] Ensure that kernel with and without higher half define works as expected within emulator and on real device
   * [ ] Check and revise stack setup for interrupt vector table regarding possible higher half
   * [ ] Add normal setup of mmu during startup of kernel splitted to folders listed below
     * [ ] `kernel/arch/{architecture}/mm`

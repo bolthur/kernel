@@ -1,2 +1,2 @@
 
-SUBDIRS = kernel arch vendor
+SUBDIRS = boot arch vendor

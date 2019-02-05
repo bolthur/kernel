@@ -78,36 +78,7 @@
 #define MAILBOX_FULL 0x80000000
 #define MAILBOX_EMPTY 0x40000000
 
-#define CPSR_MODE_USER 0x10
-#define CPSR_MODE_FIQ 0x11
-#define CPSR_MODE_IRQ 0x12
-#define CPSR_MODE_SUPERVISOR 0x13
-#define CPSR_MODE_MONITOR 0x16
-#define CPSR_MODE_ABORT 0x17
-#define CPSR_MODE_HYPERVISOR  0x1A
-#define CPSR_MODE_UNDEFINED 0x1B
-#define CPSR_MODE_SYSTEM 0x1F
-
-#define CPSR_IRQ_INHIBIT 0x80
-#define CPSR_FIQ_INHIBIT 0x40
-#define CPSR_THUMB 0x20
-
-#define STACK_FRAME_SIZE 68
-
-#define SYS_CTRL_REG_ENABLE_DATA_CACHE 0x1 << 2
-#define SYS_CTRL_REG_ENABLE_BRANCH_PREDICTION 0x1 << 11
-#define SYS_CTRL_REG_ENABLE_INSTRUCTION_CACHE 0x1 << 12
-
-#define PAGE_SIZE 0x1000
-#define VIRT_INITIAL_PAGE_DIRECTORY_SIZE 0x4000
-#define VIRT_INITIAL_PAGE_TABLE_SIZE 0x1000
-
-#include "kernel/entry.h"
-
 .section .text.boot
-
-.arch_extension sec
-.arch_extension virt
 
 .global boot_start
 boot_start:
@@ -115,189 +86,26 @@ boot_start:
   ldr r4, =boot_start
   mov sp, r4
 
-  // Return current CPU ID (0..3)
-  cpsid if // Disable IRQ & FIQ
-  mrc p15, 0, r3, c0, c0, 5 // r3 = Multiprocessor Affinity Register (MPIDR)
-  ands r3, #3 // r0 = CPU ID (Bits 0..1)
-  bne 1f // If (CPU ID != 0) Branch To Infinite Loop (Core ID 1..3)
-  beq 2f // If equal branch to normal startup
-1:
-  wfe
-  b 1
-2:
+  // save boot parameter data
+  push { r0 - r2 }
 
-  // check for hypervisor mode and switch back to supervisor mode for rpi2 and rpi3
-  mrs r0, cpsr
-  eor r0, r0, #0x1A
-  tst r0, #0x1F
-  bic r0, r0, #0x1F // clear mode bits
-  orr r0, r0, #( CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT ) // mask IRQ/FIQ bits and set SVC mode
-  bne 3f // branch if not HYP mode
-  orr r0, r0, #0x100 // mask Abort bit
-  adr lr, 4f
-  msr spsr_cxsf, r0
-  msr ELR_hyp, lr
-  eret
-3: msr cpsr_c, r0
-4:
+  // arch related boot start code
+  bl boot_arch_start
+
   // clear bss section
   bl boot_bss_clear
 
-  // Disable uart 0
-  ldr r0, =UART0_CR
-  mov r1, #0
-  bl put32
+  // prepare by vendor
+  bl boot_vendor_prepare
 
-  // Setup the GPIO pin 14 && 15
-  ldr r0, =GPFSEL1
-  bl get32
-  and r0, r0, #( ~( 7 << 12 ) )
-  orr r0, r0, #( ( 4 << 12 ) )
-  and r0, r0, #( ~( 7 << 15 ) )
-  orr r0, r0, #( ( 4 << 15 ) )
-  mov r1, r0
-  ldr r0, =GPFSEL1
-  bl put32
-
-  // Disable pull up/down for all GPIO pins & delay for 150 cycles.
-  ldr r0, =GPPUD
-  mov r1, #0
-  bl put32
-
-  // delay 150 cycles
-  movs  r0, #150
-5:
-  subs r0, r0, #1
-  bne 5b
-
-  // Disable pull up/down for pin 14,15 & delay for 150 cycles.
-  ldr r0, =GPPUDCLK0
-  mov r1, #( ( 1 << 14 ) | ( 1 << 15 ) )
-  bl put32
-
-  // delay 150 cycles
-  movs  r0, #150
-6:
-  subs r0, r0, #1
-  bne 6b
-
-  // Write 0 to GPPUDCLK0 to make it take effect.
-  ldr r0, =GPPUDCLK0
-  mov r1, #0
-  bl put32
-
-  // Clear pending interrupts.
-  ldr r0, =UART0_ICR
-  mov r1, #0x7FF
-  bl put32
-
-  // Divider = 3000000 / (16 * 115200) = 1.627 = ~1.
-  ldr r0, =UART0_IBRD
-  mov r1, #1
-  bl put32
-
-  // Fractional part register = (.627 * 64) + 0.5 = 40.6 = ~40.
-  ldr r0, =UART0_FBRD
-  mov r1, #40
-  bl put32
-
-  // Enable FIFO & 8 bit data transmissio (1 stop bit no parity).
-  ldr r0, =UART0_LCRH
-  mov r1, #( ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 ) )
-  bl put32
-
-  // Mask all interrupts.
-  ldr r0, =UART0_IMSC
-  mov r1, #( ( 1 << 1 ) | ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 ) | ( 1 << 7 ) | ( 1 << 8 ) | ( 1 << 9 ) | ( 1 << 10 ) )
-  bl put32
-
-  // Enable UART0 receive & transfer part of UART.
-  ldr r0, =UART0_CR
-  mov r1, #( ( 1 << 0 ) | ( 1 << 8 ) | ( 1 << 9 ) )
-  bl put32
-
-7:
-  // wait until ready
-  ldr r0, =UART0_FR
-  bl get32
-  ands r0, #( 1 << 5 )
-  bne 7b
-
-  // write character
-  ldr r0, =UART0_DR
-  mov r1, #( 'a' )
-  bl put32
-
-  // get max memory from vendor
-  bl get_max_mem
-  mov r0, r5
-
-8:
-  // wait until ready
-  ldr r0, =UART0_FR
-  bl get32
-  ands r0, #( 1 << 5 )
-  bne 8b
-
-  // write character
-  ldr r0, =UART0_DR
-  mov r1, #( 'b' )
-  bl put32
-
-  bl boot_create_mmu
-
-10:
-  // wait until ready
-  ldr r0, =UART0_FR
-  bl get32
-  ands r0, #( 1 << 5 )
-  bne 10b
-
-  // write character
-  ldr r0, =UART0_DR
-  mov r1, #( 'c' )
-  bl put32
+  // restore boot parameter data
+  pop { r0 - r2 }
 
   // load higher half start
-  ldr r0, =start
+  ldr r3, =start
 
   // set stack
-  mov sp, r0
+  mov sp, r3
 
   // set program counter
-  mov pc, r0
-
-halt:
-  wfe // equivalent of x86 HLT instruction
-  b halt
-
-put32:
-  str r1, [ r0 ]
-  bx lr
-
-get32:
-  ldr r0, [ r0 ]
-  bx lr
-
-// TODO: Get memory from mailbox
-.global get_max_mem
-get_max_mem:
-  mov r0, #0x40000000
-  bx lr
-
-.section .data.boot
-.align 4
-memory_info_request:
-  .int 52 // size
-  .int 0 // request
-  .int 0x10005 // arm memory
-  .int 8 // response buffer
-  .int 0 // request
-  .int 0 // buffer 1
-  .int 0 // buffer 2
-  .int 0x10006 // vc memory
-  .int 8 // response buffer
-  .int 0 // request
-  .int 0 // buffer 1
-  .int 0 // buffer 2
-  .int 0 // terminate
+  mov pc, r3

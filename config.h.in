@@ -45,6 +45,9 @@
 /* Define to 1 to enable kernel print */
 #undef KERNEL_PRINT
 
+/* Define contains max physical memory per vendor */
+#undef MAX_PHYSICAL_MEMORY
+
 /* Name of package */
 #undef PACKAGE
 

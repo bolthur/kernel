@@ -23,7 +23,7 @@
 
 #include "vendor/rpi/peripheral.h"
 
-#if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI2_B_REV2 ) || defined( PLATFORM_RPI3_B ) || defined( PLATFORM_RPI3_B_PLUS )
+#if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI3_B )
   #define CORE0_TIMER_IRQCNTL 0x40000040
   #define CORE0_IRQ_SOURCE 0x40000060
 #endif

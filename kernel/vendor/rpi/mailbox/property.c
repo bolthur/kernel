@@ -198,7 +198,7 @@ uint32_t mailbox_property_process( void ) {
   #if defined( PRINT_MAILBOX )
     printf( "%s Length: %d\r\n", __func__, ptb[ PT_OSIZE ] );
     for ( int32_t i = 0; i < ( ptb[ PT_OSIZE ] >> 2 ); i++ ) {
-      printf( "Request: %3d %8x\r\n", i, ptb[ i ] );
+      printf( "Request: %3d %08x\r\n", i, ptb[ i ] );
     }
   #endif
 

@@ -7,6 +7,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([SMP_CORE_NUMBER], [Define to amount of smp cores])
   AH_TEMPLATE([FPU_ENABLED], [Define to 1 for host with hardware FPU])
   AH_TEMPLATE([IS_HIGHER_HALF], [Define to 1 when kernel is higher half])
+  AH_TEMPLATE([MAX_PHYSICAL_MEMORY], [Define contains max physical memory per vendor])
   AH_TEMPLATE([ARCH_ARM], [Define to 1 for ARM targets])
   AH_TEMPLATE([VENDOR_RPI], [Define to 1 for raspberry pi vendor])
   AH_TEMPLATE([SERIAL_TTY], [Define to 1 for output via serial])
@@ -81,6 +82,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([SMP_CORE_NUMBER], [4])
       AC_DEFINE([FPU_ENABLED], [1])
       AC_DEFINE([IS_HIGHER_HALF], [1])
+      AC_DEFINE([MAX_PHYSICAL_MEMORY], [0x40000000])
       ;;
     rpi_zero_w)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
@@ -92,6 +94,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([VENDOR_RPI], [1])
       AC_DEFINE([FPU_ENABLED], [1])
       AC_DEFINE([IS_HIGHER_HALF], [1])
+      AC_DEFINE([MAX_PHYSICAL_MEMORY], [0x20000000])
       ;;
     rpi3_b)
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard"
@@ -107,6 +110,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([SMP_CORE_NUMBER], [4])
       AC_DEFINE([FPU_ENABLED], [1])
       AC_DEFINE([IS_HIGHER_HALF], [1])
+      AC_DEFINE([MAX_PHYSICAL_MEMORY], [0x40000000])
       ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])
@@ -135,6 +139,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([SMP_CORE_NUMBER], [4])
       AC_DEFINE([FPU_ENABLED], [1])
       AC_DEFINE([IS_HIGHER_HALF], [1])
+      AC_DEFINE([MAX_PHYSICAL_MEMORY], [0x40000000])
       ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])

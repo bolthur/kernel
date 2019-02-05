@@ -27,7 +27,7 @@ BUILT_SOURCES = \
   ${top_builddir}/boot/vendor/${vendor_subdir}/librpi.a \
   ${top_builddir}/boot/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/boot/arch/${arch_subdir}/lib$(arch_subdir).a \
-  ${top_builddir}/boot/kernel/libkernel.a \
+  ${top_builddir}/boot/boot/libboot.a \
   ${top_builddir}/font/libfont.a \
   librpi.a \
   ${top_builddir}/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
@@ -50,7 +50,7 @@ kernel_zwerg_DEPENDENCIES = \
   ${top_builddir}/boot/vendor/${vendor_subdir}/librpi.a \
   ${top_builddir}/boot/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/boot/arch/${arch_subdir}/lib$(arch_subdir).a \
-  ${top_builddir}/boot/kernel/libkernel.a \
+  ${top_builddir}/boot/boot/libboot.a \
   ${top_builddir}/font/libfont.a \
   librpi.a \
   ${top_builddir}/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \

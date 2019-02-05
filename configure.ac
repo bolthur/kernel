@@ -115,7 +115,7 @@ AC_CONFIG_FILES([
   Makefile
   font/Makefile
   boot/Makefile
-  boot/kernel/Makefile
+  boot/boot/Makefile
   boot/arch/Makefile
   boot/arch/arm/Makefile
   boot/arch/arm/v6/Makefile

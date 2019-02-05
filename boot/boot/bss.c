@@ -18,27 +18,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
+#include "boot/entry.h"
+#include "boot/bss.h"
 
-#include "kernel/entry.h"
-#include "kernel/mm/phys.h"
+void __attribute__( ( section( ".text.boot" ) ) ) boot_bss_clear( void ) {
+  bss_type_t *start = ( bss_type_t* )&__bss_start;
+  bss_type_t *end = ( bss_type_t* )&__bss_end;
 
-/**
- * @brief Physical bitmap
- */
-uintptr_t *phys_bitmap;
+  // translate to physical when higher half is enabled
+  #if defined( IS_HIGHER_HALF )
+    start -= KERNEL_OFFSET;
+    end -= KERNEL_OFFSET;
+  #endif
 
-/**
- * @brief physical bitmap length set by vendor
- */
-size_t phys_bitmap_length;
-
-/**
- * @brief placement address starting at kernel end
- */
-#if defined( IS_HIGHER_HALF )
-  uintptr_t placement_address = ( uintptr_t )&__kernel_end - KERNEL_OFFSET;
-#else
-  uintptr_t placement_address = ( uintptr_t )&__kernel_end;
-#endif
-
+  // loop through bss end and overwrite with zero
+  while( start < end ) {
+    *start++ = 0;
+  }
+}

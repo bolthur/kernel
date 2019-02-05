@@ -7,4 +7,6 @@ AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/boot/include
 AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/boot/include
 
 noinst_LIBRARIES = libv7.a
-libv7_a_SOURCES =
+libv7_a_SOURCES = \
+  mm/virt.c \
+  start.$(executable_format).S
