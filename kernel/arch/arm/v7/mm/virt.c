@@ -30,14 +30,14 @@
 /**
  * @brief
  *
- * @param page_table pointer to page table structure
+ * @param page_directory pointer to page directory
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
  * @param flags flags used for mapping
  */
-void virt_map_address( void* page_table, void* vaddr, void* paddr, uint32_t flags ) {
+void virt_map_address( void* page_directory, void* vaddr, void* paddr, uint32_t flags ) {
   // mark parameter as unused
-  ( void )page_table;
+  ( void )page_directory;
   ( void )vaddr;
   ( void )paddr;
   ( void )flags;

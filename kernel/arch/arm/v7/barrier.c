@@ -24,12 +24,12 @@
  * @brief Data memory barrier invalidation
  */
 void __attribute__(( optimize( "O0" ) )) barrier_data_mem( void ) {
-  __asm__ __volatile__ ( "dmb" );
+  __asm__ __volatile__ ( "dmb" ::: "memory" );
 }
 
 /**
  * @brief Data sync barrier invalidation
  */
 void __attribute__(( optimize( "O0" ) )) barrier_data_sync( void ) {
-  __asm__ __volatile__ ( "dsb" );
+  __asm__ __volatile__ ( "dsb" ::: "memory" );
 }

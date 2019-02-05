@@ -21,7 +21,9 @@
 #if ! defined( __KERNEL_ARCH_ARM_V7_MM_VIRT__ )
 #define __KERNEL_ARCH_ARM_V7_MM_VIRT__
 
-#define VIRT_INITIAL_PAGE_DIRECTORY_SIZE 0x4000
-#define VIRT_INITIAL_PAGE_TABLE_SIZE 0x1000
+#define VMSA_V6_BASE 0x2
+#define VMSA_V7_BASE 0x3
+#define VSMA_V7_PXN 0x4
+#define VSMA_V7_EPAE 0x5
 
 #endif

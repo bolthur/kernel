@@ -24,12 +24,12 @@
  * @brief Data memory barrier invalidation
  */
 void __attribute__(( optimize( "O0" ) )) barrier_data_mem( void ) {
-  __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c10, #5" : : [ zero ] "r" ( 0 ) );
+  __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c10, #5" : : [ zero ] "r" ( 0 ) : "memory" );
 }
 
 /**
  * @brief Data sync barrier invalidation
  */
 void __attribute__(( optimize( "O0" ) )) barrier_data_sync( void ) {
-  __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c10, #4" : : [ zero ] "r" ( 0 ) );
+  __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c10, #4" : : [ zero ] "r" ( 0 ) : "memory" );
 }
