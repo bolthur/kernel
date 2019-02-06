@@ -3,17 +3,17 @@
     {
       "name": "Mac",
       "includePath": [
-        "${workspaceFolder}/include",
-        "${workspaceFolder}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-        "${workspaceFolder}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
+        "${workspaceRoot}/include",
+        "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+        "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
       ],
       "defines": [],
       "intelliSenseMode": "${default}",
       "browse": {
         "path": [
-          "${workspaceFolder}/include",
-          "${workspaceFolder}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-          "${workspaceFolder}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
+          "${workspaceRoot}/include",
+          "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+          "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
         ],
         "limitSymbolsToIncludedHeaders": true,
         "databaseFilename": ""
@@ -26,17 +26,17 @@
     {
       "name": "Linux",
       "includePath": [
-        "${workspaceFolder}/include",
-        "${workspaceFolder}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-        "${workspaceFolder}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
+        "${workspaceRoot}/include",
+        "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+        "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
       ],
       "defines": [],
       "intelliSenseMode": "${default}",
       "browse": {
         "path": [
-          "${workspaceFolder}/include",
-          "${workspaceFolder}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-          "${workspaceFolder}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
+          "${workspaceRoot}/include",
+          "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+          "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
         ],
         "limitSymbolsToIncludedHeaders": true,
         "databaseFilename": ""
@@ -45,9 +45,9 @@
     {
       "name": "Win32",
       "includePath": [
-        "${workspaceFolder}/include",
-        "${workspaceFolder}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-        "${workspaceFolder}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
+        "${workspaceRoot}/include",
+        "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+        "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
       ],
       "defines": [
         "_DEBUG",
@@ -56,9 +56,9 @@
       "intelliSenseMode": "${default}",
       "browse": {
         "path": [
-          "${workspaceFolder}/include",
-          "${workspaceFolder}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
-          "${workspaceFolder}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
+          "${workspaceRoot}/include",
+          "${workspaceRoot}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.1.0/include",
+          "${workspaceRoot}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.1.0/include"
         ],
         "limitSymbolsToIncludedHeaders": true,
         "databaseFilename": ""
