@@ -31,5 +31,6 @@
   "editor.rulers": [
     80, 120
   ],
-  "files.insertFinalNewline": true
+  "files.insertFinalNewline": true,
+  "C_Cpp.loggingLevel": "Error"
 }
