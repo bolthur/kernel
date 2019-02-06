@@ -32,7 +32,8 @@ extern uintptr_t __kernel_end;
 
 void phys_init( void );
 
-void phys_mark_page_used( uintptr_t );
-void phys_mark_page_free( uintptr_t );
+void phys_mark_page_used( void* );
+void phys_mark_page_free( void* );
+void* phys_find_free_range( size_t, size_t );
 
 #endif

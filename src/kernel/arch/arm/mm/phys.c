@@ -19,6 +19,7 @@
  */
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #include "lib/stdc/stdio.h"
 #include "kernel/kernel/mm/phys.h"
@@ -33,9 +34,9 @@
  *
  * @param address address to mark as free
  */
-void phys_mark_page_used( uintptr_t address ) {
+void phys_mark_page_used( void* address ) {
   // get frame, index and offset
-  size_t frame = address / PHYS_PAGE_SIZE;
+  size_t frame = ( uintptr_t )address / PHYS_PAGE_SIZE;
   size_t index = PAGE_INDEX( frame );
   size_t offset = PAGE_OFFSET( frame );
 
@@ -56,13 +57,13 @@ void phys_mark_page_used( uintptr_t address ) {
  *
  * @param address address to mark as free
  */
-void phys_mark_page_free( uintptr_t address ) {
+void phys_mark_page_free( void*  address ) {
   // get frame, index and offset
-  size_t frame = address / PHYS_PAGE_SIZE;
+  size_t frame = ( uintptr_t )address / PHYS_PAGE_SIZE;
   size_t index = PAGE_INDEX( frame );
   size_t offset = PAGE_OFFSET( frame );
 
-  // mark page as used
+  // mark page as free
   phys_bitmap[ index ] &= ( uintptr_t )( ~( 0x1 << offset ) );
 
   // debug output
@@ -72,4 +73,79 @@ void phys_mark_page_free( uintptr_t address ) {
       frame, index, offset, address, index, phys_bitmap[ index ]
     );
   #endif
+}
+
+/**
+ * @brief Method to find free page range
+ *
+ * @param memory_amount amount of memory to find free page range for
+ * @return uintptr_t address of found memory
+ */
+void* phys_find_free_range( size_t memory_amount, size_t alignment ) {
+  // round up to full page
+  memory_amount += memory_amount % PHYS_PAGE_SIZE;
+  size_t page_amount = memory_amount / PHYS_PAGE_SIZE;
+  size_t found_amount = 0;
+
+  // found address range
+  void* address = NULL;
+  bool stop = false;
+
+  // loop through bitmap to find free continouse space
+  for ( size_t idx = 0; idx < phys_bitmap_length && !stop; idx++ ) {
+    // loop through bits per entry
+    for ( size_t offset = 0; offset < PAGE_PER_ENTRY && !stop; offset++ ) {
+      // not free? => reset counter and continue
+      if ( phys_bitmap[ idx ] & ( uintptr_t )( 0x1 << offset ) ) {
+        found_amount = 0;
+        address = NULL;
+        continue;
+      }
+
+      // set address if found is 0
+      if ( 0 == found_amount ) {
+        address = ( void* )(
+          idx * PHYS_PAGE_SIZE * PAGE_PER_ENTRY + offset * PHYS_PAGE_SIZE
+        );
+
+        // check for alignment
+        if (
+          0 < alignment
+          && 0 != ( uintptr_t )address % alignment
+        ) {
+          found_amount = 0;
+          address = NULL;
+          continue;
+        }
+
+        printf( "idx = %d\toffset = %d\r\n", idx, offset );
+      }
+
+      // increase found amount
+      found_amount += 1;
+
+      // reached necessary amount? => stop loop
+      if ( found_amount == page_amount ) {
+        stop = true;
+      }
+    }
+  }
+
+  // found something => mark as used
+  if ( NULL != address ) {
+    // temporary address variable
+    void *tmp = address;
+
+    // loop until amount and mark as used
+    for (
+      size_t idx = 0;
+      idx < found_amount;
+      idx++, tmp = ( void* )( ( uintptr_t ) address + PHYS_PAGE_SIZE )
+    ) {
+      phys_mark_page_used( tmp );
+    }
+  }
+
+  // return found / not found address
+  return address;
 }

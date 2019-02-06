@@ -105,7 +105,7 @@ void phys_init( void ) {
   // map from start to end addresses as used
   while( start < end ) {
     // mark used
-    phys_mark_page_used( start );
+    phys_mark_page_used( ( void* )start );
 
     // get next page
     start += PHYS_PAGE_SIZE;
@@ -118,7 +118,7 @@ void phys_init( void ) {
   // map from start to end addresses as used
   while( start < end ) {
     // mark used
-    phys_mark_page_used( start );
+    phys_mark_page_used( ( void* )start );
 
     // get next page
     start += PHYS_PAGE_SIZE;
