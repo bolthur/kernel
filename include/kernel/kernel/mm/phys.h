@@ -35,5 +35,6 @@ void phys_init( void );
 void phys_mark_page_used( void* );
 void phys_mark_page_free( void* );
 void* phys_find_free_range( size_t, size_t );
+void phys_free_range( void*, size_t );
 
 #endif

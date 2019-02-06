@@ -76,6 +76,23 @@ void phys_mark_page_free( void*  address ) {
 }
 
 /**
+ * @brief Method to free phys page range
+ *
+ * @param address start address
+ * @param amount amount of memory
+ */
+void phys_free_range( void* address, size_t amount ) {
+  // loop until amount and mark as free
+  for (
+    size_t idx = 0;
+    idx < amount / PHYS_PAGE_SIZE;
+    idx++, address = ( void* )( ( uintptr_t ) address + PHYS_PAGE_SIZE )
+  ) {
+    phys_mark_page_free( address );
+  }
+}
+
+/**
  * @brief Method to find free page range
  *
  * @param memory_amount amount of memory to find free page range for
@@ -117,8 +134,6 @@ void* phys_find_free_range( size_t memory_amount, size_t alignment ) {
           address = NULL;
           continue;
         }
-
-        printf( "idx = %d\toffset = %d\r\n", idx, offset );
       }
 
       // increase found amount
@@ -140,7 +155,7 @@ void* phys_find_free_range( size_t memory_amount, size_t alignment ) {
     for (
       size_t idx = 0;
       idx < found_amount;
-      idx++, tmp = ( void* )( ( uintptr_t ) address + PHYS_PAGE_SIZE )
+      idx++, tmp = ( void* )( ( uintptr_t ) tmp + PHYS_PAGE_SIZE )
     ) {
       phys_mark_page_used( tmp );
     }
