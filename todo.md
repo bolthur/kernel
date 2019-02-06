@@ -29,6 +29,8 @@
 * [x] FPU
   * [x] Check and revise fpu code
   * [x] Check and remove direct floating point usage within kernel except saving of floating point registers
+* [x] Move includes into extra folder with subfolders
+* [x] Move source into extra folder with subfolders
 * [ ] Memory management
   * [x] Add higher half define via vendor autotools
   * [x] Move static naked aligned function `interrupt_vector_table` into assembler stub

@@ -8,7 +8,7 @@ AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_CANONICAL_HOST
-AC_CONFIG_SRCDIR([kernel/kernel/main.c])
+AC_CONFIG_SRCDIR([src/kernel/kernel/main.c])
 AM_INIT_AUTOMAKE([foreign 1.7])
 AC_CONFIG_HEADERS([config.h])
 
@@ -113,31 +113,32 @@ AC_DEFINE_UNQUOTED([SECTION(x)], [__attribute__((section(x)))], [Keyword for sec
 
 AC_CONFIG_FILES([
   Makefile
-  font/Makefile
-  boot/Makefile
-  boot/boot/Makefile
-  boot/arch/Makefile
-  boot/arch/arm/Makefile
-  boot/arch/arm/v6/Makefile
-  boot/arch/arm/v7/Makefile
-  boot/arch/arm/v8/Makefile
-  boot/vendor/Makefile
-  boot/vendor/rpi/Makefile
-  kernel/Makefile
-  kernel/kernel/Makefile
-  kernel/arch/Makefile
-  kernel/arch/arm/Makefile
-  kernel/arch/arm/v6/Makefile
-  kernel/arch/arm/v7/Makefile
-  kernel/arch/arm/v8/Makefile
-  kernel/vendor/Makefile
-  kernel/vendor/rpi/Makefile
-  lib/Makefile
-  lib/atag/Makefile
-  lib/avl/Makefile
-  lib/fdt/Makefile
-  lib/stdc/Makefile
-  lib/tar/Makefile
+  src/Makefile
+  src/font/Makefile
+  src/boot/Makefile
+  src/boot/boot/Makefile
+  src/boot/arch/Makefile
+  src/boot/arch/arm/Makefile
+  src/boot/arch/arm/v6/Makefile
+  src/boot/arch/arm/v7/Makefile
+  src/boot/arch/arm/v8/Makefile
+  src/boot/vendor/Makefile
+  src/boot/vendor/rpi/Makefile
+  src/kernel/Makefile
+  src/kernel/kernel/Makefile
+  src/kernel/arch/Makefile
+  src/kernel/arch/arm/Makefile
+  src/kernel/arch/arm/v6/Makefile
+  src/kernel/arch/arm/v7/Makefile
+  src/kernel/arch/arm/v8/Makefile
+  src/kernel/vendor/Makefile
+  src/kernel/vendor/rpi/Makefile
+  src/lib/Makefile
+  src/lib/atag/Makefile
+  src/lib/avl/Makefile
+  src/lib/fdt/Makefile
+  src/lib/stdc/Makefile
+  src/lib/tar/Makefile
 ])
 
 AC_OUTPUT

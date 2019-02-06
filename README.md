@@ -112,8 +112,8 @@ Emulation of the kernel project with qemu during development may be done at all 
 
 ```bash
 # raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./kernel/vendor/rpi/kernel.zwerg
+qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel.zwerg
 
 # raspberry pi 3B kernel emulation
-qemu-system-aarch64 -m 1024 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./kernel/vendor/rpi/kernel.zwerg
+qemu-system-aarch64 -m 1024 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel.zwerg
 ```
