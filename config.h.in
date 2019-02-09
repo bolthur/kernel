@@ -42,9 +42,6 @@
 /* Define set for libc to compile differently */
 #undef IS_KERNEL
 
-/* Define to 1 to enable kernel print */
-#undef KERNEL_PRINT
-
 /* Define contains max physical memory per vendor */
 #undef MAX_PHYSICAL_MEMORY
 
@@ -96,9 +93,6 @@
 /* Keyword for section placement. */
 #undef SECTION
 
-/* Define to 1 for output via serial */
-#undef SERIAL_TTY
-
 /* Define to amount of smp cores */
 #undef SMP_CORE_NUMBER
 
@@ -107,6 +101,15 @@
 
 /* bolthur/kernel target subarchitecture */
 #undef SUBARCH
+
+/* Define to 1 to enable kernel print */
+#undef TTY_ENABLE
+
+/* Define to 1 for output via framebuffer */
+#undef TTY_FRAMEBUFFER
+
+/* Define to 1 for output via serial */
+#undef TTY_SERIAL
 
 /* bolthur/kernel target vendor */
 #undef VENDOR

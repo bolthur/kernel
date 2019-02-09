@@ -25,23 +25,24 @@
  * @brief Method for dumping cpu registers
  *
  * @param context cpu context with all registers
- *
- * @todo check and revise
  */
 void dump_register( cpu_register_context_t *context ) {
   printf(
     "CPU register dump\r\n"\
-    "r0: 0x%08x\tr1: 0x%08x\tr2: 0x%08x\r\n"\
-    "r3: 0x%08x\tr4: 0x%08x\tr5: 0x%08x\r\n"\
-    "r6: 0x%08x\tr7: 0x%08x\tr8: 0x%08x\r\n"\
-    "r9: 0x%08x\tr10: 0x%08x\tfp: 0x%08x\r\n"\
-    "ip: 0x%08x\tsp: 0x%08x\tlr: 0x%08x\r\n"\
-    "pc: 0x%08x\tspsr: 0x%08x\r\n",
-    context->reg.r0, context->reg.r1, context->reg.r2,
-    context->reg.r3, context->reg.r4, context->reg.r5,
-    context->reg.r6, context->reg.r7, context->reg.r8,
-    context->reg.r9, context->reg.r10, context->reg.fp,
-    context->reg.ip, context->reg.sp, context->reg.lr,
-    context->reg.pc, context->reg.spsr
+    "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
+    "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
+    "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
+    "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
+    "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
+    "%4s: 0x%08x\t%4s: 0x%08x\r\n",
+    "r0", context->reg.r0, "r1", context->reg.r1,
+    "r2", context->reg.r2, "r3", context->reg.r3,
+    "r4", context->reg.r4, "r5", context->reg.r5,
+    "r6", context->reg.r6, "r7", context->reg.r7,
+    "r8", context->reg.r8, "r9", context->reg.r9,
+    "r10", context->reg.r10, "fp", context->reg.fp,
+    "ip", context->reg.ip, "sp", context->reg.sp,
+    "lr", context->reg.lr, "pc", context->reg.pc,
+    "spsr", context->reg.spsr
   );
 }

@@ -39,7 +39,11 @@ AC_ARG_ENABLE([output],
 )
 
 AC_ARG_ENABLE([serial-tty],
-  AC_HELP_STRING([--enable-serial-tty], [switch kernel tty output to serial only (default: off)])
+  AC_HELP_STRING([--enable-serial-tty], [Enable kernel tty output to serial (default: off)])
+)
+
+AC_ARG_ENABLE([framebuffer-tty],
+  AC_HELP_STRING([--enable-framebuffer-tty], [Enable kernel tty output to framebuffer (default: off)])
 )
 
 AC_ARG_ENABLE([output-mm-phys],
