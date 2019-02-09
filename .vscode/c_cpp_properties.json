@@ -1,7 +1,12 @@
 {
   "env": {
     "kernelDefaultIncludePaths": [
-      "${workspaceFolder}",
+      "${workspaceFolder}/include",
+      "${workspaceFolder}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.2.0/include",
+      "${workspaceFolder}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.2.0/include"
+    ],
+    "kernelDefaultBrowsePaths": [
+      "${workspaceFolder}/src",
       "${workspaceFolder}/include",
       "${workspaceFolder}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.2.0/include",
       "${workspaceFolder}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.2.0/include"
@@ -17,7 +22,7 @@
       "intelliSenseMode": "${default}",
       "browse": {
         "path": [
-          "${workspaceFolder}"
+          "${kernelDefaultBrowsePaths}"
         ],
         "limitSymbolsToIncludedHeaders": true,
         "databaseFilename": ""
@@ -39,7 +44,7 @@
       "intelliSenseMode": "${default}",
       "browse": {
         "path": [
-          "${workspaceFolder}"
+          "${kernelDefaultBrowsePaths}"
         ],
         "limitSymbolsToIncludedHeaders": true,
         "databaseFilename": ""
@@ -60,7 +65,7 @@
       "intelliSenseMode": "${default}",
       "browse": {
         "path": [
-          "${workspaceFolder}"
+          "${kernelDefaultBrowsePaths}"
         ],
         "limitSymbolsToIncludedHeaders": true,
         "databaseFilename": ""
