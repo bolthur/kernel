@@ -22,12 +22,9 @@
 #include <stdbool.h>
 
 #include "lib/stdc/stdio.h"
+#include "kernel/kernel/panic.h"
 #include "kernel/kernel/mm/phys.h"
 #include "kernel/arch/arm/mm/phys.h"
-
-#define PAGE_PER_ENTRY ( sizeof( phys_bitmap_length ) * 8 )
-#define PAGE_INDEX( address ) ( address / PAGE_PER_ENTRY )
-#define PAGE_OFFSET( address ) ( address % PAGE_PER_ENTRY )
 
 /**
  * @brief Mark physical page as used on arm
@@ -81,7 +78,15 @@ void phys_mark_page_free( void*  address ) {
  * @param address start address
  * @param amount amount of memory
  */
-void phys_free_range( void* address, size_t amount ) {
+void phys_free_page_range( void* address, size_t amount ) {
+  // debug output
+  #if defined( PRINT_MM_PHYS )
+    printf(
+      "[ phys free page range ]: address: 0x%08x, amount: %i\r\n",
+      address, amount
+    );
+  #endif
+
   // loop until amount and mark as free
   for (
     size_t idx = 0;
@@ -98,18 +103,34 @@ void phys_free_range( void* address, size_t amount ) {
  * @param memory_amount amount of memory to find free page range for
  * @return uintptr_t address of found memory
  */
-void* phys_find_free_range( size_t memory_amount, size_t alignment ) {
+void* phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
+  // debug output
+  #if defined( PRINT_MM_PHYS )
+    printf(
+      "[ phys find free page range ]: memory_amount: %i, allignment: 0x%08x\r\n",
+      memory_amount, alignment
+    );
+  #endif
+
   // round up to full page
   memory_amount += memory_amount % PHYS_PAGE_SIZE;
+
+  // determine amount of pages
   size_t page_amount = memory_amount / PHYS_PAGE_SIZE;
   size_t found_amount = 0;
 
   // found address range
   void* address = NULL;
+  void* tmp = NULL;
   bool stop = false;
 
   // loop through bitmap to find free continouse space
   for ( size_t idx = 0; idx < phys_bitmap_length && !stop; idx++ ) {
+    // skip completely used entries
+    if ( PHYS_ALL_PAGES_OF_INDEX_USED == phys_bitmap[ idx ] ) {
+      continue;
+    }
+
     // loop through bits per entry
     for ( size_t offset = 0; offset < PAGE_PER_ENTRY && !stop; offset++ ) {
       // not free? => reset counter and continue
@@ -146,21 +167,37 @@ void* phys_find_free_range( size_t memory_amount, size_t alignment ) {
     }
   }
 
-  // found something => mark as used
-  if ( NULL != address ) {
-    // temporary address variable
-    void *tmp = address;
+  // assert found address
+  ASSERT( NULL != address );
 
-    // loop until amount and mark as used
-    for (
-      size_t idx = 0;
-      idx < found_amount;
-      idx++, tmp = ( void* )( ( uintptr_t ) tmp + PHYS_PAGE_SIZE )
-    ) {
-      phys_mark_page_used( tmp );
-    }
+  // loop until amount and mark as used
+  for (
+    size_t idx = 0;
+    idx < found_amount;
+    idx++, tmp = ( void* )( ( uintptr_t ) tmp + PHYS_PAGE_SIZE )
+  ) {
+    phys_mark_page_used( tmp );
   }
 
   // return found / not found address
   return address;
+}
+
+/**
+ * @brief Shorthand to find single free page
+ *
+ * @param alignment
+ * @return void*
+ */
+void* phys_find_free_page( size_t alignment ) {
+  return phys_find_free_page_range( PHYS_PAGE_SIZE, alignment );
+}
+
+/**
+ * @brief Shorthand for free one single page
+ *
+ * @param address address to free
+ */
+void phys_free_page( void* address ) {
+  phys_free_page_range( address, PHYS_PAGE_SIZE );
 }

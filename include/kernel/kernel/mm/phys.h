@@ -24,6 +24,14 @@
 #if ! defined( __KERNEL_MM_PHYS__ )
 #define __KERNEL_MM_PHYS__
 
+#define PAGE_PER_ENTRY ( sizeof( phys_bitmap_length ) * 8 )
+#define PAGE_INDEX( address ) ( address / PAGE_PER_ENTRY )
+#define PAGE_OFFSET( address ) ( address % PAGE_PER_ENTRY )
+
+#define PHYS_NO_ALIGNMENT 0
+
+#define PHYS_ALL_PAGES_OF_INDEX_USED 0xFFFFFFFF
+
 extern uintptr_t *phys_bitmap;
 extern size_t phys_bitmap_length;
 extern uintptr_t placement_address;
@@ -34,7 +42,9 @@ void phys_init( void );
 
 void phys_mark_page_used( void* );
 void phys_mark_page_free( void* );
-void* phys_find_free_range( size_t, size_t );
-void phys_free_range( void*, size_t );
+void* phys_find_free_page_range( size_t, size_t );
+void phys_free_page_range( void*, size_t );
+void* phys_find_free_page( size_t );
+void phys_free_page( void* );
 
 #endif

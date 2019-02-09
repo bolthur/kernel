@@ -23,18 +23,4 @@
 
 #define STACK_SIZE 0x1000
 
-#if ! defined( ASSEMBLER_FILE )
-
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
-// area for not assembly related content
-
-#if defined( __cplusplus )
-}
-#endif
-
-#endif
-
 #endif

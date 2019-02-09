@@ -49,6 +49,8 @@
   * [ ] Check for further splitting of entry point ( separation between 32bit and 64bit ) is necessary
   * [ ] Consider peripherals per vendor within mmu as not cachable
   * [ ] Consider and enable CPU related caches for performance
+  * [ ] Consider KPTI ( kernel page table isolation ) for virtual memory management
+  * [ ] Check and use recursive page mapping
 * [ ] Add gpl font as hex array and replace current used one
 * [ ] Ensure that kernel works still on real hardware also
 * [ ] AVL tree
