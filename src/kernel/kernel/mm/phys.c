@@ -39,11 +39,7 @@ size_t phys_bitmap_length;
 /**
  * @brief placement address starting at kernel end
  */
-#if defined( IS_HIGHER_HALF )
-  uintptr_t placement_address = ( uintptr_t )&__kernel_end - KERNEL_OFFSET;
-#else
-  uintptr_t placement_address = ( uintptr_t )&__kernel_end;
-#endif
+uintptr_t placement_address = VIRT_2_PHYS( &__kernel_end );
 
 /**
  * @brief Mark physical page as used on arm
@@ -132,7 +128,9 @@ void* phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
   #endif
 
   // round up to full page
-  memory_amount += memory_amount % PHYS_PAGE_SIZE;
+  if ( 0 < memory_amount % PHYS_PAGE_SIZE ) {
+    memory_amount += PHYS_PAGE_SIZE - ( memory_amount % PHYS_PAGE_SIZE );
+  }
 
   // determine amount of pages
   size_t page_amount = memory_amount / PHYS_PAGE_SIZE;
@@ -188,6 +186,9 @@ void* phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
 
   // assert found address
   ASSERT( NULL != address );
+
+  // set temporary address
+  tmp = address;
 
   // loop until amount and mark as used
   for (

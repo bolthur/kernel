@@ -18,18 +18,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "boot/boot/entry.h"
 #include "boot/boot/bss.h"
+#include "kernel/kernel/entry.h"
 
+/**
+ * @brief Method to clear bss during initial boot
+ */
 void __attribute__( ( section( ".text.boot" ) ) ) boot_bss_clear( void ) {
-  bss_type_t *start = ( bss_type_t* )&__bss_start;
-  bss_type_t *end = ( bss_type_t* )&__bss_end;
-
-  // translate to physical when higher half is enabled
-  #if defined( IS_HIGHER_HALF )
-    start -= KERNEL_OFFSET;
-    end -= KERNEL_OFFSET;
-  #endif
+  bss_type_t *start = ( bss_type_t* )VIRT_2_PHYS( &__bss_start );
+  bss_type_t *end = ( bss_type_t* )VIRT_2_PHYS( &__bss_end );
 
   // loop through bss end and overwrite with zero
   while( start < end ) {

@@ -21,8 +21,13 @@
 #include <stdint.h>
 
 #include "boot/boot/mm/virt.h"
-#include "boot/boot/entry.h"
+#include "kernel/kernel/entry.h"
 
+/**
+ * @brief Method to prepare section during initial boot
+ *
+ * @todo Check behaviour with less than 1 GB physical memory
+ */
 void __attribute__( ( section( ".text.boot" ) ) ) boot_vendor_prepare( void ) {
   uint32_t x;
 
@@ -42,7 +47,7 @@ void __attribute__( ( section( ".text.boot" ) ) ) boot_vendor_prepare( void ) {
     // higher half if set
     if ( 0 < KERNEL_OFFSET ) {
       boot_virt_map_address(
-        ( void* )( ( x << 20 ) + KERNEL_OFFSET ),
+        ( void* )( PHYS_2_VIRT( x << 20 ) ),
         ( void* )( x << 20 )
       );
     }

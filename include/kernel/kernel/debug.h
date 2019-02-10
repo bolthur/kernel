@@ -23,15 +23,6 @@
 
 #include <stdint.h>
 
-// FIXME: Remove, when defines have been written to functions
-#if defined( ARCH_ARM )
-  #include "kernel/arch/arm/debug.h"
-#else
-  #error "Debug defines not available"
-#endif
-
-#define BUG_ON( cond, msg ) ( cond ? BUG( msg ) : ( void )0 );
-
 #if defined( __cplusplus )
 extern "C" {
 #endif
@@ -41,7 +32,7 @@ typedef struct {
   uint32_t line;
   uint64_t addr;
   const char *msg;
-} bug_entry_t;
+} __attribute__((__packed__)) bug_entry_t;
 
 void debug_init( void );
 void debug_breakpoint( void );

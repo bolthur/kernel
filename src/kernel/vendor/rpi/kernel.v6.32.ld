@@ -66,12 +66,6 @@ SECTIONS {
     *( .text )
   }
 
-  .ARM.exidx ALIGN( 4K ) : AT( ADDR( .ARM.exidx ) - KERNEL_OFFSET ) {
-    __exidx_start = .;
-    *(.ARM.exidx*)
-    __exidx_end = .;
-  }
-
   .rodata ALIGN( 4K ) : AT( ADDR( .rodata ) - KERNEL_OFFSET ) {
     *(.rodata)
   }
@@ -87,15 +81,12 @@ SECTIONS {
     __bss_end = .;
   }
 
-  .bugtable ALIGN( 4K ) : AT( ADDR( .bugtable ) - KERNEL_OFFSET ) {
-    __bug_start = . ;
-    *(.bugtable)
-    __bug_end = . ;
-  }
-
   __kernel_end = .;
 
   /DISCARD/ : {
     *(.comment)
+    *(.eh_frame)
+    *(.ARM.exidx*)
+    *(.ARM.attributes*)
   }
 }

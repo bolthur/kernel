@@ -21,10 +21,17 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-static uint32_t
-  __attribute__( ( section( ".boot.data" ), aligned( 0x4000 ) ) )
-  boot_page_table[ 4096 ];
+#include "kernel/arch/arm/mm/virt.h"
 
+static uint32_t
+  __attribute__(
+    ( section( ".boot.data" ),
+    aligned( VSMA_SHORT_PAGE_DIRECTORY_ALIGNMENT ) )
+  ) boot_page_table[ 4096 ];
+
+/**
+ * @brief Method to check for virtual memory is supported
+ */
 bool __attribute__( ( section( ".text.boot" ) ) ) boot_virt_available( void ) {
   uint32_t reg;
 
@@ -34,11 +41,18 @@ bool __attribute__( ( section( ".text.boot" ) ) ) boot_virt_available( void ) {
   // strip out everything not needed
   reg &= 0xF;
 
-  return
-    ( 0x3 == reg || 0x4 == reg || 0x5 == reg )
-      ? true : false;
+  return (
+    VMSA_SUPPORT_V7_PAGING == reg
+    || VSMA_SUPPORT_V7_PAGING_PXN == reg
+    || VSMA_SUPPORT_V7_PAGING_LPAE == reg );
 }
 
+/**
+ * @brief Method to map virtual address to physical during initial boot
+ *
+ * @param virtual virtual address
+ * @param physical physical address
+ */
 void __attribute__( ( section( ".text.boot" ) ) ) boot_virt_map_address( void* virtual, void* physical ) {
   // transform virtual and physical address to 1MB
   uint32_t v = ( uint32_t )virtual & 0xFFF00000;
@@ -48,6 +62,9 @@ void __attribute__( ( section( ".text.boot" ) ) ) boot_virt_map_address( void* v
   boot_page_table[ v >> 20 ] = p | ( 3 << 10 ) | 0x10 | 0x2;
 }
 
+/**
+ * @brief Method to enable virtual memory during initial boot
+ */
 void __attribute__( ( section( ".text.boot" ) ) ) boot_virt_enable( void ) {
   uint32_t reg;
 

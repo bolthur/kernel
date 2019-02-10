@@ -171,7 +171,7 @@ typedef struct {
     int32_t buffer_32[ 64 ];
     uint32_t buffer_u32[ 64 ];
   } data;
-} rpi_mailbox_property_t;
+} __attribute__((__packed__)) rpi_mailbox_property_t;
 
 void mailbox_property_init( void );
 void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... );

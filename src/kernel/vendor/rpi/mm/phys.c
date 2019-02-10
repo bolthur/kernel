@@ -23,6 +23,7 @@
 #include "lib/stdc/stdio.h"
 #include "lib/stdc/string.h"
 #include "lib/stdc/stdlib.h"
+#include "kernel/kernel/entry.h"
 #include "kernel/kernel/mm/phys.h"
 #include "kernel/vendor/rpi/platform.h"
 #include "kernel/vendor/rpi/peripheral.h"
@@ -86,7 +87,7 @@ void phys_init( void ) {
   phys_bitmap_length = memory_amount / PHYS_PAGE_SIZE / ( sizeof( phys_bitmap_length ) * 8 );
 
   // allocate bitmap manually via placement address after kernel
-  phys_bitmap = ( uintptr_t* ) placement_address;
+  phys_bitmap = ( uintptr_t* )PHYS_2_VIRT( placement_address );
   placement_address += phys_bitmap_length;
 
   // overwrite physical bitmap completely with zero

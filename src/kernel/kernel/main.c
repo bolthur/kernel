@@ -31,6 +31,7 @@
 #include "kernel/kernel/debug.h"
 #include "kernel/kernel/serial.h"
 #include "kernel/kernel/mm/phys.h"
+#include "kernel/kernel/mm/virt.h"
 
 /**
  * @brief Kernel main function
@@ -75,6 +76,7 @@ void kernel_main() {
   phys_init();
   // Setup virtual memory management
   printf( " virtual, " );
+  virt_init();
   // Setup heap
   printf( " heap ] " );
   printf( "done!\r\n" );

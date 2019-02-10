@@ -22,14 +22,19 @@
 #define __KERNEL_ARCH_ARM_MM_VIRT__
 
 #if defined( ELF32 )
-  // Defines for possible supported paging
-  #define VMSA_SUPPORT_V6_PAGING 0x2
-  #define VMSA_SUPPORT_V7_PAGING 0x3
-  #define VSMA_SUPPORT_V7_PAGING_PXN 0x4
-  #define VSMA_SUPPORT_V7_PAGING_LPAE 0x5
-
-  #define VSMA_SHORT_PAGE_TABLE_SIZE 0x400
+  // page directory sizes
+  #define VSMA_SHORT_PAGE_DIRECTORY_ALIGNMENT 0x4000
   #define VSMA_SHORT_PAGE_DIRECTORY_SIZE 0x2000
+
+  #define VSMA_SHORT_PAGE_TABLE_ALIGNMENT 0x400
+  #define VSMA_SHORT_PAGE_TABLE_SIZE 0x400
 #endif
+
+typedef enum {
+  VMSA_SUPPORT_V6_PAGING = 0x2,
+  VMSA_SUPPORT_V7_PAGING = 0x3,
+  VSMA_SUPPORT_V7_PAGING_PXN = 0x4,
+  VSMA_SUPPORT_V7_PAGING_LPAE = 0x5,
+} virt_type_t;
 
 #endif
