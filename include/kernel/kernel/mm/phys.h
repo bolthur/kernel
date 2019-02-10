@@ -32,6 +32,8 @@
 
 #define PHYS_ALL_PAGES_OF_INDEX_USED 0xFFFFFFFF
 
+#define PHYS_PAGE_SIZE 0x1000
+
 extern uintptr_t *phys_bitmap;
 extern size_t phys_bitmap_length;
 extern uintptr_t placement_address;

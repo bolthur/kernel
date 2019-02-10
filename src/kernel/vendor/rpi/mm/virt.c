@@ -22,8 +22,8 @@
 
 #include "lib/stdc/stdio.h"
 #include "kernel/kernel/panic.h"
+#include "kernel/kernel/mm/phys.h"
 #include "kernel/kernel/mm/virt.h"
-#include "kernel/arch/arm/mm/phys.h"
 #include "kernel/arch/arm/mm/virt.h"
 
 /**

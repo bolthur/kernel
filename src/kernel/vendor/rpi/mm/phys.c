@@ -24,7 +24,6 @@
 #include "lib/stdc/string.h"
 #include "lib/stdc/stdlib.h"
 #include "kernel/kernel/mm/phys.h"
-#include "kernel/arch/arm/mm/phys.h"
 #include "kernel/vendor/rpi/platform.h"
 #include "kernel/vendor/rpi/peripheral.h"
 #include "kernel/vendor/rpi/mailbox/property.h"
@@ -42,6 +41,10 @@ void phys_init( void ) {
   // max memory
   uint32_t memory_amount = 0;
 
+  // video core memory
+  uint32_t vc_memory_start = 0;
+  uint32_t vc_memory_end = 0;
+
   // get arm memory
   rpi_mailbox_property_t *buffer = mailbox_property_get( TAG_GET_ARM_MEMORY );
 
@@ -54,7 +57,7 @@ void phys_init( void ) {
   #endif
 
   // increase amount by arm amount
-  memory_amount = ( uint32_t )buffer->data.buffer_32[ 1 ];
+  memory_amount = buffer->data.buffer_u32[ 1 ];
 
   // debug output
   #if defined( PRINT_MM_PHYS )
@@ -72,8 +75,12 @@ void phys_init( void ) {
     printf ( "buffer->tag: 0x%08x\r\n", buffer->tag );
   #endif
 
+  // populate video core start and end
+  vc_memory_start = buffer->data.buffer_u32[ 0 ];
+  vc_memory_end = vc_memory_start + buffer->data.buffer_u32[ 1 ];
+
   // increase amount by video core amount
-  memory_amount += ( uint32_t )buffer->data.buffer_32[ 1 ];
+  memory_amount += buffer->data.buffer_u32[ 1 ];
 
   // determine amount of pages for bitmap
   phys_bitmap_length = memory_amount / PHYS_PAGE_SIZE / ( sizeof( phys_bitmap_length ) * 8 );
@@ -114,6 +121,19 @@ void phys_init( void ) {
   // set start and end for peripherals
   start = peripheral_base_get();
   end = peripheral_end_get() + 1;
+
+  // map from start to end addresses as used
+  while( start < end ) {
+    // mark used
+    phys_mark_page_used( ( void* )start );
+
+    // get next page
+    start += PHYS_PAGE_SIZE;
+  }
+
+  // set start and end video core
+  start = vc_memory_start;
+  end = vc_memory_end + 1;
 
   // map from start to end addresses as used
   while( start < end ) {

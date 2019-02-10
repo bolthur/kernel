@@ -165,8 +165,11 @@ typedef struct {
   int32_t byte_length;
   union {
     int32_t value_32;
-    uint8_t buffer_8[ 256 ];
+    uint32_t value_u32;
+    int8_t buffer_8[ 256 ];
+    uint8_t buffer_u8[ 256 ];
     int32_t buffer_32[ 64 ];
+    uint32_t buffer_u32[ 64 ];
   } data;
 } rpi_mailbox_property_t;
 
