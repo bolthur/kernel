@@ -33,6 +33,7 @@
 // internal variables
 static bool initialized = false;
 static volatile uint8_t* address;
+static uint32_t size;
 static int32_t width = 0, height = 0, bpp = 0;
 static int32_t x = 0, y = 0, pitch = 0;
 
@@ -72,11 +73,49 @@ void framebuffer_init( void ) {
   }
 
   if ( ( mp = mailbox_property_get( TAG_ALLOCATE_BUFFER ) ) ) {
-    address = ( uint8_t* )mp->data.buffer_32[ 0 ];
-    printf( "Framebuffer address: 0x%08p\r\n", address );
+    framebuffer_base_set( mp->data.buffer_u32[ 0 ] );
+    framebuffer_size_set( mp->data.buffer_u32[ 1 ] );
+
+    printf( "Framebuffer address: 0x%08p\tsize: 0x%08p\r\n", address, size );
   }
 
   initialized = true;
+}
+
+/**
+ * @brief Method to get framebuffer base address
+ *
+ * @return uintptr_t
+ */
+uintptr_t framebuffer_base_get( void ) {
+  return ( uintptr_t )address;
+}
+
+/**
+ * @brief Method to set framebuffer base address
+ *
+ * @param a
+ */
+void framebuffer_base_set( uintptr_t a ) {
+  address = ( uint8_t* )a;
+}
+
+/**
+ * @brief Method to get framebuffer size
+ *
+ * @return uint32_t
+ */
+uint32_t framebuffer_size_get( void ) {
+  return size;
+}
+
+/**
+ * @brief Method to set framebuffer size
+ *
+ * @param s
+ */
+void framebuffer_size_set( uint32_t s ) {
+  size = s;
 }
 
 /**

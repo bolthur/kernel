@@ -58,8 +58,8 @@ void __attribute__( ( section( ".text.boot" ) ) ) boot_virt_map_address( void* v
   uint32_t v = ( uint32_t )virtual & 0xFFF00000;
   uint32_t p = ( uint32_t )physical & 0xFFF00000;
 
-  // map address ( full read and write permissions = ( 3 << 10 ), privileged only = 0x10, 1MB section entry = 0x2 )
-  boot_page_table[ v >> 20 ] = p | ( 3 << 10 ) | 0x10 | 0x2;
+  // map address ( full read and write permissions = ( 3 << 10 ), privileged only = 0x10 )
+  boot_page_table[ v >> 20 ] = p | ( 3 << 10 ) | 0x10 | TTBR_L1_IS_SECTION;
 }
 
 /**

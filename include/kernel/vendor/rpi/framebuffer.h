@@ -30,4 +30,9 @@
 void framebuffer_init( void );
 void framebuffer_putc( uint8_t );
 
+uintptr_t framebuffer_base_get( void );
+void framebuffer_base_set( uintptr_t );
+uint32_t framebuffer_size_get( void );
+void framebuffer_size_set( uint32_t );
+
 #endif

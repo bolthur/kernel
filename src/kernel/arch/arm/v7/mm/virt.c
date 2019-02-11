@@ -21,6 +21,7 @@
 #include <stddef.h>
 
 #include "lib/stdc/stdio.h"
+#include "lib/stdc/string.h"
 #include "kernel/kernel/panic.h"
 #include "kernel/kernel/mm/phys.h"
 #include "kernel/kernel/mm/virt.h"
@@ -35,9 +36,37 @@
  * @param flags flags used for mapping
  */
 void virt_map_address( void* page_directory, void* vaddr, void* paddr, uint32_t flags ) {
-  // mark parameter as unused
-  ( void )page_directory;
-  ( void )vaddr;
-  ( void )paddr;
-  ( void )flags;
+  // get page table
+  uint32_t table_idx = ( ( uint32_t )vaddr >> 20 ) << 2;
+  uint32_t page_idx = ( ( uint32_t )vaddr >> 12 ) & 0xFF;
+
+  uint32_t *dir = ( uint32_t* )page_directory;
+  uint32_t *tbl;
+
+  #if defined( PRINT_MM_VIRT )
+    printf( "vaddr: 0x%08x\tpaddr: 0x%08x\r\n", vaddr, paddr );
+    printf( "table_idx: %i\tpage_idx: %i\r\n", table_idx, page_idx );
+  #endif
+
+  // map page if set
+  if ( 0 == dir[ table_idx ] ) {
+    // allocate physical page
+    uint32_t* ptable = ( uint32_t* )phys_find_free_page( VSMA_SHORT_PAGE_TABLE_SIZE );
+
+    #if defined( PRINT_MM_VIRT )
+      printf( "ptable: 0x%08x\r\n", ptable );
+    #endif
+
+    // initialize with zero
+    memset( ptable, 0, VSMA_SHORT_PAGE_TABLE_SIZE );
+
+    // map page directory
+    dir[ table_idx ] = ( ( uint32_t )ptable & 0xFFFFFC00 ) | TTBR_L1_IS_PAGETABLE;
+  }
+
+  // get table
+  tbl = ( uint32_t* )dir[ table_idx ];
+
+  // map page into table
+  tbl[ page_idx ] = ( ( uint32_t )paddr & 0xFFFFF000 ) | 0xFF0 | flags | TTBR_L1_IS_SECTION;
 }
