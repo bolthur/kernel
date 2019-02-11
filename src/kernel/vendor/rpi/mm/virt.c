@@ -31,32 +31,36 @@
 #include "kernel/vendor/rpi/peripheral.h"
 #include "kernel/vendor/rpi/framebuffer.h"
 
-extern uint32_t ttbr0[ 2048 ];
-extern uint32_t ttbr1[ 2048 ];
+extern uint32_t ttbr[ 4096 ];
 
 /**
  * @brief Initialize virtual memory management
  */
 void virt_init( void ) {
   return;
-
   // Debug output
   #if defined( PRINT_MM_VIRT )
-    printf( "ttbr1: 0x%08x\r\n", ttbr1 );
+    printf( "ttbr: 0x%08x\r\n", ttbr );
   #endif
+
+  // temorary move framebuffer and peripherals
+  #if defined( TTY_FRAMEBUFFER )
+    peripheral_base_set( PHYS_2_VIRT( framebuffer_base_get() ) );
+  #endif
+  peripheral_base_set( PHYS_2_VIRT( peripheral_base_get() ) );
+
+  // unmap lower ttbr
+  for ( int32_t i = 0; i < ( MAX_PHYSICAL_MEMORY >> 20 ); i++ ) {
+    (( uint32_t* )PHYS_2_VIRT( ttbr ))[ i ] = 0;
+  }
+
+  virt_map_address( ( void* )ttbr, ( void* )0xC0008000, ( void* )0x8000, 0 );
 
   // Initialize with zero
-  memset( ttbr1, 0, VSMA_SHORT_PAGE_DIRECTORY_SIZE );
-
-  virt_map_address( ( void* )ttbr1, ( void* )0xC0001000, ( void* )0x1000, 0 );
-  printf( "ttbr0[ 1 ]: 0x%08x\tttbr1[ 1 ]: 0x%08x\r\n", ttbr0[ 1 ], ttbr1[ 1024 ] );
-
-  // Debug output
-  #if defined( PRINT_MM_VIRT )
-    printf( "ttbr0: 0x%08x\r\nttbr1: 0x%08x\r\n", ttbr0, ttbr1 );
-  #endif
+  // memset( ( void* )PHYS_2_VIRT( ttbr ), 0, sizeof(ttbr) * 2047 );
 
   // map kernel
+  printf( "map kernel\r\n" );
   for (
     uintptr_t loop = 0;
     loop < placement_address + 1;
@@ -65,7 +69,7 @@ void virt_init( void ) {
     // map
     // FIXME: Add correct flags
     virt_map_address(
-      ( void* )ttbr1,
+      ( void* )ttbr,
       ( void* )PHYS_2_VIRT( loop ),
       ( void* )loop,
       0
@@ -73,15 +77,16 @@ void virt_init( void ) {
   }
 
   // map peripherals
+  printf( "map peripherals\r\n" );
   for (
-    uintptr_t loop = peripheral_base_get(), start = 0xF2000000;
-    loop < peripheral_end_get() + 1;
+    uintptr_t loop = VIRT_2_PHYS( peripheral_base_get() ), start = 0xF2000000;
+    loop < VIRT_2_PHYS( peripheral_end_get() ) + 1;
     loop += PHYS_PAGE_SIZE, start += PHYS_PAGE_SIZE
   ) {
     // FIXME: Map with no cache!
     // FIXME: Add correct flags
     virt_map_address(
-      ( void* )ttbr1,
+      ( void* )ttbr,
       ( void* )start,
       ( void* )loop,
       0
@@ -115,13 +120,7 @@ void virt_init( void ) {
     }
   #endif
 
-  // remove ttbr0
-  // __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 0" : : "r" ( 0 ) : "memory" );
-
-  // Copy page table address to cp15
-  #if defined( PRINT_MM_VIRT )
-    printf( "ttbr0: 0x%08x\r\nttbr1: 0x%08x\r\n", ttbr0, ttbr1 );
-  #endif
+  printf( "asdf\r\n" );
 
   // invalidate cache
   __asm__ __volatile__( "mcr p15, 0, %0, c7, c7, 0" : : "r" ( 0 ) : "memory" );
@@ -130,14 +129,18 @@ void virt_init( void ) {
 
   // data barrier
   barrier_data_mem();
+  printf( "ttbr0 reset!" );
 
   #if defined( TTY_FRAMEBUFFER )
     // update framebuffer base
     framebuffer_base_set( 0xF3000000 );
   #endif
 
+  printf( "1" );
+
   // update peripheral base
   peripheral_base_set( 0xF2000000 );
+  printf( "2" );
 
   printf( "0x%08x\r\n", *( ( uint32_t* )( framebuffer_base_get() + FRAMEBUFFER_SCREEN_WIDTH / 2 ) ) );
   printf( "0x%08x\r\n", *( ( uint32_t* )( 0xF2000000 ) ) );

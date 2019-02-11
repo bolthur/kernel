@@ -69,6 +69,11 @@ void kernel_main() {
   platform_init();
   printf( "done!\r\n" );
 
+  // Setup irq
+  printf( "[bolthur/kernel -> irq] initialize ... " );
+  irq_init();
+  printf( "done!\r\n" );
+
   // Setup memory management
   printf( "[bolthur/kernel -> memory] initialize ... [" );
   // Setup physical memory management
@@ -84,11 +89,6 @@ void kernel_main() {
   // Setup event system
   printf( "[bolthur/kernel -> event] initialize ... " );
   event_init();
-  printf( "done!\r\n" );
-
-  // Setup irq
-  printf( "[bolthur/kernel -> irq] initialize ... " );
-  irq_init();
   printf( "done!\r\n" );
 
   // Setup debug if enabled

@@ -23,6 +23,7 @@
 #include "lib/stdc/stdio.h"
 #include "lib/stdc/string.h"
 #include "kernel/kernel/panic.h"
+#include "kernel/kernel/entry.h"
 #include "kernel/kernel/mm/phys.h"
 #include "kernel/kernel/mm/virt.h"
 #include "kernel/arch/arm/mm/virt.h"
@@ -38,38 +39,48 @@
 void virt_map_address( void* page_directory, void* vaddr, void* paddr, uint32_t flags ) {
   uint32_t vaddr_off = ( uint32_t )vaddr;
 
-  // subtract offset
-  if ( TTBR1_FIRST_ADDRESS <= vaddr_off ) {
-    vaddr_off = vaddr_off - TTBR1_FIRST_ADDRESS;
-  }
-
   // determine page table and page index
   uint32_t table_idx = ( ( uint32_t )vaddr_off >> 20 );
-  uint32_t page_idx = ( ( uint32_t )vaddr_off >> 12 ) & 0xFF;
-  uint32_t *dir = ( uint32_t* )page_directory;
+  uint32_t page_idx = ( ( ( uint32_t )vaddr_off >> 12 ) & 0xFF );
+  uint32_t *dir = ( uint32_t* )PHYS_2_VIRT( page_directory );
 
-  if ( 0 == dir[ table_idx ] ) {
+  printf( "table_idx: %i\tpage_idx: %i\t0x%08x\r\n", table_idx, page_idx, dir[ table_idx ] );
+
+  if ( 0 == ( uint32_t* )( dir[ table_idx ] & 0xFFFFFC00 ) ) {
     // allocate physical page
-    uint32_t* ptable = ( uint32_t* )phys_find_free_page( VSMA_SHORT_PAGE_TABLE_SIZE );
+    uint32_t* ptable = ( uint32_t* )PHYS_2_VIRT(
+      phys_find_free_page( VSMA_SHORT_PAGE_TABLE_SIZE )
+    );
+
+    PANIC( "fooo!" );
+
+    // set table address
+    dir[ table_idx ] = ( ( ( uint32_t )VIRT_2_PHYS( ptable ) ) & 0xFFFFFC00 ) | ( 3 << 10 ) | TTBR_L1_IS_PAGETABLE;
+
+    // map address
+    virt_map_address(
+      page_directory,
+      ( void* )ptable,
+      ( void* )VIRT_2_PHYS( ptable ),
+      0
+    );
 
     #if defined( PRINT_MM_VIRT )
-      //printf( "ptable: 0x%08x\ttbl: 0x%08x\r\n", ptable, dir[ table_idx ] );
+      printf( "ptable: 0x%08x\ttbl: 0x%08x\r\n", ptable, dir[ table_idx ] );
     #endif
 
     // initialize with zero
     memset( ptable, 0, VSMA_SHORT_PAGE_TABLE_SIZE );
-
-    // set table address
-    dir[ table_idx ] = ( ( uint32_t )ptable & 0xFFFFFC00 ) | TTBR_L1_IS_PAGETABLE;
   }
 
-  uint32_t *tbl = ( uint32_t* )( ( uint32_t )dir[ table_idx ] & 0xFFFFFC00 );
+  printf( "0x%08x\r\n", ( uint32_t )dir[ table_idx ] & 0xFFFFFC00 );
+  uint32_t *tbl = ( uint32_t* )PHYS_2_VIRT( ( uint32_t )dir[ table_idx ] & 0xFFFFFC00 );
 
   ( void )flags;
-  // tbl[ page_idx ] = ( ( uint32_t ) paddr & 0xFFFFF000 ) | ( 0xFF0 ) | flags | TTBR_L1_IS_SECTION;
+  // tbl[ page_idx ] = ( ( uint32_t ) paddr & 0xFFFFF000 ) | flags | TTBR_L1_IS_SECTION;
   tbl[ page_idx ] = ( ( uint32_t ) paddr & 0xFFFFF000 ) | 0x10;
 
-  //printf( "%i\t%i\t0x%08x\r\n", table_idx, page_idx, tbl );
+  printf( "%i\t%i\t0x%08x\r\n", table_idx, page_idx, tbl );
 
   // calculate address of table
   /*uint32_t *tbl = ( uint32_t* )( ( uint32_t )page_directory | table_idx );
