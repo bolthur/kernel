@@ -23,11 +23,17 @@
 
 #include "kernel/arch/arm/mm/virt.h"
 
-static uint32_t
+uint32_t
   __attribute__(
     ( section( ".boot.data" ),
     aligned( VSMA_SHORT_PAGE_DIRECTORY_ALIGNMENT ) )
-  ) boot_page_table[ 4096 ];
+  ) ttbr0[ 2048 ];
+
+uint32_t
+  __attribute__(
+    ( section( ".boot.data" ),
+    aligned( VSMA_SHORT_PAGE_DIRECTORY_ALIGNMENT ) )
+  ) ttbr1[ 2048 ];
 
 /**
  * @brief Method to check for virtual memory is supported
@@ -58,8 +64,14 @@ void __attribute__( ( section( ".text.boot" ) ) ) boot_virt_map_address( void* v
   uint32_t v = ( uint32_t )virtual & 0xFFF00000;
   uint32_t p = ( uint32_t )physical & 0xFFF00000;
 
+  uint32_t *chosen_ttbr = ttbr0;
+
   // map address ( full read and write permissions = ( 3 << 10 ), privileged only = 0x10 )
-  boot_page_table[ v >> 20 ] = p | ( 3 << 10 ) | 0x10 | TTBR_L1_IS_SECTION;
+  if ( TTBR1_FIRST_ADDRESS < ( uint32_t ) virtual ) {
+    chosen_ttbr = ttbr1;
+  }
+
+  chosen_ttbr[ v >> 20 ] = p | ( 3 << 10 ) | 0x10 | TTBR_L1_IS_SECTION;
 }
 
 /**
@@ -68,16 +80,29 @@ void __attribute__( ( section( ".text.boot" ) ) ) boot_virt_map_address( void* v
 void __attribute__( ( section( ".text.boot" ) ) ) boot_virt_enable( void ) {
   uint32_t reg;
 
+  // invalidate cache
+  __asm__ __volatile__( "mcr p15, 0, %0, c7, c7, 0" : : "r" ( 0 ) : "memory" );
+  // invalidate tlb
+  __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) : "memory" );
+
   // Copy page table address to cp15
-  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 0" : : "r" ( boot_page_table ) : "memory" );
+  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 0" : : "r" ( ttbr0 ) : "memory" );
+  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 1" : : "r" ( ttbr1 ) : "memory" );
+
   // Set the access control to all-supervisor
   __asm__ __volatile__( "mcr p15, 0, %0, c3, c0, 0" : : "r" ( ~0 ) );
+
+  // set ttbcr.n bit
+  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( 1 ) : "cc" );
 
   // Get content from control register
   __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
 
   // enable mmu by setting bit 0
   reg |= 0x1;
+  /*reg |= 0x1000;*/
+
+  // reg |= ( 0x00000001|0x1000|0x0002 );
 
   // push back value with mmu enabled bit set
   __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
