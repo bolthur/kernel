@@ -10,6 +10,8 @@ noinst_LIBRARIES = libkernel.a
 libkernel_a_SOURCES = \
   mm/heap.c \
   mm/phys.c \
+  mm/placement.c \
+  mm/virt.c \
   debug.c \
   event.c \
   irq.c \

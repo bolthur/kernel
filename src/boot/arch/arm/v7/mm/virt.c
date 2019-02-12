@@ -42,9 +42,9 @@ bool __attribute__( ( section( ".text.boot" ) ) ) boot_virt_available( void ) {
   reg &= 0xF;
 
   return (
-    VMSA_SUPPORT_V7_PAGING == reg
-    || VSMA_SUPPORT_V7_PAGING_PXN == reg
-    || VSMA_SUPPORT_V7_PAGING_LPAE == reg );
+    ID_MMFR0_VSMA_SUPPORT_V7_PAGING_REMAP_ACCESS == reg
+    || ID_MMFR0_VSMA_SUPPORT_V7_PAGING_PXN == reg
+    || ID_MMFR0_VSMA_SUPPORT_V7_PAGING_LPAE == reg );
 }
 
 /**

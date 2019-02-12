@@ -23,6 +23,6 @@
 #if ! defined( __KERNEL_MM_HEAP__ )
 #define __KERNEL_MM_HEAP__
 
-extern bool heap_initialized;
+bool heap_initialized_get( void );
 
 #endif

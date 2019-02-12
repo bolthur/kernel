@@ -36,7 +36,7 @@ extern uint32_t ttbr[ 4096 ];
 /**
  * @brief Initialize virtual memory management
  */
-void virt_init( void ) {
+void virt_vendor_init( void ) {
   return;
   // Debug output
   #if defined( PRINT_MM_VIRT )
@@ -64,7 +64,7 @@ void virt_init( void ) {
   for (
     uintptr_t loop = 0;
     loop < placement_address + 1;
-    loop += PHYS_PAGE_SIZE
+    loop += PAGE_SIZE
   ) {
     // map
     // FIXME: Add correct flags
@@ -81,7 +81,7 @@ void virt_init( void ) {
   for (
     uintptr_t loop = VIRT_2_PHYS( peripheral_base_get() ), start = 0xF2000000;
     loop < VIRT_2_PHYS( peripheral_end_get() ) + 1;
-    loop += PHYS_PAGE_SIZE, start += PHYS_PAGE_SIZE
+    loop += PAGE_SIZE, start += PAGE_SIZE
   ) {
     // FIXME: Map with no cache!
     // FIXME: Add correct flags
@@ -99,15 +99,15 @@ void virt_init( void ) {
     uintptr_t framebuffer_end = framebuffer_base_get() + framebuffer_size_get();
 
     // round up as usual
-    if ( 0 < framebuffer_end % PHYS_PAGE_SIZE ) {
-      framebuffer_end -= PHYS_PAGE_SIZE - ( framebuffer_end % PHYS_PAGE_SIZE );
+    if ( 0 < framebuffer_end % PAGE_SIZE ) {
+      framebuffer_end -= PAGE_SIZE - ( framebuffer_end % PAGE_SIZE );
     }
 
     // loop and map
     for (
       uintptr_t loop = framebuffer_base_get(), start = 0xF3000000;
       loop < framebuffer_end + 1;
-      loop += PHYS_PAGE_SIZE, start += PHYS_PAGE_SIZE
+      loop += PAGE_SIZE, start += PAGE_SIZE
     ) {
       // FIXME: map with no cache!
       // FIXME: Add correct flags

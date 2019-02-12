@@ -18,14 +18,34 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 
-#if ! defined( __KERNEL_MM_VIRT__ )
-#define __KERNEL_MM_VIRT__
+#include "kernel/kernel/mm/virt.h"
 
-void virt_init( void );
-void virt_vendor_init( void );
-void virt_map_address( void*, void*, void*, uint32_t );
-bool virt_initialized_get( void );
+/**
+ * @brief static initialized flag
+ */
+static bool virt_initialized = false;
 
-#endif
+/**
+ * @brief Generic initialization of virtual memory manager
+ */
+void virt_init( void ) {
+  // initialize vendor init
+  virt_vendor_init();
+  return;
+
+  // set static
+  virt_initialized = true;
+}
+
+/**
+ * @brief Get initialized flag
+ *
+ * @return true virtual memory management has been set up
+ * @return false virtual memory management has been not yet set up
+ */
+bool virt_initialized_get( void ) {
+  return virt_initialized;
+}

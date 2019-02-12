@@ -19,13 +19,13 @@
  */
 
 #include <stdint.h>
+#include <stddef.h>
 
-#if ! defined( __KERNEL_MM_VIRT__ )
-#define __KERNEL_MM_VIRT__
+#if ! defined( __KERNEL_MM_PLACEMENT__ )
+#define __KERNEL_MM_PLACEMENT__
 
-void virt_init( void );
-void virt_vendor_init( void );
-void virt_map_address( void*, void*, void*, uint32_t );
-bool virt_initialized_get( void );
+#define PLACEMENT_NO_ALIGN 0
+
+void* placement_alloc( size_t size, size_t alignment );
 
 #endif

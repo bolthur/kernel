@@ -32,7 +32,7 @@
 /**
  * @brief Initialize physical memory manager for rpi
  */
-void phys_init( void ) {
+void phys_vendor_init( void ) {
   // Get arm memory
   mailbox_property_init();
   mailbox_property_add_tag( TAG_GET_ARM_MEMORY );
@@ -84,7 +84,7 @@ void phys_init( void ) {
   memory_amount += buffer->data.buffer_u32[ 1 ];
 
   // determine amount of pages for bitmap
-  phys_bitmap_length = memory_amount / PHYS_PAGE_SIZE / ( sizeof( phys_bitmap_length ) * 8 );
+  phys_bitmap_length = memory_amount / PAGE_SIZE / ( sizeof( phys_bitmap_length ) * 8 );
 
   // allocate bitmap manually via placement address after kernel
   phys_bitmap = ( uintptr_t* )PHYS_2_VIRT( placement_address );
@@ -103,25 +103,9 @@ void phys_init( void ) {
     printf( "content of placement address: 0x%08x\r\n", placement_address );
   #endif
 
-  // determine start and end for kernel mapping
-  uintptr_t start = 0;
-  uintptr_t end = placement_address + placement_address % PHYS_PAGE_SIZE;
-
-  // adjust placement address
-  placement_address = end;
-
-  // map from start to end addresses as used
-  while( start < end ) {
-    // mark used
-    phys_mark_page_used( ( void* )start );
-
-    // get next page
-    start += PHYS_PAGE_SIZE;
-  }
-
   // set start and end for peripherals
-  start = peripheral_base_get();
-  end = peripheral_end_get() + 1;
+  uintptr_t start = peripheral_base_get();
+  uintptr_t end = peripheral_end_get() + 1;
 
   // map from start to end addresses as used
   while( start < end ) {
@@ -129,7 +113,7 @@ void phys_init( void ) {
     phys_mark_page_used( ( void* )start );
 
     // get next page
-    start += PHYS_PAGE_SIZE;
+    start += PAGE_SIZE;
   }
 
   // set start and end video core
@@ -142,6 +126,6 @@ void phys_init( void ) {
     phys_mark_page_used( ( void* )start );
 
     // get next page
-    start += PHYS_PAGE_SIZE;
+    start += PAGE_SIZE;
   }
 }

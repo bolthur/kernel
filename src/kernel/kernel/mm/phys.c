@@ -42,13 +42,18 @@ size_t phys_bitmap_length;
 uintptr_t placement_address = VIRT_2_PHYS( &__kernel_end );
 
 /**
+ * @brief static initialized flag
+ */
+static bool phys_initialized = false;
+
+/**
  * @brief Mark physical page as used on arm
  *
  * @param address address to mark as free
  */
 void phys_mark_page_used( void* address ) {
   // get frame, index and offset
-  size_t frame = ( uintptr_t )address / PHYS_PAGE_SIZE;
+  size_t frame = ( uintptr_t )address / PAGE_SIZE;
   size_t index = PAGE_INDEX( frame );
   size_t offset = PAGE_OFFSET( frame );
 
@@ -71,7 +76,7 @@ void phys_mark_page_used( void* address ) {
  */
 void phys_mark_page_free( void*  address ) {
   // get frame, index and offset
-  size_t frame = ( uintptr_t )address / PHYS_PAGE_SIZE;
+  size_t frame = ( uintptr_t )address / PAGE_SIZE;
   size_t index = PAGE_INDEX( frame );
   size_t offset = PAGE_OFFSET( frame );
 
@@ -105,10 +110,38 @@ void phys_free_page_range( void* address, size_t amount ) {
   // loop until amount and mark as free
   for (
     size_t idx = 0;
-    idx < amount / PHYS_PAGE_SIZE;
-    idx++, address = ( void* )( ( uintptr_t ) address + PHYS_PAGE_SIZE )
+    idx < amount / PAGE_SIZE;
+    idx++, address = ( void* )( ( uintptr_t ) address + PAGE_SIZE )
   ) {
     phys_mark_page_free( address );
+  }
+}
+
+/**
+ * @brief Method to free phys page range
+ *
+ * @param address start address
+ * @param amount amount of memory
+ */
+void phys_use_page_range( void* address, size_t amount ) {
+  // debug output
+  #if defined( PRINT_MM_PHYS )
+    printf(
+      "[ phys use page range ]: address: 0x%08x, amount: %i\r\n",
+      address, amount
+    );
+  #endif
+
+  // round down address to page start
+  address = ( void* )( ( uintptr_t )address - ( uintptr_t )address % PAGE_SIZE );
+
+  // loop until amount and mark as free
+  for (
+    size_t idx = 0;
+    idx < amount / PAGE_SIZE;
+    idx++, address = ( void* )( ( uintptr_t ) address + PAGE_SIZE )
+  ) {
+    phys_mark_page_used( address );
   }
 }
 
@@ -128,12 +161,12 @@ void* phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
   #endif
 
   // round up to full page
-  if ( 0 < memory_amount % PHYS_PAGE_SIZE ) {
-    memory_amount += PHYS_PAGE_SIZE - ( memory_amount % PHYS_PAGE_SIZE );
+  if ( 0 < memory_amount % PAGE_SIZE ) {
+    memory_amount += PAGE_SIZE - ( memory_amount % PAGE_SIZE );
   }
 
   // determine amount of pages
-  size_t page_amount = memory_amount / PHYS_PAGE_SIZE;
+  size_t page_amount = memory_amount / PAGE_SIZE;
   size_t found_amount = 0;
 
   // found address range
@@ -160,7 +193,7 @@ void* phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
       // set address if found is 0
       if ( 0 == found_amount ) {
         address = ( void* )(
-          idx * PHYS_PAGE_SIZE * PAGE_PER_ENTRY + offset * PHYS_PAGE_SIZE
+          idx * PAGE_SIZE * PAGE_PER_ENTRY + offset * PAGE_SIZE
         );
 
         // check for alignment
@@ -194,7 +227,7 @@ void* phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
   for (
     size_t idx = 0;
     idx < found_amount;
-    idx++, tmp = ( void* )( ( uintptr_t ) tmp + PHYS_PAGE_SIZE )
+    idx++, tmp = ( void* )( ( uintptr_t ) tmp + PAGE_SIZE )
   ) {
     phys_mark_page_used( tmp );
   }
@@ -210,7 +243,7 @@ void* phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
  * @return void*
  */
 void* phys_find_free_page( size_t alignment ) {
-  return phys_find_free_page_range( PHYS_PAGE_SIZE, alignment );
+  return phys_find_free_page_range( PAGE_SIZE, alignment );
 }
 
 /**
@@ -219,5 +252,42 @@ void* phys_find_free_page( size_t alignment ) {
  * @param address address to free
  */
 void phys_free_page( void* address ) {
-  phys_free_page_range( address, PHYS_PAGE_SIZE );
+  phys_free_page_range( address, PAGE_SIZE );
+}
+
+/**
+ * @brief Generic initialization of physical memory manager
+ */
+void phys_init( void ) {
+  // execute vendor initialization
+  phys_vendor_init();
+
+  // determine start and end for kernel mapping
+  uintptr_t start = 0;
+  uintptr_t end = placement_address + placement_address % PAGE_SIZE;
+
+  // adjust placement address
+  placement_address = end;
+
+  // map from start to end addresses as used
+  while( start < end ) {
+    // mark used
+    phys_mark_page_used( ( void* )start );
+
+    // get next page
+    start += PAGE_SIZE;
+  }
+
+  // mark initialized
+  phys_initialized = true;
+}
+
+/**
+ * @brief Get initialized flag
+ *
+ * @return true physical memory management has been set up
+ * @return false physical memory management has been not yet set up
+ */
+bool phys_initialized_get( void ) {
+  return phys_initialized;
 }

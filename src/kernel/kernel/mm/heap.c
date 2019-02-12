@@ -27,4 +27,14 @@
  *
  * @todo check and revise
  */
-bool heap_initialized = false;
+static bool heap_initialized = false;
+
+/**
+ * @brief Getter for heap initialized flag
+ *
+ * @return true
+ * @return false
+ */
+bool heap_initialized_get( void ) {
+  return heap_initialized;
+}
