@@ -34,7 +34,6 @@ static bool virt_initialized = false;
 void virt_init( void ) {
   // initialize vendor init
   virt_vendor_init();
-  return;
 
   // set static
   virt_initialized = true;
