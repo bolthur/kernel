@@ -32,7 +32,7 @@
  * @todo size down property tag buffer
  * @todo create own type for property tag buffer
  */
-static int32_t ptb[ 8192 ] __attribute__( ( aligned( 16 ) ) );
+static int32_t ptb[ 8192 ] ALIGNED( 16 );
 
 /**
  * @brief property tag buffer index

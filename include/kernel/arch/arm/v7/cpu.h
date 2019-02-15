@@ -59,7 +59,7 @@ typedef union {
     uint32_t pc; /* r15 = program counter */
     uint32_t spsr;
   } reg;
-} __attribute__((__packed__)) cpu_register_context_t;
+} PACKED cpu_register_context_t;
 
 void cpu_invalidate_cache( void );
 void cpu_disable_cache( void );

@@ -18,18 +18,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "boot/boot/bss.h"
-#include "kernel/kernel/entry.h"
+#if ! defined( __KERNEL_EVENT__ )
+#define __KERNEL_EVENT__
 
 /**
- * @brief Method to clear bss during initial boot
+ * @brief initrd fallback address used within qemu
  */
-void __attribute__( ( section( ".text.boot" ) ) ) boot_bss_clear( void ) {
-  bss_type_t *start = ( bss_type_t* )VIRT_2_PHYS( &__bss_start );
-  bss_type_t *end = ( bss_type_t* )VIRT_2_PHYS( &__bss_end );
+#define INITRD_FALLBACK_ADDRESS 0x8000000
 
-  // loop through bss end and overwrite with zero
-  while( start < end ) {
-    *start++ = 0;
-  }
-}
+#endif

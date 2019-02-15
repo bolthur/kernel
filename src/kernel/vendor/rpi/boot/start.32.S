@@ -18,28 +18,36 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
+#define ASSEMBLER_FILE 1
 
-#if ! defined( __BOOT_KERNEL_BSS__ )
-#define __BOOT_KERNEL_BSS__
+.section .text.boot
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
+.global boot_start
+boot_start:
+  // setup temporary stack
+  ldr r4, =boot_start
+  mov sp, r4
 
-// type definition for bss fields
-#if defined( ELF32 )
-  typedef uint32_t bss_type_t;
-#elif defined( ELF64 )
-  typedef uint64_t bss_type_t;
-#endif
+  // save boot parameter data
+  push { r0 - r2 }
 
-// bss fields from linker script
-bss_type_t __bss_start;
-bss_type_t __bss_end;
+  // arch related boot start code
+  bl boot_arch_start
 
-#if defined( __cplusplus )
-}
-#endif
+  // clear bss section
+  bl boot_bss_clear
 
-#endif
+  // prepare by vendor
+  bl boot_vendor_prepare
+
+  // restore boot parameter data
+  pop { r0 - r2 }
+
+  // load higher half start
+  ldr r3, =start
+
+  // set stack
+  mov sp, r3
+
+  // set program counter
+  mov pc, r3

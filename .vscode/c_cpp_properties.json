@@ -33,7 +33,8 @@
       ],
       "forcedInclude": [
         "${workspaceFolder}/build/config.h"
-      ]
+      ],
+      "cStandard": "c11"
     },
     {
       "name": "Linux",
@@ -51,7 +52,8 @@
       },
       "forcedInclude": [
         "${workspaceFolder}/build/config.h"
-      ]
+      ],
+      "cStandard": "c11"
     },
     {
       "name": "Win32",
@@ -72,7 +74,8 @@
       },
       "forcedInclude": [
         "${workspaceFolder}/build/config.h"
-      ]
+      ],
+      "cStandard": "c11"
     }
   ],
   "version": 4

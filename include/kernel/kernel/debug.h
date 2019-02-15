@@ -32,7 +32,7 @@ typedef struct {
   uint32_t line;
   uint64_t addr;
   const char *msg;
-} __attribute__((__packed__)) bug_entry_t;
+} PACKED bug_entry_t;
 
 void debug_init( void );
 void debug_breakpoint( void );

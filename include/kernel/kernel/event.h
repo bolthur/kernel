@@ -41,7 +41,7 @@ typedef void ( *event_callback_t )( void *reg );
 typedef struct {
   char event[ MAX_EVENT_NAME ];
   event_callback_t map[ MAX_EVENT_CALLBACK ];
-} __attribute__((__packed__)) event_callback_map_t;
+} PACKED event_callback_map_t;
 
 void event_bind_handler( event_type_t, event_callback_t );
 void event_init();

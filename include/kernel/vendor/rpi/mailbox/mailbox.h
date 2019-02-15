@@ -47,6 +47,8 @@ typedef enum {
   MAILBOX0_TAGS_VC_TO_ARM,
 } mailbox0_channel_t;
 
+/// FIXME: Check whether volatile is necessary or not
+/// FIXME: Check whether packing is necessary or not
 typedef struct {
   volatile uint32_t read;
   volatile uint32_t reserved_1[ ( ( 0x90 - 0x80 ) / 4 ) - 1 ];
@@ -55,7 +57,7 @@ typedef struct {
   volatile uint32_t status;
   volatile uint32_t configuration;
   volatile uint32_t write;
-} __attribute__((__packed__)) mailbox_t;
+} PACKED mailbox_t;
 
 uint32_t mailbox_read( mailbox0_channel_t );
 void mailbox_write( mailbox0_channel_t, uint32_t );

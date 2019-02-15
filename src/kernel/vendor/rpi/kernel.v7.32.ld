@@ -25,10 +25,6 @@ ENTRY( boot_start )
 
 GROUP(
   ../../../font/libfont.a
-  ../../../boot/arch/arm/v7/libv7.a
-  ../../../boot/arch/arm/libarm.a
-  ../../../boot/boot/libboot.a
-  ../../../boot/vendor/rpi/librpi.a
   ../../../kernel/arch/arm/v7/libv7.a
   ../../../kernel/arch/arm/libarm.a
   ../../../kernel/kernel/libkernel.a

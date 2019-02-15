@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* Keyword for alignment. */
+#undef ALIGNED
+
 /* bolthur/kernel target architecture */
 #undef ARCH
 
@@ -45,6 +48,9 @@
 /* Define contains max physical memory per vendor */
 #undef MAX_PHYSICAL_MEMORY
 
+/* Disable optimization */
+#undef OPT_NONE
+
 /* Name of package */
 #undef PACKAGE
 
@@ -68,6 +74,9 @@
 
 /* Keyword for packing structures. */
 #undef PACKED
+
+/* Keyword for packing and aligning structures. */
+#undef PACKED_ALIGNED
 
 /* Define to 1 for raspberry pi 2 B platform */
 #undef PLATFORM_RPI2_B

@@ -18,21 +18,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __BOOT_KERNEL_MM_VIRT__ )
-#define __BOOT_KERNEL_MM_VIRT__
+#include "kernel/kernel/boot/bss.h"
+#include "kernel/kernel/entry.h"
 
-#include <stdbool.h>
+/**
+ * @brief Method to clear bss during initial boot
+ */
+void SECTION( ".text.boot" ) boot_bss_clear( void ) {
+  bss_type_t *start = ( bss_type_t* )VIRT_2_PHYS( &__bss_start );
+  bss_type_t *end = ( bss_type_t* )VIRT_2_PHYS( &__bss_end );
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
-void boot_virt_map_address( void*, void* );
-void boot_virt_enable( void );
-bool boot_virt_available( void );
-
-#if defined( __cplusplus )
+  // loop through bss end and overwrite with zero
+  while( start < end ) {
+    *start++ = 0;
+  }
 }
-#endif
-
-#endif

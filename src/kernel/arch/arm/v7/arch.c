@@ -22,5 +22,5 @@
 
 void arch_sub_init( void ) {
   // enable caching
-  cpu_enable_cache();
+  // cpu_enable_cache();
 }

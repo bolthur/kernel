@@ -40,6 +40,7 @@
     * [x] Map up to max possible memory via vendor define
     * [x] Cleanup initial mapping within `boot`
   * [ ] Ensure that kernel with and without higher half define works as expected within emulator and on real device
+    * [ ] Get kernel to work again with real hardware, currently breaking during mmu setup
   * [ ] Check and revise stack setup for interrupt vector table regarding possible higher half
   * [ ] Add normal setup of mmu during startup of kernel splitted to folders listed below
     * [ ] `kernel/arch/{architecture}/mm`
@@ -51,7 +52,11 @@
   * [ ] Consider and enable CPU related caches for performance
   * [ ] Consider KPTI ( kernel page table isolation ) for virtual memory management
   * [ ] Check and use recursive page mapping
-* [ ] Add gpl font as hex array and replace current used one
+* [ ] Platform init
+  * [ ] Add check for initrd loaded after kernel and move placement address for placement allocator beyond initrd
+* [ ] Font
+  * [ ] Add gpl font as hex array and replace current used one
+  * [ ] Compile framebuffer and font into kernel only when framebuffer is enabled!
 * [ ] Ensure that kernel works still on real hardware also
 * [ ] AVL tree
   * [ ] Add generic avl tree library

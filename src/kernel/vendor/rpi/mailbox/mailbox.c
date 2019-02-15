@@ -31,6 +31,7 @@
  * @return uint32_t value from mailbox function or 0xffffffff
  *
  * @todo check and revise
+ * @todo remove volatile if not needed
  */
 uint32_t mailbox_read( mailbox0_channel_t channel ) {
   // data and count
@@ -38,7 +39,7 @@ uint32_t mailbox_read( mailbox0_channel_t channel ) {
   uint32_t count = 0;
 
   // get mailbox address
-  volatile mailbox_t *mbox0 = ( mailbox_t* )( peripheral_base_get() + MAILBOX_OFFSET );
+  volatile mailbox_t *mbox0 = ( volatile mailbox_t* )( peripheral_base_get() + MAILBOX_OFFSET );
 
   while( ( value & 0xF ) != channel ) {
     // wait while mailbox is empty
@@ -73,6 +74,7 @@ uint32_t mailbox_read( mailbox0_channel_t channel ) {
  * @param data Data to write depending on function
  *
  * @todo check and revise
+ * @todo remove volatile if not needed
  */
 void mailbox_write( mailbox0_channel_t channel, uint32_t data ) {
   // add channel number at the lower 4 bit
@@ -80,7 +82,7 @@ void mailbox_write( mailbox0_channel_t channel, uint32_t data ) {
   data |= channel;
 
   // get mailbox address
-  volatile mailbox_t *mbox0 = ( mailbox_t* )( peripheral_base_get() + MAILBOX_OFFSET );
+  volatile mailbox_t *mbox0 = ( volatile mailbox_t* )( peripheral_base_get() + MAILBOX_OFFSET );
 
   // wait for mailbox to be ready
   while( ( mbox0->status & MAILBOX_FULL ) != 0 ) {

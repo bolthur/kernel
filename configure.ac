@@ -112,22 +112,16 @@ AC_C_VOLATILE
 AC_C_RESTRICT
 
 # Some compiler dependent features.
-AC_DEFINE_UNQUOTED([PACKED], [__attribute__((packed))], [Keyword for packing structures.])
-AC_DEFINE_UNQUOTED([SECTION(x)], [__attribute__((section(x)))], [Keyword for section placement.])
+AC_DEFINE_UNQUOTED([PACKED], [__attribute__((__packed__))], [Keyword for packing structures.])
+AC_DEFINE_UNQUOTED([SECTION(x)], [__attribute__((__section__(x)))], [Keyword for section placement.])
+AC_DEFINE_UNQUOTED([ALIGNED(x)], [__attribute__((__aligned__(x)))], [Keyword for alignment.])
+AC_DEFINE_UNQUOTED([PACKED_ALIGNED(x)], [__attribute__((__packed__, __aligned__(x)))], [Keyword for packing and aligning structures.])
+AC_DEFINE_UNQUOTED([OPT_NONE], [__attribute__((__optimize__( "O0" )))], [Disable optimization])
 
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
   src/font/Makefile
-  src/boot/Makefile
-  src/boot/boot/Makefile
-  src/boot/arch/Makefile
-  src/boot/arch/arm/Makefile
-  src/boot/arch/arm/v6/Makefile
-  src/boot/arch/arm/v7/Makefile
-  src/boot/arch/arm/v8/Makefile
-  src/boot/vendor/Makefile
-  src/boot/vendor/rpi/Makefile
   src/kernel/Makefile
   src/kernel/kernel/Makefile
   src/kernel/arch/Makefile

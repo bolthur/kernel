@@ -1,2 +1,0 @@
-
-SUBDIRS = boot arch vendor

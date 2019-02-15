@@ -18,27 +18,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
+#include <stdint.h>
 
-#include "lib/stdc/stdio.h"
-#include "lib/stdc/string.h"
-#include "kernel/kernel/panic.h"
-#include "kernel/kernel/entry.h"
-#include "kernel/kernel/mm/phys.h"
-#include "kernel/kernel/mm/virt.h"
-#include "kernel/arch/arm/mm/virt.h"
+#if ! defined( __KERNEL_BOOT_BSS__ )
+#define __KERNEL_BOOT_BSS__
 
-/**
- * @brief
- *
- * @param context pointer to page context
- * @param vaddr pointer to virtual address
- * @param paddr pointer to physical address
- * @param flags flags used for mapping
- */
-void virt_map_address( void* context, void* vaddr, void* paddr, uint32_t flags ) {
-  ( void )context;
-  ( void )vaddr;
-  ( void )paddr;
-  ( void )flags;
+#if defined( __cplusplus )
+extern "C" {
+#endif
+
+// type definition for bss fields
+#if defined( ELF32 )
+  typedef uint32_t bss_type_t;
+#elif defined( ELF64 )
+  typedef uint64_t bss_type_t;
+#endif
+
+// bss fields from linker script
+bss_type_t __bss_start;
+bss_type_t __bss_end;
+
+#if defined( __cplusplus )
 }
+#endif
+
+#endif

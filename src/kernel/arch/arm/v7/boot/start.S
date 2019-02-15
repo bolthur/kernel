@@ -20,14 +20,12 @@
 
 #define ASSEMBLER_FILE 1
 
-#define CPSR_MODE_SUPERVISOR 0x13
-#define CPSR_IRQ_INHIBIT 0x80
-#define CPSR_FIQ_INHIBIT 0x40
-
-.section .text.boot
+#include "kernel/arch/arm/v7/cpu.h"
 
 .arch_extension sec
 .arch_extension virt
+
+.section .text.boot
 
 .global boot_arch_start
 boot_arch_start:

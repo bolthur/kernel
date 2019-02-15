@@ -30,6 +30,7 @@ extern "C" {
 void barrier_data_mem( void );
 void barrier_data_sync( void );
 void barrier_flush_cache( void );
+void barrier_instruction_sync( void );
 
 #if defined( __cplusplus )
 }

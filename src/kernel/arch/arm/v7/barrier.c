@@ -21,13 +21,20 @@
 /**
  * @brief Data memory barrier invalidation
  */
-void __attribute__(( optimize( "O0" ) )) barrier_data_mem( void ) {
+void OPT_NONE barrier_data_mem( void ) {
   __asm__ __volatile__ ( "dmb" ::: "memory" );
 }
 
 /**
  * @brief Data sync barrier invalidation
  */
-void __attribute__(( optimize( "O0" ) )) barrier_data_sync( void ) {
+void OPT_NONE barrier_data_sync( void ) {
   __asm__ __volatile__ ( "dsb" ::: "memory" );
+}
+
+/**
+ * @brief Instruction synchronization invalidation
+ */
+void OPT_NONE barrier_instruction_sync( void ) {
+  __asm__ __volatile__( "isb" ::: "memory" );
 }

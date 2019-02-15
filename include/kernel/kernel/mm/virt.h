@@ -19,13 +19,22 @@
  */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #if ! defined( __KERNEL_MM_VIRT__ )
 #define __KERNEL_MM_VIRT__
 
+typedef enum {
+  CONTEXT_TYPE_KERNEL = 1,
+  CONTEXT_TYPE_USER,
+} virt_context_type_t;
+
 void virt_init( void );
 void virt_vendor_init( void );
-void virt_map_address( void*, void*, void*, uint32_t );
 bool virt_initialized_get( void );
+
+void* virt_create_context( virt_context_type_t );
+void* virt_create_table( void );
+void virt_map_address( void*, void*, void*, uint32_t );
 
 #endif
