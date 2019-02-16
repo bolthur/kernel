@@ -29,9 +29,6 @@
  *
  * @param channel Function to read via mailbox
  * @return uint32_t value from mailbox function or 0xffffffff
- *
- * @todo check and revise
- * @todo remove volatile if not needed
  */
 uint32_t mailbox_read( mailbox0_channel_t channel ) {
   // data and count
@@ -44,23 +41,14 @@ uint32_t mailbox_read( mailbox0_channel_t channel ) {
   while( ( value & 0xF ) != channel ) {
     // wait while mailbox is empty
     while( mbox0->status & MAILBOX_EMPTY ) {
-      // flush cache
-      barrier_flush_cache();
-
       // break if it takes to much time
       if ( count++ > ( 1 << 25 ) ) {
         return 0xffffffff;
       }
     }
 
-    // data memory barrier clear
-    barrier_data_mem();
-
     // extract read value
     value = mbox0->read;
-
-    // data memory barrier clear
-    barrier_data_mem();
   }
 
   // return value without channel information
@@ -72,9 +60,6 @@ uint32_t mailbox_read( mailbox0_channel_t channel ) {
  *
  * @param channel Function to use via mailbox
  * @param data Data to write depending on function
- *
- * @todo check and revise
- * @todo remove volatile if not needed
  */
 void mailbox_write( mailbox0_channel_t channel, uint32_t data ) {
   // add channel number at the lower 4 bit
@@ -85,13 +70,7 @@ void mailbox_write( mailbox0_channel_t channel, uint32_t data ) {
   volatile mailbox_t *mbox0 = ( volatile mailbox_t* )( peripheral_base_get() + MAILBOX_OFFSET );
 
   // wait for mailbox to be ready
-  while( ( mbox0->status & MAILBOX_FULL ) != 0 ) {
-    // flush cache
-    barrier_flush_cache();
-  }
-
-  // data memory barrier clear
-  barrier_data_mem();
+  while( ( mbox0->status & MAILBOX_FULL ) != 0 ) { }
 
   // write data to mailbox
   mbox0->write = data;

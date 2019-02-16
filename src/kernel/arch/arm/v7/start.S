@@ -23,9 +23,6 @@
 #include "kernel/arch/arm/v7/cpu.h"
 #include "kernel/arch/arm/stack.h"
 
-.arch_extension sec
-.arch_extension virt
-
 .section .text
 
 .global arch_start

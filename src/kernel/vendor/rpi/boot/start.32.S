@@ -20,19 +20,55 @@
 
 #define ASSEMBLER_FILE 1
 
+// only when extension define is set
+#if defined( ARM_VIRTUALIZATION_EXTENSION )
+  .arch_extension virt
+#endif
+
 .section .text.boot
 
 .global boot_start
 boot_start:
   // setup temporary stack
-  ldr r4, =boot_start
-  mov sp, r4
+  ldr r3, =boot_start
+  mov sp, r3
+
+  // halt other cpus if smp enabled is set
+  #if defined( SMP_ENABLED )
+    // Return current CPU ID (0..3)
+    cpsid if // Disable IRQ & FIQ
+    mrc p15, 0, r3, c0, c0, 5 // r3 = Multiprocessor Affinity Register (MPIDR)
+    ands r3, #3 // r0 = CPU ID (Bits 0..1)
+    bne 1f // If (CPU ID != 0) Branch To Infinite Loop (Core ID 1..3)
+    beq 2f // If equal branch to normal startup
+    1:
+      wfe
+      b 1
+    2:
+  #endif
+
+  #if defined( ARM_VIRTUALIZATION_EXTENSION )
+    // check for hypervisor mode and switch back to supervisor mode for rpi2 and rpi3
+    mrs r3, cpsr
+    eor r3, r3, #0x1A
+    tst r3, #0x1F
+    bic r3, r3, #0x1F // clear mode bits
+    orr r3, r3, #( 0x13 | 0x40 | 0x80 ) // mask IRQ/FIQ bits and set SVC mode
+    bne 3f // branch if not HYP mode
+    orr r3, r3, #0x100 // mask Abort bit
+    adr lr, 4f
+    msr spsr_cxsf, r3
+    msr ELR_hyp, lr
+    eret
+    3: msr cpsr_c, r3
+    4:
+      // setup temporary stack again
+      ldr r4, =boot_start
+      mov sp, r4
+  #endif
 
   // save boot parameter data
   push { r0 - r2 }
-
-  // arch related boot start code
-  bl boot_arch_start
 
   // clear bss section
   bl boot_bss_clear

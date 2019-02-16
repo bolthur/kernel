@@ -51,8 +51,8 @@ SECTIONS {
     *( .text.boot )
   }
 
-  .boot.data : ALIGN( 4K ) {
-    *( .boot.data )
+  .data.boot : ALIGN( 4K ) {
+    *( .data.boot )
   }
 
   . += KERNEL_OFFSET;

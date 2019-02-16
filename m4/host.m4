@@ -89,6 +89,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([FPU_ENABLED], [1])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([MAX_PHYSICAL_MEMORY], [0x40000000])
+      AC_DEFINE([ARM_VIRTUALIZATION_EXTENSION], [1], [Indicator for virtualization extension of ARM])
       ;;
     rpi_zero_w)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
@@ -117,6 +118,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([FPU_ENABLED], [1])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([MAX_PHYSICAL_MEMORY], [0x40000000])
+      AC_DEFINE([ARM_VIRTUALIZATION_EXTENSION], [1], [Indicator for virtualization extension of ARM])
       ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])

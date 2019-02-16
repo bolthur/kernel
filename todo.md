@@ -26,9 +26,10 @@
   * [x] Get irq with cpu mode switch and register dump working
   * [x] Merge irq functions with isrs functions where possible
   * [ ] Check and revise if necessary
-* [x] FPU
+* [ ] FPU
   * [x] Check and revise fpu code
   * [x] Check and remove direct floating point usage within kernel except saving of floating point registers
+  * [ ] Check why current implementation is not working on real hardware
 * [x] Move includes into extra folder with subfolders
 * [x] Move source into extra folder with subfolders
 * [ ] Memory management
@@ -39,8 +40,8 @@
     * [x] Create first version of higher half mapping within `boot`
     * [x] Map up to max possible memory via vendor define
     * [x] Cleanup initial mapping within `boot`
-  * [ ] Ensure that kernel with and without higher half define works as expected within emulator and on real device
-    * [ ] Get kernel to work again with real hardware, currently breaking during mmu setup
+  * [x] Ensure that kernel with and without higher half define works as expected within emulator and on real device
+    * [x] Get kernel to work again with real hardware, currently breaking during mmu setup
   * [ ] Check and revise stack setup for interrupt vector table regarding possible higher half
   * [ ] Add normal setup of mmu during startup of kernel splitted to folders listed below
     * [ ] `kernel/arch/{architecture}/mm`

@@ -26,7 +26,7 @@
 /**
  * @brief Initial kernel context
  */
-sd_context_total_t SECTION( ".boot.data" ) initial_kernel_context;
+sd_context_total_t SECTION( ".data.boot" ) initial_kernel_context;
 
 /**
  * @brief Method to prepare section during initial boot
@@ -115,10 +115,29 @@ void SECTION( ".text.boot" ) boot_vendor_prepare( void ) {
     initial_kernel_context.section[ x ].frame = ( 0x40000000 >> 20 ) & 0xFFF;
   #endif
 
-  // invalidate cache
-  __asm__ __volatile__( "mcr p15, 0, %0, c7, c7, 0" : : "r" ( 0 ) : "memory" );
+  // FIXME: RPI2 specific, might need rework for RPI zero and RPI3
   // invalidate tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) : "memory" );
+  // invalidate caches
+  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 1" : : "r" ( 0 ) : "memory" );
+  // wait for finished
+  __asm__ __volatile__( "dsb" ::: "memory" );
+
+
+  // Get content from control register
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
+  // disable cache and icache
+  reg = ( uint32_t )( ( int32_t )reg & ~( 1 << 2 ) ); // unset cache
+  reg = ( uint32_t )( ( int32_t )reg & ~( 1 << 12 ) ); // unset icache
+  // write changes
+  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
+
+  // Get content from auxiliary control register
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
+  // set smp bit
+  reg |= ( 1 << 6 );
+  // write changes
+  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
 
   // Copy page table address to cp15
   __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 0" : : "r" ( initial_kernel_context.list ) : "memory" );

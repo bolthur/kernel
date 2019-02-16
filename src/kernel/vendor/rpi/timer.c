@@ -108,6 +108,7 @@ void timer_clear( uint8_t num, void *_cpu ) {
 
   // write cntcval
   // necessary to prevent nested interrupts
+  // FIXME: way to much for real hardware. Need to find a way around that
   __asm__ __volatile__ ("mcr p15, 0, %0, c14, c3, 0" :: "r"( 50000000 ) );
 }
 
@@ -146,7 +147,9 @@ void timer_init( void ) {
   __asm__ __volatile__ ( "mcr p15, 0, %0, c14, c3, 1" :: "r"( cntv_ctl ) ); // write CNTV_CTL
 
   irq_register_handler( ( 1 << 3 ), timer_clear, false );
-  event_bind_handler( EVENT_TIMER, timer_clear2 );
+
+  // following call is producing data abort on real hardware
+  // event_bind_handler( EVENT_TIMER, timer_clear2 );
 
   /*// testing timer with led
   mmio_write( GPFSEL4, mmio_read( GPFSEL4 ) | 21 );
