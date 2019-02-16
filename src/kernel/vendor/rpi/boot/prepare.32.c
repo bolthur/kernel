@@ -35,6 +35,7 @@ sd_context_total_t SECTION( ".data.boot" ) initial_kernel_context;
  */
 void SECTION( ".text.boot" ) boot_vendor_prepare( void ) {
   uint32_t x, y, reg;
+  sd_ttbcr_t ttbcr;
 
   // get paging support from mmfr0
   __asm__ __volatile__( "mrc p15, 0, %0, c0, c1, 4" : "=r" ( reg ) : : "cc" );
@@ -61,96 +62,44 @@ void SECTION( ".text.boot" ) boot_vendor_prepare( void ) {
     // offset
     y = x + ( KERNEL_OFFSET >> 20 );
 
-    initial_kernel_context.section[ x ].privileged_execute_never = 0;
     initial_kernel_context.section[ x ].type = 1;
-    initial_kernel_context.section[ x ].bufferable = 0;
-    initial_kernel_context.section[ x ].cacheable = 0;
     initial_kernel_context.section[ x ].execute_never = 1;
-    initial_kernel_context.section[ x ].domain = 0;
-    initial_kernel_context.section[ x ].imp = 0;
     initial_kernel_context.section[ x ].access_permision_0 = 0x3;
-    initial_kernel_context.section[ x ].tex = 0;
-    initial_kernel_context.section[ x ].access_permision_1 = 0;
-    initial_kernel_context.section[ x ].shareable = 0;
-    initial_kernel_context.section[ x ].not_global = 0;
-    initial_kernel_context.section[ x ].sbz = 0;
-    initial_kernel_context.section[ x ].non_secure = 0;
     initial_kernel_context.section[ x ].frame = ( ( x << 20 ) >> 20 ) & 0xFFF;
 
     if ( 0 < KERNEL_OFFSET ) {
-      initial_kernel_context.section[ y ].privileged_execute_never = 0;
       initial_kernel_context.section[ y ].type = 1;
-      initial_kernel_context.section[ y ].bufferable = 0;
-      initial_kernel_context.section[ y ].cacheable = 0;
       initial_kernel_context.section[ y ].execute_never = 1;
-      initial_kernel_context.section[ y ].domain = 0;
-      initial_kernel_context.section[ y ].imp = 0;
       initial_kernel_context.section[ y ].access_permision_0 = 0x3;
-      initial_kernel_context.section[ y ].tex = 0;
-      initial_kernel_context.section[ y ].access_permision_1 = 0;
-      initial_kernel_context.section[ y ].shareable = 0;
-      initial_kernel_context.section[ y ].not_global = 0;
-      initial_kernel_context.section[ y ].sbz = 0;
-      initial_kernel_context.section[ y ].non_secure = 0;
       initial_kernel_context.section[ y ].frame = ( ( x << 20 ) >> 20 ) & 0xFFF;
     }
   }
 
   #if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI3_B )
     x = ( 0x40000000 >> 20 );
-    initial_kernel_context.section[ x ].privileged_execute_never = 0;
     initial_kernel_context.section[ x ].type = 1;
-    initial_kernel_context.section[ x ].bufferable = 0;
-    initial_kernel_context.section[ x ].cacheable = 0;
     initial_kernel_context.section[ x ].execute_never = 1;
-    initial_kernel_context.section[ x ].domain = 0;
-    initial_kernel_context.section[ x ].imp = 0;
     initial_kernel_context.section[ x ].access_permision_0 = 0x3;
-    initial_kernel_context.section[ x ].tex = 0;
-    initial_kernel_context.section[ x ].access_permision_1 = 0;
-    initial_kernel_context.section[ x ].shareable = 0;
-    initial_kernel_context.section[ x ].not_global = 0;
-    initial_kernel_context.section[ x ].sbz = 0;
-    initial_kernel_context.section[ x ].non_secure = 0;
     initial_kernel_context.section[ x ].frame = ( 0x40000000 >> 20 ) & 0xFFF;
   #endif
 
-  // FIXME: RPI2 specific, might need rework for RPI zero and RPI3
-  // invalidate tlb
-  __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) : "memory" );
-  // invalidate caches
-  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 1" : : "r" ( 0 ) : "memory" );
-  // wait for finished
-  __asm__ __volatile__( "dsb" ::: "memory" );
-
-
-  // Get content from control register
-  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
-  // disable cache and icache
-  reg = ( uint32_t )( ( int32_t )reg & ~( 1 << 2 ) ); // unset cache
-  reg = ( uint32_t )( ( int32_t )reg & ~( 1 << 12 ) ); // unset icache
-  // write changes
-  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
-
-  // Get content from auxiliary control register
-  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
-  // set smp bit
-  reg |= ( 1 << 6 );
-  // write changes
-  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
-
   // Copy page table address to cp15
   __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 0" : : "r" ( initial_kernel_context.list ) : "memory" );
-
   // Set the access control to all-supervisor
   __asm__ __volatile__( "mcr p15, 0, %0, c3, c0, 0" : : "r" ( ~0 ) );
 
+  // read ttbcr register
+  __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
+  // set split to use ttbr0 only
+  ttbcr.data.ttbr_split = 0;
+  ttbcr.data.large_physical_address_extension = 0;
+  // push back value with ttbcr
+  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
+
   // Get content from control register
   __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
-
   // enable mmu by setting bit 0
   reg |= 0x1;
-
   // push back value with mmu enabled bit set
   __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
 }

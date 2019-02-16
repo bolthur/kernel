@@ -122,18 +122,21 @@
     #define SD_TLB_APX1_AFULL_RO_DEPRECATED ( MAC_SD_APX1_USER_RO << 4 )
     #define SD_TLB_APX1_FULL_RO ( MAC_SD_APX1_ << 4 )
 
-    typedef struct {
-      uint32_t ttbr_split : 3;
-      uint32_t sbz_0 : 1;
-      union {
-        uint32_t sbz_1 : 2;
-        struct {
-          uint32_t walk_0 : 1;
-          uint32_t walk_1 : 1;
-        } table;
-      } disable;
-      uint32_t sbz_2 : 26;
-      uint32_t large_physical_address_extension : 1;
+    typedef union {
+      uint32_t raw;
+      struct {
+        uint32_t ttbr_split : 3;
+        uint32_t sbz_0 : 1;
+        union {
+          uint32_t sbz_1 : 2;
+          struct {
+            uint32_t walk_0 : 1;
+            uint32_t walk_1 : 1;
+          } table;
+        } disable;
+        uint32_t sbz_2 : 26;
+        uint32_t large_physical_address_extension : 1;
+      } data;
     } PACKED sd_ttbcr_t;
 
     typedef struct {
