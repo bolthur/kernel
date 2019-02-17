@@ -30,6 +30,15 @@
 /* Indicator for virtualization extension of ARM */
 #undef ARM_VIRTUALIZATION_EXTENSION
 
+/* Define to 1 for BCM2708 chip */
+#undef BCM2708
+
+/* Define to 1 for BCM2709 chip */
+#undef BCM2709
+
+/* Define to 1 for BCM2710 chip */
+#undef BCM2710
+
 /* Set to 1 to enable debug mode */
 #undef DEBUG
 
@@ -80,15 +89,6 @@
 
 /* Keyword for packing and aligning structures. */
 #undef PACKED_ALIGNED
-
-/* Define to 1 for raspberry pi 2 B platform */
-#undef PLATFORM_RPI2_B
-
-/* Define to 1 for raspberry pi 3 B platform */
-#undef PLATFORM_RPI3_B
-
-/* Define to 1 for raspberry pi zero platform */
-#undef PLATFORM_RPI_ZERO_W
 
 /* Define to 1 to enable output of mailbox */
 #undef PRINT_MAILBOX

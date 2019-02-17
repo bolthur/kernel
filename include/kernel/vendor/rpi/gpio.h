@@ -23,7 +23,7 @@
 
 #include "peripheral.h"
 
-#if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI3_B )
+#if defined( BCM2709 ) || defined( BCM2710 )
   #define CORE0_TIMER_IRQCNTL 0x40000040
   #define CORE0_IRQ_SOURCE 0x40000060
 #endif

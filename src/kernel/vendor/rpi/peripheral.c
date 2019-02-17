@@ -23,7 +23,7 @@
 #include "kernel/vendor/rpi/peripheral.h"
 
 // initial setup of peripheral base
-#if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI2_B_REV2 ) || defined( PLATFORM_RPI3_B ) || defined( PLATFORM_RPI3_B_PLUS )
+#if defined( BCM2709 ) || defined( BCM2710 )
   uintptr_t peripheral_base = 0x3F000000;
   uintptr_t peripheral_size = 0xFFFFFF;
 #else

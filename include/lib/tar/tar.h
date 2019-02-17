@@ -21,14 +21,6 @@
 #if ! defined( __LIBTAR_TAR__ )
 #define __LIBTAR_TAR__
 
-#include <stdint.h>
-
-/**
- * @see https://wiki.osdev.org/Tar
- * @see https://en.wikipedia.org/wiki/Tar_(computing)
- * @see https://www.gnu.org/software/tar/manual/html_node/Standard.html
- */
-
 #define TAR_MAGIC "ustar"
 #define TAR_MAGIC_LENGTH 6
 
@@ -57,8 +49,6 @@ typedef struct {
   char device_minor_number[ 8 ];
   char filename_prefix[ 155 ];
 } tar_header_t;
-
-uint32_t tar_get_size( const uint8_t* );
 
 #if defined( __cplusplus )
 }

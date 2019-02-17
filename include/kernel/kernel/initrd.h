@@ -21,9 +21,4 @@
 #if ! defined( __KERNEL_EVENT__ )
 #define __KERNEL_EVENT__
 
-/**
- * @brief initrd fallback address used within qemu
- */
-#define INITRD_FALLBACK_ADDRESS 0x8000000
-
 #endif

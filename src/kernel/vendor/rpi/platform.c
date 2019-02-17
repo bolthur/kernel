@@ -21,8 +21,11 @@
 #include <stdint.h>
 
 #include "lib/stdc/stdio.h"
+#include "lib/tar/tar.h"
+
 #include "kernel/kernel/initrd.h"
 #include "kernel/kernel/panic.h"
+#include "kernel/kernel/mm/phys.h"
 #include "kernel/vendor/rpi/platform.h"
 #include "kernel/vendor/rpi/mailbox/property.h"
 
@@ -35,6 +38,7 @@ platform_loader_parameter_t loader_parameter_data;
  * @brief Platform depending initialization routine
  */
 void platform_init( void ) {
+  // FIXME: Move placement address beyond initrd
   // FIXME: Load firmware revision, board model, board revision, board serial from mailbox
   /*mailbox_property_init();
   mailbox_property_add_tag( TAG_GET_BOARD_MODEL );

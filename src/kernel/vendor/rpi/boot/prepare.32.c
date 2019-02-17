@@ -75,7 +75,7 @@ void SECTION( ".text.boot" ) boot_vendor_prepare( void ) {
     }
   }
 
-  #if defined( PLATFORM_RPI2_B ) || defined( PLATFORM_RPI3_B )
+  #if defined( BCM2709 ) || defined( BCM2710 )
     x = ( 0x40000000 >> 20 );
     initial_kernel_context.section[ x ].type = 1;
     initial_kernel_context.section[ x ].execute_never = 1;

@@ -80,7 +80,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       output_img=kernel7.img
       output_sym=kernel7.sym
       AC_DEFINE([ELF32])
-      AC_DEFINE([PLATFORM_RPI2_B], [1], [Define to 1 for raspberry pi 2 B platform])
+      AC_DEFINE([BCM2709], [1], [Define to 1 for BCM2709 chip])
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets])
       AC_DEFINE([VENDOR_RPI], [1])
@@ -95,7 +95,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
       subarch_subdir=v6
       vendor_subdir=rpi
-      AC_DEFINE([PLATFORM_RPI_ZERO_W], [1], [Define to 1 for raspberry pi zero platform])
+      AC_DEFINE([BCM2708], [1], [Define to 1 for BCM2708 chip])
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets])
       AC_DEFINE([VENDOR_RPI], [1])
@@ -109,7 +109,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       vendor_subdir=rpi
       output_img=kernel8.img
       output_sym=kernel8.sym
-      AC_DEFINE([PLATFORM_RPI3_B], [1], [Define to 1 for raspberry pi 3 B platform])
+      AC_DEFINE([BCM2710], [1], [Define to 1 for BCM2710 chip])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([VENDOR_RPI], [1])
@@ -139,7 +139,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       vendor_subdir=rpi
       output_img=kernel8.img
       output_sym=kernel8.sym
-      AC_DEFINE([PLATFORM_RPI3_B], [1], [Define to 1 for raspberry pi 3 B platform])
+      AC_DEFINE([BCM2710], [1])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([VENDOR_RPI], [1])
