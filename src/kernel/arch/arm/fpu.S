@@ -20,40 +20,20 @@
 
 /**
  * @brief Method to enable floating point unit when fpu enabled flag is set
- *
- * @todo Check and revise, outcommented code doesn't work on real hardware
  */
 .global fpu_enable
 fpu_enable:
   #if defined( FPU_ENABLED )
-    /*// get content from NSACR for enable of fpu for secure and non secure mode
-    mrc p15, 0, r0, c1, c1, 2
-
-    // set bit 10 and 11 for access to cp10 and cp11 within secure and non secure
-    orr r0, r0, #( 0x3 << 10 )
-
-    // write back changes to NSACR
-    mcr p15, 0, r0, c1, c1, 2
-
     // read co processor access controll register into r0
     mrc p15, 0, r0, c1, c0, 2
-
-    // full access for everyone
+    // enable full access for everyone
     orr r0, r0, #( 0xf << 20 )
-
     // write back changes
     mcr p15, 0, r0, c1, c0, 2
 
     // Set FPEXC.EN bit to enable fpu
     mov r0, #( 0x1 << 30 )
-
     // Transfer change to vfp system register
-    vmsr fpexc, r0*/
-    mrc p15, 0, r0, c1, c0, 2
-    orr r0, r0, #0x300000            /* single precision */
-    orr r0, r0, #0xC00000            /* double precision */
-    mcr p15, 0, r0, c1, c0, 2
-    mov r0, #0x40000000
-    fmxr fpexc,r0
+    vmsr fpexc, r0
   #endif
   bx lr

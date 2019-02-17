@@ -27,9 +27,6 @@
 /* Define to 1 for ARMv8 targets */
 #undef ARCH_ARM_V8
 
-/* Indicator for virtualization extension of ARM */
-#undef ARM_VIRTUALIZATION_EXTENSION
-
 /* Define to 1 for BCM2708 chip */
 #undef BCM2708
 

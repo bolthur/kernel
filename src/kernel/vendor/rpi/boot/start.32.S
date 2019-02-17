@@ -21,7 +21,7 @@
 #define ASSEMBLER_FILE 1
 
 // only when extension define is set
-#if defined( ARM_VIRTUALIZATION_EXTENSION )
+#if defined( BCM2709 ) || defined( BCM2710 )
   .arch_extension virt
 #endif
 
@@ -47,7 +47,7 @@ boot_start:
     2:
   #endif
 
-  #if defined( ARM_VIRTUALIZATION_EXTENSION )
+  #if defined( BCM2709 ) || defined( BCM2710 )
     // check for hypervisor mode and switch back to supervisor mode for rpi2 and rpi3
     mrs r3, cpsr
     eor r3, r3, #0x1A
@@ -65,6 +65,18 @@ boot_start:
       // setup temporary stack again
       ldr r4, =boot_start
       mov sp, r4
+  #endif
+
+  #if defined( BCM2709 )
+    // Set SMP bit within auxiliary control register
+    mrc p15, 0, r3, c1, c0, 1
+    orr r3, r3, #( 1 << 6 )
+    mcr p15, 0, r3, c1, c0, 1
+  #elif defined( BCM2710 )
+    // Set SMP bit within extended control register
+    mrrc p15, 1, r3, r1, c15
+    orr r3, r3, #( 1 << 6 )
+    mcrr p15, 1, r3, r1, c15
   #endif
 
   // save boot parameter data
