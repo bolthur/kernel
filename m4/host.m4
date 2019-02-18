@@ -16,6 +16,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([PRINT_MM_PHYS], [Define to 1 to enable output of physical memory manager])
   AH_TEMPLATE([PRINT_MM_VIRT], [Define to 1 to enable output of virtual memory manager])
   AH_TEMPLATE([PRINT_MM_HEAP], [Define to 1 to enable output of kernel heap])
+  AH_TEMPLATE([PRINT_MM_PLACEMENT], [Define to 1 to enable output of kernel placement allocator])
   AH_TEMPLATE([PRINT_MAILBOX], [Define to 1 to enable output of mailbox])
 
   # Define for kernel mode
@@ -55,6 +56,11 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   # Test for kernel heap output
   AS_IF([test "x$enable_output_mm_heap" == "xyes"], [
     AC_DEFINE([PRINT_MM_HEAP], [1])
+  ])
+
+  # Test for kernel placement allocator output
+  AS_IF([test "x$enable_output_mm_placement" == "xyes"], [
+    AC_DEFINE([PRINT_MM_PLACEMENT], [1])
   ])
 
   # Test for mailbox output

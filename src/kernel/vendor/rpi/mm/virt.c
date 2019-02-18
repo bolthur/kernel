@@ -24,6 +24,7 @@
 #include "lib/stdc/string.h"
 #include "kernel/kernel/entry.h"
 #include "kernel/kernel/panic.h"
+#include "kernel/kernel/mm/placement.h"
 #include "kernel/kernel/mm/phys.h"
 #include "kernel/kernel/mm/virt.h"
 #include "kernel/arch/arm/barrier.h"
@@ -31,12 +32,29 @@
 #include "kernel/vendor/rpi/peripheral.h"
 #include "kernel/vendor/rpi/framebuffer.h"
 
-extern uint32_t ttbr[ 4096 ];
+void *user_context;
+void *kernel_context;
 
 /**
  * @brief Initialize virtual memory management
  */
 void virt_vendor_init( void ) {
+  // get new kernel context and temporary user context
+  kernel_context = placement_alloc( SD_TTBR_SIZE_4G, SD_TTBR_ALIGNMENT_4G );
+  user_context = placement_alloc( SD_TTBR_SIZE_2G, SD_TTBR_ALIGNMENT_2G );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    printf( "\r\n[ %s ]: kernel_context: 0x%08x\r\n", __func__, kernel_context );
+    printf( "[ %s ]: user_context: 0x%08x\r\n", __func__, user_context );
+  #endif
+
+  // initialize with zero
+  memset( kernel_context, 0, SD_TTBR_SIZE_4G );
+  memset( user_context, 0, SD_TTBR_SIZE_2G );
+
+  // PANIC( "To be implemented" );
+
   /**
    * Short descriptor initialization:
    *  - Setup new ttbr0 with 8KB size ( 2GB )

@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
+#include "lib/stdc/stdio.h"
 #include "kernel/kernel/panic.h"
 #include "kernel/kernel/mm/placement.h"
 #include "kernel/kernel/mm/phys.h"
@@ -28,14 +29,26 @@
 #include "kernel/kernel/mm/heap.h"
 #include "kernel/kernel/entry.h"
 
+/**
+ * @brief placement address starting at kernel end
+ */
+uintptr_t placement_address = ( uintptr_t )&__kernel_end;
+
+/**
+ * @brief Placement allocator
+ *
+ * @param size amount of memory to align
+ * @param alignment alignment
+ * @return void* found address
+ */
 void* placement_alloc( size_t size, size_t alignment ) {
   // check for heap not initialized
   if ( heap_initialized_get() || virt_initialized_get() ) {
-    PANIC( "placement_alloc used with initialized heap/virtual manager!" );
+    PANIC( "placement_alloc used with initialized heap or virtual manager!" );
   }
 
   // determine offset for alignment
-  size_t offset = size;
+  size_t offset = 0;
 
   // states of memory managers
   bool phys = phys_initialized_get();
@@ -43,25 +56,44 @@ void* placement_alloc( size_t size, size_t alignment ) {
   // build return address
   void* address = ( void* )placement_address;
 
+  // debug output
+  #if defined( PRINT_MM_PLACEMENT )
+    printf( "[ %s ]: content of placement address: 0x%08x\r\n", __func__, placement_address );
+    printf( "[ %s ]: wanted size: 0x%08x\r\n", __func__, size );
+    printf( "[ %s ]: set address: 0x%08x\r\n", __func__, address );
+  #endif
+
   // handle alignment
-  if ( 0 < alignment ) {
+  if ( PLACEMENT_NO_ALIGN != alignment ) {
     // increase offset
-    offset += ( ( size_t )placement_address % alignment );
+    offset += ( alignment - ( uintptr_t )placement_address % alignment );
 
     // increase address
     address = ( void* )( ( uintptr_t )address + offset );
+
+    // debug output
+    #if defined( PRINT_MM_PLACEMENT )
+      printf( "[ %s ]: alignment offset: 0x%08x\r\n", __func__, offset );
+      printf( "[ %s ]: set address: 0x%08x\r\n", __func__, address );
+    #endif
   }
 
   // add size to offset
   offset += size;
 
+  // mark as used at physical memory manager if initialized
+  if ( phys ) {
+    phys_use_page_range( ( void* )VIRT_2_PHYS( placement_address ), offset );
+  }
+
   // move up placement address
   placement_address += offset;
 
-  // mark as used at physical memory manager if initialized
-  if ( phys ) {
-    phys_use_page_range( address, offset );
-  }
+  // debug output
+  #if defined( PRINT_MM_PLACEMENT )
+    printf( "[ %s ]: content of placement address: 0x%08x\r\n", __func__, placement_address );
+    printf( "[ %s ]: return address: 0x%08x\r\n", __func__, address );
+  #endif
 
   // finally return address
   return address;

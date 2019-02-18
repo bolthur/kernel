@@ -37,11 +37,6 @@ uintptr_t *phys_bitmap;
 size_t phys_bitmap_length;
 
 /**
- * @brief placement address starting at kernel end
- */
-uintptr_t placement_address = VIRT_2_PHYS( &__kernel_end );
-
-/**
  * @brief static initialized flag
  */
 static bool phys_initialized = false;
@@ -63,8 +58,8 @@ void phys_mark_page_used( void* address ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     printf(
-      "[ phys mark used ]: frame: %06i, index: %04i, offset: %02i, address: 0x%08x, phys_bitmap[ %04d ]: 0x%08x\r\n",
-      frame, index, offset, address, index, phys_bitmap[ index ]
+      "[ %s ]: frame: %06i, index: %04i, offset: %02i, address: 0x%08x, phys_bitmap[ %04d ]: 0x%08x\r\n",
+      __func__, frame, index, offset, address, index, phys_bitmap[ index ]
     );
   #endif
 }
@@ -86,8 +81,8 @@ void phys_mark_page_free( void*  address ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     printf(
-      "[ phys mark used ]: frame: %06i, index: %04i, offset: %02i, address: 0x%08x, phys_bitmap[ %04d ]: 0x%08x\r\n",
-      frame, index, offset, address, index, phys_bitmap[ index ]
+      "[ %s ]: frame: %06i, index: %04i, offset: %02i, address: 0x%08x, phys_bitmap[ %04d ]: 0x%08x\r\n",
+      __func__, frame, index, offset, address, index, phys_bitmap[ index ]
     );
   #endif
 }
@@ -102,8 +97,8 @@ void phys_free_page_range( void* address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     printf(
-      "[ phys free page range ]: address: 0x%08x, amount: %i\r\n",
-      address, amount
+      "[ %s ]: address: 0x%08x, amount: %i\r\n",
+      __func__, address, amount
     );
   #endif
 
@@ -127,13 +122,20 @@ void phys_use_page_range( void* address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     printf(
-      "[ phys use page range ]: address: 0x%08x, amount: %i\r\n",
-      address, amount
+      "[ %s ]: address: 0x%08x, amount: %i\r\n",
+      __func__, address, amount
     );
   #endif
 
   // round down address to page start
-  address = ( void* )( ( uintptr_t )address - ( uintptr_t )address % PAGE_SIZE );
+  if ( 0 != ( uintptr_t )address % PAGE_SIZE ) {
+    address = ( void* )( ( uintptr_t )address - ( uintptr_t )address % PAGE_SIZE );
+  }
+
+  // round up amount if necessary
+  if ( 0 != amount % PAGE_SIZE ) {
+    amount = amount + PAGE_SIZE - amount % PAGE_SIZE;
+  }
 
   // loop until amount and mark as free
   for (
@@ -155,8 +157,8 @@ void* phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     printf(
-      "[ phys find free page range ]: memory_amount: %i, allignment: 0x%08x\r\n",
-      memory_amount, alignment
+      "[ %s ]: memory_amount: %i, allignment: 0x%08x\r\n",
+      __func__, memory_amount, alignment
     );
   #endif
 
@@ -268,6 +270,9 @@ void phys_init( void ) {
 
   // adjust placement address
   placement_address = end;
+
+  // transform to physical
+  end = VIRT_2_PHYS( end );
 
   // map from start to end addresses as used
   while( start < end ) {

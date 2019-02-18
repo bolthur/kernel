@@ -96,6 +96,9 @@
 /* Define to 1 to enable output of physical memory manager */
 #undef PRINT_MM_PHYS
 
+/* Define to 1 to enable output of kernel placement allocator */
+#undef PRINT_MM_PLACEMENT
+
 /* Define to 1 to enable output of virtual memory manager */
 #undef PRINT_MM_VIRT
 

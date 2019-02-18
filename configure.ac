@@ -58,6 +58,10 @@ AC_ARG_ENABLE([output-mm-heap],
   AC_HELP_STRING([--enable-output-mm-heap], [Enables output of kernel heap routines (default: off)])
 )
 
+AC_ARG_ENABLE([output-mm-placement],
+  AC_HELP_STRING([--enable-output-mm-placement], [Enables output of placememt allocator (default: off)])
+)
+
 AC_ARG_ENABLE([output-mailbox],
   AC_HELP_STRING([--enable-output-mailbox], [Enables output of mailbox functions (default: off)])
 )

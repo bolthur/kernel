@@ -26,6 +26,6 @@
 
 #define PLACEMENT_NO_ALIGN 0
 
-void* placement_alloc( size_t size, size_t alignment );
+void* placement_alloc( size_t, size_t );
 
 #endif
