@@ -65,7 +65,7 @@ void cpu_invalidate_cache( void );
 void cpu_disable_cache( void );
 void cpu_enable_cache( void );
 
-void dump_register( cpu_register_context_t *context );
+void dump_register( cpu_register_context_t* );
 
 #if defined( __cplusplus )
 }

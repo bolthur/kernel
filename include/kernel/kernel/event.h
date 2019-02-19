@@ -36,7 +36,7 @@ typedef enum {
   EVENT_SERIAL
 } event_type_t;
 
-typedef void ( *event_callback_t )( void *reg );
+typedef void ( *event_callback_t )( void* );
 
 typedef struct {
   char event[ MAX_EVENT_NAME ];

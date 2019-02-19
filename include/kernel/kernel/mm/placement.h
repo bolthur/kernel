@@ -26,6 +26,8 @@
 
 #define PLACEMENT_NO_ALIGN 0
 
+extern uintptr_t placement_address;
+
 void* placement_alloc( size_t, size_t );
 
 #endif

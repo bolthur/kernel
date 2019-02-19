@@ -27,7 +27,7 @@
 extern "C" {
 #endif
 
-void delay( uint32_t count );
+void delay( uint32_t );
 
 #if defined( __cplusplus )
 }

@@ -174,9 +174,9 @@ typedef struct {
 } rpi_mailbox_property_t;
 
 void mailbox_property_init( void );
-void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... );
+void mailbox_property_add_tag( rpi_mailbox_tag_t, ... );
 uint32_t mailbox_property_process( void );
-rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag );
+rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t );
 
 #if defined( __cplusplus )
 }

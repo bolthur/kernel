@@ -35,11 +35,8 @@
 
 #define PAGE_SIZE 0x1000
 
-extern uintptr_t *phys_bitmap;
+extern uint32_t *phys_bitmap;
 extern size_t phys_bitmap_length;
-extern uintptr_t placement_address;
-extern uintptr_t __kernel_start;
-extern uintptr_t __kernel_end;
 
 void phys_init( void );
 void phys_vendor_init( void );

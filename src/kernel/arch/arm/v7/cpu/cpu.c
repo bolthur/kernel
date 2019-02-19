@@ -28,7 +28,7 @@
  *
  * @todo check and revise function
  */
-void dump_register( cpu_register_context_t *context ) {
+void dump_register( cpu_register_context_t* context ) {
   printf(
     "CPU register dump\r\n"\
     "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\

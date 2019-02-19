@@ -26,11 +26,12 @@
 #include "kernel/kernel/panic.h"
 #include "kernel/kernel/entry.h"
 #include "kernel/kernel/mm/phys.h"
+#include "kernel/kernel/mm/placement.h"
 
 /**
  * @brief Physical bitmap
  */
-uintptr_t *phys_bitmap;
+uint32_t *phys_bitmap;
 
 /**
  * @brief physical bitmap length set by vendor
@@ -54,7 +55,7 @@ void phys_mark_page_used( void* address ) {
   size_t offset = PAGE_OFFSET( frame );
 
   // mark page as used
-  phys_bitmap[ index ] |= ( uintptr_t )( 0x1 << offset );
+  phys_bitmap[ index ] |= ( uint32_t )( 0x1 << offset );
 
   // debug output
   #if defined( PRINT_MM_PHYS )

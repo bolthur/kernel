@@ -88,7 +88,7 @@ void phys_vendor_init( void ) {
   phys_bitmap_length = memory_amount / PAGE_SIZE / ( sizeof( phys_bitmap_length ) * 8 );
 
   // allocate bitmap manually via placement address after kernel
-  phys_bitmap = ( uintptr_t* )PHYS_2_VIRT(
+  phys_bitmap = ( uint32_t* )PHYS_2_VIRT(
     placement_alloc( phys_bitmap_length, PLACEMENT_NO_ALIGN )
   );
 
