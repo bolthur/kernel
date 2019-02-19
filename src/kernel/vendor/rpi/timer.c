@@ -19,6 +19,7 @@
  */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "lib/stdc/stdio.h"
 
@@ -77,12 +78,11 @@
  */
 void timer_clear( uint8_t num, void *_cpu ) {
   cpu_register_context_t *cpu = ( cpu_register_context_t * )_cpu;
+  static bool led = false;
 
   ( void )num;
   ( void )_cpu;
   ( void )cpu;
-
-  static int32_t led = 1;
 
   /*if ( ! timer_pending() ) {
     return;
@@ -98,12 +98,12 @@ void timer_clear( uint8_t num, void *_cpu ) {
 
   // flip led
   // FIXME: Replace by using printf
-  if ( led ) {
-    mmio_write( GPCLR1, ( 1 << 15 ) );
-    led = 0;
+  if ( true == led ) {
+    mmio_write( peripheral_base_get() + GPCLR1, ( 1 << 15 ) );
+    led = false;
   } else {
-    mmio_write( GPSET1, ( 1 << 15 ) );
-    led = 1;
+    mmio_write( peripheral_base_get() + GPSET1, ( 1 << 15 ) );
+    led = true;
   }
 
   // write cntcval
@@ -130,6 +130,10 @@ void timer_clear2( void *_cpu ) {
  */
 void timer_init( void ) {
   uint32_t cntfrq, cntv_val, cntv_ctl;
+
+  // cntfrq as set within stub
+  cntfrq = 19200000;
+
   __asm__ __volatile__( "mrc p15, 0, %0, c14, c0, 0" : "=r"( cntfrq ) );
   //printf( "CNTFRQ: 0x%08x\r\n", cntfrq, cntfrq );
 

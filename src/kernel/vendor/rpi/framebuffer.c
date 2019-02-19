@@ -24,9 +24,8 @@
 
 #include "lib/stdc/stdlib.h"
 #include "lib/stdc/string.h"
-#include "lib/stdc/stdio.h"
 #include "font/font.8x8.h"
-
+#include "kernel/kernel/debug.h"
 #include "kernel/vendor/rpi/framebuffer.h"
 #include "kernel/vendor/rpi/mailbox/property.h"
 
@@ -59,24 +58,24 @@ void framebuffer_init( void ) {
   if ( ( mp = mailbox_property_get( TAG_GET_PHYSICAL_SIZE ) ) ) {
     width = mp->data.buffer_32[ 0 ];
     height = mp->data.buffer_32[ 1 ];
-    printf( "Initialised Framebuffer: %dx%d ", width, height );
+    DEBUG_OUTPUT( "initialised Framebuffer: %dx%d ", width, height );
   }
 
   if ( ( mp = mailbox_property_get( TAG_GET_DEPTH ) ) ) {
     bpp = mp->data.buffer_32[ 0 ];
-    printf( "%dbpp\r\n", bpp );
+    DEBUG_OUTPUT( "%dbpp\r\n", bpp );
   }
 
   if ( ( mp = mailbox_property_get( TAG_GET_PITCH ) ) ) {
     pitch = mp->data.buffer_32[ 0 ];
-    printf( "Pitch: %d bytes\r\n", pitch );
+    DEBUG_OUTPUT( "pitch = %d bytes\r\n", pitch );
   }
 
   if ( ( mp = mailbox_property_get( TAG_ALLOCATE_BUFFER ) ) ) {
     framebuffer_base_set( mp->data.buffer_u32[ 0 ] );
     framebuffer_size_set( mp->data.buffer_u32[ 1 ] );
 
-    printf( "Framebuffer address: 0x%08p\tsize: 0x%08p\r\n", address, size );
+    DEBUG_OUTPUT( "framebuffer address = 0x%08p\tsize = 0x%08p\r\n", address, size );
   }
 
   initialized = true;

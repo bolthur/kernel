@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "lib/stdc/stdio.h"
+#include "kernel/kernel/debug.h"
 #include "kernel/kernel/panic.h"
 #include "kernel/kernel/mm/placement.h"
 #include "kernel/kernel/mm/phys.h"
@@ -32,7 +32,7 @@
 /**
  * @brief placement address starting at kernel end
  */
-uintptr_t placement_address = ( uintptr_t )&__kernel_end;
+uintptr_t placement_address = VIRT_2_PHYS( &__kernel_end );
 
 /**
  * @brief Placement allocator
@@ -58,9 +58,9 @@ void* placement_alloc( size_t size, size_t alignment ) {
 
   // debug output
   #if defined( PRINT_MM_PLACEMENT )
-    printf( "[ %s ]: content of placement address: 0x%08x\r\n", __func__, placement_address );
-    printf( "[ %s ]: wanted size: 0x%08x\r\n", __func__, size );
-    printf( "[ %s ]: set address: 0x%08x\r\n", __func__, address );
+    DEBUG_OUTPUT( "content of placement address: 0x%08x\r\n", placement_address );
+    DEBUG_OUTPUT( "wanted size: 0x%08x\r\n", size );
+    DEBUG_OUTPUT( "set address: 0x%08x\r\n", address );
   #endif
 
   // handle alignment
@@ -73,8 +73,8 @@ void* placement_alloc( size_t size, size_t alignment ) {
 
     // debug output
     #if defined( PRINT_MM_PLACEMENT )
-      printf( "[ %s ]: alignment offset: 0x%08x\r\n", __func__, offset );
-      printf( "[ %s ]: set address: 0x%08x\r\n", __func__, address );
+      DEBUG_OUTPUT( "alignment offset: 0x%08x\r\n", offset );
+      DEBUG_OUTPUT( "set address: 0x%08x\r\n", address );
     #endif
   }
 
@@ -83,7 +83,7 @@ void* placement_alloc( size_t size, size_t alignment ) {
 
   // mark as used at physical memory manager if initialized
   if ( phys ) {
-    phys_use_page_range( ( void* )VIRT_2_PHYS( placement_address ), offset );
+    phys_use_page_range( ( void* )placement_address, offset );
   }
 
   // move up placement address
@@ -91,8 +91,8 @@ void* placement_alloc( size_t size, size_t alignment ) {
 
   // debug output
   #if defined( PRINT_MM_PLACEMENT )
-    printf( "[ %s ]: content of placement address: 0x%08x\r\n", __func__, placement_address );
-    printf( "[ %s ]: return address: 0x%08x\r\n", __func__, address );
+    DEBUG_OUTPUT( "content of placement address: 0x%08x\r\n", placement_address );
+    DEBUG_OUTPUT( "return address: 0x%08x\r\n", address );
   #endif
 
   // finally return address

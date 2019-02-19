@@ -32,12 +32,12 @@
  *
  * @todo check and revise
  */
-void panic(const char *message, const char *file, uint32_t line) {
+void panic( const char* message, const char* file, uint32_t line ) {
   // disable interrupts
   irq_disable();
 
   // print panic
-  printf("PANIC(%s) at %s:%d\r\n", message, file, line);
+  printf( "PANIC( %s ) at %s:%d\r\n", message, file, line );
 
   // loop endless
   while ( 1 ) {}
@@ -52,12 +52,12 @@ void panic(const char *message, const char *file, uint32_t line) {
  *
  * @todo check and revise
  */
-void panic_assert(const char *file, uint32_t line, const char *desc) {
+void panic_assert( const char* file, uint32_t line, const char* desc ) {
   // disable interrupts
   irq_disable();
 
   // print panic
-  printf("ASSERTION-FAILED(%s) at %s:%d\r\n", desc, file, line);
+  printf( "ASSERTION-FAILED( %s ) at %s:%d\r\n", desc, file, line );
 
   // loop endless
   while ( 1 ) {}

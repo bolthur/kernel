@@ -25,6 +25,8 @@
  * @brief Method for dumping cpu registers
  *
  * @param context cpu context with all registers
+ *
+ * @todo check and revise function
  */
 void dump_register( cpu_register_context_t *context ) {
   printf(

@@ -20,9 +20,9 @@
 
 #include <stddef.h>
 
-#include "lib/stdc/stdio.h"
 #include "lib/stdc/string.h"
 #include "lib/stdc/stdlib.h"
+#include "kernel/kernel/debug.h"
 #include "kernel/kernel/entry.h"
 #include "kernel/kernel/mm/phys.h"
 #include "kernel/kernel/mm/placement.h"
@@ -52,10 +52,10 @@ void phys_vendor_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    printf ( "[ %s ]: buffer->byte_length: %d\r\n", __func__, buffer->byte_length );
-    printf ( "[ %s ]: buffer->data.buffer_32[ 0 ]: 0x%08x\r\n", __func__, buffer->data.buffer_32[ 0 ] );
-    printf ( "[ %s ]: buffer->data.buffer_32[ 1 ]: 0x%08x\r\n", __func__, buffer->data.buffer_32[ 1 ] );
-    printf ( "[ %s ]: buffer->tag: 0x%08x\r\n", __func__, buffer->tag );
+    DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length );
+    DEBUG_OUTPUT( "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n", buffer->data.buffer_32[ 0 ] );
+    DEBUG_OUTPUT( "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n", buffer->data.buffer_32[ 1 ] );
+    DEBUG_OUTPUT( "buffer->tag: 0x%08x\r\n", buffer->tag );
   #endif
 
   // increase amount by arm amount
@@ -63,7 +63,7 @@ void phys_vendor_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    printf( "[ %s ]: memory amount: 0x%8x\r\n", memory_amount );
+    DEBUG_OUTPUT( "memory amount: 0x%8x\r\n", memory_amount );
   #endif
 
   // get video core memory
@@ -71,10 +71,10 @@ void phys_vendor_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    printf ( "[ %s ]: buffer->byte_length: %d\r\n", __func__, buffer->byte_length );
-    printf ( "[ %s ]: buffer->data.buffer_32[ 0 ]: 0x%08x\r\n", __func__, buffer->data.buffer_32[ 0 ] );
-    printf ( "[ %s ]: buffer->data.buffer_32[ 1 ]: 0x%08x\r\n", __func__, buffer->data.buffer_32[ 1 ] );
-    printf ( "[ %s ]: buffer->tag: 0x%08x\r\n", __func__, buffer->tag );
+    DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length );
+    DEBUG_OUTPUT( "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n", buffer->data.buffer_32[ 0 ] );
+    DEBUG_OUTPUT( "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n", buffer->data.buffer_32[ 1 ] );
+    DEBUG_OUTPUT( "buffer->tag: 0x%08x\r\n", buffer->tag );
   #endif
 
   // populate video core start and end
@@ -88,18 +88,20 @@ void phys_vendor_init( void ) {
   phys_bitmap_length = memory_amount / PAGE_SIZE / ( sizeof( phys_bitmap_length ) * 8 );
 
   // allocate bitmap manually via placement address after kernel
-  phys_bitmap = ( uintptr_t* )placement_alloc( phys_bitmap_length, PLACEMENT_NO_ALIGN );
+  phys_bitmap = ( uintptr_t* )PHYS_2_VIRT(
+    placement_alloc( phys_bitmap_length, PLACEMENT_NO_ALIGN )
+  );
 
   // overwrite physical bitmap completely with zero
   memset( phys_bitmap, 0, sizeof( phys_bitmap_length ) * phys_bitmap_length );
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    printf( "[ %s ]: total memory amount: 0x%8x\r\n", __func__, memory_amount );
-    printf( "[ %s ]: bitmap length: %d\r\n", __func__, phys_bitmap_length );
-    printf( "[ %s ]: phys bitmap address: 0x%08x\r\n", __func__, phys_bitmap );
-    printf( "[ %s ]: content of __kernel_start: 0x%08x\r\n", __func__, &__kernel_start );
-    printf( "[ %s ]: content of __kernel_end: 0x%08x\r\n", __func__, &__kernel_end );
+    DEBUG_OUTPUT( "total memory amount: 0x%8x\r\n", memory_amount );
+    DEBUG_OUTPUT( "bitmap length: %d\r\n", phys_bitmap_length );
+    DEBUG_OUTPUT( "phys bitmap address: 0x%08x\r\n", phys_bitmap );
+    DEBUG_OUTPUT( "content of __kernel_start: 0x%08x\r\n", &__kernel_start );
+    DEBUG_OUTPUT( "content of __kernel_end: 0x%08x\r\n", &__kernel_end );
   #endif
 
   // set start and end for peripherals

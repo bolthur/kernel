@@ -57,7 +57,7 @@ typedef struct {
   volatile uint32_t status;
   volatile uint32_t configuration;
   volatile uint32_t write;
-} PACKED mailbox_t;
+} mailbox_t;
 
 uint32_t mailbox_read( mailbox0_channel_t );
 void mailbox_write( mailbox0_channel_t, uint32_t );

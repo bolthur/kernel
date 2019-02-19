@@ -23,6 +23,15 @@
 
 #include <stdint.h>
 
+#include "lib/stdc/stdio.h"
+
+/**
+ * @brief Debug output define
+ */
+#define DEBUG_OUTPUT( msg, ... ) \
+  printf( "[ %s ] ", __func__ ); \
+  printf( msg, __VA_ARGS__ );
+
 #if defined( __cplusplus )
 extern "C" {
 #endif
@@ -32,7 +41,7 @@ typedef struct {
   uint32_t line;
   uint64_t addr;
   const char *msg;
-} PACKED bug_entry_t;
+} bug_entry_t;
 
 void debug_init( void );
 void debug_breakpoint( void );

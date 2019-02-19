@@ -22,6 +22,7 @@
 #include <stdbool.h>
 
 #include "lib/stdc/stdio.h"
+#include "kernel/kernel/debug.h"
 #include "kernel/kernel/panic.h"
 #include "kernel/kernel/entry.h"
 #include "kernel/kernel/mm/phys.h"
@@ -57,9 +58,9 @@ void phys_mark_page_used( void* address ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    printf(
-      "[ %s ]: frame: %06i, index: %04i, offset: %02i, address: 0x%08x, phys_bitmap[ %04d ]: 0x%08x\r\n",
-      __func__, frame, index, offset, address, index, phys_bitmap[ index ]
+    DEBUG_OUTPUT(
+      "frame: %06i, index: %04i, offset: %02i, address: 0x%08x, phys_bitmap[ %04d ]: 0x%08x\r\n",
+      frame, index, offset, address, index, phys_bitmap[ index ]
     );
   #endif
 }
@@ -80,9 +81,9 @@ void phys_mark_page_free( void*  address ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    printf(
-      "[ %s ]: frame: %06i, index: %04i, offset: %02i, address: 0x%08x, phys_bitmap[ %04d ]: 0x%08x\r\n",
-      __func__, frame, index, offset, address, index, phys_bitmap[ index ]
+    DEBUG_OUTPUT(
+      "frame: %06i, index: %04i, offset: %02i, address: 0x%08x, phys_bitmap[ %04d ]: 0x%08x\r\n",
+      frame, index, offset, address, index, phys_bitmap[ index ]
     );
   #endif
 }
@@ -96,10 +97,7 @@ void phys_mark_page_free( void*  address ) {
 void phys_free_page_range( void* address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
-    printf(
-      "[ %s ]: address: 0x%08x, amount: %i\r\n",
-      __func__, address, amount
-    );
+    DEBUG_OUTPUT( "address: 0x%08x, amount: %i\r\n", address, amount );
   #endif
 
   // loop until amount and mark as free
@@ -121,10 +119,7 @@ void phys_free_page_range( void* address, size_t amount ) {
 void phys_use_page_range( void* address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
-    printf(
-      "[ %s ]: address: 0x%08x, amount: %i\r\n",
-      __func__, address, amount
-    );
+    DEBUG_OUTPUT( "address: 0x%08x, amount: %i\r\n", address, amount );
   #endif
 
   // round down address to page start
@@ -156,9 +151,9 @@ void phys_use_page_range( void* address, size_t amount ) {
 void* phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
-    printf(
-      "[ %s ]: memory_amount: %i, allignment: 0x%08x\r\n",
-      __func__, memory_amount, alignment
+    DEBUG_OUTPUT(
+      "memory_amount: %i, allignment: 0x%08x\r\n",
+      memory_amount, alignment
     );
   #endif
 
@@ -270,9 +265,6 @@ void phys_init( void ) {
 
   // adjust placement address
   placement_address = end;
-
-  // transform to physical
-  end = VIRT_2_PHYS( end );
 
   // map from start to end addresses as used
   while( start < end ) {

@@ -20,8 +20,8 @@
 
 #include <stddef.h>
 
-#include "lib/stdc/stdio.h"
 #include "lib/stdc/string.h"
+#include "kernel/kernel/debug.h"
 #include "kernel/kernel/entry.h"
 #include "kernel/kernel/panic.h"
 #include "kernel/kernel/mm/placement.h"
@@ -40,20 +40,24 @@ void *kernel_context;
  */
 void virt_vendor_init( void ) {
   // get new kernel context and temporary user context
-  kernel_context = placement_alloc( SD_TTBR_SIZE_4G, SD_TTBR_ALIGNMENT_4G );
-  user_context = placement_alloc( SD_TTBR_SIZE_2G, SD_TTBR_ALIGNMENT_2G );
+  kernel_context = ( void* )PHYS_2_VIRT(
+    placement_alloc( SD_TTBR_SIZE_4G, SD_TTBR_ALIGNMENT_4G )
+  );
+  user_context = ( void* )PHYS_2_VIRT(
+    placement_alloc( SD_TTBR_SIZE_2G, SD_TTBR_ALIGNMENT_2G )
+  );
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    printf( "\r\n[ %s ]: kernel_context: 0x%08x\r\n", __func__, kernel_context );
-    printf( "[ %s ]: user_context: 0x%08x\r\n", __func__, user_context );
+    DEBUG_OUTPUT( "kernel_context: 0x%08x\r\n", kernel_context );
+    DEBUG_OUTPUT( "user_context: 0x%08x\r\n", user_context );
   #endif
 
   // initialize with zero
   memset( kernel_context, 0, SD_TTBR_SIZE_4G );
   memset( user_context, 0, SD_TTBR_SIZE_2G );
 
-  // PANIC( "To be implemented" );
+  //PANIC( "To be implemented" );
 
   /**
    * Short descriptor initialization:

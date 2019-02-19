@@ -60,53 +60,45 @@ void kernel_main() {
   );
 
   // Setup arch related parts
-  printf( "[bolthur/kernel -> arch] initialize ... " );
+  printf( "[bolthur/kernel -> arch] initialize ...\r\n" );
   arch_init();
-  printf( "done!\r\n" );
 
   // Setup platform related parts
-  printf( "[bolthur/kernel -> platform] initialize ... " );
+  printf( "[bolthur/kernel -> platform] initialize ...\r\n" );
   platform_init();
-  printf( "done!\r\n" );
 
   // Setup irq
-  printf( "[bolthur/kernel -> irq] initialize ... " );
+  printf( "[bolthur/kernel -> irq] initialize ...\r\n" );
   irq_init();
-  printf( "done!\r\n" );
 
-  // Setup memory management
-  printf( "[bolthur/kernel -> memory] initialize ... [" );
   // Setup physical memory management
-  printf( " physical, " );
+  printf( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" );
   phys_init();
+
   // Setup virtual memory management
-  printf( " virtual, " );
+  printf( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" );
   virt_init();
+
   // Setup heap
-  printf( " heap ] " );
-  printf( "done!\r\n" );
+  printf( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
 
   // Setup event system
-  printf( "[bolthur/kernel -> event] initialize ... " );
+  printf( "[bolthur/kernel -> event] initialize ...\r\n" );
   event_init();
-  printf( "done!\r\n" );
 
   // Setup debug if enabled
   #if defined( DEBUG )
-    printf( "[bolthur/kernel -> debug] initialize ... " );
+    printf( "[bolthur/kernel -> debug] initialize ...\r\n" );
     debug_init();
-    printf( "done!\r\n" );
   #endif
 
   // Setup timer
-  printf( "[bolthur/kernel -> timer] initialize ... " );
+  printf( "[bolthur/kernel -> timer] initialize ...\r\n" );
   timer_init();
-  printf( "done!\r\n" );
 
   // Setup irq
-  printf( "[bolthur/kernel -> irq] enable ... " );
+  printf( "[bolthur/kernel -> irq] enable ...\r\n" );
   irq_enable();
-  printf( "done!\r\n" );
 
   // Debug breakpoint to kickstart remote gdb
   #if defined( DEBUG )

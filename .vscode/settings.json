@@ -21,7 +21,9 @@
     "iterator": "c",
     "vector": "c",
     "typeindex": "c",
-    "typeinfo": "c"
+    "typeinfo": "c",
+    "limits": "c",
+    "type_traits": "c"
   },
   "editor.tabSize": 2,
   "editor.renderWhitespace": "all",

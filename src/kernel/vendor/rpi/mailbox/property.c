@@ -20,8 +20,8 @@
 
 #include <stdarg.h>
 
-#include "lib/stdc/stdio.h"
 #include "lib/stdc/string.h"
+#include "kernel/kernel/debug.h"
 #include "kernel/vendor/rpi/mailbox/mailbox.h"
 #include "kernel/vendor/rpi/mailbox/property.h"
 
@@ -196,9 +196,9 @@ uint32_t mailbox_property_process( void ) {
 
   // debug output
   #if defined( PRINT_MAILBOX )
-    printf( "%s Length: %d\r\n", __func__, ptb[ PT_OSIZE ] );
+    DEBUG_OUTPUT( "Length = %d\r\n", ptb[ PT_OSIZE ] );
     for ( int32_t i = 0; i < ( ptb[ PT_OSIZE ] >> 2 ); i++ ) {
-      printf( "Request: %3d %08x\r\n", i, ptb[ i ] );
+      DEBUG_OUTPUT( "Request = %3d %08x\r\n", i, ptb[ i ] );
     }
   #endif
 
@@ -211,7 +211,7 @@ uint32_t mailbox_property_process( void ) {
   // debug output
   #if defined( PRINT_MAILBOX )
     for ( int32_t i = 0; i < ( ptb[ PT_OSIZE ] >> 2 ); i++ ) {
-      printf( "Response: %3d %08x\r\n", i, ptb[ i ] );
+      DEBUG_OUTPUT( "Response = %3d %08x\r\n", i, ptb[ i ] );
     }
   #endif
 
@@ -242,7 +242,7 @@ rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
   while( index < ( ptb[ PT_OSIZE ] >> 2 ) ) {
     // debug output
     #if defined( PRINT_MAILBOX )
-      printf( "testing tag: [ %d ] %08x\r\n", index, ptb[ index ] );
+      DEBUG_OUTPUT( "testing tag[ %d ] = %08x\r\n", index, ptb[ index ] );
     #endif
 
     // test tag

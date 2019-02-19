@@ -30,8 +30,8 @@
 extern "C" {
 #endif
 
-void panic(const char *message, const char *file, uint32_t line);
-void panic_assert(const char *file, uint32_t line, const char *desc);
+void panic(const char*, const char*, uint32_t);
+void panic_assert(const char*, uint32_t, const char*);
 
 #if defined( __cplusplus )
 }

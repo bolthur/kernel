@@ -41,7 +41,7 @@ typedef struct {
   uint32_t zero;
   uint32_t machine;
   uint32_t atag;
-} PACKED platform_loader_parameter_t;
+} platform_loader_parameter_t;
 
 #if defined( __cplusplus )
 }

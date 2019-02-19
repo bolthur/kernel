@@ -26,7 +26,7 @@
 /**
  * @brief Initial kernel context
  */
-sd_context_total_t SECTION( ".data.boot" ) initial_kernel_context;
+extern sd_context_total_t initial_kernel_context SECTION( ".data.boot" );
 
 /**
  * @brief Method to prepare section during initial boot
@@ -62,25 +62,25 @@ void SECTION( ".text.boot" ) boot_vendor_prepare( void ) {
     // offset
     y = x + ( KERNEL_OFFSET >> 20 );
 
-    initial_kernel_context.section[ x ].type = 1;
-    initial_kernel_context.section[ x ].execute_never = 1;
-    initial_kernel_context.section[ x ].access_permision_0 = 0x3;
-    initial_kernel_context.section[ x ].frame = ( ( x << 20 ) >> 20 ) & 0xFFF;
+    initial_kernel_context.section[ x ].data.type = SD_TTBR_TYPE_SECTION;
+    initial_kernel_context.section[ x ].data.execute_never = 0;
+    initial_kernel_context.section[ x ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
+    initial_kernel_context.section[ x ].data.frame = x & 0xFFF;
 
     if ( 0 < KERNEL_OFFSET ) {
-      initial_kernel_context.section[ y ].type = 1;
-      initial_kernel_context.section[ y ].execute_never = 1;
-      initial_kernel_context.section[ y ].access_permision_0 = 0x3;
-      initial_kernel_context.section[ y ].frame = ( ( x << 20 ) >> 20 ) & 0xFFF;
+      initial_kernel_context.section[ y ].data.type = SD_TTBR_TYPE_SECTION;
+      initial_kernel_context.section[ y ].data.execute_never = 0;
+      initial_kernel_context.section[ y ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
+      initial_kernel_context.section[ y ].data.frame = x & 0xFFF;
     }
   }
 
   #if defined( BCM2709 ) || defined( BCM2710 )
     x = ( 0x40000000 >> 20 );
-    initial_kernel_context.section[ x ].type = 1;
-    initial_kernel_context.section[ x ].execute_never = 1;
-    initial_kernel_context.section[ x ].access_permision_0 = 0x3;
-    initial_kernel_context.section[ x ].frame = ( 0x40000000 >> 20 ) & 0xFFF;
+    initial_kernel_context.section[ x ].data.type = SD_TTBR_TYPE_SECTION;
+    initial_kernel_context.section[ x ].data.execute_never = 0;
+    initial_kernel_context.section[ x ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
+    initial_kernel_context.section[ x ].data.frame = x & 0xFFF;
   #endif
 
   // Copy page table address to cp15
