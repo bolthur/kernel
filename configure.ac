@@ -81,6 +81,12 @@ AC_ARG_ENABLE([opt],
   3)
     CFLAGS="${CFLAGS} -O3"
     ;;
+  s)
+    CFLAGS="${CFLAGS} -Os"
+    ;;
+  g)
+    CFLAGS="${CFLAGS} -Og"
+    ;;
   *)
     CFLAGS="${CFLAGS} -O2"
     ;;

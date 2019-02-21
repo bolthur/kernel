@@ -53,11 +53,15 @@
   str r2, [sp, #56]
   str r3, [sp, #64]
 
+  /// FIXME: push floating point registers if enabled
+
   // store sp in r0
   mov r0, sp
 .endm
 
 .macro pop_arm_regs mode
+  /// FIXME: pop floating point registers if enabled
+
   // restore lr and sp
   ldr r1, [sp, #52]
   ldr r2, [sp, #56]

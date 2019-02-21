@@ -10,11 +10,10 @@ AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/include
 
 noinst_LIBRARIES = libarm.a
 libarm_a_SOURCES = \
+  boot/fpu.S \
   mm/virt.c \
   arch.c \
   barrier.c \
-  debug.c \
   delay.c \
   irq.c \
-  fpu.S \
   mmio.c

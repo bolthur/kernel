@@ -48,6 +48,7 @@
 extern "C" {
 #endif
 
+/// FIXME: Extend with FPU registers if enabled
 typedef union {
   uint32_t storage[ 17 ];
   struct {
@@ -60,10 +61,6 @@ typedef union {
     uint32_t spsr;
   } reg;
 } PACKED cpu_register_context_t;
-
-void cpu_invalidate_cache( void );
-void cpu_disable_cache( void );
-void cpu_enable_cache( void );
 
 void dump_register( cpu_register_context_t* );
 

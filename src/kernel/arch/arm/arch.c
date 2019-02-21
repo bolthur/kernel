@@ -19,7 +19,6 @@
  */
 
 #include "kernel/kernel/arch.h"
-#include "kernel/arch/arm/fpu.h"
 
 /**
  * @brief Method to initialize architecture related code
@@ -27,7 +26,4 @@
 void arch_init( void ) {
   // execute sub arch
   arch_sub_init();
-
-  // enable floating point unit
-  fpu_enable();
 }

@@ -25,6 +25,4 @@ libstdc_a_SOURCES = \
   string/memset.c \
   string/strcmp.c \
   string/strlen.c \
-  string/strncpy.c \
-  string/strnlen.c \
   string/strrev.c

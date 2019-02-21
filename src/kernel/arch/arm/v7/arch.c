@@ -21,6 +21,4 @@
 #include "kernel/arch/arm/v7/cpu.h"
 
 void arch_sub_init( void ) {
-  // enable caching
-  // cpu_enable_cache();
 }

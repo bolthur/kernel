@@ -24,7 +24,6 @@
 #include "lib/stdc/stdlib.h"
 #include "kernel/kernel/arch.h"
 #include "kernel/kernel/tty.h"
-#include "kernel/kernel/event.h"
 #include "kernel/kernel/irq.h"
 #include "kernel/kernel/timer.h"
 #include "kernel/kernel/platform.h"
@@ -82,16 +81,6 @@ void kernel_main() {
   // Setup heap
   printf( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
 
-  // Setup event system
-  printf( "[bolthur/kernel -> event] initialize ...\r\n" );
-  event_init();
-
-  // Setup debug if enabled
-  #if defined( DEBUG )
-    printf( "[bolthur/kernel -> debug] initialize ...\r\n" );
-    debug_init();
-  #endif
-
   // Setup timer
   printf( "[bolthur/kernel -> timer] initialize ...\r\n" );
   timer_init();
@@ -99,11 +88,6 @@ void kernel_main() {
   // Setup irq
   printf( "[bolthur/kernel -> irq] enable ...\r\n" );
   irq_enable();
-
-  // Debug breakpoint to kickstart remote gdb
-  #if defined( DEBUG )
-    debug_breakpoint();
-  #endif
 
   while ( 1 ) {}
 }

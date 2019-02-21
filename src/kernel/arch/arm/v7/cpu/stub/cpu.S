@@ -37,27 +37,3 @@ _hlt:
   b _hlt
 _cpu_smp_reset:
   bx lr
-
-// FIXME: Add logic
-.global cpu_invalidate_cache
-cpu_invalidate_cache:
-  bx lr
-
-// FIXME: Add logic
-.global cpu_disable_cache
-cpu_disable_cache:
-  bx lr
-
-.global cpu_enable_cache
-cpu_enable_cache:
-  // read system control register into r0
-  mrc p15, 0, r0, c1, c0, 0
-
-  // enable caches and branch prediction
-  orr r0, #SYS_CTRL_REG_ENABLE_DATA_CACHE
-  orr r0, #SYS_CTRL_REG_ENABLE_BRANCH_PREDICTION
-  orr r0, #SYS_CTRL_REG_ENABLE_INSTRUCTION_CACHE
-
-  // push back to system control register
-  mcr p15, 0, r0, c1, c0, 0
-  bx lr

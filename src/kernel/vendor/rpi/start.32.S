@@ -23,7 +23,7 @@
 // forward declaration for save of parameter
 .extern loader_parameter_data
 
-.section .text.boot
+.section .text
 
 .global start
 start:

@@ -13,8 +13,6 @@ libkernel_a_SOURCES = \
   mm/phys.c \
   mm/placement.c \
   mm/virt.c \
-  debug.c \
-  event.c \
   irq.c \
   main.c \
   panic.c

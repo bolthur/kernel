@@ -29,7 +29,9 @@
 * [ ] FPU
   * [x] Check and revise fpu code
   * [x] Check and remove direct floating point usage within kernel except saving of floating point registers
-  * [ ] Check why current implementation is not working on real hardware
+  * [x] Check why current implementation is not working on real hardware
+  * [ ] Add push and pop of fpu registers within ivt stubs
+  * [ ] Extend cpu structure if fpu is enabled
 * [x] Move includes into extra folder with subfolders
 * [x] Move source into extra folder with subfolders
 * [ ] Memory management
@@ -42,7 +44,7 @@
     * [x] Cleanup initial mapping within `boot`
   * [x] Ensure that kernel with and without higher half define works as expected within emulator and on real device
     * [x] Get kernel to work again with real hardware, currently breaking during mmu setup
-  * [ ] Check and revise stack setup for interrupt vector table regarding possible higher half
+  * [x] Check and revise stack setup for interrupt vector table regarding possible higher half
   * [ ] Add normal setup of mmu during startup of kernel splitted to folders listed below
     * [ ] `kernel/arch/{architecture}/mm`
     * [ ] `kernel/arch/{architecture}/{sub architecture}/mm`
@@ -67,9 +69,8 @@
   * [ ] Rename to `libk` and remove all non kernel related parts
   * [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
 * [ ] Add gdb stub for debugging on remote device via serial port
-  * [ ] Rework existing unfinished remote debugging code
-  * [ ] Find better place for `serial_init` than `tty_init`
-  * [ ] Finalize remote debugging integration
+  * [x] Find better place for `serial_init` than `tty_init`
+  * [ ] Add remote debugging integration
   * [ ] Finish debug launch.json when remote debugging is possible
 * [ ] Add multitasking
 * [ ] Implement syscall handling via `swi`
@@ -117,8 +118,8 @@
   * [ ] Extend automake by option for use atag
   * [ ] Add parse of atag when compiled in via option
   * [ ] Debug output, when no atag has been passed and use kernel defaults
-* [ ] Autotools / Compilation
-  * [ ] Check and revise kernel to work with all optimization levels
+* [x] Autotools / Compilation
+  * [x] Check and revise kernel to work with all optimization levels
   * [x] Check autotools setup to get compilation with more than one core to work
 * [ ] Support further platforms
   * [ ] Test and fix rpi 2 rev. 1 support with real hardware

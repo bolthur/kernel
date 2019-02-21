@@ -28,7 +28,7 @@
 #elif defined( ARCH_ARM_V7 )
   #include "kernel/arch/arm/v7/cpu.h"
 #elif defined( ARCH_ARM_V8 )
-  #error "Architecture not supported!"
+  #include "kernel/arch/arm/v8/cpu.h"
 #endif
 
 #include "kernel/arch/arm/delay.h"
@@ -38,7 +38,6 @@
 
 #include "kernel/kernel/timer.h"
 #include "kernel/kernel/irq.h"
-#include "kernel/kernel/event.h"
 
 
 // free running counter incrementing at 1 MHz => Increments each microsecond
@@ -151,9 +150,6 @@ void timer_init( void ) {
   __asm__ __volatile__ ( "mcr p15, 0, %0, c14, c3, 1" :: "r"( cntv_ctl ) ); // write CNTV_CTL
 
   irq_register_handler( ( 1 << 3 ), timer_clear, false );
-
-  // following call is producing data abort on real hardware
-  // event_bind_handler( EVENT_TIMER, timer_clear2 );
 
   /*// testing timer with led
   mmio_write( GPFSEL4, mmio_read( GPFSEL4 ) | 21 );

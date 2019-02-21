@@ -21,7 +21,7 @@
 // forward declaration for save of parameter
 .extern boot_parameter_data
 
-.section .text.boot
+.section .text
 
 .global start
 start:

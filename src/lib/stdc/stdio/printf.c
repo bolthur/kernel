@@ -145,8 +145,8 @@ int printf( const char* restrict format, ... ) {
           radix = 10;
         }
 
-        if ( ! n ) {
-          n = 0;
+        if ( ! un ) {
+          un = 0;
           // Set errno to EOVERFLOW
           // return -1;
         }

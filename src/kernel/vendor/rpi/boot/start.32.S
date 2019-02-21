@@ -93,6 +93,9 @@ boot_start:
   // save boot parameter data
   push { r0 - r2 }
 
+  // enable fpu necessary for optimization level 3
+  bl fpu_enable
+
   // clear bss section
   bl boot_bss_clear
 

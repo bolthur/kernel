@@ -18,13 +18,24 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernel/kernel/debug.h"
+.section .text.boot
 
 /**
- * @brief Debug breakpoint halt
- *
- * @todo check and revise
+ * @brief Method to enable floating point unit when fpu enabled flag is set
  */
-void debug_breakpoint( void ) {
-  __asm__ __volatile__( "swi 3" );
-}
+.global fpu_enable
+fpu_enable:
+  #if defined( FPU_ENABLED )
+    // read co processor access controll register into r0
+    mrc p15, 0, r0, c1, c0, 2
+    // enable full access for everyone
+    orr r0, r0, #( 0xf << 20 )
+    // write back changes
+    mcr p15, 0, r0, c1, c0, 2
+
+    // Set FPEXC.EN bit to enable fpu
+    mov r0, #( 0x1 << 30 )
+    // Transfer change to vfp system register
+    vmsr fpexc, r0
+  #endif
+  bx lr

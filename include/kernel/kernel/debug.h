@@ -32,22 +32,4 @@
   printf( "[ %s ] ", __func__ ); \
   printf( msg, __VA_ARGS__ );
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
-typedef struct {
-  const char *filename;
-  uint32_t line;
-  uint64_t addr;
-  const char *msg;
-} bug_entry_t;
-
-void debug_init( void );
-void debug_breakpoint( void );
-
-#if defined( __cplusplus )
-}
-#endif
-
 #endif
