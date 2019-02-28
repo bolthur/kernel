@@ -74,7 +74,7 @@ bool irq_validate_number( uint8_t num ) {
  * @todo check and revise
  */
 int8_t irq_get_pending( bool fast ) {
-  uint32_t base = peripheral_base_get();
+  uint32_t base = ( uint32_t )peripheral_base_get();
 
   // normal irq
   if ( ! fast ) {

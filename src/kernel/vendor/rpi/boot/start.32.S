@@ -27,6 +27,12 @@
   .arch_extension virt
 #endif
 
+// defines for bcm2709 and bcm2719
+#if defined( BCM2709 ) || defined( BCM2710 )
+  #define TIMER_ENABLE 1
+  #define TIMER_OSC 19200000
+#endif
+
 .section .text.boot
 
 .global boot_start
@@ -49,6 +55,7 @@ boot_start:
     2:
   #endif
 
+  // switch to svc mode if necessary
   #if defined( BCM2709 ) || defined( BCM2710 )
     // check for hypervisor mode and switch back to supervisor mode for rpi2 and rpi3
     mrs r3, cpsr
@@ -69,6 +76,7 @@ boot_start:
       mov sp, r4
   #endif
 
+  // smp bit
   #if defined( BCM2709 )
     // Set SMP bit within auxiliary control register
     mrc p15, 0, r3, c1, c0, 1
@@ -79,6 +87,17 @@ boot_start:
     mrrc p15, 1, r3, r1, c15
     orr r3, r3, #( 1 << 6 )
     mcrr p15, 1, r3, r1, c15
+  #endif
+
+  // timer initialization ( as seen within rpi tools stub )
+  #if defined( BCM2709 ) || defined( BCM2710 )
+    // enable timer without mask
+    ldr r3, =TIMER_ENABLE
+    mcr p15, 0, r3, c14, c3, 1
+
+    // load value and write CNTFRQ
+    ldr r3, =TIMER_OSC
+    mcr	p15, 0, r3, c14, c0, 0
   #endif
 
   // Disable caches within system controll register

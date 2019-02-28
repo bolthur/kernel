@@ -21,18 +21,10 @@
 #if ! defined( __KERNEL_VENDOR_RPI_PERIPHERAL__ )
 #define __KERNEL_VENDOR_RPI_PERIPHERAL__
 
-#include <stdint.h>
+#include "kernel/kernel/type.h"
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
-void peripheral_base_set( uintptr_t );
-uintptr_t peripheral_base_get( void );
-uintptr_t peripheral_end_get( void );
-
-#if defined( __cplusplus )
-}
-#endif
+void peripheral_base_set( vaddr_t );
+vaddr_t peripheral_base_get( void );
+vaddr_t peripheral_end_get( void );
 
 #endif

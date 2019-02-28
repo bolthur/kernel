@@ -90,6 +90,18 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
       ptb_index += 2;
       break;
 
+    case TAG_GET_CLOCK_STATE:
+    case TAG_GET_CLOCK_RATE:
+    case TAG_GET_MAX_CLOCK_RATE:
+    case TAG_GET_MIN_CLOCK_RATE:
+    case TAG_GET_TURBO:
+      // provide 8-byte buffer for response
+      ptb[ ptb_index++ ] = 8;
+      ptb[ ptb_index++ ] = 0; // request
+      ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // clock
+      ptb_index += 2;
+      break;
+
     case TAG_GET_CLOCKS:
     case TAG_GET_COMMAND_LINE:
       // provide a 256-byte buffer
@@ -166,6 +178,28 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
       } else {
         ptb_index += 4;
       }
+      break;
+
+    case TAG_SET_CLOCK_RATE:
+      ptb[ ptb_index++ ] = 12; // request size
+      ptb[ ptb_index++ ] = 8; // response size
+
+      ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // clock
+      ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // Hz
+      ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // turbo
+
+      ptb_index += 2;
+      break;
+
+    case TAG_SET_CLOCK_STATE:
+      ptb[ ptb_index++ ] = 8; // request size
+      ptb[ ptb_index++ ] = 8; // response size
+
+      // push request parameters
+      ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // clock
+      ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // state
+
+      ptb_index += 2;
       break;
 
     default:

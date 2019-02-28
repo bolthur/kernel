@@ -24,37 +24,29 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 // forward declarations
 typedef struct avl_node avl_node_t;
 
 // type declarations
-typedef int avl_compare_func_t( const void *avl_a, const void *avl_b, void *avl_param );
+typedef int avl_compare_func_t( const void* avl_a, const void* avl_b, void* avl_param );
 
 typedef struct avl_node {
-  void *data;
+  void* data;
 
   int8_t balance;
 
-  avl_node_t *left;
-  avl_node_t *right;
+  avl_node_t* left;
+  avl_node_t* right;
 } avl_node_t;
 
 typedef struct avl_tree {
-  avl_node_t *root;
-  avl_compare_func_t *compare;
-  void *param;
+  avl_node_t* root;
+  avl_compare_func_t* compare;
+  void* param;
   // alloc
   size_t count;
 } avl_tree_t;
 
-avl_tree_t *avl_create(avl_compare_func_t*, void *);
-
-#if defined( __cplusplus )
-}
-#endif
+avl_tree_t* avl_create( avl_compare_func_t*, void* );
 
 #endif

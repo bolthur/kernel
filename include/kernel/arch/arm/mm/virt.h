@@ -19,23 +19,17 @@
  */
 
 #if ! defined( ASSEMBLER_FILE )
-  #include <stdint.h>
+  #include "kernel/kernel/type.h"
 #endif
 
 #if ! defined( __KERNEL_ARCH_ARM_MM_VIRT__ )
 #define __KERNEL_ARCH_ARM_MM_VIRT__
   #if defined( ELF32 )
-    // helper macros
-    #if ! defined( ASSEMBLER_FILE )
-      #define SD_VIRTUAL_TO_TABLE( a ) ( ( uint32_t ) a >> 20  )
-      #define SD_VIRTUAL_TO_PAGE( a ) ( ( ( uint32_t ) a >> 12 ) & 0xFF )
-    #endif
-
-    // short descriptor format defines
-    #define ID_MMFR0_VSMA_SUPPORT_V6_PAGING 0x2
-    #define ID_MMFR0_VSMA_SUPPORT_V7_PAGING_REMAP_ACCESS 0x3
-    #define ID_MMFR0_VSMA_SUPPORT_V7_PAGING_PXN 0x4
-    #define ID_MMFR0_VSMA_SUPPORT_V7_PAGING_LPAE 0x5
+    // supported paging defines
+    #define ID_MMFR0_VSMA_V6_PAGING 0x2
+    #define ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS 0x3
+    #define ID_MMFR0_VSMA_V7_PAGING_PXN 0x4
+    #define ID_MMFR0_VSMA_V7_PAGING_LPAE 0x5
 
     // memory access permissions
     #define SD_MAC_APX0_NO_ACCESS 0x0
@@ -54,17 +48,14 @@
     #define SD_DOMAIN_MANAGER 0x3
 
     // ttbcr defines
-    #define SD_TTBCR_N_TTBR0_4G ( 0x0 << 0 )
-    #define SD_TTBCR_N_TTBR0_2G ( 0x1 << 0 )
-    #define SD_TTBCR_N_TTBR0_1G ( 0x2 << 0 )
-    #define SD_TTBCR_N_TTBR0_512M ( 0x3 << 0 )
-    #define SD_TTBCR_N_TTBR0_256M ( 0x4 << 0 )
-    #define SD_TTBCR_N_TTBR0_128M ( 0x5 << 0 )
-    #define SD_TTBCR_N_TTBR0_64M ( 0x6 << 0 )
-    #define SD_TTBCR_N_TTBR0_32M ( 0x7 << 0 )
-    #define SD_TTBCR_TABLE_WALK_TTBR0 ( 0x1 << 4 )
-    #define SD_TTBCR_TABLE_WALK_TTBR1 ( 0x1 << 5 )
-    #define SD_TTBCR_EAE ( 0x1 << 31 )
+    #define SD_TTBCR_N_TTBR0_4G 0x0
+    #define SD_TTBCR_N_TTBR0_2G 0x1
+    #define SD_TTBCR_N_TTBR0_1G 0x2
+    #define SD_TTBCR_N_TTBR0_512M 0x3
+    #define SD_TTBCR_N_TTBR0_256M 0x4
+    #define SD_TTBCR_N_TTBR0_128M 0x5
+    #define SD_TTBCR_N_TTBR0_64M 0x6
+    #define SD_TTBCR_N_TTBR0_32M 0x7
 
     // ttbr0 sizes
     #define SD_TTBR_SIZE_4G 0x4000
@@ -101,12 +92,20 @@
     #define SD_TTBR_TYPE_SECTION 1
     #define SD_TTBR_TYPE_SECTION_PXN 1
 
+    // page table sizes
+    #define SD_TBL_SIZE 0x400
+    #define SD_PAGE_SIZE 0x1000
+
     // second level table
     #define SD_TBL_INVALID 0x0
     #define SD_TBL_LARGE_PAGE 0x1
     #define SD_TBL_SMALL_PAGE 0x2
 
     #if ! defined( ASSEMBLER_FILE )
+      // helper macros
+      #define SD_VIRTUAL_TO_TABLE( a ) ( ( paddr_t ) a >> 20  )
+      #define SD_VIRTUAL_TO_PAGE( a ) ( ( ( paddr_t ) a >> 12 ) & 0xFF )
+
       typedef union PACKED {
         uint32_t raw;
         struct {

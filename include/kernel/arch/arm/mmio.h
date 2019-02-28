@@ -23,15 +23,7 @@
 
 #include <stdint.h>
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 void mmio_write( uint32_t, uint32_t );
 uint32_t mmio_read( uint32_t );
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

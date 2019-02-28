@@ -21,14 +21,6 @@
 #if ! defined( __KERNEL_ARCH_ARM_IVT__ )
 #define __KERNEL_ARCH_ARM_IVT__
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 void ivt_init( void );
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

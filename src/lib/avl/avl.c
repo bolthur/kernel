@@ -20,7 +20,7 @@
 
 #include "lib/avl/avl.h"
 
-avl_tree_t *avl_create( avl_compare_func_t *func, void *param ) {
+avl_tree_t* avl_create( avl_compare_func_t *func, void* param ) {
   ( void )func;
   ( void )param;
 

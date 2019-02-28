@@ -102,6 +102,9 @@
 /* Define to 1 to enable output of virtual memory manager */
 #undef PRINT_MM_VIRT
 
+/* Define to 1 to enable output of timer */
+#undef PRINT_TIMER
+
 /* Keyword for section placement. */
 #undef SECTION
 

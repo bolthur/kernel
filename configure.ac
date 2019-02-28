@@ -66,6 +66,10 @@ AC_ARG_ENABLE([output-mailbox],
   AC_HELP_STRING([--enable-output-mailbox], [Enables output of mailbox functions (default: off)])
 )
 
+AC_ARG_ENABLE([output-timer],
+  AC_HELP_STRING([--enable-output-timer], [Enables output of timer functions (default: off)])
+)
+
 AC_ARG_ENABLE([opt],
   AC_HELP_STRING([--disable-opt], [disable code optimization (default: on)]),
   [case "${enableval}" in

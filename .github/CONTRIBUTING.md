@@ -22,7 +22,7 @@ To setup for making changes you'll need to take a few steps, which we've outline
 
 1. Fork repository [bolthur/kernel](https://github.com/bolthur/kernel). If you're not sure how to fork the repository, GitHub has a [guide](https://help.github.com/articles/fork-a-repo/) for the process and checkout the fork.
 
-2. Setup cross compilation environment. Easiest way to achieve that is to execute the shell script `scripts/cross-gcc.sh`. Short annotation for mac users, having binutils installed via brew or something else may lead to errors during compilation of cross compiler.
+2. Setup cross compilation environment. Easiest way to achieve that is to execute the shell script `scripts/cross-gcc.sh`. Annotation for mac users, having binutils installed via brew or something else may lead to errors during compilation of cross compiler.
 
 3. Prepare checkout for compilation by executing the shellscript `autogen.sh`. If already checked out and executed, and some new files have been added to one of the `Makefile.am` files, you have to execute `autoreconf -i`. Both the shell script and the autoreconf have to be executed within project root.
 
@@ -37,7 +37,7 @@ Short branch breakdown
 - `master` - Make your change at the `master` branch in case that it is an *urgent* hotfix
 - `develop` - Make your change at the `develop` branch, when it's a *non-urgent* bugfix or feature.
 
-The change should be made directly to the correct branch within your fork or to a branch branched from the correct branch listed above.
+The change should be made directly to the correct branch within your fork or to a branch branched from the correct branch listed above. Also ensure, that there is an issue existing for the change you want to submit.
 
 ### Testing Your change
 
@@ -45,7 +45,9 @@ You can test your change by using a real device or something like qemu. If you'r
 
 ### Submitting Your change
 
-After you've made and tested the change, commit and push it to the fork. After that open a Pull Request from your fork to the main repository on the branch used in `Making a change` section of this document. Keep the fork up to date by using rebase instead of normal merge which would result in more merge commits than necessary.
+After you've made and tested the change, commit and push it to the fork. After that open a [draft pull request](https://github.blog/2019-02-14-introducing-draft-pull-requests/) from your fork to the main repository on the branch used in `Making a change` section of this document. Keep the fork up to date by using rebase instead of normal merge which would result in more merge commits than necessary.
+
+Once all discussions have been completed, and the related issue is scheduled within the current milestone, the pull request is going to be merged.
 
 ## Code style guide
 

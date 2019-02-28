@@ -74,6 +74,7 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-mm-heap` activate tty output of kernel heap
 * `--enable-output-mm-placement` activate tty output of placement allocator
 * `--enable-output-mailbox` activate tty output of mailbox implementation
+* `--enable-output-timer` activate tty output of timer implementation
 
 ### Building
 

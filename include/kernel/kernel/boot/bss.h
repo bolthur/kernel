@@ -23,10 +23,6 @@
 #if ! defined( __KERNEL_BOOT_BSS__ )
 #define __KERNEL_BOOT_BSS__
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 // type definition for bss fields
 #if defined( ELF32 )
   typedef uint32_t bss_type_t;
@@ -37,9 +33,5 @@ extern "C" {
 // bss fields from linker script
 bss_type_t __bss_start;
 bss_type_t __bss_end;
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

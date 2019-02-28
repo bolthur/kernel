@@ -18,23 +18,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if ! defined( __KERNEL_MM_VIRT__ )
+#define __KERNEL_MM_VIRT__
+
 #include <stdint.h>
 #include <stdbool.h>
 
-#if ! defined( __KERNEL_MM_VIRT__ )
-#define __KERNEL_MM_VIRT__
+#include "kernel/kernel/type.h"
 
 typedef enum {
   CONTEXT_TYPE_KERNEL = 1,
   CONTEXT_TYPE_USER,
 } virt_context_type_t;
 
+extern bool virt_use_physical_table;
+
 void virt_init( void );
 void virt_vendor_init( void );
 bool virt_initialized_get( void );
 
-void* virt_create_context( virt_context_type_t );
-void* virt_create_table( void );
-void virt_map_address( void*, void*, void*, uint32_t );
+vaddr_t virt_create_context( virt_context_type_t );
+vaddr_t virt_create_table( void );
+void virt_map_address( vaddr_t, vaddr_t, paddr_t, uint32_t );
+uint32_t virt_get_supported_modes( void );
 
 #endif

@@ -18,16 +18,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stddef.h>
-
 #if ! defined( __KERNEL_MM_PLACEMENT__ )
 #define __KERNEL_MM_PLACEMENT__
 
+#include <stddef.h>
+#include "kernel/kernel/type.h"
+
 #define PLACEMENT_NO_ALIGN 0
 
-extern uintptr_t placement_address;
-
-void* placement_alloc( size_t, size_t );
+extern paddr_t placement_address;
+vaddr_t placement_alloc( size_t, size_t );
 
 #endif

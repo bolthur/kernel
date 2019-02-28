@@ -18,10 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-
 #if ! defined( __KERNEL_VENDOR_RPI_FRAMEBUFFER__ )
 #define __KERNEL_VENDOR_RPI_FRAMEBUFFER__
+
+#include "kernel/kernel/type.h"
 
 #define FRAMEBUFFER_SCREEN_WIDTH 1024
 #define FRAMEBUFFER_SCREEN_HEIGHT 768
@@ -30,8 +30,8 @@
 void framebuffer_init( void );
 void framebuffer_putc( uint8_t );
 
-uintptr_t framebuffer_base_get( void );
-void framebuffer_base_set( uintptr_t );
+vaddr_t framebuffer_base_get( void );
+void framebuffer_base_set( vaddr_t );
 uint32_t framebuffer_size_get( void );
 void framebuffer_size_set( uint32_t );
 

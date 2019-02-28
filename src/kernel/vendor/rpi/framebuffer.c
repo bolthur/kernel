@@ -26,6 +26,7 @@
 #include "lib/stdc/string.h"
 #include "font/font.8x8.h"
 #include "kernel/kernel/debug.h"
+#include "kernel/kernel/type.h"
 #include "kernel/vendor/rpi/framebuffer.h"
 #include "kernel/vendor/rpi/mailbox/property.h"
 
@@ -72,7 +73,7 @@ void framebuffer_init( void ) {
   }
 
   if ( ( mp = mailbox_property_get( TAG_ALLOCATE_BUFFER ) ) ) {
-    framebuffer_base_set( mp->data.buffer_u32[ 0 ] );
+    framebuffer_base_set( ( vaddr_t )mp->data.buffer_u32[ 0 ] );
     framebuffer_size_set( mp->data.buffer_u32[ 1 ] );
 
     DEBUG_OUTPUT( "framebuffer address = 0x%08p\tsize = 0x%08p\r\n", address, size );
@@ -84,10 +85,10 @@ void framebuffer_init( void ) {
 /**
  * @brief Method to get framebuffer base address
  *
- * @return uintptr_t
+ * @return vaddr_t
  */
-uintptr_t framebuffer_base_get( void ) {
-  return ( uintptr_t )address;
+vaddr_t framebuffer_base_get( void ) {
+  return ( vaddr_t )address;
 }
 
 /**
@@ -95,7 +96,7 @@ uintptr_t framebuffer_base_get( void ) {
  *
  * @param a
  */
-void framebuffer_base_set( uintptr_t a ) {
+void framebuffer_base_set( vaddr_t a ) {
   address = ( uint8_t* )a;
 }
 
@@ -171,10 +172,10 @@ static void scroll( void ) {
   }
 
   // move memory up
-  memmove( ( void* )address, ( void* )src, max_y * row_size );
+  memmove( ( vaddr_t )address, ( vaddr_t )src, max_y * row_size );
 
   // erase last line
-  memset( ( void* )( address + ( max_y * row_size ) ), 0, row_size );
+  memset( ( vaddr_t  )( address + ( max_y * row_size ) ), 0, row_size );
 
   x = 0;
 }

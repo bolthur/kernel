@@ -28,20 +28,21 @@
 #include "kernel/kernel/mm/virt.h"
 #include "kernel/kernel/mm/heap.h"
 #include "kernel/kernel/entry.h"
+#include "kernel/kernel/type.h"
 
 /**
  * @brief placement address starting at kernel end
  */
-uintptr_t placement_address = VIRT_2_PHYS( &__kernel_end );
+paddr_t placement_address = VIRT_2_PHYS( &__kernel_end );
 
 /**
  * @brief Placement allocator
  *
  * @param size amount of memory to align
  * @param alignment alignment
- * @return void* found address
+ * @return vaddr_t found address
  */
-void* placement_alloc( size_t size, size_t alignment ) {
+vaddr_t placement_alloc( size_t size, size_t alignment ) {
   // check for heap not initialized
   if ( heap_initialized_get() || virt_initialized_get() ) {
     PANIC( "placement_alloc used with initialized heap or virtual manager!" );
@@ -54,7 +55,7 @@ void* placement_alloc( size_t size, size_t alignment ) {
   bool phys = phys_initialized_get();
 
   // build return address
-  void* address = ( void* )placement_address;
+  vaddr_t address = ( vaddr_t )placement_address;
 
   // debug output
   #if defined( PRINT_MM_PLACEMENT )
@@ -66,10 +67,10 @@ void* placement_alloc( size_t size, size_t alignment ) {
   // handle alignment
   if ( PLACEMENT_NO_ALIGN != alignment ) {
     // increase offset
-    offset += ( alignment - ( uintptr_t )placement_address % alignment );
+    offset += ( alignment - ( paddr_t )placement_address % alignment );
 
     // increase address
-    address = ( void* )( ( uintptr_t )address + offset );
+    address = ( vaddr_t )( ( paddr_t )address + offset );
 
     // debug output
     #if defined( PRINT_MM_PLACEMENT )
@@ -83,7 +84,7 @@ void* placement_alloc( size_t size, size_t alignment ) {
 
   // mark as used at physical memory manager if initialized
   if ( phys ) {
-    phys_use_page_range( ( void* )placement_address, offset );
+    phys_use_page_range( ( vaddr_t )placement_address, offset );
   }
 
   // move up placement address

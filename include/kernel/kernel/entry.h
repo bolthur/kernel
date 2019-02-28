@@ -21,6 +21,8 @@
 #if ! defined( __KERNEL_ENTRY__ )
 #define __KERNEL_ENTRY__
 
+#include "kernel/kernel/type.h"
+
 #if defined( IS_HIGHER_HALF )
   #if defined( ELF32 )
     #define KERNEL_OFFSET 0xC0000000
@@ -31,10 +33,10 @@
   #define KERNEL_OFFSET 0
 #endif
 
-#define PHYS_2_VIRT( a ) ( ( ( uintptr_t )( a ) + KERNEL_OFFSET ) )
-#define VIRT_2_PHYS( a ) ( ( ( uintptr_t )( a ) - KERNEL_OFFSET ) )
+#define PHYS_2_VIRT( a ) ( ( ( paddr_t )( a ) + KERNEL_OFFSET ) )
+#define VIRT_2_PHYS( a ) ( ( ( paddr_t )( a ) - KERNEL_OFFSET ) )
 
-extern uintptr_t __kernel_start;
-extern uintptr_t __kernel_end;
+extern paddr_t __kernel_start;
+extern paddr_t __kernel_end;
 
 #endif

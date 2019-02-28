@@ -27,10 +27,6 @@
 #define TAR_VERSION "00"
 #define TAR_VERSION_LENGTH 2
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 typedef struct {
   char file_name[ 100 ];
   char file_mode[ 8 ];
@@ -49,9 +45,5 @@ typedef struct {
   char device_minor_number[ 8 ];
   char filename_prefix[ 155 ];
 } tar_header_t;
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

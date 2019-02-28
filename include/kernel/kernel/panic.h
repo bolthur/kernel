@@ -26,15 +26,7 @@
 #define PANIC( msg ) panic( msg, __FILE__, __LINE__ );
 #define ASSERT( b ) ( b ? (void)0 : panic_assert( __FILE__, __LINE__, #b ) );
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 void panic(const char*, const char*, uint32_t);
 void panic_assert(const char*, uint32_t, const char*);
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

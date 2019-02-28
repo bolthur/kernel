@@ -35,9 +35,6 @@
 /**
  * @brief Kernel main function
  */
-#if defined(__cplusplus)
-extern "C" /* Use C linkage for kernel_main. */
-#endif
 void kernel_main() {
   // Initialize serial for debugging if enabled
   #if defined( DEBUG )

@@ -23,16 +23,8 @@
 
 #define EOF ( -1 )
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 int printf( const char* restrict, ... );
 int putchar( int );
 int puts( const char* );
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

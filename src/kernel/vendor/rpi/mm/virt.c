@@ -32,18 +32,18 @@
 #include "kernel/vendor/rpi/peripheral.h"
 #include "kernel/vendor/rpi/framebuffer.h"
 
-void *user_context;
-void *kernel_context;
+vaddr_t user_context;
+vaddr_t kernel_context;
 
 /**
  * @brief Initialize virtual memory management
  */
 void virt_vendor_init( void ) {
   // get new kernel context and temporary user context
-  kernel_context = ( void* )PHYS_2_VIRT(
+  kernel_context = ( vaddr_t )PHYS_2_VIRT(
     placement_alloc( SD_TTBR_SIZE_4G, SD_TTBR_ALIGNMENT_4G )
   );
-  user_context = ( void* )PHYS_2_VIRT(
+  user_context = ( vaddr_t )PHYS_2_VIRT(
     placement_alloc( SD_TTBR_SIZE_2G, SD_TTBR_ALIGNMENT_2G )
   );
 

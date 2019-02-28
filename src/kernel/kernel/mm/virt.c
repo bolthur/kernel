@@ -22,6 +22,7 @@
 #include <stdbool.h>
 
 #include "kernel/kernel/mm/virt.h"
+#include "kernel/kernel/panic.h"
 
 /**
  * @brief static initialized flag
@@ -29,14 +30,28 @@
 static bool virt_initialized = false;
 
 /**
+ * @brief Flag for indicating usage of physical tables
+ */
+bool virt_use_physical_table = false;
+
+/**
  * @brief Generic initialization of virtual memory manager
  */
 void virt_init( void ) {
+  // assert no initialize
+  ASSERT( true != virt_initialized );
+
+  // set use physical to true
+  virt_use_physical_table = true;
+
   // initialize vendor init
   virt_vendor_init();
 
   // set static
   virt_initialized = true;
+
+  // reset use physical table flag
+  virt_use_physical_table = false;
 }
 
 /**

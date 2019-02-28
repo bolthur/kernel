@@ -23,19 +23,11 @@
 #if ! defined( __FONT_FONT8x8__ )
 #define __FONT_FONT8x8__
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 #define FONT_HEIGHT 8
 #define FONT_WIDTH 8
 
 #define TAB_WIDTH FONT_WIDTH * 4
 
 extern uint8_t font8x8_basic[ 128 ][ 8 ];
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

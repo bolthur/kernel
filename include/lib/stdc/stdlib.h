@@ -26,17 +26,9 @@
 
 #define RAND_MAX 32767
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 char *itoa( int32_t, char*, int32_t, bool );
 int rand( void );
 void srand( unsigned int );
 char *utoa( uint32_t, char*, int32_t, bool );
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

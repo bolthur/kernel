@@ -23,12 +23,9 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "kernel/kernel/type.h"
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
-typedef void ( *irq_callback_t )( uint8_t, void* );
+typedef void ( *irq_callback_t )( uint8_t, vaddr_t );
 extern irq_callback_t irq_callback_map[];
 extern irq_callback_t fast_irq_callback_map[];
 
@@ -42,9 +39,5 @@ void irq_setup_event( void );
 // FIXME: Remove when event system is active
 void irq_register_handler( uint8_t, irq_callback_t, bool );
 bool irq_validate_number( uint8_t );
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

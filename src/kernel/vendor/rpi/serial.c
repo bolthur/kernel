@@ -28,6 +28,7 @@
 
 #include "kernel/vendor/rpi/peripheral.h"
 #include "kernel/vendor/rpi/gpio.h"
+#include "kernel/vendor/rpi/mailbox/property.h"
 
 #include "kernel/kernel/serial.h"
 
@@ -37,7 +38,7 @@
  * @todo check and revise
  */
 void serial_init( void ) {
-  uint32_t base = peripheral_base_get();
+  uint32_t base = ( uint32_t )peripheral_base_get();
 
   // Disable UART0.
   mmio_write( base + UARTCR, 0 );
@@ -69,10 +70,28 @@ void serial_init( void ) {
   // Fraction part register = (Fractional part * 64) + 0.5
   // UART_CLOCK = 3000000; Baud = 115200.
 
-  // Divider = 3000000 / (16 * 115200) = 1.627 = ~1.
-  mmio_write( base + UARTIBRD, 1 );
-  // Fractional part register = (.627 * 64) + 0.5 = 40.6 = ~40.
-  mmio_write( base + UARTFBRD, 40 );
+  // query mailbox to get uart clock rate
+  mailbox_property_init();
+  mailbox_property_add_tag( TAG_GET_CLOCK_RATE, TAG_CLOCK_UART );
+  mailbox_property_process();
+
+  // get clock rate property
+  rpi_mailbox_property_t *p = mailbox_property_get( TAG_GET_CLOCK_RATE );
+  uint32_t clock_rate = p->data.buffer_u32[ 1 ];
+
+  // calculate divider
+  float divider = ( float )clock_rate / ( 16 * 115200 );
+  // cast to integer for later write to ibrd
+  uint32_t brd = ( uint32_t )divider;
+
+  // calculate fractional
+  float fractional = divider - ( float )brd;
+  // calculate fractional for later write to fbrd
+  uint32_t frd = ( uint32_t )( ( fractional * 64 ) + 0.5 );
+
+  // write baud rate
+  mmio_write( base + UARTIBRD, brd );
+  mmio_write( base + UARTFBRD, frd );
 
   // Enable FIFO & 8 bit data transmissio (1 stop bit, no parity).
   mmio_write( base + UARTLCRH, ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 ) );
@@ -96,7 +115,7 @@ void serial_init( void ) {
  * @todo check and revise
  */
 void serial_putc( uint8_t c ) {
-  uint32_t base = peripheral_base_get();
+  uint32_t base = ( uint32_t )peripheral_base_get();
 
   // Wait for UART to become ready to transmit.
   while ( 0 != ( mmio_read( base + UARTFR ) & ( 1 << 5 ) ) ) { }
@@ -111,7 +130,7 @@ void serial_putc( uint8_t c ) {
  * @todo check and revise
  */
 uint8_t serial_getc( void ) {
-  uint32_t base = peripheral_base_get();
+  uint32_t base = ( uint32_t )peripheral_base_get();
 
   // Wait for UART to become ready for read
   while ( mmio_read( base + UARTFR ) & ( 1 << 4 ) ) { }
@@ -126,7 +145,7 @@ uint8_t serial_getc( void ) {
  * @todo check and revise
  */
 void serial_flush( void ) {
-  uint32_t base = peripheral_base_get();
+  uint32_t base = ( uint32_t )peripheral_base_get();
 
   // read from uart until as long as something is existing to flush
   while ( ! ( mmio_read( base + UARTFR ) & ( 1 << 4 ) ) ) {

@@ -138,7 +138,7 @@ int printf( const char* restrict format, ... ) {
       case 'u':
       case 'p':
         if ( 'p' == *format ) {
-          un = ( uintptr_t )va_arg( parameters, void* );
+          un = ( uint32_t )va_arg( parameters, void* );
           radix = 16;
         } else {
           un = va_arg( parameters, uint32_t );

@@ -30,10 +30,6 @@
 #define MAILBOX_FULL 0x80000000
 #define MAILBOX_EMPTY 0x40000000
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 typedef enum {
   MAILBOX0_POWER_MANAGEMENT = 0,
   MAILBOX0_FRAMEBUFFER,
@@ -61,9 +57,5 @@ typedef struct {
 
 uint32_t mailbox_read( mailbox0_channel_t );
 void mailbox_write( mailbox0_channel_t, uint32_t );
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

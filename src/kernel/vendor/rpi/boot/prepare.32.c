@@ -43,12 +43,11 @@ void SECTION( ".text.boot" ) boot_vendor_prepare( void ) {
   // strip out everything not needed
   reg &= 0xF;
 
+  // check for invalid paging support
   if (
-    ! (
-      ID_MMFR0_VSMA_SUPPORT_V7_PAGING_REMAP_ACCESS == reg
-      || ID_MMFR0_VSMA_SUPPORT_V7_PAGING_PXN == reg
-      || ID_MMFR0_VSMA_SUPPORT_V7_PAGING_LPAE == reg
-    )
+    ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS != reg
+    && ID_MMFR0_VSMA_V7_PAGING_PXN != reg
+    && ID_MMFR0_VSMA_V7_PAGING_LPAE != reg
   ) {
     return;
   }

@@ -18,19 +18,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIBC_STRING__ )
-#define __LIBC_STRING__
+#if ! defined( __KERNEL_MM_TYPE__ )
+#define __KERNEL_MM_TYPE__
 
-#include <stddef.h>
 #include <stdint.h>
 
-void* memchr( const void*, int, size_t );
-int memcmp( const void*, const void*, size_t );
-void* memcpy( void* restrict, const void* restrict, size_t );
-void* memmove( void*, const void*, size_t );
-void* memset( void*, int, size_t );
-int strcmp( const char*, const char* );
-size_t strlen( const char*);
-char *strrev( char* );
+typedef uintptr_t paddr_t;
+typedef void* vaddr_t;
 
 #endif

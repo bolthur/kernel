@@ -18,6 +18,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([PRINT_MM_HEAP], [Define to 1 to enable output of kernel heap])
   AH_TEMPLATE([PRINT_MM_PLACEMENT], [Define to 1 to enable output of kernel placement allocator])
   AH_TEMPLATE([PRINT_MAILBOX], [Define to 1 to enable output of mailbox])
+  AH_TEMPLATE([PRINT_TIMER], [Define to 1 to enable output of timer])
 
   # Define for kernel mode
   AC_DEFINE([IS_KERNEL], [1], [Define set for libc to compile differently])
@@ -66,6 +67,11 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   # Test for mailbox output
   AS_IF([test "x$enable_output_mailbox" == "xyes"], [
     AC_DEFINE([PRINT_MAILBOX], [1])
+  ])
+
+  # Test for timer output
+  AS_IF([test "x$enable_output_timer" == "xyes"], [
+    AC_DEFINE([PRINT_TIMER], [1])
   ])
 
   case "${host_cpu}" in

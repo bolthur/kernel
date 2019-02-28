@@ -21,18 +21,10 @@
 #if ! defined( __LIBC_CTYPE__ )
 #define __LIBC_CTYPE__
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 int isspace( int );
 int isdigit( int );
 int islower( int );
 int isalpha( int );
 int isupper( int );
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

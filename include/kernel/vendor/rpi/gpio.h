@@ -28,10 +28,6 @@
   #define CORE0_IRQ_SOURCE 0x40000060
 #endif
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 enum {
   GPIO_BASE = 0x00200000,
 
@@ -151,9 +147,5 @@ enum {
   SYSTEM_TIMER_COMPARE_2 = ( SYSTEM_TIMER_BASE + 0x14 ),
   SYSTEM_TIMER_COMPARE_3 = ( SYSTEM_TIMER_BASE + 0x18 ),
 };
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

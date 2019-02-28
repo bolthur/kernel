@@ -39,33 +39,51 @@
 #include "kernel/kernel/timer.h"
 #include "kernel/kernel/irq.h"
 
+#if defined( BCM2709 ) || defined( BCM2710 )
+  // Timer match bits
+  #define ARM_GENERIC_TIMER_MATCH_SECURE ( 1 << 0 )
+  #define ARM_GENERIC_TIMER_MATCH_NON_SECURE ( 1 << 1 )
+  #define ARM_GENERIC_TIMER_MATCH_HYP ( 1 << 2 )
+  #define ARM_GENERIC_TIMER_MATCH_VIRT ( 1 << 3 )
 
-// free running counter incrementing at 1 MHz => Increments each microsecond
-#define TIMER_FREQUENZY_HZ 1000000
+  // timer irqs
+  #define ARM_GENERIC_TIMER_IRQ_SECURE ( 1 << 0 )
+  #define ARM_GENERIC_TIMER_IRQ_NON_SECURE ( 1 << 1 )
+  #define ARM_GENERIC_TIMER_IRQ_HYP ( 1 << 2 )
+  #define ARM_GENERIC_TIMER_IRQ_VIRT ( 1 << 3 )
+#else
+  // free running counter incrementing at 1 MHz => Increments each microsecond
+  #define TIMER_FREQUENZY_HZ 1000000
 
-// interrupts per second
-// FIXME: final value should be something like 25 or 50
-#define TIMER_INTERRUPT_PER_SECOND 1
+  // interrupts per second
+  // FIXME: final value should be something like 25 or 50
+  #define TIMER_INTERRUPT_PER_SECOND 1
 
-// Timer match bits
-#define SYSTEM_TIMER_MATCH_0 ( 1 << 0 )
-#define SYSTEM_TIMER_MATCH_1 ( 1 << 1 )
-#define SYSTEM_TIMER_MATCH_2 ( 1 << 2 )
-#define SYSTEM_TIMER_MATCH_3 ( 1 << 3 )
+  // Timer match bits
+  #define SYSTEM_TIMER_MATCH_0 ( 1 << 0 )
+  #define SYSTEM_TIMER_MATCH_1 ( 1 << 1 )
+  #define SYSTEM_TIMER_MATCH_2 ( 1 << 2 )
+  #define SYSTEM_TIMER_MATCH_3 ( 1 << 3 )
 
-// timer irqs
-#define SYSTEM_TIMER_0_IRQ ( 1 << 0 )
-#define SYSTEM_TIMER_1_IRQ ( 1 << 1 )
-#define SYSTEM_TIMER_2_IRQ ( 1 << 2 )
-#define SYSTEM_TIMER_3_IRQ ( 1 << 3 )
+  // timer irqs
+  #define SYSTEM_TIMER_0_IRQ ( 1 << 0 )
+  #define SYSTEM_TIMER_1_IRQ ( 1 << 1 )
+  #define SYSTEM_TIMER_2_IRQ ( 1 << 2 )
+  #define SYSTEM_TIMER_3_IRQ ( 1 << 3 )
+#endif
 
-/*uint32_t timer_pending( void ) {
-  // return mmio_read( SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
-
-  uint32_t tmp;
-  tmp = mmio_read(CORE0_IRQ_SOURCE);
-  return tmp & 0x08;
-}*/
+/**
+ * @brief Check for pending timer interrupt
+ *
+ * @return bool
+ */
+bool timer_pending( void ) {
+  #if defined( BCM2709 ) || defined( BCM2710 )
+    return mmio_read( CORE0_IRQ_SOURCE ) & ARM_GENERIC_TIMER_MATCH_VIRT;
+  #else
+    return mmio_read( SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
+  #endif
+}
 
 /**
  * @brief Clear timer callback
@@ -75,51 +93,35 @@
  *
  * @todo check and revise
  */
-void timer_clear( uint8_t num, void *_cpu ) {
+void timer_clear( uint8_t num, vaddr_t _cpu ) {
+  // convert _cpu to cpu register context pointer
   cpu_register_context_t *cpu = ( cpu_register_context_t * )_cpu;
-  static bool led = false;
 
+  // mark parameters / variables not yet used as unused
   ( void )num;
-  ( void )_cpu;
   ( void )cpu;
 
-  /*if ( ! timer_pending() ) {
+  // check for pending timer
+  if ( ! timer_pending() ) {
     return;
-  }*/
-
-  printf( "timer_clear()\r\n" );
-
-  /*// clear timer match bit
-  mmio_write( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
-
-  // set compare again
-  mmio_write( SYSTEM_TIMER_COMPARE_3, mmio_read( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );*/
-
-  // flip led
-  // FIXME: Replace by using printf
-  if ( true == led ) {
-    mmio_write( peripheral_base_get() + GPCLR1, ( 1 << 15 ) );
-    led = false;
-  } else {
-    mmio_write( peripheral_base_get() + GPSET1, ( 1 << 15 ) );
-    led = true;
   }
 
-  // write cntcval
-  // necessary to prevent nested interrupts
-  // FIXME: way to much for real hardware. Need to find a way around that
-  __asm__ __volatile__ ("mcr p15, 0, %0, c14, c3, 0" :: "r"( 50000000 ) );
-}
+  // debug output
+  #if defined( PRINT_TIMER )
+    printf( "timer_clear()\r\n" );
+  #endif
 
-/**
- * @brief Timer clear function
- *
- * @param _cpu Pointer to cpu structure (register dump)
- *
- * @todo check and revise
- */
-void timer_clear2( void *_cpu ) {
-  timer_clear( 1, _cpu );
+  #if defined( BCM2709 ) || defined( BCM2710 )
+    // write cntcval
+    // necessary to prevent nested interrupts
+    // FIXME: way to much for real hardware. Need to find a way around that
+    __asm__ __volatile__ ( "mcr p15, 0, %0, c14, c3, 0" :: "r"( 50000000 ) );
+  #else
+    // clear timer match bit
+    mmio_write( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
+    // set compare again
+    mmio_write( SYSTEM_TIMER_COMPARE_3, mmio_read( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
+  #endif
 }
 
 /**
@@ -128,51 +130,35 @@ void timer_clear2( void *_cpu ) {
  * @todo check and revise
  */
 void timer_init( void ) {
-  uint32_t cntfrq, cntv_val, cntv_ctl;
+  #if defined( BCM2709 ) || defined( BCM2710 )
+    // register handler
+    irq_register_handler( ARM_GENERIC_TIMER_IRQ_VIRT, timer_clear, false );
 
-  // cntfrq as set within stub
-  cntfrq = 19200000;
+    // route virtual timer within core
+    mmio_write( CORE0_TIMER_IRQCNTL, ARM_GENERIC_TIMER_IRQ_VIRT );
+  #else
+    // register handler
+    irq_register_handler( SYSTEM_TIMER_3_IRQ, timer_clear, false );
 
-  __asm__ __volatile__( "mrc p15, 0, %0, c14, c0, 0" : "=r"( cntfrq ) );
-  //printf( "CNTFRQ: 0x%08x\r\n", cntfrq, cntfrq );
+    // reset timer control
+    mmio_write( SYSTEM_TIMER_CONTROL, 0x00000000 );
 
-  // write_cntv_tval(cntfrq);
-  // clear cntv interrupt and set next 1 sec timer.
-  __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 0" :: "r"( cntfrq ) );
+    // set compare for timer 3
+    mmio_write( SYSTEM_TIMER_COMPARE_3, mmio_read( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
 
-  // read_cntv_tval
-  __asm__ __volatile__ ( "mrc p15, 0, %0, c14, c3, 0" : "=r"( cntv_val ) );
-  //printf( "CNTV_VAL: 0x%08x\r\n", cntv_val );
-  mmio_write( CORE0_TIMER_IRQCNTL, ( 1 << 3 ) );
+    // enable timer 3
+    mmio_write( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
 
-  // enable cntv
-  cntv_ctl = 1;
-  __asm__ __volatile__ ( "mcr p15, 0, %0, c14, c3, 1" :: "r"( cntv_ctl ) ); // write CNTV_CTL
+    // enable interrupt for timer 3
+    mmio_write( INTERRUPT_ENABLE_IRQ_1, SYSTEM_TIMER_3_IRQ );
 
-  irq_register_handler( ( 1 << 3 ), timer_clear, false );
+    // get pending interrupt from memory
+    uint32_t irq_line = mmio_read( INTERRUPT_IRQ_PENDING_1 );
 
-  /*// testing timer with led
-  mmio_write( GPFSEL4, mmio_read( GPFSEL4 ) | 21 );
+    // clear pending interrupt
+    irq_line &= ~( SYSTEM_TIMER_3_IRQ );
 
-  // set compare
-  // reset timer control
-  mmio_write( SYSTEM_TIMER_CONTROL, 0x00000000 );
-
-  // set compare for timer 3
-  mmio_write( SYSTEM_TIMER_COMPARE_3, mmio_read( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
-
-  // enable timer 3
-  mmio_write( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
-
-  // enable interrupt for timer 3
-  mmio_write( INTERRUPT_ENABLE_IRQ_1, SYSTEM_TIMER_3_IRQ );
-
-  // get pending interrupt from memory
-  uint32_t irq_line = mmio_read( INTERRUPT_IRQ_PENDING_1 );
-
-  // clear pending interrupt
-  irq_line &= ~( SYSTEM_TIMER_3_IRQ );
-
-  // overwrite
-  mmio_write( INTERRUPT_IRQ_PENDING_1, irq_line );*/
+    // overwrite
+    mmio_write( INTERRUPT_IRQ_PENDING_1, irq_line );
+  #endif
 }

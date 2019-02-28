@@ -21,14 +21,6 @@
 #if ! defined( __KERNEL_PLATFORM__ )
 #define __KERNEL_PLATFORM__
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 extern void platform_init( void );
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

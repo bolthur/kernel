@@ -105,13 +105,13 @@ void phys_vendor_init( void ) {
   #endif
 
   // set start and end for peripherals
-  uintptr_t start = peripheral_base_get();
-  uintptr_t end = peripheral_end_get() + 1;
+  paddr_t start = ( paddr_t )peripheral_base_get();
+  paddr_t end = ( paddr_t )peripheral_end_get() + 1;
 
   // map from start to end addresses as used
   while( start < end ) {
     // mark used
-    phys_mark_page_used( ( void* )start );
+    phys_mark_page_used( ( vaddr_t )start );
 
     // get next page
     start += PAGE_SIZE;
@@ -124,7 +124,7 @@ void phys_vendor_init( void ) {
   // map from start to end addresses as used
   while( start < end ) {
     // mark used
-    phys_mark_page_used( ( void* )start );
+    phys_mark_page_used( ( vaddr_t )start );
 
     // get next page
     start += PAGE_SIZE;

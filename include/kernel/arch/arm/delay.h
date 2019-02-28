@@ -23,14 +23,6 @@
 
 #include <stdint.h>
 
-#if defined( __cplusplus )
-extern "C" {
-#endif
-
 void delay( uint32_t );
-
-#if defined( __cplusplus )
-}
-#endif
 
 #endif

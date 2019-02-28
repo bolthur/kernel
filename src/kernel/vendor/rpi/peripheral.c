@@ -24,11 +24,11 @@
 
 // initial setup of peripheral base
 #if defined( BCM2709 ) || defined( BCM2710 )
-  uintptr_t peripheral_base = 0x3F000000;
-  uintptr_t peripheral_size = 0xFFFFFF;
+  vaddr_t peripheral_base = ( vaddr_t )0x3F000000;
+  uint32_t peripheral_size = 0xFFFFFF;
 #else
-  uintptr_t peripheral_base = 0x20000000;
-  uintptr_t peripheral_size = 0xFFFFFF;
+  vaddr_t peripheral_base = ( vaddr_t )0x20000000;
+  uint32_t peripheral_size = 0xFFFFFF;
 #endif
 
 /**
@@ -36,24 +36,24 @@
  *
  * @param addr Address to set peripheral base
  */
-void peripheral_base_set( uintptr_t addr ) {
+void peripheral_base_set( vaddr_t addr ) {
   peripheral_base = addr;
 }
 
 /**
  * @brief Method to get peripheral base address
  *
- * @return uintptr_t Peripheral base address
+ * @return vaddr_t Peripheral base address
  */
-uintptr_t peripheral_base_get( void ) {
+vaddr_t peripheral_base_get( void ) {
   return peripheral_base;
 }
 
 /**
  * @brief Method to get peripheral base address
  *
- * @return uintptr_t Peripheral base address
+ * @return vaddr_t Peripheral end address
  */
-uintptr_t peripheral_end_get( void ) {
-  return peripheral_base + peripheral_size;
+vaddr_t peripheral_end_get( void ) {
+  return ( vaddr_t )( ( uint32_t )peripheral_base + peripheral_size );
 }
