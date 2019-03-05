@@ -20,9 +20,6 @@
 
 #include <stddef.h>
 
-#if defined( ARCH_ARM_V7 )
-#endif
-
 #include "kernel/arch/arm/delay.h"
 #include "kernel/arch/arm/mmio.h"
 
