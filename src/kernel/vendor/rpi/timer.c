@@ -51,6 +51,11 @@
   #define ARM_GENERIC_TIMER_IRQ_NON_SECURE ( 1 << 1 )
   #define ARM_GENERIC_TIMER_IRQ_HYP ( 1 << 2 )
   #define ARM_GENERIC_TIMER_IRQ_VIRT ( 1 << 3 )
+
+  #define ARM_GENERIC_TIMER_FREQUENCY 19200000
+  #define ARM_GENERIC_TIMER_ENABLE 1
+  // FIXME: Final value should be lower on real device
+  #define ARM_GENERIC_TIMER_COUNT 50000000
 #else
   // free running counter incrementing at 1 MHz => Increments each microsecond
   #define TIMER_FREQUENZY_HZ 1000000
@@ -112,10 +117,8 @@ void timer_clear( uint8_t num, vaddr_t _cpu ) {
   #endif
 
   #if defined( BCM2709 ) || defined( BCM2710 )
-    // write cntcval
-    // necessary to prevent nested interrupts
-    // FIXME: way to much for real hardware. Need to find a way around that
-    __asm__ __volatile__ ( "mcr p15, 0, %0, c14, c3, 0" :: "r"( 50000000 ) );
+    // reset cntcval
+    __asm__ __volatile__ ( "mcr p15, 0, %0, c14, c3, 0" :: "r"( ARM_GENERIC_TIMER_COUNT ) );
   #else
     // clear timer match bit
     mmio_write( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
@@ -136,6 +139,10 @@ void timer_init( void ) {
 
     // route virtual timer within core
     mmio_write( CORE0_TIMER_IRQCNTL, ARM_GENERIC_TIMER_IRQ_VIRT );
+
+    // set frequency and enable
+    __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 0" :: "r"( ARM_GENERIC_TIMER_FREQUENCY ) );
+    __asm__ __volatile__ ( "mcr p15, 0, %0, c14, c3, 1" :: "r"( ARM_GENERIC_TIMER_ENABLE ) );
   #else
     // register handler
     irq_register_handler( SYSTEM_TIMER_3_IRQ, timer_clear, false );
