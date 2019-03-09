@@ -76,7 +76,6 @@ int printf( const char* restrict format, ... ) {
       }
 
       if ( maxrem < amount ) {
-        // FIXME: Set errno to EOVERFLOW.
         return -1;
       }
 
@@ -107,7 +106,6 @@ int printf( const char* restrict format, ... ) {
         c = ( char )va_arg( parameters, int );
 
         if ( ! maxrem ) {
-          // FIXME: Set errno to EOVERFLOW.
           return -1;
         }
 
@@ -124,7 +122,6 @@ int printf( const char* restrict format, ... ) {
         len = strlen( str );
 
         if ( maxrem < len ) {
-          // FIXME: Set errno to EOVERFLOW.
           return -1;
         }
 
@@ -147,15 +144,12 @@ int printf( const char* restrict format, ... ) {
 
         if ( ! un ) {
           un = 0;
-          // Set errno to EOVERFLOW
-          // return -1;
         }
 
         p = utoa( un, buf, radix, false );
         len = strlen( p );
 
         if ( maxrem < len ) {
-          // FIXME: Set errno to EOVERFLOW
           return -1;
         }
 
@@ -183,15 +177,12 @@ int printf( const char* restrict format, ... ) {
         n = va_arg( parameters, int32_t );
         if ( ! n ) {
           n = 0;
-          // Set errno to EOVERFLOW
-          // return -1;
         }
 
         p = itoa( n, buf, radix, 'X' == *format );
         len = strlen( p );
 
         if ( maxrem < len ) {
-          // FIXME: Set errno to EOVERFLOW
           return -1;
         }
 
@@ -208,7 +199,6 @@ int printf( const char* restrict format, ... ) {
         len = strlen(format);
 
         if (maxrem < len) {
-          // FIXME: Set errno to EOVERFLOW.
           return -1;
         }
 

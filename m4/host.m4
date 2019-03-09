@@ -183,23 +183,3 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AC_SUBST(copy_flags)
   AC_SUBST(executable_format)
 ])
-
-AC_DEFUN([BOLTHUR_SET_FLAGS], [
-  CFLAGS="${CFLAGS} -ffreestanding -fno-exceptions -Wall -Wextra -Werror -Wpedantic -Wconversion -Wpacked -Wpacked-bitfield-compat -Wpacked-not-aligned -nodefaultlibs -std=c18"
-  LDFLAGS="${LDFLAGS} -nostdlib"
-])
-
-AC_DEFUN([BOLTHUR_PROG_OBJCOPY], [
-  AC_CHECK_TOOL([BOLTHUR_OBJCOPY], [objcopy])
-  AC_CACHE_CHECK([whether objcopy generates $host_bfd],
-    [ac_cv_objcopy_supports_host_bfd],
-    [if test "$NOS_OBJCOPY" --info 2>&1 < /dev/null | grep "$host_bfd" > /dev/null; then
-      ac_cv_objcopy_supports_host_bfd=no
-    else
-      ac_cv_objcopy_supports_host_bfd=yes
-    fi]
-  )
-  if test ac_cv_objcopy_supports_host_bfd = no; then
-    AC_MSG_ERROR([unsupported host BFD])
-  fi
-])

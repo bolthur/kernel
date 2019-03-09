@@ -35,14 +35,8 @@ platform_loader_parameter_t loader_parameter_data;
 
 /**
  * @brief Platform depending initialization routine
+ *
+ * @todo Move placement address beyond initrd
  */
 void platform_init( void ) {
-  // FIXME: Move placement address beyond initrd
-  // FIXME: Load firmware revision, board model, board revision, board serial from mailbox
-  /*mailbox_property_init();
-  mailbox_property_add_tag( TAG_GET_BOARD_MODEL );
-  mailbox_property_add_tag( TAG_GET_BOARD_REVISION );
-  mailbox_property_add_tag( TAG_GET_FIRMWARE_VERSION );
-  mailbox_property_add_tag( TAG_GET_BOARD_SERIAL );
-  mailbox_property_process();*/
 }

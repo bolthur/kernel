@@ -34,9 +34,6 @@ void irq_enable( void );
 irq_callback_t irq_get_handler( uint8_t, bool );
 int8_t irq_get_pending( bool );
 void irq_init( void );
-void irq_setup_event( void );
-
-// FIXME: Remove when event system is active
 void irq_register_handler( uint8_t, irq_callback_t, bool );
 bool irq_validate_number( uint8_t );
 

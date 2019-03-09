@@ -32,7 +32,7 @@
 /**
  * @brief Initialize serial port
  *
- * @todo check and revise
+ * @todo Route uart interrupt as FIQ when DEBUG is defined
  */
 void serial_init( void ) {
   uint32_t base = ( uint32_t )peripheral_base_get();
@@ -96,8 +96,8 @@ void serial_init( void ) {
   // Mask all interrupts.
   mmio_write( base + UARTIMSC, ( 1 << 1 ) | ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 ) | ( 1 << 7 ) | ( 1 << 8 ) | ( 1 << 9 ) | ( 1 << 10 ) );
 
+  // additional stuff for debugging with gdb and serial port
   #if defined( DEBUG )
-    // FIXME: Route uart interrupt as FIQ
   #endif
 
   // Enable UART0, receive & transfer part of UART.
@@ -108,8 +108,6 @@ void serial_init( void ) {
  * @brief Put character to serial
  *
  * @param c character to put
- *
- * @todo check and revise
  */
 void serial_putc( uint8_t c ) {
   uint32_t base = ( uint32_t )peripheral_base_get();
@@ -123,8 +121,6 @@ void serial_putc( uint8_t c ) {
  * @brief Get character from serial
  *
  * @return uint8_t Character from serial
- *
- * @todo check and revise
  */
 uint8_t serial_getc( void ) {
   uint32_t base = ( uint32_t )peripheral_base_get();
@@ -138,8 +134,6 @@ uint8_t serial_getc( void ) {
 
 /**
  * @brief Flush serial
- *
- * @todo check and revise
  */
 void serial_flush( void ) {
   uint32_t base = ( uint32_t )peripheral_base_get();

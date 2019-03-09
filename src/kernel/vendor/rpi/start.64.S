@@ -25,28 +25,8 @@
 
 .global start
 start:
-  #error "64 bit rpi startup not yet supported!"
-  // setup temporary stack
-  // FIXME: transform virtual to physical for higher half
-  ldr x4, =start
-  mov sp, x4
-
-  // reset cpu when smp is enabled
-  #if defined( SMP_ENABLED )
-    bl cpu_smp_reset
-  #endif
-
-  // setup initial mmu for higher half
-  #if defined( IS_HIGHER_HALF )
-    #error "Higher half not yet supported!"
-  #endif
-
-  // clear bss section
-  bl bss_clear
-
-  // store rpi boot parameters passed with first three registers at data array
-  ldr x4, =boot_parameter_data
-  stmia x4!, {x0-x2}
+  // FIXME: store rpi boot parameters passed with first three registers at data array
+  #error "boot parameters not saved here"
 
   // continue with arch related start
   b arch_start

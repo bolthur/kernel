@@ -71,7 +71,7 @@ AC_ARG_ENABLE([output-timer],
 )
 
 AC_ARG_ENABLE([opt],
-  AC_HELP_STRING([--disable-opt], [disable code optimization (default: on)]),
+  AC_HELP_STRING([--enable-opt], [enable code optimization (default: 2)]),
   [case "${enableval}" in
   no | 0)
     CFLAGS="${CFLAGS} -O0"

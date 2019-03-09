@@ -66,6 +66,7 @@ cd build
 Possible additional parameters to `--host` and `--enable-device`:
 
 * `--enable-debug` enables remote debugging mode
+* `--enable-opt=x` sets optimization from default ( 2 ) to specified one
 * `--enable-output` enables kernel output
 * `--enable-serial-tty` enable output to serial
 * `--enable-framebuffer-tty` enable output to framebuffer

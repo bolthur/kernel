@@ -196,7 +196,7 @@ void framebuffer_putc( uint8_t c ) {
 
   // used variables
   bool set;
-  uint8_t *bitmap;
+  char *bitmap;
   int32_t off;
 
   switch( c ) {

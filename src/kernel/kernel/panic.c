@@ -29,10 +29,8 @@
  * @param message Message to print
  * @param file File that invoked the panic
  * @param line Line where panic was called
- *
- * @todo check and revise
  */
-void panic( const char* message, const char* file, uint32_t line ) {
+void panic( const char* restrict message, const char* restrict file, uint32_t line ) {
   // disable interrupts
   irq_disable();
 
@@ -49,14 +47,12 @@ void panic( const char* message, const char* file, uint32_t line ) {
  * @param file File that invoked the panic assert
  * @param line Line where function was called
  * @param desc Additional description
- *
- * @todo check and revise
  */
-void panic_assert( const char* file, uint32_t line, const char* desc ) {
+void panic_assert( const char* restrict file, uint32_t line, const char* restrict desc ) {
   // disable interrupts
   irq_disable();
 
-  // print panic
+  // print assertion failed
   printf( "ASSERTION-FAILED( %s ) at %s:%d\r\n", desc, file, line );
 
   // loop endless

@@ -95,8 +95,6 @@ bool timer_pending( void ) {
  *
  * @param num Timer interrupt number
  * @param _cpu CPU register dump
- *
- * @todo check and revise
  */
 void timer_clear( uint8_t num, vaddr_t _cpu ) {
   // convert _cpu to cpu register context pointer
@@ -129,8 +127,6 @@ void timer_clear( uint8_t num, vaddr_t _cpu ) {
 
 /**
  * @brief Initialize timer
- *
- * @todo check and revise
  */
 void timer_init( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
@@ -142,7 +138,7 @@ void timer_init( void ) {
 
     // set frequency and enable
     __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 0" :: "r"( ARM_GENERIC_TIMER_FREQUENCY ) );
-    __asm__ __volatile__ ( "mcr p15, 0, %0, c14, c3, 1" :: "r"( ARM_GENERIC_TIMER_ENABLE ) );
+    __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 1" :: "r"( ARM_GENERIC_TIMER_ENABLE ) );
   #else
     // register handler
     irq_register_handler( SYSTEM_TIMER_3_IRQ, timer_clear, false );

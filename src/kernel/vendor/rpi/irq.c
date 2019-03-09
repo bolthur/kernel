@@ -107,12 +107,3 @@ int8_t irq_get_pending( bool fast ) {
 
   return -1;
 }
-
-/**
- * @brief Setup IRQ events
- *
- * @todo Setup events
- * @todo check and revise
- */
-void irq_setup_event( void ) {
-}

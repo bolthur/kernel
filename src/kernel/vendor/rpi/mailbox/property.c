@@ -27,24 +27,16 @@
 
 /**
  * @brief property tag buffer, which needs to be aligned to 16 byte boundary
- *
- * @todo check and revise
- * @todo size down property tag buffer
- * @todo create own type for property tag buffer
  */
-static int32_t ptb[ 8192 ] ALIGNED( 16 );
+static int32_t ptb[ 1024 ] ALIGNED( 16 );
 
 /**
- * @brief property tag buffer index
- *
- * @todo check and revise
+ * @brief property tag buffer index used internally
  */
 static int32_t ptb_index = 0;
 
 /**
  * @brief Initialize mailbox property process
- *
- * @todo check and revise
  */
 void mailbox_property_init( void ) {
   // Add startup size
@@ -66,7 +58,7 @@ void mailbox_property_init( void ) {
  * @param tag Tag to add
  * @param ... Further data depending on tag to be added
  *
- * @todo check and revise
+ * @todo check and complete
  */
 void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
   va_list vl;
@@ -218,8 +210,6 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
  * @brief Execute mailbox property process
  *
  * @return uint32_t mailbox read result after write
- *
- * @todo check and revise
  */
 uint32_t mailbox_property_process( void ) {
   uint32_t result;
@@ -258,9 +248,6 @@ uint32_t mailbox_property_process( void ) {
  *
  * @param tag tag to read from mailbox property process
  * @return rpi_mailbox_property_t* Pointer to structure of tag or NULL
- *
- * @todo Change static property to use malloc if available
- * @todo check and revise
  */
 rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
   // property structure for return and tag buffer

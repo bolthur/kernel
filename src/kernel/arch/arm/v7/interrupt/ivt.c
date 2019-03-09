@@ -30,8 +30,6 @@
  * @brief Unused exception handler
  *
  * @param status current register context
- *
- * @todo check and revise
  */
 void unused_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -43,7 +41,6 @@ void unused_handler( cpu_register_context_t *status ) {
  *
  * @param status current register context
  *
- * @todo check and revise
  * @todo check for fpu exception and reset exception bit
  */
 void undefined_instruction_handler( cpu_register_context_t *status ) {
@@ -55,12 +52,9 @@ void undefined_instruction_handler( cpu_register_context_t *status ) {
  * @brief Software interrupt exception handler
  *
  * @param status current register context
- *
- * @todo check and revise
  */
 void software_interrupt_handler( cpu_register_context_t *status ) {
   dump_register( status );
-  // FIXME: Get swi num, check for mapped swi handler and call it
   PANIC( "swi handler kicks in" );
 }
 
@@ -68,8 +62,6 @@ void software_interrupt_handler( cpu_register_context_t *status ) {
  * @brief Prefetch abort exception handler
  *
  * @param status current register context
- *
- * @todo check and revise
  */
 void prefetch_abort_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -80,8 +72,6 @@ void prefetch_abort_handler( cpu_register_context_t *status ) {
  * @brief Data abort exception handler
  *
  * @param status current register context
- *
- * @todo check and revise
  */
 void data_abort_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -134,8 +124,6 @@ void fast_interrupt_handler( cpu_register_context_t *status ) {
 
 /**
  * @brief Method to initialize interrupt vector table
- *
- * @todo check and revise
  */
 void ivt_init( void ) {
   __asm__ __volatile__( "mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" ( &interrupt_vector_table ) );

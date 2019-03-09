@@ -30,8 +30,6 @@ extern sd_context_total_t initial_kernel_context SECTION( ".data.boot" );
 
 /**
  * @brief Method to prepare section during initial boot
- *
- * @todo Check behaviour with less than 1 GB physical memory
  */
 void SECTION( ".text.boot" ) boot_vendor_prepare( void ) {
   uint32_t x, y, reg;

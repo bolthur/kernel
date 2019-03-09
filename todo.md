@@ -32,8 +32,13 @@
   * [x] Check why current implementation is not working on real hardware
   * [ ] Add push and pop of fpu registers within ivt stubs
   * [ ] Extend cpu structure if fpu is enabled
-* [x] Move includes into extra folder with subfolders
-* [x] Move source into extra folder with subfolders
+* [x] Code base reorganization
+  * [x] Move includes into extra folder with subfolders
+  * [x] Move source into extra folder with subfolders
+* [ ] Font
+  * [x] Add correct license header to font file containing
+  * [ ] Compile framebuffer and font into kernel only when framebuffer is enabled
+  * [ ] Check and fix data abort on real device, when framebuffer is activated for compile
 * [ ] Memory management
   * [x] Add higher half define via vendor autotools
   * [x] Move static naked aligned function `interrupt_vector_table` into assembler stub
@@ -57,9 +62,6 @@
   * [ ] Check and use recursive page mapping
 * [ ] Platform init
   * [ ] Add check for initrd loaded after kernel and move placement address for placement allocator beyond initrd
-* [ ] Font
-  * [ ] Add gpl font as hex array and replace current used one
-  * [ ] Compile framebuffer and font into kernel only when framebuffer is enabled!
 * [ ] Ensure that kernel works still on real hardware also
 * [ ] AVL tree
   * [ ] Add generic avl tree library

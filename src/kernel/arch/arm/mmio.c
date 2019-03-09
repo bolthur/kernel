@@ -25,10 +25,8 @@
  *
  * @param reg register/address to write to
  * @param data data to write
- *
- * @todo check and revise
  */
-void OPT_NONE mmio_write( uint32_t reg, uint32_t data ) {
+void mmio_write( uint32_t reg, uint32_t data ) {
   *( volatile uint32_t* )( ( uint32_t )reg ) = data;
 }
 
@@ -37,9 +35,7 @@ void OPT_NONE mmio_write( uint32_t reg, uint32_t data ) {
  *
  * @param reg register/address to read
  * @return uint32_t data from memory mapped I/O
- *
- * @todo check and revise
  */
-uint32_t OPT_NONE mmio_read( uint32_t reg ) {
+uint32_t mmio_read( uint32_t reg ) {
   return *( volatile uint32_t* )( ( uint32_t )reg );
 }

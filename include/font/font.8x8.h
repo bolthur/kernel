@@ -18,8 +18,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-
 #if ! defined( __FONT_FONT8x8__ )
 #define __FONT_FONT8x8__
 
@@ -28,6 +26,6 @@
 
 #define TAB_WIDTH FONT_WIDTH * 4
 
-extern uint8_t font8x8_basic[ 128 ][ 8 ];
+extern char font8x8_basic[ 128 ][ 8 ];
 
 #endif

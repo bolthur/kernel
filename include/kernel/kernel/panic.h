@@ -26,7 +26,7 @@
 #define PANIC( msg ) panic( msg, __FILE__, __LINE__ );
 #define ASSERT( b ) ( b ? (void)0 : panic_assert( __FILE__, __LINE__, #b ) );
 
-void panic(const char*, const char*, uint32_t);
-void panic_assert(const char*, uint32_t, const char*);
+void panic(const char* restrict, const char* restrict, uint32_t);
+void panic_assert(const char* restrict, uint32_t, const char* restrict);
 
 #endif
