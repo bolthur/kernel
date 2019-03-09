@@ -2,7 +2,7 @@
 
 bolthur kernel project.
 
-_Copyright (C) 2017 - 2019 bolthur project_
+_Copyright (C) 2018 - 2019 bolthur project_
 
 ## Supported platforms
 
