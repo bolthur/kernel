@@ -93,8 +93,6 @@
   * [x] Get text printing via framebuffer to work
   * [x] Use framebuffer as default tty
   * [x] Finalize console implementation for framebuffer
-* [ ] Create modules
-  * [ ] Move kernel tty into module
 * [ ] TAR
   * [ ] Add generic tar library for reading tar files
   * [ ] Add initial ramdisk during boot which should be a simple tar file
