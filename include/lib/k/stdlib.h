@@ -18,11 +18,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lib/stdc/stdlib.h"
+#if ! defined( __LIBK_STDLIB__ )
+#define __LIBK_STDLIB__
 
-static unsigned long int random_next;
+#include <stdint.h>
+#include <stdbool.h>
 
-int rand( void ) {
-  random_next = random_next * 1103515245 + 12345;
-  return ( int )( ( unsigned int )( random_next / ( ( unsigned int )RAND_MAX * 2 ) ) % RAND_MAX );
-}
+char *itoa( int32_t, char*, int32_t, bool );
+char *utoa( uint32_t, char*, int32_t, bool );
+
+#endif

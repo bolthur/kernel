@@ -149,7 +149,7 @@ AC_CONFIG_FILES([
   src/lib/atag/Makefile
   src/lib/avl/Makefile
   src/lib/fdt/Makefile
-  src/lib/stdc/Makefile
+  src/lib/k/Makefile
   src/lib/tar/Makefile
 ])
 

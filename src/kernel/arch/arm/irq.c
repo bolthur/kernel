@@ -20,7 +20,7 @@
 
 #include <stdbool.h>
 
-#include "lib/stdc/stdio.h"
+#include "lib/k/stdio.h"
 #include "kernel/arch/arm/ivt.h"
 
 /**

@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lib/stdc/stdlib.h"
+#include "lib/k/stdlib.h"
 #include "kernel/kernel/serial.h"
 #include "kernel/vendor/rpi/framebuffer.h"
 

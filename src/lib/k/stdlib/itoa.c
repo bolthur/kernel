@@ -18,19 +18,40 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lib/stdc/string.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-char *strrev( char* str ) {
-  char* p1 = str;
-  char* p2 = ( char* )( str + strlen( str ) - 1 );
+#include "lib/k/string.h"
 
-  while ( p1 < p2 ) {
-    char tmp = *p1;
-    *p1 = *p2;
-    *p2 = tmp;
-    p1++;
-    p2--;
+char *itoa( int32_t value, char* buffer, int32_t radix, bool uppercase ) {
+  char *p = buffer;
+  unsigned uv;
+  bool sign = ( 10 == radix && 0 > value ) ? true : false;
+
+  if ( sign ) {
+    uv = ( unsigned )-value;
+  } else {
+    uv = ( unsigned )value;
   }
 
-  return str;
+  // divide until we reach 0 as result
+  do {
+    int remainder = ( int )( uv % ( unsigned )radix );
+    *p++ = ( char )(
+      ( remainder < 10 )
+        ? remainder + '0'
+        : remainder + ( ! uppercase ? 'a' : 'A' ) - 10
+    );
+  } while ( uv /= ( unsigned )radix );
+
+  // add sign
+  if ( sign ) {
+    *p++ = '-';
+  }
+
+  // terminate buffer
+  *p = 0;
+
+  // return reversed string
+  return strrev( buffer );
 }

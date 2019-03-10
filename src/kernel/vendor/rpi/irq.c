@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "lib/stdc/stdio.h"
+#include "lib/k/stdio.h"
 #include "kernel/kernel/irq.h"
 #include "kernel/kernel/panic.h"
 #include "kernel/arch/arm/mmio.h"

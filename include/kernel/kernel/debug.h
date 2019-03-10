@@ -23,7 +23,7 @@
 
 #include <stdint.h>
 
-#include "lib/stdc/stdio.h"
+#include "lib/k/stdio.h"
 
 /**
  * @brief Debug output define

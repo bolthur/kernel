@@ -32,7 +32,7 @@ GROUP(
   ../../../lib/atag/libatag.a
   ../../../lib/avl/libavl.a
   ../../../lib/fdt/libfdt.a
-  ../../../lib/stdc/libstdc.a
+  ../../../lib/k/libk.a
   ../../../lib/tar/libtar.a
 )
 INPUT(

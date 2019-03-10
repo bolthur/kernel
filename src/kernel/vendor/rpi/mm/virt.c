@@ -20,7 +20,7 @@
 
 #include <stddef.h>
 
-#include "lib/stdc/string.h"
+#include "lib/k/string.h"
 #include "kernel/kernel/debug.h"
 #include "kernel/kernel/entry.h"
 #include "kernel/kernel/panic.h"

@@ -22,8 +22,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "lib/stdc/stdlib.h"
-#include "lib/stdc/string.h"
+#include "lib/k/stdlib.h"
+#include "lib/k/string.h"
 #include "font/font.8x8.h"
 #include "kernel/kernel/debug.h"
 #include "kernel/kernel/type.h"

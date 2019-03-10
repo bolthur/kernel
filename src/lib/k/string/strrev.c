@@ -18,8 +18,19 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lib/stdc/stdio.h"
+#include "lib/k/string.h"
 
-int puts( const char* string ) {
-  return printf( "%s\r\n", string );
+char *strrev( char* str ) {
+  char* p1 = str;
+  char* p2 = ( char* )( str + strlen( str ) - 1 );
+
+  while ( p1 < p2 ) {
+    char tmp = *p1;
+    *p1 = *p2;
+    *p2 = tmp;
+    p1++;
+    p2--;
+  }
+
+  return str;
 }

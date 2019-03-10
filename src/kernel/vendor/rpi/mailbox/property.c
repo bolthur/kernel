@@ -20,7 +20,7 @@
 
 #include <stdarg.h>
 
-#include "lib/stdc/string.h"
+#include "lib/k/string.h"
 #include "kernel/kernel/debug.h"
 #include "kernel/vendor/rpi/mailbox/mailbox.h"
 #include "kernel/vendor/rpi/mailbox/property.h"

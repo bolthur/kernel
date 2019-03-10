@@ -18,17 +18,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIBC_STDLIB__ )
-#define __LIBC_STDLIB__
+#if ! defined( __LIBK_STDIO__ )
+#define __LIBK_STDIO__
 
-#include <stdint.h>
-#include <stdbool.h>
+#define EOF ( -1 )
 
-#define RAND_MAX 32767
-
-char *itoa( int32_t, char*, int32_t, bool );
-int rand( void );
-void srand( unsigned int );
-char *utoa( uint32_t, char*, int32_t, bool );
+int printf( const char* restrict, ... );
+int putchar( int );
+int puts( const char* );
 
 #endif

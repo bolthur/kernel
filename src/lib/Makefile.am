@@ -1,2 +1,2 @@
 
-SUBDIRS = stdc avl tar fdt atag
+SUBDIRS = k avl tar fdt atag

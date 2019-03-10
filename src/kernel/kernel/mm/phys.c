@@ -21,7 +21,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "lib/stdc/stdio.h"
+#include "lib/k/stdio.h"
 #include "kernel/kernel/debug.h"
 #include "kernel/kernel/panic.h"
 #include "kernel/kernel/entry.h"

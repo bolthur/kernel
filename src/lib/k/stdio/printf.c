@@ -24,9 +24,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "lib/stdc/stdio.h"
-#include "lib/stdc/string.h"
-#include "lib/stdc/stdlib.h"
+#include "lib/k/stdio.h"
+#include "lib/k/string.h"
+#include "lib/k/stdlib.h"
 
 bool print( const char* data, size_t length, int32_t pad0, int32_t pad ) {
   const unsigned char* bytes = ( const unsigned char * )data;

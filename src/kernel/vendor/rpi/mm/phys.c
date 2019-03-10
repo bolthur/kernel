@@ -20,8 +20,8 @@
 
 #include <stddef.h>
 
-#include "lib/stdc/string.h"
-#include "lib/stdc/stdlib.h"
+#include "lib/k/string.h"
+#include "lib/k/stdlib.h"
 #include "kernel/kernel/debug.h"
 #include "kernel/kernel/entry.h"
 #include "kernel/kernel/mm/phys.h"
@@ -88,8 +88,9 @@ void phys_vendor_init( void ) {
   phys_bitmap_length = memory_amount / PAGE_SIZE / ( sizeof( phys_bitmap_length ) * 8 );
 
   // allocate bitmap manually via placement address after kernel
+  // align it to page size
   phys_bitmap = ( uint32_t* )PHYS_2_VIRT(
-    placement_alloc( phys_bitmap_length, PLACEMENT_NO_ALIGN )
+    placement_alloc( phys_bitmap_length, PAGE_SIZE )
   );
 
   // overwrite physical bitmap completely with zero

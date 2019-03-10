@@ -35,10 +35,9 @@
 * [x] Code base reorganization
   * [x] Move includes into extra folder with subfolders
   * [x] Move source into extra folder with subfolders
-* [ ] Font
+* [x] Font
   * [x] Add correct license header to font file containing
-  * [ ] Compile framebuffer and font into kernel only when framebuffer is enabled
-  * [ ] Check and fix data abort on real device, when framebuffer is activated for compile
+  * [x] Check and fix data abort on real device, when framebuffer is activated for compile
 * [ ] Memory management
   * [x] Add higher half define via vendor autotools
   * [x] Move static naked aligned function `interrupt_vector_table` into assembler stub
@@ -68,7 +67,7 @@
 * [ ] Memory management
   * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code with avl tree
 * [ ] `libc` rework for further kernel development
-  * [ ] Rename to `libk` and remove all non kernel related parts
+  * [x] Rename to `libk` and remove all non kernel related parts
   * [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
 * [ ] Add gdb stub for debugging on remote device via serial port
   * [x] Find better place for `serial_init` than `tty_init`
@@ -77,7 +76,6 @@
 * [ ] Add multitasking
 * [ ] Implement syscall handling via `swi`
 * [ ] FPU
-  * [ ] Enable fpu only per process when fpu exception has been thrown
   * [ ] Extend push of registers during exception to consider also fpu registers
   * [ ] Extend undefined exception to check for fpu error with clear of flag
 * [ ] Add multithreading
@@ -95,6 +93,8 @@
   * [x] Get text printing via framebuffer to work
   * [x] Use framebuffer as default tty
   * [x] Finalize console implementation for framebuffer
+* [ ] Create modules
+  * [ ] Move kernel tty into module
 * [ ] TAR
   * [ ] Add generic tar library for reading tar files
   * [ ] Add initial ramdisk during boot which should be a simple tar file

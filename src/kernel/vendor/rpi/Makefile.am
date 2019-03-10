@@ -34,7 +34,7 @@ BUILT_SOURCES = \
   ${top_builddir}/src/lib/atag/libatag.a \
   ${top_builddir}/src/lib/avl/libavl.a \
   ${top_builddir}/src/lib/fdt/libfdt.a \
-  ${top_builddir}/src/lib/stdc/libstdc.a \
+  ${top_builddir}/src/lib/k/libk.a \
   ${top_builddir}/src/lib/tar/libtar.a \
   kernel.zwerg
 
@@ -53,7 +53,7 @@ kernel_zwerg_DEPENDENCIES = \
   ${top_builddir}/src/lib/atag/libatag.a \
   ${top_builddir}/src/lib/avl/libavl.a \
   ${top_builddir}/src/lib/fdt/libfdt.a \
-  ${top_builddir}/src/lib/stdc/libstdc.a \
+  ${top_builddir}/src/lib/k/libk.a \
   ${top_builddir}/src/lib/tar/libtar.a
 kernel_zwerg_LDFLAGS = \
   -T $(top_srcdir)/src/kernel/vendor/rpi/kernel.$(subarch_subdir).$(executable_format).ld \

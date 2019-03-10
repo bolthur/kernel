@@ -4,14 +4,12 @@ AUTOMAKE_OPTIONS = nostdinc subdir-objects
 AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/include
 AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/include
 
-noinst_LIBRARIES = libstdc.a
-libstdc_a_SOURCES = \
+noinst_LIBRARIES = libk.a
+libk_a_SOURCES = \
   stdio/printf.c \
   stdio/putchar.c \
   stdio/puts.c \
   stdlib/itoa.c \
-  stdlib/rand.c \
-  stdlib/srand.c \
   stdlib/utoa.c \
   string/memchr.c \
   string/memcmp.c \

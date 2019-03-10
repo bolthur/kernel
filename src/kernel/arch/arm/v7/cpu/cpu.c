@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lib/stdc/stdio.h"
+#include "lib/k/stdio.h"
 #include "kernel/arch/arm/v7/cpu.h"
 
 /**
