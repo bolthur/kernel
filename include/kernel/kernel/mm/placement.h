@@ -24,8 +24,6 @@
 #include <stddef.h>
 #include "kernel/kernel/type.h"
 
-#define PLACEMENT_NO_ALIGN 0
-
 extern paddr_t placement_address;
 vaddr_t placement_alloc( size_t, size_t );
 

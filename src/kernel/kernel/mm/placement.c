@@ -43,10 +43,12 @@ paddr_t placement_address = VIRT_2_PHYS( &__kernel_end );
  * @return vaddr_t found address
  */
 vaddr_t placement_alloc( size_t size, size_t alignment ) {
-  // check for heap not initialized
-  if ( heap_initialized_get() || virt_initialized_get() ) {
-    PANIC( "placement_alloc used with initialized heap or virtual manager!" );
-  }
+  // assert no heap and no virtual memory
+  ASSERT( ! heap_initialized_get() );
+  ASSERT( ! virt_initialized_get() );
+
+  // assert alignment
+  ASSERT( 0 < alignment );
 
   // determine offset for alignment
   size_t offset = 0;
@@ -65,7 +67,7 @@ vaddr_t placement_alloc( size_t size, size_t alignment ) {
   #endif
 
   // handle alignment
-  if ( PLACEMENT_NO_ALIGN != alignment ) {
+  if ( ( paddr_t )placement_address % alignment ) {
     // increase offset
     offset += ( alignment - ( paddr_t )placement_address % alignment );
 

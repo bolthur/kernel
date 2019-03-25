@@ -90,7 +90,10 @@ void phys_vendor_init( void ) {
   // allocate bitmap manually via placement address after kernel
   // align it to page size
   phys_bitmap = ( uint32_t* )PHYS_2_VIRT(
-    placement_alloc( phys_bitmap_length, PAGE_SIZE )
+    placement_alloc(
+      phys_bitmap_length,
+      sizeof( uint32_t )
+    )
   );
 
   // overwrite physical bitmap completely with zero
