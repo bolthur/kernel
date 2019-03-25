@@ -118,4 +118,9 @@ m4/lt~obsolete.m4
 
 # ---> VisualStudioCode
 .settings
-.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+!.vscode/c_cpp_properties.json
