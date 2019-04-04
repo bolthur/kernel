@@ -1,6 +1,6 @@
 
 AC_PREREQ(2.57)
-AC_INIT([bolthur-kernel], [0.1], [bug-kernel@bolthur.org])
+AC_INIT([bolthur-kernel], [0.1], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 AC_COPYRIGHT([Copyright (C) 2018 - 2019 bolthur project])
 
 AC_CONFIG_SRCDIR([main.c])

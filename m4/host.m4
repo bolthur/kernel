@@ -83,6 +83,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
     executable_format=32
     AC_DEFINE([ARCH_ARM], [1])
     AC_DEFINE([ELF32], [1])
+    CFLAGS="${CFLAGS} -mno-unaligned-access"
 
     case "${DEVICE}" in
     rpi2_b_rev1)
@@ -141,6 +142,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
     executable_format=32
     AC_DEFINE([ARCH_ARM], [1])
     AC_DEFINE([ELF64], [1])
+    CFLAGS="${CFLAGS} -mno-unaligned-access"
 
     case "${DEVICE}" in
     rpi3_b)

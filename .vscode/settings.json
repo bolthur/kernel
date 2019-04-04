@@ -23,7 +23,9 @@
     "typeindex": "c",
     "typeinfo": "c",
     "limits": "c",
-    "type_traits": "c"
+    "type_traits": "c",
+    "initializer_list": "c",
+    "ios": "c"
   },
   "editor.tabSize": 2,
   "editor.renderWhitespace": "all",

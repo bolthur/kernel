@@ -92,7 +92,7 @@ void phys_vendor_init( void ) {
   phys_bitmap = ( uint32_t* )PHYS_2_VIRT(
     placement_alloc(
       phys_bitmap_length,
-      sizeof( uint32_t )
+      sizeof( phys_bitmap )
     )
   );
 
