@@ -6,7 +6,7 @@
       "type": "shell",
       "command": "make",
       "options": {
-        "cwd": "${workspaceRoot}/build"
+        "cwd": "${workspaceFolder}/build"
       },
       "args": [
         "clean"
@@ -27,7 +27,7 @@
       "type": "shell",
       "command": "make",
       "options": {
-        "cwd": "${workspaceRoot}/build"
+        "cwd": "${workspaceFolder}/build"
       },
       "group": {
         "kind": "build",
