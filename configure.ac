@@ -104,9 +104,8 @@ BOLTHUR_SET_HOST
 # set normal flags
 BOLTHUR_SET_FLAGS
 
-# extend path with local toolchain
-PATH="${ac_abs_confdir}/scripts/opt/cross/bin:${PATH}"
-AC_SUBST(PATH, "${ac_abs_confdir}/scripts/opt/cross/bin:${PATH}")
+# FIXME: Shouldn't be necessary, when creating symlinks of toolchain binaries to /usr/local/bin
+AC_SUBST(PATH, "${HOME}/.bolthur/cross/bin:${PATH}")
 
 # conftest
 AC_LANG_CONFTEST([AC_LANG_SOURCE([[const char hw[] = "Hello, World\r\n";]])])

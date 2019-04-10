@@ -1,4 +1,15 @@
 #!/bin/bash
+set -ex
+
+# Get directory path
+BASEDIR="$( cd "$( dirname "$0" )" && pwd )"
+
+# create config directory for automake
+if [ ! -d "$BASEDIR/config" ]; then
+  mkdir "$BASEDIR/config"
+fi
+
+cd $BASEDIR
 
 aclocal -I m4
 if [ $? -ne 0 ]; then
