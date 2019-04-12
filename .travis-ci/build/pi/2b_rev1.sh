@@ -5,11 +5,11 @@ set -ex
 BASEDIR="$( cd "$( dirname "$0" )" && pwd )"
 
 # Switch to base dir
-cd $BASEDIR
+cd "$BASEDIR"
 
 # Delete build directory if existing
 if [ -d "build-pi2_rev1" ]; then
-  rm -rf ./build-pi
+  rm -rf ./build-pi_rev1
 fi
 
 # Create build directory and switch into it
@@ -28,8 +28,8 @@ cd build-pi2_rev1
   --enable-output-mm-heap \
   --enable-output-mm-placement \
   --enable-output-mailbox \
-  --enable-output-timer \
+  --enable-output-timer
 
 # Start build
 make clean
-make all
+make

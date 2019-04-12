@@ -1,0 +1,17 @@
+
+language: c
+compiler: arm-none-eabi-gcc
+
+services: docker
+
+before_install:
+  - autoreconf -if
+
+install:
+  - docker build . -t bolthur
+
+script:
+  - docker run -it --rm bolthur
+
+notifications:
+  email: false
