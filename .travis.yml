@@ -4,14 +4,11 @@ compiler: arm-none-eabi-gcc
 
 services: docker
 
-before_install:
-  - autoreconf -if
-
 install:
-  - docker build . -t bolthur
+  - docker build https://github.com/bolthur/build-tools.git#develop -t bolthur-build-tools
 
 script:
-  - docker run -it --rm bolthur
+  - docker run --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools /src/.travis-ci/build.sh
 
 notifications:
   email: false
