@@ -4,5 +4,10 @@ set -ex
 # Get base directory
 BASEDIR="$( cd "$( dirname "$0" )" && pwd )"
 
-# build pi
+# Configure
+cd "$BASEDIR/../"
+autoreconf -if
+cd "$BASEDIR"
+
+# Build pi
 sh "$BASEDIR/build/pi.sh"
