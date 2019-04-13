@@ -9,7 +9,7 @@ cd "$BASEDIR"
 
 # Delete build directory if existing
 if [ -d "build-pi2_rev1" ]; then
-  rm -rf ./build-pi_rev1
+  rm -rf build-pi2_rev1
 fi
 
 # Create build directory and switch into it
