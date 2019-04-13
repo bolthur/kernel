@@ -42,7 +42,7 @@ Currently the following targets are planned to be supported:
 Initial necessary commands after checkout:
 
 ```bash
-./autogen.sh
+autoreconf -if
 ```
 
 Necessary commands after adding new files to autotools executed within project root:

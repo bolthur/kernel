@@ -24,7 +24,7 @@ To setup for making changes you'll need to take a few steps, which we've outline
 
 2. Setup cross compilation environment. Easiest way to achieve that is to use the shell script from repo [bolthur/workspace](https://github.com/bolthur/workspace). Annotation for mac users, having binutils installed via brew or something else may lead to errors during compilation of cross compiler.
 
-3. Prepare checkout for compilation by executing the shellscript `autogen.sh`. If already checked out and executed, and some new files have been added to one of the `Makefile.am` files, you have to execute `autoreconf -i`. Both the shell script and the autoreconf have to be executed within project root.
+3. Prepare checkout for compilation by executing command `autoreconf -if` within checkout. If already checked out and executed, and some new files have been added to one of the `Makefile.am` files, you have to execute `autoreconf -i`. Both the shell script and the autoreconf have to be executed within project root.
 
 4. Create a build directory and execute configure there with necessary parameters.
 
