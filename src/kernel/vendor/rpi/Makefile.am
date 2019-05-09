@@ -3,8 +3,8 @@ SUBDIRS = .
 
 AUTOMAKE_OPTIONS = nostdinc subdir-objects
 
-AM_CFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/include
-AM_CCASFLAGS = -imacros $(top_builddir)/config.h -I$(top_srcdir)/include
+AM_CFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include
+AM_CCASFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include
 
 # rpi library
 noinst_LIBRARIES = librpi.a
@@ -15,7 +15,6 @@ librpi_a_SOURCES = \
   mailbox/property.c \
   mm/phys.c \
   mm/virt.c \
-  framebuffer.c \
   irq.c \
   platform.c \
   peripheral.c \
@@ -26,16 +25,12 @@ librpi_a_SOURCES = \
 
 # built sources determining things to be built first
 BUILT_SOURCES = \
-  ${top_builddir}/src/font/libfont.a \
   librpi.a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
   ${top_builddir}/src/kernel/kernel/libkernel.a \
-  ${top_builddir}/src/lib/atag/libatag.a \
   ${top_builddir}/src/lib/avl/libavl.a \
-  ${top_builddir}/src/lib/fdt/libfdt.a \
   ${top_builddir}/src/lib/k/libk.a \
-  ${top_builddir}/src/lib/tar/libtar.a \
   kernel.zwerg
 
 # no installable programs
@@ -45,16 +40,12 @@ noinst_PROGRAMS = kernel.zwerg ${output_img}
 kernel_zwerg_SOURCES =
 kernel_zwerg_DEPENDENCIES = \
   kernel.$(subarch_subdir).$(executable_format).ld \
-  ${top_builddir}/src/font/libfont.a \
   librpi.a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
   ${top_builddir}/src/kernel/kernel/libkernel.a \
-  ${top_builddir}/src/lib/atag/libatag.a \
   ${top_builddir}/src/lib/avl/libavl.a \
-  ${top_builddir}/src/lib/fdt/libfdt.a \
-  ${top_builddir}/src/lib/k/libk.a \
-  ${top_builddir}/src/lib/tar/libtar.a
+  ${top_builddir}/src/lib/k/libk.a
 kernel_zwerg_LDFLAGS = \
   -T $(top_srcdir)/src/kernel/vendor/rpi/kernel.$(subarch_subdir).$(executable_format).ld \
   -Wl,-Map,kernel.map \

@@ -29,7 +29,7 @@
       },
       "macFrameworkPath": [],
       "forcedInclude": [
-        "${workspaceFolder}/build/config.h"
+        "${workspaceFolder}/build/include/config.h"
       ],
       "cStandard": "c11"
     },
@@ -48,7 +48,7 @@
         "databaseFilename": ""
       },
       "forcedInclude": [
-        "${workspaceFolder}/build/config.h"
+        "${workspaceFolder}/build/include/config.h"
       ],
       "cStandard": "c11"
     },
@@ -70,7 +70,7 @@
         "databaseFilename": ""
       },
       "forcedInclude": [
-        "${workspaceFolder}/build/config.h"
+        "${workspaceFolder}/build/include/config.h"
       ],
       "cStandard": "c11"
     }

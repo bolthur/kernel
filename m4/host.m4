@@ -10,8 +10,6 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([MAX_PHYSICAL_MEMORY], [Define contains max physical memory per vendor])
   AH_TEMPLATE([ARCH_ARM], [Define to 1 for ARM targets])
   AH_TEMPLATE([VENDOR_RPI], [Define to 1 for raspberry pi vendor])
-  AH_TEMPLATE([TTY_SERIAL], [Define to 1 for output via serial])
-  AH_TEMPLATE([TTY_FRAMEBUFFER], [Define to 1 for output via framebuffer])
   AH_TEMPLATE([TTY_ENABLE], [Define to 1 to enable kernel print])
   AH_TEMPLATE([PRINT_MM_PHYS], [Define to 1 to enable output of physical memory manager])
   AH_TEMPLATE([PRINT_MM_VIRT], [Define to 1 to enable output of virtual memory manager])
@@ -27,16 +25,6 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AS_IF([test "x$enable_debug" == "xyes"], [
     CFLAGS="${CFLAGS} -g"
     AC_DEFINE([DEBUG], [1])
-  ])
-
-  # Test possible serial tty activation
-  AS_IF([test "x$enable_serial_tty" == "xyes"], [
-    AC_DEFINE([TTY_SERIAL], [1])
-  ])
-
-  # Test possible framebuffer tty activation
-  AS_IF([test "x$enable_framebuffer_tty" == "xyes"], [
-    AC_DEFINE([TTY_FRAMEBUFFER], [1])
   ])
 
   # Test for general output enable

@@ -30,7 +30,6 @@
 #include "kernel/arch/arm/barrier.h"
 #include "kernel/arch/arm/mm/virt.h"
 #include "kernel/vendor/rpi/peripheral.h"
-#include "kernel/vendor/rpi/framebuffer.h"
 
 vaddr_t user_context;
 vaddr_t kernel_context;

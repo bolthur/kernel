@@ -3,18 +3,20 @@ AC_PREREQ(2.57)
 AC_INIT([bolthur-kernel], [0.1], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 AC_COPYRIGHT([Copyright (C) 2018 - 2019 bolthur project])
 
-AC_CONFIG_SRCDIR([main.c])
 AC_CONFIG_AUX_DIR([config])
 AC_CONFIG_MACRO_DIR([m4])
 
 AC_CANONICAL_HOST
 AC_CONFIG_SRCDIR([src/kernel/kernel/main.c])
 AM_INIT_AUTOMAKE([foreign 1.7])
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_HEADERS([include/config.h])
 
 AM_SILENT_RULES([yes])
 
 AC_LANG([C])
+
+# FIXME: Shouldn't be necessary, when creating symlinks of toolchain binaries to /usr/local/bin
+AC_SUBST(PATH, "${HOME}/.bolthur/cross/bin:${PATH}")
 
 AC_ARG_ENABLE([device],
   AC_HELP_STRING([--enable-device], [set target device (default and fallback is rpi2_b_rev1)]),
@@ -38,14 +40,6 @@ AC_ARG_ENABLE([debug],
 
 AC_ARG_ENABLE([output],
   AC_HELP_STRING([--enable-output], [enable kernel output (default: off)])
-)
-
-AC_ARG_ENABLE([serial-tty],
-  AC_HELP_STRING([--enable-serial-tty], [Enable kernel tty output to serial (default: off)])
-)
-
-AC_ARG_ENABLE([framebuffer-tty],
-  AC_HELP_STRING([--enable-framebuffer-tty], [Enable kernel tty output to framebuffer (default: off)])
 )
 
 AC_ARG_ENABLE([output-mm-phys],
@@ -106,9 +100,6 @@ BOLTHUR_SET_HOST
 # set normal flags
 BOLTHUR_SET_FLAGS
 
-# FIXME: Shouldn't be necessary, when creating symlinks of toolchain binaries to /usr/local/bin
-AC_SUBST(PATH, "${HOME}/.bolthur/cross/bin:${PATH}")
-
 # conftest
 AC_LANG_CONFTEST([AC_LANG_SOURCE([[const char hw[] = "Hello, World\r\n";]])])
 
@@ -136,7 +127,6 @@ AC_DEFINE_UNQUOTED([OPT_NONE], [__attribute__((__optimize__( "O0" )))], [Disable
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
-  src/font/Makefile
   src/kernel/Makefile
   src/kernel/kernel/Makefile
   src/kernel/arch/Makefile
@@ -147,11 +137,8 @@ AC_CONFIG_FILES([
   src/kernel/vendor/Makefile
   src/kernel/vendor/rpi/Makefile
   src/lib/Makefile
-  src/lib/atag/Makefile
   src/lib/avl/Makefile
-  src/lib/fdt/Makefile
   src/lib/k/Makefile
-  src/lib/tar/Makefile
 ])
 
 AC_OUTPUT

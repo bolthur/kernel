@@ -24,16 +24,12 @@ OUTPUT_ARCH( arm )
 ENTRY( boot_start )
 
 GROUP(
-  ../../../font/libfont.a
   ../../../kernel/arch/arm/v8/libv8.a
   ../../../kernel/arch/arm/libarm.a
   ../../../kernel/kernel/libkernel.a
   ../../../kernel/vendor/rpi/librpi.a
-  ../../../lib/atag/libatag.a
   ../../../lib/avl/libavl.a
-  ../../../lib/fdt/libfdt.a
   ../../../lib/k/libk.a
-  ../../../lib/tar/libtar.a
 )
 INPUT(
   libgcc.a

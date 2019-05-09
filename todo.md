@@ -1,54 +1,12 @@
 
 # Things to be done
 
-* [x] Cleanup current code mess
-  * [x] Move memory barrier header to arm as it is arm related
-  * [x] Change peripheral base from constant to function due to later virtual remap
-  * [x] Strip out ATAG and flat device tree parsing into library
-  * [x] Prefix folders used by automake with an underscore
-* [x] Serial output done within `kernel/vendor/{vendor}`
-* [x] TTY for printing debug messages done within `kernel/vendor/{vendor}`
-  * [x] printf implementation for kernel environment
-* [x] Interrupt requests and fast interrupts
-* [x] Add memory barriers for arm necessary for e.g. mailbox on rpi
-* [x] Restructure
-  * [x] Move source files out of folder `src`
-  * [x] Restructore code
-  * [x] Merge defines `KERNEL_DEBUG_PRINT` and `DEBUG`
-  * [x] Reduce devices within `m4/host.m4` and `configure.ac` to existing hardware
-  * [x] Provide `autogen.sh` for simple startup after checkout / download
-* [x] Memory management
-  * [x] Physical memory management
-    * [x] Get max memory from vendor ( store physical memory map generally per vendor )
-    * [x] Setup memory bitmap within vendor
-    * [x] Mark physical peripheral address areas per vendor as used
 * [ ] Add irq and isrs register handling
-  * [x] Get irq with cpu mode switch and register dump working
-  * [x] Merge irq functions with isrs functions where possible
   * [ ] Check and revise if necessary
 * [ ] FPU
-  * [x] Check and revise fpu code
-  * [x] Check and remove direct floating point usage within kernel except saving of floating point registers
-  * [x] Check why current implementation is not working on real hardware
   * [ ] Add push and pop of fpu registers within ivt stubs
   * [ ] Extend cpu structure if fpu is enabled
-* [x] Code base reorganization
-  * [x] Move includes into extra folder with subfolders
-  * [x] Move source into extra folder with subfolders
-* [x] Font
-  * [x] Add correct license header to font file containing
-  * [x] Check and fix data abort on real device, when framebuffer is activated for compile
 * [ ] Memory management
-  * [x] Add higher half define via vendor autotools
-  * [x] Move static naked aligned function `interrupt_vector_table` into assembler stub
-  * [x] Move stack creation into own assembly stub
-  * [x] Add creation of initial mmu during startup of vendor
-    * [x] Create first version of higher half mapping within `boot`
-    * [x] Map up to max possible memory via vendor define
-    * [x] Cleanup initial mapping within `boot`
-  * [x] Ensure that kernel with and without higher half define works as expected within emulator and on real device
-    * [x] Get kernel to work again with real hardware, currently breaking during mmu setup
-  * [x] Check and revise stack setup for interrupt vector table regarding possible higher half
   * [ ] Add normal setup of mmu during startup of kernel splitted to folders listed below
     * [ ] `kernel/arch/{architecture}/mm`
     * [ ] `kernel/arch/{architecture}/{sub architecture}/mm`
@@ -62,15 +20,12 @@
 * [ ] Platform init
   * [ ] Add check for initrd loaded after kernel and move placement address for placement allocator beyond initrd
 * [ ] Ensure that kernel works still on real hardware also
-* [ ] AVL tree
-  * [ ] Add generic avl tree library
 * [ ] Memory management
   * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code with avl tree
-* [ ] `libc` rework for further kernel development
-  * [x] Rename to `libk` and remove all non kernel related parts
-  * [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free`
+* [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free` within `libk`
+* [ ] AVL tree
+  * [ ] Add generic avl tree library
 * [ ] Add gdb stub for debugging on remote device via serial port
-  * [x] Find better place for `serial_init` than `tty_init`
   * [ ] Add remote debugging integration
   * [ ] Finish debug launch.json when remote debugging is possible
 * [ ] Add multitasking
@@ -80,19 +35,12 @@
   * [ ] Extend undefined exception to check for fpu error with clear of flag
 * [ ] Add multithreading
 * [ ] Add SMP support
-  * [x] Add smp define per vendor via autotools
-  * [x] Add smp core amount define per vendor via autotools
   * [ ] Memory management
     * [ ] Prepare virtual memory management per core if smp is active
     * [ ] Specify cores per vendor via autotools
   * [ ] Determine current running core within exceptions
   * [ ] Extend irq check to check corresponding cpu interrupt registers
   * [ ] ...
-* [x] TTY changes
-  * [x] Add switch to use serial tty for debug output
-  * [x] Get text printing via framebuffer to work
-  * [x] Use framebuffer as default tty
-  * [x] Finalize console implementation for framebuffer
 * [ ] TAR
   * [ ] Add generic tar library for reading tar files
   * [ ] Add initial ramdisk during boot which should be a simple tar file
@@ -118,11 +66,7 @@
   * [ ] Extend automake by option for use atag
   * [ ] Add parse of atag when compiled in via option
   * [ ] Debug output, when no atag has been passed and use kernel defaults
-* [x] Autotools / Compilation
-  * [x] Check and revise kernel to work with all optimization levels
-  * [x] Check autotools setup to get compilation with more than one core to work
 * [ ] Support further platforms
-  * [ ] Test and fix rpi 2 rev. 1 support with real hardware
   * [ ] Add rpi zero support ( armv6 32 bit only with one cpu )
   * [ ] Add rpi 3 support ( armv8 64 bit with smp )
   * [ ] Add rpi 3 support ( armv8 32 bit with smp )
@@ -135,7 +79,7 @@
 
 * [ ] Create a draft for "build" system to create ready to boot images with vendor driver/app packaging
   * [ ] Per vendor initial ramdisk creation
-* [ ] Move libraries `lib/tar`, `lib/avl`, `lib/atag` and `lib/fdt` into separate repositories and link them to kernel via git submodule if kernel related
+* [ ] Move library `lib/tar` into separate repository and link them to kernel via git submodule
 * [ ] Create repository for building ported applications and libraries
   * [ ] Add newlib with patch for compilation
   * [ ] Add glibc with patch for compilation

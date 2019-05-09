@@ -81,10 +81,12 @@ int8_t irq_get_pending( bool fast ) {
     uint32_t pending1 = mmio_read( base + INTERRUPT_IRQ_PENDING_1 );
     uint32_t pending2 = mmio_read( base + INTERRUPT_IRQ_PENDING_2 );
 
-    uint32_t core0_irq_source = mmio_read( CORE0_IRQ_SOURCE );
-    if ( core0_irq_source & 0x08 ) {
-      return 8;
-    }
+    #if defined( BCM2709 ) || defined( BCM2710 )
+      uint32_t core0_irq_source = mmio_read( CORE0_IRQ_SOURCE );
+      if ( core0_irq_source & 0x08 ) {
+        return 8;
+      }
+    #endif
 
     for ( int8_t i = 0; i < 32; ++i ) {
       int32_t check_bit = ( 1 << i );

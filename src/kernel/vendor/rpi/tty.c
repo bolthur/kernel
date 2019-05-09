@@ -20,20 +20,13 @@
 
 #include "lib/k/stdlib.h"
 #include "kernel/kernel/serial.h"
-#include "kernel/vendor/rpi/framebuffer.h"
 
 /**
  * @brief Initialize TTY
  */
 void tty_init( void ) {
-  #if defined( TTY_ENABLE )
-    #if defined( TTY_FRAMEBUFFER )
-      framebuffer_init();
-    #endif
-
-    #if defined( TTY_SERIAL ) && ! defined( DEBUG )
-      serial_init();
-    #endif
+  #if defined( TTY_ENABLE ) || defined( DEBUG )
+    serial_init();
   #endif
 }
 
@@ -44,15 +37,7 @@ void tty_init( void ) {
  */
 void tty_putc( uint8_t c ) {
   #if defined( TTY_ENABLE )
-    // print also to serial if enabled
-    #if defined( TTY_SERIAL )
-      serial_putc( c );
-    #endif
-
-    // print to framebuffer if enabled
-    #if defined( TTY_FRAMEBUFFER )
-      framebuffer_putc( c );
-    #endif
+    serial_putc( c );
   #else
     ( void )c;
   #endif
