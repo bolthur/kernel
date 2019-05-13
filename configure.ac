@@ -138,7 +138,9 @@ AC_CONFIG_FILES([
   src/kernel/vendor/rpi/Makefile
   src/lib/Makefile
   src/lib/avl/Makefile
-  src/lib/k/Makefile
+  src/lib/stdio/Makefile
+  src/lib/stdlib/Makefile
+  src/lib/string/Makefile
 ])
 
 AC_OUTPUT

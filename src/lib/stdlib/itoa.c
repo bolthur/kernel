@@ -18,10 +18,40 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-int strcmp( const char* str1, const char* str2 ) {
-  while ( *str1 && ( *str1 == *str2 ) ) {
-    str1++;
-    str2++;
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "lib/string.h"
+
+char *itoa( int32_t value, char* buffer, int32_t radix, bool uppercase ) {
+  char *p = buffer;
+  unsigned uv;
+  bool sign = ( 10 == radix && 0 > value ) ? true : false;
+
+  if ( sign ) {
+    uv = ( unsigned )-value;
+  } else {
+    uv = ( unsigned )value;
   }
-  return *( const unsigned char* )str1 - *( const unsigned char* )str2;
+
+  // divide until we reach 0 as result
+  do {
+    int remainder = ( int )( uv % ( unsigned )radix );
+    *p++ = ( char )(
+      ( remainder < 10 )
+        ? remainder + '0'
+        : remainder + ( ! uppercase ? 'a' : 'A' ) - 10
+    );
+  } while ( uv /= ( unsigned )radix );
+
+  // add sign
+  if ( sign ) {
+    *p++ = '-';
+  }
+
+  // terminate buffer
+  *p = 0;
+
+  // return reversed string
+  return strrev( buffer );
 }

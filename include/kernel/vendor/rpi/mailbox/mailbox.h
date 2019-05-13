@@ -23,8 +23,6 @@
 
 #include <stdint.h>
 
-#include "../peripheral.h"
-
 #define MAILBOX_OFFSET 0xB880
 
 #define MAILBOX_FULL 0x80000000

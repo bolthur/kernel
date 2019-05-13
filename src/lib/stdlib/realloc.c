@@ -19,19 +19,30 @@
  */
 
 #include <stddef.h>
-#include <stdint.h>
 
-void* memchr( const void* src, int c, size_t n ) {
-  uint8_t* p = ( uint8_t* )src;
-  uint8_t* e = p + n;
+#include "lib/string.h"
+#include "lib/stdlib.h"
 
-  while ( p < e ) {
-    if ( *p == ( uint8_t )c ) {
-      return ( void* )p;
-    }
-
-    p++;
+void *realloc( void *ptr, size_t size ) {
+  // simply use malloc if nothing is there
+  if ( NULL == ptr ) {
+    return malloc( size );
   }
 
-  return NULL;
+  // allocate new memory
+  void *new_ptr = malloc( size );
+
+  // handle error
+  if ( NULL == new_ptr ) {
+    return NULL;
+  }
+
+  // copy data
+  new_ptr = memcpy( new_ptr, ptr, size );
+
+  // mark current as free
+  free( ptr );
+
+  // return new pointer
+  return new_ptr;
 }

@@ -21,8 +21,6 @@
 #if ! defined( __KERNEL_VENDOR_RPI_GPIO__ )
 #define __KERNEL_VENDOR_RPI_GPIO__
 
-#include "peripheral.h"
-
 #if defined( BCM2709 ) || defined( BCM2710 )
   #define CORE0_TIMER_IRQCNTL 0x40000040
   #define CORE0_IRQ_SOURCE 0x40000060

@@ -18,20 +18,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
 #include <stdint.h>
+#include <stdbool.h>
 
-int memcmp(const void* aptr, const void* bptr, size_t size) {
-  const uint8_t* a = ( const uint8_t* )aptr;
-  const uint8_t* b = ( const uint8_t* )bptr;
+#include "lib/string.h"
 
-  for ( size_t i = 0; i < size; i++ ) {
-    if ( a[ i ] < b[ i ] ) {
-      return -1;
-    } else if ( b[ i ] < a[ i ] ) {
-      return 1;
-    }
-  }
+char *utoa( uint32_t value, char* buffer, int32_t radix, bool uppercase ) {
+  char *p = buffer;
+  unsigned uv = value;
 
-  return 0;
+  // divide until we reach 0 as result
+  do {
+    int remainder = ( int )( uv % ( unsigned )radix );
+    *p++ = ( char )(
+      ( remainder < 10 )
+        ? remainder + '0'
+        : remainder + ( ! uppercase ? 'a' : 'A' ) - 10
+    );
+  } while ( uv /= ( unsigned )radix );
+
+  // terminate buffer
+  *p = 0;
+
+  // return reversed string
+  return strrev( buffer );
 }

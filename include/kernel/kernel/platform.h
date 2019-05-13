@@ -21,6 +21,6 @@
 #if ! defined( __KERNEL_PLATFORM__ )
 #define __KERNEL_PLATFORM__
 
-extern void platform_init( void );
+void platform_init( void );
 
 #endif

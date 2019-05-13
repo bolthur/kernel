@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-#include "lib/k/stdio.h"
+#include "lib/stdio.h"
 #include "kernel/kernel/irq.h"
 
 /**

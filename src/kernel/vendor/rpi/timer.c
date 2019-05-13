@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "lib/k/stdio.h"
+#include "lib/stdio.h"
 
 #if defined( ARCH_ARM_V6 )
   #include "kernel/arch/arm/v6/cpu.h"

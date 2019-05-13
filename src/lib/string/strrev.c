@@ -18,32 +18,19 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIBTAR_TAR__ )
-#define __LIBTAR_TAR__
+#include "lib/string.h"
 
-#define TAR_MAGIC "ustar"
-#define TAR_MAGIC_LENGTH 6
+char *strrev( char* str ) {
+  char* p1 = str;
+  char* p2 = ( char* )( str + strlen( str ) - 1 );
 
-#define TAR_VERSION "00"
-#define TAR_VERSION_LENGTH 2
+  while ( p1 < p2 ) {
+    char tmp = *p1;
+    *p1 = *p2;
+    *p2 = tmp;
+    p1++;
+    p2--;
+  }
 
-typedef struct {
-  char file_name[ 100 ];
-  char file_mode[ 8 ];
-  char owner_user_id[ 8 ];
-  char owner_group_id[ 8 ];
-  char file_size[ 12 ];
-  char last_modification_time[ 12 ];
-  char header_checksum[ 8 ];
-  char linked_indicator;
-  char linked_file_name[ 100 ];
-  char ustar_magic[ 6 ];
-  char ustar_version[ 2 ];
-  char owner_user_name[ 32 ];
-  char owner_user_group[ 32 ];
-  char device_major_number[ 8 ];
-  char device_minor_number[ 8 ];
-  char filename_prefix[ 155 ];
-} tar_header_t;
-
-#endif
+  return str;
+}

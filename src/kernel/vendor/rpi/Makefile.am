@@ -30,7 +30,9 @@ BUILT_SOURCES = \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
   ${top_builddir}/src/kernel/kernel/libkernel.a \
   ${top_builddir}/src/lib/avl/libavl.a \
-  ${top_builddir}/src/lib/k/libk.a \
+  ${top_builddir}/src/lib/stdio/libstdio.a \
+  ${top_builddir}/src/lib/stdlib/libstdlib.a \
+  ${top_builddir}/src/lib/string/libstring.a \
   kernel.zwerg
 
 # no installable programs
@@ -45,7 +47,9 @@ kernel_zwerg_DEPENDENCIES = \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
   ${top_builddir}/src/kernel/kernel/libkernel.a \
   ${top_builddir}/src/lib/avl/libavl.a \
-  ${top_builddir}/src/lib/k/libk.a
+  ${top_builddir}/src/lib/stdio/libstdio.a \
+  ${top_builddir}/src/lib/stdlib/libstdlib.a \
+  ${top_builddir}/src/lib/string/libstring.a
 kernel_zwerg_LDFLAGS = \
   -T $(top_srcdir)/src/kernel/vendor/rpi/kernel.$(subarch_subdir).$(executable_format).ld \
   -Wl,-Map,kernel.map \

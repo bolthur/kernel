@@ -21,8 +21,6 @@
 #if ! defined( __KERNEL_ARCH_ARM_BARRIER__ )
 #define __KERNEL_ARCH_ARM_BARRIER__
 
-#include <stdint.h>
-
 void barrier_data_mem( void );
 void barrier_data_sync( void );
 void barrier_flush_cache( void );

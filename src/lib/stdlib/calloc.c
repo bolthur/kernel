@@ -18,13 +18,23 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIBK_STDLIB__ )
-#define __LIBK_STDLIB__
+#include <stddef.h>
 
-#include <stdint.h>
-#include <stdbool.h>
+#include "lib/stdlib.h"
+#include "lib/string.h"
 
-char *itoa( int32_t, char*, int32_t, bool );
-char *utoa( uint32_t, char*, int32_t, bool );
+void *calloc( size_t num, size_t size ) {
+  // allocate memory
+  void *ptr = malloc( num * size );
 
-#endif
+  // handle malloc error
+  if ( NULL == ptr ) {
+    return NULL;
+  }
+
+  // overwrite memory with 0
+  ptr = memset( ptr, 0, num * size );
+
+  // return prepared memory area
+  return ptr;
+}

@@ -18,28 +18,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stdbool.h>
+#include <stddef.h>
 
-#include "lib/k/string.h"
+#include "kernel/kernel/panic.h"
 
-char *utoa( uint32_t value, char* buffer, int32_t radix, bool uppercase ) {
-  char *p = buffer;
-  unsigned uv = value;
+void free( void *ptr ) {
+  // mark as unused
+  ( void )ptr;
 
-  // divide until we reach 0 as result
-  do {
-    int remainder = ( int )( uv % ( unsigned )radix );
-    *p++ = ( char )(
-      ( remainder < 10 )
-        ? remainder + '0'
-        : remainder + ( ! uppercase ? 'a' : 'A' ) - 10
-    );
-  } while ( uv /= ( unsigned )radix );
-
-  // terminate buffer
-  *p = 0;
-
-  // return reversed string
-  return strrev( buffer );
+  // some panic until it's implemented
+  PANIC( "malloc() not yet implemented!" );
 }

@@ -18,8 +18,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lib/k/stdio.h"
+#include <stddef.h>
 
-int puts( const char* string ) {
-  return printf( "%s\r\n", string );
+#include "kernel/kernel/panic.h"
+
+void *malloc( size_t size ) {
+  // mark as unused
+  ( void )size;
+
+  // some panic until it's implemented
+  PANIC( "malloc() not yet implemented!" );
+
+  // return null pointer
+  return NULL;
 }

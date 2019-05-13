@@ -19,12 +19,10 @@
   * [ ] Check and use recursive page mapping
 * [ ] Platform init
   * [ ] Add check for initrd loaded after kernel and move placement address for placement allocator beyond initrd
-* [ ] Ensure that kernel works still on real hardware also
 * [ ] Memory management
-  * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code with avl tree
-* [ ] Provide kernel implementation for `malloc`, `calloc`, `realloc` and `free` within `libk`
-* [ ] AVL tree
   * [ ] Add generic avl tree library
+  * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code with avl tree
+* [ ] Provide kernel implementation for `malloc` and `free` within `libstdlib`
 * [ ] Add gdb stub for debugging on remote device via serial port
   * [ ] Add remote debugging integration
   * [ ] Finish debug launch.json when remote debugging is possible
@@ -79,7 +77,6 @@
 
 * [ ] Create a draft for "build" system to create ready to boot images with vendor driver/app packaging
   * [ ] Per vendor initial ramdisk creation
-* [ ] Move library `lib/tar` into separate repository and link them to kernel via git submodule
 * [ ] Create repository for building ported applications and libraries
   * [ ] Add newlib with patch for compilation
   * [ ] Add glibc with patch for compilation

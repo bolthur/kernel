@@ -29,7 +29,9 @@ GROUP(
   ../../../kernel/kernel/libkernel.a
   ../../../kernel/vendor/rpi/librpi.a
   ../../../lib/avl/libavl.a
-  ../../../lib/k/libk.a
+  ../../../lib/stdio/libstdio.a
+  ../../../lib/stdlib/libstdlib.a
+  ../../../lib/string/libstring.a
 )
 INPUT(
   libgcc.a

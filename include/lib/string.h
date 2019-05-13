@@ -18,22 +18,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if ! defined( __LIBK_STRING__ )
+#define __LIBK_STRING__
+
 #include <stddef.h>
 #include <stdint.h>
 
-void* memmove( void* dstptr, const void* srcptr, size_t size ) {
-  uint8_t* dst = ( uint8_t* )dstptr;
-  const uint8_t* src = ( const uint8_t* )srcptr;
+void* memcpy( void* restrict, const void* restrict, size_t );
+void* memset( void*, int, size_t );
+size_t strlen( const char*);
+char *strrev( char* );
 
-  if ( dst < src ) {
-    for ( size_t i = 0; i < size; i++ ) {
-      dst[ i ] = src[ i ];
-    }
-  } else {
-    for ( size_t i = size; i != 0; i-- ) {
-      dst[ i - 1 ] = src[ i - 1 ];
-    }
-  }
-
-  return dstptr;
-}
+#endif

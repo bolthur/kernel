@@ -20,8 +20,7 @@
 
 #include <stdint.h>
 
-#include "lib/k/stdio.h"
-#include "lib/tar/tar.h"
+#include "lib/stdio.h"
 
 #include "kernel/kernel/panic.h"
 #include "kernel/kernel/mm/phys.h"

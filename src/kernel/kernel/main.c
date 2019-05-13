@@ -20,8 +20,8 @@
 
 #include <stdint.h>
 
-#include "lib/k/stdio.h"
-#include "lib/k/stdlib.h"
+#include "lib/stdio.h"
+#include "lib/stdlib.h"
 #include "kernel/kernel/arch.h"
 #include "kernel/kernel/tty.h"
 #include "kernel/kernel/irq.h"

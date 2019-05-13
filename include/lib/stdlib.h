@@ -18,19 +18,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lib/k/string.h"
+#if ! defined( __LIBK_STDLIB__ )
+#define __LIBK_STDLIB__
 
-char *strrev( char* str ) {
-  char* p1 = str;
-  char* p2 = ( char* )( str + strlen( str ) - 1 );
+#include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
-  while ( p1 < p2 ) {
-    char tmp = *p1;
-    *p1 = *p2;
-    *p2 = tmp;
-    p1++;
-    p2--;
-  }
+void *calloc( size_t, size_t );
+void free( void* );
+char *itoa( int32_t, char*, int32_t, bool );
+void *malloc( size_t );
+void *realloc( void*, size_t );
+char *utoa( uint32_t, char*, int32_t, bool );
 
-  return str;
-}
+#endif

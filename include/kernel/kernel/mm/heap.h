@@ -18,10 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-
 #if ! defined( __KERNEL_MM_HEAP__ )
 #define __KERNEL_MM_HEAP__
+
+#include <stdbool.h>
 
 bool heap_initialized_get( void );
 

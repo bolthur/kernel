@@ -20,8 +20,8 @@
 
 #include <stddef.h>
 
-#include "lib/k/string.h"
-#include "lib/k/stdlib.h"
+#include "lib/string.h"
+#include "lib/stdlib.h"
 #include "kernel/kernel/debug.h"
 #include "kernel/kernel/entry.h"
 #include "kernel/kernel/mm/phys.h"
