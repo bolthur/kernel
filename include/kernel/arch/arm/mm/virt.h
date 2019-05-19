@@ -102,6 +102,9 @@
     #define SD_TBL_SMALL_PAGE 0x2
 
     #if ! defined( ASSEMBLER_FILE )
+      // methods
+      void virt_setup_supported_modes( void );
+
       // helper macros
       #define SD_VIRTUAL_TO_TABLE( a ) ( ( paddr_t ) a >> 20  )
       #define SD_VIRTUAL_TO_PAGE( a ) ( ( ( paddr_t ) a >> 12 ) & 0xFF )
@@ -249,7 +252,7 @@
         sd_context_super_section_t super[ 2048 ];
       } sd_context_half_t;
 
-      /// FIXME: Add defines for long physical address extension
+      // FIXME: Add defines for long physical address extension
 
       typedef union PACKED {
         uint64_t raw;

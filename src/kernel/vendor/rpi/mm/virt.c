@@ -21,42 +21,13 @@
 #include <stddef.h>
 
 #include "lib/string.h"
-#include "kernel/kernel/debug.h"
-#include "kernel/kernel/entry.h"
 #include "kernel/kernel/panic.h"
-#include "kernel/kernel/mm/placement.h"
-#include "kernel/kernel/mm/phys.h"
-#include "kernel/kernel/mm/virt.h"
-#include "kernel/arch/arm/barrier.h"
-#include "kernel/arch/arm/mm/virt.h"
-#include "kernel/vendor/rpi/peripheral.h"
-
-vaddr_t user_context;
-vaddr_t kernel_context;
 
 /**
  * @brief Initialize virtual memory management
  */
 void virt_vendor_init( void ) {
-  // get new kernel context and temporary user context
-  kernel_context = ( vaddr_t )PHYS_2_VIRT(
-    placement_alloc( SD_TTBR_SIZE_4G, SD_TTBR_ALIGNMENT_4G )
-  );
-  user_context = ( vaddr_t )PHYS_2_VIRT(
-    placement_alloc( SD_TTBR_SIZE_2G, SD_TTBR_ALIGNMENT_2G )
-  );
-
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "kernel_context: 0x%08x\r\n", kernel_context );
-    DEBUG_OUTPUT( "user_context: 0x%08x\r\n", user_context );
-  #endif
-
-  // initialize with zero
-  memset( kernel_context, 0, SD_TTBR_SIZE_4G );
-  memset( user_context, 0, SD_TTBR_SIZE_2G );
-
-  //PANIC( "To be implemented" );
+  PANIC( "To be implemented" );
 
   /**
    * Short descriptor initialization:

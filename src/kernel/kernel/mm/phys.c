@@ -148,6 +148,7 @@ void phys_use_page_range( vaddr_t address, size_t amount ) {
  * @brief Method to find free page range
  *
  * @param memory_amount amount of memory to find free page range for
+ * @param alignment wanted memory alignment
  * @return vaddr_t address of found memory
  */
 vaddr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {

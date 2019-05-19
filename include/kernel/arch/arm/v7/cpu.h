@@ -44,7 +44,10 @@
   #if ! defined( ASSEMBLER_FILE )
     #include <stdint.h>
 
-    /// FIXME: Extend with FPU registers if enabled
+    /**
+     * @brief CPU register context
+     * @todo Extend with FPU registers if enabled
+     */
     typedef union {
       uint32_t storage[ 17 ];
       struct {

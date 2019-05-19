@@ -44,6 +44,9 @@ void virt_init( void ) {
   // set use physical to true
   virt_use_physical_table = true;
 
+  // architecture related initialization
+  virt_arch_init();
+
   // initialize vendor init
   virt_vendor_init();
 

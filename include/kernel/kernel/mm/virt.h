@@ -32,14 +32,18 @@ typedef enum {
 } virt_context_type_t;
 
 extern bool virt_use_physical_table;
+extern vaddr_t user_context;
+extern vaddr_t kernel_context;
 
 void virt_init( void );
 void virt_vendor_init( void );
+void virt_arch_init( void );
 bool virt_initialized_get( void );
 
 vaddr_t virt_create_context( virt_context_type_t );
 vaddr_t virt_create_table( void );
 void virt_map_address( vaddr_t, vaddr_t, paddr_t, uint32_t );
+void virt_unmap_address( vaddr_t, vaddr_t );
 uint32_t virt_get_supported_modes( void );
 
 #endif

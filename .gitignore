@@ -2,6 +2,7 @@
 # ---> Custom
 /build
 *~
+/doc
 
 # ---> Autotools
 # http://www.gnu.org/software/automake

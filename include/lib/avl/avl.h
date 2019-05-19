@@ -23,30 +23,32 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 // forward declarations
-typedef struct avl_node avl_node_t;
+typedef struct avl_node avl_node_t, *avl_node_ptr_t;
+typedef struct avl_tree avl_tree_t, *avl_tree_ptr_t;
 
 // type declarations
-typedef int avl_compare_func_t( const void *avl_a, const void *avl_b, void *avl_param );
+typedef int32_t (*avl_compare_func_t)( const avl_node_ptr_t avl_a, const avl_node_ptr_t avl_b, void *avl_param );
 
 typedef struct avl_node {
   void *data;
 
   int8_t balance;
 
-  avl_node_t *left;
-  avl_node_t *right;
-} avl_node_t;
+  avl_node_ptr_t left;
+  avl_node_ptr_t right;
+} avl_node_t, *avl_node_ptr_t;
 
 typedef struct avl_tree {
-  avl_node_t *root;
-  avl_compare_func_t *compare;
+  avl_node_ptr_t root;
+  avl_compare_func_t compare;
   void *param;
   size_t count;
-} avl_tree_t;
+} avl_tree_t, *avl_tree_ptr_t;
 
-avl_tree_t *avl_create( avl_compare_func_t*, void* );
-avl_node_t *avl_insert( const avl_tree_t *, avl_node_t* );
+avl_tree_ptr_t avl_create( avl_compare_func_t, void* );
+void avl_insert( const avl_tree_ptr_t, avl_node_ptr_t );
 
 #endif
