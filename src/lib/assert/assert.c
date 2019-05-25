@@ -18,13 +18,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_STDIO__ )
-#define __LIB_STDIO__
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <kernel/panic.h>
 
-#define EOF ( -1 )
+void _assert( const char* restrict file, uint32_t line, const char* restrict desc ) {
+  // panic init
+  panic_init();
 
-int printf( const char* restrict, ... );
-int putchar( int );
-int puts( const char* );
+  // print assertion failed
+  printf( "ASSERTION-FAILED( %s ) at %s:%d\r\n", desc, file, line );
 
-#endif
+  // abort further execution
+  abort();
+}

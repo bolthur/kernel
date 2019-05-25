@@ -20,8 +20,8 @@
 
 #include <stddef.h>
 
-#include "lib/string.h"
-#include "kernel/kernel/panic.h"
+#include <string.h>
+#include <kernel/panic.h>
 
 /**
  * @brief Initialize virtual memory management
@@ -35,7 +35,6 @@ void virt_vendor_init( void ) {
    *  - Setup new ttbr1 with 16KB size ( according to specs normal, when using ttbr0 and ttbr1 )
    *  - Set TTBCR.N to SD_TTBCR_N_TTBR0_2G
    *  - Set TTBCR.EAE to 0
-   *  - Map Kernel starting from 0 + KERNEL_OFFSET to placement_address + KERNEL_OFFSET
    *  - Map peripherals to 0xF2000000 ( without caching )
    *  - Map framebuffer if built in to 0xF3000000 ( without caching )
    *  - Map additional with specific core mappings on rpi 2 and 3 ( without caching )

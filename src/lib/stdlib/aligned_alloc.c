@@ -18,13 +18,27 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_STDIO__ )
-#define __LIB_STDIO__
+#include <stddef.h>
 
-#define EOF ( -1 )
+#include <kernel/mm/placement.h>
+#include <kernel/mm/virt.h>
+#include <kernel/mm/heap.h>
 
-int printf( const char* restrict, ... );
-int putchar( int );
-int puts( const char* );
+/**
+ * @brief Aligned memory allocation
+ *
+ * @param alignment alignment address shall match
+ * @param size amount of memory
+ * @return void* NULL on error or address to memory
+ */
+void *aligned_alloc( size_t alignment, size_t size ) {
+  // normal placement alloc when no heap and no virtual
+  if (
+    ! heap_initialized_get()
+    && ! virt_initialized_get()
+  ) {
+    return placement_alloc( size, alignment );
+  }
 
-#endif
+  return NULL;
+}

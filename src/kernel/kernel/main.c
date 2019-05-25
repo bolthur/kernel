@@ -20,17 +20,17 @@
 
 #include <stdint.h>
 
-#include "lib/stdio.h"
-#include "lib/stdlib.h"
-#include "kernel/kernel/arch.h"
-#include "kernel/kernel/tty.h"
-#include "kernel/kernel/irq.h"
-#include "kernel/kernel/timer.h"
-#include "kernel/kernel/platform.h"
-#include "kernel/kernel/debug.h"
-#include "kernel/kernel/serial.h"
-#include "kernel/kernel/mm/phys.h"
-#include "kernel/kernel/mm/virt.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <kernel/arch.h>
+#include <kernel/tty.h>
+#include <kernel/irq.h>
+#include <kernel/timer.h>
+#include <kernel/platform.h>
+#include <kernel/debug.h>
+#include <kernel/serial.h>
+#include <kernel/mm/phys.h>
+#include <kernel/mm/virt.h>
 
 /**
  * @brief Kernel main function

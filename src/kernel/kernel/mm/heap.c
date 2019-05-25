@@ -20,7 +20,7 @@
 
 #include <stdbool.h>
 
-#include "kernel/kernel/mm/heap.h"
+#include <kernel/mm/heap.h>
 
 /**
  * @brief heap initialized flag

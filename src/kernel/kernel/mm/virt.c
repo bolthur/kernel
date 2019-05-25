@@ -21,8 +21,12 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "kernel/kernel/mm/virt.h"
-#include "kernel/kernel/panic.h"
+#include <assert.h>
+#include <kernel/debug.h>
+#include <kernel/entry.h>
+#include <kernel/mm/phys.h>
+#include <kernel/mm/placement.h>
+#include <kernel/mm/virt.h>
 
 /**
  * @brief static initialized flag
@@ -36,16 +40,50 @@ bool virt_use_physical_table = false;
 
 /**
  * @brief Generic initialization of virtual memory manager
+ * @todo Set correct flags for virt_map_address
  */
 void virt_init( void ) {
   // assert no initialize
-  ASSERT( true != virt_initialized );
+  assert( true != virt_initialized );
 
   // set use physical to true
   virt_use_physical_table = true;
 
+  // set global context to null
+  kernel_context = NULL;
+  user_context = NULL;
+
   // architecture related initialization
   virt_arch_init();
+
+  // determine start and end for kernel mapping
+  paddr_t start = 0;
+  paddr_t end = placement_address;
+
+  // round up to page size if necessary
+  if ( end % PAGE_SIZE ) {
+    end += ( PAGE_SIZE - placement_address % PAGE_SIZE );
+  }
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT(
+      "Map kernel space 0x%08x - 0x%08x to 0x%08x - 0x%08x \r\n",
+      start,
+      end,
+      PHYS_2_VIRT( start ),
+      PHYS_2_VIRT( end )
+    );
+  #endif
+
+  // map from start to end addresses as used
+  while( start < end ) {
+    // map page
+    virt_map_address( kernel_context, PHYS_2_VIRT( start ), start, 0 );
+
+    // get next page
+    start += PAGE_SIZE;
+  }
 
   // initialize vendor init
   virt_vendor_init();

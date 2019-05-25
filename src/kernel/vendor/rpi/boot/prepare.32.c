@@ -20,8 +20,8 @@
 
 #include <stdint.h>
 
-#include "kernel/arch/arm/mm/virt.h"
-#include "kernel/kernel/entry.h"
+#include <arch/arm/mm/virt.h>
+#include <kernel/entry.h>
 
 /**
  * @brief Initial kernel context

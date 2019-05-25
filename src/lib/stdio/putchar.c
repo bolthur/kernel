@@ -19,7 +19,7 @@
  */
 
 #include <stdint.h>
-#include "kernel/kernel/tty.h"
+#include <kernel/tty.h>
 
 int putchar( int ic ) {
   tty_putc( ( uint8_t )ic );

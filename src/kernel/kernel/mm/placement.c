@@ -21,14 +21,14 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#include "kernel/kernel/debug.h"
-#include "kernel/kernel/panic.h"
-#include "kernel/kernel/mm/placement.h"
-#include "kernel/kernel/mm/phys.h"
-#include "kernel/kernel/mm/virt.h"
-#include "kernel/kernel/mm/heap.h"
-#include "kernel/kernel/entry.h"
-#include "kernel/kernel/type.h"
+#include <assert.h>
+#include <kernel/debug.h>
+#include <kernel/mm/placement.h>
+#include <kernel/mm/phys.h>
+#include <kernel/mm/virt.h>
+#include <kernel/mm/heap.h>
+#include <kernel/entry.h>
+#include <kernel/type.h>
 
 /**
  * @brief placement address starting at kernel end
@@ -44,11 +44,11 @@ paddr_t placement_address = VIRT_2_PHYS( &__kernel_end );
  */
 vaddr_t placement_alloc( size_t size, size_t alignment ) {
   // assert no heap and no virtual memory
-  ASSERT( ! heap_initialized_get() );
-  ASSERT( ! virt_initialized_get() );
+  assert( ! heap_initialized_get() );
+  assert( ! virt_initialized_get() );
 
   // assert alignment
-  ASSERT( 0 < alignment );
+  assert( 0 < alignment );
 
   // determine offset for alignment
   size_t offset = 0;

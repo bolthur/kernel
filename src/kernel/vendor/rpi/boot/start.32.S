@@ -20,7 +20,7 @@
 
 #define ASSEMBLER_FILE 1
 
-#include "kernel/arch/arm/mm/virt.h"
+#include <arch/arm/mm/virt.h>
 
 // only when extension define is set
 #if defined( BCM2709 ) || defined( BCM2710 )

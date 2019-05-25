@@ -18,13 +18,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIBK_STDLIB__ )
-#define __LIBK_STDLIB__
+#if ! defined( __LIB_STDLIB__ )
+#define __LIB_STDLIB__
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 
+void abort( void ) __attribute__((noreturn));
+void *aligned_alloc( size_t, size_t );
 void *calloc( size_t, size_t );
 void free( void* );
 char *itoa( int32_t, char*, int32_t, bool );

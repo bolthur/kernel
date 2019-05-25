@@ -28,6 +28,7 @@ GROUP(
   ../../../kernel/arch/arm/libarm.a
   ../../../kernel/kernel/libkernel.a
   ../../../kernel/vendor/rpi/librpi.a
+  ../../../lib/assert/libassert.a
   ../../../lib/avl/libavl.a
   ../../../lib/stdio/libstdio.a
   ../../../lib/stdlib/libstdlib.a

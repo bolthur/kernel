@@ -20,12 +20,11 @@
 
 #include <stdint.h>
 
-#include "lib/stdio.h"
+#include <stdio.h>
 
-#include "kernel/kernel/panic.h"
-#include "kernel/kernel/mm/phys.h"
-#include "kernel/vendor/rpi/platform.h"
-#include "kernel/vendor/rpi/mailbox/property.h"
+#include <kernel/mm/phys.h>
+#include <vendor/rpi/platform.h>
+#include <vendor/rpi/mailbox/property.h>
 
 /**
  * @brief Boot parameter data set during startup

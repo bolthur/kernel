@@ -20,8 +20,8 @@
 
 #include <stddef.h>
 
-#include "kernel/kernel/irq.h"
-#include "kernel/kernel/panic.h"
+#include <assert.h>
+#include <kernel/irq.h>
 
 /**
  * @brief Register IRQ handler
@@ -36,10 +36,10 @@ void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
   // normal irq
   if ( ! fast ) {
     // validate irq number
-    ASSERT( irq_validate_number( num ) );
+    assert( irq_validate_number( num ) );
 
     // check for empty
-    ASSERT( ! irq_callback_map[ num ] );
+    assert( ! irq_callback_map[ num ] );
 
     // map handler
     irq_callback_map[ num ] = func;
@@ -48,10 +48,10 @@ void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
   }
 
   // validate irq number
-  ASSERT( irq_validate_number( num ) );
+  assert( irq_validate_number( num ) );
 
   // check for empty
-  ASSERT( ! fast_irq_callback_map[ num ] );
+  assert( ! fast_irq_callback_map[ num ] );
 
   // map handler
   fast_irq_callback_map[ num ] = func;
@@ -70,7 +70,7 @@ irq_callback_t irq_get_handler( uint8_t num, bool fast ) {
   // normal irq
   if ( ! fast ) {
     // validate irq number
-    ASSERT( irq_validate_number( num ) );
+    assert( irq_validate_number( num ) );
 
     // return handler
     return ! irq_callback_map[ num ]
@@ -79,7 +79,7 @@ irq_callback_t irq_get_handler( uint8_t num, bool fast ) {
   }
 
   // validate irq number
-  ASSERT( irq_validate_number( num ) );
+  assert( irq_validate_number( num ) );
 
   // return handler
   return ! fast_irq_callback_map[ num ]

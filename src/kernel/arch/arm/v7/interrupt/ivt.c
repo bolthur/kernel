@@ -20,11 +20,12 @@
 
 #include <stddef.h>
 
-#include "lib/stdio.h"
-#include "kernel/kernel/irq.h"
-#include "kernel/kernel/panic.h"
-#include "kernel/arch/arm/v7/cpu.h"
-#include "kernel/arch/arm/v7/interrupt/ivt.h"
+#include <stdio.h>
+#include <assert.h>
+#include <kernel/irq.h>
+#include <kernel/panic.h>
+#include <arch/arm/v7/cpu.h>
+#include <arch/arm/v7/interrupt/ivt.h>
 
 /**
  * @brief Unused exception handler
@@ -90,11 +91,11 @@ void irq_handler( cpu_register_context_t *status ) {
 
   // get pending interrupt
   int8_t irq = irq_get_pending( false );
-  ASSERT( -1 != irq && 0 <= irq );
+  assert( -1 != irq && 0 <= irq );
 
   // get bound interrupt handler
   irq_callback_t cb = irq_get_handler( ( uint8_t )irq, false );
-  ASSERT( NULL != cb );
+  assert( NULL != cb );
 
   // Execute callback with registers
   cb( ( uint8_t )irq, &status );
@@ -112,11 +113,11 @@ void fast_interrupt_handler( cpu_register_context_t *status ) {
 
   // get pending interrupt
   int8_t irq = irq_get_pending( true );
-  ASSERT( -1 != irq && 0 <= irq );
+  assert( -1 != irq && 0 <= irq );
 
   // get bound interrupt handler
   irq_callback_t cb = irq_get_handler( ( uint8_t )irq, true );
-  ASSERT( NULL != cb );
+  assert( NULL != cb );
 
   // Execute callback with registers
   cb( ( uint8_t )irq, &status );

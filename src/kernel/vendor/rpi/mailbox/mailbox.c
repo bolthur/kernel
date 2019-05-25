@@ -20,9 +20,9 @@
 
 #include <stdbool.h>
 
-#include "kernel/arch/arm/barrier.h"
-#include "kernel/vendor/rpi/mailbox/mailbox.h"
-#include "kernel/vendor/rpi/peripheral.h"
+#include <arch/arm/barrier.h>
+#include <vendor/rpi/mailbox/mailbox.h>
+#include <vendor/rpi/peripheral.h>
 
 /**
  * @brief Function for reading mailbox

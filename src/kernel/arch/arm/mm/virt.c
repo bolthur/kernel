@@ -20,15 +20,18 @@
 
 #include <stddef.h>
 
-#include "lib/stdio.h"
-#include "lib/string.h"
-#include "kernel/kernel/debug.h"
-#include "kernel/kernel/entry.h"
-#include "kernel/kernel/panic.h"
-#include "kernel/kernel/mm/phys.h"
-#include "kernel/kernel/mm/placement.h"
-#include "kernel/kernel/mm/virt.h"
-#include "kernel/arch/arm/mm/virt.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <assert.h>
+
+#include <kernel/debug.h>
+#include <kernel/entry.h>
+#include <kernel/panic.h>
+#include <kernel/mm/phys.h>
+#include <kernel/mm/placement.h>
+#include <kernel/mm/virt.h>
+#include <arch/arm/mm/virt.h>
 
 /**
  * @brief Supported modes
@@ -38,28 +41,25 @@ static uint32_t supported_modes;
 /**
  * @brief user context
  */
-vaddr_t user_context;
+virt_context_ptr_t user_context;
 
 /**
  * @brief kernel context
  */
-vaddr_t kernel_context;
+virt_context_ptr_t kernel_context;
 
 /**
  * @brief Internal v6 mapping function
  *
- * @param context pointer to page context
+ * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
  * @param flags flags used for mapping
  */
 static void v6_map(
-  vaddr_t context,
-  vaddr_t vaddr,
-  paddr_t paddr,
-  uint32_t flags
+  virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr, uint32_t flags
 ) {
-  ( void )context;
+  ( void )ctx;
   ( void )vaddr;
   ( void )paddr;
   ( void )flags;
@@ -70,18 +70,15 @@ static void v6_map(
 /**
  * @brief Internal v7 short descriptor mapping function
  *
- * @param context pointer to page context
+ * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
  * @param flags flags used for mapping
  */
 static void v7_short_map(
-  vaddr_t context,
-  vaddr_t vaddr,
-  paddr_t paddr,
-  uint32_t flags
+  virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr, uint32_t flags
 ) {
-  ( void )context;
+  ( void )ctx;
   ( void )vaddr;
   ( void )paddr;
   ( void )flags;
@@ -92,18 +89,15 @@ static void v7_short_map(
 /**
  * @brief Internal v7 long descriptor mapping function
  *
- * @param context pointer to page context
+ * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
  * @param flags flags used for mapping
  */
 static void v7_long_map(
-  vaddr_t context,
-  vaddr_t vaddr,
-  paddr_t paddr,
-  uint32_t flags
+  virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr, uint32_t flags
 ) {
-  ( void )context;
+  ( void )ctx;
   ( void )vaddr;
   ( void )paddr;
   ( void )flags;
@@ -114,11 +108,11 @@ static void v7_long_map(
 /**
  * @brief Internal v6 unmapping function
  *
- * @param context pointer to page context
+ * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  */
-static void v6_unmap( vaddr_t context, vaddr_t vaddr ) {
-  ( void )context;
+static void v6_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
+  ( void )ctx;
   ( void )vaddr;
 
   PANIC( "v6 mmu mapping not yet supported!" );
@@ -127,11 +121,11 @@ static void v6_unmap( vaddr_t context, vaddr_t vaddr ) {
 /**
  * @brief Internal v7 short descriptor unmapping function
  *
- * @param context pointer to page context
+ * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  */
-static void v7_short_unmap( vaddr_t context, vaddr_t vaddr ) {
-  ( void )context;
+static void v7_short_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
+  ( void )ctx;
   ( void )vaddr;
 
   PANIC( "v7 mmu short descriptor mapping not yet supported!" );
@@ -140,86 +134,132 @@ static void v7_short_unmap( vaddr_t context, vaddr_t vaddr ) {
 /**
  * @brief Internal v7 long descriptor unmapping function
  *
- * @param context pointer to page context
+ * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  */
-static void v7_long_unmap( vaddr_t context, vaddr_t vaddr ) {
-  ( void )context;
+static void v7_long_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
+  ( void )ctx;
   ( void )vaddr;
 
   PANIC( "v7 mmu long descriptor unmapping not yet supported!" );
 }
 
 /**
+ * @brief Internal v6 create table function
+ *
+ * @param ctx context to create table for
+ * @param addr address the table is necessary for
+ * @return vaddr_t address of created and prepared table
+ */
+static vaddr_t v6_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
+  // different handling, when initial setup is done not yet added
+  if ( true != virt_use_physical_table ) {
+    return NULL;
+  }
+
+  // mark parameters as unused
+  ( void )ctx;
+  ( void )addr;
+
+  // normal handling for first setup
+  return NULL;
+}
+
+/**
+ * @brief Internal v7 short descriptor create table function
+ *
+ * @param ctx context to create table for
+ * @param addr address the table is necessary for
+ * @return vaddr_t address of created and prepared table
+ */
+static vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
+  // different handling, when initial setup is done not yet added
+  if ( true != virt_use_physical_table ) {
+    return NULL;
+  }
+
+  // mark parameters as unused
+  ( void )ctx;
+  ( void )addr;
+
+  // normal handling for first setup
+  return NULL;
+}
+
+/**
+ * @brief Internal v7 long descriptor create table function
+ *
+ * @param ctx context to create table for
+ * @param addr address the table is necessary for
+ * @return vaddr_t address of created and prepared table
+ */
+static vaddr_t v7_long_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
+  // different handling, when initial setup is done not yet added
+  if ( true != virt_use_physical_table ) {
+    return NULL;
+  }
+
+  // mark parameters as unused
+  ( void )ctx;
+  ( void )addr;
+
+  // normal handling for first setup
+  return NULL;
+}
+
+/**
  * @brief
  *
- * @param context pointer to page context
+ * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
  * @param flags flags used for mapping
  */
 void virt_map_address(
-  vaddr_t context,
-  vaddr_t vaddr,
-  paddr_t paddr,
-  uint32_t flags
+  virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr, uint32_t flags
 ) {
   #if defined( ELF32 )
-    ASSERT(
-      ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes
-      || ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
-      || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
-      || ID_MMFR0_VSMA_V6_PAGING & supported_modes
-    );
-
     // check for v7 long descriptor format
     if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-      v7_long_map( context, vaddr, paddr, flags );
+      v7_long_map( ctx, vaddr, paddr, flags );
     // check v7 short descriptor format
     } else if (
       ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
       || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
     ) {
-      v7_short_map( context, vaddr, paddr, flags );
+      v7_short_map( ctx, vaddr, paddr, flags );
     // check for old v6 paging
     } else if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-      v6_map( context, vaddr, paddr, flags );
+      v6_map( ctx, vaddr, paddr, flags );
     }
   #elif defined( ELF64 )
-    #error
+    #error "Unsupported"
   #endif
 }
 
 /**
  * @brief unmap virtual address
  *
- * @param context pointer to page context
- * @param vaddr pointer to virtual address
+ * @param ctx pointer to page context
+ * @param addr pointer to virtual address
  */
-void virt_unmap_address( vaddr_t context, vaddr_t vaddr ) {
+void virt_unmap_address( virt_context_ptr_t ctx, vaddr_t addr ) {
   #if defined( ELF32 )
-    ASSERT(
-      ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes
-      || ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
-      || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
-      || ID_MMFR0_VSMA_V6_PAGING & supported_modes
-    );
-
     // check for v7 long descriptor format
     if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-      v7_long_unmap( context, vaddr );
+      v7_long_unmap( ctx, addr );
     // check v7 short descriptor format
     } else if (
       ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
       || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
     ) {
-      v7_short_unmap( context, vaddr );
+      v7_short_unmap( ctx, addr );
     // check for old v6 paging
     } else if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-      v6_unmap( context, vaddr );
+      v6_unmap( ctx, addr );
     }
   #elif defined( ELF64 )
-    #error
+    #error "Unsupported"
   #endif
 }
 
@@ -229,17 +269,102 @@ void virt_unmap_address( vaddr_t context, vaddr_t vaddr ) {
  * @param type context type
  * @return vaddr_t address of context
  */
-vaddr_t virt_create_context( virt_context_type_t type ) {
-  ( void )type;
-  return NULL;
+virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
+  // different handling, when initial setup is done not yet added
+  if ( true != virt_use_physical_table ) {
+    return NULL;
+  }
+
+  #if defined( ELF32 )
+    if ( ! (
+        ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes
+        || ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
+        || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
+        || ID_MMFR0_VSMA_V6_PAGING & supported_modes
+      )
+    ) {
+      return NULL;
+    }
+  #elif defined( ELF64 )
+    #error "Unsupported"
+  #endif
+
+  // variables
+  size_t size, alignment;
+
+  // determine size
+  size = type == CONTEXT_TYPE_KERNEL
+    ? SD_TTBR_SIZE_4G
+    : SD_TTBR_SIZE_2G;
+
+  // determine alignment
+  alignment = type == CONTEXT_TYPE_KERNEL
+    ? SD_TTBR_ALIGNMENT_4G
+    : SD_TTBR_ALIGNMENT_2G;
+
+  // create new context
+  vaddr_t ctx = PHYS_2_VIRT(
+    aligned_alloc( size, alignment )
+  );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "type: %d, ctx: 0x%08x\r\n", type, ctx );
+  #endif
+
+  // initialize with zero
+  memset( ctx, 0, size );
+
+  // create new context structure for return
+  virt_context_ptr_t context = PHYS_2_VIRT(
+    aligned_alloc(
+      sizeof( virt_context_t ),
+      sizeof( virt_context_t )
+    )
+  );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "context: 0x%08x\r\n", context );
+  #endif
+
+  // initialize with zero
+  memset( context, 0, sizeof( virt_context_t ) );
+
+  // populate type and context
+  context->context = ctx;
+  context->type = type;
+
+  // return blank context
+  return context;
 }
 
 /**
  * @brief Method to create table
  *
+ * @param ctx context to create table for
+ * @param addr address the table is necessary for
  * @return vaddr_t address of table
  */
-vaddr_t virt_create_table( void ) {
+vaddr_t virt_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
+  #if defined( ELF32 )
+    // check for v7 long descriptor format
+    if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+      return v7_long_create_table( ctx, addr );
+    // check v7 short descriptor format
+    } else if (
+      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
+      || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
+    ) {
+      return v7_short_create_table( ctx, addr );
+    // check for old v6 paging
+    } else if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+      return v6_create_table( ctx, addr );
+    }
+  #elif defined( ELF64 )
+    #error "Unsupported"
+  #endif
+
   return NULL;
 }
 
@@ -267,29 +392,51 @@ void virt_setup_supported_modes( void ) {
 }
 
 /**
+ * @brief Method to enable given context
+ *
+ * @param ctx context structure
+ */
+void virt_activate_context( virt_context_ptr_t ctx ) {
+  // mark parameter as unused
+  ( void )ctx;
+
+  #if defined( ELF32 )
+    // check for v7 long descriptor format
+    if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+      PANIC( "Enable v7 long descriptor context not yet supported!" );
+    // check v7 short descriptor format
+    } else if (
+      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
+      || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
+    ) {
+      PANIC( "Enable v7 short descriptor context not yet supported!" );
+    // check for old v6 paging
+    } else if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+      PANIC( "Enable v6 context not yet supported!" );
+    }
+  #elif defined( ELF64 )
+    #error "Unsupported"
+  #endif
+}
+
+/**
  * @brief Method to prepare virtual memory management by architecture
  */
 void virt_arch_init( void ) {
   // setup supported mode global
   virt_setup_supported_modes();
 
-  // create new kernel context
-  kernel_context = ( vaddr_t )PHYS_2_VIRT(
-    placement_alloc( SD_TTBR_SIZE_4G, SD_TTBR_ALIGNMENT_4G )
-  );
+  // create a kernel context
+  kernel_context = virt_create_context( CONTEXT_TYPE_KERNEL );
+  assert( NULL != kernel_context );
 
-  // create temporary user context
-  user_context = ( vaddr_t )PHYS_2_VIRT(
-    placement_alloc( SD_TTBR_SIZE_2G, SD_TTBR_ALIGNMENT_2G )
-  );
+  // create a dummy user context
+  user_context = virt_create_context( CONTEXT_TYPE_USER );
+  assert( NULL != user_context );
 
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "kernel_context: 0x%08x\r\n", kernel_context );
     DEBUG_OUTPUT( "user_context: 0x%08x\r\n", user_context );
   #endif
-
-  // initialize with zero
-  memset( kernel_context, 0, SD_TTBR_SIZE_4G );
-  memset( user_context, 0, SD_TTBR_SIZE_2G );
 }

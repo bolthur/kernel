@@ -18,8 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernel/kernel/boot/bss.h"
-#include "kernel/kernel/entry.h"
+#include <kernel/boot/bss.h>
+#include <kernel/entry.h>
 
 /**
  * @brief Method to clear bss during initial boot

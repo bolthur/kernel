@@ -21,13 +21,13 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include "lib/stdio.h"
-#include "kernel/kernel/debug.h"
-#include "kernel/kernel/panic.h"
-#include "kernel/kernel/entry.h"
-#include "kernel/kernel/type.h"
-#include "kernel/kernel/mm/phys.h"
-#include "kernel/kernel/mm/placement.h"
+#include <stdio.h>
+#include <assert.h>
+#include <kernel/debug.h>
+#include <kernel/entry.h>
+#include <kernel/type.h>
+#include <kernel/mm/phys.h>
+#include <kernel/mm/placement.h>
 
 /**
  * @brief Physical bitmap
@@ -218,7 +218,7 @@ vaddr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
   }
 
   // assert found address
-  ASSERT( NULL != address );
+  assert( NULL != address );
 
   // set temporary address
   tmp = address;

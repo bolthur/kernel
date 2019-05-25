@@ -20,8 +20,16 @@
 
 #include <stdint.h>
 
-#include "lib/stdio.h"
-#include "kernel/kernel/irq.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <kernel/irq.h>
+
+/**
+ * @brief Initialize panic process
+ */
+void panic_init( void ) {
+  irq_disable();
+}
 
 /**
  * @brief Panic method
@@ -31,30 +39,12 @@
  * @param line Line where panic was called
  */
 void panic( const char* restrict message, const char* restrict file, uint32_t line ) {
-  // disable interrupts
-  irq_disable();
+  // panic init
+  panic_init();
 
   // print panic
   printf( "PANIC( %s ) at %s:%d\r\n", message, file, line );
 
-  // loop endless
-  while ( 1 ) {}
-}
-
-/**
- * @brief Panic assertion
- *
- * @param file File that invoked the panic assert
- * @param line Line where function was called
- * @param desc Additional description
- */
-void panic_assert( const char* restrict file, uint32_t line, const char* restrict desc ) {
-  // disable interrupts
-  irq_disable();
-
-  // print assertion failed
-  printf( "ASSERTION-FAILED( %s ) at %s:%d\r\n", desc, file, line );
-
-  // loop endless
-  while ( 1 ) {}
+  // abort further execution
+  abort();
 }

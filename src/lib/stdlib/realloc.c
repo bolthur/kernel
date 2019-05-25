@@ -20,8 +20,8 @@
 
 #include <stddef.h>
 
-#include "lib/string.h"
-#include "lib/stdlib.h"
+#include <string.h>
+#include <stdlib.h>
 
 void *realloc( void *ptr, size_t size ) {
   // simply use malloc if nothing is there

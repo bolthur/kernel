@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include "kernel/kernel/type.h"
+#include <kernel/type.h>
 
 #define PAGE_PER_ENTRY ( sizeof( phys_bitmap_length ) * 8 )
 #define PAGE_INDEX( address ) ( address / PAGE_PER_ENTRY )

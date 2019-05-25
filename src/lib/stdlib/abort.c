@@ -18,13 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_STDIO__ )
-#define __LIB_STDIO__
+void abort( void ) {
+  while( 1 ) {}
+}
 
-#define EOF ( -1 )
-
-int printf( const char* restrict, ... );
-int putchar( int );
-int puts( const char* );
-
-#endif

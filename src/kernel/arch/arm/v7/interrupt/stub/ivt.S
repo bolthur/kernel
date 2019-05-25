@@ -19,7 +19,7 @@
  */
 
 #define ASSEMBLER_FILE 1
-#include "kernel/arch/arm/v7/cpu.h"
+#include <arch/arm/v7/cpu.h>
 
 .section .text
 

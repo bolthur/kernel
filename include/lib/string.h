@@ -18,8 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIBK_STRING__ )
-#define __LIBK_STRING__
+#if ! defined( __LIB_STRING__ )
+#define __LIB_STRING__
 
 #include <stddef.h>
 #include <stdint.h>

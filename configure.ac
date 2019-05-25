@@ -137,6 +137,7 @@ AC_CONFIG_FILES([
   src/kernel/vendor/Makefile
   src/kernel/vendor/rpi/Makefile
   src/lib/Makefile
+  src/lib/assert/Makefile
   src/lib/avl/Makefile
   src/lib/stdio/Makefile
   src/lib/stdlib/Makefile

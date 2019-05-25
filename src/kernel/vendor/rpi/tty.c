@@ -18,8 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lib/stdlib.h"
-#include "kernel/kernel/serial.h"
+#include <stdlib.h>
+#include <kernel/serial.h>
 
 /**
  * @brief Initialize TTY

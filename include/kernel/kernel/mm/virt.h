@@ -24,26 +24,32 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "kernel/kernel/type.h"
+#include <kernel/type.h>
 
 typedef enum {
   CONTEXT_TYPE_KERNEL = 1,
   CONTEXT_TYPE_USER,
 } virt_context_type_t;
 
+typedef struct {
+  vaddr_t context;
+  virt_context_type_t type;
+} virt_context_t, *virt_context_ptr_t;
+
 extern bool virt_use_physical_table;
-extern vaddr_t user_context;
-extern vaddr_t kernel_context;
+extern virt_context_ptr_t user_context;
+extern virt_context_ptr_t kernel_context;
 
 void virt_init( void );
 void virt_vendor_init( void );
 void virt_arch_init( void );
 bool virt_initialized_get( void );
 
-vaddr_t virt_create_context( virt_context_type_t );
-vaddr_t virt_create_table( void );
-void virt_map_address( vaddr_t, vaddr_t, paddr_t, uint32_t );
-void virt_unmap_address( vaddr_t, vaddr_t );
+virt_context_ptr_t virt_create_context( virt_context_type_t );
+vaddr_t virt_create_table( virt_context_ptr_t, vaddr_t );
+void virt_map_address( virt_context_ptr_t, vaddr_t, paddr_t, uint32_t );
+void virt_unmap_address( virt_context_ptr_t, vaddr_t );
 uint32_t virt_get_supported_modes( void );
+void virt_activate_context( virt_context_ptr_t );
 
 #endif

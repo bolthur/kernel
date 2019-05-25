@@ -24,9 +24,8 @@
 #include <stdint.h>
 
 #define PANIC( msg ) panic( msg, __FILE__, __LINE__ );
-#define ASSERT( b ) ( b ? (void)0 : panic_assert( __FILE__, __LINE__, #b ) );
 
-void panic(const char* restrict, const char* restrict, uint32_t);
-void panic_assert(const char* restrict, uint32_t, const char* restrict);
+void panic_init( void );
+void panic(const char* restrict, const char* restrict, uint32_t) __attribute__((noreturn));
 
 #endif

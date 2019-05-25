@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "lib/string.h"
+#include <string.h>
 
 char *itoa( int32_t value, char* buffer, int32_t radix, bool uppercase ) {
   char *p = buffer;

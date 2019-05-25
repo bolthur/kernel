@@ -21,7 +21,7 @@
 #if ! defined( __KERNEL_DEBUG__ )
 #define __KERNEL_DEBUG__
 
-#include "lib/stdio.h"
+#include <stdio.h>
 
 /**
  * @brief Debug output define

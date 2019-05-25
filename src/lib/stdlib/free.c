@@ -20,7 +20,7 @@
 
 #include <stddef.h>
 
-#include "kernel/kernel/panic.h"
+#include <kernel/panic.h>
 
 void free( void *ptr ) {
   // mark as unused

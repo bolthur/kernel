@@ -20,7 +20,7 @@
 
 #define ASSEMBLER_FILE 1
 
-#include "kernel/arch/arm/v7/cpu.h"
+#include <arch/arm/v7/cpu.h>
 
 // Helper to stop all cpus except the first one during startup
 .global cpu_smp_reset

@@ -21,23 +21,23 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "lib/stdio.h"
+#include <stdio.h>
 
 #if defined( ARCH_ARM_V6 )
-  #include "kernel/arch/arm/v6/cpu.h"
+  #include <arch/arm/v6/cpu.h>
 #elif defined( ARCH_ARM_V7 )
-  #include "kernel/arch/arm/v7/cpu.h"
+  #include <arch/arm/v7/cpu.h>
 #elif defined( ARCH_ARM_V8 )
-  #include "kernel/arch/arm/v8/cpu.h"
+  #include <arch/arm/v8/cpu.h>
 #endif
 
-#include "kernel/arch/arm/delay.h"
-#include "kernel/arch/arm/mmio.h"
+#include <arch/arm/delay.h>
+#include <arch/arm/mmio.h>
 
-#include "kernel/vendor/rpi/gpio.h"
+#include <vendor/rpi/gpio.h>
 
-#include "kernel/kernel/timer.h"
-#include "kernel/kernel/irq.h"
+#include <kernel/timer.h>
+#include <kernel/irq.h>
 
 #if defined( BCM2709 ) || defined( BCM2710 )
   // Timer match bits

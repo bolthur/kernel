@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-#include "kernel/vendor/rpi/peripheral.h"
+#include <vendor/rpi/peripheral.h>
 
 // initial setup of peripheral base
 #if defined( BCM2709 ) || defined( BCM2710 )

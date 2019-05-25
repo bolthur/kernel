@@ -20,8 +20,8 @@
 
 #define ASSEMBLER_FILE 1
 
-#include "kernel/arch/arm/v7/cpu.h"
-#include "kernel/arch/arm/stack.h"
+#include <arch/arm/v7/cpu.h>
+#include <arch/arm/stack.h>
 
 .section .text
 

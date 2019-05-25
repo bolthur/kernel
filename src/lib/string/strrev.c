@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "lib/string.h"
+#include <string.h>
 
 char *strrev( char* str ) {
   char* p1 = str;

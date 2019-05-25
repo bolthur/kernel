@@ -1,2 +1,2 @@
 
-SUBDIRS = stdio stdlib string avl
+SUBDIRS = stdio stdlib string avl assert

@@ -20,8 +20,8 @@
 
 #include <stddef.h>
 
-#include "lib/stdlib.h"
-#include "lib/string.h"
+#include <stdlib.h>
+#include <string.h>
 
 void *calloc( size_t num, size_t size ) {
   // allocate memory

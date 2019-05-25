@@ -19,7 +19,7 @@
  */
 
 #if ! defined( ASSEMBLER_FILE )
-  #include "kernel/kernel/type.h"
+  #include <kernel/type.h>
 #endif
 
 #if ! defined( __KERNEL_ARCH_ARM_MM_VIRT__ )

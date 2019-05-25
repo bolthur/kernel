@@ -18,8 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernel/kernel/panic.h"
-#include "lib/avl/avl.h"
+#include <assert.h>
+#include <avl/avl.h>
 
 /**
  * @brief Simple helper for retrieving max between two 32 bit integers
@@ -191,7 +191,7 @@ avl_tree_ptr_t avl_create( avl_compare_func_t func, void* param ) {
  */
 void avl_insert( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
   // ensure existing tree
-  ASSERT( NULL != tree && NULL != node );
+  assert( NULL != tree && NULL != node );
 
   // insert and rebalance
   tree->root = insert( tree, node, tree->root );

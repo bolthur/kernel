@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kernel/arch/arm/v7/cpu.h"
+#include <arch/arm/v7/cpu.h>
 
 void arch_sub_init( void ) {
 }

@@ -18,13 +18,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_STDIO__ )
-#define __LIB_STDIO__
+#if ! defined( __LIB_ASSERT__ )
+#define __LIB_ASSERT__
 
-#define EOF ( -1 )
+#include <stdint.h>
 
-int printf( const char* restrict, ... );
-int putchar( int );
-int puts( const char* );
+void _assert( const char* restrict, uint32_t, const char* restrict ) __attribute__((noreturn));
+
+#define assert( b ) ( b ? ( void )0 : _assert( __FILE__, __LINE__, #b ) );
 
 #endif

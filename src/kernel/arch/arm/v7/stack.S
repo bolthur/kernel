@@ -20,7 +20,7 @@
 
 #define ASSEMBLER_FILE 1
 
-#include "kernel/arch/arm/stack.h"
+#include <arch/arm/stack.h>
 
 // align stacks 32 bit
 .comm stack_irq_mode, STACK_SIZE, 32

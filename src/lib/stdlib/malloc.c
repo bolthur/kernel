@@ -20,14 +20,21 @@
 
 #include <stddef.h>
 
-#include "kernel/kernel/panic.h"
+#include <kernel/mm/placement.h>
+#include <kernel/mm/virt.h>
+#include <kernel/mm/heap.h>
 
 void *malloc( size_t size ) {
-  // mark as unused
-  ( void )size;
-
-  // some panic until it's implemented
-  PANIC( "malloc() not yet implemented!" );
+  // normal placement alloc when no heap and no virtual
+  if (
+    ! heap_initialized_get()
+    && ! virt_initialized_get()
+  ) {
+    return placement_alloc(
+      size,
+      size + size - size % 2
+    );
+  }
 
   // return null pointer
   return NULL;

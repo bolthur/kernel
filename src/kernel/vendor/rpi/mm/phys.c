@@ -20,15 +20,15 @@
 
 #include <stddef.h>
 
-#include "lib/string.h"
-#include "lib/stdlib.h"
-#include "kernel/kernel/debug.h"
-#include "kernel/kernel/entry.h"
-#include "kernel/kernel/mm/phys.h"
-#include "kernel/kernel/mm/placement.h"
-#include "kernel/vendor/rpi/platform.h"
-#include "kernel/vendor/rpi/peripheral.h"
-#include "kernel/vendor/rpi/mailbox/property.h"
+#include <string.h>
+#include <stdlib.h>
+#include <kernel/debug.h>
+#include <kernel/entry.h>
+#include <kernel/mm/phys.h>
+#include <kernel/mm/placement.h>
+#include <vendor/rpi/platform.h>
+#include <vendor/rpi/peripheral.h>
+#include <vendor/rpi/mailbox/property.h>
 
 /**
  * @brief Initialize physical memory manager for rpi
@@ -90,7 +90,7 @@ void phys_vendor_init( void ) {
   // allocate bitmap manually via placement address after kernel
   // align it to page size
   phys_bitmap = ( uint32_t* )PHYS_2_VIRT(
-    placement_alloc(
+    aligned_alloc(
       phys_bitmap_length,
       sizeof( phys_bitmap )
     )

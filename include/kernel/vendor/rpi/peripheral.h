@@ -21,7 +21,7 @@
 #if ! defined( __KERNEL_VENDOR_RPI_PERIPHERAL__ )
 #define __KERNEL_VENDOR_RPI_PERIPHERAL__
 
-#include "kernel/kernel/type.h"
+#include <kernel/type.h>
 
 void peripheral_base_set( vaddr_t );
 vaddr_t peripheral_base_get( void );

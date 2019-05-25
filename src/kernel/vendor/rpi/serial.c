@@ -20,14 +20,14 @@
 
 #include <stddef.h>
 
-#include "kernel/arch/arm/delay.h"
-#include "kernel/arch/arm/mmio.h"
+#include <arch/arm/delay.h>
+#include <arch/arm/mmio.h>
 
-#include "kernel/vendor/rpi/peripheral.h"
-#include "kernel/vendor/rpi/gpio.h"
-#include "kernel/vendor/rpi/mailbox/property.h"
+#include <vendor/rpi/peripheral.h>
+#include <vendor/rpi/gpio.h>
+#include <vendor/rpi/mailbox/property.h>
 
-#include "kernel/kernel/serial.h"
+#include <kernel/serial.h>
 
 /**
  * @brief Initialize serial port
