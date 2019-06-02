@@ -227,10 +227,10 @@ uint32_t mailbox_property_process( void ) {
   #endif
 
   // write to mailbox
-  mailbox_write( MAILBOX0_TAGS_ARM_TO_VC, (uint32_t)ptb );
+  mailbox_write( MAILBOX0_TAGS_ARM_TO_VC, GPU_MAILBOX, ( uint32_t )ptb );
 
   // read result
-  result = mailbox_read( MAILBOX0_TAGS_ARM_TO_VC );
+  result = mailbox_read( MAILBOX0_TAGS_ARM_TO_VC, GPU_MAILBOX );
 
   // debug output
   #if defined( PRINT_MAILBOX )

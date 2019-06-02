@@ -22,7 +22,6 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 #include <assert.h>
 
 #include <kernel/debug.h>
@@ -32,6 +31,10 @@
 #include <kernel/mm/placement.h>
 #include <kernel/mm/virt.h>
 #include <arch/arm/mm/virt.h>
+
+#include <arch/arm/mm/v6/short.h>
+#include <arch/arm/mm/v7/long.h>
+#include <arch/arm/mm/v7/short.h>
 
 /**
  * @brief Supported modes
@@ -47,165 +50,6 @@ virt_context_ptr_t user_context;
  * @brief kernel context
  */
 virt_context_ptr_t kernel_context;
-
-/**
- * @brief Internal v6 mapping function
- *
- * @param ctx pointer to page context
- * @param vaddr pointer to virtual address
- * @param paddr pointer to physical address
- * @param flags flags used for mapping
- */
-static void v6_map(
-  virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr, uint32_t flags
-) {
-  ( void )ctx;
-  ( void )vaddr;
-  ( void )paddr;
-  ( void )flags;
-
-  PANIC( "v6 mmu mapping not yet supported!" );
-}
-
-/**
- * @brief Internal v7 short descriptor mapping function
- *
- * @param ctx pointer to page context
- * @param vaddr pointer to virtual address
- * @param paddr pointer to physical address
- * @param flags flags used for mapping
- */
-static void v7_short_map(
-  virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr, uint32_t flags
-) {
-  ( void )ctx;
-  ( void )vaddr;
-  ( void )paddr;
-  ( void )flags;
-
-  PANIC( "v7 mmu short descriptor mapping not yet supported!" );
-}
-
-/**
- * @brief Internal v7 long descriptor mapping function
- *
- * @param ctx pointer to page context
- * @param vaddr pointer to virtual address
- * @param paddr pointer to physical address
- * @param flags flags used for mapping
- */
-static void v7_long_map(
-  virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr, uint32_t flags
-) {
-  ( void )ctx;
-  ( void )vaddr;
-  ( void )paddr;
-  ( void )flags;
-
-  PANIC( "v7 mmu long descriptor mapping not yet supported!" );
-}
-
-/**
- * @brief Internal v6 unmapping function
- *
- * @param ctx pointer to page context
- * @param vaddr pointer to virtual address
- */
-static void v6_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
-  ( void )ctx;
-  ( void )vaddr;
-
-  PANIC( "v6 mmu mapping not yet supported!" );
-}
-
-/**
- * @brief Internal v7 short descriptor unmapping function
- *
- * @param ctx pointer to page context
- * @param vaddr pointer to virtual address
- */
-static void v7_short_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
-  ( void )ctx;
-  ( void )vaddr;
-
-  PANIC( "v7 mmu short descriptor mapping not yet supported!" );
-}
-
-/**
- * @brief Internal v7 long descriptor unmapping function
- *
- * @param ctx pointer to page context
- * @param vaddr pointer to virtual address
- */
-static void v7_long_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
-  ( void )ctx;
-  ( void )vaddr;
-
-  PANIC( "v7 mmu long descriptor unmapping not yet supported!" );
-}
-
-/**
- * @brief Internal v6 create table function
- *
- * @param ctx context to create table for
- * @param addr address the table is necessary for
- * @return vaddr_t address of created and prepared table
- */
-static vaddr_t v6_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
-  // different handling, when initial setup is done not yet added
-  if ( true != virt_use_physical_table ) {
-    return NULL;
-  }
-
-  // mark parameters as unused
-  ( void )ctx;
-  ( void )addr;
-
-  // normal handling for first setup
-  return NULL;
-}
-
-/**
- * @brief Internal v7 short descriptor create table function
- *
- * @param ctx context to create table for
- * @param addr address the table is necessary for
- * @return vaddr_t address of created and prepared table
- */
-static vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
-  // different handling, when initial setup is done not yet added
-  if ( true != virt_use_physical_table ) {
-    return NULL;
-  }
-
-  // mark parameters as unused
-  ( void )ctx;
-  ( void )addr;
-
-  // normal handling for first setup
-  return NULL;
-}
-
-/**
- * @brief Internal v7 long descriptor create table function
- *
- * @param ctx context to create table for
- * @param addr address the table is necessary for
- * @return vaddr_t address of created and prepared table
- */
-static vaddr_t v7_long_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
-  // different handling, when initial setup is done not yet added
-  if ( true != virt_use_physical_table ) {
-    return NULL;
-  }
-
-  // mark parameters as unused
-  ( void )ctx;
-  ( void )addr;
-
-  // normal handling for first setup
-  return NULL;
-}
 
 /**
  * @brief
@@ -230,7 +74,7 @@ void virt_map_address(
       v7_short_map( ctx, vaddr, paddr, flags );
     // check for old v6 paging
     } else if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-      v6_map( ctx, vaddr, paddr, flags );
+      v6_short_map( ctx, vaddr, paddr, flags );
     }
   #elif defined( ELF64 )
     #error "Unsupported"
@@ -256,7 +100,7 @@ void virt_unmap_address( virt_context_ptr_t ctx, vaddr_t addr ) {
       v7_short_unmap( ctx, addr );
     // check for old v6 paging
     } else if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-      v6_unmap( ctx, addr );
+      v6_short_unmap( ctx, addr );
     }
   #elif defined( ELF64 )
     #error "Unsupported"
@@ -304,7 +148,7 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
 
   // create new context
   vaddr_t ctx = PHYS_2_VIRT(
-    aligned_alloc( size, alignment )
+    placement_alloc( size, alignment )
   );
 
   // debug output
@@ -317,7 +161,7 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
 
   // create new context structure for return
   virt_context_ptr_t context = PHYS_2_VIRT(
-    aligned_alloc(
+    placement_alloc(
       sizeof( virt_context_t ),
       sizeof( virt_context_t )
     )
@@ -359,7 +203,7 @@ vaddr_t virt_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
       return v7_short_create_table( ctx, addr );
     // check for old v6 paging
     } else if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-      return v6_create_table( ctx, addr );
+      return v6_short_create_table( ctx, addr );
     }
   #elif defined( ELF64 )
     #error "Unsupported"
@@ -430,7 +274,7 @@ void virt_arch_init( void ) {
   kernel_context = virt_create_context( CONTEXT_TYPE_KERNEL );
   assert( NULL != kernel_context );
 
-  // create a dummy user context
+  // create a dummy user context for all cores
   user_context = virt_create_context( CONTEXT_TYPE_USER );
   assert( NULL != user_context );
 

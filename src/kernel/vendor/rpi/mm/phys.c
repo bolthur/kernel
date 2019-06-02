@@ -21,7 +21,6 @@
 #include <stddef.h>
 
 #include <string.h>
-#include <stdlib.h>
 #include <kernel/debug.h>
 #include <kernel/entry.h>
 #include <kernel/mm/phys.h>
@@ -90,7 +89,7 @@ void phys_vendor_init( void ) {
   // allocate bitmap manually via placement address after kernel
   // align it to page size
   phys_bitmap = ( uint32_t* )PHYS_2_VIRT(
-    aligned_alloc(
+    placement_alloc(
       phys_bitmap_length,
       sizeof( phys_bitmap )
     )

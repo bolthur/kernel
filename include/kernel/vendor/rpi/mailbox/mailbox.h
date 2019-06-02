@@ -23,10 +23,12 @@
 
 #include <stdint.h>
 
-#define MAILBOX_OFFSET 0xB880
-
 #define MAILBOX_FULL 0x80000000
 #define MAILBOX_EMPTY 0x40000000
+
+typedef enum {
+  GPU_MAILBOX = 0xB880,
+} mailbox_type_t;
 
 typedef enum {
   MAILBOX0_POWER_MANAGEMENT = 0,
@@ -51,7 +53,7 @@ typedef struct {
   volatile uint32_t write;
 } mailbox_t;
 
-uint32_t mailbox_read( mailbox0_channel_t );
-void mailbox_write( mailbox0_channel_t, uint32_t );
+uint32_t mailbox_read( mailbox0_channel_t, mailbox_type_t );
+void mailbox_write( mailbox0_channel_t, mailbox_type_t, uint32_t );
 
 #endif

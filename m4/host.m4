@@ -3,9 +3,6 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([ELF32], [Define to 1 for 32 bit ELF targets])
   AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets])
   AH_TEMPLATE([DEBUG], [Set to 1 to enable debug mode])
-  AH_TEMPLATE([SMP_ENABLED], [Define to 1 for SMP capable hosts])
-  AH_TEMPLATE([SMP_CORE_NUMBER], [Define to amount of smp cores])
-  AH_TEMPLATE([FPU_ENABLED], [Define to 1 for host with hardware FPU])
   AH_TEMPLATE([IS_HIGHER_HALF], [Define to 1 when kernel is higher half])
   AH_TEMPLATE([MAX_PHYSICAL_MEMORY], [Define contains max physical memory per vendor])
   AH_TEMPLATE([ARCH_ARM], [Define to 1 for ARM targets])
@@ -17,9 +14,8 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([PRINT_MM_PLACEMENT], [Define to 1 to enable output of kernel placement allocator])
   AH_TEMPLATE([PRINT_MAILBOX], [Define to 1 to enable output of mailbox])
   AH_TEMPLATE([PRINT_TIMER], [Define to 1 to enable output of timer])
-
-  # Define for kernel mode
-  AC_DEFINE([IS_KERNEL], [1], [Define set for libc to compile differently])
+  AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
+  AH_TEMPLATE([ARM_VMM_LPAE], [Define to 1 for arm long page address extension to be used])
 
   # Test possibe enable debug parameter
   AS_IF([test "x$enable_debug" == "xyes"], [
@@ -85,11 +81,10 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets])
       AC_DEFINE([VENDOR_RPI], [1])
-      AC_DEFINE([SMP_ENABLED], [1])
-      AC_DEFINE([SMP_CORE_NUMBER], [4])
-      AC_DEFINE([FPU_ENABLED], [1])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([MAX_PHYSICAL_MEMORY], [0x40000000])
+      AC_DEFINE([NUM_CPU], [4])
+      AC_DEFINE([ARM_VMM_LPAE], [1])
       ;;
     rpi_zero_w)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
@@ -99,9 +94,9 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets])
       AC_DEFINE([VENDOR_RPI], [1])
-      AC_DEFINE([FPU_ENABLED], [1])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([MAX_PHYSICAL_MEMORY], [0x20000000])
+      AC_DEFINE([NUM_CPU], [1])
       ;;
     rpi3_b)
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard"
@@ -113,11 +108,10 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([VENDOR_RPI], [1])
-      AC_DEFINE([SMP_ENABLED], [1])
-      AC_DEFINE([SMP_CORE_NUMBER], [4])
-      AC_DEFINE([FPU_ENABLED], [1])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([MAX_PHYSICAL_MEMORY], [0x40000000])
+      AC_DEFINE([NUM_CPU], [4])
+      AC_DEFINE([ARM_VMM_LPAE], [1])
       ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])
@@ -143,11 +137,10 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([VENDOR_RPI], [1])
-      AC_DEFINE([SMP_ENABLED], [1])
-      AC_DEFINE([SMP_CORE_NUMBER], [4])
-      AC_DEFINE([FPU_ENABLED], [1])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([MAX_PHYSICAL_MEMORY], [0x40000000])
+      AC_DEFINE([NUM_CPU], [4])
+      AC_DEFINE([ARM_VMM_LPAE], [1])
       ;;
     *)
       AC_MSG_ERROR([unsupported host vendor])

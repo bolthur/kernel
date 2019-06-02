@@ -20,6 +20,7 @@
 
 #include <stdbool.h>
 
+#include <kernel/panic.h>
 #include <arch/arm/barrier.h>
 #include <vendor/rpi/mailbox/mailbox.h>
 #include <vendor/rpi/peripheral.h>
@@ -28,15 +29,23 @@
  * @brief Function for reading mailbox
  *
  * @param channel Function to read via mailbox
+ * @param type mailbox type to be used
  * @return uint32_t value from mailbox function or 0xffffffff
  */
-uint32_t mailbox_read( mailbox0_channel_t channel ) {
+uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
   // data and count
   uint32_t value = 0;
   uint32_t count = 0;
 
-  // get mailbox address
-  volatile mailbox_t *mbox0 = ( volatile mailbox_t* )( ( uint32_t )peripheral_base_get() + MAILBOX_OFFSET );
+  // mbox address
+  volatile mailbox_t *mbox0;
+
+  // set pointer
+  if ( GPU_MAILBOX == type ) {
+    mbox0 = ( volatile mailbox_t* )( ( uint32_t )peripheral_base_get() + type );
+  } else {
+    mbox0 = ( volatile mailbox_t* )type;
+  }
 
   while( ( value & 0xF ) != channel ) {
     // wait while mailbox is empty
@@ -59,15 +68,25 @@ uint32_t mailbox_read( mailbox0_channel_t channel ) {
  * @brief Function for writing to mailbox
  *
  * @param channel Function to use via mailbox
+ * @param type mailbox type to be used
  * @param data Data to write depending on function
  */
-void mailbox_write( mailbox0_channel_t channel, uint32_t data ) {
+void mailbox_write(
+  mailbox0_channel_t channel, mailbox_type_t type, uint32_t data
+  ) {
   // add channel number at the lower 4 bit
   data = ( uint32_t )( ( int32_t )data & ~0xF );
   data |= channel;
 
   // get mailbox address
-  volatile mailbox_t *mbox0 = ( volatile mailbox_t* )( ( uint32_t )peripheral_base_get() + MAILBOX_OFFSET );
+  volatile mailbox_t *mbox0;
+
+  // set pointer
+  if ( GPU_MAILBOX == type ) {
+    mbox0 = ( volatile mailbox_t* )( ( uint32_t )peripheral_base_get() + type );
+  } else {
+    mbox0 = ( volatile mailbox_t* )type;
+  }
 
   // wait for mailbox to be ready
   while( ( mbox0->status & MAILBOX_FULL ) != 0 ) { }

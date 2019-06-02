@@ -36,7 +36,7 @@ boot_start:
   mov sp, r3
 
   // halt other cpus if smp enabled is set
-  #if defined( SMP_ENABLED )
+  #if defined( BCM2709 ) || defined( BCM2710 )
     // Return current CPU ID (0..3)
     cpsid if // Disable IRQ & FIQ
     mrc p15, 0, r3, c0, c0, 5 // r3 = Multiprocessor Affinity Register (MPIDR)

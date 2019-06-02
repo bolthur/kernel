@@ -7,15 +7,19 @@
   * [ ] Add push and pop of fpu registers within ivt stubs
   * [ ] Extend cpu structure if fpu is enabled
 * [ ] Memory management
+  * [ ] Extend initial vmm setup to read out max memory from mailbox ( rpi vendor )
+  * [ ] Remove memory define from hosts macro, when rpi vendor fetches amount automatically
+  * [ ] Add initial setup of paging with LPAE if enabled
+  * [ ] Change rpi 2 linker script for v7 to link with LPAE in mind and different load address similar to the one for v8
+  * [ ] Add logic LPAE
+  * [ ] Remove fallback for v7 lpae mapping to short descriptor
   * [ ] Add normal setup of mmu during startup of kernel splitted to folders listed below
     * [ ] `kernel/arch/{architecture}/mm`
     * [ ] `kernel/arch/{architecture}/{sub architecture}/mm`
     * [ ] `vendor/{vendor}/mm`
-  * [ ] Check for address extension within mmu is available, use it
   * [ ] Check for further splitting of entry point ( separation between 32bit and 64bit ) is necessary
   * [ ] Consider peripherals per vendor within mmu as not cachable
   * [ ] Consider and enable CPU related caches for performance
-  * [ ] Consider KPTI ( kernel page table isolation ) for virtual memory management
   * [ ] Check and use recursive page mapping
 * [ ] Platform init
   * [ ] Add check for initrd loaded after kernel and move placement address for placement allocator beyond initrd
