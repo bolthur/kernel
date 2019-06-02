@@ -18,10 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-
 #include <kernel/boot/virt.h>
-#include <arch/arm/mm/virt.h>
 
 /**
  * @brief Method to prepare section during initial boot
@@ -29,26 +26,5 @@
  * @todo Pass fetched amount of physical memory to vmm setup functions
  */
 void SECTION( ".text.boot" ) boot_vendor_prepare( void ) {
-  uint32_t reg;
-
-  // get paging support from mmfr0
-  __asm__ __volatile__( "mrc p15, 0, %0, c0, c1, 4" : "=r" ( reg ) : : "cc" );
-
-  // strip out everything not needed
-  reg &= 0xF;
-
-  // check for invalid paging support
-  if (
-    ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS != reg
-    && ID_MMFR0_VSMA_V7_PAGING_PXN != reg
-    && ID_MMFR0_VSMA_V7_PAGING_LPAE != reg
-  ) {
-    return;
-  }
-
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == reg ) {
-    boot_setup_long_vmm( MAX_PHYSICAL_MEMORY );
-  } else {
-    boot_setup_short_vmm( MAX_PHYSICAL_MEMORY );
-  }
+  boot_setup_vmm( MAX_PHYSICAL_MEMORY );
 }

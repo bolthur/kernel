@@ -25,9 +25,14 @@
 #include <kernel/entry.h>
 
 /**
+ * @brief Initial kernel context
+ */
+extern sd_context_total_t initial_kernel_context SECTION( ".data.boot" );
+
+/**
  * @brief Method to setup short descriptor paging
  */
-void SECTION( ".text.boot" ) boot_setup_short_vmm( paddr_t max_memory ) {
+static void SECTION( ".text.boot" ) boot_setup_short_vmm( paddr_t max_memory ) {
   uint32_t x, y, reg;
   sd_ttbcr_t ttbcr;
 
@@ -86,6 +91,34 @@ void SECTION( ".text.boot" ) boot_setup_short_vmm( paddr_t max_memory ) {
  * @brief Helper to setup initial paging with large page address extension
  * @todo Add logic
  */
-void SECTION( ".text.boot" ) boot_setup_long_vmm( paddr_t max_memory ) {
+static void SECTION( ".text.boot" ) boot_setup_long_vmm( paddr_t max_memory ) {
   boot_setup_short_vmm( max_memory );
+}
+
+/**
+ * @brief Method wraps setup of short / long descriptor mode
+ */
+void SECTION( ".text.boot" ) boot_setup_vmm( paddr_t max_memory ) {
+  uint32_t reg;
+
+  // get paging support from mmfr0
+  __asm__ __volatile__( "mrc p15, 0, %0, c0, c1, 4" : "=r" ( reg ) : : "cc" );
+
+  // strip out everything not needed
+  reg &= 0xF;
+
+  // check for invalid paging support
+  if (
+    ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS != reg
+    && ID_MMFR0_VSMA_V7_PAGING_PXN != reg
+    && ID_MMFR0_VSMA_V7_PAGING_LPAE != reg
+  ) {
+    return;
+  }
+
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == reg ) {
+    boot_setup_long_vmm( max_memory );
+  } else {
+    boot_setup_short_vmm( max_memory );
+  }
 }

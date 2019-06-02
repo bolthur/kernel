@@ -22,10 +22,7 @@
 #define __KERNEL_BOOT_VIRT__
 
 #include <kernel/type.h>
-#include <arch/arm/mm/virt.h>
 
-extern sd_context_total_t initial_kernel_context SECTION( ".data.boot" );
-void boot_setup_short_vmm( paddr_t );
-void boot_setup_long_vmm( paddr_t );
+void boot_setup_vmm( paddr_t );
 
 #endif
