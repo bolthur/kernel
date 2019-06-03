@@ -139,9 +139,11 @@ AC_CONFIG_FILES([
   src/lib/Makefile
   src/lib/assert/Makefile
   src/lib/avl/Makefile
+  src/lib/ssp/Makefile
   src/lib/stdio/Makefile
   src/lib/stdlib/Makefile
   src/lib/string/Makefile
+  src/lib/ubsan/Makefile
 ])
 
 AC_OUTPUT

@@ -30,9 +30,11 @@ GROUP(
   ../../../kernel/vendor/rpi/librpi.a
   ../../../lib/assert/libassert.a
   ../../../lib/avl/libavl.a
+  ../../../lib/ssp/libssp.a
   ../../../lib/stdio/libstdio.a
   ../../../lib/stdlib/libstdlib.a
   ../../../lib/string/libstring.a
+  ../../../lib/ubsan/libubsan.a
 )
 INPUT(
   libgcc.a
