@@ -29,15 +29,11 @@
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
- * @param flags flags used for mapping
  */
-void v6_short_map(
-  virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr, uint32_t flags
-) {
+void v6_short_map( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
   ( void )ctx;
   ( void )vaddr;
   ( void )paddr;
-  ( void )flags;
 
   PANIC( "v6 mmu mapping not yet supported!" );
 }

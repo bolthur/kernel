@@ -45,10 +45,12 @@ static vaddr_t get_new_table() {
 
   // return address
   vaddr_t r = addr;
+  DEBUG_OUTPUT( "r = 0x%08x\r\n", r );
 
   // decrease remaining and increase addr
   addr = ( vaddr_t )( ( uint32_t )addr + SD_TBL_SIZE );
   remaining -= SD_TBL_SIZE;
+  DEBUG_OUTPUT( "addr = 0x%08x - remaining = 0x%08x\r\n", addr, remaining );
 
   // check for end reached
   if ( 0 == remaining ) {
@@ -81,42 +83,89 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
 
     // check for already existing
     if ( 0 != context->list[ table_idx ] ) {
-      // FIXME: check return
-      return ( vaddr_t )context->list[ table_idx ];
+      // debug output
+      DEBUG_OUTPUT(
+        "context->table[ %d ].data.raw = 0x%08x\r\n",
+        table_idx,
+        context->table[ table_idx ].raw
+      );
+
+      // return table address
+      return ( vaddr_t )(
+        ( uint32_t )context->table[ table_idx ].raw & 0xFFFFFC00
+      );
     }
 
     // create table
     vaddr_t tbl = get_new_table();
-    DEBUG_OUTPUT( "kernel table physical address = 0x%08x\r\n", tbl );
+    DEBUG_OUTPUT( "created kernel table physical address = 0x%08x\r\n", tbl );
 
     // clear table
     memset( tbl, 0, SD_TBL_SIZE );
 
-    // FIXME: Add table to context
+    // add table to context
+    context->list[ table_idx ] = ( uint32_t )tbl & 0xFFFFFC00;
+
+    // set necessary attributes
+    context->table[ table_idx ].data.type = SD_TTBR_TYPE_PAGE_TABLE;
+    context->table[ table_idx ].data.domain = SD_DOMAIN_CLIENT;
+
+    // debug output
+    DEBUG_OUTPUT(
+      "context->table[ %d ].data.raw = 0x%08x\r\n",
+      table_idx,
+      context->table[ table_idx ].raw
+    );
+
+    // return created table
+    return tbl;
+  }
+
   // user context
-  } else if ( CONTEXT_TYPE_USER == ctx->type ) {
+  if ( CONTEXT_TYPE_USER == ctx->type ) {
     // get context
     sd_context_half_t* context = ( sd_context_half_t* )ctx->context;
 
     // check for already existing
     if ( 0 != context->list[ table_idx ] ) {
-      // FIXME: check return
-      return ( vaddr_t )context->list[ table_idx ];
+      // debug output
+      DEBUG_OUTPUT(
+        "context->table[ %d ].data.raw = 0x%08x\r\n",
+        table_idx,
+        context->table[ table_idx ].raw
+      );
+
+      // return address
+      return ( vaddr_t )(
+        ( uint32_t )context->table[ table_idx ].raw & 0xFFFFFC00
+      );
     }
 
     // create table
     vaddr_t tbl = get_new_table();
-    DEBUG_OUTPUT( "user table physical address = 0x%08x\r\n", tbl );
+    DEBUG_OUTPUT( "created user table physical address = 0x%08x\r\n", tbl );
 
     // clear table
     memset( tbl, 0, SD_TBL_SIZE );
 
-    // FIXME: Add table to context
-  } else {
-    PANIC( "Invalid context type!" );
+    // add table to context
+    context->list[ table_idx ] = ( uint32_t )tbl & 0xFFFFFC00;
+
+    // set necessary attributes
+    context->table[ table_idx ].data.type = SD_TTBR_TYPE_PAGE_TABLE;
+    context->table[ table_idx ].data.domain = SD_DOMAIN_CLIENT;
+
+    // debug output
+    DEBUG_OUTPUT(
+      "context->table[ %d ].data.raw = 0x%08x\r\n",
+      table_idx,
+      context->table[ table_idx ].raw
+    );
+
+    return tbl;
   }
 
-  // normal handling for first setup
+  // invalid type => NULL
   return NULL;
 }
 
@@ -126,21 +175,42 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
- * @param flags flags used for mapping
  */
-void v7_short_map(
-  virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr, uint32_t flags
-) {
+void v7_short_map( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
+  // get page index
+  uint32_t page_idx = SD_VIRTUAL_TO_PAGE( vaddr );
+
   // get table for mapping
-  vaddr_t table = v7_short_create_table( ctx, vaddr );
+  sd_page_table_t* table = ( sd_page_table_t* )v7_short_create_table(
+    ctx, vaddr );
+
+  // assert existance
   assert( NULL != table );
 
-  ( void )ctx;
-  ( void )vaddr;
-  ( void )paddr;
-  ( void )flags;
+  DEBUG_OUTPUT(
+    "table->page[ %d ] = 0x%08x\r\n",
+    page_idx,
+    table->page[ page_idx ]
+  );
 
-  PANIC( "v7 mmu short descriptor mapping not yet supported!" );
+  // ensure not already mapped
+  assert( 0 == table->page[ page_idx ].raw );
+
+  // create new page
+  DEBUG_OUTPUT( "page physical address = 0x%08x\r\n", paddr );
+
+  // set page
+  table->page[ page_idx ].raw = paddr & 0xFFFFF000;
+
+  // set attributes
+  table->page[ page_idx ].data.type = SD_TBL_SMALL_PAGE;
+
+  // debug output
+  DEBUG_OUTPUT(
+    "table->page[ %d ].data.raw = 0x%08x\r\n",
+    page_idx,
+    table->page[ page_idx ].raw
+  );
 }
 
 /**
@@ -150,14 +220,30 @@ void v7_short_map(
  * @param vaddr pointer to virtual address
  */
 void v7_short_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
+  // get page index
+  uint32_t page_idx = SD_VIRTUAL_TO_PAGE( vaddr );
+
   // get table for unmapping
-  vaddr_t table = v7_short_create_table( ctx, vaddr );
+  sd_page_table_t* table = ( sd_page_table_t* )v7_short_create_table(
+    ctx, vaddr );
+
+  // assert existance
   assert( NULL != table );
 
-  ( void )ctx;
-  ( void )vaddr;
+  // ensure not already mapped
+  assert( 0 != table->page[ page_idx ].raw );
 
-  PANIC( "v7 mmu short descriptor mapping not yet supported!" );
+  // get page
+  vaddr_t page = ( vaddr_t )( ( paddr_t )table->page[ page_idx ].data.frame );
+
+  // create new page
+  DEBUG_OUTPUT( "page physical address = 0x%08x\r\n", page );
+
+  // set page table entry as invalid
+  table->page[ page_idx ].raw = SD_TBL_INVALID;
+
+  // free physical page
+  phys_free_page( page );
 }
 
 /**

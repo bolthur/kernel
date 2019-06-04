@@ -58,6 +58,7 @@ void SECTION( ".text.boot" ) boot_setup_short_vmm( paddr_t max_memory ) {
     }
   }
 
+  // FIXME: Move part to vendor
   #if defined( BCM2709 ) || defined( BCM2710 )
     x = ( 0x40000000 >> 20 );
     initial_kernel_context.section[ x ].data.type = SD_TTBR_TYPE_SECTION;

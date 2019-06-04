@@ -21,13 +21,38 @@
 #include <stddef.h>
 
 #include <string.h>
+#include <kernel/type.h>
 #include <kernel/panic.h>
+#include <kernel/debug.h>
+#include <vendor/rpi/peripheral.h>
+#include <mm/kernel/arch/arm/virt.h>
+#include <mm/kernel/kernel/virt.h>
 
 /**
  * @brief Initialize virtual memory management
  */
 void virt_vendor_init( void ) {
-  PANIC( "To be implemented" );
+  paddr_t start;
+  vaddr_t virtual;
+
+  DEBUG_OUTPUT(
+    "Map 0x%08x - 0x%08x\r\n",
+    peripheral_base_get(),
+    peripheral_end_get()
+  );
+
+  for (
+    start = ( paddr_t )peripheral_base_get(), virtual = ( vaddr_t )0xF2000000;
+    start < ( paddr_t )peripheral_end_get();
+    start += SD_PAGE_SIZE, virtual = ( vaddr_t )( ( paddr_t )virtual + SD_PAGE_SIZE )
+  ) {
+    // map peripheral
+    virt_map_address( kernel_context, virtual, start );
+  }
+
+  #if defined( BCM2709 ) || defined( BCM2710 )
+    // FIXME: Map CPU peripheral
+  #endif
 
   /**
    * Short descriptor initialization:

@@ -39,20 +39,17 @@
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
- * @param flags flags used for mapping
  */
-void virt_map_address(
-  virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr, uint32_t flags
-) {
+void virt_map_address( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-    v7_long_map( ctx, vaddr, paddr, flags );
+    v7_long_map( ctx, vaddr, paddr );
   // check v7 short descriptor format
   } else if (
     ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
-    v7_short_map( ctx, vaddr, paddr, flags );
+    v7_short_map( ctx, vaddr, paddr );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

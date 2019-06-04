@@ -30,15 +30,12 @@
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
- * @param flags flags used for mapping
  *
  * @todo add logic for lpae
  * @todo remove call for v7 short mapping
  */
-void v7_long_map(
-  virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr, uint32_t flags
-) {
-  v7_short_map( ctx, vaddr, paddr, flags );
+void v7_long_map( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
+  v7_short_map( ctx, vaddr, paddr );
 }
 
 /**

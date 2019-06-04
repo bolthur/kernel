@@ -40,12 +40,10 @@
  * @param paddr pointer to physical address
  * @param flags flags used for mapping
  */
-void virt_map_address(
-  virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr, uint32_t flags
-) {
+void virt_map_address( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-    v6_short_map( ctx, vaddr, paddr, flags );
+    v6_short_map( ctx, vaddr, paddr );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

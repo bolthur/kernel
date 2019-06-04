@@ -97,9 +97,9 @@
     #define SD_PAGE_SIZE 0x1000
 
     // second level table
-    #define SD_TBL_INVALID 0x0
-    #define SD_TBL_LARGE_PAGE 0x1
-    #define SD_TBL_SMALL_PAGE 0x2
+    #define SD_TBL_INVALID 0
+    #define SD_TBL_LARGE_PAGE 0
+    #define SD_TBL_SMALL_PAGE 1
 
     #if ! defined( ASSEMBLER_FILE )
       // methods
@@ -254,6 +254,10 @@
         sd_context_section_t section[ 2048 ];
         sd_context_super_section_t super[ 2048 ];
       } sd_context_half_t;
+
+      typedef struct {
+        sd_page_small_t page[ 256 ];
+      } sd_page_table_t;
 
       // FIXME: Add defines for long physical address extension
 
