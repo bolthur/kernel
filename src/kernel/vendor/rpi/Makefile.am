@@ -3,18 +3,14 @@ SUBDIRS = .
 
 AUTOMAKE_OPTIONS = nostdinc subdir-objects
 
-AM_CFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include/kernel -I$(top_srcdir)/include/lib
-AM_CCASFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include/kernel -I$(top_srcdir)/include/lib
+AM_CFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include/kernel -I$(top_srcdir)/include/lib -I$(top_srcdir)/include
+AM_CCASFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include/kernel -I$(top_srcdir)/include/lib -I$(top_srcdir)/include
 
 # rpi library
 noinst_LIBRARIES = librpi.a
 librpi_a_SOURCES = \
-  boot/prepare.$(executable_format).c \
-  boot/start.$(executable_format).S \
   mailbox/mailbox.c \
   mailbox/property.c \
-  mm/phys.c \
-  mm/virt.c \
   irq.c \
   platform.c \
   peripheral.c \
@@ -25,6 +21,18 @@ librpi_a_SOURCES = \
 
 # built sources determining things to be built first
 BUILT_SOURCES = \
+  ${top_builddir}/src/boot/vendor/${vendor_subdir}/librpi.a \
+  ${top_builddir}/src/boot/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
+  ${top_builddir}/src/boot/arch/${arch_subdir}/lib$(arch_subdir).a \
+  ${top_builddir}/src/boot/kernel/libkernel.a \
+  ${top_builddir}/src/mm/boot/vendor/${vendor_subdir}/librpi.a \
+  ${top_builddir}/src/mm/boot/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
+  ${top_builddir}/src/mm/boot/arch/${arch_subdir}/lib$(arch_subdir).a \
+  ${top_builddir}/src/mm/boot/kernel/libkernel.a \
+  ${top_builddir}/src/mm/kernel/vendor/${vendor_subdir}/librpi.a \
+  ${top_builddir}/src/mm/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
+  ${top_builddir}/src/mm/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
+  ${top_builddir}/src/mm/kernel/kernel/libkernel.a \
   librpi.a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
@@ -42,6 +50,18 @@ noinst_PROGRAMS = kernel.zwerg ${output_img}
 kernel_zwerg_SOURCES =
 kernel_zwerg_DEPENDENCIES = \
   kernel.$(subarch_subdir).$(executable_format).ld \
+  ${top_builddir}/src/boot/vendor/${vendor_subdir}/librpi.a \
+  ${top_builddir}/src/boot/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
+  ${top_builddir}/src/boot/arch/${arch_subdir}/lib$(arch_subdir).a \
+  ${top_builddir}/src/boot/kernel/libkernel.a \
+  ${top_builddir}/src/mm/boot/vendor/${vendor_subdir}/librpi.a \
+  ${top_builddir}/src/mm/boot/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
+  ${top_builddir}/src/mm/boot/arch/${arch_subdir}/lib$(arch_subdir).a \
+  ${top_builddir}/src/mm/boot/kernel/libkernel.a \
+  ${top_builddir}/src/mm/kernel/vendor/${vendor_subdir}/librpi.a \
+  ${top_builddir}/src/mm/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
+  ${top_builddir}/src/mm/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
+  ${top_builddir}/src/mm/kernel/kernel/libkernel.a \
   librpi.a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \

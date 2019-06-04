@@ -22,7 +22,7 @@
 
 #include <stdio.h>
 
-#include <kernel/mm/phys.h>
+#include <mm/kernel/kernel/phys.h>
 #include <vendor/rpi/platform.h>
 #include <vendor/rpi/mailbox/property.h>
 

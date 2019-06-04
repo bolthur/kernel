@@ -11,7 +11,7 @@ AC_CONFIG_SRCDIR([src/kernel/kernel/main.c])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_HEADERS([include/config.h])
 
-AM_SILENT_RULES([yes])
+#AM_SILENT_RULES([yes])
 
 AC_LANG([C])
 
@@ -122,11 +122,21 @@ AC_DEFINE_UNQUOTED([PACKED], [__attribute__((__packed__))], [Keyword for packing
 AC_DEFINE_UNQUOTED([SECTION(x)], [__attribute__((__section__(x)))], [Keyword for section placement.])
 AC_DEFINE_UNQUOTED([ALIGNED(x)], [__attribute__((__aligned__(x)))], [Keyword for alignment.])
 AC_DEFINE_UNQUOTED([PACKED_ALIGNED(x)], [__attribute__((__packed__, __aligned__(x)))], [Keyword for packing and aligning structures.])
+AC_DEFINE_UNQUOTED([SECTION_ALIGNED(x,y)], [__attribute__((__section__(x), __aligned__(y)))], [Keyword for packing and aligning structures.])
 AC_DEFINE_UNQUOTED([OPT_NONE], [__attribute__((__optimize__( "O0" )))], [Disable optimization])
 
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
+  src/boot/Makefile
+  src/boot/kernel/Makefile
+  src/boot/arch/Makefile
+  src/boot/arch/arm/Makefile
+  src/boot/arch/arm/v6/Makefile
+  src/boot/arch/arm/v7/Makefile
+  src/boot/arch/arm/v8/Makefile
+  src/boot/vendor/Makefile
+  src/boot/vendor/rpi/Makefile
   src/kernel/Makefile
   src/kernel/kernel/Makefile
   src/kernel/arch/Makefile
@@ -144,6 +154,25 @@ AC_CONFIG_FILES([
   src/lib/stdlib/Makefile
   src/lib/string/Makefile
   src/lib/ubsan/Makefile
+  src/mm/Makefile
+  src/mm/boot/Makefile
+  src/mm/boot/kernel/Makefile
+  src/mm/boot/arch/Makefile
+  src/mm/boot/arch/arm/Makefile
+  src/mm/boot/arch/arm/v6/Makefile
+  src/mm/boot/arch/arm/v7/Makefile
+  src/mm/boot/arch/arm/v8/Makefile
+  src/mm/boot/vendor/Makefile
+  src/mm/boot/vendor/rpi/Makefile
+  src/mm/kernel/Makefile
+  src/mm/kernel/kernel/Makefile
+  src/mm/kernel/arch/Makefile
+  src/mm/kernel/arch/arm/Makefile
+  src/mm/kernel/arch/arm/v6/Makefile
+  src/mm/kernel/arch/arm/v7/Makefile
+  src/mm/kernel/arch/arm/v8/Makefile
+  src/mm/kernel/vendor/Makefile
+  src/mm/kernel/vendor/rpi/Makefile
 ])
 
 AC_OUTPUT

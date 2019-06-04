@@ -20,9 +20,9 @@
 
 #include <stddef.h>
 
-#include <kernel/mm/placement.h>
-#include <kernel/mm/virt.h>
-#include <kernel/mm/heap.h>
+#include <mm/kernel/kernel/placement.h>
+#include <mm/kernel/kernel/virt.h>
+#include <mm/kernel/kernel/heap.h>
 
 void *malloc( size_t size ) {
   // normal placement alloc when no heap and no virtual
