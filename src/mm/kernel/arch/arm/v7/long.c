@@ -73,6 +73,16 @@ vaddr_t v7_long_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
  * @todo add logic for lpae
  * @todo remove call for v7 short activation
  */
-void v7_long_activate_context( virt_context_ptr_t ctx ) {
-  v7_short_activate_context( ctx );
+void v7_long_set_context( virt_context_ptr_t ctx ) {
+  v7_short_set_context( ctx );
+}
+
+/**
+ * @brief Flush context
+ *
+ * @todo add logic for lpae
+ * @todo remove call for v7 short activation
+ */
+void v7_long_flush_context( void ) {
+  v7_short_flush_context();
 }

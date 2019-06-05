@@ -26,6 +26,7 @@
 void v7_short_map( virt_context_ptr_t, vaddr_t, paddr_t );
 void v7_short_unmap( virt_context_ptr_t, vaddr_t );
 vaddr_t v7_short_create_table( virt_context_ptr_t, vaddr_t );
-void v7_short_activate_context( virt_context_ptr_t );
+void v7_short_set_context( virt_context_ptr_t );
+void v7_short_flush_context( void );
 
 #endif

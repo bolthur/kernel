@@ -80,9 +80,12 @@ void virt_init( void ) {
   // initialize vendor init
   virt_vendor_init();
 
-  // enable contexts
-  virt_activate_context( user_context );
-  virt_activate_context( kernel_context );
+  // set contexts
+  virt_set_context( user_context );
+  virt_set_context( kernel_context );
+
+  // flush contexts to take effect
+  virt_flush_context();
 
   // set static
   virt_initialized = true;

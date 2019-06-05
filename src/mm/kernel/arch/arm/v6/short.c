@@ -68,11 +68,18 @@ vaddr_t v6_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
 }
 
 /**
- * @brief Internal v7 short descriptor enable context function
+ * @brief Internal v6 short descriptor set context function
  *
  * @param ctx context structure
  */
-void v6_short_activate_context( virt_context_ptr_t ctx ) {
+void v6_short_set_context( virt_context_ptr_t ctx ) {
   ( void )ctx;
-  PANIC( "Activate v7 short context not yet supported!" );
+  PANIC( "Activate v6 context not yet supported!" );
+}
+
+/**
+ * @brief Internal v6 short descriptor context flush
+ */
+void v6_short_flush_context( void ) {
+  PANIC( "Flush v6 context not yet supported!" );
 }

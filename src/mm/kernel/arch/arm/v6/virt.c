@@ -154,10 +154,23 @@ vaddr_t virt_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
  *
  * @param ctx context structure
  */
-void virt_activate_context( virt_context_ptr_t ctx ) {
+void virt_set_context( virt_context_ptr_t ctx ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-    v6_short_activate_context( ctx );
+    v6_short_set_context( ctx );
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
+ * @brief Flush set context
+ */
+void virt_flush_context( void ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+    v6_short_flush_context();
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

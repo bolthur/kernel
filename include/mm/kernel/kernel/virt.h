@@ -50,6 +50,7 @@ vaddr_t virt_create_table( virt_context_ptr_t, vaddr_t );
 void virt_map_address( virt_context_ptr_t, vaddr_t, paddr_t );
 void virt_unmap_address( virt_context_ptr_t, vaddr_t );
 uint32_t virt_get_supported_modes( void );
-void virt_activate_context( virt_context_ptr_t );
+void virt_set_context( virt_context_ptr_t );
+void virt_flush_context( void );
 
 #endif

@@ -26,6 +26,7 @@
 void v7_long_map( virt_context_ptr_t, vaddr_t, paddr_t );
 void v7_long_unmap( virt_context_ptr_t, vaddr_t );
 vaddr_t v7_long_create_table( virt_context_ptr_t, vaddr_t );
-void v7_long_activate_context( virt_context_ptr_t );
+void v7_long_set_context( virt_context_ptr_t );
+void v7_long_flush_context( void );
 
 #endif

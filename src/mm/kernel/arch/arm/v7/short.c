@@ -45,12 +45,16 @@ static vaddr_t get_new_table() {
 
   // return address
   vaddr_t r = addr;
-  DEBUG_OUTPUT( "r = 0x%08x\r\n", r );
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "r = 0x%08x\r\n", r );
+  #endif
 
   // decrease remaining and increase addr
   addr = ( vaddr_t )( ( uint32_t )addr + SD_TBL_SIZE );
   remaining -= SD_TBL_SIZE;
-  DEBUG_OUTPUT( "addr = 0x%08x - remaining = 0x%08x\r\n", addr, remaining );
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "addr = 0x%08x - remaining = 0x%08x\r\n", addr, remaining );
+  #endif
 
   // check for end reached
   if ( 0 == remaining ) {
@@ -74,7 +78,9 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
   uint32_t table_idx = SD_VIRTUAL_TO_TABLE( addr );
 
   // debug output
-  DEBUG_OUTPUT( "create short table for address 0x%08x\r\n", addr );
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "create short table for address 0x%08x\r\n", addr );
+  #endif
 
   // kernel context
   if ( CONTEXT_TYPE_KERNEL == ctx->type ) {
@@ -84,11 +90,13 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
     // check for already existing
     if ( 0 != context->list[ table_idx ] ) {
       // debug output
-      DEBUG_OUTPUT(
-        "context->table[ %d ].data.raw = 0x%08x\r\n",
-        table_idx,
-        context->table[ table_idx ].raw
-      );
+      #if defined( PRINT_MM_VIRT )
+        DEBUG_OUTPUT(
+          "context->table[ %d ].data.raw = 0x%08x\r\n",
+          table_idx,
+          context->table[ table_idx ].raw
+        );
+      #endif
 
       // return table address
       return ( vaddr_t )(
@@ -98,7 +106,9 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
 
     // create table
     vaddr_t tbl = get_new_table();
-    DEBUG_OUTPUT( "created kernel table physical address = 0x%08x\r\n", tbl );
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "created kernel table physical address = 0x%08x\r\n", tbl );
+    #endif
 
     // clear table
     memset( tbl, 0, SD_TBL_SIZE );
@@ -111,11 +121,13 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
     context->table[ table_idx ].data.domain = SD_DOMAIN_CLIENT;
 
     // debug output
-    DEBUG_OUTPUT(
-      "context->table[ %d ].data.raw = 0x%08x\r\n",
-      table_idx,
-      context->table[ table_idx ].raw
-    );
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT(
+        "context->table[ %d ].data.raw = 0x%08x\r\n",
+        table_idx,
+        context->table[ table_idx ].raw
+      );
+    #endif
 
     // return created table
     return tbl;
@@ -129,11 +141,13 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
     // check for already existing
     if ( 0 != context->list[ table_idx ] ) {
       // debug output
-      DEBUG_OUTPUT(
-        "context->table[ %d ].data.raw = 0x%08x\r\n",
-        table_idx,
-        context->table[ table_idx ].raw
-      );
+      #if defined( PRINT_MM_VIRT )
+        DEBUG_OUTPUT(
+          "context->table[ %d ].data.raw = 0x%08x\r\n",
+          table_idx,
+          context->table[ table_idx ].raw
+        );
+      #endif
 
       // return address
       return ( vaddr_t )(
@@ -143,7 +157,9 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
 
     // create table
     vaddr_t tbl = get_new_table();
-    DEBUG_OUTPUT( "created user table physical address = 0x%08x\r\n", tbl );
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "created user table physical address = 0x%08x\r\n", tbl );
+    #endif
 
     // clear table
     memset( tbl, 0, SD_TBL_SIZE );
@@ -156,11 +172,13 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
     context->table[ table_idx ].data.domain = SD_DOMAIN_CLIENT;
 
     // debug output
-    DEBUG_OUTPUT(
-      "context->table[ %d ].data.raw = 0x%08x\r\n",
-      table_idx,
-      context->table[ table_idx ].raw
-    );
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT(
+        "context->table[ %d ].data.raw = 0x%08x\r\n",
+        table_idx,
+        context->table[ table_idx ].raw
+      );
+    #endif
 
     return tbl;
   }
@@ -187,17 +205,21 @@ void v7_short_map( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
   // assert existance
   assert( NULL != table );
 
-  DEBUG_OUTPUT(
-    "table->page[ %d ] = 0x%08x\r\n",
-    page_idx,
-    table->page[ page_idx ]
-  );
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT(
+      "table->page[ %d ] = 0x%08x\r\n",
+      page_idx,
+      table->page[ page_idx ]
+    );
+  #endif
 
   // ensure not already mapped
   assert( 0 == table->page[ page_idx ].raw );
 
-  // create new page
-  DEBUG_OUTPUT( "page physical address = 0x%08x\r\n", paddr );
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "page physical address = 0x%08x\r\n", paddr );
+  #endif
 
   // set page
   table->page[ page_idx ].raw = paddr & 0xFFFFF000;
@@ -206,11 +228,13 @@ void v7_short_map( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
   table->page[ page_idx ].data.type = SD_TBL_SMALL_PAGE;
 
   // debug output
-  DEBUG_OUTPUT(
-    "table->page[ %d ].data.raw = 0x%08x\r\n",
-    page_idx,
-    table->page[ page_idx ].raw
-  );
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT(
+      "table->page[ %d ].data.raw = 0x%08x\r\n",
+      page_idx,
+      table->page[ page_idx ].raw
+    );
+  #endif
 }
 
 /**
@@ -236,8 +260,10 @@ void v7_short_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
   // get page
   vaddr_t page = ( vaddr_t )( ( paddr_t )table->page[ page_idx ].data.frame );
 
-  // create new page
-  DEBUG_OUTPUT( "page physical address = 0x%08x\r\n", page );
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "page physical address = 0x%08x\r\n", page );
+  #endif
 
   // set page table entry as invalid
   table->page[ page_idx ].raw = SD_TBL_INVALID;
@@ -247,11 +273,18 @@ void v7_short_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
 }
 
 /**
- * @brief Internal v7 short descriptor enable context function
+ * @brief Internal v7 short descriptor set context function
  *
  * @param ctx context structure
  */
-void v7_short_activate_context( virt_context_ptr_t ctx ) {
+void v7_short_set_context( virt_context_ptr_t ctx ) {
   ( void )ctx;
   PANIC( "Activate v7 short context not yet supported!" );
+}
+
+/**
+ * @brief Flush context
+ */
+void v7_short_flush_context( void ) {
+  PANIC( "Flush v7 short context not yet supported!" );
 }

@@ -35,12 +35,16 @@ void virt_vendor_init( void ) {
   paddr_t start;
   vaddr_t virtual;
 
-  DEBUG_OUTPUT(
-    "Map 0x%08x - 0x%08x\r\n",
-    peripheral_base_get(),
-    peripheral_end_get()
-  );
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT(
+      "Map peripherals 0x%08x - 0x%08x\r\n",
+      peripheral_base_get(),
+      peripheral_end_get()
+    );
+  #endif
 
+  // map peripherals
   for (
     start = ( paddr_t )peripheral_base_get(), virtual = ( vaddr_t )0xF2000000;
     start < ( paddr_t )peripheral_end_get();
@@ -51,7 +55,24 @@ void virt_vendor_init( void ) {
   }
 
   #if defined( BCM2709 ) || defined( BCM2710 )
-    // FIXME: Map CPU peripheral
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT(
+        "Map local peripherals 0x%08x - 0x%08x\r\n",
+        0x40000000,
+        0x40004000
+      );
+    #endif
+
+    // Map CPU peripheral
+    for (
+      start = ( paddr_t )0x40000000, virtual = ( vaddr_t )0xF3000000;
+      start < ( paddr_t )0x40004000;
+      start += SD_PAGE_SIZE, virtual = ( vaddr_t )( ( paddr_t )virtual + SD_PAGE_SIZE )
+    ) {
+      // map peripheral
+      virt_map_address( kernel_context, virtual, start );
+    }
   #endif
 
   /**

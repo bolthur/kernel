@@ -178,16 +178,35 @@ vaddr_t virt_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
  *
  * @param ctx context structure
  */
-void virt_activate_context( virt_context_ptr_t ctx ) {
+void virt_set_context( virt_context_ptr_t ctx ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-    v7_long_activate_context( ctx );
+    v7_long_set_context( ctx );
   // check v7 short descriptor format
   } else if (
     ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
-    v7_short_activate_context( ctx );
+    v7_short_set_context( ctx );
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
+ * @brief Flush set context
+ */
+void virt_flush_context( void ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    v7_long_flush_context();
+  // check v7 short descriptor format
+  } else if (
+    ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
+    || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
+  ) {
+    v7_short_flush_context();
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );
