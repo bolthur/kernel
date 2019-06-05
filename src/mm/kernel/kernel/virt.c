@@ -81,8 +81,8 @@ void virt_init( void ) {
   virt_vendor_init();
 
   // set contexts
-  virt_set_context( user_context );
   virt_set_context( kernel_context );
+  virt_set_context( user_context );
 
   // flush contexts to take effect
   virt_flush_context();

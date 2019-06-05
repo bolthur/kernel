@@ -278,13 +278,58 @@ void v7_short_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
  * @param ctx context structure
  */
 void v7_short_set_context( virt_context_ptr_t ctx ) {
-  ( void )ctx;
-  PANIC( "Activate v7 short context not yet supported!" );
+  // user context handling
+  if ( CONTEXT_TYPE_USER == ctx->type ) {
+    DEBUG_OUTPUT( "list: 0x%08x\r\n", ( ( ( sd_context_half_t* )ctx->context )->list ) );
+    // Copy page table address to cp15 ( ttbr0 )
+    __asm__ __volatile__(
+      "mcr p15, 0, %0, c2, c0, 0"
+      : : "r" ( ( ( sd_context_half_t* )ctx->context )->list )
+      : "memory"
+    );
+  // kernel context handling
+  } else if ( CONTEXT_TYPE_KERNEL == ctx->type ) {
+    DEBUG_OUTPUT( "list: 0x%08x\r\n", ( ( ( sd_context_total_t* )ctx->context )->list ) );
+    // Copy page table address to cp15 ( ttbr1 )
+    __asm__ __volatile__(
+      "mcr p15, 0, %0, c2, c0, 1"
+      : : "r" ( ( ( sd_context_total_t* )ctx->context )->list )
+      : "memory"
+    );
+  // invalid type
+  } else {
+    PANIC( "Invalid virtual context type!" );
+  }
 }
 
 /**
  * @brief Flush context
  */
 void v7_short_flush_context( void ) {
+  /*uint32_t reg;
+  sd_ttbcr_t ttbcr;
+
+  printf( "1\r\n" );
+
+  // read ttbcr register
+  __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
+  // set split to use ttbr0 only
+  ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_2G;
+  // should be not really necessary
+  ttbcr.data.large_physical_address_extension = 0;
+  printf( "2\r\n" );
+  // push back value with ttbcr
+  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
+
+  printf( "3\r\n" );
+  // Get content from control register
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
+  // enable mmu by setting bit 0
+  reg |= 0x1;
+  printf( "4\r\n" );;
+  // push back value with mmu enabled bit set
+  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
+  printf( "5\r\n" );*/
+
   PANIC( "Flush v7 short context not yet supported!" );
 }
