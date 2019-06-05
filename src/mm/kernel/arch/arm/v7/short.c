@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <kernel/panic.h>
 #include <kernel/debug.h>
+#include <kernel/arch/arm/barrier.h>
 #include <mm/kernel/kernel/phys.h>
 #include <mm/kernel/arch/arm/virt.h>
 #include <mm/kernel/kernel/virt.h>
@@ -306,30 +307,12 @@ void v7_short_set_context( virt_context_ptr_t ctx ) {
  * @brief Flush context
  */
 void v7_short_flush_context( void ) {
-  /*uint32_t reg;
-  sd_ttbcr_t ttbcr;
+  // Invalidate tlb
+  __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
 
-  printf( "1\r\n" );
+  // data synchronization barrier
+  barrier_data_sync();
 
-  // read ttbcr register
-  __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
-  // set split to use ttbr0 only
-  ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_2G;
-  // should be not really necessary
-  ttbcr.data.large_physical_address_extension = 0;
-  printf( "2\r\n" );
-  // push back value with ttbcr
-  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
-
-  printf( "3\r\n" );
-  // Get content from control register
-  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
-  // enable mmu by setting bit 0
-  reg |= 0x1;
-  printf( "4\r\n" );;
-  // push back value with mmu enabled bit set
-  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
-  printf( "5\r\n" );*/
-
+  // development panic
   PANIC( "Flush v7 short context not yet supported!" );
 }
