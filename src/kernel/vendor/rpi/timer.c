@@ -35,6 +35,7 @@
 #include <arch/arm/mmio.h>
 
 #include <vendor/rpi/gpio.h>
+#include <vendor/rpi/peripheral.h>
 
 #include <kernel/timer.h>
 #include <kernel/irq.h>
@@ -84,7 +85,8 @@
  */
 bool timer_pending( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
-    return mmio_read( CORE0_IRQ_SOURCE ) & ARM_GENERIC_TIMER_MATCH_VIRT;
+    vaddr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
+    return mmio_read( ( uint32_t )base + CORE0_IRQ_SOURCE ) & ARM_GENERIC_TIMER_MATCH_VIRT;
   #else
     return mmio_read( SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
   #endif
@@ -133,8 +135,11 @@ void timer_init( void ) {
     // register handler
     irq_register_handler( ARM_GENERIC_TIMER_IRQ_VIRT, timer_clear, false );
 
+    // get peripheral base
+    vaddr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
+
     // route virtual timer within core
-    mmio_write( CORE0_TIMER_IRQCNTL, ARM_GENERIC_TIMER_IRQ_VIRT );
+    mmio_write( ( uint32_t )base + CORE0_TIMER_IRQCNTL, ARM_GENERIC_TIMER_IRQ_VIRT );
 
     // set frequency and enable
     __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 0" :: "r"( ARM_GENERIC_TIMER_FREQUENCY ) );

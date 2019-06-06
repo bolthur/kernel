@@ -22,11 +22,76 @@
 #include <string.h>
 #include <assert.h>
 #include <kernel/panic.h>
+#include <kernel/entry.h>
 #include <kernel/debug.h>
 #include <kernel/arch/arm/barrier.h>
 #include <mm/kernel/kernel/phys.h>
+#include <mm/kernel/kernel/placement.h>
 #include <mm/kernel/arch/arm/virt.h>
+#include <mm/kernel/arch/arm/v7/short.h>
 #include <mm/kernel/kernel/virt.h>
+
+#include <kernel/vendor/rpi/peripheral.h>
+
+/**
+ * @brief Temporary space start for short format
+ */
+#define TEMPORARY_SPACE_START 0xF1000000
+
+/**
+ * @brief Temporary space size for short format
+ */
+#define TEMPORARY_SPACE_SIZE 0xFFFFFF
+
+/**
+ * @brief Map physical space to temporary
+ *
+ * @param start physical start address
+ * @param size size to map
+ * @return vaddr_t mapped address
+ */
+static vaddr_t map_temporary( paddr_t start, size_t size ) {
+  // calculate end
+  vaddr_t end = ( vaddr_t )( ( paddr_t )TEMPORARY_SPACE_START + size );
+
+  // ensure size
+  assert( size <= TEMPORARY_SPACE_SIZE );
+
+  // loop and map
+  for (
+    vaddr_t virt = ( vaddr_t )TEMPORARY_SPACE_START;
+    virt < end;
+    virt = ( vaddr_t )( ( paddr_t )virt + PAGE_SIZE ),
+    start = start + PAGE_SIZE
+  ) {
+    v7_short_map( kernel_context, virt, start, PAGE_FLAG_NONE );
+  }
+
+  // return mapped start
+  return ( vaddr_t )TEMPORARY_SPACE_START;
+}
+
+/**
+ * @brief Helper to unmap temporary
+ *
+ * @param addr address to unmap
+ * @param size size
+ */
+static void unmap_temporary( vaddr_t addr, size_t size ) {
+  // calculate end
+  vaddr_t end = ( vaddr_t )( ( paddr_t )addr + size );
+
+  // ensure size
+  assert( size <= TEMPORARY_SPACE_SIZE );
+
+  // loop and unmap
+  while ( addr < end ) {
+    // unmap
+    v7_short_unmap( kernel_context, addr );
+    // get next page
+    addr = ( vaddr_t )( ( paddr_t )addr + PAGE_SIZE );
+  }
+}
 
 /**
  * @brief Get the new table object
@@ -41,6 +106,21 @@ static vaddr_t get_new_table() {
   // fill addr and remaining
   if ( NULL == addr ) {
     addr = phys_find_free_page( SD_TBL_SIZE );
+
+    // prepare physical page
+    if ( virt_initialized_get() ) {
+      // map temporarily
+      vaddr_t tmp = map_temporary( ( paddr_t )addr, PAGE_SIZE );
+      // overwrite page with zero
+      memset( ( vaddr_t )TEMPORARY_SPACE_SIZE, 0, PAGE_SIZE );
+      // unmap page again
+      unmap_temporary( tmp, PAGE_SIZE );
+    } else {
+      // overwrite page with zero
+      memset( addr, 0, PAGE_SIZE );
+    }
+
+    // set remaining size
     remaining = PAGE_SIZE;
   }
 
@@ -73,6 +153,8 @@ static vaddr_t get_new_table() {
  * @param ctx context to create table for
  * @param addr address the table is necessary for
  * @return vaddr_t address of created and prepared table
+ *
+ * @todo Extend function to work also when vmm is initialized
  */
 vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
   // get table idx
@@ -107,12 +189,11 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
 
     // create table
     vaddr_t tbl = get_new_table();
+
+    // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT( "created kernel table physical address = 0x%08x\r\n", tbl );
     #endif
-
-    // clear table
-    memset( tbl, 0, SD_TBL_SIZE );
 
     // add table to context
     context->list[ table_idx ] = ( uint32_t )tbl & 0xFFFFFC00;
@@ -162,9 +243,6 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
       DEBUG_OUTPUT( "created user table physical address = 0x%08x\r\n", tbl );
     #endif
 
-    // clear table
-    memset( tbl, 0, SD_TBL_SIZE );
-
     // add table to context
     context->list[ table_idx ] = ( uint32_t )tbl & 0xFFFFFC00;
 
@@ -181,6 +259,7 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
       );
     #endif
 
+    // return table address
     return tbl;
   }
 
@@ -194,8 +273,16 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
+ * @param flag flags for mapping
+ *
+ * @todo Extend function to work also when vmm is initialized
  */
-void v7_short_map( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
+void v7_short_map(
+  virt_context_ptr_t ctx,
+  vaddr_t vaddr,
+  paddr_t paddr,
+  uint32_t flag
+) {
   // get page index
   uint32_t page_idx = SD_VIRTUAL_TO_PAGE( vaddr );
 
@@ -227,6 +314,16 @@ void v7_short_map( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
 
   // set attributes
   table->page[ page_idx ].data.type = SD_TBL_SMALL_PAGE;
+  table->page[ page_idx ].data.bufferable = 0;
+  if ( flag & PAGE_FLAG_CACHEABLE ) {
+    table->page[ page_idx ].data.bufferable = 1;
+  }
+  table->page[ page_idx ].data.cacheable = 0;
+  if ( flag & PAGE_FLAG_BUFFERABLE ) {
+    table->page[ page_idx ].data.cacheable = 1;
+  }
+
+  table->page[ page_idx ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -243,6 +340,8 @@ void v7_short_map( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
  *
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
+ *
+ * @todo Extend function to work also when vmm is initialized
  */
 void v7_short_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
   // get page index
@@ -256,7 +355,9 @@ void v7_short_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
   assert( NULL != table );
 
   // ensure not already mapped
-  assert( 0 != table->page[ page_idx ].raw );
+  if ( 0 == table->page[ page_idx ].raw ) {
+    return;
+  }
 
   // get page
   vaddr_t page = ( vaddr_t )( ( paddr_t )table->page[ page_idx ].data.frame );
@@ -281,7 +382,10 @@ void v7_short_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
 void v7_short_set_context( virt_context_ptr_t ctx ) {
   // user context handling
   if ( CONTEXT_TYPE_USER == ctx->type ) {
-    DEBUG_OUTPUT( "list: 0x%08x\r\n", ( ( ( sd_context_half_t* )ctx->context )->list ) );
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "list: 0x%08x\r\n", ( ( ( sd_context_half_t* )ctx->context )->list ) );
+    #endif
     // Copy page table address to cp15 ( ttbr0 )
     __asm__ __volatile__(
       "mcr p15, 0, %0, c2, c0, 0"
@@ -290,7 +394,10 @@ void v7_short_set_context( virt_context_ptr_t ctx ) {
     );
   // kernel context handling
   } else if ( CONTEXT_TYPE_KERNEL == ctx->type ) {
-    DEBUG_OUTPUT( "list: 0x%08x\r\n", ( ( ( sd_context_total_t* )ctx->context )->list ) );
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "list: 0x%08x\r\n", ( ( ( sd_context_total_t* )ctx->context )->list ) );
+    #endif
     // Copy page table address to cp15 ( ttbr1 )
     __asm__ __volatile__(
       "mcr p15, 0, %0, c2, c0, 1"
@@ -307,12 +414,92 @@ void v7_short_set_context( virt_context_ptr_t ctx ) {
  * @brief Flush context
  */
 void v7_short_flush_context( void ) {
-  // Invalidate tlb
+  // invalidate instruction cache
+  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) );
+  // invalidate entire tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
-
   // data synchronization barrier
-  barrier_data_sync();
+  barrier_instruction_sync();
+}
 
-  // development panic
-  PANIC( "Flush v7 short context not yet supported!" );
+/**
+ * @brief Helper to reserve temporary area for mappings
+ *
+ * @param ctx context structure
+ */
+void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
+  // ensure kernel for temporary
+  assert( CONTEXT_TYPE_KERNEL == ctx->type );
+
+  // create tables for temporary area
+  for (
+    vaddr_t v = ( vaddr_t )TEMPORARY_SPACE_START;
+    ( paddr_t )v < ( TEMPORARY_SPACE_START + TEMPORARY_SPACE_SIZE );
+    v = ( vaddr_t )( ( paddr_t )v + SD_PAGE_SIZE )
+  ) {
+    v7_short_create_table( ctx, v );
+  }
+}
+
+/**
+ * @brief Create context for v7 short descriptor
+ *
+ * @param type context type to create
+ */
+virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
+  size_t size, alignment;
+
+  // determine size
+  size = type == CONTEXT_TYPE_KERNEL
+    ? SD_TTBR_SIZE_4G
+    : SD_TTBR_SIZE_2G;
+
+  // determine alignment
+  alignment = type == CONTEXT_TYPE_KERNEL
+    ? SD_TTBR_ALIGNMENT_4G
+    : SD_TTBR_ALIGNMENT_2G;
+
+  // create new context
+  vaddr_t ctx = phys_find_free_page_range( size, alignment );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "type: %d, ctx: 0x%08x\r\n", type, ctx );
+  #endif
+
+  // initialize context space
+  if ( virt_initialized_get() ) {
+    // map temporary
+    vaddr_t tmp = map_temporary( ( paddr_t )ctx, size );
+    // initialize with zero
+    memset( tmp, 0, size );
+    // unmap temporary
+    unmap_temporary( tmp, size );
+  } else {
+    // initialize with zero
+    memset( ctx, 0, size );
+  }
+
+  // create new context structure for return
+  virt_context_ptr_t context = PHYS_2_VIRT(
+    placement_alloc(
+      sizeof( virt_context_t ),
+      sizeof( virt_context_t )
+    )
+  );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "context: 0x%08x\r\n", context );
+  #endif
+
+  // initialize with zero
+  memset( context, 0, sizeof( virt_context_t ) );
+
+  // populate type and context
+  context->context = ctx;
+  context->type = type;
+
+  // return blank context
+  return context;
 }

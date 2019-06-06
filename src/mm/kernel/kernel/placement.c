@@ -43,10 +43,6 @@ paddr_t placement_address = VIRT_2_PHYS( &__kernel_end );
  * @return vaddr_t found address
  */
 vaddr_t placement_alloc( size_t size, size_t alignment ) {
-  // assert no heap and no virtual memory
-  assert( ! heap_initialized_get() );
-  assert( ! virt_initialized_get() );
-
   // assert alignment
   assert( 0 < alignment );
 
@@ -55,6 +51,7 @@ vaddr_t placement_alloc( size_t size, size_t alignment ) {
 
   // states of memory managers
   bool phys = phys_initialized_get();
+  bool virt = virt_initialized_get();
 
   // build return address
   vaddr_t address = ( vaddr_t )placement_address;
@@ -87,6 +84,16 @@ vaddr_t placement_alloc( size_t size, size_t alignment ) {
   // mark as used at physical memory manager if initialized
   if ( phys ) {
     phys_use_page_range( ( vaddr_t )placement_address, offset );
+  }
+
+  // map virtual page
+  if ( virt ) {
+    virt_map_address(
+      kernel_context,
+      ( vaddr_t )PHYS_2_VIRT( placement_address ),
+      placement_address,
+      PAGE_FLAG_CACHEABLE | PAGE_FLAG_BUFFERABLE
+    );
   }
 
   // move up placement address

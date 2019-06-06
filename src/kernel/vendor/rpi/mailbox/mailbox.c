@@ -42,7 +42,9 @@ uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
 
   // set pointer
   if ( GPU_MAILBOX == type ) {
-    mbox0 = ( volatile mailbox_t* )( ( uint32_t )peripheral_base_get() + type );
+    mbox0 = ( volatile mailbox_t* )( ( uint32_t )peripheral_base_get(
+      PERIPHERAL_GPIO
+    ) + type );
   } else {
     mbox0 = ( volatile mailbox_t* )type;
   }
@@ -83,7 +85,9 @@ void mailbox_write(
 
   // set pointer
   if ( GPU_MAILBOX == type ) {
-    mbox0 = ( volatile mailbox_t* )( ( uint32_t )peripheral_base_get() + type );
+    mbox0 = ( volatile mailbox_t* )( ( uint32_t )peripheral_base_get(
+      PERIPHERAL_GPIO
+    ) + type );
   } else {
     mbox0 = ( volatile mailbox_t* )type;
   }

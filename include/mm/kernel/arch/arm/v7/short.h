@@ -23,10 +23,12 @@
 
 #include <mm/kernel/kernel/virt.h>
 
-void v7_short_map( virt_context_ptr_t, vaddr_t, paddr_t );
+void v7_short_map( virt_context_ptr_t, vaddr_t, paddr_t, uint32_t );
 void v7_short_unmap( virt_context_ptr_t, vaddr_t );
 vaddr_t v7_short_create_table( virt_context_ptr_t, vaddr_t );
 void v7_short_set_context( virt_context_ptr_t );
 void v7_short_flush_context( void );
+void v7_short_prepare_temporary( virt_context_ptr_t );
+virt_context_ptr_t v7_short_create_context( virt_context_type_t );
 
 #endif

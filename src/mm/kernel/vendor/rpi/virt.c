@@ -28,6 +28,11 @@
 #include <mm/kernel/arch/arm/virt.h>
 #include <mm/kernel/kernel/virt.h>
 
+#define GPIO_PERIPHERAL_BASE ( vaddr_t )0xF2000000
+#if defined( BCM2709 ) || defined( BCM2710 )
+  #define CPU_PERIPHERAL_BASE ( vaddr_t )0xF3000000
+#endif
+
 /**
  * @brief Initialize virtual memory management
  */
@@ -46,12 +51,11 @@ void virt_vendor_init( void ) {
 
   // map peripherals
   for (
-    start = ( paddr_t )peripheral_base_get(), virtual = ( vaddr_t )0xF2000000;
-    start < ( paddr_t )peripheral_end_get();
+    start = ( paddr_t )peripheral_base_get( PERIPHERAL_GPIO ), virtual = GPIO_PERIPHERAL_BASE;
+    start < ( paddr_t )peripheral_end_get( PERIPHERAL_GPIO ) + 1;
     start += SD_PAGE_SIZE, virtual = ( vaddr_t )( ( paddr_t )virtual + SD_PAGE_SIZE )
   ) {
-    // map peripheral
-    virt_map_address( kernel_context, virtual, start );
+    virt_map_address( kernel_context, virtual, start, PAGE_FLAG_NONE );
   }
 
   #if defined( BCM2709 ) || defined( BCM2710 )
@@ -66,27 +70,30 @@ void virt_vendor_init( void ) {
 
     // Map CPU peripheral
     for (
-      start = ( paddr_t )0x40000000, virtual = ( vaddr_t )0xF3000000;
-      start < ( paddr_t )0x40004000;
+      start = ( paddr_t )peripheral_base_get( PERIPHERAL_LOCAL ), virtual = CPU_PERIPHERAL_BASE;
+      start < ( paddr_t )peripheral_end_get( PERIPHERAL_LOCAL ) + 1;
       start += SD_PAGE_SIZE, virtual = ( vaddr_t )( ( paddr_t )virtual + SD_PAGE_SIZE )
     ) {
-      // map peripheral
-      virt_map_address( kernel_context, virtual, start );
+      virt_map_address( kernel_context, virtual, start, PAGE_FLAG_NONE );
     }
   #endif
+}
 
-  /**
-   * Short descriptor initialization:
-   *  - Setup new ttbr0 with 8KB size ( 2GB )
-   *  - Setup new ttbr1 with 16KB size ( according to specs normal, when using ttbr0 and ttbr1 )
-   *  - Set TTBCR.N to SD_TTBCR_N_TTBR0_2G
-   *  - Set TTBCR.EAE to 0
-   *  - Map peripherals to 0xF2000000 ( without caching )
-   *  - Map framebuffer if built in to 0xF3000000 ( without caching )
-   *  - Map additional with specific core mappings on rpi 2 and 3 ( without caching )
-   *  - Replace ttbr0 and ttbr1 with new ones
-   *  - Invalidate cache and tlb
-   *  - Handle data barriers
-   *  - Reset framebuffer base and peripheral base according to mappings
-   */
+/**
+ * @brief Vendor post initialization routine
+ */
+void virt_vendor_post_init( void ) {
+  // set new peripheral base
+  peripheral_base_set( GPIO_PERIPHERAL_BASE, PERIPHERAL_GPIO );
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "Set new gpio peripheral base to 0x%08x\r\n", GPIO_PERIPHERAL_BASE );
+  #endif
+
+  // Adjust base address of cpu peripheral
+  peripheral_base_set( CPU_PERIPHERAL_BASE, PERIPHERAL_LOCAL );
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "Set new cpu peripheral base to 0x%08x\r\n", CPU_PERIPHERAL_BASE );
+  #endif
 }

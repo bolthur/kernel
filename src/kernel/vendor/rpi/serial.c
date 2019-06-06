@@ -35,7 +35,7 @@
  * @todo Route uart interrupt as FIQ when DEBUG is defined
  */
 void serial_init( void ) {
-  uint32_t base = ( uint32_t )peripheral_base_get();
+  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // Disable UART0.
   mmio_write( base + UARTCR, 0 );
@@ -110,7 +110,7 @@ void serial_init( void ) {
  * @param c character to put
  */
 void serial_putc( uint8_t c ) {
-  uint32_t base = ( uint32_t )peripheral_base_get();
+  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // Wait for UART to become ready to transmit.
   while ( 0 != ( mmio_read( base + UARTFR ) & ( 1 << 5 ) ) ) { }
@@ -123,7 +123,7 @@ void serial_putc( uint8_t c ) {
  * @return uint8_t Character from serial
  */
 uint8_t serial_getc( void ) {
-  uint32_t base = ( uint32_t )peripheral_base_get();
+  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // Wait for UART to become ready for read
   while ( mmio_read( base + UARTFR ) & ( 1 << 4 ) ) { }
@@ -136,7 +136,7 @@ uint8_t serial_getc( void ) {
  * @brief Flush serial
  */
 void serial_flush( void ) {
-  uint32_t base = ( uint32_t )peripheral_base_get();
+  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // read from uart until as long as something is existing to flush
   while ( ! ( mmio_read( base + UARTFR ) & ( 1 << 4 ) ) ) {

@@ -65,7 +65,7 @@ void SECTION( ".text.boot" ) boot_setup_short_vmm( paddr_t max_memory ) {
     }
   }
 
-  // FIXME: Move part to vendor
+  // FIXME: Move part to vendor ?
   #if defined( BCM2709 ) || defined( BCM2710 )
     x = ( 0x40000000 >> 20 );
     initial_user_context.section[ x ].data.type = SD_TTBR_TYPE_SECTION;
@@ -82,7 +82,7 @@ void SECTION( ".text.boot" ) boot_setup_short_vmm( paddr_t max_memory ) {
 
   // read ttbcr register
   __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
-  // set split to use ttbr0 only
+  // set split to use ttbr1 and ttbr2 as it will be used later on
   ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_2G;
   ttbcr.data.large_physical_address_extension = 0;
   // push back value with ttbcr

@@ -22,8 +22,8 @@
 #define __KERNEL_VENDOR_RPI_GPIO__
 
 #if defined( BCM2709 ) || defined( BCM2710 )
-  #define CORE0_TIMER_IRQCNTL 0x40000040
-  #define CORE0_IRQ_SOURCE 0x40000060
+  #define CORE0_TIMER_IRQCNTL 0x40
+  #define CORE0_IRQ_SOURCE 0x60
 #endif
 
 enum {

@@ -24,16 +24,33 @@
 #include <mm/kernel/kernel/virt.h>
 
 /**
+ * @brief Temporary space start for short format
+ */
+#define TEMPORARY_SPACE_START 0xF1000000
+
+/**
+ * @brief Temporary space size for short format
+ */
+#define TEMPORARY_SPACE_SIZE 0xFFFFFF
+
+/**
  * @brief Internal v6 mapping function
  *
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
+ * @param flag flags for mapping
  */
-void v6_short_map( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
+void v6_short_map(
+  virt_context_ptr_t ctx,
+  vaddr_t vaddr,
+  paddr_t paddr,
+  uint32_t flag
+) {
   ( void )ctx;
   ( void )vaddr;
   ( void )paddr;
+  ( void )flag;
 
   PANIC( "v6 mmu mapping not yet supported!" );
 }
@@ -82,4 +99,24 @@ void v6_short_set_context( virt_context_ptr_t ctx ) {
  */
 void v6_short_flush_context( void ) {
   PANIC( "Flush v6 context not yet supported!" );
+}
+
+/**
+ * @brief Helper to reserve temporary area for mappings
+ *
+ * @param ctx context structure
+ */
+void v6_short_prepare_temporary( virt_context_ptr_t ctx ) {
+  ( void )ctx;
+  PANIC( "v6 temporary not yet implemented!" );
+}
+
+/**
+ * @brief Create context for v6 short descriptor
+ *
+ * @param type context type to create
+ */
+virt_context_ptr_t v6_short_create_context( virt_context_type_t type ) {
+  ( void )type;
+  PANIC( "v6 create context not yet implemented!" );
 }

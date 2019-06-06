@@ -38,12 +38,17 @@
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
- * @param flags flags used for mapping
+ * @param flag flags used for mapping
  */
-void virt_map_address( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
-  // check for v7 long descriptor format
+void virt_map_address(
+  virt_context_ptr_t ctx,
+  vaddr_t vaddr,
+  paddr_t paddr,
+  uint32_t flag
+) {
+  // check for v6 long descriptor format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-    v6_short_map( ctx, vaddr, paddr );
+    v6_short_map( ctx, vaddr, paddr, flag );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );
@@ -57,7 +62,7 @@ void virt_map_address( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
  * @param addr pointer to virtual address
  */
 void virt_unmap_address( virt_context_ptr_t ctx, vaddr_t addr ) {
-  // check for v7 long descriptor format
+  // check for v6 long descriptor format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
     v6_short_unmap( ctx, addr );
   // Panic when mode is unsupported
@@ -140,7 +145,7 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
  * @return vaddr_t address of table
  */
 vaddr_t virt_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
-  // check for v6 short descriptor format
+  // check for v6 format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
     return v6_short_create_table( ctx, addr );
   // Panic when mode is unsupported
@@ -155,7 +160,7 @@ vaddr_t virt_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
  * @param ctx context structure
  */
 void virt_set_context( virt_context_ptr_t ctx ) {
-  // check for v7 long descriptor format
+  // check for v6 format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
     v6_short_set_context( ctx );
   // Panic when mode is unsupported
@@ -168,9 +173,24 @@ void virt_set_context( virt_context_ptr_t ctx ) {
  * @brief Flush set context
  */
 void virt_flush_context( void ) {
-  // check for v7 long descriptor format
+  // check for v6 format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
     v6_short_flush_context();
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
+ * @brief Method to prepare temporary area
+ *
+ * @param ctx context structure
+ */
+void virt_prepare_temporary( virt_context_ptr_t ctx ) {
+  // check for v6 format
+  if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+    v6_short_prepare_temporary( ctx );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

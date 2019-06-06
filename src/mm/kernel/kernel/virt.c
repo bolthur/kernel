@@ -35,7 +35,6 @@ static bool virt_initialized = false;
 
 /**
  * @brief Generic initialization of virtual memory manager
- * @todo Set correct flags for virt_map_address
  */
 void virt_init( void ) {
   // assert no initialize
@@ -71,7 +70,12 @@ void virt_init( void ) {
   // map from start to end addresses as used
   while( start < end ) {
     // map page
-    virt_map_address( kernel_context, PHYS_2_VIRT( start ), start );
+    virt_map_address(
+      kernel_context,
+      PHYS_2_VIRT( start ),
+      start,
+      PAGE_FLAG_BUFFERABLE | PAGE_FLAG_CACHEABLE
+    );
 
     // get next page
     start += PAGE_SIZE;
@@ -80,12 +84,18 @@ void virt_init( void ) {
   // initialize vendor init
   virt_vendor_init();
 
+  // prepare temporary area
+  virt_prepare_temporary( kernel_context );
+
   // set contexts
   virt_set_context( kernel_context );
   virt_set_context( user_context );
 
   // flush contexts to take effect
   virt_flush_context();
+
+  // post init
+  virt_vendor_post_init();
 
   // set static
   virt_initialized = true;

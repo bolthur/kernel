@@ -30,12 +30,18 @@
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
+ * @param flag mapping flags
  *
  * @todo add logic for lpae
  * @todo remove call for v7 short mapping
  */
-void v7_long_map( virt_context_ptr_t ctx, vaddr_t vaddr, paddr_t paddr ) {
-  v7_short_map( ctx, vaddr, paddr );
+void v7_long_map(
+  virt_context_ptr_t ctx,
+  vaddr_t vaddr,
+  paddr_t paddr,
+  uint32_t flag
+) {
+  v7_short_map( ctx, vaddr, paddr, flag );
 }
 
 /**
@@ -85,4 +91,28 @@ void v7_long_set_context( virt_context_ptr_t ctx ) {
  */
 void v7_long_flush_context( void ) {
   v7_short_flush_context();
+}
+
+/**
+ * @brief Helper to reserve temporary area for mappings
+ *
+ * @param ctx context structure
+ *
+ * @todo add logic for lpae
+ * @todo remove call for v7 short activation
+ */
+void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
+  v7_short_prepare_temporary( ctx );
+}
+
+/**
+ * @brief Create context for v7 short descriptor
+ *
+ * @param type context type to create
+ *
+ * @todo add logic for lpae
+ * @todo remove call for v7 short activation
+ */
+virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
+  return v7_short_create_context( type );
 }
