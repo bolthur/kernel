@@ -201,6 +201,7 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
     // set necessary attributes
     context->table[ table_idx ].data.type = SD_TTBR_TYPE_PAGE_TABLE;
     context->table[ table_idx ].data.domain = SD_DOMAIN_CLIENT;
+    context->table[ table_idx ].data.non_secure = 0;
 
     // debug output
     #if defined( PRINT_MM_VIRT )
@@ -249,6 +250,7 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
     // set necessary attributes
     context->table[ table_idx ].data.type = SD_TTBR_TYPE_PAGE_TABLE;
     context->table[ table_idx ].data.domain = SD_DOMAIN_CLIENT;
+    context->table[ table_idx ].data.non_secure = 1;
 
     // debug output
     #if defined( PRINT_MM_VIRT )
