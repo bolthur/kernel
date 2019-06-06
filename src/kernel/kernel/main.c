@@ -31,6 +31,7 @@
 #include <kernel/serial.h>
 #include <mm/kernel/kernel/phys.h>
 #include <mm/kernel/kernel/virt.h>
+#include <mm/kernel/kernel/heap.h>
 
 /**
  * @brief Kernel main function
@@ -77,6 +78,7 @@ void kernel_main() {
 
   // Setup heap
   printf( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
+  heap_init();
 
   // Setup timer
   printf( "[bolthur/kernel -> timer] initialize ...\r\n" );

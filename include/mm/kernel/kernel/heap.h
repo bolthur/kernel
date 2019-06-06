@@ -21,8 +21,27 @@
 #if ! defined( __MM_KERNEL_KERNEL_HEAP__ )
 #define __MM_KERNEL_KERNEL_HEAP__
 
+#include <stddef.h>
 #include <stdbool.h>
+#include <kernel/entry.h>
+
+#if defined( ELF32 )
+  #define HEAP_START 0xD0000000
+  #define HEAP_MAX_SIZE 0xDFFFFFFF
+  #define HEAP_MIN_SIZE 0x4000
+#elif defined( ELF64 )
+  #error "Heap not ready for x64"
+#endif
+
+typedef struct {
+  vaddr_t start;
+  vaddr_t end;
+  size_t size;
+} heap_t, *heap_ptr_t;
+
+heap_ptr_t kernel_heap;
 
 bool heap_initialized_get( void );
+void heap_init( void );
 
 #endif

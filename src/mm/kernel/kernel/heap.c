@@ -19,13 +19,13 @@
  */
 
 #include <stdbool.h>
-
+#include <assert.h>
 #include <mm/kernel/kernel/heap.h>
 
 /**
- * @brief heap initialized flag
+ * @brief Kernel heap
  */
-static bool heap_initialized = false;
+heap_ptr_t kernel_heap = NULL;
 
 /**
  * @brief Getter for heap initialized flag
@@ -34,5 +34,13 @@ static bool heap_initialized = false;
  * @return false
  */
 bool heap_initialized_get( void ) {
-  return heap_initialized;
+  return NULL != kernel_heap;
+}
+
+/**
+ * @brief Initialize heap
+ */
+void heap_init( void ) {
+  // assert not initialized
+  assert( NULL == kernel_heap );
 }
