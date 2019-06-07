@@ -23,6 +23,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <avl/avl.h>
 #include <kernel/entry.h>
 
 #if defined( ELF32 )
@@ -35,11 +36,21 @@
 
 typedef struct {
   vaddr_t start;
-  vaddr_t end;
-  size_t size;
-} heap_t, *heap_ptr_t;
+  vaddr_t size;
+  avl_tree_ptr_t free_area;
+  avl_tree_ptr_t used_area;
+} heap_manager_t, *heap_manager_ptr_t;
 
-heap_ptr_t kernel_heap;
+typedef struct {
+  avl_node_ptr_t node;
+  vaddr_t address;
+  size_t size;
+} heap_block_t;
+
+#define GET_BLOCK_ADDRESS( node ) \
+  ( ( uint8_t* )node - &( ( heap_block_ptr_t )NULL )->node )
+
+heap_manager_ptr_t kernel_heap;
 
 bool heap_initialized_get( void );
 void heap_init( void );

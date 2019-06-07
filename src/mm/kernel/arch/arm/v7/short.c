@@ -49,6 +49,8 @@
  * @param start physical start address
  * @param size size to map
  * @return vaddr_t mapped address
+ *
+ * @todo fix endless loop when using map temporary
  */
 static vaddr_t map_temporary( paddr_t start, size_t size ) {
   // calculate end
@@ -76,6 +78,8 @@ static vaddr_t map_temporary( paddr_t start, size_t size ) {
  *
  * @param addr address to unmap
  * @param size size
+ *
+ * @todo fix endless loop when using map temporary
  */
 static void unmap_temporary( vaddr_t addr, size_t size ) {
   // calculate end
@@ -153,12 +157,11 @@ static vaddr_t get_new_table() {
  * @param ctx context to create table for
  * @param addr address the table is necessary for
  * @return vaddr_t address of created and prepared table
- *
- * @todo Extend function to work also when vmm is initialized
  */
 vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
   // get table idx
   uint32_t table_idx = SD_VIRTUAL_TO_TABLE( addr );
+  bool vmm = virt_initialized_get();
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -168,7 +171,17 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
   // kernel context
   if ( CONTEXT_TYPE_KERNEL == ctx->type ) {
     // get context
-    sd_context_total_t* context = ( sd_context_total_t* )ctx->context;
+    sd_context_total_t* context = NULL;
+    if ( vmm ) {
+      context = ( sd_context_total_t* )map_temporary(
+        ( paddr_t )ctx->context,
+        SD_TTBR_SIZE_4G
+      );
+      printf ( "0x%08x\r\n", context );
+      PANIC( "FOOO!" );
+    } else {
+      context = ( sd_context_total_t* )ctx->context;
+    }
 
     // check for already existing
     if ( 0 != context->list[ table_idx ] ) {
@@ -181,10 +194,18 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
         );
       #endif
 
-      // return table address
-      return ( vaddr_t )(
+      // return object
+      vaddr_t ret = ( vaddr_t )(
         ( uint32_t )context->table[ table_idx ].raw & 0xFFFFFC00
       );
+
+      // unmap temporary
+      if ( vmm ) {
+        unmap_temporary( ( vaddr_t )context, SD_TTBR_SIZE_4G );
+      }
+
+      // return table address
+      return ret;
     }
 
     // create table
@@ -212,6 +233,11 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
       );
     #endif
 
+    // unmap temporary
+    if ( vmm ) {
+      unmap_temporary( context, SD_TTBR_SIZE_4G );
+    }
+
     // return created table
     return tbl;
   }
@@ -219,7 +245,15 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
   // user context
   if ( CONTEXT_TYPE_USER == ctx->type ) {
     // get context
-    sd_context_half_t* context = ( sd_context_half_t* )ctx->context;
+    sd_context_half_t* context = NULL;
+    if ( vmm ) {
+      context = ( sd_context_half_t* )map_temporary(
+        ( paddr_t )ctx->context,
+        SD_TTBR_SIZE_2G
+      );
+    } else {
+      context = ( sd_context_half_t* )ctx->context;
+    }
 
     // check for already existing
     if ( 0 != context->list[ table_idx ] ) {
@@ -232,10 +266,18 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
         );
       #endif
 
-      // return address
-      return ( vaddr_t )(
-        ( uint32_t )context->table[ table_idx ].raw & 0xFFFFFC00
+      // return object
+      vaddr_t ret = ( vaddr_t )(
+        ( uint32_t )context->table[ table_idx ].raw  & 0xFFFFFC00
       );
+
+      // unmap temporary
+      if ( vmm ) {
+        unmap_temporary( ( vaddr_t )context, SD_TTBR_SIZE_4G );
+      }
+
+      // return table address
+      return ret;
     }
 
     // create table
@@ -261,6 +303,11 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
       );
     #endif
 
+    // unmap temporary
+    if ( vmm ) {
+      unmap_temporary( context, SD_TTBR_SIZE_4G );
+    }
+
     // return table address
     return tbl;
   }
@@ -276,8 +323,6 @@ vaddr_t v7_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
  * @param flag flags for mapping
- *
- * @todo Extend function to work also when vmm is initialized
  */
 void v7_short_map(
   virt_context_ptr_t ctx,
@@ -287,10 +332,28 @@ void v7_short_map(
 ) {
   // get page index
   uint32_t page_idx = SD_VIRTUAL_TO_PAGE( vaddr );
+  bool vmm = virt_initialized_get();
 
   // get table for mapping
   sd_page_table_t* table = ( sd_page_table_t* )v7_short_create_table(
-    ctx, vaddr );
+    ctx,
+    vaddr
+  );
+
+  // map temporary
+  vaddr_t mapped = NULL;
+  if ( vmm ) {
+    // calculate offset
+    size_t offset = ( size_t )table % PAGE_SIZE;
+
+    mapped = map_temporary(
+      ( paddr_t )table - ( paddr_t )table % PAGE_SIZE,
+      PAGE_SIZE
+    );
+
+    // overwrite table
+    table = ( sd_page_table_t* )( ( paddr_t )mapped + offset );
+  }
 
   // assert existance
   assert( NULL != table );
@@ -324,7 +387,6 @@ void v7_short_map(
   if ( flag & PAGE_FLAG_BUFFERABLE ) {
     table->page[ page_idx ].data.cacheable = 1;
   }
-
   table->page[ page_idx ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
 
   // debug output
@@ -335,6 +397,11 @@ void v7_short_map(
       table->page[ page_idx ].raw
     );
   #endif
+
+  // unmap temporary
+  if ( NULL != mapped ) {
+    unmap_temporary( mapped, PAGE_SIZE );
+  }
 }
 
 /**
@@ -422,6 +489,7 @@ void v7_short_flush_context( void ) {
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
   // data synchronization barrier
   barrier_instruction_sync();
+  barrier_data_sync();
 }
 
 /**
@@ -437,7 +505,7 @@ void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
   for (
     vaddr_t v = ( vaddr_t )TEMPORARY_SPACE_START;
     ( paddr_t )v < ( TEMPORARY_SPACE_START + TEMPORARY_SPACE_SIZE );
-    v = ( vaddr_t )( ( paddr_t )v + SD_PAGE_SIZE )
+    v = ( vaddr_t )( ( paddr_t )v + PAGE_SIZE )
   ) {
     v7_short_create_table( ctx, v );
   }
@@ -447,6 +515,8 @@ void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
  * @brief Create context for v7 short descriptor
  *
  * @param type context type to create
+ *
+ * @todo Extend function to work also when vmm is initialized
  */
 virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
   size_t size, alignment;

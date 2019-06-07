@@ -26,6 +26,7 @@
 #include <kernel/debug.h>
 #include <vendor/rpi/peripheral.h>
 #include <mm/kernel/arch/arm/virt.h>
+#include <mm/kernel/kernel/phys.h>
 #include <mm/kernel/kernel/virt.h>
 
 #define GPIO_PERIPHERAL_BASE ( vaddr_t )0xF2000000
@@ -44,8 +45,8 @@ void virt_vendor_init( void ) {
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
       "Map peripherals 0x%08x - 0x%08x\r\n",
-      peripheral_base_get(),
-      peripheral_end_get()
+      peripheral_base_get( PERIPHERAL_GPIO ),
+      peripheral_end_get( PERIPHERAL_GPIO )
     );
   #endif
 
@@ -53,7 +54,7 @@ void virt_vendor_init( void ) {
   for (
     start = ( paddr_t )peripheral_base_get( PERIPHERAL_GPIO ), virtual = GPIO_PERIPHERAL_BASE;
     start < ( paddr_t )peripheral_end_get( PERIPHERAL_GPIO ) + 1;
-    start += SD_PAGE_SIZE, virtual = ( vaddr_t )( ( paddr_t )virtual + SD_PAGE_SIZE )
+    start += PAGE_SIZE, virtual = ( vaddr_t )( ( paddr_t )virtual + PAGE_SIZE )
   ) {
     virt_map_address( kernel_context, virtual, start, PAGE_FLAG_NONE );
   }
@@ -63,8 +64,8 @@ void virt_vendor_init( void ) {
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
         "Map local peripherals 0x%08x - 0x%08x\r\n",
-        0x40000000,
-        0x40004000
+        peripheral_base_get( PERIPHERAL_LOCAL ),
+        peripheral_end_get( PERIPHERAL_LOCAL )
       );
     #endif
 
@@ -72,7 +73,7 @@ void virt_vendor_init( void ) {
     for (
       start = ( paddr_t )peripheral_base_get( PERIPHERAL_LOCAL ), virtual = CPU_PERIPHERAL_BASE;
       start < ( paddr_t )peripheral_end_get( PERIPHERAL_LOCAL ) + 1;
-      start += SD_PAGE_SIZE, virtual = ( vaddr_t )( ( paddr_t )virtual + SD_PAGE_SIZE )
+      start += PAGE_SIZE, virtual = ( vaddr_t )( ( paddr_t )virtual + PAGE_SIZE )
     ) {
       virt_map_address( kernel_context, virtual, start, PAGE_FLAG_NONE );
     }
