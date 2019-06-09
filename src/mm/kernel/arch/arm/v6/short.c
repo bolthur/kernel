@@ -73,12 +73,18 @@ void v6_short_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
  *
  * @param ctx context to create table for
  * @param addr address the table is necessary for
+ * @param table table address
  * @return vaddr_t address of created and prepared table
  */
-vaddr_t v6_short_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
+vaddr_t v6_short_create_table(
+  virt_context_ptr_t ctx,
+  vaddr_t addr,
+  vaddr_t table
+) {
   // mark parameters as unused
   ( void )ctx;
   ( void )addr;
+  ( void )table;
 
   // normal handling for first setup
   return NULL;

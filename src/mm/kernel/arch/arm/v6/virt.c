@@ -142,12 +142,17 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
  *
  * @param ctx context to create table for
  * @param addr address the table is necessary for
+ * @param table page table address
  * @return vaddr_t address of table
  */
-vaddr_t virt_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
+vaddr_t virt_create_table(
+  virt_context_ptr_t ctx,
+  vaddr_t addr,
+  vaddr_t table
+) {
   // check for v6 format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-    return v6_short_create_table( ctx, addr );
+    return v6_short_create_table( ctx, addr, table );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

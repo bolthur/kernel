@@ -62,13 +62,18 @@ void v7_long_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
  *
  * @param ctx context to create table for
  * @param addr address the table is necessary for
+ * @param table page table address
  * @return vaddr_t address of created and prepared table
  *
  * @todo add logic for lpae
  * @todo remove call for v7 short table
  */
-vaddr_t v7_long_create_table( virt_context_ptr_t ctx, vaddr_t addr ) {
-  return v7_short_create_table( ctx, addr );
+vaddr_t v7_long_create_table(
+  virt_context_ptr_t ctx,
+  vaddr_t addr,
+  vaddr_t table
+) {
+  return v7_short_create_table( ctx, addr, table );
 }
 
 /**

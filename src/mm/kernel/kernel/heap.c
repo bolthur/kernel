@@ -58,7 +58,7 @@ void heap_init( void ) {
 
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "Map 0x%08x to 0x%08x\r\n", 0, addr );
+      DEBUG_OUTPUT( "Map 0x%08x to 0x%08x\r\n", phys, addr );
     #endif
 
     virt_map_address(

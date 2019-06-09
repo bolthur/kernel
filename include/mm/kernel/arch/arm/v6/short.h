@@ -25,7 +25,7 @@
 
 void v6_short_map( virt_context_ptr_t, vaddr_t, paddr_t, uint32_t );
 void v6_short_unmap( virt_context_ptr_t, vaddr_t );
-vaddr_t v6_short_create_table( virt_context_ptr_t, vaddr_t );
+vaddr_t v6_short_create_table( virt_context_ptr_t, vaddr_t, vaddr_t );
 void v6_short_set_context( virt_context_ptr_t );
 void v6_short_flush_context( void );
 void v6_short_prepare_temporary( virt_context_ptr_t );

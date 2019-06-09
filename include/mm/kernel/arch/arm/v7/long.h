@@ -25,7 +25,7 @@
 
 void v7_long_map( virt_context_ptr_t, vaddr_t, paddr_t, uint32_t );
 void v7_long_unmap( virt_context_ptr_t, vaddr_t );
-vaddr_t v7_long_create_table( virt_context_ptr_t, vaddr_t );
+vaddr_t v7_long_create_table( virt_context_ptr_t, vaddr_t, vaddr_t );
 void v7_long_set_context( virt_context_ptr_t );
 void v7_long_flush_context( void );
 void v7_long_prepare_temporary( virt_context_ptr_t );
