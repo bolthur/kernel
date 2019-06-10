@@ -50,13 +50,18 @@ void virt_vendor_init( void ) {
     );
   #endif
 
+  // set start and virtual
+  start = ( paddr_t )peripheral_base_get( PERIPHERAL_GPIO );
+  virtual = GPIO_PERIPHERAL_BASE;
+
   // map peripherals
-  for (
-    start = ( paddr_t )peripheral_base_get( PERIPHERAL_GPIO ), virtual = GPIO_PERIPHERAL_BASE;
-    start < ( paddr_t )peripheral_end_get( PERIPHERAL_GPIO ) + 1;
-    start += PAGE_SIZE, virtual = ( vaddr_t )( ( paddr_t )virtual + PAGE_SIZE )
-  ) {
+  while ( start < ( paddr_t )peripheral_end_get( PERIPHERAL_GPIO ) ) {
+    // map
     virt_map_address( kernel_context, virtual, start, PAGE_FLAG_NONE );
+
+    // increase start and virtual
+    start += PAGE_SIZE;
+    virtual = ( vaddr_t )( ( paddr_t )virtual + PAGE_SIZE );
   }
 
   #if defined( BCM2709 ) || defined( BCM2710 )
@@ -69,13 +74,18 @@ void virt_vendor_init( void ) {
       );
     #endif
 
-    // Map CPU peripheral
-    for (
-      start = ( paddr_t )peripheral_base_get( PERIPHERAL_LOCAL ), virtual = CPU_PERIPHERAL_BASE;
-      start < ( paddr_t )peripheral_end_get( PERIPHERAL_LOCAL ) + 1;
-      start += PAGE_SIZE, virtual = ( vaddr_t )( ( paddr_t )virtual + PAGE_SIZE )
-    ) {
+    // set start and virtual
+    start = ( paddr_t )peripheral_base_get( PERIPHERAL_LOCAL );
+    virtual = CPU_PERIPHERAL_BASE;
+
+    // map peripherals
+    while ( start < ( paddr_t )peripheral_end_get( PERIPHERAL_LOCAL ) ) {
+      // map
       virt_map_address( kernel_context, virtual, start, PAGE_FLAG_NONE );
+
+      // increase start and virtual
+      start += PAGE_SIZE;
+      virtual = ( vaddr_t )( ( paddr_t )virtual + PAGE_SIZE );
     }
   #endif
 }

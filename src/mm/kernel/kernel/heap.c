@@ -47,7 +47,7 @@ void heap_init( void ) {
   // assert not initialized
   assert( NULL == kernel_heap );
 
-  // map heap
+  // map heap address space
   for (
     vaddr_t addr = ( vaddr_t )HEAP_START;
     addr < ( vaddr_t )( ( paddr_t )HEAP_START + HEAP_MIN_SIZE );

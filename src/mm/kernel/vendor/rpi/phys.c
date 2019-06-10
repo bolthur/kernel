@@ -51,10 +51,22 @@ void phys_vendor_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length );
-    DEBUG_OUTPUT( "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n", buffer->data.buffer_32[ 0 ] );
-    DEBUG_OUTPUT( "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n", buffer->data.buffer_32[ 1 ] );
-    DEBUG_OUTPUT( "buffer->tag: 0x%08x\r\n", buffer->tag );
+    DEBUG_OUTPUT(
+      "buffer->byte_length: %d\r\n",
+      buffer->byte_length
+    );
+    DEBUG_OUTPUT(
+      "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n",
+      buffer->data.buffer_32[ 0 ]
+    );
+    DEBUG_OUTPUT(
+      "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n",
+      buffer->data.buffer_32[ 1 ]
+    );
+    DEBUG_OUTPUT(
+      "buffer->tag: 0x%08x\r\n",
+      buffer->tag
+    );
   #endif
 
   // increase amount by arm amount
@@ -70,10 +82,22 @@ void phys_vendor_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length );
-    DEBUG_OUTPUT( "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n", buffer->data.buffer_32[ 0 ] );
-    DEBUG_OUTPUT( "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n", buffer->data.buffer_32[ 1 ] );
-    DEBUG_OUTPUT( "buffer->tag: 0x%08x\r\n", buffer->tag );
+    DEBUG_OUTPUT(
+      "buffer->byte_length: %d\r\n",
+      buffer->byte_length
+    );
+    DEBUG_OUTPUT(
+      "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n",
+      buffer->data.buffer_32[ 0 ]
+    );
+    DEBUG_OUTPUT(
+      "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n",
+      buffer->data.buffer_32[ 1 ]
+    );
+    DEBUG_OUTPUT(
+      "buffer->tag: 0x%08x\r\n",
+      buffer->tag
+    );
   #endif
 
   // populate video core start and end
@@ -84,7 +108,8 @@ void phys_vendor_init( void ) {
   memory_amount += buffer->data.buffer_u32[ 1 ];
 
   // determine amount of pages for bitmap
-  phys_bitmap_length = memory_amount / PAGE_SIZE / ( sizeof( phys_bitmap_length ) * 8 );
+  size_t pages_per_size = sizeof( phys_bitmap_length ) * 8;
+  phys_bitmap_length = memory_amount / PAGE_SIZE / pages_per_size;
 
   // allocate bitmap manually via placement address after kernel
   // align it to page size
