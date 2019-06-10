@@ -76,7 +76,8 @@ static vaddr_t map_temporary( paddr_t start, size_t size ) {
   // debug putput
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "page_amount = %d, offset = 0x%08x\r\n",
+      "start = 0x%08x, page_amount = %d, offset = 0x%08x\r\n",
+      start,
       page_amount,
       offset
     );
@@ -138,7 +139,7 @@ static vaddr_t map_temporary( paddr_t start, size_t size ) {
 
     // debug putput
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "table_idx = %d - page_idx = %d\r\n", table_idx, page_idx );
+      DEBUG_OUTPUT( "table_idx = %d, page_idx = %d\r\n", table_idx, page_idx );
     #endif
 
     // get table
@@ -308,7 +309,7 @@ vaddr_t v7_short_create_table(
     );
 
     // check for already existing
-    if ( 0 != context->list[ table_idx ] ) {
+    if ( 0 != context->table[ table_idx ].raw ) {
       // debug output
       #if defined( PRINT_MM_VIRT )
         DEBUG_OUTPUT(
@@ -339,10 +340,11 @@ vaddr_t v7_short_create_table(
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT( "created kernel table physical address = 0x%08x\r\n", tbl );
+      DEBUG_OUTPUT( "table_idx = %d\r\n", table_idx );
     #endif
 
     // add table to context
-    context->list[ table_idx ] = ( uint32_t )tbl & 0xFFFFFC00;
+    context->table[ table_idx ].raw = ( uint32_t )tbl & 0xFFFFFC00;
 
     // set necessary attributes
     context->table[ table_idx ].data.type = SD_TTBR_TYPE_PAGE_TABLE;
@@ -374,7 +376,7 @@ vaddr_t v7_short_create_table(
     );
 
     // check for already existing
-    if ( 0 != context->list[ table_idx ] ) {
+    if ( 0 != context->table[ table_idx ].raw ) {
       // debug output
       #if defined( PRINT_MM_VIRT )
         DEBUG_OUTPUT(
@@ -406,7 +408,7 @@ vaddr_t v7_short_create_table(
     #endif
 
     // add table to context
-    context->list[ table_idx ] = ( uint32_t )tbl & 0xFFFFFC00;
+    context->table[ table_idx ].raw = ( uint32_t )tbl & 0xFFFFFC00;
 
     // set necessary attributes
     context->table[ table_idx ].data.type = SD_TTBR_TYPE_PAGE_TABLE;
@@ -452,10 +454,12 @@ void v7_short_map(
 
   // get table for mapping
   sd_page_table_t* table = ( sd_page_table_t* )v7_short_create_table(
-    ctx,
-    vaddr,
-    NULL
+    ctx, vaddr, NULL
   );
+
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table: 0x%08x\r\n", table );
+  #endif
 
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( paddr_t )table, SD_TBL_SIZE );
@@ -463,7 +467,9 @@ void v7_short_map(
   // assert existance
   assert( NULL != table );
 
+  // debug output
   #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table: 0x%08x\r\n", table );
     DEBUG_OUTPUT(
       "table->page[ %d ] = 0x%08x\r\n",
       page_idx,

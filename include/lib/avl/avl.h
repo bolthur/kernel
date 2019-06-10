@@ -30,7 +30,11 @@ typedef struct avl_node avl_node_t, *avl_node_ptr_t;
 typedef struct avl_tree avl_tree_t, *avl_tree_ptr_t;
 
 // type declarations
-typedef int32_t (*avl_compare_func_t)( const avl_node_ptr_t avl_a, const avl_node_ptr_t avl_b, void *avl_param );
+typedef int32_t ( *avl_compare_func_t )(
+  const avl_node_ptr_t avl_a,
+  const avl_node_ptr_t avl_b,
+  void *avl_param
+);
 
 typedef struct avl_node {
   void *data;

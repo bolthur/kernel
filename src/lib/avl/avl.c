@@ -83,26 +83,26 @@ static int32_t balance_factor( avl_node_ptr_t node ) {
 
 static avl_node_ptr_t rotate_right( avl_node_ptr_t node ) {
   // cache left node within temporary
-  avl_node_ptr_t tmp = node->left;
+  avl_node_ptr_t left = node->left;
 
   // set right of tmp as nodes left
-  node->left = tmp->right;
-  tmp->right = node;
+  node->left = left->right;
+  left->right = node;
 
   // return new root node after rotation
-  return tmp;
+  return left;
 }
 
 static avl_node_ptr_t rotate_left( avl_node_ptr_t node ) {
   // cache left node within temporary
-  avl_node_ptr_t tmp = node->right;
+  avl_node_ptr_t right = node->right;
 
   // set right of tmp as nodes left
-  node->right = tmp->left;
-  tmp->left = node;
+  node->right = right->left;
+  right->left = node;
 
   // return new root node after rotation
-  return tmp;
+  return right;
 }
 
 /**

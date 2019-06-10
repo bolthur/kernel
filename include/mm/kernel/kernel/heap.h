@@ -29,7 +29,8 @@
 #if defined( ELF32 )
   #define HEAP_START 0xD0000000
   #define HEAP_MAX_SIZE 0xFFFFFFF
-  #define HEAP_MIN_SIZE 0x10000
+  // #define HEAP_MIN_SIZE 0x10000
+  #define HEAP_MIN_SIZE 0x4000
 #elif defined( ELF64 )
   #error "Heap not ready for x64"
 #endif
@@ -37,18 +38,18 @@
 typedef struct {
   vaddr_t start;
   vaddr_t size;
-  avl_tree_ptr_t free_area;
-  avl_tree_ptr_t used_area;
+  avl_tree_t free_area;
+  avl_tree_t used_area;
 } heap_manager_t, *heap_manager_ptr_t;
 
 typedef struct {
-  avl_node_ptr_t node;
+  avl_node_t node;
   vaddr_t address;
   size_t size;
-} heap_block_t;
+} heap_block_t, *heap_block_ptr_t;
 
 #define GET_BLOCK_ADDRESS( node ) \
-  ( ( uint8_t* )node - &( ( heap_block_ptr_t )NULL )->node )
+  ( ( uint8_t* )node - ( int32_t )&( ( heap_block_ptr_t )NULL )->node )
 
 heap_manager_ptr_t kernel_heap;
 
