@@ -75,6 +75,13 @@ void prefetch_abort_handler( cpu_register_context_t *status ) {
  * @param status current register context
  */
 void data_abort_handler( cpu_register_context_t *status ) {
+  // get faulting address
+  uint32_t fault_address;
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c6, c0, 0" : "=r" ( fault_address ) : : "cc"
+  );
+
+  printf( "faulting address: 0x%08x\r\n", fault_address );
   dump_register( status );
   PANIC( "data abort" );
 }
