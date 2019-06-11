@@ -29,8 +29,7 @@
 #if defined( ELF32 )
   #define HEAP_START 0xD0000000
   #define HEAP_MAX_SIZE 0xFFFFFFF
-  // #define HEAP_MIN_SIZE 0x10000
-  #define HEAP_MIN_SIZE 0x4000
+  #define HEAP_MIN_SIZE 0x10000
 #elif defined( ELF64 )
   #error "Heap not ready for x64"
 #endif
@@ -55,5 +54,7 @@ heap_manager_ptr_t kernel_heap;
 
 bool heap_initialized_get( void );
 void heap_init( void );
+vaddr_t heap_allocate_block( size_t );
+void heap_free_block( vaddr_t );
 
 #endif

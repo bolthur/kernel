@@ -27,18 +27,13 @@
 #include <mm/kernel/kernel/heap.h>
 
 void *malloc( size_t size ) {
-  bool use_heap = heap_initialized_get();
-  bool use_virt = virt_initialized_get();
+  // use heap if initialized
+  if ( true == heap_initialized_get() ) {
+    return heap_allocate_block( size );
+  }
 
   // check for no vmm when heap is not yet ready
-  if ( ! use_heap ) {
-    assert( true != use_virt );
-  }
-
-  // normal placement alloc when no heap and no virtual
-  if ( true == use_heap ) {
-    PANIC( "Heap not yet initialized!" );
-  }
+  assert( true != virt_initialized_get() );
 
   // no heap and no virt?
   return placement_alloc(

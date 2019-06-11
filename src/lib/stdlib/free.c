@@ -19,13 +19,14 @@
  */
 
 #include <stddef.h>
-
+#include <assert.h>
 #include <kernel/panic.h>
+#include <mm/kernel/kernel/heap.h>
 
 void free( void *ptr ) {
-  // mark as unused
-  ( void )ptr;
+  // assert heap to be initialized
+  assert( true == heap_initialized_get() );
 
-  // some panic until it's implemented
-  PANIC( "malloc() not yet implemented!" );
+  // free heap block
+  heap_free_block( ptr );
 }

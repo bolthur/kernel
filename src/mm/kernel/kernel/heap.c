@@ -131,7 +131,10 @@ void heap_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "HEAP_START: 0x%08x\t\n", *( ( uint32_t* )HEAP_START ) );
+    DEBUG_OUTPUT(
+      "HEAP_START content: 0x%08x\t\n",
+      *( ( uint32_t* )HEAP_START )
+    );
     DEBUG_OUTPUT( "Placed heap management at 0x%08x\r\n", kernel_heap );
     DEBUG_OUTPUT( "offset: %d\r\n", offset );
   #endif
@@ -140,12 +143,10 @@ void heap_init( void ) {
   memset( ( vaddr_t )kernel_heap, 0, sizeof( heap_manager_t ) );
 
   // populate trees
-  printf( "Set compare functions...\r\n" );
   kernel_heap->free_area.compare = compare_callback;
   kernel_heap->used_area.compare = compare_callback;
 
   // create free block
-  printf( "Place free block...\r\n" );
   heap_block_ptr_t free_block = ( heap_block_ptr_t )(
     ( paddr_t )HEAP_START + offset
   );
@@ -173,4 +174,26 @@ void heap_init( void ) {
 
   // insert into free tree
   avl_insert( &kernel_heap->free_area, &free_block->node );
+}
+
+/**
+ * @brief Allocate block within heap
+ *
+ * @param size size to allocate
+ * @return vaddr_t address of allocated block
+ */
+vaddr_t heap_allocate_block( size_t size ) {
+  ( void )size;
+  PANIC( "heap_allocate_block not yet implemented!" );
+  return NULL;
+}
+
+/**
+ * @brief Free block within heap
+ *
+ * @param addr address to free
+ */
+void heap_free_block( vaddr_t addr ) {
+  ( void )addr;
+  PANIC( "heap_allocate_free not yet implemented!" );
 }
