@@ -21,6 +21,7 @@
 #include <stdint.h>
 
 #include <mm/kernel/arch/arm/virt.h>
+#include <mm/boot/arch/arm/v7/short.h>
 #include <kernel/entry.h>
 
 /**
@@ -35,7 +36,8 @@ static sd_context_half_t initial_user_context
 /**
  * @brief Method to setup short descriptor paging
  */
-void SECTION( ".text.boot" ) boot_setup_short_vmm( paddr_t max_memory ) {
+void SECTION( ".text.boot" )
+boot_setup_short_vmm( paddr_t max_memory ) {
   uint32_t x, y, reg;
   sd_ttbcr_t ttbcr;
 
@@ -65,14 +67,8 @@ void SECTION( ".text.boot" ) boot_setup_short_vmm( paddr_t max_memory ) {
     }
   }
 
-  // FIXME: Move part to vendor ?
-  #if defined( BCM2709 ) || defined( BCM2710 )
-    x = ( 0x40000000 >> 20 );
-    initial_user_context.section[ x ].data.type = SD_TTBR_TYPE_SECTION;
-    initial_user_context.section[ x ].data.execute_never = 0;
-    initial_user_context.section[ x ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
-    initial_user_context.section[ x ].data.frame = x & 0xFFF;
-  #endif
+  // vendor setup
+  boot_vendor_setup_short_vmm( &initial_kernel_context );
 
   // Copy page table address to cp15
   __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 0" : : "r" ( initial_user_context.list ) : "memory" );

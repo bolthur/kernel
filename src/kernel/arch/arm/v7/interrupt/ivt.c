@@ -81,7 +81,7 @@ void data_abort_handler( cpu_register_context_t *status ) {
     "mrc p15, 0, %0, c6, c0, 0" : "=r" ( fault_address ) : : "cc"
   );
 
-  printf( "faulting address: 0x%08x\r\n", fault_address );
+  printf( "\r\ndata abort interrupt at 0x%08x\r\n", fault_address );
   dump_register( status );
   PANIC( "data abort" );
 }

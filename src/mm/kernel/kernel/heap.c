@@ -56,10 +56,28 @@ static int32_t compare_callback(
   const avl_node_ptr_t avl_b,
   void *avl_param
 ) {
-  ( void )avl_a;
-  ( void )avl_b;
+  // mark parameter as unused
   ( void )avl_param;
-  PANIC( "callback not implemented!" );
+
+  // get block structures
+  heap_block_t* a = GET_BLOCK_ADDRESS( avl_a );
+  heap_block_t* b = GET_BLOCK_ADDRESS( avl_b );
+
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "a = 0x%08x, b = 0x%08x\r\n", a, b );
+  #endif
+
+  // -1 if address of a is greater than address of b
+  if ( a->address > b->address ) {
+    return -1;
+  // 1 if address of b is greater than address of a
+  } else if ( b->address > a->address ) {
+    return 1;
+  }
+
+  // equal => return 0
+  return 0;
 }
 
 /**
@@ -150,7 +168,6 @@ void heap_init( void ) {
     ( paddr_t )HEAP_START + offset
   );
   free_block->size = HEAP_MIN_SIZE - offset;
-
   // populate node data
   free_block->node.data = ( vaddr_t )free_block->address;
 

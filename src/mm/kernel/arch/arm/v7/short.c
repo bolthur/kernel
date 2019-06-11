@@ -160,11 +160,13 @@ static vaddr_t map_temporary( paddr_t start, size_t size ) {
     tbl->page[ page_idx ].data.bufferable = 0;
     tbl->page[ page_idx ].data.cacheable = 0;
     tbl->page[ page_idx ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
+
+    // increase physical address
+    start += i * PAGE_SIZE;
   }
 
   // debug putput
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "start = 0x%08x\r\n", start );
     DEBUG_OUTPUT( "ret = 0x%08x\r\n", ( ( paddr_t )start_address + offset ) );
   #endif
 

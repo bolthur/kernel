@@ -48,8 +48,8 @@ typedef struct {
   size_t size;
 } heap_block_t, *heap_block_ptr_t;
 
-#define GET_BLOCK_ADDRESS( node ) \
-  ( ( uint8_t* )node - ( int32_t )&( ( heap_block_ptr_t )NULL )->node )
+#define GET_BLOCK_ADDRESS( n ) \
+  ( heap_block_ptr_t )( ( uint8_t* )n - ( uint32_t )&( ( heap_block_ptr_t )NULL )->node )
 
 heap_manager_ptr_t kernel_heap;
 

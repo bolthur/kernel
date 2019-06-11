@@ -58,14 +58,6 @@ void SECTION( ".text.boot" ) boot_setup_short_vmm( paddr_t max_memory ) {
     }
   }
 
-  #if defined( BCM2709 ) || defined( BCM2710 )
-    x = ( 0x40000000 >> 20 );
-    initial_kernel_context.section[ x ].data.type = SD_TTBR_TYPE_SECTION;
-    initial_kernel_context.section[ x ].data.execute_never = 0;
-    initial_kernel_context.section[ x ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
-    initial_kernel_context.section[ x ].data.frame = x & 0xFFF;
-  #endif
-
   // Copy page table address to cp15
   __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 0" : : "r" ( initial_kernel_context.list ) : "memory" );
   // Set the access control to all-supervisor

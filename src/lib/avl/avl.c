@@ -151,6 +151,11 @@ static avl_node_ptr_t insert(
   avl_node_ptr_t node,
   avl_node_ptr_t root
 ) {
+  // handle empty root
+  if ( NULL == root ) {
+    return node;
+  }
+
   if ( -1 == tree->compare( root, node, tree->param ) ) {
     if ( NULL != root->left ) {
       root->left = insert( tree, node, root->left );

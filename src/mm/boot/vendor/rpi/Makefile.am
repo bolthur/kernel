@@ -7,4 +7,5 @@ AM_CFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include/ke
 AM_CCASFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include/kernel -I$(top_srcdir)/include/lib -I$(top_srcdir)/include
 
 noinst_LIBRARIES = librpi.a
-librpi_a_SOURCES =
+librpi_a_SOURCES = \
+  short.c
