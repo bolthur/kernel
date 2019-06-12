@@ -44,14 +44,14 @@ bool heap_initialized_get( void ) {
 }
 
 /**
- * @brief Compare callback necessary for avl tree
+ * @brief Compare address callback necessary for avl tree
  *
  * @param avl_a node a
  * @param avl_b node b
  * @param avl_param parameter
  * @return int32_t
  */
-static int32_t compare_callback(
+static int32_t compare_address_callback(
   const avl_node_ptr_t avl_a,
   const avl_node_ptr_t avl_b,
   void *avl_param
@@ -143,8 +143,8 @@ void heap_init( void ) {
   memset( ( vaddr_t )kernel_heap, 0, sizeof( heap_manager_t ) );
 
   // populate trees
-  kernel_heap->free_area.compare = compare_callback;
-  kernel_heap->used_area.compare = compare_callback;
+  kernel_heap->free_area.compare = compare_address_callback;
+  kernel_heap->used_area.compare = compare_address_callback;
 
   // create free block
   heap_block_ptr_t free_block = ( heap_block_ptr_t )(
@@ -196,6 +196,53 @@ vaddr_t heap_allocate_block( size_t size, size_t alignment ) {
  * @param addr address to free
  */
 void heap_free_block( vaddr_t addr ) {
-  ( void )addr;
-  PANIC( "heap_allocate_free not yet implemented!" );
+  // temporary node
+  heap_block_t tmp_node;
+
+  // populate for free
+  tmp_node.address = addr;
+  tmp_node.size = 0;
+  tmp_node.node.data = addr;
+
+  // finde node by address within tree
+  avl_node_ptr_t node = avl_find( &kernel_heap->used_area, &tmp_node.node );
+
+  // skip if nothing has been found
+  if ( NULL == node ) {
+    return;
+  }
+
+  // remove node from used block
+  avl_remove( &kernel_heap->used_area, node );
+
+  // insert into free tree
+  avl_insert( &kernel_heap->free_area, node );
+
+  // find parent node
+  avl_node_ptr_t parent_node = avl_find_parent(
+    &kernel_heap->free_area,
+    node
+  );
+
+  // no parent node found, skip
+  if ( NULL == parent_node ) {
+    return;
+  }
+
+  // get parent and current block
+  heap_block_ptr_t parent_block = GET_BLOCK_ADDRESS( parent_node );
+  heap_block_ptr_t current_block = GET_BLOCK_ADDRESS( node );
+
+  // determine end of parent and begin of current block
+  vaddr_t end = ( vaddr_t )( ( paddr_t )&parent_block + parent_block->size );
+  vaddr_t begin = ( vaddr_t )( ( paddr_t )&current_block );
+
+  // merge on match
+  if ( begin == end ) {
+    // increase
+    parent_block->size += current_block->size;
+
+    // remove block again
+    avl_remove( &kernel_heap->free_area, node );
+  }
 }

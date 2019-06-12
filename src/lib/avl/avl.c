@@ -201,3 +201,43 @@ void avl_insert( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
   // insert and rebalance
   tree->root = insert( tree, node, tree->root );
 }
+
+/**
+ * @brief Find an avl node within treee
+ *
+ * @param tree tree to search
+ * @param node node to find
+ * @return avl_node_ptr_t found node or NULL
+ */
+avl_node_ptr_t avl_find( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
+  ( void )tree;
+  ( void )node;
+  return NULL;
+}
+
+/**
+ * @brief Remove an avl node from tree
+ *
+ * @param tree tree to search in
+ * @param node node to find
+ */
+void avl_remove( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
+  ( void )tree;
+  ( void )node;
+}
+
+/**
+ * @brief Find parent of node within tree
+ *
+ * @param tree tree to search at
+ * @param node node to get parent of
+ * @return avl_node_ptr_t found parent or NULL
+ */
+avl_node_ptr_t avl_find_parent(
+  const avl_tree_ptr_t tree,
+  avl_node_ptr_t node
+) {
+  ( void )tree;
+  ( void )node;
+  return NULL;
+}

@@ -54,5 +54,8 @@ typedef struct avl_tree {
 
 avl_tree_ptr_t avl_create( avl_compare_func_t, void* );
 void avl_insert( const avl_tree_ptr_t, avl_node_ptr_t );
+avl_node_ptr_t avl_find( const avl_tree_ptr_t, avl_node_ptr_t );
+void avl_remove( const avl_tree_ptr_t, avl_node_ptr_t );
+avl_node_ptr_t avl_find_parent( const avl_tree_ptr_t, avl_node_ptr_t );
 
 #endif
