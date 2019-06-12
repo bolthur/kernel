@@ -26,32 +26,74 @@
 #include <mm/boot/arch/arm/v7/short.h>
 
 /**
- * @brief Method wraps setup of short / long descriptor mode
+ * @brief Supported mode
  */
-void SECTION( ".text.boot" ) boot_setup_vmm( paddr_t max_memory ) {
-  uint32_t reg;
+static uint32_t supported_mode SECTION( ".data.boot" );
 
+/**
+ * @brief Method wraps setup of short / long descriptor mode
+ *
+ * @param max_memory max physical memory of the board
+ */
+void SECTION( ".text.boot" )
+boot_virt_setup( paddr_t max_memory ) {
   // get paging support from mmfr0
-  __asm__ __volatile__( "mrc p15, 0, %0, c0, c1, 4" : "=r" ( reg ) : : "cc" );
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c0, c1, 4"
+    : "=r" ( supported_mode )
+    : : "cc"
+  );
 
   // strip out everything not needed
-  reg &= 0xF;
+  supported_mode &= 0xF;
 
   // check for invalid paging support
   if (
     ! (
-      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & reg
-      || ID_MMFR0_VSMA_V7_PAGING_PXN & reg
-      || ID_MMFR0_VSMA_V7_PAGING_LPAE & reg
-      || ID_MMFR0_VSMA_V7_PAGING_LPAE & reg
+      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_PXN == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
     )
   ) {
     return;
   }
 
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == reg ) {
-    boot_setup_long_vmm( max_memory );
+  // kick start
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+    boot_virt_setup_long( max_memory );
   } else {
-    boot_setup_short_vmm( max_memory );
+    boot_virt_setup_short( max_memory );
+  }
+
+  // setup vendor related
+  boot_virt_vendor_setup();
+}
+
+/**
+ * @brief
+ *
+ * @param phys
+ * @param virt
+ */
+void SECTION( ".text.boot" )
+boot_virt_map( paddr_t phys, vaddr_t virt ) {
+  // check for invalid paging support
+  if (
+    ! (
+      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_PXN == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
+    )
+  ) {
+    return;
+  }
+
+  // map it
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+    boot_virt_map_short( phys, virt );
+  } else {
+    boot_virt_map_long( phys, virt );
   }
 }

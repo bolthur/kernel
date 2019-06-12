@@ -23,6 +23,15 @@
 
 #include <string.h>
 
+/**
+ * @brief Signed integer to ascii conversion routine
+ *
+ * @param value value to transform to string
+ * @param buffer buffer to store created space
+ * @param radix radix to use ( 10 for decimal or 16 for hex )
+ * @param uppercase flag to use uppercase characters ( used for hex base )
+ * @return char*
+ */
 char *itoa( int32_t value, char* buffer, int32_t radix, bool uppercase ) {
   char *p = buffer;
   unsigned uv;

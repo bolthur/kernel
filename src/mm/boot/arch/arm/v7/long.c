@@ -30,6 +30,15 @@
  * @todo Add initial mapping for paging with lpae
  * @todo Remove call for setup short paging
  */
-void SECTION( ".text.boot" ) boot_setup_long_vmm( paddr_t max_memory ) {
-  boot_setup_short_vmm( max_memory );
+void SECTION( ".text.boot" )
+boot_virt_setup_long( paddr_t max_memory ) {
+  boot_virt_setup_short( max_memory );
+}
+
+/**
+ * @brief Method to perform identity nap
+ */
+void SECTION( ".text.boot" )
+boot_virt_map_long( paddr_t phys, vaddr_t virt ) {
+  boot_virt_map_short( phys, virt );
 }

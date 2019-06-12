@@ -23,6 +23,13 @@
 #include <string.h>
 #include <stdlib.h>
 
+/**
+ * @brief Realloc routine
+ *
+ * @param ptr ptr to allocated space
+ * @param size new size
+ * @return void* allocated address or NULL
+ */
 void *realloc( void *ptr, size_t size ) {
   // simply use malloc if nothing is there
   if ( NULL == ptr ) {

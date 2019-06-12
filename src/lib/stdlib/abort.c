@@ -18,6 +18,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/**
+ * @brief Abort routine
+ */
 void abort( void ) {
   while( 1 ) {}
 }

@@ -19,7 +19,7 @@
  */
 
 #include <stdint.h>
-
+#include <mm/boot/arch/arm/virt.h>
 #include <mm/kernel/arch/arm/virt.h>
 #include <kernel/entry.h>
 
@@ -27,13 +27,12 @@
  * @brief Method to setup short descriptor paging
  */
 void SECTION( ".text.boot" )
-boot_vendor_setup_short_vmm( sd_context_total_t* ctx ) {
+boot_virt_vendor_setup( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
-    uint32_t x;
-    x = ( 0x40000000 >> 20 );
-    ctx->section[ x ].data.type = SD_TTBR_TYPE_SECTION;
-    ctx->section[ x ].data.execute_never = 0;
-    ctx->section[ x ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
-    ctx->section[ x ].data.frame = x & 0xFFF;
+    // map cpu local peripherals
+    boot_virt_map(
+      0x40000000,
+      ( vaddr_t )0x40000000
+    );
   #endif
 }

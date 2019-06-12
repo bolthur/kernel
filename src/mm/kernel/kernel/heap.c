@@ -180,10 +180,12 @@ void heap_init( void ) {
  * @brief Allocate block within heap
  *
  * @param size size to allocate
+ * @param alignment address aligment
  * @return vaddr_t address of allocated block
  */
-vaddr_t heap_allocate_block( size_t size ) {
+vaddr_t heap_allocate_block( size_t size, size_t alignment ) {
   ( void )size;
+  ( void )alignment;
   PANIC( "heap_allocate_block not yet implemented!" );
   return NULL;
 }

@@ -23,6 +23,7 @@
 #if ! defined( __MM_BOOT_ARCH_ARM_V6_MM_SHORT__ )
 #define __MM_BOOT_ARCH_ARM_V6_MM_SHORT__
 
-void boot_setup_short_vmm( paddr_t );
+void boot_virt_setup_short( paddr_t );
+void boot_virt_map_short( paddr_t, vaddr_t );
 
 #endif

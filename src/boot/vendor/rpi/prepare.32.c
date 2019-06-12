@@ -23,8 +23,8 @@
 /**
  * @brief Method to prepare section during initial boot
  * @todo Read amount of physical memory initially with a helper from mailbox
- * @todo Pass fetched amount of physical memory to vmm setup functions
+ * @todo Pass fetched amount of physical memory to virtual setup functions
  */
 void SECTION( ".text.boot" ) boot_vendor_prepare( void ) {
-  boot_setup_vmm( MAX_PHYSICAL_MEMORY );
+  boot_virt_setup( MAX_PHYSICAL_MEMORY );
 }

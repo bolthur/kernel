@@ -23,7 +23,7 @@
 
 #include <mm/boot/kernel/virt.h>
 
-void boot_setup_long_vmm( paddr_t );
-void boot_vendor_setup_long_vmm( sd_context_total_t* );
+void boot_virt_setup_long( paddr_t );
+void boot_virt_map_long( paddr_t, vaddr_t );
 
 #endif

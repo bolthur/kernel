@@ -26,13 +26,24 @@
 #include <mm/kernel/kernel/virt.h>
 #include <mm/kernel/kernel/heap.h>
 
+/**
+ * @brief Malloc implementation
+ *
+ * @param size size to allocate
+ * @return void* allocated address or NULL
+ *
+ * @todo check alignment calculation
+ */
 void *malloc( size_t size ) {
   // use heap if initialized
   if ( true == heap_initialized_get() ) {
-    return heap_allocate_block( size );
+    return heap_allocate_block(
+      size,
+      size + size - size % 2
+    );
   }
 
-  // check for no vmm when heap is not yet ready
+  // check for no virtual memory when heap is not yet ready
   assert( true != virt_initialized_get() );
 
   // no heap and no virt?

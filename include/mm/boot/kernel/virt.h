@@ -23,6 +23,7 @@
 
 #include <kernel/type.h>
 
-void boot_setup_vmm( paddr_t );
+void boot_virt_setup( paddr_t );
+void boot_virt_vendor_setup( void );
 
 #endif

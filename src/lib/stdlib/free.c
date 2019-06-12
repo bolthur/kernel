@@ -23,6 +23,11 @@
 #include <kernel/panic.h>
 #include <mm/kernel/kernel/heap.h>
 
+/**
+ * @brief Free allocated area
+ *
+ * @param ptr ptr to address to free
+ */
 void free( void *ptr ) {
   // assert heap to be initialized
   assert( true == heap_initialized_get() );

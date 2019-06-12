@@ -25,21 +25,43 @@
 #include <mm/boot/arch/arm/v6/short.h>
 
 /**
+ * @brief Supported mode
+ */
+static uint32_t supported_mode SECTION( ".data.boot" );
+
+/**
  * @brief Method wraps setup of short / long descriptor mode
  */
-void SECTION( ".text.boot" ) boot_setup_vmm( paddr_t max_memory ) {
-  uint32_t reg;
-
+void SECTION( ".text.boot" ) boot_virt_setup( paddr_t max_memory ) {
   // get paging support from mmfr0
-  __asm__ __volatile__( "mrc p15, 0, %0, c0, c1, 4" : "=r" ( reg ) : : "cc" );
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c0, c1, 4"
+    : "=r" ( supported_mode )
+    : : "cc"
+  );
 
   // strip out everything not needed
-  reg &= 0xF;
-
+  supported_mode &= 0xF;
   // check for invalid paging support
-  if ( ! ( ID_MMFR0_VSMA_V6_PAGING & reg ) ) {
+  if ( ID_MMFR0_VSMA_V6_PAGING != supported_mode ) {
+    return;
+  }
+  boot_virt_setup_short( max_memory );
+}
+
+/**
+ * @brief
+ *
+ * @param phys
+ * @param virt
+ */
+void SECTION( ".text.boot" )
+boot_virt_map( paddr_t phys, vaddr_t virt ) {
+  // check for invalid paging support
+  if ( ID_MMFR0_VSMA_V6_PAGING != supported_mode ) {
     return;
   }
 
-  boot_setup_short_vmm( max_memory );
+  // map it
+  boot_virt_map_short( phys, virt );
 }

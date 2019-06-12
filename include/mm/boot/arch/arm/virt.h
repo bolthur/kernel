@@ -23,6 +23,7 @@
 #if ! defined( __MM_BOOT_ARCH_ARM_MM_VIRT )
 #define __MM_BOOT_ARCH_ARM_MM_VIRT__
 
-void boot_setup_vmm( paddr_t );
+void boot_virt_setup( paddr_t );
+void boot_virt_map( paddr_t, vaddr_t );
 
 #endif

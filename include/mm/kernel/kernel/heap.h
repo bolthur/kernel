@@ -54,7 +54,7 @@ heap_manager_ptr_t kernel_heap;
 
 bool heap_initialized_get( void );
 void heap_init( void );
-vaddr_t heap_allocate_block( size_t );
+vaddr_t heap_allocate_block( size_t, size_t );
 void heap_free_block( vaddr_t );
 
 #endif

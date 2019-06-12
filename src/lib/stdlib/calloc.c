@@ -23,6 +23,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * @brief Calloc routine
+ *
+ * @param num amount of entries
+ * @param size size of one entry
+ * @return void* allocated address or NULL
+ */
 void *calloc( size_t num, size_t size ) {
   // allocate memory
   void *ptr = malloc( num * size );
