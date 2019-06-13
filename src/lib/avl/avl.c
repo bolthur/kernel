@@ -174,6 +174,61 @@ static avl_node_ptr_t insert(
 }
 
 /**
+ * @brief Helper to find node within tree
+ *
+ * @param tree tree to search
+ * @param node node to find
+ * @param root root node
+ * @return avl_node_ptr_t
+ */
+static avl_node_ptr_t find(
+  const avl_tree_ptr_t tree,
+  avl_node_ptr_t node,
+  avl_node_ptr_t root
+) {
+  ( void )tree;
+  ( void )node;
+  ( void )root;
+  return NULL;
+}
+
+/**
+ * @brief Recursive remove parent by node
+ *
+ * @param tree tree to search at
+ * @param node node to get parent of
+ * @param root root node
+ */
+static void remove(
+  const avl_tree_ptr_t tree,
+  avl_node_ptr_t node,
+  avl_node_ptr_t root
+) {
+  ( void )tree;
+  ( void )node;
+  ( void )root;
+}
+
+/**
+ * @brief Recursive find parent by node
+ *
+ * @param tree tree to search at
+ * @param node node to get parent of
+ * @param root root node
+ * @return avl_node_ptr_t
+ */
+static avl_node_ptr_t find_parent(
+  const avl_tree_ptr_t tree,
+  avl_node_ptr_t node,
+  avl_node_ptr_t root
+) {
+  ( void )tree;
+  ( void )node;
+  ( void )root;
+  return NULL;
+}
+
+/**
  * @brief Creates a new avl tree
  *
  * @param func
@@ -210,9 +265,7 @@ void avl_insert( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
  * @return avl_node_ptr_t found node or NULL
  */
 avl_node_ptr_t avl_find( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
-  ( void )tree;
-  ( void )node;
-  return NULL;
+  return find( tree, node, tree->root );
 }
 
 /**
@@ -222,8 +275,7 @@ avl_node_ptr_t avl_find( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
  * @param node node to find
  */
 void avl_remove( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
-  ( void )tree;
-  ( void )node;
+  remove( tree, node, tree->root );
 }
 
 /**
@@ -237,7 +289,5 @@ avl_node_ptr_t avl_find_parent(
   const avl_tree_ptr_t tree,
   avl_node_ptr_t node
 ) {
-  ( void )tree;
-  ( void )node;
-  return NULL;
+  return find_parent( tree, node, tree->root );
 }

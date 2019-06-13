@@ -81,6 +81,43 @@ static int32_t compare_address_callback(
 }
 
 /**
+ * @brief Compare size callback necessary for avl tree
+ *
+ * @param avl_a node a
+ * @param avl_b node b
+ * @param avl_param parameter
+ * @return int32_t
+ */
+static int32_t compare_size_callback(
+  const avl_node_ptr_t avl_a,
+  const avl_node_ptr_t avl_b,
+  void *avl_param
+) {
+  // mark parameter as unused
+  ( void )avl_param;
+
+  // get block structures
+  heap_block_t* a = GET_BLOCK_SIZE( avl_a );
+  heap_block_t* b = GET_BLOCK_SIZE( avl_b );
+
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "a = 0x%08x, b = 0x%08x\r\n", a, b );
+  #endif
+
+  // -1 if size of a is greater than size of b
+  if ( a->size > b->size ) {
+    return -1;
+  // 1 if size of b is greater than size of a
+  } else if ( b->size > a->size ) {
+    return 1;
+  }
+
+  // equal => return 0
+  return 0;
+}
+
+/**
  * @brief Initialize heap
  */
 void heap_init( void ) {
@@ -143,7 +180,8 @@ void heap_init( void ) {
   memset( ( vaddr_t )kernel_heap, 0, sizeof( heap_manager_t ) );
 
   // populate trees
-  kernel_heap->free_area.compare = compare_address_callback;
+  kernel_heap->free_area_address.compare = compare_address_callback;
+  kernel_heap->free_area_size.compare = compare_size_callback;
   kernel_heap->used_area.compare = compare_address_callback;
 
   // create free block
@@ -170,10 +208,18 @@ void heap_init( void ) {
   );
   free_block->size = HEAP_MIN_SIZE - offset;
   // populate node data
-  free_block->node.data = ( vaddr_t )free_block->address;
+  free_block->node_address.data = ( vaddr_t )free_block->address;
+  free_block->node_size.data = ( vaddr_t )free_block->size;
 
   // insert into free tree
-  avl_insert( &kernel_heap->free_area, &free_block->node );
+  avl_insert(
+    &kernel_heap->free_area_address,
+    &free_block->node_address
+  );
+  avl_insert(
+    &kernel_heap->free_area_size,
+    &free_block->node_size
+  );
 }
 
 /**
@@ -201,27 +247,42 @@ void heap_free_block( vaddr_t addr ) {
 
   // populate for free
   tmp_node.address = addr;
-  tmp_node.size = 0;
-  tmp_node.node.data = addr;
+  tmp_node.node_address.data = addr;
 
   // finde node by address within tree
-  avl_node_ptr_t node = avl_find( &kernel_heap->used_area, &tmp_node.node );
+  avl_node_ptr_t address_node = avl_find(
+    &kernel_heap->used_area,
+    &tmp_node.node_address
+  );
 
   // skip if nothing has been found
-  if ( NULL == node ) {
+  if ( NULL == address_node ) {
     return;
   }
 
+  // get memory block
+  heap_block_ptr_t current_block = GET_BLOCK_ADDRESS( address_node );
+
   // remove node from used block
-  avl_remove( &kernel_heap->used_area, node );
+  avl_remove(
+    &kernel_heap->used_area,
+    &current_block->node_address
+  );
 
   // insert into free tree
-  avl_insert( &kernel_heap->free_area, node );
+  avl_insert(
+    &kernel_heap->free_area_address,
+    &current_block->node_address
+  );
+  avl_insert(
+    &kernel_heap->free_area_size,
+    &current_block->node_size
+  );
 
   // find parent node
   avl_node_ptr_t parent_node = avl_find_parent(
-    &kernel_heap->free_area,
-    node
+    &kernel_heap->free_area_address,
+    &current_block->node_address
   );
 
   // no parent node found, skip
@@ -231,7 +292,6 @@ void heap_free_block( vaddr_t addr ) {
 
   // get parent and current block
   heap_block_ptr_t parent_block = GET_BLOCK_ADDRESS( parent_node );
-  heap_block_ptr_t current_block = GET_BLOCK_ADDRESS( node );
 
   // determine end of parent and begin of current block
   vaddr_t end = ( vaddr_t )( ( paddr_t )&parent_block + parent_block->size );
@@ -243,6 +303,13 @@ void heap_free_block( vaddr_t addr ) {
     parent_block->size += current_block->size;
 
     // remove block again
-    avl_remove( &kernel_heap->free_area, node );
+    avl_remove(
+      &kernel_heap->free_area_address,
+      &current_block->node_address
+    );
+    avl_remove(
+      &kernel_heap->free_area_size,
+      &current_block->node_size
+    );
   }
 }
