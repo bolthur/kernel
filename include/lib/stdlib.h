@@ -26,7 +26,6 @@
 #include <stddef.h>
 
 void abort( void ) __attribute__((noreturn));
-void *aligned_alloc( size_t, size_t );
 void *calloc( size_t, size_t );
 void free( void* );
 char *itoa( int32_t, char*, int32_t, bool );

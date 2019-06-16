@@ -81,6 +81,12 @@ static int32_t balance_factor( avl_node_ptr_t node ) {
   return height( node->right ) - height( node->left );
 }
 
+/**
+ * @brief Right rotation
+ *
+ * @param node
+ * @return avl_node_ptr_t
+ */
 static avl_node_ptr_t rotate_right( avl_node_ptr_t node ) {
   // cache left node within temporary
   avl_node_ptr_t left = node->left;
@@ -93,6 +99,12 @@ static avl_node_ptr_t rotate_right( avl_node_ptr_t node ) {
   return left;
 }
 
+/**
+ * @brief Left rotation
+ *
+ * @param node
+ * @return avl_node_ptr_t
+ */
 static avl_node_ptr_t rotate_left( avl_node_ptr_t node ) {
   // cache left node within temporary
   avl_node_ptr_t right = node->right;
@@ -186,20 +198,37 @@ static avl_node_ptr_t find(
   avl_node_ptr_t node,
   avl_node_ptr_t root
 ) {
-  ( void )tree;
-  ( void )node;
-  ( void )root;
-  return NULL;
+  // end point
+  if ( root == NULL ) {
+    return NULL;
+  }
+
+  // determine result
+  int32_t result = tree->compare( node, root, tree->param);
+
+  // continue left
+  if ( -1 == result ) {
+    return find( tree, node, root->left );
+  // continue right
+  } else if ( 1 == result ) {
+    return find( tree, node, root->right );
+  }
+
+  // generic else case: found node is the wanted one
+  return root;
 }
 
 /**
- * @brief Recursive remove parent by node
+ * @brief Recursive remove by node
  *
  * @param tree tree to search at
  * @param node node to get parent of
  * @param root root node
+ * @return avl_node_ptr_t
+ *
+ * @todo add logic
  */
-static void remove(
+static avl_node_ptr_t remove(
   const avl_tree_ptr_t tree,
   avl_node_ptr_t node,
   avl_node_ptr_t root
@@ -207,6 +236,7 @@ static void remove(
   ( void )tree;
   ( void )node;
   ( void )root;
+  return NULL;
 }
 
 /**
@@ -216,6 +246,8 @@ static void remove(
  * @param node node to get parent of
  * @param root root node
  * @return avl_node_ptr_t
+ *
+ * @todo add logic
  */
 static avl_node_ptr_t find_parent(
   const avl_tree_ptr_t tree,
@@ -229,11 +261,57 @@ static avl_node_ptr_t find_parent(
 }
 
 /**
+ * @brief Get the max object
+ *
+ * @param tree avl tree structure
+ * @param node current node
+ * @param result result node
+ * @return avl_node_ptr_t
+ */
+static avl_node_ptr_t get_max(
+  const avl_tree_ptr_t tree,
+  avl_node_ptr_t node,
+  avl_node_ptr_t result
+) {
+  // break if we reached the maximum
+  if ( NULL == node ) {
+    return result;
+  }
+
+  // just step to right for max entry
+  return get_max( tree, node->right, node );
+}
+
+/**
+ * @brief Get the min object
+ *
+ * @param tree avl tree structure
+ * @param node current node
+ * @param result result node
+ * @return avl_node_ptr_t
+ */
+static avl_node_ptr_t get_min(
+  const avl_tree_ptr_t tree,
+  avl_node_ptr_t node,
+  avl_node_ptr_t result
+) {
+  // break if we reached the maximum
+  if ( NULL == node ) {
+    return result;
+  }
+
+  // just step to right for max entry
+  return get_max( tree, node->left, node );
+}
+
+/**
  * @brief Creates a new avl tree
  *
  * @param func
  * @param param
  * @return avl_tree_ptr_t
+ *
+ * @todo add logic if necessary, else remove
  */
 avl_tree_ptr_t avl_create( avl_compare_func_t func, void* param ) {
   ( void )func;
@@ -275,7 +353,7 @@ avl_node_ptr_t avl_find( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
  * @param node node to find
  */
 void avl_remove( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
-  remove( tree, node, tree->root );
+  tree->root = remove( tree, node, tree->root );
 }
 
 /**
@@ -290,4 +368,24 @@ avl_node_ptr_t avl_find_parent(
   avl_node_ptr_t node
 ) {
   return find_parent( tree, node, tree->root );
+}
+
+/**
+ * @brief Get max node of tree
+ *
+ * @param tree tree to look up
+ * @return avl_node_ptr_t found node or null if empty
+ */
+avl_node_ptr_t avl_get_max( const avl_tree_ptr_t tree ) {
+  return get_max( tree, tree->root, NULL );
+}
+
+/**
+ * @brief Get min node of tree
+ *
+ * @param tree tree to look up
+ * @return avl_node_ptr_t found node or null if empty
+ */
+avl_node_ptr_t avl_get_min( const avl_tree_ptr_t tree ) {
+  return get_min( tree, tree->root, NULL );
 }

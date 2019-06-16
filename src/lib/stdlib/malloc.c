@@ -31,24 +31,16 @@
  *
  * @param size size to allocate
  * @return void* allocated address or NULL
- *
- * @todo check alignment calculation
  */
 void *malloc( size_t size ) {
-  // use heap if initialized
+  // adjust size to base of 2
+  size += size % 2;
+  // return allocated heap block
   if ( true == heap_initialized_get() ) {
-    return heap_allocate_block(
-      size,
-      size + size - size % 2
-    );
+    return heap_allocate_block( size );
   }
-
   // check for no virtual memory when heap is not yet ready
   assert( true != virt_initialized_get() );
-
-  // no heap and no virt?
-  return placement_alloc(
-    size,
-    size + size - size % 2
-  );
+  // use normal placement alloc
+  return placement_alloc( size, size );
 }
