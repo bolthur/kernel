@@ -154,25 +154,6 @@ AC_CONFIG_FILES([
   src/lib/stdlib/Makefile
   src/lib/string/Makefile
   src/lib/ubsan/Makefile
-  src/mm/Makefile
-  src/mm/boot/Makefile
-  src/mm/boot/kernel/Makefile
-  src/mm/boot/arch/Makefile
-  src/mm/boot/arch/arm/Makefile
-  src/mm/boot/arch/arm/v6/Makefile
-  src/mm/boot/arch/arm/v7/Makefile
-  src/mm/boot/arch/arm/v8/Makefile
-  src/mm/boot/vendor/Makefile
-  src/mm/boot/vendor/rpi/Makefile
-  src/mm/kernel/Makefile
-  src/mm/kernel/kernel/Makefile
-  src/mm/kernel/arch/Makefile
-  src/mm/kernel/arch/arm/Makefile
-  src/mm/kernel/arch/arm/v6/Makefile
-  src/mm/kernel/arch/arm/v7/Makefile
-  src/mm/kernel/arch/arm/v8/Makefile
-  src/mm/kernel/vendor/Makefile
-  src/mm/kernel/vendor/rpi/Makefile
 ])
 
 AC_OUTPUT

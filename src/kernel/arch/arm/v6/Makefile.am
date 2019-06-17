@@ -8,4 +8,6 @@ AM_CCASFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include
 
 noinst_LIBRARIES = libv6.a
 libv6_a_SOURCES = \
+  mm/virt/short.c \
+  mm/virt.c \
   barrier.c

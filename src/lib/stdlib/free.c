@@ -21,7 +21,7 @@
 #include <stddef.h>
 #include <assert.h>
 #include <kernel/panic.h>
-#include <mm/kernel/kernel/heap.h>
+#include <kernel/mm/heap.h>
 
 /**
  * @brief Free allocated area

@@ -21,10 +21,10 @@
 #include <stddef.h>
 #include <assert.h>
 
-#include <kernel/kernel/panic.h>
-#include <mm/kernel/kernel/placement.h>
-#include <mm/kernel/kernel/virt.h>
-#include <mm/kernel/kernel/heap.h>
+#include <kernel/panic.h>
+#include <kernel/mm/placement.h>
+#include <kernel/mm/virt.h>
+#include <kernel/mm/heap.h>
 
 /**
  * @brief Malloc implementation

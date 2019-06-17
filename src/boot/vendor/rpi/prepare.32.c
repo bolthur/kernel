@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mm/boot/kernel/virt.h>
+#include <boot/kernel/mm/virt.h>
 
 /**
  * @brief Method to prepare section during initial boot

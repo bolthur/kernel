@@ -1,2 +1,0 @@
-
-SUBDIRS = kernel arch vendor

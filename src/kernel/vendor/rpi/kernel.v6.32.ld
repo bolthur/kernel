@@ -28,14 +28,6 @@ GROUP(
   ../../../boot/arch/arm/libarm.a
   ../../../boot/kernel/libkernel.a
   ../../../boot/vendor/rpi/librpi.a
-  ../../../mm/boot/arch/arm/v6/libv6.a
-  ../../../mm/boot/arch/arm/libarm.a
-  ../../../mm/boot/kernel/libkernel.a
-  ../../../mm/boot/vendor/rpi/librpi.a
-  ../../../mm/kernel/arch/arm/v6/libv6.a
-  ../../../mm/kernel/arch/arm/libarm.a
-  ../../../mm/kernel/kernel/libkernel.a
-  ../../../mm/kernel/vendor/rpi/librpi.a
   ../../../kernel/arch/arm/v6/libv6.a
   ../../../kernel/arch/arm/libarm.a
   ../../../kernel/kernel/libkernel.a

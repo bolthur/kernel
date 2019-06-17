@@ -11,6 +11,8 @@ noinst_LIBRARIES = librpi.a
 librpi_a_SOURCES = \
   mailbox/mailbox.c \
   mailbox/property.c \
+  mm/phys.c \
+  mm/virt.c \
   irq.c \
   platform.c \
   peripheral.c \
@@ -25,14 +27,6 @@ BUILT_SOURCES = \
   ${top_builddir}/src/boot/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/src/boot/arch/${arch_subdir}/lib$(arch_subdir).a \
   ${top_builddir}/src/boot/kernel/libkernel.a \
-  ${top_builddir}/src/mm/boot/vendor/${vendor_subdir}/librpi.a \
-  ${top_builddir}/src/mm/boot/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
-  ${top_builddir}/src/mm/boot/arch/${arch_subdir}/lib$(arch_subdir).a \
-  ${top_builddir}/src/mm/boot/kernel/libkernel.a \
-  ${top_builddir}/src/mm/kernel/vendor/${vendor_subdir}/librpi.a \
-  ${top_builddir}/src/mm/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
-  ${top_builddir}/src/mm/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
-  ${top_builddir}/src/mm/kernel/kernel/libkernel.a \
   librpi.a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
@@ -54,14 +48,6 @@ kernel_zwerg_DEPENDENCIES = \
   ${top_builddir}/src/boot/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/src/boot/arch/${arch_subdir}/lib$(arch_subdir).a \
   ${top_builddir}/src/boot/kernel/libkernel.a \
-  ${top_builddir}/src/mm/boot/vendor/${vendor_subdir}/librpi.a \
-  ${top_builddir}/src/mm/boot/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
-  ${top_builddir}/src/mm/boot/arch/${arch_subdir}/lib$(arch_subdir).a \
-  ${top_builddir}/src/mm/boot/kernel/libkernel.a \
-  ${top_builddir}/src/mm/kernel/vendor/${vendor_subdir}/librpi.a \
-  ${top_builddir}/src/mm/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
-  ${top_builddir}/src/mm/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \
-  ${top_builddir}/src/mm/kernel/kernel/libkernel.a \
   librpi.a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/${subarch_subdir}/lib$(subarch_subdir).a \
   ${top_builddir}/src/kernel/arch/${arch_subdir}/lib$(arch_subdir).a \

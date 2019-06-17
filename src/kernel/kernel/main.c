@@ -29,9 +29,9 @@
 #include <kernel/platform.h>
 #include <kernel/debug.h>
 #include <kernel/serial.h>
-#include <mm/kernel/kernel/phys.h>
-#include <mm/kernel/kernel/virt.h>
-#include <mm/kernel/kernel/heap.h>
+#include <kernel/mm/phys.h>
+#include <kernel/mm/virt.h>
+#include <kernel/mm/heap.h>
 
 /**
  * @brief Kernel main function
