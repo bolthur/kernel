@@ -59,5 +59,6 @@ void avl_remove( const avl_tree_ptr_t, avl_node_ptr_t );
 avl_node_ptr_t avl_find_parent( const avl_tree_ptr_t, avl_node_ptr_t );
 avl_node_ptr_t avl_get_max( const avl_tree_ptr_t );
 avl_node_ptr_t avl_get_min( const avl_tree_ptr_t );
+void avl_print( const avl_tree_ptr_t );
 
 #endif

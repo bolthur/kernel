@@ -220,6 +220,18 @@ void heap_init( void ) {
     &kernel_heap->free_area_size,
     &free_block->node_size
   );
+
+  // Debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "%s", "Used tree:\r\n" );
+    avl_print( &kernel_heap->used_area );
+
+    DEBUG_OUTPUT( "%s", "Free address tree:\r\n" );
+    avl_print( &kernel_heap->free_area_address );
+
+    DEBUG_OUTPUT( "%s", "Free size tree:\r\n" );
+    avl_print( &kernel_heap->free_area_size );
+  #endif
 }
 
 /**

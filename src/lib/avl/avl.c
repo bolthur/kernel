@@ -18,7 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
 #include <assert.h>
+#include <stdio.h>
+#include <string.h>
 #include <avl/avl.h>
 
 /**
@@ -369,6 +372,58 @@ static avl_node_ptr_t find_parent(
 }
 
 /**
+ * @brief Recursive print of tree
+ *
+ * @param prefix
+ * @param node
+ * @param left
+ */
+static void print_recursive(
+  const char* prefix,
+  const avl_node_ptr_t node,
+  bool left
+) {
+  char buffer[ 256 ];
+
+  // break recursion on end
+  if ( NULL == node ) {
+    return;
+  }
+
+  char right_out[] = "├──\0";
+  char left_out[] = "└──\0";
+
+  char left_recursion[] = "│   \0";
+  char right_recursion[] = "    \0";
+
+  // print value
+  printf( "%s%s%x\r\n", prefix, left ? right_out : left_out, node->data );
+
+  // copy prefix into buffer
+  memcpy( buffer, prefix, strlen( prefix ) );
+
+  // recursion
+  print_recursive(
+    memcpy(
+      &buffer[ strlen( prefix ) ],
+      left ? left_recursion : right_recursion,
+      strlen( left_out )
+    ),
+    node->left,
+    true
+  );
+  print_recursive(
+    memcpy(
+      &buffer[ strlen( prefix ) ],
+      left ? left_recursion : right_recursion,
+      strlen( left_out )
+    ),
+    node->right,
+    false
+  );
+}
+
+/**
  * @brief Creates a new avl tree
  *
  * @param func
@@ -452,4 +507,13 @@ avl_node_ptr_t avl_get_max( const avl_tree_ptr_t tree ) {
  */
 avl_node_ptr_t avl_get_min( const avl_tree_ptr_t tree ) {
   return get_min( tree, tree->root, NULL );
+}
+
+/**
+ * @brief Debug output avl tree
+ *
+ * @param tree
+ */
+void avl_print( const avl_tree_ptr_t tree ) {
+  print_recursive( "", tree->root, false );
 }
