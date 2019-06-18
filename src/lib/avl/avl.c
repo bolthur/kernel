@@ -171,20 +171,20 @@ static avl_node_ptr_t insert(
     return node;
   }
 
-  if ( -1 == tree->compare( root, node, tree->param ) ) {
-    if ( NULL != root->left ) {
-      root->left = insert( tree, node, root->left );
-    } else {
-      root->left = node;
-    }
-  } else if ( 1 == tree->compare( root, node, tree->param ) ) {
-    if ( NULL != root->right ) {
-      root->right = insert( tree, node, root->right );
-    } else {
-      root->right = node;
-    }
+  int32_t result = tree->compare( root, node, tree->param );
+
+  if ( -1 == result ) {
+    root->left = insert( tree, node, root->left );
+  } else if ( 1 == result ) {
+    root->right = insert( tree, node, root->right );
+  } else {
+    return root;
   }
 
+  // update balance
+  root->balance = balance_factor( root );
+
+  // return
   return balance( root );
 }
 
@@ -192,13 +192,12 @@ static avl_node_ptr_t insert(
  * @brief Helper to find node within tree
  *
  * @param tree tree to search
- * @param node node to find
+ * @param data data to lookup for
  * @param root root node
  * @return avl_node_ptr_t
  */
 static avl_node_ptr_t find(
-  const avl_tree_ptr_t tree,
-  avl_node_ptr_t node,
+  void* data,
   avl_node_ptr_t root
 ) {
   // end point
@@ -206,15 +205,12 @@ static avl_node_ptr_t find(
     return NULL;
   }
 
-  // determine result
-  int32_t result = tree->compare( node, root, tree->param);
-
   // continue left
-  if ( -1 == result ) {
-    return find( tree, node, root->left );
+  if ( root->data > data ) {
+    return find( data, root->left );
   // continue right
-  } else if ( 1 == result ) {
-    return find( tree, node, root->right );
+  } else if ( data > root->data ) {
+    return find( data, root->right );
   }
 
   // generic else case: found node is the wanted one
@@ -335,8 +331,7 @@ static avl_node_ptr_t remove(
  * @return avl_node_ptr_t
  */
 static avl_node_ptr_t find_parent(
-  const avl_tree_ptr_t tree,
-  avl_node_ptr_t node,
+  void* data,
   avl_node_ptr_t root
 ) {
   // end point
@@ -344,27 +339,24 @@ static avl_node_ptr_t find_parent(
     return NULL;
   }
 
-  // determine result
-  int32_t result = tree->compare( node, root, tree->param);
-
   if (
     (
       NULL != root->right
-      && 0 == tree->compare( node, root->left, tree->param )
+      && data == root->left->data
     ) || (
       NULL != root->right
-      && 0 == tree->compare( node, root->right, tree->param )
+      && data == root->right->data
     )
   ) {
     return root;
   }
 
   // continue left
-  if ( -1 == result ) {
-    return find( tree, node, root->left );
+  if ( data < root->data ) {
+    return find_parent( data, root->left );
   // continue right
-  } else if ( 1 == result ) {
-    return find( tree, node, root->right );
+  } else if ( data > root->data ) {
+    return find_parent( data, root->right );
   }
 
   // generic else case: found node is the wanted one without parent
@@ -458,11 +450,11 @@ void avl_insert( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
  * @brief Find an avl node within treee
  *
  * @param tree tree to search
- * @param node node to find
+ * @param data data to lookup
  * @return avl_node_ptr_t found node or NULL
  */
-avl_node_ptr_t avl_find( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
-  return find( tree, node, tree->root );
+avl_node_ptr_t avl_find( const avl_tree_ptr_t tree, void* data ) {
+  return find( data, tree->root );
 }
 
 /**
@@ -479,14 +471,14 @@ void avl_remove( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
  * @brief Find parent of node within tree
  *
  * @param tree tree to search at
- * @param node node to get parent of
+ * @param data data to get parent of
  * @return avl_node_ptr_t found parent or NULL
  */
 avl_node_ptr_t avl_find_parent(
   const avl_tree_ptr_t tree,
-  avl_node_ptr_t node
+  void* data
 ) {
-  return find_parent( tree, node, tree->root );
+  return find_parent( data, tree->root );
 }
 
 /**

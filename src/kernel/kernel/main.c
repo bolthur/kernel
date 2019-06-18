@@ -80,6 +80,16 @@ void kernel_main() {
   printf( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
   heap_init();
 
+  void *a = malloc( 12 );
+  void *b = malloc( 4 );
+  void *c = malloc( 8 );
+  void *d = malloc( 10 );
+
+  free( b );
+  free( c );
+  free( a );
+  free( d );
+
   // Setup timer
   printf( "[bolthur/kernel -> timer] initialize ...\r\n" );
   timer_init();
