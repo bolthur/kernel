@@ -167,7 +167,7 @@ void heap_init( void ) {
   );
   free_block->size = HEAP_MIN_SIZE - offset;
   // populate node data
-  free_block->node_address.data = ( vaddr_t )free_block->address;
+  avl_prepare_node( &free_block->node_address, free_block->address );
 
   // insert into free tree
   avl_insert(
@@ -247,7 +247,7 @@ vaddr_t heap_allocate_block( size_t size ) {
   new_block->address = ( vaddr_t )(
     ( paddr_t )new_block + sizeof( heap_block_t )
   );
-  new_block->node_address.data = new_block->address;
+  avl_prepare_node( &new_block->node_address, new_block->address );
 
   // insert at used block
   avl_insert( &kernel_heap->used_area, &new_block->node_address );

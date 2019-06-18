@@ -39,8 +39,6 @@ typedef int32_t ( *avl_compare_func_t )(
 typedef struct avl_node {
   void *data;
 
-  int32_t balance;
-
   avl_node_ptr_t left;
   avl_node_ptr_t right;
 } avl_node_t, *avl_node_ptr_t;
@@ -60,5 +58,6 @@ avl_node_ptr_t avl_find_parent( const avl_tree_ptr_t, void* );
 avl_node_ptr_t avl_get_max( const avl_tree_ptr_t );
 avl_node_ptr_t avl_get_min( const avl_tree_ptr_t );
 void avl_print( const avl_tree_ptr_t );
+void avl_prepare_node( avl_node_ptr_t, void* );
 
 #endif

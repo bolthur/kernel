@@ -64,8 +64,8 @@ static int32_t height( avl_node_ptr_t node ) {
 
   // return bigger height
   return left > right
-    ? left++
-    : right++;
+    ? ++left
+    : ++right;
 }
 
 /**
@@ -133,7 +133,6 @@ static avl_node_ptr_t balance( avl_node_ptr_t node ) {
     if ( 0 > balance_factor( node->right ) ) {
       node->right = rotate_right( node->right );
     }
-
     // left rotation
     return rotate_left( node );
   }
@@ -144,7 +143,6 @@ static avl_node_ptr_t balance( avl_node_ptr_t node ) {
     if ( 0 < balance_factor( node->left ) ) {
       node->left = rotate_left( node->left );
     }
-
     // right rotation
     return rotate_right( node );
   }
@@ -180,9 +178,6 @@ static avl_node_ptr_t insert(
   } else {
     return root;
   }
-
-  // update balance
-  root->balance = balance_factor( root );
 
   // return
   return balance( root );
@@ -287,6 +282,8 @@ static avl_node_ptr_t remove_left_recursive( avl_node_ptr_t node ) {
  * @param node node to get parent of
  * @param root root node
  * @return avl_node_ptr_t
+ *
+ * @todo Fix bug within removal code
  */
 static avl_node_ptr_t remove(
   const avl_tree_ptr_t tree,
@@ -508,4 +505,15 @@ avl_node_ptr_t avl_get_min( const avl_tree_ptr_t tree ) {
  */
 void avl_print( const avl_tree_ptr_t tree ) {
   print_recursive( "", tree->root, false );
+}
+
+/**
+ * @brief method to prepare some node
+ *
+ * @param node
+ */
+void avl_prepare_node( avl_node_ptr_t node, void* data ) {
+  node->left = NULL;
+  node->right = NULL;
+  node->data = data;
 }
