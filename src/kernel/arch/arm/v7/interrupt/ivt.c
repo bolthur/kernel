@@ -75,8 +75,9 @@ void prefetch_abort_handler( cpu_register_context_t *status ) {
  * @param status current register context
  */
 void data_abort_handler( cpu_register_context_t *status ) {
-  // get faulting address
+  // variable for faulting address
   uint32_t fault_address;
+  // get faulting address
   __asm__ __volatile__(
     "mrc p15, 0, %0, c6, c0, 0" : "=r" ( fault_address ) : : "cc"
   );
@@ -92,6 +93,7 @@ void data_abort_handler( cpu_register_context_t *status ) {
  * @param status current register context
  *
  * @todo check and revise
+ * @todo add event trigger instead of get handler call, when heap is existing
  */
 void irq_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -114,6 +116,7 @@ void irq_handler( cpu_register_context_t *status ) {
  * @param status current register context
  *
  * @todo check and revise
+ * @todo add event trigger instead of get handler call, when heap is existing
  */
 void fast_interrupt_handler( cpu_register_context_t *status ) {
   dump_register( status );

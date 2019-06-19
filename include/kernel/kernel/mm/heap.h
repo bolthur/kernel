@@ -37,18 +37,22 @@
 typedef struct {
   vaddr_t start;
   vaddr_t size;
-  avl_tree_t free_area_address;
+  avl_tree_t free_address;
+  avl_tree_t free_size;
   avl_tree_t used_area;
 } heap_manager_t, *heap_manager_ptr_t;
 
 typedef struct {
   avl_node_t node_address;
+  avl_node_t node_size;
   vaddr_t address;
   size_t size;
 } heap_block_t, *heap_block_ptr_t;
 
 #define GET_BLOCK_ADDRESS( n ) \
   ( heap_block_ptr_t )( ( uint8_t* )n - ( uint32_t )&( ( heap_block_ptr_t )NULL )->node_address )
+#define GET_BLOCK_SIZE( n ) \
+  ( heap_block_ptr_t )( ( uint8_t* )n - ( uint32_t )&( ( heap_block_ptr_t )NULL )->node_size )
 
 heap_manager_ptr_t kernel_heap;
 

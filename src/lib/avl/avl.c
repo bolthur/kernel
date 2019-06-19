@@ -25,6 +25,37 @@
 #include <avl/avl.h>
 
 /**
+ * @brief buffer helper for output
+ */
+static uint8_t level_buffer[ 4096 ];
+
+/**
+ * @brief depth index
+ */
+static int32_t level_index;
+
+/**
+ * @brief Push something to depth buffer
+ *
+ * @param c
+ */
+static void push_output_level( uint8_t c ) {
+  level_buffer[ level_index++ ] = ' ';
+  level_buffer[ level_index++ ] = c;
+  level_buffer[ level_index++ ] = ' ';
+  level_buffer[ level_index++ ] = ' ';
+  level_buffer[ level_index ] = 0;
+}
+
+/**
+ * @brief Pop something from depth
+ */
+static void pop_output_level( void ) {
+  level_index -= 4;
+  level_buffer[ level_index ] = 0;
+}
+
+/**
  * @brief Simple helper for retrieving max between two 32 bit integers
  *
  * @param a
@@ -121,6 +152,32 @@ static avl_node_ptr_t rotate_left( avl_node_ptr_t node ) {
 }
 
 /**
+ * @brief Recursive print of tree
+ *
+ * @param node
+ */
+static void print_recursive( const avl_node_ptr_t node ) {
+  if ( NULL == node ) {
+    return;
+  }
+  printf( "%x\n", node->data );
+
+  if ( node->left ) {
+    printf( "%s `--", level_buffer );
+    push_output_level( '|' );
+    print_recursive( node->left );
+    pop_output_level();
+  }
+
+  if ( node->right ) {
+    printf( "%s `--", level_buffer );
+    push_output_level( '|' );
+    print_recursive( node->right );
+    pop_output_level();
+  }
+}
+
+/**
  * @brief Method to balance node with return of new root node
  *
  * @param node
@@ -169,14 +226,14 @@ static avl_node_ptr_t insert(
     return node;
   }
 
-  int32_t result = tree->compare( root, node, tree->param );
+  int32_t result = tree->compare( root, node );
 
   if ( -1 == result ) {
     root->left = insert( tree, node, root->left );
   } else if ( 1 == result ) {
     root->right = insert( tree, node, root->right );
   } else {
-    return root;
+    root->right = insert( tree, node, root->right );
   }
 
   // return
@@ -186,7 +243,6 @@ static avl_node_ptr_t insert(
 /**
  * @brief Helper to find node within tree
  *
- * @param tree tree to search
  * @param data data to lookup for
  * @param root root node
  * @return avl_node_ptr_t
@@ -213,117 +269,9 @@ static avl_node_ptr_t find(
 }
 
 /**
- * @brief Get the max object
+ * @brief Helper to find parent node within tree
  *
- * @param tree avl tree structure
- * @param node current node
- * @param result result node
- * @return avl_node_ptr_t
- */
-static avl_node_ptr_t get_max(
-  const avl_tree_ptr_t tree,
-  avl_node_ptr_t node,
-  avl_node_ptr_t result
-) {
-  // break if we reached the maximum
-  if ( NULL == node ) {
-    return result;
-  }
-
-  // just step to right for max entry
-  return get_max( tree, node->right, node );
-}
-
-/**
- * @brief Get the min object
- *
- * @param tree avl tree structure
- * @param node current node
- * @param result result node
- * @return avl_node_ptr_t
- */
-static avl_node_ptr_t get_min(
-  const avl_tree_ptr_t tree,
-  avl_node_ptr_t node,
-  avl_node_ptr_t result
-) {
-  // break if we reached the maximum
-  if ( NULL == node ) {
-    return result;
-  }
-
-  // just step to right for max entry
-  return get_min( tree, node->left, node );
-}
-
-/**
- * @brief Helper for deletion of left wing recursively
- *
- * @param node
- * @return avl_node_ptr_t
- */
-static avl_node_ptr_t remove_left_recursive( avl_node_ptr_t node ) {
-  // return right, when left is NULL
-  if ( NULL == node->left ) {
-    return node->right;
-  }
-
-  // remove left recursively and change left sibling
-  node->left = remove_left_recursive( node->left );
-
-  // return balanced node
-  return balance( node );
-}
-
-/**
- * @brief Recursive remove by node
- *
- * @param tree tree to search at
- * @param node node to get parent of
- * @param root root node
- * @return avl_node_ptr_t
- *
- * @todo Fix bug within removal code
- */
-static avl_node_ptr_t remove(
-  const avl_tree_ptr_t tree,
-  avl_node_ptr_t node,
-  avl_node_ptr_t root
-) {
-  // compare
-  int32_t result = tree->compare( node, root, tree->param );
-
-  // current node is the one to delete
-  if ( 0 == result ) {
-    // no child or one child, just return child or NULL
-    if ( NULL == root->left || NULL == root->right ) {
-      return NULL != root->left
-        ? root->left
-        : root->right;
-    }
-    // get minimum of right child for new root
-    avl_node_ptr_t left = get_min( tree, root, root->right );
-    left->right = remove_left_recursive( root->right );
-    left->left = root->left;
-    // return rebalanced node
-    return balance( left );
-  // continue left
-  } else if ( -1 == result ) {
-    root->left = remove( tree, node, root->left );
-  // continue right
-  } else if ( 1 == result ) {
-    root->right = remove( tree, node, root->right );
-  }
-
-  // return rebalanced partial root
-  return balance( root );
-}
-
-/**
- * @brief Recursive find parent by node
- *
- * @param tree tree to search at
- * @param node node to get parent of
+ * @param data data to lookup for
  * @param root root node
  * @return avl_node_ptr_t
  */
@@ -336,80 +284,224 @@ static avl_node_ptr_t find_parent(
     return NULL;
   }
 
+  // matching node left?
   if (
-    (
-      NULL != root->right
-      && data == root->left->data
-    ) || (
-      NULL != root->right
-      && data == root->right->data
-    )
+      NULL != root->left
+      && root->left->data == data
+  ) {
+    return root;
+  }
+
+  // matching node right?
+  if (
+    NULL != root->right
+    && root->right->data == data
   ) {
     return root;
   }
 
   // continue left
-  if ( data < root->data ) {
+  if ( root->data > data ) {
     return find_parent( data, root->left );
   // continue right
   } else if ( data > root->data ) {
     return find_parent( data, root->right );
   }
 
-  // generic else case: found node is the wanted one without parent
+  // generic else case: found node is the wanted one
   return NULL;
 }
 
 /**
- * @brief Recursive print of tree
+ * @brief Get the max object
  *
- * @param prefix
- * @param node
- * @param left
+ * @param node current node
+ * @param result result node
+ * @return avl_node_ptr_t
  */
-static void print_recursive(
-  const char* prefix,
-  const avl_node_ptr_t node,
-  bool left
+static avl_node_ptr_t get_max(
+  avl_node_ptr_t node,
+  avl_node_ptr_t result
 ) {
-  char buffer[ 256 ];
-
-  // break recursion on end
+  // break if we reached the maximum
   if ( NULL == node ) {
-    return;
+    return result;
   }
 
-  char right_out[] = "├──\0";
-  char left_out[] = "└──\0";
+  // just step to right for max entry
+  return get_max( node->right, node );
+}
 
-  char left_recursion[] = "│   \0";
-  char right_recursion[] = "    \0";
+/**
+ * @brief Get the min object
+ *
+ * @param node current node
+ * @param result result node
+ * @return avl_node_ptr_t
+ */
+static avl_node_ptr_t get_min(
+  avl_node_ptr_t node,
+  avl_node_ptr_t result
+) {
+  // break if we reached the maximum
+  if ( NULL == node ) {
+    return result;
+  }
 
-  // print value
-  printf( "%s%s%x\r\n", prefix, left ? right_out : left_out, node->data );
+  // just step to right for max entry
+  return get_min( node->right, node );
+}
 
-  // copy prefix into buffer
-  memcpy( buffer, prefix, strlen( prefix ) );
+/**
+ * @brief Helper to remove by node
+ *
+ * @param tree tree to work on
+ * @param node node to remove
+ * @param root current root
+ * @return avl_node_ptr_t new root
+ */
+static avl_node_ptr_t remove_by_node(
+  const avl_tree_ptr_t tree,
+  avl_node_ptr_t node,
+  avl_node_ptr_t root
+) {
+  // recursive breakpoint
+  if ( NULL == root ) {
+    return NULL;
+  }
 
-  // recursion
-  print_recursive(
-    memcpy(
-      &buffer[ strlen( prefix ) ],
-      left ? left_recursion : right_recursion,
-      strlen( left_out )
-    ),
-    node->left,
-    true
-  );
-  print_recursive(
-    memcpy(
-      &buffer[ strlen( prefix ) ],
-      left ? left_recursion : right_recursion,
-      strlen( left_out )
-    ),
-    node->right,
-    false
-  );
+  // get result
+  int32_t result = tree->compare( node, root );
+
+  // equal? => check for root is node and continue on subtrees if not
+  if ( 0 == result ) {
+    // equal but not the found one, check both sub trees
+    if ( node != root ) {
+      // continue on left subtree if existing
+      if ( NULL != root->left ) {
+        root->left = remove_by_node( tree, node, root->left );
+      }
+
+      // continue on right subtree if existing
+      if ( NULL != root->left ) {
+        root->right = remove_by_node( tree, node, root->right );
+      }
+    } else {
+      avl_node_ptr_t tmp;
+
+      // no child or one child, just return child or NULL
+      if ( NULL == root->left || NULL == root->right ) {
+        // get temporary
+        tmp = NULL != root->left
+          ? root->left
+          : root->right;
+
+        // no child
+        if ( NULL == tmp ) {
+          tmp = root;
+          root = NULL;
+        // one child
+        } else {
+          // overwrite root
+          root = tmp;
+        }
+      } else {
+        // get smallest successor of right node
+        tmp = avl_get_min( root->right );
+
+        // remove tmp from right
+        root->right = remove_by_node( tree, tmp, root->right );
+
+        // replace current one with tmp
+        tmp->left = root->left;
+        tmp->right = root->right;
+
+        // overwrite root
+        root = tmp;
+      }
+    }
+  // continue on left
+  } else if ( 1 == result ) {
+    root->left = remove_by_node( tree, node, root->left );
+  // continue on right
+  } else if ( -1 == result ) {
+    root->right = remove_by_node( tree, node, root->right );
+  }
+
+  // break if tree is empty
+  if ( NULL == root ) {
+    return root;
+  }
+
+  // return rebalanced partial root
+  return balance( root );
+}
+
+/**
+ * @brief Recursive remove by node
+ *
+ * @param data data to remove node
+ * @param root root node
+ * @return avl_node_ptr_t
+ */
+static avl_node_ptr_t remove(
+  void* data,
+  avl_node_ptr_t root
+) {
+  // recursive breakpoint
+  if ( NULL == root ) {
+    return NULL;
+  }
+
+  // continue left
+  if ( root->data > data ) {
+    root->left = remove( data, root->left );
+  // continue right
+  } else if ( data > root->data ) {
+    root->right = remove( data, root->right );
+  // found node
+  } else {
+    avl_node_ptr_t tmp;
+
+    // no child or one child, just return child or NULL
+    if ( NULL == root->left || NULL == root->right ) {
+      // get temporary
+      tmp = NULL != root->left
+        ? root->left
+        : root->right;
+
+      // no child
+      if ( NULL == tmp ) {
+        tmp = root;
+        root = NULL;
+      // one child
+      } else {
+        // overwrite root
+        root = tmp;
+      }
+    } else {
+      // get smallest successor of right node
+      tmp = avl_get_min( root->right );
+
+      // remove tmp from right
+      root->right = remove( tmp->data, root->right );
+
+      // replace current one with tmp
+      tmp->left = root->left;
+      tmp->right = root->right;
+
+      // overwrite root
+      root = tmp;
+    }
+  }
+
+  // break if tree is empty
+  if ( NULL == root ) {
+    return root;
+  }
+
+  // return rebalanced partial root
+  return balance( root );
 }
 
 /**
@@ -455,47 +547,53 @@ avl_node_ptr_t avl_find( const avl_tree_ptr_t tree, void* data ) {
 }
 
 /**
- * @brief Remove an avl node from tree
+ * @brief Find parent
  *
- * @param tree tree to search in
- * @param node node to find
+ * @param tree tree to work on
+ * @param data data to lookup
  */
-void avl_remove( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
-  tree->root = remove( tree, node, tree->root );
+avl_node_ptr_t avl_find_parent( const avl_tree_ptr_t tree, void* data ) {
+  return find_parent( data, tree->root );
 }
 
 /**
- * @brief Find parent of node within tree
+ * @brief Remove an avl node from tree
  *
- * @param tree tree to search at
- * @param data data to get parent of
- * @return avl_node_ptr_t found parent or NULL
+ * @param tree tree to search in
+ * @param data data of node to find
  */
-avl_node_ptr_t avl_find_parent(
-  const avl_tree_ptr_t tree,
-  void* data
-) {
-  return find_parent( data, tree->root );
+void avl_remove( const avl_tree_ptr_t tree, void* data ) {
+  tree->root = remove( data, tree->root );
+}
+
+/**
+ * @brief Removes an avl tree by node
+ *
+ * @param tree tree to work on
+ * @param node node to remove
+ */
+void avl_remove_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
+  tree->root = remove_by_node( tree, node, tree->root );
 }
 
 /**
  * @brief Get max node of tree
  *
- * @param tree tree to look up
+ * @param root node to get min value
  * @return avl_node_ptr_t found node or null if empty
  */
-avl_node_ptr_t avl_get_max( const avl_tree_ptr_t tree ) {
-  return get_max( tree, tree->root, NULL );
+avl_node_ptr_t avl_get_max( const avl_node_ptr_t root ) {
+  return get_max( root, NULL );
 }
 
 /**
  * @brief Get min node of tree
  *
- * @param tree tree to look up
+ * @param root node to get min value
  * @return avl_node_ptr_t found node or null if empty
  */
-avl_node_ptr_t avl_get_min( const avl_tree_ptr_t tree ) {
-  return get_min( tree, tree->root, NULL );
+avl_node_ptr_t avl_get_min( const avl_node_ptr_t root ) {
+  return get_min( root, NULL );
 }
 
 /**
@@ -504,7 +602,7 @@ avl_node_ptr_t avl_get_min( const avl_tree_ptr_t tree ) {
  * @param tree
  */
 void avl_print( const avl_tree_ptr_t tree ) {
-  print_recursive( "", tree->root, false );
+  print_recursive( tree->root );
 }
 
 /**
