@@ -184,8 +184,11 @@ static void print_recursive( const avl_node_ptr_t node ) {
  * @return avl_node_ptr_t
  */
 static avl_node_ptr_t balance( avl_node_ptr_t node ) {
+  // get balance factor
+  int32_t balance = balance_factor( node );
+
   // left / right left rotation
-  if ( 2 == balance_factor( node ) ) {
+  if ( 2 == balance ) {
     // right rotation?
     if ( 0 > balance_factor( node->right ) ) {
       node->right = rotate_right( node->right );
@@ -195,7 +198,7 @@ static avl_node_ptr_t balance( avl_node_ptr_t node ) {
   }
 
   // left / left right rotation
-  if ( -2 == balance_factor( node ) ) {
+  if ( -2 == balance ) {
     // left rotation
     if ( 0 < balance_factor( node->left ) ) {
       node->left = rotate_left( node->left );
@@ -349,7 +352,7 @@ static avl_node_ptr_t get_min(
   }
 
   // just step to right for max entry
-  return get_min( node->right, node );
+  return get_min( node->left, node );
 }
 
 /**
@@ -438,9 +441,9 @@ static avl_node_ptr_t remove_by_node(
 }
 
 /**
- * @brief Recursive remove by node
+ * @brief Recursive remove by value
  *
- * @param data data to remove node
+ * @param data data to remove
  * @param root root node
  * @return avl_node_ptr_t
  */

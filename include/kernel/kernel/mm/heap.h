@@ -30,6 +30,7 @@
   #define HEAP_START 0xD0000000
   #define HEAP_MAX_SIZE 0xFFFFFFF
   #define HEAP_MIN_SIZE 0x10000
+  #define HEAP_EXTENSION 0x1000
 #elif defined( ELF64 )
   #error "Heap not ready for x64"
 #endif
