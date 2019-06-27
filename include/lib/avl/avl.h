@@ -49,14 +49,17 @@ typedef struct avl_tree {
 } avl_tree_t, *avl_tree_ptr_t;
 
 avl_tree_ptr_t avl_create( avl_compare_func_t, void* );
-void avl_insert( const avl_tree_ptr_t, avl_node_ptr_t );
-avl_node_ptr_t avl_find( const avl_tree_ptr_t, void* );
-void avl_remove( const avl_tree_ptr_t, void* );
+
 avl_node_ptr_t avl_get_max( const avl_node_ptr_t );
 avl_node_ptr_t avl_get_min( const avl_node_ptr_t );
 void avl_print( const avl_tree_ptr_t );
 void avl_prepare_node( avl_node_ptr_t, void* );
+
+avl_node_ptr_t avl_find_by_data( const avl_tree_ptr_t, void* );
+avl_node_ptr_t avl_find_parent_by_data( const avl_tree_ptr_t, void* );
+void avl_remove_by_data( const avl_tree_ptr_t, void* );
+
+void avl_insert_by_node( const avl_tree_ptr_t, avl_node_ptr_t );
 void avl_remove_by_node( const avl_tree_ptr_t, avl_node_ptr_t );
-avl_node_ptr_t avl_find_parent( const avl_tree_ptr_t, void* );
 
 #endif

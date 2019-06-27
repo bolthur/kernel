@@ -93,16 +93,17 @@ void kernel_main() {
 
   printf( "\r\n\r\nFREE UP 0x%08X\r\n", b );
   free( b );
+
+  b = malloc( 4 );
+
+  printf( "\r\n\r\nFREE UP 0x%08X\r\n", b );
+  free( b );
   printf( "FREE UP 0x%08X\r\n", c );
   free( c );
   printf( "FREE UP 0x%08X\r\n", a );
   free( a );
   printf( "FREE UP 0x%08X\r\n", d );
   free( d );
-  printf( "FREE UP 0x%08X\r\n", e );
-  free( e );
-
-  e = malloc( 4 );
   printf( "FREE UP 0x%08X\r\n", e );
   free( e );
 

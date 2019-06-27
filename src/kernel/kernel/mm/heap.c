@@ -92,6 +92,30 @@ static int32_t compare_size_callback(
 }
 
 /**
+ * @brief Helper to prepare a block
+ *
+ * @param block block to prepare
+ * @param addr address for block
+ * @param size size for block
+ */
+static void prepare_block(
+  heap_block_ptr_t block,
+  vaddr_t addr,
+  size_t size
+) {
+  // clear memory
+  memset( ( vaddr_t )block, 0, size + sizeof( heap_block_t ) );
+
+  // prepare block itself
+  block->size = size;
+  block->address = addr;
+
+  // prepare tree nodes
+  avl_prepare_node( &block->node_address, ( void* )addr );
+  avl_prepare_node( &block->node_size, ( void* )size );
+}
+
+/**
  * @brief Internal method for extending the heap
  */
 static void extend_heap( void ) {
@@ -164,7 +188,7 @@ static void extend_heap( void ) {
     free_block = block;
 
     // remove node from free tree and size tree
-    avl_remove( &kernel_heap->free_address, free_block->node_address.data );
+    avl_remove_by_data( &kernel_heap->free_address, free_block->node_address.data );
     avl_remove_by_node( &kernel_heap->free_size, &free_block->node_size );
 
     // extend size
@@ -191,8 +215,8 @@ static void extend_heap( void ) {
   avl_prepare_node( &free_block->node_size, ( void* )free_block->size );
 
   // insert into free trees
-  avl_insert( &kernel_heap->free_address, &free_block->node_address );
-  avl_insert( &kernel_heap->free_size, &free_block->node_size );
+  avl_insert_by_node( &kernel_heap->free_address, &free_block->node_address );
+  avl_insert_by_node( &kernel_heap->free_size, &free_block->node_size );
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -301,17 +325,15 @@ void heap_init( void ) {
   #endif
 
   // prepare free block
-  free_block->address = ( vaddr_t )(
-    ( paddr_t )HEAP_START + offset
+  prepare_block(
+    free_block,
+    ( vaddr_t )( ( paddr_t )HEAP_START + offset ),
+    HEAP_MIN_SIZE - offset
   );
-  free_block->size = HEAP_MIN_SIZE - offset;
-  // populate node data
-  avl_prepare_node( &free_block->node_address, free_block->address );
-  avl_prepare_node( &free_block->node_size, ( void* )free_block->size );
 
   // insert into free tree
-  avl_insert( &kernel_heap->free_address, &free_block->node_address );
-  avl_insert( &kernel_heap->free_size, &free_block->node_size );
+  avl_insert_by_node( &kernel_heap->free_address, &free_block->node_address );
+  avl_insert_by_node( &kernel_heap->free_size, &free_block->node_size );
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -355,7 +377,7 @@ vaddr_t heap_allocate_block( size_t size ) {
   paddr_t new_start;
 
   // Try to find one that matches by size
-  address_node = avl_find(
+  address_node = avl_find_by_data(
     &kernel_heap->free_size,
     ( void* )size
   );
@@ -390,7 +412,7 @@ vaddr_t heap_allocate_block( size_t size ) {
   }
 
   // remove nodes from free trees
-  avl_remove( &kernel_heap->free_address, block->node_address.data );
+  avl_remove_by_data( &kernel_heap->free_address, block->node_address.data );
   avl_remove_by_node( &kernel_heap->free_size, &block->node_size );
 
   if ( split ) {
@@ -418,17 +440,12 @@ vaddr_t heap_allocate_block( size_t size ) {
 
     // move block
     block = ( heap_block_ptr_t )new_start;
-    // clear memory
-    memset( ( vaddr_t )block, 0, remaining_size + sizeof( heap_block_t ) );
     // prepare block
-    block->address = ( vaddr_t )(
-      ( paddr_t )block + sizeof( heap_block_t )
+    prepare_block(
+      block,
+      ( vaddr_t )( ( paddr_t )block + sizeof( heap_block_t ) ),
+      remaining_size
     );
-    block->size = remaining_size;
-
-    // refresh node size data
-    avl_prepare_node( &block->node_size, ( void* )block->size );
-    avl_prepare_node( &block->node_address, ( void* )block->address );
 
     // debug output
     #if defined( PRINT_MM_HEAP )
@@ -437,25 +454,22 @@ vaddr_t heap_allocate_block( size_t size ) {
     #endif
 
     // insert nodes at free trees
-    avl_insert( &kernel_heap->free_address, &block->node_address );
-    avl_insert( &kernel_heap->free_size, &block->node_size );
+    avl_insert_by_node( &kernel_heap->free_address, &block->node_address );
+    avl_insert_by_node( &kernel_heap->free_size, &block->node_size );
   // found matching node
   } else {
     new_block = block;
   }
 
-  // clear new block
-  memset( ( vaddr_t )new_block, 0, real_size );
-  // setup new block
-  new_block->size = size;
-  new_block->address = ( vaddr_t )(
-    ( paddr_t )new_block + sizeof( heap_block_t )
+  // prepare block
+  prepare_block(
+    new_block,
+    ( vaddr_t )( ( paddr_t )new_block + sizeof( heap_block_t ) ),
+    size
   );
-  // prepare nodes
-  avl_prepare_node( &new_block->node_address, new_block->address );
-  avl_prepare_node( &new_block->node_size, ( void* )new_block->size );
+
   // insert at used block
-  avl_insert( &kernel_heap->used_area, &new_block->node_address );
+  avl_insert_by_node( &kernel_heap->used_area, &new_block->node_address );
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -490,7 +504,7 @@ void heap_free_block( vaddr_t addr ) {
   #endif
 
   // finde node by address within tree
-  address_node = avl_find( &kernel_heap->used_area, addr );
+  address_node = avl_find_by_data( &kernel_heap->used_area, addr );
 
   // skip if nothing has been found
   if ( NULL == address_node ) {
@@ -527,7 +541,7 @@ void heap_free_block( vaddr_t addr ) {
   #endif
 
   // remove node from used block
-  avl_remove( &kernel_heap->used_area, address_node->data );
+  avl_remove_by_data( &kernel_heap->used_area, address_node->data );
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -543,12 +557,12 @@ void heap_free_block( vaddr_t addr ) {
     avl_print( &kernel_heap->free_size );
   #endif
 
-  // prepare nodes again
-  avl_prepare_node( &current_block->node_address, current_block->address );
-  avl_prepare_node( &current_block->node_size, ( void* )current_block->size );
+  // prepare block
+  prepare_block( current_block, current_block->address, current_block->size );
+
   // insert nodes
-  avl_insert( &kernel_heap->free_address, &current_block->node_address );
-  avl_insert( &kernel_heap->free_size, &current_block->node_size );
+  avl_insert_by_node( &kernel_heap->free_address, &current_block->node_address );
+  avl_insert_by_node( &kernel_heap->free_size, &current_block->node_size );
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -569,7 +583,7 @@ void heap_free_block( vaddr_t addr ) {
   // FIXME: Check right sibling for merge
 
   // find parent
-  avl_node_ptr_t parent = avl_find_parent(
+  avl_node_ptr_t parent = avl_find_parent_by_data(
     &kernel_heap->free_address,
     current_block->node_address.data
   );
@@ -609,8 +623,8 @@ void heap_free_block( vaddr_t addr ) {
     // extend parent
     if ( current_end == parent_begin ) {
       // remove node from free tree
-      avl_remove( &kernel_heap->free_address, parent->data );
-      avl_remove( &kernel_heap->free_address, current_block->node_address.data );
+      avl_remove_by_data( &kernel_heap->free_address, parent->data );
+      avl_remove_by_data( &kernel_heap->free_address, current_block->node_address.data );
       // remove node from free size
       avl_remove_by_node( &kernel_heap->free_size, &parent_block->node_size );
       avl_remove_by_node( &kernel_heap->free_size, &current_block->node_size );
@@ -620,8 +634,8 @@ void heap_free_block( vaddr_t addr ) {
       avl_prepare_node( &current_block->node_address, current_block->address );
       avl_prepare_node( &current_block->node_size, ( void* )current_block->size );
       // insert again
-      avl_insert( &kernel_heap->free_address, &current_block->node_address );
-      avl_insert( &kernel_heap->free_size, &current_block->node_size );
+      avl_insert_by_node( &kernel_heap->free_address, &current_block->node_address );
+      avl_insert_by_node( &kernel_heap->free_size, &current_block->node_size );
 
       // overwrite parent
       parent = &current_block->node_address;
@@ -629,8 +643,8 @@ void heap_free_block( vaddr_t addr ) {
 
     if ( current_begin == parent_end ) {
        // remove node from free tree
-      avl_remove( &kernel_heap->free_address, parent->data );
-      avl_remove( &kernel_heap->free_address, current_block->node_address.data );
+      avl_remove_by_data( &kernel_heap->free_address, parent->data );
+      avl_remove_by_data( &kernel_heap->free_address, current_block->node_address.data );
       // remove node from free size
       avl_remove_by_node( &kernel_heap->free_size, &parent_block->node_size );
       avl_remove_by_node( &kernel_heap->free_size, &current_block->node_size );
@@ -640,14 +654,14 @@ void heap_free_block( vaddr_t addr ) {
       avl_prepare_node( &current_block->node_address, current_block->address );
       avl_prepare_node( &current_block->node_size, ( void* )current_block->size );
       // insert again
-      avl_insert( &kernel_heap->free_address, &current_block->node_address );
-      avl_insert( &kernel_heap->free_size, &current_block->node_size );
+      avl_insert_by_node( &kernel_heap->free_address, &current_block->node_address );
+      avl_insert_by_node( &kernel_heap->free_size, &current_block->node_size );
       // overwrite current
       current_block = parent_block;
     }
 
     // find parent of parent
-    parent = avl_find_parent( &kernel_heap->free_address, parent->data );
+    parent = avl_find_parent_by_data( &kernel_heap->free_address, parent->data );
   } while ( NULL != parent );
 
   // Debug output

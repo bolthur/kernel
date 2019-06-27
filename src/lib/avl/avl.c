@@ -250,7 +250,7 @@ static avl_node_ptr_t insert(
  * @param root root node
  * @return avl_node_ptr_t
  */
-static avl_node_ptr_t find(
+static avl_node_ptr_t find_by_data(
   void* data,
   avl_node_ptr_t root
 ) {
@@ -261,10 +261,10 @@ static avl_node_ptr_t find(
 
   // continue left
   if ( root->data > data ) {
-    return find( data, root->left );
+    return find_by_data( data, root->left );
   // continue right
   } else if ( data > root->data ) {
-    return find( data, root->right );
+    return find_by_data( data, root->right );
   }
 
   // generic else case: found node is the wanted one
@@ -278,7 +278,7 @@ static avl_node_ptr_t find(
  * @param root root node
  * @return avl_node_ptr_t
  */
-static avl_node_ptr_t find_parent(
+static avl_node_ptr_t find_parent_by_data(
   void* data,
   avl_node_ptr_t root
 ) {
@@ -305,10 +305,10 @@ static avl_node_ptr_t find_parent(
 
   // continue left
   if ( root->data > data ) {
-    return find_parent( data, root->left );
+    return find_parent_by_data( data, root->left );
   // continue right
   } else if ( data > root->data ) {
-    return find_parent( data, root->right );
+    return find_parent_by_data( data, root->right );
   }
 
   // generic else case: found node is the wanted one
@@ -447,7 +447,7 @@ static avl_node_ptr_t remove_by_node(
  * @param root root node
  * @return avl_node_ptr_t
  */
-static avl_node_ptr_t remove(
+static avl_node_ptr_t remove_by_data(
   void* data,
   avl_node_ptr_t root
 ) {
@@ -458,10 +458,10 @@ static avl_node_ptr_t remove(
 
   // continue left
   if ( root->data > data ) {
-    root->left = remove( data, root->left );
+    root->left = remove_by_data( data, root->left );
   // continue right
   } else if ( data > root->data ) {
-    root->right = remove( data, root->right );
+    root->right = remove_by_data( data, root->right );
   // found node
   } else {
     avl_node_ptr_t tmp;
@@ -487,7 +487,7 @@ static avl_node_ptr_t remove(
       tmp = avl_get_min( root->right );
 
       // remove tmp from right
-      root->right = remove( tmp->data, root->right );
+      root->right = remove_by_data( tmp->data, root->right );
 
       // replace current one with tmp
       tmp->left = root->left;
@@ -530,7 +530,7 @@ avl_tree_ptr_t avl_create( avl_compare_func_t func, void* param ) {
  * @param node
  * @return bool
  */
-void avl_insert( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
+void avl_insert_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
   // ensure existing tree
   assert( NULL != tree && NULL != node );
 
@@ -545,8 +545,8 @@ void avl_insert( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
  * @param data data to lookup
  * @return avl_node_ptr_t found node or NULL
  */
-avl_node_ptr_t avl_find( const avl_tree_ptr_t tree, void* data ) {
-  return find( data, tree->root );
+avl_node_ptr_t avl_find_by_data( const avl_tree_ptr_t tree, void* data ) {
+  return find_by_data( data, tree->root );
 }
 
 /**
@@ -555,8 +555,8 @@ avl_node_ptr_t avl_find( const avl_tree_ptr_t tree, void* data ) {
  * @param tree tree to work on
  * @param data data to lookup
  */
-avl_node_ptr_t avl_find_parent( const avl_tree_ptr_t tree, void* data ) {
-  return find_parent( data, tree->root );
+avl_node_ptr_t avl_find_parent_by_data( const avl_tree_ptr_t tree, void* data ) {
+  return find_parent_by_data( data, tree->root );
 }
 
 /**
@@ -565,8 +565,8 @@ avl_node_ptr_t avl_find_parent( const avl_tree_ptr_t tree, void* data ) {
  * @param tree tree to search in
  * @param data data of node to find
  */
-void avl_remove( const avl_tree_ptr_t tree, void* data ) {
-  tree->root = remove( data, tree->root );
+void avl_remove_by_data( const avl_tree_ptr_t tree, void* data ) {
+  tree->root = remove_by_data( data, tree->root );
 }
 
 /**
