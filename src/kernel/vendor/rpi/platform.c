@@ -23,6 +23,7 @@
 #include <stdio.h>
 
 #include <kernel/mm/phys.h>
+#include <kernel/mm/placement.h>
 #include <vendor/rpi/platform.h>
 #include <vendor/rpi/mailbox/property.h>
 
