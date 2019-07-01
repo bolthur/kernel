@@ -107,6 +107,10 @@ void kernel_main() {
   printf( "FREE UP 0x%08X\r\n", e );
   free( e );
 
+  b = malloc( 0x10000 );
+  printf( "\r\n\r\nFREE UP 0x%08X\r\n", b );
+  free( b );
+
   // Setup timer
   printf( "[bolthur/kernel -> timer] initialize ...\r\n" );
   timer_init();
