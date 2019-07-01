@@ -31,8 +31,6 @@
 
 /**
  * @brief Initialize serial port
- *
- * @todo Route uart interrupt as FIQ when DEBUG is defined
  */
 void serial_init( void ) {
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
@@ -95,10 +93,6 @@ void serial_init( void ) {
 
   // Mask all interrupts.
   mmio_write( base + UARTIMSC, ( 1 << 1 ) | ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 ) | ( 1 << 7 ) | ( 1 << 8 ) | ( 1 << 9 ) | ( 1 << 10 ) );
-
-  // additional stuff for debugging with gdb and serial port
-  #if defined( DEBUG )
-  #endif
 
   // Enable UART0, receive & transfer part of UART.
   mmio_write( base + UARTCR, ( 1 << 0 ) | ( 1 << 8 ) | ( 1 << 9 ) );

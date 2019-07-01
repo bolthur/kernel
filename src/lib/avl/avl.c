@@ -22,6 +22,7 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include <avl/avl.h>
 
 /**
@@ -511,16 +512,18 @@ static avl_node_ptr_t remove_by_data(
  * @brief Creates a new avl tree
  *
  * @param func
- * @param param
  * @return avl_tree_ptr_t
- *
- * @todo add logic if necessary, else remove
  */
-avl_tree_ptr_t avl_create( avl_compare_func_t func, void* param ) {
-  ( void )func;
-  ( void )param;
+avl_tree_ptr_t avl_create( avl_compare_func_t func ) {
+  // create tree
+  avl_tree_ptr_t new_tree = ( avl_tree_ptr_t )calloc( 1, sizeof( avl_tree_t ) );
 
-  return NULL;
+  // initialize attributes
+  new_tree->compare = func;
+  new_tree->root = NULL;
+
+  // finally return
+  return new_tree;
 }
 
 /**

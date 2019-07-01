@@ -22,8 +22,6 @@
 
 /**
  * @brief Flush cache
- *
- * @todo check and revise
  */
 void OPT_NONE barrier_flush_cache( void ) {
   __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c14, #0" : : [ zero ] "r" ( 0 ) : "memory" );

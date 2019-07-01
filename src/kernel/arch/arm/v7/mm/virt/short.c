@@ -513,6 +513,11 @@ void v7_short_map(
 
   // unmap temporary
   unmap_temporary( ( vaddr_t )table, SD_TBL_SIZE );
+
+  // flush context if running
+  if ( virt_initialized_get() ) {
+    virt_flush_context();
+  }
 }
 
 /**
@@ -611,8 +616,9 @@ void v7_short_flush_context( void ) {
   __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) );
   // invalidate entire tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
-  // data synchronization barrier
+  // instruction synchronization barrier
   barrier_instruction_sync();
+  // data synchronization barrier
   barrier_data_sync();
 }
 

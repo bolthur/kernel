@@ -45,10 +45,9 @@ typedef struct avl_node {
 typedef struct avl_tree {
   avl_node_ptr_t root;
   avl_compare_func_t compare;
-  size_t count;
 } avl_tree_t, *avl_tree_ptr_t;
 
-avl_tree_ptr_t avl_create( avl_compare_func_t, void* );
+avl_tree_ptr_t avl_create( avl_compare_func_t );
 
 avl_node_ptr_t avl_get_max( const avl_node_ptr_t );
 avl_node_ptr_t avl_get_min( const avl_node_ptr_t );
