@@ -45,6 +45,24 @@ void v7_long_map(
 }
 
 /**
+ * @brief Internal v7 long descriptor mapping function
+ *
+ * @param ctx pointer to page context
+ * @param vaddr pointer to virtual address
+ * @param flag mapping flags
+ *
+ * @todo add logic for lpae
+ * @todo remove call for v7 short mapping
+ */
+void v7_long_map_random(
+  virt_context_ptr_t ctx,
+  vaddr_t vaddr,
+  uint32_t flag
+) {
+  v7_short_map_random( ctx, vaddr, flag );
+}
+
+/**
  * @brief Internal v7 long descriptor unmapping function
  *
  * @param ctx pointer to page context

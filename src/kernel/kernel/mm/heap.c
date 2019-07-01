@@ -168,17 +168,14 @@ static void extend_heap_space( void ) {
     addr < ( vaddr_t )( ( paddr_t )heap_end + HEAP_EXTENSION );
     addr = ( vaddr_t )( ( paddr_t )addr + PAGE_SIZE )
   ) {
-    // Find free page
-    paddr_t phys = ( paddr_t )phys_find_free_page( PAGE_SIZE );
-
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "Map 0x%08x to 0x%08x\r\n", phys, addr );
+      DEBUG_OUTPUT( "Map 0x%08x\r\n", addr );
     #endif
 
     // map address
-    virt_map_address(
-      kernel_context, addr, phys, PAGE_FLAG_BUFFERABLE | PAGE_FLAG_CACHEABLE
+    virt_map_address_random(
+      kernel_context, addr, PAGE_FLAG_BUFFERABLE | PAGE_FLAG_CACHEABLE
     );
   }
 
@@ -435,17 +432,14 @@ void heap_init( void ) {
     addr < ( vaddr_t )( ( paddr_t )HEAP_START + HEAP_MIN_SIZE );
     addr = ( vaddr_t )( ( paddr_t )addr + PAGE_SIZE )
   ) {
-    // Find free page
-    paddr_t phys = ( paddr_t )phys_find_free_page( PAGE_SIZE );
-
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "Map 0x%08x to 0x%08x\r\n", phys, addr );
+      DEBUG_OUTPUT( "Map 0x%08x\r\n", addr );
     #endif
 
     // map address
-    virt_map_address(
-      kernel_context, addr, phys, PAGE_FLAG_BUFFERABLE | PAGE_FLAG_CACHEABLE
+    virt_map_address_random(
+      kernel_context, addr, PAGE_FLAG_BUFFERABLE | PAGE_FLAG_CACHEABLE
     );
   }
 

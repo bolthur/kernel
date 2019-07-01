@@ -34,7 +34,7 @@
 #include <arch/arm/v7/mm/virt/long.h>
 
 /**
- * @brief
+ * @brief Map physical address to virtual one
  *
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
@@ -56,6 +56,33 @@ void virt_map_address(
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
     v7_short_map( ctx, vaddr, paddr, flag );
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
+ * @brief Map virtual address with random physical one
+ *
+ * @param ctx pointer to context
+ * @param vaddr virtual address to map
+ * @param flag flags used for mapping
+ */
+void virt_map_address_random(
+  virt_context_ptr_t ctx,
+  vaddr_t vaddr,
+  uint32_t flag
+) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    v7_long_map_random( ctx, vaddr, flag );
+  // check v7 short descriptor format
+  } else if (
+    ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
+    || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
+  ) {
+    v7_short_map_random( ctx, vaddr, flag );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

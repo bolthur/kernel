@@ -521,6 +521,26 @@ void v7_short_map(
 }
 
 /**
+ * @brief Internal v7 short descriptor random mapping function
+ *
+ * @param ctx pointer to page context
+ * @param vaddr pointer to virtual address
+ * @param flag flags for mapping
+ */
+void v7_short_map_random(
+  virt_context_ptr_t ctx,
+  vaddr_t vaddr,
+  uint32_t flag
+) {
+  // get physical address
+  vaddr_t phys = phys_find_free_page( PAGE_SIZE );
+  // assert
+  assert( NULL != phys );
+  // map it
+  v7_short_map( ctx, vaddr, ( paddr_t )phys, flag );
+}
+
+/**
  * @brief Internal v7 short descriptor unmapping function
  *
  * @param ctx pointer to page context

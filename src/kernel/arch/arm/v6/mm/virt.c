@@ -56,6 +56,27 @@ void virt_map_address(
 }
 
 /**
+ * @brief Map virtual address with random physical one
+ *
+ * @param ctx pointer to context
+ * @param vaddr virtual address to map
+ * @param flag flags used for mapping
+ */
+void virt_map_address_random(
+  virt_context_ptr_t ctx,
+  vaddr_t vaddr,
+  uint32_t flag
+) {
+  // check for v6 long descriptor format
+  if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+    v6_short_map_random( ctx, vaddr, flag );
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
  * @brief unmap virtual address
  *
  * @param ctx pointer to page context
@@ -78,10 +99,6 @@ void virt_unmap_address( virt_context_ptr_t ctx, vaddr_t addr ) {
  * @return vaddr_t address of context
  */
 virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
-  #if defined( ELF64 )
-    #error "Unsupported architecture"
-  #endif
-
   // Panic when mode is unsupported
   if ( ! ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) ) {
     PANIC( "Unsupported mode!" );
