@@ -1,4 +1,4 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = lib boot kernel
+SUBDIRS = lib kernel arch platform

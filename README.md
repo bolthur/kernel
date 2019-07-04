@@ -87,10 +87,10 @@ For remote debugging configure the kernel with `--enable-debug`, rebuild and cop
 
 ```bash
 ### debug 32 bit arm device
-../scripts/opt/cross/bin/arm-none-eabi-gdb -b 115200 --tty=/dev/ttyUSB0 ./kernel/vendor/rpi/kernel.zwerg ./kernel/vendor/rpi/kernel.map
+../scripts/opt/cross/bin/arm-none-eabi-gdb -b 115200 --tty=/dev/ttyUSB0 ./platform/rpi/kernel.zwerg ./platform/rpi/kernel.map
 
 ### debug 64 bit arm device
-../scripts/opt/cross/bin/aarch64-none-elf-gdb -b 115200 --tty=/dev/ttyUSB0 ./kernel/vendor/rpi/kernel.zwerg ./kernel/vendor/rpi/kernel.map
+../scripts/opt/cross/bin/aarch64-none-elf-gdb -b 115200 --tty=/dev/ttyUSB0 ./platform/rpi/kernel.zwerg ./platform/rpi/kernel.map
 ```
 
 ### Real hardware
@@ -113,8 +113,9 @@ Emulation of the kernel project with qemu during development may be done at all 
 
 ```bash
 # raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel.zwerg -initrd ../misc/vendor/rpi/initrd.tar
+qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.zwerg -initrd ../build-aux/platform/rpi/initrd.img
 
 # raspberry pi 3B kernel emulation
-qemu-system-aarch64 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/kernel/vendor/rpi/kernel.zwerg -initrd ../misc/vendor/rpi/initrd.tar
+qemu-system-arm -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.zwerg -initrd ../build-aux/platform/rpi/initrd.img
+qemu-system-aarch64 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.zwerg -initrd ../build-aux/platform/rpi/initrd.img
 ```

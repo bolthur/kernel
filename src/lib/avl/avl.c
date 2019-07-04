@@ -23,7 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <avl/avl.h>
+#include <avl.h>
 
 /**
  * @brief buffer helper for output

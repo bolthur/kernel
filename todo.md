@@ -1,32 +1,22 @@
 
 # Things to be done
 
-* [ ] Add irq and isrs register handling
-  * [ ] Check and revise if necessary
+* [ ] Revise irq and isrs register handling
+  * [ ] Throw global events if an interrupt occurrs
+  * [ ] Replace irq register handler by register event
+* [ ] Replace magic values at serial init by defines
 * [ ] FPU
   * [ ] Add push and pop of fpu registers within ivt stubs
   * [ ] Extend cpu structure if fpu is enabled
 * [ ] Memory management
-  * [ ] Extend initial vmm setup to read out max memory from mailbox ( rpi vendor )
-  * [ ] Remove memory define from hosts macro, when rpi vendor fetches amount automatically
   * [ ] Add initial setup of paging with LPAE if enabled
   * [ ] Change rpi 2 linker script for v7 to link with LPAE in mind and different load address similar to the one for v8
-  * [ ] Add logic LPAE
-  * [ ] Remove fallback for v7 lpae mapping to short descriptor
-  * [ ] Add normal setup of mmu during startup of kernel splitted to folders listed below
-    * [ ] `kernel/arch/{architecture}/mm`
-    * [ ] `kernel/arch/{architecture}/{sub architecture}/mm`
-    * [ ] `vendor/{vendor}/mm`
   * [ ] Check for further splitting of entry point ( separation between 32bit and 64bit ) is necessary
-  * [ ] Consider peripherals per vendor within mmu as not cachable
+  * [ ] Add lpae paging to kernel after boot setup
   * [ ] Consider and enable CPU related caches for performance
   * [ ] Check and use recursive page mapping
 * [ ] Platform init
   * [ ] Add check for initrd loaded after kernel and move placement address for placement allocator beyond initrd
-* [ ] Memory management
-  * [ ] Add generic avl tree library
-  * [ ] Heap management for dynamic memory allocation done within `kernel` using architecture related code with avl tree
-* [ ] Provide kernel implementation for `malloc` and `free` within `libstdlib`
 * [ ] Add gdb stub for debugging on remote device via serial port
   * [ ] Add remote debugging integration
   * [ ] Finish debug launch.json when remote debugging is possible
@@ -39,7 +29,7 @@
 * [ ] Add SMP support
   * [ ] Memory management
     * [ ] Prepare virtual memory management per core if smp is active
-    * [ ] Specify cores per vendor via autotools
+    * [ ] Specify cores per platform via autotools
   * [ ] Determine current running core within exceptions
   * [ ] Extend irq check to check corresponding cpu interrupt registers
   * [ ] ...
@@ -79,8 +69,8 @@
 
 # Different projects, not kernel related things to be done
 
-* [ ] Create a draft for "build" system to create ready to boot images with vendor driver/app packaging
-  * [ ] Per vendor initial ramdisk creation
+* [ ] Create a draft for "build" system to create ready to boot images with platform driver/app packaging
+  * [ ] Per platform initial ramdisk creation
 * [ ] Create repository for building ported applications and libraries
   * [ ] Add newlib with patch for compilation
   * [ ] Add glibc with patch for compilation

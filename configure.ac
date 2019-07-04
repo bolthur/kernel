@@ -7,7 +7,7 @@ AC_CONFIG_AUX_DIR([build-aux/config])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
-AC_CONFIG_SRCDIR([src/kernel/kernel/main.c])
+AC_CONFIG_SRCDIR([src/kernel/main.c])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_HEADERS([include/config.h])
 
@@ -128,24 +128,12 @@ AC_DEFINE_UNQUOTED([OPT_NONE], [__attribute__((__optimize__( "O0" )))], [Disable
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
-  src/boot/Makefile
-  src/boot/kernel/Makefile
-  src/boot/arch/Makefile
-  src/boot/arch/arm/Makefile
-  src/boot/arch/arm/v6/Makefile
-  src/boot/arch/arm/v7/Makefile
-  src/boot/arch/arm/v8/Makefile
-  src/boot/vendor/Makefile
-  src/boot/vendor/rpi/Makefile
+  src/arch/Makefile
+  src/arch/arm/Makefile
+  src/arch/arm/v6/Makefile
+  src/arch/arm/v7/Makefile
+  src/arch/arm/v8/Makefile
   src/kernel/Makefile
-  src/kernel/kernel/Makefile
-  src/kernel/arch/Makefile
-  src/kernel/arch/arm/Makefile
-  src/kernel/arch/arm/v6/Makefile
-  src/kernel/arch/arm/v7/Makefile
-  src/kernel/arch/arm/v8/Makefile
-  src/kernel/vendor/Makefile
-  src/kernel/vendor/rpi/Makefile
   src/lib/Makefile
   src/lib/assert/Makefile
   src/lib/avl/Makefile
@@ -153,7 +141,10 @@ AC_CONFIG_FILES([
   src/lib/stdio/Makefile
   src/lib/stdlib/Makefile
   src/lib/string/Makefile
+  src/lib/tar/Makefile
   src/lib/ubsan/Makefile
+  src/platform/Makefile
+  src/platform/rpi/Makefile
 ])
 
 AC_OUTPUT
