@@ -21,7 +21,6 @@
 #include <stddef.h>
 
 #include <string.h>
-#include <kernel/type.h>
 #include <kernel/panic.h>
 #include <kernel/debug.h>
 #include <platform/rpi/peripheral.h>
@@ -29,17 +28,17 @@
 #include <kernel/mm/phys.h>
 #include <kernel/mm/virt.h>
 
-#define GPIO_PERIPHERAL_BASE ( vaddr_t )0xF2000000
+#define GPIO_PERIPHERAL_BASE 0xF2000000
 #if defined( BCM2709 ) || defined( BCM2710 )
-  #define CPU_PERIPHERAL_BASE ( vaddr_t )0xF3000000
+  #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
 
 /**
  * @brief Initialize virtual memory management
  */
 void virt_platform_init( void ) {
-  paddr_t start;
-  vaddr_t virtual;
+  uintptr_t start;
+  uintptr_t virtual;
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -51,17 +50,17 @@ void virt_platform_init( void ) {
   #endif
 
   // set start and virtual
-  start = ( paddr_t )peripheral_base_get( PERIPHERAL_GPIO );
+  start = peripheral_base_get( PERIPHERAL_GPIO );
   virtual = GPIO_PERIPHERAL_BASE;
 
   // map peripherals
-  while ( start < ( paddr_t )peripheral_end_get( PERIPHERAL_GPIO ) ) {
+  while ( start < peripheral_end_get( PERIPHERAL_GPIO ) ) {
     // map
     virt_map_address( kernel_context, virtual, start, PAGE_FLAG_NONE );
 
     // increase start and virtual
     start += PAGE_SIZE;
-    virtual = ( vaddr_t )( ( paddr_t )virtual + PAGE_SIZE );
+    virtual += PAGE_SIZE;
   }
 
   #if defined( BCM2709 ) || defined( BCM2710 )
@@ -75,17 +74,17 @@ void virt_platform_init( void ) {
     #endif
 
     // set start and virtual
-    start = ( paddr_t )peripheral_base_get( PERIPHERAL_LOCAL );
+    start = peripheral_base_get( PERIPHERAL_LOCAL );
     virtual = CPU_PERIPHERAL_BASE;
 
     // map peripherals
-    while ( start < ( paddr_t )peripheral_end_get( PERIPHERAL_LOCAL ) ) {
+    while ( start < peripheral_end_get( PERIPHERAL_LOCAL ) ) {
       // map
       virt_map_address( kernel_context, virtual, start, PAGE_FLAG_NONE );
 
       // increase start and virtual
       start += PAGE_SIZE;
-      virtual = ( vaddr_t )( ( paddr_t )virtual + PAGE_SIZE );
+      virtual += PAGE_SIZE;
     }
   #endif
 }

@@ -23,6 +23,7 @@
 
 #include <assert.h>
 #include <kernel/debug.h>
+#include <kernel/panic.h>
 #include <kernel/entry.h>
 #include <kernel/mm/phys.h>
 #include <kernel/mm/placement.h>
@@ -48,8 +49,8 @@ void virt_init( void ) {
   virt_arch_init();
 
   // determine start and end for kernel mapping
-  paddr_t start = 0;
-  paddr_t end = placement_address;
+  uintptr_t start = 0;
+  uintptr_t end = placement_address;
 
   // round up to page size if necessary
   if ( end % PAGE_SIZE ) {

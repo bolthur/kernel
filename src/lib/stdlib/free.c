@@ -19,6 +19,7 @@
  */
 
 #include <stddef.h>
+#include <stdint.h>
 #include <assert.h>
 #include <kernel/panic.h>
 #include <kernel/mm/heap.h>
@@ -33,5 +34,5 @@ void free( void *ptr ) {
   assert( true == heap_initialized_get() );
 
   // free heap block
-  heap_free_block( ptr );
+  heap_free_block( ( uintptr_t )ptr );
 }

@@ -43,8 +43,8 @@
  */
 void virt_map_address(
   virt_context_ptr_t ctx,
-  vaddr_t vaddr,
-  paddr_t paddr,
+  uintptr_t vaddr,
+  uintptr_t paddr,
   uint32_t flag
 ) {
   // check for v7 long descriptor format
@@ -71,7 +71,7 @@ void virt_map_address(
  */
 void virt_map_address_random(
   virt_context_ptr_t ctx,
-  vaddr_t vaddr,
+  uintptr_t vaddr,
   uint32_t flag
 ) {
   // check for v7 long descriptor format
@@ -95,7 +95,7 @@ void virt_map_address_random(
  * @param ctx pointer to page context
  * @param addr pointer to virtual address
  */
-void virt_unmap_address( virt_context_ptr_t ctx, vaddr_t addr ) {
+void virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
     v7_long_unmap( ctx, addr );
@@ -141,10 +141,10 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
  * @param table page table address
  * @return vaddr_t address of table
  */
-vaddr_t virt_create_table(
+uintptr_t virt_create_table(
   virt_context_ptr_t ctx,
-  vaddr_t addr,
-  vaddr_t table
+  uintptr_t addr,
+  uintptr_t table
 ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {

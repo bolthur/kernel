@@ -42,27 +42,23 @@ static sd_context_half_t initial_user_context
  * @param max_memory max physical memory of the board
  */
 void SECTION( ".text.boot" )
-boot_virt_setup_short( paddr_t max_memory ) {
+boot_virt_setup_short( uintptr_t max_memory ) {
   uint32_t x, reg;
   sd_ttbcr_t ttbcr;
 
   for ( x = 0; x < 4096; x++ ) {
     initial_kernel_context.list[ x ] = 0;
   }
-
   for ( x = 0; x < 2048; x++ ) {
     initial_user_context.list[ x ] = 0;
   }
 
   // map all memory
   for ( x = 0; x < ( max_memory >> 20 ); x++ ) {
-    boot_virt_map_short( x << 20, ( vaddr_t )( x << 20 ) );
+    boot_virt_map_short( x << 20, x << 20 );
 
     if ( 0 < KERNEL_OFFSET ) {
-      boot_virt_map_short(
-        x << 20,
-        ( vaddr_t )( ( x + ( KERNEL_OFFSET >> 20 ) ) << 20 )
-      );
+      boot_virt_map_short( x << 20, ( x + ( KERNEL_OFFSET >> 20 ) ) << 20 );
     }
   }
 
@@ -94,8 +90,8 @@ boot_virt_setup_short( paddr_t max_memory ) {
  * @param max_memory max physical memory of the board
  */
 void SECTION( ".text.boot" )
-boot_virt_map_short( paddr_t phys, vaddr_t virt ) {
-  uint32_t x = ( ( uint32_t )virt >> 20 );
+boot_virt_map_short( uintptr_t phys, uintptr_t virt ) {
+  uint32_t x = virt >> 20;
   uint32_t y = phys >> 20;
 
   if ( ( uint32_t )virt < SD_TTBR1_START_TTBR0_2G ) {

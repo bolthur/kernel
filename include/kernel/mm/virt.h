@@ -23,7 +23,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <kernel/type.h>
+#include <stdint.h>
 
 typedef enum {
   PAGE_FLAG_NONE = 0,
@@ -37,7 +37,7 @@ typedef enum {
 } virt_context_type_t;
 
 typedef struct {
-  vaddr_t context;
+  uintptr_t context;
   virt_context_type_t type;
 } virt_context_t, *virt_context_ptr_t;
 
@@ -52,10 +52,10 @@ bool virt_initialized_get( void );
 void virt_platform_post_init( void );
 
 virt_context_ptr_t virt_create_context( virt_context_type_t );
-vaddr_t virt_create_table( virt_context_ptr_t, vaddr_t, vaddr_t );
-void virt_map_address( virt_context_ptr_t, vaddr_t, paddr_t, uint32_t );
-void virt_map_address_random( virt_context_ptr_t, vaddr_t, uint32_t );
-void virt_unmap_address( virt_context_ptr_t, vaddr_t );
+uintptr_t virt_create_table( virt_context_ptr_t, uintptr_t, uintptr_t );
+void virt_map_address( virt_context_ptr_t, uintptr_t, uintptr_t, uint32_t );
+void virt_map_address_random( virt_context_ptr_t, uintptr_t, uint32_t );
+void virt_unmap_address( virt_context_ptr_t, uintptr_t );
 uint32_t virt_get_supported_modes( void );
 void virt_set_context( virt_context_ptr_t );
 void virt_flush_context( void );

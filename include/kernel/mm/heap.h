@@ -36,8 +36,8 @@
 #endif
 
 typedef struct {
-  vaddr_t start;
-  vaddr_t size;
+  uintptr_t start;
+  size_t size;
   avl_tree_t free_address;
   avl_tree_t free_size;
   avl_tree_t used_area;
@@ -46,7 +46,7 @@ typedef struct {
 typedef struct {
   avl_node_t node_address;
   avl_node_t node_size;
-  vaddr_t address;
+  uintptr_t address;
   size_t size;
 } heap_block_t, *heap_block_ptr_t;
 
@@ -59,7 +59,7 @@ heap_manager_ptr_t kernel_heap;
 
 bool heap_initialized_get( void );
 void heap_init( void );
-vaddr_t heap_allocate_block( size_t );
-void heap_free_block( vaddr_t );
+uintptr_t heap_allocate_block( size_t );
+void heap_free_block( uintptr_t );
 
 #endif

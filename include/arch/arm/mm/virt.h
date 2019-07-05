@@ -19,7 +19,7 @@
  */
 
 #if ! defined( ASSEMBLER_FILE )
-  #include <kernel/type.h>
+  #include <stdint.h>
 #endif
 
 #if ! defined( __ARCH_ARM_MM_VIRT__ )
@@ -109,8 +109,8 @@
       uint32_t supported_modes;
 
       // helper macros
-      #define SD_VIRTUAL_TO_TABLE( a ) ( ( paddr_t ) a >> 20  )
-      #define SD_VIRTUAL_TO_PAGE( a ) ( ( ( paddr_t ) a >> 12 ) & 0xFF )
+      #define SD_VIRTUAL_TO_TABLE( a ) ( a >> 20  )
+      #define SD_VIRTUAL_TO_PAGE( a ) ( ( a >> 12 ) & 0xFF )
 
       typedef union PACKED {
         uint32_t raw;

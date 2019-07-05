@@ -23,9 +23,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <kernel/type.h>
 
-typedef void ( *irq_callback_t )( uint8_t, vaddr_t );
+typedef void ( *irq_callback_t )( uint8_t, void* );
 extern irq_callback_t irq_callback_map[];
 extern irq_callback_t fast_irq_callback_map[];
 

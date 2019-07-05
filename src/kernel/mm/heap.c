@@ -100,11 +100,11 @@ static int32_t compare_size_callback(
  */
 static void prepare_block(
   heap_block_ptr_t block,
-  vaddr_t addr,
+  uintptr_t addr,
   size_t size
 ) {
   // clear memory
-  memset( ( vaddr_t )block, 0, size + sizeof( heap_block_t ) );
+  memset( ( void* )block, 0, size + sizeof( heap_block_t ) );
 
   // prepare block itself
   block->size = size;
@@ -121,7 +121,7 @@ static void prepare_block(
 static void extend_heap_space( void ) {
   avl_node_ptr_t max, max_used, max_free;
   heap_block_ptr_t block, free_block;
-  paddr_t heap_end;
+  uintptr_t heap_end;
   size_t heap_size;
 
   // get max from both trees
@@ -148,7 +148,7 @@ static void extend_heap_space( void ) {
   // get block
   block = GET_BLOCK_ADDRESS( max );
   // get heap end and current size
-  heap_end = ( paddr_t )block->address + block->size;
+  heap_end = block->address + block->size;
   heap_size = heap_end - HEAP_START;
   // debug output
   #if defined( PRINT_MM_HEAP )
@@ -164,9 +164,9 @@ static void extend_heap_space( void ) {
 
   // map heap address space
   for (
-    vaddr_t addr = ( vaddr_t )heap_end;
-    addr < ( vaddr_t )( ( paddr_t )heap_end + HEAP_EXTENSION );
-    addr = ( vaddr_t )( ( paddr_t )addr + PAGE_SIZE )
+    uintptr_t addr = heap_end;
+    addr < heap_end + HEAP_EXTENSION;
+    addr += PAGE_SIZE
   ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
@@ -201,14 +201,12 @@ static void extend_heap_space( void ) {
     #endif
 
     // prepare free block
-    free_block->address = ( vaddr_t )(
-      ( paddr_t )free_block + sizeof( heap_block_t )
-    );
+    free_block->address = ( uintptr_t )free_block + sizeof( heap_block_t );
     free_block->size = HEAP_EXTENSION;
   }
 
   // populate node data
-  avl_prepare_node( &free_block->node_address, free_block->address );
+  avl_prepare_node( &free_block->node_address, ( void* )free_block->address );
   avl_prepare_node( &free_block->node_size, ( void* )free_block->size );
 
   // insert into free trees
@@ -308,9 +306,9 @@ static void shrink_heap_space( void ) {
 
   // free up virtual memory
   for (
-    vaddr_t start = ( vaddr_t )( ( size_t )max_block->address + max_block->size );
-    start < ( vaddr_t )max_end;
-    start = ( vaddr_t )( ( paddr_t )start + PAGE_SIZE )
+    uintptr_t start = max_block->address + max_block->size;
+    start < max_end;
+    start += PAGE_SIZE
   ) {
     virt_unmap_address( kernel_context, start );
   }
@@ -336,11 +334,11 @@ static void shrink_heap_space( void ) {
  * @return bool
  */
 static bool mergable( heap_block_ptr_t a, heap_block_ptr_t b ) {
-  vaddr_t a_end, b_end;
+  uintptr_t a_end, b_end;
 
   // calculate end of a and b
-  a_end = ( vaddr_t )( ( size_t )a->address + a->size );
-  b_end = ( vaddr_t )( ( size_t )b->address + b->size );
+  a_end = a->address + a->size;
+  b_end = b->address + b->size;
 
   // debug output
   #if defined( PRINT_MM_HEAP )
@@ -355,7 +353,7 @@ static bool mergable( heap_block_ptr_t a, heap_block_ptr_t b ) {
   #endif
 
   // mergable if following directly
-  return a_end == b || b_end == a;
+  return a_end == ( uintptr_t )b || b_end == ( uintptr_t )a;
 }
 
 /**
@@ -366,7 +364,7 @@ static bool mergable( heap_block_ptr_t a, heap_block_ptr_t b ) {
  * @return heap_block_ptr_t
  */
 static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
-  vaddr_t a_end, b_end;
+  uintptr_t a_end, b_end;
   heap_block_ptr_t to_insert;
 
   // skip if not mergable
@@ -374,8 +372,8 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
     return NULL;
   }
   // calculate end of a and b
-  a_end = ( vaddr_t )( ( size_t )a->address + a->size );
-  b_end = ( vaddr_t )( ( size_t )b->address + b->size );
+  a_end = a->address + a->size;
+  b_end = b->address + b->size;
 
   // remove from free address
   avl_remove_by_data( &kernel_heap->free_address, a->node_address.data );
@@ -385,11 +383,11 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
   avl_remove_by_node( &kernel_heap->free_size, &b->node_size );
 
   // merge a into b
-  if ( b_end == a ) {
+  if ( b_end == ( uintptr_t )a ) {
     b->size += sizeof( heap_block_t ) + a->size;
     to_insert = b;
   // merge b into a
-  } else if ( a_end == b ) {
+  } else if ( a_end == ( uintptr_t )b ) {
     a->size += sizeof( heap_block_t ) + b->size;
     to_insert = a;
   // unsupported case should not occur
@@ -415,7 +413,7 @@ void heap_init( void ) {
 
   // offset for first free block
   uint32_t offset = 0;
-  vaddr_t start = ( vaddr_t )HEAP_START;
+  uintptr_t start = HEAP_START;
 
   // debug output
   #if defined( PRINT_MM_HEAP )
@@ -428,9 +426,9 @@ void heap_init( void ) {
 
   // map heap address space
   for (
-    vaddr_t addr = start;
-    addr < ( vaddr_t )( ( paddr_t )HEAP_START + HEAP_MIN_SIZE );
-    addr = ( vaddr_t )( ( paddr_t )addr + PAGE_SIZE )
+    uintptr_t addr = start;
+    addr < HEAP_START + HEAP_MIN_SIZE;
+    addr += PAGE_SIZE
   ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
@@ -463,7 +461,7 @@ void heap_init( void ) {
   #endif
 
   // initialize management structure
-  memset( ( vaddr_t )kernel_heap, 0, sizeof( heap_manager_t ) );
+  memset( ( void* )kernel_heap, 0, sizeof( heap_manager_t ) );
 
   // populate trees
   kernel_heap->free_address.compare = compare_address_callback;
@@ -471,9 +469,7 @@ void heap_init( void ) {
   kernel_heap->free_size.compare = compare_size_callback;
 
   // create free block
-  heap_block_ptr_t free_block = ( heap_block_ptr_t )(
-    ( paddr_t )HEAP_START + offset
-  );
+  heap_block_ptr_t free_block = ( heap_block_ptr_t )( HEAP_START + offset );
 
   // debug output
   #if defined( PRINT_MM_HEAP )
@@ -489,11 +485,7 @@ void heap_init( void ) {
   #endif
 
   // prepare free block
-  prepare_block(
-    free_block,
-    ( vaddr_t )( ( paddr_t )HEAP_START + offset ),
-    HEAP_MIN_SIZE - offset
-  );
+  prepare_block( free_block, HEAP_START + offset, HEAP_MIN_SIZE - offset );
 
   // insert into free tree
   avl_insert_by_node( &kernel_heap->free_address, &free_block->node_address );
@@ -529,7 +521,7 @@ bool heap_initialized_get( void ) {
  * @param alignment address aligment
  * @return vaddr_t address of allocated block
  */
-vaddr_t heap_allocate_block( size_t size ) {
+uintptr_t heap_allocate_block( size_t size ) {
   // variables
   heap_block_ptr_t block, new_block;
   avl_node_ptr_t address_node;
@@ -538,7 +530,7 @@ vaddr_t heap_allocate_block( size_t size ) {
   // calculate real size
   real_size = size + sizeof( heap_block_t );
   uint32_t remaining_size;
-  paddr_t new_start;
+  uintptr_t new_start;
 
   // Try to find one that matches by size
   address_node = avl_find_by_data(
@@ -585,7 +577,7 @@ vaddr_t heap_allocate_block( size_t size ) {
   if ( split ) {
     // calculate remaining size
     remaining_size = block->size - real_size;
-    new_start = ( paddr_t )block + real_size;
+    new_start = ( uintptr_t )block + real_size;
 
     // debug output
     #if defined( PRINT_MM_HEAP )
@@ -610,7 +602,7 @@ vaddr_t heap_allocate_block( size_t size ) {
     // prepare block
     prepare_block(
       block,
-      ( vaddr_t )( ( paddr_t )block + sizeof( heap_block_t ) ),
+      ( uintptr_t )block + sizeof( heap_block_t ),
       remaining_size
     );
 
@@ -631,7 +623,7 @@ vaddr_t heap_allocate_block( size_t size ) {
   // prepare block
   prepare_block(
     new_block,
-    ( vaddr_t )( ( paddr_t )new_block + sizeof( heap_block_t ) ),
+    ( uintptr_t )new_block + sizeof( heap_block_t ),
     size
   );
 
@@ -659,7 +651,7 @@ vaddr_t heap_allocate_block( size_t size ) {
  *
  * @param addr address to free
  */
-void heap_free_block( vaddr_t addr ) {
+void heap_free_block( uintptr_t addr ) {
   // variables
   avl_node_ptr_t address_node, parent_node, sibling_node;
   heap_block_ptr_t current_block, parent_block, sibling_block;
@@ -670,7 +662,7 @@ void heap_free_block( vaddr_t addr ) {
   #endif
 
   // finde node by address within tree
-  address_node = avl_find_by_data( &kernel_heap->used_area, addr );
+  address_node = avl_find_by_data( &kernel_heap->used_area, ( void* )addr );
 
   // skip if nothing has been found
   if ( NULL == address_node ) {

@@ -37,8 +37,8 @@
  */
 void v7_long_map(
   virt_context_ptr_t ctx,
-  vaddr_t vaddr,
-  paddr_t paddr,
+  uintptr_t vaddr,
+  uintptr_t paddr,
   uint32_t flag
 ) {
   v7_short_map( ctx, vaddr, paddr, flag );
@@ -56,7 +56,7 @@ void v7_long_map(
  */
 void v7_long_map_random(
   virt_context_ptr_t ctx,
-  vaddr_t vaddr,
+  uintptr_t vaddr,
   uint32_t flag
 ) {
   v7_short_map_random( ctx, vaddr, flag );
@@ -71,7 +71,7 @@ void v7_long_map_random(
  * @todo add logic for lpae
  * @todo remove call for v7 short unmapping
  */
-void v7_long_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
+void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
   v7_short_unmap( ctx, vaddr );
 }
 
@@ -81,15 +81,15 @@ void v7_long_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
  * @param ctx context to create table for
  * @param addr address the table is necessary for
  * @param table page table address
- * @return vaddr_t address of created and prepared table
+ * @return uintptr_t address of created and prepared table
  *
  * @todo add logic for lpae
  * @todo remove call for v7 short table
  */
-vaddr_t v7_long_create_table(
+uintptr_t v7_long_create_table(
   virt_context_ptr_t ctx,
-  vaddr_t addr,
-  vaddr_t table
+  uintptr_t addr,
+  uintptr_t table
 ) {
   return v7_short_create_table( ctx, addr, table );
 }

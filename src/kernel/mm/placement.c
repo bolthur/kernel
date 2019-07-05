@@ -28,12 +28,11 @@
 #include <kernel/mm/virt.h>
 #include <kernel/mm/heap.h>
 #include <kernel/entry.h>
-#include <kernel/type.h>
 
 /**
  * @brief placement address starting at kernel end
  */
-paddr_t placement_address = VIRT_2_PHYS( &__kernel_end );
+uintptr_t placement_address = ( uintptr_t )VIRT_2_PHYS( &__kernel_end );
 
 /**
  * @brief Placement allocator
@@ -42,7 +41,7 @@ paddr_t placement_address = VIRT_2_PHYS( &__kernel_end );
  * @param alignment alignment
  * @return vaddr_t found address
  */
-vaddr_t placement_alloc( size_t size, size_t alignment ) {
+uintptr_t placement_alloc( size_t size, size_t alignment ) {
   // assert alignment
   assert( 0 < alignment );
 
@@ -57,7 +56,7 @@ vaddr_t placement_alloc( size_t size, size_t alignment ) {
   bool phys = phys_initialized_get();
 
   // build return address
-  vaddr_t address = ( vaddr_t )placement_address;
+  uintptr_t address = placement_address;
 
   // debug output
   #if defined( PRINT_MM_PLACEMENT )
@@ -70,12 +69,12 @@ vaddr_t placement_alloc( size_t size, size_t alignment ) {
   #endif
 
   // handle alignment
-  if ( ( paddr_t )placement_address % alignment ) {
+  if ( placement_address % alignment ) {
     // increase offset
-    offset += ( alignment - ( paddr_t )placement_address % alignment );
+    offset += ( alignment - placement_address % alignment );
 
     // increase address
-    address = ( vaddr_t )( ( paddr_t )address + offset );
+    address += offset;
 
     // debug output
     #if defined( PRINT_MM_PLACEMENT )
@@ -89,7 +88,7 @@ vaddr_t placement_alloc( size_t size, size_t alignment ) {
 
   // mark as used at physical memory manager if initialized
   if ( phys ) {
-    phys_use_page_range( ( vaddr_t )placement_address, offset );
+    phys_use_page_range( placement_address, offset );
   }
 
   // move up placement address

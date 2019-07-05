@@ -18,12 +18,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/type.h>
-
 #if ! defined( __ARCH_ARM_BOOT_MM_VIRT )
 #define __ARCH_ARM_BOOT_MM_VIRT__
 
-void boot_virt_setup( paddr_t );
-void boot_virt_map( paddr_t, vaddr_t );
+#include <stdint.h>
+
+void boot_virt_setup( uintptr_t );
+void boot_virt_map( uintptr_t, uintptr_t );
 
 #endif

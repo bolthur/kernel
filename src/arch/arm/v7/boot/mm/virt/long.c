@@ -31,7 +31,7 @@
  * @todo Remove call for setup short paging
  */
 void SECTION( ".text.boot" )
-boot_virt_setup_long( paddr_t max_memory ) {
+boot_virt_setup_long( uintptr_t max_memory ) {
   boot_virt_setup_short( max_memory );
 }
 
@@ -39,6 +39,6 @@ boot_virt_setup_long( paddr_t max_memory ) {
  * @brief Method to perform identity nap
  */
 void SECTION( ".text.boot" )
-boot_virt_map_long( paddr_t phys, vaddr_t virt ) {
+boot_virt_map_long( uintptr_t phys, uintptr_t virt ) {
   boot_virt_map_short( phys, virt );
 }

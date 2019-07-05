@@ -21,9 +21,9 @@
 #if ! defined( __KERNEL_BOOT_MM_VIRT__ )
 #define __KERNEL_BOOT_MM_VIRT__
 
-#include <kernel/type.h>
+#include <stdint.h>
 
-void boot_virt_setup( paddr_t );
+void boot_virt_setup( uintptr_t );
 void boot_virt_platform_setup( void );
 
 #endif

@@ -25,7 +25,6 @@
 #include <assert.h>
 #include <kernel/debug.h>
 #include <kernel/entry.h>
-#include <kernel/type.h>
 #include <kernel/mm/phys.h>
 #include <kernel/mm/placement.h>
 
@@ -49,9 +48,9 @@ static bool phys_initialized = false;
  *
  * @param address address to mark as free
  */
-void phys_mark_page_used( vaddr_t address ) {
+void phys_mark_page_used( uintptr_t address ) {
   // get frame, index and offset
-  size_t frame = ( paddr_t )address / PAGE_SIZE;
+  size_t frame = address / PAGE_SIZE;
   size_t index = PAGE_INDEX( frame );
   size_t offset = PAGE_OFFSET( frame );
 
@@ -72,9 +71,9 @@ void phys_mark_page_used( vaddr_t address ) {
  *
  * @param address address to mark as free
  */
-void phys_mark_page_free( vaddr_t address ) {
+void phys_mark_page_free( uintptr_t address ) {
   // get frame, index and offset
-  size_t frame = ( paddr_t )address / PAGE_SIZE;
+  size_t frame = address / PAGE_SIZE;
   size_t index = PAGE_INDEX( frame );
   size_t offset = PAGE_OFFSET( frame );
 
@@ -96,7 +95,7 @@ void phys_mark_page_free( vaddr_t address ) {
  * @param address start address
  * @param amount amount of memory
  */
-void phys_free_page_range( vaddr_t address, size_t amount ) {
+void phys_free_page_range( uintptr_t address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "address: 0x%08x, amount: %i\r\n", address, amount );
@@ -106,7 +105,7 @@ void phys_free_page_range( vaddr_t address, size_t amount ) {
   for (
     size_t idx = 0;
     idx < amount / PAGE_SIZE;
-    idx++, address = ( vaddr_t )( ( paddr_t ) address + PAGE_SIZE )
+    idx++, address += PAGE_SIZE
   ) {
     phys_mark_page_free( address );
   }
@@ -118,15 +117,15 @@ void phys_free_page_range( vaddr_t address, size_t amount ) {
  * @param address start address
  * @param amount amount of memory
  */
-void phys_use_page_range( vaddr_t address, size_t amount ) {
+void phys_use_page_range( uintptr_t address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "address: 0x%08x, amount: %i\r\n", address, amount );
   #endif
 
   // round down address to page start
-  if ( 0 != ( paddr_t )address % PAGE_SIZE ) {
-    address = ( vaddr_t )( ( paddr_t )address - ( paddr_t )address % PAGE_SIZE );
+  if ( 0 != address % PAGE_SIZE ) {
+    address -= address % PAGE_SIZE;
   }
 
   // round up amount if necessary
@@ -138,7 +137,7 @@ void phys_use_page_range( vaddr_t address, size_t amount ) {
   for (
     size_t idx = 0;
     idx < amount / PAGE_SIZE;
-    idx++, address = ( vaddr_t )( ( paddr_t ) address + PAGE_SIZE )
+    idx++, address += PAGE_SIZE
   ) {
     phys_mark_page_used( address );
   }
@@ -151,7 +150,7 @@ void phys_use_page_range( vaddr_t address, size_t amount ) {
  * @param alignment wanted memory alignment
  * @return vaddr_t address of found memory
  */
-vaddr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
+uintptr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
@@ -170,8 +169,8 @@ vaddr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
   size_t found_amount = 0;
 
   // found address range
-  vaddr_t address = NULL;
-  vaddr_t tmp = NULL;
+  uintptr_t address = 0;
+  uintptr_t tmp = 0;
   bool stop = false;
 
   // loop through bitmap to find free continouse space
@@ -186,23 +185,18 @@ vaddr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
       // not free? => reset counter and continue
       if ( phys_bitmap[ idx ] & ( uint32_t )( 0x1 << offset ) ) {
         found_amount = 0;
-        address = NULL;
+        address = 0;
         continue;
       }
 
       // set address if found is 0
       if ( 0 == found_amount ) {
-        address = ( vaddr_t )(
-          idx * PAGE_SIZE * PAGE_PER_ENTRY + offset * PAGE_SIZE
-        );
+        address = idx * PAGE_SIZE * PAGE_PER_ENTRY + offset * PAGE_SIZE;
 
         // check for alignment
-        if (
-          0 < alignment
-          && 0 != ( paddr_t )address % alignment
-        ) {
+        if ( 0 < alignment && 0 != address % alignment ) {
           found_amount = 0;
-          address = NULL;
+          address = 0;
           continue;
         }
       }
@@ -217,18 +211,16 @@ vaddr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
     }
   }
 
+  printf( "0x%08x\r\n", address );
+
   // assert found address
-  assert( NULL != address );
+  assert( 0 != address );
 
   // set temporary address
   tmp = address;
 
   // loop until amount and mark as used
-  for (
-    size_t idx = 0;
-    idx < found_amount;
-    idx++, tmp = ( vaddr_t )( ( paddr_t ) tmp + PAGE_SIZE )
-  ) {
+  for ( size_t idx = 0; idx < found_amount; idx++, tmp += PAGE_SIZE ) {
     phys_mark_page_used( tmp );
   }
 
@@ -242,7 +234,7 @@ vaddr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
  * @param alignment
  * @return vaddr_t
  */
-vaddr_t phys_find_free_page( size_t alignment ) {
+uintptr_t phys_find_free_page( size_t alignment ) {
   return phys_find_free_page_range( PAGE_SIZE, alignment );
 }
 
@@ -251,7 +243,7 @@ vaddr_t phys_find_free_page( size_t alignment ) {
  *
  * @param address address to free
  */
-void phys_free_page( vaddr_t address ) {
+void phys_free_page( uintptr_t address ) {
   phys_free_page_range( address, PAGE_SIZE );
 }
 
@@ -263,8 +255,10 @@ void phys_init( void ) {
   phys_platform_init();
 
   // determine start and end for kernel mapping
-  paddr_t start = 0;
-  paddr_t end = placement_address + placement_address % PAGE_SIZE;
+  uintptr_t start = 0;
+  uintptr_t end = VIRT_2_PHYS(
+    placement_address + placement_address % PAGE_SIZE
+  );
 
   // adjust placement address
   placement_address = end;
@@ -272,7 +266,7 @@ void phys_init( void ) {
   // map from start to end addresses as used
   while( start < end ) {
     // mark used
-    phys_mark_page_used( ( vaddr_t )start );
+    phys_mark_page_used( start );
 
     // get next page
     start += PAGE_SIZE;

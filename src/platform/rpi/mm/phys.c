@@ -113,33 +113,31 @@ void phys_platform_init( void ) {
 
   // allocate bitmap manually via placement address after kernel
   // align it to page size
-  phys_bitmap = ( uint32_t* )PHYS_2_VIRT(
-    placement_alloc(
-      phys_bitmap_length,
-      sizeof( phys_bitmap )
-    )
+  phys_bitmap = ( uint32_t* )placement_alloc(
+    phys_bitmap_length,
+    sizeof( phys_bitmap )
   );
-
-  // overwrite physical bitmap completely with zero
-  memset( phys_bitmap, 0, sizeof( phys_bitmap_length ) * phys_bitmap_length );
 
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "total memory amount: 0x%8x\r\n", memory_amount );
     DEBUG_OUTPUT( "bitmap length: %d\r\n", phys_bitmap_length );
-    DEBUG_OUTPUT( "phys bitmap address: 0x%08x\r\n", phys_bitmap );
+    DEBUG_OUTPUT( "phys bitmap address: 0x%08x\r\n", ( uintptr_t )phys_bitmap );
     DEBUG_OUTPUT( "content of __kernel_start: 0x%08x\r\n", &__kernel_start );
     DEBUG_OUTPUT( "content of __kernel_end: 0x%08x\r\n", &__kernel_end );
   #endif
 
+  // overwrite physical bitmap completely with zero
+  memset( phys_bitmap, 0, sizeof( phys_bitmap_length ) * phys_bitmap_length );
+
   // set start and end for peripherals
-  paddr_t start = ( paddr_t )peripheral_base_get( PERIPHERAL_GPIO );
-  paddr_t end = ( paddr_t )peripheral_end_get( PERIPHERAL_GPIO ) + 1;
+  uintptr_t start = peripheral_base_get( PERIPHERAL_GPIO );
+  uintptr_t end = peripheral_end_get( PERIPHERAL_GPIO ) + 1;
 
   // map from start to end addresses as used
   while( start < end ) {
     // mark used
-    phys_mark_page_used( ( vaddr_t )start );
+    phys_mark_page_used( start );
 
     // get next page
     start += PAGE_SIZE;
@@ -152,7 +150,7 @@ void phys_platform_init( void ) {
   // map from start to end addresses as used
   while( start < end ) {
     // mark used
-    phys_mark_page_used( ( vaddr_t )start );
+    phys_mark_page_used( start );
 
     // get next page
     start += PAGE_SIZE;

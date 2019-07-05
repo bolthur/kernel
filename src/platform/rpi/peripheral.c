@@ -25,15 +25,15 @@
 
 // initial setup of peripheral base
 #if defined( BCM2709 ) || defined( BCM2710 )
-  vaddr_t gpio_peripheral_base = ( vaddr_t )0x3F000000;
-  uint32_t gpio_peripheral_size = 0xFFFFFF;
-  vaddr_t cpu_peripheral_base = ( vaddr_t )0x40000000;
-  uint32_t cpu_peripheral_size = 0x3FFFF;
+  uintptr_t gpio_peripheral_base = 0x3F000000;
+  size_t gpio_peripheral_size = 0xFFFFFF;
+  uintptr_t cpu_peripheral_base = 0x40000000;
+  size_t cpu_peripheral_size = 0x3FFFF;
 #else
-  vaddr_t gpio_peripheral_base = ( vaddr_t )0x20000000;
-  uint32_t gpio_peripheral_size = 0xFFFFFF;
-  vaddr_t cpu_peripheral_base = NULL;
-  uint32_t cpu_peripheral_size = 0;
+  uintptr_t gpio_peripheral_base = 0x20000000;
+  size_t gpio_peripheral_size = 0xFFFFFF;
+  uintptr_t cpu_peripheral_base = 0;
+  size_t cpu_peripheral_size = 0;
 #endif
 
 /**
@@ -42,7 +42,7 @@
  * @param addr Address to set peripheral base
  * @param type peripheral type
  */
-void peripheral_base_set( vaddr_t addr, peripheral_type_t type ) {
+void peripheral_base_set( uintptr_t addr, peripheral_type_t type ) {
   if ( PERIPHERAL_LOCAL == type ) {
     cpu_peripheral_base = addr;
   } else if ( PERIPHERAL_GPIO == type ) {
@@ -56,13 +56,13 @@ void peripheral_base_set( vaddr_t addr, peripheral_type_t type ) {
  * @return vaddr_t Peripheral base address
  * @param type peripheral type
  */
-vaddr_t peripheral_base_get( peripheral_type_t type ) {
+uintptr_t peripheral_base_get( peripheral_type_t type ) {
   if ( PERIPHERAL_LOCAL == type ) {
     return cpu_peripheral_base;
   } else if ( PERIPHERAL_GPIO == type ) {
     return gpio_peripheral_base;
   }
-  return NULL;
+  return 0;
 }
 
 /**
@@ -71,11 +71,11 @@ vaddr_t peripheral_base_get( peripheral_type_t type ) {
  * @return vaddr_t Peripheral end address
  * @param type peripheral type
  */
-vaddr_t peripheral_end_get( peripheral_type_t type ) {
+uintptr_t peripheral_end_get( peripheral_type_t type ) {
   if ( PERIPHERAL_LOCAL == type ) {
-    return ( vaddr_t )( ( uint32_t )cpu_peripheral_base + cpu_peripheral_size );
+    return cpu_peripheral_base + cpu_peripheral_size;
   } else if ( PERIPHERAL_GPIO == type ) {
-    return ( vaddr_t )( ( uint32_t )gpio_peripheral_base + gpio_peripheral_size );
+    return gpio_peripheral_base + gpio_peripheral_size;
   }
-  return NULL;
+  return 0;
 }

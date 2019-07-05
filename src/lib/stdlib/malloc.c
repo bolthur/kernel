@@ -32,15 +32,15 @@
  * @param size size to allocate
  * @return void* allocated address or NULL
  */
-void *malloc( size_t size ) {
+void* malloc( size_t size ) {
   // adjust size to base of 2
   size += size % 2;
   // return allocated heap block
   if ( true == heap_initialized_get() ) {
-    return heap_allocate_block( size );
+    return ( void* )heap_allocate_block( size );
   }
   // check for no virtual memory when heap is not yet ready
   assert( true != virt_initialized_get() );
   // use normal placement alloc
-  return placement_alloc( size, size );
+  return ( void* )placement_alloc( size, size );
 }

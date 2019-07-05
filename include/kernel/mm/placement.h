@@ -22,9 +22,9 @@
 #define __KERNEL_MM_PLACEMENT__
 
 #include <stddef.h>
-#include <kernel/type.h>
+#include <stdint.h>
 
-extern paddr_t placement_address;
-vaddr_t placement_alloc( size_t, size_t );
+extern uintptr_t placement_address;
+uintptr_t placement_alloc( size_t, size_t );
 
 #endif

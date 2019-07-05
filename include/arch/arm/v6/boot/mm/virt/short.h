@@ -18,10 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/type.h>
-
 #if ! defined( __ARCH_ARM_V6_BOOT_MM_VIRT_SHORT__ )
 #define __ARCH_ARM_V6_BOOT_MM_VIRT_SHORT__
+
+#include <stdint.h>
 
 void boot_virt_setup_short( paddr_t );
 void boot_virt_map_short( paddr_t, vaddr_t );

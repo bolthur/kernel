@@ -21,15 +21,15 @@
 #if ! defined( __PLATFORM_RPI_PERIPHERAL__ )
 #define __PLATFORM_RPI_PERIPHERAL__
 
-#include <kernel/type.h>
+#include <stdint.h>
 
 typedef enum {
   PERIPHERAL_GPIO,
   PERIPHERAL_LOCAL,
 } peripheral_type_t;
 
-void peripheral_base_set( vaddr_t, peripheral_type_t );
-vaddr_t peripheral_base_get( peripheral_type_t );
-vaddr_t peripheral_end_get( peripheral_type_t );
+void peripheral_base_set( uintptr_t, peripheral_type_t );
+uintptr_t peripheral_base_get( peripheral_type_t );
+uintptr_t peripheral_end_get( peripheral_type_t );
 
 #endif

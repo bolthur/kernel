@@ -24,7 +24,6 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <kernel/type.h>
 
 #define PAGE_PER_ENTRY ( sizeof( phys_bitmap_length ) * 8 )
 #define PAGE_INDEX( address ) ( address / PAGE_PER_ENTRY )
@@ -42,13 +41,13 @@ extern size_t phys_bitmap_length;
 void phys_init( void );
 void phys_platform_init( void );
 
-void phys_mark_page_used( vaddr_t );
-void phys_mark_page_free( vaddr_t );
-vaddr_t phys_find_free_page_range( size_t, size_t );
-void phys_free_page_range( vaddr_t, size_t );
-void phys_use_page_range( vaddr_t, size_t );
-vaddr_t phys_find_free_page( size_t );
-void phys_free_page( vaddr_t );
+void phys_mark_page_used( uintptr_t );
+void phys_mark_page_free( uintptr_t );
+uintptr_t phys_find_free_page_range( size_t, size_t );
+void phys_free_page_range( uintptr_t, size_t );
+void phys_use_page_range( uintptr_t, size_t );
+uintptr_t phys_find_free_page( size_t );
+void phys_free_page( uintptr_t );
 bool phys_initialized_get( void );
 
 #endif

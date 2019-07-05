@@ -85,7 +85,7 @@
  */
 bool timer_pending( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
-    vaddr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
+    uintptr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
     return mmio_read( ( uint32_t )base + CORE0_IRQ_SOURCE ) & ARM_GENERIC_TIMER_MATCH_VIRT;
   #else
     return mmio_read( SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
@@ -98,7 +98,7 @@ bool timer_pending( void ) {
  * @param num Timer interrupt number
  * @param _cpu CPU register dump
  */
-void timer_clear( uint8_t num, vaddr_t _cpu ) {
+void timer_clear( uint8_t num, void* _cpu ) {
   // convert _cpu to cpu register context pointer
   cpu_register_context_t *cpu = ( cpu_register_context_t * )_cpu;
 
@@ -136,7 +136,7 @@ void timer_init( void ) {
     irq_register_handler( ARM_GENERIC_TIMER_IRQ_VIRT, timer_clear, false );
 
     // get peripheral base
-    vaddr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
+    uintptr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
 
     // route virtual timer within core
     mmio_write( ( uint32_t )base + CORE0_TIMER_IRQCNTL, ARM_GENERIC_TIMER_IRQ_VIRT );
