@@ -211,8 +211,6 @@ uintptr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
     }
   }
 
-  printf( "0x%08x\r\n", address );
-
   // assert found address
   assert( 0 != address );
 

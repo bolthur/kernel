@@ -3,8 +3,8 @@ SUBDIRS = .
 
 AUTOMAKE_OPTIONS = nostdinc subdir-objects
 
-AM_CFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include -I$(top_srcdir)/include/lib
-AM_CCASFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include -I$(top_srcdir)/include/lib
+AM_CFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include -I$(top_srcdir)/include/lib -Wa,-I$(top_srcdir)/build-aux/platform/rpi
+AM_CCASFLAGS = -imacros $(top_builddir)/include/config.h -I$(top_srcdir)/include -I$(top_srcdir)/include/lib -Wa,-I$(top_srcdir)/build-aux/platform/rpi
 
 # rpi library
 noinst_LIBRARIES = librpi.a
@@ -15,6 +15,7 @@ librpi_a_SOURCES = \
   mailbox/mailbox.c \
   mailbox/property.c \
   mm/phys.c \
+  initrd.S \
   mm/virt.c \
   irq.c \
   platform.c \

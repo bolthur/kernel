@@ -66,6 +66,14 @@ AC_ARG_ENABLE([output-timer],
   AC_HELP_STRING([--enable-output-timer], [Enables output of timer functions (default: off)])
 )
 
+AC_ARG_ENABLE([output-initrd],
+  AC_HELP_STRING([--enable-output-initrd], [Enables output of initrd related functions (default: off)])
+)
+
+AC_ARG_ENABLE([debug-initrd],
+  AC_HELP_STRING([--enable-debug-initrd], [Enables add of debug initrd to kernel binary (default: off)])
+)
+
 AC_ARG_ENABLE([opt],
   AC_HELP_STRING([--enable-opt], [enable code optimization (default: 2)]),
   [case "${enableval}" in

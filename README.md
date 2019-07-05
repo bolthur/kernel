@@ -65,6 +65,7 @@ cd build
 Possible additional parameters to `--host` and `--enable-device`:
 
 * `--enable-debug` enables remote debugging mode
+* `--enable-debug-initrd` activate include of debug initrd usefull for qemu testing
 * `--enable-opt=x` sets optimization from default ( 2 ) to specified one
 * `--enable-output` enables kernel output
 * `--enable-output-mm-phys` activate tty output of physical memory manager ( slows down kernel totally )
@@ -73,6 +74,7 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-mm-placement` activate tty output of placement allocator
 * `--enable-output-mailbox` activate tty output of mailbox implementation
 * `--enable-output-timer` activate tty output of timer implementation
+* `--enable-output-initrd` activate initrd implementation output
 
 ### Building
 

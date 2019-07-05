@@ -65,26 +65,32 @@ SECTIONS {
   }
 
   .rodata ALIGN( 4K ) : AT( ADDR( .rodata ) - KERNEL_OFFSET ) {
-    *(.rodata)
+    *( .rodata )
   }
 
   .data ALIGN( 4K ) : AT( ADDR( .data ) - KERNEL_OFFSET ) {
-    *(.data)
+    *( .data )
   }
 
   .bss ALIGN( 4K ) : AT( ADDR( .bss ) - KERNEL_OFFSET ) {
     __bss_start = .;
-    *(COMMON)
-    *(.bss)
+    *( COMMON )
+    *( .bss )
     __bss_end = .;
   }
 
   __kernel_end = .;
 
+  .initrd ALIGN( 4K ) : AT( ADDR( .initrd ) - KERNEL_OFFSET ) {
+    __initrd_start = .;
+    KEEP( *( .initrd ) )
+    __initrd_end = .;
+  }
+
   /DISCARD/ : {
-    *(.comment)
-    *(.eh_frame)
-    *(.ARM.exidx*)
-    *(.ARM.attributes*)
+    *( .comment )
+    *( .eh_frame )
+    *( .ARM.exidx* )
+    *( .ARM.attributes* )
   }
 }

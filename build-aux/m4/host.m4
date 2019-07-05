@@ -13,7 +13,9 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([PRINT_MM_PLACEMENT], [Define to 1 to enable output of kernel placement allocator])
   AH_TEMPLATE([PRINT_MAILBOX], [Define to 1 to enable output of mailbox])
   AH_TEMPLATE([PRINT_TIMER], [Define to 1 to enable output of timer])
+  AH_TEMPLATE([PRINT_INITRD], [Define to 1 to enable output of initrd])
   AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
+  AH_TEMPLATE([DEBUG_INITRD], [Define to 1 to include debug initrd within kernel])
 
   # Test possibe enable debug parameter
   AS_IF([test "x$enable_debug" == "xyes"], [
@@ -54,6 +56,16 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   # Test for timer output
   AS_IF([test "x$enable_output_timer" == "xyes"], [
     AC_DEFINE([PRINT_TIMER], [1])
+  ])
+
+  # Test for timer output
+  AS_IF([test "x$enable_output_initrd" == "xyes"], [
+    AC_DEFINE([PRINT_INITRD], [1])
+  ])
+
+  # Test possibe enable debug initrd
+  AS_IF([test "x$enable_debug_initrd" == "xyes"], [
+    AC_DEFINE([DEBUG_INITRD], [1])
   ])
 
   case "${host_cpu}" in
