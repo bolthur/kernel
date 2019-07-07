@@ -3,16 +3,13 @@
     "kernelDefaultIncludePaths": [
       "${workspaceFolder}/include",
       "${workspaceFolder}/include/lib",
-      "${workspaceFolder}/include/kernel",
-      "${workspaceFolder}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.2.0/include",
-      "${workspaceFolder}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.2.0/include"
+      "${workspaceFolder}/include/kernel"
     ],
     "kernelDefaultBrowsePaths": [
       "${workspaceFolder}/src",
+      "${workspaceFolder}/include",
       "${workspaceFolder}/include/lib",
-      "${workspaceFolder}/include/kernel",
-      "${workspaceFolder}/scripts/opt/cross/lib/gcc/arm-none-eabi/8.2.0/include",
-      "${workspaceFolder}/scripts/opt/cross/lib/gcc/aarch64-none-elf/8.2.0/include"
+      "${workspaceFolder}/include/kernel"
     ]
   },
   "configurations": [
@@ -39,13 +36,18 @@
     {
       "name": "Linux",
       "includePath": [
-        "${kernelDefaultIncludePaths}"
+        "${workspaceFolder}/include",
+        "${workspaceFolder}/include/lib",
+        "${workspaceFolder}/include/kernel"
       ],
       "defines": [],
       "intelliSenseMode": "${default}",
       "browse": {
         "path": [
-          "${kernelDefaultBrowsePaths}"
+          "${workspaceFolder}/src",
+          "${workspaceFolder}/include",
+          "${workspaceFolder}/include/lib",
+          "${workspaceFolder}/include/kernel"
         ],
         "limitSymbolsToIncludedHeaders": true,
         "databaseFilename": ""

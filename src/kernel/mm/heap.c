@@ -170,7 +170,7 @@ static void extend_heap_space( void ) {
   ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "Map 0x%08x\r\n", addr );
+      DEBUG_OUTPUT( "Map 0x%08x with random physical address\r\n", addr );
     #endif
 
     // map address
@@ -432,7 +432,7 @@ void heap_init( void ) {
   ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "Map 0x%08x\r\n", addr );
+      DEBUG_OUTPUT( "Map 0x%08x with random physical address\r\n", addr );
     #endif
 
     // map address
