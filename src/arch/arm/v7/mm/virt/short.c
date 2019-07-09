@@ -639,6 +639,8 @@ void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
 
   // free page table
   uintptr_t table = phys_find_free_page( PAGE_SIZE );
+  // overwrite page with zero
+  memset( ( void* )table, 0, PAGE_SIZE );
 
   // determine offset
   uint32_t offset, start = SD_VIRTUAL_TO_TABLE( TEMPORARY_SPACE_START );

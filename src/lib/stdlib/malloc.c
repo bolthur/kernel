@@ -33,8 +33,8 @@
  * @return void* allocated address or NULL
  */
 void* malloc( size_t size ) {
-  // adjust size to base of 2
-  size += size % 2;
+  // adjust size to base of 4 to prevent unaligned memory access generally
+  size += size % 4;
   // return allocated heap block
   if ( true == heap_initialized_get() ) {
     return ( void* )heap_allocate_block( size );

@@ -54,7 +54,7 @@ extern uint32_t debug_initrd;
  * @todo Move placement address beyond initrd
  */
 void platform_init( void ) {
-  // default initrd should be at end of placement address
+  /*// default initrd should be at end of placement address
   uintptr_t start = placement_address;
   uintptr_t end = 0;
 
@@ -92,5 +92,5 @@ void platform_init( void ) {
       "placement_address = 0x%08x, start = 0x%08x, end = 0x%08x\r\n",
       placement_address, start, end
     );
-  #endif
+  #endif*/
 }

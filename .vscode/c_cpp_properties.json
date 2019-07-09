@@ -1,28 +1,24 @@
 {
-  "env": {
-    "kernelDefaultIncludePaths": [
-      "${workspaceFolder}/include",
-      "${workspaceFolder}/include/lib",
-      "${workspaceFolder}/include/kernel"
-    ],
-    "kernelDefaultBrowsePaths": [
-      "${workspaceFolder}/src",
-      "${workspaceFolder}/include",
-      "${workspaceFolder}/include/lib",
-      "${workspaceFolder}/include/kernel"
-    ]
-  },
   "configurations": [
     {
       "name": "Mac",
       "includePath": [
-        "${kernelDefaultIncludePaths}"
+        "${workspaceFolder}/include",
+        "${workspaceFolder}/include/lib",
+        "${workspaceFolder}/include/kernel",
+        "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.1.0/include",
+        "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.1.0/include"
       ],
       "defines": [],
       "intelliSenseMode": "${default}",
       "browse": {
         "path": [
-          "${kernelDefaultBrowsePaths}"
+          "${workspaceFolder}/src",
+          "${workspaceFolder}/include",
+          "${workspaceFolder}/include/lib",
+          "${workspaceFolder}/include/kernel",
+          "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.1.0/include",
+          "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.1.0/include"
         ],
         "limitSymbolsToIncludedHeaders": true,
         "databaseFilename": ""
@@ -38,7 +34,9 @@
       "includePath": [
         "${workspaceFolder}/include",
         "${workspaceFolder}/include/lib",
-        "${workspaceFolder}/include/kernel"
+        "${workspaceFolder}/include/kernel",
+        "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.1.0/include",
+        "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.1.0/include"
       ],
       "defines": [],
       "intelliSenseMode": "${default}",
@@ -47,29 +45,9 @@
           "${workspaceFolder}/src",
           "${workspaceFolder}/include",
           "${workspaceFolder}/include/lib",
-          "${workspaceFolder}/include/kernel"
-        ],
-        "limitSymbolsToIncludedHeaders": true,
-        "databaseFilename": ""
-      },
-      "forcedInclude": [
-        "${workspaceFolder}/build/include/config.h"
-      ],
-      "cStandard": "c11"
-    },
-    {
-      "name": "Win32",
-      "includePath": [
-        "${kernelDefaultIncludePaths}"
-      ],
-      "defines": [
-        "_DEBUG",
-        "UNICODE"
-      ],
-      "intelliSenseMode": "${default}",
-      "browse": {
-        "path": [
-          "${kernelDefaultBrowsePaths}"
+          "${workspaceFolder}/include/kernel",
+          "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.1.0/include",
+          "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.1.0/include"
         ],
         "limitSymbolsToIncludedHeaders": true,
         "databaseFilename": ""

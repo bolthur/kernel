@@ -113,10 +113,10 @@ void phys_platform_init( void ) {
 
   // allocate bitmap manually via placement address after kernel
   // align it to page size
-  phys_bitmap = ( uint32_t* )placement_alloc(
+  phys_bitmap = ( uint32_t* )PHYS_2_VIRT( placement_alloc(
     phys_bitmap_length,
     sizeof( phys_bitmap )
-  );
+  ) );
 
   // debug output
   #if defined( PRINT_MM_PHYS )

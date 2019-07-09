@@ -33,8 +33,8 @@
   #define KERNEL_OFFSET 0
 #endif
 
-#define PHYS_2_VIRT( a ) ( a + KERNEL_OFFSET )
-#define VIRT_2_PHYS( a ) ( a - KERNEL_OFFSET )
+#define PHYS_2_VIRT( a ) ( ( uintptr_t )a + KERNEL_OFFSET )
+#define VIRT_2_PHYS( a ) ( ( uintptr_t )a - KERNEL_OFFSET )
 
 extern uintptr_t __kernel_start;
 extern uintptr_t __kernel_end;

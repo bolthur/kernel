@@ -84,13 +84,22 @@ void kernel_main() {
 
   // some heap testing code
   void *a;
+  printf( "Allocate 2 byte!\r\n" );
+  a = malloc( 2 );
+  printf( "Allocating 40 blocks of 4 byte!\r\n" );
   for( int i = 0; i < 40; i++ ) {
+    printf( "i = %d\r\n", i );
     a = malloc( 4 );
   }
+  printf( "Allocate 12 byte!\r\n" );
   a = malloc( 12 );
+  printf( "Allocate 4 byte!\r\n" );
   void *b = malloc( 4 );
+  printf( "Allocate 8 byte!\r\n" );
   void *c = malloc( 8 );
+  printf( "Allocate 10 byte!\r\n" );
   void *d = malloc( 10 );
+  printf( "Allocate 4 byte!\r\n" );
   void *e = malloc( 4 );
   printf( "\r\n\r\nFREE UP 0x%08X\r\n", b );
   free( b );

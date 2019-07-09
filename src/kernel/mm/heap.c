@@ -177,6 +177,9 @@ static void extend_heap_space( void ) {
     virt_map_address_random(
       kernel_context, addr, PAGE_FLAG_BUFFERABLE | PAGE_FLAG_CACHEABLE
     );
+
+    // clear area
+    memset( ( void* )addr, 0, PAGE_SIZE );
   }
 
   // extend free block
@@ -445,6 +448,9 @@ void heap_init( void ) {
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "heap start: 0x%08x\r\n", HEAP_START );
   #endif
+
+  // erase kernel heap section
+  memset( ( void* )HEAP_START, 0, HEAP_MIN_SIZE );
 
   // set kernel heap and increase offset
   kernel_heap = ( heap_manager_ptr_t )HEAP_START;

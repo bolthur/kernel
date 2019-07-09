@@ -254,9 +254,7 @@ void phys_init( void ) {
 
   // determine start and end for kernel mapping
   uintptr_t start = 0;
-  uintptr_t end = VIRT_2_PHYS(
-    placement_address + placement_address % PAGE_SIZE
-  );
+  uintptr_t end = placement_address + placement_address % PAGE_SIZE;
 
   // adjust placement address
   placement_address = end;
