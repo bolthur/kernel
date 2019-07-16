@@ -35,6 +35,8 @@
 #include <kernel/event.h>
 #include <kernel/vfs.h>
 
+#include <kernel/panic.h>
+
 /**
  * @brief Kernel main function
  */
@@ -46,6 +48,8 @@ void kernel_main() {
 
   // enable tty for output
   tty_init();
+
+  PANIC( "fooo!" );
 
   // Some initial output :)
   printf(

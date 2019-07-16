@@ -56,6 +56,7 @@
     #define SD_TTBCR_N_TTBR0_128M 0x5
     #define SD_TTBCR_N_TTBR0_64M 0x6
     #define SD_TTBCR_N_TTBR0_32M 0x7
+    #define LD_TTBCR_SIZE_TTBR_2G 0x1
 
     // ttbr0 sizes
     #define SD_TTBR_SIZE_4G 0x4000

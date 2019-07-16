@@ -2,15 +2,16 @@
 # Things to be done
 
 * [ ] Revise irq and isrs register handling
+  * [ ] Add generic event system
   * [ ] Throw global events if an interrupt occurrs
   * [ ] Replace irq register handler by register event
 * [ ] Replace magic values at serial init by defines
 * [ ] FPU
   * [ ] Add push and pop of fpu registers within ivt stubs
   * [ ] Extend cpu structure if fpu is enabled
+  * [ ] Extend undefined exception to check for fpu error with clear of flag
 * [ ] Memory management
   * [ ] Add initial setup of paging with LPAE if enabled
-  * [ ] Change rpi 2 linker script for v7 to link with LPAE in mind and different load address similar to the one for v8
   * [ ] Check for further splitting of entry point ( separation between 32bit and 64bit ) is necessary
   * [ ] Add lpae paging to kernel after boot setup
   * [ ] Consider and enable CPU related caches for performance
@@ -22,9 +23,6 @@
   * [ ] Finish debug launch.json when remote debugging is possible
 * [ ] Add multitasking
 * [ ] Implement syscall handling via `swi`
-* [ ] FPU
-  * [ ] Extend push of registers during exception to consider also fpu registers
-  * [ ] Extend undefined exception to check for fpu error with clear of flag
 * [ ] Add multithreading
 * [ ] Add SMP support
   * [ ] Memory management
