@@ -18,10 +18,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define ASSEMBLER_FILE 1
-
-#include <arch/arm/mm/virt.h>
-
 // only when extension define is set
 #if defined( BCM2709 ) || defined( BCM2710 )
   .arch_extension virt

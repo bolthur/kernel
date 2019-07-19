@@ -27,7 +27,7 @@
 #include <kernel/debug.h>
 #include <arch/arm/barrier.h>
 #include <kernel/mm/phys.h>
-#include <arch/arm/mm/virt.h>
+#include <arch/arm/mm/virt/short.h>
 #include <arch/arm/v7/mm/virt/short.h>
 #include <kernel/mm/virt.h>
 
@@ -64,7 +64,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
   uint32_t offset = start % PAGE_SIZE;
   start -= offset;
   uint32_t current_table = 0;
-  uint32_t table_idx_offset = SD_VIRTUAL_TO_TABLE( TEMPORARY_SPACE_START );
+  uint32_t table_idx_offset = SD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
 
   // minimum: 1 page
   if ( 0 >= page_amount ) {
@@ -128,8 +128,8 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
     uintptr_t addr = start_address + i * PAGE_SIZE;
 
     // map it
-    uint32_t table_idx = SD_VIRTUAL_TO_TABLE( addr ) - table_idx_offset;
-    uint32_t page_idx = SD_VIRTUAL_TO_PAGE( addr );
+    uint32_t table_idx = SD_VIRTUAL_TABLE_INDEX( addr ) - table_idx_offset;
+    uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( addr );
 
     // debug putput
     #if defined( PRINT_MM_VIRT )
@@ -190,7 +190,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
   }
 
   // determine table index offset
-  uint32_t table_idx_offset = SD_VIRTUAL_TO_TABLE( TEMPORARY_SPACE_START );
+  uint32_t table_idx_offset = SD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
 
   // debug putput
   #if defined( PRINT_MM_VIRT )
@@ -211,8 +211,8 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
 
   // loop and unmap
   while ( addr < end ) {
-    uint32_t table_idx = SD_VIRTUAL_TO_TABLE( addr ) - table_idx_offset;
-    uint32_t page_idx = SD_VIRTUAL_TO_PAGE( addr );
+    uint32_t table_idx = SD_VIRTUAL_TABLE_INDEX( addr ) - table_idx_offset;
+    uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( addr );
 
     // get table
     sd_page_table_t* tbl = ( sd_page_table_t* )(
@@ -289,7 +289,7 @@ uintptr_t v7_short_create_table(
   uintptr_t table
 ) {
   // get table idx
-  uint32_t table_idx = SD_VIRTUAL_TO_TABLE( addr );
+  uint32_t table_idx = SD_VIRTUAL_TABLE_INDEX( addr );
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -440,7 +440,7 @@ void v7_short_map(
   uint32_t flag
 ) {
   // get page index
-  uint32_t page_idx = SD_VIRTUAL_TO_PAGE( vaddr );
+  uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( vaddr );
 
   // get table for mapping
   sd_page_table_t* table = ( sd_page_table_t* )v7_short_create_table(
@@ -536,7 +536,7 @@ void v7_short_map_random(
  */
 void v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
   // get page index
-  uint32_t page_idx = SD_VIRTUAL_TO_PAGE( vaddr );
+  uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( vaddr );
 
   // get table for unmapping
   sd_page_table_t* table = ( sd_page_table_t* )v7_short_create_table(
@@ -643,7 +643,7 @@ void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
   memset( ( void* )table, 0, PAGE_SIZE );
 
   // determine offset
-  uint32_t offset, start = SD_VIRTUAL_TO_TABLE( TEMPORARY_SPACE_START );
+  uint32_t offset, start = SD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
 
   // create tables for temporary area
   for (
@@ -652,7 +652,7 @@ void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
     v += PAGE_SIZE
   ) {
     // table offset
-    offset = SD_VIRTUAL_TO_TABLE( v );
+    offset = SD_VIRTUAL_TABLE_INDEX( v );
     // determine table size
     uintptr_t tbl = table + ( start - offset ) * SD_TBL_SIZE;
     // create table

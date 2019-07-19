@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 
-#include <arch/arm/mm/virt.h>
+#include <arch/arm/mm/virt/long.h>
 #include <arch/arm/v7/boot/mm/virt/short.h>
 #include <kernel/entry.h>
 
