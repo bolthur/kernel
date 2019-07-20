@@ -43,8 +43,8 @@
  */
 void v6_short_map(
   virt_context_ptr_t ctx,
-  vaddr_t vaddr,
-  paddr_t paddr,
+  uintptr_t vaddr,
+  uintptr_t paddr,
   uint32_t flag
 ) {
   ( void )ctx;
@@ -61,7 +61,7 @@ void v6_short_map(
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  */
-void v6_short_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
+void v6_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
   ( void )ctx;
   ( void )vaddr;
 
@@ -74,12 +74,12 @@ void v6_short_unmap( virt_context_ptr_t ctx, vaddr_t vaddr ) {
  * @param ctx context to create table for
  * @param addr address the table is necessary for
  * @param table table address
- * @return vaddr_t address of created and prepared table
+ * @return uintptr_t address of created and prepared table
  */
-vaddr_t v6_short_create_table(
+uintptr_t v6_short_create_table(
   virt_context_ptr_t ctx,
-  vaddr_t addr,
-  vaddr_t table
+  uintptr_t addr,
+  uintptr_t table
 ) {
   // mark parameters as unused
   ( void )ctx;

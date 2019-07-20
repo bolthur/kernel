@@ -114,8 +114,8 @@ void virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr ) {
 /**
  * @brief Method to create virtual context
  *
- * @param type context type
- * @return vaddr_t address of context
+ * @param virt_context_type_t context type
+ * @return virt_context_ptr_t address of context
  */
 virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
   // check for v7 long descriptor format
@@ -139,7 +139,7 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
  * @param ctx context to create table for
  * @param addr address the table is necessary for
  * @param table page table address
- * @return vaddr_t address of table
+ * @return uintptr_t address of table
  */
 uintptr_t virt_create_table(
   virt_context_ptr_t ctx,

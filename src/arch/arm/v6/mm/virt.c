@@ -30,6 +30,7 @@
 #include <kernel/mm/placement.h>
 #include <kernel/mm/virt.h>
 #include <arch/arm/mm/virt.h>
+#include <arch/arm/mm/virt/short.h>
 #include <arch/arm/v6/mm/virt/short.h>
 
 /**
@@ -42,8 +43,8 @@
  */
 void virt_map_address(
   virt_context_ptr_t ctx,
-  vaddr_t vaddr,
-  paddr_t paddr,
+  uintptr_t vaddr,
+  uintptr_t paddr,
   uint32_t flag
 ) {
   // check for v6 long descriptor format
@@ -64,7 +65,7 @@ void virt_map_address(
  */
 void virt_map_address_random(
   virt_context_ptr_t ctx,
-  vaddr_t vaddr,
+  uintptr_t vaddr,
   uint32_t flag
 ) {
   // check for v6 long descriptor format
@@ -82,7 +83,7 @@ void virt_map_address_random(
  * @param ctx pointer to page context
  * @param addr pointer to virtual address
  */
-void virt_unmap_address( virt_context_ptr_t ctx, vaddr_t addr ) {
+void virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr ) {
   // check for v6 long descriptor format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
     v6_short_unmap( ctx, addr );
@@ -96,7 +97,7 @@ void virt_unmap_address( virt_context_ptr_t ctx, vaddr_t addr ) {
  * @brief Method to create virtual context
  *
  * @param type context type
- * @return vaddr_t address of context
+ * @return uintptr_t address of context
  */
 virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
   // Panic when mode is unsupported
@@ -118,7 +119,7 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
     : SD_TTBR_ALIGNMENT_2G;
 
   // create new context
-  vaddr_t ctx = PHYS_2_VIRT(
+  uintptr_t ctx = PHYS_2_VIRT(
     placement_alloc( size, alignment )
   );
 
@@ -160,12 +161,12 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
  * @param ctx context to create table for
  * @param addr address the table is necessary for
  * @param table page table address
- * @return vaddr_t address of table
+ * @return uintptr_t address of table
  */
-vaddr_t virt_create_table(
+uintptr_t virt_create_table(
   virt_context_ptr_t ctx,
-  vaddr_t addr,
-  vaddr_t table
+  uintptr_t addr,
+  uintptr_t table
 ) {
   // check for v6 format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {

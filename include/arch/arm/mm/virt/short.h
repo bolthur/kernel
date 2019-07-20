@@ -206,14 +206,14 @@
   } sd_context_super_section_t;
 
   typedef union PACKED {
-    uint32_t list[ 4096 ];
+    uint32_t raw[ 4096 ];
     sd_context_table_t table[ 4096 ];
     sd_context_section_t section[ 4096 ];
     sd_context_super_section_t super[ 4096 ];
   } sd_context_total_t;
 
   typedef union PACKED {
-    uint32_t list[ 2048 ];
+    uint32_t raw[ 2048 ];
     sd_context_table_t table[ 2048 ];
     sd_context_section_t section[ 2048 ];
     sd_context_super_section_t super[ 2048 ];

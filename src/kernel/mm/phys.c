@@ -148,7 +148,7 @@ void phys_use_page_range( uintptr_t address, size_t amount ) {
  *
  * @param memory_amount amount of memory to find free page range for
  * @param alignment wanted memory alignment
- * @return vaddr_t address of found memory
+ * @return uintptr_t address of found memory
  */
 uintptr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
   // debug output
@@ -230,7 +230,7 @@ uintptr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
  * @brief Shorthand to find single free page
  *
  * @param alignment
- * @return vaddr_t
+ * @return uintptr_t
  */
 uintptr_t phys_find_free_page( size_t alignment ) {
   return phys_find_free_page_range( PAGE_SIZE, alignment );

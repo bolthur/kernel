@@ -41,7 +41,7 @@ boot_virt_setup_short( uintptr_t max_memory ) {
   sd_ttbcr_t ttbcr;
 
   for ( x = 0; x < 4096; x++ ) {
-    initial_context.list[ x ] = 0;
+    initial_context.raw[ x ] = 0;
   }
 
   // map all memory
@@ -56,19 +56,27 @@ boot_virt_setup_short( uintptr_t max_memory ) {
   // Copy page table address to cp15
   __asm__ __volatile__(
     "mcr p15, 0, %0, c2, c0, 0"
-    : : "r" ( initial_context.list )
+    : : "r" ( initial_context.raw )
     : "memory"
   );
   // Set the access control to all-supervisor
   __asm__ __volatile__( "mcr p15, 0, %0, c3, c0, 0" : : "r" ( ~0 ) );
 
   // read ttbcr register
-  __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c2, c0, 2"
+    : "=r" ( ttbcr.raw )
+    : : "cc"
+  );
   // set split to no split
   ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_4G;
   ttbcr.data.large_physical_address_extension = 0;
   // push back value with ttbcr
-  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c2, c0, 2"
+    : : "r" ( ttbcr.raw )
+    : "cc"
+  );
 
   // Get content from control register
   __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );

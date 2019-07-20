@@ -46,7 +46,7 @@
  *
  * @param start physical start address
  * @param size size to map
- * @return vaddr_t mapped address
+ * @return uintptr_t mapped address
  */
 static uintptr_t map_temporary( uintptr_t start, size_t size ) {
   // find free space to map
@@ -230,7 +230,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
 /**
  * @brief Get the new table object
  *
- * @return vaddr_t address to new table
+ * @return uintptr_t address to new table
  */
 static uintptr_t get_new_table() {
   // static address and remaining amount
@@ -281,7 +281,7 @@ static uintptr_t get_new_table() {
  * @param ctx context to create table for
  * @param addr address the table is necessary for
  * @param table page table address
- * @return vaddr_t address of created and prepared table
+ * @return uintptr_t address of created and prepared table
  */
 uintptr_t v7_short_create_table(
   virt_context_ptr_t ctx,
@@ -584,13 +584,13 @@ void v7_short_set_context( virt_context_ptr_t ctx ) {
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
         "list: 0x%08x\r\n",
-        ( ( sd_context_half_t* )ctx->context )->list
+        ( ( sd_context_half_t* )ctx->context )->raw
       );
     #endif
     // Copy page table address to cp15 ( ttbr0 )
     __asm__ __volatile__(
       "mcr p15, 0, %0, c2, c0, 0"
-      : : "r" ( ( ( sd_context_half_t* )ctx->context )->list )
+      : : "r" ( ( ( sd_context_half_t* )ctx->context )->raw )
       : "memory"
     );
   // kernel context handling
@@ -599,13 +599,13 @@ void v7_short_set_context( virt_context_ptr_t ctx ) {
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
         "list: 0x%08x\r\n",
-        ( ( sd_context_total_t* )ctx->context )->list
+        ( ( sd_context_total_t* )ctx->context )->raw
       );
     #endif
     // Copy page table address to cp15 ( ttbr1 )
     __asm__ __volatile__(
       "mcr p15, 0, %0, c2, c0, 1"
-      : : "r" ( ( ( sd_context_total_t* )ctx->context )->list )
+      : : "r" ( ( ( sd_context_total_t* )ctx->context )->raw )
       : "memory"
     );
   // invalid type

@@ -39,7 +39,7 @@ uintptr_t placement_address = ( uintptr_t )VIRT_2_PHYS( &__kernel_end );
  *
  * @param size amount of memory to align
  * @param alignment alignment
- * @return vaddr_t found address
+ * @return uintptr_t found address
  */
 uintptr_t placement_alloc( size_t size, size_t alignment ) {
   // assert alignment

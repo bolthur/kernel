@@ -53,7 +53,7 @@ void peripheral_base_set( uintptr_t addr, peripheral_type_t type ) {
 /**
  * @brief Method to get peripheral base address
  *
- * @return vaddr_t Peripheral base address
+ * @return uintptr_t Peripheral base address
  * @param type peripheral type
  */
 uintptr_t peripheral_base_get( peripheral_type_t type ) {
@@ -68,7 +68,7 @@ uintptr_t peripheral_base_get( peripheral_type_t type ) {
 /**
  * @brief Method to get peripheral base address
  *
- * @return vaddr_t Peripheral end address
+ * @return uintptr_t Peripheral end address
  * @param type peripheral type
  */
 uintptr_t peripheral_end_get( peripheral_type_t type ) {

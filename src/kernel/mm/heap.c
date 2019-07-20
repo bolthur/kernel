@@ -525,7 +525,7 @@ bool heap_initialized_get( void ) {
  *
  * @param size size to allocate
  * @param alignment address aligment
- * @return vaddr_t address of allocated block
+ * @return uintptr_t address of allocated block
  */
 uintptr_t heap_allocate_block( size_t size ) {
   // variables
