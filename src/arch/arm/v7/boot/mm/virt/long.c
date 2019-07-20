@@ -20,9 +20,19 @@
 
 #include <stdint.h>
 
+#include <kernel/mm/phys.h>
 #include <arch/arm/mm/virt/long.h>
-#include <arch/arm/v7/boot/mm/virt/short.h>
+#include <arch/arm/v7/boot/mm/virt/long.h>
 #include <kernel/entry.h>
+
+/**
+ * @brief Initial kernel context
+ */
+static ld_global_page_directory_t initial_context
+  SECTION_ALIGNED( ".data.boot", PAGE_SIZE );
+
+static ld_middle_page_directory inital_middle_directory[ 4 ]
+  SECTION_ALIGNED( ".data.boot", PAGE_SIZE );
 
 /**
  * @brief Helper to setup initial paging with large page address extension
@@ -32,48 +42,68 @@
  */
 void SECTION( ".text.boot" )
 boot_virt_setup_long( uintptr_t max_memory ) {
-  boot_virt_setup_short( max_memory );
-  return;
-
   // variables
   ld_ttbcr_t ttbcr;
-  uint32_t reg;
+  uint32_t reg, x, y;
 
-  // FIXME: Prepare initial kernel context
-  /*for ( x = 0; x < 4096; x++ ) {
-    initial_kernel_context.list[ x ] = 0;
-  }*/
-  // FIXME: Prepare initial user context
-  /*for ( x = 0; x < 2048; x++ ) {
-    initial_user_context.list[ x ] = 0;
-  } */
+  // Prepare initial context
+  for ( x = 0; x < 512; x++ ) {
+    initial_context.raw[ x ] = 0ULL;
+  }
+  // Prepare middle directories
+  for ( x = 0; x < 4; x++ ) {
+    for ( y = 0; y < 512; y++ ) {
+      inital_middle_directory[ x ].raw[ y ] = 0ULL;
+    }
+  }
 
-  // FIXME: Map initial memory
-  /*for ( x = 0; x < ( max_memory >> 20 ); x++ ) {
+  // Set middle directory tables
+  for ( x = 0; x < 4; x++ ) {
+    // set next level table
+    initial_context.table[ x ].raw =
+      ( ( uintptr_t )inital_middle_directory[ x ].raw & 0xFFFFF000 )
+      | LD_TYPE_TABLE;
+  }
+
+  // Map initial memory
+  for ( x = 0; x < ( max_memory >> 20 ); x++ ) {
     boot_virt_map_long( x << 20, x << 20 );
 
     if ( 0 < KERNEL_OFFSET ) {
       boot_virt_map_long( x << 20, ( x + ( KERNEL_OFFSET >> 20 ) ) << 20 );
     }
-  } */
+  }
 
+  initial_context.section[ 0 ].raw = 0;
+  initial_context.section[ 0 ].data.type = 0x1;
+  initial_context.section[ 0 ].data.lower_attribute = 0x1C7;
+  initial_context.section[ 1 ].raw = 0;
+  initial_context.section[ 1 ].data.type = 0x1;
+  initial_context.section[ 1 ].data.lower_attribute = 0x1C7;
+  initial_context.section[ 2 ].raw = 0;
+  initial_context.section[ 2 ].data.type = 0x1;
+  initial_context.section[ 2 ].data.lower_attribute = 0x1C7;
+  initial_context.section[ 3 ].raw = 0;
+  initial_context.section[ 3 ].data.type = 0x1;
+  initial_context.section[ 3 ].data.lower_attribute = 0x1C7;
 
-  // FIXME: Set initial context
-  // Copy page table address to cp15
-  /*__asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 0" : : "r" ( initial_user_context.list ) : "memory" );
-  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 1" : : "r" ( initial_kernel_context.list ) : "memory" );
-  // Set the access control to all-supervisor
-  __asm__ __volatile__( "mcr p15, 0, %0, c3, c0, 0" : : "r" ( ~0 ) );*/
+  // Set initial context
+  __asm__ __volatile__(
+    "mcrr p15, 0, %0, %1, c2"
+    : : "r" ( initial_context.raw ), "r" ( 0 )
+    : "memory"
+  );
 
   // prepare ttbcr
   ttbcr.raw = 0;
-  // set split to use ttbr0 and ttbr1 as it will be used later on
-  ttbcr.data.ttbr0_size = LD_TTBCR_SIZE_TTBR_2G;
-  ttbcr.data.ttbr1_size = LD_TTBCR_SIZE_TTBR_2G;
   // set large physical address extension bit
   ttbcr.data.large_physical_address_extension = 1;
   // push value to ttbcr
-  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c2, c0, 2"
+    : : "r" ( ttbcr.raw )
+    : "cc"
+  );
 
   // Get content from control register
   __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
@@ -88,5 +118,22 @@ boot_virt_setup_long( uintptr_t max_memory ) {
  */
 void SECTION( ".text.boot" )
 boot_virt_map_long( uintptr_t phys, uintptr_t virt ) {
-  boot_virt_map_short( phys, virt );
+  // determine index for getting middle directory
+  uint32_t pmd_index = LD_VIRTUAL_PMD_INDEX( virt );
+  // determine index for getting table directory
+  uint32_t tbl_index = LD_VIRTUAL_TABLE_INDEX( virt );
+
+  // get middle directory
+  ld_middle_page_directory* next_level = ( ld_middle_page_directory* )
+    ( ( uintptr_t )initial_context.table[ pmd_index ].data.next_level_table );
+
+  // skip if already set
+  if ( 0 != next_level[ tbl_index ].raw ) {
+    return;
+  }
+
+  // FIXME: Set section
+  ( void )phys;
+  /*next_level[ tbl_index ].section[ tbl_index ].raw =
+    ( phys & 0xFFFFF000 ) | 0x0000074D;*/
 }

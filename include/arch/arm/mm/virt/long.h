@@ -25,8 +25,10 @@
 #define __ARCH_ARM_MM_VIRT_LONG__
 
 #if defined( ELF32 )
-  // ttbcr defines
-  #define LD_TTBCR_SIZE_TTBR_2G 0x1
+  // entry types
+  #define LD_TYPE_INVALID 0
+  #define LD_TYPE_SECTION 1
+  #define LD_TYPE_TABLE 3
 
   // helper macros
   #define LD_VIRTUAL_PMD_INDEX( a ) EXTRACT_BIT( a, 2, 31 )
@@ -60,29 +62,11 @@
     struct {
       uint32_t type : 1;
       uint32_t sbz_0 : 1;
-      union {
-        uint32_t data : 10;
-        struct {
-          uint32_t attribute_index : 3;
-          uint32_t non_secure : 1;
-          uint32_t access_permission : 2;
-          uint32_t shared : 2;
-          uint32_t access : 1;
-          uint32_t not_global : 1;
-        } attribute;
-      } lower_block_attribute;
+      uint32_t lower_attribute : 10;
       uint32_t sbz_1 : 18;
       uint32_t output_address: 10;
       uint32_t sbz_2 : 12;
-      union {
-        uint32_t data : 12;
-        struct {
-          uint32_t continguous : 1;
-          uint32_t privileged_execute_never : 1;
-          uint32_t execute_never : 1;
-          uint32_t ignored : 9;
-        } attribute;
-      } upper_block_attribute;
+      uint32_t upper_attribute : 10;
     } data;
   } ld_context_block_level1_t;
 
@@ -91,28 +75,11 @@
     struct {
       uint32_t type : 1;
       uint32_t sbz_0 : 1;
-      union {
-        uint32_t data : 10;
-        struct {
-          uint32_t memory_attribute : 4;
-          uint32_t access_permission : 2;
-          uint32_t shared : 2;
-          uint32_t access_flag : 1;
-          uint32_t sbz : 1;
-        } attribute;
-      } lower_block_attribute;
+      uint32_t lower_attribute : 10;
       uint32_t sbz_1 : 9;
       uint32_t output_address: 19;
       uint32_t sbz_2 : 12;
-      union {
-        uint32_t data : 12;
-        struct {
-          uint32_t continguous : 1;
-          uint32_t sbz : 1;
-          uint32_t execute_never : 1;
-          uint32_t ignored : 9;
-        } attribute;
-      } upper_block_attribute;
+      uint32_t upper_attribute : 10;
     } data;
   } ld_context_block_level2_t;
 
@@ -124,16 +91,7 @@
       uint32_t next_level_table : 28;
       uint32_t sbz_0 : 12;
       uint32_t ignored_1 : 7;
-
-      struct {
-        uint32_t l2_sbz : 5;
-        union {
-          uint32_t privileged_execute_never : 1;
-          uint32_t execute_never : 1;
-          uint32_t access_permission : 2;
-          uint32_t not_secure : 1;
-        } l1_data;
-      } table_attribute;
+      uint32_t table_attribute : 5;
     } data;
   } ld_context_table_t;
 
@@ -141,28 +99,10 @@
     uint64_t raw;
     struct {
       uint32_t type : 2;
-      union {
-        uint32_t data : 10;
-        struct {
-          uint32_t attribute_index : 3;
-          uint32_t non_secure : 1;
-          uint32_t access_permission : 2;
-          uint32_t shared : 2;
-          uint32_t access : 1;
-          uint32_t not_global : 1;
-        } attribute;
-      } lower_block_attribute;
+      uint32_t lower_attribute : 10;
       uint32_t output_address : 28;
       uint32_t sbz_0 : 12;
-      union {
-        uint32_t data : 12;
-        struct {
-          uint32_t continguous : 1;
-          uint32_t privileged_execute_never : 1;
-          uint32_t execute_never : 1;
-          uint32_t ignored : 9;
-        } attribute;
-      } upper_block_attribute;
+      uint32_t upper_attribute : 12;
     } data;
   } ld_context_page_t;
 
@@ -174,13 +114,13 @@
   typedef union PACKED {
     uint64_t raw[ 512 ];
     ld_context_block_level2_t section[ 512 ];
-    ld_context_table_t level[ 512 ];
+    ld_context_table_t table[ 512 ];
   } ld_middle_page_directory;
 
   typedef union PACKED {
     uint64_t raw[ 512 ];
     ld_context_block_level1_t section[ 512 ];
-    ld_context_table_t level[ 512 ];
+    ld_context_table_t table[ 512 ];
   } ld_global_page_directory_t;
 #endif
 
