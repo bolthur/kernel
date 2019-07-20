@@ -618,6 +618,16 @@ void v7_short_set_context( virt_context_ptr_t ctx ) {
  * @brief Flush context
  */
 void v7_short_flush_context( void ) {
+  sd_ttbcr_t ttbcr;
+
+  // read ttbcr register
+  __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
+  // set split to use ttbr1 and ttbr2 as it will be used later on
+  ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_2G;
+  ttbcr.data.large_physical_address_extension = 0;
+  // push back value with ttbcr
+  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
+
   // invalidate instruction cache
   __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) );
   // invalidate entire tlb

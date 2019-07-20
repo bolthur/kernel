@@ -27,14 +27,8 @@
 /**
  * @brief Initial kernel context
  */
-static sd_context_total_t initial_kernel_context
+static sd_context_total_t initial_context
   SECTION_ALIGNED( ".data.boot", SD_TTBR_ALIGNMENT_4G );
-
-/**
- * @brief Initial user context
- */
-static sd_context_half_t initial_user_context
-  SECTION_ALIGNED( ".data.boot", SD_TTBR_ALIGNMENT_2G );
 
 /**
  * @brief Method to setup short descriptor paging
@@ -47,10 +41,7 @@ boot_virt_setup_short( uintptr_t max_memory ) {
   sd_ttbcr_t ttbcr;
 
   for ( x = 0; x < 4096; x++ ) {
-    initial_kernel_context.list[ x ] = 0;
-  }
-  for ( x = 0; x < 2048; x++ ) {
-    initial_user_context.list[ x ] = 0;
+    initial_context.list[ x ] = 0;
   }
 
   // map all memory
@@ -63,15 +54,18 @@ boot_virt_setup_short( uintptr_t max_memory ) {
   }
 
   // Copy page table address to cp15
-  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 0" : : "r" ( initial_user_context.list ) : "memory" );
-  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 1" : : "r" ( initial_kernel_context.list ) : "memory" );
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c2, c0, 0"
+    : : "r" ( initial_context.list )
+    : "memory"
+  );
   // Set the access control to all-supervisor
   __asm__ __volatile__( "mcr p15, 0, %0, c3, c0, 0" : : "r" ( ~0 ) );
 
   // read ttbcr register
   __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
-  // set split to use ttbr1 and ttbr2 as it will be used later on
-  ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_2G;
+  // set split to no split
+  ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_4G;
   ttbcr.data.large_physical_address_extension = 0;
   // push back value with ttbcr
   __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
@@ -94,15 +88,8 @@ boot_virt_map_short( uintptr_t phys, uintptr_t virt ) {
   uint32_t x = virt >> 20;
   uint32_t y = phys >> 20;
 
-  if ( ( uint32_t )virt < SD_TTBR1_START_TTBR0_2G ) {
-    initial_user_context.section[ x ].data.type = SD_TTBR_TYPE_SECTION;
-    initial_user_context.section[ x ].data.execute_never = 0;
-    initial_user_context.section[ x ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
-    initial_user_context.section[ x ].data.frame = y & 0xFFF;
-  } else {
-    initial_kernel_context.section[ x ].data.type = SD_TTBR_TYPE_SECTION;
-    initial_kernel_context.section[ x ].data.execute_never = 0;
-    initial_kernel_context.section[ x ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
-    initial_kernel_context.section[ x ].data.frame = y & 0xFFF;
-  }
+  initial_context.section[ x ].data.type = SD_TTBR_TYPE_SECTION;
+  initial_context.section[ x ].data.execute_never = 0;
+  initial_context.section[ x ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
+  initial_context.section[ x ].data.frame = y & 0xFFF;
 }
