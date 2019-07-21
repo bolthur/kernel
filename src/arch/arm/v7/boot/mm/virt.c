@@ -35,8 +35,7 @@ static uint32_t supported_mode SECTION( ".data.boot" );
  *
  * @param max_memory max physical memory of the board
  */
-void SECTION( ".text.boot" )
-boot_virt_setup( uintptr_t max_memory ) {
+void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
   // get paging support from mmfr0
   __asm__ __volatile__(
     "mrc p15, 0, %0, c0, c1, 4"
@@ -76,8 +75,7 @@ boot_virt_setup( uintptr_t max_memory ) {
  * @param phys
  * @param virt
  */
-void SECTION( ".text.boot" )
-boot_virt_map( uintptr_t phys, uintptr_t virt ) {
+void __bootstrap boot_virt_map( uint64_t phys, uintptr_t virt ) {
   // check for invalid paging support
   if (
     ! (
@@ -92,8 +90,8 @@ boot_virt_map( uintptr_t phys, uintptr_t virt ) {
 
   // map it
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
-    boot_virt_map_short( phys, virt );
-  } else {
     boot_virt_map_long( phys, virt );
+  } else {
+    boot_virt_map_short( ( uintptr_t )phys, virt );
   }
 }

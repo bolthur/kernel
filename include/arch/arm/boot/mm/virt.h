@@ -23,7 +23,6 @@
 
 #include <stdint.h>
 
-void boot_virt_setup( uintptr_t );
-void boot_virt_map( uintptr_t, uintptr_t );
+void boot_virt_map( uint64_t, uintptr_t );
 
 #endif

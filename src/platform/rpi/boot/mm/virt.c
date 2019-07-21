@@ -28,8 +28,7 @@
 /**
  * @brief Method to setup short descriptor paging
  */
-void SECTION( ".text.boot" )
-boot_virt_platform_setup( void ) {
+void __bootstrap boot_virt_platform_setup( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
     uintptr_t gpio_peripheral_base = 0x3F000000;
     size_t gpio_peripheral_size = 0xFFFFFF;
@@ -49,7 +48,7 @@ boot_virt_platform_setup( void ) {
   if ( 0 != cpu_peripheral_base ) {
     while ( cpu_peripheral_base < cpu_peripheral_end ) {
       // identity map gpio
-      boot_virt_map( gpio_peripheral_base, gpio_peripheral_base );
+      boot_virt_map( ( uint64_t )gpio_peripheral_base, gpio_peripheral_base );
       // next page
       cpu_peripheral_base += PAGE_SIZE;
     }
@@ -58,7 +57,7 @@ boot_virt_platform_setup( void ) {
   // map gpio if set
   while ( gpio_peripheral_base < gpio_peripheral_end ) {
     // identity map gpio
-    boot_virt_map( gpio_peripheral_base, gpio_peripheral_base );
+    boot_virt_map( ( uint64_t )gpio_peripheral_base, gpio_peripheral_base );
     // next page
     gpio_peripheral_base += PAGE_SIZE;
   }

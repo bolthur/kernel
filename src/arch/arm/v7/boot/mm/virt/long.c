@@ -31,7 +31,7 @@
 static ld_global_page_directory_t initial_context
   SECTION_ALIGNED( ".data.boot", PAGE_SIZE );
 
-static ld_middle_page_directory inital_middle_directory[ 4 ]
+static ld_middle_page_directory initial_middle_directory[ 4 ]
   SECTION_ALIGNED( ".data.boot", PAGE_SIZE );
 
 /**
@@ -40,52 +40,38 @@ static ld_middle_page_directory inital_middle_directory[ 4 ]
  * @todo Add initial mapping for paging with lpae
  * @todo Remove call for setup short paging
  */
-void SECTION( ".text.boot" )
-boot_virt_setup_long( uintptr_t max_memory ) {
+void __bootstrap boot_virt_setup_long( uintptr_t max_memory ) {
   // variables
   ld_ttbcr_t ttbcr;
   uint32_t reg, x, y;
 
   // Prepare initial context
   for ( x = 0; x < 512; x++ ) {
-    initial_context.raw[ x ] = 0ULL;
+    initial_context.raw[ x ] = 0;
   }
   // Prepare middle directories
   for ( x = 0; x < 4; x++ ) {
     for ( y = 0; y < 512; y++ ) {
-      inital_middle_directory[ x ].raw[ y ] = 0ULL;
+      initial_middle_directory[ x ].raw[ y ] = 0;
     }
   }
 
   // Set middle directory tables
   for ( x = 0; x < 4; x++ ) {
-    // set next level table
-    initial_context.table[ x ].raw =
-      ( ( uintptr_t )inital_middle_directory[ x ].raw & 0xFFFFF000 )
-      | LD_TYPE_TABLE;
+    initial_context.table[ x ].data.type = LD_TYPE_TABLE;
+    initial_context.table[ x ].raw |= ( uint64_t )(
+      ( uintptr_t )initial_middle_directory[ x ].raw
+    );
   }
 
   // Map initial memory
-  for ( x = 0; x < ( max_memory >> 20 ); x++ ) {
-    boot_virt_map_long( x << 20, x << 20 );
+  for ( x = 0; x < ( max_memory >> 21 ); x++ ) {
+    boot_virt_map_long( x << 21, x << 21 );
 
     if ( 0 < KERNEL_OFFSET ) {
-      boot_virt_map_long( x << 20, ( x + ( KERNEL_OFFSET >> 20 ) ) << 20 );
+      boot_virt_map_long( x << 21, ( x + ( KERNEL_OFFSET >> 21 ) ) << 21 );
     }
   }
-
-  initial_context.section[ 0 ].raw = 0;
-  initial_context.section[ 0 ].data.type = 0x1;
-  initial_context.section[ 0 ].data.lower_attribute = 0x1C7;
-  initial_context.section[ 1 ].raw = 0;
-  initial_context.section[ 1 ].data.type = 0x1;
-  initial_context.section[ 1 ].data.lower_attribute = 0x1C7;
-  initial_context.section[ 2 ].raw = 0;
-  initial_context.section[ 2 ].data.type = 0x1;
-  initial_context.section[ 2 ].data.lower_attribute = 0x1C7;
-  initial_context.section[ 3 ].raw = 0;
-  initial_context.section[ 3 ].data.type = 0x1;
-  initial_context.section[ 3 ].data.lower_attribute = 0x1C7;
 
   // Set initial context
   __asm__ __volatile__(
@@ -116,24 +102,22 @@ boot_virt_setup_long( uintptr_t max_memory ) {
 /**
  * @brief Method to perform identity nap
  */
-void SECTION( ".text.boot" )
-boot_virt_map_long( uintptr_t phys, uintptr_t virt ) {
+void __bootstrap boot_virt_map_long( uint64_t phys, uintptr_t virt ) {
   // determine index for getting middle directory
   uint32_t pmd_index = LD_VIRTUAL_PMD_INDEX( virt );
   // determine index for getting table directory
   uint32_t tbl_index = LD_VIRTUAL_TABLE_INDEX( virt );
 
-  // get middle directory
-  ld_middle_page_directory* next_level = ( ld_middle_page_directory* )
-    ( ( uintptr_t )initial_context.table[ pmd_index ].data.next_level_table );
-
   // skip if already set
-  if ( 0 != next_level[ tbl_index ].raw ) {
+  if ( 0 != initial_middle_directory[ pmd_index ].raw[ tbl_index ] ) {
     return;
   }
 
-  // FIXME: Set section
-  ( void )phys;
-  /*next_level[ tbl_index ].section[ tbl_index ].raw =
-    ( phys & 0xFFFFF000 ) | 0x0000074D;*/
+  ld_context_block_level2_t* section = &initial_middle_directory[ pmd_index ]
+    .section[ tbl_index ];
+
+  // set section
+  section->data.type = 0x1;
+  section->data.lower_attr_access = 0x1;
+  section->raw |= phys;
 }

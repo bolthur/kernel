@@ -25,6 +25,6 @@
  * @todo Read amount of physical memory initially with a helper from mailbox
  * @todo Pass fetched amount of physical memory to virtual setup functions
  */
-void SECTION( ".text.boot" ) boot_platform_prepare( void ) {
+void __bootstrap boot_platform_prepare( void ) {
   boot_virt_setup( INITIAL_PHYSICAL_MAP );
 }

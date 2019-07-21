@@ -35,8 +35,7 @@ static sd_context_total_t initial_context
  *
  * @param max_memory max physical memory of the board
  */
-void SECTION( ".text.boot" )
-boot_virt_setup_short( uintptr_t max_memory ) {
+void __bootstrap boot_virt_setup_short( uintptr_t max_memory ) {
   uint32_t x, reg;
   sd_ttbcr_t ttbcr;
 
@@ -91,8 +90,7 @@ boot_virt_setup_short( uintptr_t max_memory ) {
  *
  * @param max_memory max physical memory of the board
  */
-void SECTION( ".text.boot" )
-boot_virt_map_short( uintptr_t phys, uintptr_t virt ) {
+void __bootstrap boot_virt_map_short( uintptr_t phys, uintptr_t virt ) {
   uint32_t x = virt >> 20;
   uint32_t y = phys >> 20;
 

@@ -24,7 +24,7 @@
 /**
  * @brief Method to clear bss during initial boot
  */
-void SECTION( ".text.boot" ) boot_bss_clear( void ) {
+void __bootstrap boot_bss_clear( void ) {
   bss_type_t *start = ( bss_type_t* )VIRT_2_PHYS( &__bss_start );
   bss_type_t *end = ( bss_type_t* )VIRT_2_PHYS( &__bss_end );
 

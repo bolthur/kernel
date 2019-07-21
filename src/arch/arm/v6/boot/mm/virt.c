@@ -32,7 +32,7 @@ static uint32_t supported_mode SECTION( ".data.boot" );
 /**
  * @brief Method wraps setup of short / long descriptor mode
  */
-void SECTION( ".text.boot" ) boot_virt_setup( uintptr_t max_memory ) {
+void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
   // get paging support from mmfr0
   __asm__ __volatile__(
     "mrc p15, 0, %0, c0, c1, 4"
@@ -55,13 +55,12 @@ void SECTION( ".text.boot" ) boot_virt_setup( uintptr_t max_memory ) {
  * @param phys
  * @param virt
  */
-void SECTION( ".text.boot" )
-boot_virt_map( uintptr_t phys, uintptr_t virt ) {
+void __bootstrap boot_virt_map( uint64_t phys, uintptr_t virt ) {
   // check for invalid paging support
   if ( ID_MMFR0_VSMA_V6_PAGING != supported_mode ) {
     return;
   }
 
   // map it
-  boot_virt_map_short( phys, virt );
+  boot_virt_map_short( ( uintptr_t )phys, virt );
 }

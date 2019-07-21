@@ -31,96 +31,133 @@
   #define LD_TYPE_TABLE 3
 
   // helper macros
-  #define LD_VIRTUAL_PMD_INDEX( a ) EXTRACT_BIT( a, 2, 31 )
-  #define LD_VIRTUAL_TABLE_INDEX( a ) EXTRACT_BIT( a, 9, 29 )
-  #define LD_VIRTUAL_PAGE_INDEX( a ) EXTRACT_BIT( a, 9, 20 )
+  #define LD_VIRTUAL_PMD_INDEX( a ) ( ( a & 0xC0000000 ) >> 30 )
+  #define LD_VIRTUAL_TABLE_INDEX( a ) ( ( a & 0x3FE00000 ) >> 21 )
+  #define LD_VIRTUAL_PAGE_INDEX( a ) ( ( a & 0xFF800 ) >> 11 )
 
   typedef union PACKED {
-    uint32_t raw;
+    uint64_t raw;
     struct {
-      uint32_t ttbr0_size : 3;
-      uint32_t sbz_0 : 4;
-      uint32_t ttbr0_disable_table_walk : 1;
-      uint32_t ttbr0_inner_cachability : 2;
-      uint32_t ttbr0_outer_cachability : 2;
-      uint32_t ttbr0_shareability : 2;
-      uint32_t sbz_1 : 2;
-      uint32_t ttbr1_size : 3;
-      uint32_t sbz_2 : 3;
-      uint32_t ttbr0_ttbr1_asid : 1;
-      uint32_t ttbr1_disable_table_walk : 1;
-      uint32_t ttbr1_inner_cachability : 2;
-      uint32_t ttbr1_outer_cachability : 2;
-      uint32_t ttbr1_shareability : 2;
-      uint32_t imp : 1;
-      uint32_t large_physical_address_extension : 1;
+      uint64_t ttbr0_size : 3;
+      uint64_t sbz_0 : 4;
+      uint64_t ttbr0_disable_table_walk : 1;
+      uint64_t ttbr0_inner_cachability : 2;
+      uint64_t ttbr0_outer_cachability : 2;
+      uint64_t ttbr0_shareability : 2;
+      uint64_t sbz_1 : 2;
+      uint64_t ttbr1_size : 3;
+      uint64_t sbz_2 : 3;
+      uint64_t ttbr0_ttbr1_asid : 1;
+      uint64_t ttbr1_disable_table_walk : 1;
+      uint64_t ttbr1_inner_cachability : 2;
+      uint64_t ttbr1_outer_cachability : 2;
+      uint64_t ttbr1_shareability : 2;
+      uint64_t imp : 1;
+      uint64_t large_physical_address_extension : 1;
     } data;
   } ld_ttbcr_t;
 
   typedef union PACKED {
     uint64_t raw;
     struct {
-      uint32_t type : 1;
-      uint32_t sbz_0 : 1;
-      uint32_t lower_attribute : 10;
-      uint32_t sbz_1 : 18;
-      uint32_t output_address: 10;
-      uint32_t sbz_2 : 12;
-      uint32_t upper_attribute : 10;
+      uint64_t type : 1;
+      uint64_t sbz_0 : 1;
+
+      uint64_t lower_attr_attribute_index : 3;
+      uint64_t lower_attr_non_secure : 1;
+      uint64_t lower_attr_access_permission : 2;
+      uint64_t lower_attr_shared : 2;
+      uint64_t lower_attr_access : 1;
+      uint64_t lower_attr_not_global : 1;
+
+      uint64_t sbz_1 : 18;
+      uint64_t output_address: 10;
+      uint64_t sbz_2 : 12;
+
+      uint64_t upper_attr_continguous : 1;
+      uint64_t upper_attr_privileged_execute_never : 1;
+      uint64_t upper_attr_execute_never : 1;
+      uint64_t upper_attr_ignored : 9;
     } data;
   } ld_context_block_level1_t;
 
   typedef union PACKED {
     uint64_t raw;
     struct {
-      uint32_t type : 1;
-      uint32_t sbz_0 : 1;
-      uint32_t lower_attribute : 10;
-      uint32_t sbz_1 : 9;
-      uint32_t output_address: 19;
-      uint32_t sbz_2 : 12;
-      uint32_t upper_attribute : 10;
+      uint64_t type : 1;
+      uint64_t sbz_0 : 1;
+
+      uint64_t lower_attr_attribute_index : 3;
+      uint64_t lower_attr_non_secure : 1;
+      uint64_t lower_attr_access_permission : 2;
+      uint64_t lower_attr_shared : 2;
+      uint64_t lower_attr_access : 1;
+      uint64_t lower_attr_not_global : 1;
+
+      uint64_t sbz_1 : 9;
+      uint64_t output_address: 19;
+      uint64_t sbz_2 : 12;
+
+      uint64_t upper_attr_continguous : 1;
+      uint64_t upper_attr_privileged_execute_never : 1;
+      uint64_t upper_attr_execute_never : 1;
+      uint64_t upper_attr_ignored : 9;
     } data;
   } ld_context_block_level2_t;
 
   typedef union PACKED {
     uint64_t raw;
     struct {
-      uint32_t type : 2;
-      uint32_t ignored_0 : 10;
-      uint32_t next_level_table : 28;
-      uint32_t sbz_0 : 12;
-      uint32_t ignored_1 : 7;
-      uint32_t table_attribute : 5;
+      uint64_t type : 2;
+      uint64_t ignored_0 : 10;
+      uint64_t next_level_table : 28;
+      uint64_t sbz_0 : 12;
+      uint64_t ignored_1 : 7;
+      uint64_t attr_pxn_table : 1;
+      uint64_t attr_xn_table : 1;
+      uint64_t attr_ap_table : 2;
+      uint64_t attr_ns_table : 1;
     } data;
-  } ld_context_table_t;
+  } ld_context_table_level1_t;
 
   typedef union PACKED {
     uint64_t raw;
     struct {
-      uint32_t type : 2;
-      uint32_t lower_attribute : 10;
-      uint32_t output_address : 28;
-      uint32_t sbz_0 : 12;
-      uint32_t upper_attribute : 12;
+      uint64_t type : 2;
+      uint64_t ignored_0 : 10;
+      uint64_t next_level_table : 28;
+      uint64_t sbz_0 : 12;
+      uint64_t ignored_1 : 7;
+      uint64_t sbz_1 : 5;
+    } data;
+  } ld_context_table_level2_t;
+
+  typedef union PACKED {
+    uint64_t raw;
+    struct {
+      uint64_t type : 2;
+      uint64_t lower_attr : 10;
+      uint64_t output_address : 28;
+      uint64_t sbz_0 : 12;
+      uint64_t upper_attr : 12;
     } data;
   } ld_context_page_t;
 
   typedef union PACKED {
     uint64_t raw[ 512 ];
-    ld_context_table_t table[ 512 ];
+    ld_context_page_t page[ 512 ];
   } ld_page_table_t;
 
   typedef union PACKED {
     uint64_t raw[ 512 ];
     ld_context_block_level2_t section[ 512 ];
-    ld_context_table_t table[ 512 ];
+    ld_context_table_level2_t table[ 512 ];
   } ld_middle_page_directory;
 
   typedef union PACKED {
     uint64_t raw[ 512 ];
     ld_context_block_level1_t section[ 512 ];
-    ld_context_table_t table[ 512 ];
+    ld_context_table_level1_t table[ 512 ];
   } ld_global_page_directory_t;
 #endif
 

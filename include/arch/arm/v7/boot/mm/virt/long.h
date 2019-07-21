@@ -24,6 +24,6 @@
 #include <kernel/boot/mm/virt.h>
 
 void boot_virt_setup_long( uintptr_t );
-void boot_virt_map_long( uintptr_t, uintptr_t );
+void boot_virt_map_long( uint64_t, uintptr_t );
 
 #endif

@@ -132,6 +132,7 @@ AC_DEFINE_UNQUOTED([ALIGNED(x)], [__attribute__((__aligned__(x)))], [Keyword for
 AC_DEFINE_UNQUOTED([PACKED_ALIGNED(x)], [__attribute__((__packed__, __aligned__(x)))], [Keyword for packing and aligning structures.])
 AC_DEFINE_UNQUOTED([SECTION_ALIGNED(x,y)], [__attribute__((__section__(x), __aligned__(y)))], [Keyword for packing and aligning structures.])
 AC_DEFINE_UNQUOTED([OPT_NONE], [__attribute__((__optimize__( "O0" )))], [Disable optimization])
+AC_DEFINE_UNQUOTED([__bootstrap], [SECTION( ".text.boot" )], [Bootstrap function])
 
 AC_CONFIG_FILES([
   Makefile
