@@ -614,7 +614,8 @@ void avl_print( const avl_tree_ptr_t tree ) {
 /**
  * @brief method to prepare some node
  *
- * @param node
+ * @param node node to prepare
+ * @param data initial node data
  */
 void avl_prepare_node( avl_node_ptr_t node, void* data ) {
   node->left = NULL;

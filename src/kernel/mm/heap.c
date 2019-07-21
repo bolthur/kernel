@@ -36,8 +36,8 @@ heap_manager_ptr_t kernel_heap = NULL;
 /**
  * @brief Compare address callback necessary for avl tree
  *
- * @param avl_a node a
- * @param avl_b node b
+ * @param a node a
+ * @param b node b
  * @return int32_t
  */
 static int32_t compare_address_callback(
@@ -65,8 +65,8 @@ static int32_t compare_address_callback(
 /**
  * @brief Compare address callback necessary for avl tree
  *
- * @param avl_a node a
- * @param avl_b node b
+ * @param a node a
+ * @param b node b
  * @return int32_t
  */
 static int32_t compare_size_callback(
@@ -524,7 +524,6 @@ bool heap_initialized_get( void ) {
  * @brief Allocate block within heap
  *
  * @param size size to allocate
- * @param alignment address aligment
  * @return uintptr_t address of allocated block
  */
 uintptr_t heap_allocate_block( size_t size ) {

@@ -33,7 +33,7 @@ static sd_context_total_t initial_context
 /**
  * @brief Method to setup short descriptor paging
  *
- * @param max_memory max physical memory of the board
+ * @param max_memory maximum memory to map starting from 0
  */
 void __bootstrap boot_virt_setup_short( uintptr_t max_memory ) {
   uint32_t x, reg;
@@ -80,7 +80,8 @@ void __bootstrap boot_virt_setup_short( uintptr_t max_memory ) {
 /**
  * @brief Method to perform map
  *
- * @param max_memory max physical memory of the board
+ * @param phys physical address
+ * @param virt virtual address
  */
 void __bootstrap boot_virt_map_short( uintptr_t phys, uintptr_t virt ) {
   uint32_t x = virt >> 20;

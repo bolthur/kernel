@@ -33,9 +33,11 @@ static uint32_t supported_mode SECTION( ".data.boot" );
 /**
  * @brief Method wraps setup of short / long descriptor mode
  *
- * @param max_memory max physical memory of the board
+ * @param max_memory maximum memory to map starting from 0
  */
 void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
+  uint32_t reg;
+
   // get paging support from mmfr0
   __asm__ __volatile__(
     "mrc p15, 0, %0, c0, c1, 4"
@@ -67,13 +69,20 @@ void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
 
   // setup platform related
   boot_virt_platform_setup();
+
+  // read register
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r"( reg ) :: "memory" );
+  // enable unaligned memory access
+  reg &= 0xFFFFFFFD;
+  // push back value
+  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" :: "r"( reg ) : "memory" );
 }
 
 /**
- * @brief
+ * @brief Mapper function using short or long descriptor mapping depending on support
  *
- * @param phys
- * @param virt
+ * @param phys physical address
+ * @param virt virtual address
  */
 void __bootstrap boot_virt_map( uint64_t phys, uintptr_t virt ) {
   // check for invalid paging support

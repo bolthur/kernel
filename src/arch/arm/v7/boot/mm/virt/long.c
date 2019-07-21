@@ -22,23 +22,26 @@
 
 #include <kernel/mm/phys.h>
 #include <arch/arm/mm/virt/long.h>
+#include <arch/arm/v7/boot/mm/virt/short.h>
 #include <arch/arm/v7/boot/mm/virt/long.h>
 #include <kernel/entry.h>
 
 /**
- * @brief Initial kernel context
+ * @brief Initial middle directory for context
  */
-static ld_global_page_directory_t initial_context
+static ld_middle_page_directory initial_middle_directory[ 4 ]
   SECTION_ALIGNED( ".data.boot", PAGE_SIZE );
 
-static ld_middle_page_directory initial_middle_directory[ 4 ]
+/**
+ * @brief Initial context
+ */
+static ld_global_page_directory_t initial_context
   SECTION_ALIGNED( ".data.boot", PAGE_SIZE );
 
 /**
  * @brief Helper to setup initial paging with large page address extension
  *
- * @todo Add initial mapping for paging with lpae
- * @todo Remove call for setup short paging
+ * @param max_memory maximum memory to map starting from 0
  */
 void __bootstrap boot_virt_setup_long( uintptr_t max_memory ) {
   // variables
@@ -101,6 +104,9 @@ void __bootstrap boot_virt_setup_long( uintptr_t max_memory ) {
 
 /**
  * @brief Method to perform identity nap
+ *
+ * @param phys physical address
+ * @param virt virtual address
  */
 void __bootstrap boot_virt_map_long( uint64_t phys, uintptr_t virt ) {
   // determine index for getting middle directory

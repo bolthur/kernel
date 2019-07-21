@@ -41,7 +41,11 @@ void v7_long_map(
   uintptr_t paddr,
   uint32_t flag
 ) {
-  v7_short_map( ctx, vaddr, paddr, flag );
+  ( void )ctx;
+  ( void )vaddr;
+  ( void )paddr;
+  ( void )flag;
+  PANIC( "v7_long_map not yet implemented!" );
 }
 
 /**
@@ -59,7 +63,10 @@ void v7_long_map_random(
   uintptr_t vaddr,
   uint32_t flag
 ) {
-  v7_short_map_random( ctx, vaddr, flag );
+  ( void )ctx;
+  ( void )vaddr;
+  ( void )flag;
+  PANIC( "v7_long_map_random not yet implemented!" );
 }
 
 /**
@@ -72,7 +79,9 @@ void v7_long_map_random(
  * @todo remove call for v7 short unmapping
  */
 void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
-  v7_short_unmap( ctx, vaddr );
+  ( void )ctx;
+  ( void )vaddr;
+  PANIC( "v7_long_unmap not yet implemented!" );
 }
 
 /**
@@ -91,7 +100,10 @@ uintptr_t v7_long_create_table(
   uintptr_t addr,
   uintptr_t table
 ) {
-  return v7_short_create_table( ctx, addr, table );
+  ( void )ctx;
+  ( void )addr;
+  ( void )table;
+  PANIC( "v7_long_create_tableW not yet implemented!" );
 }
 
 /**
@@ -103,7 +115,8 @@ uintptr_t v7_long_create_table(
  * @todo remove call for v7 short activation
  */
 void v7_long_set_context( virt_context_ptr_t ctx ) {
-  v7_short_set_context( ctx );
+  ( void )ctx;
+  PANIC( "v7_long_set_context not yet implemented!" );
 }
 
 /**
@@ -113,7 +126,7 @@ void v7_long_set_context( virt_context_ptr_t ctx ) {
  * @todo remove call for v7 short activation
  */
 void v7_long_flush_context( void ) {
-  v7_short_flush_context();
+  PANIC( "v7_long_flush_context not yet implemented!" );
 }
 
 /**
@@ -125,7 +138,8 @@ void v7_long_flush_context( void ) {
  * @todo remove call for v7 short activation
  */
 void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
-  v7_short_prepare_temporary( ctx );
+  ( void )ctx;
+  PANIC( "v7_long_prepare_temporary not yet implemented!" );
 }
 
 /**
@@ -137,5 +151,6 @@ void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
  * @todo remove call for v7 short activation
  */
 virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
-  return v7_short_create_context( type );
+  ( void )type;
+  PANIC( "v7_long_create_context not yet implemented!" );
 }

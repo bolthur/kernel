@@ -114,7 +114,7 @@ void virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr ) {
 /**
  * @brief Method to create virtual context
  *
- * @param virt_context_type_t context type
+ * @param type context type
  * @return virt_context_ptr_t address of context
  */
 virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
