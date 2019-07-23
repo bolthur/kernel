@@ -76,10 +76,12 @@ int printf( const char* restrict format, ... ) {
       }
 
       if ( maxrem < amount ) {
+        va_end( parameters );
         return -1;
       }
 
       if ( ! print( format, amount, pad0, pad ) ) {
+        va_end( parameters );
         return -1;
       }
 
@@ -106,10 +108,12 @@ int printf( const char* restrict format, ... ) {
         c = ( char )va_arg( parameters, int );
 
         if ( ! maxrem ) {
+          va_end( parameters );
           return -1;
         }
 
         if ( ! print( &c, sizeof( c ), pad0, pad ) ) {
+          va_end( parameters );
           return -1;
         }
 
@@ -122,10 +126,12 @@ int printf( const char* restrict format, ... ) {
         len = strlen( str );
 
         if ( maxrem < len ) {
+          va_end( parameters );
           return -1;
         }
 
         if ( ! print( str, len, pad0, pad ) ) {
+          va_end( parameters );
           return -1;
         }
 
@@ -150,10 +156,12 @@ int printf( const char* restrict format, ... ) {
         len = strlen( p );
 
         if ( maxrem < len ) {
+          va_end( parameters );
           return -1;
         }
 
         if ( ! print( p, len, pad0, pad ) ) {
+          va_end( parameters );
           return -1;
         }
 
@@ -183,10 +191,12 @@ int printf( const char* restrict format, ... ) {
         len = strlen( p );
 
         if ( maxrem < len ) {
+          va_end( parameters );
           return -1;
         }
 
         if ( ! print( p, len, pad0, pad ) ) {
+          va_end( parameters );
           return -1;
         }
 
@@ -196,13 +206,15 @@ int printf( const char* restrict format, ... ) {
 
       default:
         format = format_begun_at;
-        len = strlen(format);
+        len = strlen( format );
 
-        if (maxrem < len) {
+        if ( maxrem < len ) {
+          va_end( parameters );
           return -1;
         }
 
         if ( ! print( format, len, pad0, pad ) ) {
+          va_end( parameters );
           return -1;
         }
 

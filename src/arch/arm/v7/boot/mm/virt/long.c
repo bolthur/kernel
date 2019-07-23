@@ -22,7 +22,6 @@
 
 #include <kernel/mm/phys.h>
 #include <arch/arm/mm/virt/long.h>
-#include <arch/arm/v7/boot/mm/virt/short.h>
 #include <arch/arm/v7/boot/mm/virt/long.h>
 #include <kernel/entry.h>
 

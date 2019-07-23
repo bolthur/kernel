@@ -161,7 +161,7 @@ static void print_recursive( const avl_node_ptr_t node ) {
   if ( NULL == node ) {
     return;
   }
-  printf( "%x\n", node->data );
+  printf( "%p\r\n", node->data );
 
   if ( node->left ) {
     printf( "%s `--", level_buffer );

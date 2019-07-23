@@ -74,7 +74,7 @@ bool irq_validate_number( uint8_t num ) {
  * @todo check and revise
  */
 int8_t irq_get_pending( bool fast ) {
-  uint32_t base = ( uint32_t )peripheral_base_get(
+  uintptr_t base = ( uint32_t )peripheral_base_get(
     PERIPHERAL_GPIO
   );
 
@@ -84,7 +84,7 @@ int8_t irq_get_pending( bool fast ) {
     uint32_t pending2 = mmio_read( base + INTERRUPT_IRQ_PENDING_2 );
 
     #if defined( BCM2709 ) || defined( BCM2710 )
-      uintptr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
+      base = peripheral_base_get( PERIPHERAL_LOCAL );
       uint32_t core0_irq_source = mmio_read( ( uint32_t )base + CORE0_IRQ_SOURCE );
       if ( core0_irq_source & 0x08 ) {
         return 8;
@@ -92,7 +92,7 @@ int8_t irq_get_pending( bool fast ) {
     #endif
 
     for ( int8_t i = 0; i < 32; ++i ) {
-      int32_t check_bit = ( 1 << i );
+      uint32_t check_bit = ( 1U << i );
 
       // check first pending register
       if ( pending1 && check_bit ) {

@@ -74,7 +74,7 @@ void phys_platform_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "memory amount: 0x%8x\r\n", memory_amount );
+    DEBUG_OUTPUT( "memory amount: 0x%08x\r\n", memory_amount );
   #endif
 
   // get video core memory
@@ -120,9 +120,9 @@ void phys_platform_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "total memory amount: 0x%8x\r\n", memory_amount );
+    DEBUG_OUTPUT( "total memory amount: 0x%08x\r\n", memory_amount );
     DEBUG_OUTPUT( "bitmap length: %d\r\n", phys_bitmap_length );
-    DEBUG_OUTPUT( "phys bitmap address: 0x%08x\r\n", ( uintptr_t )phys_bitmap );
+    DEBUG_OUTPUT( "phys bitmap address: 0x%08x\r\n", ( uint32_t )phys_bitmap );
     DEBUG_OUTPUT( "content of __kernel_start: 0x%08x\r\n", &__kernel_start );
     DEBUG_OUTPUT( "content of __kernel_end: 0x%08x\r\n", &__kernel_end );
   #endif

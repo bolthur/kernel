@@ -141,7 +141,7 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "context: 0x%08x\r\n", context );
+    DEBUG_OUTPUT( "context: 0x%08p\r\n", context );
   #endif
 
   // initialize with zero

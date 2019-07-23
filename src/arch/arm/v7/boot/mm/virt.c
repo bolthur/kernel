@@ -54,7 +54,6 @@ void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
       ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_mode
       || ID_MMFR0_VSMA_V7_PAGING_PXN == supported_mode
       || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
-      || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
     )
   ) {
     return;
@@ -90,7 +89,6 @@ void __bootstrap boot_virt_map( uint64_t phys, uintptr_t virt ) {
     ! (
       ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_mode
       || ID_MMFR0_VSMA_V7_PAGING_PXN == supported_mode
-      || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
       || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
     )
   ) {

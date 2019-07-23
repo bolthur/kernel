@@ -67,7 +67,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
   uint32_t table_idx_offset = SD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
 
   // minimum: 1 page
-  if ( 0 >= page_amount ) {
+  if ( 1 > page_amount ) {
     page_amount++;
   }
 
@@ -185,7 +185,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
     return;
   }
 
-  if ( 0 >= page_amount ) {
+  if ( 1 > page_amount ) {
     ++page_amount;
   }
 

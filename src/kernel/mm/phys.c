@@ -183,7 +183,7 @@ uintptr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
     // loop through bits per entry
     for ( size_t offset = 0; offset < PAGE_PER_ENTRY && !stop; offset++ ) {
       // not free? => reset counter and continue
-      if ( phys_bitmap[ idx ] & ( uint32_t )( 0x1 << offset ) ) {
+      if ( phys_bitmap[ idx ] & ( uint32_t )( 1U << offset ) ) {
         found_amount = 0;
         address = 0;
         continue;

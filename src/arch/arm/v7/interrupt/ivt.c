@@ -100,7 +100,7 @@ void irq_handler( cpu_register_context_t *status ) {
 
   // get pending interrupt
   int8_t irq = irq_get_pending( false );
-  assert( -1 != irq && 0 <= irq );
+  assert( -1 != irq );
 
   // get bound interrupt handler
   irq_callback_t cb = irq_get_handler( ( uint8_t )irq, false );
@@ -123,7 +123,7 @@ void fast_interrupt_handler( cpu_register_context_t *status ) {
 
   // get pending interrupt
   int8_t irq = irq_get_pending( true );
-  assert( -1 != irq && 0 <= irq );
+  assert( -1 != irq );
 
   // get bound interrupt handler
   irq_callback_t cb = irq_get_handler( ( uint8_t )irq, true );
