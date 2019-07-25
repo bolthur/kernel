@@ -98,7 +98,7 @@
   #define SD_VIRTUAL_TABLE_INDEX( a ) ( a >> 20  )
   #define SD_VIRTUAL_PAGE_INDEX( a ) ( ( a >> 12 ) & 0xFF )
 
-  typedef union PACKED {
+  typedef union __packed {
     uint32_t raw;
     struct {
       uint32_t ttbr_split : 3;
@@ -115,7 +115,7 @@
     } data;
   } sd_ttbcr_t;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint32_t raw;
     struct {
       uint32_t execute_never : 1;
@@ -131,7 +131,7 @@
     } data;
   } sd_page_small_t;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint32_t raw;
     struct {
       uint32_t type: 1;
@@ -149,7 +149,7 @@
     } data;
   } sd_page_large_t;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint32_t raw;
     struct {
       uint32_t type : 2;
@@ -162,7 +162,7 @@
     } data;
   } sd_context_table_t;
 
-  typedef union  PACKED {
+  typedef union  __packed {
     uint32_t raw;
     struct {
       uint32_t privileged_execute_never : 1;
@@ -181,9 +181,9 @@
       uint32_t non_secure : 1;
       uint32_t frame: 12;
     } data;
-  } sd_context_section_t;
+  } sd_context_section_t, *sd_context_section_ptr_t;
 
-  typedef union  PACKED {
+  typedef union  __packed {
     uint32_t raw;
     struct {
       uint32_t privileged_execute_never : 1;
@@ -205,14 +205,14 @@
     } data;
   } sd_context_super_section_t;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint32_t raw[ 4096 ];
     sd_context_table_t table[ 4096 ];
     sd_context_section_t section[ 4096 ];
     sd_context_super_section_t super[ 4096 ];
   } sd_context_total_t;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint32_t raw[ 2048 ];
     sd_context_table_t table[ 2048 ];
     sd_context_section_t section[ 2048 ];

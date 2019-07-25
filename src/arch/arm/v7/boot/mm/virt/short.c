@@ -28,7 +28,7 @@
  * @brief Initial context
  */
 static sd_context_total_t initial_context
-  SECTION_ALIGNED( ".data.boot", SD_TTBR_ALIGNMENT_4G );
+  __bootstrap_data __aligned( SD_TTBR_ALIGNMENT_4G );
 
 /**
  * @brief Method to setup short descriptor paging
@@ -95,8 +95,9 @@ void __bootstrap boot_virt_map_short( uintptr_t phys, uintptr_t virt ) {
   uint32_t x = virt >> 20;
   uint32_t y = phys >> 20;
 
-  initial_context.section[ x ].data.type = SD_TTBR_TYPE_SECTION;
-  initial_context.section[ x ].data.execute_never = 0;
-  initial_context.section[ x ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
-  initial_context.section[ x ].data.frame = y & 0xFFF;
+  sd_context_section_ptr_t sec = &initial_context.section[ x ];
+  sec->data.type = SD_TTBR_TYPE_SECTION;
+  sec->data.execute_never = 0;
+  sec->data.access_permision_0 = SD_MAC_APX0_PRIVILEGED_RW;
+  sec->data.frame = y & 0xFFF;
 }

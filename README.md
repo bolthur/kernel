@@ -39,16 +39,10 @@ Currently the following targets are planned to be supported:
 
 ### Autotools related
 
-Initial necessary commands after checkout:
+Initial necessary command after checkout or adding new files autotools executed within project root:
 
 ```bash
-autoreconf -if
-```
-
-Necessary commands after adding new files to autotools executed within project root:
-
-```bash
-autoreconf -i
+autoreconf -iv
 ```
 
 ### Configuring

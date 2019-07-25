@@ -126,13 +126,13 @@ AC_C_VOLATILE
 AC_C_RESTRICT
 
 # Some compiler dependent features.
-AC_DEFINE_UNQUOTED([PACKED], [__attribute__((__packed__))], [Keyword for packing structures.])
-AC_DEFINE_UNQUOTED([SECTION(x)], [__attribute__((__section__(x)))], [Keyword for section placement.])
-AC_DEFINE_UNQUOTED([ALIGNED(x)], [__attribute__((__aligned__(x)))], [Keyword for alignment.])
-AC_DEFINE_UNQUOTED([PACKED_ALIGNED(x)], [__attribute__((__packed__, __aligned__(x)))], [Keyword for packing and aligning structures.])
-AC_DEFINE_UNQUOTED([SECTION_ALIGNED(x,y)], [__attribute__((__section__(x), __aligned__(y)))], [Keyword for packing and aligning structures.])
-AC_DEFINE_UNQUOTED([OPT_NONE], [__attribute__((__optimize__( "O0" )))], [Disable optimization])
-AC_DEFINE_UNQUOTED([__bootstrap], [SECTION( ".text.boot" )], [Bootstrap function])
+AC_DEFINE_UNQUOTED([__packed], [__attribute__((__packed__))], [Keyword for packing structures.])
+AC_DEFINE_UNQUOTED([__section(x)], [__attribute__((__section__(x)))], [Keyword for section placement.])
+AC_DEFINE_UNQUOTED([__aligned(x)], [__attribute__((__aligned__(x)))], [Keyword for alignment.])
+AC_DEFINE_UNQUOTED([__no_optimization], [__attribute__((__optimize__("O0")))], [Disable optimization])
+AC_DEFINE_UNQUOTED([__bootstrap], [__section(".text.boot")], [Bootstrap function])
+AC_DEFINE_UNQUOTED([__bootstrap_data], [__section(".data.boot")], [Bootstrap function])
+AC_DEFINE_UNQUOTED([__unused], [__attribute__((unused))], [Unused function])
 
 AC_CONFIG_FILES([
   Makefile

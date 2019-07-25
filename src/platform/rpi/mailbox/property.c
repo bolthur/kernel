@@ -28,7 +28,7 @@
 /**
  * @brief property tag buffer, which needs to be aligned to 16 byte boundary
  */
-static int32_t ptb[ 1024 ] ALIGNED( 16 );
+static int32_t ptb[ 1024 ] __aligned( 16 );
 
 /**
  * @brief property tag buffer index used internally

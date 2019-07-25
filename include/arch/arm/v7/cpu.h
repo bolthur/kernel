@@ -48,7 +48,7 @@
      * @brief CPU register context
      * @todo Extend with FPU registers if enabled
      */
-    typedef union {
+    typedef union __packed {
       uint32_t storage[ 17 ];
       struct {
         uint32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10; /* general purpose register */
@@ -59,7 +59,7 @@
         uint32_t pc; /* r15 = program counter */
         uint32_t spsr;
       } reg;
-    } PACKED cpu_register_context_t;
+    } cpu_register_context_t;
 
     void dump_register( cpu_register_context_t* );
   #endif

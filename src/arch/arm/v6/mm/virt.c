@@ -101,58 +101,11 @@ void virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr ) {
  */
 virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
   // Panic when mode is unsupported
-  if ( ! ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) ) {
+  if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+    return v6_short_create_context( type );
+  } else {
     PANIC( "Unsupported mode!" );
   }
-
-  // variables
-  size_t size, alignment;
-
-  // determine size
-  size = type == CONTEXT_TYPE_KERNEL
-    ? SD_TTBR_SIZE_4G
-    : SD_TTBR_SIZE_2G;
-
-  // determine alignment
-  alignment = type == CONTEXT_TYPE_KERNEL
-    ? SD_TTBR_ALIGNMENT_4G
-    : SD_TTBR_ALIGNMENT_2G;
-
-  // create new context
-  uintptr_t ctx = PHYS_2_VIRT(
-    placement_alloc( size, alignment )
-  );
-
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "type: %d, ctx: 0x%08x\r\n", type, ctx );
-  #endif
-
-  // initialize with zero
-  memset( ctx, 0, size );
-
-  // create new context structure for return
-  virt_context_ptr_t context = PHYS_2_VIRT(
-    placement_alloc(
-      sizeof( virt_context_t ),
-      sizeof( virt_context_t )
-    )
-  );
-
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "context: 0x%08p\r\n", context );
-  #endif
-
-  // initialize with zero
-  memset( context, 0, sizeof( virt_context_t ) );
-
-  // populate type and context
-  context->context = ctx;
-  context->type = type;
-
-  // return blank context
-  return context;
 }
 
 /**

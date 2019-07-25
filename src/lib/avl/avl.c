@@ -387,7 +387,7 @@ static avl_node_ptr_t remove_by_node(
       }
 
       // continue on right subtree if existing
-      if ( NULL != root->left ) {
+      if ( NULL != root->right ) {
         root->right = remove_by_node( tree, node, root->right );
       }
     } else {
@@ -402,7 +402,6 @@ static avl_node_ptr_t remove_by_node(
 
         // no child
         if ( NULL == tmp ) {
-          tmp = root;
           root = NULL;
         // one child
         } else {
@@ -476,7 +475,6 @@ static avl_node_ptr_t remove_by_data(
 
       // no child
       if ( NULL == tmp ) {
-        tmp = root;
         root = NULL;
       // one child
       } else {

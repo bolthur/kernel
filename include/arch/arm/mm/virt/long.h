@@ -35,7 +35,7 @@
   #define LD_VIRTUAL_TABLE_INDEX( a ) ( ( a & 0x3FE00000 ) >> 21 )
   #define LD_VIRTUAL_PAGE_INDEX( a ) ( ( a & 0xFF800 ) >> 11 )
 
-  typedef union PACKED {
+  typedef union __packed {
     uint64_t raw;
     struct {
       uint64_t ttbr0_size : 3;
@@ -57,7 +57,7 @@
     } data;
   } ld_ttbcr_t;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint64_t raw;
     struct {
       uint64_t type : 1;
@@ -81,7 +81,7 @@
     } data;
   } ld_context_block_level1_t;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint64_t raw;
     struct {
       uint64_t type : 1;
@@ -99,13 +99,14 @@
       uint64_t sbz_2 : 12;
 
       uint64_t upper_attr_continguous : 1;
-      uint64_t upper_attr_privileged_execute_never : 1;
+      uint64_t upper_attr_sbz0 : 1;
       uint64_t upper_attr_execute_never : 1;
-      uint64_t upper_attr_ignored : 9;
+      uint64_t upper_attr_software_usage : 4;
+      uint64_t upper_attr_ignored : 5;
     } data;
   } ld_context_block_level2_t;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint64_t raw;
     struct {
       uint64_t type : 2;
@@ -120,7 +121,7 @@
     } data;
   } ld_context_table_level1_t;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint64_t raw;
     struct {
       uint64_t type : 2;
@@ -132,29 +133,41 @@
     } data;
   } ld_context_table_level2_t;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint64_t raw;
     struct {
       uint64_t type : 2;
-      uint64_t lower_attr : 10;
+
+      uint64_t lower_attr_attribute_index : 3;
+      uint64_t lower_attr_non_secure : 1;
+      uint64_t lower_attr_access_permission : 2;
+      uint64_t lower_attr_shared : 2;
+      uint64_t lower_attr_access : 1;
+      uint64_t lower_attr_not_global : 1;
+
       uint64_t output_address : 28;
       uint64_t sbz_0 : 12;
-      uint64_t upper_attr : 12;
+
+      uint64_t upper_attr_continguous : 1;
+      uint64_t upper_attr_sbz0 : 1;
+      uint64_t upper_attr_execute_never : 1;
+      uint64_t upper_attr_software_usage : 4;
+      uint64_t upper_attr_ignored : 5;
     } data;
   } ld_context_page_t;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint64_t raw[ 512 ];
     ld_context_page_t page[ 512 ];
   } ld_page_table_t;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint64_t raw[ 512 ];
     ld_context_block_level2_t section[ 512 ];
     ld_context_table_level2_t table[ 512 ];
   } ld_middle_page_directory;
 
-  typedef union PACKED {
+  typedef union __packed {
     uint64_t raw[ 512 ];
     ld_context_block_level1_t section[ 512 ];
     ld_context_table_level1_t table[ 512 ];

@@ -33,6 +33,8 @@
  * @return void* allocated address or NULL
  */
 void* malloc( size_t size ) {
+  // adjust size to base of 4 to prevent unaligned memory access generally
+  size += size % 4;
   // return allocated heap block
   if ( true == heap_initialized_get() ) {
     return ( void* )heap_allocate_block( size );
@@ -40,5 +42,5 @@ void* malloc( size_t size ) {
   // check for no virtual memory when heap is not yet ready
   assert( true != virt_initialized_get() );
   // use normal placement alloc
-  return ( void* )placement_alloc( size, size );
+  return ( void* )PHYS_2_VIRT( placement_alloc( size, size ) );
 }

@@ -29,13 +29,13 @@
  * @brief Initial middle directory for context
  */
 static ld_middle_page_directory initial_middle_directory[ 4 ]
-  SECTION_ALIGNED( ".data.boot", PAGE_SIZE );
+  __bootstrap_data __aligned( PAGE_SIZE );
 
 /**
  * @brief Initial context
  */
 static ld_global_page_directory_t initial_context
-  SECTION_ALIGNED( ".data.boot", PAGE_SIZE );
+  __bootstrap_data __aligned( PAGE_SIZE );
 
 /**
  * @brief Helper to setup initial paging with large page address extension

@@ -53,16 +53,16 @@ int printf( const char* restrict format, ... ) {
   va_start( parameters, format );
 
   uint32_t written = 0;
-  size_t maxrem, amount, len;
+  size_t amount, len;
   char c, buf[ 30 ];
   int32_t n;
   uint32_t un;
   char *p;
-  int32_t pad, pad0, radix;
+  int32_t radix;
 
   while ( *format != '\0' ) {
-    maxrem = INT_MAX - written;
-    pad = pad0 = 0;
+    size_t maxrem = INT_MAX - written;
+    int32_t pad = 0, pad0 = 0;
 
     if ( format[ 0 ] != '%' || format[ 1 ] == '%' ) {
       if ( format[ 0 ] == '%' ) {

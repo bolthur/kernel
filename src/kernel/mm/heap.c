@@ -534,8 +534,6 @@ uintptr_t heap_allocate_block( size_t size ) {
 
   // calculate real size
   real_size = size + sizeof( heap_block_t );
-  uint32_t remaining_size;
-  uintptr_t new_start;
 
   // Try to find one that matches by size
   address_node = avl_find_by_data(
@@ -581,8 +579,8 @@ uintptr_t heap_allocate_block( size_t size ) {
 
   if ( split ) {
     // calculate remaining size
-    remaining_size = block->size - real_size;
-    new_start = ( uintptr_t )block + real_size;
+    uint32_t remaining_size = block->size - real_size;
+    uintptr_t new_start = ( uintptr_t )block + real_size;
 
     // debug output
     #if defined( PRINT_MM_HEAP )

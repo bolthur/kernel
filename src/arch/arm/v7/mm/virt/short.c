@@ -153,7 +153,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
     tbl->page[ page_idx ].data.type = SD_TBL_SMALL_PAGE;
     tbl->page[ page_idx ].data.bufferable = 0;
     tbl->page[ page_idx ].data.cacheable = 0;
-    tbl->page[ page_idx ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
+    tbl->page[ page_idx ].data.access_permision_0 = SD_MAC_APX0_PRIVILEGED_RW;
 
     // increase physical address
     start += i * PAGE_SIZE;
@@ -254,6 +254,7 @@ static uintptr_t get_new_table() {
 
   // return address
   uintptr_t r = addr;
+  // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "r = 0x%08x\r\n", r );
   #endif
@@ -261,6 +262,7 @@ static uintptr_t get_new_table() {
   // decrease remaining and increase addr
   addr += SD_TBL_SIZE;
   remaining -= SD_TBL_SIZE;
+  // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "addr = 0x%08x - remaining = 0x%08x\r\n", addr, remaining );
   #endif
@@ -480,15 +482,16 @@ void v7_short_map(
 
   // set attributes
   table->page[ page_idx ].data.type = SD_TBL_SMALL_PAGE;
-  table->page[ page_idx ].data.bufferable = 0;
-  if ( flag & PAGE_FLAG_CACHEABLE ) {
-    table->page[ page_idx ].data.bufferable = 1;
-  }
-  table->page[ page_idx ].data.cacheable = 0;
-  if ( flag & PAGE_FLAG_BUFFERABLE ) {
-    table->page[ page_idx ].data.cacheable = 1;
-  }
-  table->page[ page_idx ].data.access_permision_0 = SD_MAC_APX0_FULL_RW;
+  table->page[ page_idx ].data.cacheable = ( uint8_t )(
+    ( flag & PAGE_FLAG_CACHEABLE ) ? 1 : 0
+  );
+  table->page[ page_idx ].data.bufferable = ( uint8_t )(
+    ( flag & PAGE_FLAG_BUFFERABLE ) ? 1 : 0
+  );
+  table->page[ page_idx ].data.access_permision_0 =
+    ( CONTEXT_TYPE_KERNEL == ctx->type )
+      ? SD_MAC_APX0_PRIVILEGED_RW
+      : SD_MAC_APX0_FULL_RW;
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -653,7 +656,7 @@ void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
   memset( ( void* )table, 0, PAGE_SIZE );
 
   // determine offset
-  uint32_t offset, start = SD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
+  uint32_t start = SD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
 
   // create tables for temporary area
   for (
@@ -662,7 +665,7 @@ void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
     v += PAGE_SIZE
   ) {
     // table offset
-    offset = SD_VIRTUAL_TABLE_INDEX( v );
+    uint32_t offset = SD_VIRTUAL_TABLE_INDEX( v );
     // determine table size
     uintptr_t tbl = table + ( start - offset ) * SD_TBL_SIZE;
     // create table
@@ -707,8 +710,8 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
   unmap_temporary( tmp, size );
 
   // create new context structure for return
-  virt_context_ptr_t context = ( virt_context_ptr_t )PHYS_2_VIRT(
-    ( uintptr_t )malloc( sizeof( virt_context_t ) )
+  virt_context_ptr_t context = ( virt_context_ptr_t )malloc(
+    sizeof( virt_context_t )
   );
 
   // debug output
