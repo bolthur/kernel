@@ -19,5 +19,5 @@ jobs:
       name: "RPI 2 rev. 1"
       script:
         - docker run --entrypoint "" --workdir /src --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools autoreconf -iv
-        - docker run --entrypoint "" --workdir /src --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools ./configure --host arm-none-eabi --enable-device=rpi2_b_rev1 --enable-output --enable-output-mm-virt --enable-output-mm-phys --enable-output-mm-heap --enable-output-mm-placement --enable-output-timer --enable-debug --enable-output-mailbox
+        - docker run --entrypoint "" --workdir /src --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools ./configure --host arm-none-eabi --enable-device=rpi2_b_rev1 --enable-output --enable-output-mm-virt --enable-output-mm-phys --enable-output-mm-heap --enable-output-mm-placement --enable-output-timer --enable-output-mailbox --enable-output-initrd --enable-debug --enable-debug-initrd
         - docker run --entrypoint "" --workdir /src --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools make all
