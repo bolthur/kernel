@@ -134,6 +134,12 @@ void phys_platform_init( void ) {
   uintptr_t start = peripheral_base_get( PERIPHERAL_GPIO );
   uintptr_t end = peripheral_end_get( PERIPHERAL_GPIO ) + 1;
 
+  // debug output
+  #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT( "start: 0x%08x\r\n", start );
+    DEBUG_OUTPUT( "end: 0x%08x\r\n", end );
+  #endif
+
   // map from start to end addresses as used
   while( start < end ) {
     // mark used
@@ -146,6 +152,12 @@ void phys_platform_init( void ) {
   // set start and end video core
   start = vc_memory_start;
   end = vc_memory_end + 1;
+
+  // debug output
+  #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT( "start: 0x%08x\r\n", start );
+    DEBUG_OUTPUT( "end: 0x%08x\r\n", end );
+  #endif
 
   // map from start to end addresses as used
   while( start < end ) {

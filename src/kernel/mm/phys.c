@@ -36,7 +36,7 @@ uint32_t *phys_bitmap;
 /**
  * @brief physical bitmap length set by platform
  */
-size_t phys_bitmap_length;
+uint32_t phys_bitmap_length;
 
 /**
  * @brief static initialized flag
@@ -258,6 +258,12 @@ void phys_init( void ) {
 
   // adjust placement address
   placement_address = end;
+
+  // debug output
+  #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT( "start: 0x%08x\r\n", start );
+    DEBUG_OUTPUT( "end: 0x%08x\r\n", end );
+  #endif
 
   // map from start to end addresses as used
   while( start < end ) {
