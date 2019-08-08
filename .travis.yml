@@ -4,11 +4,20 @@ compiler: arm-none-eabi-gcc
 
 services: docker
 
-install:
+before_install:
   - docker build https://github.com/bolthur/build-tools.git#develop -t bolthur-build-tools
-
-script:
-  - docker run --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools /src/.travis-ci/build.sh
 
 notifications:
   email: false
+
+stages:
+  - compile
+
+jobs:
+  include:
+    - stage: compile
+      name: "RPI 2 rev. 1"
+      script:
+        - docker run --entrypoint "" --workdir /src --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools autoreconf -iv
+        - docker run --entrypoint "" --workdir /src --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools ./configure --host arm-none-eabi --enable-device=rpi2_b_rev1 --enable-output --enable-output-mm-virt --enable-output-mm-phys --enable-output-mm-heap --enable-output-mm-placement --enable-output-timer --enable-debug --enable-output-mailbox
+        - docker run --entrypoint "" --workdir /src --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools make all
