@@ -4,6 +4,8 @@ language: c
 addons:
   apt:
     update: true
+    packages:
+      - cppcheck
 
 cache:
   directories:
@@ -35,7 +37,8 @@ jobs:
   include:
     - stage: lint
       name: "lint"
-      script: docker run --entrypoint "" --workdir /src --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools cppcheck -I include -I include/lib --quiet --inline-suppr -UCMC --force --enable=all .
+      script:
+        - cppcheck -I include -I include/lib --quiet --inline-suppr -UCMC --force --enable=all --error-exitcode=1 .
     - stage: compile
       compiler: arm-none-eabi-gcc
       name: "RPI 2 rev. 1"
