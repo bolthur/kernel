@@ -11,7 +11,6 @@
   * [ ] Extend cpu structure if fpu is enabled
   * [ ] Extend undefined exception to check for fpu error with clear of flag
 * [ ] Memory management
-  * [ ] Add initial setup of paging with LPAE if enabled
   * [ ] Check for further splitting of entry point ( separation between 32bit and 64bit ) is necessary
   * [ ] Add lpae paging to kernel after boot setup
   * [ ] Consider and enable CPU related caches for performance
@@ -32,19 +31,17 @@
   * [ ] Determine current running core within exceptions
   * [ ] Extend irq check to check corresponding cpu interrupt registers
   * [ ] ...
-* [ ] TAR
+* [ ] TAR / initrd
   * [ ] Add generic tar library for reading tar files
   * [ ] Add initial ramdisk during boot which should be a simple tar file
   * [ ] Add parsing of initial ramdisk containing drivers or programs for startup
-* [ ] Add virtual file system for initrd
-  * [ ] RPI related
+  * [ ] Platform rpi related
     * [ ] Determine one of the two options to choose, or support both ( via config.txt )
       * [ ] Handle initrd to be added after kernel
       * [ ] Handle initrd loaded to fixed address set per board
     * [ ] Extend memory management
       * [ ] Mark initrd within physical memory manager as used
       * [ ] Check and extend virtual memory management if necessary
-  * [ ] Add generic vfs implementation using tar initrd
 * [ ] Add parsing of ELF files
   * [ ] Check for executable elf programs within initrd and execute them
 * [ ] Device tree
