@@ -132,7 +132,6 @@ uintptr_t v7_long_create_table(
  * @param paddr pointer to physical address
  * @param flag mapping flags
  *
- * @todo check and test logic
  * @todo consider flag
  */
 void v7_long_map(
@@ -141,11 +140,78 @@ void v7_long_map(
   uintptr_t paddr,
   uint32_t flag
 ) {
-  ( void )ctx;
-  ( void )vaddr;
-  ( void )paddr;
+  // determine page index
+  uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( vaddr );
+
+  // get table with creation if necessary
+  ld_page_table_t* table = ( ld_page_table_t* )v7_long_create_table(
+    ctx, vaddr, 0
+  );
+
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table: 0x%08x\r\n", table );
+  #endif
+
+  // map temporary
+  table = ( ld_page_table_t* )map_temporary( ( uintptr_t )table, PAGE_SIZE );
+
+  // assert existance
+  assert( NULL != table );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table: 0x%08x\r\n", table );
+    DEBUG_OUTPUT(
+      "table->page[ %d ] = 0x%08x\r\n",
+      page_idx,
+      table->page[ page_idx ]
+    );
+  #endif
+
+  // ensure not already mapped
+  assert( 0 == table->page[ page_idx ].raw );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "page physical address = 0x%08x\r\n", paddr );
+  #endif
+
+
+  // set page
+  table->page[ page_idx ].raw |= paddr & 0xFFFFF000;
+
+  // set attributes
+  table->page[ page_idx ].data.lower_attr_non_secure = ( uint8_t )(
+    ( ctx->type == CONTEXT_TYPE_USER ? 1 : 0 )
+  );
+  table->page[ page_idx ].data.type = 3;
+  table->page[ page_idx ].data.lower_attr_access = 1;
+
+  // FIXME: CONSIDER FLAGS like in short mode seting cacheability and bufferability
   ( void )flag;
-  PANIC( "v7_long_map not yet implemented!" );
+  /*table->page[ page_idx ].data.cacheable = ( uint8_t )(
+    ( flag & PAGE_FLAG_CACHEABLE ) ? 1 : 0
+  );
+  table->page[ page_idx ].data.bufferable = ( uint8_t )(
+    ( flag & PAGE_FLAG_BUFFERABLE ) ? 1 : 0
+  );*/
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT(
+      "table->page[ %d ].data.raw = 0x%08x\r\n",
+      page_idx,
+      table->page[ page_idx ].raw
+    );
+  #endif
+
+  // unmap temporary
+  unmap_temporary( ( uintptr_t )table, PAGE_SIZE );
+
+  // flush context if running
+  if ( virt_initialized_get() ) {
+    virt_flush_context();
+  }
 }
 
 /**
@@ -154,19 +220,18 @@ void v7_long_map(
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param flag mapping flags
- *
- * @todo add logic for lpae
- * @todo remove call for v7 short mapping
  */
 void v7_long_map_random(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
   uint32_t flag
 ) {
-  ( void )ctx;
-  ( void )vaddr;
-  ( void )flag;
-  PANIC( "v7_long_map_random not yet implemented!" );
+  // get physical address
+  uintptr_t phys = phys_find_free_page( PAGE_SIZE );
+  // assert
+  assert( 0 != phys );
+  // map it
+  v7_long_map( ctx, vaddr, phys, flag );
 }
 
 /**
@@ -174,37 +239,112 @@ void v7_long_map_random(
  *
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
- *
- * @todo add logic for lpae
- * @todo remove call for v7 short unmapping
  */
 void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
-  ( void )ctx;
-  ( void )vaddr;
-  PANIC( "v7_long_unmap not yet implemented!" );
+  // get page index
+  uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( vaddr );
+
+  // get table for unmapping
+  ld_page_table_t* table = ( ld_page_table_t* )v7_long_create_table(
+    ctx, vaddr, 0
+  );
+
+   // map temporary
+  table = ( ld_page_table_t* )map_temporary( ( uintptr_t )table, PAGE_SIZE );
+
+  // assert existance
+  assert( NULL != table );
+
+  // ensure not already mapped
+  if ( 0 == table->page[ page_idx ].raw ) {
+    return;
+  }
+
+  // get page
+  uintptr_t page = table->page[ page_idx ].data.output_address;
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "page physical address = 0x%08x\r\n", page );
+  #endif
+
+  // set page table entry as invalid
+  table->page[ page_idx ].raw = 0;
+
+  // free physical page
+  phys_free_page( page );
+
+  // unmap temporary
+  unmap_temporary( ( uintptr_t )table, PAGE_SIZE );
 }
 
 /**
  * @brief Internal v7 long descriptor enable context function
  *
  * @param ctx context structure
- *
- * @todo add logic for lpae
- * @todo remove call for v7 short activation
  */
 void v7_long_set_context( virt_context_ptr_t ctx ) {
-  ( void )ctx;
-  PANIC( "v7_long_set_context not yet implemented!" );
+    // user context handling
+  if ( CONTEXT_TYPE_USER == ctx->type ) {
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT(
+        "list: 0x%08x\r\n",
+        ( ( ld_global_page_directory_t* )ctx->context )->raw
+      );
+    #endif
+    // Copy page table address to cp15 ( ttbr0 )
+    __asm__ __volatile__(
+      "mcrr p15, 0, %0, %1, c2"
+      : : "r" ( ( ( ld_global_page_directory_t* )ctx->context )->raw ),
+        "r" ( 0 )
+      : "memory"
+    );
+  // kernel context handling
+  } else if ( CONTEXT_TYPE_KERNEL == ctx->type ) {
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT(
+        "list: 0x%08x\r\n",
+        ( ( ld_global_page_directory_t* )ctx->context )->raw
+      );
+    #endif
+    // Copy page table address to cp15 ( ttbr1 )
+    __asm__ __volatile__(
+      "mcrr p15, 1, %0, %1, c2"
+      : : "r" ( ( ( ld_global_page_directory_t* )ctx->context )->raw ),
+        "r" ( 0 )
+      : "memory"
+    );
+  // invalid type
+  } else {
+    PANIC( "Invalid virtual context type!" );
+  }
 }
 
 /**
  * @brief Flush context
- *
- * @todo add logic for lpae
- * @todo remove call for v7 short activation
  */
 void v7_long_flush_context( void ) {
-  PANIC( "v7_long_flush_context not yet implemented!" );
+  ld_ttbcr_t ttbcr;
+
+  // read ttbcr register
+  __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
+  // set split to use ttbr1 and ttbr2 similar to short format
+  ttbcr.data.ttbr0_size = 0;
+  ttbcr.data.ttbr1_size = 1;
+  ttbcr.data.large_physical_address_extension = 1;
+  // push back value with ttbcr
+  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
+
+  // invalidate instruction cache
+  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) );
+  // invalidate entire tlb
+  __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
+  // instruction synchronization barrier
+  barrier_instruction_sync();
+  // data synchronization barrier
+  barrier_data_sync();
 }
 
 /**
