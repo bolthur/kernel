@@ -25,7 +25,8 @@
     "limits": "c",
     "type_traits": "c",
     "initializer_list": "c",
-    "ios": "c"
+    "ios": "c",
+    "random": "c"
   },
   "editor.tabSize": 2,
   "editor.renderWhitespace": "all",

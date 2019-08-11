@@ -645,6 +645,8 @@ void v7_short_flush_context( void ) {
  * @brief Helper to reserve temporary area for mappings
  *
  * @param ctx context structure
+ *
+ * @todo check for simplification
  */
 void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
   // ensure kernel for temporary

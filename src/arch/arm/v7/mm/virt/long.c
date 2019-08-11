@@ -32,12 +32,12 @@
 #include <kernel/mm/virt.h>
 
 /**
- * @brief Temporary space start for short format
+ * @brief Temporary space start for long descriptor format
  */
 #define TEMPORARY_SPACE_START 0xF1000000
 
 /**
- * @brief Temporary space size for short format
+ * @brief Temporary space size for long descriptor format
  */
 #define TEMPORARY_SPACE_SIZE 0xFFFFFF
 
@@ -83,7 +83,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
  *
  * @return uintptr_t address to new table
  */
-static uintptr_t __unused get_new_table() {
+static uintptr_t get_new_table() {
   // get new page
   uintptr_t addr = phys_find_free_page( PAGE_SIZE );
   // debug output
@@ -110,18 +110,105 @@ static uintptr_t __unused get_new_table() {
  * @param table page table address
  * @return uintptr_t address of created and prepared table
  *
- * @todo add logic for lpae
- * @todo remove call for v7 short table
+ * @todo check whether table parameter is necessary
+ * @todo check functionality, when paging is active
  */
 uintptr_t v7_long_create_table(
   virt_context_ptr_t ctx,
   uintptr_t addr,
-  uintptr_t table
+  __unused uintptr_t table
 ) {
-  ( void )ctx;
-  ( void )addr;
-  ( void )table;
-  PANIC( "v7_long_create_table not yet implemented!" );
+  // get table idx
+  uint32_t pmd_idx = LD_VIRTUAL_PMD_INDEX( addr );
+  uint32_t tbl_idx = LD_VIRTUAL_TABLE_INDEX( addr );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "create long descriptor table for address 0x%08x\r\n", addr );
+    DEBUG_OUTPUT( "pmd_idx = %d, tbl_index = %d\r\n", pmd_idx, tbl_idx );
+  #endif
+
+  // get context
+  ld_global_page_directory_t* context = ( ld_global_page_directory_t* )
+    map_temporary( ctx->context, PAGE_SIZE );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "context = 0x%08x\r\n", context );
+  #endif
+
+  // get pmd table from pmd
+  ld_context_table_level1_t* pmd_tbl = ( ld_context_table_level1_t* )&context
+    ->table[ pmd_idx ];
+  // create it if not yet created
+  if ( 0 == pmd_tbl->raw ) {
+    // populate level 1 table
+    pmd_tbl->raw = ( get_new_table() & 0xFFFFF000 ) << 12;
+    // set attribute
+    pmd_tbl->data.attr_ns_table = ( uint8_t )(
+      ctx->type == CONTEXT_TYPE_USER ? 1 : 0
+    );
+    pmd_tbl->data.type = 3;
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT(
+        "pmd_tbl->raw = 0x%08x%08x\r\n",
+        ( uint32_t )( ( pmd_tbl->raw >> 32 ) & 0xFFFFFFFF ),
+        ( uint32_t )pmd_tbl->raw & 0xFFFFFFFF
+      );
+    #endif
+  }
+
+  // page middle directory
+  ld_middle_page_directory* pmd = ( ld_middle_page_directory* )(
+    ( uint32_t )pmd_tbl->data.next_level_table
+  );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "pmd_tbl = 0x%08x, pmd = 0x%08x\r\n", pmd_tbl, pmd );
+    DEBUG_OUTPUT(
+      "pmd_tbl->data.next_level_table = 0x%08x\r\n",
+      pmd_tbl->data.next_level_table
+    );
+  #endif
+
+  // get page table
+  ld_context_table_level2_t* tbl_tbl = ( ld_context_table_level2_t* )&pmd
+    ->table[ tbl_idx ].raw;
+  // create if not yet created
+  if ( 0 == tbl_tbl->raw ) {
+    // populate level 2 table
+    tbl_tbl->raw = ( get_new_table() & 0xFFFFF000 ) << 12;
+    // set attributes
+    tbl_tbl->data.type = 3;
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT(
+        "0x%08x%08x\r\n",
+        ( uint32_t )( ( tbl_tbl->raw >> 32 ) & 0xFFFFFFFF ),
+        ( uint32_t )tbl_tbl->raw & 0xFFFFFFFF
+      );
+    #endif
+  }
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "pmd_tbl = 0x%08x, pmd = 0x%08x\r\n", pmd_tbl, pmd );
+  #endif
+
+  // page directory
+  ld_page_table_t* tbl = ( ld_page_table_t* )(
+    ( uint32_t )tbl_tbl->data.next_level_table
+  );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "tbl_tbl = 0x%08x, tbl = 0x%08x\r\n", tbl_tbl, tbl );
+  #endif
+
+  // return table
+  return ( uintptr_t )tbl;
 }
 
 /**
@@ -330,9 +417,9 @@ void v7_long_flush_context( void ) {
 
   // read ttbcr register
   __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
-  // set split to use ttbr1 and ttbr2 similar to short format
+  // set split to use ttbr1 and ttbr2
   ttbcr.data.ttbr0_size = 0;
-  ttbcr.data.ttbr1_size = 1;
+  ttbcr.data.ttbr1_size = 2;
   ttbcr.data.large_physical_address_extension = 1;
   // push back value with ttbcr
   __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
@@ -352,8 +439,10 @@ void v7_long_flush_context( void ) {
  *
  * @param ctx context structure
  *
- * @todo add logic for lpae
- * @todo remove call for v7 short activation
+ * @todo determine amount of page tables needed for temporary area
+ * @todo align continous page range
+ * @todo insert tables
+ * @todo map at the beginning of temporary area
  */
 void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
   ( void )ctx;
@@ -361,7 +450,7 @@ void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
 }
 
 /**
- * @brief Create context for v7 short descriptor
+ * @brief Create context for v7 long descriptor
  *
  * @param type context type to create
  */

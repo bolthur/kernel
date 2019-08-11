@@ -33,7 +33,7 @@
   // helper macros
   #define LD_VIRTUAL_PMD_INDEX( a ) ( ( a & 0xC0000000 ) >> 30 )
   #define LD_VIRTUAL_TABLE_INDEX( a ) ( ( a & 0x3FE00000 ) >> 21 )
-  #define LD_VIRTUAL_PAGE_INDEX( a ) ( ( a & 0xFF800 ) >> 11 )
+  #define LD_VIRTUAL_PAGE_INDEX( a ) ( ( a & 0x1FF000 ) >> 12 )
 
   typedef union __packed {
     uint64_t raw;
