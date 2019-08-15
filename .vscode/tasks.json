@@ -39,6 +39,19 @@
         "focus": false,
         "panel": "shared"
       }
+    },
+    {
+      "label": "qemu-rpi2",
+      "type": "shell",
+      "command": "qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel src/platform/rpi/kernel.zwerg -s -S &",
+      "options": {
+        "cwd": "${workspaceFolder}/build"
+      },
+      "dependsOn": [
+        "clean",
+        "compile"
+      ],
+      "dependsOrder": "sequence"
     }
   ]
 }

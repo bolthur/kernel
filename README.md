@@ -105,13 +105,19 @@ Ctrl+a Shift+k y
 
 Emulation of the project with qemu during development is **not** recommended. The platforms itself are most time very limited or completely not supported. Raspberry pi is very limited and lack necessary features, also the n900 or the beagleboard are completely not supported. We recommend testing on real hardware with remote debugging via serial port.
 
-Emulation of the kernel project with qemu during development may be done at all with the following commands. When kernel debugging is necessary, add the parameter shorthand `-s` or the long version `-gdb tcp:1234` to qemu call:
+Emulation of the kernel project with qemu during development may be done at all with the following commands. When kernel debugging is necessary, add the parameter shorthand `-s -S` or the long version `-gdb tcp:1234` to qemu call:
 
 ```bash
 # raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.zwerg -initrd ../build-aux/platform/rpi/initrd.img
+qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.zwerg -initrd ../build-aux/platform/rpi/initrd.img -s -S
 
 # raspberry pi 3B kernel emulation
-qemu-system-arm -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.zwerg -initrd ../build-aux/platform/rpi/initrd.img
-qemu-system-aarch64 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.zwerg -initrd ../build-aux/platform/rpi/initrd.img
+qemu-system-arm -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.zwerg -initrd ../build-aux/platform/rpi/initrd.img -s -S
+qemu-system-aarch64 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.zwerg -initrd ../build-aux/platform/rpi/initrd.img -s -S
+```
+
+Starting the debugger from within build folder without any additional commands necessary would be done as follows:
+
+```bash
+/path/to/arm-none-eabi-gdb src/platform/rpi/kernel7.sym
 ```

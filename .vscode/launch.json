@@ -2,29 +2,19 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "aarch32-rpi-remote-debug",
+      "name": "aarch32-rpi-serial-debug",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/platform/rpi/kernel.zwerg",
-      "miDebuggerPath": "${workspaceFolder}/scripts/opt/cross/bin/arm-none-eabi-gdb",
+      "program": "${workspaceFolder}/build/src/platform/rpi/kernel7.sym",
+      "miDebuggerPath": "${env:HOME}/.bolthur/cross/bin/arm-none-eabi-gdb",
       "MIMode": "gdb",
-      "cwd": "${workspaceFolder}/build/platform/rpi/",
+      "cwd": "${workspaceFolder}/build/src/platform/rpi/",
       "setupCommands": [
-        {
-          "text": "set print pretty on"
-        },
-        {
-          "text": "file ${workspaceFolder}/build/platform/rpi/kernel.sym"
-        },
-        {
-          "text": "set architecture arm"
-        },
-        {
-          "text": "set serial baud 115200"
-        },
-        {
-          "text": "target remote /dev/ttyUSB0"
-        }
+        { "text": "set print pretty on" },
+        { "text": "set architecture armv7" },
+        { "text": "file ${workspaceFolder}/build/src/platform/rpi/kernel7.sym" },
+        { "text": "set serial baud 115200" },
+        { "text": "target remote /dev/ttyUSB0" }
       ],
       "externalConsole": false,
       "logging": {
@@ -34,6 +24,32 @@
         "trace": true,
         "exceptions": true,
         "moduleLoad": true
+      }
+    },
+    {
+      "name": "aarch32-rpi-qemu-debug",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/src/platform/rpi/kernel7.sym",
+      "miDebuggerPath": "${env:HOME}/.bolthur/cross/bin/arm-none-eabi-gdb",
+      "miDebuggerArgs": "-q",
+      "MIMode": "gdb",
+      "cwd": "${workspaceFolder}/build/src/platform/rpi/",
+      "setupCommands": [
+        { "text": "set print pretty on" },
+        { "text": "file ${workspaceFolder}/build/src/platform/rpi/kernel7.sym" },
+        { "text": "target remote localhost:1234" }
+      ],
+      "externalConsole": false,
+      "launchCompleteCommand": "None",
+      "preLaunchTask": "qemu-rpi2",
+      "logging": {
+        "engineLogging": true,
+        "exceptions": true,
+        "moduleLoad": true,
+        "programOutput": true,
+        "trace": true,
+        "traceResponse": true
       }
     }
   ]

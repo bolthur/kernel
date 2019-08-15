@@ -36,24 +36,24 @@
   #define LD_VIRTUAL_PAGE_INDEX( a ) ( ( a & 0x1FF000 ) >> 12 )
 
   typedef union __packed {
-    uint64_t raw;
+    uint32_t raw;
     struct {
-      uint64_t ttbr0_size : 3;
-      uint64_t sbz_0 : 4;
-      uint64_t ttbr0_disable_table_walk : 1;
-      uint64_t ttbr0_inner_cachability : 2;
-      uint64_t ttbr0_outer_cachability : 2;
-      uint64_t ttbr0_shareability : 2;
-      uint64_t sbz_1 : 2;
-      uint64_t ttbr1_size : 3;
-      uint64_t sbz_2 : 3;
-      uint64_t ttbr0_ttbr1_asid : 1;
-      uint64_t ttbr1_disable_table_walk : 1;
-      uint64_t ttbr1_inner_cachability : 2;
-      uint64_t ttbr1_outer_cachability : 2;
-      uint64_t ttbr1_shareability : 2;
-      uint64_t imp : 1;
-      uint64_t large_physical_address_extension : 1;
+      uint32_t ttbr0_size : 3;
+      uint32_t sbz_0 : 4;
+      uint32_t ttbr0_disable_table_walk : 1;
+      uint32_t ttbr0_inner_cachability : 2;
+      uint32_t ttbr0_outer_cachability : 2;
+      uint32_t ttbr0_shareability : 2;
+      uint32_t sbz_1 : 2;
+      uint32_t ttbr1_size : 3;
+      uint32_t sbz_2 : 3;
+      uint32_t ttbr0_ttbr1_asid : 1;
+      uint32_t ttbr1_disable_table_walk : 1;
+      uint32_t ttbr1_inner_cachability : 2;
+      uint32_t ttbr1_outer_cachability : 2;
+      uint32_t ttbr1_shareability : 2;
+      uint32_t imp : 1;
+      uint32_t large_physical_address_extension : 1;
     } data;
   } ld_ttbcr_t;
 

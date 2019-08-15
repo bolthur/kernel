@@ -1,6 +1,8 @@
 
 # Things to be done
 
+* [ ] Mark gdb as signed, see here https://sourceware.org/gdb/wiki/BuildingOnDarwin#Method_for_Mac_OS_X_10.5_.28Leopard.29_and_later
+* [ ] Get gdb integration reliable working within vscode
 * [ ] Revise irq and isrs register handling
   * [ ] Add generic event system
   * [ ] Throw global events if an interrupt occurrs

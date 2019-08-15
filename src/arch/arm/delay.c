@@ -29,6 +29,9 @@
  */
 void __no_optimization delay( uint32_t count ) {
   __asm__ __volatile__(
-    "__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n": "=r" ( count ): [ count ] "0" ( count ) : "cc"
+    "__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
+    : "=r" ( count )
+    : [ count ] "0" ( count )
+    : "cc"
   );
 }

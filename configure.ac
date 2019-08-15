@@ -106,7 +106,7 @@ AC_ARG_ENABLE([opt],
 BOLTHUR_SET_HOST
 
 # set normal flags
-BOLTHUR_SET_FLAGS
+BOLTHUR_SET_FLAG
 
 # conftest
 AC_LANG_CONFTEST([AC_LANG_SOURCE([[const char hw[] = "Hello, World\r\n";]])])

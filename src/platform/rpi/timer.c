@@ -98,13 +98,9 @@ bool timer_pending( void ) {
  * @param num Timer interrupt number
  * @param _cpu CPU register dump
  */
-void timer_clear( uint8_t num, void* _cpu ) {
+void timer_clear( __unused uint8_t num, __unused void* _cpu ) {
   // convert _cpu to cpu register context pointer
-  cpu_register_context_t *cpu = ( cpu_register_context_t * )_cpu;
-
-  // mark parameters / variables not yet used as unused
-  ( void )num;
-  ( void )cpu;
+  // cpu_register_context_t *cpu = ( cpu_register_context_t * )_cpu;
 
   // check for pending timer
   if ( ! timer_pending() ) {

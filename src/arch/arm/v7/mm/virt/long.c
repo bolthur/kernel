@@ -47,11 +47,13 @@
  * @param start physical start address
  * @param size size to map
  * @return uintptr_t mapped address
+ *
+ * @todo add capability of initialized virtual memory map
  */
-static uintptr_t map_temporary( uintptr_t start, size_t size ) {
-  ( void )size;
-  ( void )start;
-
+static uintptr_t map_temporary(
+  __unused uintptr_t start,
+  __unused size_t size
+) {
   // stop here if not initialized
   if ( true != virt_initialized_get() ) {
     return start;
@@ -65,11 +67,13 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
  *
  * @param addr address to unmap
  * @param size size
+ *
+ * @todo add capability of initialized virtual memory map
  */
-static void unmap_temporary( uintptr_t addr, size_t size ) {
-  ( void )addr;
-  ( void )size;
-
+static void unmap_temporary(
+  __unused uintptr_t addr,
+  __unused size_t size
+) {
   // stop here if not initialized
   if ( true != virt_initialized_get() ) {
     return;
@@ -109,9 +113,6 @@ static uintptr_t get_new_table() {
  * @param addr address the table is necessary for
  * @param table page table address
  * @return uintptr_t address of created and prepared table
- *
- * @todo check whether table parameter is necessary
- * @todo check functionality, when paging is active
  */
 uintptr_t v7_long_create_table(
   virt_context_ptr_t ctx,
@@ -143,7 +144,7 @@ uintptr_t v7_long_create_table(
   // create it if not yet created
   if ( 0 == pmd_tbl->raw ) {
     // populate level 1 table
-    pmd_tbl->raw = ( get_new_table() & 0xFFFFF000 ) << 12;
+    pmd_tbl->raw = get_new_table() & 0xFFFFF000;
     // set attribute
     pmd_tbl->data.attr_ns_table = ( uint8_t )(
       ctx->type == CONTEXT_TYPE_USER ? 1 : 0
@@ -161,16 +162,12 @@ uintptr_t v7_long_create_table(
 
   // page middle directory
   ld_middle_page_directory* pmd = ( ld_middle_page_directory* )(
-    ( uint32_t )pmd_tbl->data.next_level_table
+    ( uint32_t )pmd_tbl->raw & 0xFFFFF000
   );
 
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "pmd_tbl = 0x%08x, pmd = 0x%08x\r\n", pmd_tbl, pmd );
-    DEBUG_OUTPUT(
-      "pmd_tbl->data.next_level_table = 0x%08x\r\n",
-      pmd_tbl->data.next_level_table
-    );
   #endif
 
   // get page table
@@ -179,7 +176,7 @@ uintptr_t v7_long_create_table(
   // create if not yet created
   if ( 0 == tbl_tbl->raw ) {
     // populate level 2 table
-    tbl_tbl->raw = ( get_new_table() & 0xFFFFF000 ) << 12;
+    tbl_tbl->raw = get_new_table() & 0xFFFFF000;
     // set attributes
     tbl_tbl->data.type = 3;
     // debug output
@@ -192,14 +189,9 @@ uintptr_t v7_long_create_table(
     #endif
   }
 
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "pmd_tbl = 0x%08x, pmd = 0x%08x\r\n", pmd_tbl, pmd );
-  #endif
-
   // page directory
   ld_page_table_t* tbl = ( ld_page_table_t* )(
-    ( uint32_t )tbl_tbl->data.next_level_table
+    ( uint32_t )tbl_tbl->raw & 0xFFFFF000
   );
 
   // debug output
@@ -225,7 +217,7 @@ void v7_long_map(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
   uintptr_t paddr,
-  uint32_t flag
+  __unused uint32_t flag
 ) {
   // determine page index
   uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( vaddr );
@@ -265,7 +257,7 @@ void v7_long_map(
 
 
   // set page
-  table->page[ page_idx ].raw |= paddr & 0xFFFFF000;
+  table->page[ page_idx ].raw = paddr & 0xFFFFF000;
 
   // set attributes
   table->page[ page_idx ].data.lower_attr_non_secure = ( uint8_t )(
@@ -273,15 +265,6 @@ void v7_long_map(
   );
   table->page[ page_idx ].data.type = 3;
   table->page[ page_idx ].data.lower_attr_access = 1;
-
-  // FIXME: CONSIDER FLAGS like in short mode seting cacheability and bufferability
-  ( void )flag;
-  /*table->page[ page_idx ].data.cacheable = ( uint8_t )(
-    ( flag & PAGE_FLAG_CACHEABLE ) ? 1 : 0
-  );
-  table->page[ page_idx ].data.bufferable = ( uint8_t )(
-    ( flag & PAGE_FLAG_BUFFERABLE ) ? 1 : 0
-  );*/
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -416,13 +399,21 @@ void v7_long_flush_context( void ) {
   ld_ttbcr_t ttbcr;
 
   // read ttbcr register
-  __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c2, c0, 2"
+    : "=r" ( ttbcr.raw )
+    : : "cc", "memory"
+  );
   // set split to use ttbr1 and ttbr2
-  ttbcr.data.ttbr0_size = 0;
-  ttbcr.data.ttbr1_size = 2;
+  ttbcr.data.ttbr0_size = 1;
+  ttbcr.data.ttbr1_size = 1;
   ttbcr.data.large_physical_address_extension = 1;
   // push back value with ttbcr
-  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c2, c0, 2"
+    : : "r" ( ttbcr.raw )
+    : "cc", "memory"
+  );
 
   // invalidate instruction cache
   __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) );
@@ -438,15 +429,31 @@ void v7_long_flush_context( void ) {
  * @brief Helper to reserve temporary area for mappings
  *
  * @param ctx context structure
- *
- * @todo determine amount of page tables needed for temporary area
- * @todo align continous page range
- * @todo insert tables
- * @todo map at the beginning of temporary area
  */
 void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
-  ( void )ctx;
-  PANIC( "v7_long_prepare_temporary not yet implemented!" );
+  // ensure kernel for temporary
+  assert( CONTEXT_TYPE_KERNEL == ctx->type );
+
+  // last physical table address
+  uintptr_t table_physical = 0;
+  // mapped virtual table address
+  uintptr_t table_virtual = TEMPORARY_SPACE_START;
+
+  for (
+    uintptr_t v = TEMPORARY_SPACE_START;
+    v < ( TEMPORARY_SPACE_START + TEMPORARY_SPACE_SIZE );
+    v += PAGE_SIZE
+  ) {
+    // create table if not created
+    uintptr_t table = v7_long_create_table( ctx, v, 0 );
+    // check if table has changed
+    if ( table_physical != table ) {
+      // map page table
+      v7_long_map( ctx, table_virtual, table_physical, 0 );
+      // increase virtual
+      table_virtual += PAGE_SIZE;
+    }
+  }
 }
 
 /**
