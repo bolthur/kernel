@@ -80,7 +80,7 @@ void __bootstrap boot_virt_setup_short( uintptr_t max_memory ) {
   // Get content from control register
   __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
   // enable mmu by setting bit 0
-  reg |= 0x1;
+  reg |= 1;
   // push back value with mmu enabled bit set
   __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
 }

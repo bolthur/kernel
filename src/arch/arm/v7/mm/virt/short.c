@@ -164,6 +164,11 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
     DEBUG_OUTPUT( "ret = 0x%08x\r\n", start_address + offset );
   #endif
 
+  // flush context if running
+  if ( virt_initialized_get() ) {
+    virt_flush_context();
+  }
+
   // return address with offset
   return start_address + offset;
 }
@@ -224,6 +229,11 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
 
     // next page size
     addr += PAGE_SIZE;
+  }
+
+  // flush context if running
+  if ( virt_initialized_get() ) {
+    virt_flush_context();
   }
 }
 
@@ -731,3 +741,8 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
   // return blank context
   return context;
 }
+
+/**
+ * @brief Method to prepare
+ */
+void v7_short_prepare( void ) {}

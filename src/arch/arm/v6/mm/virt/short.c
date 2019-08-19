@@ -126,3 +126,8 @@ virt_context_ptr_t v6_short_create_context( virt_context_type_t type ) {
   ( void )type;
   PANIC( "v6 create context not yet implemented!" );
 }
+
+/**
+ * @brief Prepare short memory management
+ */
+void v6_short_prepare( void ) {}

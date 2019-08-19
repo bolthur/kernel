@@ -172,3 +172,15 @@ void virt_prepare_temporary( virt_context_ptr_t ctx ) {
     PANIC( "Unsupported mode!" );
   }
 }
+
+/**
+ * @brief Method to prepare
+ */
+void virt_arch_prepare( void ) {
+  // Panic when mode is unsupported
+  if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+    return v6_short_prepare();
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}

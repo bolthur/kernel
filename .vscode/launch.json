@@ -1,30 +1,39 @@
 {
   "version": "0.2.0",
   "configurations": [
+
     {
-      "name": "aarch32-rpi-serial-debug",
+      "name": "aarch32-rpi-serial-usb-debug",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/src/platform/rpi/kernel7.sym",
       "miDebuggerPath": "${env:HOME}/.bolthur/cross/bin/arm-none-eabi-gdb",
+      "miDebuggerArgs": "-q",
       "MIMode": "gdb",
       "cwd": "${workspaceFolder}/build/src/platform/rpi/",
       "setupCommands": [
-        { "text": "set print pretty on" },
-        { "text": "set architecture armv7" },
-        { "text": "file ${workspaceFolder}/build/src/platform/rpi/kernel7.sym" },
-        { "text": "set serial baud 115200" },
-        { "text": "target remote /dev/ttyUSB0" }
+        {
+          "text": "-enable-pretty-printing",
+          "description": "Enable GDB pretty printing"
+        },
+        {
+          "text": "set architecture armv7",
+          "description": "Set architecture"
+        },
+        {
+          "text": "file ${workspaceFolder}/build/src/platform/rpi/kernel7.sym",
+          "description": "Loading symbol file"
+        },
+        {
+          "text": "set serial baud 115200",
+          "description": "Setting baud rate for serial connection"
+        },
+        {
+          "text": "target remote /dev/ttyUSB0",
+          "description": "Set remote target"
+        }
       ],
-      "externalConsole": false,
-      "logging": {
-        "engineLogging": true,
-        "traceResponse": true,
-        "programOutput": true,
-        "trace": true,
-        "exceptions": true,
-        "moduleLoad": true
-      }
+      "externalConsole": false
     },
     {
       "name": "aarch32-rpi-qemu-debug",
@@ -36,21 +45,26 @@
       "MIMode": "gdb",
       "cwd": "${workspaceFolder}/build/src/platform/rpi/",
       "setupCommands": [
-        { "text": "set print pretty on" },
-        { "text": "file ${workspaceFolder}/build/src/platform/rpi/kernel7.sym" },
-        { "text": "target remote localhost:1234" }
+        {
+          "text": "-enable-pretty-printing",
+          "description": "Enable GDB pretty printing"
+        },
+        {
+          "text": "set architecture armv7",
+          "description": "Set architecture"
+        },
+        {
+          "text": "file ${workspaceFolder}/build/src/platform/rpi/kernel7.sym",
+          "description": "Loading symbol file"
+        },
+        {
+          "text": "target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel ${workspaceFolder}/build/src/platform/rpi/kernel.zwerg -gdb stdio -S",
+          "description": "Set target to remote with qemu"
+        }
       ],
       "externalConsole": false,
       "launchCompleteCommand": "None",
-      "preLaunchTask": "qemu-rpi2",
-      "logging": {
-        "engineLogging": true,
-        "exceptions": true,
-        "moduleLoad": true,
-        "programOutput": true,
-        "trace": true,
-        "traceResponse": true
-      }
+      "preLaunchTask": "compile"
     }
   ]
 }

@@ -77,6 +77,9 @@ void virt_arch_init( void ) {
   // setup supported mode global
   virt_setup_supported_modes();
 
+  // prepare
+  virt_arch_prepare();
+
   // create a kernel context
   kernel_context = virt_create_context( CONTEXT_TYPE_KERNEL );
   assert( NULL != kernel_context );

@@ -221,3 +221,22 @@ void virt_prepare_temporary( virt_context_ptr_t ctx ) {
     PANIC( "Unsupported mode!" );
   }
 }
+
+/**
+ * @brief Method to prepare
+ */
+void virt_arch_prepare( void ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    v7_long_prepare();
+  // check v7 short descriptor format
+  } else if (
+    ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
+    || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
+  ) {
+    v7_short_prepare();
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}

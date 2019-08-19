@@ -48,6 +48,7 @@ extern virt_context_ptr_t kernel_context;
 void virt_init( void );
 void virt_platform_init( void );
 void virt_arch_init( void );
+void virt_arch_prepare( void );
 bool virt_initialized_get( void );
 void virt_platform_post_init( void );
 
