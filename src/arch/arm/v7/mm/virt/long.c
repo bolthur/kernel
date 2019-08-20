@@ -433,6 +433,9 @@ void v7_long_map(
   );
   table->page[ page_idx ].data.type = 3;
   table->page[ page_idx ].data.lower_attr_access = 1;
+  table->page[ page_idx ].data.lower_attr_access_permission = ( uint8_t )(
+    ( ctx->type == CONTEXT_TYPE_USER ? 1 : 0 )
+  );
 
   // debug output
   #if defined( PRINT_MM_VIRT )
