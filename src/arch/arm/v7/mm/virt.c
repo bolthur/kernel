@@ -185,16 +185,37 @@ void virt_set_context( virt_context_ptr_t ctx ) {
 /**
  * @brief Flush set context
  */
-void virt_flush_context( void ) {
+void virt_flush_complete( void ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-    v7_long_flush_context();
+    v7_long_flush_complete();
   // check v7 short descriptor format
   } else if (
     ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
-    v7_short_flush_context();
+    v7_short_flush_complete();
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
+ * @brief Flush specific address mapping
+ *
+ * @param addr virtual address to flush
+ */
+void virt_flush_address( uintptr_t addr ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    v7_long_flush_address( addr );
+  // check v7 short descriptor format
+  } else if (
+    ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
+    || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
+  ) {
+    v7_short_flush_address( addr );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

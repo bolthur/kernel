@@ -103,7 +103,16 @@ void v6_short_set_context( virt_context_ptr_t ctx ) {
 /**
  * @brief Internal v6 short descriptor context flush
  */
-void v6_short_flush_context( void ) {
+void v6_short_flush_complete( void ) {
+  PANIC( "Flush v6 context not yet supported!" );
+}
+
+/**
+ * @brief Internal v6 short descriptor function to flush specific address
+ *
+ * @param addr virtual address to flush
+ */
+void v6_short_flush_address( __unused uintptr_t  addr ) {
   PANIC( "Flush v6 context not yet supported!" );
 }
 

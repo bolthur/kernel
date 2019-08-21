@@ -28,9 +28,10 @@ void v7_short_map_random( virt_context_ptr_t, uintptr_t, uint32_t );
 void v7_short_unmap( virt_context_ptr_t, uintptr_t );
 uintptr_t v7_short_create_table( virt_context_ptr_t, uintptr_t, uintptr_t );
 void v7_short_set_context( virt_context_ptr_t );
-void v7_short_flush_context( void );
 void v7_short_prepare_temporary( virt_context_ptr_t );
 virt_context_ptr_t v7_short_create_context( virt_context_type_t );
 void v7_short_prepare( void );
+void v7_short_flush_complete( void );
+void v7_short_flush_address( uintptr_t );
 
 #endif

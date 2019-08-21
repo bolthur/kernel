@@ -33,7 +33,7 @@
   // methods
   void virt_setup_supported_modes( void );
   // supported modes
-  uint32_t supported_modes;
+  extern uint32_t supported_modes;
 #endif
 
 #endif

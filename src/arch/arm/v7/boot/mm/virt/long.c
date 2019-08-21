@@ -122,7 +122,7 @@ void __bootstrap boot_virt_map_long( uint64_t phys, uintptr_t virt ) {
     .section[ tbl_index ];
 
   // set section
-  section->data.type = 1;
+  section->raw = LD_PHYSICAL_SECTION_L2_ADDRESS( phys );
+  section->data.type = LD_TYPE_SECTION;
   section->data.lower_attr_access = 1;
-  section->raw |= phys;
 }

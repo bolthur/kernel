@@ -148,10 +148,25 @@ void virt_set_context( virt_context_ptr_t ctx ) {
 /**
  * @brief Flush set context
  */
-void virt_flush_context( void ) {
+void virt_flush_complete( void ) {
   // check for v6 format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-    v6_short_flush_context();
+    v6_short_flush_complete();
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
+ * @brief Flush address
+ *
+ * @param addr virtual address
+ */
+void virt_flush_complete( uintptr_t addr ) {
+  // check for v6 format
+  if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+    v6_short_flush_address( addr );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

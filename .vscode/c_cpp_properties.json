@@ -1,62 +1,62 @@
 {
-  "configurations": [
-    {
-      "name": "Mac",
-      "includePath": [
-        "${workspaceFolder}/include",
-        "${workspaceFolder}/include/lib",
-        "${workspaceFolder}/include/kernel",
-        "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.1.0/include",
-        "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.1.0/include"
-      ],
-      "defines": [],
-      "intelliSenseMode": "${default}",
-      "browse": {
-        "path": [
-          "${workspaceFolder}/src",
-          "${workspaceFolder}/include",
-          "${workspaceFolder}/include/lib",
-          "${workspaceFolder}/include/kernel",
-          "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.1.0/include",
-          "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.1.0/include"
-        ],
-        "limitSymbolsToIncludedHeaders": true,
-        "databaseFilename": ""
-      },
-      "macFrameworkPath": [],
-      "forcedInclude": [
-        "${workspaceFolder}/build/include/config.h"
-      ],
-      "cStandard": "c11"
-    },
-    {
-      "name": "Linux",
-      "includePath": [
-        "${workspaceFolder}/include",
-        "${workspaceFolder}/include/lib",
-        "${workspaceFolder}/include/kernel",
-        "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.1.0/include",
-        "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.1.0/include"
-      ],
-      "defines": [],
-      "intelliSenseMode": "${default}",
-      "browse": {
-        "path": [
-          "${workspaceFolder}/src",
-          "${workspaceFolder}/include",
-          "${workspaceFolder}/include/lib",
-          "${workspaceFolder}/include/kernel",
-          "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.1.0/include",
-          "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.1.0/include"
-        ],
-        "limitSymbolsToIncludedHeaders": true,
-        "databaseFilename": ""
-      },
-      "forcedInclude": [
-        "${workspaceFolder}/build/include/config.h"
-      ],
-      "cStandard": "c11"
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/include/lib",
+                "${workspaceFolder}/include/kernel",
+                "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.2.0/include",
+                "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.2.0/include"
+            ],
+            "defines": [],
+            "intelliSenseMode": "${default}",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/src",
+                    "${workspaceFolder}/include",
+                    "${workspaceFolder}/include/lib",
+                    "${workspaceFolder}/include/kernel",
+                    "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.2.0/include",
+                    "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.2.0/include"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "macFrameworkPath": [],
+            "forcedInclude": [
+                "${workspaceFolder}/build/include/config.h"
+            ],
+            "cStandard": "c11"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/include",
+                "${workspaceFolder}/include/lib",
+                "${workspaceFolder}/include/kernel",
+                "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.2.0/include",
+                "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.2.0/include"
+            ],
+            "defines": [],
+            "intelliSenseMode": "${default}",
+            "browse": {
+                "path": [
+                    "${workspaceFolder}/src",
+                    "${workspaceFolder}/include",
+                    "${workspaceFolder}/include/lib",
+                    "${workspaceFolder}/include/kernel",
+                    "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.2.0/include",
+                    "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.2.0/include"
+                ],
+                "limitSymbolsToIncludedHeaders": true,
+                "databaseFilename": ""
+            },
+            "forcedInclude": [
+                "${workspaceFolder}/build/include/config.h"
+            ],
+            "cStandard": "c11"
+        }
+    ],
+    "version": 4
 }

@@ -52,10 +52,8 @@ static uint32_t mapped_temporary_tables = 0;
  * @param start physical start address
  * @param size size to map
  * @return uintptr_t mapped address
- *
- * @todo add disable of cache
  */
-static uintptr_t map_temporary( uintptr_t start, size_t size ) {
+static uintptr_t map_temporary( uint64_t start, size_t size ) {
   // find free space to map
   uint32_t page_amount = ( uint32_t )( size / PAGE_SIZE );
   uint32_t found_amount = 0;
@@ -64,7 +62,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
   // stop here if not initialized
   if ( true != virt_initialized_get() ) {
-    return start;
+    return ( uintptr_t )start;
   }
 
   // determine offset and subtract start
@@ -157,11 +155,14 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
     // handle it non cachable
     // set page
-    tbl->page[ page_idx ].raw = start & 0xFFFFF000;
+    tbl->page[ page_idx ].raw = LD_PHYSICAL_PAGE_ADDRESS( start );
 
     // set attributes
-    tbl->page[ page_idx ].data.type = 3;
+    tbl->page[ page_idx ].data.type = LD_TYPE_PAGE;
     tbl->page[ page_idx ].data.lower_attr_access = 1;
+
+    // flush address
+    virt_flush_address( addr );
 
     // increase physical address
     start += i * PAGE_SIZE;
@@ -171,11 +172,6 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "ret = 0x%08x\r\n", start_address + offset );
   #endif
-
-  // flush context if running
-  if ( virt_initialized_get() ) {
-    virt_flush_context();
-  }
 
   // return address with offset
   return start_address + offset;
@@ -240,13 +236,11 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
     // unmap
     tbl->page[ page_idx ].raw = 0;
 
+    // flush address
+    virt_flush_address( addr );
+
     // next page size
     addr += PAGE_SIZE;
-  }
-
-  // flush context if running
-  if ( virt_initialized_get() ) {
-    virt_flush_context();
   }
 }
 
@@ -311,12 +305,12 @@ uintptr_t v7_long_create_table(
   // create it if not yet created
   if ( 0 == pmd_tbl->raw ) {
     // populate level 1 table
-    pmd_tbl->raw = get_new_table() & 0xFFFFF000;
+    pmd_tbl->raw = LD_PHYSICAL_TABLE_ADDRESS( get_new_table() );
     // set attribute
     pmd_tbl->data.attr_ns_table = ( uint8_t )(
       ctx->type == CONTEXT_TYPE_USER ? 1 : 0
     );
-    pmd_tbl->data.type = 3;
+    pmd_tbl->data.type = LD_TYPE_TABLE;
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
@@ -329,7 +323,7 @@ uintptr_t v7_long_create_table(
 
   // page middle directory
   ld_middle_page_directory* pmd = ( ld_middle_page_directory* )
-    map_temporary( ( ( uint32_t )pmd_tbl->raw & 0xFFFFF000 ), PAGE_SIZE );
+    map_temporary( LD_PHYSICAL_TABLE_ADDRESS( pmd_tbl->raw ), PAGE_SIZE );
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -341,9 +335,9 @@ uintptr_t v7_long_create_table(
   // create if not yet created
   if ( 0 == tbl_tbl->raw ) {
     // populate level 2 table
-    tbl_tbl->raw = get_new_table() & 0xFFFFF000;
+    tbl_tbl->raw = LD_PHYSICAL_TABLE_ADDRESS( get_new_table() );
     // set attributes
-    tbl_tbl->data.type = 3;
+    tbl_tbl->data.type = LD_TYPE_TABLE;
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
@@ -356,7 +350,7 @@ uintptr_t v7_long_create_table(
 
   // page directory
   ld_page_table_t* tbl = ( ld_page_table_t* )(
-    ( uint32_t )tbl_tbl->raw & 0xFFFFF000
+    ( uintptr_t )LD_PHYSICAL_TABLE_ADDRESS( tbl_tbl->raw )
   );
 
   // debug output
@@ -425,13 +419,10 @@ void v7_long_map(
   #endif
 
   // set page
-  table->page[ page_idx ].raw = paddr & 0xFFFFF000;
+  table->page[ page_idx ].raw = LD_PHYSICAL_PAGE_ADDRESS( paddr );
 
   // set attributes
-  table->page[ page_idx ].data.lower_attr_non_secure = ( uint8_t )(
-    ( ctx->type == CONTEXT_TYPE_USER ? 1 : 0 )
-  );
-  table->page[ page_idx ].data.type = 3;
+  table->page[ page_idx ].data.type = LD_TYPE_PAGE;
   table->page[ page_idx ].data.lower_attr_access = 1;
   table->page[ page_idx ].data.lower_attr_access_permission = ( uint8_t )(
     ( ctx->type == CONTEXT_TYPE_USER ? 1 : 0 )
@@ -457,7 +448,7 @@ void v7_long_map(
 
   // flush context if running
   if ( virt_initialized_get() ) {
-    virt_flush_context();
+    virt_flush_address( vaddr );
   }
 }
 
@@ -572,7 +563,7 @@ void v7_long_set_context( virt_context_ptr_t ctx ) {
 /**
  * @brief Flush context
  */
-void v7_long_flush_context( void ) {
+void v7_long_flush_complete( void ) {
   ld_ttbcr_t ttbcr;
 
   // read ttbcr register
@@ -596,6 +587,20 @@ void v7_long_flush_context( void ) {
   __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) );
   // invalidate entire tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
+  // instruction synchronization barrier
+  barrier_instruction_sync();
+  // data synchronization barrier
+  barrier_data_sync();
+}
+
+/**
+ * @brief Flush address in long mode
+ *
+ * @param addr virtual address to flush
+ */
+void v7_long_flush_address( uintptr_t addr ) {
+  // flush specific address
+  __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 1" :: "r"( addr ) );
   // instruction synchronization barrier
   barrier_instruction_sync();
   // data synchronization barrier

@@ -27,13 +27,25 @@
 #if defined( ELF32 )
   // entry types
   #define LD_TYPE_INVALID 0
-  #define LD_TYPE_SECTION 1
-  #define LD_TYPE_TABLE 3
+  #define LD_TYPE_SECTION 0x1
+  #define LD_TYPE_TABLE 0x3
+  #define LD_TYPE_PAGE 0x3
+
+  // access permissions
+  #define LD_AP_RW_PRIVILEGED 0x0
+  #define LD_AP_RW_ANY 0x1
+  #define LD_AP_RO_PRIVILEGED 0x2
+  #define LD_AP_RO_ANY 0x3
 
   // helper macros
   #define LD_VIRTUAL_PMD_INDEX( a ) ( ( a & 0xC0000000 ) >> 30 )
   #define LD_VIRTUAL_TABLE_INDEX( a ) ( ( a & 0x3FE00000 ) >> 21 )
   #define LD_VIRTUAL_PAGE_INDEX( a ) ( ( a & 0x1FF000 ) >> 12 )
+
+  #define LD_PHYSICAL_SECTION_L1_ADDRESS( a ) ( ( uint64_t )a & 0x7FC0000000 )
+  #define LD_PHYSICAL_SECTION_L2_ADDRESS( a ) ( ( uint64_t )a & 0x7FFFE00000 )
+  #define LD_PHYSICAL_TABLE_ADDRESS( a ) ( ( uint64_t )a & 0xFFFFFFF000 )
+  #define LD_PHYSICAL_PAGE_ADDRESS( a ) ( ( uint64_t )a & 0xFFFFFFF000 )
 
   typedef union __packed {
     uint32_t raw;
@@ -138,12 +150,11 @@
     struct {
       uint64_t type : 2;
 
-      uint64_t lower_attr_attribute_index : 3;
-      uint64_t lower_attr_non_secure : 1;
+      uint64_t lower_attr_memory_attribute : 4;
       uint64_t lower_attr_access_permission : 2;
       uint64_t lower_attr_shared : 2;
       uint64_t lower_attr_access : 1;
-      uint64_t lower_attr_not_global : 1;
+      uint64_t lower_attr_sbz0 : 1;
 
       uint64_t output_address : 28;
       uint64_t sbz_0 : 12;
@@ -152,7 +163,7 @@
       uint64_t upper_attr_sbz0 : 1;
       uint64_t upper_attr_execute_never : 1;
       uint64_t upper_attr_software_usage : 4;
-      uint64_t upper_attr_ignored : 5;
+      uint64_t upper_attr_system_mmu_usage : 5;
     } data;
   } ld_context_page_t;
 

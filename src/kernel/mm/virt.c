@@ -93,7 +93,7 @@ void virt_init( void ) {
   virt_set_context( user_context );
 
   // flush contexts to take effect
-  virt_flush_context();
+  virt_flush_complete();
 
   // post init
   virt_platform_post_init();

@@ -155,6 +155,9 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
     tbl->page[ page_idx ].data.cacheable = 0;
     tbl->page[ page_idx ].data.access_permision_0 = SD_MAC_APX0_PRIVILEGED_RW;
 
+    // flush address
+    virt_flush_address( addr );
+
     // increase physical address
     start += i * PAGE_SIZE;
   }
@@ -221,6 +224,9 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
 
     // unmap
     tbl->page[ page_idx ].raw = 0;
+
+    // flush address
+    virt_flush_address( addr );
 
     // next page size
     addr += PAGE_SIZE;
@@ -507,7 +513,7 @@ void v7_short_map(
 
   // flush context if running
   if ( virt_initialized_get() ) {
-    virt_flush_context();
+    virt_flush_address( vaddr );
   }
 }
 
@@ -573,6 +579,11 @@ void v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
 
   // unmap temporary
   unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
+
+  // flush context if running
+  if ( virt_initialized_get() ) {
+    virt_flush_address( vaddr );
+  }
 }
 
 /**
@@ -620,7 +631,7 @@ void v7_short_set_context( virt_context_ptr_t ctx ) {
 /**
  * @brief Flush context
  */
-void v7_short_flush_context( void ) {
+void v7_short_flush_complete( void ) {
   sd_ttbcr_t ttbcr;
 
   // read ttbcr register
@@ -642,11 +653,23 @@ void v7_short_flush_context( void ) {
 }
 
 /**
+ * @brief Flush address in short mode
+ *
+ * @param addr virtual address to flush
+ */
+void v7_short_flush_address( uintptr_t addr ) {
+  // flush specific address
+  __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 1" :: "r"( addr ) );
+  // instruction synchronization barrier
+  barrier_instruction_sync();
+  // data synchronization barrier
+  barrier_data_sync();
+}
+
+/**
  * @brief Helper to reserve temporary area for mappings
  *
  * @param ctx context structure
- *
- * @todo check for simplification
  */
 void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
   // ensure kernel for temporary
