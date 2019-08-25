@@ -44,7 +44,7 @@
 void virt_map_address(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
-  uintptr_t paddr,
+  uint64_t paddr,
   uint32_t flag
 ) {
   // check for v6 long descriptor format
@@ -116,10 +116,10 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
  * @param table page table address
  * @return uintptr_t address of table
  */
-uintptr_t virt_create_table(
+uint64_t virt_create_table(
   virt_context_ptr_t ctx,
   uintptr_t addr,
-  uintptr_t table
+  uint64_t table
 ) {
   // check for v6 format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {

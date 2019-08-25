@@ -245,8 +245,8 @@ static uintptr_t get_new_table() {
 
   // fill addr and remaining
   if ( 0 == addr ) {
-    addr = phys_find_free_page( SD_TBL_SIZE );
-
+    // allocate page
+    addr = ( uintptr_t )phys_find_free_page( SD_TBL_SIZE );
     // map temporarily
     uintptr_t tmp = map_temporary( addr, PAGE_SIZE );
     // overwrite page with zero
@@ -291,10 +291,10 @@ static uintptr_t get_new_table() {
  * @param table page table address
  * @return uintptr_t address of created and prepared table
  */
-uintptr_t v7_short_create_table(
+uint64_t v7_short_create_table(
   virt_context_ptr_t ctx,
   uintptr_t addr,
-  uintptr_t table
+  uint64_t table
 ) {
   // get table idx
   uint32_t table_idx = SD_VIRTUAL_TABLE_INDEX( addr );
@@ -308,7 +308,7 @@ uintptr_t v7_short_create_table(
   if ( CONTEXT_TYPE_KERNEL == ctx->type ) {
     // get context
     sd_context_total_t* context = ( sd_context_total_t* )map_temporary(
-      ctx->context, SD_TTBR_SIZE_4G
+      ( uintptr_t )ctx->context, SD_TTBR_SIZE_4G
     );
 
     // check for already existing
@@ -333,7 +333,7 @@ uintptr_t v7_short_create_table(
     }
 
     // create table if necessary
-    uintptr_t tbl = table;
+    uintptr_t tbl = ( uintptr_t )table;
     if ( 0 == tbl ) {
       tbl = get_new_table();
     }
@@ -372,7 +372,7 @@ uintptr_t v7_short_create_table(
   if ( CONTEXT_TYPE_USER == ctx->type ) {
     // get context
     sd_context_half_t* context = ( sd_context_half_t* )map_temporary(
-      ctx->context, SD_TTBR_SIZE_2G
+      ( uintptr_t )ctx->context, SD_TTBR_SIZE_2G
     );
 
     // check for already existing
@@ -397,7 +397,7 @@ uintptr_t v7_short_create_table(
     }
 
     // create table if necessary
-    uintptr_t tbl = table;
+    uintptr_t tbl = ( uintptr_t )table;
     if ( 0 == tbl ) {
       tbl = get_new_table();
     }
@@ -444,15 +444,17 @@ uintptr_t v7_short_create_table(
 void v7_short_map(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
-  uintptr_t paddr,
+  uint64_t paddr,
   uint32_t flag
 ) {
   // get page index
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( vaddr );
 
   // get table for mapping
-  sd_page_table_t* table = ( sd_page_table_t* )v7_short_create_table(
-    ctx, vaddr, 0
+  sd_page_table_t* table = ( sd_page_table_t* )(
+    ( uintptr_t )v7_short_create_table(
+      ctx, vaddr, 0
+    )
   );
 
   #if defined( PRINT_MM_VIRT )
@@ -530,7 +532,7 @@ void v7_short_map_random(
   uint32_t flag
 ) {
   // get physical address
-  uintptr_t phys = phys_find_free_page( PAGE_SIZE );
+  uint64_t phys = phys_find_free_page( PAGE_SIZE );
   // assert
   assert( 0 != phys );
   // map it
@@ -548,8 +550,10 @@ void v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( vaddr );
 
   // get table for unmapping
-  sd_page_table_t* table = ( sd_page_table_t* )v7_short_create_table(
-    ctx, vaddr, 0
+  sd_page_table_t* table = ( sd_page_table_t* )(
+    ( uintptr_t )v7_short_create_table(
+      ctx, vaddr, 0
+    )
   );
 
    // map temporary
@@ -598,13 +602,13 @@ void v7_short_set_context( virt_context_ptr_t ctx ) {
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
         "list: 0x%08x\r\n",
-        ( ( sd_context_half_t* )ctx->context )->raw
+        ( ( sd_context_half_t* )( ( uintptr_t )ctx->context ) )->raw
       );
     #endif
     // Copy page table address to cp15 ( ttbr0 )
     __asm__ __volatile__(
       "mcr p15, 0, %0, c2, c0, 0"
-      : : "r" ( ( ( sd_context_half_t* )ctx->context )->raw )
+      : : "r" ( ( ( sd_context_half_t* )( ( uintptr_t )ctx->context ) )->raw )
       : "memory"
     );
   // kernel context handling
@@ -613,13 +617,13 @@ void v7_short_set_context( virt_context_ptr_t ctx ) {
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
         "list: 0x%08x\r\n",
-        ( ( sd_context_total_t* )ctx->context )->raw
+        ( ( sd_context_total_t* )( ( uintptr_t )ctx->context ) )->raw
       );
     #endif
     // Copy page table address to cp15 ( ttbr1 )
     __asm__ __volatile__(
       "mcr p15, 0, %0, c2, c0, 1"
-      : : "r" ( ( ( sd_context_total_t* )ctx->context )->raw )
+      : : "r" ( ( ( sd_context_total_t* )( ( uintptr_t )ctx->context ) )->raw )
       : "memory"
     );
   // invalid type
@@ -676,7 +680,7 @@ void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
   assert( CONTEXT_TYPE_KERNEL == ctx->type );
 
   // free page table
-  uintptr_t table = phys_find_free_page( PAGE_SIZE );
+  uintptr_t table = ( uintptr_t )phys_find_free_page( PAGE_SIZE );
   // overwrite page with zero
   memset( ( void* )table, 0, PAGE_SIZE );
 
@@ -720,7 +724,7 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
     : SD_TTBR_ALIGNMENT_2G;
 
   // create new context
-  uintptr_t ctx = phys_find_free_page_range( size, alignment );
+  uintptr_t ctx = ( uintptr_t )phys_find_free_page_range( size, alignment );
 
   // debug output
   #if defined( PRINT_MM_VIRT )

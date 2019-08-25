@@ -42,16 +42,11 @@
  * @param flag flags for mapping
  */
 void v6_short_map(
-  virt_context_ptr_t ctx,
-  uintptr_t vaddr,
-  uintptr_t paddr,
-  uint32_t flag
+  __unused virt_context_ptr_t ctx,
+  __unused uintptr_t vaddr,
+  __unused uint64_t paddr,
+  __unused uint32_t flag
 ) {
-  ( void )ctx;
-  ( void )vaddr;
-  ( void )paddr;
-  ( void )flag;
-
   PANIC( "v6 mmu mapping not yet supported!" );
 }
 
@@ -61,10 +56,10 @@ void v6_short_map(
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  */
-void v6_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
-  ( void )ctx;
-  ( void )vaddr;
-
+void v6_short_unmap(
+  __unused virt_context_ptr_t ctx,
+  __unused uintptr_t vaddr
+) {
   PANIC( "v6 mmu mapping not yet supported!" );
 }
 
@@ -74,18 +69,13 @@ void v6_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
  * @param ctx context to create table for
  * @param addr address the table is necessary for
  * @param table table address
- * @return uintptr_t address of created and prepared table
+ * @return uint64_t address of created and prepared table
  */
-uintptr_t v6_short_create_table(
-  virt_context_ptr_t ctx,
-  uintptr_t addr,
-  uintptr_t table
+uint64_t v6_short_create_table(
+  __unused virt_context_ptr_t ctx,
+  __unused uintptr_t addr,
+  __unused uint64_t table
 ) {
-  // mark parameters as unused
-  ( void )ctx;
-  ( void )addr;
-  ( void )table;
-
   // normal handling for first setup
   return NULL;
 }
@@ -95,8 +85,7 @@ uintptr_t v6_short_create_table(
  *
  * @param ctx context structure
  */
-void v6_short_set_context( virt_context_ptr_t ctx ) {
-  ( void )ctx;
+void v6_short_set_context( __unused virt_context_ptr_t ctx ) {
   PANIC( "Activate v6 context not yet supported!" );
 }
 
@@ -121,8 +110,7 @@ void v6_short_flush_address( __unused uintptr_t  addr ) {
  *
  * @param ctx context structure
  */
-void v6_short_prepare_temporary( virt_context_ptr_t ctx ) {
-  ( void )ctx;
+void v6_short_prepare_temporary( __unused virt_context_ptr_t ctx ) {
   PANIC( "v6 temporary not yet implemented!" );
 }
 
@@ -131,8 +119,7 @@ void v6_short_prepare_temporary( virt_context_ptr_t ctx ) {
  *
  * @param type context type to create
  */
-virt_context_ptr_t v6_short_create_context( virt_context_type_t type ) {
-  ( void )type;
+virt_context_ptr_t v6_short_create_context( __unused virt_context_type_t type ) {
   PANIC( "v6 create context not yet implemented!" );
 }
 

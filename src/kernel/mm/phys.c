@@ -48,11 +48,11 @@ static bool phys_initialized = false;
  *
  * @param address address to mark as free
  */
-void phys_mark_page_used( uintptr_t address ) {
+void phys_mark_page_used( uint64_t address ) {
   // get frame, index and offset
-  size_t frame = address / PAGE_SIZE;
-  size_t index = PAGE_INDEX( frame );
-  size_t offset = PAGE_OFFSET( frame );
+  uint64_t frame = address / PAGE_SIZE;
+  uint64_t index = PAGE_INDEX( frame );
+  uint64_t offset = PAGE_OFFSET( frame );
 
   // mark page as used
   phys_bitmap[ index ] |= ( uint32_t )( 0x1 << offset );
@@ -71,11 +71,11 @@ void phys_mark_page_used( uintptr_t address ) {
  *
  * @param address address to mark as free
  */
-void phys_mark_page_free( uintptr_t address ) {
+void phys_mark_page_free( uint64_t address ) {
   // get frame, index and offset
-  size_t frame = address / PAGE_SIZE;
-  size_t index = PAGE_INDEX( frame );
-  size_t offset = PAGE_OFFSET( frame );
+  uint64_t frame = address / PAGE_SIZE;
+  uint64_t index = PAGE_INDEX( frame );
+  uint64_t offset = PAGE_OFFSET( frame );
 
   // mark page as free
   phys_bitmap[ index ] &= ( uint32_t )( ~( 0x1 << offset ) );
@@ -95,7 +95,7 @@ void phys_mark_page_free( uintptr_t address ) {
  * @param address start address
  * @param amount amount of memory
  */
-void phys_free_page_range( uintptr_t address, size_t amount ) {
+void phys_free_page_range( uint64_t address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "address: 0x%08x, amount: %i\r\n", address, amount );
@@ -117,7 +117,7 @@ void phys_free_page_range( uintptr_t address, size_t amount ) {
  * @param address start address
  * @param amount amount of memory
  */
-void phys_use_page_range( uintptr_t address, size_t amount ) {
+void phys_use_page_range( uint64_t address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "address: 0x%08x, amount: %i\r\n", address, amount );
@@ -148,9 +148,9 @@ void phys_use_page_range( uintptr_t address, size_t amount ) {
  *
  * @param memory_amount amount of memory to find free page range for
  * @param alignment wanted memory alignment
- * @return uintptr_t address of found memory
+ * @return uint64_t address of found memory
  */
-uintptr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
+uint64_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
@@ -230,9 +230,9 @@ uintptr_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
  * @brief Shorthand to find single free page
  *
  * @param alignment
- * @return uintptr_t
+ * @return uint64_t
  */
-uintptr_t phys_find_free_page( size_t alignment ) {
+uint64_t phys_find_free_page( size_t alignment ) {
   return phys_find_free_page_range( PAGE_SIZE, alignment );
 }
 
@@ -241,7 +241,7 @@ uintptr_t phys_find_free_page( size_t alignment ) {
  *
  * @param address address to free
  */
-void phys_free_page( uintptr_t address ) {
+void phys_free_page( uint64_t address ) {
   phys_free_page_range( address, PAGE_SIZE );
 }
 

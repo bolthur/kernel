@@ -249,9 +249,9 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
  *
  * @return uintptr_t address to new table
  */
-static uintptr_t get_new_table() {
+static uint64_t get_new_table() {
   // get new page
-  uintptr_t addr = phys_find_free_page( PAGE_SIZE );
+  uint64_t addr = phys_find_free_page( PAGE_SIZE );
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "addr = 0x%08x\r\n", addr );
@@ -276,10 +276,10 @@ static uintptr_t get_new_table() {
  * @param table page table address
  * @return uintptr_t address of created and prepared table
  */
-uintptr_t v7_long_create_table(
+uint64_t v7_long_create_table(
   virt_context_ptr_t ctx,
   uintptr_t addr,
-  __unused uintptr_t table
+  __unused uint64_t table
 ) {
   // get table idx
   uint32_t pmd_idx = LD_VIRTUAL_PMD_INDEX( addr );
@@ -379,23 +379,23 @@ uintptr_t v7_long_create_table(
 void v7_long_map(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
-  uintptr_t paddr,
+  uint64_t paddr,
   __unused uint32_t flag
 ) {
   // determine page index
   uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( vaddr );
-
-  // get table with creation if necessary
-  ld_page_table_t* table = ( ld_page_table_t* )v7_long_create_table(
+  uint64_t table_phys = v7_long_create_table(
     ctx, vaddr, 0
+  );
+
+  // map temporary
+  ld_page_table_t* table = ( ld_page_table_t* )map_temporary(
+    table_phys, PAGE_SIZE
   );
 
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table: 0x%08x\r\n", table );
   #endif
-
-  // map temporary
-  table = ( ld_page_table_t* )map_temporary( ( uintptr_t )table, PAGE_SIZE );
 
   // assert existance
   assert( NULL != table );
@@ -465,7 +465,7 @@ void v7_long_map_random(
   uint32_t flag
 ) {
   // get physical address
-  uintptr_t phys = phys_find_free_page( PAGE_SIZE );
+  uint64_t phys = phys_find_free_page( PAGE_SIZE );
   // assert
   assert( 0 != phys );
   // map it
@@ -481,20 +481,24 @@ void v7_long_map_random(
 void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
   // get page index
   uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( vaddr );
-
-  // get table for unmapping
-  ld_page_table_t* table = ( ld_page_table_t* )v7_long_create_table(
+  // get physical table
+  uint64_t table_phys = v7_long_create_table(
     ctx, vaddr, 0
   );
 
-   // map temporary
-  table = ( ld_page_table_t* )map_temporary( ( uintptr_t )table, PAGE_SIZE );
+  // map table for unmapping temporary
+  ld_page_table_t* table = ( ld_page_table_t* )map_temporary(
+    table_phys, PAGE_SIZE
+  );
 
   // assert existance
   assert( NULL != table );
 
-  // ensure not already mapped
+  // ensure mapped
   if ( 0 == table->page[ page_idx ].raw ) {
+    // unmap temporary
+    unmap_temporary( ( uintptr_t )table, PAGE_SIZE );
+    // skip unmap
     return;
   }
 
@@ -522,41 +526,44 @@ void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
  * @param ctx context structure
  */
 void v7_long_set_context( virt_context_ptr_t ctx ) {
+  // handle invalid
+  if (
+    CONTEXT_TYPE_USER != ctx->type
+    && CONTEXT_TYPE_KERNEL != ctx->type
+  ) {
+    PANIC( "Invalid virtual context type!" );
+  }
+
+  // save context
+  uint64_t context = ctx->context;
+  // add offset for kernel context
+  if ( CONTEXT_TYPE_KERNEL == ctx->type ) {
+    context += sizeof( uint64_t ) * 2;
+  }
+  // extract low and high words
+  uint32_t low = ( uint32_t )context;
+  uint32_t high = ( uint32_t )( context >> 32 );
+
   // user context handling
   if ( CONTEXT_TYPE_USER == ctx->type ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT(
-        "TTBR0: 0x%08x\r\n",
-        ( ( ld_global_page_directory_t* )ctx->context )->raw
-      );
+      DEBUG_OUTPUT( "TTBR0: 0x%08x%08x\r\n", high, low );
     #endif
     // Copy page table address to cp15 ( ttbr0 )
     __asm__ __volatile__(
-      "mcrr p15, 0, %0, %1, c2"
-      : : "r" ( ( ( ld_global_page_directory_t* )ctx->context )->raw ),
-        "r" ( 0 )
-      : "memory"
+      "mcrr p15, 0, %0, %1, c2" : : "r" ( low ), "r" ( high ) : "memory"
     );
   // kernel context handling
-  } else if ( CONTEXT_TYPE_KERNEL == ctx->type ) {
+  } else {
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT(
-        "TTBR1: 0x%08x\r\n",
-        ( ( ld_global_page_directory_t* )ctx->context )->raw
-      );
+      DEBUG_OUTPUT( "TTBR1: 0x%08x%08x\r\n", high, low );
     #endif
     // Copy page table address to cp15 ( ttbr1 )
     __asm__ __volatile__(
-      "mcrr p15, 1, %0, %1, c2"
-      : : "r" ( & ( ( ld_global_page_directory_t* )ctx->context )->raw[ 2 ] ),
-        "r" ( 0 )
-      : "memory"
+      "mcrr p15, 1, %0, %1, c2" : : "r" ( low ), "r" ( high ) : "memory"
     );
-  // invalid type
-  } else {
-    PANIC( "Invalid virtual context type!" );
   }
 }
 
@@ -617,7 +624,7 @@ void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
   assert( CONTEXT_TYPE_KERNEL == ctx->type );
 
   // last physical table address
-  uintptr_t table_physical = 0;
+  uint64_t table_physical = 0;
   mapped_temporary_tables = 0;
   // mapped virtual table address
   uintptr_t table_virtual = TEMPORARY_SPACE_START;
@@ -628,7 +635,7 @@ void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
     v += PAGE_SIZE
   ) {
     // create table if not created
-    uintptr_t table = v7_long_create_table( ctx, v, 0 );
+    uint64_t table = v7_long_create_table( ctx, v, 0 );
     // check if table has changed
     if ( table_physical != table ) {
       // map page table
@@ -660,7 +667,7 @@ void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
  */
 virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
   // create new context
-  uintptr_t ctx = phys_find_free_page_range( PAGE_SIZE, PAGE_SIZE );
+  uint64_t ctx = phys_find_free_page_range( PAGE_SIZE, PAGE_SIZE );
 
   // debug output
   #if defined( PRINT_MM_VIRT )

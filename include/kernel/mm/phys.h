@@ -41,13 +41,13 @@ extern uint32_t phys_bitmap_length;
 void phys_init( void );
 void phys_platform_init( void );
 
-void phys_mark_page_used( uintptr_t );
-void phys_mark_page_free( uintptr_t );
-uintptr_t phys_find_free_page_range( size_t, size_t );
-void phys_free_page_range( uintptr_t, size_t );
-void phys_use_page_range( uintptr_t, size_t );
-uintptr_t phys_find_free_page( size_t );
-void phys_free_page( uintptr_t );
+void phys_mark_page_used( uint64_t );
+void phys_mark_page_free( uint64_t );
+uint64_t phys_find_free_page_range( size_t, size_t );
+void phys_free_page_range( uint64_t, size_t );
+void phys_use_page_range( uint64_t, size_t );
+uint64_t phys_find_free_page( size_t );
+void phys_free_page( uint64_t );
 bool phys_initialized_get( void );
 
 #endif

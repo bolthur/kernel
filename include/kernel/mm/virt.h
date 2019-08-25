@@ -37,7 +37,7 @@ typedef enum {
 } virt_context_type_t;
 
 typedef struct {
-  uintptr_t context;
+  uint64_t context;
   virt_context_type_t type;
 } virt_context_t, *virt_context_ptr_t;
 
@@ -53,8 +53,8 @@ bool virt_initialized_get( void );
 void virt_platform_post_init( void );
 
 virt_context_ptr_t virt_create_context( virt_context_type_t );
-uintptr_t virt_create_table( virt_context_ptr_t, uintptr_t, uintptr_t );
-void virt_map_address( virt_context_ptr_t, uintptr_t, uintptr_t, uint32_t );
+uint64_t virt_create_table( virt_context_ptr_t, uintptr_t, uint64_t );
+void virt_map_address( virt_context_ptr_t, uintptr_t, uint64_t, uint32_t );
 void virt_map_address_random( virt_context_ptr_t, uintptr_t, uint32_t );
 void virt_unmap_address( virt_context_ptr_t, uintptr_t );
 uint32_t virt_get_supported_modes( void );
