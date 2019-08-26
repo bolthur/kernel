@@ -126,7 +126,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   aarch64)
     arch_subdir=arm
     host_bfd=elf64-littleaarch64
-    executable_format=32
+    executable_format=64
     AC_DEFINE([ARCH_ARM], [1])
     AC_DEFINE([ELF64], [1])
     CFLAGS="${CFLAGS} -mno-unaligned-access"

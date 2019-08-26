@@ -134,6 +134,10 @@ AC_DEFINE_UNQUOTED([__bootstrap], [__section(".text.boot")], [Bootstrap function
 AC_DEFINE_UNQUOTED([__bootstrap_data], [__section(".data.boot")], [Bootstrap function])
 AC_DEFINE_UNQUOTED([__unused], [__attribute__((unused))], [Unused function])
 
+# conditional
+AM_CONDITIONAL([IS32], [test $executable_format -eq 32])
+AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
+
 AC_CONFIG_FILES([
   Makefile
   src/Makefile

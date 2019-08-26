@@ -1,11 +1,28 @@
 
 language: c
-compiler: arm-none-eabi-gcc
 
-services: docker
+addons:
+  apt:
+    update: true
 
-before_install:
-  - docker build https://github.com/bolthur/build-tools.git#develop -t bolthur-build-tools
+cache:
+  directories:
+    - /home/travis/.bolthur
+
+install:
+  - mkdir -p /home/travis/.bolthur/cross
+  - wget -q -O /home/travis/.bolthur/cross/arm-none-eabi-gcc.tar.bz2 https://developer.arm.com/-/media/Files/downloads/gnu-rm/8-2018q4/gcc-arm-none-eabi-8-2018-q4-major-linux.tar.bz2
+  - wget -q -O /home/travis/.bolthur/cross/aarch64-none-elf-gcc.tar.xz https://developer.arm.com/-/media/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-aarch64-elf.tar.xz
+  - pushd .
+  - cd /home/travis/.bolthur/cross
+  - tar -jxf arm-none-eabi-gcc.tar.bz2 --strip=1
+  - tar -xf aarch64-none-elf-gcc.tar.xz --strip=1
+  - popd
+
+before_script:
+  - export PATH="/home/travis/.bolthur/cross/bin:$PATH"
+  - arm-none-eabi-gcc --version
+  - autoconf --version
 
 notifications:
   email: false
@@ -16,8 +33,11 @@ stages:
 jobs:
   include:
     - stage: compile
+      compiler: arm-none-eabi-gcc
       name: "RPI 2 rev. 1"
       script:
-        - docker run --entrypoint "" --workdir /src --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools autoreconf -iv
-        - docker run --entrypoint "" --workdir /src --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools ./configure --host arm-none-eabi --enable-device=rpi2_b_rev1 --enable-output --enable-output-mm-virt --enable-output-mm-phys --enable-output-mm-heap --enable-output-mm-placement --enable-output-timer --enable-output-mailbox --enable-output-initrd --enable-debug --enable-debug-initrd
-        - docker run --entrypoint "" --workdir /src --privileged -v $TRAVIS_BUILD_DIR:/src bolthur-build-tools make all
+        - autoreconf -iv
+        - mkdir -p build/rpi2_rev1
+        - cd build/rpi2_rev1
+        - ../../configure --host arm-none-eabi --enable-device=rpi2_b_rev1 --enable-output --enable-output-mm-virt --enable-output-mm-phys --enable-output-mm-heap --enable-output-mm-placement --enable-output-timer --enable-output-mailbox --enable-output-initrd --enable-debug --enable-debug-initrd
+        - make
