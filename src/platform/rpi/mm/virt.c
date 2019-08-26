@@ -56,7 +56,7 @@ void virt_platform_init( void ) {
   // map peripherals
   while ( start < peripheral_end_get( PERIPHERAL_GPIO ) ) {
     // map
-    virt_map_address( kernel_context, virtual, start, PAGE_FLAG_NONE );
+    virt_map_address( kernel_context, virtual, start, MEMORY_TYPE_DEVICE );
 
     // increase start and virtual
     start += PAGE_SIZE;
@@ -80,7 +80,7 @@ void virt_platform_init( void ) {
     // map peripherals
     while ( start < peripheral_end_get( PERIPHERAL_LOCAL ) ) {
       // map
-      virt_map_address( kernel_context, virtual, start, PAGE_FLAG_NONE );
+      virt_map_address( kernel_context, virtual, start, MEMORY_TYPE_DEVICE );
 
       // increase start and virtual
       start += PAGE_SIZE;

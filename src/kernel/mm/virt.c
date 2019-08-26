@@ -75,7 +75,7 @@ void virt_init( void ) {
       kernel_context,
       PHYS_2_VIRT( start ),
       start,
-      PAGE_FLAG_BUFFERABLE | PAGE_FLAG_CACHEABLE
+      MEMORY_TYPE_NORMAL
     );
 
     // get next page

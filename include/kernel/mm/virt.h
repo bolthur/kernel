@@ -26,13 +26,11 @@
 #include <stdint.h>
 
 typedef enum {
-  PAGE_FLAG_NONE = 0,
-  PAGE_FLAG_CACHEABLE = 1,
-  PAGE_FLAG_BUFFERABLE = 2,
-} virt_page_flag_t;
-
-/*typedef enum {
-} virt_page_type_t;*/
+  MEMORY_TYPE_DEVICE = 0,
+  MEMORY_TYPE_DEVICE_STRONG = 0,
+  MEMORY_TYPE_NORMAL,
+  MEMORY_TYPE_NORMAL_NC
+} virt_memory_type_t;
 
 typedef enum {
   CONTEXT_TYPE_KERNEL = 1,

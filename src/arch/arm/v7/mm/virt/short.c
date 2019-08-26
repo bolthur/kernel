@@ -440,12 +440,14 @@ uint64_t v7_short_create_table(
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
  * @param flag flags for mapping
+ *
+ * @todo consider flags correctly
  */
 void v7_short_map(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
   uint64_t paddr,
-  uint32_t flag
+  __unused uint32_t flag
 ) {
   // get page index
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( vaddr );
@@ -490,12 +492,6 @@ void v7_short_map(
 
   // set attributes
   table->page[ page_idx ].data.type = SD_TBL_SMALL_PAGE;
-  table->page[ page_idx ].data.cacheable = ( uint8_t )(
-    ( flag & PAGE_FLAG_CACHEABLE ) ? 1 : 0
-  );
-  table->page[ page_idx ].data.bufferable = ( uint8_t )(
-    ( flag & PAGE_FLAG_BUFFERABLE ) ? 1 : 0
-  );
   table->page[ page_idx ].data.access_permision_0 =
     ( CONTEXT_TYPE_KERNEL == ctx->type )
       ? SD_MAC_APX0_PRIVILEGED_RW
