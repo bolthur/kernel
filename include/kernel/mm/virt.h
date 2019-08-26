@@ -31,6 +31,9 @@ typedef enum {
   PAGE_FLAG_BUFFERABLE = 2,
 } virt_page_flag_t;
 
+/*typedef enum {
+} virt_page_type_t;*/
+
 typedef enum {
   CONTEXT_TYPE_KERNEL = 1,
   CONTEXT_TYPE_USER,
@@ -60,7 +63,7 @@ void virt_unmap_address( virt_context_ptr_t, uintptr_t );
 uint32_t virt_get_supported_modes( void );
 void virt_set_context( virt_context_ptr_t );
 void virt_flush_complete( void );
-void virt_flush_address( uintptr_t );
+void virt_flush_address( virt_context_ptr_t, uintptr_t );
 void virt_prepare_temporary( virt_context_ptr_t );
 
 #endif

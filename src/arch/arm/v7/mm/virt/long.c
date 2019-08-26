@@ -162,7 +162,7 @@ static uintptr_t map_temporary( uint64_t start, size_t size ) {
     tbl->page[ page_idx ].data.lower_attr_access = 1;
 
     // flush address
-    virt_flush_address( addr );
+    virt_flush_address( kernel_context, addr );
 
     // increase physical address
     start += i * PAGE_SIZE;
@@ -237,7 +237,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
     tbl->page[ page_idx ].raw = 0;
 
     // flush address
-    virt_flush_address( addr );
+    virt_flush_address( kernel_context, addr );
 
     // next page size
     addr += PAGE_SIZE;
@@ -447,9 +447,7 @@ void v7_long_map(
   #endif
 
   // flush context if running
-  if ( virt_initialized_get() ) {
-    virt_flush_address( vaddr );
-  }
+  virt_flush_address( ctx, vaddr );
 }
 
 /**
@@ -518,6 +516,9 @@ void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
 
   // unmap temporary
   unmap_temporary( ( uintptr_t )table, PAGE_SIZE );
+
+  // flush context if running
+  virt_flush_address( ctx, vaddr );
 }
 
 /**

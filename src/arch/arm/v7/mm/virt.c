@@ -204,9 +204,21 @@ void virt_flush_complete( void ) {
 /**
  * @brief Flush specific address mapping
  *
+ * @param ctx used context
  * @param addr virtual address to flush
  */
-void virt_flush_address( uintptr_t addr ) {
+void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
+  // no flush if not initialized or context currently not active
+  if (
+    ! virt_initialized_get()
+    || (
+      ctx != kernel_context
+      && ctx != user_context
+    )
+  ) {
+    return;
+  }
+
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
     v7_long_flush_address( addr );

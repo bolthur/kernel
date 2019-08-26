@@ -146,7 +146,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
       DEBUG_OUTPUT( "tbl = 0x%08x\r\n", tbl );
     #endif
 
-    // map it non cachable
+    // map it non cacheable
     tbl->page[ page_idx ].raw = start & 0xFFFFF000;
 
     // set attributes
@@ -156,7 +156,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
     tbl->page[ page_idx ].data.access_permision_0 = SD_MAC_APX0_PRIVILEGED_RW;
 
     // flush address
-    virt_flush_address( addr );
+    virt_flush_address( kernel_context, addr );
 
     // increase physical address
     start += i * PAGE_SIZE;
@@ -226,7 +226,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
     tbl->page[ page_idx ].raw = 0;
 
     // flush address
-    virt_flush_address( addr );
+    virt_flush_address( kernel_context, addr );
 
     // next page size
     addr += PAGE_SIZE;
@@ -514,9 +514,7 @@ void v7_short_map(
   unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
 
   // flush context if running
-  if ( virt_initialized_get() ) {
-    virt_flush_address( vaddr );
-  }
+  virt_flush_address( ctx, vaddr );
 }
 
 /**
@@ -585,9 +583,7 @@ void v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
   unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
 
   // flush context if running
-  if ( virt_initialized_get() ) {
-    virt_flush_address( vaddr );
-  }
+  virt_flush_address( ctx, vaddr );
 }
 
 /**

@@ -161,9 +161,21 @@ void virt_flush_complete( void ) {
 /**
  * @brief Flush address
  *
+ * @param ctx used context
  * @param addr virtual address
  */
-void virt_flush_complete( uintptr_t addr ) {
+void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
+  // no flush if not initialized or context currently not active
+  if (
+    ! virt_initialized_get()
+    || (
+      ctx != kernel_context
+      && ctx != user_context
+    )
+  ) {
+    return;
+  }
+
   // check for v6 format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
     v6_short_flush_address( addr );
