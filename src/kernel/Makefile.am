@@ -16,5 +16,4 @@ libkernel_a_SOURCES = \
   event.c \
   irq.c \
   main.c \
-  panic.c \
-  vfs.c
+  panic.c

@@ -13,7 +13,6 @@ libarm_a_SOURCES = \
   boot/fpu.S \
   mm/virt.c \
   arch.c \
-  barrier.c \
   delay.c \
   irq.c \
   mmio.c

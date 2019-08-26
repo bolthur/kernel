@@ -21,20 +21,32 @@
 /**
  * @brief Data memory barrier invalidation
  */
-void __no_optimization barrier_data_mem( void ) {
-  __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c10, #5" : : [ zero ] "r" ( 0 ) : "memory" );
+void barrier_data_mem( void ) {
+  __asm__ __volatile__ (
+    "mcr p15, #0, %[zero], c7, c10, #5"
+    : : [ zero ] "r" ( 0 )
+    : "memory"
+  );
 }
 
 /**
  * @brief Data sync barrier invalidation
  */
-void __no_optimization barrier_data_sync( void ) {
-  __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c10, #4" : : [ zero ] "r" ( 0 ) : "memory" );
+void barrier_data_sync( void ) {
+  __asm__ __volatile__ (
+    "mcr p15, #0, %[zero], c7, c10, #4"
+    : : [ zero ] "r" ( 0 )
+    : "memory"
+  );
 }
 
 /**
  * @brief Instruction synchronization invalidation
  */
-void __no_optimization barrier_instruction_sync( void ) {
-  __asm__ __volatile__ ( "mcr p15, #0, %[zero], c7, c5, #4" : : [ zero ] "r" ( 0 ) : "memory" );
+void barrier_instruction_sync( void ) {
+  __asm__ __volatile__ (
+    "mcr p15, #0, %[zero], c7, c5, #4"
+    : : [ zero ] "r" ( 0 )
+    : "memory"
+  );
 }

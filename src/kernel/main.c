@@ -33,7 +33,6 @@
 #include <kernel/mm/virt.h>
 #include <kernel/mm/heap.h>
 #include <kernel/event.h>
-#include <kernel/vfs.h>
 
 /**
  * @brief Kernel main function
@@ -121,10 +120,6 @@ void kernel_main() {
   // Setup event system
   printf( "[bolthur/kernel -> event] initialize ...\r\n" );
   event_init();
-
-  // Setup vfs
-  printf( "[bolthur/kernel -> vfs] initialize ...\r\n" );
-  vfs_init();
 
   // Setup timer
   printf( "[bolthur/kernel -> timer] initialize ...\r\n" );

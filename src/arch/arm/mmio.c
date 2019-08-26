@@ -19,6 +19,7 @@
  */
 
 #include <stdint.h>
+#include <arch/arm/barrier.h>
 
 /**
  * @brief Write to memory mapped I/O
@@ -27,7 +28,9 @@
  * @param data data to write
  */
 void mmio_write( uint32_t reg, uint32_t data ) {
+  barrier_data_mem();
   *( volatile uint32_t* )( ( uint32_t )reg ) = data;
+  barrier_data_mem();
 }
 
 /**
@@ -37,5 +40,6 @@ void mmio_write( uint32_t reg, uint32_t data ) {
  * @return uint32_t data from memory mapped I/O
  */
 uint32_t mmio_read( uint32_t reg ) {
+  barrier_data_mem();
   return *( volatile uint32_t* )( ( uint32_t )reg );
 }
