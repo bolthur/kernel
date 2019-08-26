@@ -705,7 +705,26 @@ virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
 
 /**
  * @brief Method to prepare
- *
- * @todo do some general setup like mair
  */
-void v7_long_prepare( void ) {}
+void v7_long_prepare( void ) {
+  // populate mair0
+  uint32_t mair0 =
+    // device nGnRnE / strongly ordered
+    0x00u << 0
+    // device nGnRE
+    | 0x04u << 8
+    // normal non cachable
+    | 0x44u << 16
+    // normal
+    | 0xffu << 24;
+  // populate memory
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c10, c2, 0"
+    :: "r" ( mair0 )
+    : "memory"
+  );
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "mair0 = 0x%08x\r\n", mair0 );
+  #endif
+}
