@@ -26,11 +26,17 @@
 #include <stdint.h>
 
 typedef enum {
-  MEMORY_TYPE_DEVICE = 0,
-  MEMORY_TYPE_DEVICE_STRONG = 0,
+  MEMORY_TYPE_DEVICE,
+  MEMORY_TYPE_DEVICE_STRONG,
   MEMORY_TYPE_NORMAL,
   MEMORY_TYPE_NORMAL_NC
 } virt_memory_type_t;
+
+typedef enum {
+  PAGE_TYPE_AUTO,
+  PAGE_TYPE_EXECUTABLE,
+  PAGE_TYPE_NON_EXECUTABLE,
+} virt_page_type_t;
 
 typedef enum {
   CONTEXT_TYPE_KERNEL = 1,
@@ -55,8 +61,10 @@ void virt_platform_post_init( void );
 
 virt_context_ptr_t virt_create_context( virt_context_type_t );
 uint64_t virt_create_table( virt_context_ptr_t, uintptr_t, uint64_t );
-void virt_map_address( virt_context_ptr_t, uintptr_t, uint64_t, uint32_t );
-void virt_map_address_random( virt_context_ptr_t, uintptr_t, uint32_t );
+void virt_map_address(
+  virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
+void virt_map_address_random(
+  virt_context_ptr_t, uintptr_t, virt_memory_type_t, uint32_t );
 void virt_unmap_address( virt_context_ptr_t, uintptr_t );
 uint32_t virt_get_supported_modes( void );
 void virt_set_context( virt_context_ptr_t );

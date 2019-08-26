@@ -26,7 +26,14 @@
     "type_traits": "c",
     "initializer_list": "c",
     "ios": "c",
-    "random": "c"
+    "random": "c",
+    "functional": "c",
+    "istream": "c",
+    "ostream": "c",
+    "ratio": "c",
+    "tuple": "c",
+    "utility": "c",
+    "variant": "c"
   },
   "editor.tabSize": 2,
   "editor.renderWhitespace": "all",

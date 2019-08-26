@@ -39,17 +39,19 @@
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
- * @param flag flags used for mapping
+ * @param type memory type
+ * @param page page attributes
  */
 void virt_map_address(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
   uint64_t paddr,
-  uint32_t flag
+  virt_memory_type_t type,
+  uint32_t page
 ) {
   // check for v6 long descriptor format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-    v6_short_map( ctx, vaddr, paddr, flag );
+    v6_short_map( ctx, vaddr, paddr, type, page );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );
@@ -61,16 +63,18 @@ void virt_map_address(
  *
  * @param ctx pointer to context
  * @param vaddr virtual address to map
- * @param flag flags used for mapping
+ * @param type memory type
+ * @param page page attributes
  */
 void virt_map_address_random(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
-  uint32_t flag
+  virt_memory_type_t type,
+  uint32_t page
 ) {
   // check for v6 long descriptor format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-    v6_short_map_random( ctx, vaddr, flag );
+    v6_short_map_random( ctx, vaddr, type, page );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

@@ -372,15 +372,14 @@ uint64_t v7_long_create_table(
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
- * @param flag mapping flags
- *
- * @todo consider flag
+ * @param type memory type
  */
 void v7_long_map(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
   uint64_t paddr,
-  __unused uint32_t flag
+  virt_memory_type_t memory,
+  uint32_t page
 ) {
   // determine page index
   uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( vaddr );
@@ -424,9 +423,32 @@ void v7_long_map(
   // set attributes
   table->page[ page_idx ].data.type = LD_TYPE_PAGE;
   table->page[ page_idx ].data.lower_attr_access = 1;
-  table->page[ page_idx ].data.lower_attr_access_permission = ( uint8_t )(
-    ( ctx->type == CONTEXT_TYPE_USER ? 1 : 0 )
-  );
+  table->page[ page_idx ].data.lower_attr_access_permission =
+    ( ctx->type == CONTEXT_TYPE_KERNEL ) ? 0 : 1;
+  // execute never attribute
+  if ( page & PAGE_TYPE_EXECUTABLE ) {
+    table->page[ page_idx ].data.upper_attr_execute_never = 0;
+  } else if ( page & PAGE_TYPE_NON_EXECUTABLE ) {
+    table->page[ page_idx ].data.upper_attr_execute_never = 1;
+  }
+  // handle memory types
+  if (
+    memory == MEMORY_TYPE_DEVICE_STRONG
+    || memory == MEMORY_TYPE_DEVICE
+  ) {
+    // mark as outer sharable
+    table->page[ page_idx ].data.lower_attr_shared = 0x1;
+    // set attributes
+    table->page[ page_idx ].data.lower_attr_memory_attribute =
+      memory == MEMORY_TYPE_DEVICE_STRONG ? 0 : 1;
+    // set execute never
+    table->page[ page_idx ].data.upper_attr_execute_never = 1;
+  } else {
+    // mark as outer sharable
+    table->page[ page_idx ].data.lower_attr_shared = 0x3;
+    table->page[ page_idx ].data.lower_attr_memory_attribute =
+      1 << 2 | ( memory == MEMORY_TYPE_NORMAL ? 3 : 1 );
+  }
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -455,19 +477,20 @@ void v7_long_map(
  *
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
- * @param flag mapping flags
+ * @param type memory type
  */
 void v7_long_map_random(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
-  uint32_t flag
+  virt_memory_type_t memory,
+  uint32_t page
 ) {
   // get physical address
   uint64_t phys = phys_find_free_page( PAGE_SIZE );
   // assert
   assert( 0 != phys );
   // map it
-  v7_long_map( ctx, vaddr, phys, flag );
+  v7_long_map( ctx, vaddr, phys, memory, page );
 }
 
 /**
@@ -583,6 +606,12 @@ void v7_long_flush_complete( void ) {
   // set split to use ttbr1 and ttbr2
   ttbcr.data.ttbr0_size = 1;
   ttbcr.data.ttbr1_size = 1;
+  ttbcr.data.ttbr0_inner_cachability = 1;
+  ttbcr.data.ttbr0_outer_cachability = 1;
+  ttbcr.data.ttbr0_shareability = 3;
+  ttbcr.data.ttbr1_inner_cachability = 1;
+  ttbcr.data.ttbr1_outer_cachability = 1;
+  ttbcr.data.ttbr1_shareability = 3;
   ttbcr.data.large_physical_address_extension = 1;
   // push back value with ttbcr
   __asm__ __volatile__(
@@ -640,7 +669,13 @@ void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
     // check if table has changed
     if ( table_physical != table ) {
       // map page table
-      v7_long_map( ctx, table_virtual, table, 0 );
+      v7_long_map(
+        ctx,
+        table_virtual,
+        table,
+        MEMORY_TYPE_NORMAL_NC,
+        PAGE_TYPE_NON_EXECUTABLE
+      );
       // debug output
       #if defined( PRINT_MM_VIRT )
         DEBUG_OUTPUT(

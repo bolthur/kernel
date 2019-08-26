@@ -39,23 +39,25 @@
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
- * @param flag flags for mapping
+ * @param type memory type
+ * @param page page attributes
  */
 void virt_map_address(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
   uint64_t paddr,
-  uint32_t flag
+  virt_memory_type_t type,
+  uint32_t page
 ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-    v7_long_map( ctx, vaddr, paddr, flag );
+    v7_long_map( ctx, vaddr, paddr, type, page );
   // check v7 short descriptor format
   } else if (
     ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
-    v7_short_map( ctx, vaddr, paddr, flag );
+    v7_short_map( ctx, vaddr, paddr, type, page );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );
@@ -67,22 +69,24 @@ void virt_map_address(
  *
  * @param ctx pointer to context
  * @param vaddr virtual address to map
- * @param flag flags used for mapping
+ * @param type memory type
+ * @param page page attributes
  */
 void virt_map_address_random(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
-  uint32_t flag
+  virt_memory_type_t type,
+  uint32_t page
 ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-    v7_long_map_random( ctx, vaddr, flag );
+    v7_long_map_random( ctx, vaddr, type, page );
   // check v7 short descriptor format
   } else if (
     ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
-    v7_short_map_random( ctx, vaddr, flag );
+    v7_short_map_random( ctx, vaddr, type, page );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

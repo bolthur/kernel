@@ -439,15 +439,17 @@ uint64_t v7_short_create_table(
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
- * @param flag flags for mapping
+ * @param type memory type
+ * @param page page attributes
  *
- * @todo consider flags correctly
+ * @todo consider type correctly
  */
 void v7_short_map(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
   uint64_t paddr,
-  __unused uint32_t flag
+  __unused virt_memory_type_t type,
+  __unused uint32_t page
 ) {
   // get page index
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( vaddr );
@@ -518,19 +520,21 @@ void v7_short_map(
  *
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
- * @param flag flags for mapping
+ * @param type memory type
+ * @param page page attributes
  */
 void v7_short_map_random(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
-  uint32_t flag
+  virt_memory_type_t type,
+  uint32_t page
 ) {
   // get physical address
   uint64_t phys = phys_find_free_page( PAGE_SIZE );
   // assert
   assert( 0 != phys );
   // map it
-  v7_short_map( ctx, vaddr, phys, flag );
+  v7_short_map( ctx, vaddr, phys, type, page );
 }
 
 /**
@@ -694,7 +698,13 @@ void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
   }
 
   // map page table
-  v7_short_map( ctx, TEMPORARY_SPACE_START, table, 0 );
+  v7_short_map(
+    ctx,
+    TEMPORARY_SPACE_START,
+    table,
+    MEMORY_TYPE_NORMAL_NC,
+    PAGE_TYPE_NON_EXECUTABLE
+  );
 }
 
 /**

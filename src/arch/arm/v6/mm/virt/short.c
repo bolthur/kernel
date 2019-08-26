@@ -39,13 +39,15 @@
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
- * @param flag flags for mapping
+ * @param type memory type
+ * @param page page attributes
  */
 void v6_short_map(
   __unused virt_context_ptr_t ctx,
   __unused uintptr_t vaddr,
   __unused uint64_t paddr,
-  __unused uint32_t flag
+  __unused virt_memory_type_t type,
+  __unused uint32_t page
 ) {
   PANIC( "v6 mmu mapping not yet supported!" );
 }
