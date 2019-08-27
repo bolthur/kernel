@@ -58,16 +58,57 @@ void virt_setup_supported_modes( void ) {
 
   #if defined( ELF32 )
     // get paging support from mmfr0
-    __asm__ __volatile__( "mrc p15, 0, %0, c0, c1, 4" : "=r" ( reg ) : : "cc" );
+    __asm__ __volatile__(
+      "mrc p15, 0, %0, c0, c1, 4"
+      : "=r" ( reg )
+      : : "cc"
+    );
 
-    // strip out everything not needed
-    reg &= 0xF;
+    // save supported modes
+    supported_modes = reg & 0xF;
+
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT(
+        "reg = 0x%08x, supported_modes = 0x%08x\r\n",
+        reg, supported_modes
+      );
+    #endif
+
+    // get memory size from mmfr3
+    __asm__ __volatile__(
+      "mrc p15, 0, %0, c0, c1, 7"
+      : "=r" ( reg )
+      : : "cc"
+    );
+
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "reg = 0x%08x\r\n", reg );
+    #endif
+
+    // get only cpu address bus size
+    reg = ( reg >> 24 ) & 0xf;
+
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "reg = 0x%08x\r\n", reg );
+    #endif
+
+    // set paging to v7 short descriptor if more
+    // than 32 bit physical addresses arent supported
+    if ( 0 == reg && ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+      if ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes ) {
+        supported_modes = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
+      } else if ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes ) {
+        supported_modes = ID_MMFR0_VSMA_V7_PAGING_PXN;
+      } else {
+        PANIC( "No MMU supported!" );
+      }
+    }
   #elif defined( ELF64 )
     #error "Unsupported"
   #endif
-
-  // set supported modes
-  supported_modes = reg;
 }
 
 /**
