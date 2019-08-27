@@ -57,6 +57,22 @@ void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
     return;
   }
 
+  // get memory size from mmfr3
+  uint32_t reg;
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c0, c1, 7"
+    : "=r" ( reg )
+    : : "cc"
+  );
+
+  // get only cpu address bus size
+  reg = ( reg >> 24 ) & 0xf;
+
+  // use short if physical address bus is not 36 bit at least
+  if ( 0 == reg ) {
+    supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
+  }
+
   // kick start
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
     boot_virt_setup_long( max_memory );
