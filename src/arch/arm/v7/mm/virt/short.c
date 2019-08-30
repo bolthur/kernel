@@ -441,15 +441,13 @@ uint64_t v7_short_create_table(
  * @param paddr pointer to physical address
  * @param type memory type
  * @param page page attributes
- *
- * @todo consider type correctly
  */
 void v7_short_map(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
   uint64_t paddr,
-  __unused virt_memory_type_t type,
-  __unused uint32_t page
+  virt_memory_type_t memory,
+  uint32_t page
 ) {
   // get page index
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( vaddr );
@@ -498,6 +496,34 @@ void v7_short_map(
     ( CONTEXT_TYPE_KERNEL == ctx->type )
       ? SD_MAC_APX0_PRIVILEGED_RW
       : SD_MAC_APX0_FULL_RW;
+  // execute never attribute
+  if ( page & PAGE_TYPE_EXECUTABLE ) {
+    table->page[ page_idx ].data.execute_never = 0;
+  } else if ( page & PAGE_TYPE_NON_EXECUTABLE ) {
+    table->page[ page_idx ].data.execute_never = 1;
+  }
+  // handle memory types
+  if (
+    memory == MEMORY_TYPE_DEVICE_STRONG
+    || memory == MEMORY_TYPE_DEVICE
+  ) {
+    // set cacheable and bufferable to 0
+    table->page[ page_idx ].data.cacheable = 0;
+    table->page[ page_idx ].data.bufferable = 0;
+    // set tex depending on type
+    table->page[ page_idx ].data.tex =
+      memory == MEMORY_TYPE_DEVICE_STRONG ? 0 : 2;
+    // overwrite execute never
+    table->page[ page_idx ].data.execute_never = 1;
+  } else {
+    // set cacheable and bufferable depending on type
+    table->page[ page_idx ].data.cacheable =
+      memory == MEMORY_TYPE_NORMAL ? 1 : 0;
+    table->page[ page_idx ].data.bufferable =
+      memory == MEMORY_TYPE_NORMAL ? 1 : 0;
+    // set tex
+    table->page[ page_idx ].data.tex = 1;
+  }
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -526,7 +552,7 @@ void v7_short_map(
 void v7_short_map_random(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
-  virt_memory_type_t type,
+  virt_memory_type_t memory,
   uint32_t page
 ) {
   // get physical address
@@ -534,7 +560,7 @@ void v7_short_map_random(
   // assert
   assert( 0 != phys );
   // map it
-  v7_short_map( ctx, vaddr, phys, type, page );
+  v7_short_map( ctx, vaddr, phys, memory, page );
 }
 
 /**
@@ -764,4 +790,26 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
 /**
  * @brief Method to prepare
  */
-void v7_short_prepare( void ) {}
+void v7_short_prepare( void ) {
+  uint32_t reg;
+  // load sctlr register content
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "reg = 0x%08x\r\n", reg );
+  #endif
+
+  // set access flag to 1 within sctlr
+  reg |= ( 1 << 29 );
+  // set TRE flag to 0 within sctlr
+  reg &= ( uint32_t )( ~( 1 << 29 ) );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "reg = 0x%08x\r\n", reg );
+  #endif
+
+  // write back changes
+  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
+}

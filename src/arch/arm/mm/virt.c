@@ -53,10 +53,10 @@ virt_context_ptr_t kernel_context;
  * @return uint32_t supported modes
  */
 void virt_setup_supported_modes( void ) {
-  // variable for return
-  uint32_t reg = 0;
-
   #if defined( ELF32 )
+    // variable for return
+    uint32_t reg = 0;
+
     // get paging support from mmfr0
     __asm__ __volatile__(
       "mrc p15, 0, %0, c0, c1, 4"
