@@ -9,7 +9,5 @@ libstdlib_a_SOURCES = \
   abort.c \
   calloc.c \
   free.c \
-  itoa.c \
   malloc.c \
-  realloc.c \
-  utoa.c
+  realloc.c

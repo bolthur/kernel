@@ -9,4 +9,4 @@ libstring_a_SOURCES = \
   memcpy.c \
   memset.c \
   strlen.c \
-  strrev.c
+  strncmp.c

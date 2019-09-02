@@ -18,19 +18,20 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include <stddef.h>
+#include <stdint.h>
 
-char *strrev( char* str ) {
-  char* p1 = str;
-  char* p2 = ( char* )( str + strlen( str ) - 1 );
-
-  while ( p1 < p2 ) {
-    char tmp = *p1;
-    *p1 = *p2;
-    *p2 = tmp;
-    p1++;
-    p2--;
+int strncmp( const char* a, const char* b, size_t max_length ) {
+  // loop until max length
+  for ( size_t x = 0; x < max_length; x++ ) {
+    if ( '\0' == a[ x ] && '\0' == b[ x ] ) {
+      return 0;
+    } else if ( a[ x ] < b[ x ] ) {
+      return -1;
+    } else if ( a[ x ] > b[ x ] ) {
+      return 1;
+    }
   }
-
-  return str;
+  // equal
+  return 0;
 }

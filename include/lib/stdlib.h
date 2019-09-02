@@ -28,9 +28,7 @@
 void abort( void ) __attribute__((noreturn));
 void *calloc( size_t, size_t );
 void free( void* );
-char *itoa( int32_t, char*, int32_t, bool );
 void *malloc( size_t );
 void *realloc( void*, size_t );
-char *utoa( uint32_t, char*, int32_t, bool );
 
 #endif

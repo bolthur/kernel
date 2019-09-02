@@ -27,6 +27,6 @@
 void* memcpy( void* restrict, const void* restrict, size_t );
 void* memset( void*, int, size_t );
 size_t strlen( const char*);
-char *strrev( char* );
+int strncmp( const char*, const char*, size_t );
 
 #endif
