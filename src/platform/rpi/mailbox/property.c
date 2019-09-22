@@ -36,18 +36,34 @@ static int32_t ptb[ 1024 ] __aligned( 16 );
 static int32_t ptb_index = 0;
 
 /**
+ * @brief ptb buffer when virtual memory management is enabled
+ */
+int32_t* ptb_buffer = NULL;
+
+/**
  * @brief Initialize mailbox property process
  */
 void mailbox_property_init( void ) {
+  // check for active buffer
+  if ( NULL != ptb_buffer ) {
+    // Add startup size
+    ptb_buffer[ PT_OSIZE ] = 12;
+    // process request, everything else seems to be reserved
+    ptb_buffer[ PT_OREQUEST_OR_RESPONSE ] = 0;
+    // first available data slot
+    ptb_index = 2;
+    // 0-tag to terminate list after init
+    ptb_buffer[ ptb_index ] = 0;
+    // skip rest
+    return;
+  }
+
   // Add startup size
   ptb[ PT_OSIZE ] = 12;
-
   // process request, everything else seems to be reserved
   ptb[ PT_OREQUEST_OR_RESPONSE ] = 0;
-
   // first available data slot
   ptb_index = 2;
-
   // 0-tag to terminate list after init
   ptb[ ptb_index ] = 0;
 }
@@ -65,7 +81,11 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
   va_start( vl, tag );
 
   // start with adding the tag itself
-  ptb[ ptb_index++ ] = tag;
+  if ( NULL != ptb_buffer ) {
+    ptb_buffer[ ptb_index++ ] = tag;
+  } else {
+    ptb[ ptb_index++ ] = tag;
+  }
 
   switch( tag ) {
     case TAG_GET_FIRMWARE_VERSION:
@@ -77,8 +97,17 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
     case TAG_GET_VC_MEMORY:
     case TAG_GET_DMA_CHANNELS:
       // provide 8-byte buffer for response
-      ptb[ ptb_index++ ] = 8;
-      ptb[ ptb_index++ ] = 0; // request
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 8;
+      } else {
+        ptb[ ptb_index++ ] = 8;
+      }
+      // request
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 0;
+      } else {
+        ptb[ ptb_index++ ] = 0;
+      }
       ptb_index += 2;
       break;
 
@@ -88,24 +117,64 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
     case TAG_GET_MIN_CLOCK_RATE:
     case TAG_GET_TURBO:
       // provide 8-byte buffer for response
-      ptb[ ptb_index++ ] = 8;
-      ptb[ ptb_index++ ] = 0; // request
-      ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // clock
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 8;
+      } else {
+        ptb[ ptb_index++ ] = 8;
+      }
+      // request
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 0;
+      } else {
+        ptb[ ptb_index++ ] = 0;
+      }
+      // clock
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+      } else {
+        ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+      }
+      // increase index
       ptb_index += 2;
       break;
 
     case TAG_GET_CLOCKS:
     case TAG_GET_COMMAND_LINE:
       // provide a 256-byte buffer
-      ptb[ ptb_index++ ] = 256;
-      ptb[ ptb_index++ ] = 0; // request
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 256;
+      } else {
+        ptb[ ptb_index++ ] = 256;
+      }
+      // request
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 0;
+      } else {
+        ptb[ ptb_index++ ] = 0;
+      }
+      // increase index
       ptb_index += 256 >> 2;
       break;
 
     case TAG_ALLOCATE_BUFFER:
-      ptb[ ptb_index++ ] = 8;
-      ptb[ ptb_index++ ] = 0; // request
-      ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 8;
+      } else {
+        ptb[ ptb_index++ ] = 8;
+      }
+       // request
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 0;
+      } else {
+        ptb[ ptb_index++ ] = 0;
+      }
+      // pass argument
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+      } else {
+        ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+      }
+      // increase index
       ptb_index += 1;
       break;
 
@@ -117,8 +186,18 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
     case TAG_TEST_VIRTUAL_SIZE:
     case TAG_GET_VIRTUAL_OFFSET:
     case TAG_SET_VIRTUAL_OFFSET:
-      ptb[ ptb_index++ ] = 8;
-      ptb[ ptb_index++ ] = 0; // request
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 8;
+      } else {
+        ptb[ ptb_index++ ] = 8;
+      }
+
+      // request
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 0;
+      } else {
+        ptb[ ptb_index++ ] = 0;
+      }
 
       if(
         tag == TAG_SET_PHYSICAL_SIZE
@@ -127,8 +206,18 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
         || tag == TAG_TEST_PHYSICAL_SIZE
         || tag == TAG_TEST_VIRTUAL_SIZE
       ) {
-        ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // width
-        ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // height
+        // width
+        if ( NULL != ptb_buffer ) {
+          ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+        } else {
+          ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+        }
+        // height
+        if ( NULL != ptb_buffer ) {
+          ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+        } else {
+          ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+        }
       } else {
         ptb_index += 2;
       }
@@ -142,8 +231,17 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
     case TAG_GET_PIXEL_ORDER:
     case TAG_SET_PIXEL_ORDER:
     case TAG_GET_PITCH:
-      ptb[ ptb_index++ ] = 4;
-      ptb[ ptb_index++ ] = 0; // request
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 4;
+      } else {
+        ptb[ ptb_index++ ] = 4;
+      }
+      // request
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 0;
+      } else {
+        ptb[ ptb_index++ ] = 0;
+      }
 
       if(
         tag == TAG_SET_DEPTH
@@ -151,7 +249,11 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
         || tag == TAG_SET_ALPHA_MODE
       ) {
         // color depth, bits-per-pixel \ pixel order state
-        ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+        if ( NULL != ptb_buffer ) {
+          ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+        } else {
+          ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+        }
       } else {
         ptb_index += 1;
       }
@@ -159,37 +261,111 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
 
     case TAG_GET_OVERSCAN:
     case TAG_SET_OVERSCAN:
-      ptb[ ptb_index++ ] = 16;
-      ptb[ ptb_index++ ] = 0; // request
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 16;
+      } else {
+        ptb[ ptb_index++ ] = 16;
+      }
+      // request
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 0;
+      } else {
+        ptb[ ptb_index++ ] = 0;
+      }
 
       if( tag == TAG_SET_OVERSCAN ) {
-        ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // top pixels
-        ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // bottom pixels
-        ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // left pixels
-        ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // right pixels
+        // top pixels
+        if ( NULL != ptb_buffer ) {
+          ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+        } else {
+          ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+        }
+        // bottom pixels
+        if ( NULL != ptb_buffer ) {
+          ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+        } else {
+          ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+        }
+        // left pixels
+        if ( NULL != ptb_buffer ) {
+          ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+        } else {
+          ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+        }
+        // right pixels
+        if ( NULL != ptb_buffer ) {
+          ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+        } else {
+          ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+        }
       } else {
         ptb_index += 4;
       }
       break;
 
     case TAG_SET_CLOCK_RATE:
-      ptb[ ptb_index++ ] = 12; // request size
-      ptb[ ptb_index++ ] = 8; // response size
+      // request size
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 12;
+      } else {
+        ptb[ ptb_index++ ] = 12;
+      }
+      // response size
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 8;
+      } else {
+        ptb[ ptb_index++ ] = 8;
+      }
 
-      ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // clock
-      ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // Hz
-      ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // turbo
+      // clock
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+      } else {
+        ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+      }
+      // hz
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+      } else {
+        ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+      }
+      // turbo
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+      } else {
+        ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+      }
 
       ptb_index += 2;
       break;
 
     case TAG_SET_CLOCK_STATE:
-      ptb[ ptb_index++ ] = 8; // request size
-      ptb[ ptb_index++ ] = 8; // response size
+      // request size
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 8;
+      } else {
+        ptb[ ptb_index++ ] = 8;
+      }
+      // response size
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = 8;
+      } else {
+        ptb[ ptb_index++ ] = 8;
+      }
 
       // push request parameters
-      ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // clock
-      ptb[ ptb_index++ ] = va_arg( vl, int32_t ); // state
+      // clock
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+      } else {
+        ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+      }
+      // state
+      if ( NULL != ptb_buffer ) {
+        ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
+      } else {
+        ptb[ ptb_index++ ] = va_arg( vl, int32_t );
+      }
 
       ptb_index += 2;
       break;
@@ -201,7 +377,11 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
   }
 
   // Null termination of tag buffer
-  ptb[ ptb_index ] = 0;
+  if ( NULL != ptb_buffer ) {
+    ptb_buffer[ ptb_index ] = 0;
+  } else {
+    ptb[ ptb_index ] = 0;
+  }
 
   va_end( vl );
 }
@@ -215,14 +395,29 @@ uint32_t mailbox_property_process( void ) {
   uint32_t result;
 
   // set correct size
-  ptb[ PT_OSIZE ] = ( ptb_index + 1 ) << 2;
-  ptb[ PT_OREQUEST_OR_RESPONSE ] = 0;
+  if ( NULL != ptb_buffer ) {
+    ptb_buffer[ PT_OSIZE ] = ( ptb_index + 1 ) << 2;
+  } else {
+    ptb[ PT_OSIZE ] = ( ptb_index + 1 ) << 2;
+  }
+  if ( NULL != ptb_buffer ) {
+    ptb_buffer[ PT_OREQUEST_OR_RESPONSE ] = 0;
+  } else {
+    ptb[ PT_OREQUEST_OR_RESPONSE ] = 0;
+  }
 
   // debug output
   #if defined( PRINT_MAILBOX )
-    DEBUG_OUTPUT( "Length = %d\r\n", ptb[ PT_OSIZE ] );
-    for ( int32_t i = 0; i < ( ptb[ PT_OSIZE ] >> 2 ); i++ ) {
-      DEBUG_OUTPUT( "Request = %3d %08x\r\n", i, ptb[ i ] );
+    if ( NULL != ptb_buffer ) {
+      DEBUG_OUTPUT( "Length = %d\r\n", ptb_buffer[ PT_OSIZE ] );
+      for ( int32_t i = 0; i < ( ptb_buffer[ PT_OSIZE ] >> 2 ); i++ ) {
+        DEBUG_OUTPUT( "Request = %3d %08x\r\n", i, ptb_buffer[ i ] );
+      }
+    } else {
+      DEBUG_OUTPUT( "Length = %d\r\n", ptb[ PT_OSIZE ] );
+      for ( int32_t i = 0; i < ( ptb[ PT_OSIZE ] >> 2 ); i++ ) {
+        DEBUG_OUTPUT( "Request = %3d %08x\r\n", i, ptb[ i ] );
+      }
     }
   #endif
 
@@ -234,8 +429,14 @@ uint32_t mailbox_property_process( void ) {
 
   // debug output
   #if defined( PRINT_MAILBOX )
-    for ( int32_t i = 0; i < ( ptb[ PT_OSIZE ] >> 2 ); i++ ) {
-      DEBUG_OUTPUT( "Response = %3d %08x\r\n", i, ptb[ i ] );
+    if ( NULL != ptb_buffer ) {
+      for ( int32_t i = 0; i < ( ptb_buffer[ PT_OSIZE ] >> 2 ); i++ ) {
+        DEBUG_OUTPUT( "Response = %3d %08x\r\n", i, ptb_buffer[ i ] );
+      }
+    } else {
+      for ( int32_t i = 0; i < ( ptb[ PT_OSIZE ] >> 2 ); i++ ) {
+        DEBUG_OUTPUT( "Response = %3d %08x\r\n", i, ptb[ i ] );
+      }
     }
   #endif
 
@@ -259,21 +460,46 @@ rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
 
   // Get the tag from the buffer and start with first available tag position
   int32_t index = 2;
+  int32_t size = 0;
 
-  while( index < ( ptb[ PT_OSIZE ] >> 2 ) ) {
+  if ( NULL != ptb_buffer ) {
+    size = ptb_buffer[ PT_OSIZE ] >> 2;
+  } else {
+    size = ptb[ PT_OSIZE ] >> 2;
+  }
+
+  while( index < size ) {
     // debug output
     #if defined( PRINT_MAILBOX )
-      DEBUG_OUTPUT( "testing tag[ %d ] = %08x\r\n", index, ptb[ index ] );
+      if ( NULL != ptb_buffer ) {
+        DEBUG_OUTPUT(
+          "testing tag[ %d ] = %08x\r\n", index, ptb_buffer[ index ]
+        );
+      } else {
+        DEBUG_OUTPUT( "testing tag[ %d ] = %08x\r\n", index, ptb[ index ] );
+      }
     #endif
 
     // test tag
-    if( ptb[ index ] == ( int32_t )tag ) {
-      tag_buffer = &ptb[index];
-      break;
+    if ( NULL != ptb_buffer ) {
+      if( ptb_buffer[ index ] == ( int32_t )tag ) {
+        tag_buffer = &ptb_buffer[ index ];
+        break;
+      }
+    } else {
+      if( ptb[ index ] == ( int32_t )tag ) {
+        tag_buffer = &ptb[ index ];
+        break;
+      }
     }
 
+
     // progress with next tag if we haven't yet discovered the wanted tag
-    index += ( ptb[index + 1] >> 2 ) + 3;
+    if ( NULL != ptb_buffer ) {
+      index += ( ptb_buffer[ index + 1 ] >> 2 ) + 3;
+    } else {
+      index += ( ptb[ index + 1 ] >> 2 ) + 3;
+    }
   }
 
   // nothing found, return NULL

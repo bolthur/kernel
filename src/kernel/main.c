@@ -34,6 +34,8 @@
 #include <kernel/mm/heap.h>
 #include <kernel/event.h>
 
+#include <platform/rpi/mailbox/property.h>
+
 /**
  * @brief Kernel main function
  */
@@ -116,6 +118,55 @@ void kernel_main() {
   b = malloc( 0x10000 );
   printf( "\r\n\r\nFREE UP 0x%p\r\n", b );
   free( b );
+
+  /*// Get arm memory
+  mailbox_property_init();
+  mailbox_property_add_tag( TAG_GET_ARM_MEMORY );
+  mailbox_property_add_tag( TAG_GET_VC_MEMORY );
+  mailbox_property_process();
+
+  // get arm memory
+  rpi_mailbox_property_t *buffer = mailbox_property_get( TAG_GET_ARM_MEMORY );
+
+  // debug output
+  DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length );
+  DEBUG_OUTPUT(
+    "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n",
+    buffer->data.buffer_32[ 0 ]
+  );
+  DEBUG_OUTPUT(
+    "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n",
+    buffer->data.buffer_32[ 1 ]
+  );
+  DEBUG_OUTPUT( "buffer->tag: 0x%08x\r\n", buffer->tag );
+
+  // increase amount by arm amount
+  uint32_t memory_amount = buffer->data.buffer_u32[ 1 ];
+
+  // debug output
+  DEBUG_OUTPUT( "memory amount: 0x%08x\r\n", memory_amount );
+
+  // get video core memory
+  buffer = mailbox_property_get( TAG_GET_VC_MEMORY );
+
+  // debug output
+  DEBUG_OUTPUT(
+    "buffer->byte_length: %d\r\n",
+    buffer->byte_length
+  );
+  DEBUG_OUTPUT(
+    "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n",
+    buffer->data.buffer_32[ 0 ]
+  );
+  DEBUG_OUTPUT(
+    "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n",
+    buffer->data.buffer_32[ 1 ]
+  );
+  DEBUG_OUTPUT(
+    "buffer->tag: 0x%08x\r\n",
+    buffer->tag
+  );*/
+
 
   // Setup event system
   printf( "[bolthur/kernel -> event] initialize ...\r\n" );

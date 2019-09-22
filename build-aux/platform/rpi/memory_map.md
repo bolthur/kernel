@@ -14,6 +14,7 @@ kernel area:
   0xF1000000 - 0xF1FFFFFF => temporary area
   0xF2000000 - 0xF2FFFFFF => gpio peripheral
   0xF3000000 - 0xF303FFFF => local peripheral ( rpi 2 / 3 only )
+  0xF3040000 - 0xF3040FFF => mailbox area
 ```
 
 ## 64 bit ( v8 )

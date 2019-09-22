@@ -24,6 +24,7 @@
 #include <kernel/panic.h>
 #include <kernel/debug.h>
 #include <platform/rpi/peripheral.h>
+#include <platform/rpi/mailbox/property.h>
 #include <arch/arm/mm/virt.h>
 #include <kernel/mm/phys.h>
 #include <kernel/mm/virt.h>
@@ -32,6 +33,7 @@
 #if defined( BCM2709 ) || defined( BCM2710 )
   #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
+#define MAILBOX_PROPERTY_AREA 0xF3040000
 
 /**
  * @brief Initialize virtual memory management
@@ -64,6 +66,7 @@ void virt_platform_init( void ) {
     virtual += PAGE_SIZE;
   }
 
+  // handle local peripherals
   #if defined( BCM2709 ) || defined( BCM2710 )
     // debug output
     #if defined( PRINT_MM_VIRT )
@@ -89,6 +92,16 @@ void virt_platform_init( void ) {
       virtual += PAGE_SIZE;
     }
   #endif
+
+  // map mailbox buffer
+  virt_map_address_random(
+    kernel_context,
+    MAILBOX_PROPERTY_AREA,
+    MEMORY_TYPE_DEVICE_STRONG,
+    PAGE_TYPE_NON_EXECUTABLE
+  );
+  // set pointer
+  ptb_buffer = ( int32_t* )MAILBOX_PROPERTY_AREA;
 }
 
 /**
