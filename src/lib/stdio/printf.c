@@ -69,6 +69,16 @@ static size_t convert_number(
   return result;
 }
 
+/**
+ * @brief Internal helper for printing a string
+ *
+ * @param data
+ * @param length
+ * @param zero_padding
+ * @param pad
+ * @return true
+ * @return false
+ */
 static bool print( const char* data, size_t length, bool zero_padding, int32_t pad ) {
   const unsigned char* bytes = ( const unsigned char * )data;
 
@@ -191,11 +201,12 @@ int printf( const char* restrict format, ... ) {
       i++
     ) {
       size_t name_length = strlen( length_modifier_map[ i ].name );
-      // skip if not matching
-      if (
-        name_length < length_length
-        || 0 != strncmp( format, length_modifier_map[ i ].name, name_length )
-      ) {
+      // skip if length not matching
+      if ( name_length < length_length ) {
+        continue;
+      }
+      // skip if string compare not equal
+      if ( 0 != strncmp( format, length_modifier_map[ i ].name, name_length ) ) {
         continue;
       }
       // save it
@@ -204,7 +215,7 @@ int printf( const char* restrict format, ... ) {
     }
     // set format behind length modifier
     format += length_length;
-    // get modifier
+    // cache modifier
     char modifier = *format++;
     // character handling
     if ( 'c' == modifier ) {
@@ -263,7 +274,7 @@ int printf( const char* restrict format, ... ) {
         } else if ( length == LENGTH_INTMAX_T ) {
           signed_value = va_arg( parameters, intmax_t );
         } else if ( length == LENGTH_SIZE_T ) {
-          signed_value = va_arg( parameters, ssize_t );
+          signed_value = va_arg( parameters, size_t );
         } else if ( length == LENGTH_PTRDIFF_T ) {
           signed_value = va_arg( parameters, ptrdiff_t );
         } else {
@@ -332,7 +343,6 @@ int printf( const char* restrict format, ... ) {
       format += len;
     }
   }
-
   // end parameter
   va_end( parameters );
   // return written amount

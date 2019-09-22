@@ -100,21 +100,21 @@ void kernel_main() {
   void *d = malloc( 10 );
   printf( "Allocate 4 byte!\r\n" );
   void *e = malloc( 4 );
-  printf( "\r\n\r\nFREE UP 0x%08X\r\n", b );
+  printf( "\r\n\r\nFREE UP 0x%p\r\n", b );
   free( b );
   b = malloc( 4 );
-  printf( "\r\n\r\nFREE UP 0x%08X\r\n", b );
+  printf( "\r\n\r\nFREE UP 0x%p\r\n", b );
   free( b );
-  printf( "FREE UP 0x%08X\r\n", c );
+  printf( "FREE UP 0x%p\r\n", c );
   free( c );
-  printf( "FREE UP 0x%08X\r\n", a );
+  printf( "FREE UP 0x%p\r\n", a );
   free( a );
-  printf( "FREE UP 0x%08X\r\n", d );
+  printf( "FREE UP 0x%p\r\n", d );
   free( d );
-  printf( "FREE UP 0x%08X\r\n", e );
+  printf( "FREE UP 0x%p\r\n", e );
   free( e );
   b = malloc( 0x10000 );
-  printf( "\r\n\r\nFREE UP 0x%08X\r\n", b );
+  printf( "\r\n\r\nFREE UP 0x%p\r\n", b );
   free( b );
 
   // Setup event system

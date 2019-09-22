@@ -138,9 +138,6 @@ AC_DEFINE_UNQUOTED([__unused], [__attribute__((unused))], [Unused function])
 AM_CONDITIONAL([IS32], [test $executable_format -eq 32])
 AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 
-# Checks for typedefs, structures, and compiler characteristics
-AC_TYPE_SSIZE_T
-
 AC_CONFIG_FILES([
   Makefile
   src/Makefile

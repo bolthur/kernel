@@ -60,12 +60,9 @@ uintptr_t placement_alloc( size_t size, size_t alignment ) {
 
   // debug output
   #if defined( PRINT_MM_PLACEMENT )
-    DEBUG_OUTPUT(
-      "content of placement address: 0x%08x\r\n",
-      placement_address
-    );
-    DEBUG_OUTPUT( "wanted size: 0x%08x\r\n", size );
-    DEBUG_OUTPUT( "set address: 0x%08x\r\n", address );
+    DEBUG_OUTPUT( "content of placement address: 0x%lx\r\n", placement_address );
+    DEBUG_OUTPUT( "wanted size: %zu\r\n", size );
+    DEBUG_OUTPUT( "set address: 0x%lx\r\n", address );
   #endif
 
   // handle alignment
@@ -78,8 +75,8 @@ uintptr_t placement_alloc( size_t size, size_t alignment ) {
 
     // debug output
     #if defined( PRINT_MM_PLACEMENT )
-      DEBUG_OUTPUT( "alignment offset: 0x%08x\r\n", offset );
-      DEBUG_OUTPUT( "set address: 0x%08x\r\n", address );
+      DEBUG_OUTPUT( "alignment offset: 0x%zu\r\n", offset );
+      DEBUG_OUTPUT( "set address: 0x%lx\r\n", address );
     #endif
   }
 
@@ -96,11 +93,8 @@ uintptr_t placement_alloc( size_t size, size_t alignment ) {
 
   // debug output
   #if defined( PRINT_MM_PLACEMENT )
-    DEBUG_OUTPUT(
-      "content of placement address: 0x%08x\r\n",
-      placement_address
-    );
-    DEBUG_OUTPUT( "return address: 0x%08x\r\n", address );
+    DEBUG_OUTPUT( "content of placement address: 0x%lx\r\n", placement_address );
+    DEBUG_OUTPUT( "return address: 0x%lx\r\n", address );
   #endif
 
   // finally return address

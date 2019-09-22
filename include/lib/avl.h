@@ -47,8 +47,6 @@ typedef struct avl_tree {
   avl_compare_func_t compare;
 } avl_tree_t, *avl_tree_ptr_t;
 
-avl_tree_ptr_t avl_create( avl_compare_func_t );
-
 avl_node_ptr_t avl_get_max( const avl_node_ptr_t );
 avl_node_ptr_t avl_get_min( const avl_node_ptr_t );
 void avl_print( const avl_tree_ptr_t );

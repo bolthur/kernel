@@ -43,7 +43,7 @@ void panic( const char* restrict message, const char* restrict file, uint32_t li
   panic_init();
 
   // print panic
-  printf( "PANIC( %s ) at %s:%d\r\n", message, file, line );
+  printf( "PANIC( %s ) at %s:%u\r\n", message, file, line );
 
   // abort further execution
   abort();

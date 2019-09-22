@@ -60,7 +60,7 @@ void phys_mark_page_used( uint64_t address ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
-      "frame: %06i, index: %04i, offset: %02i, address: 0x%08x, phys_bitmap[ %04d ]: 0x%08x\r\n",
+      "frame: %06llu, index: %04llu, offset: %02llu, address: 0x%016llx, phys_bitmap[ %04llu ]: 0x%08x\r\n",
       frame, index, offset, address, index, phys_bitmap[ index ]
     );
   #endif
@@ -83,7 +83,7 @@ void phys_mark_page_free( uint64_t address ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
-      "frame: %06i, index: %04i, offset: %02i, address: 0x%08x, phys_bitmap[ %04d ]: 0x%08x\r\n",
+      "frame: %06llu, index: %04llu, offset: %02llu, address: 0x%016llx, phys_bitmap[ %04llu ]: 0x%08x\r\n",
       frame, index, offset, address, index, phys_bitmap[ index ]
     );
   #endif
@@ -98,7 +98,7 @@ void phys_mark_page_free( uint64_t address ) {
 void phys_free_page_range( uint64_t address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "address: 0x%08x, amount: %i\r\n", address, amount );
+    DEBUG_OUTPUT( "address: 0x%016llx, amount: %zu\r\n", address, amount );
   #endif
 
   // loop until amount and mark as free
@@ -120,7 +120,7 @@ void phys_free_page_range( uint64_t address, size_t amount ) {
 void phys_use_page_range( uint64_t address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "address: 0x%08x, amount: %i\r\n", address, amount );
+    DEBUG_OUTPUT( "address: 0x%016llu, amount: %zu\r\n", address, amount );
   #endif
 
   // round down address to page start
@@ -154,7 +154,7 @@ uint64_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
-      "memory_amount: %i, allignment: 0x%08x\r\n",
+      "memory_amount: %zu, alignment: 0x%016zx\r\n",
       memory_amount, alignment
     );
   #endif
@@ -261,8 +261,8 @@ void phys_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "start: 0x%08x\r\n", start );
-    DEBUG_OUTPUT( "end: 0x%08x\r\n", end );
+    DEBUG_OUTPUT( "start: 0x%lx\r\n", start );
+    DEBUG_OUTPUT( "end: 0x%lx\r\n", end );
   #endif
 
   // map from start to end addresses as used

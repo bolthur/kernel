@@ -367,7 +367,7 @@ static bool mergable( heap_block_ptr_t a, heap_block_ptr_t b ) {
  */
 static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
   uintptr_t a_end, b_end;
-  heap_block_ptr_t to_insert;
+  heap_block_ptr_t to_insert = NULL;
 
   // skip if not mergable
   if ( true != mergable( a, b ) ) {
@@ -392,11 +392,10 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
   } else if ( a_end == ( uintptr_t )b ) {
     a->size += sizeof( heap_block_t ) + b->size;
     to_insert = a;
-  // unsupported case should not occur
-  } else {
-    PANIC( "Blocks not mergable!" );
   }
 
+  // assert pointer to inser
+  assert( NULL != to_insert );
   // prepare blocks of element to insert
   prepare_block( to_insert, to_insert->address, to_insert->size );
   // insert merged node

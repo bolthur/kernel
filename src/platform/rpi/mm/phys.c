@@ -51,10 +51,7 @@ void phys_platform_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT(
-      "buffer->byte_length: %d\r\n",
-      buffer->byte_length
-    );
+    DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length );
     DEBUG_OUTPUT(
       "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n",
       buffer->data.buffer_32[ 0 ]
@@ -63,10 +60,7 @@ void phys_platform_init( void ) {
       "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n",
       buffer->data.buffer_32[ 1 ]
     );
-    DEBUG_OUTPUT(
-      "buffer->tag: 0x%08x\r\n",
-      buffer->tag
-    );
+    DEBUG_OUTPUT( "buffer->tag: 0x%08x\r\n", buffer->tag );
   #endif
 
   // increase amount by arm amount
@@ -121,10 +115,10 @@ void phys_platform_init( void ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "total memory amount: 0x%08x\r\n", memory_amount );
-    DEBUG_OUTPUT( "bitmap length: %d\r\n", phys_bitmap_length );
+    DEBUG_OUTPUT( "bitmap length: %u\r\n", phys_bitmap_length );
     DEBUG_OUTPUT( "phys bitmap address: 0x%08x\r\n", ( uint32_t )phys_bitmap );
-    DEBUG_OUTPUT( "content of __kernel_start: 0x%08x\r\n", &__kernel_start );
-    DEBUG_OUTPUT( "content of __kernel_end: 0x%08x\r\n", &__kernel_end );
+    DEBUG_OUTPUT( "content of __kernel_start: 0x%08lx\r\n", ( uintptr_t )&__kernel_start );
+    DEBUG_OUTPUT( "content of __kernel_end: 0x%08lx\r\n", ( uintptr_t ) &__kernel_end );
   #endif
 
   // overwrite physical bitmap completely with zero
@@ -136,8 +130,8 @@ void phys_platform_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "start: 0x%08x\r\n", start );
-    DEBUG_OUTPUT( "end: 0x%08x\r\n", end );
+    DEBUG_OUTPUT( "start: 0x%lx\r\n", start );
+    DEBUG_OUTPUT( "end: 0x%lx\r\n", end );
   #endif
 
   // map from start to end addresses as used
@@ -155,8 +149,8 @@ void phys_platform_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "start: 0x%08x\r\n", start );
-    DEBUG_OUTPUT( "end: 0x%08x\r\n", end );
+    DEBUG_OUTPUT( "start: 0x%lx\r\n", start );
+    DEBUG_OUTPUT( "end: 0x%lx\r\n", end );
   #endif
 
   // map from start to end addresses as used

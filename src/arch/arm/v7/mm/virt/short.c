@@ -575,24 +575,24 @@ void v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
 
   // get table for unmapping
   sd_page_table_t* table = ( sd_page_table_t* )(
-    ( uintptr_t )v7_short_create_table(
-      ctx, vaddr, 0
-    )
+    ( uintptr_t )v7_short_create_table( ctx, vaddr, 0 )
   );
 
    // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-
   // assert existance
   assert( NULL != table );
 
   // ensure not already mapped
   if ( 0 == table->page[ page_idx ].raw ) {
+    // unmap temporary
+    unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
+    // skip rest
     return;
   }
 
   // get page
-  uintptr_t page = table->page[ page_idx ].data.frame;
+  uintptr_t page = table->page[ page_idx ].raw & 0xFFFFF000;
 
   // debug output
   #if defined( PRINT_MM_VIRT )

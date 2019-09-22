@@ -28,7 +28,7 @@ void _assert( const char* restrict file, uint32_t line, const char* restrict des
   panic_init();
 
   // print assertion failed
-  printf( "ASSERTION-FAILED( %s ) at %s:%d\r\n", desc, file, line );
+  printf( "ASSERTION-FAILED( %s ) at %s:%u\r\n", desc, file, line );
 
   // abort further execution
   abort();

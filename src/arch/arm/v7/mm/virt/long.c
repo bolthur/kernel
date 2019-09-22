@@ -511,7 +511,6 @@ void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
   ld_page_table_t* table = ( ld_page_table_t* )map_temporary(
     table_phys, PAGE_SIZE
   );
-
   // assert existance
   assert( NULL != table );
 
@@ -523,9 +522,8 @@ void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
     return;
   }
 
-  // get page
-  uintptr_t page = table->page[ page_idx ].data.output_address;
-
+  // get physical page address
+  uint64_t page = LD_PHYSICAL_PAGE_ADDRESS( table->page[ page_idx ].raw );
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "page physical address = 0x%08x\r\n", page );
