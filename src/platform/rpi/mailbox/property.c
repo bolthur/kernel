@@ -278,9 +278,6 @@ rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
   static rpi_mailbox_property_t property;
   int32_t* tag_buffer = NULL;
 
-  // setup property structure to return
-  property.tag = tag;
-
   // Get the tag from the buffer and start with first available tag position
   int32_t index = 2;
   int32_t size = 0;
@@ -310,6 +307,8 @@ rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
 
   // clear return
   memset( &property, 0, sizeof( property ) );
+  // setup property structure to return
+  property.tag = tag;
   // set byte length
   property.byte_length = tag_buffer[ T_ORESPONSE ] & 0xFFFF;
   // copy necessary data into return structure

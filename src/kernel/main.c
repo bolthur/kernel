@@ -34,8 +34,6 @@
 #include <kernel/mm/heap.h>
 #include <kernel/event.h>
 
-#include <platform/rpi/mailbox/property.h>
-
 /**
  * @brief Kernel main function
  */
@@ -82,96 +80,6 @@ void kernel_main() {
   // Setup heap
   printf( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
   heap_init();
-
-  // some heap testing code
-  void *a;
-  printf( "Allocate 2 byte!\r\n" );
-  a = malloc( 2 );
-  printf( "Allocating 40 blocks of 4 byte!\r\n" );
-  for( int i = 0; i < 40; i++ ) {
-    printf( "i = %d\r\n", i );
-    a = malloc( 4 );
-  }
-  printf( "Allocate 12 byte!\r\n" );
-  a = malloc( 12 );
-  printf( "Allocate 4 byte!\r\n" );
-  void *b = malloc( 4 );
-  printf( "Allocate 8 byte!\r\n" );
-  void *c = malloc( 8 );
-  printf( "Allocate 10 byte!\r\n" );
-  void *d = malloc( 10 );
-  printf( "Allocate 4 byte!\r\n" );
-  void *e = malloc( 4 );
-  printf( "\r\n\r\nFREE UP 0x%p\r\n", b );
-  free( b );
-  b = malloc( 4 );
-  printf( "\r\n\r\nFREE UP 0x%p\r\n", b );
-  free( b );
-  printf( "FREE UP 0x%p\r\n", c );
-  free( c );
-  printf( "FREE UP 0x%p\r\n", a );
-  free( a );
-  printf( "FREE UP 0x%p\r\n", d );
-  free( d );
-  printf( "FREE UP 0x%p\r\n", e );
-  free( e );
-  b = malloc( 0x10000 );
-  printf( "\r\n\r\nFREE UP 0x%p\r\n", b );
-  free( b );
-
-  // FIXME: Remove after successful test
-  // Get arm memory
-  mailbox_property_init();
-  mailbox_property_add_tag( TAG_GET_ARM_MEMORY );
-  mailbox_property_add_tag( TAG_GET_VC_MEMORY );
-  mailbox_property_process();
-  rpi_mailbox_property_t *buffer = mailbox_property_get( TAG_GET_ARM_MEMORY );
-  DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length );
-  DEBUG_OUTPUT(
-    "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n",
-    buffer->data.buffer_32[ 0 ]
-  );
-  DEBUG_OUTPUT(
-    "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n",
-    buffer->data.buffer_32[ 1 ]
-  );
-  DEBUG_OUTPUT( "buffer->tag: 0x%08x\r\n", buffer->tag );
-  uint32_t memory_amount = buffer->data.buffer_u32[ 1 ];
-  DEBUG_OUTPUT( "memory amount: 0x%08x\r\n", memory_amount );
-  buffer = mailbox_property_get( TAG_GET_VC_MEMORY );
-  DEBUG_OUTPUT(
-    "buffer->byte_length: %d\r\n",
-    buffer->byte_length
-  );
-  DEBUG_OUTPUT(
-    "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n",
-    buffer->data.buffer_32[ 0 ]
-  );
-  DEBUG_OUTPUT(
-    "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n",
-    buffer->data.buffer_32[ 1 ]
-  );
-  DEBUG_OUTPUT(
-    "buffer->tag: 0x%08x\r\n",
-    buffer->tag
-  );
-  // query mailbox to get uart clock rate
-  mailbox_property_init();
-  mailbox_property_add_tag( TAG_GET_CLOCK_RATE, TAG_CLOCK_UART );
-  mailbox_property_process();
-  buffer = mailbox_property_get( TAG_GET_CLOCK_RATE );
-  DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length );
-  DEBUG_OUTPUT(
-    "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n",
-    buffer->data.buffer_32[ 0 ]
-  );
-  DEBUG_OUTPUT(
-    "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n",
-    buffer->data.buffer_32[ 1 ]
-  );
-  DEBUG_OUTPUT( "buffer->tag: 0x%08x\r\n", buffer->tag );
-
-
 
   // Setup event system
   printf( "[bolthur/kernel -> event] initialize ...\r\n" );

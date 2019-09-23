@@ -81,7 +81,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
 
     case "${DEVICE}" in
     rpi2_b_rev1)
-      CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=soft"
+      CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
       subarch_subdir=v7
       platform_subdir=rpi
       output_img=kernel7.img
@@ -95,7 +95,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([NUM_CPU], [4])
       ;;
     rpi_zero_w)
-      CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=soft"
+      CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
       subarch_subdir=v6
       platform_subdir=rpi
       AC_DEFINE([BCM2708], [1], [Define to 1 for BCM2708 chip])
@@ -106,7 +106,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([NUM_CPU], [1])
       ;;
     rpi3_b)
-      CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=soft"
+      CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard"
       subarch_subdir=v8
       platform_subdir=rpi
       output_img=kernel8.img
