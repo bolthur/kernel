@@ -19,6 +19,7 @@
  */
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #include <arch/arm/delay.h>
 #include <arch/arm/mmio.h>
@@ -30,9 +31,20 @@
 #include <kernel/serial.h>
 
 /**
+ * @brief Initialized flag
+ */
+static bool serial_initialized = false;
+
+/**
  * @brief Initialize serial port
  */
 void serial_init( void ) {
+  // handle initialized
+  if ( serial_initialized ) {
+    return;
+  }
+
+  // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // Disable UART0.
@@ -95,6 +107,9 @@ void serial_init( void ) {
 
   // Enable UART0, receive & transfer part of UART.
   mmio_write( base + UARTCR, ( 1 << 0 ) | ( 1 << 8 ) | ( 1 << 9 ) );
+
+  // set flag
+  serial_initialized = true;
 }
 
 /**
@@ -103,6 +118,12 @@ void serial_init( void ) {
  * @param c character to put
  */
 void serial_putc( uint8_t c ) {
+  // handle not initialized
+  if ( ! serial_initialized ) {
+    return;
+  }
+
+  // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // Wait for UART to become ready to transmit.
@@ -116,6 +137,12 @@ void serial_putc( uint8_t c ) {
  * @return uint8_t Character from serial
  */
 uint8_t serial_getc( void ) {
+  // handle not initialized
+  if ( ! serial_initialized ) {
+    return 0;
+  }
+
+  // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // Wait for UART to become ready for read
@@ -129,6 +156,12 @@ uint8_t serial_getc( void ) {
  * @brief Flush serial
  */
 void serial_flush( void ) {
+  // handle not initialized
+  if ( ! serial_initialized ) {
+    return;
+  }
+
+  // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // read from uart until as long as something is existing to flush

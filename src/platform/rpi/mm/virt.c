@@ -33,14 +33,12 @@
 #if defined( BCM2709 ) || defined( BCM2710 )
   #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
-#define MAILBOX_PROPERTY_AREA 0xF3040000
 
 /**
  * @brief Initialize virtual memory management
  */
 void virt_platform_init( void ) {
-  uintptr_t start;
-  uintptr_t virtual;
+  uintptr_t start, end, virtual;
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -54,12 +52,17 @@ void virt_platform_init( void ) {
   // set start and virtual
   start = peripheral_base_get( PERIPHERAL_GPIO );
   virtual = GPIO_PERIPHERAL_BASE;
+  end = peripheral_end_get( PERIPHERAL_GPIO );
 
   // map peripherals
-  while ( start < peripheral_end_get( PERIPHERAL_GPIO ) ) {
+  while ( start < end ) {
     // map
     virt_map_address(
-      kernel_context, virtual, start, MEMORY_TYPE_DEVICE, PAGE_TYPE_AUTO );
+      kernel_context,
+      virtual,
+      start,
+      MEMORY_TYPE_DEVICE,
+      PAGE_TYPE_AUTO );
 
     // increase start and virtual
     start += PAGE_SIZE;
@@ -79,29 +82,24 @@ void virt_platform_init( void ) {
 
     // set start and virtual
     start = peripheral_base_get( PERIPHERAL_LOCAL );
+    end = peripheral_end_get( PERIPHERAL_LOCAL );
     virtual = CPU_PERIPHERAL_BASE;
 
     // map peripherals
-    while ( start < peripheral_end_get( PERIPHERAL_LOCAL ) ) {
+    while ( start < end ) {
       // map
       virt_map_address(
-        kernel_context, virtual, start, MEMORY_TYPE_DEVICE, PAGE_TYPE_AUTO );
+        kernel_context,
+        virtual,
+        start,
+        MEMORY_TYPE_DEVICE,
+        PAGE_TYPE_AUTO );
 
       // increase start and virtual
       start += PAGE_SIZE;
       virtual += PAGE_SIZE;
     }
   #endif
-
-  // map mailbox buffer
-  virt_map_address_random(
-    kernel_context,
-    MAILBOX_PROPERTY_AREA,
-    MEMORY_TYPE_DEVICE_STRONG,
-    PAGE_TYPE_NON_EXECUTABLE
-  );
-  // set pointer
-  ptb_buffer = ( int32_t* )MAILBOX_PROPERTY_AREA;
 }
 
 /**
