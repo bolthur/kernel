@@ -53,12 +53,12 @@ void phys_platform_init( void ) {
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length );
     DEBUG_OUTPUT(
-      "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n",
-      buffer->data.buffer_32[ 0 ]
+      "buffer->data.buffer_u32[ 0 ]: 0x%08x\r\n",
+      buffer->data.buffer_u32[ 0 ]
     );
     DEBUG_OUTPUT(
-      "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n",
-      buffer->data.buffer_32[ 1 ]
+      "buffer->data.buffer_u32[ 1 ]: 0x%08x\r\n",
+      buffer->data.buffer_u32[ 1 ]
     );
     DEBUG_OUTPUT( "buffer->tag: 0x%08x\r\n", buffer->tag );
   #endif
@@ -81,12 +81,12 @@ void phys_platform_init( void ) {
       buffer->byte_length
     );
     DEBUG_OUTPUT(
-      "buffer->data.buffer_32[ 0 ]: 0x%08x\r\n",
-      buffer->data.buffer_32[ 0 ]
+      "buffer->data.buffer_u32[ 0 ]: 0x%08x\r\n",
+      buffer->data.buffer_u32[ 0 ]
     );
     DEBUG_OUTPUT(
-      "buffer->data.buffer_32[ 1 ]: 0x%08x\r\n",
-      buffer->data.buffer_32[ 1 ]
+      "buffer->data.buffer_u32[ 1 ]: 0x%08x\r\n",
+      buffer->data.buffer_u32[ 1 ]
     );
     DEBUG_OUTPUT(
       "buffer->tag: 0x%08x\r\n",
