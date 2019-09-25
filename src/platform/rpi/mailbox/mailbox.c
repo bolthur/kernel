@@ -75,7 +75,7 @@ uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
  */
 void mailbox_write(
   mailbox0_channel_t channel, mailbox_type_t type, uint32_t data
-  ) {
+) {
   // add channel number at the lower 4 bit
   data = ( uint32_t )( ( int32_t )data & ~0xF );
   data |= channel;

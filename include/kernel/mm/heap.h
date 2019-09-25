@@ -59,7 +59,7 @@ heap_manager_ptr_t kernel_heap;
 
 bool heap_initialized_get( void );
 void heap_init( void );
-uintptr_t heap_allocate_block( size_t );
+uintptr_t heap_allocate_block( size_t, size_t );
 void heap_free_block( uintptr_t );
 
 #endif

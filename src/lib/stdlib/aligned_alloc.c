@@ -22,14 +22,23 @@
 #include <assert.h>
 
 #include <kernel/panic.h>
-#include <stdlib.h>
+#include <kernel/mm/placement.h>
+#include <kernel/mm/virt.h>
+#include <kernel/mm/heap.h>
 
 /**
- * @brief Malloc implementation
+ * @brief alligned memory allocation
  *
- * @param size size to allocate
- * @return void* allocated address or NULL
+ * @param alignment
+ * @param size
+ * @return void*
  */
-void* malloc( size_t size ) {
-  return aligned_alloc( size, 4 );
+void* aligned_alloc( size_t alignment, size_t size ) {
+  // return allocated heap block
+  if ( true == heap_initialized_get() ) {
+    return ( void* )heap_allocate_block( size, alignment );
+  }
+  assert( true != virt_initialized_get() );
+  // use normal placement alloc
+  return ( void* )PHYS_2_VIRT( placement_alloc( alignment, size ) );
 }

@@ -27,6 +27,7 @@
 #include <kernel/debug.h>
 #include <arch/arm/barrier.h>
 #include <kernel/mm/phys.h>
+#include <kernel/mm/heap.h>
 #include <arch/arm/mm/virt/long.h>
 #include <arch/arm/v7/mm/virt/long.h>
 #include <kernel/mm/virt.h>
@@ -701,7 +702,13 @@ void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
  */
 virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
   // create new context
-  uint64_t ctx = phys_find_free_page_range( PAGE_SIZE, PAGE_SIZE );
+  uint64_t ctx;
+  if ( ! heap_initialized_get() ) {
+    ctx = ( uint64_t )(
+      ( uintptr_t )VIRT_2_PHYS( aligned_alloc( PAGE_SIZE, PAGE_SIZE ) ) );
+  } else {
+    ctx = phys_find_free_page_range( PAGE_SIZE, PAGE_SIZE );
+  }
 
   // debug output
   #if defined( PRINT_MM_VIRT )

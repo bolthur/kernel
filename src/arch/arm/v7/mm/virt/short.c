@@ -27,6 +27,7 @@
 #include <kernel/debug.h>
 #include <arch/arm/barrier.h>
 #include <kernel/mm/phys.h>
+#include <kernel/mm/heap.h>
 #include <arch/arm/mm/virt/short.h>
 #include <arch/arm/v7/mm/virt/short.h>
 #include <kernel/mm/virt.h>
@@ -752,7 +753,12 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
     : SD_TTBR_ALIGNMENT_2G;
 
   // create new context
-  uintptr_t ctx = ( uintptr_t )phys_find_free_page_range( size, alignment );
+  uintptr_t ctx;
+  if ( ! heap_initialized_get() ) {
+    ctx = ( uintptr_t )aligned_alloc( alignment, size );
+  } else {
+    ctx = ( uintptr_t )phys_find_free_page_range( size, alignment );
+  }
 
   // debug output
   #if defined( PRINT_MM_VIRT )

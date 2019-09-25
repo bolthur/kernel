@@ -169,6 +169,9 @@ typedef struct {
   } data;
 } rpi_mailbox_property_t;
 
+int32_t *ptb_buffer;
+volatile int32_t *ptb_buffer_phys;
+
 void mailbox_property_init( void );
 void mailbox_property_add_tag( rpi_mailbox_tag_t, ... );
 uint32_t mailbox_property_process( void );
