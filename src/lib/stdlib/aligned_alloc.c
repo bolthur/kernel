@@ -36,7 +36,7 @@
 void* aligned_alloc( size_t alignment, size_t size ) {
   // return allocated heap block
   if ( true == heap_initialized_get() ) {
-    return ( void* )heap_allocate_block( size, alignment );
+    return ( void* )heap_allocate_block( alignment, size );
   }
   assert( true != virt_initialized_get() );
   // use normal placement alloc

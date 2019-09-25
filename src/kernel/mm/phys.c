@@ -146,11 +146,11 @@ void phys_use_page_range( uint64_t address, size_t amount ) {
 /**
  * @brief Method to find free page range
  *
- * @param memory_amount amount of memory to find free page range for
  * @param alignment wanted memory alignment
+ * @param memory_amount amount of memory to find free page range for
  * @return uint64_t address of found memory
  */
-uint64_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
+uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
@@ -233,7 +233,7 @@ uint64_t phys_find_free_page_range( size_t memory_amount, size_t alignment ) {
  * @return uint64_t
  */
 uint64_t phys_find_free_page( size_t alignment ) {
-  return phys_find_free_page_range( PAGE_SIZE, alignment );
+  return phys_find_free_page_range( alignment, PAGE_SIZE );
 }
 
 /**

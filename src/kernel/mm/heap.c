@@ -520,11 +520,13 @@ bool heap_initialized_get( void ) {
 /**
  * @brief Allocate block within heap
  *
- * @param size size to allocate
  * @param alignment memory alignment
+ * @param size size to allocate
  * @return uintptr_t address of allocated block
+ *
+ * @todo add alignment handling
  */
-uintptr_t heap_allocate_block( size_t size, size_t alignment ) {
+uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   // variables
   heap_block_ptr_t block, new_block;
   avl_node_ptr_t address_node;
@@ -553,7 +555,7 @@ uintptr_t heap_allocate_block( size_t size, size_t alignment ) {
       // extend heap
       extend_heap_space();
       // try another allocate
-      return heap_allocate_block( size, alignment );
+      return heap_allocate_block( alignment, size );
     }
   }
 
@@ -568,7 +570,7 @@ uintptr_t heap_allocate_block( size_t size, size_t alignment ) {
     // extend heap
     extend_heap_space();
     // try another allocate
-    return heap_allocate_block( size, alignment );
+    return heap_allocate_block( alignment, size );
   }
 
   // remove nodes from free trees

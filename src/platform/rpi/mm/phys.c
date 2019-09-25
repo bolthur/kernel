@@ -21,6 +21,7 @@
 #include <stddef.h>
 
 #include <string.h>
+#include <stdlib.h>
 #include <kernel/debug.h>
 #include <kernel/entry.h>
 #include <kernel/mm/phys.h>
@@ -107,10 +108,9 @@ void phys_platform_init( void ) {
 
   // allocate bitmap manually via placement address after kernel
   // align it to page size
-  phys_bitmap = ( uint32_t* )PHYS_2_VIRT( placement_alloc(
-    phys_bitmap_length,
-    sizeof( phys_bitmap )
-  ) );
+  phys_bitmap = ( uint32_t* )aligned_alloc(
+    sizeof( phys_bitmap ),
+    phys_bitmap_length );
 
   // debug output
   #if defined( PRINT_MM_PHYS )

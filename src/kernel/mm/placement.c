@@ -37,11 +37,11 @@ uintptr_t placement_address = ( uintptr_t )VIRT_2_PHYS( &__kernel_end );
 /**
  * @brief Placement allocator
  *
- * @param size amount of memory to align
  * @param alignment alignment
+ * @param size amount of memory to align
  * @return uintptr_t found address
  */
-uintptr_t placement_alloc( size_t size, size_t alignment ) {
+uintptr_t placement_alloc( size_t alignment, size_t size ) {
   // assert alignment
   assert( 0 < alignment );
 

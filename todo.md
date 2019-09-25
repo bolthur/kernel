@@ -13,11 +13,7 @@
   * [ ] Extend cpu structure if fpu is enabled
   * [ ] Extend undefined exception to check for fpu error with clear of flag
 * [ ] Memory management
-  * [ ] Check for further splitting of entry point ( separation between 32bit and 64bit ) is necessary
-  * [ ] Add lpae paging to kernel after boot setup
   * [ ] Consider and enable CPU related caches for performance
-  * [ ] Consider enable of unaligned memory access
-  * [ ] Check and use recursive page mapping
 * [ ] Platform init
   * [ ] Add check for initrd loaded after kernel and move placement address for placement allocator beyond initrd
 * [ ] Add gdb stub for debugging on remote device via serial port

@@ -757,7 +757,7 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
   if ( ! heap_initialized_get() ) {
     ctx = ( uintptr_t )aligned_alloc( alignment, size );
   } else {
-    ctx = ( uintptr_t )phys_find_free_page_range( size, alignment );
+    ctx = ( uintptr_t )phys_find_free_page_range( alignment, size );
   }
 
   // debug output
