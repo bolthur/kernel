@@ -31,5 +31,5 @@
  * @return void* allocated address or NULL
  */
 void* malloc( size_t size ) {
-  return aligned_alloc( size, 4 );
+  return aligned_alloc( 4, size );
 }

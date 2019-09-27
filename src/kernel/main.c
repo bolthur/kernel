@@ -35,6 +35,8 @@
 #include <kernel/mm/heap.h>
 #include <kernel/event.h>
 
+#include <kernel/panic.h>
+
 /**
  * @brief Kernel main function
  */
@@ -82,6 +84,11 @@ void kernel_main() {
   printf( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
   heap_init();
 
+  // TESTING CODE
+  int *foo = aligned_alloc( PAGE_SIZE, 10 );
+  printf( "foo = %p", foo );
+  assert( 0 == ( ( uintptr_t )foo % PAGE_SIZE ) );
+
   for ( size_t i = 1; i < 50; i++ ) {
     int *foo = malloc( i );
     printf( "*foo = %d, foo = %p\r\n", *foo, foo );
@@ -91,9 +98,6 @@ void kernel_main() {
   printf( "*bar = \"%c\", bar = %p\r\n", *bar, bar );
   *bar = 'c';
   printf( "*bar = \"%c\", bar = %p\r\n", *bar, bar );
-
-  int *foo = aligned_alloc( PAGE_SIZE, 10 );
-  assert( 0 == ( ( uintptr_t )foo % PAGE_SIZE ) );
 
   // some heap testing code
   void *a;

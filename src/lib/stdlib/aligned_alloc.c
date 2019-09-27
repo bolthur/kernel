@@ -29,16 +29,20 @@
 /**
  * @brief alligned memory allocation
  *
- * @param alignment
- * @param size
- * @return void*
+ * @param alignment alignment
+ * @param size size to allocate
+ * @return void* reserved memory
  */
 void* aligned_alloc( size_t alignment, size_t size ) {
-  // return allocated heap block
+  // check for initialized heap
   if ( true == heap_initialized_get() ) {
+    // use heap allocation
     return ( void* )heap_allocate_block( alignment, size );
   }
+
+  // placement allocator requires that  virtual memory is not initialized
   assert( true != virt_initialized_get() );
+
   // use normal placement alloc
   return ( void* )PHYS_2_VIRT( placement_alloc( alignment, size ) );
 }

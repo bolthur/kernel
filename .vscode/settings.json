@@ -33,7 +33,8 @@
     "ratio": "c",
     "tuple": "c",
     "utility": "c",
-    "variant": "c"
+    "variant": "c",
+    "memory": "c"
   },
   "editor.tabSize": 2,
   "editor.renderWhitespace": "all",
