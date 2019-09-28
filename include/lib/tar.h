@@ -21,4 +21,19 @@
 #if ! defined( __LIB_TAR__ )
 #define __LIB_TAR__
 
+typedef struct {
+  char file_name[ 100 ];
+  char file_mode[ 8 ];
+  char user_id[ 8 ];
+  char group_id[ 8 ];
+  char file_size[ 12 ];
+  char last_modified[ 12 ];
+  char checksum[ 8 ];
+  char file_type;
+  char linked_file_name[ 100 ];
+  char __padding[ 255 ];
+} tar_header_t, *tar_header_ptr_t;
+
+uint64_t tar_get_total_size( uintptr_t );
+
 #endif

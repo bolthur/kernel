@@ -33,12 +33,16 @@
 #include <kernel/mm/phys.h>
 #include <kernel/mm/virt.h>
 #include <kernel/mm/heap.h>
+#include <kernel/mm/placement.h>
 #include <kernel/event.h>
 
 /**
  * @brief Kernel main function
  */
 void kernel_main() {
+  // prepare placement address before anything else
+  placement_init();
+
   // Initialize serial for debugging if enabled
   #if defined( DEBUG )
     serial_init();

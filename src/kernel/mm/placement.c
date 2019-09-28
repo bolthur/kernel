@@ -32,7 +32,7 @@
 /**
  * @brief placement address starting at kernel end
  */
-uintptr_t placement_address = ( uintptr_t )VIRT_2_PHYS( &__kernel_end );
+uintptr_t placement_address;
 
 /**
  * @brief Placement allocator

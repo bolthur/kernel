@@ -1,2 +1,2 @@
 
-SUBDIRS = stdio stdlib string avl assert ssp ubsan tar
+SUBDIRS = stdio stdlib string assert avl ssp ubsan tar
