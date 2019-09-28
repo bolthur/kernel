@@ -2,6 +2,11 @@
 # ---> Custom
 /build
 *~
+/doc
+
+# ---> JetBrains
+
+.idea
 
 # ---> Autotools
 # http://www.gnu.org/software/automake

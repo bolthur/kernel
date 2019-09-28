@@ -3,15 +3,15 @@ AC_PREREQ(2.57)
 AC_INIT([bolthur-kernel], [0.1], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 AC_COPYRIGHT([Copyright (C) 2018 - 2019 bolthur project])
 
-AC_CONFIG_AUX_DIR([config])
-AC_CONFIG_MACRO_DIR([m4])
+AC_CONFIG_AUX_DIR([build-aux/config])
+AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
-AC_CONFIG_SRCDIR([src/kernel/kernel/main.c])
-AM_INIT_AUTOMAKE([foreign 1.7])
+AC_CONFIG_SRCDIR([src/kernel/main.c])
+AM_INIT_AUTOMAKE()
 AC_CONFIG_HEADERS([include/config.h])
 
-AM_SILENT_RULES([yes])
+#AM_SILENT_RULES([yes])
 
 AC_LANG([C])
 
@@ -66,6 +66,14 @@ AC_ARG_ENABLE([output-timer],
   AC_HELP_STRING([--enable-output-timer], [Enables output of timer functions (default: off)])
 )
 
+AC_ARG_ENABLE([output-initrd],
+  AC_HELP_STRING([--enable-output-initrd], [Enables output of initrd related functions (default: off)])
+)
+
+AC_ARG_ENABLE([debug-initrd],
+  AC_HELP_STRING([--enable-debug-initrd], [Enables add of debug initrd to kernel binary (default: off)])
+)
+
 AC_ARG_ENABLE([opt],
   AC_HELP_STRING([--enable-opt], [enable code optimization (default: 2)]),
   [case "${enableval}" in
@@ -98,7 +106,7 @@ AC_ARG_ENABLE([opt],
 BOLTHUR_SET_HOST
 
 # set normal flags
-BOLTHUR_SET_FLAGS
+BOLTHUR_SET_FLAG
 
 # conftest
 AC_LANG_CONFTEST([AC_LANG_SOURCE([[const char hw[] = "Hello, World\r\n";]])])
@@ -118,27 +126,38 @@ AC_C_VOLATILE
 AC_C_RESTRICT
 
 # Some compiler dependent features.
-AC_DEFINE_UNQUOTED([PACKED], [__attribute__((__packed__))], [Keyword for packing structures.])
-AC_DEFINE_UNQUOTED([SECTION(x)], [__attribute__((__section__(x)))], [Keyword for section placement.])
-AC_DEFINE_UNQUOTED([ALIGNED(x)], [__attribute__((__aligned__(x)))], [Keyword for alignment.])
-AC_DEFINE_UNQUOTED([PACKED_ALIGNED(x)], [__attribute__((__packed__, __aligned__(x)))], [Keyword for packing and aligning structures.])
-AC_DEFINE_UNQUOTED([OPT_NONE], [__attribute__((__optimize__( "O0" )))], [Disable optimization])
+AC_DEFINE_UNQUOTED([__packed], [__attribute__((__packed__))], [Keyword for packing structures.])
+AC_DEFINE_UNQUOTED([__section(x)], [__attribute__((__section__(x)))], [Keyword for section placement.])
+AC_DEFINE_UNQUOTED([__aligned(x)], [__attribute__((__aligned__(x)))], [Keyword for alignment.])
+AC_DEFINE_UNQUOTED([__no_optimization], [__attribute__((__optimize__("O0")))], [Disable optimization])
+AC_DEFINE_UNQUOTED([__bootstrap], [__section(".text.boot")], [Bootstrap function])
+AC_DEFINE_UNQUOTED([__bootstrap_data], [__section(".data.boot")], [Bootstrap function])
+AC_DEFINE_UNQUOTED([__unused], [__attribute__((unused))], [Unused function])
+
+# conditional
+AM_CONDITIONAL([IS32], [test $executable_format -eq 32])
+AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
+  src/arch/Makefile
+  src/arch/arm/Makefile
+  src/arch/arm/v6/Makefile
+  src/arch/arm/v7/Makefile
+  src/arch/arm/v8/Makefile
   src/kernel/Makefile
-  src/kernel/kernel/Makefile
-  src/kernel/arch/Makefile
-  src/kernel/arch/arm/Makefile
-  src/kernel/arch/arm/v6/Makefile
-  src/kernel/arch/arm/v7/Makefile
-  src/kernel/arch/arm/v8/Makefile
-  src/kernel/vendor/Makefile
-  src/kernel/vendor/rpi/Makefile
   src/lib/Makefile
+  src/lib/assert/Makefile
   src/lib/avl/Makefile
-  src/lib/k/Makefile
+  src/lib/ssp/Makefile
+  src/lib/stdio/Makefile
+  src/lib/stdlib/Makefile
+  src/lib/string/Makefile
+  src/lib/tar/Makefile
+  src/lib/ubsan/Makefile
+  src/platform/Makefile
+  src/platform/rpi/Makefile
 ])
 
 AC_OUTPUT

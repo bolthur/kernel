@@ -1,2 +1,2 @@
 
-SUBDIRS = k avl
+SUBDIRS = stdio stdlib string avl assert ssp ubsan tar
