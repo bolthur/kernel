@@ -35,8 +35,6 @@
 #include <kernel/mm/heap.h>
 #include <kernel/event.h>
 
-#include <kernel/panic.h>
-
 /**
  * @brief Kernel main function
  */
@@ -83,57 +81,6 @@ void kernel_main() {
   // Setup heap
   printf( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
   heap_init();
-
-  // TESTING CODE
-  int *foo = aligned_alloc( PAGE_SIZE, 10 );
-  printf( "foo = %p", foo );
-  assert( 0 == ( ( uintptr_t )foo % PAGE_SIZE ) );
-
-  for ( size_t i = 1; i < 50; i++ ) {
-    int *foo = malloc( i );
-    printf( "*foo = %d, foo = %p\r\n", *foo, foo );
-  }
-
-  char *bar = malloc( sizeof( char ) );
-  printf( "*bar = \"%c\", bar = %p\r\n", *bar, bar );
-  *bar = 'c';
-  printf( "*bar = \"%c\", bar = %p\r\n", *bar, bar );
-
-  // some heap testing code
-  void *a;
-  printf( "Allocate 2 byte!\r\n" );
-  a = malloc( 2 );
-  printf( "Allocating 40 blocks of 4 byte!\r\n" );
-  for( int i = 0; i < 40; i++ ) {
-    printf( "i = %d\r\n", i );
-    a = malloc( 4 );
-  }
-  printf( "Allocate 12 byte!\r\n" );
-  a = malloc( 12 );
-  printf( "Allocate 4 byte!\r\n" );
-  void *b = malloc( 4 );
-  printf( "Allocate 8 byte!\r\n" );
-  void *c = malloc( 8 );
-  printf( "Allocate 10 byte!\r\n" );
-  void *d = malloc( 10 );
-  printf( "Allocate 4 byte!\r\n" );
-  void *e = malloc( 4 );
-  printf( "\r\n\r\nFREE UP 0x%p\r\n", b );
-  free( b );
-  b = malloc( 4 );
-  printf( "\r\n\r\nFREE UP 0x%p\r\n", b );
-  free( b );
-  printf( "FREE UP 0x%p\r\n", c );
-  free( c );
-  printf( "FREE UP 0x%p\r\n", a );
-  free( a );
-  printf( "FREE UP 0x%p\r\n", d );
-  free( d );
-  printf( "FREE UP 0x%p\r\n", e );
-  free( e );
-  b = malloc( 0x10000 );
-  printf( "\r\n\r\nFREE UP 0x%p\r\n", b );
-  free( b );
 
   // Setup event system
   printf( "[bolthur/kernel -> event] initialize ...\r\n" );
