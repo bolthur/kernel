@@ -18,27 +18,33 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stddef.h>
 #include <stdint.h>
-#include <assert.h>
-#include <stdio.h>
-#include <tar.h>
-
-#include <kernel/entry.h>
-#include <kernel/mm/phys.h>
-#include <kernel/mm/placement.h>
 
 /**
- * @brief Method to initialize placement address
+ * @brief Memory compare
+ *
+ * @param a
+ * @param b
+ * @param size
+ * @return int
  */
-void placement_init( void ) {
-  // set placement address to kernel end
-  placement_address = ( uintptr_t )VIRT_2_PHYS( &__kernel_end );
+int memcmp( const void* a, const void* b, size_t size ) {
+  const uint8_t* ua = ( uint8_t* )a;
+  const uint8_t* ub = ( uint8_t* )b;
 
-  // calculate initrd size
-  uint64_t initrd_size = tar_total_size( placement_address );
-
-  // move placement address beyond initrd if existing
-  if ( 0 < initrd_size ) {
-    placement_address += ( uintptr_t )initrd_size;
+  // loop through strings
+  for ( size_t idx = 0; idx < size; idx++ ) {
+    // handle smaller
+    if ( ua[ idx ] < ub[ idx ] ) {
+      return -1;
+    }
+    // handle greater
+    if ( ua[ idx ] > ub[ idx ] ) {
+      return 1;
+    }
   }
+
+  // equal
+  return 0;
 }
