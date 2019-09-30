@@ -19,33 +19,26 @@
  */
 
 #include <stdint.h>
-#include <assert.h>
-#include <stdio.h>
-#include <tar.h>
-
-#include <kernel/entry.h>
-#include <kernel/mm/phys.h>
-#include <kernel/mm/placement.h>
-#include <kernel/initrd.h>
 
 /**
- * @brief Method to initialize placement address
+ * @brief internal initrd load address
  */
-void placement_init( void ) {
-  // set placement address to kernel end
-  placement_address = ( uintptr_t )VIRT_2_PHYS( &__kernel_end );
-  // initialize with zero
-  initrd_set_address( 0 );
+static uintptr_t initrd_address;
 
-  // calculate initrd size
-  uint64_t initrd_size = tar_total_size( placement_address );
+/**
+ * @brief Method to get initrd address
+ *
+ * @return uintptr_t
+ */
+uintptr_t initrd_get_address( void ) {
+  return initrd_address;
+}
 
-  // move placement address beyond initrd if existing
-  if ( 0 < initrd_size ) {
-    // set address
-    initrd_set_address( placement_address );
-
-    // move placement address beyond initrd
-    placement_address += ( uintptr_t )initrd_size;
-  }
+/**
+ * @brief Method to set initrd address
+ *
+ * @param address
+ */
+void initrd_set_address( uintptr_t address ) {
+  initrd_address = address;
 }
