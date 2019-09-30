@@ -247,6 +247,8 @@ void phys_free_page( uint64_t address ) {
 
 /**
  * @brief Generic initialization of physical memory manager
+ *
+ * @todo Mark initrd as used
  */
 void phys_init( void ) {
   // execute platform initialization

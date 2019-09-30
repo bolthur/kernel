@@ -36,6 +36,8 @@ static bool virt_initialized = false;
 
 /**
  * @brief Generic initialization of virtual memory manager
+ *
+ * @todo Map initrd somewhere in the kernel area
  */
 void virt_init( void ) {
   // assert no initialize

@@ -21,6 +21,8 @@
 #if ! defined( __LIB_TAR__ )
 #define __LIB_TAR__
 
+#include <stdbool.h>
+
 #define TAR_HEADER_SIZE 512
 
 typedef enum {
@@ -52,5 +54,6 @@ uint64_t tar_size( tar_header_ptr_t );
 tar_header_ptr_t tar_next( tar_header_ptr_t );
 tar_header_ptr_t tar_lookup_file( uintptr_t, const char* );
 uint8_t* tar_file( tar_header_ptr_t );
+bool tar_end_reached( tar_header_ptr_t );
 
 #endif

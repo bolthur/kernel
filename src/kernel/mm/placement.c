@@ -32,7 +32,7 @@
 /**
  * @brief placement address starting at kernel end
  */
-uintptr_t placement_address;
+uintptr_t placement_address = VIRT_2_PHYS( &__kernel_end );
 
 /**
  * @brief Placement allocator
@@ -40,6 +40,8 @@ uintptr_t placement_address;
  * @param alignment alignment
  * @param size amount of memory to align
  * @return uintptr_t found address
+ *
+ * @todo ensure that initrd won't be overwritten acidentally
  */
 uintptr_t placement_alloc( size_t alignment, size_t size ) {
   // assert alignment

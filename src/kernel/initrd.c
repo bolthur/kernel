@@ -19,6 +19,9 @@
  */
 
 #include <stdint.h>
+#include <stddef.h>
+
+#include <tar.h>
 
 /**
  * @brief internal initrd load address
@@ -26,11 +29,16 @@
 static uintptr_t initrd_address;
 
 /**
+ * @brief initrd size
+ */
+static size_t initrd_size;
+
+/**
  * @brief Method to get initrd address
  *
  * @return uintptr_t
  */
-uintptr_t initrd_get_address( void ) {
+uintptr_t initrd_get_start_address( void ) {
   return initrd_address;
 }
 
@@ -39,6 +47,26 @@ uintptr_t initrd_get_address( void ) {
  *
  * @param address
  */
-void initrd_set_address( uintptr_t address ) {
+void initrd_set_start_address( uintptr_t address ) {
   initrd_address = address;
+}
+
+/**
+ * @brief Get end address of initrd
+ *
+ * @return uintptr_t
+ */
+uintptr_t initrd_get_end_address( void ) {
+  return initrd_address + initrd_size;
+}
+
+/**
+ * @brief Prepare for initrd usage
+ */
+void initrd_init( void ) {
+  // set start address
+  initrd_address = INITRD_LOAD_ADDRESS;
+
+  // calculate size
+  initrd_size = ( size_t )tar_total_size( initrd_address );
 }

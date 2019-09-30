@@ -44,9 +44,6 @@
  * @brief Kernel main function
  */
 void kernel_main() {
-  // prepare placement address before anything else
-  placement_init();
-
   // Initialize serial for debugging if enabled
   #if defined( DEBUG )
     serial_init();
@@ -66,26 +63,6 @@ void kernel_main() {
     "|_.__/ \\___/|_|\\__|_| |_|\\__,_|_|    /_/     |_|\\_\\___|_|  |_| |_|\\___|_|"
   );
 
-
-  // print size
-  uintptr_t initrd = initrd_get_address();
-  uint32_t* f = ( uint32_t* )PHYS_2_VIRT( initrd );
-  printf( "f = 0x%08x, *f = 0x%08x\r\n", f, *f );
-  printf( "placement_address = 0x%08x\r\n", placement_address );
-  printf( "initrd = 0x%08x\r\nsize = %llu\r\n", initrd, tar_total_size( initrd ) );
-  PANIC( "TEST" );
-
-  // set iterator
-  tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
-  // loop through tar
-  while ( iter ) {
-    printf( "iter = 0x%08x, size = %d\r\n", iter, tar_size( iter ) );
-    //printf( "file name: %s\r\n", iter->file_name );
-    iter = tar_next( iter );
-  }
-
-  PANIC( "FOOO!" );
-
   // Setup arch related parts
   printf( "[bolthur/kernel -> arch] initialize ...\r\n" );
   arch_init();
@@ -97,6 +74,27 @@ void kernel_main() {
   // Setup irq
   printf( "[bolthur/kernel -> irq] initialize ...\r\n" );
   irq_init();
+
+  // Setup initrd parts
+  printf( "[bolthur/kernel -> initrd] initialize ...\r\n" );
+  initrd_init();
+
+  // print size
+  uintptr_t initrd = initrd_get_start_address();
+
+  printf( "initrd = 0x%08x\r\n", initrd );
+
+  // set iterator
+  tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
+  // loop through tar
+  while ( iter ) {
+    if ( ! tar_end_reached( iter ) ) {
+      printf( "initrd file name: %s\r\n", iter->file_name );
+    }
+    iter = tar_next( iter );
+  }
+
+  PANIC( "FOOO!" );
 
   // Setup physical memory management
   printf( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" );

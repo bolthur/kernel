@@ -15,6 +15,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([PRINT_TIMER], [Define to 1 to enable output of timer])
   AH_TEMPLATE([PRINT_INITRD], [Define to 1 to enable output of initrd])
   AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
+  AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
 
   # Test possibe enable debug parameter
   AS_IF([test "x$enable_debug" == "xyes"], [
@@ -86,6 +87,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [4])
+      AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     rpi_zero_w)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
@@ -97,6 +99,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [1])
+      AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     rpi3_b)
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard"
@@ -110,6 +113,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [4])
+      AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])
@@ -136,6 +140,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [4])
+      AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])

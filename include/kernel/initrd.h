@@ -23,7 +23,9 @@
 
 #include <stdint.h>
 
-uintptr_t initrd_get_address( void );
-void initrd_set_address( uintptr_t address );
+uintptr_t initrd_get_start_address( void );
+void initrd_set_start_address( uintptr_t );
+uintptr_t initrd_get_end_address( void );
+void initrd_init( void );
 
 #endif

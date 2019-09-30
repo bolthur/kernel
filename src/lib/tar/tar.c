@@ -176,3 +176,14 @@ tar_header_ptr_t tar_lookup_file( uintptr_t address, const char* file_name ) {
   // return iter
   return iter;
 }
+
+/**
+ * @brief Check for tar end is reached
+ *
+ * @param current
+ * @return true
+ * @return false
+ */
+bool tar_end_reached( tar_header_ptr_t current ) {
+  return '\0' == current->file_name[ 0 ];
+}

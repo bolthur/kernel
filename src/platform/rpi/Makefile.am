@@ -13,7 +13,6 @@ librpi_a_SOURCES = \
   mailbox/mailbox.c \
   mailbox/property.c \
   mm/phys.c \
-  mm/placement.c \
   mm/virt.c \
   irq.c \
   platform.c \
