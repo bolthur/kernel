@@ -61,6 +61,15 @@ uintptr_t initrd_get_end_address( void ) {
 }
 
 /**
+ * @brief Get total size of initrd
+ *
+ * @return size_t
+ */
+size_t initrd_get_size( void ) {
+  return initrd_size;
+}
+
+/**
  * @brief Prepare for initrd usage
  */
 void initrd_init( void ) {

@@ -36,6 +36,7 @@
 #include <kernel/mm/placement.h>
 #include <kernel/event.h>
 
+#include <endian.h>
 #include <tar.h>
 #include <kernel/panic.h>
 #include <kernel/initrd.h>
@@ -81,20 +82,17 @@ void kernel_main() {
 
   // print size
   uintptr_t initrd = initrd_get_start_address();
-
   printf( "initrd = 0x%08x\r\n", initrd );
-
+  printf( "initrd = 0x%08x\r\n", initrd_get_end_address() );
+  printf( "size = %o\r\n", initrd_get_size() );
+  printf( "size = %d\r\n", initrd_get_size() );
   // set iterator
   tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
   // loop through tar
-  while ( iter ) {
-    if ( ! tar_end_reached( iter ) ) {
-      printf( "initrd file name: %s\r\n", iter->file_name );
-    }
+  while ( ! tar_end_reached( iter ) ) {
+    printf( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
     iter = tar_next( iter );
   }
-
-  PANIC( "FOOO!" );
 
   // Setup physical memory management
   printf( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" );
@@ -103,6 +101,22 @@ void kernel_main() {
   // Setup virtual memory management
   printf( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" );
   virt_init();
+
+  // print size
+  initrd = initrd_get_start_address();
+  printf( "initrd = 0x%08x\r\n", initrd );
+  printf( "initrd = 0x%08x\r\n", initrd_get_end_address() );
+  printf( "size = %o\r\n", initrd_get_size() );
+  printf( "size = %d\r\n", initrd_get_size() );
+  // set iterator
+  iter = ( tar_header_ptr_t )initrd;
+  // loop through tar
+  while ( ! tar_end_reached( iter ) ) {
+    printf( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
+    iter = tar_next( iter );
+  }
+
+  PANIC( "FOOO!" );
 
   // Setup heap
   printf( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );

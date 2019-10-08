@@ -78,7 +78,7 @@ uint64_t tar_total_size( uintptr_t address ) {
 
     // calculate size
     uint64_t size = octal_size_to_int( header->file_size, 11 );
-    total_size += size;
+    total_size += ( ( ( ( size + 511 ) / 512 ) + 1 ) * 512 );
 
     // get to next file
     address += ( uintptr_t )( ( ( ( size + 511 ) / 512 ) + 1 ) * 512 );
@@ -180,10 +180,10 @@ tar_header_ptr_t tar_lookup_file( uintptr_t address, const char* file_name ) {
 /**
  * @brief Check for tar end is reached
  *
- * @param current
- * @return true
- * @return false
+ * @param current tar header to check for end reached
+ * @return true end is reached
+ * @return false there are more elements
  */
 bool tar_end_reached( tar_header_ptr_t current ) {
-  return '\0' == current->file_name[ 0 ];
+  return NULL == ( char* )current->file_name;
 }

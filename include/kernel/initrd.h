@@ -26,6 +26,7 @@
 uintptr_t initrd_get_start_address( void );
 void initrd_set_start_address( uintptr_t );
 uintptr_t initrd_get_end_address( void );
+size_t initrd_get_size( void );
 void initrd_init( void );
 
 #endif

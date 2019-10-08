@@ -18,6 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <platform/rpi/platform.h>
 
 /**
@@ -27,6 +28,9 @@ platform_loader_parameter_t loader_parameter_data;
 
 /**
  * @brief Platform depending initialization routine
+ *
+ * @todo remove debug output
  */
 void platform_init( void ) {
+  printf( "0x%08x - 0x%08x - 0x%08x\r\n", loader_parameter_data.atag, loader_parameter_data.machine, loader_parameter_data.zero );
 }

@@ -83,6 +83,7 @@ SECTIONS {
 
   /DISCARD/ : {
     *( .comment )
+    *( .note )
     *( .eh_frame )
     *( .ARM.exidx* )
     *( .ARM.attributes* )

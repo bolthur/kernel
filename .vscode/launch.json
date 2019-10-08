@@ -58,7 +58,7 @@
           "description": "Loading symbol file"
         },
         {
-          "text": "target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel ${workspaceFolder}/build/src/platform/rpi/kernel.zwerg -gdb stdio -S",
+          "text": "target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel ${workspaceFolder}/build/src/platform/rpi/kernel.elf -gdb stdio -S",
           "description": "Set target to remote with qemu"
         }
       ],

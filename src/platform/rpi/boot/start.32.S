@@ -18,6 +18,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define ASSEMBLER_FILE 1
+#include <kernel/entry.h>
+
+// forward declaration for save of parameter
+.extern loader_parameter_data
+
 // only when extension define is set
 #if defined( BCM2709 ) || defined( BCM2710 )
   .arch_extension virt
@@ -90,18 +96,24 @@ boot_start:
 
   // save boot parameter data
   push { r0 - r2 }
-
   // enable fpu necessary for optimization level 3
   bl fpu_enable
+  // restore boot parameter data
+  pop { r0 - r2 }
 
+  // save boot parameter data
+  push { r0 - r2 }
   // clear bss section
   bl boot_bss_clear
+  // restore boot parameter data
+  pop { r0 - r2 }
+
+  // store rpi boot parameters passed with first three registers at data array
+  ldr r3, =loader_parameter_data-KERNEL_OFFSET
+  stmia r3!, {r0-r2}
 
   // prepare by platform
   bl boot_platform_prepare
-
-  // restore boot parameter data
-  pop { r0 - r2 }
 
   // load higher half start
   ldr r3, =start

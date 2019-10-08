@@ -20,16 +20,9 @@
 
 #define ASSEMBLER_FILE 1
 
-// forward declaration for save of parameter
-.extern loader_parameter_data
-
 .section .text
 
 .global start
 start:
-  // store rpi boot parameters passed with first three registers at data array
-  ldr r3, =loader_parameter_data
-  stmia r3!, {r0-r2}
-
   // continue with arch related start
   b arch_start
