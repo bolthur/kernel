@@ -18,10 +18,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * @brief Abort routine
- */
-void __no_return abort( void ) {
-  while( 1 ) {}
-}
+#include <avl.h>
 
+/**
+ * @brief method to prepare some node
+ *
+ * @param node node to prepare
+ * @param data initial node data
+ */
+void avl_prepare_node( avl_node_ptr_t node, void* data ) {
+  node->left = NULL;
+  node->right = NULL;
+  node->data = data;
+}

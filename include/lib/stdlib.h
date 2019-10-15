@@ -25,7 +25,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-void abort( void ) __attribute__((noreturn));
+void __no_return abort( void );
 void* aligned_alloc( size_t, size_t );
 void* calloc( size_t, size_t );
 void free( void* );

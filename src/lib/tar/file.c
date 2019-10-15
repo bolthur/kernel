@@ -18,12 +18,22 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_MMIO__ )
-#define __ARCH_ARM_MMIO__
-
 #include <stdint.h>
+#include <stddef.h>
+#include <tar.h>
 
-void mmio_write( uint32_t, uint32_t );
-uint32_t mmio_read( uint32_t );
+/**
+ * @brief Method to get buffer
+ *
+ * @param header
+ * @return uint8_t*
+ */
+uint8_t* tar_file( tar_header_ptr_t header ) {
+  // check for invalid
+  if ( '\0' == header->file_name[ 0 ] ) {
+    return NULL;
+  }
 
-#endif
+  // build return
+  return ( uint8_t* )( ( uintptr_t )header + TAR_HEADER_SIZE );
+}

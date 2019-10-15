@@ -14,5 +14,5 @@ libarm_a_SOURCES = \
   mm/virt.c \
   arch.c \
   delay.c \
-  irq.c \
-  mmio.c
+  io.c \
+  irq.c

@@ -59,8 +59,8 @@ cd build
 
 Possible additional parameters to `--host` and `--enable-device`:
 
-* `--enable-debug` enables remote debugging mode
-* `--enable-opt=x` sets optimization from default ( 2 ) to specified one
+* `--with-debug` enables remote debugging mode
+* `--with-opt=x` sets optimization from default ( 2 ) to specified one
 * `--enable-output` enables kernel output
 * `--enable-output-mm-phys` activate tty output of physical memory manager ( slows down kernel totally )
 * `--enable-output-mm-virt` activate tty output of virtual memory manager
@@ -109,15 +109,15 @@ Emulation of the kernel project with qemu during development may be done at all 
 
 ```bash
 # raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -initrd ../build-aux/platform/rpi/initrd.img -fw_cfg name=opt/org.bolthur.kernel/initrd,file=../build-aux/platform/rpi/initrd -s -S
+qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -s -S
 
 # raspberry pi 2B rev 2 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -initrd ../build-aux/platform/rpi/initrd.img -fw_cfg name=opt/org.bolthur.kernel/initrd,file=../build-aux/platform/rpi/initrd -s -S
-qemu-system-aarch64 -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -initrd ../build-aux/platform/rpi/initrd.img -fw_cfg name=opt/org.bolthur.kernel/initrd,file=../build-aux/platform/rpi/initrd -s -S
+qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -s -S
+qemu-system-aarch64 -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -s -S
 
 # raspberry pi 3B kernel emulation
-qemu-system-arm -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -initrd ../build-aux/platform/rpi/initrd.img -fw_cfg name=opt/org.bolthur.kernel/initrd,file=../build-aux/platform/rpi/initrd -s -S
-qemu-system-aarch64 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -initrd ../build-aux/platform/rpi/initrd.img -fw_cfg name=opt/org.bolthur.kernel/initrd,file=../build-aux/platform/rpi/initrd -s -S
+qemu-system-arm -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -s -S
+qemu-system-aarch64 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -s -S
 ```
 
 Starting the debugger from within build folder without any additional commands necessary would be done as follows:

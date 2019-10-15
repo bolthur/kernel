@@ -18,10 +18,34 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <avl.h>
+
 /**
- * @brief Abort routine
+ * @brief Get the max object
+ *
+ * @param node current node
+ * @param result result node
+ * @return avl_node_ptr_t
  */
-void __no_return abort( void ) {
-  while( 1 ) {}
+static avl_node_ptr_t get_max(
+  avl_node_ptr_t node,
+  avl_node_ptr_t result
+) {
+  // break if we reached the maximum
+  if ( NULL == node ) {
+    return result;
+  }
+
+  // just step to right for max entry
+  return get_max( node->right, node );
 }
 
+/**
+ * @brief Get max node of tree
+ *
+ * @param root node to get min value
+ * @return avl_node_ptr_t found node or null if empty
+ */
+avl_node_ptr_t avl_get_max( const avl_node_ptr_t root ) {
+  return get_max( root, NULL );
+}

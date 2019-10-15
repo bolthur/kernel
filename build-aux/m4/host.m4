@@ -18,8 +18,7 @@ AC_DEFUN([BOLTHUR_SET_HOST], [
   AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
 
   # Test possibe enable debug parameter
-  AS_IF([test "x$enable_debug" == "xyes"], [
-    CFLAGS="${CFLAGS} -g"
+  AS_IF([test "x$with_debug" == "xyes"], [
     AC_DEFINE([DEBUG], [1])
   ])
 

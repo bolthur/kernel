@@ -35,6 +35,6 @@ uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 /**
  * @brief Stack check failed callback
  */
-__attribute__( ( noreturn ) ) void __stack_chk_fail( void ) {
+void __no_return __stack_chk_fail( void ) {
   PANIC( "Stack smashing detected" );
 }

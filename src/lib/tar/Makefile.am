@@ -6,4 +6,9 @@ AM_CCASFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/include
 
 noinst_LIBRARIES = libtar.a
 libtar_a_SOURCES = \
-  tar.c
+  end.c \
+  file.c \
+  helper.c \
+  lookup.c \
+  next.c \
+  size.c

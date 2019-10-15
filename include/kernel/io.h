@@ -18,10 +18,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * @brief Abort routine
- */
-void __no_return abort( void ) {
-  while( 1 ) {}
-}
+#if ! defined( __KERNEL_IO__ )
+#define __KERNEL_IO__
 
+#include <stdint.h>
+
+uint8_t io_in8( uint32_t );
+void io_out8( uint32_t, uint8_t );
+
+uint16_t io_in16( uint32_t );
+void io_out16( uint32_t, uint16_t );
+
+uint32_t io_in32( uint32_t );
+void io_out32( uint32_t, uint32_t );
+
+#endif

@@ -18,10 +18,32 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * @brief Abort routine
- */
-void __no_return abort( void ) {
-  while( 1 ) {}
-}
+#include <stdint.h>
+#include <string.h>
+#include <tar.h>
 
+/**
+ * @brief Lookup for specific tar file
+ *
+ * @param address
+ * @param file_name
+ * @return tar_header_ptr_t
+ */
+tar_header_ptr_t tar_lookup_file( uintptr_t address, const char* file_name ) {
+  // iterator
+  tar_header_ptr_t iter = tar_next( ( tar_header_ptr_t )address );
+
+  // loop through tar
+  while ( iter ) {
+    // check for file
+    if ( ! memcmp( iter->file_name, file_name, strlen( file_name ) + 1 ) ) {
+      break;
+    }
+
+    // next iterator
+    iter = tar_next( iter );
+  }
+
+  // return iter
+  return iter;
+}

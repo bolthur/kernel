@@ -22,6 +22,7 @@
 #define __LIB_TAR__
 
 #include <stdbool.h>
+#include <stddef.h>
 
 #define TAR_HEADER_SIZE 512
 
@@ -55,5 +56,6 @@ tar_header_ptr_t tar_next( tar_header_ptr_t );
 tar_header_ptr_t tar_lookup_file( uintptr_t, const char* );
 uint8_t* tar_file( tar_header_ptr_t );
 bool tar_end_reached( tar_header_ptr_t );
+uint64_t octal_size_to_int( const char*, size_t );
 
 #endif
