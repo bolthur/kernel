@@ -43,8 +43,10 @@
 
 /**
  * @brief Kernel main function
+ *
+ * @todo remove initrd test code later
  */
-void kernel_main() {
+void kernel_main( void ) {
   // Initialize serial for debugging if enabled
   #if defined( DEBUG )
     serial_init();
@@ -81,17 +83,19 @@ void kernel_main() {
   initrd_init();
 
   // print size
-  uintptr_t initrd = initrd_get_start_address();
-  printf( "initrd = 0x%08x\r\n", initrd );
-  printf( "initrd = 0x%08x\r\n", initrd_get_end_address() );
-  printf( "size = %o\r\n", initrd_get_size() );
-  printf( "size = %d\r\n", initrd_get_size() );
-  // set iterator
-  tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
-  // loop through tar
-  while ( ! tar_end_reached( iter ) ) {
-    printf( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
-    iter = tar_next( iter );
+  if ( initrd_exist() ) {
+    uintptr_t initrd = initrd_get_start_address();
+    printf( "initrd = 0x%08x\r\n", initrd );
+    printf( "initrd = 0x%08x\r\n", initrd_get_end_address() );
+    printf( "size = %o\r\n", initrd_get_size() );
+    printf( "size = %d\r\n", initrd_get_size() );
+    // set iterator
+    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
+    // loop through tar
+    while ( ! tar_end_reached( iter ) ) {
+      printf( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
+      iter = tar_next( iter );
+    }
   }
 
   // Setup physical memory management
@@ -103,20 +107,20 @@ void kernel_main() {
   virt_init();
 
   // print size
-  initrd = initrd_get_start_address();
-  printf( "initrd = 0x%08x\r\n", initrd );
-  printf( "initrd = 0x%08x\r\n", initrd_get_end_address() );
-  printf( "size = %o\r\n", initrd_get_size() );
-  printf( "size = %d\r\n", initrd_get_size() );
-  // set iterator
-  iter = ( tar_header_ptr_t )initrd;
-  // loop through tar
-  while ( ! tar_end_reached( iter ) ) {
-    printf( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
-    iter = tar_next( iter );
+  if ( initrd_exist() ) {
+    uintptr_t initrd = initrd_get_start_address();
+    printf( "initrd = 0x%08x\r\n", initrd );
+    printf( "initrd = 0x%08x\r\n", initrd_get_end_address() );
+    printf( "size = %o\r\n", initrd_get_size() );
+    printf( "size = %d\r\n", initrd_get_size() );
+    // set iterator
+    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
+    // loop through tar
+    while ( ! tar_end_reached( iter ) ) {
+      printf( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
+      iter = tar_next( iter );
+    }
   }
-
-  PANIC( "FOOO!" );
 
   // Setup heap
   printf( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );

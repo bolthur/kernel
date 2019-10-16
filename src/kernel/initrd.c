@@ -22,6 +22,7 @@
 #include <stddef.h>
 
 #include <tar.h>
+#include <kernel/initrd.h>
 
 /**
  * @brief internal initrd load address
@@ -73,9 +74,19 @@ size_t initrd_get_size( void ) {
  * @brief Prepare for initrd usage
  */
 void initrd_init( void ) {
-  // set start address
-  initrd_address = INITRD_LOAD_ADDRESS;
+  // platform related initialization
+  initrd_platform_init();
 
   // calculate size
   initrd_size = ( size_t )tar_total_size( initrd_address );
+}
+
+/**
+ * @brief Method to check for initrd exists
+ *
+ * @return true initrd existing
+ * @return false initrd missing
+ */
+bool initrd_exist( void ) {
+  return 0 < initrd_size;
 }

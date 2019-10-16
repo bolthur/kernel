@@ -14,6 +14,7 @@ librpi_a_SOURCES = \
   mailbox/property.c \
   mm/phys.c \
   mm/virt.c \
+  initrd.c \
   irq.c \
   platform.c \
   peripheral.c \

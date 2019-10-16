@@ -18,19 +18,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_INITRD__ )
-#define __KERNEL_INITRD__
+#include <kernel/initrd.h>
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-
-uintptr_t initrd_get_start_address( void );
-void initrd_set_start_address( uintptr_t );
-uintptr_t initrd_get_end_address( void );
-size_t initrd_get_size( void );
-bool initrd_exist( void );
-void initrd_platform_init( void );
-void initrd_init( void );
-
-#endif
+/**
+ * @brief Platform initrd init
+ */
+void initrd_platform_init( void ) {
+  // set start address
+  initrd_set_start_address( INITRD_LOAD_ADDRESS );
+}

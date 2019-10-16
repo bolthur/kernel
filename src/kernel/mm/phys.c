@@ -275,23 +275,26 @@ void phys_init( void ) {
     start += PAGE_SIZE;
   }
 
-  // set start and end from initrd
-  start = initrd_get_start_address();
-  end = initrd_get_end_address();
+  // consider possible initrd
+  if ( initrd_exist() ) {
+    // set start and end from initrd
+    start = initrd_get_start_address();
+    end = initrd_get_end_address();
 
-  // debug output
-  #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "start: 0x%lx\r\n", start );
-    DEBUG_OUTPUT( "end: 0x%lx\r\n", end );
-  #endif
+    // debug output
+    #if defined( PRINT_MM_PHYS )
+      DEBUG_OUTPUT( "start: 0x%lx\r\n", start );
+      DEBUG_OUTPUT( "end: 0x%lx\r\n", end );
+    #endif
 
-  // map from start to end addresses as used
-  while ( start < end ) {
-    // mark used
-    phys_mark_page_used( start );
+    // map from start to end addresses as used
+    while ( start < end ) {
+      // mark used
+      phys_mark_page_used( start );
 
-    // get next page
-    start += PAGE_SIZE;
+      // get next page
+      start += PAGE_SIZE;
+    }
   }
 
   // mark initialized

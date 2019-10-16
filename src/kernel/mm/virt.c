@@ -84,40 +84,43 @@ void virt_init( void ) {
     start += PAGE_SIZE;
   }
 
-  // set start and end from initrd
-  start = initrd_get_start_address();
-  end = initrd_get_end_address();
+  // consider possible initrd
+  if ( initrd_exist() ) {
+    // set start and end from initrd
+    start = initrd_get_start_address();
+    end = initrd_get_end_address();
 
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT(
-      "Map initrd space 0x%08x - 0x%08x to 0x%08x - 0x%08x \r\n",
-      start,
-      end,
-      PHYS_2_VIRT( start ),
-      PHYS_2_VIRT( end )
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT(
+        "Map initrd space 0x%08x - 0x%08x to 0x%08x - 0x%08x \r\n",
+        start,
+        end,
+        PHYS_2_VIRT( start ),
+        PHYS_2_VIRT( end )
+      );
+    #endif
+
+    // map from start to end addresses as used
+    while ( start < end ) {
+      // map page
+      virt_map_address(
+        kernel_context,
+        PHYS_2_VIRT( start ),
+        start,
+        MEMORY_TYPE_NORMAL,
+        PAGE_TYPE_EXECUTABLE
+      );
+
+      // get next page
+      start += PAGE_SIZE;
+    }
+
+    // change initrd location
+    initrd_set_start_address(
+      PHYS_2_VIRT( initrd_get_start_address() )
     );
-  #endif
-
-  // map from start to end addresses as used
-  while ( start < end ) {
-    // map page
-    virt_map_address(
-      kernel_context,
-      PHYS_2_VIRT( start ),
-      start,
-      MEMORY_TYPE_NORMAL,
-      PAGE_TYPE_EXECUTABLE
-    );
-
-    // get next page
-    start += PAGE_SIZE;
   }
-
-  // change initrd location
-  initrd_set_start_address(
-    PHYS_2_VIRT( initrd_get_start_address() )
-  );
 
   // initialize platform related
   virt_platform_init();
