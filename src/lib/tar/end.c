@@ -19,27 +19,16 @@
  */
 
 #include <stdint.h>
-#include <arch/arm/barrier.h>
+#include <stddef.h>
+#include <tar.h>
 
 /**
- * @brief Write to memory mapped I/O
+ * @brief Check for tar end is reached
  *
- * @param reg register/address to write to
- * @param data data to write
+ * @param current tar header to check for end reached
+ * @return true end is reached
+ * @return false there are more elements
  */
-void mmio_write( uint32_t reg, uint32_t data ) {
-  barrier_data_mem();
-  *( volatile uint32_t* )( ( uint32_t )reg ) = data;
-  barrier_data_mem();
-}
-
-/**
- * @brief Read from memory mapped I/O
- *
- * @param reg register/address to read
- * @return uint32_t data from memory mapped I/O
- */
-uint32_t mmio_read( uint32_t reg ) {
-  barrier_data_mem();
-  return *( volatile uint32_t* )( ( uint32_t )reg );
+bool tar_end_reached( tar_header_ptr_t current ) {
+  return NULL == ( uint8_t* )current->file_name;
 }

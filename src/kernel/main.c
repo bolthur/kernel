@@ -33,12 +33,20 @@
 #include <kernel/mm/phys.h>
 #include <kernel/mm/virt.h>
 #include <kernel/mm/heap.h>
+#include <kernel/mm/placement.h>
 #include <kernel/event.h>
+
+#include <endian.h>
+#include <tar.h>
+#include <kernel/panic.h>
+#include <kernel/initrd.h>
 
 /**
  * @brief Kernel main function
+ *
+ * @todo remove initrd test code later
  */
-void kernel_main() {
+void kernel_main( void ) {
   // Initialize serial for debugging if enabled
   #if defined( DEBUG )
     serial_init();
@@ -70,6 +78,26 @@ void kernel_main() {
   printf( "[bolthur/kernel -> irq] initialize ...\r\n" );
   irq_init();
 
+  // Setup initrd parts
+  printf( "[bolthur/kernel -> initrd] initialize ...\r\n" );
+  initrd_init();
+
+  // print size
+  if ( initrd_exist() ) {
+    uintptr_t initrd = initrd_get_start_address();
+    printf( "initrd = 0x%08x\r\n", initrd );
+    printf( "initrd = 0x%08x\r\n", initrd_get_end_address() );
+    printf( "size = %o\r\n", initrd_get_size() );
+    printf( "size = %d\r\n", initrd_get_size() );
+    // set iterator
+    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
+    // loop through tar
+    while ( ! tar_end_reached( iter ) ) {
+      printf( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
+      iter = tar_next( iter );
+    }
+  }
+
   // Setup physical memory management
   printf( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" );
   phys_init();
@@ -77,6 +105,22 @@ void kernel_main() {
   // Setup virtual memory management
   printf( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" );
   virt_init();
+
+  // print size
+  if ( initrd_exist() ) {
+    uintptr_t initrd = initrd_get_start_address();
+    printf( "initrd = 0x%08x\r\n", initrd );
+    printf( "initrd = 0x%08x\r\n", initrd_get_end_address() );
+    printf( "size = %o\r\n", initrd_get_size() );
+    printf( "size = %d\r\n", initrd_get_size() );
+    // set iterator
+    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
+    // loop through tar
+    while ( ! tar_end_reached( iter ) ) {
+      printf( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
+      iter = tar_next( iter );
+    }
+  }
 
   // Setup heap
   printf( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );

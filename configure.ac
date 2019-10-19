@@ -11,102 +11,115 @@ AC_CONFIG_SRCDIR([src/kernel/main.c])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_HEADERS([include/config.h])
 
-#AM_SILENT_RULES([yes])
-
 AC_LANG([C])
 
 # FIXME: Shouldn't be necessary, when creating symlinks of toolchain binaries to /usr/local/bin
 AC_SUBST(PATH, "${HOME}/.bolthur/cross/bin:${PATH}")
 
 AC_ARG_ENABLE([device],
-  AC_HELP_STRING([--enable-device], [set target device (default and fallback is rpi2_b_rev1)]),
-  [case "${enableval}" in
-  rpi2_b_rev1)
-    DEVICE="rpi2_b_rev1"
-    ;;
-  rpi3_b)
-    DEVICE="rpi3_b"
-    ;;
-  rpi_zero_w)
-    DEVICE="rpi_zero_w"
-    ;;
-  esac],
-  [DEVICE="rpi2_b_rev1"]
+  AC_HELP_STRING(
+    [--enable-device],
+    [set target device to compile for [possible targets: rpi2_b_rev1]]
+  ),
+  [enable_device=$enableval],
+  [AC_MSG_ERROR([Target device missing])]
 )
 
-AC_ARG_ENABLE([debug],
-  AC_HELP_STRING([--enable-debug], [enable debug mode with debug symbols (default: off)])
+AC_ARG_ENABLE(
+  [output],
+  AC_HELP_STRING(
+    [--enable-output],
+    [activate kernel output [default: off]]
+  ),
+  [enable_output=yes]
 )
 
-AC_ARG_ENABLE([output],
-  AC_HELP_STRING([--enable-output], [enable kernel output (default: off)])
+AC_ARG_ENABLE(
+  [output-mm-phys],
+  AC_HELP_STRING(
+    [--enable-output-mm-phys],
+    [activate physical memory mapping output [default: off]]
+  ),
+  [enable_output_mm_phys=yes]
 )
 
-AC_ARG_ENABLE([output-mm-phys],
-  AC_HELP_STRING([--enable-output-mm-phys], [Enables output of physical memory mapping routines (default: off)])
+AC_ARG_ENABLE(
+  [output-mm-virt],
+  AC_HELP_STRING(
+    [--enable-output-mm-virt],
+    [activate virtual memory mapping output [default: off]]
+  ),
+  [enable_output_mm_virt=yes]
 )
 
-AC_ARG_ENABLE([output-mm-virt],
-  AC_HELP_STRING([--enable-output-mm-virt], [Enables output of virtual memory mapping routines (default: off)])
+AC_ARG_ENABLE(
+  [output-mm-heap],
+  AC_HELP_STRING(
+    [--enable-output-mm-heap],
+    [activate heap output [default: off]]
+  ),
+  [enable_output_mm_heap=yes]
 )
 
-AC_ARG_ENABLE([output-mm-heap],
-  AC_HELP_STRING([--enable-output-mm-heap], [Enables output of kernel heap routines (default: off)])
+AC_ARG_ENABLE(
+  [output-mm-placement],
+  AC_HELP_STRING(
+    [--enable-output-mm-placement],
+    [activate placememt allocator output [default: off]]
+  ),
+  [enable_output_mm_placement=yes]
 )
 
-AC_ARG_ENABLE([output-mm-placement],
-  AC_HELP_STRING([--enable-output-mm-placement], [Enables output of placememt allocator (default: off)])
+AC_ARG_ENABLE(
+  [output-mailbox],
+  AC_HELP_STRING(
+    [--enable-output-mailbox],
+    [activate mailbox output [default: off]]
+  ),
+  [enable_output_mailbox=yes]
 )
 
-AC_ARG_ENABLE([output-mailbox],
-  AC_HELP_STRING([--enable-output-mailbox], [Enables output of mailbox functions (default: off)])
+AC_ARG_ENABLE(
+  [output-timer],
+  AC_HELP_STRING(
+    [--enable-output-timer],
+    [activate timer output [default: off]]
+  ),
+  [enable_output_timer=yes]
 )
 
-AC_ARG_ENABLE([output-timer],
-  AC_HELP_STRING([--enable-output-timer], [Enables output of timer functions (default: off)])
+AC_ARG_ENABLE(
+  [output-initrd],
+  AC_HELP_STRING(
+    [--enable-output-initrd],
+    [activate initrd output [default: off]]
+  ),
+  [enable_output_initrd=yes]
 )
 
-AC_ARG_ENABLE([output-initrd],
-  AC_HELP_STRING([--enable-output-initrd], [Enables output of initrd related functions (default: off)])
+AC_ARG_WITH(
+  [opt],
+  AC_HELP_STRING(
+    [--with-opt],
+    [compile with specific code optimization level [possible values: 0, 1, 2, 3, s, g | default: 2]]
+  ),
+  [with_opt=$withval]
 )
 
-AC_ARG_ENABLE([debug-initrd],
-  AC_HELP_STRING([--enable-debug-initrd], [Enables add of debug initrd to kernel binary (default: off)])
-)
-
-AC_ARG_ENABLE([opt],
-  AC_HELP_STRING([--enable-opt], [enable code optimization (default: 2)]),
-  [case "${enableval}" in
-  no | 0)
-    CFLAGS="${CFLAGS} -O0"
-    ;;
-  1)
-    CFLAGS="${CFLAGS} -O1"
-    ;;
-  2)
-    CFLAGS="${CFLAGS} -O2"
-    ;;
-  3)
-    CFLAGS="${CFLAGS} -O3"
-    ;;
-  s)
-    CFLAGS="${CFLAGS} -Os"
-    ;;
-  g)
-    CFLAGS="${CFLAGS} -Og"
-    ;;
-  *)
-    CFLAGS="${CFLAGS} -O2"
-    ;;
-  esac],
-  [CFLAGS="${CFLAGS} -O2"]
+AC_ARG_WITH(
+  [debug],
+  AC_HELP_STRING(
+    [--with-debug],
+    [compile with debug symbols]
+  ),
+  [with_debug=yes]
 )
 
 # set target and flags
-BOLTHUR_SET_HOST
-
-# set normal flags
-BOLTHUR_SET_FLAG
+BOLTHUR_KERNEL_SET_DEVICE
+BOLTHUR_KERNEL_SET_HOST
+# set rest of flags
+BOLTHUR_KERNEL_SET_FLAG
 
 # conftest
 AC_LANG_CONFTEST([AC_LANG_SOURCE([[const char hw[] = "Hello, World\r\n";]])])
@@ -117,7 +130,7 @@ AM_PROG_AS
 AC_PROG_RANLIB
 AM_PROG_AR
 AC_PROG_CXX
-BOLTHUR_PROG_OBJCOPY
+BOLTHUR_KERNEL_PROG_OBJCOPY
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -126,13 +139,56 @@ AC_C_VOLATILE
 AC_C_RESTRICT
 
 # Some compiler dependent features.
-AC_DEFINE_UNQUOTED([__packed], [__attribute__((__packed__))], [Keyword for packing structures.])
-AC_DEFINE_UNQUOTED([__section(x)], [__attribute__((__section__(x)))], [Keyword for section placement.])
-AC_DEFINE_UNQUOTED([__aligned(x)], [__attribute__((__aligned__(x)))], [Keyword for alignment.])
-AC_DEFINE_UNQUOTED([__no_optimization], [__attribute__((__optimize__("O0")))], [Disable optimization])
-AC_DEFINE_UNQUOTED([__bootstrap], [__section(".text.boot")], [Bootstrap function])
-AC_DEFINE_UNQUOTED([__bootstrap_data], [__section(".data.boot")], [Bootstrap function])
-AC_DEFINE_UNQUOTED([__unused], [__attribute__((unused))], [Unused function])
+AC_DEFINE_UNQUOTED(
+  [__packed],
+  [__attribute__((__packed__))],
+  [Keyword for packing structures.]
+)
+AC_DEFINE_UNQUOTED(
+  [__section(x)],
+  [__attribute__((__section__(x)))],
+  [Keyword for section placement.]
+)
+AC_DEFINE_UNQUOTED(
+  [__aligned(x)],
+  [__attribute__((__aligned__(x)))],
+  [Keyword for alignment.]
+)
+AC_DEFINE_UNQUOTED(
+  [__no_optimization],
+  [__attribute__((__optimize__("O0")))],
+  [Disable optimization]
+)
+AC_DEFINE_UNQUOTED(
+  [__bootstrap],
+  [__section(".text.boot")],
+  [Bootstrap function]
+)
+AC_DEFINE_UNQUOTED(
+  [__bootstrap_data],
+  [__section(".data.boot")],
+  [Bootstrap data]
+)
+AC_DEFINE_UNQUOTED(
+  [__unused],
+  [__attribute__((unused))],
+  [Unused function]
+)
+AC_DEFINE_UNQUOTED(
+  [__no_sanitize],
+  [__attribute__((no_sanitize("undefined")))],
+  [disable undefined behaviour sanitization]
+)
+AC_DEFINE_UNQUOTED(
+  [__no_return],
+  [__attribute__((noreturn))],
+  [mark function as function without continuing exectution]
+)
+AC_DEFINE_UNQUOTED(
+  [__constructor],
+  [__attribute__((constructor))],
+  [mark function as constructor]
+)
 
 # conditional
 AM_CONDITIONAL([IS32], [test $executable_format -eq 32])

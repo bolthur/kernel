@@ -25,6 +25,7 @@
 #include <assert.h>
 #include <kernel/debug.h>
 #include <kernel/entry.h>
+#include <kernel/initrd.h>
 #include <kernel/mm/phys.h>
 #include <kernel/mm/placement.h>
 
@@ -272,6 +273,28 @@ void phys_init( void ) {
 
     // get next page
     start += PAGE_SIZE;
+  }
+
+  // consider possible initrd
+  if ( initrd_exist() ) {
+    // set start and end from initrd
+    start = initrd_get_start_address();
+    end = initrd_get_end_address();
+
+    // debug output
+    #if defined( PRINT_MM_PHYS )
+      DEBUG_OUTPUT( "start: 0x%lx\r\n", start );
+      DEBUG_OUTPUT( "end: 0x%lx\r\n", end );
+    #endif
+
+    // map from start to end addresses as used
+    while ( start < end ) {
+      // mark used
+      phys_mark_page_used( start );
+
+      // get next page
+      start += PAGE_SIZE;
+    }
   }
 
   // mark initialized

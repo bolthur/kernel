@@ -32,11 +32,11 @@
 #endif
 
 #include <arch/arm/delay.h>
-#include <arch/arm/mmio.h>
 
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
 
+#include <kernel/io.h>
 #include <kernel/timer.h>
 #include <kernel/irq.h>
 
@@ -86,9 +86,9 @@
 bool timer_pending( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
     uintptr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
-    return mmio_read( ( uint32_t )base + CORE0_IRQ_SOURCE ) & ARM_GENERIC_TIMER_MATCH_VIRT;
+    return io_in32( ( uint32_t )base + CORE0_IRQ_SOURCE ) & ARM_GENERIC_TIMER_MATCH_VIRT;
   #else
-    return mmio_read( SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
+    return io_in32( SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
   #endif
 }
 
@@ -117,9 +117,9 @@ void timer_clear( __unused uint8_t num, __unused void* _cpu ) {
     __asm__ __volatile__ ( "mcr p15, 0, %0, c14, c3, 0" :: "r"( ARM_GENERIC_TIMER_COUNT ) );
   #else
     // clear timer match bit
-    mmio_write( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
+    io_out32( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
     // set compare again
-    mmio_write( SYSTEM_TIMER_COMPARE_3, mmio_read( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
+    io_out32( SYSTEM_TIMER_COMPARE_3, io_in32( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
   #endif
 }
 
@@ -135,7 +135,7 @@ void timer_init( void ) {
     uintptr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
 
     // route virtual timer within core
-    mmio_write( ( uint32_t )base + CORE0_TIMER_IRQCNTL, ARM_GENERIC_TIMER_IRQ_VIRT );
+    io_out32( ( uint32_t )base + CORE0_TIMER_IRQCNTL, ARM_GENERIC_TIMER_IRQ_VIRT );
 
     // set frequency and enable
     __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 0" :: "r"( ARM_GENERIC_TIMER_FREQUENCY ) );
@@ -145,24 +145,24 @@ void timer_init( void ) {
     irq_register_handler( SYSTEM_TIMER_3_IRQ, timer_clear, false );
 
     // reset timer control
-    mmio_write( SYSTEM_TIMER_CONTROL, 0x00000000 );
+    io_out32( SYSTEM_TIMER_CONTROL, 0x00000000 );
 
     // set compare for timer 3
-    mmio_write( SYSTEM_TIMER_COMPARE_3, mmio_read( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
+    io_out32( SYSTEM_TIMER_COMPARE_3, io_in32( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
 
     // enable timer 3
-    mmio_write( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
+    io_out32( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
 
     // enable interrupt for timer 3
-    mmio_write( INTERRUPT_ENABLE_IRQ_1, SYSTEM_TIMER_3_IRQ );
+    io_out32( INTERRUPT_ENABLE_IRQ_1, SYSTEM_TIMER_3_IRQ );
 
     // get pending interrupt from memory
-    uint32_t irq_line = mmio_read( INTERRUPT_IRQ_PENDING_1 );
+    uint32_t irq_line = io_in32( INTERRUPT_IRQ_PENDING_1 );
 
     // clear pending interrupt
     irq_line &= ~( SYSTEM_TIMER_3_IRQ );
 
     // overwrite
-    mmio_write( INTERRUPT_IRQ_PENDING_1, irq_line );
+    io_out32( INTERRUPT_IRQ_PENDING_1, irq_line );
   #endif
 }

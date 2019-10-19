@@ -6,6 +6,7 @@ AM_CCASFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/include
 
 noinst_LIBRARIES = libstring.a
 libstring_a_SOURCES = \
+  memcmp.c \
   memcpy.c \
   memset.c \
   strlen.c \

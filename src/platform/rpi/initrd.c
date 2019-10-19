@@ -18,10 +18,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * @brief Abort routine
- */
-void __no_return abort( void ) {
-  while( 1 ) {}
-}
+#include <kernel/initrd.h>
 
+/**
+ * @brief Platform initrd init
+ */
+void initrd_platform_init( void ) {
+  // set start address
+  initrd_set_start_address( INITRD_LOAD_ADDRESS );
+}

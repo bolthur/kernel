@@ -21,4 +21,41 @@
 #if ! defined( __LIB_TAR__ )
 #define __LIB_TAR__
 
+#include <stdbool.h>
+#include <stddef.h>
+
+#define TAR_HEADER_SIZE 512
+
+typedef enum {
+  TAR_FILE_TYPE_NORMAL_FILE = '0',
+  TAR_FILE_TYPE_NORMAL_FILE_EX = '\0',
+  TAR_FILE_TYPE_HARD_LINK = '1',
+  TAR_FILE_TYPE_SYMBOLIC_LINK = '2',
+  TAR_FILE_TYPE_CHARACTER_DEVICE = '3',
+  TAR_FILE_TYPE_BLOCK_DEVICE = '4',
+  TAR_FILE_TYPE_DIRECTORY = '5',
+  TAR_FILE_TYPE_NAMED_PIPE = '6',
+} tar_file_type_t;
+
+typedef struct {
+  char file_name[ 100 ];
+  char file_mode[ 8 ];
+  char user_id[ 8 ];
+  char group_id[ 8 ];
+  char file_size[ 12 ];
+  char last_modified[ 12 ];
+  char checksum[ 8 ];
+  char file_type;
+  char linked_file_name[ 100 ];
+  char __padding[ 255 ];
+} tar_header_t, *tar_header_ptr_t;
+
+uint64_t tar_total_size( uintptr_t );
+uint64_t tar_size( tar_header_ptr_t );
+tar_header_ptr_t tar_next( tar_header_ptr_t );
+tar_header_ptr_t tar_lookup_file( uintptr_t, const char* );
+uint8_t* tar_file( tar_header_ptr_t );
+bool tar_end_reached( tar_header_ptr_t );
+uint64_t octal_size_to_int( const char*, size_t );
+
 #endif

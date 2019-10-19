@@ -24,7 +24,7 @@
 #include <stdio.h>
 #include <kernel/irq.h>
 #include <kernel/panic.h>
-#include <arch/arm/mmio.h>
+#include <kernel/io.h>
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
 
@@ -80,12 +80,12 @@ int8_t irq_get_pending( bool fast ) {
 
   // normal irq
   if ( ! fast ) {
-    uint32_t pending1 = mmio_read( base + INTERRUPT_IRQ_PENDING_1 );
-    uint32_t pending2 = mmio_read( base + INTERRUPT_IRQ_PENDING_2 );
+    uint32_t pending1 = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
+    uint32_t pending2 = io_in32( base + INTERRUPT_IRQ_PENDING_2 );
 
     #if defined( BCM2709 ) || defined( BCM2710 )
       base = peripheral_base_get( PERIPHERAL_LOCAL );
-      uint32_t core0_irq_source = mmio_read( ( uint32_t )base + CORE0_IRQ_SOURCE );
+      uint32_t core0_irq_source = io_in32( ( uint32_t )base + CORE0_IRQ_SOURCE );
       if ( core0_irq_source & 0x08 ) {
         return 8;
       }

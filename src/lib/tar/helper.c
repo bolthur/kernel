@@ -18,12 +18,36 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_MMIO__ )
-#define __ARCH_ARM_MMIO__
-
 #include <stdint.h>
+#include <stddef.h>
 
-void mmio_write( uint32_t, uint32_t );
-uint32_t mmio_read( uint32_t );
+/**
+ * @brief Helper to transform size to integer
+ *
+ * @param in
+ * @param size
+ * @return uint64_t
+ */
+uint64_t octal_size_to_int( const char* in, size_t size ) {
+  uint64_t value = 0;
 
-#endif
+  // skip bullshit data
+  while ( ( '0' > *in || '7' < *in ) && 0 < size ) {
+    ++in;
+    --size;
+  }
+
+  // parse octal to int
+  while ( '0' <= *in && '7' >= *in  && 0 < size ) {
+    // multiply by base
+    value *= 8;
+    // add number
+    value += ( uint64_t )( *in - '0' );
+    // step to next
+    ++in;
+    --size;
+  }
+
+  // return calculated size
+  return value;
+}

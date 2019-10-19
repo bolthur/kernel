@@ -18,14 +18,39 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_PANIC__ )
-#define __KERNEL_PANIC__
-
 #include <stdint.h>
+#include <stddef.h>
+#include <tar.h>
 
-#define PANIC( msg ) panic( msg, __FILE__, __LINE__ );
+/**
+ * @brief Method to get next element within tar file
+ *
+ * @param current
+ * @return tar_header_ptr_t
+ */
+tar_header_ptr_t tar_next( tar_header_ptr_t current ) {
+  // variables
+  uintptr_t address = ( uintptr_t )current;
+  uint64_t size;
+  tar_header_ptr_t next = NULL;
 
-void panic_init( void );
-void __no_return panic( const char* restrict, const char* restrict, uint32_t );
+  // check for invalid
+  if ( tar_end_reached( current ) ) {
+    return NULL;
+  }
 
-#endif
+  // get size
+  size = octal_size_to_int( current->file_size, 11 );
+  // get to next file
+  address +=( uintptr_t )( ( ( ( size + 511 ) / 512 ) + 1 ) * 512 );
+  // transform to tar header
+  next = ( tar_header_ptr_t )address;
+
+  // check for end reached
+  if ( '\0' == next->file_name[ 0 ] ) {
+    return NULL;
+  }
+
+  // return next element
+  return next;
+}

@@ -25,6 +25,7 @@
 #include <stdint.h>
 
 extern uintptr_t placement_address;
+
 uintptr_t placement_alloc( size_t, size_t );
 
 #endif

@@ -14,6 +14,7 @@ libkernel_a_SOURCES = \
   mm/placement.c \
   mm/virt.c \
   event.c \
+  initrd.c \
   irq.c \
   main.c \
   panic.c

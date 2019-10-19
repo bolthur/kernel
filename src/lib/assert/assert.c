@@ -23,7 +23,11 @@
 #include <assert.h>
 #include <kernel/panic.h>
 
-void _assert( const char* restrict file, uint32_t line, const char* restrict desc ) {
+void __no_return _assert(
+  const char* restrict file,
+  uint32_t line,
+  const char* restrict desc
+) {
   // panic init
   panic_init();
 

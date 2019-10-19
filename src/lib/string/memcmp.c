@@ -18,10 +18,33 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/**
- * @brief Abort routine
- */
-void __no_return abort( void ) {
-  while( 1 ) {}
-}
+#include <stddef.h>
+#include <stdint.h>
 
+/**
+ * @brief Memory compare
+ *
+ * @param a
+ * @param b
+ * @param size
+ * @return int
+ */
+int memcmp( const void* a, const void* b, size_t size ) {
+  const uint8_t* ua = ( uint8_t* )a;
+  const uint8_t* ub = ( uint8_t* )b;
+
+  // loop through strings
+  for ( size_t idx = 0; idx < size; idx++ ) {
+    // handle smaller
+    if ( ua[ idx ] < ub[ idx ] ) {
+      return -1;
+    }
+    // handle greater
+    if ( ua[ idx ] > ub[ idx ] ) {
+      return 1;
+    }
+  }
+
+  // equal
+  return 0;
+}

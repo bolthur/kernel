@@ -81,14 +81,9 @@ SECTIONS {
 
   __kernel_end = .;
 
-  .initrd ALIGN( 4K ) : AT( ADDR( .initrd ) - KERNEL_OFFSET ) {
-    __initrd_start = .;
-    KEEP( *( .initrd ) )
-    __initrd_end = .;
-  }
-
   /DISCARD/ : {
     *( .comment )
+    *( .note )
     *( .eh_frame )
     *( .ARM.exidx* )
     *( .ARM.attributes* )
