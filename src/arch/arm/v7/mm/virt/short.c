@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <kernel/panic.h>
 #include <kernel/entry.h>
-#include <kernel/debug.h>
+#include <kernel/debug/debug.h>
 #include <arch/arm/barrier.h>
 #include <kernel/mm/phys.h>
 #include <kernel/mm/heap.h>

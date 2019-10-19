@@ -22,7 +22,7 @@
 #include <string.h>
 #include <assert.h>
 #include <avl.h>
-#include <kernel/debug.h>
+#include <kernel/debug/debug.h>
 #include <kernel/panic.h>
 #include <kernel/mm/phys.h>
 #include <kernel/mm/virt.h>

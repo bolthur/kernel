@@ -18,25 +18,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <kernel/debug/debug.h>
-#include <platform/rpi/platform.h>
+#if ! defined( __KERNEL_TASK_THREAD__ )
+#define __KERNEL_TASK_THREAD__
 
-/**
- * @brief Boot parameter data set during startup
- */
-platform_loader_parameter_t loader_parameter_data;
+typedef struct thread {
+  // thread stack
+  void* stack;
+  // pointer to next thread
+  struct thread* next;
+  // pointer to previous thread
+  struct thread* previous;
+} thread_t, *thread_ptr_t;
 
-/**
- * @brief Platform depending initialization routine
- *
- * @todo remove debug output
- */
-void platform_init( void ) {
-  DEBUG_OUTPUT(
-    "0x%08x - 0x%08x - 0x%08x\r\n",
-    loader_parameter_data.atag,
-    loader_parameter_data.machine,
-    loader_parameter_data.zero
-  );
-}
+#endif

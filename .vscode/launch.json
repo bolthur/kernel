@@ -1,7 +1,6 @@
 {
   "version": "0.2.0",
   "configurations": [
-
     {
       "name": "aarch32-rpi-serial-usb-debug",
       "type": "cppdbg",

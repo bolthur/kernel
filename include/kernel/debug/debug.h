@@ -18,25 +18,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if ! defined( __KERNEL_DEBUG_DEBUG__ )
+#define __KERNEL_DEBUG_DEBUG__
+
 #include <stdio.h>
-#include <kernel/debug/debug.h>
-#include <platform/rpi/platform.h>
 
 /**
- * @brief Boot parameter data set during startup
+ * @brief Debug output define
  */
-platform_loader_parameter_t loader_parameter_data;
+#define DEBUG_OUTPUT( msg, ... ) \
+  printf( "[ %s:%4d ] ", __func__, __LINE__ ); \
+  printf( msg, __VA_ARGS__ );
 
-/**
- * @brief Platform depending initialization routine
- *
- * @todo remove debug output
- */
-void platform_init( void ) {
-  DEBUG_OUTPUT(
-    "0x%08x - 0x%08x - 0x%08x\r\n",
-    loader_parameter_data.atag,
-    loader_parameter_data.machine,
-    loader_parameter_data.zero
-  );
-}
+#endif

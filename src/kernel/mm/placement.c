@@ -22,7 +22,7 @@
 #include <stddef.h>
 
 #include <assert.h>
-#include <kernel/debug.h>
+#include <kernel/debug/debug.h>
 #include <kernel/mm/placement.h>
 #include <kernel/mm/phys.h>
 #include <kernel/mm/virt.h>

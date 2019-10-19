@@ -23,7 +23,7 @@
 
 #include <stdio.h>
 #include <assert.h>
-#include <kernel/debug.h>
+#include <kernel/debug/debug.h>
 #include <kernel/entry.h>
 #include <kernel/initrd.h>
 #include <kernel/mm/phys.h>

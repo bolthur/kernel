@@ -22,7 +22,7 @@
 
 #include <string.h>
 #include <kernel/panic.h>
-#include <kernel/debug.h>
+#include <kernel/debug/debug.h>
 #include <platform/rpi/peripheral.h>
 #include <platform/rpi/mailbox/property.h>
 #include <arch/arm/mm/virt.h>

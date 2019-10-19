@@ -22,7 +22,7 @@
 #include <stdbool.h>
 
 #include <assert.h>
-#include <kernel/debug.h>
+#include <kernel/debug/debug.h>
 #include <kernel/panic.h>
 #include <kernel/entry.h>
 #include <kernel/initrd.h>

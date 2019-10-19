@@ -22,7 +22,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <kernel/debug.h>
+#include <kernel/debug/debug.h>
 #include <kernel/entry.h>
 #include <kernel/mm/phys.h>
 #include <kernel/mm/placement.h>

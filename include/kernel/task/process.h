@@ -18,16 +18,25 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_DEBUG__ )
-#define __KERNEL_DEBUG__
+#if ! defined( __KERNEL_TASK_PROCESS__ )
+#define __KERNEL_TASK_PROCESS__
 
-#include <stdio.h>
+#include <stddef.h>
 
-/**
- * @brief Debug output define
- */
-#define DEBUG_OUTPUT( msg, ... ) \
-  printf( "[ %s:%4d ] ", __func__, __LINE__ ); \
-  printf( msg, __VA_ARGS__ );
+#include <kernel/mm/virt.h>
+#include <kernel/task/thread.h>
+
+typedef struct process {
+  // pointer to thread list
+  thread_ptr_t thread_list;
+
+  // pointer to virtual context
+  virt_context_ptr_t context;
+
+  // pointer to next process
+  struct process* next;
+  // pointer to previous process
+  struct process* previous;
+} process_t, *process_ptr_t;
 
 #endif

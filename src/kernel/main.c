@@ -28,7 +28,7 @@
 #include <kernel/irq.h>
 #include <kernel/timer.h>
 #include <kernel/platform.h>
-#include <kernel/debug.h>
+#include <kernel/debug/debug.h>
 #include <kernel/serial.h>
 #include <kernel/mm/phys.h>
 #include <kernel/mm/virt.h>
