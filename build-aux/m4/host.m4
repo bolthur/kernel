@@ -1,5 +1,5 @@
 
-AC_DEFUN([BOLTHUR_SET_HOST], [
+AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([ELF32], [Define to 1 for 32 bit ELF targets])
   AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets])
   AH_TEMPLATE([DEBUG], [Set to 1 to enable debug mode])

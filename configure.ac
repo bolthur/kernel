@@ -116,10 +116,10 @@ AC_ARG_WITH(
 )
 
 # set target and flags
-BOLTHUR_SET_DEVICE
-BOLTHUR_SET_HOST
+BOLTHUR_KERNEL_SET_DEVICE
+BOLTHUR_KERNEL_SET_HOST
 # set rest of flags
-BOLTHUR_SET_FLAG
+BOLTHUR_KERNEL_SET_FLAG
 
 # conftest
 AC_LANG_CONFTEST([AC_LANG_SOURCE([[const char hw[] = "Hello, World\r\n";]])])
@@ -130,7 +130,7 @@ AM_PROG_AS
 AC_PROG_RANLIB
 AM_PROG_AR
 AC_PROG_CXX
-BOLTHUR_PROG_OBJCOPY
+BOLTHUR_KERNEL_PROG_OBJCOPY
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

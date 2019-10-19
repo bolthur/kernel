@@ -1,5 +1,5 @@
 
-AC_DEFUN([BOLTHUR_SET_FLAG], [
+AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   # stack protector
   CFLAGS="${CFLAGS} -fstack-protector-strong -Wstack-protector"
   # warnings
