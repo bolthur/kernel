@@ -13,6 +13,7 @@ libkernel_a_SOURCES = \
   mm/phys.c \
   mm/placement.c \
   mm/virt.c \
+  task/process.c \
   event.c \
   initrd.c \
   irq.c \

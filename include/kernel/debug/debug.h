@@ -26,8 +26,8 @@
 /**
  * @brief Debug output define
  */
-#define DEBUG_OUTPUT( msg, ... ) \
+#define DEBUG_OUTPUT( ... ) \
   printf( "[ %s:%4d ] ", __func__, __LINE__ ); \
-  printf( msg, __VA_ARGS__ );
+  printf( __VA_ARGS__ );
 
 #endif

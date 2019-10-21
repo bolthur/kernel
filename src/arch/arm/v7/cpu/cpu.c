@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include <kernel/debug/debug.h>
 #include <arch/arm/v7/cpu.h>
 
 /**
@@ -29,7 +29,7 @@
  * @todo check and revise function
  */
 void dump_register( cpu_register_context_t* context ) {
-  printf(
+  DEBUG_OUTPUT(
     "CPU register dump\r\n"\
     "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
     "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\

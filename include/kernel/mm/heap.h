@@ -50,12 +50,12 @@ typedef struct {
   size_t size;
 } heap_block_t, *heap_block_ptr_t;
 
-#define GET_BLOCK_ADDRESS( n ) \
+#define HEAP_GET_BLOCK_ADDRESS( n ) \
   ( heap_block_ptr_t )( ( uint8_t* )n - offsetof( heap_block_t, node_address ) )
-#define GET_BLOCK_SIZE( n ) \
+#define HEAP_GET_BLOCK_SIZE( n ) \
   ( heap_block_ptr_t )( ( uint8_t* )n - offsetof( heap_block_t, node_size ) )
 
-heap_manager_ptr_t kernel_heap;
+extern heap_manager_ptr_t kernel_heap;
 
 bool heap_initialized_get( void );
 void heap_init( void );

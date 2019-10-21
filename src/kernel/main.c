@@ -35,6 +35,7 @@
 #include <kernel/mm/heap.h>
 #include <kernel/mm/placement.h>
 #include <kernel/event.h>
+#include <kernel/task/process.h>
 
 #include <endian.h>
 #include <tar.h>
@@ -56,7 +57,7 @@ void kernel_main( void ) {
   tty_init();
 
   // Some initial output :)
-  printf(
+  DEBUG_OUTPUT(
     "\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n\r\n",
     " _           _ _   _                      __  _                        _ ",
     "| |         | | | | |                    / / | |                      | |",
@@ -67,75 +68,79 @@ void kernel_main( void ) {
   );
 
   // Setup arch related parts
-  printf( "[bolthur/kernel -> arch] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> arch] initialize ...\r\n" );
   arch_init();
 
   // Setup platform related parts
-  printf( "[bolthur/kernel -> platform] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> platform] initialize ...\r\n" );
   platform_init();
 
   // Setup irq
-  printf( "[bolthur/kernel -> irq] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> irq] initialize ...\r\n" );
   irq_init();
 
   // Setup initrd parts
-  printf( "[bolthur/kernel -> initrd] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> initrd] initialize ...\r\n" );
   initrd_init();
 
   // print size
   if ( initrd_exist() ) {
     uintptr_t initrd = initrd_get_start_address();
-    printf( "initrd = 0x%08x\r\n", initrd );
-    printf( "initrd = 0x%08x\r\n", initrd_get_end_address() );
-    printf( "size = %o\r\n", initrd_get_size() );
-    printf( "size = %d\r\n", initrd_get_size() );
+    DEBUG_OUTPUT( "initrd = 0x%08x\r\n", initrd );
+    DEBUG_OUTPUT( "initrd = 0x%08x\r\n", initrd_get_end_address() );
+    DEBUG_OUTPUT( "size = %o\r\n", initrd_get_size() );
+    DEBUG_OUTPUT( "size = %d\r\n", initrd_get_size() );
     // set iterator
     tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
     // loop through tar
     while ( ! tar_end_reached( iter ) ) {
-      printf( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
+      DEBUG_OUTPUT( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
       iter = tar_next( iter );
     }
   }
 
   // Setup physical memory management
-  printf( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" );
   phys_init();
 
   // Setup virtual memory management
-  printf( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" );
   virt_init();
 
   // print size
   if ( initrd_exist() ) {
     uintptr_t initrd = initrd_get_start_address();
-    printf( "initrd = 0x%08x\r\n", initrd );
-    printf( "initrd = 0x%08x\r\n", initrd_get_end_address() );
-    printf( "size = %o\r\n", initrd_get_size() );
-    printf( "size = %d\r\n", initrd_get_size() );
+    DEBUG_OUTPUT( "initrd = 0x%08x\r\n", initrd );
+    DEBUG_OUTPUT( "initrd = 0x%08x\r\n", initrd_get_end_address() );
+    DEBUG_OUTPUT( "size = %o\r\n", initrd_get_size() );
+    DEBUG_OUTPUT( "size = %d\r\n", initrd_get_size() );
     // set iterator
     tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
     // loop through tar
     while ( ! tar_end_reached( iter ) ) {
-      printf( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
+      DEBUG_OUTPUT( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
       iter = tar_next( iter );
     }
   }
 
   // Setup heap
-  printf( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
   heap_init();
 
   // Setup event system
-  printf( "[bolthur/kernel -> event] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> event] initialize ...\r\n" );
   event_init();
 
   // Setup timer
-  printf( "[bolthur/kernel -> timer] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" );
   timer_init();
 
+  // Setup multitasking
+  DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" );
+  task_process_init();
+
   // Setup irq
-  printf( "[bolthur/kernel -> irq] enable ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> irq] enable ...\r\n" );
   irq_enable();
 
   while ( 1 ) {}
