@@ -43,6 +43,7 @@ BUILT_SOURCES = \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
   ${abs_top_builddir}/src/kernel/libkernel.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
+  ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \
   ${abs_top_builddir}/src/lib/stdlib/libstdlib.a \
   ${abs_top_builddir}/src/lib/string/libstring.a \
@@ -62,6 +63,7 @@ kernel_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
   ${abs_top_builddir}/src/kernel/libkernel.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
+  ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \
   ${abs_top_builddir}/src/lib/stdlib/libstdlib.a \
   ${abs_top_builddir}/src/lib/string/libstring.a \

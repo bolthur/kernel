@@ -19,6 +19,9 @@
  */
 
 #include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #include <kernel/task/thread.h>
 #include <arch/arm/v7/cpu.h>
 
@@ -28,10 +31,25 @@
  * @param entry entry point of the thread
  * @param type thread type
  * @return void* pointer to thread structure
+ *
+ * @todo populate reserved context
+ * @todo set entry point within created cpu context
+ * @todo consider thread type within context prepare
  */
 void* task_create_thread(
   __unused uintptr_t entry,
   __unused task_thread_type_t type
 ) {
-  return NULL;
+  // create instance of cpu structure
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )malloc(
+    sizeof( cpu_register_context_t ) );
+  // assert malloc return
+  assert( NULL != cpu );
+  // preset with 0
+  memset( ( void* )cpu, 0, sizeof( cpu_register_context_t ) );
+
+  // fill context
+
+  // return created context
+  return ( void* )cpu;
 }

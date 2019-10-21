@@ -18,32 +18,25 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_EVENT__ )
-#define __KERNEL_EVENT__
-
-#include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
 #include <list.h>
 
-typedef enum {
-  EVENT_TIMER = 0,
-  EVENT_DUMMY_LAST
-} event_type_t;
+list_item_ptr_t list_node_create( void* data ) {
+  // allocate new node
+  list_item_ptr_t node = ( list_item_ptr_t )malloc( sizeof( list_item_t ) );
+  // assert allocation
+  assert( NULL != node );
+  // overwrite allocated memory with 0
+  memset( ( void* )node, 0, sizeof( list_item_t ) );
 
-typedef struct {
-  list_item_ptr_t* list;
-} event_manager_t, *event_manager_ptr_t;
+  // populate created node
+  node->next = NULL;
+  node->previous = NULL;
+  node->data = data;
 
-typedef void ( *event_callback_t )( void* data );
-
-typedef struct {
-  event_callback_t callback;
-} event_callback_wrapper_t, *event_callback_wrapper_ptr_t;
-
-bool event_initialized_get( void );
-void event_init( void );
-
-bool event_bind( event_type_t, event_callback_t );
-void event_unbind( event_type_t, event_callback_t );
-void event_fire( event_type_t, void* );
-
-#endif
+  // return created node
+  return node;
+}

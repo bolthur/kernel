@@ -59,9 +59,9 @@
         uint32_t pc; /* r15 = program counter */
         uint32_t spsr;
       } reg;
-    } cpu_register_context_t;
+    } cpu_register_context_t, *cpu_register_context_ptr_t;
 
-    void dump_register( cpu_register_context_t* );
+    void dump_register( cpu_register_context_ptr_t );
   #endif
 
 #endif

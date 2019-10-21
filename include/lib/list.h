@@ -18,32 +18,26 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_EVENT__ )
-#define __KERNEL_EVENT__
+#if ! defined( __LIB_LIST__ )
+#define __LIB_LIST__
 
 #include <stdbool.h>
-#include <list.h>
+#include <stdint.h>
 
-typedef enum {
-  EVENT_TIMER = 0,
-  EVENT_DUMMY_LAST
-} event_type_t;
+// forward declaration
+typedef struct list_item list_item_t, *list_item_ptr_t;
 
-typedef struct {
-  list_item_ptr_t* list;
-} event_manager_t, *event_manager_ptr_t;
+// generic list item
+typedef struct list_item {
+  void* data;
+  list_item_ptr_t previous;
+  list_item_ptr_t next;
+} list_item_t, *list_item_ptr_t;
 
-typedef void ( *event_callback_t )( void* data );
-
-typedef struct {
-  event_callback_t callback;
-} event_callback_wrapper_t, *event_callback_wrapper_ptr_t;
-
-bool event_initialized_get( void );
-void event_init( void );
-
-bool event_bind( event_type_t, event_callback_t );
-void event_unbind( event_type_t, event_callback_t );
-void event_fire( event_type_t, void* );
+list_item_ptr_t* list_construct( void* );
+void list_destruct( list_item_ptr_t* );
+void list_push( list_item_ptr_t*, void* );
+void* list_pop( list_item_ptr_t* );
+list_item_ptr_t list_node_create( void* );
 
 #endif

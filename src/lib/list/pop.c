@@ -18,32 +18,31 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_EVENT__ )
-#define __KERNEL_EVENT__
-
-#include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <assert.h>
 #include <list.h>
 
-typedef enum {
-  EVENT_TIMER = 0,
-  EVENT_DUMMY_LAST
-} event_type_t;
+void* list_pop( list_item_ptr_t* list ) {
+  void* data;
+  list_item_ptr_t first;
 
-typedef struct {
-  list_item_ptr_t* list;
-} event_manager_t, *event_manager_ptr_t;
+  // assert list is initialized
+  assert( NULL != list && NULL != *list );
+  // get first element
+  first = *list;
 
-typedef void ( *event_callback_t )( void* data );
+  // cache data of first element
+  data = first->data;
+  // change previous of next element if existing
+  if ( NULL != first->next ) {
+    first->next->previous = NULL;
+  }
 
-typedef struct {
-  event_callback_t callback;
-} event_callback_wrapper_t, *event_callback_wrapper_ptr_t;
-
-bool event_initialized_get( void );
-void event_init( void );
-
-bool event_bind( event_type_t, event_callback_t );
-void event_unbind( event_type_t, event_callback_t );
-void event_fire( event_type_t, void* );
-
-#endif
+  // change list to next to remove first element from list
+  *list = first->next;
+  // free first element
+  free( ( void* )first );
+  // return set data
+  return data;
+}

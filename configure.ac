@@ -97,6 +97,15 @@ AC_ARG_ENABLE(
   [enable_output_initrd=yes]
 )
 
+AC_ARG_ENABLE(
+  [output-event],
+  AC_HELP_STRING(
+    [--enable-output-event],
+    [activate event output [default: off]]
+  ),
+  [enable_output_event=yes]
+)
+
 AC_ARG_WITH(
   [opt],
   AC_HELP_STRING(
@@ -206,6 +215,7 @@ AC_CONFIG_FILES([
   src/lib/Makefile
   src/lib/assert/Makefile
   src/lib/avl/Makefile
+  src/lib/list/Makefile
   src/lib/ssp/Makefile
   src/lib/stdio/Makefile
   src/lib/stdlib/Makefile

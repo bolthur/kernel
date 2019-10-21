@@ -69,6 +69,7 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-mailbox` activate tty output of mailbox implementation
 * `--enable-output-timer` activate tty output of timer implementation
 * `--enable-output-initrd` activate initrd implementation output
+* `--enable-output-event` activate event implementation output
 
 ### Building
 

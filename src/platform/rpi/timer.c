@@ -36,6 +36,7 @@
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
 
+#include <kernel/event.h>
 #include <kernel/io.h>
 #include <kernel/timer.h>
 #include <kernel/irq.h>
@@ -98,14 +99,14 @@ bool timer_pending( void ) {
  * @param num Timer interrupt number
  * @param _cpu CPU register dump
  */
-void timer_clear( __unused uint8_t num, __unused void* _cpu ) {
-  // convert _cpu to cpu register context pointer
-  // cpu_register_context_t *cpu = ( cpu_register_context_t * )_cpu;
-
+void timer_clear( __unused uint8_t num, void* cpu ) {
   // check for pending timer
   if ( ! timer_pending() ) {
     return;
   }
+
+  // trigger timer event
+  event_fire( EVENT_TIMER, cpu );
 
   // debug output
   #if defined( PRINT_TIMER )

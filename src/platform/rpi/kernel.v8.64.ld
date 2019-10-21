@@ -30,6 +30,7 @@ GROUP(
   ../../platform/rpi/librpi.a
   ../../lib/assert/libassert.a
   ../../lib/avl/libavl.a
+  ../../lib/list/liblist.a
   ../../lib/ssp/libssp.a
   ../../lib/stdio/libstdio.a
   ../../lib/stdlib/libstdlib.a

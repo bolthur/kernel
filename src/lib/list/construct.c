@@ -18,32 +18,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_EVENT__ )
-#define __KERNEL_EVENT__
-
-#include <stdbool.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <string.h>
 #include <list.h>
 
-typedef enum {
-  EVENT_TIMER = 0,
-  EVENT_DUMMY_LAST
-} event_type_t;
+#include <stdio.h>
 
-typedef struct {
-  list_item_ptr_t* list;
-} event_manager_t, *event_manager_ptr_t;
+list_item_ptr_t* list_construct( void* data ) {
+  list_item_ptr_t node;
+  list_item_ptr_t *list;
 
-typedef void ( *event_callback_t )( void* data );
+  // allocate list
+  list = ( list_item_ptr_t* )malloc( sizeof( list_item_ptr_t ) );
+  // assert malloc result
+  assert( NULL != list );
 
-typedef struct {
-  event_callback_t callback;
-} event_callback_wrapper_t, *event_callback_wrapper_ptr_t;
+  // allocate new node
+  node = list_node_create( data );
+  // set list pointer
+  *list = node;
 
-bool event_initialized_get( void );
-void event_init( void );
-
-bool event_bind( event_type_t, event_callback_t );
-void event_unbind( event_type_t, event_callback_t );
-void event_fire( event_type_t, void* );
-
-#endif
+  // return created list
+  return list;
+}

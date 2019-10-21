@@ -18,32 +18,31 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_EVENT__ )
-#define __KERNEL_EVENT__
-
-#include <stdbool.h>
+#include <stddef.h>
+#include <assert.h>
+#include <stdlib.h>
 #include <list.h>
 
-typedef enum {
-  EVENT_TIMER = 0,
-  EVENT_DUMMY_LAST
-} event_type_t;
+void list_push( list_item_ptr_t *list, void* data ) {
+  list_item_ptr_t first, node;
 
-typedef struct {
-  list_item_ptr_t* list;
-} event_manager_t, *event_manager_ptr_t;
+  // assert list is initialized
+  assert( NULL != list && NULL != *list );
+  // set list head
+  first = *list;
+  // handle empty list
+  if ( NULL == first->data ) {
+    first->data = data;
+    return;
+  }
 
-typedef void ( *event_callback_t )( void* data );
+  // create new node
+  node = list_node_create( data );
+  // set next to first
+  node->next = first;
+  // set previous for first element
+  first->previous = node;
 
-typedef struct {
-  event_callback_t callback;
-} event_callback_wrapper_t, *event_callback_wrapper_ptr_t;
-
-bool event_initialized_get( void );
-void event_init( void );
-
-bool event_bind( event_type_t, event_callback_t );
-void event_unbind( event_type_t, event_callback_t );
-void event_fire( event_type_t, void* );
-
-#endif
+  // overwrite first element within list pointer
+  *list = node;
+}
