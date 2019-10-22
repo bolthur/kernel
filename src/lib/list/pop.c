@@ -23,24 +23,41 @@
 #include <assert.h>
 #include <list.h>
 
-void* list_pop( list_item_ptr_t* list ) {
+/**
+ * @brief Method to pop element from list
+ *
+ * @param list list to use
+ * @return void* data of first element or NULL if empty
+ */
+void* list_pop( list_manager_ptr_t list ) {
   void* data;
   list_item_ptr_t first;
 
   // assert list is initialized
-  assert( NULL != list && NULL != *list );
+  assert( NULL != list );
   // get first element
-  first = *list;
+  first = list->first;
+
+  // handle empty list
+  if ( NULL == first ) {
+    return NULL;
+  }
 
   // cache data of first element
   data = first->data;
   // change previous of next element if existing
   if ( NULL != first->next ) {
+    // change previous
     first->next->previous = NULL;
   }
 
   // change list to next to remove first element from list
-  *list = first->next;
+  list->first = first->next;
+  // change last if no next element is existing
+  if ( NULL == list->first || NULL == list->first->next ) {
+    list->last = list->first;
+  }
+
   // free first element
   free( ( void* )first );
   // return set data

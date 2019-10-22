@@ -29,34 +29,26 @@
 #include <kernel/debug/debug.h>
 #include <kernel/event.h>
 
-static bool event_initialized = false;
+/**
+ * @brief event manager structure
+ */
 event_manager_ptr_t event = NULL;
 
 /**
- * @brief Get initialized flag
- *
- * @return true event management has been set up
- * @return false event management has not been set up yet
- */
-bool event_initialized_get( void ) {
-  return event_initialized;
-}
-
-/**
  * @brief Method to setup event system
- *
- * @todo Add debug output encapsulated by define PRINT_EVENT
  */
 void event_init( void ) {
-  // assert not initialized
-  assert( true != event_initialized );
-
   // set count to 0
   size_t count = 0;
   // count amount of types
   for ( int32_t type = EVENT_TIMER; type < EVENT_DUMMY_LAST; type++ ) {
     count++;
   }
+
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Determined count of event lists: %d\r\n", count );
+  #endif
 
   // create manager structure
   event = ( event_manager_ptr_t )malloc( sizeof( event_manager_t ) );
@@ -65,15 +57,23 @@ void event_init( void ) {
   // prepare
   memset( ( void* )event, 0, sizeof( event_manager_t ) );
 
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Initialized event manager structure at 0x%08p\r\n", event );
+  #endif
+
   // create lists for each type
-  event->list = ( list_item_ptr_t* )malloc( count * sizeof( list_item_ptr_t ) );
+  event->list = ( list_manager_ptr_t* )malloc(
+    count * sizeof( list_manager_ptr_t ) );
   // assert result
   assert( NULL != event->list );
   // prepare
-  memset( ( void* )event->list, 0, count * sizeof( list_item_ptr_t ) );
+  memset( ( void* )event->list, 0, count * sizeof( list_manager_ptr_t ) );
 
-  // set flag
-  event_initialized = true;
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Initialized list for types at: 0x%08p\r\n", event->list );
+  #endif
 }
 
 /**
@@ -83,41 +83,76 @@ void event_init( void ) {
  * @param callback callback to bind
  * @return true on success
  * @return false on error
- *
- * @todo check for already bound callback
- *
- * @todo Add debug output encapsulated by define PRINT_EVENT
  */
 bool event_bind( event_type_t type, event_callback_t callback ) {
   // do nothing if not initialized
-  if ( ! event_initialized ) {
+  if ( NULL == event ) {
     return true;
   }
 
+  // Get list of type
+  list_manager_ptr_t list = event->list[ type ];
+  // construct list if not created
+  if ( NULL == list ) {
+    // create list
+    list = list_construct();
+    // debug output
+    #if defined( PRINT_EVENT )
+      DEBUG_OUTPUT( "Created list at 0x%08p\r\n", list );
+    #endif
+  }
+
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Checking for already bound callback\r\n" );
+  #endif
+  // get first element
+  list_item_ptr_t current = list->first;
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
+  #endif
+  // loop through list for check callback
+  while ( NULL != current ) {
+    // get callback from data
+    event_callback_wrapper_ptr_t wrapper =
+      ( event_callback_wrapper_ptr_t )current->data;
+    // debug output
+    #if defined( PRINT_EVENT )
+      DEBUG_OUTPUT( "Check bound callback at 0x%08p\r\n", wrapper );
+    #endif
+    // handle match
+    if ( wrapper->callback == callback ) {
+      return true;
+    }
+    // get to next
+    current = current->next;
+  }
+
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Push wrapper into list\r\n" );
+  #endif
   // create callback wrapper
   event_callback_wrapper_ptr_t wrapper = ( event_callback_wrapper_ptr_t )malloc(
     sizeof( event_callback_wrapper_t ) );
-  DEBUG_OUTPUT( "wrapper = 0x%08x\r\n", wrapper );
   // assert malloc
   assert( NULL != malloc );
   // prepare
   memset( ( void* )wrapper, 0, sizeof( event_callback_wrapper_t ) );
   // populate callback
   wrapper->callback = callback;
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Binding callback for type %d\r\n", type );
+    DEBUG_OUTPUT( "Created wrapper at 0x%08p\r\n", wrapper );
+  #endif
 
-  // Get list of type
-  list_item_ptr_t current = event->list[ type ];
-
-  // construct list
-  if ( NULL == current ) {
-    current = *list_construct( ( void* )wrapper );
   // push item
-  } else {
-    list_push( &current, ( void* )wrapper );
-  }
+  list_push( list, ( void* )wrapper );
 
   // overwrite event list entry
-  event->list[ type ] = current;
+  event->list[ type ] = list;
 
   // return success
   return true;
@@ -129,11 +164,11 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
  * @param event_type_t event type
  * @param event_callback_t bound callback
  *
- * @todo Add debug output encapsulated by define PRINT_EVENT
+ * @todo Add logic for method
  */
 void event_unbind( __unused event_type_t type, __unused event_callback_t callback ) {
   // do nothing if not initialized
-  if ( ! event_initialized ) {
+  if ( NULL == event ) {
     return;
   }
 
@@ -145,23 +180,44 @@ void event_unbind( __unused event_type_t type, __unused event_callback_t callbac
  *
  * @param type type to fire
  * @param data data to pass through
- *
- * @todo Add debug output encapsulated by define PRINT_EVENT
  */
-void event_fire( event_type_t type, void* data ) {
+void event_fire( event_type_t type, void** data ) {
   // do nothing if not initialized
-  if ( ! event_initialized ) {
+  if ( NULL == event ) {
     return;
   }
 
   // Get list of type
-  list_item_ptr_t current = event->list[ type ];
+  list_manager_ptr_t list = event->list[ type ];
+
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Use list 0x%08p for fire\r\n", list );
+  #endif
+
+  // handle NULL
+  if ( NULL == list ) {
+    return;
+  }
+
+  // get first element
+  list_item_ptr_t current = list->first;
+
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
+  #endif
 
   // loop through list
   while ( NULL != current ) {
     // get callback from data
     event_callback_wrapper_ptr_t wrapper =
       ( event_callback_wrapper_ptr_t )current->data;
+
+    // debug output
+    #if defined( PRINT_EVENT )
+      DEBUG_OUTPUT( "Executing bound callback 0x%08p\r\n", wrapper );
+    #endif
 
     // fire with data
     wrapper->callback( data );

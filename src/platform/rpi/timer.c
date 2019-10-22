@@ -96,17 +96,16 @@ bool timer_pending( void ) {
 /**
  * @brief Clear timer callback
  *
- * @param num Timer interrupt number
- * @param _cpu CPU register dump
+ * @param context cpu context
  */
-void timer_clear( __unused uint8_t num, void* cpu ) {
+void timer_clear( void** context ) {
   // check for pending timer
   if ( ! timer_pending() ) {
     return;
   }
 
   // trigger timer event
-  event_fire( EVENT_TIMER, cpu );
+  event_fire( EVENT_TIMER, context );
 
   // debug output
   #if defined( PRINT_TIMER )

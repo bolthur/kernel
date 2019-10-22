@@ -23,26 +23,30 @@
 #include <stdlib.h>
 #include <list.h>
 
-void list_push( list_item_ptr_t *list, void* data ) {
+/**
+ * @brief Method to push node with data into list
+ *
+ * @param list list to use
+ * @param data data to push into list
+ */
+void list_push( list_manager_ptr_t list, void* data ) {
   list_item_ptr_t first, node;
 
   // assert list is initialized
-  assert( NULL != list && NULL != *list );
+  assert( NULL != list );
   // set list head
-  first = *list;
-  // handle empty list
-  if ( NULL == first->data ) {
-    first->data = data;
-    return;
-  }
+  first = list->first;
 
   // create new node
   node = list_node_create( data );
   // set next to first
   node->next = first;
+
   // set previous for first element
-  first->previous = node;
+  if ( NULL != first ) {
+    first->previous = node;
+  }
 
   // overwrite first element within list pointer
-  *list = node;
+  list->first = node;
 }

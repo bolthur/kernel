@@ -26,19 +26,24 @@
 
 #include <stdio.h>
 
-list_item_ptr_t* list_construct( void* data ) {
-  list_item_ptr_t node;
-  list_item_ptr_t *list;
+/**
+ * @brief Method to construct list
+ *
+ * @return list_manager_ptr_t pointer to created list
+ */
+list_manager_ptr_t list_construct( void ) {
+  list_manager_ptr_t list;
 
   // allocate list
-  list = ( list_item_ptr_t* )malloc( sizeof( list_item_ptr_t ) );
+  list = ( list_manager_ptr_t )malloc( sizeof( list_manager_t ) );
   // assert malloc result
   assert( NULL != list );
+  // overwrite with zero
+  memset( ( void* )list, 0, sizeof( list_manager_t ) );
 
-  // allocate new node
-  node = list_node_create( data );
-  // set list pointer
-  *list = node;
+  // preset elements
+  list->first = NULL;
+  list->last = NULL;
 
   // return created list
   return list;

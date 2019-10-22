@@ -49,6 +49,39 @@ static avl_node_ptr_t find_by_data(
 }
 
 /**
+ * @brief Helper to find node within tree
+ *
+ * @param node node to lookup for
+ * @param root root node
+ * @param tree tree container
+ * @return avl_node_ptr_t
+ */
+static avl_node_ptr_t find_by_node(
+  avl_node_ptr_t node,
+  avl_node_ptr_t root,
+  avl_tree_ptr_t tree
+) {
+  // end point
+  if ( root == NULL ) {
+    return NULL;
+  }
+
+  // compare
+  int32_t result = tree->compare( root, node );
+
+  // continue left
+  if ( -1 == result ) {
+    return find_by_node( node, root->left, tree );
+  // continue right
+  } else if ( 1 == result ) {
+    return find_by_node( node, root->right, tree );
+  }
+
+  // generic else case: found node is the wanted one
+  return root;
+}
+
+/**
  * @brief Helper to find parent node within tree
  *
  * @param data data to lookup for
@@ -111,4 +144,15 @@ avl_node_ptr_t avl_find_by_data( const avl_tree_ptr_t tree, void* data ) {
  */
 avl_node_ptr_t avl_find_parent_by_data( const avl_tree_ptr_t tree, void* data ) {
   return find_parent_by_data( data, tree->root );
+}
+
+/**
+ * @brief Find an avl node within treee
+ *
+ * @param tree tree to search
+ * @param data data to lookup
+ * @return avl_node_ptr_t found node or NULL
+ */
+avl_node_ptr_t avl_find_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
+  return find_by_node( node, tree->root, tree );
 }

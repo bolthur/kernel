@@ -42,11 +42,11 @@
 #include <kernel/panic.h>
 #include <kernel/initrd.h>
 
-static void foo( __unused void* data ) {
+static void foo( __unused void** data ) {
   DEBUG_OUTPUT("TESTING AROUND WITH EVENTS!\r\n");
 }
 
-static void foo2( __unused void* data ) {
+static void foo2( __unused void** data ) {
   DEBUG_OUTPUT("TESTING AROUND WITH EVENTS 2!\r\n");
 }
 

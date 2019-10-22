@@ -15,6 +15,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_TIMER], [Define to 1 to enable output of timer])
   AH_TEMPLATE([PRINT_INITRD], [Define to 1 to enable output of initrd])
   AH_TEMPLATE([PRINT_EVENT], [Define to 1 to enable output of event])
+  AH_TEMPLATE([PRINT_INTERRUPT], [Define to 1 to enable output of interrupt methods])
   AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
   AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
 
@@ -66,6 +67,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   # Test for event output
   AS_IF([test "x$enable_output_event" == "xyes"], [
     AC_DEFINE([PRINT_EVENT], [1])
+  ])
+
+  # Test for interrupt output
+  AS_IF([test "x$enable_output_interrupt" == "xyes"], [
+    AC_DEFINE([PRINT_INTERRUPT], [1])
   ])
 
   case "${host_cpu}" in

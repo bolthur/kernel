@@ -91,9 +91,6 @@ void data_abort_handler( cpu_register_context_t *status ) {
  * @brief Interrupt request exception handler
  *
  * @param status current register context
- *
- * @todo check and revise
- * @todo add event trigger instead of get handler call, when heap is existing
  */
 void irq_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -102,21 +99,14 @@ void irq_handler( cpu_register_context_t *status ) {
   int8_t irq = irq_get_pending( false );
   assert( -1 != irq );
 
-  // get bound interrupt handler
-  irq_callback_t cb = irq_get_handler( ( uint8_t )irq, false );
-  assert( NULL != cb );
-
-  // Execute callback with registers
-  cb( ( uint8_t )irq, &status );
+  // handle bound irq handlers
+  irq_handle( ( uint8_t )irq, false, ( void**)&status );
 }
 
 /**
  * @brief Fast interrupt request exception handler
  *
  * @param status current register context
- *
- * @todo check and revise
- * @todo add event trigger instead of get handler call, when heap is existing
  */
 void fast_interrupt_handler( cpu_register_context_t *status ) {
   dump_register( status );
@@ -125,12 +115,8 @@ void fast_interrupt_handler( cpu_register_context_t *status ) {
   int8_t irq = irq_get_pending( true );
   assert( -1 != irq );
 
-  // get bound interrupt handler
-  irq_callback_t cb = irq_get_handler( ( uint8_t )irq, true );
-  assert( NULL != cb );
-
-  // Execute callback with registers
-  cb( ( uint8_t )irq, &status );
+  // handle bound fast interrupt handlers
+  irq_handle( ( uint8_t )irq, true, ( void**)&status );
 }
 
 /**

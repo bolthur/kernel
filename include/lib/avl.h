@@ -54,6 +54,7 @@ void avl_prepare_node( avl_node_ptr_t, void* );
 
 avl_node_ptr_t avl_find_by_data( const avl_tree_ptr_t, void* );
 avl_node_ptr_t avl_find_parent_by_data( const avl_tree_ptr_t, void* );
+avl_node_ptr_t avl_find_by_node( const avl_tree_ptr_t, avl_node_ptr_t );
 void avl_remove_by_data( const avl_tree_ptr_t, void* );
 
 void avl_insert_by_node( const avl_tree_ptr_t, avl_node_ptr_t );

@@ -24,6 +24,12 @@
 #include <string.h>
 #include <list.h>
 
+/**
+ * @brief Helper for creating a list node
+ *
+ * @param data data to populate
+ * @return list_item_ptr_t pointer to created node
+ */
 list_item_ptr_t list_node_create( void* data ) {
   // allocate new node
   list_item_ptr_t node = ( list_item_ptr_t )malloc( sizeof( list_item_t ) );

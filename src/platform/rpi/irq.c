@@ -29,27 +29,11 @@
 #include <platform/rpi/peripheral.h>
 
 /**
- * @brief IRQ callback map
- *
- * @todo check and revise
- */
-irq_callback_t irq_callback_map[ 64 ];
-
-/**
- * @brief FIQ callback map
- *
- * @todo check and revise
- */
-irq_callback_t fast_irq_callback_map[ 72 ];
-
-/**
  * @brief Helper to validate irq number
  *
  * @param num number to validate
  * @return true if irq is valid
  * @return false if irq is invalid
- *
- * @todo check and revise
  */
 bool irq_validate_number( uint8_t num ) {
   return ! (
@@ -71,7 +55,7 @@ bool irq_validate_number( uint8_t num ) {
  * @return int8_t pending interrupt number
  *
  * @todo add code for checking for fast interrupts
- * @todo check and revise
+ * @todo check and revise or extend
  */
 int8_t irq_get_pending( bool fast ) {
   uintptr_t base = ( uint32_t )peripheral_base_get(

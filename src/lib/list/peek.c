@@ -18,29 +18,29 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stddef.h>
 #include <stdlib.h>
-#include <string.h>
 #include <assert.h>
-#include <avl.h>
+#include <list.h>
 
 /**
- * @brief Helper to create new tree
+ * @brief Method to get element from list like pop without removal
  *
- * @param compare compare function to be used within tree
- * @return avl_tree_ptr_t pointer to new tree
+ * @param list list to use
+ * @return void* data of first element or NULL if empty
  */
-avl_tree_ptr_t avl_create_tree( avl_compare_func_t compare ) {
-  // allocate new tree structure
-  avl_tree_ptr_t tree = ( avl_tree_ptr_t )malloc( sizeof( avl_tree_t ) );
-  // assert malloc result
-  assert( NULL != tree );
-  // prepare structure
-  memset( ( void* )tree, 0, sizeof( avl_tree_t ) );
+void* list_peek( list_manager_ptr_t list ) {
+  list_item_ptr_t first;
 
-  // fill structure itself
-  tree->root = NULL;
-  tree->compare = compare;
+  // assert list is initialized
+  assert( NULL != list );
+  // get first element
+  first = list->first;
 
-  // return created tree
-  return tree;
+  // handle empty list
+  if ( NULL == first ) {
+    return NULL;
+  }
+  // return data of first element
+  return first->data;
 }

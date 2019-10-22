@@ -23,13 +23,18 @@
 #include <assert.h>
 #include <list.h>
 
-void list_destruct( list_item_ptr_t* list ) {
+/**
+ * @brief Method to destruct list
+ *
+ * @param list list to use
+ */
+void list_destruct( list_manager_ptr_t list ) {
   list_item_ptr_t current, next;
 
   // assert list
   assert( NULL != list );
   // populate current
-  current = *list;
+  current = list->first;
 
   // loop through list until end
   while ( NULL != current ) {

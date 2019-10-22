@@ -9,5 +9,6 @@ liblist_a_SOURCES = \
   construct.c \
   destruct.c \
   node_create.c \
+  peek.c \
   pop.c \
   push.c

@@ -34,10 +34,16 @@ typedef struct list_item {
   list_item_ptr_t next;
 } list_item_t, *list_item_ptr_t;
 
-list_item_ptr_t* list_construct( void* );
-void list_destruct( list_item_ptr_t* );
-void list_push( list_item_ptr_t*, void* );
-void* list_pop( list_item_ptr_t* );
+typedef struct {
+  list_item_ptr_t first;
+  list_item_ptr_t last;
+} list_manager_t, *list_manager_ptr_t;
+
+list_manager_ptr_t list_construct( void );
+void list_destruct( list_manager_ptr_t );
+void list_push( list_manager_ptr_t, void* );
+void* list_pop( list_manager_ptr_t );
+void* list_peek( list_manager_ptr_t );
 list_item_ptr_t list_node_create( void* );
 
 #endif

@@ -40,8 +40,6 @@ uintptr_t placement_address = VIRT_2_PHYS( &__kernel_end );
  * @param alignment alignment
  * @param size amount of memory to align
  * @return uintptr_t found address
- *
- * @todo ensure that initrd won't be overwritten acidentally
  */
 uintptr_t placement_alloc( size_t alignment, size_t size ) {
   // assert alignment

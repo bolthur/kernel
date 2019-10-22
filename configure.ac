@@ -106,6 +106,15 @@ AC_ARG_ENABLE(
   [enable_output_event=yes]
 )
 
+AC_ARG_ENABLE(
+  [output-interrupt],
+  AC_HELP_STRING(
+    [--enable-output-interrupt],
+    [activate interrupt output [default: off]]
+  ),
+  [enable_output_interrupt=yes]
+)
+
 AC_ARG_WITH(
   [opt],
   AC_HELP_STRING(
