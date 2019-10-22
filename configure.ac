@@ -107,6 +107,15 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_ENABLE(
+  [output-process],
+  AC_HELP_STRING(
+    [--enable-output-process],
+    [activate task output [default: off]]
+  ),
+  [enable_output_process=yes]
+)
+
+AC_ARG_ENABLE(
   [output-interrupt],
   AC_HELP_STRING(
     [--enable-output-interrupt],

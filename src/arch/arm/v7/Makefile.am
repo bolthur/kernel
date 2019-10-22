@@ -19,6 +19,7 @@ libv7_a_SOURCES = \
   mm/virt/long.c \
   mm/virt/short.c \
   mm/virt.c \
+  task/process.c \
   task/thread.c \
   arch.c \
   barrier.c \

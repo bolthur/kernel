@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <kernel/event.h>
 #include <kernel/task/process.h>
 
 /**
@@ -60,4 +61,7 @@ void task_process_init( void ) {
 
   // create tree for managing processes by id
   process_manager->tree_id = avl_create_tree( compare_id_callback );
+
+  // register timer event
+  event_bind( EVENT_TIMER, task_process_schedule );
 }

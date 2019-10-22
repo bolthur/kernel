@@ -65,12 +65,12 @@ static int32_t compare_irq_callback(
  * @brief Unregister IRQ handler
  *
  * @param num IRQ/FIQ to bind
- * @param func Callback to bind
+ * @param callback Callback to bind
  * @param fast flag to bind FIQ
  */
 void irq_unregister_handler(
   __unused uint8_t num,
-  __unused irq_callback_t func,
+  __unused irq_callback_t callback,
   __unused bool fast
 ) {
   PANIC( "Unregister handling is not yet implemented!" );
@@ -80,12 +80,18 @@ void irq_unregister_handler(
  * @brief Register IRQ handler
  *
  * @param num IRQ/FIQ to bind
- * @param func Callback to bind
+ * @param callback Callback to bind
  * @param fast flag to bind FIQ
  */
-void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
+void irq_register_handler( uint8_t num, irq_callback_t callback, bool fast ) {
   // assert heap existance
   assert( true == heap_initialized_get() );
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT(
+      "Called irq_register_handler( %d, 0x%08p, %s )\r\n",
+      num, callback, fast ? "true" : "false" );
+  #endif
 
   // debug output
   #if defined( PRINT_INTERRUPT )
@@ -189,7 +195,7 @@ void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
       DEBUG_OUTPUT( "Check bound callback at 0x%08p\r\n", wrapper );
     #endif
     // handle match
-    if ( wrapper->callback == func ) {
+    if ( wrapper->callback == callback ) {
       return;
     }
     // get to next
@@ -205,7 +211,7 @@ void irq_register_handler( uint8_t num, irq_callback_t func, bool fast ) {
   memset( ( void* )wrapper, 0, sizeof( irq_callback_wrapper_t ) );
 
   // populate wrapper
-  wrapper->callback = func;
+  wrapper->callback = callback;
 
   // debug output
   #if defined( PRINT_INTERRUPT )

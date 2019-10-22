@@ -35,44 +35,52 @@
 event_manager_ptr_t event = NULL;
 
 /**
+ * @brief Compare event callback necessary for avl tree
+ *
+ * @param a node a
+ * @param b node b
+ * @return int32_t
+ */
+static int32_t compare_event_callback(
+  const avl_node_ptr_t a,
+  const avl_node_ptr_t b
+) {
+  // get blocks
+  event_block_ptr_t block_a = EVENT_GET_BLOCK( a );
+  event_block_ptr_t block_b = EVENT_GET_BLOCK( b );
+
+  // -1 if address of a is greater than address of b
+  if ( block_a->type > block_b->type ) {
+    return -1;
+  // 1 if address of b is greater than address of a
+  } else if ( block_b->type > block_a->type ) {
+    return 1;
+  }
+
+  // equal => return 0
+  return 0;
+}
+
+/**
  * @brief Method to setup event system
  */
 void event_init( void ) {
-  // set count to 0
-  size_t count = 0;
-  // count amount of types
-  for ( int32_t type = EVENT_TIMER; type < EVENT_DUMMY_LAST; type++ ) {
-    count++;
-  }
-
-  // debug output
-  #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Determined count of event lists: %d\r\n", count );
-  #endif
-
   // create manager structure
   event = ( event_manager_ptr_t )malloc( sizeof( event_manager_t ) );
   // assert result
   assert( NULL != event );
   // prepare
   memset( ( void* )event, 0, sizeof( event_manager_t ) );
-
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Initialized event manager structure at 0x%08p\r\n", event );
   #endif
 
-  // create lists for each type
-  event->list = ( list_manager_ptr_t* )malloc(
-    count * sizeof( list_manager_ptr_t ) );
-  // assert result
-  assert( NULL != event->list );
-  // prepare
-  memset( ( void* )event->list, 0, count * sizeof( list_manager_ptr_t ) );
-
+  // create tree
+  event->tree = avl_create_tree( compare_event_callback );
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Initialized list for types at: 0x%08p\r\n", event->list );
+    DEBUG_OUTPUT( "Created event tree at: 0x%08p\r\n", event->tree );
   #endif
 }
 
@@ -90,24 +98,60 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
     return true;
   }
 
-  // Get list of type
-  list_manager_ptr_t list = event->list[ type ];
-  // construct list if not created
-  if ( NULL == list ) {
-    // create list
-    list = list_construct();
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Called event_bind( %d, 0x%08p )\r\n", type, callback );
+  #endif
+  // get correct tree to use
+  avl_tree_ptr_t tree = event->tree;
+
+  // build temporary block
+  event_block_t tmp_block;
+  // prepare memory
+  memset( ( void* )&tmp_block, 0, sizeof( event_block_t ) );
+  // prepare node
+  avl_prepare_node( &tmp_block.node, NULL );
+  // populate necessary attributes
+  tmp_block.type = type;
+
+  // try to find node
+  avl_node_ptr_t node = avl_find_by_node( tree, &tmp_block.node );
+  event_block_ptr_t block;
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
+  #endif
+  // handle not yet added
+  if ( NULL == node ) {
+    // allocate block
+    block = ( event_block_ptr_t )malloc( sizeof( event_block_t ) );
+    // assert initialization
+    assert( NULL != block );
+    // prepare memory
+    memset( ( void* )block, 0, sizeof( event_block_t ) );
     // debug output
-    #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Created list at 0x%08p\r\n", list );
+    #if defined( PRINT_INTERRUPT )
+      DEBUG_OUTPUT( "Initialized new node at 0x%08p\r\n", block );
     #endif
+    // populate block
+    block->type = type;
+    block->callback_list = list_construct();
+    // prepare and insert node
+    avl_prepare_node( &block->node, NULL );
+    avl_insert_by_node( tree, &block->node );
+    // overwrite node
+    node = &block->node;
+  // existing? => gather block
+  } else {
+    block = EVENT_GET_BLOCK( node );
   }
 
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Checking for already bound callback\r\n" );
+    DEBUG_OUTPUT( "Checking for already bound event callback\r\n" );
   #endif
   // get first element
-  list_item_ptr_t current = list->first;
+  list_item_ptr_t current = block->callback_list->first;
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
@@ -123,36 +167,32 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
     #endif
     // handle match
     if ( wrapper->callback == callback ) {
+      // debug output
+      #if defined( PRINT_INTERRUPT )
+        DEBUG_OUTPUT( "Callback already existing\r\n" );
+      #endif
+      // return success
       return true;
     }
     // get to next
     current = current->next;
   }
 
-  // debug output
-  #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Push wrapper into list\r\n" );
-  #endif
-  // create callback wrapper
+  // create wrapper
   event_callback_wrapper_ptr_t wrapper = ( event_callback_wrapper_ptr_t )malloc(
     sizeof( event_callback_wrapper_t ) );
-  // assert malloc
-  assert( NULL != malloc );
-  // prepare
+  // assert initialization
+  assert( NULL != wrapper );
+  // prepare memory
   memset( ( void* )wrapper, 0, sizeof( event_callback_wrapper_t ) );
-  // populate callback
+  // populate wrapper
   wrapper->callback = callback;
   // debug output
-  #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Binding callback for type %d\r\n", type );
-    DEBUG_OUTPUT( "Created wrapper at 0x%08p\r\n", wrapper );
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Created wrapper container at 0x%08p\r\n", wrapper );
   #endif
-
-  // push item
-  list_push( list, ( void* )wrapper );
-
-  // overwrite event list entry
-  event->list[ type ] = list;
+  // push to list
+  list_push( block->callback_list, ( void* )wrapper );
 
   // return success
   return true;
@@ -187,22 +227,35 @@ void event_fire( event_type_t type, void** data ) {
     return;
   }
 
-  // Get list of type
-  list_manager_ptr_t list = event->list[ type ];
+  // get correct tree to use
+  avl_tree_ptr_t tree = event->tree;
 
+  // build temporary block
+  event_block_t tmp_block;
+  // prepare memory
+  memset( ( void* )&tmp_block, 0, sizeof( event_block_t ) );
+  // prepare node
+  avl_prepare_node( &tmp_block.node, NULL );
+  // populate necessary attributes
+  tmp_block.type = type;
+
+  // try to find node
+  avl_node_ptr_t node = avl_find_by_node( tree, &tmp_block.node );
+  event_block_ptr_t block;
   // debug output
-  #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Use list 0x%08p for fire\r\n", list );
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
   #endif
 
-  // handle NULL
-  if ( NULL == list ) {
+  // handle no existing
+  if ( NULL == node ) {
     return;
   }
 
-  // get first element
-  list_item_ptr_t current = list->first;
-
+  // get block
+  block = EVENT_GET_BLOCK( node );
+  // get first element of callback list
+  list_item_ptr_t current = block->callback_list->first;
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
@@ -213,15 +266,12 @@ void event_fire( event_type_t type, void** data ) {
     // get callback from data
     event_callback_wrapper_ptr_t wrapper =
       ( event_callback_wrapper_ptr_t )current->data;
-
     // debug output
     #if defined( PRINT_EVENT )
       DEBUG_OUTPUT( "Executing bound callback 0x%08p\r\n", wrapper );
     #endif
-
     // fire with data
     wrapper->callback( data );
-
     // step to next
     current = current->next;
   }

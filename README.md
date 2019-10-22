@@ -70,6 +70,7 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-timer` activate tty output of timer implementation
 * `--enable-output-initrd` activate initrd implementation output
 * `--enable-output-event` activate event implementation output
+* `--enable-output-process` activate process implementation output
 
 ### Building
 

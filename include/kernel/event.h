@@ -23,15 +23,21 @@
 
 #include <stdbool.h>
 #include <list.h>
+#include <avl.h>
 
 typedef enum {
   EVENT_TIMER = 0,
-  EVENT_DUMMY_LAST
 } event_type_t;
 
 typedef struct {
-  list_manager_ptr_t* list;
+  avl_tree_ptr_t tree;
 } event_manager_t, *event_manager_ptr_t;
+
+typedef struct {
+  avl_node_t node;
+  event_type_t type;
+  list_manager_ptr_t callback_list;
+} event_block_t, *event_block_ptr_t;
 
 typedef void ( *event_callback_t )( void** data );
 
@@ -39,9 +45,11 @@ typedef struct {
   event_callback_t callback;
 } event_callback_wrapper_t, *event_callback_wrapper_ptr_t;
 
+#define EVENT_GET_BLOCK( n ) \
+  ( event_block_ptr_t )( ( uint8_t* )n - offsetof( event_block_t, node ) )
+
 bool event_initialized_get( void );
 void event_init( void );
-
 bool event_bind( event_type_t, event_callback_t );
 void event_unbind( event_type_t, event_callback_t );
 void event_fire( event_type_t, void** );

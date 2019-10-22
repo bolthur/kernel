@@ -16,6 +16,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_INITRD], [Define to 1 to enable output of initrd])
   AH_TEMPLATE([PRINT_EVENT], [Define to 1 to enable output of event])
   AH_TEMPLATE([PRINT_INTERRUPT], [Define to 1 to enable output of interrupt methods])
+  AH_TEMPLATE([PRINT_PROCESS], [Define to 1 to enable output of process methods])
   AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
   AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
 
@@ -72,6 +73,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   # Test for interrupt output
   AS_IF([test "x$enable_output_interrupt" == "xyes"], [
     AC_DEFINE([PRINT_INTERRUPT], [1])
+  ])
+
+  # Test for process output
+  AS_IF([test "x$enable_output_process" == "xyes"], [
+    AC_DEFINE([PRINT_PROCESS], [1])
   ])
 
   case "${host_cpu}" in

@@ -42,14 +42,6 @@
 #include <kernel/panic.h>
 #include <kernel/initrd.h>
 
-static void foo( __unused void** data ) {
-  DEBUG_OUTPUT("TESTING AROUND WITH EVENTS!\r\n");
-}
-
-static void foo2( __unused void** data ) {
-  DEBUG_OUTPUT("TESTING AROUND WITH EVENTS 2!\r\n");
-}
-
 /**
  * @brief Kernel main function
  *
@@ -138,12 +130,6 @@ void kernel_main( void ) {
   // Setup event system
   DEBUG_OUTPUT( "[bolthur/kernel -> event] initialize ...\r\n" );
   event_init();
-
-  event_bind( EVENT_TIMER, foo );
-  event_fire( EVENT_TIMER, NULL );
-  event_bind( EVENT_TIMER, foo2 );
-  event_bind( EVENT_TIMER, foo );
-  event_fire( EVENT_TIMER, NULL );
 
   // Setup timer
   DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" );
