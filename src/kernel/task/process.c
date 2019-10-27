@@ -22,7 +22,9 @@
 #include <string.h>
 #include <assert.h>
 #include <kernel/event.h>
+#include <kernel/debug/debug.h>
 #include <kernel/task/process.h>
+#include <kernel/task/thread.h>
 
 /**
  * @brief Process management structure
@@ -64,4 +66,65 @@ void task_process_init( void ) {
 
   // register timer event
   event_bind( EVENT_TIMER, task_process_schedule );
+}
+
+/**
+ * @brief Method to generate new process id
+ *
+ * @return size_t generated process id
+ */
+size_t task_process_generate_id( void ) {
+  // current pid
+  static size_t current = 0;
+  // return new pid by simple increment
+  return ++current;
+}
+
+/**
+ * @brief Method to create new process
+ *
+ * @param entry process entry address
+ * @param type process type
+ */
+void task_process_create(
+  uintptr_t entry,
+  task_process_type_t type
+) {
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT(
+      "task_process_create( 0x%08x, %d ) called\r\n",
+      entry, type );
+  #endif
+
+  // allocate process structure
+  task_process_ptr_t process = ( task_process_ptr_t )malloc(
+    sizeof( task_process_t ) );
+  // assert initialization
+  assert( NULL != process );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Allocated process structure at 0x%08x\r\n", process );
+  #endif
+
+  // prepare structure
+  memset( ( void* )process, 0, sizeof( task_process_t ) );
+  // prepare node
+  avl_prepare_node( &process->node_id, NULL );
+
+  // populate process structure
+  process->id = task_process_generate_id();
+  process->thread_manager = task_thread_init();
+  process->type = type;
+  // create context
+  process->virtual_context = virt_create_context(
+    TASK_PROCESS_TYPE_USER == type
+      ? VIRT_CONTEXT_TYPE_USER
+      : VIRT_CONTEXT_TYPE_KERNEL );
+
+  // Setup thread with entry
+  task_thread_create( entry, process );
+
+  // add to tree
+  avl_insert_by_node( process_manager->tree_id, &process->node_id );
 }

@@ -14,6 +14,7 @@ libkernel_a_SOURCES = \
   mm/placement.c \
   mm/virt.c \
   task/process.c \
+  task/thread.c \
   event.c \
   initrd.c \
   irq.c \

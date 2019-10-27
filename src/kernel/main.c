@@ -42,6 +42,18 @@
 #include <kernel/panic.h>
 #include <kernel/initrd.h>
 
+static void process1( void ) {
+  printf( "A" );
+}
+
+static void process2( void ) {
+  printf( "B" );
+}
+
+static void process3( void ) {
+  printf( "C" );
+}
+
 /**
  * @brief Kernel main function
  *
@@ -134,6 +146,11 @@ void kernel_main( void ) {
   // Setup multitasking
   DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" );
   task_process_init();
+
+  // create some dummy processes
+  task_process_create( ( uintptr_t )process1, TASK_PROCESS_TYPE_KERNEL );
+  task_process_create( ( uintptr_t )process2, TASK_PROCESS_TYPE_KERNEL );
+  task_process_create( ( uintptr_t )process3, TASK_PROCESS_TYPE_USER );
 
   // Setup irq
   DEBUG_OUTPUT( "[bolthur/kernel -> irq] enable ...\r\n" );

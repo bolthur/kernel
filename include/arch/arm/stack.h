@@ -23,4 +23,18 @@
 
 #define STACK_SIZE 0x1000
 
+#if ! defined( ASSEMBLER_FILE )
+  #include <stdint.h>
+
+  extern uint32_t stack_irq_mode;
+  extern uint32_t stack_fiq_mode;
+  extern uint32_t stack_abort_mode;
+  extern uint32_t stack_undefined_mode;
+  extern uint32_t stack_system_mode;
+  extern uint32_t stack_user_mode;
+  extern uint32_t stack_supervisor_mode;
+  extern uint32_t stack_hypervisor_mode;
+  extern uint32_t stack_monitor_mode;
+#endif
+
 #endif

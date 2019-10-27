@@ -21,25 +21,12 @@
 #if ! defined( __KERNEL_TASK_THREAD__ )
 #define __KERNEL_TASK_THREAD__
 
-#include <avl.h>
-
-typedef enum {
-  TASK_THREAD_TYPE_KERNEL = 1,
-  TASK_THREAD_TYPE_USER,
-} task_thread_type_t;
-
-typedef struct thread {
-  avl_node_t node;
-  void* stack;
-} task_thread_t, *task_thread_ptr_t;
-
-typedef struct {
-  avl_tree_ptr_t thread;
-} task_thread_manager_t, *task_thread_manager_ptr_t;
+#include <kernel/task/task.h>
 
 #define TASK_THREAD_GET_BLOCK( n ) \
   ( task_thread_ptr_t )( ( uint8_t* )n - offsetof( task_thread_t, node ) )
 
-void* task_create_thread( uintptr_t, task_thread_type_t );
+task_thread_manager_ptr_t task_thread_init( void );
+void task_thread_create( uintptr_t, task_process_ptr_t );
 
 #endif

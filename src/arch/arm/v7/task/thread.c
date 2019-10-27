@@ -22,6 +22,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <arch/arm/stack.h>
+#include <kernel/mm/phys.h>
+#include <kernel/mm/virt.h>
+#include <kernel/debug/debug.h>
 #include <kernel/task/thread.h>
 #include <arch/arm/v7/cpu.h>
 
@@ -29,27 +33,83 @@
  * @brief Method to create thread structure
  *
  * @param entry entry point of the thread
- * @param type thread type
+ * @param process thread process
  * @return void* pointer to thread structure
  *
- * @todo populate reserved context
- * @todo set entry point within created cpu context
- * @todo consider thread type within context prepare
+ * @todo replace magic values by define
  */
-void* task_create_thread(
-  __unused uintptr_t entry,
-  __unused task_thread_type_t type
-) {
+void task_thread_create( uintptr_t entry, task_process_ptr_t process ) {
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT(
+      "task_thread_create( 0x%08x, 0x%08x ) called\r\n", entry, process );
+  #endif
+
   // create instance of cpu structure
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )malloc(
     sizeof( cpu_register_context_t ) );
   // assert malloc return
   assert( NULL != cpu );
-  // preset with 0
+  // prepare
   memset( ( void* )cpu, 0, sizeof( cpu_register_context_t ) );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Allocated CPU structure at 0x%08x\r\n", cpu );
+  #endif
 
-  // fill context
+  // create thread structure
+  task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
+    sizeof( task_thread_t ) );
+  // assert malloc return
+  assert( NULL != thread );
+  // prepare
+  memset( ( void* )thread, 0, sizeof( task_thread_t ) );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Allocated thread structure at 0x%08x\r\n", thread );
+  #endif
 
-  // return created context
-  return ( void* )cpu;
+  // reserve stack
+  uint64_t physical_stack = phys_find_free_page_range( PAGE_SIZE, STACK_SIZE );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT(
+      "Allocated stack structure at physical 0x%08x\r\n",
+      physical_stack );
+  #endif
+  // map temporary
+  uintptr_t virtual_temporary = virt_map_temporary( physical_stack, STACK_SIZE );
+  // prepare
+  memset( ( void* )virtual_temporary, 0, STACK_SIZE );
+  // unmap again
+  virt_unmap_temporary( virtual_temporary, STACK_SIZE );
+
+  // populate cpu context
+  cpu->reg.pc = ( uint32_t )entry;
+  cpu->reg.spsr = 0x60000000;
+  if ( TASK_PROCESS_TYPE_USER == process->type ) {
+    // set user mode and stack
+    cpu->reg.spsr |= CPSR_MODE_USER;
+    cpu->reg.sp = ( uint32_t )&stack_user_mode;
+  } else {
+    // set supervisor mode and stack
+    cpu->reg.spsr |= (
+      CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT
+    );
+    cpu->reg.sp = ( uint32_t )&stack_supervisor_mode;
+  }
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Mapped stack to 0x%08x\r\n", cpu->reg.sp );
+    dump_register( cpu );
+  #endif
+
+  // populate thread structure
+  thread->context = ( void* )cpu;
+  thread->stack = physical_stack;
+
+  // prepare node
+  avl_prepare_node( &thread->node, NULL );
+  // add to tree
+  avl_insert_by_node( process->thread_manager->thread, &thread->node );
 }

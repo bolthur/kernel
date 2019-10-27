@@ -28,6 +28,7 @@
 .comm stack_abort_mode, STACK_SIZE, 32
 .comm stack_undefined_mode, STACK_SIZE, 32
 .comm stack_system_mode, STACK_SIZE, 32
+.comm stack_user_mode, STACK_SIZE, 32
 .comm stack_supervisor_mode, STACK_SIZE, 32
 .comm stack_hypervisor_mode, STACK_SIZE, 32
 .comm stack_monitor_mode, STACK_SIZE, 32

@@ -18,6 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <arch/arm/stack.h>
 #include <kernel/debug/debug.h>
 
 /**
@@ -32,4 +33,6 @@ void task_process_schedule( __unused void** context ) {
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", context );
   #endif
+
+  // on thread / process switch map process stack temporary and copy over stack content
 }
