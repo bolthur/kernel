@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <kernel/event.h>
 #include <kernel/debug/debug.h>
+#include <kernel/task/queue.h>
 #include <kernel/task/process.h>
 #include <kernel/task/thread.h>
 
@@ -38,7 +39,7 @@ task_manager_ptr_t process_manager = NULL;
  * @param b node b
  * @return int32_t
  */
-static int32_t compare_id_callback(
+static int32_t process_compare_id_callback(
   const avl_node_ptr_t a,
   const avl_node_ptr_t b
 ) {
@@ -77,9 +78,10 @@ void task_process_init( void ) {
   memset( ( void* )process_manager, 0, sizeof( task_manager_t ) );
 
   // create tree for managing processes by id
-  process_manager->tree_process_id = avl_create_tree( compare_id_callback );
-  // create thread list
-  process_manager->thread_list = list_construct();
+  process_manager->tree_process_id = avl_create_tree(
+    process_compare_id_callback );
+  // create thread queue tree
+  process_manager->thread_priority_tree = task_queue_init();
 
   // register timer event
   event_bind( EVENT_TIMER, task_process_schedule );
@@ -102,16 +104,18 @@ size_t task_process_generate_id( void ) {
  *
  * @param entry process entry address
  * @param type process type
+ * @param priority process priority
  */
 void task_process_create(
   uintptr_t entry,
-  task_process_type_t type
+  task_process_type_t type,
+  size_t priority
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "task_process_create( 0x%08x, %d ) called\r\n",
-      entry, type );
+      "task_process_create( 0x%08x, %d, %d ) called\r\n",
+      entry, type, priority );
   #endif
 
   // allocate process structure
@@ -130,6 +134,8 @@ void task_process_create(
   process->id = task_process_generate_id();
   process->thread_manager = task_thread_init();
   process->type = type;
+  process->state = TASK_PROCESS_STATE_READY;
+  process->priority = priority;
   // create context
   process->virtual_context = virt_create_context(
     TASK_PROCESS_TYPE_USER == type
@@ -139,10 +145,13 @@ void task_process_create(
   avl_prepare_node( &process->node_id, ( void* )process->id );
 
   // Setup thread with entry
-  task_thread_ptr_t thread = task_thread_create( entry, process );
-  // add to tree
+  task_thread_ptr_t thread = task_thread_create( entry, process, priority );
+  // add process to tree
   avl_insert_by_node( process_manager->tree_process_id, &process->node_id );
 
+  // get thread queue by priority
+  task_priority_queue_ptr_t queue = task_queue_get_queue(
+    process_manager, priority );
   // add thread to thread list for switching
-  list_push( process_manager->thread_list, ( void* )thread );
+  list_push( queue->thread_list, thread );
 }

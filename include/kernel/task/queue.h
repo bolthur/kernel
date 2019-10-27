@@ -18,35 +18,24 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_TASK_THREAD__ )
-#define __KERNEL_TASK_THREAD__
+#if !defined( __KERNEL_TASK_QUEUE__ )
+#define __KERNEL_TASK_QUEUE__
 
-#include <stdint.h>
 #include <stddef.h>
 #include <avl.h>
+#include <list.h>
+#include <kernel/task/process.h>
 
-typedef struct process task_process_t, *task_process_ptr_t;
-
-typedef enum {
-  TASK_THREAD_STATE_READY = 0,
-  TASK_THREAD_STATE_ACTIVE,
-} task_thread_state_t;
-
-typedef struct task_thread {
-  avl_node_t node_id;
-  size_t id;
+typedef struct {
+  avl_node_t node;
   size_t priority;
-  void* context;
-  uint64_t stack;
-  task_thread_state_t state;
-} task_thread_t, *task_thread_ptr_t;
+  list_manager_ptr_t thread_list;
+} task_priority_queue_t, *task_priority_queue_ptr_t;
 
-#define TASK_THREAD_GET_BLOCK( n ) \
-  ( task_thread_ptr_t )( ( uint8_t* )n - offsetof( task_thread_t, node ) )
+#define TASK_QUEUE_GET_PRIORITY( n ) \
+  ( task_priority_queue_ptr_t )( ( uint8_t* )n - offsetof( task_priority_queue_t, node ) )
 
-extern task_thread_ptr_t current;
-size_t task_thread_generate_id( void );
-avl_tree_ptr_t task_thread_init( void );
-task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t, size_t );
+avl_tree_ptr_t task_queue_init( void );
+task_priority_queue_ptr_t task_queue_get_queue( task_manager_ptr_t, size_t );
 
 #endif

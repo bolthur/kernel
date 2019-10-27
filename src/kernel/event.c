@@ -109,7 +109,7 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
   avl_node_ptr_t node = avl_find_by_data( tree, ( void* )type );
   event_block_ptr_t block;
   // debug output
-  #if defined( PRINT_INTERRUPT )
+  #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
   #endif
   // handle not yet added
@@ -121,7 +121,7 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
     // prepare memory
     memset( ( void* )block, 0, sizeof( event_block_t ) );
     // debug output
-    #if defined( PRINT_INTERRUPT )
+    #if defined( PRINT_EVENT )
       DEBUG_OUTPUT( "Initialized new node at 0x%08p\r\n", block );
     #endif
     // populate block
@@ -159,7 +159,7 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
     // handle match
     if ( wrapper->callback == callback ) {
       // debug output
-      #if defined( PRINT_INTERRUPT )
+      #if defined( PRINT_EVENT )
         DEBUG_OUTPUT( "Callback already existing\r\n" );
       #endif
       // return success
@@ -179,7 +179,7 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
   // populate wrapper
   wrapper->callback = callback;
   // debug output
-  #if defined( PRINT_INTERRUPT )
+  #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Created wrapper container at 0x%08p\r\n", wrapper );
   #endif
   // push to list
@@ -225,7 +225,7 @@ void event_fire( event_type_t type, void** data ) {
   avl_node_ptr_t node = avl_find_by_data( tree, ( void* )type );
   event_block_ptr_t block;
   // debug output
-  #if defined( PRINT_INTERRUPT )
+  #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
   #endif
 

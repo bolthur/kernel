@@ -26,6 +26,7 @@
 #include <kernel/mm/phys.h>
 #include <kernel/mm/virt.h>
 #include <kernel/debug/debug.h>
+#include <kernel/task/process.h>
 #include <kernel/task/thread.h>
 #include <arch/arm/v7/cpu.h>
 
@@ -34,13 +35,19 @@
  *
  * @param entry entry point of the thread
  * @param process thread process
+ * @param priority thread priority
  * @return task_thread_ptr_t pointer to thread structure
  */
-task_thread_ptr_t task_thread_create( uintptr_t entry, task_process_ptr_t process ) {
+task_thread_ptr_t task_thread_create(
+  uintptr_t entry,
+  task_process_ptr_t process,
+  size_t priority
+) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "task_thread_create( 0x%08x, 0x%08x ) called\r\n", entry, process );
+      "task_thread_create( 0x%08x, 0x%08x, %d ) called\r\n",
+      entry, process, priority );
   #endif
 
   // create instance of cpu structure
@@ -106,11 +113,13 @@ task_thread_ptr_t task_thread_create( uintptr_t entry, task_process_ptr_t proces
   thread->context = ( void* )cpu;
   thread->stack = physical_stack;
   thread->state = TASK_THREAD_STATE_READY;
+  thread->id = task_thread_generate_id();
+  thread->priority = priority;
 
   // prepare node
-  avl_prepare_node( &thread->node, NULL );
+  avl_prepare_node( &thread->node_id, ( void* )thread->id );
   // add to tree
-  avl_insert_by_node( process->thread_manager->thread, &thread->node );
+  avl_insert_by_node( process->thread_manager, &thread->node_id );
 
   // return created thread
   return thread;

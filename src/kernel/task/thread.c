@@ -21,8 +21,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <kernel/debug/debug.h>
 #include <kernel/event.h>
 #include <kernel/task/thread.h>
+
+/**
+ * @brief Current running thread
+ */
+task_thread_ptr_t current = NULL;
 
 /**
  * @brief Compare id callback necessary for avl tree
@@ -31,30 +37,47 @@
  * @param b node b
  * @return int32_t
  */
-static int32_t compare_id_callback(
-  __unused const avl_node_ptr_t a,
-  __unused const avl_node_ptr_t b
+static int32_t thread_compare_id_callback(
+  const avl_node_ptr_t a,
+  const avl_node_ptr_t b
 ) {
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "a = 0x%08p, b = 0x%08p\r\n", a, b );
+    DEBUG_OUTPUT( "a->data = %d, b->data = %d\r\n",
+      ( size_t )a->data,
+      ( size_t )b->data );
+  #endif
+
+  // -1 if address of a is greater than address of b
+  if ( ( size_t )a->data > ( size_t )b->data ) {
+    return -1;
+  // 1 if address of b is greater than address of a
+  } else if ( ( size_t )b->data > ( size_t )a->data ) {
+    return 1;
+  }
+
+  // equal => return 0
   return 0;
+}
+
+/**
+ * @brief Method to generate new thread id
+ *
+ * @return size_t generated thread id
+ */
+size_t task_thread_generate_id( void ) {
+  // current pid
+  static size_t current = 0;
+  // return new pid by simple increment
+  return ++current;
 }
 
 /**
  * @brief Create thread manager for task
  *
- * @return task_thread_manager_ptr_t
+ * @return avl_tree_ptr_t
  */
-task_thread_manager_ptr_t task_thread_init( void ) {
-  // allocate thread manager
-  task_thread_manager_ptr_t manager = ( task_thread_manager_ptr_t )malloc(
-    sizeof( task_thread_manager_t ) );
-  // assert malloc result
-  assert( NULL != manager );
-
-  // prepare structure
-  memset( ( void* )manager, 0, sizeof( task_thread_manager_t ) );
-  // populate
-  manager->thread = avl_create_tree( compare_id_callback );
-
-  // return manager
-  return manager;
+avl_tree_ptr_t task_thread_init( void ) {
+  return avl_create_tree( thread_compare_id_callback );
 }

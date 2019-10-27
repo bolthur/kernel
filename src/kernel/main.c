@@ -148,9 +148,9 @@ void kernel_main( void ) {
   task_process_init();
 
   // create some dummy processes
-  task_process_create( ( uintptr_t )process1, TASK_PROCESS_TYPE_KERNEL );
-  task_process_create( ( uintptr_t )process2, TASK_PROCESS_TYPE_KERNEL );
-  task_process_create( ( uintptr_t )process3, TASK_PROCESS_TYPE_USER );
+  task_process_create( ( uintptr_t )process1, TASK_PROCESS_TYPE_KERNEL, 0 );
+  task_process_create( ( uintptr_t )process2, TASK_PROCESS_TYPE_KERNEL, 0 );
+  task_process_create( ( uintptr_t )process3, TASK_PROCESS_TYPE_USER, 0 );
 
   // Setup irq
   DEBUG_OUTPUT( "[bolthur/kernel -> irq] enable ...\r\n" );
