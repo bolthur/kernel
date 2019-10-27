@@ -53,6 +53,20 @@ void v6_short_map(
 }
 
 /**
+ * @brief Map a physical address within temporary space
+ *
+ * @param paddr physicall address
+ * @param size size to map
+ * @return uintptr_t
+ */
+uintptr_t v6_short_map_temporary(
+  __unused uint64_t paddr,
+  __unused size_t size
+) {
+  PANIC( "v6 mmu temporary mapping not yet supported!" );
+}
+
+/**
  * @brief Internal v6 unmapping function
  *
  * @param ctx pointer to page context
@@ -63,6 +77,19 @@ void v6_short_unmap(
   __unused uintptr_t vaddr
 ) {
   PANIC( "v6 mmu mapping not yet supported!" );
+}
+
+/**
+ * @brief Unmap temporary mapped page again
+ *
+ * @param addr virtual temporary address
+ * @param size size to unmap
+ */
+void v6_short_unmap_temporary(
+  __unused uintptr_t addr,
+  __unused size_t size
+) {
+  PANIC( "v6 mmu unmap temporary not yet supported!" );
 }
 
 /**

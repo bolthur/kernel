@@ -122,11 +122,11 @@ void virt_arch_init( void ) {
   virt_arch_prepare();
 
   // create a kernel context
-  kernel_context = virt_create_context( CONTEXT_TYPE_KERNEL );
+  kernel_context = virt_create_context( VIRT_CONTEXT_TYPE_KERNEL );
   assert( NULL != kernel_context );
 
   // create a dummy user context for all cores
-  user_context = virt_create_context( CONTEXT_TYPE_USER );
+  user_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
   assert( NULL != user_context );
 
   // debug output

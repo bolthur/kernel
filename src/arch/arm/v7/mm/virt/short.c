@@ -306,7 +306,7 @@ uint64_t v7_short_create_table(
   #endif
 
   // kernel context
-  if ( CONTEXT_TYPE_KERNEL == ctx->type ) {
+  if ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type ) {
     // get context
     sd_context_total_t* context = ( sd_context_total_t* )map_temporary(
       ( uintptr_t )ctx->context, SD_TTBR_SIZE_4G
@@ -370,7 +370,7 @@ uint64_t v7_short_create_table(
   }
 
   // user context
-  if ( CONTEXT_TYPE_USER == ctx->type ) {
+  if ( VIRT_CONTEXT_TYPE_USER == ctx->type ) {
     // get context
     sd_context_half_t* context = ( sd_context_half_t* )map_temporary(
       ( uintptr_t )ctx->context, SD_TTBR_SIZE_2G
@@ -494,34 +494,34 @@ void v7_short_map(
   // set attributes
   table->page[ page_idx ].data.type = SD_TBL_SMALL_PAGE;
   table->page[ page_idx ].data.access_permision_0 =
-    ( CONTEXT_TYPE_KERNEL == ctx->type )
+    ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type )
       ? SD_MAC_APX0_PRIVILEGED_RW
       : SD_MAC_APX0_FULL_RW;
   // execute never attribute
-  if ( page & PAGE_TYPE_EXECUTABLE ) {
+  if ( page & VIRT_PAGE_TYPE_EXECUTABLE ) {
     table->page[ page_idx ].data.execute_never = 0;
-  } else if ( page & PAGE_TYPE_NON_EXECUTABLE ) {
+  } else if ( page & VIRT_PAGE_TYPE_NON_EXECUTABLE ) {
     table->page[ page_idx ].data.execute_never = 1;
   }
   // handle memory types
   if (
-    memory == MEMORY_TYPE_DEVICE_STRONG
-    || memory == MEMORY_TYPE_DEVICE
+    memory == VIRT_MEMORY_TYPE_DEVICE_STRONG
+    || memory == VIRT_MEMORY_TYPE_DEVICE
   ) {
     // set cacheable and bufferable to 0
     table->page[ page_idx ].data.cacheable = 0;
     table->page[ page_idx ].data.bufferable = 0;
     // set tex depending on type
     table->page[ page_idx ].data.tex =
-      memory == MEMORY_TYPE_DEVICE_STRONG ? 0 : 2;
+      memory == VIRT_MEMORY_TYPE_DEVICE_STRONG ? 0 : 2;
     // overwrite execute never
     table->page[ page_idx ].data.execute_never = 1;
   } else {
     // set cacheable and bufferable depending on type
     table->page[ page_idx ].data.cacheable =
-      memory == MEMORY_TYPE_NORMAL ? 1 : 0;
+      memory == VIRT_MEMORY_TYPE_NORMAL ? 1 : 0;
     table->page[ page_idx ].data.bufferable =
-      memory == MEMORY_TYPE_NORMAL ? 1 : 0;
+      memory == VIRT_MEMORY_TYPE_NORMAL ? 1 : 0;
     // set tex
     table->page[ page_idx ].data.tex = 1;
   }
@@ -562,6 +562,17 @@ void v7_short_map_random(
   assert( 0 != phys );
   // map it
   v7_short_map( ctx, vaddr, phys, memory, page );
+}
+
+/**
+ * @brief Map a physical address within temporary space
+ *
+ * @param paddr physicall address
+ * @param size size to map
+ * @return uintptr_t
+ */
+uintptr_t v7_short_map_temporary( uint64_t paddr, size_t size ) {
+  return map_temporary( ( uintptr_t )paddr, size );
 }
 
 /**
@@ -614,13 +625,23 @@ void v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
 }
 
 /**
+ * @brief Unmap temporary mapped page again
+ *
+ * @param addr virtual temporary address
+ * @param size size to unmap
+ */
+void v7_short_unmap_temporary( uintptr_t addr, size_t size ) {
+  unmap_temporary( addr, size );
+}
+
+/**
  * @brief Internal v7 short descriptor set context function
  *
  * @param ctx context structure
  */
 void v7_short_set_context( virt_context_ptr_t ctx ) {
   // user context handling
-  if ( CONTEXT_TYPE_USER == ctx->type ) {
+  if ( VIRT_CONTEXT_TYPE_USER == ctx->type ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
@@ -635,7 +656,7 @@ void v7_short_set_context( virt_context_ptr_t ctx ) {
       : "memory"
     );
   // kernel context handling
-  } else if ( CONTEXT_TYPE_KERNEL == ctx->type ) {
+  } else if ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
@@ -700,7 +721,7 @@ void v7_short_flush_address( uintptr_t addr ) {
  */
 void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
   // ensure kernel for temporary
-  assert( CONTEXT_TYPE_KERNEL == ctx->type );
+  assert( VIRT_CONTEXT_TYPE_KERNEL == ctx->type );
 
   // free page table
   uintptr_t table = ( uintptr_t )phys_find_free_page( PAGE_SIZE );
@@ -729,8 +750,8 @@ void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
     ctx,
     TEMPORARY_SPACE_START,
     table,
-    MEMORY_TYPE_NORMAL_NC,
-    PAGE_TYPE_NON_EXECUTABLE
+    VIRT_MEMORY_TYPE_NORMAL_NC,
+    VIRT_PAGE_TYPE_NON_EXECUTABLE
   );
 }
 
@@ -743,12 +764,12 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
   size_t size, alignment;
 
   // determine size
-  size = type == CONTEXT_TYPE_KERNEL
+  size = type == VIRT_CONTEXT_TYPE_KERNEL
     ? SD_TTBR_SIZE_4G
     : SD_TTBR_SIZE_2G;
 
   // determine alignment
-  alignment = type == CONTEXT_TYPE_KERNEL
+  alignment = type == VIRT_CONTEXT_TYPE_KERNEL
     ? SD_TTBR_ALIGNMENT_4G
     : SD_TTBR_ALIGNMENT_2G;
 

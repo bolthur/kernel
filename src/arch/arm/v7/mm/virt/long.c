@@ -309,7 +309,7 @@ uint64_t v7_long_create_table(
     pmd_tbl->raw = LD_PHYSICAL_TABLE_ADDRESS( get_new_table() );
     // set attribute
     pmd_tbl->data.attr_ns_table = ( uint8_t )(
-      ctx->type == CONTEXT_TYPE_USER ? 1 : 0
+      ctx->type == VIRT_CONTEXT_TYPE_USER ? 1 : 0
     );
     pmd_tbl->data.type = LD_TYPE_TABLE;
     // debug output
@@ -425,30 +425,30 @@ void v7_long_map(
   table->page[ page_idx ].data.type = LD_TYPE_PAGE;
   table->page[ page_idx ].data.lower_attr_access = 1;
   table->page[ page_idx ].data.lower_attr_access_permission =
-    ( ctx->type == CONTEXT_TYPE_KERNEL ) ? 0 : 1;
+    ( ctx->type == VIRT_CONTEXT_TYPE_KERNEL ) ? 0 : 1;
   // execute never attribute
-  if ( page & PAGE_TYPE_EXECUTABLE ) {
+  if ( page & VIRT_PAGE_TYPE_EXECUTABLE ) {
     table->page[ page_idx ].data.upper_attr_execute_never = 0;
-  } else if ( page & PAGE_TYPE_NON_EXECUTABLE ) {
+  } else if ( page & VIRT_PAGE_TYPE_NON_EXECUTABLE ) {
     table->page[ page_idx ].data.upper_attr_execute_never = 1;
   }
   // handle memory types
   if (
-    memory == MEMORY_TYPE_DEVICE_STRONG
-    || memory == MEMORY_TYPE_DEVICE
+    memory == VIRT_MEMORY_TYPE_DEVICE_STRONG
+    || memory == VIRT_MEMORY_TYPE_DEVICE
   ) {
     // mark as outer sharable
     table->page[ page_idx ].data.lower_attr_shared = 0x1;
     // set attributes
     table->page[ page_idx ].data.lower_attr_memory_attribute =
-      memory == MEMORY_TYPE_DEVICE_STRONG ? 0 : 1;
+      memory == VIRT_MEMORY_TYPE_DEVICE_STRONG ? 0 : 1;
     // set execute never
     table->page[ page_idx ].data.upper_attr_execute_never = 1;
   } else {
     // mark as outer sharable
     table->page[ page_idx ].data.lower_attr_shared = 0x3;
     table->page[ page_idx ].data.lower_attr_memory_attribute =
-      1 << 2 | ( memory == MEMORY_TYPE_NORMAL ? 3 : 1 );
+      1 << 2 | ( memory == VIRT_MEMORY_TYPE_NORMAL ? 3 : 1 );
   }
 
   // debug output
@@ -492,6 +492,17 @@ void v7_long_map_random(
   assert( 0 != phys );
   // map it
   v7_long_map( ctx, vaddr, phys, memory, page );
+}
+
+/**
+ * @brief Map a physical address within temporary space
+ *
+ * @param paddr physicall address
+ * @param size size to map
+ * @return uintptr_t
+ */
+uintptr_t v7_long_map_temporary( uint64_t paddr, size_t size ) {
+  return map_temporary( paddr, size );
 }
 
 /**
@@ -544,6 +555,16 @@ void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
 }
 
 /**
+ * @brief Unmap temporary mapped page again
+ *
+ * @param addr virtual temporary address
+ * @param size size to unmap
+ */
+void v7_long_unmap_temporary( uintptr_t addr, size_t size ) {
+  unmap_temporary( addr, size );
+}
+
+/**
  * @brief Internal v7 long descriptor enable context function
  *
  * @param ctx context structure
@@ -551,8 +572,8 @@ void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
 void v7_long_set_context( virt_context_ptr_t ctx ) {
   // handle invalid
   if (
-    CONTEXT_TYPE_USER != ctx->type
-    && CONTEXT_TYPE_KERNEL != ctx->type
+    VIRT_CONTEXT_TYPE_USER != ctx->type
+    && VIRT_CONTEXT_TYPE_KERNEL != ctx->type
   ) {
     PANIC( "Invalid virtual context type!" );
   }
@@ -560,7 +581,7 @@ void v7_long_set_context( virt_context_ptr_t ctx ) {
   // save context
   uint64_t context = ctx->context;
   // add offset for kernel context
-  if ( CONTEXT_TYPE_KERNEL == ctx->type ) {
+  if ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type ) {
     context += sizeof( uint64_t ) * 2;
   }
   // extract low and high words
@@ -568,7 +589,7 @@ void v7_long_set_context( virt_context_ptr_t ctx ) {
   uint32_t high = ( uint32_t )( context >> 32 );
 
   // user context handling
-  if ( CONTEXT_TYPE_USER == ctx->type ) {
+  if ( VIRT_CONTEXT_TYPE_USER == ctx->type ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT( "TTBR0: 0x%08x%08x\r\n", high, low );
@@ -650,7 +671,7 @@ void v7_long_flush_address( uintptr_t addr ) {
  */
 void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
   // ensure kernel for temporary
-  assert( CONTEXT_TYPE_KERNEL == ctx->type );
+  assert( VIRT_CONTEXT_TYPE_KERNEL == ctx->type );
 
   // last physical table address
   uint64_t table_physical = 0;
@@ -672,8 +693,8 @@ void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
         ctx,
         table_virtual,
         table,
-        MEMORY_TYPE_NORMAL_NC,
-        PAGE_TYPE_NON_EXECUTABLE
+        VIRT_MEMORY_TYPE_NORMAL_NC,
+        VIRT_PAGE_TYPE_NON_EXECUTABLE
       );
       // debug output
       #if defined( PRINT_MM_VIRT )

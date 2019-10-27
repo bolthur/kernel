@@ -1,12 +1,9 @@
 
 # Things to be done
 
-* [ ] Mark gdb as signed, see here https://sourceware.org/gdb/wiki/BuildingOnDarwin#Method_for_Mac_OS_X_10.5_.28Leopard.29_and_later
-* [ ] Get gdb integration reliable working within vscode
-* [ ] Revise irq and isrs register handling
-  * [ ] Add generic event system
-  * [ ] Throw global events if an interrupt occurrs
-  * [ ] Replace irq register handler by register event
+* [ ] Add gdb stub for debugging on remote device via serial port
+  * [ ] Add remote debugging integration
+  * [ ] Finish debug launch.json when remote debugging is possible
 * [ ] Replace magic values at serial init by defines
 * [ ] FPU
   * [ ] Add push and pop of fpu registers within ivt stubs
@@ -14,34 +11,23 @@
   * [ ] Extend undefined exception to check for fpu error with clear of flag
 * [ ] Memory management
   * [ ] Consider and enable CPU related caches for performance
-* [ ] Platform init
-  * [ ] Add check for initrd loaded after kernel and move placement address for placement allocator beyond initrd
-* [ ] Add gdb stub for debugging on remote device via serial port
-  * [ ] Add remote debugging integration
-  * [ ] Finish debug launch.json when remote debugging is possible
-* [ ] Add multitasking
+* [ ] Multitasking
+  * [ ] Add kernel side multitasking
+  * [ ] Add user processes to multitasking
+  * [ ] Add parsing of ELF files
+  * [ ] Extend dummy initrd by test programs and execute them
 * [ ] Implement syscall handling via `swi`
-* [ ] Add multithreading
+* [ ] TAR / initrd
+  * [ ] Add initial ramdisk during boot which should be a simple tar file
+  * [ ] Add parsing of initial ramdisk containing drivers or programs for startup
+  * [ ] Check for drivers within folder "/driver"
+* [ ] Multitasking
+  * [ ] Add multithreading
 * [ ] Add SMP support
   * [ ] Memory management
     * [ ] Prepare virtual memory management per core if smp is active
-    * [ ] Specify cores per platform via autotools
   * [ ] Determine current running core within exceptions
   * [ ] Extend irq check to check corresponding cpu interrupt registers
-  * [ ] ...
-* [ ] TAR / initrd
-  * [ ] Add generic tar library for reading tar files
-  * [ ] Add initial ramdisk during boot which should be a simple tar file
-  * [ ] Add parsing of initial ramdisk containing drivers or programs for startup
-  * [ ] Platform rpi related
-    * [ ] Determine one of the two options to choose, or support both ( via config.txt )
-      * [ ] Handle initrd to be added after kernel
-      * [ ] Handle initrd loaded to fixed address set per board
-    * [ ] Extend memory management
-      * [ ] Mark initrd within physical memory manager as used
-      * [ ] Check and extend virtual memory management if necessary
-* [ ] Add parsing of ELF files
-  * [ ] Check for executable elf programs within initrd and execute them
 * [ ] Device tree
   * [ ] Add device tree library
   * [ ] Extend automake by option for use device tree

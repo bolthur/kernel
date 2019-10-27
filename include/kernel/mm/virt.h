@@ -26,21 +26,21 @@
 #include <stdint.h>
 
 typedef enum {
-  MEMORY_TYPE_DEVICE,
-  MEMORY_TYPE_DEVICE_STRONG,
-  MEMORY_TYPE_NORMAL,
-  MEMORY_TYPE_NORMAL_NC
+  VIRT_MEMORY_TYPE_DEVICE,
+  VIRT_MEMORY_TYPE_DEVICE_STRONG,
+  VIRT_MEMORY_TYPE_NORMAL,
+  VIRT_MEMORY_TYPE_NORMAL_NC
 } virt_memory_type_t;
 
 typedef enum {
-  PAGE_TYPE_AUTO,
-  PAGE_TYPE_EXECUTABLE,
-  PAGE_TYPE_NON_EXECUTABLE,
+  VIRT_PAGE_TYPE_AUTO,
+  VIRT_PAGE_TYPE_EXECUTABLE,
+  VIRT_PAGE_TYPE_NON_EXECUTABLE,
 } virt_page_type_t;
 
 typedef enum {
-  CONTEXT_TYPE_KERNEL = 1,
-  CONTEXT_TYPE_USER,
+  VIRT_CONTEXT_TYPE_KERNEL = 1,
+  VIRT_CONTEXT_TYPE_USER,
 } virt_context_type_t;
 
 typedef struct {
@@ -65,7 +65,9 @@ void virt_map_address(
   virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
 void virt_map_address_random(
   virt_context_ptr_t, uintptr_t, virt_memory_type_t, uint32_t );
+uintptr_t virt_map_temporary( uint64_t, size_t );
 void virt_unmap_address( virt_context_ptr_t, uintptr_t );
+void virt_unmap_temporary( uintptr_t, size_t );
 uint32_t virt_get_supported_modes( void );
 void virt_set_context( virt_context_ptr_t );
 void virt_flush_complete( void );

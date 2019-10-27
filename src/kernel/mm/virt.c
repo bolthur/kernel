@@ -76,8 +76,8 @@ void virt_init( void ) {
       kernel_context,
       PHYS_2_VIRT( start ),
       start,
-      MEMORY_TYPE_NORMAL,
-      PAGE_TYPE_EXECUTABLE
+      VIRT_MEMORY_TYPE_NORMAL,
+      VIRT_PAGE_TYPE_EXECUTABLE
     );
 
     // get next page
@@ -108,8 +108,8 @@ void virt_init( void ) {
         kernel_context,
         PHYS_2_VIRT( start ),
         start,
-        MEMORY_TYPE_NORMAL,
-        PAGE_TYPE_EXECUTABLE
+        VIRT_MEMORY_TYPE_NORMAL,
+        VIRT_PAGE_TYPE_EXECUTABLE
       );
 
       // get next page

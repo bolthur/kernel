@@ -175,7 +175,10 @@ static void extend_heap_space( void ) {
 
     // map address
     virt_map_address_random(
-      kernel_context, addr, MEMORY_TYPE_NORMAL, PAGE_TYPE_NON_EXECUTABLE );
+      kernel_context,
+      addr,
+      VIRT_MEMORY_TYPE_NORMAL,
+      VIRT_PAGE_TYPE_NON_EXECUTABLE );
 
     // clear area
     memset( ( void* )addr, 0, PAGE_SIZE );
@@ -456,7 +459,10 @@ void heap_init( void ) {
 
     // map address
     virt_map_address_random(
-      kernel_context, addr, MEMORY_TYPE_NORMAL, PAGE_TYPE_NON_EXECUTABLE );
+      kernel_context,
+      addr,
+      VIRT_MEMORY_TYPE_NORMAL,
+      VIRT_PAGE_TYPE_NON_EXECUTABLE );
   }
 
   // debug output
