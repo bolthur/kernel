@@ -1,12 +1,14 @@
 
 AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
+  # General define templates
   AH_TEMPLATE([ELF32], [Define to 1 for 32 bit ELF targets])
   AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets])
-  AH_TEMPLATE([DEBUG], [Set to 1 to enable debug mode])
   AH_TEMPLATE([IS_HIGHER_HALF], [Define to 1 when kernel is higher half])
-  AH_TEMPLATE([INITIAL_PHYSICAL_MAP], [Define contains amount of memory to map initially per platform])
-  AH_TEMPLATE([ARCH_ARM], [Define to 1 for ARM targets])
-  AH_TEMPLATE([TTY_ENABLE], [Define to 1 to enable kernel print])
+  AH_TEMPLATE([INITIAL_PHYSICAL_MAP], [Define contains amount of memory to map initially by platform])
+  AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
+  AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
+  # Output related define templates
+  AH_TEMPLATE([OUTPUT_ENABLE], [Define to 1 to enable kernel print])
   AH_TEMPLATE([PRINT_MM_PHYS], [Define to 1 to enable output of physical memory manager])
   AH_TEMPLATE([PRINT_MM_VIRT], [Define to 1 to enable output of virtual memory manager])
   AH_TEMPLATE([PRINT_MM_HEAP], [Define to 1 to enable output of kernel heap])
@@ -17,17 +19,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_EVENT], [Define to 1 to enable output of event])
   AH_TEMPLATE([PRINT_INTERRUPT], [Define to 1 to enable output of interrupt methods])
   AH_TEMPLATE([PRINT_PROCESS], [Define to 1 to enable output of process methods])
-  AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
-  AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
-
-  # Test possibe enable debug parameter
-  AS_IF([test "x$with_debug" == "xyes"], [
-    AC_DEFINE([DEBUG], [1])
-  ])
 
   # Test for general output enable
   AS_IF([test "x$enable_output" == "xyes"], [
-    AC_DEFINE([TTY_ENABLE], [1])
+    AC_DEFINE([OUTPUT_ENABLE], [1])
   ])
 
   # Test for physical memory manager output
@@ -87,7 +82,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     output_img=kernel.img
     output_sym=kernel.sym
     executable_format=32
-    AC_DEFINE([ARCH_ARM], [1])
     AC_DEFINE([ELF32], [1])
 
     case "${DEVICE}" in
@@ -141,7 +135,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     arch_subdir=arm
     host_bfd=elf64-littleaarch64
     executable_format=64
-    AC_DEFINE([ARCH_ARM], [1])
     AC_DEFINE([ELF64], [1])
 
     case "${DEVICE}" in

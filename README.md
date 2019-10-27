@@ -59,8 +59,8 @@ cd build
 
 Possible additional parameters to `--host` and `--enable-device`:
 
-* `--with-debug` enables remote debugging mode
-* `--with-opt=x` sets optimization from default ( 2 ) to specified one
+* `--with-debug-symbols` enables remote debugging mode
+* `--with-optimization-level=x` sets optimization from default ( 2 ) to specified one
 * `--enable-output` enables kernel output
 * `--enable-output-mm-phys` activate tty output of physical memory manager ( slows down kernel totally )
 * `--enable-output-mm-virt` activate tty output of virtual memory manager

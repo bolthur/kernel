@@ -125,21 +125,21 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_WITH(
-  [opt],
+  [optimization-level],
   AC_HELP_STRING(
-    [--with-opt],
+    [--with-optimization-level],
     [compile with specific code optimization level [possible values: 0, 1, 2, 3, s, g | default: 2]]
   ),
-  [with_opt=$withval]
+  [with_optimization_level=$withval]
 )
 
 AC_ARG_WITH(
-  [debug],
+  [debug-symbols],
   AC_HELP_STRING(
-    [--with-debug],
+    [--with-debug-symbols],
     [compile with debug symbols]
   ),
-  [with_debug=yes]
+  [with_debug_debug_symbols=yes]
 )
 
 # set target and flags

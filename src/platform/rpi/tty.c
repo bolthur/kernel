@@ -25,7 +25,7 @@
  * @brief Initialize TTY
  */
 void tty_init( void ) {
-  #if defined( TTY_ENABLE ) || defined( DEBUG )
+  #if defined( OUTPUT_ENABLE )
     serial_init();
   #endif
 }
@@ -36,7 +36,7 @@ void tty_init( void ) {
  * @param c Character to print
  */
 void tty_putc( uint8_t c ) {
-  #if defined( TTY_ENABLE )
+  #if defined( OUTPUT_ENABLE )
     serial_putc( c );
   #else
     ( void )c;

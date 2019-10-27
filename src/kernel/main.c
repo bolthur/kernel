@@ -46,13 +46,9 @@
  * @brief Kernel main function
  *
  * @todo remove initrd test code later
+ * @todo initialize serial when remote debugging is enabled
  */
 void kernel_main( void ) {
-  // Initialize serial for debugging if enabled
-  #if defined( DEBUG )
-    serial_init();
-  #endif
-
   // enable tty for output
   tty_init();
 
