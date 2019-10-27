@@ -35,7 +35,7 @@ typedef struct {
 
 typedef struct {
   avl_node_t node;
-  uint8_t interrupt;
+  size_t interrupt;
   list_manager_ptr_t callback_list;
 } irq_block_t, *irq_block_ptr_t;
 
@@ -49,10 +49,10 @@ typedef struct {
 int8_t irq_get_pending( bool );
 void irq_disable( void );
 void irq_enable( void );
-bool irq_validate_number( uint8_t );
+bool irq_validate_number( size_t );
 void irq_init( void );
-void irq_handle( uint8_t, bool, void** );
-void irq_register_handler( uint8_t, irq_callback_t, bool );
-void irq_unregister_handler( uint8_t, irq_callback_t, bool );
+void irq_handle( size_t, bool, void** );
+void irq_register_handler( size_t, irq_callback_t, bool );
+void irq_unregister_handler( size_t, irq_callback_t, bool );
 
 #endif

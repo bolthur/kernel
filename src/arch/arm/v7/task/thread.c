@@ -34,11 +34,9 @@
  *
  * @param entry entry point of the thread
  * @param process thread process
- * @return void* pointer to thread structure
- *
- * @todo replace magic values by define
+ * @return task_thread_ptr_t pointer to thread structure
  */
-void task_thread_create( uintptr_t entry, task_process_ptr_t process ) {
+task_thread_ptr_t task_thread_create( uintptr_t entry, task_process_ptr_t process ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
@@ -107,9 +105,13 @@ void task_thread_create( uintptr_t entry, task_process_ptr_t process ) {
   // populate thread structure
   thread->context = ( void* )cpu;
   thread->stack = physical_stack;
+  thread->state = TASK_THREAD_STATE_READY;
 
   // prepare node
   avl_prepare_node( &thread->node, NULL );
   // add to tree
   avl_insert_by_node( process->thread_manager->thread, &thread->node );
+
+  // return created thread
+  return thread;
 }

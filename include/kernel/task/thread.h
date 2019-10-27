@@ -27,6 +27,6 @@
   ( task_thread_ptr_t )( ( uint8_t* )n - offsetof( task_thread_t, node ) )
 
 task_thread_manager_ptr_t task_thread_init( void );
-void task_thread_create( uintptr_t, task_process_ptr_t );
+task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t );
 
 #endif

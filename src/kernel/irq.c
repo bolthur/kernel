@@ -69,7 +69,7 @@ static int32_t compare_irq_callback(
  * @param fast flag to bind FIQ
  */
 void irq_unregister_handler(
-  __unused uint8_t num,
+  __unused size_t num,
   __unused irq_callback_t callback,
   __unused bool fast
 ) {
@@ -83,7 +83,7 @@ void irq_unregister_handler(
  * @param callback Callback to bind
  * @param fast flag to bind FIQ
  */
-void irq_register_handler( uint8_t num, irq_callback_t callback, bool fast ) {
+void irq_register_handler( size_t num, irq_callback_t callback, bool fast ) {
   // assert heap existance
   assert( true == heap_initialized_get() );
   // debug output
@@ -134,17 +134,8 @@ void irq_register_handler( uint8_t num, irq_callback_t callback, bool fast ) {
     );
   #endif
 
-  // build temporary block
-  irq_block_t tmp_block;
-  // prepare memory
-  memset( ( void* )&tmp_block, 0, sizeof( irq_block_t ) );
-  // prepare node
-  avl_prepare_node( &tmp_block.node, NULL );
-  // populate necessary attributes
-  tmp_block.interrupt = num;
-
   // try to find node
-  avl_node_ptr_t node = avl_find_by_node( tree, &tmp_block.node );
+  avl_node_ptr_t node = avl_find_by_data( tree, ( void* )num );
   irq_block_ptr_t block;
   // debug output
   #if defined( PRINT_INTERRUPT )
@@ -166,7 +157,7 @@ void irq_register_handler( uint8_t num, irq_callback_t callback, bool fast ) {
     block->interrupt = num;
     block->callback_list = list_construct();
     // prepare and insert node
-    avl_prepare_node( &block->node, NULL );
+    avl_prepare_node( &block->node, ( void* )num );
     avl_insert_by_node( tree, &block->node );
     // overwrite node
     node = &block->node;
@@ -229,7 +220,7 @@ void irq_register_handler( uint8_t num, irq_callback_t callback, bool fast ) {
  * @param fast fast interrupt flag
  * @param context interrupt context
  */
-void irq_handle( uint8_t num, bool fast, void** context ) {
+void irq_handle( size_t num, bool fast, void** context ) {
   // handle no irq manager which means no irq bound
   if ( NULL == irq_manager ) {
     return;
@@ -258,17 +249,8 @@ void irq_handle( uint8_t num, bool fast, void** context ) {
     );
   #endif
 
-  // build temporary block
-  irq_block_t tmp_block;
-  // prepare memory
-  memset( ( void* )&tmp_block, 0, sizeof( irq_block_t ) );
-  // prepare node
-  avl_prepare_node( &tmp_block.node, NULL );
-  // populate necessary attributes
-  tmp_block.interrupt = num;
-
   // try to get node by interrupt
-  avl_node_ptr_t node = avl_find_by_node( tree, &tmp_block.node );
+  avl_node_ptr_t node = avl_find_by_data( tree, ( void* )num );
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );

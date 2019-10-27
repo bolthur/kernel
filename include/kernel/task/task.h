@@ -23,10 +23,13 @@
 
 #include <stddef.h>
 #include <avl.h>
+#include <list.h>
 #include <kernel/mm/virt.h>
 
-/*typedef enum {
-} task_thread_state_t;*/
+typedef enum {
+  TASK_THREAD_STATE_READY = 0,
+  TASK_THREAD_STATE_ACTIVE,
+} task_thread_state_t;
 
 typedef enum {
   TASK_PROCESS_TYPE_KERNEL = 1,
@@ -39,6 +42,7 @@ typedef struct {
   avl_node_t node;
   void* context;
   uint64_t stack;
+  task_thread_state_t state;
 } task_thread_t, *task_thread_ptr_t;
 
 typedef struct {
@@ -54,7 +58,8 @@ typedef struct process {
 } task_process_t, *task_process_ptr_t;
 
 typedef struct {
-  avl_tree_ptr_t tree_id;
-} task_process_manager_t, *task_process_manager_ptr_t;
+  avl_tree_ptr_t tree_process_id;
+  list_manager_ptr_t thread_list;
+} task_manager_t, *task_manager_ptr_t;
 
 #endif

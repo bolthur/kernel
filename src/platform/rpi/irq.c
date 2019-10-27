@@ -35,7 +35,7 @@
  * @return true if irq is valid
  * @return false if irq is invalid
  */
-bool irq_validate_number( uint8_t num ) {
+bool irq_validate_number( size_t num ) {
   return ! (
     num != 1 && num != 8
     && num != 29 && num != 43

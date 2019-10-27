@@ -105,17 +105,8 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
   // get correct tree to use
   avl_tree_ptr_t tree = event->tree;
 
-  // build temporary block
-  event_block_t tmp_block;
-  // prepare memory
-  memset( ( void* )&tmp_block, 0, sizeof( event_block_t ) );
-  // prepare node
-  avl_prepare_node( &tmp_block.node, NULL );
-  // populate necessary attributes
-  tmp_block.type = type;
-
   // try to find node
-  avl_node_ptr_t node = avl_find_by_node( tree, &tmp_block.node );
+  avl_node_ptr_t node = avl_find_by_data( tree, ( void* )type );
   event_block_ptr_t block;
   // debug output
   #if defined( PRINT_INTERRUPT )
@@ -137,7 +128,7 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
     block->type = type;
     block->callback_list = list_construct();
     // prepare and insert node
-    avl_prepare_node( &block->node, NULL );
+    avl_prepare_node( &block->node, ( void* )type );
     avl_insert_by_node( tree, &block->node );
     // overwrite node
     node = &block->node;
@@ -230,17 +221,8 @@ void event_fire( event_type_t type, void** data ) {
   // get correct tree to use
   avl_tree_ptr_t tree = event->tree;
 
-  // build temporary block
-  event_block_t tmp_block;
-  // prepare memory
-  memset( ( void* )&tmp_block, 0, sizeof( event_block_t ) );
-  // prepare node
-  avl_prepare_node( &tmp_block.node, NULL );
-  // populate necessary attributes
-  tmp_block.type = type;
-
   // try to find node
-  avl_node_ptr_t node = avl_find_by_node( tree, &tmp_block.node );
+  avl_node_ptr_t node = avl_find_by_data( tree, ( void* )type );
   event_block_ptr_t block;
   // debug output
   #if defined( PRINT_INTERRUPT )
