@@ -15,4 +15,5 @@ libarm_a_SOURCES = \
   arch.c \
   delay.c \
   io.c \
-  irq.c
+  irq.c \
+  lock.c

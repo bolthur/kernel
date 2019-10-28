@@ -73,6 +73,7 @@ task_priority_queue_ptr_t task_queue_get_queue(
   task_manager_ptr_t manager,
   size_t priority
 ) {
+  // assert manager existance
   assert( NULL != manager );
   // debug output
   #if defined( PRINT_PROCESS )
@@ -114,6 +115,8 @@ task_priority_queue_ptr_t task_queue_get_queue(
     queue = TASK_QUEUE_GET_PRIORITY( node );
   }
 
+  // assert existance
+  assert( NULL != queue );
   // return queue
   return queue;
 }

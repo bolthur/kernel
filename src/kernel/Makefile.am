@@ -16,8 +16,10 @@ libkernel_a_SOURCES = \
   task/process.c \
   task/queue.c \
   task/thread.c \
+  cpu.c \
   event.c \
   initrd.c \
   irq.c \
+  lock.c \
   main.c \
   panic.c

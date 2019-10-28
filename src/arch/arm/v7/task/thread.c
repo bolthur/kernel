@@ -26,6 +26,7 @@
 #include <kernel/mm/phys.h>
 #include <kernel/mm/virt.h>
 #include <kernel/debug/debug.h>
+#include <kernel/task/queue.h>
 #include <kernel/task/process.h>
 #include <kernel/task/thread.h>
 #include <arch/arm/v7/cpu.h>
@@ -120,6 +121,12 @@ task_thread_ptr_t task_thread_create(
   avl_prepare_node( &thread->node_id, ( void* )thread->id );
   // add to tree
   avl_insert_by_node( process->thread_manager, &thread->node_id );
+
+  // get thread queue by priority
+  task_priority_queue_ptr_t queue = task_queue_get_queue(
+    process_manager, priority );
+  // add thread to thread list for switching
+  list_push( queue->thread_list, thread );
 
   // return created thread
   return thread;

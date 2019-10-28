@@ -6,6 +6,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([IS_HIGHER_HALF], [Define to 1 when kernel is higher half])
   AH_TEMPLATE([INITIAL_PHYSICAL_MAP], [Define contains amount of memory to map initially by platform])
   AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
+  AH_TEMPLATE([HAS_SMP], [Define to 1 when board supports smp])
   AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
   # Output related define templates
   AH_TEMPLATE([OUTPUT_ENABLE], [Define to 1 to enable kernel print])
@@ -98,6 +99,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [4])
+      AC_DEFINE([HAS_SMP], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     rpi_zero_w)
@@ -124,6 +126,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [4])
+      AC_DEFINE([HAS_SMP], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     *)
@@ -150,6 +153,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [4])
+      AC_DEFINE([HAS_SMP], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     *)

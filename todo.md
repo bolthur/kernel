@@ -23,7 +23,7 @@
   * [ ] Check for drivers within folder "/driver"
 * [ ] Multitasking
   * [ ] Add multithreading
-* [ ] Add SMP support
+* [ ] Add SMP support [see also](http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dai0425/ch04s07s01.html)
   * [ ] Memory management
     * [ ] Prepare virtual memory management per core if smp is active
   * [ ] Determine current running core within exceptions

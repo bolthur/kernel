@@ -143,15 +143,8 @@ void task_process_create(
       : VIRT_CONTEXT_TYPE_KERNEL );
   // prepare node
   avl_prepare_node( &process->node_id, ( void* )process->id );
-
-  // Setup thread with entry
-  task_thread_ptr_t thread = task_thread_create( entry, process, priority );
   // add process to tree
   avl_insert_by_node( process_manager->tree_process_id, &process->node_id );
-
-  // get thread queue by priority
-  task_priority_queue_ptr_t queue = task_queue_get_queue(
-    process_manager, priority );
-  // add thread to thread list for switching
-  list_push( queue->thread_list, thread );
+  // Setup thread with entry
+  task_thread_create( entry, process, priority );
 }

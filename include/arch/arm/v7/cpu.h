@@ -46,7 +46,6 @@
 
     /**
      * @brief CPU register context
-     * @todo Extend with FPU registers if enabled
      */
     typedef union __packed {
       uint32_t storage[ 17 ];
