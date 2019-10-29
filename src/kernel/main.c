@@ -43,15 +43,21 @@
 #include <kernel/initrd.h>
 
 static void process1( void ) {
-  printf( "A" );
+  while( true ) {
+    printf( "A" );
+  }
 }
 
 static void process2( void ) {
-  printf( "B" );
+  while( true ) {
+    printf( "B" );
+  }
 }
 
 static void process3( void ) {
-  printf( "C" );
+  while( true ) {
+    printf( "C" );
+  }
 }
 
 /**
@@ -150,7 +156,7 @@ void kernel_main( void ) {
   // create some dummy processes
   task_process_create( ( uintptr_t )process1, TASK_PROCESS_TYPE_KERNEL, 0 );
   task_process_create( ( uintptr_t )process2, TASK_PROCESS_TYPE_KERNEL, 0 );
-  task_process_create( ( uintptr_t )process3, TASK_PROCESS_TYPE_USER, 0 );
+  task_process_create( ( uintptr_t )process3, TASK_PROCESS_TYPE_KERNEL, 0 );
 
   // Setup irq
   DEBUG_OUTPUT( "[bolthur/kernel -> irq] enable ...\r\n" );

@@ -68,7 +68,6 @@
 
   // switch to previous mode
   ldr r0, [sp, #64]
-  orr r0, r0, #( CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
   msr cpsr_c, r0
 
   // restore sp and lr

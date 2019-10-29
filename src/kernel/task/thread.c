@@ -28,7 +28,7 @@
 /**
  * @brief Current running thread
  */
-task_thread_ptr_t current = NULL;
+static task_thread_ptr_t current = NULL;
 
 /**
  * @brief Compare id callback necessary for avl tree
@@ -71,6 +71,24 @@ size_t task_thread_generate_id( void ) {
   static size_t current = 0;
   // return new pid by simple increment
   return ++current;
+}
+
+/**
+ * @brief Returns current thread
+ *
+ * @return task_thread_ptr_t
+ */
+task_thread_ptr_t task_thread_get_current( void ) {
+  return current;
+}
+
+/**
+ * @brief Sets current running thread
+ *
+ * @param thread thread to set
+ */
+void task_thread_set_current( task_thread_ptr_t thread ) {
+  current = thread;
 }
 
 /**

@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <kernel/panic.h>
 #include <arch/arm/stack.h>
 #include <kernel/mm/phys.h>
 #include <kernel/mm/virt.h>
@@ -75,6 +76,27 @@ task_thread_ptr_t task_thread_create(
     DEBUG_OUTPUT( "Allocated thread structure at 0x%08x\r\n", thread );
   #endif
 
+  // populate cpu context
+  cpu->reg.pc = ( uint32_t )entry;
+  cpu->reg.spsr = 0x60000000;
+  cpu->reg.sp = ( uint32_t )THREAD_STACK_ADDRESS;
+  if ( TASK_PROCESS_TYPE_USER == process->type ) {
+    // set user mode and stack
+    cpu->reg.spsr |= CPSR_MODE_USER;
+  } else if ( TASK_PROCESS_TYPE_KERNEL == process->type ) {
+    // set supervisor mode and stack
+    cpu->reg.spsr |= (
+      CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT
+    );
+  } else {
+    PANIC( "Unknown / unsupported process type!" );
+  }
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Using stack 0x%08x\r\n", cpu->reg.sp );
+    dump_register( cpu );
+  #endif
+
   // reserve stack
   uint64_t physical_stack = phys_find_free_page_range( PAGE_SIZE, STACK_SIZE );
   // debug output
@@ -87,28 +109,13 @@ task_thread_ptr_t task_thread_create(
   uintptr_t virtual_temporary = virt_map_temporary( physical_stack, STACK_SIZE );
   // prepare
   memset( ( void* )virtual_temporary, 0, STACK_SIZE );
+  // populate cpu context for initial switch
+  memcpy(
+    ( void* )virtual_temporary,
+    ( void* )cpu,
+    sizeof( cpu_register_context_t ) );
   // unmap again
   virt_unmap_temporary( virtual_temporary, STACK_SIZE );
-
-  // populate cpu context
-  cpu->reg.pc = ( uint32_t )entry;
-  cpu->reg.spsr = 0x60000000;
-  if ( TASK_PROCESS_TYPE_USER == process->type ) {
-    // set user mode and stack
-    cpu->reg.spsr |= CPSR_MODE_USER;
-    cpu->reg.sp = ( uint32_t )&stack_user_mode;
-  } else {
-    // set supervisor mode and stack
-    cpu->reg.spsr |= (
-      CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT
-    );
-    cpu->reg.sp = ( uint32_t )&stack_supervisor_mode;
-  }
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Mapped stack to 0x%08x\r\n", cpu->reg.sp );
-    dump_register( cpu );
-  #endif
 
   // populate thread structure
   thread->context = ( void* )cpu;
@@ -116,6 +123,7 @@ task_thread_ptr_t task_thread_create(
   thread->state = TASK_THREAD_STATE_READY;
   thread->id = task_thread_generate_id();
   thread->priority = priority;
+  thread->process = process;
 
   // prepare node
   avl_prepare_node( &thread->node_id, ( void* )thread->id );
@@ -126,7 +134,7 @@ task_thread_ptr_t task_thread_create(
   task_priority_queue_ptr_t queue = task_queue_get_queue(
     process_manager, priority );
   // add thread to thread list for switching
-  list_push( queue->thread_list, thread );
+  list_push_back( queue->thread_list, thread );
 
   // return created thread
   return thread;

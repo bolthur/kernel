@@ -105,11 +105,11 @@ task_priority_queue_ptr_t task_queue_get_queue(
     // populate queue
     queue->priority = priority;
     queue->thread_list = list_construct();
+    queue->current = NULL;
+    queue->last_handled = NULL;
     // prepare and insert node
     avl_prepare_node( &queue->node, ( void* )priority );
     avl_insert_by_node( tree, &queue->node );
-    // overwrite node
-    node = &queue->node;
   // existing? => gather block
   } else {
     queue = TASK_QUEUE_GET_PRIORITY( node );

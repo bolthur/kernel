@@ -25,6 +25,12 @@
 #include <stddef.h>
 #include <avl.h>
 
+#if defined( ELF32 )
+  #define THREAD_STACK_ADDRESS 0xF3041000
+#elif defined( ELF64 )
+  #error "Unsupported"
+#endif
+
 typedef struct process task_process_t, *task_process_ptr_t;
 
 typedef enum {
@@ -39,12 +45,14 @@ typedef struct task_thread {
   void* context;
   uint64_t stack;
   task_thread_state_t state;
+  task_process_ptr_t process;
 } task_thread_t, *task_thread_ptr_t;
 
 #define TASK_THREAD_GET_BLOCK( n ) \
   ( task_thread_ptr_t )( ( uint8_t* )n - offsetof( task_thread_t, node ) )
 
-extern task_thread_ptr_t current;
+task_thread_ptr_t task_thread_get_current( void );
+void task_thread_set_current( task_thread_ptr_t );
 size_t task_thread_generate_id( void );
 avl_tree_ptr_t task_thread_init( void );
 task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t, size_t );

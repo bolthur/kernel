@@ -24,11 +24,16 @@
 #include <stddef.h>
 #include <avl.h>
 #include <list.h>
+#include <kernel/task/thread.h>
 #include <kernel/task/process.h>
 
 typedef struct {
   avl_node_t node;
   size_t priority;
+
+  task_thread_ptr_t last_handled;
+  task_thread_ptr_t current;
+
   list_manager_ptr_t thread_list;
 } task_priority_queue_t, *task_priority_queue_ptr_t;
 

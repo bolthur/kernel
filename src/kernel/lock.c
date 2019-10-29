@@ -26,5 +26,9 @@
  * @param m mutex to unlock
  */
 void lock_mutex_release( lock_mutex_t* m ) {
+  // set to released
   *m = LOCK_MUTEX_RELEASED;
+
+  // snychronize
+  __sync_synchronize();
 }
