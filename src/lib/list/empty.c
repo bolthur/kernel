@@ -19,30 +19,28 @@
  */
 
 #include <stddef.h>
-#include <stdlib.h>
 #include <assert.h>
-#include <string.h>
 #include <list.h>
 
 /**
- * @brief Method to construct list
+ * @brief Method checks for list is empty
  *
- * @return list_manager_ptr_t pointer to created list
+ * @return true empty list
+ * @return false at least one item
  */
-list_manager_ptr_t list_construct( void ) {
-  list_manager_ptr_t list;
-
-  // allocate list
-  list = ( list_manager_ptr_t )malloc( sizeof( list_manager_t ) );
-  // assert malloc result
+bool list_empty( list_manager_ptr_t list ) {
+  // assert existance
   assert( NULL != list );
-  // overwrite with zero
-  memset( ( void* )list, 0, sizeof( list_manager_t ) );
 
-  // preset elements
-  list->first = NULL;
-  list->last = NULL;
+  // check first and last item
+  if (
+    NULL == list->first
+    && NULL == list->last
+  ) {
+    // list empty
+    return true;
+  }
 
-  // return created list
-  return list;
+  // list not empty
+  return false;
 }

@@ -510,8 +510,9 @@ uintptr_t v7_long_map_temporary( uint64_t paddr, size_t size ) {
  *
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
+ * @param free_phys flag to free also physical memory
  */
-void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
+void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
   // get page index
   uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( vaddr );
   // get physical table
@@ -545,7 +546,9 @@ void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr ) {
   table->page[ page_idx ].raw = 0;
 
   // free physical page
-  phys_free_page( page );
+  if ( true == free_phys ) {
+    phys_free_page( page );
+  }
 
   // unmap temporary
   unmap_temporary( ( uintptr_t )table, PAGE_SIZE );

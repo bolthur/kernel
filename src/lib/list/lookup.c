@@ -19,30 +19,34 @@
  */
 
 #include <stddef.h>
-#include <stdlib.h>
 #include <assert.h>
-#include <string.h>
 #include <list.h>
 
 /**
- * @brief Method to construct list
+ * @brief Search a list item by data
  *
- * @return list_manager_ptr_t pointer to created list
+ * @param list list to lookup
+ * @param data data to find
+ * @return list_item_ptr_t
  */
-list_manager_ptr_t list_construct( void ) {
-  list_manager_ptr_t list;
+list_item_ptr_t list_lookup_data( list_manager_ptr_t list, void* data ) {
+  list_item_ptr_t current;
 
-  // allocate list
-  list = ( list_manager_ptr_t )malloc( sizeof( list_manager_t ) );
-  // assert malloc result
+  // assert existance
   assert( NULL != list );
-  // overwrite with zero
-  memset( ( void* )list, 0, sizeof( list_manager_t ) );
+  // populate current
+  current = list->first;
 
-  // preset elements
-  list->first = NULL;
-  list->last = NULL;
 
-  // return created list
-  return list;
+  // loop through list until end
+  while ( NULL != current ) {
+    if ( data == current->data ) {
+      return current;
+    }
+    // check next one
+    current = current->next;
+  }
+
+  // return not found
+  return NULL;
 }

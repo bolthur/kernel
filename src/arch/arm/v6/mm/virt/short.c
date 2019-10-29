@@ -71,10 +71,12 @@ uintptr_t v6_short_map_temporary(
  *
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
+ * @param free_phys flag to free also physical memory
  */
 void v6_short_unmap(
   __unused virt_context_ptr_t ctx,
-  __unused uintptr_t vaddr
+  __unused uintptr_t vaddr,
+  __unused bool free_phys
 ) {
   PANIC( "v6 mmu mapping not yet supported!" );
 }

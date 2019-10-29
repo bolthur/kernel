@@ -121,17 +121,18 @@ uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
  *
  * @param ctx pointer to page context
  * @param addr pointer to virtual address
+ * @param free_phys flag to free also physical memory
  */
-void virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr ) {
+void virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr, bool free_phys ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-    v7_long_unmap( ctx, addr );
+    v7_long_unmap( ctx, addr, free_phys );
   // check v7 short descriptor format
   } else if (
     ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
-    v7_short_unmap( ctx, addr );
+    v7_short_unmap( ctx, addr, free_phys );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

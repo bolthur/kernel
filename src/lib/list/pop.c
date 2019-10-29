@@ -29,7 +29,7 @@
  * @param list list to use
  * @return void* data of first element or NULL if empty
  */
-void* list_pop( list_manager_ptr_t list ) {
+void* list_pop_front( list_manager_ptr_t list ) {
   void* data;
   list_item_ptr_t first;
 
@@ -60,6 +60,47 @@ void* list_pop( list_manager_ptr_t list ) {
 
   // free first element
   free( ( void* )first );
+  // return set data
+  return data;
+}
+
+/**
+ * @brief Method to pop element from list
+ *
+ * @param list list to use
+ * @return void* data of first element or NULL if empty
+ */
+void* list_pop_back( list_manager_ptr_t list ) {
+  void* data;
+  list_item_ptr_t last;
+
+  // assert list is initialized
+  assert( NULL != list );
+  // get last element
+  last = list->last;
+
+  // handle empty list
+  if ( NULL == last ) {
+    return NULL;
+  }
+
+  // cache data of first element
+  data = last->data;
+  // change next of previous element if existing
+  if ( NULL != last->previous ) {
+    // change previous
+    last->previous->next = NULL;
+  }
+
+  // change list to next to remove first element from list
+  list->last = last->previous;
+  // change first if no next element is existing
+  if ( NULL == list->last || NULL == list->last->next ) {
+    list->first = list->last;
+  }
+
+  // free first element
+  free( ( void* )last );
   // return set data
   return data;
 }

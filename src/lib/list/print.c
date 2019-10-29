@@ -21,28 +21,26 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <string.h>
 #include <list.h>
+#include <stdio.h>
 
 /**
- * @brief Method to construct list
+ * @brief Method to print list
  *
- * @return list_manager_ptr_t pointer to created list
+ * @param list list to use
  */
-list_manager_ptr_t list_construct( void ) {
-  list_manager_ptr_t list;
+void list_print( list_manager_ptr_t list ) {
+  list_item_ptr_t current;
 
-  // allocate list
-  list = ( list_manager_ptr_t )malloc( sizeof( list_manager_t ) );
-  // assert malloc result
+  // assert list
   assert( NULL != list );
-  // overwrite with zero
-  memset( ( void* )list, 0, sizeof( list_manager_t ) );
+  // populate current
+  current = list->first;
 
-  // preset elements
-  list->first = NULL;
-  list->last = NULL;
-
-  // return created list
-  return list;
+  // loop through list until end
+  while ( NULL != current ) {
+    printf( "list->data = 0x%08x - ", current->data );
+    // get next element
+    current = current->next;
+  }
 }

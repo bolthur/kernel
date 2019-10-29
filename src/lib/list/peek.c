@@ -29,7 +29,7 @@
  * @param list list to use
  * @return void* data of first element or NULL if empty
  */
-void* list_peek( list_manager_ptr_t list ) {
+void* list_peek_front( list_manager_ptr_t list ) {
   list_item_ptr_t first;
 
   // assert list is initialized
@@ -43,4 +43,26 @@ void* list_peek( list_manager_ptr_t list ) {
   }
   // return data of first element
   return first->data;
+}
+
+/**
+ * @brief Method to get element from list like pop without removal
+ *
+ * @param list list to use
+ * @return void* data of first element or NULL if empty
+ */
+void* list_peek_back( list_manager_ptr_t list ) {
+  list_item_ptr_t last;
+
+  // assert list is initialized
+  assert( NULL != list );
+  // get last element
+  last = list->last;
+
+  // handle empty list
+  if ( NULL == last ) {
+    return NULL;
+  }
+  // return data of first element
+  return last->data;
 }

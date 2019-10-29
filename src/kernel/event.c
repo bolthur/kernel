@@ -183,7 +183,7 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
     DEBUG_OUTPUT( "Created wrapper container at 0x%08p\r\n", wrapper );
   #endif
   // push to list
-  list_push( block->callback_list, ( void* )wrapper );
+  list_push_back( block->callback_list, ( void* )wrapper );
 
   // return success
   return true;

@@ -28,7 +28,7 @@ void v6_short_map(
 void v6_short_map_random(
   virt_context_ptr_t, uintptr_t, virt_memory_type_t, uint32_t );
 uintptr_t v6_short_map_temporary( uint64_t, size_t );
-void v6_short_unmap( virt_context_ptr_t, uintptr_t );
+void v6_short_unmap( virt_context_ptr_t, uintptr_t, bool );
 void v6_short_unmap_temporary( uintptr_t, size_t );
 uint64_t v6_short_create_table( virt_context_ptr_t, uintptr_t, uint64_t );
 void v6_short_set_context( virt_context_ptr_t );

@@ -66,7 +66,7 @@ void virt_map_address(
 void virt_map_address_random(
   virt_context_ptr_t, uintptr_t, virt_memory_type_t, uint32_t );
 uintptr_t virt_map_temporary( uint64_t, size_t );
-void virt_unmap_address( virt_context_ptr_t, uintptr_t );
+void virt_unmap_address( virt_context_ptr_t, uintptr_t, bool );
 void virt_unmap_temporary( uintptr_t, size_t );
 uint32_t virt_get_supported_modes( void );
 void virt_set_context( virt_context_ptr_t );

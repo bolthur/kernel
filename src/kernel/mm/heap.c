@@ -315,7 +315,7 @@ static void shrink_heap_space( void ) {
     start < max_end;
     start += PAGE_SIZE
   ) {
-    virt_unmap_address( kernel_context, start );
+    virt_unmap_address( kernel_context, start, true );
   }
 
   // Debug output

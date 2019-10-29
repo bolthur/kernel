@@ -210,7 +210,7 @@ void irq_register_handler( size_t num, irq_callback_t callback, bool fast ) {
   #endif
 
   // push to list
-  list_push( block->callback_list, ( void* )wrapper );
+  list_push_back( block->callback_list, ( void* )wrapper );
 }
 
 /**
