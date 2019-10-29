@@ -102,7 +102,7 @@ task_thread_ptr_t task_thread_create(
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "Allocated stack structure at physical 0x%08x\r\n",
+      "Allocated stack structure at physical 0x%016llx\r\n",
       physical_stack );
   #endif
   // map temporary

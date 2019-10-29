@@ -170,8 +170,8 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
   size_t found_amount = 0;
 
   // found address range
-  uintptr_t address = 0;
-  uintptr_t tmp = 0;
+  uint64_t address = 0;
+  uint64_t tmp = 0;
   bool stop = false;
 
   // loop through bitmap to find free continouse space
@@ -193,6 +193,9 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
       // set address if found is 0
       if ( 0 == found_amount ) {
         address = idx * PAGE_SIZE * PAGE_PER_ENTRY + offset * PAGE_SIZE;
+        #if defined( PRINT_MM_PHYS )
+          DEBUG_OUTPUT( "idx = %d\r\n", idx );
+        #endif
 
         // check for alignment
         if ( 0 < alignment && 0 != address % alignment ) {
