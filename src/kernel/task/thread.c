@@ -21,8 +21,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <kernel/panic.h>
 #include <kernel/debug/debug.h>
 #include <kernel/event.h>
+#include <kernel/task/queue.h>
 #include <kernel/task/thread.h>
 
 /**
@@ -78,7 +80,7 @@ size_t task_thread_generate_id( void ) {
  *
  * @return task_thread_ptr_t
  */
-task_thread_ptr_t task_thread_get_current( void ) {
+task_thread_ptr_t task_thread_current( void ) {
   return current;
 }
 
@@ -86,9 +88,14 @@ task_thread_ptr_t task_thread_get_current( void ) {
  * @brief Sets current running thread
  *
  * @param thread thread to set
+ * @param queue thread queue
  */
-void task_thread_set_current( task_thread_ptr_t thread ) {
+void task_thread_set_current(
+  task_thread_ptr_t thread,
+  task_priority_queue_ptr_t queue
+) {
   current = thread;
+  queue->current = thread;
 }
 
 /**
@@ -98,4 +105,111 @@ void task_thread_set_current( task_thread_ptr_t thread ) {
  */
 avl_tree_ptr_t task_thread_init( void ) {
   return avl_create_tree( thread_compare_id_callback );
+}
+
+/**
+ * @brief Function to get next thread for execution
+ *
+ * @return task_thread_ptr_t
+ */
+task_thread_ptr_t task_thread_next( void ) {
+  // min / max queue
+  task_priority_queue_ptr_t min_queue = NULL;
+  task_priority_queue_ptr_t max_queue = NULL;
+  avl_node_ptr_t min = NULL;
+  avl_node_ptr_t max = NULL;
+
+  // get min and max priority queue
+  min = avl_get_min( process_manager->thread_priority_tree->root );
+  max = avl_get_max( process_manager->thread_priority_tree->root );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "min: 0x%08p, max: 0x%08p\r\n", min, max );
+  #endif
+
+  // get nodes from min/max
+  if ( NULL != min ) {
+    min_queue = TASK_QUEUE_GET_PRIORITY( min );
+  }
+  if ( NULL != max ) {
+    max_queue = TASK_QUEUE_GET_PRIORITY( max );
+  }
+  // handle no min or no max queue
+  if ( NULL == min_queue || NULL == max_queue ) {
+    return NULL;
+  }
+
+  // loop through priorities and try to get next task
+  for(
+    size_t priority = max_queue->priority;
+    priority >= min_queue->priority;
+    priority--
+  ) {
+    // try to find queue for priority
+    avl_node_ptr_t current_node = avl_find_by_data(
+      process_manager->thread_priority_tree,
+      ( void* )priority );
+    // skip if not existing
+    if ( NULL == current_node ) {
+      // prevent endless loop by checking against 0
+      if ( 0 == priority ) {
+        break;
+      }
+      // skip if no such queue exists
+      continue;
+    }
+
+    // get queue
+    task_priority_queue_ptr_t current = TASK_QUEUE_GET_PRIORITY( current_node );
+    // check for no items left or empty list
+    if (
+      list_empty( current->thread_list )
+      || current->last_handled == ( task_thread_ptr_t )current->thread_list->last->data
+    ) {
+      // prevent endless loop by checking against 0
+      if ( 0 == priority ) {
+        break;
+      }
+      // skip if queue is handled
+      continue;
+    }
+
+    // find next thread in queue ( default case: start with first one )
+    list_item_ptr_t item = current->thread_list->first;
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT(
+        "current->last_handled = 0x%08x\r\n",
+      current->last_handled );
+    #endif
+    // handle already executed entry
+    if ( current->last_handled != NULL ) {
+      // try to find element in list
+      item = list_lookup_data(
+        current->thread_list, ( void* )current->last_handled );
+      // debug output
+      #if defined( PRINT_PROCESS )
+        DEBUG_OUTPUT( "item->data = 0x%08x\r\n", item->data );
+      #endif
+      // assert result
+      assert( NULL != item );
+      // head to next
+      item = item->next;
+    }
+
+    // skip if nothing is existing after last handled
+    if ( NULL == item ) {
+      // prevent endless loop by checking against 0
+      if ( 0 == priority ) {
+        break;
+      }
+      // skip if nothing is left
+      continue;
+    }
+    // return next thread
+    return ( task_thread_ptr_t )item->data;
+  }
+
+  // return NULL
+  return NULL;
 }

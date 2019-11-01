@@ -42,36 +42,9 @@ void task_process_schedule( void** context ) {
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", context );
   #endif
-  // min / max queue
-  task_priority_queue_ptr_t min_queue = NULL;
-  task_priority_queue_ptr_t max_queue = NULL;
-
-  // get min and max priority queue
-  avl_node_ptr_t min = avl_get_min(
-    process_manager->thread_priority_tree->root );
-  avl_node_ptr_t max = avl_get_max(
-    process_manager->thread_priority_tree->root );
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "min: 0x%08p, max: 0x%08p\r\n", min, max );
-  #endif
-
-  // get nodes from min/max
-  if ( NULL != min ) {
-    min_queue = TASK_QUEUE_GET_PRIORITY( min );
-  }
-  if ( NULL != max ) {
-    max_queue = TASK_QUEUE_GET_PRIORITY( max );
-  }
-
-  // handle no min or no max queue
-  if ( NULL == min_queue || NULL == max_queue ) {
-    return;
-  }
 
   // get running thread
-  task_thread_ptr_t running_thread = task_thread_get_current();
-
+  task_thread_ptr_t running_thread = task_thread_current();
   // get running queue if set
   task_priority_queue_ptr_t running_queue = NULL;
   if ( NULL != running_thread ) {
@@ -83,90 +56,23 @@ void task_process_schedule( void** context ) {
     running_queue->last_handled = running_thread;
   }
 
-  // variable for next thread
-  task_thread_ptr_t next_thread = NULL;
-  task_priority_queue_ptr_t next_queue = NULL;
-
-  // loop through priorities and try to get next task
-  for(
-    size_t priority = max_queue->priority;
-    priority >= min_queue->priority;
-    priority--
-  ) {
-    // try to find queue for priority
-    avl_node_ptr_t current_node = avl_find_by_data(
-      process_manager->thread_priority_tree,
-      ( void* )priority );
-
-    // skip if not existing
-    if ( NULL == current_node ) {
-      // prevent endless loop by checking against 0
-      if ( 0 == priority ) {
-        break;
-      }
-      // skip if no such queue exists
-      continue;
-    }
-
-    // get queue
-    task_priority_queue_ptr_t current = TASK_QUEUE_GET_PRIORITY( current_node );
-
-    // check for no items left or empty list
-    if (
-      list_empty( current->thread_list )
-      || current->last_handled == ( task_thread_ptr_t )current->thread_list->last->data
-    ) {
-      // prevent endless loop by checking against 0
-      if ( 0 == priority ) {
-        break;
-      }
-      // skip if queue is handled
-      continue;
-    }
-
-    // find next thread in queue ( default case: start with first one )
-    list_item_ptr_t item = current->thread_list->first;
-    // debug output
-    #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "current->last_handled = 0x%08x\r\n", current->last_handled );
-    #endif
-    // handle already executed entry
-    if ( current->last_handled != NULL ) {
-      // try to find element in list
-      item = list_lookup_data(
-        current->thread_list, ( void* )current->last_handled );
-      // debug output
-      #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "item->data = 0x%08x\r\n", item->data );
-      #endif
-      // assert result
-      assert( NULL != item );
-      // head to next
-      item = item->next;
-    }
-
-    // skip if nothing is existing after last handled
-    if ( NULL == item ) {
-      // prevent endless loop by checking against 0
-      if ( 0 == priority ) {
-        break;
-      }
-      // skip if nothing is left
-      continue;
-    }
-
-    // determine next thread
-    next_thread = ( task_thread_ptr_t )item->data;
-    // set next queue
-    next_queue = current;
-
-    // prevent endless loop by checking against 0
-    if ( 0 == priority ) {
-      break;
-    }
+  // get next thread
+  task_thread_ptr_t next_thread = task_thread_next();
+  if ( NULL == next_thread ) {
+    // Reset thread queues
+    task_process_queue_reset();
+    // Try to get next thread after reset once more
+    next_thread = task_thread_next();
   }
 
-  // FIXME: RESET THREAD LIST AT ALL QUEUES, WHEN ALL LISTS ARE HANDLED AND NO ONE IS LEFT
+  // variable for next thread
+  task_priority_queue_ptr_t next_queue = NULL;
+  if ( NULL != next_thread ) {
+    next_queue = task_queue_get_queue(
+      process_manager, next_thread->priority );
+    // assert queue
+    assert( NULL != next_queue );
+  }
 
   // assert next queue and next thread to exist
   assert( NULL != next_queue );
@@ -189,15 +95,13 @@ void task_process_schedule( void** context ) {
       *context,
       sizeof( cpu_register_context_t ) );
   }
-
-  // update next queue current
-  next_queue->current = next_thread;
-  // overwrite current thread
-  task_thread_set_current( next_thread );
-
+  // overwrite current running thread
+  task_thread_set_current( next_thread, next_queue );
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Process of next thread: %d\r\n", next_thread->process->id );
+    DEBUG_OUTPUT( "Stack of next thread: 0x%016llx\r\n",
+      next_thread->stack );
   #endif
 
   // unmap current thread stack

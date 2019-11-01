@@ -148,3 +148,74 @@ void task_process_create(
   // Setup thread with entry
   task_thread_create( entry, process, priority );
 }
+
+/**
+ * @brief Resets process priority queues
+ */
+void task_process_queue_reset( void ) {
+    // min / max queue
+  task_priority_queue_ptr_t min_queue = NULL;
+  task_priority_queue_ptr_t max_queue = NULL;
+  avl_node_ptr_t min = NULL;
+  avl_node_ptr_t max = NULL;
+
+  // get min and max priority queue
+  min = avl_get_min( process_manager->thread_priority_tree->root );
+  max = avl_get_max( process_manager->thread_priority_tree->root );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "min: 0x%08p, max: 0x%08p\r\n", min, max );
+  #endif
+
+  // get nodes from min/max
+  if ( NULL != min ) {
+    min_queue = TASK_QUEUE_GET_PRIORITY( min );
+  }
+  if ( NULL != max ) {
+    max_queue = TASK_QUEUE_GET_PRIORITY( max );
+  }
+  // handle no min or no max queue
+  if ( NULL == min_queue || NULL == max_queue ) {
+    return;
+  }
+
+  // loop through priorities and try to get next task
+  for(
+    size_t priority = max_queue->priority;
+    priority >= min_queue->priority;
+    priority--
+  ) {
+    // try to find queue for priority
+    avl_node_ptr_t current_node = avl_find_by_data(
+      process_manager->thread_priority_tree,
+      ( void* )priority );
+    // skip if not existing
+    if ( NULL == current_node ) {
+      // prevent endless loop by checking against 0
+      if ( 0 == priority ) {
+        break;
+      }
+      // skip if no such queue exists
+      continue;
+    }
+
+    // get queue
+    task_priority_queue_ptr_t current = TASK_QUEUE_GET_PRIORITY( current_node );
+    // check for empty
+    if ( list_empty( current->thread_list ) ) {
+      // prevent endless loop by checking against 0
+      if ( 0 == priority ) {
+        break;
+      }
+      // skip if queue is handled
+      continue;
+    }
+
+    // reset last handled
+    current->last_handled = NULL;
+    // prevent endless loop by checking against 0
+    if ( 0 == priority ) {
+      break;
+    }
+  }
+}

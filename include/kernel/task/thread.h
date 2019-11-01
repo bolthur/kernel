@@ -32,6 +32,7 @@
 #endif
 
 typedef struct process task_process_t, *task_process_ptr_t;
+typedef struct task_priority_queue task_priority_queue_t, *task_priority_queue_ptr_t;
 
 typedef enum {
   TASK_THREAD_STATE_READY = 0,
@@ -51,10 +52,11 @@ typedef struct task_thread {
 #define TASK_THREAD_GET_BLOCK( n ) \
   ( task_thread_ptr_t )( ( uint8_t* )n - offsetof( task_thread_t, node ) )
 
-task_thread_ptr_t task_thread_get_current( void );
-void task_thread_set_current( task_thread_ptr_t );
+task_thread_ptr_t task_thread_current( void );
+void task_thread_set_current( task_thread_ptr_t, task_priority_queue_ptr_t );
 size_t task_thread_generate_id( void );
 avl_tree_ptr_t task_thread_init( void );
 task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t, size_t );
+task_thread_ptr_t task_thread_next( void );
 
 #endif

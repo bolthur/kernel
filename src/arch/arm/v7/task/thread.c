@@ -39,6 +39,8 @@
  * @param process thread process
  * @param priority thread priority
  * @return task_thread_ptr_t pointer to thread structure
+ *
+ * @todo stack grows downwards, stack pointer setup needs to be fixed
  */
 task_thread_ptr_t task_thread_create(
   uintptr_t entry,

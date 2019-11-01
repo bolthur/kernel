@@ -62,14 +62,12 @@
 .macro pop_arm_regs mode
   // FIXME: pop floating point registers if enabled
 
-  // restore lr and sp
+  // get lr and sp of previous mode
   ldr r1, [sp, #52]
   ldr r2, [sp, #56]
-
   // switch to previous mode
   ldr r0, [sp, #64]
   msr cpsr_c, r0
-
   // restore sp and lr
   mov sp, r1
   mov lr, r2

@@ -27,7 +27,7 @@
 #include <kernel/task/thread.h>
 #include <kernel/task/process.h>
 
-typedef struct {
+typedef struct task_priority_queue {
   avl_node_t node;
   size_t priority;
 
@@ -42,5 +42,6 @@ typedef struct {
 
 avl_tree_ptr_t task_queue_init( void );
 task_priority_queue_ptr_t task_queue_get_queue( task_manager_ptr_t, size_t );
+void task_process_queue_reset( void );
 
 #endif
