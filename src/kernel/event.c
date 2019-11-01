@@ -192,8 +192,8 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
 /**
  * @brief Unbind event if existing
  *
- * @param event_type_t event type
- * @param event_callback_t bound callback
+ * @param type event type
+ * @param callback bound callback
  *
  * @todo Add logic for method
  */

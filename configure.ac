@@ -124,6 +124,15 @@ AC_ARG_ENABLE(
   [enable_output_interrupt=yes]
 )
 
+AC_ARG_ENABLE(
+  [output-exception],
+  AC_HELP_STRING(
+    [--enable-output-exception],
+    [activate exception output [default: off]]
+  ),
+  [enable_output_exception=yes]
+)
+
 AC_ARG_WITH(
   [optimization-level],
   AC_HELP_STRING(

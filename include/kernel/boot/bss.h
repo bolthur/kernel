@@ -18,10 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-
 #if ! defined( __KERNEL_BOOT_BSS__ )
 #define __KERNEL_BOOT_BSS__
+
+#include <stdint.h>
 
 // type definition for bss fields
 #if defined( ELF32 )

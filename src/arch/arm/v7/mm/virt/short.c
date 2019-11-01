@@ -440,7 +440,7 @@ uint64_t v7_short_create_table(
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
- * @param type memory type
+ * @param memory memory type
  * @param page page attributes
  */
 void v7_short_map(
@@ -547,7 +547,7 @@ void v7_short_map(
  *
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
- * @param type memory type
+ * @param memory memory type
  * @param page page attributes
  */
 void v7_short_map_random(

@@ -373,7 +373,8 @@ uint64_t v7_long_create_table(
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
  * @param paddr pointer to physical address
- * @param type memory type
+ * @param memory memory type
+ * @param page page attributes
  */
 void v7_long_map(
   virt_context_ptr_t ctx,
@@ -478,7 +479,8 @@ void v7_long_map(
  *
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
- * @param type memory type
+ * @param memory memory type
+ * @param page page attributes
  */
 void v7_long_map_random(
   virt_context_ptr_t ctx,

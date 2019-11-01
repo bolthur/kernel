@@ -49,8 +49,6 @@ virt_context_ptr_t kernel_context;
 
 /**
  * @brief Method to get supported modes
- *
- * @return uint32_t supported modes
  */
 void virt_setup_supported_modes( void ) {
   #if defined( ELF32 )

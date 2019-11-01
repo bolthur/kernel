@@ -23,7 +23,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdint.h>
+#include <stddef.h>
 
 typedef enum {
   VIRT_MEMORY_TYPE_DEVICE,

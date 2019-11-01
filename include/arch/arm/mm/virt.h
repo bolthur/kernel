@@ -18,10 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-
 #if ! defined( __ARCH_ARM_MM_VIRT__ )
 #define __ARCH_ARM_MM_VIRT__
+
+#include <stdint.h>
 
 #if defined( ELF32 )
   // supported paging defines
