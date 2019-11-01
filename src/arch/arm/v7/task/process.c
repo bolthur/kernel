@@ -34,8 +34,7 @@
  *
  * @param context cpu context
  *
- * @todo add reset of queues, when all priority queues are handled
- * @todo split up function into multiple smaller ones
+ * @todo fix function by check/rework
  */
 void task_process_schedule( void** context ) {
   // debug output

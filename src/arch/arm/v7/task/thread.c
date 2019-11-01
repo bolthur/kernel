@@ -40,6 +40,7 @@
  * @param priority thread priority
  * @return task_thread_ptr_t pointer to thread structure
  *
+ * @todo fix function by rework
  * @todo stack grows downwards, stack pointer setup needs to be fixed
  */
 task_thread_ptr_t task_thread_create(
