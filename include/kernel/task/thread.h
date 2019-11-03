@@ -25,12 +25,6 @@
 #include <stddef.h>
 #include <avl.h>
 
-#if defined( ELF32 )
-  #define THREAD_STACK_ADDRESS 0xF3041000
-#elif defined( ELF64 )
-  #error "Unsupported"
-#endif
-
 typedef struct process task_process_t, *task_process_ptr_t;
 typedef struct task_priority_queue task_priority_queue_t, *task_priority_queue_ptr_t;
 
@@ -44,7 +38,6 @@ typedef struct task_thread {
   size_t id;
   size_t priority;
   void* context;
-  uint64_t stack;
   task_thread_state_t state;
   task_process_ptr_t process;
 } task_thread_t, *task_thread_ptr_t;

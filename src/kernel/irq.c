@@ -220,7 +220,7 @@ void irq_register_handler( size_t num, irq_callback_t callback, bool fast ) {
  * @param fast fast interrupt flag
  * @param context interrupt context
  */
-void irq_handle( size_t num, bool fast, void** context ) {
+void irq_handle( size_t num, bool fast, void* context ) {
   // handle no irq manager which means no irq bound
   if ( NULL == irq_manager ) {
     return;

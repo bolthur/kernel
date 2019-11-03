@@ -60,7 +60,33 @@
     } reg;
   } cpu_register_context_t, *cpu_register_context_ptr_t;
 
-  void dump_register( cpu_register_context_ptr_t );
+  #define DUMP_REGISTER( context ) \
+    DEBUG_OUTPUT( \
+      "CPU register dump\r\n"\
+      "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
+      "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
+      "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
+      "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
+      "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
+      "%4s: 0x%08x\t%4s: 0x%08x\r\n", \
+      "r0", ( ( cpu_register_context_ptr_t )context )->reg.r0, \
+      "r1", ( ( cpu_register_context_ptr_t )context )->reg.r1, \
+      "r2", ( ( cpu_register_context_ptr_t )context )->reg.r2, \
+      "r3", ( ( cpu_register_context_ptr_t )context )->reg.r3, \
+      "r4", ( ( cpu_register_context_ptr_t )context )->reg.r4, \
+      "r5", ( ( cpu_register_context_ptr_t )context )->reg.r5, \
+      "r6", ( ( cpu_register_context_ptr_t )context )->reg.r6, \
+      "r7", ( ( cpu_register_context_ptr_t )context )->reg.r7, \
+      "r8", ( ( cpu_register_context_ptr_t )context )->reg.r8, \
+      "r9", ( ( cpu_register_context_ptr_t )context )->reg.r9, \
+      "r10", ( ( cpu_register_context_ptr_t )context )->reg.r10, \
+      "fp", ( ( cpu_register_context_ptr_t )context )->reg.fp, \
+      "ip", ( ( cpu_register_context_ptr_t )context )->reg.ip, \
+      "sp", ( ( cpu_register_context_ptr_t )context )->reg.sp, \
+      "lr", ( ( cpu_register_context_ptr_t )context )->reg.lr, \
+      "pc", ( ( cpu_register_context_ptr_t )context )->reg.pc, \
+      "spsr", ( ( cpu_register_context_ptr_t )context )->reg.spsr \
+    )
 #endif
 
 #endif

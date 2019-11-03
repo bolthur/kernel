@@ -31,6 +31,42 @@
 #include <kernel/task/process.h>
 #include <kernel/task/thread.h>
 #include <arch/arm/v7/cpu.h>
+#include <arch/arm/v7/task/thread.h>
+
+/**
+ * @brief Thread control block for undefined handler
+ */
+thread_control_block_t tcb_undefined;
+
+/**
+ * @brief Thread control block for swi handler
+ */
+thread_control_block_t tcb_software;
+
+/**
+ * @brief Thread control block for prefetch abort handler
+ */
+thread_control_block_t tcb_prefetch;
+
+/**
+ * @brief Thread control block for data abort handler
+ */
+thread_control_block_t tcb_data;
+
+/**
+ * @brief Thread control block for unused handler
+ */
+thread_control_block_t tcb_unused;
+
+/**
+ * @brief Thread control block for irq handler
+ */
+thread_control_block_t tcb_irq;
+
+/**
+ * @brief Thread control block for fiq handler
+ */
+thread_control_block_t tcb_fiq;
 
 /**
  * @brief Method to create thread structure
@@ -55,18 +91,6 @@ task_thread_ptr_t task_thread_create(
       entry, process, priority );
   #endif
 
-  // create instance of cpu structure
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )malloc(
-    sizeof( cpu_register_context_t ) );
-  // assert malloc return
-  assert( NULL != cpu );
-  // prepare
-  memset( ( void* )cpu, 0, sizeof( cpu_register_context_t ) );
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Allocated CPU structure at 0x%08x\r\n", cpu );
-  #endif
-
   // create thread structure
   task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
     sizeof( task_thread_t ) );
@@ -79,50 +103,40 @@ task_thread_ptr_t task_thread_create(
     DEBUG_OUTPUT( "Allocated thread structure at 0x%08x\r\n", thread );
   #endif
 
+  // create instance of cpu structure
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )malloc(
+    sizeof( cpu_register_context_t ) );
+  // assert malloc return
+  assert( NULL != cpu );
+  // prepare
+  memset( ( void* )cpu, 0, sizeof( cpu_register_context_t ) );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Allocated CPU structure at 0x%08x\r\n", cpu );
+  #endif
+
   // populate cpu context
   cpu->reg.pc = ( uint32_t )entry;
-  cpu->reg.spsr = 0x60000000;
-  cpu->reg.sp = ( uint32_t )THREAD_STACK_ADDRESS;
+  cpu->reg.spsr = 0x60000000 | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT;
   if ( TASK_PROCESS_TYPE_USER == process->type ) {
     // set user mode and stack
     cpu->reg.spsr |= CPSR_MODE_USER;
+    cpu->reg.sp = ( uint32_t )&stack_user_mode;
   } else if ( TASK_PROCESS_TYPE_KERNEL == process->type ) {
     // set supervisor mode and stack
-    cpu->reg.spsr |= (
-      CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT
-    );
+    cpu->reg.spsr |= CPSR_MODE_SUPERVISOR;
+    cpu->reg.sp = ( uint32_t )&stack_supervisor_mode;
   } else {
     PANIC( "Unknown / unsupported process type!" );
   }
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Using stack 0x%08x\r\n", cpu->reg.sp );
-    dump_register( cpu );
+    DUMP_REGISTER( ( cpu_register_context_ptr_t )cpu );
   #endif
-
-  // reserve stack
-  uint64_t physical_stack = phys_find_free_page_range( PAGE_SIZE, STACK_SIZE );
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT(
-      "Allocated stack structure at physical 0x%016llx\r\n",
-      physical_stack );
-  #endif
-  // map temporary
-  uintptr_t virtual_temporary = virt_map_temporary( physical_stack, STACK_SIZE );
-  // prepare
-  memset( ( void* )virtual_temporary, 0, STACK_SIZE );
-  // populate cpu context for initial switch
-  memcpy(
-    ( void* )virtual_temporary,
-    ( void* )cpu,
-    sizeof( cpu_register_context_t ) );
-  // unmap again
-  virt_unmap_temporary( virtual_temporary, STACK_SIZE );
 
   // populate thread structure
   thread->context = ( void* )cpu;
-  thread->stack = physical_stack;
   thread->state = TASK_THREAD_STATE_READY;
   thread->id = task_thread_generate_id();
   thread->priority = priority;

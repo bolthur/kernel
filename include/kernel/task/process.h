@@ -61,7 +61,7 @@ typedef struct {
 
 task_manager_ptr_t process_manager;
 void task_process_init( void );
-void task_process_schedule( void** );
+void task_process_schedule( void* );
 size_t task_process_generate_id( void );
 void task_process_create( uintptr_t, task_process_type_t, size_t );
 

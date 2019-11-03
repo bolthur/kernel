@@ -28,6 +28,7 @@
 #include <kernel/task/process.h>
 #include <kernel/debug/debug.h>
 #include <arch/arm/v7/cpu.h>
+#include <arch/arm/v7/task/thread.h>
 
 /**
  * @brief Task process scheduler
@@ -36,7 +37,7 @@
  *
  * @todo fix function by check/rework
  */
-void task_process_schedule( void** context ) {
+void task_process_schedule( void* context ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", context );
@@ -87,40 +88,34 @@ void task_process_schedule( void** context ) {
     running_queue->last_handled = running_thread;
   }
 
+  // get context pointer
+  thread_control_block_ptr_t tcb = ( thread_control_block_ptr_t )context;
+
   // save context of current thread
   if ( NULL != running_thread ) {
+    // save context of running thread
     memcpy(
       running_thread->context,
-      *context,
+      &tcb->context,
       sizeof( cpu_register_context_t ) );
   }
   // overwrite current running thread
   task_thread_set_current( next_thread, next_queue );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Process of next thread: %d\r\n", next_thread->process->id );
-    DEBUG_OUTPUT( "Stack of next thread: 0x%016llx\r\n",
-      next_thread->stack );
+    DUMP_REGISTER( next_thread->context );
   #endif
 
-  // unmap current thread stack
-  virt_unmap_address( kernel_context, THREAD_STACK_ADDRESS, false );
-  // Map next thread stack
-  virt_map_address(
-    kernel_context,
-    THREAD_STACK_ADDRESS,
-    next_thread->stack,
-    VIRT_MEMORY_TYPE_NORMAL,
-    VIRT_PAGE_TYPE_EXECUTABLE
-  );
   // debug output
   #if defined( PRINT_PROCESS )
-    dump_register( *context );
+    DUMP_REGISTER( &tcb->context );
   #endif
   // overwrite context
-  memcpy( *context, next_thread->context, sizeof( cpu_register_context_t ) );
+  memcpy( &tcb->context, next_thread->context, sizeof( cpu_register_context_t ) );
   // debug output
   #if defined( PRINT_PROCESS )
-    dump_register( *context );
+    DUMP_REGISTER( &tcb->context );
   #endif
+
+  // FIXME: SWITCH TTBR when thread is from different process
 }

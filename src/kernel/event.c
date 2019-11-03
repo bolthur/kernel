@@ -212,7 +212,7 @@ void event_unbind( __unused event_type_t type, __unused event_callback_t callbac
  * @param type type to fire
  * @param data data to pass through
  */
-void event_fire( event_type_t type, void** data ) {
+void event_fire( event_type_t type, void* data ) {
   // do nothing if not initialized
   if ( NULL == event ) {
     return;

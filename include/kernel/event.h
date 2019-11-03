@@ -39,7 +39,7 @@ typedef struct {
   list_manager_ptr_t callback_list;
 } event_block_t, *event_block_ptr_t;
 
-typedef void ( *event_callback_t )( void** data );
+typedef void ( *event_callback_t )( void* data );
 
 typedef struct {
   event_callback_t callback;
@@ -52,6 +52,6 @@ bool event_initialized_get( void );
 void event_init( void );
 bool event_bind( event_type_t, event_callback_t );
 void event_unbind( event_type_t, event_callback_t );
-void event_fire( event_type_t, void** );
+void event_fire( event_type_t, void* );
 
 #endif

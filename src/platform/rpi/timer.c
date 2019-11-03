@@ -57,7 +57,7 @@
   #define ARM_GENERIC_TIMER_FREQUENCY 19200000
   #define ARM_GENERIC_TIMER_ENABLE 1
   // FIXME: Final value should be lower on real device
-  #define ARM_GENERIC_TIMER_COUNT 50000 // 50000000
+  #define ARM_GENERIC_TIMER_COUNT 50000000 // 50000
 #else
   // free running counter incrementing at 1 MHz => Increments each microsecond
   #define TIMER_FREQUENZY_HZ 1000000
@@ -98,7 +98,7 @@ bool timer_pending( void ) {
  *
  * @param context cpu context
  */
-void timer_clear( void** context ) {
+void timer_clear( void* context ) {
   // check for pending timer
   if ( ! timer_pending() ) {
     return;

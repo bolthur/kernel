@@ -27,18 +27,15 @@
 #include <kernel/panic.h>
 #include <arch/arm/v7/cpu.h>
 #include <arch/arm/v7/interrupt/ivt.h>
+#include <arch/arm/v7/task/thread.h>
 
 /**
  * @brief Unused exception handler
- *
- * @param status current register context
  */
-void unused_handler( cpu_register_context_t *status ) {
+void unused_handler( void ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
-    dump_register( status );
-  #else
-    ( void )status;
+    DUMP_REGISTER( &tcb_unused.context );
   #endif
   PANIC( "unused" );
 }
@@ -46,56 +43,42 @@ void unused_handler( cpu_register_context_t *status ) {
 /**
  * @brief Undefined instruction exception handler
  *
- * @param status current register context
- *
  * @todo check for fpu exception and reset exception bit
  */
-void undefined_instruction_handler( cpu_register_context_t *status ) {
+void undefined_instruction_handler( void ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
-    dump_register( status );
-  #else
-    ( void )status;
+    DUMP_REGISTER( &tcb_undefined.context );
   #endif
   PANIC( "undefined" );
 }
 
 /**
  * @brief Software interrupt exception handler
- *
- * @param status current register context
  */
-void software_interrupt_handler( cpu_register_context_t *status ) {
+void software_interrupt_handler( void ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
-    dump_register( status );
-  #else
-    ( void )status;
+    DUMP_REGISTER( &tcb_software.context );
   #endif
   PANIC( "swi handler kicks in" );
 }
 
 /**
  * @brief Prefetch abort exception handler
- *
- * @param status current register context
  */
-void prefetch_abort_handler( cpu_register_context_t *status ) {
+void prefetch_abort_handler( void ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
-    dump_register( status );
-  #else
-    ( void )status;
+    DUMP_REGISTER( &tcb_prefetch.context );
   #endif
   PANIC( "prefetch abort" );
 }
 
 /**
  * @brief Data abort exception handler
- *
- * @param status current register context
  */
-void data_abort_handler( cpu_register_context_t *status ) {
+void data_abort_handler( void ) {
   // variable for faulting address
   uint32_t fault_address;
   // get faulting address
@@ -106,9 +89,8 @@ void data_abort_handler( cpu_register_context_t *status ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "\r\ndata abort interrupt at 0x%08x\r\n", fault_address );
-    dump_register( status );
+    DUMP_REGISTER( &tcb_data.context );
   #else
-    ( void )status;
     ( void )fault_address;
   #endif
   PANIC( "data abort" );
@@ -116,12 +98,10 @@ void data_abort_handler( cpu_register_context_t *status ) {
 
 /**
  * @brief Interrupt request exception handler
- *
- * @param status current register context
  */
-void irq_handler( cpu_register_context_t *status ) {
+void irq_handler( void ) {
   #if defined( PRINT_EXCEPTION )
-    dump_register( status );
+    DUMP_REGISTER( &tcb_irq.context );
   #endif
 
   // get pending interrupt
@@ -129,17 +109,15 @@ void irq_handler( cpu_register_context_t *status ) {
   assert( -1 != irq );
 
   // handle bound irq handlers
-  irq_handle( ( uint8_t )irq, false, ( void**)&status );
+  irq_handle( ( uint8_t )irq, false, &tcb_irq );
 }
 
 /**
  * @brief Fast interrupt request exception handler
- *
- * @param status current register context
  */
-void fast_interrupt_handler( cpu_register_context_t *status ) {
+void fast_interrupt_handler( void ) {
   #if defined( PRINT_EXCEPTION )
-    dump_register( status );
+    DUMP_REGISTER( &tcb_fiq.context );
   #endif
 
   // get pending interrupt
@@ -147,7 +125,7 @@ void fast_interrupt_handler( cpu_register_context_t *status ) {
   assert( -1 != irq );
 
   // handle bound fast interrupt handlers
-  irq_handle( ( uint8_t )irq, true, ( void**)&status );
+  irq_handle( ( uint8_t )irq, true, &tcb_fiq );
 }
 
 /**

@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef void ( *irq_callback_t )( void** );
+typedef void ( *irq_callback_t )( void* );
 
 typedef struct {
   avl_tree_ptr_t normal_interrupt;
@@ -51,7 +51,7 @@ void irq_disable( void );
 void irq_enable( void );
 bool irq_validate_number( size_t );
 void irq_init( void );
-void irq_handle( size_t, bool, void** );
+void irq_handle( size_t, bool, void* );
 void irq_register_handler( size_t, irq_callback_t, bool );
 void irq_unregister_handler( size_t, irq_callback_t, bool );
 
