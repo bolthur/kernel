@@ -28,7 +28,6 @@
 #include <kernel/task/process.h>
 #include <kernel/debug/debug.h>
 #include <arch/arm/v7/cpu.h>
-#include <arch/arm/v7/task/thread.h>
 
 /**
  * @brief Task process scheduler
@@ -42,6 +41,8 @@ void task_process_schedule( void* context ) {
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", context );
   #endif
+  // get cpu pointer
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
 
   // get running thread
   task_thread_ptr_t running_thread = task_thread_current();
@@ -88,34 +89,15 @@ void task_process_schedule( void* context ) {
     running_queue->last_handled = running_thread;
   }
 
-  // get context pointer
-  thread_control_block_ptr_t tcb = ( thread_control_block_ptr_t )context;
-
   // save context of current thread
   if ( NULL != running_thread ) {
-    // save context of running thread
-    memcpy(
-      running_thread->context,
-      &tcb->context,
-      sizeof( cpu_register_context_t ) );
+    // save stack of running thread
+    running_thread->stack_virtual = cpu->reg.sp;
+    // reset state to ready
+    running_thread->state = TASK_THREAD_STATE_READY;
   }
   // overwrite current running thread
   task_thread_set_current( next_thread, next_queue );
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DUMP_REGISTER( next_thread->context );
-  #endif
-
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DUMP_REGISTER( &tcb->context );
-  #endif
-  // overwrite context
-  memcpy( &tcb->context, next_thread->context, sizeof( cpu_register_context_t ) );
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DUMP_REGISTER( &tcb->context );
-  #endif
 
   // FIXME: SWITCH TTBR when thread is from different process
 }

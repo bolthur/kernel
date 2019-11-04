@@ -15,6 +15,7 @@ libkernel_a_SOURCES = \
   mm/virt.c \
   task/process.c \
   task/queue.c \
+  task/stack.c \
   task/thread.c \
   cpu.c \
   event.c \

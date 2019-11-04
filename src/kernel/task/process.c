@@ -26,6 +26,7 @@
 #include <kernel/task/queue.h>
 #include <kernel/task/process.h>
 #include <kernel/task/thread.h>
+#include <kernel/task/stack.h>
 
 /**
  * @brief Process management structure
@@ -64,6 +65,13 @@ static int32_t process_compare_id_callback(
 }
 
 /**
+ * @brief Task idle
+ */
+/*static void task_idle( void ) {
+  while ( 1 ) {}
+}*/
+
+/**
  * @brief Initialize task process manager
  */
 void task_process_init( void ) {
@@ -82,6 +90,14 @@ void task_process_init( void ) {
     process_compare_id_callback );
   // create thread queue tree
   process_manager->thread_priority_tree = task_queue_init();
+
+  // create tree for managing stack addresses
+  task_stack_manager_init();
+
+  // create idle threads
+  /*for ( int32_t i = 0; i < NUM_CPU; i++ ) {
+    task_process_create( ( uintptr_t )task_idle, TASK_PROCESS_TYPE_KERNEL, 0 );
+  }*/
 
   // register timer event
   event_bind( EVENT_TIMER, task_process_schedule );

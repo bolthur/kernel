@@ -31,6 +31,9 @@ typedef struct task_thread
 typedef struct task_thread_manager
   task_thread_manager_t, *task_thread_manager_ptr_t;
 
+typedef struct task_stack_manager
+  task_stack_manager_t, *task_stack_manager_ptr_t;
+
 typedef enum {
   TASK_PROCESS_STATE_READY = 0,
   TASK_PROCESS_STATE_ACTIVE,

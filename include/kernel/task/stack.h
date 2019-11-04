@@ -18,23 +18,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_V7_TASK_THREAD__ )
-#define __ARCH_ARM_V7_TASK_THREAD__
+#if ! defined( __KERNEL_TASK_STACK__ )
+#define __KERNEL_TASK_STACK__
 
-#include <stdint.h>
-#include <arch/arm/v7/cpu.h>
+#include <avl.h>
 
-typedef struct {
-  cpu_register_context_t context;
-  uint32_t cpu_num;
-} thread_control_block_t, *thread_control_block_ptr_t;
+typedef struct task_stack_manager {
+  avl_tree_ptr_t tree;
+} task_stack_manager_t, *task_stack_manager_ptr_t;
 
-extern thread_control_block_t tcb_undefined;
-extern thread_control_block_t tcb_software;
-extern thread_control_block_t tcb_prefetch;
-extern thread_control_block_t tcb_data;
-extern thread_control_block_t tcb_unused;
-extern thread_control_block_t tcb_irq;
-extern thread_control_block_t tcb_fiq;
+extern task_stack_manager_ptr_t task_stack_manager;
+void task_stack_manager_init( void );
+uintptr_t task_stack_manager_next( void );
+void task_stack_manager_add( uintptr_t );
 
 #endif

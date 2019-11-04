@@ -94,8 +94,12 @@ void task_thread_set_current(
   task_thread_ptr_t thread,
   task_priority_queue_ptr_t queue
 ) {
+  // set current
   current = thread;
+  // update queue
   queue->current = thread;
+  // set state
+  current->state = TASK_THREAD_STATE_ACTIVE;
 }
 
 /**
@@ -194,6 +198,18 @@ task_thread_ptr_t task_thread_next( void ) {
       // assert result
       assert( NULL != item );
       // head to next
+      item = item->next;
+    }
+
+    // get next ready task
+    while ( NULL != item ) {
+      // get task object
+      task_thread_ptr_t task = ( task_thread_ptr_t )item->data;
+      // check for ready
+      if ( task->state == TASK_THREAD_STATE_READY ) {
+        break;
+      }
+      // try next if not ready
       item = item->next;
     }
 

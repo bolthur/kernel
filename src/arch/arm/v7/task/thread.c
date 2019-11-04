@@ -30,43 +30,34 @@
 #include <kernel/task/queue.h>
 #include <kernel/task/process.h>
 #include <kernel/task/thread.h>
+#include <kernel/task/stack.h>
 #include <arch/arm/v7/cpu.h>
-#include <arch/arm/v7/task/thread.h>
 
 /**
- * @brief Thread control block for undefined handler
+ * @brief Method to switch back to thread
+ *
+ * @param context current context
+ * @return uintptr_t
  */
-thread_control_block_t tcb_undefined;
-
-/**
- * @brief Thread control block for swi handler
- */
-thread_control_block_t tcb_software;
-
-/**
- * @brief Thread control block for prefetch abort handler
- */
-thread_control_block_t tcb_prefetch;
-
-/**
- * @brief Thread control block for data abort handler
- */
-thread_control_block_t tcb_data;
-
-/**
- * @brief Thread control block for unused handler
- */
-thread_control_block_t tcb_unused;
-
-/**
- * @brief Thread control block for irq handler
- */
-thread_control_block_t tcb_irq;
-
-/**
- * @brief Thread control block for fiq handler
- */
-thread_control_block_t tcb_fiq;
+uintptr_t task_thread_stack( void* context ) {
+  // get running thread
+  task_thread_ptr_t running_thread = task_thread_current();
+  // handle no running thread
+  if ( NULL == running_thread ) {
+    // return current stack pointer
+    cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+    return cpu->reg.sp;
+  }
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT(
+      "running_thread = 0x%08x, stack_virtual = 0x%08x\r\n",
+      running_thread,
+      running_thread->stack_virtual );
+  #endif
+  // return virtual stack
+  return running_thread->stack_virtual;
+}
 
 /**
  * @brief Method to create thread structure
@@ -76,8 +67,7 @@ thread_control_block_t tcb_fiq;
  * @param priority thread priority
  * @return task_thread_ptr_t pointer to thread structure
  *
- * @todo fix function by rework
- * @todo stack grows downwards, stack pointer setup needs to be fixed
+ * @todo document the subtract of 12 necessary due to mode switch and lr push of irq handler
  */
 task_thread_ptr_t task_thread_create(
   uintptr_t entry,
@@ -91,6 +81,49 @@ task_thread_ptr_t task_thread_create(
       entry, process, priority );
   #endif
 
+  // create stack
+  uint64_t stack_physical = phys_find_free_page_range( STACK_SIZE, STACK_SIZE );
+  // calculate stack offset
+  uint32_t offset = STACK_SIZE - sizeof( cpu_register_context_t ) - 12; // why subtract 12?
+
+  // get next stack address
+  uintptr_t stack_virtual = task_stack_manager_next();
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "stack_virtual = 0x%08x\r\n", stack_virtual );
+  #endif
+  // map stack
+  virt_map_address(
+    kernel_context,
+    stack_virtual,
+    stack_physical,
+    VIRT_MEMORY_TYPE_NORMAL,
+    VIRT_PAGE_TYPE_EXECUTABLE );
+  // prepare stack
+  memset( ( void* )stack_virtual, 0, STACK_SIZE );
+
+  // setup stack
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )(
+    stack_virtual + offset );
+  // populate stack content
+  cpu->reg.pc = ( uint32_t )entry;
+  cpu->reg.spsr = 0x60000000 | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT | (
+    TASK_PROCESS_TYPE_USER == process->type
+      ? CPSR_MODE_USER
+      : CPSR_MODE_SUPERVISOR
+  );
+  cpu->reg.sp = stack_virtual + offset;
+  // assert process type
+  assert(
+    TASK_PROCESS_TYPE_USER == process->type
+    || TASK_PROCESS_TYPE_KERNEL == process->type
+  );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Using stack 0x%08x\r\n", cpu->reg.sp );
+    DUMP_REGISTER( cpu );
+  #endif
+
   // create thread structure
   task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
     sizeof( task_thread_t ) );
@@ -102,41 +135,9 @@ task_thread_ptr_t task_thread_create(
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Allocated thread structure at 0x%08x\r\n", thread );
   #endif
-
-  // create instance of cpu structure
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )malloc(
-    sizeof( cpu_register_context_t ) );
-  // assert malloc return
-  assert( NULL != cpu );
-  // prepare
-  memset( ( void* )cpu, 0, sizeof( cpu_register_context_t ) );
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Allocated CPU structure at 0x%08x\r\n", cpu );
-  #endif
-
-  // populate cpu context
-  cpu->reg.pc = ( uint32_t )entry;
-  cpu->reg.spsr = 0x60000000 | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT;
-  if ( TASK_PROCESS_TYPE_USER == process->type ) {
-    // set user mode and stack
-    cpu->reg.spsr |= CPSR_MODE_USER;
-    cpu->reg.sp = ( uint32_t )&stack_user_mode;
-  } else if ( TASK_PROCESS_TYPE_KERNEL == process->type ) {
-    // set supervisor mode and stack
-    cpu->reg.spsr |= CPSR_MODE_SUPERVISOR;
-    cpu->reg.sp = ( uint32_t )&stack_supervisor_mode;
-  } else {
-    PANIC( "Unknown / unsupported process type!" );
-  }
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Using stack 0x%08x\r\n", cpu->reg.sp );
-    DUMP_REGISTER( ( cpu_register_context_ptr_t )cpu );
-  #endif
-
   // populate thread structure
-  thread->context = ( void* )cpu;
+  thread->stack_physical = stack_physical;
+  thread->stack_virtual = stack_virtual + offset;
   thread->state = TASK_THREAD_STATE_READY;
   thread->id = task_thread_generate_id();
   thread->priority = priority;
@@ -146,6 +147,9 @@ task_thread_ptr_t task_thread_create(
   avl_prepare_node( &thread->node_id, ( void* )thread->id );
   // add to tree
   avl_insert_by_node( process->thread_manager, &thread->node_id );
+
+  // create node for stack address management tree
+  task_stack_manager_add( stack_virtual );
 
   // get thread queue by priority
   task_priority_queue_ptr_t queue = task_queue_get_queue(
