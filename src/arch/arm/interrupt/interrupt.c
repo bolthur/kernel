@@ -18,15 +18,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-.section .text
+#include <stdbool.h>
 
-.global irq_enable
-irq_enable:
-  cpsie if
-  bx lr
+#include <stdio.h>
+#include <arch/arm/interrupt/vector.h>
 
-.global irq_disable
-irq_disable:
-  mrs r0, cpsr
-  cpsid if
-  bx lr
+/**
+ * @brief Initialize interrupt requests
+ */
+void interrupt_init( void ) {
+  interrupt_vector_init();
+}

@@ -22,13 +22,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <kernel/irq.h>
+#include <kernel/interrupt/interrupt.h>
 
 /**
  * @brief Initialize panic process
  */
 void panic_init( void ) {
-  irq_disable();
+  interrupt_disable();
 }
 
 /**

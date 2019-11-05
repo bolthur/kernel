@@ -18,22 +18,23 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define ASSEMBLER_FILE 1
+#include <kernel/smp/lock.h>
 
-#include <arch/arm/v7/cpu.h>
+/**
+ * @brief Acquire lock
+ *
+ * @param m mutex to lock
+ */
+void smp_lock_mutex_acquire( smp_lock_mutex_t* m ) {
+  // yield until mutex could be applied
+  while (
+    ! __sync_bool_compare_and_swap(
+      m, SMP_LOCK_MUTEX_RELEASED, SMP_LOCK_MUTEX_LOCKED
+    )
+  ) {
+    __asm__ __volatile__( "yield" ::: "memory" );
+  }
 
-// Helper to stop all cpus except the first one during startup
-.global cpu_smp_reset
-cpu_smp_reset:
-  // check for hypervisor mode and switch back to supervisor mode for rpi2 and rpi3
-  // Return current CPU ID (0..3)
-  cpsid if // Disable IRQ & FIQ
-  mrc p15, 0, r3, c0, c0, 5 // r3 = Multiprocessor Affinity Register (MPIDR)
-  ands r3, #3 // r0 = CPU ID (Bits 0..1)
-  bne _hlt // If (CPU ID != 0) Branch To Infinite Loop (Core ID 1..3)
-  beq _cpu_smp_reset // If equal branch to normal startup
-_hlt:
-  wfe
-  b _hlt
-_cpu_smp_reset:
-  bx lr
+  // synchronize
+  __sync_synchronize();
+}

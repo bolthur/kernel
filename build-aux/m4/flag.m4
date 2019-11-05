@@ -12,7 +12,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
 
   # debug parameter
   AS_IF([test "x$with_debug_symbols" == "xyes"], [
-    CFLAGS="${CFLAGS} -g"
+    CFLAGS="${CFLAGS} -g3"
   ])
   # optimization level
   case "${with_opt}" in

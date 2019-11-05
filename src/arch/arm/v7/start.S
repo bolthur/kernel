@@ -27,15 +27,15 @@
 
 .global arch_start
 arch_start:
-  // setup irq mode stack
+  // setup interrupt mode stack
   msr cpsr_c, #( CPSR_MODE_IRQ | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr r0, =stack_irq_mode
+  ldr r0, =stack_interrupt_mode
   add r0, r0, #STACK_SIZE
   mov sp, r0
 
-  // setup fiq mode stack
+  // setup fast interrupt mode stack
   msr cpsr_c, #( CPSR_MODE_FIQ | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr r0, =stack_fiq_mode
+  ldr r0, =stack_fast_interrupt_mode
   add r0, r0, #STACK_SIZE
   mov sp, r0
 

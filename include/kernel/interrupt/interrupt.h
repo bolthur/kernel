@@ -18,41 +18,41 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_IRQ__ )
-#define __KERNEL_IRQ__
+#if ! defined( __KERNEL_INTERRUPT_INTERRUPT__ )
+#define __KERNEL_INTERRUPT_INTERRUPT__
 
 #include <avl.h>
 #include <list.h>
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef void ( *irq_callback_t )( void* );
+typedef void ( *interrupt_callback_t )( void* );
 
 typedef struct {
   avl_tree_ptr_t normal_interrupt;
   avl_tree_ptr_t fast_interrupt;
-} irq_manager_t, *irq_manager_ptr_t;
+} interrupt_manager_t, *interrupt_manager_ptr_t;
 
 typedef struct {
   avl_node_t node;
   size_t interrupt;
   list_manager_ptr_t callback_list;
-} irq_block_t, *irq_block_ptr_t;
+} interrupt_block_t, *interrupt_block_ptr_t;
 
 typedef struct {
-  irq_callback_t callback;
-} irq_callback_wrapper_t, *irq_callback_wrapper_ptr_t;
+  interrupt_callback_t callback;
+} interrupt_callback_wrapper_t, *interrupt_callback_wrapper_ptr_t;
 
-#define IRQ_GET_BLOCK( n ) \
-  ( irq_block_ptr_t )( ( uint8_t* )n - offsetof( irq_block_t, node ) )
+#define INTERRUPT_GET_BLOCK( n ) \
+  ( interrupt_block_ptr_t )( ( uint8_t* )n - offsetof( interrupt_block_t, node ) )
 
-int8_t irq_get_pending( bool );
-void irq_disable( void );
-void irq_enable( void );
-bool irq_validate_number( size_t );
-void irq_init( void );
-void irq_handle( size_t, bool, void* );
-void irq_register_handler( size_t, irq_callback_t, bool );
-void irq_unregister_handler( size_t, irq_callback_t, bool );
+int8_t interrupt_get_pending( bool );
+void interrupt_disable( void );
+void interrupt_enable( void );
+bool interrupt_validate_number( size_t );
+void interrupt_init( void );
+void interrupt_handle( size_t, bool, void* );
+void interrupt_register_handler( size_t, interrupt_callback_t, bool );
+void interrupt_unregister_handler( size_t, interrupt_callback_t, bool );
 
 #endif

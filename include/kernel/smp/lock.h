@@ -18,23 +18,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/lock.h>
+#if !defined( __KERNEL_SMP_LOCK__ )
+#define __KERNEL_SMP_LOCK__
 
-/**
- * @brief Acquire lock
- *
- * @param m mutex to lock
- */
-void lock_mutex_acquire( lock_mutex_t* m ) {
-  // yield until mutex could be applied
-  while (
-    ! __sync_bool_compare_and_swap(
-      m, LOCK_MUTEX_RELEASED, LOCK_MUTEX_LOCKED
-    )
-  ) {
-    __asm__ __volatile__( "yield" ::: "memory" );
-  }
+#include <stdint.h>
 
-  // synchronize
-  __sync_synchronize();
-}
+typedef volatile int32_t smp_lock_mutex_t;
+
+#define SMP_LOCK_MUTEX_LOCKED 1
+#define SMP_LOCK_MUTEX_RELEASED 0
+
+void smp_lock_mutex_acquire( smp_lock_mutex_t* );
+void smp_lock_mutex_release( smp_lock_mutex_t* );
+
+#endif

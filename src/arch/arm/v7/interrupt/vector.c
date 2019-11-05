@@ -23,10 +23,10 @@
 #include <stdio.h>
 #include <assert.h>
 #include <kernel/debug/debug.h>
-#include <kernel/irq.h>
+#include <kernel/interrupt/interrupt.h>
 #include <kernel/panic.h>
 #include <arch/arm/v7/cpu.h>
-#include <arch/arm/v7/interrupt/ivt.h>
+#include <arch/arm/v7/interrupt/vector.h>
 
 /**
  * @brief Unused exception handler
@@ -119,17 +119,17 @@ void data_abort_handler( cpu_register_context_ptr_t cpu ) {
  *
  * @param cpu cpu context
  */
-void irq_handler( cpu_register_context_ptr_t cpu ) {
+void interrupt_handler( cpu_register_context_ptr_t cpu ) {
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
   #endif
 
   // get pending interrupt
-  int8_t irq = irq_get_pending( false );
-  assert( -1 != irq );
+  int8_t interrupt = interrupt_get_pending( false );
+  assert( -1 != interrupt );
 
-  // handle bound irq handlers
-  irq_handle( ( uint8_t )irq, false, cpu );
+  // handle bound interrupt handlers
+  interrupt_handle( ( uint8_t )interrupt, false, cpu );
 }
 
 /**
@@ -143,16 +143,18 @@ void fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   #endif
 
   // get pending interrupt
-  int8_t irq = irq_get_pending( true );
-  assert( -1 != irq );
+  int8_t interrupt = interrupt_get_pending( true );
+  assert( -1 != interrupt );
 
   // handle bound fast interrupt handlers
-  irq_handle( ( uint8_t )irq, true, cpu );
+  interrupt_handle( ( uint8_t )interrupt, true, cpu );
 }
 
 /**
  * @brief Method to initialize interrupt vector table
  */
-void ivt_init( void ) {
-  __asm__ __volatile__( "mcr p15, 0, %[addr], c12, c0, 0" : : [addr] "r" ( &interrupt_vector_table ) );
+void interrupt_vector_init( void ) {
+  __asm__ __volatile__(
+    "mcr p15, 0, %[addr], c12, c0, 0"
+    : : [addr] "r" ( &interrupt_vector_table ) );
 }

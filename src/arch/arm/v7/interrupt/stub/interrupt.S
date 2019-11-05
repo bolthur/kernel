@@ -18,17 +18,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( __KERNEL_CPU__ )
-#define __KERNEL_CPU__
+.section .text
 
-#include <stdint.h>
+.global interrupt_enable
+interrupt_enable:
+  cpsie if
+  bx lr
 
-typedef volatile int32_t lock_mutex_t;
-
-#define LOCK_MUTEX_LOCKED 1
-#define LOCK_MUTEX_RELEASED 0
-
-void lock_mutex_acquire( lock_mutex_t* );
-void lock_mutex_release( lock_mutex_t* );
-
-#endif
+.global interrupt_disable
+interrupt_disable:
+  mrs r0, cpsr
+  cpsid if
+  bx lr

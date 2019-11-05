@@ -29,7 +29,7 @@
 .extern prefetch_abort_handler
 .extern data_abort_handler
 .extern unused_handler
-.extern irq_handler
+.extern interrupt_handler
 .extern fast_interrupt_handler
 
 // additional global functions
@@ -145,8 +145,8 @@ _data_abort_handler:
 _unused_handler:
   ex_handler #8, unused_handler, CPSR_MODE_SUPERVISOR
 
-_irq_handler:
-  ex_handler #4, irq_handler, CPSR_MODE_SUPERVISOR
+_interrupt_handler:
+  ex_handler #4, interrupt_handler, CPSR_MODE_SUPERVISOR
 
 _fast_interrupt_handler:
   ex_handler #4, fast_interrupt_handler, CPSR_MODE_SUPERVISOR
@@ -160,5 +160,5 @@ interrupt_vector_table:
   b _prefetch_abort_handler // prefetch abort
   b _data_abort_handler // data abort
   b _unused_handler // unused
-  b _irq_handler // irq
+  b _interrupt_handler // irq
   b _fast_interrupt_handler // fiq

@@ -18,16 +18,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/lock.h>
+#include <kernel/smp/lock.h>
 
 /**
  * @brief release lock
  *
  * @param m mutex to unlock
  */
-void lock_mutex_release( lock_mutex_t* m ) {
+void smp_lock_mutex_release( smp_lock_mutex_t* m ) {
   // set to released
-  *m = LOCK_MUTEX_RELEASED;
+  *m = SMP_LOCK_MUTEX_RELEASED;
 
   // snychronize
   __sync_synchronize();

@@ -18,9 +18,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_IVT__ )
-#define __ARCH_ARM_IVT__
+#if ! defined( __ARCH_ARM_V7_INTERRUPT_VECTOR__ )
+#define __ARCH_ARM_V7_INTERRUPT_VECTOR__
 
-void ivt_init( void );
+void interrupt_vector_table( void );
 
 #endif

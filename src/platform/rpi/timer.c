@@ -39,7 +39,7 @@
 #include <kernel/event.h>
 #include <kernel/io.h>
 #include <kernel/timer.h>
-#include <kernel/irq.h>
+#include <kernel/interrupt/interrupt.h>
 
 #if defined( BCM2709 ) || defined( BCM2710 )
   // Timer match bits
@@ -48,16 +48,16 @@
   #define ARM_GENERIC_TIMER_MATCH_HYP ( 1 << 2 )
   #define ARM_GENERIC_TIMER_MATCH_VIRT ( 1 << 3 )
 
-  // timer irqs
-  #define ARM_GENERIC_TIMER_IRQ_SECURE ( 1 << 0 )
-  #define ARM_GENERIC_TIMER_IRQ_NON_SECURE ( 1 << 1 )
-  #define ARM_GENERIC_TIMER_IRQ_HYP ( 1 << 2 )
-  #define ARM_GENERIC_TIMER_IRQ_VIRT ( 1 << 3 )
+  // timer interrupts
+  #define ARM_GENERIC_TIMER_INTERRUPT_SECURE ( 1 << 0 )
+  #define ARM_GENERIC_TIMER_INTERRUPT_NON_SECURE ( 1 << 1 )
+  #define ARM_GENERIC_TIMER_INTERRUPT_HYP ( 1 << 2 )
+  #define ARM_GENERIC_TIMER_INTERRUPT_VIRT ( 1 << 3 )
 
   #define ARM_GENERIC_TIMER_FREQUENCY 19200000
   #define ARM_GENERIC_TIMER_ENABLE 1
   // FIXME: Final value should be lower on real device
-  #define ARM_GENERIC_TIMER_COUNT 50000 // 50000000
+  #define ARM_GENERIC_TIMER_COUNT 50000000 // 50000
 #else
   // free running counter incrementing at 1 MHz => Increments each microsecond
   #define TIMER_FREQUENZY_HZ 1000000
@@ -72,11 +72,11 @@
   #define SYSTEM_TIMER_MATCH_2 ( 1 << 2 )
   #define SYSTEM_TIMER_MATCH_3 ( 1 << 3 )
 
-  // timer irqs
-  #define SYSTEM_TIMER_0_IRQ ( 1 << 0 )
-  #define SYSTEM_TIMER_1_IRQ ( 1 << 1 )
-  #define SYSTEM_TIMER_2_IRQ ( 1 << 2 )
-  #define SYSTEM_TIMER_3_IRQ ( 1 << 3 )
+  // timer interrupts
+  #define SYSTEM_TIMER_0_INTERRUPT ( 1 << 0 )
+  #define SYSTEM_TIMER_1_INTERRUPT ( 1 << 1 )
+  #define SYSTEM_TIMER_2_INTERRUPT ( 1 << 2 )
+  #define SYSTEM_TIMER_3_INTERRUPT ( 1 << 3 )
 #endif
 
 /**
@@ -129,20 +129,20 @@ void timer_clear( void* context ) {
 void timer_init( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
     // register handler
-    irq_register_handler( ARM_GENERIC_TIMER_IRQ_VIRT, timer_clear, false );
+    interrupt_register_handler( ARM_GENERIC_TIMER_INTERRUPT_VIRT, timer_clear, false );
 
     // get peripheral base
     uintptr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
 
     // route virtual timer within core
-    io_out32( ( uint32_t )base + CORE0_TIMER_IRQCNTL, ARM_GENERIC_TIMER_IRQ_VIRT );
+    io_out32( ( uint32_t )base + CORE0_TIMER_IRQCNTL, ARM_GENERIC_TIMER_INTERRUPT_VIRT );
 
     // set frequency and enable
     __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 0" :: "r"( ARM_GENERIC_TIMER_FREQUENCY ) );
     __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 1" :: "r"( ARM_GENERIC_TIMER_ENABLE ) );
   #else
     // register handler
-    irq_register_handler( SYSTEM_TIMER_3_IRQ, timer_clear, false );
+    interrupt_register_handler( SYSTEM_TIMER_3_INTERRUPT, timer_clear, false );
 
     // reset timer control
     io_out32( SYSTEM_TIMER_CONTROL, 0x00000000 );
@@ -154,15 +154,15 @@ void timer_init( void ) {
     io_out32( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
 
     // enable interrupt for timer 3
-    io_out32( INTERRUPT_ENABLE_IRQ_1, SYSTEM_TIMER_3_IRQ );
+    io_out32( INTERRUPT_ENABLE_IRQ_1, SYSTEM_TIMER_3_INTERRUPT );
 
     // get pending interrupt from memory
-    uint32_t irq_line = io_in32( INTERRUPT_IRQ_PENDING_1 );
+    uint32_t interrupt_line = io_in32( INTERRUPT_IRQ_PENDING_1 );
 
     // clear pending interrupt
-    irq_line &= ~( SYSTEM_TIMER_3_IRQ );
+    interrupt_line &= ~( SYSTEM_TIMER_3_INTERRUPT );
 
     // overwrite
-    io_out32( INTERRUPT_IRQ_PENDING_1, irq_line );
+    io_out32( INTERRUPT_IRQ_PENDING_1, interrupt_line );
   #endif
 }

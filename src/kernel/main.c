@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <kernel/arch.h>
 #include <kernel/tty.h>
-#include <kernel/irq.h>
+#include <kernel/interrupt/interrupt.h>
 #include <kernel/timer.h>
 #include <kernel/platform.h>
 #include <kernel/debug/debug.h>
@@ -89,9 +89,9 @@ void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> platform] initialize ...\r\n" );
   platform_init();
 
-  // Setup irq
-  DEBUG_OUTPUT( "[bolthur/kernel -> irq] initialize ...\r\n" );
-  irq_init();
+  // Setup interrupt
+  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] initialize ...\r\n" );
+  interrupt_init();
 
   // Setup initrd parts
   DEBUG_OUTPUT( "[bolthur/kernel -> initrd] initialize ...\r\n" );
@@ -158,9 +158,9 @@ void kernel_main( void ) {
   task_process_create( ( uintptr_t )process2, TASK_PROCESS_TYPE_KERNEL, 0 );
   task_process_create( ( uintptr_t )process3, TASK_PROCESS_TYPE_KERNEL, 0 );
 
-  // Setup irq
-  DEBUG_OUTPUT( "[bolthur/kernel -> irq] enable ...\r\n" );
-  irq_enable();
+  // Enable interrupts
+  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] enable ...\r\n" );
+  interrupt_enable();
 
   while ( 1 ) {}
 }

@@ -20,22 +20,20 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
-#include <stdio.h>
-#include <kernel/irq.h>
+#include <stddef.h>
 #include <kernel/panic.h>
 #include <kernel/io.h>
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
 
 /**
- * @brief Helper to validate irq number
+ * @brief Helper to validate interrupt number
  *
  * @param num number to validate
- * @return true if irq is valid
- * @return false if irq is invalid
+ * @return true if interrupt is valid
+ * @return false if interrupt is invalid
  */
-bool irq_validate_number( size_t num ) {
+bool interrupt_validate_number( size_t num ) {
   return ! (
     num != 1 && num != 8
     && num != 29 && num != 43
@@ -49,7 +47,7 @@ bool irq_validate_number( size_t num ) {
 }
 
 /**
- * @brief Get pending irq
+ * @brief Get pending interrupt
  *
  * @param fast use fast interrupts
  * @return int8_t pending interrupt number
@@ -57,20 +55,20 @@ bool irq_validate_number( size_t num ) {
  * @todo add code for checking for fast interrupts
  * @todo check and revise or extend
  */
-int8_t irq_get_pending( bool fast ) {
+int8_t interrupt_get_pending( bool fast ) {
   uintptr_t base = ( uint32_t )peripheral_base_get(
     PERIPHERAL_GPIO
   );
 
-  // normal irq
+  // normal interrupt
   if ( ! fast ) {
     uint32_t pending1 = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
     uint32_t pending2 = io_in32( base + INTERRUPT_IRQ_PENDING_2 );
 
     #if defined( BCM2709 ) || defined( BCM2710 )
       base = peripheral_base_get( PERIPHERAL_LOCAL );
-      uint32_t core0_irq_source = io_in32( ( uint32_t )base + CORE0_IRQ_SOURCE );
-      if ( core0_irq_source & 0x08 ) {
+      uint32_t core0_interrupt_source = io_in32( ( uint32_t )base + CORE0_IRQ_SOURCE );
+      if ( core0_interrupt_source & 0x08 ) {
         return 8;
       }
     #endif
