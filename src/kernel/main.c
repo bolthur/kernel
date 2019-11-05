@@ -60,6 +60,13 @@ static void process3( void ) {
   }
 }
 
+__section( ".text.dummytask" )
+static void process4( void ) {
+  while( true ) {
+    printf( "D" );
+  }
+}
+
 /**
  * @brief Kernel main function
  *
@@ -157,6 +164,7 @@ void kernel_main( void ) {
   task_process_create( ( uintptr_t )process1, TASK_PROCESS_TYPE_KERNEL, 0 );
   task_process_create( ( uintptr_t )process2, TASK_PROCESS_TYPE_KERNEL, 0 );
   task_process_create( ( uintptr_t )process3, TASK_PROCESS_TYPE_KERNEL, 0 );
+  task_process_create( ( uintptr_t )process4, TASK_PROCESS_TYPE_USER, 0 );
 
   // Enable interrupts
   DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] enable ...\r\n" );

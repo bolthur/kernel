@@ -58,6 +58,11 @@ SECTIONS {
     *( .data.boot )
   }
 
+  /* dummy user task */
+  .text.dummytask ALIGN( 4K ) : AT( 0x500000 ) {
+    *( .text.dummytask )
+  }
+
   . += KERNEL_OFFSET;
 
   /* higher half kernel sections */
