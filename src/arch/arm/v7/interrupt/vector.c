@@ -122,6 +122,7 @@ void data_abort_handler( cpu_register_context_ptr_t cpu ) {
 void interrupt_handler( cpu_register_context_ptr_t cpu ) {
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
+    printf( "Address of CPU: 0x%08x\r\n", cpu );
   #endif
 
   // get pending interrupt

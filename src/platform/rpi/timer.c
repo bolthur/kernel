@@ -104,14 +104,12 @@ void timer_clear( void* context ) {
     return;
   }
 
-  // trigger timer event
-  event_fire( EVENT_TIMER, context );
-
   // debug output
   #if defined( PRINT_TIMER )
     printf( "timer_clear()\r\n" );
   #endif
 
+  // clear timer
   #if defined( BCM2709 ) || defined( BCM2710 )
     // reset cntcval
     __asm__ __volatile__ ( "mcr p15, 0, %0, c14, c3, 0" :: "r"( ARM_GENERIC_TIMER_COUNT ) );
@@ -121,6 +119,9 @@ void timer_clear( void* context ) {
     // set compare again
     io_out32( SYSTEM_TIMER_COMPARE_3, io_in32( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
   #endif
+
+  // trigger timer event
+  event_fire( EVENT_TIMER, context );
 }
 
 /**
@@ -129,7 +130,8 @@ void timer_clear( void* context ) {
 void timer_init( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
     // register handler
-    interrupt_register_handler( ARM_GENERIC_TIMER_INTERRUPT_VIRT, timer_clear, false );
+    interrupt_register_handler(
+      ARM_GENERIC_TIMER_INTERRUPT_VIRT, timer_clear, false, false );
 
     // get peripheral base
     uintptr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
@@ -142,7 +144,8 @@ void timer_init( void ) {
     __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 1" :: "r"( ARM_GENERIC_TIMER_ENABLE ) );
   #else
     // register handler
-    interrupt_register_handler( SYSTEM_TIMER_3_INTERRUPT, timer_clear, false );
+    interrupt_register_handler(
+      SYSTEM_TIMER_3_INTERRUPT, timer_clear, false, false );
 
     // reset timer control
     io_out32( SYSTEM_TIMER_CONTROL, 0x00000000 );

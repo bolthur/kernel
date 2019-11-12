@@ -22,14 +22,15 @@
 #define __KERNEL_TASK_STACK__
 
 #include <avl.h>
-
+#include <kernel/task/process.h>
 typedef struct task_stack_manager {
   avl_tree_ptr_t tree;
 } task_stack_manager_t, *task_stack_manager_ptr_t;
 
 extern task_stack_manager_ptr_t task_stack_manager;
+task_stack_manager_ptr_t task_stack_manager_create( void );
 void task_stack_manager_init( void );
-uintptr_t task_stack_manager_next( void );
-void task_stack_manager_add( uintptr_t );
+uintptr_t task_stack_manager_next( task_process_type_t, task_stack_manager_ptr_t );
+void task_stack_manager_add( uintptr_t, task_stack_manager_ptr_t );
 
 #endif

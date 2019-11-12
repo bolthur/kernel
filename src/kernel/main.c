@@ -60,10 +60,10 @@ static void process3( void ) {
   }
 }
 
-__section( ".text.dummytask" )
+__section( ".text.dummytask" ) __unused
 static void process4( void ) {
   while( true ) {
-    printf( "D" );
+    __asm__ __volatile__( "swi #1" );
   }
 }
 
@@ -161,14 +161,14 @@ void kernel_main( void ) {
   task_process_init();
 
   // create some dummy processes
+  //task_process_create( ( uintptr_t )process4, TASK_PROCESS_TYPE_USER, 0 );
   task_process_create( ( uintptr_t )process1, TASK_PROCESS_TYPE_KERNEL, 0 );
+  //task_process_create( ( uintptr_t )process4, TASK_PROCESS_TYPE_USER, 0 );
   task_process_create( ( uintptr_t )process2, TASK_PROCESS_TYPE_KERNEL, 0 );
+  //task_process_create( ( uintptr_t )process4, TASK_PROCESS_TYPE_USER, 0 );
   task_process_create( ( uintptr_t )process3, TASK_PROCESS_TYPE_KERNEL, 0 );
-  task_process_create( ( uintptr_t )process4, TASK_PROCESS_TYPE_USER, 0 );
 
   // Enable interrupts
   DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] enable ...\r\n" );
   interrupt_enable();
-
-  while ( 1 ) {}
 }

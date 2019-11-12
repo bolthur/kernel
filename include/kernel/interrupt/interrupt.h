@@ -36,7 +36,8 @@ typedef struct {
 typedef struct {
   avl_node_t node;
   size_t interrupt;
-  list_manager_ptr_t callback_list;
+  list_manager_ptr_t handler;
+  list_manager_ptr_t post;
 } interrupt_block_t, *interrupt_block_ptr_t;
 
 typedef struct {
@@ -52,7 +53,7 @@ void interrupt_enable( void );
 bool interrupt_validate_number( size_t );
 void interrupt_init( void );
 void interrupt_handle( size_t, bool, void* );
-void interrupt_register_handler( size_t, interrupt_callback_t, bool );
-void interrupt_unregister_handler( size_t, interrupt_callback_t, bool );
+void interrupt_register_handler( size_t, interrupt_callback_t, bool, bool );
+void interrupt_unregister_handler( size_t, interrupt_callback_t, bool, bool );
 
 #endif

@@ -41,12 +41,12 @@ typedef struct task_thread {
   uint64_t stack_physical;
   task_thread_state_t state;
   task_process_ptr_t process;
+  void* context;
 } task_thread_t, *task_thread_ptr_t;
 
 #define TASK_THREAD_GET_BLOCK( n ) \
   ( task_thread_ptr_t )( ( uint8_t* )n - offsetof( task_thread_t, node ) )
 
-uintptr_t task_thread_stack( void* );
 task_thread_ptr_t task_thread_current( void );
 void task_thread_set_current( task_thread_ptr_t, task_priority_queue_ptr_t );
 size_t task_thread_generate_id( void );

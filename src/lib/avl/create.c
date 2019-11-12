@@ -44,3 +44,21 @@ avl_tree_ptr_t avl_create_tree( avl_compare_func_t compare ) {
   // return created tree
   return tree;
 }
+
+/**
+ * @brief creates and prepares a avl node
+ *
+ * @param data node data
+ */
+avl_node_ptr_t avl_create_node( void* data ) {
+  // allocate node
+  avl_node_ptr_t node = ( avl_node_ptr_t )malloc( sizeof( avl_node_t ) );
+  // assert allocation
+  assert( NULL != node );
+  // prepare data
+  memset( ( void* )node, 0, sizeof( avl_node_t ) );
+  // call prepare node
+  avl_prepare_node( node, data );
+  // return created node
+  return node;
+}

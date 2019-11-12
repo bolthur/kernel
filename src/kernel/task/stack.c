@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <kernel/debug/debug.h>
 #include <kernel/task/stack.h>
+#include <kernel/task/process.h>
 
 /**
  * @brief Stack management structure
@@ -61,29 +62,46 @@ static int32_t task_stack_callback(
 }
 
 /**
+ * @brief Create stack manager
+ *
+ * @return task_stack_manager_ptr_t
+ */
+task_stack_manager_ptr_t task_stack_manager_create( void ) {
+  // allocate manager
+  task_stack_manager_ptr_t manager = ( task_stack_manager_ptr_t )malloc(
+    sizeof( task_stack_manager_t ) );
+  // assert allocation
+  assert( NULL != manager );
+  // prepare
+  memset( ( void* )manager, 0, sizeof( task_stack_manager_t ) );
+  // create tree
+  manager->tree = avl_create_tree( task_stack_callback );
+  // return manager
+  return manager;
+}
+
+/**
  * @brief Initialize stack manager
  */
 void task_stack_manager_init( void ) {
   // allocate manager
-  task_stack_manager = ( task_stack_manager_ptr_t )malloc(
-    sizeof( task_stack_manager_t ) );
-  // assert allocation
-  assert( NULL != task_stack_manager );
-  // prepare
-  memset( ( void* )task_stack_manager, 0, sizeof( task_stack_manager_t ) );
-  // prepare tree
-  task_stack_manager->tree = avl_create_tree( task_stack_callback );
+  task_stack_manager = task_stack_manager_create();
 }
 
-void task_stack_manager_add( uintptr_t stack ) {
+/**
+ * @brief Add stack to manager
+ *
+ * @param stack stack to add
+ */
+void task_stack_manager_add( uintptr_t stack, task_stack_manager_ptr_t manager ) {
+  // overwrite with task stack manager if not passed
+  if ( NULL == manager ) {
+    manager = task_stack_manager;
+  }
+  // assert manager
+  assert( NULL != manager );
   // create node
-  avl_node_ptr_t node = ( avl_node_ptr_t )malloc( sizeof( avl_node_t ) );
-  // assert allocation
-  assert( NULL != node );
-  // prepare allocated space
-  memset( ( void* )node, 0, sizeof( avl_node_t ) );
-  // preparre node
-  avl_prepare_node( node, ( void* )stack );
-  /// insert node
-  avl_insert_by_node( task_stack_manager->tree, node );
+  avl_node_ptr_t node = avl_create_node( ( void* )stack );
+  // insert node
+  avl_insert_by_node( manager->tree, node );
 }

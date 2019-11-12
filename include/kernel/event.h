@@ -36,7 +36,8 @@ typedef struct {
 typedef struct {
   avl_node_t node;
   event_type_t type;
-  list_manager_ptr_t callback_list;
+  list_manager_ptr_t handler;
+  list_manager_ptr_t post;
 } event_block_t, *event_block_ptr_t;
 
 typedef void ( *event_callback_t )( void* data );
@@ -50,8 +51,8 @@ typedef struct {
 
 bool event_initialized_get( void );
 void event_init( void );
-bool event_bind( event_type_t, event_callback_t );
-void event_unbind( event_type_t, event_callback_t );
+bool event_bind( event_type_t, event_callback_t, bool );
+void event_unbind( event_type_t, event_callback_t, bool );
 void event_fire( event_type_t, void* );
 
 #endif

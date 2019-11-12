@@ -22,13 +22,6 @@
 
 #include <arch/arm/stack.h>
 
-// align stacks 32 bit
-.comm stack_interrupt_mode, STACK_SIZE, 32
-.comm stack_fast_interrupt_mode, STACK_SIZE, 32
-.comm stack_abort_mode, STACK_SIZE, 32
-.comm stack_undefined_mode, STACK_SIZE, 32
-.comm stack_system_mode, STACK_SIZE, 32
-.comm stack_user_mode, STACK_SIZE, 32
+// stacks for other modes not necessary as all we use is supervisor mode
+// reserve areas for stack with 32 bit alignment
 .comm stack_supervisor_mode, STACK_SIZE, 32
-.comm stack_hypervisor_mode, STACK_SIZE, 32
-.comm stack_monitor_mode, STACK_SIZE, 32

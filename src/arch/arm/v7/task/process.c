@@ -37,12 +37,21 @@
  * @todo fix function by check/rework
  */
 void task_process_schedule( void* context ) {
+  //static int foo = 0;
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", context );
   #endif
   // get cpu pointer
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  // debug
+  #if defined( PRINT_PROCESS )
+    DUMP_REGISTER( cpu );
+  #endif
+  // debug panic
+  //if ( ++foo > 1 ) {
+    PANIC( "Process switch!" );
+  //}
 
   // get running thread
   task_thread_ptr_t running_thread = task_thread_current();
@@ -92,12 +101,23 @@ void task_process_schedule( void* context ) {
   // save context of current thread
   if ( NULL != running_thread ) {
     // save stack of running thread
-    running_thread->stack_virtual = cpu->reg.sp;
+    // running_thread->stack_kernel_virtual = cpu->reg.sp;
     // reset state to ready
     running_thread->state = TASK_THREAD_STATE_READY;
   }
   // overwrite current running thread
   task_thread_set_current( next_thread, next_queue );
 
-  // FIXME: SWITCH TTBR when thread is from different process
+  // Switch to thread ttbr when thread is a different process in user mode
+  if (
+    TASK_PROCESS_TYPE_USER == next_thread->process->type
+    && (
+      NULL == running_thread
+      || running_thread->process != next_thread->process
+    )
+  ) {
+    // set context and flush
+    virt_set_context( next_thread->process->virtual_context );
+    virt_flush_complete();
+  }
 }

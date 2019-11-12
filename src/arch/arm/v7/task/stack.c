@@ -24,8 +24,11 @@
 #include <arch/arm/stack.h>
 
 #if defined( ELF32 )
-  #define THREAD_STACK_START_ADDRESS 0xF3041000
-  #define THREAD_STACK_END_ADDRESS 0xF3FFFFFF - STACK_SIZE
+  #define THREAD_KERNEL_STACK_START_ADDRESS 0xF3041000
+  #define THREAD_KERNEL_STACK_END_ADDRESS 0xF4000000 - STACK_SIZE
+
+  #define THREAD_USER_STACK_START_ADDRESS 0x00001000
+  #define THREAD_USER_STACK_END_ADDRESS 0x00200000 - STACK_SIZE
 #elif defined( ELF64 )
   #error "Unsupported"
 #endif
@@ -36,13 +39,31 @@
  * @param manager
  * @return uintptr_t
  */
-uintptr_t task_stack_manager_next( void ) {
+uintptr_t task_stack_manager_next(
+  task_process_type_t type,
+  task_stack_manager_ptr_t manager
+) {
+  if ( NULL == manager ) {
+    manager = task_stack_manager;
+  }
   // assert manager
-  assert( NULL != task_stack_manager );
+  assert( NULL != manager );
 
-  avl_node_ptr_t min = avl_get_min( task_stack_manager->tree->root );
-  avl_node_ptr_t max = avl_get_max( task_stack_manager->tree->root );
-  uintptr_t current = THREAD_STACK_START_ADDRESS;
+  // determine min and max
+  uintptr_t current, min_stack, max_stack;
+  if ( TASK_PROCESS_TYPE_KERNEL == type ) {
+    current = THREAD_KERNEL_STACK_START_ADDRESS;
+    min_stack = current;
+    max_stack = THREAD_KERNEL_STACK_END_ADDRESS;
+  } else {
+    current = THREAD_USER_STACK_START_ADDRESS;
+    min_stack = current;
+    max_stack = THREAD_USER_STACK_END_ADDRESS;
+  }
+
+  // get min and max nodes
+  avl_node_ptr_t min = avl_get_min( manager->tree->root );
+  avl_node_ptr_t max = avl_get_max( manager->tree->root );
 
   // handle empty
   if ( NULL == min && NULL == max ) {
@@ -52,21 +73,18 @@ uintptr_t task_stack_manager_next( void ) {
   // find possible hole
   while ( min != max ) {
     // try to find
-    avl_node_ptr_t tmp = avl_find_by_data(
-      task_stack_manager->tree, ( void* )current );
-
+    avl_node_ptr_t tmp = avl_find_by_data( manager->tree, ( void* )current );
     // not found => free
     if ( NULL == tmp ) {
       return current;
     }
-
     // next to probe
     current += STACK_SIZE;
   }
 
   // assert address
-  assert( current >= THREAD_STACK_START_ADDRESS );
-  assert( current <= THREAD_STACK_END_ADDRESS );
+  assert( current >= min_stack );
+  assert( current <= max_stack );
 
   // return new one
   return current + STACK_SIZE;

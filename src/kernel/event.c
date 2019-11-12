@@ -89,10 +89,11 @@ void event_init( void ) {
  *
  * @param type event type
  * @param callback callback to bind
+ * @param post post callback mapping
  * @return true on success
  * @return false on error
  */
-bool event_bind( event_type_t type, event_callback_t callback ) {
+bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   // do nothing if not initialized
   if ( NULL == event ) {
     return true;
@@ -100,7 +101,8 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
 
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Called event_bind( %d, 0x%08p )\r\n", type, callback );
+    DEBUG_OUTPUT( "Called event_bind( %d, 0x%08p, %s )\r\n",
+      type, callback, post ? "true" : "false" );
   #endif
   // get correct tree to use
   avl_tree_ptr_t tree = event->tree;
@@ -126,7 +128,8 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
     #endif
     // populate block
     block->type = type;
-    block->callback_list = list_construct();
+    block->handler = list_construct();
+    block->post = list_construct();
     // prepare and insert node
     avl_prepare_node( &block->node, ( void* )type );
     avl_insert_by_node( tree, &block->node );
@@ -142,7 +145,9 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
     DEBUG_OUTPUT( "Checking for already bound event callback\r\n" );
   #endif
   // get first element
-  list_item_ptr_t current = block->callback_list->first;
+  list_item_ptr_t current = true != post
+      ? block->handler->first
+      : block->post->first;
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
@@ -183,7 +188,11 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
     DEBUG_OUTPUT( "Created wrapper container at 0x%08p\r\n", wrapper );
   #endif
   // push to list
-  list_push_back( block->callback_list, ( void* )wrapper );
+  list_push_back(
+    true != post
+      ? block->handler
+      : block->post,
+    ( void* )wrapper );
 
   // return success
   return true;
@@ -194,10 +203,15 @@ bool event_bind( event_type_t type, event_callback_t callback ) {
  *
  * @param type event type
  * @param callback bound callback
+ * @param post post callback
  *
  * @todo Add logic for method
  */
-void event_unbind( __unused event_type_t type, __unused event_callback_t callback ) {
+void event_unbind(
+  __unused event_type_t type,
+  __unused event_callback_t callback,
+  __unused bool post
+) {
   // do nothing if not initialized
   if ( NULL == event ) {
     return;
@@ -236,13 +250,34 @@ void event_fire( event_type_t type, void* data ) {
 
   // get block
   block = EVENT_GET_BLOCK( node );
-  // get first element of callback list
-  list_item_ptr_t current = block->callback_list->first;
+
+  // get first element of normal callback list
+  list_item_ptr_t current = block->handler->first;
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
   #endif
+  // loop through list
+  while ( NULL != current ) {
+    // get callback from data
+    event_callback_wrapper_ptr_t wrapper =
+      ( event_callback_wrapper_ptr_t )current->data;
+    // debug output
+    #if defined( PRINT_EVENT )
+      DEBUG_OUTPUT( "Executing bound callback 0x%08p\r\n", wrapper );
+    #endif
+    // fire with data
+    wrapper->callback( data );
+    // step to next
+    current = current->next;
+  }
 
+  // get first element of post callback list
+  current = block->post->first;
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
+  #endif
   // loop through list
   while ( NULL != current ) {
     // get callback from data

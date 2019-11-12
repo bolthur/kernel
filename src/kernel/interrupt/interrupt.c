@@ -67,11 +67,13 @@ static int32_t compare_interrupt_callback(
  * @param num interrupt to unbind
  * @param callback Callback to unbind
  * @param fast flag to unbind fast
+ * @param post flag to bind as post callback
  */
 void interrupt_unregister_handler(
   __unused size_t num,
   __unused interrupt_callback_t callback,
-  __unused bool fast
+  __unused bool fast,
+  __unused bool post
 ) {
   PANIC( "Unregister handling is not yet implemented!" );
 }
@@ -82,19 +84,21 @@ void interrupt_unregister_handler(
  * @param num Interrupt to bind
  * @param callback Callback to bind
  * @param fast flag to bind FIQ
+ * @param post flag to bind as post callback
  */
 void interrupt_register_handler(
   size_t num,
   interrupt_callback_t callback,
-  bool fast
+  bool fast,
+  bool post
 ) {
   // assert heap existance
   assert( true == heap_initialized_get() );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT(
-      "Called interrupt_register_handler( %d, 0x%08p, %s )\r\n",
-      num, callback, fast ? "true" : "false" );
+      "Called interrupt_register_handler( %d, 0x%08p, %s, %s )\r\n",
+      num, callback, fast ? "true" : "false", post  ? "true" : "false" );
   #endif
 
   // debug output
@@ -162,7 +166,8 @@ void interrupt_register_handler(
     #endif
     // populate block
     block->interrupt = num;
-    block->callback_list = list_construct();
+    block->handler = list_construct();
+    block->post = list_construct();
     // prepare and insert node
     avl_prepare_node( &block->node, ( void* )num );
     avl_insert_by_node( tree, &block->node );
@@ -178,7 +183,10 @@ void interrupt_register_handler(
     DEBUG_OUTPUT( "Checking for already bound interrupt callback\r\n" );
   #endif
   // get first element
-  list_item_ptr_t current = block->callback_list->first;
+  list_item_ptr_t current =
+    true != post
+      ? block->handler->first
+      : block->post->first;
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
@@ -217,7 +225,11 @@ void interrupt_register_handler(
   #endif
 
   // push to list
-  list_push_back( block->callback_list, ( void* )wrapper );
+  list_push_back(
+    true != post
+      ? block->handler
+      : block->post,
+    ( void* )wrapper );
 }
 
 /**
@@ -270,30 +282,44 @@ void interrupt_handle( size_t num, bool fast, void* context ) {
   // get interrupt block
   interrupt_block_ptr_t block = INTERRUPT_GET_BLOCK( node );
 
-  // get list of bound handlers
-  list_manager_ptr_t list = block->callback_list;
-  // get first element
-  list_item_ptr_t current = list->first;
-
+  // get first element of normal handler
+  list_item_ptr_t current = block->handler->first;
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Looping through mapped callbacks and execute them\r\n" );
   #endif
-
   // loop through list
   while ( NULL != current ) {
     // get callback from data
     interrupt_callback_wrapper_ptr_t wrapper =
       ( interrupt_callback_wrapper_ptr_t )current->data;
-
     // debug output
     #if defined( PRINT_INTERRUPT )
       DEBUG_OUTPUT( "Handling wrapper container 0x%08p\r\n", wrapper );
     #endif
-
     // fire with data
     wrapper->callback( context );
+    // step to next
+    current = current->next;
+  }
 
+  // get first element of post callbacks
+  current = block->post->first;
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Looping through mapped callbacks and execute them\r\n" );
+  #endif
+  // loop through list
+  while ( NULL != current ) {
+    // get callback from data
+    interrupt_callback_wrapper_ptr_t wrapper =
+      ( interrupt_callback_wrapper_ptr_t )current->data;
+    // debug output
+    #if defined( PRINT_INTERRUPT )
+      DEBUG_OUTPUT( "Handling wrapper container 0x%08p\r\n", wrapper );
+    #endif
+    // fire with data
+    wrapper->callback( context );
     // step to next
     current = current->next;
   }

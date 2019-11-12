@@ -100,7 +100,7 @@ void task_process_init( void ) {
   }*/
 
   // register timer event
-  event_bind( EVENT_TIMER, task_process_schedule );
+  event_bind( EVENT_TIMER, task_process_schedule, true );
 }
 
 /**
@@ -152,11 +152,11 @@ void task_process_create(
   process->type = type;
   process->state = TASK_PROCESS_STATE_READY;
   process->priority = priority;
-  // create context
-  process->virtual_context = virt_create_context(
-    TASK_PROCESS_TYPE_USER == type
-      ? VIRT_CONTEXT_TYPE_USER
-      : VIRT_CONTEXT_TYPE_KERNEL );
+  process->thread_stack_manager = task_stack_manager_create();
+  // create context only for user processes
+  if ( TASK_PROCESS_TYPE_USER == type ) {
+    process->virtual_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
+  }
   // prepare node
   avl_prepare_node( &process->node_id, ( void* )process->id );
   // add process to tree

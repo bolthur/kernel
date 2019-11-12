@@ -47,6 +47,7 @@ typedef enum {
 typedef struct process {
   avl_node_t node_id;
   avl_tree_ptr_t thread_manager;
+  task_stack_manager_ptr_t thread_stack_manager;
   size_t id;
   size_t priority;
   virt_context_ptr_t virtual_context;
