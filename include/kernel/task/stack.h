@@ -29,8 +29,7 @@ typedef struct task_stack_manager {
 
 extern task_stack_manager_ptr_t task_stack_manager;
 task_stack_manager_ptr_t task_stack_manager_create( void );
-void task_stack_manager_init( void );
-uintptr_t task_stack_manager_next( task_process_type_t, task_stack_manager_ptr_t );
+uintptr_t task_stack_manager_next( task_stack_manager_ptr_t );
 void task_stack_manager_add( uintptr_t, task_stack_manager_ptr_t );
 
 #endif

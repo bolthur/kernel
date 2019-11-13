@@ -20,12 +20,13 @@
 
 #define ASSEMBLER_FILE 1
 
+#include <kernel/assembly.h>
 #include <arch/arm/v7/cpu.h>
 #include <arch/arm/stack.h>
 
 .section .text
 
-.global arch_start
+EXPORT( arch_start )
 arch_start:
   // setup of other modes stacks not necessary as all exceptions use supervisor mode
 

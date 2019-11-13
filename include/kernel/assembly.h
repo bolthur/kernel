@@ -18,17 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/assembly.h>
+#if !defined( __KERNEL_ASSEMBLY__ )
+#define __KERNEL_ASSEMBLY__
 
-.section .text
+#define IMPORT( symbol ) .extern symbol
+#define EXPORT( symbol ) .global symbol
 
-EXPORT( interrupt_enable )
-interrupt_enable:
-  cpsie if
-  bx lr
-
-EXPORT( interrupt_disable )
-interrupt_disable:
-  mrs r0, cpsr
-  cpsid if
-  bx lr
+#endif

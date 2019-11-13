@@ -82,6 +82,9 @@ void event_init( void ) {
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Created event tree at: 0x%08p\r\n", event->tree );
   #endif
+
+  // create queue
+  event->queue = list_construct();
 }
 
 /**
@@ -221,75 +224,104 @@ void event_unbind(
 }
 
 /**
- * @brief Fire event by type with data
+ * @brief Enqueue event
  *
- * @param type type to fire
- * @param data data to pass through
+ * @param type type to enqueue
  */
-void event_fire( event_type_t type, void* data ) {
+void event_enqueue( event_type_t type ) {
   // do nothing if not initialized
   if ( NULL == event ) {
     return;
   }
 
-  // get correct tree to use
-  avl_tree_ptr_t tree = event->tree;
+  // push back event
+  list_push_back( event->queue, ( void* )type );
+}
 
-  // try to find node
-  avl_node_ptr_t node = avl_find_by_data( tree, ( void* )type );
-  event_block_ptr_t block;
-  // debug output
-  #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
-  #endif
-
-  // handle no existing
-  if ( NULL == node ) {
+/**
+ * @brief Handle enqueued events with data
+ *
+ * @param data data to pass through
+ */
+void event_handle( void* data ) {
+  // do nothing if not initialized
+  if ( NULL == event ) {
     return;
   }
 
-  // get block
-  block = EVENT_GET_BLOCK( node );
-
-  // get first element of normal callback list
-  list_item_ptr_t current = block->handler->first;
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
+    DEBUG_OUTPUT( "event_handle( 0x%08x )\r\n", data );
   #endif
-  // loop through list
-  while ( NULL != current ) {
-    // get callback from data
-    event_callback_wrapper_ptr_t wrapper =
-      ( event_callback_wrapper_ptr_t )current->data;
-    // debug output
-    #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Executing bound callback 0x%08p\r\n", wrapper );
-    #endif
-    // fire with data
-    wrapper->callback( data );
-    // step to next
-    current = current->next;
-  }
 
-  // get first element of post callback list
-  current = block->post->first;
-  // debug output
-  #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
-  #endif
-  // loop through list
-  while ( NULL != current ) {
-    // get callback from data
-    event_callback_wrapper_ptr_t wrapper =
-      ( event_callback_wrapper_ptr_t )current->data;
+  // variables
+  list_item_ptr_t current_event = list_pop_front( event->queue );
+  // get correct tree to use
+  avl_tree_ptr_t tree = event->tree;
+
+  while ( NULL != current_event ) {
+    // try to find node
+    avl_node_ptr_t node = avl_find_by_data( tree, current_event );
+    event_block_ptr_t block;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Executing bound callback 0x%08p\r\n", wrapper );
+      DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
     #endif
-    // fire with data
-    wrapper->callback( data );
-    // step to next
-    current = current->next;
+
+    // handle no existing
+    if ( NULL == node ) {
+      // pop next
+      current_event = list_pop_front( event->queue );
+      // skip rest
+      continue;
+    }
+
+    // get block
+    block = EVENT_GET_BLOCK( node );
+
+    // get first element of normal callback list
+    list_item_ptr_t current = block->handler->first;
+    // debug output
+    #if defined( PRINT_EVENT )
+      DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
+    #endif
+    // loop through list
+    while ( NULL != current ) {
+      // get callback from data
+      event_callback_wrapper_ptr_t wrapper =
+        ( event_callback_wrapper_ptr_t )current->data;
+      // debug output
+      #if defined( PRINT_EVENT )
+        DEBUG_OUTPUT( "Executing bound callback 0x%08p\r\n", wrapper );
+      #endif
+      // fire with data
+      wrapper->callback( data );
+      // step to next
+      current = current->next;
+    }
+
+    // get first element of post callback list
+    current = block->post->first;
+    // debug output
+    #if defined( PRINT_EVENT )
+      DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
+    #endif
+    // loop through list
+    while ( NULL != current ) {
+      // get callback from data
+      event_callback_wrapper_ptr_t wrapper =
+        ( event_callback_wrapper_ptr_t )current->data;
+      // debug output
+      #if defined( PRINT_EVENT )
+        DEBUG_OUTPUT( "Executing bound callback 0x%08p\r\n", wrapper );
+      #endif
+      // fire with data
+      wrapper->callback( data );
+      // step to next
+      current = current->next;
+    }
+
+    // get next element
+    current_event = list_pop_front( event->queue );
   }
 }

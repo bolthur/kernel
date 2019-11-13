@@ -18,12 +18,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <kernel/assembly.h>
+
 .section .text.boot
 
 /**
  * @brief Method to enable floating point unit when fpu enabled flag is set
  */
-.global fpu_enable
+EXPORT( fpu_enable )
 fpu_enable:
   // read co processor access control register into r0
   mrc p15, 0, r0, c1, c0, 2

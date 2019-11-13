@@ -91,14 +91,6 @@ void task_process_init( void ) {
   // create thread queue tree
   process_manager->thread_priority_tree = task_queue_init();
 
-  // create tree for managing stack addresses
-  task_stack_manager_init();
-
-  // create idle threads
-  /*for ( int32_t i = 0; i < NUM_CPU; i++ ) {
-    task_process_create( ( uintptr_t )task_idle, TASK_PROCESS_TYPE_KERNEL, 0 );
-  }*/
-
   // register timer event
   event_bind( EVENT_TIMER, task_process_schedule, true );
 }
@@ -124,14 +116,12 @@ size_t task_process_generate_id( void ) {
  */
 void task_process_create(
   uintptr_t entry,
-  task_process_type_t type,
   size_t priority
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "task_process_create( 0x%08x, %d, %d ) called\r\n",
-      entry, type, priority );
+      "task_process_create( 0x%08x, %d ) called\r\n", entry, priority );
   #endif
 
   // allocate process structure
@@ -149,14 +139,11 @@ void task_process_create(
   // populate process structure
   process->id = task_process_generate_id();
   process->thread_manager = task_thread_init();
-  process->type = type;
   process->state = TASK_PROCESS_STATE_READY;
   process->priority = priority;
   process->thread_stack_manager = task_stack_manager_create();
   // create context only for user processes
-  if ( TASK_PROCESS_TYPE_USER == type ) {
-    process->virtual_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
-  }
+  process->virtual_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
   // prepare node
   avl_prepare_node( &process->node_id, ( void* )process->id );
   // add process to tree

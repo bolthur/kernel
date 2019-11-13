@@ -323,4 +323,8 @@ void interrupt_handle( size_t num, bool fast, void* context ) {
     // step to next
     current = current->next;
   }
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Handling of callbacks finished!\r\n" );
+  #endif
 }

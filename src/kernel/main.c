@@ -42,26 +42,7 @@
 #include <kernel/panic.h>
 #include <kernel/initrd.h>
 
-static void process1( void ) {
-  while( true ) {
-    printf( "A" );
-  }
-}
-
-static void process2( void ) {
-  while( true ) {
-    printf( "B" );
-  }
-}
-
-static void process3( void ) {
-  while( true ) {
-    printf( "C" );
-  }
-}
-
-__section( ".text.dummytask" ) __unused
-static void process4( void ) {
+__section( ".text.dummytask" ) static void dummy_process( void ) {
   while( true ) {
     __asm__ __volatile__( "swi #1" );
   }
@@ -161,12 +142,9 @@ void kernel_main( void ) {
   task_process_init();
 
   // create some dummy processes
-  //task_process_create( ( uintptr_t )process4, TASK_PROCESS_TYPE_USER, 0 );
-  task_process_create( ( uintptr_t )process1, TASK_PROCESS_TYPE_KERNEL, 0 );
-  //task_process_create( ( uintptr_t )process4, TASK_PROCESS_TYPE_USER, 0 );
-  task_process_create( ( uintptr_t )process2, TASK_PROCESS_TYPE_KERNEL, 0 );
-  //task_process_create( ( uintptr_t )process4, TASK_PROCESS_TYPE_USER, 0 );
-  task_process_create( ( uintptr_t )process3, TASK_PROCESS_TYPE_KERNEL, 0 );
+  task_process_create( ( uintptr_t )dummy_process, 0 );
+  task_process_create( ( uintptr_t )dummy_process, 0 );
+  task_process_create( ( uintptr_t )dummy_process, 0 );
 
   // Enable interrupts
   DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] enable ...\r\n" );

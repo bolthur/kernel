@@ -98,7 +98,7 @@ bool timer_pending( void ) {
  *
  * @param context cpu context
  */
-void timer_clear( void* context ) {
+void timer_clear( __unused void* context ) {
   // check for pending timer
   if ( ! timer_pending() ) {
     return;
@@ -121,7 +121,7 @@ void timer_clear( void* context ) {
   #endif
 
   // trigger timer event
-  event_fire( EVENT_TIMER, context );
+  event_enqueue( EVENT_TIMER );
 }
 
 /**

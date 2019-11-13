@@ -26,11 +26,12 @@
 #include <avl.h>
 
 typedef enum {
-  EVENT_TIMER = 0,
+  EVENT_TIMER = 1,
 } event_type_t;
 
 typedef struct {
   avl_tree_ptr_t tree;
+  list_manager_ptr_t queue;
 } event_manager_t, *event_manager_ptr_t;
 
 typedef struct {
@@ -53,6 +54,7 @@ bool event_initialized_get( void );
 void event_init( void );
 bool event_bind( event_type_t, event_callback_t, bool );
 void event_unbind( event_type_t, event_callback_t, bool );
-void event_fire( event_type_t, void* );
+void event_handle( void* );
+void event_enqueue( event_type_t );
 
 #endif

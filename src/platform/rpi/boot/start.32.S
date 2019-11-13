@@ -19,10 +19,11 @@
  */
 
 #define ASSEMBLER_FILE 1
+#include <kernel/assembly.h>
 #include <kernel/entry.h>
 
 // forward declaration for save of parameter
-.extern loader_parameter_data
+IMPORT( loader_parameter_data )
 
 // only when extension define is set
 #if defined( BCM2709 ) || defined( BCM2710 )
@@ -31,7 +32,7 @@
 
 .section .text.boot
 
-.global boot_start
+EXPORT( boot_start )
 boot_start:
   // setup temporary stack
   ldr r3, =boot_start

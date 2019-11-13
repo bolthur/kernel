@@ -81,23 +81,14 @@ task_stack_manager_ptr_t task_stack_manager_create( void ) {
 }
 
 /**
- * @brief Initialize stack manager
- */
-void task_stack_manager_init( void ) {
-  // allocate manager
-  task_stack_manager = task_stack_manager_create();
-}
-
-/**
  * @brief Add stack to manager
  *
  * @param stack stack to add
  */
-void task_stack_manager_add( uintptr_t stack, task_stack_manager_ptr_t manager ) {
-  // overwrite with task stack manager if not passed
-  if ( NULL == manager ) {
-    manager = task_stack_manager;
-  }
+void task_stack_manager_add(
+  uintptr_t stack,
+  task_stack_manager_ptr_t manager
+) {
   // assert manager
   assert( NULL != manager );
   // create node

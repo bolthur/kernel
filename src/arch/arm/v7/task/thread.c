@@ -59,13 +59,7 @@ task_thread_ptr_t task_thread_create(
   uint64_t stack_physical = phys_find_free_page_range( STACK_SIZE, STACK_SIZE );
   uintptr_t stack_virtual;
   // get next stack address for user area
-  if ( TASK_PROCESS_TYPE_KERNEL == process->type ) {
-    stack_virtual = task_stack_manager_next(
-      TASK_PROCESS_TYPE_KERNEL, NULL );
-  } else {
-    stack_virtual = task_stack_manager_next(
-      TASK_PROCESS_TYPE_KERNEL, process->thread_stack_manager );
-  }
+  stack_virtual = task_stack_manager_next( process->thread_stack_manager );
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "stack_kernel_virtual = 0x%08x\r\n", stack_virtual );
@@ -77,29 +71,21 @@ task_thread_ptr_t task_thread_create(
   // unmap again
   virt_unmap_temporary( tmp_virtual_user, STACK_SIZE );
   // create node for stack address management tree
-  if ( TASK_PROCESS_TYPE_KERNEL == process->type ) {
-    task_stack_manager_add( stack_virtual, NULL );
-  } else {
-    task_stack_manager_add( stack_virtual, process->thread_stack_manager );
-  }
+  task_stack_manager_add( stack_virtual, process->thread_stack_manager );
   // map allocated stack
   virt_map_address(
-    TASK_PROCESS_TYPE_KERNEL == process->type
-      ? kernel_context
-      : process->virtual_context,
+    process->virtual_context,
     stack_virtual,
     stack_physical,
     VIRT_MEMORY_TYPE_NORMAL,
     VIRT_PAGE_TYPE_EXECUTABLE );
   // FIXME: REMOVE DUMMY MAPPING AFTER USER MODE THREAD INTEGRATION
-  if ( TASK_PROCESS_TYPE_USER == process->type ) {
-    virt_map_address(
-      process->virtual_context,
-      0x500000,
-      0x500000,
-      VIRT_MEMORY_TYPE_NORMAL,
-      VIRT_PAGE_TYPE_EXECUTABLE );
-  }
+  virt_map_address(
+    process->virtual_context,
+    0x500000,
+    0x500000,
+    VIRT_MEMORY_TYPE_NORMAL,
+    VIRT_PAGE_TYPE_EXECUTABLE );
 
   // create context
   cpu_register_context_ptr_t context = ( cpu_register_context_ptr_t )malloc(
@@ -107,15 +93,11 @@ task_thread_ptr_t task_thread_create(
   // Prepare area
   memset( ( void* )context, 0, sizeof( cpu_register_context_t ) );
   // set content
-  context->reg.pc = ( uint32_t )entry;
+  context->lr = ( uint32_t )entry;
   // kernel threads run in system mode to keep the super visor stack clean and persistant
-  context->reg.spsr = 0x60000000 | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT | (
-    TASK_PROCESS_TYPE_KERNEL == process->type
-      ? CPSR_MODE_SYSTEM
-      : CPSR_MODE_USER
-  );
+  context->spsr = 0x60000000 | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT | CPSR_MODE_USER;
   // set stack pointer
-  context->reg.sp = stack_virtual + STACK_SIZE;
+  context->sp = stack_virtual + STACK_SIZE;
 
   // create thread structure
   task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
