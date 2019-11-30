@@ -24,10 +24,52 @@
 #include <arch/arm/stack.h>
 #include <kernel/mm/virt.h>
 #include <kernel/panic.h>
+#include <kernel/arch.h>
 #include <kernel/task/queue.h>
 #include <kernel/task/process.h>
 #include <kernel/debug/debug.h>
 #include <arch/arm/v7/cpu.h>
+
+/**
+ * @brief Start multitasking with first ready task
+ *
+ * @todo add logic
+ */
+void task_process_start( void ) {
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Entered task_process_start()\r\n" );
+  #endif
+
+  // get next thread
+  task_thread_ptr_t next_thread = task_thread_next();
+  // assert thread
+  assert( NULL != next_thread );
+
+  // variable for next thread queue
+  task_priority_queue_ptr_t next_queue = task_queue_get_queue(
+    process_manager, next_thread->priority );
+  // assert queue
+  assert( NULL != next_queue );
+
+  // set current running thread
+  task_thread_set_current( next_thread, next_queue );
+
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "next_thread = 0x%08x, next_queue = 0x%08x\r\n",
+      next_thread, next_queue );
+  #endif
+
+  // set context and flush
+  virt_set_context( next_thread->process->virtual_context );
+  virt_flush_complete();
+
+  // jump to thread
+  switch_to_thread( ( uintptr_t )
+    ( ( cpu_register_context_ptr_t )next_thread->context )->sp
+  );
+}
 
 /**
  * @brief Task process scheduler
@@ -37,13 +79,27 @@
  * @todo fix function by check/rework
  */
 void task_process_schedule( void* context ) {
-  // debug variable
-  static int foo = 0;
+  // convert context into cpu pointer
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", context );
-    DUMP_REGISTER( ( cpu_register_context_ptr_t )context );
+    DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", cpu );
+    DUMP_REGISTER( cpu );
   #endif
+
+  // prevent scheduling when kernel interrupt occurs
+  if ( ( cpu->spsr & CPSR_MODE_MASK ) != CPSR_MODE_USER ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT(
+        "No scheduling in kernel level exception, spsr = 0x%x\r\n",
+        cpu->spsr & CPSR_MODE_MASK );
+    #endif
+
+    // skip scheduling code
+    return;
+  }
 
   // get running thread
   task_thread_ptr_t running_thread = task_thread_current();
@@ -59,13 +115,19 @@ void task_process_schedule( void* context ) {
   }
 
   // get next thread
-  task_thread_ptr_t next_thread = task_thread_next();
-  if ( NULL == next_thread ) {
-    // Reset thread queues
-    task_process_queue_reset();
-    // Try to get next thread after reset once more
+  task_thread_ptr_t next_thread;
+  do {
+    // get next thread
     next_thread = task_thread_next();
-  }
+
+    // reset queue if nothing found
+    if ( NULL == next_thread ) {
+      // reset
+      task_process_queue_reset();
+      // wait for exception
+      arch_halt();
+    }
+  } while ( NULL == next_thread );
 
   // variable for next thread
   task_priority_queue_ptr_t next_queue = NULL;
@@ -75,10 +137,6 @@ void task_process_schedule( void* context ) {
     // assert queue
     assert( NULL != next_queue );
   }
-
-  // assert next queue and next thread to exist
-  assert( NULL != next_queue );
-  assert( NULL != next_thread );
 
   // update last executed within running queue
   if ( NULL != running_queue ) {
@@ -122,9 +180,5 @@ void task_process_schedule( void* context ) {
     #endif
   }
 
-  // debug panic
-  if ( ++foo > 1 ) {
-    PANIC( "Process switch!" );
-  }
-  // PANIC( "Process switch!" );
+  PANIC( "Process switch!" );
 }

@@ -27,3 +27,10 @@ void arch_init( void ) {
   // execute sub arch
   arch_sub_init();
 }
+
+/**
+ * @brief halt instruction
+ */
+void arch_halt( void ) {
+  __asm__ __volatile__( "wfe" ::: "memory" );
+}

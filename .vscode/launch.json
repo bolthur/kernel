@@ -5,11 +5,11 @@
       "name": "aarch32-rpi-serial-usb-debug",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/src/platform/rpi/kernel7.sym",
+      "program": "${workspaceFolder}/build/src/target/rpi/kernel7.sym",
       "miDebuggerPath": "${env:HOME}/.bolthur/cross/bin/arm-none-eabi-gdb",
       "miDebuggerArgs": "-q",
       "MIMode": "gdb",
-      "cwd": "${workspaceFolder}/build/src/platform/rpi/",
+      "cwd": "${workspaceFolder}/build/src/target/rpi/",
       "setupCommands": [
         {
           "text": "-enable-pretty-printing",
@@ -20,7 +20,7 @@
           "description": "Set architecture"
         },
         {
-          "text": "file ${workspaceFolder}/build/src/platform/rpi/kernel7.sym",
+          "text": "file ${workspaceFolder}/build/src/target/rpi/kernel7.sym",
           "description": "Loading symbol file"
         },
         {
@@ -38,11 +38,11 @@
       "name": "aarch32-rpi-qemu-debug",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/src/platform/rpi/kernel7.sym",
+      "program": "${workspaceFolder}/build/src/target/rpi/kernel7.sym",
       "miDebuggerPath": "${env:HOME}/.bolthur/cross/bin/arm-none-eabi-gdb",
       "miDebuggerArgs": "-q",
       "MIMode": "gdb",
-      "cwd": "${workspaceFolder}/build/src/platform/rpi/",
+      "cwd": "${workspaceFolder}/build/src/target/rpi/",
       "setupCommands": [
         {
           "text": "-enable-pretty-printing",
@@ -53,11 +53,11 @@
           "description": "Set architecture"
         },
         {
-          "text": "file ${workspaceFolder}/build/src/platform/rpi/kernel7.sym",
+          "text": "file ${workspaceFolder}/build/src/target/rpi/kernel7.sym",
           "description": "Loading symbol file"
         },
         {
-          "text": "target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel ${workspaceFolder}/build/src/platform/rpi/kernel.elf -gdb stdio -S",
+          "text": "target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel ${workspaceFolder}/build/src/target/rpi/kernel.elf -gdb stdio -S",
           "description": "Set target to remote with qemu"
         }
       ],

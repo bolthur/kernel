@@ -15,6 +15,7 @@ AC_LANG([C])
 
 # FIXME: Shouldn't be necessary, when creating symlinks of toolchain binaries to /usr/local/bin
 AC_SUBST(PATH, "${HOME}/.bolthur/cross/bin:${PATH}")
+AC_SUBST(MAKEFLAGS, "${MAKEFLAGS} --no-print-directory")
 
 AC_ARG_ENABLE([device],
   AC_HELP_STRING(
@@ -251,6 +252,8 @@ AC_CONFIG_FILES([
   src/lib/ubsan/Makefile
   src/platform/Makefile
   src/platform/rpi/Makefile
+  src/target/Makefile
+  src/target/rpi/Makefile
 ])
 
 AC_OUTPUT

@@ -53,5 +53,6 @@ size_t task_thread_generate_id( void );
 avl_tree_ptr_t task_thread_init( void );
 task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t, size_t );
 task_thread_ptr_t task_thread_next( void );
+void switch_to_thread( uintptr_t );
 
 #endif

@@ -18,11 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_ARCH__ )
-#define __KERNEL_ARCH__
+#define ASSEMBLER_FILE 1
+#include <arch/arm/v7/cpu.h>
 
-void arch_init( void );
-void arch_halt( void );
-void arch_sub_init( void );
-
-#endif
+.global switch_to_thread
+switch_to_thread:
+  // TODO: ADD LOGIC
+  bx lr

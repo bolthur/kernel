@@ -37,17 +37,17 @@ IMPORT( event_handle )
 
 
 // ensure correct stack alignment before calling any c function
-.macro stack_wind register
-  mov \register, sp
-  tst sp, #4
-  subeq sp, #4
-  push {\register}
+.macro stack_wind register, stack
+  mov \register, \stack
+  tst \stack, #4
+  subeq \stack, #4
+  push { \register }
 .endm
 
 // restore stack possibly changed due to stack alignment
-.macro stack_unwind register
-  pop {\register}
-  mov sp, \register
+.macro stack_unwind register, stack
+  pop { \register }
+  mov \stack, \register
 .endm
 
 // macro to switch to mode
@@ -60,26 +60,17 @@ IMPORT( event_handle )
   cpsid if, #\mode
 .endm
 
-.macro privileged_unprivileged_switch offset, privileged, unprivileged, pre
+.macro privileged_unprivileged_switch offset, privileged, unprivileged
   // save r3 on stack and check for user mode
   push { r3 }
   // load spsr from previous mode
   ldr r3, [ sp, #( \offset + 4 ) ]
-  // mask interrupts on return
-  orr r3, #( CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
-  // push back value
-  str r3, [ sp, #( \offset + 4 ) ]
   // mask mode only for comparison
   and r3, #CPSR_MODE_MASK
   // compare to user mode
   cmp r3, #CPSR_MODE_USER
   // restore r3
   pop { r3 }
-
-  // allocate space for context structure
-  .ifnb \pre
-    sub sp, sp, #STACK_FRAME_SIZE
-  .endif
 
   // handle privileged
   bne \privileged
@@ -88,42 +79,73 @@ IMPORT( event_handle )
   beq \unprivileged
 .endm
 
-.macro push_register name
+.macro push_register name, mode
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
     4, \
     _\name\()_entry_privileged, \
-    _\name\()_entry_unprivileged, \
-    1
+    _\name\()_entry_unprivileged
 
 // non privileged entry
 _\name\()_entry_unprivileged:
-  stmia sp, {r0-r14}^
+  // load sp into current fp register
+  stm fp, { r13 }^
+
+  // allocate space for context structure
+  sub fp, fp, #STACK_FRAME_SIZE
+  // save registers
+  stmia fp, { r0 - r14 }^
+  // get pushed lr and fill it into struct
+  ldr r0, [ fp, #68 ]
+  str r0, [ fp, #60 ]
+  // get pushed spsr and fill it into struct
+  ldr r0, [ fp, #72 ]
+  str r0, [ fp, #64 ]
+
+  // save fp in first register
+  mov r1, fp
+
+  // jump to finished
   b _\name\()_entry_finished
 
 // privileged entry
 _\name\()_entry_privileged:
-  stmia sp, {r0-r14}
-  b _\name\()_entry_finished
-
-// finished entry
-_\name\()_entry_finished:
+  // allocate space for context structure
+  sub sp, sp, #STACK_FRAME_SIZE
+  // save registers
+  stmia sp, { r0 - r12 }
   // get pushed lr and fill it into struct
   ldr r0, [ sp, #68 ]
   str r0, [ sp, #60 ]
   // get pushed spsr and fill it into struct
   ldr r0, [ sp, #72 ]
   str r0, [ sp, #64 ]
+
+  // get pushed spsr for mode switch
+  ldr r0, [ sp, #72 ]
+  // switch to previous mode
+  orr r0, r0, #( CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
+  msr cpsr_c, r0
+  // get sp and lr
+  mov r1, sp
+  mov r2, lr
+  // switch mode again
+  cps \mode
+  // push sp, lr
+  str r1, [ sp, #52 ]
+  str r2, [ sp, #56 ]
+
+  // save sp in first register
+  mov r1, sp
+
+  // jump to finished
+  b _\name\()_entry_finished
+
+// finished entry
+_\name\()_entry_finished:
 .endm
 
-.macro pop_register name
-  // restore lr from stack
-  ldr r0, [ sp, #60 ]
-  str r0, [ sp, #68 ]
-  // restore spsr from stack
-  ldr r0, [ sp, #64 ]
-  str r0, [ sp, #72 ]
-
+.macro pop_register name, mode
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
     64, \
@@ -132,43 +154,74 @@ _\name\()_entry_finished:
 
 // non privileged exit
 _\name\()_exit_unprivileged:
-  /// FIXME: RESTORE REGISTERS
+  // load old pc and fixup
+  ldr r0, [ sp, #60 ]
+  str r0, [ sp, #68 ]
+  // restore registers
+  stmia fp, { r0 - r14 }
+  // correct fp again
+  add fp, #STACK_FRAME_SIZE
+
+  // jump to finished
   b _\name\()_exit_finished
 
 // privileged exit
 _\name\()_exit_privileged:
+  // get lr and sp of previous mode
+  ldr r1, [ sp, #52 ]
+  ldr r2, [ sp, #56 ]
+  // switch to previous mode
+  ldr r0, [ sp, #64 ]
+  orr r0, r0, #( CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
+  msr cpsr_c, r0
+  // restore sp and lr
+  mov sp, r1
+  mov lr, r2
+
+  // switch again to passed mode
+  cps \mode
+
+  // load old pc and fixup
+  ldr r0, [ sp, #60 ]
+  str r0, [ sp, #68 ]
   // restore previous state
-  ldmia sp, { r0 - r14 }
+  ldmia sp, { r0 - r12 }
+  // correct stack pointer again
+  add sp, #STACK_FRAME_SIZE
+
+  // jump to finished
   b _\name\()_exit_finished
 
 // finished exit
 _\name\()_exit_finished:
 .endm
 
-// see http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.faqs/ka13552.html
 .macro ex_handler fixup, handler, mode, name
   // switch to svc mode with fixup
   switch_mode \mode, \fixup
   // push register
-  push_register \name
+  push_register \name, \mode
+
   // ensure stack alignment
-  stack_wind r0
+  stack_wind r0, r1
   // call handler routine
   bl \handler
   // restore stack adjustments
-  stack_unwind r0
+  stack_unwind r0, r1
+
+  // ensure stack alignment
+  stack_wind r0, r1
   // enable interrupts
   cpsie if
-  // ensure stack alignment
-  stack_wind r0
   // handle events
   bl event_handle
   // disable interrupts
   cpsid if
   // restore stack adjustments
-  stack_unwind r0
+  stack_unwind r0, r1
+
   // restore registers
-  pop_register \name
+  pop_register \name, \mode
   // enable interrupts again
   cpsie if
   // return from exception

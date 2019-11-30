@@ -57,17 +57,36 @@ task_thread_ptr_t task_thread_create(
 
   // create stack
   uint64_t stack_physical = phys_find_free_page_range( STACK_SIZE, STACK_SIZE );
-  uintptr_t stack_virtual;
   // get next stack address for user area
-  stack_virtual = task_stack_manager_next( process->thread_stack_manager );
+  uintptr_t stack_virtual = task_stack_manager_next( process->thread_stack_manager );
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "stack_kernel_virtual = 0x%08x\r\n", stack_virtual );
   #endif
+
+  // create context
+  cpu_register_context_ptr_t context = ( cpu_register_context_ptr_t )malloc(
+    sizeof( cpu_register_context_t ) );
+  // Prepare area
+  memset( ( void* )context, 0, sizeof( cpu_register_context_t ) );
+  // set content
+  context->lr = ( uint32_t )entry;
+  // Only user mode threads are possible
+  context->spsr = 0x60000000 | CPSR_MODE_USER;
+  // set stack pointer
+  context->sp = stack_virtual + STACK_SIZE - sizeof( cpu_register_context_t );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DUMP_REGISTER( context );
+  #endif
+
   // map stack temporary
   uintptr_t tmp_virtual_user = virt_map_temporary( stack_physical, STACK_SIZE );
   // prepare stack
   memset( ( void* )tmp_virtual_user, 0, STACK_SIZE );
+  memcpy(
+    ( void* )( tmp_virtual_user + PAGE_SIZE - sizeof( cpu_register_context_t ) ),
+    context, sizeof( cpu_register_context_t ) );
   // unmap again
   virt_unmap_temporary( tmp_virtual_user, STACK_SIZE );
   // create node for stack address management tree
@@ -86,18 +105,6 @@ task_thread_ptr_t task_thread_create(
     0x500000,
     VIRT_MEMORY_TYPE_NORMAL,
     VIRT_PAGE_TYPE_EXECUTABLE );
-
-  // create context
-  cpu_register_context_ptr_t context = ( cpu_register_context_ptr_t )malloc(
-    sizeof( cpu_register_context_t ) );
-  // Prepare area
-  memset( ( void* )context, 0, sizeof( cpu_register_context_t ) );
-  // set content
-  context->lr = ( uint32_t )entry;
-  // kernel threads run in system mode to keep the super visor stack clean and persistant
-  context->spsr = 0x60000000 | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT | CPSR_MODE_USER;
-  // set stack pointer
-  context->sp = stack_virtual + STACK_SIZE;
 
   // create thread structure
   task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(

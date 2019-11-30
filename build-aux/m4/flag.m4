@@ -9,10 +9,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   # CFLAGS="${CFLAGS} -fsanitize=undefined"
   # generic
   CFLAGS="${CFLAGS} -ffreestanding -fno-exceptions -nodefaultlibs -std=c18"
+  CFLAGS="${CFLAGS} -fomit-frame-pointer"
 
   # debug parameter
   AS_IF([test "x$with_debug_symbols" == "xyes"], [
-    CFLAGS="${CFLAGS} -g3"
+    CFLAGS="${CFLAGS} -g"
   ])
   # optimization level
   case "${with_opt}" in

@@ -17,6 +17,7 @@ libv7_a_SOURCES = \
   mm/virt/long.c \
   mm/virt/short.c \
   mm/virt.c \
+  task/stub/thread.S \
   task/process.c \
   task/stack.c \
   task/thread.c \

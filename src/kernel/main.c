@@ -141,6 +141,7 @@ void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" );
   task_process_init();
 
+  // FIXME: Create init process from initialramdisk and pass initrd to init process
   // create some dummy processes
   task_process_create( ( uintptr_t )dummy_process, 0 );
   task_process_create( ( uintptr_t )dummy_process, 0 );
@@ -149,4 +150,7 @@ void kernel_main( void ) {
   // Enable interrupts
   DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] enable ...\r\n" );
   interrupt_enable();
+
+  // Kickstart multitasking
+  task_process_start();
 }
