@@ -27,12 +27,12 @@
 /**
  * @brief internal initrd load address
  */
-static uintptr_t initrd_address;
+static uintptr_t initrd_address = 0;
 
 /**
  * @brief initrd size
  */
-static size_t initrd_size;
+static size_t initrd_size = 0;
 
 /**
  * @brief Method to get initrd address
@@ -71,6 +71,15 @@ size_t initrd_get_size( void ) {
 }
 
 /**
+ * @brief Set initrd size
+ *
+ * @param size
+ */
+void initrd_set_size( size_t size ) {
+  initrd_size = size;
+}
+
+/**
  * @brief Prepare for initrd usage
  */
 void initrd_init( void ) {
@@ -78,7 +87,9 @@ void initrd_init( void ) {
   initrd_platform_init();
 
   // calculate size
-  initrd_size = ( size_t )tar_total_size( initrd_address );
+  if ( 0 == initrd_size ) {
+    initrd_size = ( size_t )tar_total_size( initrd_address );
+  }
 }
 
 /**

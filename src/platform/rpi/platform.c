@@ -19,6 +19,8 @@
  */
 
 #include <stdio.h>
+#include <atag.h>
+#include <kernel/initrd.h>
 #include <kernel/debug/debug.h>
 #include <platform/rpi/platform.h>
 
@@ -39,4 +41,20 @@ void platform_init( void ) {
     loader_parameter_data.machine,
     loader_parameter_data.zero
   );
+
+  // get first atag
+  atag_ptr_t atag = ( atag_ptr_t )loader_parameter_data.atag;
+  // loop until atag end reached
+  while ( atag ) {
+    // handle initrd
+    if ( atag->tag_type == ATAG_TAG_INITRD2 ) {
+      DEBUG_OUTPUT( "atag initrd start: 0x%08x, size: 0x%08x\r\n",
+        atag->initrd.start, atag->initrd.size );
+      initrd_set_start_address( atag->initrd.start );
+      initrd_set_size( atag->initrd.size );
+    }
+
+    // get next
+    atag = atag_next( atag );
+  }
 }

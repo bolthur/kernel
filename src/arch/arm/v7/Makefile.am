@@ -11,6 +11,7 @@ libv7_a_SOURCES = \
   boot/mm/virt/long.c \
   boot/mm/virt/short.c \
   boot/mm/virt.c \
+  boot/fpu.S \
   interrupt/stub/interrupt.S \
   interrupt/stub/vector.S \
   interrupt/vector.c \

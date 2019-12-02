@@ -35,7 +35,7 @@
       "externalConsole": false
     },
     {
-      "name": "aarch32-rpi-qemu-debug",
+      "name": "aarch32-rpi2-qemu-debug",
       "type": "cppdbg",
       "request": "launch",
       "program": "${workspaceFolder}/build/src/target/rpi/kernel7.sym",
@@ -53,11 +53,11 @@
           "description": "Set architecture"
         },
         {
-          "text": "file ${workspaceFolder}/build/src/target/rpi/kernel7.sym",
+          "text": "file ${workspaceFolder}/build/src/target/rpi/kernel7_qemu.sym",
           "description": "Loading symbol file"
         },
         {
-          "text": "target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel ${workspaceFolder}/build/src/target/rpi/kernel.elf -gdb stdio -S",
+          "text": "target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel ${workspaceFolder}/build/src/target/rpi/kernel7_qemu.img -gdb stdio -S",
           "description": "Set target to remote with qemu"
         }
       ],

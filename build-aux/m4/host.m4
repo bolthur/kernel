@@ -88,6 +88,8 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     host_bfd=elf32-littlearm
     output_img=kernel.img
     output_sym=kernel.sym
+    output_img_qemu=kernel.img
+    output_sym_qemu=kernel.sym
     executable_format=32
     AC_DEFINE([ELF32], [1])
 
@@ -98,6 +100,8 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       platform_subdir=rpi
       output_img=kernel7.img
       output_sym=kernel7.sym
+      output_img_qemu=kernel7_qemu.img
+      output_sym_qemu=kernel7_qemu.sym
       AC_DEFINE([ELF32])
       AC_DEFINE([BCM2709], [1], [Define to 1 for BCM2709 chip])
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets])
@@ -126,6 +130,8 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       platform_subdir=rpi
       output_img=kernel8.img
       output_sym=kernel8.sym
+      output_img_qemu=kernel8_qemu.img
+      output_sym_qemu=kernel8_qemu.sym
       AC_DEFINE([BCM2710], [1], [Define to 1 for BCM2710 chip])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
@@ -153,6 +159,8 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       platform_subdir=rpi
       output_img=kernel8.img
       output_sym=kernel8.sym
+      output_img_qemu=kernel8_qemu.img
+      output_sym_qemu=kernel8_qemu.sym
       AC_DEFINE([BCM2710], [1])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
@@ -182,6 +190,8 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AC_SUBST(platform_subdir)
   AC_SUBST(output_img)
   AC_SUBST(output_sym)
+  AC_SUBST(output_img_qemu)
+  AC_SUBST(output_sym_qemu)
   AC_SUBST(host_bfd)
   AC_SUBST(copy_flags)
   AC_SUBST(executable_format)

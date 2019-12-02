@@ -85,22 +85,6 @@ void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> initrd] initialize ...\r\n" );
   initrd_init();
 
-  // print size
-  if ( initrd_exist() ) {
-    uintptr_t initrd = initrd_get_start_address();
-    DEBUG_OUTPUT( "initrd = 0x%08x\r\n", initrd );
-    DEBUG_OUTPUT( "initrd = 0x%08x\r\n", initrd_get_end_address() );
-    DEBUG_OUTPUT( "size = %o\r\n", initrd_get_size() );
-    DEBUG_OUTPUT( "size = %d\r\n", initrd_get_size() );
-    // set iterator
-    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
-    // loop through tar
-    while ( ! tar_end_reached( iter ) ) {
-      DEBUG_OUTPUT( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
-      iter = tar_next( iter );
-    }
-  }
-
   // Setup physical memory management
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" );
   phys_init();
@@ -120,7 +104,8 @@ void kernel_main( void ) {
     tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
     // loop through tar
     while ( ! tar_end_reached( iter ) ) {
-      DEBUG_OUTPUT( "0x%lx: initrd file name: %s\r\n", (uintptr_t)iter, iter->file_name );
+      DEBUG_OUTPUT( "0x%lx: initrd file name: %s\r\n",
+        ( uintptr_t )iter, iter->file_name );
       iter = tar_next( iter );
     }
   }

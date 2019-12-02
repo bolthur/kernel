@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2019 bolthur project.
  *
@@ -30,14 +29,14 @@ fpu_enable:
   // read co processor access control register into r0
   mrc p15, 0, r0, c1, c0, 2
   // enable full access for everyone
-  orr r0, r0, #( 0xf << 20 )
+  orr r0, #( 0xf << 20 )
   // write back changes
   mcr p15, 0, r0, c1, c0, 2
 
   // read again co processor access control register into r0 to check for fpu
   mrc p15, 0, r0, c1, c0, 2
   // get 4 bits starting at bit 20
-  and r0, r0, #( 0xf << 20 )
+  ands r0, #( 0xf << 20 )
   // skip enable if not supported
   bne 1f // If not 0 enable fpu ( detected )
   beq 2f // If 0 skip enable

@@ -18,13 +18,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-OUTPUT_FORMAT( elf32-littlearm )
+OUTPUT_FORMAT( elf64-littleaarch64 )
 OUTPUT_ARCH( arm )
 
 ENTRY( boot_start )
 
 GROUP(
-  ../../arch/arm/v7/libv7.a
+  ../../arch/arm/v8/libv8.a
   ../../arch/arm/libarm.a
   ../../kernel/libkernel.a
   ../../platform/rpi/librpi.a
@@ -43,8 +43,8 @@ INPUT(
   libgcc.a
 )
 
-KERNEL_LMA = 0x8000;
-KERNEL_OFFSET = 0xC0000000;
+KERNEL_LMA = 0x10000;
+KERNEL_OFFSET = 0xffffffff80000000;
 
 SECTIONS {
   . = KERNEL_LMA;

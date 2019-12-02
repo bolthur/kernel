@@ -29,6 +29,7 @@ GROUP(
   ../../kernel/libkernel.a
   ../../platform/rpi/librpi.a
   ../../lib/assert/libassert.a
+  ../../lib/atag/libatag.a
   ../../lib/avl/libavl.a
   ../../lib/list/liblist.a
   ../../lib/ssp/libssp.a

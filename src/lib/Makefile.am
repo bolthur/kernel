@@ -1,2 +1,2 @@
 
-SUBDIRS = stdio stdlib string assert ssp ubsan avl tar list
+SUBDIRS = stdio stdlib string assert atag ssp ubsan avl tar list

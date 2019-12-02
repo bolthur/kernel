@@ -18,20 +18,44 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_INITRD__ )
-#define __KERNEL_INITRD__
+#if ! defined( __LIB_ATAG__ )
+#define __LIB_ATAG__
 
-#include <stdbool.h>
-#include <stddef.h>
 #include <stdint.h>
+#include <stddef.h>
 
-uintptr_t initrd_get_start_address( void );
-void initrd_set_start_address( uintptr_t );
-uintptr_t initrd_get_end_address( void );
-size_t initrd_get_size( void );
-void initrd_set_size( size_t );
-bool initrd_exist( void );
-void initrd_platform_init( void );
-void initrd_init( void );
+enum tag {
+  ATAG_TAG_NONE = 0x00000000,
+  ATAG_TAG_CORE = 0x54410001,
+  ATAG_TAG_MEM = 0x54410002,
+  ATAG_TAG_INITRD2 = 0x54420005,
+  ATAG_TAG_CMDLINE = 0x54410009,
+};
+
+typedef struct {
+  uint32_t size;
+  uint32_t start;
+} atag_mem_t;
+
+typedef struct {
+  uint32_t start;
+  uint32_t size;
+} atag_initrd2_t;
+
+typedef struct {
+  char cmdline[ 1 ];
+} atag_cmdline_t;
+
+typedef struct {
+  uint32_t tag_size;
+  uint32_t tag_type;
+  union {
+    atag_mem_t memory;
+    atag_initrd2_t initrd;
+    atag_cmdline_t cmdline;
+  };
+} atag_t, *atag_ptr_t;
+
+atag_ptr_t atag_next( atag_ptr_t );
 
 #endif

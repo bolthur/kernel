@@ -25,5 +25,7 @@
  */
 void initrd_platform_init( void ) {
   // set start address
-  initrd_set_start_address( INITRD_LOAD_ADDRESS );
+  if ( 0 == initrd_get_start_address() ) {
+    initrd_set_start_address( INITRD_LOAD_ADDRESS );
+  }
 }

@@ -18,20 +18,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_INITRD__ )
-#define __KERNEL_INITRD__
+#include <atag.h>
 
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
+/**
+ * @brief Get next atag entry
+ *
+ * @param atag
+ * @return atag_ptr_t
+ */
+atag_ptr_t atag_next( atag_ptr_t atag ) {
+  if ( atag->tag_type == ATAG_TAG_NONE ) {
+    return NULL;
+  }
 
-uintptr_t initrd_get_start_address( void );
-void initrd_set_start_address( uintptr_t );
-uintptr_t initrd_get_end_address( void );
-size_t initrd_get_size( void );
-void initrd_set_size( size_t );
-bool initrd_exist( void );
-void initrd_platform_init( void );
-void initrd_init( void );
-
-#endif
+  return ( atag_ptr_t )( ( uint32_t* )atag + atag->tag_size );
+}
