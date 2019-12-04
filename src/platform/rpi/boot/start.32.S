@@ -133,13 +133,15 @@ reset:
   stmia r3!, { r0 - r2 }
 
   #if defined( BCM2709 ) || defined( BCM2710 )
-    // qemu hack around ( mvbar starts at 0x400 )
-    mov r1, #0x400
-    ldr r0, =boot_start
-    ldmia r0!,{ r2 - r9 }
-    stmia r1!,{ r2 - r9 }
-    ldmia r0!,{ r2 - r9 }
-    stmia r1!,{ r2 - r9 }
+    #if defined( QEMU_BUILD )
+      // qemu hack to overwrite mvbar which starts at 0x400
+      mov r1, #0x400
+      ldr r0, =boot_start
+      ldmia r0!,{ r2 - r9 }
+      stmia r1!,{ r2 - r9 }
+      ldmia r0!,{ r2 - r9 }
+      stmia r1!,{ r2 - r9 }
+    #endif
     // normal startup
     // get vbar
     mrc p15, 0, r1, c12, c0, 0

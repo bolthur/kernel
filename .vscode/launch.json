@@ -38,7 +38,7 @@
       "name": "aarch32-rpi2-qemu-debug",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/build/src/target/rpi/kernel7.sym",
+      "program": "${workspaceFolder}/build/src/target/rpi/kernel7_qemu.sym",
       "miDebuggerPath": "${env:HOME}/.bolthur/cross/bin/arm-none-eabi-gdb",
       "miDebuggerArgs": "-q",
       "MIMode": "gdb",
@@ -57,7 +57,7 @@
           "description": "Loading symbol file"
         },
         {
-          "text": "target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel ${workspaceFolder}/build/src/target/rpi/kernel7_qemu.img -gdb stdio -S",
+          "text": "target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel ${workspaceFolder}/build/src/target/rpi/kernel7_qemu.img -initrd ${workspaceFolder}/build-aux/platform/rpi/initrd -gdb stdio -S",
           "description": "Set target to remote with qemu"
         }
       ],

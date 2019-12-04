@@ -27,7 +27,7 @@ GROUP(
   ../../arch/arm/v7/libv7.a
   ../../arch/arm/libarm.a
   ../../kernel/libkernel.a
-  ../../platform/rpi/librpi.a
+  ../../platform/rpi/librpi_qemu.a
   ../../lib/assert/libassert.a
   ../../lib/atag/libatag.a
   ../../lib/avl/libavl.a
