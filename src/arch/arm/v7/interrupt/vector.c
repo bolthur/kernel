@@ -29,11 +29,53 @@
 #include <arch/arm/v7/interrupt/vector.h>
 
 /**
+ * @brief Define containing maximum nested interrupt calls
+ */
+#define NESTED_MAX 3
+
+/**
+ * @brief Nested counter for unused exception handler
+ */
+static uint32_t nested_unused = 0;
+
+/**
+ * @brief Nested counter for undefined instruction exception handler
+ */
+static uint32_t nested_undefined = 0;
+
+/**
+ * @brief Nested counter for software interrupt exception handler
+ */
+static uint32_t nested_software_interrupt = 0;
+
+/**
+ * @brief Nested counter for prefetch abort exception handler
+ */
+static uint32_t nested_prefetch_abort = 0;
+
+/**
+ * @brief Nested counter for data abort exception handler
+ */
+static uint32_t nested_data_abort = 0;
+
+/**
+ * @brief Nested counter for interrupt exception handler
+ */
+static uint32_t nested_interrupt = 0;
+
+/**
+ * @brief Nested counter for fast interrupt exception handler
+ */
+static uint32_t nested_fast_interrupt = 0;
+
+/**
  * @brief Unused exception handler
  *
  * @param cpu cpu context
  */
 void unused_handler( cpu_register_context_ptr_t cpu ) {
+  // assert nesting
+  assert( nested_unused++ < NESTED_MAX );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
@@ -41,6 +83,8 @@ void unused_handler( cpu_register_context_ptr_t cpu ) {
     ( void )cpu;
   #endif
   PANIC( "unused" );
+  // decrement nested counter
+  nested_unused--;
 }
 
 /**
@@ -51,6 +95,8 @@ void unused_handler( cpu_register_context_ptr_t cpu ) {
  * @todo check for fpu exception and reset exception bit
  */
 void undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
+  // assert nesting
+  assert( nested_undefined++ < NESTED_MAX );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
@@ -58,6 +104,8 @@ void undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
     ( void )cpu;
   #endif
   PANIC( "undefined" );
+  // decrement nested counter
+  nested_undefined--;
 }
 
 /**
@@ -66,13 +114,30 @@ void undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
  * @param cpu cpu context
  */
 void software_interrupt_handler( cpu_register_context_ptr_t cpu ) {
+  // assert nesting
+  assert( nested_software_interrupt++ < NESTED_MAX );
+  // get svc number
+  uint32_t svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->pc ) ) & 0xffff;
+
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
-  #else
-    ( void )cpu;
+    DEBUG_OUTPUT( "address of cpu = 0x%08x\r\n", cpu );
+    DEBUG_OUTPUT( "svc_num = %d\r\n", svc_num );
   #endif
-  PANIC( "swi handler kicks in" );
+
+  // handle svc requests
+  switch ( svc_num ) {
+    case 10:
+      printf( "%c", ( uint8_t )cpu->r0 );
+      break;
+  }
+
+  // handle bound interrupt handlers
+  interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu );
+
+  // decrement nested counter
+  nested_software_interrupt--;
 }
 
 /**
@@ -81,6 +146,8 @@ void software_interrupt_handler( cpu_register_context_ptr_t cpu ) {
  * @param cpu cpu context
  */
 void prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
+  // assert nesting
+  assert( nested_prefetch_abort++ < NESTED_MAX );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
@@ -88,6 +155,9 @@ void prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
     ( void )cpu;
   #endif
   PANIC( "prefetch abort" );
+
+  // decrement nested counter
+  nested_prefetch_abort--;
 }
 
 /**
@@ -96,6 +166,8 @@ void prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
  * @param cpu cpu context
  */
 void data_abort_handler( cpu_register_context_ptr_t cpu ) {
+  // assert nesting
+  assert( nested_data_abort++ < NESTED_MAX );
   // variable for faulting address
   uint32_t fault_address;
   // get faulting address
@@ -112,6 +184,9 @@ void data_abort_handler( cpu_register_context_ptr_t cpu ) {
     ( void )fault_address;
   #endif
   PANIC( "data abort" );
+
+  // decrement nested counter
+  nested_data_abort--;
 }
 
 /**
@@ -120,6 +195,9 @@ void data_abort_handler( cpu_register_context_ptr_t cpu ) {
  * @param cpu cpu context
  */
 void interrupt_handler( cpu_register_context_ptr_t cpu ) {
+  // assert nesting
+  assert( nested_interrupt++ < NESTED_MAX );
+  // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
     printf( "Address of CPU: 0x%08x\r\n", cpu );
@@ -130,7 +208,10 @@ void interrupt_handler( cpu_register_context_ptr_t cpu ) {
   assert( -1 != interrupt );
 
   // handle bound interrupt handlers
-  interrupt_handle( ( uint8_t )interrupt, false, cpu );
+  interrupt_handle( ( uint8_t )interrupt, INTERRUPT_NORMAL, cpu );
+
+  // decrement nested counter
+  nested_interrupt--;
 }
 
 /**
@@ -139,6 +220,9 @@ void interrupt_handler( cpu_register_context_ptr_t cpu ) {
  * @param cpu cpu context
  */
 void fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
+  // assert nesting
+  assert( nested_fast_interrupt++ < NESTED_MAX );
+  // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
   #endif
@@ -148,7 +232,10 @@ void fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   assert( -1 != interrupt );
 
   // handle bound fast interrupt handlers
-  interrupt_handle( ( uint8_t )interrupt, true, cpu );
+  interrupt_handle( ( uint8_t )interrupt, INTERRUPT_FAST, cpu );
+
+  // decrement nested counter
+  nested_fast_interrupt--;
 }
 
 /**

@@ -74,7 +74,7 @@ task_thread_ptr_t task_thread_create(
   // Only user mode threads are possible
   context->spsr = 0x60000000 | CPSR_MODE_USER;
   // set stack pointer
-  context->sp = stack_virtual + STACK_SIZE;
+  context->sp = stack_virtual + STACK_SIZE - 4;
   // debug output
   #if defined( PRINT_PROCESS )
     DUMP_REGISTER( context );

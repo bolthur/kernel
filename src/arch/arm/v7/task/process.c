@@ -179,6 +179,4 @@ void task_process_schedule( void* context ) {
       DUMP_REGISTER( ( cpu_register_context_ptr_t )context );
     #endif
   }
-
-  PANIC( "Process switch!" );
 }

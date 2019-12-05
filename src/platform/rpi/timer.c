@@ -131,7 +131,7 @@ void timer_init( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
     // register handler
     interrupt_register_handler(
-      ARM_GENERIC_TIMER_INTERRUPT_VIRT, timer_clear, false, false );
+      ARM_GENERIC_TIMER_INTERRUPT_VIRT, timer_clear, INTERRUPT_NORMAL, false );
 
     // get peripheral base
     uintptr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
@@ -145,7 +145,7 @@ void timer_init( void ) {
   #else
     // register handler
     interrupt_register_handler(
-      SYSTEM_TIMER_3_INTERRUPT, timer_clear, false, false );
+      SYSTEM_TIMER_3_INTERRUPT, timer_clear, INTERRUPT_NORMAL, false );
 
     // reset timer control
     io_out32( SYSTEM_TIMER_CONTROL, 0x00000000 );

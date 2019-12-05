@@ -42,9 +42,28 @@
 #include <kernel/panic.h>
 #include <kernel/initrd.h>
 
-__section( ".text.dummytask" ) static void dummy_process( void ) {
+__section( ".text.dummytask" ) static void dummy_process_1( void ) {
   while( true ) {
-    __asm__ __volatile__( "svc #1" );
+    uint8_t c = 'a';
+    __asm__ __volatile__( "\n\
+      mov r0, %[r0] \n\
+      svc #10" : : [ r0 ]"r"( c ) );
+  }
+}
+__section( ".text.dummytask" ) static void dummy_process_2( void ) {
+  while( true ) {
+    uint8_t c = 'b';
+    __asm__ __volatile__( "\n\
+      mov r0, %[r0] \n\
+      svc #10" : : [ r0 ]"r"( c ) );
+  }
+}
+__section( ".text.dummytask" ) static void dummy_process_3( void ) {
+  while( true ) {
+    uint8_t c = 'c';
+    __asm__ __volatile__( "\n\
+      mov r0, %[r0] \n\
+      svc #10" : : [ r0 ]"r"( c ) );
   }
 }
 
@@ -128,9 +147,9 @@ void kernel_main( void ) {
 
   // FIXME: Create init process from initialramdisk and pass initrd to init process
   // create some dummy processes
-  task_process_create( ( uintptr_t )dummy_process, 0 );
-  task_process_create( ( uintptr_t )dummy_process, 0 );
-  task_process_create( ( uintptr_t )dummy_process, 0 );
+  task_process_create( ( uintptr_t )dummy_process_1, 0 );
+  task_process_create( ( uintptr_t )dummy_process_2, 0 );
+  task_process_create( ( uintptr_t )dummy_process_3, 0 );
 
   // Enable interrupts
   DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] enable ...\r\n" );

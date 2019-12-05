@@ -34,6 +34,8 @@ IMPORT( interrupt_handler )
 IMPORT( fast_interrupt_handler )
 // event handling
 IMPORT( event_handle )
+// switch to thread
+IMPORT( switch_to_thread )
 
 
 // ensure correct stack alignment before calling any c function
@@ -60,11 +62,11 @@ IMPORT( event_handle )
   cpsid if, #\mode
 .endm
 
-.macro privileged_unprivileged_switch offset, privileged, unprivileged
+.macro privileged_unprivileged_switch offset, register, privileged, unprivileged
   // save r3 on stack and check for user mode
   push { r3 }
   // load spsr from previous mode
-  ldr r3, [ sp, #( \offset + 4 ) ]
+  ldr r3, [ \register, #( \offset + 4 ) ]
   // mask mode only for comparison
   and r3, #CPSR_MODE_MASK
   // compare to user mode
@@ -83,27 +85,37 @@ IMPORT( event_handle )
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
     4, \
+    sp, \
     _\name\()_entry_privileged, \
     _\name\()_entry_unprivileged
 
 // non privileged entry
 _\name\()_entry_unprivileged:
-  // load sp into current fp register
-  stm fp, { r13 }^
+  // store r13 and r14 usermode
+  stmfd sp, { r13 }^
+  nop
+  // update stack pointer
+  sub sp, #4
 
+  // load lr from stack
+  ldr lr, [ sp ]
   // allocate space for context structure
-  sub fp, fp, #STACK_FRAME_SIZE
+  sub lr, lr, #STACK_FRAME_SIZE
   // save registers
-  stmia fp, { r0 - r14 }^
+  stmia lr, { r0 - r14 }^
+
   // get pushed lr and fill it into struct
-  ldr r0, [ fp, #68 ]
-  str r0, [ fp, #60 ]
+  ldr r0, [ sp, #4 ]
+  str r0, [ lr, #60 ]
   // get pushed spsr and fill it into struct
-  ldr r0, [ fp, #72 ]
-  str r0, [ fp, #64 ]
+  ldr r0, [ sp, #8 ]
+  str r0, [ lr, #64 ]
+
+  // adjust stack pointer back
+  add sp, #12
 
   // save fp in first register
-  mov r1, fp
+  mov r1, lr
 
   // jump to finished
   b _\name\()_entry_finished
@@ -145,23 +157,20 @@ _\name\()_entry_privileged:
 _\name\()_entry_finished:
 .endm
 
-.macro pop_register name, mode
+.macro pop_register name, mode, stack
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
     64, \
+    \stack, \
     _\name\()_exit_privileged, \
     _\name\()_exit_unprivileged
 
 // non privileged exit
 _\name\()_exit_unprivileged:
-  // load old pc and fixup
-  ldr r0, [ sp, #60 ]
-  str r0, [ sp, #68 ]
-  // restore registers
-  stmia fp, { r0 - r14 }^
-  // correct fp again
-  add fp, #STACK_FRAME_SIZE
-
+  // set r0
+  mov r0, \stack
+  // call switch to thread
+  bl switch_to_thread
   // jump to finished
   b _\name\()_exit_finished
 
@@ -221,7 +230,7 @@ _\name\()_exit_finished:
   stack_unwind r0, r1
 
   // restore registers
-  pop_register \name, \mode
+  pop_register \name, \mode, r1
   // enable interrupts again
   cpsie if
   // return from exception

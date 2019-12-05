@@ -62,48 +62,17 @@ static int32_t compare_interrupt_callback(
 }
 
 /**
- * @brief Unregister interrupt handler
+ * @brief Helper to get interrupt manager tree by type
  *
- * @param num interrupt to unbind
- * @param callback Callback to unbind
- * @param fast flag to unbind fast
- * @param post flag to bind as post callback
+ * @param type type to get tree from
+ * @return avl_tree_ptr_t
  */
-void interrupt_unregister_handler(
-  __unused size_t num,
-  __unused interrupt_callback_t callback,
-  __unused bool fast,
-  __unused bool post
-) {
-  PANIC( "Unregister handling is not yet implemented!" );
-}
-
-/**
- * @brief Register interrupt handler
- *
- * @param num Interrupt to bind
- * @param callback Callback to bind
- * @param fast flag to bind FIQ
- * @param post flag to bind as post callback
- */
-void interrupt_register_handler(
-  size_t num,
-  interrupt_callback_t callback,
-  bool fast,
-  bool post
-) {
+static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
   // assert heap existance
   assert( true == heap_initialized_get() );
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT(
-      "Called interrupt_register_handler( %d, 0x%08p, %s, %s )\r\n",
-      num, callback, fast ? "true" : "false", post  ? "true" : "false" );
-  #endif
-
-  // debug output
-  #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Try to map callback for interrupt %d\r\n", num );
+    DEBUG_OUTPUT( "Called tree_by_type( %d )\r\n", type );
   #endif
   // setup interrupt manager if not done existing
   if ( NULL == interrupt_manager ) {
@@ -119,6 +88,8 @@ void interrupt_register_handler(
       compare_interrupt_callback );
     interrupt_manager->fast_interrupt = avl_create_tree(
       compare_interrupt_callback );
+    interrupt_manager->software_interrupt = avl_create_tree(
+      compare_interrupt_callback );
     // debug output
     #if defined( PRINT_INTERRUPT )
       DEBUG_OUTPUT(
@@ -128,21 +99,80 @@ void interrupt_register_handler(
     #endif
   }
 
-  // validate interrupt number by fendor
-  assert( interrupt_validate_number( num ) );
+  // set by type
+  switch ( type ) {
+    case INTERRUPT_NORMAL:
+      return interrupt_manager->normal_interrupt;
+
+    case INTERRUPT_FAST:
+      return interrupt_manager->fast_interrupt;
+
+    case INTERRUPT_SOFTWARE:
+      return interrupt_manager->software_interrupt;
+  }
+
+  // invalid
+  return NULL;
+}
+
+/**
+ * @brief Unregister interrupt handler
+ *
+ * @param num interrupt to unbind
+ * @param callback Callback to unbind
+ * @param type interrupt type
+ * @param post flag to bind as post callback
+ */
+void interrupt_unregister_handler(
+  __unused size_t num,
+  __unused interrupt_callback_t callback,
+  __unused interrupt_type_t type,
+  __unused bool post
+) {
+  PANIC( "Unregister handling is not yet implemented!" );
+}
+
+/**
+ * @brief Register interrupt handler
+ *
+ * @param num Interrupt to bind
+ * @param callback Callback to bind
+ * @param type interrupt type
+ * @param post flag to bind as post callback
+ */
+void interrupt_register_handler(
+  size_t num,
+  interrupt_callback_t callback,
+  interrupt_type_t type,
+  bool post
+) {
+  // assert heap existance
+  assert( true == heap_initialized_get() );
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT(
+      "Called interrupt_register_handler( %d, 0x%08p, %d, %s )\r\n",
+      num, callback, type, post  ? "true" : "false" );
+  #endif
+
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Try to map callback for interrupt %d\r\n", num );
+  #endif
+
+  // validate interrupt number by vendor
+  if ( type == INTERRUPT_NORMAL || type == INTERRUPT_FAST ) {
+    assert( interrupt_validate_number( num ) );
+  }
 
   // get correct tree to use
-  avl_tree_ptr_t tree = interrupt_manager->normal_interrupt;
-  // use fast tree if set
-  if ( true == fast ) {
-    tree = interrupt_manager->fast_interrupt;
-  }
+  avl_tree_ptr_t tree = tree_by_type( type );
+  // assert return
+  assert( NULL != tree );
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT(
-      "Using interrupt tree \"%s\" for lookup!\r\n",
-      ( true == fast ) ? "fast_interrupt" : "normal_interrupt"
-    );
+      "Using interrupt tree \"0x%08x\" for lookup!\r\n", tree );
   #endif
 
   // try to find node
@@ -236,17 +266,19 @@ void interrupt_register_handler(
  * @brief Handle interrupt
  *
  * @param num interrupt number
- * @param fast fast interrupt flag
+ * @param type interrupt type
  * @param context interrupt context
  */
-void interrupt_handle( size_t num, bool fast, void* context ) {
+void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   // handle no interrupt manager as not bound
   if ( NULL == interrupt_manager ) {
     return;
   }
 
-  // validate interrupt number by fendor
-  assert( interrupt_validate_number( num ) );
+  // validate interrupt number by vendor
+  if ( type == INTERRUPT_NORMAL || type == INTERRUPT_FAST ) {
+    assert( interrupt_validate_number( num ) );
+  }
 
   // debug output
   #if defined( PRINT_INTERRUPT )
@@ -254,18 +286,14 @@ void interrupt_handle( size_t num, bool fast, void* context ) {
   #endif
 
   // get correct tree to use
-  avl_tree_ptr_t tree = interrupt_manager->normal_interrupt;
-  // use fast tree if set
-  if ( true == fast ) {
-    tree = interrupt_manager->fast_interrupt;
-  }
+  avl_tree_ptr_t tree = tree_by_type( type );
+  // assert return
+  assert( NULL != tree );
 
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT(
-      "Using interrupt tree \"%s\" for lookup!\r\n",
-      ( true == fast ) ? "fast_interrupt" : "normal_interrupt"
-    );
+      "Using interrupt tree \"0x%08x\" for lookup!\r\n", tree );
   #endif
 
   // try to get node by interrupt
