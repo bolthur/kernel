@@ -19,9 +19,21 @@
  */
 
 #define ASSEMBLER_FILE 1
+#include <kernel/assembly.h>
 #include <arch/arm/v7/cpu.h>
 
-.global switch_to_thread
+EXPORT( switch_to_thread )
 switch_to_thread:
-  // TODO: ADD LOGIC
-  bx lr
+  // set fp
+  mov fp, r0
+  // load spsr
+  ldr r0, [ fp, #64 ]
+  // load lr
+  ldr lr, [ fp, #60 ]
+  // set spsr
+  msr spsr_cxsf, r0
+  // restore registers
+  ldmia fp, { r0 - r14 }^
+  nop
+  // return to process
+  movs pc, lr

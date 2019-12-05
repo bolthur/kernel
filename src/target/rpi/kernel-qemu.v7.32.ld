@@ -59,8 +59,9 @@ SECTIONS {
     *( .data.boot )
   }
 
+  . += 0x20000;
   /* dummy user task */
-  .text.dummytask ALIGN( 4K ) : AT( 0x500000 ) {
+  .text.dummytask : ALIGN( 4K ) {
     *( .text.dummytask )
   }
 

@@ -158,7 +158,7 @@ _\name\()_exit_unprivileged:
   ldr r0, [ sp, #60 ]
   str r0, [ sp, #68 ]
   // restore registers
-  stmia fp, { r0 - r14 }
+  stmia fp, { r0 - r14 }^
   // correct fp again
   add fp, #STACK_FRAME_SIZE
 

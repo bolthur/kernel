@@ -44,7 +44,7 @@
 
 __section( ".text.dummytask" ) static void dummy_process( void ) {
   while( true ) {
-    __asm__ __volatile__( "swi #1" );
+    __asm__ __volatile__( "svc #1" );
   }
 }
 

@@ -32,8 +32,6 @@
 
 /**
  * @brief Start multitasking with first ready task
- *
- * @todo add logic
  */
 void task_process_start( void ) {
   // debug output
@@ -66,9 +64,11 @@ void task_process_start( void ) {
   virt_flush_complete();
 
   // jump to thread
-  switch_to_thread( ( uintptr_t )
-    ( ( cpu_register_context_ptr_t )next_thread->context )->sp
-  );
+  #if defined( PRINT_PROCESS )
+    DUMP_REGISTER( next_thread->context );
+  #endif
+
+  switch_to_thread( ( uintptr_t )next_thread->context );
 }
 
 /**

@@ -105,7 +105,7 @@ void data_abort_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "\r\ndata abort interrupt at 0x%08x\r\n", fault_address );
+    DEBUG_OUTPUT( "data abort interrupt at 0x%08x\r\n", fault_address );
     DUMP_REGISTER( cpu );
   #else
     ( void )cpu;
