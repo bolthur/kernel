@@ -20,6 +20,7 @@ libkernel_a_SOURCES = \
   task/stack.c \
   task/thread.c \
   cpu.c \
+  elf.c \
   event.c \
   initrd.c \
   main.c \

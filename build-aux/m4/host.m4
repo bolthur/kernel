@@ -21,6 +21,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_INTERRUPT], [Define to 1 to enable output of interrupt methods])
   AH_TEMPLATE([PRINT_PROCESS], [Define to 1 to enable output of process methods])
   AH_TEMPLATE([PRINT_EXCEPTION], [Define to 1 to enable output of exception handlers])
+  AH_TEMPLATE([PRINT_ELF], [Define to 1 to enable output of elf routines])
 
   # Test for general output enable
   AS_IF([test "x$enable_output" == "xyes"], [
@@ -80,6 +81,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   # Test for exception output
   AS_IF([test "x$enable_output_exception" == "xyes"], [
     AC_DEFINE([PRINT_EXCEPTION], [1])
+  ])
+
+  # Test for exception output
+  AS_IF([test "x$enable_output_elf" == "xyes"], [
+    AC_DEFINE([PRINT_ELF], [1])
   ])
 
   case "${host_cpu}" in

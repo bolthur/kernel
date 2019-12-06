@@ -111,13 +111,11 @@ size_t task_process_generate_id( void ) {
  * @brief Method to create new process
  *
  * @param entry process entry address
- * @param type process type
  * @param priority process priority
+ *
+ * @todo Add elf parsing
  */
-void task_process_create(
-  uintptr_t entry,
-  size_t priority
-) {
+void task_process_create( uintptr_t entry, size_t priority ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(

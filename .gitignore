@@ -59,6 +59,7 @@ m4/lt~obsolete.m4
 *.ko
 *.obj
 *.elf
+*.bin
 
 # Precompiled Headers
 *.gch

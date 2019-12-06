@@ -70,9 +70,6 @@ SECTIONS {
   /* higher half kernel sections */
   .text ALIGN( 4K ) : AT( ADDR( .text ) - KERNEL_OFFSET ) {
     *( .text )
-  }
-
-  .rodata ALIGN( 4K ) : AT( ADDR( .rodata ) - KERNEL_OFFSET ) {
     *( .rodata )
   }
 

@@ -15,7 +15,7 @@ AC_LANG([C])
 
 # FIXME: Shouldn't be necessary, when creating symlinks of toolchain binaries to /usr/local/bin
 AC_SUBST(PATH, "${HOME}/.bolthur/cross/bin:${PATH}")
-AC_SUBST(MAKEFLAGS, "${MAKEFLAGS} --no-print-directory")
+AC_SUBST(MAKEFLAGS, "${MAKEFLAGS} --no-print-directory -j")
 
 AC_ARG_ENABLE([device],
   AC_HELP_STRING(
@@ -132,6 +132,15 @@ AC_ARG_ENABLE(
     [activate exception output [default: off]]
   ),
   [enable_output_exception=yes]
+)
+
+AC_ARG_ENABLE(
+  [output-elf],
+  AC_HELP_STRING(
+    [--enable-output-elf],
+    [activate elf output [default: off]]
+  ),
+  [enable_output_elf=yes]
 )
 
 AC_ARG_WITH(

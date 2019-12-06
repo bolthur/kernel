@@ -74,9 +74,6 @@ SECTIONS {
 
   .rodata ALIGN( 4K ) : AT( ADDR( .rodata ) - KERNEL_OFFSET ) {
     *( .rodata )
-  }
-
-  .data ALIGN( 4K ) : AT( ADDR( .data ) - KERNEL_OFFSET ) {
     *( .data )
   }
 

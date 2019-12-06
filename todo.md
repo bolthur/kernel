@@ -18,11 +18,8 @@
   * [ ] Extend dummy initrd by test programs and execute them
 * [ ] Implement syscall handling via `swi`
 * [ ] TAR / initrd
-  * [ ] Add initial ramdisk during boot which should be a simple tar file
   * [ ] Add parsing of initial ramdisk containing drivers or programs for startup
-  * [ ] Check for drivers within folder "/driver"
-* [ ] Multitasking
-  * [ ] Add multithreading
+  * [ ] Check init driver within folder "/boot"
 * [ ] Add SMP support [see also](http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dai0425/ch04s07s01.html)
   * [ ] Memory management
     * [ ] Prepare virtual memory management per core if smp is active
@@ -33,11 +30,6 @@
   * [ ] Extend automake by option for use device tree
   * [ ] Add parse of device tree when compiled in via option
   * [ ] Debug output, when no device tree has been found and use kernel defaults
-* [ ] ATAG
-  * [ ] Add atag library
-  * [ ] Extend automake by option for use atag
-  * [ ] Add parse of atag when compiled in via option
-  * [ ] Debug output, when no atag has been passed and use kernel defaults
 * [ ] Support further platforms
   * [ ] Add rpi zero support ( armv6 32 bit only with one cpu )
   * [ ] Add rpi 3 support ( armv8 64 bit with smp )

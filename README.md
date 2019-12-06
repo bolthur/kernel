@@ -73,6 +73,7 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-process` activate process implementation output
 * `--enable-output-interrupt` activate interrupt request output
 * `--enable-output-exception` activate exception handler output
+* `--enable-output-elf` activate elf routine output
 
 ### Building
 

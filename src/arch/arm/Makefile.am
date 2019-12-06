@@ -15,4 +15,5 @@ libarm_a_SOURCES = \
   smp/lock.c \
   arch.c \
   delay.c \
+  elf.c \
   io.c

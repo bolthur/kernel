@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <kernel/arch.h>
+#include <kernel/elf.h>
 #include <kernel/tty.h>
 #include <kernel/interrupt/interrupt.h>
 #include <kernel/timer.h>
@@ -119,12 +120,17 @@ void kernel_main( void ) {
     DEBUG_OUTPUT( "initrd = 0x%08x\r\n", initrd_get_end_address() );
     DEBUG_OUTPUT( "size = %o\r\n", initrd_get_size() );
     DEBUG_OUTPUT( "size = %d\r\n", initrd_get_size() );
+
     // set iterator
     tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
+
     // loop through tar
     while ( ! tar_end_reached( iter ) ) {
+      // debug output
       DEBUG_OUTPUT( "0x%lx: initrd file name: %s\r\n",
         ( uintptr_t )iter, iter->file_name );
+
+      // next
       iter = tar_next( iter );
     }
   }
@@ -146,6 +152,28 @@ void kernel_main( void ) {
   task_process_init();
 
   // FIXME: Create init process from initialramdisk and pass initrd to init process
+  // create processes for elf files
+  if ( initrd_exist() ) {
+    // get iterator
+    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd_get_start_address();
+
+    // loop
+    while( ! tar_end_reached( iter ) ) {
+      // get file
+      uintptr_t file = ( uintptr_t )tar_file( iter );
+
+      // skip non elf files
+      if ( elf_check( ( elf_header_ptr_t )file ) ) {
+        // create process
+        DEBUG_OUTPUT( "Create process for file %s\r\n", iter->file_name );
+        // task_process_create( file, 0 );
+      }
+
+      // next task
+      iter = tar_next( iter );
+    }
+  }
+
   // create some dummy processes
   task_process_create( ( uintptr_t )dummy_process_1, 0 );
   task_process_create( ( uintptr_t )dummy_process_2, 0 );

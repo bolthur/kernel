@@ -75,8 +75,6 @@ void task_process_start( void ) {
  * @brief Task process scheduler
  *
  * @param context cpu context
- *
- * @todo fix function by check/rework
  */
 void task_process_schedule( void* context ) {
   // convert context into cpu pointer
