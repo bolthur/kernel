@@ -22,7 +22,9 @@
 #include <string.h>
 #include <assert.h>
 #include <kernel/event.h>
+#include <kernel/elf.h>
 #include <kernel/debug/debug.h>
+#include <kernel/mm/phys.h>
 #include <kernel/task/queue.h>
 #include <kernel/task/process.h>
 #include <kernel/task/thread.h>
@@ -65,13 +67,6 @@ static int32_t process_compare_id_callback(
 }
 
 /**
- * @brief Task idle
- */
-/*static void task_idle( void ) {
-  while ( 1 ) {}
-}*/
-
-/**
  * @brief Initialize task process manager
  */
 void task_process_init( void ) {
@@ -112,8 +107,6 @@ size_t task_process_generate_id( void ) {
  *
  * @param entry process entry address
  * @param priority process priority
- *
- * @todo Add elf parsing
  */
 void task_process_create( uintptr_t entry, size_t priority ) {
   // debug output
@@ -121,6 +114,18 @@ void task_process_create( uintptr_t entry, size_t priority ) {
     DEBUG_OUTPUT(
       "task_process_create( 0x%08x, %d ) called\r\n", entry, priority );
   #endif
+
+  // check for elf header
+  elf_header_ptr_t header = ( elf_header_ptr_t )entry;
+  // check for valid header
+  if ( ! elf_check( header ) ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "No valid elf header found\r\n" );
+    #endif
+    // return
+    return;
+  }
 
   // allocate process structure
   task_process_ptr_t process = ( task_process_ptr_t )malloc(
@@ -142,19 +147,113 @@ void task_process_create( uintptr_t entry, size_t priority ) {
   process->thread_stack_manager = task_stack_manager_create();
   // create context only for user processes
   process->virtual_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
+
+  // parse header
+  for ( uint32_t index = 0; index < header->program_header_count; ++index ) {
+    // get program header
+    elf_program_header_ptr_t program_header = ( elf_program_header_ptr_t )(
+      ( uintptr_t )header + header->program_header + header->program_header_size * index
+    );
+
+    // skip non loadable sections
+    if ( ELF_PROGRAM_HEADER_TYPE_LOAD != program_header->type ) {
+      continue;
+    }
+
+    // determine needed space
+    uintptr_t needed_size = program_header->memory_size;
+    if ( needed_size % PAGE_SIZE ) {
+      needed_size += ( PAGE_SIZE - needed_size % PAGE_SIZE );
+    }
+
+    // find memory
+    uint64_t phys = phys_find_free_page_range( PAGE_SIZE, needed_size );
+    // map temporary
+    uintptr_t tmp = virt_map_temporary( phys, needed_size );
+    // copy over data
+    memcpy(
+      ( void* )tmp,
+      ( void* )( ( uintptr_t )header + program_header->offset ),
+      program_header->file_size
+    );
+    // unmap temporary
+    virt_unmap_temporary( tmp, needed_size );
+
+    // calculate start and end for loop
+    uintptr_t start = program_header->virtual;
+    uintptr_t end = start + program_header->memory_size;
+    while ( start < end ) {
+      // map it in process context
+      virt_map_address(
+        process->virtual_context,
+        start,
+        phys,
+        VIRT_MEMORY_TYPE_NORMAL,
+        VIRT_PAGE_TYPE_EXECUTABLE
+      );
+      // increase start and phys
+      start += PAGE_SIZE;
+      phys += PAGE_SIZE;
+    }
+
+    // initialize offset
+    uintptr_t offset = 0;
+    // map until everything is done
+    while ( start < end ) {
+      // get physical page
+      uint64_t phys = phys_find_free_page( PAGE_SIZE );
+      // map it into user context
+      virt_map_address(
+        process->virtual_context,
+        start,
+        phys,
+        VIRT_MEMORY_TYPE_NORMAL,
+        VIRT_PAGE_TYPE_EXECUTABLE );
+      // map it temporary
+      uintptr_t tmp = virt_map_temporary( phys, PAGE_SIZE );
+      DEBUG_OUTPUT(
+        "tmp = 0x%08x, destination = 0x%08x\r\n",
+        tmp, ( header + program_header->offset + offset ) );
+      DEBUG_OUTPUT(
+        "header = 0x%08x, program_header->offset = 0x%08x\r\n",
+        header, program_header->offset );
+      // copy over content
+      memcpy(
+        ( void* )tmp,
+        ( void* )( header + program_header->offset + offset ),
+        program_header->file_size - offset
+      );
+      // unmap temporary
+      virt_unmap_temporary( tmp, PAGE_SIZE );
+      // increase offset
+      offset += PAGE_SIZE;
+      start += PAGE_SIZE;
+    }
+  }
+
   // prepare node
   avl_prepare_node( &process->node_id, ( void* )process->id );
   // add process to tree
   avl_insert_by_node( process_manager->tree_process_id, &process->node_id );
+
   // Setup thread with entry
-  task_thread_create( entry, process, priority );
+  if ( NULL == task_thread_create( header->program_entry, process, priority ) ) {
+    // remove node again
+    avl_remove_by_node( process_manager->tree_process_id, &process->node_id );;
+    // destroy context
+    virt_destroy_context( process->virtual_context );
+    // destroy stack manager
+    task_stack_manager_destroy( process->thread_stack_manager );
+    // destroy thread manager
+    task_thread_destroy( process->thread_manager );
+  }
 }
 
 /**
  * @brief Resets process priority queues
  */
 void task_process_queue_reset( void ) {
-    // min / max queue
+  // min / max queue
   task_priority_queue_ptr_t min_queue = NULL;
   task_priority_queue_ptr_t max_queue = NULL;
   avl_node_ptr_t min = NULL;

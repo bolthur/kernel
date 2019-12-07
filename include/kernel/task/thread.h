@@ -31,6 +31,7 @@ typedef struct task_priority_queue task_priority_queue_t, *task_priority_queue_p
 typedef enum {
   TASK_THREAD_STATE_READY = 0,
   TASK_THREAD_STATE_ACTIVE,
+  TASK_THREAD_STATE_HALT_SWITCH,
 } task_thread_state_t;
 
 typedef struct task_thread {
@@ -51,8 +52,9 @@ task_thread_ptr_t task_thread_current( void );
 void task_thread_set_current( task_thread_ptr_t, task_priority_queue_ptr_t );
 size_t task_thread_generate_id( void );
 avl_tree_ptr_t task_thread_init( void );
+void task_thread_destroy( avl_tree_ptr_t );
 task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t, size_t );
 task_thread_ptr_t task_thread_next( void );
-void __no_return switch_to_thread( uintptr_t );
+void __no_return switch_to_thread( uintptr_t, uint32_t );
 
 #endif

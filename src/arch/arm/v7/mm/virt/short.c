@@ -818,6 +818,15 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
 }
 
 /**
+ * @brief Destroy context for v7 short descriptor
+ *
+ * @param ctx context to destroy
+ */
+void v7_short_destroy_context( __unused virt_context_ptr_t ctx ) {
+  PANIC( "v7 short destroy context not yet implemented!" );
+}
+
+/**
  * @brief Method to prepare
  */
 void v7_short_prepare( void ) {

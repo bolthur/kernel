@@ -40,8 +40,6 @@
  * @param process thread process
  * @param priority thread priority
  * @return task_thread_ptr_t pointer to thread structure
- *
- * @todo remove mapping of dummy function
  */
 task_thread_ptr_t task_thread_create(
   uintptr_t entry,
@@ -84,9 +82,6 @@ task_thread_ptr_t task_thread_create(
   uintptr_t tmp_virtual_user = virt_map_temporary( stack_physical, STACK_SIZE );
   // prepare stack
   memset( ( void* )tmp_virtual_user, 0, STACK_SIZE );
-  memcpy(
-    ( void* )( tmp_virtual_user + PAGE_SIZE - sizeof( cpu_register_context_t ) ),
-    context, sizeof( cpu_register_context_t ) );
   // unmap again
   virt_unmap_temporary( tmp_virtual_user, STACK_SIZE );
   // create node for stack address management tree
@@ -96,13 +91,6 @@ task_thread_ptr_t task_thread_create(
     process->virtual_context,
     stack_virtual,
     stack_physical,
-    VIRT_MEMORY_TYPE_NORMAL,
-    VIRT_PAGE_TYPE_EXECUTABLE );
-  // FIXME: REMOVE DUMMY MAPPING AFTER USER MODE THREAD INTEGRATION
-  virt_map_address(
-    process->virtual_context,
-    entry,
-    entry,
     VIRT_MEMORY_TYPE_NORMAL,
     VIRT_PAGE_TYPE_EXECUTABLE );
 

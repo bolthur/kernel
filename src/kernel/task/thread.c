@@ -112,6 +112,15 @@ avl_tree_ptr_t task_thread_init( void ) {
 }
 
 /**
+ * @brief Destroy thread manager for task
+ *
+ * @param tree
+ */
+void task_thread_destroy( avl_tree_ptr_t tree ) {
+  avl_destroy_tree( tree );
+}
+
+/**
  * @brief Function to get next thread for execution
  *
  * @return task_thread_ptr_t
@@ -206,7 +215,10 @@ task_thread_ptr_t task_thread_next( void ) {
       // get task object
       task_thread_ptr_t task = ( task_thread_ptr_t )item->data;
       // check for ready
-      if ( task->state == TASK_THREAD_STATE_READY ) {
+      if (
+        TASK_THREAD_STATE_READY == task->state
+        || TASK_THREAD_STATE_HALT_SWITCH == task->state
+      ) {
         break;
       }
       // try next if not ready

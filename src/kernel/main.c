@@ -43,31 +43,6 @@
 #include <kernel/panic.h>
 #include <kernel/initrd.h>
 
-__section( ".text.dummytask" ) static void dummy_process_1( void ) {
-  while( true ) {
-    uint8_t c = 'a';
-    __asm__ __volatile__( "\n\
-      mov r0, %[r0] \n\
-      svc #10" : : [ r0 ]"r"( c ) );
-  }
-}
-__section( ".text.dummytask" ) static void dummy_process_2( void ) {
-  while( true ) {
-    uint8_t c = 'b';
-    __asm__ __volatile__( "\n\
-      mov r0, %[r0] \n\
-      svc #10" : : [ r0 ]"r"( c ) );
-  }
-}
-__section( ".text.dummytask" ) static void dummy_process_3( void ) {
-  while( true ) {
-    uint8_t c = 'c';
-    __asm__ __volatile__( "\n\
-      mov r0, %[r0] \n\
-      svc #10" : : [ r0 ]"r"( c ) );
-  }
-}
-
 /**
  * @brief Kernel main function
  *
@@ -165,19 +140,16 @@ void kernel_main( void ) {
       // skip non elf files
       if ( elf_check( ( elf_header_ptr_t )file ) ) {
         // create process
+        uint64_t file_size = tar_size( iter );
         DEBUG_OUTPUT( "Create process for file %s\r\n", iter->file_name );
-        // task_process_create( file, 0 );
+        DEBUG_OUTPUT( "File size: 0x%llx\r\n", file_size );
+        task_process_create( file, 0 );
       }
 
       // next task
       iter = tar_next( iter );
     }
   }
-
-  // create some dummy processes
-  task_process_create( ( uintptr_t )dummy_process_1, 0 );
-  task_process_create( ( uintptr_t )dummy_process_2, 0 );
-  task_process_create( ( uintptr_t )dummy_process_3, 0 );
 
   // Enable interrupts
   DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] enable ...\r\n" );

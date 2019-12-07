@@ -184,6 +184,27 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
 }
 
 /**
+ * @brief Method to destroy virtual context
+ *
+ * @param ctx
+ */
+void virt_destroy_context( virt_context_ptr_t ctx ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    v7_long_destroy_context( ctx );
+  // check v7 short descriptor format
+  } else if (
+    ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
+    || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
+  ) {
+    v7_short_destroy_context( ctx );
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
  * @brief Method to create table
  *
  * @param ctx context to create table for

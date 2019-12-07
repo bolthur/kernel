@@ -60,6 +60,7 @@ bool virt_initialized_get( void );
 void virt_platform_post_init( void );
 
 virt_context_ptr_t virt_create_context( virt_context_type_t );
+void virt_destroy_context( virt_context_ptr_t );
 uint64_t virt_create_table( virt_context_ptr_t, uintptr_t, uint64_t );
 void virt_map_address(
   virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );

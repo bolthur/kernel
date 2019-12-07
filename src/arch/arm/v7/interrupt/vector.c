@@ -114,6 +114,12 @@ void undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
  * @param cpu cpu context
  */
 void software_interrupt_handler( cpu_register_context_ptr_t cpu ) {
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DEBUG_OUTPUT( "Entering software_interrupt_handler( 0x%08x )\r\n",
+      cpu );
+  #endif
+
   // assert nesting
   assert( nested_software_interrupt++ < NESTED_MAX );
   // get svc number
@@ -138,6 +144,11 @@ void software_interrupt_handler( cpu_register_context_ptr_t cpu ) {
 
   // decrement nested counter
   nested_software_interrupt--;
+
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DEBUG_OUTPUT( "Leaving software_interrupt_handler\r\n" );
+  #endif
 }
 
 /**

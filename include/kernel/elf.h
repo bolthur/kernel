@@ -57,6 +57,11 @@ typedef enum {
   ELF_HEADER_MAGIC_4 = 'F',
 } elf_header_magic_t;
 
+typedef enum {
+  ELF_HEADER_VERSION_NONE = 0,
+  ELF_HEADER_VERSION_CURRENT = 1,
+} elf_header_version_t;
+
 typedef struct {
   uint8_t magic[ 4 ];
   uint8_t architecture;

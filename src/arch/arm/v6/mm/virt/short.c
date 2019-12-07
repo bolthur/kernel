@@ -155,6 +155,15 @@ virt_context_ptr_t v6_short_create_context( __unused virt_context_type_t type ) 
 }
 
 /**
+ * @brief Destroy context for v6 short descriptor
+ *
+ * @param ctx context to destroy
+ */
+void v6_short_destroy_context( __unused virt_context_ptr_t ctx ) {
+  PANIC( "v6 destroy context not yet implemented!" );
+}
+
+/**
  * @brief Prepare short memory management
  */
 void v6_short_prepare( void ) {}

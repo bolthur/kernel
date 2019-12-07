@@ -62,6 +62,24 @@ static int32_t task_stack_callback(
 }
 
 /**
+ * @brief Destroy task stack manager
+ *
+ * @param manager
+ */
+void task_stack_manager_destroy( task_stack_manager_ptr_t manager ) {
+  // handle invalid
+  if ( NULL == manager ) {
+    return;
+  }
+
+  // destroy tree
+  avl_destroy_tree( manager->tree );
+
+  // free up manager
+  free( manager );
+}
+
+/**
  * @brief Create stack manager
  *
  * @return task_stack_manager_ptr_t

@@ -18,19 +18,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_TASK_STACK__ )
-#define __KERNEL_TASK_STACK__
-
+#include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #include <avl.h>
-#include <kernel/task/process.h>
-typedef struct task_stack_manager {
-  avl_tree_ptr_t tree;
-} task_stack_manager_t, *task_stack_manager_ptr_t;
 
-extern task_stack_manager_ptr_t task_stack_manager;
-task_stack_manager_ptr_t task_stack_manager_create( void );
-void task_stack_manager_destroy( task_stack_manager_ptr_t );
-uintptr_t task_stack_manager_next( task_stack_manager_ptr_t );
-void task_stack_manager_add( uintptr_t, task_stack_manager_ptr_t );
-
-#endif
+/**
+ * @brief Helper to destroy created tree
+ *
+ * @param tree
+ *
+ * @todo
+ */
+void avl_destroy_tree( __unused avl_tree_ptr_t tree ) {
+  assert( true == false );
+}

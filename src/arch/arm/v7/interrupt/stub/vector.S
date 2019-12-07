@@ -100,7 +100,7 @@ _\name\()_entry_unprivileged:
   // load lr from stack
   ldr lr, [ sp ]
   // allocate space for context structure
-  sub lr, lr, #STACK_FRAME_SIZE
+  sub lr, #STACK_FRAME_SIZE
   // save registers
   stmia lr, { r0 - r14 }^
 
@@ -123,7 +123,7 @@ _\name\()_entry_unprivileged:
 // privileged entry
 _\name\()_entry_privileged:
   // allocate space for context structure
-  sub sp, sp, #STACK_FRAME_SIZE
+  sub sp, #STACK_FRAME_SIZE
   // save registers
   stmia sp, { r0 - r12 }
   // get pushed lr and fill it into struct
@@ -157,10 +157,10 @@ _\name\()_entry_privileged:
 _\name\()_entry_finished:
 .endm
 
-.macro pop_register name, mode, stack
+.macro pop_register name, mode, stack, fixup
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
-    64, \
+    60, \
     \stack, \
     _\name\()_exit_privileged, \
     _\name\()_exit_unprivileged
@@ -169,6 +169,7 @@ _\name\()_entry_finished:
 _\name\()_exit_unprivileged:
   // set r0
   mov r0, \stack
+  mov r1, #\fixup
   // call switch to thread
   bl switch_to_thread
   // jump to finished
@@ -186,6 +187,7 @@ _\name\()_exit_privileged:
   // restore sp and lr
   mov sp, r1
   mov lr, r2
+  add lr, #\fixup
 
   // switch again to passed mode
   cps \mode
@@ -205,7 +207,7 @@ _\name\()_exit_privileged:
 _\name\()_exit_finished:
 .endm
 
-.macro ex_handler fixup, handler, mode, name
+.macro ex_handler fixup, handler, mode, name, fixup_restore
   // switch to svc mode with fixup
   switch_mode \mode, \fixup
   // push register
@@ -229,8 +231,8 @@ _\name\()_exit_finished:
   // restore stack adjustments
   stack_unwind r0, r1
 
-  // restore registers
-  pop_register \name, \mode, r1
+  // restore registers for return
+  pop_register \name, \mode, r1, \fixup_restore
   // enable interrupts again
   cpsie if
   // return from exception
@@ -238,22 +240,22 @@ _\name\()_exit_finished:
 .endm
 
 _undefined_instruction_handler:
-  ex_handler 4, undefined_instruction_handler, CPSR_MODE_SUPERVISOR, undefined
+  ex_handler 4, undefined_instruction_handler, CPSR_MODE_SUPERVISOR, undefined, 0
 
 _software_interrupt_handler:
-  ex_handler 4, software_interrupt_handler, CPSR_MODE_SUPERVISOR, software
+  ex_handler 4, software_interrupt_handler, CPSR_MODE_SUPERVISOR, software, 4
 
 _prefetch_abort_handler:
-  ex_handler 4, prefetch_abort_handler, CPSR_MODE_SUPERVISOR, prefetch_abort
+  ex_handler 4, prefetch_abort_handler, CPSR_MODE_SUPERVISOR, prefetch_abort, 0
 
 _data_abort_handler:
-  ex_handler 8, data_abort_handler, CPSR_MODE_SUPERVISOR, data_abort
+  ex_handler 8, data_abort_handler, CPSR_MODE_SUPERVISOR, data_abort, 0
 
 _interrupt_handler:
-  ex_handler 4, interrupt_handler, CPSR_MODE_SUPERVISOR, interrupt
+  ex_handler 4, interrupt_handler, CPSR_MODE_SUPERVISOR, interrupt, 0
 
 _fast_interrupt_handler:
-  ex_handler 4, fast_interrupt_handler, CPSR_MODE_SUPERVISOR, fast_interrupt
+  ex_handler 4, fast_interrupt_handler, CPSR_MODE_SUPERVISOR, fast_interrupt, 0
 
 EXPORT( interrupt_vector_table )
 .balign 32

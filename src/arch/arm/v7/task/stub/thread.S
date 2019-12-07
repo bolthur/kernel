@@ -30,6 +30,8 @@ switch_to_thread:
   ldr r0, [ fp, #64 ]
   // load lr
   ldr lr, [ fp, #60 ]
+  // apply fixup
+  add lr, r1
   // set spsr
   msr spsr_cxsf, r0
   // restore registers

@@ -147,6 +147,20 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
 }
 
 /**
+ * @brief Method to destroy virtual context
+ *
+ * @param ctx
+ */
+void virt_destroy_context( virt_context_ptr_t ctx ) {
+  // Panic when mode is unsupported
+  if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+    v6_short_destroy_context( ctx );
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
  * @brief Method to create table
  *
  * @param ctx context to create table for

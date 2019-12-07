@@ -68,7 +68,7 @@ void task_process_start( void ) {
     DUMP_REGISTER( next_thread->context );
   #endif
 
-  switch_to_thread( ( uintptr_t )next_thread->context );
+  switch_to_thread( ( uintptr_t )next_thread->context, 0 );
 }
 
 /**
@@ -112,6 +112,9 @@ void task_process_schedule( void* context ) {
     running_queue->last_handled = running_thread;
   }
 
+  // update running task to halt due to switch
+  running_thread->state = TASK_THREAD_STATE_HALT_SWITCH;
+
   // get next thread
   task_thread_ptr_t next_thread;
   do {
@@ -136,14 +139,9 @@ void task_process_schedule( void* context ) {
     assert( NULL != next_queue );
   }
 
-  // update last executed within running queue
-  if ( NULL != running_queue ) {
-    // reset current if queue changed
-    if ( running_queue != next_queue ) {
-      running_queue->current = NULL;
-    }
-    // set last handled within running queue
-    running_queue->last_handled = running_thread;
+  // reset current if queue changed
+  if ( NULL != running_queue && running_queue != next_queue ) {
+    running_queue->current = NULL;
   }
 
   // save context of current thread
@@ -170,7 +168,9 @@ void task_process_schedule( void* context ) {
     DUMP_REGISTER( ( cpu_register_context_ptr_t )context );
   #endif
   // overwrite context if different
+  // FIXME: May be necessary to use sp of user - offset of context
   if ( running_thread != next_thread ) {
+    PANIC( "IMPLEMENTATION MAY BE TOTALLY WRONG!" )
     memcpy( context, next_thread->context, sizeof( cpu_register_context_t ) );
     // debug output
     #if defined( PRINT_PROCESS )
