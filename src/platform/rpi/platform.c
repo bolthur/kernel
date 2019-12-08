@@ -31,16 +31,16 @@ platform_loader_parameter_t loader_parameter_data;
 
 /**
  * @brief Platform depending initialization routine
- *
- * @todo remove debug output
  */
 void platform_init( void ) {
-  DEBUG_OUTPUT(
-    "0x%08x - 0x%08x - 0x%08x\r\n",
-    loader_parameter_data.atag,
-    loader_parameter_data.machine,
-    loader_parameter_data.zero
-  );
+  #if defined( PRINT_PLATFORM )
+    DEBUG_OUTPUT(
+      "0x%08x - 0x%08x - 0x%08x\r\n",
+      loader_parameter_data.atag,
+      loader_parameter_data.machine,
+      loader_parameter_data.zero
+    );
+  #endif
 
   // get first atag
   atag_ptr_t atag = ( atag_ptr_t )loader_parameter_data.atag;
@@ -48,8 +48,10 @@ void platform_init( void ) {
   while ( atag ) {
     // handle initrd
     if ( atag->tag_type == ATAG_TAG_INITRD2 ) {
-      DEBUG_OUTPUT( "atag initrd start: 0x%08x, size: 0x%08x\r\n",
-        atag->initrd.start, atag->initrd.size );
+      #if defined( PRINT_PLATFORM )
+        DEBUG_OUTPUT( "atag initrd start: 0x%08x, size: 0x%08x\r\n",
+          atag->initrd.start, atag->initrd.size );
+      #endif
       initrd_set_start_address( atag->initrd.start );
       initrd_set_size( atag->initrd.size );
     }

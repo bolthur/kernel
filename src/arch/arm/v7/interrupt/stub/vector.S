@@ -81,38 +81,38 @@ IMPORT( switch_to_thread )
   beq \unprivileged
 .endm
 
-.macro push_register name, mode
+.macro push_register name, mode, stack
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
     4, \
-    sp, \
+    \stack, \
     _\name\()_entry_privileged, \
     _\name\()_entry_unprivileged
 
 // non privileged entry
 _\name\()_entry_unprivileged:
   // store r13 and r14 usermode
-  stmfd sp, { r13 }^
+  stmfd \stack, { r13 }^
   nop
   // update stack pointer
-  sub sp, #4
+  sub \stack, #4
 
   // load lr from stack
-  ldr lr, [ sp ]
+  ldr lr, [ \stack ]
   // allocate space for context structure
   sub lr, #STACK_FRAME_SIZE
   // save registers
   stmia lr, { r0 - r14 }^
 
   // get pushed lr and fill it into struct
-  ldr r0, [ sp, #4 ]
+  ldr r0, [ \stack, #4 ]
   str r0, [ lr, #60 ]
   // get pushed spsr and fill it into struct
-  ldr r0, [ sp, #8 ]
+  ldr r0, [ \stack, #8 ]
   str r0, [ lr, #64 ]
 
   // adjust stack pointer back
-  add sp, #12
+  add \stack, #12
 
   // save fp in first register
   mov r1, lr
@@ -123,18 +123,18 @@ _\name\()_entry_unprivileged:
 // privileged entry
 _\name\()_entry_privileged:
   // allocate space for context structure
-  sub sp, #STACK_FRAME_SIZE
+  sub \stack, #STACK_FRAME_SIZE
   // save registers
-  stmia sp, { r0 - r12 }
+  stmia \stack, { r0 - r12 }
   // get pushed lr and fill it into struct
-  ldr r0, [ sp, #68 ]
-  str r0, [ sp, #60 ]
+  ldr r0, [ \stack, #68 ]
+  str r0, [ \stack, #60 ]
   // get pushed spsr and fill it into struct
-  ldr r0, [ sp, #72 ]
-  str r0, [ sp, #64 ]
+  ldr r0, [ \stack, #72 ]
+  str r0, [ \stack, #64 ]
 
   // get pushed spsr for mode switch
-  ldr r0, [ sp, #72 ]
+  ldr r0, [ \stack, #72 ]
   // switch to previous mode
   orr r0, r0, #( CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
   msr cpsr_c, r0
@@ -144,11 +144,11 @@ _\name\()_entry_privileged:
   // switch mode again
   cps \mode
   // push sp, lr
-  str r1, [ sp, #52 ]
-  str r2, [ sp, #56 ]
+  str r1, [ \stack, #52 ]
+  str r2, [ \stack, #56 ]
 
   // save sp in first register
-  mov r1, sp
+  mov r1, \stack
 
   // jump to finished
   b _\name\()_entry_finished
@@ -211,7 +211,7 @@ _\name\()_exit_finished:
   // switch to svc mode with fixup
   switch_mode \mode, \fixup
   // push register
-  push_register \name, \mode
+  push_register \name, \mode, sp
 
   // ensure stack alignment
   stack_wind r0, r1

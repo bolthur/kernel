@@ -24,7 +24,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <kernel/arch.h>
-#include <kernel/elf.h>
+#include <kernel/elf/common.h>
 #include <kernel/tty.h>
 #include <kernel/interrupt/interrupt.h>
 #include <kernel/timer.h>
@@ -138,7 +138,7 @@ void kernel_main( void ) {
       uintptr_t file = ( uintptr_t )tar_file( iter );
 
       // skip non elf files
-      if ( elf_check( ( elf_header_ptr_t )file ) ) {
+      if ( elf_check( file ) ) {
         // create process
         uint64_t file_size = tar_size( iter );
         DEBUG_OUTPUT( "Create process for file %s\r\n", iter->file_name );

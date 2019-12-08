@@ -18,34 +18,37 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/elf.h>
+#include <kernel/elf/elf32.h>
 #include <kernel/entry.h>
 #include <kernel/debug/debug.h>
 
 /**
  * @brief Check elf header for execution
  *
- * @param header header to check
+ * @param elf header address to check
  * @return true elf header valid
  * @return false elf header invalid
  */
-bool elf_arch_check( elf_header_ptr_t header ) {
+bool elf_arch_check( uintptr_t elf ) {
+  Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+
   // check machine to match kernel
   #if defined( ELF32 )
-    if ( ELF_HEADER_MACHINE_ARM != header->machine ) {
+    if ( EM_ARM != header->e_machine ) {
       // debug output
       #if defined ( PRINT_ELF )
         DEBUG_OUTPUT( "Invalid machine type, expected %x and received %x!\r\n",
-          ELF_HEADER_MACHINE_ARM, header->machine );
+          EM_ARM, header->e_machine );
       #endif
       // return error
       return false;
     }
   #elif defined( ELF64 )
-    if ( ELF_HEADER_MACHINE_AARCH64 != header->machine ) {
+    if ( EM_AARCH64 != header->e_machine ) {
       // debug output
       #if defined ( PRINT_ELF )
-        DEBUG_OUTPUT( "Invalid machine type!\r\n" );
+        DEBUG_OUTPUT( "Invalid machine type, expected %x and received %x!\r\n",
+          EM_AARCH64, header->e_machine );
       #endif
       // return error
       return false;
