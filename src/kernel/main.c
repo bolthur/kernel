@@ -37,6 +37,7 @@
 #include <kernel/mm/placement.h>
 #include <kernel/event.h>
 #include <kernel/task/process.h>
+#include <kernel/syscall.h>
 
 #include <endian.h>
 #include <tar.h>
@@ -125,6 +126,10 @@ void kernel_main( void ) {
   // Setup multitasking
   DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" );
   task_process_init();
+
+  // setup syscalls
+  DEBUG_OUTPUT( "[bolthur/kernel -> syscall] initialize ...\r\n" );;
+  syscall_init();
 
   // FIXME: Create init process from initialramdisk and pass initrd to init process
   // create processes for elf files

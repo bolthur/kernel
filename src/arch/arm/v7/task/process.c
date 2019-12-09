@@ -20,7 +20,6 @@
 
 #include <avl.h>
 #include <assert.h>
-#include <string.h>
 #include <arch/arm/stack.h>
 #include <kernel/mm/virt.h>
 #include <kernel/panic.h>
@@ -28,6 +27,7 @@
 #include <kernel/task/queue.h>
 #include <kernel/task/process.h>
 #include <kernel/debug/debug.h>
+#include <kernel/interrupt/interrupt.h>
 #include <arch/arm/v7/cpu.h>
 
 /**
@@ -68,7 +68,7 @@ void task_process_start( void ) {
     DUMP_REGISTER( next_thread->context );
   #endif
 
-  switch_to_thread( ( uintptr_t )next_thread->context, 0 );
+  task_thread_switch_to( ( uintptr_t )next_thread->context, 0 );
 }
 
 /**
@@ -77,8 +77,29 @@ void task_process_start( void ) {
  * @param context cpu context
  */
 void task_process_schedule( void* context ) {
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", context );
+  #endif
+
+  // prevent scheduling when kernel interrupt occurs ( context != NULL )
+  if ( NULL != context ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT(
+        "No scheduling in kernel level exception, context = 0x%x\r\n",
+        context );
+    #endif
+
+    // skip scheduling code
+    return;
+  }
+
   // convert context into cpu pointer
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+
+  // get context
+  INTERRUPT_DETERMINE_CONTEXT( cpu )
 
   // debug output
   #if defined( PRINT_PROCESS )
@@ -86,21 +107,8 @@ void task_process_schedule( void* context ) {
     DUMP_REGISTER( cpu );
   #endif
 
-  // prevent scheduling when kernel interrupt occurs
-  if ( ( cpu->spsr & CPSR_MODE_MASK ) != CPSR_MODE_USER ) {
-    // debug output
-    #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT(
-        "No scheduling in kernel level exception, spsr = 0x%x\r\n",
-        cpu->spsr & CPSR_MODE_MASK );
-    #endif
-
-    // skip scheduling code
-    return;
-  }
-
-  // get running thread
-  task_thread_ptr_t running_thread = task_thread_current();
+  // set running thread
+  task_thread_ptr_t running_thread = task_thread_current_thread;
   // get running queue if set
   task_priority_queue_ptr_t running_queue = NULL;
   if ( NULL != running_thread ) {
@@ -146,8 +154,6 @@ void task_process_schedule( void* context ) {
 
   // save context of current thread
   if ( NULL != running_thread ) {
-    // save state of running thread
-    memcpy( running_thread->context, context, sizeof( cpu_register_context_t ) );
     // reset state to ready
     running_thread->state = TASK_THREAD_STATE_READY;
   }
@@ -162,19 +168,5 @@ void task_process_schedule( void* context ) {
     // set context and flush
     virt_set_context( next_thread->process->virtual_context );
     virt_flush_complete();
-  }
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DUMP_REGISTER( ( cpu_register_context_ptr_t )context );
-  #endif
-  // overwrite context if different
-  // FIXME: May be necessary to use sp of user - offset of context
-  if ( running_thread != next_thread ) {
-    PANIC( "IMPLEMENTATION MAY BE TOTALLY WRONG!" )
-    memcpy( context, next_thread->context, sizeof( cpu_register_context_t ) );
-    // debug output
-    #if defined( PRINT_PROCESS )
-      DUMP_REGISTER( ( cpu_register_context_ptr_t )context );
-    #endif
   }
 }

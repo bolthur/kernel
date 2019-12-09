@@ -152,6 +152,15 @@ AC_ARG_ENABLE(
   [enable_output_platform=yes]
 )
 
+AC_ARG_ENABLE(
+  [output-syscall],
+  AC_HELP_STRING(
+    [--enable-output-syscall],
+    [activate syscall output [default: off]]
+  ),
+  [enable_output_syscall=yes]
+)
+
 AC_ARG_WITH(
   [optimization-level],
   AC_HELP_STRING(

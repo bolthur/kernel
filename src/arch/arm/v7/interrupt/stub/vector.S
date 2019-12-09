@@ -18,25 +18,34 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+.section .text
+
 #define ASSEMBLER_FILE 1
 #include <kernel/assembly.h>
 #include <arch/arm/v7/cpu.h>
-
-.section .text
 
 // handler
 IMPORT( undefined_instruction_handler )
 IMPORT( software_interrupt_handler )
 IMPORT( prefetch_abort_handler )
 IMPORT( data_abort_handler )
-IMPORT( unused_handler )
 IMPORT( interrupt_handler )
 IMPORT( fast_interrupt_handler )
 // event handling
 IMPORT( event_handle )
 // switch to thread
-IMPORT( switch_to_thread )
+IMPORT( task_thread_switch_to )
+IMPORT( task_thread_current_thread )
 
+// get thread context address
+.macro get_thread_context register
+  // load address of current executing thread
+  ldr \register, =task_thread_current_thread
+  // get address of pointer
+  ldr \register, [ \register ]
+  // get context ( first property )
+  ldr \register, [ \register ]
+.endm
 
 // ensure correct stack alignment before calling any c function
 .macro stack_wind register, stack
@@ -63,6 +72,11 @@ IMPORT( switch_to_thread )
 .endm
 
 .macro privileged_unprivileged_switch offset, register, privileged, unprivileged
+  // user mode also determined by stack is zero
+  cmp \register, #0
+  // jump to unprivileged if 0
+  beq \unprivileged
+
   // save r3 on stack and check for user mode
   push { r3 }
   // load spsr from previous mode
@@ -81,41 +95,34 @@ IMPORT( switch_to_thread )
   beq \unprivileged
 .endm
 
-.macro push_register name, mode, stack
+.macro push_register name, mode
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
     4, \
-    \stack, \
+    sp, \
     _\name\()_entry_privileged, \
     _\name\()_entry_unprivileged
 
 // non privileged entry
 _\name\()_entry_unprivileged:
-  // store r13 and r14 usermode
-  stmfd \stack, { r13 }^
-  nop
-  // update stack pointer
-  sub \stack, #4
+  // use context from thread structure
+  get_thread_context lr
 
-  // load lr from stack
-  ldr lr, [ \stack ]
-  // allocate space for context structure
-  sub lr, #STACK_FRAME_SIZE
   // save registers
   stmia lr, { r0 - r14 }^
 
   // get pushed lr and fill it into struct
-  ldr r0, [ \stack, #4 ]
+  ldr r0, [ sp, #0 ]
   str r0, [ lr, #60 ]
   // get pushed spsr and fill it into struct
-  ldr r0, [ \stack, #8 ]
+  ldr r0, [ sp, #4 ]
   str r0, [ lr, #64 ]
 
   // adjust stack pointer back
-  add \stack, #12
+  add sp, #8
 
-  // save fp in first register
-  mov r1, lr
+  // pass 0 as paramter to indicate user entry
+  mov r1, #0
 
   // jump to finished
   b _\name\()_entry_finished
@@ -123,18 +130,18 @@ _\name\()_entry_unprivileged:
 // privileged entry
 _\name\()_entry_privileged:
   // allocate space for context structure
-  sub \stack, #STACK_FRAME_SIZE
+  sub sp, #STACK_FRAME_SIZE
   // save registers
-  stmia \stack, { r0 - r12 }
+  stmia sp, { r0 - r12 }
   // get pushed lr and fill it into struct
-  ldr r0, [ \stack, #68 ]
-  str r0, [ \stack, #60 ]
+  ldr r0, [ sp, #68 ]
+  str r0, [ sp, #60 ]
   // get pushed spsr and fill it into struct
-  ldr r0, [ \stack, #72 ]
-  str r0, [ \stack, #64 ]
+  ldr r0, [ sp, #72 ]
+  str r0, [ sp, #64 ]
 
   // get pushed spsr for mode switch
-  ldr r0, [ \stack, #72 ]
+  ldr r0, [ sp, #72 ]
   // switch to previous mode
   orr r0, r0, #( CPSR_IRQ_INHIBIT | CPSR_FIQ_INHIBIT )
   msr cpsr_c, r0
@@ -144,11 +151,11 @@ _\name\()_entry_privileged:
   // switch mode again
   cps \mode
   // push sp, lr
-  str r1, [ \stack, #52 ]
-  str r2, [ \stack, #56 ]
+  str r1, [ sp, #52 ]
+  str r2, [ sp, #56 ]
 
   // save sp in first register
-  mov r1, \stack
+  mov r1, sp
 
   // jump to finished
   b _\name\()_entry_finished
@@ -167,13 +174,12 @@ _\name\()_entry_finished:
 
 // non privileged exit
 _\name\()_exit_unprivileged:
-  // set r0
-  mov r0, \stack
+  // get context from thread structure
+  get_thread_context r0
+  // set possible lr return fixup
   mov r1, #\fixup
   // call switch to thread
-  bl switch_to_thread
-  // jump to finished
-  b _\name\()_exit_finished
+  b task_thread_switch_to
 
 // privileged exit
 _\name\()_exit_privileged:
@@ -211,7 +217,7 @@ _\name\()_exit_finished:
   // switch to svc mode with fixup
   switch_mode \mode, \fixup
   // push register
-  push_register \name, \mode, sp
+  push_register \name, \mode
 
   // ensure stack alignment
   stack_wind r0, r1

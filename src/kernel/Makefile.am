@@ -15,6 +15,7 @@ libkernel_a_SOURCES = \
   mm/placement.c \
   mm/virt.c \
   smp/lock.c \
+  syscall/init.c \
   task/process.c \
   task/queue.c \
   task/stack.c \

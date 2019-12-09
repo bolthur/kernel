@@ -30,7 +30,7 @@
 /**
  * @brief Current running thread
  */
-static task_thread_ptr_t current = NULL;
+task_thread_ptr_t task_thread_current_thread = NULL;
 
 /**
  * @brief Compare id callback necessary for avl tree
@@ -76,15 +76,6 @@ size_t task_thread_generate_id( void ) {
 }
 
 /**
- * @brief Returns current thread
- *
- * @return task_thread_ptr_t
- */
-task_thread_ptr_t task_thread_current( void ) {
-  return current;
-}
-
-/**
  * @brief Sets current running thread
  *
  * @param thread thread to set
@@ -95,11 +86,11 @@ void task_thread_set_current(
   task_priority_queue_ptr_t queue
 ) {
   // set current
-  current = thread;
+  task_thread_current_thread = thread;
   // update queue
   queue->current = thread;
   // set state
-  current->state = TASK_THREAD_STATE_ACTIVE;
+  task_thread_current_thread->state = TASK_THREAD_STATE_ACTIVE;
 }
 
 /**

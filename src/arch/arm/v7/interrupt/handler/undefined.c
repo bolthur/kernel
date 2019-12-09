@@ -18,13 +18,37 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/v7/interrupt/vector.h>
+#include <assert.h>
+#include <arch/arm/v7/cpu.h>
+#include <kernel/panic.h>
+#include <kernel/interrupt/interrupt.h>
 
 /**
- * @brief Method to initialize interrupt vector table
+ * @brief Nested counter for undefined instruction exception handler
  */
-void interrupt_vector_init( void ) {
-  __asm__ __volatile__(
-    "mcr p15, 0, %[addr], c12, c0, 0"
-    : : [addr] "r" ( &interrupt_vector_table ) );
+static uint32_t nested_undefined = 0;
+
+/**
+ * @brief Undefined instruction exception handler
+ *
+ * @param cpu cpu context
+ *
+ * @todo check for fpu exception and reset exception bit
+ */
+void undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
+  // assert nesting
+  assert( nested_undefined++ < INTERRUPT_NESTED_MAX );
+
+  // get context
+  INTERRUPT_DETERMINE_CONTEXT( cpu )
+
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DUMP_REGISTER( cpu );
+  #else
+    ( void )cpu;
+  #endif
+  PANIC( "undefined" );
+  // decrement nested counter
+  nested_undefined--;
 }

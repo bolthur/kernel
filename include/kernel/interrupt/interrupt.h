@@ -21,10 +21,18 @@
 #if ! defined( __KERNEL_INTERRUPT_INTERRUPT__ )
 #define __KERNEL_INTERRUPT_INTERRUPT__
 
+#include <assert.h>
 #include <avl.h>
 #include <list.h>
 #include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
+#include <kernel/task/thread.h>
+
+#define INTERRUPT_NESTED_MAX 3
+#define INTERRUPT_DETERMINE_CONTEXT( c ) \
+  c = NULL != c ? c : TASK_THREAD_GET_CONTEXT; \
+  assert( c != NULL );
 
 typedef void ( *interrupt_callback_t )( void* );
 

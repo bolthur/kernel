@@ -22,8 +22,8 @@
 #include <kernel/assembly.h>
 #include <arch/arm/v7/cpu.h>
 
-EXPORT( switch_to_thread )
-switch_to_thread:
+EXPORT( task_thread_switch_to )
+task_thread_switch_to:
   // set fp
   mov fp, r0
   // load spsr

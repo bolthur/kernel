@@ -18,13 +18,23 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/v7/interrupt/vector.h>
+#include <kernel/event.h>
+#include <kernel/syscall.h>
+#include <kernel/interrupt/interrupt.h>
+#include <arch/arm/v7/cpu.h>
 
 /**
- * @brief Method to initialize interrupt vector table
+ * @brief Dummy system call for testing purposes
+ *
+ * @param context
  */
-void interrupt_vector_init( void ) {
-  __asm__ __volatile__(
-    "mcr p15, 0, %[addr], c12, c0, 0"
-    : : [addr] "r" ( &interrupt_vector_table ) );
+void syscall_putc( void* context ) {
+  // get context
+  INTERRUPT_DETERMINE_CONTEXT( context )
+
+  // transform to cpu structure
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+
+  // simple character printing
+  printf( "%c", ( uint8_t )cpu->r0 );
 }

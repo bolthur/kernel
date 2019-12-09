@@ -35,6 +35,7 @@ typedef enum {
 } task_thread_state_t;
 
 typedef struct task_thread {
+  void* context;
   avl_node_t node_id;
   size_t id;
   size_t priority;
@@ -42,19 +43,21 @@ typedef struct task_thread {
   uint64_t stack_physical;
   task_thread_state_t state;
   task_process_ptr_t process;
-  void* context;
 } task_thread_t, *task_thread_ptr_t;
 
-#define TASK_THREAD_GET_BLOCK( n ) \
-  ( task_thread_ptr_t )( ( uint8_t* )n - offsetof( task_thread_t, node ) )
+extern task_thread_ptr_t task_thread_current_thread;
 
-task_thread_ptr_t task_thread_current( void );
+#define TASK_THREAD_GET_BLOCK( n ) \
+  ( task_thread_ptr_t )( ( uint8_t* )n - offsetof( task_thread_t, node_id ) )
+#define TASK_THREAD_GET_CONTEXT  \
+  ( NULL != task_thread_current_thread ? task_thread_current_thread->context : NULL )
+
 void task_thread_set_current( task_thread_ptr_t, task_priority_queue_ptr_t );
 size_t task_thread_generate_id( void );
 avl_tree_ptr_t task_thread_init( void );
 void task_thread_destroy( avl_tree_ptr_t );
 task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t, size_t );
 task_thread_ptr_t task_thread_next( void );
-void __no_return switch_to_thread( uintptr_t, uint32_t );
+void __no_return task_thread_switch_to( uintptr_t, uint32_t );
 
 #endif
