@@ -18,9 +18,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/elf/elf32.h>
-#include <kernel/entry.h>
-#include <kernel/debug/debug.h>
+#include <core/elf/elf32.h>
+#include <core/entry.h>
+#include <core/debug/debug.h>
 
 /**
  * @brief Check elf header for execution

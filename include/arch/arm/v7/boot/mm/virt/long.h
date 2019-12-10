@@ -21,7 +21,7 @@
 #if ! defined( __ARCH_ARM_V7_BOOT_MM_VIRT_LONG__ )
 #define __ARCH_ARM_V7_BOOT_MM_VIRT_LONG__
 
-#include <kernel/boot/mm/virt.h>
+#include <core/boot/mm/virt.h>
 
 void boot_virt_setup_long( uintptr_t );
 void boot_virt_map_long( uint64_t, uintptr_t );

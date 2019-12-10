@@ -20,8 +20,8 @@
 
 #define ASSEMBLER_FILE 1
 #include <arch/arm/v7/cpu.h>
-#include <kernel/assembly.h>
-#include <kernel/entry.h>
+#include <core/assembly.h>
+#include <core/entry.h>
 
 // forward declaration for save of parameter
 IMPORT( loader_parameter_data )

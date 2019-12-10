@@ -24,12 +24,12 @@
 #include <string.h>
 #include <assert.h>
 
-#include <kernel/debug/debug.h>
-#include <kernel/entry.h>
-#include <kernel/panic.h>
-#include <kernel/mm/phys.h>
-#include <kernel/mm/placement.h>
-#include <kernel/mm/virt.h>
+#include <core/debug/debug.h>
+#include <core/entry.h>
+#include <core/panic.h>
+#include <core/mm/phys.h>
+#include <core/mm/placement.h>
+#include <core/mm/virt.h>
 #include <arch/arm/mm/virt.h>
 
 /**

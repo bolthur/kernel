@@ -21,7 +21,7 @@
 #if ! defined( __ARCH_ARM_V7_MM_VIRT_SHORT__ )
 #define __ARCH_ARM_V7_MM_VIRT_SHORT__
 
-#include <kernel/mm/virt.h>
+#include <core/mm/virt.h>
 
 void v7_short_map(
   virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );

@@ -19,7 +19,7 @@
  */
 
 #define ASSEMBLER_FILE 1
-#include <kernel/assembly.h>
+#include <core/assembly.h>
 
 .section .text
 

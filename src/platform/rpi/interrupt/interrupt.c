@@ -21,8 +21,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <kernel/panic.h>
-#include <kernel/io.h>
+#include <core/panic.h>
+#include <core/io.h>
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
 

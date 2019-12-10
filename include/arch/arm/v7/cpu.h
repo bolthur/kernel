@@ -45,7 +45,7 @@
 
 #if ! defined( ASSEMBLER_FILE )
   #include <stdint.h>
-  #include <kernel/debug/debug.h>
+  #include <core/debug/debug.h>
 
   /**
    * @brief CPU register context

@@ -5,7 +5,7 @@
             "includePath": [
                 "${workspaceFolder}/include",
                 "${workspaceFolder}/include/lib",
-                "${workspaceFolder}/include/kernel",
+                "${workspaceFolder}/include/core",
                 "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.2.0/include",
                 "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.2.0/include"
             ],
@@ -16,7 +16,7 @@
                     "${workspaceFolder}/src",
                     "${workspaceFolder}/include",
                     "${workspaceFolder}/include/lib",
-                    "${workspaceFolder}/include/kernel",
+                    "${workspaceFolder}/include/core",
                     "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.2.0/include",
                     "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.2.0/include"
                 ],
@@ -34,7 +34,7 @@
             "includePath": [
                 "${workspaceFolder}/include",
                 "${workspaceFolder}/include/lib",
-                "${workspaceFolder}/include/kernel",
+                "${workspaceFolder}/include/core",
                 "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.2.0/include",
                 "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.2.0/include"
             ],
@@ -45,7 +45,7 @@
                     "${workspaceFolder}/src",
                     "${workspaceFolder}/include",
                     "${workspaceFolder}/include/lib",
-                    "${workspaceFolder}/include/kernel",
+                    "${workspaceFolder}/include/core",
                     "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.2.0/include",
                     "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.2.0/include"
                 ],

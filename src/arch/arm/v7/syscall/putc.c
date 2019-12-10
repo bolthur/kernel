@@ -18,9 +18,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/event.h>
-#include <kernel/syscall.h>
-#include <kernel/interrupt/interrupt.h>
+#include <core/event.h>
+#include <core/syscall.h>
+#include <core/interrupt.h>
 #include <arch/arm/v7/cpu.h>
 
 /**

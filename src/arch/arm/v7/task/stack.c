@@ -19,8 +19,8 @@
  */
 
 #include <assert.h>
-#include <kernel/debug/debug.h>
-#include <kernel/task/stack.h>
+#include <core/debug/debug.h>
+#include <core/task/stack.h>
 #include <arch/arm/stack.h>
 
 #if defined( ELF32 )

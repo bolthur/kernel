@@ -22,15 +22,15 @@
 #include <string.h>
 #include <assert.h>
 #include <stdlib.h>
-#include <kernel/panic.h>
-#include <kernel/entry.h>
-#include <kernel/debug/debug.h>
+#include <core/panic.h>
+#include <core/entry.h>
+#include <core/debug/debug.h>
 #include <arch/arm/barrier.h>
-#include <kernel/mm/phys.h>
-#include <kernel/mm/heap.h>
+#include <core/mm/phys.h>
+#include <core/mm/heap.h>
 #include <arch/arm/mm/virt/short.h>
 #include <arch/arm/v7/mm/virt/short.h>
-#include <kernel/mm/virt.h>
+#include <core/mm/virt.h>
 
 /**
  * @brief Temporary space start for short format

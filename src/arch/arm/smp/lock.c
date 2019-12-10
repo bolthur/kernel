@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/smp/lock.h>
+#include <core/smp/lock.h>
 
 /**
  * @brief Acquire lock

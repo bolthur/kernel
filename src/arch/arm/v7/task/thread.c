@@ -22,15 +22,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
-#include <kernel/panic.h>
+#include <core/panic.h>
 #include <arch/arm/stack.h>
-#include <kernel/mm/phys.h>
-#include <kernel/mm/virt.h>
-#include <kernel/debug/debug.h>
-#include <kernel/task/queue.h>
-#include <kernel/task/process.h>
-#include <kernel/task/thread.h>
-#include <kernel/task/stack.h>
+#include <core/mm/phys.h>
+#include <core/mm/virt.h>
+#include <core/debug/debug.h>
+#include <core/task/queue.h>
+#include <core/task/process.h>
+#include <core/task/thread.h>
+#include <core/task/stack.h>
 #include <arch/arm/v7/cpu.h>
 
 /**
@@ -59,7 +59,7 @@ task_thread_ptr_t task_thread_create(
   uintptr_t stack_virtual = task_stack_manager_next( process->thread_stack_manager );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "stack_kernel_virtual = 0x%08x\r\n", stack_virtual );
+    DEBUG_OUTPUT( "stack_virtual = 0x%08x\r\n", stack_virtual );
   #endif
 
   // create context

@@ -19,7 +19,7 @@
  */
 
 #define ASSEMBLER_FILE 1
-#include <kernel/assembly.h>
+#include <core/assembly.h>
 #include <arch/arm/v7/cpu.h>
 
 EXPORT( task_thread_switch_to )

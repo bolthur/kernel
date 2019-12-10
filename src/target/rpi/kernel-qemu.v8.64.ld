@@ -26,7 +26,7 @@ ENTRY( boot_start )
 GROUP(
   ../../arch/arm/v8/libv8.a
   ../../arch/arm/libarm.a
-  ../../kernel/libkernel.a
+  ../../core/libcore.a
   ../../platform/rpi/librpi_qemu.a
   ../../lib/assert/libassert.a
   ../../lib/atag/libatag.a

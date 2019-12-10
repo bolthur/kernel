@@ -20,8 +20,8 @@
 
 #include <stddef.h>
 
-#include <kernel/panic.h>
-#include <kernel/mm/virt.h>
+#include <core/panic.h>
+#include <core/mm/virt.h>
 
 /**
  * @brief Temporary space start for short format

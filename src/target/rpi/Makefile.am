@@ -7,7 +7,7 @@ BUILT_SOURCES = \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}_qemu.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
-  ${abs_top_builddir}/src/kernel/libkernel.a \
+  ${abs_top_builddir}/src/core/libcore.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \
@@ -27,7 +27,7 @@ kernel_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
-  ${abs_top_builddir}/src/kernel/libkernel.a \
+  ${abs_top_builddir}/src/core/libcore.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \
@@ -46,7 +46,7 @@ kernel_qemu_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}_qemu.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
-  ${abs_top_builddir}/src/kernel/libkernel.a \
+  ${abs_top_builddir}/src/core/libcore.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \

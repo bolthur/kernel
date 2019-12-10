@@ -21,13 +21,13 @@
 #include <avl.h>
 #include <assert.h>
 #include <arch/arm/stack.h>
-#include <kernel/mm/virt.h>
-#include <kernel/panic.h>
-#include <kernel/arch.h>
-#include <kernel/task/queue.h>
-#include <kernel/task/process.h>
-#include <kernel/debug/debug.h>
-#include <kernel/interrupt/interrupt.h>
+#include <core/mm/virt.h>
+#include <core/panic.h>
+#include <core/arch.h>
+#include <core/task/queue.h>
+#include <core/task/process.h>
+#include <core/debug/debug.h>
+#include <core/interrupt.h>
 #include <arch/arm/v7/cpu.h>
 
 /**

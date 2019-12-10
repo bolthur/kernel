@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/arch.h>
+#include <core/arch.h>
 
 /**
  * @brief Method to initialize architecture related code

@@ -19,7 +19,7 @@
  */
 
 #include <stdlib.h>
-#include <kernel/serial.h>
+#include <core/serial.h>
 
 /**
  * @brief Initialize TTY

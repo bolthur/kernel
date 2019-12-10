@@ -36,10 +36,10 @@
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
 
-#include <kernel/event.h>
-#include <kernel/io.h>
-#include <kernel/timer.h>
-#include <kernel/interrupt/interrupt.h>
+#include <core/event.h>
+#include <core/io.h>
+#include <core/timer.h>
+#include <core/interrupt.h>
 
 #if defined( BCM2709 ) || defined( BCM2710 )
   // Timer match bits

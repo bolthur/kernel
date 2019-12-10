@@ -20,7 +20,7 @@
 
 #include <stdint.h>
 #include <arch/arm/barrier.h>
-#include <kernel/io.h>
+#include <core/io.h>
 
 /**
  * @brief Read 8 bit from memory mapped I/O

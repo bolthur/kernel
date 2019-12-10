@@ -19,7 +19,7 @@
  */
 
 #include <stdint.h>
-#include <kernel/panic.h>
+#include <core/panic.h>
 
 #if UINT32_MAX == UINTPTR_MAX
   #define STACK_CHK_GUARD 0x01234567

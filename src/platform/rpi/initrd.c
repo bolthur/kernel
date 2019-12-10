@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/initrd.h>
+#include <core/initrd.h>
 
 /**
  * @brief Platform initrd init

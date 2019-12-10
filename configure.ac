@@ -7,15 +7,14 @@ AC_CONFIG_AUX_DIR([build-aux/config])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
-AC_CONFIG_SRCDIR([src/kernel/main.c])
+AC_CONFIG_SRCDIR([src/core/main.c])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_HEADERS([include/config.h])
 
 AC_LANG([C])
 
-# FIXME: Shouldn't be necessary, when creating symlinks of toolchain binaries to /usr/local/bin
-AC_SUBST(PATH, "${HOME}/.bolthur/cross/bin:${PATH}")
-AC_SUBST(MAKEFLAGS, "${MAKEFLAGS} --no-print-directory -j")
+# Prevent enter folder output
+AC_SUBST(MAKEFLAGS, "${MAKEFLAGS} --no-print-directory")
 
 AC_ARG_ENABLE([device],
   AC_HELP_STRING(
@@ -266,7 +265,7 @@ AC_CONFIG_FILES([
   src/arch/arm/v6/Makefile
   src/arch/arm/v7/Makefile
   src/arch/arm/v8/Makefile
-  src/kernel/Makefile
+  src/core/Makefile
   src/lib/Makefile
   src/lib/assert/Makefile
   src/lib/atag/Makefile

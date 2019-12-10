@@ -20,8 +20,8 @@
 
 #include <stdio.h>
 #include <atag.h>
-#include <kernel/initrd.h>
-#include <kernel/debug/debug.h>
+#include <core/initrd.h>
+#include <core/debug/debug.h>
 #include <platform/rpi/platform.h>
 
 /**

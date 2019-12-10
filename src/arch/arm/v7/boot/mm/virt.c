@@ -21,7 +21,7 @@
 #include <stdint.h>
 
 #include <arch/arm/mm/virt.h>
-#include <kernel/entry.h>
+#include <core/entry.h>
 #include <arch/arm/v7/boot/mm/virt/long.h>
 #include <arch/arm/v7/boot/mm/virt/short.h>
 

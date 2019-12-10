@@ -20,8 +20,8 @@
 
 #include <assert.h>
 #include <arch/arm/v7/cpu.h>
-#include <kernel/panic.h>
-#include <kernel/interrupt/interrupt.h>
+#include <core/panic.h>
+#include <core/interrupt.h>
 
 /**
  * @brief Nested counter for prefetch abort exception handler

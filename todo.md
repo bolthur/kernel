@@ -11,12 +11,6 @@
   * [ ] Extend undefined exception to check for fpu error with clear of flag
 * [ ] Memory management
   * [ ] Consider and enable CPU related caches for performance
-* [ ] Multitasking
-  * [ ] Add kernel side multitasking
-  * [ ] Add user processes to multitasking
-  * [ ] Add parsing of ELF files
-  * [ ] Extend dummy initrd by test programs and execute them
-* [ ] Implement syscall handling via `swi`
 * [ ] TAR / initrd
   * [ ] Add parsing of initial ramdisk containing drivers or programs for startup
   * [ ] Check init driver within folder "/boot"

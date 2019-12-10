@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/assembly.h>
+#include <core/assembly.h>
 
 .section .text.boot
 

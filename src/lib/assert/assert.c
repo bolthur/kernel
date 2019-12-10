@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <kernel/panic.h>
+#include <core/panic.h>
 
 void __no_return _assert(
   const char* restrict file,

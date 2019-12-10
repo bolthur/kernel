@@ -21,13 +21,13 @@
 #include <stddef.h>
 
 #include <string.h>
-#include <kernel/panic.h>
-#include <kernel/debug/debug.h>
+#include <core/panic.h>
+#include <core/debug/debug.h>
 #include <platform/rpi/peripheral.h>
 #include <platform/rpi/mailbox/property.h>
 #include <arch/arm/mm/virt.h>
-#include <kernel/mm/phys.h>
-#include <kernel/mm/virt.h>
+#include <core/mm/phys.h>
+#include <core/mm/virt.h>
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
 #if defined( BCM2709 ) || defined( BCM2710 )
