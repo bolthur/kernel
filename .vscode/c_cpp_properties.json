@@ -6,8 +6,8 @@
                 "${workspaceFolder}/include",
                 "${workspaceFolder}/include/lib",
                 "${workspaceFolder}/include/core",
-                "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.2.0/include",
-                "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.2.0/include"
+                "/opt/bolthur/os/lib/gcc/arm-bolthur-eabi/9.2.0/include",
+                "/opt/bolthur/os/lib/gcc/aarch64-bolthur-elf/9.2.0/include"
             ],
             "defines": [],
             "intelliSenseMode": "${default}",
@@ -17,8 +17,8 @@
                     "${workspaceFolder}/include",
                     "${workspaceFolder}/include/lib",
                     "${workspaceFolder}/include/core",
-                    "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.2.0/include",
-                    "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.2.0/include"
+                    "/opt/bolthur/os/lib/gcc/arm-bolthur-eabi/9.2.0/include",
+                    "/opt/bolthur/os/lib/gcc/aarch64-bolthur-elf/9.2.0/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -35,8 +35,8 @@
                 "${workspaceFolder}/include",
                 "${workspaceFolder}/include/lib",
                 "${workspaceFolder}/include/core",
-                "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.2.0/include",
-                "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.2.0/include"
+                "/opt/bolthur/os/lib/gcc/arm-bolthur-eabi/9.2.0/include",
+                "/opt/bolthur/os/lib/gcc/aarch64-bolthur-elf/9.2.0/include"
             ],
             "defines": [],
             "intelliSenseMode": "${default}",
@@ -46,8 +46,8 @@
                     "${workspaceFolder}/include",
                     "${workspaceFolder}/include/lib",
                     "${workspaceFolder}/include/core",
-                    "${env:HOME}/.bolthur/cross/lib/gcc/arm-none-eabi/9.2.0/include",
-                    "${env:HOME}/.bolthur/cross/lib/gcc/aarch64-none-elf/9.2.0/include"
+                    "/opt/bolthur/os/lib/gcc/arm-bolthur-eabi/9.2.0/include",
+                    "/opt/bolthur/os/lib/gcc/aarch64-bolthur-elf/9.2.0/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""

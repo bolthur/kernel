@@ -52,9 +52,9 @@ autoreconf -iv
 mkdir build
 cd build
 ### configure with one of the following commands
-../configure --host arm-none-eabi --enable-device=rpi2_b_rev1 --enable-debug --enable-output
-../configure --host aarch64-none-elf --enable-device=rpi3_b --enable-debug --enable-output
-../configure --host arm-none-eabi --enable-device=rpi_zero_w --enable-debug --enable-output
+../configure --host arm-bolthur-eabi --enable-device=rpi2_b_rev1 --enable-debug --enable-output
+../configure --host aarch64-bolthur-elf --enable-device=rpi3_b --enable-debug --enable-output
+../configure --host arm-bolthur-eabi --enable-device=rpi_zero_w --enable-debug --enable-output
 ```
 
 Possible additional parameters to `--host` and `--enable-device`:
