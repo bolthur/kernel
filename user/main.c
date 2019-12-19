@@ -1,15 +1,13 @@
 
+#include <stdio.h>
+
 int i = 0;
 
-void _start( void ) {
+int main( int argc, char *argv[] ) {
   for ( int j = i + 5; i < j; i++ ) {
     char c = ( char )( ( int )'0' + i );
-
-    __asm__ __volatile__( "\n\
-      mov r0, %[r0] \n\
-      svc #10" : : [ r0 ]"r"( c )
-    );
+    putchar( c );
   }
 
-  while( 1 ) {}
+  return 0;
 }
