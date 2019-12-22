@@ -11,7 +11,7 @@ LDFLAGS =
 all: $(BIN)
 
 %.bin: $(SRC)
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ -v
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ -specs=bolthur.specs
 
 clean:
 	rm $(BIN)
