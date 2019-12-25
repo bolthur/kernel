@@ -111,6 +111,9 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     executable_format=32
     AC_DEFINE([ELF32], [1])
 
+    # Add sysroot to path
+    AC_SUBST(PATH, "/opt/bolthur/sysroot/arm/bin:${PATH}")
+
     case "${DEVICE}" in
     rpi2_b_rev1)
       CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
@@ -169,6 +172,9 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     host_bfd=elf64-littleaarch64
     executable_format=64
     AC_DEFINE([ELF64], [1])
+
+    # Add sysroot to path
+    AC_SUBST(PATH, "/opt/bolthur/sysroot/aarch64/bin:${PATH}")
 
     case "${DEVICE}" in
     rpi3_b)

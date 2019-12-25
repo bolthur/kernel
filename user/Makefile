@@ -1,5 +1,5 @@
 
-SRC = $(shell find -name '*.c')
+SRC = $(shell find . -name '*.c')
 BIN = $(addsuffix .bin,$(basename $(SRC)))
 
 CC = arm-bolthur-eabi-gcc
@@ -11,7 +11,7 @@ LDFLAGS =
 all: $(BIN)
 
 %.bin: $(SRC)
-	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ -specs=bolthur.specs
+	$(CC) $(CFLAGS) $(LDFLAGS) $^ -o $@ -v
 
 clean:
 	rm $(BIN)
