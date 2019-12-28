@@ -22,10 +22,10 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <kernel/debug.h>
-#include <kernel/entry.h>
-#include <kernel/mm/phys.h>
-#include <kernel/mm/placement.h>
+#include <core/debug/debug.h>
+#include <core/entry.h>
+#include <core/mm/phys.h>
+#include <core/mm/placement.h>
 #include <platform/rpi/platform.h>
 #include <platform/rpi/peripheral.h>
 #include <platform/rpi/mailbox/property.h>

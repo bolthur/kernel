@@ -21,7 +21,7 @@
 #include <stddef.h>
 #include <assert.h>
 
-#include <kernel/panic.h>
+#include <core/panic.h>
 #include <stdlib.h>
 
 /**

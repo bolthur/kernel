@@ -21,7 +21,7 @@
 #if ! defined( __BOOT_ARCH_ARM_V7_MM_SHORT__ )
 #define __BOOT_ARCH_ARM_V7_MM_SHORT__
 
-#include <kernel/boot/mm/virt.h>
+#include <core/boot/mm/virt.h>
 
 void boot_virt_setup_short( uintptr_t );
 void boot_virt_map_short( uintptr_t, uintptr_t );

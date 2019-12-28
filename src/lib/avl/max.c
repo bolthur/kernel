@@ -43,7 +43,7 @@ static avl_node_ptr_t get_max(
 /**
  * @brief Get max node of tree
  *
- * @param root node to get min value
+ * @param root root to get max node
  * @return avl_node_ptr_t found node or null if empty
  */
 avl_node_ptr_t avl_get_max( const avl_node_ptr_t root ) {

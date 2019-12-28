@@ -21,13 +21,13 @@
 #include <stddef.h>
 
 #include <string.h>
-#include <kernel/panic.h>
-#include <kernel/debug.h>
+#include <core/panic.h>
+#include <core/debug/debug.h>
 #include <platform/rpi/peripheral.h>
 #include <platform/rpi/mailbox/property.h>
 #include <arch/arm/mm/virt.h>
-#include <kernel/mm/phys.h>
-#include <kernel/mm/virt.h>
+#include <core/mm/phys.h>
+#include <core/mm/virt.h>
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
 #if defined( BCM2709 ) || defined( BCM2710 )
@@ -59,7 +59,11 @@ void virt_platform_init( void ) {
   while ( start < peripheral_end_get( PERIPHERAL_GPIO ) ) {
     // map
     virt_map_address(
-      kernel_context, virtual, start, MEMORY_TYPE_DEVICE, PAGE_TYPE_AUTO );
+      kernel_context,
+      virtual,
+      start,
+      VIRT_MEMORY_TYPE_DEVICE,
+      VIRT_PAGE_TYPE_AUTO );
 
     // increase start and virtual
     start += PAGE_SIZE;
@@ -85,7 +89,11 @@ void virt_platform_init( void ) {
     while ( start < peripheral_end_get( PERIPHERAL_LOCAL ) ) {
       // map
       virt_map_address(
-        kernel_context, virtual, start, MEMORY_TYPE_DEVICE, PAGE_TYPE_AUTO );
+        kernel_context,
+        virtual,
+        start,
+        VIRT_MEMORY_TYPE_DEVICE,
+        VIRT_PAGE_TYPE_AUTO );
 
       // increase start and virtual
       start += PAGE_SIZE;
@@ -98,8 +106,8 @@ void virt_platform_init( void ) {
     kernel_context,
     MAILBOX_PROPERTY_AREA,
     ( uintptr_t )ptb_buffer_phys,
-    MEMORY_TYPE_DEVICE,
-    PAGE_TYPE_AUTO
+    VIRT_MEMORY_TYPE_DEVICE,
+    VIRT_PAGE_TYPE_AUTO
   );
   // set pointer
   ptb_buffer = ( int32_t* )MAILBOX_PROPERTY_AREA;

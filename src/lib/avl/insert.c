@@ -58,7 +58,6 @@ static avl_node_ptr_t insert(
  *
  * @param tree
  * @param node
- * @return bool
  */
 void avl_insert_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
   // ensure existing tree

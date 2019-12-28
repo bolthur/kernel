@@ -27,8 +27,8 @@
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/mailbox/property.h>
 
-#include <kernel/io.h>
-#include <kernel/serial.h>
+#include <core/io.h>
+#include <core/serial.h>
 
 /**
  * @brief Initialized flag

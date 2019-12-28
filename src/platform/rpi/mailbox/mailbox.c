@@ -20,7 +20,7 @@
 
 #include <stdbool.h>
 
-#include <kernel/panic.h>
+#include <core/panic.h>
 #include <arch/arm/barrier.h>
 #include <platform/rpi/mailbox/mailbox.h>
 #include <platform/rpi/peripheral.h>

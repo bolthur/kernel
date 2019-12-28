@@ -20,8 +20,8 @@
 
 #include <stddef.h>
 
-#include <kernel/panic.h>
-#include <kernel/mm/virt.h>
+#include <core/panic.h>
+#include <core/mm/virt.h>
 
 /**
  * @brief Temporary space start for short format
@@ -53,16 +53,45 @@ void v6_short_map(
 }
 
 /**
+ * @brief Map a physical address within temporary space
+ *
+ * @param paddr physicall address
+ * @param size size to map
+ * @return uintptr_t
+ */
+uintptr_t v6_short_map_temporary(
+  __unused uint64_t paddr,
+  __unused size_t size
+) {
+  PANIC( "v6 mmu temporary mapping not yet supported!" );
+}
+
+/**
  * @brief Internal v6 unmapping function
  *
  * @param ctx pointer to page context
  * @param vaddr pointer to virtual address
+ * @param free_phys flag to free also physical memory
  */
 void v6_short_unmap(
   __unused virt_context_ptr_t ctx,
-  __unused uintptr_t vaddr
+  __unused uintptr_t vaddr,
+  __unused bool free_phys
 ) {
   PANIC( "v6 mmu mapping not yet supported!" );
+}
+
+/**
+ * @brief Unmap temporary mapped page again
+ *
+ * @param addr virtual temporary address
+ * @param size size to unmap
+ */
+void v6_short_unmap_temporary(
+  __unused uintptr_t addr,
+  __unused size_t size
+) {
+  PANIC( "v6 mmu unmap temporary not yet supported!" );
 }
 
 /**
@@ -123,6 +152,15 @@ void v6_short_prepare_temporary( __unused virt_context_ptr_t ctx ) {
  */
 virt_context_ptr_t v6_short_create_context( __unused virt_context_type_t type ) {
   PANIC( "v6 create context not yet implemented!" );
+}
+
+/**
+ * @brief Destroy context for v6 short descriptor
+ *
+ * @param ctx context to destroy
+ */
+void v6_short_destroy_context( __unused virt_context_ptr_t ctx ) {
+  PANIC( "v6 destroy context not yet implemented!" );
 }
 
 /**

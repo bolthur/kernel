@@ -20,10 +20,10 @@
 
 #include <stdint.h>
 
-#include <kernel/mm/phys.h>
+#include <core/mm/phys.h>
 #include <arch/arm/mm/virt/long.h>
 #include <arch/arm/v7/boot/mm/virt/long.h>
-#include <kernel/entry.h>
+#include <core/entry.h>
 
 /**
  * @brief Initial middle directory for context

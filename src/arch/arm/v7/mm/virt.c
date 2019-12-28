@@ -22,13 +22,13 @@
 
 #include <string.h>
 
-#include <kernel/entry.h>
-#include <kernel/panic.h>
-#include <kernel/debug.h>
+#include <core/entry.h>
+#include <core/panic.h>
+#include <core/debug/debug.h>
 
-#include <kernel/mm/phys.h>
-#include <kernel/mm/placement.h>
-#include <kernel/mm/virt.h>
+#include <core/mm/phys.h>
+#include <core/mm/placement.h>
+#include <core/mm/virt.h>
 #include <arch/arm/mm/virt.h>
 #include <arch/arm/v7/mm/virt/short.h>
 #include <arch/arm/v7/mm/virt/long.h>
@@ -94,21 +94,67 @@ void virt_map_address_random(
 }
 
 /**
- * @brief unmap virtual address
+ * @brief Map a physical address within temporary space
  *
- * @param ctx pointer to page context
- * @param addr pointer to virtual address
+ * @param paddr physicall address
+ * @param size size to map
+ * @return uintptr_t
  */
-void virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr ) {
+uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-    v7_long_unmap( ctx, addr );
+    return v7_long_map_temporary( paddr, size );
   // check v7 short descriptor format
   } else if (
     ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
-    v7_short_unmap( ctx, addr );
+    return v7_short_map_temporary( paddr, size );
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
+ * @brief unmap virtual address
+ *
+ * @param ctx pointer to page context
+ * @param addr pointer to virtual address
+ * @param free_phys flag to free also physical memory
+ */
+void virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr, bool free_phys ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    v7_long_unmap( ctx, addr, free_phys );
+  // check v7 short descriptor format
+  } else if (
+    ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
+    || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
+  ) {
+    v7_short_unmap( ctx, addr, free_phys );
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
+ * @brief Unmap temporary mapped page again
+ *
+ * @param addr virtual temporary address
+ * @param size size to unmap
+ */
+void virt_unmap_temporary( uintptr_t addr, size_t size ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    v7_long_unmap_temporary( addr, size );
+  // check v7 short descriptor format
+  } else if (
+    ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
+    || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
+  ) {
+    v7_short_unmap_temporary( addr, size );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );
@@ -131,6 +177,27 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
     return v7_short_create_context( type );
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
+ * @brief Method to destroy virtual context
+ *
+ * @param ctx
+ */
+void virt_destroy_context( virt_context_ptr_t ctx ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    v7_long_destroy_context( ctx );
+  // check v7 short descriptor format
+  } else if (
+    ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
+    || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
+  ) {
+    v7_short_destroy_context( ctx );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

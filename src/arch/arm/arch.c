@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/arch.h>
+#include <core/arch.h>
 
 /**
  * @brief Method to initialize architecture related code
@@ -26,4 +26,11 @@
 void arch_init( void ) {
   // execute sub arch
   arch_sub_init();
+}
+
+/**
+ * @brief halt instruction
+ */
+void arch_halt( void ) {
+  __asm__ __volatile__( "wfe" ::: "memory" );
 }

@@ -18,12 +18,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <kernel/initrd.h>
+#include <core/initrd.h>
 
 /**
  * @brief Platform initrd init
  */
 void initrd_platform_init( void ) {
   // set start address
-  initrd_set_start_address( INITRD_LOAD_ADDRESS );
+  if ( 0 == initrd_get_start_address() ) {
+    initrd_set_start_address( INITRD_LOAD_ADDRESS );
+  }
 }

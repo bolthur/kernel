@@ -21,17 +21,20 @@
 #if ! defined( __ARCH_ARM_V7_MM_VIRT_LONG__ )
 #define __ARCH_ARM_V7_MM_VIRT_LONG__
 
-#include <kernel/mm/virt.h>
+#include <core/mm/virt.h>
 
 void v7_long_map(
   virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
 void v7_long_map_random(
   virt_context_ptr_t, uintptr_t, virt_memory_type_t, uint32_t );
-void v7_long_unmap( virt_context_ptr_t, uintptr_t );
+uintptr_t v7_long_map_temporary( uint64_t, size_t );
+void v7_long_unmap( virt_context_ptr_t, uintptr_t, bool );
+void v7_long_unmap_temporary( uintptr_t, size_t );
 uint64_t v7_long_create_table( virt_context_ptr_t, uintptr_t, uint64_t );
 void v7_long_set_context( virt_context_ptr_t );
 void v7_long_prepare_temporary( virt_context_ptr_t );
 virt_context_ptr_t v7_long_create_context( virt_context_type_t );
+void v7_long_destroy_context( virt_context_ptr_t );
 void v7_long_prepare( void );
 void v7_long_flush_complete( void );
 void v7_long_flush_address( uintptr_t );

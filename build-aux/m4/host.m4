@@ -1,12 +1,15 @@
 
 AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
+  # General define templates
   AH_TEMPLATE([ELF32], [Define to 1 for 32 bit ELF targets])
   AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets])
-  AH_TEMPLATE([DEBUG], [Set to 1 to enable debug mode])
   AH_TEMPLATE([IS_HIGHER_HALF], [Define to 1 when kernel is higher half])
-  AH_TEMPLATE([INITIAL_PHYSICAL_MAP], [Define contains amount of memory to map initially per platform])
-  AH_TEMPLATE([ARCH_ARM], [Define to 1 for ARM targets])
-  AH_TEMPLATE([TTY_ENABLE], [Define to 1 to enable kernel print])
+  AH_TEMPLATE([INITIAL_PHYSICAL_MAP], [Define contains amount of memory to map initially by platform])
+  AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
+  AH_TEMPLATE([HAS_SMP], [Define to 1 when board supports smp])
+  AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
+  # Output related define templates
+  AH_TEMPLATE([OUTPUT_ENABLE], [Define to 1 to enable kernel print])
   AH_TEMPLATE([PRINT_MM_PHYS], [Define to 1 to enable output of physical memory manager])
   AH_TEMPLATE([PRINT_MM_VIRT], [Define to 1 to enable output of virtual memory manager])
   AH_TEMPLATE([PRINT_MM_HEAP], [Define to 1 to enable output of kernel heap])
@@ -14,17 +17,17 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_MAILBOX], [Define to 1 to enable output of mailbox])
   AH_TEMPLATE([PRINT_TIMER], [Define to 1 to enable output of timer])
   AH_TEMPLATE([PRINT_INITRD], [Define to 1 to enable output of initrd])
-  AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
-  AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
-
-  # Test possibe enable debug parameter
-  AS_IF([test "x$with_debug" == "xyes"], [
-    AC_DEFINE([DEBUG], [1])
-  ])
+  AH_TEMPLATE([PRINT_EVENT], [Define to 1 to enable output of event])
+  AH_TEMPLATE([PRINT_INTERRUPT], [Define to 1 to enable output of interrupt methods])
+  AH_TEMPLATE([PRINT_PROCESS], [Define to 1 to enable output of process methods])
+  AH_TEMPLATE([PRINT_EXCEPTION], [Define to 1 to enable output of exception handlers])
+  AH_TEMPLATE([PRINT_ELF], [Define to 1 to enable output of elf routines])
+  AH_TEMPLATE([PRINT_PLATFORM], [Define to 1 to enable output of platform initialization])
+  AH_TEMPLATE([PRINT_SYSCALL], [Define to 1 to enable output of syscall initialization])
 
   # Test for general output enable
   AS_IF([test "x$enable_output" == "xyes"], [
-    AC_DEFINE([TTY_ENABLE], [1])
+    AC_DEFINE([OUTPUT_ENABLE], [1])
   ])
 
   # Test for physical memory manager output
@@ -57,9 +60,44 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     AC_DEFINE([PRINT_TIMER], [1])
   ])
 
-  # Test for timer output
+  # Test for initrd output
   AS_IF([test "x$enable_output_initrd" == "xyes"], [
     AC_DEFINE([PRINT_INITRD], [1])
+  ])
+
+  # Test for event output
+  AS_IF([test "x$enable_output_event" == "xyes"], [
+    AC_DEFINE([PRINT_EVENT], [1])
+  ])
+
+  # Test for interrupt output
+  AS_IF([test "x$enable_output_interrupt" == "xyes"], [
+    AC_DEFINE([PRINT_INTERRUPT], [1])
+  ])
+
+  # Test for process output
+  AS_IF([test "x$enable_output_process" == "xyes"], [
+    AC_DEFINE([PRINT_PROCESS], [1])
+  ])
+
+  # Test for exception output
+  AS_IF([test "x$enable_output_exception" == "xyes"], [
+    AC_DEFINE([PRINT_EXCEPTION], [1])
+  ])
+
+  # Test for elf output
+  AS_IF([test "x$enable_output_elf" == "xyes"], [
+    AC_DEFINE([PRINT_ELF], [1])
+  ])
+
+  # Test for platform output
+  AS_IF([test "x$enable_output_platform" == "xyes"], [
+    AC_DEFINE([PRINT_PLATFORM],[1])
+  ])
+
+  # Test for syscall output
+  AS_IF([test "x$enable_output_syscall" == "xyes"], [
+    AC_DEFINE([PRINT_SYSCALL],[1])
   ])
 
   case "${host_cpu}" in
@@ -68,9 +106,13 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     host_bfd=elf32-littlearm
     output_img=kernel.img
     output_sym=kernel.sym
+    output_img_qemu=kernel.img
+    output_sym_qemu=kernel.sym
     executable_format=32
-    AC_DEFINE([ARCH_ARM], [1])
     AC_DEFINE([ELF32], [1])
+
+    # Add sysroot to path
+    AC_SUBST(PATH, "/opt/bolthur/sysroot/arm/bin:${PATH}")
 
     case "${DEVICE}" in
     rpi2_b_rev1)
@@ -79,6 +121,8 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       platform_subdir=rpi
       output_img=kernel7.img
       output_sym=kernel7.sym
+      output_img_qemu=kernel7_qemu.img
+      output_sym_qemu=kernel7_qemu.sym
       AC_DEFINE([ELF32])
       AC_DEFINE([BCM2709], [1], [Define to 1 for BCM2709 chip])
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets])
@@ -86,6 +130,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [4])
+      AC_DEFINE([HAS_SMP], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     rpi_zero_w)
@@ -106,12 +151,15 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       platform_subdir=rpi
       output_img=kernel8.img
       output_sym=kernel8.sym
+      output_img_qemu=kernel8_qemu.img
+      output_sym_qemu=kernel8_qemu.sym
       AC_DEFINE([BCM2710], [1], [Define to 1 for BCM2710 chip])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [4])
+      AC_DEFINE([HAS_SMP], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     *)
@@ -123,8 +171,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     arch_subdir=arm
     host_bfd=elf64-littleaarch64
     executable_format=64
-    AC_DEFINE([ARCH_ARM], [1])
     AC_DEFINE([ELF64], [1])
+
+    # Add sysroot to path
+    AC_SUBST(PATH, "/opt/bolthur/sysroot/aarch64/bin:${PATH}")
 
     case "${DEVICE}" in
     rpi3_b)
@@ -133,12 +183,15 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       platform_subdir=rpi
       output_img=kernel8.img
       output_sym=kernel8.sym
+      output_img_qemu=kernel8_qemu.img
+      output_sym_qemu=kernel8_qemu.sym
       AC_DEFINE([BCM2710], [1])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [4])
+      AC_DEFINE([HAS_SMP], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     *)
@@ -161,6 +214,8 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AC_SUBST(platform_subdir)
   AC_SUBST(output_img)
   AC_SUBST(output_sym)
+  AC_SUBST(output_img_qemu)
+  AC_SUBST(output_sym_qemu)
   AC_SUBST(host_bfd)
   AC_SUBST(copy_flags)
   AC_SUBST(executable_format)

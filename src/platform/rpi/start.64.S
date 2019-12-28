@@ -18,15 +18,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// forward declaration for save of parameter
-.extern boot_parameter_data
+#define ASSEMBLER_FILE 1
+#include <core/assembly.h>
 
 .section .text
 
-.global start
+EXPORT( start )
 start:
-  // FIXME: store rpi boot parameters passed with first three registers at data array
-  #error "boot parameters not saved here"
-
   // continue with arch related start
   b arch_start

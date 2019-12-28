@@ -11,14 +11,24 @@ libv7_a_SOURCES = \
   boot/mm/virt/long.c \
   boot/mm/virt/short.c \
   boot/mm/virt.c \
-  cpu/stub/cpu.S \
-  cpu/cpu.c \
-  interrupt/stub/irq.S \
-  interrupt/stub/ivt.S \
-  interrupt/ivt.c \
+  syscall/putc.c \
+  boot/fpu.S \
+  interrupt/handler/data.c \
+  interrupt/handler/fiq.c \
+  interrupt/handler/irq.c \
+  interrupt/handler/prefetch.c \
+  interrupt/handler/svc.c \
+  interrupt/handler/undefined.c \
+  interrupt/stub/interrupt.S \
+  interrupt/stub/vector.S \
+  interrupt/vector.c \
   mm/virt/long.c \
   mm/virt/short.c \
   mm/virt.c \
+  task/stub/thread.S \
+  task/process.c \
+  task/stack.c \
+  task/thread.c \
   arch.c \
   barrier.c \
   stack.S \

@@ -1,0 +1,46 @@
+
+/**
+ * Copyright (C) 2018 - 2019 bolthur project.
+ *
+ * This file is part of bolthur/kernel.
+ *
+ * bolthur/kernel is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * bolthur/kernel is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <stddef.h>
+#include <stdlib.h>
+#include <assert.h>
+#include <list.h>
+#include <stdio.h>
+
+/**
+ * @brief Method to print list
+ *
+ * @param list list to use
+ */
+void list_print( list_manager_ptr_t list ) {
+  list_item_ptr_t current;
+
+  // assert list
+  assert( NULL != list );
+  // populate current
+  current = list->first;
+
+  // loop through list until end
+  while ( NULL != current ) {
+    printf( "list->data = 0x%08x - ", current->data );
+    // get next element
+    current = current->next;
+  }
+}

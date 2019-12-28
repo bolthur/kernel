@@ -21,10 +21,10 @@
 #include <stddef.h>
 #include <assert.h>
 
-#include <kernel/panic.h>
-#include <kernel/mm/placement.h>
-#include <kernel/mm/virt.h>
-#include <kernel/mm/heap.h>
+#include <core/panic.h>
+#include <core/mm/placement.h>
+#include <core/mm/virt.h>
+#include <core/mm/heap.h>
 
 /**
  * @brief alligned memory allocation

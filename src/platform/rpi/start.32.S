@@ -19,10 +19,11 @@
  */
 
 #define ASSEMBLER_FILE 1
+#include <core/assembly.h>
 
 .section .text
 
-.global start
+EXPORT( start )
 start:
   // continue with arch related start
   b arch_start

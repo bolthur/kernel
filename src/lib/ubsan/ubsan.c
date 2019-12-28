@@ -20,4 +20,4 @@
 
 #include <stdio.h>
 #include <ubsan.h>
-#include <kernel/panic.h>
+#include <core/panic.h>

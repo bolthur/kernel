@@ -22,13 +22,13 @@
 
 #include <string.h>
 
-#include <kernel/entry.h>
-#include <kernel/panic.h>
-#include <kernel/debug.h>
+#include <core/entry.h>
+#include <core/panic.h>
+#include <core/debug/debug.h>
 
-#include <kernel/mm/phys.h>
-#include <kernel/mm/placement.h>
-#include <kernel/mm/virt.h>
+#include <core/mm/phys.h>
+#include <core/mm/placement.h>
+#include <core/mm/virt.h>
 #include <arch/arm/mm/virt.h>
 #include <arch/arm/mm/virt/short.h>
 #include <arch/arm/v6/mm/virt/short.h>
@@ -82,15 +82,49 @@ void virt_map_address_random(
 }
 
 /**
+ * @brief Map a physical address within temporary space
+ *
+ * @param paddr physicall address
+ * @param size size to map
+ * @return uintptr_t
+ */
+uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
+  // check for v6 short descriptor format
+  if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+    return v6_short_map_temporary( paddr, size );
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
  * @brief unmap virtual address
  *
  * @param ctx pointer to page context
  * @param addr pointer to virtual address
+ * @param free_phys flag to free also physical memory
  */
-void virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr ) {
+void virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr, bool free_phys ) {
   // check for v6 long descriptor format
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
-    v6_short_unmap( ctx, addr );
+    v6_short_unmap( ctx, addr, free_phys );
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
+ * @brief Unmap temporary mapped page again
+ *
+ * @param addr virtual temporary address
+ * @param size size to unmap
+ */
+void virt_unmap_temporary( uintptr_t addr, size_t size ) {
+  // check for v6 short descriptor format
+  if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+    v6_short_unmap_temporary( addr, size );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );
@@ -107,6 +141,20 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
   // Panic when mode is unsupported
   if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
     return v6_short_create_context( type );
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
+ * @brief Method to destroy virtual context
+ *
+ * @param ctx
+ */
+void virt_destroy_context( virt_context_ptr_t ctx ) {
+  // Panic when mode is unsupported
+  if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+    v6_short_destroy_context( ctx );
   } else {
     PANIC( "Unsupported mode!" );
   }

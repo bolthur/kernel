@@ -22,7 +22,7 @@
 
 #include <arch/arm/mm/virt/short.h>
 #include <arch/arm/v6/boot/mm/virt/short.h>
-#include <kernel/entry.h>
+#include <core/entry.h>
 
 /**
  * @brief Initial kernel context

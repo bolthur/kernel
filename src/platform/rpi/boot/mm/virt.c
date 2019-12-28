@@ -22,8 +22,8 @@
 #include <stddef.h>
 #include <arch/arm/boot/mm/virt.h>
 #include <arch/arm/mm/virt.h>
-#include <kernel/entry.h>
-#include <kernel/mm/phys.h>
+#include <core/entry.h>
+#include <core/mm/phys.h>
 
 /**
  * @brief Method to setup short descriptor paging

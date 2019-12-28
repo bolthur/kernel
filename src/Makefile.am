@@ -1,4 +1,4 @@
 
 ACLOCAL_AMFLAGS = -I m4
 
-SUBDIRS = lib kernel arch platform
+SUBDIRS = lib core arch platform target

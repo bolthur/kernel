@@ -7,6 +7,8 @@ AM_CCASFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/include
 noinst_LIBRARIES = libavl.a
 libavl_a_SOURCES =\
   balance.c \
+  create.c \
+  destroy.c \
   find.c \
   insert.c \
   max.c \

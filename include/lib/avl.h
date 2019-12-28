@@ -59,6 +59,10 @@ void avl_remove_by_data( const avl_tree_ptr_t, void* );
 void avl_insert_by_node( const avl_tree_ptr_t, avl_node_ptr_t );
 void avl_remove_by_node( const avl_tree_ptr_t, avl_node_ptr_t );
 
+avl_tree_ptr_t avl_create_tree( avl_compare_func_t );
+avl_node_ptr_t avl_create_node( void* );
+void avl_destroy_tree( avl_tree_ptr_t );
+
 avl_node_ptr_t balance( avl_node_ptr_t );
 
 #endif

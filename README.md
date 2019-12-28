@@ -1,6 +1,6 @@
-# bolthur kernel [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](./LICENSE) [![Code of Conduct](https://img.shields.io/badge/%E2%9D%A4-code%20of%20conduct-blue.svg?style=flat)](./.github/CODE_OF_CONDUCT.md) [![Contribution Guide](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](./.github/CONTRIBUTING.md) ![version](https://img.shields.io/badge/version-none-blue.svg?maxAge=2592000) [![Build Status](https://travis-ci.com/bolthur/kernel.svg?branch=develop)](https://travis-ci.com/bolthur/kernel)
+# kernel
 
-bolthur kernel project.
+bolthur/kernel project.
 _Copyright (C) 2018 - 2019 bolthur project_
 
 ## Supported platforms
@@ -52,15 +52,15 @@ autoreconf -iv
 mkdir build
 cd build
 ### configure with one of the following commands
-../configure --host arm-none-eabi --enable-device=rpi2_b_rev1 --enable-debug --enable-output
-../configure --host aarch64-none-elf --enable-device=rpi3_b --enable-debug --enable-output
-../configure --host arm-none-eabi --enable-device=rpi_zero_w --enable-debug --enable-output
+../configure --host arm-bolthur-eabi --enable-device=rpi2_b_rev1 --enable-debug --enable-output
+../configure --host aarch64-bolthur-elf --enable-device=rpi3_b --enable-debug --enable-output
+../configure --host arm-bolthur-eabi --enable-device=rpi_zero_w --enable-debug --enable-output
 ```
 
 Possible additional parameters to `--host` and `--enable-device`:
 
-* `--with-debug` enables remote debugging mode
-* `--with-opt=x` sets optimization from default ( 2 ) to specified one
+* `--with-debug-symbols` enables remote debugging mode
+* `--with-optimization-level=x` sets optimization from default ( 2 ) to specified one
 * `--enable-output` enables kernel output
 * `--enable-output-mm-phys` activate tty output of physical memory manager ( slows down kernel totally )
 * `--enable-output-mm-virt` activate tty output of virtual memory manager
@@ -69,6 +69,13 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-mailbox` activate tty output of mailbox implementation
 * `--enable-output-timer` activate tty output of timer implementation
 * `--enable-output-initrd` activate initrd implementation output
+* `--enable-output-event` activate event implementation output
+* `--enable-output-process` activate process implementation output
+* `--enable-output-interrupt` activate interrupt request output
+* `--enable-output-exception` activate exception handler output
+* `--enable-output-elf` activate elf routine output
+* `--enable-output-platform` activate platform initialization output
+* `--enable-output-syscall` activate syscall output
 
 ### Building
 

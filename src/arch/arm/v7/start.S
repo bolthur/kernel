@@ -20,56 +20,17 @@
 
 #define ASSEMBLER_FILE 1
 
+#include <core/assembly.h>
 #include <arch/arm/v7/cpu.h>
 #include <arch/arm/stack.h>
 
 .section .text
 
-.global arch_start
+EXPORT( arch_start )
 arch_start:
-  // setup irq mode stack
-  msr cpsr_c, #( CPSR_MODE_IRQ | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr r0, =stack_irq_mode
-  add r0, r0, #STACK_SIZE
-  mov sp, r0
+  // setup of other modes stacks not necessary as all exceptions use supervisor mode
 
-  // setup fiq mode stack
-  msr cpsr_c, #( CPSR_MODE_FIQ | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr r0, =stack_fiq_mode
-  add r0, r0, #STACK_SIZE
-  mov sp, r0
-
-  // setup abort mode stack
-  msr cpsr_c, #( CPSR_MODE_ABORT | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr r0, =stack_abort_mode
-  add r0, r0, #STACK_SIZE
-  mov sp, r0
-
-  // setup system mode stack
-  msr cpsr_c, #( CPSR_MODE_SYSTEM | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr r0, =stack_system_mode
-  add r0, r0, #STACK_SIZE
-  mov sp, r0
-
-  // setup undefined mode stack
-  msr cpsr_c, #( CPSR_MODE_UNDEFINED | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr r0, =stack_undefined_mode
-  add r0, r0, #STACK_SIZE
-  mov sp, r0
-
-  // setup hypervisor mode stack
-  msr cpsr_c, #( CPSR_MODE_HYPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr r0, =stack_hypervisor_mode
-  add r0, r0, #STACK_SIZE
-  mov sp, r0
-
-  // setup monitor mode stack
-  msr cpsr_c, #( CPSR_MODE_MONITOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr r0, =stack_monitor_mode
-  add r0, r0, #STACK_SIZE
-  mov sp, r0
-
-  // setup supervisor mode stack
+  // switch to supervisor mode and setup stack
   msr cpsr_c, #( CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
   ldr r0, =stack_supervisor_mode
   add r0, r0, #STACK_SIZE

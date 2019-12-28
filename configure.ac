@@ -7,14 +7,14 @@ AC_CONFIG_AUX_DIR([build-aux/config])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
-AC_CONFIG_SRCDIR([src/kernel/main.c])
+AC_CONFIG_SRCDIR([src/core/main.c])
 AM_INIT_AUTOMAKE()
 AC_CONFIG_HEADERS([include/config.h])
 
 AC_LANG([C])
 
-# FIXME: Shouldn't be necessary, when creating symlinks of toolchain binaries to /usr/local/bin
-AC_SUBST(PATH, "${HOME}/.bolthur/cross/bin:${PATH}")
+# Prevent enter folder output
+AC_SUBST(MAKEFLAGS, "${MAKEFLAGS} --no-print-directory")
 
 AC_ARG_ENABLE([device],
   AC_HELP_STRING(
@@ -97,22 +97,85 @@ AC_ARG_ENABLE(
   [enable_output_initrd=yes]
 )
 
-AC_ARG_WITH(
-  [opt],
+AC_ARG_ENABLE(
+  [output-event],
   AC_HELP_STRING(
-    [--with-opt],
-    [compile with specific code optimization level [possible values: 0, 1, 2, 3, s, g | default: 2]]
+    [--enable-output-event],
+    [activate event output [default: off]]
   ),
-  [with_opt=$withval]
+  [enable_output_event=yes]
+)
+
+AC_ARG_ENABLE(
+  [output-process],
+  AC_HELP_STRING(
+    [--enable-output-process],
+    [activate task output [default: off]]
+  ),
+  [enable_output_process=yes]
+)
+
+AC_ARG_ENABLE(
+  [output-interrupt],
+  AC_HELP_STRING(
+    [--enable-output-interrupt],
+    [activate interrupt output [default: off]]
+  ),
+  [enable_output_interrupt=yes]
+)
+
+AC_ARG_ENABLE(
+  [output-exception],
+  AC_HELP_STRING(
+    [--enable-output-exception],
+    [activate exception output [default: off]]
+  ),
+  [enable_output_exception=yes]
+)
+
+AC_ARG_ENABLE(
+  [output-elf],
+  AC_HELP_STRING(
+    [--enable-output-elf],
+    [activate elf output [default: off]]
+  ),
+  [enable_output_elf=yes]
+)
+
+AC_ARG_ENABLE(
+  [output-platform],
+  AC_HELP_STRING(
+    [--enable-output-platform],
+    [activate platform init output [default: off]]
+  ),
+  [enable_output_platform=yes]
+)
+
+AC_ARG_ENABLE(
+  [output-syscall],
+  AC_HELP_STRING(
+    [--enable-output-syscall],
+    [activate syscall output [default: off]]
+  ),
+  [enable_output_syscall=yes]
 )
 
 AC_ARG_WITH(
-  [debug],
+  [optimization-level],
   AC_HELP_STRING(
-    [--with-debug],
+    [--with-optimization-level],
+    [compile with specific code optimization level [possible values: 0, 1, 2, 3, s, g | default: 2]]
+  ),
+  [with_optimization_level=$withval]
+)
+
+AC_ARG_WITH(
+  [debug-symbols],
+  AC_HELP_STRING(
+    [--with-debug-symbols],
     [compile with debug symbols]
   ),
-  [with_debug=yes]
+  [with_debug_debug_symbols=yes]
 )
 
 # set target and flags
@@ -202,10 +265,12 @@ AC_CONFIG_FILES([
   src/arch/arm/v6/Makefile
   src/arch/arm/v7/Makefile
   src/arch/arm/v8/Makefile
-  src/kernel/Makefile
+  src/core/Makefile
   src/lib/Makefile
   src/lib/assert/Makefile
+  src/lib/atag/Makefile
   src/lib/avl/Makefile
+  src/lib/list/Makefile
   src/lib/ssp/Makefile
   src/lib/stdio/Makefile
   src/lib/stdlib/Makefile
@@ -214,6 +279,8 @@ AC_CONFIG_FILES([
   src/lib/ubsan/Makefile
   src/platform/Makefile
   src/platform/rpi/Makefile
+  src/target/Makefile
+  src/target/rpi/Makefile
 ])
 
 AC_OUTPUT

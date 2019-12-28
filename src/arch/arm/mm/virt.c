@@ -24,12 +24,12 @@
 #include <string.h>
 #include <assert.h>
 
-#include <kernel/debug.h>
-#include <kernel/entry.h>
-#include <kernel/panic.h>
-#include <kernel/mm/phys.h>
-#include <kernel/mm/placement.h>
-#include <kernel/mm/virt.h>
+#include <core/debug/debug.h>
+#include <core/entry.h>
+#include <core/panic.h>
+#include <core/mm/phys.h>
+#include <core/mm/placement.h>
+#include <core/mm/virt.h>
 #include <arch/arm/mm/virt.h>
 
 /**
@@ -49,8 +49,6 @@ virt_context_ptr_t kernel_context;
 
 /**
  * @brief Method to get supported modes
- *
- * @return uint32_t supported modes
  */
 void virt_setup_supported_modes( void ) {
   #if defined( ELF32 )
@@ -122,11 +120,11 @@ void virt_arch_init( void ) {
   virt_arch_prepare();
 
   // create a kernel context
-  kernel_context = virt_create_context( CONTEXT_TYPE_KERNEL );
+  kernel_context = virt_create_context( VIRT_CONTEXT_TYPE_KERNEL );
   assert( NULL != kernel_context );
 
   // create a dummy user context for all cores
-  user_context = virt_create_context( CONTEXT_TYPE_USER );
+  user_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
   assert( NULL != user_context );
 
   // debug output
