@@ -8,4 +8,5 @@ noinst_LIBRARIES = libstdio.a
 libstdio_a_SOURCES = \
   printf.c \
   putchar.c \
-  puts.c
+  puts.c \
+  sprintf.c

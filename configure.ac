@@ -160,6 +160,15 @@ AC_ARG_ENABLE(
   [enable_output_syscall=yes]
 )
 
+AC_ARG_ENABLE(
+  [remote-debug],
+  AC_HELP_STRING(
+    [--enable-remote-debug],
+    [activate remote debugging [default: off]]
+  ),
+  [enable_remote_debug=yes]
+)
+
 AC_ARG_WITH(
   [optimization-level],
   AC_HELP_STRING(

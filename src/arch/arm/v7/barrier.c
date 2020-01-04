@@ -22,19 +22,19 @@
  * @brief Data memory barrier invalidation
  */
 void barrier_data_mem( void ) {
-  __asm__ __volatile__ ( "dmb" ::: "memory" );
+  __asm__( "dmb" ::: "memory" );
 }
 
 /**
  * @brief Data sync barrier invalidation
  */
 void barrier_data_sync( void ) {
-  __asm__ __volatile__ ( "dsb" ::: "memory" );
+  __asm__( "dsb" ::: "memory" );
 }
 
 /**
  * @brief Instruction synchronization invalidation
  */
 void barrier_instruction_sync( void ) {
-  __asm__ __volatile__( "isb" ::: "memory" );
+  __asm__( "isb" ::: "memory" );
 }

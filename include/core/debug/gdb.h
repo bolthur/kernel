@@ -18,23 +18,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/smp/lock.h>
+#if ! defined( __CORE_DEBUG_GDB__ )
+#define __CORE_DEBUG_GDB__
 
-/**
- * @brief Acquire lock
- *
- * @param m mutex to lock
- */
-void smp_lock_mutex_acquire( smp_lock_mutex_t* m ) {
-  // yield until mutex could be applied
-  while (
-    ! __sync_bool_compare_and_swap(
-      m, SMP_LOCK_MUTEX_RELEASED, SMP_LOCK_MUTEX_LOCKED
-    )
-  ) {
-    __asm__( "yield" ::: "memory" );
-  }
+#include <stdbool.h>
 
-  // synchronize
-  __sync_synchronize();
-}
+typedef enum {
+  GDB_SIGNAL_TRAP = 5,
+  GDB_SIGNAL_ABORT = 6,
+} debug_gdb_signal_t;
+
+void debug_gdb_init( void );
+void debug_gdb_arch_init( void );
+void debug_gdb_breakpoint( void );
+void debug_gdb_set_trap( void );
+void debug_gdb_handle_exception( void );
+bool debug_gbb_initialized( void );
+void debug_gdb_handle_event( void* );
+debug_gdb_signal_t debug_gdb_get_signal( void );
+
+void debug_gdb_packet_send( unsigned char* );
+unsigned char* packet_receive( void );
+int debug_gdb_putchar( int );
+int debug_gdb_puts( const char* );
+
+#endif

@@ -76,6 +76,7 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-elf` activate elf routine output
 * `--enable-output-platform` activate platform initialization output
 * `--enable-output-syscall` activate syscall output
+* `*--enable-remote-debug` activate remote debugging
 
 ### Building
 

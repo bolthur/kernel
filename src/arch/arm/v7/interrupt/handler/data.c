@@ -19,14 +19,32 @@
  */
 
 #include <assert.h>
+#include <arch/arm/v7/debug/debug.h>
 #include <arch/arm/v7/cpu.h>
-#include <core/panic.h>
+#include <core/event.h>
 #include <core/interrupt.h>
+#include <core/panic.h>
 
 /**
  * @brief Nested counter for data abort exception handler
  */
 static uint32_t nested_data_abort = 0;
+
+/**
+ * @brief Helper returns faulting address
+ *
+ * @return uint32_t
+ */
+static uint32_t fault_address( void ) {
+  // variable for faulting address
+  uint32_t address;
+  // get faulting address
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c6, c0, 0" : "=r" ( address ) : : "cc"
+  );
+  // return faulting address
+  return address;
+}
 
 /**
  * @brief Data abort exception handler
@@ -40,22 +58,22 @@ void data_abort_handler( cpu_register_context_ptr_t cpu ) {
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
 
-  // variable for faulting address
-  uint32_t fault_address;
-  // get faulting address
-  __asm__ __volatile__(
-    "mrc p15, 0, %0, c6, c0, 0" : "=r" ( fault_address ) : : "cc"
-  );
-
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "data abort interrupt at 0x%08x\r\n", fault_address );
+    DEBUG_OUTPUT( "data abort interrupt at 0x%08x\r\n", fault_address() );
     DUMP_REGISTER( cpu );
   #else
     ( void )cpu;
     ( void )fault_address;
   #endif
-  PANIC( "data abort" );
+
+  // special debug exception handling
+  if ( debug_is_debug_exception() ) {
+    event_enqueue( EVENT_DEBUG );
+    PANIC( "Check fixup!" );
+  } else {
+    PANIC( "data abort" );
+  }
 
   // decrement nested counter
   nested_data_abort--;

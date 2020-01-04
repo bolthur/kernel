@@ -32,5 +32,5 @@ void arch_init( void ) {
  * @brief halt instruction
  */
 void arch_halt( void ) {
-  __asm__ __volatile__( "wfe" ::: "memory" );
+  __asm__( "wfe" ::: "memory" );
 }

@@ -18,23 +18,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/smp/lock.h>
+#include <limits.h>
+#include <stdbool.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 /**
- * @brief Acquire lock
+ * @brief Simple sprintf for kernel
  *
- * @param m mutex to lock
+ * @param format
+ * @param ...
+ * @return int
  */
-void smp_lock_mutex_acquire( smp_lock_mutex_t* m ) {
-  // yield until mutex could be applied
-  while (
-    ! __sync_bool_compare_and_swap(
-      m, SMP_LOCK_MUTEX_RELEASED, SMP_LOCK_MUTEX_LOCKED
-    )
-  ) {
-    __asm__( "yield" ::: "memory" );
-  }
-
-  // synchronize
-  __sync_synchronize();
+int sprintf( __unused char* str, __unused const char* restrict format, ... ) {
+  va_list parameters;
+  va_start( parameters, format );
+  // end parameter
+  va_end( parameters );
+  // return written amount
+  return ( int )0;
 }

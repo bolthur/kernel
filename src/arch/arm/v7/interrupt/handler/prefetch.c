@@ -18,10 +18,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
 #include <assert.h>
+#include <arch/arm/v7/debug/debug.h>
 #include <arch/arm/v7/cpu.h>
-#include <core/panic.h>
+#include <core/event.h>
 #include <core/interrupt.h>
+#include <core/panic.h>
 
 /**
  * @brief Nested counter for prefetch abort exception handler
@@ -46,7 +49,16 @@ void prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   #else
     ( void )cpu;
   #endif
-  PANIC( "prefetch abort" );
+
+  // special debug exception handling
+  if ( debug_is_debug_exception() ) {
+    event_enqueue( EVENT_DEBUG );
+    // FIXME: ADD CORRECT FIXUP
+    cpu->pc += 4;
+    // PANIC( "Check fixup!" );
+  } else {
+    PANIC( "prefetch abort" );
+  }
 
   // decrement nested counter
   nested_prefetch_abort--;

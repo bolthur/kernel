@@ -8,6 +8,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
   AH_TEMPLATE([HAS_SMP], [Define to 1 when board supports smp])
   AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
+  AH_TEMPLATE([REMOTE_DEBUG], [Define to 1 to enable remote debugging])
   # Output related define templates
   AH_TEMPLATE([OUTPUT_ENABLE], [Define to 1 to enable kernel print])
   AH_TEMPLATE([PRINT_MM_PHYS], [Define to 1 to enable output of physical memory manager])
@@ -24,6 +25,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_ELF], [Define to 1 to enable output of elf routines])
   AH_TEMPLATE([PRINT_PLATFORM], [Define to 1 to enable output of platform initialization])
   AH_TEMPLATE([PRINT_SYSCALL], [Define to 1 to enable output of syscall initialization])
+
+  # Test for debugging enabled
+  AS_IF([test "x$enable_remote_debug" == "xyes"], [
+    AC_DEFINE([REMOTE_DEBUG], [1])
+  ])
 
   # Test for general output enable
   AS_IF([test "x$enable_output" == "xyes"], [

@@ -11,8 +11,9 @@ libv7_a_SOURCES = \
   boot/mm/virt/long.c \
   boot/mm/virt/short.c \
   boot/mm/virt.c \
-  syscall/putc.c \
   boot/fpu.S \
+  debug/debug.c \
+  debug/gdb.c \
   interrupt/handler/data.c \
   interrupt/handler/fiq.c \
   interrupt/handler/irq.c \
@@ -25,6 +26,7 @@ libv7_a_SOURCES = \
   mm/virt/long.c \
   mm/virt/short.c \
   mm/virt.c \
+  syscall/putc.c \
   task/stub/thread.S \
   task/process.c \
   task/stack.c \

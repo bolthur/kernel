@@ -64,6 +64,47 @@
       "externalConsole": false,
       "launchCompleteCommand": "None",
       "preLaunchTask": "compile"
+    },
+    {
+      "name": "aarch32-rpi-remote-qemu-debug",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/src/target/rpi/kernel7_qemu.sym",
+      "miDebuggerPath": "/opt/bolthur/cross/bin/arm-none-eabi-gdb",
+      "miDebuggerArgs": "-q",
+      "MIMode": "gdb",
+      "cwd": "${workspaceFolder}/build/src/target/rpi/",
+      "setupCommands": [
+        {
+          "text": "-enable-pretty-printing",
+          "description": "Enable GDB pretty printing"
+        },
+        {
+          "text": "set architecture armv7",
+          "description": "Set architecture"
+        },
+        {
+          "text": "file ${workspaceFolder}/build/src/target/rpi/kernel7_qemu.sym",
+          "description": "Loading symbol file"
+        },
+        {
+          "text": "set serial baud 115200",
+          "description": "Setting baud rate for serial connection"
+        },
+        {
+          "text": "target remote /dev/pts/3",
+          "description": "Set remote target"
+        }
+      ],
+      "externalConsole": false,
+      "logging": {
+        "engineLogging": true,
+        "exceptions": true,
+        "moduleLoad": true,
+        "programOutput": true,
+        "trace": true,
+        "traceResponse": true
+      }
     }
   ]
 }

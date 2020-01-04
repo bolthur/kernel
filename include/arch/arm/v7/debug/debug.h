@@ -18,23 +18,20 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/smp/lock.h>
+#if ! defined( __ARCH_ARM_V7_DEBUG_DEBUG__ )
+#define __ARCH_ARM_V7_DEBUG_DEBUG__
 
-/**
- * @brief Acquire lock
- *
- * @param m mutex to lock
- */
-void smp_lock_mutex_acquire( smp_lock_mutex_t* m ) {
-  // yield until mutex could be applied
-  while (
-    ! __sync_bool_compare_and_swap(
-      m, SMP_LOCK_MUTEX_RELEASED, SMP_LOCK_MUTEX_LOCKED
-    )
-  ) {
-    __asm__( "yield" ::: "memory" );
-  }
+#include <stdbool.h>
 
-  // synchronize
-  __sync_synchronize();
-}
+bool debug_check_data_fault_status( void );
+bool debug_check_instruction_fault( void );
+bool debug_is_debug_exception( void );
+
+void debug_enable_debug_monitor( void );
+void debug_disable_debug_monitor( void );
+void debug_set_breakpoint( uintptr_t );
+void debug_remove_breakpoint( uintptr_t );
+void debug_enable_single_step( void );
+void debug_disable_single_step( void );
+
+#endif

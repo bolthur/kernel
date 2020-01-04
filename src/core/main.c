@@ -30,7 +30,6 @@
 #include <core/timer.h>
 #include <core/platform.h>
 #include <core/debug/debug.h>
-#include <core/serial.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <core/mm/heap.h>
@@ -39,9 +38,12 @@
 #include <core/task/process.h>
 #include <core/syscall.h>
 
-#include <endian.h>
+#if defined( REMOTE_DEBUG )
+  #include <core/serial.h>
+  #include <core/debug/gdb.h>
+#endif
+
 #include <tar.h>
-#include <core/panic.h>
 #include <core/initrd.h>
 
 /**
@@ -51,6 +53,11 @@
  * @todo initialize serial when remote debugging is enabled
  */
 void kernel_main( void ) {
+  // initialize serial
+  #if defined( REMOTE_DEBUG )
+    serial_init();
+  #endif
+
   // enable tty for output
   tty_init();
 
@@ -119,6 +126,19 @@ void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> event] initialize ...\r\n" );
   event_init();
 
+  // Enable interrupts
+  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] enable ...\r\n" );
+  interrupt_enable();
+
+  // remote gdb debugging
+  #if defined( REMOTE_DEBUG )
+    // Setup gdb stub
+    DEBUG_OUTPUT( "[bolthur/kernel -> debug -> gdb] initialize ...\r\n" );
+    debug_gdb_init();
+
+    // FIXME: set uart fiq
+  #endif
+
   // Setup timer
   DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" );
   timer_init();
@@ -155,10 +175,6 @@ void kernel_main( void ) {
       iter = tar_next( iter );
     }
   }
-
-  // Enable interrupts
-  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] enable ...\r\n" );
-  interrupt_enable();
 
   // Kickstart multitasking
   task_process_start();
