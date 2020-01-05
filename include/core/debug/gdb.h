@@ -22,6 +22,7 @@
 #define __CORE_DEBUG_GDB__
 
 #include <stdbool.h>
+#include <stdint.h>
 
 typedef enum {
   GDB_SIGNAL_TRAP = 5,
@@ -38,7 +39,7 @@ void debug_gdb_handle_event( void* );
 debug_gdb_signal_t debug_gdb_get_signal( void );
 
 void debug_gdb_packet_send( unsigned char* );
-unsigned char* debug_gdb_packet_receive( void );
+unsigned char* debug_gdb_packet_receive( unsigned char*, size_t );
 int debug_gdb_putchar( int );
 int debug_gdb_puts( const char* );
 

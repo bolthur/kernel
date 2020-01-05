@@ -84,6 +84,10 @@
           "description": "Enable verbose debugging output"
         },
         {
+          "text": "set debug remote 1",
+          "description": "Enable package output"
+        },
+        {
           "text": "set architecture armv7",
           "description": "Set architecture"
         },

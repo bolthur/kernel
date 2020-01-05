@@ -22,6 +22,8 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <assert.h>
 #include <core/panic.h>
 #include <core/debug/debug.h>
 #include <core/debug/gdb.h>
@@ -29,9 +31,19 @@
 #include <arch/arm/v7/debug/debug.h>
 
 /**
+ * @brief Max buffer size
+ */
+#define MAX_BUFFER 500
+
+/**
  * @brief output buffer used for formatting via sprintf
  */
-static char output_buffer[ 500 ];
+static unsigned char output_buffer[ 500 ];
+
+/**
+ * @brief input buffer used for incomming packages
+ */
+static unsigned char input_buffer[ 500 ];
 
 /**
  * @brief Arch related gdb init
@@ -51,18 +63,43 @@ void debug_gdb_arch_init( void ) {
 void debug_gdb_handle_event( void* context ) {
   // get signal
   debug_gdb_signal_t signal = debug_gdb_get_signal();
+  // transform context
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  // variables
+  unsigned char* packet;
+
   // print signal
   printf( "signal = %d\r\n", signal );
   DUMP_REGISTER( cpu );
 
-  // sprintf testing
-  sprintf( output_buffer, "signal = %d", signal );
-  printf( "1 - %s\r\n", output_buffer );
-  for(;;);
-
   while ( true ) {
-    // FIXME: Add logic
+    // get packet
+    packet = debug_gdb_packet_receive( input_buffer, MAX_BUFFER );
+    // assert existance
+    assert( packet != NULL );
+
+    // handle packet
+    switch ( packet[ 0 ] ) {
+      case 'q':
+        if ( 0 == strncmp( "qSupported:", ( char* )packet, strlen( "qSupported:" ) ) ) {
+          // response into output buffer
+          sprintf(
+            ( char* )output_buffer, "qSupported:PacketSize=256;multiprocess+" );
+          // send
+          debug_gdb_packet_send( output_buffer );
+        } else {
+          debug_gdb_packet_send( ( unsigned char* )"\0" );
+        }
+        break;
+
+      case 'v':
+        debug_gdb_packet_send( ( unsigned char* )"\0" );
+        break;
+
+      // default case is unsupported command
+      default:
+        debug_gdb_packet_send( ( unsigned char* )"\0" );
+    }
   }
 }
 

@@ -76,7 +76,7 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-elf` activate elf routine output
 * `--enable-output-platform` activate platform initialization output
 * `--enable-output-syscall` activate syscall output
-* `*--enable-remote-debug` activate remote debugging
+* `--enable-remote-debug` activate remote debugging
 
 ### Building
 
@@ -117,19 +117,36 @@ Emulation of the kernel project with qemu during development may be done at all 
 
 ```bash
 # raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -s -S
+qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
 
 # raspberry pi 2B rev 2 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -s -S
-qemu-system-aarch64 -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -s -S
+qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+qemu-system-aarch64 -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
 
 # raspberry pi 3B kernel emulation
-qemu-system-arm -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -s -S
-qemu-system-aarch64 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/platform/rpi/kernel.elf -s -S
+qemu-system-arm -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+qemu-system-aarch64 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
 ```
 
 Starting the debugger from within build folder without any additional commands necessary would be done as follows:
 
 ```bash
-/path/to/arm-none-eabi-gdb src/platform/rpi/kernel7.sym
+/path/to/arm-none-eabi-gdb src/target/rpi/kernel7.sym
+```
+
+### Test remote serial debugging with qemu
+
+Testing remote debugging with qemu within development:
+
+```bash
+/path/to/arm-none-eabi-gdb src/target/rpi/kernel7_qemu.sym
+```
+
+Within gdb execute following commands:
+```
+set verbose on
+set debug remote 1
+set architecture armv7
+set serial baud 115200
+target remote /dev/pts/2
 ```

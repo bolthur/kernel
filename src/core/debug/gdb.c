@@ -33,7 +33,30 @@ static bool stub_initialized = false;
 /**
  * @brief hex characters used for transform
  */
-const char hex[] = "0123456789abcdef";
+const char hexchar[] = "0123456789abcdef";
+
+/**
+ * @brief Transform character to hex value
+ *
+ * @param ch
+ * @return int
+ */
+static int char2hex( char ch ) {
+  if ( ch >= 'a' && ch <= 'f' ) {
+    return ch - 'a' + 10;
+  }
+
+  if ( ch >= '0' && ch <= '9' ) {
+    return ch - '0';
+  }
+
+  if ( ch >= 'A' && ch <= 'F' ) {
+    return ch - 'A' + 10;
+  }
+
+  return -1;
+}
+
 
 /**
  * @brief Setup gdb debugging
@@ -45,6 +68,9 @@ void debug_gdb_init( void ) {
   // setup debug traps
   DEBUG_OUTPUT( "Setup debug traps\r\n" );
   debug_gdb_set_trap();
+  // clear serial
+  DEBUG_OUTPUT( "Flushing serial\r\n" );
+  serial_flush();
   // synchronize
   DEBUG_OUTPUT( "Synchronize with remote GDB\r\n" );
   debug_gdb_breakpoint();
@@ -81,30 +107,101 @@ void debug_gdb_packet_send( unsigned char* p ) {
   char ch;
 
   // $<packet info>#<checksum>.
-  do {
+  //do {
     serial_putc( '$' );
     checksum = 0;
     count = 0;
-    while( ( ch = p[ count ] ) ) {
+    while( NULL != p && ( ch = p[ count ] ) ) {
       serial_putc( ch );
       checksum = ( unsigned char )( ( int )checksum + ch );
       count++;
     }
     serial_putc( '#' );
-    serial_putc( hex[ checksum >> 4 ] );
-    serial_putc( hex[ checksum % 16 ] );
-  } while ( serial_getc() != '+' );
+    serial_putc( hexchar[ checksum >> 4 ] );
+    serial_putc( hexchar[ checksum % 16 ] );
+  //} while ( NULL != p && serial_getc() != '+' );
+}
+
+/**
+ * @brief Method to check calculated checksum against incoming
+ *
+ * @param in
+ * @return true
+ * @return false
+ */
+static bool checksum( uint8_t in ) {
+  // put into destination
+  uint8_t out;
+  // calculate checksum
+  out = ( uint8_t )(
+    ( char2hex( serial_getc() ) << 4 ) + char2hex( serial_getc() ) );
+  // return compare result
+  return in == out;
 }
 
 /**
  * @brief Receive a packet
  *
+ * @param max
  * @return unsigned* packet_receive
- *
- * @todo add logic
  */
-unsigned char* debug_gdb_packet_receive( void ) {
-  return NULL;
+unsigned char* debug_gdb_packet_receive( unsigned char* buffer, size_t max ) {
+  char c;
+  uint8_t calculated_checksum;
+  size_t count = 0;
+  bool cont;
+
+  while( true ) {
+    // wait until debug character drops in
+    while ( '$' != ( c = serial_getc() ) ) {}
+
+    // prepare variables
+    cont = false;
+    calculated_checksum = 0;
+    // read until max or #
+    while ( count < max - 1 ) {
+      // get next serial character
+      c = serial_getc();
+      // handle invalid
+      if ( '$' == c ) {
+        cont = true;
+        break;
+      // handle end
+      } else if ( '#' == c ) {
+        break;
+      }
+      // checksum
+      calculated_checksum = ( uint8_t )( calculated_checksum + c );
+      buffer[ count ] = c;
+      count++;
+    }
+    // check for continue
+    if ( cont ) {
+      continue;
+    }
+
+    // set end
+    buffer[ count ] = 0;
+    // check checksum checksum
+    if ( ! checksum( calculated_checksum ) ) {
+      serial_putc( '-' );
+      continue;
+    }
+
+    // send acknowledge
+    serial_putc( '+' );
+    // check for sequence
+    if ( buffer[ 2 ] == ':' ) {
+      // send sequence id
+      serial_putc( buffer[ 0 ] );
+      serial_putc( buffer[ 1 ] );
+      // return packet
+      return &buffer[ 3 ];
+    }
+
+    // return normal buffer
+    return buffer;
+  }
 }
 
 /**
@@ -115,7 +212,7 @@ unsigned char* debug_gdb_packet_receive( void ) {
  */
 int debug_gdb_putchar( int c ) {
   // build buffer
-  char buf[ 4 ] = { '0', hex[ c >> 4 ], hex [ c & 0x0f ], 0 };
+  char buf[ 4 ] = { '0', hexchar[ c >> 4 ], hexchar[ c & 0x0f ], 0 };
   // send packet
   debug_gdb_packet_send( ( unsigned char* )buf );
   // return sent character
