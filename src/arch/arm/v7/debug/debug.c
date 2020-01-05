@@ -20,7 +20,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <core/panic.h>
 #include <core/debug/debug.h>
 
 /**
@@ -107,8 +106,7 @@ bool debug_is_debug_exception( void ) {
  * @brief Method enables debug monitor
  */
 void debug_enable_debug_monitor( void ) {
-  return;
-  uint32_t dbgdscr;
+  /*uint32_t dbgdscr;
   // read out register
   __asm__ __volatile__(
     "mrc p14, 0, %0, c0, c1, 0"
@@ -122,14 +120,13 @@ void debug_enable_debug_monitor( void ) {
     "mcr p14, 0, %0, c0, c1, 0"
     : : "r" ( dbgdscr )
     : "cc"
-  );
+  );*/
 }
 
 /**
  * @brief Method disables debug monitor
  */
 void debug_disable_debug_monitor( void ) {
-  PANIC( "Disable debug monitor not yet supported!" );
 }
 
 /**
@@ -139,7 +136,6 @@ void debug_disable_debug_monitor( void ) {
  */
 void debug_set_breakpoint( uintptr_t address ) {
   DEBUG_OUTPUT( "Set breakpoint at address 0x%08x\r\n", address );
-  PANIC( "Set breakpoint not yet supported!" );
 }
 
 /**
@@ -149,19 +145,16 @@ void debug_set_breakpoint( uintptr_t address ) {
  */
 void debug_remove_breakpoint( uintptr_t address ) {
   DEBUG_OUTPUT( "Remove breakpoint at address 0x%08x\r\n", address );
-  PANIC( "Remove breakpoint not yet supported!" );
 }
 
 /**
  * @brief Enable single stepping
  */
 void debug_enable_single_step( void ) {
-  PANIC( "Enable single step not yet supported!" );
 }
 
 /**
  * @brief Dissable single stepping
  */
 void debug_disable_single_step( void ) {
-  PANIC( "Disable single step not yet supported!" );
 }

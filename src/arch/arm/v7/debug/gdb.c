@@ -38,12 +38,70 @@
 /**
  * @brief output buffer used for formatting via sprintf
  */
-static unsigned char output_buffer[ 500 ];
+static unsigned char output_buffer[ 500 ] __unused;
 
 /**
  * @brief input buffer used for incomming packages
  */
 static unsigned char input_buffer[ 500 ];
+
+/**
+ * @brief Supported packet handler
+ *
+ * @param context
+ * @param packet
+ */
+static void handle_supported(
+  __unused void* context,
+  __unused const unsigned char *packet
+) {
+  debug_gdb_packet_send(
+    ( unsigned char* )"qSupported:PacketSize=256;multiprocess+" );
+}
+
+/**
+ * @brief Unsupported packet response
+ *
+ * @param context
+ * @param packet
+ */
+static void handle_unsupported(
+  __unused void* context,
+  __unused const unsigned char *packet
+) {
+  // send empty response as not supported
+  debug_gdb_packet_send( ( unsigned char* )"\0" );
+}
+
+/**
+ * @brief debug command handler
+ */
+static debug_gdb_command_handler_t handler[] = {
+  { .prefix = "qSupported", .handler = handle_supported, },
+};
+
+/**
+ * @brief Helper to identify handler to call
+ *
+ * @param packet
+ * @return debug_gdb_callback_t
+ */
+static debug_gdb_callback_t get_handler( const unsigned char* packet ) {
+  // max size
+  size_t max = sizeof( handler ) / sizeof( handler[ 0 ] );
+  // loop through handler to identify used one
+  for ( size_t i = 0; i < max; i++ ) {
+    if ( 0 == strncmp(
+      handler[ i ].prefix,
+      ( char* )packet,
+      strlen( handler[ i ].prefix ) )
+    ) {
+      return handler[ i ].handler;
+    }
+  }
+  // return unsupported handler
+  return handle_unsupported;
+}
 
 /**
  * @brief Arch related gdb init
@@ -57,49 +115,27 @@ void debug_gdb_arch_init( void ) {
  * @brief Handle debug event
  *
  * @param void
- *
- * @todo add logic
  */
 void debug_gdb_handle_event( void* context ) {
   // get signal
   debug_gdb_signal_t signal = debug_gdb_get_signal();
-  // transform context
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-  // variables
+  // further variables
   unsigned char* packet;
+  debug_gdb_callback_t cb;
 
   // print signal
   printf( "signal = %d\r\n", signal );
-  DUMP_REGISTER( cpu );
+  DUMP_REGISTER( context );
 
   while ( true ) {
     // get packet
     packet = debug_gdb_packet_receive( input_buffer, MAX_BUFFER );
     // assert existance
     assert( packet != NULL );
-
-    // handle packet
-    switch ( packet[ 0 ] ) {
-      case 'q':
-        if ( 0 == strncmp( "qSupported:", ( char* )packet, strlen( "qSupported:" ) ) ) {
-          // response into output buffer
-          sprintf(
-            ( char* )output_buffer, "qSupported:PacketSize=256;multiprocess+" );
-          // send
-          debug_gdb_packet_send( output_buffer );
-        } else {
-          debug_gdb_packet_send( ( unsigned char* )"\0" );
-        }
-        break;
-
-      case 'v':
-        debug_gdb_packet_send( ( unsigned char* )"\0" );
-        break;
-
-      // default case is unsupported command
-      default:
-        debug_gdb_packet_send( ( unsigned char* )"\0" );
-    }
+    // get handler
+    cb = get_handler( packet );
+    // execute found handler
+    cb( context, packet );
   }
 }
 

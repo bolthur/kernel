@@ -136,17 +136,19 @@ Starting the debugger from within build folder without any additional commands n
 
 ### Test remote serial debugging with qemu
 
-Testing remote debugging with qemu within development:
+Testing remote debugging with qemu within development from build directory.
 
 ```bash
 /path/to/arm-none-eabi-gdb src/target/rpi/kernel7_qemu.sym
 ```
 
 Within gdb execute following commands:
+
 ```
+file src/target/rpi/kernel7_qemu.sym
 set verbose on
 set debug remote 1
 set architecture armv7
 set serial baud 115200
-target remote /dev/pts/2
+target remote /dev/pts/0
 ```

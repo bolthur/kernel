@@ -29,6 +29,13 @@ typedef enum {
   GDB_SIGNAL_ABORT = 6,
 } debug_gdb_signal_t;
 
+typedef void ( *debug_gdb_callback_t )( void* context, const unsigned char* message );
+
+typedef struct {
+  const char* prefix;
+  debug_gdb_callback_t handler;
+} debug_gdb_command_handler_t;
+
 void debug_gdb_init( void );
 void debug_gdb_arch_init( void );
 void debug_gdb_breakpoint( void );

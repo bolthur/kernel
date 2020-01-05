@@ -33,7 +33,7 @@ static bool stub_initialized = false;
 /**
  * @brief hex characters used for transform
  */
-const char hexchar[] = "0123456789abcdef";
+static const char hexchar[] = "0123456789abcdef";
 
 /**
  * @brief Transform character to hex value
@@ -57,6 +57,22 @@ static int char2hex( char ch ) {
   return -1;
 }
 
+/**
+ * @brief Method to check calculated checksum against incoming
+ *
+ * @param in
+ * @return true
+ * @return false
+ */
+static bool checksum( uint8_t in ) {
+  // put into destination
+  uint8_t out;
+  // calculate checksum
+  out = ( uint8_t )(
+    ( char2hex( serial_getc() ) << 4 ) + char2hex( serial_getc() ) );
+  // return compare result
+  return in == out;
+}
 
 /**
  * @brief Setup gdb debugging
@@ -107,36 +123,17 @@ void debug_gdb_packet_send( unsigned char* p ) {
   char ch;
 
   // $<packet info>#<checksum>.
-  //do {
-    serial_putc( '$' );
-    checksum = 0;
-    count = 0;
-    while( NULL != p && ( ch = p[ count ] ) ) {
-      serial_putc( ch );
-      checksum = ( unsigned char )( ( int )checksum + ch );
-      count++;
-    }
-    serial_putc( '#' );
-    serial_putc( hexchar[ checksum >> 4 ] );
-    serial_putc( hexchar[ checksum % 16 ] );
-  //} while ( NULL != p && serial_getc() != '+' );
-}
-
-/**
- * @brief Method to check calculated checksum against incoming
- *
- * @param in
- * @return true
- * @return false
- */
-static bool checksum( uint8_t in ) {
-  // put into destination
-  uint8_t out;
-  // calculate checksum
-  out = ( uint8_t )(
-    ( char2hex( serial_getc() ) << 4 ) + char2hex( serial_getc() ) );
-  // return compare result
-  return in == out;
+  serial_putc( '$' );
+  checksum = 0;
+  count = 0;
+  while( NULL != p && ( ch = p[ count ] ) ) {
+    serial_putc( ch );
+    checksum = ( unsigned char )( ( int )checksum + ch );
+    count++;
+  }
+  serial_putc( '#' );
+  serial_putc( hexchar[ checksum >> 4 ] );
+  serial_putc( hexchar[ checksum % 16 ] );
 }
 
 /**
