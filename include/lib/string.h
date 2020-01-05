@@ -27,7 +27,7 @@
 int memcmp( const void*, const void*, size_t );
 void* memcpy( void* restrict, const void* restrict, size_t );
 void* memset( void*, int, size_t );
-size_t strlen( const char*);
+size_t strlen( const char* );
 int strncmp( const char*, const char*, size_t );
 
 #endif
