@@ -46,8 +46,6 @@ void prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
-  #else
-    ( void )cpu;
   #endif
 
   // special debug exception handling

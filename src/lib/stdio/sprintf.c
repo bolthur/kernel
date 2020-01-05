@@ -31,15 +31,15 @@
 /**
  * @brief Simple sprintf for kernel
  *
+ * @param buffer
  * @param format
  * @param ...
  * @return int
  */
-int sprintf( __unused char* str, __unused const char* restrict format, ... ) {
-  va_list parameters;
-  va_start( parameters, format );
-  // end parameter
-  va_end( parameters );
-  // return written amount
-  return ( int )0;
+int sprintf( char* buffer, const char* restrict format, ... ) {
+  va_list parameter;
+  va_start( parameter, format );
+  int written = vsprintf( buffer, format, parameter );
+  va_end( parameter );
+  return written;
 }

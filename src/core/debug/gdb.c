@@ -66,7 +66,7 @@ void debug_gdb_set_trap( void ) {
  * @return true
  * @return false
  */
-bool debug_gbb_initialized( void ) {
+bool debug_gdb_initialized( void ) {
   return stub_initialized;
 }
 
@@ -74,10 +74,8 @@ bool debug_gbb_initialized( void ) {
  * @brief Send packet
  *
  * @param char string to send
- *
- * @todo check why no optimization is necessary
  */
-void __no_optimization debug_gdb_packet_send( unsigned char* p ) {
+void debug_gdb_packet_send( unsigned char* p ) {
   unsigned char checksum;
   int count;
   char ch;
@@ -105,7 +103,7 @@ void __no_optimization debug_gdb_packet_send( unsigned char* p ) {
  *
  * @todo add logic
  */
-unsigned char* packet_receive( void ) {
+unsigned char* debug_gdb_packet_receive( void ) {
   return NULL;
 }
 

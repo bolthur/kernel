@@ -19,7 +19,9 @@
  */
 
 #include <assert.h>
+#include <arch/arm/v7/debug/debug.h>
 #include <arch/arm/v7/cpu.h>
+#include <core/event.h>
 #include <core/panic.h>
 #include <core/interrupt.h>
 
@@ -44,6 +46,12 @@ void fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
   #endif
+
+  // special debug exception handling
+  if ( debug_is_debug_exception() ) {
+    event_enqueue( EVENT_DEBUG );
+    PANIC( "Check fixup!" );
+  }
 
   // get pending interrupt
   int8_t interrupt = interrupt_get_pending( true );

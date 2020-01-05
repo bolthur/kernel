@@ -63,7 +63,6 @@ void data_abort_handler( cpu_register_context_ptr_t cpu ) {
     DEBUG_OUTPUT( "data abort interrupt at 0x%08x\r\n", fault_address() );
     DUMP_REGISTER( cpu );
   #else
-    ( void )cpu;
     ( void )fault_address;
   #endif
 

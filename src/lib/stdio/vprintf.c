@@ -18,18 +18,23 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_STDIO__ )
-#define __LIB_STDIO__
-
+#include <limits.h>
+#include <stdbool.h>
 #include <stdarg.h>
+#include <stdint.h>
+#include <stdbool.h>
 
-#define EOF ( -1 )
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
-int printf( const char* restrict, ... );
-int putchar( int );
-int puts( const char* );
-int sprintf( char*, const char* restrict, ... );
-int vprintf( const char* restrict, va_list );
-int vsprintf( char*, const char* restrict, va_list );
-
-#endif
+/**
+ * @brief Simple vprintf for kernel
+ *
+ * @param format
+ * @param parameter
+ * @return int
+ */
+int vprintf( const char* restrict format, va_list parameter ) {
+  return vsprintf( NULL, format, parameter );
+}

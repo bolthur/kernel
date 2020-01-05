@@ -19,7 +19,9 @@
  */
 
 #include <assert.h>
+#include <arch/arm/v7/debug/debug.h>
 #include <arch/arm/v7/cpu.h>
+#include <core/event.h>
 #include <core/panic.h>
 #include <core/interrupt.h>
 
@@ -45,9 +47,14 @@ void undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
-  #else
-    ( void )cpu;
   #endif
+
+  // special debug exception handling
+  if ( debug_is_debug_exception() ) {
+    event_enqueue( EVENT_DEBUG );
+    PANIC( "Check fixup!" );
+  }
+
   PANIC( "undefined" );
   // decrement nested counter
   nested_undefined--;

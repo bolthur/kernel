@@ -33,12 +33,12 @@ void debug_gdb_arch_init( void );
 void debug_gdb_breakpoint( void );
 void debug_gdb_set_trap( void );
 void debug_gdb_handle_exception( void );
-bool debug_gbb_initialized( void );
+bool debug_gdb_initialized( void );
 void debug_gdb_handle_event( void* );
 debug_gdb_signal_t debug_gdb_get_signal( void );
 
 void debug_gdb_packet_send( unsigned char* );
-unsigned char* packet_receive( void );
+unsigned char* debug_gdb_packet_receive( void );
 int debug_gdb_putchar( int );
 int debug_gdb_puts( const char* );
 

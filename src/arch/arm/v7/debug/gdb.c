@@ -19,12 +19,19 @@
  */
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <core/panic.h>
 #include <core/debug/debug.h>
 #include <core/debug/gdb.h>
 #include <arch/arm/v7/cpu.h>
 #include <arch/arm/v7/debug/debug.h>
+
+/**
+ * @brief output buffer used for formatting via sprintf
+ */
+static char output_buffer[ 500 ];
 
 /**
  * @brief Arch related gdb init
@@ -41,13 +48,21 @@ void debug_gdb_arch_init( void ) {
  *
  * @todo add logic
  */
-void debug_gdb_handle_event( __unused void* context ) {
+void debug_gdb_handle_event( void* context ) {
   // get signal
   debug_gdb_signal_t signal = debug_gdb_get_signal();
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  // print signal
   printf( "signal = %d\r\n", signal );
+  DUMP_REGISTER( cpu );
+
+  // sprintf testing
+  sprintf( output_buffer, "signal = %d", signal );
+  printf( "1 - %s\r\n", output_buffer );
+  for(;;);
 
   while ( true ) {
-    debug_gdb_puts( "fuack!\n" );
+    // FIXME: Add logic
   }
 }
 
@@ -56,7 +71,7 @@ void debug_gdb_handle_event( __unused void* context ) {
  */
 void debug_gdb_breakpoint( void ) {
   // breakpoint only if initialized
-  if ( debug_gbb_initialized() ) {
+  if ( debug_gdb_initialized() ) {
     __asm__( "bkpt #5" );
   }
 }

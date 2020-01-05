@@ -19,7 +19,9 @@
  */
 
 #include <assert.h>
+#include <arch/arm/v7/debug/debug.h>
 #include <arch/arm/v7/cpu.h>
+#include <core/event.h>
 #include <core/panic.h>
 #include <core/interrupt.h>
 
@@ -46,6 +48,12 @@ void software_interrupt_handler( cpu_register_context_ptr_t cpu ) {
     DEBUG_OUTPUT( "Entering software_interrupt_handler( 0x%08x )\r\n",
       cpu );
   #endif
+
+  // special debug exception handling
+  if ( debug_is_debug_exception() ) {
+    event_enqueue( EVENT_DEBUG );
+    PANIC( "Check fixup!" );
+  }
 
   // get svc number
   uint32_t svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->pc ) ) & 0xffff;

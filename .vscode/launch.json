@@ -80,6 +80,10 @@
           "description": "Enable GDB pretty printing"
         },
         {
+          "text": "set verbose on",
+          "description": "Enable verbose debugging output"
+        },
+        {
           "text": "set architecture armv7",
           "description": "Set architecture"
         },
@@ -92,7 +96,7 @@
           "description": "Setting baud rate for serial connection"
         },
         {
-          "text": "target remote /dev/pts/3",
+          "text": "target remote /dev/pts/2",
           "description": "Set remote target"
         }
       ],
