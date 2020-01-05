@@ -29,12 +29,14 @@ typedef enum {
   GDB_SIGNAL_ABORT = 6,
 } debug_gdb_signal_t;
 
-typedef void ( *debug_gdb_callback_t )( void* context, const unsigned char* message );
+typedef void ( *debug_gdb_callback_t )( void* context, const uint8_t* message );
 
 typedef struct {
   const char* prefix;
   debug_gdb_callback_t handler;
 } debug_gdb_command_handler_t;
+
+extern const char debug_gdb_hexchar[];
 
 void debug_gdb_init( void );
 void debug_gdb_arch_init( void );
@@ -45,9 +47,10 @@ bool debug_gdb_initialized( void );
 void debug_gdb_handle_event( void* );
 debug_gdb_signal_t debug_gdb_get_signal( void );
 
-void debug_gdb_packet_send( unsigned char* );
-unsigned char* debug_gdb_packet_receive( unsigned char*, size_t );
-int debug_gdb_putchar( int );
-int debug_gdb_puts( const char* );
+void debug_gdb_packet_send( uint8_t* );
+uint8_t* debug_gdb_packet_receive( uint8_t*, size_t );
+int32_t debug_gdb_putchar( int32_t );
+int32_t debug_gdb_puts( const char* );
+int32_t debug_gdb_char2hex( char );
 
 #endif

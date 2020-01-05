@@ -25,6 +25,7 @@
 #include <string.h>
 #include <assert.h>
 #include <core/panic.h>
+#include <core/interrupt.h>
 #include <core/debug/debug.h>
 #include <core/debug/gdb.h>
 #include <arch/arm/v7/cpu.h>
@@ -38,12 +39,12 @@
 /**
  * @brief output buffer used for formatting via sprintf
  */
-static unsigned char output_buffer[ 500 ] __unused;
+static uint8_t output_buffer[ 500 ] __unused;
 
 /**
  * @brief input buffer used for incomming packages
  */
-static unsigned char input_buffer[ 500 ];
+static uint8_t input_buffer[ 500 ];
 
 /**
  * @brief Supported packet handler
@@ -53,10 +54,10 @@ static unsigned char input_buffer[ 500 ];
  */
 static void handle_supported(
   __unused void* context,
-  __unused const unsigned char *packet
+  __unused const uint8_t *packet
 ) {
   debug_gdb_packet_send(
-    ( unsigned char* )"qSupported:PacketSize=256;multiprocess+" );
+    ( uint8_t* )"qSupported:PacketSize=256;multiprocess+" );
 }
 
 /**
@@ -67,10 +68,10 @@ static void handle_supported(
  */
 static void handle_unsupported(
   __unused void* context,
-  __unused const unsigned char *packet
+  __unused const uint8_t *packet
 ) {
   // send empty response as not supported
-  debug_gdb_packet_send( ( unsigned char* )"\0" );
+  debug_gdb_packet_send( ( uint8_t* )"\0" );
 }
 
 /**
@@ -86,7 +87,7 @@ static debug_gdb_command_handler_t handler[] = {
  * @param packet
  * @return debug_gdb_callback_t
  */
-static debug_gdb_callback_t get_handler( const unsigned char* packet ) {
+static debug_gdb_callback_t get_handler( const uint8_t* packet ) {
   // max size
   size_t max = sizeof( handler ) / sizeof( handler[ 0 ] );
   // loop through handler to identify used one
@@ -117,16 +118,21 @@ void debug_gdb_arch_init( void ) {
  * @param void
  */
 void debug_gdb_handle_event( void* context ) {
-  // get signal
-  debug_gdb_signal_t signal = debug_gdb_get_signal();
-  // further variables
-  unsigned char* packet;
+  // variables
+  debug_gdb_signal_t signal;
+  uint8_t* packet;
   debug_gdb_callback_t cb;
 
+  // disable interrupts while debugging
+  interrupt_disable();
+
+  // get signal
+  signal = debug_gdb_get_signal();
   // print signal
   printf( "signal = %d\r\n", signal );
   DUMP_REGISTER( context );
 
+  // handle incoming packets in endless loop
   while ( true ) {
     // get packet
     packet = debug_gdb_packet_receive( input_buffer, MAX_BUFFER );

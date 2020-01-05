@@ -33,15 +33,15 @@ static bool stub_initialized = false;
 /**
  * @brief hex characters used for transform
  */
-static const char hexchar[] = "0123456789abcdef";
+const char debug_gdb_hexchar[] = "0123456789abcdef";
 
 /**
  * @brief Transform character to hex value
  *
  * @param ch
- * @return int
+ * @return int32_t
  */
-static int char2hex( char ch ) {
+int32_t debug_gdb_char2hex( char ch ) {
   if ( ch >= 'a' && ch <= 'f' ) {
     return ch - 'a' + 10;
   }
@@ -69,7 +69,9 @@ static bool checksum( uint8_t in ) {
   uint8_t out;
   // calculate checksum
   out = ( uint8_t )(
-    ( char2hex( serial_getc() ) << 4 ) + char2hex( serial_getc() ) );
+    ( debug_gdb_char2hex( serial_getc() ) << 4 )
+    + debug_gdb_char2hex( serial_getc() )
+  );
   // return compare result
   return in == out;
 }
@@ -117,23 +119,25 @@ bool debug_gdb_initialized( void ) {
  *
  * @param char string to send
  */
-void debug_gdb_packet_send( unsigned char* p ) {
-  unsigned char checksum;
+void debug_gdb_packet_send( uint8_t* p ) {
+  uint8_t checksum;
   int count;
   char ch;
 
   // $<packet info>#<checksum>.
-  serial_putc( '$' );
-  checksum = 0;
-  count = 0;
-  while( NULL != p && ( ch = p[ count ] ) ) {
-    serial_putc( ch );
-    checksum = ( unsigned char )( ( int )checksum + ch );
-    count++;
-  }
-  serial_putc( '#' );
-  serial_putc( hexchar[ checksum >> 4 ] );
-  serial_putc( hexchar[ checksum % 16 ] );
+  do {
+    serial_putc( '$' );
+    checksum = 0;
+    count = 0;
+    while( NULL != p && ( ch = p[ count ] ) ) {
+      serial_putc( ch );
+      checksum = ( uint8_t )( ( int )checksum + ch );
+      count++;
+    }
+    serial_putc( '#' );
+    serial_putc( debug_gdb_hexchar[ checksum >> 4 ] );
+    serial_putc( debug_gdb_hexchar[ checksum % 16 ] );
+  } while( '+' != serial_getc() );
 }
 
 /**
@@ -142,7 +146,7 @@ void debug_gdb_packet_send( unsigned char* p ) {
  * @param max
  * @return unsigned* packet_receive
  */
-unsigned char* debug_gdb_packet_receive( unsigned char* buffer, size_t max ) {
+uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
   char c;
   uint8_t calculated_checksum;
   size_t count = 0;
@@ -205,13 +209,15 @@ unsigned char* debug_gdb_packet_receive( unsigned char* buffer, size_t max ) {
  * @brief Internal method to send character printed by remote gdb
  *
  * @param c
- * @return int
+ * @return int32_t
  */
-int debug_gdb_putchar( int c ) {
+int32_t debug_gdb_putchar( int32_t c ) {
   // build buffer
-  char buf[ 4 ] = { '0', hexchar[ c >> 4 ], hexchar[ c & 0x0f ], 0 };
+  char buf[ 4 ] = {
+    '0', debug_gdb_hexchar[ c >> 4 ], debug_gdb_hexchar[ c & 0x0f ], 0,
+  };
   // send packet
-  debug_gdb_packet_send( ( unsigned char* )buf );
+  debug_gdb_packet_send( ( uint8_t* )buf );
   // return sent character
   return c;
 }
@@ -220,9 +226,9 @@ int debug_gdb_putchar( int c ) {
  * @brief Internal method to send string printed by remote gdb
  *
  * @param s
- * @return int
+ * @return int32_t
  */
-int debug_gdb_puts( const char* s ) {
+int32_t debug_gdb_puts( const char* s ) {
   // get string length
   int len = ( int )strlen( s );
   // print character by character
