@@ -36,5 +36,5 @@ void syscall_putc( void* context ) {
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
 
   // simple character printing
-  printf( "%c", ( uint8_t )cpu->r0 );
+  printf( "%c", ( uint8_t )cpu->reg.r0 );
 }

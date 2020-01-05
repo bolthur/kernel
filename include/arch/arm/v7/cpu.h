@@ -50,15 +50,22 @@
   /**
    * @brief CPU register context
    */
-  typedef struct {
-    uint32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10; /* general purpose register */
-    uint32_t fp; /* r11 = frame pointer */
-    uint32_t ip; /* r12 = intraprocess scratch */
-    uint32_t sp; /* r13 = stack pointer */
-    uint32_t lr; /* r14 = link register */
-    uint32_t pc; /* r15 = program counter */
-    uint32_t spsr;
+  typedef union __packed {
+    uint32_t raw[ 17 ];
+    struct {
+      uint32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10; /* general purpose register */
+      uint32_t fp; /* r11 = frame pointer */
+      uint32_t ip; /* r12 = intraprocess scratch */
+      uint32_t sp; /* r13 = stack pointer */
+      uint32_t lr; /* r14 = link register */
+      uint32_t pc; /* r15 = program counter */
+      uint32_t spsr;
+    } reg;
   } cpu_register_context_t, *cpu_register_context_ptr_t;
+
+  enum {
+    R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, SP, LR, PC, CPSR
+  };
 
   #define DUMP_REGISTER( context ) \
     DEBUG_OUTPUT( \
@@ -69,23 +76,23 @@
       "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
       "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
       "%4s: 0x%08x\t%4s: 0x%08x\r\n", \
-      "r0", ( ( cpu_register_context_ptr_t )context )->r0, \
-      "r1", ( ( cpu_register_context_ptr_t )context )->r1, \
-      "r2", ( ( cpu_register_context_ptr_t )context )->r2, \
-      "r3", ( ( cpu_register_context_ptr_t )context )->r3, \
-      "r4", ( ( cpu_register_context_ptr_t )context )->r4, \
-      "r5", ( ( cpu_register_context_ptr_t )context )->r5, \
-      "r6", ( ( cpu_register_context_ptr_t )context )->r6, \
-      "r7", ( ( cpu_register_context_ptr_t )context )->r7, \
-      "r8", ( ( cpu_register_context_ptr_t )context )->r8, \
-      "r9", ( ( cpu_register_context_ptr_t )context )->r9, \
-      "r10", ( ( cpu_register_context_ptr_t )context )->r10, \
-      "fp", ( ( cpu_register_context_ptr_t )context )->fp, \
-      "ip", ( ( cpu_register_context_ptr_t )context )->ip, \
-      "sp", ( ( cpu_register_context_ptr_t )context )->sp, \
-      "lr", ( ( cpu_register_context_ptr_t )context )->lr, \
-      "pc", ( ( cpu_register_context_ptr_t )context )->pc, \
-      "spsr", ( ( cpu_register_context_ptr_t )context )->spsr \
+      "r0", ( ( cpu_register_context_ptr_t )context )->reg.r0, \
+      "r1", ( ( cpu_register_context_ptr_t )context )->reg.r1, \
+      "r2", ( ( cpu_register_context_ptr_t )context )->reg.r2, \
+      "r3", ( ( cpu_register_context_ptr_t )context )->reg.r3, \
+      "r4", ( ( cpu_register_context_ptr_t )context )->reg.r4, \
+      "r5", ( ( cpu_register_context_ptr_t )context )->reg.r5, \
+      "r6", ( ( cpu_register_context_ptr_t )context )->reg.r6, \
+      "r7", ( ( cpu_register_context_ptr_t )context )->reg.r7, \
+      "r8", ( ( cpu_register_context_ptr_t )context )->reg.r8, \
+      "r9", ( ( cpu_register_context_ptr_t )context )->reg.r9, \
+      "r10", ( ( cpu_register_context_ptr_t )context )->reg.r10, \
+      "fp", ( ( cpu_register_context_ptr_t )context )->reg.fp, \
+      "ip", ( ( cpu_register_context_ptr_t )context )->reg.ip, \
+      "sp", ( ( cpu_register_context_ptr_t )context )->reg.sp, \
+      "lr", ( ( cpu_register_context_ptr_t )context )->reg.lr, \
+      "pc", ( ( cpu_register_context_ptr_t )context )->reg.pc, \
+      "spsr", ( ( cpu_register_context_ptr_t )context )->reg.spsr \
     )
 #endif
 

@@ -52,7 +52,7 @@ void prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   if ( debug_is_debug_exception() ) {
     event_enqueue( EVENT_DEBUG );
     // FIXME: ADD CORRECT FIXUP
-    cpu->pc += 4;
+    cpu->reg.pc += 4;
     // PANIC( "Check fixup!" );
   } else {
     PANIC( "prefetch abort" );

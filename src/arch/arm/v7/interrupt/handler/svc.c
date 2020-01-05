@@ -56,7 +56,7 @@ void software_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   }
 
   // get svc number
-  uint32_t svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->pc ) ) & 0xffff;
+  uint32_t svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xffff;
 
   // debug output
   #if defined( PRINT_EXCEPTION )

@@ -68,11 +68,11 @@ task_thread_ptr_t task_thread_create(
   // Prepare area
   memset( ( void* )context, 0, sizeof( cpu_register_context_t ) );
   // set content
-  context->pc = ( uint32_t )entry;
+  context->reg.pc = ( uint32_t )entry;
   // Only user mode threads are possible
-  context->spsr = 0x60000000 | CPSR_MODE_USER;
+  context->reg.spsr = 0x60000000 | CPSR_MODE_USER;
   // set stack pointer
-  context->sp = stack_virtual + STACK_SIZE - 4;
+  context->reg.sp = stack_virtual + STACK_SIZE - 4;
   // debug output
   #if defined( PRINT_PROCESS )
     DUMP_REGISTER( context );
