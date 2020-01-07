@@ -773,6 +773,8 @@ virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
  * @brief Destroy context for v7 long descriptor
  *
  * @param ctx context to destroy
+ *
+ * @todo add logic
  */
 void v7_long_destroy_context( __unused virt_context_ptr_t ctx ) {
   PANIC( "v7 long destroy context not yet implemented!" );
@@ -802,4 +804,54 @@ void v7_long_prepare( void ) {
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "mair0 = 0x%08x\r\n", mair0 );
   #endif
+}
+
+/**
+ * @brief Checks whether address is mapped or not
+ *
+ * @param ctx
+ * @param addr
+ * @return true
+ * @return false
+ */
+bool v7_long_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
+  // get page index
+  uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( addr );
+  bool mapped = false;
+
+  // determine page index
+  uint64_t table_phys = v7_long_create_table( ctx, addr, 0 );
+
+  // map temporary
+  ld_page_table_t* table = ( ld_page_table_t* )map_temporary(
+    table_phys, PAGE_SIZE );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table: 0x%08x\r\n", table );
+  #endif
+
+  // assert existance
+  assert( NULL != table );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table: 0x%08x\r\n", table );
+    DEBUG_OUTPUT(
+      "table->page[ %d ] = 0x%08x\r\n",
+      page_idx,
+      table->page[ page_idx ]
+    );
+  #endif
+
+  // switch flag to true if mapped
+  if ( 0 != table->page[ page_idx ].raw ) {
+    mapped = true;
+  }
+
+  // unmap temporary
+  unmap_temporary( ( uintptr_t )table, PAGE_SIZE );
+
+  // return flag
+  return mapped;
 }

@@ -263,3 +263,20 @@ void virt_arch_prepare( void ) {
     PANIC( "Unsupported mode!" );
   }
 }
+
+/**
+ * @brief Method checks whether address is mapped or not without generating exceptions
+ *
+ * @param ctx
+ * @param addr
+ * @return true
+ * @return false
+ */
+bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
+  // Panic when mode is unsupported
+  if ( ID_MMFR0_VSMA_V6_PAGING & supported_modes ) {
+    return v6_short_is_mapped_in_context( ctx, addr );
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}

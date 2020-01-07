@@ -18,6 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
 #include <assert.h>
 #include <arch/arm/v7/debug/debug.h>
 #include <arch/arm/v7/cpu.h>
@@ -26,54 +27,37 @@
 #include <core/panic.h>
 
 /**
- * @brief Nested counter for data abort exception handler
+ * @brief Nested counter for prefetch abort exception handler
  */
-static uint32_t nested_data_abort = 0;
+static uint32_t nested_prefetch_abort = 0;
 
 /**
- * @brief Helper returns faulting address
- *
- * @return uint32_t
- */
-static uint32_t fault_address( void ) {
-  // variable for faulting address
-  uint32_t address;
-  // get faulting address
-  __asm__ __volatile__(
-    "mrc p15, 0, %0, c6, c0, 0" : "=r" ( address ) : : "cc"
-  );
-  // return faulting address
-  return address;
-}
-
-/**
- * @brief Data abort exception handler
+ * @brief Prefetch abort exception handler
  *
  * @param cpu cpu context
  */
-void data_abort_handler( cpu_register_context_ptr_t cpu ) {
+void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
-  assert( nested_data_abort++ < INTERRUPT_NESTED_MAX );
+  assert( nested_prefetch_abort++ < INTERRUPT_NESTED_MAX );
 
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "data abort interrupt at 0x%08x\r\n", fault_address() );
     DUMP_REGISTER( cpu );
-  #else
-    ( void )fault_address;
   #endif
 
   // special debug exception handling
   if ( debug_is_debug_exception() ) {
     event_enqueue( EVENT_DEBUG );
-    PANIC( "Check fixup!" );
+    // FIXME: ADD CORRECT FIXUP
+    cpu->reg.pc += 4;
+    // PANIC( "Check fixup!" );
   } else {
-    PANIC( "data abort" );
+    PANIC( "prefetch abort" );
   }
 
   // decrement nested counter
-  nested_data_abort--;
+  nested_prefetch_abort--;
 }

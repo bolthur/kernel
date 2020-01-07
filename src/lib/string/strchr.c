@@ -18,10 +18,19 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_INTERRUPT_VECTOR__ )
-#define __ARCH_ARM_INTERRUPT_VECTOR__
+#include <stddef.h>
+#include <stdint.h>
 
-void interrupt_vector_init( void );
-void interrupt_monitor_init( void );
-
-#endif
+char* strchr( const char *str, int delimiter ) {
+  // loop until possible match
+  while ( *str ) {
+    // return string pointer on match
+    if ( ( int )*str == delimiter ) {
+      return ( char* )str;
+    }
+    // continue with next
+    str++;
+  }
+  // no match
+  return NULL;
+}

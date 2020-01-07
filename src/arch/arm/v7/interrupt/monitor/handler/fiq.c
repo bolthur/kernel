@@ -18,10 +18,37 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_INTERRUPT_VECTOR__ )
-#define __ARCH_ARM_INTERRUPT_VECTOR__
+#include <assert.h>
+#include <arch/arm/v7/debug/debug.h>
+#include <arch/arm/v7/cpu.h>
+#include <core/event.h>
+#include <core/panic.h>
+#include <core/interrupt.h>
 
-void interrupt_vector_init( void );
-void interrupt_monitor_init( void );
+/**
+ * @brief Nested counter for fast interrupt exception handler
+ */
+static uint32_t nested_fast_interrupt = 0;
 
-#endif
+/**
+ * @brief Fast interrupt request exception handler
+ *
+ * @param cpu cpu context
+ */
+void monitor_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
+  // assert nesting
+  assert( nested_fast_interrupt++ < INTERRUPT_NESTED_MAX );
+
+  // get context
+  INTERRUPT_DETERMINE_CONTEXT( cpu )
+
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DUMP_REGISTER( cpu );
+  #endif
+
+  PANIC( "FOOO!" );
+
+  // decrement nested counter
+  nested_fast_interrupt--;
+}

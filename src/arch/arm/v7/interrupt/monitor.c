@@ -18,10 +18,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_INTERRUPT_VECTOR__ )
-#define __ARCH_ARM_INTERRUPT_VECTOR__
+#include <arch/arm/v7/interrupt/vector.h>
 
-void interrupt_vector_init( void );
-void interrupt_monitor_init( void );
-
-#endif
+/**
+ * @brief Method to initialize monitor interrupt vector table
+ */
+void interrupt_monitor_init( void ) {
+  __asm__ __volatile__(
+      "mcr p15, 0, %[addr], c12, c0, 1"
+      : : [addr] "r" ( &monitor_vector_table )
+      : "cc"
+    );
+}

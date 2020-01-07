@@ -18,19 +18,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-.section .text
-
-#define ASSEMBLER_FILE 1
-#include <core/assembly.h>
-#include <arch/arm/v7/cpu.h>
-
-// handler
-IMPORT( undefined_instruction_handler )
-IMPORT( software_interrupt_handler )
-IMPORT( prefetch_abort_handler )
-IMPORT( data_abort_handler )
-IMPORT( interrupt_handler )
-IMPORT( fast_interrupt_handler )
 // event handling
 IMPORT( event_handle )
 // switch to thread
@@ -244,33 +231,3 @@ _\name\()_exit_finished:
   // return from exception
   rfeia sp!
 .endm
-
-_undefined_instruction_handler:
-  ex_handler 4, undefined_instruction_handler, CPSR_MODE_SUPERVISOR, undefined, 0
-
-_software_interrupt_handler:
-  ex_handler 4, software_interrupt_handler, CPSR_MODE_SUPERVISOR, software, 4
-
-_prefetch_abort_handler:
-  ex_handler 4, prefetch_abort_handler, CPSR_MODE_SUPERVISOR, prefetch_abort, 0
-
-_data_abort_handler:
-  ex_handler 8, data_abort_handler, CPSR_MODE_SUPERVISOR, data_abort, 0
-
-_interrupt_handler:
-  ex_handler 4, interrupt_handler, CPSR_MODE_SUPERVISOR, interrupt, 0
-
-_fast_interrupt_handler:
-  ex_handler 4, fast_interrupt_handler, CPSR_MODE_SUPERVISOR, fast_interrupt, 0
-
-EXPORT( interrupt_vector_table )
-.balign 32
-interrupt_vector_table:
-  b start // reset
-  b _undefined_instruction_handler // undefined instruction
-  b _software_interrupt_handler // software interrupt
-  b _prefetch_abort_handler // prefetch abort
-  b _data_abort_handler // data abort
-  nop // unused
-  b _interrupt_handler // irq
-  b _fast_interrupt_handler // fiq

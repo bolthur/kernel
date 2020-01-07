@@ -167,3 +167,18 @@ void v6_short_destroy_context( __unused virt_context_ptr_t ctx ) {
  * @brief Prepare short memory management
  */
 void v6_short_prepare( void ) {}
+
+/**
+ * @brief Checks whether address is mapped or not
+ *
+ * @param ctx
+ * @param uintptr_t
+ * @return true
+ * @return false
+ */
+bool v6_short_is_mapped_in_context(
+  __unused virt_context_ptr_t ctx,
+  __unused uintptr_t addr
+) {
+  PANIC( "NOT SUPPORTED!" );
+}

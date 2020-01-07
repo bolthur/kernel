@@ -37,5 +37,6 @@ virt_context_ptr_t v6_short_create_context( virt_context_type_t );
 void v6_short_prepare( void );
 void v6_short_flush_complete( void );
 void v6_short_flush_address( uintptr_t );
+bool v6_short_is_mapped_in_context( virt_context_ptr_t, uintptr_t );
 
 #endif

@@ -26,20 +26,18 @@
 #include <core/interrupt.h>
 
 /**
- * @brief Nested counter for undefined instruction exception handler
+ * @brief Nested counter for interrupt exception handler
  */
-static uint32_t nested_undefined = 0;
+static uint32_t nested_interrupt = 0;
 
 /**
- * @brief Undefined instruction exception handler
+ * @brief Interrupt request exception handler
  *
  * @param cpu cpu context
- *
- * @todo check for fpu exception and reset exception bit
  */
-void undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
+void vector_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
-  assert( nested_undefined++ < INTERRUPT_NESTED_MAX );
+  assert( nested_interrupt++ < INTERRUPT_NESTED_MAX );
 
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
@@ -55,7 +53,13 @@ void undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
     PANIC( "Check fixup!" );
   }
 
-  PANIC( "undefined" );
+  // get pending interrupt
+  int8_t interrupt = interrupt_get_pending( false );
+  assert( -1 != interrupt );
+
+  // handle bound interrupt handlers
+  interrupt_handle( ( uint8_t )interrupt, INTERRUPT_NORMAL, cpu );
+
   // decrement nested counter
-  nested_undefined--;
+  nested_interrupt--;
 }

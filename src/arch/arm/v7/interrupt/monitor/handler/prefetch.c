@@ -36,7 +36,7 @@ static uint32_t nested_prefetch_abort = 0;
  *
  * @param cpu cpu context
  */
-void prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
+void monitor_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   assert( nested_prefetch_abort++ < INTERRUPT_NESTED_MAX );
 
@@ -48,15 +48,7 @@ void prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
     DUMP_REGISTER( cpu );
   #endif
 
-  // special debug exception handling
-  if ( debug_is_debug_exception() ) {
-    event_enqueue( EVENT_DEBUG );
-    // FIXME: ADD CORRECT FIXUP
-    cpu->reg.pc += 4;
-    // PANIC( "Check fixup!" );
-  } else {
-    PANIC( "prefetch abort" );
-  }
+  PANIC( "FOOO!" );
 
   // decrement nested counter
   nested_prefetch_abort--;

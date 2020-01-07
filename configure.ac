@@ -242,9 +242,14 @@ AC_DEFINE_UNQUOTED(
   [Bootstrap data]
 )
 AC_DEFINE_UNQUOTED(
+  [__maybe_unused],
+  [__attribute__((unused))],
+  [Possibly unused]
+)
+AC_DEFINE_UNQUOTED(
   [__unused],
   [__attribute__((unused))],
-  [Unused function]
+  [Unused]
 )
 AC_DEFINE_UNQUOTED(
   [__no_sanitize],

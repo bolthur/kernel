@@ -14,14 +14,22 @@ libv7_a_SOURCES = \
   boot/fpu.S \
   debug/debug.c \
   debug/gdb.c \
-  interrupt/handler/data.c \
-  interrupt/handler/fiq.c \
-  interrupt/handler/irq.c \
-  interrupt/handler/prefetch.c \
-  interrupt/handler/svc.c \
-  interrupt/handler/undefined.c \
+  interrupt/monitor/handler/data.c \
+  interrupt/monitor/handler/fiq.c \
+  interrupt/monitor/handler/irq.c \
+  interrupt/monitor/handler/prefetch.c \
+  interrupt/monitor/handler/smc.c \
+  interrupt/monitor/handler/unknown.c \
+  interrupt/monitor/stub/vector.S \
   interrupt/stub/interrupt.S \
-  interrupt/stub/vector.S \
+  interrupt/vector/handler/data.c \
+  interrupt/vector/handler/fiq.c \
+  interrupt/vector/handler/irq.c \
+  interrupt/vector/handler/prefetch.c \
+  interrupt/vector/handler/svc.c \
+  interrupt/vector/handler/undefined.c \
+  interrupt/vector/stub/vector.S \
+  interrupt/monitor.c \
   interrupt/vector.c \
   mm/virt/long.c \
   mm/virt/short.c \

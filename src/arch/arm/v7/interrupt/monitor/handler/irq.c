@@ -26,18 +26,18 @@
 #include <core/interrupt.h>
 
 /**
- * @brief Nested counter for software interrupt exception handler
+ * @brief Nested counter for interrupt exception handler
  */
-static uint32_t nested_software_interrupt = 0;
+static uint32_t nested_interrupt = 0;
 
 /**
- * @brief Software interrupt exception handler
+ * @brief Interrupt request exception handler
  *
  * @param cpu cpu context
  */
-void software_interrupt_handler( cpu_register_context_ptr_t cpu ) {
+void monitor_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
-  assert( nested_software_interrupt++ < INTERRUPT_NESTED_MAX );
+  assert( nested_interrupt++ < INTERRUPT_NESTED_MAX );
 
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
@@ -45,33 +45,10 @@ void software_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
-    DEBUG_OUTPUT( "Entering software_interrupt_handler( 0x%08x )\r\n",
-      cpu );
   #endif
 
-  // special debug exception handling
-  if ( debug_is_debug_exception() ) {
-    event_enqueue( EVENT_DEBUG );
-    PANIC( "Check fixup!" );
-  }
-
-  // get svc number
-  uint32_t svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xffff;
-
-  // debug output
-  #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "address of cpu = 0x%08x\r\n", cpu );
-    DEBUG_OUTPUT( "svc_num = %d\r\n", svc_num );
-  #endif
-
-  // handle bound interrupt handlers
-  interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu );
+  PANIC( "FOOO!" );
 
   // decrement nested counter
-  nested_software_interrupt--;
-
-  // debug output
-  #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "Leaving software_interrupt_handler\r\n" );
-  #endif
+  nested_interrupt--;
 }

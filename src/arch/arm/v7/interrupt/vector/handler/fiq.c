@@ -26,18 +26,18 @@
 #include <core/interrupt.h>
 
 /**
- * @brief Nested counter for interrupt exception handler
+ * @brief Nested counter for fast interrupt exception handler
  */
-static uint32_t nested_interrupt = 0;
+static uint32_t nested_fast_interrupt = 0;
 
 /**
- * @brief Interrupt request exception handler
+ * @brief Fast interrupt request exception handler
  *
  * @param cpu cpu context
  */
-void interrupt_handler( cpu_register_context_ptr_t cpu ) {
+void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
-  assert( nested_interrupt++ < INTERRUPT_NESTED_MAX );
+  assert( nested_fast_interrupt++ < INTERRUPT_NESTED_MAX );
 
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
@@ -54,12 +54,12 @@ void interrupt_handler( cpu_register_context_ptr_t cpu ) {
   }
 
   // get pending interrupt
-  int8_t interrupt = interrupt_get_pending( false );
+  int8_t interrupt = interrupt_get_pending( true );
   assert( -1 != interrupt );
 
-  // handle bound interrupt handlers
-  interrupt_handle( ( uint8_t )interrupt, INTERRUPT_NORMAL, cpu );
+  // handle bound fast interrupt handlers
+  interrupt_handle( ( uint8_t )interrupt, INTERRUPT_FAST, cpu );
 
   // decrement nested counter
-  nested_interrupt--;
+  nested_fast_interrupt--;
 }

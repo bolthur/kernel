@@ -28,4 +28,5 @@
  */
 void interrupt_init( void ) {
   interrupt_vector_init();
+  interrupt_monitor_init();
 }

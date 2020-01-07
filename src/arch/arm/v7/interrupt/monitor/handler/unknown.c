@@ -18,30 +18,39 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <core/serial.h>
-#include <core/debug/gdb.h>
+#include <assert.h>
+#include <arch/arm/v7/debug/debug.h>
+#include <arch/arm/v7/cpu.h>
+#include <core/event.h>
+#include <core/panic.h>
+#include <core/interrupt.h>
 
 /**
- * @brief Initialize TTY
+ * @brief Nested counter for undefined instruction exception handler
  */
-void tty_init( void ) {
-  #if defined( OUTPUT_ENABLE )
-    serial_init();
-  #endif
-}
+static uint32_t nested_unknown = 0;
 
 /**
- * @brief Print character to TTY
+ * @brief Undefined instruction exception handler
  *
- * @param c Character to print
+ * @param cpu cpu context
+ *
+ * @todo check for fpu exception and reset exception bit
  */
-void tty_putc( __maybe_unused uint8_t c ) {
-  if ( debug_gdb_initialized() ) {
-    return;
-  }
-  // only if enabled
-  #if defined( OUTPUT_ENABLE )
-    serial_putc( c );
+void monitor_unknown_handler( cpu_register_context_ptr_t cpu ) {
+  // assert nesting
+  assert( nested_unknown++ < INTERRUPT_NESTED_MAX );
+
+  // get context
+  INTERRUPT_DETERMINE_CONTEXT( cpu )
+
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DUMP_REGISTER( cpu );
   #endif
+
+  PANIC( "FOOO!" );
+
+  // decrement nested counter
+  nested_unknown--;
 }

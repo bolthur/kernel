@@ -133,3 +133,16 @@ void virt_arch_init( void ) {
     DEBUG_OUTPUT( "user_context: 0x%08x\r\n", user_context );
   #endif
 }
+
+/**
+ * @brief Method checks whether address is mapped or not without generating exceptions
+ *
+ * @param addr
+ * @return true
+ * @return false
+ */
+bool virt_is_mapped( uintptr_t addr ) {
+  return
+    virt_is_mapped_in_context( kernel_context, addr )
+    || virt_is_mapped_in_context( user_context, addr );
+}
