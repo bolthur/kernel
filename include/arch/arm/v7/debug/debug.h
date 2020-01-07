@@ -29,9 +29,9 @@ bool debug_is_debug_exception( void );
 
 void debug_enable_debug_monitor( void );
 void debug_disable_debug_monitor( void );
-void debug_set_breakpoint( uintptr_t );
-void debug_remove_breakpoint( uintptr_t );
-void debug_enable_single_step( void );
-void debug_disable_single_step( void );
+bool debug_set_breakpoint( uintptr_t );
+bool debug_remove_breakpoint( uintptr_t );
+bool debug_enable_single_step( void );
+bool debug_disable_single_step( void );
 
 #endif

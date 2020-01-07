@@ -93,9 +93,14 @@ static uint32_t extract_hex_value( const uint8_t* buffer, uint8_t **next ) {
  * @param dest
  * @param address
  * @param length
- * @return int
+ * @return true
+ * @return false
  */
-static int read_memory_content( void *dest, uint32_t address, size_t length ) {
+static bool read_memory_content( void *dest, uint32_t address, size_t length ) {
+  // handle not mapped as empty
+  if ( ! virt_is_mapped( address ) ) {
+    return false;
+  }
   // read memory
   switch ( length ) {
     case 4:
@@ -108,12 +113,46 @@ static int read_memory_content( void *dest, uint32_t address, size_t length ) {
       *(uint8_t* )dest = *( const volatile uint8_t* )address;
       break;
     default:
-      return -1;
+      return false;
   }
   // data transfer barrier
   barrier_data_mem();
-  // return 0 for success
-  return 0;
+  // return success
+  return true;
+}
+
+/**
+ * @brief Helper to write from src to dest
+ *
+ * @param src
+ * @param dest
+ * @param length
+ * @return true
+ * @return false
+ */
+static bool write_memory_content( const void* src, uint32_t dest, size_t length ) {
+  // handle not mapped as empty
+  if ( ! virt_is_mapped( dest ) ) {
+    return false;
+  }
+  // write memory
+  switch ( length ) {
+    case 4:
+      *( volatile uint32_t* )dest = be32toh( *( const uint32_t* )src );
+      break;
+    case 2:
+      *( volatile uint16_t* )dest = be16toh( *( const uint16_t* )src );
+      break;
+    case 1:
+      *( volatile uint8_t* )dest = *( const uint8_t* )src;
+      break;
+    default:
+      return false;
+  }
+  // data transfer barrier
+  barrier_data_mem();
+  // return success
+  return true;
 }
 
 /**
@@ -124,7 +163,8 @@ static int read_memory_content( void *dest, uint32_t address, size_t length ) {
  * @return int32_t
  */
 static int32_t write_register( char *dst, uint32_t r ) {
-  for ( uint32_t m = 0; m < 4; ++m ) {
+  // loop through byes
+  for ( uint32_t i = 0; i < 4; i++ ) {
     // extract byte
     uint8_t r8 = r & 0xff;
     // write to buffer
@@ -164,7 +204,8 @@ static uint32_t str_to_hex( const uint8_t* buffer ) {
   int32_t current;
 
   while (
-    '\0' != *buffer && -1 != ( current = debug_gdb_char2hex( *buffer ) )
+    '\0' != *buffer
+    && -1 != ( current = debug_gdb_char2hex( *buffer ) )
   ) {
     value *= 16;
     value += ( uint32_t )current;
@@ -181,13 +222,78 @@ static uint32_t str_to_hex( const uint8_t* buffer ) {
  * @return uint32_t
  */
 static uint32_t read_register_from_string( const uint8_t* str ) {
-  uint8_t s[ 9 ];
+  uint8_t str_readout[ 9 ];
   // copy 8 values
-  memcpy( s, str, 8 );
+  memcpy( str_readout, str, 8 );
   // add end
-  s[ 8 ] = '\0';
+  str_readout[ 8 ] = '\0';
   // return integer representation
-  return ( uint32_t )be32toh( str_to_hex( s ) );
+  return ( uint32_t )be32toh( str_to_hex( str_readout ) );
+}
+
+/**
+ * @brief Helper to extract field from string
+ *
+ * @param src
+ * @param dest
+ * @param delim
+ * @return true
+ * @return false
+ */
+static bool read_field( const uint8_t** src, uint32_t* dest, char delim ) {
+  // get address of starting field
+  const uint8_t* del = ( uint8_t* )strchr( ( char* )*src, delim );
+  uint8_t* next;
+  // handle error
+  if ( NULL == del ) {
+    return false;
+  };
+  // extract hex value
+  *dest = extract_hex_value( *src, &next );
+  // check for read to be done until completely
+  if ( next != del ) {
+    return false;
+  }
+  // change src to next character after read
+  *src = next + 1;
+  // return success
+  return true;
+}
+
+/**
+ * @brief Helper to fetch address out of string
+ *
+ * @param p
+ * @param addr
+ * @return bool
+ */
+static bool read_address_from_string( const uint8_t** src, uint32_t* addr ) {
+  return read_field( src, addr, ',' );
+}
+
+/**
+ * @brief Helper to read length from string
+ *
+ * @param p
+ * @param len
+ * @return bool
+ */
+static bool read_length_from_string( const uint8_t** src, uint32_t* len ) {
+  return read_field( src, len, ':' );
+}
+
+/**
+ * @brief Read byte from string into buffer
+ *
+ * @param p
+ * @param b
+ */
+static void read_byte_from_string( const uint8_t** src, uint8_t* dest ) {
+  uint8_t buf[ 3 ];
+  memcpy( buf, *src, 2 );
+  buf[ 2 ] = '\0';
+  *dest = ( uint8_t )extract_hex_value( buf, NULL );
+  *src += 2;
 }
 
 /**
@@ -267,7 +373,6 @@ static void handle_read_register( void* context, __unused const uint8_t *packet 
 static void handle_write_register( void* context, const uint8_t *packet ) {
   // transform context
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-
   // skip command
   packet++;
   // Ensure packet size
@@ -275,7 +380,6 @@ static void handle_write_register( void* context, const uint8_t *packet ) {
     debug_gdb_packet_send( ( uint8_t* )"E01" );
     return;
   }
-
   // populate registers
   for ( uint32_t i = R0; i <= PC; i++ ) {
     cpu->raw[ i ] = read_register_from_string( packet + i * 8 );
@@ -283,7 +387,6 @@ static void handle_write_register( void* context, const uint8_t *packet ) {
   // populate spsr
   cpu->reg.spsr = read_register_from_string(
     packet + ( 16 + GDB_EXTRA_REGISTER ) * 8 );
-
   // send success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
@@ -293,8 +396,6 @@ static void handle_write_register( void* context, const uint8_t *packet ) {
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 static void handle_read_memory(
   __unused void* context,
@@ -318,7 +419,7 @@ static void handle_read_memory(
   // read bytes
   for ( uint32_t i = 0; i < length; i++ ) {
     // read memory and stop on error
-    if ( 0 != read_memory_content( &value, addr + i, 1 ) ) {
+    if ( ! read_memory_content( &value, addr + i, 1 ) ) {
       break;
     }
     // extract byte
@@ -328,7 +429,8 @@ static void handle_read_memory(
     *resp++ = debug_gdb_hexchar[ r8 & 0x0f ];
     *resp = '\0';
   }
-
+  // set ending
+  *resp = '\0';
   // send response
   debug_gdb_packet_send( output_buffer );
 }
@@ -338,14 +440,53 @@ static void handle_read_memory(
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 static void handle_write_memory(
   __unused void* context,
-  __unused const uint8_t *packet
+  const uint8_t *packet
 ) {
-  debug_gdb_packet_send( ( uint8_t* )"E01" );
+  const uint8_t* buffer;
+  uint32_t address, length, value;
+  // skip identifier
+  buffer = ++packet;
+  // Read address
+  if (
+    ! read_address_from_string( &buffer, &address )
+    || ! read_length_from_string( &buffer, &length )
+    || strlen( ( char* )buffer ) != length * 2
+  ) {
+    debug_gdb_packet_send( ( uint8_t* )"E01" );
+    return;
+  }
+
+  /*
+  * Handle 16/32 bit access atomically as they could be register
+  * read/writes and doing a bunch of byte accesses may not do the right
+  * thing by the hardware.
+  */
+  if ( 2 == length || 4 == length ) {
+    // extract value to write
+    value = extract_hex_value( buffer, NULL );
+    // write memory
+    if ( ! write_memory_content( &value, address, length ) ) {
+      debug_gdb_packet_send( ( uint8_t* )"E02" );
+      return;
+    }
+    // return success
+    debug_gdb_packet_send( ( uint8_t* )"OK" );
+    return;
+  }
+
+  for ( uint32_t i = 0; i < length; i++ ) {
+    uint8_t value8;
+    read_byte_from_string( &buffer, &value8 );
+    if ( ! write_memory_content( &value8, address + i, 1 ) ) {
+      debug_gdb_packet_send( ( uint8_t* )"E02" );
+      return;
+    }
+  }
+  // return success
+  debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
 
 /**
@@ -353,14 +494,26 @@ static void handle_write_memory(
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 static void handle_remove_breakpoint(
   __unused void* context,
-  __unused const uint8_t *packet
+  const uint8_t *packet
 ) {
-  debug_gdb_packet_send( ( uint8_t* )"E01" );
+  uint32_t address;
+  // skip packet identifier and separator
+  packet += 3;
+  // extract address
+  if ( ! read_field( &packet, &address, ',' ) ) {
+    debug_gdb_packet_send( ( uint8_t* )"E01" );
+    return;
+  }
+  // remove breakpoint
+  if ( ! debug_remove_breakpoint( ( uintptr_t )address ) ) {
+    debug_gdb_packet_send( ( uint8_t* )"E02" );
+    return;
+  };
+  // return success
+  debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
 
 /**
@@ -368,14 +521,26 @@ static void handle_remove_breakpoint(
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 static void handle_insert_breakpoint(
   __unused void* context,
-  __unused const uint8_t *packet
+  const uint8_t *packet
 ) {
-  debug_gdb_packet_send( ( uint8_t* )"E01" );
+  uint32_t address;
+  // skip packet identifier and separator
+  packet += 3;
+  // extract address
+  if ( ! read_field( &packet, &address, ',' ) ) {
+    debug_gdb_packet_send( ( uint8_t* )"E01" );
+    return;
+  }
+  // set breakpoint
+  if ( ! debug_set_breakpoint( ( uintptr_t )address ) ) {
+    debug_gdb_packet_send( ( uint8_t* )"E02" );
+    return;
+  };
+  // return success
+  debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
 
 /**
@@ -394,34 +559,60 @@ static void handle_continue_query(
 }
 
 /**
- * @brief Handle continue
+ * @brief Handler to return continue supported actions
  *
  * @param context
  * @param packet
  *
  * @todo add logic
+ */
+static void handle_continue_query_supported(
+  __unused void* context,
+  __unused const uint8_t *packet
+) {
+  debug_gdb_packet_send( ( uint8_t* )"" );
+}
+
+/**
+ * @brief Handle continue
+ *
+ * @param context
+ * @param packet
  */
 static void handle_continue(
   __unused void* context,
   __unused const uint8_t *packet
 ) {
+  // disable single stepping
+  if ( ! debug_disable_single_step() ) {
+    debug_gdb_packet_send( ( uint8_t* )"E01" );
+    return;
+  }
+  // set handler running to false
   handler_running = false;
-  debug_gdb_packet_send( ( uint8_t* )"E01" );
+  // response success
+  debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
 
 /**
- * @brief Handle single stepping
+ * @brief Handle single detach
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 static void handle_stepping(
   __unused void* context,
   __unused const uint8_t *packet
 ) {
-  debug_gdb_packet_send( ( uint8_t* )"E01" );
+  // enable single step
+  if ( ! debug_enable_single_step() ) {
+    debug_gdb_packet_send( ( uint8_t* )"E01" );
+    return;
+  }
+  // set handler running to false
+  handler_running = false;
+  // return success
+  debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
 
 /**
@@ -465,7 +656,7 @@ static debug_gdb_command_handler_t handler[] = {
   { .prefix = "Z0", .handler = handle_insert_breakpoint, },
   { .prefix = "z1", .handler = handle_remove_breakpoint, },
   { .prefix = "Z1", .handler = handle_insert_breakpoint, },
-  { .prefix = "vCont?", .handler = handle_continue_query, },
+  { .prefix = "vCont?", .handler = handle_continue_query_supported, },
   { .prefix = "vCont", .handler = handle_continue_query, },
   { .prefix = "qAttached", .handler = handle_attach, },
   { .prefix = "D", .handler = handle_detach, },

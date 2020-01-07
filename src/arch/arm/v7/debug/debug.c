@@ -21,6 +21,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <core/debug/debug.h>
+#include <arch/arm/v7/cpu.h>
+#include <arch/arm/v7/debug/debug.h>
 
 /**
  * @brief Helper to check dfsr for debug exception
@@ -106,19 +108,22 @@ bool debug_is_debug_exception( void ) {
  * @brief Method enables debug monitor
  */
 void debug_enable_debug_monitor( void ) {
-  /*uint32_t dbgdscr;
-  // read out register
+  /*// switch to monitor mode
+  DEBUG_OUTPUT( "Switching to monitor mode\r\n" );
   __asm__ __volatile__(
-    "mrc p14, 0, %0, c0, c1, 0"
-    : "=r" ( dbgdscr )
-    : : "cc"
+    "msr cpsr,%[ps]"
+    : : [ ps ]"r"( CPSR_MODE_MONITOR )
+    : "cc"
   );
-  // enable monitor mode bit 15 and halt mode bit 14
-  dbgdscr |= ( 1 << 15 ) | ( 1 << 14 );
-  // write back value
+  // FIXME: TESTING MVBAR WRITE
+  __asm__( ".arch_extension sec\n\t"
+    "smc #1"
+  );
+  // enable monitor mode ( bit 15 )
+  DEBUG_OUTPUT( "Enable monitor mode in debug control status register\r\n" );
   __asm__ __volatile__(
     "mcr p14, 0, %0, c0, c1, 0"
-    : : "r" ( dbgdscr )
+    : : "r" ( 1 << 15 )
     : "cc"
   );*/
 }
@@ -132,29 +137,37 @@ void debug_disable_debug_monitor( void ) {
 /**
  * @brief Add breakpoint at address
  *
- * @param uintptr_t
+ * @param address
+ * @return true
+ * @return false
  */
-void debug_set_breakpoint( uintptr_t address ) {
+bool debug_set_breakpoint( uintptr_t address ) {
   DEBUG_OUTPUT( "Set breakpoint at address 0x%08x\r\n", address );
+  return false;
 }
 
 /**
  * @brief Remove breakpoint at address
  *
- * @param uintptr_t
+ * @param address
+ * @return true
+ * @return false
  */
-void debug_remove_breakpoint( uintptr_t address ) {
+bool debug_remove_breakpoint( uintptr_t address ) {
   DEBUG_OUTPUT( "Remove breakpoint at address 0x%08x\r\n", address );
+  return false;
 }
 
 /**
  * @brief Enable single stepping
  */
-void debug_enable_single_step( void ) {
+bool debug_enable_single_step( void ) {
+  return false;
 }
 
 /**
  * @brief Dissable single stepping
  */
-void debug_disable_single_step( void ) {
+bool debug_disable_single_step( void ) {
+  return false;
 }

@@ -31,8 +31,7 @@
           "text": "target remote /dev/ttyUSB0",
           "description": "Set remote target"
         }
-      ],
-      "externalConsole": false
+      ]
     },
     {
       "name": "aarch32-rpi2-qemu-debug",
@@ -57,13 +56,27 @@
           "description": "Loading symbol file"
         },
         {
+          "text": "set verbose on",
+          "description": "Enable verbose debugging output"
+        },
+        {
+          "text": "set debug remote 1",
+          "description": "Enable package output"
+        },
+        {
           "text": "target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel ${workspaceFolder}/build/src/target/rpi/kernel7_qemu.img -initrd ${workspaceFolder}/build-aux/platform/rpi/initrd -gdb stdio -S",
           "description": "Set target to remote with qemu"
         }
       ],
-      "externalConsole": false,
-      "launchCompleteCommand": "None",
-      "preLaunchTask": "compile"
+      "preLaunchTask": "compile",
+      "logging": {
+        "engineLogging": true,
+        "exceptions": true,
+        "moduleLoad": true,
+        "programOutput": true,
+        "trace": true,
+        "traceResponse": true
+      }
     },
     {
       "name": "aarch32-rpi-remote-qemu-debug",
@@ -100,11 +113,10 @@
           "description": "Setting baud rate for serial connection"
         },
         {
-          "text": "target remote /dev/pts/2",
+          "text": "target remote /dev/pts/1",
           "description": "Set remote target"
         }
       ],
-      "externalConsole": false,
       "logging": {
         "engineLogging": true,
         "exceptions": true,
