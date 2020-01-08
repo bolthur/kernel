@@ -185,8 +185,9 @@ _\name\()_exit_privileged:
   // switch again to passed mode
   cps \mode
 
-  // load old pc and fixup
+  // load old pc
   ldr r0, [ sp, #60 ]
+  // push back onto stack
   str r0, [ sp, #68 ]
   // restore previous state
   ldmia sp, { r0 - r12 }

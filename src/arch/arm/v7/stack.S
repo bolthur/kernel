@@ -25,4 +25,3 @@
 // stacks for other modes not necessary as all we use is supervisor mode
 // reserve areas for stack with 32 bit alignment
 .comm stack_supervisor_mode, STACK_SIZE, 32
-.comm stack_monitor_mode, STACK_SIZE, 32

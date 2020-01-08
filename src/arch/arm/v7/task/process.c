@@ -103,7 +103,7 @@ void task_process_schedule( void* context ) {
 
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", cpu );
+    DEBUG_OUTPUT( "cpu register context: 0x%08p\r\n", cpu );
     DUMP_REGISTER( cpu );
   #endif
 

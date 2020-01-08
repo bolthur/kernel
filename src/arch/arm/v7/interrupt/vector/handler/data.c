@@ -35,7 +35,7 @@ static uint32_t nested_data_abort = 0;
  *
  * @return uint32_t
  */
-static uint32_t fault_address( void ) {
+__maybe_unused static uint32_t fault_address( void ) {
   // variable for faulting address
   uint32_t address;
   // get faulting address

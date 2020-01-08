@@ -251,7 +251,7 @@ void event_handle( void* data ) {
 
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "event_handle( 0x%08x )\r\n", data );
+    DEBUG_OUTPUT( "Enter event_handle( 0x%08x )\r\n", data );
   #endif
 
   // variables
@@ -283,7 +283,7 @@ void event_handle( void* data ) {
     list_item_ptr_t current = block->handler->first;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
+      DEBUG_OUTPUT( "Used first normal element for looping at 0x%08p\r\n", current );
     #endif
     // loop through list
     while ( NULL != current ) {
@@ -304,7 +304,7 @@ void event_handle( void* data ) {
     current = block->post->first;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
+      DEBUG_OUTPUT( "Used first post element for looping at 0x%08p\r\n", current );
     #endif
     // loop through list
     while ( NULL != current ) {
@@ -324,4 +324,9 @@ void event_handle( void* data ) {
     // get next element
     current_event = list_pop_front( event->queue );
   }
+
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Leave event_handle\r\n", data );
+  #endif
 }

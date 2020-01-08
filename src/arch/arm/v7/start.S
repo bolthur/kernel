@@ -32,7 +32,7 @@ arch_start:
 
   // switch to monitor mode and setup stack
   msr cpsr_c, #( CPSR_MODE_MONITOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr r0, =stack_monitor_mode
+  ldr r0, =stack_supervisor_mode
   add r0, r0, #STACK_SIZE
   mov sp, r0
 

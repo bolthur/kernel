@@ -35,7 +35,8 @@ typedef enum {
 } task_thread_state_t;
 
 typedef struct task_thread {
-  void* context;
+  void* current_context;
+  void* initial_context;
   avl_node_t node_id;
   size_t id;
   size_t priority;
@@ -50,7 +51,7 @@ extern task_thread_ptr_t task_thread_current_thread;
 #define TASK_THREAD_GET_BLOCK( n ) \
   ( task_thread_ptr_t )( ( uint8_t* )n - offsetof( task_thread_t, node_id ) )
 #define TASK_THREAD_GET_CONTEXT  \
-  ( NULL != task_thread_current_thread ? task_thread_current_thread->context : NULL )
+  ( NULL != task_thread_current_thread ? task_thread_current_thread->current_context : NULL )
 
 void task_thread_set_current( task_thread_ptr_t, task_priority_queue_ptr_t );
 size_t task_thread_generate_id( void );

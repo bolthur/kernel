@@ -22,16 +22,25 @@
 #include <core/assembly.h>
 #include <arch/arm/v7/cpu.h>
 
+IMPORT( task_thread_current_thread )
+
 EXPORT( task_thread_switch_to )
 task_thread_switch_to:
   // set fp
   mov fp, r0
+  // load pc/lr
+  ldr lr, [ fp, #60 ]
+  // load initial context
+  ldr r3, =task_thread_current_thread
+  ldr r3, [ r3 ]
+  ldr r3, [ r3, #4 ]
+  // load pc/lr from initial context
+  ldr r3, [ r3, #60 ]
+  // compare for lr to 0
+  cmp r3, lr
+  addne lr, r1
   // load spsr
   ldr r0, [ fp, #64 ]
-  // load lr
-  ldr lr, [ fp, #60 ]
-  // apply fixup
-  add lr, r1
   // set spsr
   msr spsr_cxsf, r0
   // restore registers
