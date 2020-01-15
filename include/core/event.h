@@ -25,14 +25,23 @@
 #include <list.h>
 #include <avl.h>
 
+#define EVENT_DETERMINE_ORIGIN( o ) \
+  o == NULL ? EVENT_ORIGIN_USER : EVENT_ORIGIN_KERNEL
+
 typedef enum {
   EVENT_TIMER = 1,
   EVENT_DEBUG,
 } event_type_t;
 
+typedef enum {
+  EVENT_ORIGIN_KERNEL = 1,
+  EVENT_ORIGIN_USER,
+} event_origin_t;
+
 typedef struct {
   avl_tree_ptr_t tree;
-  list_manager_ptr_t queue;
+  list_manager_ptr_t queue_kernel;
+  list_manager_ptr_t queue_user;
 } event_manager_t, *event_manager_ptr_t;
 
 typedef struct {
@@ -56,6 +65,6 @@ void event_init( void );
 bool event_bind( event_type_t, event_callback_t, bool );
 void event_unbind( event_type_t, event_callback_t, bool );
 void event_handle( void* );
-void event_enqueue( event_type_t );
+void event_enqueue( event_type_t, event_origin_t );
 
 #endif

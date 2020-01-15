@@ -39,6 +39,9 @@ void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   assert( nested_fast_interrupt++ < INTERRUPT_NESTED_MAX );
 
+  // get event origin
+  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
 
@@ -49,7 +52,7 @@ void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
 
   // special debug exception handling
   if ( debug_is_debug_exception() ) {
-    event_enqueue( EVENT_DEBUG );
+    event_enqueue( EVENT_DEBUG, origin );
     PANIC( "Check fixup!" );
   }
 

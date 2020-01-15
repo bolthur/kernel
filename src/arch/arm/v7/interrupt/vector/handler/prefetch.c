@@ -40,6 +40,9 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   assert( nested_prefetch_abort++ < INTERRUPT_NESTED_MAX );
 
+  // get event origin
+  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
 
@@ -48,9 +51,11 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
     DUMP_REGISTER( cpu );
   #endif
 
+  PANIC( "FOOO!" );
+
   // special debug exception handling
   if ( debug_is_debug_exception() ) {
-    event_enqueue( EVENT_DEBUG );
+    event_enqueue( EVENT_DEBUG, origin );
     // FIXME: ADD CORRECT FIXUP
     cpu->reg.pc += 4;
     // PANIC( "Check fixup!" );

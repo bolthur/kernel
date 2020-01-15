@@ -216,22 +216,32 @@ _\name\()_exit_finished:
   push_register \name, \mode
 
   // ensure stack alignment
-  stack_wind r0, r1
+  stack_wind r0, sp
+  // push r1 and set r0
+  push { r1 }
+  mov r0, r1
   // call handler routine
   bl \handler
+  // pop r0
+  pop { r1 }
   // restore stack adjustments
-  stack_unwind r0, r1
+  stack_unwind r0, sp
 
   // ensure stack alignment
-  stack_wind r0, r1
+  stack_wind r0, sp
+  // push r1 and set r0
+  push { r1 }
+  mov r0, r1
   // enable interrupts
   cpsie if
   // handle events
   bl event_handle
   // disable interrupts
   cpsid if
+  // pop r0
+  pop { r1 }
   // restore stack adjustments
-  stack_unwind r0, r1
+  stack_unwind r0, sp
 
   // restore registers for return
   pop_register \name, \mode, r1, \fixup_restore

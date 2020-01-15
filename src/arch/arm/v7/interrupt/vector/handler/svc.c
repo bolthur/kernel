@@ -39,18 +39,21 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   assert( nested_svc++ < INTERRUPT_NESTED_MAX );
 
+  // get event origin
+  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DUMP_REGISTER( cpu );
     DEBUG_OUTPUT( "Entering software_interrupt_handler( 0x%08x )\r\n", cpu );
+    DUMP_REGISTER( cpu );
   #endif
 
   // special debug exception handling
   if ( debug_is_debug_exception() ) {
-    event_enqueue( EVENT_DEBUG );
+    event_enqueue( EVENT_DEBUG, origin );
     PANIC( "Check fixup!" );
   }
 
@@ -68,6 +71,9 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
 
   // decrement nested counter
   nested_svc--;
+
+  // enqueue timer event for testing
+  event_enqueue( EVENT_TIMER, origin );
 
   // debug output
   #if defined( PRINT_EXCEPTION )

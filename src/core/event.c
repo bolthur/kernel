@@ -84,7 +84,8 @@ void event_init( void ) {
   #endif
 
   // create queue
-  event->queue = list_construct();
+  event->queue_kernel = list_construct();
+  event->queue_user = list_construct();
 }
 
 /**
@@ -227,15 +228,21 @@ void event_unbind(
  * @brief Enqueue event
  *
  * @param type type to enqueue
+ * @param origin event origin
  */
-void event_enqueue( event_type_t type ) {
+void event_enqueue( event_type_t type, event_origin_t origin ) {
   // do nothing if not initialized
   if ( NULL == event ) {
     return;
   }
 
   // push back event
-  list_push_back( event->queue, ( void* )type );
+  list_push_back(
+    EVENT_ORIGIN_KERNEL == origin
+      ? event->queue_kernel
+      : event->queue_user,
+    ( void* )type
+  );
 }
 
 /**
@@ -254,8 +261,14 @@ void event_handle( void* data ) {
     DEBUG_OUTPUT( "Enter event_handle( 0x%08x )\r\n", data );
   #endif
 
+  // determine origin
+  event_origin_t origin = EVENT_DETERMINE_ORIGIN( data );
+  list_manager_ptr_t queue = EVENT_ORIGIN_KERNEL == origin
+    ? event->queue_kernel
+    : event->queue_user;
+
   // variables
-  list_item_ptr_t current_event = list_pop_front( event->queue );
+  list_item_ptr_t current_event = list_pop_front( queue );
   // get correct tree to use
   avl_tree_ptr_t tree = event->tree;
 
@@ -271,7 +284,7 @@ void event_handle( void* data ) {
     // handle no existing
     if ( NULL == node ) {
       // pop next
-      current_event = list_pop_front( event->queue );
+      current_event = list_pop_front( queue );
       // skip rest
       continue;
     }
@@ -322,7 +335,7 @@ void event_handle( void* data ) {
     }
 
     // get next element
-    current_event = list_pop_front( event->queue );
+    current_event = list_pop_front( queue );
   }
 
   // debug output
