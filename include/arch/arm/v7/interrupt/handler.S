@@ -58,28 +58,36 @@ IMPORT( task_thread_current_thread )
   cpsid if, #\mode
 .endm
 
-.macro privileged_unprivileged_switch offset, register, privileged, unprivileged
-  // user mode also determined by stack is zero
-  cmp \register, #0
-  // jump to unprivileged if 0
-  beq \unprivileged
-
+.macro equal_mode_switch offset, register, mode, equal, notequal
   // save r3 on stack and check for user mode
   push { r3 }
   // load spsr from previous mode
   ldr r3, [ \register, #( \offset + 4 ) ]
   // mask mode only for comparison
   and r3, #CPSR_MODE_MASK
-  // compare to user mode
-  cmp r3, #CPSR_MODE_USER
+  // compare to passed mode
+  cmp r3, #\mode
   // restore r3
   pop { r3 }
 
   // handle privileged
-  bne \privileged
-
+  bne \notequal
   // handle non privileged
+  beq \equal
+.endm
+
+.macro privileged_unprivileged_switch offset, register, privileged, unprivileged
+  // user mode also determined by stack is zero
+  cmp \register, #0
+  // jump to unprivileged if 0
   beq \unprivileged
+
+  equal_mode_switch \
+    \offset, \
+    \register, \
+    CPSR_MODE_USER, \
+    \unprivileged, \
+    \privileged
 .endm
 
 .macro push_register name, mode

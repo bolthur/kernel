@@ -60,7 +60,7 @@ void monitor_smc_handler( cpu_register_context_ptr_t cpu ) {
   // handle bound interrupt handlers
   interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu );*/
 
-  PANIC( "FOOO!" );
+  //PANIC( "FOOO!" );
 
   // decrement nested counter
   nested_monitor_call--;

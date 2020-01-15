@@ -44,6 +44,7 @@
 #endif
 
 #include <tar.h>
+#include <core/panic.h>
 #include <core/initrd.h>
 
 /**
@@ -160,6 +161,7 @@ void kernel_main( void ) {
     // loop
     while( ! tar_end_reached( iter ) ) {
       // get file
+      DEBUG_OUTPUT( "Current file %s\r\n", iter->file_name );
       uintptr_t file = ( uintptr_t )tar_file( iter );
 
       // skip non elf files
@@ -168,6 +170,8 @@ void kernel_main( void ) {
         uint64_t file_size = tar_size( iter );
         DEBUG_OUTPUT( "Create process for file %s\r\n", iter->file_name );
         DEBUG_OUTPUT( "File size: 0x%llx\r\n", file_size );
+        task_process_create( file, 0 );
+        task_process_create( file, 0 );
         task_process_create( file, 0 );
       }
 

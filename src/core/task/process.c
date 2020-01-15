@@ -176,6 +176,11 @@ void task_process_queue_reset( void ) {
   avl_node_ptr_t min = NULL;
   avl_node_ptr_t max = NULL;
 
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "task_process_queue_reset()\r\n" );
+  #endif
+
   // get min and max priority queue
   min = avl_get_min( process_manager->thread_priority_tree->root );
   max = avl_get_max( process_manager->thread_priority_tree->root );

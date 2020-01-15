@@ -63,12 +63,12 @@ void task_process_start( void ) {
   virt_set_context( next_thread->process->virtual_context );
   virt_flush_complete();
 
-  // jump to thread
+  // debug output
   #if defined( PRINT_PROCESS )
-    DUMP_REGISTER( next_thread->context );
+    DUMP_REGISTER( next_thread->current_context );
   #endif
-
-  task_thread_switch_to( ( uintptr_t )next_thread->context, 0 );
+  // jump to thread
+  task_thread_switch_to( ( uintptr_t )next_thread->current_context, 0 );
 }
 
 /**
@@ -168,5 +168,9 @@ void task_process_schedule( void* context ) {
     // set context and flush
     virt_set_context( next_thread->process->virtual_context );
     virt_flush_complete();
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DUMP_REGISTER( next_thread->current_context );
+    #endif
   }
 }
