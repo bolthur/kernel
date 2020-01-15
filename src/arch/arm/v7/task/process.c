@@ -68,7 +68,7 @@ void task_process_start( void ) {
     DUMP_REGISTER( next_thread->current_context );
   #endif
   // jump to thread
-  task_thread_switch_to( ( uintptr_t )next_thread->current_context, 0 );
+  task_thread_switch_to( ( uintptr_t )next_thread->current_context );
 }
 
 /**

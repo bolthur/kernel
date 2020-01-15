@@ -34,12 +34,12 @@ libv7_a_SOURCES = \
   mm/virt/long.c \
   mm/virt/short.c \
   mm/virt.c \
+  stub/stack.S \
+  stub/start.S \
   syscall/putc.c \
   task/stub/thread.S \
   task/process.c \
   task/stack.c \
   task/thread.c \
   arch.c \
-  barrier.c \
-  stack.S \
-  start.S
+  barrier.c

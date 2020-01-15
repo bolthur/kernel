@@ -159,7 +159,7 @@ _\name\()_entry_privileged:
 _\name\()_entry_finished:
 .endm
 
-.macro pop_register name, mode, stack, fixup
+.macro pop_register name, mode, stack
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
     60, \
@@ -171,8 +171,6 @@ _\name\()_entry_finished:
 _\name\()_exit_unprivileged:
   // get context from thread structure
   get_thread_context r0
-  // set possible lr return fixup
-  mov r1, #\fixup
   // call switch to thread
   b task_thread_switch_to
 
@@ -188,7 +186,6 @@ _\name\()_exit_privileged:
   // restore sp and lr
   mov sp, r1
   mov lr, r2
-  add lr, #\fixup
 
   // switch again to passed mode
   cps \mode
@@ -209,7 +206,7 @@ _\name\()_exit_privileged:
 _\name\()_exit_finished:
 .endm
 
-.macro ex_handler fixup, handler, mode, name, fixup_restore
+.macro ex_handler fixup, handler, mode, name
   // switch to svc mode with fixup
   switch_mode \mode, \fixup
   // push register
@@ -244,7 +241,7 @@ _\name\()_exit_finished:
   stack_unwind r0, sp
 
   // restore registers for return
-  pop_register \name, \mode, r1, \fixup_restore
+  pop_register \name, \mode, r1
   // enable interrupts again
   cpsie if
   // return from exception

@@ -263,9 +263,18 @@ void event_handle( void* data ) {
 
   // determine origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( data );
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "origin = %x\r\n", origin );
+  #endif
+  // queue to use
   list_manager_ptr_t queue = EVENT_ORIGIN_KERNEL == origin
     ? event->queue_kernel
     : event->queue_user;
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "queue = %x\r\n", queue );
+  #endif
 
   // variables
   list_item_ptr_t current_event = list_pop_front( queue );

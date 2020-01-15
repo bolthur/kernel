@@ -24,9 +24,11 @@
 #include <stdbool.h>
 #include <list.h>
 #include <avl.h>
+#include <core/stack.h>
 
 #define EVENT_DETERMINE_ORIGIN( o ) \
-  o == NULL ? EVENT_ORIGIN_USER : EVENT_ORIGIN_KERNEL
+  ( o == NULL || ! stack_is_kernel( ( uintptr_t )o ) ) \
+    ? EVENT_ORIGIN_USER : EVENT_ORIGIN_KERNEL
 
 typedef enum {
   EVENT_TIMER = 1,

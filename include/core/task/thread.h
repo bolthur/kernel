@@ -59,6 +59,6 @@ avl_tree_ptr_t task_thread_init( void );
 void task_thread_destroy( avl_tree_ptr_t );
 task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t, size_t );
 task_thread_ptr_t task_thread_next( void );
-void __no_return task_thread_switch_to( uintptr_t, uint32_t );
+void __no_return task_thread_switch_to( uintptr_t );
 
 #endif

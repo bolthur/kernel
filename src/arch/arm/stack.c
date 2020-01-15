@@ -18,30 +18,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define ASSEMBLER_FILE 1
-#include <core/assembly.h>
-#include <arch/arm/v7/cpu.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <arch/arm/stack.h>
+#include <core/debug/debug.h>
+#include <core/panic.h>
 
-IMPORT( task_thread_current_thread )
+extern void stack_supervisor_mode( void );
 
-EXPORT( task_thread_switch_to )
-task_thread_switch_to:
-  // set fp
-  mov fp, r0
-  // load pc/lr
-  ldr lr, [ fp, #60 ]
-  // load initial context
-  ldr r3, =task_thread_current_thread
-  ldr r3, [ r3 ]
-  ldr r3, [ r3, #4 ]
-  // load pc/lr from initial context
-  ldr r3, [ r3, #60 ]
-  // load spsr
-  ldr r0, [ fp, #64 ]
-  // set spsr
-  msr spsr_cxsf, r0
-  // restore registers
-  ldmia fp, { r0 - r14 }^
-  nop
-  // return to process
-  movs pc, lr
+bool stack_is_kernel( __maybe_unused uintptr_t address ) {
+  uintptr_t stack_start = ( uintptr_t )&stack_supervisor_mode;
+  uintptr_t stack_end = stack_start + STACK_SIZE;
+  DEBUG_OUTPUT( "start = %x, end = %x, addr = %x\r\n",
+    stack_start, stack_end, address );
+  return stack_start <= address && stack_end > address;
+}

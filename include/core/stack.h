@@ -18,30 +18,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define ASSEMBLER_FILE 1
-#include <core/assembly.h>
-#include <arch/arm/v7/cpu.h>
+#if ! defined( __CORE_STACK__ )
+#define __CORE_STACK__
 
-IMPORT( task_thread_current_thread )
+#include <stdbool.h>
+#include <stdint.h>
 
-EXPORT( task_thread_switch_to )
-task_thread_switch_to:
-  // set fp
-  mov fp, r0
-  // load pc/lr
-  ldr lr, [ fp, #60 ]
-  // load initial context
-  ldr r3, =task_thread_current_thread
-  ldr r3, [ r3 ]
-  ldr r3, [ r3, #4 ]
-  // load pc/lr from initial context
-  ldr r3, [ r3, #60 ]
-  // load spsr
-  ldr r0, [ fp, #64 ]
-  // set spsr
-  msr spsr_cxsf, r0
-  // restore registers
-  ldmia fp, { r0 - r14 }^
-  nop
-  // return to process
-  movs pc, lr
+bool stack_is_kernel( uintptr_t );
+
+#endif

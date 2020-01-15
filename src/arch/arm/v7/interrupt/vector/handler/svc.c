@@ -59,6 +59,8 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
 
   // get svc number
   uint32_t svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xffff;
+  // apply offset again
+  cpu->reg.pc += 4;
 
   // debug output
   #if defined( PRINT_EXCEPTION )

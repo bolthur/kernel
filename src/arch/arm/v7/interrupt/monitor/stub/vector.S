@@ -35,22 +35,22 @@ IMPORT( monitor_interrupt_handler )
 IMPORT( monitor_fast_interrupt_handler )
 
 _monitor_unknown_handler:
-  ex_handler 4, monitor_unknown_handler, CPSR_MODE_MONITOR, monitor_unknown, 0
+  ex_handler 4, monitor_unknown_handler, CPSR_MODE_MONITOR, monitor_unknown
 
 _monitor_prefetch_abort_handler:
-  ex_handler 4, monitor_prefetch_abort_handler, CPSR_MODE_MONITOR, monitor_prefetch_abort, 0
+  ex_handler 4, monitor_prefetch_abort_handler, CPSR_MODE_MONITOR, monitor_prefetch_abort
 
 _monitor_data_abort_handler:
-  ex_handler 8, monitor_data_abort_handler, CPSR_MODE_MONITOR, monitor_data_abort, 0
+  ex_handler 8, monitor_data_abort_handler, CPSR_MODE_MONITOR, monitor_data_abort
 
 _monitor_smc_handler:
-  ex_handler 4, monitor_smc_handler, CPSR_MODE_MONITOR, monitor_smc, 4
+  ex_handler 4, monitor_smc_handler, CPSR_MODE_MONITOR, monitor_smc
 
 _monitor_interrupt_handler:
-  ex_handler 4, monitor_interrupt_handler, CPSR_MODE_MONITOR, monitor_interrupt, 0
+  ex_handler 4, monitor_interrupt_handler, CPSR_MODE_MONITOR, monitor_interrupt
 
 _monitor_fast_interrupt_handler:
-  ex_handler 4, monitor_fast_interrupt_handler, CPSR_MODE_MONITOR, monitor_fast_interrupt, 0
+  ex_handler 4, monitor_fast_interrupt_handler, CPSR_MODE_MONITOR, monitor_fast_interrupt
 
 EXPORT( monitor_vector_table )
 .balign 32

@@ -16,4 +16,5 @@ libarm_a_SOURCES = \
   arch.c \
   delay.c \
   elf.c \
-  io.c
+  io.c \
+  stack.c
