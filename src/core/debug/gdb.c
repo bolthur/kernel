@@ -20,6 +20,7 @@
 
 #include <stdbool.h>
 #include <string.h>
+#include <stdlib.h>
 #include <core/event.h>
 #include <core/serial.h>
 #include <core/debug/debug.h>
@@ -34,6 +35,11 @@ static bool stub_initialized = false;
  * @brief hex characters used for transform
  */
 const char debug_gdb_hexchar[] = "0123456789abcdef";
+
+/**
+ * @brief breakpoint manager
+ */
+debug_gdb_breakpoint_manager_ptr_t debug_gdb_bpm;
 
 /**
  * @brief Transform character to hex value
@@ -83,12 +89,27 @@ void debug_gdb_init( void ) {
   // arch init
   DEBUG_OUTPUT( "Arch init gdb related\r\n" );
   debug_gdb_arch_init();
+
+  // setup breakpoint manager
+  DEBUG_OUTPUT( "Setup breakpoint manager\r\n" );
+  // allocate space
+  debug_gdb_bpm = ( debug_gdb_breakpoint_manager_ptr_t )malloc(
+    sizeof( debug_gdb_breakpoint_manager_t ) );
+  // clear out
+  memset(
+    ( void* )debug_gdb_bpm,
+    0, sizeof( debug_gdb_breakpoint_manager_t ) );
+  // setup list
+  debug_gdb_bpm->breakpoint = list_construct();
+
   // setup debug traps
   DEBUG_OUTPUT( "Setup debug traps\r\n" );
   debug_gdb_set_trap();
+
   // clear serial
   DEBUG_OUTPUT( "Flushing serial\r\n" );
   serial_flush();
+
   // synchronize
   DEBUG_OUTPUT( "Synchronize with remote GDB\r\n" );
   debug_gdb_breakpoint();

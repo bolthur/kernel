@@ -23,11 +23,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-
-/**
- * @brief Max buffer size
- */
-#define GDB_DEBUG_MAX_BUFFER 500
+#include <list.h>
 
 typedef enum {
   GDB_SIGNAL_TRAP = 5,
@@ -39,19 +35,20 @@ typedef void ( *debug_gdb_callback_t )( void* context, const uint8_t* message );
 typedef struct {
   const char* prefix;
   debug_gdb_callback_t handler;
-} debug_gdb_command_handler_t;
+} debug_gdb_command_handler_t, *debug_gdb_command_handler_ptr_t;
+
+typedef struct {
+  uintptr_t address;
+  uintptr_t instruction;
+  bool step;
+} debug_gdb_breakpoint_entry_t, *debug_gdb_breakpoint_entry_ptr_t;
+
+typedef struct {
+  list_manager_ptr_t breakpoint;
+} debug_gdb_breakpoint_manager_t, *debug_gdb_breakpoint_manager_ptr_t;
 
 extern const char debug_gdb_hexchar[];
-
-/**
- * @brief output buffer used for formatting via sprintf
- */
-uint8_t debug_gdb_output_buffer[ GDB_DEBUG_MAX_BUFFER ];
-
-/**
- * @brief input buffer used for incomming packages
- */
-uint8_t debug_gdb_input_buffer[ GDB_DEBUG_MAX_BUFFER ];
+extern debug_gdb_breakpoint_manager_ptr_t debug_gdb_bpm;
 
 void debug_gdb_init( void );
 void debug_gdb_arch_init( void );

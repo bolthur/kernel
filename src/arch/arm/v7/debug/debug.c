@@ -20,9 +20,35 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
+#include <core/panic.h>
 #include <core/debug/debug.h>
+#include <arch/arm/barrier.h>
 #include <arch/arm/v7/cpu.h>
 #include <arch/arm/v7/debug/debug.h>
+
+/**
+ * @brief Helper to get debug base register
+ *
+ * @return volatile* base_debug_register
+ */
+static volatile void* base_debug_register( void ) {
+  uint32_t rom = 0, offset = 0;
+  // read debug rom address register ( dbgdrar )
+  __asm__ __volatile__ (
+    "mrc p14, 0, %0, c1, c0, 0"
+    : : "r"( rom )
+    : "cc"
+  );
+  // read debug self address offset register ( dbgdsar )
+  __asm__ __volatile__ (
+    "mrc p14, 0, %0, c2, c0, 0"
+    : : "r"( offset )
+    : "cc"
+  );
+  // return address
+  return ( volatile void* )( ( rom & 0xFFFFF000 ) + ( offset & 0xFFFFF000 ) );
+}
 
 /**
  * @brief Helper to check dfsr for debug exception
@@ -108,6 +134,12 @@ bool debug_is_debug_exception( void ) {
  * @brief Method enables debug monitor
  */
 void debug_enable_debug_monitor( void ) {
+  /*__asm__( "svc #5" );
+  // FIXME: TESTING MVBAR WRITE
+  __asm__( ".arch_extension sec\n\t"
+    "smc #1"
+  );
+  PANIC( "FOOO!" );*/
   /*// switch to monitor mode
   DEBUG_OUTPUT( "Switching to monitor mode\r\n" );
   __asm__ __volatile__(
@@ -143,6 +175,14 @@ void debug_disable_debug_monitor( void ) {
  */
 bool debug_set_breakpoint( uintptr_t address ) {
   DEBUG_OUTPUT( "Set breakpoint at address 0x%08x\r\n", address );
+  // get base register
+  volatile void* reg = base_debug_register();
+  // set software breakpoint if not supported
+  if ( NULL == reg ) {
+    // FIXME: SET SOFTWARE BREAKPOINT
+  }
+  // FIXME: SET HARDWARE BREAKPOINT
+  // FIXME: RETURN SUCCESS
   return false;
 }
 
@@ -155,19 +195,55 @@ bool debug_set_breakpoint( uintptr_t address ) {
  */
 bool debug_remove_breakpoint( uintptr_t address ) {
   DEBUG_OUTPUT( "Remove breakpoint at address 0x%08x\r\n", address );
+  // get base register
+  volatile void* reg = base_debug_register();
+  // set software breakpoint if not supported
+  if ( NULL == reg ) {
+    // FIXME: SET SOFTWARE BREAKPOINT
+  }
+  // FIXME: SET HARDWARE BREAKPOINT
+  // FIXME: RETURN SUCCESS
   return false;
 }
 
 /**
  * @brief Enable single stepping
+ *
+ * @param address
+ * @return true
+ * @return false
  */
-bool debug_enable_single_step( void ) {
+bool debug_enable_single_step( uintptr_t address ) {
+  DEBUG_OUTPUT(
+    "Enable single step by adding breakpoint at address 0x%08x\r\n",
+    address );
+  // get base register
+  volatile void* reg = base_debug_register();
+  // single stepping not supported within software mode
+  if ( NULL == reg ) {
+    return false;
+  }
+  // FIXME: SET HARDWARE BREAKPOINT
+  // FIXME: RETURN SUCCESS
   return false;
 }
 
 /**
  * @brief Dissable single stepping
+ *
+ * @param address
+ * @return true
+ * @return false
  */
 bool debug_disable_single_step( void ) {
+  DEBUG_OUTPUT( "Disable single step" );
+  // get base register
+  volatile void* reg = base_debug_register();
+  // single stepping not supported within software mode
+  if ( NULL == reg ) {
+    return false;
+  }
+  // FIXME: SET HARDWARE BREAKPOINT
+  // FIXME: RETURN SUCCESS
   return false;
 }

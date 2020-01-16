@@ -35,6 +35,17 @@
 #include <arch/arm/v7/debug/debug.h>
 
 /**
+ * @brief Max buffer size
+ */
+#define GDB_DEBUG_MAX_BUFFER 500
+
+/**
+ * @brief Used instruction for breakpoints ( bkpt #0 )
+ *
+ */
+#define GDB_BREAKPOINT_INSTRUCTION 0xe1200070
+
+/**
  * @brief Extra registers not filled
  */
 #define GDB_EXTRA_REGISTER 25
@@ -48,6 +59,16 @@ static bool handler_running;
  * @brief GDB stop signal
  */
 static debug_gdb_signal_t signal;
+
+/**
+ * @brief output buffer used for formatting via sprintf
+ */
+static uint8_t debug_gdb_output_buffer[ GDB_DEBUG_MAX_BUFFER ];
+
+/**
+ * @brief input buffer used for incomming packages
+ */
+static uint8_t debug_gdb_input_buffer[ GDB_DEBUG_MAX_BUFFER ];
 
 /**
  * @brief Helper to etract hex value from buffer
@@ -292,7 +313,7 @@ static void handle_supported(
   __unused const uint8_t *packet
 ) {
   debug_gdb_packet_send(
-    ( uint8_t* )"qSupported:PacketSize=256;multiprocess+" );
+    ( uint8_t* )"qSupported:PacketSize=256;multiprocess+;swbreak+" );
 }
 
 /**
@@ -586,13 +607,50 @@ static void handle_continue(
  * @param packet
  */
 static void handle_stepping(
-  __unused void* context,
+  void* context,
   __unused const uint8_t *packet
 ) {
-  // enable single step
-  if ( ! debug_enable_single_step() ) {
-    debug_gdb_packet_send( ( uint8_t* )"E01" );
-    return;
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  // determine address for next breakpoint
+  uintptr_t next_address = cpu->reg.pc + 8;
+  volatile uintptr_t* instruction = ( volatile uintptr_t* )next_address;
+  uintptr_t bpi = GDB_BREAKPOINT_INSTRUCTION;
+
+  // check for possible existance
+  list_item_ptr_t current = list_peek_front( debug_gdb_bpm->breakpoint );
+  debug_gdb_breakpoint_entry_ptr_t entry = NULL;
+  // loop through list of entries
+  while ( NULL != current ) {
+    // get entry value
+    entry = ( debug_gdb_breakpoint_entry_ptr_t )current->data;
+    // check for match
+    if ( entry->address == next_address ) {
+      break;
+    }
+    // reset
+    entry = NULL;
+  }
+  // handle temporary breakpoint
+  if ( NULL == entry ) {
+    // allocate entry
+    entry = ( debug_gdb_breakpoint_entry_ptr_t )malloc(
+      sizeof( debug_gdb_breakpoint_entry_t ) );
+    // erase allocated memory
+    memset( ( void* )entry, 0, sizeof( debug_gdb_breakpoint_entry_t ) );
+    // set attributes
+    entry->step = true;
+    entry->address = next_address;
+    // push entry back
+    list_push_back( debug_gdb_bpm->breakpoint, ( void* )entry );
+    // save instruction
+    memcpy(
+      ( void* )&entry->instruction,
+      ( void* )instruction,
+      sizeof( entry->instruction ) );
+    // overwrite with breakpoint instruction
+    memcpy( ( void* )instruction, ( void* )&bpi, sizeof( bpi ) );
+    // flush cache
+    virt_flush_complete();
   }
   // set handler running to false
   handler_running = false;
@@ -695,15 +753,32 @@ void debug_gdb_handle_event( void* context ) {
 
   // get signal
   signal = debug_gdb_get_signal();
-  // print signal
-  printf( "signal = %d\r\n", signal );
-  DUMP_REGISTER( context );
-
+  // save context
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // set exit handler flag
   handler_running = true;
 
   // handle incoming packets in endless loop
   while ( handler_running ) {
+    // check for possible existance
+    list_item_ptr_t current = list_peek_front( debug_gdb_bpm->breakpoint );
+    debug_gdb_breakpoint_entry_ptr_t entry = NULL;
+    // loop through list of entries
+    while ( NULL != current ) {
+      // get entry value
+      entry = ( debug_gdb_breakpoint_entry_ptr_t )current->data;
+      // check for match
+      if ( entry->address == cpu->reg.pc ) {
+        break;
+      }
+      // reset
+      entry = NULL;
+    }
+    // handle stepping or breakpoint
+    if ( NULL != entry ) {
+      debug_gdb_packet_send( ( uint8_t* )"S05" );
+    }
+
     // get packet
     packet = debug_gdb_packet_receive(
       debug_gdb_input_buffer, GDB_DEBUG_MAX_BUFFER );
@@ -722,7 +797,7 @@ void debug_gdb_handle_event( void* context ) {
 void debug_gdb_breakpoint( void ) {
   // breakpoint only if initialized
   if ( debug_gdb_initialized() ) {
-    __asm__( "bkpt #5" );
+    __asm__( "bkpt #0" );
   }
 }
 
@@ -737,6 +812,8 @@ debug_gdb_signal_t debug_gdb_get_signal( void ) {
     return GDB_SIGNAL_ABORT;
   // handle prefetch abort via instruction fault
   } else if ( debug_check_instruction_fault() ) {
+    return GDB_SIGNAL_TRAP;
+  } else {
     return GDB_SIGNAL_TRAP;
   }
   // unhandled
