@@ -48,10 +48,11 @@ void monitor_smc_handler( cpu_register_context_ptr_t cpu ) {
     DEBUG_OUTPUT( "Entering monitor_smc_handler( 0x%08x )\r\n", cpu );
   #endif
 
+  // apply offset
+  cpu->reg.pc += 4;
+
   // get svc number
   /*uint32_t svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xffff;
-  // apply offset again
-  cpu->reg.pc += 4;
 
   // debug output
   #if defined( PRINT_EXCEPTION )
