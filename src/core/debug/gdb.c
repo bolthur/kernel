@@ -19,6 +19,7 @@
  */
 
 #include <stdbool.h>
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <core/event.h>
@@ -95,6 +96,7 @@ void debug_gdb_init( void ) {
   // allocate space
   debug_gdb_bpm = ( debug_gdb_breakpoint_manager_ptr_t )malloc(
     sizeof( debug_gdb_breakpoint_manager_t ) );
+  assert( NULL != debug_gdb_bpm );
   // clear out
   memset(
     ( void* )debug_gdb_bpm,

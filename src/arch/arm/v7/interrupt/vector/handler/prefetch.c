@@ -54,9 +54,6 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   // special debug exception handling
   if ( debug_is_debug_exception() ) {
     event_enqueue( EVENT_DEBUG, origin );
-    // FIXME: ADD CORRECT FIXUP
-    cpu->reg.pc += 4;
-    // PANIC( "Check fixup!" );
   } else {
     PANIC( "prefetch abort" );
   }

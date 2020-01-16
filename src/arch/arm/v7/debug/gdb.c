@@ -611,8 +611,10 @@ static void handle_stepping(
   __unused const uint8_t *packet
 ) {
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  // change program counter
+  cpu->reg.pc += 4;
   // determine address for next breakpoint
-  uintptr_t next_address = cpu->reg.pc + 8;
+  uintptr_t next_address = cpu->reg.pc;
   volatile uintptr_t* instruction = ( volatile uintptr_t* )next_address;
   uintptr_t bpi = GDB_BREAKPOINT_INSTRUCTION;
 
@@ -629,6 +631,8 @@ static void handle_stepping(
     }
     // reset
     entry = NULL;
+    // next entry
+    current = current->next;
   }
   // handle temporary breakpoint
   if ( NULL == entry ) {
@@ -734,7 +738,6 @@ static debug_gdb_callback_t get_handler( const uint8_t* packet ) {
  * @brief Arch related gdb init
  */
 void debug_gdb_arch_init( void ) {
-  DEBUG_OUTPUT( "Enable debug monitor mode\r\n" );
   debug_enable_debug_monitor();
 }
 
@@ -753,32 +756,51 @@ void debug_gdb_handle_event( void* context ) {
 
   // get signal
   signal = debug_gdb_get_signal();
-  // save context
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // set exit handler flag
   handler_running = true;
 
+  // get context
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  // check for possible existance
+  list_item_ptr_t current = list_peek_front( debug_gdb_bpm->breakpoint );
+  debug_gdb_breakpoint_entry_ptr_t entry = NULL;
+  // loop through list of entries
+  while ( NULL != current ) {
+    // get entry value
+    debug_gdb_breakpoint_entry_ptr_t tmp =
+      ( debug_gdb_breakpoint_entry_ptr_t )current->data;
+    // check for match
+    if ( tmp->address == cpu->reg.pc ) {
+      entry = tmp;
+      break;
+    }
+    // next entry
+    current = current->next;
+  }
+  // handle stepping or breakpoint ( copy data )
+  if ( NULL != entry ) {
+    if ( entry->step ) {
+      // push back instruction
+      memcpy(
+        ( void* )entry->address,
+        ( void* )&entry->instruction,
+        sizeof( entry->instruction ) );
+      // FIXME: remove from list
+    }
+    debug_gdb_packet_send( ( uint8_t* )"S05" );
+  }
+
+  // build signal package
+  char *buffer = ( char* )debug_gdb_output_buffer;
+  *buffer++ = 'S';
+  *buffer++ = debug_gdb_hexchar[ signal >> 4 ];
+  *buffer++ = debug_gdb_hexchar[ signal & 0x0f ];
+  *buffer = '\0';
+  // send signal package
+  debug_gdb_packet_send( debug_gdb_output_buffer );
+
   // handle incoming packets in endless loop
   while ( handler_running ) {
-    // check for possible existance
-    list_item_ptr_t current = list_peek_front( debug_gdb_bpm->breakpoint );
-    debug_gdb_breakpoint_entry_ptr_t entry = NULL;
-    // loop through list of entries
-    while ( NULL != current ) {
-      // get entry value
-      entry = ( debug_gdb_breakpoint_entry_ptr_t )current->data;
-      // check for match
-      if ( entry->address == cpu->reg.pc ) {
-        break;
-      }
-      // reset
-      entry = NULL;
-    }
-    // handle stepping or breakpoint
-    if ( NULL != entry ) {
-      debug_gdb_packet_send( ( uint8_t* )"S05" );
-    }
-
     // get packet
     packet = debug_gdb_packet_receive(
       debug_gdb_input_buffer, GDB_DEBUG_MAX_BUFFER );
@@ -789,6 +811,8 @@ void debug_gdb_handle_event( void* context ) {
     // execute found handler
     cb( context, packet );
   }
+  // enable interrupts again
+  interrupt_enable();
 }
 
 /**
