@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <core/debug/gdb.h>
 
 /**
  * @brief Simple vprintf for kernel
@@ -34,7 +35,24 @@
  * @param format
  * @param parameter
  * @return int
+ *
+ * @todo handle possible overvlow with remote debugging by dynamic buffer
  */
 int vprintf( const char* restrict format, va_list parameter ) {
+  // different behaviour for remote debugging
+  #if defined( REMOTE_DEBUG )
+    // only if initialized
+    if ( debug_gdb_initialized() ) {
+      // temporary buffer
+      char buffer[ 256 ];
+      // write to buffer
+      int written = vsprintf( buffer, format, parameter );
+      // write via gdb
+      debug_gdb_puts( buffer );
+      // return written count
+      return written;
+    }
+  #endif
+  // normal behaviour
   return vsprintf( NULL, format, parameter );
 }

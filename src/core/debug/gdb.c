@@ -231,9 +231,28 @@ int32_t debug_gdb_putchar( int32_t c ) {
 int32_t debug_gdb_puts( const char* s ) {
   // get string length
   int len = ( int )strlen( s );
-  // print character by character
-  for( int i = 0; i < len; i++ ) {
-    debug_gdb_putchar( ( int )s[ i ] );
+  int idx = 0;
+  uint8_t* fill;
+  // determine max buffer address for inner loop
+  uint8_t* max_buffer = debug_gdb_output_buffer
+    + sizeof( debug_gdb_output_buffer ) - 3;
+  // fill output buffer
+  debug_gdb_output_buffer[ 0 ] = 'O';
+  // loop until string end
+  while ( idx < len ) {
+    // loop until maximum and copy to output buffer
+    for (
+      fill = debug_gdb_output_buffer + 1;
+      idx < len && fill < max_buffer;
+      idx++
+    ) {
+      *fill++ = debug_gdb_hexchar[ s[ idx ] >> 4 ];
+      *fill++ = debug_gdb_hexchar[ s[ idx ] & 0x0f ];
+    }
+    // set termination character
+    *fill = '\0';
+    // send data
+    debug_gdb_packet_send( debug_gdb_output_buffer );
   }
   // return written count
   return len;

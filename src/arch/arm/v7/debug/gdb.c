@@ -35,24 +35,9 @@
 #include <arch/arm/v7/debug/debug.h>
 
 /**
- * @brief Max buffer size
- */
-#define MAX_BUFFER 500
-
-/**
  * @brief Extra registers not filled
  */
 #define GDB_EXTRA_REGISTER 25
-
-/**
- * @brief output buffer used for formatting via sprintf
- */
-static uint8_t output_buffer[ 500 ];
-
-/**
- * @brief input buffer used for incomming packages
- */
-static uint8_t input_buffer[ 500 ];
 
 /**
  * @brief Flag set to true when receiving continue command
@@ -346,7 +331,7 @@ static void handle_stop_status(
  * @param packet
  */
 static void handle_read_register( void* context, __unused const uint8_t *packet ) {
-  char *buffer = ( char* )output_buffer;
+  char *buffer = ( char* )debug_gdb_output_buffer;
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // push registers from context
   for ( uint32_t m = R0; m <= PC; ++m ) {
@@ -361,7 +346,7 @@ static void handle_read_register( void* context, __unused const uint8_t *packet 
   // ending
   *buffer++ = '\0';
   // send packet
-  debug_gdb_packet_send( output_buffer );
+  debug_gdb_packet_send( debug_gdb_output_buffer );
 }
 
 /**
@@ -415,7 +400,7 @@ static void handle_read_memory(
   // read length to read
   length = extract_hex_value( next + 1, NULL );
   // set response buffer pointer
-  resp = output_buffer;
+  resp = debug_gdb_output_buffer;
   // read bytes
   for ( uint32_t i = 0; i < length; i++ ) {
     // read memory and stop on error
@@ -432,7 +417,7 @@ static void handle_read_memory(
   // set ending
   *resp = '\0';
   // send response
-  debug_gdb_packet_send( output_buffer );
+  debug_gdb_packet_send( debug_gdb_output_buffer );
 }
 
 /**
@@ -720,7 +705,8 @@ void debug_gdb_handle_event( void* context ) {
   // handle incoming packets in endless loop
   while ( handler_running ) {
     // get packet
-    packet = debug_gdb_packet_receive( input_buffer, MAX_BUFFER );
+    packet = debug_gdb_packet_receive(
+      debug_gdb_input_buffer, GDB_DEBUG_MAX_BUFFER );
     // assert existance
     assert( packet != NULL );
     // get handler
