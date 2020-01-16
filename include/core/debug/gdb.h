@@ -29,16 +29,6 @@
  */
 #define GDB_DEBUG_MAX_BUFFER 500
 
-/**
- * @brief output buffer used for formatting via sprintf
- */
-uint8_t debug_gdb_output_buffer[ GDB_DEBUG_MAX_BUFFER ];
-
-/**
- * @brief input buffer used for incomming packages
- */
-uint8_t debug_gdb_input_buffer[ GDB_DEBUG_MAX_BUFFER ];
-
 typedef enum {
   GDB_SIGNAL_TRAP = 5,
   GDB_SIGNAL_ABORT = 6,
@@ -53,6 +43,16 @@ typedef struct {
 
 extern const char debug_gdb_hexchar[];
 
+/**
+ * @brief output buffer used for formatting via sprintf
+ */
+uint8_t debug_gdb_output_buffer[ GDB_DEBUG_MAX_BUFFER ];
+
+/**
+ * @brief input buffer used for incomming packages
+ */
+uint8_t debug_gdb_input_buffer[ GDB_DEBUG_MAX_BUFFER ];
+
 void debug_gdb_init( void );
 void debug_gdb_arch_init( void );
 void debug_gdb_breakpoint( void );
@@ -65,7 +65,6 @@ debug_gdb_signal_t debug_gdb_get_signal( void );
 void debug_gdb_packet_send( uint8_t* );
 uint8_t* debug_gdb_packet_receive( uint8_t*, size_t );
 int32_t debug_gdb_putchar( int32_t );
-int32_t debug_gdb_puts( const char* );
 int32_t debug_gdb_char2hex( char );
 
 #endif

@@ -51,8 +51,6 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
     DUMP_REGISTER( cpu );
   #endif
 
-  PANIC( "FOOO!" );
-
   // special debug exception handling
   if ( debug_is_debug_exception() ) {
     event_enqueue( EVENT_DEBUG, origin );
