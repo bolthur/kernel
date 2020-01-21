@@ -32,6 +32,7 @@
 #include <core/mm/virt.h>
 #include <arch/arm/v7/cpu.h>
 #include <arch/arm/barrier.h>
+#include <arch/arm/v7/cache.h>
 #include <arch/arm/v7/debug/debug.h>
 
 /**
@@ -133,7 +134,7 @@ static void add_breakpoint( uintptr_t address ) {
   memcpy( ( void* )instruction, ( void* )&bpi, sizeof( bpi ) );
 
   // flush cache
-  virt_flush_complete();
+  cache_invalidate_instruction_cache();
 }
 
 /**
@@ -677,10 +678,11 @@ static void handle_stepping(
   __unused const uint8_t *packet
 ) {
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-  // change program counter
-  if ( debug_gdb_get_initial_entry() ) {
-    cpu->reg.pc += 4;
-  }
+  // FIXME: Add correct arm / thumb handling if necessary
+  // increase to next address
+  cpu->reg.pc += 4;
+
+  // FIXME: execute code at address
   // determine address for next breakpoint
   uintptr_t next_address = cpu->reg.pc;
   // add breakpoint
@@ -801,7 +803,7 @@ void debug_gdb_handle_event( void* context ) {
         ( void* )&entry->instruction,
         sizeof( entry->instruction ) );
       // flush after copy
-      virt_flush_complete();
+      cache_invalidate_instruction_cache();
       // FIXME: remove from list
     }
     debug_gdb_packet_send( ( uint8_t* )"S05" );
@@ -829,8 +831,6 @@ void debug_gdb_handle_event( void* context ) {
     cb( context, packet );
   }
 
-  // reset initial entry flag
-  debug_gdb_set_initial_entry( false );
   // enable interrupts again
   interrupt_enable();
 }

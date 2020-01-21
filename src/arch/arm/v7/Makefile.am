@@ -42,4 +42,5 @@ libv7_a_SOURCES = \
   task/stack.c \
   task/thread.c \
   arch.c \
-  barrier.c
+  barrier.c \
+  cache.c

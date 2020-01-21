@@ -26,6 +26,7 @@
 #include <core/entry.h>
 #include <core/debug/debug.h>
 #include <arch/arm/barrier.h>
+#include <arch/arm/v7/cache.h>
 #include <core/mm/phys.h>
 #include <core/mm/heap.h>
 #include <arch/arm/mm/virt/long.h>
@@ -646,7 +647,7 @@ void v7_long_flush_complete( void ) {
   );
 
   // invalidate instruction cache
-  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) );
+  cache_invalidate_instruction_cache();
   // invalidate entire tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
   // instruction synchronization barrier
