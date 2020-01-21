@@ -619,18 +619,18 @@ static void handle_stepping(
   uintptr_t bpi = GDB_BREAKPOINT_INSTRUCTION;
 
   // check for possible existance
-  list_item_ptr_t current = list_peek_front( debug_gdb_bpm->breakpoint );
+  list_item_ptr_t current = debug_gdb_bpm->breakpoint->first;
   debug_gdb_breakpoint_entry_ptr_t entry = NULL;
   // loop through list of entries
   while ( NULL != current ) {
     // get entry value
-    entry = ( debug_gdb_breakpoint_entry_ptr_t )current->data;
+    debug_gdb_breakpoint_entry_ptr_t tmp =
+      ( debug_gdb_breakpoint_entry_ptr_t )current->data;
     // check for match
-    if ( entry->address == next_address ) {
+    if ( tmp->address == next_address ) {
+      entry = tmp;
       break;
     }
-    // reset
-    entry = NULL;
     // next entry
     current = current->next;
   }
@@ -762,7 +762,7 @@ void debug_gdb_handle_event( void* context ) {
   // get context
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // check for possible existance
-  list_item_ptr_t current = list_peek_front( debug_gdb_bpm->breakpoint );
+  list_item_ptr_t current = debug_gdb_bpm->breakpoint->first;
   debug_gdb_breakpoint_entry_ptr_t entry = NULL;
   // loop through list of entries
   while ( NULL != current ) {
@@ -788,16 +788,16 @@ void debug_gdb_handle_event( void* context ) {
       // FIXME: remove from list
     }
     debug_gdb_packet_send( ( uint8_t* )"S05" );
+  } else {
+    // build signal package
+    char *buffer = ( char* )debug_gdb_output_buffer;
+    *buffer++ = 'S';
+    *buffer++ = debug_gdb_hexchar[ signal >> 4 ];
+    *buffer++ = debug_gdb_hexchar[ signal & 0x0f ];
+    *buffer = '\0';
+    // send signal package
+    debug_gdb_packet_send( debug_gdb_output_buffer );
   }
-
-  // build signal package
-  char *buffer = ( char* )debug_gdb_output_buffer;
-  *buffer++ = 'S';
-  *buffer++ = debug_gdb_hexchar[ signal >> 4 ];
-  *buffer++ = debug_gdb_hexchar[ signal & 0x0f ];
-  *buffer = '\0';
-  // send signal package
-  debug_gdb_packet_send( debug_gdb_output_buffer );
 
   // handle incoming packets in endless loop
   while ( handler_running ) {
@@ -811,6 +811,9 @@ void debug_gdb_handle_event( void* context ) {
     // execute found handler
     cb( context, packet );
   }
+
+  // reset initial entry flag
+  debug_gdb_set_initial_entry( false );
   // enable interrupts again
   interrupt_enable();
 }

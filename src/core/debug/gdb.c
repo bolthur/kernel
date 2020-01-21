@@ -33,6 +33,11 @@
 static bool stub_initialized = false;
 
 /**
+ * @brief Initial entry of stub
+ */
+static bool stub_initial_entry = true;
+
+/**
  * @brief hex characters used for transform
  */
 const char debug_gdb_hexchar[] = "0123456789abcdef";
@@ -243,4 +248,23 @@ int32_t debug_gdb_putchar( int32_t c ) {
   debug_gdb_packet_send( ( uint8_t* )buf );
   // return sent character
   return c;
+}
+
+/**
+ * @brief Returns whether it's the first or last entry
+ *
+ * @return true
+ * @return false
+ */
+bool debug_gdb_get_initial_entry( void ) {
+  return stub_initial_entry;
+}
+
+/**
+ * @brief Set initial entry value
+ *
+ * @param value
+ */
+void debug_gdb_set_initial_entry( bool value ) {
+  stub_initial_entry = value;
 }
