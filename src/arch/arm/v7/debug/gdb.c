@@ -71,6 +71,72 @@ static uint8_t debug_gdb_output_buffer[ GDB_DEBUG_MAX_BUFFER ];
 static uint8_t debug_gdb_input_buffer[ GDB_DEBUG_MAX_BUFFER ];
 
 /**
+ * @brief Helper to get a possible breakpoint
+ *
+ * @param address
+ * @return debug_gdb_breakpoint_entry_ptr_t
+ */
+static debug_gdb_breakpoint_entry_ptr_t get_breakpoint( uintptr_t address ) {
+  // check for possible existance
+  list_item_ptr_t current = debug_gdb_bpm->breakpoint->first;
+  debug_gdb_breakpoint_entry_ptr_t entry = NULL;
+  // loop through list of entries
+  while ( NULL != current ) {
+    // get entry value
+    debug_gdb_breakpoint_entry_ptr_t tmp =
+      ( debug_gdb_breakpoint_entry_ptr_t )current->data;
+    // check for match
+    if ( tmp->address == address ) {
+      entry = tmp;
+      break;
+    }
+    // next entry
+    current = current->next;
+  }
+  // return found / not found entry
+  return entry;
+}
+
+/**
+ * @brief Method to add breakpoint to list
+ *
+ * @param address
+ */
+static void add_breakpoint( uintptr_t address ) {
+  // variables
+  volatile uintptr_t* instruction = ( volatile uintptr_t* )address;
+  uintptr_t bpi = GDB_BREAKPOINT_INSTRUCTION;
+
+  // Don't add if already existing
+  if ( NULL != get_breakpoint( address ) ) {
+    return;
+  }
+
+  // allocate entry
+  debug_gdb_breakpoint_entry_ptr_t entry = ( debug_gdb_breakpoint_entry_ptr_t )
+    malloc( sizeof( debug_gdb_breakpoint_entry_t ) );
+  // erase allocated memory
+  memset( ( void* )entry, 0, sizeof( debug_gdb_breakpoint_entry_t ) );
+
+  // set attributes
+  entry->step = true;
+  entry->address = address;
+  // push entry back
+  list_push_back( debug_gdb_bpm->breakpoint, ( void* )entry );
+
+  // save instruction
+  memcpy(
+    ( void* )&entry->instruction,
+    ( void* )instruction,
+    sizeof( entry->instruction ) );
+  // overwrite with breakpoint instruction
+  memcpy( ( void* )instruction, ( void* )&bpi, sizeof( bpi ) );
+
+  // flush cache
+  virt_flush_complete();
+}
+
+/**
  * @brief Helper to etract hex value from buffer
  *
  * @param buffer
@@ -612,50 +678,13 @@ static void handle_stepping(
 ) {
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // change program counter
-  cpu->reg.pc += 4;
+  if ( debug_gdb_get_initial_entry() ) {
+    cpu->reg.pc += 4;
+  }
   // determine address for next breakpoint
   uintptr_t next_address = cpu->reg.pc;
-  volatile uintptr_t* instruction = ( volatile uintptr_t* )next_address;
-  uintptr_t bpi = GDB_BREAKPOINT_INSTRUCTION;
-
-  // check for possible existance
-  list_item_ptr_t current = debug_gdb_bpm->breakpoint->first;
-  debug_gdb_breakpoint_entry_ptr_t entry = NULL;
-  // loop through list of entries
-  while ( NULL != current ) {
-    // get entry value
-    debug_gdb_breakpoint_entry_ptr_t tmp =
-      ( debug_gdb_breakpoint_entry_ptr_t )current->data;
-    // check for match
-    if ( tmp->address == next_address ) {
-      entry = tmp;
-      break;
-    }
-    // next entry
-    current = current->next;
-  }
-  // handle temporary breakpoint
-  if ( NULL == entry ) {
-    // allocate entry
-    entry = ( debug_gdb_breakpoint_entry_ptr_t )malloc(
-      sizeof( debug_gdb_breakpoint_entry_t ) );
-    // erase allocated memory
-    memset( ( void* )entry, 0, sizeof( debug_gdb_breakpoint_entry_t ) );
-    // set attributes
-    entry->step = true;
-    entry->address = next_address;
-    // push entry back
-    list_push_back( debug_gdb_bpm->breakpoint, ( void* )entry );
-    // save instruction
-    memcpy(
-      ( void* )&entry->instruction,
-      ( void* )instruction,
-      sizeof( entry->instruction ) );
-    // overwrite with breakpoint instruction
-    memcpy( ( void* )instruction, ( void* )&bpi, sizeof( bpi ) );
-    // flush cache
-    virt_flush_complete();
-  }
+  // add breakpoint
+  add_breakpoint( next_address );
   // set handler running to false
   handler_running = false;
   // return success
@@ -761,22 +790,8 @@ void debug_gdb_handle_event( void* context ) {
 
   // get context
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-  // check for possible existance
-  list_item_ptr_t current = debug_gdb_bpm->breakpoint->first;
-  debug_gdb_breakpoint_entry_ptr_t entry = NULL;
-  // loop through list of entries
-  while ( NULL != current ) {
-    // get entry value
-    debug_gdb_breakpoint_entry_ptr_t tmp =
-      ( debug_gdb_breakpoint_entry_ptr_t )current->data;
-    // check for match
-    if ( tmp->address == cpu->reg.pc ) {
-      entry = tmp;
-      break;
-    }
-    // next entry
-    current = current->next;
-  }
+  // get possible breakpoint
+  debug_gdb_breakpoint_entry_ptr_t entry = get_breakpoint( cpu->reg.pc );
   // handle stepping or breakpoint ( copy data )
   if ( NULL != entry ) {
     if ( entry->step ) {
@@ -785,6 +800,8 @@ void debug_gdb_handle_event( void* context ) {
         ( void* )entry->address,
         ( void* )&entry->instruction,
         sizeof( entry->instruction ) );
+      // flush after copy
+      virt_flush_complete();
       // FIXME: remove from list
     }
     debug_gdb_packet_send( ( uint8_t* )"S05" );
