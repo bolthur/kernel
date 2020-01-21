@@ -99,28 +99,61 @@ static debug_gdb_breakpoint_entry_ptr_t get_breakpoint( uintptr_t address ) {
 }
 
 /**
+ * @brief Helper to remove a breakpoint
+ *
+ * @param address
+ *
+ * @todo add removal from list
+ */
+static void remove_breakpoint( uintptr_t address ) {
+  // variables
+  debug_gdb_breakpoint_entry_ptr_t entry = get_breakpoint( address );
+  // Do nothing if not existing
+  if ( NULL == entry || true != entry->enabled ) {
+    return;
+  }
+  // push back instruction
+  memcpy(
+    ( void* )entry->address,
+    ( void* )&entry->instruction,
+    sizeof( entry->instruction ) );
+  // flush after copy
+  cache_invalidate_instruction_cache();
+  // set enabled to false
+  entry->enabled = false;
+  // FIXME: remove from list
+}
+
+/**
  * @brief Method to add breakpoint to list
  *
  * @param address
+ * @param step
+ * @param enable
  */
-static void add_breakpoint( uintptr_t address ) {
+static void add_breakpoint( uintptr_t address, bool step, bool enable ) {
   // variables
   volatile uintptr_t* instruction = ( volatile uintptr_t* )address;
   uintptr_t bpi = GDB_BREAKPOINT_INSTRUCTION;
+  debug_gdb_breakpoint_entry_ptr_t entry = get_breakpoint( address );
 
   // Don't add if already existing
-  if ( NULL != get_breakpoint( address ) ) {
+  if ( NULL != entry && true == entry->enabled ) {
     return;
   }
 
-  // allocate entry
-  debug_gdb_breakpoint_entry_ptr_t entry = ( debug_gdb_breakpoint_entry_ptr_t )
-    malloc( sizeof( debug_gdb_breakpoint_entry_t ) );
-  // erase allocated memory
-  memset( ( void* )entry, 0, sizeof( debug_gdb_breakpoint_entry_t ) );
+  // create if not existing
+  if ( NULL == entry ) {
+    // allocate entry
+    entry = ( debug_gdb_breakpoint_entry_ptr_t )malloc(
+      sizeof( debug_gdb_breakpoint_entry_t ) );
+    // erase allocated memory
+    memset( ( void* )entry, 0, sizeof( debug_gdb_breakpoint_entry_t ) );
+  }
 
   // set attributes
-  entry->step = true;
+  entry->step = step;
+  entry->enabled = enable;
   entry->address = address;
   // push entry back
   list_push_back( debug_gdb_bpm->breakpoint, ( void* )entry );
@@ -581,10 +614,7 @@ static void handle_remove_breakpoint(
     return;
   }
   // remove breakpoint
-  if ( ! debug_remove_breakpoint( ( uintptr_t )address ) ) {
-    debug_gdb_packet_send( ( uint8_t* )"E02" );
-    return;
-  };
+  remove_breakpoint( ( uintptr_t )address );
   // return success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
@@ -608,10 +638,7 @@ static void handle_insert_breakpoint(
     return;
   }
   // set breakpoint
-  if ( ! debug_set_breakpoint( ( uintptr_t )address ) ) {
-    debug_gdb_packet_send( ( uint8_t* )"E02" );
-    return;
-  };
+  add_breakpoint( ( uintptr_t )address, false, true );
   // return success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
@@ -672,6 +699,8 @@ static void handle_continue(
  *
  * @param context
  * @param packet
+ *
+ * @todo finish logic
  */
 static void handle_stepping(
   void* context,
@@ -686,7 +715,7 @@ static void handle_stepping(
   // determine address for next breakpoint
   uintptr_t next_address = cpu->reg.pc;
   // add breakpoint
-  add_breakpoint( next_address );
+  add_breakpoint( next_address, true, true );
   // set handler running to false
   handler_running = false;
   // return success
@@ -795,16 +824,10 @@ void debug_gdb_handle_event( void* context ) {
   // get possible breakpoint
   debug_gdb_breakpoint_entry_ptr_t entry = get_breakpoint( cpu->reg.pc );
   // handle stepping or breakpoint ( copy data )
-  if ( NULL != entry ) {
+  if ( NULL != entry && true == entry->enabled ) {
     if ( entry->step ) {
-      // push back instruction
-      memcpy(
-        ( void* )entry->address,
-        ( void* )&entry->instruction,
-        sizeof( entry->instruction ) );
-      // flush after copy
-      cache_invalidate_instruction_cache();
-      // FIXME: remove from list
+      // remove brakpoint when it's a stepping breakpoint
+      remove_breakpoint( cpu->reg.pc );
     }
     debug_gdb_packet_send( ( uint8_t* )"S05" );
   } else {

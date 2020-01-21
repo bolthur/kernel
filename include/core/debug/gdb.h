@@ -41,6 +41,7 @@ typedef struct {
   uintptr_t address;
   uintptr_t instruction;
   bool step;
+  bool enabled;
 } debug_gdb_breakpoint_entry_t, *debug_gdb_breakpoint_entry_ptr_t;
 
 typedef struct {
