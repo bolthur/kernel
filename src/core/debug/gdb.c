@@ -33,6 +33,11 @@
 static bool stub_initialized = false;
 
 /**
+ * @brief first entry
+ */
+static bool stub_first_entry = true;
+
+/**
  * @brief hex characters used for transform
  */
 const char debug_gdb_hexchar[] = "0123456789abcdef";
@@ -243,4 +248,23 @@ int32_t debug_gdb_putchar( int32_t c ) {
   debug_gdb_packet_send( ( uint8_t* )buf );
   // return sent character
   return c;
+}
+
+/**
+ * @brief Get first entry flag
+ *
+ * @return true
+ * @return false
+ */
+bool debug_gdb_get_first_entry( void ) {
+  return stub_first_entry;
+}
+
+/**
+ * @brief Set first entry flag
+ *
+ * @param flag
+ */
+void debug_gdb_set_first_entry( bool flag ) {
+  stub_first_entry = flag;
 }

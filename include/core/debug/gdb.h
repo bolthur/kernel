@@ -65,4 +65,7 @@ uint8_t* debug_gdb_packet_receive( uint8_t*, size_t );
 int32_t debug_gdb_putchar( int32_t );
 int32_t debug_gdb_char2hex( char );
 
+bool debug_gdb_get_first_entry( void );
+void debug_gdb_set_first_entry( bool );
+
 #endif

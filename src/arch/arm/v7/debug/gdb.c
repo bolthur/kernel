@@ -103,6 +103,8 @@ static debug_gdb_breakpoint_entry_ptr_t get_breakpoint( uintptr_t address ) {
  *
  * @param address
  * @param remove
+ *
+ * @todo add dummy breakpoint for continue to reenable normal breakpoint after continue / stepping
  */
 static void remove_breakpoint( uintptr_t address, bool remove ) {
   // variables
@@ -741,6 +743,8 @@ static uintptr_t next_step_address( uintptr_t address, uintptr_t stack ) {
  *
  * @param context
  * @param packet
+ *
+ * @todo add correct arm / thumb handling if necessary
  */
 static void handle_stepping(
   void* context,
@@ -749,9 +753,11 @@ static void handle_stepping(
   // transform context to correct structure
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // set to next address
-  cpu->reg.pc = next_step_address( cpu->reg.pc, cpu->reg.sp );
-  // determine address for next breakpoint
-  uintptr_t next_address = cpu->reg.pc;
+  uintptr_t next_address = next_step_address( cpu->reg.pc, cpu->reg.sp );
+  // add necessary offset to skip current address on first entry
+  if ( debug_gdb_get_first_entry() ) {
+    cpu->reg.pc += 4;
+  }
   // add breakpoint
   add_breakpoint( next_address, true, true );
   // set handler running to false
@@ -863,10 +869,9 @@ void debug_gdb_handle_event( void* context ) {
   debug_gdb_breakpoint_entry_ptr_t entry = get_breakpoint( cpu->reg.pc );
   // handle stepping or breakpoint ( copy data )
   if ( NULL != entry && true == entry->enabled ) {
-    if ( entry->step ) {
-      // remove brakpoint when it's a stepping breakpoint
-      remove_breakpoint( cpu->reg.pc, true );
-    }
+    // remove brakpoint when it's a stepping breakpoint
+    remove_breakpoint( cpu->reg.pc, entry->step );
+    // return signal
     debug_gdb_packet_send( ( uint8_t* )"S05" );
   } else {
     // build signal package
@@ -892,6 +897,8 @@ void debug_gdb_handle_event( void* context ) {
     cb( context, packet );
   }
 
+  // set first entry flag
+  debug_gdb_set_first_entry( false );
   // enable interrupts again
   interrupt_enable();
 }
