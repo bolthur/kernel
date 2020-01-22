@@ -43,6 +43,7 @@ list_manager_ptr_t list_construct( void );
 void list_destruct( list_manager_ptr_t );
 bool list_empty( list_manager_ptr_t );
 list_item_ptr_t list_lookup_data( list_manager_ptr_t, void* );
+list_item_ptr_t list_lookup_item( list_manager_ptr_t, list_item_ptr_t );
 void list_push_front( list_manager_ptr_t, void* );
 void list_push_back( list_manager_ptr_t, void* );
 void* list_pop_front( list_manager_ptr_t );
@@ -51,5 +52,6 @@ void* list_peek_front( list_manager_ptr_t );
 void* list_peek_back( list_manager_ptr_t );
 list_item_ptr_t list_node_create( void* );
 void list_print( list_manager_ptr_t );
+void list_remove( list_manager_ptr_t, list_item_ptr_t );
 
 #endif

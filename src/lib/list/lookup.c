@@ -50,3 +50,32 @@ list_item_ptr_t list_lookup_data( list_manager_ptr_t list, void* data ) {
   // return not found
   return NULL;
 }
+
+/**
+ * @brief Search a list item by item
+ *
+ * @param list list to lookup
+ * @param item item to find
+ * @return list_item_ptr_t
+ */
+list_item_ptr_t list_lookup_item( list_manager_ptr_t list, list_item_ptr_t item ) {
+  list_item_ptr_t current;
+
+  // assert existance
+  assert( NULL != list );
+  // populate current
+  current = list->first;
+
+
+  // loop through list until end
+  while ( NULL != current ) {
+    if ( item == current ) {
+      return current;
+    }
+    // check next one
+    current = current->next;
+  }
+
+  // return not found
+  return NULL;
+}

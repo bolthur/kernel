@@ -102,10 +102,9 @@ static debug_gdb_breakpoint_entry_ptr_t get_breakpoint( uintptr_t address ) {
  * @brief Helper to remove a breakpoint
  *
  * @param address
- *
- * @todo add removal from list
+ * @param remove
  */
-static void remove_breakpoint( uintptr_t address ) {
+static void remove_breakpoint( uintptr_t address, bool remove ) {
   // variables
   debug_gdb_breakpoint_entry_ptr_t entry = get_breakpoint( address );
   // Do nothing if not existing
@@ -121,7 +120,13 @@ static void remove_breakpoint( uintptr_t address ) {
   cache_invalidate_instruction_cache();
   // set enabled to false
   entry->enabled = false;
-  // FIXME: remove from list
+  // handle remove
+  if ( remove ) {
+    list_remove(
+      debug_gdb_bpm->breakpoint,
+      list_lookup_data( debug_gdb_bpm->breakpoint, entry )
+    );
+  }
 }
 
 /**
@@ -614,7 +619,7 @@ static void handle_remove_breakpoint(
     return;
   }
   // remove breakpoint
-  remove_breakpoint( ( uintptr_t )address );
+  remove_breakpoint( ( uintptr_t )address, true );
   // return success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
@@ -695,23 +700,56 @@ static void handle_continue(
 }
 
 /**
+ * @brief Get next address for stepping
+ *
+ * @param address
+ * @param stack
+ * @return uintptr_t
+ *
+ * @todo add correct arm / thumb handling if necessary
+ */
+static uintptr_t next_step_address( uintptr_t address, uintptr_t stack ) {
+  // instruction pointer
+  uintptr_t instruction = *( ( volatile uintptr_t* )address );
+
+  // handle branch due to pop at next address
+  if (
+    instruction & 0xe8bd0000
+    && instruction & ( 1 << 15 )
+  ) {
+    uint32_t pop_amount = 0;
+    for ( uint32_t idx = 0; idx < 16; idx++ ) {
+      // increment if set
+      if ( ( uintptr_t )( 1 << idx ) & instruction ) {
+        pop_amount++;
+      }
+    }
+    // get pc from stack
+    volatile uint32_t* sp = ( volatile uint32_t* )stack;
+    // increase by amount - 1
+    sp += pop_amount - 1;
+    // return next address
+    return ( uintptr_t )*sp;
+  }
+
+  // return default
+  return address + 4;
+}
+
+/**
  * @brief Handle single detach
  *
  * @param context
  * @param packet
- *
- * @todo finish logic
  */
 static void handle_stepping(
   void* context,
   __unused const uint8_t *packet
 ) {
+  // transform context to correct structure
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-  // FIXME: Add correct arm / thumb handling if necessary
-  // increase to next address
-  cpu->reg.pc += 4;
-
-  // FIXME: execute code at address
+  // set to next address
+  cpu->reg.pc = next_step_address( cpu->reg.pc, cpu->reg.sp );
   // determine address for next breakpoint
   uintptr_t next_address = cpu->reg.pc;
   // add breakpoint
@@ -827,7 +865,7 @@ void debug_gdb_handle_event( void* context ) {
   if ( NULL != entry && true == entry->enabled ) {
     if ( entry->step ) {
       // remove brakpoint when it's a stepping breakpoint
-      remove_breakpoint( cpu->reg.pc );
+      remove_breakpoint( cpu->reg.pc, true );
     }
     debug_gdb_packet_send( ( uint8_t* )"S05" );
   } else {
