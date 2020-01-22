@@ -863,6 +863,10 @@ void debug_gdb_handle_event( void* context ) {
   // set exit handler flag
   handler_running = true;
 
+  // FIXME: REMOVE DEBUG OUTPUT
+  debug_gdb_packet_send(
+    ( uint8_t* )"O48656c6c6f2c20776f726c64210a" );
+
   // get context
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // get possible breakpoint
