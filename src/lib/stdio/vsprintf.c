@@ -79,7 +79,7 @@ static size_t convert_number(
  * @return true
  * @return false
  */
-static bool print(
+static int print(
   char* _buffer,
   const char* data,
   size_t length,
@@ -87,33 +87,41 @@ static bool print(
   int32_t pad
 ) {
   const unsigned char* bytes = ( const unsigned char * )data;
-  char* buffer = _buffer;
+  unsigned char* buffer = ( unsigned char* )_buffer;
+  int written = 0;
 
   // print padding if set
   for ( size_t i = 0; pad > 0 && i < ( ( size_t )pad - length ); i++ ) {
     char c = zero_padding ? '0' : ' ';
 
     // write to buffer
-    if ( buffer != NULL ) {
+    if ( NULL != buffer ) {
       *buffer++ = c;
     // put character without buffer
     } else if ( putchar( c ) == EOF ) {
-      return false;
+      return EOF;
     }
+
+    // increment written amount
+    written++;
   }
 
   // print data
   for ( size_t i = 0; i < length; i++ ) {
     // write to buffer
-    if ( buffer != NULL ) {
+    if ( NULL != buffer ) {
       *buffer++ = bytes[ i ];
     // put character without buffer
     } else if ( putchar( bytes[ i ] ) == EOF ) {
-      return false;
+      return EOF;
     }
+
+    // increment written amount
+    written++;
   }
 
-  return true;
+  // return total written amount
+  return written;
 }
 
 /**
@@ -126,6 +134,7 @@ static bool print(
  */
 int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
   uint32_t written = 0;
+  int print_written;
   size_t amount;
   char buf[ 256 ];
   char* buffer = _buffer;
@@ -145,15 +154,16 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       while ( format[ amount ] && format[ amount ] != '%' ) {
         amount++;
       }
+      print_written = print( buffer, format, amount, zero_padding, field_width );
       // print characters
-      if ( ! print( buffer, format, amount, zero_padding, field_width ) ) {
-        return -1;
+      if ( EOF == print_written ) {
+        return EOF;
       }
       // increase format and written
-      format += amount;
-      written += amount;
+      format += print_written;
+      written += ( uint32_t )print_written;
       if ( NULL != buffer ) {
-        buffer += amount;
+        buffer += print_written;
       }
       continue;
     }
@@ -239,14 +249,15 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
     if ( 'c' == modifier ) {
       // get character to print
       char c = ( char )va_arg( parameter, int );
+      print_written = print( buffer, &c, sizeof( c ), zero_padding, field_width );
       // print character
-      if ( ! print( buffer, &c, sizeof( c ), zero_padding, field_width ) ) {
-        return -1;
+      if ( EOF == print_written ) {
+        return EOF;
       }
       // increase written
-      written++;
+      written += ( uint32_t )print_written;
       if ( NULL != buffer ) {
-        buffer++;
+        buffer += print_written;
       }
     // string handling
     } else if( 's' == modifier ) {
@@ -258,14 +269,15 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       }
       // determine string length
       size_t len = strlen( str );
+      print_written = print( buffer, str, len, zero_padding, field_width );
       // print string
-      if ( ! print( buffer, str, len, zero_padding, field_width ) ) {
-        return -1;
+      if ( EOF == print_written ) {
+        return EOF;
       }
       // increase written count
-      written += len;
+      written += ( uint32_t )print_written;
       if ( NULL != buffer ) {
-        buffer += len;
+        buffer += print_written;
       }
     } else if (
       'd' == modifier || 'i' == modifier || 'o' == modifier
@@ -344,28 +356,30 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       }
       // transform integer
       size_t len = convert_number( buf, value, base, digit, negative_value );
+      print_written = print( buffer, buf, len, zero_padding, field_width );
       // print string
-      if ( ! print( buffer, buf, len, zero_padding, field_width ) ) {
-        return -1;
+      if ( EOF == print_written ) {
+        return EOF;
       }
       // increase written and format
-      written += len;
+      written += ( uint32_t )print_written;
       if ( NULL != buffer ) {
-        buffer += len;
+        buffer += print_written;
       }
     } else {
       // start where formatting begun
       format = format_begun_at;
       size_t len = strlen( format );
+      print_written = print( buffer, format, len, zero_padding, field_width );
       // print string
-      if ( ! print( buffer, format, len, zero_padding, field_width ) ) {
-        return -1;
+      if ( EOF == print_written ) {
+        return EOF;
       }
       // increase written and format
-      written += len;
-      format += len;
+      written += ( uint32_t )print_written;
+      format += print_written;
       if ( NULL != buffer ) {
-        buffer += len;
+        buffer += print_written;
       }
     }
   }

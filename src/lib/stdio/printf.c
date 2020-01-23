@@ -43,15 +43,8 @@ int printf( const char* restrict format, ... ) {
 
   // variable arguments
   va_start( parameter, format );
-  // write to output
-  if ( debug_gdb_initialized() ) {
-    // print to buffer
-    written = vsprintf( debug_gdb_print_buffer, format, parameter );
-    // print string
-    debug_gdb_puts( debug_gdb_print_buffer );
-  } else {
-    written = vprintf( format, parameter );
-  }
+  // write
+  written = vprintf( format, parameter );
   // cleanup parameter
   va_end( parameter );
 

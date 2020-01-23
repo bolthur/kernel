@@ -41,9 +41,14 @@
 int vprintf( const char* restrict format, va_list parameter ) {
   // different behaviour for remote debugging
   #if defined( REMOTE_DEBUG )
-    // only if initialized
+    // write to output
     if ( debug_gdb_initialized() ) {
-      return EOF;
+      // clear out buffer
+      memset( debug_gdb_print_buffer, 0, GDB_DEBUG_MAX_BUFFER );
+      // print to buffer
+      vsprintf( debug_gdb_print_buffer, format, parameter );
+      // print string
+      return debug_gdb_puts( debug_gdb_print_buffer );
     }
   #endif
   // normal behaviour

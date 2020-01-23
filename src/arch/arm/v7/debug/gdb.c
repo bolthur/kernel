@@ -708,11 +708,12 @@ static void handle_continue(
 static uintptr_t next_step_address( uintptr_t address, uintptr_t stack ) {
   // instruction pointer
   uintptr_t instruction = *( ( volatile uintptr_t* )address );
+  //DEBUG_OUTPUT( "instruction = 0x%08x\r\n", instruction );
 
   // handle branch due to pop at next address
   if (
-    instruction & 0xe8bd0000
-    && instruction & ( 1 << 15 )
+    0xe8bd0000 == ( instruction & 0xffff0000 )
+    && ( 1 << 15 ) == ( instruction & ( 1 << 15 ) )
   ) {
     uint32_t pop_amount = 0;
     for ( uint32_t idx = 0; idx < 16; idx++ ) {
@@ -728,6 +729,22 @@ static uintptr_t next_step_address( uintptr_t address, uintptr_t stack ) {
     // return next address
     return ( uintptr_t )*sp;
   }
+
+  // handle branch due to bl
+  /*if ( 0xeb000000 == ( instruction & 0xff000000 ) ) {
+    DEBUG_OUTPUT( "BRANCH BY BL!\r\n" );
+    // extract offset
+    uintptr_t offset = ( instruction & 0x7fffff ) << 1;
+    DEBUG_OUTPUT( "offset = 0x%08x\r\n", offset );
+    DEBUG_OUTPUT( "address = 0x%08x\r\n", address );
+    if ( instruction & ( 1 << 24 ) ) {
+      DEBUG_OUTPUT( "negative\r\n" );
+      return address - offset;
+    }
+    // next address is pc + offset
+    DEBUG_OUTPUT( "negative\r\n" );
+    return address + offset;
+  }*/
 
   // return default
   return address + 4;
@@ -745,17 +762,21 @@ static void handle_stepping(
   void* context,
   __unused const uint8_t *packet
 ) {
+  //DUMP_REGISTER( context );
   // transform context to correct structure
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // set to next address
+  //DEBUG_OUTPUT( "Determine next address...\r\n" );
   uintptr_t next_address = next_step_address( cpu->reg.pc, cpu->reg.sp );
   // add necessary offset to skip current address on first entry
   if ( debug_gdb_get_first_entry() ) {
     cpu->reg.pc += 4;
   }
+  //DEBUG_OUTPUT( "Adding breakpoint at 0x%08x...\r\n", next_address );
   // add breakpoint
   add_breakpoint( next_address, true, true );
   // set handler running to false
+  //DEBUG_OUTPUT( "Set running flag to false...\r\n" );
   handler_running = false;
   // return success
   debug_gdb_packet_send( ( uint8_t* )"OK" );

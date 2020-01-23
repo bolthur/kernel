@@ -259,8 +259,9 @@ int32_t debug_gdb_putchar( int32_t c ) {
  * @brief Print string to gdb
  *
  * @param str
+ * @return int
  */
-void debug_gdb_puts( const char* str ) {
+int debug_gdb_puts( const char* str ) {
   // variables
   uint8_t* buffer = debug_gdb_output_buffer;
   uint8_t* copy;
@@ -275,7 +276,7 @@ void debug_gdb_puts( const char* str ) {
     // copy string
     for (
       copy = buffer + 1;
-      idx < length && copy < buffer + ( GDB_DEBUG_MAX_BUFFER - 3 );
+      idx < length && copy < buffer + GDB_DEBUG_MAX_BUFFER - 3;
       idx++
     ) {
       *copy++ = debug_gdb_hexchar[ str[ idx ] >> 4 ];
@@ -287,6 +288,9 @@ void debug_gdb_puts( const char* str ) {
     // send packet
     debug_gdb_packet_send( buffer );
   }
+
+  // return printed length
+  return ( int )length;
 }
 
 /**
