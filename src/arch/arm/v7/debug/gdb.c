@@ -36,11 +36,6 @@
 #include <arch/arm/v7/debug/debug.h>
 
 /**
- * @brief Max buffer size
- */
-#define GDB_DEBUG_MAX_BUFFER 500
-
-/**
  * @brief Used instruction for breakpoints ( bkpt #0 )
  *
  */
@@ -64,12 +59,12 @@ static debug_gdb_signal_t signal;
 /**
  * @brief output buffer used for formatting via sprintf
  */
-static uint8_t debug_gdb_output_buffer[ GDB_DEBUG_MAX_BUFFER ];
+uint8_t debug_gdb_output_buffer[ GDB_DEBUG_MAX_BUFFER ];
 
 /**
  * @brief input buffer used for incomming packages
  */
-static uint8_t debug_gdb_input_buffer[ GDB_DEBUG_MAX_BUFFER ];
+uint8_t debug_gdb_input_buffer[ GDB_DEBUG_MAX_BUFFER ];
 
 /**
  * @brief Helper to get a possible breakpoint
@@ -862,10 +857,6 @@ void debug_gdb_handle_event( void* context ) {
   signal = debug_gdb_get_signal();
   // set exit handler flag
   handler_running = true;
-
-  // FIXME: REMOVE DEBUG OUTPUT
-  debug_gdb_packet_send(
-    ( uint8_t* )"O48656c6c6f2c20776f726c64210a" );
 
   // get context
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;

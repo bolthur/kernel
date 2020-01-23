@@ -43,6 +43,11 @@ static bool stub_first_entry = true;
 const char debug_gdb_hexchar[] = "0123456789abcdef";
 
 /**
+ * @brief Print buffer
+ */
+char debug_gdb_print_buffer[ GDB_DEBUG_MAX_BUFFER ];
+
+/**
  * @brief breakpoint manager
  */
 debug_gdb_breakpoint_manager_ptr_t debug_gdb_bpm;
@@ -248,6 +253,40 @@ int32_t debug_gdb_putchar( int32_t c ) {
   debug_gdb_packet_send( ( uint8_t* )buf );
   // return sent character
   return c;
+}
+
+/**
+ * @brief Print string to gdb
+ *
+ * @param str
+ */
+void debug_gdb_puts( const char* str ) {
+  // variables
+  uint8_t* buffer = debug_gdb_output_buffer;
+  uint8_t* copy;
+  size_t idx = 0;
+  size_t length = strlen( str );
+
+  // set command
+  buffer[ 0 ] = 'O';
+
+  // loop through string
+  while ( idx < length ) {
+    // copy string
+    for (
+      copy = buffer + 1;
+      idx < length && copy < buffer + ( GDB_DEBUG_MAX_BUFFER - 3 );
+      idx++
+    ) {
+      *copy++ = debug_gdb_hexchar[ str[ idx ] >> 4 ];
+      *copy++ = debug_gdb_hexchar[ str[ idx ] & 0x0f ];
+    }
+    // set ending
+    *copy = 0;
+
+    // send packet
+    debug_gdb_packet_send( buffer );
+  }
 }
 
 /**

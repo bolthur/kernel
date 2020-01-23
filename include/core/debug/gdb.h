@@ -25,6 +25,11 @@
 #include <stdint.h>
 #include <list.h>
 
+/**
+ * @brief Max buffer size
+ */
+#define GDB_DEBUG_MAX_BUFFER 500
+
 typedef enum {
   GDB_SIGNAL_TRAP = 5,
   GDB_SIGNAL_ABORT = 6,
@@ -49,6 +54,9 @@ typedef struct {
 } debug_gdb_breakpoint_manager_t, *debug_gdb_breakpoint_manager_ptr_t;
 
 extern const char debug_gdb_hexchar[];
+extern char debug_gdb_print_buffer[];
+extern uint8_t debug_gdb_output_buffer[];
+extern uint8_t debug_gdb_input_buffer[];
 extern debug_gdb_breakpoint_manager_ptr_t debug_gdb_bpm;
 
 void debug_gdb_init( void );
@@ -67,5 +75,6 @@ int32_t debug_gdb_char2hex( char );
 
 bool debug_gdb_get_first_entry( void );
 void debug_gdb_set_first_entry( bool );
+void debug_gdb_puts( const char* );
 
 #endif

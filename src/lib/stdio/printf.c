@@ -27,6 +27,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <core/debug/gdb.h>
+
 /**
  * @brief Simple printf for kernel
  *
@@ -35,9 +37,24 @@
  * @return int
  */
 int printf( const char* restrict format, ... ) {
+  // variables
+  int written;
   va_list parameter;
+
+  // variable arguments
   va_start( parameter, format );
-  int written = vprintf( format, parameter );
+  // write to output
+  if ( debug_gdb_initialized() ) {
+    // print to buffer
+    written = vsprintf( debug_gdb_print_buffer, format, parameter );
+    // print string
+    debug_gdb_puts( debug_gdb_print_buffer );
+  } else {
+    written = vprintf( format, parameter );
+  }
+  // cleanup parameter
   va_end( parameter );
+
+  // return written amount
   return written;
 }
