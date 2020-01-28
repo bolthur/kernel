@@ -13,6 +13,7 @@ libv7_a_SOURCES = \
   boot/mm/virt.c \
   boot/fpu.S \
   debug/debug.c \
+  debug/disasm.c \
   debug/gdb.c \
   interrupt/monitor/handler/data.c \
   interrupt/monitor/handler/fiq.c \

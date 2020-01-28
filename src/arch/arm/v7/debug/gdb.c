@@ -28,6 +28,7 @@
 #include <core/panic.h>
 #include <core/interrupt.h>
 #include <core/debug/debug.h>
+#include <core/debug/disasm.h>
 #include <core/debug/gdb.h>
 #include <core/mm/virt.h>
 #include <arch/arm/v7/cpu.h>
@@ -135,7 +136,6 @@ static void remove_breakpoint( uintptr_t address, bool remove ) {
  */
 static void add_breakpoint( uintptr_t address, bool step, bool enable ) {
   // variables
-  volatile uintptr_t* instruction = ( volatile uintptr_t* )address;
   uintptr_t bpi = GDB_BREAKPOINT_INSTRUCTION;
   debug_gdb_breakpoint_entry_ptr_t entry = get_breakpoint( address );
 
@@ -163,10 +163,10 @@ static void add_breakpoint( uintptr_t address, bool step, bool enable ) {
   // save instruction
   memcpy(
     ( void* )&entry->instruction,
-    ( void* )instruction,
+    ( void* )address,
     sizeof( entry->instruction ) );
   // overwrite with breakpoint instruction
-  memcpy( ( void* )instruction, ( void* )&bpi, sizeof( bpi ) );
+  memcpy( ( void* )address, ( void* )&bpi, sizeof( bpi ) );
 
   // flush cache
   cache_invalidate_instruction_cache();
@@ -682,72 +682,19 @@ static void handle_continue_query_supported(
  * @param packet
  */
 static void handle_continue(
-  __unused void* context,
+  void* context,
   __unused const uint8_t *packet
 ) {
-  // disable single stepping
-  if ( ! debug_disable_single_step() ) {
-    debug_gdb_packet_send( ( uint8_t* )"E01" );
-    return;
+  // transform context to correct structure
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  // add necessary offset to skip current address on first entry
+  if ( debug_gdb_get_first_entry() ) {
+    cpu->reg.pc += 4;
   }
   // set handler running to false
   handler_running = false;
   // response success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
-}
-
-/**
- * @brief Get next address for stepping
- *
- * @param address
- * @param stack
- * @return uintptr_t
- *
- * @todo add correct arm / thumb handling if necessary
- */
-static uintptr_t next_step_address( uintptr_t address, uintptr_t stack ) {
-  // instruction pointer
-  uintptr_t instruction = *( ( volatile uintptr_t* )address );
-  //DEBUG_OUTPUT( "instruction = 0x%08x\r\n", instruction );
-
-  // handle branch due to pop at next address
-  if (
-    0xe8bd0000 == ( instruction & 0xffff0000 )
-    && ( 1 << 15 ) == ( instruction & ( 1 << 15 ) )
-  ) {
-    uint32_t pop_amount = 0;
-    for ( uint32_t idx = 0; idx < 16; idx++ ) {
-      // increment if set
-      if ( ( uintptr_t )( 1 << idx ) & instruction ) {
-        pop_amount++;
-      }
-    }
-    // get pc from stack
-    volatile uint32_t* sp = ( volatile uint32_t* )stack;
-    // increase by amount - 1
-    sp += pop_amount - 1;
-    // return next address
-    return ( uintptr_t )*sp;
-  }
-
-  // handle branch due to bl
-  /*if ( 0xeb000000 == ( instruction & 0xff000000 ) ) {
-    DEBUG_OUTPUT( "BRANCH BY BL!\r\n" );
-    // extract offset
-    uintptr_t offset = ( instruction & 0x7fffff ) << 1;
-    DEBUG_OUTPUT( "offset = 0x%08x\r\n", offset );
-    DEBUG_OUTPUT( "address = 0x%08x\r\n", address );
-    if ( instruction & ( 1 << 24 ) ) {
-      DEBUG_OUTPUT( "negative\r\n" );
-      return address - offset;
-    }
-    // next address is pc + offset
-    DEBUG_OUTPUT( "negative\r\n" );
-    return address + offset;
-  }*/
-
-  // return default
-  return address + 4;
 }
 
 /**
@@ -762,21 +709,18 @@ static void handle_stepping(
   void* context,
   __unused const uint8_t *packet
 ) {
-  //DUMP_REGISTER( context );
   // transform context to correct structure
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // set to next address
-  //DEBUG_OUTPUT( "Determine next address...\r\n" );
-  uintptr_t next_address = next_step_address( cpu->reg.pc, cpu->reg.sp );
+  uintptr_t next_address = debug_disasm_next_instruction(
+    cpu->reg.pc, cpu->reg.sp );
   // add necessary offset to skip current address on first entry
   if ( debug_gdb_get_first_entry() ) {
     cpu->reg.pc += 4;
   }
-  //DEBUG_OUTPUT( "Adding breakpoint at 0x%08x...\r\n", next_address );
   // add breakpoint
   add_breakpoint( next_address, true, true );
   // set handler running to false
-  //DEBUG_OUTPUT( "Set running flag to false...\r\n" );
   handler_running = false;
   // return success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
