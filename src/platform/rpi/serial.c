@@ -104,12 +104,14 @@ void serial_init( void ) {
     ( 1 << 1 ) | ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 )
     | ( 1 << 7 ) | ( 1 << 8 ) | ( 1 << 9 ) | ( 1 << 10 )
   );
-
   // Enable UART0, receive & transfer part of UART.
   io_out32( base + UARTCR, ( 1 << 0 ) | ( 1 << 8 ) | ( 1 << 9 ) );
 
   // set flag
   serial_initialized = true;
+
+  // flush it
+  serial_flush();
 }
 
 /**

@@ -56,7 +56,7 @@ void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
   assert( nested_data_abort++ < INTERRUPT_NESTED_MAX );
 
   // get event origin
-  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  __maybe_unused event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
 
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )

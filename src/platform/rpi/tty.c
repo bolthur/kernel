@@ -20,7 +20,6 @@
 
 #include <stdlib.h>
 #include <core/serial.h>
-#include <core/debug/gdb.h>
 
 /**
  * @brief Initialize TTY
@@ -37,9 +36,6 @@ void tty_init( void ) {
  * @param c Character to print
  */
 void tty_putc( __maybe_unused uint8_t c ) {
-  if ( debug_gdb_initialized() ) {
-    return;
-  }
   // only if enabled
   #if defined( OUTPUT_ENABLE )
     serial_putc( c );

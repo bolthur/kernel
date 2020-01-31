@@ -128,10 +128,13 @@ void virt_init( void ) {
   // prepare temporary area
   virt_prepare_temporary( kernel_context );
 
-  // set contexts
+  // set kernel context
   virt_set_context( kernel_context );
+  // FIXME: DIRTY HACK TO WORK WITH EMULATOR, NOT NECESSARY ON REAL DEVICE!
+  // flush contexts to take effect
+  virt_flush_complete();
+  // set dummy user context
   virt_set_context( user_context );
-
   // flush contexts to take effect
   virt_flush_complete();
 

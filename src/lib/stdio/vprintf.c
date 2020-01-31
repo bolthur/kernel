@@ -43,12 +43,16 @@ int vprintf( const char* restrict format, va_list parameter ) {
   #if defined( REMOTE_DEBUG )
     // write to output
     if ( debug_gdb_initialized() ) {
-      // clear out buffer
-      memset( debug_gdb_print_buffer, 0, GDB_DEBUG_MAX_BUFFER );
-      // print to buffer
-      vsprintf( debug_gdb_print_buffer, format, parameter );
-      // print string
-      return debug_gdb_puts( debug_gdb_print_buffer );
+      if ( ! debug_gdb_get_first_entry() ) {
+        // clear out buffer
+        memset( debug_gdb_print_buffer, 0, GDB_DEBUG_MAX_BUFFER );
+        // print to buffer
+        vsprintf( debug_gdb_print_buffer, format, parameter );
+        // print string
+        return debug_gdb_puts( debug_gdb_print_buffer );
+      } else {
+        return EOF;
+      }
     }
   #endif
   // normal behaviour
