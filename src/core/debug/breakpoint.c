@@ -18,37 +18,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
 #include <assert.h>
-#include <arch/arm/v7/debug/debug.h>
-#include <arch/arm/v7/cpu.h>
+#include <string.h>
+#include <stdlib.h>
 #include <core/event.h>
-#include <core/panic.h>
-#include <core/interrupt.h>
+#include <core/serial.h>
+#include <core/debug/debug.h>
+#include <core/debug/gdb.h>
 
 /**
- * @brief Nested counter for fast interrupt exception handler
+ * @brief debug breakpoint manager
  */
-static uint32_t nested_fast_interrupt = 0;
+list_manager_ptr_t debug_breakpoint_manager = NULL;
 
 /**
- * @brief Fast interrupt request exception handler
- *
- * @param cpu cpu context
+ * @brief Setup breakpoint manager
  */
-void monitor_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
-  // assert nesting
-  assert( nested_fast_interrupt++ < INTERRUPT_NESTED_MAX );
-
-  // get context
-  INTERRUPT_DETERMINE_CONTEXT( cpu )
-
-  // debug output
-  #if defined( PRINT_EXCEPTION )
-    DUMP_REGISTER( cpu );
-  #endif
-
-  PANIC( "Monitor fast interrupt!" );
-
-  // decrement nested counter
-  nested_fast_interrupt--;
+void debug_breakpoint_init( void ) {
+  // handle initialized
+  if ( NULL != debug_breakpoint_manager ) {
+    return;
+  }
+  // setup list
+  debug_breakpoint_manager = list_construct();
 }

@@ -26,6 +26,7 @@
 #include <core/serial.h>
 #include <core/debug/debug.h>
 #include <core/debug/gdb.h>
+#include <core/debug/breakpoint.h>
 
 /**
  * @brief stub initialized flag
@@ -38,6 +39,28 @@ static bool stub_initialized = false;
 static bool stub_first_entry = true;
 
 /**
+ * @brief debug command handler
+ */
+static debug_gdb_command_handler_t handler[] = {
+  { .prefix = "qSupported", .handler = debug_gdb_handler_supported, },
+  { .prefix = "?", .handler = debug_gdb_handler_stop_status, },
+  { .prefix = "g", .handler = debug_gdb_handler_read_register, },
+  { .prefix = "G", .handler = debug_gdb_handler_write_register, },
+  { .prefix = "m", .handler = debug_gdb_handler_read_memory, },
+  { .prefix = "M", .handler = debug_gdb_handler_write_memory, },
+  { .prefix = "z0", .handler = debug_gdb_handler_remove_breakpoint, },
+  { .prefix = "Z0", .handler = debug_gdb_handler_insert_breakpoint, },
+  { .prefix = "z1", .handler = debug_gdb_handler_remove_breakpoint, },
+  { .prefix = "Z1", .handler = debug_gdb_handler_insert_breakpoint, },
+  { .prefix = "vCont?", .handler = debug_gdb_handler_continue_query_supported, },
+  { .prefix = "vCont", .handler = debug_gdb_handler_continue_query, },
+  { .prefix = "qAttached", .handler = debug_gdb_handler_attach, },
+  { .prefix = "D", .handler = debug_gdb_handler_detach, },
+  { .prefix = "c", .handler = debug_gdb_handler_continue, },
+  { .prefix = "s", .handler = debug_gdb_handler_stepping, },
+};
+
+/**
  * @brief hex characters used for transform
  */
 const char debug_gdb_hexchar[] = "0123456789abcdef";
@@ -46,11 +69,6 @@ const char debug_gdb_hexchar[] = "0123456789abcdef";
  * @brief Print buffer
  */
 char debug_gdb_print_buffer[ GDB_DEBUG_MAX_BUFFER ];
-
-/**
- * @brief breakpoint manager
- */
-debug_gdb_breakpoint_manager_ptr_t debug_gdb_bpm;
 
 /**
  * @brief Transform character to hex value
@@ -103,16 +121,7 @@ void debug_gdb_init( void ) {
 
   // setup breakpoint manager
   DEBUG_OUTPUT( "Setup breakpoint manager\r\n" );
-  // allocate space
-  debug_gdb_bpm = ( debug_gdb_breakpoint_manager_ptr_t )malloc(
-    sizeof( debug_gdb_breakpoint_manager_t ) );
-  assert( NULL != debug_gdb_bpm );
-  // clear out
-  memset(
-    ( void* )debug_gdb_bpm,
-    0, sizeof( debug_gdb_breakpoint_manager_t ) );
-  // setup list
-  debug_gdb_bpm->breakpoint = list_construct();
+  debug_breakpoint_init();
 
   // setup debug traps
   DEBUG_OUTPUT( "Setup debug traps\r\n" );
@@ -310,4 +319,114 @@ bool debug_gdb_get_first_entry( void ) {
  */
 void debug_gdb_set_first_entry( bool flag ) {
   stub_first_entry = flag;
+}
+
+/**
+ * @brief Handle attach
+ *
+ * @param context
+ * @param packet
+ */
+void debug_gdb_handler_attach(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  debug_gdb_packet_send( ( uint8_t* )"1" );
+}
+
+/**
+ * @brief Handler to continue with query
+ *
+ * @param context
+ * @param packet
+ *
+ * @todo add logic
+ */
+void debug_gdb_handler_continue_query(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  debug_gdb_packet_send( ( uint8_t* )"E01" );
+}
+
+/**
+ * @brief Handler to return continue supported actions
+ *
+ * @param context
+ * @param packet
+ *
+ * @todo add logic
+ */
+void debug_gdb_handler_continue_query_supported(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  debug_gdb_packet_send( ( uint8_t* )"" );
+}
+
+/**
+ * @brief Unsupported packet response
+ *
+ * @param context
+ * @param packet
+ */
+void debug_gdb_handler_unsupported(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  // send empty response as not supported
+  debug_gdb_packet_send( ( uint8_t* )"\0" );
+}
+
+/**
+ * @brief Handle continue
+ *
+ * @param context
+ * @param packet
+ */
+void debug_gdb_handler_continue(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  // set handler running to false
+  debug_gdb_set_running_flag( false );
+  // response success
+  debug_gdb_packet_send( ( uint8_t* )"OK" );
+}
+
+/**
+ * @brief Handle detach
+ *
+ * @param context
+ * @param packet
+ */
+void debug_gdb_handler_detach(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  debug_gdb_set_running_flag( false );
+  debug_gdb_packet_send( ( uint8_t* )"OK" );
+}
+
+/**
+ * @brief Helper to identify handler to call
+ *
+ * @param packet
+ * @return debug_gdb_callback_t
+ */
+debug_gdb_callback_t debug_gdb_get_handler( const uint8_t* packet ) {
+  // max size
+  size_t max = sizeof( handler ) / sizeof( handler[ 0 ] );
+  // loop through handler to identify used one
+  for ( size_t i = 0; i < max; i++ ) {
+    if ( 0 == strncmp(
+      handler[ i ].prefix,
+      ( char* )packet,
+      strlen( handler[ i ].prefix ) )
+    ) {
+      return handler[ i ].handler;
+    }
+  }
+  // return unsupported handler
+  return debug_gdb_handler_unsupported;
 }

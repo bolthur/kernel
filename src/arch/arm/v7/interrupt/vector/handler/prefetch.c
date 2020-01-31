@@ -41,7 +41,9 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   assert( nested_prefetch_abort++ < INTERRUPT_NESTED_MAX );
 
   // get event origin
-  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  #if defined( REMOTE_DEBUG )
+    event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  #endif
 
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
@@ -52,11 +54,15 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   #endif
 
   // special debug exception handling
-  if ( debug_is_debug_exception() ) {
-    event_enqueue( EVENT_DEBUG, origin );
-  } else {
-    PANIC( "prefetch abort" );
-  }
+  #if defined( REMOTE_DEBUG )
+    if ( debug_is_debug_exception() ) {
+      event_enqueue( EVENT_DEBUG, origin );
+    } else {
+      PANIC( "prefetch abort" );
+    }
+  #else
+    PANIC( "prefetch abort!" );
+  #endif
 
   // decrement nested counter
   nested_prefetch_abort--;

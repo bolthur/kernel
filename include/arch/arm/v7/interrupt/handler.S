@@ -20,6 +20,11 @@
 
 // event handling
 IMPORT( event_handle )
+// remote debugging
+#if defined( REMOTE_DEBUG )
+  IMPORT( debug_breakpoint_enable )
+  IMPORT( debug_breakpoint_disable )
+#endif
 // switch to thread
 IMPORT( task_thread_switch_to )
 IMPORT( task_thread_current_thread )
@@ -212,6 +217,20 @@ _\name\()_exit_finished:
   // push register
   push_register \name, \mode
 
+  // remote debugging
+  #if defined( REMOTE_DEBUG )
+    // ensure stack alignment
+    stack_wind r0, sp
+    // push r1 and set r0
+    push { r1 }
+    // add breakpoints
+    bl debug_breakpoint_disable
+    // pop r1
+    pop { r1 }
+    // restore stack adjustments
+    stack_unwind r0, sp
+  #endif
+
   // ensure stack alignment
   stack_wind r0, sp
   // push r1 and set r0
@@ -219,7 +238,7 @@ _\name\()_exit_finished:
   mov r0, r1
   // call handler routine
   bl \handler
-  // pop r0
+  // pop r1
   pop { r1 }
   // restore stack adjustments
   stack_unwind r0, sp
@@ -235,10 +254,24 @@ _\name\()_exit_finished:
   bl event_handle
   // disable interrupts
   cpsid if
-  // pop r0
+  // pop r1
   pop { r1 }
   // restore stack adjustments
   stack_unwind r0, sp
+
+  // remote debugging
+  #if defined( REMOTE_DEBUG )
+    // ensure stack alignment
+    stack_wind r0, sp
+    // push r1 and set r0
+    push { r1 }
+    // add breakpoints
+    bl debug_breakpoint_enable
+    // pop r1
+    pop { r1 }
+    // restore stack adjustments
+    stack_unwind r0, sp
+  #endif
 
   // restore registers for return
   pop_register \name, \mode, r1

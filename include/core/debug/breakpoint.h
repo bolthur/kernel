@@ -18,37 +18,27 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
-#include <arch/arm/v7/debug/debug.h>
-#include <arch/arm/v7/cpu.h>
-#include <core/event.h>
-#include <core/panic.h>
-#include <core/interrupt.h>
+#if ! defined( __CORE_DEBUG_BREAKPOINT__ )
+#define __CORE_DEBUG_BREAKPOINT__
 
-/**
- * @brief Nested counter for interrupt exception handler
- */
-static uint32_t nested_interrupt = 0;
+#include <stdint.h>
+#include <stdbool.h>
+#include <list.h>
 
-/**
- * @brief Interrupt request exception handler
- *
- * @param cpu cpu context
- */
-void monitor_interrupt_handler( cpu_register_context_ptr_t cpu ) {
-  // assert nesting
-  assert( nested_interrupt++ < INTERRUPT_NESTED_MAX );
+typedef struct {
+  uintptr_t address;
+  uintptr_t instruction;
+  bool step;
+  bool enabled;
+} debug_breakpoint_entry_t, *debug_breakpoint_entry_ptr_t;
 
-  // get context
-  INTERRUPT_DETERMINE_CONTEXT( cpu )
+extern list_manager_ptr_t debug_breakpoint_manager;
 
-  // debug output
-  #if defined( PRINT_EXCEPTION )
-    DUMP_REGISTER( cpu );
-  #endif
+void debug_breakpoint_remove( uintptr_t, bool );
+void debug_breakpoint_add( uintptr_t, bool, bool );
+debug_breakpoint_entry_ptr_t debug_breakpoint_find( uintptr_t );
+void debug_breakpoint_enable( void );
+void debug_breakpoint_disable( void );
+void debug_breakpoint_init( void );
 
-  PANIC( "Monitor normal interrupt!" );
-
-  // decrement nested counter
-  nested_interrupt--;
-}
+#endif

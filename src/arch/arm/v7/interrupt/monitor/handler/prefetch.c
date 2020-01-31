@@ -48,7 +48,7 @@ void monitor_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
     DUMP_REGISTER( cpu );
   #endif
 
-  PANIC( "FOOO!" );
+  PANIC( "Monitor prefetch abort!" );
 
   // decrement nested counter
   nested_prefetch_abort--;

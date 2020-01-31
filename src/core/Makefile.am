@@ -10,6 +10,7 @@ noinst_LIBRARIES = libcore.a
 libcore_a_SOURCES = \
   boot/bss.c \
   debug/gdb.c \
+  debug/breakpoint.c \
   interrupt/interrupt.c \
   mm/heap.c \
   mm/phys.c \

@@ -30,17 +30,12 @@
 #include <core/debug/debug.h>
 #include <core/debug/disasm.h>
 #include <core/debug/gdb.h>
+#include <core/debug/breakpoint.h>
 #include <core/mm/virt.h>
 #include <arch/arm/v7/cpu.h>
 #include <arch/arm/barrier.h>
 #include <arch/arm/v7/cache.h>
 #include <arch/arm/v7/debug/debug.h>
-
-/**
- * @brief Used instruction for breakpoints ( bkpt #0 )
- *
- */
-#define GDB_BREAKPOINT_INSTRUCTION 0xe1200070
 
 /**
  * @brief Extra registers not filled
@@ -53,11 +48,6 @@
 static bool handler_running;
 
 /**
- * @brief GDB stop signal
- */
-static debug_gdb_signal_t signal;
-
-/**
  * @brief output buffer used for formatting via sprintf
  */
 uint8_t debug_gdb_output_buffer[ GDB_DEBUG_MAX_BUFFER ];
@@ -66,111 +56,6 @@ uint8_t debug_gdb_output_buffer[ GDB_DEBUG_MAX_BUFFER ];
  * @brief input buffer used for incomming packages
  */
 uint8_t debug_gdb_input_buffer[ GDB_DEBUG_MAX_BUFFER ];
-
-/**
- * @brief Helper to get a possible breakpoint
- *
- * @param address
- * @return debug_gdb_breakpoint_entry_ptr_t
- */
-static debug_gdb_breakpoint_entry_ptr_t get_breakpoint( uintptr_t address ) {
-  // check for possible existance
-  list_item_ptr_t current = debug_gdb_bpm->breakpoint->first;
-  debug_gdb_breakpoint_entry_ptr_t entry = NULL;
-  // loop through list of entries
-  while ( NULL != current ) {
-    // get entry value
-    debug_gdb_breakpoint_entry_ptr_t tmp =
-      ( debug_gdb_breakpoint_entry_ptr_t )current->data;
-    // check for match
-    if ( tmp->address == address ) {
-      entry = tmp;
-      break;
-    }
-    // next entry
-    current = current->next;
-  }
-  // return found / not found entry
-  return entry;
-}
-
-/**
- * @brief Helper to remove a breakpoint
- *
- * @param address
- * @param remove
- *
- * @todo add dummy breakpoint for continue to reenable normal breakpoint after continue / stepping
- */
-static void remove_breakpoint( uintptr_t address, bool remove ) {
-  // variables
-  debug_gdb_breakpoint_entry_ptr_t entry = get_breakpoint( address );
-  // Do nothing if not existing
-  if ( NULL == entry || true != entry->enabled ) {
-    return;
-  }
-  // push back instruction
-  memcpy(
-    ( void* )entry->address,
-    ( void* )&entry->instruction,
-    sizeof( entry->instruction ) );
-  // flush after copy
-  cache_invalidate_instruction_cache();
-  // set enabled to false
-  entry->enabled = false;
-  // handle remove
-  if ( remove ) {
-    list_remove(
-      debug_gdb_bpm->breakpoint,
-      list_lookup_data( debug_gdb_bpm->breakpoint, entry )
-    );
-  }
-}
-
-/**
- * @brief Method to add breakpoint to list
- *
- * @param address
- * @param step
- * @param enable
- */
-static void add_breakpoint( uintptr_t address, bool step, bool enable ) {
-  // variables
-  uintptr_t bpi = GDB_BREAKPOINT_INSTRUCTION;
-  debug_gdb_breakpoint_entry_ptr_t entry = get_breakpoint( address );
-
-  // Don't add if already existing
-  if ( NULL != entry && true == entry->enabled ) {
-    return;
-  }
-
-  // create if not existing
-  if ( NULL == entry ) {
-    // allocate entry
-    entry = ( debug_gdb_breakpoint_entry_ptr_t )malloc(
-      sizeof( debug_gdb_breakpoint_entry_t ) );
-    // erase allocated memory
-    memset( ( void* )entry, 0, sizeof( debug_gdb_breakpoint_entry_t ) );
-  }
-
-  // set attributes
-  entry->step = step;
-  entry->enabled = enable;
-  entry->address = address;
-  // push entry back
-  list_push_back( debug_gdb_bpm->breakpoint, ( void* )entry );
-
-  // save instruction
-  memcpy(
-    ( void* )&entry->instruction,
-    ( void* )address,
-    sizeof( entry->instruction ) );
-  // overwrite with breakpoint instruction
-  memcpy( ( void* )address, ( void* )&bpi, sizeof( bpi ) );
-
-  // flush cache
-  cache_invalidate_instruction_cache();
-}
 
 /**
  * @brief Helper to etract hex value from buffer
@@ -410,26 +295,12 @@ static void read_byte_from_string( const uint8_t** src, uint8_t* dest ) {
  * @param context
  * @param packet
  */
-static void handle_supported(
+void debug_gdb_handler_supported(
   __unused void* context,
-  __unused const uint8_t *packet
+  __unused const uint8_t* packet
 ) {
   debug_gdb_packet_send(
     ( uint8_t* )"qSupported:PacketSize=256;multiprocess+;swbreak+" );
-}
-
-/**
- * @brief Unsupported packet response
- *
- * @param context
- * @param packet
- */
-static void handle_unsupported(
-  __unused void* context,
-  __unused const uint8_t *packet
-) {
-  // send empty response as not supported
-  debug_gdb_packet_send( ( uint8_t* )"\0" );
 }
 
 /**
@@ -439,12 +310,24 @@ static void handle_unsupported(
  * @param packet
  *
  * @todo return correct signal determined within debug_gdb_handle_event()
+ * @todo add support for stop status containing more than 1 numeric
+ * @todo move to core/gdb.c
  */
-static void handle_stop_status(
+void debug_gdb_handler_stop_status(
   __unused void* context,
-  __unused const uint8_t *packet
+  __unused const uint8_t* packet
 ) {
-  debug_gdb_packet_send( ( uint8_t* )"S05" );
+  debug_gdb_signal_t signal = debug_gdb_get_signal();
+  char* buffer = ( char* )debug_gdb_output_buffer;
+
+  // build return
+  *buffer++ = 'S';
+  *buffer++ = debug_gdb_hexchar[ signal >> 4 ];
+  *buffer++ = debug_gdb_hexchar[ signal & 0x0f ];
+  *buffer++ = '\0';
+
+  // send stop status
+  debug_gdb_packet_send( debug_gdb_output_buffer );
 }
 
 /**
@@ -453,7 +336,7 @@ static void handle_stop_status(
  * @param context
  * @param packet
  */
-static void handle_read_register( void* context, __unused const uint8_t *packet ) {
+void debug_gdb_handler_read_register( void* context, __unused const uint8_t* packet ) {
   char *buffer = ( char* )debug_gdb_output_buffer;
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // push registers from context
@@ -478,7 +361,7 @@ static void handle_read_register( void* context, __unused const uint8_t *packet 
  * @param context
  * @param packet
  */
-static void handle_write_register( void* context, const uint8_t *packet ) {
+void debug_gdb_handler_write_register( void* context, const uint8_t* packet ) {
   // transform context
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // skip command
@@ -504,10 +387,12 @@ static void handle_write_register( void* context, const uint8_t *packet ) {
  *
  * @param context
  * @param packet
+ *
+ * @todo move to core/gdb.c
  */
-static void handle_read_memory(
+void debug_gdb_handler_read_memory(
   __unused void* context,
-  const uint8_t *packet
+  const uint8_t* packet
 ) {
   // variables
   uint8_t* resp = NULL, *next;
@@ -548,10 +433,12 @@ static void handle_read_memory(
  *
  * @param context
  * @param packet
+ *
+ * @todo move to core/gdb.c
  */
-static void handle_write_memory(
+void debug_gdb_handler_write_memory(
   __unused void* context,
-  const uint8_t *packet
+  const uint8_t* packet
 ) {
   const uint8_t* buffer;
   uint32_t address, length, value;
@@ -602,10 +489,12 @@ static void handle_write_memory(
  *
  * @param context
  * @param packet
+ *
+ * @todo move to core/gdb.c
  */
-static void handle_remove_breakpoint(
+void debug_gdb_handler_remove_breakpoint(
   __unused void* context,
-  const uint8_t *packet
+  const uint8_t* packet
 ) {
   uint32_t address;
   // skip packet identifier and separator
@@ -616,7 +505,7 @@ static void handle_remove_breakpoint(
     return;
   }
   // remove breakpoint
-  remove_breakpoint( ( uintptr_t )address, true );
+  debug_breakpoint_remove( ( uintptr_t )address, true );
   // return success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
@@ -626,10 +515,12 @@ static void handle_remove_breakpoint(
  *
  * @param context
  * @param packet
+ *
+ * @todo move to core/gdb.c
  */
-static void handle_insert_breakpoint(
+void debug_gdb_handler_insert_breakpoint(
   __unused void* context,
-  const uint8_t *packet
+  const uint8_t* packet
 ) {
   uint32_t address;
   // skip packet identifier and separator
@@ -640,60 +531,8 @@ static void handle_insert_breakpoint(
     return;
   }
   // set breakpoint
-  add_breakpoint( ( uintptr_t )address, false, true );
+  debug_breakpoint_add( ( uintptr_t )address, false, true );
   // return success
-  debug_gdb_packet_send( ( uint8_t* )"OK" );
-}
-
-/**
- * @brief Handler to continue with query
- *
- * @param context
- * @param packet
- *
- * @todo add logic
- */
-static void handle_continue_query(
-  __unused void* context,
-  __unused const uint8_t *packet
-) {
-  debug_gdb_packet_send( ( uint8_t* )"E01" );
-}
-
-/**
- * @brief Handler to return continue supported actions
- *
- * @param context
- * @param packet
- *
- * @todo add logic
- */
-static void handle_continue_query_supported(
-  __unused void* context,
-  __unused const uint8_t *packet
-) {
-  debug_gdb_packet_send( ( uint8_t* )"" );
-}
-
-/**
- * @brief Handle continue
- *
- * @param context
- * @param packet
- */
-static void handle_continue(
-  void* context,
-  __unused const uint8_t *packet
-) {
-  // transform context to correct structure
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-  // add necessary offset to skip current address on first entry
-  if ( debug_gdb_get_first_entry() ) {
-    cpu->reg.pc += 4;
-  }
-  // set handler running to false
-  handler_running = false;
-  // response success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
 
@@ -702,100 +541,22 @@ static void handle_continue(
  *
  * @param context
  * @param packet
- *
- * @todo add correct arm / thumb handling if necessary
  */
-static void handle_stepping(
+void debug_gdb_handler_stepping(
   void* context,
-  __unused const uint8_t *packet
+  __unused const uint8_t* packet
 ) {
   // transform context to correct structure
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // set to next address
   uintptr_t next_address = debug_disasm_next_instruction(
     cpu->reg.pc, cpu->reg.sp );
-  // add necessary offset to skip current address on first entry
-  if ( debug_gdb_get_first_entry() ) {
-    cpu->reg.pc += 4;
-  }
   // add breakpoint
-  add_breakpoint( next_address, true, true );
+  debug_breakpoint_add( next_address, true, true );
   // set handler running to false
-  handler_running = false;
+  debug_gdb_set_running_flag( false );
   // return success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
-}
-
-/**
- * @brief Handle attach
- *
- * @param context
- * @param packet
- */
-static void handle_attach(
-  __unused void* context,
-  __unused const uint8_t *packet
-) {
-  debug_gdb_packet_send( ( uint8_t* )"1" );
-}
-
-/**
- * @brief Handle detach
- *
- * @param context
- * @param packet
- */
-static void handle_detach(
-  __unused void* context,
-  __unused const uint8_t *packet
-) {
-  handler_running = false;
-  debug_gdb_packet_send( ( uint8_t* )"OK" );
-}
-
-/**
- * @brief debug command handler
- */
-static debug_gdb_command_handler_t handler[] = {
-  { .prefix = "qSupported", .handler = handle_supported, },
-  { .prefix = "?", .handler = handle_stop_status, },
-  { .prefix = "g", .handler = handle_read_register, },
-  { .prefix = "G", .handler = handle_write_register, },
-  { .prefix = "m", .handler = handle_read_memory, },
-  { .prefix = "M", .handler = handle_write_memory, },
-  { .prefix = "z0", .handler = handle_remove_breakpoint, },
-  { .prefix = "Z0", .handler = handle_insert_breakpoint, },
-  { .prefix = "z1", .handler = handle_remove_breakpoint, },
-  { .prefix = "Z1", .handler = handle_insert_breakpoint, },
-  { .prefix = "vCont?", .handler = handle_continue_query_supported, },
-  { .prefix = "vCont", .handler = handle_continue_query, },
-  { .prefix = "qAttached", .handler = handle_attach, },
-  { .prefix = "D", .handler = handle_detach, },
-  { .prefix = "c", .handler = handle_continue, },
-  { .prefix = "s", .handler = handle_stepping, },
-};
-
-/**
- * @brief Helper to identify handler to call
- *
- * @param packet
- * @return debug_gdb_callback_t
- */
-static debug_gdb_callback_t get_handler( const uint8_t* packet ) {
-  // max size
-  size_t max = sizeof( handler ) / sizeof( handler[ 0 ] );
-  // loop through handler to identify used one
-  for ( size_t i = 0; i < max; i++ ) {
-    if ( 0 == strncmp(
-      handler[ i ].prefix,
-      ( char* )packet,
-      strlen( handler[ i ].prefix ) )
-    ) {
-      return handler[ i ].handler;
-    }
-  }
-  // return unsupported handler
-  return handle_unsupported;
 }
 
 /**
@@ -813,36 +574,27 @@ void debug_gdb_arch_init( void ) {
 void debug_gdb_handle_event( void* context ) {
   // variables
   uint8_t* packet;
-  debug_gdb_callback_t cb;
-
   // disable interrupts while debugging
   interrupt_disable();
-
-  // get signal
-  signal = debug_gdb_get_signal();
   // set exit handler flag
-  handler_running = true;
+  debug_gdb_set_running_flag( true );
 
   // get context
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  // add necessary offset to skip current address on first entry
+  if ( debug_gdb_get_first_entry() ) {
+    cpu->reg.pc += 4;
+  }
+
   // get possible breakpoint
-  debug_gdb_breakpoint_entry_ptr_t entry = get_breakpoint( cpu->reg.pc );
+  debug_breakpoint_entry_ptr_t entry = debug_breakpoint_find( cpu->reg.pc );
   // handle stepping or breakpoint ( copy data )
   if ( NULL != entry && true == entry->enabled ) {
     // remove brakpoint when it's a stepping breakpoint
-    remove_breakpoint( cpu->reg.pc, entry->step );
-    // return signal
-    debug_gdb_packet_send( ( uint8_t* )"S05" );
-  } else {
-    // build signal package
-    char *buffer = ( char* )debug_gdb_output_buffer;
-    *buffer++ = 'S';
-    *buffer++ = debug_gdb_hexchar[ signal >> 4 ];
-    *buffer++ = debug_gdb_hexchar[ signal & 0x0f ];
-    *buffer = '\0';
-    // send signal package
-    debug_gdb_packet_send( debug_gdb_output_buffer );
+    debug_breakpoint_remove( cpu->reg.pc, entry->step );
   }
+  // handle stop status
+  debug_gdb_handler_stop_status( context, NULL );
 
   // handle incoming packets in endless loop
   while ( handler_running ) {
@@ -851,10 +603,8 @@ void debug_gdb_handle_event( void* context ) {
       debug_gdb_input_buffer, GDB_DEBUG_MAX_BUFFER );
     // assert existance
     assert( packet != NULL );
-    // get handler
-    cb = get_handler( packet );
-    // execute found handler
-    cb( context, packet );
+    // execute handler
+    debug_gdb_get_handler( packet )( context, packet );
   }
 
   // set first entry flag
@@ -890,4 +640,13 @@ debug_gdb_signal_t debug_gdb_get_signal( void ) {
   }
   // unhandled
   PANIC( "Unknown / Unsupported gdb signal!" );
+}
+
+/**
+ * @brief Set handler running flag
+ *
+ * @param flag
+ */
+void debug_gdb_set_running_flag( bool flag ) {
+  handler_running = flag;
 }

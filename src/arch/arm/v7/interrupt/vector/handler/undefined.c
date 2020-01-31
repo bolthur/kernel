@@ -41,9 +41,6 @@ void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   assert( nested_undefined++ < INTERRUPT_NESTED_MAX );
 
-  // get event origin
-  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
-
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
 
@@ -51,12 +48,6 @@ void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
   #endif
-
-  // special debug exception handling
-  if ( debug_is_debug_exception() ) {
-    event_enqueue( EVENT_DEBUG, origin );
-    PANIC( "Check fixup!" );
-  }
 
   PANIC( "undefined" );
   // decrement nested counter

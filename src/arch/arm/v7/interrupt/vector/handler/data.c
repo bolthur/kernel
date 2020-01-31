@@ -68,12 +68,16 @@ void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
   #endif
 
   // special debug exception handling
-  if ( debug_is_debug_exception() ) {
-    event_enqueue( EVENT_DEBUG, origin );
-    PANIC( "Check fixup!" );
-  } else {
-    PANIC( "data abort" );
-  }
+  #if defined( REMOTE_DEBUG )
+    if ( debug_is_debug_exception() ) {
+      event_enqueue( EVENT_DEBUG, origin );
+      PANIC( "Check fixup!" );
+    } else {
+      PANIC( "prefetch abort" );
+    }
+  #else
+    PANIC( "prefetch abort!" );
+  #endif
 
   // decrement nested counter
   nested_data_abort--;

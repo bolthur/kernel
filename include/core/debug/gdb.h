@@ -42,27 +42,16 @@ typedef struct {
   debug_gdb_callback_t handler;
 } debug_gdb_command_handler_t, *debug_gdb_command_handler_ptr_t;
 
-typedef struct {
-  uintptr_t address;
-  uintptr_t instruction;
-  bool step;
-  bool enabled;
-} debug_gdb_breakpoint_entry_t, *debug_gdb_breakpoint_entry_ptr_t;
-
-typedef struct {
-  list_manager_ptr_t breakpoint;
-} debug_gdb_breakpoint_manager_t, *debug_gdb_breakpoint_manager_ptr_t;
-
 extern const char debug_gdb_hexchar[];
 extern char debug_gdb_print_buffer[];
 extern uint8_t debug_gdb_output_buffer[];
 extern uint8_t debug_gdb_input_buffer[];
-extern debug_gdb_breakpoint_manager_ptr_t debug_gdb_bpm;
 
 void debug_gdb_init( void );
 void debug_gdb_arch_init( void );
 void debug_gdb_breakpoint( void );
 void debug_gdb_set_trap( void );
+void debug_gdb_set_running_flag( bool );
 void debug_gdb_handle_exception( void );
 bool debug_gdb_initialized( void );
 void debug_gdb_handle_event( void* );
@@ -76,5 +65,22 @@ int32_t debug_gdb_char2hex( char );
 bool debug_gdb_get_first_entry( void );
 void debug_gdb_set_first_entry( bool );
 int debug_gdb_puts( const char* );
+
+debug_gdb_callback_t debug_gdb_get_handler( const uint8_t* );
+void debug_gdb_handler_supported( void*, const uint8_t* );
+void debug_gdb_handler_unsupported( void*, const uint8_t* );
+void debug_gdb_handler_stop_status( void*, const uint8_t* );
+void debug_gdb_handler_read_register( void*, const uint8_t* );
+void debug_gdb_handler_write_register( void*, const uint8_t* );
+void debug_gdb_handler_read_memory( void*, const uint8_t* );
+void debug_gdb_handler_write_memory( void*, const uint8_t* );
+void debug_gdb_handler_remove_breakpoint( void*, const uint8_t* );
+void debug_gdb_handler_insert_breakpoint( void*, const uint8_t* );
+void debug_gdb_handler_continue_query( void*, const uint8_t* );
+void debug_gdb_handler_continue_query_supported( void*, const uint8_t* );
+void debug_gdb_handler_continue( void*, const uint8_t* );
+void debug_gdb_handler_stepping( void* , const uint8_t* );
+void debug_gdb_handler_detach( void*, const uint8_t* );
+void debug_gdb_handler_attach( void*, const uint8_t* );
 
 #endif
