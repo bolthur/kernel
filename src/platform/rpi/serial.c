@@ -29,6 +29,8 @@
 
 #include <core/io.h>
 #include <core/serial.h>
+#include <core/interrupt.h>
+#include <core/event.h>
 
 /**
  * @brief Initialized flag
@@ -98,17 +100,62 @@ void serial_init( void ) {
   // Enable FIFO & 8 bit data transmissio (1 stop bit, no parity).
   io_out32( base + UARTLCRH, ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 ) );
 
-  // Mask all interrupts.
-  io_out32(
-    base + UARTIMSC,
-    ( 1 << 1 ) | ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 )
-    | ( 1 << 7 ) | ( 1 << 8 ) | ( 1 << 9 ) | ( 1 << 10 )
-  );
+  // Mask incoming interrupt only
+  #if defined( REMOTE_DEBUG )
+    io_out32( base + UARTIMSC, ( 1 << 4 ) );
+  #endif
   // Enable UART0, receive & transfer part of UART.
   io_out32( base + UARTCR, ( 1 << 0 ) | ( 1 << 8 ) | ( 1 << 9 ) );
 
   // set flag
   serial_initialized = true;
+}
+
+/**
+ * @brief serial clear callback
+ *
+ * @param context cpu context
+ *
+ * @todo clear interrupt correctly
+ */
+void serial_clear( __unused void* context ) {
+  // get peripheral base
+  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+
+  // Clear pending interrupts.
+  io_out32( base + UARTICR, 0x7ff );
+
+  // get pending interrupt from memory
+  uint32_t interrupt_line = io_in32( base + INTERRUPT_IRQ_PENDING_2 );
+  // clear pending interrupt
+  interrupt_line &= ( uint32_t )( ~( 1 << 25 ) );
+  // overwrite
+  io_out32( base + INTERRUPT_IRQ_PENDING_2, interrupt_line );
+}
+
+/**
+ * @brief register serial interrupt
+ *
+ * @todo remove return at the beginning when handling is ready
+ */
+void serial_register_interrupt( void ) {
+  return;
+
+  // get peripheral base
+  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  // register interrupt
+  interrupt_register_handler( 57, serial_clear, INTERRUPT_NORMAL, false );
+
+  // Clear pending interrupts.
+  io_out32( base + UARTICR, 0x7ff );
+  // get pending interrupt from memory
+  uint32_t interrupt_line = io_in32( base + INTERRUPT_IRQ_PENDING_2 );
+  // clear pending interrupt
+  interrupt_line &= ( uint32_t )( ~( 1 << 25 ) );
+  // overwrite
+  io_out32( base + INTERRUPT_IRQ_PENDING_2, interrupt_line );
+  // map interrupt for remote debugging
+  io_out32( base + INTERRUPT_ENABLE_IRQ_2, 1 << 25 );
 
   // flush it
   serial_flush();

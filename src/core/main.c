@@ -133,6 +133,9 @@ void kernel_main( void ) {
 
   // remote gdb debugging
   #if defined( REMOTE_DEBUG )
+    DEBUG_OUTPUT( "[bolthur/kernel -> serial ] register interrupt ...\r\n" );
+    serial_register_interrupt();
+
     // Setup gdb stub
     DEBUG_OUTPUT( "[bolthur/kernel -> debug -> gdb] initialize ...\r\n" );
     debug_gdb_init();

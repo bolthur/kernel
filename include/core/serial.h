@@ -27,5 +27,6 @@ void serial_init( void );
 void serial_putc( uint8_t );
 uint8_t serial_getc( void );
 void serial_flush( void );
+void serial_register_interrupt( void );
 
 #endif

@@ -166,7 +166,7 @@ void timer_init( void ) {
     uint32_t interrupt_line = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
 
     // clear pending interrupt
-    interrupt_line &= ~( base + SYSTEM_TIMER_3_INTERRUPT );
+    interrupt_line &= ~( SYSTEM_TIMER_3_INTERRUPT );
 
     // overwrite
     io_out32( base + INTERRUPT_IRQ_PENDING_1, interrupt_line );

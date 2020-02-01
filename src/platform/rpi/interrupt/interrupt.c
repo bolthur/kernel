@@ -77,12 +77,12 @@ int8_t interrupt_get_pending( bool fast ) {
       uint32_t check_bit = ( 1U << i );
 
       // check first pending register
-      if ( pending1 && check_bit ) {
+      if ( pending1 & check_bit ) {
         return i;
       }
 
       // check second pending register
-      if ( pending2 && check_bit ) {
+      if ( pending2 & check_bit ) {
         return ( int8_t )( i + 32 );
       }
     }
