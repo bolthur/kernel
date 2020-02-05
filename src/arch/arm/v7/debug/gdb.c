@@ -550,7 +550,7 @@ void debug_gdb_handler_stepping(
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // set to next address
   uintptr_t next_address = debug_disasm_next_instruction(
-    cpu->reg.pc, cpu->reg.sp );
+    cpu->reg.pc, cpu->reg.sp, context );
   // add breakpoint
   debug_breakpoint_add( next_address, true, true );
   // set handler running to false

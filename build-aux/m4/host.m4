@@ -116,6 +116,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     output_sym_qemu=kernel.sym
     executable_format=32
     AC_DEFINE([ELF32], [1])
+    CFLAGS="${CFLAGS} -marm"
 
     # Add sysroot to path
     AC_SUBST(PATH, "/opt/bolthur/sysroot/arm/bin:${PATH}")

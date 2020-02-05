@@ -40,22 +40,31 @@
  * @todo add support for hardware breakpoints
  */
 debug_breakpoint_entry_ptr_t debug_breakpoint_find( uintptr_t address ) {
+  // handle not existing
+  if ( NULL == debug_breakpoint_manager ) {
+    return NULL;
+  }
+
   // check for possible existance
   list_item_ptr_t current = debug_breakpoint_manager->first;
   debug_breakpoint_entry_ptr_t entry = NULL;
+
   // loop through list of entries
   while ( NULL != current ) {
     // get entry value
     debug_breakpoint_entry_ptr_t tmp =
       ( debug_breakpoint_entry_ptr_t )current->data;
+
     // check for match
     if ( tmp->address == address ) {
       entry = tmp;
       break;
     }
+
     // next entry
     current = current->next;
   }
+
   // return found / not found entry
   return entry;
 }
@@ -134,13 +143,14 @@ void debug_breakpoint_add( uintptr_t address, bool step, bool enable ) {
  * @brief Method deactivates all breakpoints
  *
  * @todo add support for hardware breakpoints
+ * @todo replace kernel functions completely by internal ones
  */
 void debug_breakpoint_disable( void ) {
   // variables
   list_item_ptr_t current;
 
   // skip if not initialized
-  if ( ! debug_gdb_initialized() ) {
+  if ( NULL == debug_breakpoint_manager ) {
     return;
   }
 
@@ -176,6 +186,7 @@ void debug_breakpoint_disable( void ) {
  * @brief Method activates all enabled breakpoints
  *
  * @todo add support for hardware breakpoints
+ * @todo replace kernel functions completely by internal ones
  */
 void debug_breakpoint_enable( void ) {
   // variables
@@ -183,7 +194,7 @@ void debug_breakpoint_enable( void ) {
   list_item_ptr_t current;
 
   // skip if not initialized
-  if ( ! debug_gdb_initialized() ) {
+  if ( NULL == debug_breakpoint_manager ) {
     return;
   }
 

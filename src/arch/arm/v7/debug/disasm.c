@@ -18,6 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <arch/arm/v7/cpu.h>
 #include <core/debug/debug.h>
 #include <core/debug/disasm.h>
 
@@ -26,11 +27,16 @@
  *
  * @param address
  * @param stack
+ * @param context
  * @return uintptr_t
  *
  * @todo add correct arm / thumb handling if necessary
  */
-uintptr_t debug_disasm_next_instruction( uintptr_t address, uintptr_t stack ) {
+uintptr_t debug_disasm_next_instruction(
+  uintptr_t address,
+  uintptr_t stack,
+  __maybe_unused void* context
+) {
   // instruction pointer
   uintptr_t instruction = *( ( volatile uintptr_t* )address );
 
@@ -58,15 +64,13 @@ uintptr_t debug_disasm_next_instruction( uintptr_t address, uintptr_t stack ) {
     sp += pop_count;
     // return next address
     return ( uintptr_t )*sp;
-  }
 
   // branch by "b"
-  if ( 0xea000000 == ( instruction & 0xff000000 ) ) {
+  } else if ( 0xea000000 == ( instruction & 0xff000000 ) ) {
     // FIXME: ADD LOGIC!
-  }
 
-  if (
-    // branch by "bl"
+  // branch by "bl"
+  } else if (
     0xeb000000 == ( instruction & 0xff000000 )
   ) {
     // anonymous union for branch offset
@@ -86,6 +90,17 @@ uintptr_t debug_disasm_next_instruction( uintptr_t address, uintptr_t stack ) {
     );
     // return found
     return return_address;
+
+  // unconditional branch with bx
+  } else if (
+    0xe12fff10 == ( instruction & 0xf12fff10 )
+  ) {
+    // get branch register
+    uint32_t reg = instruction & 0x0000000f;
+    // get register context
+    cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+    // get register to branch to
+    return ( uintptr_t )cpu->raw[ reg ];
   }
 
   // return default
