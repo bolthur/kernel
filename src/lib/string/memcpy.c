@@ -21,6 +21,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/**
+ * @brief Copy memory
+ *
+ * @param dstptr
+ * @param srcptr
+ * @param size
+ * @return void*
+ */
 void* memcpy( void* restrict dstptr, const void* restrict srcptr, size_t size ) {
   uint8_t* dst = ( uint8_t * ) dstptr;
   const uint8_t* src = ( const uint8_t * ) srcptr;

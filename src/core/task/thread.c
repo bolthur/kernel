@@ -144,7 +144,7 @@ task_thread_ptr_t task_thread_next( void ) {
   }
 
   // loop through priorities and try to get next task
-  for(
+  for (
     size_t priority = max_queue->priority;
     priority >= min_queue->priority;
     priority--

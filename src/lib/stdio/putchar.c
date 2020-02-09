@@ -21,6 +21,12 @@
 #include <stdint.h>
 #include <core/tty.h>
 
+/**
+ * @brief Print character at tty
+ *
+ * @param ic
+ * @return int
+ */
 int putchar( int ic ) {
   tty_putc( ( uint8_t )ic );
   return ic;

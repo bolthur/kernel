@@ -162,7 +162,7 @@ void kernel_main( void ) {
     tar_header_ptr_t iter = ( tar_header_ptr_t )initrd_get_start_address();
 
     // loop
-    while( ! tar_end_reached( iter ) ) {
+    while ( ! tar_end_reached( iter ) ) {
       // get file
       DEBUG_OUTPUT( "Current file %s\r\n", iter->file_name );
       uintptr_t file = ( uintptr_t )tar_file( iter );

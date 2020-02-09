@@ -83,6 +83,8 @@
  * @brief Check for pending timer interrupt
  *
  * @return bool
+ *
+ * @todo Check system timer support of qemu
  */
 bool timer_pending( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
@@ -97,6 +99,8 @@ bool timer_pending( void ) {
  * @brief Clear timer callback
  *
  * @param context cpu context
+ *
+ * @todo Check system timer support of qemu
  */
 void timer_clear( void* context ) {
   // check for pending timer
@@ -126,6 +130,8 @@ void timer_clear( void* context ) {
 
 /**
  * @brief Initialize timer
+ *
+ * @todo Check system timer support of qemu
  */
 void timer_init( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )

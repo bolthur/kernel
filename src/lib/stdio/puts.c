@@ -20,6 +20,12 @@
 
 #include <stdio.h>
 
+/**
+ * @brief Print simple string
+ *
+ * @param string
+ * @return int
+ */
 int puts( const char* string ) {
   return printf( "%s\r\n", string );
 }

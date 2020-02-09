@@ -28,7 +28,7 @@
  *
  * @param tree
  *
- * @todo
+ * @todo add logic for tree destroy
  */
 void avl_destroy_tree( __unused avl_tree_ptr_t tree ) {
   assert( true == false );

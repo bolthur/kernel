@@ -23,6 +23,13 @@
 #include <assert.h>
 #include <core/panic.h>
 
+/**
+ * @brief Assert functionality
+ *
+ * @param file
+ * @param line
+ * @param desc
+ */
 void __no_return _assert(
   const char* restrict file,
   uint32_t line,

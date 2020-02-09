@@ -22,6 +22,7 @@
 
 /**
  * @brief Method to prepare section during initial boot
+ *
  * @todo Read amount of physical memory initially with a helper from mailbox
  * @todo Pass fetched amount of physical memory to virtual setup functions
  */

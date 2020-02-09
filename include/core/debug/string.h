@@ -18,28 +18,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if ! defined( __CORE_DEBUG_STRING__ )
+#define __CORE_DEBUG_STRING__
+
 #include <stddef.h>
 #include <stdint.h>
 
-/**
- * @brief Compare two strings until end or max length
- *
- * @param a
- * @param b
- * @param max_length
- * @return int
- */
-int strncmp( const char* a, const char* b, size_t max_length ) {
-  // loop until max length
-  for ( size_t x = 0; x < max_length; x++ ) {
-    if ( '\0' == a[ x ] && '\0' == b[ x ] ) {
-      return 0;
-    } else if ( a[ x ] < b[ x ] ) {
-      return -1;
-    } else if ( a[ x ] > b[ x ] ) {
-      return 1;
-    }
-  }
-  // equal
-  return 0;
-}
+void* debug_memcpy( void* restrict, const void* restrict, size_t );
+void* debug_memset( void*, int, size_t );
+
+#endif

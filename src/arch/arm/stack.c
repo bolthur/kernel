@@ -26,7 +26,16 @@
 
 extern void stack_supervisor_mode( void );
 
-bool stack_is_kernel( __maybe_unused uintptr_t address ) {
+/**
+ * @brief Determines whether stack is in kernel or user
+ *
+ * @param uintptr_t
+ * @return true
+ * @return false
+ *
+ * @todo encapsulate debug output by some define or remove it
+ */
+bool stack_is_kernel( uintptr_t address ) {
   uintptr_t stack_start = ( uintptr_t )&stack_supervisor_mode;
   uintptr_t stack_end = stack_start + STACK_SIZE;
   DEBUG_OUTPUT( "start = %x, end = %x, addr = %x\r\n",

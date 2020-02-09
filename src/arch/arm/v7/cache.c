@@ -18,7 +18,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
+/**
+ * @brief Invalidate instruction cache
+ */
 void cache_invalidate_instruction_cache( void ) {
   __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) : "memory" );
 }

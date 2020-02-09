@@ -270,7 +270,7 @@ void phys_init( void ) {
   #endif
 
   // map from start to end addresses as used
-  while( start < end ) {
+  while ( start < end ) {
     // mark used
     phys_mark_page_used( start );
 

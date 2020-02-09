@@ -171,7 +171,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
     // pointer where formatting started
     const char* format_begun_at = format++;
     // gather possible flags
-    while( true ) {
+    while ( true ) {
       // check flags
       switch ( *format++ ) {
         // zero padding
@@ -260,7 +260,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
         buffer += print_written;
       }
     // string handling
-    } else if( 's' == modifier ) {
+    } else if ( 's' == modifier ) {
       // get string to print and string length
       const char* str = va_arg( parameter, const char* );
       // set str to value if not set

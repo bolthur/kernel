@@ -33,6 +33,11 @@
 #include <core/event.h>
 
 /**
+ * Regarding uart interrupts as example
+ * @see https://github.com/dwelch67/raspberrypi/blob/master/uart04/uart04.c
+ */
+
+/**
  * @brief Initialized flag
  */
 static bool serial_initialized = false;

@@ -49,9 +49,9 @@ uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
     mbox0 = ( volatile mailbox_t* )type;
   }
 
-  while( ( value & 0xF ) != channel ) {
+  while ( ( value & 0xF ) != channel ) {
     // wait while mailbox is empty
-    while( mbox0->status & MAILBOX_EMPTY ) {
+    while ( mbox0->status & MAILBOX_EMPTY ) {
       // break if it takes to much time
       if ( count++ > ( 1 << 25 ) ) {
         return 0xffffffff;
@@ -93,7 +93,7 @@ void mailbox_write(
   }
 
   // wait for mailbox to be ready
-  while( ( mbox0->status & MAILBOX_FULL ) != 0 ) { }
+  while ( ( mbox0->status & MAILBOX_FULL ) != 0 ) { }
 
   // write data to mailbox
   mbox0->write = data;

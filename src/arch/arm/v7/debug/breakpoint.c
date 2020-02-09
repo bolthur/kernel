@@ -19,12 +19,12 @@
  */
 
 #include <stddef.h>
-#include <string.h>
 #include <stdlib.h>
-#include <arch/arm/barrier.h>
-#include <arch/arm/v7/cache.h>
+#include <arch/arm/debug/barrier.h>
+#include <arch/arm/debug/cache.h>
 #include <core/debug/gdb.h>
 #include <core/debug/breakpoint.h>
+#include <core/debug/string.h>
 
 /**
  * @brief Used instruction for breakpoints ( bkpt #0 )
@@ -70,6 +70,43 @@ debug_breakpoint_entry_ptr_t debug_breakpoint_find( uintptr_t address ) {
 }
 
 /**
+ * @brief Method to remove all stepping breakpoints
+ *
+ * @todo add support for hardware breakpoints
+ */
+void debug_breakpoint_remove_step( void ) {
+  // variables
+  debug_breakpoint_entry_ptr_t entry = NULL;
+  list_item_ptr_t current = NULL;
+
+  // check for initialized
+  if ( NULL == debug_breakpoint_manager ) {
+    return;
+  }
+
+  // get first element
+  current = debug_breakpoint_manager->first;
+  // loop through list of entries
+  while ( NULL != current ) {
+    // get entry value
+    entry = ( debug_breakpoint_entry_ptr_t )current->data;
+    // skip non stepping breakpoints
+    if ( ! entry->step ) {
+      continue;
+    }
+
+    // next entry
+    current = current->next;
+
+    // remove from breakpoint manager list
+    list_remove(
+      debug_breakpoint_manager,
+      list_lookup_data( debug_breakpoint_manager, entry )
+    );
+  }
+}
+
+/**
  * @brief Helper to remove a breakpoint
  *
  * @param address
@@ -81,21 +118,14 @@ void debug_breakpoint_remove( uintptr_t address, bool remove ) {
   // variables
   debug_breakpoint_entry_ptr_t entry = debug_breakpoint_find( address );
   // Do nothing if not existing
-  if ( NULL == entry || true != entry->enabled ) {
+  if ( NULL == entry ) {
     return;
   }
-  // push back instruction
-  memcpy(
-    ( void* )entry->address,
-    ( void* )&entry->instruction,
-    sizeof( entry->instruction ) );
-  // data transfer barrier
-  barrier_data_mem();
-  // flush after copy
-  cache_invalidate_instruction_cache();
+
   // set enabled to false
   entry->enabled = false;
-  // handle remove
+
+  // handle remova;
   if ( remove ) {
     list_remove(
       debug_breakpoint_manager,
@@ -128,7 +158,7 @@ void debug_breakpoint_add( uintptr_t address, bool step, bool enable ) {
     entry = ( debug_breakpoint_entry_ptr_t )malloc(
       sizeof( debug_breakpoint_entry_t ) );
     // erase allocated memory
-    memset( ( void* )entry, 0, sizeof( debug_breakpoint_entry_t ) );
+    debug_memset( ( void* )entry, 0, sizeof( debug_breakpoint_entry_t ) );
     // push entry back
     list_push_back( debug_breakpoint_manager, ( void* )entry );
   }
@@ -143,7 +173,6 @@ void debug_breakpoint_add( uintptr_t address, bool step, bool enable ) {
  * @brief Method deactivates all breakpoints
  *
  * @todo add support for hardware breakpoints
- * @todo replace kernel functions completely by internal ones
  */
 void debug_breakpoint_disable( void ) {
   // variables
@@ -166,12 +195,12 @@ void debug_breakpoint_disable( void ) {
     // replace instruction if enabled
     if ( entry->enabled ) {
       // push back instruction
-      memcpy(
+      debug_memcpy(
         ( void* )entry->address,
         ( void* )&entry->instruction,
         sizeof( entry->instruction ) );
       // data transfer barrier
-      barrier_data_mem();
+      debug_barrier_data_mem();
     }
 
     // next entry
@@ -179,14 +208,13 @@ void debug_breakpoint_disable( void ) {
   }
 
   // flush after copy
-  cache_invalidate_instruction_cache();
+  debug_cache_invalidate_instruction_cache();
 }
 
 /**
  * @brief Method activates all enabled breakpoints
  *
  * @todo add support for hardware breakpoints
- * @todo replace kernel functions completely by internal ones
  */
 void debug_breakpoint_enable( void ) {
   // variables
@@ -210,17 +238,17 @@ void debug_breakpoint_enable( void ) {
     // replace instruction if enabled
     if ( entry->enabled ) {
       // save instruction
-      memcpy(
+      debug_memcpy(
         ( void* )&entry->instruction,
         ( void* )entry->address,
         sizeof( entry->instruction ) );
       // data transfer barrier
-      barrier_data_mem();
+      debug_barrier_data_mem();
 
       // overwrite with breakpoint instruction
-      memcpy( ( void* )entry->address, ( void* )&bpi, sizeof( bpi ) );
+      debug_memcpy( ( void* )entry->address, ( void* )&bpi, sizeof( bpi ) );
       // data transfer barrier
-      barrier_data_mem();
+      debug_barrier_data_mem();
     }
 
     // next entry
@@ -228,5 +256,5 @@ void debug_breakpoint_enable( void ) {
   }
 
   // flush cache
-  cache_invalidate_instruction_cache();
+  debug_cache_invalidate_instruction_cache();
 }

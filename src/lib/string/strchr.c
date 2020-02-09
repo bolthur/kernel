@@ -21,6 +21,13 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/**
+ * @brief get string part starting with delimiter
+ *
+ * @param str
+ * @param delimiter
+ * @return char*
+ */
 char* strchr( const char *str, int delimiter ) {
   // loop until possible match
   while ( *str ) {

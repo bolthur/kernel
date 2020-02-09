@@ -27,6 +27,8 @@
  * @brief Dummy system call for testing purposes
  *
  * @param context
+ *
+ * @todo remove with syscall implementation
  */
 void syscall_putc( void* context ) {
   // get context

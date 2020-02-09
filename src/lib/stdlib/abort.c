@@ -20,8 +20,10 @@
 
 /**
  * @brief Abort routine
+ *
+ * @todo disable interrupts needed?
  */
 void __no_return abort( void ) {
-  while( 1 ) {}
+  while ( 1 ) {}
 }
 

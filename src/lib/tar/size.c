@@ -31,7 +31,7 @@
 uint64_t tar_total_size( uintptr_t address ) {
   uint64_t total_size = 0;
 
-  while( true ) {
+  while ( true ) {
     // get tar header
     tar_header_ptr_t header = ( tar_header_ptr_t )address;
 

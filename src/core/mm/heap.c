@@ -623,7 +623,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     alignment_offset = ( alignment - ( current->address % alignment ) );
     do {
       alignment_offset += alignment;
-    } while( alignment_offset < real_size );
+    } while ( alignment_offset < real_size );
 
     // debug output
     #if defined( PRINT_MM_HEAP )

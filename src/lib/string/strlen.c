@@ -20,6 +20,12 @@
 
 #include <stddef.h>
 
+/**
+ * @brief Get string length
+ *
+ * @param str
+ * @return size_t
+ */
 size_t strlen( const char* str ) {
   size_t len = 0;
 

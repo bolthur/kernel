@@ -22,24 +22,38 @@
 #include <stdint.h>
 
 /**
- * @brief Compare two strings until end or max length
+ * @brief Copy of memcpy for remote debugging
  *
- * @param a
- * @param b
- * @param max_length
- * @return int
+ * @param dstptr
+ * @param srcptr
+ * @param size
+ * @return void*
  */
-int strncmp( const char* a, const char* b, size_t max_length ) {
-  // loop until max length
-  for ( size_t x = 0; x < max_length; x++ ) {
-    if ( '\0' == a[ x ] && '\0' == b[ x ] ) {
-      return 0;
-    } else if ( a[ x ] < b[ x ] ) {
-      return -1;
-    } else if ( a[ x ] > b[ x ] ) {
-      return 1;
-    }
+void* debug_memcpy( void* restrict dstptr, const void* restrict srcptr, size_t size ) {
+  uint8_t* dst = ( uint8_t * ) dstptr;
+  const uint8_t* src = ( const uint8_t * ) srcptr;
+
+  for ( size_t i = 0; i < size; i++ ) {
+    dst[ i ] = src[ i ];
   }
-  // equal
-  return 0;
+
+  return dstptr;
+}
+
+/**
+ * @brief Copy of memset for remote debugging
+ *
+ * @param bufptr
+ * @param value
+ * @param size
+ * @return void*
+ */
+void* debug_memset ( void* bufptr, int value, size_t size ) {
+  uint8_t* buf = ( uint8_t* ) bufptr;
+
+  for ( size_t i = 0; i < size; i++ ) {
+    buf[ i ] = ( uint8_t ) value;
+  }
+
+  return bufptr;
 }

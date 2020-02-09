@@ -171,7 +171,7 @@ void debug_gdb_packet_send( uint8_t* p ) {
     serial_putc( '$' );
     checksum = 0;
     count = 0;
-    while( NULL != p && ( ch = p[ count ] ) ) {
+    while ( NULL != p && ( ch = p[ count ] ) ) {
       serial_putc( ch );
       checksum = ( uint8_t )( ( int )checksum + ch );
       count++;
@@ -179,7 +179,7 @@ void debug_gdb_packet_send( uint8_t* p ) {
     serial_putc( '#' );
     serial_putc( debug_gdb_hexchar[ checksum >> 4 ] );
     serial_putc( debug_gdb_hexchar[ checksum % 16 ] );
-  } while( '+' != serial_getc() );
+  } while ( '+' != serial_getc() );
 }
 
 /**
@@ -194,7 +194,7 @@ uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
   size_t count = 0;
   bool cont;
 
-  while( true ) {
+  while ( true ) {
     // wait until debug character drops in
     while ( '$' != ( c = serial_getc() ) ) {}
 

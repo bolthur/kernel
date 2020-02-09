@@ -67,7 +67,7 @@ uint8_t debug_gdb_input_buffer[ GDB_DEBUG_MAX_BUFFER ];
 static uint32_t extract_hex_value( const uint8_t* buffer, uint8_t **next ) {
   uint32_t value = 0;
   // loop until no hex char is found
-  while( -1 != debug_gdb_char2hex( *buffer ) ) {
+  while ( -1 != debug_gdb_char2hex( *buffer ) ) {
     value *= 16;
     value += ( uint32_t )debug_gdb_char2hex( *buffer );
     ++buffer;
@@ -541,6 +541,8 @@ void debug_gdb_handler_insert_breakpoint(
  *
  * @param context
  * @param packet
+ *
+ * @todo emulate conditional branch by adding two breakpoints ( direct following instruction and branch instruction )
  */
 void debug_gdb_handler_stepping(
   void* context,
@@ -586,13 +588,8 @@ void debug_gdb_handle_event( void* context ) {
     cpu->reg.pc += 4;
   }
 
-  // get possible breakpoint
-  debug_breakpoint_entry_ptr_t entry = debug_breakpoint_find( cpu->reg.pc );
-  // handle stepping or breakpoint ( copy data )
-  if ( NULL != entry && true == entry->enabled ) {
-    // remove brakpoint when it's a stepping breakpoint
-    debug_breakpoint_remove( cpu->reg.pc, entry->step );
-  }
+  // Remove all stepping breakpoints due to conditional branches
+  debug_breakpoint_remove_step();
   // handle stop status
   debug_gdb_handler_stop_status( context, NULL );
 
