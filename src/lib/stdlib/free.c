@@ -30,9 +30,6 @@
  * @param ptr ptr to address to free
  */
 void free( void *ptr ) {
-  // assert heap to be initialized
-  assert( true == heap_initialized_get() );
-
   // free heap block
   heap_free_block( ( uintptr_t )ptr );
 }

@@ -27,6 +27,7 @@
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <core/mm/heap.h>
+#include <core/initrd.h>
 #include <core/entry.h>
 
 /**
@@ -58,6 +59,10 @@ uintptr_t placement_alloc( size_t alignment, size_t size ) {
   // build return address
   uintptr_t address = placement_address;
 
+  // get possible initrd
+  uintptr_t initrd_start = initrd_get_start_address();
+  uintptr_t initrd_end = initrd_get_start_address();
+
   // debug output
   #if defined( PRINT_MM_PLACEMENT )
     DEBUG_OUTPUT( "content of placement address: 0x%lx\r\n", placement_address );
@@ -65,20 +70,59 @@ uintptr_t placement_alloc( size_t alignment, size_t size ) {
     DEBUG_OUTPUT( "set address: 0x%lx\r\n", address );
   #endif
 
-  // handle alignment
-  if ( placement_address % alignment ) {
+  // handle possible alignment offset
+  if ( address % alignment ) {
     // increase offset
-    offset += ( alignment - placement_address % alignment );
+    offset += ( alignment - address % alignment );
+    // debug output
+    #if defined( PRINT_MM_PLACEMENT )
+      DEBUG_OUTPUT( "alignment offset: 0x%zu\r\n", offset );
+    #endif
+  }
 
-    // increase address
-    address += offset;
+  // prevent overwrite of initrd
+  if (
+    0 < initrd_start
+    && (
+      // address within initrd
+      (
+        address >= initrd_start
+        && address + size <= initrd_end
+      // address with size within initrd
+      ) || (
+        ( address + offset + size ) > initrd_start
+        && ( address + offset + size ) <= initrd_end
+      )
+    )
+  ) {
+    // set address to initrd end
+    address = initrd_end;
+    // apply offset
+    offset += initrd_end - address;
 
     // debug output
     #if defined( PRINT_MM_PLACEMENT )
       DEBUG_OUTPUT( "alignment offset: 0x%zu\r\n", offset );
-      DEBUG_OUTPUT( "set address: 0x%lx\r\n", address );
     #endif
+
+    // recalculate possible alignment offset
+    if ( address % alignment ) {
+      // increase offset
+      offset += ( alignment - address % alignment );
+      // debug output
+      #if defined( PRINT_MM_PLACEMENT )
+        DEBUG_OUTPUT( "alignment offset: 0x%zu\r\n", offset );
+      #endif
+    }
   }
+
+  // increase address
+  address += offset;
+
+  // debug output
+  #if defined( PRINT_MM_PLACEMENT )
+    DEBUG_OUTPUT( "set address: 0x%lx\r\n", address );
+  #endif
 
   // add size to offset
   offset += size;

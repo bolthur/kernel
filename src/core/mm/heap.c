@@ -124,6 +124,11 @@ static void extend_heap_space( void ) {
   uintptr_t heap_end;
   size_t heap_size;
 
+  // stop if not setup
+  if ( NULL == kernel_heap ) {
+    return;
+  }
+
   // get max from both trees
   max = NULL;
   max_used = avl_get_max( kernel_heap->used_area.root );
@@ -238,6 +243,11 @@ static void shrink_heap_space( void ) {
   heap_block_ptr_t max_block;
   size_t max_end, expand_size, to_remove;
   avl_node_ptr_t max_node;
+
+  // stop if not setup
+  if ( NULL == kernel_heap ) {
+    return;
+  }
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -436,6 +446,7 @@ void heap_init( void ) {
   // offset for first free block
   uint32_t offset = 0;
   uintptr_t start = HEAP_START;
+  heap_manager_ptr_t heap = NULL;
 
   // debug output
   #if defined( PRINT_MM_HEAP )
@@ -474,7 +485,7 @@ void heap_init( void ) {
   memset( ( void* )HEAP_START, 0, HEAP_MIN_SIZE );
 
   // set kernel heap and increase offset
-  kernel_heap = ( heap_manager_ptr_t )HEAP_START;
+  heap = ( heap_manager_ptr_t )HEAP_START;
   offset += sizeof( heap_manager_t );
 
   // debug output
@@ -483,17 +494,17 @@ void heap_init( void ) {
       "HEAP_START content: 0x%08x\t\n",
       *( ( uint32_t* )HEAP_START )
     );
-    DEBUG_OUTPUT( "Placed heap management at 0x%08x\r\n", kernel_heap );
+    DEBUG_OUTPUT( "Placed heap management at 0x%08x\r\n", heap );
     DEBUG_OUTPUT( "offset: %d\r\n", offset );
   #endif
 
   // initialize management structure
-  memset( ( void* )kernel_heap, 0, sizeof( heap_manager_t ) );
+  memset( ( void* )heap, 0, sizeof( heap_manager_t ) );
 
   // populate trees
-  kernel_heap->free_address.compare = compare_address_callback;
-  kernel_heap->used_area.compare = compare_address_callback;
-  kernel_heap->free_size.compare = compare_size_callback;
+  heap->free_address.compare = compare_address_callback;
+  heap->used_area.compare = compare_address_callback;
+  heap->free_size.compare = compare_size_callback;
 
   // create free block
   heap_block_ptr_t free_block = ( heap_block_ptr_t )( HEAP_START + offset );
@@ -517,6 +528,9 @@ void heap_init( void ) {
   // insert into free tree
   avl_insert_by_node( &kernel_heap->free_address, &free_block->node_address );
   avl_insert_by_node( &kernel_heap->free_size, &free_block->node_size );
+
+  // finally set global
+  kernel_heap = heap;
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -554,6 +568,11 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   avl_node_ptr_t address_node;
   size_t real_size, alignment_offset;
   bool split;
+
+  // stop if not setup
+  if ( NULL == kernel_heap ) {
+    return 0;
+  }
 
   // calculate real size
   real_size = size + sizeof( heap_block_t );
@@ -794,6 +813,11 @@ void heap_free_block( uintptr_t addr ) {
   // variables
   avl_node_ptr_t address_node, parent_node, sibling_node;
   heap_block_ptr_t current_block, parent_block, sibling_block;
+
+  // stop if not setup
+  if ( NULL == kernel_heap ) {
+    return;
+  }
 
   // debug output
   #if defined( PRINT_MM_HEAP )

@@ -91,7 +91,7 @@ static uint32_t extract_hex_value( const uint8_t* buffer, uint8_t **next ) {
  */
 static bool read_memory_content( void *dest, uint32_t address, size_t length ) {
   // handle not mapped as empty
-  if ( ! virt_is_mapped( address ) ) {
+  if (  virt_initialized_get() && ! virt_is_mapped( address ) ) {
     return false;
   }
   // read memory
@@ -125,7 +125,7 @@ static bool read_memory_content( void *dest, uint32_t address, size_t length ) {
  */
 static bool write_memory_content( const void* src, uint32_t dest, size_t length ) {
   // handle not mapped as empty
-  if ( ! virt_is_mapped( dest ) ) {
+  if ( virt_initialized_get() && ! virt_is_mapped( dest ) ) {
     return false;
   }
   // write memory
