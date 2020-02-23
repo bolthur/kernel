@@ -91,7 +91,7 @@ static uint32_t extract_hex_value( const uint8_t* buffer, uint8_t **next ) {
  */
 static bool read_memory_content( void *dest, uint32_t address, size_t length ) {
   // handle not mapped as empty
-  if (  virt_initialized_get() && ! virt_is_mapped( address ) ) {
+  if ( virt_initialized_get() && ! virt_is_mapped( address ) ) {
     return false;
   }
   // read memory
@@ -559,7 +559,8 @@ void debug_gdb_handler_stepping(
     if ( 0 == next_address[ idx ] ) {
       continue;
     }
-
+    // some debug output
+    DEBUG_OUTPUT( "next_address: 0x%08x\r\n", next_address[ idx ] );
     // add breakpoint
     debug_breakpoint_add( next_address[ idx ], true, true );
   }

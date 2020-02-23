@@ -75,14 +75,17 @@ uintptr_t* debug_disasm_next_instruction(
     // return next address
     return next_instruction;
 
-  // branch by "b"
-  } else if ( 0xea000000 == ( instruction & 0xff000000 ) ) {
-    // FIXME: ADD LOGIC!
-
-  // branch by "bl"
+  // branch by "b"/"bl"
   } else if (
-    0xeb000000 == ( instruction & 0xff000000 )
+    // branch by "b"
+    0x0a000000 == ( instruction & 0x0f000000 )
+    // branch by "bl"
+    || 0x0b000000 == ( instruction & 0x0f000000 )
   ) {
+    // FIXME: ADD LOGIC!
+    // get possible condition
+    uint32_t condition = ( instruction >> 28 );
+
     // anonymous union for branch offset
     union {
       struct {
@@ -98,9 +101,11 @@ uintptr_t* debug_disasm_next_instruction(
     next_instruction[ instruction_index++ ] = ( uintptr_t )(
       ( imm24.data.offset << 2 ) + ( int32_t ) address + 8
     );
-    // return next address
-    return next_instruction;
 
+    // handle branch without condition
+    if ( 0xf == condition ) {
+      return next_instruction;
+    }
   // unconditional branch with bx
   } else if (
     0xe12fff10 == ( instruction & 0xf12fff10 )

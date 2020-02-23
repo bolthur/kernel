@@ -78,6 +78,7 @@ void debug_breakpoint_remove_step( void ) {
   // variables
   debug_breakpoint_entry_ptr_t entry = NULL;
   list_item_ptr_t current = NULL;
+  list_item_ptr_t next = NULL;
 
   // check for initialized
   if ( NULL == debug_breakpoint_manager ) {
@@ -90,19 +91,15 @@ void debug_breakpoint_remove_step( void ) {
   while ( NULL != current ) {
     // get entry value
     entry = ( debug_breakpoint_entry_ptr_t )current->data;
-    // skip non stepping breakpoints
-    if ( ! entry->step ) {
-      continue;
-    }
-
     // next entry
-    current = current->next;
-
-    // remove from breakpoint manager list
-    list_remove(
-      debug_breakpoint_manager,
-      list_lookup_data( debug_breakpoint_manager, entry )
-    );
+    next = current->next;
+    // handle only stepping breakpoints
+    if ( entry->step ) {
+      // remove from breakpoint manager list
+      list_remove( debug_breakpoint_manager, current );
+    }
+    // set current to next
+    current = next;
   }
 }
 
