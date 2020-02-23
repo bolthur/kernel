@@ -57,7 +57,8 @@ typedef struct {
 #define TASK_PROCESS_GET_BLOCK_ID( n ) \
   ( task_process_ptr_t )( ( uint8_t* )n - offsetof( task_process_t, node_id ) )
 
-task_manager_ptr_t process_manager;
+extern task_manager_ptr_t process_manager;
+
 void task_process_init( void );
 void task_process_schedule( void* );
 void task_process_start( void );
