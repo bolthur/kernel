@@ -24,6 +24,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-uintptr_t debug_disasm_next_instruction( uintptr_t, uintptr_t, void* );
+#define DEBUG_DISASM_MAX_INSTRUCTION 2
+
+uintptr_t* debug_disasm_next_instruction( uintptr_t, uintptr_t, void* );
 
 #endif

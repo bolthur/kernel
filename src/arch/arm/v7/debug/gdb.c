@@ -551,10 +551,18 @@ void debug_gdb_handler_stepping(
   // transform context to correct structure
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // set to next address
-  uintptr_t next_address = debug_disasm_next_instruction(
+  uintptr_t* next_address = debug_disasm_next_instruction(
     cpu->reg.pc, cpu->reg.sp, context );
-  // add breakpoint
-  debug_breakpoint_add( next_address, true, true );
+  // loop until max and add breakpoints
+  for ( uint32_t idx = 0; idx < DEBUG_DISASM_MAX_INSTRUCTION; idx++ ) {
+    // skip 0 address
+    if ( 0 == next_address[ idx ] ) {
+      continue;
+    }
+
+    // add breakpoint
+    debug_breakpoint_add( next_address[ idx ], true, true );
+  }
   // set handler running to false
   debug_gdb_set_running_flag( false );
   // return success

@@ -18,6 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
 #include <arch/arm/v7/cpu.h>
 #include <core/debug/debug.h>
 #include <core/debug/disasm.h>
@@ -28,18 +29,24 @@
  * @param address
  * @param stack
  * @param context
- * @return uintptr_t
+ * @return uintptr_t*
  *
  * @todo add correct arm / thumb handling if necessary
- * @todo find way to handle conditional branch return
+ * @todo complete logic to cover all branch instructions
  */
-uintptr_t debug_disasm_next_instruction(
+uintptr_t* debug_disasm_next_instruction(
   uintptr_t address,
   uintptr_t stack,
   __maybe_unused void* context
 ) {
+  // static array for up to two instruction addresses
+  static uintptr_t next_instruction[ DEBUG_DISASM_MAX_INSTRUCTION ];
   // instruction pointer
   uintptr_t instruction = *( ( volatile uintptr_t* )address );
+  // clear static return
+  memset( ( void* )next_instruction, 0, sizeof( next_instruction ) );
+  // index
+  uint32_t instruction_index = 0;
 
   if (
     // check for pop instruction
@@ -63,8 +70,10 @@ uintptr_t debug_disasm_next_instruction(
     }
     // increase stack by registers to skip
     sp += pop_count;
+    // push to array
+    next_instruction[ instruction_index++ ] = *sp;
     // return next address
-    return ( uintptr_t )*sp;
+    return next_instruction;
 
   // branch by "b"
   } else if ( 0xea000000 == ( instruction & 0xff000000 ) ) {
@@ -86,11 +95,11 @@ uintptr_t debug_disasm_next_instruction(
     imm24.raw = instruction;
     // return address is determined by offset shifted by 2 bits + address + 8
     // offset of 8 is necessary due to the bl command handled in multiple steps
-    uintptr_t return_address = ( uintptr_t )(
+    next_instruction[ instruction_index++ ] = ( uintptr_t )(
       ( imm24.data.offset << 2 ) + ( int32_t ) address + 8
     );
-    // return found
-    return return_address;
+    // return next address
+    return next_instruction;
 
   // unconditional branch with bx
   } else if (
@@ -101,9 +110,13 @@ uintptr_t debug_disasm_next_instruction(
     // get register context
     cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
     // get register to branch to
-    return ( uintptr_t )cpu->raw[ reg ];
+    next_instruction[ instruction_index++ ] = cpu->raw[ reg ];
+    // return next address
+    return next_instruction;
   }
 
-  // return default
-  return address + 4;
+  // default next instruction follows current one
+  next_instruction[ instruction_index ] = address + 4;
+  // return pointer
+  return next_instruction;
 }
