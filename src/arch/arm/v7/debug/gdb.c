@@ -413,7 +413,8 @@ void debug_gdb_handler_read_memory(
   for ( uint32_t i = 0; i < length; i++ ) {
     // read memory and stop on error
     if ( ! read_memory_content( &value, addr + i, 1 ) ) {
-      break;
+      debug_gdb_packet_send( ( uint8_t* )"E02" );
+      return;
     }
     // extract byte
     uint8_t r8 = value & 0xff;
