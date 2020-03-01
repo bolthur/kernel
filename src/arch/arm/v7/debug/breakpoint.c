@@ -137,10 +137,16 @@ void debug_breakpoint_remove( uintptr_t address, bool remove ) {
  * @param address
  * @param step
  * @param enable
+ * @param previous_address
  *
  * @todo add support for hardware breakpoints
  */
-void debug_breakpoint_add( uintptr_t address, bool step, bool enable ) {
+void debug_breakpoint_add(
+  uintptr_t address,
+  bool step,
+  bool enable,
+  uintptr_t previous_address
+) {
   // variables
   debug_breakpoint_entry_ptr_t entry = debug_breakpoint_find( address );
 
@@ -164,6 +170,7 @@ void debug_breakpoint_add( uintptr_t address, bool step, bool enable ) {
   entry->step = step;
   entry->enabled = enable;
   entry->address = address;
+  entry->previous = previous_address;
 }
 
 /**

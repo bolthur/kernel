@@ -526,8 +526,8 @@ void heap_init( void ) {
   prepare_block( free_block, HEAP_START + offset, HEAP_MIN_SIZE - offset );
 
   // insert into free tree
-  avl_insert_by_node( &kernel_heap->free_address, &free_block->node_address );
-  avl_insert_by_node( &kernel_heap->free_size, &free_block->node_size );
+  avl_insert_by_node( &heap->free_address, &free_block->node_address );
+  avl_insert_by_node( &heap->free_size, &free_block->node_size );
 
   // finally set global
   kernel_heap = heap;

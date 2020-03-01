@@ -520,10 +520,13 @@ void debug_gdb_handler_remove_breakpoint(
  * @todo move to core/gdb.c
  */
 void debug_gdb_handler_insert_breakpoint(
-  __unused void* context,
+  void* context,
   const uint8_t* packet
 ) {
+  // transform context to correct structure
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   uint32_t address;
+
   // skip packet identifier and separator
   packet += 3;
   // extract address
@@ -531,8 +534,10 @@ void debug_gdb_handler_insert_breakpoint(
     debug_gdb_packet_send( ( uint8_t* )"E01" );
     return;
   }
+
   // set breakpoint
-  debug_breakpoint_add( ( uintptr_t )address, false, true );
+  debug_breakpoint_add( ( uintptr_t )address, false, true, cpu->reg.pc );
+
   // return success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
@@ -551,20 +556,23 @@ void debug_gdb_handler_stepping(
 ) {
   // transform context to correct structure
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-  // set to next address
+
+  // get to next address
   uintptr_t* next_address = debug_disasm_next_instruction(
     cpu->reg.pc, cpu->reg.sp, context );
-  // loop until max and add breakpoints
-  for ( uint32_t idx = 0; idx < DEBUG_DISASM_MAX_INSTRUCTION; idx++ ) {
+
+  // loop until max and save next address
+  for ( uint32_t x = 0; x < DEBUG_DISASM_MAX_INSTRUCTION; x++ ) {
     // skip 0 address
-    if ( 0 == next_address[ idx ] ) {
+    if ( 0 == next_address[ x ] ) {
       continue;
     }
     // some debug output
-    DEBUG_OUTPUT( "next_address: 0x%08x\r\n", next_address[ idx ] );
+    DEBUG_OUTPUT( "next_address: 0x%08x\r\n", next_address[ x ] );
     // add breakpoint
-    debug_breakpoint_add( next_address[ idx ], true, true );
+    debug_breakpoint_add( next_address[ x ], true, true, cpu->reg.pc );
   }
+
   // set handler running to false
   debug_gdb_set_running_flag( false );
   // return success
