@@ -49,6 +49,8 @@ void vector_interrupt_handler( cpu_register_context_ptr_t cpu ) {
 
   // get pending interrupt
   int8_t interrupt = interrupt_get_pending( false );
+  //DEBUG_OUTPUT( "interrupt: %d\r\n", interrupt );
+  //PANIC( "IRQ!" );
   assert( -1 != interrupt );
 
   // handle bound interrupt handlers

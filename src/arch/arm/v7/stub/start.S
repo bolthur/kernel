@@ -30,12 +30,6 @@ EXPORT( arch_start )
 arch_start:
   // setup of other modes stacks not necessary as all exceptions use supervisor mode
 
-  // switch to monitor mode and setup stack
-  msr cpsr_c, #( CPSR_MODE_MONITOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
-  ldr r0, =stack_supervisor_mode
-  add r0, r0, #STACK_SIZE
-  mov sp, r0
-
   // switch to supervisor mode and setup stack
   msr cpsr_c, #( CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
   ldr r0, =stack_supervisor_mode

@@ -33,11 +33,6 @@
 #include <core/event.h>
 
 /**
- * Regarding uart interrupts as example
- * @see https://github.com/dwelch67/raspberrypi/blob/master/uart04/uart04.c
- */
-
-/**
  * @brief Initialized flag
  */
 static bool serial_initialized = false;
@@ -141,7 +136,7 @@ void serial_clear( __unused void* context ) {
 /**
  * @brief register serial interrupt
  *
- * @todo remove return at the beginning when handling is ready
+ * @todo remove return at the beginning when handling is connected to gdb
  */
 void serial_register_interrupt( void ) {
   return;
