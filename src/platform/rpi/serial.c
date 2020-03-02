@@ -31,6 +31,7 @@
 #include <core/serial.h>
 #include <core/interrupt.h>
 #include <core/event.h>
+#include <core/debug/debug.h>
 
 /**
  * @brief Initialized flag
@@ -119,6 +120,7 @@ void serial_init( void ) {
  * @todo clear irq/fiq correctly
  */
 void serial_clear( __unused void* context ) {
+  DEBUG_OUTPUT( "Clear interrupt source for serial!\r\n" );
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
@@ -126,21 +128,17 @@ void serial_clear( __unused void* context ) {
   io_out32( base + UARTICR, 0x7ff );
 
   // get pending interrupt from memory
-  uint32_t interrupt_line = io_in32( base + INTERRUPT_IRQ_PENDING_2 );
-  // clear pending interrupt
-  interrupt_line &= ( uint32_t )( ~( 1 << 25 ) );
-  // overwrite
-  io_out32( base + INTERRUPT_IRQ_PENDING_2, interrupt_line );
+  // uint32_t interrupt_line = io_in32( base + INTERRUPT_IRQ_PENDING_2 );
+  // // clear pending interrupt
+  // interrupt_line &= ( uint32_t )( ~( 1 << 25 ) );
+  // // overwrite
+  // io_out32( base + INTERRUPT_IRQ_PENDING_2, interrupt_line );
 }
 
 /**
  * @brief register serial interrupt
- *
- * @todo remove return at the beginning when handling is connected to gdb
  */
 void serial_register_interrupt( void ) {
-  return;
-
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // register interrupt
@@ -154,7 +152,9 @@ void serial_register_interrupt( void ) {
   // flush it
   serial_flush();
 
-  for(;;);
+  for(;;) {
+    __asm__ __volatile__( "nop" );
+  }
 }
 
 /**

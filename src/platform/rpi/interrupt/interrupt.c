@@ -86,10 +86,14 @@ int8_t interrupt_get_pending( bool fast ) {
         return ( int8_t )( i + 32 );
       }
     }
-
   // fast interrupt handling
   } else if ( fast ) {
-    PANIC( "Fast interrupts not yet completely supported!" );
+    // get set interrupt
+    uint32_t interrupt = io_in32( base + INTERRUPT_FIQ_CONTROL );
+    // get only number
+    interrupt &= 0x7f;
+    // return interrupt
+    return ( int8_t )interrupt;
   }
 
   return -1;
