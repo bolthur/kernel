@@ -116,7 +116,7 @@ void serial_init( void ) {
  *
  * @param context cpu context
  *
- * @todo clear interrupt correctly
+ * @todo clear irq/fiq correctly
  */
 void serial_clear( __unused void* context ) {
   // get peripheral base
@@ -144,21 +144,17 @@ void serial_register_interrupt( void ) {
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // register interrupt
-  interrupt_register_handler( 57, serial_clear, INTERRUPT_NORMAL, false );
+  interrupt_register_handler( 57, serial_clear, INTERRUPT_FAST, true );
 
   // Clear pending interrupts.
   io_out32( base + UARTICR, 0x7ff );
-  // get pending interrupt from memory
-  uint32_t interrupt_line = io_in32( base + INTERRUPT_IRQ_PENDING_2 );
-  // clear pending interrupt
-  interrupt_line &= ( uint32_t )( ~( 1 << 25 ) );
-  // overwrite
-  io_out32( base + INTERRUPT_IRQ_PENDING_2, interrupt_line );
-  // map interrupt for remote debugging
-  io_out32( base + INTERRUPT_ENABLE_IRQ_2, 1 << 25 );
+  // mask interrupt
+  io_out32( base + INTERRUPT_FIQ_CONTROL, 57 | 0x80 );
 
   // flush it
   serial_flush();
+
+  for(;;);
 }
 
 /**

@@ -38,6 +38,7 @@ static uint32_t nested_fast_interrupt = 0;
 void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   assert( nested_fast_interrupt++ < INTERRUPT_NESTED_MAX );
+  // PANIC( "FIQ!" );
 
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
@@ -49,6 +50,7 @@ void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
 
   // get pending interrupt
   int8_t interrupt = interrupt_get_pending( true );
+  // DEBUG_OUTPUT( "interrupt: %d\r\n", interrupt );
   assert( -1 != interrupt );
 
   // handle bound fast interrupt handlers
