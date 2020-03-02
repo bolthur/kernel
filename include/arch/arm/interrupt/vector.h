@@ -22,6 +22,5 @@
 #define __ARCH_ARM_INTERRUPT_VECTOR__
 
 void interrupt_vector_init( void );
-void interrupt_monitor_init( void );
 
 #endif

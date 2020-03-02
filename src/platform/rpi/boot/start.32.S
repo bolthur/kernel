@@ -133,16 +133,6 @@ reset:
   stmia r3!, { r0 - r2 }
 
   #if defined( BCM2709 ) || defined( BCM2710 )
-    #if defined( QEMU_BUILD )
-      // qemu hack to overwrite mvbar which starts at 0x400
-      mov r1, #0x400
-      ldr r0, =boot_start
-      ldmia r0!,{ r2 - r9 }
-      stmia r1!,{ r2 - r9 }
-      ldmia r0!,{ r2 - r9 }
-      stmia r1!,{ r2 - r9 }
-    #endif
-    // normal startup
     // get vbar
     mrc p15, 0, r1, c12, c0, 0
     ldr r0, =boot_start
@@ -150,17 +140,20 @@ reset:
     stmia r1!,{ r2 - r9 }
     ldmia r0!,{ r2 - r9 }
     stmia r1!,{ r2 - r9 }
+
     // clear data cache
     mov r0, #0
     mcr p15, 0, r0, c7, c10, 1
     // ensure that it's written
     dsb
+
     // invalidate instruction cache
     mov r0, #0
     mcr p15, 0, r0, c7, c5, 0
     // flush branch target cache
     mov r0, #0
     mcr p15, 0, r0, c7, c5, 6
+
     // ensure actions to be done completely
     dsb
     isb
@@ -171,15 +164,12 @@ reset:
 
   // enable fpu
   bl fpu_enable
-
   // prepare by platform
   bl boot_platform_prepare
 
   // load higher half start
   ldr r3, =start
-
   // set stack
   mov sp, r3
-
   // set program counter
   mov pc, r3

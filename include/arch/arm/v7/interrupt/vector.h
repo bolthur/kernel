@@ -22,6 +22,5 @@
 #define __ARCH_ARM_V7_INTERRUPT_VECTOR__
 
 void interrupt_vector_table( void );
-void monitor_vector_table( void );
 
 #endif
