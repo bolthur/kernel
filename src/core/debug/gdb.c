@@ -137,11 +137,29 @@ void debug_gdb_init( void ) {
 }
 
 /**
+ * @brief Serial gdb handler
+ *
+ * @param context cpu context
+ *
+ * @todo check for valid package within serial buffer
+ * @todo invoke command handler for valid ones
+ * @todo clear buffer if valid
+ * @todo remove debug output
+ */
+void debug_gdb_serial_handler( __unused void* context ) {
+  DEBUG_OUTPUT( "%s\r\n", serial_get_buffer() );
+}
+
+/**
  * @brief Setup gdb debug traps
+ *
+ * @todo check whether post callback is really necessary
  */
 void debug_gdb_set_trap( void ) {
   // register debug event
   event_bind( EVENT_DEBUG, debug_gdb_handle_event, true );
+  // register serial event
+  event_bind( EVENT_SERIAL, debug_gdb_serial_handler, true );
   // set initialized
   stub_initialized = true;
 }

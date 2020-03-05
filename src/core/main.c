@@ -140,10 +140,9 @@ void kernel_main( void ) {
     debug_gdb_init();
   #endif
 
-  //printf( "looping!\r\n" );
-  //for(;;) {
-  //  // nop
-  //}
+  for(;;) {
+    __asm__ __volatile__( "nop" );
+  }
 
   // Setup timer
   DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" );

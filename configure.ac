@@ -161,6 +161,15 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_ENABLE(
+  [output-serial],
+  AC_HELP_STRING(
+    [--enable-output-serial],
+    [activate serial handling output [default: off]]
+  ),
+  [enable_output_serial=yes]
+)
+
+AC_ARG_ENABLE(
   [remote-debug],
   AC_HELP_STRING(
     [--enable-remote-debug],

@@ -33,10 +33,39 @@
 #include <core/event.h>
 #include <core/debug/debug.h>
 
+#define MAX_SERIAL_BUFFER 500
+
 /**
  * @brief Initialized flag
  */
 static bool serial_initialized = false;
+
+/**
+ * @brief output buffer used for formatting via sprintf
+ */
+static uint8_t serial_buffer[ MAX_SERIAL_BUFFER ];
+
+/**
+ * @brief Current buffer index
+ */
+static uint32_t index;
+
+/**
+ * @brief Method to get serial buffer
+ *
+ * @return uint8_t*
+ */
+uint8_t* serial_get_buffer( void ) {
+  return serial_buffer;
+}
+
+/**
+ * @brief Flush serial buffer
+ */
+void serial_flush_buffer( void ) {
+  index = 0;
+  serial_buffer[ index ] = 0;
+}
 
 /**
  * @brief Initialize serial port
@@ -46,6 +75,9 @@ void serial_init( void ) {
   if ( serial_initialized ) {
     return;
   }
+
+  // reset buffer index
+  index = 0;
 
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
@@ -116,32 +148,41 @@ void serial_init( void ) {
  * @brief serial clear callback
  *
  * @param context cpu context
- *
- * @todo clear irq/fiq correctly
- * @todo surround interrupt output by defined check
  */
 void serial_clear( __unused void* context ) {
-  DEBUG_OUTPUT( "Clear interrupt source for serial!\r\n" );
+  // debug output
+  #if defined( PRINT_SERIAL )
+    DEBUG_OUTPUT( "Clear interrupt source for serial!\r\n" );
+  #endif
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+
   // get interrupt state
   uint32_t state = io_in32( base + UARTMIS );
-
   // receive flag used for fetching
   bool receive = state & ( 1 << 4 );
+
   // loop until flag will be reset
   while ( receive ) {
+    // clear out serial buffer to prevent overrun
+    if ( MAX_SERIAL_BUFFER <= ( index + 1 ) ) {
+      serial_flush_buffer();
+    }
+
     // read character
-    uint8_t c = io_in8( base + UARTDR );
-    // FIXME: Remove debug output
-    DEBUG_OUTPUT( "%c\r\n", c );
-    // FIXME: collect input for gdb if enabled
-    // evaluate next run
+    serial_buffer[ index++ ] = io_in8( base + UARTDR );
+    // add ending character
+    serial_buffer[ index ] = '\0';
+
+    // evaluate another run
     receive = ( 0 == ( io_in32( base + UARTFR ) & ( 1 << 4 ) ) );
   }
 
-  // Clear pending interrupts.
+  // clear pending interrupts.
   io_out32( base + UARTICR, 0x7ff );
+
+  // trigger serial event
+  event_enqueue( EVENT_SERIAL, EVENT_DETERMINE_ORIGIN( context ) );
 }
 
 /**
@@ -160,10 +201,6 @@ void serial_register_interrupt( void ) {
 
   // flush it
   serial_flush();
-
-  for(;;) {
-    __asm__ __volatile__( "nop" );
-  }
 }
 
 /**

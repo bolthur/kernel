@@ -82,5 +82,6 @@ void debug_gdb_handler_continue( void*, const uint8_t* );
 void debug_gdb_handler_stepping( void* , const uint8_t* );
 void debug_gdb_handler_detach( void*, const uint8_t* );
 void debug_gdb_handler_attach( void*, const uint8_t* );
+void debug_gdb_serial_handler( void* );
 
 #endif

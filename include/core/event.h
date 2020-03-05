@@ -32,6 +32,7 @@
 
 typedef enum {
   EVENT_TIMER = 1,
+  EVENT_SERIAL,
   EVENT_DEBUG,
 } event_type_t;
 
