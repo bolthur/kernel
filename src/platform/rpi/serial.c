@@ -118,21 +118,30 @@ void serial_init( void ) {
  * @param context cpu context
  *
  * @todo clear irq/fiq correctly
+ * @todo surround interrupt output by defined check
  */
 void serial_clear( __unused void* context ) {
   DEBUG_OUTPUT( "Clear interrupt source for serial!\r\n" );
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  // get interrupt state
+  uint32_t state = io_in32( base + UARTMIS );
+
+  // receive flag used for fetching
+  bool receive = state & ( 1 << 4 );
+  // loop until flag will be reset
+  while ( receive ) {
+    // read character
+    uint8_t c = io_in8( base + UARTDR );
+    // FIXME: Remove debug output
+    DEBUG_OUTPUT( "%c\r\n", c );
+    // FIXME: collect input for gdb if enabled
+    // evaluate next run
+    receive = ( 0 == ( io_in32( base + UARTFR ) & ( 1 << 4 ) ) );
+  }
 
   // Clear pending interrupts.
   io_out32( base + UARTICR, 0x7ff );
-
-  // get pending interrupt from memory
-  // uint32_t interrupt_line = io_in32( base + INTERRUPT_IRQ_PENDING_2 );
-  // // clear pending interrupt
-  // interrupt_line &= ( uint32_t )( ~( 1 << 25 ) );
-  // // overwrite
-  // io_out32( base + INTERRUPT_IRQ_PENDING_2, interrupt_line );
 }
 
 /**
