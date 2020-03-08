@@ -24,7 +24,9 @@
 #include <stdlib.h>
 #include <core/event.h>
 #include <core/serial.h>
+#include <core/interrupt.h>
 #include <core/debug/debug.h>
+#include <core/debug/string.h>
 #include <core/debug/gdb.h>
 #include <core/debug/breakpoint.h>
 
@@ -37,6 +39,16 @@ static bool stub_initialized = false;
  * @brief first entry
  */
 static bool stub_first_entry = true;
+
+/**
+ * @brief sending flag
+ */
+static bool stub_sending = false;
+
+/**
+ * @brief GDB debug context
+ */
+static void *gdb_execution_context = NULL;
 
 /**
  * @brief debug command handler
@@ -96,16 +108,17 @@ int32_t debug_gdb_char2hex( char ch ) {
  * @brief Method to check calculated checksum against incoming
  *
  * @param in
+ * @param chk
  * @return true
  * @return false
  */
-static bool checksum( uint8_t in ) {
+static bool checksum( uint8_t in, uint8_t* chk ) {
   // put into destination
   uint8_t out;
   // calculate checksum
   out = ( uint8_t )(
-    ( debug_gdb_char2hex( serial_getc() ) << 4 )
-    + debug_gdb_char2hex( serial_getc() )
+    ( debug_gdb_char2hex( chk[ 0 ] ) << 4 )
+    + debug_gdb_char2hex( chk[ 1 ] )
   );
   // return compare result
   return in == out;
@@ -146,8 +159,96 @@ void debug_gdb_init( void ) {
  * @todo clear buffer if valid
  * @todo remove debug output
  */
-void debug_gdb_serial_handler( __unused void* context ) {
-  DEBUG_OUTPUT( "%s\r\n", serial_get_buffer() );
+void debug_gdb_serial_event( __unused void* context ) {
+  // disable interrupts while debugging
+  interrupt_disable();
+
+  // cache package
+  uint8_t* pkg = serial_get_buffer();
+  uint8_t* buf = debug_gdb_input_buffer;
+  uint8_t* chk = ( uint8_t* )debug_strchr( ( char* )pkg, '#' );
+  char c;
+  uint8_t calculated_checksum;
+  uint32_t idx = 1, buf_idx = 0;
+
+  if ( stub_sending ) {
+    interrupt_enable();
+    return;
+  }
+
+  // reset input buffer
+  debug_memset( buf, 0, GDB_DEBUG_MAX_BUFFER );
+
+  // Clear serial buffer when there is no debug character
+  if ( '$' != pkg[ 0 ] ) {
+    serial_flush_buffer();
+  }
+  // prepare variables
+  calculated_checksum = 0;
+  // check for closing # ( may be incomplete if missing! )
+  if ( NULL == chk ) {
+    return;
+  }
+  // increase chk to skip closing #
+  chk++;
+  // check for checksum
+  if ( 2 > debug_strlen( ( char* )chk ) ) {
+    return;
+  }
+
+  // loop until end or closing #
+  while( pkg[ idx ] != '\0' ) {
+    // save current character
+    c = pkg[ idx ];
+
+    // handle invalid character
+    if ( '$' == c ) {
+      serial_flush_buffer();
+      return;
+    // handle closing #
+    } else if ( '#' == c ) {
+      break;
+    }
+
+    // checksum
+    calculated_checksum = ( uint8_t )( calculated_checksum + c );
+    // push back character
+    buf[ buf_idx ] = c;
+    // increment
+    idx++;
+    buf_idx++;
+  }
+
+  // set buffer end
+  buf[ idx ] = 0;
+  // check for checksum
+  if ( ! checksum( calculated_checksum, chk ) ) {
+    serial_putc( '-' );
+    return;
+  }
+
+  // send acknowledge
+  serial_putc( '+' );
+
+  // check for sequence
+  if ( buf[ 2 ] == ':' ) {
+    // send sequence id
+    serial_putc( buf[ 0 ] );
+    serial_putc( buf[ 1 ] );
+    // adjust package packet
+    buf = &buf[ 3 ];
+  }
+
+  // execute determine callback
+  debug_gdb_get_handler( buf )( context, buf );
+
+  // flush serial buffer
+  DEBUG_OUTPUT( "pkg = %s", pkg );
+  serial_flush_buffer();
+  pkg = serial_get_buffer();
+  DEBUG_OUTPUT( "pkg = %s", pkg );
+  // enable interrupts again
+  interrupt_enable();
 }
 
 /**
@@ -159,7 +260,7 @@ void debug_gdb_set_trap( void ) {
   // register debug event
   event_bind( EVENT_DEBUG, debug_gdb_handle_event, true );
   // register serial event
-  event_bind( EVENT_SERIAL, debug_gdb_serial_handler, true );
+  event_bind( EVENT_SERIAL, debug_gdb_serial_event, true );
   // set initialized
   stub_initialized = true;
 }
@@ -184,8 +285,13 @@ void debug_gdb_packet_send( uint8_t* p ) {
   int count;
   char ch;
 
+  // set sending flag
+  stub_sending = true;
+  interrupt_disable();
+
   // $<packet info>#<checksum>.
   do {
+    // start sending packet
     serial_putc( '$' );
     checksum = 0;
     count = 0;
@@ -198,71 +304,11 @@ void debug_gdb_packet_send( uint8_t* p ) {
     serial_putc( debug_gdb_hexchar[ checksum >> 4 ] );
     serial_putc( debug_gdb_hexchar[ checksum % 16 ] );
   } while ( '+' != serial_getc() );
-}
 
-/**
- * @brief Receive a packet
- *
- * @param max
- * @return unsigned* packet_receive
- */
-uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
-  char c;
-  uint8_t calculated_checksum;
-  size_t count = 0;
-  bool cont;
-
-  while ( true ) {
-    // wait until debug character drops in
-    while ( '$' != ( c = serial_getc() ) ) {}
-
-    // prepare variables
-    cont = false;
-    calculated_checksum = 0;
-    // read until max or #
-    while ( count < max - 1 ) {
-      // get next serial character
-      c = serial_getc();
-      // handle invalid
-      if ( '$' == c ) {
-        cont = true;
-        break;
-      // handle end
-      } else if ( '#' == c ) {
-        break;
-      }
-      // checksum
-      calculated_checksum = ( uint8_t )( calculated_checksum + c );
-      buffer[ count ] = c;
-      count++;
-    }
-    // check for continue
-    if ( cont ) {
-      continue;
-    }
-
-    // set end
-    buffer[ count ] = 0;
-    // check checksum checksum
-    if ( ! checksum( calculated_checksum ) ) {
-      serial_putc( '-' );
-      continue;
-    }
-
-    // send acknowledge
-    serial_putc( '+' );
-    // check for sequence
-    if ( buffer[ 2 ] == ':' ) {
-      // send sequence id
-      serial_putc( buffer[ 0 ] );
-      serial_putc( buffer[ 1 ] );
-      // return packet
-      return &buffer[ 3 ];
-    }
-
-    // return normal buffer
-    return buffer;
-  }
+  // enable interrupts again
+  interrupt_enable();
+  // set sending flag
+  stub_sending = false;
 }
 
 /**
@@ -293,7 +339,7 @@ int debug_gdb_puts( const char* str ) {
   uint8_t* buffer = debug_gdb_output_buffer;
   uint8_t* copy;
   size_t idx = 0;
-  size_t length = strlen( str );
+  size_t length = debug_strlen( str );
 
   // set command
   buffer[ 0 ] = 'O';
@@ -440,11 +486,20 @@ debug_gdb_callback_t debug_gdb_get_handler( const uint8_t* packet ) {
     if ( 0 == strncmp(
       handler[ i ].prefix,
       ( char* )packet,
-      strlen( handler[ i ].prefix ) )
+      debug_strlen( handler[ i ].prefix ) )
     ) {
       return handler[ i ].handler;
     }
   }
   // return unsupported handler
   return debug_gdb_handler_unsupported;
+}
+
+/**
+ * @brief Set execution context
+ *
+ * @param context
+ */
+void debug_gdb_set_context( void* context ) {
+  gdb_execution_context = context;
 }

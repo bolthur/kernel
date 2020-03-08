@@ -58,7 +58,6 @@ void debug_gdb_handle_event( void* );
 debug_gdb_signal_t debug_gdb_get_signal( void );
 
 void debug_gdb_packet_send( uint8_t* );
-uint8_t* debug_gdb_packet_receive( uint8_t*, size_t );
 int32_t debug_gdb_putchar( int32_t );
 int32_t debug_gdb_char2hex( char );
 
@@ -82,6 +81,8 @@ void debug_gdb_handler_continue( void*, const uint8_t* );
 void debug_gdb_handler_stepping( void* , const uint8_t* );
 void debug_gdb_handler_detach( void*, const uint8_t* );
 void debug_gdb_handler_attach( void*, const uint8_t* );
-void debug_gdb_serial_handler( void* );
+
+void debug_gdb_set_context( void* );
+void debug_gdb_serial_event( void* );
 
 #endif

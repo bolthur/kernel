@@ -28,6 +28,7 @@
 #include <core/panic.h>
 #include <core/interrupt.h>
 #include <core/debug/debug.h>
+#include <core/debug/string.h>
 #include <core/debug/disasm.h>
 #include <core/debug/gdb.h>
 #include <core/debug/breakpoint.h>
@@ -181,7 +182,7 @@ static int32_t write_register_invalid( char *dst ) {
   // invalid value
   const char *v = "xxxxxxxx";
   // copy invalid content
-  memcpy( dst, v, strlen( v ) + 1 );
+  debug_memcpy( dst, v, debug_strlen( v ) + 1 );
   // return copied values
   return 8;
 }
@@ -235,7 +236,7 @@ static uint32_t read_register_from_string( const uint8_t* str ) {
  */
 static bool read_field( const uint8_t** src, uint32_t* dest, char delim ) {
   // get address of starting field
-  const uint8_t* del = ( uint8_t* )strchr( ( char* )*src, delim );
+  const uint8_t* del = ( uint8_t* )debug_strchr( ( char* )*src, delim );
   uint8_t* next;
   // handle error
   if ( NULL == del ) {
@@ -367,7 +368,7 @@ void debug_gdb_handler_write_register( void* context, const uint8_t* packet ) {
   // skip command
   packet++;
   // Ensure packet size
-  if ( strlen( ( char* )packet ) != ( ( 17 + GDB_EXTRA_REGISTER ) * 8 ) ) {
+  if ( debug_strlen( ( char* )packet ) != ( ( 17 + GDB_EXTRA_REGISTER ) * 8 ) ) {
     debug_gdb_packet_send( ( uint8_t* )"E01" );
     return;
   }
@@ -449,7 +450,7 @@ void debug_gdb_handler_write_memory(
   if (
     ! read_address_from_string( &buffer, &address )
     || ! read_length_from_string( &buffer, &length )
-    || strlen( ( char* )buffer ) != length * 2
+    || debug_strlen( ( char* )buffer ) != length * 2
   ) {
     debug_gdb_packet_send( ( uint8_t* )"E01" );
     return;
@@ -592,9 +593,7 @@ void debug_gdb_arch_init( void ) {
  * @param void
  */
 void debug_gdb_handle_event( void* context ) {
-  // variables
-  uint8_t* packet;
-  // disable interrupts while debugging
+  // disable interrupts
   interrupt_disable();
   // set exit handler flag
   debug_gdb_set_running_flag( true );
@@ -606,26 +605,23 @@ void debug_gdb_handle_event( void* context ) {
     cpu->reg.pc += 4;
   }
 
+  // save context
+  debug_gdb_set_context( cpu );
+
   // Remove all stepping breakpoints due to conditional branches
   debug_breakpoint_remove_step();
   // handle stop status
   debug_gdb_handler_stop_status( context, NULL );
 
-  // handle incoming packets in endless loop
-  while ( handler_running ) {
-    // get packet
-    packet = debug_gdb_packet_receive(
-      debug_gdb_input_buffer, GDB_DEBUG_MAX_BUFFER );
-    // assert existance
-    assert( packet != NULL );
-    // execute handler
-    debug_gdb_get_handler( packet )( context, packet );
-  }
-
-  // set first entry flag
-  debug_gdb_set_first_entry( false );
   // enable interrupts again
   interrupt_enable();
+
+  // loop with nop until flag is reset!
+  while ( handler_running ) {}
+  // set first entry flag
+  debug_gdb_set_first_entry( false );
+  // reset context
+  debug_gdb_set_context( NULL );
 }
 
 /**
