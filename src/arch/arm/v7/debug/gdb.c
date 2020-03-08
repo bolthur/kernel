@@ -593,8 +593,6 @@ void debug_gdb_arch_init( void ) {
  * @param void
  */
 void debug_gdb_handle_event( void* context ) {
-  // disable interrupts
-  interrupt_disable();
   // set exit handler flag
   debug_gdb_set_running_flag( true );
 
@@ -610,14 +608,14 @@ void debug_gdb_handle_event( void* context ) {
 
   // Remove all stepping breakpoints due to conditional branches
   debug_breakpoint_remove_step();
+
   // handle stop status
   debug_gdb_handler_stop_status( context, NULL );
-
-  // enable interrupts again
-  interrupt_enable();
-
   // loop with nop until flag is reset!
-  while ( handler_running ) {}
+  while ( handler_running ) {
+    __asm__ __volatile__( "nop" );
+  }
+
   // set first entry flag
   debug_gdb_set_first_entry( false );
   // reset context
