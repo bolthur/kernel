@@ -151,5 +151,12 @@ set verbose on
 set debug remote 1
 set architecture armv7
 set serial baud 115200
-target remote /dev/pts/0
+target remote /dev/pts/3
+```
+
+```
+file src/target/rpi/kernel7_qemu.sym
+set architecture armv7
+set serial baud 115200
+target remote /dev/pts/3
 ```

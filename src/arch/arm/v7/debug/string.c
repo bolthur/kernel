@@ -57,3 +57,40 @@ void* debug_memset ( void* bufptr, int value, size_t size ) {
 
   return bufptr;
 }
+
+/**
+ * @brief get string part starting with delimiter
+ *
+ * @param str
+ * @param delimiter
+ * @return char*
+ */
+char* debug_strchr( const char *str, int delimiter ) {
+  // loop until possible match
+  while ( *str ) {
+    // return string pointer on match
+    if ( ( int )*str == delimiter ) {
+      return ( char* )str;
+    }
+    // continue with next
+    str++;
+  }
+  // no match
+  return NULL;
+}
+
+/**
+ * @brief Get string length
+ *
+ * @param str
+ * @return size_t
+ */
+size_t debug_strlen( const char* str ) {
+  size_t len = 0;
+
+  while ( str[ len ] ) {
+    len++;
+  }
+
+  return len;
+}
