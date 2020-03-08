@@ -160,6 +160,11 @@ void debug_gdb_init( void ) {
  * @todo remove debug output
  */
 void debug_gdb_serial_event( __unused void* context ) {
+  // skip if stub is sending
+  if ( stub_sending ) {
+    return;
+  }
+
   // disable interrupts while debugging
   interrupt_disable();
 
@@ -170,11 +175,6 @@ void debug_gdb_serial_event( __unused void* context ) {
   char c;
   uint8_t calculated_checksum;
   uint32_t idx = 1, buf_idx = 0;
-
-  if ( stub_sending ) {
-    interrupt_enable();
-    return;
-  }
 
   // reset input buffer
   debug_memset( buf, 0, GDB_DEBUG_MAX_BUFFER );
@@ -240,13 +240,10 @@ void debug_gdb_serial_event( __unused void* context ) {
   }
 
   // execute determine callback
-  debug_gdb_get_handler( buf )( context, buf );
+  debug_gdb_get_handler( buf )( gdb_execution_context, buf );
 
   // flush serial buffer
-  DEBUG_OUTPUT( "pkg = %s", pkg );
   serial_flush_buffer();
-  pkg = serial_get_buffer();
-  DEBUG_OUTPUT( "pkg = %s", pkg );
   // enable interrupts again
   interrupt_enable();
 }
