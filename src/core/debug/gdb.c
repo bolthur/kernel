@@ -178,9 +178,13 @@ void debug_gdb_serial_event( event_origin_t origin, __unused void* context ) {
   // reset input buffer
   debug_memset( buf, 0, GDB_DEBUG_MAX_BUFFER );
 
-  // handle ctrl-c
-  if ( 3 == ( int )pkg[ 0 ] ) {
+  // handle ctrl+c
+  if ( GDB_DEBUG_CONTROL_C == ( int )pkg[ 0 ] ) {
+    // flush out read buffer
+    serial_flush_buffer();
+    // enqueue debug event to start debug handling
     event_enqueue( EVENT_DEBUG, origin );
+    // skip rest
     return;
   }
 

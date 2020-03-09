@@ -31,6 +31,11 @@
  */
 #define GDB_DEBUG_MAX_BUFFER 500
 
+/**
+ * @brief Ctrl+C command for interrupt
+ */
+#define GDB_DEBUG_CONTROL_C 3
+
 typedef enum {
   GDB_SIGNAL_TRAP = 5,
   GDB_SIGNAL_ABORT = 6,
