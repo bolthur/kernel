@@ -43,7 +43,7 @@ int vprintf( const char* restrict format, va_list parameter ) {
   #if defined( REMOTE_DEBUG )
     // write to output
     if ( debug_gdb_initialized() ) {
-      if ( ! debug_gdb_get_first_entry() ) {
+      if ( ! debug_gdb_get_first_entry() && ! debug_gdb_get_running_flag() ) {
         // clear out buffer
         memset( debug_gdb_print_buffer, 0, GDB_DEBUG_MAX_BUFFER );
         // print to buffer

@@ -659,3 +659,13 @@ debug_gdb_signal_t debug_gdb_get_signal( void ) {
 void debug_gdb_set_running_flag( bool flag ) {
   handler_running = flag;
 }
+
+/**
+ * @brief Method to get handler running flag
+ *
+ * @return true
+ * @return false
+ */
+bool debug_gdb_get_running_flag( void ) {
+  return handler_running;
+}

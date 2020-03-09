@@ -25,6 +25,7 @@
 #include <core/event.h>
 #include <core/serial.h>
 #include <core/interrupt.h>
+#include <core/panic.h>
 #include <core/debug/debug.h>
 #include <core/debug/string.h>
 #include <core/debug/gdb.h>
@@ -179,6 +180,13 @@ void debug_gdb_serial_event( __unused void* context ) {
   // reset input buffer
   debug_memset( buf, 0, GDB_DEBUG_MAX_BUFFER );
 
+  // handle ctrl-c
+  /*if ( 3 == ( int )pkg[ 0 ] ) {
+    PANIC( "foo!" );
+  }
+  // PANIC( "bar!" );
+  DEBUG_OUTPUT( "pkg = %s\r\n", pkg );*/
+
   // Clear serial buffer when there is no debug character
   if ( '$' != pkg[ 0 ] ) {
     serial_flush_buffer();
@@ -257,7 +265,7 @@ void debug_gdb_set_trap( void ) {
   // register debug event
   event_bind( EVENT_DEBUG, debug_gdb_handle_event, true );
   // register serial event
-  event_bind( EVENT_SERIAL, debug_gdb_serial_event, true );
+  event_bind( EVENT_SERIAL, debug_gdb_serial_event, false );
   // set initialized
   stub_initialized = true;
 }

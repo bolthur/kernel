@@ -52,6 +52,7 @@ void debug_gdb_arch_init( void );
 void debug_gdb_breakpoint( void );
 void debug_gdb_set_trap( void );
 void debug_gdb_set_running_flag( bool );
+bool debug_gdb_get_running_flag( void );
 void debug_gdb_handle_exception( void );
 bool debug_gdb_initialized( void );
 void debug_gdb_handle_event( void* );

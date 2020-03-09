@@ -140,6 +140,7 @@ void kernel_main( void ) {
     debug_gdb_init();
   #endif
 
+  DEBUG_OUTPUT( "Starting endless loop!\r\n" );
   for(;;) {
     __asm__ __volatile__( "nop" );
   }
