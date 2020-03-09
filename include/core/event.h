@@ -54,7 +54,7 @@ typedef struct {
   list_manager_ptr_t post;
 } event_block_t, *event_block_ptr_t;
 
-typedef void ( *event_callback_t )( void* data );
+typedef void ( *event_callback_t )( event_origin_t, void* data );
 
 typedef struct {
   event_callback_t callback;

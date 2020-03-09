@@ -590,9 +590,10 @@ void debug_gdb_arch_init( void ) {
 /**
  * @brief Handle debug event
  *
- * @param void
+ * @param origin
+ * @param context
  */
-void debug_gdb_handle_event( void* context ) {
+void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
   // set exit handler flag
   debug_gdb_set_running_flag( true );
 

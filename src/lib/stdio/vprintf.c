@@ -36,13 +36,15 @@
  * @param parameter
  * @return int
  *
- * @todo handle possible overvlow with remote debugging by dynamic buffer
+ * @todo remove gdb stuff
  */
 int vprintf( const char* restrict format, va_list parameter ) {
   // different behaviour for remote debugging
   #if defined( REMOTE_DEBUG )
     // write to output
     if ( debug_gdb_initialized() ) {
+      return EOF;
+
       if ( ! debug_gdb_get_first_entry() && ! debug_gdb_get_running_flag() ) {
         // clear out buffer
         memset( debug_gdb_print_buffer, 0, GDB_DEBUG_MAX_BUFFER );

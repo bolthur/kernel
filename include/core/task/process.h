@@ -25,6 +25,7 @@
 #include <avl.h>
 #include <list.h>
 #include <core/mm/virt.h>
+#include <core/event.h>
 
 typedef struct task_thread
   task_thread_t, *task_thread_ptr_t;
@@ -60,7 +61,7 @@ typedef struct {
 extern task_manager_ptr_t process_manager;
 
 void task_process_init( void );
-void task_process_schedule( void* );
+void task_process_schedule( event_origin_t, void* );
 void task_process_start( void );
 size_t task_process_generate_id( void );
 void task_process_create( uintptr_t, size_t );

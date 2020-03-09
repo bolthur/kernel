@@ -153,6 +153,7 @@ void debug_gdb_init( void ) {
 /**
  * @brief Serial gdb handler
  *
+ * @param origin origin
  * @param context cpu context
  *
  * @todo check for valid package within serial buffer
@@ -160,14 +161,11 @@ void debug_gdb_init( void ) {
  * @todo clear buffer if valid
  * @todo remove debug output
  */
-void debug_gdb_serial_event( __unused void* context ) {
+void debug_gdb_serial_event( event_origin_t origin, __unused void* context ) {
   // skip if stub is sending
   if ( stub_sending ) {
     return;
   }
-
-  // disable interrupts while debugging
-  interrupt_disable();
 
   // cache package
   uint8_t* pkg = serial_get_buffer();
@@ -181,11 +179,10 @@ void debug_gdb_serial_event( __unused void* context ) {
   debug_memset( buf, 0, GDB_DEBUG_MAX_BUFFER );
 
   // handle ctrl-c
-  /*if ( 3 == ( int )pkg[ 0 ] ) {
-    PANIC( "foo!" );
+  if ( 3 == ( int )pkg[ 0 ] ) {
+    event_enqueue( EVENT_DEBUG, origin );
+    return;
   }
-  // PANIC( "bar!" );
-  DEBUG_OUTPUT( "pkg = %s\r\n", pkg );*/
 
   // Clear serial buffer when there is no debug character
   if ( '$' != pkg[ 0 ] ) {
@@ -252,8 +249,6 @@ void debug_gdb_serial_event( __unused void* context ) {
 
   // flush serial buffer
   serial_flush_buffer();
-  // enable interrupts again
-  interrupt_enable();
 }
 
 /**

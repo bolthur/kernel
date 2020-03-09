@@ -74,9 +74,10 @@ void task_process_start( void ) {
 /**
  * @brief Task process scheduler
  *
+ * @param origin
  * @param context cpu context
  */
-void task_process_schedule( void* context ) {
+void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", context );

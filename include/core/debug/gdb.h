@@ -24,6 +24,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <list.h>
+#include <core/event.h>
 
 /**
  * @brief Max buffer size
@@ -55,7 +56,6 @@ void debug_gdb_set_running_flag( bool );
 bool debug_gdb_get_running_flag( void );
 void debug_gdb_handle_exception( void );
 bool debug_gdb_initialized( void );
-void debug_gdb_handle_event( void* );
 debug_gdb_signal_t debug_gdb_get_signal( void );
 
 void debug_gdb_packet_send( uint8_t* );
@@ -84,6 +84,7 @@ void debug_gdb_handler_detach( void*, const uint8_t* );
 void debug_gdb_handler_attach( void*, const uint8_t* );
 
 void debug_gdb_set_context( void* );
-void debug_gdb_serial_event( void* );
+void debug_gdb_serial_event( event_origin_t, void* );
+void debug_gdb_handle_event( event_origin_t, void* );
 
 #endif
