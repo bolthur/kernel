@@ -7,8 +7,8 @@ AUTOMAKE_OPTIONS = nostdinc subdir-objects
 noinst_LIBRARIES = librpi.a
 
 # normal rpi library
-librpi_a_CFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/include -I${top_srcdir}/include/lib
-librpi_a_CCASFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/include -I${top_srcdir}/include/lib
+librpi_a_CFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/include -I${top_srcdir}/include/lib -I${top_srcdir}/thirdparty
+librpi_a_CCASFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/include -I${top_srcdir}/include/lib -I${top_srcdir}/thirdparty
 librpi_a_SOURCES = \
   boot/mm/virt.c \
   interrupt/interrupt.c \
@@ -16,6 +16,7 @@ librpi_a_SOURCES = \
   mailbox/property.c \
   mm/phys.c \
   mm/virt.c \
+  framebuffer.c \
   initrd.c \
   platform.c \
   peripheral.c \

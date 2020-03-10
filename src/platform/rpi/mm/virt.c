@@ -28,12 +28,14 @@
 #include <arch/arm/mm/virt.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
+#include <platform/rpi/framebuffer.h>
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
 #if defined( BCM2709 ) || defined( BCM2710 )
   #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
 #define MAILBOX_PROPERTY_AREA 0xF3040000
+#define FRAMEBUFFER_AREA 0xF3041000
 
 /**
  * @brief Initialize virtual memory management
@@ -41,6 +43,26 @@
 void virt_platform_init( void ) {
   uintptr_t start;
   uintptr_t virtual;
+
+  // set start and virtual
+  start = framebuffer_base_get();
+  virtual = FRAMEBUFFER_AREA;
+  // map framebuffer
+  while ( start < framebuffer_end_get() ) {
+    // map framebuffer
+    virt_map_address(
+      kernel_context,
+      virtual,
+      start,
+      VIRT_MEMORY_TYPE_DEVICE,
+      VIRT_PAGE_TYPE_AUTO
+    );
+    // increase start and virtual
+    start += PAGE_SIZE;
+    virtual += PAGE_SIZE;
+  }
+  // set framebuffer
+  framebuffer_base_set( FRAMEBUFFER_AREA );
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -69,7 +91,6 @@ void virt_platform_init( void ) {
     start += PAGE_SIZE;
     virtual += PAGE_SIZE;
   }
-
   // handle local peripherals
   #if defined( BCM2709 ) || defined( BCM2710 )
     // debug output
@@ -84,7 +105,6 @@ void virt_platform_init( void ) {
     // set start and virtual
     start = peripheral_base_get( PERIPHERAL_LOCAL );
     virtual = CPU_PERIPHERAL_BASE;
-
     // map peripherals
     while ( start < peripheral_end_get( PERIPHERAL_LOCAL ) ) {
       // map
@@ -94,7 +114,6 @@ void virt_platform_init( void ) {
         start,
         VIRT_MEMORY_TYPE_DEVICE,
         VIRT_PAGE_TYPE_AUTO );
-
       // increase start and virtual
       start += PAGE_SIZE;
       virtual += PAGE_SIZE;

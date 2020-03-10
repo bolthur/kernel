@@ -18,24 +18,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <limits.h>
-#include <stdbool.h>
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdbool.h>
+#if ! defined( __FONT_FONT8x8__ )
+#define __FONT_FONT8x8__
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#define FONT_HEIGHT 8
+#define FONT_WIDTH 8
 
-/**
- * @brief Simple vprintf for kernel
- *
- * @param format
- * @param parameter
- * @return int
- */
-int vprintf( const char* restrict format, va_list parameter ) {
-  // normal behaviour
-  return vsprintf( NULL, format, parameter );
-}
+#define TAB_WIDTH FONT_WIDTH * 4
+
+extern char font8x8_basic[ 128 ][ 8 ];
+
+#endif

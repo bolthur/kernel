@@ -20,15 +20,14 @@
 
 #include <stdlib.h>
 #include <core/serial.h>
+#include <platform/rpi/framebuffer.h>
 
 /**
  * @brief Initialize TTY
- *
- * @todo replace by something like framebuffer
  */
 void tty_init( void ) {
   #if defined( OUTPUT_ENABLE )
-    serial_init();
+    framebuffer_init();
   #endif
 }
 
@@ -36,12 +35,10 @@ void tty_init( void ) {
  * @brief Print character to TTY
  *
  * @param c Character to print
- *
- * @todo replace by something like framebuffer
  */
 void tty_putc( __maybe_unused uint8_t c ) {
   // only if enabled
   #if defined( OUTPUT_ENABLE )
-    serial_putc( c );
+    framebuffer_putc( c );
   #endif
 }

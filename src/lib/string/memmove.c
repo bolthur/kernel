@@ -18,24 +18,22 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <limits.h>
-#include <stdbool.h>
-#include <stdarg.h>
+#include <stddef.h>
 #include <stdint.h>
-#include <stdbool.h>
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+void* memmove( void* dst, const void* src, size_t n ) {
+  uint8_t *cdst = ( uint8_t* )dst;
+  const uint8_t *csrc = ( const uint8_t* )src;
 
-/**
- * @brief Simple vprintf for kernel
- *
- * @param format
- * @param parameter
- * @return int
- */
-int vprintf( const char* restrict format, va_list parameter ) {
-  // normal behaviour
-  return vsprintf( NULL, format, parameter );
+  if ( cdst < csrc ) {
+    for ( size_t i = 0; i < n; i++ ) {
+      cdst[ i ] = csrc[ i ];
+    }
+    return dst;
+  }
+
+  for ( size_t i = n; i != 0; i-- ) {
+    cdst[ i - 1 ] = csrc[ i - 1 ];
+  }
+  return dst;
 }

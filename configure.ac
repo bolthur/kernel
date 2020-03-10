@@ -304,6 +304,8 @@ AC_CONFIG_FILES([
   src/platform/rpi/Makefile
   src/target/Makefile
   src/target/rpi/Makefile
+  thirdparty/Makefile
+  thirdparty/font/Makefile
 ])
 
 AC_OUTPUT

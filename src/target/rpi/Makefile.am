@@ -3,6 +3,7 @@ AUTOMAKE_OPTIONS = nostdinc subdir-objects
 
 # built sources determining things to be built first
 BUILT_SOURCES = \
+  ${abs_top_builddir}/thirdparty/font/libfont.a \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
@@ -23,6 +24,7 @@ noinst_PROGRAMS = kernel.elf kernel_qemu.elf ${output_img} ${output_img_qemu}
 # Normal kernel building for physical device
 kernel_elf_SOURCES =
 kernel_elf_DEPENDENCIES = \
+  ${abs_top_builddir}/thirdparty/font/libfont.a \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
@@ -42,6 +44,7 @@ kernel_elf_LDFLAGS = \
 # Normal kernel building for physical device
 kernel_qemu_elf_SOURCES =
 kernel_qemu_elf_DEPENDENCIES = \
+  ${abs_top_builddir}/thirdparty/font/libfont.a \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \

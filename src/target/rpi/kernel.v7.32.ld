@@ -38,6 +38,7 @@ GROUP(
   ../../lib/string/libstring.a
   ../../lib/tar/libtar.a
   ../../lib/ubsan/libubsan.a
+  ../../../thirdparty/font/libfont.a
 )
 INPUT(
   libgcc.a
