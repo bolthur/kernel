@@ -178,6 +178,8 @@ static void put_pixel(
 
 /**
  * @brief Internal method to scroll up if end has been reached
+ *
+ * @todo optimize scrolling
  */
 static void scroll( void ) {
   // calculate row size

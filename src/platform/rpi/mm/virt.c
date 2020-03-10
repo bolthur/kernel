@@ -61,8 +61,6 @@ void virt_platform_init( void ) {
     start += PAGE_SIZE;
     virtual += PAGE_SIZE;
   }
-  // set framebuffer
-  framebuffer_base_set( FRAMEBUFFER_AREA );
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -128,14 +126,19 @@ void virt_platform_init( void ) {
     VIRT_MEMORY_TYPE_DEVICE,
     VIRT_PAGE_TYPE_AUTO
   );
-  // set pointer
-  ptb_buffer = ( int32_t* )MAILBOX_PROPERTY_AREA;
 }
 
 /**
  * @brief Platform post initialization routine
  */
 void virt_platform_post_init( void ) {
+  // set framebuffer
+  framebuffer_base_set( FRAMEBUFFER_AREA );
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "Set new framebuffer base to 0x%08x\r\n", FRAMEBUFFER_AREA );
+  #endif
+
   // set new peripheral base
   peripheral_base_set( GPIO_PERIPHERAL_BASE, PERIPHERAL_GPIO );
   // debug output
@@ -148,5 +151,12 @@ void virt_platform_post_init( void ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "Set new cpu peripheral base to 0x%08x\r\n", CPU_PERIPHERAL_BASE );
+  #endif
+
+  // set mailbox property pointer
+  ptb_buffer = ( int32_t* )MAILBOX_PROPERTY_AREA;
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "Set mailbox property buffer to 0x%08x\r\n", MAILBOX_PROPERTY_AREA );
   #endif
 }
