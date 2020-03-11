@@ -183,7 +183,10 @@ void debug_breakpoint_disable( void ) {
   list_item_ptr_t current;
 
   // skip if not initialized
-  if ( NULL == debug_breakpoint_manager ) {
+  if (
+    NULL == debug_breakpoint_manager
+    || debug_gdb_get_running_flag()
+  ) {
     return;
   }
 
@@ -226,7 +229,10 @@ void debug_breakpoint_enable( void ) {
   list_item_ptr_t current;
 
   // skip if not initialized
-  if ( NULL == debug_breakpoint_manager ) {
+  if (
+    NULL == debug_breakpoint_manager
+    || debug_gdb_get_running_flag()
+  ) {
     return;
   }
 

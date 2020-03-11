@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <core/serial.h>
 #include <platform/rpi/framebuffer.h>
+#include <core/debug/gdb.h>
 
 /**
  * @brief Initialize TTY
@@ -37,8 +38,10 @@ void tty_init( void ) {
  * @param c Character to print
  */
 void tty_putc( __maybe_unused uint8_t c ) {
-  // only if enabled
+  // return if disabled
   #if defined( OUTPUT_ENABLE )
-    framebuffer_putc( c );
+    if ( ! debug_gdb_get_running_flag() ) {
+      framebuffer_putc( c );
+    }
   #endif
 }

@@ -211,7 +211,7 @@ _\name\()_exit_privileged:
 _\name\()_exit_finished:
 .endm
 
-.macro ex_handler fixup, handler, mode, name
+.macro ex_handler fixup:req, handler:req, mode:req, name:req
   // switch to svc mode with fixup
   switch_mode \mode, \fixup
   // push register

@@ -349,6 +349,6 @@ void event_handle( void* data ) {
 
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Leave event_handle\r\n", data );
+    DEBUG_OUTPUT( "Leave event_handle\r\n" );
   #endif
 }

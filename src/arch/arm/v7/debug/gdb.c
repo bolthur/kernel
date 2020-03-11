@@ -657,7 +657,7 @@ debug_gdb_signal_t debug_gdb_get_signal( void ) {
  *
  * @param flag
  */
-void debug_gdb_set_running_flag( bool flag ) {
+inline void debug_gdb_set_running_flag( bool flag ) {
   handler_running = flag;
 }
 
@@ -667,6 +667,6 @@ void debug_gdb_set_running_flag( bool flag ) {
  * @return true
  * @return false
  */
-bool debug_gdb_get_running_flag( void ) {
+inline bool debug_gdb_get_running_flag( void ) {
   return handler_running;
 }
