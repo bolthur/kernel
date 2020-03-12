@@ -44,6 +44,11 @@
 #define GDB_EXTRA_REGISTER 25
 
 /**
+ * @brief Extra registers not filled
+ */
+#define GDB_NORMAL_REGISTER 17
+
+/**
  * @brief Flag set to true when receiving continue command
  */
 static bool handler_running;
@@ -156,7 +161,7 @@ static bool write_memory_content( const void* src, uint32_t dest, size_t length 
  * @param r
  * @return int32_t
  */
-static int32_t write_register( char *dst, uint32_t r ) {
+static int32_t write_register( uint8_t* dst, uint32_t r ) {
   // loop through byes
   for ( uint32_t i = 0; i < 4; i++ ) {
     // extract byte
@@ -178,11 +183,11 @@ static int32_t write_register( char *dst, uint32_t r ) {
  * @param dst
  * @return int32_t
  */
-static int32_t write_register_invalid( char *dst ) {
+static int32_t write_register_invalid( uint8_t* dst ) {
   // invalid value
-  const char *v = "xxxxxxxx";
+  const uint8_t* val = ( uint8_t* )"xxxxxxxx";
   // copy invalid content
-  debug_memcpy( dst, v, debug_strlen( v ) + 1 );
+  debug_memcpy( dst, val, debug_strlen( ( char* )val ) + 1 );
   // return copied values
   return 8;
 }
@@ -319,16 +324,16 @@ void debug_gdb_handler_stop_status(
   __unused const uint8_t* packet
 ) {
   debug_gdb_signal_t signal = debug_gdb_get_signal();
-  char* buffer = ( char* )debug_gdb_output_buffer;
+  uint8_t buffer[ 4 ];
 
   // build return
-  *buffer++ = 'S';
-  *buffer++ = debug_gdb_hexchar[ signal >> 4 ];
-  *buffer++ = debug_gdb_hexchar[ signal & 0x0f ];
-  *buffer++ = '\0';
+  buffer[ 0 ] = 'S';
+  buffer[ 1 ] = debug_gdb_hexchar[ signal >> 4 ];
+  buffer[ 2 ] = debug_gdb_hexchar[ signal & 0x0f ];
+  buffer[ 3 ] = '\0';
 
   // send stop status
-  debug_gdb_packet_send( debug_gdb_output_buffer );
+  debug_gdb_packet_send( buffer );
 }
 
 /**
@@ -337,8 +342,19 @@ void debug_gdb_handler_stop_status(
  * @param context
  * @param packet
  */
-void debug_gdb_handler_read_register( void* context, __unused const uint8_t* packet ) {
-  char *buffer = ( char* )debug_gdb_output_buffer;
+void debug_gdb_handler_read_register(
+  void* context,
+  __unused const uint8_t* packet
+) {
+  // allocate memory
+  uint8_t* p = ( uint8_t* )malloc(
+    sizeof( uint8_t ) * ( ( GDB_NORMAL_REGISTER + GDB_EXTRA_REGISTER  ) * 8 + 1 )
+  );
+  // assert allocation
+  assert( NULL != p );
+  // pointer for writing
+  uint8_t* buffer = p;
+  // transform cpu
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // push registers from context
   for ( uint32_t m = R0; m <= PC; ++m ) {
@@ -353,7 +369,9 @@ void debug_gdb_handler_read_register( void* context, __unused const uint8_t* pac
   // ending
   *buffer++ = '\0';
   // send packet
-  debug_gdb_packet_send( debug_gdb_output_buffer );
+  debug_gdb_packet_send( p );
+  // free again
+  free( p );
 }
 
 /**
@@ -396,7 +414,7 @@ void debug_gdb_handler_read_memory(
   const uint8_t* packet
 ) {
   // variables
-  uint8_t* resp = NULL, *next;
+  uint8_t* buffer = NULL, *p, *next;
   uint32_t addr, length, value;
   // skip packet identifier
   packet++;
@@ -408,8 +426,11 @@ void debug_gdb_handler_read_memory(
   }
   // read length to read
   length = extract_hex_value( next + 1, NULL );
+  // allocate buffer
+  p = ( uint8_t* )malloc( length * 2 + 1 );
+  assert( NULL != p );
   // set response buffer pointer
-  resp = debug_gdb_output_buffer;
+  buffer = p;
   // read bytes
   for ( uint32_t i = 0; i < length; i++ ) {
     // read memory and stop on error
@@ -420,14 +441,16 @@ void debug_gdb_handler_read_memory(
     // extract byte
     uint8_t r8 = value & 0xff;
     // write to buffer
-    *resp++ = debug_gdb_hexchar[ r8 >> 4 ];
-    *resp++ = debug_gdb_hexchar[ r8 & 0x0f ];
-    *resp = '\0';
+    *buffer++ = debug_gdb_hexchar[ r8 >> 4 ];
+    *buffer++ = debug_gdb_hexchar[ r8 & 0x0f ];
+    *buffer = '\0';
   }
   // set ending
-  *resp = '\0';
+  *buffer = '\0';
   // send response
-  debug_gdb_packet_send( debug_gdb_output_buffer );
+  debug_gdb_packet_send( p );
+  // free stuff again
+  free( p );
 }
 
 /**

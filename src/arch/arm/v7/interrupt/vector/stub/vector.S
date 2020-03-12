@@ -49,7 +49,7 @@ _vector_interrupt_handler:
   ex_handler 4, vector_interrupt_handler, CPSR_MODE_SUPERVISOR, vector_interrupt
 
 _vector_fast_interrupt_handler:
-  ex_handler 4, vector_fast_interrupt_handler, CPSR_MODE_SUPERVISOR, vector_fast_interrupt
+  ex_handler 4, vector_fast_interrupt_handler, CPSR_MODE_SUPERVISOR, vector_fast_interrupt, 1
 
 EXPORT( interrupt_vector_table )
 .balign 32

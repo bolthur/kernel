@@ -30,7 +30,7 @@ IMPORT( task_thread_switch_to )
 IMPORT( task_thread_current_thread )
 
 // get thread context address
-.macro get_thread_context register
+.macro get_thread_context register:req
   // load address of current executing thread
   ldr \register, =task_thread_current_thread
   // get address of pointer
@@ -40,7 +40,7 @@ IMPORT( task_thread_current_thread )
 .endm
 
 // ensure correct stack alignment before calling any c function
-.macro stack_wind register, stack
+.macro stack_wind register:req, stack:req
   mov \register, \stack
   tst \stack, #4
   subeq \stack, #4
@@ -48,13 +48,13 @@ IMPORT( task_thread_current_thread )
 .endm
 
 // restore stack possibly changed due to stack alignment
-.macro stack_unwind register, stack
+.macro stack_unwind register:req, stack:req
   pop { \register }
   mov \stack, \register
 .endm
 
 // macro to switch to mode
-.macro switch_mode mode, fixup
+.macro switch_mode mode:req, fixup:req
   // adjust lr
   sub lr, #\fixup
   // switch mode and push lr and spsr to mode stack
@@ -63,7 +63,7 @@ IMPORT( task_thread_current_thread )
   cpsid if, #\mode
 .endm
 
-.macro equal_mode_switch offset, register, mode, equal, notequal
+.macro equal_mode_switch offset:req, register:req, mode:req, equal:req, notequal:req
   // save r3 on stack and check for user mode
   push { r3 }
   // load spsr from previous mode
@@ -81,7 +81,7 @@ IMPORT( task_thread_current_thread )
   beq \equal
 .endm
 
-.macro privileged_unprivileged_switch offset, register, privileged, unprivileged
+.macro privileged_unprivileged_switch offset:req, register:req, privileged:req, unprivileged:req
   // user mode also determined by stack is zero
   cmp \register, #0
   // jump to unprivileged if 0
@@ -95,7 +95,7 @@ IMPORT( task_thread_current_thread )
     \privileged
 .endm
 
-.macro push_register name, mode
+.macro push_register name:req, mode:req
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
     4, \
@@ -164,7 +164,7 @@ _\name\()_entry_privileged:
 _\name\()_entry_finished:
 .endm
 
-.macro pop_register name, mode, stack
+.macro pop_register name:req, mode:req, stack:req
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
     60, \
@@ -211,7 +211,7 @@ _\name\()_exit_privileged:
 _\name\()_exit_finished:
 .endm
 
-.macro ex_handler fixup:req, handler:req, mode:req, name:req
+.macro ex_handler fixup:req, handler:req, mode:req, name:req, suppress_nested
   // switch to svc mode with fixup
   switch_mode \mode, \fixup
   // push register
@@ -249,11 +249,15 @@ _\name\()_exit_finished:
   push { r1 }
   mov r0, r1
   // enable interrupts
-  cpsie if
+  .ifb \suppress_nested
+    cpsie if
+  .endif
   // handle events
   bl event_handle
   // disable interrupts
-  cpsid if
+  .ifb \suppress_nested
+    cpsid if
+  .endif
   // pop r1
   pop { r1 }
   // restore stack adjustments

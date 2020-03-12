@@ -64,12 +64,10 @@ bool debug_gdb_initialized( void );
 debug_gdb_signal_t debug_gdb_get_signal( void );
 
 void debug_gdb_packet_send( uint8_t* );
-int32_t debug_gdb_putchar( int32_t );
 int32_t debug_gdb_char2hex( char );
 
 bool debug_gdb_get_first_entry( void );
 void debug_gdb_set_first_entry( bool );
-int debug_gdb_puts( const char* );
 
 debug_gdb_callback_t debug_gdb_get_handler( const uint8_t* );
 void debug_gdb_handler_supported( void*, const uint8_t* );

@@ -162,24 +162,31 @@ void debug_gdb_init( void ) {
  * @todo remove debug output
  */
 void debug_gdb_serial_event( event_origin_t origin, __unused void* context ) {
-  // skip if stub is sending
-  if ( stub_sending ) {
-    return;
-  }
-
-  // cache package
+  // get start of serial buffer
   uint8_t* pkg = serial_get_buffer();
   uint8_t* buf = debug_gdb_input_buffer;
-  uint8_t* chk = ( uint8_t* )debug_strchr( ( char* )pkg, '#' );
-  char c;
-  uint8_t calculated_checksum;
-  uint32_t idx = 1, buf_idx = 0;
+  uint8_t* chk;
+  uint8_t c, calculated_checksum = 0;
+  uint32_t idx = 0, buf_idx = 0;
 
-  // reset input buffer
-  debug_memset( buf, 0, GDB_DEBUG_MAX_BUFFER );
+  // handle acknowledge
+  if ( stub_sending && '+' == pkg[ idx ] ) {
+    // reset sending state
+    stub_sending = false;
+  }
+  // increment index to skip sign
+  idx++;
+
+  // skip if stub is sending
+  if ( stub_sending ) {
+    // flush buffer
+    serial_flush_buffer();
+    // resend
+    debug_gdb_packet_send( NULL );
+  }
 
   // handle ctrl+c
-  if ( GDB_DEBUG_CONTROL_C == ( int )pkg[ 0 ] ) {
+  if ( GDB_DEBUG_CONTROL_C == ( int )pkg[ idx ] ) {
     // flush out read buffer
     serial_flush_buffer();
     // enqueue debug event to start debug handling
@@ -189,9 +196,14 @@ void debug_gdb_serial_event( event_origin_t origin, __unused void* context ) {
   }
 
   // Clear serial buffer when there is no debug character
-  if ( '$' != pkg[ 0 ] ) {
+  if ( '$' != pkg[ idx ] ) {
     serial_flush_buffer();
+    return;
   }
+  // increase again
+  idx++;
+  // check for string
+  chk = ( uint8_t* )debug_strchr( ( char* )pkg, '#' );
   // prepare variables
   calculated_checksum = 0;
   // check for closing # ( may be incomplete if missing! )
@@ -204,6 +216,8 @@ void debug_gdb_serial_event( event_origin_t origin, __unused void* context ) {
   if ( 2 > debug_strlen( ( char* )chk ) ) {
     return;
   }
+  // reset input buffer
+  debug_memset( buf, 0, GDB_DEBUG_MAX_BUFFER );
 
   // loop until end or closing #
   while( pkg[ idx ] != '\0' ) {
@@ -227,12 +241,14 @@ void debug_gdb_serial_event( event_origin_t origin, __unused void* context ) {
     idx++;
     buf_idx++;
   }
-
   // set buffer end
-  buf[ idx ] = 0;
+  buf[ buf_idx ] = 0;
   // check for checksum
   if ( ! checksum( calculated_checksum, chk ) ) {
+    // send invalid return
     serial_putc( '-' );
+    // flush buffer
+    serial_flush_buffer();
     return;
   }
 
@@ -285,89 +301,52 @@ bool debug_gdb_initialized( void ) {
  * @param char string to send
  */
 void debug_gdb_packet_send( uint8_t* p ) {
-  uint8_t checksum;
-  int count;
-  char ch;
+  uint8_t ch, checksum = 0;
+  int count = 0;
+  uint8_t *buf = debug_gdb_output_buffer;
 
-  // set sending flag
-  stub_sending = true;
-  interrupt_disable();
-
-  // $<packet info>#<checksum>.
-  do {
-    // start sending packet
-    serial_putc( '$' );
-    checksum = 0;
-    count = 0;
-    while ( NULL != p && ( ch = p[ count ] ) ) {
-      serial_putc( ch );
-      checksum = ( uint8_t )( ( int )checksum + ch );
-      count++;
-    }
-    serial_putc( '#' );
-    serial_putc( debug_gdb_hexchar[ checksum >> 4 ] );
-    serial_putc( debug_gdb_hexchar[ checksum % 16 ] );
-  } while ( '+' != serial_getc() );
-
-  // enable interrupts again
-  interrupt_enable();
-  // set sending flag
-  stub_sending = false;
-}
-
-/**
- * @brief Internal method to send character printed by remote gdb
- *
- * @param c
- * @return int32_t
- */
-int32_t debug_gdb_putchar( int32_t c ) {
-  // build buffer
-  char buf[ 4 ] = {
-    '0', debug_gdb_hexchar[ c >> 4 ], debug_gdb_hexchar[ c & 0x0f ], 0,
-  };
-  // send packet
-  debug_gdb_packet_send( ( uint8_t* )buf );
-  // return sent character
-  return c;
-}
-
-/**
- * @brief Print string to gdb
- *
- * @param str
- * @return int
- */
-int debug_gdb_puts( const char* str ) {
-  // variables
-  uint8_t* buffer = debug_gdb_output_buffer;
-  uint8_t* copy;
-  size_t idx = 0;
-  size_t length = debug_strlen( str );
-
-  // set command
-  buffer[ 0 ] = 'O';
-
-  // loop through string
-  while ( idx < length ) {
-    // copy string
-    for (
-      copy = buffer + 1;
-      idx < length && copy < buffer + GDB_DEBUG_MAX_BUFFER - 3;
-      idx++
-    ) {
-      *copy++ = debug_gdb_hexchar[ str[ idx ] >> 4 ];
-      *copy++ = debug_gdb_hexchar[ str[ idx ] & 0x0f ];
-    }
-    // set ending
-    *copy = 0;
-
-    // send packet
-    debug_gdb_packet_send( buffer );
+  // handle possible error due to nested interrupts
+  if ( NULL == p && ! stub_sending ) {
+    return;
   }
 
-  // return printed length
-  return ( int )length;
+  if ( ! stub_sending ) {
+    if ( p != debug_gdb_output_buffer ) {
+      // reset buffer
+      debug_memset( debug_gdb_output_buffer, 0, GDB_DEBUG_MAX_BUFFER );
+
+      // build packet
+      debug_gdb_output_buffer[ 0 ] = '$';
+      while ( NULL != p && ( ch = p[ count ] ) ) {
+        // handle overflow by package drop
+        if ( count + 1 >= GDB_DEBUG_MAX_BUFFER ) {
+          return;
+        }
+        // push to buffer
+        debug_gdb_output_buffer[ ++count ] = ch;
+        // update checksum
+        checksum = ( uint8_t )( ( int )checksum + ch );
+      }
+      // another overflow handle by drop
+      if ( count + 4 >= GDB_DEBUG_MAX_BUFFER ) {
+        return;
+      }
+      // add checksum
+      debug_gdb_output_buffer[ ++count ] = '#';
+      debug_gdb_output_buffer[ ++count ] = debug_gdb_hexchar[ checksum >> 4 ];
+      debug_gdb_output_buffer[ ++count ] = debug_gdb_hexchar[ checksum % 16 ];
+      debug_gdb_output_buffer[ ++count ] = '\0';
+    }
+
+    // set sending flag
+    stub_sending = true;
+  }
+
+  // send package
+  while ( *buf != '\0' ) {
+    serial_putc( *buf );
+    buf++;
+  }
 }
 
 /**
