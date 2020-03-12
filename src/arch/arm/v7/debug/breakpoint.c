@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <arch/arm/debug/barrier.h>
 #include <arch/arm/debug/cache.h>
+#include <arch/arm/v7/debug/debug.h>
 #include <core/debug/gdb.h>
 #include <core/debug/breakpoint.h>
 #include <core/debug/string.h>
@@ -185,6 +186,7 @@ void debug_breakpoint_disable( void ) {
   // skip if not initialized
   if (
     NULL == debug_breakpoint_manager
+    || ! debug_is_debug_exception()
     || debug_gdb_get_running_flag()
   ) {
     return;
@@ -231,6 +233,7 @@ void debug_breakpoint_enable( void ) {
   // skip if not initialized
   if (
     NULL == debug_breakpoint_manager
+    || ! debug_is_debug_exception()
     || debug_gdb_get_running_flag()
   ) {
     return;

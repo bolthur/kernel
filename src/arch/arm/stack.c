@@ -32,13 +32,9 @@ extern void stack_supervisor_mode( void );
  * @param uintptr_t
  * @return true
  * @return false
- *
- * @todo encapsulate debug output by some define or remove it
  */
 bool stack_is_kernel( uintptr_t address ) {
   uintptr_t stack_start = ( uintptr_t )&stack_supervisor_mode;
   uintptr_t stack_end = stack_start + STACK_SIZE;
-  DEBUG_OUTPUT( "start = %x, end = %x, addr = %x\r\n",
-    stack_start, stack_end, address );
   return stack_start <= address && stack_end > address;
 }
