@@ -20,6 +20,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <limits.h>
 
 #include <arch/arm/delay.h>
 
@@ -169,8 +170,23 @@ void serial_clear( __unused void* context ) {
       serial_flush_buffer();
     }
 
+    // read data register
+    uint16_t data_register = io_in16( base + UARTDR );
+    // extract error related shit
+    uint8_t error = ( uint8_t )( data_register >> CHAR_BIT );
+    // extract character
+    uint8_t character = ( uint8_t )data_register;
+
+    // handle error by dropping packet
+    if ( 0 != error ) {
+      // flush buffer
+      serial_flush_buffer();
+      // stop it
+      break;
+    }
+
     // read character
-    serial_buffer[ index++ ] = io_in8( base + UARTDR );
+    serial_buffer[ index++ ] = character;
     // add ending character
     serial_buffer[ index ] = '\0';
 

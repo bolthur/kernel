@@ -7,8 +7,10 @@
                 "${workspaceFolder}/include/lib",
                 "${workspaceFolder}/include/core",
                 "${workspaceFolder}/thirdparty",
-                "/opt/bolthur/os/lib/gcc/arm-bolthur-eabi/9.2.0/include",
-                "/opt/bolthur/os/lib/gcc/aarch64-bolthur-elf/9.2.0/include"
+                "/opt/bolthur/sysroot/arm/lib/gcc/arm-bolthur-eabi/9.2.0/include",
+                "/opt/bolthur/sysroot/arm/lib/gcc/arm-bolthur-eabi/9.2.0/include-fixed",
+                "/opt/bolthur/sysroot/arm/lib/gcc/aarch64-bolthur-elf/9.2.0/include",
+                "/opt/bolthur/sysroot/arm/lib/gcc/aarch64-bolthur-elf/9.2.0/include-fixed"
             ],
             "defines": [],
             "intelliSenseMode": "${default}",
@@ -19,8 +21,10 @@
                     "${workspaceFolder}/include/lib",
                     "${workspaceFolder}/include/core",
                     "${workspaceFolder}/thirdparty",
-                    "/opt/bolthur/os/lib/gcc/arm-bolthur-eabi/9.2.0/include",
-                    "/opt/bolthur/os/lib/gcc/aarch64-bolthur-elf/9.2.0/include"
+                    "/opt/bolthur/sysroot/arm/lib/gcc/arm-bolthur-eabi/9.2.0/include",
+                    "/opt/bolthur/sysroot/arm/lib/gcc/arm-bolthur-eabi/9.2.0/include-fixed",
+                    "/opt/bolthur/sysroot/arm/lib/gcc/aarch64-bolthur-elf/9.2.0/include",
+                    "/opt/bolthur/sysroot/arm/lib/gcc/aarch64-bolthur-elf/9.2.0/include-fixed"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -38,8 +42,10 @@
                 "${workspaceFolder}/include/lib",
                 "${workspaceFolder}/include/core",
                 "${workspaceFolder}/thirdparty",
-                "/opt/bolthur/os/lib/gcc/arm-bolthur-eabi/9.2.0/include",
-                "/opt/bolthur/os/lib/gcc/aarch64-bolthur-elf/9.2.0/include"
+                "/opt/bolthur/sysroot/arm/lib/gcc/arm-bolthur-eabi/9.2.0/include",
+                "/opt/bolthur/sysroot/arm/lib/gcc/arm-bolthur-eabi/9.2.0/include-fixed",
+                "/opt/bolthur/sysroot/arm/lib/gcc/aarch64-bolthur-elf/9.2.0/include",
+                "/opt/bolthur/sysroot/arm/lib/gcc/aarch64-bolthur-elf/9.2.0/include-fixed"
             ],
             "defines": [],
             "intelliSenseMode": "${default}",
@@ -50,8 +56,10 @@
                     "${workspaceFolder}/include/lib",
                     "${workspaceFolder}/include/core",
                     "${workspaceFolder}/thirdparty",
-                    "/opt/bolthur/os/lib/gcc/arm-bolthur-eabi/9.2.0/include",
-                    "/opt/bolthur/os/lib/gcc/aarch64-bolthur-elf/9.2.0/include"
+                    "/opt/bolthur/sysroot/arm/lib/gcc/arm-bolthur-eabi/9.2.0/include",
+                    "/opt/bolthur/sysroot/arm/lib/gcc/arm-bolthur-eabi/9.2.0/include-fixed",
+                    "/opt/bolthur/sysroot/arm/lib/gcc/aarch64-bolthur-elf/9.2.0/include",
+                    "/opt/bolthur/sysroot/arm/lib/gcc/aarch64-bolthur-elf/9.2.0/include-fixed"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""

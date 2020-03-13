@@ -161,7 +161,7 @@ void debug_gdb_init( void ) {
  * @todo clear buffer if valid
  * @todo remove debug output
  */
-void debug_gdb_serial_event( event_origin_t origin, __unused void* context ) {
+void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
   // get start of serial buffer
   uint8_t* pkg = serial_get_buffer();
   uint8_t* buf = debug_gdb_input_buffer;
@@ -173,9 +173,9 @@ void debug_gdb_serial_event( event_origin_t origin, __unused void* context ) {
   if ( stub_sending && '+' == pkg[ idx ] ) {
     // reset sending state
     stub_sending = false;
+    // increment index to skip sign
+    idx++;
   }
-  // increment index to skip sign
-  idx++;
 
   // skip if stub is sending
   if ( stub_sending ) {
@@ -183,14 +183,16 @@ void debug_gdb_serial_event( event_origin_t origin, __unused void* context ) {
     serial_flush_buffer();
     // resend
     debug_gdb_packet_send( NULL );
+    // return again
+    return;
   }
 
   // handle ctrl+c
   if ( GDB_DEBUG_CONTROL_C == ( int )pkg[ idx ] ) {
     // flush out read buffer
     serial_flush_buffer();
-    // enqueue debug event to start debug handling
-    event_enqueue( EVENT_DEBUG, origin );
+    // fake stepping at next address
+    debug_gdb_handler_stepping( context, NULL );
     // skip rest
     return;
   }
@@ -249,6 +251,7 @@ void debug_gdb_serial_event( event_origin_t origin, __unused void* context ) {
     serial_putc( '-' );
     // flush buffer
     serial_flush_buffer();
+    // skip
     return;
   }
 

@@ -639,7 +639,6 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
   while ( handler_running ) {
     __asm__ __volatile__( "nop" );
   }
-
   // set first entry flag
   debug_gdb_set_first_entry( false );
   // reset context

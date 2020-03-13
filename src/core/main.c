@@ -129,6 +129,7 @@ void kernel_main( void ) {
   // remote gdb debugging
   #if defined( REMOTE_DEBUG )
     // initialize serial
+    DEBUG_OUTPUT( "[bolthur/kernel -> serial ] serial init ...\r\n" );
     serial_init();
 
     // register serial interrupt ( irg/fiq )
