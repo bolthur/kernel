@@ -34,22 +34,22 @@ IMPORT( vector_interrupt_handler )
 IMPORT( vector_fast_interrupt_handler )
 
 _vector_undefined_instruction_handler:
-  ex_handler 4, vector_undefined_instruction_handler, CPSR_MODE_SUPERVISOR, vector_undefined
+  exception_handler 4, vector_undefined_instruction_handler, CPSR_MODE_SUPERVISOR, vector_undefined, "all"
 
 _vector_svc_handler:
-  ex_handler 4, vector_svc_handler, CPSR_MODE_SUPERVISOR, vector_svc
+  exception_handler 4, vector_svc_handler, CPSR_MODE_SUPERVISOR, vector_svc, "all"
 
 _vector_prefetch_abort_handler:
-  ex_handler 4, vector_prefetch_abort_handler, CPSR_MODE_SUPERVISOR, vector_prefetch_abort
+  exception_handler 4, vector_prefetch_abort_handler, CPSR_MODE_SUPERVISOR, vector_prefetch_abort, "fast"
 
 _vector_data_abort_handler:
-  ex_handler 8, vector_data_abort_handler, CPSR_MODE_SUPERVISOR, vector_data_abort
+  exception_handler 8, vector_data_abort_handler, CPSR_MODE_SUPERVISOR, vector_data_abort, "fast"
 
 _vector_interrupt_handler:
-  ex_handler 4, vector_interrupt_handler, CPSR_MODE_SUPERVISOR, vector_interrupt
+  exception_handler 4, vector_interrupt_handler, CPSR_MODE_SUPERVISOR, vector_interrupt, "all"
 
 _vector_fast_interrupt_handler:
-  ex_handler 4, vector_fast_interrupt_handler, CPSR_MODE_SUPERVISOR, vector_fast_interrupt, 1
+  exception_handler 4, vector_fast_interrupt_handler, CPSR_MODE_SUPERVISOR, vector_fast_interrupt, "none"
 
 EXPORT( interrupt_vector_table )
 .balign 32

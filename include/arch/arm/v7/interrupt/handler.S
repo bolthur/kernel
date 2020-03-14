@@ -211,7 +211,7 @@ _\name\()_exit_privileged:
 _\name\()_exit_finished:
 .endm
 
-.macro ex_handler fixup:req, handler:req, mode:req, name:req, suppress_nested
+.macro exception_handler fixup:req, handler:req, mode:req, name:req, nested:req
   // switch to svc mode with fixup
   switch_mode \mode, \fixup
   // push register
@@ -249,14 +249,20 @@ _\name\()_exit_finished:
   push { r1 }
   mov r0, r1
   // enable interrupts
-  .ifb \suppress_nested
+  .ifc \nested, all
     cpsie if
+  .endif
+  .ifc \nested, fast
+    cpsie f
   .endif
   // handle events
   bl event_handle
   // disable interrupts
-  .ifb \suppress_nested
+  .ifc \nested, all
     cpsid if
+  .endif
+  .ifc \nested, fast
+    cpsid f
   .endif
   // pop r1
   pop { r1 }

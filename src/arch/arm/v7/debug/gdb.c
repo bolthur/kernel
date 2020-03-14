@@ -629,16 +629,16 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
 
   // save context
   debug_gdb_set_context( cpu );
-
-  // Remove all stepping breakpoints due to conditional branches
+  // Remove all breakpoints temporary
   debug_breakpoint_remove_step();
-
   // handle stop status
   debug_gdb_handler_stop_status( context, NULL );
+
   // loop with nop until flag is reset!
   while ( handler_running ) {
     __asm__ __volatile__( "nop" );
   }
+
   // set first entry flag
   debug_gdb_set_first_entry( false );
   // reset context

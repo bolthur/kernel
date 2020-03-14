@@ -98,6 +98,8 @@ void debug_breakpoint_remove_step( void ) {
     if ( entry->step ) {
       // remove from breakpoint manager list
       list_remove( debug_breakpoint_manager, current );
+      // free stuff
+      free( entry );
     }
     // set current to next
     current = next;
@@ -178,6 +180,7 @@ void debug_breakpoint_add(
  * @brief Method deactivates all breakpoints
  *
  * @todo add support for hardware breakpoints
+ * @todo fix timing bug
  */
 void debug_breakpoint_disable( void ) {
   // variables
