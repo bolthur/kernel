@@ -141,10 +141,6 @@ void debug_gdb_init( void ) {
   DEBUG_OUTPUT( "Setup debug traps\r\n" );
   debug_gdb_set_trap();
 
-  // clear serial
-  DEBUG_OUTPUT( "Flushing serial\r\n" );
-  serial_flush();
-
   // synchronize
   DEBUG_OUTPUT( "Synchronize with remote GDB\r\n" );
   debug_gdb_breakpoint();

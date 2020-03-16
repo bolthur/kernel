@@ -195,7 +195,7 @@ void serial_clear( __unused void* context ) {
   }
 
   // clear pending interrupts.
-  io_out32( base + UARTICR, 0x7ff );
+  io_out32( base + UARTICR, state );
 
   // trigger serial event
   event_enqueue( EVENT_SERIAL, EVENT_DETERMINE_ORIGIN( context ) );
@@ -209,12 +209,8 @@ void serial_register_interrupt( void ) {
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // register interrupt
   interrupt_register_handler( 57, serial_clear, INTERRUPT_FAST, true );
-
-  // Clear pending interrupts.
-  io_out32( base + UARTICR, 0x7ff );
   // mask interrupt
   io_out32( base + INTERRUPT_FIQ_CONTROL, 57 | 0x80 );
-
   // flush it
   serial_flush();
 }
