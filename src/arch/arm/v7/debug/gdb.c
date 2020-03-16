@@ -628,9 +628,12 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
 
   // get context
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-  // add necessary offset to skip current address on first entry
+  // handle first entry
   if ( debug_gdb_get_first_entry() ) {
+    // add necessary offset to skip current address
     cpu->reg.pc += 4;
+    // set first entry to false
+    debug_gdb_set_first_entry( false );
   }
 
   // save context
@@ -645,10 +648,14 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
     __asm__ __volatile__( "nop" );
   }
 
-  // set first entry flag
-  handler_running = false;
   // reset context
   debug_gdb_set_context( NULL );
+  // disable all interrupts for sane exit
+  // necessary to prevent nesting, which might insert stupid breakpoint
+  // instructions via serial interrupt handling
+  interrupt_disable();
+  // set running flag
+  handler_running = false;
 }
 
 /**
