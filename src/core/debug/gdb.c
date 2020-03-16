@@ -439,7 +439,7 @@ void debug_gdb_handler_continue(
   __unused const uint8_t* packet
 ) {
   // set handler running to false
-  debug_gdb_set_running_flag( false );
+  debug_gdb_end_loop();
   // response success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
@@ -454,7 +454,7 @@ void debug_gdb_handler_detach(
   __unused void* context,
   __unused const uint8_t* packet
 ) {
-  debug_gdb_set_running_flag( false );
+  debug_gdb_end_loop();
   debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
 

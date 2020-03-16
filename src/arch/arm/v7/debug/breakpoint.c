@@ -100,6 +100,7 @@ void debug_breakpoint_remove_step( void ) {
       list_remove( debug_breakpoint_manager, current );
       // free stuff
       free( entry );
+      free( current );
     }
     // set current to next
     current = next;
@@ -124,13 +125,14 @@ void debug_breakpoint_remove( uintptr_t address, bool remove ) {
 
   // set enabled to false
   entry->enabled = false;
-
-  // handle remova;
+  // handle removal
   if ( remove ) {
-    list_remove(
-      debug_breakpoint_manager,
-      list_lookup_data( debug_breakpoint_manager, entry )
-    );
+    list_item_ptr_t item = list_lookup_data( debug_breakpoint_manager, entry );
+    // remove from list
+    list_remove( debug_breakpoint_manager, item );
+    // free stuff
+    free( entry );
+    free( item );
   }
 }
 
@@ -180,7 +182,6 @@ void debug_breakpoint_add(
  * @brief Method deactivates all breakpoints
  *
  * @todo add support for hardware breakpoints
- * @todo fix timing bug
  */
 void debug_breakpoint_disable( void ) {
   // variables
@@ -189,7 +190,6 @@ void debug_breakpoint_disable( void ) {
   // skip if not initialized
   if (
     NULL == debug_breakpoint_manager
-    || ! debug_is_debug_exception()
     || debug_gdb_get_running_flag()
   ) {
     return;
@@ -203,7 +203,6 @@ void debug_breakpoint_disable( void ) {
     // get entry value
     debug_breakpoint_entry_ptr_t entry =
       ( debug_breakpoint_entry_ptr_t )current->data;
-
     // replace instruction if enabled
     if ( entry->enabled ) {
       // push back instruction
@@ -236,7 +235,6 @@ void debug_breakpoint_enable( void ) {
   // skip if not initialized
   if (
     NULL == debug_breakpoint_manager
-    || ! debug_is_debug_exception()
     || debug_gdb_get_running_flag()
   ) {
     return;
@@ -250,7 +248,6 @@ void debug_breakpoint_enable( void ) {
     // get entry value
     debug_breakpoint_entry_ptr_t entry =
       ( debug_breakpoint_entry_ptr_t )current->data;
-
     // replace instruction if enabled
     if ( entry->enabled ) {
       // save instruction

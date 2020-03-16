@@ -51,7 +51,12 @@
 /**
  * @brief Flag set to true when receiving continue command
  */
-static bool handler_running;
+static bool handler_running = false;
+
+/**
+ * @brief End running debug handler
+ */
+static bool end_handler = false;
 
 /**
  * @brief output buffer used for formatting via sprintf
@@ -598,7 +603,7 @@ void debug_gdb_handler_stepping(
   }
 
   // set handler running to false
-  debug_gdb_set_running_flag( false );
+  debug_gdb_end_loop();
   // return success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
@@ -618,7 +623,8 @@ void debug_gdb_arch_init( void ) {
  */
 void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
   // set exit handler flag
-  debug_gdb_set_running_flag( true );
+  handler_running = true;
+  end_handler = false;
 
   // get context
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
@@ -635,12 +641,12 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
   debug_gdb_handler_stop_status( context, NULL );
 
   // loop with nop until flag is reset!
-  while ( handler_running ) {
+  while ( ! end_handler ) {
     __asm__ __volatile__( "nop" );
   }
 
   // set first entry flag
-  debug_gdb_set_first_entry( false );
+  handler_running = false;
   // reset context
   debug_gdb_set_context( NULL );
 }
@@ -675,15 +681,6 @@ debug_gdb_signal_t debug_gdb_get_signal( void ) {
 }
 
 /**
- * @brief Set handler running flag
- *
- * @param flag
- */
-inline void debug_gdb_set_running_flag( bool flag ) {
-  handler_running = flag;
-}
-
-/**
  * @brief Method to get handler running flag
  *
  * @return true
@@ -691,4 +688,11 @@ inline void debug_gdb_set_running_flag( bool flag ) {
  */
 inline bool debug_gdb_get_running_flag( void ) {
   return handler_running;
+}
+
+/**
+ * @brief End debug loop
+ */
+void debug_gdb_end_loop( void ) {
+  end_handler = true;
 }

@@ -57,8 +57,6 @@ void debug_gdb_init( void );
 void debug_gdb_arch_init( void );
 void debug_gdb_breakpoint( void );
 void debug_gdb_set_trap( void );
-void debug_gdb_set_running_flag( bool );
-bool debug_gdb_get_running_flag( void );
 void debug_gdb_handle_exception( void );
 bool debug_gdb_initialized( void );
 debug_gdb_signal_t debug_gdb_get_signal( void );
@@ -66,8 +64,10 @@ debug_gdb_signal_t debug_gdb_get_signal( void );
 void debug_gdb_packet_send( uint8_t* );
 int32_t debug_gdb_char2hex( char );
 
+bool debug_gdb_get_running_flag( void );
 bool debug_gdb_get_first_entry( void );
 void debug_gdb_set_first_entry( bool );
+void debug_gdb_end_loop( void );
 
 debug_gdb_callback_t debug_gdb_get_handler( const uint8_t* );
 void debug_gdb_handler_supported( void*, const uint8_t* );
