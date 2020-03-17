@@ -30,6 +30,7 @@
 #include <core/debug/string.h>
 #include <core/debug/gdb.h>
 #include <core/debug/breakpoint.h>
+#include <core/debug/watchpoint.h>
 
 /**
  * @brief stub initialized flag
@@ -131,6 +132,10 @@ void debug_gdb_init( void ) {
   // setup breakpoint manager
   DEBUG_OUTPUT( "Setup breakpoint manager\r\n" );
   debug_breakpoint_init();
+
+  // setup watchpoint manager
+  DEBUG_OUTPUT( "Setup watchpoint manager\r\n" );
+  debug_watchpoint_init();
 
   // setup debug traps
   DEBUG_OUTPUT( "Setup debug traps\r\n" );

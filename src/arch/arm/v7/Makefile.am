@@ -18,7 +18,7 @@ libv7_a_SOURCES = \
   debug/debug.c \
   debug/disasm.c \
   debug/gdb.c \
-  debug/string.c \
+  debug/watchpoint.c \
   interrupt/stub/interrupt.S \
   interrupt/vector/handler/data.c \
   interrupt/vector/handler/fiq.c \

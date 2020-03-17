@@ -26,6 +26,7 @@
 #include <core/serial.h>
 #include <core/debug/debug.h>
 #include <core/debug/gdb.h>
+#include <core/debug/breakpoint.h>
 
 /**
  * @brief debug breakpoint manager
@@ -42,4 +43,65 @@ void debug_breakpoint_init( void ) {
   }
   // setup list
   debug_breakpoint_manager = list_construct();
+}
+
+/**
+ * @brief Helper to get a possible breakpoint
+ *
+ * @param address
+ * @return debug_breakpoint_entry_ptr_t
+ */
+debug_breakpoint_entry_ptr_t debug_breakpoint_find( uintptr_t address ) {
+  // handle not existing
+  if ( NULL == debug_breakpoint_manager ) {
+    return NULL;
+  }
+  // check for possible existance
+  list_item_ptr_t current = debug_breakpoint_manager->first;
+  // loop through list of entries
+  while ( NULL != current ) {
+    // get entry value
+    debug_breakpoint_entry_ptr_t entry =
+      ( debug_breakpoint_entry_ptr_t )current->data;
+    // check for match
+    if ( entry->address == address ) {
+      return entry;
+    }
+    // next entry
+    current = current->next;
+  }
+  // return found / not found entry
+  return NULL;
+}
+
+/**
+ * @brief Method to remove all stepping breakpoints
+ */
+void debug_breakpoint_remove_step( void ) {
+  // check for initialized
+  if ( NULL == debug_breakpoint_manager ) {
+    return;
+  }
+  // variables
+  debug_breakpoint_entry_ptr_t entry = NULL;
+  list_item_ptr_t current = debug_breakpoint_manager->first;
+  list_item_ptr_t next = NULL;
+
+  // loop through list of entries
+  while ( NULL != current ) {
+    // get entry value
+    entry = ( debug_breakpoint_entry_ptr_t )current->data;
+    // next entry
+    next = current->next;
+    // handle only stepping breakpoints
+    if ( entry->step ) {
+      // remove from breakpoint manager list
+      list_remove( debug_breakpoint_manager, current );
+      // free stuff
+      free( entry );
+      free( current );
+    }
+    // set current to next
+    current = next;
+  }
 }
