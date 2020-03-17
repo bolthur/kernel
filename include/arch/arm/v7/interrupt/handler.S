@@ -219,16 +219,18 @@ _\name\()_exit_finished:
 
   // remote debugging
   #if defined( REMOTE_DEBUG )
-    // ensure stack alignment
-    stack_wind r0, sp
-    // push r1 and set r0
-    push { r1 }
-    // add breakpoints
-    bl debug_breakpoint_disable
-    // pop r1
-    pop { r1 }
-    // restore stack adjustments
-    stack_unwind r0, sp
+    .ifnc \nested, all
+      // ensure stack alignment
+      stack_wind r0, sp
+      // push r1 and set r0
+      push { r1 }
+      // add breakpoints
+      bl debug_breakpoint_disable
+      // pop r1
+      pop { r1 }
+      // restore stack adjustments
+      stack_unwind r0, sp
+    .endif
   #endif
 
   // ensure stack alignment
@@ -271,22 +273,22 @@ _\name\()_exit_finished:
 
   // remote debugging
   #if defined( REMOTE_DEBUG )
-    // ensure stack alignment
-    stack_wind r0, sp
-    // push r1 and set r0
-    push { r1 }
-    // add breakpoints
-    bl debug_breakpoint_enable
-    // pop r1
-    pop { r1 }
-    // restore stack adjustments
-    stack_unwind r0, sp
+    .ifnc \nested, all
+      // ensure stack alignment
+      stack_wind r0, sp
+      // push r1 and set r0
+      push { r1 }
+      // add breakpoints
+      bl debug_breakpoint_enable
+      // pop r1
+      pop { r1 }
+      // restore stack adjustments
+      stack_unwind r0, sp
+    .endif
   #endif
 
   // restore registers for return
   pop_register \name, \mode, r1
-  // enable interrupts again
-  cpsie if
   // return from exception
   rfeia sp!
 .endm

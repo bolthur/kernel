@@ -65,7 +65,7 @@ uint8_t* serial_get_buffer( void ) {
  */
 void serial_flush_buffer( void ) {
   index = 0;
-  serial_buffer[ index ] = 0;
+  serial_buffer[ index ] = '\0';
 }
 
 /**
@@ -157,14 +157,16 @@ void serial_clear( __unused void* context ) {
   #endif
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
-
   // get interrupt state
   uint32_t state = io_in32( base + UARTMIS );
-  // receive flag used for fetching
-  bool receive = state & ( 1 << 4 );
 
   // loop until flag will be reset
-  while ( receive ) {
+  while (
+    (
+      ( io_in32( base + UARTRIS ) & ( 1 << 4 ) )
+      && ! ( io_in32( base + UARTFR ) & ( 1 << 4 ) )
+    )
+  ) {
     // clear out serial buffer to prevent overrun
     if ( MAX_SERIAL_BUFFER <= ( index + 1 ) ) {
       serial_flush_buffer();
@@ -189,14 +191,10 @@ void serial_clear( __unused void* context ) {
     serial_buffer[ index++ ] = character;
     // add ending character
     serial_buffer[ index ] = '\0';
-
-    // evaluate another run
-    receive = ( 0 == ( io_in32( base + UARTFR ) & ( 1 << 4 ) ) );
   }
 
   // clear pending interrupts.
   io_out32( base + UARTICR, state );
-
   // trigger serial event
   event_enqueue( EVENT_SERIAL, EVENT_DETERMINE_ORIGIN( context ) );
 }

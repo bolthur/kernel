@@ -297,7 +297,6 @@ void event_handle( void* data ) {
       // skip rest
       continue;
     }
-
     // get block
     block = EVENT_GET_BLOCK( node );
 

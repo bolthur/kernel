@@ -45,7 +45,6 @@ debug_breakpoint_entry_ptr_t debug_breakpoint_find( uintptr_t address ) {
   if ( NULL == debug_breakpoint_manager ) {
     return NULL;
   }
-
   // check for possible existance
   list_item_ptr_t current = debug_breakpoint_manager->first;
   debug_breakpoint_entry_ptr_t entry = NULL;
@@ -76,18 +75,15 @@ debug_breakpoint_entry_ptr_t debug_breakpoint_find( uintptr_t address ) {
  * @todo add support for hardware breakpoints
  */
 void debug_breakpoint_remove_step( void ) {
-  // variables
-  debug_breakpoint_entry_ptr_t entry = NULL;
-  list_item_ptr_t current = NULL;
-  list_item_ptr_t next = NULL;
-
   // check for initialized
   if ( NULL == debug_breakpoint_manager ) {
     return;
   }
+  // variables
+  debug_breakpoint_entry_ptr_t entry = NULL;
+  list_item_ptr_t current = debug_breakpoint_manager->first;
+  list_item_ptr_t next = NULL;
 
-  // get first element
-  current = debug_breakpoint_manager->first;
   // loop through list of entries
   while ( NULL != current ) {
     // get entry value
@@ -142,19 +138,16 @@ void debug_breakpoint_remove( uintptr_t address, bool remove ) {
  * @param address
  * @param step
  * @param enable
- * @param previous_address
  *
  * @todo add support for hardware breakpoints
  */
 void debug_breakpoint_add(
   uintptr_t address,
   bool step,
-  bool enable,
-  uintptr_t previous_address
+  bool enable
 ) {
   // variables
   debug_breakpoint_entry_ptr_t entry = debug_breakpoint_find( address );
-
   // Don't add if already existing
   if ( NULL != entry && true == entry->enabled ) {
     return;
@@ -175,7 +168,6 @@ void debug_breakpoint_add(
   entry->step = step;
   entry->enabled = enable;
   entry->address = address;
-  entry->previous = previous_address;
 }
 
 /**
@@ -184,9 +176,6 @@ void debug_breakpoint_add(
  * @todo add support for hardware breakpoints
  */
 void debug_breakpoint_disable( void ) {
-  // variables
-  list_item_ptr_t current;
-
   // skip if not initialized
   if (
     NULL == debug_breakpoint_manager
@@ -194,9 +183,8 @@ void debug_breakpoint_disable( void ) {
   ) {
     return;
   }
-
-  // start with head
-  current = debug_breakpoint_manager->first;
+  // variables
+  list_item_ptr_t current = debug_breakpoint_manager->first;
 
   // loop through list of entries
   while ( NULL != current ) {
@@ -213,7 +201,6 @@ void debug_breakpoint_disable( void ) {
       // data transfer barrier
       debug_barrier_data_mem();
     }
-
     // next entry
     current = current->next;
   }
@@ -228,10 +215,6 @@ void debug_breakpoint_disable( void ) {
  * @todo add support for hardware breakpoints
  */
 void debug_breakpoint_enable( void ) {
-  // variables
-  uintptr_t bpi = GDB_BREAKPOINT_INSTRUCTION;
-  list_item_ptr_t current;
-
   // skip if not initialized
   if (
     NULL == debug_breakpoint_manager
@@ -239,9 +222,9 @@ void debug_breakpoint_enable( void ) {
   ) {
     return;
   }
-
-  // start with head
-  current = debug_breakpoint_manager->first;
+  // variables
+  uintptr_t bpi = GDB_BREAKPOINT_INSTRUCTION;
+  list_item_ptr_t current = debug_breakpoint_manager->first;
 
   // loop through list of entries
   while ( NULL != current ) {
@@ -263,7 +246,6 @@ void debug_breakpoint_enable( void ) {
       // data transfer barrier
       debug_barrier_data_mem();
     }
-
     // next entry
     current = current->next;
   }

@@ -245,10 +245,8 @@ void interrupt_register_handler(
   assert( NULL != wrapper );
   // prepare memory
   memset( ( void* )wrapper, 0, sizeof( interrupt_callback_wrapper_t ) );
-
   // populate wrapper
   wrapper->callback = callback;
-
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Created wrapper container at 0x%08p\r\n", wrapper );

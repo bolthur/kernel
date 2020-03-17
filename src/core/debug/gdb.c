@@ -166,9 +166,11 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
   uint32_t idx = 0, buf_idx = 0;
 
   // handle acknowledge
-  if ( stub_sending && '+' == pkg[ idx ] ) {
+  if ( '+' == pkg[ idx ] ) {
     // reset sending state
-    stub_sending = false;
+    if ( stub_sending ) {
+      stub_sending = false;
+    }
     // increment index to skip sign
     idx++;
   }
@@ -195,7 +197,9 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
 
   // Clear serial buffer when there is no debug character
   if ( '$' != pkg[ idx ] ) {
+    // flush invalid buffer content
     serial_flush_buffer();
+    // skip rest
     return;
   }
   // increase again
@@ -206,12 +210,18 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
   calculated_checksum = 0;
   // check for closing # ( may be incomplete if missing! )
   if ( NULL == chk ) {
+    // flush invalid buffer content
+    serial_flush_buffer();
+    // skip rest
     return;
   }
   // increase chk to skip closing #
   chk++;
   // check for checksum
   if ( 2 > debug_strlen( ( char* )chk ) ) {
+    // flush invalid buffer content
+    serial_flush_buffer();
+    // skip rest
     return;
   }
   // reset input buffer
@@ -224,7 +234,9 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
 
     // handle invalid character
     if ( '$' == c ) {
+      // flush invalid buffer content
       serial_flush_buffer();
+      // skip rest
       return;
     // handle closing #
     } else if ( '#' == c ) {
@@ -241,6 +253,7 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
   }
   // set buffer end
   buf[ buf_idx ] = 0;
+
   // check for checksum
   if ( ! checksum( calculated_checksum, chk ) ) {
     // send invalid return
@@ -250,10 +263,8 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
     // skip
     return;
   }
-
   // send acknowledge
   serial_putc( '+' );
-
   // check for sequence
   if ( buf[ 2 ] == ':' ) {
     // send sequence id
@@ -265,7 +276,6 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
 
   // execute determine callback
   debug_gdb_get_handler( buf )( gdb_execution_context, buf );
-
   // flush serial buffer
   serial_flush_buffer();
 }

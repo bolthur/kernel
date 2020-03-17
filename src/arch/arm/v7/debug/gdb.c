@@ -549,11 +549,10 @@ void debug_gdb_handler_remove_breakpoint(
  * @todo move to core/gdb.c
  */
 void debug_gdb_handler_insert_breakpoint(
-  void* context,
+  __unused void* context,
   const uint8_t* packet
 ) {
   // transform context to correct structure
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   uint32_t address;
 
   // skip packet identifier and separator
@@ -565,7 +564,7 @@ void debug_gdb_handler_insert_breakpoint(
   }
 
   // set breakpoint
-  debug_breakpoint_add( ( uintptr_t )address, false, true, cpu->reg.pc );
+  debug_breakpoint_add( ( uintptr_t )address, false, true );
 
   // return success
   debug_gdb_packet_send( ( uint8_t* )"OK" );
@@ -599,7 +598,7 @@ void debug_gdb_handler_stepping(
     // some debug output
     DEBUG_OUTPUT( "next_address: 0x%08x\r\n", next_address[ x ] );
     // add breakpoint
-    debug_breakpoint_add( next_address[ x ], true, true, cpu->reg.pc );
+    debug_breakpoint_add( next_address[ x ], true, true );
   }
 
   // set handler running to false
