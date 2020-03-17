@@ -90,4 +90,6 @@ void debug_gdb_set_context( void* );
 void debug_gdb_serial_event( event_origin_t, void* );
 void debug_gdb_handle_event( event_origin_t, void* );
 
+uint8_t* debug_gdb_packet_receive( uint8_t*, size_t );
+
 #endif

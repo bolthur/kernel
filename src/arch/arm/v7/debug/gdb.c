@@ -644,7 +644,13 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
 
   // loop with nop until flag is reset!
   while ( ! end_handler ) {
-    __asm__ __volatile__( "nop" );
+    // get packet
+    uint8_t* packet = debug_gdb_packet_receive(
+      debug_gdb_input_buffer, GDB_DEBUG_MAX_BUFFER );
+    // assert existance
+    assert( packet != NULL );
+    // execute handler
+    debug_gdb_get_handler( packet )( context, packet );
   }
 
   // reset context

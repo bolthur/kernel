@@ -40,10 +40,10 @@ _vector_svc_handler:
   exception_handler 4, vector_svc_handler, CPSR_MODE_SUPERVISOR, vector_svc, "all"
 
 _vector_prefetch_abort_handler:
-  exception_handler 4, vector_prefetch_abort_handler, CPSR_MODE_SUPERVISOR, vector_prefetch_abort, "fast"
+  exception_handler 4, vector_prefetch_abort_handler, CPSR_MODE_SUPERVISOR, vector_prefetch_abort, "none"
 
 _vector_data_abort_handler:
-  exception_handler 8, vector_data_abort_handler, CPSR_MODE_SUPERVISOR, vector_data_abort, "fast"
+  exception_handler 8, vector_data_abort_handler, CPSR_MODE_SUPERVISOR, vector_data_abort, "none"
 
 _vector_interrupt_handler:
   exception_handler 4, vector_interrupt_handler, CPSR_MODE_SUPERVISOR, vector_interrupt, "all"

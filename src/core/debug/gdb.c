@@ -42,11 +42,6 @@ static bool stub_initialized = false;
 static bool stub_first_entry = true;
 
 /**
- * @brief sending flag
- */
-static bool stub_sending = false;
-
-/**
  * @brief GDB debug context
  */
 static void *gdb_execution_context = NULL;
@@ -113,13 +108,13 @@ int32_t debug_gdb_char2hex( char ch ) {
  * @return true
  * @return false
  */
-static bool checksum( uint8_t in, uint8_t* chk ) {
+static bool checksum( uint8_t in ) {
   // put into destination
   uint8_t out;
   // calculate checksum
   out = ( uint8_t )(
-    ( debug_gdb_char2hex( chk[ 0 ] ) << 4 )
-    + debug_gdb_char2hex( chk[ 1 ] )
+    ( debug_gdb_char2hex( serial_getc() ) << 4 )
+    + debug_gdb_char2hex( serial_getc() )
   );
   // return compare result
   return in == out;
@@ -146,6 +141,76 @@ void debug_gdb_init( void ) {
   debug_gdb_breakpoint();
 }
 
+
+/**
+ * @brief Receive a packet
+ *
+ * @param max
+ * @return unsigned* packet_receive
+ */
+uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
+  char c;
+  uint8_t calculated_checksum;
+  size_t count = 0;
+  bool cont;
+
+  while ( true ) {
+    // wait until debug character drops in
+    while ( '$' != ( c = serial_getc() ) ) {}
+
+    // prepare variables
+    cont = false;
+    calculated_checksum = 0;
+    // read until max or #
+    while ( count < max - 1 ) {
+      // get next serial character
+      c = serial_getc();
+      // handle invalid
+      if ( '$' == c ) {
+        cont = true;
+        break;
+      // handle end
+      } else if ( '#' == c ) {
+        break;
+      }
+      // checksum
+      calculated_checksum = ( uint8_t )( calculated_checksum + c );
+      buffer[ count ] = c;
+      count++;
+    }
+    // check for continue
+    if ( cont ) {
+      continue;
+    }
+    count++;
+
+    // set end
+    buffer[ count ] = 0;
+    // check checksum checksum
+    if ( ! checksum( calculated_checksum ) ) {
+      serial_putc( '-' );
+      continue;
+    }
+
+    // send acknowledge
+    serial_putc( '+' );
+    // check for sequence
+    if ( ':' == buffer[ 2 ] ) {
+      // send sequence id
+      serial_putc( buffer[ 0 ] );
+      serial_putc( buffer[ 1 ] );
+      // return packet
+      return &buffer[ 3 ];
+    }
+
+    // return normal buffer
+    return buffer;
+  }
+
+  return NULL;
+}
+
+
 /**
  * @brief Serial gdb handler
  *
@@ -160,124 +225,14 @@ void debug_gdb_init( void ) {
 void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
   // get start of serial buffer
   uint8_t* pkg = serial_get_buffer();
-  uint8_t* buf = debug_gdb_input_buffer;
-  uint8_t* chk;
-  uint8_t c, calculated_checksum = 0;
-  uint32_t idx = 0, buf_idx = 0;
-
-  // handle acknowledge
-  if ( '+' == pkg[ idx ] ) {
-    // reset sending state
-    if ( stub_sending ) {
-      stub_sending = false;
-    }
-    // increment index to skip sign
-    idx++;
-  }
-
-  // skip if stub is sending
-  if ( stub_sending ) {
-    // flush buffer
-    serial_flush_buffer();
-    // resend
-    debug_gdb_packet_send( NULL );
-    // return again
-    return;
-  }
 
   // handle ctrl+c
-  if ( GDB_DEBUG_CONTROL_C == ( int )pkg[ idx ] ) {
+  if ( GDB_DEBUG_CONTROL_C == *pkg ) {
     // flush out read buffer
     serial_flush_buffer();
     // fake stepping at next address
     debug_gdb_handler_stepping( context, NULL );
-    // skip rest
-    return;
   }
-
-  // Clear serial buffer when there is no debug character
-  if ( '$' != pkg[ idx ] ) {
-    // flush invalid buffer content
-    serial_flush_buffer();
-    // skip rest
-    return;
-  }
-  // increase again
-  idx++;
-  // check for string
-  chk = ( uint8_t* )debug_strchr( ( char* )pkg, '#' );
-  // prepare variables
-  calculated_checksum = 0;
-  // check for closing # ( may be incomplete if missing! )
-  if ( NULL == chk ) {
-    // flush invalid buffer content
-    serial_flush_buffer();
-    // skip rest
-    return;
-  }
-  // increase chk to skip closing #
-  chk++;
-  // check for checksum
-  if ( 2 > debug_strlen( ( char* )chk ) ) {
-    // flush invalid buffer content
-    serial_flush_buffer();
-    // skip rest
-    return;
-  }
-  // reset input buffer
-  debug_memset( buf, 0, GDB_DEBUG_MAX_BUFFER );
-
-  // loop until end or closing #
-  while( pkg[ idx ] != '\0' ) {
-    // save current character
-    c = pkg[ idx ];
-
-    // handle invalid character
-    if ( '$' == c ) {
-      // flush invalid buffer content
-      serial_flush_buffer();
-      // skip rest
-      return;
-    // handle closing #
-    } else if ( '#' == c ) {
-      break;
-    }
-
-    // checksum
-    calculated_checksum = ( uint8_t )( calculated_checksum + c );
-    // push back character
-    buf[ buf_idx ] = c;
-    // increment
-    idx++;
-    buf_idx++;
-  }
-  // set buffer end
-  buf[ buf_idx ] = 0;
-
-  // check for checksum
-  if ( ! checksum( calculated_checksum, chk ) ) {
-    // send invalid return
-    serial_putc( '-' );
-    // flush buffer
-    serial_flush_buffer();
-    // skip
-    return;
-  }
-  // send acknowledge
-  serial_putc( '+' );
-  // check for sequence
-  if ( buf[ 2 ] == ':' ) {
-    // send sequence id
-    serial_putc( buf[ 0 ] );
-    serial_putc( buf[ 1 ] );
-    // adjust package packet
-    buf = &buf[ 3 ];
-  }
-
-  // execute determine callback
-  debug_gdb_get_handler( buf )( gdb_execution_context, buf );
-  // flush serial buffer
-  serial_flush_buffer();
 }
 
 /**
@@ -310,52 +265,25 @@ bool debug_gdb_initialized( void ) {
  * @param char string to send
  */
 void debug_gdb_packet_send( uint8_t* p ) {
-  uint8_t ch, checksum = 0;
-  int count = 0;
-  uint8_t *buf = debug_gdb_output_buffer;
+  uint8_t checksum;
+  int count;
+  char ch;
 
-  // handle possible error due to nested interrupts
-  if ( NULL == p && ! stub_sending ) {
-    return;
-  }
-
-  if ( ! stub_sending ) {
-    if ( p != debug_gdb_output_buffer ) {
-      // reset buffer
-      debug_memset( debug_gdb_output_buffer, 0, GDB_DEBUG_MAX_BUFFER );
-
-      // build packet
-      debug_gdb_output_buffer[ 0 ] = '$';
-      while ( NULL != p && ( ch = p[ count ] ) ) {
-        // handle overflow by package drop
-        if ( count + 1 >= GDB_DEBUG_MAX_BUFFER ) {
-          return;
-        }
-        // push to buffer
-        debug_gdb_output_buffer[ ++count ] = ch;
-        // update checksum
-        checksum = ( uint8_t )( ( int )checksum + ch );
-      }
-      // another overflow handle by drop
-      if ( count + 4 >= GDB_DEBUG_MAX_BUFFER ) {
-        return;
-      }
-      // add checksum
-      debug_gdb_output_buffer[ ++count ] = '#';
-      debug_gdb_output_buffer[ ++count ] = debug_gdb_hexchar[ checksum >> 4 ];
-      debug_gdb_output_buffer[ ++count ] = debug_gdb_hexchar[ checksum % 16 ];
-      debug_gdb_output_buffer[ ++count ] = '\0';
+  // $<packet info>#<checksum>.
+  do {
+    // start sending packet
+    serial_putc( '$' );
+    checksum = 0;
+    count = 0;
+    while ( NULL != p && ( ch = p[ count ] ) ) {
+      serial_putc( ch );
+      checksum = ( uint8_t )( ( int )checksum + ch );
+      count++;
     }
-
-    // set sending flag
-    stub_sending = true;
-  }
-
-  // send package
-  while ( *buf != '\0' ) {
-    serial_putc( *buf );
-    buf++;
-  }
+    serial_putc( '#' );
+    serial_putc( debug_gdb_hexchar[ checksum >> 4 ] );
+    serial_putc( debug_gdb_hexchar[ checksum % 16 ] );
+  } while ( '+' != serial_getc() );
 }
 
 /**
