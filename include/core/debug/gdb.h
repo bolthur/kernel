@@ -54,7 +54,6 @@ extern uint8_t debug_gdb_output_buffer[];
 extern uint8_t debug_gdb_input_buffer[];
 
 void debug_gdb_init( void );
-void debug_gdb_arch_init( void );
 void debug_gdb_breakpoint( void );
 void debug_gdb_set_trap( void );
 void debug_gdb_handle_exception( void );
@@ -85,6 +84,12 @@ void debug_gdb_handler_continue( void*, const uint8_t* );
 void debug_gdb_handler_stepping( void* , const uint8_t* );
 void debug_gdb_handler_detach( void*, const uint8_t* );
 void debug_gdb_handler_attach( void*, const uint8_t* );
+void debug_gdb_handler_remove_write_watchpoint( void*, const uint8_t* );
+void debug_gdb_handler_insert_write_watchpoint( void*, const uint8_t* );
+void debug_gdb_handler_remove_read_watchpoint( void*, const uint8_t* );
+void debug_gdb_handler_insert_read_watchpoint( void*, const uint8_t* );
+void debug_gdb_handler_remove_access_watchpoint( void*, const uint8_t* );
+void debug_gdb_handler_insert_access_watchpoint( void*, const uint8_t* );
 
 void debug_gdb_set_context( void* );
 void debug_gdb_serial_event( event_origin_t, void* );

@@ -21,6 +21,7 @@
 #include <stddef.h>
 #include <list.h>
 #include <core/debug/watchpoint.h>
+#include <core/debug/gdb.h>
 
 /**
  * @brief debug watchpoint manager
@@ -66,4 +67,62 @@ debug_watchpoint_entry_ptr_t debug_watchpoint_find( uintptr_t address ) {
   }
   // return not found
   return NULL;
+}
+
+/**
+ * @brief Method deactivates all watchpoints
+ *
+ * @todo add support for software watchpoints
+ */
+void debug_watchpoint_disable( void ) {
+  // skip if not initialized
+  if (
+    NULL == debug_watchpoint_manager
+    || debug_gdb_get_running_flag()
+  ) {
+    return;
+  }
+}
+
+/**
+ * @brief Method activates all enabled watchpoint
+ *
+ * @todo add support for software watchpoint
+ */
+void debug_watchpoint_enable( void ) {
+  // skip if not initialized
+  if (
+    NULL == debug_watchpoint_manager
+    || debug_gdb_get_running_flag()
+  ) {
+    return;
+  }
+}
+
+/**
+ * @brief Removes a watch point at address
+ *
+ * @param address address
+ * @param remove remove completely
+ *
+ * @todo add logic for software watchpoints
+ */
+void debug_watchpoint_remove(
+  __unused uintptr_t address,
+  __unused bool remove
+) {
+}
+
+/**
+ * @brief Adds a watchpoint
+ *
+ * @param address address
+ * @param enable watchpoint enabled
+ *
+ * @todo add logic for software watchpoints
+ */
+void debug_watchpoint_add(
+  __unused uintptr_t address,
+  __unused bool enable
+) {
 }

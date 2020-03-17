@@ -61,6 +61,12 @@ static debug_gdb_command_handler_t handler[] = {
   { .prefix = "Z0", .handler = debug_gdb_handler_insert_breakpoint, },
   { .prefix = "z1", .handler = debug_gdb_handler_remove_breakpoint, },
   { .prefix = "Z1", .handler = debug_gdb_handler_insert_breakpoint, },
+  { .prefix = "z2", .handler = debug_gdb_handler_remove_write_watchpoint, },
+  { .prefix = "Z2", .handler = debug_gdb_handler_insert_write_watchpoint, },
+  { .prefix = "z1", .handler = debug_gdb_handler_remove_read_watchpoint, },
+  { .prefix = "Z1", .handler = debug_gdb_handler_insert_read_watchpoint, },
+  { .prefix = "z1", .handler = debug_gdb_handler_remove_access_watchpoint, },
+  { .prefix = "Z1", .handler = debug_gdb_handler_insert_access_watchpoint, },
   { .prefix = "vCont?", .handler = debug_gdb_handler_continue_query_supported, },
   { .prefix = "vCont", .handler = debug_gdb_handler_continue_query, },
   { .prefix = "qAttached", .handler = debug_gdb_handler_attach, },
@@ -125,10 +131,6 @@ static bool checksum( uint8_t in ) {
  * @brief Setup gdb debugging
  */
 void debug_gdb_init( void ) {
-  // arch init
-  DEBUG_OUTPUT( "Arch init gdb related\r\n" );
-  debug_gdb_arch_init();
-
   // setup breakpoint manager
   DEBUG_OUTPUT( "Setup breakpoint manager\r\n" );
   debug_breakpoint_init();

@@ -18,8 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_DEBUG_CACHE__ )
-#define __ARCH_ARM_DEBUG_CACHE__
+#if ! defined( __CORE_DEBUG_CACHE__ )
+#define __CORE_DEBUG_CACHE__
 
 void debug_cache_invalidate_instruction_cache( void );
 

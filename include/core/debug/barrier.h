@@ -18,8 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_DEBUG_BARRIER__ )
-#define __ARCH_ARM_DEBUG_BARRIER__
+#if ! defined( __CORE_DEBUG_BARRIER__ )
+#define __CORE_DEBUG_BARRIER__
 
 void debug_barrier_data_mem( void );
 void debug_barrier_data_sync( void );

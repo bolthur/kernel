@@ -608,10 +608,93 @@ void debug_gdb_handler_stepping(
 }
 
 /**
- * @brief Arch related gdb init
+ * @brief Remove write watchpoint
+ *
+ * @param context
+ * @param packet
+ *
+ * @todo add logic
  */
-void debug_gdb_arch_init( void ) {
-  debug_enable_debug_monitor();
+void debug_gdb_handler_remove_write_watchpoint(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  debug_gdb_packet_send( ( uint8_t* )"E01" );
+}
+
+/**
+ * @brief Add write watchpoint
+ *
+ * @param context
+ * @param packet
+ *
+ * @todo add logic
+ */
+void debug_gdb_handler_insert_write_watchpoint(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  debug_gdb_packet_send( ( uint8_t* )"E01" );
+}
+
+/**
+ * @brief Remove read watchpoint
+ *
+ * @param context
+ * @param packet
+ *
+ * @todo add logic
+ */
+void debug_gdb_handler_remove_read_watchpoint(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  debug_gdb_packet_send( ( uint8_t* )"E01" );
+}
+
+/**
+ * @brief Add read watchpoint
+ *
+ * @param context
+ * @param packet
+ *
+ * @todo add logic
+ */
+void debug_gdb_handler_insert_read_watchpoint(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  debug_gdb_packet_send( ( uint8_t* )"E01" );
+}
+
+/**
+ * @brief Remove access watchpoint
+ *
+ * @param context
+ * @param packet
+ *
+ * @todo add logic
+ */
+void debug_gdb_handler_remove_access_watchpoint(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  debug_gdb_packet_send( ( uint8_t* )"E01" );
+}
+
+/**
+ * @brief Add access watchpoint
+ *
+ * @param context
+ * @param packet
+ *
+ * @todo add logic
+ */
+void debug_gdb_handler_insert_access_watchpoint(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
 
 /**
