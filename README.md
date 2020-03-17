@@ -1,7 +1,7 @@
 # kernel
 
 bolthur/kernel project.
-_Copyright (C) 2018 - 2019 bolthur project_
+_Copyright (C) 2018 - 2020 bolthur project_
 
 ## Supported platforms
 
@@ -129,34 +129,18 @@ qemu-system-arm -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel
 qemu-system-aarch64 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
 ```
 
-Starting the debugger from within build folder without any additional commands necessary would be done as follows:
+### Debugging
+
+Within the project root there are two different gdbinit files that may be used for setting up the debugger. `.gdbinit-qemu` should be chosen, when debugging the kernel with qemu. In case you want to use remote debugging, you should choose `.gdbinit-remote`.
+
+The files can be specified by using the parameter `-x`.
 
 ```bash
-/path/to/arm-none-eabi-gdb src/target/rpi/kernel7.sym
+# qemu debugging example
+/opt/bolthur/sysroot/arm/bin/arm-bolthur-eabi-gdb -x .gdbinit-qemu
+
+# remote debugging example
+/opt/bolthur/sysroot/arm/bin/arm-bolthur-eabi-gdb -x .gdbinit-remote
 ```
 
-### Test remote serial debugging with qemu
-
-Testing remote debugging with qemu within development from build directory.
-
-```bash
-/path/to/arm-none-eabi-gdb src/target/rpi/kernel7_qemu.sym
-```
-
-Within gdb execute following commands:
-
-```
-file src/target/rpi/kernel7_qemu.sym
-set verbose on
-set debug remote 1
-set architecture armv7
-set serial baud 115200
-target remote /dev/pts/2
-```
-
-```
-file src/target/rpi/kernel7_qemu.sym
-set architecture armv7
-set serial baud 115200
-target remote /dev/pts/2
-```
+When starting remote debugging, you need to specify the target, e.g. `target /dev/tty0` to connect to the running instance. Furthermore you need to configure the project with option `--enable-remote-debug`.

@@ -16,8 +16,8 @@ libcore_a_SOURCES = \
   mm/phys.c \
   mm/placement.c \
   mm/virt.c \
-  smp/lock.c \
   syscall/init.c \
+  task/lock.c \
   task/process.c \
   task/queue.c \
   task/stack.c \

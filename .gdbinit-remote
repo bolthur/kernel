@@ -1,0 +1,4 @@
+
+set architecture armv7
+set serial baud 115200
+file build/src/target/rpi/kernel7_qemu.sym

@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,23 +18,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/smp/lock.h>
+#include <core/task/lock.h>
 
 /**
- * @brief Acquire lock
+ * @brief release lock
  *
- * @param m mutex to lock
+ * @param m mutex to unlock
  */
-void smp_lock_mutex_acquire( smp_lock_mutex_t* m ) {
-  // yield until mutex could be applied
-  while (
-    ! __sync_bool_compare_and_swap(
-      m, SMP_LOCK_MUTEX_RELEASED, SMP_LOCK_MUTEX_LOCKED
-    )
-  ) {
-    __asm__( "yield" ::: "memory" );
-  }
-
-  // synchronize
+void task_lock_mutex_release( task_lock_mutex_t* m ) {
+  // set to released
+  *m = TASK_LOCK_MUTEX_RELEASED;
+  // snychronize
   __sync_synchronize();
 }

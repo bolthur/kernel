@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,17 +18,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( __CORE_SMP_LOCK__ )
-#define __CORE_SMP_LOCK__
+#if !defined( __CORE_TASK_LOCK__ )
+#define __CORE_TASK_LOCK__
 
 #include <stdint.h>
 
-typedef volatile int32_t smp_lock_mutex_t;
+typedef volatile int32_t task_lock_mutex_t;
 
-#define SMP_LOCK_MUTEX_LOCKED 1
-#define SMP_LOCK_MUTEX_RELEASED 0
+#define TASK_LOCK_MUTEX_LOCKED 1
+#define TASK_LOCK_MUTEX_RELEASED 0
 
-void smp_lock_mutex_acquire( smp_lock_mutex_t* );
-void smp_lock_mutex_release( smp_lock_mutex_t* );
+void task_lock_mutex_acquire( task_lock_mutex_t* );
+void task_lock_mutex_release( task_lock_mutex_t* );
 
 #endif

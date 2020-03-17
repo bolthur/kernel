@@ -12,7 +12,7 @@ noinst_LIBRARIES = libarm.a
 libarm_a_SOURCES = \
   interrupt/interrupt.c \
   mm/virt.c \
-  smp/lock.c \
+  task/lock.c \
   arch.c \
   delay.c \
   elf.c \
