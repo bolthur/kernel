@@ -39,12 +39,8 @@ static uint32_t nested_prefetch_abort = 0;
 void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   assert( nested_prefetch_abort++ < INTERRUPT_NESTED_MAX );
-
   // get event origin
-  #if defined( REMOTE_DEBUG )
-    event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
-  #endif
-
+  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
 
@@ -63,6 +59,9 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   #else
     PANIC( "prefetch abort!" );
   #endif
+
+  // enqueue cleanup
+  event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
 
   // decrement nested counter
   nested_prefetch_abort--;

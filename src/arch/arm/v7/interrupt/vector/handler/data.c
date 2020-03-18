@@ -54,10 +54,8 @@ __maybe_unused static uint32_t fault_address( void ) {
 void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   assert( nested_data_abort++ < INTERRUPT_NESTED_MAX );
-
   // get event origin
-  __maybe_unused event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
-
+  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
 
@@ -78,6 +76,9 @@ void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
   #else
     PANIC( "prefetch abort!" );
   #endif
+
+  // enqueue cleanup
+  event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
 
   // decrement nested counter
   nested_data_abort--;

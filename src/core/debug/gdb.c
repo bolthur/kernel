@@ -249,7 +249,7 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
  */
 void debug_gdb_set_trap( void ) {
   // register debug event
-  event_bind( EVENT_DEBUG, debug_gdb_handle_event, true );
+  event_bind( EVENT_DEBUG, debug_gdb_handle_event, false );
   // register serial event
   event_bind( EVENT_SERIAL, debug_gdb_serial_event, false );
   // set initialized

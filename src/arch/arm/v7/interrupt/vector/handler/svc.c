@@ -40,10 +40,8 @@ static uint32_t nested_svc = 0;
 void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   assert( nested_svc++ < INTERRUPT_NESTED_MAX );
-
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
-
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
 
@@ -66,15 +64,16 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
 
   // handle bound interrupt handlers
   interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu );
-
-  // decrement nested counter
-  nested_svc--;
-
   // enqueue timer event for testing
   event_enqueue( EVENT_TIMER, origin );
+  // enqueue cleanup
+  event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
 
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "Leaving software_interrupt_handler\r\n" );
   #endif
+
+  // decrement nested counter
+  nested_svc--;
 }

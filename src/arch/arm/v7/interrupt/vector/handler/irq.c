@@ -38,7 +38,8 @@ static uint32_t nested_interrupt = 0;
 void vector_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   assert( nested_interrupt++ < INTERRUPT_NESTED_MAX );
-
+  // get event origin
+  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
 
@@ -49,10 +50,12 @@ void vector_interrupt_handler( cpu_register_context_ptr_t cpu ) {
 
   // get pending interrupt
   int8_t interrupt = interrupt_get_pending( false );
+  // assert return
   assert( -1 != interrupt );
-
   // handle bound interrupt handlers
   interrupt_handle( ( uint8_t )interrupt, INTERRUPT_NORMAL, cpu );
+  // enqueue cleanup
+  event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
 
   // decrement nested counter
   nested_interrupt--;
