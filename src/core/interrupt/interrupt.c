@@ -354,3 +354,29 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
     DEBUG_OUTPUT( "Handling of callbacks finished!\r\n" );
   #endif
 }
+
+/**
+ * @brief Generic interrupt init method
+ */
+void interrupt_init( void ) {
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Calling arch related interrupt init\r\n" );
+  #endif
+  // arch related init part
+  interrupt_arch_init();
+
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Calling post interrupt init\r\n" );
+  #endif
+  // possible post init
+  interrupt_post_init();
+
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Enabling interrupts\r\n" );
+  #endif
+  // enable interrupts
+  interrupt_enable();
+}

@@ -70,21 +70,13 @@ void kernel_main( void ) {
     "|_.__/ \\___/|_|\\__|_| |_|\\__,_|_|    /_/     |_|\\_\\___|_|  |_| |_|\\___|_|"
   );
 
-  // Setup interrupt
-  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] initialize ...\r\n" );
-  interrupt_init();
-
   // Setup event system
   DEBUG_OUTPUT( "[bolthur/kernel -> event] initialize ...\r\n" );
   event_init();
 
-  // Post interrupt setup
-  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] post initialize ...\r\n" );
-  interrupt_post_init();
-
-  // Enable interrupts
-  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] enable ...\r\n" );
-  interrupt_enable();
+  // Setup interrupt
+  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] initialize ...\r\n" );
+  interrupt_init();
 
   // remote gdb debugging
   #if defined( REMOTE_DEBUG )

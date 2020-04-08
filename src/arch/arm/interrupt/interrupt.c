@@ -26,6 +26,6 @@
 /**
  * @brief Initialize interrupt requests
  */
-void interrupt_init( void ) {
+void interrupt_arch_init( void ) {
   interrupt_vector_init();
 }
