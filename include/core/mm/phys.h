@@ -48,6 +48,6 @@ void phys_free_page_range( uint64_t, size_t );
 void phys_use_page_range( uint64_t, size_t );
 uint64_t phys_find_free_page( size_t );
 void phys_free_page( uint64_t );
-bool phys_initialized_get( void );
+bool phys_init_get( void );
 
 #endif

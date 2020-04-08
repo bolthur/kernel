@@ -26,12 +26,10 @@ librpi_a_SOURCES = \
 if IS32
   librpi_a_SOURCES += \
     boot/start.32.S \
-    boot/prepare.32.c \
     start.32.S
 endif
 if IS64
   librpi_a_SOURCES += \
     boot/start.64.S \
-    boot/prepare.64.c \
     start.64.S
 endif

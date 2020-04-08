@@ -28,7 +28,6 @@
 #include <core/entry.h>
 #include <core/panic.h>
 #include <core/mm/phys.h>
-#include <core/mm/placement.h>
 #include <core/mm/virt.h>
 #include <arch/arm/mm/virt.h>
 

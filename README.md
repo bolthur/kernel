@@ -65,7 +65,6 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-mm-phys` activate tty output of physical memory manager ( slows down kernel totally )
 * `--enable-output-mm-virt` activate tty output of virtual memory manager
 * `--enable-output-mm-heap` activate tty output of kernel heap
-* `--enable-output-mm-placement` activate tty output of placement allocator
 * `--enable-output-mailbox` activate tty output of mailbox implementation
 * `--enable-output-timer` activate tty output of timer implementation
 * `--enable-output-initrd` activate initrd implementation output
@@ -84,18 +83,6 @@ Possible additional parameters to `--host` and `--enable-device`:
 ```bash
 # just call make for building the project
 make clean && make
-```
-
-### Remote debugging
-
-For remote debugging configure the kernel with `--enable-debug`, rebuild and copy it to remote device. After that, depending on the remote arch, execute one of the following commands
-
-```bash
-### debug 32 bit arm device
-../scripts/opt/cross/bin/arm-none-eabi-gdb -b 115200 --tty=/dev/ttyUSB0 ./platform/rpi/kernel.elf ./platform/rpi/kernel.map
-
-### debug 64 bit arm device
-../scripts/opt/cross/bin/aarch64-none-elf-gdb -b 115200 --tty=/dev/ttyUSB0 ./platform/rpi/kernel.elf ./platform/rpi/kernel.map
 ```
 
 ### Real hardware
@@ -137,10 +124,10 @@ The files can be specified by using the parameter `-x`.
 
 ```bash
 # qemu debugging example
-/opt/bolthur/sysroot/arm/bin/arm-bolthur-eabi-gdb -x .gdbinit-qemu
+/opt/bolthur/sysroot/arm/bin/arm-unknown-bolthur-eabi-gdb -x .gdbinit-qemu
 
 # remote debugging example
-/opt/bolthur/sysroot/arm/bin/arm-bolthur-eabi-gdb -x .gdbinit-remote
+/opt/bolthur/sysroot/arm/bin/arm-unknown-bolthur-eabi-gdb -x .gdbinit-remote
 ```
 
-When starting remote debugging, you need to specify the target, e.g. `target /dev/tty0` to connect to the running instance. Furthermore you need to configure the project with option `--enable-remote-debug`.
+When starting remote debugging, you need to specify the target, e.g. `target /dev/ttyUSB0` to connect to the running instance. Furthermore you need to configure the project with option `--enable-debug`.

@@ -63,7 +63,7 @@ static uintptr_t map_temporary( uint64_t start, size_t size ) {
   bool stop = false;
 
   // stop here if not initialized
-  if ( true != virt_initialized_get() ) {
+  if ( true != virt_init_get() ) {
     return ( uintptr_t )start;
   }
 
@@ -192,7 +192,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
   addr = addr - offset;
 
   // stop here if not initialized
-  if ( true != virt_initialized_get() ) {
+  if ( true != virt_init_get() ) {
     return;
   }
 
@@ -730,7 +730,7 @@ void v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
 virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
   // create new context
   uint64_t ctx;
-  if ( ! heap_initialized_get() ) {
+  if ( ! virt_init_get() ) {
     ctx = ( uint64_t )(
       ( uintptr_t )VIRT_2_PHYS( aligned_alloc( PAGE_SIZE, PAGE_SIZE ) ) );
   } else {

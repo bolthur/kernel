@@ -31,10 +31,8 @@ static uint32_t supported_mode __bootstrap_data;
 
 /**
  * @brief Wrapper to setup short descriptor mapping if supported
- *
- * @param max_memory maximum memory to map starting from 0
  */
-void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
+void __bootstrap boot_virt_setup( void ) {
   // get paging support from mmfr0
   __asm__ __volatile__(
     "mrc p15, 0, %0, c0, c1, 4"
@@ -50,7 +48,7 @@ void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
   }
 
   // setup short memory
-  boot_virt_setup_short( max_memory );
+  boot_virt_setup_short();
 
   // setup platform related
   boot_virt_platform_setup();

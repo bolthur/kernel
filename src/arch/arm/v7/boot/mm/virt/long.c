@@ -39,10 +39,8 @@ static ld_global_page_directory_t initial_context
 
 /**
  * @brief Helper to setup initial paging with large page address extension
- *
- * @param max_memory maximum memory to map starting from 0
  */
-void __bootstrap boot_virt_setup_long( uintptr_t max_memory ) {
+void __bootstrap boot_virt_setup_long( void ) {
   // variables
   ld_ttbcr_t ttbcr;
   uint32_t reg, x, y;
@@ -66,8 +64,21 @@ void __bootstrap boot_virt_setup_long( uintptr_t max_memory ) {
     );
   }
 
+  // determine max
+  uintptr_t max = VIRT_2_PHYS( &__kernel_end );
+  // round up to page size if necessary
+  if ( max % PAGE_SIZE ) {
+    max += ( PAGE_SIZE - max % PAGE_SIZE );
+  }
+  // shift max
+  max >>= 21;
+  // minimum is 1
+  if ( 0 == max ) {
+    max = 1;
+  }
+
   // Map initial memory
-  for ( x = 0; x < ( max_memory >> 21 ); x++ ) {
+  for ( x = 0; x < max; x++ ) {
     boot_virt_map_long( x << 21, x << 21 );
 
     if ( 0 < KERNEL_OFFSET ) {

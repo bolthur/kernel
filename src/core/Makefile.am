@@ -16,7 +16,6 @@ libcore_a_SOURCES = \
   interrupt/interrupt.c \
   mm/heap.c \
   mm/phys.c \
-  mm/placement.c \
   mm/virt.c \
   syscall/init.c \
   task/lock.c \

@@ -27,7 +27,6 @@
 #include <core/entry.h>
 #include <core/initrd.h>
 #include <core/mm/phys.h>
-#include <core/mm/placement.h>
 #include <core/mm/virt.h>
 
 /**
@@ -51,11 +50,10 @@ void virt_init( void ) {
 
   // determine start and end for kernel mapping
   uintptr_t start = 0;
-  uintptr_t end = placement_address;
-
+  uintptr_t end = VIRT_2_PHYS( &__kernel_end );
   // round up to page size if necessary
   if ( end % PAGE_SIZE ) {
-    end += ( PAGE_SIZE - placement_address % PAGE_SIZE );
+    end += ( PAGE_SIZE - end % PAGE_SIZE );
   }
 
   // debug output
@@ -150,6 +148,6 @@ void virt_init( void ) {
  * @return true virtual memory management has been set up
  * @return false virtual memory management has been not yet set up
  */
-bool virt_initialized_get( void ) {
+bool virt_init_get( void ) {
   return virt_initialized;
 }

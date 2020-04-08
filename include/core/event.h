@@ -64,7 +64,7 @@ typedef struct {
 #define EVENT_GET_BLOCK( n ) \
   ( event_block_ptr_t )( ( uint8_t* )n - offsetof( event_block_t, node ) )
 
-bool event_initialized_get( void );
+bool event_init_get( void );
 void event_init( void );
 bool event_bind( event_type_t, event_callback_t, bool );
 void event_unbind( event_type_t, event_callback_t, bool );

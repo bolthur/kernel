@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 
+#include <core/mm/phys.h>
 #include <arch/arm/mm/virt/short.h>
 #include <arch/arm/v7/boot/mm/virt/short.h>
 #include <core/entry.h>
@@ -32,10 +33,8 @@ static sd_context_total_t initial_context
 
 /**
  * @brief Method to setup short descriptor paging
- *
- * @param max_memory maximum memory to map starting from 0
  */
-void __bootstrap boot_virt_setup_short( uintptr_t max_memory ) {
+void __bootstrap boot_virt_setup_short() {
   uint32_t x, reg;
   sd_ttbcr_t ttbcr;
 
@@ -43,8 +42,21 @@ void __bootstrap boot_virt_setup_short( uintptr_t max_memory ) {
     initial_context.raw[ x ] = 0;
   }
 
+  // determine max
+  uintptr_t max = VIRT_2_PHYS( &__kernel_end );
+  // round up to page size if necessary
+  if ( max % PAGE_SIZE ) {
+    max += ( PAGE_SIZE - max % PAGE_SIZE );
+  }
+  // shift max
+  max >>= 20;
+  // minimum is 1
+  if ( 0 == max ) {
+    max = 1;
+  }
+
   // map all memory
-  for ( x = 0; x < ( max_memory >> 20 ); x++ ) {
+  for ( x = 0; x < max; x++ ) {
     boot_virt_map_short( x << 20, x << 20 );
 
     if ( 0 < KERNEL_OFFSET ) {

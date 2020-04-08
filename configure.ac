@@ -62,15 +62,6 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_ENABLE(
-  [output-mm-placement],
-  AC_HELP_STRING(
-    [--enable-output-mm-placement],
-    [activate placememt allocator output [default: off]]
-  ),
-  [enable_output_mm_placement=yes]
-)
-
-AC_ARG_ENABLE(
   [output-mailbox],
   AC_HELP_STRING(
     [--enable-output-mailbox],

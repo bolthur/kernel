@@ -56,7 +56,7 @@ void virt_init( void );
 void virt_platform_init( void );
 void virt_arch_init( void );
 void virt_arch_prepare( void );
-bool virt_initialized_get( void );
+bool virt_init_get( void );
 void virt_platform_post_init( void );
 
 virt_context_ptr_t virt_create_context( virt_context_type_t );

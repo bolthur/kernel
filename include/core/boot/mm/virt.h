@@ -23,7 +23,7 @@
 
 #include <stdint.h>
 
-void boot_virt_setup( uintptr_t );
+void boot_virt_setup( void );
 void boot_virt_platform_setup( void );
 
 #endif

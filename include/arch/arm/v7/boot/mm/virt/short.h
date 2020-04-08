@@ -23,7 +23,7 @@
 
 #include <core/boot/mm/virt.h>
 
-void boot_virt_setup_short( uintptr_t );
+void boot_virt_setup_short( void );
 void boot_virt_map_short( uintptr_t, uintptr_t );
 
 #endif

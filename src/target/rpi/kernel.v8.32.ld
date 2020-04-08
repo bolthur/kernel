@@ -76,6 +76,12 @@ SECTIONS {
     __bss_start = .;
     *( COMMON )
     *( .bss )
+
+    /* 1MB for initial heap */
+    __initial_heap_start = .;
+    . += 0x100000;
+    __initial_heap_end = .;
+
     __bss_end = .;
   }
 

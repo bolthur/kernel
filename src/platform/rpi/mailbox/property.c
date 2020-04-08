@@ -25,7 +25,6 @@
 #include <core/debug/debug.h>
 #include <core/entry.h>
 #include <core/mm/phys.h>
-#include <core/mm/placement.h>
 #include <platform/rpi/mailbox/mailbox.h>
 #include <platform/rpi/mailbox/property.h>
 
@@ -47,7 +46,7 @@ void mailbox_property_init( void ) {
   // reserve memory if not yet done
   if ( NULL == ptb_buffer ) {
     ptb_buffer = ( int32_t* )aligned_alloc( PAGE_SIZE, PAGE_SIZE );
-    ptb_buffer_phys = ( int32_t* )VIRT_2_PHYS( ( uintptr_t )ptb_buffer );
+    ptb_buffer_phys = ( int32_t* )VIRT_2_PHYS( ptb_buffer );
   }
 
   // Add startup size

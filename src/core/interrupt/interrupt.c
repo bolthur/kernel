@@ -69,7 +69,7 @@ static int32_t compare_interrupt_callback(
  */
 static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
   // assert heap existance
-  assert( true == heap_initialized_get() );
+  assert( true == heap_init_get() );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Called tree_by_type( %d )\r\n", type );
@@ -147,7 +147,7 @@ void interrupt_register_handler(
   bool post
 ) {
   // assert heap existance
-  assert( true == heap_initialized_get() );
+  assert( true == heap_init_get() );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT(

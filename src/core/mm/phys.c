@@ -27,7 +27,6 @@
 #include <core/entry.h>
 #include <core/initrd.h>
 #include <core/mm/phys.h>
-#include <core/mm/placement.h>
 
 /**
  * @brief Physical bitmap
@@ -258,10 +257,11 @@ void phys_init( void ) {
 
   // determine start and end for kernel mapping
   uintptr_t start = 0;
-  uintptr_t end = placement_address + placement_address % PAGE_SIZE;
-
-  // adjust placement address
-  placement_address = end;
+  uintptr_t end = VIRT_2_PHYS( &__kernel_end );
+  // round up to page size if necessary
+  if ( end % PAGE_SIZE ) {
+    end += ( PAGE_SIZE - end % PAGE_SIZE );
+  }
 
   // debug output
   #if defined( PRINT_MM_PHYS )
@@ -310,6 +310,6 @@ void phys_init( void ) {
  * @return true physical memory management has been set up
  * @return false physical memory management has been not yet set up
  */
-bool phys_initialized_get( void ) {
+bool phys_init_get( void ) {
   return phys_initialized;
 }

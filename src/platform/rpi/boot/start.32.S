@@ -164,8 +164,8 @@ reset:
 
   // enable fpu
   bl fpu_enable
-  // prepare by platform
-  bl boot_platform_prepare
+  // innitial virtual memory setup
+  bl boot_virt_setup
 
   // load higher half start
   ldr r3, =start

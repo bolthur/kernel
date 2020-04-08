@@ -27,7 +27,6 @@
 #include <core/debug/debug.h>
 
 #include <core/mm/phys.h>
-#include <core/mm/placement.h>
 #include <core/mm/virt.h>
 #include <arch/arm/mm/virt.h>
 #include <arch/arm/v7/mm/virt/short.h>
@@ -281,7 +280,7 @@ void virt_flush_complete( void ) {
 void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
   // no flush if not initialized or context currently not active
   if (
-    ! virt_initialized_get()
+    ! virt_init_get()
     || (
       ctx != kernel_context
       && ctx != user_context

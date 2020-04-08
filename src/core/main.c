@@ -33,7 +33,6 @@
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <core/mm/heap.h>
-#include <core/mm/placement.h>
 #include <core/event.h>
 #include <core/task/process.h>
 #include <core/syscall.h>
@@ -54,6 +53,9 @@
  * @todo initialize serial when remote debugging is enabled
  */
 void kernel_main( void ) {
+  // Setup early heap for malloc / free support
+  heap_init( HEAP_INIT_EARLY );
+
   // enable tty for output
   tty_init();
 
@@ -68,6 +70,37 @@ void kernel_main( void ) {
     "|_.__/ \\___/|_|\\__|_| |_|\\__,_|_|    /_/     |_|\\_\\___|_|  |_| |_|\\___|_|"
   );
 
+  // Setup interrupt
+  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] initialize ...\r\n" );
+  interrupt_init();
+
+  // Setup event system
+  DEBUG_OUTPUT( "[bolthur/kernel -> event] initialize ...\r\n" );
+  event_init();
+
+  // Post interrupt setup
+  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] post initialize ...\r\n" );
+  interrupt_post_init();
+
+  // Enable interrupts
+  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] enable ...\r\n" );
+  interrupt_enable();
+
+  // remote gdb debugging
+  #if defined( REMOTE_DEBUG )
+    // initialize serial
+    DEBUG_OUTPUT( "[bolthur/kernel -> serial ] serial init ...\r\n" );
+    serial_init();
+
+    // register serial interrupt ( irg/fiq )
+    DEBUG_OUTPUT( "[bolthur/kernel -> serial ] register interrupt ...\r\n" );
+    serial_register_interrupt();
+
+    // Setup gdb stub
+    DEBUG_OUTPUT( "[bolthur/kernel -> debug -> gdb] initialize ...\r\n" );
+    debug_gdb_init();
+  #endif
+
   // Setup arch related parts
   DEBUG_OUTPUT( "[bolthur/kernel -> arch] initialize ...\r\n" );
   arch_init();
@@ -75,10 +108,6 @@ void kernel_main( void ) {
   // Setup platform related parts
   DEBUG_OUTPUT( "[bolthur/kernel -> platform] initialize ...\r\n" );
   platform_init();
-
-  // Setup interrupt
-  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] initialize ...\r\n" );
-  interrupt_init();
 
   // Setup initrd parts
   DEBUG_OUTPUT( "[bolthur/kernel -> initrd] initialize ...\r\n" );
@@ -116,34 +145,7 @@ void kernel_main( void ) {
 
   // Setup heap
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
-  heap_init();
-
-  // Setup event system
-  DEBUG_OUTPUT( "[bolthur/kernel -> event] initialize ...\r\n" );
-  event_init();
-
-  // Post interrupt setup
-  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] post initialize ...\r\n" );
-  interrupt_post_init();
-
-  // Enable interrupts
-  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] enable ...\r\n" );
-  interrupt_enable();
-
-  // remote gdb debugging
-  #if defined( REMOTE_DEBUG )
-    // initialize serial
-    DEBUG_OUTPUT( "[bolthur/kernel -> serial ] serial init ...\r\n" );
-    serial_init();
-
-    // register serial interrupt ( irg/fiq )
-    DEBUG_OUTPUT( "[bolthur/kernel -> serial ] register interrupt ...\r\n" );
-    serial_register_interrupt();
-
-    // Setup gdb stub
-    DEBUG_OUTPUT( "[bolthur/kernel -> debug -> gdb] initialize ...\r\n" );
-    debug_gdb_init();
-  #endif
+  heap_init( HEAP_INIT_NORMAL );
 
   // Setup timer
   DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" );

@@ -32,10 +32,8 @@ static uint32_t supported_mode __bootstrap_data;
 
 /**
  * @brief Method wraps setup of short / long descriptor mode
- *
- * @param max_memory maximum memory to map starting from 0
  */
-void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
+void __bootstrap boot_virt_setup( void ) {
   // get paging support from mmfr0
   __asm__ __volatile__(
     "mrc p15, 0, %0, c0, c1, 4"
@@ -75,9 +73,9 @@ void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
 
   // kick start
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
-    boot_virt_setup_long( max_memory );
+    boot_virt_setup_long();
   } else {
-    boot_virt_setup_short( max_memory );
+    boot_virt_setup_short();
   }
 
   // setup platform related
