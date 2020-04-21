@@ -43,7 +43,7 @@ static ld_global_page_directory_t initial_context
 void __bootstrap boot_virt_setup_long( void ) {
   // variables
   ld_ttbcr_t ttbcr;
-  uint32_t reg, x, y;
+  uint32_t x, y;
 
   // Prepare initial context
   for ( x = 0; x < 512; x++ ) {
@@ -103,13 +103,6 @@ void __bootstrap boot_virt_setup_long( void ) {
     : : "r" ( ttbcr.raw )
     : "cc"
   );
-
-  // Get content from control register
-  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
-  // enable mmu by setting bit 0
-  reg |= 1;
-  // push back value with mmu enabled bit set
-  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
 }
 
 /**
@@ -136,4 +129,17 @@ void __bootstrap boot_virt_map_long( uint64_t phys, uintptr_t virt ) {
   section->raw = LD_PHYSICAL_SECTION_L2_ADDRESS( phys );
   section->data.type = LD_TYPE_SECTION;
   section->data.lower_attr_access = 1;
+}
+
+/**
+ * @brief Method to enable initial virtual memory
+ */
+void __bootstrap boot_virt_enable_long( void ) {
+  uint32_t reg;
+  // Get content from control register
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
+  // enable mmu by setting bit 0
+  reg |= 1;
+  // push back value with mmu enabled bit set
+  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
 }

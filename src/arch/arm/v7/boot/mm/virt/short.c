@@ -35,7 +35,7 @@ static sd_context_total_t initial_context
  * @brief Method to setup short descriptor paging
  */
 void __bootstrap boot_virt_setup_short() {
-  uint32_t x, reg;
+  uint32_t x;
   sd_ttbcr_t ttbcr;
 
   for ( x = 0; x < 4096; x++ ) {
@@ -88,13 +88,6 @@ void __bootstrap boot_virt_setup_short() {
     : : "r" ( ttbcr.raw )
     : "cc"
   );
-
-  // Get content from control register
-  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
-  // enable mmu by setting bit 0
-  reg |= 1;
-  // push back value with mmu enabled bit set
-  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
 }
 
 /**
@@ -112,4 +105,17 @@ void __bootstrap boot_virt_map_short( uintptr_t phys, uintptr_t virt ) {
   sec->data.execute_never = 0;
   sec->data.access_permision_0 = SD_MAC_APX0_PRIVILEGED_RW;
   sec->data.frame = y & 0xFFF;
+}
+
+/**
+ * @brief Method to enable initial virtual memory
+ */
+void __bootstrap boot_virt_enable_short( void ) {
+  uint32_t reg;
+  // Get content from control register
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
+  // enable mmu by setting bit 0
+  reg |= 1;
+  // push back value with mmu enabled bit set
+  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
 }

@@ -25,5 +25,6 @@
 
 void boot_virt_setup_short( void );
 void boot_virt_map_short( uintptr_t, uintptr_t );
+void boot_virt_enable_short( void );
 
 #endif

@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <core/serial.h>
 #include <platform/rpi/framebuffer.h>
+#include <core/serial.h>
 #include <core/debug/gdb.h>
 
 /**
@@ -28,7 +29,8 @@
  */
 void tty_init( void ) {
   #if defined( OUTPUT_ENABLE )
-    framebuffer_init();
+    //framebuffer_init();
+    serial_init();
   #endif
 }
 
@@ -41,7 +43,7 @@ void tty_putc( __maybe_unused uint8_t c ) {
   // return if disabled
   #if defined( OUTPUT_ENABLE )
     if ( ! debug_gdb_get_running_flag() ) {
-      framebuffer_putc( c );
+      serial_putc( c );
     }
   #endif
 }

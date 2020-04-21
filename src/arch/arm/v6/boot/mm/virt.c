@@ -52,6 +52,9 @@ void __bootstrap boot_virt_setup( void ) {
 
   // setup platform related
   boot_virt_platform_setup();
+
+  // enable mapping
+  boot_virt_enable_short();
 }
 
 /**

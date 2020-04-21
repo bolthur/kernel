@@ -7,10 +7,12 @@
                 "${workspaceFolder}/include/lib",
                 "${workspaceFolder}/include/core",
                 "${workspaceFolder}/thirdparty",
-                "/opt/bolthur/sysroot/arm/lib/gcc/arm-unknown-bolthur-eabi/9.2.0/include",
-                "/opt/bolthur/sysroot/arm/lib/gcc/arm-unknown-bolthur-eabi/9.2.0/include-fixed",
-                "/opt/bolthur/sysroot/arm/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include",
-                "/opt/bolthur/sysroot/arm/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include-fixed"
+                "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/9.2.0/include",
+                "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/9.2.0/include-fixed",
+                "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include",
+                "/opt/bolthur/cross/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include",
+                "/opt/bolthur/cross/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include-fixed",
+                "/opt/bolthur/sysroot/aarch64-unknown-bolthur-eabi/usr/include"
             ],
             "defines": [],
             "intelliSenseMode": "${default}",
@@ -23,8 +25,10 @@
                     "${workspaceFolder}/thirdparty",
                     "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/9.2.0/include",
                     "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/9.2.0/include-fixed",
+                    "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include",
                     "/opt/bolthur/cross/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include",
-                    "/opt/bolthur/cross/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include-fixed"
+                    "/opt/bolthur/cross/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include-fixed",
+                    "/opt/bolthur/sysroot/aarch64-unknown-bolthur-eabi/usr/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""
@@ -44,8 +48,10 @@
                 "${workspaceFolder}/thirdparty",
                 "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/9.2.0/include",
                 "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/9.2.0/include-fixed",
+                "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include",
                 "/opt/bolthur/cross/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include",
-                "/opt/bolthur/cross/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include-fixed"
+                "/opt/bolthur/cross/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include-fixed",
+                "/opt/bolthur/sysroot/aarch64-unknown-bolthur-eabi/usr/include"
             ],
             "defines": [],
             "intelliSenseMode": "${default}",
@@ -58,8 +64,10 @@
                     "${workspaceFolder}/thirdparty",
                     "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/9.2.0/include",
                     "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/9.2.0/include-fixed",
+                    "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include",
                     "/opt/bolthur/cross/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include",
-                    "/opt/bolthur/cross/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include-fixed"
+                    "/opt/bolthur/cross/lib/gcc/aarch64-unknown-bolthur-elf/9.2.0/include-fixed",
+                    "/opt/bolthur/sysroot/aarch64-unknown-bolthur-eabi/usr/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""

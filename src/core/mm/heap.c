@@ -523,25 +523,33 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
   return to_insert;
 }
 
+extern void boot_putc( uint8_t c );
+
 /**
  * @brief Initialize heap
  *
  * @todo check normal init after early init
+ * @todo find issue ocurring somewhere here on real hardware
  */
 void heap_init( heap_init_state_t state ) {
+  boot_putc( '1' );
   // assert not initialized
+  // if leads to fault on real hardware
   if (
     (
       NULL != kernel_heap
       && kernel_heap->state > state
     ) || HEAP_INIT_NONE == state
   ) {
+    boot_putc( '2' );
     return;
   }
 
+  boot_putc( '2' );
   // start and end of early init
   uintptr_t initial_start = ( uintptr_t )&__initial_heap_start;
   uintptr_t initial_end = ( uintptr_t )&__initial_heap_end;
+  boot_putc( '3' );
 
   // offset for first free block
   uint32_t offset = 0;
@@ -554,6 +562,7 @@ void heap_init( heap_init_state_t state ) {
     : HEAP_MIN_SIZE;
   // heap to be created
   heap_manager_ptr_t heap = NULL;
+  boot_putc( '4' );
 
   // debug output
   #if defined( PRINT_MM_HEAP )
@@ -564,6 +573,7 @@ void heap_init( heap_init_state_t state ) {
     );
   #endif
 
+  boot_putc( '5' );
   // map heap address space
   if ( HEAP_INIT_NORMAL == state ) {
     for (
@@ -590,6 +600,7 @@ void heap_init( heap_init_state_t state ) {
     #endif
   }
 
+  boot_putc( '6' );
   // erase kernel heap section
   memset( ( void* )start, 0, min_size );
 
@@ -611,15 +622,18 @@ void heap_init( heap_init_state_t state ) {
     DEBUG_OUTPUT( "offset: %d\r\n", offset );
   #endif
 
+  boot_putc( '7' );
   // initialize management structure
   if ( NULL == kernel_heap ) {
     memset( ( void* )heap, 0, sizeof( heap_manager_t ) );
   }
+  boot_putc( '8' );
 
   // populate trees
   heap->free_address[ state ].compare = compare_address_callback;
   heap->used_area[ state ].compare = compare_address_callback;
   heap->free_size[ state ].compare = compare_size_callback;
+  boot_putc( '8' );
 
   // create free block
   heap_block_ptr_t free_block = ( heap_block_ptr_t )( start + offset );
@@ -629,11 +643,13 @@ void heap_init( heap_init_state_t state ) {
   #endif
   // increase offset
   offset += sizeof( heap_block_t );
+  boot_putc( '8' );
   // debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "Heap offset: %d\r\n", offset );
   #endif
 
+  boot_putc( '8' );
   // prepare free block
   prepare_block( free_block, start + offset, min_size - offset );
   // insert into free trees
@@ -647,6 +663,7 @@ void heap_init( heap_init_state_t state ) {
     kernel_heap = heap;
   }
 
+  boot_putc( '9' );
   // Debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "Used tree:\r\n" );

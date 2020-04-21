@@ -25,10 +25,36 @@
 #include <arch/arm/v7/boot/mm/virt/long.h>
 #include <arch/arm/v7/boot/mm/virt/short.h>
 
+#include <platform/rpi/gpio.h>
+
 /**
  * @brief Supported mode
  */
 static uint32_t supported_mode __bootstrap_data;
+
+void __bootstrap boot_io_out32( uint32_t port, uint32_t val ) {
+  __asm__( "dmb" ::: "memory" );
+  *( volatile uint32_t* )( port ) = val;
+  __asm__( "dmb" ::: "memory" );
+}
+
+uint32_t __bootstrap boot_io_in32( uint32_t port ) {
+  __asm__( "dmb" ::: "memory" );
+  return *( volatile uint32_t* )( port );
+}
+
+void __bootstrap boot_io_out8( uint32_t port, uint8_t val ) {
+  boot_io_out32( port, ( uint32_t )val );
+}
+
+void __bootstrap boot_putc( uint8_t c ) {
+  // get peripheral base
+  uint32_t base = 0x3F000000;
+
+  // Wait for UART to become ready to transmit.
+  while ( 0 != ( boot_io_in32( base + UARTFR ) & ( 1 << 5 ) ) ) { }
+  boot_io_out8( base + UARTDR, c );
+}
 
 /**
  * @brief Method wraps setup of short / long descriptor mode
@@ -41,6 +67,8 @@ void __bootstrap boot_virt_setup( void ) {
     : : "cc"
   );
 
+  boot_putc( 'a' );
+
   // strip out everything not needed
   supported_mode &= 0xF;
 
@@ -52,6 +80,7 @@ void __bootstrap boot_virt_setup( void ) {
       || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
     )
   ) {
+    boot_putc( 'b' );
     return;
   }
 
@@ -62,15 +91,16 @@ void __bootstrap boot_virt_setup( void ) {
     : "=r" ( reg )
     : : "cc"
   );
+  boot_putc( 'c' );
 
   // get only cpu address bus size
   reg = ( reg >> 24 ) & 0xf;
-
   // use short if physical address bus is not 36 bit at least
   if ( 0 == reg ) {
     supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
   }
 
+  boot_putc( 'd' );
   // kick start
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
     boot_virt_setup_long();
@@ -78,8 +108,20 @@ void __bootstrap boot_virt_setup( void ) {
     boot_virt_setup_short();
   }
 
+  boot_putc( 'e' );
   // setup platform related
   boot_virt_platform_setup();
+
+  boot_putc( 'f' );
+
+  // enable initial mapping
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+    boot_virt_enable_long();
+  } else {
+    boot_virt_enable_short();
+  }
+
+  boot_putc( 'g' );
 }
 
 /**
