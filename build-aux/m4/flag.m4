@@ -5,6 +5,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   # warnings
   CFLAGS="${CFLAGS} -Wall -Wextra -Werror -Wpedantic -Wconversion -Wpacked"
   CFLAGS="${CFLAGS} -Wpacked-bitfield-compat -Wpacked-not-aligned"
+  # FIXME: ADD FOLLOWING CFLAGS WHEN CONFTEST CHANGED: -Wstrict-prototypes -Wmissing-prototypes -Wshadow
   # sanitize
   # CFLAGS="${CFLAGS} -fsanitize=undefined"
   # generic

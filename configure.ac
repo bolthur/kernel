@@ -1,5 +1,5 @@
 
-AC_PREREQ(2.57)
+AC_PREREQ(2.69)
 AC_INIT([bolthur-kernel], [0.1], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 AC_COPYRIGHT([Copyright (C) 2018 - 2020 bolthur project])
 
