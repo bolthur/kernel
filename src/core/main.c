@@ -55,14 +55,10 @@ extern void boot_putc( uint8_t c );
  * @todo initialize serial when remote debugging is enabled
  */
 void kernel_main( void ) {
-  boot_putc( 'h' );
   // Setup early heap for malloc / free support
   heap_init( HEAP_INIT_EARLY );
-  boot_putc( 'i' );
-
   // enable tty for output
   tty_init();
-  boot_putc( 'j' );
 
   // Some initial output :)
   DEBUG_OUTPUT(

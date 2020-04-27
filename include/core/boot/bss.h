@@ -31,7 +31,7 @@
 #endif
 
 // bss fields from linker script
-bss_type_t __bss_start;
-bss_type_t __bss_end;
+extern bss_type_t __bss_start;
+extern bss_type_t __bss_end;
 
 #endif
