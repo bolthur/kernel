@@ -26,12 +26,9 @@
 
 /**
  * @brief Initialize TTY
- *
- * @todo remove serial init
  */
 void tty_init( void ) {
   #if defined( OUTPUT_ENABLE )
-    serial_init();
     framebuffer_init();
   #endif
 }
@@ -40,15 +37,12 @@ void tty_init( void ) {
  * @brief Print character to TTY
  *
  * @param c Character to print
- *
- * @todo remove serial putc
  */
 void tty_putc( __maybe_unused uint8_t c ) {
   // return if disabled
   #if defined( OUTPUT_ENABLE )
     if ( ! debug_gdb_get_running_flag() ) {
       framebuffer_putc( c );
-      serial_putc( c );
     }
   #endif
 }
