@@ -12,7 +12,6 @@ libcore_a_SOURCES = \
   debug/breakpoint.c \
   debug/gdb.c \
   debug/string.c \
-  debug/watchpoint.c \
   interrupt/interrupt.c \
   mm/heap.c \
   mm/phys.c \

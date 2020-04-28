@@ -54,7 +54,6 @@
  * @brief Kernel main function
  *
  * @todo remove initrd test code later
- * @todo initialize serial when remote debugging is enabled
  */
 void kernel_main( void ) {
   // Setup early heap for malloc / free support

@@ -24,8 +24,6 @@ IMPORT( event_handle )
 #if defined( REMOTE_DEBUG )
   IMPORT( debug_breakpoint_enable )
   IMPORT( debug_breakpoint_disable )
-  IMPORT( debug_watchpoint_enable )
-  IMPORT( debug_watchpoint_disable )
 #endif
 // switch to thread
 IMPORT( task_thread_switch_to )
@@ -228,8 +226,6 @@ _\name\()_exit_finished:
       push { r1 }
       // disable  breakpoints
       bl debug_breakpoint_disable
-      // disable watch points
-      bl debug_watchpoint_disable
       // pop r1
       pop { r1 }
       // restore stack adjustments
@@ -284,8 +280,6 @@ _\name\()_exit_finished:
       push { r1 }
       // add breakpoints
       bl debug_breakpoint_enable
-      // add watch points
-      bl debug_watchpoint_enable
       // pop r1
       pop { r1 }
       // restore stack adjustments
