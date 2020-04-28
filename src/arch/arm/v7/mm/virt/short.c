@@ -240,7 +240,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
  *
  * @return uintptr_t address to new table
  */
-static uintptr_t get_new_table() {
+static uintptr_t get_new_table( void ) {
   // static address and remaining amount
   static uintptr_t addr = 0;
   static uint32_t remaining = 0;

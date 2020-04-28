@@ -19,7 +19,7 @@
  */
 
 #include <stdlib.h>
-#include <core/serial.h>
+#include <core/tty.h>
 #include <platform/rpi/framebuffer.h>
 #include <core/serial.h>
 #include <core/debug/gdb.h>

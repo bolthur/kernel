@@ -86,7 +86,7 @@
  *
  * @todo Check system timer support of qemu
  */
-bool timer_pending( void ) {
+static bool timer_pending( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
     uintptr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
     return io_in32( ( uint32_t )base + CORE0_IRQ_SOURCE ) & ARM_GENERIC_TIMER_MATCH_VIRT;
@@ -102,7 +102,7 @@ bool timer_pending( void ) {
  *
  * @todo Check system timer support of qemu
  */
-void timer_clear( void* context ) {
+static void timer_clear( void* context ) {
   // check for pending timer
   if ( ! timer_pending() ) {
     return;

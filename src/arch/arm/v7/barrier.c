@@ -18,6 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <arch/arm/barrier.h>
+
 /**
  * @brief Data memory barrier invalidation
  */

@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <core/boot/mm/virt.h>
 #include <arch/arm/boot/mm/virt.h>
 #include <arch/arm/mm/virt.h>
 #include <core/entry.h>

@@ -20,6 +20,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 void* memmove( void* dst, const void* src, size_t n ) {
   uint8_t *cdst = ( uint8_t* )dst;

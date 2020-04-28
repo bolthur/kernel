@@ -34,4 +34,6 @@
 extern bss_type_t __bss_start;
 extern bss_type_t __bss_end;
 
+void boot_bss_clear( void );
+
 #endif

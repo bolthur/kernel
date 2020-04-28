@@ -20,6 +20,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <core/debug/string.h>
 
 /**
  * @brief Copy of memcpy for remote debugging

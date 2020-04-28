@@ -23,6 +23,6 @@
 
 #include <stdint.h>
 
-uint32_t cpu_num( void )
+uint32_t cpu_num( void );
 
 #endif

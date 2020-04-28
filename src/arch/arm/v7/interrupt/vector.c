@@ -20,6 +20,7 @@
 
 #include <core/interrupt.h>
 #include <core/event.h>
+#include <arch/arm/interrupt/vector.h>
 #include <arch/arm/v7/interrupt/vector.h>
 
 /**

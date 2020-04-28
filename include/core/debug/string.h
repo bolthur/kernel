@@ -26,7 +26,7 @@
 
 void* debug_memcpy( void* restrict, const void* restrict, size_t );
 void* debug_memset( void*, int, size_t );
-void* debug_strchr( const char*, int );
+char* debug_strchr( const char*, int );
 size_t debug_strlen( const char* );
 
 #endif

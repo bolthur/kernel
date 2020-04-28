@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <atag.h>
 #include <core/initrd.h>
+#include <core/platform.h>
 #include <core/debug/debug.h>
 #include <platform/rpi/platform.h>
 

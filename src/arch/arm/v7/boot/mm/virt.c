@@ -22,6 +22,7 @@
 
 #include <arch/arm/mm/virt.h>
 #include <core/entry.h>
+#include <arch/arm/boot/mm/virt.h>
 #include <arch/arm/v7/boot/mm/virt/long.h>
 #include <arch/arm/v7/boot/mm/virt/short.h>
 

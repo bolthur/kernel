@@ -20,7 +20,7 @@
 
 #include <assert.h>
 #include <arch/arm/v7/debug/debug.h>
-#include <arch/arm/v7/cpu.h>
+#include <arch/arm/v7/interrupt/vector.h>
 #include <core/event.h>
 #include <core/panic.h>
 #include <core/interrupt.h>

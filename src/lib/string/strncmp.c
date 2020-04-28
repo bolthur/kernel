@@ -20,6 +20,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
 /**
  * @brief Compare two strings until end or max length

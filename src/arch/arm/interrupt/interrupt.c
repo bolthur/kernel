@@ -21,6 +21,7 @@
 #include <stdbool.h>
 
 #include <stdio.h>
+#include <core/interrupt.h>
 #include <arch/arm/interrupt/vector.h>
 
 /**

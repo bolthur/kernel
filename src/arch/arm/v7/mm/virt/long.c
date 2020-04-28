@@ -251,7 +251,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
  *
  * @return uintptr_t address to new table
  */
-static uint64_t get_new_table() {
+static uint64_t get_new_table( void ) {
   // get new page
   uint64_t addr = phys_find_free_page( PAGE_SIZE );
   // debug output

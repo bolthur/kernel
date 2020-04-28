@@ -11,7 +11,7 @@ AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
 AC_CONFIG_SRCDIR([src/core/main.c])
-AM_INIT_AUTOMAKE()
+AM_INIT_AUTOMAKE
 AC_CONFIG_HEADERS([include/config.h])
 
 AC_LANG([C])
@@ -195,16 +195,13 @@ BOLTHUR_KERNEL_SET_DEVICE
 BOLTHUR_KERNEL_SET_HOST
 # set rest of flags
 BOLTHUR_KERNEL_SET_FLAG
-
-# conftest
-AC_LANG_CONFTEST([AC_LANG_SOURCE([[const char hw[] = "Hello, World\r\n";]])])
+BOLTHUR_KERNEL_LANG_PROGRAM
 
 # checks for programs
 AC_PROG_CC
 AM_PROG_AS
 AC_PROG_RANLIB
 AM_PROG_AR
-AC_PROG_CXX
 BOLTHUR_KERNEL_PROG_OBJCOPY
 
 # Checks for typedefs, structures, and compiler characteristics.

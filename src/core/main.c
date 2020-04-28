@@ -46,7 +46,9 @@
 #include <core/panic.h>
 #include <core/initrd.h>
 
-extern void boot_putc( uint8_t c );
+// disable missing prototype temporarily
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
 
 /**
  * @brief Kernel main function
@@ -154,7 +156,7 @@ void kernel_main( void ) {
 
   // FIXME: Create init process from initialramdisk and pass initrd to init process
   // create processes for elf files
-  if ( initrd_exist() ) {
+  if ( initrd_exist() && false == true ) {
     // get iterator
     tar_header_ptr_t iter = ( tar_header_ptr_t )initrd_get_start_address();
 
@@ -178,8 +180,11 @@ void kernel_main( void ) {
       // next task
       iter = tar_next( iter );
     }
-  }
 
-  // Kickstart multitasking
-  task_process_start();
+    // kickstart multitasking
+    task_process_start();
+  }
 }
+
+// enable again
+#pragma GCC diagnostic pop

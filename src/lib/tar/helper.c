@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <tar.h>
 
 /**
  * @brief Helper to transform size to integer

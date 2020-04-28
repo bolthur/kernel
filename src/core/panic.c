@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <core/interrupt.h>
+#include <core/panic.h>
 
 /**
  * @brief Initialize panic process

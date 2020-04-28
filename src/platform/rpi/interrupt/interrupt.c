@@ -23,6 +23,7 @@
 #include <stddef.h>
 #include <core/panic.h>
 #include <core/io.h>
+#include <core/interrupt.h>
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
 
