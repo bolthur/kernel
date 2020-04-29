@@ -525,9 +525,6 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
 
 /**
  * @brief Initialize heap
- *
- * @todo check normal init after early init
- * @todo find issue ocurring somewhere here on real hardware
  */
 void heap_init( heap_init_state_t state ) {
   // correct state

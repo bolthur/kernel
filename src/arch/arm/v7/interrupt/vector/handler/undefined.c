@@ -34,8 +34,6 @@ static uint32_t nested_undefined = 0;
  * @brief Undefined instruction exception handler
  *
  * @param cpu cpu context
- *
- * @todo check for fpu exception and reset exception bit
  */
 void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting

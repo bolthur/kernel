@@ -218,11 +218,6 @@ uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
  *
  * @param origin origin
  * @param context cpu context
- *
- * @todo check for valid package within serial buffer
- * @todo invoke command handler for valid ones
- * @todo clear buffer if valid
- * @todo remove debug output
  */
 void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
   // get start of serial buffer
@@ -239,8 +234,6 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
 
 /**
  * @brief Setup gdb debug traps
- *
- * @todo check whether post callback is really necessary
  */
 void debug_gdb_set_trap( void ) {
   // register debug event
@@ -325,8 +318,6 @@ void debug_gdb_handler_attach(
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 void debug_gdb_handler_continue_query(
   __unused void* context,
@@ -340,8 +331,6 @@ void debug_gdb_handler_continue_query(
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 void debug_gdb_handler_continue_query_supported(
   __unused void* context,
@@ -424,4 +413,27 @@ debug_gdb_callback_t debug_gdb_get_handler( const uint8_t* packet ) {
  */
 void debug_gdb_set_context( void* context ) {
   gdb_execution_context = context;
+}
+
+/**
+ * @brief Handler to get stop status
+ *
+ * @param context
+ * @param packet
+ */
+void debug_gdb_handler_stop_status(
+  __unused void* context,
+  __unused const uint8_t* packet
+) {
+  debug_gdb_signal_t signal = debug_gdb_get_signal();
+  uint8_t buffer[ 4 ];
+
+  // build return
+  buffer[ 0 ] = 'S';
+  buffer[ 1 ] = debug_gdb_hexchar[ signal >> 4 ];
+  buffer[ 2 ] = debug_gdb_hexchar[ signal & 0x0f ];
+  buffer[ 3 ] = '\0';
+
+  // send stop status
+  debug_gdb_packet_send( buffer );
 }

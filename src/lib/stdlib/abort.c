@@ -19,13 +19,15 @@
  */
 
 #include <stdlib.h>
+#include <core/interrupt.h>
 
 /**
  * @brief Abort routine
- *
- * @todo disable interrupts needed?
  */
 void __no_return abort( void ) {
+  // disable all interrupts
+  interrupt_disable();
+  // loop without return
   while ( 1 ) {}
 }
 

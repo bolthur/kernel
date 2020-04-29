@@ -315,33 +315,6 @@ void debug_gdb_handler_supported(
 }
 
 /**
- * @brief Handler to get stop status
- *
- * @param context
- * @param packet
- *
- * @todo return correct signal determined within debug_gdb_handle_event()
- * @todo add support for stop status containing more than 1 numeric
- * @todo move to core/gdb.c
- */
-void debug_gdb_handler_stop_status(
-  __unused void* context,
-  __unused const uint8_t* packet
-) {
-  debug_gdb_signal_t signal = debug_gdb_get_signal();
-  uint8_t buffer[ 4 ];
-
-  // build return
-  buffer[ 0 ] = 'S';
-  buffer[ 1 ] = debug_gdb_hexchar[ signal >> 4 ];
-  buffer[ 2 ] = debug_gdb_hexchar[ signal & 0x0f ];
-  buffer[ 3 ] = '\0';
-
-  // send stop status
-  debug_gdb_packet_send( buffer );
-}
-
-/**
  * @brief Handle to perform register read
  *
  * @param context
@@ -414,8 +387,6 @@ void debug_gdb_handler_write_register( void* context, const uint8_t* packet ) {
  *
  * @param context
  * @param packet
- *
- * @todo move to core/gdb.c
  */
 void debug_gdb_handler_read_memory(
   __unused void* context,
@@ -470,8 +441,6 @@ void debug_gdb_handler_read_memory(
  *
  * @param context
  * @param packet
- *
- * @todo move to core/gdb.c
  */
 void debug_gdb_handler_write_memory(
   __unused void* context,
@@ -526,8 +495,6 @@ void debug_gdb_handler_write_memory(
  *
  * @param context
  * @param packet
- *
- * @todo move to core/gdb.c
  */
 void debug_gdb_handler_remove_breakpoint(
   __unused void* context,
@@ -552,8 +519,6 @@ void debug_gdb_handler_remove_breakpoint(
  *
  * @param context
  * @param packet
- *
- * @todo move to core/gdb.c
  */
 void debug_gdb_handler_insert_breakpoint(
   __unused void* context,
@@ -619,8 +584,6 @@ void debug_gdb_handler_stepping(
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 void debug_gdb_handler_remove_write_watchpoint(
   __unused void* context,
@@ -634,8 +597,6 @@ void debug_gdb_handler_remove_write_watchpoint(
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 void debug_gdb_handler_insert_write_watchpoint(
   __unused void* context,
@@ -649,8 +610,6 @@ void debug_gdb_handler_insert_write_watchpoint(
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 void debug_gdb_handler_remove_read_watchpoint(
   __unused void* context,
@@ -664,8 +623,6 @@ void debug_gdb_handler_remove_read_watchpoint(
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 void debug_gdb_handler_insert_read_watchpoint(
   __unused void* context,
@@ -679,8 +636,6 @@ void debug_gdb_handler_insert_read_watchpoint(
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 void debug_gdb_handler_remove_access_watchpoint(
   __unused void* context,
@@ -694,8 +649,6 @@ void debug_gdb_handler_remove_access_watchpoint(
  *
  * @param context
  * @param packet
- *
- * @todo add logic
  */
 void debug_gdb_handler_insert_access_watchpoint(
   __unused void* context,

@@ -32,7 +32,6 @@
  * @return uintptr_t*
  *
  * @todo add correct arm / thumb handling if necessary
- * @todo complete logic to cover all branch instructions
  */
 uintptr_t* debug_disasm_next_instruction(
   uintptr_t address,
