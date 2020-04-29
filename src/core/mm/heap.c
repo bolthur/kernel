@@ -847,8 +847,25 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
       DEBUG_OUTPUT(
-        "block->size = %d, remaining_size = %d\r\n",
-        current->size, remaining_size );
+        "block->size = %d, remaining_size = %d, new_start 0x%08x\r\n",
+        current->size, remaining_size, new_start );
+    #endif
+
+    // prevent unaligned access
+    if ( new_start % 4 ) {
+      // increment real size by necessary alignment offset
+      real_size += ( new_start % 4 );
+      // recalculate remaining size
+      remaining_size = current->size - real_size;
+      // recalculate new start
+      new_start = ( uintptr_t )current + real_size;
+    }
+
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT(
+        "block->size = %d, remaining_size = %d, new_start 0x%08x\r\n",
+        current->size, remaining_size, new_start );
     #endif
 
     // place new block before

@@ -19,6 +19,7 @@
  */
 
 #include <avl.h>
+#include <core/debug/debug.h>
 
 /**
  * @brief method to prepare some node
@@ -27,7 +28,10 @@
  * @param data initial node data
  */
 void avl_prepare_node( avl_node_ptr_t node, void* data ) {
-  node->left = NULL;
-  node->right = NULL;
-  node->data = data;
+  // use volatile pointer for preparation
+  volatile avl_node_ptr_t tmp = node;
+  // prepare node
+  tmp->left = NULL;
+  tmp->right = NULL;
+  tmp->data = data;
 }

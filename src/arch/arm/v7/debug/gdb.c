@@ -355,8 +355,11 @@ void debug_gdb_handler_read_register(
   uint8_t* p = ( uint8_t* )malloc(
     sizeof( uint8_t ) * ( ( GDB_NORMAL_REGISTER + GDB_EXTRA_REGISTER  ) * 8 + 1 )
   );
-  // assert allocation
-  assert( NULL != p );
+  // handle not enough memory
+  if ( NULL == p ) {
+    debug_gdb_packet_send( ( uint8_t* )"E01" );
+    return;
+  }
   // pointer for writing
   uint8_t* buffer = p;
   // transform cpu
@@ -433,7 +436,11 @@ void debug_gdb_handler_read_memory(
   length = extract_hex_value( next + 1, NULL );
   // allocate buffer
   p = ( uint8_t* )malloc( length * 2 + 1 );
-  assert( NULL != p );
+  // handle not enough memory
+  if ( NULL == p ) {
+    debug_gdb_packet_send( ( uint8_t* )"E01" );
+    return;
+  }
   // set response buffer pointer
   buffer = p;
   // read bytes
@@ -763,11 +770,11 @@ void debug_gdb_breakpoint( void ) {
  */
 debug_gdb_signal_t debug_gdb_get_signal( void ) {
   // handle data abort via data fault
-  if ( debug_check_data_fault_status() ) {
-    return GDB_SIGNAL_ABORT;
-  // handle prefetch abort via instruction fault
-  } else if ( debug_check_instruction_fault() ) {
+  if ( debug_check_instruction_fault() ) {
     return GDB_SIGNAL_TRAP;
+  // handle prefetch abort via instruction fault
+  } else if ( debug_check_data_fault_status() ) {
+    return GDB_SIGNAL_ABORT;
   } else {
     return GDB_SIGNAL_TRAP;
   }

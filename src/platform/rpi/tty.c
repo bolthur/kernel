@@ -41,8 +41,6 @@ void tty_init( void ) {
 void tty_putc( __maybe_unused uint8_t c ) {
   // return if disabled
   #if defined( OUTPUT_ENABLE )
-    if ( ! debug_gdb_get_running_flag() ) {
-      framebuffer_putc( c );
-    }
+    framebuffer_putc( c );
   #endif
 }
