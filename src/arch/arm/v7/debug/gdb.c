@@ -326,7 +326,9 @@ void debug_gdb_handler_read_register(
 ) {
   // allocate memory
   uint8_t* p = ( uint8_t* )malloc(
-    sizeof( uint8_t ) * ( ( GDB_NORMAL_REGISTER + GDB_EXTRA_REGISTER  ) * 8 + 1 )
+    sizeof( uint8_t ) + sizeof( uint8_t ) * (
+      ( GDB_NORMAL_REGISTER + GDB_EXTRA_REGISTER ) * 8
+    )
   );
   // handle not enough memory
   if ( NULL == p ) {

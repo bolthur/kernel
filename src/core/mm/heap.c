@@ -19,6 +19,7 @@
  */
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <string.h>
 #include <assert.h>
 #include <avl.h>
@@ -166,12 +167,24 @@ static void prepare_block(
   uintptr_t addr,
   size_t size
 ) {
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "block = 0x%08x, addr = 0x%08x, size = %d\r\n",
+      block, addr, size );
+  #endif
+
   // clear memory
   memset( ( void* )block, 0, size + sizeof( heap_block_t ) );
 
   // prepare block itself
   block->size = size;
   block->address = addr;
+
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "block->node_address = 0x%08x, block->node_size = 0x%08x\r\n",
+      &block->node_address, &block->node_size );
+  #endif
 
   // prepare tree nodes
   avl_prepare_node( &block->node_address, ( void* )addr );
@@ -693,9 +706,27 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   if ( NULL == kernel_heap ) {
     return 0;
   }
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "alignment = 0x%08x, size = %d\r\n", alignment, size );
+  #endif
 
   // calculate real size
   real_size = size + sizeof( heap_block_t );
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "real_size = 0x%08x\r\n", real_size );
+  #endif
+  // align real size properly
+  if ( real_size % __alignof( real_size ) ) {
+    real_size = real_size + (
+      real_size % __alignof( real_size )
+    );
+  }
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "real_size = 0x%08x\r\n", real_size );
+  #endif
 
   // get correct trees
   used_area = get_used_area_tree( kernel_heap->state, kernel_heap );
@@ -719,6 +750,10 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
       address_node = NULL;
     }
   }
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "address_node = 0x%08x\r\n", address_node );
+  #endif
 
   // Check for no matching node has been found
   if ( NULL == address_node ) {
@@ -840,23 +875,6 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     // calculate remaining size
     uint32_t remaining_size = current->size - real_size;
     uintptr_t new_start = ( uintptr_t )current + real_size;
-
-    // debug output
-    #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT(
-        "block->size = %d, remaining_size = %d, new_start 0x%08x\r\n",
-        current->size, remaining_size, new_start );
-    #endif
-
-    // prevent unaligned access
-    if ( new_start % 4 ) {
-      // increment real size by necessary alignment offset
-      real_size += ( new_start % 4 );
-      // recalculate remaining size
-      remaining_size = current->size - real_size;
-      // recalculate new start
-      new_start = ( uintptr_t )current + real_size;
-    }
 
     // debug output
     #if defined( PRINT_MM_HEAP )

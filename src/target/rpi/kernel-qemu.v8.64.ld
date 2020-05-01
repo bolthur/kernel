@@ -77,6 +77,8 @@ SECTIONS {
     *( COMMON )
     *( .bss )
 
+    /* align to 4k */
+    . = ALIGN( 4K );
     /* 1MB for initial heap */
     __initial_heap_start = .;
     . += 0x100000;
