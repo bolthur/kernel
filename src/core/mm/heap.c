@@ -482,7 +482,7 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
   if ( true != mergable( a, b ) ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "a ( 0x%08x ) not mergable with b ( 0x%08x )", a, b );
+      DEBUG_OUTPUT( "a ( 0x%08x ) not mergable with b ( 0x%08x )\r\n", a, b );
     #endif
     // return NULL
     return NULL;
@@ -704,7 +704,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 
   // stop if not setup
   if ( NULL == kernel_heap ) {
-    return 0;
+    return ( uintptr_t )NULL;
   }
   // debug output
   #if defined( PRINT_MM_HEAP )
@@ -713,20 +713,6 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 
   // calculate real size
   real_size = size + sizeof( heap_block_t );
-  // debug output
-  #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "real_size = 0x%08x\r\n", real_size );
-  #endif
-  // align real size properly
-  if ( real_size % __alignof( real_size ) ) {
-    real_size = real_size + (
-      real_size % __alignof( real_size )
-    );
-  }
-  // debug output
-  #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "real_size = 0x%08x\r\n", real_size );
-  #endif
 
   // get correct trees
   used_area = get_used_area_tree( kernel_heap->state, kernel_heap );
@@ -768,7 +754,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
           DEBUG_OUTPUT( "No max node found, tree empty\r\n" );
         #endif
         // return invalid
-        return 0;
+        return ( uintptr_t )NULL;
       }
       // extend heap
       extend_heap_space();
@@ -799,8 +785,8 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
           real_size
         );
       #endif
-      // return 0
-      return 0;
+      // return NULL
+      return ( uintptr_t )NULL;
     }
     // extend heap
     extend_heap_space();
@@ -855,7 +841,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
           DEBUG_OUTPUT( "Not enough space with alignment\r\n" );
         #endif
         // return invalid
-        return 0;
+        return ( uintptr_t )NULL;
       }
       // extend heap
       extend_heap_space();
@@ -875,6 +861,29 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     // calculate remaining size
     uint32_t remaining_size = current->size - real_size;
     uintptr_t new_start = ( uintptr_t )current + real_size;
+    uint32_t block_alignment = new_start % sizeof( heap_block_t );
+
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT(
+        "block->size = %d, remaining_size = %d, new_start 0x%08x\r\n",
+        current->size, remaining_size, new_start );
+    #endif
+    // handle proper block structure alignment
+    if ( block_alignment ) {
+      // calculate correct alignment
+      block_alignment = sizeof( heap_block_t ) - block_alignment % sizeof( heap_block_t );
+      // debug output
+      #if defined( PRINT_MM_HEAP )
+        DEBUG_OUTPUT( "added offset for heap block = 0x%08x\r\n", block_alignment );
+      #endif
+      // increment new start and decrement remaining size
+      new_start += block_alignment;
+      remaining_size -= block_alignment;
+      // adjust real_size and size of block
+      real_size += block_alignment;
+      size += block_alignment;
+    }
 
     // debug output
     #if defined( PRINT_MM_HEAP )

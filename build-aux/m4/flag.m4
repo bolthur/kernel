@@ -6,15 +6,16 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   CFLAGS="${CFLAGS} -Wall -Wextra -Werror -Wpedantic -Wconversion -Wpacked"
   CFLAGS="${CFLAGS} -Wpacked-bitfield-compat -Wpacked-not-aligned"
   CFLAGS="${CFLAGS} -Wstrict-prototypes -Wmissing-prototypes -Wshadow"
-  # sanitize
-  # CFLAGS="${CFLAGS} -fsanitize=undefined"
   # generic
   CFLAGS="${CFLAGS} -ffreestanding -fno-exceptions -nodefaultlibs -std=c18"
   CFLAGS="${CFLAGS} -fomit-frame-pointer -ffreestanding -fno-common"
 
   # debug parameter
   AS_IF([test "x$with_debug_symbols" == "xyes"], [
-    CFLAGS="${CFLAGS} -g3"
+    # debug symbols
+    CFLAGS="${CFLAGS} -g"
+    # undefined behaviour sanitization
+    CFLAGS="${CFLAGS} -fsanitize=undefined"
   ])
   # optimization level
   case "${with_opt}" in

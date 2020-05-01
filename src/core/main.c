@@ -57,8 +57,11 @@
  */
 void kernel_main( void ) {
   // Setup early heap for malloc / free support
+  DEBUG_OUTPUT( "[bolthur/kernel -> heap] early heap initialize ...\r\n" );
   heap_init( HEAP_INIT_EARLY );
-  // enable tty for output
+
+  // setup tty for output
+  DEBUG_OUTPUT( "[bolthur/kernel -> heap] tty initialize ...\r\n" );
   tty_init();
 
   // Some initial output :)
