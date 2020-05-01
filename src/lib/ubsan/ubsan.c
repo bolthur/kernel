@@ -44,7 +44,7 @@ const char* type_check_kind[] = {
  * @param location
  */
 static void print( ubsan_source_location_ptr_t location ) {
-  printf( "\tfile: %s\r\n\tline: %d\r\n\tcolumn: %d\r\n",
+  printf( "\tfile: %s\r\n\tline: %u\r\n\tcolumn: %u\r\n",
     location->file, location->line, location->column );
 }
 
@@ -71,7 +71,8 @@ static void handle_type_mismatch_generic(
   } else {
       printf(
         "Insufficient size\r\n%s address %p with insufficient space for object of type %s\n",
-        type_check_kind[ mismatch->type_check_kind ], ( void* )pointer,
+        type_check_kind[ mismatch->type_check_kind ],
+        ( void* )pointer,
         mismatch->type->name );
   }
   // print location where it happened

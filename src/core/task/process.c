@@ -47,7 +47,7 @@ static int32_t process_compare_id_callback(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = 0x%08p, b = 0x%08p\r\n", a, b );
+    DEBUG_OUTPUT( "a = 0x%08x, b = 0x%08x\r\n", a, b );
     DEBUG_OUTPUT( "a->data = %d, b->data = %d\r\n",
       ( size_t )a->data,
       ( size_t )b->data );
@@ -186,7 +186,7 @@ void task_process_queue_reset( void ) {
   max = avl_get_max( process_manager->thread_priority_tree->root );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "min: 0x%08p, max: 0x%08p\r\n", min, max );
+    DEBUG_OUTPUT( "min: 0x%08x, max: 0x%08x\r\n", min, max );
   #endif
 
   // get nodes from min/max

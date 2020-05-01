@@ -39,7 +39,8 @@ static uint32_t nested_svc = 0;
  */
 void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
-  assert( nested_svc++ < INTERRUPT_NESTED_MAX );
+  nested_svc++;
+  assert( nested_svc < INTERRUPT_NESTED_MAX );
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context

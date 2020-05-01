@@ -37,7 +37,8 @@ static uint32_t nested_undefined = 0;
  */
 void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
-  assert( nested_undefined++ < INTERRUPT_NESTED_MAX );
+  nested_undefined++;
+  assert( nested_undefined < INTERRUPT_NESTED_MAX );
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context

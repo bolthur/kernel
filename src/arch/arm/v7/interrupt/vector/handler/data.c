@@ -53,7 +53,8 @@ __maybe_unused static uint32_t fault_address( void ) {
  */
 void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
-  assert( nested_data_abort++ < INTERRUPT_NESTED_MAX );
+  nested_data_abort++;
+  assert( nested_data_abort < INTERRUPT_NESTED_MAX );
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context

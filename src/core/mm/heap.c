@@ -101,8 +101,8 @@ static int32_t compare_address_callback(
 ) {
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "a = 0x%08p, b = 0x%08p\r\n", a, b );
-    DEBUG_OUTPUT( "a->data = 0x%08p, b->data = 0x%08p\r\n", a->data, b->data );
+    DEBUG_OUTPUT( "a = 0x%08x, b = 0x%08x\r\n", a, b );
+    DEBUG_OUTPUT( "a->data = 0x%08x, b->data = 0x%08x\r\n", a->data, b->data );
   #endif
 
   // -1 if address of a is greater than address of b
@@ -130,8 +130,8 @@ static int32_t compare_size_callback(
 ) {
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "a = 0x%08p, b = 0x%08p\r\n", a, b );
-    DEBUG_OUTPUT( "a->data = 0x%08p, b->data = 0x%08p\r\n", a->data, b->data );
+    DEBUG_OUTPUT( "a = 0x%08x, b = 0x%08x\r\n", a, b );
+    DEBUG_OUTPUT( "a->data = 0x%08x, b->data = 0x%08x\r\n", a->data, b->data );
   #endif
 
   // -1 if address of a is greater than address of b
@@ -1026,7 +1026,7 @@ void heap_free_block( uintptr_t addr ) {
 
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "addr = 0x%08p\r\n", addr );
+    DEBUG_OUTPUT( "addr = 0x%08x\r\n", addr );
   #endif
 
   // finde node by address within tree
@@ -1040,7 +1040,7 @@ void heap_free_block( uintptr_t addr ) {
   // debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT(
-      "address_node = 0x%08p, data = 0x%08p\r\n",
+      "address_node = 0x%08x, data = 0x%08x\r\n",
       address_node,
       address_node->data
     );

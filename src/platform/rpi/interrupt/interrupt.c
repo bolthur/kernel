@@ -88,7 +88,7 @@ int8_t interrupt_get_pending( bool fast ) {
       }
     }
   // fast interrupt handling
-  } else if ( fast ) {
+  } else {
     // get set interrupt
     uint32_t interrupt = io_in32( base + INTERRUPT_FIQ_CONTROL );
     // get only number

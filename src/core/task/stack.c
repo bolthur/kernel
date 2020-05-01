@@ -43,7 +43,7 @@ static int32_t task_stack_callback(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = 0x%08p, b = 0x%08p\r\n", a, b );
+    DEBUG_OUTPUT( "a = 0x%08x, b = 0x%08x\r\n", a, b );
     DEBUG_OUTPUT( "a->data = 0x%08x, b->data = 0x%08x\r\n",
       ( uintptr_t )a->data,
       ( uintptr_t )b->data );

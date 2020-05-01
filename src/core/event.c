@@ -73,14 +73,14 @@ void event_init( void ) {
   memset( ( void* )event, 0, sizeof( event_manager_t ) );
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Initialized event manager structure at 0x%08p\r\n", event );
+    DEBUG_OUTPUT( "Initialized event manager structure at 0x%08x\r\n", event );
   #endif
 
   // create tree
   event->tree = avl_create_tree( compare_event_callback );
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Created event tree at: 0x%08p\r\n", event->tree );
+    DEBUG_OUTPUT( "Created event tree at: 0x%08x\r\n", event->tree );
   #endif
 
   // create queue
@@ -105,7 +105,7 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
 
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Called event_bind( %d, 0x%08p, %s )\r\n",
+    DEBUG_OUTPUT( "Called event_bind( %d, 0x%08x, %s )\r\n",
       type, callback, post ? "true" : "false" );
   #endif
   // get correct tree to use
@@ -116,7 +116,7 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   event_block_ptr_t block;
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
+    DEBUG_OUTPUT( "Found node 0x%08x\r\n", node );
   #endif
   // handle not yet added
   if ( NULL == node ) {
@@ -128,7 +128,7 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
     memset( ( void* )block, 0, sizeof( event_block_t ) );
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Initialized new node at 0x%08p\r\n", block );
+      DEBUG_OUTPUT( "Initialized new node at 0x%08x\r\n", block );
     #endif
     // populate block
     block->type = type;
@@ -154,7 +154,7 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
       : block->post->first;
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
+    DEBUG_OUTPUT( "Used first element for looping at 0x%08x\r\n", current );
   #endif
   // loop through list for check callback
   while ( NULL != current ) {
@@ -163,7 +163,7 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
       ( event_callback_wrapper_ptr_t )current->data;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Check bound callback at 0x%08p\r\n", wrapper );
+      DEBUG_OUTPUT( "Check bound callback at 0x%08x\r\n", wrapper );
     #endif
     // handle match
     if ( wrapper->callback == callback ) {
@@ -189,7 +189,7 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   wrapper->callback = callback;
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Created wrapper container at 0x%08p\r\n", wrapper );
+    DEBUG_OUTPUT( "Created wrapper container at 0x%08x\r\n", wrapper );
   #endif
   // push to list
   list_push_back(
@@ -287,7 +287,7 @@ void event_handle( void* data ) {
     event_block_ptr_t block;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
+      DEBUG_OUTPUT( "Found node 0x%08x\r\n", node );
     #endif
 
     // handle no existing
@@ -304,7 +304,7 @@ void event_handle( void* data ) {
     list_item_ptr_t current = block->handler->first;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Used first normal element for looping at 0x%08p\r\n", current );
+      DEBUG_OUTPUT( "Used first normal element for looping at 0x%08x\r\n", current );
     #endif
     // loop through list
     while ( NULL != current ) {
@@ -313,7 +313,7 @@ void event_handle( void* data ) {
         ( event_callback_wrapper_ptr_t )current->data;
       // debug output
       #if defined( PRINT_EVENT )
-        DEBUG_OUTPUT( "Executing bound callback 0x%08p\r\n", wrapper );
+        DEBUG_OUTPUT( "Executing bound callback 0x%08x\r\n", wrapper );
       #endif
       // fire with data
       wrapper->callback( origin, data );
@@ -325,7 +325,7 @@ void event_handle( void* data ) {
     current = block->post->first;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Used first post element for looping at 0x%08p\r\n", current );
+      DEBUG_OUTPUT( "Used first post element for looping at 0x%08x\r\n", current );
     #endif
     // loop through list
     while ( NULL != current ) {
@@ -334,7 +334,7 @@ void event_handle( void* data ) {
         ( event_callback_wrapper_ptr_t )current->data;
       // debug output
       #if defined( PRINT_EVENT )
-        DEBUG_OUTPUT( "Executing bound callback 0x%08p\r\n", wrapper );
+        DEBUG_OUTPUT( "Executing bound callback 0x%08x\r\n", wrapper );
       #endif
       // fire with data
       wrapper->callback( origin, data );

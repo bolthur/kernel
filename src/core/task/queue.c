@@ -37,7 +37,7 @@ static int32_t queue_compare_priority_callback(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = 0x%08p, b = 0x%08p\r\n", a, b );
+    DEBUG_OUTPUT( "a = 0x%08x, b = 0x%08x\r\n", a, b );
     DEBUG_OUTPUT( "a->data = %d, b->data = %d\r\n",
       ( size_t )a->data,
       ( size_t )b->data );
@@ -87,7 +87,7 @@ task_priority_queue_ptr_t task_queue_get_queue(
   task_priority_queue_ptr_t queue;
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
+    DEBUG_OUTPUT( "Found node 0x%08x\r\n", node );
   #endif
   // handle not yet added
   if ( NULL == node ) {
@@ -100,7 +100,7 @@ task_priority_queue_ptr_t task_queue_get_queue(
     memset( ( void* )queue, 0, sizeof( task_priority_queue_t ) );
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "Initialized new node at 0x%08p\r\n", queue );
+      DEBUG_OUTPUT( "Initialized new node at 0x%08x\r\n", queue );
     #endif
     // populate queue
     queue->priority = priority;

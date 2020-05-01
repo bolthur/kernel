@@ -123,8 +123,8 @@ void kernel_main( void ) {
     uintptr_t initrd = initrd_get_start_address();
     DEBUG_OUTPUT( "initrd = 0x%08x\r\n", initrd );
     DEBUG_OUTPUT( "initrd = 0x%08x\r\n", initrd_get_end_address() );
-    DEBUG_OUTPUT( "size = %o\r\n", initrd_get_size() );
-    DEBUG_OUTPUT( "size = %d\r\n", initrd_get_size() );
+    DEBUG_OUTPUT( "size = %zo\r\n", initrd_get_size() );
+    DEBUG_OUTPUT( "size = %zu\r\n", initrd_get_size() );
 
     // set iterator
     tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
@@ -174,6 +174,7 @@ void kernel_main( void ) {
         uint64_t file_size = tar_size( iter );
         DEBUG_OUTPUT( "Create process for file %s\r\n", iter->file_name );
         DEBUG_OUTPUT( "File size: 0x%llx\r\n", file_size );
+
         task_process_create( file, 0 );
         task_process_create( file, 0 );
         task_process_create( file, 0 );

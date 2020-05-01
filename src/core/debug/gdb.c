@@ -151,12 +151,13 @@ void debug_gdb_init( void ) {
  * @return unsigned* packet_receive
  */
 uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
-  char c;
-  uint8_t calculated_checksum;
   size_t count = 0;
-  bool cont;
 
   while ( true ) {
+    char c;
+    uint8_t calculated_checksum;
+    bool cont;
+
     // wait until debug character drops in
     while ( '$' != ( c = serial_getc() ) ) {}
 
@@ -260,24 +261,25 @@ bool debug_gdb_initialized( void ) {
  * @param char string to send
  */
 void debug_gdb_packet_send( uint8_t* p ) {
-  uint8_t checksum;
-  int count;
-  char ch;
-
   // $<packet info>#<checksum>.
   do {
+    uint8_t packet_checksum;
+    int count;
+    char ch;
     // start sending packet
     serial_putc( '$' );
-    checksum = 0;
+    packet_checksum = 0;
     count = 0;
+    // send and calculate checksum
     while ( NULL != p && ( ch = p[ count ] ) ) {
       serial_putc( ch );
-      checksum = ( uint8_t )( ( int )checksum + ch );
+      packet_checksum = ( uint8_t )( ( int )packet_checksum + ch );
       count++;
     }
+    // send checksum
     serial_putc( '#' );
-    serial_putc( debug_gdb_hexchar[ checksum >> 4 ] );
-    serial_putc( debug_gdb_hexchar[ checksum % 16 ] );
+    serial_putc( debug_gdb_hexchar[ packet_checksum >> 4 ] );
+    serial_putc( debug_gdb_hexchar[ packet_checksum % 16 ] );
   } while ( '+' != serial_getc() );
 }
 

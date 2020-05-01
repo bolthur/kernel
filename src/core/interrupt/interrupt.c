@@ -93,7 +93,7 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
     // debug output
     #if defined( PRINT_INTERRUPT )
       DEBUG_OUTPUT(
-        "Initialized interrupt manager with address 0x%08p\r\n",
+        "Initialized interrupt manager with address 0x%08x\r\n",
         interrupt_manager
       );
     #endif
@@ -151,7 +151,7 @@ void interrupt_register_handler(
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT(
-      "Called interrupt_register_handler( %d, 0x%08p, %d, %s )\r\n",
+      "Called interrupt_register_handler( %d, 0x%08x, %d, %s )\r\n",
       num, callback, type, post  ? "true" : "false" );
   #endif
 
@@ -180,7 +180,7 @@ void interrupt_register_handler(
   interrupt_block_ptr_t block;
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
+    DEBUG_OUTPUT( "Found node 0x%08x\r\n", node );
   #endif
   // handle not yet added
   if ( NULL == node ) {
@@ -192,7 +192,7 @@ void interrupt_register_handler(
     memset( ( void* )block, 0, sizeof( interrupt_block_t ) );
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Initialized new node at 0x%08p\r\n", block );
+      DEBUG_OUTPUT( "Initialized new node at 0x%08x\r\n", block );
     #endif
     // populate block
     block->interrupt = num;
@@ -219,7 +219,7 @@ void interrupt_register_handler(
       : block->post->first;
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
+    DEBUG_OUTPUT( "Used first element for looping at 0x%08x\r\n", current );
   #endif
   // loop through list for check callback
   while ( NULL != current ) {
@@ -228,7 +228,7 @@ void interrupt_register_handler(
       ( interrupt_callback_wrapper_ptr_t )current->data;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Check bound callback at 0x%08p\r\n", wrapper );
+      DEBUG_OUTPUT( "Check bound callback at 0x%08x\r\n", wrapper );
     #endif
     // handle match
     if ( wrapper->callback == callback ) {
@@ -249,7 +249,7 @@ void interrupt_register_handler(
   wrapper->callback = callback;
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Created wrapper container at 0x%08p\r\n", wrapper );
+    DEBUG_OUTPUT( "Created wrapper container at 0x%08x\r\n", wrapper );
   #endif
 
   // push to list
@@ -298,7 +298,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   avl_node_ptr_t node = avl_find_by_data( tree, ( void* )num );
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
+    DEBUG_OUTPUT( "Found node 0x%08x\r\n", node );
   #endif
 
   // handle nothing found which means nothing bound
@@ -321,7 +321,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
       ( interrupt_callback_wrapper_ptr_t )current->data;
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Handling wrapper container 0x%08p\r\n", wrapper );
+      DEBUG_OUTPUT( "Handling wrapper container 0x%08x\r\n", wrapper );
     #endif
     // fire with data
     wrapper->callback( context );
@@ -342,7 +342,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
       ( interrupt_callback_wrapper_ptr_t )current->data;
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Handling wrapper container 0x%08p\r\n", wrapper );
+      DEBUG_OUTPUT( "Handling wrapper container 0x%08x\r\n", wrapper );
     #endif
     // fire with data
     wrapper->callback( context );

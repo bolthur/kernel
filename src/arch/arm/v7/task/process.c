@@ -80,7 +80,7 @@ void task_process_start( void ) {
 void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", context );
+    DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08x )\r\n", context );
   #endif
 
   // prevent scheduling when kernel interrupt occurs ( context != NULL )
@@ -104,7 +104,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
 
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "cpu register context: 0x%08p\r\n", cpu );
+    DEBUG_OUTPUT( "cpu register context: 0x%08x\r\n", cpu );
     DUMP_REGISTER( cpu );
   #endif
 

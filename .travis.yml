@@ -37,8 +37,8 @@ jobs:
       name: "RPI 2 rev. 1 - debug"
       script:
         - autoreconf -iv
-        - mkdir -p build/rpi2_rev1
-        - cd build/rpi2_rev1
+        - mkdir -p build/rpi2_rev1_debug
+        - cd build/rpi2_rev1_debug
         - ../../configure --enable-silent-rules --host arm-none-eabi --enable-device=rpi2_b_rev1 --enable-output --enable-output-timer --enable-output-interrupt --enable-output-exception --enable-output-process --with-debug-symbols --enable-output-event --enable-output-exception --enable-output-elf --enable-output-platform --enable-output-syscall
         - make
     - stage: compile
@@ -46,7 +46,7 @@ jobs:
       name: "RPI 2 rev. 1 - prod"
       script:
         - autoreconf -iv
-        - mkdir -p build/rpi2_rev1
-        - cd build/rpi2_rev1
+        - mkdir -p build/rpi2_rev1_release
+        - cd build/rpi2_rev1_release
         - ../../configure --enable-silent-rules --host arm-none-eabi --enable-device=rpi2_b_rev1
         - make

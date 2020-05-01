@@ -73,6 +73,7 @@ static size_t convert_number(
  *
  * @param _buffer
  * @param data
+ * @param prefix
  * @param length
  * @param zero_padding
  * @param pad
@@ -82,6 +83,7 @@ static size_t convert_number(
 static int print(
   char* _buffer,
   const char* data,
+  const char* prefix,
   size_t length,
   bool zero_padding,
   int32_t pad
@@ -89,6 +91,20 @@ static int print(
   const unsigned char* bytes = ( const unsigned char * )data;
   unsigned char* buffer = ( unsigned char* )_buffer;
   int written = 0;
+
+  // handle possible prefix
+  while( *prefix != '\0' ) {
+    // write to buffer
+    if ( NULL != buffer ) {
+      *buffer++ = *prefix;
+    // put character without buffer
+    } else if ( putchar( *prefix ) == EOF ) {
+      return EOF;
+    }
+    // increment written amount
+    written++;
+    prefix++;
+  }
 
   // print padding if set
   for ( size_t i = 0; pad > 0 && i < ( ( size_t )pad - length ); i++ ) {
@@ -142,6 +158,8 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
   while ( *format != '\0' ) {
     int32_t field_width = 0;
     bool zero_padding = false;
+    bool alternate = false;
+
     // print if current sign is not a place holder or second one
     // is another placeholder
     if ( '%' != format[ 0 ] || '%' == format[ 1 ] ) {
@@ -154,7 +172,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       while ( format[ amount ] && format[ amount ] != '%' ) {
         amount++;
       }
-      print_written = print( buffer, format, amount, zero_padding, field_width );
+      print_written = print( buffer, format, "", amount, zero_padding, field_width );
       // print characters
       if ( EOF == print_written ) {
         return EOF;
@@ -177,6 +195,9 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
         // zero padding
         case '0':
           zero_padding = true;
+          continue;
+        case '#':
+          alternate = true;
           continue;
         // unknown modifier
         default:
@@ -249,7 +270,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
     if ( 'c' == modifier ) {
       // get character to print
       char c = ( char )va_arg( parameter, int );
-      print_written = print( buffer, &c, sizeof( c ), zero_padding, field_width );
+      print_written = print( buffer, &c, "", sizeof( c ), zero_padding, field_width );
       // print character
       if ( EOF == print_written ) {
         return EOF;
@@ -269,7 +290,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       }
       // determine string length
       size_t len = strlen( str );
-      print_written = print( buffer, str, len, zero_padding, field_width );
+      print_written = print( buffer, str, "", len, zero_padding, field_width );
       // print string
       if ( EOF == print_written ) {
         return EOF;
@@ -289,6 +310,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       // handle pointer
       if ( 'p' == modifier ) {
         value = ( uintptr_t )va_arg( parameter, void* );
+        alternate = !alternate;
         modifier = 'x';
       // handle signed integer
       } else if ( 'i' == modifier || 'd' == modifier ) {
@@ -349,14 +371,27 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
         : "0123456789abcdef";
       // determine base
       uintmax_t base = 10;
+      char prefix[ 3 ] = "\0";
+      char *tmp = buf;
       if ( 'x' == modifier || 'X' == modifier ) {
         base = 16;
+        // handle alternate
+        if ( alternate && 0 != value ) {
+          prefix[ 0 ] = '0';
+          prefix[ 1 ] = modifier;
+          prefix[ 2 ] = '\0';
+        }
       } else if ( 'o' == modifier ) {
         base = 8;
+        // handle alternate
+        if ( alternate && 0 != value ) {
+          prefix[ 0 ] = '0';
+          prefix[ 1 ] = '\0';
+        }
       }
       // transform integer
-      size_t len = convert_number( buf, value, base, digit, negative_value );
-      print_written = print( buffer, buf, len, zero_padding, field_width );
+      size_t len = convert_number( tmp, value, base, digit, negative_value );
+      print_written = print( buffer, buf, prefix, len, zero_padding, field_width );
       // print string
       if ( EOF == print_written ) {
         return EOF;
@@ -370,7 +405,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       // start where formatting begun
       format = format_begun_at;
       size_t len = strlen( format );
-      print_written = print( buffer, format, len, zero_padding, field_width );
+      print_written = print( buffer, format, "", len, zero_padding, field_width );
       // print string
       if ( EOF == print_written ) {
         return EOF;
