@@ -37,14 +37,14 @@ typedef struct {
 
 typedef struct {
   ubsan_source_location_t location;
-  ubsan_type_descriptor_ptr_t array_type;
-  ubsan_type_descriptor_ptr_t index_type;
+  ubsan_type_descriptor_ptr_t array;
+  ubsan_type_descriptor_ptr_t index;
 } ubsan_out_of_bounds_data_t, *ubsan_out_of_bounds_data_ptr_t;
 
 typedef struct {
   ubsan_source_location_t location;
-  ubsan_type_descriptor_ptr_t left_type;
-  ubsan_type_descriptor_ptr_t right_type;
+  ubsan_type_descriptor_ptr_t left;
+  ubsan_type_descriptor_ptr_t right;
 } ubsan_shift_out_of_bounds_data_t, *ubsan_shift_out_of_bounds_data_ptr_t;
 
 typedef struct {
@@ -89,8 +89,8 @@ void __ubsan_handle_add_overflow( ubsan_overflow_data_ptr_t, uint64_t, uint64_t 
 void __ubsan_handle_sub_overflow( ubsan_overflow_data_ptr_t, uint64_t, uint64_t );
 void __ubsan_handle_mul_overflow( ubsan_overflow_data_ptr_t, uint64_t, uint64_t );
 void __ubsan_handle_divrem_overflow( ubsan_overflow_data_ptr_t, uint64_t, uint64_t );
-void __ubsan_handle_shift_out_of_bounds( ubsan_out_of_bounds_data_ptr_t, uint64_t, uint64_t );
-void __ubsan_handle_out_of_bounds( ubsan_overflow_data_ptr_t, uint64_t );
+void __ubsan_handle_shift_out_of_bounds( ubsan_shift_out_of_bounds_data_ptr_t, uint64_t, uint64_t );
+void __ubsan_handle_out_of_bounds( ubsan_out_of_bounds_data_ptr_t, uint64_t );
 void __ubsan_handle_load_invalid_value( ubsan_invalid_value_data_ptr_t, uint64_t );
 
 #endif

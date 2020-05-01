@@ -55,7 +55,7 @@ void phys_mark_page_used( uint64_t address ) {
   uint64_t offset = PAGE_OFFSET( frame );
 
   // mark page as used
-  phys_bitmap[ index ] |= ( uint32_t )( 0x1 << offset );
+  phys_bitmap[ index ] |= ( 0x1U << offset );
 
   // debug output
   #if defined( PRINT_MM_PHYS )

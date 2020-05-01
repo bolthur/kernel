@@ -45,10 +45,7 @@ static avl_tree_ptr_t get_free_address_tree(
   heap_init_state_t state,
   heap_manager_ptr_t heap
 ) {
-  if (
-    state == HEAP_INIT_NONE
-    || NULL == heap
-  ) {
+  if ( NULL == heap ) {
     return NULL;
   }
 
@@ -66,10 +63,7 @@ static avl_tree_ptr_t get_free_size_tree(
   heap_init_state_t state,
   heap_manager_ptr_t heap
 ) {
-  if (
-    state == HEAP_INIT_NONE
-    || NULL == heap
-  ) {
+  if ( NULL == heap ) {
     return NULL;
   }
 
@@ -87,10 +81,7 @@ static avl_tree_ptr_t get_used_area_tree(
   heap_init_state_t state,
   heap_manager_ptr_t heap
 ) {
-  if (
-    state == HEAP_INIT_NONE
-    || NULL == heap
-  ) {
+  if ( NULL == heap ) {
     return NULL;
   }
 

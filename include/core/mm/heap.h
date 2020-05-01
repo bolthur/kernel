@@ -36,18 +36,18 @@
 #endif
 
 typedef enum {
-  HEAP_INIT_NONE = 0,
-  HEAP_INIT_EARLY,
+  HEAP_INIT_EARLY = 0,
   HEAP_INIT_NORMAL,
+  HEAP_INIT_SIZE,
 } heap_init_state_t;
 
 typedef struct {
   uintptr_t start;
   size_t size;
   heap_init_state_t state;
-  avl_tree_t free_address[ HEAP_INIT_NORMAL ];
-  avl_tree_t free_size[ HEAP_INIT_NORMAL ];
-  avl_tree_t used_area[ HEAP_INIT_NORMAL ];
+  avl_tree_t free_address[ HEAP_INIT_SIZE ];
+  avl_tree_t free_size[ HEAP_INIT_SIZE ];
+  avl_tree_t used_area[ HEAP_INIT_SIZE ];
 } heap_manager_t, *heap_manager_ptr_t;
 
 typedef struct {

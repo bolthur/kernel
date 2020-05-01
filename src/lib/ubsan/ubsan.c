@@ -127,124 +127,147 @@ void __no_return __ubsan_handle_type_mismatch(
 /**
  * @brief Pointer overflow handling
  *
- * @todo add logic
- *
  * @param data
  * @param before
  * @param after
  */
 void __no_return __ubsan_handle_pointer_overflow(
-  __maybe_unused ubsan_pointer_overflow_data_ptr_t data,
-  __maybe_unused uint64_t before,
-  __maybe_unused uint64_t after
+  ubsan_pointer_overflow_data_ptr_t data,
+  uint64_t before,
+  uint64_t after
 ) {
-  PANIC( "POINTER OVERFLOW!\r\n" );
+  printf( "pointer overflow!\r\nbefore: %lu, after: %lu\r\n", before, after );
+  // print location
+  print( &data->location );
+  // abort execution
+  abort();
 }
 
 /**
  * @brief Add overflow handling
  *
- * @todo add logic
- *
  * @param data
- * @param lhs
- * @param rhs
+ * @param left
+ * @param right
  */
 void __no_return __ubsan_handle_add_overflow(
   __maybe_unused ubsan_overflow_data_ptr_t data,
-  __maybe_unused uint64_t lhs,
-  __maybe_unused uint64_t rhs
+  __maybe_unused uint64_t left,
+  __maybe_unused uint64_t right
 ) {
-  PANIC( "ADD OVERFLOW!\r\n" );
+  printf(
+    "add overflow!\r\ntype: %s, value: %lu, value: %lu\r\n",
+    data->type->name, left, right );
+  // print location
+  print( &data->location );
+  // abort execution
+  abort();
 }
 
 /**
  * @brief Subtract overflow handling
  *
- * @todo add logic
- *
  * @param data
- * @param lhs
- * @param rhs
+ * @param left
+ * @param right
  */
 void __no_return __ubsan_handle_sub_overflow(
-  __maybe_unused ubsan_overflow_data_ptr_t data,
-  __maybe_unused uint64_t lhs,
-  __maybe_unused uint64_t rhs
+  ubsan_overflow_data_ptr_t data,
+  uint64_t left,
+  uint64_t right
 ) {
-  PANIC( "SUB OVERFLOW!\r\n" );
+  printf(
+    "sub overflow!\r\ntype: %s, value: %lu, value: %lu\r\n",
+    data->type->name, left, right );
+  // print location
+  print( &data->location );
+  // abort execution
+  abort();
 }
 
 /**
  * @brief Multiplication overflow handling
  *
- * @todo add logic
- *
  * @param data
- * @param lhs
- * @param rhs
+ * @param left
+ * @param right
  */
 void __no_return __ubsan_handle_mul_overflow(
   __maybe_unused ubsan_overflow_data_ptr_t data,
-  __maybe_unused uint64_t lhs,
-  __maybe_unused uint64_t rhs
+  __maybe_unused uint64_t left,
+  __maybe_unused uint64_t right
 ) {
-  PANIC( "MUL OVERFLOW!\r\n" );
+  printf(
+    "mul overflow!\r\ntype: %s, value: %lu, value: %lu\r\n",
+    data->type->name, left, right );
+  // print location
+  print( &data->location );
+  // abort execution
+  abort();
 }
 
 /**
  * @brief
  *
- * @todo add logic
- *
  * @param data
- * @param lhs
- * @param rhs
+ * @param left
+ * @param right
  */
 void __no_return __ubsan_handle_divrem_overflow(
-  __maybe_unused ubsan_overflow_data_ptr_t data,
-  __maybe_unused uint64_t lhs,
-  __maybe_unused uint64_t rhs
+  ubsan_overflow_data_ptr_t data,
+  uint64_t left,
+  uint64_t right
 ) {
-  PANIC( "DIVREM OVERFLOW!\r\n" );
+  printf(
+    "divrem overflow!\r\ntype: %s, value: %lu, value: %lu\r\n",
+    data->type->name, left, right );
+  // print location
+  print( &data->location );
+  // abort execution
+  abort();
 }
 
 /**
  * @brief Out of bounds handling
- *
- * @todo add logic
  *
  * @param data
  * @param left
  * @param right
  */
 void __no_return __ubsan_handle_shift_out_of_bounds(
-  __maybe_unused ubsan_out_of_bounds_data_ptr_t data,
-  __maybe_unused uint64_t left,
-  __maybe_unused uint64_t right
+  ubsan_shift_out_of_bounds_data_ptr_t data,
+  uint64_t left,
+  uint64_t right
 ) {
-  PANIC( "SHIFT OUT OF BOUNDS!\r\n" );
+  printf(
+    "Shift out of bounds!\r\nleft: %s, value: %lu, right: %s, value: %lu\r\n",
+    data->left->name, left, data->right->name, right );
+  // print location
+  print( &data->location );
+  // abort execution
+  abort();
 }
 
 /**
  * @brief Out of bounds handling
  *
- * @todo add logic
- *
  * @param data
  * @param index
  */
 void __no_return __ubsan_handle_out_of_bounds(
-  __maybe_unused ubsan_overflow_data_ptr_t data,
-  __maybe_unused uint64_t index
+  ubsan_out_of_bounds_data_ptr_t data,
+  uint64_t index
 ) {
-  PANIC( "OUT OF BOUNDS!\r\n" );
+  printf( "Out of bounds!\r\narray_type: %s, index: %lu\r\n",
+    data->array->name, index );
+  // print location
+  print( &data->location );
+  // abort execution
+  abort();
 }
 
 /**
  * @brief Load invalid value handling
- *
- * @todo add logic
  *
  * @param data
  * @param value
@@ -253,5 +276,10 @@ void __no_return __ubsan_handle_load_invalid_value(
   __maybe_unused ubsan_invalid_value_data_ptr_t data,
   __maybe_unused uint64_t value
 ) {
-  PANIC( "LOAD INVALID VALUE!\r\n" );
+  printf( "Load invalid value!\r\narray_type: %s, index: %lu\r\n",
+    data->type->name, value );
+  // print location
+  print( &data->location );
+  // abort execution
+  abort();
 }
