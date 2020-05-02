@@ -685,6 +685,8 @@ bool heap_init_get( void ) {
  * @param alignment memory alignment
  * @param size size to allocate
  * @return uintptr_t address of allocated block
+ *
+ * @todo check proper alignment for all cases
  */
 uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   // variables
