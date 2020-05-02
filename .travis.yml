@@ -25,6 +25,7 @@ before_script:
   - export PATH="/home/travis/.bolthur/cross/bin:$PATH"
   - arm-none-eabi-gcc --version
   - autoconf --version
+  - cppcheck --version
 
 notifications:
   email: false
