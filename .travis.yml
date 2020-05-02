@@ -40,7 +40,7 @@ jobs:
         - autoreconf -iv
         - mkdir -p build/lint/rpi2_rev1_debug
         - cd build/lint/rpi2_rev1_debug
-        - ../../configure --enable-silent-rules --host arm-none-eabi --enable-device=rpi2_b_rev1 --with-debug-symbols --enable-output --enable-output-mm-phys --enable-output-mm-virt --enable-output-mm-heap --enable-output-mailbox --enable-output-timer --enable-output-initrd --enable-output-event --enable-output-process --enable-output-interrupt --enable-output-exception --enable-output-elf --enable-output-platform --enable-output-syscall --enable-output-serial --enable-remote-debug
+        - ../../../configure --enable-silent-rules --host arm-none-eabi --enable-device=rpi2_b_rev1 --with-debug-symbols --enable-output --enable-output-mm-phys --enable-output-mm-virt --enable-output-mm-heap --enable-output-mailbox --enable-output-timer --enable-output-initrd --enable-output-event --enable-output-process --enable-output-interrupt --enable-output-exception --enable-output-elf --enable-output-platform --enable-output-syscall --enable-output-serial --enable-remote-debug
         - cppcheck -I include -I include/lib --quiet --inline-suppr -UCMC --force --enable=all --suppress-xml=build-aux/platform/rpi/cppcheck.suppression.xml --platform=build-aux/platform/rpi/cppcheck.32.xml --include=build/lint/rpi2_rev1_debug/include/config.h --project=build-aux/platform/rpi/project.cppcheck .
     - stage: compile
       compiler: arm-none-eabi-gcc
