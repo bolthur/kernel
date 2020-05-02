@@ -33,11 +33,11 @@ static uint32_t nested_data_abort = 0;
 /**
  * @brief Helper returns faulting address
  *
- * @return uint32_t
+ * @return uintptr_t
  */
-__maybe_unused static uint32_t fault_address( void ) {
+__maybe_unused static uintptr_t fault_address( void ) {
   // variable for faulting address
-  uint32_t address;
+  uintptr_t address;
   // get faulting address
   __asm__ __volatile__(
     "mrc p15, 0, %0, c6, c0, 0" : "=r" ( address ) : : "cc"
@@ -62,7 +62,7 @@ void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "data abort interrupt at 0x%08x\r\n", fault_address() );
+    DEBUG_OUTPUT( "data abort interrupt at %p\r\n", ( void* )fault_address() );
     DUMP_REGISTER( cpu );
   #endif
 

@@ -49,8 +49,8 @@ task_thread_ptr_t task_thread_create(
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "task_thread_create( 0x%08x, 0x%08x, %d ) called\r\n",
-      entry, process, priority );
+      "task_thread_create( %p, %p, %zu ) called\r\n",
+      ( void* )entry, ( void* )process, priority );
   #endif
 
   // create stack
@@ -59,7 +59,7 @@ task_thread_ptr_t task_thread_create(
   uintptr_t stack_virtual = task_stack_manager_next( process->thread_stack_manager );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "stack_virtual = 0x%08x\r\n", stack_virtual );
+    DEBUG_OUTPUT( "stack_virtual = %p\r\n", ( void* )stack_virtual );
   #endif
 
   // create context
@@ -110,7 +110,7 @@ task_thread_ptr_t task_thread_create(
   memset( ( void* )thread, 0, sizeof( task_thread_t ) );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Allocated thread structure at 0x%08x\r\n", thread );
+    DEBUG_OUTPUT( "Allocated thread structure at %p\r\n", ( void* )thread );
   #endif
   // populate thread structure
   thread->state = TASK_THREAD_STATE_READY;
@@ -134,6 +134,7 @@ task_thread_ptr_t task_thread_create(
   // add thread to thread list for switching
   list_push_back( queue->thread_list, thread );
 
+  // cppcheck-suppress memleak
   // return created thread
   return thread;
 }

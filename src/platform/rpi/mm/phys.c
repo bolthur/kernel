@@ -53,14 +53,14 @@ void phys_platform_init( void ) {
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length );
     DEBUG_OUTPUT(
-      "buffer->data.buffer_u32[ 0 ]: 0x%08x\r\n",
+      "buffer->data.buffer_u32[ 0 ]: %#08x\r\n",
       buffer->data.buffer_u32[ 0 ]
     );
     DEBUG_OUTPUT(
-      "buffer->data.buffer_u32[ 1 ]: 0x%08x\r\n",
+      "buffer->data.buffer_u32[ 1 ]: %#08x\r\n",
       buffer->data.buffer_u32[ 1 ]
     );
-    DEBUG_OUTPUT( "buffer->tag: 0x%08x\r\n", buffer->tag );
+    DEBUG_OUTPUT( "buffer->tag: %#08x\r\n", buffer->tag );
   #endif
 
   // increase amount by arm amount
@@ -68,7 +68,7 @@ void phys_platform_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "memory amount: 0x%08x\r\n", memory_amount );
+    DEBUG_OUTPUT( "memory amount: %#08x\r\n", memory_amount );
   #endif
 
   // get video core memory
@@ -81,15 +81,15 @@ void phys_platform_init( void ) {
       buffer->byte_length
     );
     DEBUG_OUTPUT(
-      "buffer->data.buffer_u32[ 0 ]: 0x%08x\r\n",
+      "buffer->data.buffer_u32[ 0 ]: %#08x\r\n",
       buffer->data.buffer_u32[ 0 ]
     );
     DEBUG_OUTPUT(
-      "buffer->data.buffer_u32[ 1 ]: 0x%08x\r\n",
+      "buffer->data.buffer_u32[ 1 ]: %#08x\r\n",
       buffer->data.buffer_u32[ 1 ]
     );
     DEBUG_OUTPUT(
-      "buffer->tag: 0x%08x\r\n",
+      "buffer->tag: %#08x\r\n",
       buffer->tag
     );
   #endif
@@ -113,11 +113,11 @@ void phys_platform_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "total memory amount: 0x%08x\r\n", memory_amount );
+    DEBUG_OUTPUT( "total memory amount: %#08x\r\n", memory_amount );
     DEBUG_OUTPUT( "bitmap length: %u\r\n", phys_bitmap_length );
-    DEBUG_OUTPUT( "phys bitmap address: 0x%08x\r\n", phys_bitmap );
-    DEBUG_OUTPUT( "content of __kernel_start: 0x%08lx\r\n", ( uintptr_t )&__kernel_start );
-    DEBUG_OUTPUT( "content of __kernel_end: 0x%08lx\r\n", ( uintptr_t ) &__kernel_end );
+    DEBUG_OUTPUT( "phys bitmap address: %p\r\n", ( void* )phys_bitmap );
+    DEBUG_OUTPUT( "content of __kernel_start: %p\r\n", ( void* )&__kernel_start );
+    DEBUG_OUTPUT( "content of __kernel_end: %p\r\n", ( void* ) &__kernel_end );
   #endif
   // overwrite physical bitmap completely with zero
   memset( phys_bitmap, 0, phys_bitmap_length * sizeof( uint32_t ) );
@@ -128,8 +128,8 @@ void phys_platform_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "start: 0x%lx\r\n", start );
-    DEBUG_OUTPUT( "end: 0x%lx\r\n", end );
+    DEBUG_OUTPUT( "start: %p\r\n", ( void* )start );
+    DEBUG_OUTPUT( "end: %p\r\n", ( void* )end );
   #endif
 
   // map from start to end addresses as used
@@ -147,8 +147,8 @@ void phys_platform_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "start: 0x%lx\r\n", start );
-    DEBUG_OUTPUT( "end: 0x%lx\r\n", end );
+    DEBUG_OUTPUT( "start: %p\r\n", ( void* )start );
+    DEBUG_OUTPUT( "end: %p\r\n", ( void* )end );
   #endif
 
   // map from start to end addresses as used

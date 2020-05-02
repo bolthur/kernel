@@ -65,9 +65,9 @@ void virt_platform_init( void ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "Map peripherals 0x%08x - 0x%08x\r\n",
-      peripheral_base_get( PERIPHERAL_GPIO ),
-      peripheral_end_get( PERIPHERAL_GPIO )
+      "Map peripherals %p - %p\r\n",
+      ( void* )peripheral_base_get( PERIPHERAL_GPIO ),
+      ( void* )peripheral_end_get( PERIPHERAL_GPIO )
     );
   #endif
 
@@ -94,9 +94,9 @@ void virt_platform_init( void ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "Map local peripherals 0x%08x - 0x%08x\r\n",
-        peripheral_base_get( PERIPHERAL_LOCAL ),
-        peripheral_end_get( PERIPHERAL_LOCAL )
+        "Map local peripherals %p - %p\r\n",
+        ( void* )peripheral_base_get( PERIPHERAL_LOCAL ),
+        ( void* )peripheral_end_get( PERIPHERAL_LOCAL )
       );
     #endif
 
@@ -134,29 +134,22 @@ void virt_platform_init( void ) {
 void virt_platform_post_init( void ) {
   // set framebuffer
   framebuffer_base_set( FRAMEBUFFER_AREA );
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "Set new framebuffer base to 0x%08x\r\n", FRAMEBUFFER_AREA );
-  #endif
-
   // set new peripheral base
   peripheral_base_set( GPIO_PERIPHERAL_BASE, PERIPHERAL_GPIO );
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "Set new gpio peripheral base to 0x%08x\r\n", GPIO_PERIPHERAL_BASE );
-  #endif
-
   // Adjust base address of cpu peripheral
   peripheral_base_set( CPU_PERIPHERAL_BASE, PERIPHERAL_LOCAL );
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "Set new cpu peripheral base to 0x%08x\r\n", CPU_PERIPHERAL_BASE );
-  #endif
-
   // set mailbox property pointer
   ptb_buffer = ( int32_t* )MAILBOX_PROPERTY_AREA;
+
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "Set mailbox property buffer to 0x%08x\r\n", MAILBOX_PROPERTY_AREA );
+    DEBUG_OUTPUT( "Set new framebuffer base to %p\r\n",
+      ( void* )FRAMEBUFFER_AREA );
+    DEBUG_OUTPUT( "Set new gpio peripheral base to %p\r\n",
+      ( void* )GPIO_PERIPHERAL_BASE );
+    DEBUG_OUTPUT( "Set new cpu peripheral base to %p\r\n",
+      ( void* )CPU_PERIPHERAL_BASE );
+    DEBUG_OUTPUT( "Set mailbox property buffer to %p\r\n",
+      ( void* )MAILBOX_PROPERTY_AREA );
   #endif
 }

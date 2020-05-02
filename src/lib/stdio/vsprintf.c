@@ -312,6 +312,8 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
         value = ( uintptr_t )va_arg( parameter, void* );
         alternate = !alternate;
         modifier = 'x';
+        zero_padding = true;
+        field_width = sizeof( uintptr_t ) * 2;
       // handle signed integer
       } else if ( 'i' == modifier || 'd' == modifier ) {
         // value to print
@@ -376,7 +378,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       if ( 'x' == modifier || 'X' == modifier ) {
         base = 16;
         // handle alternate
-        if ( alternate && 0 != value ) {
+        if ( alternate ) {
           prefix[ 0 ] = '0';
           prefix[ 1 ] = modifier;
           prefix[ 2 ] = '\0';
@@ -384,7 +386,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       } else if ( 'o' == modifier ) {
         base = 8;
         // handle alternate
-        if ( alternate && 0 != value ) {
+        if ( alternate ) {
           prefix[ 0 ] = '0';
           prefix[ 1 ] = '\0';
         }

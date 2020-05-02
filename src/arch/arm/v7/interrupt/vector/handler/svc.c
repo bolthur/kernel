@@ -48,7 +48,8 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "Entering software_interrupt_handler( 0x%08x )\r\n", cpu );
+    DEBUG_OUTPUT( "Entering software_interrupt_handler( %p )\r\n",
+      ( void* )cpu );
     DUMP_REGISTER( cpu );
   #endif
 
@@ -59,8 +60,8 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "address of cpu = 0x%08x\r\n", cpu );
-    DEBUG_OUTPUT( "svc_num = %d\r\n", svc_num );
+    DEBUG_OUTPUT( "address of cpu = %p\r\n", ( void* )cpu );
+    DEBUG_OUTPUT( "svc_num = %u\r\n", svc_num );
   #endif
 
   // handle bound interrupt handlers

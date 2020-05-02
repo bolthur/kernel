@@ -70,12 +70,12 @@
   #define DUMP_REGISTER( context ) \
     DEBUG_OUTPUT( \
       "CPU register dump\r\n"\
-      "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
-      "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
-      "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
-      "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
-      "%4s: 0x%08x\t%4s: 0x%08x\t%4s: 0x%08x\r\n"\
-      "%4s: 0x%08x\t%4s: 0x%08x\r\n", \
+      "%4s: %p\t%4s: %p\t%4s: %p\r\n"\
+      "%4s: %p\t%4s: %p\t%4s: %p\r\n"\
+      "%4s: %p\t%4s: %p\t%4s: %p\r\n"\
+      "%4s: %p\t%4s: %p\t%4s: %p\r\n"\
+      "%4s: %p\t%4s: %p\t%4s: %p\r\n"\
+      "%4s: %p\t%4s: %p\r\n", \
       "r0", ( ( cpu_register_context_ptr_t )context )->reg.r0, \
       "r1", ( ( cpu_register_context_ptr_t )context )->reg.r1, \
       "r2", ( ( cpu_register_context_ptr_t )context )->reg.r2, \

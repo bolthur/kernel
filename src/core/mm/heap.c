@@ -101,8 +101,8 @@ static int32_t compare_address_callback(
 ) {
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "a = 0x%08x, b = 0x%08x\r\n", a, b );
-    DEBUG_OUTPUT( "a->data = 0x%08x, b->data = 0x%08x\r\n", a->data, b->data );
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
+    DEBUG_OUTPUT( "a->data = %p, b->data = %p\r\n", a->data, b->data );
   #endif
 
   // -1 if address of a is greater than address of b
@@ -130,8 +130,8 @@ static int32_t compare_size_callback(
 ) {
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "a = 0x%08x, b = 0x%08x\r\n", a, b );
-    DEBUG_OUTPUT( "a->data = 0x%08x, b->data = 0x%08x\r\n", a->data, b->data );
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
+    DEBUG_OUTPUT( "a->data = %p, b->data = %p\r\n", a->data, b->data );
   #endif
 
   // -1 if address of a is greater than address of b
@@ -160,8 +160,8 @@ static void prepare_block(
 ) {
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "block = 0x%08x, addr = 0x%08x, size = %d\r\n",
-      block, addr, size );
+    DEBUG_OUTPUT( "block = %p, addr = %p, size = %zu\r\n",
+      ( void* )block, ( void* )addr, size );
   #endif
 
   // clear memory
@@ -173,7 +173,7 @@ static void prepare_block(
 
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "block->node_address = 0x%08x, block->node_size = 0x%08x\r\n",
+    DEBUG_OUTPUT( "block->node_address = %p, block->node_size = %p\r\n",
       &block->node_address, &block->node_size );
   #endif
 
@@ -234,8 +234,8 @@ static void extend_heap_space( void ) {
   // debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT(
-      "End: 0x%08x, Size: 0x%08x, New size: 0x%08x\r\n",
-      heap_end,
+      "End: %p, Size: %zx, New size: %zx\r\n",
+      ( void* )heap_end,
       heap_size,
       heap_size + HEAP_EXTENSION
     );
@@ -251,7 +251,7 @@ static void extend_heap_space( void ) {
   ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "Map 0x%08x with random physical address\r\n", addr );
+      DEBUG_OUTPUT( "Map %p with random physical address\r\n", ( void* )addr );
     #endif
 
     // map address
@@ -283,7 +283,7 @@ static void extend_heap_space( void ) {
 
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "Created free block at 0x%08x\r\n", free_block );
+      DEBUG_OUTPUT( "Created free block at %p\r\n", ( void* )free_block );
     #endif
 
     // prepare free block
@@ -344,7 +344,7 @@ static void shrink_heap_space( void ) {
   max_node = avl_get_max( free_address->root );
   // Debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "max_node = 0x%08x\r\n", max_node );
+    DEBUG_OUTPUT( "max_node = %p\r\n", ( void* )max_node );
   #endif
   // skip if there is nothing
   if ( NULL == max_node ) {
@@ -355,14 +355,14 @@ static void shrink_heap_space( void ) {
   max_block = HEAP_GET_BLOCK_ADDRESS( max_node );
   // Debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "max_block = 0x%08x\r\n", max_block );
+    DEBUG_OUTPUT( "max_block = %p\r\n", ( void* )max_block );
   #endif
 
   // determine end of block
   max_end = ( size_t )max_block->address + max_block->size;
   // Debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "max_end = 0x%08x\r\n", max_end );
+    DEBUG_OUTPUT( "max_end = %p\r\n", ( void* )max_end );
   #endif
   // do nothing if not yet expanded
   if ( HEAP_START + HEAP_MIN_SIZE >= max_end ) {
@@ -381,7 +381,7 @@ static void shrink_heap_space( void ) {
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "expand_size = 0x%08x\r\n", expand_size );
+    DEBUG_OUTPUT( "expand_size = %p\r\n", ( void* )expand_size );
   #endif
 
   // remove from free address
@@ -397,7 +397,7 @@ static void shrink_heap_space( void ) {
   }
   // Debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "to_remove = 0x%08x\r\n", to_remove );
+    DEBUG_OUTPUT( "to_remove = %p\r\n", ( void* )to_remove );
   #endif
   // prepare blocks after adjustment
   prepare_block( max_block, max_block->address, max_block->size );
@@ -444,12 +444,12 @@ static bool mergable( heap_block_ptr_t a, heap_block_ptr_t b ) {
   // debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT(
-      "a = 0x%08x, a->address = 0x%08x, size = %d, a_end = 0x%08x\r\n",
-      a, a->address, a->size, a_end
+      "a = %p, a->address = %p, size = %zu, a_end = %p\r\n",
+      ( void* )a, ( void* )a->address, a->size, ( void* )a_end
     );
     DEBUG_OUTPUT(
-      "b = 0x%08x, b->address = 0x%08x, size = %d, b_end = 0x%08x\r\n",
-      b, b->address, b->size, b_end
+      "b = %p, b->address = %p, size = %zu, b_end = %p\r\n",
+      ( void* )b, ( void* )b->address, b->size, ( void* )b_end
     );
   #endif
 
@@ -473,7 +473,8 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
   if ( true != mergable( a, b ) ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "a ( 0x%08x ) not mergable with b ( 0x%08x )\r\n", a, b );
+      DEBUG_OUTPUT( "a ( %p ) not mergable with b ( %p )\r\n",
+        ( void* )a, ( void* )b );
     #endif
     // return NULL
     return NULL;
@@ -486,12 +487,12 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
   // debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT(
-      "a = 0x%08x, a->address = 0x%08x, size = %d, a_end = 0x%08x\r\n",
-      a, a->address, a->size, a_end
+      "a =  %p, a->address =  %p, size = %zu, a_end =  %p\r\n",
+      ( void* )a, ( void* )a->address, a->size, ( void* )a_end
     );
     DEBUG_OUTPUT(
-      "b = 0x%08x, b->address = 0x%08x, size = %d, b_end = 0x%08x\r\n",
-      b, b->address, b->size, b_end
+      "b =  %p, b->address =  %p, size = %zu, b_end =  %p\r\n",
+      ( void* )b, ( void* )b->address, b->size, ( void* )b_end
     );
   #endif
 
@@ -558,9 +559,9 @@ void heap_init( heap_init_state_t state ) {
   // debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT(
-      "Heap start: 0x%08x, Heap end: 0x%08x\r\n",
-      start,
-      start + min_size
+      "Heap start: %p, Heap end: %p\r\n",
+      ( void* )start,
+      ( void* )( start + min_size )
     );
     DEBUG_OUTPUT( "state = %d\r\n", state );
   #endif
@@ -574,7 +575,7 @@ void heap_init( heap_init_state_t state ) {
     ) {
       // debug output
       #if defined( PRINT_MM_HEAP )
-        DEBUG_OUTPUT( "Map 0x%08x with random physical address\r\n", addr );
+        DEBUG_OUTPUT( "Map %p with random physical address\r\n", ( void* )addr );
       #endif
 
       // map address
@@ -604,8 +605,8 @@ void heap_init( heap_init_state_t state ) {
 
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "Placed heap management at 0x%08x\r\n", heap );
-    DEBUG_OUTPUT( "offset: %d\r\n", offset );
+    DEBUG_OUTPUT( "Placed heap management at %p\r\n", ( void* )heap );
+    DEBUG_OUTPUT( "offset: %u\r\n", offset );
   #endif
 
   // initialize management structure
@@ -631,14 +632,14 @@ void heap_init( heap_init_state_t state ) {
   heap_block_ptr_t free_block = ( heap_block_ptr_t )( start + offset );
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "Placing free block at 0x%08x\r\n", free_block );
+    DEBUG_OUTPUT( "Placing free block at %p\r\n", ( void* )free_block );
   #endif
 
   // increase offset
   offset += sizeof( heap_block_t );
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "Heap offset: %d\r\n", offset );
+    DEBUG_OUTPUT( "Heap offset: %u\r\n", offset );
     DEBUG_OUTPUT( "Preparing and inserting free block\r\n" );
   #endif
 
@@ -699,7 +700,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   }
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "alignment = 0x%08x, size = %d\r\n", alignment, size );
+    DEBUG_OUTPUT( "alignment = %zx, size = %zu\r\n", alignment, size );
   #endif
 
   // calculate real size
@@ -714,7 +715,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   address_node = avl_find_by_data( free_size, ( void* )size );
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "address_node = 0x%08x\r\n", address_node );
+    DEBUG_OUTPUT( "address_node = %p\r\n", ( void* )address_node );
   #endif
   // check alignment for possible matching block
   if ( NULL != address_node ) {
@@ -729,7 +730,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   }
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "address_node = 0x%08x\r\n", address_node );
+    DEBUG_OUTPUT( "address_node = %p\r\n", ( void* )address_node );
   #endif
 
   // Check for no matching node has been found
@@ -758,9 +759,9 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   current = HEAP_GET_BLOCK_SIZE( address_node );
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "address_node = 0x%08x\r\n", address_node );
-    DEBUG_OUTPUT( "current->size = %d\r\n", current->size );
-    DEBUG_OUTPUT( "current->address = 0x%08x\r\n", current->address );
+    DEBUG_OUTPUT( "address_node = %p\r\n", ( void* )address_node );
+    DEBUG_OUTPUT( "current->size = %zx\r\n", current->size );
+    DEBUG_OUTPUT( "current->address = %p\r\n", ( void* )current->address );
   #endif
 
   // split flag
@@ -771,7 +772,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     if ( HEAP_INIT_EARLY == kernel_heap->state ) {
       // debug output
       #if defined( PRINT_MM_HEAP )
-        DEBUG_OUTPUT( "Not enough space, existing size: %d, real size = %d\r\n",
+        DEBUG_OUTPUT( "Not enough space, existing size: %zu, real size = %zu\r\n",
           current->size,
           real_size
         );
@@ -791,7 +792,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   if ( current->address % alignment ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "alignment_offset = %d\r\n", alignment_offset );
+      DEBUG_OUTPUT( "alignment_offset = %zu\r\n", alignment_offset );
     #endif
 
     // determine alignment offset
@@ -802,7 +803,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "alignment_offset = %d\r\n", alignment_offset );
+      DEBUG_OUTPUT( "alignment_offset = %zu\r\n", alignment_offset );
     #endif
 
     // subtract heap block size
@@ -810,7 +811,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "alignment_offset = %x\r\n", alignment_offset );
+      DEBUG_OUTPUT( "alignment_offset = %zu\r\n", alignment_offset );
     #endif
 
     // check for extension is necessary
@@ -857,8 +858,8 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
       DEBUG_OUTPUT(
-        "block->size = %d, remaining_size = %d, new_start 0x%08x\r\n",
-        current->size, remaining_size, new_start );
+        "block->size = %zu, remaining_size = %u, new_start %p\r\n",
+        current->size, remaining_size, ( void* )new_start );
     #endif
     // handle proper block structure alignment
     if ( block_alignment ) {
@@ -866,7 +867,8 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
       block_alignment = sizeof( heap_block_t ) - block_alignment % sizeof( heap_block_t );
       // debug output
       #if defined( PRINT_MM_HEAP )
-        DEBUG_OUTPUT( "added offset for heap block = 0x%08x\r\n", block_alignment );
+        DEBUG_OUTPUT( "added offset for heap block = %p\r\n",
+          ( void* )block_alignment );
       #endif
       // increment new start and decrement remaining size
       new_start += block_alignment;
@@ -879,8 +881,8 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
       DEBUG_OUTPUT(
-        "block->size = %d, remaining_size = %d, new_start 0x%08x\r\n",
-        current->size, remaining_size, new_start );
+        "block->size = %zu, remaining_size = %u, new_start %p\r\n",
+        current->size, remaining_size, ( void* )new_start );
     #endif
 
     // place new block before
@@ -894,8 +896,8 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "block->size = %d\r\n", current->size );
-      DEBUG_OUTPUT( "block->address = 0x%08x\r\n", current->address );
+      DEBUG_OUTPUT( "block->size = %zu\r\n", current->size );
+      DEBUG_OUTPUT( "block->address = %p\r\n", ( void* )current->address );
     #endif
 
     // insert nodes at free trees
@@ -915,7 +917,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "check_following_size = %d\r\n", check_following_size );
+      DEBUG_OUTPUT( "check_following_size = %zu\r\n", check_following_size );
     #endif
 
     // create and insert following block
@@ -931,8 +933,8 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 
       // debug output
       #if defined( PRINT_MM_HEAP )
-        DEBUG_OUTPUT( "following->size = %d\r\n", following->size );
-        DEBUG_OUTPUT( "following->address = 0x%08x\r\n", following->address );
+        DEBUG_OUTPUT( "following->size = %zu\r\n", following->size );
+        DEBUG_OUTPUT( "following->address = %p\r\n", ( void* )following->address );
       #endif
 
       // insert nodes at free trees
@@ -942,8 +944,8 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "previous->size = %d\r\n", previous->size );
-      DEBUG_OUTPUT( "previous->address = 0x%08x\r\n", previous->address );
+      DEBUG_OUTPUT( "previous->size = %zu\r\n", previous->size );
+      DEBUG_OUTPUT( "previous->address = %p\r\n", ( void* )previous->address );
     #endif
 
     // prepare previous block
@@ -952,8 +954,8 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "previous->size = %d\r\n", previous->size );
-      DEBUG_OUTPUT( "previous->address = 0x%08x\r\n", previous->address );
+      DEBUG_OUTPUT( "previous->size = %zu\r\n", previous->size );
+      DEBUG_OUTPUT( "previous->address = %p\r\n", ( void* )previous->address );
     #endif
 
     // insert nodes at free trees
@@ -969,8 +971,8 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "new->size = %d\r\n", new->size );
-    DEBUG_OUTPUT( "new->address = 0x%08x\r\n", new->address );
+    DEBUG_OUTPUT( "new->size = %zu\r\n", new->size );
+    DEBUG_OUTPUT( "new->address = %p\r\n", ( void* )new->address );
   #endif
 
   // insert at used block
@@ -999,7 +1001,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
  */
 void heap_free_block( uintptr_t addr ) {
   // variables
-  avl_node_ptr_t address_node, parent_node, sibling_node;
+  avl_node_ptr_t address_node, parent_node;
   heap_block_ptr_t current_block, parent_block, sibling_block;
   avl_tree_ptr_t used_area, free_address, free_size;
 
@@ -1026,7 +1028,7 @@ void heap_free_block( uintptr_t addr ) {
 
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "addr = 0x%08x\r\n", addr );
+    DEBUG_OUTPUT( "addr = %p\r\n", ( void* )addr );
   #endif
 
   // finde node by address within tree
@@ -1040,8 +1042,8 @@ void heap_free_block( uintptr_t addr ) {
   // debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT(
-      "address_node = 0x%08x, data = 0x%08x\r\n",
-      address_node,
+      "address_node = %p, data = %p\r\n",
+      ( void* )address_node,
       address_node->data
     );
   #endif
@@ -1063,7 +1065,7 @@ void heap_free_block( uintptr_t addr ) {
 
   // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "current_block = 0x%08x\r\n", current_block );
+    DEBUG_OUTPUT( "current_block = %p\r\n", ( void* )current_block );
   #endif
 
   // remove node from used block
@@ -1071,7 +1073,8 @@ void heap_free_block( uintptr_t addr ) {
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "removed 0x%08x from tree\r\n", &current_block->node_address );
+    DEBUG_OUTPUT( "removed %p from tree\r\n",
+      ( void* )&current_block->node_address );
 
     DEBUG_OUTPUT( "Used tree:\r\n" );
     avl_print( used_area );
@@ -1104,14 +1107,14 @@ void heap_free_block( uintptr_t addr ) {
 
   do {
     // left sibling
-    sibling_node = current_block->node_address.left;
+    avl_node_ptr_t sibling_node = current_block->node_address.left;
     // try to merge if not null
     if ( NULL != sibling_node ) {
       // debug output
       #if defined( PRINT_MM_HEAP )
-        DEBUG_OUTPUT( "possible sibling for merge = 0x%08x\r\n", sibling_node );
-        DEBUG_OUTPUT( "sibling->data = 0x%08x\r\n", sibling_node->data );
-        DEBUG_OUTPUT( "current_block = 0x%08x\r\n", ( uintptr_t )current_block );
+        DEBUG_OUTPUT( "possible sibling for merge = %p\r\n", ( void* )sibling_node );
+        DEBUG_OUTPUT( "sibling->data = %p\r\n", ( void* )sibling_node->data );
+        DEBUG_OUTPUT( "current_block = %p\r\n", ( void* )current_block );
       #endif
       // get block structure of sibling
       sibling_block = HEAP_GET_BLOCK_ADDRESS( sibling_node );
@@ -1129,9 +1132,9 @@ void heap_free_block( uintptr_t addr ) {
     if ( NULL != sibling_node ) {
       // debug output
       #if defined( PRINT_MM_HEAP )
-        DEBUG_OUTPUT( "possible sibling for merge = 0x%08x\r\n", sibling_node );
-        DEBUG_OUTPUT( "sibling->data = 0x%08x\r\n", sibling_node->data );
-        DEBUG_OUTPUT( "current_block = 0x%08x\r\n", ( uintptr_t )current_block );
+        DEBUG_OUTPUT( "possible sibling for merge = %p\r\n", ( void* )sibling_node );
+        DEBUG_OUTPUT( "sibling->data = %p\r\n", sibling_node->data );
+        DEBUG_OUTPUT( "current_block = %p\r\n", ( void* )current_block );
       #endif
       // get block structure of sibling
       sibling_block = HEAP_GET_BLOCK_ADDRESS( sibling_node );
@@ -1152,8 +1155,8 @@ void heap_free_block( uintptr_t addr ) {
     if ( NULL != parent_node ) {
       // debug output
       #if defined( PRINT_MM_HEAP )
-        DEBUG_OUTPUT( "possible parent for merge = 0x%08x\r\n", parent_node );
-        DEBUG_OUTPUT( "parent->data = 0x%08x\r\n", parent_node->data );
+        DEBUG_OUTPUT( "possible parent for merge = %p\r\n", ( void* )parent_node );
+        DEBUG_OUTPUT( "parent->data = %p\r\n", parent_node->data );
       #endif
       // get block structure of parent_node
       parent_block = HEAP_GET_BLOCK_ADDRESS( parent_node );

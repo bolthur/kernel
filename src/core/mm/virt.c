@@ -59,11 +59,11 @@ void virt_init( void ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "Map kernel space 0x%08x - 0x%08x to 0x%08x - 0x%08x \r\n",
-      start,
-      end,
-      PHYS_2_VIRT( start ),
-      PHYS_2_VIRT( end )
+      "Map kernel space %p - %p to %p - %p \r\n",
+      ( void* )start,
+      ( void* )end,
+      ( void* )PHYS_2_VIRT( start ),
+      ( void* )PHYS_2_VIRT( end )
     );
   #endif
 
@@ -91,11 +91,11 @@ void virt_init( void ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "Map initrd space 0x%08x - 0x%08x to 0x%08x - 0x%08x \r\n",
-        start,
-        end,
-        PHYS_2_VIRT( start ),
-        PHYS_2_VIRT( end )
+        "Map initrd space %p - %p to %p - %p \r\n",
+        ( void* )start,
+        ( void* )end,
+        ( void* )PHYS_2_VIRT( start ),
+        ( void* )PHYS_2_VIRT( end )
       );
     #endif
 

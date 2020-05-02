@@ -137,7 +137,7 @@ void __no_return __ubsan_handle_pointer_overflow(
   uint64_t before,
   uint64_t after
 ) {
-  printf( "pointer overflow!\r\nbefore: %lu, after: %lu\r\n", before, after );
+  printf( "pointer overflow!\r\nbefore: %llu, after: %llu\r\n", before, after );
   // print location
   print( &data->location );
   // abort execution
@@ -157,7 +157,7 @@ void __no_return __ubsan_handle_add_overflow(
   __maybe_unused uint64_t right
 ) {
   printf(
-    "add overflow!\r\ntype: %s, value: %lu, value: %lu\r\n",
+    "add overflow!\r\ntype: %s, value: %llu, value: %llu\r\n",
     data->type->name, left, right );
   // print location
   print( &data->location );
@@ -178,7 +178,7 @@ void __no_return __ubsan_handle_sub_overflow(
   uint64_t right
 ) {
   printf(
-    "sub overflow!\r\ntype: %s, value: %lu, value: %lu\r\n",
+    "sub overflow!\r\ntype: %s, value: %llu, value: %llu\r\n",
     data->type->name, left, right );
   // print location
   print( &data->location );
@@ -199,7 +199,7 @@ void __no_return __ubsan_handle_mul_overflow(
   __maybe_unused uint64_t right
 ) {
   printf(
-    "mul overflow!\r\ntype: %s, value: %lu, value: %lu\r\n",
+    "mul overflow!\r\ntype: %s, value: %llu, value: %llu\r\n",
     data->type->name, left, right );
   // print location
   print( &data->location );
@@ -220,7 +220,7 @@ void __no_return __ubsan_handle_divrem_overflow(
   uint64_t right
 ) {
   printf(
-    "divrem overflow!\r\ntype: %s, value: %lu, value: %lu\r\n",
+    "divrem overflow!\r\ntype: %s, value: %llu, value: %llu\r\n",
     data->type->name, left, right );
   // print location
   print( &data->location );
@@ -241,7 +241,7 @@ void __no_return __ubsan_handle_shift_out_of_bounds(
   uint64_t right
 ) {
   printf(
-    "Shift out of bounds!\r\nleft: %s, value: %lu, right: %s, value: %lu\r\n",
+    "Shift out of bounds!\r\nleft: %s, value: %llu, right: %s, value: %llu\r\n",
     data->left->name, left, data->right->name, right );
   // print location
   print( &data->location );
@@ -259,7 +259,7 @@ void __no_return __ubsan_handle_out_of_bounds(
   ubsan_out_of_bounds_data_ptr_t data,
   uint64_t index
 ) {
-  printf( "Out of bounds!\r\narray_type: %s, index: %lu\r\n",
+  printf( "Out of bounds!\r\narray_type: %s, index: %llu\r\n",
     data->array->name, index );
   // print location
   print( &data->location );
@@ -277,7 +277,7 @@ void __no_return __ubsan_handle_load_invalid_value(
   __maybe_unused ubsan_invalid_value_data_ptr_t data,
   __maybe_unused uint64_t value
 ) {
-  printf( "Load invalid value!\r\narray_type: %s, index: %lu\r\n",
+  printf( "Load invalid value!\r\narray_type: %s, index: %llu\r\n",
     data->type->name, value );
   // print location
   print( &data->location );

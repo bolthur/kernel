@@ -121,8 +121,8 @@ void kernel_main( void ) {
   // print size
   if ( initrd_exist() ) {
     uintptr_t initrd = initrd_get_start_address();
-    DEBUG_OUTPUT( "initrd = 0x%08x\r\n", initrd );
-    DEBUG_OUTPUT( "initrd = 0x%08x\r\n", initrd_get_end_address() );
+    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd );
+    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd_get_end_address() );
     DEBUG_OUTPUT( "size = %zo\r\n", initrd_get_size() );
     DEBUG_OUTPUT( "size = %zu\r\n", initrd_get_size() );
 
@@ -132,8 +132,8 @@ void kernel_main( void ) {
     // loop through tar
     while ( ! tar_end_reached( iter ) ) {
       // debug output
-      DEBUG_OUTPUT( "0x%lx: initrd file name: %s\r\n",
-        ( uintptr_t )iter, iter->file_name );
+      DEBUG_OUTPUT( "%p: initrd file name: %s\r\n",
+        ( void* )iter, iter->file_name );
 
       // next
       iter = tar_next( iter );
@@ -158,7 +158,7 @@ void kernel_main( void ) {
 
   // FIXME: Create init process from initialramdisk and pass initrd to init process
   // create processes for elf files
-  if ( initrd_exist() && false == true ) {
+  if ( initrd_exist() ) {
     // get iterator
     tar_header_ptr_t iter = ( tar_header_ptr_t )initrd_get_start_address();
 
@@ -173,7 +173,7 @@ void kernel_main( void ) {
         // create process
         uint64_t file_size = tar_size( iter );
         DEBUG_OUTPUT( "Create process for file %s\r\n", iter->file_name );
-        DEBUG_OUTPUT( "File size: 0x%llx\r\n", file_size );
+        DEBUG_OUTPUT( "File size: %#llx\r\n", file_size );
 
         task_process_create( file, 0 );
         task_process_create( file, 0 );

@@ -570,7 +570,7 @@ void debug_gdb_handler_stepping(
       continue;
     }
     // some debug output
-    DEBUG_OUTPUT( "next_address: 0x%08x\r\n", next_address[ x ] );
+    DEBUG_OUTPUT( "next_address: %p\r\n", ( void* )next_address[ x ] );
     // add breakpoint
     debug_breakpoint_add( next_address[ x ], true, true );
   }

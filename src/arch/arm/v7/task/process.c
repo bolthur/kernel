@@ -55,8 +55,8 @@ void task_process_start( void ) {
 
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "next_thread = 0x%08x, next_queue = 0x%08x\r\n",
-      next_thread, next_queue );
+    DEBUG_OUTPUT( "next_thread = %p, next_queue = %p\r\n",
+      ( void* )next_thread, ( void* )next_queue );
   #endif
 
   // set context and flush
@@ -80,15 +80,14 @@ void task_process_start( void ) {
 void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08x )\r\n", context );
+    DEBUG_OUTPUT( "Entered task_process_schedule( %p )\r\n", context );
   #endif
 
   // prevent scheduling when kernel interrupt occurs ( context != NULL )
   if ( NULL != context ) {
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT(
-        "No scheduling in kernel level exception, context = 0x%x\r\n",
+      DEBUG_OUTPUT( "No scheduling in kernel level exception, context = %p\r\n",
         context );
     #endif
 
@@ -104,7 +103,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
 
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "cpu register context: 0x%08x\r\n", cpu );
+    DEBUG_OUTPUT( "cpu register context: %p\r\n", ( void* )cpu );
     DUMP_REGISTER( cpu );
   #endif
 
@@ -119,10 +118,9 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     assert( NULL != running_queue );
     // set last handled within running queue
     running_queue->last_handled = running_thread;
+    // update running task to halt due to switch
+    running_thread->state = TASK_THREAD_STATE_HALT_SWITCH;
   }
-
-  // update running task to halt due to switch
-  running_thread->state = TASK_THREAD_STATE_HALT_SWITCH;
 
   // get next thread
   task_thread_ptr_t next_thread;

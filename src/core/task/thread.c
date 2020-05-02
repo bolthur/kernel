@@ -45,8 +45,8 @@ static int32_t thread_compare_id_callback(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = 0x%08x, b = 0x%08x\r\n", a, b );
-    DEBUG_OUTPUT( "a->data = %d, b->data = %d\r\n",
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
+    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n",
       ( size_t )a->data,
       ( size_t )b->data );
   #endif
@@ -85,9 +85,13 @@ void task_thread_set_current(
   task_thread_ptr_t thread,
   task_priority_queue_ptr_t queue
 ) {
-  // set current
+  // assert thread parameter
+  assert( NULL != thread );
+  // set current thread
   task_thread_current_thread = thread;
-  // update queue
+  // assert thread parameter
+  assert( NULL != queue );
+  // update queue current
   queue->current = thread;
   // set state
   task_thread_current_thread->state = TASK_THREAD_STATE_ACTIVE;
@@ -128,7 +132,7 @@ task_thread_ptr_t task_thread_next( void ) {
   max = avl_get_max( process_manager->thread_priority_tree->root );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "min: 0x%08x, max: 0x%08x\r\n", min, max );
+    DEBUG_OUTPUT( "min: %p, max: %p\r\n", ( void* )min, ( void* )max );
   #endif
 
   // get nodes from min/max
@@ -183,20 +187,20 @@ task_thread_ptr_t task_thread_next( void ) {
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT(
-        "current->last_handled = 0x%08x\r\n",
-      current->last_handled );
+        "current->last_handled = %p\r\n",
+        ( void* )current->last_handled );
     #endif
     // handle already executed entry
     if ( current->last_handled != NULL ) {
       // try to find element in list
       item = list_lookup_data(
         current->thread_list, ( void* )current->last_handled );
-      // debug output
-      #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "item->data = 0x%08x\r\n", item->data );
-      #endif
       // assert result
       assert( NULL != item );
+      // debug output
+      #if defined( PRINT_PROCESS )
+        DEBUG_OUTPUT( "item->data = %p\r\n", item->data );
+      #endif
       // head to next
       item = item->next;
     }
