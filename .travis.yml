@@ -30,6 +30,7 @@ notifications:
   email: false
 
 stages:
+  - lint
   - compile
 
 jobs:
