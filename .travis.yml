@@ -26,6 +26,8 @@ before_script:
   - autoconf --version
   - cppcheck --version
 
+compiler: gcc
+
 notifications:
   email: false
 
@@ -35,7 +37,6 @@ stages:
 jobs:
   include:
     - stage: compile
-      compiler: arm-unknown-bolthur-eabi-gcc
       name: "RPI 2 rev. 1 - debug"
       script:
         - autoreconf -iv
@@ -45,7 +46,6 @@ jobs:
         - make cppcheck
         - make all
     - stage: compile
-      compiler: arm-unknown-bolthur-eabi-gcc
       name: "RPI 2 rev. 1 - prod"
       script:
         - autoreconf -iv
