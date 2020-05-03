@@ -5,8 +5,15 @@ addons:
   apt:
     update: true
     packages:
+      - build-essential
       - gcc
       - g++
+      - texinfo
+      - bison
+      - flex
+      - libgmp3-dev
+      - libmpc-dev
+      - libmpfr-dev
 
 cache:
   directories:
