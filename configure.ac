@@ -3,9 +3,6 @@ AC_PREREQ(2.69)
 AC_INIT([bolthur-kernel], [0.1], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 AC_COPYRIGHT([Copyright (C) 2018 - 2020 bolthur project])
 
-# Add hosted toolchain to path
-AC_SUBST(PATH, "/opt/bolthur/cross/bin:${PATH}")
-
 AC_CONFIG_AUX_DIR([build-aux/config])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
