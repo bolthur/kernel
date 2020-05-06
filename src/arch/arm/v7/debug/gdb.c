@@ -703,7 +703,7 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
   // disable all interrupts for sane exit
   // necessary to prevent nesting, which might insert stupid breakpoint
   // instructions via serial interrupt handling
-  interrupt_disable();
+  interrupt_toggle( INTERRUPT_TOGGLE_OFF );
   // set running flag
   handler_running = false;
 }

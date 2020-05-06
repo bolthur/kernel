@@ -29,7 +29,7 @@
  * @brief Initialize panic process
  */
 void panic_init( void ) {
-  interrupt_disable();
+  interrupt_toggle( INTERRUPT_TOGGLE_OFF );
 }
 
 /**

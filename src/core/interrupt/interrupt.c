@@ -370,8 +370,43 @@ void interrupt_init( void ) {
 
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Enabling interrupts\r\n" );
+    DEBUG_OUTPUT( "Toggle interrupts\r\n" );
   #endif
-  // enable interrupts
-  interrupt_enable();
+  interrupt_toggle( INTERRUPT_TOGGLE_ON );
+}
+
+/**
+ * @brief Toggle interrupt on / off
+ *
+ * @param state
+ */
+void interrupt_toggle( interrupt_toggle_state_t state ) {
+  // static status flag
+  static bool enabled = false;
+
+  // handle off
+  if ( INTERRUPT_TOGGLE_OFF == state ) {
+    // set flag
+    enabled = false;
+    // disable
+    interrupt_disable();
+  // handle on
+  } else if ( INTERRUPT_TOGGLE_ON == state ) {
+    // set flag
+    enabled = true;
+    // enable
+    interrupt_enable();
+  } else {
+    // toggle flag
+    enabled = !enabled;
+
+    // handle enable
+    if ( enabled ) {
+      // enable
+      interrupt_enable();
+    } else {
+      // disable interrupts
+      interrupt_disable();
+    }
+  }
 }

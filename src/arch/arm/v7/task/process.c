@@ -39,10 +39,12 @@ void task_process_start( void ) {
     DEBUG_OUTPUT( "Entered task_process_start()\r\n" );
   #endif
 
-  // get next thread
+  // get first thread to execute
   task_thread_ptr_t next_thread = task_thread_next();
-  // assert thread
-  assert( NULL != next_thread );
+  // handle no thread
+  if ( NULL == next_thread ) {
+    return;
+  }
 
   // variable for next thread queue
   task_priority_queue_ptr_t next_queue = task_queue_get_queue(

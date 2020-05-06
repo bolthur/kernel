@@ -144,10 +144,6 @@ void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
   heap_init( HEAP_INIT_NORMAL );
 
-  // Setup timer
-  DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" );
-  timer_init();
-
   // Setup multitasking
   DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" );
   task_process_init();
@@ -183,10 +179,14 @@ void kernel_main( void ) {
       // next task
       iter = tar_next( iter );
     }
-
-    // kickstart multitasking
-    task_process_start();
   }
+
+  // Setup timer
+  DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" );
+  timer_init();
+
+  // kickstart multitasking
+  task_process_start();
 }
 
 // enable again

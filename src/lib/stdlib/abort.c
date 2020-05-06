@@ -26,7 +26,7 @@
  */
 void __no_return abort( void ) {
   // disable all interrupts
-  interrupt_disable();
+  interrupt_toggle( INTERRUPT_TOGGLE_OFF );
   // loop without return
   while ( 1 ) {}
 }
