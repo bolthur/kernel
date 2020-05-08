@@ -311,7 +311,6 @@ uint64_t v7_short_create_table(
     );
 
     // check for already existing
-    // cppcheck-suppress arrayIndexOutOfBounds
     if ( 0 != context->table[ table_idx ].raw ) {
       // debug output
       #if defined( PRINT_MM_VIRT )
@@ -343,7 +342,6 @@ uint64_t v7_short_create_table(
     #endif
 
     // add table to context
-    // cppcheck-suppress AssignmentIntegerToAddress
     context->table[ table_idx ].raw = ( uint32_t )tbl & 0xFFFFFC00;
 
     // set necessary attributes
@@ -400,7 +398,6 @@ uint64_t v7_short_create_table(
     #endif
 
     // add table to context
-    // cppcheck-suppress AssignmentIntegerToAddress
     context->table[ table_idx ].raw = ( uint32_t )tbl & 0xFFFFFC00;
 
     // set necessary attributes

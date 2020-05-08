@@ -317,10 +317,13 @@ static void extend_heap_space( void ) {
  */
 static void shrink_heap_space( void ) {
   heap_block_ptr_t max_block;
-  size_t max_end, expand_size, to_remove;
+  size_t max_end, expand_size;
   avl_node_ptr_t max_node;
-  __maybe_unused avl_tree_ptr_t used_area;
   avl_tree_ptr_t free_address, free_size;
+  // variable used for debug output only
+  #if defined( PRINT_MM_HEAP )
+    size_t to_remove;
+  #endif
 
   // stop if not setup
   if (
@@ -331,7 +334,6 @@ static void shrink_heap_space( void ) {
   }
 
   // get correct trees
-  used_area = get_used_area_tree( kernel_heap->state, kernel_heap );
   free_address = get_free_address_tree( kernel_heap->state, kernel_heap );
   free_size = get_free_size_tree( kernel_heap->state, kernel_heap );
 
@@ -389,10 +391,16 @@ static void shrink_heap_space( void ) {
   // remove from free size tree
   avl_remove_by_node( free_size, &max_block->node_size );
 
+  // debug output stat only
+  #if defined( PRINT_MM_HEAP )
+    to_remove = 0;
+  #endif
   // adjust block size
-  to_remove = 0;
   while ( max_block->size > HEAP_EXTENSION ) {
-    to_remove += HEAP_EXTENSION;
+    // debug output stat only
+    #if defined( PRINT_MM_HEAP )
+      to_remove += HEAP_EXTENSION;
+    #endif
     max_block->size -= HEAP_EXTENSION;
   }
   // Debug output
@@ -417,7 +425,7 @@ static void shrink_heap_space( void ) {
   // Debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "Used tree:\r\n" );
-    avl_print( used_area );
+    avl_print( get_used_area_tree( kernel_heap->state, kernel_heap ) );
 
     DEBUG_OUTPUT( "Free address tree:\r\n" );
     avl_print( free_address );
@@ -866,7 +874,8 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     // handle proper block structure alignment
     if ( block_alignment ) {
       // calculate correct alignment
-      block_alignment = sizeof( heap_block_t ) - block_alignment % sizeof( heap_block_t );
+      block_alignment = sizeof( heap_block_t )
+        - block_alignment % sizeof( heap_block_t );
       // debug output
       #if defined( PRINT_MM_HEAP )
         DEBUG_OUTPUT( "added offset for heap block = %p\r\n",
@@ -875,8 +884,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
       // increment new start and decrement remaining size
       new_start += block_alignment;
       remaining_size -= block_alignment;
-      // adjust real_size and size of block
-      real_size += block_alignment;
+      // adjust size of block
       size += block_alignment;
     }
 
