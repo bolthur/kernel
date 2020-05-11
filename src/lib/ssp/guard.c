@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -32,9 +32,16 @@
  */
 uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 
+// disable missing prototype temporarily
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+
 /**
  * @brief Stack check failed callback
  */
 void __no_return __stack_chk_fail( void ) {
   PANIC( "Stack smashing detected" );
 }
+
+// restore again
+#pragma GCC diagnostic pop

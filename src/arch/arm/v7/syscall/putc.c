@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,6 +27,8 @@
  * @brief Dummy system call for testing purposes
  *
  * @param context
+ *
+ * @todo remove with syscall implementation
  */
 void syscall_putc( void* context ) {
   // get context
@@ -36,5 +38,5 @@ void syscall_putc( void* context ) {
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
 
   // simple character printing
-  printf( "%c", ( uint8_t )cpu->r0 );
+  printf( "%c", ( uint8_t )cpu->reg.r0 );
 }

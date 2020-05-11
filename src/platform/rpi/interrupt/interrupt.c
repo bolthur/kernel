@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,6 +23,7 @@
 #include <stddef.h>
 #include <core/panic.h>
 #include <core/io.h>
+#include <core/interrupt.h>
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
 
@@ -77,19 +78,23 @@ int8_t interrupt_get_pending( bool fast ) {
       uint32_t check_bit = ( 1U << i );
 
       // check first pending register
-      if ( pending1 && check_bit ) {
+      if ( pending1 & check_bit ) {
         return i;
       }
 
       // check second pending register
-      if ( pending2 && check_bit ) {
+      if ( pending2 & check_bit ) {
         return ( int8_t )( i + 32 );
       }
     }
-
   // fast interrupt handling
-  } else if ( fast ) {
-    PANIC( "Fast interrupts not yet completely supported!" );
+  } else {
+    // get set interrupt
+    uint32_t interrupt = io_in32( base + INTERRUPT_FIQ_CONTROL );
+    // get only number
+    interrupt &= 0x7f;
+    // return interrupt
+    return ( int8_t )interrupt;
   }
 
   return -1;

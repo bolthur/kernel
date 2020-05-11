@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -56,7 +56,7 @@ void virt_init( void );
 void virt_platform_init( void );
 void virt_arch_init( void );
 void virt_arch_prepare( void );
-bool virt_initialized_get( void );
+bool virt_init_get( void );
 void virt_platform_post_init( void );
 
 virt_context_ptr_t virt_create_context( virt_context_type_t );
@@ -74,5 +74,7 @@ void virt_set_context( virt_context_ptr_t );
 void virt_flush_complete( void );
 void virt_flush_address( virt_context_ptr_t, uintptr_t );
 void virt_prepare_temporary( virt_context_ptr_t );
+bool virt_is_mapped_in_context( virt_context_ptr_t, uintptr_t );
+bool virt_is_mapped( uintptr_t );
 
 #endif

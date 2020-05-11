@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -38,6 +38,7 @@ GROUP(
   ../../lib/string/libstring.a
   ../../lib/tar/libtar.a
   ../../lib/ubsan/libubsan.a
+  ../../../thirdparty/font/libfont.a
 )
 INPUT(
   libgcc.a
@@ -75,6 +76,14 @@ SECTIONS {
     __bss_start = .;
     *( COMMON )
     *( .bss )
+
+    /* align to 4k */
+    . = ALIGN( 4K );
+    /* 1MB for initial heap */
+    __initial_heap_start = .;
+    . += 0x100000;
+    __initial_heap_end = .;
+
     __bss_end = .;
   }
 

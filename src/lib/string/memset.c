@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,8 +20,17 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
-void* memset ( void* bufptr, int value, size_t size ) {
+/**
+ * @brief Fill address with value
+ *
+ * @param bufptr
+ * @param value
+ * @param size
+ * @return void*
+ */
+void* memset( void* bufptr, int value, size_t size ) {
   uint8_t* buf = ( uint8_t* ) bufptr;
 
   for ( size_t i = 0; i < size; i++ ) {

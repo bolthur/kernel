@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,6 +18,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <core/interrupt.h>
+#include <core/event.h>
+#include <arch/arm/interrupt/vector.h>
 #include <arch/arm/v7/interrupt/vector.h>
 
 /**
@@ -27,4 +30,36 @@ void interrupt_vector_init( void ) {
   __asm__ __volatile__(
     "mcr p15, 0, %[addr], c12, c0, 0"
     : : [addr] "r" ( &interrupt_vector_table ) );
+}
+
+/**
+ * @brief Handler to cleanup status flags
+ *
+ * @param origin
+ * @param context
+ */
+static void debug_cleanup_status_flag(
+  __unused event_origin_t origin,
+  __unused void* context
+) {
+  // reset data fault status register
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c5, c0, 0"
+    : : "r" ( 0 ) : "memory"
+  );
+
+  // reset instruction fault status register
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c5, c0, 1"
+    : : "r" ( 0 ) : "memory"
+  );
+}
+
+
+/**
+ * @brief Post interrupt initialization
+ */
+void interrupt_post_init( void ) {
+  // bind cleanup event
+  event_bind( EVENT_INTERRUPT_CLEANUP, debug_cleanup_status_flag, true );
 }

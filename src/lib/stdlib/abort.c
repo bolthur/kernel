@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,10 +18,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
+#include <core/interrupt.h>
+
 /**
  * @brief Abort routine
  */
 void __no_return abort( void ) {
-  while( 1 ) {}
+  // disable all interrupts
+  interrupt_toggle( INTERRUPT_TOGGLE_OFF );
+  // loop without return
+  while ( 1 ) {}
 }
 

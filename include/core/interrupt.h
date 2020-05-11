@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -42,6 +42,12 @@ typedef enum {
   INTERRUPT_SOFTWARE
 } interrupt_type_t;
 
+typedef enum {
+  INTERRUPT_TOGGLE_AUTO,
+  INTERRUPT_TOGGLE_ON,
+  INTERRUPT_TOGGLE_OFF
+} interrupt_toggle_state_t;
+
 typedef struct {
   avl_tree_ptr_t normal_interrupt;
   avl_tree_ptr_t fast_interrupt;
@@ -63,10 +69,13 @@ typedef struct {
   ( interrupt_block_ptr_t )( ( uint8_t* )n - offsetof( interrupt_block_t, node ) )
 
 int8_t interrupt_get_pending( bool );
+void interrupt_toggle( interrupt_toggle_state_t );
 void interrupt_disable( void );
 void interrupt_enable( void );
 bool interrupt_validate_number( size_t );
 void interrupt_init( void );
+void interrupt_arch_init( void );
+void interrupt_post_init( void );
 void interrupt_handle( size_t, interrupt_type_t, void* );
 void interrupt_register_handler( size_t, interrupt_callback_t, interrupt_type_t, bool );
 void interrupt_unregister_handler( size_t, interrupt_callback_t, interrupt_type_t, bool );

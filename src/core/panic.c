@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,12 +23,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <core/interrupt.h>
+#include <core/panic.h>
 
 /**
  * @brief Initialize panic process
  */
 void panic_init( void ) {
-  interrupt_disable();
+  interrupt_toggle( INTERRUPT_TOGGLE_OFF );
 }
 
 /**

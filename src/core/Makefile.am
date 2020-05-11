@@ -9,13 +9,15 @@ AM_CCASFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/include
 noinst_LIBRARIES = libcore.a
 libcore_a_SOURCES = \
   boot/bss.c \
+  debug/breakpoint.c \
+  debug/gdb.c \
+  debug/string.c \
   interrupt/interrupt.c \
   mm/heap.c \
   mm/phys.c \
-  mm/placement.c \
   mm/virt.c \
-  smp/lock.c \
   syscall/init.c \
+  task/lock.c \
   task/process.c \
   task/queue.c \
   task/stack.c \

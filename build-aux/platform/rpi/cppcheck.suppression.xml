@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<suppressions>
+  <suppress>
+    <id>unusedFunction</id>
+  </suppress>
+  <suppress>
+    <id>unusedStructMember</id>
+  </suppress>
+  <suppress>
+    <id>missingIncludeSystem</id>
+  </suppress>
+</suppressions>

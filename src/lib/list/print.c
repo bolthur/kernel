@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -39,7 +39,7 @@ void list_print( list_manager_ptr_t list ) {
 
   // loop through list until end
   while ( NULL != current ) {
-    printf( "list->data = 0x%08x - ", current->data );
+    printf( "list->data = %p", current->data );
     // get next element
     current = current->next;
   }

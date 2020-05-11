@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -29,7 +29,7 @@ void __bootstrap boot_bss_clear( void ) {
   bss_type_t *end = ( bss_type_t* )VIRT_2_PHYS( &__bss_end );
 
   // loop through bss end and overwrite with zero
-  while( start < end ) {
+  while ( start < end ) {
     *start++ = 0;
   }
 }

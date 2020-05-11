@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,6 +21,15 @@
 #if ! defined( __ARCH_ARM_V7_INTERRUPT_VECTOR__ )
 #define __ARCH_ARM_V7_INTERRUPT_VECTOR__
 
+#include <arch/arm/v7/cpu.h>
+
 void interrupt_vector_table( void );
+
+void vector_data_abort_handler( cpu_register_context_ptr_t );
+void vector_fast_interrupt_handler( cpu_register_context_ptr_t );
+void vector_interrupt_handler( cpu_register_context_ptr_t );
+void vector_prefetch_abort_handler( cpu_register_context_ptr_t );
+void vector_svc_handler( cpu_register_context_ptr_t );
+void vector_undefined_instruction_handler( cpu_register_context_ptr_t );
 
 #endif

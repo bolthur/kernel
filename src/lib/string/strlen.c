@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,7 +19,14 @@
  */
 
 #include <stddef.h>
+#include <string.h>
 
+/**
+ * @brief Get string length
+ *
+ * @param str
+ * @return size_t
+ */
 size_t strlen( const char* str ) {
   size_t len = 0;
 

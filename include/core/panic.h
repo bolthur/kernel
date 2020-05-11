@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,9 +23,9 @@
 
 #include <stdint.h>
 
-#define PANIC( msg ) panic( msg, __FILE__, __LINE__ );
-
 void panic_init( void );
 void __no_return panic( const char* restrict, const char* restrict, uint32_t );
+
+#define PANIC( msg ) panic( msg, __FILE__, __LINE__ );
 
 #endif

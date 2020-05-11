@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <assert.h>
 #include <core/panic.h>
 #include <core/mm/heap.h>
@@ -30,9 +31,6 @@
  * @param ptr ptr to address to free
  */
 void free( void *ptr ) {
-  // assert heap to be initialized
-  assert( true == heap_initialized_get() );
-
   // free heap block
   heap_free_block( ( uintptr_t )ptr );
 }

@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -39,10 +39,12 @@ void task_process_start( void ) {
     DEBUG_OUTPUT( "Entered task_process_start()\r\n" );
   #endif
 
-  // get next thread
+  // get first thread to execute
   task_thread_ptr_t next_thread = task_thread_next();
-  // assert thread
-  assert( NULL != next_thread );
+  // handle no thread
+  if ( NULL == next_thread ) {
+    return;
+  }
 
   // variable for next thread queue
   task_priority_queue_ptr_t next_queue = task_queue_get_queue(
@@ -55,39 +57,39 @@ void task_process_start( void ) {
 
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "next_thread = 0x%08x, next_queue = 0x%08x\r\n",
-      next_thread, next_queue );
+    DEBUG_OUTPUT( "next_thread = %p, next_queue = %p\r\n",
+      ( void* )next_thread, ( void* )next_queue );
   #endif
 
   // set context and flush
   virt_set_context( next_thread->process->virtual_context );
   virt_flush_complete();
 
-  // jump to thread
+  // debug output
   #if defined( PRINT_PROCESS )
-    DUMP_REGISTER( next_thread->context );
+    DUMP_REGISTER( next_thread->current_context );
   #endif
-
-  task_thread_switch_to( ( uintptr_t )next_thread->context, 0 );
+  // jump to thread
+  task_thread_switch_to( ( uintptr_t )next_thread->current_context );
 }
 
 /**
  * @brief Task process scheduler
  *
+ * @param origin
  * @param context cpu context
  */
-void task_process_schedule( void* context ) {
+void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", context );
+    DEBUG_OUTPUT( "Entered task_process_schedule( %p )\r\n", context );
   #endif
 
   // prevent scheduling when kernel interrupt occurs ( context != NULL )
   if ( NULL != context ) {
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT(
-        "No scheduling in kernel level exception, context = 0x%x\r\n",
+      DEBUG_OUTPUT( "No scheduling in kernel level exception, context = %p\r\n",
         context );
     #endif
 
@@ -103,7 +105,7 @@ void task_process_schedule( void* context ) {
 
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Entered task_process_schedule( 0x%08p )\r\n", cpu );
+    DEBUG_OUTPUT( "cpu register context: %p\r\n", ( void* )cpu );
     DUMP_REGISTER( cpu );
   #endif
 
@@ -118,10 +120,9 @@ void task_process_schedule( void* context ) {
     assert( NULL != running_queue );
     // set last handled within running queue
     running_queue->last_handled = running_thread;
+    // update running task to halt due to switch
+    running_thread->state = TASK_THREAD_STATE_HALT_SWITCH;
   }
-
-  // update running task to halt due to switch
-  running_thread->state = TASK_THREAD_STATE_HALT_SWITCH;
 
   // get next thread
   task_thread_ptr_t next_thread;
@@ -168,5 +169,9 @@ void task_process_schedule( void* context ) {
     // set context and flush
     virt_set_context( next_thread->process->virtual_context );
     virt_flush_complete();
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DUMP_REGISTER( next_thread->current_context );
+    #endif
   }
 }

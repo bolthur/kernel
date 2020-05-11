@@ -4,16 +4,15 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([ELF32], [Define to 1 for 32 bit ELF targets])
   AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets])
   AH_TEMPLATE([IS_HIGHER_HALF], [Define to 1 when kernel is higher half])
-  AH_TEMPLATE([INITIAL_PHYSICAL_MAP], [Define contains amount of memory to map initially by platform])
   AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
   AH_TEMPLATE([HAS_SMP], [Define to 1 when board supports smp])
   AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
+  AH_TEMPLATE([REMOTE_DEBUG], [Define to 1 to enable remote debugging])
   # Output related define templates
   AH_TEMPLATE([OUTPUT_ENABLE], [Define to 1 to enable kernel print])
   AH_TEMPLATE([PRINT_MM_PHYS], [Define to 1 to enable output of physical memory manager])
   AH_TEMPLATE([PRINT_MM_VIRT], [Define to 1 to enable output of virtual memory manager])
   AH_TEMPLATE([PRINT_MM_HEAP], [Define to 1 to enable output of kernel heap])
-  AH_TEMPLATE([PRINT_MM_PLACEMENT], [Define to 1 to enable output of kernel placement allocator])
   AH_TEMPLATE([PRINT_MAILBOX], [Define to 1 to enable output of mailbox])
   AH_TEMPLATE([PRINT_TIMER], [Define to 1 to enable output of timer])
   AH_TEMPLATE([PRINT_INITRD], [Define to 1 to enable output of initrd])
@@ -24,6 +23,12 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_ELF], [Define to 1 to enable output of elf routines])
   AH_TEMPLATE([PRINT_PLATFORM], [Define to 1 to enable output of platform initialization])
   AH_TEMPLATE([PRINT_SYSCALL], [Define to 1 to enable output of syscall initialization])
+  AH_TEMPLATE([PRINT_SERIAL], [Define to 1 to enable output of serial handling])
+
+  # Test for debugging enabled
+  AS_IF([test "x$enable_remote_debug" == "xyes"], [
+    AC_DEFINE([REMOTE_DEBUG], [1])
+  ])
 
   # Test for general output enable
   AS_IF([test "x$enable_output" == "xyes"], [
@@ -43,11 +48,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   # Test for kernel heap output
   AS_IF([test "x$enable_output_mm_heap" == "xyes"], [
     AC_DEFINE([PRINT_MM_HEAP], [1])
-  ])
-
-  # Test for kernel placement allocator output
-  AS_IF([test "x$enable_output_mm_placement" == "xyes"], [
-    AC_DEFINE([PRINT_MM_PLACEMENT], [1])
   ])
 
   # Test for mailbox output
@@ -100,6 +100,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     AC_DEFINE([PRINT_SYSCALL],[1])
   ])
 
+  # Test for serial output
+  AS_IF([test "x$enable_output_serial" == "xyes"], [
+    AC_DEFINE([PRINT_SERIAL],[1])
+  ])
+
   case "${host_cpu}" in
   arm)
     arch_subdir=arm
@@ -110,9 +115,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     output_sym_qemu=kernel.sym
     executable_format=32
     AC_DEFINE([ELF32], [1])
-
-    # Add sysroot to path
-    AC_SUBST(PATH, "/opt/bolthur/sysroot/arm/bin:${PATH}")
+    CFLAGS="${CFLAGS} -marm"
 
     case "${DEVICE}" in
     rpi2_b_rev1)
@@ -128,7 +131,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [4])
       AC_DEFINE([HAS_SMP], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
@@ -141,7 +143,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
@@ -157,7 +158,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [4])
       AC_DEFINE([HAS_SMP], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
@@ -173,9 +173,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     executable_format=64
     AC_DEFINE([ELF64], [1])
 
-    # Add sysroot to path
-    AC_SUBST(PATH, "/opt/bolthur/sysroot/aarch64/bin:${PATH}")
-
     case "${DEVICE}" in
     rpi3_b)
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
@@ -189,7 +186,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([INITIAL_PHYSICAL_MAP], [0x1000000])
       AC_DEFINE([NUM_CPU], [4])
       AC_DEFINE([HAS_SMP], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])

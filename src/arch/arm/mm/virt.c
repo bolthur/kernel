@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -28,7 +28,6 @@
 #include <core/entry.h>
 #include <core/panic.h>
 #include <core/mm/phys.h>
-#include <core/mm/placement.h>
 #include <core/mm/virt.h>
 #include <arch/arm/mm/virt.h>
 
@@ -67,10 +66,8 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT(
-        "reg = 0x%08x, supported_modes = 0x%08x\r\n",
-        reg, supported_modes
-      );
+      DEBUG_OUTPUT( "reg = %#08x, supported_modes = %#08x\r\n",
+        reg, supported_modes );
     #endif
 
     // get memory size from mmfr3
@@ -82,7 +79,7 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = 0x%08x\r\n", reg );
+      DEBUG_OUTPUT( "reg = %#08x\r\n", reg );
     #endif
 
     // get only cpu address bus size
@@ -90,7 +87,7 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = 0x%08x\r\n", reg );
+      DEBUG_OUTPUT( "reg = %#08x\r\n", reg );
     #endif
 
     // set paging to v7 short descriptor if more
@@ -129,7 +126,20 @@ void virt_arch_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "kernel_context: 0x%08x\r\n", kernel_context );
-    DEBUG_OUTPUT( "user_context: 0x%08x\r\n", user_context );
+    DEBUG_OUTPUT( "kernel_context: %p\r\n", ( void* )kernel_context );
+    DEBUG_OUTPUT( "user_context: %p\r\n", ( void* )user_context );
   #endif
+}
+
+/**
+ * @brief Method checks whether address is mapped or not without generating exceptions
+ *
+ * @param addr
+ * @return true
+ * @return false
+ */
+bool virt_is_mapped( uintptr_t addr ) {
+  return
+    virt_is_mapped_in_context( kernel_context, addr )
+    || virt_is_mapped_in_context( user_context, addr );
 }

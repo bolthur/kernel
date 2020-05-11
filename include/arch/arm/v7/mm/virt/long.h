@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -38,5 +38,6 @@ void v7_long_destroy_context( virt_context_ptr_t );
 void v7_long_prepare( void );
 void v7_long_flush_complete( void );
 void v7_long_flush_address( uintptr_t );
+bool v7_long_is_mapped_in_context( virt_context_ptr_t, uintptr_t );
 
 #endif

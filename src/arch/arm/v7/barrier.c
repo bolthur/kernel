@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,23 +18,25 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <arch/arm/barrier.h>
+
 /**
  * @brief Data memory barrier invalidation
  */
 void barrier_data_mem( void ) {
-  __asm__ __volatile__ ( "dmb" ::: "memory" );
+  __asm__( "dmb" ::: "memory" );
 }
 
 /**
  * @brief Data sync barrier invalidation
  */
 void barrier_data_sync( void ) {
-  __asm__ __volatile__ ( "dsb" ::: "memory" );
+  __asm__( "dsb" ::: "memory" );
 }
 
 /**
  * @brief Instruction synchronization invalidation
  */
 void barrier_instruction_sync( void ) {
-  __asm__ __volatile__( "isb" ::: "memory" );
+  __asm__( "isb" ::: "memory" );
 }

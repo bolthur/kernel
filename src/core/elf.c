@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -34,6 +34,16 @@
  */
 bool elf_check( uintptr_t elf ) {
   Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+
+  // handle invalid
+  if ( NULL == header ) {
+    // debug output
+    #if defined ( PRINT_ELF )
+      DEBUG_OUTPUT( "Invalid parameter!\r\n" );
+    #endif
+    // return error
+    return false;
+  }
 
   // check magic
   if (

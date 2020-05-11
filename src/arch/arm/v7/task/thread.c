@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -49,8 +49,8 @@ task_thread_ptr_t task_thread_create(
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "task_thread_create( 0x%08x, 0x%08x, %d ) called\r\n",
-      entry, process, priority );
+      "task_thread_create( %p, %p, %zu ) called\r\n",
+      ( void* )entry, ( void* )process, priority );
   #endif
 
   // create stack
@@ -59,24 +59,31 @@ task_thread_ptr_t task_thread_create(
   uintptr_t stack_virtual = task_stack_manager_next( process->thread_stack_manager );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "stack_virtual = 0x%08x\r\n", stack_virtual );
+    DEBUG_OUTPUT( "stack_virtual = %p\r\n", ( void* )stack_virtual );
   #endif
 
   // create context
-  cpu_register_context_ptr_t context = ( cpu_register_context_ptr_t )malloc(
+  cpu_register_context_ptr_t current_context = ( cpu_register_context_ptr_t )malloc(
+    sizeof( cpu_register_context_t ) );
+  cpu_register_context_ptr_t initial_context = ( cpu_register_context_ptr_t )malloc(
     sizeof( cpu_register_context_t ) );
   // Prepare area
-  memset( ( void* )context, 0, sizeof( cpu_register_context_t ) );
+  memset( ( void* )current_context, 0, sizeof( cpu_register_context_t ) );
   // set content
-  context->pc = ( uint32_t )entry;
+  current_context->reg.pc = ( uint32_t )entry;
   // Only user mode threads are possible
-  context->spsr = 0x60000000 | CPSR_MODE_USER;
+  current_context->reg.spsr = 0x60000000 | CPSR_MODE_USER;
   // set stack pointer
-  context->sp = stack_virtual + STACK_SIZE - 4;
+  current_context->reg.sp = stack_virtual + STACK_SIZE - 4;
   // debug output
   #if defined( PRINT_PROCESS )
-    DUMP_REGISTER( context );
+    DUMP_REGISTER( current_context );
   #endif
+  // copy over to initial context
+  memcpy(
+    ( void* )initial_context,
+    ( void* )current_context,
+    sizeof( cpu_register_context_t ) );
 
   // map stack temporary
   uintptr_t tmp_virtual_user = virt_map_temporary( stack_physical, STACK_SIZE );
@@ -103,7 +110,7 @@ task_thread_ptr_t task_thread_create(
   memset( ( void* )thread, 0, sizeof( task_thread_t ) );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Allocated thread structure at 0x%08x\r\n", thread );
+    DEBUG_OUTPUT( "Allocated thread structure at %p\r\n", ( void* )thread );
   #endif
   // populate thread structure
   thread->state = TASK_THREAD_STATE_READY;
@@ -112,7 +119,9 @@ task_thread_ptr_t task_thread_create(
   thread->process = process;
   thread->stack_physical = stack_physical;
   thread->stack_virtual = stack_virtual;
-  thread->context = ( void* )context;
+  thread->current_context = ( void* )current_context;
+  thread->initial_context = ( void* )initial_context;
+
 
   // prepare node
   avl_prepare_node( &thread->node_id, ( void* )thread->id );
@@ -125,6 +134,7 @@ task_thread_ptr_t task_thread_create(
   // add thread to thread list for switching
   list_push_back( queue->thread_list, thread );
 
+  // cppcheck-suppress memleak
   // return created thread
   return thread;
 }

@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,10 +19,10 @@
  */
 
 #include <stddef.h>
+#include <stdlib.h>
 #include <assert.h>
 
 #include <core/panic.h>
-#include <core/mm/placement.h>
 #include <core/mm/virt.h>
 #include <core/mm/heap.h>
 
@@ -34,15 +34,6 @@
  * @return void* reserved memory
  */
 void* aligned_alloc( size_t alignment, size_t size ) {
-  // check for initialized heap
-  if ( true == heap_initialized_get() ) {
-    // use heap allocation
-    return ( void* )heap_allocate_block( alignment, size );
-  }
-
-  // placement allocator requires that  virtual memory is not initialized
-  assert( true != virt_initialized_get() );
-
-  // use normal placement alloc
-  return ( void* )PHYS_2_VIRT( placement_alloc( alignment, size ) );
+  // use heap allocation
+  return ( void* )heap_allocate_block( alignment, size );
 }

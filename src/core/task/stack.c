@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -43,10 +43,8 @@ static int32_t task_stack_callback(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = 0x%08p, b = 0x%08p\r\n", a, b );
-    DEBUG_OUTPUT( "a->data = 0x%08x, b->data = 0x%08x\r\n",
-      ( uintptr_t )a->data,
-      ( uintptr_t )b->data );
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
+    DEBUG_OUTPUT( "a->data = %p, b->data = %p\r\n", a->data, b->data );
   #endif
 
   // -1 if address of a is greater than address of b

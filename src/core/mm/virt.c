@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,7 +27,6 @@
 #include <core/entry.h>
 #include <core/initrd.h>
 #include <core/mm/phys.h>
-#include <core/mm/placement.h>
 #include <core/mm/virt.h>
 
 /**
@@ -51,26 +50,25 @@ void virt_init( void ) {
 
   // determine start and end for kernel mapping
   uintptr_t start = 0;
-  uintptr_t end = placement_address;
-
+  uintptr_t end = VIRT_2_PHYS( &__kernel_end );
   // round up to page size if necessary
   if ( end % PAGE_SIZE ) {
-    end += ( PAGE_SIZE - placement_address % PAGE_SIZE );
+    end += ( PAGE_SIZE - end % PAGE_SIZE );
   }
 
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "Map kernel space 0x%08x - 0x%08x to 0x%08x - 0x%08x \r\n",
-      start,
-      end,
-      PHYS_2_VIRT( start ),
-      PHYS_2_VIRT( end )
+      "Map kernel space %p - %p to %p - %p \r\n",
+      ( void* )start,
+      ( void* )end,
+      ( void* )PHYS_2_VIRT( start ),
+      ( void* )PHYS_2_VIRT( end )
     );
   #endif
 
   // map from start to end addresses as used
-  while( start < end ) {
+  while ( start < end ) {
     // map page
     virt_map_address(
       kernel_context,
@@ -93,11 +91,11 @@ void virt_init( void ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "Map initrd space 0x%08x - 0x%08x to 0x%08x - 0x%08x \r\n",
-        start,
-        end,
-        PHYS_2_VIRT( start ),
-        PHYS_2_VIRT( end )
+        "Map initrd space %p - %p to %p - %p \r\n",
+        ( void* )start,
+        ( void* )end,
+        ( void* )PHYS_2_VIRT( start ),
+        ( void* )PHYS_2_VIRT( end )
       );
     #endif
 
@@ -124,14 +122,16 @@ void virt_init( void ) {
 
   // initialize platform related
   virt_platform_init();
-
   // prepare temporary area
   virt_prepare_temporary( kernel_context );
 
-  // set contexts
+  // set kernel context
   virt_set_context( kernel_context );
-  virt_set_context( user_context );
+  // flush contexts to take effect
+  virt_flush_complete();
 
+  // set dummy user context
+  virt_set_context( user_context );
   // flush contexts to take effect
   virt_flush_complete();
 
@@ -148,6 +148,6 @@ void virt_init( void ) {
  * @return true virtual memory management has been set up
  * @return false virtual memory management has been not yet set up
  */
-bool virt_initialized_get( void ) {
+bool virt_init_get( void ) {
   return virt_initialized;
 }

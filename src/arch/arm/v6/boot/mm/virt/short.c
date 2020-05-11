@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 
+#include <core/mm/phys.h>
 #include <arch/arm/mm/virt/short.h>
 #include <arch/arm/v6/boot/mm/virt/short.h>
 #include <core/entry.h>
@@ -32,19 +33,30 @@ static sd_context_total_t initial_context
 
 /**
  * @brief Method to setup short descriptor paging
- *
- * @param max_memory maximum memory to map starting from 0
  */
-void __bootstrap boot_virt_setup_short( uintptr_t max_memory ) {
-  uint32_t x, reg;
+void __bootstrap boot_virt_setup_short( void ) {
+  uint32_t x;
   sd_ttbcr_t ttbcr;
 
   for ( x = 0; x < 4096; x++ ) {
     initial_context.raw[ x ] = 0;
   }
 
+  // determine max
+  uintptr_t max = VIRT_2_PHYS( &__kernel_end );
+  // round up to page size if necessary
+  if ( max % PAGE_SIZE ) {
+    max += ( PAGE_SIZE - max % PAGE_SIZE );
+  }
+  // shift max
+  max >>= 20;
+  // minimum is 1
+  if ( 0 == max ) {
+    max = 1;
+  }
+
   // map all memory
-  for ( x = 0; x < ( max_memory >> 20 ); x++ ) {
+  for ( x = 0; x < max; x++ ) {
     boot_virt_map_short( x << 20, x << 20 );
 
     if ( 0 < KERNEL_OFFSET ) {
@@ -75,13 +87,6 @@ void __bootstrap boot_virt_setup_short( uintptr_t max_memory ) {
     : : "r" ( ttbcr.raw )
     : "cc"
   );
-
-  // Get content from control register
-  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
-  // enable mmu by setting bit 0
-  reg |= 1;
-  // push back value with mmu enabled bit set
-  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
 }
 
 /**
@@ -99,4 +104,17 @@ void __bootstrap boot_virt_map_short( uintptr_t phys, uintptr_t virt ) {
   sec->data.execute_never = 0;
   sec->data.access_permision_0 = SD_MAC_APX0_PRIVILEGED_RW;
   sec->data.frame = y & 0xFFF;
+}
+
+/**
+ * @brief Method to enable initial virtual memory
+ */
+void __bootstrap boot_virt_enable_short( void ) {
+  uint32_t reg;
+  // Get content from control register
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
+  // enable mmu by setting bit 0
+  reg |= 1;
+  // push back value with mmu enabled bit set
+  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
 }

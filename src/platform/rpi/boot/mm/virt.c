@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <core/boot/mm/virt.h>
 #include <arch/arm/boot/mm/virt.h>
 #include <arch/arm/mm/virt.h>
 #include <core/entry.h>

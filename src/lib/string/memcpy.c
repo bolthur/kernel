@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,7 +20,16 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
+/**
+ * @brief Copy memory
+ *
+ * @param dstptr
+ * @param srcptr
+ * @param size
+ * @return void*
+ */
 void* memcpy( void* restrict dstptr, const void* restrict srcptr, size_t size ) {
   uint8_t* dst = ( uint8_t * ) dstptr;
   const uint8_t* src = ( const uint8_t * ) srcptr;

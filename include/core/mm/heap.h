@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -35,12 +35,19 @@
   #error "Heap not ready for x64"
 #endif
 
+typedef enum {
+  HEAP_INIT_EARLY = 0,
+  HEAP_INIT_NORMAL,
+  HEAP_INIT_SIZE,
+} heap_init_state_t;
+
 typedef struct {
   uintptr_t start;
   size_t size;
-  avl_tree_t free_address;
-  avl_tree_t free_size;
-  avl_tree_t used_area;
+  heap_init_state_t state;
+  avl_tree_t free_address[ HEAP_INIT_SIZE ];
+  avl_tree_t free_size[ HEAP_INIT_SIZE ];
+  avl_tree_t used_area[ HEAP_INIT_SIZE ];
 } heap_manager_t, *heap_manager_ptr_t;
 
 typedef struct {
@@ -57,8 +64,11 @@ typedef struct {
 
 extern heap_manager_ptr_t kernel_heap;
 
-bool heap_initialized_get( void );
-void heap_init( void );
+extern uintptr_t __initial_heap_start;
+extern uintptr_t __initial_heap_end;
+
+bool heap_init_get( void );
+void heap_init( heap_init_state_t );
 uintptr_t heap_allocate_block( size_t, size_t );
 void heap_free_block( uintptr_t );
 

@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -41,6 +41,35 @@ list_item_ptr_t list_lookup_data( list_manager_ptr_t list, void* data ) {
   // loop through list until end
   while ( NULL != current ) {
     if ( data == current->data ) {
+      return current;
+    }
+    // check next one
+    current = current->next;
+  }
+
+  // return not found
+  return NULL;
+}
+
+/**
+ * @brief Search a list item by item
+ *
+ * @param list list to lookup
+ * @param item item to find
+ * @return list_item_ptr_t
+ */
+list_item_ptr_t list_lookup_item( list_manager_ptr_t list, list_item_ptr_t item ) {
+  list_item_ptr_t current;
+
+  // assert existance
+  assert( NULL != list );
+  // populate current
+  current = list->first;
+
+
+  // loop through list until end
+  while ( NULL != current ) {
+    if ( item == current ) {
       return current;
     }
     // check next one

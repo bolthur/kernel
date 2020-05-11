@@ -1,14 +1,14 @@
 
-AC_PREREQ(2.57)
+AC_PREREQ(2.69)
 AC_INIT([bolthur-kernel], [0.1], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
-AC_COPYRIGHT([Copyright (C) 2018 - 2019 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2020 bolthur project])
 
 AC_CONFIG_AUX_DIR([build-aux/config])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
 AC_CONFIG_SRCDIR([src/core/main.c])
-AM_INIT_AUTOMAKE()
+AM_INIT_AUTOMAKE
 AC_CONFIG_HEADERS([include/config.h])
 
 AC_LANG([C])
@@ -59,15 +59,6 @@ AC_ARG_ENABLE(
     [activate heap output [default: off]]
   ),
   [enable_output_mm_heap=yes]
-)
-
-AC_ARG_ENABLE(
-  [output-mm-placement],
-  AC_HELP_STRING(
-    [--enable-output-mm-placement],
-    [activate placememt allocator output [default: off]]
-  ),
-  [enable_output_mm_placement=yes]
 )
 
 AC_ARG_ENABLE(
@@ -160,6 +151,24 @@ AC_ARG_ENABLE(
   [enable_output_syscall=yes]
 )
 
+AC_ARG_ENABLE(
+  [output-serial],
+  AC_HELP_STRING(
+    [--enable-output-serial],
+    [activate serial handling output [default: off]]
+  ),
+  [enable_output_serial=yes]
+)
+
+AC_ARG_ENABLE(
+  [remote-debug],
+  AC_HELP_STRING(
+    [--enable-remote-debug],
+    [activate remote debugging [default: off]]
+  ),
+  [enable_remote_debug=yes]
+)
+
 AC_ARG_WITH(
   [optimization-level],
   AC_HELP_STRING(
@@ -183,16 +192,13 @@ BOLTHUR_KERNEL_SET_DEVICE
 BOLTHUR_KERNEL_SET_HOST
 # set rest of flags
 BOLTHUR_KERNEL_SET_FLAG
-
-# conftest
-AC_LANG_CONFTEST([AC_LANG_SOURCE([[const char hw[] = "Hello, World\r\n";]])])
+BOLTHUR_KERNEL_LANG_PROGRAM
 
 # checks for programs
 AC_PROG_CC
 AM_PROG_AS
 AC_PROG_RANLIB
 AM_PROG_AR
-AC_PROG_CXX
 BOLTHUR_KERNEL_PROG_OBJCOPY
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -233,9 +239,14 @@ AC_DEFINE_UNQUOTED(
   [Bootstrap data]
 )
 AC_DEFINE_UNQUOTED(
+  [__maybe_unused],
+  [__attribute__((unused))],
+  [Possibly unused]
+)
+AC_DEFINE_UNQUOTED(
   [__unused],
   [__attribute__((unused))],
-  [Unused function]
+  [Unused]
 )
 AC_DEFINE_UNQUOTED(
   [__no_sanitize],
@@ -281,6 +292,8 @@ AC_CONFIG_FILES([
   src/platform/rpi/Makefile
   src/target/Makefile
   src/target/rpi/Makefile
+  thirdparty/Makefile
+  thirdparty/font/Makefile
 ])
 
 AC_OUTPUT

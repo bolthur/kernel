@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,8 +22,11 @@
 
 #include <arch/arm/mm/virt.h>
 #include <core/entry.h>
+#include <arch/arm/boot/mm/virt.h>
 #include <arch/arm/v7/boot/mm/virt/long.h>
 #include <arch/arm/v7/boot/mm/virt/short.h>
+
+#include <platform/rpi/gpio.h>
 
 /**
  * @brief Supported mode
@@ -32,10 +35,8 @@ static uint32_t supported_mode __bootstrap_data;
 
 /**
  * @brief Method wraps setup of short / long descriptor mode
- *
- * @param max_memory maximum memory to map starting from 0
  */
-void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
+void __bootstrap boot_virt_setup( void ) {
   // get paging support from mmfr0
   __asm__ __volatile__(
     "mrc p15, 0, %0, c0, c1, 4"
@@ -64,10 +65,8 @@ void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
     : "=r" ( reg )
     : : "cc"
   );
-
   // get only cpu address bus size
   reg = ( reg >> 24 ) & 0xf;
-
   // use short if physical address bus is not 36 bit at least
   if ( 0 == reg ) {
     supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
@@ -75,13 +74,18 @@ void __bootstrap boot_virt_setup( uintptr_t max_memory ) {
 
   // kick start
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
-    boot_virt_setup_long( max_memory );
+    boot_virt_setup_long();
   } else {
-    boot_virt_setup_short( max_memory );
+    boot_virt_setup_short();
   }
-
   // setup platform related
   boot_virt_platform_setup();
+  // enable initial mapping
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+    boot_virt_enable_long();
+  } else {
+    boot_virt_enable_short();
+  }
 }
 
 /**

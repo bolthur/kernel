@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,7 +23,7 @@
 
 #include <stdint.h>
 
-void boot_virt_setup( uintptr_t );
+void boot_virt_setup( void );
 void boot_virt_platform_setup( void );
 
 #endif

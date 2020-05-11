@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -69,7 +69,7 @@ static int32_t compare_interrupt_callback(
  */
 static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
   // assert heap existance
-  assert( true == heap_initialized_get() );
+  assert( true == heap_init_get() );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Called tree_by_type( %d )\r\n", type );
@@ -92,10 +92,8 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
       compare_interrupt_callback );
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT(
-        "Initialized interrupt manager with address 0x%08p\r\n",
-        interrupt_manager
-      );
+      DEBUG_OUTPUT( "Initialized interrupt manager with address %p\r\n",
+        ( void* )interrupt_manager );
     #endif
   }
 
@@ -147,17 +145,17 @@ void interrupt_register_handler(
   bool post
 ) {
   // assert heap existance
-  assert( true == heap_initialized_get() );
+  assert( true == heap_init_get() );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT(
-      "Called interrupt_register_handler( %d, 0x%08p, %d, %s )\r\n",
+      "Called interrupt_register_handler( %zu, %p, %d, %s )\r\n",
       num, callback, type, post  ? "true" : "false" );
   #endif
 
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Try to map callback for interrupt %d\r\n", num );
+    DEBUG_OUTPUT( "Try to map callback for interrupt %zu\r\n", num );
   #endif
 
   // validate interrupt number by vendor
@@ -172,7 +170,7 @@ void interrupt_register_handler(
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT(
-      "Using interrupt tree \"0x%08x\" for lookup!\r\n", tree );
+      "Using interrupt tree \"%p\" for lookup!\r\n", ( void* )tree );
   #endif
 
   // try to find node
@@ -180,7 +178,7 @@ void interrupt_register_handler(
   interrupt_block_ptr_t block;
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
+    DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
   #endif
   // handle not yet added
   if ( NULL == node ) {
@@ -192,7 +190,7 @@ void interrupt_register_handler(
     memset( ( void* )block, 0, sizeof( interrupt_block_t ) );
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Initialized new node at 0x%08p\r\n", block );
+      DEBUG_OUTPUT( "Initialized new node at %p\r\n", ( void* )block );
     #endif
     // populate block
     block->interrupt = num;
@@ -201,8 +199,6 @@ void interrupt_register_handler(
     // prepare and insert node
     avl_prepare_node( &block->node, ( void* )num );
     avl_insert_by_node( tree, &block->node );
-    // overwrite node
-    node = &block->node;
   // existing? => gather block
   } else {
     block = INTERRUPT_GET_BLOCK( node );
@@ -219,7 +215,7 @@ void interrupt_register_handler(
       : block->post->first;
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Used first element for looping at 0x%08p\r\n", current );
+    DEBUG_OUTPUT( "Used first element for looping at %p\r\n", ( void* )current );
   #endif
   // loop through list for check callback
   while ( NULL != current ) {
@@ -228,7 +224,7 @@ void interrupt_register_handler(
       ( interrupt_callback_wrapper_ptr_t )current->data;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Check bound callback at 0x%08p\r\n", wrapper );
+      DEBUG_OUTPUT( "Check bound callback at %p\r\n", ( void* )wrapper );
     #endif
     // handle match
     if ( wrapper->callback == callback ) {
@@ -245,13 +241,11 @@ void interrupt_register_handler(
   assert( NULL != wrapper );
   // prepare memory
   memset( ( void* )wrapper, 0, sizeof( interrupt_callback_wrapper_t ) );
-
   // populate wrapper
   wrapper->callback = callback;
-
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Created wrapper container at 0x%08p\r\n", wrapper );
+    DEBUG_OUTPUT( "Created wrapper container at %p\r\n", ( void* )wrapper );
   #endif
 
   // push to list
@@ -282,7 +276,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
 
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Handle interrupt %d\r\n", num );
+    DEBUG_OUTPUT( "Handle interrupt %zu\r\n", num );
   #endif
 
   // get correct tree to use
@@ -292,15 +286,14 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
 
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT(
-      "Using interrupt tree \"0x%08x\" for lookup!\r\n", tree );
+    DEBUG_OUTPUT( "Using interrupt tree \"%p\" for lookup!\r\n", ( void* )tree );
   #endif
 
   // try to get node by interrupt
   avl_node_ptr_t node = avl_find_by_data( tree, ( void* )num );
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
+    DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
   #endif
 
   // handle nothing found which means nothing bound
@@ -323,7 +316,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
       ( interrupt_callback_wrapper_ptr_t )current->data;
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Handling wrapper container 0x%08p\r\n", wrapper );
+      DEBUG_OUTPUT( "Handling wrapper container %p\r\n", ( void* )wrapper );
     #endif
     // fire with data
     wrapper->callback( context );
@@ -344,7 +337,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
       ( interrupt_callback_wrapper_ptr_t )current->data;
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Handling wrapper container 0x%08p\r\n", wrapper );
+      DEBUG_OUTPUT( "Handling wrapper container %p\r\n", ( void* )wrapper );
     #endif
     // fire with data
     wrapper->callback( context );
@@ -355,4 +348,65 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Handling of callbacks finished!\r\n" );
   #endif
+}
+
+/**
+ * @brief Generic interrupt init method
+ */
+void interrupt_init( void ) {
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Calling arch related interrupt init\r\n" );
+  #endif
+  // arch related init part
+  interrupt_arch_init();
+
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Calling post interrupt init\r\n" );
+  #endif
+  // possible post init
+  interrupt_post_init();
+
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Toggle interrupts\r\n" );
+  #endif
+  interrupt_toggle( INTERRUPT_TOGGLE_ON );
+}
+
+/**
+ * @brief Toggle interrupt on / off
+ *
+ * @param state
+ */
+void interrupt_toggle( interrupt_toggle_state_t state ) {
+  // static status flag
+  static bool enabled = false;
+
+  // handle off
+  if ( INTERRUPT_TOGGLE_OFF == state ) {
+    // set flag
+    enabled = false;
+    // disable
+    interrupt_disable();
+  // handle on
+  } else if ( INTERRUPT_TOGGLE_ON == state ) {
+    // set flag
+    enabled = true;
+    // enable
+    interrupt_enable();
+  } else {
+    // toggle flag
+    enabled = !enabled;
+
+    // handle enable
+    if ( enabled ) {
+      // enable
+      interrupt_enable();
+    } else {
+      // disable interrupts
+      interrupt_disable();
+    }
+  }
 }

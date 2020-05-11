@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -28,7 +28,7 @@
  *
  * @param tree
  *
- * @todo
+ * @todo add logic for tree destroy
  */
 void avl_destroy_tree( __unused avl_tree_ptr_t tree ) {
   assert( true == false );

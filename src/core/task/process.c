@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -47,8 +47,8 @@ static int32_t process_compare_id_callback(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = 0x%08p, b = 0x%08p\r\n", a, b );
-    DEBUG_OUTPUT( "a->data = %d, b->data = %d\r\n",
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
+    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n",
       ( size_t )a->data,
       ( size_t )b->data );
   #endif
@@ -111,7 +111,7 @@ void task_process_create( uintptr_t entry, size_t priority ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "task_process_create( 0x%08x, %d ) called\r\n", entry, priority );
+      "task_process_create( %p, %zu ) called\r\n", ( void* )entry, priority );
   #endif
 
   // check for valid header
@@ -131,7 +131,7 @@ void task_process_create( uintptr_t entry, size_t priority ) {
   assert( NULL != process );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Allocated process structure at 0x%08x\r\n", process );
+    DEBUG_OUTPUT( "Allocated process structure at %p\r\n", ( void* )process );
   #endif
 
   // prepare structure
@@ -176,12 +176,17 @@ void task_process_queue_reset( void ) {
   avl_node_ptr_t min = NULL;
   avl_node_ptr_t max = NULL;
 
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "task_process_queue_reset()\r\n" );
+  #endif
+
   // get min and max priority queue
   min = avl_get_min( process_manager->thread_priority_tree->root );
   max = avl_get_max( process_manager->thread_priority_tree->root );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "min: 0x%08p, max: 0x%08p\r\n", min, max );
+    DEBUG_OUTPUT( "min: %p, max: %p\r\n", ( void* )min, ( void* )max );
   #endif
 
   // get nodes from min/max
@@ -197,7 +202,7 @@ void task_process_queue_reset( void ) {
   }
 
   // loop through priorities and try to get next task
-  for(
+  for (
     size_t priority = max_queue->priority;
     priority >= min_queue->priority;
     priority--

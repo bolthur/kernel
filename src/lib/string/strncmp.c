@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,7 +20,16 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
+/**
+ * @brief Compare two strings until end or max length
+ *
+ * @param a
+ * @param b
+ * @param max_length
+ * @return int
+ */
 int strncmp( const char* a, const char* b, size_t max_length ) {
   // loop until max length
   for ( size_t x = 0; x < max_length; x++ ) {

@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -25,7 +25,6 @@
 #include <core/debug/debug.h>
 #include <core/entry.h>
 #include <core/mm/phys.h>
-#include <core/mm/placement.h>
 #include <platform/rpi/mailbox/mailbox.h>
 #include <platform/rpi/mailbox/property.h>
 
@@ -47,7 +46,7 @@ void mailbox_property_init( void ) {
   // reserve memory if not yet done
   if ( NULL == ptb_buffer ) {
     ptb_buffer = ( int32_t* )aligned_alloc( PAGE_SIZE, PAGE_SIZE );
-    ptb_buffer_phys = ( int32_t* )VIRT_2_PHYS( ( uintptr_t )ptb_buffer );
+    ptb_buffer_phys = ( int32_t* )VIRT_2_PHYS( ptb_buffer );
   }
 
   // Add startup size
@@ -137,7 +136,7 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
       // request
       ptb_buffer[ ptb_index++ ] = 0;
 
-      if(
+      if (
         tag == TAG_SET_PHYSICAL_SIZE
         || tag == TAG_SET_VIRTUAL_SIZE
         || tag == TAG_SET_VIRTUAL_OFFSET
@@ -164,7 +163,7 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
       // request
       ptb_buffer[ ptb_index++ ] = 0;
 
-      if(
+      if (
         tag == TAG_SET_DEPTH
         || tag == TAG_SET_PIXEL_ORDER
         || tag == TAG_SET_ALPHA_MODE
@@ -182,7 +181,7 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
       // request
       ptb_buffer[ ptb_index++ ] = 0;
 
-      if( tag == TAG_SET_OVERSCAN ) {
+      if ( tag == TAG_SET_OVERSCAN ) {
         // top pixels
         ptb_buffer[ ptb_index++ ] = va_arg( vl, int32_t );
         // bottom pixels
@@ -295,14 +294,14 @@ rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
 
   size = ptb_buffer[ PT_OSIZE ] >> 2;
 
-  while( index < size ) {
+  while ( index < size ) {
     // debug output
     #if defined( PRINT_MAILBOX )
       DEBUG_OUTPUT( "testing tag[ %d ] = %08x\r\n", index, ptb_buffer[ index ] );
     #endif
 
     // test tag
-    if( ptb_buffer[ index ] == ( int32_t )tag ) {
+    if ( ptb_buffer[ index ] == ( int32_t )tag ) {
       tag_buffer = &ptb_buffer[ index ];
       break;
     }
@@ -312,7 +311,7 @@ rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
   }
 
   // nothing found, return NULL
-  if( tag_buffer == NULL ) {
+  if ( tag_buffer == NULL ) {
     return NULL;
   }
 

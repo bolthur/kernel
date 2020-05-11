@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,7 @@
  */
 
 #include <stdint.h>
+#include <core/cpu.h>
 
 /**
  * @brief Get CPU num from data populated within early boot

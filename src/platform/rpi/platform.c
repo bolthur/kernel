@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <atag.h>
 #include <core/initrd.h>
+#include <core/platform.h>
 #include <core/debug/debug.h>
 #include <platform/rpi/platform.h>
 
@@ -35,7 +36,7 @@ platform_loader_parameter_t loader_parameter_data;
 void platform_init( void ) {
   #if defined( PRINT_PLATFORM )
     DEBUG_OUTPUT(
-      "0x%08x - 0x%08x - 0x%08x\r\n",
+      "%#08x - %#08x - %#08x\r\n",
       loader_parameter_data.atag,
       loader_parameter_data.machine,
       loader_parameter_data.zero
@@ -49,8 +50,8 @@ void platform_init( void ) {
     // handle initrd
     if ( atag->tag_type == ATAG_TAG_INITRD2 ) {
       #if defined( PRINT_PLATFORM )
-        DEBUG_OUTPUT( "atag initrd start: 0x%08x, size: 0x%08x\r\n",
-          atag->initrd.start, atag->initrd.size );
+        DEBUG_OUTPUT( "atag initrd start: %p, size: %#08x\r\n",
+          ( void* )atag->initrd.start, atag->initrd.size );
       #endif
       initrd_set_start_address( atag->initrd.start );
       initrd_set_size( atag->initrd.size );

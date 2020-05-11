@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,14 +19,15 @@
  */
 
 #include <stdlib.h>
-#include <core/serial.h>
+#include <core/tty.h>
+#include <platform/rpi/framebuffer.h>
 
 /**
  * @brief Initialize TTY
  */
 void tty_init( void ) {
   #if defined( OUTPUT_ENABLE )
-    serial_init();
+    framebuffer_init();
   #endif
 }
 
@@ -35,10 +36,9 @@ void tty_init( void ) {
  *
  * @param c Character to print
  */
-void tty_putc( uint8_t c ) {
+void tty_putc( __maybe_unused uint8_t c ) {
+  // return if disabled
   #if defined( OUTPUT_ENABLE )
-    serial_putc( c );
-  #else
-    ( void )c;
+    framebuffer_putc( c );
   #endif
 }

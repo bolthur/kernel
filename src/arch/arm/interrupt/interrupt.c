@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,11 +21,12 @@
 #include <stdbool.h>
 
 #include <stdio.h>
+#include <core/interrupt.h>
 #include <arch/arm/interrupt/vector.h>
 
 /**
  * @brief Initialize interrupt requests
  */
-void interrupt_init( void ) {
+void interrupt_arch_init( void ) {
   interrupt_vector_init();
 }

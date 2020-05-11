@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,7 +27,6 @@
 #include <core/debug/debug.h>
 
 #include <core/mm/phys.h>
-#include <core/mm/placement.h>
 #include <core/mm/virt.h>
 #include <arch/arm/mm/virt.h>
 #include <arch/arm/v7/mm/virt/short.h>
@@ -281,7 +280,7 @@ void virt_flush_complete( void ) {
 void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
   // no flush if not initialized or context currently not active
   if (
-    ! virt_initialized_get()
+    ! virt_init_get()
     || (
       ctx != kernel_context
       && ctx != user_context
@@ -339,6 +338,30 @@ void virt_arch_prepare( void ) {
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
     v7_short_prepare();
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" );
+  }
+}
+
+/**
+ * @brief Method checks whether address is mapped or not without generating exceptions
+ *
+ * @param ctx
+ * @param addr
+ * @return true
+ * @return false
+ */
+bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    return v7_long_is_mapped_in_context( ctx, addr );
+  // check v7 short descriptor format
+  } else if (
+    ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
+    || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
+  ) {
+    return v7_short_is_mapped_in_context( ctx, addr );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );

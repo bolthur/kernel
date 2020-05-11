@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <limits.h>
 
 #include <arch/arm/delay.h>
 
@@ -29,11 +30,43 @@
 
 #include <core/io.h>
 #include <core/serial.h>
+#include <core/interrupt.h>
+#include <core/event.h>
+#include <core/debug/debug.h>
+
+#define MAX_SERIAL_BUFFER 500
 
 /**
  * @brief Initialized flag
  */
 static bool serial_initialized = false;
+
+/**
+ * @brief output buffer used for formatting via sprintf
+ */
+static uint8_t serial_buffer[ MAX_SERIAL_BUFFER ];
+
+/**
+ * @brief Current buffer index
+ */
+static uint32_t index;
+
+/**
+ * @brief Method to get serial buffer
+ *
+ * @return uint8_t*
+ */
+uint8_t* serial_get_buffer( void ) {
+  return serial_buffer;
+}
+
+/**
+ * @brief Flush serial buffer
+ */
+void serial_flush_buffer( void ) {
+  index = 0;
+  serial_buffer[ index ] = '\0';
+}
 
 /**
  * @brief Initialize serial port
@@ -43,6 +76,9 @@ void serial_init( void ) {
   if ( serial_initialized ) {
     return;
   }
+
+  // reset buffer index
+  index = 0;
 
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
@@ -98,18 +134,83 @@ void serial_init( void ) {
   // Enable FIFO & 8 bit data transmissio (1 stop bit, no parity).
   io_out32( base + UARTLCRH, ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 ) );
 
-  // Mask all interrupts.
-  io_out32(
-    base + UARTIMSC,
-    ( 1 << 1 ) | ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 )
-    | ( 1 << 7 ) | ( 1 << 8 ) | ( 1 << 9 ) | ( 1 << 10 )
-  );
-
+  // Mask incoming interrupt only
+  #if defined( REMOTE_DEBUG )
+    io_out32( base + UARTIMSC, ( 1 << 4 ) );
+  #endif
   // Enable UART0, receive & transfer part of UART.
   io_out32( base + UARTCR, ( 1 << 0 ) | ( 1 << 8 ) | ( 1 << 9 ) );
 
   // set flag
   serial_initialized = true;
+}
+
+/**
+ * @brief serial clear callback
+ *
+ * @param context cpu context
+ */
+static void serial_clear( __unused void* context ) {
+  // debug output
+  #if defined( PRINT_SERIAL )
+    DEBUG_OUTPUT( "Clear interrupt source for serial!\r\n" );
+  #endif
+  // get peripheral base
+  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  // get interrupt state
+  uint32_t state = io_in32( base + UARTMIS );
+
+  // loop until flag will be reset
+  while (
+    (
+      ( io_in32( base + UARTRIS ) & ( 1 << 4 ) )
+      && ! ( io_in32( base + UARTFR ) & ( 1 << 4 ) )
+    )
+  ) {
+    // clear out serial buffer to prevent overrun
+    if ( MAX_SERIAL_BUFFER <= ( index + 1 ) ) {
+      serial_flush_buffer();
+    }
+
+    // read data register
+    uint16_t data_register = io_in16( base + UARTDR );
+    // extract error related shit
+    uint8_t error = ( uint8_t )( data_register >> CHAR_BIT );
+    // extract character
+    uint8_t character = ( uint8_t )data_register;
+
+    // handle error by dropping packet
+    if ( 0 != error ) {
+      // flush buffer
+      serial_flush_buffer();
+      // stop it
+      break;
+    }
+
+    // read character
+    serial_buffer[ index++ ] = character;
+    // add ending character
+    serial_buffer[ index ] = '\0';
+  }
+
+  // clear pending interrupts.
+  io_out32( base + UARTICR, state );
+  // trigger serial event
+  event_enqueue( EVENT_SERIAL, EVENT_DETERMINE_ORIGIN( context ) );
+}
+
+/**
+ * @brief register serial interrupt
+ */
+void serial_register_interrupt( void ) {
+  // get peripheral base
+  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  // register interrupt
+  interrupt_register_handler( 57, serial_clear, INTERRUPT_FAST, true );
+  // mask interrupt
+  io_out32( base + INTERRUPT_FIQ_CONTROL, 57 | 0x80 );
+  // flush it
+  serial_flush();
 }
 
 /**

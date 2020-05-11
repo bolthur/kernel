@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,7 +23,8 @@
 
 #include <core/boot/mm/virt.h>
 
-void boot_virt_setup_short( uintptr_t );
+void boot_virt_setup_short( void );
 void boot_virt_map_short( uintptr_t, uintptr_t );
+void boot_virt_enable_short( void );
 
 #endif

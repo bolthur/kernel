@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -32,5 +32,5 @@ void arch_init( void ) {
  * @brief halt instruction
  */
 void arch_halt( void ) {
-  __asm__ __volatile__( "wfe" ::: "memory" );
+  __asm__( "wfe" ::: "memory" );
 }

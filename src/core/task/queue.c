@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -37,8 +37,8 @@ static int32_t queue_compare_priority_callback(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = 0x%08p, b = 0x%08p\r\n", a, b );
-    DEBUG_OUTPUT( "a->data = %d, b->data = %d\r\n",
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
+    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n",
       ( size_t )a->data,
       ( size_t )b->data );
   #endif
@@ -77,7 +77,7 @@ task_priority_queue_ptr_t task_queue_get_queue(
   assert( NULL != manager );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Called task_queue_get_queue( %d )\r\n", priority );
+    DEBUG_OUTPUT( "Called task_queue_get_queue( %zu )\r\n", priority );
   #endif
   // get correct tree to use
   avl_tree_ptr_t tree = manager->thread_priority_tree;
@@ -87,7 +87,7 @@ task_priority_queue_ptr_t task_queue_get_queue(
   task_priority_queue_ptr_t queue;
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Found node 0x%08p\r\n", node );
+    DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
   #endif
   // handle not yet added
   if ( NULL == node ) {
@@ -100,7 +100,7 @@ task_priority_queue_ptr_t task_queue_get_queue(
     memset( ( void* )queue, 0, sizeof( task_priority_queue_t ) );
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "Initialized new node at 0x%08p\r\n", queue );
+      DEBUG_OUTPUT( "Initialized new node at %p\r\n", ( void* )queue );
     #endif
     // populate queue
     queue->priority = priority;

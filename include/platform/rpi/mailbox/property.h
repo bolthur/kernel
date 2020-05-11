@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -169,8 +169,8 @@ typedef struct {
   } data;
 } rpi_mailbox_property_t;
 
-int32_t *ptb_buffer;
-volatile int32_t *ptb_buffer_phys;
+extern int32_t *ptb_buffer;
+extern volatile int32_t *ptb_buffer_phys;
 
 void mailbox_property_init( void );
 void mailbox_property_add_tag( rpi_mailbox_tag_t, ... );

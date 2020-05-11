@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -83,8 +83,10 @@
  * @brief Check for pending timer interrupt
  *
  * @return bool
+ *
+ * @todo Check system timer support of qemu
  */
-bool timer_pending( void ) {
+static bool timer_pending( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
     uintptr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
     return io_in32( ( uint32_t )base + CORE0_IRQ_SOURCE ) & ARM_GENERIC_TIMER_MATCH_VIRT;
@@ -97,8 +99,10 @@ bool timer_pending( void ) {
  * @brief Clear timer callback
  *
  * @param context cpu context
+ *
+ * @todo Check system timer support of qemu
  */
-void timer_clear( __unused void* context ) {
+static void timer_clear( void* context ) {
   // check for pending timer
   if ( ! timer_pending() ) {
     return;
@@ -121,11 +125,13 @@ void timer_clear( __unused void* context ) {
   #endif
 
   // trigger timer event
-  event_enqueue( EVENT_TIMER );
+  event_enqueue( EVENT_TIMER, EVENT_DETERMINE_ORIGIN( context ) );
 }
 
 /**
  * @brief Initialize timer
+ *
+ * @todo Check system timer support of qemu
  */
 void timer_init( void ) {
   #if defined( BCM2709 ) || defined( BCM2710 )
@@ -143,29 +149,32 @@ void timer_init( void ) {
     __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 0" :: "r"( ARM_GENERIC_TIMER_FREQUENCY ) );
     __asm__ __volatile__( "mcr p15, 0, %0, c14, c3, 1" :: "r"( ARM_GENERIC_TIMER_ENABLE ) );
   #else
+    // get peripheral base
+    uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+
     // register handler
     interrupt_register_handler(
       SYSTEM_TIMER_3_INTERRUPT, timer_clear, INTERRUPT_NORMAL, false );
 
     // reset timer control
-    io_out32( SYSTEM_TIMER_CONTROL, 0x00000000 );
+    io_out32( base + SYSTEM_TIMER_CONTROL, 0x00000000 );
 
     // set compare for timer 3
-    io_out32( SYSTEM_TIMER_COMPARE_3, io_in32( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
+    io_out32( base + SYSTEM_TIMER_COMPARE_3, io_in32( base + SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
 
     // enable timer 3
-    io_out32( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
+    io_out32( base + SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
 
     // enable interrupt for timer 3
-    io_out32( INTERRUPT_ENABLE_IRQ_1, SYSTEM_TIMER_3_INTERRUPT );
+    io_out32( base + INTERRUPT_ENABLE_IRQ_1, SYSTEM_TIMER_3_INTERRUPT );
 
     // get pending interrupt from memory
-    uint32_t interrupt_line = io_in32( INTERRUPT_IRQ_PENDING_1 );
+    uint32_t interrupt_line = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
 
     // clear pending interrupt
     interrupt_line &= ~( SYSTEM_TIMER_3_INTERRUPT );
 
     // overwrite
-    io_out32( INTERRUPT_IRQ_PENDING_1, interrupt_line );
+    io_out32( base + INTERRUPT_IRQ_PENDING_1, interrupt_line );
   #endif
 }

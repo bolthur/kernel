@@ -14,4 +14,5 @@ liblist_a_SOURCES = \
   peek.c \
   pop.c \
   print.c \
-  push.c
+  push.c \
+  remove.c

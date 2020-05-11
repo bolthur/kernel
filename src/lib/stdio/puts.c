@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,12 @@
 
 #include <stdio.h>
 
+/**
+ * @brief Print simple string
+ *
+ * @param string
+ * @return int
+ */
 int puts( const char* string ) {
   return printf( "%s\r\n", string );
 }

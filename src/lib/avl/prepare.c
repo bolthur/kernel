@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,7 @@
  */
 
 #include <avl.h>
+#include <core/debug/debug.h>
 
 /**
  * @brief method to prepare some node

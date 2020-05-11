@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2019 bolthur project.
+ * Copyright (C) 2018 - 2020 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,8 +24,11 @@
 #include <stdint.h>
 
 void serial_init( void );
+void serial_register_interrupt( void );
 void serial_putc( uint8_t );
 uint8_t serial_getc( void );
 void serial_flush( void );
+uint8_t* serial_get_buffer( void );
+void serial_flush_buffer( void );
 
 #endif

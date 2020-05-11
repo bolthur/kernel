@@ -14,5 +14,6 @@
     80, 120
   ],
   "files.insertFinalNewline": true,
-  "C_Cpp.loggingLevel": "Error"
+  "C_Cpp.loggingLevel": "Error",
+  "C_Cpp.autoAddFileAssociations": false
 }
