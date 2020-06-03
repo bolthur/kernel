@@ -18,18 +18,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <atag.h>
+/dts-v1/;
 
-/**
- * @brief Get next atag entry
- *
- * @param atag
- * @return atag_ptr_t
- */
-atag_ptr_t atag_next( atag_ptr_t atag ) {
-  if ( atag->tag_type == ATAG_TAG_NONE ) {
-    return NULL;
-  }
+/include/ "skeleton.dtsi"
 
-  return ( atag_ptr_t )( ( uint32_t* )atag + atag->tag_size );
-}
+/ {
+  compatible = "raspberrypi,4-model-b", "brcm,bcm2711";
+  model = "Raspberry Pi 4 Model B";
+
+  memory@0 {
+    device_type = "memory";
+    reg = <0 0x40000000>;
+  };
+};

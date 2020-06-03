@@ -18,16 +18,31 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/delay.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
 
 /**
- * @brief Delay given amount of cpu cycles
+ * @brief memchr
  *
- * @param count Amount of cycles to delay
+ * @param buf
+ * @param c
+ * @param n
+ * @return void*
  */
-inline void delay( uint32_t count ) {
-  __asm__ __volatile__(
-    "__delay_%=: subs %[count], #1; bne __delay_%=\n"
-    : "=r" ( count ) : [ count ] "0" ( count ) : "cc"
-  );
+void* memchr( const void* buf, int32_t c, size_t n ) {
+  uint8_t* current = ( uint8_t* )buf;
+  uint8_t* end = current + n;
+
+  while ( current != end ) {
+    // check for match
+    if ( *current == c ) {
+      return current;
+    }
+    // next
+    current++;
+  }
+
+  // nothing found
+  return NULL;
 }

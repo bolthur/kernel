@@ -549,8 +549,6 @@ void debug_gdb_handler_insert_breakpoint(
  *
  * @param context
  * @param packet
- *
- * @todo emulate conditional branch by adding two breakpoints ( direct following instruction and branch instruction )
  */
 void debug_gdb_handler_stepping(
   void* context,

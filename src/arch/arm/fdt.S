@@ -18,16 +18,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/delay.h>
+#define ASSEMBLER_FILE 1
 
-/**
- * @brief Delay given amount of cpu cycles
- *
- * @param count Amount of cycles to delay
- */
-inline void delay( uint32_t count ) {
-  __asm__ __volatile__(
-    "__delay_%=: subs %[count], #1; bne __delay_%=\n"
-    : "=r" ( count ) : [ count ] "0" ( count ) : "cc"
-  );
-}
+#include <core/assembly.h>
+
+.section .fdt
+
+EXPORT( fdt_file_start )
+EXPORT( fdt_file_end )
+
+fdt_file_start:
+  #if defined( FDT_BINARY ) && defined( FDT_EMBED )
+    .incbin FDT_BINARY
+  #endif
+fdt_file_end:

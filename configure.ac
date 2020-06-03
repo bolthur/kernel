@@ -241,8 +241,13 @@ AC_DEFINE_UNQUOTED(
   [Disable optimization]
 )
 AC_DEFINE_UNQUOTED(
+  [__no_sanitize],
+  [__attribute__((no_sanitize("undefined")))],
+  [disable undefined behaviour sanitization]
+)
+AC_DEFINE_UNQUOTED(
   [__bootstrap],
-  [__section(".text.boot")],
+  [__section(".text.boot") __no_sanitize],
   [Bootstrap function]
 )
 AC_DEFINE_UNQUOTED(
@@ -261,19 +266,9 @@ AC_DEFINE_UNQUOTED(
   [Unused]
 )
 AC_DEFINE_UNQUOTED(
-  [__no_sanitize],
-  [__attribute__((no_sanitize("undefined")))],
-  [disable undefined behaviour sanitization]
-)
-AC_DEFINE_UNQUOTED(
   [__no_return],
   [__attribute__((noreturn))],
   [mark function as function without continuing exectution]
-)
-AC_DEFINE_UNQUOTED(
-  [__constructor],
-  [__attribute__((constructor))],
-  [mark function as constructor]
 )
 
 # conditional
@@ -291,8 +286,10 @@ AC_CONFIG_FILES([
   src/core/Makefile
   src/lib/Makefile
   src/lib/assert/Makefile
-  src/lib/atag/Makefile
   src/lib/avl/Makefile
+  src/lib/boot/Makefile
+  src/lib/boot/atag/Makefile
+  src/lib/boot/fdt/Makefile
   src/lib/list/Makefile
   src/lib/ssp/Makefile
   src/lib/stdio/Makefile

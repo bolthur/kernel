@@ -27,7 +27,7 @@
 IMPORT( loader_parameter_data )
 
 // only when extension define is set
-#if defined( BCM2709 ) || defined( BCM2710 )
+#if defined( BCM2836 ) || defined( BCM2837 )
   .arch_extension virt
   .arch_extension sec
 #endif
@@ -37,7 +37,7 @@ IMPORT( loader_parameter_data )
 EXPORT( boot_start )
 boot_start:
   b reset
-  #if defined( BCM2709 ) || defined( BCM2710 )
+  #if defined( BCM2836 ) || defined( BCM2837 )
     b hang
     b smc
     b hang
@@ -47,7 +47,7 @@ boot_start:
     b hang
   #endif
 
-#if defined( BCM2709 ) || defined( BCM2710 )
+#if defined( BCM2836 ) || defined( BCM2837 )
   hang:
     b hang
 
@@ -65,7 +65,7 @@ reset:
   mov sp, r3
 
   // halt other cpus if smp enabled is set
-  #if defined( BCM2709 ) || defined( BCM2710 )
+  #if defined( BCM2836 ) || defined( BCM2837 )
     // Return current CPU ID (0..3)
     cpsid if // Disable IRQ & FIQ
     mrc p15, 0, r3, c0, c0, 5 // r3 = Multiprocessor Affinity Register (MPIDR)
@@ -79,7 +79,7 @@ reset:
   #endif
 
   // switch to svc mode if necessary
-  #if defined( BCM2709 ) || defined( BCM2710 )
+  #if defined( BCM2836 ) || defined( BCM2837 )
     // check for hypervisor mode and switch back to supervisor mode for rpi2 and rpi3
     mrs r3, cpsr
     eor r3, #CPSR_MODE_HYPERVISOR
@@ -100,12 +100,12 @@ reset:
   #endif
 
   // smp bit
-  #if defined( BCM2709 )
+  #if defined( BCM2836 )
     // Set SMP bit within auxiliary control register
     mrc p15, 0, r3, c1, c0, 1
     orr r3, r3, #( 1 << 6 )
     mcr p15, 0, r3, c1, c0, 1
-  #elif defined( BCM2710 )
+  #elif defined( BCM2837 )
     // Set SMP bit within extended control register
     mrrc p15, 1, r3, r1, c15
     orr r3, r3, #( 1 << 6 )
@@ -132,7 +132,7 @@ reset:
   ldr r3, =loader_parameter_data - KERNEL_OFFSET
   stmia r3!, { r0 - r2 }
 
-  #if defined( BCM2709 ) || defined( BCM2710 )
+  #if defined( BCM2836 ) || defined( BCM2837 )
     // get vbar
     mrc p15, 0, r1, c12, c0, 0
     ldr r0, =boot_start

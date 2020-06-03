@@ -52,9 +52,6 @@ bool interrupt_validate_number( size_t num ) {
  *
  * @param fast use fast interrupts
  * @return int8_t pending interrupt number
- *
- * @todo add code for checking for fast interrupts
- * @todo check and revise or extend
  */
 int8_t interrupt_get_pending( bool fast ) {
   uintptr_t base = ( uint32_t )peripheral_base_get(
@@ -66,7 +63,7 @@ int8_t interrupt_get_pending( bool fast ) {
     uint32_t pending1 = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
     uint32_t pending2 = io_in32( base + INTERRUPT_IRQ_PENDING_2 );
 
-    #if defined( BCM2709 ) || defined( BCM2710 )
+    #if defined( BCM2836 ) || defined( BCM2837 )
       base = peripheral_base_get( PERIPHERAL_LOCAL );
       uint32_t core0_interrupt_source = io_in32( ( uint32_t )base + CORE0_IRQ_SOURCE );
       if ( core0_interrupt_source & 0x08 ) {

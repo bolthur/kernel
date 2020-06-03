@@ -25,13 +25,23 @@
 #include <arch/arm/mm/virt.h>
 #include <core/entry.h>
 #include <core/mm/phys.h>
+#include <platform/rpi/platform.h>
 
 /**
  * @brief Method to setup short descriptor paging
  */
 void __bootstrap boot_virt_platform_setup( void ) {
+  // get platform parameter
+  uintptr_t fdt_address = ( uintptr_t )(
+    ( platform_loader_parameter_ptr_t )(
+      VIRT_2_PHYS( &loader_parameter_data )
+    )
+  )->atag_fdt;
+  // map address within atag / fdt
+  boot_virt_map( ( uint64_t )fdt_address, fdt_address );
+
   // cpu local peripherals
-  #if defined( BCM2709 ) || defined( BCM2710 )
+  #if defined( BCM2836 ) || defined( BCM2837 )
     uintptr_t cpu_peripheral_base = 0x40000000;
     size_t cpu_peripheral_size = 0x3FFFF;
     uintptr_t cpu_peripheral_end = cpu_peripheral_base + cpu_peripheral_size;
@@ -45,7 +55,7 @@ void __bootstrap boot_virt_platform_setup( void ) {
   #endif
 
   // GPIO related
-  #if defined( BCM2709 ) || defined( BCM2710 )
+  #if defined( BCM2836 ) || defined( BCM2837 )
     uintptr_t gpio_peripheral_base = 0x3F000000;
     size_t gpio_peripheral_size = 0xFFFFFF;
   #else

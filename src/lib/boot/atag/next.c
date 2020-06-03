@@ -18,16 +18,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/delay.h>
+#include <atag.h>
 
 /**
- * @brief Delay given amount of cpu cycles
+ * @brief Get next atag entry
  *
- * @param count Amount of cycles to delay
+ * @param atag
+ * @return atag_ptr_t
  */
-inline void delay( uint32_t count ) {
-  __asm__ __volatile__(
-    "__delay_%=: subs %[count], #1; bne __delay_%=\n"
-    : "=r" ( count ) : [ count ] "0" ( count ) : "cc"
-  );
+atag_ptr_t __bootstrap atag_next( atag_ptr_t atag ) {
+  if ( atag->header.tag == ATAG_TAG_NONE ) {
+    return NULL;
+  }
+
+  return ( atag_ptr_t )( ( uint32_t* )atag + atag->header.size );
 }

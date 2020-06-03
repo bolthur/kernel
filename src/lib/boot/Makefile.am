@@ -1,0 +1,2 @@
+
+SUBDIRS = atag fdt

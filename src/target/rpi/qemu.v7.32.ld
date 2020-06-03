@@ -29,8 +29,9 @@ GROUP(
   ../../core/libcore.a
   ../../platform/rpi/librpi.a
   ../../lib/assert/libassert.a
-  ../../lib/atag/libatag.a
   ../../lib/avl/libavl.a
+  ../../lib/boot/atag/libatag.a
+  ../../lib/boot/fdt/libfdt.a
   ../../lib/list/liblist.a
   ../../lib/ssp/libssp.a
   ../../lib/stdio/libstdio.a
@@ -82,6 +83,12 @@ SECTIONS {
     __initial_heap_end = .;
 
     __bss_end = .;
+  }
+
+  .fdt ALIGN( 4K ) : AT( ADDR( .fdt ) - KERNEL_OFFSET ) {
+    __fdt_start = .;
+    *( .fdt )
+    __fdt_end = .;
   }
 
   __kernel_end = .;

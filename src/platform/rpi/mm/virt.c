@@ -31,7 +31,7 @@
 #include <platform/rpi/framebuffer.h>
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
-#if defined( BCM2709 ) || defined( BCM2710 )
+#if defined( BCM2836 ) || defined( BCM2837 )
   #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
 #define MAILBOX_PROPERTY_AREA 0xF3040000
@@ -90,7 +90,7 @@ void virt_platform_init( void ) {
     virtual += PAGE_SIZE;
   }
   // handle local peripherals
-  #if defined( BCM2709 ) || defined( BCM2710 )
+  #if defined( BCM2836 ) || defined( BCM2837 )
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(

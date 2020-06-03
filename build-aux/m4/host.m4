@@ -4,10 +4,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([ELF32], [Define to 1 for 32 bit ELF targets])
   AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets])
   AH_TEMPLATE([IS_HIGHER_HALF], [Define to 1 when kernel is higher half])
-  AH_TEMPLATE([NUM_CPU], [Define to amount of existing cpu])
-  AH_TEMPLATE([HAS_SMP], [Define to 1 when board supports smp])
   AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
   AH_TEMPLATE([REMOTE_DEBUG], [Define to 1 to enable remote debugging])
+  AH_TEMPLATE([FDT_BINARY], [Define to path to binary])
+  AH_TEMPLATE([FDT_EMBED], [Define to 1 if you want to embed binary])
   # Output related define templates
   AH_TEMPLATE([OUTPUT_ENABLE], [Define to 1 to enable kernel print])
   AH_TEMPLATE([PRINT_MM_PHYS], [Define to 1 to enable output of physical memory manager])
@@ -129,24 +129,23 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       output_img_qemu=kernel7_qemu.img
       output_sym_qemu=kernel7_qemu.sym
       AC_DEFINE([ELF32])
-      AC_DEFINE([BCM2709], [1], [Define to 1 for BCM2709 chip])
+      AC_DEFINE([BCM2836], [1], [Define to 1 for BCM2836 chip])
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([NUM_CPU], [4])
-      AC_DEFINE([HAS_SMP], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
+      AC_DEFINE_UNQUOTED([FDT_BINARY], ["$(readlink -f ${srcdir})/dts/rpi/bcm2836-rpi-2b.dtb"])
       ;;
     rpi_zero_w)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
       subarch_subdir=v6
       platform_subdir=rpi
-      AC_DEFINE([BCM2708], [1], [Define to 1 for BCM2708 chip])
+      AC_DEFINE([BCM2835], [1], [Define to 1 for BCM2835])
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([NUM_CPU], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
+      AC_DEFINE_UNQUOTED([FDT_BINARY], ["$(readlink -f ${srcdir})/dts/rpi/bcm2835-rpi-zero-w.dtb"])
       ;;
     rpi3_b)
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard"
@@ -156,12 +155,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       output_sym=kernel8.sym
       output_img_qemu=kernel8_qemu.img
       output_sym_qemu=kernel8_qemu.sym
-      AC_DEFINE([BCM2710], [1], [Define to 1 for BCM2710 chip])
+      AC_DEFINE([BCM2837], [1], [Define to 1 for BCM2837 chip])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([NUM_CPU], [4])
-      AC_DEFINE([HAS_SMP], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     *)
@@ -184,12 +181,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       output_sym=kernel8.sym
       output_img_qemu=kernel8_qemu.img
       output_sym_qemu=kernel8_qemu.sym
-      AC_DEFINE([BCM2710], [1])
+      AC_DEFINE([BCM2837], [1], [Define to 1 for BCM2837 chip])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([NUM_CPU], [4])
-      AC_DEFINE([HAS_SMP], [1])
       AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     *)
@@ -202,6 +197,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     ;;
   esac
 
+  # copy flags for binary creation
   copy_flags="-I ${host_bfd} -O ${host_bfd}"
 
   AC_DEFINE_UNQUOTED([ARCH], [${arch_subdir}], [bolthur/kernel target architecture])

@@ -23,20 +23,12 @@
 
 #include <stdint.h>
 
-#define PLATFORM_ATAG_FALLBACK_ADDR 0x00000100
-
-enum {
-  PLATFORM_USE_SOURCE_NONE = 0,
-  PLATFORM_USE_SOURCE_ATAG_V1,
-  PLATFORM_USE_SOURCE_ATAG_V2,
-  PLATFORM_USE_SOURCE_DEVICE_TREE_V1,
-  PLATFORM_USE_SOURCE_DEVICE_TREE_V2
-};
-
 typedef struct {
   uint32_t zero;
   uint32_t machine;
-  uint32_t atag;
-} platform_loader_parameter_t;
+  uint32_t atag_fdt;
+} platform_loader_parameter_t, *platform_loader_parameter_ptr_t;
+
+extern platform_loader_parameter_t loader_parameter_data;
 
 #endif

@@ -23,8 +23,8 @@
 
 #include <stdint.h>
 
-void __no_return _assert( const char* restrict, uint32_t, const char* restrict );
+void __no_return __assert( const char* restrict, uint32_t, const char* restrict );
 
-#define assert( b ) if ( !( b ) ) { _assert( __FILE__, __LINE__, #b ); }
+#define assert( b ) if ( !( b ) ) { __assert( __FILE__, __LINE__, #b ); }
 
 #endif

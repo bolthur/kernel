@@ -102,6 +102,8 @@ void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> platform] initialize ...\r\n" );
   platform_init();
 
+  for(;;);
+
   // Setup initrd parts
   DEBUG_OUTPUT( "[bolthur/kernel -> initrd] initialize ...\r\n" );
   initrd_init();

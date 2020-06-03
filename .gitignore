@@ -4,6 +4,7 @@
 *~
 /doc
 **/*.disasm
+*.dtb
 
 # ---> JetBrains
 

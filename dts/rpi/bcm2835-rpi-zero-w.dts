@@ -18,16 +18,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/delay.h>
+/dts-v1/;
 
-/**
- * @brief Delay given amount of cpu cycles
- *
- * @param count Amount of cycles to delay
- */
-inline void delay( uint32_t count ) {
-  __asm__ __volatile__(
-    "__delay_%=: subs %[count], #1; bne __delay_%=\n"
-    : "=r" ( count ) : [ count ] "0" ( count ) : "cc"
-  );
-}
+/include/ "skeleton.dtsi"
+
+/ {
+  compatible = "raspberrypi,model-zero-w", "brcm,bcm2835";
+  model = "Raspberry Pi Zero W";
+
+  memory@0 {
+    device_type = "memory";
+    reg = <0 0x20000000>;
+  };
+};
