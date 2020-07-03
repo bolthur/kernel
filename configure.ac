@@ -1,6 +1,6 @@
 
 AC_PREREQ(2.69)
-AC_INIT([bolthur-kernel], [0.1], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
+AC_INIT([bolthur-kernel], [0.1.0], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 AC_COPYRIGHT([Copyright (C) 2018 - 2020 bolthur project])
 
 AC_CONFIG_AUX_DIR([build-aux/config])
@@ -17,7 +17,7 @@ AC_LANG([C])
 AC_SUBST(MAKEFLAGS, "${MAKEFLAGS} --no-print-directory")
 
 AC_ARG_ENABLE([device],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-device],
     [set target device to compile for [possible targets: rpi2_b_rev1]]
   ),
@@ -27,7 +27,7 @@ AC_ARG_ENABLE([device],
 
 AC_ARG_ENABLE(
   [output],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output],
     [activate kernel output [default: off]]
   ),
@@ -36,7 +36,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-mm-phys],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-mm-phys],
     [activate physical memory mapping output [default: off]]
   ),
@@ -45,7 +45,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-mm-virt],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-mm-virt],
     [activate virtual memory mapping output [default: off]]
   ),
@@ -54,7 +54,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-mm-heap],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-mm-heap],
     [activate heap output [default: off]]
   ),
@@ -63,7 +63,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-mailbox],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-mailbox],
     [activate mailbox output [default: off]]
   ),
@@ -72,7 +72,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-timer],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-timer],
     [activate timer output [default: off]]
   ),
@@ -81,7 +81,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-initrd],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-initrd],
     [activate initrd output [default: off]]
   ),
@@ -90,7 +90,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-event],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-event],
     [activate event output [default: off]]
   ),
@@ -99,7 +99,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-process],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-process],
     [activate task output [default: off]]
   ),
@@ -108,7 +108,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-interrupt],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-interrupt],
     [activate interrupt output [default: off]]
   ),
@@ -117,7 +117,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-exception],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-exception],
     [activate exception output [default: off]]
   ),
@@ -126,7 +126,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-elf],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-elf],
     [activate elf output [default: off]]
   ),
@@ -135,7 +135,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-platform],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-platform],
     [activate platform init output [default: off]]
   ),
@@ -144,7 +144,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-syscall],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-syscall],
     [activate syscall output [default: off]]
   ),
@@ -153,7 +153,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [output-serial],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-output-serial],
     [activate serial handling output [default: off]]
   ),
@@ -162,7 +162,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_ENABLE(
   [remote-debug],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-remote-debug],
     [activate remote debugging [default: off]]
   ),
@@ -171,7 +171,7 @@ AC_ARG_ENABLE(
 
 AC_ARG_WITH(
   [optimization-level],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--with-optimization-level],
     [compile with specific code optimization level [possible values: 0, 1, 2, 3, s, g | default: 2]]
   ),
@@ -180,7 +180,7 @@ AC_ARG_WITH(
 
 AC_ARG_WITH(
   [debug-symbols],
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--with-debug-symbols],
     [compile with debug symbols]
   ),
@@ -206,6 +206,18 @@ AC_C_CONST
 AC_C_INLINE
 AC_C_VOLATILE
 AC_C_RESTRICT
+
+# embed git revision and compiler
+AC_DEFINE_UNQUOTED(
+  [PACKAGE_REVISION],
+  ["m4_esyscmd_s([git describe --always])"],
+  [Define to the revision of this package.]
+)
+AC_DEFINE_UNQUOTED(
+  [PACKAGE_COMPILER],
+  ["$CC"],
+  [Define to the used compiler of this package.]
+)
 
 # Some compiler dependent features.
 AC_DEFINE_UNQUOTED(

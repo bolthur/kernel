@@ -66,13 +66,9 @@ void kernel_main( void ) {
 
   // Some initial output :)
   DEBUG_OUTPUT(
-    "\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n%s\r\n\r\n",
-    " _           _ _   _                      __  _                        _ ",
-    "| |         | | | | |                    / / | |                      | |",
-    "| |__   ___ | | |_| |__  _   _ _ __     / /  | | _____ _ __ _ __   ___| |",
-    "| '_ \\ / _ \\| | __| '_ \\| | | | '__|   / /   | |/ / _ \\ '__| '_ \\ / _ \\ |",
-    "| |_) | (_) | | |_| | | | |_| | |     / /    |   <  __/ |  | | | |  __/ |",
-    "|_.__/ \\___/|_|\\__|_| |_|\\__,_|_|    /_/     |_|\\_\\___|_|  |_| |_|\\___|_|"
+    "bolthur/kernel " PACKAGE_VERSION " ( commit #" PACKAGE_REVISION
+    " ) compiled with " PACKAGE_COMPILER " for target " PACKAGE_ARCHITECTURE
+    " \r\n"
   );
 
   // Setup event system

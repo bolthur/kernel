@@ -23,8 +23,8 @@
 
 #include <stdint.h>
 
-#define FRAMEBUFFER_SCREEN_WIDTH 800
-#define FRAMEBUFFER_SCREEN_HEIGHT 600
+#define FRAMEBUFFER_SCREEN_WIDTH 800 // 960
+#define FRAMEBUFFER_SCREEN_HEIGHT 600 // 720
 #define FRAMEBUFFER_SCREEN_DEPTH 16
 
 void framebuffer_init( void );

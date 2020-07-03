@@ -205,6 +205,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AC_DEFINE_UNQUOTED([ARCH], [${arch_subdir}], [bolthur/kernel target architecture])
   AC_DEFINE_UNQUOTED([SUBARCH], [${subarch_subdir}], [bolthur/kernel target subarchitecture])
   AC_DEFINE_UNQUOTED([PLATFORM], [${platform_subdir}], [bolthur/kernel target platform])
+  AC_DEFINE_UNQUOTED(
+    [PACKAGE_ARCHITECTURE],
+    ["$arch_subdir$subarch_subdir"],
+    [Define to the target architecture for this package]
+  )
   AC_SUBST(arch_subdir)
   AC_SUBST(subarch_subdir)
   AC_SUBST(platform_subdir)
