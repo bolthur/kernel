@@ -38,8 +38,7 @@ kernel_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/lib/tar/libtar.a
 kernel_elf_LDFLAGS = \
   -T ${top_srcdir}/src/target/rpi/kernel.${subarch_subdir}.${executable_format}.ld \
-  -Wl,-Map,kernel.map \
-  -Wl,-u,Entry
+  -Wl,-Map,kernel.map
 
 # Normal kernel building for physical device
 kernel_qemu_elf_SOURCES =
@@ -58,8 +57,7 @@ kernel_qemu_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/lib/tar/libtar.a
 kernel_qemu_elf_LDFLAGS = \
   -T ${top_srcdir}/src/target/rpi/kernel-qemu.${subarch_subdir}.${executable_format}.ld \
-  -Wl,-Map,kernel_qemu.map \
-  -Wl,-u,Entry
+  -Wl,-Map,kernel_qemu.map
 
 EXTRA_PROGRAMS = kernel.img kernel7.img kernel8.img kernel_qemu.img kernel7_qemu.img kernel8_qemu.img
 kernel_img_DEPENDENCIES = kernel.elf

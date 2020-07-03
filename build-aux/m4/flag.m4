@@ -14,6 +14,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer], [CFLAGS])
   AX_APPEND_COMPILE_FLAGS([-ffreestanding -fno-common], [CFLAGS])
 
+  # default include directories
+  AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/include], [CFLAGS])
+  AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/include/lib], [CFLAGS])
+
   # debug parameter
   AS_IF([test "x$with_debug_symbols" == "xyes"], [
     # debug symbols and undefined behaviour sanitization
@@ -44,9 +48,8 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
       AX_APPEND_COMPILE_FLAGS([-O2], [CFLAGS])
       ;;
   esac
-  # FIXME: ADD COMPILER FLAGS FROM Makefile.am files
 
   # linker flags
   AX_APPEND_LINK_FLAGS([-nostdlib], [LDFLAGS])
-  # FIXME: ADD LINKER FLAGS FROM Makefile.am files
+  AX_APPEND_LINK_FLAGS([-Wl,-u,Entry], [LDFLAGS])
 ])
