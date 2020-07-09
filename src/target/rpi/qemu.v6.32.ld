@@ -24,7 +24,7 @@ OUTPUT_ARCH( arm )
 ENTRY( boot_start )
 
 GROUP(
-  ../../arch/arm/v7/libv7.a
+  ../../arch/arm/v6/libv6.a
   ../../arch/arm/libarm.a
   ../../core/libcore.a
   ../../platform/rpi/librpi.a
@@ -40,11 +40,8 @@ GROUP(
   ../../lib/ubsan/libubsan.a
   ../../../thirdparty/font/libfont.a
 )
-INPUT(
-  libgcc.a
-)
 
-KERNEL_LMA = 0x8000;
+KERNEL_LMA = 0x10000;
 KERNEL_OFFSET = 0xC0000000;
 
 SECTIONS {

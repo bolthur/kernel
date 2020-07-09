@@ -15,8 +15,16 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-ffreestanding -fno-common], [CFLAGS])
 
   # default include directories
-  AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/include], [CFLAGS])
-  AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/include/lib], [CFLAGS])
+  case "${build_os}" in
+    darwin*)
+      AX_APPEND_COMPILE_FLAGS([-I$(greadlink -f ${srcdir})/include], [CFLAGS])
+      AX_APPEND_COMPILE_FLAGS([-I$(greadlink -f ${srcdir})/include/lib], [CFLAGS])
+      ;;
+    *)
+      AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/include], [CFLAGS])
+      AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/include/lib], [CFLAGS])
+      ;;
+  esac
 
   # debug parameter
   AS_IF([test "x$with_debug_symbols" == "xyes"], [
@@ -52,4 +60,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   # linker flags
   AX_APPEND_LINK_FLAGS([-nostdlib], [LDFLAGS])
   AX_APPEND_LINK_FLAGS([-Wl,-u,Entry], [LDFLAGS])
+
+  # Populate libraries for linker
+  CC_SPECIFIC_LDADD=;
+  if `$CC -v 2>&1 | grep 'gcc version' >/dev/null 2>&1` ; then
+    CC_SPECIFIC_LDADD="-lgcc"
+  fi
+  AC_SUBST(CC_SPECIFIC_LDADD, $CC_SPECIFIC_LDADD)
 ])

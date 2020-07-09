@@ -37,8 +37,10 @@ kernel_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/lib/ubsan/libubsan.a \
   ${abs_top_builddir}/src/lib/tar/libtar.a
 kernel_elf_LDFLAGS = \
-  -T ${top_srcdir}/src/target/rpi/kernel.${subarch_subdir}.${executable_format}.ld \
-  -Wl,-Map,kernel.map
+  -Wl,-L,${top_srcdir}/src/target \
+  -Wl,-T,${top_srcdir}/src/target/rpi/physical.${subarch_subdir}.${executable_format}.ld \
+  -Wl,-Map,${output_map}
+kernel_elf_LDADD = ${CC_SPECIFIC_LDADD}
 
 # Normal kernel building for physical device
 kernel_qemu_elf_SOURCES =
@@ -56,8 +58,10 @@ kernel_qemu_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/lib/ubsan/libubsan.a \
   ${abs_top_builddir}/src/lib/tar/libtar.a
 kernel_qemu_elf_LDFLAGS = \
-  -T ${top_srcdir}/src/target/rpi/kernel-qemu.${subarch_subdir}.${executable_format}.ld \
-  -Wl,-Map,kernel_qemu.map
+  -Wl,-L,${top_srcdir}/src/target \
+  -Wl,-T,${top_srcdir}/src/target/rpi/qemu.${subarch_subdir}.${executable_format}.ld \
+  -Wl,-Map,${output_map_qemu}
+kernel_qemu_elf_LDADD = ${CC_SPECIFIC_LDADD}
 
 EXTRA_PROGRAMS = kernel.img kernel7.img kernel8.img kernel_qemu.img kernel7_qemu.img kernel8_qemu.img
 kernel_img_DEPENDENCIES = kernel.elf
