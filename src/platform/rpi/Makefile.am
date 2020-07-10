@@ -1,14 +1,13 @@
 
 SUBDIRS = .
 
-AUTOMAKE_OPTIONS = nostdinc subdir-objects
+AM_CFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/thirdparty
+AM_CCASFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/thirdparty
 
 # rpi library
 noinst_LIBRARIES = librpi.a
 
 # normal rpi library
-librpi_a_CFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/thirdparty
-librpi_a_CCASFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/thirdparty
 librpi_a_SOURCES = \
   boot/mm/virt.c \
   interrupt/interrupt.c \

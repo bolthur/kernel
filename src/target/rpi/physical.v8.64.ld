@@ -40,9 +40,6 @@ GROUP(
   ../../lib/ubsan/libubsan.a
   ../../../thirdparty/font/libfont.a
 )
-INPUT(
-  libgcc.a
-)
 
 KERNEL_LMA = 0x80000;
 KERNEL_OFFSET = 0xffffffff80000000;

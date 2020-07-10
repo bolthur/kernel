@@ -1,6 +1,4 @@
 
-AUTOMAKE_OPTIONS = nostdinc subdir-objects
-
 # built sources determining things to be built first
 BUILT_SOURCES = \
   ${abs_top_builddir}/thirdparty/font/libfont.a \

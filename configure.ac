@@ -8,7 +8,7 @@ AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
 AC_CONFIG_SRCDIR([src/core/main.c])
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([nostdinc subdir-objects])
 AC_CONFIG_HEADERS([include/config.h])
 
 AC_LANG([C])
