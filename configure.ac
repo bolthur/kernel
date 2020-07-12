@@ -187,12 +187,13 @@ AC_ARG_WITH(
   [with_debug_debug_symbols=yes]
 )
 
+# set program
+BOLTHUR_KERNEL_LANG_PROGRAM
 # set target and flags
 BOLTHUR_KERNEL_SET_DEVICE
 BOLTHUR_KERNEL_SET_HOST
 # set rest of flags
 BOLTHUR_KERNEL_SET_FLAG
-BOLTHUR_KERNEL_LANG_PROGRAM
 
 # checks for programs
 AC_PROG_CC
