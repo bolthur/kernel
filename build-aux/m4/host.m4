@@ -111,8 +111,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     host_bfd=elf32-littlearm
     output_img=kernel.img
     output_sym=kernel.sym
-    output_img_qemu=kernel.img
-    output_sym_qemu=kernel.sym
+    output_map=kernel.map
+    output_img_qemu=kernel_qemu.img
+    output_sym_qemu=kernel_qemu.sym
+    output_map_qemu=kernel_qemu.map
     executable_format=32
     AC_DEFINE([ELF32], [1])
     CFLAGS="${CFLAGS} -marm"
@@ -205,13 +207,20 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AC_DEFINE_UNQUOTED([ARCH], [${arch_subdir}], [bolthur/kernel target architecture])
   AC_DEFINE_UNQUOTED([SUBARCH], [${subarch_subdir}], [bolthur/kernel target subarchitecture])
   AC_DEFINE_UNQUOTED([PLATFORM], [${platform_subdir}], [bolthur/kernel target platform])
+  AC_DEFINE_UNQUOTED(
+    [PACKAGE_ARCHITECTURE],
+    ["$arch_subdir$subarch_subdir"],
+    [Define to the target architecture for this package]
+  )
   AC_SUBST(arch_subdir)
   AC_SUBST(subarch_subdir)
   AC_SUBST(platform_subdir)
   AC_SUBST(output_img)
   AC_SUBST(output_sym)
+  AC_SUBST(output_map)
   AC_SUBST(output_img_qemu)
   AC_SUBST(output_sym_qemu)
+  AC_SUBST(output_map_qemu)
   AC_SUBST(host_bfd)
   AC_SUBST(copy_flags)
   AC_SUBST(executable_format)

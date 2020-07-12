@@ -81,7 +81,6 @@ uintptr_t* debug_disasm_next_instruction(
     // branch by "bl"
     || 0x0b000000 == ( instruction & 0x0f000000 )
   ) {
-    // FIXME: ADD LOGIC!
     // get possible condition
     uint32_t condition = ( instruction >> 28 );
 

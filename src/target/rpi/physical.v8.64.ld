@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-OUTPUT_FORMAT( elf32-littlearm )
+OUTPUT_FORMAT( elf64-littleaarch64 )
 OUTPUT_ARCH( arm )
 
 ENTRY( boot_start )
@@ -40,12 +40,9 @@ GROUP(
   ../../lib/ubsan/libubsan.a
   ../../../thirdparty/font/libfont.a
 )
-INPUT(
-  libgcc.a
-)
 
-KERNEL_LMA = 0x10000;
-KERNEL_OFFSET = 0xC0000000;
+KERNEL_LMA = 0x80000;
+KERNEL_OFFSET = 0xffffffff80000000;
 
 SECTIONS {
   . = KERNEL_LMA;
@@ -65,10 +62,10 @@ SECTIONS {
   /* higher half kernel sections */
   .text ALIGN( 4K ) : AT( ADDR( .text ) - KERNEL_OFFSET ) {
     *( .text )
-    *( .rodata )
   }
 
-  .data ALIGN( 4K ) : AT( ADDR( .data ) - KERNEL_OFFSET ) {
+  .rodata ALIGN( 4K ) : AT( ADDR( .rodata ) - KERNEL_OFFSET ) {
+    *( .rodata )
     *( .data )
   }
 

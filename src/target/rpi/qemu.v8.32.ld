@@ -24,7 +24,7 @@ OUTPUT_ARCH( arm )
 ENTRY( boot_start )
 
 GROUP(
-  ../../arch/arm/v7/libv7.a
+  ../../arch/arm/v8/libv8.a
   ../../arch/arm/libarm.a
   ../../core/libcore.a
   ../../platform/rpi/librpi.a
@@ -39,9 +39,6 @@ GROUP(
   ../../lib/tar/libtar.a
   ../../lib/ubsan/libubsan.a
   ../../../thirdparty/font/libfont.a
-)
-INPUT(
-  libgcc.a
 )
 
 KERNEL_LMA = 0x10000;
