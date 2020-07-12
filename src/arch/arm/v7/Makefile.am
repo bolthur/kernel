@@ -1,9 +1,4 @@
 
-SUBDIRS = .
-
-AM_CFLAGS = -imacros ${top_builddir}/include/config.h
-AM_CCASFLAGS = -imacros ${top_builddir}/include/config.h
-
 noinst_LIBRARIES = libv7.a
 libv7_a_SOURCES = \
   boot/mm/virt/long.c \

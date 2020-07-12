@@ -14,18 +14,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer], [CFLAGS])
   AX_APPEND_COMPILE_FLAGS([-ffreestanding -fno-common], [CFLAGS])
 
-  # default include directories
-  case "${build_os}" in
-    darwin*)
-      AX_APPEND_COMPILE_FLAGS([-I$(greadlink -f ${srcdir})/include], [CFLAGS])
-      AX_APPEND_COMPILE_FLAGS([-I$(greadlink -f ${srcdir})/include/lib], [CFLAGS])
-      ;;
-    *)
-      AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/include], [CFLAGS])
-      AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/include/lib], [CFLAGS])
-      ;;
-  esac
-
   # debug parameter
   AS_IF([test "x$with_debug_symbols" == "xyes"], [
     # debug symbols and undefined behaviour sanitization
@@ -54,6 +42,23 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
       ;;
     *)
       AX_APPEND_COMPILE_FLAGS([-O2], [CFLAGS])
+      ;;
+  esac
+
+  # default include directories
+  AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}/include], [CFLAGS])
+  case "${build_os}" in
+    darwin*)
+      AX_APPEND_COMPILE_FLAGS([-I$(greadlink -f ${srcdir})/include], [CFLAGS])
+      AX_APPEND_COMPILE_FLAGS([-I$(greadlink -f ${srcdir})/include/lib], [CFLAGS])
+      AX_APPEND_COMPILE_FLAGS([-I$(greadlink -f ${srcdir})/thirdparty], [CFLAGS])
+      AX_APPEND_COMPILE_FLAGS([-imacros\ $(greadlink -f ${srcdir})/include/core/config.h], [CFLAGS])
+      ;;
+    *)
+      AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/include], [CFLAGS])
+      AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/include/lib], [CFLAGS])
+      AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/thirdparty], [CFLAGS])
+      AX_APPEND_COMPILE_FLAGS([-imacros\ $(readlink -f ${srcdir})/include/core/config.h], [CFLAGS])
       ;;
   esac
 

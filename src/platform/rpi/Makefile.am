@@ -1,9 +1,4 @@
 
-SUBDIRS = .
-
-AM_CFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/thirdparty
-AM_CCASFLAGS = -imacros ${top_builddir}/include/config.h -I${top_srcdir}/thirdparty
-
 # rpi library
 noinst_LIBRARIES = librpi.a
 
