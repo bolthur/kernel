@@ -20,7 +20,7 @@
 
 /dts-v1/;
 
-/include/ "skeleton.dtsi"
+/include/ "../skeleton.dtsi"
 
 / {
   compatible = "raspberrypi,4-model-b", "brcm,bcm2711";

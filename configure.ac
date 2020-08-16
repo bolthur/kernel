@@ -187,6 +187,9 @@ AC_ARG_WITH(
   [with_debug_debug_symbols=yes]
 )
 
+# check necessary programs
+BOLTHUR_KERNEL_PROG_READLINK
+
 # set program
 BOLTHUR_KERNEL_LANG_PROGRAM
 # set target and flags

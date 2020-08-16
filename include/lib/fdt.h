@@ -77,6 +77,14 @@ typedef struct {
 #define FDT_FIRST_SUPPORTED_VERSION 0x02
 #define FDT_LAST_SUPPORTED_VERSION 0x11
 
+#define fdt_reserved_get_attribute( address, field ) ( be64toh( ( ( fdt_reserved_entry_ptr_t )address )->field ) )
+#define fdt_reserved_get_address( address ) ( fdt_reserved_get_attribute( address, len ) )
+#define fdt_reserved_get_size( address ) ( fdt_reserved_get_attribute( address, nameoff ) )
+
+#define fdt_property_get_attribute( address, field ) ( be32toh( ( ( fdt_property_ptr_t )address )->field ) )
+#define fdt_property_get_len( address ) ( fdt_property_get_attribute( address, len ) )
+#define fdt_property_get_nameoff( address ) ( fdt_property_get_attribute( address, nameoff ) )
+
 #define fdt_header_get_attribute( address, field ) ( be32toh( ( ( fdt_header_ptr_t )address )->field ) )
 #define fdt_header_get_magic( address ) ( fdt_header_get_attribute( address, magic ) )
 #define fdt_header_get_totalsize( address ) ( fdt_header_get_attribute( address, totalsize ) )

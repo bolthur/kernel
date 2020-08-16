@@ -9,7 +9,7 @@ AC_DEFUN([BOLTHUR_KERNEL_PROG_OBJCOPY], [
       ac_cv_objcopy_supports_host_bfd=yes
     fi]
   )
-  if test ac_cv_objcopy_supports_host_bfd = no; then
+  if test "$ac_cv_objcopy_supports_host_bfd" == "no"; then
     AC_MSG_ERROR([unsupported host BFD])
   fi
 ])

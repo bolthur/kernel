@@ -47,20 +47,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
 
   # default include directories
   AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}/include])
-  case "${build_os}" in
-    darwin*)
-      AX_APPEND_COMPILE_FLAGS([-I$(greadlink -f ${srcdir})/include])
-      AX_APPEND_COMPILE_FLAGS([-I$(greadlink -f ${srcdir})/include/lib])
-      AX_APPEND_COMPILE_FLAGS([-I$(greadlink -f ${srcdir})/thirdparty])
-      AX_APPEND_COMPILE_FLAGS([-imacros\ $(greadlink -f ${srcdir})/include/core/config.h])
-      ;;
-    *)
-      AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/include])
-      AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/include/lib])
-      AX_APPEND_COMPILE_FLAGS([-I$(readlink -f ${srcdir})/thirdparty])
-      AX_APPEND_COMPILE_FLAGS([-imacros\ $(readlink -f ${srcdir})/include/core/config.h])
-      ;;
-  esac
+  AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/include])
+  AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/include/lib])
+  AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty])
+  AX_APPEND_COMPILE_FLAGS([-imacros\ $($BOLTHUR_READLINK -f ${srcdir})/include/core/config.h])
 
   # linker flags
   AX_APPEND_LINK_FLAGS([-nostdlib])
