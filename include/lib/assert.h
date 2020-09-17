@@ -22,8 +22,9 @@
 #define __LIB_ASSERT__
 
 #include <stdint.h>
+#include <stdnoreturn.h>
 
-void __no_return __assert( const char* restrict, uint32_t, const char* restrict );
+noreturn void __assert( const char* restrict, uint32_t, const char* restrict );
 
 #define assert( b ) if ( !( b ) ) { __assert( __FILE__, __LINE__, #b ); }
 

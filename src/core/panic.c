@@ -39,7 +39,7 @@ void panic_init( void ) {
  * @param file File that invoked the panic
  * @param line Line where panic was called
  */
-void __no_return panic(
+noreturn void panic(
   const char* restrict message,
   const char* restrict file,
   uint32_t line

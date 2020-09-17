@@ -269,11 +269,6 @@ AC_DEFINE_UNQUOTED(
   [__attribute__((unused))],
   [Unused]
 )
-AC_DEFINE_UNQUOTED(
-  [__no_return],
-  [__attribute__((noreturn))],
-  [mark function as function without continuing exectution]
-)
 
 # conditional
 AM_CONDITIONAL([IS32], [test $executable_format -eq 32])
