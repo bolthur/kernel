@@ -1,19 +1,21 @@
 {
+  "C_Cpp.loggingLevel": "Error",
+  "C_Cpp.autoAddFileAssociations": false,
+  "editor.insertSpaces": true,
+  "editor.renderWhitespace": "all",
+  "editor.rulers": [
+    80, 120
+  ],
+  "editor.tabSize": 2,
   "files.associations": {
     "*.h": "c",
     "*.c": "c",
     "src/arch/arm/**/**.S": "arm",
     "platform/rpi/**/**.S": "arm"
   },
-  "editor.tabSize": 2,
-  "editor.renderWhitespace": "all",
-  "files.trimTrailingWhitespace": true,
-  "editor.insertSpaces": true,
-  "workbench.colorTheme": "Default Dark+",
-  "editor.rulers": [
-    80, 120
-  ],
   "files.insertFinalNewline": true,
-  "C_Cpp.loggingLevel": "Error",
-  "C_Cpp.autoAddFileAssociations": false
+  "files.trimTrailingWhitespace": true,
+  "telemetry.enableTelemetry": false,
+  "telemetry.enableCrashReporter": false,
+  "workbench.colorTheme": "Default Dark+"
 }
