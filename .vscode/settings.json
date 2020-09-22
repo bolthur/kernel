@@ -1,6 +1,8 @@
 {
   "C_Cpp.loggingLevel": "Error",
   "C_Cpp.autoAddFileAssociations": false,
+  "cSpell.enabled": true,
+  "cSpell.language": "en",
   "editor.insertSpaces": true,
   "editor.renderWhitespace": "all",
   "editor.rulers": [

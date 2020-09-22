@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <atag.h>
+#include <boot/atag.h>
 
 /**
  * @brief Get next atag entry

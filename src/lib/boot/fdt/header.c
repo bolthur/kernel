@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <fdt.h>
+#include <boot/fdt.h>
 
 /**
  * @brief Check device tree header

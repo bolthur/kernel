@@ -18,8 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_FDT__ )
-#define __LIB_FDT__
+#if ! defined( __LIB_BOOT_FDT__ )
+#define __LIB_BOOT_FDT__
 
 #include <stdint.h>
 #include <stdbool.h>

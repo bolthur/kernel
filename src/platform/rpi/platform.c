@@ -26,8 +26,8 @@
 #include <core/panic.h>
 
 #include <assert.h>
-#include <atag.h>
-#include <fdt.h>
+#include <boot/atag.h>
+#include <boot/fdt.h>
 #include <endian.h>
 #include <string.h>
 

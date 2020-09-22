@@ -32,6 +32,7 @@ GROUP(
   ../../lib/avl/libavl.a
   ../../lib/boot/atag/libatag.a
   ../../lib/boot/fdt/libfdt.a
+  ../../lib/boot/string/libstring.a
   ../../lib/list/liblist.a
   ../../lib/ssp/libssp.a
   ../../lib/stdio/libstdio.a

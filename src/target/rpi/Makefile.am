@@ -10,6 +10,7 @@ BUILT_SOURCES = \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
   ${abs_top_builddir}/src/lib/boot/atag/libatag.a \
   ${abs_top_builddir}/src/lib/boot/fdt/libfdt.a \
+  ${abs_top_builddir}/src/lib/boot/string/libstring.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \
   ${abs_top_builddir}/src/lib/stdlib/libstdlib.a \
@@ -34,6 +35,7 @@ kernel_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
   ${abs_top_builddir}/src/lib/boot/atag/libatag.a \
   ${abs_top_builddir}/src/lib/boot/fdt/libfdt.a \
+  ${abs_top_builddir}/src/lib/boot/string/libstring.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \
   ${abs_top_builddir}/src/lib/stdlib/libstdlib.a \
@@ -58,6 +60,7 @@ kernel_qemu_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
   ${abs_top_builddir}/src/lib/boot/atag/libatag.a \
   ${abs_top_builddir}/src/lib/boot/fdt/libfdt.a \
+  ${abs_top_builddir}/src/lib/boot/string/libstring.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \
   ${abs_top_builddir}/src/lib/stdlib/libstdlib.a \

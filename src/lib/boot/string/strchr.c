@@ -18,9 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
+#include <boot/string.h>
 
 /**
  * @brief get string part starting with delimiter
@@ -29,7 +27,7 @@
  * @param delimiter
  * @return char*
  */
-char* strchr( const char *str, int delimiter ) {
+char* __bootstrap boot_strchr( const char *str, int delimiter ) {
   // loop until possible match
   while ( *str ) {
     // return string pointer on match
