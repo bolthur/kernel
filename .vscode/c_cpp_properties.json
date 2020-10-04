@@ -1,70 +1,70 @@
 {
-    "configurations": [
-        {
-            "name": "Mac",
-            "includePath": [
-                "${workspaceFolder}/include",
-                "${workspaceFolder}/include/lib",
-                "${workspaceFolder}/include/core",
-                "${workspaceFolder}/thirdparty",
-                "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
-                "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
-                "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
-            ],
-            "defines": [],
-            "intelliSenseMode": "${default}",
-            "browse": {
-                "path": [
-                    "${workspaceFolder}/src",
-                    "${workspaceFolder}/include",
-                    "${workspaceFolder}/include/lib",
-                    "${workspaceFolder}/include/core",
-                    "${workspaceFolder}/thirdparty",
-                    "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
-                    "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
-                    "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
-                ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
-            },
-            "macFrameworkPath": [],
-            "forcedInclude": [
-                "${workspaceFolder}/build/include/config.h"
-            ],
-            "cStandard": "c18"
-        },
-        {
-            "name": "Linux",
-            "includePath": [
-                "${workspaceFolder}/include",
-                "${workspaceFolder}/include/lib",
-                "${workspaceFolder}/include/core",
-                "${workspaceFolder}/thirdparty",
-                "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
-                "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
-                "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
-            ],
-            "defines": [],
-            "intelliSenseMode": "${default}",
-            "browse": {
-                "path": [
-                    "${workspaceFolder}/src",
-                    "${workspaceFolder}/include",
-                    "${workspaceFolder}/include/lib",
-                    "${workspaceFolder}/include/core",
-                    "${workspaceFolder}/thirdparty",
-                    "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
-                    "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
-                    "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
-                ],
-                "limitSymbolsToIncludedHeaders": true,
-                "databaseFilename": ""
-            },
-            "forcedInclude": [
-                "${workspaceFolder}/build/include/config.h"
-            ],
-            "cStandard": "c18"
-        }
-    ],
-    "version": 4
+  "configurations": [
+    {
+      "name": "Mac",
+      "includePath": [
+        "${workspaceFolder}/include",
+        "${workspaceFolder}/include/lib",
+        "${workspaceFolder}/include/core",
+        "${workspaceFolder}/thirdparty",
+        "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
+        "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
+        "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
+      ],
+      "defines": [],
+      "intelliSenseMode": "${default}",
+      "browse": {
+        "path": [
+          "${workspaceFolder}/src",
+          "${workspaceFolder}/include",
+          "${workspaceFolder}/include/lib",
+          "${workspaceFolder}/include/core",
+          "${workspaceFolder}/thirdparty",
+          "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
+          "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
+          "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
+        ],
+        "limitSymbolsToIncludedHeaders": true,
+        "databaseFilename": ""
+      },
+      "macFrameworkPath": [],
+      "forcedInclude": [
+        "${workspaceFolder}/build/include/config.h"
+      ],
+      "cStandard": "c18"
+    },
+    {
+      "name": "Linux",
+      "includePath": [
+        "${workspaceFolder}/include",
+        "${workspaceFolder}/include/lib",
+        "${workspaceFolder}/include/core",
+        "${workspaceFolder}/thirdparty",
+        "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
+        "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
+        "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
+      ],
+      "defines": [],
+      "intelliSenseMode": "${default}",
+      "browse": {
+        "path": [
+          "${workspaceFolder}/src",
+          "${workspaceFolder}/include",
+          "${workspaceFolder}/include/lib",
+          "${workspaceFolder}/include/core",
+          "${workspaceFolder}/thirdparty",
+          "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
+          "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
+          "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
+        ],
+        "limitSymbolsToIncludedHeaders": true,
+        "databaseFilename": ""
+      },
+      "forcedInclude": [
+        "${workspaceFolder}/build/include/config.h"
+      ],
+      "cStandard": "c18"
+    }
+  ],
+  "version": 4
 }

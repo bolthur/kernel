@@ -24,11 +24,11 @@
 /include/ "bcm2835.dtsi"
 
 / {
-  compatible = "raspberrypi,model-zero-w", "brcm,bcm2835";
-  model = "Raspberry Pi Zero W";
+  compatible = "raspberrypi,model-a", "brcm,bcm2835";
+  model = "Raspberry Pi Model A";
 
   memory@0 {
     device_type = "memory";
-    reg = <0 0x20000000>;
+    reg = <0 0x10000000>;
   };
 };

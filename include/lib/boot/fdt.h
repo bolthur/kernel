@@ -102,5 +102,6 @@ bool fdt_check_offset(  uint32_t, uint32_t, uint32_t);
 bool fdt_check_block( uint32_t, uint32_t, uint32_t, uint32_t );
 size_t fdt_header_size( uintptr_t );
 uintptr_t fdt_parse_address( const char*, uintptr_t, size_t );
+void fdt_dump( uintptr_t );
 
 #endif

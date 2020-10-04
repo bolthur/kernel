@@ -27,6 +27,25 @@
 #include <string.h>
 #include <stdlib.h>
 
+// Possible length types
+typedef enum {
+  LENGTH_SHORT_SHORT,
+  LENGTH_SHORT,
+  LENGTH_DEFAULT,
+  LENGTH_LONG,
+  LENGTH_LONG_LONG,
+  LENGTH_LONG_DOUBLE,
+  LENGTH_INTMAX_T,
+  LENGTH_SIZE_T,
+  LENGTH_PTRDIFF_T,
+} length_type_t;
+
+// structure for length modifiers
+typedef struct {
+  const char* name;
+  length_type_t length;
+} length_modifer_t;
+
 /**
  * @brief
  *
@@ -196,6 +215,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
         case '0':
           zero_padding = true;
           continue;
+        // hex specifier
         case '#':
           alternate = true;
           continue;
@@ -207,27 +227,18 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       // stop loop
       break;
     }
-    // determine field width
-    while ( '0' <= *format && '9' >= *format ) {
-      field_width = 10 * field_width + ( *format++ - '0' );
+    // variable length modifier via parameter
+    if ( '*' == *format ) {
+      // get next character
+      format++;
+      // store field width
+      field_width = va_arg( parameter, int );
+    } else {
+      // try to determine fixed field length
+      while ( '0' <= *format && '9' >= *format ) {
+        field_width = 10 * field_width + ( *format++ - '0' );
+      }
     }
-    // Possible length types
-    typedef enum {
-      LENGTH_SHORT_SHORT,
-      LENGTH_SHORT,
-      LENGTH_DEFAULT,
-      LENGTH_LONG,
-      LENGTH_LONG_LONG,
-      LENGTH_LONG_DOUBLE,
-      LENGTH_INTMAX_T,
-      LENGTH_SIZE_T,
-      LENGTH_PTRDIFF_T,
-    } length_type_t;
-    // structure for length modifiers
-    typedef struct {
-      const char* name;
-      length_type_t length;
-    } length_modifer_t;
     // length modifier map
     length_modifer_t length_modifier_map[] = {
       { "hh", LENGTH_SHORT_SHORT },

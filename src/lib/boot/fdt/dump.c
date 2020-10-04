@@ -18,39 +18,23 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <core/debug/debug.h>
 #include <boot/fdt.h>
 #include <boot/string.h>
+#include <stdio.h>
 
-/**
- * @brief Internal helper to parse recursively for address at property
- *
- * @param path path to property
- * @param offset possible offset, when property contains 2 or more addresses
- * @param lex starting structure
- * @param string string informations like names
- * @return uintptr_t
- *
- * @todo extract and consider #address-cells and #size-cells correctly
- * @todo move recursive walk through flattened device tree into function with callback used for return
- */
-static uintptr_t __bootstrap fdt_parse_address_recursive(
-  const char* path,
-  size_t offset,
+static int32_t fdt_dump_level;
+
+static uint32_t* fdt_dump_recursive(
   uintptr_t lex,
   uintptr_t string
 ) {
-  // skip leading slash
-  if ( '/' == *path ) {
-    path++;
-  }
-
-  // loop until matching property has been found
   fdt_node_header_ptr_t node;
   fdt_property_ptr_t prop;
   uint32_t* foo = ( uint32_t* )lex;
   uint32_t len, name_length;
-  bool loop = true;
   char* check_str;
+  bool loop = true;
 
   while ( loop ) {
     switch ( be32toh( *foo ) ) {
@@ -78,37 +62,16 @@ static uintptr_t __bootstrap fdt_parse_address_recursive(
           len += sizeof( uint32_t );
         }
 
-        // consider only if nesting level reached
-        if ( NULL == boot_strchr( path, '/' ) ) {
-          // check for match
-          if ( 0 == boot_strncmp( check_str, path, name_length ) ) {
-            if ( ( offset * sizeof( uint32_t ) ) <= be32toh( prop->len ) ) {
-              // get address
-              uint32_t* addr = ( uint32_t* )prop->data;
-              // return address
-              return ( uintptr_t )be32toh( *( addr + offset ) );
-            }
-          }
-        }
+        // print
+        printf( "%*s%s\r\n", fdt_dump_level * 2, "", check_str );
         // get to next
         foo = ( uint32_t* )( ( uint8_t* )foo + sizeof( fdt_property_t ) + len );
         break;
 
       case FDT_NODE_BEGIN:
         node = ( fdt_node_header_ptr_t )foo;
-        // extract next path
-        char *next = boot_strchr( path, '/' );
         // determine length
         len = name_length = boot_strlen( node->name );
-
-        // handle nothing => invalid
-        if (
-          NULL == next
-          && 0 < name_length
-          && 0 == boot_strncmp( node->name, path, name_length )
-        ) {
-          return ( uintptr_t )NULL;
-        }
 
         // add alignment offset
         if ( len % sizeof( uint32_t ) ) {
@@ -118,58 +81,40 @@ static uintptr_t __bootstrap fdt_parse_address_recursive(
         if ( 0 == len ) {
           len += sizeof( uint32_t );
         }
+
+        // print name
+        printf( "%*s%s{\r\n", fdt_dump_level * 2, "", node->name );
+
         // add offset to get to next entry if not matching
         foo += 2 + name_length / 4;
-        // handle match
-        if (
-          ( size_t )( next - path ) == name_length
-          && 0 == boot_strncmp( node->name, path, name_length )
-        ) {
-          // recursive call
-          return fdt_parse_address_recursive(
-            next,
-            offset,
-            ( uintptr_t )foo,
-            string
-          );
-        }
+
+        // continue recursive
+        fdt_dump_level++;
+        foo = fdt_dump_recursive( ( uintptr_t )foo, string );
         break;
 
       case FDT_NODE_END:
-        foo++;
+        // reset level
+        fdt_dump_level--;
+        // print closing tag
+        printf( "%*s%c\r\n", fdt_dump_level * 2, "", '}' );
+        return ++foo;
         break;
 
       default:
         loop = false;
-        break;
     }
   }
 
-  return ( uintptr_t )NULL;
+  return NULL;
 }
 
-/**
- * @brief Parse flattened device try for address in property
- *
- * @param path full path to property
- * @param address flattened device tree address
- * @param offset possible offset, when property contains 2 or more addresses
- * @return uintptr_t found address or NULL
- */
-uintptr_t __bootstrap fdt_parse_address(
-  const char* path,
-  uintptr_t address,
-  size_t offset
-) {
+void fdt_dump( uintptr_t address ) {
   // get struct and string offset
   uintptr_t lex = address + fdt_header_get_off_dt_struct( address );
   uintptr_t string = address + fdt_header_get_off_dt_strings( address );
-
-  // parse address recursive
-  return fdt_parse_address_recursive(
-    path,
-    offset,
-    lex,
-    string
-  );
+  // setup static level for dump
+  fdt_dump_level = 0;
+  // start recursive dump
+  fdt_dump_recursive( lex, string );
 }

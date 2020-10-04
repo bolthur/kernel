@@ -135,6 +135,8 @@ void platform_init( void ) {
       atag = atag_next( atag );
     }
   } else if ( fdt_check_header( ( uintptr_t )loader_parameter_data.atag_fdt ) ) {
+    fdt_dump( ( uintptr_t )loader_parameter_data.atag_fdt );
+
     DEBUG_OUTPUT( "fooo = %p\r\n", ( void* )fdt_parse_address(
       "/#address-cells",
       ( uintptr_t )loader_parameter_data.atag_fdt,
@@ -176,6 +178,17 @@ void platform_init( void ) {
     ) );
     DEBUG_OUTPUT( "fooo = %p\r\n", ( void* )fdt_parse_address(
       "/memory@0/reg",
+      ( uintptr_t )loader_parameter_data.atag_fdt,
+      1
+    ) );
+
+    DEBUG_OUTPUT( "fooo = %p\r\n", ( void* )fdt_parse_address(
+      "/memory@1/reg",
+      ( uintptr_t )loader_parameter_data.atag_fdt,
+      0
+    ) );
+    DEBUG_OUTPUT( "fooo = %p\r\n", ( void* )fdt_parse_address(
+      "/memory@1/reg",
       ( uintptr_t )loader_parameter_data.atag_fdt,
       1
     ) );

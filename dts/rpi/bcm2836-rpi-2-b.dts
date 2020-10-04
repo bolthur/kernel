@@ -21,6 +21,7 @@
 /dts-v1/;
 
 /include/ "../skeleton.dtsi"
+/include/ "bcm2836.dtsi"
 
 / {
   compatible = "raspberrypi,2-model-b", "brcm,bcm2836";

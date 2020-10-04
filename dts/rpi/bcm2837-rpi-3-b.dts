@@ -21,14 +21,14 @@
 /dts-v1/;
 
 /include/ "../skeleton.dtsi"
-/include/ "bcm2835.dtsi"
+/include/ "bcm2837.dtsi"
 
 / {
-  compatible = "raspberrypi,model-zero-w", "brcm,bcm2835";
-  model = "Raspberry Pi Zero W";
+  compatible = "raspberrypi,3-model-b", "brcm,bcm2837";
+  model = "Raspberry Pi 3 Model B";
 
   memory@0 {
     device_type = "memory";
-    reg = <0 0x20000000>;
+    reg = <0 0x40000000>;
   };
 };

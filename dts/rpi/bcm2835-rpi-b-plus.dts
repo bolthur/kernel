@@ -24,8 +24,8 @@
 /include/ "bcm2835.dtsi"
 
 / {
-  compatible = "raspberrypi,model-zero-w", "brcm,bcm2835";
-  model = "Raspberry Pi Zero W";
+  compatible = "raspberrypi,model-b-plus", "brcm,bcm2835";
+  model = "Raspberry Pi Model B+";
 
   memory@0 {
     device_type = "memory";
