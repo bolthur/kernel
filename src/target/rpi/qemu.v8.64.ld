@@ -29,10 +29,11 @@ GROUP(
   ../../core/libcore.a
   ../../platform/rpi/librpi.a
   ../../lib/assert/libassert.a
+  ../../lib/atag/libatag.a
   ../../lib/avl/libavl.a
-  ../../lib/boot/atag/libatag.a
   ../../lib/boot/fdt/libfdt.a
   ../../lib/boot/string/libstring.a
+  ../../lib/ctype/libctype.a
   ../../lib/list/liblist.a
   ../../lib/ssp/libssp.a
   ../../lib/stdio/libstdio.a
@@ -41,6 +42,7 @@ GROUP(
   ../../lib/tar/libtar.a
   ../../lib/ubsan/libubsan.a
   ../../../thirdparty/font/libfont.a
+  ../../../thirdparty/dtc/libfdt/libfdt.a
 )
 
 KERNEL_LMA = 0x10000;

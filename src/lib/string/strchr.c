@@ -18,18 +18,25 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <boot/atag.h>
+#include <string.h>
 
 /**
- * @brief Get next atag entry
+ * @brief get string part starting with delimiter
  *
- * @param atag
- * @return atag_ptr_t
+ * @param str
+ * @param delimiter
+ * @return char*
  */
-atag_ptr_t __bootstrap atag_next( atag_ptr_t atag ) {
-  if ( atag->header.tag == ATAG_TAG_NONE ) {
-    return NULL;
+char* strchr( const char* str, int delimiter ) {
+  // loop until possible match
+  while ( *str ) {
+    // return string pointer on match
+    if ( ( int )*str == delimiter ) {
+      return ( char* )str;
+    }
+    // continue with next
+    str++;
   }
-
-  return ( atag_ptr_t )( ( uint32_t* )atag + atag->header.size );
+  // no match
+  return NULL;
 }

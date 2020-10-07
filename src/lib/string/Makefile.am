@@ -6,5 +6,8 @@ libstring_a_SOURCES = \
   memcpy.c \
   memmove.c \
   memset.c \
+  strchr.c \
   strlen.c \
-  strncmp.c
+  strncmp.c \
+  strnlen.c \
+  strrchr.c

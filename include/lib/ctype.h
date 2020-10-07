@@ -18,21 +18,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_STRING__ )
-#define __LIB_STRING__
+#if ! defined( __LIB_CTYPE__ )
+#define __LIB_CTYPE__
 
-#include <stddef.h>
-#include <stdint.h>
-
-void* memchr( const void*, int32_t, size_t );
-int memcmp( const void*, const void*, size_t );
-void* memcpy( void* restrict, const void* restrict, size_t );
-void* memset( void*, int, size_t );
-char* strchr( const char*, int );
-size_t strlen( const char* );
-int strncmp( const char*, const char*, size_t );
-void* memmove( void*, const void*, size_t );
-size_t strnlen( const char*, size_t );
-char* strrchr( const char*, int );
+int isalpha( int );
+int isdigit( int );
+int islower( int );
+int isspace( int );
+int isupper( int );
 
 #endif

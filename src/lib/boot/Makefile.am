@@ -1,2 +1,2 @@
 
-SUBDIRS = string atag fdt
+SUBDIRS = string fdt

@@ -18,8 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_BOOT_ATAG__ )
-#define __LIB_BOOT_ATAG__
+#if ! defined( __LIB_ATAG__ )
+#define __LIB_ATAG__
 
 #include <stdint.h>
 #include <stddef.h>

@@ -50,6 +50,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/include])
   AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/include/lib])
   AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty])
+  AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty/dtc/libfdt])
   AX_APPEND_COMPILE_FLAGS([-imacros\ $($BOLTHUR_READLINK -f ${srcdir})/include/core/config.h])
 
   # linker flags

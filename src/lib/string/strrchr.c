@@ -18,21 +18,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_STRING__ )
-#define __LIB_STRING__
+#include <string.h>
 
-#include <stddef.h>
-#include <stdint.h>
-
-void* memchr( const void*, int32_t, size_t );
-int memcmp( const void*, const void*, size_t );
-void* memcpy( void* restrict, const void* restrict, size_t );
-void* memset( void*, int, size_t );
-char* strchr( const char*, int );
-size_t strlen( const char* );
-int strncmp( const char*, const char*, size_t );
-void* memmove( void*, const void*, size_t );
-size_t strnlen( const char*, size_t );
-char* strrchr( const char*, int );
-
-#endif
+/**
+ * @brief get string part starting with delimiter
+ *
+ * @param str
+ * @param delimiter
+ * @return char*
+ */
+char* strrchr( const char* str, int delimiter ) {
+  // handle string end
+  if ( delimiter == '\0' ) {
+    return strchr( str, delimiter );
+  }
+  // variables for found and current
+  const char* found = NULL;
+  const char* current;
+  // loop until last occurrence
+  while ( NULL != ( current = strchr( str, delimiter ) ) ) {
+    found = current;
+    str = current + 1;
+  }
+  // return found
+  return ( char* )found;
+}

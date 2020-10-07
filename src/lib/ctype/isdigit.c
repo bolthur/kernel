@@ -18,17 +18,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <boot/atag.h>
+#include <ctype.h>
 
-/**
- * @brief Check for atag existing
- *
- * @param atag
- * @return atag_ptr_t
- */
-bool __bootstrap atag_check( uintptr_t atag ) {
-  // convert to integer
-  atag_ptr_t p = ( atag_ptr_t )atag;
-  // atag has to start with core tag
-  return ATAG_TAG_CORE == p->header.tag;
+int isdigit( int c ) {
+  return (
+    '0' <= c
+    && '9' >= c
+  );
 }

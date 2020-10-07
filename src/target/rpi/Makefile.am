@@ -2,15 +2,17 @@
 # built sources determining things to be built first
 BUILT_SOURCES = \
   ${abs_top_builddir}/thirdparty/font/libfont.a \
+  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.a \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
   ${abs_top_builddir}/src/core/libcore.a \
   ${abs_top_builddir}/src/lib/assert/libassert.a \
+  ${abs_top_builddir}/src/lib/atag/libatag.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
-  ${abs_top_builddir}/src/lib/boot/atag/libatag.a \
   ${abs_top_builddir}/src/lib/boot/fdt/libfdt.a \
   ${abs_top_builddir}/src/lib/boot/string/libstring.a \
+  ${abs_top_builddir}/src/lib/ctype/libctype.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \
   ${abs_top_builddir}/src/lib/stdlib/libstdlib.a \
@@ -27,15 +29,17 @@ noinst_PROGRAMS = kernel.elf kernel_qemu.elf ${output_img} ${output_img_qemu}
 kernel_elf_SOURCES =
 kernel_elf_DEPENDENCIES = \
   ${abs_top_builddir}/thirdparty/font/libfont.a \
+  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.a \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
   ${abs_top_builddir}/src/core/libcore.a \
   ${abs_top_builddir}/src/lib/assert/libassert.a \
+  ${abs_top_builddir}/src/lib/atag/libatag.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
-  ${abs_top_builddir}/src/lib/boot/atag/libatag.a \
   ${abs_top_builddir}/src/lib/boot/fdt/libfdt.a \
   ${abs_top_builddir}/src/lib/boot/string/libstring.a \
+  ${abs_top_builddir}/src/lib/ctype/libctype.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \
   ${abs_top_builddir}/src/lib/stdlib/libstdlib.a \
@@ -52,15 +56,17 @@ kernel_elf_LDADD = ${CC_SPECIFIC_LDADD}
 kernel_qemu_elf_SOURCES =
 kernel_qemu_elf_DEPENDENCIES = \
   ${abs_top_builddir}/thirdparty/font/libfont.a \
+  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.a \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
   ${abs_top_builddir}/src/core/libcore.a \
   ${abs_top_builddir}/src/lib/assert/libassert.a \
+  ${abs_top_builddir}/src/lib/atag/libatag.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
-  ${abs_top_builddir}/src/lib/boot/atag/libatag.a \
   ${abs_top_builddir}/src/lib/boot/fdt/libfdt.a \
   ${abs_top_builddir}/src/lib/boot/string/libstring.a \
+  ${abs_top_builddir}/src/lib/ctype/libctype.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \
   ${abs_top_builddir}/src/lib/stdlib/libstdlib.a \

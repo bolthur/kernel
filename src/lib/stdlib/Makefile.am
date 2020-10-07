@@ -6,4 +6,5 @@ libstdlib_a_SOURCES = \
   calloc.c \
   free.c \
   malloc.c \
-  realloc.c
+  realloc.c \
+  strtoul.c

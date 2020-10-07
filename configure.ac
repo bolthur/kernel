@@ -285,11 +285,12 @@ AC_CONFIG_FILES([
   src/core/Makefile
   src/lib/Makefile
   src/lib/assert/Makefile
+  src/lib/atag/Makefile
   src/lib/avl/Makefile
   src/lib/boot/Makefile
-  src/lib/boot/atag/Makefile
   src/lib/boot/fdt/Makefile
   src/lib/boot/string/Makefile
+  src/lib/ctype/Makefile
   src/lib/list/Makefile
   src/lib/ssp/Makefile
   src/lib/stdio/Makefile
@@ -302,6 +303,7 @@ AC_CONFIG_FILES([
   src/target/Makefile
   src/target/rpi/Makefile
   thirdparty/Makefile
+  thirdparty/dtc/libfdt/Makefile
   thirdparty/font/Makefile
 ])
 
