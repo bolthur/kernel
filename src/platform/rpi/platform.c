@@ -18,6 +18,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// disable some warnings temporarily
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
 #include <stdio.h>
 #include <core/initrd.h>
 #include <core/platform.h>
@@ -27,9 +32,29 @@
 
 #include <assert.h>
 #include <atag.h>
-#include <boot/fdt.h>
+#include <libfdt.h>
 #include <endian.h>
 #include <string.h>
+
+/**
+ * @brief Small temporary helper to read a big endian number
+ *
+ * @param cell number to read
+ * @param size size in cells
+ * @return uint64_t
+ */
+static inline uint64_t read_number( const uint32_t *cell, int size ) {
+  uint64_t val = 0;
+  // loop until size reaches 0
+  while ( size-- ) {
+    // push to value
+    val = ( val << 32 ) | be32toh( *cell );
+    // increment cell
+    cell++;
+  }
+  // return built value
+  return val;
+}
 
 /**
  * @brief Boot parameter data set during startup
@@ -51,9 +76,12 @@ void platform_init( void ) {
     );
   #endif
 
+  // transfer to uintptr_t
+  uintptr_t atag_fdt = ( uintptr_t )loader_parameter_data.atag_fdt;
+
   // handle atag
-  if ( atag_check( ( uintptr_t )loader_parameter_data.atag_fdt ) ) {
-    atag_ptr_t atag = ( atag_ptr_t )loader_parameter_data.atag_fdt;
+  if ( atag_check( atag_fdt ) ) {
+    atag_ptr_t atag = ( atag_ptr_t )atag_fdt;
     // loop until atag end reached
     while ( atag ) {
       // different atag handling
@@ -134,65 +162,55 @@ void platform_init( void ) {
       // get next
       atag = atag_next( atag );
     }
-  } else if ( fdt_check_header( ( uintptr_t )loader_parameter_data.atag_fdt ) ) {
-    fdt_dump( ( uintptr_t )loader_parameter_data.atag_fdt );
+  } else if ( 0 == fdt_check_header( ( void* )atag_fdt ) ) {
+    // get chosen node
+    int32_t node = fdt_path_offset( ( void* )atag_fdt, "/chosen" );
+    uint32_t* prop;
+    int len;
+    uintptr_t initrd_start = 0, initrd_end = 0;
 
-    DEBUG_OUTPUT( "fooo = %p\r\n", ( void* )fdt_parse_address(
-      "/#address-cells",
-      ( uintptr_t )loader_parameter_data.atag_fdt,
-      0
-    ) );
-    DEBUG_OUTPUT( "fooo = %p\r\n", ( void* )fdt_parse_address(
-      "/#size-cells",
-      ( uintptr_t )loader_parameter_data.atag_fdt,
-      0
-    ) );
+    // try to get property initrd start
+    prop = ( uint32_t* )fdt_getprop(
+      ( void* )atag_fdt,
+      node,
+      "linux,initrd-start",
+      &len
+    );
+    // transfer to address
+    if ( prop ) {
+      initrd_start = ( uintptr_t )read_number( prop, len / 4 );
+    }
 
-    // get initrd start address
-    uintptr_t initrd_start = fdt_parse_address(
-      "/chosen/linux,initrd-start",
-      ( uintptr_t )loader_parameter_data.atag_fdt,
-      0
+    // try to get property initrd end
+    prop = ( uint32_t* )fdt_getprop(
+      ( void* )atag_fdt,
+      node,
+      "linux,initrd-end",
+      &len
     );
-    // get initrd end address
-    uintptr_t initrd_end = fdt_parse_address(
-      "/chosen/linux,initrd-end",
-      ( uintptr_t )loader_parameter_data.atag_fdt,
-      0
-    );
-    // Check for found initrd
+    // transfer to address
+    if ( prop ) {
+      initrd_end = ( uintptr_t )read_number( prop, len / 4 );
+    }
+
+    // Set found address if set
     if ( 0 < initrd_start && 0 < initrd_end ) {
+      // debug output
       #if defined( PRINT_PLATFORM )
         DEBUG_OUTPUT( "initrd-start: %p\r\n", ( void* )initrd_start );
         DEBUG_OUTPUT( "initrd-end: %p\r\n", ( void* )initrd_end );
         DEBUG_OUTPUT( "initrd-size: %#08x\r\n", initrd_end - initrd_start );
       #endif
+      // set start address and size
       initrd_set_start_address( initrd_start );
       initrd_set_size( initrd_end - initrd_start );
+    } else {
+      PANIC( "NO INITIAL RAMDISK FOUND!" );
     }
-
-    DEBUG_OUTPUT( "fooo = %p\r\n", ( void* )fdt_parse_address(
-      "/memory@0/reg",
-      ( uintptr_t )loader_parameter_data.atag_fdt,
-      0
-    ) );
-    DEBUG_OUTPUT( "fooo = %p\r\n", ( void* )fdt_parse_address(
-      "/memory@0/reg",
-      ( uintptr_t )loader_parameter_data.atag_fdt,
-      1
-    ) );
-
-    DEBUG_OUTPUT( "fooo = %p\r\n", ( void* )fdt_parse_address(
-      "/memory@1/reg",
-      ( uintptr_t )loader_parameter_data.atag_fdt,
-      0
-    ) );
-    DEBUG_OUTPUT( "fooo = %p\r\n", ( void* )fdt_parse_address(
-      "/memory@1/reg",
-      ( uintptr_t )loader_parameter_data.atag_fdt,
-      1
-    ) );
   }
 
   PANIC( "FOO" );
 }
+
+// enable again
+#pragma GCC diagnostic pop

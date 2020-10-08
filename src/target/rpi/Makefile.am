@@ -10,8 +10,6 @@ BUILT_SOURCES = \
   ${abs_top_builddir}/src/lib/assert/libassert.a \
   ${abs_top_builddir}/src/lib/atag/libatag.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
-  ${abs_top_builddir}/src/lib/boot/fdt/libfdt.a \
-  ${abs_top_builddir}/src/lib/boot/string/libstring.a \
   ${abs_top_builddir}/src/lib/ctype/libctype.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \
@@ -37,8 +35,6 @@ kernel_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/lib/assert/libassert.a \
   ${abs_top_builddir}/src/lib/atag/libatag.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
-  ${abs_top_builddir}/src/lib/boot/fdt/libfdt.a \
-  ${abs_top_builddir}/src/lib/boot/string/libstring.a \
   ${abs_top_builddir}/src/lib/ctype/libctype.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \
@@ -64,8 +60,6 @@ kernel_qemu_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/lib/assert/libassert.a \
   ${abs_top_builddir}/src/lib/atag/libatag.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
-  ${abs_top_builddir}/src/lib/boot/fdt/libfdt.a \
-  ${abs_top_builddir}/src/lib/boot/string/libstring.a \
   ${abs_top_builddir}/src/lib/ctype/libctype.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
   ${abs_top_builddir}/src/lib/stdio/libstdio.a \

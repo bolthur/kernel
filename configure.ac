@@ -287,9 +287,6 @@ AC_CONFIG_FILES([
   src/lib/assert/Makefile
   src/lib/atag/Makefile
   src/lib/avl/Makefile
-  src/lib/boot/Makefile
-  src/lib/boot/fdt/Makefile
-  src/lib/boot/string/Makefile
   src/lib/ctype/Makefile
   src/lib/list/Makefile
   src/lib/ssp/Makefile

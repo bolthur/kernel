@@ -284,3 +284,21 @@ noreturn void __ubsan_handle_load_invalid_value(
   // abort execution
   abort();
 }
+
+/**
+ * @brief Handle negative overflow
+ *
+ * @param data
+ * @param value
+ */
+noreturn void __ubsan_handle_negate_overflow(
+  __maybe_unused ubsan_overflow_data_ptr_t data,
+  __maybe_unused uint64_t value
+) {
+  printf( "Negate value overflow!\r\narray_type: %s, index: %llu\r\n",
+    data->type->name, value );
+  // print location
+  print( &data->location );
+  // abort execution
+  abort();
+}

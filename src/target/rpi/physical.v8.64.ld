@@ -31,8 +31,6 @@ GROUP(
   ../../lib/assert/libassert.a
   ../../lib/atag/libatag.a
   ../../lib/avl/libavl.a
-  ../../lib/boot/fdt/libfdt.a
-  ../../lib/boot/string/libstring.a
   ../../lib/ctype/libctype.a
   ../../lib/list/liblist.a
   ../../lib/ssp/libssp.a
