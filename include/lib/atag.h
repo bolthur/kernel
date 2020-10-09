@@ -25,7 +25,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-enum tag {
+typedef enum {
   ATAG_TAG_NONE = 0x00000000,
   ATAG_TAG_CORE = 0x54410001,
   ATAG_TAG_MEM = 0x54410002,
@@ -36,38 +36,38 @@ enum tag {
   ATAG_TAG_REVISION = 0x54410007,
   ATAG_TAG_VIDEOLFB = 0x54410008,
   ATAG_TAG_CMDLINE = 0x54410009,
-};
+} atag_tag_t;
 
 typedef struct {
   uint32_t size;
   uint32_t tag;
-} atag_header_t;
+} atag_header_t, *atag_header_ptr_t;
 
 typedef struct {
   uint32_t flag;
   uint32_t pagesize;
   uint32_t rootdev;
-} atag_core_t;
+} atag_core_t, *atag_core_ptr_t;
 
 typedef struct {
   uint32_t size;
   uint32_t start;
-} atag_mem_t;
+} atag_mem_t, *atag_mem_ptr_t;
 
 typedef struct {
   uint32_t start;
   uint32_t size;
-} atag_initrd2_t;
+} atag_initrd2_t, *atag_initrd2_ptr_t;
 
 typedef struct {
   char cmdline[ 1 ];
-} atag_cmdline_t;
+} atag_cmdline_t, *atag_cmdline_ptr_t;
 
 typedef struct {
   uint32_t flag;
   uint32_t size;
   uint32_t start;
-} atag_ramdisk_t;
+} atag_ramdisk_t, *atag_ramdisk_ptr_t;
 
 typedef struct {
   uint8_t display_width;
@@ -79,16 +79,16 @@ typedef struct {
   uint8_t video_lines;
   uint8_t video_isvga;
   uint16_t video_points;
-} atag_videotext_t;
+} atag_videotext_t, *atag_videotext_ptr_t;
 
 typedef struct {
   uint32_t low;
   uint32_t high;
-} atag_serial_t;
+} atag_serial_t, *atag_serial_ptr_t;
 
 typedef struct {
   uint32_t revision;
-} atag_revision_t;
+} atag_revision_t, *atag_revision_ptr_t;
 
 typedef struct {
   uint16_t lfb_width;
@@ -105,7 +105,7 @@ typedef struct {
   uint8_t blue_pos;
   uint8_t rsvd_size;
   uint8_t rsvd_pos;
-} atag_videolfb_t;
+} atag_videolfb_t, *atag_videolfb_ptr_t;
 
 typedef struct {
   atag_header_t header;
@@ -125,5 +125,6 @@ typedef struct {
 
 atag_ptr_t atag_next( atag_ptr_t );
 bool atag_check( uintptr_t );
+atag_ptr_t atag_find( atag_ptr_t, atag_tag_t );
 
 #endif

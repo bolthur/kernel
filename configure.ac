@@ -284,15 +284,11 @@ AC_CONFIG_FILES([
   src/arch/arm/v8/Makefile
   src/core/Makefile
   src/lib/Makefile
-  src/lib/assert/Makefile
   src/lib/atag/Makefile
   src/lib/avl/Makefile
-  src/lib/ctype/Makefile
+  src/lib/libc/Makefile
   src/lib/list/Makefile
   src/lib/ssp/Makefile
-  src/lib/stdio/Makefile
-  src/lib/stdlib/Makefile
-  src/lib/string/Makefile
   src/lib/tar/Makefile
   src/lib/ubsan/Makefile
   src/platform/Makefile

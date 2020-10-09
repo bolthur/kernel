@@ -28,15 +28,11 @@ GROUP(
   ../../arch/arm/libarm.a
   ../../core/libcore.a
   ../../platform/rpi/librpi.a
-  ../../lib/assert/libassert.a
   ../../lib/atag/libatag.a
   ../../lib/avl/libavl.a
-  ../../lib/ctype/libctype.a
+  ../../lib/libc/libc.a
   ../../lib/list/liblist.a
   ../../lib/ssp/libssp.a
-  ../../lib/stdio/libstdio.a
-  ../../lib/stdlib/libstdlib.a
-  ../../lib/string/libstring.a
   ../../lib/tar/libtar.a
   ../../lib/ubsan/libubsan.a
   ../../../thirdparty/font/libfont.a

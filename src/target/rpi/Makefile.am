@@ -7,16 +7,13 @@ BUILT_SOURCES = \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
   ${abs_top_builddir}/src/core/libcore.a \
-  ${abs_top_builddir}/src/lib/assert/libassert.a \
   ${abs_top_builddir}/src/lib/atag/libatag.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
-  ${abs_top_builddir}/src/lib/ctype/libctype.a \
+  ${abs_top_builddir}/src/lib/libc/libc.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
-  ${abs_top_builddir}/src/lib/stdio/libstdio.a \
-  ${abs_top_builddir}/src/lib/stdlib/libstdlib.a \
-  ${abs_top_builddir}/src/lib/string/libstring.a \
-  ${abs_top_builddir}/src/lib/ubsan/libubsan.a \
+  ${abs_top_builddir}/src/lib/ssp/libssp.a \
   ${abs_top_builddir}/src/lib/tar/libtar.a \
+  ${abs_top_builddir}/src/lib/ubsan/libubsan.a \
   kernel.elf \
   kernel_qemu.elf
 
@@ -32,16 +29,13 @@ kernel_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
   ${abs_top_builddir}/src/core/libcore.a \
-  ${abs_top_builddir}/src/lib/assert/libassert.a \
   ${abs_top_builddir}/src/lib/atag/libatag.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
-  ${abs_top_builddir}/src/lib/ctype/libctype.a \
+  ${abs_top_builddir}/src/lib/libc/libc.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
-  ${abs_top_builddir}/src/lib/stdio/libstdio.a \
-  ${abs_top_builddir}/src/lib/stdlib/libstdlib.a \
-  ${abs_top_builddir}/src/lib/string/libstring.a \
-  ${abs_top_builddir}/src/lib/ubsan/libubsan.a \
-  ${abs_top_builddir}/src/lib/tar/libtar.a
+  ${abs_top_builddir}/src/lib/ssp/libssp.a \
+  ${abs_top_builddir}/src/lib/tar/libtar.a \
+  ${abs_top_builddir}/src/lib/ubsan/libubsan.a
 kernel_elf_LDFLAGS = \
   -Wl,-L,${top_srcdir}/src/target \
   -Wl,-T,${top_srcdir}/src/target/rpi/physical.${subarch_subdir}.${executable_format}.ld \
@@ -57,16 +51,13 @@ kernel_qemu_elf_DEPENDENCIES = \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
   ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
   ${abs_top_builddir}/src/core/libcore.a \
-  ${abs_top_builddir}/src/lib/assert/libassert.a \
   ${abs_top_builddir}/src/lib/atag/libatag.a \
   ${abs_top_builddir}/src/lib/avl/libavl.a \
-  ${abs_top_builddir}/src/lib/ctype/libctype.a \
+  ${abs_top_builddir}/src/lib/libc/libc.a \
   ${abs_top_builddir}/src/lib/list/liblist.a \
-  ${abs_top_builddir}/src/lib/stdio/libstdio.a \
-  ${abs_top_builddir}/src/lib/stdlib/libstdlib.a \
-  ${abs_top_builddir}/src/lib/string/libstring.a \
-  ${abs_top_builddir}/src/lib/ubsan/libubsan.a \
-  ${abs_top_builddir}/src/lib/tar/libtar.a
+  ${abs_top_builddir}/src/lib/ssp/libssp.a \
+  ${abs_top_builddir}/src/lib/tar/libtar.a \
+  ${abs_top_builddir}/src/lib/ubsan/libubsan.a
 kernel_qemu_elf_LDFLAGS = \
   -Wl,-L,${top_srcdir}/src/target \
   -Wl,-T,${top_srcdir}/src/target/rpi/qemu.${subarch_subdir}.${executable_format}.ld \

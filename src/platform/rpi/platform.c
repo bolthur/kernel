@@ -81,86 +81,26 @@ void platform_init( void ) {
 
   // handle atag
   if ( atag_check( atag_fdt ) ) {
-    atag_ptr_t atag = ( atag_ptr_t )atag_fdt;
-    // loop until atag end reached
-    while ( atag ) {
-      // different atag handling
-      switch ( atag->header.tag )
-      {
-        // core tag
-        case ATAG_TAG_CORE:
-          #if defined( PRINT_PLATFORM )
-            if ( 5 == atag->header.size ) {
-              DEBUG_OUTPUT(
-                "core flag: %#08x, page size: %#08x, root device: %#08x\r\n",
-                atag->core.flag, atag->core.pagesize, atag->core.rootdev );
-            }
-          #endif
-          break;
-
-        // memory
-        case ATAG_TAG_MEM:
-          #if defined( PRINT_PLATFORM )
-            DEBUG_OUTPUT( "memory start: %p, size: %#08x\r\n",
-              ( void* )atag->memory.start, atag->memory.size );
-          #endif
-          // TODO: SET MEMORY LIMITS!
-          break;
-
-        // video text
-        case ATAG_TAG_VIDEOTEXT:
-          PANIC( "ADD SUPPORT FOR VIDEOTEXT!" );
-          break;
-
-        // serial number of board
-        case ATAG_TAG_SERIAL:
-          PANIC( "ADD SUPPORT FOR BOARD SERIAL NUMBER!" );
-          break;
-
-        // board revision
-        case ATAG_TAG_REVISION:
-          PANIC( "ADD SUPPORT FOR BOARD REVISION!" );
-          break;
-
-        // framebuffer
-        case ATAG_TAG_VIDEOLFB:
-          PANIC( "ADD SUPPORT FOR FRAMEBUFFER!" );
-          break;
-
-        // command line
-        case ATAG_TAG_CMDLINE:
-          #if defined( PRINT_PLATFORM )
-            DEBUG_OUTPUT( "command line: %s\r\n", atag->cmdline.cmdline );
-          #endif
-          break;
-
-        // ramdisk
-        case ATAG_TAG_RAMDISK:
-          #if defined( PRINT_PLATFORM )
-            DEBUG_OUTPUT( "ramdisk start: %p, size: %#08x, flags: %#08x\r\n",
-              ( void* )atag->ramdisk.start, atag->ramdisk.size, atag->ramdisk.flag
-            );
-          #endif
-          initrd_set_start_address( atag->ramdisk.start );
-          initrd_set_size( atag->ramdisk.size );
-          break;
-
-        // initrd
-        case ATAG_TAG_INITRD2:
-          #if defined( PRINT_PLATFORM )
-            DEBUG_OUTPUT( "atag initrd start: %p, size: %#08x\r\n",
-              ( void* )atag->initrd.start, atag->initrd.size );
-          #endif
-          initrd_set_start_address( atag->initrd.start );
-          initrd_set_size( atag->initrd.size );
-          break;
-
-        default:
-          break;
+    atag_ptr_t ramdisk = atag_find( ( atag_ptr_t )atag_fdt, ATAG_TAG_INITRD2 );
+    if ( ramdisk ) {
+      #if defined( PRINT_PLATFORM )
+        DEBUG_OUTPUT( "atag initrd start: %p, size: %#08x\r\n",
+          ( void* )ramdisk->initrd.start, ramdisk->initrd.size );
+      #endif
+      initrd_set_start_address( ramdisk->initrd.start );
+      initrd_set_size( ramdisk->initrd.size );
+    } else {
+      ramdisk = atag_find( ( atag_ptr_t )atag_fdt, ATAG_TAG_RAMDISK );
+      if ( ramdisk ) {
+        #if defined( PRINT_PLATFORM )
+          DEBUG_OUTPUT( "ramdisk start: %p, size: %#08x, flags: %#08x\r\n",
+            ( void* )ramdisk->ramdisk.start, ramdisk->ramdisk.size,
+            ramdisk->ramdisk.flag
+          );
+        #endif
+        initrd_set_start_address( ramdisk->ramdisk.start );
+        initrd_set_size( ramdisk->ramdisk.size );
       }
-
-      // get next
-      atag = atag_next( atag );
     }
   } else if ( 0 == fdt_check_header( ( void* )atag_fdt ) ) {
     // get chosen node
