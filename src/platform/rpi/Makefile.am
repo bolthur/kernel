@@ -4,13 +4,13 @@ noinst_LTLIBRARIES = librpi.la
 
 # normal rpi library
 librpi_la_SOURCES = \
-  interrupt/interrupt.c \
   mailbox/mailbox.c \
   mailbox/property.c \
   mm/phys.c \
   mm/virt.c \
   framebuffer.c \
   initrd.c \
+  interrupt.c \
   platform.c \
   peripheral.c \
   serial.c \

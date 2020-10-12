@@ -22,6 +22,8 @@
 
 /**
  * @brief Platform initrd init
+ *
+ * @todo replace define by parsing atag/dtb
  */
 void initrd_platform_init( void ) {
   // set start address

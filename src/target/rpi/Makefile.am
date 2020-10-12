@@ -11,9 +11,9 @@ BUILT_SOURCES = \
   ${abs_top_builddir}/src/lib/avl/libavl.la \
   ${abs_top_builddir}/src/lib/libc/libc.la \
   ${abs_top_builddir}/src/lib/list/liblist.la \
-  ${abs_top_builddir}/src/lib/ssp/libssp.la \
   ${abs_top_builddir}/src/lib/tar/libtar.la \
-  ${abs_top_builddir}/src/lib/ubsan/libubsan.la \
+  ${abs_top_builddir}/src/lib/libssp.la \
+  ${abs_top_builddir}/src/lib/libubsan.la \
   libtarget.la \
   kernel.elf \
   kernel_qemu.elf
@@ -33,9 +33,9 @@ libtarget_la_DEPENDENCIES = \
   ${abs_top_builddir}/src/lib/avl/libavl.la \
   ${abs_top_builddir}/src/lib/libc/libc.la \
   ${abs_top_builddir}/src/lib/list/liblist.la \
-  ${abs_top_builddir}/src/lib/ssp/libssp.la \
   ${abs_top_builddir}/src/lib/tar/libtar.la \
-  ${abs_top_builddir}/src/lib/ubsan/libubsan.la
+  ${abs_top_builddir}/src/lib/libssp.la \
+  ${abs_top_builddir}/src/lib/libubsan.la
 libtarget_la_SOURCES =
 libtarget_la_LIBADD = \
   ${CC_SPECIFIC_LDADD}  \
@@ -49,9 +49,9 @@ libtarget_la_LIBADD = \
   ${abs_top_builddir}/src/lib/avl/libavl.la \
   ${abs_top_builddir}/src/lib/libc/libc.la \
   ${abs_top_builddir}/src/lib/list/liblist.la \
-  ${abs_top_builddir}/src/lib/ssp/libssp.la \
   ${abs_top_builddir}/src/lib/tar/libtar.la \
-  ${abs_top_builddir}/src/lib/ubsan/libubsan.la
+  ${abs_top_builddir}/src/lib/libssp.la \
+  ${abs_top_builddir}/src/lib/libubsan.la
 libtarget_la_LDFLAGS = -all-static
 
 # Normal kernel building for physical device

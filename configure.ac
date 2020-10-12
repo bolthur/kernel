@@ -293,9 +293,7 @@ AC_CONFIG_FILES([
   src/lib/avl/Makefile
   src/lib/libc/Makefile
   src/lib/list/Makefile
-  src/lib/ssp/Makefile
   src/lib/tar/Makefile
-  src/lib/ubsan/Makefile
   src/platform/Makefile
   src/platform/rpi/Makefile
   src/target/Makefile

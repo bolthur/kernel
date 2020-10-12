@@ -18,35 +18,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/task/lock.h>
-#include <core/yield.h>
+#if ! defined( __CORE_YIELD__ )
+#define __CORE_YIELD__
 
-/**
- * @brief release lock
- *
- * @param m mutex to unlock
- */
-void task_lock_mutex_release( task_lock_mutex_t* m ) {
-  // set to released
-  *m = TASK_LOCK_MUTEX_RELEASED;
-  // snychronize
-  __sync_synchronize();
-}
+void yield( void );
 
-/**
- * @brief Acquire lock
- *
- * @param m mutex to lock
- */
-void task_lock_mutex_acquire( task_lock_mutex_t* m ) {
-  // yield until mutex could be applied
-  while (
-    ! __sync_bool_compare_and_swap(
-      m, TASK_LOCK_MUTEX_RELEASED, TASK_LOCK_MUTEX_LOCKED
-    )
-  ) {
-    yield();
-  }
-  // synchronize
-  __sync_synchronize();
-}
+#endif
