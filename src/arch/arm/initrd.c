@@ -29,28 +29,6 @@
 #include <libfdt.h>
 #include <endian.h>
 
-
-/**
- * @brief Small temporary helper to read a big endian number
- *
- * @param cell number to read
- * @param size size in cells
- * @return uint64_t
- */
-static inline uint64_t read_number( const uint32_t *cell, int size ) {
-  uint64_t val = 0;
-  // loop until size reaches 0
-  while ( size-- ) {
-    // push to value
-    val = ( val << 32 ) | be32toh( *cell );
-    // increment cell
-    cell++;
-  }
-  // return built value
-  return val;
-}
-
-
 /**
  * @brief Prepare for initrd usage
  */
@@ -87,7 +65,7 @@ void initrd_init( void ) {
     );
     // transfer to address
     if ( prop ) {
-      initrd_start = ( uintptr_t )read_number( prop, len / 4 );
+      initrd_start = ( uintptr_t )fdt32_to_cpu( *prop );
     }
 
     // try to get property initrd end
@@ -99,7 +77,7 @@ void initrd_init( void ) {
     );
     // transfer to address
     if ( prop ) {
-      initrd_end = ( uintptr_t )read_number( prop, len / 4 );
+      initrd_end = ( uintptr_t )fdt32_to_cpu( *prop );
     }
 
     // Set found address if set
