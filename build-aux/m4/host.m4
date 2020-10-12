@@ -4,7 +4,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([ELF32], [Define to 1 for 32 bit ELF targets])
   AH_TEMPLATE([ELF64], [Define to 1 for 64 bit ELF targets])
   AH_TEMPLATE([IS_HIGHER_HALF], [Define to 1 when kernel is higher half])
-  AH_TEMPLATE([INITRD_LOAD_ADDRESS], [Define contains initrd load address])
   AH_TEMPLATE([REMOTE_DEBUG], [Define to 1 to enable remote debugging])
   AH_TEMPLATE([FDT_BINARY], [Define to path to binary])
   AH_TEMPLATE([FDT_EMBED], [Define to 1 if you want to embed binary])
@@ -133,7 +132,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       AC_DEFINE_UNQUOTED([FDT_BINARY], ["$($BOLTHUR_READLINK -f ${srcdir})/dts/rpi/bcm2836-rpi-2b.dtb"])
       ;;
     rpi_zero_w)
@@ -144,7 +142,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       AC_DEFINE_UNQUOTED([FDT_BINARY], ["$($BOLTHUR_READLINK -f ${srcdir})/dts/rpi/bcm2835-rpi-zero-w.dtb"])
       ;;
     rpi3_b)
@@ -159,7 +156,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])
@@ -185,7 +181,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([INITRD_LOAD_ADDRESS], [0x800000])
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])

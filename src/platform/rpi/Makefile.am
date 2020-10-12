@@ -9,9 +9,7 @@ librpi_la_SOURCES = \
   mm/phys.c \
   mm/virt.c \
   framebuffer.c \
-  initrd.c \
   interrupt.c \
-  platform.c \
   peripheral.c \
   serial.c \
   timer.c \

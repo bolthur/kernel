@@ -80,19 +80,6 @@ void initrd_set_size( size_t size ) {
 }
 
 /**
- * @brief Prepare for initrd usage
- */
-void initrd_init( void ) {
-  // platform related initialization
-  initrd_platform_init();
-
-  // calculate size
-  if ( 0 == initrd_size ) {
-    initrd_size = ( size_t )tar_total_size( initrd_address );
-  }
-}
-
-/**
  * @brief Method to check for initrd exists
  *
  * @return true initrd existing

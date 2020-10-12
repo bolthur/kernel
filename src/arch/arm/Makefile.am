@@ -10,6 +10,7 @@ libarm_la_SOURCES = \
   delay.c \
   elf.c \
   fdt.S \
+  initrd.c \
   interrupt.c \
   io.c \
   stack.c \

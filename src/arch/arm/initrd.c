@@ -23,18 +23,12 @@
 #pragma GCC diagnostic ignored "-Wunused-function"
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 
-#include <stdio.h>
 #include <core/initrd.h>
-#include <core/platform.h>
-#include <core/debug/debug.h>
 #include <arch/arm/system.h>
-#include <core/panic.h>
-
-#include <assert.h>
 #include <atag.h>
 #include <libfdt.h>
 #include <endian.h>
-#include <string.h>
+
 
 /**
  * @brief Small temporary helper to read a big endian number
@@ -56,18 +50,11 @@ static inline uint64_t read_number( const uint32_t *cell, int size ) {
   return val;
 }
 
-/**
- * @brief Platform depending initialization routine
- *
- * @todo move atag and fdt parsing to arch and boot
- */
-void platform_init( void ) {
-  #if defined( PRINT_PLATFORM )
-    DEBUG_OUTPUT(
-      "%#08x - %#08x - %#08x\r\n",
-      system_info.atag_fdt, system_info.machine, system_info.unused );
-  #endif
 
+/**
+ * @brief Prepare for initrd usage
+ */
+void initrd_init( void ) {
   // transfer to uintptr_t
   uintptr_t atag_fdt = ( uintptr_t )system_info.atag_fdt;
 
@@ -75,21 +62,11 @@ void platform_init( void ) {
   if ( atag_check( atag_fdt ) ) {
     atag_ptr_t ramdisk = atag_find( ( atag_ptr_t )atag_fdt, ATAG_TAG_INITRD2 );
     if ( ramdisk ) {
-      #if defined( PRINT_PLATFORM )
-        DEBUG_OUTPUT( "atag initrd start: %p, size: %#08x\r\n",
-          ( void* )ramdisk->initrd.start, ramdisk->initrd.size );
-      #endif
       initrd_set_start_address( ramdisk->initrd.start );
       initrd_set_size( ramdisk->initrd.size );
     } else {
       ramdisk = atag_find( ( atag_ptr_t )atag_fdt, ATAG_TAG_RAMDISK );
       if ( ramdisk ) {
-        #if defined( PRINT_PLATFORM )
-          DEBUG_OUTPUT( "ramdisk start: %p, size: %#08x, flags: %#08x\r\n",
-            ( void* )ramdisk->ramdisk.start, ramdisk->ramdisk.size,
-            ramdisk->ramdisk.flag
-          );
-        #endif
         initrd_set_start_address( ramdisk->ramdisk.start );
         initrd_set_size( ramdisk->ramdisk.size );
       }
@@ -127,18 +104,16 @@ void platform_init( void ) {
 
     // Set found address if set
     if ( 0 < initrd_start && 0 < initrd_end ) {
-      // debug output
-      #if defined( PRINT_PLATFORM )
-        DEBUG_OUTPUT( "initrd-start: %p\r\n", ( void* )initrd_start );
-        DEBUG_OUTPUT( "initrd-end: %p\r\n", ( void* )initrd_end );
-        DEBUG_OUTPUT( "initrd-size: %#08x\r\n", initrd_end - initrd_start );
-      #endif
       // set start address and size
       initrd_set_start_address( initrd_start );
       initrd_set_size( initrd_end - initrd_start );
     } else {
-      PANIC( "NO INITIAL RAMDISK FOUND!" );
+      initrd_set_start_address( 0 );
+      initrd_set_size( 0 );
     }
+  } else {
+    initrd_set_start_address( 0 );
+    initrd_set_size( 0 );
   }
 }
 

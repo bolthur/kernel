@@ -28,7 +28,6 @@
 #include <core/tty.h>
 #include <core/interrupt.h>
 #include <core/timer.h>
-#include <core/platform.h>
 #include <core/debug/debug.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
@@ -98,10 +97,6 @@ void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> arch] initialize ...\r\n" );
   arch_init();
 
-  // Setup platform related parts
-  DEBUG_OUTPUT( "[bolthur/kernel -> platform] initialize ...\r\n" );
-  platform_init();
-
   // Setup initrd parts
   DEBUG_OUTPUT( "[bolthur/kernel -> initrd] initialize ...\r\n" );
   initrd_init();
@@ -109,13 +104,6 @@ void kernel_main( void ) {
   // Setup physical memory management
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" );
   phys_init();
-
-  // Setup virtual memory management
-  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" );
-  virt_init();
-
-  platform_init();
-  PANIC( "FOO!" );
 
   // print size
   if ( initrd_exist() ) {
@@ -138,6 +126,33 @@ void kernel_main( void ) {
       iter = tar_next( iter );
     }
   }
+
+  // Setup virtual memory management
+  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" );
+  virt_init();
+
+  // print size
+  if ( initrd_exist() ) {
+    uintptr_t initrd = initrd_get_start_address();
+    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd );
+    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd_get_end_address() );
+    DEBUG_OUTPUT( "size = %zo\r\n", initrd_get_size() );
+    DEBUG_OUTPUT( "size = %zu\r\n", initrd_get_size() );
+
+    // set iterator
+    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
+
+    // loop through tar
+    while ( ! tar_end_reached( iter ) ) {
+      // debug output
+      DEBUG_OUTPUT( "%p: initrd file name: %s\r\n",
+        ( void* )iter, iter->file_name );
+
+      // next
+      iter = tar_next( iter );
+    }
+  }
+  PANIC( "FOO" );
 
   // Setup heap
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
