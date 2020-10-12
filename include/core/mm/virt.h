@@ -52,6 +52,10 @@ extern bool virt_use_physical_table;
 extern virt_context_ptr_t user_context;
 extern virt_context_ptr_t kernel_context;
 
+void boot_virt_setup( void );
+void boot_virt_platform_setup( void );
+void boot_virt_map( uint64_t, uintptr_t );
+
 void virt_init( void );
 void virt_platform_init( void );
 void virt_arch_init( void );

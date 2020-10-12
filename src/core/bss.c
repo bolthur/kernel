@@ -18,17 +18,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/assembly.h>
+#include <core/bss.h>
+#include <core/entry.h>
 
-.section .text
+/**
+ * @brief Method to clear bss during initial boot
+ */
+void __bootstrap boot_bss_clear( void ) {
+  bss_type_t *start = ( bss_type_t* )VIRT_2_PHYS( &__bss_start );
+  bss_type_t *end = ( bss_type_t* )VIRT_2_PHYS( &__bss_end );
 
-EXPORT( interrupt_enable )
-interrupt_enable:
-  cpsie if
-  bx lr
-
-EXPORT( interrupt_disable )
-interrupt_disable:
-  mrs r0, cpsr
-  cpsid if
-  bx lr
+  // loop through bss end and overwrite with zero
+  while ( start < end ) {
+    *start++ = 0;
+  }
+}

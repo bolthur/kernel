@@ -32,6 +32,58 @@
 #include <arch/arm/mm/virt/short.h>
 #include <arch/arm/v6/mm/virt/short.h>
 
+#include <arch/arm/mm/virt.h>
+#include <core/entry.h>
+
+/**
+ * @brief Supported mode
+ */
+static uint32_t supported_mode __bootstrap_data;
+
+/**
+ * @brief Wrapper to setup short descriptor mapping if supported
+ */
+void __bootstrap boot_virt_setup( void ) {
+  // get paging support from mmfr0
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c0, c1, 4"
+    : "=r" ( supported_mode )
+    : : "cc"
+  );
+
+  // strip out everything not needed
+  supported_mode &= 0xF;
+  // check for invalid paging support
+  if ( ID_MMFR0_VSMA_V6_PAGING != supported_mode ) {
+    return;
+  }
+
+  // setup short memory
+  boot_virt_setup_short();
+
+  // setup platform related
+  boot_virt_platform_setup();
+
+  // enable mapping
+  boot_virt_enable_short();
+}
+
+/**
+ * @brief Wrapper method calling short mapping if supported
+ *
+ * @param phys physical address
+ * @param virt virtual address
+ */
+void __bootstrap boot_virt_map( uint64_t phys, uintptr_t virt ) {
+  // check for invalid paging support
+  if ( ID_MMFR0_VSMA_V6_PAGING != supported_mode ) {
+    return;
+  }
+
+  // map it
+  boot_virt_map_short( ( uintptr_t )phys, virt );
+}
+
 /**
  * @brief
  *

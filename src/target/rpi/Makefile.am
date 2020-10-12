@@ -1,68 +1,76 @@
 
 # built sources determining things to be built first
 BUILT_SOURCES = \
-  ${abs_top_builddir}/thirdparty/font/libfont.a \
-  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.a \
-  ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.a \
-  ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
-  ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
-  ${abs_top_builddir}/src/core/libcore.a \
-  ${abs_top_builddir}/src/lib/atag/libatag.a \
-  ${abs_top_builddir}/src/lib/avl/libavl.a \
-  ${abs_top_builddir}/src/lib/libc/libc.a \
-  ${abs_top_builddir}/src/lib/list/liblist.a \
-  ${abs_top_builddir}/src/lib/ssp/libssp.a \
-  ${abs_top_builddir}/src/lib/tar/libtar.a \
-  ${abs_top_builddir}/src/lib/ubsan/libubsan.a \
+  ${abs_top_builddir}/thirdparty/font/libfont.la \
+  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
+  ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.la \
+  ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
+  ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.la \
+  ${abs_top_builddir}/src/core/libcore.la \
+  ${abs_top_builddir}/src/lib/atag/libatag.la \
+  ${abs_top_builddir}/src/lib/avl/libavl.la \
+  ${abs_top_builddir}/src/lib/libc/libc.la \
+  ${abs_top_builddir}/src/lib/list/liblist.la \
+  ${abs_top_builddir}/src/lib/ssp/libssp.la \
+  ${abs_top_builddir}/src/lib/tar/libtar.la \
+  ${abs_top_builddir}/src/lib/ubsan/libubsan.la \
+  libtarget.la \
   kernel.elf \
   kernel_qemu.elf
 
 # no installable programs
 noinst_PROGRAMS = kernel.elf kernel_qemu.elf ${output_img} ${output_img_qemu}
+noinst_LTLIBRARIES = libtarget.la
+
+libtarget_la_DEPENDENCIES = \
+  ${abs_top_builddir}/thirdparty/font/libfont.la \
+  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
+  ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.la \
+  ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
+  ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.la \
+  ${abs_top_builddir}/src/core/libcore.la \
+  ${abs_top_builddir}/src/lib/atag/libatag.la \
+  ${abs_top_builddir}/src/lib/avl/libavl.la \
+  ${abs_top_builddir}/src/lib/libc/libc.la \
+  ${abs_top_builddir}/src/lib/list/liblist.la \
+  ${abs_top_builddir}/src/lib/ssp/libssp.la \
+  ${abs_top_builddir}/src/lib/tar/libtar.la \
+  ${abs_top_builddir}/src/lib/ubsan/libubsan.la
+libtarget_la_SOURCES =
+libtarget_la_LIBADD = \
+  ${CC_SPECIFIC_LDADD}  \
+  ${abs_top_builddir}/thirdparty/font/libfont.la \
+  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
+  ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.la \
+  ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
+  ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.la \
+  ${abs_top_builddir}/src/core/libcore.la \
+  ${abs_top_builddir}/src/lib/atag/libatag.la \
+  ${abs_top_builddir}/src/lib/avl/libavl.la \
+  ${abs_top_builddir}/src/lib/libc/libc.la \
+  ${abs_top_builddir}/src/lib/list/liblist.la \
+  ${abs_top_builddir}/src/lib/ssp/libssp.la \
+  ${abs_top_builddir}/src/lib/tar/libtar.la \
+  ${abs_top_builddir}/src/lib/ubsan/libubsan.la
+libtarget_la_LDFLAGS = -all-static
 
 # Normal kernel building for physical device
 kernel_elf_SOURCES =
-kernel_elf_DEPENDENCIES = \
-  ${abs_top_builddir}/thirdparty/font/libfont.a \
-  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.a \
-  ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.a \
-  ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
-  ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
-  ${abs_top_builddir}/src/core/libcore.a \
-  ${abs_top_builddir}/src/lib/atag/libatag.a \
-  ${abs_top_builddir}/src/lib/avl/libavl.a \
-  ${abs_top_builddir}/src/lib/libc/libc.a \
-  ${abs_top_builddir}/src/lib/list/liblist.a \
-  ${abs_top_builddir}/src/lib/ssp/libssp.a \
-  ${abs_top_builddir}/src/lib/tar/libtar.a \
-  ${abs_top_builddir}/src/lib/ubsan/libubsan.a
+kernel_elf_DEPENDENCIES = libtarget.la
 kernel_elf_LDFLAGS = \
   -Wl,-L,${top_srcdir}/src/target \
   -Wl,-T,${top_srcdir}/src/target/rpi/physical.${subarch_subdir}.${executable_format}.ld \
   -Wl,-Map,${output_map}
-kernel_elf_LDADD = ${CC_SPECIFIC_LDADD}
+kernel_elf_LDADD = libtarget.la
 
 # Normal kernel building for physical device
 kernel_qemu_elf_SOURCES =
-kernel_qemu_elf_DEPENDENCIES = \
-  ${abs_top_builddir}/thirdparty/font/libfont.a \
-  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.a \
-  ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.a \
-  ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.a \
-  ${abs_top_builddir}/src/arch/${arch_subdir}/lib${arch_subdir}.a \
-  ${abs_top_builddir}/src/core/libcore.a \
-  ${abs_top_builddir}/src/lib/atag/libatag.a \
-  ${abs_top_builddir}/src/lib/avl/libavl.a \
-  ${abs_top_builddir}/src/lib/libc/libc.a \
-  ${abs_top_builddir}/src/lib/list/liblist.a \
-  ${abs_top_builddir}/src/lib/ssp/libssp.a \
-  ${abs_top_builddir}/src/lib/tar/libtar.a \
-  ${abs_top_builddir}/src/lib/ubsan/libubsan.a
+kernel_qemu_elf_DEPENDENCIES = libtarget.la
 kernel_qemu_elf_LDFLAGS = \
   -Wl,-L,${top_srcdir}/src/target \
   -Wl,-T,${top_srcdir}/src/target/rpi/qemu.${subarch_subdir}.${executable_format}.ld \
   -Wl,-Map,${output_map_qemu}
-kernel_qemu_elf_LDADD = ${CC_SPECIFIC_LDADD}
+kernel_qemu_elf_LDADD = libtarget.la
 
 EXTRA_PROGRAMS = kernel.img kernel7.img kernel8.img kernel_qemu.img kernel7_qemu.img kernel8_qemu.img
 kernel_img_DEPENDENCIES = kernel.elf

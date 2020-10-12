@@ -1,24 +1,19 @@
 
-noinst_LIBRARIES = libv7.a
-libv7_a_SOURCES = \
-  boot/mm/virt/long.c \
-  boot/mm/virt/short.c \
-  boot/mm/virt.c \
-  boot/fpu.S \
+noinst_LTLIBRARIES = libv7.la
+libv7_la_SOURCES = \
   debug/barrier.c \
   debug/breakpoint.c \
   debug/cache.c \
   debug/debug.c \
   debug/disasm.c \
   debug/gdb.c \
-  interrupt/stub/interrupt.S \
-  interrupt/vector/handler/data.c \
-  interrupt/vector/handler/fiq.c \
-  interrupt/vector/handler/irq.c \
-  interrupt/vector/handler/prefetch.c \
-  interrupt/vector/handler/svc.c \
-  interrupt/vector/handler/undefined.c \
-  interrupt/vector/stub/vector.S \
+  interrupt/handler/data.c \
+  interrupt/handler/fiq.c \
+  interrupt/handler/irq.c \
+  interrupt/handler/prefetch.c \
+  interrupt/handler/svc.c \
+  interrupt/handler/undefined.c \
+  interrupt/stub.S \
   interrupt/vector.c \
   mm/virt/long.c \
   mm/virt/short.c \
@@ -26,10 +21,11 @@ libv7_a_SOURCES = \
   stub/stack.S \
   stub/start.S \
   syscall/putc.c \
-  task/stub/thread.S \
   task/process.c \
   task/stack.c \
+  task/stub.S \
   task/thread.c \
   arch.c \
   barrier.c \
-  cache.c
+  cache.c \
+  fpu.S

@@ -25,6 +25,17 @@
 #include <arch/arm/v7/cpu.h>
 #include <arch/arm/v7/interrupt/handler.S>
 
+EXPORT( interrupt_enable )
+interrupt_enable:
+  cpsie if
+  bx lr
+
+EXPORT( interrupt_disable )
+interrupt_disable:
+  mrs r0, cpsr
+  cpsid if
+  bx lr
+
 // handler
 IMPORT( vector_undefined_instruction_handler )
 IMPORT( vector_svc_handler )

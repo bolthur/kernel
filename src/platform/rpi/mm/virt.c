@@ -23,12 +23,14 @@
 #include <string.h>
 #include <core/panic.h>
 #include <core/debug/debug.h>
+#include <core/entry.h>
 #include <platform/rpi/peripheral.h>
 #include <platform/rpi/mailbox/property.h>
 #include <arch/arm/mm/virt.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <platform/rpi/framebuffer.h>
+#include <platform/rpi/platform.h>
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
 #if defined( BCM2836 ) || defined( BCM2837 )
@@ -36,6 +38,52 @@
 #endif
 #define MAILBOX_PROPERTY_AREA 0xF3040000
 #define FRAMEBUFFER_AREA 0xF3041000
+
+/**
+ * @brief Method to setup short descriptor paging
+ */
+void __bootstrap boot_virt_platform_setup( void ) {
+  // get platform parameter
+  uintptr_t fdt_address = ( uintptr_t )(
+    ( platform_loader_parameter_ptr_t )(
+      VIRT_2_PHYS( &loader_parameter_data )
+    )
+  )->atag_fdt;
+  // map address within atag / fdt
+  boot_virt_map( ( uint64_t )fdt_address, fdt_address );
+
+  // cpu local peripherals
+  #if defined( BCM2836 ) || defined( BCM2837 )
+    uintptr_t cpu_peripheral_base = 0x40000000;
+    size_t cpu_peripheral_size = 0x3FFFF;
+    uintptr_t cpu_peripheral_end = cpu_peripheral_base + cpu_peripheral_size;
+
+    while ( cpu_peripheral_base < cpu_peripheral_end ) {
+      // identity map gpio
+      boot_virt_map( ( uint64_t )cpu_peripheral_base, cpu_peripheral_base );
+      // next page
+      cpu_peripheral_base += PAGE_SIZE;
+    }
+  #endif
+
+  // GPIO related
+  #if defined( BCM2836 ) || defined( BCM2837 )
+    uintptr_t gpio_peripheral_base = 0x3F000000;
+    size_t gpio_peripheral_size = 0xFFFFFF;
+  #else
+    uintptr_t gpio_peripheral_base = 0x20000000;
+    size_t gpio_peripheral_size = 0xFFFFFF;
+  #endif
+  uintptr_t gpio_peripheral_end = gpio_peripheral_base + gpio_peripheral_size;
+
+  // map gpio if set
+  while ( gpio_peripheral_base < gpio_peripheral_end ) {
+    // identity map gpio
+    boot_virt_map( ( uint64_t )gpio_peripheral_base, gpio_peripheral_base );
+    // next page
+    gpio_peripheral_base += PAGE_SIZE;
+  }
+}
 
 /**
  * @brief Initialize virtual memory management

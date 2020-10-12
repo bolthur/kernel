@@ -33,6 +33,92 @@
 #include <arch/arm/v7/mm/virt/long.h>
 
 /**
+ * @brief Supported mode
+ */
+static uint32_t supported_mode __bootstrap_data;
+
+/**
+ * @brief Method wraps setup of short / long descriptor mode
+ */
+void __bootstrap boot_virt_setup( void ) {
+  // get paging support from mmfr0
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c0, c1, 4"
+    : "=r" ( supported_mode )
+    : : "cc"
+  );
+
+  // strip out everything not needed
+  supported_mode &= 0xF;
+
+  // check for invalid paging support
+  if (
+    ! (
+      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_PXN == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
+    )
+  ) {
+    return;
+  }
+
+  // get memory size from mmfr3
+  uint32_t reg;
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c0, c1, 7"
+    : "=r" ( reg )
+    : : "cc"
+  );
+  // get only cpu address bus size
+  reg = ( reg >> 24 ) & 0xf;
+  // use short if physical address bus is not 36 bit at least
+  if ( 0 == reg ) {
+    supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
+  }
+
+  // kick start
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+    boot_virt_setup_long();
+  } else {
+    boot_virt_setup_short();
+  }
+  // setup platform related
+  boot_virt_platform_setup();
+  // enable initial mapping
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+    boot_virt_enable_long();
+  } else {
+    boot_virt_enable_short();
+  }
+}
+
+/**
+ * @brief Mapper function using short or long descriptor mapping depending on support
+ *
+ * @param phys physical address
+ * @param virt virtual address
+ */
+void __bootstrap boot_virt_map( uint64_t phys, uintptr_t virt ) {
+  // check for invalid paging support
+  if (
+    ! (
+      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_PXN == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
+    )
+  ) {
+    return;
+  }
+
+  // map it
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+    boot_virt_map_long( phys, virt );
+  } else {
+    boot_virt_map_short( ( uintptr_t )phys, virt );
+  }
+}
+
+/**
  * @brief Map physical address to virtual one
  *
  * @param ctx pointer to page context

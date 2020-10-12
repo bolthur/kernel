@@ -23,22 +23,6 @@ OUTPUT_ARCH( arm )
 
 ENTRY( boot_start )
 
-GROUP(
-  ../../arch/arm/v8/libv8.a
-  ../../arch/arm/libarm.a
-  ../../core/libcore.a
-  ../../platform/rpi/librpi.a
-  ../../lib/atag/libatag.a
-  ../../lib/avl/libavl.a
-  ../../lib/libc/libc.a
-  ../../lib/list/liblist.a
-  ../../lib/ssp/libssp.a
-  ../../lib/tar/libtar.a
-  ../../lib/ubsan/libubsan.a
-  ../../../thirdparty/font/libfont.a
-  ../../../thirdparty/dtc/libfdt/libfdt.a
-)
-
 KERNEL_LMA = 0x10000;
 KERNEL_OFFSET = 0xC0000000;
 

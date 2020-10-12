@@ -1,10 +1,9 @@
 
 # rpi library
-noinst_LIBRARIES = librpi.a
+noinst_LTLIBRARIES = librpi.la
 
 # normal rpi library
-librpi_a_SOURCES = \
-  boot/mm/virt.c \
+librpi_la_SOURCES = \
   interrupt/interrupt.c \
   mailbox/mailbox.c \
   mailbox/property.c \
@@ -18,12 +17,10 @@ librpi_a_SOURCES = \
   timer.c \
   tty.c
 if IS32
-  librpi_a_SOURCES += \
-    boot/start.32.S \
+  librpi_la_SOURCES += \
     start.32.S
 endif
 if IS64
-  librpi_a_SOURCES += \
-    boot/start.64.S \
+  librpi_la_SOURCES += \
     start.64.S
 endif

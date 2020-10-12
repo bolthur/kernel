@@ -1,6 +1,6 @@
 
-noinst_LIBRARIES = libatag.a
-libatag_a_SOURCES = \
+noinst_LTLIBRARIES = libatag.la
+libatag_la_SOURCES = \
   check.c \
   find.c \
   next.c

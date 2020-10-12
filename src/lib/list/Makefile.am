@@ -1,6 +1,6 @@
 
-noinst_LIBRARIES = liblist.a
-liblist_a_SOURCES = \
+noinst_LTLIBRARIES = liblist.la
+liblist_la_SOURCES = \
   construct.c \
   destruct.c \
   empty.c \

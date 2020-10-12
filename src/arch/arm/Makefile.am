@@ -3,8 +3,8 @@ SUBDIRS = ${subarch_subdir}
 
 DIST_SUBDIRS = v6 v7 v8
 
-noinst_LIBRARIES = libarm.a
-libarm_a_SOURCES = \
+noinst_LTLIBRARIES = libarm.la
+libarm_la_SOURCES = \
   interrupt/interrupt.c \
   mm/virt.c \
   task/lock.c \

@@ -1,4 +1,4 @@
 
-noinst_LIBRARIES = libfont.a
-libfont_a_SOURCES = \
+noinst_LTLIBRARIES = libfont.la
+libfont_la_SOURCES = \
   font.c

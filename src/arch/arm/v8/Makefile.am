@@ -1,3 +1,3 @@
 
-noinst_LIBRARIES = libv8.a
-libv8_a_SOURCES =
+noinst_LTLIBRARIES = libv8.la
+libv8_la_SOURCES =

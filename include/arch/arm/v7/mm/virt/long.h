@@ -23,6 +23,10 @@
 
 #include <core/mm/virt.h>
 
+void boot_virt_setup_long( void );
+void boot_virt_map_long( uint64_t, uintptr_t );
+void boot_virt_enable_long( void );
+
 void v7_long_map(
   virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
 void v7_long_map_random(

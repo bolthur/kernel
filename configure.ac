@@ -1,6 +1,9 @@
 
-AC_PREREQ(2.69)
+LT_PREREQ([2.4.6])
+AC_PREREQ([2.69])
+
 AC_INIT([bolthur-kernel], [0.1.0], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
+
 AC_COPYRIGHT([Copyright (C) 2018 - 2020 bolthur project])
 
 AC_CONFIG_AUX_DIR([build-aux/config])
@@ -201,8 +204,6 @@ BOLTHUR_KERNEL_SET_FLAG
 # checks for programs
 AC_PROG_CC
 AM_PROG_AS
-AC_PROG_RANLIB
-AM_PROG_AR
 BOLTHUR_KERNEL_PROG_OBJCOPY
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -210,6 +211,10 @@ AC_C_CONST
 AC_C_INLINE
 AC_C_VOLATILE
 AC_C_RESTRICT
+
+# init libtool
+LT_INIT([disable-shared static])
+LT_LANG([C])
 
 # embed git revision and compiler
 AC_DEFINE_UNQUOTED(

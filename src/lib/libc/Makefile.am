@@ -1,6 +1,6 @@
 
-noinst_LIBRARIES = libc.a
-libc_a_SOURCES = \
+noinst_LTLIBRARIES = libc.la
+libc_la_SOURCES = \
   ctype/isalpha.c \
   ctype/isdigit.c \
   ctype/islower.c \

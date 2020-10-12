@@ -1,7 +1,6 @@
 
-noinst_LIBRARIES = libcore.a
-libcore_a_SOURCES = \
-  boot/bss.c \
+noinst_LTLIBRARIES = libcore.la
+libcore_la_SOURCES = \
   debug/breakpoint.c \
   debug/gdb.c \
   debug/string.c \
@@ -15,6 +14,7 @@ libcore_a_SOURCES = \
   task/queue.c \
   task/stack.c \
   task/thread.c \
+  bss.c \
   cpu.c \
   elf.c \
   event.c \

@@ -1,6 +1,6 @@
 
-noinst_LIBRARIES = libtar.a
-libtar_a_SOURCES = \
+noinst_LTLIBRARIES = libtar.la
+libtar_la_SOURCES = \
   end.c \
   file.c \
   helper.c \

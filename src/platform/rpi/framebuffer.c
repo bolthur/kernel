@@ -31,7 +31,6 @@
 #include <font/font.h>
 
 #include <core/mm/phys.h>
-#include <arch/arm/boot/mm/virt.h>
 #include <arch/arm/barrier.h>
 #include <core/mm/virt.h>
 

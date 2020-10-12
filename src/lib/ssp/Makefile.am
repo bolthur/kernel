@@ -1,4 +1,4 @@
 
-noinst_LIBRARIES = libssp.a
-libssp_a_SOURCES = \
+noinst_LTLIBRARIES = libssp.la
+libssp_la_SOURCES = \
   guard.c

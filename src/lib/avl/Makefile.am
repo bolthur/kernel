@@ -1,6 +1,6 @@
 
-noinst_LIBRARIES = libavl.a
-libavl_a_SOURCES =\
+noinst_LTLIBRARIES = libavl.la
+libavl_la_SOURCES =\
   balance.c \
   create.c \
   destroy.c \
