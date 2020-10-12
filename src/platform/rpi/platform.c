@@ -27,7 +27,7 @@
 #include <core/initrd.h>
 #include <core/platform.h>
 #include <core/debug/debug.h>
-#include <platform/rpi/platform.h>
+#include <arch/arm/system.h>
 #include <core/panic.h>
 
 #include <assert.h>
@@ -57,11 +57,6 @@ static inline uint64_t read_number( const uint32_t *cell, int size ) {
 }
 
 /**
- * @brief Boot parameter data set during startup
- */
-platform_loader_parameter_t loader_parameter_data;
-
-/**
  * @brief Platform depending initialization routine
  *
  * @todo move atag and fdt parsing to arch and boot
@@ -70,14 +65,11 @@ void platform_init( void ) {
   #if defined( PRINT_PLATFORM )
     DEBUG_OUTPUT(
       "%#08x - %#08x - %#08x\r\n",
-      loader_parameter_data.atag_fdt,
-      loader_parameter_data.machine,
-      loader_parameter_data.zero
-    );
+      system_info.atag_fdt, system_info.machine, system_info.unused );
   #endif
 
   // transfer to uintptr_t
-  uintptr_t atag_fdt = ( uintptr_t )loader_parameter_data.atag_fdt;
+  uintptr_t atag_fdt = ( uintptr_t )system_info.atag_fdt;
 
   // handle atag
   if ( atag_check( atag_fdt ) ) {
@@ -148,8 +140,6 @@ void platform_init( void ) {
       PANIC( "NO INITIAL RAMDISK FOUND!" );
     }
   }
-
-  PANIC( "FOO" );
 }
 
 // enable again

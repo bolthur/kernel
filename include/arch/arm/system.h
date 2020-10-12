@@ -18,17 +18,23 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __PLATFORM_RPI_PLATFORM__ )
-#define __PLATFORM_RPI_PLATFORM__
+#if ! defined( __ARCH_ARM_SYSTEM__ )
+#define __ARCH_ARM_SYSTEM__
 
 #include <stdint.h>
 
-typedef struct {
-  uint32_t zero;
-  uint32_t machine;
-  uint32_t atag_fdt;
-} platform_loader_parameter_t, *platform_loader_parameter_ptr_t;
+#if defined( ELF32 )
+  typedef uint32_t system_register_t;
+#elif defined( ELF64 )
+  typedef uint64_t system_register_t;
+#endif
 
-extern platform_loader_parameter_t loader_parameter_data;
+typedef struct {
+  system_register_t unused;
+  system_register_t machine;
+  system_register_t atag_fdt;
+} system_information_t, *system_information_ptr_t;
+
+extern system_information_t system_info;
 
 #endif

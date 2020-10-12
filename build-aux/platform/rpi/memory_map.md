@@ -15,7 +15,8 @@ kernel area:
   0xF2000000 - 0xF2FFFFFF => gpio peripheral
   0xF3000000 - 0xF303FFFF => local peripheral ( rpi 2 / 3 only )
   0xF3040000 - 0xF3040FFF => mailbox area
-  0xF3041000 - 0xF30xxxxx => framebuffer
+  0xF3041000 - 0xF3041FFF => system info area
+  0xF3042000 - 0xF30xxxxx => framebuffer
 ```
 
 ## 64 bit ( v8 )

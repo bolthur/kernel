@@ -114,6 +114,9 @@ void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" );
   virt_init();
 
+  platform_init();
+  PANIC( "FOO!" );
+
   // print size
   if ( initrd_exist() ) {
     uintptr_t initrd = initrd_get_start_address();

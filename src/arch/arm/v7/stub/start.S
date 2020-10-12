@@ -49,3 +49,8 @@ arch_start:
 halt:
   wfe // equivalent of x86 HLT instruction
   b halt
+
+
+
+// reserve space for system info block
+.comm system_info, 12, 32

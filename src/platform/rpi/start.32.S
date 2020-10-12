@@ -24,7 +24,7 @@
 #include <core/entry.h>
 
 // forward declaration for save of parameter
-IMPORT( loader_parameter_data )
+IMPORT( system_info )
 
 // only when extension define is set
 #if defined( BCM2836 ) || defined( BCM2837 )
@@ -129,7 +129,7 @@ reset:
   pop { r0 - r2 }
 
   // store rpi boot parameters passed with first three registers at data array
-  ldr r3, =loader_parameter_data - KERNEL_OFFSET
+  ldr r3, =system_info - KERNEL_OFFSET
   stmia r3!, { r0 - r2 }
 
   #if defined( BCM2836 ) || defined( BCM2837 )
@@ -164,7 +164,7 @@ reset:
 
   // enable fpu
   bl fpu_enable
-  // innitial virtual memory setup
+  // initial virtual memory setup
   bl boot_virt_setup
 
   // load higher half start

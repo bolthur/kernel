@@ -30,14 +30,15 @@
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <platform/rpi/framebuffer.h>
-#include <platform/rpi/platform.h>
+#include <arch/arm/system.h>
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
 #if defined( BCM2836 ) || defined( BCM2837 )
   #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
 #define MAILBOX_PROPERTY_AREA 0xF3040000
-#define FRAMEBUFFER_AREA 0xF3041000
+#define SYSTEM_INFO_AREA 0xF3041000
+#define FRAMEBUFFER_AREA 0xF3042000
 
 /**
  * @brief Method to setup short descriptor paging
@@ -45,9 +46,7 @@
 void __bootstrap boot_virt_platform_setup( void ) {
   // get platform parameter
   uintptr_t fdt_address = ( uintptr_t )(
-    ( platform_loader_parameter_ptr_t )(
-      VIRT_2_PHYS( &loader_parameter_data )
-    )
+    ( system_information_ptr_t )( VIRT_2_PHYS( &system_info ) )
   )->atag_fdt;
   // map address within atag / fdt
   boot_virt_map( ( uint64_t )fdt_address, fdt_address );
@@ -174,6 +173,17 @@ void virt_platform_init( void ) {
     VIRT_MEMORY_TYPE_DEVICE,
     VIRT_PAGE_TYPE_AUTO
   );
+
+  // FIXME: MAP ATAG/FDT correctly
+  virt_map_address(
+    kernel_context,
+    SYSTEM_INFO_AREA,
+    ( uintptr_t )(
+      ( system_information_ptr_t )&system_info
+    )->atag_fdt,
+    VIRT_MEMORY_TYPE_NORMAL,
+    VIRT_PAGE_TYPE_AUTO
+  );
 }
 
 /**
@@ -188,6 +198,8 @@ void virt_platform_post_init( void ) {
   peripheral_base_set( CPU_PERIPHERAL_BASE, PERIPHERAL_LOCAL );
   // set mailbox property pointer
   ptb_buffer = ( int32_t* )MAILBOX_PROPERTY_AREA;
+  // overwrite system_info
+  system_info.atag_fdt = SYSTEM_INFO_AREA;
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -199,5 +211,7 @@ void virt_platform_post_init( void ) {
       ( void* )CPU_PERIPHERAL_BASE );
     DEBUG_OUTPUT( "Set mailbox property buffer to %p\r\n",
       ( void* )MAILBOX_PROPERTY_AREA );
+    DEBUG_OUTPUT( "Set system info atag property to %p\r\n",
+      ( void* )SYSTEM_INFO_AREA );
   #endif
 }
