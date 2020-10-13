@@ -25,22 +25,40 @@
 #include <core/entry.h>
 #include <core/panic.h>
 #include <core/debug/debug.h>
-
+#include <core/initrd.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
+#include <core/system.h>
 #include <arch/arm/mm/virt.h>
 #include <arch/arm/v7/mm/virt/short.h>
 #include <arch/arm/v7/mm/virt/long.h>
+#include <arch/arm/system.h>
 
 /**
  * @brief Supported mode
  */
 static uint32_t supported_mode __bootstrap_data;
 
+
+// disable some warnings temporarily
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+
+#include <core/mm/virt.h>
+#include <core/mm/phys.h>
+#include <core/system.h>
+#include <arch/arm/system.h>
+#include <core/entry.h>
+
+#include <libfdt.h>
+
 /**
  * @brief Method wraps setup of short / long descriptor mode
+ *
+ * @todo fix issue within startup setup and remove custom dtb mapping here
  */
-void __bootstrap boot_virt_setup( void ) {
+void __bootstrap virt_startup_setup( void ) {
   // get paging support from mmfr0
   __asm__ __volatile__(
     "mrc p15, 0, %0, c0, c1, 4"
@@ -78,19 +96,47 @@ void __bootstrap boot_virt_setup( void ) {
 
   // kick start
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
-    boot_virt_setup_long();
+    v7_long_startup_setup();
   } else {
-    boot_virt_setup_short();
+    v7_short_startup_setup();
   }
+
   // setup platform related
-  boot_virt_platform_setup();
+  virt_startup_platform_setup();
+
   // enable initial mapping
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
-    boot_virt_enable_long();
+    v7_long_startup_enable();
   } else {
-    boot_virt_enable_short();
+    v7_short_startup_enable();
   }
+
+  // transfer to uintptr_t
+  uintptr_t atag_fdt = ( uintptr_t )system_info.atag_fdt;
+  // first mapping before access
+  virt_startup_map( atag_fdt, atag_fdt );
+
+  if ( 0 == fdt_check_header( ( void* )atag_fdt ) ) {
+    // map device tree binary
+    uintptr_t start = atag_fdt;
+    uintptr_t end = start + fdt32_to_cpu(
+      ( ( struct fdt_header* )atag_fdt )->totalsize
+    );
+    while ( start < end ) {
+      virt_startup_map( start, start );
+      start += PAGE_SIZE;
+    }
+  }
+
+  // startup related init
+  system_startup_init();
+
+  // handle initrdx
+  initrd_startup_init();
 }
+
+// enable again
+#pragma GCC diagnostic pop
 
 /**
  * @brief Mapper function using short or long descriptor mapping depending on support
@@ -98,7 +144,7 @@ void __bootstrap boot_virt_setup( void ) {
  * @param phys physical address
  * @param virt virtual address
  */
-void __bootstrap boot_virt_map( uint64_t phys, uintptr_t virt ) {
+void __bootstrap virt_startup_map( uint64_t phys, uintptr_t virt ) {
   // check for invalid paging support
   if (
     ! (
@@ -112,9 +158,9 @@ void __bootstrap boot_virt_map( uint64_t phys, uintptr_t virt ) {
 
   // map it
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
-    boot_virt_map_long( phys, virt );
+    v7_long_startup_map( phys, virt );
   } else {
-    boot_virt_map_short( ( uintptr_t )phys, virt );
+    v7_short_startup_map( ( uintptr_t )phys, virt );
   }
 }
 

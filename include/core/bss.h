@@ -18,8 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_BOOT_BSS__ )
-#define __CORE_BOOT_BSS__
+#if ! defined( __CORE_BSS__ )
+#define __CORE_BSS__
 
 #include <stdint.h>
 
@@ -34,6 +34,6 @@
 extern bss_type_t __bss_start;
 extern bss_type_t __bss_end;
 
-void boot_bss_clear( void );
+void bss_startup_clear( void );
 
 #endif

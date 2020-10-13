@@ -23,6 +23,10 @@
 
 #include <core/mm/virt.h>
 
+void v6_short_startup_setup( void );
+void v6_short_startup_map( uintptr_t phys, uintptr_t virt );
+void v6_short_startup_enable( void );
+
 void v6_short_map(
   virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
 void v6_short_map_random(

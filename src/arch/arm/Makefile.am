@@ -14,4 +14,5 @@ libarm_la_SOURCES = \
   interrupt.c \
   io.c \
   stack.c \
+  system.c \
   yield.c

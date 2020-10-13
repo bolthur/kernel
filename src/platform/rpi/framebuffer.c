@@ -120,7 +120,7 @@ void framebuffer_init( void ) {
   uintptr_t start = framebuffer_base_get();
   uintptr_t end = framebuffer_end_get();
   while ( start < end ) {
-    boot_virt_map( ( uint64_t )start, start );
+    virt_startup_map( ( uint64_t )start, start );
     start += PAGE_SIZE;
   }
 

@@ -63,7 +63,7 @@ static ld_global_page_directory_t initial_context
 /**
  * @brief Helper to setup initial paging with large page address extension
  */
-void __bootstrap boot_virt_setup_long( void ) {
+void __bootstrap v7_long_startup_setup( void ) {
   // variables
   ld_ttbcr_t ttbcr;
   uint32_t x, y;
@@ -102,10 +102,9 @@ void __bootstrap boot_virt_setup_long( void ) {
 
   // Map initial memory
   for ( x = 0; x < max; x++ ) {
-    boot_virt_map_long( x << 21, x << 21 );
-
+    v7_long_startup_map( x << 21, x << 21 );
     if ( 0 < KERNEL_OFFSET ) {
-      boot_virt_map_long( x << 21, ( x + ( KERNEL_OFFSET >> 21 ) ) << 21 );
+      v7_long_startup_map( x << 21, ( x + ( KERNEL_OFFSET >> 21 ) ) << 21 );
     }
   }
 
@@ -134,7 +133,7 @@ void __bootstrap boot_virt_setup_long( void ) {
  * @param phys physical address
  * @param virt virtual address
  */
-void __bootstrap boot_virt_map_long( uint64_t phys, uintptr_t virt ) {
+void __bootstrap v7_long_startup_map( uint64_t phys, uintptr_t virt ) {
   // determine index for getting middle directory
   uint32_t pmd_index = LD_VIRTUAL_PMD_INDEX( virt );
   // determine index for getting table directory
@@ -157,7 +156,7 @@ void __bootstrap boot_virt_map_long( uint64_t phys, uintptr_t virt ) {
 /**
  * @brief Method to enable initial virtual memory
  */
-void __bootstrap boot_virt_enable_long( void ) {
+void __bootstrap v7_long_startup_enable( void ) {
   uint32_t reg;
   // Get content from control register
   __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );

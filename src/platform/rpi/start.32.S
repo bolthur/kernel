@@ -34,8 +34,8 @@ IMPORT( system_info )
 
 .section .text.boot
 
-EXPORT( boot_start )
-boot_start:
+EXPORT( startup )
+startup:
   b reset
   #if defined( BCM2836 ) || defined( BCM2837 )
     b hang
@@ -61,7 +61,7 @@ boot_start:
 
 reset:
   // setup temporary stack
-  ldr r3, =boot_start
+  ldr r3, =startup
   mov sp, r3
 
   // halt other cpus if smp enabled is set
@@ -95,7 +95,7 @@ reset:
     3: msr cpsr_c, r3
     4:
       // setup temporary stack again
-      ldr r4, =boot_start
+      ldr r4, =startup
       mov sp, r4
   #endif
 
@@ -124,7 +124,7 @@ reset:
   // save boot parameter data
   push { r0 - r2 }
   // clear bss section
-  bl boot_bss_clear
+  bl bss_startup_clear
   // restore boot parameter data
   pop { r0 - r2 }
 
@@ -135,7 +135,7 @@ reset:
   #if defined( BCM2836 ) || defined( BCM2837 )
     // get vbar
     mrc p15, 0, r1, c12, c0, 0
-    ldr r0, =boot_start
+    ldr r0, =startup
     ldmia r0!,{ r2 - r9 }
     stmia r1!,{ r2 - r9 }
     ldmia r0!,{ r2 - r9 }
@@ -165,7 +165,7 @@ reset:
   // enable fpu
   bl fpu_enable
   // initial virtual memory setup
-  bl boot_virt_setup
+  bl virt_startup_setup
 
   // load higher half start
   ldr r3, =start

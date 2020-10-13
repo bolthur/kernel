@@ -7,6 +7,7 @@
         "${workspaceFolder}/include/lib",
         "${workspaceFolder}/include/core",
         "${workspaceFolder}/thirdparty",
+        "${workspaceFolder}/thirdparty/dtc/libfdt",
         "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
         "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
         "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
@@ -20,6 +21,7 @@
           "${workspaceFolder}/include/lib",
           "${workspaceFolder}/include/core",
           "${workspaceFolder}/thirdparty",
+          "${workspaceFolder}/thirdparty/dtc/libfdt",
           "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
           "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
           "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
@@ -40,6 +42,7 @@
         "${workspaceFolder}/include/lib",
         "${workspaceFolder}/include/core",
         "${workspaceFolder}/thirdparty",
+        "${workspaceFolder}/thirdparty/dtc/libfdt",
         "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
         "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
         "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
@@ -53,6 +56,7 @@
           "${workspaceFolder}/include/lib",
           "${workspaceFolder}/include/core",
           "${workspaceFolder}/thirdparty",
+          "${workspaceFolder}/thirdparty/dtc/libfdt",
           "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
           "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
           "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"

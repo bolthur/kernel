@@ -21,7 +21,7 @@
 OUTPUT_FORMAT( elf32-littlearm )
 OUTPUT_ARCH( arm )
 
-ENTRY( boot_start )
+ENTRY( startup )
 
 KERNEL_LMA = 0x10000;
 KERNEL_OFFSET = 0xC0000000;

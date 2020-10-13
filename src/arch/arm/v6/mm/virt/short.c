@@ -42,7 +42,7 @@ static sd_context_total_t initial_context
 /**
  * @brief Method to setup short descriptor paging
  */
-void __bootstrap boot_virt_setup_short( void ) {
+void __bootstrap v6_short_startup_setup( void ) {
   uint32_t x;
   sd_ttbcr_t ttbcr;
 
@@ -65,10 +65,9 @@ void __bootstrap boot_virt_setup_short( void ) {
 
   // map all memory
   for ( x = 0; x < max; x++ ) {
-    boot_virt_map_short( x << 20, x << 20 );
-
+    v6_short_startup_map( x << 20, x << 20 );
     if ( 0 < KERNEL_OFFSET ) {
-      boot_virt_map_short( x << 20, ( x + ( KERNEL_OFFSET >> 20 ) ) << 20 );
+      v6_short_startup_map( x << 20, ( x + ( KERNEL_OFFSET >> 20 ) ) << 20 );
     }
   }
 
@@ -103,7 +102,7 @@ void __bootstrap boot_virt_setup_short( void ) {
  * @param phys physical address
  * @param virt virtual address
  */
-void __bootstrap boot_virt_map_short( uintptr_t phys, uintptr_t virt ) {
+void __bootstrap v6_short_startup_map( uintptr_t phys, uintptr_t virt ) {
   uint32_t x = virt >> 20;
   uint32_t y = phys >> 20;
 
@@ -117,7 +116,7 @@ void __bootstrap boot_virt_map_short( uintptr_t phys, uintptr_t virt ) {
 /**
  * @brief Method to enable initial virtual memory
  */
-void __bootstrap boot_virt_enable_short( void ) {
+void __bootstrap v6_short_startup_enable( void ) {
   uint32_t reg;
   // Get content from control register
   __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );

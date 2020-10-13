@@ -45,6 +45,8 @@
 #include <core/panic.h>
 #include <core/initrd.h>
 
+#include <arch/arm/system.h>
+
 // disable missing prototype temporarily
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-prototypes"
@@ -97,10 +99,6 @@ void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> arch] initialize ...\r\n" );
   arch_init();
 
-  // Setup initrd parts
-  DEBUG_OUTPUT( "[bolthur/kernel -> initrd] initialize ...\r\n" );
-  initrd_init();
-
   // Setup physical memory management
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" );
   phys_init();
@@ -127,6 +125,13 @@ void kernel_main( void ) {
     }
   }
 
+  uintptr_t atag_fdt = ( uintptr_t )system_info.atag_fdt;
+  DEBUG_OUTPUT(
+    "atag_fdt = %#x, *atag_fdt = %#x\r\n",
+    atag_fdt,
+    *( ( uint32_t* )atag_fdt )
+  );
+
   // Setup virtual memory management
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" );
   virt_init();
@@ -152,6 +157,14 @@ void kernel_main( void ) {
       iter = tar_next( iter );
     }
   }
+
+  atag_fdt = ( uintptr_t )system_info.atag_fdt;
+  DEBUG_OUTPUT(
+    "atag_fdt = %#x, *atag_fdt = %#x\r\n",
+    atag_fdt,
+    *( ( uint32_t* )atag_fdt )
+  );
+
   PANIC( "FOO" );
 
   // Setup heap

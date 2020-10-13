@@ -21,7 +21,7 @@
 OUTPUT_FORMAT( elf64-littleaarch64 )
 OUTPUT_ARCH( arm )
 
-ENTRY( boot_start )
+ENTRY( startup )
 
 KERNEL_LMA = 0x80000;
 KERNEL_OFFSET = 0xffffffff80000000;

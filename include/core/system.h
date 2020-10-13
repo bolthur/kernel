@@ -18,13 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_BOOT_STRING__ )
-#define __LIB_BOOT_STRING__
+#if ! defined( __CORE_SYSTEM__ )
+#define __CORE_SYSTEM__
 
-#include <stddef.h>
-
-char* boot_strchr( const char*, int );
-size_t boot_strlen( const char* );
-int boot_strncmp( const char*, const char*, size_t );
+void system_startup_init( void );
+void system_init( void );
 
 #endif

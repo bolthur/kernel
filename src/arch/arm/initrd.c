@@ -24,6 +24,8 @@
 #pragma GCC diagnostic ignored "-Wsign-conversion"
 
 #include <core/initrd.h>
+#include <core/mm/phys.h>
+#include <core/mm/virt.h>
 #include <arch/arm/system.h>
 #include <atag.h>
 #include <libfdt.h>
@@ -32,7 +34,7 @@
 /**
  * @brief Prepare for initrd usage
  */
-void initrd_init( void ) {
+void initrd_startup_init( void ) {
   // transfer to uintptr_t
   uintptr_t atag_fdt = ( uintptr_t )system_info.atag_fdt;
 
@@ -92,6 +94,17 @@ void initrd_init( void ) {
   } else {
     initrd_set_start_address( 0 );
     initrd_set_size( 0 );
+  }
+
+  // map initrd
+  if ( initrd_exist() ) {
+    uintptr_t start = initrd_get_start_address();
+    uintptr_t end = initrd_get_end_address();
+    // map 1:1
+    while ( start < end ) {
+      virt_startup_map( start, start );
+      start += PAGE_SIZE;
+    }
   }
 }
 

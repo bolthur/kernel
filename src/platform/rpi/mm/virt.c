@@ -37,20 +37,12 @@
   #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
 #define MAILBOX_PROPERTY_AREA 0xF3040000
-#define SYSTEM_INFO_AREA 0xF3041000
-#define FRAMEBUFFER_AREA 0xF3042000
+#define FRAMEBUFFER_AREA 0xF3041000
 
 /**
  * @brief Method to setup short descriptor paging
  */
-void __bootstrap boot_virt_platform_setup( void ) {
-  // get platform parameter
-  uintptr_t fdt_address = ( uintptr_t )(
-    ( system_information_ptr_t )( VIRT_2_PHYS( &system_info ) )
-  )->atag_fdt;
-  // map address within atag / fdt
-  boot_virt_map( ( uint64_t )fdt_address, fdt_address );
-
+void __bootstrap virt_startup_platform_setup( void ) {
   // cpu local peripherals
   #if defined( BCM2836 ) || defined( BCM2837 )
     uintptr_t cpu_peripheral_base = 0x40000000;
@@ -59,7 +51,7 @@ void __bootstrap boot_virt_platform_setup( void ) {
 
     while ( cpu_peripheral_base < cpu_peripheral_end ) {
       // identity map gpio
-      boot_virt_map( ( uint64_t )cpu_peripheral_base, cpu_peripheral_base );
+      virt_startup_map( ( uint64_t )cpu_peripheral_base, cpu_peripheral_base );
       // next page
       cpu_peripheral_base += PAGE_SIZE;
     }
@@ -78,7 +70,7 @@ void __bootstrap boot_virt_platform_setup( void ) {
   // map gpio if set
   while ( gpio_peripheral_base < gpio_peripheral_end ) {
     // identity map gpio
-    boot_virt_map( ( uint64_t )gpio_peripheral_base, gpio_peripheral_base );
+    virt_startup_map( ( uint64_t )gpio_peripheral_base, gpio_peripheral_base );
     // next page
     gpio_peripheral_base += PAGE_SIZE;
   }
@@ -173,17 +165,6 @@ void virt_platform_init( void ) {
     VIRT_MEMORY_TYPE_DEVICE,
     VIRT_PAGE_TYPE_AUTO
   );
-
-  // FIXME: MAP ATAG/FDT correctly
-  virt_map_address(
-    kernel_context,
-    SYSTEM_INFO_AREA,
-    ( uintptr_t )(
-      ( system_information_ptr_t )&system_info
-    )->atag_fdt,
-    VIRT_MEMORY_TYPE_NORMAL,
-    VIRT_PAGE_TYPE_AUTO
-  );
 }
 
 /**
@@ -198,8 +179,6 @@ void virt_platform_post_init( void ) {
   peripheral_base_set( CPU_PERIPHERAL_BASE, PERIPHERAL_LOCAL );
   // set mailbox property pointer
   ptb_buffer = ( int32_t* )MAILBOX_PROPERTY_AREA;
-  // overwrite system_info
-  system_info.atag_fdt = SYSTEM_INFO_AREA;
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -211,7 +190,5 @@ void virt_platform_post_init( void ) {
       ( void* )CPU_PERIPHERAL_BASE );
     DEBUG_OUTPUT( "Set mailbox property buffer to %p\r\n",
       ( void* )MAILBOX_PROPERTY_AREA );
-    DEBUG_OUTPUT( "Set system info atag property to %p\r\n",
-      ( void* )SYSTEM_INFO_AREA );
   #endif
 }
