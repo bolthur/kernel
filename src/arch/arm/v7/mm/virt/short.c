@@ -137,6 +137,32 @@ void __bootstrap v7_short_startup_enable( void ) {
   __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
 }
 
+
+/**
+ * @brief Flush context
+ */
+void __bootstrap v7_short_startup_flush( void ) {
+  sd_ttbcr_t ttbcr;
+
+  // read ttbcr register
+  __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
+  // set split to use ttbr1 and ttbr2 as it will be used later on
+  ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_4G;
+  ttbcr.data.large_physical_address_extension = 0;
+  // push back value with ttbcr
+  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
+
+  // invalidate instruction cache
+  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) : "memory" );
+  // invalidate entire tlb
+  __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
+  // instruction synchronization barrier
+  __asm__( "isb" ::: "memory" );
+  // data synchronization barrier
+  __asm__( "dsb" ::: "memory" );
+}
+
+
 /**
  * @brief Map physical space to temporary
  *

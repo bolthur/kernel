@@ -55,6 +55,7 @@ extern virt_context_ptr_t kernel_context;
 void virt_startup_setup( void );
 void virt_startup_platform_setup( void );
 void virt_startup_map( uint64_t, uintptr_t );
+void virt_startup_flush( void );
 
 void virt_init( void );
 void virt_platform_init( void );

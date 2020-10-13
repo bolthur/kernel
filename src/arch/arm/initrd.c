@@ -34,7 +34,7 @@
 /**
  * @brief Prepare for initrd usage
  */
-void initrd_startup_init( void ) {
+void __bootstrap initrd_startup_init( void ) {
   // transfer to uintptr_t
   uintptr_t atag_fdt = ( uintptr_t )system_info.atag_fdt;
 

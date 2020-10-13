@@ -167,6 +167,37 @@ void __bootstrap v7_long_startup_enable( void ) {
 }
 
 /**
+ * @brief Flush context
+ */
+void v7_long_startup_flush( void ) {
+  ld_ttbcr_t ttbcr;
+
+  // read ttbcr register
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c2, c0, 2"
+    : "=r" ( ttbcr.raw )
+    : : "cc"
+  );
+  ttbcr.raw = 0;
+  ttbcr.data.large_physical_address_extension = 1;
+  // push back value with ttbcr
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c2, c0, 2"
+    : : "r" ( ttbcr.raw )
+    : "cc"
+  );
+
+  // invalidate instruction cache
+  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) : "memory" );
+  // invalidate entire tlb
+  __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
+  // instruction synchronization barrier
+  __asm__( "isb" ::: "memory" );
+  // data synchronization barrier
+  __asm__( "dsb" ::: "memory" );
+}
+
+/**
  * @brief Map physical space to temporary
  *
  * @param start physical start address

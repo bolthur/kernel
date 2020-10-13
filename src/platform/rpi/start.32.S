@@ -166,6 +166,10 @@ reset:
   bl fpu_enable
   // initial virtual memory setup
   bl virt_startup_setup
+  // startup related init
+  bl system_startup_init
+  // startup related initrd init
+  bl initrd_startup_init
 
   // load higher half start
   ldr r3, =start

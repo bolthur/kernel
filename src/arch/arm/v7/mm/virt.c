@@ -39,19 +39,10 @@
  */
 static uint32_t supported_mode __bootstrap_data;
 
-
-// disable some warnings temporarily
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-
-#include <core/mm/virt.h>
-#include <core/mm/phys.h>
-#include <core/system.h>
-#include <arch/arm/system.h>
-#include <core/entry.h>
-
-#include <libfdt.h>
+/**
+ * @brief Initial setup done flag
+ */
+static bool initial_setup_done __bootstrap_data = false;
 
 /**
  * @brief Method wraps setup of short / long descriptor mode
@@ -111,32 +102,9 @@ void __bootstrap virt_startup_setup( void ) {
     v7_short_startup_enable();
   }
 
-  // transfer to uintptr_t
-  uintptr_t atag_fdt = ( uintptr_t )system_info.atag_fdt;
-  // first mapping before access
-  virt_startup_map( atag_fdt, atag_fdt );
-
-  if ( 0 == fdt_check_header( ( void* )atag_fdt ) ) {
-    // map device tree binary
-    uintptr_t start = atag_fdt;
-    uintptr_t end = start + fdt32_to_cpu(
-      ( ( struct fdt_header* )atag_fdt )->totalsize
-    );
-    while ( start < end ) {
-      virt_startup_map( start, start );
-      start += PAGE_SIZE;
-    }
-  }
-
-  // startup related init
-  system_startup_init();
-
-  // handle initrdx
-  initrd_startup_init();
+  // set flag
+  initial_setup_done = true;
 }
-
-// enable again
-#pragma GCC diagnostic pop
 
 /**
  * @brief Mapper function using short or long descriptor mapping depending on support
@@ -161,6 +129,21 @@ void __bootstrap virt_startup_map( uint64_t phys, uintptr_t virt ) {
     v7_long_startup_map( phys, virt );
   } else {
     v7_short_startup_map( ( uintptr_t )phys, virt );
+  }
+
+  if ( initial_setup_done ) {
+    virt_startup_flush();
+  }
+}
+
+/**
+ * @brief Flush set context
+ */
+void __bootstrap virt_startup_flush( void ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+    v7_long_startup_flush();
+  } else {
+    v7_short_startup_flush();
   }
 }
 

@@ -26,6 +26,7 @@
 void v7_long_startup_setup( void );
 void v7_long_startup_map( uint64_t, uintptr_t );
 void v7_long_startup_enable( void );
+void v7_long_startup_flush( void );
 
 void v7_long_map(
   virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
