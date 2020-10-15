@@ -24,11 +24,7 @@
 #include <stdint.h>
 
 // type definition for bss fields
-#if defined( ELF32 )
-  typedef uint32_t bss_type_t;
-#elif defined( ELF64 )
-  typedef uint64_t bss_type_t;
-#endif
+typedef uint8_t bss_type_t;
 
 // bss fields from linker script
 extern bss_type_t __bss_start;

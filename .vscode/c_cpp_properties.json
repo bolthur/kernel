@@ -33,7 +33,7 @@
       "forcedInclude": [
         "${workspaceFolder}/build/include/config.h"
       ],
-      "cStandard": "c18"
+      "cStandard": "c17"
     },
     {
       "name": "Linux",
@@ -67,7 +67,7 @@
       "forcedInclude": [
         "${workspaceFolder}/build/include/config.h"
       ],
-      "cStandard": "c18"
+      "cStandard": "c17"
     }
   ],
   "version": 4

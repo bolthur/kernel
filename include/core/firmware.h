@@ -18,23 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_SYSTEM__ )
-#define __ARCH_ARM_SYSTEM__
+#if ! defined( __CORE_FIRMWARE__ )
+#define __CORE_FIRMWARE__
 
-#include <stdint.h>
-
-#if defined( ELF32 )
-  typedef uint32_t system_register_t;
-#elif defined( ELF64 )
-  typedef uint64_t system_register_t;
-#endif
-
-typedef struct {
-  system_register_t unused;
-  system_register_t machine;
-  system_register_t atag_fdt;
-} system_information_t, *system_information_ptr_t;
-
-extern system_information_t system_info;
+void firmware_startup_init( void );
+void firmware_init( void );
 
 #endif

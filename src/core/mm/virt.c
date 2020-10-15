@@ -26,7 +26,7 @@
 #include <core/panic.h>
 #include <core/entry.h>
 #include <core/initrd.h>
-#include <core/system.h>
+#include <core/firmware.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 
@@ -126,8 +126,8 @@ void virt_init( void ) {
   // prepare temporary area
   virt_prepare_temporary( kernel_context );
 
-  // system init stuff
-  system_init();
+  // firmware init stuff
+  firmware_init();
 
   // set kernel context
   virt_set_context( kernel_context );

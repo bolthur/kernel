@@ -26,7 +26,7 @@
 #include <core/initrd.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
-#include <arch/arm/system.h>
+#include <arch/arm/firmware.h>
 #include <atag.h>
 #include <libfdt.h>
 #include <endian.h>
@@ -36,7 +36,7 @@
  */
 void __bootstrap initrd_startup_init( void ) {
   // transfer to uintptr_t
-  uintptr_t atag_fdt = ( uintptr_t )system_info.atag_fdt;
+  uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
 
   // handle atag
   if ( atag_check( atag_fdt ) ) {

@@ -169,7 +169,7 @@ void __bootstrap v7_long_startup_enable( void ) {
 /**
  * @brief Flush context
  */
-void v7_long_startup_flush( void ) {
+void __bootstrap v7_long_startup_flush( void ) {
   ld_ttbcr_t ttbcr;
 
   // read ttbcr register

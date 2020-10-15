@@ -66,12 +66,6 @@ void __bootstrap virt_startup_setup( void ) {
 
   // enable mapping
   v6_short_startup_enable();
-
-  // startup related init
-  system_startup_init();
-
-  // handle initrdx
-  initrd_startup_init();
 }
 
 /**

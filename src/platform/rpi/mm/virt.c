@@ -30,7 +30,6 @@
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <platform/rpi/framebuffer.h>
-#include <arch/arm/system.h>
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
 #if defined( BCM2836 ) || defined( BCM2837 )

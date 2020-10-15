@@ -1,8 +1,13 @@
 
 AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
+  # Linker flags ( first due to stack protector and no standard library )
+  AX_APPEND_LINK_FLAGS([-nostdlib])
+  AX_APPEND_LINK_FLAGS([-ffreestanding])
+  AX_APPEND_LINK_FLAGS([-Wl,-u,Entry])
+
   # Compilation flags
   # stack protector
-  AX_APPEND_COMPILE_FLAGS([-fstack-protector-strong -Wstack-protector])
+  AX_APPEND_COMPILE_FLAGS([-fstack-protector-all -Wstack-protector])
   # warnings
   AX_APPEND_COMPILE_FLAGS([-Wall -Wextra -Werror -Wpedantic])
   AX_APPEND_COMPILE_FLAGS([-Wconversion -Wpacked])
@@ -52,10 +57,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty])
   AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty/dtc/libfdt])
   AX_APPEND_COMPILE_FLAGS([-imacros\ $($BOLTHUR_READLINK -f ${srcdir})/include/core/config.h])
-
-  # linker flags
-  AX_APPEND_LINK_FLAGS([-nostdlib])
-  AX_APPEND_LINK_FLAGS([-Wl,-u,Entry])
 
   # Populate libraries for linker
   CC_SPECIFIC_LDADD=;

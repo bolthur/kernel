@@ -25,18 +25,21 @@
 
 #include <core/mm/virt.h>
 #include <core/mm/phys.h>
-#include <core/system.h>
-#include <arch/arm/system.h>
+#include <core/firmware.h>
+#include <arch/arm/firmware.h>
 #include <core/entry.h>
+#include <core/panic.h>
+#include <core/debug/debug.h>
 
+#include <atag.h>
 #include <libfdt.h>
 
 /**
- * @brief Handle system information related startup init
+ * @brief Handle firmware information related startup init
  */
-void __bootstrap system_startup_init( void ) {
+void __bootstrap firmware_startup_init( void ) {
   // transfer to uintptr_t
-  uintptr_t atag_fdt = ( uintptr_t )system_info.atag_fdt;
+  uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
   // first mapping before access
   virt_startup_map( atag_fdt, atag_fdt );
 
@@ -54,13 +57,25 @@ void __bootstrap system_startup_init( void ) {
 }
 
 /**
- * @brief Handle system information related init
+ * @brief Handle firmware information related init
  */
-void system_init( void ) {
+void firmware_init( void ) {
   // transfer to uintptr_t
-  uintptr_t atag_fdt = ( uintptr_t )system_info.atag_fdt;
+  uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
 
-  if ( 0 == fdt_check_header( ( void* )atag_fdt ) ) {
+  // handle atag
+  if ( atag_check( atag_fdt ) ) {
+    if ( !virt_is_mapped( PHYS_2_VIRT( atag_fdt ) ) ) {
+      virt_map_address(
+        kernel_context,
+        PHYS_2_VIRT( atag_fdt ),
+        atag_fdt,
+        VIRT_MEMORY_TYPE_NORMAL,
+        VIRT_PAGE_TYPE_EXECUTABLE );
+    }
+    // transform to virtual
+    firmware_info.atag_fdt = PHYS_2_VIRT( atag_fdt );
+  } else if ( 0 == fdt_check_header( ( void* )atag_fdt ) ) {
     // map device tree binary
     uintptr_t start = atag_fdt;
     uintptr_t end = start + fdt32_to_cpu(
@@ -80,7 +95,7 @@ void system_init( void ) {
       virtual += PAGE_SIZE;
     }
     // overwrite
-    system_info.atag_fdt = PHYS_2_VIRT( atag_fdt );
+    firmware_info.atag_fdt = PHYS_2_VIRT( atag_fdt );
   }
 }
 

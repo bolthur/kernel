@@ -10,9 +10,9 @@ libarm_la_SOURCES = \
   delay.c \
   elf.c \
   fdt.S \
+  firmware.c \
   initrd.c \
   interrupt.c \
   io.c \
   stack.c \
-  system.c \
   yield.c

@@ -45,7 +45,7 @@
 #include <core/panic.h>
 #include <core/initrd.h>
 
-#include <arch/arm/system.h>
+#include <arch/arm/firmware.h>
 
 // disable missing prototype temporarily
 #pragma GCC diagnostic push
@@ -125,7 +125,7 @@ void kernel_main( void ) {
     }
   }
 
-  uintptr_t atag_fdt = ( uintptr_t )system_info.atag_fdt;
+  uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
   DEBUG_OUTPUT(
     "atag_fdt = %#x, *atag_fdt = %#x\r\n",
     atag_fdt,
@@ -158,7 +158,7 @@ void kernel_main( void ) {
     }
   }
 
-  atag_fdt = ( uintptr_t )system_info.atag_fdt;
+  atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
   DEBUG_OUTPUT(
     "atag_fdt = %#x, *atag_fdt = %#x\r\n",
     atag_fdt,

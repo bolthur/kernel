@@ -53,4 +53,9 @@ halt:
 
 
 // reserve space for system info block
-.comm system_info, 12, 32
+// FIXME: HANDLE 64 bit correctly
+#if defined( ELF32 )
+  .comm firmware_info, 12, 32
+#elif defined( ELF64 )
+  #error "Not supported"
+#endif

@@ -28,11 +28,9 @@
 #include <core/initrd.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
-#include <core/system.h>
 #include <arch/arm/mm/virt.h>
 #include <arch/arm/v7/mm/virt/short.h>
 #include <arch/arm/v7/mm/virt/long.h>
-#include <arch/arm/system.h>
 
 /**
  * @brief Supported mode

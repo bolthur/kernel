@@ -24,7 +24,7 @@
 #include <core/entry.h>
 
 // forward declaration for save of parameter
-IMPORT( system_info )
+IMPORT( firmware_info )
 
 // only when extension define is set
 #if defined( BCM2836 ) || defined( BCM2837 )
@@ -129,7 +129,7 @@ reset:
   pop { r0 - r2 }
 
   // store rpi boot parameters passed with first three registers at data array
-  ldr r3, =system_info - KERNEL_OFFSET
+  ldr r3, =firmware_info - KERNEL_OFFSET
   stmia r3!, { r0 - r2 }
 
   #if defined( BCM2836 ) || defined( BCM2837 )
@@ -167,7 +167,7 @@ reset:
   // initial virtual memory setup
   bl virt_startup_setup
   // startup related init
-  bl system_startup_init
+  bl firmware_startup_init
   // startup related initrd init
   bl initrd_startup_init
 
