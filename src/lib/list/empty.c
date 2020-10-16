@@ -29,7 +29,7 @@
  * @return false at least one item
  */
 bool list_empty( list_manager_ptr_t list ) {
-  // assert existance
+  // assert existence
   assert( NULL != list );
 
   // check first and last item

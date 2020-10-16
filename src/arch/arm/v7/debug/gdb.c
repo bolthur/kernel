@@ -690,7 +690,7 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
     // get packet
     uint8_t* packet = debug_gdb_packet_receive(
       debug_gdb_input_buffer, GDB_DEBUG_MAX_BUFFER );
-    // assert existance
+    // assert existence
     assert( packet != NULL );
     // execute handler
     debug_gdb_get_handler( packet )( context, packet );

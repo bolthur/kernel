@@ -35,8 +35,10 @@ static uint32_t nested_prefetch_abort = 0;
  * @brief Prefetch abort exception handler
  *
  * @param cpu cpu context
+ *
+ * @todo remove noreturn when handler is completed
  */
-void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
+noreturn void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   nested_prefetch_abort++;
   assert( nested_prefetch_abort < INTERRUPT_NESTED_MAX );

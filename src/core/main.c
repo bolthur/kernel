@@ -19,6 +19,7 @@
  */
 
 #include <stdint.h>
+#include <stdnoreturn.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -47,16 +48,15 @@
 
 #include <arch/arm/firmware.h>
 
-// disable missing prototype temporarily
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+// prototype declaration to get rid of a warning
+void kernel_main( void );
 
 /**
  * @brief Kernel main function
  *
  * @todo remove initrd test code later
  */
-void kernel_main( void ) {
+noreturn void kernel_main( void ) {
   // Setup early heap for malloc / free support
   DEBUG_OUTPUT( "[bolthur/kernel -> heap] early heap initialize ...\r\n" );
   heap_init( HEAP_INIT_EARLY );
@@ -215,6 +215,3 @@ void kernel_main( void ) {
   // kickstart multitasking
   task_process_start();
 }
-
-// enable again
-#pragma GCC diagnostic pop

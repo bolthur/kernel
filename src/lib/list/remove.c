@@ -30,7 +30,7 @@
  * @param item
  */
 void list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
-  // assert existance
+  // assert existence
   assert( NULL != list && NULL != item );
 
   // stop if not existing
@@ -56,4 +56,7 @@ void list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
   if ( item == list->last ) {
     list->last = item->previous;
   }
+
+  // free list item
+  free( item );
 }

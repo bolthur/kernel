@@ -539,7 +539,7 @@ void v7_long_map(
     DEBUG_OUTPUT( "table: %p\r\n", ( void* )table );
   #endif
 
-  // assert existance
+  // assert existence
   assert( NULL != table );
 
   // debug output
@@ -661,7 +661,7 @@ void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
   ld_page_table_t* table = ( ld_page_table_t* )map_temporary(
     table_phys, PAGE_SIZE
   );
-  // assert existance
+  // assert existence
   assert( NULL != table );
 
   // ensure mapped
@@ -909,8 +909,9 @@ virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
  * @param ctx context to destroy
  *
  * @todo add logic
+ * @todo remove noreturn when handler is completed
  */
-void v7_long_destroy_context( __unused virt_context_ptr_t ctx ) {
+noreturn void v7_long_destroy_context( __unused virt_context_ptr_t ctx ) {
   PANIC( "v7 long destroy context not yet implemented!" );
 }
 
@@ -965,7 +966,7 @@ bool v7_long_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
     DEBUG_OUTPUT( "table: %p\r\n", ( void* )table );
   #endif
 
-  // assert existance
+  // assert existence
   assert( NULL != table );
 
   // debug output

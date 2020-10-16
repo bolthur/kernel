@@ -86,7 +86,7 @@ bool elf_check( uintptr_t elf ) {
     return false;
   }
 
-  // ensure program header existance
+  // ensure program header existence
   if ( 0 == header->e_phentsize ) {
     // debug output
     #if defined ( PRINT_ELF )
@@ -96,7 +96,7 @@ bool elf_check( uintptr_t elf ) {
     return false;
   }
 
-  // ensure section header existance
+  // ensure section header existence
   if ( 0 == header->e_shentsize ) {
     // debug output
     #if defined ( PRINT_ELF )

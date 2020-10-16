@@ -50,8 +50,10 @@ __maybe_unused static uintptr_t fault_address( void ) {
  * @brief Data abort exception handler
  *
  * @param cpu cpu context
+ *
+ * @todo remove noreturn when handler is completed
  */
-void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
+noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   nested_data_abort++;
   assert( nested_data_abort < INTERRUPT_NESTED_MAX );

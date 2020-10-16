@@ -575,7 +575,7 @@ void v7_short_map(
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
 
-  // assert existance
+  // assert existence
   assert( NULL != table );
 
   // debug output
@@ -695,7 +695,7 @@ void v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
 
    // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-  // assert existance
+  // assert existence
   assert( NULL != table );
 
   // ensure not already mapped
@@ -925,8 +925,9 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
  * @param ctx context to destroy
  *
  * @todo add logic
+ * @todo remove noreturn when handler is completed
  */
-void v7_short_destroy_context( __unused virt_context_ptr_t ctx ) {
+noreturn void v7_short_destroy_context( __unused virt_context_ptr_t ctx ) {
   PANIC( "v7 short destroy context not yet implemented!" );
 }
 
@@ -987,7 +988,7 @@ bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
   #endif
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-  // assert existance
+  // assert existence
   assert( NULL != table );
 
   // debug output

@@ -34,8 +34,10 @@ static uint32_t nested_undefined = 0;
  * @brief Undefined instruction exception handler
  *
  * @param cpu cpu context
+ *
+ * @todo remove noreturn when handler is completed
  */
-void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
+noreturn void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
   nested_undefined++;
   assert( nested_undefined < INTERRUPT_NESTED_MAX );

@@ -19,6 +19,7 @@
  */
 
 #include <stdint.h>
+#include <ssp.h>
 #include <core/panic.h>
 
 #if UINT32_MAX == UINTPTR_MAX
@@ -32,16 +33,9 @@
  */
 uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 
-// disable missing prototype temporarily
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-prototypes"
-
 /**
  * @brief Stack check failed callback
  */
 noreturn void __stack_chk_fail( void ) {
   PANIC( "Stack smashing detected" );
 }
-
-// restore again
-#pragma GCC diagnostic pop

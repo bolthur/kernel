@@ -27,7 +27,7 @@
 #include <core/mm/heap.h>
 
 /**
- * @brief alligned memory allocation
+ * @brief aligned memory allocation
  *
  * @param alignment alignment
  * @param size size to allocate

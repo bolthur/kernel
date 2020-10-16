@@ -32,7 +32,7 @@
 list_item_ptr_t list_lookup_data( list_manager_ptr_t list, void* data ) {
   list_item_ptr_t current;
 
-  // assert existance
+  // assert existence
   assert( NULL != list );
   // populate current
   current = list->first;
@@ -61,7 +61,7 @@ list_item_ptr_t list_lookup_data( list_manager_ptr_t list, void* data ) {
 list_item_ptr_t list_lookup_item( list_manager_ptr_t list, list_item_ptr_t item ) {
   list_item_ptr_t current;
 
-  // assert existance
+  // assert existence
   assert( NULL != list );
   // populate current
   current = list->first;

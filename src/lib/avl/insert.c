@@ -43,8 +43,6 @@ static avl_node_ptr_t insert(
 
   if ( -1 == result ) {
     root->left = insert( tree, node, root->left );
-  } else if ( 1 == result ) {
-    root->right = insert( tree, node, root->right );
   } else {
     root->right = insert( tree, node, root->right );
   }

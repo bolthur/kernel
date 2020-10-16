@@ -18,26 +18,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <avl.h>
+#if ! defined( __LIB_SSP__ )
+#define __LIB_SSP__
 
-/**
- * @brief Helper to destroy created tree
- *
- * @param tree
- */
-void avl_destroy_tree( avl_tree_ptr_t tree ) {
-  // loop as long a root node is existing
-  while ( NULL != tree->root ) {
-    // cache root node
-    avl_node_ptr_t node = tree->root;
-    // remove node from tree
-    avl_remove_by_node( tree, node );
-    // free structure
-    free( ( void* )node );
-  }
-  // finally free tree itself
-  free( tree );
-}
+#include <stdnoreturn.h>
+
+noreturn void __stack_chk_fail( void );
+
+#endif

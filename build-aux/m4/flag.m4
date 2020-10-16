@@ -10,10 +10,13 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-fstack-protector-all -Wstack-protector])
   # warnings
   AX_APPEND_COMPILE_FLAGS([-Wall -Wextra -Werror -Wpedantic])
-  AX_APPEND_COMPILE_FLAGS([-Wconversion -Wpacked])
-  AX_APPEND_COMPILE_FLAGS([-Wpacked-bitfield-compat])
+  AX_APPEND_COMPILE_FLAGS([-Wconversion -Wpacked -Wredundant-decls])
+  AX_APPEND_COMPILE_FLAGS([-Wmisleading-indentation -Wundef])
+  AX_APPEND_COMPILE_FLAGS([-Wpacked-bitfield-compat -Wrestrict])
   AX_APPEND_COMPILE_FLAGS([-Wpacked-not-aligned -Wstrict-prototypes])
   AX_APPEND_COMPILE_FLAGS([-Wmissing-prototypes -Wshadow])
+  AX_APPEND_COMPILE_FLAGS([-Wmissing-noreturn -Wmissing-format-attribute])
+  AX_APPEND_COMPILE_FLAGS([-Wduplicated-branches -Wduplicated-cond])
   # generic
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -nodefaultlibs -std=c18])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
@@ -21,7 +24,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
 
   # debug parameter
   AS_IF([test "x$with_debug_symbols" == "xyes"], [
-    # debug symbols and undefined behaviour sanitization
+    # debug symbols and sanitizer
     AX_APPEND_COMPILE_FLAGS([-g -fsanitize=undefined])
   ])
 

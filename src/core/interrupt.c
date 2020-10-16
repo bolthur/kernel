@@ -68,7 +68,7 @@ static int32_t compare_interrupt_callback(
  * @return avl_tree_ptr_t
  */
 static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
-  // assert heap existance
+  // assert heap existence
   assert( true == heap_init_get() );
   // debug output
   #if defined( PRINT_EVENT )
@@ -122,12 +122,95 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
  * @param post flag to bind as post callback
  */
 void interrupt_unregister_handler(
-  __unused size_t num,
-  __unused interrupt_callback_t callback,
-  __unused interrupt_type_t type,
-  __unused bool post
+  size_t num,
+  interrupt_callback_t callback,
+  interrupt_type_t type,
+  bool post
 ) {
-  PANIC( "Unregister handling is not yet implemented!" );
+  // assert heap existence
+  assert( true == heap_init_get() );
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT(
+      "Called interrupt_unregister_handler( %zu, %p, %d, %s )\r\n",
+      num, callback, type, post  ? "true" : "false" );
+  #endif
+
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Try to unmap callback for interrupt %zu\r\n", num );
+  #endif
+
+  // validate interrupt number by vendor
+  if ( type == INTERRUPT_NORMAL || type == INTERRUPT_FAST ) {
+    assert( interrupt_validate_number( num ) );
+  }
+
+  // get correct tree to use
+  avl_tree_ptr_t tree = tree_by_type( type );
+  // handle no tree
+  if ( NULL == tree ) {
+    return;
+  }
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT(
+      "Using interrupt tree \"%p\" for lookup!\r\n", ( void* )tree );
+  #endif
+
+  // try to find node
+  avl_node_ptr_t node = avl_find_by_data( tree, ( void* )num );
+  interrupt_block_ptr_t block;
+  // debug output
+  #if defined( PRINT_INTERRUPT )
+    DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
+  #endif
+  // handle not yet added
+  if ( NULL == node ) {
+    return;
+  }
+  // gather block
+  block = INTERRUPT_GET_BLOCK( node );
+
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Checking for not bound interrupt callback\r\n" );
+  #endif
+  // get first element
+  list_item_ptr_t match = NULL;
+  list_manager_ptr_t list = true != post
+    ? block->handler : block->post;
+  list_item_ptr_t current = list->first;
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Used first element for looping at %p\r\n", ( void* )current );
+  #endif
+  // loop through list for check callback
+  while ( NULL != current ) {
+    // get callback from data
+    interrupt_callback_wrapper_ptr_t wrapper =
+      ( interrupt_callback_wrapper_ptr_t )current->data;
+    // debug output
+    #if defined( PRINT_EVENT )
+      DEBUG_OUTPUT( "Check bound callback at %p\r\n", ( void* )wrapper );
+    #endif
+    // handle match
+    if ( wrapper->callback == callback ) {
+      match = current;
+      break;
+    }
+    // get to next
+    current = current->next;
+  }
+
+  // handle no match
+  if ( NULL == match ) {
+    return;
+  }
+  // free allocated wrapper
+  free( match->data );
+  // remove element
+  list_remove( list, match );
 }
 
 /**
@@ -144,7 +227,7 @@ void interrupt_register_handler(
   interrupt_type_t type,
   bool post
 ) {
-  // assert heap existance
+  // assert heap existence
   assert( true == heap_init_get() );
   // debug output
   #if defined( PRINT_EVENT )
@@ -209,10 +292,9 @@ void interrupt_register_handler(
     DEBUG_OUTPUT( "Checking for already bound interrupt callback\r\n" );
   #endif
   // get first element
-  list_item_ptr_t current =
-    true != post
-      ? block->handler->first
-      : block->post->first;
+  list_manager_ptr_t list = true != post
+    ? block->handler : block->post;
+  list_item_ptr_t current = list->first;
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Used first element for looping at %p\r\n", ( void* )current );
@@ -249,11 +331,7 @@ void interrupt_register_handler(
   #endif
 
   // push to list
-  list_push_back(
-    true != post
-      ? block->handler
-      : block->post,
-    ( void* )wrapper );
+  list_push_back( list, ( void* )wrapper );
 }
 
 /**
