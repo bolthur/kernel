@@ -112,9 +112,22 @@ void framebuffer_init( void ) {
   }
 
   if ( ( mp = mailbox_property_get( TAG_ALLOCATE_BUFFER ) ) ) {
-    // Transform VC virtual address to arm physical address
-    framebuffer_base_set( mp->data.buffer_u32[ 0 ] & 0x3FFFFFFF );
+    framebuffer_base_set( mp->data.buffer_u32[ 0 ] );
     framebuffer_size = mp->data.buffer_u32[ 1 ];
+  }
+
+  // fetch video core informations
+  mailbox_property_init();
+  mailbox_property_add_tag( TAG_GET_VC_MEMORY );
+  mailbox_property_process();
+  // transform address to physical one
+  if ( ( mp = mailbox_property_get( TAG_GET_VC_MEMORY ) ) ) {
+    // get set base
+    uintptr_t base = framebuffer_base_get();
+    // transform to physical
+    base = base & ( mp->data.buffer_u32[ 0 ] + mp->data.buffer_u32[ 1 ] - 1 );
+    // push back
+    framebuffer_base_set( base );
   }
 
   // map initially
