@@ -112,7 +112,8 @@ void framebuffer_init( void ) {
   }
 
   if ( ( mp = mailbox_property_get( TAG_ALLOCATE_BUFFER ) ) ) {
-    framebuffer_base_set( mp->data.buffer_u32[ 0 ] );
+    // Transform VC virtual address to arm physical address
+    framebuffer_base_set( mp->data.buffer_u32[ 0 ] & 0x3FFFFFFF );
     framebuffer_size = mp->data.buffer_u32[ 1 ];
   }
 
