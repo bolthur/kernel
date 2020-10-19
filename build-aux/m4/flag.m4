@@ -19,7 +19,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-Wduplicated-branches -Wduplicated-cond])
   # generic
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -nodefaultlibs -std=c18])
-  AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
+  AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer -fno-builtin])
   AX_APPEND_COMPILE_FLAGS([-ffreestanding -fno-common])
 
   # debug parameter
