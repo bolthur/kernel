@@ -1,5 +1,5 @@
 
-SUBDIRS = libc atag avl list tar
+SUBDIRS = libc atag collection tar
 
 noinst_LTLIBRARIES = libubsan.la libssp.la
 
