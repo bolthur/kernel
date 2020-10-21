@@ -20,14 +20,14 @@
 
 #include <stdlib.h>
 #include <core/tty.h>
-#include <platform/rpi/framebuffer.h>
+#include <core/video.h>
 
 /**
  * @brief Initialize TTY
  */
 void tty_init( void ) {
   #if defined( OUTPUT_ENABLE )
-    framebuffer_init();
+    video_init();
   #endif
 }
 
@@ -39,6 +39,6 @@ void tty_init( void ) {
 void tty_putc( __maybe_unused uint8_t c ) {
   // return if disabled
   #if defined( OUTPUT_ENABLE )
-    framebuffer_putc( c );
+    video_putc( c );
   #endif
 }

@@ -35,7 +35,7 @@
 #include <core/mm/virt.h>
 #include <arch/arm/v7/cpu.h>
 #include <arch/arm/barrier.h>
-#include <arch/arm/v7/cache.h>
+#include <arch/arm/cache.h>
 #include <arch/arm/v7/debug/debug.h>
 
 /**

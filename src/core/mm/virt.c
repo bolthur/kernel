@@ -29,6 +29,8 @@
 #include <core/firmware.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
+#include <core/video.h>
+#include <core/cache.h>
 
 /**
  * @brief static initialized flag
@@ -121,10 +123,33 @@ void virt_init( void ) {
     );
   }
 
+  // handle video mapping
+  #if defined( OUTPUT_ENABLE )
+    // map video area
+    start = video_base_get();
+    uintptr_t virtual = video_virtual_destination();
+    // map video
+    while ( start < video_end_get() ) {
+      // map it page by page
+      virt_map_address(
+        kernel_context,
+        virtual,
+        start,
+        VIRT_MEMORY_TYPE_DEVICE,
+        VIRT_PAGE_TYPE_AUTO
+      );
+      // increase start and virtual
+      start += PAGE_SIZE;
+      virtual += PAGE_SIZE;
+    }
+  #endif
+
   // initialize platform related
   virt_platform_init();
   // prepare temporary area
   virt_prepare_temporary( kernel_context );
+  // enable cpu caches
+  cache_enable();
 
   // firmware init stuff
   firmware_init();
@@ -140,6 +165,16 @@ void virt_init( void ) {
   virt_flush_complete();
 
   // post init
+  // set new video base
+  #if defined( OUTPUT_ENABLE )
+    video_base_set( video_virtual_destination() );
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "Set new video base to %p\r\n",
+        ( void* )video_virtual_destination() );
+    #endif
+  #endif
+  // platform post init
   virt_platform_post_init();
 
   // set static

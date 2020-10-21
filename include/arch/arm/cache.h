@@ -18,20 +18,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __KERNEL_VENDOR_RPI_FRAMEBUFFER__ )
-#define __KERNEL_VENDOR_RPI_FRAMEBUFFER__
+#if ! defined( __ARCH_ARM_CACHE__ )
+#define __ARCH_ARM_CACHE__
 
-#include <stdint.h>
-
-#define FRAMEBUFFER_SCREEN_WIDTH 800 // 960
-#define FRAMEBUFFER_SCREEN_HEIGHT 600 // 720
-#define FRAMEBUFFER_SCREEN_DEPTH 16
-
-void framebuffer_init( void );
-void framebuffer_putc( uint8_t );
-
-uintptr_t framebuffer_end_get( void );
-uintptr_t framebuffer_base_get( void );
-void framebuffer_base_set( uintptr_t );
+void cache_invalidate_instruction_cache( void );
+void cache_invalidate_data_cache( void );
+void cache_invalidate_prefetch_buffer( void );
 
 #endif
