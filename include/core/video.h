@@ -18,11 +18,20 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_DEBUG_CACHE__ )
-#define __CORE_DEBUG_CACHE__
+#if ! defined( __CORE_VIDEO__ )
+#define __CORE_VIDEO__
 
-void debug_cache_invalidate_instruction_cache( void );
-void debug_cache_invalidate_data_cache( void );
-void debug_cache_invalidate_prefetch_buffer( void );
+#include <stdint.h>
+
+#define VIDEO_SCREEN_WIDTH 800
+#define VIDEO_SCREEN_HEIGHT 600
+
+void video_init( void );
+void video_putc( uint8_t );
+
+uintptr_t video_end_get( void );
+uintptr_t video_base_get( void );
+void video_base_set( uintptr_t );
+uintptr_t video_virtual_destination( void );
 
 #endif

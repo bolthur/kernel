@@ -25,7 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <core/debug/debug.h>
-#include <platform/rpi/framebuffer.h>
+#include <core/video.h>
 #include <platform/rpi/mailbox/property.h>
 
 #include <font/font.h>
@@ -37,17 +37,17 @@
 /**
  * @brief Initialized flag
  */
-static bool framebuffer_initialized = false;
+static bool video_initialized = false;
 
 /**
- * @brief Framebuffer address
+ * @brief Video address
  */
-static volatile uint8_t* framebuffer_address = NULL;
+static volatile uint8_t* video_address = NULL;
 
 /**
- * @brief Framebuffer size
+ * @brief Video size
  */
-static uint32_t framebuffer_size = 0;
+static uint32_t video_size = 0;
 
 /**
  * @brief Resolution width
@@ -62,7 +62,7 @@ static int32_t resolution_height = 0;
 /**
  * @brief Bits per pixel
  */
-static int32_t framebuffer_bpp = 0;
+static int32_t video_bpp = 0;
 
 /**
  * @brief X coordinate
@@ -80,16 +80,54 @@ static int32_t coordinate_y = 0;
 static int32_t pitch = 0;
 
 /**
- * @brief Initialize framebuffer
+ * @brief Virtual area of video
  */
-void framebuffer_init( void ) {
-  rpi_mailbox_property_t* mp;
+#if defined( ELF32 )
+  #define VIDEO_VIRTUAL_AREA 0xF3041000
+#else
+  #error "64 bit not yet supported!"
+#endif
 
-  // Initialize framebuffer
+/**
+ * @brief Initialize video
+ *
+ * @todo set arm clock to max clock rate
+ */
+void video_init( void ) {
+  rpi_mailbox_property_t* mp;
+  int32_t width_x = 0, width_y = 0;
+
+  // try to get current width and height and max arm clock rate
   mailbox_property_init();
-  mailbox_property_add_tag( TAG_SET_PHYSICAL_SIZE, FRAMEBUFFER_SCREEN_WIDTH, FRAMEBUFFER_SCREEN_HEIGHT );
-  mailbox_property_add_tag( TAG_SET_VIRTUAL_SIZE, FRAMEBUFFER_SCREEN_WIDTH, FRAMEBUFFER_SCREEN_HEIGHT );
-  mailbox_property_add_tag( TAG_SET_DEPTH, FRAMEBUFFER_SCREEN_DEPTH );
+  mailbox_property_add_tag( TAG_GET_PHYSICAL_SIZE );
+  mailbox_property_add_tag( TAG_GET_MAX_CLOCK_RATE, TAG_CLOCK_ARM );
+  mailbox_property_process();
+  // get current set width
+  if ( ( mp = mailbox_property_get( TAG_GET_PHYSICAL_SIZE ) ) ) {
+    width_x = mp->data.buffer_32[ 0 ];
+    width_y = mp->data.buffer_32[ 1 ];
+  }
+  // set to default if one or both aren't set
+  if ( 0 >= width_x || 0 >= width_y ) {
+    width_x = VIDEO_SCREEN_WIDTH;
+    width_y = VIDEO_SCREEN_HEIGHT;
+  }
+  // get max clock rate
+  if ( ( mp = mailbox_property_get( TAG_GET_MAX_CLOCK_RATE ) ) ) {
+    // set max clock rate
+    mailbox_property_init();
+    mailbox_property_add_tag(
+      TAG_SET_CLOCK_RATE, TAG_CLOCK_ARM, mp->data.buffer_32, 0 );
+    mailbox_property_process();
+  }
+
+  // Initialize video framebuffer
+  mailbox_property_init();
+  mailbox_property_add_tag(
+    TAG_SET_PHYSICAL_SIZE, VIDEO_SCREEN_WIDTH, VIDEO_SCREEN_HEIGHT );
+  mailbox_property_add_tag(
+    TAG_SET_VIRTUAL_SIZE, VIDEO_SCREEN_WIDTH, VIDEO_SCREEN_HEIGHT );
+  mailbox_property_add_tag( TAG_SET_DEPTH, 16 );
   mailbox_property_add_tag( TAG_SET_PIXEL_ORDER, 0 );
   mailbox_property_add_tag( TAG_ALLOCATE_BUFFER, 16 );
   mailbox_property_add_tag( TAG_SET_VIRTUAL_OFFSET, 0, 0 );
@@ -104,7 +142,7 @@ void framebuffer_init( void ) {
   }
 
   if ( ( mp = mailbox_property_get( TAG_GET_DEPTH ) ) ) {
-    framebuffer_bpp = mp->data.buffer_32[ 0 ];
+    video_bpp = mp->data.buffer_32[ 0 ];
   }
 
   if ( ( mp = mailbox_property_get( TAG_GET_PITCH ) ) ) {
@@ -112,8 +150,8 @@ void framebuffer_init( void ) {
   }
 
   if ( ( mp = mailbox_property_get( TAG_ALLOCATE_BUFFER ) ) ) {
-    framebuffer_base_set( mp->data.buffer_u32[ 0 ] );
-    framebuffer_size = mp->data.buffer_u32[ 1 ];
+    video_base_set( mp->data.buffer_u32[ 0 ] );
+    video_size = mp->data.buffer_u32[ 1 ];
   }
 
   // fetch video core informations
@@ -123,50 +161,50 @@ void framebuffer_init( void ) {
   // transform address to physical one
   if ( ( mp = mailbox_property_get( TAG_GET_VC_MEMORY ) ) ) {
     // get set base
-    uintptr_t base = framebuffer_base_get();
+    uintptr_t base = video_base_get();
     // transform to physical
     base = base & ( mp->data.buffer_u32[ 0 ] + mp->data.buffer_u32[ 1 ] - 1 );
     // push back
-    framebuffer_base_set( base );
+    video_base_set( base );
   }
 
   // map initially
-  uintptr_t start = framebuffer_base_get();
-  uintptr_t end = framebuffer_end_get();
+  uintptr_t start = video_base_get();
+  uintptr_t end = video_end_get();
   while ( start < end ) {
     virt_startup_map( ( uint64_t )start, start );
     start += PAGE_SIZE;
   }
 
   // set flag
-  framebuffer_initialized = true;
+  video_initialized = true;
 }
 
 /**
- * @brief Method to get framebuffer base address
+ * @brief Method to get video base address
  *
  * @return uintptr_t
  */
-uintptr_t framebuffer_base_get( void ) {
-  return ( uintptr_t )framebuffer_address;
+uintptr_t video_base_get( void ) {
+  return ( uintptr_t )video_address;
 }
 
 /**
- * @brief Method to set framebuffer base address
+ * @brief Method to set video base address
  *
  * @param addr
  */
-void framebuffer_base_set( uintptr_t addr ) {
-  framebuffer_address = ( volatile uint8_t* )addr;
+void video_base_set( uintptr_t addr ) {
+  video_address = ( volatile uint8_t* )addr;
 }
 
 /**
- * @brief Get end address of frame buffer
+ * @brief Get end address of video buffer
  *
  * @return void*
  */
-uintptr_t framebuffer_end_get( void ) {
-  return ( uintptr_t )( framebuffer_address + framebuffer_size );
+uintptr_t video_end_get( void ) {
+  return ( uintptr_t )( video_address + video_size );
 }
 
 /**
@@ -182,9 +220,9 @@ static void put_pixel(
   int32_t x, int32_t y, uint8_t r, uint8_t g, uint8_t b
 ) {
   // calculate offset
-  int32_t pixel_offset = ( x * ( framebuffer_bpp >> 3 ) ) + ( y * pitch );
+  int32_t pixel_offset = ( x * ( video_bpp >> 3 ) ) + ( y * pitch );
   // Bit pack RGB565 into the 16-bit pixel offset
-  *( uint16_t* )&framebuffer_address[ pixel_offset ] = ( uint16_t )(
+  *( uint16_t* )&video_address[ pixel_offset ] = ( uint16_t )(
     ( r >> 3 ) << 11 | ( g >> 2 ) << 5 | ( b >> 3 )
   );
 }
@@ -198,9 +236,9 @@ static void scroll( void ) {
   // calculate row size
   uint32_t row_size = (uint32_t)( FONT_HEIGHT * pitch );
   // src line
-  uint32_t src = ( uint32_t )( framebuffer_address + row_size );
+  uint32_t src = ( uint32_t )( video_address + row_size );
   // max y row
-  uint32_t max_y = FRAMEBUFFER_SCREEN_HEIGHT / FONT_HEIGHT - 1;
+  uint32_t max_y = VIDEO_SCREEN_HEIGHT / FONT_HEIGHT - 1;
 
   // check for scrolling is really necessary
   if ( coordinate_y + FONT_HEIGHT < resolution_height ) {
@@ -213,21 +251,21 @@ static void scroll( void ) {
   }
 
   // move memory up
-  memmove( ( void* )framebuffer_address, ( void* )src, max_y * row_size );
+  memmove( ( void* )video_address, ( void* )src, max_y * row_size );
   // erase last line
-  memset( ( void*  )( framebuffer_address + ( max_y * row_size ) ), 0, row_size );
+  memset( ( void*  )( video_address + ( max_y * row_size ) ), 0, row_size );
   // reset x
   coordinate_x = 0;
 }
 
 /**
- * @brief Print character to framebuffer
+ * @brief Print character to video
  *
  * @param c character to print
  */
-void framebuffer_putc( uint8_t c ) {
+void video_putc( uint8_t c ) {
   // ensure initialized environment
-  if ( ! framebuffer_initialized ) {
+  if ( ! video_initialized ) {
     return;
   }
 
@@ -287,4 +325,13 @@ void framebuffer_putc( uint8_t c ) {
       // increase x coordinate
       coordinate_x += FONT_WIDTH;
   }
+}
+
+/**
+ * @brief Get virtual destination of video
+ *
+ * @return uintptr_t
+ */
+uintptr_t video_virtual_destination( void ) {
+  return VIDEO_VIRTUAL_AREA;
 }
