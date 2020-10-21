@@ -18,21 +18,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_SYSCALL__ )
-#define __CORE_SYSCALL__
+#include <core/event.h>
+#include <core/syscall.h>
+#include <core/interrupt.h>
+#include <arch/arm/v7/cpu.h>
 
-#define SYSCALL_PROCESS_CREATE 1
-#define SYSCALL_PROCESS_ID 2
-#define SYSCALL_PROCESS_KILL 3
-
-#define SYSCALL_THREAD_CREATE 10
-#define SYSCALL_THREAD_KILL 11
-
-void syscall_init( void );
-void syscall_process_create( void* context );
-void syscall_process_id( void* context );
-void syscall_process_kill( void* context );
-void syscall_thread_create( void* context );
-void syscall_thread_kill( void* context );
-
-#endif
+void syscall_thread_create( void* context ) {
+  // get context
+  INTERRUPT_DETERMINE_CONTEXT( context )
+  // transform to cpu structure
+  __unused cpu_register_context_ptr_t cpu =
+    ( cpu_register_context_ptr_t )context;
+}

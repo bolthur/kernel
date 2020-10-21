@@ -23,20 +23,10 @@
 #include <core/interrupt.h>
 #include <arch/arm/v7/cpu.h>
 
-/**
- * @brief Dummy system call for testing purposes
- *
- * @param context
- *
- * @todo remove with syscall implementation
- */
-void syscall_putc( void* context ) {
+void syscall_thread_kill( void* context ) {
   // get context
   INTERRUPT_DETERMINE_CONTEXT( context )
-
   // transform to cpu structure
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-
-  // simple character printing
-  printf( "%c", ( uint8_t )cpu->reg.r0 );
+  __unused cpu_register_context_ptr_t cpu =
+    ( cpu_register_context_ptr_t )context;
 }

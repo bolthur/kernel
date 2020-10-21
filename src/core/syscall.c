@@ -25,6 +25,36 @@
  * @brief Initialize syscalls
  */
 void syscall_init( void ) {
+  // process system calls
   interrupt_register_handler(
-    SYSCALL_PUTC, syscall_putc, INTERRUPT_SOFTWARE, false );
+    SYSCALL_PROCESS_CREATE,
+    syscall_process_create,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_PROCESS_ID,
+    syscall_process_id,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_PROCESS_KILL,
+    syscall_process_kill,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  // thread related system calls
+  interrupt_register_handler(
+    SYSCALL_THREAD_CREATE,
+    syscall_thread_create,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_THREAD_KILL,
+    syscall_thread_kill,
+    INTERRUPT_SOFTWARE,
+    false
+  );
 }

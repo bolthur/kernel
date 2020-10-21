@@ -20,7 +20,11 @@ libv7_la_SOURCES = \
   mm/virt.c \
   stub/stack.S \
   stub/start.S \
-  syscall/putc.c \
+  syscall/task/process_create.c \
+  syscall/task/process_id.c \
+  syscall/task/process_kill.c \
+  syscall/task/thread_create.c \
+  syscall/task/thread_kill.c \
   task/process.c \
   task/stack.c \
   task/stub.S \
