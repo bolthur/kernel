@@ -41,7 +41,7 @@
 #include <core/timer.h>
 #include <core/interrupt.h>
 
-#if defined( BCM2709 ) || defined( BCM2710 )
+#if defined( BCM2836 ) || defined( BCM2837 )
   // Timer match bits
   #define ARM_GENERIC_TIMER_MATCH_SECURE ( 1 << 0 )
   #define ARM_GENERIC_TIMER_MATCH_NON_SECURE ( 1 << 1 )
@@ -87,7 +87,7 @@
  * @todo Check system timer support of qemu
  */
 static bool timer_pending( void ) {
-  #if defined( BCM2709 ) || defined( BCM2710 )
+  #if defined( BCM2836 ) || defined( BCM2837 )
     uintptr_t base = peripheral_base_get( PERIPHERAL_LOCAL );
     return io_in32( ( uint32_t )base + CORE0_IRQ_SOURCE ) & ARM_GENERIC_TIMER_MATCH_VIRT;
   #else
@@ -114,7 +114,7 @@ static void timer_clear( void* context ) {
   #endif
 
   // clear timer
-  #if defined( BCM2709 ) || defined( BCM2710 )
+  #if defined( BCM2836 ) || defined( BCM2837 )
     // reset cntcval
     __asm__ __volatile__ ( "mcr p15, 0, %0, c14, c3, 0" :: "r"( ARM_GENERIC_TIMER_COUNT ) );
   #else
@@ -134,7 +134,7 @@ static void timer_clear( void* context ) {
  * @todo Check system timer support of qemu
  */
 void timer_init( void ) {
-  #if defined( BCM2709 ) || defined( BCM2710 )
+  #if defined( BCM2836 ) || defined( BCM2837 )
     // register handler
     interrupt_register_handler(
       ARM_GENERIC_TIMER_INTERRUPT_VIRT, timer_clear, INTERRUPT_NORMAL, false );

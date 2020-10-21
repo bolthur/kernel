@@ -19,6 +19,7 @@
  */
 
 #include <stdint.h>
+#include <stdnoreturn.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +29,6 @@
 #include <core/tty.h>
 #include <core/interrupt.h>
 #include <core/timer.h>
-#include <core/platform.h>
 #include <core/debug/debug.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
@@ -46,16 +46,17 @@
 #include <core/panic.h>
 #include <core/initrd.h>
 
-// disable missing prototype temporarily
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wmissing-prototypes"
+#include <arch/arm/firmware.h>
+
+// prototype declaration to get rid of a warning
+void kernel_main( void );
 
 /**
  * @brief Kernel main function
  *
  * @todo remove initrd test code later
  */
-void kernel_main( void ) {
+noreturn void kernel_main( void ) {
   // Setup early heap for malloc / free support
   DEBUG_OUTPUT( "[bolthur/kernel -> heap] early heap initialize ...\r\n" );
   heap_init( HEAP_INIT_EARLY );
@@ -98,17 +99,38 @@ void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> arch] initialize ...\r\n" );
   arch_init();
 
-  // Setup platform related parts
-  DEBUG_OUTPUT( "[bolthur/kernel -> platform] initialize ...\r\n" );
-  platform_init();
-
-  // Setup initrd parts
-  DEBUG_OUTPUT( "[bolthur/kernel -> initrd] initialize ...\r\n" );
-  initrd_init();
-
   // Setup physical memory management
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" );
   phys_init();
+
+  // print size
+  if ( initrd_exist() ) {
+    uintptr_t initrd = initrd_get_start_address();
+    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd );
+    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd_get_end_address() );
+    DEBUG_OUTPUT( "size = %zo\r\n", initrd_get_size() );
+    DEBUG_OUTPUT( "size = %zu\r\n", initrd_get_size() );
+
+    // set iterator
+    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
+
+    // loop through tar
+    while ( ! tar_end_reached( iter ) ) {
+      // debug output
+      DEBUG_OUTPUT( "%p: initrd file name: %s\r\n",
+        ( void* )iter, iter->file_name );
+
+      // next
+      iter = tar_next( iter );
+    }
+  }
+
+  uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
+  DEBUG_OUTPUT(
+    "atag_fdt = %#x, *atag_fdt = %#x\r\n",
+    atag_fdt,
+    *( ( uint32_t* )atag_fdt )
+  );
 
   // Setup virtual memory management
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" );
@@ -135,6 +157,15 @@ void kernel_main( void ) {
       iter = tar_next( iter );
     }
   }
+
+  atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
+  DEBUG_OUTPUT(
+    "atag_fdt = %#x, *atag_fdt = %#x\r\n",
+    atag_fdt,
+    *( ( uint32_t* )atag_fdt )
+  );
+
+  PANIC( "FOO" );
 
   // Setup heap
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
@@ -184,6 +215,3 @@ void kernel_main( void ) {
   // kickstart multitasking
   task_process_start();
 }
-
-// enable again
-#pragma GCC diagnostic pop

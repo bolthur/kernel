@@ -31,7 +31,6 @@
 #include <font/font.h>
 
 #include <core/mm/phys.h>
-#include <arch/arm/boot/mm/virt.h>
 #include <arch/arm/barrier.h>
 #include <core/mm/virt.h>
 
@@ -117,11 +116,25 @@ void framebuffer_init( void ) {
     framebuffer_size = mp->data.buffer_u32[ 1 ];
   }
 
+  // fetch video core informations
+  mailbox_property_init();
+  mailbox_property_add_tag( TAG_GET_VC_MEMORY );
+  mailbox_property_process();
+  // transform address to physical one
+  if ( ( mp = mailbox_property_get( TAG_GET_VC_MEMORY ) ) ) {
+    // get set base
+    uintptr_t base = framebuffer_base_get();
+    // transform to physical
+    base = base & ( mp->data.buffer_u32[ 0 ] + mp->data.buffer_u32[ 1 ] - 1 );
+    // push back
+    framebuffer_base_set( base );
+  }
+
   // map initially
   uintptr_t start = framebuffer_base_get();
   uintptr_t end = framebuffer_end_get();
   while ( start < end ) {
-    boot_virt_map( ( uint64_t )start, start );
+    virt_startup_map( ( uint64_t )start, start );
     start += PAGE_SIZE;
   }
 

@@ -21,17 +21,13 @@
 #include <arch/arm/delay.h>
 
 /**
- * @brief Delay function by given amount of cpu cycles
+ * @brief Delay given amount of cpu cycles
  *
  * @param count Amount of cycles to delay
- *
- * @todo check and revise
  */
-void __no_optimization delay( uint32_t count ) {
+inline void delay( uint32_t count ) {
   __asm__ __volatile__(
-    "__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
-    : "=r" ( count )
-    : [ count ] "0" ( count )
-    : "cc"
+    "__delay_%=: subs %[count], #1; bne __delay_%=\n"
+    : "=r" ( count ) : [ count ] "0" ( count ) : "cc"
   );
 }

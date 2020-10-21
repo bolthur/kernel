@@ -49,3 +49,13 @@ arch_start:
 halt:
   wfe // equivalent of x86 HLT instruction
   b halt
+
+
+
+// reserve space for system info block
+// FIXME: HANDLE 64 bit correctly
+#if defined( ELF32 )
+  .comm firmware_info, 12, 32
+#elif defined( ELF64 )
+  #error "Not supported"
+#endif

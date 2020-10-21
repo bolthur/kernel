@@ -26,6 +26,7 @@
 #include <core/panic.h>
 #include <core/entry.h>
 #include <core/initrd.h>
+#include <core/firmware.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 
@@ -107,7 +108,7 @@ void virt_init( void ) {
         PHYS_2_VIRT( start ),
         start,
         VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_EXECUTABLE
+        VIRT_PAGE_TYPE_AUTO
       );
 
       // get next page
@@ -124,6 +125,9 @@ void virt_init( void ) {
   virt_platform_init();
   // prepare temporary area
   virt_prepare_temporary( kernel_context );
+
+  // firmware init stuff
+  firmware_init();
 
   // set kernel context
   virt_set_context( kernel_context );

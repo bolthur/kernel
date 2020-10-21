@@ -1,2 +1,9 @@
 
-SUBDIRS = stdio stdlib string assert atag ssp ubsan avl tar list
+SUBDIRS = libc atag collection tar
+
+noinst_LTLIBRARIES = libubsan.la libssp.la
+
+libubsan_la_SOURCES = \
+  ubsan.c
+libssp_la_SOURCES = \
+  ssp.c

@@ -27,9 +27,9 @@
  * @return atag_ptr_t
  */
 atag_ptr_t atag_next( atag_ptr_t atag ) {
-  if ( atag->tag_type == ATAG_TAG_NONE ) {
+  if ( atag->header.tag == ATAG_TAG_NONE ) {
     return NULL;
   }
 
-  return ( atag_ptr_t )( ( uint32_t* )atag + atag->tag_size );
+  return ( atag_ptr_t )( ( uint32_t* )atag + atag->header.size );
 }

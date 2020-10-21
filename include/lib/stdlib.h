@@ -24,12 +24,14 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdnoreturn.h>
 
-void __no_return abort( void );
+noreturn void abort( void );
 void* aligned_alloc( size_t, size_t );
 void* calloc( size_t, size_t );
 void free( void* );
 void* malloc( size_t );
 void* realloc( void*, size_t );
+unsigned long int strtoul( const char*, char**, int );
 
 #endif

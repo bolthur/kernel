@@ -25,11 +25,9 @@
  * @brief Get CPU num from data populated within early boot
  *
  * @return uint32_t
+ *
+ * @todo use global populated by device tree
  */
 uint32_t cpu_num( void ) {
-  #if defined( HAS_SMP ) && defined( NUM_CPU )
-    return NUM_CPU;
-  #else
-    return 1;
-  #endif
+  return 1;
 }

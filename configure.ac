@@ -1,6 +1,9 @@
 
-AC_PREREQ(2.69)
-AC_INIT([bolthur-kernel], [0.1.0], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
+LT_PREREQ([2.4.6])
+AC_PREREQ([2.69])
+
+AC_INIT([bolthur-kernel], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
+
 AC_COPYRIGHT([Copyright (C) 2018 - 2020 bolthur project])
 
 AC_CONFIG_AUX_DIR([build-aux/config])
@@ -187,18 +190,20 @@ AC_ARG_WITH(
   [with_debug_debug_symbols=yes]
 )
 
+# check necessary programs
+BOLTHUR_KERNEL_PROG_READLINK
+
+# set program
+BOLTHUR_KERNEL_LANG_PROGRAM
 # set target and flags
 BOLTHUR_KERNEL_SET_DEVICE
 BOLTHUR_KERNEL_SET_HOST
 # set rest of flags
 BOLTHUR_KERNEL_SET_FLAG
-BOLTHUR_KERNEL_LANG_PROGRAM
 
 # checks for programs
 AC_PROG_CC
 AM_PROG_AS
-AC_PROG_RANLIB
-AM_PROG_AR
 BOLTHUR_KERNEL_PROG_OBJCOPY
 
 # Checks for typedefs, structures, and compiler characteristics.
@@ -206,6 +211,10 @@ AC_C_CONST
 AC_C_INLINE
 AC_C_VOLATILE
 AC_C_RESTRICT
+
+# init libtool
+LT_INIT([disable-shared static])
+LT_LANG([C])
 
 # embed git revision and compiler
 AC_DEFINE_UNQUOTED(
@@ -241,8 +250,23 @@ AC_DEFINE_UNQUOTED(
   [Disable optimization]
 )
 AC_DEFINE_UNQUOTED(
+  [__no_sanitize],
+  [__attribute__((no_sanitize("undefined")))],
+  [disable undefined behaviour sanitization]
+)
+AC_DEFINE_UNQUOTED(
+  [__no_stack_protector],
+  [__attribute__((__optimize__("no-stack-protector")))],
+  [disable stack protector mechanism]
+)
+AC_DEFINE_UNQUOTED(
+  [__no_tree_loop_distribute],
+  [__attribute__((__optimize__("no-tree-loop-distribute-patterns")))],
+  [disable stuff like replace logic with memset]
+)
+AC_DEFINE_UNQUOTED(
   [__bootstrap],
-  [__section(".text.boot")],
+  [__section(".text.boot") __no_sanitize __no_stack_protector __no_tree_loop_distribute],
   [Bootstrap function]
 )
 AC_DEFINE_UNQUOTED(
@@ -260,21 +284,6 @@ AC_DEFINE_UNQUOTED(
   [__attribute__((unused))],
   [Unused]
 )
-AC_DEFINE_UNQUOTED(
-  [__no_sanitize],
-  [__attribute__((no_sanitize("undefined")))],
-  [disable undefined behaviour sanitization]
-)
-AC_DEFINE_UNQUOTED(
-  [__no_return],
-  [__attribute__((noreturn))],
-  [mark function as function without continuing exectution]
-)
-AC_DEFINE_UNQUOTED(
-  [__constructor],
-  [__attribute__((constructor))],
-  [mark function as constructor]
-)
 
 # conditional
 AM_CONDITIONAL([IS32], [test $executable_format -eq 32])
@@ -290,21 +299,16 @@ AC_CONFIG_FILES([
   src/arch/arm/v8/Makefile
   src/core/Makefile
   src/lib/Makefile
-  src/lib/assert/Makefile
   src/lib/atag/Makefile
-  src/lib/avl/Makefile
-  src/lib/list/Makefile
-  src/lib/ssp/Makefile
-  src/lib/stdio/Makefile
-  src/lib/stdlib/Makefile
-  src/lib/string/Makefile
+  src/lib/collection/Makefile
+  src/lib/libc/Makefile
   src/lib/tar/Makefile
-  src/lib/ubsan/Makefile
   src/platform/Makefile
   src/platform/rpi/Makefile
   src/target/Makefile
   src/target/rpi/Makefile
   thirdparty/Makefile
+  thirdparty/dtc/libfdt/Makefile
   thirdparty/font/Makefile
 ])
 

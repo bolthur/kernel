@@ -59,7 +59,7 @@ debug_breakpoint_entry_ptr_t debug_breakpoint_find( uintptr_t address ) {
   if ( NULL == debug_breakpoint_manager ) {
     return NULL;
   }
-  // check for possible existance
+  // check for possible existence
   list_item_ptr_t current = debug_breakpoint_manager->first;
   // loop through list of entries
   while ( NULL != current ) {
@@ -102,7 +102,6 @@ void debug_breakpoint_remove_step( void ) {
       list_remove( debug_breakpoint_manager, current );
       // free stuff
       free( entry );
-      free( current );
     }
     // set current to next
     current = next;
@@ -133,7 +132,6 @@ void debug_breakpoint_remove( uintptr_t address, bool remove ) {
     list_remove( debug_breakpoint_manager, item );
     // free stuff
     free( entry );
-    free( item );
   }
 }
 

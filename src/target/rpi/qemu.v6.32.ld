@@ -21,25 +21,7 @@
 OUTPUT_FORMAT( elf32-littlearm )
 OUTPUT_ARCH( arm )
 
-ENTRY( boot_start )
-
-GROUP(
-  ../../arch/arm/v6/libv6.a
-  ../../arch/arm/libarm.a
-  ../../core/libcore.a
-  ../../platform/rpi/librpi.a
-  ../../lib/assert/libassert.a
-  ../../lib/atag/libatag.a
-  ../../lib/avl/libavl.a
-  ../../lib/list/liblist.a
-  ../../lib/ssp/libssp.a
-  ../../lib/stdio/libstdio.a
-  ../../lib/stdlib/libstdlib.a
-  ../../lib/string/libstring.a
-  ../../lib/tar/libtar.a
-  ../../lib/ubsan/libubsan.a
-  ../../../thirdparty/font/libfont.a
-)
+ENTRY( startup )
 
 KERNEL_LMA = 0x10000;
 KERNEL_OFFSET = 0xC0000000;
@@ -82,6 +64,12 @@ SECTIONS {
     __initial_heap_end = .;
 
     __bss_end = .;
+  }
+
+  .fdt ALIGN( 4K ) : AT( ADDR( .fdt ) - KERNEL_OFFSET ) {
+    __fdt_start = .;
+    *( .fdt )
+    __fdt_end = .;
   }
 
   __kernel_end = .;

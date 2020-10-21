@@ -84,7 +84,7 @@ typedef struct {
 
 void __ubsan_handle_type_mismatch( ubsan_type_mismatch_data_ptr_t, uintptr_t );
 void __ubsan_handle_type_mismatch_v1( ubsan_type_mismatch_data_v1_ptr_t, uintptr_t );
-void __ubsan_handle_pointer_overflow(ubsan_pointer_overflow_data_ptr_t, uint64_t, uint64_t );
+void __ubsan_handle_pointer_overflow( ubsan_pointer_overflow_data_ptr_t, uint64_t, uint64_t );
 void __ubsan_handle_add_overflow( ubsan_overflow_data_ptr_t, uint64_t, uint64_t );
 void __ubsan_handle_sub_overflow( ubsan_overflow_data_ptr_t, uint64_t, uint64_t );
 void __ubsan_handle_mul_overflow( ubsan_overflow_data_ptr_t, uint64_t, uint64_t );
@@ -92,5 +92,6 @@ void __ubsan_handle_divrem_overflow( ubsan_overflow_data_ptr_t, uint64_t, uint64
 void __ubsan_handle_shift_out_of_bounds( ubsan_shift_out_of_bounds_data_ptr_t, uint64_t, uint64_t );
 void __ubsan_handle_out_of_bounds( ubsan_out_of_bounds_data_ptr_t, uint64_t );
 void __ubsan_handle_load_invalid_value( ubsan_invalid_value_data_ptr_t, uint64_t );
+void __ubsan_handle_negate_overflow( ubsan_overflow_data_ptr_t, uint64_t );
 
 #endif

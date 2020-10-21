@@ -23,6 +23,7 @@
 #include <string.h>
 #include <core/panic.h>
 #include <core/debug/debug.h>
+#include <core/entry.h>
 #include <platform/rpi/peripheral.h>
 #include <platform/rpi/mailbox/property.h>
 #include <arch/arm/mm/virt.h>
@@ -31,11 +32,48 @@
 #include <platform/rpi/framebuffer.h>
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
-#if defined( BCM2709 ) || defined( BCM2710 )
+#if defined( BCM2836 ) || defined( BCM2837 )
   #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
 #define MAILBOX_PROPERTY_AREA 0xF3040000
 #define FRAMEBUFFER_AREA 0xF3041000
+
+/**
+ * @brief Method to setup short descriptor paging
+ */
+void __bootstrap virt_startup_platform_setup( void ) {
+  // cpu local peripherals
+  #if defined( BCM2836 ) || defined( BCM2837 )
+    uintptr_t cpu_peripheral_base = 0x40000000;
+    size_t cpu_peripheral_size = 0x3FFFF;
+    uintptr_t cpu_peripheral_end = cpu_peripheral_base + cpu_peripheral_size;
+
+    while ( cpu_peripheral_base < cpu_peripheral_end ) {
+      // identity map gpio
+      virt_startup_map( ( uint64_t )cpu_peripheral_base, cpu_peripheral_base );
+      // next page
+      cpu_peripheral_base += PAGE_SIZE;
+    }
+  #endif
+
+  // GPIO related
+  #if defined( BCM2836 ) || defined( BCM2837 )
+    uintptr_t gpio_peripheral_base = 0x3F000000;
+    size_t gpio_peripheral_size = 0xFFFFFF;
+  #else
+    uintptr_t gpio_peripheral_base = 0x20000000;
+    size_t gpio_peripheral_size = 0xFFFFFF;
+  #endif
+  uintptr_t gpio_peripheral_end = gpio_peripheral_base + gpio_peripheral_size;
+
+  // map gpio if set
+  while ( gpio_peripheral_base < gpio_peripheral_end ) {
+    // identity map gpio
+    virt_startup_map( ( uint64_t )gpio_peripheral_base, gpio_peripheral_base );
+    // next page
+    gpio_peripheral_base += PAGE_SIZE;
+  }
+}
 
 /**
  * @brief Initialize virtual memory management
@@ -90,7 +128,7 @@ void virt_platform_init( void ) {
     virtual += PAGE_SIZE;
   }
   // handle local peripherals
-  #if defined( BCM2709 ) || defined( BCM2710 )
+  #if defined( BCM2836 ) || defined( BCM2837 )
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(

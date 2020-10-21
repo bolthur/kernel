@@ -24,7 +24,7 @@
 #include <platform/rpi/peripheral.h>
 
 // initial setup of peripheral base
-#if defined( BCM2709 ) || defined( BCM2710 )
+#if defined( BCM2836 ) || defined( BCM2837 )
   uintptr_t gpio_peripheral_base = 0x3F000000;
   size_t gpio_peripheral_size = 0xFFFFFF;
   uintptr_t cpu_peripheral_base = 0x40000000;

@@ -1,9 +1,6 @@
 
 # Things to be done
 
-* [ ] Add gdb stub for debugging on remote device via serial port
-  * [ ] Add remote debugging integration
-  * [ ] Finish debug launch.json when remote debugging is possible
 * [ ] Replace magic values at serial init by defines
 * [ ] FPU
   * [ ] Add push and pop of fpu registers within ivt stubs
@@ -19,11 +16,6 @@
     * [ ] Prepare virtual memory management per core if smp is active
   * [ ] Determine current running core within exceptions
   * [ ] Extend irq check to check corresponding cpu interrupt registers
-* [ ] Device tree
-  * [ ] Add device tree library
-  * [ ] Extend automake by option for use device tree
-  * [ ] Add parse of device tree when compiled in via option
-  * [ ] Debug output, when no device tree has been found and use kernel defaults
 * [ ] Support further platforms
   * [ ] Add rpi zero support ( armv6 32 bit only with one cpu )
   * [ ] Add rpi 3 support ( armv8 64 bit with smp )

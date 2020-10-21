@@ -25,12 +25,125 @@
 #include <core/entry.h>
 #include <core/panic.h>
 #include <core/debug/debug.h>
-
+#include <core/initrd.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <arch/arm/mm/virt.h>
 #include <arch/arm/v7/mm/virt/short.h>
 #include <arch/arm/v7/mm/virt/long.h>
+
+/**
+ * @brief Supported mode
+ */
+static uint32_t supported_mode __bootstrap_data;
+
+/**
+ * @brief Initial setup done flag
+ */
+static bool initial_setup_done __bootstrap_data = false;
+
+/**
+ * @brief Method wraps setup of short / long descriptor mode
+ *
+ * @todo fix issue within startup setup and remove custom dtb mapping here
+ */
+void __bootstrap virt_startup_setup( void ) {
+  // get paging support from mmfr0
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c0, c1, 4"
+    : "=r" ( supported_mode )
+    : : "cc"
+  );
+
+  // strip out everything not needed
+  supported_mode &= 0xF;
+
+  // check for invalid paging support
+  if (
+    ! (
+      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_PXN == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
+    )
+  ) {
+    return;
+  }
+
+  // get memory size from mmfr3
+  uint32_t reg;
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c0, c1, 7"
+    : "=r" ( reg )
+    : : "cc"
+  );
+  // get only cpu address bus size
+  reg = ( reg >> 24 ) & 0xf;
+  // use short if physical address bus is not 36 bit at least
+  if ( 0 == reg ) {
+    supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
+  }
+
+  // kick start
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+    v7_long_startup_setup();
+  } else {
+    v7_short_startup_setup();
+  }
+
+  // setup platform related
+  virt_startup_platform_setup();
+
+  // enable initial mapping
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+    v7_long_startup_enable();
+  } else {
+    v7_short_startup_enable();
+  }
+
+  // set flag
+  initial_setup_done = true;
+}
+
+/**
+ * @brief Mapper function using short or long descriptor mapping depending on support
+ *
+ * @param phys physical address
+ * @param virt virtual address
+ */
+void __bootstrap virt_startup_map( uint64_t phys, uintptr_t virt ) {
+  // check for invalid paging support
+  if (
+    ! (
+      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_PXN == supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
+    )
+  ) {
+    return;
+  }
+
+  // map it
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+    v7_long_startup_map( phys, virt );
+  } else {
+    v7_short_startup_map( ( uintptr_t )phys, virt );
+  }
+
+  if ( initial_setup_done ) {
+    virt_startup_flush();
+  }
+}
+
+/**
+ * @brief Flush set context
+ */
+void __bootstrap virt_startup_flush( void ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+    v7_long_startup_flush();
+  } else {
+    v7_short_startup_flush();
+  }
+}
 
 /**
  * @brief Map physical address to virtual one

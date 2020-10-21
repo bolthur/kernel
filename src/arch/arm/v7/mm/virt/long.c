@@ -49,6 +49,155 @@
 static uint32_t mapped_temporary_tables = 0;
 
 /**
+ * @brief Initial middle directory for context
+ */
+static ld_middle_page_directory initial_middle_directory[ 4 ]
+  __bootstrap_data __aligned( PAGE_SIZE );
+
+/**
+ * @brief Initial context
+ */
+static ld_global_page_directory_t initial_context
+  __bootstrap_data __aligned( PAGE_SIZE );
+
+/**
+ * @brief Helper to setup initial paging with large page address extension
+ */
+void __bootstrap v7_long_startup_setup( void ) {
+  // variables
+  ld_ttbcr_t ttbcr;
+  uint32_t x, y;
+
+  // Prepare initial context
+  for ( x = 0; x < 512; x++ ) {
+    initial_context.raw[ x ] = 0;
+  }
+  // Prepare middle directories
+  for ( x = 0; x < 4; x++ ) {
+    for ( y = 0; y < 512; y++ ) {
+      initial_middle_directory[ x ].raw[ y ] = 0;
+    }
+  }
+
+  // Set middle directory tables
+  for ( x = 0; x < 4; x++ ) {
+    initial_context.table[ x ].data.type = LD_TYPE_TABLE;
+    initial_context.table[ x ].raw |= ( uint64_t )(
+      ( uintptr_t )initial_middle_directory[ x ].raw
+    );
+  }
+
+  // determine max
+  uintptr_t max = VIRT_2_PHYS( &__kernel_end );
+  // round up to page size if necessary
+  if ( max % PAGE_SIZE ) {
+    max += ( PAGE_SIZE - max % PAGE_SIZE );
+  }
+  // shift max
+  max >>= 21;
+  // minimum is 1
+  if ( 0 == max ) {
+    max = 1;
+  }
+
+  // Map initial memory
+  for ( x = 0; x < max; x++ ) {
+    v7_long_startup_map( x << 21, x << 21 );
+    if ( 0 < KERNEL_OFFSET ) {
+      v7_long_startup_map( x << 21, ( x + ( KERNEL_OFFSET >> 21 ) ) << 21 );
+    }
+  }
+
+  // Set initial context
+  __asm__ __volatile__(
+    "mcrr p15, 0, %0, %1, c2"
+    : : "r" ( initial_context.raw ), "r" ( 0 )
+    : "memory"
+  );
+
+  // prepare ttbcr
+  ttbcr.raw = 0;
+  // set large physical address extension bit
+  ttbcr.data.large_physical_address_extension = 1;
+  // push value to ttbcr
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c2, c0, 2"
+    : : "r" ( ttbcr.raw )
+    : "cc"
+  );
+}
+
+/**
+ * @brief Method to perform identity nap
+ *
+ * @param phys physical address
+ * @param virt virtual address
+ */
+void __bootstrap v7_long_startup_map( uint64_t phys, uintptr_t virt ) {
+  // determine index for getting middle directory
+  uint32_t pmd_index = LD_VIRTUAL_PMD_INDEX( virt );
+  // determine index for getting table directory
+  uint32_t tbl_index = LD_VIRTUAL_TABLE_INDEX( virt );
+
+  // skip if already set
+  if ( 0 != initial_middle_directory[ pmd_index ].raw[ tbl_index ] ) {
+    return;
+  }
+
+  ld_context_block_level2_t* section = &initial_middle_directory[ pmd_index ]
+    .section[ tbl_index ];
+
+  // set section
+  section->raw = LD_PHYSICAL_SECTION_L2_ADDRESS( phys );
+  section->data.type = LD_TYPE_SECTION;
+  section->data.lower_attr_access = 1;
+}
+
+/**
+ * @brief Method to enable initial virtual memory
+ */
+void __bootstrap v7_long_startup_enable( void ) {
+  uint32_t reg;
+  // Get content from control register
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
+  // enable mmu by setting bit 0
+  reg |= 1;
+  // push back value with mmu enabled bit set
+  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
+}
+
+/**
+ * @brief Flush context
+ */
+void __bootstrap v7_long_startup_flush( void ) {
+  ld_ttbcr_t ttbcr;
+
+  // read ttbcr register
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c2, c0, 2"
+    : "=r" ( ttbcr.raw )
+    : : "cc"
+  );
+  ttbcr.raw = 0;
+  ttbcr.data.large_physical_address_extension = 1;
+  // push back value with ttbcr
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c2, c0, 2"
+    : : "r" ( ttbcr.raw )
+    : "cc"
+  );
+
+  // invalidate instruction cache
+  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) : "memory" );
+  // invalidate entire tlb
+  __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
+  // instruction synchronization barrier
+  __asm__( "isb" ::: "memory" );
+  // data synchronization barrier
+  __asm__( "dsb" ::: "memory" );
+}
+
+/**
  * @brief Map physical space to temporary
  *
  * @param start physical start address
@@ -390,7 +539,7 @@ void v7_long_map(
     DEBUG_OUTPUT( "table: %p\r\n", ( void* )table );
   #endif
 
-  // assert existance
+  // assert existence
   assert( NULL != table );
 
   // debug output
@@ -512,7 +661,7 @@ void v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
   ld_page_table_t* table = ( ld_page_table_t* )map_temporary(
     table_phys, PAGE_SIZE
   );
-  // assert existance
+  // assert existence
   assert( NULL != table );
 
   // ensure mapped
@@ -760,8 +909,9 @@ virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
  * @param ctx context to destroy
  *
  * @todo add logic
+ * @todo remove noreturn when handler is completed
  */
-void v7_long_destroy_context( __unused virt_context_ptr_t ctx ) {
+noreturn void v7_long_destroy_context( __unused virt_context_ptr_t ctx ) {
   PANIC( "v7 long destroy context not yet implemented!" );
 }
 
@@ -816,7 +966,7 @@ bool v7_long_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
     DEBUG_OUTPUT( "table: %p\r\n", ( void* )table );
   #endif
 
-  // assert existance
+  // assert existence
   assert( NULL != table );
 
   // debug output

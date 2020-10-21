@@ -48,7 +48,8 @@ void mailbox_property_init( void ) {
     ptb_buffer = ( int32_t* )aligned_alloc( PAGE_SIZE, PAGE_SIZE );
     ptb_buffer_phys = ( int32_t* )VIRT_2_PHYS( ptb_buffer );
   }
-
+  // clear out buffer
+  memset( ptb_buffer, 0, PAGE_SIZE );
   // Add startup size
   ptb_buffer[ PT_OSIZE ] = 12;
   // process request, everything else seems to be reserved

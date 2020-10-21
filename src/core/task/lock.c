@@ -19,6 +19,7 @@
  */
 
 #include <core/task/lock.h>
+#include <core/yield.h>
 
 /**
  * @brief release lock
@@ -29,5 +30,23 @@ void task_lock_mutex_release( task_lock_mutex_t* m ) {
   // set to released
   *m = TASK_LOCK_MUTEX_RELEASED;
   // snychronize
+  __sync_synchronize();
+}
+
+/**
+ * @brief Acquire lock
+ *
+ * @param m mutex to lock
+ */
+void task_lock_mutex_acquire( task_lock_mutex_t* m ) {
+  // yield until mutex could be applied
+  while (
+    ! __sync_bool_compare_and_swap(
+      m, TASK_LOCK_MUTEX_RELEASED, TASK_LOCK_MUTEX_LOCKED
+    )
+  ) {
+    yield();
+  }
+  // synchronize
   __sync_synchronize();
 }

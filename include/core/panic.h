@@ -22,9 +22,10 @@
 #define __CORE_PANIC__
 
 #include <stdint.h>
+#include <stdnoreturn.h>
 
 void panic_init( void );
-void __no_return panic( const char* restrict, const char* restrict, uint32_t );
+noreturn void panic( const char* restrict, const char* restrict, uint32_t );
 
 #define PANIC( msg ) panic( msg, __FILE__, __LINE__ );
 

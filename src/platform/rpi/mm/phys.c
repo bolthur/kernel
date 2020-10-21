@@ -25,7 +25,6 @@
 #include <core/debug/debug.h>
 #include <core/entry.h>
 #include <core/mm/phys.h>
-#include <platform/rpi/platform.h>
 #include <platform/rpi/peripheral.h>
 #include <platform/rpi/mailbox/property.h>
 

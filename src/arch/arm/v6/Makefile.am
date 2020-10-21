@@ -1,8 +1,6 @@
 
-noinst_LIBRARIES = libv6.a
-libv6_a_SOURCES = \
-  boot/mm/virt/short.c \
-  boot/mm/virt.c \
+noinst_LTLIBRARIES = libv6.la
+libv6_la_SOURCES =
   mm/virt/short.c \
   mm/virt.c \
   barrier.c

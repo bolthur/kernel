@@ -31,7 +31,6 @@ uintptr_t initrd_get_end_address( void );
 size_t initrd_get_size( void );
 void initrd_set_size( size_t );
 bool initrd_exist( void );
-void initrd_platform_init( void );
-void initrd_init( void );
+void initrd_startup_init( void );
 
 #endif
