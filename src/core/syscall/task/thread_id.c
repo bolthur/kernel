@@ -18,15 +18,22 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/event.h>
+#include <assert.h>
 #include <core/syscall.h>
-#include <core/interrupt.h>
-#include <arch/arm/v7/cpu.h>
+#include <core/task/process.h>
+#include <core/task/thread.h>
 
-void syscall_thread_kill( void* context ) {
-  // get context
-  INTERRUPT_DETERMINE_CONTEXT( context )
-  // transform to cpu structure
-  __unused cpu_register_context_ptr_t cpu =
-    ( cpu_register_context_ptr_t )context;
+/**
+ * @brief System call for returning current thread id
+ *
+ * @param context
+ */
+void syscall_thread_id( void* context ) {
+  // assert current thread
+  assert( NULL != task_thread_current_thread );
+  // populate return
+  syscall_populate_single_return(
+    context,
+    task_thread_current_thread->id
+  );
 }

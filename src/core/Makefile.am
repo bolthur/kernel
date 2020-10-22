@@ -7,6 +7,9 @@ libcore_la_SOURCES = \
   mm/heap.c \
   mm/phys.c \
   mm/virt.c \
+  syscall/task/process_id.c \
+  syscall/task/thread_id.c \
+  syscall/init.c \
   task/lock.c \
   task/process.c \
   task/queue.c \
@@ -19,5 +22,4 @@ libcore_la_SOURCES = \
   initrd.c \
   interrupt.c \
   main.c \
-  panic.c \
-  syscall.c
+  panic.c

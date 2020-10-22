@@ -165,8 +165,6 @@ noreturn void kernel_main( void ) {
     *( ( uint32_t* )atag_fdt )
   );
 
-  PANIC( "FOO" );
-
   // Setup heap
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
   heap_init( HEAP_INIT_NORMAL );
@@ -214,4 +212,6 @@ noreturn void kernel_main( void ) {
 
   // kickstart multitasking
   task_process_start();
+
+  for(;;);
 }

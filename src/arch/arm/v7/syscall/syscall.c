@@ -23,10 +23,17 @@
 #include <core/interrupt.h>
 #include <arch/arm/v7/cpu.h>
 
-void syscall_process_kill( void* context ) {
+/**
+ * @brief Populate single return to caller
+ *
+ * @param context
+ * @param value
+ */
+void syscall_populate_single_return( void* context, size_t value ) {
   // get context
   INTERRUPT_DETERMINE_CONTEXT( context )
   // transform to cpu structure
-  __unused cpu_register_context_ptr_t cpu =
-    ( cpu_register_context_ptr_t )context;
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  // set return value
+  cpu->reg.r0 = value;
 }

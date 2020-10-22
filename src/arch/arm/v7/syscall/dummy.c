@@ -21,12 +21,35 @@
 #include <core/event.h>
 #include <core/syscall.h>
 #include <core/interrupt.h>
+#include <core/panic.h>
 #include <arch/arm/v7/cpu.h>
 
-void syscall_process_id( void* context ) {
+/**
+ * @brief Dummy system call for testing purposes
+ *
+ * @param context
+ *
+ * @todo remove with syscall implementation
+ */
+void syscall_dummy_putc( void* context ) {
   // get context
   INTERRUPT_DETERMINE_CONTEXT( context )
   // transform to cpu structure
-  __unused cpu_register_context_ptr_t cpu =
-    ( cpu_register_context_ptr_t )context;
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  printf( "%c", ( uint8_t )cpu->reg.r0 );
+}
+
+/**
+ * @brief Dummy system call for testing purposes
+ *
+ * @param context
+ *
+ * @todo remove with syscall implementation
+ */
+void syscall_dummy_puts( void* context ) {
+  // get context
+  INTERRUPT_DETERMINE_CONTEXT( context )
+  // transform to cpu structure
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  printf( "%s", ( uint8_t* )cpu->reg.r0 );
 }

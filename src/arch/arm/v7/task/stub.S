@@ -24,6 +24,7 @@
 
 IMPORT( task_thread_current_thread )
 
+// FIXME: SP FOR USER MODE DOESN'T CHANGE HERE!
 EXPORT( task_thread_switch_to )
 task_thread_switch_to:
   // set fp
@@ -40,6 +41,10 @@ task_thread_switch_to:
   ldr r0, [ fp, #64 ]
   // set spsr
   msr spsr_cxsf, r0
+  // // load sp from initial context
+  // ldr r3, [ fp, #52 ]
+  // // set stack pointer
+  // mov sp, r3
   // restore registers
   ldmia fp, { r0 - r14 }^
   nop

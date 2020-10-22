@@ -18,33 +18,22 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_SYSCALL__ )
-#define __CORE_SYSCALL__
+#include <assert.h>
+#include <core/syscall.h>
+#include <core/task/process.h>
+#include <core/task/thread.h>
 
-#include <stddef.h>
-
-#define SYSCALL_PROCESS_CREATE 1
-#define SYSCALL_PROCESS_EXIT 2
-#define SYSCALL_PROCESS_ID 3
-#define SYSCALL_THREAD_CREATE 4
-#define SYSCALL_THREAD_EXIT 5
-#define SYSCALL_THREAD_ID 6
-
-#define SYSCALL_DUMMY_PUTC 10
-#define SYSCALL_DUMMY_PUTS 11
-
-void syscall_init( void );
-void syscall_populate_single_return( void*, size_t );
-
-void syscall_process_create( void* );
-void syscall_process_exit( void* );
-void syscall_process_id( void* );
-
-void syscall_thread_create( void* );
-void syscall_thread_exit( void* );
-void syscall_thread_id( void* );
-
-void syscall_dummy_putc( void* );
-void syscall_dummy_puts( void* );
-
-#endif
+/**
+ * @brief System call for returning current threads process id
+ *
+ * @param context
+ */
+void syscall_process_id( void* context ) {
+  // assert current thread
+  assert( NULL != task_thread_current_thread );
+  // populate return
+  syscall_populate_single_return(
+    context,
+    task_thread_current_thread->process->id
+  );
+}
