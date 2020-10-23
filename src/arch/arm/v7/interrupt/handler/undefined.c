@@ -50,6 +50,11 @@ noreturn void vector_undefined_instruction_handler( cpu_register_context_ptr_t c
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu );
   #endif
+
+  // assert kernel stack
+  interrupt_assert_kernel_stack();
+
+  // just panic
   PANIC( "undefined" );
 
   // enqueue cleanup

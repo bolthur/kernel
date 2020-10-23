@@ -49,6 +49,9 @@ void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
     DUMP_REGISTER( cpu );
   #endif
 
+  // assert kernel stack
+  interrupt_assert_kernel_stack();
+
   // get pending interrupt
   int8_t interrupt = interrupt_get_pending( true );
   // assert return

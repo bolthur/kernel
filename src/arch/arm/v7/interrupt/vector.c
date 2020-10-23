@@ -63,3 +63,13 @@ void interrupt_post_init( void ) {
   // bind cleanup event
   event_bind( EVENT_INTERRUPT_CLEANUP, debug_cleanup_status_flag, true );
 }
+
+/**
+ * @brief Helper to assert kernel stack!
+ *
+ */
+void interrupt_assert_kernel_stack( void ) {
+  uintptr_t sp;
+  __asm__ __volatile__( "mov %0, sp" : "=r" ( sp ) : : "cc" );
+  assert( stack_is_kernel( sp ) );
+}

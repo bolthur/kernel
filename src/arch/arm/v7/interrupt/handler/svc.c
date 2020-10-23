@@ -34,8 +34,6 @@ static uint32_t nested_svc = 0;
  * @brief Software interrupt exception handler
  *
  * @param cpu cpu context
- *
- * @todo remove event timer enqueue from svc handler
  */
 void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   // assert nesting
@@ -53,6 +51,9 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
     DUMP_REGISTER( cpu );
   #endif
 
+  // assert kernel stack
+  interrupt_assert_kernel_stack();
+
   // get svc number from instruction
   uint32_t svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xffff;
   // apply offset
@@ -66,8 +67,6 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
 
   // handle bound interrupt handlers
   interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu );
-  // enqueue timer event for testing
-  event_enqueue( EVENT_TIMER, origin );
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
 

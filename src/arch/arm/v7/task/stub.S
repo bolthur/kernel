@@ -30,10 +30,12 @@ task_thread_switch_to:
   ldr lr, [ fp, #60 ]
   // load spsr from passed context
   ldr r0, [ fp, #64 ]
+  // switch to system mode
+  cps #CPSR_MODE_SYSTEM
   // set spsr used when returning
   msr SPSR_cxsf, r0
   // restore registers and nop
-  ldmia fp, { r0 - r15 }^
+  ldm fp, { r0 - r15 }^
   nop
   // return to process
   movs pc, lr

@@ -110,7 +110,7 @@ static void timer_clear( void* context ) {
 
   // debug output
   #if defined( PRINT_TIMER )
-    printf( "timer_clear()\r\n" );
+    DEBUG_OUTPUT( "timer_clear()\r\n" );
   #endif
 
   // clear timer

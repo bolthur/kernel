@@ -58,7 +58,7 @@ IMPORT( task_thread_current_thread )
   // adjust lr
   sub lr, #\fixup
   // switch mode and push lr and spsr to mode stack
-  srsdb sp!, #\mode
+  srsdb #\mode!
   // disable interrupts and switch to mode
   cpsid if, #\mode
 .endm

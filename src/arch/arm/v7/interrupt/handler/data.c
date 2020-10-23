@@ -68,6 +68,9 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
     DUMP_REGISTER( cpu );
   #endif
 
+  // assert kernel stack
+  interrupt_assert_kernel_stack();
+
   // special debug exception handling
   #if defined( REMOTE_DEBUG )
     if ( debug_is_debug_exception() ) {
