@@ -67,6 +67,8 @@ static int32_t thread_compare_id_callback(
  * @brief Method to generate new thread id
  *
  * @return size_t generated thread id
+ *
+ * @todo generate id continuously by process and not generally
  */
 size_t task_thread_generate_id( void ) {
   // current pid

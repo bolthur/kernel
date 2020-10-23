@@ -7,6 +7,8 @@ libcore_la_SOURCES = \
   mm/heap.c \
   mm/phys.c \
   mm/virt.c \
+  syscall/mm/memory_acquire.c \
+  syscall/mm/memory_release.c \
   syscall/task/process_id.c \
   syscall/task/thread_id.c \
   syscall/init.c \

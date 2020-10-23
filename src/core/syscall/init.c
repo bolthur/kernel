@@ -63,6 +63,19 @@ void syscall_init( void ) {
     INTERRUPT_SOFTWARE,
     false
   );
+  // memory related
+  interrupt_register_handler(
+    SYSCALL_MEMORY_ACQUIRE,
+    syscall_memory_acquire,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_MEMORY_RELEASE,
+    syscall_memory_release,
+    INTERRUPT_SOFTWARE,
+    false
+  );
   // dummy syscalls
   interrupt_register_handler(
     SYSCALL_DUMMY_PUTC,
