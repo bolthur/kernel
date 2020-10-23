@@ -22,31 +22,18 @@
 #include <core/assembly.h>
 #include <arch/arm/v7/cpu.h>
 
-IMPORT( task_thread_current_thread )
-
-// FIXME: SP FOR USER MODE DOESN'T CHANGE HERE!
 EXPORT( task_thread_switch_to )
 task_thread_switch_to:
-  // set fp
+  // cache parameter within fp register
   mov fp, r0
-  // load pc/lr
+  // load pc/lr from passed context
   ldr lr, [ fp, #60 ]
-  // load initial context
-  ldr r3, =task_thread_current_thread
-  ldr r3, [ r3 ]
-  ldr r3, [ r3, #4 ]
-  // load pc/lr from initial context
-  ldr r3, [ r3, #60 ]
-  // load spsr
+  // load spsr from passed context
   ldr r0, [ fp, #64 ]
-  // set spsr
-  msr spsr_cxsf, r0
-  // // load sp from initial context
-  // ldr r3, [ fp, #52 ]
-  // // set stack pointer
-  // mov sp, r3
-  // restore registers
-  ldmia fp, { r0 - r14 }^
+  // set spsr used when returning
+  msr SPSR_cxsf, r0
+  // restore registers and nop
+  ldmia fp, { r0 - r15 }^
   nop
   // return to process
   movs pc, lr

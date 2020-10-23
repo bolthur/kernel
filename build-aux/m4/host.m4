@@ -20,7 +20,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_PROCESS], [Define to 1 to enable output of process methods])
   AH_TEMPLATE([PRINT_EXCEPTION], [Define to 1 to enable output of exception handlers])
   AH_TEMPLATE([PRINT_ELF], [Define to 1 to enable output of elf routines])
-  AH_TEMPLATE([PRINT_PLATFORM], [Define to 1 to enable output of platform initialization])
   AH_TEMPLATE([PRINT_SYSCALL], [Define to 1 to enable output of syscall initialization])
   AH_TEMPLATE([PRINT_SERIAL], [Define to 1 to enable output of serial handling])
 
@@ -87,11 +86,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   # Test for elf output
   AS_IF([test "x$enable_output_elf" == "xyes"], [
     AC_DEFINE([PRINT_ELF], [1])
-  ])
-
-  # Test for platform output
-  AS_IF([test "x$enable_output_platform" == "xyes"], [
-    AC_DEFINE([PRINT_PLATFORM],[1])
   ])
 
   # Test for syscall output

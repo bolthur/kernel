@@ -137,15 +137,6 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_ENABLE(
-  [output-platform],
-  AS_HELP_STRING(
-    [--enable-output-platform],
-    [activate platform init output [default: off]]
-  ),
-  [enable_output_platform=yes]
-)
-
-AC_ARG_ENABLE(
   [output-syscall],
   AS_HELP_STRING(
     [--enable-output-syscall],
