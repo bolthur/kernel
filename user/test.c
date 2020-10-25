@@ -60,16 +60,16 @@ void _start( void ) {
   // call for put string
   __asm__ __volatile__( "\n\
     mov r0, %[r0] \n\
-    svc #11 \n\
+    svc #102 \n\
     mov r0, %[r1] \n\
-    svc #11" : : [ r0 ]"r"( str_pid ), [ r1 ]"r"( str_tid )
+    svc #102" : : [ r0 ]"r"( str_pid ), [ r1 ]"r"( str_tid )
   );
 
   // gather pid and tid
   __asm__ __volatile__( "\n\
     svc #3 \n\
     mov %0, r0 \n\
-    svc #6 \n\
+    svc #13 \n\
     mov %1, r0"
     : "=r" ( pid ), "=r" ( tid )
     : : "cc"
@@ -81,9 +81,9 @@ void _start( void ) {
   // call for put string
   __asm__ __volatile__( "\n\
     mov r0, %[r0] \n\
-    svc #11 \n\
+    svc #102 \n\
     mov r0, %[r1] \n\
-    svc #11" : : [ r0 ]"r"( str_pid ), [ r1 ]"r"( str_tid )
+    svc #102" : : [ r0 ]"r"( str_pid ), [ r1 ]"r"( str_tid )
   );
 
   while( 1 ) {

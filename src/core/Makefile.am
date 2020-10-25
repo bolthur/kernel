@@ -11,6 +11,7 @@ libcore_la_SOURCES = \
   syscall/mm/memory_release.c \
   syscall/task/process_id.c \
   syscall/task/thread_id.c \
+  syscall/dummy.c \
   syscall/init.c \
   task/lock.c \
   task/process.c \

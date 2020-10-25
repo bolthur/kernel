@@ -24,7 +24,6 @@ libv7_la_SOURCES = \
   syscall/task/process_exit.c \
   syscall/task/thread_create.c \
   syscall/task/thread_exit.c \
-  syscall/dummy.c \
   syscall/syscall.c \
   task/process.c \
   task/stack.c \

@@ -18,25 +18,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <core/event.h>
 #include <core/syscall.h>
 #include <core/interrupt.h>
 #include <core/panic.h>
-#include <arch/arm/v7/cpu.h>
 
 /**
  * @brief Dummy system call for testing purposes
  *
  * @param context
  *
- * @todo remove with syscall implementation
+ * @todo remove with final syscall implementation
  */
 void syscall_dummy_putc( void* context ) {
-  // get context
-  INTERRUPT_DETERMINE_CONTEXT( context )
-  // transform to cpu structure
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-  printf( "%c", ( uint8_t )cpu->reg.r0 );
+  printf( "%c", ( uint8_t )syscall_get_parameter( context, 0 ) );
 }
 
 /**
@@ -44,12 +40,8 @@ void syscall_dummy_putc( void* context ) {
  *
  * @param context
  *
- * @todo remove with syscall implementation
+ * @todo remove with final syscall implementation
  */
 void syscall_dummy_puts( void* context ) {
-  // get context
-  INTERRUPT_DETERMINE_CONTEXT( context )
-  // transform to cpu structure
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-  printf( "%s", ( uint8_t* )cpu->reg.r0 );
+  printf( "%s", ( uint8_t* )syscall_get_parameter( context, 0 ) );
 }
