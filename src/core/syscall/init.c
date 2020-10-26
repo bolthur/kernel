@@ -76,6 +76,105 @@ void syscall_init( void ) {
     INTERRUPT_SOFTWARE,
     false
   );
+  interrupt_register_handler(
+    SYSCALL_SHARED_MEMORY_ACQUIRE,
+    syscall_shared_memory_acquire,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_SHARED_MEMORY_CREATE,
+    syscall_shared_memory_create,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_SHARED_MEMORY_EXTEND,
+    syscall_shared_memory_extend,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_SHARED_MEMORY_RELEASE,
+    syscall_shared_memory_release,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  // interrupt related
+  interrupt_register_handler(
+    SYSCALL_INTERRUPT_ACQUIRE,
+    syscall_interrupt_acquire,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_INTERRUPT_RELEASE,
+    syscall_interrupt_release,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  // io related
+  interrupt_register_handler(
+    SYSCALL_IO_ACQUIRE,
+    syscall_io_acquire,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_IO_CHECK,
+    syscall_io_check,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_IO_RAISE,
+    syscall_io_raise,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_IO_RELEASE,
+    syscall_io_release,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  // message related
+  interrupt_register_handler(
+    SYSCALL_MESSAGE_ACQUIRE,
+    syscall_message_acquire,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_MESSAGE_RELEASE,
+    syscall_message_release,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_MESSAGE_SYNC_SEND,
+    syscall_message_sync_send,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_MESSAGE_SYNC_RECEIVE,
+    syscall_message_sync_receive,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_MESSAGE_ASYNC_SEND,
+    syscall_message_async_send,
+    INTERRUPT_SOFTWARE,
+    false
+  );
+  interrupt_register_handler(
+    SYSCALL_MESSAGE_ASYNC_RECEIVE,
+    syscall_message_async_receive,
+    INTERRUPT_SOFTWARE,
+    false
+  );
   // dummy syscalls
   interrupt_register_handler(
     SYSCALL_DUMMY_PUTC,

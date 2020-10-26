@@ -7,8 +7,20 @@ libcore_la_SOURCES = \
   mm/heap.c \
   mm/phys.c \
   mm/virt.c \
-  syscall/mm/memory_acquire.c \
-  syscall/mm/memory_release.c \
+  syscall/interrupt/acquire.c \
+  syscall/interrupt/release.c \
+  syscall/message/async/receive.c \
+  syscall/message/async/send.c \
+  syscall/message/sync/receive.c \
+  syscall/message/sync/send.c \
+  syscall/message/acquire.c \
+  syscall/message/release.c \
+  syscall/mm/acquire.c \
+  syscall/mm/release.c \
+  syscall/mm/shared/acquire.c \
+  syscall/mm/shared/create.c \
+  syscall/mm/shared/extend.c \
+  syscall/mm/shared/release.c \
   syscall/task/process_id.c \
   syscall/task/thread_id.c \
   syscall/dummy.c \

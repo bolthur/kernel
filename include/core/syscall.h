@@ -51,8 +51,8 @@
 #define SYSCALL_MESSAGE_ASYNC_SEND 55
 #define SYSCALL_MESSAGE_ASYNC_RECEIVE 56
 
-#define SYSCALL_IRQ_ACQUIRE 61
-#define SYSCALL_IRQ_RELEASE 62
+#define SYSCALL_INTERRUPT_ACQUIRE 61
+#define SYSCALL_INTERRUPT_RELEASE 62
 
 #define SYSCALL_DUMMY_PUTC 101
 #define SYSCALL_DUMMY_PUTS 102
@@ -71,6 +71,26 @@ void syscall_thread_id( void* );
 
 void syscall_memory_acquire( void* );
 void syscall_memory_release( void* );
+
+void syscall_shared_memory_acquire( void* );
+void syscall_shared_memory_create( void* );
+void syscall_shared_memory_extend( void* );
+void syscall_shared_memory_release( void* );
+
+void syscall_interrupt_acquire( void* );
+void syscall_interrupt_release( void* );
+
+void syscall_io_acquire( void* );
+void syscall_io_release( void* );
+void syscall_io_check( void* );
+void syscall_io_raise( void* );
+
+void syscall_message_acquire( void* );
+void syscall_message_release( void* );
+void syscall_message_sync_send( void* );
+void syscall_message_sync_receive( void* );
+void syscall_message_async_send( void* );
+void syscall_message_async_receive( void* );
 
 void syscall_dummy_putc( void* );
 void syscall_dummy_puts( void* );
