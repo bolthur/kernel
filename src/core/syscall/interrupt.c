@@ -22,5 +22,8 @@
 #include <core/syscall.h>
 #include <core/interrupt.h>
 
-void syscall_io_raise( __unused void* context ) {
+void syscall_interrupt_acquire( __unused void* context ) {
+}
+
+void syscall_interrupt_release( __unused void* context ) {
 }

@@ -6,10 +6,7 @@ DIST_SUBDIRS = v6 v7 v8
 noinst_LTLIBRARIES = libarm.la
 libarm_la_SOURCES = \
   mm/virt.c \
-  syscall/io/acquire.c \
-  syscall/io/check.c \
-  syscall/io/raise.c \
-  syscall/io/release.c \
+  syscall/io.c \
   arch.c \
   delay.c \
   elf.c \

@@ -22,5 +22,20 @@
 #include <core/syscall.h>
 #include <core/interrupt.h>
 
-void syscall_interrupt_acquire( __unused void* context ) {
+void syscall_message_acquire( __unused void* context ) {
+}
+
+void syscall_message_release( __unused void* context ) {
+}
+
+void syscall_message_sync_receive( __unused void* context ) {
+}
+
+void syscall_message_sync_send( __unused void* context ) {
+}
+
+void syscall_message_async_receive( __unused void* context ) {
+}
+
+void syscall_message_async_send( __unused void* context ) {
 }

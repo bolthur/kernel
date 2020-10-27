@@ -18,9 +18,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/event.h>
+#include <assert.h>
 #include <core/syscall.h>
-#include <core/interrupt.h>
+#include <core/task/process.h>
+#include <core/task/thread.h>
 
-void syscall_io_release( __unused void* context ) {
+/**
+ * @brief System call for returning current thread id
+ *
+ * @param context
+ */
+void syscall_thread_id( void* context ) {
+  // assert current thread
+  assert( NULL != task_thread_current_thread );
+  // populate return
+  syscall_populate_single_return(
+    context,
+    task_thread_current_thread->id
+  );
+}
+
+void syscall_thread_create( __unused void* context ) {
+}
+
+void syscall_thread_exit( __unused void* context ) {
 }

@@ -20,11 +20,6 @@ libv7_la_SOURCES = \
   mm/virt.c \
   stub/stack.S \
   stub/start.S \
-  syscall/task/process_create.c \
-  syscall/task/process_exit.c \
-  syscall/task/thread_create.c \
-  syscall/task/thread_exit.c \
-  syscall/syscall.c \
   task/process.c \
   task/stack.c \
   task/stub.S \
@@ -32,4 +27,5 @@ libv7_la_SOURCES = \
   arch.c \
   barrier.c \
   cache.c \
-  fpu.S
+  fpu.S \
+  syscall.c

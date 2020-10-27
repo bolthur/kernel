@@ -124,14 +124,10 @@ void phys_use_page_range( uint64_t address, size_t amount ) {
   #endif
 
   // round down address to page start
-  if ( 0 != address % PAGE_SIZE ) {
-    address -= address % PAGE_SIZE;
-  }
+  ROUND_DOWN_TO_FULL_PAGE( address )
 
   // round up amount if necessary
-  if ( 0 != amount % PAGE_SIZE ) {
-    amount = amount + PAGE_SIZE - amount % PAGE_SIZE;
-  }
+  ROUND_UP_TO_FULL_PAGE( amount )
 
   // loop until amount and mark as free
   for (
@@ -160,9 +156,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
   #endif
 
   // round up to full page
-  if ( 0 < memory_amount % PAGE_SIZE ) {
-    memory_amount += PAGE_SIZE - ( memory_amount % PAGE_SIZE );
-  }
+  ROUND_UP_TO_FULL_PAGE( memory_amount )
 
   // determine amount of pages
   size_t page_amount = memory_amount / PAGE_SIZE;
@@ -259,9 +253,7 @@ void phys_init( void ) {
   uintptr_t start = 0;
   uintptr_t end = VIRT_2_PHYS( &__kernel_end );
   // round up to page size if necessary
-  if ( end % PAGE_SIZE ) {
-    end += ( PAGE_SIZE - end % PAGE_SIZE );
-  }
+  ROUND_UP_TO_FULL_PAGE( end )
 
   // debug output
   #if defined( PRINT_MM_PHYS )

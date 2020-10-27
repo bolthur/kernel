@@ -22,5 +22,14 @@
 #include <core/syscall.h>
 #include <core/interrupt.h>
 
+void syscall_shared_memory_acquire( __unused void* context ) {
+}
+
+void syscall_shared_memory_create( __unused void* context ) {
+}
+
+void syscall_shared_memory_extend( __unused void* context ) {
+}
+
 void syscall_shared_memory_release( __unused void* context ) {
 }

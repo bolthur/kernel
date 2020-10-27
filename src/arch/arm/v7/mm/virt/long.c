@@ -90,9 +90,7 @@ void __bootstrap v7_long_startup_setup( void ) {
   // determine max
   uintptr_t max = VIRT_2_PHYS( &__kernel_end );
   // round up to page size if necessary
-  if ( max % PAGE_SIZE ) {
-    max += ( PAGE_SIZE - max % PAGE_SIZE );
-  }
+  ROUND_UP_TO_FULL_PAGE( max )
   // shift max
   max >>= 21;
   // minimum is 1

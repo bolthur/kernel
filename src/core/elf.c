@@ -134,9 +134,7 @@ static void load_program_header( uintptr_t elf, task_process_ptr_t process ) {
 
     // determine needed space
     uintptr_t needed_size = program_header->p_memsz;
-    if ( needed_size % PAGE_SIZE ) {
-      needed_size += ( PAGE_SIZE - needed_size % PAGE_SIZE );
-    }
+    ROUND_UP_TO_FULL_PAGE( needed_size )
 
     // loop until needed size is zero
     uintptr_t offset = 0;
