@@ -6,6 +6,7 @@ libcore_la_SOURCES = \
   debug/string.c \
   mm/heap.c \
   mm/phys.c \
+  mm/shared.c \
   mm/virt.c \
   syscall/mm/memory.c \
   syscall/mm/shared.c \

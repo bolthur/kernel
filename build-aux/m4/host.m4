@@ -22,6 +22,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_ELF], [Define to 1 to enable output of elf routines])
   AH_TEMPLATE([PRINT_SYSCALL], [Define to 1 to enable output of syscall initialization])
   AH_TEMPLATE([PRINT_SERIAL], [Define to 1 to enable output of serial handling])
+  AH_TEMPLATE([PRINT_MM_SHARED], [Define to 1 to enable output of shared memory functions])
 
   # Test for debugging enabled
   AS_IF([test "x$enable_remote_debug" == "xyes"], [
@@ -46,6 +47,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   # Test for kernel heap output
   AS_IF([test "x$enable_output_mm_heap" == "xyes"], [
     AC_DEFINE([PRINT_MM_HEAP], [1])
+  ])
+
+  # Test for shared memory output
+  AS_IF([test "x$enable_output_mm_shared" == "xyes"], [
+    AC_DEFINE([PRINT_MM_SHARED],[1])
   ])
 
   # Test for mailbox output

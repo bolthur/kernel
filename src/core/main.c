@@ -33,6 +33,7 @@
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <core/mm/heap.h>
+#include <core/mm/shared.h>
 #include <core/event.h>
 #include <core/task/process.h>
 #include <core/syscall.h>
@@ -168,6 +169,10 @@ noreturn void kernel_main( void ) {
   // Setup heap
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
   heap_init( HEAP_INIT_NORMAL );
+
+  // Setup shared
+  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> shared] initialize ...\r\n" );
+  shared_init();
 
   // Setup multitasking
   DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" );

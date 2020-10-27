@@ -21,6 +21,7 @@
 #if ! defined( __CORE_SYSCALL__ )
 #define __CORE_SYSCALL__
 
+#include <stdint.h>
 #include <stddef.h>
 
 #define SYSCALL_PROCESS_CREATE 1

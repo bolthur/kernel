@@ -18,22 +18,32 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_STRING__ )
-#define __LIB_STRING__
-
 #include <stddef.h>
-#include <stdint.h>
+#include <string.h>
 
-void* memchr( const void*, int32_t, size_t );
-int memcmp( const void*, const void*, size_t );
-void* memcpy( void* restrict, const void* restrict, size_t );
-void* memset( void*, int, size_t );
-char* strchr( const char*, int );
-char* strcpy( char*, const char* );
-size_t strlen( const char* );
-int strncmp( const char*, const char*, size_t );
-void* memmove( void*, const void*, size_t );
-size_t strnlen( const char*, size_t );
-char* strrchr( const char*, int );
+/**
+ * @brief Copy src into destination
+ *
+ * @param dst destination
+ * @param src source data
+ * @return char*
+ */
+char* strcpy( char* dst, const char* src ) {
+  // handle null
+  if ( NULL == dst ) {
+    return NULL;
+  }
+  // cache destination due to loop
+  char *p = dst;
+  // loop until end of src
+  while ( *src ) {
+    *dst = *src;
+    dst++;
+    src++;
+  }
 
-#endif
+  // set termination
+  *dst = '\0';
+  // return p
+  return p;
+}

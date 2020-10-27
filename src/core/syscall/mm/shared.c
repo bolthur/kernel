@@ -18,18 +18,53 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/event.h>
 #include <core/syscall.h>
-#include <core/interrupt.h>
+#include <core/task/thread.h>
+#include <core/mm/shared.h>
 
-void syscall_shared_memory_acquire( __unused void* context ) {
+void syscall_shared_memory_create( void* context ) {
+  // get parameter
+  const char* name = ( const char* )syscall_get_parameter( context, 0 );
+  size_t size = syscall_get_parameter( context, 1 );
+  // create shared memory and populate return
+  syscall_populate_single_return(
+    context,
+    shared_memory_create( name, size )
+  );
 }
 
-void syscall_shared_memory_create( __unused void* context ) {
+void syscall_shared_memory_release( void* context ) {
+  // get parameter
+  const char* name = ( const char* )syscall_get_parameter( context, 0 );
+  // release and populate return
+  syscall_populate_single_return(
+    context,
+    shared_memory_release(
+      task_thread_current_thread->process,
+      name
+    )
+  );
 }
 
-void syscall_shared_memory_extend( __unused void* context ) {
+void syscall_shared_memory_acquire( void* context ) {
+  // get parameter
+  const char* name = ( const char* )syscall_get_parameter( context, 0 );
+  // attach to current thread
+  syscall_populate_single_return(
+    context,
+    shared_memory_acquire(
+      task_thread_current_thread->process,
+      name
+    )
+  );
 }
 
-void syscall_shared_memory_release( __unused void* context ) {
+void syscall_shared_memory_extend( void* context ) {
+  // get parameter
+  const char* name = ( const char* )syscall_get_parameter( context, 0 );
+  // attach to current thread
+  syscall_populate_single_return(
+    context,
+    shared_memory_extend( name )
+  );
 }

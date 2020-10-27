@@ -58,6 +58,35 @@ void list_push_front( list_manager_ptr_t list, void* data ) {
  * @brief Method to push node with data into list
  *
  * @param list list to use
+ * @param item item to push
+ */
+void list_push_front_node( list_manager_ptr_t list, list_item_ptr_t node ) {
+  list_item_ptr_t first;
+
+  // assert list is initialized
+  assert( NULL != list );
+  // set list head
+  first = list->first;
+
+  // set next to first
+  node->next = first;
+  // set previous for first element
+  if ( NULL != first ) {
+    first->previous = node;
+  }
+
+  // overwrite first element within list pointer
+  list->first = node;
+  // set last element if NULL
+  if ( NULL == list->last ) {
+    list->last = list->first;
+  }
+}
+
+/**
+ * @brief Method to push node with data into list
+ *
+ * @param list list to use
  * @param data data to push into list
  */
 void list_push_back( list_manager_ptr_t list, void* data ) {
@@ -70,6 +99,35 @@ void list_push_back( list_manager_ptr_t list, void* data ) {
 
   // create new node
   node = list_node_create( data );
+  // set previous to last
+  node->previous = last;
+  // set next for last element
+  if ( NULL != last ) {
+    last->next = node;
+  }
+
+  // overwrite last element within list pointer
+  list->last = node;
+  // set first element if NULL
+  if ( NULL == list->first ) {
+    list->first = list->last;
+  }
+}
+
+/**
+ * @brief Method to push node with data into list
+ *
+ * @param list list to use
+ * @param data data to push into list
+ */
+void list_push_back_node( list_manager_ptr_t list, list_item_ptr_t node ) {
+  list_item_ptr_t last;
+
+  // assert list is initialized
+  assert( NULL != list );
+  // set list head
+  last = list->last;
+
   // set previous to last
   node->previous = last;
   // set next for last element

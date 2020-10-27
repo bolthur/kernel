@@ -65,6 +65,15 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_ENABLE(
+  [output-mm-shared],
+  AS_HELP_STRING(
+    [--enable-output-mm-shared],
+    [activate shared memory output [default: off]]
+  ),
+  [enable_output_mm_shared=yes]
+)
+
+AC_ARG_ENABLE(
   [output-mailbox],
   AS_HELP_STRING(
     [--enable-output-mailbox],

@@ -25,6 +25,7 @@
 #include <avl.h>
 #include <list.h>
 #include <core/mm/virt.h>
+#include <core/mm/shared.h>
 #include <core/event.h>
 
 typedef struct task_thread
@@ -48,6 +49,8 @@ typedef struct process {
   size_t priority;
   virt_context_ptr_t virtual_context;
   task_process_state_t state;
+  list_manager_ptr_t shared_memory_entry;
+  list_manager_ptr_t shared_memory_mapped;
 } task_process_t, *task_process_ptr_t;
 
 typedef struct {

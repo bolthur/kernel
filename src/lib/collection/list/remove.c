@@ -60,3 +60,114 @@ void list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
   // free list item
   free( item );
 }
+
+/**
+ * @brief Remove list item
+ *
+ * @param list
+ * @param item
+ */
+void list_remove_keep( list_manager_ptr_t list, list_item_ptr_t item ) {
+  // assert existence
+  assert( NULL != list && NULL != item );
+
+  // stop if not existing
+  if ( NULL == list_lookup_item( list, item ) ) {
+    return;
+  }
+
+  // set previous of next
+  if ( NULL != item->next ) {
+    item->next->previous = item->previous;
+  }
+
+  // set next of previous
+  if ( NULL != item->previous ) {
+    item->previous->next = item->next;
+  }
+
+  // handle head removal
+  if ( item == list->first ) {
+    list->first = item->next;
+  }
+  // handle foot removal
+  if ( item == list->last ) {
+    list->last = item->previous;
+  }
+}
+
+
+/**
+ * @brief Remove list item
+ *
+ * @param list
+ * @param item
+ */
+void list_remove_data( list_manager_ptr_t list, void* data ) {
+  // assert existence
+  assert( NULL != list && NULL != data );
+
+  // stop if not existing
+  list_item_ptr_t item = list_lookup_data( list, data );
+  if ( NULL == item ) {
+    return;
+  }
+
+  // set previous of next
+  if ( NULL != item->next ) {
+    item->next->previous = item->previous;
+  }
+
+  // set next of previous
+  if ( NULL != item->previous ) {
+    item->previous->next = item->next;
+  }
+
+  // handle head removal
+  if ( item == list->first ) {
+    list->first = item->next;
+  }
+  // handle foot removal
+  if ( item == list->last ) {
+    list->last = item->previous;
+  }
+
+  // free list item
+  free( item );
+}
+
+/**
+ * @brief Remove list item
+ *
+ * @param list
+ * @param item
+ */
+void list_remove_data_keep( list_manager_ptr_t list, void* data ) {
+  // assert existence
+  assert( NULL != list && NULL != data );
+
+  // get item
+  list_item_ptr_t item = list_lookup_data( list, data );
+  if ( NULL == item ) {
+    return;
+  }
+
+  // set previous of next
+  if ( NULL != item->next ) {
+    item->next->previous = item->previous;
+  }
+
+  // set next of previous
+  if ( NULL != item->previous ) {
+    item->previous->next = item->next;
+  }
+
+  // handle head removal
+  if ( item == list->first ) {
+    list->first = item->next;
+  }
+  // handle foot removal
+  if ( item == list->last ) {
+    list->last = item->previous;
+  }
+}

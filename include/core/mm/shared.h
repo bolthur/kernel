@@ -18,22 +18,33 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_STRING__ )
-#define __LIB_STRING__
+#if ! defined( __CORE_MM_SHARED__ )
+#define __CORE_MM_SHARED__
 
 #include <stddef.h>
-#include <stdint.h>
+#include <stdbool.h>
+#include <core/task/process.h>
 
-void* memchr( const void*, int32_t, size_t );
-int memcmp( const void*, const void*, size_t );
-void* memcpy( void* restrict, const void* restrict, size_t );
-void* memset( void*, int, size_t );
-char* strchr( const char*, int );
-char* strcpy( char*, const char* );
-size_t strlen( const char* );
-int strncmp( const char*, const char*, size_t );
-void* memmove( void*, const void*, size_t );
-size_t strnlen( const char*, size_t );
-char* strrchr( const char*, int );
+// forward declaration due to circular include
+typedef struct process task_process_t, *task_process_ptr_t;
+
+typedef struct {
+  uint64_t* address_list;
+  char* name;
+  size_t size;
+  size_t use_count;
+} shared_memory_entry_t, *shared_memory_entry_ptr_t;
+
+typedef struct {
+  uintptr_t start;
+  char* name;
+  size_t size;
+} shared_memory_entry_mapped_t, *shared_memory_entry_mapped_ptr_t;
+
+void shared_init( void );
+bool shared_memory_create( const char*, size_t );
+uintptr_t shared_memory_extend( const char* );
+uintptr_t shared_memory_acquire( task_process_ptr_t, const char* );
+bool shared_memory_release( task_process_ptr_t, const char* );
 
 #endif

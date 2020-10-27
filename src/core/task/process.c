@@ -142,6 +142,8 @@ void task_process_create( uintptr_t entry, size_t priority ) {
   process->state = TASK_PROCESS_STATE_READY;
   process->priority = priority;
   process->thread_stack_manager = task_stack_manager_create();
+  process->shared_memory_entry = list_construct();
+  process->shared_memory_mapped = list_construct();
   // create context only for user processes
   process->virtual_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
 
