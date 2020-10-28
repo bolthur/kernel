@@ -25,6 +25,12 @@
 
 // forward declaration for save of parameter
 IMPORT( firmware_info )
+// import used functions
+IMPORT( bss_startup_clear )
+IMPORT( fpu_enable )
+IMPORT( virt_startup_setup )
+IMPORT( firmware_startup_init )
+IMPORT( initrd_startup_init )
 
 // only when extension define is set
 #if defined( BCM2836 ) || defined( BCM2837 )

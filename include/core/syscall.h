@@ -36,9 +36,8 @@
 #define SYSCALL_MEMORY_RELEASE 22
 
 #define SYSCALL_SHARED_MEMORY_CREATE 31
-#define SYSCALL_SHARED_MEMORY_EXTEND 32
-#define SYSCALL_SHARED_MEMORY_ACQUIRE 33
-#define SYSCALL_SHARED_MEMORY_RELEASE 34
+#define SYSCALL_SHARED_MEMORY_ACQUIRE 32
+#define SYSCALL_SHARED_MEMORY_RELEASE 33
 
 #define SYSCALL_IO_ACQUIRE 41
 #define SYSCALL_IO_RELEASE 42
@@ -75,7 +74,6 @@ void syscall_memory_release( void* );
 
 void syscall_shared_memory_acquire( void* );
 void syscall_shared_memory_create( void* );
-void syscall_shared_memory_extend( void* );
 void syscall_shared_memory_release( void* );
 
 void syscall_interrupt_acquire( void* );

@@ -29,6 +29,7 @@
 typedef struct process task_process_t, *task_process_ptr_t;
 
 typedef struct {
+  avl_node_t node;
   uint64_t* address_list;
   char* name;
   size_t size;
@@ -36,14 +37,20 @@ typedef struct {
 } shared_memory_entry_t, *shared_memory_entry_ptr_t;
 
 typedef struct {
+  avl_node_t node;
   uintptr_t start;
   char* name;
   size_t size;
 } shared_memory_entry_mapped_t, *shared_memory_entry_mapped_ptr_t;
 
+#define SHARED_ENTRY_GET_BLOCK( n ) \
+  ( shared_memory_entry_ptr_t )( ( uint8_t* )n - offsetof( event_block_t, node ) )
+
+#define SHARED_MAPPED_GET_BLOCK( n ) \
+  ( shared_memory_entry_mapped_ptr_t )( ( uint8_t* )n - offsetof( event_block_t, node ) )
+
 void shared_init( void );
 bool shared_memory_create( const char*, size_t );
-uintptr_t shared_memory_extend( const char* );
 uintptr_t shared_memory_acquire( task_process_ptr_t, const char* );
 bool shared_memory_release( task_process_ptr_t, const char* );
 

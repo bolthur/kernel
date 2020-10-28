@@ -18,23 +18,37 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_STRING__ )
-#define __LIB_STRING__
-
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include <string.h>
 
-void* memchr( const void*, int32_t, size_t );
-int memcmp( const void*, const void*, size_t );
-void* memcpy( void* restrict, const void* restrict, size_t );
-void* memset( void*, int, size_t );
-char* strchr( const char*, int );
-int strcmp( const char*, const char* );
-char* strcpy( char*, const char* );
-size_t strlen( const char* );
-int strncmp( const char*, const char*, size_t );
-void* memmove( void*, const void*, size_t );
-size_t strnlen( const char*, size_t );
-char* strrchr( const char*, int );
-
-#endif
+/**
+ * @brief Compare two strings
+ *
+ * @param a
+ * @param b
+ * @return int
+ */
+int strcmp( const char* a, const char* b ) {
+  size_t idx = 0;
+  // loop and check
+  while ( true ) {
+    uint8_t ac = a[ idx ];
+    uint8_t bc = b[ idx ];
+    // end reached? => equal
+    if ( '\0' == ac && '\0' == bc ) {
+      return 0;
+    }
+    // handle a smaller b
+    if ( ac < bc ) {
+      return -1;
+    }
+    // handle a greater b
+    if ( ac > bc ) {
+      return 1;
+    }
+    // next one
+    idx++;
+  }
+}

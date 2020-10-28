@@ -49,6 +49,37 @@ static avl_node_ptr_t find_by_data(
 }
 
 /**
+ * @brief Helper to find node within tree
+ *
+ * @param data data to lookup for
+ * @param root root node
+ * @param compare compare function
+ * @return avl_node_ptr_t
+ */
+static avl_node_ptr_t find_by_value(
+  void* data,
+  avl_node_ptr_t root,
+  avl_lookup_func_t compare
+) {
+  // end point
+  if ( root == NULL ) {
+    return NULL;
+  }
+
+  int32_t result = compare( root, data );
+  // continue left
+  if ( -1 == result ) {
+    return find_by_value( data, root->left, compare );
+  // continue right
+  } else if ( 1 == result ) {
+    return find_by_value( data, root->right, compare );
+  }
+
+  // generic else case: found node is the wanted one
+  return root;
+}
+
+/**
  * @brief Helper to find parent node within tree
  *
  * @param data data to lookup for
@@ -111,4 +142,19 @@ avl_node_ptr_t avl_find_by_data( const avl_tree_ptr_t tree, void* data ) {
  */
 avl_node_ptr_t avl_find_parent_by_data( const avl_tree_ptr_t tree, void* data ) {
   return find_parent_by_data( data, tree->root );
+}
+
+/**
+ * @brief Find by value with callback
+ *
+ * @param tree tree to work on
+ * @param data data to lookup
+ * @param compare comparison callback
+ */
+avl_node_ptr_t avl_find_by_value(
+  const avl_tree_ptr_t tree,
+  void* value,
+  avl_lookup_func_t compare
+) {
+  return find_by_value( value, tree->root, compare );
 }

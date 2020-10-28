@@ -89,12 +89,6 @@ void syscall_init( void ) {
     false
   );
   interrupt_register_handler(
-    SYSCALL_SHARED_MEMORY_EXTEND,
-    syscall_shared_memory_extend,
-    INTERRUPT_SOFTWARE,
-    false
-  );
-  interrupt_register_handler(
     SYSCALL_SHARED_MEMORY_RELEASE,
     syscall_shared_memory_release,
     INTERRUPT_SOFTWARE,

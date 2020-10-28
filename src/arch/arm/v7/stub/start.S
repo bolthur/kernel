@@ -26,6 +26,8 @@
 
 .section .text
 
+IMPORT( kernel_main )
+
 EXPORT( arch_start )
 arch_start:
   // setup of other modes stacks not necessary as all exceptions use supervisor mode

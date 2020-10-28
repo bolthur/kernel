@@ -58,13 +58,3 @@ void syscall_shared_memory_acquire( void* context ) {
     )
   );
 }
-
-void syscall_shared_memory_extend( void* context ) {
-  // get parameter
-  const char* name = ( const char* )syscall_get_parameter( context, 0 );
-  // attach to current thread
-  syscall_populate_single_return(
-    context,
-    shared_memory_extend( name )
-  );
-}

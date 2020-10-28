@@ -34,6 +34,10 @@ typedef int32_t ( *avl_compare_func_t )(
   const avl_node_ptr_t avl_a,
   const avl_node_ptr_t avl_b
 );
+typedef int32_t ( *avl_lookup_func_t )(
+  const avl_node_ptr_t avl_a,
+  const void* data
+);
 
 typedef struct avl_node {
   void *data;
@@ -54,6 +58,7 @@ void avl_prepare_node( avl_node_ptr_t, void* );
 
 avl_node_ptr_t avl_find_by_data( const avl_tree_ptr_t, void* );
 avl_node_ptr_t avl_find_parent_by_data( const avl_tree_ptr_t, void* );
+avl_node_ptr_t avl_find_by_value( const avl_tree_ptr_t, void*, avl_lookup_func_t );
 void avl_remove_by_data( const avl_tree_ptr_t, void* );
 
 void avl_insert_by_node( const avl_tree_ptr_t, avl_node_ptr_t );

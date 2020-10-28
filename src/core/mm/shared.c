@@ -19,7 +19,7 @@
  */
 
 #include <stdlib.h>
-#include <list.h>
+#include <avl.h>
 #include <string.h>
 #include <assert.h>
 #include <core/panic.h>
@@ -27,73 +27,66 @@
 #include <core/mm/shared.h>
 
 /**
- * @brief list of shared memory entries
+ * @brief Tree of shared memory items
  */
-list_manager_ptr_t shared_memory = NULL;
+avl_tree_ptr_t shared_tree = NULL;
 
 /**
- * @brief Helper to get item by name
+ * @brief Compare entry callback necessary for avl tree
  *
- * @param name name to lookup
- * @return list_item_ptr_t
+ * @param a node a
+ * @param b node b
+ * @return int32_t
  */
-static list_item_ptr_t entry_by_name(
-  const char* name,
-  list_manager_ptr_t list
-) {
-  // check for name is already in use
-  list_item_ptr_t item = list->first;
-  // loop until end of list
-  while ( item ) {
-    // get entry
-    shared_memory_entry_ptr_t entry = ( shared_memory_entry_ptr_t )item->data;
-    // skip if length is not equal
-    if ( strlen( name ) != strlen( entry->name ) ) {
-      item = item->next;
-      continue;
-    }
-    // break if name is equal
-    if ( 0 == strncmp( entry->name, name, strlen( name ) ) ) {
-      return item;
-    }
-    // next one
-    item = item->next;
-  }
-  // not found
-  return NULL;
+static int32_t compare_entry( const avl_node_ptr_t a, const avl_node_ptr_t b ) {
+  // get blocks
+  shared_memory_entry_ptr_t block_a = SHARED_ENTRY_GET_BLOCK( a );
+  shared_memory_entry_ptr_t block_b = SHARED_ENTRY_GET_BLOCK( b );
+  // return string comparison
+  return strcmp( block_a->name, block_b->name );
 }
 
 /**
- * @brief Helper to get item by name
+ * @brief Lookup entry callback necessary for avl tree
  *
- * @param name name to lookup
- * @return list_item_ptr_t
+ * @param a node a
+ * @param b node b
+ * @return int32_t
  */
-static list_item_ptr_t mapped_by_name(
-  const char* name,
-  list_manager_ptr_t list
-) {
-  // check for name is already in use
-  list_item_ptr_t item = list->first;
-  // loop until end of list
-  while ( item ) {
-    // get entry
-    shared_memory_entry_mapped_ptr_t entry = ( shared_memory_entry_mapped_ptr_t )
-      item->data;
-    // skip if length is not equal
-    if ( strlen( name ) != strlen( entry->name ) ) {
-      item = item->next;
-      continue;
-    }
-    // break if name is equal
-    if ( 0 == strncmp( entry->name, name, strlen( name ) ) ) {
-      return item;
-    }
-    // next one
-    item = item->next;
-  }
-  // not found
-  return NULL;
+static int32_t lookup_entry( const avl_node_ptr_t a, const void* b ) {
+  // get blocks
+  shared_memory_entry_ptr_t block_a = SHARED_ENTRY_GET_BLOCK( a );
+  // return string comparison
+  return strcmp( block_a->name, ( char* )b );
+}
+
+/**
+ * @brief Compare mapped callback necessary for avl tree
+ *
+ * @param a node a
+ * @param b node b
+ * @return int32_t
+ */
+static int32_t compare_mapped( const avl_node_ptr_t a, const avl_node_ptr_t b ) {
+  // get blocks
+  shared_memory_entry_mapped_ptr_t block_a = SHARED_MAPPED_GET_BLOCK( a );
+  shared_memory_entry_mapped_ptr_t block_b = SHARED_MAPPED_GET_BLOCK( b );
+  // return string comparison
+  return strcmp( block_a->name, block_b->name );
+}
+
+/**
+ * @brief Lookup mapped callback necessary for avl tree
+ *
+ * @param a node a
+ * @param b node b
+ * @return int32_t
+ */
+static int32_t lookup_mapped( const avl_node_ptr_t a, const void* b ) {
+  // get blocks
+  shared_memory_entry_mapped_ptr_t block_a = SHARED_MAPPED_GET_BLOCK( a );
+  // return string comparison
+  return strcmp( block_a->name, ( char* )b );
 }
 
 /**
@@ -179,10 +172,25 @@ static shared_memory_entry_mapped_ptr_t create_mapped(
 }
 
 /**
+ * @brief Helper to setup process trees
+ *
+ * @param process
+ */
+static void prepare_process( task_process_ptr_t process ) {
+  // create tree if necessary
+  if ( NULL == process->shared_memory_entry ) {
+    process->shared_memory_entry = avl_create_tree( compare_entry );
+  }
+  if ( NULL == process->shared_memory_mapped ) {
+    process->shared_memory_mapped = avl_create_tree( compare_mapped );
+  }
+}
+
+/**
  * @brief Init shared memory
  */
 void shared_init( void ) {
-  shared_memory = list_construct();
+  shared_tree = avl_create_tree( compare_entry );
 }
 
 /**
@@ -195,45 +203,27 @@ void shared_init( void ) {
  */
 bool shared_memory_create( const char* name, size_t size ) {
   // handle not initialized
-  if ( NULL == shared_memory ) {
+  if ( NULL == shared_tree ) {
     return false;
   }
 
-  // entry variable
-  list_item_ptr_t entry = entry_by_name( name, shared_memory );
+  // try to find node
+  avl_node_ptr_t node = avl_find_by_value(
+    shared_tree,
+    ( void* )name,
+    lookup_entry
+  );
   // skip if name is already in use
-  if ( NULL != entry ) {
+  if ( NULL != node ) {
     return false;
   }
 
   // create entry
   shared_memory_entry_ptr_t tmp = create_entry( name, size );
   // push back entry
-  list_push_back( shared_memory, tmp );
+  avl_insert_by_node( shared_tree, &tmp->node );
   // return success
   return true;
-}
-
-/**
- * @brief Extend shared memory area
- *
- * @param name name to extend
- * @return uintptr_t
- *
- * @todo implement logic
- */
-uintptr_t shared_memory_extend( const char* name ) {
-  // try to get item by name
-  list_item_ptr_t entry = entry_by_name( name, shared_memory );
-  // handle missing
-  if ( NULL == entry ) {
-    return ( uintptr_t )NULL;
-  }
-
-  // FIXME: ADD LOGIC
-  PANIC( "Not implemented!" );
-
-  return (uintptr_t)NULL;
 }
 
 /**
@@ -244,29 +234,47 @@ uintptr_t shared_memory_extend( const char* name ) {
  * @return uintptr_t start address or NULL if not existing / already mapped
  */
 uintptr_t shared_memory_acquire( task_process_ptr_t process, const char* name ) {
+  // handle not initialized
+  if ( NULL == shared_tree ) {
+    return ( uintptr_t )NULL;
+  }
+
+  // prepare process
+  prepare_process( process );
+
   // try to get item by name
-  list_item_ptr_t list_entry = entry_by_name( name, shared_memory );
+  avl_node_ptr_t node = avl_find_by_value(
+    shared_tree,
+    ( void* )name,
+    lookup_entry
+  );
   // handle missing
-  if ( NULL == list_entry ) {
+  if ( NULL == node ) {
     return ( uintptr_t )NULL;
   }
   // try to get item by name from process
-  list_item_ptr_t process_entry = entry_by_name(
-    name, process->shared_memory_entry );
+  avl_node_ptr_t process_node = avl_find_by_value(
+    process->shared_memory_entry,
+    ( void* )name,
+    lookup_entry
+  );
   // handle already attached
-  if ( NULL != process_entry ) {
+  if ( NULL != process_node ) {
     // get mapped entry
-    list_item_ptr_t mapped_entry = mapped_by_name(
-      name, process->shared_memory_mapped );
+    avl_node_ptr_t mapped_node = avl_find_by_value(
+      process->shared_memory_mapped,
+      ( void* )name,
+      lookup_mapped
+    );
     // handle error
-    if ( NULL == mapped_entry ) {
+    if ( NULL == mapped_node ) {
       return ( uintptr_t )NULL;
     }
     // return start
-    return ( ( shared_memory_entry_mapped_ptr_t )mapped_entry->data )->start;
+    return ( ( shared_memory_entry_mapped_ptr_t )mapped_node->data )->start;
   }
 
-  shared_memory_entry_ptr_t tmp = ( shared_memory_entry_ptr_t )list_entry->data;
+  shared_memory_entry_ptr_t tmp = ( shared_memory_entry_ptr_t )node->data;
   // find free page range
   uintptr_t virt = virt_find_free_page_range(
     process->virtual_context,
@@ -293,12 +301,12 @@ uintptr_t shared_memory_acquire( task_process_ptr_t process, const char* name ) 
   }
 
   // attach item to process list
-  list_push_back_node( process->shared_memory_entry, list_entry );
+  avl_insert_by_node( process->shared_memory_entry, node );
   // create mapped entry
   shared_memory_entry_mapped_ptr_t mapped = create_mapped(
     name, tmp->size, virt );
   // push back
-  list_push_back( process->shared_memory_mapped, mapped );
+  avl_insert_by_node( process->shared_memory_mapped, &mapped->node );
 
   // increment entry count
   tmp->use_count++;
@@ -315,24 +323,44 @@ uintptr_t shared_memory_acquire( task_process_ptr_t process, const char* name ) 
  * @return true
  * @return false
  */
-bool shared_memory_release( __unused task_process_ptr_t process, const char* name ) {
+bool shared_memory_release( task_process_ptr_t process, const char* name ) {
+  // handle not initialized
+  if ( NULL == shared_tree ) {
+    return false;
+  }
+
+  // prepare process
+  prepare_process( process );
+
   // get item by name
-  list_item_ptr_t entry = entry_by_name( name, shared_memory );
+  avl_node_ptr_t node = avl_find_by_value(
+    shared_tree,
+    ( void* )name,
+    lookup_entry
+  );
   // handle missing
-  if ( NULL == entry ) {
+  if ( NULL == node ) {
     return false;
   }
 
   // get mapped item
-  list_item_ptr_t mapped = mapped_by_name(
-    name, process->shared_memory_mapped );
+  avl_node_ptr_t mapped = avl_find_by_value(
+    process->shared_memory_mapped,
+    ( void* )name,
+    lookup_mapped
+  );
   if ( NULL == mapped ) {
     return false;
   }
 
+  shared_memory_entry_mapped_ptr_t mapped_item = ( shared_memory_entry_mapped_ptr_t )
+    mapped->data;
+  shared_memory_entry_ptr_t node_item = ( shared_memory_entry_ptr_t )
+    node->data;
+
   // determine start and end
-  uintptr_t start = ( ( shared_memory_entry_mapped_ptr_t )mapped->data )->start;
-  uintptr_t end = start + ( ( shared_memory_entry_mapped_ptr_t )mapped->data )->size;
+  uintptr_t start = mapped_item->start;
+  uintptr_t end = start + mapped_item->size;
   // loop until end
   while ( start < end ) {
     // unmap
@@ -346,13 +374,13 @@ bool shared_memory_release( __unused task_process_ptr_t process, const char* nam
   }
 
   // decrement entry count
-  ( ( shared_memory_entry_ptr_t )entry->data )->use_count--;
+  node_item->use_count--;
   // remove item
-  list_remove_data_keep( process->shared_memory_entry, entry );
-  list_remove_data( process->shared_memory_mapped, mapped );
+  avl_remove_by_node( process->shared_memory_entry, node );
+  avl_remove_by_node( process->shared_memory_mapped, mapped );
   // cleanup if unused
-  if ( 0 == ( ( shared_memory_entry_ptr_t )entry->data )->use_count ) {
-    list_remove_data( shared_memory, entry );
+  if ( 0 == node_item->use_count ) {
+    avl_remove_by_node( shared_tree, node );
   }
 
   // return success
