@@ -23,6 +23,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #define SYSCALL_PROCESS_CREATE 1
 #define SYSCALL_PROCESS_EXIT 2
@@ -57,7 +58,7 @@
 #define SYSCALL_DUMMY_PUTC 101
 #define SYSCALL_DUMMY_PUTS 102
 
-void syscall_init( void );
+bool syscall_init( void );
 void syscall_populate_single_return( void*, size_t );
 size_t syscall_get_parameter( void*, int32_t );
 

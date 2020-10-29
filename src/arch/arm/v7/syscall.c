@@ -34,10 +34,8 @@
 void syscall_populate_single_return( void* context, size_t value ) {
   // get context
   INTERRUPT_DETERMINE_CONTEXT( context )
-  // transform to cpu structure
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // set return value
-  cpu->reg.r0 = value;
+  ( ( cpu_register_context_ptr_t )context )->reg.r0 = value;
 }
 
 /**
@@ -52,7 +50,7 @@ size_t syscall_get_parameter( void* context, int32_t num ) {
   INTERRUPT_DETERMINE_CONTEXT( context )
   // transform to cpu structure
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-  // assert number
+  // number sanitize
   assert( num >= R0 && num <= CPSR );
   // return value
   return ( size_t )cpu->raw[ num ];

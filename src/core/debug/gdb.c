@@ -19,7 +19,6 @@
  */
 
 #include <stdbool.h>
-#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <core/event.h>
@@ -132,17 +131,16 @@ static bool checksum( uint8_t in ) {
 void debug_gdb_init( void ) {
   // setup breakpoint manager
   DEBUG_OUTPUT( "Setup breakpoint manager\r\n" );
-  debug_breakpoint_init();
+  assert( debug_breakpoint_init() );
 
   // setup debug traps
   DEBUG_OUTPUT( "Setup debug traps\r\n" );
-  debug_gdb_set_trap();
+  assert( debug_gdb_set_trap() );
 
   // synchronize
   DEBUG_OUTPUT( "Synchronize with remote GDB\r\n" );
   debug_gdb_breakpoint();
 }
-
 
 /**
  * @brief Receive a packet
@@ -213,7 +211,6 @@ uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
   return NULL;
 }
 
-
 /**
  * @brief Serial gdb handler
  *
@@ -236,13 +233,18 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
 /**
  * @brief Setup gdb debug traps
  */
-void debug_gdb_set_trap( void ) {
+bool debug_gdb_set_trap( void ) {
   // register debug event
-  event_bind( EVENT_DEBUG, debug_gdb_handle_event, false );
+  if ( ! event_bind( EVENT_DEBUG, debug_gdb_handle_event, false ) ) {
+    return false;
+  }
   // register serial event
-  event_bind( EVENT_SERIAL, debug_gdb_serial_event, false );
+  if ( ! event_bind( EVENT_SERIAL, debug_gdb_serial_event, false ) ) {
+    return false;
+  }
   // set initialized
   stub_initialized = true;
+  return true;
 }
 
 /**

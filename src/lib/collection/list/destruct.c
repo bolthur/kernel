@@ -20,7 +20,6 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <list.h>
 
 /**
@@ -31,8 +30,10 @@
 void list_destruct( list_manager_ptr_t list ) {
   list_item_ptr_t current, next;
 
-  // assert list
-  assert( NULL != list );
+  // check parameter
+  if ( NULL == list ) {
+    return;
+  }
   // populate current
   current = list->first;
 

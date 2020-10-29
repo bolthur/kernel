@@ -20,6 +20,7 @@
 
 #include <stddef.h>
 
+#include <assert.h>
 #include <string.h>
 #include <core/panic.h>
 #include <core/debug/debug.h>
@@ -88,13 +89,13 @@ void virt_platform_init( void ) {
   // map framebuffer
   while ( start < framebuffer_end_get() ) {
     // map framebuffer
-    virt_map_address(
+    assert( virt_map_address(
       kernel_context,
       virtual,
       start,
       VIRT_MEMORY_TYPE_DEVICE,
       VIRT_PAGE_TYPE_AUTO
-    );
+    ) );
     // increase start and virtual
     start += PAGE_SIZE;
     virtual += PAGE_SIZE;
@@ -116,12 +117,12 @@ void virt_platform_init( void ) {
   // map peripherals
   while ( start < peripheral_end_get( PERIPHERAL_GPIO ) ) {
     // map
-    virt_map_address(
+    assert( virt_map_address(
       kernel_context,
       virtual,
       start,
       VIRT_MEMORY_TYPE_DEVICE,
-      VIRT_PAGE_TYPE_AUTO );
+      VIRT_PAGE_TYPE_AUTO ) );
 
     // increase start and virtual
     start += PAGE_SIZE;
@@ -144,12 +145,12 @@ void virt_platform_init( void ) {
     // map peripherals
     while ( start < peripheral_end_get( PERIPHERAL_LOCAL ) ) {
       // map
-      virt_map_address(
+      assert( virt_map_address(
         kernel_context,
         virtual,
         start,
         VIRT_MEMORY_TYPE_DEVICE,
-        VIRT_PAGE_TYPE_AUTO );
+        VIRT_PAGE_TYPE_AUTO ) );
       // increase start and virtual
       start += PAGE_SIZE;
       virtual += PAGE_SIZE;
@@ -157,13 +158,13 @@ void virt_platform_init( void ) {
   #endif
 
   // map mailbox buffer
-  virt_map_address(
+  assert( virt_map_address(
     kernel_context,
     MAILBOX_PROPERTY_AREA,
     ( uintptr_t )ptb_buffer_phys,
     VIRT_MEMORY_TYPE_DEVICE,
     VIRT_PAGE_TYPE_AUTO
-  );
+  ) );
 }
 
 /**

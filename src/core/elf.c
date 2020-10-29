@@ -115,8 +115,10 @@ bool elf_check( uintptr_t elf ) {
  *
  * @param elf adress to elf header
  * @param process process structure
+ * @return true
+ * @return false
  */
-static void load_program_header( uintptr_t elf, task_process_ptr_t process ) {
+static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
   // get header
   Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
 
@@ -141,9 +143,16 @@ static void load_program_header( uintptr_t elf, task_process_ptr_t process ) {
     while ( needed_size != 0 ) {
       // get physical page
       uint64_t phys = phys_find_free_page( PAGE_SIZE );
+      // handle error
+      if ( 0 == phys ) {
+        return false;
+      }
 
       // map it temporary
       uintptr_t tmp = virt_map_temporary( phys, PAGE_SIZE );
+      if ( 0 == tmp ) {
+        return false;
+      }
 
       // partial data copy
       if ( offset < program_header->p_filesz ) {
@@ -164,20 +173,24 @@ static void load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       // unmap temporary
       virt_unmap_temporary( tmp, PAGE_SIZE );
 
-      // map it wotjom process context
-      virt_map_address(
-        process->virtual_context,
-        program_header->p_vaddr + offset,
-        phys,
-        VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_EXECUTABLE
-      );
+      // map it wihin process context
+      if ( ! virt_map_address(
+          process->virtual_context,
+          program_header->p_vaddr + offset,
+          phys,
+          VIRT_MEMORY_TYPE_NORMAL,
+          VIRT_PAGE_TYPE_EXECUTABLE
+        )
+      ) {
+        return false;
+      }
 
       // subtract one page
       needed_size -= PAGE_SIZE;
       offset += PAGE_SIZE;
     }
   }
+  return true;
 }
 
 /**
@@ -195,7 +208,9 @@ uintptr_t elf_load( uintptr_t elf, task_process_ptr_t process ) {
   // get header
   Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
   // load program header
-  load_program_header( elf, process );
+  if ( ! load_program_header( elf, process ) ) {
+    return 0;
+  }
   // return entry
   return ( uintptr_t )header->e_entry;
 }

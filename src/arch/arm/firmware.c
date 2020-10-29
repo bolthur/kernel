@@ -59,19 +59,22 @@ void __bootstrap firmware_startup_init( void ) {
 /**
  * @brief Handle firmware information related init
  */
-void firmware_init( void ) {
+bool firmware_init( void ) {
   // transfer to uintptr_t
   uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
 
   // handle atag
   if ( atag_check( atag_fdt ) ) {
-    if ( !virt_is_mapped( PHYS_2_VIRT( atag_fdt ) ) ) {
-      virt_map_address(
+    if ( ! virt_is_mapped( PHYS_2_VIRT( atag_fdt ) ) ) {
+      if ( ! virt_map_address(
         kernel_context,
         PHYS_2_VIRT( atag_fdt ),
         atag_fdt,
         VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_EXECUTABLE );
+        VIRT_PAGE_TYPE_EXECUTABLE
+      ) ) {
+        return false;
+      }
     }
     // transform to virtual
     firmware_info.atag_fdt = PHYS_2_VIRT( atag_fdt );
@@ -84,12 +87,15 @@ void firmware_init( void ) {
     uintptr_t virtual = PHYS_2_VIRT( start );
     // map until end of dtb
     while ( start < end ) {
-      virt_map_address(
+      if ( ! virt_map_address(
         kernel_context,
         virtual,
         start,
         VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_EXECUTABLE );
+        VIRT_PAGE_TYPE_EXECUTABLE
+      ) ) {
+        return false;
+      }
       // next page
       start += PAGE_SIZE;
       virtual += PAGE_SIZE;
@@ -97,6 +103,8 @@ void firmware_init( void ) {
     // overwrite
     firmware_info.atag_fdt = PHYS_2_VIRT( atag_fdt );
   }
+
+  return true;
 }
 
 // enable again

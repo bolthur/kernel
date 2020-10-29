@@ -20,7 +20,6 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <list.h>
 
 /**
@@ -28,14 +27,17 @@
  *
  * @param list
  * @param item
+ * @return true
+ * @return false
  */
-void list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
-  // assert existence
-  assert( NULL != list && NULL != item );
-
+bool list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
+  // handle invalid parameter
+  if ( NULL == list || NULL == item ) {
+    return false;
+  }
   // stop if not existing
   if ( NULL == list_lookup_item( list, item ) ) {
-    return;
+    return false;
   }
 
   // set previous of next
@@ -59,6 +61,7 @@ void list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
 
   // free list item
   free( item );
+  return true;
 }
 
 /**
@@ -67,13 +70,15 @@ void list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
  * @param list
  * @param item
  */
-void list_remove_keep( list_manager_ptr_t list, list_item_ptr_t item ) {
-  // assert existence
-  assert( NULL != list && NULL != item );
+bool list_remove_keep( list_manager_ptr_t list, list_item_ptr_t item ) {
+  // handle invalid parameter
+  if ( NULL == list || NULL == item ) {
+    return false;
+  }
 
   // stop if not existing
   if ( NULL == list_lookup_item( list, item ) ) {
-    return;
+    return false;
   }
 
   // set previous of next
@@ -94,6 +99,7 @@ void list_remove_keep( list_manager_ptr_t list, list_item_ptr_t item ) {
   if ( item == list->last ) {
     list->last = item->previous;
   }
+  return true;
 }
 
 
@@ -102,15 +108,19 @@ void list_remove_keep( list_manager_ptr_t list, list_item_ptr_t item ) {
  *
  * @param list
  * @param item
+ * @return true
+ * @return false
  */
-void list_remove_data( list_manager_ptr_t list, void* data ) {
-  // assert existence
-  assert( NULL != list && NULL != data );
+bool list_remove_data( list_manager_ptr_t list, void* data ) {
+  // handle invalid parameter
+  if ( NULL == list || NULL == data ) {
+    return false;
+  }
 
   // stop if not existing
   list_item_ptr_t item = list_lookup_data( list, data );
   if ( NULL == item ) {
-    return;
+    return false;
   }
 
   // set previous of next
@@ -134,6 +144,7 @@ void list_remove_data( list_manager_ptr_t list, void* data ) {
 
   // free list item
   free( item );
+  return true;
 }
 
 /**
@@ -141,15 +152,19 @@ void list_remove_data( list_manager_ptr_t list, void* data ) {
  *
  * @param list
  * @param item
+ * @return true
+ * @return false
  */
-void list_remove_data_keep( list_manager_ptr_t list, void* data ) {
-  // assert existence
-  assert( NULL != list && NULL != data );
+bool list_remove_data_keep( list_manager_ptr_t list, void* data ) {
+  // handle invalid parameter
+  if ( NULL == list || NULL == data ) {
+    return false;
+  }
 
   // get item
   list_item_ptr_t item = list_lookup_data( list, data );
   if ( NULL == item ) {
-    return;
+    return false;
   }
 
   // set previous of next
@@ -170,4 +185,6 @@ void list_remove_data_keep( list_manager_ptr_t list, void* data ) {
   if ( item == list->last ) {
     list->last = item->previous;
   }
+
+  return true;
 }

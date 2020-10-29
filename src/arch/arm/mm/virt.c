@@ -98,7 +98,7 @@ void virt_setup_supported_modes( void ) {
       } else if ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes ) {
         supported_modes = ID_MMFR0_VSMA_V7_PAGING_PXN;
       } else {
-        PANIC( "No MMU supported!" );
+        PANIC( "Not supported!" );
       }
     }
   #elif defined( ELF64 )

@@ -20,11 +20,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <stddef.h>
-#include <core/panic.h>
 #include <core/debug/debug.h>
-#include <arch/arm/barrier.h>
-#include <arch/arm/v7/cpu.h>
 #include <arch/arm/v7/debug/debug.h>
 
 /**

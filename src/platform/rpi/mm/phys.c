@@ -26,17 +26,20 @@
 #include <core/entry.h>
 #include <core/mm/phys.h>
 #include <platform/rpi/peripheral.h>
+#include <platform/rpi/mailbox/mailbox.h>
 #include <platform/rpi/mailbox/property.h>
 
 /**
  * @brief Initialize physical memory manager for rpi
  */
-void phys_platform_init( void ) {
+bool phys_platform_init( void ) {
   // Get arm memory
   mailbox_property_init();
   mailbox_property_add_tag( TAG_GET_ARM_MEMORY );
   mailbox_property_add_tag( TAG_GET_VC_MEMORY );
-  mailbox_property_process();
+  if ( MAILBOX_ERROR == mailbox_property_process() ) {
+    return false;
+  }
 
   // max memory
   uint32_t memory_amount = 0;
@@ -109,6 +112,9 @@ void phys_platform_init( void ) {
   phys_bitmap = ( uint32_t* )aligned_alloc(
     sizeof( phys_bitmap ),
     phys_bitmap_length * sizeof( uint32_t ) );
+  if ( NULL == phys_bitmap ) {
+    return false;
+  }
 
   // debug output
   #if defined( PRINT_MM_PHYS )
@@ -158,4 +164,5 @@ void phys_platform_init( void ) {
     // get next page
     start += PAGE_SIZE;
   }
+  return true;
 }

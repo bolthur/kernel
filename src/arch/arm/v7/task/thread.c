@@ -21,7 +21,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <core/panic.h>
 #include <arch/arm/stack.h>
 #include <core/mm/phys.h>
@@ -55,8 +54,18 @@ task_thread_ptr_t task_thread_create(
 
   // create stack
   uint64_t stack_physical = phys_find_free_page_range( STACK_SIZE, STACK_SIZE );
+  // handle error
+  if ( 0 == stack_physical ) {
+    return NULL;
+  }
+
   // get next stack address for user area
   uintptr_t stack_virtual = task_stack_manager_next( process->thread_stack_manager );
+  // handle error
+  if ( 0 == stack_virtual ) {
+    phys_free_page_range( stack_physical, STACK_SIZE );
+    return NULL;
+  }
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "stack_virtual = %p\r\n", ( void* )stack_virtual );
@@ -65,8 +74,11 @@ task_thread_ptr_t task_thread_create(
   // create context
   cpu_register_context_ptr_t current_context = ( cpu_register_context_ptr_t )malloc(
     sizeof( cpu_register_context_t ) );
-  cpu_register_context_ptr_t initial_context = ( cpu_register_context_ptr_t )malloc(
-    sizeof( cpu_register_context_t ) );
+  // handle error
+  if ( current_context == NULL ) {
+    phys_free_page_range( stack_physical, STACK_SIZE );
+    return NULL;
+  }
   // Prepare area
   memset( ( void* )current_context, 0, sizeof( cpu_register_context_t ) );
   // set content
@@ -79,33 +91,49 @@ task_thread_ptr_t task_thread_create(
   #if defined( PRINT_PROCESS )
     DUMP_REGISTER( current_context );
   #endif
-  // copy over to initial context
-  memcpy(
-    ( void* )initial_context,
-    ( void* )current_context,
-    sizeof( cpu_register_context_t ) );
 
   // map stack temporary
   uintptr_t tmp_virtual_user = virt_map_temporary( stack_physical, STACK_SIZE );
+  // handle error
+  if ( 0 == tmp_virtual_user ) {
+    phys_free_page_range( stack_physical, STACK_SIZE );
+    free( current_context );
+    return NULL;
+  }
   // prepare stack
   memset( ( void* )tmp_virtual_user, 0, STACK_SIZE );
   // unmap again
   virt_unmap_temporary( tmp_virtual_user, STACK_SIZE );
   // create node for stack address management tree
-  task_stack_manager_add( stack_virtual, process->thread_stack_manager );
+  if ( ! task_stack_manager_add( stack_virtual, process->thread_stack_manager ) ) {
+    phys_free_page_range( stack_physical, STACK_SIZE );
+    free( current_context );
+    return NULL;
+  }
   // map allocated stack
-  virt_map_address(
+  if ( ! virt_map_address(
     process->virtual_context,
     stack_virtual,
     stack_physical,
     VIRT_MEMORY_TYPE_NORMAL,
-    VIRT_PAGE_TYPE_EXECUTABLE );
+    VIRT_PAGE_TYPE_EXECUTABLE
+  ) ) {
+    task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
+    phys_free_page_range( stack_physical, STACK_SIZE );
+    free( current_context );
+    return NULL;
+  }
 
   // create thread structure
   task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
     sizeof( task_thread_t ) );
-  // assert malloc return
-  assert( NULL != thread );
+  // check allocation
+  if ( NULL == thread ) {
+    task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
+    virt_unmap_address( process->virtual_context, stack_virtual, true );
+    free( current_context );
+    return NULL;
+  }
   // prepare
   memset( ( void* )thread, 0, sizeof( task_thread_t ) );
   // debug output
@@ -120,19 +148,34 @@ task_thread_ptr_t task_thread_create(
   thread->stack_physical = stack_physical;
   thread->stack_virtual = stack_virtual;
   thread->current_context = ( void* )current_context;
-  thread->initial_context = ( void* )initial_context;
 
 
   // prepare node
   avl_prepare_node( &thread->node_id, ( void* )thread->id );
   // add to tree
-  avl_insert_by_node( process->thread_manager, &thread->node_id );
+  if ( ! avl_insert_by_node( process->thread_manager, &thread->node_id ) ) {
+    task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
+    virt_unmap_address( process->virtual_context, stack_virtual, true );
+    free( thread );
+    free( current_context );
+    return NULL;
+  }
 
   // get thread queue by priority
   task_priority_queue_ptr_t queue = task_queue_get_queue(
     process_manager, priority );
-  // add thread to thread list for switching
-  list_push_back( queue->thread_list, thread );
+  if (
+    NULL == queue
+    // add thread to thread list for switching
+    || ! list_push_back( queue->thread_list, thread )
+  ) {
+    avl_remove_by_node( process->thread_manager, &thread->node_id );
+    task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
+    virt_unmap_address( process->virtual_context, stack_virtual, true );
+    free( thread );
+    free( current_context );
+    return NULL;
+  }
 
   // cppcheck-suppress memleak
   // return created thread

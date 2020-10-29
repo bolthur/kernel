@@ -21,13 +21,14 @@
 #if ! defined( __KERNEL_VENDOR_RPI_FRAMEBUFFER__ )
 #define __KERNEL_VENDOR_RPI_FRAMEBUFFER__
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #define FRAMEBUFFER_SCREEN_WIDTH 800 // 960
 #define FRAMEBUFFER_SCREEN_HEIGHT 600 // 720
 #define FRAMEBUFFER_SCREEN_DEPTH 16
 
-void framebuffer_init( void );
+bool framebuffer_init( void );
 void framebuffer_putc( uint8_t );
 
 uintptr_t framebuffer_end_get( void );

@@ -19,7 +19,6 @@
  */
 
 #include <stddef.h>
-#include <assert.h>
 #include <stddef.h>
 
 #include <core/panic.h>

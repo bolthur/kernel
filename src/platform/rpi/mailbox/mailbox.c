@@ -30,7 +30,7 @@
  *
  * @param channel Function to read via mailbox
  * @param type mailbox type to be used
- * @return uint32_t value from mailbox function or 0xffffffff
+ * @return uint32_t value from mailbox function or MAILBOX_ERROR
  */
 uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
   // data and count
@@ -54,7 +54,7 @@ uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
     while ( mbox0->status & MAILBOX_EMPTY ) {
       // break if it takes to much time
       if ( count++ > ( 1 << 25 ) ) {
-        return 0xffffffff;
+        return MAILBOX_ERROR;
       }
     }
 

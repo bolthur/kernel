@@ -20,7 +20,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <avl.h>
 
 /**
@@ -32,8 +31,10 @@
 avl_tree_ptr_t avl_create_tree( avl_compare_func_t compare ) {
   // allocate new tree structure
   avl_tree_ptr_t tree = ( avl_tree_ptr_t )malloc( sizeof( avl_tree_t ) );
-  // assert malloc result
-  assert( NULL != tree );
+  // check malloc return
+  if ( NULL == tree ) {
+    return NULL;
+  }
   // prepare structure
   memset( ( void* )tree, 0, sizeof( avl_tree_t ) );
 
@@ -53,8 +54,10 @@ avl_tree_ptr_t avl_create_tree( avl_compare_func_t compare ) {
 avl_node_ptr_t avl_create_node( void* data ) {
   // allocate node
   avl_node_ptr_t node = ( avl_node_ptr_t )malloc( sizeof( avl_node_t ) );
-  // assert allocation
-  assert( NULL != node );
+  // check malloc return
+  if ( NULL == node ) {
+    return NULL;
+  }
   // prepare data
   memset( ( void* )node, 0, sizeof( avl_node_t ) );
   // call prepare node

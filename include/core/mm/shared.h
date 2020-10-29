@@ -49,7 +49,7 @@ typedef struct {
 #define SHARED_MAPPED_GET_BLOCK( n ) \
   ( shared_memory_entry_mapped_ptr_t )( ( uint8_t* )n - offsetof( event_block_t, node ) )
 
-void shared_init( void );
+bool shared_init( void );
 bool shared_memory_create( const char*, size_t );
 uintptr_t shared_memory_acquire( task_process_ptr_t, const char* );
 bool shared_memory_release( task_process_ptr_t, const char* );

@@ -21,7 +21,6 @@
 #include <stddef.h>
 
 #include <avl.h>
-#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <core/panic.h>
@@ -68,8 +67,10 @@ static int32_t compare_interrupt_callback(
  * @return avl_tree_ptr_t
  */
 static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
-  // assert heap existence
-  assert( true == heap_init_get() );
+  // check heap existence
+  if ( ! heap_init_get() ) {
+    return NULL;
+  }
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Called tree_by_type( %d )\r\n", type );
@@ -79,17 +80,37 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
     // initialize interrupt manager
     interrupt_manager = ( interrupt_manager_ptr_t )malloc(
       sizeof( interrupt_manager_t ) );
-    // assert initialization
-    assert( NULL != interrupt_manager );
+    // check allocation
+    if ( NULL == interrupt_manager ) {
+      return NULL;
+    }
     // prepare memory
     memset( ( void* )interrupt_manager, 0, sizeof( interrupt_manager_t ) );
     // create trees for interrupt types
     interrupt_manager->normal_interrupt = avl_create_tree(
       compare_interrupt_callback );
+    // check allocation
+    if ( NULL == interrupt_manager->normal_interrupt ) {
+      free( interrupt_manager );
+      return NULL;
+    }
     interrupt_manager->fast_interrupt = avl_create_tree(
       compare_interrupt_callback );
+    // check allocation
+    if ( NULL == interrupt_manager->fast_interrupt ) {
+      free( interrupt_manager->normal_interrupt );
+      free( interrupt_manager );
+      return NULL;
+    }
     interrupt_manager->software_interrupt = avl_create_tree(
       compare_interrupt_callback );
+    // check allocation
+    if ( NULL == interrupt_manager ) {
+      free( interrupt_manager->normal_interrupt );
+      free( interrupt_manager->fast_interrupt );
+      free( interrupt_manager );
+      return NULL;
+    }
     // debug output
     #if defined( PRINT_INTERRUPT )
       DEBUG_OUTPUT( "Initialized interrupt manager with address %p\r\n",
@@ -120,15 +141,18 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
  * @param callback Callback to unbind
  * @param type interrupt type
  * @param post flag to bind as post callback
+ * @return true
+ * @return false
  */
-void interrupt_unregister_handler(
+bool interrupt_unregister_handler(
   size_t num,
   interrupt_callback_t callback,
   interrupt_type_t type,
   bool post
 ) {
-  // assert heap existence
-  assert( true == heap_init_get() );
+  if ( ! heap_init_get() ) {
+    return false;
+  }
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT(
@@ -142,15 +166,20 @@ void interrupt_unregister_handler(
   #endif
 
   // validate interrupt number by vendor
-  if ( type == INTERRUPT_NORMAL || type == INTERRUPT_FAST ) {
-    assert( interrupt_validate_number( num ) );
+  if (
+    (
+      type == INTERRUPT_NORMAL
+      || type == INTERRUPT_FAST
+    ) && ! interrupt_validate_number( num )
+  ) {
+    return false;
   }
 
   // get correct tree to use
   avl_tree_ptr_t tree = tree_by_type( type );
   // handle no tree
   if ( NULL == tree ) {
-    return;
+    return false;
   }
   // debug output
   #if defined( PRINT_INTERRUPT )
@@ -167,7 +196,7 @@ void interrupt_unregister_handler(
   #endif
   // handle not yet added
   if ( NULL == node ) {
-    return;
+    return true;
   }
   // gather block
   block = INTERRUPT_GET_BLOCK( node );
@@ -205,12 +234,12 @@ void interrupt_unregister_handler(
 
   // handle no match
   if ( NULL == match ) {
-    return;
+    return true;
   }
   // free allocated wrapper
   free( match->data );
   // remove element
-  list_remove( list, match );
+  return list_remove( list, match );
 }
 
 /**
@@ -220,15 +249,18 @@ void interrupt_unregister_handler(
  * @param callback Callback to bind
  * @param type interrupt type
  * @param post flag to bind as post callback
+ * @return true
+ * @return false
  */
-void interrupt_register_handler(
+bool interrupt_register_handler(
   size_t num,
   interrupt_callback_t callback,
   interrupt_type_t type,
   bool post
 ) {
-  // assert heap existence
-  assert( true == heap_init_get() );
+  if ( ! heap_init_get() ) {
+    return false;
+  }
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT(
@@ -242,14 +274,21 @@ void interrupt_register_handler(
   #endif
 
   // validate interrupt number by vendor
-  if ( type == INTERRUPT_NORMAL || type == INTERRUPT_FAST ) {
-    assert( interrupt_validate_number( num ) );
+  if (
+    (
+      type == INTERRUPT_NORMAL
+      || type == INTERRUPT_FAST
+    ) && ! interrupt_validate_number( num )
+  ) {
+    return false;
   }
 
   // get correct tree to use
   avl_tree_ptr_t tree = tree_by_type( type );
-  // assert return
-  assert( NULL != tree );
+  // check tree
+  if ( NULL == tree ) {
+    return false;
+  }
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT(
@@ -267,8 +306,10 @@ void interrupt_register_handler(
   if ( NULL == node ) {
     // allocate block
     block = ( interrupt_block_ptr_t )malloc( sizeof( interrupt_block_t ) );
-    // assert initialization
-    assert( NULL != block );
+    // check allocation
+    if ( NULL == block ) {
+      return false;
+    }
     // prepare memory
     memset( ( void* )block, 0, sizeof( interrupt_block_t ) );
     // debug output
@@ -278,10 +319,26 @@ void interrupt_register_handler(
     // populate block
     block->interrupt = num;
     block->handler = list_construct();
+    // check list
+    if ( NULL == block->handler ) {
+      free( block );
+      return false;
+    }
     block->post = list_construct();
+    // check list
+    if ( NULL == block->post ) {
+      free( block->handler );
+      free( block );
+      return false;
+    }
     // prepare and insert node
     avl_prepare_node( &block->node, ( void* )num );
-    avl_insert_by_node( tree, &block->node );
+    if ( ! avl_insert_by_node( tree, &block->node ) ) {
+      free( block->post );
+      free( block->handler );
+      free( block );
+      return false;
+    }
   // existing? => gather block
   } else {
     block = INTERRUPT_GET_BLOCK( node );
@@ -310,7 +367,7 @@ void interrupt_register_handler(
     #endif
     // handle match
     if ( wrapper->callback == callback ) {
-      return;
+      return true;
     }
     // get to next
     current = current->next;
@@ -319,8 +376,10 @@ void interrupt_register_handler(
   // create wrapper
   interrupt_callback_wrapper_ptr_t wrapper = ( interrupt_callback_wrapper_ptr_t )
     malloc( sizeof( interrupt_callback_wrapper_t ) );
-  // assert initialization
-  assert( NULL != wrapper );
+  // check allocation
+  if ( NULL == wrapper ) {
+    return false;
+  }
   // prepare memory
   memset( ( void* )wrapper, 0, sizeof( interrupt_callback_wrapper_t ) );
   // populate wrapper
@@ -331,7 +390,7 @@ void interrupt_register_handler(
   #endif
 
   // push to list
-  list_push_back( list, ( void* )wrapper );
+  return list_push_back( list, ( void* )wrapper );
 }
 
 /**
@@ -348,8 +407,13 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   }
 
   // validate interrupt number by vendor
-  if ( type == INTERRUPT_NORMAL || type == INTERRUPT_FAST ) {
-    assert( interrupt_validate_number( num ) );
+  if (
+    (
+      type == INTERRUPT_NORMAL
+      || type == INTERRUPT_FAST
+    ) && ! interrupt_validate_number( num )
+  ) {
+    return;
   }
 
   // debug output
@@ -359,8 +423,10 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
 
   // get correct tree to use
   avl_tree_ptr_t tree = tree_by_type( type );
-  // assert return
-  assert( NULL != tree );
+  // check tree
+  if ( NULL == tree ) {
+    return;
+  }
 
   // debug output
   #if defined( PRINT_INTERRUPT )

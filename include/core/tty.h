@@ -21,9 +21,10 @@
 #if ! defined( __CORE_TTY__ )
 #define __CORE_TTY__
 
+#include <stdbool.h>
 #include <stdint.h>
 
-void tty_init( void );
+bool tty_init( void );
 void tty_putc( uint8_t );
 
 #endif

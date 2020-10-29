@@ -20,7 +20,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <avl.h>
 
 /**
@@ -29,6 +28,11 @@
  * @param tree
  */
 void avl_destroy_tree( avl_tree_ptr_t tree ) {
+  // check parameter
+  if ( NULL == tree ) {
+    return;
+  }
+
   // loop as long a root node is existing
   while ( NULL != tree->root ) {
     // cache root node

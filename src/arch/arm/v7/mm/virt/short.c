@@ -20,7 +20,6 @@
 
 #include <stddef.h>
 #include <string.h>
-#include <assert.h>
 #include <stdlib.h>
 #include <core/panic.h>
 #include <core/entry.h>
@@ -134,7 +133,6 @@ void __bootstrap v7_short_startup_enable( void ) {
   __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
 }
 
-
 /**
  * @brief Flush context
  */
@@ -158,7 +156,6 @@ void __bootstrap v7_short_startup_flush( void ) {
   // data synchronization barrier
   __asm__( "dsb" ::: "memory" );
 }
-
 
 /**
  * @brief Map physical space to temporary
@@ -231,14 +228,17 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
     }
   }
 
-  // assert found address
-  assert( 0 != start_address );
+  // check found address
+  if ( 0 == start_address ) {
+    return start_address;
+  }
 
   // debug putput
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "Found virtual address %p\r\n", ( void* )start_address );
   #endif
 
+  // map amount of pages
   for ( uint32_t i = 0; i < page_amount; ++i ) {
     uintptr_t addr = start_address + i * PAGE_SIZE;
 
@@ -248,7 +248,9 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
     // debug putput
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "table_idx = %u, page_idx = %u\r\n", table_idx, page_idx );
+      DEBUG_OUTPUT(
+        "table_idx = %u, page_idx = %u\r\n",
+        table_idx, page_idx );
     #endif
 
     // get table
@@ -353,17 +355,36 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
  *
  * @return uintptr_t address to new table
  */
-static uintptr_t get_new_table( void ) {
+static uintptr_t get_new_table( uintptr_t table ) {
   // static address and remaining amount
   static uintptr_t addr = 0;
   static uint32_t remaining = 0;
+  static uintptr_t last_addr = 0;
+
+  // handle free
+  if ( 0 != table ) {
+    addr = last_addr;
+    remaining += SD_TBL_SIZE;
+    phys_free_page( table );
+    return 0;
+  }
 
   // fill addr and remaining
   if ( 0 == addr ) {
     // allocate page
     addr = ( uintptr_t )phys_find_free_page( SD_TBL_SIZE );
+    // handle error
+    if ( 0 == addr ) {
+      return addr;
+    }
     // map temporarily
     uintptr_t tmp = map_temporary( addr, PAGE_SIZE );
+    // handle error
+    if ( 0 == tmp ) {
+      phys_free_page( addr );
+      addr = 0;
+      return addr;
+    }
     // overwrite page with zero
     memset( ( void* )tmp, 0, PAGE_SIZE );
     // unmap page again
@@ -426,6 +447,9 @@ uint64_t v7_short_create_table(
     sd_context_total_t* context = ( sd_context_total_t* )map_temporary(
       ( uintptr_t )ctx->context, SD_TTBR_SIZE_4G
     );
+    if ( NULL == context ) {
+      return 0;
+    }
 
     // check for already existing
     if ( 0 != context->table[ table_idx ].raw ) {
@@ -448,7 +472,13 @@ uint64_t v7_short_create_table(
     // create table if necessary
     uintptr_t tbl = ( uintptr_t )table;
     if ( 0 == tbl ) {
-      tbl = get_new_table();
+      // try to get new table
+      tbl = get_new_table( 0 );
+      // handle error
+      if ( 0 == tbl ) {
+        unmap_temporary( ( uintptr_t )context, SD_TTBR_SIZE_4G );
+        return 0;
+      }
     }
 
     // debug output
@@ -485,6 +515,10 @@ uint64_t v7_short_create_table(
     sd_context_half_t* context = ( sd_context_half_t* )map_temporary(
       ( uintptr_t )ctx->context, SD_TTBR_SIZE_2G
     );
+    // handle error
+    if ( NULL == context ) {
+      return 0;
+    }
 
     // check for already existing
     if ( 0 != context->table[ table_idx ].raw ) {
@@ -507,7 +541,12 @@ uint64_t v7_short_create_table(
     // create table if necessary
     uintptr_t tbl = ( uintptr_t )table;
     if ( 0 == tbl ) {
-      tbl = get_new_table();
+      tbl = get_new_table( 0 );
+      // handle error
+      if ( 0 == tbl ) {
+        unmap_temporary( ( uintptr_t )context, SD_TTBR_SIZE_2G );
+        return 0;
+      }
     }
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT( "created user table physical address = %p\r\n",
@@ -548,7 +587,7 @@ uint64_t v7_short_create_table(
  * @param memory memory type
  * @param page page attributes
  */
-void v7_short_map(
+bool v7_short_map(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
   uint64_t paddr,
@@ -564,6 +603,10 @@ void v7_short_map(
       ctx, vaddr, 0
     )
   );
+  // handle error
+  if ( NULL == table ) {
+    return false;
+  }
 
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table: %p\r\n", ( void* )table );
@@ -571,9 +614,10 @@ void v7_short_map(
 
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-
-  // assert existence
-  assert( NULL != table );
+  // handle error
+  if ( NULL == table ) {
+    return false;
+  }
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -583,7 +627,10 @@ void v7_short_map(
   #endif
 
   // ensure not already mapped
-  assert( 0 == table->page[ page_idx ].raw );
+  if ( 0 != table->page[ page_idx ].raw ) {
+    unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
+    return false;
+  }
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -639,6 +686,7 @@ void v7_short_map(
 
   // flush context if running
   virt_flush_address( ctx, vaddr );
+  return true;
 }
 
 /**
@@ -649,7 +697,7 @@ void v7_short_map(
  * @param memory memory type
  * @param page page attributes
  */
-void v7_short_map_random(
+bool v7_short_map_random(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
   virt_memory_type_t memory,
@@ -657,10 +705,12 @@ void v7_short_map_random(
 ) {
   // get physical address
   uint64_t phys = phys_find_free_page( PAGE_SIZE );
-  // assert
-  assert( 0 != phys );
+  // handle error
+  if ( 0 == phys ) {
+    return false;
+  }
   // map it
-  v7_short_map( ctx, vaddr, phys, memory, page );
+  return v7_short_map( ctx, vaddr, phys, memory, page );
 }
 
 /**
@@ -681,7 +731,7 @@ uintptr_t v7_short_map_temporary( uint64_t paddr, size_t size ) {
  * @param vaddr pointer to virtual address
  * @param free_phys flag to free also physical memory
  */
-void v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
+bool v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
   // get page index
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( vaddr );
 
@@ -689,18 +739,24 @@ void v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
   sd_page_table_t* table = ( sd_page_table_t* )(
     ( uintptr_t )v7_short_create_table( ctx, vaddr, 0 )
   );
+  // handle error
+  if ( NULL == table ) {
+    return false;
+  }
 
    // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-  // assert existence
-  assert( NULL != table );
+  // return error
+  if ( NULL == table ) {
+    return false;
+  }
 
   // ensure not already mapped
   if ( 0 == table->page[ page_idx ].raw ) {
     // unmap temporary
     unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
     // skip rest
-    return;
+    return true;
   }
 
   // get page
@@ -718,12 +774,11 @@ void v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
   if ( true == free_phys ) {
     phys_free_page( page );
   }
-
   // unmap temporary
   unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-
   // flush context if running
   virt_flush_address( ctx, vaddr );
+  return true;
 }
 
 /**
@@ -741,7 +796,14 @@ void v7_short_unmap_temporary( uintptr_t addr, size_t size ) {
  *
  * @param ctx context structure
  */
-void v7_short_set_context( virt_context_ptr_t ctx ) {
+bool v7_short_set_context( virt_context_ptr_t ctx ) {
+  // handle invalid
+  if (
+    VIRT_CONTEXT_TYPE_USER != ctx->type
+    && VIRT_CONTEXT_TYPE_KERNEL != ctx->type
+  ) {
+    return false;
+  }
   // user context handling
   if ( VIRT_CONTEXT_TYPE_USER == ctx->type ) {
     // debug output
@@ -772,10 +834,9 @@ void v7_short_set_context( virt_context_ptr_t ctx ) {
     );
     // overwrite global pointer
     kernel_context = ctx;
-  // invalid type
-  } else {
-    PANIC( "Invalid virtual context type!" );
   }
+
+  return true;
 }
 
 /**
@@ -785,12 +846,20 @@ void v7_short_flush_complete( void ) {
   sd_ttbcr_t ttbcr;
 
   // read ttbcr register
-  __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c2, c0, 2"
+    : "=r" ( ttbcr.raw )
+    : : "cc"
+  );
   // set split to use ttbr1 and ttbr2 as it will be used later on
   ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_2G;
   ttbcr.data.large_physical_address_extension = 0;
   // push back value with ttbcr
-  __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c2, c0, 2"
+    : : "r" ( ttbcr.raw )
+    : "cc"
+  );
 
   // invalidate instruction cache
   cache_invalidate_instruction_cache();
@@ -820,13 +889,21 @@ void v7_short_flush_address( uintptr_t addr ) {
  * @brief Helper to reserve temporary area for mappings
  *
  * @param ctx context structure
+ * @return true
+ * @return false
  */
-void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
+bool v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
   // ensure kernel for temporary
-  assert( VIRT_CONTEXT_TYPE_KERNEL == ctx->type );
+  if( VIRT_CONTEXT_TYPE_KERNEL != ctx->type ) {
+    return false;
+  }
 
   // free page table
   uintptr_t table = ( uintptr_t )phys_find_free_page( PAGE_SIZE );
+  // handle error
+  if ( 0 == table ) {
+    return table;
+  }
   // overwrite page with zero
   memset( ( void* )table, 0, PAGE_SIZE );
 
@@ -844,11 +921,13 @@ void v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
     // determine table size
     uintptr_t tbl = table + ( start - offset ) * SD_TBL_SIZE;
     // create table
-    v7_short_create_table( ctx, v, tbl );
+    if ( 0 == v7_short_create_table( ctx, v, tbl ) ) {
+      return false;
+    }
   }
 
   // map page table
-  v7_short_map(
+  return v7_short_map(
     ctx,
     TEMPORARY_SPACE_START,
     table,
@@ -882,6 +961,10 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
   } else {
     ctx = ( uintptr_t )phys_find_free_page_range( alignment, size );
   }
+  // handle error
+  if ( 0 == ctx ) {
+    return NULL;
+  }
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -890,6 +973,16 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
 
   // map temporary
   uintptr_t tmp = map_temporary( ctx, size );
+  // handle error
+  if ( 0 == tmp ) {
+  // free stuff
+    if ( ! virt_init_get() ) {
+      free( ( void* )PHYS_2_VIRT( ctx ) );
+    } else {
+      phys_free_page_range( ctx, size );
+    }
+    return NULL;
+  }
   // initialize with zero
   memset( ( void* )tmp, 0, size );
   // unmap temporary
@@ -899,6 +992,18 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
   virt_context_ptr_t context = ( virt_context_ptr_t )malloc(
     sizeof( virt_context_t )
   );
+  // handle error
+  if ( NULL == context ) {
+    // unmap temporary
+    unmap_temporary( ( uintptr_t )ctx, size );
+    // free stuff
+    if ( ! virt_init_get() ) {
+      free( ( void* )PHYS_2_VIRT( ctx ) );
+    } else {
+      phys_free_page_range( ctx, size );
+    }
+    return NULL;
+  }
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -907,11 +1012,9 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
 
   // initialize with zero
   memset( ( void* )context, 0, sizeof( virt_context_t ) );
-
   // populate type and context
   context->context = ctx;
   context->type = type;
-
   // return blank context
   return context;
 }
@@ -979,14 +1082,20 @@ bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
   // get table for checking
   sd_page_table_t* table = ( sd_page_table_t* )(
     ( uintptr_t )v7_short_create_table( ctx, addr, 0 ) );
+  // handle error
+  if ( NULL == table ) {
+    return false;
+  }
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table: %p\r\n", ( void* )table );
   #endif
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-  // assert existence
-  assert( NULL != table );
+  // not mapped if null
+  if ( NULL == table ) {
+    return false;
+  }
 
   // debug output
   #if defined( PRINT_MM_VIRT )

@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <avl.h>
 #include <string.h>
-#include <assert.h>
 #include <core/panic.h>
 #include <core/mm/phys.h>
 #include <core/mm/shared.h>
@@ -90,6 +89,53 @@ static int32_t lookup_mapped( const avl_node_ptr_t a, const void* b ) {
 }
 
 /**
+ * @brief Helper to destroy single entry completely
+ *
+ * @param entry
+ */
+static void destroy_entry( shared_memory_entry_ptr_t entry ) {
+  // handle invalid
+  if ( NULL == entry ) {
+    return;
+  }
+  // free name
+  if ( NULL != entry->name ) {
+    free( entry->name ) ;
+  }
+  // free address list
+  if ( NULL != entry->address_list ) {
+    // free pages again
+    for (
+      size_t count = entry->size / PAGE_SIZE, idx = 0;
+      idx < count;
+      idx++
+    ) {
+      if ( 0 != entry->address_list[ idx ] ) {
+        phys_free_page( entry->address_list[ idx ] );
+      }
+    }
+    // free array
+    free( entry->address_list );
+  }
+  // free rest of structure
+  free( entry );
+}
+
+/**
+ * @brief Helper to destroy single mapped completely
+ *
+ * @param entry
+ */
+static void destroy_mapped( shared_memory_entry_mapped_ptr_t mapped ) {
+  // handle invalid
+  if ( NULL == mapped ) {
+    return;
+  }
+  // free rest of structure
+  free( mapped );
+}
+
+/**
  * @brief Create a entry object
  *
  * @param name
@@ -110,23 +156,39 @@ static shared_memory_entry_ptr_t create_entry(
   shared_memory_entry_ptr_t entry = ( shared_memory_entry_ptr_t )malloc(
     sizeof( shared_memory_entry_t )
   );
-  // assert existence
-  assert( NULL != entry );
+  // check allocation
+  if ( NULL == entry ) {
+    destroy_entry( entry );
+    return NULL;
+  }
   // prepare area
   entry = memset( entry, 0, sizeof( shared_memory_entry_t ) );
 
   // allocate name array
   entry->name = ( char* )calloc( strlen( name ), sizeof( char ) );
-  assert( NULL != entry->name );
+  // check allocation
+  if ( NULL == entry->name ) {
+    destroy_entry( entry );
+    return NULL;
+  }
   // allocate address list
   entry->address_list = ( uint64_t* )calloc( count, sizeof( uint64_t ) );
-  assert( NULL != entry->address_list );
+  // check allocation
+  if ( NULL == entry->name ) {
+    destroy_entry( entry );
+    return NULL;
+  }
 
   // copy data
   entry->name = strcpy( entry->name, name );
   // allocate pages
   for ( size_t idx = 0; idx < count; idx++ ) {
     entry->address_list[ idx ] = phys_find_free_page( PAGE_SIZE );
+    // handle error
+    if ( 0 == entry->address_list[ idx ] ) {
+      destroy_entry( entry );
+      return NULL;
+    }
   }
   entry->size = size;
   entry->use_count = 0;
@@ -154,14 +216,21 @@ static shared_memory_entry_mapped_ptr_t create_mapped(
   // create list entry
   shared_memory_entry_mapped_ptr_t entry = ( shared_memory_entry_mapped_ptr_t )
     malloc( sizeof( shared_memory_entry_mapped_t ) );
-  // assert existence
-  assert( NULL != entry );
+  // check allocation
+  if ( NULL == entry ) {
+    destroy_mapped( entry );
+    return NULL;
+  }
   // prepare area
   entry = memset( entry, 0, sizeof( shared_memory_entry_t ) );
 
   // allocate name array
   entry->name = ( char* )calloc( strlen( name ), sizeof( char ) );
-  assert( NULL != entry->name );
+  // check allocation
+  if ( NULL == entry->name ) {
+    destroy_mapped( entry );
+    return NULL;
+  }
 
   // copy data
   entry->name = strcpy( entry->name, name );
@@ -175,8 +244,10 @@ static shared_memory_entry_mapped_ptr_t create_mapped(
  * @brief Helper to setup process trees
  *
  * @param process
+ * @return true
+ * @return false
  */
-static void prepare_process( task_process_ptr_t process ) {
+static bool prepare_process( task_process_ptr_t process ) {
   // create tree if necessary
   if ( NULL == process->shared_memory_entry ) {
     process->shared_memory_entry = avl_create_tree( compare_entry );
@@ -184,13 +255,27 @@ static void prepare_process( task_process_ptr_t process ) {
   if ( NULL == process->shared_memory_mapped ) {
     process->shared_memory_mapped = avl_create_tree( compare_mapped );
   }
+  // check for error
+  if (
+    NULL == process->shared_memory_entry
+    || NULL == process->shared_memory_mapped
+  ) {
+    avl_destroy_tree( process->shared_memory_entry );
+    avl_destroy_tree( process->shared_memory_mapped );
+    return false;
+  }
+  // return success
+  return true;
 }
 
 /**
  * @brief Init shared memory
+ * @return true
+ * @return false
  */
-void shared_init( void ) {
+bool shared_init( void ) {
   shared_tree = avl_create_tree( compare_entry );
+  return NULL != shared_tree;
 }
 
 /**
@@ -220,8 +305,15 @@ bool shared_memory_create( const char* name, size_t size ) {
 
   // create entry
   shared_memory_entry_ptr_t tmp = create_entry( name, size );
+  // handle error
+  if ( NULL == tmp ) {
+    return false;
+  }
   // push back entry
-  avl_insert_by_node( shared_tree, &tmp->node );
+  if ( ! avl_insert_by_node( shared_tree, &tmp->node ) ) {
+    destroy_entry( tmp );
+    return false;
+  }
   // return success
   return true;
 }
@@ -236,11 +328,13 @@ bool shared_memory_create( const char* name, size_t size ) {
 uintptr_t shared_memory_acquire( task_process_ptr_t process, const char* name ) {
   // handle not initialized
   if ( NULL == shared_tree ) {
-    return ( uintptr_t )NULL;
+    return 0;
   }
 
   // prepare process
-  prepare_process( process );
+  if ( ! prepare_process( process ) ) {
+    return 0;
+  }
 
   // try to get item by name
   avl_node_ptr_t node = avl_find_by_value(
@@ -250,7 +344,7 @@ uintptr_t shared_memory_acquire( task_process_ptr_t process, const char* name ) 
   );
   // handle missing
   if ( NULL == node ) {
-    return ( uintptr_t )NULL;
+    return 0;
   }
   // try to get item by name from process
   avl_node_ptr_t process_node = avl_find_by_value(
@@ -268,7 +362,7 @@ uintptr_t shared_memory_acquire( task_process_ptr_t process, const char* name ) 
     );
     // handle error
     if ( NULL == mapped_node ) {
-      return ( uintptr_t )NULL;
+      return 0;
     }
     // return start
     return ( ( shared_memory_entry_mapped_ptr_t )mapped_node->data )->start;
@@ -288,25 +382,67 @@ uintptr_t shared_memory_acquire( task_process_ptr_t process, const char* name ) 
   // map addresses
   while ( start < end ) {
     // map address
-    virt_map_address(
+    if ( ! virt_map_address(
       process->virtual_context,
       start,
       tmp->address_list[ idx ],
       VIRT_MEMORY_TYPE_NORMAL,
       VIRT_PAGE_TYPE_NON_EXECUTABLE
-    );
+    ) ) {
+      // unmap everything on error
+      uintptr_t start_inner = virt;
+      uintptr_t end_inner = start + tmp->size;
+      while ( start_inner < end_inner ) {
+        virt_unmap_address( process->virtual_context, start_inner, false );
+        start_inner += PAGE_SIZE;
+      }
+      return false;
+    }
     // next one
     start += PAGE_SIZE;
     idx++;
   }
 
   // attach item to process list
-  avl_insert_by_node( process->shared_memory_entry, node );
+  if ( ! avl_insert_by_node( process->shared_memory_entry, node ) ) {
+    start = virt;
+    end = start + tmp->size;
+    // unmap addresses
+    while ( start < end ) {
+      virt_unmap_address( process->virtual_context, start, false );
+      start += PAGE_SIZE;
+    }
+  }
   // create mapped entry
   shared_memory_entry_mapped_ptr_t mapped = create_mapped(
     name, tmp->size, virt );
+  // handle error
+  if ( NULL == mapped ) {
+    start = virt;
+    end = start + tmp->size;
+    // unmap addresses
+    while ( start < end ) {
+      virt_unmap_address( process->virtual_context, start, false );
+      start += PAGE_SIZE;
+    }
+    // remove node
+    avl_remove_by_node( process->shared_memory_entry, node );
+  }
   // push back
-  avl_insert_by_node( process->shared_memory_mapped, &mapped->node );
+  if ( ! avl_insert_by_node( process->shared_memory_mapped, &mapped->node ) ) {
+    start = virt;
+    end = start + tmp->size;
+    // unmap addresses
+    while ( start < end ) {
+      virt_unmap_address( process->virtual_context, start, false );
+      start += PAGE_SIZE;
+    }
+    // remove node
+    avl_remove_by_node( process->shared_memory_entry, node );
+    avl_remove_by_node( process->shared_memory_mapped, &mapped->node );
+    // destroy mapped
+    destroy_mapped( mapped );
+  }
 
   // increment entry count
   tmp->use_count++;
@@ -330,7 +466,9 @@ bool shared_memory_release( task_process_ptr_t process, const char* name ) {
   }
 
   // prepare process
-  prepare_process( process );
+  if ( ! prepare_process( process ) ) {
+    return false;
+  }
 
   // get item by name
   avl_node_ptr_t node = avl_find_by_value(
@@ -381,7 +519,11 @@ bool shared_memory_release( task_process_ptr_t process, const char* name ) {
   // cleanup if unused
   if ( 0 == node_item->use_count ) {
     avl_remove_by_node( shared_tree, node );
+    free( node );
+    destroy_entry( node_item );
   }
+  free( mapped );
+  destroy_mapped( mapped_item );
 
   // return success
   return true;

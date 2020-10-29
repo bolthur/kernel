@@ -26,7 +26,7 @@
 #include <arch/arm/v7/cpu.h>
 
 void interrupt_vector_table( void );
-void interrupt_assert_kernel_stack( void );
+void interrupt_ensure_kernel_stack( void );
 
 void vector_data_abort_handler( cpu_register_context_ptr_t );
 void vector_fast_interrupt_handler( cpu_register_context_ptr_t );

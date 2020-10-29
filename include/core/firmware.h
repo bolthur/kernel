@@ -22,6 +22,6 @@
 #define __CORE_FIRMWARE__
 
 void firmware_startup_init( void );
-void firmware_init( void );
+bool firmware_init( void );
 
 #endif

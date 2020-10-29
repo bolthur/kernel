@@ -39,8 +39,9 @@ static bool virt_initialized = false;
  * @brief Generic initialization of virtual memory manager
  */
 void virt_init( void ) {
-  // assert no initialize
-  assert( true != virt_initialized );
+  if ( virt_initialized ) {
+    return;
+  }
 
   // set global context to null
   kernel_context = NULL;
@@ -69,13 +70,13 @@ void virt_init( void ) {
   // map from start to end addresses as used
   while ( start < end ) {
     // map page
-    virt_map_address(
+    assert( virt_map_address(
       kernel_context,
       PHYS_2_VIRT( start ),
       start,
       VIRT_MEMORY_TYPE_NORMAL,
       VIRT_PAGE_TYPE_EXECUTABLE
-    );
+    ) );
 
     // get next page
     start += PAGE_SIZE;
@@ -101,13 +102,13 @@ void virt_init( void ) {
     // map from start to end addresses as used
     while ( start < end ) {
       // map page
-      virt_map_address(
+      assert( virt_map_address(
         kernel_context,
         PHYS_2_VIRT( start ),
         start,
         VIRT_MEMORY_TYPE_NORMAL,
         VIRT_PAGE_TYPE_AUTO
-      );
+      ) );
 
       // get next page
       start += PAGE_SIZE;
@@ -122,18 +123,18 @@ void virt_init( void ) {
   // initialize platform related
   virt_platform_init();
   // prepare temporary area
-  virt_prepare_temporary( kernel_context );
+  assert( virt_prepare_temporary( kernel_context ) );
 
   // firmware init stuff
-  firmware_init();
+  assert( firmware_init() );
 
   // set kernel context
-  virt_set_context( kernel_context );
+  assert( virt_set_context( kernel_context ) );
   // flush contexts to take effect
   virt_flush_complete();
 
   // set dummy user context
-  virt_set_context( user_context );
+  assert( virt_set_context( user_context ) );
   // flush contexts to take effect
   virt_flush_complete();
 
@@ -214,8 +215,10 @@ bool virt_is_mapped_range( uintptr_t address, size_t size ) {
  * @param address start address of range
  * @param size range size
  * @param free_phys free physical memory
+ * @return true
+ * @return false
  */
-void virt_unmap_address_range(
+bool virt_unmap_address_range(
   virt_context_ptr_t ctx,
   uintptr_t address,
   size_t size,
@@ -226,10 +229,13 @@ void virt_unmap_address_range(
   // loop until end
   while ( start < end ) {
     // unmap virtual
-    virt_unmap_address( ctx, address, free_phys );
+    if ( ! virt_unmap_address( ctx, address, free_phys ) ) {
+      return false;
+    }
     // get next page
     start  += PAGE_SIZE;
   }
+  return true;
 }
 
 /**
@@ -276,9 +282,6 @@ uintptr_t virt_find_free_page_range( virt_context_ptr_t ctx, size_t size ) {
     min += PAGE_SIZE;
   }
 
-  // assert address
-  assert( 0 != address );
-
   // return found address or null
   return address;
 }
@@ -291,8 +294,10 @@ uintptr_t virt_find_free_page_range( virt_context_ptr_t ctx, size_t size ) {
  * @param size size
  * @param type memory type
  * @param page page attributes
+ * @return true
+ * @return false
  */
-void virt_map_address_range(
+bool virt_map_address_range(
   virt_context_ptr_t ctx,
   uintptr_t address,
   uint64_t phys,
@@ -303,14 +308,23 @@ void virt_map_address_range(
   // mark range as used
   phys_use_page_range( phys, size );
   // determine end
+  uintptr_t start = address;
   uintptr_t end = address + size;
   // loop and map
-  while ( address < end ) {
-    virt_map_address( ctx, address, phys, type, page );
+  while ( start < end ) {
+    if ( ! virt_map_address( ctx, address, phys, type, page ) ) {
+      // free already mapped stuff
+      while ( address < end ) {
+        virt_unmap_address( ctx, address, true );
+        address += PAGE_SIZE;
+      }
+      return false;
+    }
     // next page
     address += PAGE_SIZE;
     phys += PAGE_SIZE;
   }
+  return true;
 }
 
 /**
@@ -321,8 +335,10 @@ void virt_map_address_range(
  * @param size size
  * @param type memory type
  * @param page page attributes
+ * @return true
+ * @return false
  */
-void virt_map_address_range_random(
+bool virt_map_address_range_random(
   virt_context_ptr_t ctx,
   uintptr_t address,
   size_t size,
@@ -330,16 +346,35 @@ void virt_map_address_range_random(
   uint32_t page
 ) {
   // determine end
-  uintptr_t end = address + size;
+  uintptr_t start = address;
+  uintptr_t end = start + size;
   // loop and map
-  while ( address < end ) {
+  while ( start < end ) {
     // get physical page
     uint64_t phys = phys_find_free_page( PAGE_SIZE );
-    // map address
-    virt_map_address( ctx, address, phys, type, page );
+    // handle error
+    if (
+      // handle physical error
+      0 == phys
+      // try to map and handle error
+      || ! virt_map_address( ctx, address, phys, type, page )
+    ) {
+      // free page
+      if ( 0 != phys ) {
+        phys_free_page( phys );
+      }
+      // free already mapped stuff
+      while ( address < end ) {
+        virt_unmap_address( ctx, address, true );
+        address += PAGE_SIZE;
+      }
+      // return error
+      return false;
+    }
     // next page
-    address += PAGE_SIZE;
+    start += PAGE_SIZE;
   }
+  return true;
 }
 
 /**

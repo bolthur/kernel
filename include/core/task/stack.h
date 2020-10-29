@@ -31,6 +31,7 @@ extern task_stack_manager_ptr_t task_stack_manager;
 task_stack_manager_ptr_t task_stack_manager_create( void );
 void task_stack_manager_destroy( task_stack_manager_ptr_t );
 uintptr_t task_stack_manager_next( task_stack_manager_ptr_t );
-void task_stack_manager_add( uintptr_t, task_stack_manager_ptr_t );
+bool task_stack_manager_add( uintptr_t, task_stack_manager_ptr_t );
+bool task_stack_manager_remove( uintptr_t, task_stack_manager_ptr_t );
 
 #endif

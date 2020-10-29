@@ -36,7 +36,7 @@ static uint32_t nested_svc = 0;
  * @param cpu cpu context
  */
 void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
-  // assert nesting
+  // nesting
   nested_svc++;
   assert( nested_svc < INTERRUPT_NESTED_MAX );
   // get event origin
@@ -51,8 +51,8 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
     DUMP_REGISTER( cpu );
   #endif
 
-  // assert kernel stack
-  interrupt_assert_kernel_stack();
+  // kernel stack
+  interrupt_ensure_kernel_stack();
 
   // get svc number from instruction
   uint32_t svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xffff;

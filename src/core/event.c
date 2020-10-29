@@ -23,7 +23,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <list.h>
 #include <core/panic.h>
 #include <core/debug/debug.h>
@@ -63,12 +62,16 @@ static int32_t compare_event_callback(
 
 /**
  * @brief Method to setup event system
+ * @return true
+ * @return false
  */
-void event_init( void ) {
+bool event_init( void ) {
   // create manager structure
   event = ( event_manager_ptr_t )malloc( sizeof( event_manager_t ) );
-  // assert result
-  assert( NULL != event );
+  // check allocation
+  if ( NULL == event ) {
+    return false;
+  }
   // prepare
   memset( ( void* )event, 0, sizeof( event_manager_t ) );
   // debug output
@@ -83,10 +86,30 @@ void event_init( void ) {
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Created event tree at: %p\r\n", ( void* )event->tree );
   #endif
+  // handle error
+  if ( NULL == event->tree ) {
+    free( event->tree );
+    return false;
+  }
 
   // create queue
   event->queue_kernel = list_construct();
+  // check allocation
+  if ( NULL == event->queue_kernel ) {
+    free( event->tree );
+    free( event );
+    return false;
+  }
+
   event->queue_user = list_construct();
+  // check allocation
+  if ( NULL == event->queue_user ) {
+    free( event->tree );
+    free( event->queue_kernel );
+    free( event );
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -123,8 +146,10 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   if ( NULL == node ) {
     // allocate block
     block = ( event_block_ptr_t )malloc( sizeof( event_block_t ) );
-    // assert initialization
-    assert( NULL != block );
+    // check allocation
+    if ( NULL == block ) {
+      return false;
+    }
     // prepare memory
     memset( ( void* )block, 0, sizeof( event_block_t ) );
     // debug output
@@ -134,10 +159,24 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
     // populate block
     block->type = type;
     block->handler = list_construct();
+    if ( NULL == block->handler ) {
+      free( block );
+      return false;
+    }
     block->post = list_construct();
+    if ( NULL == block->post ) {
+      free( block->handler );
+      free( block );
+      return false;
+    }
     // prepare and insert node
     avl_prepare_node( &block->node, ( void* )type );
-    avl_insert_by_node( tree, &block->node );
+    if ( ! avl_insert_by_node( tree, &block->node ) ) {
+      free( block->handler );
+      free( block->post );
+      free( block );
+      return false;
+    }
   // existing? => gather block
   } else {
     block = EVENT_GET_BLOCK( node );
@@ -180,8 +219,10 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   // create wrapper
   event_callback_wrapper_ptr_t wrapper = ( event_callback_wrapper_ptr_t )malloc(
     sizeof( event_callback_wrapper_t ) );
-  // assert initialization
-  assert( NULL != wrapper );
+  // check allocation
+  if ( NULL == wrapper ) {
+    return false;
+  }
   // prepare memory
   memset( ( void* )wrapper, 0, sizeof( event_callback_wrapper_t ) );
   // populate wrapper
@@ -191,14 +232,11 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
     DEBUG_OUTPUT( "Created wrapper container at %p\r\n", ( void* )wrapper );
   #endif
   // push to list
-  list_push_back(
+  return list_push_back(
     true != post
       ? block->handler
       : block->post,
     ( void* )wrapper );
-
-  // return success
-  return true;
 }
 
 /**
@@ -228,15 +266,17 @@ void event_unbind(
  *
  * @param type type to enqueue
  * @param origin event origin
+ * @return true
+ * @return false
  */
-void event_enqueue( event_type_t type, event_origin_t origin ) {
+bool event_enqueue( event_type_t type, event_origin_t origin ) {
   // do nothing if not initialized
   if ( NULL == event ) {
-    return;
+    return true;
   }
 
   // push back event
-  list_push_back(
+  return list_push_back(
     EVENT_ORIGIN_KERNEL == origin
       ? event->queue_kernel
       : event->queue_user,

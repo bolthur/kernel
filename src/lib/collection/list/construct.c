@@ -20,7 +20,6 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
 #include <list.h>
 
@@ -34,8 +33,10 @@ list_manager_ptr_t list_construct( void ) {
 
   // allocate list
   list = ( list_manager_ptr_t )malloc( sizeof( list_manager_t ) );
-  // assert malloc result
-  assert( NULL != list );
+  // handle error
+  if ( NULL == list ) {
+    return NULL;
+  }
   // overwrite with zero
   memset( ( void* )list, 0, sizeof( list_manager_t ) );
 

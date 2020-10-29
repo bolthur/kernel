@@ -20,7 +20,6 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <list.h>
 #include <stdio.h>
 
@@ -32,8 +31,10 @@
 void list_print( list_manager_ptr_t list ) {
   list_item_ptr_t current;
 
-  // assert list
-  assert( NULL != list );
+  // handle invalid
+  if ( NULL == list ) {
+    return;
+  }
   // populate current
   current = list->first;
 

@@ -20,7 +20,6 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <list.h>
 
 /**
@@ -32,8 +31,10 @@
 void* list_peek_front( list_manager_ptr_t list ) {
   list_item_ptr_t first;
 
-  // assert list is initialized
-  assert( NULL != list );
+  // check parameter
+  if ( NULL == list ) {
+    return NULL;
+  }
   // get first element
   first = list->first;
 
@@ -54,8 +55,10 @@ void* list_peek_front( list_manager_ptr_t list ) {
 void* list_peek_back( list_manager_ptr_t list ) {
   list_item_ptr_t last;
 
-  // assert list is initialized
-  assert( NULL != list );
+  // check parameter
+  if ( NULL == list ) {
+    return NULL;
+  }
   // get last element
   last = list->last;
 

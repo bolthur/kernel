@@ -20,6 +20,7 @@
 
 #include <stdarg.h>
 
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <core/debug/debug.h>
@@ -46,6 +47,7 @@ void mailbox_property_init( void ) {
   // reserve memory if not yet done
   if ( NULL == ptb_buffer ) {
     ptb_buffer = ( int32_t* )aligned_alloc( PAGE_SIZE, PAGE_SIZE );
+    assert( NULL != ptb_buffer );
     ptb_buffer_phys = ( int32_t* )VIRT_2_PHYS( ptb_buffer );
   }
   // clear out buffer

@@ -77,7 +77,7 @@ void interrupt_init( void );
 void interrupt_arch_init( void );
 void interrupt_post_init( void );
 void interrupt_handle( size_t, interrupt_type_t, void* );
-void interrupt_register_handler( size_t, interrupt_callback_t, interrupt_type_t, bool );
-void interrupt_unregister_handler( size_t, interrupt_callback_t, interrupt_type_t, bool );
+bool interrupt_register_handler( size_t, interrupt_callback_t, interrupt_type_t, bool );
+bool interrupt_unregister_handler( size_t, interrupt_callback_t, interrupt_type_t, bool );
 
 #endif

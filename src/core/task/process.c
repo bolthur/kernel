@@ -20,7 +20,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <core/event.h>
 #include <core/elf/common.h>
 #include <core/debug/debug.h>
@@ -67,26 +66,49 @@ static int32_t process_compare_id_callback(
 
 /**
  * @brief Initialize task process manager
+ * @return true
+ * @return false
  */
-void task_process_init( void ) {
-  // assert no initialized process manager
-  assert( NULL == process_manager );
+bool task_process_init( void ) {
+  // check parameter
+  if ( NULL != process_manager ) {
+    return false;
+  }
 
   // allocate management structures
   process_manager = ( task_manager_ptr_t )malloc( sizeof( task_manager_t ) );
-  // assert malloc result
-  assert( NULL != process_manager );
+  // check parameter
+  if ( NULL == process_manager ) {
+    return false;
+  }
   // prepare structure
   memset( ( void* )process_manager, 0, sizeof( task_manager_t ) );
 
   // create tree for managing processes by id
   process_manager->tree_process_id = avl_create_tree(
     process_compare_id_callback );
+  // handle error
+  if ( NULL == process_manager->tree_process_id ) {
+    free( process_manager );
+    return false;
+  }
   // create thread queue tree
   process_manager->thread_priority_tree = task_queue_init();
+  // handle error
+  if ( NULL == process_manager->thread_priority_tree ) {
+    avl_destroy_tree( process_manager->tree_process_id );
+    free( process_manager );
+    return false;
+  }
 
   // register timer event
-  event_bind( EVENT_TIMER, task_process_schedule, true );
+  if ( ! event_bind( EVENT_TIMER, task_process_schedule, true ) ) {
+    avl_destroy_tree( process_manager->thread_priority_tree );
+    avl_destroy_tree( process_manager->tree_process_id );
+    free( process_manager );
+    return false;
+  }
+  return true;
 }
 
 /**
@@ -106,8 +128,15 @@ size_t task_process_generate_id( void ) {
  *
  * @param entry process entry address
  * @param priority process priority
+ * @return true
+ * @return false
  */
-void task_process_create( uintptr_t entry, size_t priority ) {
+bool task_process_create( uintptr_t entry, size_t priority ) {
+  // check manager
+  if ( NULL == process_manager ) {
+    return false;
+  }
+
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
@@ -121,14 +150,16 @@ void task_process_create( uintptr_t entry, size_t priority ) {
       DEBUG_OUTPUT( "No valid elf header found\r\n" );
     #endif
     // return
-    return;
+    return false;
   }
 
   // allocate process structure
   task_process_ptr_t process = ( task_process_ptr_t )malloc(
     sizeof( task_process_t ) );
-  // assert initialization
-  assert( NULL != process );
+  // check allocation
+  if ( NULL == process ) {
+    return false;
+  }
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Allocated process structure at %p\r\n", ( void* )process );
@@ -139,31 +170,62 @@ void task_process_create( uintptr_t entry, size_t priority ) {
   // populate process structure
   process->id = task_process_generate_id();
   process->thread_manager = task_thread_init();
+  // handle error
+  if ( NULL == process->thread_manager ) {
+    free( process );
+    return false;
+  }
   process->state = TASK_PROCESS_STATE_READY;
   process->priority = priority;
   process->thread_stack_manager = task_stack_manager_create();
+  // handle error
+  if ( NULL == process->thread_stack_manager ) {
+    task_thread_destroy( process->thread_manager );
+    free( process );
+    return false;
+  }
   // create context only for user processes
   process->virtual_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
+  // handle error
+  if ( NULL == process->virtual_context ) {
+    task_stack_manager_destroy( process->thread_stack_manager );
+    task_thread_destroy( process->thread_manager );
+    free( process );
+    return false;
+  }
 
   // load elf executable
   uintptr_t program_entry = elf_load( entry, process );
+  // handle error
+  if ( 0 == program_entry ) {
+    virt_destroy_context( process->virtual_context );
+    task_stack_manager_destroy( process->thread_stack_manager );
+    task_thread_destroy( process->thread_manager );
+    free( process );
+    return false;
+  }
 
   // prepare node
   avl_prepare_node( &process->node_id, ( void* )process->id );
   // add process to tree
-  avl_insert_by_node( process_manager->tree_process_id, &process->node_id );
+  if ( ! avl_insert_by_node( process_manager->tree_process_id, &process->node_id ) ) {
+    virt_destroy_context( process->virtual_context );
+    task_stack_manager_destroy( process->thread_stack_manager );
+    task_thread_destroy( process->thread_manager );
+    free( process );
+    return false;
+  }
 
   // Setup thread with entry
   if ( NULL == task_thread_create( program_entry, process, priority ) ) {
-    // remove node again
     avl_remove_by_node( process_manager->tree_process_id, &process->node_id );;
-    // destroy context
     virt_destroy_context( process->virtual_context );
-    // destroy stack manager
     task_stack_manager_destroy( process->thread_stack_manager );
-    // destroy thread manager
     task_thread_destroy( process->thread_manager );
+    free( process );
+    return false;
   }
+  return true;
 }
 
 /**

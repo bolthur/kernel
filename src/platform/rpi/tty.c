@@ -25,9 +25,11 @@
 /**
  * @brief Initialize TTY
  */
-void tty_init( void ) {
+bool tty_init( void ) {
   #if defined( OUTPUT_ENABLE )
-    framebuffer_init();
+    return framebuffer_init();
+  #else
+    return true;
   #endif
 }
 

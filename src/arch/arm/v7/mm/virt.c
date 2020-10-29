@@ -153,23 +153,29 @@ void __bootstrap virt_startup_flush( void ) {
  * @param paddr pointer to physical address
  * @param type memory type
  * @param page page attributes
+ * @return true
+ * @return false
  */
-void virt_map_address(
+bool virt_map_address(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
   uint64_t paddr,
   virt_memory_type_t type,
   uint32_t page
 ) {
+  // check context
+  if ( NULL == ctx ) {
+    return false;
+  }
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-    v7_long_map( ctx, vaddr, paddr, type, page );
+    return v7_long_map( ctx, vaddr, paddr, type, page );
   // check v7 short descriptor format
   } else if (
     ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
-    v7_short_map( ctx, vaddr, paddr, type, page );
+    return v7_short_map( ctx, vaddr, paddr, type, page );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );
@@ -183,22 +189,28 @@ void virt_map_address(
  * @param vaddr virtual address to map
  * @param type memory type
  * @param page page attributes
+ * @return true
+ * @return false
  */
-void virt_map_address_random(
+bool virt_map_address_random(
   virt_context_ptr_t ctx,
   uintptr_t vaddr,
   virt_memory_type_t type,
   uint32_t page
 ) {
+  // check context
+  if ( NULL == ctx ) {
+    return false;
+  }
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-    v7_long_map_random( ctx, vaddr, type, page );
+    return v7_long_map_random( ctx, vaddr, type, page );
   // check v7 short descriptor format
   } else if (
     ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
-    v7_short_map_random( ctx, vaddr, type, page );
+    return v7_short_map_random( ctx, vaddr, type, page );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );
@@ -234,17 +246,23 @@ uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
  * @param ctx pointer to page context
  * @param addr pointer to virtual address
  * @param free_phys flag to free also physical memory
+ * @return true
+ * @return false
  */
-void virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr, bool free_phys ) {
+bool virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr, bool free_phys ) {
+  // check context
+  if ( NULL == ctx ) {
+    return false;
+  }
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-    v7_long_unmap( ctx, addr, free_phys );
+    return v7_long_unmap( ctx, addr, free_phys );
   // check v7 short descriptor format
   } else if (
     ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
-    v7_short_unmap( ctx, addr, free_phys );
+    return v7_short_unmap( ctx, addr, free_phys );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );
@@ -299,8 +317,15 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
  * @brief Method to destroy virtual context
  *
  * @param ctx
+ *
+ * @todo add error return, when sub functions have been implemented
  */
-void virt_destroy_context( virt_context_ptr_t ctx ) {
+bool virt_destroy_context( virt_context_ptr_t ctx ) {
+  // check context
+  if ( NULL == ctx ) {
+    return false;
+  }
+
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
     v7_long_destroy_context( ctx );
@@ -314,6 +339,8 @@ void virt_destroy_context( virt_context_ptr_t ctx ) {
   } else {
     PANIC( "Unsupported mode!" );
   }
+
+  return true;
 }
 
 /**
@@ -329,6 +356,11 @@ uint64_t virt_create_table(
   uintptr_t addr,
   uint64_t table
 ) {
+  // check context
+  if ( NULL == ctx ) {
+    return 0;
+  }
+
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
     return v7_long_create_table( ctx, addr, table );
@@ -348,17 +380,24 @@ uint64_t virt_create_table(
  * @brief Method to enable given context
  *
  * @param ctx context structure
+ * @return true
+ * @return false
  */
-void virt_set_context( virt_context_ptr_t ctx ) {
+bool virt_set_context( virt_context_ptr_t ctx ) {
+  // handle invalid context
+  if ( NULL == ctx ) {
+    return false;
+  }
+
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-    v7_long_set_context( ctx );
+    return v7_long_set_context( ctx );
   // check v7 short descriptor format
   } else if (
     ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
-    v7_short_set_context( ctx );
+    return v7_short_set_context( ctx );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );
@@ -394,6 +433,7 @@ void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
   // no flush if not initialized or context currently not active
   if (
     ! virt_init_get()
+    || NULL == ctx
     || (
       ctx != kernel_context
       && ctx != user_context
@@ -421,17 +461,23 @@ void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
  * @brief Method to prepare temporary area
  *
  * @param ctx context structure
+ * @return true
+ * @return false
  */
-void virt_prepare_temporary( virt_context_ptr_t ctx ) {
+bool virt_prepare_temporary( virt_context_ptr_t ctx ) {
+  // check context
+  if ( NULL == ctx ) {
+    return false;
+  }
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
-    v7_long_prepare_temporary( ctx );
+    return v7_long_prepare_temporary( ctx );
   // check v7 short descriptor format
   } else if (
     ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes
     || ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes
   ) {
-    v7_short_prepare_temporary( ctx );
+    return v7_short_prepare_temporary( ctx );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" );
@@ -466,6 +512,11 @@ void virt_arch_prepare( void ) {
  * @return false
  */
 bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
+  // check context
+  if ( NULL == ctx ) {
+    return false;
+  }
+
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
     return v7_long_is_mapped_in_context( ctx, addr );

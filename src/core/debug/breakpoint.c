@@ -19,7 +19,6 @@
  */
 
 #include <stdbool.h>
-#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <core/event.h>
@@ -39,13 +38,14 @@ list_manager_ptr_t debug_breakpoint_manager = NULL;
 /**
  * @brief Setup breakpoint manager
  */
-void debug_breakpoint_init( void ) {
+bool debug_breakpoint_init( void ) {
   // handle initialized
   if ( NULL != debug_breakpoint_manager ) {
-    return;
+    return true;
   }
   // setup list
   debug_breakpoint_manager = list_construct();
+  return NULL != debug_breakpoint_manager;
 }
 
 /**
@@ -80,10 +80,10 @@ debug_breakpoint_entry_ptr_t debug_breakpoint_find( uintptr_t address ) {
 /**
  * @brief Method to remove all stepping breakpoints
  */
-void debug_breakpoint_remove_step( void ) {
+bool debug_breakpoint_remove_step( void ) {
   // check for initialized
   if ( NULL == debug_breakpoint_manager ) {
-    return;
+    return false;
   }
   // variables
   debug_breakpoint_entry_ptr_t entry = NULL;
@@ -99,13 +99,16 @@ void debug_breakpoint_remove_step( void ) {
     // handle only stepping breakpoints
     if ( entry->step ) {
       // remove from breakpoint manager list
-      list_remove( debug_breakpoint_manager, current );
+      if ( ! list_remove( debug_breakpoint_manager, current ) ) {
+        return false;
+      }
       // free stuff
       free( entry );
     }
     // set current to next
     current = next;
   }
+  return true;
 }
 
 
@@ -115,12 +118,12 @@ void debug_breakpoint_remove_step( void ) {
  * @param address
  * @param remove
  */
-void debug_breakpoint_remove( uintptr_t address, bool remove ) {
+bool debug_breakpoint_remove( uintptr_t address, bool remove ) {
   // variables
   debug_breakpoint_entry_ptr_t entry = debug_breakpoint_find( address );
   // Do nothing if not existing
   if ( NULL == entry ) {
-    return;
+    return true;
   }
 
   // set enabled to false
@@ -128,11 +131,17 @@ void debug_breakpoint_remove( uintptr_t address, bool remove ) {
   // handle removal
   if ( remove ) {
     list_item_ptr_t item = list_lookup_data( debug_breakpoint_manager, entry );
+    if ( NULL == item ) {
+      return false;
+    }
     // remove from list
-    list_remove( debug_breakpoint_manager, item );
+    if ( ! list_remove( debug_breakpoint_manager, item ) ) {
+      return false;
+    }
     // free stuff
     free( entry );
   }
+  return true;
 }
 
 /**
@@ -142,7 +151,7 @@ void debug_breakpoint_remove( uintptr_t address, bool remove ) {
  * @param step
  * @param enable
  */
-void debug_breakpoint_add(
+bool debug_breakpoint_add(
   uintptr_t address,
   bool step,
   bool enable
@@ -151,7 +160,7 @@ void debug_breakpoint_add(
   debug_breakpoint_entry_ptr_t entry = debug_breakpoint_find( address );
   // Don't add if already existing
   if ( NULL != entry && true == entry->enabled ) {
-    return;
+    return true;
   }
 
   // create if not existing
@@ -159,16 +168,24 @@ void debug_breakpoint_add(
     // allocate entry
     entry = ( debug_breakpoint_entry_ptr_t )malloc(
       sizeof( debug_breakpoint_entry_t ) );
+    // handle error
+    if ( NULL == entry ) {
+      return false;
+    }
     // erase allocated memory
     debug_memset( ( void* )entry, 0, sizeof( debug_breakpoint_entry_t ) );
     // push entry back
-    list_push_back( debug_breakpoint_manager, ( void* )entry );
+    if ( ! list_push_back( debug_breakpoint_manager, ( void* )entry ) ) {
+      free( entry );
+      return false;
+    }
   }
 
   // set attributes
   entry->step = step;
   entry->enabled = enable;
   entry->address = address;
+  return true;
 }
 
 /**

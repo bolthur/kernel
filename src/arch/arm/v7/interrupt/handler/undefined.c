@@ -38,7 +38,7 @@ static uint32_t nested_undefined = 0;
  * @todo remove noreturn when handler is completed
  */
 noreturn void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
-  // assert nesting
+  // nesting
   nested_undefined++;
   assert( nested_undefined < INTERRUPT_NESTED_MAX );
   // get event origin
@@ -51,8 +51,8 @@ noreturn void vector_undefined_instruction_handler( cpu_register_context_ptr_t c
     DUMP_REGISTER( cpu );
   #endif
 
-  // assert kernel stack
-  interrupt_assert_kernel_stack();
+  // kernel stack
+  interrupt_ensure_kernel_stack();
 
   // just panic
   PANIC( "undefined" );

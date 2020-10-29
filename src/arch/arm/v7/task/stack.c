@@ -18,7 +18,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
 #include <core/debug/debug.h>
 #include <core/task/stack.h>
 #include <arch/arm/stack.h>
@@ -37,8 +36,10 @@
  * @return uintptr_t
  */
 uintptr_t task_stack_manager_next( task_stack_manager_ptr_t manager ) {
-  // assert manager
-  assert( NULL != manager );
+  // check parameter
+  if ( NULL == manager ) {
+    return 0;
+  }
 
   // determine min and max
   uintptr_t current = THREAD_STACK_START_ADDRESS;
@@ -66,9 +67,13 @@ uintptr_t task_stack_manager_next( task_stack_manager_ptr_t manager ) {
     current += STACK_SIZE;
   }
 
-  // assert address
-  assert( current >= min_stack );
-  assert( current <= max_stack );
+  // check address
+  if (
+    current < min_stack
+    || current > max_stack
+  ) {
+    return 0;
+  }
 
   // return new one
   return current + STACK_SIZE;

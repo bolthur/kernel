@@ -20,8 +20,8 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <string.h>
 #include <assert.h>
+#include <string.h>
 #include <avl.h>
 #include <core/debug/debug.h>
 #include <core/panic.h>
@@ -185,7 +185,7 @@ static void prepare_block(
 /**
  * @brief Internal method for extending the heap
  */
-static void extend_heap_space( void ) {
+static bool extend_heap_space( void ) {
   avl_node_ptr_t max, max_used, max_free;
   heap_block_ptr_t block, free_block;
   uintptr_t heap_end;
@@ -193,11 +193,8 @@ static void extend_heap_space( void ) {
   avl_tree_ptr_t used_area, free_address, free_size;
 
   // stop if not setup
-  if (
-    NULL == kernel_heap
-    || HEAP_INIT_NORMAL != kernel_heap->state
-  ) {
-    return;
+  if ( NULL == kernel_heap || HEAP_INIT_NORMAL != kernel_heap->state ) {
+    return false;
   }
 
   // get correct trees
@@ -223,8 +220,10 @@ static void extend_heap_space( void ) {
     max = max_free;
   }
 
-  // assert set max
-  assert( NULL != max );
+  // check max
+  if ( NULL == max ) {
+    return false;
+  }
 
   // get block
   block = HEAP_GET_BLOCK_ADDRESS( max );
@@ -240,8 +239,10 @@ static void extend_heap_space( void ) {
       heap_size + HEAP_EXTENSION
     );
   #endif
-  // assert size against max size
-  assert( heap_size + HEAP_EXTENSION < HEAP_MAX_SIZE );
+  // check size against max size
+  if ( heap_size + HEAP_EXTENSION >= HEAP_MAX_SIZE ) {
+    return false;
+  }
 
   // map heap address space
   for (
@@ -255,11 +256,14 @@ static void extend_heap_space( void ) {
     #endif
 
     // map address
-    virt_map_address_random(
+    if ( ! virt_map_address_random(
       kernel_context,
       addr,
       VIRT_MEMORY_TYPE_NORMAL,
-      VIRT_PAGE_TYPE_NON_EXECUTABLE );
+      VIRT_PAGE_TYPE_NON_EXECUTABLE
+    ) ) {
+      return false;
+    }
 
     // clear area
     memset( ( void* )addr, 0, PAGE_SIZE );
@@ -296,8 +300,10 @@ static void extend_heap_space( void ) {
   avl_prepare_node( &free_block->node_size, ( void* )free_block->size );
 
   // insert into free trees
-  avl_insert_by_node( free_address, &free_block->node_address );
-  avl_insert_by_node( free_size, &free_block->node_size );
+  assert(
+    avl_insert_by_node( free_address, &free_block->node_address )
+    && avl_insert_by_node( free_size, &free_block->node_size )
+  );
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -310,6 +316,8 @@ static void extend_heap_space( void ) {
     DEBUG_OUTPUT( "Free size tree:\r\n" );
     avl_print( free_size );
   #endif
+
+  return true;
 }
 
 /**
@@ -409,9 +417,11 @@ static void shrink_heap_space( void ) {
   #endif
   // prepare blocks after adjustment
   prepare_block( max_block, max_block->address, max_block->size );
-  // reinsert block
-  avl_insert_by_node( free_address, &max_block->node_address );
-  avl_insert_by_node( free_size, &max_block->node_size );
+  // reinsert block with assertion
+  assert(
+    avl_insert_by_node( free_address, &max_block->node_address )
+    && avl_insert_by_node( free_size, &max_block->node_size )
+  );
 
   // free up virtual memory
   for (
@@ -523,15 +533,17 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
   } else if ( a_end == ( uintptr_t )b ) {
     a->size += sizeof( heap_block_t ) + b->size;
     to_insert = a;
+  } else {
+    return NULL;
   }
 
-  // assert pointer to inser
-  assert( NULL != to_insert );
   // prepare blocks of element to insert
   prepare_block( to_insert, to_insert->address, to_insert->size );
   // insert merged node
-  avl_insert_by_node( free_address, &to_insert->node_address );
-  avl_insert_by_node( free_size, &to_insert->node_size );
+  assert(
+    avl_insert_by_node( free_address, &to_insert->node_address )
+    && avl_insert_by_node( free_size, &to_insert->node_size )
+  );
   // return pointer to merged node
   return to_insert;
 }
@@ -541,10 +553,17 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
  */
 void heap_init( heap_init_state_t state ) {
   // correct state
-  assert( HEAP_INIT_EARLY == state || HEAP_INIT_NORMAL == state );
-  // check state if already initialized
-  if ( NULL != kernel_heap ) {
-    assert( kernel_heap->state < state );
+  // skip if wrong state is passed
+  if (
+    (
+      HEAP_INIT_EARLY != state
+      && HEAP_INIT_NORMAL != state
+    ) || (
+      NULL != kernel_heap
+      && kernel_heap->state > state
+    )
+  ) {
+    return;
   }
 
   // start and end of early init
@@ -587,11 +606,12 @@ void heap_init( heap_init_state_t state ) {
       #endif
 
       // map address
-      virt_map_address_random(
+      assert( virt_map_address_random(
         kernel_context,
         addr,
         VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_NON_EXECUTABLE );
+        VIRT_PAGE_TYPE_NON_EXECUTABLE
+      ) );
     }
   }
 
@@ -609,7 +629,6 @@ void heap_init( heap_init_state_t state ) {
   } else {
     heap = kernel_heap;
   }
-
 
   // debug output
   #if defined( PRINT_MM_HEAP )
@@ -654,8 +673,10 @@ void heap_init( heap_init_state_t state ) {
   // prepare free block
   prepare_block( free_block, start + offset, min_size - offset );
   // insert into free trees
-  avl_insert_by_node( &heap->free_address[ state ], &free_block->node_address );
-  avl_insert_by_node( &heap->free_size[ state ], &free_block->node_size );
+  assert(
+    avl_insert_by_node( &heap->free_address[ state ], &free_block->node_address )
+    && avl_insert_by_node( &heap->free_size[ state ], &free_block->node_size )
+  );
 
   // finally set state
   heap->state = state;
@@ -706,7 +727,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 
   // stop if not setup
   if ( NULL == kernel_heap ) {
-    return ( uintptr_t )NULL;
+    return 0;
   }
   // debug output
   #if defined( PRINT_MM_HEAP )
@@ -756,10 +777,12 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
           DEBUG_OUTPUT( "No max node found, tree empty\r\n" );
         #endif
         // return invalid
-        return ( uintptr_t )NULL;
+        return 0;
       }
       // extend heap
-      extend_heap_space();
+      if ( ! extend_heap_space() ) {
+        return 0;
+      }
       // try another allocation
       return heap_allocate_block( alignment, size );
     }
@@ -788,10 +811,12 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
         );
       #endif
       // return NULL
-      return ( uintptr_t )NULL;
+      return 0;
     }
     // extend heap
-    extend_heap_space();
+    if ( ! extend_heap_space() ) {
+      return 0;
+    }
     // try another allocation
     return heap_allocate_block( alignment, size );
   }
@@ -843,10 +868,12 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
           DEBUG_OUTPUT( "Not enough space with alignment\r\n" );
         #endif
         // return invalid
-        return ( uintptr_t )NULL;
+        return 0;
       }
       // extend heap
-      extend_heap_space();
+      if ( ! extend_heap_space() ) {
+        return 0;
+      }
       // try another allocation
       return heap_allocate_block( alignment, size );
     }
@@ -911,8 +938,10 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     #endif
 
     // insert nodes at free trees
-    avl_insert_by_node( free_address, &current->node_address );
-    avl_insert_by_node( free_size, &current->node_size );
+    assert(
+      avl_insert_by_node( free_address, &current->node_address )
+      && avl_insert_by_node( free_size, &current->node_size )
+    );
   // split with alignment offset
   } else if ( split && 0 < alignment_offset ) {
     // determine previous block
@@ -948,8 +977,10 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
       #endif
 
       // insert nodes at free trees
-      avl_insert_by_node( free_address, &following->node_address );
-      avl_insert_by_node( free_size, &following->node_size );
+      assert(
+        avl_insert_by_node( free_address, &following->node_address )
+        && avl_insert_by_node( free_size, &following->node_size )
+      );
     }
 
     // debug output
@@ -969,8 +1000,10 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     #endif
 
     // insert nodes at free trees
-    avl_insert_by_node( free_address, &previous->node_address );
-    avl_insert_by_node( free_size, &previous->node_size );
+    assert(
+      avl_insert_by_node( free_address, &previous->node_address )
+      && avl_insert_by_node( free_size, &previous->node_size )
+    );
   // found matching node
   } else {
     new = current;
@@ -986,7 +1019,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   #endif
 
   // insert at used block
-  avl_insert_by_node( used_area, &new->node_address );
+  assert( avl_insert_by_node( used_area, &new->node_address ) );
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -1100,8 +1133,10 @@ void heap_free_block( uintptr_t addr ) {
   prepare_block( current_block, current_block->address, current_block->size );
 
   // insert nodes
-  avl_insert_by_node( free_address, &current_block->node_address );
-  avl_insert_by_node( free_size, &current_block->node_size );
+  assert(
+    avl_insert_by_node( free_address, &current_block->node_address )
+    && avl_insert_by_node( free_size, &current_block->node_size )
+  );
 
   // Debug output
   #if defined( PRINT_MM_HEAP )

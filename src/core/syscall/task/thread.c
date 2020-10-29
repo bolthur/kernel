@@ -18,7 +18,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
 #include <core/syscall.h>
 #include <core/task/process.h>
 #include <core/task/thread.h>
@@ -29,8 +28,14 @@
  * @param context
  */
 void syscall_thread_id( void* context ) {
-  // assert current thread
-  assert( NULL != task_thread_current_thread );
+  if ( NULL == task_thread_current_thread ) {
+    // populate return
+    syscall_populate_single_return(
+      context,
+      ( size_t )-1
+    );
+    return;
+  }
   // populate return
   syscall_populate_single_return(
     context,

@@ -21,8 +21,8 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include <stdio.h>
 #include <assert.h>
+#include <stdio.h>
 #include <core/debug/debug.h>
 #include <core/entry.h>
 #include <core/initrd.h>
@@ -208,8 +208,10 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
     }
   }
 
-  // assert found address
-  assert( 0 != address );
+  // handle no address
+  if ( 0 == address ) {
+    return address;
+  }
 
   // set temporary address
   tmp = address;
@@ -247,7 +249,7 @@ void phys_free_page( uint64_t address ) {
  */
 void phys_init( void ) {
   // execute platform initialization
-  phys_platform_init();
+  assert( phys_platform_init() );
 
   // determine start and end for kernel mapping
   uintptr_t start = 0;

@@ -20,7 +20,6 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <assert.h>
 
 #include <core/panic.h>
 #include <core/mm/virt.h>

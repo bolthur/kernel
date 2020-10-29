@@ -23,7 +23,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <endian.h>
 #include <core/panic.h>
 #include <core/interrupt.h>
@@ -421,6 +420,7 @@ void debug_gdb_handler_read_memory(
     // read memory and stop on error
     if ( ! read_memory_content( &value, addr + i, 1 ) ) {
       debug_gdb_packet_send( ( uint8_t* )"E02" );
+      free( p );
       return;
     }
     // extract byte
@@ -556,6 +556,7 @@ void debug_gdb_handler_stepping(
 ) {
   // transform context to correct structure
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  bool step_set = false;
 
   // get to next address
   uintptr_t* next_address = debug_disasm_next_instruction(
@@ -567,10 +568,15 @@ void debug_gdb_handler_stepping(
     if ( 0 == next_address[ x ] ) {
       continue;
     }
-    // some debug output
-    DEBUG_OUTPUT( "next_address: %p\r\n", ( void* )next_address[ x ] );
     // add breakpoint
     debug_breakpoint_add( next_address[ x ], true, true );
+    step_set = true;
+  }
+
+  // handle error
+  if ( ! step_set ) {
+    debug_gdb_packet_send( ( uint8_t* )"E01" );
+    return;
   }
 
   // set handler running to false
@@ -690,8 +696,10 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
     // get packet
     uint8_t* packet = debug_gdb_packet_receive(
       debug_gdb_input_buffer, GDB_DEBUG_MAX_BUFFER );
-    // assert existence
-    assert( packet != NULL );
+    // check packet existence
+    if ( NULL == packet ) {
+      continue;
+    }
     // execute handler
     debug_gdb_get_handler( packet )( context, packet );
   }

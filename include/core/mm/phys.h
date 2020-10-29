@@ -43,7 +43,7 @@ extern uint32_t *phys_bitmap;
 extern uint32_t phys_bitmap_length;
 
 void phys_init( void );
-void phys_platform_init( void );
+bool phys_platform_init( void );
 
 void phys_mark_page_used( uint64_t );
 void phys_mark_page_free( uint64_t );

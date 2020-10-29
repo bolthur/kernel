@@ -50,13 +50,16 @@ void syscall_memory_acquire( void* context ) {
   );
 
   // map address range random
-  virt_map_address_range_random(
+  if ( ! virt_map_address_range_random(
     virtual_context,
     start,
     amount,
     VIRT_MEMORY_TYPE_NORMAL,
     VIRT_PAGE_TYPE_AUTO
-  );
+  ) ) {
+    syscall_populate_single_return( context, 0 );
+    return;
+  }
 
   // populate return
   syscall_populate_single_return( context, start );

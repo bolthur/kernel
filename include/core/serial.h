@@ -21,10 +21,11 @@
 #if ! defined( __CORE_SERIAL__ )
 #define __CORE_SERIAL__
 
+#include <stdbool.h>
 #include <stdint.h>
 
 void serial_init( void );
-void serial_register_interrupt( void );
+bool serial_register_interrupt( void );
 void serial_putc( uint8_t );
 uint8_t serial_getc( void );
 void serial_flush( void );

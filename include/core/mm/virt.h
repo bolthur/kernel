@@ -65,27 +65,27 @@ bool virt_init_get( void );
 void virt_platform_post_init( void );
 
 virt_context_ptr_t virt_create_context( virt_context_type_t );
-void virt_destroy_context( virt_context_ptr_t );
+bool virt_destroy_context( virt_context_ptr_t );
 uint64_t virt_create_table( virt_context_ptr_t, uintptr_t, uint64_t );
 
-void virt_map_address( virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
-void virt_map_address_random( virt_context_ptr_t, uintptr_t, virt_memory_type_t, uint32_t );
-void virt_map_address_range( virt_context_ptr_t, uintptr_t, uint64_t, size_t, virt_memory_type_t, uint32_t );
-void virt_map_address_range_random( virt_context_ptr_t, uintptr_t, size_t, virt_memory_type_t, uint32_t );
+bool virt_map_address( virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
+bool virt_map_address_random( virt_context_ptr_t, uintptr_t, virt_memory_type_t, uint32_t );
+bool virt_map_address_range( virt_context_ptr_t, uintptr_t, uint64_t, size_t, virt_memory_type_t, uint32_t );
+bool virt_map_address_range_random( virt_context_ptr_t, uintptr_t, size_t, virt_memory_type_t, uint32_t );
 uintptr_t virt_map_temporary( uint64_t, size_t );
 
-void virt_unmap_address( virt_context_ptr_t, uintptr_t, bool );
-void virt_unmap_address_range( virt_context_ptr_t, uintptr_t, size_t, bool );
+bool virt_unmap_address( virt_context_ptr_t, uintptr_t, bool );
+bool virt_unmap_address_range( virt_context_ptr_t, uintptr_t, size_t, bool );
 void virt_unmap_temporary( uintptr_t, size_t );
 
 uintptr_t virt_find_free_page_range( virt_context_ptr_t, size_t );
 uintptr_t virt_get_context_min_address( virt_context_ptr_t );
 uintptr_t virt_get_context_max_address( virt_context_ptr_t );
 uint32_t virt_get_supported_modes( void );
-void virt_set_context( virt_context_ptr_t );
+bool virt_set_context( virt_context_ptr_t );
 void virt_flush_complete( void );
 void virt_flush_address( virt_context_ptr_t, uintptr_t );
-void virt_prepare_temporary( virt_context_ptr_t );
+bool virt_prepare_temporary( virt_context_ptr_t );
 
 bool virt_is_mapped_in_context_range( virt_context_ptr_t, uintptr_t, size_t );
 bool virt_is_mapped_in_context( virt_context_ptr_t, uintptr_t );

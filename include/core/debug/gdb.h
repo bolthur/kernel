@@ -55,7 +55,7 @@ extern uint8_t debug_gdb_input_buffer[];
 
 void debug_gdb_init( void );
 void debug_gdb_breakpoint( void );
-void debug_gdb_set_trap( void );
+bool debug_gdb_set_trap( void );
 void debug_gdb_handle_exception( void );
 bool debug_gdb_initialized( void );
 debug_gdb_signal_t debug_gdb_get_signal( void );

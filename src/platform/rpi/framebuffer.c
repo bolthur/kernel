@@ -26,6 +26,7 @@
 #include <string.h>
 #include <core/debug/debug.h>
 #include <platform/rpi/framebuffer.h>
+#include <platform/rpi/mailbox/mailbox.h>
 #include <platform/rpi/mailbox/property.h>
 
 #include <font/font.h>
@@ -82,7 +83,7 @@ static int32_t pitch = 0;
 /**
  * @brief Initialize framebuffer
  */
-void framebuffer_init( void ) {
+bool framebuffer_init( void ) {
   rpi_mailbox_property_t* mp;
 
   // Initialize framebuffer
@@ -96,30 +97,42 @@ void framebuffer_init( void ) {
   mailbox_property_add_tag( TAG_GET_PITCH );
   mailbox_property_add_tag( TAG_GET_PHYSICAL_SIZE );
   mailbox_property_add_tag( TAG_GET_DEPTH );
-  mailbox_property_process();
+  if ( MAILBOX_ERROR == mailbox_property_process() )  {
+    return false;
+  }
 
   if ( ( mp = mailbox_property_get( TAG_GET_PHYSICAL_SIZE ) ) ) {
     resolution_width = mp->data.buffer_32[ 0 ];
     resolution_height = mp->data.buffer_32[ 1 ];
+  } else {
+    return false;
   }
 
   if ( ( mp = mailbox_property_get( TAG_GET_DEPTH ) ) ) {
     framebuffer_bpp = mp->data.buffer_32[ 0 ];
+  } else {
+    return false;
   }
 
   if ( ( mp = mailbox_property_get( TAG_GET_PITCH ) ) ) {
     pitch = mp->data.buffer_32[ 0 ];
+  } else {
+    return false;
   }
 
   if ( ( mp = mailbox_property_get( TAG_ALLOCATE_BUFFER ) ) ) {
     framebuffer_base_set( mp->data.buffer_u32[ 0 ] );
     framebuffer_size = mp->data.buffer_u32[ 1 ];
+  } else {
+    return false;
   }
 
   // fetch video core informations
   mailbox_property_init();
   mailbox_property_add_tag( TAG_GET_VC_MEMORY );
-  mailbox_property_process();
+  if ( MAILBOX_ERROR == mailbox_property_process() ) {
+    return false;
+  }
   // transform address to physical one
   if ( ( mp = mailbox_property_get( TAG_GET_VC_MEMORY ) ) ) {
     // get set base
@@ -128,6 +141,8 @@ void framebuffer_init( void ) {
     base = base & ( mp->data.buffer_u32[ 0 ] + mp->data.buffer_u32[ 1 ] - 1 );
     // push back
     framebuffer_base_set( base );
+  } else {
+    return false;
   }
 
   // map initially
@@ -140,6 +155,7 @@ void framebuffer_init( void ) {
 
   // set flag
   framebuffer_initialized = true;
+  return true;
 }
 
 /**

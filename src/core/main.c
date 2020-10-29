@@ -23,7 +23,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <core/arch.h>
 #include <core/elf/common.h>
 #include <core/tty.h>
@@ -64,7 +63,7 @@ noreturn void kernel_main( void ) {
 
   // setup tty for output
   DEBUG_OUTPUT( "[bolthur/kernel -> heap] tty initialize ...\r\n" );
-  tty_init();
+  assert( tty_init() );
 
   // Some initial output :)
   DEBUG_OUTPUT(
@@ -75,7 +74,7 @@ noreturn void kernel_main( void ) {
 
   // Setup event system
   DEBUG_OUTPUT( "[bolthur/kernel -> event] initialize ...\r\n" );
-  event_init();
+  assert( event_init() );
 
   // Setup interrupt
   DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] initialize ...\r\n" );
@@ -89,7 +88,7 @@ noreturn void kernel_main( void ) {
 
     // register serial interrupt ( irg/fiq )
     DEBUG_OUTPUT( "[bolthur/kernel -> serial ] register interrupt ...\r\n" );
-    serial_register_interrupt();
+    assert( serial_register_interrupt() );
 
     // Setup gdb stub
     DEBUG_OUTPUT( "[bolthur/kernel -> debug -> gdb] initialize ...\r\n" );
@@ -172,15 +171,15 @@ noreturn void kernel_main( void ) {
 
   // Setup shared
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> shared] initialize ...\r\n" );
-  shared_init();
+  assert( shared_init() );
 
   // Setup multitasking
   DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" );
-  task_process_init();
+  assert( task_process_init() );
 
   // setup syscalls
   DEBUG_OUTPUT( "[bolthur/kernel -> syscall] initialize ...\r\n" );;
-  syscall_init();
+  assert( syscall_init() );
 
   // FIXME: Create init process from initialramdisk and pass initrd to init process
   // create processes for elf files

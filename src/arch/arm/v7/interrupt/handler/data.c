@@ -54,7 +54,7 @@ __maybe_unused static uintptr_t fault_address( void ) {
  * @todo remove noreturn when handler is completed
  */
 noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
-  // assert nesting
+  // nesting
   nested_data_abort++;
   assert( nested_data_abort < INTERRUPT_NESTED_MAX );
   // get event origin
@@ -68,8 +68,8 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
     DUMP_REGISTER( cpu );
   #endif
 
-  // assert kernel stack
-  interrupt_assert_kernel_stack();
+  // kernel stack
+  interrupt_ensure_kernel_stack();
 
   // special debug exception handling
   #if defined( REMOTE_DEBUG )

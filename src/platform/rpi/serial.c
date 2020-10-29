@@ -202,15 +202,18 @@ static void serial_clear( __unused void* context ) {
 /**
  * @brief register serial interrupt
  */
-void serial_register_interrupt( void ) {
+bool serial_register_interrupt( void ) {
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // register interrupt
-  interrupt_register_handler( 57, serial_clear, INTERRUPT_FAST, true );
+  if ( ! interrupt_register_handler( 57, serial_clear, INTERRUPT_FAST, true ) ) {
+    return false;
+  }
   // mask interrupt
   io_out32( base + INTERRUPT_FIQ_CONTROL, 57 | 0x80 );
   // flush it
   serial_flush();
+  return true;
 }
 
 /**

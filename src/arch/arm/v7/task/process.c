@@ -49,11 +49,15 @@ void task_process_start( void ) {
   // variable for next thread queue
   task_priority_queue_ptr_t next_queue = task_queue_get_queue(
     process_manager, next_thread->priority );
-  // assert queue
-  assert( NULL != next_queue );
+  // check queue
+  if ( NULL == next_queue ) {
+    return;
+  }
 
   // set current running thread
-  task_thread_set_current( next_thread, next_queue );
+  if ( ! task_thread_set_current( next_thread, next_queue ) ) {
+    return;
+  }
 
   // debug output
   #if defined( PRINT_PROCESS )
@@ -62,7 +66,10 @@ void task_process_start( void ) {
   #endif
 
   // set context and flush
-  virt_set_context( next_thread->process->virtual_context );
+  if ( ! virt_set_context( next_thread->process->virtual_context ) ) {
+    task_thread_reset_current();
+    return;
+  }
   virt_flush_complete();
 
   // debug output
@@ -116,7 +123,15 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   if ( NULL != running_thread ) {
     running_queue = task_queue_get_queue(
       process_manager, running_thread->priority );
-    // assert queue
+    // handle error
+    if ( NULL == running_queue ) {
+      // reset
+      task_process_queue_reset();
+      task_thread_reset_current();
+      // wait for exception
+      arch_halt();
+    }
+    // check queue
     assert( NULL != running_queue );
     // set last handled within running queue
     running_queue->last_handled = running_thread;
@@ -134,6 +149,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     if ( NULL == next_thread ) {
       // reset
       task_process_queue_reset();
+      task_thread_reset_current();
       // wait for exception
       arch_halt();
     }
@@ -144,8 +160,15 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   if ( NULL != next_thread ) {
     next_queue = task_queue_get_queue(
       process_manager, next_thread->priority );
-    // assert queue
-    assert( NULL != next_queue );
+
+    // reset queue if nothing found
+    if ( NULL == next_thread ) {
+      // reset
+      task_process_queue_reset();
+      task_thread_reset_current();
+      // wait for exception
+      arch_halt();
+    }
   }
 
   // reset current if queue changed
@@ -159,7 +182,13 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     running_thread->state = TASK_THREAD_STATE_READY;
   }
   // overwrite current running thread
-  task_thread_set_current( next_thread, next_queue );
+  if ( ! task_thread_set_current( next_thread, next_queue ) ) {
+    // reset
+    task_process_queue_reset();
+    task_thread_reset_current();
+    // wait for exception
+    arch_halt();
+  }
 
   // Switch to thread ttbr when thread is a different process in user mode
   if (
@@ -167,7 +196,13 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     || running_thread->process != next_thread->process
   ) {
     // set context and flush
-    virt_set_context( next_thread->process->virtual_context );
+    if ( ! virt_set_context( next_thread->process->virtual_context ) ) {
+      // reset
+      task_process_queue_reset();
+      task_thread_reset_current();
+      // wait for exception
+      arch_halt();
+    }
     virt_flush_complete();
     // debug output
     #if defined( PRINT_PROCESS )

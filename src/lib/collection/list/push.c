@@ -19,7 +19,6 @@
  */
 
 #include <stddef.h>
-#include <assert.h>
 #include <stdlib.h>
 #include <list.h>
 
@@ -28,17 +27,26 @@
  *
  * @param list list to use
  * @param data data to push into list
+ * @return true
+ * @return false
  */
-void list_push_front( list_manager_ptr_t list, void* data ) {
+bool list_push_front( list_manager_ptr_t list, void* data ) {
   list_item_ptr_t first, node;
 
-  // assert list is initialized
-  assert( NULL != list );
+  // handle invalid paramter
+  if ( NULL == list || NULL == data ) {
+    return false;
+  }
   // set list head
   first = list->first;
 
   // create new node
   node = list_node_create( data );
+  // handle error
+  if ( NULL == node ) {
+    return false;
+  }
+
   // set next to first
   node->next = first;
   // set previous for first element
@@ -52,6 +60,8 @@ void list_push_front( list_manager_ptr_t list, void* data ) {
   if ( NULL == list->last ) {
     list->last = list->first;
   }
+
+  return true;
 }
 
 /**
@@ -59,12 +69,16 @@ void list_push_front( list_manager_ptr_t list, void* data ) {
  *
  * @param list list to use
  * @param item item to push
+ * @return true
+ * @return false
  */
-void list_push_front_node( list_manager_ptr_t list, list_item_ptr_t node ) {
+bool list_push_front_node( list_manager_ptr_t list, list_item_ptr_t node ) {
   list_item_ptr_t first;
 
-  // assert list is initialized
-  assert( NULL != list );
+  // handle invalid paramter
+  if ( NULL == list || NULL == node ) {
+    return false;
+  }
   // set list head
   first = list->first;
 
@@ -81,6 +95,8 @@ void list_push_front_node( list_manager_ptr_t list, list_item_ptr_t node ) {
   if ( NULL == list->last ) {
     list->last = list->first;
   }
+
+  return true;
 }
 
 /**
@@ -88,17 +104,26 @@ void list_push_front_node( list_manager_ptr_t list, list_item_ptr_t node ) {
  *
  * @param list list to use
  * @param data data to push into list
+ * @return true
+ * @return false
  */
-void list_push_back( list_manager_ptr_t list, void* data ) {
+bool list_push_back( list_manager_ptr_t list, void* data ) {
   list_item_ptr_t last, node;
 
-  // assert list is initialized
-  assert( NULL != list );
+  // handle invalid paramter
+  if ( NULL == list || NULL == data ) {
+    return false;
+  }
   // set list head
   last = list->last;
 
   // create new node
   node = list_node_create( data );
+  // handle error
+  if ( NULL == node ) {
+    return false;
+  }
+
   // set previous to last
   node->previous = last;
   // set next for last element
@@ -112,6 +137,8 @@ void list_push_back( list_manager_ptr_t list, void* data ) {
   if ( NULL == list->first ) {
     list->first = list->last;
   }
+
+  return true;
 }
 
 /**
@@ -119,12 +146,16 @@ void list_push_back( list_manager_ptr_t list, void* data ) {
  *
  * @param list list to use
  * @param data data to push into list
+ * @return true
+ * @return false
  */
-void list_push_back_node( list_manager_ptr_t list, list_item_ptr_t node ) {
+bool list_push_back_node( list_manager_ptr_t list, list_item_ptr_t node ) {
   list_item_ptr_t last;
+  // handle invalid paramter
+  if ( NULL == list || NULL == node ) {
+    return false;
+  }
 
-  // assert list is initialized
-  assert( NULL != list );
   // set list head
   last = list->last;
 
@@ -141,4 +172,6 @@ void list_push_back_node( list_manager_ptr_t list, list_item_ptr_t node ) {
   if ( NULL == list->first ) {
     list->first = list->last;
   }
+
+  return true;
 }

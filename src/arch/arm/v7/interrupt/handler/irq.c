@@ -36,7 +36,7 @@ static uint32_t nested_interrupt = 0;
  * @param cpu cpu context
  */
 void vector_interrupt_handler( cpu_register_context_ptr_t cpu ) {
-  // assert nesting
+  // nesting
   nested_interrupt++;
   assert( nested_interrupt < INTERRUPT_NESTED_MAX );
   // get event origin
@@ -49,15 +49,15 @@ void vector_interrupt_handler( cpu_register_context_ptr_t cpu ) {
     DUMP_REGISTER( cpu );
   #endif
 
-  // assert kernel stack
-  interrupt_assert_kernel_stack();
+  // kernel stack
+  interrupt_ensure_kernel_stack();
 
   // get pending interrupt
   int8_t interrupt = interrupt_get_pending( false );
-  // assert return
-  assert( -1 != interrupt );
   // handle bound interrupt handlers
-  interrupt_handle( ( uint8_t )interrupt, INTERRUPT_NORMAL, cpu );
+  if ( -1 != interrupt ) {
+    interrupt_handle( ( uint8_t )interrupt, INTERRUPT_NORMAL, cpu );
+  }
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
 

@@ -20,7 +20,6 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <string.h>
 #include <list.h>
 
@@ -33,8 +32,10 @@
 list_item_ptr_t list_node_create( void* data ) {
   // allocate new node
   list_item_ptr_t node = ( list_item_ptr_t )malloc( sizeof( list_item_t ) );
-  // assert allocation
-  assert( NULL != node );
+  // check malloc result
+  if ( NULL == node ) {
+    return NULL;
+  }
   // overwrite allocated memory with 0
   memset( ( void* )node, 0, sizeof( list_item_t ) );
 

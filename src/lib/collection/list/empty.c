@@ -19,7 +19,6 @@
  */
 
 #include <stddef.h>
-#include <assert.h>
 #include <list.h>
 
 /**
@@ -29,8 +28,10 @@
  * @return false at least one item
  */
 bool list_empty( list_manager_ptr_t list ) {
-  // assert existence
-  assert( NULL != list );
+  // check parameter
+  if ( NULL == list ) {
+    return true;
+  }
 
   // check first and last item
   if (

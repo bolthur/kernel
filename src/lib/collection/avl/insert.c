@@ -19,7 +19,6 @@
  */
 
 #include <avl.h>
-#include <assert.h>
 
 /**
  * @brief Internal function for inserting a node
@@ -56,11 +55,15 @@ static avl_node_ptr_t insert(
  *
  * @param tree
  * @param node
+ * @return true
+ * @return false
  */
-void avl_insert_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
-  // ensure existing tree
-  assert( NULL != tree && NULL != node );
-
+bool avl_insert_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
+  // check parameter
+  if ( NULL == tree || NULL == node ) {
+    return false;
+  }
   // insert and rebalance
   tree->root = insert( tree, node, tree->root );
+  return true;
 }

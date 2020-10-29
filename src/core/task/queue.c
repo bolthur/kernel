@@ -18,7 +18,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <core/debug/debug.h>
@@ -73,8 +72,10 @@ task_priority_queue_ptr_t task_queue_get_queue(
   task_manager_ptr_t manager,
   size_t priority
 ) {
-  // assert manager existence
-  assert( NULL != manager );
+  // check parameter
+  if ( NULL == manager ) {
+    return NULL;
+  }
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Called task_queue_get_queue( %zu )\r\n", priority );
@@ -94,8 +95,10 @@ task_priority_queue_ptr_t task_queue_get_queue(
     // allocate block
     queue = ( task_priority_queue_ptr_t )malloc(
       sizeof( task_priority_queue_t ) );
-    // assert initialization
-    assert( NULL != queue );
+    // check parameter
+    if ( NULL == queue ) {
+      return NULL;
+    }
     // prepare memory
     memset( ( void* )queue, 0, sizeof( task_priority_queue_t ) );
     // debug output
@@ -105,18 +108,24 @@ task_priority_queue_ptr_t task_queue_get_queue(
     // populate queue
     queue->priority = priority;
     queue->thread_list = list_construct();
+    if ( ! queue->thread_list ) {
+      free( queue );
+      return NULL;
+    }
     queue->current = NULL;
     queue->last_handled = NULL;
     // prepare and insert node
     avl_prepare_node( &queue->node, ( void* )priority );
-    avl_insert_by_node( tree, &queue->node );
+    if ( ! avl_insert_by_node( tree, &queue->node ) ) {
+      list_destruct( queue->thread_list );
+      free( queue );
+      return NULL;
+    }
   // existing? => gather block
   } else {
     queue = TASK_QUEUE_GET_PRIORITY( node );
   }
 
-  // assert existence
-  assert( NULL != queue );
   // return queue
   return queue;
 }

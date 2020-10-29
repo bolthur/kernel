@@ -20,7 +20,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <core/panic.h>
 #include <core/debug/debug.h>
 #include <core/event.h>
@@ -82,21 +81,38 @@ size_t task_thread_generate_id( void ) {
  *
  * @param thread thread to set
  * @param queue thread queue
+ * @return true
+ * @return false
  */
-void task_thread_set_current(
+bool task_thread_set_current(
   task_thread_ptr_t thread,
   task_priority_queue_ptr_t queue
 ) {
-  // assert thread parameter
-  assert( NULL != thread );
+  // check parameter
+  if ( NULL == thread || NULL == queue ) {
+    return false;
+  }
   // set current thread
   task_thread_current_thread = thread;
-  // assert thread parameter
-  assert( NULL != queue );
   // update queue current
   queue->current = thread;
   // set state
   task_thread_current_thread->state = TASK_THREAD_STATE_ACTIVE;
+  return true;
+}
+
+/**
+ * @brief Reset current process
+ */
+void task_thread_reset_current( void ) {
+  // reset queue
+  task_process_queue_reset();
+  // set state
+  if ( NULL != task_thread_current_thread ) {
+    task_thread_current_thread->state = TASK_THREAD_STATE_READY;
+  }
+  // unset current thread
+  task_thread_current_thread = NULL;
 }
 
 /**
@@ -123,6 +139,11 @@ void task_thread_destroy( avl_tree_ptr_t tree ) {
  * @return task_thread_ptr_t
  */
 task_thread_ptr_t task_thread_next( void ) {
+  // check process manager
+  if ( NULL == process_manager ) {
+    return NULL;
+  }
+
   // min / max queue
   task_priority_queue_ptr_t min_queue = NULL;
   task_priority_queue_ptr_t max_queue = NULL;
@@ -197,8 +218,15 @@ task_thread_ptr_t task_thread_next( void ) {
       // try to find element in list
       item = list_lookup_data(
         current->thread_list, ( void* )current->last_handled );
-      // assert result
-      assert( NULL != item );
+      // check return
+      if ( NULL == item ) {
+        // prevent endless loop by checking against 0
+        if ( 0 == priority ) {
+          break;
+        }
+        // skip due to an error
+        continue;
+      }
       // debug output
       #if defined( PRINT_PROCESS )
         DEBUG_OUTPUT( "item->data = %p\r\n", item->data );
