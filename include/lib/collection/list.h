@@ -18,14 +18,22 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_LIST__ )
-#define __LIB_LIST__
+#if ! defined( __LIB_COLLECTION_LIST__ )
+#define __LIB_COLLECTION_LIST__
 
 #include <stdbool.h>
 #include <stdint.h>
 
 // forward declaration
 typedef struct list_item list_item_t, *list_item_ptr_t;
+
+typedef int32_t ( *list_lookup_func_t )(
+  const list_item_ptr_t a,
+  const void* data
+);
+typedef void ( *list_cleanup_func_t )(
+  const list_item_ptr_t a
+);
 
 // generic list item
 typedef struct list_item {
@@ -37,9 +45,11 @@ typedef struct list_item {
 typedef struct {
   list_item_ptr_t first;
   list_item_ptr_t last;
+  list_lookup_func_t lookup;
+  list_cleanup_func_t cleanup;
 } list_manager_t, *list_manager_ptr_t;
 
-list_manager_ptr_t list_construct( void );
+list_manager_ptr_t list_construct( list_lookup_func_t, list_cleanup_func_t );
 void list_destruct( list_manager_ptr_t );
 bool list_empty( list_manager_ptr_t );
 list_item_ptr_t list_lookup_data( list_manager_ptr_t, void* );
@@ -55,8 +65,9 @@ void* list_peek_back( list_manager_ptr_t );
 list_item_ptr_t list_node_create( void* );
 void list_print( list_manager_ptr_t );
 bool list_remove( list_manager_ptr_t, list_item_ptr_t );
-bool list_remove_keep( list_manager_ptr_t, list_item_ptr_t );
-bool list_remove_data( list_manager_ptr_t, void*);
-bool list_remove_data_keep( list_manager_ptr_t, void* );
+bool list_remove_data( list_manager_ptr_t, void* );
+
+int32_t list_default_lookup( const list_item_ptr_t a, const void* );
+void list_default_cleanup( const list_item_ptr_t );
 
 #endif

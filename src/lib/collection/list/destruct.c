@@ -20,7 +20,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <list.h>
+#include <collection/list.h>
 
 /**
  * @brief Method to destruct list
@@ -42,8 +42,8 @@ void list_destruct( list_manager_ptr_t list ) {
     // get next element
     next = current->next;
 
-    // free current element
-    free( current );
+    // additional cleanup
+    list->cleanup( current );
 
     // overwrite current with next
     current = next;

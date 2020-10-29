@@ -21,14 +21,45 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <list.h>
+#include <collection/list.h>
+
+/**
+ * @brief Default lookup if not passed during creation
+ *
+ * @param a
+ * @param b
+ * @return int32_t
+ */
+int32_t list_default_lookup(
+  const list_item_ptr_t a,
+  const void* b
+) {
+  return a->data == b ? 0 : 1;
+}
+
+/**
+ * @brief Default cleanup if not passed during creation
+ *
+ * @param a
+ */
+void list_default_cleanup(
+  const list_item_ptr_t a
+) {
+  // free current element
+  free( a );
+}
 
 /**
  * @brief Method to construct list
  *
+ * @param lookup
+ * @param cleanup
  * @return list_manager_ptr_t pointer to created list
  */
-list_manager_ptr_t list_construct( void ) {
+list_manager_ptr_t list_construct(
+  list_lookup_func_t lookup,
+  list_cleanup_func_t cleanup
+) {
   list_manager_ptr_t list;
 
   // allocate list
@@ -43,6 +74,18 @@ list_manager_ptr_t list_construct( void ) {
   // preset elements
   list->first = NULL;
   list->last = NULL;
+  // lookup function
+  if( NULL != lookup ) {
+    list->lookup = lookup;
+  } else {
+    list->lookup = list_default_lookup;
+  }
+  // cleanup function
+  if( NULL != cleanup ) {
+    list->cleanup = cleanup;
+  } else {
+    list->cleanup = list_default_cleanup;
+  }
 
   // return created list
   return list;

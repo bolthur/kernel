@@ -23,7 +23,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include <avl.h>
+#include <collection/avl.h>
 #include <core/entry.h>
 
 #if defined( ELF32 )

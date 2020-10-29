@@ -58,7 +58,7 @@ static int32_t queue_compare_priority_callback(
  * @brief Initialize task process manager
  */
 avl_tree_ptr_t task_queue_init( void ) {
-  return avl_create_tree( queue_compare_priority_callback );
+  return avl_create_tree( queue_compare_priority_callback, NULL, NULL );
 }
 
 /**
@@ -107,7 +107,7 @@ task_priority_queue_ptr_t task_queue_get_queue(
     #endif
     // populate queue
     queue->priority = priority;
-    queue->thread_list = list_construct();
+    queue->thread_list = list_construct( NULL, NULL );
     if ( ! queue->thread_list ) {
       free( queue );
       return NULL;

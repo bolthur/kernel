@@ -20,7 +20,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <avl.h>
+#include <collection/avl.h>
 
 /**
  * @brief Helper to destroy created tree
@@ -39,8 +39,8 @@ void avl_destroy_tree( avl_tree_ptr_t tree ) {
     avl_node_ptr_t node = tree->root;
     // remove node from tree
     avl_remove_by_node( tree, node );
-    // free structure
-    free( ( void* )node );
+    // cleanup
+    tree->cleanup( node );
   }
   // finally free tree itself
   free( tree );

@@ -23,7 +23,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <list.h>
+#include <collection/list.h>
 #include <core/panic.h>
 #include <core/debug/debug.h>
 #include <core/event.h>
@@ -81,7 +81,7 @@ bool event_init( void ) {
   #endif
 
   // create tree
-  event->tree = avl_create_tree( compare_event_callback );
+  event->tree = avl_create_tree( compare_event_callback, NULL, NULL );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Created event tree at: %p\r\n", ( void* )event->tree );
@@ -93,7 +93,7 @@ bool event_init( void ) {
   }
 
   // create queue
-  event->queue_kernel = list_construct();
+  event->queue_kernel = list_construct( NULL, NULL );
   // check allocation
   if ( NULL == event->queue_kernel ) {
     free( event->tree );
@@ -101,7 +101,7 @@ bool event_init( void ) {
     return false;
   }
 
-  event->queue_user = list_construct();
+  event->queue_user = list_construct( NULL, NULL );
   // check allocation
   if ( NULL == event->queue_user ) {
     free( event->tree );
@@ -158,12 +158,12 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
     #endif
     // populate block
     block->type = type;
-    block->handler = list_construct();
+    block->handler = list_construct( NULL, NULL );
     if ( NULL == block->handler ) {
       free( block );
       return false;
     }
-    block->post = list_construct();
+    block->post = list_construct( NULL, NULL );
     if ( NULL == block->post ) {
       free( block->handler );
       free( block );

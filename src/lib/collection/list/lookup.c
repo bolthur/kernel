@@ -19,7 +19,7 @@
  */
 
 #include <stddef.h>
-#include <list.h>
+#include <collection/list.h>
 
 /**
  * @brief Search a list item by data
@@ -40,7 +40,7 @@ list_item_ptr_t list_lookup_data( list_manager_ptr_t list, void* data ) {
 
   // loop through list until end
   while ( NULL != current ) {
-    if ( data == current->data ) {
+    if ( 0 == list->lookup( current, data ) ) {
       return current;
     }
     // check next one

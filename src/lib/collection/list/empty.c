@@ -19,7 +19,7 @@
  */
 
 #include <stddef.h>
-#include <list.h>
+#include <collection/list.h>
 
 /**
  * @brief Method checks for list is empty

@@ -18,8 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_AVL__ )
-#define __LIB_AVL__
+#if ! defined( __LIB_COLLECTION_AVL__ )
+#define __LIB_COLLECTION_AVL__
 
 #include <stdint.h>
 #include <stddef.h>
@@ -38,6 +38,9 @@ typedef int32_t ( *avl_lookup_func_t )(
   const avl_node_ptr_t avl_a,
   const void* data
 );
+typedef void ( *avl_cleanup_func_t )(
+  const avl_node_ptr_t avl_a
+);
 
 typedef struct avl_node {
   void *data;
@@ -49,6 +52,8 @@ typedef struct avl_node {
 typedef struct avl_tree {
   avl_node_ptr_t root;
   avl_compare_func_t compare;
+  avl_lookup_func_t lookup;
+  avl_cleanup_func_t cleanup;
 } avl_tree_t, *avl_tree_ptr_t;
 
 avl_node_ptr_t avl_get_max( const avl_node_ptr_t );
@@ -58,16 +63,18 @@ void avl_prepare_node( avl_node_ptr_t, void* );
 
 avl_node_ptr_t avl_find_by_data( const avl_tree_ptr_t, void* );
 avl_node_ptr_t avl_find_parent_by_data( const avl_tree_ptr_t, void* );
-avl_node_ptr_t avl_find_by_value( const avl_tree_ptr_t, void*, avl_lookup_func_t );
 void avl_remove_by_data( const avl_tree_ptr_t, void* );
 
 bool avl_insert_by_node( const avl_tree_ptr_t, avl_node_ptr_t );
 void avl_remove_by_node( const avl_tree_ptr_t, avl_node_ptr_t );
 
-avl_tree_ptr_t avl_create_tree( avl_compare_func_t );
+avl_tree_ptr_t avl_create_tree( avl_compare_func_t, avl_lookup_func_t, avl_cleanup_func_t );
 avl_node_ptr_t avl_create_node( void* );
 void avl_destroy_tree( avl_tree_ptr_t );
 
 avl_node_ptr_t balance( avl_node_ptr_t );
+
+int32_t avl_default_lookup( const avl_node_ptr_t a, const void* );
+void avl_default_cleanup( const avl_node_ptr_t );
 
 #endif

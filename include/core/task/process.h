@@ -22,8 +22,8 @@
 #define __CORE_TASK_PROCESS__
 
 #include <stddef.h>
-#include <avl.h>
-#include <list.h>
+#include <collection/avl.h>
+#include <collection/list.h>
 #include <core/mm/virt.h>
 #include <core/mm/shared.h>
 #include <core/event.h>

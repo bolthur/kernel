@@ -92,7 +92,7 @@ task_stack_manager_ptr_t task_stack_manager_create( void ) {
   // prepare
   memset( ( void* )manager, 0, sizeof( task_stack_manager_t ) );
   // create tree
-  manager->tree = avl_create_tree( task_stack_callback );
+  manager->tree = avl_create_tree( task_stack_callback, NULL, NULL );
   if ( NULL == manager->tree ) {
     free( manager );
     return NULL;

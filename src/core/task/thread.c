@@ -121,7 +121,7 @@ void task_thread_reset_current( void ) {
  * @return avl_tree_ptr_t
  */
 avl_tree_ptr_t task_thread_init( void ) {
-  return avl_create_tree( thread_compare_id_callback );
+  return avl_create_tree( thread_compare_id_callback, NULL, NULL );
 }
 
 /**

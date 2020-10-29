@@ -44,7 +44,7 @@ bool debug_breakpoint_init( void ) {
     return true;
   }
   // setup list
-  debug_breakpoint_manager = list_construct();
+  debug_breakpoint_manager = list_construct( NULL, NULL );
   return NULL != debug_breakpoint_manager;
 }
 

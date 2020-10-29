@@ -18,7 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <avl.h>
+#include <collection/avl.h>
 
 /**
  * @brief Calculate node height

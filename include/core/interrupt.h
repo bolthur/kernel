@@ -22,8 +22,8 @@
 #define __CORE_INTERRUPT__
 
 #include <assert.h>
-#include <avl.h>
-#include <list.h>
+#include <collection/avl.h>
+#include <collection/list.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>

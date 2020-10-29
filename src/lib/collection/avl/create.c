@@ -20,15 +20,53 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <avl.h>
+#include <collection/avl.h>
+
+/**
+ * @brief Default lookup if not passed during creation
+ *
+ * @param a
+ * @param b
+ * @return int32_t
+ */
+int32_t avl_default_lookup(
+  const avl_node_ptr_t a,
+  const void* b
+) {
+  if ( a->data == b ) {
+    return 0;
+  }
+
+  return a->data > b
+    ? -1
+    : 1;
+}
+
+/**
+ * @brief Default cleanup if not passed during creation
+ *
+ * @param a
+ */
+void avl_default_cleanup(
+  const avl_node_ptr_t a
+) {
+  // free structure
+  free( a );
+}
 
 /**
  * @brief Helper to create new tree
  *
  * @param compare compare function to be used within tree
+ * @param lookup
+ * @param cleanup
  * @return avl_tree_ptr_t pointer to new tree
  */
-avl_tree_ptr_t avl_create_tree( avl_compare_func_t compare ) {
+avl_tree_ptr_t avl_create_tree(
+  avl_compare_func_t compare,
+  avl_lookup_func_t lookup,
+  avl_cleanup_func_t cleanup
+) {
   // allocate new tree structure
   avl_tree_ptr_t tree = ( avl_tree_ptr_t )malloc( sizeof( avl_tree_t ) );
   // check malloc return
@@ -41,6 +79,18 @@ avl_tree_ptr_t avl_create_tree( avl_compare_func_t compare ) {
   // fill structure itself
   tree->root = NULL;
   tree->compare = compare;
+  // lookup function
+  if( NULL != lookup ) {
+    tree->lookup = lookup;
+  } else {
+    tree->lookup = avl_default_lookup;
+  }
+  // cleanup function
+  if( NULL != cleanup ) {
+    tree->cleanup = cleanup;
+  } else {
+    tree->cleanup = avl_default_cleanup;
+  }
 
   // return created tree
   return tree;

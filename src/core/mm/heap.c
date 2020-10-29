@@ -22,7 +22,7 @@
 #include <stddef.h>
 #include <assert.h>
 #include <string.h>
-#include <avl.h>
+#include <collection/avl.h>
 #include <core/debug/debug.h>
 #include <core/panic.h>
 #include <core/mm/phys.h>
@@ -652,8 +652,16 @@ void heap_init( heap_init_state_t state ) {
   #endif
   // populate trees
   heap->free_address[ state ].compare = compare_address_callback;
+  heap->free_address[ state ].lookup = avl_default_lookup;
+  heap->free_address[ state ].cleanup = avl_default_cleanup;
+
   heap->used_area[ state ].compare = compare_address_callback;
+  heap->used_area[ state ].lookup = avl_default_lookup;
+  heap->used_area[ state ].cleanup = avl_default_cleanup;
+
   heap->free_size[ state ].compare = compare_size_callback;
+  heap->free_size[ state ].lookup = avl_default_lookup;
+  heap->free_size[ state ].cleanup = avl_default_cleanup;
 
   // create free block
   heap_block_ptr_t free_block = ( heap_block_ptr_t )( start + offset );

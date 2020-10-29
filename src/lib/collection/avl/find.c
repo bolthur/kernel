@@ -18,65 +18,40 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <avl.h>
+#include <collection/avl.h>
 
 /**
  * @brief Helper to find node within tree
  *
  * @param data data to lookup for
  * @param root root node
+ * @param tree
  * @return avl_node_ptr_t
  */
 static avl_node_ptr_t find_by_data(
   void* data,
-  avl_node_ptr_t root
-) {
-  // end point
-  if ( root == NULL ) {
-    return NULL;
-  }
-
-  // continue left
-  if ( root->data > data ) {
-    return find_by_data( data, root->left );
-  // continue right
-  } else if ( data > root->data ) {
-    return find_by_data( data, root->right );
-  }
-
-  // generic else case: found node is the wanted one
-  return root;
-}
-
-/**
- * @brief Helper to find node within tree
- *
- * @param data data to lookup for
- * @param root root node
- * @param compare compare function
- * @return avl_node_ptr_t
- */
-static avl_node_ptr_t find_by_value(
-  void* data,
   avl_node_ptr_t root,
-  avl_lookup_func_t compare
+  avl_tree_ptr_t tree
 ) {
   // end point
   if ( root == NULL ) {
     return NULL;
   }
 
-  int32_t result = compare( root, data );
+  // check result
+  int32_t result = tree->lookup( root, data );
+  // handle match
+  if ( 0 == result ) {
+    return root;
+  }
+
   // continue left
   if ( -1 == result ) {
-    return find_by_value( data, root->left, compare );
+    return find_by_data( data, root->left, tree );
   // continue right
-  } else if ( 1 == result ) {
-    return find_by_value( data, root->right, compare );
+  } else {
+    return find_by_data( data, root->right, tree );
   }
-
-  // generic else case: found node is the wanted one
-  return root;
 }
 
 /**
@@ -88,7 +63,8 @@ static avl_node_ptr_t find_by_value(
  */
 static avl_node_ptr_t find_parent_by_data(
   void* data,
-  avl_node_ptr_t root
+  avl_node_ptr_t root,
+  avl_tree_ptr_t tree
 ) {
   // end point
   if ( root == NULL ) {
@@ -98,7 +74,7 @@ static avl_node_ptr_t find_parent_by_data(
   // matching node left?
   if (
       NULL != root->left
-      && root->left->data == data
+      && 0 == tree->lookup( root->left, data )
   ) {
     return root;
   }
@@ -106,17 +82,19 @@ static avl_node_ptr_t find_parent_by_data(
   // matching node right?
   if (
     NULL != root->right
-    && root->right->data == data
+    && tree->compare( root->right, data )
   ) {
     return root;
   }
 
+  int32_t result = tree->compare( root, data );
+
   // continue left
-  if ( root->data > data ) {
-    return find_parent_by_data( data, root->left );
+  if ( -1 == result ) {
+    return find_parent_by_data( data, root->left, tree );
   // continue right
-  } else if ( data > root->data ) {
-    return find_parent_by_data( data, root->right );
+  } else if ( 1 == result ) {
+    return find_parent_by_data( data, root->right, tree );
   }
 
   // generic else case: found node is the wanted one
@@ -124,14 +102,14 @@ static avl_node_ptr_t find_parent_by_data(
 }
 
 /**
- * @brief Find an avl node within treee
+ * @brief Find an avl node within tree
  *
  * @param tree tree to search
  * @param data data to lookup
  * @return avl_node_ptr_t found node or NULL
  */
 avl_node_ptr_t avl_find_by_data( const avl_tree_ptr_t tree, void* data ) {
-  return find_by_data( data, tree->root );
+  return find_by_data( data, tree->root, tree );
 }
 
 /**
@@ -141,20 +119,5 @@ avl_node_ptr_t avl_find_by_data( const avl_tree_ptr_t tree, void* data ) {
  * @param data data to lookup
  */
 avl_node_ptr_t avl_find_parent_by_data( const avl_tree_ptr_t tree, void* data ) {
-  return find_parent_by_data( data, tree->root );
-}
-
-/**
- * @brief Find by value with callback
- *
- * @param tree tree to work on
- * @param data data to lookup
- * @param compare comparison callback
- */
-avl_node_ptr_t avl_find_by_value(
-  const avl_tree_ptr_t tree,
-  void* value,
-  avl_lookup_func_t compare
-) {
-  return find_by_value( value, tree->root, compare );
+  return find_parent_by_data( data, tree->root, tree );
 }

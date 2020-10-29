@@ -22,8 +22,8 @@
 #define __CORE_TASK_QUEUE__
 
 #include <stddef.h>
-#include <avl.h>
-#include <list.h>
+#include <collection/avl.h>
+#include <collection/list.h>
 #include <core/task/thread.h>
 #include <core/task/process.h>
 

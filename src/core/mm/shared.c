@@ -19,7 +19,7 @@
  */
 
 #include <stdlib.h>
-#include <avl.h>
+#include <collection/avl.h>
 #include <string.h>
 #include <core/panic.h>
 #include <core/mm/phys.h>
@@ -250,10 +250,18 @@ static shared_memory_entry_mapped_ptr_t create_mapped(
 static bool prepare_process( task_process_ptr_t process ) {
   // create tree if necessary
   if ( NULL == process->shared_memory_entry ) {
-    process->shared_memory_entry = avl_create_tree( compare_entry );
+    process->shared_memory_entry = avl_create_tree(
+      compare_entry,
+      lookup_entry,
+      NULL
+    );
   }
   if ( NULL == process->shared_memory_mapped ) {
-    process->shared_memory_mapped = avl_create_tree( compare_mapped );
+    process->shared_memory_mapped = avl_create_tree(
+      compare_mapped,
+      lookup_mapped,
+      NULL
+    );
   }
   // check for error
   if (
@@ -274,7 +282,11 @@ static bool prepare_process( task_process_ptr_t process ) {
  * @return false
  */
 bool shared_init( void ) {
-  shared_tree = avl_create_tree( compare_entry );
+  shared_tree = avl_create_tree(
+    compare_entry,
+    lookup_entry,
+    NULL
+  );
   return NULL != shared_tree;
 }
 
@@ -293,10 +305,9 @@ bool shared_memory_create( const char* name, size_t size ) {
   }
 
   // try to find node
-  avl_node_ptr_t node = avl_find_by_value(
+  avl_node_ptr_t node = avl_find_by_data(
     shared_tree,
-    ( void* )name,
-    lookup_entry
+    ( void* )name
   );
   // skip if name is already in use
   if ( NULL != node ) {
@@ -337,28 +348,25 @@ uintptr_t shared_memory_acquire( task_process_ptr_t process, const char* name ) 
   }
 
   // try to get item by name
-  avl_node_ptr_t node = avl_find_by_value(
+  avl_node_ptr_t node = avl_find_by_data(
     shared_tree,
-    ( void* )name,
-    lookup_entry
+    ( void* )name
   );
   // handle missing
   if ( NULL == node ) {
     return 0;
   }
   // try to get item by name from process
-  avl_node_ptr_t process_node = avl_find_by_value(
+  avl_node_ptr_t process_node = avl_find_by_data(
     process->shared_memory_entry,
-    ( void* )name,
-    lookup_entry
+    ( void* )name
   );
   // handle already attached
   if ( NULL != process_node ) {
     // get mapped entry
-    avl_node_ptr_t mapped_node = avl_find_by_value(
+    avl_node_ptr_t mapped_node = avl_find_by_data(
       process->shared_memory_mapped,
-      ( void* )name,
-      lookup_mapped
+      ( void* )name
     );
     // handle error
     if ( NULL == mapped_node ) {
@@ -471,10 +479,9 @@ bool shared_memory_release( task_process_ptr_t process, const char* name ) {
   }
 
   // get item by name
-  avl_node_ptr_t node = avl_find_by_value(
+  avl_node_ptr_t node = avl_find_by_data(
     shared_tree,
-    ( void* )name,
-    lookup_entry
+    ( void* )name
   );
   // handle missing
   if ( NULL == node ) {
@@ -482,10 +489,9 @@ bool shared_memory_release( task_process_ptr_t process, const char* name ) {
   }
 
   // get mapped item
-  avl_node_ptr_t mapped = avl_find_by_value(
+  avl_node_ptr_t mapped = avl_find_by_data(
     process->shared_memory_mapped,
-    ( void* )name,
-    lookup_mapped
+    ( void* )name
   );
   if ( NULL == mapped ) {
     return false;

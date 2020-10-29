@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <avl.h>
+#include <collection/avl.h>
 
 /**
  * @brief Helper to remove by node

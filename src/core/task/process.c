@@ -86,7 +86,7 @@ bool task_process_init( void ) {
 
   // create tree for managing processes by id
   process_manager->tree_process_id = avl_create_tree(
-    process_compare_id_callback );
+    process_compare_id_callback, NULL, NULL );
   // handle error
   if ( NULL == process_manager->tree_process_id ) {
     free( process_manager );

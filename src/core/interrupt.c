@@ -20,7 +20,7 @@
 
 #include <stddef.h>
 
-#include <avl.h>
+#include <collection/avl.h>
 #include <string.h>
 #include <stdlib.h>
 #include <core/panic.h>
@@ -88,14 +88,14 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
     memset( ( void* )interrupt_manager, 0, sizeof( interrupt_manager_t ) );
     // create trees for interrupt types
     interrupt_manager->normal_interrupt = avl_create_tree(
-      compare_interrupt_callback );
+      compare_interrupt_callback, NULL, NULL );
     // check allocation
     if ( NULL == interrupt_manager->normal_interrupt ) {
       free( interrupt_manager );
       return NULL;
     }
     interrupt_manager->fast_interrupt = avl_create_tree(
-      compare_interrupt_callback );
+      compare_interrupt_callback, NULL, NULL );
     // check allocation
     if ( NULL == interrupt_manager->fast_interrupt ) {
       free( interrupt_manager->normal_interrupt );
@@ -103,7 +103,7 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
       return NULL;
     }
     interrupt_manager->software_interrupt = avl_create_tree(
-      compare_interrupt_callback );
+      compare_interrupt_callback, NULL, NULL );
     // check allocation
     if ( NULL == interrupt_manager ) {
       free( interrupt_manager->normal_interrupt );
@@ -318,13 +318,13 @@ bool interrupt_register_handler(
     #endif
     // populate block
     block->interrupt = num;
-    block->handler = list_construct();
+    block->handler = list_construct( NULL, NULL );
     // check list
     if ( NULL == block->handler ) {
       free( block );
       return false;
     }
-    block->post = list_construct();
+    block->post = list_construct( NULL, NULL );
     // check list
     if ( NULL == block->post ) {
       free( block->handler );

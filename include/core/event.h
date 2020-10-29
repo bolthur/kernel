@@ -22,8 +22,8 @@
 #define __CORE_EVENT__
 
 #include <stdbool.h>
-#include <list.h>
-#include <avl.h>
+#include <collection/list.h>
+#include <collection/avl.h>
 #include <core/stack.h>
 
 #define EVENT_DETERMINE_ORIGIN( o ) \

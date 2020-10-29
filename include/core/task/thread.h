@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdnoreturn.h>
-#include <avl.h>
+#include <collection/avl.h>
 
 typedef struct process task_process_t, *task_process_ptr_t;
 typedef struct task_priority_queue task_priority_queue_t, *task_priority_queue_ptr_t;

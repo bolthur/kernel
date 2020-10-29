@@ -20,7 +20,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <list.h>
+#include <collection/list.h>
 
 /**
  * @brief Method to pop element from list
@@ -60,7 +60,7 @@ void* list_pop_front( list_manager_ptr_t list ) {
   }
 
   // free first element
-  free( ( void* )first );
+  list->cleanup( first );
   // return set data
   return data;
 }
@@ -103,7 +103,7 @@ void* list_pop_back( list_manager_ptr_t list ) {
   }
 
   // free first element
-  free( ( void* )last );
+  list->cleanup( last );
   // return set data
   return data;
 }

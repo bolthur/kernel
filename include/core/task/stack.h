@@ -21,7 +21,7 @@
 #if ! defined( __CORE_TASK_STACK__ )
 #define __CORE_TASK_STACK__
 
-#include <avl.h>
+#include <collection/avl.h>
 #include <core/task/process.h>
 typedef struct task_stack_manager {
   avl_tree_ptr_t tree;
