@@ -135,7 +135,7 @@ void debug_gdb_init( void ) {
 
   // setup debug traps
   DEBUG_OUTPUT( "Setup debug traps\r\n" );
-  assert( debug_gdb_set_trap() );
+  debug_gdb_set_trap();
 
   // synchronize
   DEBUG_OUTPUT( "Synchronize with remote GDB\r\n" );
@@ -233,18 +233,13 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
 /**
  * @brief Setup gdb debug traps
  */
-bool debug_gdb_set_trap( void ) {
+void debug_gdb_set_trap( void ) {
   // register debug event
-  if ( ! event_bind( EVENT_DEBUG, debug_gdb_handle_event, false ) ) {
-    return false;
-  }
+  assert( event_bind( EVENT_DEBUG, debug_gdb_handle_event, false ) );
   // register serial event
-  if ( ! event_bind( EVENT_SERIAL, debug_gdb_serial_event, false ) ) {
-    return false;
-  }
+  assert( event_bind( EVENT_SERIAL, debug_gdb_serial_event, false ) );
   // set initialized
   stub_initialized = true;
-  return true;
 }
 
 /**
@@ -273,7 +268,7 @@ void debug_gdb_packet_send( uint8_t* p ) {
     packet_checksum = 0;
     count = 0;
     // send and calculate checksum
-    while ( NULL != p && ( ch = p[ count ] ) ) {
+    while ( p && ( ch = p[ count ] ) ) {
       serial_putc( ch );
       packet_checksum = ( uint8_t )( ( int )packet_checksum + ch );
       count++;

@@ -73,7 +73,7 @@ task_priority_queue_ptr_t task_queue_get_queue(
   size_t priority
 ) {
   // check parameter
-  if ( NULL == manager ) {
+  if ( ! manager ) {
     return NULL;
   }
   // debug output
@@ -91,12 +91,12 @@ task_priority_queue_ptr_t task_queue_get_queue(
     DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
   #endif
   // handle not yet added
-  if ( NULL == node ) {
+  if ( ! node ) {
     // allocate block
     queue = ( task_priority_queue_ptr_t )malloc(
       sizeof( task_priority_queue_t ) );
     // check parameter
-    if ( NULL == queue ) {
+    if ( ! queue ) {
       return NULL;
     }
     // prepare memory

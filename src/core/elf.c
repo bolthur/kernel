@@ -36,7 +36,7 @@ bool elf_check( uintptr_t elf ) {
   Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
 
   // handle invalid
-  if ( NULL == header ) {
+  if ( ! header ) {
     // debug output
     #if defined ( PRINT_ELF )
       DEBUG_OUTPUT( "Invalid parameter!\r\n" );

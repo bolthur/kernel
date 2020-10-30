@@ -114,7 +114,7 @@ static int print(
   // handle possible prefix
   while( *prefix != '\0' ) {
     // write to buffer
-    if ( NULL != buffer ) {
+    if ( buffer ) {
       *buffer++ = *prefix;
     // put character without buffer
     } else if ( putchar( *prefix ) == EOF ) {
@@ -130,7 +130,7 @@ static int print(
     char c = zero_padding ? '0' : ' ';
 
     // write to buffer
-    if ( NULL != buffer ) {
+    if ( buffer ) {
       *buffer++ = c;
     // put character without buffer
     } else if ( putchar( c ) == EOF ) {
@@ -144,7 +144,7 @@ static int print(
   // print data
   for ( size_t i = 0; i < length; i++ ) {
     // write to buffer
-    if ( NULL != buffer ) {
+    if ( buffer ) {
       *buffer++ = bytes[ i ];
     // put character without buffer
     } else if ( putchar( bytes[ i ] ) == EOF ) {
@@ -199,7 +199,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       // increase format and written
       format += print_written;
       written += ( uint32_t )print_written;
-      if ( NULL != buffer ) {
+      if ( buffer ) {
         buffer += print_written;
       }
       continue;
@@ -288,7 +288,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       }
       // increase written
       written += ( uint32_t )print_written;
-      if ( NULL != buffer ) {
+      if ( buffer ) {
         buffer += print_written;
       }
     // string handling
@@ -296,7 +296,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       // get string to print and string length
       const char* str = va_arg( parameter, const char* );
       // set str to value if not set
-      if ( NULL == str ) {
+      if ( ! str ) {
         str = "( null )";
       }
       // determine string length
@@ -308,7 +308,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       }
       // increase written count
       written += ( uint32_t )print_written;
-      if ( NULL != buffer ) {
+      if ( buffer ) {
         buffer += print_written;
       }
     } else if (
@@ -411,7 +411,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       }
       // increase written and format
       written += ( uint32_t )print_written;
-      if ( NULL != buffer ) {
+      if ( buffer ) {
         buffer += print_written;
       }
     } else {
@@ -426,7 +426,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       // increase written and format
       written += ( uint32_t )print_written;
       format += print_written;
-      if ( NULL != buffer ) {
+      if ( buffer ) {
         buffer += print_written;
       }
     }

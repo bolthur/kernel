@@ -65,7 +65,7 @@ list_manager_ptr_t list_construct(
   // allocate list
   list = ( list_manager_ptr_t )malloc( sizeof( list_manager_t ) );
   // handle error
-  if ( NULL == list ) {
+  if ( ! list ) {
     return NULL;
   }
   // overwrite with zero
@@ -75,13 +75,13 @@ list_manager_ptr_t list_construct(
   list->first = NULL;
   list->last = NULL;
   // lookup function
-  if( NULL != lookup ) {
+  if( lookup ) {
     list->lookup = lookup;
   } else {
     list->lookup = list_default_lookup;
   }
   // cleanup function
-  if( NULL != cleanup ) {
+  if( cleanup ) {
     list->cleanup = cleanup;
   } else {
     list->cleanup = list_default_cleanup;

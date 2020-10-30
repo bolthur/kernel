@@ -70,7 +70,7 @@ avl_tree_ptr_t avl_create_tree(
   // allocate new tree structure
   avl_tree_ptr_t tree = ( avl_tree_ptr_t )malloc( sizeof( avl_tree_t ) );
   // check malloc return
-  if ( NULL == tree ) {
+  if ( ! tree ) {
     return NULL;
   }
   // prepare structure
@@ -80,13 +80,13 @@ avl_tree_ptr_t avl_create_tree(
   tree->root = NULL;
   tree->compare = compare;
   // lookup function
-  if( NULL != lookup ) {
+  if( lookup ) {
     tree->lookup = lookup;
   } else {
     tree->lookup = avl_default_lookup;
   }
   // cleanup function
-  if( NULL != cleanup ) {
+  if( cleanup ) {
     tree->cleanup = cleanup;
   } else {
     tree->cleanup = avl_default_cleanup;
@@ -105,7 +105,7 @@ avl_node_ptr_t avl_create_node( void* data ) {
   // allocate node
   avl_node_ptr_t node = ( avl_node_ptr_t )malloc( sizeof( avl_node_t ) );
   // check malloc return
-  if ( NULL == node ) {
+  if ( ! node ) {
     return NULL;
   }
   // prepare data

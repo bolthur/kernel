@@ -27,7 +27,7 @@
 #include <core/stack.h>
 
 #define EVENT_DETERMINE_ORIGIN( o ) \
-  ( o == NULL || ! stack_is_kernel( ( uintptr_t )o ) ) \
+  ( ! o || ! stack_is_kernel( ( uintptr_t )o ) ) \
     ? EVENT_ORIGIN_USER : EVENT_ORIGIN_KERNEL
 
 typedef enum {

@@ -29,14 +29,14 @@
  */
 bool list_empty( list_manager_ptr_t list ) {
   // check parameter
-  if ( NULL == list ) {
+  if ( ! list ) {
     return true;
   }
 
   // check first and last item
   if (
-    NULL == list->first
-    && NULL == list->last
+    ! list->first
+    && ! list->last
   ) {
     // list empty
     return true;

@@ -447,7 +447,7 @@ uint64_t v7_short_create_table(
     sd_context_total_t* context = ( sd_context_total_t* )map_temporary(
       ( uintptr_t )ctx->context, SD_TTBR_SIZE_4G
     );
-    if ( NULL == context ) {
+    if ( ! context ) {
       return 0;
     }
 
@@ -516,7 +516,7 @@ uint64_t v7_short_create_table(
       ( uintptr_t )ctx->context, SD_TTBR_SIZE_2G
     );
     // handle error
-    if ( NULL == context ) {
+    if ( ! context ) {
       return 0;
     }
 
@@ -604,7 +604,7 @@ bool v7_short_map(
     )
   );
   // handle error
-  if ( NULL == table ) {
+  if ( ! table ) {
     return false;
   }
 
@@ -615,7 +615,7 @@ bool v7_short_map(
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
   // handle error
-  if ( NULL == table ) {
+  if ( ! table ) {
     return false;
   }
 
@@ -740,14 +740,14 @@ bool v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
     ( uintptr_t )v7_short_create_table( ctx, vaddr, 0 )
   );
   // handle error
-  if ( NULL == table ) {
+  if ( ! table ) {
     return false;
   }
 
    // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
   // return error
-  if ( NULL == table ) {
+  if ( ! table ) {
     return false;
   }
 
@@ -993,7 +993,7 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
     sizeof( virt_context_t )
   );
   // handle error
-  if ( NULL == context ) {
+  if ( ! context ) {
     // unmap temporary
     unmap_temporary( ( uintptr_t )ctx, size );
     // free stuff
@@ -1083,7 +1083,7 @@ bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
   sd_page_table_t* table = ( sd_page_table_t* )(
     ( uintptr_t )v7_short_create_table( ctx, addr, 0 ) );
   // handle error
-  if ( NULL == table ) {
+  if ( ! table ) {
     return false;
   }
   // debug output
@@ -1093,7 +1093,7 @@ bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
   // not mapped if null
-  if ( NULL == table ) {
+  if ( ! table ) {
     return false;
   }
 

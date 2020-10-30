@@ -34,7 +34,7 @@ bool list_push_front( list_manager_ptr_t list, void* data ) {
   list_item_ptr_t first, node;
 
   // handle invalid paramter
-  if ( NULL == list || NULL == data ) {
+  if ( ! list || ! data ) {
     return false;
   }
   // set list head
@@ -43,21 +43,21 @@ bool list_push_front( list_manager_ptr_t list, void* data ) {
   // create new node
   node = list_node_create( data );
   // handle error
-  if ( NULL == node ) {
+  if ( ! node ) {
     return false;
   }
 
   // set next to first
   node->next = first;
   // set previous for first element
-  if ( NULL != first ) {
+  if ( first ) {
     first->previous = node;
   }
 
   // overwrite first element within list pointer
   list->first = node;
   // set last element if NULL
-  if ( NULL == list->last ) {
+  if ( ! list->last ) {
     list->last = list->first;
   }
 
@@ -76,7 +76,7 @@ bool list_push_front_node( list_manager_ptr_t list, list_item_ptr_t node ) {
   list_item_ptr_t first;
 
   // handle invalid paramter
-  if ( NULL == list || NULL == node ) {
+  if ( ! list || ! node ) {
     return false;
   }
   // set list head
@@ -85,14 +85,14 @@ bool list_push_front_node( list_manager_ptr_t list, list_item_ptr_t node ) {
   // set next to first
   node->next = first;
   // set previous for first element
-  if ( NULL != first ) {
+  if ( first ) {
     first->previous = node;
   }
 
   // overwrite first element within list pointer
   list->first = node;
   // set last element if NULL
-  if ( NULL == list->last ) {
+  if ( ! list->last ) {
     list->last = list->first;
   }
 
@@ -111,7 +111,7 @@ bool list_push_back( list_manager_ptr_t list, void* data ) {
   list_item_ptr_t last, node;
 
   // handle invalid paramter
-  if ( NULL == list || NULL == data ) {
+  if ( ! list || ! data ) {
     return false;
   }
   // set list head
@@ -120,21 +120,21 @@ bool list_push_back( list_manager_ptr_t list, void* data ) {
   // create new node
   node = list_node_create( data );
   // handle error
-  if ( NULL == node ) {
+  if ( ! node ) {
     return false;
   }
 
   // set previous to last
   node->previous = last;
   // set next for last element
-  if ( NULL != last ) {
+  if ( last ) {
     last->next = node;
   }
 
   // overwrite last element within list pointer
   list->last = node;
   // set first element if NULL
-  if ( NULL == list->first ) {
+  if ( ! list->first ) {
     list->first = list->last;
   }
 
@@ -152,7 +152,7 @@ bool list_push_back( list_manager_ptr_t list, void* data ) {
 bool list_push_back_node( list_manager_ptr_t list, list_item_ptr_t node ) {
   list_item_ptr_t last;
   // handle invalid paramter
-  if ( NULL == list || NULL == node ) {
+  if ( ! list || ! node ) {
     return false;
   }
 
@@ -162,14 +162,14 @@ bool list_push_back_node( list_manager_ptr_t list, list_item_ptr_t node ) {
   // set previous to last
   node->previous = last;
   // set next for last element
-  if ( NULL != last ) {
+  if ( last ) {
     last->next = node;
   }
 
   // overwrite last element within list pointer
   list->last = node;
   // set first element if NULL
-  if ( NULL == list->first ) {
+  if ( ! list->first ) {
     list->first = list->last;
   }
 

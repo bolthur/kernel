@@ -33,6 +33,10 @@
  * @return void* reserved memory
  */
 void* aligned_alloc( size_t alignment, size_t size ) {
+  // standard conformance
+  if ( 0 == size ) {
+    return NULL;
+  }
   // use heap allocation
   return ( void* )heap_allocate_block( alignment, size );
 }

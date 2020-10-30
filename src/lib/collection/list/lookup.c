@@ -32,14 +32,14 @@ list_item_ptr_t list_lookup_data( list_manager_ptr_t list, void* data ) {
   list_item_ptr_t current;
 
   // check parameter
-  if ( NULL == list ) {
+  if ( ! list ) {
     return NULL;
   }
   // populate current
   current = list->first;
 
   // loop through list until end
-  while ( NULL != current ) {
+  while ( current ) {
     if ( 0 == list->lookup( current, data ) ) {
       return current;
     }
@@ -62,7 +62,7 @@ list_item_ptr_t list_lookup_item( list_manager_ptr_t list, list_item_ptr_t item 
   list_item_ptr_t current;
 
   // check parameter
-  if ( NULL == list ) {
+  if ( ! list ) {
     return NULL;
   }
   // populate current
@@ -70,7 +70,7 @@ list_item_ptr_t list_lookup_item( list_manager_ptr_t list, list_item_ptr_t item 
 
 
   // loop through list until end
-  while ( NULL != current ) {
+  while ( current ) {
     if ( item == current ) {
       return current;
     }

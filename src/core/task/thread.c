@@ -89,7 +89,7 @@ bool task_thread_set_current(
   task_priority_queue_ptr_t queue
 ) {
   // check parameter
-  if ( NULL == thread || NULL == queue ) {
+  if ( ! thread || ! queue ) {
     return false;
   }
   // set current thread
@@ -108,7 +108,7 @@ void task_thread_reset_current( void ) {
   // reset queue
   task_process_queue_reset();
   // set state
-  if ( NULL != task_thread_current_thread ) {
+  if ( task_thread_current_thread ) {
     task_thread_current_thread->state = TASK_THREAD_STATE_READY;
   }
   // unset current thread
@@ -140,7 +140,7 @@ void task_thread_destroy( avl_tree_ptr_t tree ) {
  */
 task_thread_ptr_t task_thread_next( void ) {
   // check process manager
-  if ( NULL == process_manager ) {
+  if ( ! process_manager ) {
     return NULL;
   }
 
@@ -159,14 +159,14 @@ task_thread_ptr_t task_thread_next( void ) {
   #endif
 
   // get nodes from min/max
-  if ( NULL != min ) {
+  if ( min ) {
     min_queue = TASK_QUEUE_GET_PRIORITY( min );
   }
-  if ( NULL != max ) {
+  if ( max ) {
     max_queue = TASK_QUEUE_GET_PRIORITY( max );
   }
   // handle no min or no max queue
-  if ( NULL == min_queue || NULL == max_queue ) {
+  if ( ! min_queue || ! max_queue ) {
     return NULL;
   }
 
@@ -181,7 +181,7 @@ task_thread_ptr_t task_thread_next( void ) {
       process_manager->thread_priority_tree,
       ( void* )priority );
     // skip if not existing
-    if ( NULL == current_node ) {
+    if ( ! current_node ) {
       // prevent endless loop by checking against 0
       if ( 0 == priority ) {
         break;
@@ -214,12 +214,12 @@ task_thread_ptr_t task_thread_next( void ) {
         ( void* )current->last_handled );
     #endif
     // handle already executed entry
-    if ( current->last_handled != NULL ) {
+    if ( current->last_handled ) {
       // try to find element in list
       item = list_lookup_data(
         current->thread_list, ( void* )current->last_handled );
       // check return
-      if ( NULL == item ) {
+      if ( ! item ) {
         // prevent endless loop by checking against 0
         if ( 0 == priority ) {
           break;
@@ -236,7 +236,7 @@ task_thread_ptr_t task_thread_next( void ) {
     }
 
     // get next ready task
-    while ( NULL != item ) {
+    while ( item ) {
       // get task object
       task_thread_ptr_t task = ( task_thread_ptr_t )item->data;
       // check for ready
@@ -251,7 +251,7 @@ task_thread_ptr_t task_thread_next( void ) {
     }
 
     // skip if nothing is existing after last handled
-    if ( NULL == item ) {
+    if ( ! item ) {
       // prevent endless loop by checking against 0
       if ( 0 == priority ) {
         break;
@@ -263,6 +263,5 @@ task_thread_ptr_t task_thread_next( void ) {
     return ( task_thread_ptr_t )item->data;
   }
 
-  // return NULL
   return NULL;
 }

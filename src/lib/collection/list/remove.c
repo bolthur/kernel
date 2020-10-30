@@ -32,21 +32,21 @@
  */
 bool list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
   // handle invalid parameter
-  if ( NULL == list || NULL == item ) {
+  if ( ! list || ! item ) {
     return false;
   }
   // stop if not existing
-  if ( NULL == list_lookup_item( list, item ) ) {
+  if ( ! list_lookup_item( list, item ) ) {
     return false;
   }
 
   // set previous of next
-  if ( NULL != item->next ) {
+  if ( item->next ) {
     item->next->previous = item->previous;
   }
 
   // set next of previous
-  if ( NULL != item->previous ) {
+  if ( item->previous ) {
     item->previous->next = item->next;
   }
 
@@ -74,23 +74,23 @@ bool list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
  */
 bool list_remove_data( list_manager_ptr_t list, void* data ) {
   // handle invalid parameter
-  if ( NULL == list || NULL == data ) {
+  if ( ! list || ! data ) {
     return false;
   }
 
   // stop if not existing
   list_item_ptr_t item = list_lookup_data( list, data );
-  if ( NULL == item ) {
+  if ( ! item ) {
     return false;
   }
 
   // set previous of next
-  if ( NULL != item->next ) {
+  if ( item->next ) {
     item->next->previous = item->previous;
   }
 
   // set next of previous
-  if ( NULL != item->previous ) {
+  if ( item->previous ) {
     item->previous->next = item->next;
   }
 

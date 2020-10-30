@@ -28,7 +28,7 @@
  */
 static int32_t height( avl_node_ptr_t node ) {
   // handle null value
-  if ( NULL == node ) {
+  if ( ! node ) {
     return 0;
   }
 
@@ -50,7 +50,7 @@ static int32_t height( avl_node_ptr_t node ) {
  */
 static int32_t balance_factor( avl_node_ptr_t node ) {
   // handle invalid node ( balanced )
-  if ( NULL == node ) {
+  if ( ! node ) {
     return 0;
   }
 

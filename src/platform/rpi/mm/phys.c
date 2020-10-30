@@ -112,7 +112,7 @@ bool phys_platform_init( void ) {
   phys_bitmap = ( uint32_t* )aligned_alloc(
     sizeof( phys_bitmap ),
     phys_bitmap_length * sizeof( uint32_t ) );
-  if ( NULL == phys_bitmap ) {
+  if ( ! phys_bitmap ) {
     return false;
   }
 

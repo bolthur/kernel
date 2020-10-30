@@ -75,7 +75,7 @@ task_thread_ptr_t task_thread_create(
   cpu_register_context_ptr_t current_context = ( cpu_register_context_ptr_t )malloc(
     sizeof( cpu_register_context_t ) );
   // handle error
-  if ( current_context == NULL ) {
+  if ( ! current_context ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
     return NULL;
   }
@@ -128,7 +128,7 @@ task_thread_ptr_t task_thread_create(
   task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
     sizeof( task_thread_t ) );
   // check allocation
-  if ( NULL == thread ) {
+  if ( ! thread ) {
     task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
     virt_unmap_address( process->virtual_context, stack_virtual, true );
     free( current_context );
@@ -165,7 +165,7 @@ task_thread_ptr_t task_thread_create(
   task_priority_queue_ptr_t queue = task_queue_get_queue(
     process_manager, priority );
   if (
-    NULL == queue
+    ! queue
     // add thread to thread list for switching
     || ! list_push_back( queue->thread_list, thread )
   ) {

@@ -33,21 +33,21 @@ void* list_pop_front( list_manager_ptr_t list ) {
   list_item_ptr_t first;
 
   // check parameter
-  if ( NULL == list ) {
+  if ( ! list ) {
     return NULL;
   }
   // get first element
   first = list->first;
 
   // handle empty list
-  if ( NULL == first ) {
+  if ( ! first ) {
     return NULL;
   }
 
   // cache data of first element
   data = first->data;
   // change previous of next element if existing
-  if ( NULL != first->next ) {
+  if ( first->next ) {
     // change previous
     first->next->previous = NULL;
   }
@@ -55,7 +55,7 @@ void* list_pop_front( list_manager_ptr_t list ) {
   // change list to next to remove first element from list
   list->first = first->next;
   // change last if no next element is existing
-  if ( NULL == list->first || NULL == list->first->next ) {
+  if ( ! list->first || ! list->first->next ) {
     list->last = list->first;
   }
 
@@ -76,21 +76,21 @@ void* list_pop_back( list_manager_ptr_t list ) {
   list_item_ptr_t last;
 
   // check parameter
-  if ( NULL == list ) {
+  if ( ! list ) {
     return NULL;
   }
   // get last element
   last = list->last;
 
   // handle empty list
-  if ( NULL == last ) {
+  if ( ! last ) {
     return NULL;
   }
 
   // cache data of first element
   data = last->data;
   // change next of previous element if existing
-  if ( NULL != last->previous ) {
+  if ( last->previous ) {
     // change previous
     last->previous->next = NULL;
   }
@@ -98,7 +98,7 @@ void* list_pop_back( list_manager_ptr_t list ) {
   // change list to next to remove first element from list
   list->last = last->previous;
   // change first if no next element is existing
-  if ( NULL == list->last || NULL == list->last->next ) {
+  if ( ! list->last || ! list->last->next ) {
     list->first = list->last;
   }
 

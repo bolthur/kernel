@@ -34,7 +34,7 @@ static avl_node_ptr_t insert(
   avl_node_ptr_t root
 ) {
   // handle empty root
-  if ( NULL == root ) {
+  if ( ! root ) {
     return node;
   }
 
@@ -60,7 +60,7 @@ static avl_node_ptr_t insert(
  */
 bool avl_insert_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
   // check parameter
-  if ( NULL == tree || NULL == node ) {
+  if ( ! tree || ! node ) {
     return false;
   }
   // insert and rebalance

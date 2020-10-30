@@ -459,7 +459,7 @@ uint64_t v7_long_create_table(
   ld_global_page_directory_t* context = ( ld_global_page_directory_t* )
     map_temporary( ctx->context, PAGE_SIZE );
   // handle error
-  if ( NULL == context ) {
+  if ( ! context ) {
     return 0;
   }
 
@@ -497,7 +497,7 @@ uint64_t v7_long_create_table(
   ld_middle_page_directory* pmd = ( ld_middle_page_directory* )
     map_temporary( LD_PHYSICAL_TABLE_ADDRESS( pmd_tbl->raw ), PAGE_SIZE );
   // handle error
-  if ( NULL == pmd ) {
+  if ( ! pmd ) {
     if ( l1table ) {
       // free table
       get_new_table( phys_l1table );
@@ -594,7 +594,7 @@ bool v7_long_map(
     table_phys, PAGE_SIZE
   );
   // check mapping
-  if ( NULL == table ) {
+  if ( ! table ) {
     return false;
   }
 
@@ -731,7 +731,7 @@ bool v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
     table_phys, PAGE_SIZE
   );
   // check table
-  if ( NULL == table ) {
+  if ( ! table ) {
     return false;
   }
 
@@ -985,7 +985,7 @@ virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
     sizeof( virt_context_t )
   );
   // handle error
-  if ( NULL == context ) {
+  if ( ! context ) {
     // unmap temporary
     unmap_temporary( ( uintptr_t )ctx, PAGE_SIZE );
     // free stuff
@@ -1072,7 +1072,7 @@ bool v7_long_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
   ld_page_table_t* table = ( ld_page_table_t* )map_temporary(
     table_phys, PAGE_SIZE );
   // handle error
-  if ( NULL == table ) {
+  if ( ! table ) {
     return false;
   }
 

@@ -30,7 +30,7 @@
  */
 char* strcpy( char* dst, const char* src ) {
   // handle null
-  if ( NULL == dst ) {
+  if ( ! dst ) {
     return NULL;
   }
   // cache destination due to loop

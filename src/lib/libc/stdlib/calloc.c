@@ -33,9 +33,8 @@
 void *calloc( size_t num, size_t size ) {
   // allocate memory
   void *ptr = malloc( num * size );
-
   // handle malloc error
-  if ( NULL == ptr ) {
+  if ( ! ptr ) {
     return NULL;
   }
 

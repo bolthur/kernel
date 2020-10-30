@@ -69,7 +69,7 @@ bool event_init( void ) {
   // create manager structure
   event = ( event_manager_ptr_t )malloc( sizeof( event_manager_t ) );
   // check allocation
-  if ( NULL == event ) {
+  if ( ! event ) {
     return false;
   }
   // prepare
@@ -87,7 +87,7 @@ bool event_init( void ) {
     DEBUG_OUTPUT( "Created event tree at: %p\r\n", ( void* )event->tree );
   #endif
   // handle error
-  if ( NULL == event->tree ) {
+  if ( ! event->tree ) {
     free( event->tree );
     return false;
   }
@@ -95,7 +95,7 @@ bool event_init( void ) {
   // create queue
   event->queue_kernel = list_construct( NULL, NULL );
   // check allocation
-  if ( NULL == event->queue_kernel ) {
+  if ( ! event->queue_kernel ) {
     free( event->tree );
     free( event );
     return false;
@@ -103,7 +103,7 @@ bool event_init( void ) {
 
   event->queue_user = list_construct( NULL, NULL );
   // check allocation
-  if ( NULL == event->queue_user ) {
+  if ( ! event->queue_user ) {
     free( event->tree );
     free( event->queue_kernel );
     free( event );
@@ -123,7 +123,7 @@ bool event_init( void ) {
  */
 bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   // do nothing if not initialized
-  if ( NULL == event ) {
+  if ( ! event ) {
     return true;
   }
 
@@ -143,11 +143,11 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
     DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
   #endif
   // handle not yet added
-  if ( NULL == node ) {
+  if ( ! node ) {
     // allocate block
     block = ( event_block_ptr_t )malloc( sizeof( event_block_t ) );
     // check allocation
-    if ( NULL == block ) {
+    if ( ! block ) {
       return false;
     }
     // prepare memory
@@ -159,12 +159,12 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
     // populate block
     block->type = type;
     block->handler = list_construct( NULL, NULL );
-    if ( NULL == block->handler ) {
+    if ( ! block->handler ) {
       free( block );
       return false;
     }
     block->post = list_construct( NULL, NULL );
-    if ( NULL == block->post ) {
+    if ( ! block->post ) {
       free( block->handler );
       free( block );
       return false;
@@ -195,7 +195,7 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
     DEBUG_OUTPUT( "Used first element for looping at %p\r\n", ( void* )current );
   #endif
   // loop through list for check callback
-  while ( NULL != current ) {
+  while ( current ) {
     // get callback from data
     event_callback_wrapper_ptr_t wrapper =
       ( event_callback_wrapper_ptr_t )current->data;
@@ -220,7 +220,7 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   event_callback_wrapper_ptr_t wrapper = ( event_callback_wrapper_ptr_t )malloc(
     sizeof( event_callback_wrapper_t ) );
   // check allocation
-  if ( NULL == wrapper ) {
+  if ( ! wrapper ) {
     return false;
   }
   // prepare memory
@@ -254,7 +254,7 @@ void event_unbind(
   __unused bool post
 ) {
   // do nothing if not initialized
-  if ( NULL == event ) {
+  if ( ! event ) {
     return;
   }
 
@@ -271,7 +271,7 @@ void event_unbind(
  */
 bool event_enqueue( event_type_t type, event_origin_t origin ) {
   // do nothing if not initialized
-  if ( NULL == event ) {
+  if ( ! event ) {
     return true;
   }
 
@@ -291,7 +291,7 @@ bool event_enqueue( event_type_t type, event_origin_t origin ) {
  */
 void event_handle( void* data ) {
   // do nothing if not initialized
-  if ( NULL == event ) {
+  if ( ! event ) {
     return;
   }
 
@@ -320,7 +320,7 @@ void event_handle( void* data ) {
   // get correct tree to use
   avl_tree_ptr_t tree = event->tree;
 
-  while ( NULL != current_event ) {
+  while ( current_event ) {
     // try to find node
     avl_node_ptr_t node = avl_find_by_data( tree, current_event );
     event_block_ptr_t block;
@@ -330,7 +330,7 @@ void event_handle( void* data ) {
     #endif
 
     // handle no existing
-    if ( NULL == node ) {
+    if ( ! node ) {
       // pop next
       current_event = list_pop_front( queue );
       // skip rest
@@ -347,7 +347,7 @@ void event_handle( void* data ) {
         ( void* )current );
     #endif
     // loop through list
-    while ( NULL != current ) {
+    while ( current ) {
       // get callback from data
       event_callback_wrapper_ptr_t wrapper =
         ( event_callback_wrapper_ptr_t )current->data;
@@ -369,7 +369,7 @@ void event_handle( void* data ) {
         ( void* )current );
     #endif
     // loop through list
-    while ( NULL != current ) {
+    while ( current ) {
       // get callback from data
       event_callback_wrapper_ptr_t wrapper =
         ( event_callback_wrapper_ptr_t )current->data;

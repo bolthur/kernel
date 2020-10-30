@@ -32,7 +32,7 @@
  */
 void *realloc( void *ptr, size_t size ) {
   // simply use malloc if nothing is there
-  if ( NULL == ptr ) {
+  if ( ! ptr ) {
     return malloc( size );
   }
 
@@ -40,7 +40,8 @@ void *realloc( void *ptr, size_t size ) {
   void *new_ptr = malloc( size );
 
   // handle error
-  if ( NULL == new_ptr ) {
+  if ( ! new_ptr ) {
+    free( ptr );
     return NULL;
   }
 

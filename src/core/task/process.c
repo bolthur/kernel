@@ -71,14 +71,14 @@ static int32_t process_compare_id_callback(
  */
 bool task_process_init( void ) {
   // check parameter
-  if ( NULL != process_manager ) {
+  if ( process_manager ) {
     return false;
   }
 
   // allocate management structures
   process_manager = ( task_manager_ptr_t )malloc( sizeof( task_manager_t ) );
   // check parameter
-  if ( NULL == process_manager ) {
+  if ( ! process_manager ) {
     return false;
   }
   // prepare structure
@@ -88,14 +88,14 @@ bool task_process_init( void ) {
   process_manager->tree_process_id = avl_create_tree(
     process_compare_id_callback, NULL, NULL );
   // handle error
-  if ( NULL == process_manager->tree_process_id ) {
+  if ( ! process_manager->tree_process_id ) {
     free( process_manager );
     return false;
   }
   // create thread queue tree
   process_manager->thread_priority_tree = task_queue_init();
   // handle error
-  if ( NULL == process_manager->thread_priority_tree ) {
+  if ( ! process_manager->thread_priority_tree ) {
     avl_destroy_tree( process_manager->tree_process_id );
     free( process_manager );
     return false;
@@ -133,7 +133,7 @@ size_t task_process_generate_id( void ) {
  */
 bool task_process_create( uintptr_t entry, size_t priority ) {
   // check manager
-  if ( NULL == process_manager ) {
+  if ( ! process_manager ) {
     return false;
   }
 
@@ -157,7 +157,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
   task_process_ptr_t process = ( task_process_ptr_t )malloc(
     sizeof( task_process_t ) );
   // check allocation
-  if ( NULL == process ) {
+  if ( ! process ) {
     return false;
   }
   // debug output
@@ -171,7 +171,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
   process->id = task_process_generate_id();
   process->thread_manager = task_thread_init();
   // handle error
-  if ( NULL == process->thread_manager ) {
+  if ( ! process->thread_manager ) {
     free( process );
     return false;
   }
@@ -179,7 +179,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
   process->priority = priority;
   process->thread_stack_manager = task_stack_manager_create();
   // handle error
-  if ( NULL == process->thread_stack_manager ) {
+  if ( ! process->thread_stack_manager ) {
     task_thread_destroy( process->thread_manager );
     free( process );
     return false;
@@ -187,7 +187,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
   // create context only for user processes
   process->virtual_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
   // handle error
-  if ( NULL == process->virtual_context ) {
+  if ( ! process->virtual_context ) {
     task_stack_manager_destroy( process->thread_stack_manager );
     task_thread_destroy( process->thread_manager );
     free( process );
@@ -217,7 +217,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
   }
 
   // Setup thread with entry
-  if ( NULL == task_thread_create( program_entry, process, priority ) ) {
+  if ( ! task_thread_create( program_entry, process, priority ) ) {
     avl_remove_by_node( process_manager->tree_process_id, &process->node_id );;
     virt_destroy_context( process->virtual_context );
     task_stack_manager_destroy( process->thread_stack_manager );
@@ -252,14 +252,14 @@ void task_process_queue_reset( void ) {
   #endif
 
   // get nodes from min/max
-  if ( NULL != min ) {
+  if ( min ) {
     min_queue = TASK_QUEUE_GET_PRIORITY( min );
   }
-  if ( NULL != max ) {
+  if ( max ) {
     max_queue = TASK_QUEUE_GET_PRIORITY( max );
   }
   // handle no min or no max queue
-  if ( NULL == min_queue || NULL == max_queue ) {
+  if ( ! min_queue || ! max_queue ) {
     return;
   }
 
@@ -274,7 +274,7 @@ void task_process_queue_reset( void ) {
       process_manager->thread_priority_tree,
       ( void* )priority );
     // skip if not existing
-    if ( NULL == current_node ) {
+    if ( ! current_node ) {
       // prevent endless loop by checking against 0
       if ( 0 == priority ) {
         break;

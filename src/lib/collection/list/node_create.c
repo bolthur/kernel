@@ -33,7 +33,7 @@ list_item_ptr_t list_node_create( void* data ) {
   // allocate new node
   list_item_ptr_t node = ( list_item_ptr_t )malloc( sizeof( list_item_t ) );
   // check malloc result
-  if ( NULL == node ) {
+  if ( ! node ) {
     return NULL;
   }
   // overwrite allocated memory with 0

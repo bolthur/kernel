@@ -164,7 +164,7 @@ bool virt_map_address(
   uint32_t page
 ) {
   // check context
-  if ( NULL == ctx ) {
+  if ( ! ctx ) {
     return false;
   }
   // check for v7 long descriptor format
@@ -199,7 +199,7 @@ bool virt_map_address_random(
   uint32_t page
 ) {
   // check context
-  if ( NULL == ctx ) {
+  if ( ! ctx ) {
     return false;
   }
   // check for v7 long descriptor format
@@ -251,7 +251,7 @@ uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
  */
 bool virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr, bool free_phys ) {
   // check context
-  if ( NULL == ctx ) {
+  if ( ! ctx ) {
     return false;
   }
   // check for v7 long descriptor format
@@ -322,7 +322,7 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
  */
 bool virt_destroy_context( virt_context_ptr_t ctx ) {
   // check context
-  if ( NULL == ctx ) {
+  if ( ! ctx ) {
     return false;
   }
 
@@ -357,7 +357,7 @@ uint64_t virt_create_table(
   uint64_t table
 ) {
   // check context
-  if ( NULL == ctx ) {
+  if ( ! ctx ) {
     return 0;
   }
 
@@ -385,7 +385,7 @@ uint64_t virt_create_table(
  */
 bool virt_set_context( virt_context_ptr_t ctx ) {
   // handle invalid context
-  if ( NULL == ctx ) {
+  if ( ! ctx ) {
     return false;
   }
 
@@ -433,7 +433,7 @@ void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
   // no flush if not initialized or context currently not active
   if (
     ! virt_init_get()
-    || NULL == ctx
+    || ! ctx
     || (
       ctx != kernel_context
       && ctx != user_context
@@ -466,7 +466,7 @@ void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
  */
 bool virt_prepare_temporary( virt_context_ptr_t ctx ) {
   // check context
-  if ( NULL == ctx ) {
+  if ( ! ctx ) {
     return false;
   }
   // check for v7 long descriptor format
@@ -513,7 +513,7 @@ void virt_arch_prepare( void ) {
  */
 bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
   // check context
-  if ( NULL == ctx ) {
+  if ( ! ctx ) {
     return false;
   }
 

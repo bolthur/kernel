@@ -58,7 +58,7 @@ static void pop_output_level( void ) {
  * @param node
  */
 static void print_recursive( const avl_node_ptr_t node ) {
-  if ( NULL == node ) {
+  if ( ! node ) {
     return;
   }
   printf( "%p\r\n", node->data );

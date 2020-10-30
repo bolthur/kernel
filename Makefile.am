@@ -3,6 +3,6 @@ ACLOCAL_AMFLAGS = -I build-aux/m4
 
 .PHONY: cppcheck
 cppcheck:
-	cppcheck -I $(top_srcdir)/include -I $(top_srcdir)/include/lib --quiet --inline-suppr -UCMC --force --enable=all --suppress-xml=$(top_srcdir)/build-aux/platform/rpi/cppcheck.suppression.xml --platform=$(top_srcdir)/build-aux/platform/rpi/cppcheck.32.xml --include=$(top_srcdir)/build/include/config.h --project=$(top_srcdir)/build-aux/platform/rpi/project.cppcheck $(top_srcdir)
+	cppcheck --quiet -UCMC --inline-suppr --enable=all --force --platform=$(shell $(BOLTHUR_READLINK) -f $(top_srcdir)/build-aux/platform/$(platform_subdir)/cppcheck.32.xml) --include=$(shell $(BOLTHUR_READLINK) -f $(top_srcdir)/build/include/config.h) --project=$(shell $(BOLTHUR_READLINK) -f $(top_srcdir)/build-aux/platform/$(platform_subdir)/project.$(executable_format).cppcheck)
 
 SUBDIRS = thirdparty src

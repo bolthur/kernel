@@ -32,14 +32,14 @@ void list_print( list_manager_ptr_t list ) {
   list_item_ptr_t current;
 
   // handle invalid
-  if ( NULL == list ) {
+  if ( ! list ) {
     return;
   }
   // populate current
   current = list->first;
 
   // loop through list until end
-  while ( NULL != current ) {
+  while ( current ) {
     printf( "list->data = %p", current->data );
     // get next element
     current = current->next;

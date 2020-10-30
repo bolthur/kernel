@@ -42,7 +42,7 @@ void task_process_start( void ) {
   // get first thread to execute
   task_thread_ptr_t next_thread = task_thread_next();
   // handle no thread
-  if ( NULL == next_thread ) {
+  if ( ! next_thread ) {
     return;
   }
 
@@ -50,7 +50,7 @@ void task_process_start( void ) {
   task_priority_queue_ptr_t next_queue = task_queue_get_queue(
     process_manager, next_thread->priority );
   // check queue
-  if ( NULL == next_queue ) {
+  if ( ! next_queue ) {
     return;
   }
 
@@ -85,6 +85,9 @@ void task_process_start( void ) {
  *
  * @param origin
  * @param context cpu context
+ *
+ * @todo handle halt when there is no task to switch to
+ * @todo add cleanup of exited tasks
  */
 void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // debug output
@@ -93,7 +96,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   #endif
 
   // prevent scheduling when kernel interrupt occurs ( context != NULL )
-  if ( NULL != context ) {
+  if ( context ) {
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT( "No scheduling in kernel level exception, context = %p\r\n",
@@ -120,19 +123,12 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   task_thread_ptr_t running_thread = task_thread_current_thread;
   // get running queue if set
   task_priority_queue_ptr_t running_queue = NULL;
-  if ( NULL != running_thread ) {
-    running_queue = task_queue_get_queue(
-      process_manager, running_thread->priority );
-    // handle error
-    if ( NULL == running_queue ) {
-      // reset
-      task_process_queue_reset();
-      task_thread_reset_current();
-      // wait for exception
-      arch_halt();
+  if ( running_thread ) {
+    // load queue until it worked
+    while ( ! running_queue ) {
+      running_queue = task_queue_get_queue(
+        process_manager, running_thread->priority );
     }
-    // check queue
-    assert( NULL != running_queue );
     // set last handled within running queue
     running_queue->last_handled = running_thread;
     // update running task to halt due to switch
@@ -144,64 +140,52 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   do {
     // get next thread
     next_thread = task_thread_next();
-
     // reset queue if nothing found
-    if ( NULL == next_thread ) {
+    if ( ! next_thread ) {
       // reset
       task_process_queue_reset();
       task_thread_reset_current();
-      // wait for exception
-      arch_halt();
+      // get next thread after reset
+      next_thread = task_thread_next();
+      if ( ! next_thread ) {
+        // FIXME: HALT HERE WHEN THERE IS NO NEXT THREAD AFTER RESET and enable exceptions
+        // wait for exception
+        arch_halt();
+      }
     }
-  } while ( NULL == next_thread );
+  } while ( ! next_thread );
 
-  // variable for next thread
+  // variable for next queue
   task_priority_queue_ptr_t next_queue = NULL;
-  if ( NULL != next_thread ) {
+  // get queue of next thread
+  while ( next_thread && ! next_queue ) {
     next_queue = task_queue_get_queue(
       process_manager, next_thread->priority );
-
-    // reset queue if nothing found
-    if ( NULL == next_thread ) {
-      // reset
-      task_process_queue_reset();
-      task_thread_reset_current();
-      // wait for exception
-      arch_halt();
-    }
   }
 
   // reset current if queue changed
-  if ( NULL != running_queue && running_queue != next_queue ) {
+  if ( running_queue && running_queue != next_queue ) {
     running_queue->current = NULL;
   }
 
   // save context of current thread
-  if ( NULL != running_thread ) {
+  if ( running_thread ) {
     // reset state to ready
     running_thread->state = TASK_THREAD_STATE_READY;
   }
   // overwrite current running thread
-  if ( ! task_thread_set_current( next_thread, next_queue ) ) {
-    // reset
-    task_process_queue_reset();
-    task_thread_reset_current();
-    // wait for exception
-    arch_halt();
+  while( ! task_thread_set_current( next_thread, next_queue ) ) {
+    __asm__ __volatile__ ( "nop" ::: "cc" );
   }
 
-  // Switch to thread ttbr when thread is a different process in user mode
+  // Switch to thread contexr when thread is a different process in user mode
   if (
-    NULL == running_thread
+    ! running_thread
     || running_thread->process != next_thread->process
   ) {
     // set context and flush
-    if ( ! virt_set_context( next_thread->process->virtual_context ) ) {
-      // reset
-      task_process_queue_reset();
-      task_thread_reset_current();
-      // wait for exception
-      arch_halt();
+    while ( ! virt_set_context( next_thread->process->virtual_context ) ) {
+      __asm__ __volatile__ ( "nop" ::: "cc" );
     }
     virt_flush_complete();
     // debug output

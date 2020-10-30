@@ -76,12 +76,12 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
     DEBUG_OUTPUT( "Called tree_by_type( %d )\r\n", type );
   #endif
   // setup interrupt manager if not done existing
-  if ( NULL == interrupt_manager ) {
+  if ( ! interrupt_manager ) {
     // initialize interrupt manager
     interrupt_manager = ( interrupt_manager_ptr_t )malloc(
       sizeof( interrupt_manager_t ) );
     // check allocation
-    if ( NULL == interrupt_manager ) {
+    if ( ! interrupt_manager ) {
       return NULL;
     }
     // prepare memory
@@ -90,14 +90,14 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
     interrupt_manager->normal_interrupt = avl_create_tree(
       compare_interrupt_callback, NULL, NULL );
     // check allocation
-    if ( NULL == interrupt_manager->normal_interrupt ) {
+    if ( ! interrupt_manager->normal_interrupt ) {
       free( interrupt_manager );
       return NULL;
     }
     interrupt_manager->fast_interrupt = avl_create_tree(
       compare_interrupt_callback, NULL, NULL );
     // check allocation
-    if ( NULL == interrupt_manager->fast_interrupt ) {
+    if ( ! interrupt_manager->fast_interrupt ) {
       free( interrupt_manager->normal_interrupt );
       free( interrupt_manager );
       return NULL;
@@ -105,7 +105,7 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
     interrupt_manager->software_interrupt = avl_create_tree(
       compare_interrupt_callback, NULL, NULL );
     // check allocation
-    if ( NULL == interrupt_manager ) {
+    if ( ! interrupt_manager ) {
       free( interrupt_manager->normal_interrupt );
       free( interrupt_manager->fast_interrupt );
       free( interrupt_manager );
@@ -178,7 +178,7 @@ bool interrupt_unregister_handler(
   // get correct tree to use
   avl_tree_ptr_t tree = tree_by_type( type );
   // handle no tree
-  if ( NULL == tree ) {
+  if ( ! tree ) {
     return false;
   }
   // debug output
@@ -195,7 +195,7 @@ bool interrupt_unregister_handler(
     DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
   #endif
   // handle not yet added
-  if ( NULL == node ) {
+  if ( ! node ) {
     return true;
   }
   // gather block
@@ -215,7 +215,7 @@ bool interrupt_unregister_handler(
     DEBUG_OUTPUT( "Used first element for looping at %p\r\n", ( void* )current );
   #endif
   // loop through list for check callback
-  while ( NULL != current ) {
+  while ( current ) {
     // get callback from data
     interrupt_callback_wrapper_ptr_t wrapper =
       ( interrupt_callback_wrapper_ptr_t )current->data;
@@ -233,7 +233,7 @@ bool interrupt_unregister_handler(
   }
 
   // handle no match
-  if ( NULL == match ) {
+  if ( ! match ) {
     return true;
   }
   // free allocated wrapper
@@ -286,7 +286,7 @@ bool interrupt_register_handler(
   // get correct tree to use
   avl_tree_ptr_t tree = tree_by_type( type );
   // check tree
-  if ( NULL == tree ) {
+  if ( ! tree ) {
     return false;
   }
   // debug output
@@ -303,11 +303,11 @@ bool interrupt_register_handler(
     DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
   #endif
   // handle not yet added
-  if ( NULL == node ) {
+  if ( ! node ) {
     // allocate block
     block = ( interrupt_block_ptr_t )malloc( sizeof( interrupt_block_t ) );
     // check allocation
-    if ( NULL == block ) {
+    if ( ! block ) {
       return false;
     }
     // prepare memory
@@ -320,13 +320,13 @@ bool interrupt_register_handler(
     block->interrupt = num;
     block->handler = list_construct( NULL, NULL );
     // check list
-    if ( NULL == block->handler ) {
+    if ( ! block->handler ) {
       free( block );
       return false;
     }
     block->post = list_construct( NULL, NULL );
     // check list
-    if ( NULL == block->post ) {
+    if ( ! block->post ) {
       free( block->handler );
       free( block );
       return false;
@@ -357,7 +357,7 @@ bool interrupt_register_handler(
     DEBUG_OUTPUT( "Used first element for looping at %p\r\n", ( void* )current );
   #endif
   // loop through list for check callback
-  while ( NULL != current ) {
+  while ( current ) {
     // get callback from data
     interrupt_callback_wrapper_ptr_t wrapper =
       ( interrupt_callback_wrapper_ptr_t )current->data;
@@ -377,7 +377,7 @@ bool interrupt_register_handler(
   interrupt_callback_wrapper_ptr_t wrapper = ( interrupt_callback_wrapper_ptr_t )
     malloc( sizeof( interrupt_callback_wrapper_t ) );
   // check allocation
-  if ( NULL == wrapper ) {
+  if ( ! wrapper ) {
     return false;
   }
   // prepare memory
@@ -402,7 +402,7 @@ bool interrupt_register_handler(
  */
 void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   // handle no interrupt manager as not bound
-  if ( NULL == interrupt_manager ) {
+  if ( ! interrupt_manager ) {
     return;
   }
 
@@ -424,7 +424,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   // get correct tree to use
   avl_tree_ptr_t tree = tree_by_type( type );
   // check tree
-  if ( NULL == tree ) {
+  if ( ! tree ) {
     return;
   }
 
@@ -441,7 +441,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   #endif
 
   // handle nothing found which means nothing bound
-  if ( NULL == node ) {
+  if ( ! node ) {
     return;
   }
   // get interrupt block
@@ -454,7 +454,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
     DEBUG_OUTPUT( "Looping through mapped callbacks and execute them\r\n" );
   #endif
   // loop through list
-  while ( NULL != current ) {
+  while ( current ) {
     // get callback from data
     interrupt_callback_wrapper_ptr_t wrapper =
       ( interrupt_callback_wrapper_ptr_t )current->data;
@@ -475,7 +475,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
     DEBUG_OUTPUT( "Looping through mapped callbacks and execute them\r\n" );
   #endif
   // loop through list
-  while ( NULL != current ) {
+  while ( current ) {
     // get callback from data
     interrupt_callback_wrapper_ptr_t wrapper =
       ( interrupt_callback_wrapper_ptr_t )current->data;

@@ -28,7 +28,7 @@
  * @param context
  */
 void syscall_process_id( void* context ) {
-  if ( NULL == task_thread_current_thread ) {
+  if ( ! task_thread_current_thread ) {
     // populate return
     syscall_populate_single_return(
       context,

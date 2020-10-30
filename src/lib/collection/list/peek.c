@@ -32,14 +32,14 @@ void* list_peek_front( list_manager_ptr_t list ) {
   list_item_ptr_t first;
 
   // check parameter
-  if ( NULL == list ) {
+  if ( ! list ) {
     return NULL;
   }
   // get first element
   first = list->first;
 
   // handle empty list
-  if ( NULL == first ) {
+  if ( ! first ) {
     return NULL;
   }
   // return data of first element
@@ -56,14 +56,14 @@ void* list_peek_back( list_manager_ptr_t list ) {
   list_item_ptr_t last;
 
   // check parameter
-  if ( NULL == list ) {
+  if ( ! list ) {
     return NULL;
   }
   // get last element
   last = list->last;
 
   // handle empty list
-  if ( NULL == last ) {
+  if ( ! last ) {
     return NULL;
   }
   // return data of first element

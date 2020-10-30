@@ -34,7 +34,7 @@ static avl_node_ptr_t find_by_data(
   avl_tree_ptr_t tree
 ) {
   // end point
-  if ( root == NULL ) {
+  if ( ! root ) {
     return NULL;
   }
 
@@ -67,22 +67,22 @@ static avl_node_ptr_t find_parent_by_data(
   avl_tree_ptr_t tree
 ) {
   // end point
-  if ( root == NULL ) {
+  if ( ! root ) {
     return NULL;
   }
 
   // matching node left?
   if (
-      NULL != root->left
-      && 0 == tree->lookup( root->left, data )
+    root->left
+    && 0 == tree->lookup( root->left, data )
   ) {
     return root;
   }
 
   // matching node right?
   if (
-    NULL != root->right
-    && tree->compare( root->right, data )
+    root->right
+    && 0 == tree->compare( root->right, data )
   ) {
     return root;
   }

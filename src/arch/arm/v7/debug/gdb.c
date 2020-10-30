@@ -248,7 +248,7 @@ static bool read_field( const uint8_t** src, uint32_t* dest, char delim ) {
   const uint8_t* del = ( uint8_t* )debug_strchr( ( char* )*src, delim );
   uint8_t* next;
   // handle error
-  if ( NULL == del ) {
+  if ( ! del ) {
     return false;
   };
   // extract hex value
@@ -330,7 +330,7 @@ void debug_gdb_handler_read_register(
     )
   );
   // handle not enough memory
-  if ( NULL == p ) {
+  if ( ! p ) {
     debug_gdb_packet_send( ( uint8_t* )"E01" );
     return;
   }
@@ -409,7 +409,7 @@ void debug_gdb_handler_read_memory(
   // allocate buffer
   p = ( uint8_t* )malloc( length * 2 + 1 );
   // handle not enough memory
-  if ( NULL == p ) {
+  if ( ! p ) {
     debug_gdb_packet_send( ( uint8_t* )"E01" );
     return;
   }
@@ -697,7 +697,7 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
     uint8_t* packet = debug_gdb_packet_receive(
       debug_gdb_input_buffer, GDB_DEBUG_MAX_BUFFER );
     // check packet existence
-    if ( NULL == packet ) {
+    if ( ! packet ) {
       continue;
     }
     // execute handler

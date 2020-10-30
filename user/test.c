@@ -87,6 +87,9 @@ void _start( void ) {
   );
 
   while( 1 ) {
-    __asm__ __volatile__( "nop" );
+    __asm__ __volatile__( "\n\
+      mov r0, %[r0] \n\
+      svc #101" : : [ r0 ]"r"( ( char )( pid + '0' ) )
+    );
   }
 }

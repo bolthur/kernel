@@ -127,8 +127,8 @@ noreturn void kernel_main( void ) {
 
   uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
   DEBUG_OUTPUT(
-    "atag_fdt = %#x, *atag_fdt = %#x\r\n",
-    atag_fdt,
+    "atag_fdt = %#p, *atag_fdt = %#x\r\n",
+    ( void* )atag_fdt,
     *( ( uint32_t* )atag_fdt )
   );
 
@@ -160,8 +160,8 @@ noreturn void kernel_main( void ) {
 
   atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
   DEBUG_OUTPUT(
-    "atag_fdt = %#x, *atag_fdt = %#x\r\n",
-    atag_fdt,
+    "atag_fdt = %#p, *atag_fdt = %#x\r\n",
+    ( void* )atag_fdt,
     *( ( uint32_t* )atag_fdt )
   );
 

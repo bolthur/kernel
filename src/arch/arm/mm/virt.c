@@ -118,11 +118,11 @@ void virt_arch_init( void ) {
 
   // create a kernel context
   kernel_context = virt_create_context( VIRT_CONTEXT_TYPE_KERNEL );
-  assert( NULL != kernel_context );
+  assert( kernel_context );
 
   // create a dummy user context for all cores
   user_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
-  assert( NULL != user_context );
+  assert( user_context );
 
   // debug output
   #if defined( PRINT_MM_VIRT )

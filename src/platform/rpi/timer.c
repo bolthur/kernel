@@ -24,11 +24,11 @@
 #include <stdio.h>
 
 #if defined( ARCH_ARM_V6 )
-  #include <arch/arm/v6/cpu.h>
+  //#include <arch/arm/v6/cpu.h>
 #elif defined( ARCH_ARM_V7 )
   #include <arch/arm/v7/cpu.h>
 #elif defined( ARCH_ARM_V8 )
-  #include <arch/arm/v8/cpu.h>
+  //#include <arch/arm/v8/cpu.h>
 #endif
 
 #include <arch/arm/delay.h>

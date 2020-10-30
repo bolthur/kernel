@@ -31,14 +31,14 @@ void list_destruct( list_manager_ptr_t list ) {
   list_item_ptr_t current, next;
 
   // check parameter
-  if ( NULL == list ) {
+  if ( ! list ) {
     return;
   }
   // populate current
   current = list->first;
 
   // loop through list until end
-  while ( NULL != current ) {
+  while ( current ) {
     // get next element
     next = current->next;
 

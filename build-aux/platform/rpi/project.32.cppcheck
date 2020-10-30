@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="1">
+  <root name="." />
+  <includedir>
+    <dir name="../../../include/" />
+    <dir name="../../../include/lib/" />
+    <dir name="../../../thirdparty/" />
+    <dir name="../../../thirdparty/dtc/libfdt/" />
+    <dir name="/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include/" />
+    <dir name="/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include/" />
+  </includedir>
+  <exclude>
+    <path name="../../../user/"/>
+    <path name="../../../thirdparty/"/>
+  </exclude>
+  <paths>
+    <dir name="../../../" />
+  </paths>
+  <suppressions>
+    <suppression>unusedFunction</suppression>
+    <suppression>unusedStructMember</suppression>
+    <suppression>ConfigurationNotChecked</suppression>
+    <suppression>unmatchedSuppression</suppression>
+    <suppression>objectIndex</suppression>
+  </suppressions>
+</project>

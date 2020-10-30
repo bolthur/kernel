@@ -29,12 +29,12 @@
  */
 void avl_destroy_tree( avl_tree_ptr_t tree ) {
   // check parameter
-  if ( NULL == tree ) {
+  if ( ! tree ) {
     return;
   }
 
   // loop as long a root node is existing
-  while ( NULL != tree->root ) {
+  while ( tree->root ) {
     // cache root node
     avl_node_ptr_t node = tree->root;
     // remove node from tree

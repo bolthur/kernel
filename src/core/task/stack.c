@@ -65,7 +65,7 @@ static int32_t task_stack_callback(
  */
 void task_stack_manager_destroy( task_stack_manager_ptr_t manager ) {
   // handle invalid
-  if ( NULL == manager ) {
+  if ( ! manager ) {
     return;
   }
 
@@ -86,14 +86,14 @@ task_stack_manager_ptr_t task_stack_manager_create( void ) {
   task_stack_manager_ptr_t manager = ( task_stack_manager_ptr_t )malloc(
     sizeof( task_stack_manager_t ) );
   // check allocation
-  if ( NULL == manager ) {
+  if ( ! manager ) {
     return NULL;
   }
   // prepare
   memset( ( void* )manager, 0, sizeof( task_stack_manager_t ) );
   // create tree
   manager->tree = avl_create_tree( task_stack_callback, NULL, NULL );
-  if ( NULL == manager->tree ) {
+  if ( ! manager->tree ) {
     free( manager );
     return NULL;
   }
@@ -113,13 +113,13 @@ bool task_stack_manager_add(
   task_stack_manager_ptr_t manager
 ) {
   // check manager
-  if ( NULL == manager ) {
+  if ( ! manager ) {
     return false;
   }
   // create node
   avl_node_ptr_t node = avl_create_node( ( void* )stack );
   // handle error
-  if ( NULL == node ) {
+  if ( ! node ) {
     return false;
   }
   // insert node
@@ -139,13 +139,13 @@ bool task_stack_manager_remove(
   task_stack_manager_ptr_t manager
 ) {
   // check manager
-  if ( NULL == manager ) {
+  if ( ! manager ) {
     return false;
   }
   // try to get node
   avl_node_ptr_t node = avl_find_by_data( manager->tree, ( void* )stack );
   // handle not found
-  if ( NULL == node ) {
+  if ( ! node ) {
     return true;
   }
   // remove node

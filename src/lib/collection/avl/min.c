@@ -32,7 +32,7 @@ static avl_node_ptr_t get_min(
   avl_node_ptr_t result
 ) {
   // break if we reached the maximum
-  if ( NULL == node ) {
+  if ( ! node ) {
     return result;
   }
 

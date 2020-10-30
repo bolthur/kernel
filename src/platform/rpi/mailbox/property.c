@@ -45,9 +45,9 @@ volatile int32_t *ptb_buffer_phys = NULL;
  */
 void mailbox_property_init( void ) {
   // reserve memory if not yet done
-  if ( NULL == ptb_buffer ) {
+  if ( ! ptb_buffer ) {
     ptb_buffer = ( int32_t* )aligned_alloc( PAGE_SIZE, PAGE_SIZE );
-    assert( NULL != ptb_buffer );
+    assert( ptb_buffer );
     ptb_buffer_phys = ( int32_t* )VIRT_2_PHYS( ptb_buffer );
   }
   // clear out buffer
@@ -314,7 +314,7 @@ rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
   }
 
   // nothing found, return NULL
-  if ( tag_buffer == NULL ) {
+  if ( ! tag_buffer ) {
     return NULL;
   }
 

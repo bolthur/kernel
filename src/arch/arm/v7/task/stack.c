@@ -37,7 +37,7 @@
  */
 uintptr_t task_stack_manager_next( task_stack_manager_ptr_t manager ) {
   // check parameter
-  if ( NULL == manager ) {
+  if ( ! manager ) {
     return 0;
   }
 
@@ -51,7 +51,7 @@ uintptr_t task_stack_manager_next( task_stack_manager_ptr_t manager ) {
   avl_node_ptr_t max = avl_get_max( manager->tree->root );
 
   // handle empty
-  if ( NULL == min && NULL == max ) {
+  if ( ! min && ! max ) {
     return current;
   }
 
@@ -60,7 +60,7 @@ uintptr_t task_stack_manager_next( task_stack_manager_ptr_t manager ) {
     // try to find
     avl_node_ptr_t tmp = avl_find_by_data( manager->tree, ( void* )current );
     // not found => free
-    if ( NULL == tmp ) {
+    if ( ! tmp ) {
       return current;
     }
     // next to probe

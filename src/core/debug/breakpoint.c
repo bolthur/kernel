@@ -40,12 +40,12 @@ list_manager_ptr_t debug_breakpoint_manager = NULL;
  */
 bool debug_breakpoint_init( void ) {
   // handle initialized
-  if ( NULL != debug_breakpoint_manager ) {
+  if ( debug_breakpoint_manager ) {
     return true;
   }
   // setup list
   debug_breakpoint_manager = list_construct( NULL, NULL );
-  return NULL != debug_breakpoint_manager;
+  return ( bool )debug_breakpoint_manager;
 }
 
 /**
@@ -56,13 +56,13 @@ bool debug_breakpoint_init( void ) {
  */
 debug_breakpoint_entry_ptr_t debug_breakpoint_find( uintptr_t address ) {
   // handle not existing
-  if ( NULL == debug_breakpoint_manager ) {
+  if ( ! debug_breakpoint_manager ) {
     return NULL;
   }
   // check for possible existence
   list_item_ptr_t current = debug_breakpoint_manager->first;
   // loop through list of entries
-  while ( NULL != current ) {
+  while ( current ) {
     // get entry value
     debug_breakpoint_entry_ptr_t entry =
       ( debug_breakpoint_entry_ptr_t )current->data;
@@ -82,20 +82,18 @@ debug_breakpoint_entry_ptr_t debug_breakpoint_find( uintptr_t address ) {
  */
 bool debug_breakpoint_remove_step( void ) {
   // check for initialized
-  if ( NULL == debug_breakpoint_manager ) {
+  if ( ! debug_breakpoint_manager ) {
     return false;
   }
   // variables
-  debug_breakpoint_entry_ptr_t entry = NULL;
   list_item_ptr_t current = debug_breakpoint_manager->first;
-  list_item_ptr_t next = NULL;
 
   // loop through list of entries
-  while ( NULL != current ) {
+  while ( current ) {
     // get entry value
-    entry = ( debug_breakpoint_entry_ptr_t )current->data;
+    debug_breakpoint_entry_ptr_t entry = ( debug_breakpoint_entry_ptr_t )current->data;
     // next entry
-    next = current->next;
+    list_item_ptr_t next = current->next;
     // handle only stepping breakpoints
     if ( entry->step ) {
       // remove from breakpoint manager list
@@ -111,7 +109,6 @@ bool debug_breakpoint_remove_step( void ) {
   return true;
 }
 
-
 /**
  * @brief Helper to remove a breakpoint
  *
@@ -122,7 +119,7 @@ bool debug_breakpoint_remove( uintptr_t address, bool remove ) {
   // variables
   debug_breakpoint_entry_ptr_t entry = debug_breakpoint_find( address );
   // Do nothing if not existing
-  if ( NULL == entry ) {
+  if ( ! entry ) {
     return true;
   }
 
@@ -131,7 +128,7 @@ bool debug_breakpoint_remove( uintptr_t address, bool remove ) {
   // handle removal
   if ( remove ) {
     list_item_ptr_t item = list_lookup_data( debug_breakpoint_manager, entry );
-    if ( NULL == item ) {
+    if ( ! item ) {
       return false;
     }
     // remove from list
@@ -159,17 +156,17 @@ bool debug_breakpoint_add(
   // variables
   debug_breakpoint_entry_ptr_t entry = debug_breakpoint_find( address );
   // Don't add if already existing
-  if ( NULL != entry && true == entry->enabled ) {
+  if ( entry && true == entry->enabled ) {
     return true;
   }
 
   // create if not existing
-  if ( NULL == entry ) {
+  if ( ! entry ) {
     // allocate entry
     entry = ( debug_breakpoint_entry_ptr_t )malloc(
       sizeof( debug_breakpoint_entry_t ) );
     // handle error
-    if ( NULL == entry ) {
+    if ( ! entry ) {
       return false;
     }
     // erase allocated memory
@@ -194,7 +191,7 @@ bool debug_breakpoint_add(
 void debug_breakpoint_disable( void ) {
   // skip if not initialized
   if (
-    NULL == debug_breakpoint_manager
+    ! debug_breakpoint_manager
     || debug_gdb_get_running_flag()
   ) {
     return;
@@ -203,7 +200,7 @@ void debug_breakpoint_disable( void ) {
   list_item_ptr_t current = debug_breakpoint_manager->first;
 
   // loop through list of entries
-  while ( NULL != current ) {
+  while ( current ) {
     // get entry value
     debug_breakpoint_entry_ptr_t entry =
       ( debug_breakpoint_entry_ptr_t )current->data;
@@ -231,7 +228,7 @@ void debug_breakpoint_disable( void ) {
 void debug_breakpoint_enable( void ) {
   // skip if not initialized
   if (
-    NULL == debug_breakpoint_manager
+    ! debug_breakpoint_manager
     || debug_gdb_get_running_flag()
   ) {
     return;
@@ -241,7 +238,7 @@ void debug_breakpoint_enable( void ) {
   list_item_ptr_t current = debug_breakpoint_manager->first;
 
   // loop through list of entries
-  while ( NULL != current ) {
+  while ( current ) {
     // get entry value
     debug_breakpoint_entry_ptr_t entry =
       ( debug_breakpoint_entry_ptr_t )current->data;
