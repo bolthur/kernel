@@ -71,14 +71,33 @@ task_thread_ptr_t task_thread_create(
     DEBUG_OUTPUT( "stack_virtual = %p\r\n", ( void* )stack_virtual );
   #endif
 
-  // create context
-  cpu_register_context_ptr_t current_context = ( cpu_register_context_ptr_t )malloc(
-    sizeof( cpu_register_context_t ) );
-  // handle error
-  if ( ! current_context ) {
+  // create thread structure
+  task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
+    sizeof( task_thread_t ) );
+  // check allocation
+  if ( ! thread ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
     return NULL;
   }
+  // prepare
+  memset( ( void* )thread, 0, sizeof( task_thread_t ) );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Allocated thread structure at %p\r\n", ( void* )thread );
+  #endif
+
+  // create context
+  thread->current_context = malloc( sizeof( cpu_register_context_t ) );
+  // handle error
+  if ( ! thread->current_context ) {
+    phys_free_page_range( stack_physical, STACK_SIZE );
+    free( thread );
+    return NULL;
+  }
+
+  // cache locally
+  cpu_register_context_ptr_t current_context =
+    ( cpu_register_context_ptr_t )thread->current_context;
   // Prepare area
   memset( ( void* )current_context, 0, sizeof( cpu_register_context_t ) );
   // set content
@@ -97,7 +116,8 @@ task_thread_ptr_t task_thread_create(
   // handle error
   if ( 0 == tmp_virtual_user ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
-    free( current_context );
+    free( thread->current_context );
+    free( thread );
     return NULL;
   }
   // prepare stack
@@ -107,7 +127,8 @@ task_thread_ptr_t task_thread_create(
   // create node for stack address management tree
   if ( ! task_stack_manager_add( stack_virtual, process->thread_stack_manager ) ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
-    free( current_context );
+    free( thread->current_context );
+    free( thread );
     return NULL;
   }
   // map allocated stack
@@ -120,35 +141,18 @@ task_thread_ptr_t task_thread_create(
   ) ) {
     task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
     phys_free_page_range( stack_physical, STACK_SIZE );
-    free( current_context );
+    free( thread->current_context );
+    free( thread );
     return NULL;
   }
 
-  // create thread structure
-  task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
-    sizeof( task_thread_t ) );
-  // check allocation
-  if ( ! thread ) {
-    task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
-    virt_unmap_address( process->virtual_context, stack_virtual, true );
-    free( current_context );
-    return NULL;
-  }
-  // prepare
-  memset( ( void* )thread, 0, sizeof( task_thread_t ) );
-  // debug output
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Allocated thread structure at %p\r\n", ( void* )thread );
-  #endif
-  // populate thread structure
+  // populate thread data
   thread->state = TASK_THREAD_STATE_READY;
   thread->id = task_thread_generate_id();
   thread->priority = priority;
   thread->process = process;
   thread->stack_physical = stack_physical;
   thread->stack_virtual = stack_virtual;
-  thread->current_context = ( void* )current_context;
-
 
   // prepare node
   avl_prepare_node( &thread->node_id, ( void* )thread->id );
@@ -156,8 +160,8 @@ task_thread_ptr_t task_thread_create(
   if ( ! avl_insert_by_node( process->thread_manager, &thread->node_id ) ) {
     task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
     virt_unmap_address( process->virtual_context, stack_virtual, true );
+    free( thread->current_context );
     free( thread );
-    free( current_context );
     return NULL;
   }
 
@@ -172,12 +176,11 @@ task_thread_ptr_t task_thread_create(
     avl_remove_by_node( process->thread_manager, &thread->node_id );
     task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
     virt_unmap_address( process->virtual_context, stack_virtual, true );
+    free( thread->current_context );
     free( thread );
-    free( current_context );
     return NULL;
   }
 
-  // cppcheck-suppress memleak
   // return created thread
   return thread;
 }

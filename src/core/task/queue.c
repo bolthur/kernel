@@ -81,7 +81,7 @@ task_priority_queue_ptr_t task_queue_get_queue(
     DEBUG_OUTPUT( "Called task_queue_get_queue( %zu )\r\n", priority );
   #endif
   // get correct tree to use
-  avl_tree_ptr_t tree = manager->thread_priority_tree;
+  avl_tree_ptr_t tree = manager->thread_priority;
 
   // try to find node
   avl_node_ptr_t node = avl_find_by_data( tree, ( void* )priority );

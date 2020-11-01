@@ -33,6 +33,7 @@ typedef enum {
   TASK_THREAD_STATE_READY = 0,
   TASK_THREAD_STATE_ACTIVE,
   TASK_THREAD_STATE_HALT_SWITCH,
+  TASK_THREAD_STATE_KILL,
 } task_thread_state_t;
 
 typedef struct task_thread {

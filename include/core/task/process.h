@@ -39,6 +39,7 @@ typedef struct task_stack_manager
 typedef enum {
   TASK_PROCESS_STATE_READY = 0,
   TASK_PROCESS_STATE_ACTIVE,
+  TASK_PROCESS_STATE_KILL,
 } task_process_state_t;
 
 typedef struct process {
@@ -54,8 +55,8 @@ typedef struct process {
 } task_process_t, *task_process_ptr_t;
 
 typedef struct {
-  avl_tree_ptr_t tree_process_id;
-  avl_tree_ptr_t thread_priority_tree;
+  avl_tree_ptr_t process_id;
+  avl_tree_ptr_t thread_priority;
 } task_manager_t, *task_manager_ptr_t;
 
 #define TASK_PROCESS_GET_BLOCK_ID( n ) \

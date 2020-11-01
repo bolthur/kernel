@@ -85,9 +85,6 @@ void task_process_start( void ) {
  *
  * @param origin
  * @param context cpu context
- *
- * @todo handle halt when there is no task to switch to
- * @todo add cleanup of exited tasks
  */
 void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // debug output
@@ -109,10 +106,8 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
 
   // convert context into cpu pointer
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
-
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
-
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "cpu register context: %p\r\n", ( void* )cpu );
@@ -124,7 +119,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // get running queue if set
   task_priority_queue_ptr_t running_queue = NULL;
   if ( running_thread ) {
-    // load queue until it worked
+    // load queue until success has been returned
     while ( ! running_queue ) {
       running_queue = task_queue_get_queue(
         process_manager, running_thread->priority );
@@ -147,8 +142,9 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
       task_thread_reset_current();
       // get next thread after reset
       next_thread = task_thread_next();
+      // handle no next thread
       if ( ! next_thread ) {
-        // FIXME: HALT HERE WHEN THERE IS NO NEXT THREAD AFTER RESET and enable exceptions
+        // FIXME: HALT HERE WHEN THERE IS NO NEXT THREAD AFTER RESET WITH ENABLE OF EXCEPTIONS
         // wait for exception
         arch_halt();
       }
@@ -193,4 +189,6 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
       DUMP_REGISTER( next_thread->current_context );
     #endif
   }
+
+  // FIXME: cleanup killed processes
 }

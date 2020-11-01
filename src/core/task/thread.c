@@ -151,8 +151,8 @@ task_thread_ptr_t task_thread_next( void ) {
   avl_node_ptr_t max = NULL;
 
   // get min and max priority queue
-  min = avl_get_min( process_manager->thread_priority_tree->root );
-  max = avl_get_max( process_manager->thread_priority_tree->root );
+  min = avl_get_min( process_manager->thread_priority->root );
+  max = avl_get_max( process_manager->thread_priority->root );
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "min: %p, max: %p\r\n", ( void* )min, ( void* )max );
@@ -178,7 +178,7 @@ task_thread_ptr_t task_thread_next( void ) {
   ) {
     // try to find queue for priority
     avl_node_ptr_t current_node = avl_find_by_data(
-      process_manager->thread_priority_tree,
+      process_manager->thread_priority,
       ( void* )priority );
     // skip if not existing
     if ( ! current_node ) {

@@ -85,26 +85,26 @@ bool task_process_init( void ) {
   memset( ( void* )process_manager, 0, sizeof( task_manager_t ) );
 
   // create tree for managing processes by id
-  process_manager->tree_process_id = avl_create_tree(
+  process_manager->process_id = avl_create_tree(
     process_compare_id_callback, NULL, NULL );
   // handle error
-  if ( ! process_manager->tree_process_id ) {
+  if ( ! process_manager->process_id ) {
     free( process_manager );
     return false;
   }
   // create thread queue tree
-  process_manager->thread_priority_tree = task_queue_init();
+  process_manager->thread_priority = task_queue_init();
   // handle error
-  if ( ! process_manager->thread_priority_tree ) {
-    avl_destroy_tree( process_manager->tree_process_id );
+  if ( ! process_manager->thread_priority ) {
+    avl_destroy_tree( process_manager->process_id );
     free( process_manager );
     return false;
   }
 
   // register timer event
   if ( ! event_bind( EVENT_TIMER, task_process_schedule, true ) ) {
-    avl_destroy_tree( process_manager->thread_priority_tree );
-    avl_destroy_tree( process_manager->tree_process_id );
+    avl_destroy_tree( process_manager->thread_priority );
+    avl_destroy_tree( process_manager->process_id );
     free( process_manager );
     return false;
   }
@@ -208,7 +208,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
   // prepare node
   avl_prepare_node( &process->node_id, ( void* )process->id );
   // add process to tree
-  if ( ! avl_insert_by_node( process_manager->tree_process_id, &process->node_id ) ) {
+  if ( ! avl_insert_by_node( process_manager->process_id, &process->node_id ) ) {
     virt_destroy_context( process->virtual_context );
     task_stack_manager_destroy( process->thread_stack_manager );
     task_thread_destroy( process->thread_manager );
@@ -218,7 +218,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
 
   // Setup thread with entry
   if ( ! task_thread_create( program_entry, process, priority ) ) {
-    avl_remove_by_node( process_manager->tree_process_id, &process->node_id );;
+    avl_remove_by_node( process_manager->process_id, &process->node_id );;
     virt_destroy_context( process->virtual_context );
     task_stack_manager_destroy( process->thread_stack_manager );
     task_thread_destroy( process->thread_manager );
@@ -244,8 +244,8 @@ void task_process_queue_reset( void ) {
   #endif
 
   // get min and max priority queue
-  min = avl_get_min( process_manager->thread_priority_tree->root );
-  max = avl_get_max( process_manager->thread_priority_tree->root );
+  min = avl_get_min( process_manager->thread_priority->root );
+  max = avl_get_max( process_manager->thread_priority->root );
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "min: %p, max: %p\r\n", ( void* )min, ( void* )max );
@@ -271,7 +271,7 @@ void task_process_queue_reset( void ) {
   ) {
     // try to find queue for priority
     avl_node_ptr_t current_node = avl_find_by_data(
-      process_manager->thread_priority_tree,
+      process_manager->thread_priority,
       ( void* )priority );
     // skip if not existing
     if ( ! current_node ) {

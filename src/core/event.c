@@ -391,4 +391,14 @@ void event_handle( void* data ) {
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Leave event_handle\r\n" );
   #endif
+
+  // recursive call if not empty
+  if ( ! list_empty( queue ) ) {
+    // debug output
+    #if defined( PRINT_EVENT )
+      DEBUG_OUTPUT( "Further outstanding events, recursive call!\r\n" );
+    #endif
+    // recursive call for handle remaining events
+    event_handle( data );
+  }
 }

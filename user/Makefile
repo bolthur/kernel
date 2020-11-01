@@ -15,7 +15,13 @@ TEST_LDFLAGS = -T link.ld
 
 all: $(BIN) $(DISASM)
 
-test.bin: test.c
+test_generic.bin: test_generic.c
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) $^ -o $@
+
+test_process_exit.bin: test_process_exit.c
+	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) $^ -o $@
+
+test_thread_exit.bin: test_thread_exit.c
 	$(CC) $(TEST_CFLAGS) $(TEST_LDFLAGS) $^ -o $@
 
 %.bin: %.c

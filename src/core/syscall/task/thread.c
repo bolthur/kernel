@@ -19,7 +19,7 @@
  */
 
 #include <core/syscall.h>
-#include <core/task/process.h>
+#include <core/event.h>
 #include <core/task/thread.h>
 
 /**
@@ -46,5 +46,12 @@ void syscall_thread_id( void* context ) {
 void syscall_thread_create( __unused void* context ) {
 }
 
-void syscall_thread_exit( __unused void* context ) {
+/**
+ * @brief System call kill thread handler
+ *
+ * @param context
+ */
+void syscall_thread_exit( void* context ) {
+  task_thread_current_thread->state = TASK_THREAD_STATE_KILL;
+  event_enqueue( EVENT_TIMER, EVENT_DETERMINE_ORIGIN( context ) );
 }

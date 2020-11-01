@@ -77,4 +77,9 @@ avl_node_ptr_t balance( avl_node_ptr_t );
 int32_t avl_default_lookup( const avl_node_ptr_t a, const void* );
 void avl_default_cleanup( const avl_node_ptr_t );
 
+avl_node_ptr_t avl_iterate_first( avl_tree_ptr_t );
+avl_node_ptr_t avl_iterate_last( avl_tree_ptr_t );
+avl_node_ptr_t avl_iterate_next( avl_tree_ptr_t, avl_node_ptr_t );
+avl_node_ptr_t avl_iterate_previous( avl_tree_ptr_t, avl_node_ptr_t );
+
 #endif

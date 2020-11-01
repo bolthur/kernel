@@ -201,8 +201,8 @@ noreturn void kernel_main( void ) {
         DEBUG_OUTPUT( "File size: %#llx\r\n", file_size );
 
         task_process_create( file, 0 );
-        task_process_create( file, 0 );
-        task_process_create( file, 0 );
+        //task_process_create( file, 0 );
+        //task_process_create( file, 0 );
       }
 
       // next task
