@@ -59,6 +59,7 @@ static avl_node_ptr_t find_by_data(
  *
  * @param data data to lookup for
  * @param root root node
+ * @param tree
  * @return avl_node_ptr_t
  */
 static avl_node_ptr_t find_parent_by_data(

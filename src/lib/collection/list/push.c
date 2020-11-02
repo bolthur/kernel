@@ -68,7 +68,7 @@ bool list_push_front( list_manager_ptr_t list, void* data ) {
  * @brief Method to push node with data into list
  *
  * @param list list to use
- * @param item item to push
+ * @param node item to push
  * @return true
  * @return false
  */
@@ -145,7 +145,7 @@ bool list_push_back( list_manager_ptr_t list, void* data ) {
  * @brief Method to push node with data into list
  *
  * @param list list to use
- * @param data data to push into list
+ * @param node node to push into list
  * @return true
  * @return false
  */

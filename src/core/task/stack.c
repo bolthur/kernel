@@ -105,6 +105,7 @@ task_stack_manager_ptr_t task_stack_manager_create( void ) {
  * @brief Add stack to manager
  *
  * @param stack stack to add
+ * @param manager task stack manager
  * @return true
  * @return false
  */

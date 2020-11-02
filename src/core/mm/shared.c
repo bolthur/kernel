@@ -124,7 +124,7 @@ static void destroy_entry( shared_memory_entry_ptr_t entry ) {
 /**
  * @brief Helper to destroy single mapped completely
  *
- * @param entry
+ * @param mapped
  */
 static void destroy_mapped( shared_memory_entry_mapped_ptr_t mapped ) {
   // handle invalid

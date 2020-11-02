@@ -109,7 +109,6 @@ int32_t debug_gdb_char2hex( char ch ) {
  * @brief Method to check calculated checksum against incoming
  *
  * @param in
- * @param chk
  * @return true
  * @return false
  */
@@ -145,6 +144,7 @@ void debug_gdb_init( void ) {
 /**
  * @brief Receive a packet
  *
+ * @param buffer
  * @param max
  * @return unsigned* packet_receive
  */
@@ -255,7 +255,7 @@ bool debug_gdb_initialized( void ) {
 /**
  * @brief Send packet
  *
- * @param char string to send
+ * @param p string to send
  */
 void debug_gdb_packet_send( uint8_t* p ) {
   // $<packet info>#<checksum>.

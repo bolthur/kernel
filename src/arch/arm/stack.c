@@ -30,7 +30,7 @@ extern void stack_supervisor_mode( void );
 /**
  * @brief Determines whether stack is in kernel or user
  *
- * @param uintptr_t
+ * @param address
  * @return true
  * @return false
  */

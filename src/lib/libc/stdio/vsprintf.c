@@ -162,7 +162,7 @@ static int print(
 /**
  * @brief Simple vsprintf for kernel
  *
- * @param buffer
+ * @param _buffer
  * @param format
  * @param parameter
  * @return int

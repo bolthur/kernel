@@ -211,7 +211,7 @@ bool virt_is_mapped_range( uintptr_t address, size_t size ) {
 /**
  * @brief Method to unmap address range
  *
- * @param context ctx to perform unmap in
+ * @param ctx context to perform unmap in
  * @param address start address of range
  * @param size range size
  * @param free_phys free physical memory
@@ -241,7 +241,7 @@ bool virt_unmap_address_range(
 /**
  * @brief Find free page range within context
  *
- * @param context ctx to use for lookup
+ * @param ctx context to use for lookup
  * @param size necessary amount
  * @return uintptr_t
  */
@@ -290,7 +290,8 @@ uintptr_t virt_find_free_page_range( virt_context_ptr_t ctx, size_t size ) {
  * @brief Map physical address range to virtual address range
  *
  * @param ctx context
- * @param address start address
+ * @param address virtual start address
+ * @param phys physical address
  * @param size size
  * @param type memory type
  * @param page page attributes

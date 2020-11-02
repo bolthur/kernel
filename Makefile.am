@@ -1,8 +1,16 @@
 
 ACLOCAL_AMFLAGS = -I build-aux/m4
 
+SUBDIRS = thirdparty src
+
+# cppcheck stuff
 .PHONY: cppcheck
 cppcheck:
-	cppcheck --quiet -UCMC --inline-suppr --enable=all --force --platform=$(shell $(BOLTHUR_READLINK) -f $(top_srcdir)/build-aux/platform/$(platform_subdir)/cppcheck.32.xml) --include=$(shell $(BOLTHUR_READLINK) -f $(top_srcdir)/build/include/config.h) --project=$(shell $(BOLTHUR_READLINK) -f $(top_srcdir)/build-aux/platform/$(platform_subdir)/project.$(executable_format).cppcheck)
+	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
+		--platform=$(CPPCHECK_PLATFORM) \
+		--include=$(CPPCHECK_INCLUDE) \
+		--project=$(CPPCHECK_PROJECT)
 
-SUBDIRS = thirdparty src
+# doxygen related
+@DX_RULES@
+MOSTLYCLEANFILES = $(DX_CLEANFILES)

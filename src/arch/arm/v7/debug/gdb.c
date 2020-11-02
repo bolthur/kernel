@@ -199,7 +199,7 @@ static int32_t write_register_invalid( uint8_t* dst ) {
 /**
  * @brief Helper to transform string to hex integer
  *
- * @param p
+ * @param buffer
  * @return uint32_t
  */
 static uint32_t str_to_hex( const uint8_t* buffer ) {
@@ -266,7 +266,7 @@ static bool read_field( const uint8_t** src, uint32_t* dest, char delim ) {
 /**
  * @brief Helper to fetch address out of string
  *
- * @param p
+ * @param src
  * @param addr
  * @return bool
  */
@@ -277,7 +277,7 @@ static bool read_address_from_string( const uint8_t** src, uint32_t* addr ) {
 /**
  * @brief Helper to read length from string
  *
- * @param p
+ * @param src
  * @param len
  * @return bool
  */
@@ -288,8 +288,8 @@ static bool read_length_from_string( const uint8_t** src, uint32_t* len ) {
 /**
  * @brief Read byte from string into buffer
  *
- * @param p
- * @param b
+ * @param src
+ * @param dest
  */
 static void read_byte_from_string( const uint8_t** src, uint8_t* dest ) {
   uint8_t buf[ 3 ];

@@ -11,7 +11,7 @@ AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
 AC_CONFIG_SRCDIR([src/core/main.c])
-AM_INIT_AUTOMAKE([nostdinc subdir-objects])
+AM_INIT_AUTOMAKE([nostdinc subdir-objects -Werror])
 AC_CONFIG_HEADERS([include/config.h])
 
 AC_LANG([C])
@@ -200,6 +200,16 @@ BOLTHUR_KERNEL_SET_DEVICE
 BOLTHUR_KERNEL_SET_HOST
 # set rest of flags
 BOLTHUR_KERNEL_SET_FLAG
+
+# prepare cppecheck stuff
+BOLTHUR_KERNEL_PREPARE_CPPCHECK
+# doxygen stuff
+DX_DOXYGEN_FEATURE(ON)
+DX_HTML_FEATURE(ON)
+DX_MAN_FEATURE(ON)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_INIT_DOXYGEN([bolthur/kernel], [$(srcdir)/doxyfile], [doc])
 
 # checks for programs
 AC_PROG_CC

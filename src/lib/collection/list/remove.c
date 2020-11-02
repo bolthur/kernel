@@ -68,7 +68,7 @@ bool list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
  * @brief Remove list item
  *
  * @param list
- * @param item
+ * @param data
  * @return true
  * @return false
  */
