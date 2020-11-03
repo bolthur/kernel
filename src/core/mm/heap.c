@@ -23,8 +23,9 @@
 #include <assert.h>
 #include <string.h>
 #include <collection/avl.h>
-#include <core/debug/debug.h>
-#include <core/panic.h>
+#if defined( PRINT_MM_HEAP )
+  #include <core/debug/debug.h>
+#endif
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <core/mm/heap.h>
@@ -214,9 +215,9 @@ static bool extend_heap_space( void ) {
     } else {
       max = max_used;
     }
-  } else if ( max_used && ! max_free ) {
+  } else if ( max_used ) {
     max = max_used;
-  } else if ( max_free && ! max_used ) {
+  } else if ( max_free ) {
     max = max_free;
   }
 
@@ -303,7 +304,7 @@ static bool extend_heap_space( void ) {
   assert(
     avl_insert_by_node( free_address, &free_block->node_address )
     && avl_insert_by_node( free_size, &free_block->node_size )
-  );
+  )
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -421,7 +422,7 @@ static void shrink_heap_space( void ) {
   assert(
     avl_insert_by_node( free_address, &max_block->node_address )
     && avl_insert_by_node( free_size, &max_block->node_size )
-  );
+  )
 
   // free up virtual memory
   for (
@@ -446,13 +447,13 @@ static void shrink_heap_space( void ) {
 }
 
 /**
- * @brief Helper to check whether two blocks are mergable
+ * @brief Helper to check whether two blocks are combinable
  *
  * @param a block a
  * @param b block b
  * @return bool
  */
-static bool mergable( heap_block_ptr_t a, heap_block_ptr_t b ) {
+static bool combinable( heap_block_ptr_t a, heap_block_ptr_t b ) {
   uintptr_t a_end, b_end;
 
   // calculate end of a and b
@@ -471,7 +472,7 @@ static bool mergable( heap_block_ptr_t a, heap_block_ptr_t b ) {
     );
   #endif
 
-  // mergable if following directly
+  // combinable if following directly
   return a_end == ( uintptr_t )b || b_end == ( uintptr_t )a;
 }
 
@@ -487,11 +488,11 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
   heap_block_ptr_t to_insert = NULL;
   avl_tree_ptr_t free_address, free_size;
 
-  // skip if not mergable
-  if ( true != mergable( a, b ) ) {
+  // skip if not combinable
+  if ( true != combinable( a, b ) ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "a ( %p ) not mergable with b ( %p )\r\n",
+      DEBUG_OUTPUT( "a ( %p ) not combinable with b ( %p )\r\n",
         ( void* )a, ( void* )b );
     #endif
     return NULL;
@@ -542,7 +543,7 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
   assert(
     avl_insert_by_node( free_address, &to_insert->node_address )
     && avl_insert_by_node( free_size, &to_insert->node_size )
-  );
+  )
   // return pointer to merged node
   return to_insert;
 }
@@ -610,7 +611,7 @@ void heap_init( heap_init_state_t state ) {
         addr,
         VIRT_MEMORY_TYPE_NORMAL,
         VIRT_PAGE_TYPE_NON_EXECUTABLE
-      ) );
+      ) )
     }
   }
 
@@ -683,7 +684,7 @@ void heap_init( heap_init_state_t state ) {
   assert(
     avl_insert_by_node( &heap->free_address[ state ], &free_block->node_address )
     && avl_insert_by_node( &heap->free_size[ state ], &free_block->node_size )
-  );
+  )
 
   // finally set state
   heap->state = state;
@@ -947,7 +948,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     assert(
       avl_insert_by_node( free_address, &current->node_address )
       && avl_insert_by_node( free_size, &current->node_size )
-    );
+    )
   // split with alignment offset
   } else if ( split && 0 < alignment_offset ) {
     // determine previous block
@@ -986,7 +987,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
       assert(
         avl_insert_by_node( free_address, &following->node_address )
         && avl_insert_by_node( free_size, &following->node_size )
-      );
+      )
     }
 
     // debug output
@@ -1009,7 +1010,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     assert(
       avl_insert_by_node( free_address, &previous->node_address )
       && avl_insert_by_node( free_size, &previous->node_size )
-    );
+    )
   // found matching node
   } else {
     new = current;
@@ -1025,7 +1026,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   #endif
 
   // insert at used block
-  assert( avl_insert_by_node( used_area, &new->node_address ) );
+  assert( avl_insert_by_node( used_area, &new->node_address ) )
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -1080,7 +1081,7 @@ void heap_free_block( uintptr_t addr ) {
     DEBUG_OUTPUT( "addr = %p\r\n", ( void* )addr );
   #endif
 
-  // finde node by address within tree
+  // find node by address within tree
   address_node = avl_find_by_data( used_area, ( void* )addr );
 
   // skip if nothing has been found
@@ -1142,7 +1143,7 @@ void heap_free_block( uintptr_t addr ) {
   assert(
     avl_insert_by_node( free_address, &current_block->node_address )
     && avl_insert_by_node( free_size, &current_block->node_size )
-  );
+  )
 
   // Debug output
   #if defined( PRINT_MM_HEAP )

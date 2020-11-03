@@ -23,8 +23,9 @@
 #include <collection/avl.h>
 #include <string.h>
 #include <stdlib.h>
-#include <core/panic.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_EVENT )
+  #include <core/debug/debug.h>
+#endif
 #include <core/mm/heap.h>
 #include <core/interrupt.h>
 

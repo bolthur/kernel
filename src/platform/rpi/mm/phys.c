@@ -22,7 +22,9 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_MM_PHYS )
+  #include <core/debug/debug.h>
+#endif
 #include <core/entry.h>
 #include <core/mm/phys.h>
 #include <platform/rpi/peripheral.h>
@@ -42,11 +44,11 @@ bool phys_platform_init( void ) {
   }
 
   // max memory
-  uint32_t memory_amount = 0;
+  uint32_t memory_amount;
 
   // video core memory
-  uint32_t vc_memory_start = 0;
-  uint32_t vc_memory_end = 0;
+  uint32_t vc_memory_start;
+  uint32_t vc_memory_end;
 
   // get arm memory
   rpi_mailbox_property_t *buffer = mailbox_property_get( TAG_GET_ARM_MEMORY );

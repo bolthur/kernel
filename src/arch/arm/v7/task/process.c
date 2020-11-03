@@ -20,13 +20,13 @@
 
 #include <collection/avl.h>
 #include <assert.h>
-#include <arch/arm/stack.h>
 #include <core/mm/virt.h>
-#include <core/panic.h>
 #include <core/arch.h>
 #include <core/task/queue.h>
 #include <core/task/process.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_PROCESS )
+  #include <core/debug/debug.h>
+#endif
 #include <core/interrupt.h>
 #include <arch/arm/v7/cpu.h>
 
@@ -36,7 +36,7 @@
 void task_process_start( void ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Entered task_process_start()\r\n" );
+    DEBUG_OUTPUT( "Entered task_process_start()\r\n" )
   #endif
 
   // get first thread to execute
@@ -62,7 +62,7 @@ void task_process_start( void ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "next_thread = %p, next_queue = %p\r\n",
-      ( void* )next_thread, ( void* )next_queue );
+      ( void* )next_thread, ( void* )next_queue )
   #endif
 
   // set context and flush
@@ -74,7 +74,7 @@ void task_process_start( void ) {
 
   // debug output
   #if defined( PRINT_PROCESS )
-    DUMP_REGISTER( next_thread->current_context );
+    DUMP_REGISTER( next_thread->current_context )
   #endif
   // jump to thread
   task_thread_switch_to( ( uintptr_t )next_thread->current_context );
@@ -83,13 +83,16 @@ void task_process_start( void ) {
 /**
  * @brief Task process scheduler
  *
- * @param origin
+ * @param origin event origin
  * @param context cpu context
+ *
+ * @todo Prefetch abort, when no more other tasks are there to switch to
+ * @todo Add endless loop with enabled interrupts, when there are no mor tasks left
  */
 void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Entered task_process_schedule( %p )\r\n", context );
+    DEBUG_OUTPUT( "Entered task_process_schedule( %p )\r\n", context )
   #endif
 
   // prevent scheduling when kernel interrupt occurs ( context != NULL )
@@ -97,9 +100,8 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT( "No scheduling in kernel level exception, context = %p\r\n",
-        context );
+        context )
     #endif
-
     // skip scheduling code
     return;
   }
@@ -110,8 +112,8 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   INTERRUPT_DETERMINE_CONTEXT( cpu )
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "cpu register context: %p\r\n", ( void* )cpu );
-    DUMP_REGISTER( cpu );
+    DEBUG_OUTPUT( "cpu register context: %p\r\n", ( void* )cpu )
+    DUMP_REGISTER( cpu )
   #endif
 
   // set running thread
@@ -135,6 +137,11 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   do {
     // get next thread
     next_thread = task_thread_next();
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "current_thread = %#p\r\n", running_thread )
+      DEBUG_OUTPUT( "next_thread = %#p\r\n", next_thread )
+    #endif
     // reset queue if nothing found
     if ( ! next_thread ) {
       // reset
@@ -142,6 +149,10 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
       task_thread_reset_current();
       // get next thread after reset
       next_thread = task_thread_next();
+      // debug output
+      #if defined( PRINT_PROCESS )
+        DEBUG_OUTPUT( "next_thread = %#p\r\n", next_thread )
+      #endif
       // handle no next thread
       if ( ! next_thread ) {
         // FIXME: HALT HERE WHEN THERE IS NO NEXT THREAD AFTER RESET WITH ENABLE OF EXCEPTIONS
@@ -174,7 +185,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     __asm__ __volatile__ ( "nop" ::: "cc" );
   }
 
-  // Switch to thread contexr when thread is a different process in user mode
+  // Switch to thread context when thread is a different process in user mode
   if (
     ! running_thread
     || running_thread->process != next_thread->process
@@ -186,7 +197,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     virt_flush_complete();
     // debug output
     #if defined( PRINT_PROCESS )
-      DUMP_REGISTER( next_thread->current_context );
+      DUMP_REGISTER( next_thread->current_context )
     #endif
   }
 

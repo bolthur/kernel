@@ -29,8 +29,6 @@
 #define PAGE_INDEX( address ) ( address / PAGE_PER_ENTRY )
 #define PAGE_OFFSET( address ) ( address % PAGE_PER_ENTRY )
 
-#define PHYS_NO_ALIGNMENT 0
-
 #define PHYS_ALL_PAGES_OF_INDEX_USED 0xFFFFFFFF
 
 #define PAGE_SIZE 0x1000

@@ -23,7 +23,9 @@
 #include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_MAILBOX )
+  #include <core/debug/debug.h>
+#endif
 #include <core/entry.h>
 #include <core/mm/phys.h>
 #include <platform/rpi/mailbox/mailbox.h>
@@ -47,7 +49,7 @@ void mailbox_property_init( void ) {
   // reserve memory if not yet done
   if ( ! ptb_buffer ) {
     ptb_buffer = ( int32_t* )aligned_alloc( PAGE_SIZE, PAGE_SIZE );
-    assert( ptb_buffer );
+    assert( ptb_buffer )
     ptb_buffer_phys = ( int32_t* )VIRT_2_PHYS( ptb_buffer );
   }
   // clear out buffer
@@ -293,9 +295,7 @@ rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
 
   // Get the tag from the buffer and start with first available tag position
   int32_t index = 2;
-  int32_t size = 0;
-
-  size = ptb_buffer[ PT_OSIZE ] >> 2;
+  int32_t size = ptb_buffer[ PT_OSIZE ] >> 2;
 
   while ( index < size ) {
     // debug output

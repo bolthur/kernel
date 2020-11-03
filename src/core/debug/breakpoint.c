@@ -21,9 +21,6 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
-#include <core/event.h>
-#include <core/serial.h>
-#include <core/debug/debug.h>
 #include <core/debug/gdb.h>
 #include <core/debug/breakpoint.h>
 #include <core/debug/string.h>

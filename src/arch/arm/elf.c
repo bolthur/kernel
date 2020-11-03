@@ -20,7 +20,9 @@
 
 #include <core/elf/elf32.h>
 #include <core/entry.h>
-#include <core/debug/debug.h>
+#if defined ( PRINT_ELF )
+  #include <core/debug/debug.h>
+#endif
 
 /**
  * @brief Check elf header for execution
@@ -38,7 +40,7 @@ bool elf_arch_check( uintptr_t elf ) {
       // debug output
       #if defined ( PRINT_ELF )
         DEBUG_OUTPUT( "Invalid machine type, expected %x and received %x!\r\n",
-          EM_ARM, header->e_machine );
+          EM_ARM, header->e_machine )
       #endif
       // return error
       return false;
@@ -48,7 +50,7 @@ bool elf_arch_check( uintptr_t elf ) {
       // debug output
       #if defined ( PRINT_ELF )
         DEBUG_OUTPUT( "Invalid machine type, expected %x and received %x!\r\n",
-          EM_AARCH64, header->e_machine );
+          EM_AARCH64, header->e_machine )
       #endif
       // return error
       return false;

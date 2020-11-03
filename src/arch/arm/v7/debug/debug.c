@@ -20,7 +20,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_EXCEPTION )
+  #include <core/debug/debug.h>
+#endif
 #include <arch/arm/v7/debug/debug.h>
 
 /**
@@ -47,7 +49,7 @@ bool debug_check_data_fault_status( void ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "dfsr_content = %#08x, dfsr_state = %#08x\r\n",
-      dfsr_content, dfsr_state );
+      dfsr_content, dfsr_state )
   #endif
   // check for debug event
   if ( dfsr_content & ( 1 << 9 ) ) {
@@ -80,7 +82,7 @@ bool debug_check_instruction_fault( void ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "ifsr_content = %#08x, ifsr_state = %#08x\r\n",
-      ifsr_content, ifsr_state );
+      ifsr_content, ifsr_state )
   #endif
   // check for debug event
   if ( ifsr_content & ( 1 << 9 ) ) {

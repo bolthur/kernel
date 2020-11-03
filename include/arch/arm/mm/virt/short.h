@@ -122,9 +122,9 @@
       uint32_t type: 1;
       uint32_t bufferable : 1;
       uint32_t cacheable : 1;
-      uint32_t access_permision_0 : 2;
+      uint32_t access_permission_0 : 2;
       uint32_t tex : 3;
-      uint32_t access_permision_1 : 1;
+      uint32_t access_permission_1 : 1;
       uint32_t shareable : 1;
       uint32_t not_global : 1;
       uint32_t frame : 20;
@@ -138,9 +138,9 @@
       uint32_t sbz_0 : 1;
       uint32_t bufferable : 1;
       uint32_t cacheable : 1;
-      uint32_t access_permision_0 : 2;
+      uint32_t access_permission_0 : 2;
       uint32_t sbz_1 : 3;
-      uint32_t access_permision_1 : 1;
+      uint32_t access_permission_1 : 1;
       uint32_t shareable : 1;
       uint32_t not_global : 1;
       uint32_t tex : 3;
@@ -172,9 +172,9 @@
       uint32_t execute_never : 1;
       uint32_t domain : 4;
       uint32_t imp : 1;
-      uint32_t access_permision_0 : 2;
+      uint32_t access_permission_0 : 2;
       uint32_t tex : 3;
-      uint32_t access_permision_1 : 1;
+      uint32_t access_permission_1 : 1;
       uint32_t shareable : 1;
       uint32_t not_global : 1;
       uint32_t sbz : 1;
@@ -193,9 +193,9 @@
       uint32_t execute_never : 1;
       uint32_t base_bit_36_39 : 4;
       uint32_t imp : 1;
-      uint32_t access_permision_0 : 2;
+      uint32_t access_permission_0 : 2;
       uint32_t tex : 3;
-      uint32_t access_permision_1 : 1;
+      uint32_t access_permission_1 : 1;
       uint32_t shareable : 1;
       uint32_t not_global : 1;
       uint32_t sb1 : 1;

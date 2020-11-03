@@ -22,7 +22,7 @@
 #include <core/syscall.h>
 
 /**
- * @brief Initialize syscalls
+ * @brief Initialize system calls
  */
 bool syscall_init( void ) {
   // process system calls
@@ -215,7 +215,7 @@ bool syscall_init( void ) {
   ) ) {
     return false;
   }
-  // dummy syscalls
+  // dummy
   if ( ! interrupt_register_handler(
     SYSCALL_DUMMY_PUTC,
     syscall_dummy_putc,

@@ -19,10 +19,8 @@
  */
 
 #include <assert.h>
-#include <arch/arm/v7/debug/debug.h>
 #include <arch/arm/v7/interrupt/vector.h>
 #include <core/event.h>
-#include <core/panic.h>
 #include <core/interrupt.h>
 
 /**
@@ -38,7 +36,7 @@ static uint32_t nested_svc = 0;
 void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   // nesting
   nested_svc++;
-  assert( nested_svc < INTERRUPT_NESTED_MAX );
+  assert( nested_svc < INTERRUPT_NESTED_MAX )
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
@@ -47,8 +45,8 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "Entering software_interrupt_handler( %p )\r\n",
-      ( void* )cpu );
-    DUMP_REGISTER( cpu );
+      ( void* )cpu )
+    DUMP_REGISTER( cpu )
   #endif
 
   // kernel stack
@@ -61,8 +59,8 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "address of cpu = %p\r\n", ( void* )cpu );
-    DEBUG_OUTPUT( "svc_num = %u\r\n", svc_num );
+    DEBUG_OUTPUT( "address of cpu = %p\r\n", ( void* )cpu )
+    DEBUG_OUTPUT( "svc_num = %u\r\n", svc_num )
   #endif
 
   // handle bound interrupt handlers
@@ -72,7 +70,7 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "Leaving software_interrupt_handler\r\n" );
+    DEBUG_OUTPUT( "Leaving software_interrupt_handler\r\n" )
   #endif
 
   // decrement nested counter

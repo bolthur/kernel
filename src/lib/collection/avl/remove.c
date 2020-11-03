@@ -18,10 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 #include <collection/avl.h>
 
 /**

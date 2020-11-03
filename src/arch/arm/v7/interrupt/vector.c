@@ -73,5 +73,5 @@ void interrupt_post_init( void ) {
 void interrupt_ensure_kernel_stack( void ) {
   uintptr_t sp;
   __asm__ __volatile__( "mov %0, sp" : "=r" ( sp ) : : "cc" );
-  assert( stack_is_kernel( sp ) );
+  assert( stack_is_kernel( sp ) )
 }

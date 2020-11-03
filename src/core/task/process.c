@@ -22,7 +22,9 @@
 #include <string.h>
 #include <core/event.h>
 #include <core/elf/common.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_PROCESS )
+  #include <core/debug/debug.h>
+#endif
 #include <core/task/queue.h>
 #include <core/task/process.h>
 #include <core/task/thread.h>
@@ -101,13 +103,22 @@ bool task_process_init( void ) {
     return false;
   }
 
-  // register timer event
-  if ( ! event_bind( EVENT_TIMER, task_process_schedule, true ) ) {
+  // register process switch event
+  if ( ! event_bind( EVENT_PROCESS, task_process_schedule, true ) ) {
     avl_destroy_tree( process_manager->thread_priority );
     avl_destroy_tree( process_manager->process_id );
     free( process_manager );
     return false;
   }
+  // register cleanup
+  if ( ! event_bind( EVENT_PROCESS, task_process_cleanup, true ) ) {
+    event_unbind( EVENT_PROCESS, task_process_schedule, true );
+    avl_destroy_tree( process_manager->thread_priority );
+    avl_destroy_tree( process_manager->process_id );
+    free( process_manager );
+    return false;
+  }
+  // return success
   return true;
 }
 
@@ -218,7 +229,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
 
   // Setup thread with entry
   if ( ! task_thread_create( program_entry, process, priority ) ) {
-    avl_remove_by_node( process_manager->process_id, &process->node_id );;
+    avl_remove_by_node( process_manager->process_id, &process->node_id );
     virt_destroy_context( process->virtual_context );
     task_stack_manager_destroy( process->thread_stack_manager );
     task_thread_destroy( process->thread_manager );
@@ -302,4 +313,18 @@ void task_process_queue_reset( void ) {
       break;
     }
   }
+}
+
+/**
+ * @brief Task process cleanup handling
+ *
+ * @param origin
+ * @param context
+ *
+ * @todo add process cleanup logic
+ */
+void task_process_cleanup(
+  __unused event_origin_t origin,
+  __unused void* context
+) {
 }

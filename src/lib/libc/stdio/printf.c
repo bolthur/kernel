@@ -19,15 +19,7 @@
  */
 
 #include <limits.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdbool.h>
-
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-
-#include <core/debug/gdb.h>
 
 /**
  * @brief Simple printf for kernel

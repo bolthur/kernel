@@ -19,7 +19,9 @@
  */
 
 #include <assert.h>
-#include <arch/arm/v7/debug/debug.h>
+#if defined( REMOTE_DEBUG )
+  #include <arch/arm/v7/debug/debug.h>
+#endif
 #include <arch/arm/v7/interrupt/vector.h>
 #include <core/event.h>
 #include <core/interrupt.h>
@@ -56,7 +58,7 @@ __maybe_unused static uintptr_t fault_address( void ) {
 noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
   // nesting
   nested_data_abort++;
-  assert( nested_data_abort < INTERRUPT_NESTED_MAX );
+  assert( nested_data_abort < INTERRUPT_NESTED_MAX )
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
@@ -64,8 +66,8 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "data abort interrupt at %p\r\n", ( void* )fault_address() );
-    DUMP_REGISTER( cpu );
+    DEBUG_OUTPUT( "data abort interrupt at %p\r\n", ( void* )fault_address() )
+    DUMP_REGISTER( cpu )
   #endif
 
   // kernel stack
@@ -75,12 +77,12 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
   #if defined( REMOTE_DEBUG )
     if ( debug_is_debug_exception() ) {
       event_enqueue( EVENT_DEBUG, origin );
-      PANIC( "Check fixup!" );
+      PANIC( "Check fixup!" )
     } else {
-      PANIC( "data abort" );
+      PANIC( "data abort" )
     }
   #else
-    PANIC( "prefetch abort!" );
+    PANIC( "prefetch abort!" )
   #endif
 
   // enqueue cleanup

@@ -16,9 +16,6 @@ AC_CONFIG_HEADERS([include/config.h])
 
 AC_LANG([C])
 
-# Prevent enter folder output
-AC_SUBST(MAKEFLAGS, "${MAKEFLAGS} --no-print-directory")
-
 AC_ARG_ENABLE([device],
   AS_HELP_STRING(
     [--enable-device],

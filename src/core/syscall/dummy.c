@@ -19,9 +19,7 @@
  */
 
 #include <stdio.h>
-#include <core/event.h>
 #include <core/syscall.h>
-#include <core/interrupt.h>
 #include <core/panic.h>
 
 /**

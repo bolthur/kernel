@@ -18,8 +18,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <stdlib.h>
 #include <collection/list.h>
 
 /**
@@ -33,7 +31,7 @@
 bool list_push_front( list_manager_ptr_t list, void* data ) {
   list_item_ptr_t first, node;
 
-  // handle invalid paramter
+  // handle invalid parameter
   if ( ! list || ! data ) {
     return false;
   }
@@ -75,7 +73,7 @@ bool list_push_front( list_manager_ptr_t list, void* data ) {
 bool list_push_front_node( list_manager_ptr_t list, list_item_ptr_t node ) {
   list_item_ptr_t first;
 
-  // handle invalid paramter
+  // handle invalid parameter
   if ( ! list || ! node ) {
     return false;
   }
@@ -110,7 +108,7 @@ bool list_push_front_node( list_manager_ptr_t list, list_item_ptr_t node ) {
 bool list_push_back( list_manager_ptr_t list, void* data ) {
   list_item_ptr_t last, node;
 
-  // handle invalid paramter
+  // handle invalid parameter
   if ( ! list || ! data ) {
     return false;
   }
@@ -151,7 +149,7 @@ bool list_push_back( list_manager_ptr_t list, void* data ) {
  */
 bool list_push_back_node( list_manager_ptr_t list, list_item_ptr_t node ) {
   list_item_ptr_t last;
-  // handle invalid paramter
+  // handle invalid parameter
   if ( ! list || ! node ) {
     return false;
   }

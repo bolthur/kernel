@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <collection/avl.h>
 #include <string.h>
-#include <core/panic.h>
 #include <core/mm/phys.h>
 #include <core/mm/shared.h>
 

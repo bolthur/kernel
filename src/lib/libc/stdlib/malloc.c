@@ -19,9 +19,6 @@
  */
 
 #include <stddef.h>
-#include <stddef.h>
-
-#include <core/panic.h>
 #include <stdlib.h>
 
 /**

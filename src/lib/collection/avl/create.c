@@ -68,32 +68,32 @@ avl_tree_ptr_t avl_create_tree(
   avl_cleanup_func_t cleanup
 ) {
   // allocate new tree structure
-  avl_tree_ptr_t tree = ( avl_tree_ptr_t )malloc( sizeof( avl_tree_t ) );
+  avl_tree_ptr_t new_tree = ( avl_tree_ptr_t )malloc( sizeof( avl_tree_t ) );
   // check malloc return
-  if ( ! tree ) {
+  if ( !new_tree ) {
     return NULL;
   }
   // prepare structure
-  memset( ( void* )tree, 0, sizeof( avl_tree_t ) );
+  memset( ( void* )new_tree, 0, sizeof( avl_tree_t ) );
 
   // fill structure itself
-  tree->root = NULL;
-  tree->compare = compare;
+  new_tree->root = NULL;
+  new_tree->compare = compare;
   // lookup function
   if( lookup ) {
-    tree->lookup = lookup;
+    new_tree->lookup = lookup;
   } else {
-    tree->lookup = avl_default_lookup;
+    new_tree->lookup = avl_default_lookup;
   }
   // cleanup function
   if( cleanup ) {
-    tree->cleanup = cleanup;
+    new_tree->cleanup = cleanup;
   } else {
-    tree->cleanup = avl_default_cleanup;
+    new_tree->cleanup = avl_default_cleanup;
   }
 
   // return created tree
-  return tree;
+  return new_tree;
 }
 
 /**

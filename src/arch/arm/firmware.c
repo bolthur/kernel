@@ -28,8 +28,6 @@
 #include <core/firmware.h>
 #include <arch/arm/firmware.h>
 #include <core/entry.h>
-#include <core/panic.h>
-#include <core/debug/debug.h>
 
 #include <atag.h>
 #include <libfdt.h>

@@ -18,9 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
 #include <assert.h>
-#include <arch/arm/v7/debug/debug.h>
+#if defined( PRINT_EXCEPTION )
+  #include <arch/arm/v7/debug/debug.h>
+#endif
 #include <arch/arm/v7/interrupt/vector.h>
 #include <core/event.h>
 #include <core/interrupt.h>
@@ -38,10 +39,13 @@ static uint32_t nested_prefetch_abort = 0;
  *
  * @todo remove noreturn when handler is completed
  */
-noreturn void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
+#if ! defined( REMOTE_DEBUG )
+noreturn
+#endif
+void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   // nesting
   nested_prefetch_abort++;
-  assert( nested_prefetch_abort < INTERRUPT_NESTED_MAX );
+  assert( nested_prefetch_abort < INTERRUPT_NESTED_MAX )
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
@@ -49,7 +53,7 @@ noreturn void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DUMP_REGISTER( cpu );
+    DUMP_REGISTER( cpu )
   #endif
 
   // kernel stack
@@ -60,10 +64,10 @@ noreturn void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
     if ( debug_is_debug_exception() ) {
       event_enqueue( EVENT_DEBUG, origin );
     } else {
-      PANIC( "prefetch abort" );
+      PANIC( "prefetch abort" )
     }
   #else
-    PANIC( "prefetch abort!" );
+    PANIC( "prefetch abort!" )
   #endif
 
   // enqueue cleanup

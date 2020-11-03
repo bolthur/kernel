@@ -21,13 +21,12 @@
 #include <stddef.h>
 
 #include <assert.h>
-#include <string.h>
-#include <core/panic.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_MM_VIRT )
+  #include <core/debug/debug.h>
+#endif
 #include <core/entry.h>
 #include <platform/rpi/peripheral.h>
 #include <platform/rpi/mailbox/property.h>
-#include <arch/arm/mm/virt.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <platform/rpi/framebuffer.h>
@@ -95,7 +94,7 @@ void virt_platform_init( void ) {
       start,
       VIRT_MEMORY_TYPE_DEVICE,
       VIRT_PAGE_TYPE_AUTO
-    ) );
+    ) )
     // increase start and virtual
     start += PAGE_SIZE;
     virtual += PAGE_SIZE;
@@ -107,7 +106,7 @@ void virt_platform_init( void ) {
       "Map peripherals %p - %p\r\n",
       ( void* )peripheral_base_get( PERIPHERAL_GPIO ),
       ( void* )peripheral_end_get( PERIPHERAL_GPIO )
-    );
+    )
   #endif
 
   // set start and virtual
@@ -122,7 +121,7 @@ void virt_platform_init( void ) {
       virtual,
       start,
       VIRT_MEMORY_TYPE_DEVICE,
-      VIRT_PAGE_TYPE_AUTO ) );
+      VIRT_PAGE_TYPE_AUTO ) )
 
     // increase start and virtual
     start += PAGE_SIZE;
@@ -135,8 +134,7 @@ void virt_platform_init( void ) {
       DEBUG_OUTPUT(
         "Map local peripherals %p - %p\r\n",
         ( void* )peripheral_base_get( PERIPHERAL_LOCAL ),
-        ( void* )peripheral_end_get( PERIPHERAL_LOCAL )
-      );
+        ( void* )peripheral_end_get( PERIPHERAL_LOCAL ) )
     #endif
 
     // set start and virtual
@@ -150,7 +148,7 @@ void virt_platform_init( void ) {
         virtual,
         start,
         VIRT_MEMORY_TYPE_DEVICE,
-        VIRT_PAGE_TYPE_AUTO ) );
+        VIRT_PAGE_TYPE_AUTO ) )
       // increase start and virtual
       start += PAGE_SIZE;
       virtual += PAGE_SIZE;
@@ -164,7 +162,7 @@ void virt_platform_init( void ) {
     ( uintptr_t )ptb_buffer_phys,
     VIRT_MEMORY_TYPE_DEVICE,
     VIRT_PAGE_TYPE_AUTO
-  ) );
+  ) )
 }
 
 /**
@@ -183,12 +181,12 @@ void virt_platform_post_init( void ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "Set new framebuffer base to %p\r\n",
-      ( void* )FRAMEBUFFER_AREA );
+      ( void* )FRAMEBUFFER_AREA )
     DEBUG_OUTPUT( "Set new gpio peripheral base to %p\r\n",
-      ( void* )GPIO_PERIPHERAL_BASE );
+      ( void* )GPIO_PERIPHERAL_BASE )
     DEBUG_OUTPUT( "Set new cpu peripheral base to %p\r\n",
-      ( void* )CPU_PERIPHERAL_BASE );
+      ( void* )CPU_PERIPHERAL_BASE )
     DEBUG_OUTPUT( "Set mailbox property buffer to %p\r\n",
-      ( void* )MAILBOX_PROPERTY_AREA );
+      ( void* )MAILBOX_PROPERTY_AREA )
   #endif
 }

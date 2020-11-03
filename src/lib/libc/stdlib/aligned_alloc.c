@@ -21,8 +21,6 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include <core/panic.h>
-#include <core/mm/virt.h>
 #include <core/mm/heap.h>
 
 /**

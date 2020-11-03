@@ -5,25 +5,20 @@
 /doc
 **/*.disasm
 *.dtb
-/build-aux/m4/libtool.m4
-/build-aux/m4/lt~obsolete.m4
-/build-aux/m4/ltoptions.m4
-/build-aux/m4/ltsugar.m4
-/build-aux/m4/ltversion.m4
 
-# ---> JetBrains
-
-.idea
 
 # ---> Autotools
 # http://www.gnu.org/software/automake
 
 Makefile.in
+Makefile
 ar-lib
 mdate-sh
 py-compile
 test-driver
 ylwrap
+libtool
+.dirstamp
 
 # http://www.gnu.org/software/autoconf
 
@@ -43,6 +38,7 @@ depcomp
 install-sh
 missing
 stamp-h1
+*.Plo
 
 # https://www.gnu.org/software/libtool/
 
@@ -54,11 +50,11 @@ texinfo.tex
 
 # http://www.gnu.org/software/m4/
 
-m4/libtool.m4
-m4/ltoptions.m4
-m4/ltsugar.m4
-m4/ltversion.m4
-m4/lt~obsolete.m4
+/build-aux/m4/libtool.m4
+/build-aux/m4/ltoptions.m4
+/build-aux/m4/ltsugar.m4
+/build-aux/m4/ltversion.m4
+/build-aux/m4/lt~obsolete.m4
 
 # ---> C
 # Object files
@@ -67,6 +63,7 @@ m4/lt~obsolete.m4
 *.obj
 *.elf
 *.bin
+*.img
 
 # Precompiled Headers
 *.gch
@@ -94,36 +91,8 @@ m4/lt~obsolete.m4
 
 # Debug files
 *.dSYM/
-
-# ---> C++
-# Compiled Object files
-*.slo
-*.lo
-*.o
-*.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
-*.mod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
-*.out
-*.app
+*.sym
+*.map
 
 # ---> VisualStudioCode
 .settings

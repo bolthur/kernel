@@ -21,8 +21,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <arch/arm/stack.h>
-#include <core/debug/debug.h>
-#include <core/panic.h>
 #include <core/stack.h>
 
 extern void stack_supervisor_mode( void );

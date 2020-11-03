@@ -18,9 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/event.h>
 #include <core/syscall.h>
-#include <core/interrupt.h>
 
 void syscall_io_acquire( __unused void* context ) {
 }

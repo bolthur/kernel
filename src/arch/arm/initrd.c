@@ -29,7 +29,6 @@
 #include <arch/arm/firmware.h>
 #include <atag.h>
 #include <libfdt.h>
-#include <endian.h>
 
 /**
  * @brief Prepare for initrd usage

@@ -121,7 +121,7 @@ _\name\()_entry_unprivileged:
   // adjust stack pointer back
   add sp, #8
 
-  // pass 0 as paramter to indicate user entry
+  // pass 0 as parameter to indicate user entry
   mov r1, #0
 
   // jump to finished

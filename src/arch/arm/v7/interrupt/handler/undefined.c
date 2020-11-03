@@ -19,7 +19,6 @@
  */
 
 #include <assert.h>
-#include <arch/arm/v7/debug/debug.h>
 #include <arch/arm/v7/interrupt/vector.h>
 #include <core/event.h>
 #include <core/panic.h>
@@ -40,7 +39,7 @@ static uint32_t nested_undefined = 0;
 noreturn void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
   // nesting
   nested_undefined++;
-  assert( nested_undefined < INTERRUPT_NESTED_MAX );
+  assert( nested_undefined < INTERRUPT_NESTED_MAX )
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
@@ -48,14 +47,14 @@ noreturn void vector_undefined_instruction_handler( cpu_register_context_ptr_t c
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DUMP_REGISTER( cpu );
+    DUMP_REGISTER( cpu )
   #endif
 
   // kernel stack
   interrupt_ensure_kernel_stack();
 
   // just panic
-  PANIC( "undefined" );
+  PANIC( "undefined" )
 
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );

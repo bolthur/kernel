@@ -25,17 +25,17 @@
 /**
  * @brief Fill address with value
  *
- * @param bufptr
- * @param value
- * @param size
- * @return void*
+ * @param buf buffer to fill
+ * @param value value to set
+ * @param size length
+ * @return void* address to buffer
  */
-void* memset( void* bufptr, int value, size_t size ) {
-  uint8_t* buf = ( uint8_t* ) bufptr;
+void* memset( void* buf, int value, size_t size ) {
+  uint8_t* _buf = ( uint8_t* )buf;
 
   for ( size_t i = 0; i < size; i++ ) {
-    buf[ i ] = ( uint8_t ) value;
+    _buf[ i ] = ( uint8_t ) value;
   }
 
-  return bufptr;
+  return buf;
 }

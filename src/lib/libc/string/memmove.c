@@ -22,6 +22,14 @@
 #include <stdint.h>
 #include <string.h>
 
+/**
+ * @brief Move Memory from src to destination with length
+ *
+ * @param dst destination
+ * @param src source
+ * @param n length
+ * @return address of destination
+ */
 void* memmove( void* dst, const void* src, size_t n ) {
   uint8_t *cdst = ( uint8_t* )dst;
   const uint8_t *csrc = ( const uint8_t* )src;

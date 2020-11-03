@@ -23,40 +23,40 @@
 #include <core/debug/string.h>
 
 /**
- * @brief Copy of memcpy for remote debugging
+ * @brief Duplicate of memory copy function used during remote debugging
  *
- * @param dstptr
- * @param srcptr
+ * @param dst
+ * @param src
  * @param size
  * @return void*
  */
-void* debug_memcpy( void* restrict dstptr, const void* restrict srcptr, size_t size ) {
-  uint8_t* dst = ( uint8_t * ) dstptr;
-  const uint8_t* src = ( const uint8_t * ) srcptr;
+void* debug_memcpy( void* restrict dst, const void* restrict src, size_t size ) {
+  uint8_t* _dst = ( uint8_t * )dst;
+  const uint8_t* _src = ( const uint8_t * )src;
 
   for ( size_t i = 0; i < size; i++ ) {
-    dst[ i ] = src[ i ];
+    _dst[ i ] = _src[ i ];
   }
 
-  return dstptr;
+  return dst;
 }
 
 /**
  * @brief Copy of memset for remote debugging
  *
- * @param bufptr
+ * @param buf
  * @param value
  * @param size
  * @return void*
  */
-void* debug_memset ( void* bufptr, int value, size_t size ) {
-  uint8_t* buf = ( uint8_t* ) bufptr;
+void* debug_memset ( void* buf, int value, size_t size ) {
+  uint8_t* _buf = ( uint8_t* )buf;
 
   for ( size_t i = 0; i < size; i++ ) {
-    buf[ i ] = ( uint8_t ) value;
+    _buf[ i ] = ( uint8_t ) value;
   }
 
-  return bufptr;
+  return buf;
 }
 
 /**

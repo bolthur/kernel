@@ -18,7 +18,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/debug/debug.h>
 #include <core/task/stack.h>
 #include <arch/arm/stack.h>
 

@@ -21,11 +21,12 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <core/panic.h>
 #include <arch/arm/stack.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_PROCESS )
+  #include <core/debug/debug.h>
+#endif
 #include <core/task/queue.h>
 #include <core/task/process.h>
 #include <core/task/thread.h>
@@ -49,7 +50,7 @@ task_thread_ptr_t task_thread_create(
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
       "task_thread_create( %p, %p, %zu ) called\r\n",
-      ( void* )entry, ( void* )process, priority );
+      ( void* )entry, ( void* )process, priority )
   #endif
 
   // create stack
@@ -68,7 +69,7 @@ task_thread_ptr_t task_thread_create(
   }
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "stack_virtual = %p\r\n", ( void* )stack_virtual );
+    DEBUG_OUTPUT( "stack_virtual = %p\r\n", ( void* )stack_virtual )
   #endif
 
   // create thread structure
@@ -83,7 +84,7 @@ task_thread_ptr_t task_thread_create(
   memset( ( void* )thread, 0, sizeof( task_thread_t ) );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Allocated thread structure at %p\r\n", ( void* )thread );
+    DEBUG_OUTPUT( "Allocated thread structure at %p\r\n", ( void* )thread )
   #endif
 
   // create context
@@ -108,7 +109,7 @@ task_thread_ptr_t task_thread_create(
   current_context->reg.sp = stack_virtual + STACK_SIZE - 4;
   // debug output
   #if defined( PRINT_PROCESS )
-    DUMP_REGISTER( current_context );
+    DUMP_REGISTER( current_context )
   #endif
 
   // map stack temporary

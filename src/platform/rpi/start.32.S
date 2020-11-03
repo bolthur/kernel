@@ -118,7 +118,7 @@ reset:
     mcrr p15, 1, r3, r1, c15
   #endif
 
-  // Disable caches within system controll register
+  // Disable caches within system control register
   mrc p15, 0, r3, c1, c0, 0
   // disable data cache
   bic r3, r3, #( 1 << 2 )

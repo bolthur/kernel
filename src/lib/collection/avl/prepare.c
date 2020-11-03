@@ -19,7 +19,6 @@
  */
 
 #include <collection/avl.h>
-#include <core/debug/debug.h>
 
 /**
  * @brief method to prepare some node

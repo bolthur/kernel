@@ -20,8 +20,9 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <core/panic.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_PROCESS )
+  #include <core/debug/debug.h>
+#endif
 #include <core/event.h>
 #include <core/task/queue.h>
 #include <core/task/thread.h>

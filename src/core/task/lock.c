@@ -29,7 +29,7 @@
 void task_lock_mutex_release( task_lock_mutex_t* m ) {
   // set to released
   *m = TASK_LOCK_MUTEX_RELEASED;
-  // snychronize
+  // synchronize
   __sync_synchronize();
 }
 

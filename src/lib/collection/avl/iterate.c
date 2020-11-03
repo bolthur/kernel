@@ -18,7 +18,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
 #include <string.h>
 #include <collection/avl.h>
 
@@ -43,19 +42,11 @@ static avl_node_ptr_t find_previous_node(
   if ( root == current ) {
     // handle left node existing ( max )
     if ( root->left ) {
-      root = root->left;
-      while ( root->right ) {
-        root = root->right;
-      }
-      return root;
+      return avl_get_max( root->left );
     }
     // handle right node existing ( min )
     if ( root->right ) {
-      root = root->right;
-      while ( root->left ) {
-        root = root->left;
-      }
-      return root;
+      return avl_get_min( root->right );
     }
     // nothing existing
     return NULL;
@@ -108,12 +99,8 @@ avl_node_ptr_t avl_iterate_next( avl_tree_ptr_t tree, avl_node_ptr_t node ) {
   if ( node->right ) {
     // step right
     node = node->right;
-    // get smallest one
-    while ( node->left ) {
-      node = node->left;
-    }
-    // return found one
-    return node;
+    // return smallest node of right sub tree
+    return avl_get_min( node->right );
   }
 
   avl_node_ptr_t next = NULL;

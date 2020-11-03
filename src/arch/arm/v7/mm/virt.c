@@ -20,13 +20,9 @@
 
 #include <stddef.h>
 
-#include <string.h>
-
 #include <core/entry.h>
 #include <core/panic.h>
-#include <core/debug/debug.h>
 #include <core/initrd.h>
-#include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <arch/arm/mm/virt.h>
 #include <arch/arm/v7/mm/virt/short.h>
@@ -178,7 +174,7 @@ bool virt_map_address(
     return v7_short_map( ctx, vaddr, paddr, type, page );
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }
 
@@ -213,14 +209,14 @@ bool virt_map_address_random(
     return v7_short_map_random( ctx, vaddr, type, page );
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }
 
 /**
  * @brief Map a physical address within temporary space
  *
- * @param paddr physicall address
+ * @param paddr physical address
  * @param size size to map
  * @return uintptr_t
  */
@@ -236,7 +232,7 @@ uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
     return v7_short_map_temporary( paddr, size );
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }
 
@@ -265,7 +261,7 @@ bool virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr, bool free_phys 
     return v7_short_unmap( ctx, addr, free_phys );
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }
 
@@ -287,7 +283,7 @@ void virt_unmap_temporary( uintptr_t addr, size_t size ) {
     v7_short_unmap_temporary( addr, size );
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }
 
@@ -309,7 +305,7 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
     return v7_short_create_context( type );
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }
 
@@ -337,7 +333,7 @@ bool virt_destroy_context( virt_context_ptr_t ctx ) {
     v7_short_destroy_context( ctx );
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 
   return true;
@@ -372,7 +368,7 @@ uint64_t virt_create_table(
     return v7_short_create_table( ctx, addr, table );
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }
 
@@ -400,7 +396,7 @@ bool virt_set_context( virt_context_ptr_t ctx ) {
     return v7_short_set_context( ctx );
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }
 
@@ -419,7 +415,7 @@ void virt_flush_complete( void ) {
     v7_short_flush_complete();
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }
 
@@ -453,7 +449,7 @@ void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
     v7_short_flush_address( addr );
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }
 
@@ -480,7 +476,7 @@ bool virt_prepare_temporary( virt_context_ptr_t ctx ) {
     return v7_short_prepare_temporary( ctx );
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }
 
@@ -499,7 +495,7 @@ void virt_arch_prepare( void ) {
     v7_short_prepare();
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }
 
@@ -528,6 +524,6 @@ bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
     return v7_short_is_mapped_in_context( ctx, addr );
   // Panic when mode is unsupported
   } else {
-    PANIC( "Unsupported mode!" );
+    PANIC( "Unsupported mode!" )
   }
 }

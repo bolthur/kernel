@@ -23,7 +23,9 @@
 #include <core/elf/elf32.h>
 #include <core/mm/phys.h>
 #include <core/entry.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_ELF )
+  #include <core/debug/debug.h>
+#endif
 
 /**
  * @brief Check elf header for execution
@@ -39,7 +41,7 @@ bool elf_check( uintptr_t elf ) {
   if ( ! header ) {
     // debug output
     #if defined ( PRINT_ELF )
-      DEBUG_OUTPUT( "Invalid parameter!\r\n" );
+      DEBUG_OUTPUT( "Invalid parameter!\r\n" )
     #endif
     // return error
     return false;
@@ -54,7 +56,7 @@ bool elf_check( uintptr_t elf ) {
   ) {
     // debug output
     #if defined ( PRINT_ELF )
-      DEBUG_OUTPUT( "Invalid header magic value!\r\n" );
+      DEBUG_OUTPUT( "Invalid header magic value!\r\n" )
     #endif
     // return error
     return false;
@@ -65,7 +67,7 @@ bool elf_check( uintptr_t elf ) {
     if ( ELFCLASS32 != header->e_ident[ EI_CLASS ] ) {
       // debug output
       #if defined ( PRINT_ELF )
-        DEBUG_OUTPUT( "Invalid architecture!\r\n" );
+        DEBUG_OUTPUT( "Invalid architecture!\r\n" )
       #endif
       // return error
       return false;
@@ -74,7 +76,7 @@ bool elf_check( uintptr_t elf ) {
     if ( ELFCLASS64 != header->e_ident[ EI_CLASS ] ) {
       // debug output
       #if defined ( PRINT_ELF )
-        DEBUG_OUTPUT( "Invalid architecture!\r\n" );
+        DEBUG_OUTPUT( "Invalid architecture!\r\n" )
       #endif
       // return error
       return false;
@@ -90,7 +92,7 @@ bool elf_check( uintptr_t elf ) {
   if ( 0 == header->e_phentsize ) {
     // debug output
     #if defined ( PRINT_ELF )
-      DEBUG_OUTPUT( "Program header missing!\r\n" );
+      DEBUG_OUTPUT( "Program header missing!\r\n" )
     #endif
     // return error
     return false;
@@ -100,7 +102,7 @@ bool elf_check( uintptr_t elf ) {
   if ( 0 == header->e_shentsize ) {
     // debug output
     #if defined ( PRINT_ELF )
-      DEBUG_OUTPUT( "Section header missing!\r\n" );
+      DEBUG_OUTPUT( "Section header missing!\r\n" )
     #endif
     // return error
     return false;
@@ -113,7 +115,7 @@ bool elf_check( uintptr_t elf ) {
 /**
  * @brief Internal helper to parse and load program header
  *
- * @param elf adress to elf header
+ * @param elf address to elf header
  * @param process process structure
  * @return true
  * @return false
@@ -173,7 +175,7 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       // unmap temporary
       virt_unmap_temporary( tmp, PAGE_SIZE );
 
-      // map it wihin process context
+      // map it within process context
       if ( ! virt_map_address(
           process->virtual_context,
           program_header->p_vaddr + offset,

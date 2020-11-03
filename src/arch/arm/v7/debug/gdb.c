@@ -20,13 +20,10 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <endian.h>
 #include <core/panic.h>
-#include <core/interrupt.h>
-#include <core/debug/debug.h>
 #include <core/debug/string.h>
 #include <core/debug/disasm.h>
 #include <core/debug/gdb.h>
@@ -34,7 +31,6 @@
 #include <core/mm/virt.h>
 #include <arch/arm/v7/cpu.h>
 #include <arch/arm/barrier.h>
-#include <arch/arm/v7/cache.h>
 #include <arch/arm/v7/debug/debug.h>
 
 /**
@@ -63,12 +59,12 @@ static bool end_handler = false;
 uint8_t debug_gdb_output_buffer[ GDB_DEBUG_MAX_BUFFER ];
 
 /**
- * @brief input buffer used for incomming packages
+ * @brief input buffer used for incoming packages
  */
 uint8_t debug_gdb_input_buffer[ GDB_DEBUG_MAX_BUFFER ];
 
 /**
- * @brief Helper to etract hex value from buffer
+ * @brief Helper to extract hex value from buffer
  *
  * @param buffer
  * @param next
@@ -250,7 +246,7 @@ static bool read_field( const uint8_t** src, uint32_t* dest, char delim ) {
   // handle error
   if ( ! del ) {
     return false;
-  };
+  }
   // extract hex value
   *dest = extract_hex_value( *src, &next );
   // check for read to be done until completely
@@ -349,7 +345,7 @@ void debug_gdb_handler_read_register(
   // push spsr
   buffer += write_register( buffer, cpu->reg.spsr );
   // ending
-  *buffer++ = '\0';
+  *buffer = '\0';
   // send packet
   debug_gdb_packet_send( p );
   // free again
@@ -736,7 +732,7 @@ debug_gdb_signal_t debug_gdb_get_signal( void ) {
     return GDB_SIGNAL_TRAP;
   }
   // unhandled
-  PANIC( "Unknown / Unsupported gdb signal!" );
+  PANIC( "Unknown / Unsupported gdb signal!" )
 }
 
 /**

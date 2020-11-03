@@ -104,11 +104,11 @@ enum {
   UARTLCRH = ( UART_BASE + 0x2C ), // line control register
   UARTCR = ( UART_BASE + 0x30 ), // control register
   UARTIFLS = ( UART_BASE + 0x34 ), // interrupt fifo level select register
-  UARTIMSC = ( UART_BASE + 0x38 ), // interupt mask set/clear register
+  UARTIMSC = ( UART_BASE + 0x38 ), // interrupt mask set/clear register
   UARTRIS = ( UART_BASE + 0x3C ), // raw interrupt status register
   UARTMIS = ( UART_BASE + 0x40 ), // masked interrupt status register
   UARTICR = ( UART_BASE + 0x44 ), // interrupt clear register
-  UARTDMACR = ( UART_BASE + 0x48 ), // dma controll register
+  UARTDMACR = ( UART_BASE + 0x48 ), // dma control register
 
   // Interrupt register
   INTERRUPT_IRQ_BASE = 0xB200,

@@ -18,10 +18,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-
-#include <core/panic.h>
-#include <arch/arm/barrier.h>
 #include <platform/rpi/mailbox/mailbox.h>
 #include <platform/rpi/peripheral.h>
 

@@ -24,7 +24,7 @@
 #include <string.h>
 
 /**
- * @brief Calloc routine
+ * @brief continuous allocation
  *
  * @param num amount of entries
  * @param size size of one entry

@@ -25,7 +25,9 @@
 #include <string.h>
 #include <collection/list.h>
 #include <core/panic.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_EVENT )
+  #include <core/debug/debug.h>
+#endif
 #include <core/event.h>
 
 /**
@@ -77,14 +79,14 @@ bool event_init( void ) {
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Initialized event manager structure at %p\r\n",
-      ( void* )event );
+      ( void* )event )
   #endif
 
   // create tree
   event->tree = avl_create_tree( compare_event_callback, NULL, NULL );
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Created event tree at: %p\r\n", ( void* )event->tree );
+    DEBUG_OUTPUT( "Created event tree at: %p\r\n", ( void* )event->tree )
   #endif
   // handle error
   if ( ! event->tree ) {
@@ -130,7 +132,7 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Called event_bind( %d, %p, %s )\r\n",
-      type, callback, post ? "true" : "false" );
+      type, callback, post ? "true" : "false" )
   #endif
   // get correct tree to use
   avl_tree_ptr_t tree = event->tree;
@@ -258,7 +260,7 @@ void event_unbind(
     return;
   }
 
-  PANIC( "event_unbind not yet implemented!" );
+  PANIC( "event_unbind not yet implemented!" )
 }
 
 /**

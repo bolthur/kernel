@@ -21,7 +21,6 @@
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <core/task/process.h>
-#include <core/event.h>
 #include <core/syscall.h>
 #include <core/interrupt.h>
 
@@ -31,7 +30,6 @@
  * @param context
  *
  * @todo add support for executable / non executable via parameter
- * @todo abort when virtual mapping failed
  */
 void syscall_memory_acquire( void* context ) {
   // get amount and current context
@@ -83,9 +81,8 @@ void syscall_memory_release( void* context ) {
     return;
   }
 
-  // unmap
-  virt_unmap_address_range( virtual_context, address, amount, true );
-
-  // return success
-  syscall_populate_single_return( context, true );
+  // return unmap result
+  syscall_populate_single_return(
+    context,
+    virt_unmap_address_range( virtual_context, address, amount, true ) );
 }

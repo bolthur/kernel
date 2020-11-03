@@ -21,11 +21,9 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdbool.h>
 
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 // Possible length types
 typedef enum {
@@ -44,7 +42,7 @@ typedef enum {
 typedef struct {
   const char* name;
   length_type_t length;
-} length_modifer_t;
+} length_modifier_t;
 
 /**
  * @brief
@@ -240,7 +238,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       }
     }
     // length modifier map
-    length_modifer_t length_modifier_map[] = {
+    length_modifier_t length_modifier_map[] = {
       { "hh", LENGTH_SHORT_SHORT },
       { "h", LENGTH_SHORT },
       { "", LENGTH_DEFAULT },

@@ -23,7 +23,7 @@
 #include <string.h>
 
 /**
- * @brief memchr
+ * @brief Locate character in memory
  *
  * @param buf
  * @param c

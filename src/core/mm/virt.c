@@ -22,7 +22,9 @@
 #include <stdbool.h>
 
 #include <assert.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_MM_VIRT )
+  #include <core/debug/debug.h>
+#endif
 #include <core/panic.h>
 #include <core/entry.h>
 #include <core/initrd.h>
@@ -76,7 +78,7 @@ void virt_init( void ) {
       start,
       VIRT_MEMORY_TYPE_NORMAL,
       VIRT_PAGE_TYPE_EXECUTABLE
-    ) );
+    ) )
 
     // get next page
     start += PAGE_SIZE;
@@ -108,7 +110,7 @@ void virt_init( void ) {
         start,
         VIRT_MEMORY_TYPE_NORMAL,
         VIRT_PAGE_TYPE_AUTO
-      ) );
+      ) )
 
       // get next page
       start += PAGE_SIZE;
@@ -123,18 +125,18 @@ void virt_init( void ) {
   // initialize platform related
   virt_platform_init();
   // prepare temporary area
-  assert( virt_prepare_temporary( kernel_context ) );
+  assert( virt_prepare_temporary( kernel_context ) )
 
   // firmware init stuff
-  assert( firmware_init() );
+  assert( firmware_init() )
 
   // set kernel context
-  assert( virt_set_context( kernel_context ) );
+  assert( virt_set_context( kernel_context ) )
   // flush contexts to take effect
   virt_flush_complete();
 
   // set dummy user context
-  assert( virt_set_context( user_context ) );
+  assert( virt_set_context( user_context ) )
   // flush contexts to take effect
   virt_flush_complete();
 
@@ -390,7 +392,7 @@ uintptr_t virt_get_context_min_address( virt_context_ptr_t ctx ) {
   } else if ( ctx->type == VIRT_CONTEXT_TYPE_USER ) {
     return USER_AREA_START;
   } else {
-    PANIC( "Unsupported context type!" );
+    PANIC( "Unsupported context type!" )
   }
 }
 
@@ -406,6 +408,6 @@ uintptr_t virt_get_context_max_address( virt_context_ptr_t ctx ) {
   } else if ( ctx->type == VIRT_CONTEXT_TYPE_USER ) {
     return USER_AREA_END;
   } else {
-    PANIC( "Unsupported context type!" );
+    PANIC( "Unsupported context type!" )
   }
 }

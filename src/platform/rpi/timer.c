@@ -21,21 +21,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <stdio.h>
-
-#if defined( ARCH_ARM_V6 )
-  //#include <arch/arm/v6/cpu.h>
-#elif defined( ARCH_ARM_V7 )
-  #include <arch/arm/v7/cpu.h>
-#elif defined( ARCH_ARM_V8 )
-  //#include <arch/arm/v8/cpu.h>
-#endif
-
-#include <arch/arm/delay.h>
-
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
 
+#if defined( PRINT_TIMER )
+  #include <core/debug/debug.h>
+#endif
 #include <core/event.h>
 #include <core/io.h>
 #include <core/timer.h>
@@ -60,7 +51,7 @@
   #define ARM_GENERIC_TIMER_COUNT 50000000 // 50000
 #else
   // free running counter incrementing at 1 MHz => Increments each microsecond
-  #define TIMER_FREQUENZY_HZ 1000000
+  #define TIMER_FREQUENCY_HZ 1000000
 
   // interrupts per second
   // FIXME: final value should be something like 25 or 50
@@ -110,7 +101,7 @@ static void timer_clear( void* context ) {
 
   // debug output
   #if defined( PRINT_TIMER )
-    DEBUG_OUTPUT( "timer_clear()\r\n" );
+    DEBUG_OUTPUT( "timer_clear()\r\n" )
   #endif
 
   // clear timer
@@ -121,11 +112,11 @@ static void timer_clear( void* context ) {
     // clear timer match bit
     io_out32( SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
     // set compare again
-    io_out32( SYSTEM_TIMER_COMPARE_3, io_in32( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
+    io_out32( SYSTEM_TIMER_COMPARE_3, io_in32( SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENCY_HZ / TIMER_INTERRUPT_PER_SECOND );
   #endif
 
   // trigger timer event
-  event_enqueue( EVENT_TIMER, EVENT_DETERMINE_ORIGIN( context ) );
+  event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
 }
 
 /**
@@ -160,7 +151,7 @@ void timer_init( void ) {
     io_out32( base + SYSTEM_TIMER_CONTROL, 0x00000000 );
 
     // set compare for timer 3
-    io_out32( base + SYSTEM_TIMER_COMPARE_3, io_in32( base + SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENZY_HZ / TIMER_INTERRUPT_PER_SECOND );
+    io_out32( base + SYSTEM_TIMER_COMPARE_3, io_in32( base + SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENCY_HZ / TIMER_INTERRUPT_PER_SECOND );
 
     // enable timer 3
     io_out32( base + SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );

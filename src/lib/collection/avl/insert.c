@@ -63,7 +63,7 @@ bool avl_insert_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
   if ( ! tree || ! node ) {
     return false;
   }
-  // insert and rebalance
+  // insert and balance
   tree->root = insert( tree, node, tree->root );
   return true;
 }

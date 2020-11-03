@@ -22,8 +22,9 @@
 #include <stdbool.h>
 
 #include <assert.h>
-#include <stdio.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_MM_PHYS )
+  #include <core/debug/debug.h>
+#endif
 #include <core/entry.h>
 #include <core/initrd.h>
 #include <core/mm/phys.h>
@@ -164,10 +165,10 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
 
   // found address range
   uint64_t address = 0;
-  uint64_t tmp = 0;
+  uint64_t tmp;
   bool stop = false;
 
-  // loop through bitmap to find free continouse space
+  // loop through bitmap to find free continuous space
   for ( size_t idx = 0; idx < phys_bitmap_length && !stop; idx++ ) {
     // skip completely used entries
     if ( PHYS_ALL_PAGES_OF_INDEX_USED == phys_bitmap[ idx ] ) {
@@ -249,7 +250,7 @@ void phys_free_page( uint64_t address ) {
  */
 void phys_init( void ) {
   // execute platform initialization
-  assert( phys_platform_init() );
+  assert( phys_platform_init() )
 
   // determine start and end for kernel mapping
   uintptr_t start = 0;

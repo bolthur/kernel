@@ -20,7 +20,9 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_PROCESS )
+  #include <core/debug/debug.h>
+#endif
 #include <core/task/stack.h>
 #include <core/task/process.h>
 

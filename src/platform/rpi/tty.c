@@ -18,9 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
 #include <core/tty.h>
-#include <platform/rpi/framebuffer.h>
+#if defined( OUTPUT_ENABLE )
+  #include <platform/rpi/framebuffer.h>
+#endif
 
 /**
  * @brief Initialize TTY

@@ -24,7 +24,7 @@
 #include <stdlib.h>
 
 /**
- * @brief Realloc routine
+ * @brief Reallocate memory
  *
  * @param ptr ptr to allocated space
  * @param size new size

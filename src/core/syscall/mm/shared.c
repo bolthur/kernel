@@ -22,6 +22,13 @@
 #include <core/task/thread.h>
 #include <core/mm/shared.h>
 
+/**
+ * @brief Create shared memory area
+ *
+ * @param context
+ *
+ * @todo add some sort of unsafe copy because the address of string may be corrupt
+ */
 void syscall_shared_memory_create( void* context ) {
   // get parameter
   const char* name = ( const char* )syscall_get_parameter( context, 0 );
@@ -33,6 +40,13 @@ void syscall_shared_memory_create( void* context ) {
   );
 }
 
+/**
+ * @brief Release shared memory area
+ *
+ * @param context
+ *
+ * @todo add some sort of unsafe copy because the address of string may be corrupt
+ */
 void syscall_shared_memory_release( void* context ) {
   // get parameter
   const char* name = ( const char* )syscall_get_parameter( context, 0 );
@@ -46,6 +60,13 @@ void syscall_shared_memory_release( void* context ) {
   );
 }
 
+/**
+ * @brief Acquire shared memory by name
+ *
+ * @param context
+ *
+ * @todo add some sort of unsafe copy because the address of string may be corrupt
+ */
 void syscall_shared_memory_acquire( void* context ) {
   // get parameter
   const char* name = ( const char* )syscall_get_parameter( context, 0 );

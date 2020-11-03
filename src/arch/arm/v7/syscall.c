@@ -19,8 +19,6 @@
  */
 
 #include <assert.h>
-#include <core/event.h>
-#include <core/panic.h>
 #include <core/syscall.h>
 #include <core/interrupt.h>
 #include <arch/arm/v7/cpu.h>
@@ -51,7 +49,7 @@ size_t syscall_get_parameter( void* context, int32_t num ) {
   // transform to cpu structure
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
   // number sanitize
-  assert( num >= R0 && num <= CPSR );
+  assert( num >= R0 && num <= CPSR )
   // return value
   return ( size_t )cpu->raw[ num ];
 }

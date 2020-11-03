@@ -25,13 +25,13 @@
  * @brief strtoul
  *
  * @param str
- * @param endptr
+ * @param end
  * @param base
  * @return unsigned long int
  */
 unsigned long int strtoul(
   const char* str,
-  __unused char** endptr,
+  __unused char** end,
   int base
 ) {
   unsigned long int val = 0;

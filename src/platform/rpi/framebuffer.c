@@ -22,9 +22,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <stdlib.h>
 #include <string.h>
-#include <core/debug/debug.h>
 #include <platform/rpi/framebuffer.h>
 #include <platform/rpi/mailbox/mailbox.h>
 #include <platform/rpi/mailbox/property.h>
@@ -32,7 +30,6 @@
 #include <font/font.h>
 
 #include <core/mm/phys.h>
-#include <arch/arm/barrier.h>
 #include <core/mm/virt.h>
 
 /**
@@ -127,7 +124,7 @@ bool framebuffer_init( void ) {
     return false;
   }
 
-  // fetch video core informations
+  // fetch video core information
   mailbox_property_init();
   mailbox_property_add_tag( TAG_GET_VC_MEMORY );
   if ( MAILBOX_ERROR == mailbox_property_process() ) {

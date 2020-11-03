@@ -18,13 +18,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-
-#include <stdio.h>
-#include <string.h>
 #include <assert.h>
-
-#include <core/debug/debug.h>
+#if defined( PRINT_MM_VIRT )
+  #include <core/debug/debug.h>
+#endif
 #include <core/entry.h>
 #include <core/panic.h>
 #include <core/mm/phys.h>
@@ -67,7 +64,7 @@ void virt_setup_supported_modes( void ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT( "reg = %#08x, supported_modes = %#08x\r\n",
-        reg, supported_modes );
+        reg, supported_modes )
     #endif
 
     // get memory size from mmfr3
@@ -79,7 +76,7 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#08x\r\n", reg );
+      DEBUG_OUTPUT( "reg = %#08x\r\n", reg )
     #endif
 
     // get only cpu address bus size
@@ -87,7 +84,7 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#08x\r\n", reg );
+      DEBUG_OUTPUT( "reg = %#08x\r\n", reg )
     #endif
 
     // set paging to v7 short descriptor if more
@@ -98,7 +95,7 @@ void virt_setup_supported_modes( void ) {
       } else if ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes ) {
         supported_modes = ID_MMFR0_VSMA_V7_PAGING_PXN;
       } else {
-        PANIC( "Not supported!" );
+        PANIC( "Not supported!" )
       }
     }
   #elif defined( ELF64 )
@@ -118,16 +115,16 @@ void virt_arch_init( void ) {
 
   // create a kernel context
   kernel_context = virt_create_context( VIRT_CONTEXT_TYPE_KERNEL );
-  assert( kernel_context );
+  assert( kernel_context )
 
   // create a dummy user context for all cores
   user_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
-  assert( user_context );
+  assert( user_context )
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "kernel_context: %p\r\n", ( void* )kernel_context );
-    DEBUG_OUTPUT( "user_context: %p\r\n", ( void* )user_context );
+    DEBUG_OUTPUT( "kernel_context: %p\r\n", ( void* )kernel_context )
+    DEBUG_OUTPUT( "user_context: %p\r\n", ( void* )user_context )
   #endif
 }
 
