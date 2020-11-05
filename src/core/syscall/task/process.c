@@ -51,8 +51,6 @@ void syscall_process_create( __unused void* context ) {
  * @brief System call process handler
  *
  * @param context
- *
- * @todo check why prefetch abort occurs here
  */
 void syscall_process_exit( void* context ) {
   task_thread_current_thread->process->state = TASK_PROCESS_STATE_KILL;

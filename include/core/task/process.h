@@ -39,6 +39,7 @@ typedef struct task_stack_manager
 typedef enum {
   TASK_PROCESS_STATE_READY = 0,
   TASK_PROCESS_STATE_ACTIVE,
+  TASK_PROCESS_STATE_HALT_SWITCH,
   TASK_PROCESS_STATE_KILL,
 } task_process_state_t;
 

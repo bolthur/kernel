@@ -86,8 +86,7 @@ void task_process_start( void ) {
  * @param origin event origin
  * @param context cpu context
  *
- * @todo Prefetch abort, when no more other tasks are there to switch to
- * @todo Add endless loop with enabled interrupts, when there are no mor tasks left
+ * @todo Add endless loop with enabled interrupts, when there are no more possible tasks left
  */
 void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // debug output
@@ -129,7 +128,12 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     // set last handled within running queue
     running_queue->last_handled = running_thread;
     // update running task to halt due to switch
-    running_thread->state = TASK_THREAD_STATE_HALT_SWITCH;
+    if ( TASK_PROCESS_STATE_KILL != running_thread->process->state ) {
+      running_thread->process->state = TASK_PROCESS_STATE_HALT_SWITCH;
+    }
+    if ( TASK_THREAD_STATE_KILL != running_thread->state ) {
+      running_thread->state = TASK_THREAD_STATE_HALT_SWITCH;
+    }
   }
 
   // get next thread
@@ -178,7 +182,12 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // save context of current thread
   if ( running_thread ) {
     // reset state to ready
-    running_thread->state = TASK_THREAD_STATE_READY;
+    if ( TASK_PROCESS_STATE_HALT_SWITCH == running_thread->process->state ) {
+      running_thread->process->state = TASK_PROCESS_STATE_READY;
+    }
+    if ( TASK_THREAD_STATE_HALT_SWITCH == running_thread->state ) {
+      running_thread->state = TASK_THREAD_STATE_READY;
+    }
   }
   // overwrite current running thread
   while( ! task_thread_set_current( next_thread, next_queue ) ) {

@@ -99,18 +99,27 @@ bool task_thread_set_current(
   queue->current = thread;
   // set state
   task_thread_current_thread->state = TASK_THREAD_STATE_ACTIVE;
+  task_thread_current_thread->process->state = TASK_PROCESS_STATE_ACTIVE;
   return true;
 }
 
 /**
  * @brief Reset current process
+ *
+ * @todo Rename to task_reset and move to somewhere more generic
+ * @todo Add further checks here, e.g. when thread or process is blocked by sync message or waiting for some interrupt
  */
 void task_thread_reset_current( void ) {
   // reset queue
   task_process_queue_reset();
   // set state
   if ( task_thread_current_thread ) {
-    task_thread_current_thread->state = TASK_THREAD_STATE_READY;
+    if ( TASK_THREAD_STATE_KILL != task_thread_current_thread->state ) {
+      task_thread_current_thread->state = TASK_THREAD_STATE_READY;
+    }
+    if ( TASK_PROCESS_STATE_KILL != task_thread_current_thread->process->state ) {
+      task_thread_current_thread->process->state = TASK_PROCESS_STATE_READY;
+    }
   }
   // unset current thread
   task_thread_current_thread = NULL;
@@ -240,10 +249,16 @@ task_thread_ptr_t task_thread_next( void ) {
     while ( item ) {
       // get task object
       task_thread_ptr_t task = ( task_thread_ptr_t )item->data;
+      task_process_ptr_t proc = ( task_process_ptr_t )task->process;
       // check for ready
       if (
-        TASK_THREAD_STATE_READY == task->state
-        || TASK_THREAD_STATE_HALT_SWITCH == task->state
+        (
+          TASK_THREAD_STATE_READY == task->state
+          || TASK_THREAD_STATE_HALT_SWITCH == task->state
+        ) && (
+          TASK_PROCESS_STATE_READY == proc->state
+          || TASK_PROCESS_STATE_HALT_SWITCH == proc->state
+        )
       ) {
         break;
       }

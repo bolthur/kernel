@@ -50,8 +50,6 @@ void syscall_thread_create( __unused void* context ) {
  * @brief System call kill thread handler
  *
  * @param context
- *
- * @todo check why prefetch abort occurs here
  */
 void syscall_thread_exit( void* context ) {
   task_thread_current_thread->state = TASK_THREAD_STATE_KILL;
