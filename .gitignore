@@ -102,3 +102,13 @@ texinfo.tex
 !.vscode/launch.json
 !.vscode/extensions.json
 !.vscode/c_cpp_properties.json
+
+# --> Eclipse
+# CDT-specific (C/C++ Development Tooling)
+.cproject
+
+# CDT- autotools
+.autotools
+
+# Generic
+.project
