@@ -107,17 +107,16 @@ bool task_thread_set_current(
  * @brief Reset current process
  *
  * @todo Rename to task_reset and move to somewhere more generic
- * @todo Add further checks here, e.g. when thread or process is blocked by sync message or waiting for some interrupt
  */
 void task_thread_reset_current( void ) {
   // reset queue
   task_process_queue_reset();
   // set state
   if ( task_thread_current_thread ) {
-    if ( TASK_THREAD_STATE_KILL != task_thread_current_thread->state ) {
+    if ( TASK_THREAD_STATE_HALT_SWITCH == task_thread_current_thread->state ) {
       task_thread_current_thread->state = TASK_THREAD_STATE_READY;
     }
-    if ( TASK_PROCESS_STATE_KILL != task_thread_current_thread->process->state ) {
+    if ( TASK_PROCESS_STATE_HALT_SWITCH == task_thread_current_thread->process->state ) {
       task_thread_current_thread->process->state = TASK_PROCESS_STATE_READY;
     }
   }

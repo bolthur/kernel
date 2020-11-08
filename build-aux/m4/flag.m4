@@ -29,7 +29,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   ])
 
   # optimization level
-  case "${with_opt}" in
+  case "${with_optimization_level}" in
     no | 0)
       AX_APPEND_COMPILE_FLAGS([-O0])
       ;;

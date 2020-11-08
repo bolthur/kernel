@@ -75,7 +75,7 @@
  *
  * @return bool
  *
- * @todo Check system timer support of qemu
+ * @todo Revise implementation to system timer only, when qemu support landed
  */
 static bool timer_pending( void ) {
   #if defined( BCM2836 ) || defined( BCM2837 )
@@ -91,7 +91,7 @@ static bool timer_pending( void ) {
  *
  * @param context cpu context
  *
- * @todo Check system timer support of qemu
+ * @todo Revise implementation to system timer only, when qemu support landed
  */
 static void timer_clear( void* context ) {
   // check for pending timer
@@ -122,7 +122,7 @@ static void timer_clear( void* context ) {
 /**
  * @brief Initialize timer
  *
- * @todo Check system timer support of qemu
+ * @todo Revise implementation to system timer only, when qemu support landed
  */
 void timer_init( void ) {
   #if defined( BCM2836 ) || defined( BCM2837 )
@@ -151,7 +151,12 @@ void timer_init( void ) {
     io_out32( base + SYSTEM_TIMER_CONTROL, 0x00000000 );
 
     // set compare for timer 3
-    io_out32( base + SYSTEM_TIMER_COMPARE_3, io_in32( base + SYSTEM_TIMER_COUNTER_LOWER ) + TIMER_FREQUENCY_HZ / TIMER_INTERRUPT_PER_SECOND );
+    uint32_t current_count = io_in32( base + SYSTEM_TIMER_COUNTER_LOWER );
+    uint32_t next_count = current_count + TIMER_FREQUENCY_HZ / TIMER_INTERRUPT_PER_SECOND;
+    #if defined( PRINT_TIMER )
+      DEBUG_OUTPUT( "%#x, %#x\r\n", current_count, next_count );
+    #endif
+    io_out32( base + SYSTEM_TIMER_COMPARE_3, next_count );
 
     // enable timer 3
     io_out32( base + SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
@@ -163,7 +168,7 @@ void timer_init( void ) {
     uint32_t interrupt_line = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
 
     // clear pending interrupt
-    interrupt_line &= ~( SYSTEM_TIMER_3_INTERRUPT );
+    interrupt_line &= ( uint32_t )( ~( SYSTEM_TIMER_3_INTERRUPT ) );
 
     // overwrite
     io_out32( base + INTERRUPT_IRQ_PENDING_1, interrupt_line );

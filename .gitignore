@@ -95,7 +95,6 @@ texinfo.tex
 *.map
 
 # ---> VisualStudioCode
-.settings
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -103,12 +102,5 @@ texinfo.tex
 !.vscode/extensions.json
 !.vscode/c_cpp_properties.json
 
-# --> Eclipse
-# CDT-specific (C/C++ Development Tooling)
-.cproject
-
-# CDT- autotools
+# ---> Eclipse
 .autotools
-
-# Generic
-.project

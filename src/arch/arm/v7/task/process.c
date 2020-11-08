@@ -128,10 +128,10 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     // set last handled within running queue
     running_queue->last_handled = running_thread;
     // update running task to halt due to switch
-    if ( TASK_PROCESS_STATE_KILL != running_thread->process->state ) {
+    if ( TASK_PROCESS_STATE_ACTIVE == running_thread->process->state ) {
       running_thread->process->state = TASK_PROCESS_STATE_HALT_SWITCH;
     }
-    if ( TASK_THREAD_STATE_KILL != running_thread->state ) {
+    if ( TASK_THREAD_STATE_ACTIVE == running_thread->state ) {
       running_thread->state = TASK_THREAD_STATE_HALT_SWITCH;
     }
   }
