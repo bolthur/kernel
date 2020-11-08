@@ -1,8 +1,8 @@
 doxygen/doxygen_new_line_after_brief=true
-doxygen/doxygen_use_brief_tag=false
+doxygen/doxygen_use_brief_tag=true
 doxygen/doxygen_use_javadoc_tags=true
 doxygen/doxygen_use_pre_tag=false
-doxygen/doxygen_use_structural_commands=false
+doxygen/doxygen_use_structural_commands=true
 eclipse.preferences.version=1
 environment/project/org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1229220215/PATH/delimiter=\:
 environment/project/org.eclipse.linuxtools.cdt.autotools.core.configuration.build.1229220215/PATH/operation=append

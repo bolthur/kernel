@@ -53,7 +53,8 @@ __maybe_unused static uintptr_t fault_address( void ) {
  *
  * @param cpu cpu context
  *
- * @todo remove noreturn when handler is completed
+ * @todo kill task when data abort is triggered from user task
+ * @todo panic when data abort is triggered from kernel
  */
 noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
   // nesting
@@ -82,7 +83,7 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
       PANIC( "data abort" )
     }
   #else
-    PANIC( "prefetch abort!" )
+    PANIC( "data abort!" )
   #endif
 
   // enqueue cleanup

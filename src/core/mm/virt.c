@@ -266,8 +266,11 @@ uintptr_t virt_find_free_page_range( virt_context_ptr_t ctx, size_t size ) {
   while ( min <= max && !stop ) {
     // skip if mapped
     if ( virt_is_mapped_in_context( ctx, min ) ) {
+      // reset possible found amount and set address
       found_amount = 0;
       address = 0;
+      // next page
+      min += PAGE_SIZE;
       continue;
     }
     // set address if we start
@@ -360,7 +363,7 @@ bool virt_map_address_range_random(
       // handle physical error
       0 == phys
       // try to map and handle error
-      || ! virt_map_address( ctx, address, phys, type, page )
+      || ! virt_map_address( ctx, start, phys, type, page )
     ) {
       // free page
       if ( 0 != phys ) {
@@ -368,7 +371,7 @@ bool virt_map_address_range_random(
       }
       // free already mapped stuff
       while ( address < end ) {
-        virt_unmap_address( ctx, address, true );
+        virt_unmap_address( ctx, start, true );
         address += PAGE_SIZE;
       }
       // return error

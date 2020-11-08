@@ -19,7 +19,7 @@
  */
 
 #include <assert.h>
-#if defined( PRINT_EXCEPTION )
+#if defined( REMOTE_DEBUG )
   #include <arch/arm/v7/debug/debug.h>
 #endif
 #include <arch/arm/v7/interrupt/vector.h>
@@ -37,7 +37,8 @@ static uint32_t nested_prefetch_abort = 0;
  *
  * @param cpu cpu context
  *
- * @todo remove noreturn when handler is completed
+ * @todo kill task when prefetch abort is triggered from user task
+ * @todo panic when prefetch abort is triggered from kernel
  */
 #if ! defined( REMOTE_DEBUG )
 noreturn

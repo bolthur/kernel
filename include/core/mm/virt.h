@@ -33,7 +33,7 @@ typedef enum {
 } virt_memory_type_t;
 
 typedef enum {
-  VIRT_PAGE_TYPE_AUTO,
+  VIRT_PAGE_TYPE_AUTO = 0,
   VIRT_PAGE_TYPE_EXECUTABLE,
   VIRT_PAGE_TYPE_NON_EXECUTABLE,
 } virt_page_type_t;

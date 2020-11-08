@@ -608,7 +608,7 @@ bool v7_long_map(
 
   // ensure not already mapped
   if( 0 != table->page[ page_idx ].raw ) {
-    unmap_temporary( ( uintptr_t )table_phys, PAGE_SIZE );
+    unmap_temporary( ( uintptr_t )table, PAGE_SIZE );
     return false;
   }
 

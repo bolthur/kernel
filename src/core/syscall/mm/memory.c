@@ -28,15 +28,20 @@
  * @brief Acquire memory
  *
  * @param context
- *
- * @todo add support for executable / non executable via parameter
  */
 void syscall_memory_acquire( void* context ) {
   // get amount and current context
   uint32_t amount = syscall_get_parameter( context, 0 );
+  uint32_t flag = syscall_get_parameter( context, 1 );
   virt_context_ptr_t virtual_context = task_thread_current_thread
     ->process
     ->virtual_context;
+
+  // check for correct flag
+  if ( flag > VIRT_PAGE_TYPE_NON_EXECUTABLE ) {
+    syscall_populate_single_return( context, 0 );
+    return;
+  }
 
   // get full page count
   ROUND_UP_TO_FULL_PAGE( amount )
@@ -53,7 +58,7 @@ void syscall_memory_acquire( void* context ) {
     start,
     amount,
     VIRT_MEMORY_TYPE_NORMAL,
-    VIRT_PAGE_TYPE_AUTO
+    flag
   ) ) {
     syscall_populate_single_return( context, 0 );
     return;
@@ -67,13 +72,13 @@ void syscall_memory_acquire( void* context ) {
  * @brief Release memory
  *
  * @param context
- *
- * @todo add error handling ( abort task when unmapping task )
  */
 void syscall_memory_release( void* context ) {
   uintptr_t address = syscall_get_parameter( context, 0 );
   uintptr_t amount = syscall_get_parameter( context, 1 ) * PAGE_SIZE;
-  virt_context_ptr_t virtual_context = task_thread_current_thread->process->virtual_context;
+  virt_context_ptr_t virtual_context = task_thread_current_thread
+      ->process
+      ->virtual_context;
 
   // check if range is mapped in context
   if ( ! virt_is_mapped_in_context_range( virtual_context, address, amount ) ) {
