@@ -93,6 +93,3 @@ texinfo.tex
 *.dSYM/
 *.sym
 *.map
-
-# ---> Eclipse
-.autotools

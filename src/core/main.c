@@ -103,19 +103,18 @@ noreturn void kernel_main( void ) {
 
   // print size
   if ( initrd_exist() ) {
-    uintptr_t initrd = initrd_get_start_address();
-    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd )
+    // set iterator
+    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd_get_start_address();
+    DEBUG_OUTPUT( "initrd = %p\r\n", iter )
     DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd_get_end_address() )
     DEBUG_OUTPUT( "size = %zo\r\n", initrd_get_size() )
     DEBUG_OUTPUT( "size = %zu\r\n", initrd_get_size() )
 
-    // set iterator
-    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
-
     // loop through tar
     while ( ! tar_end_reached( iter ) ) {
       // debug output
-      DEBUG_OUTPUT( "%p: initrd file name: %s\r\n",
+      DEBUG_OUTPUT(
+        "%p: initrd file name: %s\r\n",
         ( void* )iter, iter->file_name )
 
       // next
@@ -136,14 +135,12 @@ noreturn void kernel_main( void ) {
 
   // print size
   if ( initrd_exist() ) {
-    uintptr_t initrd = initrd_get_start_address();
-    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd )
+    // set iterator
+    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd_get_start_address();
+    DEBUG_OUTPUT( "initrd = %p\r\n", iter )
     DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd_get_end_address() )
     DEBUG_OUTPUT( "size = %zo\r\n", initrd_get_size() )
     DEBUG_OUTPUT( "size = %zu\r\n", initrd_get_size() )
-
-    // set iterator
-    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
 
     // loop through tar
     while ( ! tar_end_reached( iter ) ) {
@@ -199,8 +196,6 @@ noreturn void kernel_main( void ) {
         DEBUG_OUTPUT( "File size: %#llx\r\n", file_size )
 
         task_process_create( file, 0 );
-        //task_process_create( file, 0 );
-        //task_process_create( file, 0 );
       }
 
       // next task
@@ -212,7 +207,7 @@ noreturn void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" )
   timer_init();
 
-  // kickstart multitasking
+  // Start multitasking
   task_process_start();
 
   for(;;);

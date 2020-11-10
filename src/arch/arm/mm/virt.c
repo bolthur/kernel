@@ -89,7 +89,7 @@ void virt_setup_supported_modes( void ) {
 
     // set paging to v7 short descriptor if more
     // than 32 bit physical addresses arent supported
-    if ( 0 == reg && ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    if ( 0 == reg && ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) ) {
       if ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes ) {
         supported_modes = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
       } else if ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes ) {
