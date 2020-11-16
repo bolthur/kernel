@@ -105,6 +105,11 @@ task_thread_ptr_t task_thread_create(
   current_context->reg.pc = ( uint32_t )entry;
   // Only user mode threads are possible
   current_context->reg.spsr = 0x60000000 | CPSR_MODE_USER;
+  // handle arm thumb mode
+  if ( ( uint32_t )entry & 0x1 ) {
+    current_context->reg.spsr |= CPSR_THUMB;
+    // FIXME: CHECK FOR REMOVE OF OFFSET LOWEST BIT IS NECESSARY
+  }
   // set stack pointer
   current_context->reg.sp = stack_virtual + STACK_SIZE - 4;
   // debug output

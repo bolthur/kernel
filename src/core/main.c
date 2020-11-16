@@ -208,6 +208,7 @@ noreturn void kernel_main( void ) {
   timer_init();
 
   // Start multitasking
+  DEBUG_OUTPUT( "[bolthur/kernel -> task] start multitasking ...\r\n" )
   task_process_start();
 
   for(;;);
