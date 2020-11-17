@@ -23,6 +23,9 @@
 #include <core/task/process.h>
 #include <core/syscall.h>
 #include <core/interrupt.h>
+#if defined( PRINT_SYSCALL )
+  #include <core/debug/debug.h>
+#endif
 
 /**
  * @brief Acquire memory
@@ -36,6 +39,13 @@ void syscall_memory_acquire( void* context ) {
   virt_context_ptr_t virtual_context = task_thread_current_thread
     ->process
     ->virtual_context;
+
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT(
+      "acquire memory amount %#x with flags %#x\r\n",
+      amount, flag )
+  #endif
 
   // check for correct flag
   if ( flag > VIRT_PAGE_TYPE_NON_EXECUTABLE ) {
@@ -79,6 +89,13 @@ void syscall_memory_release( void* context ) {
   virt_context_ptr_t virtual_context = task_thread_current_thread
       ->process
       ->virtual_context;
+
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT(
+      "release memory amount %#x starting at address %#x\r\n",
+      amount, address )
+  #endif
 
   // check if range is mapped in context
   if ( ! virt_is_mapped_in_context_range( virtual_context, address, amount ) ) {

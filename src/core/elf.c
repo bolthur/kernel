@@ -258,14 +258,19 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       // unmap temporary
       virt_unmap_temporary( tmp, PAGE_SIZE );
 
-      // FIXME: CONSIDER FLAGS FROM ELF CORRECTLY
+      // get mapping flag from section
+      uint32_t mapping_flag =
+        program_header->p_flags & PF_X
+          ? VIRT_PAGE_TYPE_EXECUTABLE
+          : VIRT_PAGE_TYPE_NON_EXECUTABLE;
+
       // map it within process context
       if ( ! virt_map_address(
           process->virtual_context,
           program_header->p_vaddr + offset,
           phys,
           VIRT_MEMORY_TYPE_NORMAL,
-          VIRT_PAGE_TYPE_EXECUTABLE
+          mapping_flag
         )
       ) {
         return false;

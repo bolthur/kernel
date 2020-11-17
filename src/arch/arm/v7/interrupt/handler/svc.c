@@ -53,16 +53,20 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   // kernel stack
   interrupt_ensure_kernel_stack();
 
-  // FIXME: ADD FETCH OF SVC NUM FROM THUMB MODE
-  // check for thumb mode
-  if ( cpu->reg.spsr & CPSR_THUMB ) {
-    PANIC( "THUMB MODE!" )
-  }
+  uint32_t svc_num;
 
-  // get svc number from instruction
-  uint32_t svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xffff;
-  // apply offset
-  cpu->reg.pc += 4;
+  // thumb mode
+  if ( cpu->reg.spsr & CPSR_THUMB ) {
+    svc_num = *( ( uint16_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xff;
+    // apply offset
+    cpu->reg.pc += 2;
+  // arm mode
+  } else {
+    // get svc number from instruction
+    svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xffff;
+    // apply offset
+    cpu->reg.pc += 4;
+  }
 
   // debug output
   #if defined( PRINT_EXCEPTION )

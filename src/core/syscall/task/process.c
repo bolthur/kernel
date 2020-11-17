@@ -22,6 +22,9 @@
 #include <core/event.h>
 #include <core/task/process.h>
 #include <core/task/thread.h>
+#if defined( PRINT_SYSCALL )
+  #include <core/debug/debug.h>
+#endif
 
 /**
  * @brief System call for returning current threads process id
@@ -29,6 +32,11 @@
  * @param context
  */
 void syscall_process_id( void* context ) {
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "process id called\r\n" )
+  #endif
+
   if ( ! task_thread_current_thread ) {
     // populate return
     syscall_populate_single_return(
@@ -53,6 +61,11 @@ void syscall_process_create( __unused void* context ) {
  * @param context
  */
 void syscall_process_exit( void* context ) {
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "process exit called\r\n" )
+  #endif
+
   task_thread_current_thread->process->state = TASK_PROCESS_STATE_KILL;
   event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
 }

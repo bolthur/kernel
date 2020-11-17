@@ -74,6 +74,11 @@ enum Elf_Ident {
 #define PT_SHLIB 0x5
 #define PT_PHDR 0x6
 
+// p_flags
+#define PF_X 0x1
+#define PF_W 0x2
+#define PF_R 0x4
+
 // sh_type
 #define SHT_NULL 0x0
 #define SHT_PROGBITS 0x1

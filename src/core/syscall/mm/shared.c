@@ -21,6 +21,9 @@
 #include <core/syscall.h>
 #include <core/task/thread.h>
 #include <core/mm/shared.h>
+#if defined( PRINT_SYSCALL )
+  #include <core/debug/debug.h>
+#endif
 
 /**
  * @brief Create shared memory area
@@ -33,6 +36,13 @@ void syscall_shared_memory_create( void* context ) {
   // get parameter
   const char* name = ( const char* )syscall_get_parameter( context, 0 );
   size_t size = syscall_get_parameter( context, 1 );
+
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT(
+      "create shared memory with name \"%s\" and amount %#x\r\n", name, size )
+  #endif
+
   // create shared memory and populate return
   syscall_populate_single_return(
     context,
@@ -50,6 +60,12 @@ void syscall_shared_memory_create( void* context ) {
 void syscall_shared_memory_release( void* context ) {
   // get parameter
   const char* name = ( const char* )syscall_get_parameter( context, 0 );
+
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "release shared memory with name \"%s\"\r\n", name )
+  #endif
+
   // release and populate return
   syscall_populate_single_return(
     context,
@@ -70,6 +86,12 @@ void syscall_shared_memory_release( void* context ) {
 void syscall_shared_memory_acquire( void* context ) {
   // get parameter
   const char* name = ( const char* )syscall_get_parameter( context, 0 );
+
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "acquire shared memory with name \"%s\"\r\n", name )
+  #endif
+
   // attach to current thread
   syscall_populate_single_return(
     context,

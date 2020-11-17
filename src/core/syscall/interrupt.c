@@ -19,6 +19,9 @@
  */
 
 #include <core/syscall.h>
+#if defined( PRINT_SYSCALL )
+  #include <core/debug/debug.h>
+#endif
 
 void syscall_interrupt_acquire( __unused void* context ) {
 }
