@@ -29,6 +29,8 @@ IMPORT( event_handle )
 IMPORT( task_thread_switch_to )
 IMPORT( task_thread_current_thread )
 
+// FIXME: ADD SUPPORT FOR THUMB MODE WITHIN MACROS
+
 // get thread context address
 .macro get_thread_context register:req
   // load address of current executing thread

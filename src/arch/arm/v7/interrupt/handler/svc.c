@@ -22,6 +22,7 @@
 #include <arch/arm/v7/interrupt/vector.h>
 #include <core/event.h>
 #include <core/interrupt.h>
+#include <core/panic.h>
 
 /**
  * @brief Nested counter for software interrupt exception handler
@@ -51,6 +52,12 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
 
   // kernel stack
   interrupt_ensure_kernel_stack();
+
+  // FIXME: ADD FETCH OF SVC NUM FROM THUMB MODE
+  // check for thumb mode
+  if ( cpu->reg.spsr & CPSR_THUMB ) {
+    PANIC( "THUMB MODE!" )
+  }
 
   // get svc number from instruction
   uint32_t svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xffff;

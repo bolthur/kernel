@@ -1086,6 +1086,7 @@ bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
   if ( ! table ) {
     return false;
   }
+
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
@@ -1103,15 +1104,63 @@ bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
     DEBUG_OUTPUT( "table->page[ %u ] = %#08x\r\n",
       page_idx, table->page[ page_idx ].raw )
   #endif
-
   // switch flag to true if mapped
   if ( 0 != table->page[ page_idx ].raw ) {
     mapped = true;
   }
-
   // unmap temporary
   unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-
   // return flag
   return mapped;
+}
+
+/**
+ * @brief Get mapped physical address
+ * @param ctx
+ * @param addr
+ * @return
+ */
+uint64_t v7_short_get_mapped_address_in_context(
+  virt_context_ptr_t ctx,
+  uintptr_t addr
+) {
+  // get page index
+  uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( addr );
+  uint64_t phys = 0;
+
+  // get table for checking
+  sd_page_table_t* table = ( sd_page_table_t* )(
+    ( uintptr_t )v7_short_create_table( ctx, addr, 0 ) );
+  // handle error
+  if ( ! table ) {
+    return ( uint64_t )-1;
+  }
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
+  #endif
+  // map temporary
+  table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
+  // not mapped if null
+  if ( ! table ) {
+    return ( uint64_t )-1;
+  }
+  // handle not mapped
+  if ( 0 == table->page[ page_idx ].raw ) {
+    return ( uint64_t )-1;
+  }
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
+    DEBUG_OUTPUT( "table->page[ %u ] = %#08x\r\n",
+      page_idx, table->page[ page_idx ].raw )
+  #endif
+  // get mapped address
+  phys = ( uint64_t )( table->page[ page_idx ].raw & 0xFFFFF000 );
+  // unmap temporary
+  unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
+  // return physical address
+  return phys;
 }

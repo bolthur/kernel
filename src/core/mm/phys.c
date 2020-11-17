@@ -79,7 +79,7 @@ void phys_mark_page_free( uint64_t address ) {
   uint64_t offset = PAGE_OFFSET( frame );
 
   // mark page as free
-  phys_bitmap[ index ] &= ( uint32_t )( ~( 0x1 << offset ) );
+  phys_bitmap[ index ] &= ( uint32_t )( ~( 1U << offset ) );
 
   // debug output
   #if defined( PRINT_MM_PHYS )

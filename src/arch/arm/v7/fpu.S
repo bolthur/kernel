@@ -42,7 +42,7 @@ fpu_enable:
   beq 2f // If 0 skip enable
   1:
     // Set FPEXC.EN bit to enable fpu
-    mov r0, #( 0x1 << 30 )
+    mov r0, #( 1 << 30 )
     // Transfer change to vfp system register
     vmsr fpexc, r0
   2:

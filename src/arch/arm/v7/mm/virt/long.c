@@ -1095,3 +1095,50 @@ bool v7_long_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
   // return flag
   return mapped;
 }
+
+/**
+ * @brief Get mapped physical address
+ *
+ * @param ctx
+ * @param addr
+ * @return
+ */
+uint64_t v7_long_get_mapped_address_in_context(
+  virt_context_ptr_t ctx,
+  uintptr_t addr
+) {
+  // get page index
+  uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( addr );
+  uint64_t phys = 0;
+  // determine page index
+  uint64_t table_phys = v7_long_create_table( ctx, addr, 0 );
+  if ( 0 == table_phys ) {
+    return ( uint64_t )-1;
+  }
+
+  // map temporary
+  ld_page_table_t* table = ( ld_page_table_t* )map_temporary(
+    table_phys, PAGE_SIZE );
+  // handle error
+  if ( ! table ) {
+    return ( uint64_t )-1;
+  }
+  // handle not mapped
+  if ( 0 == table->page[ page_idx ].raw ) {
+    return ( uint64_t )-1;
+  }
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
+    DEBUG_OUTPUT( "table->page[ %u ].raw = %#016llx\r\n",
+      page_idx, table->page[ page_idx ].raw )
+  #endif
+  // get mapped address
+  phys = LD_PHYSICAL_PAGE_ADDRESS( table->page[ page_idx ].raw );
+  // unmap temporary
+  unmap_temporary( ( uintptr_t )table, PAGE_SIZE );
+
+  // return physical address
+  return phys;
+}

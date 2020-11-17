@@ -131,23 +131,94 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       elf + header->e_phoff + header->e_phentsize * index
     );
 
-    // skip non loadable sections
+    // skip all sections except load
     if ( PT_LOAD != program_header->p_type ) {
       continue;
     }
 
+    // debug output
+    #if defined ( PRINT_ELF )
+      DEBUG_OUTPUT(
+        "type = %#x, vaddr = %#x, paddr = %#x, size = %#x, offset = %#x!\r\n",
+        program_header->p_type,
+        program_header->p_vaddr,
+        program_header->p_paddr,
+        program_header->p_memsz,
+        program_header->p_offset )
+    #endif
+
     // determine needed space
     uintptr_t needed_size = program_header->p_memsz;
+    // debug output
+    #if defined( PRINT_ELF )
+      DEBUG_OUTPUT( "needed_size = %#x\r\n", needed_size )
+    #endif
+    // round to full page
     ROUND_UP_TO_FULL_PAGE( needed_size )
+    // debug output
+    #if defined( PRINT_ELF )
+      DEBUG_OUTPUT( "needed_size = %#x\r\n", needed_size )
+    #endif
+
+    // get start address
+    uintptr_t start = program_header->p_vaddr;
+    uintptr_t start_down = start;
+    uintptr_t start_up = start;
+    // debug output
+    #if defined( PRINT_ELF )
+      DEBUG_OUTPUT( "needed_size = %#x\r\n", needed_size )
+    #endif
+    // check for not aligned address
+    if ( start_down % PAGE_SIZE ) {
+      // round down start to full page
+      ROUND_DOWN_TO_FULL_PAGE( start_down )
+      // check if mapped
+      if ( virt_is_mapped_in_context(
+        process->virtual_context,
+        start_down
+      ) ) {
+        // subtract already mapped size from size
+        ROUND_UP_TO_FULL_PAGE( start_up )
+        needed_size -= ( start_up - start );
+      } else {
+        // enlarge needed size
+        needed_size += ( start - start_down );
+      }
+    }
+    // round again up to full page due to possible modifications
+    ROUND_UP_TO_FULL_PAGE( needed_size )
+    // debug output
+    #if defined( PRINT_ELF )
+      DEBUG_OUTPUT( "needed_size = %#x\r\n", needed_size )
+    #endif
 
     // loop until needed size is zero
     uintptr_t offset = 0;
+    uintptr_t page_offset = program_header->p_vaddr % PAGE_SIZE;
+
     while ( needed_size != 0 ) {
-      // get physical page
-      uint64_t phys = phys_find_free_page( PAGE_SIZE );
-      // handle error
-      if ( 0 == phys ) {
-        return false;
+      // physical page
+      uint64_t phys;
+
+      if ( virt_is_mapped_in_context(
+        process->virtual_context,
+        program_header->p_vaddr + offset
+      ) ) {
+        phys = virt_get_mapped_address_in_context(
+          process->virtual_context,
+          program_header->p_vaddr + offset
+        );
+        // handle error
+        if ( ( uint64_t )-1 == phys ) {
+          return false;
+        }
+      } else {
+        // get new physical page
+        phys = phys_find_free_page( PAGE_SIZE );
+        // handle error
+        if ( 0 == phys ) {
+          return false;
+        }
       }
 
       // map it temporary
@@ -155,26 +226,39 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       if ( 0 == tmp ) {
         return false;
       }
-
-      // partial data copy
-      if ( offset < program_header->p_filesz ) {
-        // determine amount to copy
-        size_t to_copy = program_header->p_filesz - offset;
-        // copy up to one page size
-        if ( to_copy > PAGE_SIZE ) {
-          to_copy = PAGE_SIZE;
-        }
-        // copy over data
-        memcpy(
-          ( void* )tmp,
-          ( void* )( ( uintptr_t )header + program_header->p_offset + offset ),
-          program_header->p_filesz - offset
-        );
+      // get size to copy
+      size_t to_copy = program_header->p_filesz;
+      size_t tmp_offset = 0;
+      // adjust to copy by file offset and page offset
+      if ( offset > 0 ) {
+        to_copy -= offset + page_offset;
       }
-
+      // copy up to one page size
+      if ( to_copy > PAGE_SIZE ) {
+        to_copy = PAGE_SIZE;
+      }
+      // handle page offset at the beginning
+      if ( 0 == offset && 0 < page_offset ) {
+        // reduce to copy value
+        to_copy = PAGE_SIZE - page_offset;
+        tmp_offset = page_offset;
+      }
+      // debug output
+      #if defined( PRINT_ELF )
+        DEBUG_OUTPUT(
+          "to_copy = %#x, tmp_offset = %#x, offset = %#x\r\n",
+          to_copy, tmp_offset, offset)
+      #endif
+      // copy over data
+      memcpy(
+        ( void* )( ( uintptr_t )tmp + tmp_offset ),
+        ( void* )( ( uintptr_t )header + program_header->p_offset + offset ),
+        to_copy
+      );
       // unmap temporary
       virt_unmap_temporary( tmp, PAGE_SIZE );
 
+      // FIXME: CONSIDER FLAGS FROM ELF CORRECTLY
       // map it within process context
       if ( ! virt_map_address(
           process->virtual_context,
@@ -189,7 +273,7 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
 
       // subtract one page
       needed_size -= PAGE_SIZE;
-      offset += PAGE_SIZE;
+      offset += to_copy;
     }
   }
   return true;

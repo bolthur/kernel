@@ -527,3 +527,34 @@ bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
     PANIC( "Unsupported mode!" )
   }
 }
+
+/**
+ * @brief Get mapped physical address
+ *
+ * @param ctx
+ * @param addr
+ * @return
+ */
+uint64_t virt_get_mapped_address_in_context(
+  virt_context_ptr_t ctx,
+  uintptr_t addr
+) {
+  // check context
+  if ( ! ctx ) {
+    return ( uint64_t )-1;
+  }
+
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    return v7_long_get_mapped_address_in_context( ctx, addr );
+  // check v7 short descriptor format
+  } else if (
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+  ) {
+    return v7_short_get_mapped_address_in_context( ctx, addr );
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" )
+  }
+}

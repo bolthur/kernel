@@ -99,16 +99,16 @@ task_thread_ptr_t task_thread_create(
   // cache locally
   cpu_register_context_ptr_t current_context =
     ( cpu_register_context_ptr_t )thread->current_context;
-  // Prepare area
+  // prepare area
   memset( ( void* )current_context, 0, sizeof( cpu_register_context_t ) );
   // set content
   current_context->reg.pc = ( uint32_t )entry;
-  // Only user mode threads are possible
-  current_context->reg.spsr = 0x60000000 | CPSR_MODE_USER;
-  // handle arm thumb mode
+  // only user mode threads are possible
+  current_context->reg.spsr = CPSR_MODE_USER;
+  // add arm thumb mode to spsr if necessary
   if ( ( uint32_t )entry & 0x1 ) {
+    // add thumb mode to spsr
     current_context->reg.spsr |= CPSR_THUMB;
-    // FIXME: CHECK FOR REMOVE OF OFFSET LOWEST BIT IS NECESSARY
   }
   // set stack pointer
   current_context->reg.sp = stack_virtual + STACK_SIZE - 4;
