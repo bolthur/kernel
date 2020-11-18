@@ -9,7 +9,7 @@ OBJDUMP = arm-unknown-bolthur-eabi-objdump
 OBJCOPY = arm-unknown-bolthur-eabi-objcopy
 
 ASFLAGS =
-CFLAGS = -Wall -g -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
+CFLAGS = -Wall -g -O0 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
 LDFLAGS =
 
 TEST_CFLAGS = -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard  -Wall -Wextra -Werror -Wpedantic -Wconversion -Wpacked -Wpacked-bitfield-compat -Wpacked-not-aligned -Wno-sign-conversion -Wno-unused-variable -ffreestanding -fno-exceptions -nodefaultlibs -std=c18 -fomit-frame-pointer -g -O2 -nostdlib

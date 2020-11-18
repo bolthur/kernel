@@ -18,6 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
 #include <string.h>
 #include <core/elf/common.h>
 #include <core/elf/elf32.h>
@@ -199,7 +200,9 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
     while ( needed_size != 0 ) {
       // physical page
       uint64_t phys;
+      bool clear = false;
 
+      // determine whether new page has to be mapped or not
       if ( virt_is_mapped_in_context(
         process->virtual_context,
         program_header->p_vaddr + offset
@@ -219,12 +222,27 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
         if ( 0 == phys ) {
           return false;
         }
+        // set clear flag
+        clear = true;
       }
 
       // map it temporary
       uintptr_t tmp = virt_map_temporary( phys, PAGE_SIZE );
       if ( 0 == tmp ) {
+        // free phys if new page is registered
+        if ( clear ) {
+          phys_free_page( phys );
+        }
+        // return error
         return false;
+      }
+      // handle clear
+      if ( clear ) {
+        // debug output
+        #if defined( PRINT_ELF )
+          DEBUG_OUTPUT( "clear page at address %#x\r\n", tmp )
+        #endif
+        memset( ( void* )tmp, 0, PAGE_SIZE );
       }
       // get size to copy
       size_t to_copy = program_header->p_filesz;
@@ -273,6 +291,11 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
           mapping_flag
         )
       ) {
+        // free phys if new page is registered
+        if ( clear ) {
+          phys_free_page( phys );
+        }
+        // return error
         return false;
       }
 
