@@ -319,4 +319,8 @@ AC_CONFIG_FILES([
   thirdparty/font/Makefile
 ])
 
+AC_CONFIG_SUBDIRS([
+  driver
+])
+
 AC_OUTPUT

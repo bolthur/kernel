@@ -1,7 +1,7 @@
 
 ACLOCAL_AMFLAGS = -I build-aux/m4
 
-SUBDIRS = thirdparty src
+SUBDIRS = thirdparty src driver
 
 # cppcheck stuff
 .PHONY: cppcheck

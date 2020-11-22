@@ -5,6 +5,7 @@
 /doc
 **/*.disasm
 *.dtb
+driver-config.h.in
 
 
 # ---> Autotools
