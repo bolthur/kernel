@@ -1,17 +1,17 @@
 
 AC_PREREQ([2.69])
 
-AC_INIT([bolthur-driver], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-driver], [https://github.com/bolthur/kernel])
+AC_INIT([bolthur-driver], [0.1.0-dev], [https://github.com/bolthur/driver/issues], [bolthur-driver], [https://github.com/bolthur/driver])
 
 AC_COPYRIGHT([Copyright (C) 2018 - 2020 bolthur project])
 
-AC_CONFIG_AUX_DIR([../build-aux/driver-config])
-AC_CONFIG_MACRO_DIR([../build-aux/m4])
+AC_CONFIG_AUX_DIR([build-aux/config])
+AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
-AC_CONFIG_SRCDIR([../src/core/main.c])
-AM_INIT_AUTOMAKE([foreign subdir-objects -Werror])
-AC_CONFIG_HEADERS([../include/driver-config.h])
+AC_CONFIG_SRCDIR([src/generic/init/main.c])
+AM_INIT_AUTOMAKE([subdir-objects -Werror])
+AC_CONFIG_HEADERS([include/config.h])
 
 AC_LANG([C])
 
@@ -43,26 +43,30 @@ AC_ARG_WITH(
 )
 
 # check necessary programs
-BOLTHUR_KERNEL_PROG_READLINK
+BOLTHUR_DRIVER_PROG_READLINK
 
 # set program
-BOLTHUR_KERNEL_LANG_PROGRAM
+BOLTHUR_DRIVER_LANG_PROGRAM
 # set target and flags
-BOLTHUR_KERNEL_SET_DEVICE
-BOLTHUR_KERNEL_SET_HOST
+BOLTHUR_DRIVER_SET_DEVICE
+BOLTHUR_DRIVER_SET_HOST
 # set rest of flags
 BOLTHUR_DRIVER_SET_FLAG
 
 # checks for programs
 AC_PROG_CC
 AM_PROG_AS
-BOLTHUR_KERNEL_PROG_OBJCOPY
+BOLTHUR_DRIVER_PROG_OBJCOPY
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE
 AC_C_VOLATILE
 AC_C_RESTRICT
+
+# init libtool
+LT_INIT([disable-shared static])
+LT_LANG([C])
 
 # embed git revision and compiler
 AC_DEFINE_UNQUOTED(
@@ -121,12 +125,13 @@ AC_DEFINE_UNQUOTED(
 # FIXME: Move driver to own repository
 AC_CONFIG_FILES([
   Makefile
-  generic/Makefile
-  generic/init/Makefile
-  generic/vfs/Makefile
-  platform/Makefile
-  platform/rpi/Makefile
-  platform/rpi/framebuffer/Makefile
+  src/Makefile
+  src/generic/Makefile
+  src/generic/init/Makefile
+  src/generic/vfs/Makefile
+  src/platform/Makefile
+  src/platform/rpi/Makefile
+  src/platform/rpi/framebuffer/Makefile
 ])
 
 AC_OUTPUT
