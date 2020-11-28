@@ -20,6 +20,10 @@
 
 #include <stdio.h>
 
+// struct dirent, DIR and struct stat
+#include <sys/dirent.h>
+#include <sys/stat.h>
+
 int main( __maybe_unused int argc, __maybe_unused char* argv[] ) {
   return 0;
 }

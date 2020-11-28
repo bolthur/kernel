@@ -128,7 +128,6 @@ AC_CONFIG_FILES([
   src/Makefile
   src/generic/Makefile
   src/generic/init/Makefile
-  src/generic/vfs/Makefile
   src/platform/Makefile
   src/platform/rpi/Makefile
   src/platform/rpi/framebuffer/Makefile
