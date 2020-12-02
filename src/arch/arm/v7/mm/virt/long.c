@@ -817,6 +817,8 @@ bool v7_long_set_context( virt_context_ptr_t ctx ) {
     __asm__ __volatile__(
       "mcrr p15, 0, %0, %1, c2" : : "r" ( low ), "r" ( high ) : "memory"
     );
+    // overwrite global pointer
+    user_context = ctx;
   // kernel context handling
   } else {
     // debug output
@@ -827,6 +829,8 @@ bool v7_long_set_context( virt_context_ptr_t ctx ) {
     __asm__ __volatile__(
       "mcrr p15, 1, %0, %1, c2" : : "r" ( low ), "r" ( high ) : "memory"
     );
+    // overwrite global pointer
+    kernel_context = ctx;
   }
 
   return true;

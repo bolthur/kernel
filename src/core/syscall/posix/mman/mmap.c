@@ -40,7 +40,7 @@
  * @todo Add support for file descriptor
  * @todo add support for lock
  */
-void syscall_mman_mmap( void* context ) {
+void syscall_posix_mman_mmap( void* context ) {
   // get parameter
   void* addr = ( void* )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
@@ -114,6 +114,10 @@ void syscall_mman_mmap( void* context ) {
     return;
   }
 
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "start = %p\r\n", start )
+  #endif
   syscall_populate_single_return( context, start );
 }
 
@@ -126,7 +130,7 @@ void syscall_mman_mmap( void* context ) {
  * @todo handle memory locks
  * @todo add support for typed memory
  */
-void syscall_mman_munmap( void* context ) {
+void syscall_posix_mman_munmap( void* context ) {
   // get parameters
   uintptr_t address = ( uintptr_t )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );

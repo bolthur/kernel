@@ -45,6 +45,7 @@ void vector_interrupt_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
+    DEBUG_OUTPUT( "Entering interrupt_handler( %p )\r\n", ( void* )cpu )
     DUMP_REGISTER( cpu )
   #endif
 
@@ -59,6 +60,12 @@ void vector_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   }
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
+
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DEBUG_OUTPUT( "Leaving interrupt_handler\r\n" )
+    DUMP_REGISTER( cpu )
+  #endif
 
   // decrement nested counter
   nested_interrupt--;

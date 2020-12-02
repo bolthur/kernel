@@ -68,10 +68,10 @@ void syscall_thread_create( void* );
 void syscall_thread_exit( void* );
 void syscall_thread_id( void* );
 
-void syscall_mman_mmap( void* );
-void syscall_mman_munmap( void* );
-void syscall_mman_shm_open( void* );
-void syscall_mman_shm_unlink( void* );
+void syscall_posix_mman_mmap( void* );
+void syscall_posix_mman_munmap( void* );
+void syscall_posix_mman_shm_open( void* );
+void syscall_posix_mman_shm_unlink( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );

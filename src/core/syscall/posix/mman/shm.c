@@ -37,7 +37,7 @@
  *
  * @todo add some sort of unsafe copy because the address of string may be corrupt
  */
-noreturn void syscall_mman_shm_open( void* context ) {
+noreturn void syscall_posix_mman_shm_open( void* context ) {
   // get parameter
   const char* name = ( const char* )syscall_get_parameter( context, 0 );
   int flag = ( int )syscall_get_parameter( context, 1 );
@@ -70,7 +70,7 @@ noreturn void syscall_mman_shm_open( void* context ) {
  *
  * @todo add some sort of unsafe copy because the address of string may be corrupt
  */
-void syscall_mman_shm_unlink( void* context ) {
+void syscall_posix_mman_shm_unlink( void* context ) {
   // get parameter
   const char* name = ( const char* )syscall_get_parameter( context, 0 );
 

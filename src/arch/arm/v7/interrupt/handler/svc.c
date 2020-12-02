@@ -80,6 +80,7 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
+    DUMP_REGISTER( cpu )
     DEBUG_OUTPUT( "Leaving software_interrupt_handler\r\n" )
   #endif
 

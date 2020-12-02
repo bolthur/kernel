@@ -6,5 +6,6 @@
 #include <string.h>
 
 int main( int argc, char *argv[] ) {
-  mmap( NULL, 0x10000, 3, 3, -1, 0x18 );
+  uint8_t* p = mmap( NULL, 0x10000, 3, 3, -1, 0x18 );
+  memset( p, 0, 0x10000 );
 }
