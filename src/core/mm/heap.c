@@ -261,7 +261,7 @@ static bool extend_heap_space( void ) {
       kernel_context,
       addr,
       VIRT_MEMORY_TYPE_NORMAL,
-      VIRT_PAGE_TYPE_NON_EXECUTABLE
+      VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
     ) ) {
       return false;
     }
@@ -610,7 +610,7 @@ void heap_init( heap_init_state_t state ) {
         kernel_context,
         addr,
         VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_NON_EXECUTABLE
+        VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
       ) )
     }
   }

@@ -8,8 +8,8 @@ libcore_la_SOURCES = \
   mm/phys.c \
   mm/shared.c \
   mm/virt.c \
-  syscall/mm/memory.c \
-  syscall/mm/shared.c \
+  syscall/posix/mman/mmap.c \
+  syscall/posix/mman/shm.c \
   syscall/task/process.c \
   syscall/task/thread.c \
   syscall/dummy.c \

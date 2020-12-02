@@ -33,9 +33,9 @@ typedef enum {
 } virt_memory_type_t;
 
 typedef enum {
-  VIRT_PAGE_TYPE_AUTO = 0,
+  VIRT_PAGE_TYPE_READ = 1,
+  VIRT_PAGE_TYPE_WRITE,
   VIRT_PAGE_TYPE_EXECUTABLE,
-  VIRT_PAGE_TYPE_NON_EXECUTABLE,
 } virt_page_type_t;
 
 typedef enum {
@@ -79,7 +79,7 @@ bool virt_unmap_address( virt_context_ptr_t, uintptr_t, bool );
 bool virt_unmap_address_range( virt_context_ptr_t, uintptr_t, size_t, bool );
 void virt_unmap_temporary( uintptr_t, size_t );
 
-uintptr_t virt_find_free_page_range( virt_context_ptr_t, size_t );
+uintptr_t virt_find_free_page_range( virt_context_ptr_t, size_t, uintptr_t );
 uintptr_t virt_get_context_min_address( virt_context_ptr_t );
 uintptr_t virt_get_context_max_address( virt_context_ptr_t );
 uint32_t virt_get_supported_modes( void );

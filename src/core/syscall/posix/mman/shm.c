@@ -25,6 +25,11 @@
   #include <core/debug/debug.h>
 #endif
 
+#include <core/panic.h>
+// libc header for defines
+#include <sys/mman.h>
+#include <errno.h>
+
 /**
  * @brief Create shared memory area
  *
@@ -32,22 +37,30 @@
  *
  * @todo add some sort of unsafe copy because the address of string may be corrupt
  */
-void syscall_shared_memory_create( void* context ) {
+noreturn void syscall_mman_shm_open( void* context ) {
   // get parameter
   const char* name = ( const char* )syscall_get_parameter( context, 0 );
-  size_t size = syscall_get_parameter( context, 1 );
-
+  int flag = ( int )syscall_get_parameter( context, 1 );
+  mode_t mode = ( mode_t )syscall_get_parameter( context, 2 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "create shared memory with name \"%s\" and amount %#x\r\n", name, size )
+      "acquire shared memory with name \"%s\", flag %#x and mode %zu\r\n",
+      name, flag, mode )
   #endif
-
-  // create shared memory and populate return
+  PANIC( "foo!" )
+/*  // create shared memory and populate return
+  if ( ! shared_memory_create( name, size ) ) {
+    syscall_populate_single_return( context, false );
+  }
+  // attach to current thread
   syscall_populate_single_return(
     context,
-    shared_memory_create( name, size )
-  );
+    shared_memory_acquire(
+      task_thread_current_thread->process,
+      name
+    )
+  );*/
 }
 
 /**
@@ -57,7 +70,7 @@ void syscall_shared_memory_create( void* context ) {
  *
  * @todo add some sort of unsafe copy because the address of string may be corrupt
  */
-void syscall_shared_memory_release( void* context ) {
+void syscall_mman_shm_unlink( void* context ) {
   // get parameter
   const char* name = ( const char* )syscall_get_parameter( context, 0 );
 
@@ -68,36 +81,10 @@ void syscall_shared_memory_release( void* context ) {
 
   // release and populate return
   syscall_populate_single_return(
-    context,
-    shared_memory_release(
+    context, shared_memory_release(
       task_thread_current_thread->process,
       name
     )
   );
 }
 
-/**
- * @brief Acquire shared memory by name
- *
- * @param context
- *
- * @todo add some sort of unsafe copy because the address of string may be corrupt
- */
-void syscall_shared_memory_acquire( void* context ) {
-  // get parameter
-  const char* name = ( const char* )syscall_get_parameter( context, 0 );
-
-  // debug output
-  #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "acquire shared memory with name \"%s\"\r\n", name )
-  #endif
-
-  // attach to current thread
-  syscall_populate_single_return(
-    context,
-    shared_memory_acquire(
-      task_thread_current_thread->process,
-      name
-    )
-  );
-}

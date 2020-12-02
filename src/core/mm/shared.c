@@ -379,7 +379,8 @@ uintptr_t shared_memory_acquire( task_process_ptr_t process, const char* name ) 
   // find free page range
   uintptr_t virt = virt_find_free_page_range(
     process->virtual_context,
-    tmp->size
+    tmp->size,
+    0
   );
 
   // determine end
@@ -394,7 +395,7 @@ uintptr_t shared_memory_acquire( task_process_ptr_t process, const char* name ) 
       start,
       tmp->address_list[ idx ],
       VIRT_MEMORY_TYPE_NORMAL,
-      VIRT_PAGE_TYPE_NON_EXECUTABLE
+      VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
     ) ) {
       // unmap everything on error
       uintptr_t start_inner = virt;

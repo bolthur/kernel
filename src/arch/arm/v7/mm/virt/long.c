@@ -623,13 +623,21 @@ bool v7_long_map(
   // set attributes
   table->page[ page_idx ].data.type = LD_TYPE_PAGE;
   table->page[ page_idx ].data.lower_attr_access = 1;
-  table->page[ page_idx ].data.lower_attr_access_permission =
-    ( ctx->type == VIRT_CONTEXT_TYPE_KERNEL ) ? 0 : 1;
-  // execute never attribute
+  // default is not executable
+  table->page[ page_idx ].data.upper_attr_execute_never = 1;
+  // handle executable area
   if ( page & VIRT_PAGE_TYPE_EXECUTABLE ) {
     table->page[ page_idx ].data.upper_attr_execute_never = 0;
-  } else if ( page & VIRT_PAGE_TYPE_NON_EXECUTABLE ) {
-    table->page[ page_idx ].data.upper_attr_execute_never = 1;
+  }
+  // handle read access by setting read only
+  if ( page & VIRT_PAGE_TYPE_READ ) {
+    table->page[ page_idx ].data.lower_attr_access_permission =
+      ( ctx->type == VIRT_CONTEXT_TYPE_KERNEL ) ? 2 : 3;
+  }
+  // Overwrite with read / write mapping
+  if ( page & VIRT_PAGE_TYPE_WRITE ) {
+    table->page[ page_idx ].data.lower_attr_access_permission =
+      ( ctx->type == VIRT_CONTEXT_TYPE_KERNEL ) ? 0 : 1;
   }
   // handle memory types
   if (
@@ -641,8 +649,6 @@ bool v7_long_map(
     // set attributes
     table->page[ page_idx ].data.lower_attr_memory_attribute =
       memory == VIRT_MEMORY_TYPE_DEVICE_STRONG ? 0 : 1;
-    // set execute never
-    table->page[ page_idx ].data.upper_attr_execute_never = 1;
   } else {
     // mark as outer sharable
     table->page[ page_idx ].data.lower_attr_shared = 0x3;
@@ -920,7 +926,7 @@ bool v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
         table_virtual,
         table,
         VIRT_MEMORY_TYPE_NORMAL_NC,
-        VIRT_PAGE_TYPE_NON_EXECUTABLE
+        VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
       );
       // debug output
       #if defined( PRINT_MM_VIRT )

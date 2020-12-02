@@ -642,15 +642,23 @@ bool v7_short_map(
 
   // set attributes
   table->page[ page_idx ].data.type = SD_TBL_SMALL_PAGE;
-  table->page[ page_idx ].data.access_permission_0 =
-    ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type )
-      ? SD_MAC_APX0_PRIVILEGED_RW
-      : SD_MAC_APX0_FULL_RW;
-  // execute never attribute
+  // default is not executable
+  table->page[ page_idx ].data.execute_never = 1;
+  // executable
   if ( page & VIRT_PAGE_TYPE_EXECUTABLE ) {
     table->page[ page_idx ].data.execute_never = 0;
-  } else if ( page & VIRT_PAGE_TYPE_NON_EXECUTABLE ) {
-    table->page[ page_idx ].data.execute_never = 1;
+  }
+  if ( page & VIRT_PAGE_TYPE_READ ) {
+    table->page[ page_idx ].data.access_permission_0 =
+      ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type )
+        ? SD_MAC_APX1_PRIVILEGED_RO
+        : SD_MAC_APX1_USER_RO;
+  }
+  if ( page & VIRT_PAGE_TYPE_WRITE ) {
+    table->page[ page_idx ].data.access_permission_0 =
+      ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type )
+        ? SD_MAC_APX0_PRIVILEGED_RW
+        : SD_MAC_APX0_FULL_RW;
   }
   // handle memory types
   if (
@@ -932,7 +940,7 @@ bool v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
     TEMPORARY_SPACE_START,
     table,
     VIRT_MEMORY_TYPE_NORMAL_NC,
-    VIRT_PAGE_TYPE_NON_EXECUTABLE
+    VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
   );
 }
 

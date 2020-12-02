@@ -93,7 +93,7 @@ void virt_platform_init( void ) {
       virtual,
       start,
       VIRT_MEMORY_TYPE_DEVICE,
-      VIRT_PAGE_TYPE_AUTO
+      VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
     ) )
     // increase start and virtual
     start += PAGE_SIZE;
@@ -121,7 +121,8 @@ void virt_platform_init( void ) {
       virtual,
       start,
       VIRT_MEMORY_TYPE_DEVICE,
-      VIRT_PAGE_TYPE_AUTO ) )
+      VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
+    ) )
 
     // increase start and virtual
     start += PAGE_SIZE;
@@ -148,7 +149,8 @@ void virt_platform_init( void ) {
         virtual,
         start,
         VIRT_MEMORY_TYPE_DEVICE,
-        VIRT_PAGE_TYPE_AUTO ) )
+        VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
+      ) )
       // increase start and virtual
       start += PAGE_SIZE;
       virtual += PAGE_SIZE;
@@ -161,7 +163,7 @@ void virt_platform_init( void ) {
     MAILBOX_PROPERTY_AREA,
     ( uintptr_t )ptb_buffer_phys,
     VIRT_MEMORY_TYPE_DEVICE,
-    VIRT_PAGE_TYPE_AUTO
+    VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
   ) )
 }
 

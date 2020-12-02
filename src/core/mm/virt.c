@@ -109,7 +109,7 @@ void virt_init( void ) {
         PHYS_2_VIRT( start ),
         start,
         VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_AUTO
+        VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
       ) )
 
       // get next page
@@ -245,12 +245,29 @@ bool virt_unmap_address_range(
  *
  * @param ctx context to use for lookup
  * @param size necessary amount
+ * @param start start address to use
  * @return uintptr_t
  */
-uintptr_t virt_find_free_page_range( virt_context_ptr_t ctx, size_t size ) {
+uintptr_t virt_find_free_page_range(
+  virt_context_ptr_t ctx,
+  size_t size,
+  uintptr_t start
+) {
   // get min and max by context
   uintptr_t min = virt_get_context_min_address( ctx );
   uintptr_t max = virt_get_context_max_address( ctx );
+
+  // handle start
+  if (
+    0 != start
+    && (
+      min > start
+      || max <= start
+      || max <= start + size
+    )
+  ) {
+    return ( uintptr_t )NULL;
+  }
 
   // round up to full page
   ROUND_UP_TO_FULL_PAGE( size )

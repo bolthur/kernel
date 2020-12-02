@@ -33,12 +33,10 @@
 #define SYSCALL_THREAD_EXIT 12
 #define SYSCALL_THREAD_ID 13
 
-#define SYSCALL_MEMORY_ACQUIRE 21
-#define SYSCALL_MEMORY_RELEASE 22
-
-#define SYSCALL_SHARED_MEMORY_CREATE 31
-#define SYSCALL_SHARED_MEMORY_ACQUIRE 32
-#define SYSCALL_SHARED_MEMORY_RELEASE 33
+#define SYSCALL_MMAN_MMAP 21
+#define SYSCALL_MMAN_MUNMAP 22
+#define SYSCALL_MMAN_SHM_OPEN 23
+#define SYSCALL_MMAN_SHM_UNLINK 24
 
 #define SYSCALL_IO_ACQUIRE 41
 #define SYSCALL_IO_RELEASE 42
@@ -70,12 +68,10 @@ void syscall_thread_create( void* );
 void syscall_thread_exit( void* );
 void syscall_thread_id( void* );
 
-void syscall_memory_acquire( void* );
-void syscall_memory_release( void* );
-
-void syscall_shared_memory_acquire( void* );
-void syscall_shared_memory_create( void* );
-void syscall_shared_memory_release( void* );
+void syscall_mman_mmap( void* );
+void syscall_mman_munmap( void* );
+void syscall_mman_shm_open( void* );
+void syscall_mman_shm_unlink( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );

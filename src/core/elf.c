@@ -277,10 +277,10 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       virt_unmap_temporary( tmp, PAGE_SIZE );
 
       // get mapping flag from section
-      uint32_t mapping_flag =
-        program_header->p_flags & PF_X
-          ? VIRT_PAGE_TYPE_EXECUTABLE
-          : VIRT_PAGE_TYPE_NON_EXECUTABLE;
+      uint32_t mapping_flag = VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
+      if ( program_header->p_flags & PF_X ) {
+        mapping_flag |= VIRT_PAGE_TYPE_EXECUTABLE;
+      }
 
       // map it within process context
       if ( ! virt_map_address(

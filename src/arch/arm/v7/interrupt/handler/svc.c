@@ -54,7 +54,6 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   interrupt_ensure_kernel_stack();
 
   uint32_t svc_num;
-
   // thumb mode
   if ( cpu->reg.spsr & CPSR_THUMB ) {
     svc_num = *( ( uint16_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xff;
