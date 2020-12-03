@@ -60,7 +60,7 @@ void syscall_posix_mman_mmap( void* context ) {
       addr, len, prot, flags, filedes, off )
   #endif
   // handle not supported file descriptor
-  if ( -1 != filedes ) {
+  if ( -1 != filedes || ! ( flags & MAP_ANONYMOUS ) ) {
     syscall_populate_single_return( context, ( uintptr_t )-EINVAL );
     return;
   }
@@ -71,7 +71,8 @@ void syscall_posix_mman_mmap( void* context ) {
     // handle missing private or shared
     || (
       ! ( flags & MAP_SHARED )
-      && ! ( flags && MAP_PRIVATE )
+      && ! ( flags & MAP_PRIVATE )
+      && ! ( flags & MAP_ANONYMOUS )
     )
   ) {
     syscall_populate_single_return( context, ( uintptr_t )-EINVAL );

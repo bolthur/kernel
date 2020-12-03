@@ -52,6 +52,11 @@ void syscall_process_id( void* context ) {
   );
 }
 
+/**
+ * @brief Create new process
+ *
+ * @param context
+ */
 void syscall_process_create( __unused void* context ) {
 }
 

@@ -1174,7 +1174,7 @@ uint64_t v7_short_get_mapped_address_in_context(
 }
 
 /**
- * Get prefetch fault address
+ * @brief Get prefetch fault address
  *
  * @return
  */
@@ -1190,7 +1190,7 @@ uintptr_t v7_short_prefetch_fault_address( void ) {
 }
 
 /**
- * Get prefetch status
+ * @brief Get prefetch status
  *
  * @return
  */
@@ -1208,7 +1208,7 @@ uintptr_t v7_short_prefetch_status( void ) {
 }
 
 /**
- * Get data abort fault address
+ * @brief Get data abort fault address
  *
  * @return
  */
@@ -1224,7 +1224,7 @@ uintptr_t v7_short_data_fault_address( void ) {
 }
 
 /**
- * Get data abort status
+ * @brief Get data abort status
  *
  * @return
  */

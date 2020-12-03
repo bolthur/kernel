@@ -51,6 +51,11 @@ void syscall_thread_id( void* context ) {
   );
 }
 
+/**
+ * @brief Create new thread
+ *
+ * @param context
+ */
 void syscall_thread_create( __unused void* context ) {
 }
 
