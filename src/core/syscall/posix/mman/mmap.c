@@ -29,6 +29,7 @@
 
 #include <core/panic.h>
 // libc header for defines
+#include <inttypes.h>
 #include <sys/mman.h>
 #include <errno.h>
 
@@ -55,7 +56,7 @@ void syscall_posix_mman_mmap( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall mmap( %#p, %zu, %d, %d, %d, %#x )\r\n",
+      "syscall mmap( %#p, %zu, %d, %d, %d, %lx )\r\n",
       addr, len, prot, flags, filedes, off )
   #endif
   // handle not supported file descriptor
@@ -116,7 +117,7 @@ void syscall_posix_mman_mmap( void* context ) {
 
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "start = %p\r\n", start )
+    DEBUG_OUTPUT( "start = %#"PRIxPTR"\r\n", start )
   #endif
   syscall_populate_single_return( context, start );
 }
@@ -140,7 +141,7 @@ void syscall_posix_mman_munmap( void* context ) {
       ->virtual_context;
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall munmap ( %#x, %uz )\r\n", address, len )
+    DEBUG_OUTPUT( "syscall munmap ( %#"PRIxPTR", %zx )\r\n", address, len )
   #endif
   // handle invalid stuff
   if ( 0 == len ) {

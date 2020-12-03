@@ -29,6 +29,7 @@
 // libc header for defines
 #include <sys/mman.h>
 #include <errno.h>
+#include <inttypes.h>
 
 /**
  * @brief Create shared memory area
@@ -37,18 +38,20 @@
  *
  * @todo add some sort of unsafe copy because the address of string may be corrupt
  */
-noreturn void syscall_posix_mman_shm_open( void* context ) {
+void syscall_posix_mman_shm_open( void* context ) {
   // get parameter
   const char* name = ( const char* )syscall_get_parameter( context, 0 );
   int flag = ( int )syscall_get_parameter( context, 1 );
   mode_t mode = ( mode_t )syscall_get_parameter( context, 2 );
+
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "acquire shared memory with name \"%s\", flag %#x and mode %zu\r\n",
-      name, flag, mode )
+      "acquire shared memory with name \"%s\", flag %d and mode %#"PRIxPTR"\r\n",
+      name, flag, ( uintptr_t )mode )
   #endif
-  PANIC( "foo!" )
+
+  syscall_populate_single_return( context, false );
 /*  // create shared memory and populate return
   if ( ! shared_memory_create( name, size ) ) {
     syscall_populate_single_return( context, false );

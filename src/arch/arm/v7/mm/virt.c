@@ -558,3 +558,87 @@ uint64_t virt_get_mapped_address_in_context(
     PANIC( "Unsupported mode!" )
   }
 }
+
+/**
+ * Get prefetch fault address
+ *
+ * @return
+ */
+uintptr_t virt_prefetch_fault_address( void ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    return v7_long_prefetch_fault_address();
+  // check v7 short descriptor format
+  } else if (
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+  ) {
+    return v7_long_prefetch_fault_address();
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" )
+  }
+}
+
+/**
+ * Get prefetch abort status
+ *
+ * @return
+ */
+uintptr_t virt_prefetch_status( void ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    return v7_long_prefetch_status();
+  // check v7 short descriptor format
+  } else if (
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+  ) {
+    return v7_short_prefetch_status();
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" )
+  }
+}
+
+/**
+ * Get data abort status
+ *
+ * @return
+ */
+uintptr_t virt_data_fault_address( void ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    return v7_long_data_fault_address();
+  // check v7 short descriptor format
+  } else if (
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+  ) {
+    return v7_short_data_fault_address();
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" )
+  }
+}
+
+/**
+ * Get data abort status
+ *
+ * @return data abort address
+ */
+uintptr_t virt_data_status( void ) {
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    return v7_long_data_status();
+  // check v7 short descriptor format
+  } else if (
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+  ) {
+    return v7_short_data_status();
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" )
+  }
+}

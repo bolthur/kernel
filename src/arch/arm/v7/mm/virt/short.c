@@ -1172,3 +1172,71 @@ uint64_t v7_short_get_mapped_address_in_context(
   // return physical address
   return phys;
 }
+
+/**
+ * Get prefetch fault address
+ *
+ * @return
+ */
+uintptr_t v7_short_prefetch_fault_address( void ) {
+  // variable for faulting address
+  uintptr_t address;
+  // get faulting address
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c6, c0, 2" : "=r" ( address ) : : "cc"
+  );
+  // return faulting address
+  return address;
+}
+
+/**
+ * Get prefetch status
+ *
+ * @return
+ */
+uintptr_t v7_short_prefetch_status( void ) {
+  // variable for faulting address
+  uintptr_t fault_status;
+  // get faulting address
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c5, c0, 1" : "=r" ( fault_status ) : : "cc"
+  );
+  // extract fault status
+  fault_status = fault_status & 0x7;
+  // return fault
+  return fault_status;
+}
+
+/**
+ * Get data abort fault address
+ *
+ * @return
+ */
+uintptr_t v7_short_data_fault_address( void ) {
+  // variable for faulting address
+  uintptr_t address;
+  // get faulting address
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c6, c0, 0" : "=r" ( address ) : : "cc"
+  );
+  // return faulting address
+  return address;
+}
+
+/**
+ * Get data abort status
+ *
+ * @return
+ */
+uintptr_t v7_short_data_status( void ) {
+  // variable for faulting address
+  uintptr_t fault_status;
+  // get faulting address
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c5, c0, 0" : "=r" ( fault_status ) : : "cc"
+  );
+  // extract fault status
+  fault_status = fault_status & 0x7;
+  // return fault
+  return fault_status;
+}

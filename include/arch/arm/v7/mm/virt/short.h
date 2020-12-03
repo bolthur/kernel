@@ -45,5 +45,9 @@ void v7_short_flush_complete( void );
 void v7_short_flush_address( uintptr_t );
 bool v7_short_is_mapped_in_context( virt_context_ptr_t, uintptr_t );
 uint64_t v7_short_get_mapped_address_in_context( virt_context_ptr_t, uintptr_t );
+uintptr_t v7_short_prefetch_fault_address( void );
+uintptr_t v7_short_prefetch_status( void );
+uintptr_t v7_short_data_fault_address( void );
+uintptr_t v7_short_data_status( void );
 
 #endif

@@ -77,7 +77,7 @@ bool syscall_init( void ) {
   }
   // memory related
   if ( ! interrupt_register_handler(
-    SYSCALL_MMAN_MMAP,
+    SYSCALL_POSIX_MMAN_MMAP,
     syscall_posix_mman_mmap,
     INTERRUPT_SOFTWARE,
     false
@@ -85,7 +85,7 @@ bool syscall_init( void ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_MMAN_MUNMAP,
+    SYSCALL_POSIX_MMAN_MUNMAP,
     syscall_posix_mman_munmap,
     INTERRUPT_SOFTWARE,
     false
@@ -93,7 +93,7 @@ bool syscall_init( void ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_MMAN_SHM_OPEN,
+    SYSCALL_POSIX_MMAN_SHM_OPEN,
     syscall_posix_mman_shm_open,
     INTERRUPT_SOFTWARE,
     false
@@ -101,7 +101,7 @@ bool syscall_init( void ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_MMAN_SHM_UNLINK,
+    SYSCALL_POSIX_MMAN_SHM_UNLINK,
     syscall_posix_mman_shm_unlink,
     INTERRUPT_SOFTWARE,
     false

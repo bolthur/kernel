@@ -35,7 +35,7 @@
 #define ROUND_UP_TO_FULL_PAGE( a )  \
   a += ( a % PAGE_SIZE ? ( PAGE_SIZE - a % PAGE_SIZE ) : 0 );
 #define ROUND_DOWN_TO_FULL_PAGE( a )  \
-  a -= ( a % PAGE_SIZE ? ( PAGE_SIZE - a % PAGE_SIZE ) : 0 );
+  a -= ( a % PAGE_SIZE );
 
 extern uint32_t *phys_bitmap;
 extern uint32_t phys_bitmap_length;

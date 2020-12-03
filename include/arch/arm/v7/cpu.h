@@ -45,21 +45,22 @@
 
 #if ! defined( ASSEMBLER_FILE )
   #include <stdint.h>
+  #include <inttypes.h>
   #include <core/debug/debug.h>
 
   /**
    * @brief CPU register context
    */
   typedef union __packed {
-    uint32_t raw[ 17 ];
+    uintptr_t raw[ 17 ];
     struct {
-      uint32_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10; /* general purpose register */
-      uint32_t fp; /* r11 = frame pointer */
-      uint32_t ip; /* r12 = intraprocess scratch */
-      uint32_t sp; /* r13 = stack pointer */
-      uint32_t lr; /* r14 = link register */
-      uint32_t pc; /* r15 = program counter */
-      uint32_t spsr;
+      uintptr_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10; /* general purpose register */
+      uintptr_t fp; /* r11 = frame pointer */
+      uintptr_t ip; /* r12 = intraprocess scratch */
+      uintptr_t sp; /* r13 = stack pointer */
+      uintptr_t lr; /* r14 = link register */
+      uintptr_t pc; /* r15 = program counter */
+      uintptr_t spsr;
     } reg;
   } cpu_register_context_t, *cpu_register_context_ptr_t;
 
@@ -70,32 +71,33 @@
     R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, SP, LR, PC, CPSR
   } cpu_register_map_t, *cpu_register_map_ptr_t;
 
+  #define PRIxPTR_WIDTH ((int)(sizeof(uintptr_t)*2))
   #define DUMP_REGISTER( context ) \
     DEBUG_OUTPUT( \
       "CPU register dump\r\n"\
-      "%4s: %#x\t%4s: %#x\t%4s: %#x\r\n"\
-      "%4s: %#x\t%4s: %#x\t%4s: %#x\r\n"\
-      "%4s: %#x\t%4s: %#x\t%4s: %#x\r\n"\
-      "%4s: %#x\t%4s: %#x\t%4s: %#x\r\n"\
-      "%4s: %#x\t%4s: %#x\t%4s: %#x\r\n"\
-      "%4s: %#x\t%4s: %#x\r\n", \
-      "r0", ( ( cpu_register_context_ptr_t )context )->reg.r0, \
-      "r1", ( ( cpu_register_context_ptr_t )context )->reg.r1, \
-      "r2", ( ( cpu_register_context_ptr_t )context )->reg.r2, \
-      "r3", ( ( cpu_register_context_ptr_t )context )->reg.r3, \
-      "r4", ( ( cpu_register_context_ptr_t )context )->reg.r4, \
-      "r5", ( ( cpu_register_context_ptr_t )context )->reg.r5, \
-      "r6", ( ( cpu_register_context_ptr_t )context )->reg.r6, \
-      "r7", ( ( cpu_register_context_ptr_t )context )->reg.r7, \
-      "r8", ( ( cpu_register_context_ptr_t )context )->reg.r8, \
-      "r9", ( ( cpu_register_context_ptr_t )context )->reg.r9, \
-      "r10", ( ( cpu_register_context_ptr_t )context )->reg.r10, \
-      "fp", ( ( cpu_register_context_ptr_t )context )->reg.fp, \
-      "ip", ( ( cpu_register_context_ptr_t )context )->reg.ip, \
-      "sp", ( ( cpu_register_context_ptr_t )context )->reg.sp, \
-      "lr", ( ( cpu_register_context_ptr_t )context )->reg.lr, \
-      "pc", ( ( cpu_register_context_ptr_t )context )->reg.pc, \
-      "spsr", ( ( cpu_register_context_ptr_t )context )->reg.spsr \
+      "%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\r\n"\
+      "%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\r\n"\
+      "%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\r\n"\
+      "%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\r\n"\
+      "%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\r\n"\
+      "%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\r\n", \
+      "r0", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r0, \
+      "r1", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r1, \
+      "r2", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r2, \
+      "r3", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r3, \
+      "r4", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r4, \
+      "r5", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r5, \
+      "r6", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r6, \
+      "r7", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r7, \
+      "r8", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r8, \
+      "r9", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r9, \
+      "r10", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r10, \
+      "fp", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.fp, \
+      "ip", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.ip, \
+      "sp", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.sp, \
+      "lr", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.lr, \
+      "pc", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.pc, \
+      "spsr", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.spsr \
     )
 #endif
 

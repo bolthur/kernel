@@ -95,7 +95,7 @@ IMPORT( task_thread_current_thread )
     \privileged
 .endm
 
-.macro push_register name:req, mode:req, fixup:req
+.macro push_register name:req, mode:req, fixup:req, thumb_offset:req
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
     4, \
@@ -130,7 +130,7 @@ _\name\()_entry_unprivileged:
   // thumb entry
   _\name\()_entry_unprivileged_thumb:
     ldr r0, [ lr, #60 ]
-    add r0, #(\fixup / 2)
+    add r0, #\thumb_offset
     str r0, [ lr, #60 ]
   // arm entry
   _\name\()_entry_unprivileged_arm:
@@ -228,11 +228,11 @@ _\name\()_exit_privileged:
 _\name\()_exit_finished:
 .endm
 
-.macro exception_handler fixup:req, handler:req, mode:req, name:req, nested:req
+.macro exception_handler fixup:req, thumb_offset:req, handler:req, mode:req, name:req, nested:req
   // switch to svc mode with fixup
   switch_mode \mode, \fixup
   // push register
-  push_register \name, \mode, \fixup
+  push_register \name, \mode, \fixup, \thumb_offset
 
   // remote debugging
   #if defined( REMOTE_DEBUG )

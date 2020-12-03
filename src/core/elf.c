@@ -18,6 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <inttypes.h>
 #include <stdbool.h>
 #include <string.h>
 #include <core/elf/common.h>
@@ -131,90 +132,78 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
     Elf32_Phdr* program_header = ( Elf32_Phdr* )(
       elf + header->e_phoff + header->e_phentsize * index
     );
-
+    // debug output
+    #if defined ( PRINT_ELF )
+      DEBUG_OUTPUT(
+        "type = %#x, vaddr = %#x, paddr = %#x, size = %#x, offset = %#x!\r\n",
+        program_header->p_type, program_header->p_vaddr, program_header->p_paddr,
+        program_header->p_memsz, program_header->p_offset )
+    #endif
     // skip all sections except load
     if ( PT_LOAD != program_header->p_type ) {
       continue;
     }
 
+    // determine start and end
+    uintptr_t start = program_header->p_vaddr;
+    uintptr_t end = start + program_header->p_memsz;
+    // debug output
+    #if defined ( PRINT_ELF )
+      DEBUG_OUTPUT( "start = %#"PRIxPTR", end = %#"PRIxPTR"\r\n", start, end )
+    #endif
+    // round down start and up end
+    ROUND_DOWN_TO_FULL_PAGE( start );
+    ROUND_UP_TO_FULL_PAGE( end );
+    // debug output
+    #if defined ( PRINT_ELF )
+      DEBUG_OUTPUT( "start = %#"PRIxPTR", end = %#"PRIxPTR"\r\n", start, end )
+    #endif
+
+    // determine copy offset and copy amount
+    uintptr_t memory_offset = program_header->p_vaddr % PAGE_SIZE;
+    uintptr_t file_offset = program_header->p_offset;
+    uintptr_t copy_size = program_header->p_memsz;
     // debug output
     #if defined ( PRINT_ELF )
       DEBUG_OUTPUT(
-        "type = %#x, vaddr = %#x, paddr = %#x, size = %#x, offset = %#x!\r\n",
-        program_header->p_type,
-        program_header->p_vaddr,
-        program_header->p_paddr,
-        program_header->p_memsz,
-        program_header->p_offset )
+        "memory_offset = %#"PRIxPTR", file_offset = %#"PRIxPTR", copy_size = %#"PRIxPTR"\r\n",
+        memory_offset, file_offset, copy_size )
     #endif
 
-    // determine needed space
-    uintptr_t needed_size = program_header->p_memsz;
-    // debug output
-    #if defined( PRINT_ELF )
-      DEBUG_OUTPUT( "needed_size = %#x\r\n", needed_size )
-    #endif
-    // round to full page
-    ROUND_UP_TO_FULL_PAGE( needed_size )
-    // debug output
-    #if defined( PRINT_ELF )
-      DEBUG_OUTPUT( "needed_size = %#x\r\n", needed_size )
-    #endif
-
-    // get start address
-    uintptr_t start = program_header->p_vaddr;
-    uintptr_t start_down = start;
-    uintptr_t start_up = start;
-    // debug output
-    #if defined( PRINT_ELF )
-      DEBUG_OUTPUT( "needed_size = %#x\r\n", needed_size )
-    #endif
-    // check for not aligned address
-    if ( start_down % PAGE_SIZE ) {
-      // round down start to full page
-      ROUND_DOWN_TO_FULL_PAGE( start_down )
-      // check if mapped
-      if ( virt_is_mapped_in_context(
-        process->virtual_context,
-        start_down
-      ) ) {
-        // subtract already mapped size from size
-        ROUND_UP_TO_FULL_PAGE( start_up )
-        needed_size -= ( start_up - start );
-      } else {
-        // enlarge needed size
-        needed_size += ( start - start_down );
+    // loop from start to end, map and copy data
+    while( start < end ) {
+      // determine copy amount
+      uintptr_t to_copy = copy_size;
+      // handle page size exceeded
+      if ( to_copy > PAGE_SIZE ) {
+        to_copy = PAGE_SIZE;
       }
-    }
-    // round again up to full page due to possible modifications
-    ROUND_UP_TO_FULL_PAGE( needed_size )
-    // debug output
-    #if defined( PRINT_ELF )
-      DEBUG_OUTPUT( "needed_size = %#x\r\n", needed_size )
-    #endif
+      // consider memory offset
+      if ( memory_offset > 0 ) {
+        to_copy = PAGE_SIZE - memory_offset;
+      }
+      // debug output
+      #if defined ( PRINT_ELF )
+        DEBUG_OUTPUT(
+          "copy_size = %#"PRIxPTR", to_copy = %#"PRIxPTR", file_offset = %#"PRIxPTR"\r\n",
+          copy_size, to_copy, file_offset )
+      #endif
 
-    // loop until needed size is zero
-    uintptr_t offset = 0;
-    uintptr_t page_offset = program_header->p_vaddr % PAGE_SIZE;
-
-    while ( needed_size != 0 ) {
-      // physical page
+      // physical page variable and clear flag
       uint64_t phys;
       bool clear = false;
-
-      // determine whether new page has to be mapped or not
-      if ( virt_is_mapped_in_context(
-        process->virtual_context,
-        program_header->p_vaddr + offset
-      ) ) {
+      // handle already mapped ( fetch physical page )
+      if ( virt_is_mapped_in_context( process->virtual_context, start ) ) {
+        // get physical address of already mapped one
         phys = virt_get_mapped_address_in_context(
           process->virtual_context,
-          program_header->p_vaddr + offset
+          start
         );
         // handle error
         if ( ( uint64_t )-1 == phys ) {
           return false;
         }
+      // handle not mapped ( acquire new physical page )
       } else {
         // get new physical page
         phys = phys_find_free_page( PAGE_SIZE );
@@ -225,8 +214,12 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
         // set clear flag
         clear = true;
       }
+      // debug output
+      #if defined ( PRINT_ELF )
+        DEBUG_OUTPUT( "phys = %#016llx\r\n", phys )
+      #endif
 
-      // map it temporary
+      // map temporary
       uintptr_t tmp = virt_map_temporary( phys, PAGE_SIZE );
       if ( 0 == tmp ) {
         // free phys if new page is registered
@@ -240,68 +233,61 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       if ( clear ) {
         // debug output
         #if defined( PRINT_ELF )
-          DEBUG_OUTPUT( "clear page at address %#x\r\n", tmp )
+          DEBUG_OUTPUT( "clear page at address %#"PRIxPTR"\r\n", tmp )
         #endif
+        // clear page
         memset( ( void* )tmp, 0, PAGE_SIZE );
       }
-      // get size to copy
-      size_t to_copy = program_header->p_filesz;
-      size_t tmp_offset = 0;
-      // adjust to copy by file offset and page offset
-      if ( offset > 0 ) {
-        to_copy -= offset + page_offset;
-      }
-      // copy up to one page size
-      if ( to_copy > PAGE_SIZE ) {
-        to_copy = PAGE_SIZE;
-      }
-      // handle page offset at the beginning
-      if ( 0 == offset && 0 < page_offset ) {
-        // reduce to copy value
-        to_copy = PAGE_SIZE - page_offset;
-        tmp_offset = page_offset;
-      }
       // debug output
-      #if defined( PRINT_ELF )
+      #if defined ( PRINT_ELF )
         DEBUG_OUTPUT(
-          "to_copy = %#x, tmp_offset = %#x, offset = %#x\r\n",
-          to_copy, tmp_offset, offset)
+          "memcpy( %#"PRIxPTR", %#"PRIxPTR", %#"PRIxPTR" )\r\n",
+          tmp + memory_offset,
+          ( uintptr_t )header + file_offset,
+          to_copy
+        )
       #endif
-      // copy over data
+      // copy data
       memcpy(
-        ( void* )( ( uintptr_t )tmp + tmp_offset ),
-        ( void* )( ( uintptr_t )header + program_header->p_offset + offset ),
+        ( void* )( tmp + memory_offset ),
+        ( void* )( ( uintptr_t )header + file_offset ),
         to_copy
       );
-      // unmap temporary
+      // unmap temporary again
       virt_unmap_temporary( tmp, PAGE_SIZE );
-
-      // get mapping flag from section
-      uint32_t mapping_flag = VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
-      if ( program_header->p_flags & PF_X ) {
-        mapping_flag |= VIRT_PAGE_TYPE_EXECUTABLE;
-      }
-
-      // map it within process context
-      if ( ! virt_map_address(
-          process->virtual_context,
-          program_header->p_vaddr + offset,
-          phys,
-          VIRT_MEMORY_TYPE_NORMAL,
-          mapping_flag
-        )
-      ) {
-        // free phys if new page is registered
-        if ( clear ) {
-          phys_free_page( phys );
+      // map it within process context if new page
+      if ( clear ) {
+        // get mapping flag for section
+        uint32_t mapping_flag = VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
+        if ( program_header->p_flags & PF_X ) {
+          mapping_flag |= VIRT_PAGE_TYPE_EXECUTABLE;
         }
-        // return error
-        return false;
+        // map it
+        if ( ! virt_map_address(
+            process->virtual_context,
+            start,
+            phys,
+            VIRT_MEMORY_TYPE_NORMAL,
+            mapping_flag
+          )
+        ) {
+          // free phys if new page is registered
+          if ( clear ) {
+            phys_free_page( phys );
+          }
+          // return error
+          return false;
+        }
       }
 
-      // subtract one page
-      needed_size -= PAGE_SIZE;
-      offset += to_copy;
+      // set offset to 0
+      memory_offset = 0;
+      // decrease copy size
+      copy_size -= to_copy;
+      // increase file offset
+      file_offset += to_copy;
+      // increase start
+      start += PAGE_SIZE;
     }
   }
   return true;

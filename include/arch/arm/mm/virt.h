@@ -36,4 +36,9 @@
   extern uint32_t supported_modes;
 #endif
 
+uintptr_t virt_prefetch_fault_address( void );
+uintptr_t virt_prefetch_status( void );
+uintptr_t virt_data_fault_address( void );
+uintptr_t virt_data_status( void );
+
 #endif

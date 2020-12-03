@@ -23,6 +23,7 @@
   #include <arch/arm/v7/debug/debug.h>
 #endif
 #include <arch/arm/v7/interrupt/vector.h>
+#include <arch/arm/mm/virt.h>
 #include <core/event.h>
 #include <core/interrupt.h>
 #include <core/panic.h>
@@ -54,6 +55,9 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
+    DEBUG_OUTPUT( "prefetch abort while accessing %p\r\n",
+      ( void* )virt_prefetch_fault_address() )
+    DEBUG_OUTPUT( "fault_status = %#x\r\n", ( void* )virt_prefetch_status() )
     DUMP_REGISTER( cpu )
   #endif
 
