@@ -237,6 +237,26 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
         field_width = 10 * field_width + ( *format++ - '0' );
       }
     }
+
+    // handle precision
+    size_t precision = SIZE_MAX;
+    if ( *format == '.' ) {
+      // get next character
+      format++;
+      precision = 0;
+      if ( *format == '*' ) {
+        // get next character
+        format++;
+        // get precision
+        int int_precision = va_arg( parameter, int );
+        precision = 0 <= int_precision ? ( size_t )int_precision : 0;
+      } else {
+        while ( '0' <= *format && *format <= '9' ) {
+          precision = 10 * precision + ( *format++ - '0' );
+        }
+      }
+    }
+
     // length modifier map
     length_modifier_t length_modifier_map[] = {
       { "hh", LENGTH_SHORT_SHORT },
@@ -298,7 +318,17 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
         str = "( null )";
       }
       // determine string length
-      size_t len = strlen( str );
+      size_t real_len = strlen( str );
+      // consider possible precision
+      size_t len = 0;
+      if ( precision != SIZE_MAX ) {
+        for ( size_t i = 0; i < precision && i < real_len; i++ ) {
+          len++;
+        }
+      } else {
+        len = real_len;
+      }
+
       print_written = print( buffer, str, "", len, zero_padding, field_width );
       // print string
       if ( EOF == print_written ) {

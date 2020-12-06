@@ -19,11 +19,33 @@
  */
 
 #include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <zlib.h>
+#include "vfs.h"
 
-// struct dirent, DIR and struct stat
-#include <sys/dirent.h>
-#include <sys/stat.h>
+pid_t pid = 0;
+vfs_node_ptr_t root = NULL;
 
 int main( __maybe_unused int argc, __maybe_unused char* argv[] ) {
+  // get current pid
+  pid = getpid();
+  // setup root
+  root = vfs_setup( pid );
+
+  z_stream stream;
+  stream.zalloc = Z_NULL;
+  stream.zfree = Z_NULL;
+  stream.opaque = Z_NULL;
+  stream.avail_in = 0;
+  stream.next_in = ( Bytef* )argv[ 0 ];
+  inflateInit2( &stream, -15 );
+
+  // FIXME: check arguments for binary device tree
+    // FIXME: parse binary device tree and populate into vfs tree "/dev"
+  // FIXME: check arguments for initrd
+    // FIXME: parse initrd for ramdisk.tar.gz
+      // FIXME: parse ramdisk.tar.gz and populate into vfs tree "/"
+
   return 0;
 }

@@ -41,5 +41,17 @@ void syscall_dummy_putc( void* context ) {
  * @todo remove with final syscall implementation
  */
 void syscall_dummy_puts( void* context ) {
-  printf( "%s", ( uint8_t* )syscall_get_parameter( context, 0 ) );
+  // get parameter
+  // int file = ( int )syscall_get_parameter( context, 0 );
+  char* str = ( char* )syscall_get_parameter( context, 1 );
+  int len = ( int )syscall_get_parameter( context, 2 );
+  // handle errors
+  if ( ! str ) {
+    syscall_populate_single_return( context, ( uintptr_t )-1 );
+    return;
+  }
+  // print until end of string or len
+  syscall_populate_single_return(
+    context, ( uintptr_t )printf( "%.*s", len, str )
+  );
 }

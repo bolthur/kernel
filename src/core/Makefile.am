@@ -10,12 +10,12 @@ libcore_la_SOURCES = \
   mm/virt.c \
   syscall/posix/mman/mmap.c \
   syscall/posix/mman/shm.c \
+  syscall/posix/mqueue.c \
   syscall/task/process.c \
   syscall/task/thread.c \
   syscall/dummy.c \
   syscall/init.c \
   syscall/interrupt.c \
-  syscall/message.c \
   task/lock.c \
   task/process.c \
   task/queue.c \

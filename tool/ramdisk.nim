@@ -21,10 +21,10 @@ import os
 import osproc
 import strutils
 
-# create tmp dir
-discard existsOrCreateDir("tmp")
-discard existsOrCreateDir("tmp/ramdisk")
-discard existsOrCreateDir("tmp/ramdisk/driver")
+# create tmp directories
+discard existsOrCreateDir( "tmp" )
+discard existsOrCreateDir( "tmp/ramdisk" )
+discard existsOrCreateDir( "tmp/ramdisk/driver" )
 
 # check argument count
 let argc: int = paramCount()
@@ -36,21 +36,22 @@ if argc != 2:
 let driver: string = paramStr( 1 );
 let output: string = paramStr( 2 );
 
-for file in walkDirRec driver:
-  let outp_shell = execProcess("file " & file)
-  if contains(outp_shell, ": ELF") and contains(outp_shell, "executable"):
-    echo file
-    let split = splitPath(file)
+# loop through files of folder including subfolders
+for file in walkDirRec( driver ):
+  let outp_shell = execProcess( "file " & file )
+  if contains( outp_shell, ": ELF" ) and contains( outp_shell, "executable" ):
+    # split file path
+    let split = splitPath( file )
+    # special handling for init
     if split.tail == "init":
-      copyFile(file, "tmp/" & split.tail);
+      copyFile( file, "tmp/" & split.tail );
     else:
-      copyFile(file, "tmp/ramdisk/driver/" & split.tail);
+      copyFile( file, "tmp/ramdisk/driver/" & split.tail );
 
-# create ramdisk
-echo execProcess("tar czvf ../ramdisk.tar.gz *", "tmp/ramdisk")
-removeDir("tmp/ramdisk")
-# create initrd with init and compressed ramdisk
-echo execProcess("tar cvf ../" & output & " *", "tmp")
-
+# create ramdisk and remove normal directory
+echo execProcess( "tar czvf ../ramdisk.tar.gz *", "tmp/ramdisk" )
+removeDir( "tmp/ramdisk" )
+# create initrd with init and compressed ramdisk and cleanup directory
+echo execProcess( "tar cvf ../" & output & " *", "tmp" )
 # remove tmp dir again
 removeDir("tmp")

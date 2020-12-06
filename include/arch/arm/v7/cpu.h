@@ -71,7 +71,7 @@
     R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, SP, LR, PC, CPSR
   } cpu_register_map_t, *cpu_register_map_ptr_t;
 
-  #define PRIxPTR_WIDTH ((int)(sizeof(uintptr_t)*2))
+  #define PRIxPTR_WIDTH ( ( int )( sizeof( uintptr_t ) * 2 ) )
   #define DUMP_REGISTER( context ) \
     DEBUG_OUTPUT( \
       "CPU register dump\r\n"\

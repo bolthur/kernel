@@ -38,17 +38,21 @@
 #define SYSCALL_POSIX_MMAN_SHM_OPEN 23
 #define SYSCALL_POSIX_MMAN_SHM_UNLINK 24
 
+#define SYSCALL_POSIX_MQUEUE_OPEN 31
+#define SYSCALL_POSIX_MQUEUE_CLOSE 32
+#define SYSCALL_POSIX_MQUEUE_UNLINK 33
+#define SYSCALL_POSIX_MQUEUE_SEND 34
+#define SYSCALL_POSIX_MQUEUE_SEND_TIMED 35
+#define SYSCALL_POSIX_MQUEUE_RECEIVE 36
+#define SYSCALL_POSIX_MQUEUE_RECEIVE_TIMED 37
+#define SYSCALL_POSIX_MQUEUE_NOTIFY 38
+#define SYSCALL_POSIX_MQUEUE_GET_ATTRIBUTE 39
+#define SYSCALL_POSIX_MQUEUE_SET_ATTRIBUTE 40
+
 #define SYSCALL_IO_ACQUIRE 41
 #define SYSCALL_IO_RELEASE 42
 #define SYSCALL_IO_CHECK 43
 #define SYSCALL_IO_RAISE 44
-
-#define SYSCALL_MESSAGE_ACQUIRE 51
-#define SYSCALL_MESSAGE_RELEASE 52
-#define SYSCALL_MESSAGE_SYNC_SEND 53
-#define SYSCALL_MESSAGE_SYNC_RECEIVE 54
-#define SYSCALL_MESSAGE_ASYNC_SEND 55
-#define SYSCALL_MESSAGE_ASYNC_RECEIVE 56
 
 #define SYSCALL_INTERRUPT_ACQUIRE 61
 #define SYSCALL_INTERRUPT_RELEASE 62
@@ -73,6 +77,17 @@ void syscall_posix_mman_munmap( void* );
 void syscall_posix_mman_shm_open( void* );
 void syscall_posix_mman_shm_unlink( void* );
 
+void syscall_posix_mqueue_open( void* );
+void syscall_posix_mqueue_close( void* );
+void syscall_posix_mqueue_unlink( void* );
+void syscall_posix_mqueue_send( void* );
+void syscall_posix_mqueue_send_timed( void* );
+void syscall_posix_mqueue_receive( void* );
+void syscall_posix_mqueue_receive_timed( void* );
+void syscall_posix_mqueue_notify( void* );
+void syscall_posix_mqueue_get_attribute( void* );
+void syscall_posix_mqueue_set_attribute( void* );
+
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );
 
@@ -80,13 +95,6 @@ void syscall_io_acquire( void* );
 void syscall_io_release( void* );
 void syscall_io_check( void* );
 void syscall_io_raise( void* );
-
-void syscall_message_acquire( void* );
-void syscall_message_release( void* );
-void syscall_message_sync_send( void* );
-void syscall_message_sync_receive( void* );
-void syscall_message_async_send( void* );
-void syscall_message_async_receive( void* );
 
 void syscall_dummy_putc( void* );
 void syscall_dummy_puts( void* );

@@ -108,6 +108,87 @@ bool syscall_init( void ) {
   ) ) {
     return false;
   }
+  // message related
+  if ( ! interrupt_register_handler(
+    SYSCALL_POSIX_MQUEUE_OPEN,
+    syscall_posix_mqueue_open,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_POSIX_MQUEUE_CLOSE,
+    syscall_posix_mqueue_close,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_POSIX_MQUEUE_UNLINK,
+    syscall_posix_mqueue_unlink,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_POSIX_MQUEUE_SEND,
+    syscall_posix_mqueue_send,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_POSIX_MQUEUE_SEND_TIMED,
+    syscall_posix_mqueue_send_timed,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_POSIX_MQUEUE_RECEIVE,
+    syscall_posix_mqueue_receive,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_POSIX_MQUEUE_RECEIVE_TIMED,
+    syscall_posix_mqueue_receive_timed,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_POSIX_MQUEUE_NOTIFY,
+    syscall_posix_mqueue_notify,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_POSIX_MQUEUE_GET_ATTRIBUTE,
+    syscall_posix_mqueue_get_attribute,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_POSIX_MQUEUE_SET_ATTRIBUTE,
+    syscall_posix_mqueue_set_attribute,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
   // interrupt related
   if ( ! interrupt_register_handler(
     SYSCALL_INTERRUPT_ACQUIRE,
@@ -153,55 +234,6 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_IO_RELEASE,
     syscall_io_release,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  // message related
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_ACQUIRE,
-    syscall_message_acquire,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_RELEASE,
-    syscall_message_release,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_SYNC_SEND,
-    syscall_message_sync_send,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_SYNC_RECEIVE,
-    syscall_message_sync_receive,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_ASYNC_SEND,
-    syscall_message_async_send,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_ASYNC_RECEIVE,
-    syscall_message_async_receive,
     INTERRUPT_SOFTWARE,
     false
   ) ) {

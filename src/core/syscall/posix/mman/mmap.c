@@ -27,7 +27,6 @@
   #include <core/debug/debug.h>
 #endif
 
-#include <core/panic.h>
 // libc header for defines
 #include <inttypes.h>
 #include <sys/mman.h>
