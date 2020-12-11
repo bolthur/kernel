@@ -44,10 +44,10 @@ void syscall_posix_mman_mmap( void* context ) {
   // get parameter
   void* addr = ( void* )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
-  int prot = ( int )syscall_get_parameter( context, 2 );
+  __maybe_unused int prot = ( int )syscall_get_parameter( context, 2 );
   int flags = ( int )syscall_get_parameter( context, 3 );
   int filedes = ( int )syscall_get_parameter( context, 4 );
-  off_t off = ( off_t )syscall_get_parameter( context, 5 );
+  __maybe_unused off_t off = ( off_t )syscall_get_parameter( context, 5 );
   // get context
   virt_context_ptr_t virtual_context = task_thread_current_thread
     ->process

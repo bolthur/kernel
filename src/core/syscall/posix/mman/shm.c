@@ -40,9 +40,9 @@
  */
 void syscall_posix_mman_shm_open( void* context ) {
   // get parameter
-  const char* name = ( const char* )syscall_get_parameter( context, 0 );
-  int flag = ( int )syscall_get_parameter( context, 1 );
-  mode_t mode = ( mode_t )syscall_get_parameter( context, 2 );
+  __maybe_unused const char* name = ( const char* )syscall_get_parameter( context, 0 );
+  __maybe_unused int flag = ( int )syscall_get_parameter( context, 1 );
+  __maybe_unused mode_t mode = ( mode_t )syscall_get_parameter( context, 2 );
 
   // debug output
   #if defined( PRINT_SYSCALL )
