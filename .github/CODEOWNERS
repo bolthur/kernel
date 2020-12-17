@@ -1,0 +1,10 @@
+
+# bolthur Project Codeowners
+
+# 1. Codeowners must always be teams, never individuals
+# 2. Each codeowner team should contain at least one TSC member
+# 3. PRs touching any code with a codeowner must be signed off by at least one
+#    person on the code owner team.
+
+# Global code owner
+* @bolthur/core
