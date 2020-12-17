@@ -272,9 +272,7 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
           )
         ) {
           // free phys if new page is registered
-          if ( clear ) {
-            phys_free_page( phys );
-          }
+          phys_free_page( phys );
           // return error
           return false;
         }

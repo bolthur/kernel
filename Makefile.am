@@ -9,7 +9,9 @@ cppcheck:
 	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
 		--platform=$(CPPCHECK_PLATFORM) \
 		--include=$(CPPCHECK_INCLUDE) \
-		--project=$(CPPCHECK_PROJECT)
+		--project=$(CPPCHECK_PROJECT) \
+		-U__CYGWIN__ -U__APPLE__ -D__INTPTR_TYPE__=4 -v
+# FIXME: MOVE __INTPTR_TYPE__ DEFINE INTO MACRO PER HOST
 
 # doxygen related
 @DX_RULES@

@@ -10,10 +10,10 @@ OBJCOPY = arm-unknown-bolthur-eabi-objcopy
 
 ASFLAGS =
 CFLAGS = -Wall -g -O0 -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard
-LDFLAGS =
+LDFLAGS = -static
 
 TEST_CFLAGS = -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard  -Wall -Wextra -Werror -Wpedantic -Wconversion -Wpacked -Wpacked-bitfield-compat -Wpacked-not-aligned -Wno-sign-conversion -Wno-unused-variable -ffreestanding -fno-exceptions -nodefaultlibs -std=c18 -fomit-frame-pointer -g -O0 -nostdlib
-TEST_LDFLAGS = -T link.ld
+TEST_LDFLAGS = -T link.ld -static
 
 all: $(BIN) $(DISASM) $(SYM)
 

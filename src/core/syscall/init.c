@@ -240,21 +240,23 @@ bool syscall_init( void ) {
     return false;
   }
   // dummy
-  if ( ! interrupt_register_handler(
-    SYSCALL_DUMMY_PUTC,
-    syscall_dummy_putc,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_DUMMY_PUTS,
-    syscall_dummy_puts,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
+  #if defined( OUTPUT_ENABLE )
+    if ( ! interrupt_register_handler(
+      SYSCALL_DUMMY_PUTC,
+      syscall_dummy_putc,
+      INTERRUPT_SOFTWARE,
+      false
+    ) ) {
+      return false;
+    }
+    if ( ! interrupt_register_handler(
+      SYSCALL_DUMMY_PUTS,
+      syscall_dummy_puts,
+      INTERRUPT_SOFTWARE,
+      false
+    ) ) {
+      return false;
+    }
+  #endif
   return true;
 }

@@ -101,64 +101,9 @@ noreturn void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" )
   phys_init();
 
-  // print size
-  if ( initrd_exist() ) {
-    // set iterator
-    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd_get_start_address();
-    DEBUG_OUTPUT( "initrd = %p\r\n", iter )
-    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd_get_end_address() )
-    DEBUG_OUTPUT( "size = %zo\r\n", initrd_get_size() )
-    DEBUG_OUTPUT( "size = %zu\r\n", initrd_get_size() )
-
-    // loop through tar
-    while ( ! tar_end_reached( iter ) ) {
-      // debug output
-      DEBUG_OUTPUT(
-        "%p: initrd file name: %s\r\n",
-        ( void* )iter, iter->file_name )
-
-      // next
-      iter = tar_next( iter );
-    }
-  }
-
-  uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
-  DEBUG_OUTPUT(
-    "atag_fdt = %#p, *atag_fdt = %#x\r\n",
-    ( void* )atag_fdt,
-    *( ( uint32_t* )atag_fdt )
-  )
-
   // Setup virtual memory management
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" )
   virt_init();
-
-  // print size
-  if ( initrd_exist() ) {
-    // set iterator
-    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd_get_start_address();
-    DEBUG_OUTPUT( "initrd = %p\r\n", iter )
-    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd_get_end_address() )
-    DEBUG_OUTPUT( "size = %zo\r\n", initrd_get_size() )
-    DEBUG_OUTPUT( "size = %zu\r\n", initrd_get_size() )
-
-    // loop through tar
-    while ( ! tar_end_reached( iter ) ) {
-      // debug output
-      DEBUG_OUTPUT( "%p: initrd file name: %s\r\n",
-        ( void* )iter, iter->file_name )
-
-      // next
-      iter = tar_next( iter );
-    }
-  }
-
-  atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
-  DEBUG_OUTPUT(
-    "atag_fdt = %#p, *atag_fdt = %#x\r\n",
-    ( void* )atag_fdt,
-    *( ( uint32_t* )atag_fdt )
-  )
 
   // Setup heap
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" )
@@ -172,44 +117,43 @@ noreturn void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" )
   assert( task_process_init() )
 
-  // setup system calls
+  // Setup system calls
   DEBUG_OUTPUT( "[bolthur/kernel -> syscall] initialize ...\r\n" )
   assert( syscall_init() )
 
-  // FIXME: Create init process from initial ramdisk and pass initrd to init process
-  // create processes for elf files
+  bool init_created = false;
+  // Create init process stored within initrd
   if ( initrd_exist() ) {
-    // get iterator
-    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd_get_start_address();
-
-    // loop
-    while ( ! tar_end_reached( iter ) ) {
-      // get file
-      DEBUG_OUTPUT( "Current file %s\r\n", iter->file_name )
-      uintptr_t file = ( uintptr_t )tar_file( iter );
-
-      // skip non elf files
+    // Find init process
+    tar_header_ptr_t init = tar_lookup_file( initrd_get_start_address(), "init" );
+    if ( init ) {
+      // Get file
+      DEBUG_OUTPUT( "File %s\r\n", init->file_name )
+      uintptr_t file = ( uintptr_t )tar_file( init );
+      // Check elf header
       if ( elf_check( file ) ) {
-        // create process
-        uint64_t file_size = tar_size( iter );
-        DEBUG_OUTPUT( "Create process for file %s\r\n", iter->file_name )
+        // Get file size
+        uint64_t file_size = tar_size( init );
+        DEBUG_OUTPUT( "Create process for file %s\r\n", init->file_name )
         DEBUG_OUTPUT( "File size: %#llx\r\n", file_size )
-
+        // Create process
+        // FIXME:  PASS RAMDISK TO INIT
         task_process_create( file, 0 );
+        // set flag
+        init_created = true;
       }
-
-      // next task
-      iter = tar_next( iter );
     }
   }
-
   // Setup timer
   DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" )
   timer_init();
 
-  // Start multitasking
-  DEBUG_OUTPUT( "[bolthur/kernel -> task] start multitasking ...\r\n" )
-  task_process_start();
+  // Start multitasking in case that init has been created
+  if ( init_created ) {
+    DEBUG_OUTPUT( "[bolthur/kernel -> task] start multitasking ...\r\n" )
+    task_process_start();
+  }
 
+  // Endless loop
   for(;;);
 }
