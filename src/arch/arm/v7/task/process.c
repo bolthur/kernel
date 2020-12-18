@@ -18,8 +18,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
 #include <collection/avl.h>
 #include <assert.h>
+#include <tar.h>
+#include <string.h>
+#include <core/initrd.h>
+#include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <core/arch.h>
 #include <core/task/queue.h>
@@ -211,4 +216,83 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   }
 
   // FIXME: cleanup killed processes
+}
+
+/**
+ * @brief prepare init process by mapping ramdisk and device tree and adjusting initial context
+ *
+ * @param proc pointer to init process structure
+ * @return bool true on success, else false
+ *
+ * @todo Add mapping of device tree to process
+ * @todo Adjust initial context, so that mapped addresses are pushed to argv
+ * @todo Adjust initial context, so that argc is passed correctly
+ */
+bool task_process_prepare_init( task_process_ptr_t proc ) {
+  tar_header_ptr_t ramdisk = tar_lookup_file(
+    initrd_get_start_address(),
+    "ramdisk.tar.gz"
+  );
+  // handle error
+  if ( ! ramdisk ) {
+    return false;
+  }
+  // Get file address and size
+  uintptr_t ramdisk_file = ( uintptr_t )tar_file( ramdisk );
+  size_t ramdisk_file_size = tar_size( ramdisk );
+  // FIXME: REMOVE DEBUG OUTPUT CALLS BELOW
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "ramdisk file name %s\r\n", ramdisk->file_name )
+    DEBUG_OUTPUT( "File size: %#llx\r\n", ramdisk_file_size )*/
+  #endif
+  // round up size
+  size_t rounded_ramdisk_file_size = ramdisk_file_size;
+  ROUND_UP_TO_FULL_PAGE( rounded_ramdisk_file_size )
+  // get physical area
+  uint64_t phys_address_ramdisk = phys_find_free_page_range(
+    PAGE_SIZE,
+    rounded_ramdisk_file_size
+  );
+  if( ! phys_address_ramdisk ) {
+    return false;
+  }
+  // map temporary
+  uintptr_t ramdisk_tmp = virt_map_temporary(
+    phys_address_ramdisk,
+    rounded_ramdisk_file_size
+  );
+  if ( !ramdisk_tmp ) {
+    phys_free_page_range( phys_address_ramdisk, rounded_ramdisk_file_size );
+    return false;
+  }
+  // copy over content
+  memcpy( ( void* )ramdisk_tmp, ( void* )ramdisk_file, ramdisk_file_size );
+  // unmap again
+  virt_unmap_temporary( ramdisk_tmp, ( size_t )rounded_ramdisk_file_size );
+  // find free page range
+  uintptr_t proc_ramdisk_start = virt_find_free_page_range(
+    proc->virtual_context,
+    rounded_ramdisk_file_size,
+    0
+  );
+  if ( ! proc_ramdisk_start ) {
+    phys_free_page_range( phys_address_ramdisk, rounded_ramdisk_file_size );
+    return false;
+  }
+  // map ramdisk
+  if ( ! virt_map_address_range(
+    proc->virtual_context,
+    proc_ramdisk_start,
+    phys_address_ramdisk,
+    rounded_ramdisk_file_size,
+    VIRT_MEMORY_TYPE_NORMAL,
+    VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
+  ) ) {
+    phys_free_page_range( phys_address_ramdisk, rounded_ramdisk_file_size );
+    return false;
+  }
+
+  // FIXME: MAP BINARY DEVICE TREE
+
+  return true;
 }

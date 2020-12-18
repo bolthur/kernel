@@ -26,10 +26,10 @@
  * @brief Method to get total size of tar
  *
  * @param address
- * @return uint64_t
+ * @return size_t
  */
-uint64_t tar_total_size( uintptr_t address ) {
-  uint64_t total_size = 0;
+size_t tar_total_size( uintptr_t address ) {
+  size_t total_size = 0;
 
   while ( true ) {
     // get tar header
@@ -41,7 +41,7 @@ uint64_t tar_total_size( uintptr_t address ) {
     }
 
     // calculate size
-    uint64_t size = octal_size_to_int( header->file_size, 11 );
+    size_t size = octal_size_to_int( header->file_size, 11 );
     total_size += ( ( ( ( size + 511 ) / 512 ) + 1 ) * 512 );
 
     // get to next file
@@ -55,9 +55,9 @@ uint64_t tar_total_size( uintptr_t address ) {
  * @brief Method to get size of file by header
  *
  * @param header
- * @return uint64_t
+ * @return size_t
  */
-uint64_t tar_size( tar_header_ptr_t header ) {
+size_t tar_size( tar_header_ptr_t header ) {
   // check for end reached
   if ( '\0' == header->file_name[ 0 ] ) {
     return 0;

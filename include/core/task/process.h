@@ -70,6 +70,7 @@ void task_process_schedule( event_origin_t, void* );
 void task_process_cleanup( event_origin_t, void* );
 void task_process_start( void );
 size_t task_process_generate_id( void );
-bool task_process_create( uintptr_t, size_t );
+task_process_ptr_t task_process_create( uintptr_t, size_t );
+bool task_process_prepare_init( task_process_ptr_t );
 
 #endif

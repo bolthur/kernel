@@ -139,13 +139,12 @@ size_t task_process_generate_id( void ) {
  *
  * @param entry process entry address
  * @param priority process priority
- * @return true
- * @return false
+ * @return pointer to created task
  */
-bool task_process_create( uintptr_t entry, size_t priority ) {
+task_process_ptr_t task_process_create( uintptr_t entry, size_t priority ) {
   // check manager
   if ( ! process_manager ) {
-    return false;
+    return NULL;
   }
 
   // debug output
@@ -161,7 +160,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
       DEBUG_OUTPUT( "No valid elf header found\r\n" );
     #endif
     // return
-    return false;
+    return NULL;
   }
 
   // allocate process structure
@@ -169,7 +168,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
     sizeof( task_process_t ) );
   // check allocation
   if ( ! process ) {
-    return false;
+    return NULL;
   }
   // debug output
   #if defined( PRINT_PROCESS )
@@ -184,7 +183,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
   // handle error
   if ( ! process->thread_manager ) {
     free( process );
-    return false;
+    return NULL;
   }
   process->state = TASK_PROCESS_STATE_READY;
   process->priority = priority;
@@ -193,7 +192,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
   if ( ! process->thread_stack_manager ) {
     task_thread_destroy( process->thread_manager );
     free( process );
-    return false;
+    return NULL;
   }
   // create context only for user processes
   process->virtual_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
@@ -202,7 +201,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
     task_stack_manager_destroy( process->thread_stack_manager );
     task_thread_destroy( process->thread_manager );
     free( process );
-    return false;
+    return NULL;
   }
 
   // load elf executable
@@ -213,7 +212,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
     task_stack_manager_destroy( process->thread_stack_manager );
     task_thread_destroy( process->thread_manager );
     free( process );
-    return false;
+    return NULL;
   }
 
   // prepare node
@@ -224,7 +223,7 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
     task_stack_manager_destroy( process->thread_stack_manager );
     task_thread_destroy( process->thread_manager );
     free( process );
-    return false;
+    return NULL;
   }
 
   // Setup thread with entry
@@ -234,9 +233,10 @@ bool task_process_create( uintptr_t entry, size_t priority ) {
     task_stack_manager_destroy( process->thread_stack_manager );
     task_thread_destroy( process->thread_manager );
     free( process );
-    return false;
+    return NULL;
   }
-  return true;
+  // return allocated process
+  return process;
 }
 
 /**

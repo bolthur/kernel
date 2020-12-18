@@ -23,8 +23,8 @@
 #include <string.h>
 #include "tar.h"
 
-static uint64_t octal_size_to_int( const char* in, size_t size ) {
-  uint64_t value = 0;
+static size_t octal_size_to_int( const char* in, size_t size ) {
+  size_t value = 0;
 
   // skip bullshit data
   while ( ( '0' > *in || '7' < *in ) && 0 < size ) {
@@ -37,7 +37,7 @@ static uint64_t octal_size_to_int( const char* in, size_t size ) {
     // multiply by base
     value *= 8;
     // add number
-    value += ( uint64_t )( *in - '0' );
+    value += ( size_t )( *in - '0' );
     // step to next
     ++in;
     --size;
@@ -107,8 +107,8 @@ tar_header_ptr_t tar_next( tar_header_ptr_t current ) {
   return next;
 }
 
-uint64_t tar_total_size( uintptr_t address ) {
-  uint64_t total_size = 0;
+size_t tar_total_size( uintptr_t address ) {
+  size_t total_size = 0;
 
   while ( true ) {
     // get tar header
@@ -120,7 +120,7 @@ uint64_t tar_total_size( uintptr_t address ) {
     }
 
     // calculate size
-    uint64_t size = octal_size_to_int( header->file_size, 11 );
+    size_t size = octal_size_to_int( header->file_size, 11 );
     total_size += ( ( ( ( size + 511 ) / 512 ) + 1 ) * 512 );
 
     // get to next file
@@ -130,7 +130,7 @@ uint64_t tar_total_size( uintptr_t address ) {
   return total_size;
 }
 
-uint64_t tar_size( tar_header_ptr_t header ) {
+size_t tar_size( tar_header_ptr_t header ) {
   // check for end reached
   if ( '\0' == header->file_name[ 0 ] ) {
     return 0;

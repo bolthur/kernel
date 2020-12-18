@@ -19,6 +19,7 @@
  */
 
 #include <stdint.h>
+#include <string.h>
 #include <stdnoreturn.h>
 
 #include <stdio.h>
@@ -121,38 +122,38 @@ noreturn void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> syscall] initialize ...\r\n" )
   assert( syscall_init() )
 
-  bool init_created = false;
-  // Create init process stored within initrd
-  if ( initrd_exist() ) {
-    // Find init process
-    tar_header_ptr_t init = tar_lookup_file( initrd_get_start_address(), "init" );
-    if ( init ) {
-      // Get file
-      DEBUG_OUTPUT( "File %s\r\n", init->file_name )
-      uintptr_t file = ( uintptr_t )tar_file( init );
-      // Check elf header
-      if ( elf_check( file ) ) {
-        // Get file size
-        uint64_t file_size = tar_size( init );
-        DEBUG_OUTPUT( "Create process for file %s\r\n", init->file_name )
-        DEBUG_OUTPUT( "File size: %#llx\r\n", file_size )
-        // Create process
-        // FIXME:  PASS RAMDISK TO INIT
-        task_process_create( file, 0 );
-        // set flag
-        init_created = true;
-      }
-    }
-  }
   // Setup timer
   DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" )
   timer_init();
 
+
+  // assert initrd necessary now
+  assert( initrd_exist() )
+  // Find init process
+  tar_header_ptr_t init = tar_lookup_file(
+    initrd_get_start_address(),
+    "init"
+  );
+  assert( init )
+  // Get file address and size
+  uintptr_t elf_file = ( uintptr_t )tar_file( init );
+  size_t elf_file_size = tar_size( init );
+  // assert elf header
+  assert( elf_check( elf_file ) )
+  // FIXME: REMOVE DEBUG OUTPUT BELOW
+  DEBUG_OUTPUT( "Create process for file %s\r\n", init->file_name )
+  DEBUG_OUTPUT( "File size: %#llx\r\n", elf_file_size )
+  // Create process
+  DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] create ...\r\n" )
+  task_process_ptr_t proc = task_process_create( elf_file, 0 );
+  assert( proc )
+  // further init process preparation
+  DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] prepare ...\r\n" )
+  assert( task_process_prepare_init( proc ) )
+
   // Start multitasking in case that init has been created
-  if ( init_created ) {
-    DEBUG_OUTPUT( "[bolthur/kernel -> task] start multitasking ...\r\n" )
-    task_process_start();
-  }
+  DEBUG_OUTPUT( "[bolthur/kernel -> task] start multitasking ...\r\n" )
+  task_process_start();
 
   // Endless loop
   for(;;);

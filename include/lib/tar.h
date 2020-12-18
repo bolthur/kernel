@@ -50,12 +50,12 @@ typedef struct {
   char __padding[ 255 ];
 } tar_header_t, *tar_header_ptr_t;
 
-uint64_t tar_total_size( uintptr_t );
-uint64_t tar_size( tar_header_ptr_t );
+size_t tar_total_size( uintptr_t );
+size_t tar_size( tar_header_ptr_t );
 tar_header_ptr_t tar_next( tar_header_ptr_t );
 tar_header_ptr_t tar_lookup_file( uintptr_t, const char* );
 uint8_t* tar_file( tar_header_ptr_t );
 bool tar_end_reached( tar_header_ptr_t );
-uint64_t octal_size_to_int( const char*, size_t );
+size_t octal_size_to_int( const char*, size_t );
 
 #endif

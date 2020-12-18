@@ -269,13 +269,15 @@ uintptr_t virt_find_free_page_range(
     return ( uintptr_t )NULL;
   }
 
+  // consider start correctly
+  if ( min < start ) {
+    min = start;
+  }
   // round up to full page
   ROUND_UP_TO_FULL_PAGE( size )
-
   // determine amount of pages
   size_t page_amount = size / PAGE_SIZE;
   size_t found_amount = 0;
-
   // found address range
   uintptr_t address = 0;
   bool stop = false;
