@@ -18,19 +18,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// disable some warnings temporarily
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-
 #include <core/mm/virt.h>
 #include <core/mm/phys.h>
 #include <core/firmware.h>
 #include <arch/arm/firmware.h>
 #include <core/entry.h>
-
 #include <atag.h>
+
+// disable some warnings temporarily
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+// include fdt library
 #include <libfdt.h>
+// enable again
+#pragma GCC diagnostic pop
 
 /**
  * @brief Handle firmware information related startup init
@@ -104,6 +106,3 @@ bool firmware_init( void ) {
 
   return true;
 }
-
-// enable again
-#pragma GCC diagnostic pop

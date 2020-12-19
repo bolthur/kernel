@@ -21,9 +21,7 @@
 #include <stdbool.h>
 #include <collection/avl.h>
 #include <assert.h>
-#include <tar.h>
 #include <string.h>
-#include <core/initrd.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <core/arch.h>
@@ -34,6 +32,7 @@
 #endif
 #include <core/interrupt.h>
 #include <arch/arm/v7/cpu.h>
+#include <arch/arm/firmware.h>
 
 /**
  * @brief Start multitasking with first ready task
@@ -218,81 +217,90 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // FIXME: cleanup killed processes
 }
 
+// disable some warnings temporarily
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+// include fdt library
+#include <libfdt.h>
+// enable again
+#pragma GCC diagnostic pop
+
 /**
- * @brief prepare init process by mapping ramdisk and device tree and adjusting initial context
+ * @brief prepare init process by mapping device tree
  *
  * @param proc pointer to init process structure
  * @return bool true on success, else false
  *
  * @todo Add mapping of device tree to process
- * @todo Adjust initial context, so that mapped addresses are pushed to argv
- * @todo Adjust initial context, so that argc is passed correctly
+ * @todo Push argument to stack for process
  */
-bool task_process_prepare_init( task_process_ptr_t proc ) {
-  tar_header_ptr_t ramdisk = tar_lookup_file(
-    initrd_get_start_address(),
-    "ramdisk.tar.gz"
-  );
-  // handle error
-  if ( ! ramdisk ) {
-    return false;
+bool task_process_prepare_init_arch( __maybe_unused task_process_ptr_t proc ) {
+  // get possible device tree
+  uintptr_t device_tree = firmware_info.atag_fdt;
+  // return success if not a device tree
+  if ( 0 != fdt_check_header( ( void* )device_tree ) ) {
+    return true;
   }
-  // Get file address and size
-  uintptr_t ramdisk_file = ( uintptr_t )tar_file( ramdisk );
-  size_t ramdisk_file_size = tar_size( ramdisk );
+
+  // get start and end of tree
+  uintptr_t fdt_start = device_tree;
+  size_t fdt_size = fdt32_to_cpu(
+    ( ( struct fdt_header* )device_tree )->totalsize
+  );
   // FIXME: REMOVE DEBUG OUTPUT CALLS BELOW
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "ramdisk file name %s\r\n", ramdisk->file_name )
-    DEBUG_OUTPUT( "File size: %#llx\r\n", ramdisk_file_size )*/
+    uintptr_t fdt_end = fdt_start + fdt_size;
+    DEBUG_OUTPUT( "start: %#llx, end: %#llx\r\n", start, end )
   #endif
   // round up size
-  size_t rounded_ramdisk_file_size = ramdisk_file_size;
-  ROUND_UP_TO_FULL_PAGE( rounded_ramdisk_file_size )
+  size_t rounded_fdt_size = fdt_size;
+  ROUND_UP_TO_FULL_PAGE( rounded_fdt_size )
   // get physical area
-  uint64_t phys_address_ramdisk = phys_find_free_page_range(
+  uint64_t phys_address_fdt = phys_find_free_page_range(
     PAGE_SIZE,
-    rounded_ramdisk_file_size
+    rounded_fdt_size
   );
-  if( ! phys_address_ramdisk ) {
+  // handle error
+  if( ! phys_address_fdt ) {
     return false;
   }
   // map temporary
-  uintptr_t ramdisk_tmp = virt_map_temporary(
-    phys_address_ramdisk,
-    rounded_ramdisk_file_size
+  uintptr_t fdt_tmp = virt_map_temporary(
+    phys_address_fdt,
+    rounded_fdt_size
   );
-  if ( !ramdisk_tmp ) {
-    phys_free_page_range( phys_address_ramdisk, rounded_ramdisk_file_size );
+  if ( !fdt_tmp ) {
+    phys_free_page_range( phys_address_fdt, rounded_fdt_size );
     return false;
   }
   // copy over content
-  memcpy( ( void* )ramdisk_tmp, ( void* )ramdisk_file, ramdisk_file_size );
+  memcpy( ( void* )fdt_tmp, ( void* )fdt_start, fdt_size );
   // unmap again
-  virt_unmap_temporary( ramdisk_tmp, ( size_t )rounded_ramdisk_file_size );
+  virt_unmap_temporary( fdt_tmp, ( size_t )rounded_fdt_size );
   // find free page range
   uintptr_t proc_ramdisk_start = virt_find_free_page_range(
     proc->virtual_context,
-    rounded_ramdisk_file_size,
+    rounded_fdt_size,
     0
   );
   if ( ! proc_ramdisk_start ) {
-    phys_free_page_range( phys_address_ramdisk, rounded_ramdisk_file_size );
+    phys_free_page_range( phys_address_fdt, rounded_fdt_size );
     return false;
   }
   // map ramdisk
   if ( ! virt_map_address_range(
     proc->virtual_context,
     proc_ramdisk_start,
-    phys_address_ramdisk,
-    rounded_ramdisk_file_size,
+    phys_address_fdt,
+    rounded_fdt_size,
     VIRT_MEMORY_TYPE_NORMAL,
     VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
   ) ) {
-    phys_free_page_range( phys_address_ramdisk, rounded_ramdisk_file_size );
+    phys_free_page_range( phys_address_fdt, rounded_fdt_size );
     return false;
   }
 
-  // FIXME: MAP BINARY DEVICE TREE
-
+  // return success
   return true;
 }
