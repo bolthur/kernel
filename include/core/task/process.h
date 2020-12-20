@@ -72,6 +72,6 @@ void task_process_start( void );
 size_t task_process_generate_id( void );
 task_process_ptr_t task_process_create( uintptr_t, size_t );
 bool task_process_prepare_init( task_process_ptr_t );
-bool task_process_prepare_init_arch( task_process_ptr_t );
+bool task_process_prepare_init_arch( task_process_ptr_t, uintptr_t );
 
 #endif

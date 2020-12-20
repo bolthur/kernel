@@ -31,6 +31,7 @@
   #include <core/debug/debug.h>
 #endif
 #include <core/interrupt.h>
+#include <arch/arm/stack.h>
 #include <arch/arm/v7/cpu.h>
 #include <arch/arm/firmware.h>
 
@@ -230,17 +231,20 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
  * @brief prepare init process by mapping device tree
  *
  * @param proc pointer to init process structure
+ * @param proc_ramdisk_start ramdisk address
  * @return bool true on success, else false
  *
- * @todo Add mapping of device tree to process
- * @todo Push argument to stack for process
+ * @todo fix / revise error handling
  */
-bool task_process_prepare_init_arch( __maybe_unused task_process_ptr_t proc ) {
+bool task_process_prepare_init_arch(
+  task_process_ptr_t proc,
+  uintptr_t proc_ramdisk_start
+) {
   // get possible device tree
   uintptr_t device_tree = firmware_info.atag_fdt;
-  // return success if not a device tree
+  // return error if device tree is missing
   if ( 0 != fdt_check_header( ( void* )device_tree ) ) {
-    return true;
+    return false;
   }
 
   // get start and end of tree
@@ -248,10 +252,10 @@ bool task_process_prepare_init_arch( __maybe_unused task_process_ptr_t proc ) {
   size_t fdt_size = fdt32_to_cpu(
     ( ( struct fdt_header* )device_tree )->totalsize
   );
-  // FIXME: REMOVE DEBUG OUTPUT CALLS BELOW
+  // debug output
   #if defined( PRINT_PROCESS )
     uintptr_t fdt_end = fdt_start + fdt_size;
-    DEBUG_OUTPUT( "start: %#llx, end: %#llx\r\n", start, end )
+    DEBUG_OUTPUT( "start: %#llx, end: %#llx\r\n", fdt_start, fdt_end )
   #endif
   // round up size
   size_t rounded_fdt_size = fdt_size;
@@ -279,19 +283,19 @@ bool task_process_prepare_init_arch( __maybe_unused task_process_ptr_t proc ) {
   // unmap again
   virt_unmap_temporary( fdt_tmp, ( size_t )rounded_fdt_size );
   // find free page range
-  uintptr_t proc_ramdisk_start = virt_find_free_page_range(
+  uintptr_t proc_fdt_start = virt_find_free_page_range(
     proc->virtual_context,
     rounded_fdt_size,
     0
   );
-  if ( ! proc_ramdisk_start ) {
+  if ( ! proc_fdt_start ) {
     phys_free_page_range( phys_address_fdt, rounded_fdt_size );
     return false;
   }
   // map ramdisk
   if ( ! virt_map_address_range(
     proc->virtual_context,
-    proc_ramdisk_start,
+    proc_fdt_start,
     phys_address_fdt,
     rounded_fdt_size,
     VIRT_MEMORY_TYPE_NORMAL,
@@ -301,6 +305,98 @@ bool task_process_prepare_init_arch( __maybe_unused task_process_ptr_t proc ) {
     return false;
   }
 
+  // copy process name
+  char str_name[] = "./init";
+  char str_ramdisk[ PRIxPTR_WIDTH + 3 ];
+  char str_device_tree[ PRIxPTR_WIDTH + 3 ];
+  sprintf( str_ramdisk, "%#0*"PRIxPTR"\0", PRIxPTR_WIDTH, proc_ramdisk_start );
+  sprintf( str_device_tree, "%#0*"PRIxPTR"\0", PRIxPTR_WIDTH, proc_fdt_start );
+  // build argv
+  char *argv[] = { &str_name[ 0 ], &str_ramdisk[ 0 ], &str_device_tree[ 0 ] };
+
+  // calculate count
+  int argc = 3;
+  size_t count = 0;
+  for ( int i = 0; i < argc; i++ ) {
+    count += strlen( argv[ i ] ) + 1;
+  }
+  count += sizeof( char* ) * ( size_t )argc;
+  count += sizeof( argc );
+  DEBUG_OUTPUT( "count = %zx\r\n", count )
+
+  // get thread
+  avl_node_ptr_t first_thread = avl_iterate_first( proc->thread_manager );
+  if ( ! first_thread ) {
+    return false;
+  }
+  task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( first_thread );
+  // map stack temporarily
+  uintptr_t stack_tmp = virt_map_temporary(
+    thread->stack_physical,
+    STACK_SIZE
+  );
+  if ( !stack_tmp ) {
+    return false;
+  }
+  // get stack offset
+  cpu_register_context_ptr_t cpu =
+    ( cpu_register_context_ptr_t )thread->current_context;
+  size_t offset = cpu->reg.sp - thread->stack_virtual;
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "offset = %zx\r\n", offset )
+  #endif
+  offset -= count;
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "offset = %zx\r\n", offset )
+  #endif
+  offset -= ( offset % 4 ? ( 4 - offset % 4 ) : 0 );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "offset = %zx\r\n", offset )
+  #endif
+
+  // push argc
+  *( ( int* )( stack_tmp + offset ) ) = argc;
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "argc = %d\r\n", *( ( int* )( stack_tmp + offset ) ) )
+  #endif
+  // push argv data
+  char* tmp = ( char* )(
+    stack_tmp + offset + sizeof( argc ) + ( sizeof( char* ) * ( size_t )argc )
+  );
+  char** argv_tmp = ( char** )(
+    stack_tmp + offset + sizeof( argc )
+  );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "tmp = %x\r\n", tmp )
+  #endif
+  // push parameter by parameter
+  for ( int i = 0; i < argc; i++ ) {
+    strcpy( tmp, argv[ i ] );
+    argv_tmp[ i ] = ( char* )( thread->stack_virtual + ( ( uintptr_t )tmp - stack_tmp ) );
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "tmp = %s\r\n", tmp )
+      DEBUG_OUTPUT( "argv_tmp[ %d ] = %#x\r\n", i, argv_tmp[ i ] )
+    #endif
+    tmp += strlen( tmp ) + 1;
+  }
+  // unmap again
+  virt_unmap_temporary( stack_tmp, STACK_SIZE );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DUMP_REGISTER( cpu )
+  #endif
+  // adjust thread stack pointer register
+  cpu->reg.sp = thread->stack_virtual + offset;
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DUMP_REGISTER( cpu )
+  #endif
   // return success
   return true;
 }

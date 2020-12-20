@@ -337,7 +337,7 @@ bool virt_map_address_range(
   uintptr_t end = address + size;
   // loop and map
   while ( start < end ) {
-    if ( ! virt_map_address( ctx, address, phys, type, page ) ) {
+    if ( ! virt_map_address( ctx, start, phys, type, page ) ) {
       // free already mapped stuff
       while ( address < end ) {
         virt_unmap_address( ctx, address, true );
@@ -346,7 +346,7 @@ bool virt_map_address_range(
       return false;
     }
     // next page
-    address += PAGE_SIZE;
+    start += PAGE_SIZE;
     phys += PAGE_SIZE;
   }
   return true;

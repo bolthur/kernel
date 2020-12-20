@@ -28,6 +28,21 @@ pid_t pid = 0;
 vfs_node_ptr_t root = NULL;
 
 int main( __maybe_unused int argc, __maybe_unused char* argv[] ) {
+  printf( "init process starting!\r\n" );
+  printf( "argc = %d\r\n", argc );
+  for ( int i = 0; i < argc; i++ ) {
+    printf( "argv[ %i ] = %s\r\n", i, argv[ i ] );
+  }
+  printf( "Hello World!\r\n" );
+
+  /*
+   * argv[ 0 ] = name
+   * argv[ 1 ] = ramdisk.tar.gz
+   * argv[ 2 ] = device tree
+   */
+
+  for(;;);
+
   // get current pid
   pid = getpid();
   // setup root

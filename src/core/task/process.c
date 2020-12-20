@@ -338,10 +338,12 @@ void task_process_cleanup(
  *
  * @param proc pointer to init process structure
  * @return bool true on success, else false
- *
- * @todo Push argument to stack for process
  */
 bool task_process_prepare_init( task_process_ptr_t proc ) {
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "task_process_prepare_init( %p )\r\n", proc )
+  #endif
   tar_header_ptr_t ramdisk = tar_lookup_file(
     initrd_get_start_address(),
     "ramdisk.tar.gz"
@@ -353,19 +355,27 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
   // Get file address and size
   uintptr_t ramdisk_file = ( uintptr_t )tar_file( ramdisk );
   size_t ramdisk_file_size = tar_size( ramdisk );
-  // FIXME: REMOVE DEBUG OUTPUT CALLS BELOW
+  // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "ramdisk file name %s\r\n", ramdisk->file_name )
-    DEBUG_OUTPUT( "File size: %#llx\r\n", ramdisk_file_size )
+    DEBUG_OUTPUT( "File size: %#zx\r\n", ramdisk_file_size )
   #endif
   // round up size
   size_t rounded_ramdisk_file_size = ramdisk_file_size;
   ROUND_UP_TO_FULL_PAGE( rounded_ramdisk_file_size )
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "rounded size: %#zx\r\n", rounded_ramdisk_file_size )
+  #endif
   // get physical area
   uint64_t phys_address_ramdisk = phys_find_free_page_range(
     PAGE_SIZE,
     rounded_ramdisk_file_size
   );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "phys address: %#llx\r\n", phys_address_ramdisk )
+  #endif
   if( ! phys_address_ramdisk ) {
     return false;
   }
@@ -404,6 +414,6 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
     phys_free_page_range( phys_address_ramdisk, rounded_ramdisk_file_size );
     return false;
   }
-
-  return task_process_prepare_init_arch( proc );
+  // arch related
+  return task_process_prepare_init_arch( proc, proc_ramdisk_start );
 }

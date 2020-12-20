@@ -122,11 +122,6 @@ noreturn void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> syscall] initialize ...\r\n" )
   assert( syscall_init() )
 
-  // Setup timer
-  DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" )
-  timer_init();
-
-
   // assert initrd necessary now
   assert( initrd_exist() )
   // Find init process
@@ -150,6 +145,10 @@ noreturn void kernel_main( void ) {
   // further init process preparation
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] prepare ...\r\n" )
   assert( task_process_prepare_init( proc ) )
+
+  // Setup timer
+  DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" )
+  timer_init();
 
   // Start multitasking in case that init has been created
   DEBUG_OUTPUT( "[bolthur/kernel -> task] start multitasking ...\r\n" )

@@ -35,5 +35,6 @@ int sprintf( char* buffer, const char* restrict format, ... ) {
   va_start( parameter, format );
   int written = vsprintf( buffer, format, parameter );
   va_end( parameter );
+  buffer[ written ] = '\0';
   return written;
 }

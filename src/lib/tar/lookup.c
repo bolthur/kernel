@@ -31,19 +31,16 @@
  */
 tar_header_ptr_t tar_lookup_file( uintptr_t address, const char* file_name ) {
   // iterator
-  tar_header_ptr_t iter = tar_next( ( tar_header_ptr_t )address );
-
+  tar_header_ptr_t iter = ( tar_header_ptr_t )address;
   // loop through tar
   while ( iter ) {
     // check for file
     if ( ! memcmp( iter->file_name, file_name, strlen( file_name ) + 1 ) ) {
       break;
     }
-
     // next iterator
     iter = tar_next( iter );
   }
-
   // return iter
   return iter;
 }
