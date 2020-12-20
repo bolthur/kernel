@@ -18,8 +18,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <inttypes.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <tar.h>
 #include <core/initrd.h>
 #include <core/event.h>
@@ -414,6 +417,25 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
     phys_free_page_range( phys_address_ramdisk, rounded_ramdisk_file_size );
     return false;
   }
+
+  int addr_size = sizeof( uintptr_t ) * 2;
+  char str_ramdisk[ 20 ];
+  sprintf( str_ramdisk, "%#0*"PRIxPTR"\0", addr_size, proc_ramdisk_start );
+
   // arch related
-  return task_process_prepare_init_arch( proc, proc_ramdisk_start );
+  uintptr_t proc_additional_start = task_process_prepare_init_arch( proc );
+  if ( proc_additional_start ) {
+    char str_additional[ 20 ];
+    sprintf(
+      str_additional, "%#0*"PRIxPTR"\0", addr_size, proc_additional_start
+    );
+
+    assert( task_thread_push_arguments(
+      proc, "./init", str_ramdisk, str_additional, NULL
+    ) );
+  } else {
+    assert( task_thread_push_arguments( proc, "./init", str_ramdisk, NULL ) );
+  }
+
+  return true;
 }

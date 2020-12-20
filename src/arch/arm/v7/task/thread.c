@@ -190,3 +190,109 @@ task_thread_ptr_t task_thread_create(
   // return created thread
   return thread;
 }
+
+/**
+ * Small helper to push arguments for first thread of process to stack
+ *
+ * @param proc process
+ * @return true on success, else false
+ */
+bool task_thread_push_arguments(
+  task_process_ptr_t proc,
+  ...
+) {
+  va_list parameter;
+  size_t total_size = 0;
+  size_t entry_count = 0;
+  const char* arg;
+
+  // determine count
+  va_start( parameter, proc );
+  while ( ( arg = va_arg( parameter, const char* ) ) ) {
+    DEBUG_OUTPUT( "%s\r\n", arg )
+    total_size += strlen( arg ) + 1;
+    // increment entry count
+    entry_count++;
+  }
+  va_end( parameter );
+  // add argv array size
+  total_size += sizeof( char* ) * entry_count;
+  // add argc
+  total_size += sizeof( int );
+
+  // get thread
+  avl_node_ptr_t node = avl_iterate_first( proc->thread_manager );
+  if ( ! node ) {
+    return false;
+  }
+  task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( node );
+  // map stack temporarily
+  uintptr_t stack_tmp = virt_map_temporary(
+    thread->stack_physical,
+    STACK_SIZE
+  );
+  if ( !stack_tmp ) {
+    return false;
+  }
+  // get stack offset
+  cpu_register_context_ptr_t cpu =
+    ( cpu_register_context_ptr_t )thread->current_context;
+  size_t offset = cpu->reg.sp - thread->stack_virtual;
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "offset = %zx\r\n", offset )
+  #endif
+  offset -= total_size;
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "offset = %zx\r\n", offset )
+  #endif
+  offset -= ( offset % 4 ? ( 4 - offset % 4 ) : 0 );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "offset = %zx\r\n", offset )
+  #endif
+
+  uintptr_t stack_loop = stack_tmp + offset;
+  // push argc
+  *( ( int* )( stack_loop ) ) = ( int )entry_count;
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "argc = %d\r\n", *( ( int* )( stack_loop ) ) )
+  #endif
+  // get beyond argc
+  stack_loop += sizeof( int );
+  // get pointer to argv
+  char **argv = ( char** )stack_loop;
+  int current_idx = 0;
+  // get beyond argv
+  stack_loop += ( sizeof( char* ) * entry_count );
+  // loop through parameters
+  va_start( parameter, proc );
+  while ( ( arg = va_arg( parameter, const char* ) ) ) {
+    // copy data
+    strcpy( ( void* )stack_loop, arg );
+    // populate argv
+    argv[ current_idx ] = ( char* )(
+      thread->stack_virtual + ( stack_loop - stack_tmp )
+    );
+    // get to next place for insert
+    stack_loop += strlen( arg ) + 1;
+    current_idx++;
+  }
+  va_end( parameter );
+  // unmap again
+  virt_unmap_temporary( stack_tmp, STACK_SIZE );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DUMP_REGISTER( cpu )
+  #endif
+  // adjust thread stack pointer register
+  cpu->reg.sp = thread->stack_virtual + offset;
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DUMP_REGISTER( cpu )
+  #endif
+
+  return true;
+}
