@@ -273,10 +273,12 @@ uintptr_t task_process_prepare_init_arch( task_process_ptr_t proc ) {
     phys_free_page_range( phys_address_fdt, rounded_fdt_size );
     return 0;
   }
+  // clear area
+  memset( ( void* )fdt_tmp, 0, rounded_fdt_size );
   // copy over content
   memcpy( ( void* )fdt_tmp, ( void* )fdt_start, fdt_size );
   // unmap again
-  virt_unmap_temporary( fdt_tmp, ( size_t )rounded_fdt_size );
+  virt_unmap_temporary( fdt_tmp, rounded_fdt_size );
   // find free page range
   uintptr_t proc_fdt_start = virt_find_free_page_range(
     proc->virtual_context,

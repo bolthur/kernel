@@ -1,5 +1,5 @@
 
-AC_PREREQ([2.69])
+AC_PREREQ([2.70])
 
 AC_INIT([bolthur-driver], [0.1.0-dev], [https://github.com/bolthur/driver/issues], [bolthur-driver], [https://github.com/bolthur/driver])
 
@@ -122,7 +122,6 @@ AC_DEFINE_UNQUOTED(
   [Unused]
 )
 
-# FIXME: Move driver to own repository
 AC_CONFIG_FILES([
   Makefile
   src/Makefile
@@ -131,6 +130,10 @@ AC_CONFIG_FILES([
   src/platform/Makefile
   src/platform/rpi/Makefile
   src/platform/rpi/framebuffer/Makefile
+  thirdparty/Makefile
+  thirdparty/dtc/libfdt/Makefile
+  thirdparty/font/Makefile
 ])
+# FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO
 
 AC_OUTPUT

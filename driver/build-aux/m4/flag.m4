@@ -16,6 +16,15 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c18])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
 
+  # third party stuff
+  AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}/include])
+  AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty])
+  AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty/dtc/libfdt])
+  AX_APPEND_COMPILE_FLAGS([-imacros\ $($BOLTHUR_READLINK -f ${srcdir})/include/config.h])
+  # FIXME: NECESSARY BECAUSE OF NEWLIB
+  AC_DEFINE_UNQUOTED([_GNU_SOURCE], [1], [Necessary newlib define])
+  #AC_DEFINE_UNQUOTED([_FORTIFY_SOURCE], [2], [Necessary newlib define])
+
   # debug parameter
   AS_IF([test "x$with_debug_symbols" == "xyes"], [
     # debug symbols and sanitizer

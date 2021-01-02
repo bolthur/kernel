@@ -111,7 +111,7 @@ task_thread_ptr_t task_thread_create(
     current_context->reg.spsr |= CPSR_THUMB;
   }
   // set stack pointer
-  current_context->reg.sp = stack_virtual + STACK_SIZE - 4;
+  current_context->reg.sp = stack_virtual + STACK_SIZE - sizeof( int );
   // debug output
   #if defined( PRINT_PROCESS )
     DUMP_REGISTER( current_context )
@@ -209,7 +209,9 @@ bool task_thread_push_arguments(
   // determine count
   va_start( parameter, proc );
   while ( ( arg = va_arg( parameter, const char* ) ) ) {
-    DEBUG_OUTPUT( "%s\r\n", arg )
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "%s\r\n", arg )
+    #endif
     total_size += strlen( arg ) + 1;
     // increment entry count
     entry_count++;
@@ -247,7 +249,7 @@ bool task_thread_push_arguments(
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "offset = %zx\r\n", offset )
   #endif
-  offset -= ( offset % 4 ? ( 4 - offset % 4 ) : 0 );
+  offset -= ( offset % sizeof( int ) ? ( offset % sizeof( int ) ) : 0 );
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "offset = %zx\r\n", offset )

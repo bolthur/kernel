@@ -313,7 +313,7 @@ static uintptr_t map_temporary( uint64_t start, size_t size ) {
     virt_flush_address( kernel_context, addr );
 
     // increase physical address
-    start += i * PAGE_SIZE;
+    start += PAGE_SIZE;
   }
 
   // debug output

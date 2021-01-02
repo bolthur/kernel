@@ -1,6 +1,6 @@
 
 LT_PREREQ([2.4.6])
-AC_PREREQ([2.69])
+AC_PREREQ([2.70])
 
 AC_INIT([bolthur-kernel], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 
