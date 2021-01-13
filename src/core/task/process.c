@@ -420,7 +420,9 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
 
   int addr_size = sizeof( uintptr_t ) * 2;
   char str_ramdisk[ 20 ];
+  char str_ramdisk_size[ 20 ];
   sprintf( str_ramdisk, "%#0*"PRIxPTR"\0", addr_size, proc_ramdisk_start );
+  sprintf( str_ramdisk_size, "%#0*zx\0", addr_size, ramdisk_file_size );
 
   // arch related
   uintptr_t proc_additional_start = task_process_prepare_init_arch( proc );
@@ -431,10 +433,12 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
     );
 
     assert( task_thread_push_arguments(
-      proc, "./init", str_ramdisk, str_additional, NULL
+      proc, "./init", str_ramdisk, str_ramdisk_size, str_additional, NULL
     ) );
   } else {
-    assert( task_thread_push_arguments( proc, "./init", str_ramdisk, NULL ) );
+    assert( task_thread_push_arguments(
+      proc, "./init", str_ramdisk, str_ramdisk_size, NULL
+    ) );
   }
 
   return true;

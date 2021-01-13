@@ -23,6 +23,7 @@
 
 #include <stdint.h>
 #include <unistd.h>
+#include "list.h"
 
 #define VFS_FILE 0x01
 #define VFS_DIRECTORY 0x02
@@ -34,17 +35,6 @@
 #define VFS_MOUNTPOINT 0x10
 
 typedef struct vfs_node vfs_node_t,*vfs_node_ptr_t;
-typedef struct list_item list_item_t, *list_item_ptr_t;
-
-/**
- * @struct Simple list structure
- * Structure representing list of nodes
- */
-typedef struct list_item {
-  vfs_node_ptr_t node; /**< pointer to node */
-  list_item_ptr_t previous; /**< previous entry */
-  list_item_ptr_t next; /**< next entry */
-} list_item_t, *list_item_ptr_t;
 
 /**
  * @struct VFS node structure
@@ -59,10 +49,11 @@ typedef struct vfs_node {
   uint32_t length; /**< byte size of file */
   vfs_node_ptr_t target; /**< target link ( symlink or mountpoint ) */
   pid_t *pid; /**< process taking care of the node ( check parent if NULL ) */
-  list_item_ptr_t children; /**< list of child nodes */
+  list_manager_ptr_t children; /**< list of child nodes */
   vfs_node_ptr_t parent; /**< parent node */
 } vfs_node_t, *vfs_node_ptr_t;
 
 vfs_node_ptr_t vfs_setup( pid_t );
+void vfs_dump( vfs_node_ptr_t, size_t );
 
 #endif

@@ -5,4 +5,5 @@ init_LDADD = \
 	${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la
 init_SOURCES = main.c \
   vfs.c \
-  tar.c
+  tar.c \
+  list.c

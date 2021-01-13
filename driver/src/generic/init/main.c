@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <inttypes.h>
 #include <ctype.h>
+#include <assert.h>
 // third party libraries
 #include <zlib.h>
 // disable some warnings temporarily
@@ -37,27 +38,88 @@
 // enable again
 #pragma GCC diagnostic pop
 #include "vfs.h"
+#include "tar.h"
 
 pid_t pid = 0;
 vfs_node_ptr_t root = NULL;
 
+/**
+ * @brief helper to parse ramdisk
+ *
+ * @param address
+ * @param size
+ * @return
+ */
+static int parse_ramdisk( uintptr_t address, size_t size ) {
+  // decompress initrd
+  z_stream stream = { 0 };
+  uintptr_t dec = ( uintptr_t )malloc( size * 4 );
+
+  stream.total_in = stream.avail_in = size;
+  stream.total_out = stream.avail_out = size * 4;
+  stream.next_in = ( Bytef* )address;
+  stream.next_out = ( Bytef* )dec;
+
+  stream.zalloc = Z_NULL;
+  stream.zfree  = Z_NULL;
+  stream.opaque = Z_NULL;
+
+  int err = -1;
+  err = inflateInit2( &stream, ( 15 + 32 ) );
+  if ( Z_OK != err ) {
+    inflateEnd( &stream );
+    return err;
+  }
+  err = inflate( &stream, Z_FINISH);
+  if ( err != Z_STREAM_END ) {
+    inflateEnd( &stream );
+    return err;
+  }
+  inflateEnd( &stream );
+
+  // set iterator
+  tar_header_ptr_t iter = ( tar_header_ptr_t )dec;
+  // loop through tar
+  while ( ! tar_end_reached( iter ) ) {
+    // debug output
+    printf( "%p: initrd file name: %s\r\n",
+      ( void* )iter, iter->file_name );
+    // next
+    iter = tar_next( iter );
+  }
+  // debug output
+  printf( "tar size: %x\r\n", tar_total_size( dec ) );
+  // FIXME: add to vfs
+  return 0;
+}
+
+/**
+ * @brief main entry function
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main( int argc, char* argv[] ) {
   // variables
   uintptr_t ramdisk, device_tree;
+  size_t ramdisk_size;
 
   // check parameter count
-  if ( argc < 3 ) {
+  if ( argc < 4 ) {
     return -1;
   }
 
   // transform arguments to hex
   ramdisk = strtoul( argv[ 1 ], NULL, 16 );
-  device_tree = strtoul( argv[ 2 ], NULL, 16 );
+  ramdisk_size = strtoul( argv[ 2 ], NULL, 16 );
+  device_tree = strtoul( argv[ 3 ], NULL, 16 );
   // address size constant
   const int address_size = ( int )( sizeof( uintptr_t ) * 2 );
   // print something
   printf( "init process starting up!\r\n" );
   printf( "ramdisk = %#0*"PRIxPTR"\r\n", address_size, ramdisk );
+  printf( "ramdisk_size = %x\r\n", ramdisk_size );
   printf( "device_tree = %#0*"PRIxPTR"\r\n", address_size, device_tree );
 
   // check device tree
@@ -68,8 +130,13 @@ int main( int argc, char* argv[] ) {
 
   // get current pid
   pid = getpid();
-  // setup root
+  // setup vfs
   root = vfs_setup( pid );
+
+  assert( 0 == parse_ramdisk( ramdisk, ramdisk_size ) );
+
+  // debug output
+  vfs_dump( root, 0 );
 
   /*
    * argv[ 0 ] = name
@@ -78,14 +145,6 @@ int main( int argc, char* argv[] ) {
    */
 
   for(;;);
-
-  z_stream stream;
-  stream.zalloc = Z_NULL;
-  stream.zfree = Z_NULL;
-  stream.opaque = Z_NULL;
-  stream.avail_in = 0;
-  stream.next_in = ( Bytef* )argv[ 0 ];
-  inflateInit2( &stream, -15 );
 
   // FIXME: check arguments for binary device tree
     // FIXME: parse binary device tree and populate into vfs tree "/dev"
