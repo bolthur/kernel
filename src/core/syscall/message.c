@@ -18,36 +18,39 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <collection/list.h>
+#include <core/syscall.h>
+#if defined( PRINT_SYSCALL )
+  #include <core/debug/debug.h>
+#endif
 
 /**
- * @brief Method to destruct list
+ * @brief Acquire message descriptor
  *
- * @param list list to use
+ * @param context
  */
-void list_destruct( list_manager_ptr_t list ) {
-  list_item_ptr_t current, next;
+void syscall_message_acquire( __unused void* context ) {
+}
 
-  // check parameter
-  if ( ! list ) {
-    return;
-  }
-  // populate current
-  current = list->first;
+/**
+ * @brief Release message descriptor
+ *
+ * @param context
+ */
+void syscall_message_release( __unused void* context ) {
+}
 
-  // loop through list until end
-  while ( current ) {
-    // get next element
-    next = current->next;
+/**
+ * @brief Send message
+ *
+ * @param context
+ */
+void syscall_message_send( __unused void* context ) {
+}
 
-    // additional cleanup
-    list->cleanup( current );
-
-    // overwrite current with next
-    current = next;
-  }
-
-  // finally free list
-  free( list );
+/**
+ * @brief Receive message
+ *
+ * @param context
+ */
+void syscall_message_receive( __unused void* context ) {
 }

@@ -8,14 +8,14 @@ libcore_la_SOURCES = \
   mm/phys.c \
   mm/shared.c \
   mm/virt.c \
-  syscall/posix/mman/mmap.c \
-  syscall/posix/mman/shm.c \
-  syscall/posix/mqueue.c \
   syscall/task/process.c \
   syscall/task/thread.c \
   syscall/dummy.c \
   syscall/init.c \
   syscall/interrupt.c \
+  syscall/memory.c \
+  syscall/message.c \
+  syscall/rpc.c \
   task/lock.c \
   task/process.c \
   task/queue.c \

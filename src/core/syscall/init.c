@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -77,32 +77,32 @@ bool syscall_init( void ) {
   }
   // memory related
   if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MMAN_MMAP,
-    syscall_posix_mman_mmap,
+    SYSCALL_MEMORY_ACQUIRE,
+    syscall_memory_acquire,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MMAN_MUNMAP,
-    syscall_posix_mman_munmap,
+    SYSCALL_MEMORY_RELEASE,
+    syscall_memory_release,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MMAN_SHM_OPEN,
-    syscall_posix_mman_shm_open,
+    SYSCALL_MEMORY_SHARED_ACQUIRE,
+    syscall_memory_shared_acquire,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MMAN_SHM_UNLINK,
-    syscall_posix_mman_shm_unlink,
+    SYSCALL_MEMORY_SHARED_RELEASE,
+    syscall_memory_shared_release,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -110,80 +110,49 @@ bool syscall_init( void ) {
   }
   // message related
   if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MQUEUE_OPEN,
-    syscall_posix_mqueue_open,
+    SYSCALL_MESSAGE_ACQUIRE,
+    syscall_message_acquire,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MQUEUE_CLOSE,
-    syscall_posix_mqueue_close,
+    SYSCALL_MESSAGE_RELEASE,
+    syscall_message_release,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MQUEUE_UNLINK,
-    syscall_posix_mqueue_unlink,
+    SYSCALL_MESSAGE_SEND,
+    syscall_message_send,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MQUEUE_SEND,
-    syscall_posix_mqueue_send,
+    SYSCALL_MESSAGE_RECEIVE,
+    syscall_message_receive,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  // rpc related
+  if ( ! interrupt_register_handler(
+    SYSCALL_RPC_ACQUIRE,
+    syscall_rpc_acquire,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MQUEUE_SEND_TIMED,
-    syscall_posix_mqueue_send_timed,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MQUEUE_RECEIVE,
-    syscall_posix_mqueue_receive,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MQUEUE_RECEIVE_TIMED,
-    syscall_posix_mqueue_receive_timed,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MQUEUE_NOTIFY,
-    syscall_posix_mqueue_notify,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MQUEUE_GET_ATTRIBUTE,
-    syscall_posix_mqueue_get_attribute,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_POSIX_MQUEUE_SET_ATTRIBUTE,
-    syscall_posix_mqueue_set_attribute,
+    SYSCALL_RPC_RELEASE,
+    syscall_rpc_release,
     INTERRUPT_SOFTWARE,
     false
   ) ) {

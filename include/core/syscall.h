@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -33,26 +33,23 @@
 #define SYSCALL_THREAD_EXIT 12
 #define SYSCALL_THREAD_ID 13
 
-#define SYSCALL_POSIX_MMAN_MMAP 21
-#define SYSCALL_POSIX_MMAN_MUNMAP 22
-#define SYSCALL_POSIX_MMAN_SHM_OPEN 23
-#define SYSCALL_POSIX_MMAN_SHM_UNLINK 24
+#define SYSCALL_MEMORY_ACQUIRE 21
+#define SYSCALL_MEMORY_RELEASE 22
+#define SYSCALL_MEMORY_SHARED_ACQUIRE 23
+#define SYSCALL_MEMORY_SHARED_RELEASE 24
 
-#define SYSCALL_POSIX_MQUEUE_OPEN 31
-#define SYSCALL_POSIX_MQUEUE_CLOSE 32
-#define SYSCALL_POSIX_MQUEUE_UNLINK 33
-#define SYSCALL_POSIX_MQUEUE_SEND 34
-#define SYSCALL_POSIX_MQUEUE_SEND_TIMED 35
-#define SYSCALL_POSIX_MQUEUE_RECEIVE 36
-#define SYSCALL_POSIX_MQUEUE_RECEIVE_TIMED 37
-#define SYSCALL_POSIX_MQUEUE_NOTIFY 38
-#define SYSCALL_POSIX_MQUEUE_GET_ATTRIBUTE 39
-#define SYSCALL_POSIX_MQUEUE_SET_ATTRIBUTE 40
+#define SYSCALL_MESSAGE_ACQUIRE 31
+#define SYSCALL_MESSAGE_RELEASE 32
+#define SYSCALL_MESSAGE_SEND 33
+#define SYSCALL_MESSAGE_RECEIVE 34
 
-#define SYSCALL_IO_ACQUIRE 41
-#define SYSCALL_IO_RELEASE 42
-#define SYSCALL_IO_CHECK 43
-#define SYSCALL_IO_RAISE 44
+#define SYSCALL_RPC_ACQUIRE 41
+#define SYSCALL_RPC_RELEASE 42
+
+#define SYSCALL_IO_ACQUIRE 51
+#define SYSCALL_IO_RELEASE 52
+#define SYSCALL_IO_CHECK 53
+#define SYSCALL_IO_RAISE 54
 
 #define SYSCALL_INTERRUPT_ACQUIRE 61
 #define SYSCALL_INTERRUPT_RELEASE 62
@@ -72,21 +69,18 @@ void syscall_thread_create( void* );
 void syscall_thread_exit( void* );
 void syscall_thread_id( void* );
 
-void syscall_posix_mman_mmap( void* );
-void syscall_posix_mman_munmap( void* );
-void syscall_posix_mman_shm_open( void* );
-void syscall_posix_mman_shm_unlink( void* );
+void syscall_memory_acquire( void* );
+void syscall_memory_release( void* );
+void syscall_memory_shared_acquire( void* );
+void syscall_memory_shared_release( void* );
 
-void syscall_posix_mqueue_open( void* );
-void syscall_posix_mqueue_close( void* );
-void syscall_posix_mqueue_unlink( void* );
-void syscall_posix_mqueue_send( void* );
-void syscall_posix_mqueue_send_timed( void* );
-void syscall_posix_mqueue_receive( void* );
-void syscall_posix_mqueue_receive_timed( void* );
-void syscall_posix_mqueue_notify( void* );
-void syscall_posix_mqueue_get_attribute( void* );
-void syscall_posix_mqueue_set_attribute( void* );
+void syscall_message_acquire( void* );
+void syscall_message_release( void* );
+void syscall_message_send( void* );
+void syscall_message_receive( void* );
+
+void syscall_rpc_acquire( void* );
+void syscall_rpc_release( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );

@@ -1,6 +1,6 @@
 
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,8 +23,18 @@
   #include <core/debug/debug.h>
 #endif
 
+/**
+ * @brief Acquire interrupt handler
+ *
+ * @param context
+ */
 void syscall_interrupt_acquire( __unused void* context ) {
 }
 
+/**
+ * @brief Release interrupt handler
+ *
+ * @param context
+ */
 void syscall_interrupt_release( __unused void* context ) {
 }

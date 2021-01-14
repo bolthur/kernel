@@ -18,36 +18,24 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <collection/list.h>
+#include <core/syscall.h>
+#if defined( PRINT_SYSCALL )
+  #include <core/debug/debug.h>
+#endif
 
 /**
- * @brief Method to destruct list
+ * @brief Acquire rpc handler
  *
- * @param list list to use
+ * @param context
  */
-void list_destruct( list_manager_ptr_t list ) {
-  list_item_ptr_t current, next;
+void syscall_rpc_acquire( __unused void* context ) {
+}
 
-  // check parameter
-  if ( ! list ) {
-    return;
-  }
-  // populate current
-  current = list->first;
 
-  // loop through list until end
-  while ( current ) {
-    // get next element
-    next = current->next;
-
-    // additional cleanup
-    list->cleanup( current );
-
-    // overwrite current with next
-    current = next;
-  }
-
-  // finally free list
-  free( list );
+/**
+ * @brief Release rpc handler
+ *
+ * @param context
+ */
+void syscall_rpc_release( __unused void* context ) {
 }
