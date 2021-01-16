@@ -18,8 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( __INIT_TAR_H__ )
-#define __INIT_TAR_H__
+#if !defined( __TAR_H__ )
+#define __TAR_H__
 
 #include <stdbool.h>
 #include <stddef.h>

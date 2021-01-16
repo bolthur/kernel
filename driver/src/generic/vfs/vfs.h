@@ -18,8 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( __INIT_VFS_H__ )
-#define __INIT_VFS_H__
+#if !defined( __VFS_H__ )
+#define __VFS_H__
 
 #include <stdint.h>
 #include <unistd.h>

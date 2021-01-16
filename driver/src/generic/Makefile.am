@@ -1,2 +1,2 @@
 
-SUBDIRS = init
+SUBDIRS = init vfs

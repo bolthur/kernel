@@ -37,11 +37,9 @@
 #include <fdt.h>
 // enable again
 #pragma GCC diagnostic pop
-#include "vfs.h"
 #include "tar.h"
 
 pid_t pid = 0;
-vfs_node_ptr_t root = NULL;
 
 /**
  * @brief helper to parse ramdisk
@@ -54,6 +52,8 @@ static int parse_ramdisk( uintptr_t address, size_t size ) {
   // decompress initrd
   z_stream stream = { 0 };
   uintptr_t dec = ( uintptr_t )malloc( size * 4 );
+  if ( ! dec ) {
+  }
 
   stream.total_in = stream.avail_in = size;
   stream.total_out = stream.avail_out = size * 4;
@@ -89,7 +89,6 @@ static int parse_ramdisk( uintptr_t address, size_t size ) {
   }
   // debug output
   printf( "tar size: %x\r\n", tar_total_size( dec ) );
-  // FIXME: add to vfs
   return 0;
 }
 
@@ -130,13 +129,8 @@ int main( int argc, char* argv[] ) {
 
   // get current pid
   pid = getpid();
-  // setup vfs
-  root = vfs_setup( pid );
 
   assert( 0 == parse_ramdisk( ramdisk, ramdisk_size ) );
-
-  // debug output
-  vfs_dump( root, 0 );
 
   /*
    * argv[ 0 ] = name

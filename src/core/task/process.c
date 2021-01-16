@@ -341,12 +341,16 @@ void task_process_cleanup(
  *
  * @param proc pointer to init process structure
  * @return bool true on success, else false
+ *
+ * @todo skip ramdisk if not existing
+ * @todo skip device tree if not existing
  */
 bool task_process_prepare_init( task_process_ptr_t proc ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "task_process_prepare_init( %p )\r\n", proc )
   #endif
+
   tar_header_ptr_t ramdisk = tar_lookup_file(
     initrd_get_start_address(),
     "ramdisk.tar.gz"
