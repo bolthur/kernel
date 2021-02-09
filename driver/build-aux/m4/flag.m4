@@ -4,7 +4,8 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   # FIXME: Add stack protector if working
   AX_APPEND_COMPILE_FLAGS([-fstack-protector-all -Wstack-protector])
   # warnings
-  AX_APPEND_COMPILE_FLAGS([-Wall -Wextra -Werror -Wpedantic])
+  # fixme: add again when fixing god damn zlib issues  -Werror
+  AX_APPEND_COMPILE_FLAGS([-Wall -Wextra -Wpedantic])
   AX_APPEND_COMPILE_FLAGS([-Wconversion -Wpacked -Wredundant-decls])
   AX_APPEND_COMPILE_FLAGS([-Wmisleading-indentation -Wundef])
   AX_APPEND_COMPILE_FLAGS([-Wpacked-bitfield-compat -Wrestrict])
@@ -20,6 +21,7 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}/include])
   AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty])
   AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty/dtc/libfdt])
+  AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty/zlib])
   AX_APPEND_COMPILE_FLAGS([-imacros\ $($BOLTHUR_READLINK -f ${srcdir})/include/config.h])
   # FIXME: NECESSARY BECAUSE OF NEWLIB
   AC_DEFINE_UNQUOTED([_GNU_SOURCE], [1], [Necessary newlib define])

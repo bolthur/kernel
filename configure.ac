@@ -323,4 +323,6 @@ AC_CONFIG_SUBDIRS([
   driver
 ])
 
+AM_CONDITIONAL([ENABLE_ZLIB], [false])
+
 AC_OUTPUT

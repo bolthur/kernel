@@ -134,7 +134,9 @@ AC_CONFIG_FILES([
   thirdparty/Makefile
   thirdparty/dtc/libfdt/Makefile
   thirdparty/font/Makefile
+  thirdparty/zlib/Makefile
 ])
 # FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO
+AM_CONDITIONAL([ENABLE_ZLIB], [true])
 
 AC_OUTPUT
