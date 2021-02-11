@@ -65,7 +65,7 @@ static int parse_ramdisk( uintptr_t address, size_t size ) {
   stream.opaque = Z_NULL;
 
   int err = -1;
-  err = inflateInit2( &stream, ( 15 + 32 ) );
+  err = inflateInit2( &stream, 15 + 32 );
   if ( Z_OK != err ) {
     inflateEnd( &stream );
     return err;

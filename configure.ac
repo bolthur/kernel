@@ -1,10 +1,10 @@
 
 LT_PREREQ([2.4.6])
-AC_PREREQ([2.70])
+AC_PREREQ([2.71])
 
 AC_INIT([bolthur-kernel], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2020 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2021 bolthur project])
 
 AC_CONFIG_AUX_DIR([build-aux/config])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
@@ -322,7 +322,5 @@ AC_CONFIG_FILES([
 AC_CONFIG_SUBDIRS([
   driver
 ])
-
-AM_CONDITIONAL([ENABLE_ZLIB], [false])
 
 AC_OUTPUT

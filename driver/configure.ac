@@ -1,9 +1,9 @@
 
-AC_PREREQ([2.70])
+AC_PREREQ([2.71])
 
 AC_INIT([bolthur-driver], [0.1.0-dev], [https://github.com/bolthur/driver/issues], [bolthur-driver], [https://github.com/bolthur/driver])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2020 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2021 bolthur project])
 
 AC_CONFIG_AUX_DIR([build-aux/config])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
@@ -134,9 +134,7 @@ AC_CONFIG_FILES([
   thirdparty/Makefile
   thirdparty/dtc/libfdt/Makefile
   thirdparty/font/Makefile
-  thirdparty/zlib/Makefile
 ])
 # FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO
-AM_CONDITIONAL([ENABLE_ZLIB], [true])
 
 AC_OUTPUT

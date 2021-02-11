@@ -1,7 +1,7 @@
 # kernel
 
 bolthur/kernel project.
-_Copyright (C) 2018 - 2020 bolthur project_
+_Copyright (C) 2018 - 2021 bolthur project_
 
 ## Supported platforms
 

@@ -4,8 +4,7 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   # FIXME: Add stack protector if working
   AX_APPEND_COMPILE_FLAGS([-fstack-protector-all -Wstack-protector])
   # warnings
-  # fixme: add again when fixing god damn zlib issues  -Werror
-  AX_APPEND_COMPILE_FLAGS([-Wall -Wextra -Wpedantic])
+  AX_APPEND_COMPILE_FLAGS([-Wall -Werror -Wextra -Wpedantic])
   AX_APPEND_COMPILE_FLAGS([-Wconversion -Wpacked -Wredundant-decls])
   AX_APPEND_COMPILE_FLAGS([-Wmisleading-indentation -Wundef])
   AX_APPEND_COMPILE_FLAGS([-Wpacked-bitfield-compat -Wrestrict])

@@ -1,7 +1,9 @@
 
 bin_PROGRAMS = init
+
 init_LDADD = \
-	${abs_top_builddir}/thirdparty/zlib/libzlib.la \
+	-lz \
 	${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la
+
 init_SOURCES = main.c \
   tar.c
