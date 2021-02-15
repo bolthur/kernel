@@ -281,11 +281,7 @@ static bool prepare_process( task_process_ptr_t process ) {
  * @return false
  */
 bool shared_init( void ) {
-  shared_tree = avl_create_tree(
-    compare_entry,
-    lookup_entry,
-    NULL
-  );
+  shared_tree = avl_create_tree( compare_entry, lookup_entry, NULL );
   return ( bool )shared_tree;
 }
 
@@ -302,17 +298,10 @@ bool shared_memory_create( const char* name, size_t size ) {
   if ( ! shared_tree ) {
     return false;
   }
-
-  // try to find node
-  avl_node_ptr_t node = avl_find_by_data(
-    shared_tree,
-    ( void* )name
-  );
-  // skip if name is already in use
-  if ( node ) {
+  // check for existence
+  if ( shared_memory_existing( name ) ) {
     return false;
   }
-
   // create entry
   shared_memory_entry_ptr_t tmp = create_entry( name, size );
   // handle error
@@ -329,13 +318,28 @@ bool shared_memory_create( const char* name, size_t size ) {
 }
 
 /**
+ * Shared memory existing helper
+ *
+ * @param name
+ * @return
+ */
+bool shared_memory_existing( const char* name ) {
+  return NULL != avl_find_by_data( shared_tree, ( void* )name );
+}
+
+/**
  * @brief Process acquire of shared memory
  *
  * @param process process
  * @param name name
+ * @param virt_start optional start address
  * @return uintptr_t start address or NULL if not existing / already mapped
  */
-uintptr_t shared_memory_acquire( task_process_ptr_t process, const char* name ) {
+uintptr_t shared_memory_acquire(
+  task_process_ptr_t process,
+  const char* name,
+  uintptr_t virt_start
+) {
   // handle not initialized
   if ( ! shared_tree ) {
     return 0;
@@ -377,11 +381,12 @@ uintptr_t shared_memory_acquire( task_process_ptr_t process, const char* name ) 
 
   shared_memory_entry_ptr_t tmp = ( shared_memory_entry_ptr_t )node->data;
   // find free page range
-  uintptr_t virt = virt_find_free_page_range(
-    process->virtual_context,
-    tmp->size,
-    0
-  );
+  uintptr_t virt;
+  if ( 0 != virt_start ) {
+    virt = virt_start;
+  } else {
+    virt = virt_find_free_page_range( process->virtual_context, tmp->size, 0 );
+  }
 
   // determine end
   uintptr_t start = virt;
@@ -533,4 +538,33 @@ bool shared_memory_release( task_process_ptr_t process, const char* name ) {
 
   // return success
   return true;
+}
+
+/**
+ * Retrieve shared memory by address
+ *
+ * @param process
+ * @param start
+ * @return
+ */
+shared_memory_entry_mapped_ptr_t shared_memory_retrieve(
+  task_process_ptr_t process,
+  uintptr_t start
+) {
+  // get start node
+  avl_node_ptr_t node = avl_iterate_first( process->shared_memory_mapped );
+  // loop until end
+  while ( NULL != node ) {
+    // get mapped entry
+    shared_memory_entry_mapped_ptr_t area =
+      ( shared_memory_entry_mapped_ptr_t )node->data;
+    // handle match
+    if ( area->start == start ) {
+      return area;
+    }
+    // get next
+    node = avl_iterate_next( process->shared_memory_mapped, node );
+  }
+  // return NULL
+  return NULL;
 }

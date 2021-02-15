@@ -13,7 +13,6 @@ libcore_la_SOURCES = \
   syscall/interrupt.c \
   syscall/memory.c \
   syscall/message.c \
-  syscall/rpc.c \
   syscall/task.c \
   task/lock.c \
   task/process.c \

@@ -51,7 +51,9 @@ typedef struct {
 
 bool shared_init( void );
 bool shared_memory_create( const char*, size_t );
-uintptr_t shared_memory_acquire( task_process_ptr_t, const char* );
+bool shared_memory_existing( const char* );
+uintptr_t shared_memory_acquire( task_process_ptr_t, const char*, uintptr_t );
 bool shared_memory_release( task_process_ptr_t, const char* );
+shared_memory_entry_mapped_ptr_t shared_memory_retrieve( task_process_ptr_t, uintptr_t );
 
 #endif
