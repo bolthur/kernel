@@ -25,6 +25,7 @@
 #include <inttypes.h>
 #include <ctype.h>
 #include <assert.h>
+#include <sys/bolthur.h>
 // third party libraries
 #include <zlib.h>
 // disable some warnings temporarily
@@ -67,11 +68,13 @@ static int parse_ramdisk( uintptr_t address, size_t size ) {
   int err = -1;
   err = inflateInit2( &stream, 15 + 32 );
   if ( Z_OK != err ) {
+    printf( "ERROR ON INIT = %d!\r\n", err );
     inflateEnd( &stream );
     return err;
   }
   err = inflate( &stream, Z_FINISH);
   if ( err != Z_STREAM_END ) {
+    printf( "ERROR ON INFLATE = %d!\r\n", err );
     inflateEnd( &stream );
     return err;
   }
@@ -82,8 +85,12 @@ static int parse_ramdisk( uintptr_t address, size_t size ) {
   // loop through tar
   while ( ! tar_end_reached( iter ) ) {
     // debug output
-    printf( "%p: initrd file name: %s\r\n",
-      ( void* )iter, iter->file_name );
+    printf( "%p: initrd %s: %s\r\n",
+      ( void* )iter,
+      ( TAR_FILE_TYPE_DIRECTORY == iter->file_type )
+        ? "folder" : "file",
+      iter->file_name
+    );
     // next
     iter = tar_next( iter );
   }

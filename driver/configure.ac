@@ -126,11 +126,13 @@ AC_CONFIG_FILES([
   Makefile
   src/Makefile
   src/generic/Makefile
+  src/generic/core/Makefile
+  src/generic/core/vfs/Makefile
   src/generic/init/Makefile
-  src/generic/vfs/Makefile
   src/platform/Makefile
   src/platform/rpi/Makefile
-  src/platform/rpi/framebuffer/Makefile
+  src/platform/rpi/driver/Makefile
+  src/platform/rpi/driver/framebuffer/Makefile
   thirdparty/Makefile
   thirdparty/dtc/libfdt/Makefile
   thirdparty/font/Makefile

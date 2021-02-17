@@ -22,15 +22,13 @@ import osproc
 import strutils
 
 # create tmp directories
-discard existsOrCreateDir( "tmp" )
-discard existsOrCreateDir( "tmp/ramdisk" )
-discard existsOrCreateDir( "tmp/ramdisk/driver" )
+createDir( "tmp" )
 
 # check argument count
 let argc: int = paramCount()
 if argc != 2:
   echo "Usage: ramdisk <dirver path> <initrd name>"
-  quit(1)
+  quit( 1 )
 
 # get command line arguments
 let driver: string = paramStr( 1 );
@@ -42,11 +40,23 @@ for file in walkDirRec( driver ):
   if contains( outp_shell, ": ELF" ) and contains( outp_shell, "executable" ):
     # split file path
     let split = splitPath( file )
+    let splitted_head = split.head.split( DirSep )
+    let executable = split.tail
+
+    # determine target folder
+    var target_folder = $DirSep
+    var last = len( splitted_head ) - 1
+    if executable == splitted_head[ last ]: last = last - 1
+    if "core" == splitted_head[ last ] or "driver" == splitted_head[ last ]:
+      target_folder = target_folder & splitted_head[ last ] & $DirSep
+
     # special handling for init
-    if split.tail == "init":
-      copyFile( file, "tmp/" & split.tail );
+    if executable == "init":
+      copyFile( file, joinPath( "tmp", executable ) )
     else:
-      copyFile( file, "tmp/ramdisk/driver/" & split.tail );
+      let base_path = joinPath( "tmp", "ramdisk", target_folder )
+      createDir( base_path )
+      copyFile( file, joinPath( base_path, executable ) )
 
 # create ramdisk and remove normal directory
 echo execProcess( "tar czvf ../ramdisk.tar.gz *", "tmp/ramdisk" )

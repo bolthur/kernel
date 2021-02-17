@@ -46,8 +46,8 @@ org.eclipse.cdt.core.formatter.comment.preserve_white_space_between_code_and_lin
 org.eclipse.cdt.core.formatter.comment_formatter_off_tag=@formatter\:off
 org.eclipse.cdt.core.formatter.comment_formatter_on_tag=@formatter\:on
 org.eclipse.cdt.core.formatter.compact_else_if=true
-org.eclipse.cdt.core.formatter.continuation_indentation=2
-org.eclipse.cdt.core.formatter.continuation_indentation_for_array_initializer=2
+org.eclipse.cdt.core.formatter.continuation_indentation=1
+org.eclipse.cdt.core.formatter.continuation_indentation_for_array_initializer=1
 org.eclipse.cdt.core.formatter.format_block_comment=true
 org.eclipse.cdt.core.formatter.format_guardian_clause_on_one_line=false
 org.eclipse.cdt.core.formatter.format_header_comment=true
