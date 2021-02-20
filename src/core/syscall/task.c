@@ -22,6 +22,7 @@
 #include <core/event.h>
 #include <core/task/process.h>
 #include <core/task/thread.h>
+#include <core/elf/common.h>
 #if defined( PRINT_SYSCALL )
   #include <core/debug/debug.h>
 #endif
@@ -34,7 +35,7 @@
 void syscall_process_id( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "process id called\r\n" )
+    DEBUG_OUTPUT( "syscall_process_id()\r\n" )
   #endif
 
   if ( ! task_thread_current_thread ) {
@@ -56,8 +57,32 @@ void syscall_process_id( void* context ) {
  * @brief Create new process
  *
  * @param context
+ *
+ * @todo add support for priority
+ * @todo revise first iteration
  */
-void syscall_process_create( __unused void* context ) {
+void syscall_process_create( void* context ) {
+  // get elf image to create new process from
+  void* image = ( void* )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_process_create( %#p )\r\n" )
+  #endif
+  // handle invalid parameter or no elf image
+  if ( ! image || ! elf_check( ( uintptr_t )image ) ) {
+    syscall_populate_single_return( context, ( size_t )-1 );
+    return;
+  }
+  // create new process
+  task_process_ptr_t process = task_process_create(
+    ( uintptr_t )image, 0, task_thread_current_thread->process->id );
+  // handle error
+  if ( ! process ) {
+    syscall_populate_single_return( context, ( size_t )-1 );
+    return;
+  }
+  // populate pid as return
+  syscall_populate_single_return( context, process->id );
 }
 
 /**

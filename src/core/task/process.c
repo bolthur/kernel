@@ -146,9 +146,10 @@ size_t task_process_generate_id( void ) {
  *
  * @param entry process entry address
  * @param priority process priority
+ * @param parent parent process id
  * @return pointer to created task
  */
-task_process_ptr_t task_process_create( uintptr_t entry, size_t priority ) {
+task_process_ptr_t task_process_create( uintptr_t entry, size_t priority, size_t parent ) {
   // check manager
   if ( ! process_manager ) {
     return NULL;
@@ -157,7 +158,8 @@ task_process_ptr_t task_process_create( uintptr_t entry, size_t priority ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "task_process_create( %p, %zu ) called\r\n", ( void* )entry, priority );
+      "task_process_create( %p, %zu, %zu ) called\r\n",
+      ( void* )entry, priority, parent );
   #endif
 
   // check for valid header
@@ -194,6 +196,7 @@ task_process_ptr_t task_process_create( uintptr_t entry, size_t priority ) {
   }
   process->state = TASK_PROCESS_STATE_READY;
   process->priority = priority;
+  process->parent = parent;
   process->thread_stack_manager = task_stack_manager_create();
   // handle error
   if ( ! process->thread_stack_manager ) {

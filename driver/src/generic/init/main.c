@@ -91,6 +91,15 @@ static int parse_ramdisk( uintptr_t address, size_t size ) {
         ? "folder" : "file",
       iter->file_name
     );
+    if (
+      strlen( iter->file_name ) == strlen( "core/vfs" )
+      && 0 == strcmp( iter->file_name, "core/vfs" )
+    ) {
+      // get file
+      void* vfs = ( void* )tar_file( iter );
+      pid_t vfs_pid = _process_create( vfs );
+      printf( "vfs pid = %d\r\n", vfs_pid );
+    }
     // next
     iter = tar_next( iter );
   }

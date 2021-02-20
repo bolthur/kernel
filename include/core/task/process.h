@@ -48,6 +48,7 @@ typedef struct process {
   avl_tree_ptr_t thread_manager;
   task_stack_manager_ptr_t thread_stack_manager;
   size_t id;
+  size_t parent;
   size_t priority;
   virt_context_ptr_t virtual_context;
   task_process_state_t state;
@@ -70,7 +71,7 @@ void task_process_schedule( event_origin_t, void* );
 void task_process_cleanup( event_origin_t, void* );
 void task_process_start( void );
 size_t task_process_generate_id( void );
-task_process_ptr_t task_process_create( uintptr_t, size_t );
+task_process_ptr_t task_process_create( uintptr_t, size_t, size_t );
 bool task_process_prepare_init( task_process_ptr_t );
 uintptr_t task_process_prepare_init_arch( task_process_ptr_t );
 
