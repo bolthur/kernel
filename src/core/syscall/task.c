@@ -60,6 +60,7 @@ void syscall_process_id( void* context ) {
  *
  * @todo add support for priority
  * @todo revise first iteration
+ * @todo add optional parameter with list of shared libraries in shared areas
  */
 void syscall_process_create( void* context ) {
   // get elf image to create new process from

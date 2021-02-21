@@ -92,6 +92,30 @@ bool syscall_init( void ) {
   ) ) {
     return false;
   }
+  if ( ! interrupt_register_handler(
+    SYSCALL_MEMORY_SHARED_ACQUIRE,
+    syscall_memory_shared_acquire,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_MEMORY_SHARED_RELEASE,
+    syscall_memory_shared_release,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_MEMORY_SHARED_INITIALIZE,
+    syscall_memory_shared_initialize,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
   // message related
   if ( ! interrupt_register_handler(
     SYSCALL_MESSAGE_ACQUIRE,
@@ -120,6 +144,14 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_MESSAGE_RECEIVE,
     syscall_message_receive,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_MESSAGE_LIST,
+    syscall_message_list,
     INTERRUPT_SOFTWARE,
     false
   ) ) {

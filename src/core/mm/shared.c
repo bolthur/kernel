@@ -19,8 +19,10 @@
  */
 
 #include <stdlib.h>
+#include <collection/list.h>
 #include <collection/avl.h>
 #include <string.h>
+#include <core/task/process.h>
 #include <core/mm/phys.h>
 #include <core/mm/shared.h>
 
@@ -28,6 +30,11 @@
  * @brief Tree of shared memory items
  */
 avl_tree_ptr_t shared_tree = NULL;
+
+/**
+ * @brief List of deleted items
+ */
+list_manager_ptr_t deleted = NULL;
 
 /**
  * @brief Compare entry callback necessary for avl tree
@@ -102,22 +109,33 @@ static void destroy_entry( shared_memory_entry_ptr_t entry ) {
     free( entry->name ) ;
   }
   // free address list
-  if ( entry->address_list ) {
+  if ( entry->address ) {
     // free pages again
     for (
       size_t count = entry->size / PAGE_SIZE, idx = 0;
       idx < count;
       idx++
     ) {
-      if ( 0 != entry->address_list[ idx ] ) {
-        phys_free_page( entry->address_list[ idx ] );
+      if ( 0 != entry->address[ idx ] ) {
+        phys_free_page( entry->address[ idx ] );
       }
     }
     // free array
-    free( entry->address_list );
+    free( entry->address );
   }
   // free rest of structure
   free( entry );
+}
+
+/**
+ * @brief list item cleanup
+ * @param item
+ */
+static void deleted_cleanup( list_item_ptr_t item ) {
+  // destroy entry
+  destroy_entry( item->data );
+  // delete item
+  free( item );
 }
 
 /**
@@ -135,6 +153,52 @@ static void destroy_mapped( shared_memory_entry_mapped_ptr_t mapped ) {
 }
 
 /**
+ * @brief initialize memory area
+ *
+ * @param name
+ * @param size
+ * @return
+ */
+bool shared_memory_initialize( const char* name, size_t size ) {
+  // round up to full size
+  ROUND_UP_TO_FULL_PAGE( size )
+  // determine count
+  size_t count = size / PAGE_SIZE;
+  // get entry
+  shared_memory_entry_ptr_t entry = shared_memory_retrieve_by_name( name );
+  // treat non zero as initialized
+  if ( ! entry || 0 < entry->size ) {
+    return false;
+  }
+  // allocate address list
+  uint64_t* addr = ( uint64_t* )calloc( count, sizeof( uint64_t ) );
+  // check allocation
+  if ( ! addr ) {
+    return false;
+  }
+  // allocate pages
+  for ( size_t idx = 0; idx < count; idx++ ) {
+    addr[ idx ] = phys_find_free_page( PAGE_SIZE );
+    // handle error
+    if ( 0 == addr[ idx ] ) {
+      // free pages allocated until here
+      for ( size_t inner = 0; inner < idx; inner++ ) {
+        phys_free_page( addr[ inner ] );
+      }
+      // cleanup allocated list
+      free( addr );
+      // return error
+      return false;
+    }
+  }
+  // populate new size and address list
+  entry->size = size;
+  entry->address = addr;
+  // return success
+  return true;
+}
+
+/**
  * @brief Create a entry object
  *
  * @param name
@@ -143,14 +207,8 @@ static void destroy_mapped( shared_memory_entry_mapped_ptr_t mapped ) {
  */
 static shared_memory_entry_ptr_t create_entry(
   const char* name,
-  size_t size
+  uint32_t access
 ) {
-  // round up to full size
-  ROUND_UP_TO_FULL_PAGE( size )
-
-  // determine count
-  size_t count = size / PAGE_SIZE;
-
   // create list entry
   shared_memory_entry_ptr_t entry = ( shared_memory_entry_ptr_t )malloc(
     sizeof( shared_memory_entry_t )
@@ -170,27 +228,13 @@ static shared_memory_entry_ptr_t create_entry(
     destroy_entry( entry );
     return NULL;
   }
-  // allocate address list
-  entry->address_list = ( uint64_t* )calloc( count, sizeof( uint64_t ) );
-  // check allocation
-  if ( ! entry->address_list ) {
-    destroy_entry( entry );
-    return NULL;
-  }
 
-  // copy data
+  // populate data
   entry->name = strcpy( entry->name, name );
-  // allocate pages
-  for ( size_t idx = 0; idx < count; idx++ ) {
-    entry->address_list[ idx ] = phys_find_free_page( PAGE_SIZE );
-    // handle error
-    if ( 0 == entry->address_list[ idx ] ) {
-      destroy_entry( entry );
-      return NULL;
-    }
-  }
-  entry->size = size;
+  entry->size = 0;
   entry->use_count = 0;
+  entry->address = NULL;
+  entry->access = access;
 
   // return address
   return entry;
@@ -207,11 +251,11 @@ static shared_memory_entry_ptr_t create_entry(
 static shared_memory_entry_mapped_ptr_t create_mapped(
   const char* name,
   size_t size,
-  uintptr_t address
+  uintptr_t address,
+  shared_memory_entry_ptr_t reference
 ) {
   // round up to full size
   ROUND_UP_TO_FULL_PAGE( size )
-
   // create list entry
   shared_memory_entry_mapped_ptr_t entry = ( shared_memory_entry_mapped_ptr_t )
     malloc( sizeof( shared_memory_entry_mapped_t ) );
@@ -222,7 +266,6 @@ static shared_memory_entry_mapped_ptr_t create_mapped(
   }
   // prepare area
   entry = memset( entry, 0, sizeof( shared_memory_entry_t ) );
-
   // allocate name array
   entry->name = ( char* )calloc( strlen( name ), sizeof( char ) );
   // check allocation
@@ -230,12 +273,12 @@ static shared_memory_entry_mapped_ptr_t create_mapped(
     destroy_mapped( entry );
     return NULL;
   }
-
-  // copy data
+  // populate data
   entry->name = strcpy( entry->name, name );
   entry->start = address;
   entry->size = size;
-
+  entry->reference = reference;
+  // return created entry
   return entry;
 }
 
@@ -281,29 +324,45 @@ static bool prepare_process( task_process_ptr_t process ) {
  * @return false
  */
 bool shared_init( void ) {
+  // create tree
   shared_tree = avl_create_tree( compare_entry, lookup_entry, NULL );
-  return ( bool )shared_tree;
+  if ( ! shared_tree ) {
+    return false;
+  }
+  // create deleted list
+  deleted = list_construct( NULL, deleted_cleanup );
+  if ( ! deleted ) {
+    return false;
+  }
+  return true;
 }
 
 /**
  * @brief Create new shared memory area with name and size
  *
- * @param name name of the area
- * @param size area size
+ * @param name
+ * @param flags
  * @return true
  * @return false
  */
-bool shared_memory_create( const char* name, size_t size ) {
+bool shared_memory_create( const char* name, uint32_t flags ) {
   // handle not initialized
   if ( ! shared_tree ) {
     return false;
   }
   // check for existence
-  if ( shared_memory_existing( name ) ) {
+  if ( shared_memory_retrieve_by_name( name ) ) {
+    return false;
+  }
+  // check flags
+  if (
+    ! ( flags & SHARED_MEMORY_ACCESS_READ )
+    && ! ( flags & SHARED_MEMORY_ACCESS_WRITE )
+  ) {
     return false;
   }
   // create entry
-  shared_memory_entry_ptr_t tmp = create_entry( name, size );
+  shared_memory_entry_ptr_t tmp = create_entry( name, flags );
   // handle error
   if ( ! tmp ) {
     return false;
@@ -323,33 +382,34 @@ bool shared_memory_create( const char* name, size_t size ) {
  * @param name
  * @return
  */
-bool shared_memory_existing( const char* name ) {
-  return NULL != avl_find_by_data( shared_tree, ( void* )name );
+shared_memory_entry_ptr_t shared_memory_retrieve_by_name(
+  const char* name
+) {
+  // try to get node by name
+  avl_node_ptr_t node = avl_find_by_data( shared_tree, ( void* )name );
+  // return node or null
+  return ! node ? NULL : SHARED_ENTRY_GET_BLOCK( node );
 }
 
 /**
  * @brief Process acquire of shared memory
  *
- * @param process process
- * @param name name
+ * @param process
+ * @param name
  * @param virt_start optional start address
+ * @param access
  * @return uintptr_t start address or NULL if not existing / already mapped
  */
 uintptr_t shared_memory_acquire(
   task_process_ptr_t process,
   const char* name,
-  uintptr_t virt_start
+  uintptr_t virt_start,
+  uint32_t access
 ) {
   // handle not initialized
   if ( ! shared_tree ) {
     return 0;
   }
-
-  // prepare process
-  if ( ! prepare_process( process ) ) {
-    return 0;
-  }
-
   // try to get item by name
   avl_node_ptr_t node = avl_find_by_data(
     shared_tree,
@@ -357,6 +417,28 @@ uintptr_t shared_memory_acquire(
   );
   // handle missing
   if ( ! node ) {
+    return 0;
+  }
+  // cache area information
+  shared_memory_entry_ptr_t area = SHARED_ENTRY_GET_BLOCK( node );
+  // handle not initialized
+  if ( 0 == area->size ) {
+    return 0;
+  }
+  // prepare process structure
+  if ( ! prepare_process( process ) ) {
+    return 0;
+  }
+  // check mapping options
+  if (
+    (
+      ( access & VIRT_PAGE_TYPE_WRITE )
+      && !( area->access & SHARED_MEMORY_ACCESS_WRITE )
+    ) || (
+      ( access & VIRT_PAGE_TYPE_READ )
+      && !( area->access & SHARED_MEMORY_ACCESS_READ )
+    )
+  ) {
     return 0;
   }
   // try to get item by name from process
@@ -379,18 +461,17 @@ uintptr_t shared_memory_acquire(
     return ( ( shared_memory_entry_mapped_ptr_t )mapped_node->data )->start;
   }
 
-  shared_memory_entry_ptr_t tmp = ( shared_memory_entry_ptr_t )node->data;
   // find free page range
   uintptr_t virt;
   if ( 0 != virt_start ) {
     virt = virt_start;
   } else {
-    virt = virt_find_free_page_range( process->virtual_context, tmp->size, 0 );
+    virt = virt_find_free_page_range( process->virtual_context, area->size, 0 );
   }
 
   // determine end
   uintptr_t start = virt;
-  uintptr_t end = start + tmp->size;
+  uintptr_t end = start + area->size;
   size_t idx = 0;
   // map addresses
   while ( start < end ) {
@@ -398,13 +479,13 @@ uintptr_t shared_memory_acquire(
     if ( ! virt_map_address(
       process->virtual_context,
       start,
-      tmp->address_list[ idx ],
+      area->address[ idx ],
       VIRT_MEMORY_TYPE_NORMAL,
-      VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
+      access
     ) ) {
       // unmap everything on error
       uintptr_t start_inner = virt;
-      uintptr_t end_inner = start + tmp->size;
+      uintptr_t end_inner = start + area->size;
       while ( start_inner < end_inner ) {
         virt_unmap_address( process->virtual_context, start_inner, false );
         start_inner += PAGE_SIZE;
@@ -419,7 +500,7 @@ uintptr_t shared_memory_acquire(
   // attach item to process list
   if ( ! avl_insert_by_node( process->shared_memory_entry, node ) ) {
     start = virt;
-    end = start + tmp->size;
+    end = start + area->size;
     // unmap addresses
     while ( start < end ) {
       virt_unmap_address( process->virtual_context, start, false );
@@ -428,11 +509,11 @@ uintptr_t shared_memory_acquire(
   }
   // create mapped entry
   shared_memory_entry_mapped_ptr_t mapped = create_mapped(
-    name, tmp->size, virt );
+    name, area->size, virt, area );
   // handle error
   if ( ! mapped ) {
     start = virt;
-    end = start + tmp->size;
+    end = start + area->size;
     // unmap addresses
     while ( start < end ) {
       virt_unmap_address( process->virtual_context, start, false );
@@ -444,7 +525,7 @@ uintptr_t shared_memory_acquire(
   // push back
   if ( ! avl_insert_by_node( process->shared_memory_mapped, &mapped->node ) ) {
     start = virt;
-    end = start + tmp->size;
+    end = start + area->size;
     // unmap addresses
     while ( start < end ) {
       virt_unmap_address( process->virtual_context, start, false );
@@ -458,7 +539,7 @@ uintptr_t shared_memory_acquire(
   }
 
   // increment entry count
-  tmp->use_count++;
+  area->use_count++;
 
   // return start address
   return virt;
@@ -467,19 +548,13 @@ uintptr_t shared_memory_acquire(
 /**
  * @brief Process release use of shared memory
  *
- * @param process process
  * @param name name
  * @return true
  * @return false
  */
-bool shared_memory_release( task_process_ptr_t process, const char* name ) {
+bool shared_memory_release( const char* name ) {
   // handle not initialized
   if ( ! shared_tree ) {
-    return false;
-  }
-
-  // prepare process
-  if ( ! prepare_process( process ) ) {
     return false;
   }
 
@@ -492,50 +567,14 @@ bool shared_memory_release( task_process_ptr_t process, const char* name ) {
   if ( ! node ) {
     return false;
   }
-
-  // get mapped item
-  avl_node_ptr_t mapped = avl_find_by_data(
-    process->shared_memory_mapped,
-    ( void* )name
-  );
-  if ( ! mapped ) {
+  // get node to push to deleted list
+  shared_memory_entry_ptr_t block = SHARED_ENTRY_GET_BLOCK( node );
+  // insert to deleted
+  if ( ! list_push_back( deleted, block ) ) {
     return false;
   }
-
-  shared_memory_entry_mapped_ptr_t mapped_item = ( shared_memory_entry_mapped_ptr_t )
-    mapped->data;
-  shared_memory_entry_ptr_t node_item = ( shared_memory_entry_ptr_t )
-    node->data;
-
-  // determine start and end
-  uintptr_t start = mapped_item->start;
-  uintptr_t end = start + mapped_item->size;
-  // loop until end
-  while ( start < end ) {
-    // unmap
-    virt_unmap_address(
-      process->virtual_context,
-      start,
-      false
-    );
-    // next page
-    start += PAGE_SIZE;
-  }
-
-  // decrement entry count
-  node_item->use_count--;
-  // remove item
-  avl_remove_by_node( process->shared_memory_entry, node );
-  avl_remove_by_node( process->shared_memory_mapped, mapped );
-  // cleanup if unused
-  if ( 0 == node_item->use_count ) {
-    avl_remove_by_node( shared_tree, node );
-    free( node );
-    destroy_entry( node_item );
-  }
-  free( mapped );
-  destroy_mapped( mapped_item );
-
+  // remove node from tree
+  avl_remove_by_node( shared_tree, node );
   // return success
   return true;
 }
@@ -547,7 +586,7 @@ bool shared_memory_release( task_process_ptr_t process, const char* name ) {
  * @param start
  * @return
  */
-shared_memory_entry_mapped_ptr_t shared_memory_retrieve(
+shared_memory_entry_mapped_ptr_t shared_memory_retrieve_by_address(
   task_process_ptr_t process,
   uintptr_t start
 ) {
@@ -567,4 +606,26 @@ shared_memory_entry_mapped_ptr_t shared_memory_retrieve(
   }
   // return NULL
   return NULL;
+}
+
+/**
+ * @brief check whether item is in deleted
+ *
+ * @param reference
+ * @return
+ */
+shared_memory_entry_ptr_t shared_memory_retrieve_deleted(
+  shared_memory_entry_ptr_t reference
+) {
+  list_item_ptr_t item = list_lookup_data( deleted, reference );
+  return ! item ? NULL : item->data;
+}
+
+/**
+ * @brief remove from deleted list
+ *
+ * @param reference
+ */
+bool shared_memory_cleanup_deleted( shared_memory_entry_ptr_t reference ) {
+  return list_remove_data( deleted, reference );
 }

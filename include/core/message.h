@@ -18,47 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/syscall.h>
-#if defined( PRINT_SYSCALL )
-  #include <core/debug/debug.h>
+#if ! defined( __CORE_MESSAGE__ )
+#define __CORE_MESSAGE__
+
 #endif
-
-/**
- * @brief Acquire message descriptor
- *
- * @param context
- */
-void syscall_message_acquire( __unused void* context ) {
-}
-
-/**
- * @brief Release message descriptor
- *
- * @param context
- */
-void syscall_message_release( __unused void* context ) {
-}
-
-/**
- * @brief Send message
- *
- * @param context
- */
-void syscall_message_send( __unused void* context ) {
-}
-
-/**
- * @brief Receive message
- *
- * @param context
- */
-void syscall_message_receive( __unused void* context ) {
-}
-
-/**
- * @brief Get a list of message queues
- *
- * @param context
- */
-void syscall_message_list( __unused void* context ) {
-}

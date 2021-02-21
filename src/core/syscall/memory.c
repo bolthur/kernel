@@ -34,7 +34,6 @@
 #define MEMORY_ACQUIRE_PROTECTION_READ 0x1
 #define MEMORY_ACQUIRE_PROTECTION_WRITE 0x2
 #define MEMORY_ACQUIRE_PROTECTION_EXECUTABLE 0x4
-
 #define MEMORY_ACQUIRE_MAP_SHARED 0x1
 #define MEMORY_ACQUIRE_MAP_PRIVATE 0x2
 #define MEMORY_ACQUIRE_MAP_FIXED 0x4
@@ -128,17 +127,9 @@ void syscall_memory_acquire( void* context ) {
 
   // handle shared memory
   if ( flags & MEMORY_ACQUIRE_MAP_SHARED ) {
-    // create if not existing
-    if (
-      ! shared_memory_existing( name )
-      && ! shared_memory_create( name, len )
-    ) {
-      syscall_populate_single_return( context, ( uintptr_t )-ENOMEM );
-      return;
-    }
     // acquire shared memory
     uintptr_t shared_start = shared_memory_acquire(
-      task_thread_current_thread->process, name, start );
+      task_thread_current_thread->process, name, start, map_flag );
     // handle error
     if ( ( uintptr_t )NULL == shared_start ) {
       syscall_populate_single_return( context, ( uintptr_t )-ENOMEM );
@@ -181,6 +172,7 @@ void syscall_memory_release( void* context ) {
   // get parameters
   uintptr_t address = ( uintptr_t )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
+  bool unmap_phys = true;
   // context
   virt_context_ptr_t virtual_context = task_thread_current_thread
     ->process
@@ -214,23 +206,32 @@ void syscall_memory_release( void* context ) {
   }
 
   // handle possible shared mapping
-  shared_memory_entry_mapped_ptr_t mapping = shared_memory_retrieve(
+  shared_memory_entry_mapped_ptr_t mapping = shared_memory_retrieve_by_address(
     task_thread_current_thread->process,
     address
   );
   // handle shared
   if ( NULL != mapping ) {
-    // Release shared memory
-    if ( ! shared_memory_release(
-      task_thread_current_thread->process,
-      mapping->name
-    ) ) {
-      syscall_populate_single_return( context, ( uintptr_t )-EINVAL );
-      return;
+    shared_memory_entry_ptr_t area = shared_memory_retrieve_deleted(
+      mapping->reference );
+    // skip unmap of physical
+    unmap_phys = false;
+    // handle area in deletion
+    if ( area ) {
+      // cleanup completely
+      if ( 1 >= area->use_count ) {
+        // cleanup deleted entry
+        if ( ! shared_memory_cleanup_deleted( area ) ) {
+          syscall_populate_single_return( context, 0 );
+          return;
+        }
+        // change flag again to true
+        unmap_phys = true;
+      // decrement use count only
+      } else {
+        area->use_count--;
+      }
     }
-    // return success
-    syscall_populate_single_return( context, 0 );
-    return;
   }
 
   // check if range is mapped in context
@@ -239,10 +240,69 @@ void syscall_memory_release( void* context ) {
     return;
   }
   // try to unmap
-  if ( ! virt_unmap_address_range( virtual_context, address, len, true ) ) {
+  if ( ! virt_unmap_address_range( virtual_context, address, len, unmap_phys ) ) {
     syscall_populate_single_return( context, ( uintptr_t )-EINVAL );
     return;
   }
   // return success
   syscall_populate_single_return( context, 0 );
+}
+
+/**
+ * @brief Acquire new or existing shared memory area
+ *
+ * @param context
+ */
+void syscall_memory_shared_acquire( void* context ) {
+  // get parameters
+  const char* name = ( const char* )syscall_get_parameter( context, 0 );
+  uint32_t access = ( uint32_t )syscall_get_parameter( context, 1 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_memory_shared_acquire( %s, %zx  )\r\n", name, access )
+  #endif
+  // create entry
+  syscall_populate_single_return(
+    context, shared_memory_create( name, access )
+  );
+}
+
+/**
+ * @brief release shared memory
+ *
+ * @param context
+ */
+void syscall_memory_shared_release( void* context ) {
+  // get parameters
+  const char* name = ( const char* )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_memory_shared_release( %s )\r\n", name )
+  #endif
+  // check if existing
+  shared_memory_entry_ptr_t entry = shared_memory_retrieve_by_name( name ) ;
+  if ( ! entry ) {
+    syscall_populate_single_return( context, ( uintptr_t )-ENOENT );
+    return;
+  }
+  // release shared memory in process
+  syscall_populate_single_return( context, shared_memory_release( name ) );
+}
+
+/**
+ * @brief initialize shared memory if not yet initialized
+ *
+ * @param context
+ */
+void syscall_memory_shared_initialize( void* context ) {
+  const char* name = ( const char* )syscall_get_parameter( context, 0 );
+  size_t size = ( size_t )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_memory_shared_release( %s, %zx )\r\n", name, size )
+  #endif
+  // initialize
+  syscall_populate_single_return(
+    context, shared_memory_initialize( name, size )
+  );
 }
