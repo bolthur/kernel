@@ -31,7 +31,7 @@
 
 size_t ramdisk_extract_size( uintptr_t address, size_t size ) {
   int err;
-  char out[ INFLATE_CHUNK ];
+  char out[ INFLATE_CHUNK ] = { '\0' };
   size_t extract_len = 0;
 
   // zlib structure
@@ -103,6 +103,7 @@ void* ramdisk_extract( uintptr_t address, size_t size, size_t extract_size ) {
   if ( Z_OK != err ) {
     printf( "ERROR ON INIT = %d!\r\n", err );
     inflateEnd( &stream );
+    free( dec );
     return NULL;
   }
   // inflate in one step
@@ -110,6 +111,7 @@ void* ramdisk_extract( uintptr_t address, size_t size, size_t extract_size ) {
   if ( err != Z_STREAM_END ) {
     printf( "ERROR ON INFLATE = %d!\r\n", err );
     inflateEnd( &stream );
+    free( dec );
     return NULL;
   }
   // end inflate

@@ -89,7 +89,7 @@ int main( int argc, char* argv[] ) {
   // debug print
   printf( "init pid = %d\r\n", pid );
   printf( "ramdisk = %#0*"PRIxPTR"\r\n", address_size, ramdisk );
-  printf( "ramdisk_size = %x\r\n", ramdisk_size );
+  printf( "ramdisk_size = %zx\r\n", ramdisk_size );
   printf( "device_tree = %#0*"PRIxPTR"\r\n", address_size, device_tree );
 
   // create message queue
@@ -142,7 +142,7 @@ int main( int argc, char* argv[] ) {
       msg->path
     );
     // calculate message length
-    printf( "\tmsg_len = %#x\r\n", sizeof( vfs_message_t ) );
+    printf( "\tmsg_len = %#zx\r\n", sizeof( vfs_message_t ) );
 
     // FIXME: SAVE MESSAGE ID FROM SYSCALL IN SOME SORT OF LIST FOR CHECKING ANSWERS
     size_t message_id;

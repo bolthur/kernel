@@ -18,6 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <inttypes.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
@@ -39,7 +41,7 @@ noreturn void __assert(
   panic_init();
 
   // print assertion failed
-  printf( "ASSERTION-FAILED( %s ) at %s:%u\r\n", desc, file, line );
+  printf( "ASSERTION-FAILED( %s ) at %s:%"PRIu32"\r\n", desc, file, line );
 
   // abort further execution
   abort();

@@ -29,12 +29,10 @@
  * @return
  */
 char* ltrim( char* s, char c ) {
-  size_t len;
-  char *cur;
   // trim from left
   if( s && *s ) {
-    len = strlen( s );
-    cur = s;
+    size_t len = strlen( s );
+    char* cur = s;
     // loop until end or mismatch
     while( *cur && c == *cur ) {
       ++cur, --len;
@@ -55,11 +53,9 @@ char* ltrim( char* s, char c ) {
  * @return
  */
 char* rtrim( char* s, char c ) {
-  size_t len;
-  char *cur;
   if ( s && *s ) {
-    len = strlen( s );
-    cur = s + len - 1;
+    size_t len = strlen( s );
+    char* cur = s + len - 1;
     // remove until not equal or start reached
     while ( cur != s && c == *cur ) {
       --cur, --len;

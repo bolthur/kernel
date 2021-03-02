@@ -241,7 +241,7 @@ uintptr_t shared_memory_attach(
   // debug output
   #if defined( PRINT_MM_SHARED )
     DEBUG_OUTPUT(
-      "shared_memory_attach( %d, %d, %#"PRIxPTR" )\r\n",
+      "shared_memory_attach( %d, %zu, %#"PRIxPTR" )\r\n",
       process->id, id, virt_start )
   #endif
   // handle not initialized
@@ -340,7 +340,7 @@ bool shared_memory_detach( task_process_ptr_t process, size_t id ) {
   // debug output
   #if defined( PRINT_MM_SHARED )
     DEBUG_OUTPUT(
-      "shared_memory_detach( %d, %d )\r\n",
+      "shared_memory_detach( %d, %zu )\r\n",
       process->id, id )
   #endif
   // handle not initialized

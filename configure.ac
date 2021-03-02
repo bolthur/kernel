@@ -222,6 +222,10 @@ AC_PROG_CC
 AM_PROG_AS
 BOLTHUR_KERNEL_PROG_OBJCOPY
 
+# get host cpu count
+AX_COUNT_CPUS
+AC_SUBST(CPU_COUNT)
+
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
 AC_C_INLINE

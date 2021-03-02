@@ -12,7 +12,6 @@
   <exclude>
     <path name="../../../user_libc_test/"/>
     <path name="../../../thirdparty/"/>
-    <path name="../../../driver/"/>
     <path name="../../../tool/"/>
   </exclude>
   <paths>

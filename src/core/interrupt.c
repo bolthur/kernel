@@ -106,7 +106,7 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
     interrupt_manager->software_interrupt = avl_create_tree(
       compare_interrupt_callback, NULL, NULL );
     // check allocation
-    if ( ! interrupt_manager ) {
+    if ( ! interrupt_manager->software_interrupt ) {
       free( interrupt_manager->normal_interrupt );
       free( interrupt_manager->fast_interrupt );
       free( interrupt_manager );

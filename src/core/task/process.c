@@ -32,7 +32,6 @@
 #if defined( PRINT_PROCESS )
   #include <core/debug/debug.h>
 #endif
-#include <core/debug/debug.h>
 #include <core/task/queue.h>
 #include <core/task/process.h>
 #include <core/task/thread.h>
@@ -386,9 +385,6 @@ task_process_ptr_t task_process_create(
   } else {
     name_entry = TASK_PROCESS_GET_BLOCK_NAME( name_node );
   }
-
-  DEBUG_OUTPUT("entry = %#x\r\n", name_entry )
-  DEBUG_OUTPUT("\tname_entry->node = %#x\r\n", &name_entry->node_name )
 
   // push back process to name list
   if ( ! list_push_back( name_entry->process, process ) ) {
