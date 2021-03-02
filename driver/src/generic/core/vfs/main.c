@@ -25,6 +25,7 @@
 #include <inttypes.h>
 #include <ctype.h>
 #include <assert.h>
+#include <sys/bolthur.h>
 #include "vfs.h"
 
 pid_t pid = 0;
@@ -47,10 +48,36 @@ int main( __unused int argc, __unused char* argv[] ) {
   printf( "vfs starting up!\r\n" );
   // cache current pid
   pid = getpid();
+  // create message queue
+  assert( _message_create() );
   // setup vfs
   root = vfs_setup( pid );
-  // debug output
-  vfs_dump( root, 0 );
+  pid_t sender;
+
+  while( true ) {
+    // get message
+    vfs_message_t msg;
+
+    // skip if no message has been received
+    if ( ! _message_receive(
+      ( char* )&msg,
+      sizeof( vfs_message_t ),
+      &sender )
+    ) {
+      continue;
+    }
+    if ( VFS_ADD == msg.type ) {
+      if ( ! vfs_add_path( root, sender, msg.path, msg.file ) ) {
+        printf( "ERROR: CANNOT ADD \"%s\"\r\n", msg.path );
+        continue;
+      }
+    }
+
+    // debug output
+    printf( "-------->VFS DEBUG_DUMP<--------\r\n" );
+    vfs_dump( root, NULL );
+  }
+
   for(;;);
   return 0;
 }

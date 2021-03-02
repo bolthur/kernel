@@ -7,4 +7,5 @@ init_LDADD = \
 
 init_SOURCES = \
   main.c \
+  ramdisk.c \
   tar.c

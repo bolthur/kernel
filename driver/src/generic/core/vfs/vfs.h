@@ -54,6 +54,8 @@ typedef struct vfs_node {
 } vfs_node_t, *vfs_node_ptr_t;
 
 vfs_node_ptr_t vfs_setup( pid_t );
-void vfs_dump( vfs_node_ptr_t, size_t );
+void vfs_destroy( vfs_node_ptr_t );
+void vfs_dump( vfs_node_ptr_t, const char* );
+bool vfs_add_path( vfs_node_ptr_t, pid_t, const char*, bool );
 
 #endif

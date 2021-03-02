@@ -38,74 +38,21 @@
 #include <fdt.h>
 // enable again
 #pragma GCC diagnostic pop
+#include "ramdisk.h"
 #include "tar.h"
 
 pid_t pid = 0;
 
 /**
- * @brief helper to parse ramdisk
- *
- * @param address
- * @param size
- * @return
+ * @brief Spinning cursor
  */
-static int parse_ramdisk( uintptr_t address, size_t size ) {
-  // decompress initrd
-  z_stream stream = { 0 };
-  uintptr_t dec = ( uintptr_t )malloc( size * 4 );
-  if ( ! dec ) {
-  }
-
-  stream.total_in = stream.avail_in = size;
-  stream.total_out = stream.avail_out = size * 4;
-  stream.next_in = ( Bytef* )address;
-  stream.next_out = ( Bytef* )dec;
-
-  stream.zalloc = Z_NULL;
-  stream.zfree  = Z_NULL;
-  stream.opaque = Z_NULL;
-
-  int err = -1;
-  err = inflateInit2( &stream, 15 + 32 );
-  if ( Z_OK != err ) {
-    printf( "ERROR ON INIT = %d!\r\n", err );
-    inflateEnd( &stream );
-    return err;
-  }
-  err = inflate( &stream, Z_FINISH);
-  if ( err != Z_STREAM_END ) {
-    printf( "ERROR ON INFLATE = %d!\r\n", err );
-    inflateEnd( &stream );
-    return err;
-  }
-  inflateEnd( &stream );
-
-  // set iterator
-  tar_header_ptr_t iter = ( tar_header_ptr_t )dec;
-  // loop through tar
-  while ( ! tar_end_reached( iter ) ) {
-    // debug output
-    printf( "%p: initrd %s: %s\r\n",
-      ( void* )iter,
-      ( TAR_FILE_TYPE_DIRECTORY == iter->file_type )
-        ? "folder" : "file",
-      iter->file_name
-    );
-    if (
-      strlen( iter->file_name ) == strlen( "core/vfs" )
-      && 0 == strcmp( iter->file_name, "core/vfs" )
-    ) {
-      // get file
-      void* vfs = ( void* )tar_file( iter );
-      pid_t vfs_pid = _process_create( vfs );
-      printf( "vfs pid = %d\r\n", vfs_pid );
-    }
-    // next
-    iter = tar_next( iter );
-  }
-  // debug output
-  printf( "tar size: %x\r\n", tar_total_size( dec ) );
-  return 0;
+__maybe_unused static void spinning_cursor( void ) {
+  static char bars[] = { '/', '-', '\\', '|' };
+  static int nbars = sizeof( bars ) / sizeof( char );
+  static int pos = 0;
+  printf( "%c\r", bars[ pos ] );
+  fflush( stdout );
+  pos = ( pos + 1 ) % nbars;
 }
 
 /**
@@ -119,23 +66,16 @@ int main( int argc, char* argv[] ) {
   // variables
   uintptr_t ramdisk, device_tree;
   size_t ramdisk_size;
-
   // check parameter count
   if ( argc < 4 ) {
     return -1;
   }
-
   // transform arguments to hex
   ramdisk = strtoul( argv[ 1 ], NULL, 16 );
   ramdisk_size = strtoul( argv[ 2 ], NULL, 16 );
   device_tree = strtoul( argv[ 3 ], NULL, 16 );
   // address size constant
   const int address_size = ( int )( sizeof( uintptr_t ) * 2 );
-  // print something
-  printf( "init process starting up!\r\n" );
-  printf( "ramdisk = %#0*"PRIxPTR"\r\n", address_size, ramdisk );
-  printf( "ramdisk_size = %x\r\n", ramdisk_size );
-  printf( "device_tree = %#0*"PRIxPTR"\r\n", address_size, device_tree );
 
   // check device tree
   if ( 0 != fdt_check_header( ( void* )device_tree ) ) {
@@ -146,21 +86,78 @@ int main( int argc, char* argv[] ) {
   // get current pid
   pid = getpid();
 
-  assert( 0 == parse_ramdisk( ramdisk, ramdisk_size ) );
+  // debug print
+  printf( "init pid = %d\r\n", pid );
+  printf( "ramdisk = %#0*"PRIxPTR"\r\n", address_size, ramdisk );
+  printf( "ramdisk_size = %x\r\n", ramdisk_size );
+  printf( "device_tree = %#0*"PRIxPTR"\r\n", address_size, device_tree );
 
-  /*
-   * argv[ 0 ] = name
-   * argv[ 1 ] = ramdisk.tar.gz
-   * argv[ 2 ] = device tree
-   */
+  // create message queue
+  assert( _message_create() );
+
+  // get extract size
+  size_t extract_size = ramdisk_extract_size( ramdisk, ramdisk_size );
+  // deflate
+  void* dec = ramdisk_extract( ramdisk, ramdisk_size, extract_size );
+  if ( NULL == dec ) {
+    printf( "ERROR: Cannot allocate necessary amount of memory for extraction!\r\n" );
+    return -1;
+  }
+  // get and start core/vfs
+  tar_header_ptr_t vfs_entry = tar_lookup_file( ( uintptr_t )dec, "core/vfs" );
+  if ( ! vfs_entry ) {
+    printf( "ERROR: Unable to get vfs entry from ramdisk!\r\n" );
+    return -1;
+  }
+  void* vfs_image = ( void* )tar_file( vfs_entry );
+  pid_t vfs_pid = _process_create( vfs_image, "daemon:/vfs" );
+  assert( -1 != pid );
+  printf( "\tvfs pid = %d\r\n", vfs_pid );
+
+  // set iterator
+  tar_header_ptr_t iter = ( tar_header_ptr_t )dec;
+  // loop through tar and send to vfs
+  while ( ! tar_end_reached( iter ) ) {
+    // allocate message structures
+    vfs_message_ptr_t msg = malloc( sizeof( vfs_message_t ) );
+    assert( msg );
+
+    // calculate path size
+    size_t path_len =
+      ( strlen( iter->file_name ) + strlen( "/ramdisk/" ) + 1 ) * sizeof( char );
+    // allocate path
+    char* path = ( char* )malloc( path_len );
+    // copy path
+    strcpy( path, "/ramdisk/" );
+    strcat( path, iter->file_name );
+
+    // populate data structure
+    msg->type = VFS_ADD;
+    msg->file = ( TAR_FILE_TYPE_DIRECTORY != iter->file_type );
+    strcpy( msg->path, path );
+
+    printf(
+      "\t%s: %s\r\n",
+      ( TAR_FILE_TYPE_DIRECTORY == iter->file_type ) ? "folder" : "file",
+      msg->path
+    );
+    // calculate message length
+    printf( "\tmsg_len = %#x\r\n", sizeof( vfs_message_t ) );
+
+    // FIXME: SAVE MESSAGE ID FROM SYSCALL IN SOME SORT OF LIST FOR CHECKING ANSWERS
+    size_t message_id;
+    do {
+      message_id = _message_send_by_name(
+        "daemon:/vfs",
+        ( const char* )msg,
+        sizeof( vfs_message_t ),
+        0
+      );
+    } while ( 0 == message_id );
+    // next
+    iter = tar_next( iter );
+  }
 
   for(;;);
-
-  // FIXME: check arguments for binary device tree
-    // FIXME: parse binary device tree and populate into vfs tree "/dev"
-  // FIXME: check arguments for initrd
-    // FIXME: parse initrd for ramdisk.tar.gz
-      // FIXME: parse ramdisk.tar.gz and populate into vfs tree "/"
-
   return 0;
 }
