@@ -93,24 +93,24 @@ bool syscall_init( void ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_MEMORY_SHARED_ACQUIRE,
-    syscall_memory_shared_acquire,
+    SYSCALL_MEMORY_SHARED_CREATE,
+    syscall_memory_shared_create,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_MEMORY_SHARED_RELEASE,
-    syscall_memory_shared_release,
+    SYSCALL_MEMORY_SHARED_ATTACH,
+    syscall_memory_shared_attach,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_MEMORY_SHARED_INITIALIZE,
-    syscall_memory_shared_initialize,
+    SYSCALL_MEMORY_SHARED_DETACH,
+    syscall_memory_shared_detach,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -118,24 +118,32 @@ bool syscall_init( void ) {
   }
   // message related
   if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_ACQUIRE,
-    syscall_message_acquire,
+    SYSCALL_MESSAGE_CREATE,
+    syscall_message_create,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_RELEASE,
-    syscall_message_release,
+    SYSCALL_MESSAGE_DESTROY,
+    syscall_message_destroy,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_SEND,
-    syscall_message_send,
+    SYSCALL_MESSAGE_SEND_BY_PID,
+    syscall_message_send_by_pid,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_MESSAGE_SEND_BY_NAME,
+    syscall_message_send_by_name,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -150,8 +158,8 @@ bool syscall_init( void ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_LIST,
-    syscall_message_list,
+    SYSCALL_MESSAGE_RECEIVE_RESPONSE,
+    syscall_message_receive_response,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -226,5 +234,9 @@ bool syscall_init( void ) {
       return false;
     }
   #endif
+  // platform related system calls
+  if ( ! syscall_init_platform() ) {
+    return false;
+  }
   return true;
 }

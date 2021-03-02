@@ -36,6 +36,7 @@
 #include <core/event.h>
 #include <core/task/process.h>
 #include <core/syscall.h>
+#include <core/message.h>
 
 #if defined( REMOTE_DEBUG )
   #include <core/serial.h>
@@ -112,7 +113,7 @@ noreturn void kernel_main( void ) {
 
   // Setup shared
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> shared] initialize ...\r\n" )
-  assert( shared_init() )
+  assert( shared_memory_init() )
 
   // Setup multitasking
   DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" )
@@ -121,6 +122,10 @@ noreturn void kernel_main( void ) {
   // Setup system calls
   DEBUG_OUTPUT( "[bolthur/kernel -> syscall] initialize ...\r\n" )
   assert( syscall_init() )
+
+  // Setup message queues
+  DEBUG_OUTPUT( "[bolthur/kernel -> message] initialize ...\r\n" )
+  assert( message_init() )
 
   // assert initrd necessary now
   assert( initrd_exist() )
@@ -137,10 +142,11 @@ noreturn void kernel_main( void ) {
   assert( elf_check( elf_file ) )
   // FIXME: REMOVE DEBUG OUTPUT BELOW
   DEBUG_OUTPUT( "Create process for file %s\r\n", init->file_name )
-  DEBUG_OUTPUT( "File size: %#llx\r\n", elf_file_size )
+  DEBUG_OUTPUT( "File size: %#zx\r\n", elf_file_size )
   // Create process
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] create ...\r\n" )
-  task_process_ptr_t proc = task_process_create( elf_file, 0, 0 );
+  task_process_ptr_t proc = task_process_create(
+    elf_file, 0, 0, "daemon:/init" );
   assert( proc )
   // further init process preparation
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] prepare ...\r\n" )

@@ -1,7 +1,6 @@
 
 AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   # Compilation flags
-  # FIXME: Add stack protector if working
   AX_APPEND_COMPILE_FLAGS([-fstack-protector-all -Wstack-protector])
   # warnings
   AX_APPEND_COMPILE_FLAGS([-Wall -Werror -Wextra -Wpedantic])

@@ -35,15 +35,16 @@
 
 #define SYSCALL_MEMORY_ACQUIRE 21
 #define SYSCALL_MEMORY_RELEASE 22
-#define SYSCALL_MEMORY_SHARED_ACQUIRE 23
-#define SYSCALL_MEMORY_SHARED_RELEASE 24
-#define SYSCALL_MEMORY_SHARED_INITIALIZE 25
+#define SYSCALL_MEMORY_SHARED_CREATE 23
+#define SYSCALL_MEMORY_SHARED_ATTACH 24
+#define SYSCALL_MEMORY_SHARED_DETACH 25
 
-#define SYSCALL_MESSAGE_ACQUIRE 31
-#define SYSCALL_MESSAGE_RELEASE 32
-#define SYSCALL_MESSAGE_SEND 33
-#define SYSCALL_MESSAGE_RECEIVE 34
-#define SYSCALL_MESSAGE_LIST 35
+#define SYSCALL_MESSAGE_CREATE 31
+#define SYSCALL_MESSAGE_DESTROY 32
+#define SYSCALL_MESSAGE_SEND_BY_PID 33
+#define SYSCALL_MESSAGE_SEND_BY_NAME 34
+#define SYSCALL_MESSAGE_RECEIVE 35
+#define SYSCALL_MESSAGE_RECEIVE_RESPONSE 36
 
 #define SYSCALL_IO_ACQUIRE 41
 #define SYSCALL_IO_RELEASE 42
@@ -57,6 +58,7 @@
 #define SYSCALL_DUMMY_PUTS 102
 
 bool syscall_init( void );
+bool syscall_init_platform( void );
 void syscall_populate_single_return( void*, size_t );
 size_t syscall_get_parameter( void*, int32_t );
 
@@ -70,15 +72,16 @@ void syscall_thread_id( void* );
 
 void syscall_memory_acquire( void* );
 void syscall_memory_release( void* );
-void syscall_memory_shared_acquire( void* );
-void syscall_memory_shared_release( void* );
-void syscall_memory_shared_initialize( void* );
+void syscall_memory_shared_create( void* );
+void syscall_memory_shared_attach( void* );
+void syscall_memory_shared_detach( void* );
 
-void syscall_message_acquire( void* );
-void syscall_message_release( void* );
-void syscall_message_send( void* );
+void syscall_message_create( void* );
+void syscall_message_destroy( void* );
+void syscall_message_send_by_pid( void* );
+void syscall_message_send_by_name( void* );
 void syscall_message_receive( void* );
-void syscall_message_list( void* );
+void syscall_message_receive_response( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );

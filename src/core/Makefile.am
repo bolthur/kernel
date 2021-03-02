@@ -26,4 +26,5 @@ libcore_la_SOURCES = \
   initrd.c \
   interrupt.c \
   main.c \
+  message.c \
   panic.c

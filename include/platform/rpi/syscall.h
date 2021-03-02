@@ -18,22 +18,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_MESSAGE__ )
-#define __CORE_MESSAGE__
+#if ! defined( __PLATFORM_RPI_SYSCALL__ )
+#define __PLATFORM_RPI_SYSCALL__
 
-#include <unistd.h>
-#include <stdbool.h>
-#include <collection/list.h>
+#define SYSCALL_MAILBOX_READ 61
+#define SYSCALL_MAILBOX_WRITE 52
 
-typedef struct {
-  const char* data;
-  size_t message_id;
-  size_t source_message_id;
-  pid_t sender;
-  size_t len;
-} message_entry_t, *message_entry_ptr_t;
-
-bool message_init( void );
-size_t message_generate_id( void );
+void syscall_mailbox_read( void* );
+void syscall_mailbox_write( void* );
 
 #endif

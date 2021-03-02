@@ -25,8 +25,9 @@
 #include <collection/avl.h>
 #include <collection/list.h>
 #include <core/mm/virt.h>
-#include <core/mm/shared.h>
 #include <core/event.h>
+
+#include <unistd.h>
 
 typedef struct task_thread
   task_thread_t, *task_thread_ptr_t;
@@ -47,22 +48,32 @@ typedef struct process {
   avl_node_t node_id;
   avl_tree_ptr_t thread_manager;
   task_stack_manager_ptr_t thread_stack_manager;
-  size_t id;
-  size_t parent;
+  pid_t id;
+  pid_t parent;
   size_t priority;
+  char* name;
   virt_context_ptr_t virtual_context;
   task_process_state_t state;
-  avl_tree_ptr_t shared_memory_entry;
-  avl_tree_ptr_t shared_memory_mapped;
+  list_manager_ptr_t message_queue;
 } task_process_t, *task_process_ptr_t;
 
 typedef struct {
+  avl_node_t node_name;
+  char* name;
+  list_manager_ptr_t process;
+} task_process_name_t, *task_process_name_ptr_t;
+
+typedef struct {
   avl_tree_ptr_t process_id;
+  avl_tree_ptr_t process_name;
   avl_tree_ptr_t thread_priority;
 } task_manager_t, *task_manager_ptr_t;
 
 #define TASK_PROCESS_GET_BLOCK_ID( n ) \
   ( task_process_ptr_t )( ( uint8_t* )n - offsetof( task_process_t, node_id ) )
+
+#define TASK_PROCESS_GET_BLOCK_NAME( n ) \
+  ( task_process_name_ptr_t )( ( uint8_t* )n - offsetof( task_process_name_t, node_name ) )
 
 extern task_manager_ptr_t process_manager;
 
@@ -70,9 +81,11 @@ bool task_process_init( void );
 void task_process_schedule( event_origin_t, void* );
 void task_process_cleanup( event_origin_t, void* );
 void task_process_start( void );
-size_t task_process_generate_id( void );
-task_process_ptr_t task_process_create( uintptr_t, size_t, size_t );
+pid_t task_process_generate_id( void );
+task_process_ptr_t task_process_create( uintptr_t, size_t, pid_t, const char* );
 bool task_process_prepare_init( task_process_ptr_t );
 uintptr_t task_process_prepare_init_arch( task_process_ptr_t );
+task_process_ptr_t task_process_get_by_id( pid_t );
+list_manager_ptr_t task_process_get_by_name( const char* );
 
 #endif

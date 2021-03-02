@@ -161,6 +161,15 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_ENABLE(
+  [output-message],
+  AS_HELP_STRING(
+    [--enable-output-message],
+    [activate message output [default: off]]
+  ),
+  [enable_output_message=yes]
+)
+
+AC_ARG_ENABLE(
   [remote-debug],
   AS_HELP_STRING(
     [--enable-remote-debug],

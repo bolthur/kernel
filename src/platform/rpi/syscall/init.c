@@ -18,22 +18,31 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_MESSAGE__ )
-#define __CORE_MESSAGE__
+#include <core/interrupt.h>
+#include <core/syscall.h>
+#include <platform/rpi/syscall.h>
 
-#include <unistd.h>
-#include <stdbool.h>
-#include <collection/list.h>
-
-typedef struct {
-  const char* data;
-  size_t message_id;
-  size_t source_message_id;
-  pid_t sender;
-  size_t len;
-} message_entry_t, *message_entry_ptr_t;
-
-bool message_init( void );
-size_t message_generate_id( void );
-
-#endif
+/**
+ * @brief platform related syscall init
+ * @return
+ */
+bool syscall_init_platform( void ) {
+  // process system calls
+  if ( ! interrupt_register_handler(
+    SYSCALL_MAILBOX_READ,
+    syscall_mailbox_read,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_MAILBOX_WRITE,
+    syscall_mailbox_write,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  return true;
+}

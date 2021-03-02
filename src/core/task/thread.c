@@ -70,9 +70,9 @@ static int32_t thread_compare_id_callback(
  *
  * @todo generate id continuously by process and not generally
  */
-size_t task_thread_generate_id( void ) {
+pid_t task_thread_generate_id( void ) {
   // current pid
-  static size_t current = 0;
+  static pid_t current = 0;
   // return new pid by simple increment
   return ++current;
 }

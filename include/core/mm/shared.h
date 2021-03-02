@@ -25,44 +25,30 @@
 #include <stdbool.h>
 #include <collection/list.h>
 #include <collection/avl.h>
-
-#define SHARED_MEMORY_ACCESS_READ 0x1
-#define SHARED_MEMORY_ACCESS_WRITE 0x2
-
-// forward declaration due to circular include
-typedef struct process task_process_t, *task_process_ptr_t;
+#include <core/task/process.h>
 
 typedef struct {
   avl_node_t node;
   uint64_t* address;
-  char* name;
+  size_t id;
   size_t size;
   size_t use_count;
-  uint32_t access;
+  list_manager_ptr_t process_mapping;
 } shared_memory_entry_t, *shared_memory_entry_ptr_t;
 
 typedef struct {
-  avl_node_t node;
-  char* name;
   uintptr_t start;
   size_t size;
-  shared_memory_entry_ptr_t reference;
+  task_process_ptr_t process;
 } shared_memory_entry_mapped_t, *shared_memory_entry_mapped_ptr_t;
 
 #define SHARED_ENTRY_GET_BLOCK( n ) \
   ( shared_memory_entry_ptr_t )( ( uint8_t* )n - offsetof( shared_memory_entry_t, node ) )
 
-#define SHARED_MAPPED_GET_BLOCK( n ) \
-  ( shared_memory_entry_mapped_ptr_t )( ( uint8_t* )n - offsetof( shared_memory_entry_mapped_t, node ) )
-
-bool shared_init( void );
-bool shared_memory_create( const char*, uint32_t );
-bool shared_memory_release( const char* );
-bool shared_memory_initialize( const char*, size_t );
-uintptr_t shared_memory_acquire( task_process_ptr_t, const char*, uintptr_t, uint32_t );
-shared_memory_entry_mapped_ptr_t shared_memory_retrieve_by_address( task_process_ptr_t, uintptr_t );
-shared_memory_entry_ptr_t shared_memory_retrieve_by_name( const char* );
-shared_memory_entry_ptr_t shared_memory_retrieve_deleted( shared_memory_entry_ptr_t );
-bool shared_memory_cleanup_deleted( shared_memory_entry_ptr_t );
+bool shared_memory_init( void );
+size_t shared_memory_create( size_t );
+uintptr_t shared_memory_attach( task_process_ptr_t, size_t, uintptr_t );
+bool shared_memory_detach( task_process_ptr_t, size_t );
+bool shared_memory_address_is_shared( task_process_ptr_t, uintptr_t, size_t );
 
 #endif

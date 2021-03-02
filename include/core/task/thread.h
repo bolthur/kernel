@@ -26,6 +26,8 @@
 #include <stdnoreturn.h>
 #include <collection/avl.h>
 
+#include <unistd.h>
+
 typedef struct process task_process_t, *task_process_ptr_t;
 typedef struct task_priority_queue task_priority_queue_t, *task_priority_queue_ptr_t;
 
@@ -39,7 +41,7 @@ typedef enum {
 typedef struct task_thread {
   void* current_context;
   avl_node_t node_id;
-  size_t id;
+  pid_t id;
   size_t priority;
   uintptr_t stack_virtual;
   uint64_t stack_physical;
@@ -56,7 +58,7 @@ extern task_thread_ptr_t task_thread_current_thread;
 
 bool task_thread_set_current( task_thread_ptr_t, task_priority_queue_ptr_t );
 void task_thread_reset_current( void );
-size_t task_thread_generate_id( void );
+pid_t task_thread_generate_id( void );
 avl_tree_ptr_t task_thread_init( void );
 void task_thread_destroy( avl_tree_ptr_t );
 task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t, size_t );

@@ -197,10 +197,7 @@ task_thread_ptr_t task_thread_create(
  * @param proc process
  * @return true on success, else false
  */
-bool task_thread_push_arguments(
-  task_process_ptr_t proc,
-  ...
-) {
+bool task_thread_push_arguments( task_process_ptr_t proc, ... ) {
   va_list parameter;
   size_t total_size = 0;
   size_t entry_count = 0;
@@ -249,7 +246,7 @@ bool task_thread_push_arguments(
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "offset = %zx\r\n", offset )
   #endif
-  offset -= ( offset % sizeof( int ) ? ( offset % sizeof( int ) ) : 0 );
+  offset -= ( ( offset % sizeof( int ) ) ? ( offset % sizeof( int ) ) : 0 );
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "offset = %zx\r\n", offset )

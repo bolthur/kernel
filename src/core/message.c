@@ -18,22 +18,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_MESSAGE__ )
-#define __CORE_MESSAGE__
-
-#include <unistd.h>
-#include <stdbool.h>
-#include <collection/list.h>
-
-typedef struct {
-  const char* data;
-  size_t message_id;
-  size_t source_message_id;
-  pid_t sender;
-  size_t len;
-} message_entry_t, *message_entry_ptr_t;
-
-bool message_init( void );
-size_t message_generate_id( void );
-
+#include <string.h>
+#include <core/message.h>
+#if defined( PRINT_MESSAGE )
+  #include <core/debug/debug.h>
 #endif
+
+/**
+ * @brief Init message queue stuff
+ *
+ * @return true
+ * @return false
+ */
+bool message_init( void ) {
+  return true;
+}
+
+/**
+ * @brief Generates new message id
+ *
+ * @return
+ */
+size_t message_generate_id( void ) {
+  static size_t id = 1;
+  return id++;
+}

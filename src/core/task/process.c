@@ -32,6 +32,7 @@
 #if defined( PRINT_PROCESS )
   #include <core/debug/debug.h>
 #endif
+#include <core/debug/debug.h>
 #include <core/task/queue.h>
 #include <core/task/process.h>
 #include <core/task/thread.h>
@@ -49,7 +50,7 @@ task_manager_ptr_t process_manager = NULL;
  * @param b node b
  * @return int32_t
  */
-static int32_t process_compare_id_callback(
+static int32_t process_compare_id(
   const avl_node_ptr_t a,
   const avl_node_ptr_t b
 ) {
@@ -62,15 +63,75 @@ static int32_t process_compare_id_callback(
   #endif
 
   // -1 if address of a is greater than address of b
-  if ( ( size_t )a->data > ( size_t )b->data ) {
+  if ( ( pid_t )a->data > ( pid_t )b->data ) {
     return -1;
   // 1 if address of b is greater than address of a
-  } else if ( ( size_t )b->data > ( size_t )a->data ) {
+  } else if ( ( pid_t )b->data > ( pid_t )a->data ) {
     return 1;
   }
 
   // equal => return 0
   return 0;
+}
+
+/**
+ * @brief Compare id callback necessary for avl tree
+ *
+ * @param a node a
+ * @param b node b
+ * @return int32_t
+ */
+static int32_t process_lookup_id(
+  const avl_node_ptr_t a,
+  const void* b
+) {
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
+    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n", ( size_t )a->data, b );
+  #endif
+  // -1 if address of a is greater than address of b
+  if ( ( pid_t )a->data > ( pid_t )b) {
+    return -1;
+  // 1 if address of b is greater than address of a
+  } else if ( ( pid_t )b > ( pid_t )a->data ) {
+    return 1;
+  }
+  // equal => return 0
+  return 0;
+}
+
+/**
+ * @brief Compare id callback necessary for avl tree
+ *
+ * @param a node a
+ * @param b node b
+ * @return int32_t
+ */
+static int32_t process_compare_name(
+  const avl_node_ptr_t a,
+  const avl_node_ptr_t b
+) {
+  task_process_name_ptr_t node_a = TASK_PROCESS_GET_BLOCK_NAME( a );
+  task_process_name_ptr_t node_b = TASK_PROCESS_GET_BLOCK_NAME( b );
+  // return comparison
+  return strcmp( node_a->name, node_b->name );
+}
+
+/**
+ * @brief Compare id callback necessary for avl tree
+ *
+ * @param a node a
+ * @param b node b
+ * @return int32_t
+ */
+static int32_t process_lookup_name(
+  const avl_node_ptr_t a,
+  const void* b
+) {
+  task_process_name_ptr_t node_a = TASK_PROCESS_GET_BLOCK_NAME( a );
+  // return comparison
+  return strcmp( node_a->name, ( char* ) b );
 }
 
 /**
@@ -95,7 +156,7 @@ bool task_process_init( void ) {
 
   // create tree for managing processes by id
   process_manager->process_id = avl_create_tree(
-    process_compare_id_callback, NULL, NULL );
+    process_compare_id, process_lookup_id, NULL );
   // handle error
   if ( ! process_manager->process_id ) {
     free( process_manager );
@@ -106,6 +167,16 @@ bool task_process_init( void ) {
   // handle error
   if ( ! process_manager->thread_priority ) {
     avl_destroy_tree( process_manager->process_id );
+    free( process_manager );
+    return false;
+  }
+  // create tree for managing processes by name
+  process_manager->process_name = avl_create_tree(
+    process_compare_name, process_lookup_name, NULL );
+  // handle error
+  if ( ! process_manager->process_name ) {
+    avl_destroy_tree( process_manager->process_id );
+    avl_destroy_tree( process_manager->thread_priority );
     free( process_manager );
     return false;
   }
@@ -134,9 +205,9 @@ bool task_process_init( void ) {
  *
  * @return size_t generated process id
  */
-size_t task_process_generate_id( void ) {
+pid_t task_process_generate_id( void ) {
   // current pid
-  static size_t current = 0;
+  static pid_t current = 0;
   // return new pid by simple increment
   return ++current;
 }
@@ -147,9 +218,15 @@ size_t task_process_generate_id( void ) {
  * @param entry process entry address
  * @param priority process priority
  * @param parent parent process id
+ * @param name
  * @return pointer to created task
  */
-task_process_ptr_t task_process_create( uintptr_t entry, size_t priority, size_t parent ) {
+task_process_ptr_t task_process_create(
+  uintptr_t entry,
+  size_t priority,
+  pid_t parent,
+  const char* name
+) {
   // check manager
   if ( ! process_manager ) {
     return NULL;
@@ -186,11 +263,20 @@ task_process_ptr_t task_process_create( uintptr_t entry, size_t priority, size_t
 
   // prepare structure
   memset( ( void* )process, 0, sizeof( task_process_t ) );
+  // allocate name
+  process->name = ( char* )malloc( ( strlen( name ) + 1 ) * sizeof( char ) );
+  if ( ! process->name ) {
+    free( process );
+    return NULL;
+  }
+  // copy name
+  process->name = strcpy( process->name, name );
   // populate process structure
   process->id = task_process_generate_id();
   process->thread_manager = task_thread_init();
   // handle error
   if ( ! process->thread_manager ) {
+    free( process->name );
     free( process );
     return NULL;
   }
@@ -201,6 +287,7 @@ task_process_ptr_t task_process_create( uintptr_t entry, size_t priority, size_t
   // handle error
   if ( ! process->thread_stack_manager ) {
     task_thread_destroy( process->thread_manager );
+    free( process->name );
     free( process );
     return NULL;
   }
@@ -210,6 +297,7 @@ task_process_ptr_t task_process_create( uintptr_t entry, size_t priority, size_t
   if ( ! process->virtual_context ) {
     task_stack_manager_destroy( process->thread_stack_manager );
     task_thread_destroy( process->thread_manager );
+    free( process->name );
     free( process );
     return NULL;
   }
@@ -221,6 +309,7 @@ task_process_ptr_t task_process_create( uintptr_t entry, size_t priority, size_t
     virt_destroy_context( process->virtual_context );
     task_stack_manager_destroy( process->thread_stack_manager );
     task_thread_destroy( process->thread_manager );
+    free( process->name );
     free( process );
     return NULL;
   }
@@ -232,16 +321,93 @@ task_process_ptr_t task_process_create( uintptr_t entry, size_t priority, size_t
     virt_destroy_context( process->virtual_context );
     task_stack_manager_destroy( process->thread_stack_manager );
     task_thread_destroy( process->thread_manager );
+    free( process->name );
     free( process );
     return NULL;
   }
 
-  // Setup thread with entry
-  if ( ! task_thread_create( program_entry, process, priority ) ) {
+  // get possible name node
+  avl_node_ptr_t name_node = avl_find_by_data(
+    process_manager->process_name, process->name );
+  task_process_name_ptr_t name_entry = NULL;
+  if ( ! name_node ) {
+    name_entry = ( task_process_name_ptr_t )malloc(
+      sizeof( task_process_name_t ) );
+    // handle error
+    if ( ! name_entry ) {
+      virt_destroy_context( process->virtual_context );
+      task_stack_manager_destroy( process->thread_stack_manager );
+      task_thread_destroy( process->thread_manager );
+      free( process->name );
+      free( process );
+      return NULL;
+    }
+    // clear
+    memset( name_entry, 0, sizeof( task_process_name_t ) );
+    // allocate name
+    name_entry->name = ( char* )malloc( ( strlen( name ) + 1 ) * sizeof( char ) );
+    if ( ! name_entry->name ) {
+      free( name_entry );
+      virt_destroy_context( process->virtual_context );
+      task_stack_manager_destroy( process->thread_stack_manager );
+      task_thread_destroy( process->thread_manager );
+      free( process->name );
+      free( process );
+      return NULL;
+    }
+    name_entry->name = strcpy( name_entry->name, name );
+    // create process list
+    name_entry->process = list_construct( NULL, NULL );
+    if ( ! name_entry->process ) {
+      free( name_entry->name );
+      free( name_entry );
+      virt_destroy_context( process->virtual_context );
+      task_stack_manager_destroy( process->thread_stack_manager );
+      task_thread_destroy( process->thread_manager );
+      free( process->name );
+      free( process );
+      return NULL;
+    }
+    // push back
+    if ( ! avl_insert_by_node(
+      process_manager->process_name,
+      &name_entry->node_name
+    ) ) {
+      list_destruct( name_entry->process );
+      free( name_entry->name );
+      free( name_entry );
+      virt_destroy_context( process->virtual_context );
+      task_stack_manager_destroy( process->thread_stack_manager );
+      task_thread_destroy( process->thread_manager );
+      free( process->name );
+      free( process );
+      return NULL;
+    }
+  } else {
+    name_entry = TASK_PROCESS_GET_BLOCK_NAME( name_node );
+  }
+
+  DEBUG_OUTPUT("entry = %#x\r\n", name_entry )
+  DEBUG_OUTPUT("\tname_entry->node = %#x\r\n", &name_entry->node_name )
+
+  // push back process to name list
+  if ( ! list_push_back( name_entry->process, process ) ) {
     avl_remove_by_node( process_manager->process_id, &process->node_id );
     virt_destroy_context( process->virtual_context );
     task_stack_manager_destroy( process->thread_stack_manager );
     task_thread_destroy( process->thread_manager );
+    free( process->name );
+    free( process );
+    return NULL;
+  }
+  // Setup thread with entry
+  if ( ! task_thread_create( program_entry, process, priority ) ) {
+    list_remove_data( name_entry->process, process );
+    avl_remove_by_node( process_manager->process_id, &process->node_id );
+    virt_destroy_context( process->virtual_context );
+    task_stack_manager_destroy( process->thread_stack_manager );
+    task_thread_destroy( process->thread_manager );
+    free( process->name );
     free( process );
     return NULL;
   }
@@ -449,4 +615,41 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
   }
 
   return true;
+}
+
+/**
+ * @brief Get task structure by id
+ *
+ * @param pid
+ * @return
+ */
+task_process_ptr_t task_process_get_by_id( pid_t pid ) {
+  // lookup process id tree
+  avl_node_ptr_t found = avl_find_by_data(
+    process_manager->process_id,
+    ( void* )pid
+  );
+  // handle not existing
+  if ( ! found ) {
+    return NULL;
+  }
+  // return found entry
+  return TASK_PROCESS_GET_BLOCK_ID( found );
+}
+
+/**
+ * @brief Get list of processes by name
+ *
+ * @param name
+ * @return
+ */
+list_manager_ptr_t task_process_get_by_name( const char* name ) {
+  avl_node_ptr_t found = avl_find_by_data(
+    process_manager->process_name,
+    ( void* )name
+  );
+  if ( ! found ) {
+    return NULL;
+  }
+  return ( TASK_PROCESS_GET_BLOCK_NAME( found ) )->process;
 }
