@@ -74,6 +74,9 @@ void syscall_message_destroy( __unused void* context ) {
  * @brief Send message
  *
  * @param context
+ *
+ * @todo Check for target process is waiting for response of current message
+ * @todo Set process back to ready when waiting for message id is matching
  */
 void syscall_message_send_by_pid( void* context ) {
   // get parameter
@@ -162,6 +165,9 @@ void syscall_message_send_by_pid( void* context ) {
  * @brief Send message by name
  *
  * @param context
+ *
+ * @todo Check for target process is waiting for response of current message
+ * @todo Set process back to ready when waiting for message id is matching
  */
 void syscall_message_send_by_name( void* context ) {
   // get parameter
@@ -268,6 +274,9 @@ void syscall_message_send_by_name( void* context ) {
  * @brief receive message
  *
  * @param context
+ *
+ * @todo Set process to state waiting for response when nothing is in there
+ * @todo Trigger scheduling
  */
 void syscall_message_receive( void* context ) {
   // get parameter
@@ -337,8 +346,12 @@ void syscall_message_receive( void* context ) {
  * @brief Get response to a message by sent message id
  *
  * @param context
+ *
+ * @todo Set process to state waiting for response
+ * @todo Store message id the process is waiting for somehow
+ * @todo Trigger scheduling
  */
-void syscall_message_receive_response( void* context ) {
+void syscall_message_wait_for_response( void* context ) {
   // parameters
   char* target = ( char* )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
@@ -403,7 +416,7 @@ void syscall_message_receive_response( void* context ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
         "Not enough space for message existing ( %#zx - %#zx )!\r\n",
-        message_entry->len,
+        found->len,
         len );
     #endif
     syscall_populate_single_return( context, false );

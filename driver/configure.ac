@@ -133,9 +133,6 @@ AC_CONFIG_FILES([
   src/platform/rpi/Makefile
   src/platform/rpi/driver/Makefile
   src/platform/rpi/driver/framebuffer/Makefile
-  thirdparty/Makefile
-  thirdparty/dtc/libfdt/Makefile
-  thirdparty/font/Makefile
 ])
 # FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO
 

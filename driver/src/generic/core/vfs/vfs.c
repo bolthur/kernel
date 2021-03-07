@@ -206,7 +206,7 @@ bool vfs_add_path(
   bool file
 ) {
   // create folders if necessary
-  __maybe_unused vfs_node_ptr_t start = NULL;
+  vfs_node_ptr_t start = NULL;
   // prepare path by trimming trailing separators
   char* path = malloc( sizeof( char ) * ( strlen( set_path ) + 1 ) );
   if ( ! path ) {

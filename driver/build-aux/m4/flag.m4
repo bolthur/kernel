@@ -17,9 +17,6 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
 
   # third party stuff
   AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}/include])
-  AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty])
-  AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty/dtc/libfdt])
-  AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/thirdparty/zlib])
   AX_APPEND_COMPILE_FLAGS([-imacros\ $($BOLTHUR_READLINK -f ${srcdir})/include/config.h])
   # FIXME: NECESSARY BECAUSE OF NEWLIB
   AC_DEFINE_UNQUOTED([_GNU_SOURCE], [1], [Necessary newlib define])

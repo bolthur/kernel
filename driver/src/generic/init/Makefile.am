@@ -3,9 +3,9 @@ bin_PROGRAMS = init
 
 init_LDADD = \
   -lz \
-  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la
+  -ltar \
+  -lfdt
 
 init_SOURCES = \
   main.c \
-  ramdisk.c \
-  tar.c
+  ramdisk.c
