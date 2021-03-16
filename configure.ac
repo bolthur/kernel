@@ -209,6 +209,8 @@ BOLTHUR_KERNEL_SET_FLAG
 
 # prepare cppecheck stuff
 BOLTHUR_KERNEL_PREPARE_CPPCHECK
+# add directory for ramdisk
+AC_SUBST(ROOT_DIR, $($BOLTHUR_READLINK -f ${srcdir}))
 # doxygen stuff
 DX_DOXYGEN_FEATURE(ON)
 DX_HTML_FEATURE(ON)

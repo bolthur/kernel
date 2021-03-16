@@ -26,11 +26,12 @@
 #include <collection/list.h>
 
 typedef struct {
+  size_t id;
+  size_t type;
   const char* data;
-  size_t message_id;
-  size_t source_message_id;
+  size_t length;
   pid_t sender;
-  size_t len;
+  size_t request;
 } message_entry_t, *message_entry_ptr_t;
 
 bool message_init( void );

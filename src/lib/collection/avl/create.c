@@ -47,11 +47,7 @@ int32_t avl_default_lookup(
  *
  * @param a
  */
-void avl_default_cleanup(
-  const avl_node_ptr_t a
-) {
-  // free structure
-  free( a );
+void avl_default_cleanup( __unused const avl_node_ptr_t a ) {
 }
 
 /**

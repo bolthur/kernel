@@ -44,7 +44,9 @@
 #define SYSCALL_MESSAGE_SEND_BY_PID 33
 #define SYSCALL_MESSAGE_SEND_BY_NAME 34
 #define SYSCALL_MESSAGE_RECEIVE 35
-#define SYSCALL_MESSAGE_WAIT_FOR_RESPONSE 36
+#define SYSCALL_MESSAGE_RECEIVE_TYPE 36
+#define SYSCALL_MESSAGE_WAIT_FOR_RESPONSE 37
+#define SYSCALL_MESSAGE_WAIT_FOR_RESPONSE_TYPE 38
 
 #define SYSCALL_IO_ACQUIRE 41
 #define SYSCALL_IO_RELEASE 42
@@ -59,7 +61,8 @@
 
 bool syscall_init( void );
 bool syscall_init_platform( void );
-void syscall_populate_single_return( void*, size_t );
+void syscall_populate_success( void*, size_t );
+void syscall_populate_error( void*, size_t );
 size_t syscall_get_parameter( void*, int32_t );
 
 void syscall_process_create( void* );
@@ -81,7 +84,9 @@ void syscall_message_destroy( void* );
 void syscall_message_send_by_pid( void* );
 void syscall_message_send_by_name( void* );
 void syscall_message_receive( void* );
+void syscall_message_receive_type( void* );
 void syscall_message_wait_for_response( void* );
+void syscall_message_wait_for_response_type( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );

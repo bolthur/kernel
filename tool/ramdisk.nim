@@ -52,16 +52,31 @@ for file in walkDirRec( driver ):
 
     # special handling for init
     if executable == "init":
-      copyFile( file, joinPath( "tmp", executable ) )
+      copyFile( file, joinPath( getCurrentDir(), "tmp", executable ) )
     else:
-      let base_path = joinPath( "tmp", "ramdisk", target_folder )
+      let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", target_folder )
       createDir( base_path )
       copyFile( file, joinPath( base_path, executable ) )
 
+# append testing stuff from current dir
+for kind, file in walkDir(getCurrentDir()):
+  # split file
+  let split = splitFile( file )
+  let folder = split.dir
+  let file_name = split.name
+  let ending = split.ext
+  if ending == ".txt":
+    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "test" )
+    createDir( base_path )
+    copyFile( file, joinPath( base_path, file_name & ending ) )
+
 # create ramdisk and remove normal directory
-echo execProcess( "tar czvf ../ramdisk.tar.gz *", "tmp/ramdisk" )
+echo execProcess( "tar czvf ../ramdisk.tar.gz * --owner=0 --group=0", "tmp/ramdisk" )
 removeDir( "tmp/ramdisk" )
 # create initrd with init and compressed ramdisk and cleanup directory
-echo execProcess( "tar cvf ../" & output & " *", "tmp" )
+if output.isAbsolute:
+  echo execProcess( "tar cvf " & output & " * --owner=0 --group=0", "tmp" )
+else:
+  echo execProcess( "tar cvf ../" & output & " * --owner=0 --group=0", "tmp" )
 # remove tmp dir again
 removeDir("tmp")

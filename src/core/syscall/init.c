@@ -158,8 +158,24 @@ bool syscall_init( void ) {
     return false;
   }
   if ( ! interrupt_register_handler(
+    SYSCALL_MESSAGE_RECEIVE_TYPE,
+    syscall_message_receive_type,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
     SYSCALL_MESSAGE_WAIT_FOR_RESPONSE,
     syscall_message_wait_for_response,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_MESSAGE_WAIT_FOR_RESPONSE_TYPE,
+    syscall_message_wait_for_response_type,
     INTERRUPT_SOFTWARE,
     false
   ) ) {

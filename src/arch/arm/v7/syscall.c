@@ -29,11 +29,30 @@
  * @param context
  * @param value
  */
-void syscall_populate_single_return( void* context, size_t value ) {
+void syscall_populate_success( void* context, size_t value ) {
   // get context
   INTERRUPT_DETERMINE_CONTEXT( context )
-  // set return value
-  ( ( cpu_register_context_ptr_t )context )->reg.r0 = value;
+  // get cpu context
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context ;
+  // set return values
+  cpu->reg.r0 = value;
+  cpu->reg.r1 = 0;
+}
+
+/**
+ * @brief Populate single return to caller
+ *
+ * @param context
+ * @param value
+ */
+void syscall_populate_error( void* context, size_t error ) {
+  // get context
+  INTERRUPT_DETERMINE_CONTEXT( context )
+  // get cpu context
+  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context ;
+  // set return values
+  cpu->reg.r0 = 0;
+  cpu->reg.r1 = error;
 }
 
 /**

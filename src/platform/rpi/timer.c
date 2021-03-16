@@ -36,8 +36,7 @@
 #define TIMER_FREQUENCY_HZ 1000000
 
 // interrupts per second
-// FIXME: final value should be something like 25 or 50
-#define TIMER_INTERRUPT_PER_SECOND 1
+#define TIMER_INTERRUPT_PER_SECOND 50
 
 // Timer match bits
 #define SYSTEM_TIMER_MATCH_0 ( 1 << 0 )

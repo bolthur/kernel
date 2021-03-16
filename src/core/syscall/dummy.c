@@ -19,6 +19,7 @@
  */
 
 #include <stdio.h>
+#include <errno.h>
 #include <core/syscall.h>
 #include <core/panic.h>
 
@@ -47,11 +48,11 @@ void syscall_dummy_puts( void* context ) {
   int len = ( int )syscall_get_parameter( context, 2 );
   // handle errors
   if ( ! str ) {
-    syscall_populate_single_return( context, ( uintptr_t )-1 );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // print until end of string or len
-  syscall_populate_single_return(
-    context, ( uintptr_t )printf( "%.*s", len, str )
+  syscall_populate_success(
+    context, ( size_t )printf( "%.*s", len, str )
   );
 }

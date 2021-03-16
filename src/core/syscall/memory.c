@@ -18,6 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <inttypes.h>
+#include <errno.h>
 #include <core/syscall.h>
 #if defined( PRINT_SYSCALL )
   #include <core/debug/debug.h>
@@ -27,9 +29,6 @@
 #include <core/mm/shared.h>
 #include <core/task/process.h>
 #include <core/task/thread.h>
-
-#include <inttypes.h>
-#include <errno.h>
 
 #define MEMORY_ACQUIRE_PROTECTION_NONE 0x0
 #define MEMORY_ACQUIRE_PROTECTION_READ 0x1
@@ -59,7 +58,7 @@ void syscall_memory_acquire( void* context ) {
 
   // handle invalid length
   if ( 0 == len ) {
-    syscall_populate_single_return( context, ( uintptr_t )-EINVAL );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
 
@@ -75,7 +74,7 @@ void syscall_memory_acquire( void* context ) {
     uintptr_t max = virt_get_context_max_address( virtual_context );
     // ensure that address is in context
     if ( min > start || max <= start || max <= start + len ) {
-      syscall_populate_single_return( context, ( uintptr_t )-ENOMEM );
+      syscall_populate_error( context, ( size_t )-ENOMEM );
       return;
     }
   // find free page range
@@ -85,7 +84,7 @@ void syscall_memory_acquire( void* context ) {
 
   // handle no address found
   if ( ( uintptr_t )NULL == start ) {
-    syscall_populate_single_return( context, ( uintptr_t )-ENOMEM );
+    syscall_populate_error( context, ( size_t )-ENOMEM );
     return;
   }
 
@@ -109,7 +108,7 @@ void syscall_memory_acquire( void* context ) {
     VIRT_MEMORY_TYPE_NORMAL,
     map_flag
   ) ) {
-    syscall_populate_single_return( context, ( uintptr_t )-ENOMEM );
+    syscall_populate_error( context, ( size_t )-ENOMEM );
     return;
   }
   // debug output
@@ -117,7 +116,7 @@ void syscall_memory_acquire( void* context ) {
     DEBUG_OUTPUT( "start = %#"PRIxPTR"\r\n", start )
   #endif
   // return to process with address
-  syscall_populate_single_return( context, start );
+  syscall_populate_success( context, start );
 }
 
 /**
@@ -142,7 +141,7 @@ void syscall_memory_release( void* context ) {
   #endif
   // handle invalid stuff
   if ( 0 == len ) {
-    syscall_populate_single_return( context, ( uintptr_t )-EINVAL );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // get at least full page size
@@ -158,7 +157,7 @@ void syscall_memory_release( void* context ) {
       && max > ( address + len )
     )
   ) {
-    syscall_populate_single_return( context, ( uintptr_t )-EINVAL );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
 
@@ -168,22 +167,22 @@ void syscall_memory_release( void* context ) {
     address,
     len
   ) ) {
-    syscall_populate_single_return( context, ( uintptr_t )-EINVAL );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
 
   // check if range is mapped in context
   if ( ! virt_is_mapped_in_context_range( virtual_context, address, len ) ) {
-    syscall_populate_single_return( context, 0 );
+    syscall_populate_success( context, 0 );
     return;
   }
   // try to unmap
   if ( ! virt_unmap_address_range( virtual_context, address, len, unmap_phys ) ) {
-    syscall_populate_single_return( context, ( uintptr_t )-EINVAL );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // return success
-  syscall_populate_single_return( context, 0 );
+  syscall_populate_success( context, 0 );
 }
 
 /**
@@ -200,8 +199,15 @@ void syscall_memory_shared_create( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_memory_shared_acquire( %zx )\r\n", len )
   #endif
+  // create shared area
+  size_t id = shared_memory_create( len );
+  // handle error
+  if ( 0 == id ) {
+    syscall_populate_error( context, ( size_t )-ENOMEM );
+    return;
+  }
   // create and populate return
-  syscall_populate_single_return( context, shared_memory_create( len ) );
+  syscall_populate_success( context, id );
 }
 
 /**
@@ -219,11 +225,15 @@ void syscall_memory_shared_attach( void* context ) {
       "syscall_memory_shared_attach( %d, %#"PRIxPTR" )\r\n",
       id, start )
   #endif
+  uintptr_t addr = shared_memory_attach(
+    task_thread_current_thread->process, id, start );
+  // handle error
+  if ( 0 == addr ) {
+    syscall_populate_error( context, ( size_t )-ENOMEM );
+    return;
+  }
   // attach
-  syscall_populate_single_return(
-    context,
-    shared_memory_attach( task_thread_current_thread->process, id, start )
-  );
+  syscall_populate_success( context, ( size_t )addr );
 }
 
 /**
@@ -238,9 +248,9 @@ void syscall_memory_shared_detach( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_memory_shared_detach( %d )\r\n", id )
   #endif
-  // detach
-  syscall_populate_single_return(
-    context,
-    shared_memory_detach( task_thread_current_thread->process, id )
-  );
+  // try to detach
+  if ( ! shared_memory_detach( task_thread_current_thread->process, id ) ) {
+    syscall_populate_error( context, ( size_t )-EIO );
+    return;
+  }
 }

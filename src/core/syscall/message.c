@@ -18,6 +18,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <inttypes.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <core/syscall.h>
@@ -28,8 +30,6 @@
   #include <core/debug/debug.h>
 #endif
 #include <core/panic.h>
-
-#include <inttypes.h>
 
 /**
  * @brief Create message queue
@@ -43,17 +43,15 @@ void syscall_message_create( void* context ) {
   #endif
   // handle already set
   if( task_thread_current_thread->process->message_queue ) {
-    syscall_populate_single_return( context, false );
     return;
   }
   // prepare message queue
-  task_thread_current_thread->process->message_queue = list_construct( NULL, NULL );
+  task_thread_current_thread->process->message_queue = list_construct(
+    NULL, NULL );
   // handle error
   if ( ! task_thread_current_thread->process->message_queue ) {
-    syscall_populate_single_return( context, false );
+    syscall_populate_error( context, ( size_t )-EIO );
   }
-  // return success
-  syscall_populate_single_return( context, true );
 }
 
 /**
@@ -66,6 +64,11 @@ void syscall_message_destroy( __unused void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_message_destroy()\r\n" )
   #endif
+  // handle no queue
+  if( ! task_thread_current_thread->process->message_queue ) {
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
   // destroy message queue
   list_destruct( task_thread_current_thread->process->message_queue );
 }
@@ -81,9 +84,10 @@ void syscall_message_destroy( __unused void* context ) {
 void syscall_message_send_by_pid( void* context ) {
   // get parameter
   pid_t pid = ( pid_t )syscall_get_parameter( context, 0 );
-  const char* data = ( const char* )syscall_get_parameter( context, 1 );
-  size_t len = ( size_t )syscall_get_parameter( context, 2 );
-  size_t sender_message_id = ( size_t )syscall_get_parameter( context, 3 );
+  size_t type = ( size_t )syscall_get_parameter( context, 1 );
+  const char* data = ( const char* )syscall_get_parameter( context, 2 );
+  size_t len = ( size_t )syscall_get_parameter( context, 3 );
+  size_t sender_message_id = ( size_t )syscall_get_parameter( context, 4 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
@@ -98,7 +102,7 @@ void syscall_message_send_by_pid( void* context ) {
       DEBUG_OUTPUT( "Target process not found!\r\n" )
     #endif
       // set return and exit
-      syscall_populate_single_return( context, 0 );
+      syscall_populate_error( context, ( size_t )-EINVAL );
       return;
   }
   // handle error
@@ -108,7 +112,7 @@ void syscall_message_send_by_pid( void* context ) {
       DEBUG_OUTPUT( "Target process has no queue!\r\n" )
     #endif
     // set return and exit
-    syscall_populate_single_return( context, 0 );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // handle invalid length
@@ -118,7 +122,7 @@ void syscall_message_send_by_pid( void* context ) {
       DEBUG_OUTPUT( "Invalid length passed!\r\n" )
     #endif
     // set return and exit
-    syscall_populate_single_return( context, 0 );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
 
@@ -131,7 +135,7 @@ void syscall_message_send_by_pid( void* context ) {
       DEBUG_OUTPUT( "No free space left for message structure!\r\n" )
     #endif
     // set return and exit
-    syscall_populate_single_return( context, 0 );
+    syscall_populate_error( context, ( size_t )-EIO );
     return;
   }
 
@@ -144,21 +148,22 @@ void syscall_message_send_by_pid( void* context ) {
     #endif
     free( message_entry );
     // set return and exit
-    syscall_populate_single_return( context, 0 );
+    syscall_populate_error( context, ( size_t )-EIO );
     return;
   }
   // copy over content
   memcpy( message, data, len );
   // prepare structure
   message_entry->data = message;
-  message_entry->len = len;
+  message_entry->length = len;
+  message_entry->type = type;
   message_entry->sender = task_thread_current_thread->process->id;
-  message_entry->message_id = message_generate_id();
-  message_entry->source_message_id = sender_message_id;
+  message_entry->id = message_generate_id();
+  message_entry->request = sender_message_id;
   // push message to process queue
   list_push_back( target->message_queue, message_entry );
   // return success
-  syscall_populate_single_return( context, message_entry->message_id );
+  syscall_populate_success( context, message_entry->id );
 }
 
 /**
@@ -172,9 +177,10 @@ void syscall_message_send_by_pid( void* context ) {
 void syscall_message_send_by_name( void* context ) {
   // get parameter
   const char* name = ( const char* )syscall_get_parameter( context, 0 );
-  const char* data = ( const char* )syscall_get_parameter( context, 1 );
-  size_t len = ( size_t )syscall_get_parameter( context, 2 );
-  size_t sender_message_id = ( size_t )syscall_get_parameter( context, 3 );
+  size_t type = ( size_t )syscall_get_parameter( context, 1 );
+  const char* data = ( const char* )syscall_get_parameter( context, 2 );
+  size_t len = ( size_t )syscall_get_parameter( context, 3 );
+  size_t sender_message_id = ( size_t )syscall_get_parameter( context, 4 );
   size_t message_id = 0;
   // debug output
   #if defined( PRINT_SYSCALL )
@@ -187,7 +193,7 @@ void syscall_message_send_by_name( void* context ) {
       DEBUG_OUTPUT( "Invalid length passed!\r\n" )
     #endif
     // set return and exit
-    syscall_populate_single_return( context, 0 );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // debug output
@@ -197,7 +203,7 @@ void syscall_message_send_by_name( void* context ) {
   // get name list
   list_manager_ptr_t name_list = task_process_get_by_name( name );
   if ( ! name_list ) {
-    syscall_populate_single_return( context, 0 );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // debug output
@@ -244,9 +250,10 @@ void syscall_message_send_by_name( void* context ) {
     memcpy( message, data, len );
     // prepare structure
     message_entry->data = message;
-    message_entry->len = len;
+    message_entry->length = len;
+    message_entry->type = type;
     message_entry->sender = task_thread_current_thread->process->id;
-    message_entry->source_message_id = sender_message_id;
+    message_entry->request = sender_message_id;
     // push message to process queue
     if ( ! list_push_back( proc->message_queue, message_entry ) ) {
       // debug output
@@ -262,12 +269,12 @@ void syscall_message_send_by_name( void* context ) {
       message_id = message_generate_id();
     }
     // finally set message id
-    message_entry->message_id = message_id;
+    message_entry->id = message_id;
     // next item
     item = item->next;
   }
   // return error
-  syscall_populate_single_return( context, message_id );
+  syscall_populate_success( context, message_id );
 }
 
 /**
@@ -283,6 +290,7 @@ void syscall_message_receive( void* context ) {
   char* target = ( char* )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   pid_t* pid = ( pid_t* )syscall_get_parameter( context, 2 );
+  size_t* mid = ( size_t* )syscall_get_parameter( context, 3 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_message_receive( %#"PRIxPTR", %zx )\r\n", target, len )
@@ -295,7 +303,7 @@ void syscall_message_receive( void* context ) {
       DEBUG_OUTPUT( "Target process has no queue!\r\n" )
     #endif
     // set return and exit
-    syscall_populate_single_return( context, false );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // handle invalid length
@@ -305,7 +313,7 @@ void syscall_message_receive( void* context ) {
       DEBUG_OUTPUT( "Invalid length or target passed!\r\n" )
     #endif
     // set return and exit
-    syscall_populate_single_return( context, false );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // get first message
@@ -318,28 +326,72 @@ void syscall_message_receive( void* context ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "No message existing!\r\n" )
     #endif
-    syscall_populate_single_return( context, false );
+    syscall_populate_error( context, ( size_t )-ENOMSG );
     return;
   }
   // check for length mismatch
-  if ( message_entry->len > len ) {
+  if ( message_entry->length > len ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
         "Not enough space for message existing ( %#zx - %#zx )!\r\n",
-        message_entry->len,
+        message_entry->length,
         len );
     #endif
-    syscall_populate_single_return( context, false );
+    syscall_populate_error( context, ( size_t )-EMSGSIZE );
     return;
   }
   // copy over message content
-  memcpy( target, message_entry->data, message_entry->len );
+  memcpy( target, message_entry->data, message_entry->length );
+  // copy pid if passed
   if ( pid ) {
     *pid = message_entry->sender;
   }
-  // return success
-  syscall_populate_single_return( context, true );
+  // copy message id if passed
+  if ( mid ) {
+    *mid = message_entry->id;
+  }
+}
+
+/**
+ * @brief receive message
+ *
+ * @param context
+ *
+ * @todo Set process to state waiting for response when nothing is in there
+ * @todo Trigger scheduling
+ */
+void syscall_message_receive_type( void* context ) {
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_message_receive_type()\r\n" )
+  #endif
+
+  // handle error
+  if ( ! task_thread_current_thread->process->message_queue ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Target process has no queue!\r\n" )
+    #endif
+    // set return and exit
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // get first message
+  message_entry_ptr_t message_entry = ( message_entry_ptr_t )list_peek_front(
+    task_thread_current_thread->process->message_queue
+  );
+  // handle no entry
+  if ( ! message_entry ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "No message existing!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-ENOMSG );
+    return;
+  }
+  // return with message type
+  syscall_populate_success( context, message_entry->type );
 }
 
 /**
@@ -370,7 +422,7 @@ void syscall_message_wait_for_response( void* context ) {
       DEBUG_OUTPUT( "Target process has no queue!\r\n" )
     #endif
     // set return and exit
-    syscall_populate_single_return( context, false );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // handle invalid length
@@ -380,7 +432,7 @@ void syscall_message_wait_for_response( void* context ) {
       DEBUG_OUTPUT( "Invalid length or target passed!\r\n" )
     #endif
     // set return and exit
-    syscall_populate_single_return( context, false );
+    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // loop through messages for a matching answer
@@ -393,7 +445,7 @@ void syscall_message_wait_for_response( void* context ) {
     // get message item
     message_entry_ptr_t message_entry = ( message_entry_ptr_t )item->data;
     // check message
-    if ( message_entry->source_message_id == message_id ) {
+    if ( message_entry->request == message_id ) {
       found = message_entry;
       break;
     }
@@ -407,19 +459,19 @@ void syscall_message_wait_for_response( void* context ) {
       DEBUG_OUTPUT( "No response found for message!\r\n" )
     #endif
     // set return and exit
-    syscall_populate_single_return( context, false );
+    syscall_populate_error( context, ( size_t )-ENOMSG );
     return;
   }
   // check for length mismatch
-  if ( found->len > len ) {
+  if ( found->length > len ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
         "Not enough space for message existing ( %#zx - %#zx )!\r\n",
-        found->len,
+        found->length,
         len );
     #endif
-    syscall_populate_single_return( context, false );
+    syscall_populate_error( context, ( size_t )-EMSGSIZE );
     return;
   }
   // remove list element
@@ -431,11 +483,28 @@ void syscall_message_wait_for_response( void* context ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Error during remove of message from queue!\r\n" );
     #endif
-    syscall_populate_single_return( context, false );
+    syscall_populate_error( context, ( size_t )-EIO );
     return;
   }
   // copy over message content
-  memcpy( target, found->data, found->len );
-  // return success
-  syscall_populate_single_return( context, false );
+  memcpy( target, found->data, found->length );
+}
+
+/**
+ * @brief Get response type to a message by sent message id
+ *
+ * @param context
+ *
+ * @todo Set process to state waiting for response
+ * @todo Store message id the process is waiting for somehow
+ * @todo Trigger scheduling
+ * @todo Add logic
+ * @todo Return errno on error
+ */
+void syscall_message_wait_for_response_type( void* context ) {
+  // parameters
+  __unused size_t message_type = ( size_t )syscall_get_parameter( context, 0 );
+  __unused size_t message_id = ( size_t )syscall_get_parameter( context, 1 );
+  // return type of message
+  syscall_populate_error( context, ( size_t )-EINVAL );
 }

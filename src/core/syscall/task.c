@@ -18,6 +18,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include <core/syscall.h>
 #include <core/event.h>
 #include <core/task/process.h>
@@ -39,15 +40,11 @@ void syscall_process_id( void* context ) {
   #endif
 
   if ( ! task_thread_current_thread ) {
-    // populate return
-    syscall_populate_single_return(
-      context,
-      ( size_t )-1
-    );
+    syscall_populate_error( context, ( size_t )-ESRCH );
     return;
   }
   // populate return
-  syscall_populate_single_return(
+  syscall_populate_success(
     context,
     ( size_t )task_thread_current_thread->process->id
   );
@@ -71,7 +68,7 @@ void syscall_process_create( void* context ) {
   #endif
   // handle invalid parameter or no elf image
   if ( ! image || ! elf_check( ( uintptr_t )image ) || ! name ) {
-    syscall_populate_single_return( context, ( size_t )-1 );
+    syscall_populate_error( context, ( size_t )-ENOEXEC );
     return;
   }
   // create new process
@@ -82,11 +79,11 @@ void syscall_process_create( void* context ) {
     name );
   // handle error
   if ( ! process ) {
-    syscall_populate_single_return( context, ( size_t )-1 );
+    syscall_populate_error( context, ( size_t )-ENOEXEC );
     return;
   }
   // populate pid as return
-  syscall_populate_single_return( context, ( size_t )process->id );
+  syscall_populate_success( context, ( size_t )process->id );
 }
 
 /**
@@ -116,15 +113,11 @@ void syscall_thread_id( void* context ) {
   #endif
 
   if ( ! task_thread_current_thread ) {
-    // populate return
-    syscall_populate_single_return(
-      context,
-      ( size_t )-1
-    );
+    syscall_populate_error( context, ( size_t )-ESRCH );
     return;
   }
   // populate return
-  syscall_populate_single_return(
+  syscall_populate_success(
     context,
     ( size_t )task_thread_current_thread->id
   );
