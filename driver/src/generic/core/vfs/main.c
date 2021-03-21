@@ -19,17 +19,21 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <inttypes.h>
 #include <ctype.h>
 #include <assert.h>
+#include <errno.h>
 #include <sys/bolthur.h>
+#include <libgen.h>
+#include "handle.h"
 #include "vfs.h"
+#include "msg.h"
 
 pid_t pid = 0;
-vfs_node_ptr_t root = NULL;
 
 /**
  * @brief main entry function
@@ -38,46 +42,35 @@ vfs_node_ptr_t root = NULL;
  * @param argv
  * @return
  *
- * @todo setup message queue
- * @todo add message handler for adding a file
- * @todo add message handler for removing a file
- * @todo add message handler for receiving a file
+ * @todo remove vfs debug output
+ * @todo add return message for adding file / folder containing success / failure state
+ * @todo add necessary message handling to loop
+ * @todo move message handling into own thread
  */
 int main( __unused int argc, __unused char* argv[] ) {
+  vfs_message_type_t type;
+
   // print something
-  printf( "vfs starting up!\r\n" );
+  printf( "vfs processing!\r\n" );
   // cache current pid
   pid = getpid();
   // create message queue
-  assert( _message_create() );
-  // setup vfs
-  root = vfs_setup( pid );
-  pid_t sender;
+  _message_create();
+  assert( ! errno );
+  // setup handle tree and vfs
+  handle_init();
+  assert( vfs_setup( pid ) );
 
   while( true ) {
-    // get message
-    vfs_message_t msg;
-
-    // skip if no message has been received
-    if ( ! _message_receive(
-      ( char* )&msg,
-      sizeof( vfs_message_t ),
-      &sender )
-    ) {
+    // get message type
+    type = _message_receive_type();
+    // skip on error / no message
+    if ( errno ) {
       continue;
     }
-    if ( VFS_ADD == msg.type ) {
-      if ( ! vfs_add_path( root, sender, msg.path, msg.file ) ) {
-        printf( "ERROR: CANNOT ADD \"%s\"\r\n", msg.path );
-        continue;
-      }
-    }
-
-    // debug output
-    printf( "-------->VFS DEBUG_DUMP<--------\r\n" );
-    vfs_dump( root, NULL );
+    // dispatch message
+    msg_dispatch( type );
   }
-
-  for(;;);
+  // return exit code 0
   return 0;
 }

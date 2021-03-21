@@ -18,8 +18,26 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include <sys/bolthur.h>
 
-int main( __unused int argc, __unused char* argv[] ) {
-  return 0;
-}
+#if !defined( __MSG_H__ )
+#define __MSG_H__
+
+typedef void ( *msg_callback_t )( void );
+typedef struct {
+  vfs_message_type_t type;
+  msg_callback_t handler;
+} msg_command_handler_t, msg_command_handler_ptr_t;
+
+void msg_dispatch( vfs_message_type_t );
+void msg_handle_add( void );
+void msg_handle_remove( void );
+void msg_handle_open( void );
+void msg_handle_close( void );
+void msg_handle_read( void );
+void msg_handle_write( void );
+void msg_handle_seek( void );
+void msg_handle_size( void );
+void msg_handle_has( void );
+
+#endif

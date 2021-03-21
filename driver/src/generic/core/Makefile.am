@@ -1,2 +1,2 @@
 
-SUBDIRS = vfs
+SUBDIRS = console startup vfs

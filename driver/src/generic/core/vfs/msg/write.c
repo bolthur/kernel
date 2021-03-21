@@ -19,7 +19,17 @@
  */
 
 #include <stdio.h>
+#include <string.h>
+#include <errno.h>
+#include <libgen.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <limits.h>
+#include <sys/bolthur.h>
+#include "../msg.h"
+#include "../vfs.h"
+#include "../handle.h"
 
-int main( __unused int argc, __unused char* argv[] ) {
-  return 0;
+void msg_handle_write( void ) {
+  printf( "HANDLE WRITE NOT YET IMPLEMENTED!\r\n" );
 }
