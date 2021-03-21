@@ -4,4 +4,5 @@ AC_DEFUN([BOLTHUR_KERNEL_PREPARE_CPPCHECK], [
   AC_SUBST(CPPCHECK_PLATFORM, ${dir}/cppcheck.${executable_format}.xml)
   AC_SUBST(CPPCHECK_INCLUDE, ${ac_pwd}/include/config.h)
   AC_SUBST(CPPCHECK_PROJECT, ${dir}/project.${executable_format}.cppcheck)
+  AC_SUBST(CPPCHECK_SUPPRESS, ${dir}/suppress.${executable_format}.txt)
 ])

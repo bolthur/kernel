@@ -1,6 +1,7 @@
 
 # Things to be done
 
+* [ ] Replace thirdparty/dtc/libfdt by usage of the one from sysroot
 * [ ] Replace magic values at serial init by defines
 * [ ] FPU
   * [ ] Add push and pop of fpu registers within ivt stubs

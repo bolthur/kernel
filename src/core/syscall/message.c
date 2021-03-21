@@ -503,8 +503,8 @@ void syscall_message_wait_for_response( void* context ) {
  */
 void syscall_message_wait_for_response_type( void* context ) {
   // parameters
-  __unused size_t message_type = ( size_t )syscall_get_parameter( context, 0 );
-  __unused size_t message_id = ( size_t )syscall_get_parameter( context, 1 );
+  /*__unused size_t message_type = ( size_t )syscall_get_parameter( context, 0 );
+  __unused size_t message_id = ( size_t )syscall_get_parameter( context, 1 );*/
   // return type of message
   syscall_populate_error( context, ( size_t )-EINVAL );
 }

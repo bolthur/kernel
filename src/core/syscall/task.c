@@ -102,6 +102,30 @@ void syscall_process_exit( void* context ) {
 }
 
 /**
+ * @brief System call fork handler
+ *
+ * @param context
+ */
+void syscall_process_fork( __unused void* context ) {
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "process fork called\r\n" )
+  #endif
+}
+
+/**
+ * @brief System call replace handler
+ *
+ * @param context
+ */
+void syscall_process_replace( __unused void* context ) {
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "process replace called\r\n" )
+  #endif
+}
+
+/**
  * @brief System call for returning current thread id
  *
  * @param context

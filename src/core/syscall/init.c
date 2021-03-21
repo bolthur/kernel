@@ -50,6 +50,22 @@ bool syscall_init( void ) {
   ) ) {
     return false;
   }
+  if ( ! interrupt_register_handler(
+    SYSCALL_PROCESS_FORK,
+    syscall_process_fork,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_PROCESS_REPLACE,
+    syscall_process_replace,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
   // thread related system calls
   if ( ! interrupt_register_handler(
     SYSCALL_THREAD_CREATE,

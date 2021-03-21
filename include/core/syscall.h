@@ -28,6 +28,8 @@
 #define SYSCALL_PROCESS_CREATE 1
 #define SYSCALL_PROCESS_EXIT 2
 #define SYSCALL_PROCESS_ID 3
+#define SYSCALL_PROCESS_FORK 4
+#define SYSCALL_PROCESS_REPLACE 5
 
 #define SYSCALL_THREAD_CREATE 11
 #define SYSCALL_THREAD_EXIT 12
@@ -68,6 +70,8 @@ size_t syscall_get_parameter( void*, int32_t );
 void syscall_process_create( void* );
 void syscall_process_exit( void* );
 void syscall_process_id( void* );
+void syscall_process_fork( void* );
+void syscall_process_replace( void* );
 
 void syscall_thread_create( void* );
 void syscall_thread_exit( void* );

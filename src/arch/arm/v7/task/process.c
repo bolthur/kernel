@@ -231,7 +231,6 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
  * @brief prepare init process by mapping device tree
  *
  * @param proc pointer to init process structure
- * @param proc_ramdisk_start ramdisk address
  * @return bool true on success, else false
  */
 uintptr_t task_process_prepare_init_arch( task_process_ptr_t proc ) {

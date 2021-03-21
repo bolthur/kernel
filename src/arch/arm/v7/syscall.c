@@ -43,7 +43,7 @@ void syscall_populate_success( void* context, size_t value ) {
  * @brief Populate single return to caller
  *
  * @param context
- * @param value
+ * @param error
  */
 void syscall_populate_error( void* context, size_t error ) {
   // get context

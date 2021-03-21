@@ -36,7 +36,7 @@ libtarget_la_DEPENDENCIES = \
   ${abs_top_builddir}/src/lib/libubsan.la
 libtarget_la_SOURCES =
 libtarget_la_LIBADD = \
-  ${CC_SPECIFIC_LDADD}  \
+  ${CC_SPECIFIC_LDADD} \
   ${abs_top_builddir}/thirdparty/font/libfont.la \
   ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.la \

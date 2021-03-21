@@ -195,7 +195,6 @@ bool shared_memory_init( void ) {
 /**
  * @brief generate new shared memory block
  *
- * @param access access restrictions, e.g. read only
  * @param len shared area size
  * @return
  */
@@ -229,6 +228,7 @@ size_t shared_memory_create( size_t len ) {
  *
  * @param process
  * @param id
+ * @param virt_start
  * @return
  *
  * @todo add support for start address usually passed by mmap as orientation
