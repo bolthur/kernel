@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -66,7 +65,8 @@ static ld_global_page_directory_t initial_context
 void __bootstrap v7_long_startup_setup( void ) {
   // variables
   ld_ttbcr_t ttbcr;
-  uint32_t x, y;
+  uint32_t x;
+  uint32_t y;
 
   // Prepare initial context
   for ( x = 0; x < 512; x++ ) {

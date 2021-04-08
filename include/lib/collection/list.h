@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -25,7 +24,10 @@
 #include <stdint.h>
 
 // forward declaration
-typedef struct list_item list_item_t, *list_item_ptr_t;
+typedef struct list_item list_item_t;
+typedef struct list_item *list_item_ptr_t;
+typedef struct list_manager list_manager_t;
+typedef struct list_manager *list_manager_ptr_t;
 
 typedef int32_t ( *list_lookup_func_t )(
   const list_item_ptr_t a,
@@ -36,18 +38,18 @@ typedef void ( *list_cleanup_func_t )(
 );
 
 // generic list item
-typedef struct list_item {
+struct list_item {
   void* data;
   list_item_ptr_t previous;
   list_item_ptr_t next;
-} list_item_t, *list_item_ptr_t;
+};
 
-typedef struct {
+struct list_manager {
   list_item_ptr_t first;
   list_item_ptr_t last;
   list_lookup_func_t lookup;
   list_cleanup_func_t cleanup;
-} list_manager_t, *list_manager_ptr_t;
+};
 
 list_manager_ptr_t list_construct( list_lookup_func_t, list_cleanup_func_t );
 void list_destruct( list_manager_ptr_t );

@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -18,14 +17,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <collection/avl.h>
+#include <core/task/process.h>
+
 #if ! defined( __CORE_TASK_STACK__ )
 #define __CORE_TASK_STACK__
 
-#include <collection/avl.h>
-#include <core/task/process.h>
-typedef struct task_stack_manager {
+struct task_stack_manager {
   avl_tree_ptr_t tree;
-} task_stack_manager_t, *task_stack_manager_ptr_t;
+};
+typedef struct task_stack_manager task_stack_manager_t;
+typedef struct task_stack_manager *task_stack_manager_ptr_t;
 
 extern task_stack_manager_ptr_t task_stack_manager;
 task_stack_manager_ptr_t task_stack_manager_create( void );

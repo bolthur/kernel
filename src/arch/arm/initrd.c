@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -55,7 +54,8 @@ void __bootstrap initrd_startup_init( void ) {
     int32_t node = fdt_path_offset( ( void* )atag_fdt, "/chosen" );
     uint32_t* prop;
     int len;
-    uintptr_t initrd_start = 0, initrd_end = 0;
+    uintptr_t initrd_start = 0;
+    uintptr_t initrd_end = 0;
 
     // try to get property initrd start
     prop = ( uint32_t* )fdt_getprop(

@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -187,11 +186,16 @@ static void prepare_block(
  * @brief Internal method for extending the heap
  */
 static bool extend_heap_space( void ) {
-  avl_node_ptr_t max, max_used, max_free;
-  heap_block_ptr_t block, free_block;
+  avl_node_ptr_t max;
+  avl_node_ptr_t max_used;
+  avl_node_ptr_t max_free;
+  heap_block_ptr_t block;
+  heap_block_ptr_t free_block;
   uintptr_t heap_end;
   size_t heap_size;
-  avl_tree_ptr_t used_area, free_address, free_size;
+  avl_tree_ptr_t used_area;
+  avl_tree_ptr_t free_address;
+  avl_tree_ptr_t free_size;
 
   // stop if not setup
   if ( ! kernel_heap || HEAP_INIT_NORMAL != kernel_heap->state ) {
@@ -265,7 +269,6 @@ static bool extend_heap_space( void ) {
     ) ) {
       return false;
     }
-
     // clear area
     memset( ( void* )addr, 0, PAGE_SIZE );
   }
@@ -326,9 +329,11 @@ static bool extend_heap_space( void ) {
  */
 static void shrink_heap_space( void ) {
   heap_block_ptr_t max_block;
-  size_t max_end, expand_size;
+  size_t max_end;
+  size_t expand_size;
   avl_node_ptr_t max_node;
-  avl_tree_ptr_t free_address, free_size;
+  avl_tree_ptr_t free_address;
+  avl_tree_ptr_t free_size;
   // variable used for debug output only
   #if defined( PRINT_MM_HEAP )
     size_t to_remove;
@@ -454,7 +459,8 @@ static void shrink_heap_space( void ) {
  * @return bool
  */
 static bool combinable( heap_block_ptr_t a, heap_block_ptr_t b ) {
-  uintptr_t a_end, b_end;
+  uintptr_t a_end;
+  uintptr_t b_end;
 
   // calculate end of a and b
   a_end = a->address + a->size;
@@ -484,9 +490,11 @@ static bool combinable( heap_block_ptr_t a, heap_block_ptr_t b ) {
  * @return heap_block_ptr_t
  */
 static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
-  uintptr_t a_end, b_end;
+  uintptr_t a_end;
+  uintptr_t b_end;
   heap_block_ptr_t to_insert = NULL;
-  avl_tree_ptr_t free_address, free_size;
+  avl_tree_ptr_t free_address;
+  avl_tree_ptr_t free_size;
 
   // skip if not combinable
   if ( true != combinable( a, b ) ) {
@@ -727,11 +735,17 @@ bool heap_init_get( void ) {
  */
 uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   // variables
-  heap_block_ptr_t current, new, following, previous;
+  heap_block_ptr_t current;
+  heap_block_ptr_t new;
+  heap_block_ptr_t following;
+  heap_block_ptr_t previous;
   avl_node_ptr_t address_node;
-  size_t real_size, alignment_offset;
+  size_t real_size;
+  size_t alignment_offset;
   bool split;
-  avl_tree_ptr_t used_area, free_address, free_size;
+  avl_tree_ptr_t used_area;
+  avl_tree_ptr_t free_address;
+  avl_tree_ptr_t free_size;
 
   // stop if not setup
   if ( ! kernel_heap ) {
@@ -908,6 +922,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     // handle proper block structure alignment
     if ( block_alignment ) {
       // calculate correct alignment
+      /// FIXME: CHECK BLOCK ALIGNMENT CALCULATION
       block_alignment = sizeof( heap_block_t )
         - block_alignment % sizeof( heap_block_t );
       // debug output
@@ -1051,9 +1066,14 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
  */
 void heap_free_block( uintptr_t addr ) {
   // variables
-  avl_node_ptr_t address_node, parent_node;
-  heap_block_ptr_t current_block, parent_block, sibling_block;
-  avl_tree_ptr_t used_area, free_address, free_size;
+  avl_node_ptr_t address_node;
+  avl_node_ptr_t parent_node;
+  heap_block_ptr_t current_block;
+  heap_block_ptr_t parent_block;
+  heap_block_ptr_t sibling_block;
+  avl_tree_ptr_t used_area;
+  avl_tree_ptr_t free_address;
+  avl_tree_ptr_t free_size;
 
   // stop if not setup
   if ( ! kernel_heap ) {

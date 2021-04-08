@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -162,7 +161,7 @@
     } data;
   } sd_context_table_t;
 
-  typedef union  __packed {
+  union __packed sd_context_section {
     uint32_t raw;
     struct {
       uint32_t privileged_execute_never : 1;
@@ -181,7 +180,9 @@
       uint32_t non_secure : 1;
       uint32_t frame: 12;
     } data;
-  } sd_context_section_t, *sd_context_section_ptr_t;
+  };
+  typedef union sd_context_section sd_context_section_t;
+  typedef union sd_context_section *sd_context_section_ptr_t;
 
   typedef union  __packed {
     uint32_t raw;

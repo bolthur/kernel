@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -83,12 +82,12 @@ static avl_node_ptr_t find_parent_by_data(
   // matching node right?
   if (
     root->right
-    && 0 == tree->compare( root->right, data )
+    && 0 == tree->lookup( root->right, data )
   ) {
     return root;
   }
 
-  int32_t result = tree->compare( root, data );
+  int32_t result = tree->lookup( root, data );
 
   // continue left
   if ( -1 == result ) {

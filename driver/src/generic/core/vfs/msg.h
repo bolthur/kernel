@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -24,10 +23,12 @@
 #define __MSG_H__
 
 typedef void ( *msg_callback_t )( void );
-typedef struct {
+struct msg_command_handler {
   vfs_message_type_t type;
   msg_callback_t handler;
-} msg_command_handler_t, msg_command_handler_ptr_t;
+};
+typedef struct msg_command_handler msg_command_handler_t;
+typedef struct msg_command_handler *msg_command_handler_ptr_t;
 
 void msg_dispatch( vfs_message_type_t );
 void msg_handle_add( void );

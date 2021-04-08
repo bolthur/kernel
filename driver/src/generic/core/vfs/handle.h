@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -26,14 +25,14 @@
 #if !defined( __HANDLE_H__ )
 #define __HANDLE_H__
 
-typedef struct {
+struct handle_pid {
   avl_node_t node;
   pid_t pid;
   int handle;
   avl_tree_ptr_t tree;
-} handle_pid_t, *handle_pid_ptr_t;
+};
 
-typedef struct {
+struct handle_container {
   avl_node_t node;
   int handle;
   int flags;
@@ -41,7 +40,12 @@ typedef struct {
   off_t pos;
   char path[ PATH_MAX ];
   vfs_node_ptr_t target;
-} handle_container_t, *handle_container_ptr_t;
+};
+
+typedef struct handle_pid handle_pid_t;
+typedef struct handle_pid *handle_pid_ptr_t;
+typedef struct handle_container handle_container_t;
+typedef struct handle_container *handle_container_ptr_t;
 
 #define HANDLE_GET_CONTAINER( n ) \
   ( handle_container_ptr_t )( ( uint8_t* )n - offsetof( handle_container_t, node ) )

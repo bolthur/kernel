@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -27,20 +26,25 @@
 #include <collection/avl.h>
 #include <core/task/process.h>
 
-typedef struct {
+struct shared_memory_entry {
   avl_node_t node;
   uint64_t* address;
   size_t id;
   size_t size;
   size_t use_count;
   list_manager_ptr_t process_mapping;
-} shared_memory_entry_t, *shared_memory_entry_ptr_t;
+};
 
-typedef struct {
+struct shared_memory_entry_mapped {
   uintptr_t start;
   size_t size;
   task_process_ptr_t process;
-} shared_memory_entry_mapped_t, *shared_memory_entry_mapped_ptr_t;
+};
+
+typedef struct shared_memory_entry shared_memory_entry_t;
+typedef struct shared_memory_entry *shared_memory_entry_ptr_t;
+typedef struct shared_memory_entry_mapped shared_memory_entry_mapped_t;
+typedef struct shared_memory_entry_mapped *shared_memory_entry_mapped_ptr_t;
 
 #define SHARED_ENTRY_GET_BLOCK( n ) \
   ( shared_memory_entry_ptr_t )( ( uint8_t* )n - offsetof( shared_memory_entry_t, node ) )

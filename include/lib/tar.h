@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -37,7 +36,7 @@ typedef enum {
   TAR_FILE_TYPE_NAMED_PIPE = '6',
 } tar_file_type_t;
 
-typedef struct {
+struct tar_header {
   char file_name[ 100 ];
   char file_mode[ 8 ];
   char user_id[ 8 ];
@@ -48,7 +47,10 @@ typedef struct {
   char file_type;
   char linked_file_name[ 100 ];
   char __padding[ 255 ];
-} tar_header_t, *tar_header_ptr_t;
+};
+
+typedef struct tar_header tar_header_t;
+typedef struct tar_header *tar_header_ptr_t;
 
 size_t tar_total_size( uintptr_t );
 size_t tar_size( tar_header_ptr_t );

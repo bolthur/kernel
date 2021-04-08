@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -25,6 +24,29 @@
 #include <stddef.h>
 #include <stdbool.h>
 
+typedef struct atag_header atag_header_t;
+typedef struct atag_header *atag_header_ptr_t;
+typedef struct atag_core atag_core_t;
+typedef struct atag_core *atag_core_ptr_t;
+typedef struct atag_mem atag_mem_t;
+typedef struct atag_mem *atag_mem_ptr_t;
+typedef struct atag_initrd2 atag_initrd2_t;
+typedef struct atag_initrd2 *atag_initrd2_ptr_t;
+typedef struct atag_cmdline atag_cmdline_t;
+typedef struct atag_cmdline *atag_cmdline_ptr_t;
+typedef struct atag_ramdisk atag_ramdisk_t;
+typedef struct atag_ramdisk *atag_ramdisk_ptr_t;
+typedef struct atag_videotext atag_videotext_t;
+typedef struct atag_videotext *atag_videotext_ptr_t;
+typedef struct atag_serial atag_serial_t;
+typedef struct atag_serial *atag_serial_ptr_t;
+typedef struct atag_revision atag_revision_t;
+typedef struct atag_revision *atag_revision_ptr_t;
+typedef struct atag_videolfb atag_videolfb_t;
+typedef struct atag_videolfb *atag_videolfb_ptr_t;
+typedef struct atag atag_t;
+typedef struct atag *atag_ptr_t;
+
 typedef enum {
   ATAG_TAG_NONE = 0x00000000,
   ATAG_TAG_CORE = 0x54410001,
@@ -38,38 +60,38 @@ typedef enum {
   ATAG_TAG_CMDLINE = 0x54410009,
 } atag_tag_t;
 
-typedef struct {
+struct atag_header {
   uint32_t size;
   uint32_t tag;
-} atag_header_t, *atag_header_ptr_t;
+};
 
-typedef struct {
+struct atag_core {
   uint32_t flag;
   uint32_t pagesize;
   uint32_t rootdev;
-} atag_core_t, *atag_core_ptr_t;
+};
 
-typedef struct {
+struct atag_mem {
   uint32_t size;
   uint32_t start;
-} atag_mem_t, *atag_mem_ptr_t;
+};
 
-typedef struct {
+struct atag_initrd2 {
   uint32_t start;
   uint32_t size;
-} atag_initrd2_t, *atag_initrd2_ptr_t;
+};
 
-typedef struct {
+struct atag_cmdline {
   char cmdline[ 1 ];
-} atag_cmdline_t, *atag_cmdline_ptr_t;
+};
 
-typedef struct {
+struct atag_ramdisk {
   uint32_t flag;
   uint32_t size;
   uint32_t start;
-} atag_ramdisk_t, *atag_ramdisk_ptr_t;
+};
 
-typedef struct {
+struct atag_videotext {
   uint8_t display_width;
   uint8_t display_height;
   uint16_t video_page;
@@ -79,18 +101,18 @@ typedef struct {
   uint8_t video_lines;
   uint8_t video_isvga;
   uint16_t video_points;
-} atag_videotext_t, *atag_videotext_ptr_t;
+};
 
-typedef struct {
+struct atag_serial {
   uint32_t low;
   uint32_t high;
-} atag_serial_t, *atag_serial_ptr_t;
+};
 
-typedef struct {
+struct atag_revision {
   uint32_t revision;
-} atag_revision_t, *atag_revision_ptr_t;
+};
 
-typedef struct {
+struct atag_videolfb {
   uint16_t lfb_width;
   uint16_t lfb_height;
   uint16_t lfb_depth;
@@ -105,9 +127,9 @@ typedef struct {
   uint8_t blue_pos;
   uint8_t rsvd_size;
   uint8_t rsvd_pos;
-} atag_videolfb_t, *atag_videolfb_ptr_t;
+};
 
-typedef struct {
+struct atag {
   atag_header_t header;
 
   union {
@@ -121,7 +143,7 @@ typedef struct {
     atag_videolfb_t videolfb;
     atag_cmdline_t cmdline;
   };
-} atag_t, *atag_ptr_t;
+};
 
 atag_ptr_t atag_next( atag_ptr_t );
 bool atag_check( uintptr_t );

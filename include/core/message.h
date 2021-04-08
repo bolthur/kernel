@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -25,14 +24,17 @@
 #include <stdbool.h>
 #include <collection/list.h>
 
-typedef struct {
+struct message_entry {
   size_t id;
   size_t type;
   const char* data;
   size_t length;
   pid_t sender;
   size_t request;
-} message_entry_t, *message_entry_ptr_t;
+};
+
+typedef struct message_entry message_entry_t;
+typedef struct message_entry *message_entry_ptr_t;
 
 bool message_init( void );
 size_t message_generate_id( void );

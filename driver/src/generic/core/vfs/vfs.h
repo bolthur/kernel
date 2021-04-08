@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -38,9 +37,10 @@
 #define VFS_MOUNTPOINT 0x10
 
 // forward declaration necessary due to circular referencing
-typedef struct vfs_node vfs_node_t,*vfs_node_ptr_t;
+typedef struct vfs_node vfs_node_t;
+typedef struct vfs_node *vfs_node_ptr_t;
 // structure itself
-typedef struct vfs_node {
+struct vfs_node {
   char *name;
   uint32_t permission_mask;
   uint32_t user_id;
@@ -51,7 +51,7 @@ typedef struct vfs_node {
   pid_t pid;
   list_manager_ptr_t children;
   list_manager_ptr_t handle;
-} vfs_node_t, *vfs_node_ptr_t;
+};
 
 // functions
 vfs_node_ptr_t vfs_setup( pid_t );

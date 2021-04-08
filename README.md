@@ -62,7 +62,7 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--with-debug-symbols` enables remote debugging mode
 * `--with-optimization-level=x` sets optimization from default ( 2 ) to specified one
 * `--enable-output` enables kernel output
-* `--enable-output-mm-phys` activate tty output of physical memory manager ( slows down kernel totally )
+* `--enable-output-mm-phys` activate tty output of physical memory manager
 * `--enable-output-mm-virt` activate tty output of virtual memory manager
 * `--enable-output-mm-heap` activate tty output of kernel heap
 * `--enable-output-mm-shared` activate tty output of shared memory

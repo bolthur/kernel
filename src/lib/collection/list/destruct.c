@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -27,7 +26,8 @@
  * @param list list to use
  */
 void list_destruct( list_manager_ptr_t list ) {
-  list_item_ptr_t current, next;
+  list_item_ptr_t current;
+  list_item_ptr_t next;
 
   // check parameter
   if ( ! list ) {

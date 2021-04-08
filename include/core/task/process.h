@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -29,13 +28,13 @@
 
 #include <unistd.h>
 
-typedef struct task_thread
-  task_thread_t, *task_thread_ptr_t;
-typedef struct task_thread_manager
-  task_thread_manager_t, *task_thread_manager_ptr_t;
+typedef struct task_thread task_thread_t;
+typedef struct task_thread *task_thread_ptr_t;
+typedef struct task_thread_manager task_thread_manager_t;
+typedef struct task_thread_manager *task_thread_manager_ptr_t;
 
-typedef struct task_stack_manager
-  task_stack_manager_t, *task_stack_manager_ptr_t;
+typedef struct task_stack_manager task_stack_manager_t;
+typedef struct task_stack_manager *task_stack_manager_ptr_t;
 
 typedef enum {
   TASK_PROCESS_STATE_READY = 0,
@@ -44,7 +43,7 @@ typedef enum {
   TASK_PROCESS_STATE_KILL,
 } task_process_state_t;
 
-typedef struct process {
+struct task_process {
   avl_node_t node_id;
   avl_tree_ptr_t thread_manager;
   task_stack_manager_ptr_t thread_stack_manager;
@@ -55,19 +54,27 @@ typedef struct process {
   virt_context_ptr_t virtual_context;
   task_process_state_t state;
   list_manager_ptr_t message_queue;
-} task_process_t, *task_process_ptr_t;
+};
 
-typedef struct {
+struct task_process_name {
   avl_node_t node_name;
   char* name;
   list_manager_ptr_t process;
-} task_process_name_t, *task_process_name_ptr_t;
+};
 
-typedef struct {
+struct task_manager {
   avl_tree_ptr_t process_id;
   avl_tree_ptr_t process_name;
   avl_tree_ptr_t thread_priority;
-} task_manager_t, *task_manager_ptr_t;
+};
+
+typedef struct task_process task_process_t;
+typedef struct task_process *task_process_ptr_t;
+
+typedef struct task_process_name task_process_name_t;
+typedef struct task_process_name *task_process_name_ptr_t;
+typedef struct task_manager task_manager_t;
+typedef struct task_manager *task_manager_ptr_t;
 
 #define TASK_PROCESS_GET_BLOCK_ID( n ) \
   ( task_process_ptr_t )( ( uint8_t* )n - offsetof( task_process_t, node_id ) )

@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -28,8 +27,10 @@
 
 #include <unistd.h>
 
-typedef struct process task_process_t, *task_process_ptr_t;
-typedef struct task_priority_queue task_priority_queue_t, *task_priority_queue_ptr_t;
+typedef struct task_process task_process_t;
+typedef struct task_process *task_process_ptr_t;
+typedef struct task_priority_queue task_priority_queue_t;
+typedef struct task_priority_queue *task_priority_queue_ptr_t;
 
 typedef enum {
   TASK_THREAD_STATE_READY = 0,
@@ -38,7 +39,7 @@ typedef enum {
   TASK_THREAD_STATE_KILL,
 } task_thread_state_t;
 
-typedef struct task_thread {
+struct task_thread {
   void* current_context;
   avl_node_t node_id;
   pid_t id;
@@ -47,7 +48,10 @@ typedef struct task_thread {
   uint64_t stack_physical;
   task_thread_state_t state;
   task_process_ptr_t process;
-} task_thread_t, *task_thread_ptr_t;
+};
+
+typedef struct task_thread task_thread_t;
+typedef struct task_thread *task_thread_ptr_t;
 
 extern task_thread_ptr_t task_thread_current_thread;
 

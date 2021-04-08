@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -26,8 +25,10 @@
 #include <stdbool.h>
 
 // forward declarations
-typedef struct avl_node avl_node_t, *avl_node_ptr_t;
-typedef struct avl_tree avl_tree_t, *avl_tree_ptr_t;
+typedef struct avl_node avl_node_t;
+typedef struct avl_node *avl_node_ptr_t;
+typedef struct avl_tree avl_tree_t;
+typedef struct avl_tree *avl_tree_ptr_t;
 
 // type declarations
 typedef int32_t ( *avl_compare_func_t )(
@@ -42,19 +43,18 @@ typedef void ( *avl_cleanup_func_t )(
   const avl_node_ptr_t avl_a
 );
 
-typedef struct avl_node {
+struct avl_node {
   void *data;
-
   avl_node_ptr_t left;
   avl_node_ptr_t right;
-} avl_node_t, *avl_node_ptr_t;
+};
 
-typedef struct avl_tree {
+struct avl_tree {
   avl_node_ptr_t root;
   avl_compare_func_t compare;
   avl_lookup_func_t lookup;
   avl_cleanup_func_t cleanup;
-} avl_tree_t, *avl_tree_ptr_t;
+};
 
 avl_node_ptr_t avl_get_max( const avl_node_ptr_t );
 avl_node_ptr_t avl_get_min( const avl_node_ptr_t );

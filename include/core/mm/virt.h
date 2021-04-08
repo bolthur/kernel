@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -43,10 +42,13 @@ typedef enum {
   VIRT_CONTEXT_TYPE_USER,
 } virt_context_type_t;
 
-typedef struct {
+struct virt_context {
   uint64_t context;
   virt_context_type_t type;
-} virt_context_t, *virt_context_ptr_t;
+};
+
+typedef struct virt_context virt_context_t;
+typedef struct virt_context *virt_context_ptr_t;
 
 extern bool virt_use_physical_table;
 extern virt_context_ptr_t user_context;

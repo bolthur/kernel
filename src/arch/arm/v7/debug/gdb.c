@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -390,8 +389,12 @@ void debug_gdb_handler_read_memory(
   const uint8_t* packet
 ) {
   // variables
-  uint8_t* buffer = NULL, *p, *next;
-  uint32_t addr, length, value;
+  uint8_t* buffer = NULL;
+  uint8_t* p;
+  uint8_t* next;
+  uint32_t addr;
+  uint32_t length;
+  uint32_t value;
   // skip packet identifier
   packet++;
   // read address from string
@@ -445,7 +448,9 @@ void debug_gdb_handler_write_memory(
   const uint8_t* packet
 ) {
   const uint8_t* buffer;
-  uint32_t address, length, value;
+  uint32_t address;
+  uint32_t length;
+  uint32_t value;
   // skip identifier
   buffer = ++packet;
   // Read address

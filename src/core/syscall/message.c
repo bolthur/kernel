@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -30,6 +29,21 @@
   #include <core/debug/debug.h>
 #endif
 #include <core/panic.h>
+#include <core/mm/heap.h>
+
+/**
+ * @brief list item cleanup helper
+ *
+ * @param item
+ */
+static void message_cleanup(
+  const list_item_ptr_t item
+) {
+  if ( item->data ) {
+    free( item->data );
+  }
+  list_default_cleanup( item );
+}
 
 /**
  * @brief Create message queue
@@ -47,7 +61,7 @@ void syscall_message_create( void* context ) {
   }
   // prepare message queue
   task_thread_current_thread->process->message_queue = list_construct(
-    NULL, NULL );
+    NULL, message_cleanup );
   // handle error
   if ( ! task_thread_current_thread->process->message_queue ) {
     syscall_populate_error( context, ( size_t )-EIO );
@@ -58,6 +72,8 @@ void syscall_message_create( void* context ) {
  * @brief Delete message queue
  *
  * @param context
+ *
+ * @todo during list destruct possible messages structures are not deleted
  */
 void syscall_message_destroy( __unused void* context ) {
   // debug output
@@ -282,7 +298,7 @@ void syscall_message_send_by_name( void* context ) {
  *
  * @param context
  *
- * @todo Set process to state waiting for response when nothing is in there
+ * @todo Set process to state waiting for response when no message is existing
  * @todo Trigger scheduling
  */
 void syscall_message_receive( void* context ) {
@@ -317,7 +333,7 @@ void syscall_message_receive( void* context ) {
     return;
   }
   // get first message
-  message_entry_ptr_t message_entry = ( message_entry_ptr_t )list_pop_front(
+  message_entry_ptr_t message_entry = ( message_entry_ptr_t )list_peek_front(
     task_thread_current_thread->process->message_queue
   );
   // handle no entry
@@ -351,6 +367,11 @@ void syscall_message_receive( void* context ) {
   if ( mid ) {
     *mid = message_entry->id;
   }
+  // remove it
+  list_remove_data(
+    task_thread_current_thread->process->message_queue,
+    ( void* )message_entry
+  );
 }
 
 /**
@@ -441,13 +462,12 @@ void syscall_message_wait_for_response( void* context ) {
   // set start
   item = task_thread_current_thread->process->message_queue->first;
   // loop until match or end
-  while( item ) {
+  while( item && ! found ) {
     // get message item
     message_entry_ptr_t message_entry = ( message_entry_ptr_t )item->data;
-    // check message
+    // check message and set found
     if ( message_entry->request == message_id ) {
       found = message_entry;
-      break;
     }
     // get next
     item = item->next;
@@ -474,20 +494,13 @@ void syscall_message_wait_for_response( void* context ) {
     syscall_populate_error( context, ( size_t )-EMSGSIZE );
     return;
   }
-  // remove list element
-  if ( ! list_remove_data(
-    task_thread_current_thread->process->message_queue,
-    ( void* )found
-  ) ) {
-    // debug output
-    #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "Error during remove of message from queue!\r\n" );
-    #endif
-    syscall_populate_error( context, ( size_t )-EIO );
-    return;
-  }
   // copy over message content
   memcpy( target, found->data, found->length );
+  // remove list element
+  list_remove_data(
+    task_thread_current_thread->process->message_queue,
+    ( void* )found
+  );
 }
 
 /**

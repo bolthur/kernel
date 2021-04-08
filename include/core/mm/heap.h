@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -41,21 +40,26 @@ typedef enum {
   HEAP_INIT_SIZE,
 } heap_init_state_t;
 
-typedef struct {
+struct heap_manager {
   uintptr_t start;
   size_t size;
   heap_init_state_t state;
   avl_tree_t free_address[ HEAP_INIT_SIZE ];
   avl_tree_t free_size[ HEAP_INIT_SIZE ];
   avl_tree_t used_area[ HEAP_INIT_SIZE ];
-} heap_manager_t, *heap_manager_ptr_t;
+};
 
-typedef struct {
+struct heap_block {
   avl_node_t node_address;
   avl_node_t node_size;
   uintptr_t address;
   size_t size;
-} heap_block_t, *heap_block_ptr_t;
+};
+
+typedef struct heap_manager heap_manager_t;
+typedef struct heap_manager *heap_manager_ptr_t;
+typedef struct heap_block heap_block_t;
+typedef struct heap_block *heap_block_ptr_t;
 
 #define HEAP_GET_BLOCK_ADDRESS( n ) \
   ( heap_block_ptr_t )( ( uint8_t* )n - offsetof( heap_block_t, node_address ) )

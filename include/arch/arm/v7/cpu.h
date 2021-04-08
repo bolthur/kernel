@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -51,10 +50,21 @@
   /**
    * @brief CPU register context
    */
-  typedef union __packed {
+  union __packed cpu_register_context {
     uintptr_t raw[ 17 ];
     struct {
-      uintptr_t r0, r1, r2, r3, r4, r5, r6, r7, r8, r9, r10; /* general purpose register */
+      /* general purpose register */
+      uintptr_t r0;
+      uintptr_t r1;
+      uintptr_t r2;
+      uintptr_t r3;
+      uintptr_t r4;
+      uintptr_t r5;
+      uintptr_t r6;
+      uintptr_t r7;
+      uintptr_t r8;
+      uintptr_t r9;
+      uintptr_t r10;
       uintptr_t fp; /* r11 = frame pointer */
       uintptr_t ip; /* r12 = intraprocess scratch */
       uintptr_t sp; /* r13 = stack pointer */
@@ -62,14 +72,19 @@
       uintptr_t pc; /* r15 = program counter */
       uintptr_t spsr;
     } reg;
-  } cpu_register_context_t, *cpu_register_context_ptr_t;
+  };
+
+  typedef union cpu_register_context cpu_register_context_t;
+  typedef union cpu_register_context *cpu_register_context_ptr_t;
 
   /**
    * @brief Register map
    */
-  typedef enum {
+  enum cpu_register_map {
     R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, SP, LR, PC, CPSR
-  } cpu_register_map_t, *cpu_register_map_ptr_t;
+  };
+  typedef enum cpu_register_map cpu_register_map_t;
+  typedef enum cpu_register_map *cpu_register_map_ptr_t;
 
   #define PRIxPTR_WIDTH ( ( int )( sizeof( uintptr_t ) * 2 ) )
   #define DUMP_REGISTER( context ) \

@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -33,7 +32,8 @@
  */
 bool debug_check_data_fault_status( void ) {
   // variable for data fault status register
-  uint32_t dfsr_content, dfsr_state;
+  uint32_t dfsr_content;
+  uint32_t dfsr_state;
   // read data fault status register
   __asm__ __volatile__(
     "mrc p15, 0, %0, c5, c0, 0"
@@ -66,7 +66,8 @@ bool debug_check_data_fault_status( void ) {
  */
 bool debug_check_instruction_fault( void ) {
   // variable for instruction fault status register
-  uint32_t ifsr_content, ifsr_state;
+  uint32_t ifsr_content;
+  uint32_t ifsr_state;
   // read instruction fault status register
   __asm__ __volatile__(
     "mrc p15, 0, %0, c5, c0, 1"

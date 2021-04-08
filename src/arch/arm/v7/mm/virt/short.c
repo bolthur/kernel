@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -950,7 +949,8 @@ bool v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
  * @param type context type to create
  */
 virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
-  size_t size, alignment;
+  size_t size;
+  size_t alignment;
 
   // determine size
   size = type == VIRT_CONTEXT_TYPE_KERNEL

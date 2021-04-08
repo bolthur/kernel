@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -32,7 +31,8 @@
 
 void msg_handle_read( void ) {
   pid_t sender;
-  size_t message_id, nested_message_id;
+  size_t message_id;
+  size_t nested_message_id;
   vfs_read_request_t request;
   vfs_read_response_t response;
   vfs_read_request_t nested_request;

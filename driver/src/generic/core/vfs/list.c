@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -98,7 +97,8 @@ list_manager_ptr_t list_construct(
  * @param list list to use
  */
 void list_destruct( list_manager_ptr_t list ) {
-  list_item_ptr_t current, next;
+  list_item_ptr_t current;
+  list_item_ptr_t next;
 
   // check parameter
   if ( ! list ) {
@@ -400,7 +400,8 @@ void list_print( list_manager_ptr_t list ) {
  * @return false
  */
 bool list_push_front( list_manager_ptr_t list, void* data ) {
-  list_item_ptr_t first, node;
+  list_item_ptr_t first;
+  list_item_ptr_t node;
 
   // handle invalid parameter
   if ( ! list || ! data ) {
@@ -477,7 +478,8 @@ bool list_push_front_node( list_manager_ptr_t list, list_item_ptr_t node ) {
  * @return false
  */
 bool list_push_back( list_manager_ptr_t list, void* data ) {
-  list_item_ptr_t last, node;
+  list_item_ptr_t last;
+  list_item_ptr_t node;
 
   // handle invalid parameter
   if ( ! list || ! data ) {

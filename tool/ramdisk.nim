@@ -47,11 +47,18 @@ for file in walkDirRec( driver ):
     var target_folder = $DirSep
     var last = len( splitted_head ) - 1
     if executable == splitted_head[ last ]: last = last - 1
-    if "core" == splitted_head[ last ] or "driver" == splitted_head[ last ]:
-      target_folder = target_folder & splitted_head[ last ] & $DirSep
+
+    var pos = -1
+    for idx, value in splitted_head:
+      if value == "driver" or value == "core":
+        pos = idx
+    if not ( "src" in splitted_head[ pos..^1 ] ) and pos != -1:
+      target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
+    else:
+      pos = -1
 
     # special handling for init
-    if executable == "init":
+    if executable == "init" and -1 == pos:
       copyFile( file, joinPath( getCurrentDir(), "tmp", executable ) )
     else:
       let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", target_folder )
@@ -62,7 +69,6 @@ for file in walkDirRec( driver ):
 for kind, file in walkDir(getCurrentDir()):
   # split file
   let split = splitFile( file )
-  let folder = split.dir
   let file_name = split.name
   let ending = split.ext
   if ending == ".txt":
@@ -79,4 +85,4 @@ if output.isAbsolute:
 else:
   echo execProcess( "tar cvf ../" & output & " * --owner=0 --group=0", "tmp" )
 # remove tmp dir again
-removeDir("tmp")
+removeDir( "tmp" )

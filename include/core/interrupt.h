@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -48,22 +47,29 @@ typedef enum {
   INTERRUPT_TOGGLE_OFF
 } interrupt_toggle_state_t;
 
-typedef struct {
+struct interrupt_manager {
   avl_tree_ptr_t normal_interrupt;
   avl_tree_ptr_t fast_interrupt;
   avl_tree_ptr_t software_interrupt;
-} interrupt_manager_t, *interrupt_manager_ptr_t;
+};
 
-typedef struct {
+struct interrupt_block {
   avl_node_t node;
   size_t interrupt;
   list_manager_ptr_t handler;
   list_manager_ptr_t post;
-} interrupt_block_t, *interrupt_block_ptr_t;
+};
 
-typedef struct {
+struct interrupt_callback {
   interrupt_callback_t callback;
-} interrupt_callback_wrapper_t, *interrupt_callback_wrapper_ptr_t;
+};
+
+typedef struct interrupt_manager interrupt_manager_t;
+typedef struct interrupt_manager *interrupt_manager_ptr_t;
+typedef struct interrupt_block interrupt_block_t;
+typedef struct interrupt_block *interrupt_block_ptr_t;
+typedef struct interrupt_callback interrupt_callback_wrapper_t;
+typedef struct interrupt_callback *interrupt_callback_wrapper_ptr_t;
 
 #define INTERRUPT_GET_BLOCK( n ) \
   ( interrupt_block_ptr_t )( ( uint8_t* )n - offsetof( interrupt_block_t, node ) )

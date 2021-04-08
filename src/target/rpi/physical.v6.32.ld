@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -73,12 +72,4 @@ SECTIONS {
   }
 
   __kernel_end = .;
-
-  /DISCARD/ : {
-    *( .comment )
-    *( .note )
-    *( .eh_frame )
-    *( .ARM.exidx* )
-    *( .ARM.attributes* )
-  }
 }

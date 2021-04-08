@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -25,12 +24,14 @@
 #include <stdbool.h>
 #include <collection/list.h>
 
-typedef struct {
+struct debug_breakpoint_entry {
   uintptr_t address;
   uintptr_t instruction;
   bool step;
   bool enabled;
-} debug_breakpoint_entry_t, *debug_breakpoint_entry_ptr_t;
+};
+typedef struct debug_breakpoint_entry debug_breakpoint_entry_t;
+typedef struct debug_breakpoint_entry *debug_breakpoint_entry_ptr_t;
 
 extern list_manager_ptr_t debug_breakpoint_manager;
 

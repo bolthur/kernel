@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -23,64 +22,87 @@
 
 #include <stdint.h>
 
-typedef struct {
+
+typedef struct ubsan_source_location ubsan_source_location_t;
+typedef struct ubsan_source_location *ubsan_source_location_ptr_t;
+typedef struct ubsan_type_descriptor ubsan_type_descriptor_t;
+typedef struct ubsan_type_descriptor *ubsan_type_descriptor_ptr_t;
+typedef struct ubsan_out_of_bounds_data ubsan_out_of_bounds_data_t;
+typedef struct ubsan_out_of_bounds_data *ubsan_out_of_bounds_data_ptr_t;
+typedef struct ubsan_shift_out_of_bounds_data ubsan_shift_out_of_bounds_data_t;
+typedef struct ubsan_shift_out_of_bounds_data *ubsan_shift_out_of_bounds_data_ptr_t;
+typedef struct ubsan_overflow_data ubsan_overflow_data_t;
+typedef struct ubsan_overflow_data *ubsan_overflow_data_ptr_t;
+typedef struct ubsan_pointer_overflow_data ubsan_pointer_overflow_data_t;
+typedef struct ubsan_pointer_overflow_data *ubsan_pointer_overflow_data_ptr_t;
+typedef struct ubsan_type_mismatch_data ubsan_type_mismatch_data_t;
+typedef struct ubsan_type_mismatch_data *ubsan_type_mismatch_data_ptr_t;
+typedef struct ubsan_type_mismatch_data_v1 ubsan_type_mismatch_data_v1_t;
+typedef struct ubsan_type_mismatch_data_v1 *ubsan_type_mismatch_data_v1_ptr_t;
+typedef struct ubsan_type_mismatch_data_generic ubsan_type_mismatch_data_generic_t;
+typedef struct ubsan_type_mismatch_data_generic *ubsan_type_mismatch_data_generic_ptr_t;
+typedef struct ubsan_invalid_value_data ubsan_invalid_value_data_t;
+typedef struct ubsan_invalid_value_data *ubsan_invalid_value_data_ptr_t;
+
+
+struct ubsan_source_location {
   const char* file;
   uint32_t line;
   uint32_t column;
-} ubsan_source_location_t, *ubsan_source_location_ptr_t;
+};
 
-typedef struct {
+struct ubsan_type_descriptor {
   uint16_t kind;
   uint16_t info;
   char name[];
-} ubsan_type_descriptor_t, *ubsan_type_descriptor_ptr_t;
+};
 
-typedef struct {
+struct ubsan_out_of_bounds_data {
   ubsan_source_location_t location;
   ubsan_type_descriptor_ptr_t array;
   ubsan_type_descriptor_ptr_t index;
-} ubsan_out_of_bounds_data_t, *ubsan_out_of_bounds_data_ptr_t;
+};
 
-typedef struct {
+struct ubsan_shift_out_of_bounds_data {
   ubsan_source_location_t location;
   ubsan_type_descriptor_ptr_t left;
   ubsan_type_descriptor_ptr_t right;
-} ubsan_shift_out_of_bounds_data_t, *ubsan_shift_out_of_bounds_data_ptr_t;
+};
 
-typedef struct {
+struct ubsan_overflow_data {
   ubsan_source_location_t location;
   ubsan_type_descriptor_ptr_t type;
-} ubsan_overflow_data_t, *ubsan_overflow_data_ptr_t;
+};
 
-typedef struct {
+struct ubsan_pointer_overflow_data {
   ubsan_source_location_t location;
-} ubsan_pointer_overflow_data_t, *ubsan_pointer_overflow_data_ptr_t;
+};
 
-typedef struct {
+struct ubsan_type_mismatch_data {
   ubsan_source_location_t location;
   ubsan_type_descriptor_ptr_t type;
   uintptr_t alignment;
   uint8_t type_check_kind;
-} ubsan_type_mismatch_data_t, *ubsan_type_mismatch_data_ptr_t;
+};
 
-typedef struct {
+struct ubsan_type_mismatch_data_v1 {
   ubsan_source_location_t location;
   ubsan_type_descriptor_ptr_t type;
   const uint8_t alignment;
   const uint8_t type_check_kind;
-} ubsan_type_mismatch_data_v1_t, *ubsan_type_mismatch_data_v1_ptr_t;
+};
 
-typedef struct {
+struct ubsan_type_mismatch_data_generic {
   ubsan_source_location_ptr_t location;
   ubsan_type_descriptor_ptr_t type;
   uintptr_t alignment;
   uint8_t type_check_kind;
-} ubsan_type_mismatch_data_generic_t, *ubsan_type_mismatch_data_generic_ptr_t;
+};
 
-typedef struct {
+struct ubsan_invalid_value_data {
   ubsan_source_location_t location;
   ubsan_type_descriptor_ptr_t type;
-} ubsan_invalid_value_data_t, *ubsan_invalid_value_data_ptr_t;
+};
 
 void __ubsan_handle_type_mismatch( ubsan_type_mismatch_data_ptr_t, uintptr_t );
 void __ubsan_handle_type_mismatch_v1( ubsan_type_mismatch_data_v1_ptr_t, uintptr_t );

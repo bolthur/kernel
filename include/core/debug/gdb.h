@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -43,10 +42,12 @@ typedef enum {
 
 typedef void ( *debug_gdb_callback_t )( void* context, const uint8_t* message );
 
-typedef struct {
+struct debug_gdb_command_handler {
   const char* prefix;
   debug_gdb_callback_t handler;
-} debug_gdb_command_handler_t, *debug_gdb_command_handler_ptr_t;
+};
+typedef struct debug_gdb_command_handler debug_gdb_command_handler_t;
+typedef struct debug_gdb_command_handler *debug_gdb_command_handler_ptr_t;
 
 extern const char debug_gdb_hexchar[];
 extern char debug_gdb_print_buffer[];
