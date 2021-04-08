@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -359,7 +358,7 @@ int main( int argc, char* argv[] ) {
       // get filename
       char* filename = th_get_pathname( t );
       // check for vfs
-      if ( 0 == strcmp( "core/console", filename ) ) {
+      if ( 0 == strcmp( "core/tty/console", filename ) ) {
         // set vfs image addr
         console_image = ( void* )( ( uint8_t* )ramdisk_decompressed + read_offset );
         break;
@@ -373,7 +372,7 @@ int main( int argc, char* argv[] ) {
   }
   // handle no existing startup image
   if ( ! console_image ) {
-    printf( "ERROR: startup daemon not found!\r\n" );
+    printf( "ERROR: console daemon not found!\r\n" );
     return -1;
   }
   // start startup and expect it to be third process
@@ -382,15 +381,15 @@ int main( int argc, char* argv[] ) {
   // loop until stdin, stdout and stderr are existing
   while( true ) {
     // check if stdin is existing
-    if ( check_for_path( "/stdin" ) ) {
+    if ( ! check_for_path( "/stdin" ) ) {
       continue;
     }
     // check if stdout is existing
-    if ( check_for_path( "/stdout" ) ) {
+    if ( ! check_for_path( "/stdout" ) ) {
       continue;
     }
     // check if stderr is existing
-    if ( check_for_path( "/stderr" ) ) {
+    if ( ! check_for_path( "/stderr" ) ) {
       continue;
     }
     // all are existing so break out

@@ -1,4 +1,3 @@
-
 /**
  * Copyright (C) 2018 - 2021 bolthur project.
  *
@@ -79,12 +78,16 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
 }
 
 int main( __unused int argc, __unused char* argv[] ) {
+  // FIXME: Add endless loop to reproduce kernel data abort in message passing logic
+  /*while( true ) {
+  }*/
+
   // create message queue
   _message_create();
   assert( ! errno );
 
   // print something
-  printf( "console processing!\r\n" );
+  printf( "tty/console processing!\r\n" );
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
