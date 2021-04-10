@@ -78,10 +78,6 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
 }
 
 int main( __unused int argc, __unused char* argv[] ) {
-  // FIXME: Add endless loop to reproduce kernel data abort in message passing logic
-  /*while( true ) {
-  }*/
-
   // create message queue
   _message_create();
   assert( ! errno );
