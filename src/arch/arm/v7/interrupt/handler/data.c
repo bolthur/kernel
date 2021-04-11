@@ -38,6 +38,7 @@ static uint32_t nested_data_abort = 0;
  * @param cpu cpu context
  *
  * @todo kill task when data abort is triggered from user task
+ * @todo trigger schedule when prefetch abort source is user task
  * @todo panic when data abort is triggered from kernel
  */
 noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {

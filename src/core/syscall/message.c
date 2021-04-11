@@ -40,8 +40,16 @@ static void message_cleanup(
   const list_item_ptr_t item
 ) {
   if ( item->data ) {
-    free( item->data );
+    // transform to entry
+    const message_entry_ptr_t entry = ( message_entry_ptr_t )item->data;
+    // free message if set
+    if ( entry->data ) {
+      free( ( void* )entry->data );
+    }
+    // free entry
+    free( entry );
   }
+  // continue with default list cleanup
   list_default_cleanup( item );
 }
 
@@ -72,8 +80,6 @@ void syscall_message_create( void* context ) {
  * @brief Delete message queue
  *
  * @param context
- *
- * @todo during list destruct possible messages structures are not deleted
  */
 void syscall_message_destroy( __unused void* context ) {
   // debug output

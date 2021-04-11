@@ -38,6 +38,7 @@ static uint32_t nested_prefetch_abort = 0;
  * @param cpu cpu context
  *
  * @todo kill task when prefetch abort is triggered from user task
+ * @todo trigger schedule when prefetch abort source is user task
  * @todo panic when prefetch abort is triggered from kernel
  */
 #if ! defined( REMOTE_DEBUG )
