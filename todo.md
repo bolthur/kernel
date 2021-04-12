@@ -9,9 +9,6 @@
   * [ ] Extend undefined exception to check for fpu error with clear of flag
 * [ ] Memory management
   * [ ] Consider and enable CPU related caches for performance
-* [ ] TAR / initrd
-  * [ ] Add parsing of initial ramdisk containing drivers or programs for startup
-  * [ ] Check init driver within folder "/boot"
 * [ ] Add SMP support [see also](http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dai0425/ch04s07s01.html)
   * [ ] Memory management
     * [ ] Prepare virtual memory management per core if smp is active

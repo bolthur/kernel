@@ -6,18 +6,20 @@
 **/*.disasm
 *.dtb
 /tool/ramdisk
+/include/config.h
+/driver/include/config.h
 
 # ---> Autotools
 # http://www.gnu.org/software/automake
 
 Makefile.in
-Makefile
 ar-lib
 mdate-sh
 py-compile
 test-driver
 ylwrap
 libtool
+.deps/
 .dirstamp
 
 # http://www.gnu.org/software/autoconf
@@ -38,7 +40,6 @@ depcomp
 install-sh
 missing
 stamp-h1
-*.Plo
 
 # https://www.gnu.org/software/libtool/
 
@@ -56,14 +57,26 @@ texinfo.tex
 **/*/m4/ltversion.m4
 **/*/m4/lt~obsolete.m4
 
+# Generated Makefile
+# (meta build system like autotools,
+# can automatically generate from config.status script
+# (which is called by configure script))
+Makefile
+
 # ---> C
+# Prerequisites
+*.d
+
 # Object files
 *.o
 *.ko
 *.obj
 *.elf
-*.bin
-*.img
+
+# Linker output
+*.ilk
+*.map
+*.exp
 
 # Precompiled Headers
 *.gch
@@ -88,8 +101,11 @@ texinfo.tex
 *.i*86
 *.x86_64
 *.hex
+*.bin
+*.img
 
 # Debug files
 *.dSYM/
-*.sym
-*.map
+*.su
+*.idb
+*.pdb
