@@ -45,7 +45,7 @@ uintptr_t ramdisk_compressed;
 size_t ramdisk_compressed_size;
 uintptr_t ramdisk_decompressed;
 size_t ramdisk_decompressed_size;
-size_t read_offset = 0;
+size_t ramdisk_read_offset = 0;
 pid_t pid = 0;
 
 /**
@@ -93,17 +93,17 @@ static int my_tar_close( __unused int fd ) {
  * @return
  */
 static ssize_t my_tar_read( __unused int fd, void* buffer, size_t count ) {
-  uint8_t* src = ( uint8_t* )ramdisk_decompressed + read_offset;
+  uint8_t* src = ( uint8_t* )ramdisk_decompressed + ramdisk_read_offset;
   uint8_t* dst = ( uint8_t* )buffer;
 
   uintptr_t end = ( uintptr_t )ramdisk_decompressed + ramdisk_decompressed_size;
   // handle end reached
-  if ( ramdisk_decompressed + read_offset >= end ) {
+  if ( ramdisk_decompressed + ramdisk_read_offset >= end ) {
     return 0;
   }
   // cap amount
-  if ( ramdisk_decompressed + read_offset + count > end ) {
-    size_t diff = ramdisk_decompressed + read_offset + count - end;
+  if ( ramdisk_decompressed + ramdisk_read_offset + count > end ) {
+    size_t diff = ramdisk_decompressed + ramdisk_read_offset + count - end;
     count -= diff;
   }
 
@@ -112,7 +112,7 @@ static ssize_t my_tar_read( __unused int fd, void* buffer, size_t count ) {
     dst[ i ] = src[ i ];
   }
   // increase count
-  read_offset += count;
+  ramdisk_read_offset += count;
   // return read count
   return ( ssize_t )count;
 }
@@ -277,27 +277,8 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
 
-  // VFS image address
-  void* vfs_image = NULL;
-  // loop until vfs image is there
-  while ( th_read( t ) == 0 ) {
-    if ( TH_ISREG( t ) ) {
-      // get filename
-      char* filename = th_get_pathname( t );
-      // check for vfs
-      if ( 0 == strcmp( "core/vfs", filename ) ) {
-        // set vfs image addr
-        vfs_image = ( void* )( ( uint8_t* )ramdisk_decompressed + read_offset );
-        break;
-      }
-      // skip to next file
-      if ( tar_skip_regfile( t ) != 0 ) {
-        printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
-        return -1;
-      }
-    }
-  }
-  // handle no vfs
+  // Get VFS
+  void* vfs_image = ramdisk_lookup_file( t, "core/vfs" );
   if ( ! vfs_image ) {
     printf( "ERROR: VFS daemon not found!\r\n" );
     return -1;
@@ -316,7 +297,7 @@ int main( int argc, char* argv[] ) {
   // send message
   send_add_request( msg );
   // reset read offset
-  read_offset = 0;
+  ramdisk_read_offset = 0;
   // loop until vfs image is there
   while ( th_read( t ) == 0 ) {
     // handle directory, hard links, symbolic links and normal entries
@@ -348,29 +329,8 @@ int main( int argc, char* argv[] ) {
   // free message structure
   free( msg );
 
-  // startup image address
-  void* console_image = NULL;
-  // reset read offset
-  read_offset = 0;
-  // loop until vfs image is there
-  while ( th_read( t ) == 0 ) {
-    if ( TH_ISREG( t ) ) {
-      // get filename
-      char* filename = th_get_pathname( t );
-      // check for vfs
-      if ( 0 == strcmp( "core/tty/console", filename ) ) {
-        // set vfs image addr
-        console_image = ( void* )( ( uint8_t* )ramdisk_decompressed + read_offset );
-        break;
-      }
-      // skip to next file
-      if ( tar_skip_regfile( t ) != 0 ) {
-        printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
-        return -1;
-      }
-    }
-  }
-  // handle no existing startup image
+  // Get system console
+  void* console_image = ramdisk_lookup_file( t, "core/console" );
   if ( ! console_image ) {
     printf( "ERROR: console daemon not found!\r\n" );
     return -1;
@@ -378,6 +338,7 @@ int main( int argc, char* argv[] ) {
   // start startup and expect it to be third process
   pid_t console_pid = _process_create( console_image, "daemon:/console" );
   assert( -1 != console_pid );
+
   // loop until stdin, stdout and stderr are existing
   while( true ) {
     // check if stdin is existing
@@ -396,31 +357,20 @@ int main( int argc, char* argv[] ) {
     break;
   }
 
-  // startup image address
-  void* startup_image = NULL;
-  // reset read offset
-  read_offset = 0;
-  // loop until vfs image is there
-  while ( th_read( t ) == 0 ) {
-    if ( TH_ISREG( t ) ) {
-      // get filename
-      char* filename = th_get_pathname( t );
-      // check for vfs
-      if ( 0 == strcmp( "core/startup", filename ) ) {
-        // set vfs image addr
-        startup_image = ( void* )( ( uint8_t* )ramdisk_decompressed + read_offset );
-        break;
-      }
-      // skip to next file
-      if ( tar_skip_regfile( t ) != 0 ) {
-        printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
-        return -1;
-      }
-    }
+  // Get tty
+  void* tty_image = ramdisk_lookup_file( t, "core/tty" );
+  if ( ! tty_image ) {
+    printf( "ERROR: tty daemon not found!\r\n" );
+    return -1;
   }
-  // handle no existing startup image
+  // start startup and expect it to be third process
+  pid_t tty_pid = _process_create( tty_image, "daemon:/tty" );
+  assert( -1 != tty_pid );
+
+  // startup image address
+  void* startup_image = ramdisk_lookup_file( t, "core/startup" );
   if ( ! startup_image ) {
-    printf( "ERROR: startup daemon not found!\r\n" );
+    printf( "ERROR: console daemon not found!\r\n" );
     return -1;
   }
   // start startup and expect it to be third process
@@ -459,7 +409,7 @@ int main( int argc, char* argv[] ) {
       size_t total_size = 0;
       file += strlen( MOUNT_POINT );
       // reset read offset
-      read_offset = 0;
+      ramdisk_read_offset = 0;
       // try to find within ramdisk
       while ( th_read( t ) == 0 ) {
         if ( TH_ISREG( t ) ) {
@@ -469,7 +419,7 @@ int main( int argc, char* argv[] ) {
           if ( 0 == strcmp( file, ramdisk_file ) ) {
             // set vfs image addr
             total_size = th_get_size( t );
-            buf = ( char* )( ( uint8_t* )ramdisk_decompressed + read_offset );
+            buf = ( char* )( ( uint8_t* )ramdisk_decompressed + ramdisk_read_offset );
             break;
           }
           // skip to next file
@@ -534,7 +484,7 @@ int main( int argc, char* argv[] ) {
       size_t total_size = 0;
       file += strlen( MOUNT_POINT );
       // reset read offset
-      read_offset = 0;
+      ramdisk_read_offset = 0;
       // try to find within ramdisk
       while ( th_read( t ) == 0 ) {
         if ( TH_ISREG( t ) ) {

@@ -23,6 +23,7 @@
 #include <stdbool.h>
 #include <zlib.h>
 #include <sys/bolthur.h>
+#include <errno.h>
 #include "ramdisk.h"
 #include "tar.h"
 
@@ -118,4 +119,33 @@ void* ramdisk_extract( uintptr_t address, size_t size, size_t extract_size ) {
 
   // return decompressed
   return dec;
+}
+
+void* ramdisk_lookup_file( TAR* t, const char* name ) {
+  // variables
+  ramdisk_read_offset = 0;
+  void* file = NULL;
+
+  // loop through ramdisk and lookup file
+  while ( th_read( t ) == 0 ) {
+    if ( TH_ISREG( t ) ) {
+      // get filename
+      char* filename = th_get_pathname( t );
+      // check for vfs
+      if ( 0 == strcmp( name, filename ) ) {
+        // set vfs image addr
+        file = ( void* )(
+          ( uint8_t* )ramdisk_decompressed + ramdisk_read_offset
+        );
+        break;
+      }
+      // skip to next file
+      if ( tar_skip_regfile( t ) != 0 ) {
+        printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
+        break;
+      }
+    }
+  }
+
+  return file;
 }

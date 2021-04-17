@@ -17,10 +17,19 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <libtar.h>
+
 #if !defined( __RAMDISK_H__ )
 #define __RAMDISK_H__
 
+extern uintptr_t ramdisk_compressed;
+extern size_t ramdisk_compressed_size;
+extern uintptr_t ramdisk_decompressed;
+extern size_t ramdisk_decompressed_size;
+extern size_t ramdisk_read_offset;
+
 size_t ramdisk_extract_size( uintptr_t, size_t );
 void* ramdisk_extract( uintptr_t, size_t, size_t );
+void* ramdisk_lookup_file( TAR*, const char* );
 
 #endif

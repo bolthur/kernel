@@ -252,6 +252,16 @@ AC_DEFINE_UNQUOTED(
 
 # Some compiler dependent features.
 AC_DEFINE_UNQUOTED(
+  [__allocator],
+  [__attribute__((malloc))],
+  [Keyword for section placement.]
+)
+AC_DEFINE_UNQUOTED(
+  [__deallocator],
+  [__attribute__((malloc, free))],
+  [Keyword for section placement.]
+)
+AC_DEFINE_UNQUOTED(
   [__packed],
   [__attribute__((__packed__))],
   [Keyword for packing structures.]

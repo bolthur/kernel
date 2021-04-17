@@ -83,35 +83,17 @@ int main( __unused int argc, __unused char* argv[] ) {
   assert( ! errno );
 
   // print something
-  printf( "tty/console processing!\r\n" );
+  printf( "tty processing!\r\n" );
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
 
-  // STDIN
+  // tty device
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->entry_type = VFS_ENTRY_TYPE_FILE;
-  strcpy( msg->file_path, "/stdin" );
-  // perform add request
-  send_add_request( msg );
-
-  // STDOUT
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
-  // prepare message structure
-  msg->entry_type = VFS_ENTRY_TYPE_FILE;
-  strcpy( msg->file_path, "/stdout" );
-  // perform add request
-  send_add_request( msg );
-
-  // STDERR
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
-  // prepare message structure
-  msg->entry_type = VFS_ENTRY_TYPE_FILE;
-  strcpy( msg->file_path, "/stderr" );
+  strcpy( msg->file_path, "/dev/tty" );
   // perform add request
   send_add_request( msg );
 

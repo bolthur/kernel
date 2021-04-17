@@ -29,6 +29,9 @@
 #include "../vfs.h"
 #include "../handle.h"
 
+/**
+ * @brief Handle read file request
+ */
 void msg_handle_read( void ) {
   pid_t sender;
   size_t message_id;
@@ -68,6 +71,19 @@ void msg_handle_read( void ) {
       sizeof( vfs_read_response_t ),
       message_id
     );
+    return;
+  }
+  // special handling for null device
+  if ( 0 == strcmp( container->path, "/dev/null" ) ) {
+    // send back zero return
+    _message_send_by_pid(
+      sender,
+      VFS_READ_RESPONSE,
+      ( const char* )&response,
+      sizeof( vfs_read_response_t ),
+      message_id
+    );
+    // skip rest
     return;
   }
   // get handling process

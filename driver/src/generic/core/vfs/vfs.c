@@ -134,12 +134,18 @@ void vfs_destroy( vfs_node_ptr_t node ) {
 vfs_node_ptr_t vfs_setup( pid_t current_pid ) {
   // necessary variables
   vfs_node_ptr_t ipc;
+  vfs_node_ptr_t dev;
   // allocate minimum necessary nodes
   if (
+    // create root node
     ! ( root = vfs_prepare_node( current_pid, "/", VFS_DIRECTORY, NULL ) )
-    || ! ( ipc = vfs_prepare_node( current_pid, "ipc", VFS_DIRECTORY, root ) )
-    || ! vfs_prepare_node( current_pid, "dev", VFS_DIRECTORY, root )
+    // create process, ipc and dev node
     || ! vfs_prepare_node( current_pid, "process", VFS_DIRECTORY, root )
+    || ! ( ipc = vfs_prepare_node( current_pid, "ipc", VFS_DIRECTORY, root ) )
+    || ! ( dev = vfs_prepare_node( current_pid, "dev", VFS_DIRECTORY, root ) )
+    // populate dev null file node
+    || ! vfs_prepare_node( current_pid, "null", VFS_FILE, dev )
+    // populate ipc node
     || ! vfs_prepare_node( current_pid, "shared", VFS_DIRECTORY, ipc )
     || ! vfs_prepare_node( current_pid, "message", VFS_DIRECTORY, ipc )
   ) {

@@ -1,2 +1,3 @@
 
-SUBDIRS = console terminal
+bin_PROGRAMS = tty
+tty_SOURCES = main.c
