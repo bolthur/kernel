@@ -252,6 +252,16 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
 
+  // debug
+  printf( "Testing FORK!\r\n" );
+  pid_t forked_process = fork();
+  if ( 0 == forked_process ) {
+    printf( "Child process kicks in!\r\n" );
+  } else {
+    printf( "Parent process!\r\n" );
+  }
+  for(;;);
+
   // debug print
   printf( "ramdisk = %#0*"PRIxPTR"\r\n", address_size, ramdisk_compressed );
   printf( "ramdisk_size = %zx\r\n", ramdisk_compressed_size );

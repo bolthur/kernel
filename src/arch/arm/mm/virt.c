@@ -103,7 +103,10 @@ void virt_setup_supported_modes( void ) {
 }
 
 /**
+ * @fn void virt_arch_init(void)
  * @brief Method to prepare virtual memory management by architecture
+ *
+ * @todo move calls to virt_create_context into core init
  */
 void virt_arch_init( void ) {
   // setup supported mode global

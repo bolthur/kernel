@@ -309,6 +309,33 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
 }
 
 /**
+ * @fn virt_context_ptr_t virt_fork_context(virt_context_ptr_t)
+ * @brief Fork a virtual context
+ * @param ctx context to fork
+ * @return
+ */
+virt_context_ptr_t virt_fork_context( virt_context_ptr_t ctx ) {
+  // check context
+  if ( ! ctx ) {
+    return false;
+  }
+
+  // check for v7 long descriptor format
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+    return v7_long_fork_context( ctx );
+  // check v7 short descriptor format
+  } else if (
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+  ) {
+    return v7_short_fork_context( ctx );
+  // Panic when mode is unsupported
+  } else {
+    PANIC( "Unsupported mode!" )
+  }
+}
+
+/**
  * @brief Method to destroy virtual context
  *
  * @param ctx

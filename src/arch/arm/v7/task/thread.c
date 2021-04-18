@@ -20,6 +20,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <core/panic.h>
 #include <arch/arm/stack.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
@@ -188,6 +189,22 @@ task_thread_ptr_t task_thread_create(
 
   // return created thread
   return thread;
+}
+
+/**
+ * @fn task_thread_ptr_t task_thread_fork(task_process_ptr_t, task_thread_ptr_t)
+ * @brief Create a copy of a thread of a process
+ * @param process process where thread shall be pushed into
+ * @param thread thread to be copied
+ * @return new thread structure or null
+ *
+ * @todo Copy all necessary thread values
+ */
+noreturn task_thread_ptr_t task_thread_fork(
+  __unused task_process_ptr_t process,
+  __unused task_thread_ptr_t thread
+) {
+  PANIC( "THREAD FORK NOT YET IMPLEMENTED!\r\n" )
 }
 
 /**

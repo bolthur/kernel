@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_MM_VIRT__ )
-#define __CORE_MM_VIRT__
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+
+#if ! defined( __CORE_MM_VIRT__ )
+#define __CORE_MM_VIRT__
 
 typedef enum {
   VIRT_MEMORY_TYPE_DEVICE,
@@ -68,6 +68,7 @@ void virt_platform_post_init( void );
 
 virt_context_ptr_t virt_create_context( virt_context_type_t );
 bool virt_destroy_context( virt_context_ptr_t );
+virt_context_ptr_t virt_fork_context( virt_context_ptr_t );
 uint64_t virt_create_table( virt_context_ptr_t, uintptr_t, uint64_t );
 
 bool virt_map_address( virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );

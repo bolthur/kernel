@@ -17,16 +17,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_TASK_PROCESS__ )
-#define __CORE_TASK_PROCESS__
-
 #include <stddef.h>
+#include <stdnoreturn.h>
+#include <unistd.h>
 #include <collection/avl.h>
 #include <collection/list.h>
 #include <core/mm/virt.h>
 #include <core/event.h>
 
-#include <unistd.h>
+#if ! defined( __CORE_TASK_PROCESS__ )
+#define __CORE_TASK_PROCESS__
 
 typedef struct task_thread task_thread_t;
 typedef struct task_thread *task_thread_ptr_t;
@@ -90,6 +90,7 @@ void task_process_cleanup( event_origin_t, void* );
 void task_process_start( void );
 pid_t task_process_generate_id( void );
 task_process_ptr_t task_process_create( uintptr_t, size_t, pid_t, const char* );
+noreturn task_process_ptr_t task_process_fork( task_process_ptr_t );
 bool task_process_prepare_init( task_process_ptr_t );
 uintptr_t task_process_prepare_init_arch( task_process_ptr_t );
 task_process_ptr_t task_process_get_by_id( pid_t );

@@ -23,6 +23,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <tar.h>
+#include <core/panic.h>
 #include <core/initrd.h>
 #include <core/event.h>
 #include <core/mm/phys.h>
@@ -73,7 +74,7 @@ static int32_t process_compare_id(
 }
 
 /**
- * @brief Compare id callback necessary for avl tree
+ * @brief Compare id callback necessary for avl tree lookup
  *
  * @param a node a
  * @param b node b
@@ -100,7 +101,7 @@ static int32_t process_lookup_id(
 }
 
 /**
- * @brief Compare id callback necessary for avl tree
+ * @brief Compare name callback necessary for avl tree
  *
  * @param a node a
  * @param b node b
@@ -117,7 +118,7 @@ static int32_t process_compare_name(
 }
 
 /**
- * @brief Compare id callback necessary for avl tree
+ * @brief Compare name callback necessary for avl tree lookup
  *
  * @param a node a
  * @param b node b
@@ -408,6 +409,24 @@ task_process_ptr_t task_process_create(
   }
   // return allocated process
   return process;
+}
+
+/**
+ * @fn task_process_ptr_t task_process_fork(task_process_ptr_t)
+ * @brief Generate complete copy of process to fork
+ * @param proc process to fork
+ * @return forked process structure or null
+ *
+ * @todo create a copy of virtual memory management tables ( possibly not mapped right now )
+ * @todo create a copy of process structure
+ * @todo generate new process id
+ * @todo setup stack and thread manager
+ * @todo create copies of possible threads
+ */
+noreturn task_process_ptr_t task_process_fork(
+  __unused task_process_ptr_t proc
+) {
+  PANIC( "PROCESS FORK NOT YET IMPLEMENTED!\r\n" )
 }
 
 /**

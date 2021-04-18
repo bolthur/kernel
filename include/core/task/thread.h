@@ -17,15 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_TASK_THREAD__ )
-#define __CORE_TASK_THREAD__
-
 #include <stdint.h>
 #include <stddef.h>
 #include <stdnoreturn.h>
 #include <collection/avl.h>
-
 #include <unistd.h>
+
+#if ! defined( __CORE_TASK_THREAD__ )
+#define __CORE_TASK_THREAD__
 
 typedef struct task_process task_process_t;
 typedef struct task_process *task_process_ptr_t;
@@ -66,6 +65,7 @@ pid_t task_thread_generate_id( void );
 avl_tree_ptr_t task_thread_init( void );
 void task_thread_destroy( avl_tree_ptr_t );
 task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t, size_t );
+noreturn task_thread_ptr_t task_thread_fork( task_process_ptr_t, task_thread_ptr_t );
 task_thread_ptr_t task_thread_next( void );
 noreturn void task_thread_switch_to( uintptr_t );
 bool task_thread_push_arguments( task_process_ptr_t, ... );

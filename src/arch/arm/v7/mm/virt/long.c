@@ -1023,6 +1023,18 @@ virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
 }
 
 /**
+ * @fn virt_context_ptr_t v7_long_fork_context(virt_context_ptr_t)
+ * @brief Fork virtual context with long page address extension
+ * @param ctx context to fork
+ * @return forked context or null
+ */
+noreturn virt_context_ptr_t v7_long_fork_context(
+  __unused virt_context_ptr_t ctx
+) {
+  PANIC( "FORK NOT IMPLEMENTED FOR V7 LPAE!\r\n" )
+}
+
+/**
  * @brief Destroy context for v7 long descriptor
  *
  * @param ctx context to destroy

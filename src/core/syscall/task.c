@@ -56,6 +56,7 @@ void syscall_process_id( void* context ) {
  *
  * @todo add support for priority
  * @todo add optional parameter with list of shared libraries in shared areas
+ * @todo create process necessary when fork and replace are existing?
  */
 void syscall_process_create( void* context ) {
   // get elf image to create new process from
@@ -104,6 +105,9 @@ void syscall_process_exit( void* context ) {
  * @brief System call fork handler
  *
  * @param context
+ *
+ * @todo add logic for forking a process
+ * @todo remove create process syscall?
  */
 void syscall_process_fork( __unused void* context ) {
   // debug output
@@ -116,6 +120,10 @@ void syscall_process_fork( __unused void* context ) {
  * @brief System call replace handler
  *
  * @param context
+ *
+ * @todo add logic for replacing current process image with new one
+ * @todo add after fork has been implemented as fork and replace are necessary for execve
+ * @todo remove create process syscall?
  */
 void syscall_process_replace( __unused void* context ) {
   // debug output
