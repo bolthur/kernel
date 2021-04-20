@@ -97,6 +97,9 @@ void virt_setup_supported_modes( void ) {
         PANIC( "Not supported!" )
       }
     }
+
+    // FIXME: uncomment for testing short descriptor mode
+    //supported_modes = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
   #elif defined( ELF64 )
     #error "Unsupported"
   #endif

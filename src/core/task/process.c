@@ -134,6 +134,96 @@ static int32_t process_lookup_name(
 }
 
 /**
+ * @fn void task_process_free(task_process_ptr_t, task_process_name_ptr_t)
+ * @brief Helper to destroy process structure
+ *
+ * @param proc process structure to free
+ * @param name name entry list
+ */
+static void task_process_free( task_process_ptr_t proc, task_process_name_ptr_t name ) {
+  // handle invalid
+  if ( ! proc ) {
+    return;
+  }
+  // remove node
+  avl_remove_by_node( process_manager->process_id, &proc->node_id );
+  // destroy context if existing
+  if ( proc->virtual_context ) {
+    virt_destroy_context( proc->virtual_context );
+  }
+  // destroy stack manager
+  if ( proc->thread_stack_manager ) {
+    task_stack_manager_destroy( proc->thread_stack_manager );
+  }
+  // destroy thread manager
+  if ( proc->thread_manager ) {
+    task_thread_destroy( proc->thread_manager );
+  }
+  // free up name
+  if ( proc->name ) {
+    free( proc->name );
+  }
+  // cleanup from name entry if set
+  if ( name ) {
+    list_remove_data( name->process, proc );
+  }
+  // free finally structure itself
+  free( proc );
+}
+
+/**
+ * @fn task_process_name_ptr_t task_process_get_name_list(const char*)
+ * @brief Helper to get or create process name list
+ *
+ * @param name process name to get list of
+ * @return
+ */
+static task_process_name_ptr_t task_process_get_name_list( const char* name ) {
+  // get possible name node
+  avl_node_ptr_t name_node = avl_find_by_data(
+    process_manager->process_name, ( void* )name );
+  task_process_name_ptr_t name_entry = NULL;
+  if ( ! name_node ) {
+    name_entry = ( task_process_name_ptr_t )malloc(
+      sizeof( task_process_name_t ) );
+    // handle error
+    if ( ! name_entry ) {
+      return NULL;
+    }
+    // clear
+    memset( name_entry, 0, sizeof( task_process_name_t ) );
+    // allocate name
+    name_entry->name = ( char* )malloc( ( strlen( name ) + 1 ) * sizeof( char ) );
+    if ( ! name_entry->name ) {
+      free( name_entry );
+      return NULL;
+    }
+    name_entry->name = strcpy( name_entry->name, name );
+    // create process list
+    name_entry->process = list_construct( NULL, NULL );
+    if ( ! name_entry->process ) {
+      free( name_entry->name );
+      free( name_entry );
+      return NULL;
+    }
+    // push back
+    if ( ! avl_insert_by_node(
+      process_manager->process_name,
+      &name_entry->node_name
+    ) ) {
+      list_destruct( name_entry->process );
+      free( name_entry->name );
+      free( name_entry );
+      return NULL;
+    }
+  } else {
+    name_entry = TASK_PROCESS_GET_BLOCK_NAME( name_node );
+  }
+  // return found or created name entry
+  return name_entry;
+}
+
+/**
  * @brief Initialize task process manager
  * @return true
  * @return false
@@ -265,7 +355,7 @@ task_process_ptr_t task_process_create(
   // allocate name
   process->name = ( char* )malloc( ( strlen( name ) + 1 ) * sizeof( char ) );
   if ( ! process->name ) {
-    free( process );
+    task_process_free( process, NULL );
     return NULL;
   }
   // copy name
@@ -275,8 +365,7 @@ task_process_ptr_t task_process_create(
   process->thread_manager = task_thread_init();
   // handle error
   if ( ! process->thread_manager ) {
-    free( process->name );
-    free( process );
+    task_process_free( process, NULL );
     return NULL;
   }
   process->state = TASK_PROCESS_STATE_READY;
@@ -285,19 +374,14 @@ task_process_ptr_t task_process_create(
   process->thread_stack_manager = task_stack_manager_create();
   // handle error
   if ( ! process->thread_stack_manager ) {
-    task_thread_destroy( process->thread_manager );
-    free( process->name );
-    free( process );
+    task_process_free( process, NULL );
     return NULL;
   }
   // create context only for user processes
   process->virtual_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
   // handle error
   if ( ! process->virtual_context ) {
-    task_stack_manager_destroy( process->thread_stack_manager );
-    task_thread_destroy( process->thread_manager );
-    free( process->name );
-    free( process );
+    task_process_free( process, NULL );
     return NULL;
   }
 
@@ -305,11 +389,7 @@ task_process_ptr_t task_process_create(
   uintptr_t program_entry = elf_load( entry, process );
   // handle error
   if ( 0 == program_entry ) {
-    virt_destroy_context( process->virtual_context );
-    task_stack_manager_destroy( process->thread_stack_manager );
-    task_thread_destroy( process->thread_manager );
-    free( process->name );
-    free( process );
+    task_process_free( process, NULL );
     return NULL;
   }
 
@@ -317,94 +397,27 @@ task_process_ptr_t task_process_create(
   avl_prepare_node( &process->node_id, ( void* )process->id );
   // add process to tree
   if ( ! avl_insert_by_node( process_manager->process_id, &process->node_id ) ) {
-    virt_destroy_context( process->virtual_context );
-    task_stack_manager_destroy( process->thread_stack_manager );
-    task_thread_destroy( process->thread_manager );
-    free( process->name );
-    free( process );
+    task_process_free( process, NULL );
     return NULL;
   }
 
   // get possible name node
-  avl_node_ptr_t name_node = avl_find_by_data(
-    process_manager->process_name, process->name );
-  task_process_name_ptr_t name_entry = NULL;
-  if ( ! name_node ) {
-    name_entry = ( task_process_name_ptr_t )malloc(
-      sizeof( task_process_name_t ) );
-    // handle error
-    if ( ! name_entry ) {
-      virt_destroy_context( process->virtual_context );
-      task_stack_manager_destroy( process->thread_stack_manager );
-      task_thread_destroy( process->thread_manager );
-      free( process->name );
-      free( process );
-      return NULL;
-    }
-    // clear
-    memset( name_entry, 0, sizeof( task_process_name_t ) );
-    // allocate name
-    name_entry->name = ( char* )malloc( ( strlen( name ) + 1 ) * sizeof( char ) );
-    if ( ! name_entry->name ) {
-      free( name_entry );
-      virt_destroy_context( process->virtual_context );
-      task_stack_manager_destroy( process->thread_stack_manager );
-      task_thread_destroy( process->thread_manager );
-      free( process->name );
-      free( process );
-      return NULL;
-    }
-    name_entry->name = strcpy( name_entry->name, name );
-    // create process list
-    name_entry->process = list_construct( NULL, NULL );
-    if ( ! name_entry->process ) {
-      free( name_entry->name );
-      free( name_entry );
-      virt_destroy_context( process->virtual_context );
-      task_stack_manager_destroy( process->thread_stack_manager );
-      task_thread_destroy( process->thread_manager );
-      free( process->name );
-      free( process );
-      return NULL;
-    }
-    // push back
-    if ( ! avl_insert_by_node(
-      process_manager->process_name,
-      &name_entry->node_name
-    ) ) {
-      list_destruct( name_entry->process );
-      free( name_entry->name );
-      free( name_entry );
-      virt_destroy_context( process->virtual_context );
-      task_stack_manager_destroy( process->thread_stack_manager );
-      task_thread_destroy( process->thread_manager );
-      free( process->name );
-      free( process );
-      return NULL;
-    }
-  } else {
-    name_entry = TASK_PROCESS_GET_BLOCK_NAME( name_node );
+  task_process_name_ptr_t name_entry = task_process_get_name_list(
+    process->name
+  );
+  if ( ! name_entry ) {
+    task_process_free( process, NULL );
+    return NULL;
   }
 
   // push back process to name list
   if ( ! list_push_back( name_entry->process, process ) ) {
-    avl_remove_by_node( process_manager->process_id, &process->node_id );
-    virt_destroy_context( process->virtual_context );
-    task_stack_manager_destroy( process->thread_stack_manager );
-    task_thread_destroy( process->thread_manager );
-    free( process->name );
-    free( process );
+    task_process_free( process, name_entry );
     return NULL;
   }
   // Setup thread with entry
   if ( ! task_thread_create( program_entry, process, priority ) ) {
-    list_remove_data( name_entry->process, process );
-    avl_remove_by_node( process_manager->process_id, &process->node_id );
-    virt_destroy_context( process->virtual_context );
-    task_stack_manager_destroy( process->thread_stack_manager );
-    task_thread_destroy( process->thread_manager );
-    free( process->name );
-    free( process );
+    task_process_free( process, name_entry );
     return NULL;
   }
   // return allocated process
@@ -412,21 +425,89 @@ task_process_ptr_t task_process_create(
 }
 
 /**
- * @fn task_process_ptr_t task_process_fork(task_process_ptr_t)
+ * @fn task_process_ptr_t task_process_fork(task_thread_ptr_t)
  * @brief Generate complete copy of process to fork
- * @param proc process to fork
+ * @param thread_calling calling thread containing process information
  * @return forked process structure or null
- *
- * @todo create a copy of virtual memory management tables ( possibly not mapped right now )
- * @todo create a copy of process structure
- * @todo generate new process id
- * @todo setup stack and thread manager
- * @todo create copies of possible threads
  */
-noreturn task_process_ptr_t task_process_fork(
-  __unused task_process_ptr_t proc
-) {
-  PANIC( "PROCESS FORK NOT YET IMPLEMENTED!\r\n" )
+task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
+  // allocate new process structure
+  task_process_ptr_t forked = ( task_process_ptr_t )malloc(
+    sizeof( task_process_t )
+  );
+  if ( ! forked ) {
+    return NULL;
+  }
+  memset( ( void* )forked, 0, sizeof( task_process_t ) );
+  task_process_ptr_t proc = thread_calling->process;
+
+  // prepare dynamic data structures
+  forked->name = ( char* )malloc( ( strlen( proc->name ) + 1 ) * sizeof( char ) );
+  if ( ! forked->name ) {
+    task_process_free( forked, NULL );
+    return NULL;
+  }
+  forked->thread_manager = task_thread_init();
+  if ( ! forked->thread_manager ) {
+    task_process_free( forked, NULL );
+    return NULL;
+  }
+  forked->thread_stack_manager = task_stack_manager_create();
+  if ( ! forked->thread_stack_manager ) {
+    task_process_free( forked, NULL );
+    return NULL;
+  }
+  // fork virtual context
+  forked->virtual_context = virt_fork_context( proc->virtual_context );
+  if ( ! forked->virtual_context ) {
+    task_process_free( forked, NULL );
+    return NULL;
+  }
+
+  // populate data normal data
+  forked->id = task_process_generate_id();
+  forked->parent = proc->parent;
+  forked->state = TASK_PROCESS_STATE_READY;
+  forked->priority = proc->priority;
+  strcpy( forked->name, proc->name );
+
+  // prepare node
+  avl_prepare_node( &forked->node_id, ( void* )forked->id );
+  // add process to tree
+  if ( ! avl_insert_by_node( process_manager->process_id, &forked->node_id ) ) {
+    task_process_free( forked, NULL );
+    return NULL;
+  }
+
+  // get possible name node
+  task_process_name_ptr_t name_entry = task_process_get_name_list(
+    forked->name
+  );
+  if ( ! name_entry ) {
+    task_process_free( forked, NULL );
+    return NULL;
+  }
+
+  // push back process to name list
+  if ( ! list_push_back( name_entry->process, forked ) ) {
+    task_process_free( forked, name_entry );
+    return NULL;
+  }
+
+  avl_node_ptr_t current = avl_iterate_first( proc->thread_manager );
+  while ( current ) {
+    // get thread
+    task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( current );
+    // try to fork it
+    if ( ! task_thread_fork( forked, thread ) ) {
+      task_process_free( forked, name_entry );
+      return NULL;
+    }
+    // get next thread
+    current = avl_iterate_next(  proc->thread_manager, current );
+  }
+
+  return forked;
 }
 
 /**

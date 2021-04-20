@@ -90,7 +90,7 @@ void task_process_cleanup( event_origin_t, void* );
 void task_process_start( void );
 pid_t task_process_generate_id( void );
 task_process_ptr_t task_process_create( uintptr_t, size_t, pid_t, const char* );
-noreturn task_process_ptr_t task_process_fork( task_process_ptr_t );
+task_process_ptr_t task_process_fork( task_thread_ptr_t );
 bool task_process_prepare_init( task_process_ptr_t );
 uintptr_t task_process_prepare_init_arch( task_process_ptr_t );
 task_process_ptr_t task_process_get_by_id( pid_t );

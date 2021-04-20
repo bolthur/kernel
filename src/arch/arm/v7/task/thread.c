@@ -24,6 +24,7 @@
 #include <arch/arm/stack.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
+#include <core/syscall.h>
 #if defined( PRINT_PROCESS )
   #include <core/debug/debug.h>
 #endif
@@ -194,17 +195,97 @@ task_thread_ptr_t task_thread_create(
 /**
  * @fn task_thread_ptr_t task_thread_fork(task_process_ptr_t, task_thread_ptr_t)
  * @brief Create a copy of a thread of a process
- * @param process process where thread shall be pushed into
- * @param thread thread to be copied
+ * @param forked_process process where thread shall be pushed into
+ * @param thread_to_fork thread to be forked
  * @return new thread structure or null
- *
- * @todo Copy all necessary thread values
  */
-noreturn task_thread_ptr_t task_thread_fork(
-  __unused task_process_ptr_t process,
-  __unused task_thread_ptr_t thread
+task_thread_ptr_t task_thread_fork(
+  task_process_ptr_t forked_process,
+  task_thread_ptr_t thread_to_fork
 ) {
-  PANIC( "THREAD FORK NOT YET IMPLEMENTED!\r\n" )
+  // allocate new management structure
+  task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
+    sizeof( task_thread_t ) );
+  // handle error
+  if ( ! thread ) {
+    return NULL;
+  }
+  // erase memory
+  memset( thread, 0, sizeof( task_thread_t ) );
+
+  // allocate context
+  thread->current_context = malloc( sizeof( cpu_register_context_t ) );
+  // handle error
+  if ( ! thread->current_context ) {
+    free( thread );
+    return NULL;
+  }
+  // erase memory
+  memset( thread->current_context, 0, sizeof( cpu_register_context_t ) );
+
+  // populate data
+  thread->process = forked_process;
+  thread->id = task_thread_generate_id();
+  thread->priority = thread_to_fork->priority;
+  thread->stack_virtual = thread_to_fork->stack_virtual;
+  thread->stack_physical = virt_get_mapped_address_in_context(
+    thread->process->virtual_context,
+    thread->stack_virtual
+  );
+  thread->state = TASK_THREAD_STATE_READY;
+  // copy register context data
+  memcpy(
+    thread->current_context,
+    thread_to_fork->current_context,
+    sizeof( cpu_register_context_t )
+  );
+  // overwrite return on forked thread with 0
+  syscall_populate_success( thread->current_context, 0 );
+
+  // create node for stack address management tree
+  if ( ! task_stack_manager_add(
+    thread->stack_virtual,
+    thread->process->thread_stack_manager
+  ) ) {
+    free( thread->current_context );
+    free( thread );
+    return NULL;
+  }
+
+
+  // prepare node
+  avl_prepare_node( &thread->node_id, ( void* )thread->id );
+  // add to tree
+  if ( ! avl_insert_by_node( thread->process->thread_manager, &thread->node_id ) ) {
+    task_stack_manager_remove(
+      thread->stack_virtual,
+      thread->process->thread_stack_manager
+    );
+    free( thread->current_context );
+    free( thread );
+    return NULL;
+  }
+  // get thread queue by priority
+  task_priority_queue_ptr_t queue = task_queue_get_queue(
+    process_manager,
+    thread->priority
+  );
+  if (
+    ! queue
+    // add thread to thread list for switching
+    || ! list_push_back( queue->thread_list, thread )
+  ) {
+    task_stack_manager_remove(
+      thread->stack_virtual,
+      thread->process->thread_stack_manager
+    );
+    avl_remove_by_node( thread->process->thread_manager, &thread->node_id );
+    free( thread->current_context );
+    free( thread );
+    return NULL;
+  }
+
+  return thread;
 }
 
 /**

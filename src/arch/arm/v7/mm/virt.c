@@ -30,7 +30,7 @@
 /**
  * @brief Supported mode
  */
-static uint32_t supported_mode __bootstrap_data;
+static uint32_t initial_supported_mode __bootstrap_data;
 
 /**
  * @brief Initial setup done flag
@@ -46,19 +46,19 @@ void __bootstrap virt_startup_setup( void ) {
   // get paging support from mmfr0
   __asm__ __volatile__(
     "mrc p15, 0, %0, c0, c1, 4"
-    : "=r" ( supported_mode )
+    : "=r" ( initial_supported_mode )
     : : "cc"
   );
 
   // strip out everything not needed
-  supported_mode &= 0xF;
+  initial_supported_mode &= 0xF;
 
   // check for invalid paging support
   if (
     ! (
-      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_mode
-      || ID_MMFR0_VSMA_V7_PAGING_PXN == supported_mode
-      || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
+      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == initial_supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_PXN == initial_supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_LPAE == initial_supported_mode
     )
   ) {
     return;
@@ -75,11 +75,14 @@ void __bootstrap virt_startup_setup( void ) {
   reg = ( reg >> 24 ) & 0xf;
   // use short if physical address bus is not 36 bit at least
   if ( 0 == reg ) {
-    supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
+    initial_supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
   }
 
+  // FIXME: uncomment for testing short descriptor mode
+  //initial_supported_mode = ID_MMFR0_VSMA_V7_PAGING_PXN;
+
   // kick start
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == initial_supported_mode ) {
     v7_long_startup_setup();
   } else {
     v7_short_startup_setup();
@@ -89,7 +92,7 @@ void __bootstrap virt_startup_setup( void ) {
   virt_startup_platform_setup();
 
   // enable initial mapping
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == initial_supported_mode ) {
     v7_long_startup_enable();
   } else {
     v7_short_startup_enable();
@@ -109,16 +112,16 @@ void __bootstrap virt_startup_map( uint64_t phys, uintptr_t virt ) {
   // check for invalid paging support
   if (
     ! (
-      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_mode
-      || ID_MMFR0_VSMA_V7_PAGING_PXN == supported_mode
-      || ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode
+      ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == initial_supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_PXN == initial_supported_mode
+      || ID_MMFR0_VSMA_V7_PAGING_LPAE == initial_supported_mode
     )
   ) {
     return;
   }
 
   // map it
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == initial_supported_mode ) {
     v7_long_startup_map( phys, virt );
   } else {
     v7_short_startup_map( ( uintptr_t )phys, virt );
@@ -133,7 +136,7 @@ void __bootstrap virt_startup_map( uint64_t phys, uintptr_t virt ) {
  * @brief Flush set context
  */
 void __bootstrap virt_startup_flush( void ) {
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_mode ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == initial_supported_mode ) {
     v7_long_startup_flush();
   } else {
     v7_short_startup_flush();
@@ -163,12 +166,12 @@ bool virt_map_address(
     return false;
   }
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_map( ctx, vaddr, paddr, type, page );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_map( ctx, vaddr, paddr, type, page );
   // Panic when mode is unsupported
@@ -198,12 +201,12 @@ bool virt_map_address_random(
     return false;
   }
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_map_random( ctx, vaddr, type, page );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_map_random( ctx, vaddr, type, page );
   // Panic when mode is unsupported
@@ -221,12 +224,12 @@ bool virt_map_address_random(
  */
 uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_map_temporary( paddr, size );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_map_temporary( paddr, size );
   // Panic when mode is unsupported
@@ -250,12 +253,12 @@ bool virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr, bool free_phys 
     return false;
   }
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_unmap( ctx, addr, free_phys );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_unmap( ctx, addr, free_phys );
   // Panic when mode is unsupported
@@ -272,12 +275,12 @@ bool virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr, bool free_phys 
  */
 void virt_unmap_temporary( uintptr_t addr, size_t size ) {
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     v7_long_unmap_temporary( addr, size );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     v7_short_unmap_temporary( addr, size );
   // Panic when mode is unsupported
@@ -294,12 +297,12 @@ void virt_unmap_temporary( uintptr_t addr, size_t size ) {
  */
 virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_create_context( type );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_create_context( type );
   // Panic when mode is unsupported
@@ -316,17 +319,17 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
  */
 virt_context_ptr_t virt_fork_context( virt_context_ptr_t ctx ) {
   // check context
-  if ( ! ctx ) {
-    return false;
+  if ( ! ctx || ctx->type != VIRT_CONTEXT_TYPE_USER ) {
+    return NULL;
   }
 
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_fork_context( ctx );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_fork_context( ctx );
   // Panic when mode is unsupported
@@ -349,12 +352,12 @@ bool virt_destroy_context( virt_context_ptr_t ctx ) {
   }
 
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     v7_long_destroy_context( ctx );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     v7_short_destroy_context( ctx );
   // Panic when mode is unsupported
@@ -384,12 +387,12 @@ uint64_t virt_create_table(
   }
 
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_create_table( ctx, addr, table );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_create_table( ctx, addr, table );
   // Panic when mode is unsupported
@@ -412,12 +415,12 @@ bool virt_set_context( virt_context_ptr_t ctx ) {
   }
 
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_set_context( ctx );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_set_context( ctx );
   // Panic when mode is unsupported
@@ -431,12 +434,12 @@ bool virt_set_context( virt_context_ptr_t ctx ) {
  */
 void virt_flush_complete( void ) {
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     v7_long_flush_complete();
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     v7_short_flush_complete();
   // Panic when mode is unsupported
@@ -465,12 +468,12 @@ void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
   }
 
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     v7_long_flush_address( addr );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     v7_short_flush_address( addr );
   // Panic when mode is unsupported
@@ -492,12 +495,12 @@ bool virt_prepare_temporary( virt_context_ptr_t ctx ) {
     return false;
   }
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_prepare_temporary( ctx );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_prepare_temporary( ctx );
   // Panic when mode is unsupported
@@ -511,12 +514,12 @@ bool virt_prepare_temporary( virt_context_ptr_t ctx ) {
  */
 void virt_arch_prepare( void ) {
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     v7_long_prepare();
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     v7_short_prepare();
   // Panic when mode is unsupported
@@ -540,12 +543,12 @@ bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
   }
 
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_is_mapped_in_context( ctx, addr );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_is_mapped_in_context( ctx, addr );
   // Panic when mode is unsupported
@@ -571,12 +574,12 @@ uint64_t virt_get_mapped_address_in_context(
   }
 
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_get_mapped_address_in_context( ctx, addr );
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_get_mapped_address_in_context( ctx, addr );
   // Panic when mode is unsupported
@@ -592,12 +595,12 @@ uint64_t virt_get_mapped_address_in_context(
  */
 uintptr_t virt_prefetch_fault_address( void ) {
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_prefetch_fault_address();
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_long_prefetch_fault_address();
   // Panic when mode is unsupported
@@ -613,12 +616,12 @@ uintptr_t virt_prefetch_fault_address( void ) {
  */
 uintptr_t virt_prefetch_status( void ) {
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_prefetch_status();
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_prefetch_status();
   // Panic when mode is unsupported
@@ -634,12 +637,12 @@ uintptr_t virt_prefetch_status( void ) {
  */
 uintptr_t virt_data_fault_address( void ) {
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_data_fault_address();
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_data_fault_address();
   // Panic when mode is unsupported
@@ -655,12 +658,12 @@ uintptr_t virt_data_fault_address( void ) {
  */
 uintptr_t virt_data_status( void ) {
   // check for v7 long descriptor format
-  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) {
+  if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == supported_modes ) {
     return v7_long_data_status();
   // check v7 short descriptor format
   } else if (
-    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes )
-    || ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes )
+    ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == supported_modes )
+    || ( ID_MMFR0_VSMA_V7_PAGING_PXN == supported_modes )
   ) {
     return v7_short_data_status();
   // Panic when mode is unsupported

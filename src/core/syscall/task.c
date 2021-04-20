@@ -18,6 +18,7 @@
  */
 
 #include <errno.h>
+#include <stdnoreturn.h> // FIXME: REMOVE IF NOT NEEDED ANY LONGER
 #include <core/syscall.h>
 #include <core/event.h>
 #include <core/task/process.h>
@@ -28,9 +29,10 @@
 #endif
 
 /**
- * @brief System call for returning current threads process id
+ * @fn void syscall_process_id(void*)
+ * @brief return process id to calling thread
  *
- * @param context
+ * @param context context of calling thread
  */
 void syscall_process_id( void* context ) {
   // debug output
@@ -50,9 +52,10 @@ void syscall_process_id( void* context ) {
 }
 
 /**
- * @brief Create new process
+ * @fn void syscall_process_create(void*)
+ * @brief create a new process from imagee
  *
- * @param context
+ * @param context context of calling thread
  *
  * @todo add support for priority
  * @todo add optional parameter with list of shared libraries in shared areas
@@ -87,9 +90,10 @@ void syscall_process_create( void* context ) {
 }
 
 /**
- * @brief System call process handler
+ * @fn void syscall_process_exit(void*)
+ * @brief exit calling process
  *
- * @param context
+ * @param context context of calling thread
  */
 void syscall_process_exit( void* context ) {
   // debug output
@@ -102,24 +106,38 @@ void syscall_process_exit( void* context ) {
 }
 
 /**
- * @brief System call fork handler
+ * @fn void syscall_process_fork(void*)
+ * @brief fork calling process
  *
- * @param context
+ * @param context context of calling thread
  *
  * @todo add logic for forking a process
  * @todo remove create process syscall?
  */
-void syscall_process_fork( __unused void* context ) {
+void syscall_process_fork( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "process fork called\r\n" )
   #endif
+  // fork process
+  task_process_ptr_t forked = task_process_fork( task_thread_current_thread );
+  // handle error
+  if ( ! forked ) {
+    syscall_populate_error( context, ( size_t )-ENOMEM );
+    return;
+  }
+  // populate return
+  syscall_populate_success(
+    context,
+    ( size_t )task_thread_current_thread->process->id
+  );
 }
 
 /**
- * @brief System call replace handler
+ * @fn void syscall_process_replace(void*)
+ * @brief replace existing executable image with new one
  *
- * @param context
+ * @param context context of calling thread
  *
  * @todo add logic for replacing current process image with new one
  * @todo add after fork has been implemented as fork and replace are necessary for execve
@@ -133,9 +151,10 @@ void syscall_process_replace( __unused void* context ) {
 }
 
 /**
- * @brief System call for returning current thread id
+ * @fn void syscall_thread_id(void*)
+ * @brief return current thread id to calling thread
  *
- * @param context
+ * @param context context of calling thread
  */
 void syscall_thread_id( void* context ) {
   // debug output
@@ -155,17 +174,19 @@ void syscall_thread_id( void* context ) {
 }
 
 /**
- * @brief Create new thread
+ * @fn void syscall_thread_create(void*)
+ * @brief create new thread
  *
- * @param context
+ * @param context context of calling thread
  */
 void syscall_thread_create( __unused void* context ) {
 }
 
 /**
- * @brief System call kill thread handler
+ * @fn void syscall_thread_exit(void*)
+ * @brief exit calling thread
  *
- * @param context
+ * @param context context of calling thread
  */
 void syscall_thread_exit( void* context ) {
   // debug output

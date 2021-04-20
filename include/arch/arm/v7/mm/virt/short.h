@@ -17,10 +17,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <core/mm/virt.h>
+#include <arch/arm/mm/virt/short.h>
+
 #if ! defined( __ARCH_ARM_V7_MM_VIRT_SHORT__ )
 #define __ARCH_ARM_V7_MM_VIRT_SHORT__
 
-#include <core/mm/virt.h>
+#define SECTION_SIZE 0x100000
+#define ROUND_UP_TO_FULL_SECTION( a )  \
+  a += ( a % SECTION_SIZE ? ( SECTION_SIZE - a % SECTION_SIZE ) : 0 );
 
 void v7_short_startup_setup( void );
 void v7_short_startup_map( uintptr_t, uintptr_t );
@@ -38,7 +43,11 @@ uint64_t v7_short_create_table( virt_context_ptr_t, uintptr_t, uint64_t );
 bool v7_short_set_context( virt_context_ptr_t );
 bool v7_short_prepare_temporary( virt_context_ptr_t );
 virt_context_ptr_t v7_short_create_context( virt_context_type_t );
+
 virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t );
+bool v7_short_fork_table( sd_page_table_t*, sd_page_table_t* );
+bool v7_short_fork_global_directory( sd_context_half_t*, sd_context_half_t* );
+
 void v7_short_destroy_context( virt_context_ptr_t );
 void v7_short_prepare( void );
 void v7_short_flush_complete( void );
