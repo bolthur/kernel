@@ -138,6 +138,10 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     if ( TASK_THREAD_STATE_ACTIVE == running_thread->state ) {
       running_thread->state = TASK_THREAD_STATE_HALT_SWITCH;
     }
+    // update running task to kill in case of process kill
+    if ( TASK_PROCESS_STATE_KILL == running_thread->process->state ) {
+      running_thread->state = TASK_THREAD_STATE_KILL;
+    }
   }
 
   // get next thread
@@ -213,8 +217,6 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
       DUMP_REGISTER( next_thread->current_context )
     #endif
   }
-
-  // FIXME: cleanup killed processes
 }
 
 // disable some warnings temporarily

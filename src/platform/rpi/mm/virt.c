@@ -88,7 +88,7 @@ void virt_platform_init( void ) {
   while ( start < framebuffer_end_get() ) {
     // map framebuffer
     assert( virt_map_address(
-      kernel_context,
+      virt_current_kernel_context,
       virtual,
       start,
       VIRT_MEMORY_TYPE_DEVICE,
@@ -116,7 +116,7 @@ void virt_platform_init( void ) {
   while ( start < peripheral_end_get( PERIPHERAL_GPIO ) ) {
     // map
     assert( virt_map_address(
-      kernel_context,
+      virt_current_kernel_context,
       virtual,
       start,
       VIRT_MEMORY_TYPE_DEVICE,
@@ -144,7 +144,7 @@ void virt_platform_init( void ) {
     while ( start < peripheral_end_get( PERIPHERAL_LOCAL ) ) {
       // map
       assert( virt_map_address(
-        kernel_context,
+        virt_current_kernel_context,
         virtual,
         start,
         VIRT_MEMORY_TYPE_DEVICE,
@@ -158,7 +158,7 @@ void virt_platform_init( void ) {
 
   // map mailbox buffer
   assert( virt_map_address(
-    kernel_context,
+    virt_current_kernel_context,
     MAILBOX_PROPERTY_AREA,
     ( uintptr_t )ptb_buffer_phys,
     VIRT_MEMORY_TYPE_DEVICE,

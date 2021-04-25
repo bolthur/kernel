@@ -45,8 +45,8 @@ void virt_init( void ) {
   }
 
   // set global context to null
-  kernel_context = NULL;
-  user_context = NULL;
+  virt_current_kernel_context = NULL;
+  virt_current_user_context = NULL;
 
   // architecture related initialization
   virt_arch_init();
@@ -72,7 +72,7 @@ void virt_init( void ) {
   while ( start < end ) {
     // map page
     assert( virt_map_address(
-      kernel_context,
+      virt_current_kernel_context,
       PHYS_2_VIRT( start ),
       start,
       VIRT_MEMORY_TYPE_NORMAL,
@@ -104,7 +104,7 @@ void virt_init( void ) {
     while ( start < end ) {
       // map page
       assert( virt_map_address(
-        kernel_context,
+        virt_current_kernel_context,
         PHYS_2_VIRT( start ),
         start,
         VIRT_MEMORY_TYPE_NORMAL,
@@ -124,18 +124,18 @@ void virt_init( void ) {
   // initialize platform related
   virt_platform_init();
   // prepare temporary area
-  assert( virt_prepare_temporary( kernel_context ) )
+  assert( virt_prepare_temporary( virt_current_kernel_context ) )
 
   // firmware init stuff
   assert( firmware_init() )
 
   // set kernel context
-  assert( virt_set_context( kernel_context ) )
+  assert( virt_set_context( virt_current_kernel_context ) )
   // flush contexts to take effect
   virt_flush_complete();
 
   // set dummy user context
-  assert( virt_set_context( user_context ) )
+  assert( virt_set_context( virt_current_user_context ) )
   // flush contexts to take effect
   virt_flush_complete();
 

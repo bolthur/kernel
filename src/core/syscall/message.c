@@ -527,3 +527,31 @@ void syscall_message_wait_for_response_type( void* context ) {
   // return type of message
   syscall_populate_error( context, ( size_t )-EINVAL );
 }
+
+/**
+ * @fn void syscall_message_wait_has_by_name(void*)
+ * @brief Check for message box by name is possible
+ *
+ * @param context
+ */
+void syscall_message_has_by_name( void* context ) {
+  // get parameter
+  const char* name = ( const char* )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_message_wait_has_by_name( %s )\r\n", name )
+  #endif
+  // get name list
+  list_manager_ptr_t name_list = task_process_get_by_name( name );
+  if ( ! name_list ) {
+    syscall_populate_error( context, false );
+    return;
+  }
+  // handle empty
+  if ( ! name_list->first ) {
+    syscall_populate_error( context, false );
+    return;
+  }
+  // return success
+  syscall_populate_error( context, true );
+}

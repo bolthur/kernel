@@ -44,11 +44,14 @@ bool v7_short_set_context( virt_context_ptr_t );
 bool v7_short_prepare_temporary( virt_context_ptr_t );
 virt_context_ptr_t v7_short_create_context( virt_context_type_t );
 
-virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t );
 bool v7_short_fork_table( sd_page_table_t*, sd_page_table_t* );
 bool v7_short_fork_global_directory( sd_context_half_t*, sd_context_half_t* );
+virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t );
 
-void v7_short_destroy_context( virt_context_ptr_t );
+bool v7_short_destroy_table( sd_page_table_t* );
+bool v7_short_destroy_global_directory( sd_context_half_t* );
+bool v7_short_destroy_context( virt_context_ptr_t );
+
 void v7_short_prepare( void );
 void v7_short_flush_complete( void );
 void v7_short_flush_address( uintptr_t );

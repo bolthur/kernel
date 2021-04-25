@@ -20,6 +20,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 #include <core/panic.h>
 #include <core/entry.h>
 #if defined( PRINT_MM_VIRT )
@@ -271,7 +272,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
     tbl->page[ page_idx ].data.access_permission_0 = SD_MAC_APX0_PRIVILEGED_RW;
 
     // flush address
-    virt_flush_address( kernel_context, addr );
+    virt_flush_address( virt_current_kernel_context, addr );
 
     // increase physical address
     start += PAGE_SIZE;
@@ -340,7 +341,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
     tbl->page[ page_idx ].raw = 0;
 
     // flush address
-    virt_flush_address( kernel_context, addr );
+    virt_flush_address( virt_current_kernel_context, addr );
 
     // next page size
     addr += PAGE_SIZE;
@@ -348,71 +349,86 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
 }
 
 /**
- * @brief Get the new table object
+ * @fn uintptr_t get_new_table(uintptr_t)
+ * @brief Method to get new table or free one if passed
  *
- * @return uintptr_t address to new table
+ * @param table 0 = new table, everything else = table to free
+ * @return address of new table or 0
  */
 static uintptr_t get_new_table( uintptr_t table ) {
   // static address and remaining amount
-  static uintptr_t addr = 0;
-  static uint32_t remaining = 0;
-  static uintptr_t last_addr = 0;
+  static uintptr_t* addr = NULL;
+  static size_t max_addr;
+  static size_t free_addr;
 
   // handle free
   if ( 0 != table ) {
-    addr = last_addr;
-    remaining += SD_TBL_SIZE;
-    phys_free_page( table );
+    // extend
+    if ( max_addr == free_addr ) {
+      // get another space of x tables
+      max_addr *= 2;
+      // reallocate array
+      addr = realloc( addr, max_addr );
+    }
+    // add entry to list
+    addr[ free_addr ] = table;
+    // increase free address
+    free_addr++;
+    // return here
     return 0;
   }
 
-  // fill addr and remaining
-  if ( 0 == addr ) {
+  if ( ! free_addr || ! addr ) {
     // allocate page
-    addr = ( uintptr_t )phys_find_free_page( SD_TBL_SIZE );
+    uintptr_t new_tables = ( uintptr_t )phys_find_free_page( SD_TBL_SIZE );
     // handle error
-    if ( 0 == addr ) {
-      return addr;
+    if ( 0 == new_tables ) {
+      return 0;
     }
     // map temporarily
-    uintptr_t tmp = map_temporary( addr, PAGE_SIZE );
+    uintptr_t tmp = map_temporary( new_tables, PAGE_SIZE );
     // handle error
     if ( 0 == tmp ) {
-      phys_free_page( addr );
-      addr = 0;
-      return addr;
+      phys_free_page( new_tables );
+      return 0;
     }
     // overwrite page with zero
     memset( ( void* )tmp, 0, PAGE_SIZE );
     // unmap page again
     unmap_temporary( tmp, PAGE_SIZE );
 
-    // set remaining size
-    remaining = PAGE_SIZE;
+    // allocate addr
+    if ( ! addr ) {
+      max_addr = PAGE_SIZE / SD_TBL_SIZE;
+      // create handling array for free tables
+      addr = malloc( sizeof( uintptr_t ) * max_addr );
+      if ( ! addr ) {
+        phys_free_page( new_tables );
+        return 0;
+      }
+      // clear area
+      memset( addr, 0, sizeof( uintptr_t ) * max_addr );
+    }
+    // populate array
+    for ( size_t idx = 0; idx < ( PAGE_SIZE / SD_TBL_SIZE ); idx++ ) {
+      addr[ idx ] = new_tables + ( idx * SD_TBL_SIZE );
+      free_addr++;
+    }
   }
 
-  // return address
-  uintptr_t r = addr;
+  // use first address as return
+  uintptr_t r = addr[ 0 ];
+  // move all entries one row up
+  for ( size_t idx = 1; idx < max_addr; idx++ ) {
+    addr[ idx - 1 ] = addr[ idx ];
+  }
+  // decrement free_addr counter
+  free_addr--;
   // debug output
   #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "free_addr = %d - max_addr = %d\r\n", next_addr, max_addr )
     DEBUG_OUTPUT( "r = %p\r\n", ( void* )r )
   #endif
-
-  // decrease remaining and increase addr
-  addr += SD_TBL_SIZE;
-  remaining -= SD_TBL_SIZE;
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "addr = %p - remaining = %p\r\n",
-      ( void* )addr, ( void* )remaining )
-  #endif
-
-  // check for end reached
-  if ( 0 == remaining ) {
-    addr = 0;
-    remaining = 0;
-  }
-
   // return address
   return r;
 }
@@ -823,7 +839,7 @@ bool v7_short_set_context( virt_context_ptr_t ctx ) {
       : "memory"
     );
     // overwrite global pointer
-    user_context = ctx;
+    virt_current_user_context = ctx;
   // kernel context handling
   } else if ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type ) {
     // debug output
@@ -838,7 +854,7 @@ bool v7_short_set_context( virt_context_ptr_t ctx ) {
       : "memory"
     );
     // overwrite global pointer
-    kernel_context = ctx;
+    virt_current_kernel_context = ctx;
   }
 
   return true;
@@ -1185,7 +1201,7 @@ virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t ctx ) {
     ( uintptr_t )ctx->context, SD_TTBR_SIZE_2G );
   // handle error
   if ( 0 == ctx_to_fork ) {
-    virt_destroy_context( forked );
+    assert( virt_destroy_context( forked ) );
     return NULL;
   }
   // map new context temporarily
@@ -1194,7 +1210,7 @@ virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t ctx ) {
   // handle error
   if ( 0 == ctx_forked ) {
     unmap_temporary( ctx_to_fork, SD_TTBR_SIZE_2G );
-    virt_destroy_context( forked );
+    assert( virt_destroy_context( forked ) );
     return NULL;
   }
   // clear page
@@ -1207,7 +1223,7 @@ virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t ctx ) {
   ) ) {
     unmap_temporary( ctx_to_fork, SD_TTBR_SIZE_2G );
     unmap_temporary( ctx_forked, SD_TTBR_SIZE_2G );
-    virt_destroy_context( forked );
+    assert( virt_destroy_context( forked ) );
     return NULL;
   }
 
@@ -1219,15 +1235,106 @@ virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t ctx ) {
 }
 
 /**
+ * @fn bool v7_short_destroy_table(sd_page_table_t*)
+ * @brief Helper to destroy passed page table
+ *
+ * @param table table to destroy
+ * @return
+ */
+bool v7_short_destroy_table( sd_page_table_t* table ) {
+  // copy pages with content
+  for ( size_t page_idx = 0; page_idx < 256; page_idx++ ) {
+    // just copy value if not mapped
+    if( 0 == table->page[ page_idx ].raw ) {
+      continue;
+    }
+    // get mapped address
+    uintptr_t phys_to_destroy = table->page[ page_idx ].raw & 0xFFFFF000;
+    // free space
+    phys_free_page( phys_to_destroy );
+    // unset table entry
+    table->page[ page_idx ].raw = 0;
+  }
+  // return success
+  return true;
+}
+
+/**
+ * @fn bool v7_short_destroy_global_directory(sd_context_half_t*)
+ * @brief Helper to destroy passed context / global directory
+ *
+ * @param ctx context to destroy
+ * @return
+ */
+bool v7_short_destroy_global_directory( sd_context_half_t* ctx ) {
+  for ( size_t gpd_idx = 0; gpd_idx < 2048; gpd_idx++ ) {
+    // get middle table
+    sd_context_table_t* pmd_tbl_to_destroy = &ctx->table[ gpd_idx ];
+    // get middle directory to fork
+    uintptr_t pmd_phys_to_destroy = pmd_tbl_to_destroy->raw & 0xFFFFFC00;
+    // skip if not mapped!
+    if ( 0 == pmd_phys_to_destroy ) {
+      continue;
+    }
+
+    // map both temporarily
+    sd_page_table_t* pmd_to_destroy = ( sd_page_table_t* )
+      map_temporary( pmd_phys_to_destroy, SD_TBL_SIZE );
+    if ( ! pmd_to_destroy ) {
+      return false;
+    }
+
+    // fork middle directory
+    if ( ! v7_short_destroy_table( pmd_to_destroy ) ) {
+      unmap_temporary( ( uintptr_t )pmd_to_destroy, SD_TBL_SIZE );
+      return false;
+    }
+
+    // unmap again
+    unmap_temporary( ( uintptr_t )pmd_to_destroy, SD_TBL_SIZE );
+    // destroy table
+    get_new_table( ( uintptr_t )pmd_to_destroy );
+    // set to invalid
+    ctx->table[ gpd_idx ].raw = 0;
+  }
+  // return success
+  return true;
+}
+
+/**
+ * @fn bool v7_short_destroy_context(virt_context_ptr_t)
  * @brief Destroy context for v7 short descriptor
  *
  * @param ctx context to destroy
- *
- * @todo add logic
- * @todo remove noreturn when handler is completed
+ * @return
  */
-noreturn void v7_short_destroy_context( __unused virt_context_ptr_t ctx ) {
-  PANIC( "v7 short destroy context not yet implemented!" )
+bool v7_short_destroy_context( virt_context_ptr_t ctx ) {
+  // check context to be not active
+  if (
+    ctx == virt_current_kernel_context
+    || ctx == virt_current_user_context
+  ) {
+    return false;
+  }
+  // map temporarily
+  sd_context_half_t* ctx_mapped = ( sd_context_half_t* )map_temporary(
+    ( uintptr_t )ctx->context, SD_TTBR_SIZE_2G );
+  if ( ! ctx_mapped  ) {
+    return false;
+  }
+  // destroy global directory
+  if ( ! v7_short_destroy_global_directory( ctx_mapped ) ) {
+    unmap_temporary( ( uintptr_t )ctx_mapped, SD_TTBR_SIZE_2G );
+    return false;
+  }
+  // unmap directory
+  unmap_temporary( ( uintptr_t )ctx_mapped, SD_TTBR_SIZE_2G );
+  // free range
+  phys_free_page_range( ctx->context, SD_TTBR_SIZE_2G );
+  // free structure
+  free( ctx );
+  // return success
+  return true;
 }
 
 /**

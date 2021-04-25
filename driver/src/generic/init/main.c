@@ -257,7 +257,7 @@ int main( int argc, char* argv[] ) {
   pid_t forked_process = fork();
   if ( 0 == forked_process ) {
     printf( "Child process kicks in ( pid = %d )!\r\n", getpid() );
-    exit( 0 );
+    return -1; // return for exit!
   } else {
     printf( "Parent process continues ( pid = %d )!\r\n", getpid() );
   }

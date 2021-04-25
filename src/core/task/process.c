@@ -139,6 +139,8 @@ static int32_t process_lookup_name(
  *
  * @param proc process structure to free
  * @param name name entry list
+ *
+ * @todo ensure that method is completed
  */
 static void task_process_free( task_process_ptr_t proc, task_process_name_ptr_t name ) {
   // handle invalid
@@ -149,7 +151,7 @@ static void task_process_free( task_process_ptr_t proc, task_process_name_ptr_t 
   avl_remove_by_node( process_manager->process_id, &proc->node_id );
   // destroy context if existing
   if ( proc->virtual_context ) {
-    virt_destroy_context( proc->virtual_context );
+    assert( virt_destroy_context( proc->virtual_context ) );
   }
   // destroy stack manager
   if ( proc->thread_stack_manager ) {
@@ -269,9 +271,20 @@ bool task_process_init( void ) {
     free( process_manager );
     return false;
   }
+  // create cleanup list
+  process_manager->process_to_cleanup = list_construct( NULL, NULL );
+  if ( ! process_manager->process_to_cleanup ) {
+    avl_destroy_tree( process_manager->process_name );
+    avl_destroy_tree( process_manager->process_id );
+    avl_destroy_tree( process_manager->thread_priority );
+    free( process_manager );
+    return false;
+  }
 
   // register process switch event
   if ( ! event_bind( EVENT_PROCESS, task_process_schedule, true ) ) {
+    list_destruct( process_manager->process_to_cleanup );
+    avl_destroy_tree( process_manager->process_name );
     avl_destroy_tree( process_manager->thread_priority );
     avl_destroy_tree( process_manager->process_id );
     free( process_manager );
@@ -280,6 +293,8 @@ bool task_process_init( void ) {
   // register cleanup
   if ( ! event_bind( EVENT_PROCESS, task_process_cleanup, true ) ) {
     event_unbind( EVENT_PROCESS, task_process_schedule, true );
+    list_destruct( process_manager->process_to_cleanup );
+    avl_destroy_tree( process_manager->process_name );
     avl_destroy_tree( process_manager->thread_priority );
     avl_destroy_tree( process_manager->process_id );
     free( process_manager );
@@ -504,7 +519,7 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
       return NULL;
     }
     // get next thread
-    current = avl_iterate_next(  proc->thread_manager, current );
+    current = avl_iterate_next( proc->thread_manager, current );
   }
 
   return forked;
@@ -598,6 +613,51 @@ void task_process_cleanup(
   __unused event_origin_t origin,
   __unused void* context
 ) {
+  list_item_ptr_t current = process_manager->process_to_cleanup->first;
+  // loop
+  while ( current ) {
+    // get process from item
+    task_process_ptr_t proc = ( task_process_ptr_t )current->data;
+
+    // check for running thread
+    avl_node_ptr_t current_thread = avl_iterate_first( proc->thread_manager );
+    bool skip = false;
+    while ( current_thread ) {
+      // get thread
+      task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( current_thread );
+      // check for active
+      if ( thread->state != TASK_THREAD_STATE_KILL ) {
+        skip = true;
+        break;
+      }
+      // get next thread
+      current_thread = avl_iterate_next( proc->thread_manager, current_thread );
+    }
+
+    // skip
+    if ( skip ) {
+      // debug output
+      #if defined( PRINT_PROCESS )
+        DEBUG_OUTPUT( "Skip process with id %d!\r\n", proc->id );
+      #endif
+      continue;
+    }
+
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "Cleanup process with id %d!\r\n", proc->id );
+    #endif
+    // cleanup process
+    task_process_free( proc, task_process_get_name_list( proc->name ) );
+
+    // cache current as remove
+    list_item_ptr_t remove = current;
+    // head over to next
+    current = current->next;
+
+    // remove list item
+    list_remove( process_manager->process_to_cleanup, remove );
+  }
 }
 
 /**

@@ -28,19 +28,72 @@
 #include <arch/arm/mm/virt.h>
 
 /**
+ * @brief Supported mode
+ */
+uint32_t virt_startup_supported_mode __bootstrap_data;
+
+/**
  * @brief Supported modes
  */
-uint32_t supported_modes;
+uint32_t virt_supported_mode;
 
 /**
  * @brief user context
  */
-virt_context_ptr_t user_context;
+virt_context_ptr_t virt_current_user_context;
 
 /**
  * @brief kernel context
  */
-virt_context_ptr_t kernel_context;
+virt_context_ptr_t virt_current_kernel_context;
+
+/**
+ * @brief Method to get supported modes
+ */
+void __bootstrap virt_startup_setup_supported_modes( void ) {
+  #if defined( ELF32 )
+    // get paging support from mmfr0
+    __asm__ __volatile__(
+      "mrc p15, 0, %0, c0, c1, 4"
+      : "=r" ( virt_startup_supported_mode )
+      : : "cc"
+    );
+
+    // strip out everything not needed
+    virt_startup_supported_mode &= 0xF;
+
+    // check for invalid paging support
+    if (
+      ! (
+        ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == virt_startup_supported_mode
+        || ID_MMFR0_VSMA_V7_PAGING_PXN == virt_startup_supported_mode
+        || ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_startup_supported_mode
+      )
+    ) {
+      virt_startup_supported_mode = 0;
+      return;
+    }
+
+    // get memory size from mmfr3
+    uint32_t reg;
+    __asm__ __volatile__(
+      "mrc p15, 0, %0, c0, c1, 7"
+      : "=r" ( reg )
+      : : "cc"
+    );
+    // get only cpu address bus size
+    reg = ( reg >> 24 ) & 0xf;
+    // use short if physical address bus is not 36 bit at least
+    if ( 0 == reg ) {
+      virt_startup_supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
+    }
+
+    // FIXME: uncomment for testing short descriptor mode
+    //virt_startup_supported_mode = ID_MMFR0_VSMA_V7_PAGING_PXN;
+  #elif defined( ELF64 )
+    #error "Unsupported"
+  #endif
+}
 
 /**
  * @brief Method to get supported modes
@@ -58,12 +111,12 @@ void virt_setup_supported_modes( void ) {
     );
 
     // save supported modes
-    supported_modes = reg & 0xF;
+    virt_supported_mode = reg & 0xF;
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#08x, supported_modes = %#08x\r\n",
-        reg, supported_modes )
+      DEBUG_OUTPUT( "reg = %#08x, virt_supported_mode = %#08x\r\n",
+        reg, virt_supported_mode )
     #endif
 
     // get memory size from mmfr3
@@ -88,18 +141,18 @@ void virt_setup_supported_modes( void ) {
 
     // set paging to v7 short descriptor if more
     // than 32 bit physical addresses arent supported
-    if ( 0 == reg && ( ID_MMFR0_VSMA_V7_PAGING_LPAE & supported_modes ) ) {
-      if ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & supported_modes ) {
-        supported_modes = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
-      } else if ( ID_MMFR0_VSMA_V7_PAGING_PXN & supported_modes ) {
-        supported_modes = ID_MMFR0_VSMA_V7_PAGING_PXN;
+    if ( 0 == reg && ( ID_MMFR0_VSMA_V7_PAGING_LPAE & virt_supported_mode ) ) {
+      if ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & virt_supported_mode ) {
+        virt_supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
+      } else if ( ID_MMFR0_VSMA_V7_PAGING_PXN & virt_supported_mode ) {
+        virt_supported_mode = ID_MMFR0_VSMA_V7_PAGING_PXN;
       } else {
         PANIC( "Not supported!" )
       }
     }
 
     // FIXME: uncomment for testing short descriptor mode
-    //supported_modes = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
+    //virt_supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
   #elif defined( ELF64 )
     #error "Unsupported"
   #endif
@@ -119,17 +172,17 @@ void virt_arch_init( void ) {
   virt_arch_prepare();
 
   // create a kernel context
-  kernel_context = virt_create_context( VIRT_CONTEXT_TYPE_KERNEL );
-  assert( kernel_context )
+  virt_current_kernel_context = virt_create_context( VIRT_CONTEXT_TYPE_KERNEL );
+  assert( virt_current_kernel_context )
 
   // create a dummy user context for all cores
-  user_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
-  assert( user_context )
+  virt_current_user_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
+  assert( virt_current_user_context )
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "kernel_context: %p\r\n", ( void* )kernel_context )
-    DEBUG_OUTPUT( "user_context: %p\r\n", ( void* )user_context )
+    DEBUG_OUTPUT( "virt_current_kernel_context: %p\r\n", ( void* )virt_current_kernel_context )
+    DEBUG_OUTPUT( "virt_current_user_context: %p\r\n", ( void* )virt_current_user_context )
   #endif
 }
 
@@ -142,6 +195,6 @@ void virt_arch_init( void ) {
  */
 bool virt_is_mapped( uintptr_t addr ) {
   return
-    virt_is_mapped_in_context( kernel_context, addr )
-    || virt_is_mapped_in_context( user_context, addr );
+    virt_is_mapped_in_context( virt_current_kernel_context, addr )
+    || virt_is_mapped_in_context( virt_current_user_context, addr );
 }

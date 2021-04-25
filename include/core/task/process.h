@@ -66,6 +66,7 @@ struct task_manager {
   avl_tree_ptr_t process_id;
   avl_tree_ptr_t process_name;
   avl_tree_ptr_t thread_priority;
+  list_manager_ptr_t process_to_cleanup;
 };
 
 typedef struct task_process task_process_t;

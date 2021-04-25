@@ -196,6 +196,14 @@ bool syscall_init( void ) {
   ) ) {
     return false;
   }
+  if ( ! interrupt_register_handler(
+    SYSCALL_MESSAGE_HAS_BY_NAME,
+    syscall_message_has_by_name,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
   // interrupt related
   if ( ! interrupt_register_handler(
     SYSCALL_INTERRUPT_ACQUIRE,

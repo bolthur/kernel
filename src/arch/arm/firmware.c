@@ -66,7 +66,7 @@ bool firmware_init( void ) {
   if ( atag_check( atag_fdt ) ) {
     if ( ! virt_is_mapped( PHYS_2_VIRT( atag_fdt ) ) ) {
       if ( ! virt_map_address(
-        kernel_context,
+        virt_current_kernel_context,
         PHYS_2_VIRT( atag_fdt ),
         atag_fdt,
         VIRT_MEMORY_TYPE_NORMAL,
@@ -87,7 +87,7 @@ bool firmware_init( void ) {
     // map until end of dtb
     while ( start < end ) {
       if ( ! virt_map_address(
-        kernel_context,
+        virt_current_kernel_context,
         virtual,
         start,
         VIRT_MEMORY_TYPE_NORMAL,

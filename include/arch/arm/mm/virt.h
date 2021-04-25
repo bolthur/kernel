@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdint.h>
+
 #if ! defined( __ARCH_ARM_MM_VIRT__ )
 #define __ARCH_ARM_MM_VIRT__
-
-#include <stdint.h>
 
 #if defined( ELF32 )
   // supported paging defines
@@ -31,8 +31,11 @@
 
   // methods
   void virt_setup_supported_modes( void );
+  void virt_startup_setup_supported_modes( void );
+
   // supported modes
-  extern uint32_t supported_modes;
+  extern uint32_t virt_supported_mode;
+  extern uint32_t virt_startup_supported_mode;
 #endif
 
 uintptr_t virt_prefetch_fault_address( void );

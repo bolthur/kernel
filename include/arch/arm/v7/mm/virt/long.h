@@ -38,14 +38,18 @@ void v7_long_unmap_temporary( uintptr_t, size_t );
 uint64_t v7_long_create_table( virt_context_ptr_t, uintptr_t, uint64_t );
 bool v7_long_set_context( virt_context_ptr_t );
 bool v7_long_prepare_temporary( virt_context_ptr_t );
-
 virt_context_ptr_t v7_long_create_context( virt_context_type_t );
+
 bool v7_long_fork_table( ld_page_table_t*, ld_page_table_t* );
 bool v7_long_fork_middle_directory( ld_middle_page_directory*, ld_middle_page_directory* );
 bool v7_long_fork_global_directory( ld_global_page_directory_t*, ld_global_page_directory_t* );
-
 virt_context_ptr_t v7_long_fork_context( virt_context_ptr_t );
-void v7_long_destroy_context( virt_context_ptr_t );
+
+bool v7_long_destroy_table( ld_page_table_t* );
+bool v7_long_destroy_middle_directory( ld_middle_page_directory* );
+bool v7_long_destroy_global_directory( ld_global_page_directory_t* );
+bool v7_long_destroy_context( virt_context_ptr_t );
+
 void v7_long_prepare( void );
 void v7_long_flush_complete( void );
 void v7_long_flush_address( uintptr_t );

@@ -20,7 +20,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
-#include <core/panic.h>
+#include <assert.h>
 #include <core/entry.h>
 #include <core/mm/phys.h>
 #if defined( PRINT_MM_VIRT )
@@ -308,7 +308,7 @@ static uintptr_t map_temporary( uint64_t start, size_t size ) {
     tbl->page[ page_idx ].data.lower_attr_access = 1;
 
     // flush address
-    virt_flush_address( kernel_context, addr );
+    virt_flush_address( virt_current_kernel_context, addr );
 
     // increase physical address
     start += PAGE_SIZE;
@@ -383,7 +383,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
     tbl->page[ page_idx ].raw = 0;
 
     // flush address
-    virt_flush_address( kernel_context, addr );
+    virt_flush_address( virt_current_kernel_context, addr );
 
     // next page size
     addr += PAGE_SIZE;
@@ -816,7 +816,7 @@ bool v7_long_set_context( virt_context_ptr_t ctx ) {
       "mcrr p15, 0, %0, %1, c2" : : "r" ( low ), "r" ( high ) : "memory"
     );
     // overwrite global pointer
-    user_context = ctx;
+    virt_current_user_context = ctx;
   // kernel context handling
   } else {
     // debug output
@@ -828,7 +828,7 @@ bool v7_long_set_context( virt_context_ptr_t ctx ) {
       "mcrr p15, 1, %0, %1, c2" : : "r" ( low ), "r" ( high ) : "memory"
     );
     // overwrite global pointer
-    kernel_context = ctx;
+    virt_current_kernel_context = ctx;
   }
 
   return true;
@@ -1244,7 +1244,7 @@ virt_context_ptr_t v7_long_fork_context( virt_context_ptr_t ctx ) {
   uintptr_t ctx_to_fork = map_temporary( ctx->context, PAGE_SIZE );
   // handle error
   if ( 0 == ctx_to_fork ) {
-    virt_destroy_context( forked );
+    assert( virt_destroy_context( forked ) );
     return NULL;
   }
   // map new context temporarily
@@ -1252,7 +1252,7 @@ virt_context_ptr_t v7_long_fork_context( virt_context_ptr_t ctx ) {
   // handle error
   if ( 0 == ctx_forked ) {
     unmap_temporary( ctx_to_fork, PAGE_SIZE );
-    virt_destroy_context( forked );
+    assert( virt_destroy_context( forked ) );
     return NULL;
   }
   // clear page
@@ -1265,7 +1265,7 @@ virt_context_ptr_t v7_long_fork_context( virt_context_ptr_t ctx ) {
   ) ) {
     unmap_temporary( ctx_to_fork, PAGE_SIZE );
     unmap_temporary( ctx_forked, PAGE_SIZE );
-    virt_destroy_context( forked );
+    assert( virt_destroy_context( forked ) );
     return NULL;
   }
 
@@ -1277,15 +1277,150 @@ virt_context_ptr_t v7_long_fork_context( virt_context_ptr_t ctx ) {
 }
 
 /**
+ * @fn bool v7_long_destroy_table(ld_page_table_t*)
+ * @brief Helper to destroy passed page table
+ *
+ * @param table
+ * @return
+ *
+ * @todo test implementation by stepping with gdb
+ */
+bool v7_long_destroy_table( ld_page_table_t* table ) {
+  // copy pages with content
+  for ( size_t page_idx = 0; page_idx < 512; page_idx++ ) {
+    // just copy value if not mapped
+    if( 0 == table->page[ page_idx ].raw ) {
+      continue;
+    }
+    // get mapped address
+    uint64_t phys_to_destroy = LD_PHYSICAL_PAGE_ADDRESS(
+      table->page[ page_idx ].raw
+    );
+    // free space
+    phys_free_page( phys_to_destroy );
+    // unset table entry
+    table->page[ page_idx ].raw = 0;
+  }
+  // return success
+  return true;
+}
+
+/**
+ * @fn bool v7_long_destroy_middle_directory(ld_middle_page_directory*)
+ * @brief Helper to destroy passed middle directory
+ *
+ * @param dir
+ * @return
+ *
+ * @todo test implementation by stepping with gdb
+ */
+bool v7_long_destroy_middle_directory( ld_middle_page_directory* dir ) {
+  // loop and duplicate page tables
+  for ( size_t tbl_idx = 0; tbl_idx < 512; tbl_idx++ ) {
+    // break if not mapped
+    if ( 0 == dir->table[ tbl_idx ].raw ) {
+      continue;
+    }
+    uint64_t phys_table = LD_PHYSICAL_TABLE_ADDRESS( dir->table[ tbl_idx ].raw );
+    // map table temporarily
+    ld_page_table_t* tbl_to_destroy = ( ld_page_table_t* )map_temporary(
+      phys_table, PAGE_SIZE );
+    if ( ! tbl_to_destroy ) {
+      return false;
+    }
+    // destroy table content
+    if ( ! v7_long_destroy_table( tbl_to_destroy ) ) {
+      unmap_temporary( ( uintptr_t )tbl_to_destroy, PAGE_SIZE );
+      return false;
+    }
+    // unmap again
+    unmap_temporary( ( uintptr_t )tbl_to_destroy, PAGE_SIZE );
+    // free page
+    phys_free_page( phys_table );
+    // set table to invalid
+    dir->table[ tbl_idx ].raw = 0;
+  }
+  // return success
+  return true;
+}
+
+/**
+ * @fn bool v7_long_destroy_global_directory(ld_global_page_directory_t*)
+ * @brief Helper to destroy passed global page directory
+ *
+ * @param dir
+ * @return
+ *
+ * @todo test implementation by stepping with gdb
+ */
+bool v7_long_destroy_global_directory( ld_global_page_directory_t* dir ) {
+  for ( size_t gpd_idx = 0; gpd_idx < 512; gpd_idx++ ) {
+    // get middle table
+    ld_context_table_level1_t* pmd_tbl_to_destroy = &dir->table[ gpd_idx ];
+    // get middle directory to fork
+    uint64_t pmd_phys_to_destroy = LD_PHYSICAL_TABLE_ADDRESS( pmd_tbl_to_destroy->raw );
+    // skip if not mapped!
+    if ( 0 == pmd_phys_to_destroy ) {
+      continue;
+    }
+    // map temporarily
+    ld_middle_page_directory* pmd_to_destroy = ( ld_middle_page_directory* )
+      map_temporary( pmd_phys_to_destroy, PAGE_SIZE );
+    if ( ! pmd_to_destroy ) {
+      return false;
+    }
+    // destroy middle directory
+    if ( ! v7_long_destroy_middle_directory( pmd_to_destroy ) ) {
+      unmap_temporary( ( uintptr_t )pmd_to_destroy, PAGE_SIZE );
+      return false;
+    }
+    // unmap again
+    unmap_temporary( ( uintptr_t )pmd_to_destroy, PAGE_SIZE );
+    // free page
+    phys_free_page( pmd_phys_to_destroy );
+    // set to invalid
+    dir->table[ gpd_idx ].raw = 0;
+  }
+  // return success
+  return true;
+}
+
+/**
+ * @fn bool v7_long_destroy_context(virt_context_ptr_t)
  * @brief Destroy context for v7 long descriptor
  *
  * @param ctx context to destroy
+ * @return
  *
- * @todo add logic
- * @todo remove noreturn when handler is completed
+ * @todo test implementation by stepping with gdb
  */
-noreturn void v7_long_destroy_context( __unused virt_context_ptr_t ctx ) {
-  PANIC( "v7 long destroy context not yet implemented!" )
+bool v7_long_destroy_context( virt_context_ptr_t ctx ) {
+  // check context to be not active
+  if (
+    ctx == virt_current_kernel_context
+    || ctx == virt_current_user_context
+  ) {
+    return false;
+  }
+  // map temporarily
+  ld_global_page_directory_t* ctx_mapped = ( ld_global_page_directory_t* )
+    map_temporary( ctx->context, PAGE_SIZE );
+  if ( ! ctx_mapped  ) {
+    return false;
+  }
+  // destroy global directory
+  if ( ! v7_long_destroy_global_directory( ctx_mapped ) ) {
+    unmap_temporary( ( uintptr_t )ctx_mapped, PAGE_SIZE );
+    return false;
+  }
+  // unmap directory
+  unmap_temporary( ( uintptr_t )ctx_mapped, PAGE_SIZE );
+  // free range
+  phys_free_page_range( ctx->context, PAGE_SIZE );
+  // free structure
+  free( ctx );
+  // return success
+  return true;
 }
 
 /**

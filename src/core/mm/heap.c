@@ -267,7 +267,7 @@ static bool extend_heap_space( void ) {
 
     // map address
     if ( ! virt_map_address_random(
-      kernel_context,
+      virt_current_kernel_context,
       addr,
       VIRT_MEMORY_TYPE_NORMAL,
       VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
@@ -497,7 +497,7 @@ static void shrink_heap_space( void ) {
       DEBUG_OUTPUT( "unmap = %"PRIxPTR"\r\n", start );
     #endif
     // unmap virtual address
-    virt_unmap_address( kernel_context, start, true );
+    virt_unmap_address( virt_current_kernel_context, start, true );
   }
 
   // Debug output
@@ -728,7 +728,7 @@ void heap_init( heap_init_state_t state ) {
 
       // map address
       assert( virt_map_address_random(
-        kernel_context,
+        virt_current_kernel_context,
         addr,
         VIRT_MEMORY_TYPE_NORMAL,
         VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE

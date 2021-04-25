@@ -51,8 +51,8 @@ typedef struct virt_context virt_context_t;
 typedef struct virt_context *virt_context_ptr_t;
 
 extern bool virt_use_physical_table;
-extern virt_context_ptr_t user_context;
-extern virt_context_ptr_t kernel_context;
+extern virt_context_ptr_t virt_current_user_context;
+extern virt_context_ptr_t virt_current_kernel_context;
 
 void virt_startup_setup( void );
 void virt_startup_platform_setup( void );

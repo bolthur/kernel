@@ -48,6 +48,7 @@
 #define SYSCALL_MESSAGE_RECEIVE_TYPE 36
 #define SYSCALL_MESSAGE_WAIT_FOR_RESPONSE 37
 #define SYSCALL_MESSAGE_WAIT_FOR_RESPONSE_TYPE 38
+#define SYSCALL_MESSAGE_HAS_BY_NAME 39
 
 #define SYSCALL_IO_ACQUIRE 41
 #define SYSCALL_IO_RELEASE 42
@@ -90,6 +91,7 @@ void syscall_message_receive( void* );
 void syscall_message_receive_type( void* );
 void syscall_message_wait_for_response( void* );
 void syscall_message_wait_for_response_type( void* );
+void syscall_message_has_by_name( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );
