@@ -32,6 +32,8 @@
  *
  * @param manager
  * @return uintptr_t
+ *
+ * @todo revise stack handling
  */
 uintptr_t task_stack_manager_next( task_stack_manager_ptr_t manager ) {
   // check parameter

@@ -25,6 +25,8 @@
 #include <core/event.h>
 #include <core/task/queue.h>
 #include <core/task/thread.h>
+#include <core/task/stack.h>
+#include <core/mm/virt.h>
 
 /**
  * @brief Current running thread
@@ -32,11 +34,12 @@
 task_thread_ptr_t task_thread_current_thread = NULL;
 
 /**
- * @brief Compare id callback necessary for avl tree
+ * @fn int32_t thread_compare_id_callback(const avl_node_ptr_t, const avl_node_ptr_t)
+ * @brief Helper necessary for avl thread manager tree
  *
  * @param a node a
  * @param b node b
- * @return int32_t
+ * @return
  */
 static int32_t thread_compare_id_callback(
   const avl_node_ptr_t a,
@@ -63,17 +66,59 @@ static int32_t thread_compare_id_callback(
 }
 
 /**
+ * @fn void thread_destroy_callback(const avl_node_ptr_t)
+ * @brief Helper to destroy avl node
+ *
+ * @param a
+ */
+static void thread_destroy_callback( const avl_node_ptr_t node ) {
+  // get thread and context
+  task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( node );
+  task_process_ptr_t proc = thread->process;
+  virt_context_ptr_t ctx = proc->virtual_context;
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Destroy thread with id %d of process with id %d!\r\n",
+      thread->id,
+      thread->process->id );
+  #endif
+  // unmap thread stack
+  while (
+    proc->virtual_context
+    && ! virt_unmap_address( ctx, thread->stack_virtual, true )
+  ) {
+    // loop until successful unmapped!
+  }
+  // get thread queue by priority
+  task_priority_queue_ptr_t queue = task_queue_get_queue(
+    process_manager, proc->priority );
+  while( queue && ! list_remove_data( queue->thread_list, thread ) ) {
+    // loop until successfully removed
+  }
+  // remove from stack address from manager
+  while ( ! task_stack_manager_remove(
+    thread->stack_virtual,
+    proc->thread_stack_manager
+  ) ) {
+    // wait until removal was successful
+  }
+  // free allocated space
+  if ( thread->current_context ) {
+    free( thread->current_context );
+  }
+  free( thread );
+}
+
+/**
+ * @fn pid_t task_thread_generate_id(task_process_ptr_t)
  * @brief Method to generate new thread id
  *
- * @return size_t generated thread id
- *
- * @todo generate id continuously by process and not generally
+ * @param proc process to generate id for
+ * @return
  */
-pid_t task_thread_generate_id( void ) {
-  // current pid
-  static pid_t current = 0;
+pid_t task_thread_generate_id( task_process_ptr_t proc ) {
   // return new pid by simple increment
-  return ++current;
+  return ++proc->current_thread_id;
 }
 
 /**
@@ -124,16 +169,22 @@ void task_thread_reset_current( void ) {
 }
 
 /**
+ * @fn avl_tree_ptr_t task_thread_init(void)
  * @brief Create thread manager for task
  *
- * @return avl_tree_ptr_t
+ * @return
  */
 avl_tree_ptr_t task_thread_init( void ) {
-  return avl_create_tree( thread_compare_id_callback, NULL, NULL );
+  return avl_create_tree(
+    thread_compare_id_callback,
+    NULL,
+    thread_destroy_callback
+  );
 }
 
 /**
- * @brief Destroy thread manager for task
+ * @fn void task_thread_destroy(avl_tree_ptr_t)
+ * @brief Destroy thread manager tree
  *
  * @param tree
  */
@@ -278,4 +329,42 @@ task_thread_ptr_t task_thread_next( void ) {
   }
 
   return NULL;
+}
+
+/**
+ * @fn void task_thread_cleanup(event_origin_t, void*)
+ * @brief thread cleanup handling
+ *
+ * @param origin
+ * @param context
+ */
+void task_thread_cleanup(
+  __unused event_origin_t origin,
+  __unused void* context
+) {
+  list_item_ptr_t current = process_manager->process_to_cleanup->first;
+  // loop
+  while ( current ) {
+    // get process from item
+    task_thread_ptr_t thread = ( task_thread_ptr_t )current->data;
+    // skip running
+    if ( thread->state != TASK_THREAD_STATE_KILL ) {
+      continue;
+    }
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "Cleanup thread with id %d of process with id %d!\r\n",
+        thread->id,
+        thread->process->id );
+    #endif
+    // cache current as remove
+    list_item_ptr_t remove = current;
+    // head over to next
+    current = current->next;
+    // remove node from tree and cleanup
+    avl_remove_by_node( thread->process->thread_manager, &thread->node_id );
+    thread->process->thread_manager->cleanup( &thread->node_id );
+    // remove list item
+    list_remove( process_manager->thread_to_cleanup, remove );
+  }
 }

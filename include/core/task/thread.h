@@ -22,6 +22,7 @@
 #include <stdnoreturn.h>
 #include <collection/avl.h>
 #include <unistd.h>
+#include <core/event.h>
 
 #if ! defined( __CORE_TASK_THREAD__ )
 #define __CORE_TASK_THREAD__
@@ -61,7 +62,7 @@ extern task_thread_ptr_t task_thread_current_thread;
 
 bool task_thread_set_current( task_thread_ptr_t, task_priority_queue_ptr_t );
 void task_thread_reset_current( void );
-pid_t task_thread_generate_id( void );
+pid_t task_thread_generate_id( task_process_ptr_t );
 avl_tree_ptr_t task_thread_init( void );
 void task_thread_destroy( avl_tree_ptr_t );
 task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t, size_t );
@@ -69,5 +70,6 @@ task_thread_ptr_t task_thread_fork( task_process_ptr_t, task_thread_ptr_t );
 task_thread_ptr_t task_thread_next( void );
 noreturn void task_thread_switch_to( uintptr_t );
 bool task_thread_push_arguments( task_process_ptr_t, ... );
+void task_thread_cleanup( event_origin_t, void* );
 
 #endif

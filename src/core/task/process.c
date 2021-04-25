@@ -139,8 +139,6 @@ static int32_t process_lookup_name(
  *
  * @param proc process structure to free
  * @param name name entry list
- *
- * @todo ensure that method is completed
  */
 static void task_process_free( task_process_ptr_t proc, task_process_name_ptr_t name ) {
   // handle invalid
@@ -153,13 +151,19 @@ static void task_process_free( task_process_ptr_t proc, task_process_name_ptr_t 
   if ( proc->virtual_context ) {
     assert( virt_destroy_context( proc->virtual_context ) );
   }
+  // set to null
+  proc->virtual_context = NULL;
+  // destroy thread manager
+  if ( proc->thread_manager ) {
+    task_thread_destroy( proc->thread_manager );
+  }
   // destroy stack manager
   if ( proc->thread_stack_manager ) {
     task_stack_manager_destroy( proc->thread_stack_manager );
   }
-  // destroy thread manager
-  if ( proc->thread_manager ) {
-    task_thread_destroy( proc->thread_manager );
+  // destroy message queue
+  if ( proc->message_queue ) {
+    list_destruct( proc->message_queue );
   }
   // free up name
   if ( proc->name ) {
@@ -280,9 +284,20 @@ bool task_process_init( void ) {
     free( process_manager );
     return false;
   }
+  // create cleanup list
+  process_manager->thread_to_cleanup = list_construct( NULL, NULL );
+  if ( ! process_manager->thread_to_cleanup ) {
+    list_destruct( process_manager->process_to_cleanup );
+    avl_destroy_tree( process_manager->process_name );
+    avl_destroy_tree( process_manager->process_id );
+    avl_destroy_tree( process_manager->thread_priority );
+    free( process_manager );
+    return false;
+  }
 
   // register process switch event
   if ( ! event_bind( EVENT_PROCESS, task_process_schedule, true ) ) {
+    list_destruct( process_manager->thread_to_cleanup );
     list_destruct( process_manager->process_to_cleanup );
     avl_destroy_tree( process_manager->process_name );
     avl_destroy_tree( process_manager->thread_priority );
@@ -293,6 +308,18 @@ bool task_process_init( void ) {
   // register cleanup
   if ( ! event_bind( EVENT_PROCESS, task_process_cleanup, true ) ) {
     event_unbind( EVENT_PROCESS, task_process_schedule, true );
+    list_destruct( process_manager->thread_to_cleanup );
+    list_destruct( process_manager->process_to_cleanup );
+    avl_destroy_tree( process_manager->process_name );
+    avl_destroy_tree( process_manager->thread_priority );
+    avl_destroy_tree( process_manager->process_id );
+    free( process_manager );
+    return false;
+  }
+  if ( ! event_bind( EVENT_PROCESS, task_thread_cleanup, true ) ) {
+    event_unbind( EVENT_PROCESS, task_process_cleanup, true );
+    event_unbind( EVENT_PROCESS, task_process_schedule, true );
+    list_destruct( process_manager->thread_to_cleanup );
     list_destruct( process_manager->process_to_cleanup );
     avl_destroy_tree( process_manager->process_name );
     avl_destroy_tree( process_manager->thread_priority );
@@ -602,12 +629,11 @@ void task_process_queue_reset( void ) {
 }
 
 /**
+ * @fn void task_process_cleanup(event_origin_t, void*)
  * @brief Task process cleanup handling
  *
  * @param origin
  * @param context
- *
- * @todo add process cleanup logic
  */
 void task_process_cleanup(
   __unused event_origin_t origin,

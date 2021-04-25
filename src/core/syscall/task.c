@@ -201,7 +201,11 @@ void syscall_thread_exit( void* context ) {
   #endif
   // set process state
   task_thread_current_thread->state = TASK_THREAD_STATE_KILL;
-  // FIXME: PUSH THREAD TO SOME CLEANUP LIST
+  // push process to cleanup list
+  list_push_back(
+    process_manager->thread_to_cleanup,
+    task_thread_current_thread->process
+  );
   // trigger schedule and cleanup
   event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
 }

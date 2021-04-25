@@ -49,6 +49,7 @@ struct task_process {
   task_stack_manager_ptr_t thread_stack_manager;
   pid_t id;
   pid_t parent;
+  pid_t current_thread_id;
   size_t priority;
   char* name;
   virt_context_ptr_t virtual_context;
@@ -67,6 +68,7 @@ struct task_manager {
   avl_tree_ptr_t process_name;
   avl_tree_ptr_t thread_priority;
   list_manager_ptr_t process_to_cleanup;
+  list_manager_ptr_t thread_to_cleanup;
 };
 
 typedef struct task_process task_process_t;
