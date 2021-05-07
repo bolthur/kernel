@@ -29,9 +29,9 @@
  * @param size size of one entry
  * @return void* allocated address or NULL
  */
-void *calloc( size_t num, size_t size ) {
+__allocator void* calloc( size_t num, size_t size ) {
   // allocate memory
-  void *ptr = malloc( num * size );
+  void* ptr = malloc( num * size );
   // handle malloc error
   if ( ! ptr ) {
     return NULL;

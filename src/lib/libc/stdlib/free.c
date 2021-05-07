@@ -26,7 +26,7 @@
  *
  * @param ptr ptr to address to free
  */
-void free( void *ptr ) {
+void free( void* ptr ) {
   // free heap block
   heap_free_block( ( uintptr_t )ptr );
 }

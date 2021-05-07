@@ -26,6 +26,6 @@
  * @param size size to allocate
  * @return void* allocated address or NULL
  */
-void* malloc( size_t size ) {
+__allocator void* malloc( size_t size ) {
   return aligned_alloc( __alignof( size ), size );
 }

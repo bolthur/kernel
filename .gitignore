@@ -8,6 +8,7 @@
 /tool/ramdisk
 /include/config.h
 /driver/include/config.h
+/build-aux/platform/rpi/initrd
 
 # ---> Autotools
 # http://www.gnu.org/software/automake

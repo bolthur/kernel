@@ -40,7 +40,7 @@ static bool stub_first_entry = true;
 /**
  * @brief GDB debug context
  */
-static void *gdb_execution_context = NULL;
+static void* gdb_execution_context = NULL;
 
 /**
  * @brief debug command handler

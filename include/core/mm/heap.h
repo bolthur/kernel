@@ -75,5 +75,6 @@ bool heap_init_get( void );
 void heap_init( heap_init_state_t );
 uintptr_t heap_allocate_block( size_t, size_t );
 void heap_free_block( uintptr_t );
+size_t heap_block_length( uintptr_t );
 
 #endif

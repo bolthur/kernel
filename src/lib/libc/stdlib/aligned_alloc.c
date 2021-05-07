@@ -29,7 +29,7 @@
  * @param size size to allocate
  * @return void* reserved memory
  */
-void* aligned_alloc( size_t alignment, size_t size ) {
+__allocator void* aligned_alloc( size_t alignment, size_t size ) {
   // standard conformance
   if ( 0 == size ) {
     return NULL;

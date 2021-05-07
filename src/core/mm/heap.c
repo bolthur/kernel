@@ -1308,3 +1308,58 @@ void heap_free_block( uintptr_t addr ) {
     shrink_heap_space();
   }
 }
+
+/**
+ * @fn size_t heap_block_length(uintptr_t)
+ * @brief Get original heap block length
+ *
+ * @param addr address to get length for
+ * @return
+ */
+size_t heap_block_length( uintptr_t addr ) {
+  // variables
+  avl_node_ptr_t address_node;
+  heap_block_ptr_t current_block;
+  avl_tree_ptr_t used_area;
+  // stop if not setup
+  if ( ! kernel_heap ) {
+    return 0;
+  }
+  // start and end of early init
+  uintptr_t initial_start = ( uintptr_t )&__initial_heap_start;
+  uintptr_t initial_end = ( uintptr_t )&__initial_heap_end;
+  // consider block from early setup
+  if ( addr >= initial_start && addr <= initial_end ) {
+    used_area = get_used_area_tree( HEAP_INIT_EARLY, kernel_heap );
+  // else use heap state tree
+  } else {
+    used_area = get_used_area_tree( kernel_heap->state, kernel_heap );
+  }
+
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "addr = %p\r\n", ( void* )addr );
+  #endif
+  // find node by address within tree
+  address_node = avl_find_by_data( used_area, ( void* )addr );
+  // skip if nothing has been found
+  if ( ! address_node ) {
+    return 0;
+  }
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT(
+      "address_node = %p, data = %p\r\n",
+      ( void* )address_node,
+      address_node->data
+    );
+  #endif
+  // get memory block
+  current_block = HEAP_GET_BLOCK_ADDRESS( address_node );
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "current_block = %p\r\n", ( void* )current_block );
+  #endif
+
+  return current_block->size;
+}

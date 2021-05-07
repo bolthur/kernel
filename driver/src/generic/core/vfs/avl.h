@@ -44,7 +44,7 @@ typedef void ( *avl_cleanup_func_t )(
 );
 
 struct avl_node {
-  void *data;
+  void* data;
   avl_node_ptr_t left;
   avl_node_ptr_t right;
 };

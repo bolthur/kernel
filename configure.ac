@@ -254,12 +254,7 @@ AC_DEFINE_UNQUOTED(
 AC_DEFINE_UNQUOTED(
   [__allocator],
   [__attribute__((malloc))],
-  [Keyword for section placement.]
-)
-AC_DEFINE_UNQUOTED(
-  [__deallocator],
-  [__attribute__((malloc, free))],
-  [Keyword for section placement.]
+  [Keyword for mark something as allocator.]
 )
 AC_DEFINE_UNQUOTED(
   [__packed],

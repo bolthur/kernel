@@ -30,6 +30,7 @@
 
 /**
  * @brief Current running thread
+ * @todo Transform to pointer to multiple threads ( depending on cpu size )
  */
 task_thread_ptr_t task_thread_current_thread = NULL;
 
