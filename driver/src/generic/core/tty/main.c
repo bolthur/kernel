@@ -78,10 +78,6 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
 }
 
 int main( __unused int argc, __unused char* argv[] ) {
-  // create message queue
-  _message_create();
-  assert( ! errno );
-
   // print something
   printf( "tty processing!\r\n" );
   // allocate memory for add request

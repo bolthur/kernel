@@ -33,7 +33,8 @@ typedef struct task_priority_queue task_priority_queue_t;
 typedef struct task_priority_queue *task_priority_queue_ptr_t;
 
 typedef enum {
-  TASK_THREAD_STATE_READY = 0,
+  TASK_THREAD_STATE_INIT = 0,
+  TASK_THREAD_STATE_READY,
   TASK_THREAD_STATE_ACTIVE,
   TASK_THREAD_STATE_HALT_SWITCH,
   TASK_THREAD_STATE_KILL,

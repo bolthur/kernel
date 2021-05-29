@@ -24,11 +24,10 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define SYSCALL_PROCESS_CREATE 1
-#define SYSCALL_PROCESS_EXIT 2
-#define SYSCALL_PROCESS_ID 3
-#define SYSCALL_PROCESS_FORK 4
-#define SYSCALL_PROCESS_REPLACE 5
+#define SYSCALL_PROCESS_EXIT 1
+#define SYSCALL_PROCESS_ID 2
+#define SYSCALL_PROCESS_FORK 3
+#define SYSCALL_PROCESS_REPLACE 4
 
 #define SYSCALL_THREAD_CREATE 11
 #define SYSCALL_THREAD_EXIT 12
@@ -49,6 +48,7 @@
 #define SYSCALL_MESSAGE_WAIT_FOR_RESPONSE 37
 #define SYSCALL_MESSAGE_WAIT_FOR_RESPONSE_TYPE 38
 #define SYSCALL_MESSAGE_HAS_BY_NAME 39
+#define SYSCALL_MESSAGE_REGISTER_HANDLER 40
 
 #define SYSCALL_IO_ACQUIRE 41
 #define SYSCALL_IO_RELEASE 42
@@ -67,7 +67,6 @@ void syscall_populate_success( void*, size_t );
 void syscall_populate_error( void*, size_t );
 size_t syscall_get_parameter( void*, int32_t );
 
-void syscall_process_create( void* );
 void syscall_process_exit( void* );
 void syscall_process_id( void* );
 void syscall_process_fork( void* );
@@ -92,6 +91,7 @@ void syscall_message_receive_type( void* );
 void syscall_message_wait_for_response( void* );
 void syscall_message_wait_for_response_type( void* );
 void syscall_message_has_by_name( void* );
+void syscall_message_register_handler( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );

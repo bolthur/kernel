@@ -69,9 +69,6 @@ __weak_symbol int _open( const char* name, int flags, ... ) {
   // allocate message structures
   memset( &request, 0, sizeof( vfs_open_request_t ) );
   memset( &response, 0, sizeof( vfs_open_response_t ) );
-  // create message queue
-  _message_create();
-  assert( ! errno );
   // prepare message structure
   strcpy( request.path, name );
   request.flags = flags;
@@ -124,9 +121,6 @@ __weak_symbol int _close( int file ) {
   // allocate message structures
   memset( &request, 0, sizeof( vfs_close_request_t ) );
   memset( &response, 0, sizeof( vfs_close_response_t ) );
-  // create message queue
-  _message_create();
-  assert( ! errno );
   // prepare message structure
   request.handle = file;
   // loop until message has been sent and answer has been received
@@ -181,9 +175,6 @@ ssize_t _read( int file, void* ptr, size_t len ) {
   vfs_read_response_t response;
   size_t read_amount = 0;
   char* buf = ( char* )ptr;
-  // create message queue
-  _message_create();
-  assert( ! errno );
 
   while( read_amount < len ) {
     // set amount to read

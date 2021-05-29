@@ -50,7 +50,7 @@ virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t );
 
 bool v7_short_destroy_table( sd_page_table_t* );
 bool v7_short_destroy_global_directory( sd_context_half_t* );
-bool v7_short_destroy_context( virt_context_ptr_t );
+bool v7_short_destroy_context( virt_context_ptr_t, bool );
 
 void v7_short_prepare( void );
 void v7_short_flush_complete( void );

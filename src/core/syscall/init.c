@@ -26,14 +26,6 @@
 bool syscall_init( void ) {
   // process system calls
   if ( ! interrupt_register_handler(
-    SYSCALL_PROCESS_CREATE,
-    syscall_process_create,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
     SYSCALL_PROCESS_EXIT,
     syscall_process_exit,
     INTERRUPT_SOFTWARE,
@@ -199,6 +191,14 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_MESSAGE_HAS_BY_NAME,
     syscall_message_has_by_name,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_MESSAGE_REGISTER_HANDLER,
+    syscall_message_register_handler,
     INTERRUPT_SOFTWARE,
     false
   ) ) {

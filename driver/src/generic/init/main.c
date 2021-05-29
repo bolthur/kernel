@@ -47,6 +47,7 @@ uintptr_t ramdisk_decompressed;
 size_t ramdisk_decompressed_size;
 size_t ramdisk_read_offset = 0;
 pid_t pid = 0;
+TAR *disk = NULL;
 
 /**
  * @brief Simulate open, by decompressing ramdisk tar image
@@ -55,7 +56,7 @@ pid_t pid = 0;
  * @param b
  * @return
  */
-static int my_tar_open( __unused const char* path, __unused int b, ... ) {
+__maybe_unused static int my_tar_open( __unused const char* path, __unused int b, ... ) {
   // get extract size
   ramdisk_decompressed_size = ramdisk_extract_size(
     ramdisk_compressed,
@@ -79,7 +80,7 @@ static int my_tar_open( __unused const char* path, __unused int b, ... ) {
  * @param fd
  * @return
  */
-static int my_tar_close( __unused int fd ) {
+__maybe_unused static int my_tar_close( __unused int fd ) {
   free( ( void* )ramdisk_decompressed );
   return 0;
 }
@@ -92,7 +93,7 @@ static int my_tar_close( __unused int fd ) {
  * @param count
  * @return
  */
-static ssize_t my_tar_read( __unused int fd, void* buffer, size_t count ) {
+__maybe_unused static ssize_t my_tar_read( __unused int fd, void* buffer, size_t count ) {
   uint8_t* src = ( uint8_t* )ramdisk_decompressed + ramdisk_read_offset;
   uint8_t* dst = ( uint8_t* )buffer;
 
@@ -125,7 +126,7 @@ static ssize_t my_tar_read( __unused int fd, void* buffer, size_t count ) {
  * @param count
  * @return
  */
-static ssize_t my_tar_write( __unused int fd, __unused const void* src, __unused size_t count ) {
+__maybe_unused static ssize_t my_tar_write( __unused int fd, __unused const void* src, __unused size_t count ) {
   return 0;
 }
 
@@ -134,7 +135,7 @@ static ssize_t my_tar_write( __unused int fd, __unused const void* src, __unused
  *
  * @param msg
  */
-static void send_add_request( vfs_add_request_ptr_t msg ) {
+__maybe_unused static void send_add_request( vfs_add_request_ptr_t msg ) {
   vfs_add_response_t response;
   memset( &response, 0, sizeof( vfs_add_response_t ) );
   // message id variable
@@ -179,7 +180,7 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
  * @param str
  * @return true if exist, else false
  */
-static bool check_for_path( const char* str ) {
+__maybe_unused static bool check_for_path( const char* str ) {
   vfs_has_request_t request;
   vfs_has_response_t response;
   memset( &request, 0, sizeof( vfs_has_request_t ) );
@@ -217,6 +218,15 @@ static bool check_for_path( const char* str ) {
   }
 }
 
+__unused static int execute_driver(
+  __unused char* name,
+  __unused char** argv,
+  __unused char** env
+) {
+  errno = ENOSYS;
+  return -1;
+}
+
 /**
  * @brief main entry function
  *
@@ -252,25 +262,10 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
 
-  // debug
-  printf( "Testing FORK!\r\n" );
-  pid_t forked_process = fork();
-  if ( 0 == forked_process ) {
-    printf( "Child process kicks in ( pid = %d )!\r\n", getpid() );
-    return -1; // return for exit!
-  } else {
-    printf( "Parent process continues ( pid = %d )!\r\n", getpid() );
-  }
-  for(;;);
-
   // debug print
   printf( "ramdisk = %#0*"PRIxPTR"\r\n", address_size, ramdisk_compressed );
   printf( "ramdisk_size = %zx\r\n", ramdisk_compressed_size );
   printf( "device_tree = %#0*"PRIxPTR"\r\n", address_size, device_tree );
-
-  // create message queue
-  _message_create();
-  assert( ! errno );
 
   tartype_t *mytype = malloc( sizeof( tartype_t ) );
   if ( !mytype ) {
@@ -282,57 +277,65 @@ int main( int argc, char* argv[] ) {
   mytype->readfunc = my_tar_read;
   mytype->writefunc = my_tar_write;
 
-  TAR *t = NULL;
-  if ( 0 != tar_open( &t, "/ramdisk.tar", mytype, O_RDONLY, 0, 0 ) ) {
+  if ( 0 != tar_open( &disk, "/ramdisk.tar", mytype, O_RDONLY, 0, 0 ) ) {
     printf( "ERROR: Cannot open ramdisk!\r\n" );
     return -1;
   }
 
-  // Get VFS
-  void* vfs_image = ramdisk_lookup_file( t, "core/vfs" );
-  if ( ! vfs_image ) {
-    printf( "ERROR: VFS daemon not found!\r\n" );
+  // dump ramdisk
+  ramdisk_dump( disk );
+  // get vfs image
+  void* vfs_image = ramdisk_lookup_file( disk, "ramdisk/core/vfs" );
+  assert( vfs_image );
+  // fork process and handle possible error
+  printf( "Forking process for vfs start!\r\n" );
+  pid_t forked_process = fork();
+  if ( errno ) {
+    printf( "Unable to fork process for vfs replace: %s\r\n", strerror( errno ) );
     return -1;
   }
-  // start vfs daemon and expect it to be second process
-  pid_t vfs_pid = _process_create( vfs_image, "daemon:/vfs" );
-  assert( -1 != vfs_pid );
+  // fork only
+  if ( 0 == forked_process ) {
+    printf( "Replacing fork with vfs image!\r\n" );
+    // call for replace and handle error
+    _process_replace( vfs_image, "daemon:/vfs" );
+    if ( errno ) {
+      printf( "Unable to replace process with image: %s\r\n", strerror( errno ) );
+      return -1;
+    }
+  }
+  printf( "Continuing with init startup!\r\n" );
 
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
   // create root ramdisk directory
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
-  // prepare message structure
-  msg->entry_type = VFS_ENTRY_TYPE_DIRECTORY;
-  strcpy( msg->file_path, MOUNT_POINT );
-  // send message
-  send_add_request( msg );
   // reset read offset
   ramdisk_read_offset = 0;
   // loop until vfs image is there
-  while ( th_read( t ) == 0 ) {
+  while ( th_read( disk ) == 0 ) {
     // handle directory, hard links, symbolic links and normal entries
-    if ( TH_ISREG( t ) || TH_ISDIR( t ) || TH_ISLNK( t ) || TH_ISSYM( t ) ) {
+    if ( TH_ISREG( disk ) || TH_ISDIR( disk ) || TH_ISLNK( disk ) || TH_ISSYM( disk ) ) {
       // clear message structures
       memset( msg, 0, sizeof( vfs_add_request_t ) );
       // set correct entry type
-      if ( TH_ISREG( t ) ) {
+      if ( TH_ISREG( disk ) ) {
         msg->entry_type = VFS_ENTRY_TYPE_FILE;
-      } else if ( TH_ISDIR( t ) ) {
+      } else if ( TH_ISDIR( disk ) ) {
         msg->entry_type = VFS_ENTRY_TYPE_DIRECTORY;
-      } else if ( TH_ISLNK( t ) ) {
+      } else if ( TH_ISLNK( disk ) ) {
         msg->entry_type = VFS_ENTRY_TYPE_HARDLINK;
-      } else if ( TH_ISSYM( t ) ) {
+      } else if ( TH_ISSYM( disk ) ) {
         msg->entry_type = VFS_ENTRY_TYPE_SYMLINK;
       }
       // populate path into message
-      strcpy( msg->file_path, MOUNT_POINT );
-      strcat( msg->file_path, th_get_pathname( t ) );
+      strcpy( msg->file_path, "/" );
+      strcat( msg->file_path, th_get_pathname( disk ) );
       // send add request
       send_add_request( msg );
     }
     // skip to next file
-    if ( TH_ISREG( t ) && tar_skip_regfile( t ) != 0 ) {
+    if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
       printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
       return -1;
     }
@@ -340,7 +343,21 @@ int main( int argc, char* argv[] ) {
   // free message structure
   free( msg );
 
-  // Get system console
+  // fork process and handle possible error
+  printf( "Forking process for further init!\r\n" );
+  forked_process = fork();
+  if ( errno ) {
+    printf( "Unable to fork process for init continue: %s\r\n", strerror( errno ) );
+    return -1;
+  }
+  // fork only
+  if ( 0 == forked_process ) {
+    printf( "Exit fork!\r\n" );
+    _process_exit( 1 );
+  }
+
+  // FIXME: FORK AND HANDLE FURTHER OUTCOMMENTED SETUP WITHIN FORKED PROCESS
+/*  // Get system console
   void* console_image = ramdisk_lookup_file( t, "core/console" );
   if ( ! console_image ) {
     printf( "ERROR: console daemon not found!\r\n" );
@@ -386,7 +403,7 @@ int main( int argc, char* argv[] ) {
   }
   // start startup and expect it to be third process
   pid_t startup_pid = _process_create( startup_image, "daemon:/startup" );
-  assert( -1 != startup_pid );
+  assert( -1 != startup_pid );*/
 
   while( true ) {
     // get message type
@@ -422,19 +439,19 @@ int main( int argc, char* argv[] ) {
       // reset read offset
       ramdisk_read_offset = 0;
       // try to find within ramdisk
-      while ( th_read( t ) == 0 ) {
-        if ( TH_ISREG( t ) ) {
+      while ( th_read( disk ) == 0 ) {
+        if ( TH_ISREG( disk ) ) {
           // get filename
-          char* ramdisk_file = th_get_pathname( t );
+          char* ramdisk_file = th_get_pathname( disk );
           // check for match
           if ( 0 == strcmp( file, ramdisk_file ) ) {
             // set vfs image addr
-            total_size = th_get_size( t );
+            total_size = th_get_size( disk );
             buf = ( char* )( ( uint8_t* )ramdisk_decompressed + ramdisk_read_offset );
             break;
           }
           // skip to next file
-          if ( tar_skip_regfile( t ) != 0 ) {
+          if ( tar_skip_regfile( disk ) != 0 ) {
             printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
             return -1;
           }
@@ -497,18 +514,18 @@ int main( int argc, char* argv[] ) {
       // reset read offset
       ramdisk_read_offset = 0;
       // try to find within ramdisk
-      while ( th_read( t ) == 0 ) {
-        if ( TH_ISREG( t ) ) {
+      while ( th_read( disk ) == 0 ) {
+        if ( TH_ISREG( disk ) ) {
           // get filename
-          char* ramdisk_file = th_get_pathname( t );
+          char* ramdisk_file = th_get_pathname( disk );
           // check for match
           if ( 0 == strcmp( file, ramdisk_file ) ) {
             // set vfs image addr
-            total_size = th_get_size( t );
+            total_size = th_get_size( disk );
             break;
           }
           // skip to next file
-          if ( tar_skip_regfile( t ) != 0 ) {
+          if ( tar_skip_regfile( disk ) != 0 ) {
             printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
             return -1;
           }

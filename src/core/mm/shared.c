@@ -36,11 +36,12 @@
 avl_tree_ptr_t shared_tree = NULL;
 
 /**
- * @brief Lookup callback necessary for avl tree
+ * @fn int32_t lookup_process(const list_item_ptr_t, const void*)
+ * @brief Tree helper for process list lookup
  *
- * @param a node a
- * @param b node b
- * @return int32_t
+ * @param a
+ * @param b
+ * @return
  */
 static int32_t lookup_process( const list_item_ptr_t a, const void* b ) {
   // get blocks
@@ -54,7 +55,9 @@ static int32_t lookup_process( const list_item_ptr_t a, const void* b ) {
 }
 
 /**
- * @brief Cleanup process list helper
+ * @fn void cleanup_process(const list_item_ptr_t)
+ * @brief Helper to cleanup process list
+ *
  * @param a
  */
 static void cleanup_process( const list_item_ptr_t a ) {
@@ -74,9 +77,10 @@ static void cleanup_process( const list_item_ptr_t a ) {
 }
 
 /**
- * @brief helper to generate new shared memory id
+ * @fn size_t generate_shared_memory_id(void)
+ * @brief Helper to generate new shared memory id
  *
- * @return new shared memory id
+ * @return
  */
 static size_t generate_shared_memory_id( void ) {
   static size_t id = 1;
@@ -84,6 +88,7 @@ static size_t generate_shared_memory_id( void ) {
 }
 
 /**
+ * @fn void destroy_entry(shared_memory_entry_ptr_t)
  * @brief Helper to destroy single entry completely
  *
  * @param entry
@@ -117,10 +122,11 @@ static void destroy_entry( shared_memory_entry_ptr_t entry ) {
 }
 
 /**
- * @brief Create a entry object
+ * @fn shared_memory_entry_ptr_t create_entry(size_t)
+ * @brief Helper to create a entry object
  *
  * @param size
- * @return shared_memory_entry_ptr_t
+ * @return
  */
 static shared_memory_entry_ptr_t create_entry( size_t size ) {
   // create list entry
@@ -173,7 +179,8 @@ static shared_memory_entry_ptr_t create_entry( size_t size ) {
 }
 
 /**
- * @brief initialize shared memory functionality
+ * @fn bool shared_memory_init(void)
+ * @brief Initialize shared memory functionality
  *
  * @return
  */
@@ -192,7 +199,8 @@ bool shared_memory_init( void ) {
 }
 
 /**
- * @brief generate new shared memory block
+ * @fn size_t shared_memory_create(size_t)
+ * @brief Create new shared memory area
  *
  * @param len shared area size
  * @return
@@ -223,6 +231,7 @@ size_t shared_memory_create( size_t len ) {
 }
 
 /**
+ * @fn uintptr_t shared_memory_attach(task_process_ptr_t, size_t, uintptr_t)
  * @brief Attached shared memory area by id
  *
  * @param process
@@ -329,6 +338,7 @@ uintptr_t shared_memory_attach(
 }
 
 /**
+ * @fn bool shared_memory_detach(task_process_ptr_t, size_t)
  * @brief Detach shared memory area by id
  *
  * @param process
@@ -376,6 +386,7 @@ bool shared_memory_detach( task_process_ptr_t process, size_t id ) {
 }
 
 /**
+ * @fn bool shared_memory_address_is_shared(task_process_ptr_t, uintptr_t, size_t)
  * @brief Check if area is somehow in shared
  *
  * @param process
@@ -397,7 +408,7 @@ bool shared_memory_address_is_shared(
     // lookup process
     list_item_ptr_t process_list_item = list_lookup_data(
       entry->process_mapping, process );
-    // handle not attached
+    // handle attached
     if ( process_list_item ) {
       // transform to mapped entry
       shared_memory_entry_mapped_ptr_t mapped = ( shared_memory_entry_mapped_ptr_t )
@@ -415,4 +426,80 @@ bool shared_memory_address_is_shared(
   }
   // return NULL
   return false;
+}
+
+/**
+ * @fn bool shared_memory_fork(task_process_ptr_t, task_process_ptr_t)
+* @brief Method to duplicate shared memory entries during fork
+ *
+ * @param process_to_fork
+ * @param process_fork
+ * @return
+ */
+bool shared_memory_fork(
+  task_process_ptr_t process_to_fork,
+  task_process_ptr_t process_fork
+) {
+  // get start node
+  avl_node_ptr_t node = avl_iterate_first( shared_tree );
+  // loop until end
+  while ( NULL != node ) {
+    // get mapped entry
+    shared_memory_entry_ptr_t entry = SHARED_ENTRY_GET_BLOCK( node );
+    // lookup process
+    list_item_ptr_t process_list_item = list_lookup_data(
+      entry->process_mapping, process_to_fork );
+    // handle attached
+    if ( process_list_item ) {
+      // transform to mapped entry
+      shared_memory_entry_mapped_ptr_t mapped_to_fork = ( shared_memory_entry_mapped_ptr_t )
+        process_list_item->data;
+      // allocate new entry
+      shared_memory_entry_mapped_ptr_t mapped_fork = ( shared_memory_entry_mapped_ptr_t )
+        malloc( sizeof( shared_memory_entry_mapped_t) );
+      if ( ! mapped_fork ) {
+        return false;
+      }
+      memset( mapped_fork, 0, sizeof( shared_memory_entry_mapped_t ) );
+      // duplicate data
+      mapped_fork->process = process_fork;
+      mapped_fork->size = mapped_to_fork->size;
+      mapped_fork->start = mapped_to_fork->start;
+      // push to entry list
+      if ( ! list_push_back( entry->process_mapping, mapped_fork ) ) {
+        // free and return error
+        free( mapped_fork );
+        return false;
+      }
+    }
+    // get next
+    node = avl_iterate_next( shared_tree, node );
+  }
+  // return success
+  return true;
+}
+
+/**
+ * @fn bool shared_memory_cleanup_process(task_process_ptr_t)
+ * @brief Method to cleanup all assigned shared memory areas
+ *
+ * @param proc
+ * @return
+ */
+bool shared_memory_cleanup_process( task_process_ptr_t proc ) {
+  // get start node
+  avl_node_ptr_t node = avl_iterate_first( shared_tree );
+  // loop until end
+  while ( NULL != node ) {
+    // get mapped entry
+    shared_memory_entry_ptr_t entry = SHARED_ENTRY_GET_BLOCK( node );
+    // detach shared memory
+    if ( ! shared_memory_detach( proc, entry->id ) ) {
+      return false;
+    }
+    // get next
+    node = avl_iterate_next( shared_tree, node );
+  }
+  // return success
+  return true;
 }

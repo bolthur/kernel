@@ -26,13 +26,26 @@ createDir( "tmp" )
 
 # check argument count
 let argc: int = paramCount()
-if argc != 2:
-  echo "Usage: ramdisk <dirver path> <initrd name>"
+if argc != 3:
+  echo "Usage: ramdisk <dirver path> <initrd name> <sysroot libdir>"
   quit( 1 )
 
 # get command line arguments
 let driver: string = paramStr( 1 );
 let output: string = paramStr( 2 );
+let lib: string = paramStr( 3 );
+
+for file in walkDirRec( lib ):
+  let outp_shell = execProcess( "file " & file )
+  if contains( outp_shell, "LSB shared object" ):
+    # split file path
+    let split = splitPath( file )
+    #let splitted_head = split.head.split( DirSep )
+    let library = split.tail
+    # copy library
+    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "usr", "lib" )
+    createDir( base_path )
+    copyFile( file, joinPath( base_path, library ) )
 
 # loop through files of folder including subfolders
 for file in walkDirRec( driver ):
@@ -48,10 +61,13 @@ for file in walkDirRec( driver ):
     var last = len( splitted_head ) - 1
     if executable == splitted_head[ last ]: last = last - 1
 
+    var skip_top_ramdisk = false
     var pos = -1
     for idx, value in splitted_head:
-      if value == "driver" or value == "core":
+      if value == "driver" or value == "core" or value == "usr":
         pos = idx
+      if value == "usr":
+        skip_top_ramdisk = true
     if not ( "src" in splitted_head[ pos..^1 ] ) and pos != -1:
       target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
     else:
@@ -61,7 +77,11 @@ for file in walkDirRec( driver ):
     if executable == "init" and -1 == pos:
       copyFile( file, joinPath( getCurrentDir(), "tmp", executable ) )
     else:
-      let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", target_folder )
+      var base_path = ""
+      if skip_top_ramdisk:
+        base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", target_folder )
+      else:
+        base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", target_folder )
       createDir( base_path )
       copyFile( file, joinPath( base_path, executable ) )
 
@@ -72,7 +92,7 @@ for kind, file in walkDir(getCurrentDir()):
   let file_name = split.name
   let ending = split.ext
   if ending == ".txt":
-    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "test" )
+    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", "test" )
     createDir( base_path )
     copyFile( file, joinPath( base_path, file_name & ending ) )
 

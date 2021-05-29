@@ -67,7 +67,7 @@ bool virt_init_get( void );
 void virt_platform_post_init( void );
 
 virt_context_ptr_t virt_create_context( virt_context_type_t );
-bool virt_destroy_context( virt_context_ptr_t );
+bool virt_destroy_context( virt_context_ptr_t, bool );
 virt_context_ptr_t virt_fork_context( virt_context_ptr_t );
 uint64_t virt_create_table( virt_context_ptr_t, uintptr_t, uint64_t );
 

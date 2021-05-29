@@ -129,24 +129,26 @@ noreturn void kernel_main( void ) {
   // assert initrd necessary now
   assert( initrd_exist() )
   // Find init process
-  tar_header_ptr_t init = tar_lookup_file(
-    initrd_get_start_address(),
-    "init"
-  );
+  tar_header_ptr_t init = tar_lookup_file( initrd_get_start_address(), "init" );
   assert( init )
   // Get file address and size
   uintptr_t elf_file = ( uintptr_t )tar_file( init );
-  size_t elf_file_size = tar_size( init );
+  size_t flat_file_size = tar_size( init );
   // assert elf header
-  assert( elf_check( elf_file ) )
   // FIXME: REMOVE DEBUG OUTPUT BELOW
   DEBUG_OUTPUT( "Create process for file %s\r\n", init->file_name )
-  DEBUG_OUTPUT( "File size: %#zx\r\n", elf_file_size )
+  DEBUG_OUTPUT( "File size: %#zx\r\n", flat_file_size )
   // Create process
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] create ...\r\n" )
-  task_process_ptr_t proc = task_process_create(
-    elf_file, 0, 0, "daemon:/init" );
+  task_process_ptr_t proc = task_process_create( 0, 0, "daemon:/init" );
   assert( proc )
+  // load flat image
+  uintptr_t init_entry = elf_load( elf_file, proc );
+  assert( init_entry )
+  // add thread
+  assert( task_thread_create( init_entry, proc, 0 ) );
+  // set to ready and kick start user mode init
+  proc->state = TASK_PROCESS_STATE_READY;
   // further init process preparation
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] prepare ...\r\n" )
   assert( task_process_prepare_init( proc ) )

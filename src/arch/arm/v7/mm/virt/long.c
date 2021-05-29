@@ -1244,7 +1244,7 @@ virt_context_ptr_t v7_long_fork_context( virt_context_ptr_t ctx ) {
   uintptr_t ctx_to_fork = map_temporary( ctx->context, PAGE_SIZE );
   // handle error
   if ( 0 == ctx_to_fork ) {
-    assert( virt_destroy_context( forked ) );
+    assert( virt_destroy_context( forked, false ) );
     return NULL;
   }
   // map new context temporarily
@@ -1252,7 +1252,7 @@ virt_context_ptr_t v7_long_fork_context( virt_context_ptr_t ctx ) {
   // handle error
   if ( 0 == ctx_forked ) {
     unmap_temporary( ctx_to_fork, PAGE_SIZE );
-    assert( virt_destroy_context( forked ) );
+    assert( virt_destroy_context( forked, false ) );
     return NULL;
   }
   // clear page
@@ -1265,7 +1265,7 @@ virt_context_ptr_t v7_long_fork_context( virt_context_ptr_t ctx ) {
   ) ) {
     unmap_temporary( ctx_to_fork, PAGE_SIZE );
     unmap_temporary( ctx_forked, PAGE_SIZE );
-    assert( virt_destroy_context( forked ) );
+    assert( virt_destroy_context( forked, false ) );
     return NULL;
   }
 
@@ -1386,19 +1386,22 @@ bool v7_long_destroy_global_directory( ld_global_page_directory_t* dir ) {
 }
 
 /**
- * @fn bool v7_long_destroy_context(virt_context_ptr_t)
+ * @fn bool v7_long_destroy_context(virt_context_ptr_t, bool)
  * @brief Destroy context for v7 long descriptor
  *
- * @param ctx context to destroy
+ * @param ctx
+ * @param unmap_only
  * @return
  *
  * @todo test implementation by stepping with gdb
  */
-bool v7_long_destroy_context( virt_context_ptr_t ctx ) {
+bool v7_long_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
   // check context to be not active
   if (
-    ctx == virt_current_kernel_context
-    || ctx == virt_current_user_context
+    (
+      ctx == virt_current_kernel_context
+      || ctx == virt_current_user_context
+    ) && false == unmap_only
   ) {
     return false;
   }
@@ -1415,10 +1418,15 @@ bool v7_long_destroy_context( virt_context_ptr_t ctx ) {
   }
   // unmap directory
   unmap_temporary( ( uintptr_t )ctx_mapped, PAGE_SIZE );
-  // free range
-  phys_free_page_range( ctx->context, PAGE_SIZE );
-  // free structure
-  free( ctx );
+  // free up context
+  if ( ! unmap_only ) {
+    // free range
+    phys_free_page_range( ctx->context, PAGE_SIZE );
+    // free structure
+    free( ctx );
+  } else {
+    virt_flush_complete();
+  }
   // return success
   return true;
 }

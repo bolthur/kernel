@@ -28,6 +28,7 @@
 #include <core/event.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
+#include <core/mm/shared.h>
 #include <core/elf/common.h>
 #if defined( PRINT_PROCESS )
   #include <core/debug/debug.h>
@@ -140,7 +141,10 @@ static int32_t process_lookup_name(
  * @param proc process structure to free
  * @param name name entry list
  */
-static void task_process_free( task_process_ptr_t proc, task_process_name_ptr_t name ) {
+static void task_process_free(
+  task_process_ptr_t proc,
+  task_process_name_ptr_t name
+) {
   // handle invalid
   if ( ! proc ) {
     return;
@@ -149,7 +153,10 @@ static void task_process_free( task_process_ptr_t proc, task_process_name_ptr_t 
   avl_remove_by_node( process_manager->process_id, &proc->node_id );
   // destroy context if existing
   if ( proc->virtual_context ) {
-    assert( virt_destroy_context( proc->virtual_context ) );
+    // unmap all mapped shared memory areas
+    assert( shared_memory_cleanup_process( proc ) );
+    // destroy context
+    assert( virt_destroy_context( proc->virtual_context, false ) );
   }
   // set to null
   proc->virtual_context = NULL;
@@ -184,7 +191,7 @@ static void task_process_free( task_process_ptr_t proc, task_process_name_ptr_t 
  * @param name process name to get list of
  * @return
  */
-static task_process_name_ptr_t task_process_get_name_list( const char* name ) {
+task_process_name_ptr_t task_process_get_name_list( const char* name ) {
   // get possible name node
   avl_node_ptr_t name_node = avl_find_by_data(
     process_manager->process_name, ( void* )name );
@@ -344,16 +351,15 @@ pid_t task_process_generate_id( void ) {
 }
 
 /**
+ * @fn task_process_ptr_t task_process_create(size_t, pid_t, const char*)
  * @brief Method to create new process
  *
- * @param entry process entry address
  * @param priority process priority
  * @param parent parent process id
- * @param name
- * @return pointer to created task
+ * @param name process name
+ * @return
  */
 task_process_ptr_t task_process_create(
-  uintptr_t entry,
   size_t priority,
   pid_t parent,
   const char* name
@@ -366,19 +372,9 @@ task_process_ptr_t task_process_create(
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "task_process_create( %p, %zu, %zu ) called\r\n",
-      ( void* )entry, priority, parent );
+      "task_process_create( %zu, %d, %s ) called\r\n",
+      priority, parent, name );
   #endif
-
-  // check for valid header
-  if ( ! elf_check( entry ) ) {
-    // debug output
-    #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "No valid elf header found\r\n" );
-    #endif
-    // return
-    return NULL;
-  }
 
   // allocate process structure
   task_process_ptr_t process = ( task_process_ptr_t )malloc(
@@ -410,7 +406,7 @@ task_process_ptr_t task_process_create(
     task_process_free( process, NULL );
     return NULL;
   }
-  process->state = TASK_PROCESS_STATE_READY;
+  process->state = TASK_PROCESS_STATE_INIT;
   process->priority = priority;
   process->parent = parent;
   process->thread_stack_manager = task_stack_manager_create();
@@ -423,14 +419,6 @@ task_process_ptr_t task_process_create(
   process->virtual_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
   // handle error
   if ( ! process->virtual_context ) {
-    task_process_free( process, NULL );
-    return NULL;
-  }
-
-  // load elf executable
-  uintptr_t program_entry = elf_load( entry, process );
-  // handle error
-  if ( 0 == program_entry ) {
     task_process_free( process, NULL );
     return NULL;
   }
@@ -454,11 +442,6 @@ task_process_ptr_t task_process_create(
 
   // push back process to name list
   if ( ! list_push_back( name_entry->process, process ) ) {
-    task_process_free( process, name_entry );
-    return NULL;
-  }
-  // Setup thread with entry
-  if ( ! task_thread_create( program_entry, process, priority ) ) {
     task_process_free( process, name_entry );
     return NULL;
   }
@@ -508,10 +491,16 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
 
   // populate data normal data
   forked->id = task_process_generate_id();
-  forked->parent = proc->parent;
+  forked->parent = proc->id;
   forked->state = TASK_PROCESS_STATE_READY;
   forked->priority = proc->priority;
   strcpy( forked->name, proc->name );
+
+  // fork shared memory
+  if ( ! shared_memory_fork( proc, forked ) ) {
+    task_process_free( forked, NULL );
+    return NULL;
+  }
 
   // prepare node
   avl_prepare_node( &forked->node_id, ( void* )forked->id );

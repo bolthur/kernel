@@ -54,5 +54,7 @@ size_t shared_memory_create( size_t );
 uintptr_t shared_memory_attach( task_process_ptr_t, size_t, uintptr_t );
 bool shared_memory_detach( task_process_ptr_t, size_t );
 bool shared_memory_address_is_shared( task_process_ptr_t, uintptr_t, size_t );
+bool shared_memory_fork( task_process_ptr_t, task_process_ptr_t );
+bool shared_memory_cleanup_process( task_process_ptr_t );
 
 #endif

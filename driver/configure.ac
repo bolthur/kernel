@@ -65,7 +65,7 @@ AC_C_VOLATILE
 AC_C_RESTRICT
 
 # init libtool
-LT_INIT([disable-shared static])
+LT_INIT
 LT_LANG([C])
 
 # embed git revision and compiler
@@ -132,6 +132,9 @@ AC_CONFIG_FILES([
   src/generic/core/tty/Makefile
   src/generic/core/vfs/Makefile
   src/generic/init/Makefile
+  src/generic/usr/Makefile
+  src/generic/usr/bin/Makefile
+  src/generic/usr/bin/linker/Makefile
   src/platform/Makefile
   src/platform/rpi/Makefile
   src/platform/rpi/driver/Makefile

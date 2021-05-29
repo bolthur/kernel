@@ -37,7 +37,8 @@ typedef struct task_stack_manager task_stack_manager_t;
 typedef struct task_stack_manager *task_stack_manager_ptr_t;
 
 typedef enum {
-  TASK_PROCESS_STATE_READY = 0,
+  TASK_PROCESS_STATE_INIT = 0,
+  TASK_PROCESS_STATE_READY,
   TASK_PROCESS_STATE_ACTIVE,
   TASK_PROCESS_STATE_HALT_SWITCH,
   TASK_PROCESS_STATE_KILL,
@@ -92,11 +93,12 @@ void task_process_schedule( event_origin_t, void* );
 void task_process_cleanup( event_origin_t, void* );
 void task_process_start( void );
 pid_t task_process_generate_id( void );
-task_process_ptr_t task_process_create( uintptr_t, size_t, pid_t, const char* );
+task_process_ptr_t task_process_create( size_t, pid_t, const char* );
 task_process_ptr_t task_process_fork( task_thread_ptr_t );
 bool task_process_prepare_init( task_process_ptr_t );
 uintptr_t task_process_prepare_init_arch( task_process_ptr_t );
 task_process_ptr_t task_process_get_by_id( pid_t );
 list_manager_ptr_t task_process_get_by_name( const char* );
+task_process_name_ptr_t task_process_get_name_list( const char* );
 
 #endif

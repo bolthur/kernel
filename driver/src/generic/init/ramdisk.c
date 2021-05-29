@@ -149,3 +149,21 @@ void* ramdisk_lookup_file( TAR* t, const char* name ) {
 
   return file;
 }
+
+void ramdisk_dump( TAR* t ) {
+  // variables
+  ramdisk_read_offset = 0;
+  // loop through ramdisk and lookup file
+  while ( th_read( t ) == 0 ) {
+    if ( TH_ISREG( t ) ) {
+      // get filename
+      char* filename = th_get_pathname( t );
+      printf( "%s\r\n", filename );
+      // skip to next file
+      if ( tar_skip_regfile( t ) != 0 ) {
+        printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
+        break;
+      }
+    }
+  }
+}

@@ -15,7 +15,7 @@ cppcheck:
 # FIXME: MOVE __INTPTR_TYPE__ DEFINE INTO MACRO PER HOST
 
 ramdisk:
-	cd $(ROOT_DIR)/tool && nim compile --run ramdisk.nim $(ROOT_DIR)/build/driver $(ROOT_DIR)/build-aux/platform/rpi/initrd
+	cd $(ROOT_DIR)/tool && nim compile --run ramdisk.nim $(ROOT_DIR)/build/driver $(ROOT_DIR)/build-aux/platform/rpi/initrd $(SYSROOT_LIBDIR)
 
 # doxygen related
 @DX_RULES@

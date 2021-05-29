@@ -308,13 +308,14 @@ virt_context_ptr_t virt_fork_context( virt_context_ptr_t ctx ) {
 }
 
 /**
+ * @fn bool virt_destroy_context(virt_context_ptr_t, bool)
  * @brief Method to destroy virtual context
  *
  * @param ctx
- *
- * @todo add error return, when sub functions have been implemented
+ * @param unmap_only
+ * @return
  */
-bool virt_destroy_context( virt_context_ptr_t ctx ) {
+bool virt_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
   // check context
   if ( ! ctx ) {
     return false;
@@ -322,13 +323,13 @@ bool virt_destroy_context( virt_context_ptr_t ctx ) {
 
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_supported_mode ) {
-    return v7_long_destroy_context( ctx );
+    return v7_long_destroy_context( ctx, unmap_only );
   // check v7 short descriptor format
   } else if (
     ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == virt_supported_mode )
     || ( ID_MMFR0_VSMA_V7_PAGING_PXN == virt_supported_mode )
   ) {
-    return v7_short_destroy_context( ctx );
+    return v7_short_destroy_context( ctx, unmap_only );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" )

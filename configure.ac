@@ -211,6 +211,8 @@ BOLTHUR_KERNEL_SET_FLAG
 BOLTHUR_KERNEL_PREPARE_CPPCHECK
 # add directory for ramdisk
 AC_SUBST(ROOT_DIR, $($BOLTHUR_READLINK -f ${srcdir}))
+AC_SUBST(SYSROOT_LIBDIR, $(dirname $($BOLTHUR_READLINK -f $($CC $CFLAGS --print-file-name=libc.so))))
+
 # doxygen stuff
 DX_DOXYGEN_FEATURE(ON)
 DX_HTML_FEATURE(ON)

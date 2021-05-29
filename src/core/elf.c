@@ -29,11 +29,11 @@
 #endif
 
 /**
+ * @fn bool elf_check(uintptr_t)
  * @brief Check elf header for execution
  *
  * @param elf header address to check
- * @return true elf header valid
- * @return false elf header invalid
+ * @return
  */
 bool elf_check( uintptr_t elf ) {
   Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
@@ -114,12 +114,12 @@ bool elf_check( uintptr_t elf ) {
 }
 
 /**
+ * @fn bool load_program_header(uintptr_t, task_process_ptr_t)
  * @brief Internal helper to parse and load program header
  *
- * @param elf address to elf header
- * @param process process structure
- * @return true
- * @return false
+ * @param elf elf image address
+ * @param process process
+ * @return
  */
 static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
   // get header
@@ -291,11 +291,12 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
 }
 
 /**
- * @brief Method to load elf for process
+ * @fn uintptr_t elf_load(uintptr_t, task_process_ptr_t)
+ * @brief Method to load simple elf for process ( used for init only )
  *
- * @param elf address to elf header
- * @param process process structure
- * @return uintptr_t program entry or 0 on error
+ * @param elf address to image
+ * @param process process where it shall be loaded into
+ * @return
  */
 uintptr_t elf_load( uintptr_t elf, task_process_ptr_t process ) {
   // check for elf
@@ -310,4 +311,34 @@ uintptr_t elf_load( uintptr_t elf, task_process_ptr_t process ) {
   }
   // return entry
   return ( uintptr_t )header->e_entry;
+}
+
+/**
+ * @fn size_t elf_image_size(uintptr_t)
+ * @brief Helper to get elf image size
+ *
+ * @param elf
+ * @return
+ */
+size_t elf_image_size( uintptr_t elf ) {
+  // check header
+  if ( ! elf_check( elf ) ) {
+    return 0;
+  }
+
+  Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  size_t size = 0;
+  // parse program header
+  for ( uint32_t index = 0; index < header->e_phnum; ++index ) {
+    // get program header
+    Elf32_Phdr* program_header = ( Elf32_Phdr* )(
+      elf + header->e_phoff + header->e_phentsize * index
+    );
+    size_t tmp = program_header->p_offset + program_header->p_memsz;
+    if ( tmp > size ) {
+      size = tmp;
+    }
+  }
+  // return calculated size
+  return size;
 }

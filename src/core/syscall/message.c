@@ -525,7 +525,7 @@ void syscall_message_wait_for_response_type( void* context ) {
   /*__unused size_t message_type = ( size_t )syscall_get_parameter( context, 0 );
   __unused size_t message_id = ( size_t )syscall_get_parameter( context, 1 );*/
   // return type of message
-  syscall_populate_error( context, ( size_t )-EINVAL );
+  syscall_populate_error( context, ( size_t )-ENOSYS );
 }
 
 /**
@@ -554,4 +554,19 @@ void syscall_message_has_by_name( void* context ) {
   }
   // return success
   syscall_populate_error( context, true );
+}
+
+/**
+ * @fn void syscall_message_register_handler(void*)
+ * @brief System call to register message handler
+ *
+ * @param context
+ *
+ * @todo return error when handler with/without message type has been already registered
+ * @todo create new thread for process with passed function as entry point
+ * @todo save created thread with message type ( or 0 if generic ) in a list
+ */
+void syscall_message_register_handler( void* context ) {
+  // return type of message
+  syscall_populate_error( context, ( size_t )-ENOSYS );
 }

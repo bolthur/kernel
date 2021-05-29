@@ -18,55 +18,22 @@
  */
 
 #include <stdio.h>
+// necessary for libc hacking
 #include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <inttypes.h>
-#include <ctype.h>
-#include <assert.h>
+#include <limits.h>
 #include <errno.h>
+#include <stdarg.h>
+#include <string.h>
+#include <assert.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <stdint.h>
+#include <inttypes.h>
+#include <sys/types.h>
 #include <sys/bolthur.h>
-#include <libgen.h>
-#include "handle.h"
-#include "vfs.h"
-#include "msg.h"
 
-pid_t pid = 0;
-
-/**
- * @brief main entry function
- *
- * @param argc
- * @param argv
- * @return
- *
- * @todo remove vfs debug output
- * @todo add return message for adding file / folder containing success / failure state
- * @todo add necessary message handling to loop
- * @todo move message handling into own thread
- */
 int main( __unused int argc, __unused char* argv[] ) {
-  vfs_message_type_t type;
-
-  // print something
-  printf( "vfs processing!\r\n" );
-  // cache current pid
-  pid = getpid();
-  // setup handle tree and vfs
-  handle_init();
-  assert( vfs_setup( pid ) );
-
-  while( true ) {
-    // get message type
-    type = _message_receive_type();
-    // skip on error / no message
-    if ( errno ) {
-      continue;
-    }
-    // dispatch message
-    msg_dispatch( type );
-  }
-  // return exit code 0
+  printf( "linker.so processing!\r\n" );
+  for(;;);
   return 0;
 }
