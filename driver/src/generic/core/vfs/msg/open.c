@@ -38,33 +38,45 @@
 void msg_handle_open( void ) {
   pid_t sender;
   size_t message_id;
-  vfs_open_request_t request;
-  vfs_open_response_t response;
+  vfs_open_request_ptr_t request = ( vfs_open_request_ptr_t )malloc(
+    sizeof( vfs_open_request_t ) );
+  if ( ! request ) {
+    return;
+  }
+  vfs_open_response_ptr_t response = ( vfs_open_response_ptr_t )malloc(
+    sizeof( vfs_open_response_t ) );
+  if ( ! response ) {
+    free( request );
+    return;
+  }
   char* dir = NULL;
   char* base = NULL;
   char* dir_old = NULL;
   char* base_old = NULL;
   // clear variables
-  memset( &request, 0, sizeof( vfs_open_request_t ) );
-  memset( &response, 0, sizeof( vfs_open_response_t ) );
+  memset( request, 0, sizeof( vfs_open_request_t ) );
+  memset( response, 0, sizeof( vfs_open_response_t ) );
 
   // get message
   _message_receive(
-    ( char* )&request,
+    ( char* )request,
     sizeof( vfs_open_request_t ),
     &sender,
     &message_id
   );
   // handle error
   if ( errno ) {
+    // free message structures
+    free( request );
+    free( response );
     return;
   }
 
   // check path name components
   do {
     // extract base and dir
-    base = basename( !dir ? request.path : dir );
-    dir = dirname( !dir ? request.path : dir );
+    base = basename( !dir ? request->path : dir );
+    dir = dirname( !dir ? request->path : dir );
     // cleanup previous dir / base stuff
     if ( dir_old ) {
       free( dir_old );
@@ -78,15 +90,18 @@ void msg_handle_open( void ) {
       free( base );
       free( dir );
       // prepare error return
-      response.handle = -ENAMETOOLONG;
+      response->handle = -ENAMETOOLONG;
       // send response
       _message_send_by_pid(
         sender,
         VFS_OPEN_RESPONSE,
-        ( const char* )&response,
+        ( const char* )response,
         sizeof( vfs_open_response_t ),
         message_id
       );
+      // free message structures
+      free( request );
+      free( response );
       return;
     }
     // set old
@@ -102,8 +117,8 @@ void msg_handle_open( void ) {
   }
 
   // extract dir and base names
-  dir = dirname( request.path );
-  base = basename( request.path );
+  dir = dirname( request->path );
+  base = basename( request->path );
 
   // get parent node by dir
   vfs_node_ptr_t dir_node = vfs_node_by_path( dir );
@@ -113,33 +128,39 @@ void msg_handle_open( void ) {
     free( dir );
     free( base );
     // prepare error return
-    response.handle = ( request.flags & O_CREAT ) ? -ENOENT : -ENOTDIR;
+    response->handle = ( request->flags & O_CREAT ) ? -ENOENT : -ENOTDIR;
     // send response
     _message_send_by_pid(
       sender,
       VFS_OPEN_RESPONSE,
-      ( const char* )&response,
+      ( const char* )response,
       sizeof( vfs_open_response_t ),
       message_id
     );
+    // free message structures
+    free( request );
+    free( response );
     return;
   }
 
   // get file node of dir
   vfs_node_ptr_t base_node = vfs_node_by_name( dir_node, base );
-  if ( ! base_node && ! ( request.flags & O_CREAT ) ) {
+  if ( ! base_node && ! ( request->flags & O_CREAT ) ) {
     free( dir );
     free( base );
     // prepare error return
-    response.handle = -ENOENT;
+    response->handle = -ENOENT;
     // send response
     _message_send_by_pid(
       sender,
       VFS_OPEN_RESPONSE,
-      ( const char* )&response,
+      ( const char* )response,
       sizeof( vfs_open_response_t ),
       message_id
     );
+    // free message structures
+    free( request );
+    free( response );
     return;
   }
   // free dir and base strings
@@ -148,19 +169,22 @@ void msg_handle_open( void ) {
 
   if (
     base_node
-    && ( request.flags & O_CREAT )
-    && ( request.flags & O_EXCL )
+    && ( request->flags & O_CREAT )
+    && ( request->flags & O_EXCL )
   ) {
     // prepare error return
-    response.handle = -EEXIST;
+    response->handle = -EEXIST;
     // send response
     _message_send_by_pid(
       sender,
       VFS_OPEN_RESPONSE,
-      ( const char* )&response,
+      ( const char* )response,
       sizeof( vfs_open_response_t ),
       message_id
     );
+    // free message structures
+    free( request );
+    free( response );
     return;
   }
 
@@ -176,20 +200,23 @@ void msg_handle_open( void ) {
   if (
     ( base_node->flags & VFS_DIRECTORY )
     && (
-      ( request.flags & O_WRONLY )
-      || ( request.flags & O_RDWR )
+      ( request->flags & O_WRONLY )
+      || ( request->flags & O_RDWR )
     )
   ) {
     // prepare error return
-    response.handle = -EISDIR;
+    response->handle = -EISDIR;
     // send response
     _message_send_by_pid(
       sender,
       VFS_OPEN_RESPONSE,
-      ( const char* )&response,
+      ( const char* )response,
       sizeof( vfs_open_response_t ),
       message_id
     );
+    // free message structures
+    free( request );
+    free( response );
     return;
   }
 
@@ -200,9 +227,9 @@ void msg_handle_open( void ) {
     sender,
     dir_node,
     base_node,
-    request.path,
-    request.flags,
-    request.mode
+    request->path,
+    request->flags,
+    request->mode
   );
 
   // handle error
@@ -212,26 +239,32 @@ void msg_handle_open( void ) {
     free( dir );
     free( base );
     // prepare error return
-    response.handle = result;
+    response->handle = result;
     // send response
     _message_send_by_pid(
       sender,
       VFS_OPEN_RESPONSE,
-      ( const char* )&response,
+      ( const char* )response,
       sizeof( vfs_open_response_t ),
       message_id
     );
+    // free message structures
+    free( request );
+    free( response );
     return;
   }
 
   // prepare return
-  response.handle = container->handle;
+  response->handle = container->handle;
   // send response
   _message_send_by_pid(
     sender,
     VFS_OPEN_RESPONSE,
-    ( const char* )&response,
+    ( const char* )response,
     sizeof( vfs_open_response_t ),
     message_id
   );
+  // free message structures
+  free( request );
+  free( response );
 }

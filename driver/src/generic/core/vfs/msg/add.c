@@ -35,62 +35,80 @@
 void msg_handle_add( void ) {
   pid_t sender;
   size_t message_id;
-  vfs_add_request_t request;
-  vfs_add_response_t response;
   char* str;
+  vfs_add_request_ptr_t request = ( vfs_add_request_ptr_t )malloc(
+    sizeof( vfs_add_request_t ) );
+  if ( ! request ) {
+    return;
+  }
+  vfs_add_response_ptr_t response = ( vfs_add_response_ptr_t )malloc(
+    sizeof( vfs_add_response_ptr_t ) );
+  if ( ! response ) {
+    free( request );
+    return;
+  }
 
   // clear variables
-  memset( &request, 0, sizeof( vfs_add_request_t ) );
-  memset( &response, 0, sizeof( vfs_add_response_t ) );
+  memset( request, 0, sizeof( vfs_add_request_t ) );
+  memset( response, 0, sizeof( vfs_add_response_t ) );
 
   // get message
   _message_receive(
-    ( char* )&request,
+    ( char* )request,
     sizeof( vfs_add_request_t ),
     &sender,
     &message_id
   );
   // handle error
   if ( errno ) {
+    // free message structures
+    free( request );
+    free( response );
     return;
   }
   // extract dirname and get parent node by dirname
-  str = dirname( request.file_path );
+  str = dirname( request->file_path );
   vfs_node_ptr_t node = vfs_node_by_path( str );
   if ( ! node ) {
     // debug output
-    printf( "Parent node \"%s\" for \"%s\" not found!\r\n", str, request.file_path );
+    printf( "Parent node \"%s\" for \"%s\" not found!\r\n", str, request->file_path );
     free( str );
     // prepare response
-    response.success = false;
+    response->success = false;
     // send response
     _message_send_by_pid(
       sender,
       VFS_ADD_RESPONSE,
-      ( const char* )&response,
+      ( const char* )response,
       sizeof( vfs_add_response_t ),
       message_id
     );
+    // free message structures
+    free( request );
+    free( response );
     // skip
     return;
   }
   // get basename and create node
-  str = basename( request.file_path );
+  str = basename( request->file_path );
   // add basename to path
-  if ( ! vfs_add_path( node, sender, str, request.entry_type ) ) {
+  if ( ! vfs_add_path( node, sender, str, request->entry_type ) ) {
     // debug output
-    printf( "Error: Couldn't add \"%s\"\r\n", request.file_path );
+    printf( "Error: Couldn't add \"%s\"\r\n", request->file_path );
     free( str );
     // prepare response
-    response.success = false;
+    response->success = false;
     // send response
     _message_send_by_pid(
       sender,
       VFS_ADD_RESPONSE,
-      ( const char* )&response,
+      ( const char* )response,
       sizeof( vfs_add_response_t ),
       message_id
     );
+    // free message structures
+    free( request );
+    free( response );
     // skip
     return;
   }
@@ -99,7 +117,7 @@ void msg_handle_add( void ) {
   vfs_dump( NULL, NULL );*/
   free( str );
   // prepare response
-  response.success = true;
+  response->success = true;
   // send response
   _message_send_by_pid(
     sender,
@@ -108,4 +126,7 @@ void msg_handle_add( void ) {
     sizeof( vfs_add_response_t ),
     message_id
   );
+  // free message structures
+  free( request );
+  free( response );
 }

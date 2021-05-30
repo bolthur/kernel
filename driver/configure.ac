@@ -57,6 +57,7 @@ BOLTHUR_DRIVER_SET_FLAG
 AC_PROG_CC
 AM_PROG_AS
 BOLTHUR_DRIVER_PROG_OBJCOPY
+BOLTHUR_DRIVER_PROG_STRIP
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

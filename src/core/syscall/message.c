@@ -32,28 +32,6 @@
 #include <core/mm/heap.h>
 
 /**
- * @brief list item cleanup helper
- *
- * @param item
- */
-static void message_cleanup(
-  const list_item_ptr_t item
-) {
-  if ( item->data ) {
-    // transform to entry
-    const message_entry_ptr_t entry = ( message_entry_ptr_t )item->data;
-    // free message if set
-    if ( entry->data ) {
-      free( ( void* )entry->data );
-    }
-    // free entry
-    free( entry );
-  }
-  // continue with default list cleanup
-  list_default_cleanup( item );
-}
-
-/**
  * @brief Create message queue
  *
  * @param context
@@ -441,13 +419,13 @@ void syscall_message_wait_for_response( void* context ) {
       "syscall_message_receive_response( %#"PRIxPTR", %zx, %zu )\r\n",
       target, len, message_id )
   #endif
-
+#include <core/debug/debug.h>
   // handle error
   if ( ! task_thread_current_thread->process->message_queue ) {
     // debug output
-    #if defined( PRINT_SYSCALL )
+//    #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Target process has no queue!\r\n" )
-    #endif
+//    #endif
     // set return and exit
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
@@ -455,9 +433,9 @@ void syscall_message_wait_for_response( void* context ) {
   // handle invalid length
   if ( 0 == len || ! target ) {
     // debug output
-    #if defined( PRINT_SYSCALL )
+//    #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Invalid length or target passed!\r\n" )
-    #endif
+//    #endif
     // set return and exit
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
@@ -539,21 +517,21 @@ void syscall_message_has_by_name( void* context ) {
   const char* name = ( const char* )syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_message_wait_has_by_name( %s )\r\n", name )
+    DEBUG_OUTPUT( "syscall_message_has_by_name( %s )\r\n", name )
   #endif
   // get name list
   list_manager_ptr_t name_list = task_process_get_by_name( name );
   if ( ! name_list ) {
-    syscall_populate_error( context, false );
+    syscall_populate_error( context, ( size_t )-ESRCH );
     return;
   }
   // handle empty
   if ( ! name_list->first ) {
-    syscall_populate_error( context, false );
+    syscall_populate_error( context, ( size_t )-ESRCH );
     return;
   }
   // return success
-  syscall_populate_error( context, true );
+  syscall_populate_error( context, 0 );
 }
 
 /**

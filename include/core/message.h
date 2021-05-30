@@ -37,6 +37,7 @@ typedef struct message_entry message_entry_t;
 typedef struct message_entry *message_entry_ptr_t;
 
 bool message_init( void );
+void message_cleanup( const list_item_ptr_t );
 size_t message_generate_id( void );
 
 #endif

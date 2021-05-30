@@ -30,6 +30,7 @@
 #include <stdbool.h>
 #include <sys/bolthur.h>
 #include <libgen.h>
+#include <stdnoreturn.h>
 // third party libraries
 #include <zlib.h>
 #include <libtar.h>
@@ -39,8 +40,6 @@
 // local stuff
 #include "ramdisk.h"
 
-#define MOUNT_POINT "/ramdisk/"
-
 uintptr_t ramdisk_compressed;
 size_t ramdisk_compressed_size;
 uintptr_t ramdisk_decompressed;
@@ -49,6 +48,73 @@ size_t ramdisk_read_offset = 0;
 pid_t pid = 0;
 TAR *disk = NULL;
 
+
+// integration overwrites
+int _execve( char*, char**, char** );
+
+int _execve(
+  __unused char* name,
+  __unused char** argv,
+  __unused char** env
+) {
+  printf( "fooo %d!\r\n", getpid() );
+  // open file to read binary
+  FILE* fp = fopen( "/usr/bin/linker.so", "rb" );
+  if ( ! fp ) {
+    printf( "Open failed with error \"%s\"\r\n", strerror( errno ) );
+    errno = EIO;
+    return -1;
+  }
+  printf( "Start fetching content of file %s!\r\n", name );
+  // image pointer offset and read size
+  uint8_t* image = NULL;
+  size_t offset = 0;
+  size_t read_size = MAX_READ_LEN;
+  while ( true ) {
+    printf( "file %s: %d - %d / %#x\r\n", name, offset, read_size, read_size );
+    // allocate / extend
+    image = realloc( image, sizeof( uint8_t ) * ( offset + read_size ) );
+    // handle possible error
+    if ( ! image ) {
+      printf( "NO MEMORY!\r\n" );
+      free( image );
+      errno = ENOMEM;
+      return -1;
+    }
+    // reset errno and read chunk
+    errno = 0;
+    size_t n = fread( image + offset, sizeof( uint8_t ), read_size, fp );
+    // handle possible error
+    if ( errno ) {
+      printf( "read error: %s\r\n", strerror( errno ) );
+      free( image );
+      return -1;
+    }
+    // increase offset
+    offset += read_size;
+    if ( 0 == n ) {
+      break;
+    }
+  }
+  // close opened file handle again
+  fclose( fp );
+  // replace process image with linker
+  printf( "Finished read with read bytes of file %s: %d\r\n", basename( name ), offset );
+  // FIXME: APPEND ARGUMENTS
+  // FIXME: APPEND ENVIRONMENT
+  printf( "Replace process with image %p and name %s\r\n", ( void* )image, basename( name ) );
+  // create process
+  _process_replace( ( void* )image, name );
+  // clear image
+  free( image );
+  // set errno if not already set
+  if ( ! errno ) {
+    errno = ENOEXEC;
+  }
+  return -1;
+}
+
+
 /**
  * @brief Simulate open, by decompressing ramdisk tar image
  *
@@ -56,7 +122,7 @@ TAR *disk = NULL;
  * @param b
  * @return
  */
-__maybe_unused static int my_tar_open( __unused const char* path, __unused int b, ... ) {
+static int my_tar_open( __unused const char* path, __unused int b, ... ) {
   // get extract size
   ramdisk_decompressed_size = ramdisk_extract_size(
     ramdisk_compressed,
@@ -80,7 +146,7 @@ __maybe_unused static int my_tar_open( __unused const char* path, __unused int b
  * @param fd
  * @return
  */
-__maybe_unused static int my_tar_close( __unused int fd ) {
+static int my_tar_close( __unused int fd ) {
   free( ( void* )ramdisk_decompressed );
   return 0;
 }
@@ -93,7 +159,7 @@ __maybe_unused static int my_tar_close( __unused int fd ) {
  * @param count
  * @return
  */
-__maybe_unused static ssize_t my_tar_read( __unused int fd, void* buffer, size_t count ) {
+static ssize_t my_tar_read( __unused int fd, void* buffer, size_t count ) {
   uint8_t* src = ( uint8_t* )ramdisk_decompressed + ramdisk_read_offset;
   uint8_t* dst = ( uint8_t* )buffer;
 
@@ -126,7 +192,7 @@ __maybe_unused static ssize_t my_tar_read( __unused int fd, void* buffer, size_t
  * @param count
  * @return
  */
-__maybe_unused static ssize_t my_tar_write( __unused int fd, __unused const void* src, __unused size_t count ) {
+static ssize_t my_tar_write( __unused int fd, __unused const void* src, __unused size_t count ) {
   return 0;
 }
 
@@ -135,9 +201,13 @@ __maybe_unused static ssize_t my_tar_write( __unused int fd, __unused const void
  *
  * @param msg
  */
-__maybe_unused static void send_add_request( vfs_add_request_ptr_t msg ) {
-  vfs_add_response_t response;
-  memset( &response, 0, sizeof( vfs_add_response_t ) );
+static void send_add_request( vfs_add_request_ptr_t msg ) {
+  vfs_add_response_ptr_t response = ( vfs_add_response_ptr_t )malloc(
+    sizeof( vfs_add_response_t ) );
+  if ( ! response ) {
+    return;
+  }
+  memset( response, 0, sizeof( vfs_add_response_t ) );
   // message id variable
   size_t message_id;
   bool send = true;
@@ -156,7 +226,7 @@ __maybe_unused static void send_add_request( vfs_add_request_ptr_t msg ) {
     }
     // wait for response
     _message_wait_for_response(
-      ( char* )&response,
+      ( char* )response,
       sizeof( vfs_add_response_t ),
       message_id );
     // handle error / no message
@@ -165,13 +235,15 @@ __maybe_unused static void send_add_request( vfs_add_request_ptr_t msg ) {
       continue;
     }
     // evaluate response
-    if ( ! response.success ) {
+    if ( ! response->success ) {
       send = true;
       continue;
     }
     // exit loop
     break;
   }
+  // free up response
+  free( response );
 }
 
 /**
@@ -181,12 +253,21 @@ __maybe_unused static void send_add_request( vfs_add_request_ptr_t msg ) {
  * @return true if exist, else false
  */
 __maybe_unused static bool check_for_path( const char* str ) {
-  vfs_has_request_t request;
-  vfs_has_response_t response;
-  memset( &request, 0, sizeof( vfs_has_request_t ) );
-  memset( &response, 0, sizeof( vfs_has_response_t ) );
+  vfs_has_request_ptr_t request = ( vfs_has_request_ptr_t )malloc(
+    sizeof( vfs_has_request_t ) );
+  if ( ! request ) {
+    return false;
+  }
+  vfs_has_response_ptr_t response = ( vfs_has_response_ptr_t )malloc(
+    sizeof( vfs_has_response_t ) );
+  if ( ! request ) {
+    free( request );
+    return false;
+  }
+  memset( request, 0, sizeof( vfs_has_request_t ) );
+  memset( response, 0, sizeof( vfs_has_response_t ) );
   // prepare message
-  strcpy( request.path, str );
+  strcpy( request->path, str );
   // message id variable
   size_t message_id;
   bool send = true;
@@ -198,14 +279,14 @@ __maybe_unused static bool check_for_path( const char* str ) {
         message_id = _message_send_by_name(
           "daemon:/vfs",
           VFS_HAS_REQUEST,
-          ( const char* )&request,
+          ( const char* )request,
           sizeof( vfs_has_request_t ),
           0 );
       } while ( 0 == message_id );
     }
     // wait for response
     _message_wait_for_response(
-      ( char* )&response,
+      ( char* )response,
       sizeof( vfs_has_response_t ),
       message_id );
     // handle error / no message
@@ -213,18 +294,99 @@ __maybe_unused static bool check_for_path( const char* str ) {
       send = false;
       continue;
     }
+    bool success = response->success;
+    // free up
+    free( response );
+    free( request );
     // return state
-    return response.success;
+    return success;
   }
 }
 
-__unused static int execute_driver(
-  __unused char* name,
-  __unused char** argv,
-  __unused char** env
-) {
-  errno = ENOSYS;
-  return -1;
+/**
+ * @fn int execute_driver(char*)
+ * @brief Helper to execute specific driver from ramdisk
+ *
+ * @param name
+ * @return
+ */
+static int execute_driver( char* name ) {
+  pid_t forked_process = fork();
+  if ( errno ) {
+    printf( "Unable to fork process for image replace: %s\r\n", strerror( errno ) );
+    return -1;
+  }
+  // fork only
+  if ( 0 == forked_process ) {
+    printf( "Replacing fork with image by using exec!\r\n" );
+    // build command
+    char* cmd[] = { "linker.so", name, ( char* )0, };
+    // exec to replace
+    if ( -1 == execv( "/usr/bin/linker.so", cmd ) ) {
+      printf( "Exec failed: %s\r\n", strerror( errno ) );
+      exit( errno );
+    }
+  }
+  // non fork return 0
+  return 0;
+}
+
+// noreturn function
+static void handle_normal_init( void ) {
+  execute_driver( "/ramdisk/core/console" );
+
+  // FIXME: FORK AND HANDLE FURTHER OUTCOMMENTED SETUP WITHIN FORKED PROCESS
+/*  // Get system console
+  void* console_image = ramdisk_lookup_file( t, "core/console" );
+  if ( ! console_image ) {
+    printf( "ERROR: console daemon not found!\r\n" );
+    return -1;
+  }
+  // start startup and expect it to be third process
+  pid_t console_pid = _process_create( console_image, "daemon:/console" );
+  assert( -1 != console_pid );
+
+  // loop until stdin, stdout and stderr are existing
+  while( true ) {
+    // check if stdin is existing
+    if ( ! check_for_path( "/stdin" ) ) {
+      continue;
+    }
+    // check if stdout is existing
+    if ( ! check_for_path( "/stdout" ) ) {
+      continue;
+    }
+    // check if stderr is existing
+    if ( ! check_for_path( "/stderr" ) ) {
+      continue;
+    }
+    // all are existing so break out
+    break;
+  }
+
+  // Get tty
+  void* tty_image = ramdisk_lookup_file( t, "core/tty" );
+  if ( ! tty_image ) {
+    printf( "ERROR: tty daemon not found!\r\n" );
+    return -1;
+  }
+  // start startup and expect it to be third process
+  pid_t tty_pid = _process_create( tty_image, "daemon:/tty" );
+  assert( -1 != tty_pid );
+
+  // startup image address
+  void* startup_image = ramdisk_lookup_file( t, "core/startup" );
+  if ( ! startup_image ) {
+    printf( "ERROR: console daemon not found!\r\n" );
+    return -1;
+  }
+  // start startup and expect it to be third process
+  pid_t startup_pid = _process_create( startup_image, "daemon:/startup" );
+  assert( -1 != startup_pid );*/
+
+  // exit program!
+  printf( "Init done!\r\n" );
+  exit( 0 );
 }
 
 /**
@@ -350,61 +512,12 @@ int main( int argc, char* argv[] ) {
     printf( "Unable to fork process for init continue: %s\r\n", strerror( errno ) );
     return -1;
   }
-  // fork only
+  // handle ongoing init in forked process
   if ( 0 == forked_process ) {
-    printf( "Exit fork!\r\n" );
-    _process_exit( 1 );
+    handle_normal_init();
   }
 
-  // FIXME: FORK AND HANDLE FURTHER OUTCOMMENTED SETUP WITHIN FORKED PROCESS
-/*  // Get system console
-  void* console_image = ramdisk_lookup_file( t, "core/console" );
-  if ( ! console_image ) {
-    printf( "ERROR: console daemon not found!\r\n" );
-    return -1;
-  }
-  // start startup and expect it to be third process
-  pid_t console_pid = _process_create( console_image, "daemon:/console" );
-  assert( -1 != console_pid );
-
-  // loop until stdin, stdout and stderr are existing
-  while( true ) {
-    // check if stdin is existing
-    if ( ! check_for_path( "/stdin" ) ) {
-      continue;
-    }
-    // check if stdout is existing
-    if ( ! check_for_path( "/stdout" ) ) {
-      continue;
-    }
-    // check if stderr is existing
-    if ( ! check_for_path( "/stderr" ) ) {
-      continue;
-    }
-    // all are existing so break out
-    break;
-  }
-
-  // Get tty
-  void* tty_image = ramdisk_lookup_file( t, "core/tty" );
-  if ( ! tty_image ) {
-    printf( "ERROR: tty daemon not found!\r\n" );
-    return -1;
-  }
-  // start startup and expect it to be third process
-  pid_t tty_pid = _process_create( tty_image, "daemon:/tty" );
-  assert( -1 != tty_pid );
-
-  // startup image address
-  void* startup_image = ramdisk_lookup_file( t, "core/startup" );
-  if ( ! startup_image ) {
-    printf( "ERROR: console daemon not found!\r\n" );
-    return -1;
-  }
-  // start startup and expect it to be third process
-  pid_t startup_pid = _process_create( startup_image, "daemon:/startup" );
-  assert( -1 != startup_pid );*/
-
+  printf( "Entering message loop!\r\n" );
   while( true ) {
     // get message type
     vfs_message_type_t type = _message_receive_type();
@@ -414,28 +527,43 @@ int main( int argc, char* argv[] ) {
     }
 
     if ( VFS_READ_REQUEST == type ) {
-      vfs_read_request_t request;
-      vfs_read_response_t response;
+      vfs_read_request_ptr_t request = ( vfs_read_request_ptr_t )malloc(
+        sizeof( vfs_read_request_t ) );
+      if ( ! request ) {
+        continue;
+      }
+      vfs_read_response_ptr_t response = ( vfs_read_response_ptr_t )malloc(
+        sizeof( vfs_read_response_t ) );
+      if ( ! response ) {
+        free( request );
+        continue;
+      }
       pid_t sender = 0;
       size_t message_id = 0;
-      memset( &request, 0, sizeof( request ) );
-      memset( &response, 0, sizeof( response ) );
+      memset( request, 0, sizeof( vfs_read_request_t ) );
+      memset( response, 0, sizeof( vfs_read_response_t ) );
       // get message
       _message_receive(
-        ( char* )&request,
+        ( char* )request,
         sizeof( vfs_read_request_t ),
         &sender,
         &message_id
       );
       // handle error
       if ( errno ) {
+        printf( "Read error: %s\r\n", strerror( errno ) );
+        free( request );
+        free( response );
         continue;
       }
       // get rid of mount point
-      char* file = request.file_path;
+      char* file = request->file_path;
       char* buf = NULL;
+      // strip leading slash
+      if ( '/' == *file ) {
+        file++;
+      }
       size_t total_size = 0;
-      file += strlen( MOUNT_POINT );
       // reset read offset
       ramdisk_read_offset = 0;
       // try to find within ramdisk
@@ -460,57 +588,79 @@ int main( int argc, char* argv[] ) {
       // handle error
       if ( ! buf ) {
         // prepare response
-        response.len = -EIO;
+        response->len = -EIO;
         // send response
         _message_send_by_pid(
           sender,
           VFS_READ_RESPONSE,
-          ( const char* )&response,
+          ( const char* )response,
           sizeof( vfs_read_response_t ),
           message_id );
+        // free stuff
+        free( request );
+        free( response );
         continue;
       }
 
       // read until end / size
-      size_t amount = request.len;
-      size_t total = amount + ( size_t )request.offset;
+      size_t amount = request->len;
+      size_t total = amount + ( size_t )request->offset;
       if ( total > total_size ) {
         amount -= ( total - total_size );
       }
+//      printf( "init->read: amount = %d, offset = %ld\r\n",
+//        amount, request->offset );
       // now copy
-      memcpy( response.data, buf + request.offset, amount );
-      response.len = ( ssize_t )amount;
+      memcpy( response->data, buf + request->offset, amount );
+      response->len = ( ssize_t )amount;
       // send response
       _message_send_by_pid(
         sender,
         VFS_READ_RESPONSE,
-        ( const char* )&response,
+        ( const char* )response,
         sizeof( vfs_read_response_t ),
         message_id );
+      // free stuff
+      free( request );
+      free( response );
       continue;
     // handle stat request
     } else if ( VFS_SIZE_REQUEST == type ) {
-      vfs_size_request_t request;
-      vfs_size_response_t response;
+      vfs_size_request_ptr_t request = ( vfs_size_request_ptr_t )malloc(
+        sizeof( vfs_size_request_t ) );
+      if ( ! request ) {
+        continue;
+      }
+      vfs_size_response_ptr_t response = ( vfs_size_response_ptr_t )malloc(
+        sizeof( vfs_size_response_t ) );
+      if ( ! response ) {
+        free( request );
+        continue;
+      }
       pid_t sender = 0;
       size_t message_id = 0;
-      memset( &request, 0, sizeof( request ) );
-      memset( &response, 0, sizeof( response ) );
+      memset( request, 0, sizeof( vfs_size_request_t ) );
+      memset( response, 0, sizeof( vfs_size_response_t ) );
       // get message
       _message_receive(
-        ( char* )&request,
+        ( char* )request,
         sizeof( vfs_size_request_t ),
         &sender,
         &message_id
       );
       // handle error
       if ( errno ) {
+        free( request );
+        free( response );
         continue;
       }
       // get rid of mount point
-      char* file = request.file_path;
+      char* file = request->file_path;
+      // strip leading slash
+      if ( '/' == *file ) {
+        file++;
+      }
       size_t total_size = 0;
-      file += strlen( MOUNT_POINT );
       // reset read offset
       ramdisk_read_offset = 0;
       // try to find within ramdisk
@@ -532,14 +682,16 @@ int main( int argc, char* argv[] ) {
         }
       }
       // set message
-      response.total = total_size;
+      response->total = total_size;
       // send response
       _message_send_by_pid(
         sender,
         VFS_SIZE_RESPONSE,
-        ( const char* )&response,
+        ( const char* )response,
         sizeof( vfs_size_response_t ),
         message_id );
+      free( request );
+      free( response );
       continue;
     }
 

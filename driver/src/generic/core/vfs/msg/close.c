@@ -35,30 +35,45 @@
 void msg_handle_close( void ) {
   pid_t sender;
   size_t message_id;
-  vfs_close_request_t request;
-  vfs_close_response_t response;
+  vfs_close_request_ptr_t request = ( vfs_close_request_ptr_t )malloc(
+    sizeof( vfs_close_request_t ) );
+  if ( ! request ) {
+    return;
+  }
+  vfs_close_response_ptr_t response = ( vfs_close_response_ptr_t )malloc(
+    sizeof( vfs_close_response_t) );
+  if ( ! response ) {
+    free( request );
+    return;
+  }
   // clear variables
-  memset( &request, 0, sizeof( vfs_close_request_t ) );
-  memset( &response, 0, sizeof( vfs_close_response_t ) );
+  memset( request, 0, sizeof( vfs_close_request_t ) );
+  memset( response, 0, sizeof( vfs_close_response_t ) );
   // get message
   _message_receive(
-    ( char* )&request,
+    ( char* )request,
     sizeof( vfs_close_request_t ),
     &sender,
     &message_id
   );
   // handle error
   if ( errno ) {
+    // free message structures
+    free( request );
+    free( response );
     return;
   }
   // destroy and push to state
-  response.state = handle_destory( sender, request.handle );
+  response->state = handle_destory( sender, request->handle );
   // send response
   _message_send_by_pid(
     sender,
     VFS_OPEN_RESPONSE,
-    ( const char* )&response,
+    ( const char* )response,
     sizeof( vfs_close_response_t ),
     message_id
   );
+  // free message structures
+  free( request );
+  free( response );
 }

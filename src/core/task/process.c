@@ -37,6 +37,7 @@
 #include <core/task/process.h>
 #include <core/task/thread.h>
 #include <core/task/stack.h>
+#include <core/message.h>
 
 /**
  * @brief Process management structure
@@ -487,6 +488,11 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
   if ( ! forked->virtual_context ) {
     task_process_free( forked, NULL );
     return NULL;
+  }
+  // create message queue if existing
+  if( proc->message_queue ) {
+    // prepare message queue
+    forked->message_queue = list_construct( NULL, message_cleanup );
   }
 
   // populate data normal data

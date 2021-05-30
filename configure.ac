@@ -225,6 +225,7 @@ DX_INIT_DOXYGEN([bolthur/kernel], [$(srcdir)/doxyfile], [doc])
 AC_PROG_CC
 AM_PROG_AS
 BOLTHUR_KERNEL_PROG_OBJCOPY
+BOLTHUR_KERNEL_PROG_STRIP
 
 # get host cpu count
 AX_COUNT_CPUS

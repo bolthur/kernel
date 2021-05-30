@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
 #include <string.h>
 #include <core/message.h>
 #if defined( PRINT_MESSAGE )
@@ -31,6 +32,26 @@
  */
 bool message_init( void ) {
   return true;
+}
+
+/**
+ * @brief list item cleanup helper
+ *
+ * @param item
+ */
+void message_cleanup( const list_item_ptr_t item ) {
+  if ( item->data ) {
+    // transform to entry
+    const message_entry_ptr_t entry = ( message_entry_ptr_t )item->data;
+    // free message if set
+    if ( entry->data ) {
+      free( ( void* )entry->data );
+    }
+    // free entry
+    free( entry );
+  }
+  // continue with default list cleanup
+  list_default_cleanup( item );
 }
 
 /**

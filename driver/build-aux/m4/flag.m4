@@ -15,6 +15,7 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c18])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
 
+
   # third party stuff
   AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}/include])
   AX_APPEND_COMPILE_FLAGS([-imacros\ $($BOLTHUR_READLINK -f ${srcdir})/include/core/config.h])
@@ -27,7 +28,10 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
     # debug symbols and sanitizer
     # -fsanitize=undefined
     AX_APPEND_COMPILE_FLAGS([-g])
-  ])
+  ], [
+    # Linker flags
+    AX_APPEND_LINK_FLAGS([-s])
+  ] )
 
   # optimization level
   case "${with_optimization_level}" in
@@ -50,7 +54,7 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
       AX_APPEND_COMPILE_FLAGS([-Og])
       ;;
     *)
-      AX_APPEND_COMPILE_FLAGS([-O2])
+      AX_APPEND_COMPILE_FLAGS([-Os])
       ;;
   esac
 ])

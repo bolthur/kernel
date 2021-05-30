@@ -36,41 +36,73 @@ void msg_handle_read( void ) {
   pid_t sender;
   size_t message_id;
   size_t nested_message_id;
-  vfs_read_request_t request;
-  vfs_read_response_t response;
-  vfs_read_request_t nested_request;
-  vfs_read_response_t nested_response;
+  vfs_read_request_ptr_t request = ( vfs_read_request_ptr_t )malloc(
+    sizeof( vfs_read_request_t ) );
+  if ( ! request ) {
+    return;
+  }
+  vfs_read_response_ptr_t response = ( vfs_read_response_ptr_t )malloc(
+    sizeof( vfs_read_response_t ) );
+  if ( ! response ) {
+    free( request );
+    return;
+  }
+  vfs_read_request_ptr_t nested_request = ( vfs_read_request_ptr_t )malloc(
+    sizeof( vfs_read_request_t ) );
+  if ( ! nested_request ) {
+    free( request );
+    free( response );
+    return;
+  }
+  vfs_read_response_ptr_t nested_response = ( vfs_read_response_ptr_t )malloc(
+    sizeof( vfs_read_response_t ) );
+  if ( ! nested_response ) {
+    free( request );
+    free( response );
+    free( nested_request );
+    return;
+  }
   handle_container_ptr_t container;
   // clear variables
-  memset( &request, 0, sizeof( vfs_read_request_t ) );
-  memset( &response, 0, sizeof( vfs_read_response_t ) );
-  memset( &nested_request, 0, sizeof( vfs_read_request_t ) );
-  memset( &nested_response, 0, sizeof( vfs_read_response_t ) );
+  memset( request, 0, sizeof( vfs_read_request_t ) );
+  memset( response, 0, sizeof( vfs_read_response_t ) );
+  memset( nested_request, 0, sizeof( vfs_read_request_t ) );
+  memset( nested_response, 0, sizeof( vfs_read_response_t ) );
   // get message
   _message_receive(
-    ( char* )&request,
+    ( char* )request,
     sizeof( vfs_read_request_t ),
     &sender,
     &message_id
   );
   // handle error
   if ( errno ) {
+    // free stuff
+    free( request );
+    free( response );
+    free( nested_request );
+    free( nested_response );
     return;
   }
   // try to get handle information
-  int result = handle_get( &container, sender, request.handle );
+  int result = handle_get( &container, sender, request->handle );
   // handle error
   if ( 0 > result ) {
     // send errno via negative len
-    response.len = result;
+    response->len = result;
     // send response
     _message_send_by_pid(
       sender,
       VFS_READ_RESPONSE,
-      ( const char* )&response,
+      ( const char* )response,
       sizeof( vfs_read_response_t ),
       message_id
     );
+    // free stuff
+    free( request );
+    free( response );
+    free( nested_request );
+    free( nested_response );
     return;
   }
   // special handling for null device
@@ -79,10 +111,15 @@ void msg_handle_read( void ) {
     _message_send_by_pid(
       sender,
       VFS_READ_RESPONSE,
-      ( const char* )&response,
+      ( const char* )response,
       sizeof( vfs_read_response_t ),
       message_id
     );
+    // free stuff
+    free( request );
+    free( response );
+    free( nested_request );
+    free( nested_response );
     // skip rest
     return;
   }
@@ -92,9 +129,10 @@ void msg_handle_read( void ) {
   nested_message_id = 0;
   bool send = true;
   // prepare structure
-  strcpy( nested_request.file_path, container->path );
-  nested_request.offset = container->pos;
-  nested_request.len = request.len;
+  strcpy( nested_request->file_path, container->path );
+  nested_request->offset = container->pos;
+  nested_request->len = request->len;
+  //printf( "vfs->read: request->len = %#x\r\n", request->len );
   // loop until message has been sent and answer has been received
   while( true ) {
     // send to handling process if not done
@@ -102,13 +140,13 @@ void msg_handle_read( void ) {
       nested_message_id = _message_send_by_pid(
         handling_process,
         VFS_READ_REQUEST,
-        ( const char* )&nested_request,
+        ( const char* )nested_request,
         sizeof( vfs_read_request_t ),
         0 );
     };
     // wait for response
     _message_wait_for_response(
-      ( char* )&nested_response,
+      ( char* )nested_response,
       sizeof( vfs_read_response_t ),
       nested_message_id );
     // handle error / no message
@@ -120,17 +158,22 @@ void msg_handle_read( void ) {
     break;
   }
   // copy over read content to response for caller
-  memcpy( &response, &nested_response, sizeof( vfs_read_response_t ) );
+  memcpy( response, nested_response, sizeof( vfs_read_response_t ) );
   // update offset
-  if ( 0 < nested_response.len ) {
-    container->pos += ( off_t )nested_response.len;
+  if ( 0 < nested_response->len ) {
+    container->pos += ( off_t )nested_response->len;
   }
   // send response
   _message_send_by_pid(
     sender,
     VFS_READ_RESPONSE,
-    ( const char* )&response,
+    ( const char* )response,
     sizeof( vfs_read_response_t ),
     message_id
   );
+  // free stuff
+  free( request );
+  free( response );
+  free( nested_request );
+  free( nested_response );
 }

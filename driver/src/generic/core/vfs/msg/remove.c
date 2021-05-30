@@ -35,35 +35,50 @@
 void msg_handle_remove( void ) {
   pid_t sender;
   size_t message_id;
-  vfs_remove_request_t request;
-  vfs_remove_response_t response;
+  vfs_remove_request_ptr_t request = ( vfs_remove_request_ptr_t )malloc(
+    sizeof( vfs_remove_request_t ) );
+  if ( ! request ) {
+    return;
+  }
+  vfs_remove_response_ptr_t response = ( vfs_remove_response_ptr_t )malloc(
+    sizeof( vfs_remove_response_t ) );
+  if ( ! response ) {
+    free( request );
+    return;
+  }
 
   // clear variables
-  memset( &request, 0, sizeof( vfs_remove_request_t ) );
-  memset( &response, 0, sizeof( vfs_remove_response_t ) );
+  memset( request, 0, sizeof( vfs_remove_request_t ) );
+  memset( response, 0, sizeof( vfs_remove_response_t ) );
 
   // get message
   _message_receive(
-    ( char* )&request,
+    ( char* )request,
     sizeof( vfs_remove_request_t ),
     &sender,
     &message_id
   );
   // handle error
   if ( errno ) {
+    // free stuff
+    free( request );
+    free( response );
     return;
   }
 
   // debug output
   printf( "HANDLE REMOVE NOT YET IMPLEMENTED!\r\n" );
   // prepare response
-  response.state = -ENOSYS;
+  response->state = -ENOSYS;
   // send response
   _message_send_by_pid(
     sender,
     VFS_REMOVE_RESPONSE,
-    ( const char* )&response,
+    ( const char* )response,
     sizeof( vfs_remove_response_t ),
     message_id
   );
+  // free stuff
+  free( request );
+  free( response );
 }
