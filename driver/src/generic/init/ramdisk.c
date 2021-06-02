@@ -24,8 +24,8 @@
 #include <zlib.h>
 #include <sys/bolthur.h>
 #include <errno.h>
+#include <tar.h>
 #include "ramdisk.h"
-#include "tar.h"
 
 #define INFLATE_CHUNK 32
 

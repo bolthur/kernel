@@ -773,6 +773,15 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
   sprintf( str_ramdisk, "%#0*"PRIxPTR"\0", addr_size, proc_ramdisk_start );
   sprintf( str_ramdisk_size, "%#0*zx\0", addr_size, ramdisk_file_size );
 
+  // get thread
+  avl_node_ptr_t node = avl_iterate_first( proc->thread_manager );
+  if ( ! node ) {
+    return false;
+  }
+  task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( node );
+
+  // empty env for init
+  char* env[] = { NULL, };
   // arch related
   uintptr_t proc_additional_start = task_process_prepare_init_arch( proc );
   if ( proc_additional_start ) {
@@ -781,13 +790,12 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
       str_additional, "%#0*"PRIxPTR"\0", addr_size, proc_additional_start
     );
 
-    assert( task_thread_push_arguments(
-      proc, "./init", str_ramdisk, str_ramdisk_size, str_additional, NULL
-    ) );
+    char* arg[] = {
+      "daemon:/init", str_ramdisk, str_ramdisk_size, str_additional, NULL, };
+    assert( task_thread_push_arguments( thread, arg, env ) );
   } else {
-    assert( task_thread_push_arguments(
-      proc, "./init", str_ramdisk, str_ramdisk_size, NULL
-    ) );
+    char* arg[] = { "daemon:/init", str_ramdisk, str_ramdisk_size, NULL, };
+    assert( task_thread_push_arguments( thread, arg, env ) );
   }
 
   return true;
@@ -828,4 +836,20 @@ list_manager_ptr_t task_process_get_by_name( const char* name ) {
     return NULL;
   }
   return ( TASK_PROCESS_GET_BLOCK_NAME( found ) )->process;
+}
+
+/**
+ * @fn void task_process_prepare_kill(void*, task_process_ptr_t)
+ * @brief Prepare process kill
+ *
+ * @param context
+ * @param proc
+ */
+void task_process_prepare_kill( void* context, task_process_ptr_t proc ) {
+  // set process state
+  proc->state = TASK_PROCESS_STATE_KILL;
+  // push process to cleanup list
+  list_push_back( process_manager->process_to_cleanup, proc );
+  // trigger schedule and cleanup
+  event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
 }

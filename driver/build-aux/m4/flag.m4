@@ -13,6 +13,7 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-Wduplicated-branches -Wduplicated-cond])
   # generic
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c18])
+  AX_APPEND_COMPILE_FLAGS([-ffunction-sections -fdata-sections])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
 
 
@@ -30,8 +31,9 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
     AX_APPEND_COMPILE_FLAGS([-g])
   ], [
     # Linker flags
-    AX_APPEND_LINK_FLAGS([-s])
+    AX_APPEND_LINK_FLAGS([-Wl,-s])
   ] )
+  AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
 
   # optimization level
   case "${with_optimization_level}" in

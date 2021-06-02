@@ -288,40 +288,48 @@ task_thread_ptr_t task_thread_fork(
   return thread;
 }
 
+
 /**
- * Small helper to push arguments for first thread of process to stack
+ * @fn bool task_thread_push_arguments(task_thread_ptr_t, char**)
+ * @brief Small helper to push parameter list for thread to stack
  *
- * @param proc process
- * @return true on success, else false
+ * @param thread
+ * @param parameter
+ * @return
  */
-bool task_thread_push_arguments( task_process_ptr_t proc, ... ) {
-  va_list parameter;
+bool task_thread_push_arguments(
+  task_thread_ptr_t thread,
+  char** parameter,
+  char** environment
+) {
   size_t total_size = 0;
   size_t entry_count = 0;
-  const char* arg;
+  size_t env_count = 0;
 
   // determine count
-  va_start( parameter, proc );
-  while ( ( arg = va_arg( parameter, const char* ) ) ) {
+  while( parameter && parameter[ entry_count ] ) {
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "%s\r\n", arg )
+      DEBUG_OUTPUT( "%s\r\n", parameter[ entry_count ] )
     #endif
-    total_size += strlen( arg ) + 1;
+    total_size += strlen( parameter[ entry_count ] ) + 1;
     // increment entry count
     entry_count++;
   }
-  va_end( parameter );
-  // add argv array size
-  total_size += sizeof( char* ) * entry_count;
-  // add argc
-  total_size += sizeof( int );
-
-  // get thread
-  avl_node_ptr_t node = avl_iterate_first( proc->thread_manager );
-  if ( ! node ) {
-    return false;
+  while( environment && environment[ env_count ] ) {
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "%s\r\n", environment[ env_count ] )
+    #endif
+    total_size += strlen( environment[ env_count ] ) + 1;
+    // increment count
+      env_count++;
   }
-  task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( node );
+  // add argv and env array size
+  total_size += sizeof( char* ) * entry_count + sizeof( char* ) * env_count;
+  // NULL termination for argv and env
+  total_size += sizeof( char* ) * 2;
+  // add space for parameters argc, argv and env
+  total_size += sizeof( int ) + sizeof( char** ) + sizeof( char** );
+
   // map stack temporarily
   uintptr_t stack_tmp = virt_map_temporary(
     thread->stack_physical,
@@ -359,24 +367,46 @@ bool task_thread_push_arguments( task_process_ptr_t proc, ... ) {
   // get beyond argc
   stack_loop += sizeof( int );
   // get pointer to argv
-  char **argv = ( char** )stack_loop;
-  int current_idx = 0;
+  char** argv = ( char** )stack_loop;
   // get beyond argv
-  stack_loop += ( sizeof( char* ) * entry_count );
+  stack_loop += ( sizeof( char* ) * entry_count ) + sizeof( char* );
+  // get pointer to env
+  char** env = ( char** )stack_loop;
+  // get beyond env
+  stack_loop += ( sizeof( char* ) * env_count ) + sizeof( char* );
+
   // loop through parameters
-  va_start( parameter, proc );
-  while ( ( arg = va_arg( parameter, const char* ) ) ) {
+  int current_idx = 0;
+  while ( parameter && parameter[ current_idx ] ) {
     // copy data
-    strcpy( ( void* )stack_loop, arg );
+    strcpy( ( void* )stack_loop, parameter[ current_idx ] );
     // populate argv
     argv[ current_idx ] = ( char* )(
       thread->stack_virtual + ( stack_loop - stack_tmp )
     );
     // get to next place for insert
-    stack_loop += strlen( arg ) + 1;
+    stack_loop += strlen( parameter[ current_idx ] ) + 1;
     current_idx++;
   }
-  va_end( parameter );
+  argv[ current_idx ] = NULL;
+  stack_loop += sizeof( NULL );
+
+  // loop through environment
+  current_idx = 0;
+  while ( environment && environment[ current_idx ] ) {
+    // copy data
+    strcpy( ( void* )stack_loop, environment[ current_idx ] );
+    // populate argv
+    env[ current_idx ] = ( char* )(
+      thread->stack_virtual + ( stack_loop - stack_tmp )
+    );
+    // get to next place for insert
+    stack_loop += strlen( environment[ current_idx ] ) + 1;
+    current_idx++;
+  }
+  env[ current_idx ] = NULL;
+  stack_loop += sizeof( NULL );
+
   // unmap again
   virt_unmap_temporary( stack_tmp, STACK_SIZE );
   // debug output

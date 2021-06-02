@@ -33,6 +33,50 @@
 #endif
 
 /**
+ * @fn char duplicate**(const char**)
+ * @brief Helper to duplicate 2d array
+ *
+ * @param src
+ * @return
+ *
+ * @todo Since this is some sort of unsafe copy it needs to be checked whether the area is mapped before copying it
+ */
+static char** duplicate( const char** src ) {
+  char** dst = NULL;
+  size_t len = 0;
+  size_t count;
+  size_t src_count = 0;
+  // determine source count
+  while ( src && src[ src_count ] ) {
+    src_count++;
+  }
+  // Sum up all strings
+  for ( count = 0; count < src_count; count++ ) {
+    len += strlen( src[ count ] ) + 1;
+  }
+  // allocate new buffer
+  dst = ( char** )malloc( ( src_count + 1 ) * sizeof( char* ) + len );
+  if ( ! dst ) {
+    return NULL;
+  }
+  // copy stuff over into contiguous buffer
+  len = 0;
+  for ( count = 0; count < src_count; count++ ) {
+    // set pointer to string
+    dst[ count ] =
+      &( ( ( char* )dst )[ ( src_count + 1 ) * sizeof( char* ) + len ] );
+    // copy string content
+    strcpy( dst[ count ], src[ count ] );
+    // increase length for next offset
+    len += strlen( src[ count ] ) + 1;
+  }
+  // append null termination
+  dst[ src_count ] = NULL;
+  // return buffer
+  return dst;
+}
+
+/**
  * @fn void syscall_process_id(void*)
  * @brief return process id to calling thread
  *
@@ -66,15 +110,8 @@ void syscall_process_exit( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "process exit called\r\n" )
   #endif
-  // set process state
-  task_thread_current_thread->process->state = TASK_PROCESS_STATE_KILL;
-  // push process to cleanup list
-  list_push_back(
-    process_manager->process_to_cleanup,
-    task_thread_current_thread->process
-  );
-  // trigger schedule and cleanup
-  event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+  // enqueue kill
+  task_process_prepare_kill( context, task_thread_current_thread->process );
 }
 
 /**
@@ -112,17 +149,35 @@ void syscall_process_replace( void* context ) {
   // parameters
   void* addr = ( void* )syscall_get_parameter( context, 0 );
   const char* name = ( const char* )syscall_get_parameter( context, 1 );
+  const char** argv = ( const char** )syscall_get_parameter( context, 2 );
+  const char** env = ( const char** )syscall_get_parameter( context, 3 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_replace( %#p, %s )\r\n", addr, name )
+    DEBUG_OUTPUT( "syscall_process_replace( %#p, %s, %#p, %#p )\r\n",
+      addr, name, argv, env )
   #endif
   task_process_ptr_t proc = task_thread_current_thread->process;
+
+  // save argv and env if existing
+  char** tmp_argv = duplicate( argv );
+  if ( ! tmp_argv ) {
+    syscall_populate_error( context, ( size_t )-ENOMEM );
+    return;
+  }
+  char** tmp_env = duplicate( env );
+  if ( ! tmp_env ) {
+    free( tmp_argv );
+    syscall_populate_error( context, ( size_t )-ENOMEM );
+    return;
+  }
 
   // save image temporary
   size_t image_size = elf_image_size( ( uintptr_t )addr );
   void* image = ( void* )malloc( image_size );
   // handle error
   if ( ! image ) {
+    free( tmp_argv );
+    free( tmp_env );
     syscall_populate_error( context, ( size_t )-ENOMEM );
     return;
   }
@@ -133,6 +188,8 @@ void syscall_process_replace( void* context ) {
   char* saved_name = ( char* )malloc( name_size * sizeof( char ) );
   // handle error
   if ( ! saved_name ) {
+    free( tmp_argv );
+    free( tmp_env );
     free( image );
     syscall_populate_error( context, ( size_t )-ENOMEM );
     return;
@@ -141,17 +198,24 @@ void syscall_process_replace( void* context ) {
 
   // clear all assigned shared areas
   if ( ! shared_memory_cleanup_process( task_thread_current_thread->process ) ) {
+    free( tmp_argv );
+    free( tmp_env );
     free( image );
     free( saved_name );
-    syscall_populate_error( context, ( size_t )-EIO );
+    task_process_prepare_kill( context, task_thread_current_thread->process );
     return;
   }
 
   // destroy virtual context
-  if ( ! virt_destroy_context( task_thread_current_thread->process->virtual_context, true ) ) {
+  if ( ! virt_destroy_context(
+    task_thread_current_thread->process->virtual_context,
+    true
+  ) ) {
+    free( tmp_argv );
+    free( tmp_env );
     free( image );
     free( saved_name );
-    syscall_populate_error( context, ( size_t )-ENOMEM );
+    task_process_prepare_kill( context, task_thread_current_thread->process );
     return;
   }
 
@@ -167,33 +231,41 @@ void syscall_process_replace( void* context ) {
   // recreate thread manager and stack manager
   proc->thread_manager = task_thread_init();
   if ( ! proc->thread_manager ) {
+    free( tmp_argv );
+    free( tmp_env );
     free( image );
     free( saved_name );
-    syscall_populate_error( context, ( size_t )-ENOMEM );
+    task_process_prepare_kill( context, task_thread_current_thread->process );
     return;
   }
   proc->thread_stack_manager = task_stack_manager_create();
   if ( ! proc->thread_stack_manager ) {
+    free( tmp_argv );
+    free( tmp_env );
     free( image );
     free( saved_name );
-    syscall_populate_error( context, ( size_t )-ENOMEM );
+    task_process_prepare_kill( context, task_thread_current_thread->process );
     return;
   }
 
   // load elf image
   uintptr_t init_entry = elf_load( ( uintptr_t )image, proc );
   if ( ! init_entry ) {
+    free( tmp_argv );
+    free( tmp_env );
     free( image );
     free( saved_name );
-    syscall_populate_error( context, ( size_t )-ENOMEM );
+    task_process_prepare_kill( context, task_thread_current_thread->process );
     return;
   }
   // add thread
   task_thread_ptr_t new_current = task_thread_create( init_entry, proc, 0 );
   if ( ! new_current ) {
+    free( tmp_argv );
+    free( tmp_env );
     free( image );
     free( saved_name );
-    syscall_populate_error( context, ( size_t )-ENOMEM );
+    task_process_prepare_kill( context, task_thread_current_thread->process );
     return;
   }
   // remove old process name and pass new one
@@ -202,13 +274,25 @@ void syscall_process_replace( void* context ) {
     list_remove_data( name_entry->process, proc );
   }
 
+  // push arguments and environment
+  if ( ! task_thread_push_arguments( new_current, tmp_argv, tmp_env ) ) {
+    free( tmp_argv );
+    free( tmp_env );
+    free( image );
+    free( saved_name );
+    task_process_prepare_kill( context, task_thread_current_thread->process );
+    return;
+  }
+
   // replace process structure name
   free( proc->name );
   proc->name = ( char* )malloc( name_size * sizeof( char ) );
   if ( ! proc->name ) {
+    free( tmp_argv );
+    free( tmp_env );
     free( image );
     free( saved_name );
-    syscall_populate_error( context, ( size_t )-ENOMEM );
+    task_process_prepare_kill( context, task_thread_current_thread->process );
     return;
   }
   strcpy( proc->name, saved_name );
@@ -216,20 +300,26 @@ void syscall_process_replace( void* context ) {
   // remove old process name and pass new one
   name_entry = task_process_get_name_list( saved_name );
   if ( ! name_entry ) {
+    free( tmp_argv );
+    free( tmp_env );
     free( image );
     free( saved_name );
-    syscall_populate_error( context, ( size_t )-ENOMEM );
+    task_process_prepare_kill( context, task_thread_current_thread->process );
     return;
   }
   // add new process name
   if ( ! list_push_back( name_entry->process, proc ) ) {
+    free( tmp_argv );
+    free( tmp_env );
     free( image );
     free( saved_name );
-    syscall_populate_error( context, ( size_t )-ENOMEM );
+    task_process_prepare_kill( context, task_thread_current_thread->process );
     return;
   }
 
   // free temporary stuff
+  free( tmp_argv );
+  free( tmp_env );
   free( image );
   free( saved_name );
 

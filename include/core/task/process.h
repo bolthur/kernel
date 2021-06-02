@@ -100,5 +100,6 @@ uintptr_t task_process_prepare_init_arch( task_process_ptr_t );
 task_process_ptr_t task_process_get_by_id( pid_t );
 list_manager_ptr_t task_process_get_by_name( const char* );
 task_process_name_ptr_t task_process_get_name_list( const char* );
+void task_process_prepare_kill( void*, task_process_ptr_t );
 
 #endif

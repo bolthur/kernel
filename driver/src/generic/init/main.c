@@ -48,73 +48,6 @@ size_t ramdisk_read_offset = 0;
 pid_t pid = 0;
 TAR *disk = NULL;
 
-
-// integration overwrites
-int _execve( char*, char**, char** );
-
-int _execve(
-  __unused char* name,
-  __unused char** argv,
-  __unused char** env
-) {
-  printf( "fooo %d!\r\n", getpid() );
-  // open file to read binary
-  FILE* fp = fopen( "/usr/bin/linker.so", "rb" );
-  if ( ! fp ) {
-    printf( "Open failed with error \"%s\"\r\n", strerror( errno ) );
-    errno = EIO;
-    return -1;
-  }
-  printf( "Start fetching content of file %s!\r\n", name );
-  // image pointer offset and read size
-  uint8_t* image = NULL;
-  size_t offset = 0;
-  size_t read_size = MAX_READ_LEN;
-  while ( true ) {
-    printf( "file %s: %d - %d / %#x\r\n", name, offset, read_size, read_size );
-    // allocate / extend
-    image = realloc( image, sizeof( uint8_t ) * ( offset + read_size ) );
-    // handle possible error
-    if ( ! image ) {
-      printf( "NO MEMORY!\r\n" );
-      free( image );
-      errno = ENOMEM;
-      return -1;
-    }
-    // reset errno and read chunk
-    errno = 0;
-    size_t n = fread( image + offset, sizeof( uint8_t ), read_size, fp );
-    // handle possible error
-    if ( errno ) {
-      printf( "read error: %s\r\n", strerror( errno ) );
-      free( image );
-      return -1;
-    }
-    // increase offset
-    offset += read_size;
-    if ( 0 == n ) {
-      break;
-    }
-  }
-  // close opened file handle again
-  fclose( fp );
-  // replace process image with linker
-  printf( "Finished read with read bytes of file %s: %d\r\n", basename( name ), offset );
-  // FIXME: APPEND ARGUMENTS
-  // FIXME: APPEND ENVIRONMENT
-  printf( "Replace process with image %p and name %s\r\n", ( void* )image, basename( name ) );
-  // create process
-  _process_replace( ( void* )image, name );
-  // clear image
-  free( image );
-  // set errno if not already set
-  if ( ! errno ) {
-    errno = ENOEXEC;
-  }
-  return -1;
-}
-
-
 /**
  * @brief Simulate open, by decompressing ramdisk tar image
  *
@@ -318,11 +251,15 @@ static int execute_driver( char* name ) {
   }
   // fork only
   if ( 0 == forked_process ) {
-    printf( "Replacing fork with image by using exec!\r\n" );
+    char* base = basename( name );
+    if ( ! base ) {
+      printf( "Basename failed!\r\n" );
+      exit( -1 );
+    }
     // build command
-    char* cmd[] = { "linker.so", name, ( char* )0, };
+    char* cmd[] = { base, NULL, };
     // exec to replace
-    if ( -1 == execv( "/usr/bin/linker.so", cmd ) ) {
+    if ( -1 == execv( name, cmd ) ) {
       printf( "Exec failed: %s\r\n", strerror( errno ) );
       exit( errno );
     }
@@ -439,6 +376,7 @@ int main( int argc, char* argv[] ) {
   mytype->readfunc = my_tar_read;
   mytype->writefunc = my_tar_write;
 
+  printf( "Starting deflate of init ramdisk\r\n" );
   if ( 0 != tar_open( &disk, "/ramdisk.tar", mytype, O_RDONLY, 0, 0 ) ) {
     printf( "ERROR: Cannot open ramdisk!\r\n" );
     return -1;
@@ -460,7 +398,7 @@ int main( int argc, char* argv[] ) {
   if ( 0 == forked_process ) {
     printf( "Replacing fork with vfs image!\r\n" );
     // call for replace and handle error
-    _process_replace( vfs_image, "daemon:/vfs" );
+    _process_replace( vfs_image, "daemon:/vfs", NULL, NULL );
     if ( errno ) {
       printf( "Unable to replace process with image: %s\r\n", strerror( errno ) );
       return -1;
@@ -468,6 +406,20 @@ int main( int argc, char* argv[] ) {
   }
   printf( "Continuing with init startup!\r\n" );
 
+  // wait for vfs is available
+  printf( "Waiting until vfs is up!\r\n" );
+  while( true ) {
+    // check for vfs is existing
+    _message_has_by_name( "daemon:/vfs" );
+    // continue on error
+    if ( errno ) {
+      continue;
+    }
+    // vfs is up, so end endless loop
+    break;
+  }
+
+  printf( "Sending ramdisk files to vfs!\r\n" );
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
   // create root ramdisk directory
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
