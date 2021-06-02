@@ -18,22 +18,64 @@
  */
 
 #include <stdio.h>
-// necessary for libc hacking
-#include <stdlib.h>
-#include <limits.h>
-#include <errno.h>
-#include <stdarg.h>
-#include <string.h>
-#include <assert.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <inttypes.h>
-#include <sys/types.h>
-#include <sys/bolthur.h>
+#include "type.h"
+#include "image.h"
 
-int main( __unused int argc, __unused char* argv[] ) {
-  printf( "linker.so processing!\r\n" );
+/**
+ * @fn int main(int, char*[])
+ * @brief main entry point
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
+int main( int argc, char* argv[] ) {
+  // debug output
+  #if defined( OUTPUT_ENABLE )
+    printf( "linker.so processing!\r\n" );
+  #endif
+  // check arguments
+  if ( argc < 2 ) {
+    fprintf(
+      stderr,
+      "linker.so - dynamic binary loader\r\n"
+      "usage: %s [-e] [EXECUTABLE PATH]\r\n"
+      " -e     Adjust argument offset\r\n",
+      argv[ 0 ]
+    );
+    return -1;
+  }
+
+  // debug output
+  #if defined( OUTPUT_ENABLE )
+    for ( int i = 0; i < argc; i++ ) {
+      printf( "argv[ %d ] = %s\r\n", i, argv[ i ] );
+    }
+  #endif
+
+  // cache file
+  char* file = argv[ 1 ];
+  // load executable image
+  uint8_t* image = image_load_file( file );
+  // handle image
+  if ( ! image ) {
+    fprintf( stderr, "Unable to load image \"%s\"!\r\n", file );
+    return -1;
+  }
+  // debug output
+  #if defined( OUTPUT_ENABLE )
+    printf( "Loaded image \"%s\" into buffer %p\r\n", file, image );
+  #endif
+  // verify image
+  if ( ! image_validate( image ) ) {
+    fprintf( stderr, "Image \"%s\" is not valid for execution!\r\n", file );
+    return -1;
+  }
+  // debug output
+  #if defined( OUTPUT_ENABLE )
+    printf( "Image \"%s\" is valid for execution!\r\n", file );
+  #endif
+
   for(;;);
   return 0;
 }

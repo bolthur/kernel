@@ -1,10 +1,18 @@
 
 AC_DEFUN([BOLTHUR_DRIVER_SET_HOST], [
+  AH_TEMPLATE([OUTPUT_ENABLE], [Define to 1 to enable kernel print])
+
+  # Test for general output enable
+  AS_IF([test "x$enable_output" == "xyes"], [
+    AC_DEFINE([OUTPUT_ENABLE], [1])
+  ])
+
   case "${host_cpu}" in
   arm)
     arch_subdir=arm
     host_bfd=elf32-littlearm
     CFLAGS="${CFLAGS} -marm"
+    executable_format=32
 
     case "${DEVICE}" in
     rpi2_b_rev1)
@@ -30,6 +38,7 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_HOST], [
   aarch64)
     arch_subdir=arm
     host_bfd=elf64-littleaarch64
+    executable_format=64
 
     case "${DEVICE}" in
     rpi3_b)
@@ -62,4 +71,5 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_HOST], [
   AC_SUBST(platform_subdir)
   AC_SUBST(host_bfd)
   AC_SUBST(copy_flags)
+  AC_SUBST(executable_format)
 ])

@@ -23,7 +23,7 @@
 
 #include <stdio.h>
 #include <core/arch.h>
-#include <core/elf/common.h>
+#include <core/elf.h>
 #include <core/tty.h>
 #include <core/interrupt.h>
 #include <core/timer.h>

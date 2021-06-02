@@ -20,8 +20,8 @@
 #include <inttypes.h>
 #include <stdbool.h>
 #include <string.h>
-#include <core/elf/common.h>
-#include <core/elf/elf32.h>
+#include <elf.h>
+#include <core/elf.h>
 #include <core/mm/phys.h>
 #include <core/entry.h>
 #if defined( PRINT_ELF )
@@ -36,7 +36,11 @@
  * @return
  */
 bool elf_check( uintptr_t elf ) {
-  Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #if defined( ELF32 )
+    Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #elif defined( ELF64 )
+    Elf64_Ehdr* header = ( Elf64_Ehdr* )elf;
+  #endif
 
   // handle invalid
   if ( ! header ) {
@@ -66,23 +70,16 @@ bool elf_check( uintptr_t elf ) {
   // check architecture
   #if defined( ELF32 )
     if ( ELFCLASS32 != header->e_ident[ EI_CLASS ] ) {
-      // debug output
-      #if defined ( PRINT_ELF )
-        DEBUG_OUTPUT( "Invalid architecture!\r\n" )
-      #endif
-      // return error
-      return false;
-    }
   #elif defined( ELF64 )
     if ( ELFCLASS64 != header->e_ident[ EI_CLASS ] ) {
-      // debug output
-      #if defined ( PRINT_ELF )
-        DEBUG_OUTPUT( "Invalid architecture!\r\n" )
-      #endif
-      // return error
-      return false;
-    }
   #endif
+    // debug output
+    #if defined ( PRINT_ELF )
+      DEBUG_OUTPUT( "Invalid architecture!\r\n" )
+    #endif
+    // return error
+    return false;
+  }
 
   // architecture related checks
   if ( ! elf_arch_check( elf ) ) {
@@ -123,14 +120,24 @@ bool elf_check( uintptr_t elf ) {
  */
 static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
   // get header
-  Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #if defined( ELF32 )
+    Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #elif defined( ELF64 )
+    Elf64_Ehdr* header = ( Elf64_Ehdr* )elf;
+  #endif
 
   // parse program header
   for ( uint32_t index = 0; index < header->e_phnum; ++index ) {
     // get program header
-    Elf32_Phdr* program_header = ( Elf32_Phdr* )(
-      elf + header->e_phoff + header->e_phentsize * index
-    );
+    #if defined( ELF32 )
+      Elf32_Phdr* program_header = ( Elf32_Phdr* )(
+        elf + header->e_phoff + header->e_phentsize * index
+      );
+    #elif defined( ELF64 )
+      Elf64_Phdr* program_header = ( Elf64_Phdr* )(
+        elf + header->e_phoff + header->e_phentsize * index
+      );
+    #endif
     // debug output
     #if defined ( PRINT_ELF )
       DEBUG_OUTPUT(

@@ -29,7 +29,6 @@
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <core/mm/shared.h>
-#include <core/elf/common.h>
 #if defined( PRINT_PROCESS )
   #include <core/debug/debug.h>
 #endif

@@ -24,6 +24,15 @@ AC_ARG_ENABLE([device],
   [AC_MSG_ERROR([Target device missing])]
 )
 
+AC_ARG_ENABLE(
+  [output],
+  AS_HELP_STRING(
+    [--enable-output],
+    [activate debug output [default: off]]
+  ),
+  [enable_output=yes]
+)
+
 AC_ARG_WITH(
   [optimization-level],
   AS_HELP_STRING(
@@ -122,6 +131,10 @@ AC_DEFINE_UNQUOTED(
   [__attribute__((unused))],
   [Unused]
 )
+
+# conditional
+AM_CONDITIONAL([IS32], [test $executable_format -eq 32])
+AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 
 AC_CONFIG_FILES([
   Makefile

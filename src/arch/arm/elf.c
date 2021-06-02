@@ -17,7 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <core/elf/elf32.h>
+#include <stdbool.h>
+#include <elf.h>
+#include <core/elf.h>
 #include <core/entry.h>
 #if defined ( PRINT_ELF )
   #include <core/debug/debug.h>

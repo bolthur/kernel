@@ -27,7 +27,7 @@
 #include <core/task/stack.h>
 #include <core/task/thread.h>
 #include <core/mm/shared.h>
-#include <core/elf/common.h>
+#include <core/elf.h>
 #if defined( PRINT_SYSCALL )
   #include <core/debug/debug.h>
 #endif
