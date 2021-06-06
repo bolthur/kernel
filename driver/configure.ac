@@ -146,9 +146,8 @@ AC_CONFIG_FILES([
   src/generic/core/tty/Makefile
   src/generic/core/vfs/Makefile
   src/generic/init/Makefile
-  src/generic/usr/Makefile
-  src/generic/usr/bin/Makefile
-  src/generic/usr/bin/linker/Makefile
+  src/generic/lib/Makefile
+  src/generic/lib/ld-bolthur/Makefile
   src/platform/Makefile
   src/platform/rpi/Makefile
   src/platform/rpi/driver/Makefile

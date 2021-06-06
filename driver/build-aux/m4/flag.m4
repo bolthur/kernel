@@ -29,12 +29,7 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
     # debug symbols and sanitizer
     # -fsanitize=undefined
     AX_APPEND_COMPILE_FLAGS([-g])
-  ], [
-    # Linker flags
-    AX_APPEND_LINK_FLAGS([-Wl,-s])
   ] )
-  AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
-
   # optimization level
   case "${with_optimization_level}" in
     no | 0)

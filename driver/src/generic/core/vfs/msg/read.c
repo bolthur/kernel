@@ -132,7 +132,8 @@ void msg_handle_read( void ) {
   strcpy( nested_request->file_path, container->path );
   nested_request->offset = container->pos;
   nested_request->len = request->len;
-  //printf( "vfs->read: request->len = %#x\r\n", request->len );
+  //printf( "vfs->read: request->len = %#x, SIZE_MAX = %#x\r\n",
+  //  request->len, SIZE_MAX );
   // loop until message has been sent and answer has been received
   while( true ) {
     // send to handling process if not done

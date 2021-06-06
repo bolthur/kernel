@@ -158,12 +158,14 @@ void ramdisk_dump( TAR* t ) {
     if ( TH_ISREG( t ) ) {
       // get filename
       char* filename = th_get_pathname( t );
-      printf( "%s\r\n", filename );
+      printf( "%10s - %s\r\n", "file", filename );
       // skip to next file
       if ( tar_skip_regfile( t ) != 0 ) {
         printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
         break;
       }
+    } else if ( TH_ISSYM( t ) ) {
+      printf( "%10s - %s -> %s\r\n", "symlink", th_get_pathname( t ), th_get_linkname( t ) );
     }
   }
 }

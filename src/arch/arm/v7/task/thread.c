@@ -155,6 +155,7 @@ task_thread_ptr_t task_thread_create(
 
   // populate thread data
   thread->state = TASK_THREAD_STATE_READY;
+  thread->entry = entry;
   thread->id = task_thread_generate_id( process );
   thread->priority = priority;
   thread->process = process;
@@ -228,6 +229,7 @@ task_thread_ptr_t task_thread_fork(
   thread->id = task_thread_generate_id( forked_process );
   thread->priority = thread_to_fork->priority;
   thread->stack_virtual = thread_to_fork->stack_virtual;
+  thread->entry = thread_to_fork->entry;
   thread->stack_physical = virt_get_mapped_address_in_context(
     thread->process->virtual_context,
     thread->stack_virtual

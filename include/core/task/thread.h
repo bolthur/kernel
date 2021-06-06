@@ -47,6 +47,7 @@ struct task_thread {
   size_t priority;
   uintptr_t stack_virtual;
   uint64_t stack_physical;
+  uintptr_t entry;
   task_thread_state_t state;
   task_process_ptr_t process;
 };

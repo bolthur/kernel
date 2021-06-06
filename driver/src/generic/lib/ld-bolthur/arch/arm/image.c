@@ -17,48 +17,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <elf.h>
 #include "../../image.h"
+#include <elf.h>
 
 /**
- * @fn bool image_validate(void*)
- * @brief Image validation for 32 bit architecture
+ * @fn bool image_validate_header(void*)
+ * @brief Method to validate header
  *
  * @param img
  * @return
  */
-bool image_validate( void* img ) {
+bool image_validate_machine( void* img ) {
   Elf32_Ehdr* header = ( Elf32_Ehdr* )img;
-  // handle invalid
-  if ( ! header ) {
+  // check machine
+  if ( EM_ARM != header->e_machine ) {
     return false;
   }
-  // check magic
-  if (
-    ELFMAG0 != header->e_ident[ EI_MAG0 ]
-    || ELFMAG1 != header->e_ident[ EI_MAG1 ]
-    || ELFMAG2 != header->e_ident[ EI_MAG2 ]
-    || ELFMAG3 != header->e_ident[ EI_MAG3 ]
-  ) {
-    // return error
-    return false;
-  }
-  // handle wrong architecture
-  if ( ELFCLASS32 != header->e_ident[ EI_CLASS ] ) {
-    return false;
-  }
-  // architecture related checks
-  if ( ! image_validate_machine( img ) ) {
-    return false;
-  }
-  // ensure program header existence
-  if ( 0 == header->e_phentsize ) {
-    return false;
-  }
-  // ensure section header existence
-  if ( 0 == header->e_shentsize ) {
-    return false;
-  }
-  // return success
   return true;
 }

@@ -202,6 +202,19 @@ int handle_generate(
   ( *container )->handle = generate_handle( process_handle );
   // copy path
   strcpy( ( *container )->path, path );
+  // special handling for symlinks
+  if ( target->flags & VFS_SYMLINK ) {
+    // get link destination
+    char* destination = vfs_path_bottom_up( target->target ) ;
+    if ( ! destination ) {
+      free( *container );
+      return -1;
+    }
+    // copy link destination
+    strcpy( ( *container )->path, destination );
+    // free again after copy
+    free( destination );
+  }
   // prepare and insert avl node
   avl_prepare_node( &(*container)->node, ( void* )(*container)->handle );
   if ( ! avl_insert_by_node( process_handle->tree, &(*container)->node ) ) {

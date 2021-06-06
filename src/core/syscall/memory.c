@@ -76,9 +76,23 @@ void syscall_memory_acquire( void* context ) {
       syscall_populate_error( context, ( size_t )-ENOMEM );
       return;
     }
-  // find free page range
+  // find free page range starting after thread entry point
   } else {
-    start = virt_find_free_page_range( virtual_context, len, ( uintptr_t )addr );
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "entry = %#x, address = %p\r\n",
+        task_thread_current_thread->entry, addr )
+    #endif
+    // set address
+    uintptr_t tmp_addr = task_thread_current_thread->entry;
+    ROUND_UP_TO_FULL_PAGE( tmp_addr )
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "entry = %#x, address = %p\r\n",
+        tmp_addr, addr )
+    #endif
+    start = virt_find_free_page_range(
+      virtual_context, len, tmp_addr );
   }
 
   // handle no address found

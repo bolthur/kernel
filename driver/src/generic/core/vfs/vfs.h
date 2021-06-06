@@ -47,6 +47,7 @@ struct vfs_node {
   uint32_t group_id;
   uint32_t flags;
   uint32_t length;
+  vfs_node_ptr_t parent;
   vfs_node_ptr_t target;
   pid_t pid;
   list_manager_ptr_t children;
@@ -57,9 +58,10 @@ struct vfs_node {
 vfs_node_ptr_t vfs_setup( pid_t );
 void vfs_destroy( vfs_node_ptr_t );
 void vfs_dump( vfs_node_ptr_t, const char* );
-bool vfs_add_path( vfs_node_ptr_t, pid_t, const char*, vfs_entry_type_t );
+bool vfs_add_path( vfs_node_ptr_t, pid_t, const char*, vfs_entry_type_t, vfs_node_ptr_t );
 
 vfs_node_ptr_t vfs_node_by_name( vfs_node_ptr_t, const char* );
 vfs_node_ptr_t vfs_node_by_path( const char* );
+char* vfs_path_bottom_up( vfs_node_ptr_t );
 
 #endif

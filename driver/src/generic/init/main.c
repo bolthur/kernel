@@ -31,6 +31,7 @@
 #include <sys/bolthur.h>
 #include <libgen.h>
 #include <stdnoreturn.h>
+#include <unistd.h>
 // third party libraries
 #include <zlib.h>
 #include <libtar.h>
@@ -261,7 +262,7 @@ static int execute_driver( char* name ) {
     // exec to replace
     if ( -1 == execv( name, cmd ) ) {
       printf( "Exec failed: %s\r\n", strerror( errno ) );
-      exit( errno );
+      exit( 1 );
     }
   }
   // non fork return 0
@@ -383,7 +384,7 @@ int main( int argc, char* argv[] ) {
   }
 
   // dump ramdisk
-  ramdisk_dump( disk );
+  //ramdisk_dump( disk );
   // get vfs image
   void* vfs_image = ramdisk_lookup_file( disk, "ramdisk/core/vfs" );
   assert( vfs_image );
@@ -420,31 +421,80 @@ int main( int argc, char* argv[] ) {
   }
 
   printf( "Sending ramdisk files to vfs!\r\n" );
+  // FIXME: ADD IN THREE STEPS: 1st DIRECTORIES, 2nd FILES, 3rd SYMLINKS
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
   // create root ramdisk directory
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
+
+  printf( "SENDING FOLDERS TO VFS!\r\n" );
   // reset read offset
   ramdisk_read_offset = 0;
-  // loop until vfs image is there
+  // loop and add folders
   while ( th_read( disk ) == 0 ) {
     // handle directory, hard links, symbolic links and normal entries
-    if ( TH_ISREG( disk ) || TH_ISDIR( disk ) || TH_ISLNK( disk ) || TH_ISSYM( disk ) ) {
+    if ( TH_ISDIR( disk ) ) {
+      // clear message structures
+      memset( msg, 0, sizeof( vfs_add_request_t ) );
+      msg->entry_type = VFS_ENTRY_TYPE_DIRECTORY;
+      // populate path into message
+      strcpy( msg->file_path, "/" );
+      strcat( msg->file_path, th_get_pathname( disk ) );
+      // send add request
+      send_add_request( msg );
+    }
+    // skip to next file
+    if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
+      printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
+      return -1;
+    }
+  }
+  printf( "SENDING FILES TO VFS!\r\n" );
+  // reset read offset
+  ramdisk_read_offset = 0;
+  // loop and add files
+  while ( th_read( disk ) == 0 ) {
+    // handle directory, hard links, symbolic links and normal entries
+    if ( TH_ISREG( disk ) ) {
+      // clear message structures
+      memset( msg, 0, sizeof( vfs_add_request_t ) );
+      msg->entry_type = VFS_ENTRY_TYPE_FILE;
+      // populate path into message
+      strcpy( msg->file_path, "/" );
+      strcat( msg->file_path, th_get_pathname( disk ) );
+      // send add request
+      send_add_request( msg );
+    }
+    // skip to next file
+    if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
+      printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
+      return -1;
+    }
+  }
+  printf( "SENDING LINKS TO VFS!\r\n" );
+  // reset read offset
+  ramdisk_read_offset = 0;
+  // loop and add links
+  while ( th_read( disk ) == 0 ) {
+    // handle directory, hard links, symbolic links and normal entries
+    if ( TH_ISLNK( disk ) || TH_ISSYM( disk ) ) {
       // clear message structures
       memset( msg, 0, sizeof( vfs_add_request_t ) );
       // set correct entry type
-      if ( TH_ISREG( disk ) ) {
-        msg->entry_type = VFS_ENTRY_TYPE_FILE;
-      } else if ( TH_ISDIR( disk ) ) {
-        msg->entry_type = VFS_ENTRY_TYPE_DIRECTORY;
-      } else if ( TH_ISLNK( disk ) ) {
+      if ( TH_ISLNK( disk ) ) {
         msg->entry_type = VFS_ENTRY_TYPE_HARDLINK;
       } else if ( TH_ISSYM( disk ) ) {
         msg->entry_type = VFS_ENTRY_TYPE_SYMLINK;
       }
+
+      // get file and linkname
+      char* filename = th_get_pathname( disk );
+      char* linkname = th_get_linkname( disk );
       // populate path into message
       strcpy( msg->file_path, "/" );
-      strcat( msg->file_path, th_get_pathname( disk ) );
+      strcat( msg->file_path, filename );
+      // populate linked path
+      strcpy( msg->linked_path, linkname );
       // send add request
       send_add_request( msg );
     }
@@ -511,6 +561,7 @@ int main( int argc, char* argv[] ) {
       // get rid of mount point
       char* file = request->file_path;
       char* buf = NULL;
+//      printf( "file = %s\r\n", file );
       // strip leading slash
       if ( '/' == *file ) {
         file++;
@@ -560,8 +611,8 @@ int main( int argc, char* argv[] ) {
       if ( total > total_size ) {
         amount -= ( total - total_size );
       }
-//      printf( "init->read: amount = %d, offset = %ld\r\n",
-//        amount, request->offset );
+//      printf( "init->read: amount = %d ( %#x ), offset = %ld ( %#lx ), total = %d ( %#x )\r\n",
+//        amount, amount, request->offset, request->offset, total, total );
       // now copy
       memcpy( response->data, buf + request->offset, amount );
       response->len = ( ssize_t )amount;
@@ -627,7 +678,7 @@ int main( int argc, char* argv[] ) {
             break;
           }
           // skip to next file
-          if ( tar_skip_regfile( disk ) != 0 ) {
+          if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
             printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
             return -1;
           }

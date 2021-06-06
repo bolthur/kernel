@@ -1,2 +1,2 @@
 
-SUBDIRS = init core usr
+SUBDIRS = init core lib

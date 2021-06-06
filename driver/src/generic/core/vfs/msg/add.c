@@ -31,6 +31,9 @@
 
 /**
  * @brief handle incoming add message
+ *
+ * @todo add handle of variable parts in path
+ * @todo handle invalid link targets somehow
  */
 void msg_handle_add( void ) {
   pid_t sender;
@@ -91,8 +94,55 @@ void msg_handle_add( void ) {
   }
   // get basename and create node
   str = basename( request->file_path );
+  // get target node
+  vfs_node_ptr_t target = NULL;
+  if ( VFS_ENTRY_TYPE_SYMLINK == request->entry_type ) {
+    // check for target is not set
+    if ( 0 == strlen( request->linked_path ) ) {
+      // prepare response
+      response->success = false;
+      // send response
+      _message_send_by_pid(
+        sender,
+        VFS_ADD_RESPONSE,
+        ( const char* )response,
+        sizeof( vfs_add_response_t ),
+        message_id
+      );
+      // free message structures
+      free( request );
+      free( response );
+      // skip
+      return;
+    }
+    // handle absolute
+    if ( '/' == request->linked_path[ 0 ] ) {
+      target = vfs_node_by_path( request->linked_path );
+    } else {
+      // set parent node
+      target = vfs_node_by_name( node, request->linked_path );
+    }
+    // handle no target found
+    if ( ! target ) {
+      // prepare response
+      response->success = false;
+      // send response
+      _message_send_by_pid(
+        sender,
+        VFS_ADD_RESPONSE,
+        ( const char* )response,
+        sizeof( vfs_add_response_t ),
+        message_id
+      );
+      // free message structures
+      free( request );
+      free( response );
+      // skip
+      return;
+    }
+  }
   // add basename to path
-  if ( ! vfs_add_path( node, sender, str, request->entry_type ) ) {
+  if ( ! vfs_add_path( node, sender, str, request->entry_type, target ) ) {
     // debug output
     printf( "Error: Couldn't add \"%s\"\r\n", request->file_path );
     free( str );

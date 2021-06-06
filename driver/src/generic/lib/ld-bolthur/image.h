@@ -19,12 +19,31 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include "list.h"
 
 #ifndef __IMAGE_H__
 #define __IMAGE_H__
 
+// entry point type
+typedef int ( *main_entry_point )( int, char** );
+// some forward declarations
+struct elf_image;
+typedef struct elf_image elf_image_t;
+typedef struct elf_image* elf_image_ptr_t;
+
+void image_list_cleanup_helper( const list_item_ptr_t );
+void image_destroy_data_entry( elf_image_ptr_t );
+
+uint32_t image_name_hash( const char* );
 bool image_validate_machine( void* );
-bool image_validate( void* );
-uint8_t* image_load_file( const char* );
+bool image_validate( void*, int );
+uint8_t* image_buffer_file( const char*, size_t* );
+bool image_list_data_create( list_manager_ptr_t, void*, size_t, int, char* );
+bool image_list_contain( list_manager_ptr_t, char* );
+bool image_load( void*, size_t );
+bool image_handle_dynamic( elf_image_ptr_t, list_manager_ptr_t );
+bool image_handle_flat( elf_image_ptr_t );
+void* image_get_section_by_type( void*, size_t );
 
 #endif

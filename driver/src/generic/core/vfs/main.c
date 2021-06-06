@@ -50,7 +50,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   vfs_message_type_t type;
 
   // print something
-  printf( "vfs processing!\r\n" );
+  //printf( "vfs processing!\r\n" );
   // cache current pid
   pid = getpid();
   // setup handle tree and vfs

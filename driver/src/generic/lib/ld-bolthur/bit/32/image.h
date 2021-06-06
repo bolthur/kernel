@@ -17,21 +17,25 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdint.h>
+#include <stdbool.h>
 #include <elf.h>
-#include "../../image.h"
+#include "../../list.h"
 
-/**
- * @fn bool image_validate_header(void*)
- * @brief Method to validate header
- *
- * @param img
- * @return
- */
-bool image_validate_machine( void* img ) {
-  Elf32_Ehdr* header = ( Elf32_Ehdr* )img;
-  // check machine
-  if ( EM_ARM != header->e_machine ) {
-    return false;
-  }
-  return true;
-}
+#ifndef __BIT_32_IMAGE_H__
+#define __BIT_32_IMAGE_H__
+
+struct elf_image {
+  Elf32_Ehdr* header;
+  size_t size;
+  char* name;
+
+  uintptr_t min_address;
+  uintptr_t max_address;
+
+  uint8_t* memory;
+};
+typedef struct elf_image elf_image_t;
+typedef struct elf_image* elf_image_ptr_t;
+
+#endif

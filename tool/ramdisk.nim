@@ -35,17 +35,34 @@ let driver: string = paramStr( 1 );
 let output: string = paramStr( 2 );
 let lib: string = paramStr( 3 );
 
-for file in walkDirRec( lib ):
-  let outp_shell = execProcess( "file " & file )
+for file in walkDirRec( lib, { pcFile, pcLinkToFile } ):
+  var file_to_check = file
+  var info = getFileInfo( file, false )
+  var symlink_src = ""
+  if pcLinkToFile == info.kind:
+    # get info with follow symlink again
+    info = getFileInfo( file )
+    # skip non files
+    if pcFile != info.kind:
+      echo "skip file " & file
+      continue
+    # expand symlink and use for check
+    file_to_check = execProcess( "readlink -f " & file )
+    # determine symlink source and strip variable
+    symlink_src = strip( replace( file_to_check, lib & DirSep, "" ) )
+  let outp_shell = execProcess( "file " & file_to_check )
   if contains( outp_shell, "LSB shared object" ):
     # split file path
     let split = splitPath( file )
     #let splitted_head = split.head.split( DirSep )
     let library = split.tail
     # copy library
-    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "usr", "lib" )
+    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "lib" )
     createDir( base_path )
-    copyFile( file, joinPath( base_path, library ) )
+    if not isEmptyOrWhitespace( symlink_src ):
+      createSymlink( symlink_src, joinPath( base_path, library ) )
+    else:
+      copyFile( file, joinPath( base_path, library ) )
 
 # loop through files of folder including subfolders
 for file in walkDirRec( driver ):
@@ -64,9 +81,9 @@ for file in walkDirRec( driver ):
     var skip_top_ramdisk = false
     var pos = -1
     for idx, value in splitted_head:
-      if value == "driver" or value == "core" or value == "usr":
+      if value == "driver" or value == "core" or value == "lib":
         pos = idx
-      if value == "usr":
+      if value == "lib":
         skip_top_ramdisk = true
     if not ( "src" in splitted_head[ pos..^1 ] ) and pos != -1:
       target_folder &= splitted_head[ pos..^2 ].join( $DirSep )

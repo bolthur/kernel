@@ -56,13 +56,15 @@ static void vfs_destroy_node( vfs_node_ptr_t node ) {
  * @param name
  * @param flags
  * @param parent
+ * @param target
  * @return
  */
 static vfs_node_ptr_t vfs_prepare_node(
   pid_t pid,
   const char* name,
   uint32_t flags,
-  vfs_node_ptr_t parent
+  vfs_node_ptr_t parent,
+  vfs_node_ptr_t target
 ) {
   // allocate and error handling
   vfs_node_ptr_t node = malloc( sizeof( vfs_node_t ) );
@@ -81,6 +83,7 @@ static vfs_node_ptr_t vfs_prepare_node(
   strcpy( node->name, name );
   node->pid = pid;
   node->flags = flags;
+  node->target = target;
   // create list
   // FIXME: Add lookup and cleanup functions
   node->children = list_construct( NULL, NULL );
@@ -95,6 +98,8 @@ static vfs_node_ptr_t vfs_prepare_node(
       vfs_destroy_node( node );
       return NULL;
     }
+    // set parent
+    node->parent = parent;
   }
   // return constructed node
   return node;
@@ -138,16 +143,16 @@ vfs_node_ptr_t vfs_setup( pid_t current_pid ) {
   // allocate minimum necessary nodes
   if (
     // create root node
-    ! ( root = vfs_prepare_node( current_pid, "/", VFS_DIRECTORY, NULL ) )
+    ! ( root = vfs_prepare_node( current_pid, "/", VFS_DIRECTORY, NULL, NULL ) )
     // create process, ipc and dev node
-    || ! vfs_prepare_node( current_pid, "process", VFS_DIRECTORY, root )
-    || ! ( ipc = vfs_prepare_node( current_pid, "ipc", VFS_DIRECTORY, root ) )
-    || ! ( dev = vfs_prepare_node( current_pid, "dev", VFS_DIRECTORY, root ) )
+    || ! vfs_prepare_node( current_pid, "process", VFS_DIRECTORY, root, NULL )
+    || ! ( ipc = vfs_prepare_node( current_pid, "ipc", VFS_DIRECTORY, root, NULL ) )
+    || ! ( dev = vfs_prepare_node( current_pid, "dev", VFS_DIRECTORY, root, NULL ) )
     // populate dev null file node
-    || ! vfs_prepare_node( current_pid, "null", VFS_FILE, dev )
+    || ! vfs_prepare_node( current_pid, "null", VFS_FILE, dev, NULL )
     // populate ipc node
-    || ! vfs_prepare_node( current_pid, "shared", VFS_DIRECTORY, ipc )
-    || ! vfs_prepare_node( current_pid, "message", VFS_DIRECTORY, ipc )
+    || ! vfs_prepare_node( current_pid, "shared", VFS_DIRECTORY, ipc, NULL )
+    || ! vfs_prepare_node( current_pid, "message", VFS_DIRECTORY, ipc, NULL )
   ) {
     // destroy recursively by starting with root
     vfs_destroy( root );
@@ -164,15 +169,15 @@ vfs_node_ptr_t vfs_setup( pid_t current_pid ) {
  * @param handler handling process
  * @param path path to add
  * @param type file type
+ * @param target optional target node necessary for links
  * @return
- *
- * @todo add support for symlinks and hardlinks
  */
 bool vfs_add_path(
   vfs_node_ptr_t node,
   pid_t handler,
   const char* path,
-  vfs_entry_type_t type
+  vfs_entry_type_t type,
+  vfs_node_ptr_t target
 ) {
   // variables
   uint32_t flags = 0;
@@ -190,12 +195,15 @@ bool vfs_add_path(
     case VFS_ENTRY_TYPE_DIRECTORY:
       flags |= VFS_DIRECTORY;
       break;
+    case VFS_ENTRY_TYPE_SYMLINK:
+      flags |= VFS_SYMLINK;
+      break;
     default:
       return false;
   }
 
   // return prepared node
-  return vfs_prepare_node( handler, path, flags, node );
+  return vfs_prepare_node( handler, path, flags, node, target );
 }
 
 /**
@@ -349,4 +357,47 @@ vfs_node_ptr_t vfs_node_by_path( const char* path ) {
   }
   // return found node
   return current;
+}
+
+/**
+ * @fn char vfs_path_bottom_up*(vfs_node_ptr_t)
+ * @brief Method to build path from bottom up
+ *
+ * @param node
+ * @return
+ */
+char* vfs_path_bottom_up( vfs_node_ptr_t node ) {
+  // handle no node
+  if ( ! node ) {
+    return NULL;
+  }
+  // allocate path
+  char* path = malloc( sizeof( char ) * PATH_MAX );
+  if ( ! path ) {
+    return NULL;
+  }
+  memset( path, 0, sizeof( char ) * PATH_MAX );
+  // traverse up until null and prepend
+  while ( node ) {
+    // copy only
+    if ( '\0' == path[ 0 ] ) {
+      strcpy( path, node->name );
+    } else {
+      // prepend!
+      size_t offset = 0;
+      if ( '/' != node->name[ 0 ] ) {
+        offset = 1;
+      }
+      size_t len = strlen( node->name ) + offset;
+      memmove( path + len, path, strlen( path ) + offset );
+      memcpy( path, node->name, len );
+      if ( '/' != node->name[ 0 ] ) {
+        path[ len - 1 ] = '/';
+      }
+    }
+    // continue with parent
+    node = node->parent;
+  }
+  // return build path
+  return path;
 }

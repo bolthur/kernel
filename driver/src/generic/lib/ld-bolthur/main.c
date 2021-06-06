@@ -18,7 +18,7 @@
  */
 
 #include <stdio.h>
-#include "type.h"
+#include "debug.h"
 #include "image.h"
 
 /**
@@ -32,15 +32,14 @@
 int main( int argc, char* argv[] ) {
   // debug output
   #if defined( OUTPUT_ENABLE )
-    printf( "linker.so processing!\r\n" );
+    DEBUG_OUTPUT( "linker.so processing!\r\n" )
   #endif
   // check arguments
   if ( argc < 2 ) {
     fprintf(
       stderr,
       "linker.so - dynamic binary loader\r\n"
-      "usage: %s [-e] [EXECUTABLE PATH]\r\n"
-      " -e     Adjust argument offset\r\n",
+      "usage: %s [EXECUTABLE PATH]\r\n",
       argv[ 0 ]
     );
     return -1;
@@ -49,14 +48,15 @@ int main( int argc, char* argv[] ) {
   // debug output
   #if defined( OUTPUT_ENABLE )
     for ( int i = 0; i < argc; i++ ) {
-      printf( "argv[ %d ] = %s\r\n", i, argv[ i ] );
+      DEBUG_OUTPUT( "argv[ %d ] = %s\r\n", i, argv[ i ] )
     }
   #endif
 
   // cache file
   char* file = argv[ 1 ];
+  size_t size;
   // load executable image
-  uint8_t* image = image_load_file( file );
+  uint8_t* image = image_buffer_file( file, &size );
   // handle image
   if ( ! image ) {
     fprintf( stderr, "Unable to load image \"%s\"!\r\n", file );
@@ -64,17 +64,15 @@ int main( int argc, char* argv[] ) {
   }
   // debug output
   #if defined( OUTPUT_ENABLE )
-    printf( "Loaded image \"%s\" into buffer %p\r\n", file, image );
+    DEBUG_OUTPUT( "Loaded image \"%s\" into buffer %p\r\n", file, image )
   #endif
-  // verify image
-  if ( ! image_validate( image ) ) {
-    fprintf( stderr, "Image \"%s\" is not valid for execution!\r\n", file );
+  // load and start image with dependencies
+  if ( ! image_load( image, size ) ) {
+    fprintf( stderr, "Failed to load and start image \"%s\"!\r\n", file );
     return -1;
   }
-  // debug output
-  #if defined( OUTPUT_ENABLE )
-    printf( "Image \"%s\" is valid for execution!\r\n", file );
-  #endif
+
+  // FIXME: JUMP TO LOADED IMAGE
 
   for(;;);
   return 0;
