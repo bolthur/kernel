@@ -20,14 +20,19 @@
 import os
 import osproc
 import strutils
+# thirdparty
+import zippy
+#import zippy/tarballs
 
+# remove tmp dir again
+removeDir( "tmp" )
 # create tmp directories
 createDir( "tmp" )
 
 # check argument count
 let argc: int = paramCount()
 if argc != 3:
-  echo "Usage: ramdisk <dirver path> <initrd name> <sysroot libdir>"
+  echo "Usage: ramdisk <driver path> <initrd name> <sysroot libdir>"
   quit( 1 )
 
 # get command line arguments
@@ -44,7 +49,6 @@ for file in walkDirRec( lib, { pcFile, pcLinkToFile } ):
     info = getFileInfo( file )
     # skip non files
     if pcFile != info.kind:
-      echo "skip file " & file
       continue
     # expand symlink and use for check
     file_to_check = execProcess( "readlink -f " & file )
@@ -62,6 +66,8 @@ for file in walkDirRec( lib, { pcFile, pcLinkToFile } ):
     if not isEmptyOrWhitespace( symlink_src ):
       createSymlink( symlink_src, joinPath( base_path, library ) )
     else:
+      # Add shared object compressed
+      #writeFile( joinPath( base_path, library ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
       copyFile( file, joinPath( base_path, library ) )
 
 # loop through files of folder including subfolders

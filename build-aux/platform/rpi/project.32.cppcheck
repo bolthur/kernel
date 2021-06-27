@@ -6,7 +6,7 @@
     <dir name="../../../include/lib/" />
     <dir name="../../../thirdparty/" />
     <dir name="../../../thirdparty/dtc/libfdt/" />
-    <dir name="/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include/" />
+    <dir name="/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/11.1.0/include/" />
     <dir name="/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include/" />
   </includedir>
   <exclude>

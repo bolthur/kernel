@@ -160,6 +160,9 @@ void msg_handle_seek( void ) {
     // send errno via negative len
     response->position = -EINVAL;
   } else {
+    // set new position in handle
+    container->pos = new_pos;
+    // push into response
     response->position = new_pos;
   }
   // send response

@@ -16,7 +16,6 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-ffunction-sections -fdata-sections])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
 
-
   # third party stuff
   AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}/include])
   AX_APPEND_COMPILE_FLAGS([-imacros\ $($BOLTHUR_READLINK -f ${srcdir})/include/core/config.h])

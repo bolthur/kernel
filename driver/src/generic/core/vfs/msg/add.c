@@ -34,6 +34,7 @@
  *
  * @todo add handle of variable parts in path
  * @todo handle invalid link targets somehow
+ * @todo add handle for existing path
  */
 void msg_handle_add( void ) {
   pid_t sender;
@@ -45,7 +46,7 @@ void msg_handle_add( void ) {
     return;
   }
   vfs_add_response_ptr_t response = ( vfs_add_response_ptr_t )malloc(
-    sizeof( vfs_add_response_ptr_t ) );
+    sizeof( vfs_add_response_t ) );
   if ( ! response ) {
     free( request );
     return;
@@ -69,9 +70,30 @@ void msg_handle_add( void ) {
     free( response );
     return;
   }
+  // check if existing
+  vfs_node_ptr_t node = vfs_node_by_path( request->file_path );
+  if ( node ) {
+    // debug output
+    printf( "Node \"%s\" already existing!\r\n", request->file_path );
+    // prepare response
+    response->success = false;
+    // send response
+    _message_send_by_pid(
+      sender,
+      VFS_ADD_RESPONSE,
+      ( const char* )response,
+      sizeof( vfs_add_response_t ),
+      message_id
+    );
+    // free message structures
+    free( request );
+    free( response );
+    // skip
+    return;
+  }
   // extract dirname and get parent node by dirname
   str = dirname( request->file_path );
-  vfs_node_ptr_t node = vfs_node_by_path( str );
+  node = vfs_node_by_path( str );
   if ( ! node ) {
     // debug output
     printf( "Parent node \"%s\" for \"%s\" not found!\r\n", str, request->file_path );
@@ -92,6 +114,7 @@ void msg_handle_add( void ) {
     // skip
     return;
   }
+  free( str );
   // get basename and create node
   str = basename( request->file_path );
   // get target node
@@ -99,6 +122,7 @@ void msg_handle_add( void ) {
   if ( VFS_ENTRY_TYPE_SYMLINK == request->entry_type ) {
     // check for target is not set
     if ( 0 == strlen( request->linked_path ) ) {
+      free( str );
       // prepare response
       response->success = false;
       // send response
@@ -124,6 +148,7 @@ void msg_handle_add( void ) {
     }
     // handle no target found
     if ( ! target ) {
+      free( str );
       // prepare response
       response->success = false;
       // send response

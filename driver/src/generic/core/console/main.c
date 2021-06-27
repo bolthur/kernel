@@ -84,6 +84,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
 
+  printf( "pushing stdin to vfs!\r\n" );
   // STDIN
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -93,6 +94,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // perform add request
   send_add_request( msg );
 
+  printf( "pushing stdout to vfs!\r\n" );
   // STDOUT
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -102,6 +104,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // perform add request
   send_add_request( msg );
 
+  printf( "pushing stderr to vfs!\r\n" );
   // STDERR
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -111,6 +114,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // perform add request
   send_add_request( msg );
 
+  printf( "pushing console device to vfs!\r\n" );
   // console device
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );

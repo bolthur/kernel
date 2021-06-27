@@ -344,14 +344,24 @@ vfs_node_ptr_t vfs_node_by_path( const char* path ) {
     memset( inner_path, 0, sizeof( char ) * inner );
     strncpy( inner_path, begin, inner - 1 );
     inner_path[ inner - 1 ] = '\0';
+    // handle end, e.g. when trailing slash is existing it may be 0
+    if ( 0 == strlen( inner_path ) ) {
+      // free up memory again
+      free( inner_path );
+      // return current
+      return current;
+    }
     // try to get node by name
     current = vfs_node_by_name( current, inner_path );
-    // free up memory again
-    free( inner_path );
     // handle no node found
     if ( ! current ) {
+      // free up memory again
+      free( inner_path );
+      // return not found
       return NULL;
     }
+    // free up memory again
+    free( inner_path );
     // reset begin and continue
     begin = ++end;
   }

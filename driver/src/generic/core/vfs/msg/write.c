@@ -42,7 +42,7 @@ void msg_handle_write( void ) {
     return;
   }
   vfs_write_response_ptr_t response = ( vfs_write_response_ptr_t )malloc(
-    sizeof( vfs_write_response_ptr_t ) );
+    sizeof( vfs_write_response_t ) );
   if ( ! response ) {
     free( request );
     return;
@@ -55,7 +55,7 @@ void msg_handle_write( void ) {
     return;
   }
   vfs_write_response_ptr_t nested_response = ( vfs_write_response_ptr_t )malloc(
-    sizeof( vfs_write_response_ptr_t ) );
+    sizeof( vfs_write_response_t ) );
   if ( ! nested_response ) {
     free( request );
     free( response );

@@ -168,13 +168,12 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
       send = false;
       continue;
     }
-    // evaluate response
-    if ( ! response->success ) {
-      send = true;
-      continue;
+    // stop on success
+    if ( response->success ) {
+      break;
     }
-    // exit loop
-    break;
+    // set send to true again to retry
+    send = true;
   }
   // free up response
   free( response );
@@ -194,7 +193,7 @@ __maybe_unused static bool check_for_path( const char* str ) {
   }
   vfs_has_response_ptr_t response = ( vfs_has_response_ptr_t )malloc(
     sizeof( vfs_has_response_t ) );
-  if ( ! request ) {
+  if ( ! response ) {
     free( request );
     return false;
   }
