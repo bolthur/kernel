@@ -66,11 +66,12 @@ void syscall_message_destroy( __unused void* context ) {
   #endif
   // handle no queue
   if( ! task_thread_current_thread->process->message_queue ) {
-    syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // destroy message queue
   list_destruct( task_thread_current_thread->process->message_queue );
+  // set to NULL
+  task_thread_current_thread->process->message_queue = NULL;
 }
 
 /**
@@ -419,13 +420,12 @@ void syscall_message_wait_for_response( void* context ) {
       "syscall_message_receive_response( %#"PRIxPTR", %zx, %zu )\r\n",
       target, len, message_id )
   #endif
-#include <core/debug/debug.h>
   // handle error
   if ( ! task_thread_current_thread->process->message_queue ) {
     // debug output
-//    #if defined( PRINT_SYSCALL )
+    #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Target process has no queue!\r\n" )
-//    #endif
+    #endif
     // set return and exit
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
@@ -433,9 +433,9 @@ void syscall_message_wait_for_response( void* context ) {
   // handle invalid length
   if ( 0 == len || ! target ) {
     // debug output
-//    #if defined( PRINT_SYSCALL )
+    #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Invalid length or target passed!\r\n" )
-//    #endif
+    #endif
     // set return and exit
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;

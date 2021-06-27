@@ -141,7 +141,7 @@ static shared_memory_entry_ptr_t create_entry( size_t size ) {
   entry = memset( entry, 0, sizeof( shared_memory_entry_t ) );
 
   // round up to full size
-  ROUND_UP_TO_FULL_PAGE( size )
+  size = ROUND_UP_TO_FULL_PAGE( size );
   // determine count
   size_t count = size / PAGE_SIZE;
   // allocate address list

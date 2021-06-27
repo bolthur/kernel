@@ -407,7 +407,6 @@ bool task_thread_push_arguments(
     current_idx++;
   }
   env[ current_idx ] = NULL;
-  stack_loop += sizeof( NULL );
 
   // unmap again
   virt_unmap_temporary( stack_tmp, STACK_SIZE );

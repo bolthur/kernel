@@ -158,8 +158,8 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       DEBUG_OUTPUT( "start = %#"PRIxPTR", end = %#"PRIxPTR"\r\n", start, end )
     #endif
     // round down start and up end
-    ROUND_DOWN_TO_FULL_PAGE( start );
-    ROUND_UP_TO_FULL_PAGE( end );
+    start = ROUND_DOWN_TO_FULL_PAGE( start );
+    end = ROUND_UP_TO_FULL_PAGE( end );
     // debug output
     #if defined ( PRINT_ELF )
       DEBUG_OUTPUT( "start = %#"PRIxPTR", end = %#"PRIxPTR"\r\n", start, end )

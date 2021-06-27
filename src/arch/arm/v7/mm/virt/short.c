@@ -369,6 +369,10 @@ static uintptr_t get_new_table( uintptr_t table ) {
       max_addr *= 2;
       // reallocate array
       addr = realloc( addr, max_addr );
+      // handle error
+      if ( ! addr ) {
+        PANIC( "reallocate failed for array holding free addresses!\r\n" );
+      }
     }
     // add entry to list
     addr[ free_addr ] = table;

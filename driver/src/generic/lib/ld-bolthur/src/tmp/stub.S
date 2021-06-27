@@ -17,25 +17,25 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stdbool.h>
-#include <elf.h>
-#include "../../list.h"
+.global dl_resolve_stub
+.extern dl_resolve_lazy
 
-#ifndef __BIT_32_IMAGE_H__
-#define __BIT_32_IMAGE_H__
-
-struct elf_image {
-  Elf32_Ehdr* header;
-  size_t size;
-  char* name;
-
-  uintptr_t min_address;
-  uintptr_t max_address;
-
-  uint8_t* memory;
-};
-typedef struct elf_image elf_image_t;
-typedef struct elf_image* elf_image_ptr_t;
-
-#endif
+dl_resolve_stub:
+  // ip contains &GOT[n+3] (pointer to function)
+  // lr points to &GOT[2]
+  // push argument registers to stack
+  stmdb sp!, {r0-r3}
+  // extract handle pointer from stack
+  ldr r0, [ lr, #-4 ]
+  // extract symbol
+  sub r1, ip, lr
+  sub r1, #4
+  add r1, r1
+  // call to resolve lazy
+  bl dl_resolve_lazy
+  // save return
+  mov r12, r0
+  // restore arguments for original function to call
+  ldmia sp!, {r0, r1, r2, r3, lr}
+  // branch to looked up function
+  mov pc, r12

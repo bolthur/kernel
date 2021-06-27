@@ -253,8 +253,7 @@ uintptr_t task_process_prepare_init_arch( task_process_ptr_t proc ) {
     DEBUG_OUTPUT( "start: %#lx, end: %#lx\r\n", fdt_start, fdt_end )
   #endif
   // round up size
-  size_t rounded_fdt_size = fdt_size;
-  ROUND_UP_TO_FULL_PAGE( rounded_fdt_size )
+  size_t rounded_fdt_size = ROUND_UP_TO_FULL_PAGE( fdt_size );
   // get physical area
   uint64_t phys_address_fdt = phys_find_free_page_range(
     PAGE_SIZE,

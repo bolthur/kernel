@@ -712,8 +712,7 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
     DEBUG_OUTPUT( "File size: %#zx\r\n", ramdisk_file_size )
   #endif
   // round up size
-  size_t rounded_ramdisk_file_size = ramdisk_file_size;
-  ROUND_UP_TO_FULL_PAGE( rounded_ramdisk_file_size )
+  size_t rounded_ramdisk_file_size = ROUND_UP_TO_FULL_PAGE( ramdisk_file_size );
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "rounded size: %#zx\r\n", rounded_ramdisk_file_size )

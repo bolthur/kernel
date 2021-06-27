@@ -53,9 +53,7 @@ void virt_init( void ) {
 
   // determine start and end for kernel mapping
   uintptr_t start = 0;
-  uintptr_t end = VIRT_2_PHYS( &__kernel_end );
-  // round up to page size if necessary
-  ROUND_UP_TO_FULL_PAGE( end )
+  uintptr_t end = ROUND_UP_TO_FULL_PAGE( VIRT_2_PHYS( &__kernel_end ) );
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -230,7 +228,7 @@ bool virt_unmap_address_range(
   // loop until end
   while ( start < end ) {
     // unmap virtual
-    if ( ! virt_unmap_address( ctx, address, free_phys ) ) {
+    if ( ! virt_unmap_address( ctx, start, free_phys ) ) {
       return false;
     }
     // get next page
@@ -273,7 +271,7 @@ uintptr_t virt_find_free_page_range(
     min = start;
   }
   // round up to full page
-  ROUND_UP_TO_FULL_PAGE( size )
+  size= ROUND_UP_TO_FULL_PAGE( size );
   // determine amount of pages
   size_t page_amount = size / PAGE_SIZE;
   size_t found_amount = 0;

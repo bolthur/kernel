@@ -1,13 +1,11 @@
 
-AM_CFLAGS = -fPIC
+AM_CFLAGS = -fPIC -I$(srcdir)/include
 
 bin_PROGRAMS = ld-bolthur.so
 ld_bolthur_so_SOURCES = \
-  arch/${arch_subdir}/image.c \
-  bit/${executable_format}/image.c \
-  image.c \
-  list.c \
-  main.c
+  src/tmp/dl.c \
+  src/tmp/stub.S \
+  src/main.c
 ld_bolthur_so_LDFLAGS = -all-static -Wl,-static -Wl,-s -Wl,--gc-sections
 # 32 bit start address
 if IS32
@@ -15,5 +13,6 @@ if IS32
 endif
 # 64 bit start address
 if IS64
+  # FIXME: Specify correct text segment address
   ld_bolthur_so_LDFLAGS += -Wl,-Ttext-segment=0x70000000
 endif

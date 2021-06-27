@@ -21,7 +21,7 @@ import os
 import osproc
 import strutils
 # thirdparty
-import zippy
+#import zippy
 #import zippy/tarballs
 
 # remove tmp dir again

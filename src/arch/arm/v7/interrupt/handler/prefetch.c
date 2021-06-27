@@ -26,6 +26,9 @@
 #include <core/event.h>
 #include <core/interrupt.h>
 #include <core/panic.h>
+// process related stuff
+#include <core/task/process.h>
+#include <core/task/thread.h>
 
 /**
  * @brief Nested counter for prefetch abort exception handler
@@ -59,6 +62,11 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
       ( void* )virt_prefetch_fault_address() )
     DEBUG_OUTPUT( "fault_status = %#x\r\n", ( void* )virt_prefetch_status() )
     DUMP_REGISTER( cpu )
+    if ( EVENT_ORIGIN_USER == origin ) {
+      DEBUG_OUTPUT( "process id: %d, name: %s\r\n",
+        task_thread_current_thread->process->id,
+        task_thread_current_thread->process->name )
+    }
   #endif
 
   // kernel stack

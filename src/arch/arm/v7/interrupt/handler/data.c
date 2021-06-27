@@ -55,7 +55,7 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "prefetch abort while accessing %p\r\n",
+    DEBUG_OUTPUT( "data abort while accessing %p\r\n",
       ( void* )virt_data_fault_address() )
     DEBUG_OUTPUT( "fault_status = %#x\r\n", ( void* )virt_data_status() )
     DUMP_REGISTER( cpu )

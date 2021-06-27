@@ -51,7 +51,7 @@ void syscall_memory_acquire( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall memory acquire( %#p, %zu, %d )\r\n",
+      "syscall memory acquire( %#p, %#x, %d )\r\n",
       addr, len, protection )
   #endif
 
@@ -62,7 +62,7 @@ void syscall_memory_acquire( void* context ) {
   }
 
   // get full page count
-  ROUND_UP_TO_FULL_PAGE( len )
+  len = ROUND_UP_TO_FULL_PAGE( len );
   // determine start
   uintptr_t start;
   // fixed handling means take address as start
@@ -74,6 +74,10 @@ void syscall_memory_acquire( void* context ) {
     // ensure that address is in context
     if ( min > start || max <= start || max <= start + len ) {
       syscall_populate_error( context, ( size_t )-ENOMEM );
+      // debug output
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "Invalid address received!\r\n" )
+      #endif
       return;
     }
   // find free page range starting after thread entry point
@@ -84,8 +88,8 @@ void syscall_memory_acquire( void* context ) {
         task_thread_current_thread->entry, addr )
     #endif
     // set address
-    uintptr_t tmp_addr = task_thread_current_thread->entry;
-    ROUND_UP_TO_FULL_PAGE( tmp_addr )
+    uintptr_t tmp_addr = ROUND_UP_TO_FULL_PAGE(
+      task_thread_current_thread->entry );
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "entry = %#x, address = %p\r\n",
@@ -98,6 +102,10 @@ void syscall_memory_acquire( void* context ) {
   // handle no address found
   if ( ( uintptr_t )NULL == start ) {
     syscall_populate_error( context, ( size_t )-ENOMEM );
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "No start address found!\r\n" )
+    #endif
     return;
   }
 
@@ -121,6 +129,10 @@ void syscall_memory_acquire( void* context ) {
     VIRT_MEMORY_TYPE_NORMAL,
     map_flag
   ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Error during map of address!\r\n" )
+    #endif
     syscall_populate_error( context, ( size_t )-ENOMEM );
     return;
   }
@@ -158,7 +170,7 @@ void syscall_memory_release( void* context ) {
     return;
   }
   // get at least full page size
-  ROUND_UP_TO_FULL_PAGE( len )
+  len = ROUND_UP_TO_FULL_PAGE( len );
   // check range
   uintptr_t min = virt_get_context_min_address( virtual_context );
   uintptr_t max = virt_get_context_max_address( virtual_context );
@@ -171,6 +183,10 @@ void syscall_memory_release( void* context ) {
     )
   ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid address!\r\n" )
+    #endif
     return;
   }
 
@@ -181,19 +197,35 @@ void syscall_memory_release( void* context ) {
     len
   ) ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Address is shared and handled differently!\r\n" )
+    #endif
     return;
   }
 
   // check if range is mapped in context
   if ( ! virt_is_mapped_in_context_range( virtual_context, address, len ) ) {
     syscall_populate_success( context, 0 );
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Not mapped in context range!\r\n" )
+    #endif
     return;
   }
   // try to unmap
   if ( ! virt_unmap_address_range( virtual_context, address, len, unmap_phys ) ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Error during unmap!\r\n" )
+    #endif
     return;
   }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Success!\r\n" )
+  #endif
   // return success
   syscall_populate_success( context, 0 );
 }
@@ -204,10 +236,10 @@ void syscall_memory_release( void* context ) {
  * @param context
  */
 void syscall_memory_shared_create( void* context ) {
-  // get parameters
-  size_t len = ( size_t )syscall_get_parameter( context, 0 );
-  // round up to full page
-  ROUND_UP_TO_FULL_PAGE( len )
+  // get parameter rounded to full page
+  size_t len = ROUND_UP_TO_FULL_PAGE(
+    ( size_t )syscall_get_parameter( context, 0 )
+  );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_memory_shared_acquire( %zx )\r\n", len )
