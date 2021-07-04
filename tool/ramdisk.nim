@@ -22,7 +22,6 @@ import osproc
 import strutils
 # thirdparty
 #import zippy
-#import zippy/tarballs
 
 # remove tmp dir again
 removeDir( "tmp" )
@@ -51,9 +50,21 @@ for file in walkDirRec( lib, { pcFile, pcLinkToFile } ):
     if pcFile != info.kind:
       continue
     # expand symlink and use for check
-    file_to_check = execProcess( "readlink -f " & file )
+    file_to_check = expandSymlink( file )
+    if not file_to_check.isAbsolute:
+      file_to_check = joinPath( lib, file_to_check )
     # determine symlink source and strip variable
     symlink_src = strip( replace( file_to_check, lib & DirSep, "" ) )
+    # loop as long as file to check is still a symlink
+    info = getFileInfo( file_to_check, false )
+    while pcLinkToFile == info.kind:
+      # expand symlink again
+      file_to_check = expandSymlink( file_to_check )
+      # add absolute path
+      if not file_to_check.isAbsolute:
+        file_to_check = joinPath( lib, file_to_check )
+      # get info again
+      info = getFileInfo( file_to_check, false )
   let outp_shell = execProcess( "file " & file_to_check )
   if contains( outp_shell, "LSB shared object" ):
     # split file path
@@ -61,7 +72,7 @@ for file in walkDirRec( lib, { pcFile, pcLinkToFile } ):
     #let splitted_head = split.head.split( DirSep )
     let library = split.tail
     # copy library
-    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "lib" )
+    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", "lib" )
     createDir( base_path )
     if not isEmptyOrWhitespace( symlink_src ):
       createSymlink( symlink_src, joinPath( base_path, library ) )
@@ -89,8 +100,6 @@ for file in walkDirRec( driver ):
     for idx, value in splitted_head:
       if value == "driver" or value == "core" or value == "lib":
         pos = idx
-      if value == "lib":
-        skip_top_ramdisk = true
     if not ( "src" in splitted_head[ pos..^1 ] ) and pos != -1:
       target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
     else:

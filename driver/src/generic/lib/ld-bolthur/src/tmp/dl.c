@@ -40,18 +40,16 @@
 #define E_DL_HEADER_VALIDATE_MACHINE 7 /* Wrong elf machine type */
 #define E_DL_HEADER_VALIDATE_SECTION 8 /* Wrong elf machine type */
 #define E_DL_HEADER_VALIDATE_PROGRAM 9 /* Wrong elf machine type */
-#define E_DL_COMPRESSED_NOT_SUPPORTED 10 /* Compressed libraries not supported */
-#define E_DL_IO_ERROR 11 /* I/O ERROR */
-#define E_DL_NOT_SUPPORTED 12 /* Not supported behaviour */
-#define E_DL_UNKNOWN 13 /* Unknown error */
+#define E_DL_IO_ERROR 10 /* I/O ERROR */
+#define E_DL_NOT_SUPPORTED 11 /* Not supported behaviour */
+#define E_DL_UNKNOWN 12 /* Unknown error */
 
 // internal structure containing single message
-struct _dl_message_entry {
+typedef struct {
   char* message;
-};
-typedef struct _dl_message_entry _dl_message_entry_t;
+} dl_message_entry_t;
 
-static _dl_message_entry_t _dl_error_message[] = {
+static dl_message_entry_t dl_error_message[] = {
   { "Could not open library: " },
   { "Could not find library: " },
   { "Error while allocating memory" },
@@ -61,16 +59,15 @@ static _dl_message_entry_t _dl_error_message[] = {
   { "Wrong elf machine" },
   { "No program header found" },
   { "No section header found" },
-  { "Compressed libraries not supported" },
   { "Not supported behaviour" },
   { "Unknown error" },
 };
 
 // globals
 // FIXME: PUSH VARIABLES TO REENT WHEN IMPORTING TO NEWLIB
-uint32_t _dl_error;
-const char* _dl_error_location;
-const char* _dl_error_data;
+uint32_t dl_error;
+const char* dl_error_location;
+const char* dl_error_data;
 dl_image_handle_ptr_t root_object_handle = NULL;
 
 static char dl_open_buffer[ PATH_MAX ];
@@ -87,31 +84,31 @@ char* dlerror( void ) {
   // set total length to length - 1 to leave space for 0 termination
   size_t total_length = sizeof( buffer ) - 1;
   // handle no error
-  if ( 0 == _dl_error ) {
+  if ( 0 == dl_error ) {
     strncpy( buffer, "no error", total_length );
     // reset globals
-    _dl_error_location = 0;
-    _dl_error_data = "";
-    _dl_error = 0;
+    dl_error_location = 0;
+    dl_error_data = "";
+    dl_error = 0;
     // return buffer
     return buffer;
   }
   // clear buffer
   memset( buffer, 0, sizeof( buffer ) );
   // determine entry count
-  size_t error_count = sizeof( _dl_error_message ) / sizeof( _dl_message_entry_t );
+  size_t error_count = sizeof( dl_error_message ) / sizeof( dl_message_entry_t );
   // handle invalid error code
-  if ( _dl_error >= error_count ) {
+  if ( dl_error >= error_count ) {
     // copy over last error message
     strncpy(
       buffer,
-      _dl_error_message[ error_count - 1 ].message,
+      dl_error_message[ error_count - 1 ].message,
       total_length
     );
     // reset globals
-    _dl_error_location = 0;
-    _dl_error_data = "";
-    _dl_error = 0;
+    dl_error_location = 0;
+    dl_error_data = "";
+    dl_error = 0;
     // return buffer
     return buffer;
   }
@@ -119,11 +116,11 @@ char* dlerror( void ) {
   char *buffer_pos = buffer;
   size_t length;
   // check if location is set
-  if ( _dl_error_location ) {
+  if ( dl_error_location ) {
     // determine length of error location
-    length = strlen( _dl_error_location );
+    length = strlen( dl_error_location );
     // push location string to buffer
-    strncpy( buffer_pos, _dl_error_location, total_length );
+    strncpy( buffer_pos, dl_error_location, total_length );
     // decrement total length and increment buffer position
     total_length -= length;
     buffer_pos += length;
@@ -134,20 +131,20 @@ char* dlerror( void ) {
     buffer_pos += 2;
   }
   // get length of message
-  length = strlen( _dl_error_message[ _dl_error - 1 ].message );
+  length = strlen( dl_error_message[ dl_error - 1 ].message );
   // push message string to buffer
-  strncpy( buffer_pos, _dl_error_message[ _dl_error - 1 ].message, total_length );
+  strncpy( buffer_pos, dl_error_message[ dl_error - 1 ].message, total_length );
   // decrement total length and increment buffer position
   total_length -= length;
   buffer_pos += length;
   // push error data if set
-  if ( _dl_error_data ) {
-    strncpy( buffer_pos, _dl_error_data, total_length );
+  if ( dl_error_data ) {
+    strncpy( buffer_pos, dl_error_data, total_length );
   }
   // reset globals
-  _dl_error_location = 0;
-  _dl_error_data = "";
-  _dl_error = 0;
+  dl_error_location = 0;
+  dl_error_data = "";
+  dl_error = 0;
   // return buffer
   return buffer;
 }
@@ -178,11 +175,13 @@ uint32_t dl_elf_symbol_name_hash( const char* name ) {
  *
  * @param name
  * @return
- *
- * @todo implement logic
  */
-uint32_t dl_gnu_symbol_name_hash( __unused const char* name ) {
-  return 0;
+uint32_t dl_gnu_symbol_name_hash( const char* name ) {
+  uint32_t h = 5381;
+  while( *name ) {
+    h = ( h << 5 ) + h + *name++;
+  }
+  return h;
 }
 
 /**
@@ -248,8 +247,6 @@ void* dl_lookup_symbol( dl_image_handle_ptr_t handle, const char* name ) {
  *
  * @param handle
  * @param name
- *
- * @todo return symbol address instead of symbol
  */
 void* dlsym( void* __restrict handle, const char* __restrict name ) {
   return dl_lookup_symbol( handle, name );
@@ -286,23 +283,56 @@ dl_image_handle_ptr_t dl_find_loaded_library( const char* file ) {
  * @param file
  * @return
  *
- * @todo add file lookup by config and/or environment
+ * @todo add file lookup by environment
+ * @todo add file lookup by config file
+ * @todo use /lib:/usr/lib:/ramdisk/lib as fallback
  */
 int dl_lookup_library( char* buffer, size_t buffer_size, const char* file ) {
-  // build full path
-  char* p = buffer;
-  size_t sz = strlen( "/lib/" );
-  // copy lib folder to buffer
-  strncpy( p, "/lib/", buffer_size );
-  buffer_size -= sz;
-  p += sz;
-  // attach file
-  sz = strlen( file );
-  strncpy( p, file, buffer_size );
-  p += sz;
-  buffer_size -= sz;
-  // try to open
-  return open( buffer, O_RDONLY );
+  // fallback path list
+  char* path = NULL;
+  char* fallback_path = "/lib:/usr/lib:/ramdisk/lib";
+  // FIXME: CHECK ENVIRONMENT
+  // FIXME: CHECK CONFIG FILE
+
+  // use fallback as path if not set
+  if ( ! path ) {
+    path = strdup( fallback_path );
+  }
+  char* part = NULL;
+  char* last_part = NULL;
+  for (
+    part = strtok_r( path, ":", &last_part );
+    part;
+    part = strtok_r( NULL, ":", &last_part )
+  ) {
+    char* p = buffer;
+    size_t size_part = strlen( part );
+    size_t size_file = strlen( part );
+    size_t buffer_size_backup = buffer_size;
+    // copy first part of path
+    strncpy( p, part, buffer_size_backup );
+    buffer_size_backup -= size_part;
+    p += size_part;
+    // path separator
+    strncpy( p, "/", buffer_size_backup );
+    buffer_size_backup--;
+    p++;
+    // copy file
+    strncpy( p, file, buffer_size_backup );
+    buffer_size_backup -= size_file;
+    p += size_file;
+    printf( "TRYING %s\r\n", buffer );
+    // try to open
+    int fd = open( buffer, O_RDONLY );
+    // stop if found
+    if ( -1 != fd ) {
+      free( path );
+      return fd;
+    }
+  }
+  // free path and return negative result
+  free( path );
+  return -1;
 }
 
 /**
@@ -350,7 +380,6 @@ void dl_free_handle( dl_image_handle_ptr_t handle ) {
   if ( ! handle ) {
     return;
   }
-
   // handle free of root handle
   if ( root_object_handle == handle ) {
     root_object_handle = handle->next;
@@ -367,6 +396,10 @@ void dl_free_handle( dl_image_handle_ptr_t handle ) {
   free( handle->filename );
   // close descriptor
   close( handle->descriptor );
+  // unmap without success check
+  if ( handle->memory_start ) {
+    munmap( handle->memory_start, handle->memory_size );
+  }
   // free handle itself
   free( handle );
 }
@@ -401,8 +434,11 @@ dl_image_handle_ptr_t dl_load_dependency( dl_image_handle_ptr_t handle ) {
     if ( ! dependency ) {
       dl_image_handle_ptr_t current_handle = root_object_handle;
       while ( current_handle ) {
-        dl_free_handle( current_handle );
+        // cache current handle and set current to next
+        dl_image_handle_ptr_t tmp = current_handle;
         current_handle = current_handle->next;
+        // free cached
+        dl_free_handle( tmp );
       }
       return NULL;
     }
@@ -454,6 +490,8 @@ void* dl_map_load_section(
  * @param mode
  * @param descriptor
  * @return
+ *
+ * @todo add support for init array and fini array
  */
 dl_image_handle_ptr_t dl_load_entry(
   const char* file,
@@ -467,23 +505,14 @@ dl_image_handle_ptr_t dl_load_entry(
   // create handle
   dl_image_handle_ptr_t handle = dl_allocate_handle();
   if ( ! handle ) {
-    _dl_error = E_DL_NO_MEMORY;
+    dl_error = E_DL_NO_MEMORY;
     return NULL;
   }
   // read elf header
   r = read( descriptor, &handle->header, sizeof( handle->header ) );
   // handle error
   if ( r != sizeof( handle->header ) ) {
-    _dl_error = E_DL_READ_HDR;
-    dl_free_handle( handle );
-    return NULL;
-  }
-
-  // check for gzip compression and load whole file if so
-  uint8_t* compression = ( uint8_t* )&handle->header;
-  // check if no gzip was used
-  if ( 0x1f == compression[ 0 ] && 0x8b == compression[ 1 ] ) {
-    _dl_error = E_DL_COMPRESSED_NOT_SUPPORTED;
+    dl_error = E_DL_READ_HDR;
     dl_free_handle( handle );
     return NULL;
   }
@@ -495,37 +524,37 @@ dl_image_handle_ptr_t dl_load_entry(
     || ELFMAG2 != handle->header.e_ident[ EI_MAG2 ]
     || ELFMAG3 != handle->header.e_ident[ EI_MAG3 ]
   ) {
-    _dl_error = E_DL_HEADER_VALIDATE_MAGIC;
+    dl_error = E_DL_HEADER_VALIDATE_MAGIC;
     dl_free_handle( handle );
     return NULL;
   }
   // check architecture
   if ( ELFCLASS32 != handle->header.e_ident[ EI_CLASS ] ) {
-    _dl_error = E_DL_HEADER_VALIDATE_BYTE;
+    dl_error = E_DL_HEADER_VALIDATE_BYTE;
     dl_free_handle( handle );
     return NULL;
   }
   if ( EM_ARM != handle->header.e_machine ) {
-    _dl_error = E_DL_HEADER_VALIDATE_MACHINE;
+    dl_error = E_DL_HEADER_VALIDATE_MACHINE;
     dl_free_handle( handle );
     return NULL;
   }
   // further header checks
   if ( 0 == handle->header.e_phentsize ) {
-    _dl_error = E_DL_HEADER_VALIDATE_PROGRAM;
+    dl_error = E_DL_HEADER_VALIDATE_PROGRAM;
     dl_free_handle( handle );
     return NULL;
   }
   // ensure section header existence
   if ( 0 == handle->header.e_shentsize ) {
-    _dl_error = E_DL_HEADER_VALIDATE_SECTION;
+    dl_error = E_DL_HEADER_VALIDATE_SECTION;
     dl_free_handle( handle );
     return NULL;
   }
   // allocate name
   handle->filename = strdup( file );
   if ( ! handle->filename ) {
-    _dl_error = E_DL_NO_MEMORY;
+    dl_error = E_DL_NO_MEMORY;
     dl_free_handle( handle );
     return NULL;
   }
@@ -544,21 +573,21 @@ dl_image_handle_ptr_t dl_load_entry(
     // set file pointer to offset
     offset = lseek( handle->descriptor, offset, SEEK_SET );
     if ( -1 == offset ) {
-      _dl_error = E_DL_IO_ERROR;
+      dl_error = E_DL_IO_ERROR;
       dl_free_handle( handle );
       return NULL;
     }
     // try to read
     r = read( handle->descriptor, &program_header, sizeof( Elf32_Phdr ) );
     if ( r != sizeof( Elf32_Phdr ) ) {
-      _dl_error = E_DL_IO_ERROR;
+      dl_error = E_DL_IO_ERROR;
       dl_free_handle( handle );
       return NULL;
     }
     // reallocate phdr of handle
     handle->phdr = realloc( handle->phdr, ( idx + 1 ) * sizeof( Elf32_Phdr ) );
     if ( ! handle->phdr ) {
-      _dl_error = E_DL_NO_MEMORY;
+      dl_error = E_DL_NO_MEMORY;
       dl_free_handle( handle );
       return NULL;
     }
@@ -597,7 +626,7 @@ dl_image_handle_ptr_t dl_load_entry(
       offset
     );
     if ( memory == MAP_FAILED ) {
-      _dl_error = E_DL_NO_MEMORY;
+      dl_error = E_DL_NO_MEMORY;
       dl_free_handle( handle );
       return NULL;
     }
@@ -631,7 +660,7 @@ dl_image_handle_ptr_t dl_load_entry(
       text_offset
     );
     if ( memory == MAP_FAILED ) {
-      _dl_error = E_DL_NO_MEMORY;
+      dl_error = E_DL_NO_MEMORY;
       dl_free_handle( handle );
       return NULL;
     }
@@ -646,7 +675,7 @@ dl_image_handle_ptr_t dl_load_entry(
       data_offset
     );
     if ( data == MAP_FAILED ) {
-      _dl_error = E_DL_NO_MEMORY;
+      dl_error = E_DL_NO_MEMORY;
       dl_free_handle( handle );
       return NULL;
     }
@@ -662,7 +691,7 @@ dl_image_handle_ptr_t dl_load_entry(
       );
       // handle error
       if ( bss == MAP_FAILED ) {
-        _dl_error = E_DL_NO_MEMORY;
+        dl_error = E_DL_NO_MEMORY;
         dl_free_handle( handle );
         return NULL;
       }
@@ -677,7 +706,7 @@ dl_image_handle_ptr_t dl_load_entry(
       handle->dyn = ( Elf32_Dyn* )( memory + dyn->p_vaddr - load_header[ 0 ].p_vaddr );
     }
   } else {
-    _dl_error = E_DL_UNKNOWN;
+    dl_error = E_DL_UNKNOWN;
     dl_free_handle( handle );
     return NULL;
   }
@@ -703,11 +732,11 @@ dl_image_handle_ptr_t dl_load_entry(
     Elf32_Word relaent = 0;
     Elf32_Addr pltgot = 0;
     init_callback_t init = NULL;
-    init_callback_t fini = NULL;/*
-    init_callback_t init_array;
+    init_callback_t fini = NULL;
+    init_array_callback_t init_array = NULL;
     Elf32_Word init_array_size = 0;
-    init_callback_t fini_array;
-    Elf32_Word fini_array_size = 0;*/
+    init_array_callback_t fini_array = NULL;
+    Elf32_Word fini_array_size = 0;
 
     // loop through dyn section entries and populate some necessary data
     while( current->d_tag != DT_NULL ) {
@@ -770,23 +799,23 @@ dl_image_handle_ptr_t dl_load_entry(
           fini = ( init_callback_t )(
             current->d_un.d_ptr - ( uintptr_t )load_header[ 0 ].p_vaddr
           );
-          break;/*
+          break;
         case DT_INIT_ARRAY:
-          init_array = ( init_callback_t )(
+          init_array = ( init_array_callback_t )(
             current->d_un.d_ptr - ( uintptr_t )load_header[ 0 ].p_vaddr
           );
           break;
         case DT_INIT_ARRAYSZ:
-          init_array_size = current->d_un.d_val;
+          init_array_size = current->d_un.d_val / sizeof( uintptr_t );
           break;
         case DT_FINI_ARRAY:
-          fini_array = ( init_callback_t )(
+          fini_array = ( init_array_callback_t )(
             current->d_un.d_ptr - ( uintptr_t )load_header[ 0 ].p_vaddr
           );
           break;
         case DT_FINI_ARRAYSZ:
-          fini_array_size = current->d_un.d_val;
-          break;*/
+          fini_array_size = current->d_un.d_val / sizeof( uintptr_t );
+          break;
       }
       // get to next one
       current++;
@@ -795,7 +824,7 @@ dl_image_handle_ptr_t dl_load_entry(
     // validate string table
     if ( strsz > UINT32_MAX - strtab || strtab + strsz > handle->memory_size ) {
       // FIXME: SET CORRECT ERRNO
-      _dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_UNKNOWN;
       dl_free_handle( handle );
       return NULL;
     }
@@ -803,7 +832,7 @@ dl_image_handle_ptr_t dl_load_entry(
     char* str = ( char* )( handle->memory_start + strtab );
     if ( '\0' != str[ strsz - 1 ] ) {
       // FIXME: SET CORRECT ERRNO
-      _dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_UNKNOWN;
       dl_free_handle( handle );
       return NULL;
     }
@@ -814,7 +843,7 @@ dl_image_handle_ptr_t dl_load_entry(
     // symbol table
     if ( symtab > handle->memory_size ) {
       // FIXME: SET CORRECT ERRNO
-      _dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_UNKNOWN;
       dl_free_handle( handle );
       return NULL;
     }
@@ -823,7 +852,7 @@ dl_image_handle_ptr_t dl_load_entry(
     // hash table
     if ( hash > handle->memory_size - 8 ) {
       // FIXME: SET CORRECT ERRNO
-      _dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_UNKNOWN;
       dl_free_handle( handle );
       return NULL;
     }
@@ -838,7 +867,7 @@ dl_image_handle_ptr_t dl_load_entry(
       || handle->hash.nbucket + handle->hash.nchain > ( handle->memory_size - hash ) / 4
     ) {
       // FIXME: SET CORRECT ERRNO
-      _dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_UNKNOWN;
       dl_free_handle( handle );
       return NULL;
     }
@@ -846,7 +875,7 @@ dl_image_handle_ptr_t dl_load_entry(
     // jmprel
     if ( pltrelsz > UINT32_MAX - jmprel || jmprel + pltrelsz > handle->memory_size ) {
       // FIXME: SET CORRECT ERRNO
-      _dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_UNKNOWN;
       dl_free_handle( handle );
       return NULL;
     }
@@ -859,7 +888,7 @@ dl_image_handle_ptr_t dl_load_entry(
     // rel
     if ( relsz > UINT32_MAX - rel || rel + relsz > handle->memory_size ) {
       // FIXME: SET CORRECT ERRNO
-      _dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_UNKNOWN;
       dl_free_handle( handle );
       return NULL;
     }
@@ -871,7 +900,7 @@ dl_image_handle_ptr_t dl_load_entry(
     // rela
     if ( relasz > UINT32_MAX - rela || rela + relasz > handle->memory_size ) {
       // FIXME: SET CORRECT ERRNO
-      _dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_UNKNOWN;
       dl_free_handle( handle );
       return NULL;
     }
@@ -893,6 +922,17 @@ dl_image_handle_ptr_t dl_load_entry(
       uintptr_t tmp_fini = ( uintptr_t )fini + ( uintptr_t )handle->memory_start;
       handle->fini = ( init_callback_t )tmp_fini;
     }
+    // init_array / fini_array
+    if ( init_array ) {
+      uintptr_t tmp_init_array = ( uintptr_t )init_array + ( uintptr_t )handle->memory_start;
+      handle->init_array = ( init_array_callback_t )tmp_init_array;
+      handle->init_array_size = init_array_size;
+    }
+    if ( fini_array ) {
+      uintptr_t tmp_fini_array = ( uintptr_t )fini_array + ( uintptr_t )handle->memory_start;
+      handle->fini_array = ( init_array_callback_t )tmp_fini_array;
+      handle->fini_array_size = fini_array_size;
+    }
   }
   // free load header again
   free( load_header );
@@ -911,6 +951,12 @@ dl_image_handle_ptr_t dl_post_init( dl_image_handle_ptr_t handle ) {
   // call for init if existing
   if ( handle->init ) {
     handle->init();
+  }
+  // handle existing init array
+  if ( handle->init_array ) {
+    for( size_t idx = 0; idx < handle->init_array_size; idx++ ) {
+      handle->init_array[ idx ]();
+    }
   }
   // return handle
   return handle;
@@ -1084,7 +1130,7 @@ dl_image_handle_ptr_t dl_relocate( dl_image_handle_ptr_t handle ) {
  */
 void* dlopen( const char* file, int mode ) {
   // set error location
-  _dl_error_location = "dlopen";
+  dl_error_location = "dlopen";
   // some variables
   int fd;
   const char* p;
@@ -1096,7 +1142,10 @@ void* dlopen( const char* file, int mode ) {
       fd = open( file, O_RDONLY );
       p = file;
     } else {
-      fd = dl_lookup_library( dl_open_buffer, sizeof( dl_open_buffer ) - 1, file );
+      fd = dl_lookup_library(
+        dl_open_buffer,
+        sizeof( dl_open_buffer ) - 1,
+        file );
       p = dl_open_buffer;
     }
     // lookup loaded stuff
@@ -1112,7 +1161,7 @@ void* dlopen( const char* file, int mode ) {
     }
     // error handling
     if ( -1 == fd ) {
-      _dl_error = E_DL_CANNOT_OPEN;
+      dl_error = E_DL_CANNOT_OPEN;
       return NULL;
     }
     // load given handle with dependencies
@@ -1129,29 +1178,72 @@ void* dlopen( const char* file, int mode ) {
   return root_object_handle;
 }
 
-int dlclose( void* handle ) {
-  // set error location
-  _dl_error_location = "dlclose";
-  // skip invalid handles
-  if ( ! handle ) {
-    return 0;
-  }
-  // convert to dl handle
-  dl_image_handle_ptr_t converted_handle = handle;
+/**
+ * @fn int dl_close(dl_image_handle_ptr_t)
+ * @brief Internal close function with correct type
+ *
+ * @param handle
+ * @return
+ *
+ * @todo add support for fini array
+ */
+static int dl_close( dl_image_handle_ptr_t handle ) {
   // decrease link count
-  converted_handle->link_count -= 1;
+  handle->link_count -= 1;
   // skip if still referenced somewhere
-  if ( 0 < converted_handle->link_count ) {
+  if ( 0 < handle->link_count ) {
     return 0;
   }
+  // execute fini
+  if ( handle->fini ) {
+    handle->fini();
+  }
+  // execute fini array
+  if ( handle->fini_array ) {
+    for( size_t idx = 0; idx < handle->fini_array_size; idx++ ) {
+      handle->fini_array[ idx ]();
+    }
+  }
 
-  // FIXME: CALL CURRENT HANDLE FINI FUNCTION IF EXISTING
-  // FIXME: CALL CURRENT HANDLE FINI ARRAY FUNCTION IF EXISTING
-  // FIXME: CLOSE REFERENCES USING CURRENT HANDLE
-  // FIXME: UNMAP handle WITH MUNMAP
+  // decrement link count of libraries needed by this one
+  for (
+    Elf32_Dyn* current = handle->dyn;
+    current->d_tag != DT_NULL;
+    current++
+  ) {
+    // skip everything except DT_NEEDED
+    if ( DT_NEEDED != current->d_tag ) {
+      continue;
+    }
+    // get library name
+    char* name = handle->strtab + current->d_un.d_val;
+    // try to close library ( maybe a dependency )
+    dlclose( dl_find_loaded_library( name ) );
+  }
 
+  // unmap memory
+  if ( -1 == munmap( handle->memory_start, handle->memory_size ) ) {
+    return -1;
+  }
   // remove handle from list
   dl_free_handle( handle );
   // return success
   return 0;
+}
+
+/**
+ * @fn int dlclose(void*)
+ * @brief Close opened handle again
+ *
+ * @param handle
+ * @return
+ */
+int dlclose( void* handle ) {
+  // set error location
+  dl_error_location = "dlclose";
+  // skip invalid handles
+  if ( ! handle ) {
+    return 0;
+  }
+  return dl_close( handle );
 }

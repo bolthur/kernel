@@ -6,7 +6,7 @@ ld_bolthur_so_SOURCES = \
   src/tmp/dl.c \
   src/tmp/stub.S \
   src/main.c
-ld_bolthur_so_LDFLAGS = -all-static -Wl,-static -Wl,-s -Wl,--gc-sections
+ld_bolthur_so_LDFLAGS = -all-static --static -Wl,-s -Wl,--gc-sections
 # 32 bit start address
 if IS32
   ld_bolthur_so_LDFLAGS += -Wl,-Ttext-segment=0x70000000

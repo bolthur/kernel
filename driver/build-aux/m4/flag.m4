@@ -23,6 +23,9 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   AC_DEFINE_UNQUOTED([_GNU_SOURCE], [1], [Necessary newlib define])
   #AC_DEFINE_UNQUOTED([_FORTIFY_SOURCE], [2], [Necessary newlib define])
 
+  # linker flags
+  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/ramdisk/lib/ld-bolthur.so])
+
   # debug parameter
   AS_IF([test "x$with_debug_symbols" == "xyes"], [
     # debug symbols and sanitizer

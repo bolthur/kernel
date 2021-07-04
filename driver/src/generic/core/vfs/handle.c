@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <libgen.h>
 #include "handle.h"
 #include "avl.h"
 
@@ -195,17 +196,49 @@ int handle_generate(
     return -1;
   }
   memset( *container, 0, sizeof( handle_container_t ) );
-  // populate structure
-  ( *container )->flags = flags;
-  ( *container )->mode = mode;
-  ( *container )->target = target;
-  ( *container )->handle = generate_handle( process_handle );
   // copy path
   strcpy( ( *container )->path, path );
   // special handling for symlinks
   if ( target->flags & VFS_SYMLINK ) {
+    while ( target && ( target->flags & VFS_SYMLINK ) ) {
+      if ( '/' == target->target[ 0 ] ) {
+        target = vfs_node_by_path( target->target );
+      } else {
+        // allocate target
+        char* link_path = malloc( sizeof( char ) * PATH_MAX );
+        if ( ! link_path ) {
+          free( *container );
+          return -1;
+        }
+        char* target_path = vfs_path_bottom_up( target );
+        if ( ! target_path ) {
+          free( link_path );
+          free( *container );
+          return -1;
+        }
+        // dir
+        char* dir = dirname( target_path );
+        if ( ! dir ) {
+          free( target_path );
+          free( link_path );
+          free( *container );
+          return -1;
+        }
+        // build target path
+        link_path = strncpy( link_path, dir, PATH_MAX );
+        link_path = strncat( link_path, "/", PATH_MAX - strlen( link_path ) );
+        link_path = strncat( link_path, target->target, PATH_MAX - strlen( link_path ) );
+        // free up base path again
+        free( target_path );
+        free( dir );
+        // overwrite target
+        target = vfs_node_by_path( link_path );
+        // free built link path
+        free( link_path );
+      }
+    }
     // get link destination
-    char* destination = vfs_path_bottom_up( target->target ) ;
+    char* destination = vfs_path_bottom_up( target ) ;
     if ( ! destination ) {
       free( *container );
       return -1;
@@ -215,6 +248,11 @@ int handle_generate(
     // free again after copy
     free( destination );
   }
+  // populate structure
+  ( *container )->flags = flags;
+  ( *container )->mode = mode;
+  ( *container )->target = target;
+  ( *container )->handle = generate_handle( process_handle );
   // prepare and insert avl node
   avl_prepare_node( &(*container)->node, ( void* )(*container)->handle );
   if ( ! avl_insert_by_node( process_handle->tree, &(*container)->node ) ) {

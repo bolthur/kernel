@@ -7,4 +7,4 @@ init_LDADD = \
 init_SOURCES = \
   main.c \
   ramdisk.c
-init_LDFLAGS = -all-static -Wl,-static
+init_LDFLAGS = -all-static --static

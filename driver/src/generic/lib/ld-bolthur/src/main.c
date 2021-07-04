@@ -73,64 +73,10 @@ int main( int argc, char* argv[] ) {
     )
   #endif
 
-  // some dlsym testing after open
-  void* exit_symbol = dlsym( NULL, "exit" );
-  void* fabs_symbol = dlsym( NULL, "fabs" );
-  void* aeabi_idiv_symbol = dlsym( NULL, "__aeabi_idiv" );
-  void* start_symbol = dlsym( NULL, "start" );
-  void* _start_symbol = dlsym( NULL, "_start" );
-  void* main_symbol = dlsym( NULL, "main" );
-  // debug output
-  #if defined( OUTPUT_ENABLE )
-    DEBUG_OUTPUT( "dlsym( NULL, \"exit\" ) = %p\r\n", exit_symbol )
-    DEBUG_OUTPUT( "dlsym( NULL, \"fabs\" ) = %p\r\n", fabs_symbol )
-    DEBUG_OUTPUT( "dlsym( NULL, \"__aeabi_idiv\" ) = %p\r\n", aeabi_idiv_symbol )
-    DEBUG_OUTPUT( "dlsym( NULL, \"start\" ) = %p\r\n", start_symbol )
-    DEBUG_OUTPUT( "dlsym( NULL, \"_start\" ) = %p\r\n", _start_symbol )
-    DEBUG_OUTPUT( "dlsym( NULL, \"main\" ) = %p\r\n", main_symbol )
-  #endif
-
-
   // get main  object
   void* main_object = ( void* )( (  dl_image_handle_ptr_t ) handle )->header.e_entry;
   DEBUG_OUTPUT( "main_object->header->e_entry = %p\r\n", main_object );
-  // test call main entry function
-  main_entry_point foo = ( main_entry_point )( (  dl_image_handle_ptr_t ) handle )->header.e_entry;
-  foo();
-
-  /*
-  // cache file
-  char* file = argv[ 1 ];
-  size_t size;
-  // load executable image
-  uint8_t* image = image_buffer_file( file, &size );
-  // handle image
-  if ( ! image ) {
-    fprintf( stderr, "Unable to load image \"%s\"!\r\n", file );
-    return -1;
-  }
-  // debug output
-  #if defined( OUTPUT_ENABLE )
-    DEBUG_OUTPUT( "Loaded image \"%s\" into buffer %p\r\n", file, image )
-  #endif
-  // load and start image with dependencies
-  main_entry_point entry = image_load( image, size );
-  if ( ! entry ) {
-    fprintf( stderr, "Failed to load and start image \"%s\"!\r\n", file );
-    return -1;
-  }
-
-  // debug output
-  uintptr_t uentry = ( uintptr_t )*entry;
-  #if defined( OUTPUT_ENABLE )
-    DEBUG_OUTPUT( "Calling entry point located at %p!\r\n", ( void* )uentry )
-  #endif
-
-  // FIXME: allocate space for argv
-  // FIXME: add environment pointer to end of argv
-  // FIXME: execute main entry point
-   */
-  for(;;);
-
-  return 0;
+  // FIXME: PUSH ARGC, ARGV and ENVIRONMENT
+  // call main entry function
+  ( ( main_entry_point )( (  dl_image_handle_ptr_t ) handle )->header.e_entry )();
 }

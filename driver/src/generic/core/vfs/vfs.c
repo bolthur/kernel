@@ -32,6 +32,7 @@
 static vfs_node_ptr_t root;
 
 /**
+ * @fn void vfs_destroy_node(vfs_node_ptr_t)
  * @brief helper to destroy a node
  *
  * @param node
@@ -43,6 +44,9 @@ static void vfs_destroy_node( vfs_node_ptr_t node ) {
   if ( node->name ) {
     free( node->name );
   }
+  if ( node->target ) {
+    free( node->target );
+  }
   if ( node->children ) {
     list_destruct( node->children );
   }
@@ -50,6 +54,7 @@ static void vfs_destroy_node( vfs_node_ptr_t node ) {
 }
 
 /**
+ * @fn vfs_node_ptr_t vfs_prepare_node(pid_t, const char*, uint32_t, vfs_node_ptr_t, char*)
  * @brief Create and prepare vfs node
  *
  * @param pid
@@ -64,7 +69,7 @@ static vfs_node_ptr_t vfs_prepare_node(
   const char* name,
   uint32_t flags,
   vfs_node_ptr_t parent,
-  vfs_node_ptr_t target
+  char* target
 ) {
   // allocate and error handling
   vfs_node_ptr_t node = malloc( sizeof( vfs_node_t ) );
@@ -83,7 +88,13 @@ static vfs_node_ptr_t vfs_prepare_node(
   strcpy( node->name, name );
   node->pid = pid;
   node->flags = flags;
-  node->target = target;
+  if ( target ) {
+    node->target = strdup( target );
+    if ( ! node->target ) {
+      vfs_destroy_node( node );
+      return NULL;
+    }
+  }
   // create list
   // FIXME: Add lookup and cleanup functions
   node->children = list_construct( NULL, NULL );
@@ -163,13 +174,14 @@ vfs_node_ptr_t vfs_setup( pid_t current_pid ) {
 }
 
 /**
+ * @fn bool vfs_add_path(vfs_node_ptr_t, pid_t, const char*, vfs_entry_type_t, char*)
  * @brief Add path to vfs
  *
  * @param node node object
  * @param handler handling process
  * @param path path to add
  * @param type file type
- * @param target optional target node necessary for links
+ * @param target optional target path necessary for links
  * @return
  */
 bool vfs_add_path(
@@ -177,7 +189,7 @@ bool vfs_add_path(
   pid_t handler,
   const char* path,
   vfs_entry_type_t type,
-  vfs_node_ptr_t target
+  char* target
 ) {
   // variables
   uint32_t flags = 0;

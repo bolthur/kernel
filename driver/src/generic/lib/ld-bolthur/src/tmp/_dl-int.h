@@ -36,6 +36,7 @@
 #define ROUND_PAGE_OFFSET( a ) ( ( uintptr_t )( a ) & ( ( PAGE_SIZE ) -1 ) )
 
 typedef void ( *init_callback_t )( void );
+typedef void ( **init_array_callback_t )( void );
 typedef uint32_t ( *hash_callback_t )( const char* );
 typedef void ( *main_entry_point )( void );
 
@@ -50,7 +51,7 @@ struct dl_image_handle {
   // file header
   Elf32_Ehdr header;
 
-  // pointer to next / previous address
+  // pointer to next / previous entry
   dl_image_handle_ptr_t next;
   dl_image_handle_ptr_t previous;
 
@@ -64,14 +65,13 @@ struct dl_image_handle {
   // init and fini function reference
   init_callback_t init;
   init_callback_t fini;
-  init_callback_t init_array;
+  init_array_callback_t init_array;
   size_t init_array_size;
-  init_callback_t fini_array;
+  init_array_callback_t fini_array;
   size_t fini_array_size;
   // more general informations for linking / loading
   char* memory_start;
   size_t memory_size;
-  bool compressed;
 
   // necessary elf section attributes
   Elf32_Dyn* dyn;

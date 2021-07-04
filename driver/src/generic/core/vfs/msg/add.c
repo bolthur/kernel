@@ -118,7 +118,7 @@ void msg_handle_add( void ) {
   // get basename and create node
   str = basename( request->file_path );
   // get target node
-  vfs_node_ptr_t target = NULL;
+  char* target = NULL;
   if ( VFS_ENTRY_TYPE_SYMLINK == request->entry_type ) {
     // check for target is not set
     if ( 0 == strlen( request->linked_path ) ) {
@@ -139,13 +139,8 @@ void msg_handle_add( void ) {
       // skip
       return;
     }
-    // handle absolute
-    if ( '/' == request->linked_path[ 0 ] ) {
-      target = vfs_node_by_path( request->linked_path );
-    } else {
-      // set parent node
-      target = vfs_node_by_name( node, request->linked_path );
-    }
+    // duplicate link target ( either absolute or relative )
+    target = strdup( request->linked_path );
     // handle no target found
     if ( ! target ) {
       free( str );
@@ -171,6 +166,9 @@ void msg_handle_add( void ) {
     // debug output
     printf( "Error: Couldn't add \"%s\"\r\n", request->file_path );
     free( str );
+    if ( target ) {
+      free( target );
+    }
     // prepare response
     response->success = false;
     // send response
@@ -191,6 +189,9 @@ void msg_handle_add( void ) {
   /*printf( "-------->VFS DEBUG_DUMP<--------\r\n" );
   vfs_dump( NULL, NULL );*/
   free( str );
+  if ( target ) {
+    free( target );
+  }
   // prepare response
   response->success = true;
   // send response
