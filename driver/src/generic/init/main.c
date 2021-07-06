@@ -271,6 +271,7 @@ static int execute_driver( char* name ) {
 // noreturn function
 static void handle_normal_init( void ) {
   execute_driver( "/ramdisk/core/console" );
+  execute_driver( "/ramdisk/driver/framebuffer" );
 
   // FIXME: FORK AND HANDLE FURTHER OUTCOMMENTED SETUP WITHIN FORKED PROCESS
 /*  // Get system console

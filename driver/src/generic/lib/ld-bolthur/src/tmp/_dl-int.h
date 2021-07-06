@@ -106,6 +106,8 @@ dl_image_handle_ptr_t dl_load_entry( const char*, int, int );
 dl_image_handle_ptr_t dl_load_dependency( dl_image_handle_ptr_t );
 void* dl_map_load_section( void*, size_t, Elf32_Word, int, off_t );
 dl_image_handle_ptr_t dl_relocate( dl_image_handle_ptr_t );
+void dl_handle_rel_symbol( dl_image_handle_ptr_t, void*, size_t );
+bool dl_handle_rel_relocate( dl_image_handle_ptr_t, void*, size_t );
 dl_image_handle_ptr_t dl_post_init( dl_image_handle_ptr_t );
 void* dl_lookup_symbol( dl_image_handle_ptr_t, const char* );
 void* dl_resolve_lazy( dl_image_handle_ptr_t, uint32_t );

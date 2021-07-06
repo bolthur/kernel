@@ -10,7 +10,6 @@ librpi_la_SOURCES = \
   mm/virt.c \
   syscall/init.c \
   syscall/mailbox.c \
-  framebuffer.c \
   interrupt.c \
   peripheral.c \
   serial.c \

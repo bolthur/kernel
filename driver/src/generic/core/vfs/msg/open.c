@@ -124,7 +124,7 @@ void msg_handle_open( void ) {
   vfs_node_ptr_t dir_node = vfs_node_by_path( dir );
   if ( ! dir_node ) {
     // debug output
-    printf( "Error: Directory \"%s\" doesn't exist!\r\n", dir );
+    printf( "Error: \"%s/%s\" doesn't exist!\r\n", dir, base );
     free( dir );
     free( base );
     // prepare error return

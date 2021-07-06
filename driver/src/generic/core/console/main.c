@@ -84,33 +84,33 @@ int main( __unused int argc, __unused char* argv[] ) {
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
 
-  printf( "pushing stdin to vfs!\r\n" );
+  printf( "pushing /dev/stdin to vfs!\r\n" );
   // STDIN
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->entry_type = VFS_ENTRY_TYPE_FILE;
-  strcpy( msg->file_path, "/stdin" );
+  strcpy( msg->file_path, "/dev/stdin" );
   // perform add request
   send_add_request( msg );
 
-  printf( "pushing stdout to vfs!\r\n" );
+  printf( "pushing /dev/stdout to vfs!\r\n" );
   // STDOUT
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->entry_type = VFS_ENTRY_TYPE_FILE;
-  strcpy( msg->file_path, "/stdout" );
+  strcpy( msg->file_path, "/dev/stdout" );
   // perform add request
   send_add_request( msg );
 
-  printf( "pushing stderr to vfs!\r\n" );
+  printf( "pushing /dev/stderr to vfs!\r\n" );
   // STDERR
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->entry_type = VFS_ENTRY_TYPE_FILE;
-  strcpy( msg->file_path, "/stderr" );
+  strcpy( msg->file_path, "/dev/stderr" );
   // perform add request
   send_add_request( msg );
 

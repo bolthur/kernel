@@ -61,8 +61,8 @@ noreturn void kernel_main( void ) {
   heap_init( HEAP_INIT_EARLY );
 
   // setup tty for output
-  DEBUG_OUTPUT( "[bolthur/kernel -> heap] tty initialize ...\r\n" )
-  assert( tty_init() )
+  DEBUG_OUTPUT( "[bolthur/kernel ->tty] initialize ...\r\n" )
+  tty_init();
 
   // Some initial output :)
   DEBUG_OUTPUT(

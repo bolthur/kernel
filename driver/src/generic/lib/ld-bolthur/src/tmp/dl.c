@@ -41,8 +41,11 @@
 #define E_DL_HEADER_VALIDATE_SECTION 8 /* Wrong elf machine type */
 #define E_DL_HEADER_VALIDATE_PROGRAM 9 /* Wrong elf machine type */
 #define E_DL_IO_ERROR 10 /* I/O ERROR */
-#define E_DL_NOT_SUPPORTED 11 /* Not supported behaviour */
-#define E_DL_UNKNOWN 12 /* Unknown error */
+#define E_DL_MALFORMED 11 /* Malformed ELF data */
+#define E_DL_UNKNOWN_SYMBOL 12 /* Unknown symbol during relocation */
+#define E_DL_DT_RELA_NOT_IMPLEMENTED 13 /* Relocation with DT_RELA not yet implemented */
+#define E_DL_NOT_SUPPORTED 14 /* Not supported behaviour */
+#define E_DL_UNKNOWN 15 /* Unknown error */
 
 // internal structure containing single message
 typedef struct {
@@ -59,6 +62,9 @@ static dl_message_entry_t dl_error_message[] = {
   { "Wrong elf machine" },
   { "No program header found" },
   { "No section header found" },
+  { "Malformed elf data" },
+  { "Undefined not relocatable symbol" },
+  { "Relocation using DT_RELA is not yet implemented" },
   { "Not supported behaviour" },
   { "Unknown error" },
 };
@@ -209,22 +215,28 @@ void* dl_lookup_symbol( dl_image_handle_ptr_t handle, const char* name ) {
     const char* sym_name;
     uint32_t index = buckets[ hash % nbucket ];
     while ( index != STN_UNDEF) {
+      // skip if wrong
       if ( index > nchain) {
-        // FIXME: SET ERROR AND RETURN?
         break;
       }
       // get symbol
       sym = &current->symtab[ index ];
+      // skip if wrong
       if ( sym->st_name > current->strsz ) {
-        // FIXME: SET ERROR AND RETURN?
         break;
       }
+      // get symbol name
       sym_name = current->strtab + sym->st_name;
+      // check for matching symbol
       if ( 0 == strcmp( sym_name, name ) ) {
+        // check for not undefined
         if ( sym->st_shndx != SHN_UNDEF ) {
+          // set found symbol to value
           found_symbol = ( void* )sym->st_value;
+          // apply relocation offset if relocated
           if ( current->relocated ) {
-            found_symbol = ( void* )( current->memory_start + ( uint32_t )found_symbol );
+            found_symbol = ( void* )( current->memory_start
+              + ( uint32_t )found_symbol );
           }
           break;
         } else {
@@ -232,6 +244,7 @@ void* dl_lookup_symbol( dl_image_handle_ptr_t handle, const char* name ) {
           break;
         }
       }
+      // next index
       index = chain[ index ];
     }
     // next handle
@@ -291,9 +304,6 @@ int dl_lookup_library( char* buffer, size_t buffer_size, const char* file ) {
   // fallback path list
   char* path = NULL;
   char* fallback_path = "/lib:/usr/lib:/ramdisk/lib";
-  // FIXME: CHECK ENVIRONMENT
-  // FIXME: CHECK CONFIG FILE
-
   // use fallback as path if not set
   if ( ! path ) {
     path = strdup( fallback_path );
@@ -321,7 +331,6 @@ int dl_lookup_library( char* buffer, size_t buffer_size, const char* file ) {
     strncpy( p, file, buffer_size_backup );
     buffer_size_backup -= size_file;
     p += size_file;
-    printf( "TRYING %s\r\n", buffer );
     // try to open
     int fd = open( buffer, O_RDONLY );
     // stop if found
@@ -823,16 +832,14 @@ dl_image_handle_ptr_t dl_load_entry(
 
     // validate string table
     if ( strsz > UINT32_MAX - strtab || strtab + strsz > handle->memory_size ) {
-      // FIXME: SET CORRECT ERRNO
-      dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
       return NULL;
     }
     // set local pointer for strtab and ensure termination
     char* str = ( char* )( handle->memory_start + strtab );
     if ( '\0' != str[ strsz - 1 ] ) {
-      // FIXME: SET CORRECT ERRNO
-      dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
       return NULL;
     }
@@ -842,8 +849,7 @@ dl_image_handle_ptr_t dl_load_entry(
 
     // symbol table
     if ( symtab > handle->memory_size ) {
-      // FIXME: SET CORRECT ERRNO
-      dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
       return NULL;
     }
@@ -851,8 +857,7 @@ dl_image_handle_ptr_t dl_load_entry(
 
     // hash table
     if ( hash > handle->memory_size - 8 ) {
-      // FIXME: SET CORRECT ERRNO
-      dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
       return NULL;
     }
@@ -866,16 +871,14 @@ dl_image_handle_ptr_t dl_load_entry(
       handle->hash.nbucket > UINT32_MAX - handle->hash.nchain
       || handle->hash.nbucket + handle->hash.nchain > ( handle->memory_size - hash ) / 4
     ) {
-      // FIXME: SET CORRECT ERRNO
-      dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
       return NULL;
     }
 
     // jmprel
     if ( pltrelsz > UINT32_MAX - jmprel || jmprel + pltrelsz > handle->memory_size ) {
-      // FIXME: SET CORRECT ERRNO
-      dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
       return NULL;
     }
@@ -887,8 +890,7 @@ dl_image_handle_ptr_t dl_load_entry(
 
     // rel
     if ( relsz > UINT32_MAX - rel || rel + relsz > handle->memory_size ) {
-      // FIXME: SET CORRECT ERRNO
-      dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
       return NULL;
     }
@@ -899,8 +901,7 @@ dl_image_handle_ptr_t dl_load_entry(
     }
     // rela
     if ( relasz > UINT32_MAX - rela || rela + relasz > handle->memory_size ) {
-      // FIXME: SET CORRECT ERRNO
-      dl_error = E_DL_UNKNOWN;
+      dl_error = E_DL_MALFORMED;
       dl_free_handle( handle );
       return NULL;
     }
@@ -992,6 +993,105 @@ void* dl_resolve_lazy( dl_image_handle_ptr_t handle, uint32_t offset ) {
 }
 
 /**
+ * @fn void dl_handle_rel_symbol(dl_image_handle_ptr_t, void*, size_t)
+ * @brief Helper to handle global offset table relocations
+ *
+ * @param handle
+ * @param address
+ * @param size
+ */
+void dl_handle_rel_symbol( dl_image_handle_ptr_t handle, void* address, size_t size ) {
+  for (
+    Elf32_Rel* rel = ( Elf32_Rel* )address;
+    rel < ( Elf32_Rel* )address + size;
+    rel++
+  ) {
+    if ( handle->open_mode & RTLD_NOW ) {
+      uint32_t symbol_index = ELF32_R_SYM( rel->r_info );
+      // get symbol name and symbol by name
+      char* symbol_name = handle->strtab + handle->symtab[ symbol_index ].st_name;
+      void* symbol_value = dlsym( NULL, symbol_name );
+      // handle no symbol found!
+      if ( ! symbol_value ) {
+        continue;
+      }
+      // replace symbol
+      uint32_t* target = ( uint32_t* )rel->r_offset;
+      if ( handle->relocated ) {
+        target = ( uint32_t* )( handle->memory_start + ( uint32_t )target );
+      }
+      // adjust memory
+      *target = ( uint32_t )symbol_value;
+    } else {
+      // determine relocation address
+      uint32_t* relocation = ( uint32_t* )rel->r_offset;
+      if ( handle->relocated ) {
+        relocation = ( uint32_t* )( handle->memory_start + rel->r_offset );
+        *relocation += ( uint32_t )handle->memory_start;
+      }
+    }
+  }
+}
+
+/**
+ * @fn bool dl_handle_rel_relocate(dl_image_handle_ptr_t, void*, size_t)
+ * @brief Helper to handle normal rel relocations
+ *
+ * @param handle
+ * @param address
+ * @param size
+ * @return
+ */
+bool dl_handle_rel_relocate( dl_image_handle_ptr_t handle, void* address, size_t size ) {
+  for (
+    Elf32_Rel* rel = ( Elf32_Rel* )address;
+    rel < ( Elf32_Rel* )address + size;
+    rel++
+  ) {
+    uint32_t symbol_index = ELF32_R_SYM( rel->r_info );
+    uint32_t symbol_type = ELF32_R_TYPE( rel->r_info );
+    // get symbol name and symbol by name
+    char* name = handle->strtab + handle->symtab[ symbol_index ].st_name;
+    uintptr_t new_address = 0;
+    // determine relocation address
+    uint32_t* relocation = ( uint32_t* )rel->r_offset;
+    if ( handle->relocated ) {
+      relocation = ( uint32_t* )( handle->memory_start + rel->r_offset );
+    }
+
+    if ( R_ARM_NONE == symbol_type ) {
+      new_address = *relocation;
+    } else if ( R_ARM_COPY == symbol_type ) {
+      size_t copy_size = handle->symtab[ symbol_index ].st_size;
+      void* from = dlsym( handle->next, name );
+      memcpy( relocation, from, copy_size );
+    } else if ( R_ARM_GLOB_DAT == symbol_type ) {
+      new_address = ( uintptr_t )dlsym( handle, name );
+    } else if ( R_ARM_ABS32 == symbol_type ) {
+      uint32_t val = handle->symtab[ symbol_type ].st_value;
+      if ( val ) {
+        new_address = ( uintptr_t )( handle->memory_start + val );
+      } else {
+        new_address = ( uintptr_t )dlsym( NULL, name );
+      }
+    } else if (
+      R_ARM_JUMP_SLOT == symbol_type
+      || R_ARM_RELATIVE == symbol_type
+    ) {
+      new_address = ( uintptr_t )( handle->memory_start + *relocation );
+    } else {
+      dl_error = E_DL_UNKNOWN_SYMBOL;
+      return false;
+    }
+    // set new address if set
+    if ( R_ARM_COPY != symbol_type && 0 < new_address ) {
+      *relocation = new_address;
+    }
+  }
+  return true;
+}
+
+/**
  * @fn dl_image_handle_ptr_t dl_relocate(dl_image_handle_ptr_t)
  * @brief Relocate all symbols of handle
  *
@@ -999,10 +1099,6 @@ void* dl_resolve_lazy( dl_image_handle_ptr_t handle, uint32_t offset ) {
  * @return
  */
 dl_image_handle_ptr_t dl_relocate( dl_image_handle_ptr_t handle ) {
-  if ( ! ( handle->open_mode & RTLD_NOW ) ) {
-    return handle;
-  }
-
   // global offset table handling
   if ( handle->pltgot ) {
     // get address of handler
@@ -1017,105 +1113,33 @@ dl_image_handle_ptr_t dl_relocate( dl_image_handle_ptr_t handle ) {
     // push handler address
     handle->pltgot[ 2 ] = ( void* )handler;
   }
-
+  // jmprel symbols
   if ( handle->jmprel ) {
     if ( DT_REL == handle->pltrel ) {
-      // FIXME: Move to helper function
-      for (
-        Elf32_Rel* rel = ( Elf32_Rel* )handle->jmprel;
-        rel < ( Elf32_Rel* )handle->jmprel + ( handle->pltrelsz / sizeof( *rel ) );
-        rel++
-      ) {
-        if ( handle->open_mode & RTLD_NOW ) {
-          uint32_t symbol_index = ELF32_R_SYM( rel->r_info );
-          // get symbol name and symbol by name
-          char* symbol_name = handle->strtab + handle->symtab[ symbol_index ].st_name;
-          void* symbol_value = dlsym( NULL, symbol_name );
-          // handle no symbol found!
-          if ( ! symbol_value ) {
-            continue;
-          }
-          // replace symbol
-          uint32_t* target = ( uint32_t* )rel->r_offset;
-          if ( handle->relocated ) {
-            target = ( uint32_t* )( handle->memory_start + ( uint32_t )target );
-          }
-          // adjust memory
-          *target = ( uint32_t )symbol_value;
-        } else {
-          // determine relocation address
-          uint32_t* relocation = ( uint32_t* )rel->r_offset;
-          if ( handle->relocated ) {
-            relocation = ( uint32_t* )( handle->memory_start + rel->r_offset );
-            *relocation += ( uint32_t )handle->memory_start;
-          }
-        }
-      }
+      dl_handle_rel_symbol(
+        handle,
+        handle->jmprel,
+        handle->pltrelsz / sizeof( Elf32_Rel )
+      );
     } else if ( DT_RELA == handle->pltrel ) {
-      // FIXME: ADD IF NECESSARY
-      fprintf( stderr, "Support for DT_RELA not yet implemented!\r\n" );
+      dl_error = E_DL_DT_RELA_NOT_IMPLEMENTED;
       return NULL;
     }
   }
-
+  // normal relocations
   if ( handle->rel ) {
-    // FIXME: MOVE INTO HELPER FUNCTION
-    for (
-      Elf32_Rel* rel = ( Elf32_Rel* )handle->rel;
-      rel < ( Elf32_Rel* )handle->rel + ( handle->relsz / handle->relent );
-      rel++
-    ) {
-      uint32_t symbol_index = ELF32_R_SYM( rel->r_info );
-      uint32_t symbol_type = ELF32_R_TYPE( rel->r_info );
-      // get symbol name and symbol by name
-      char* name = handle->strtab + handle->symtab[ symbol_index ].st_name;
-      uintptr_t new_address = 0;
-      // determine relocation address
-      uint32_t* relocation = ( uint32_t* )rel->r_offset;
-      if ( handle->relocated ) {
-        relocation = ( uint32_t* )( handle->memory_start + rel->r_offset );
-      }
-
-      if ( R_ARM_NONE == symbol_type ) {
-        new_address = *relocation;
-      } else if ( R_ARM_COPY == symbol_type ) {
-        size_t size = handle->symtab[ symbol_index ].st_size;
-        void* from = dlsym( handle->next, name );
-        memcpy( relocation, from, size );
-      } else if ( R_ARM_GLOB_DAT == symbol_type ) {
-        new_address = ( uintptr_t )dlsym( handle, name );
-      } else if ( R_ARM_ABS32 == symbol_type ) {
-        uint32_t val = handle->symtab[ symbol_type ].st_value;
-        if ( val ) {
-          new_address = ( uintptr_t )( handle->memory_start + val );
-        } else {
-          new_address = ( uintptr_t )dlsym( NULL, name );
-        }
-      } else if (
-        R_ARM_JUMP_SLOT == symbol_type
-        || R_ARM_RELATIVE == symbol_type
-      ) {
-        new_address = ( uintptr_t )( handle->memory_start + *relocation );
-      } else {
-        fprintf(
-          stderr,
-          "Unsupported relocation type ( rel %ld )\n",
-          symbol_type
-        );
-        return NULL;
-      }
-      // set new address if set
-      if ( R_ARM_COPY != symbol_type && 0 < new_address ) {
-        *relocation = new_address;
-      }
+    if ( ! dl_handle_rel_relocate(
+      handle,
+      handle->rel,
+      handle->relsz / handle->relent
+    ) ) {
+      return NULL;
     }
   }
   if ( handle->rela ) {
-    // FIXME: ADD IF NECESSARY
-    fprintf( stderr, "Support for DT_RELA not yet implemented!\r\n" );
+    dl_error = E_DL_DT_RELA_NOT_IMPLEMENTED;
     return NULL;
   }
-
   // return with init after relocate
   return dl_post_init( handle );
 }

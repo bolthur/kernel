@@ -1,7 +1,6 @@
 
 # built sources determining things to be built first
 BUILT_SOURCES = \
-  ${abs_top_builddir}/thirdparty/font/libfont.la \
   ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.la \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
@@ -22,7 +21,6 @@ noinst_PROGRAMS = kernel.elf kernel_qemu.elf ${output_img} ${output_img_qemu}
 noinst_LTLIBRARIES = libtarget.la
 
 libtarget_la_DEPENDENCIES = \
-  ${abs_top_builddir}/thirdparty/font/libfont.la \
   ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.la \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
@@ -37,7 +35,6 @@ libtarget_la_DEPENDENCIES = \
 libtarget_la_SOURCES =
 libtarget_la_LIBADD = \
   ${CC_SPECIFIC_LDADD} \
-  ${abs_top_builddir}/thirdparty/font/libfont.la \
   ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.la \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \

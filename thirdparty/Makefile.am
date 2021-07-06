@@ -1,2 +1,2 @@
 
-SUBDIRS = font dtc/libfdt
+SUBDIRS = dtc/libfdt

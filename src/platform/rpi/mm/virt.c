@@ -28,15 +28,13 @@
 #include <platform/rpi/mailbox/property.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
-#include <platform/rpi/framebuffer.h>
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
 #if defined( BCM2836 ) || defined( BCM2837 )
   #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
 #define MAILBOX_PROPERTY_AREA 0xF3040000
-#define FRAMEBUFFER_AREA 0xF3041000
-
+#
 /**
  * @brief Method to setup short descriptor paging
  */
@@ -80,24 +78,6 @@ void __bootstrap virt_startup_platform_setup( void ) {
 void virt_platform_init( void ) {
   uintptr_t start;
   uintptr_t virtual;
-
-  // set start and virtual
-  start = framebuffer_base_get();
-  virtual = FRAMEBUFFER_AREA;
-  // map framebuffer
-  while ( start < framebuffer_end_get() ) {
-    // map framebuffer
-    assert( virt_map_address(
-      virt_current_kernel_context,
-      virtual,
-      start,
-      VIRT_MEMORY_TYPE_DEVICE,
-      VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
-    ) )
-    // increase start and virtual
-    start += PAGE_SIZE;
-    virtual += PAGE_SIZE;
-  }
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -170,8 +150,6 @@ void virt_platform_init( void ) {
  * @brief Platform post initialization routine
  */
 void virt_platform_post_init( void ) {
-  // set framebuffer
-  framebuffer_base_set( FRAMEBUFFER_AREA );
   // set new peripheral base
   peripheral_base_set( GPIO_PERIPHERAL_BASE, PERIPHERAL_GPIO );
   // Adjust base address of cpu peripheral
@@ -181,8 +159,6 @@ void virt_platform_post_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "Set new framebuffer base to %p\r\n",
-      ( void* )FRAMEBUFFER_AREA )
     DEBUG_OUTPUT( "Set new gpio peripheral base to %p\r\n",
       ( void* )GPIO_PERIPHERAL_BASE )
     DEBUG_OUTPUT( "Set new cpu peripheral base to %p\r\n",

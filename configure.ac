@@ -196,6 +196,11 @@ AC_ARG_WITH(
   [with_debug_debug_symbols=yes]
 )
 
+# enable output and enable remote debugging together is not allowed
+AS_IF([test "x$enable_output" == "xyes" && test "x$enable_remote_debug" == "xyes"], [
+  AC_MSG_ERROR([Enabled kernel output and remote debug are not possible at the same time])
+])
+
 # check necessary programs
 BOLTHUR_KERNEL_PROG_READLINK
 
@@ -339,7 +344,6 @@ AC_CONFIG_FILES([
   src/target/rpi/Makefile
   thirdparty/Makefile
   thirdparty/dtc/libfdt/Makefile
-  thirdparty/font/Makefile
 ])
 
 AC_CONFIG_SUBDIRS([

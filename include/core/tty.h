@@ -23,7 +23,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-bool tty_init( void );
+void tty_init( void );
 void tty_putc( uint8_t );
 
 #endif

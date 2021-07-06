@@ -19,17 +19,15 @@
 
 #include <core/tty.h>
 #if defined( OUTPUT_ENABLE )
-  #include <platform/rpi/framebuffer.h>
+  #include <core/serial.h>
 #endif
 
 /**
  * @brief Initialize TTY
  */
-bool tty_init( void ) {
+void tty_init( void ) {
   #if defined( OUTPUT_ENABLE )
-    return framebuffer_init();
-  #else
-    return true;
+    serial_init();
   #endif
 }
 
@@ -41,6 +39,6 @@ bool tty_init( void ) {
 void tty_putc( __maybe_unused uint8_t c ) {
   // return if disabled
   #if defined( OUTPUT_ENABLE )
-    framebuffer_putc( c );
+    serial_putc( c );
   #endif
 }
