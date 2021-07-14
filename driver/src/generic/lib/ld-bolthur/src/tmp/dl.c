@@ -296,6 +296,7 @@ dl_image_handle_ptr_t dl_find_loaded_library( const char* file ) {
  * @param file
  * @return
  *
+ * @todo add file lookup within DT_RPATH somehow if set within original executable
  * @todo add file lookup by environment
  * @todo add file lookup by config file
  * @todo use /lib:/usr/lib:/ramdisk/lib as fallback

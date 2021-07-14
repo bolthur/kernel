@@ -28,6 +28,8 @@ removeDir( "tmp" )
 # create tmp directories
 createDir( "tmp" )
 
+# FIXME: USE PATCHELF TO REPLACE RPATH OF LIBRARIES AND EXECUTABLES
+
 # check argument count
 let argc: int = paramCount()
 if argc != 3:
@@ -49,20 +51,22 @@ for file in walkDirRec( lib, { pcFile, pcLinkToFile } ):
     # skip non files
     if pcFile != info.kind:
       continue
+    var splitted = file.splitFile()
     # expand symlink and use for check
     file_to_check = expandSymlink( file )
     if not file_to_check.isAbsolute:
-      file_to_check = joinPath( lib, file_to_check )
+      file_to_check = joinPath( splitted.dir, file_to_check )
     # determine symlink source and strip variable
-    symlink_src = strip( replace( file_to_check, lib & DirSep, "" ) )
+    symlink_src = strip( replace( file_to_check, splitted.dir & DirSep, "" ) )
     # loop as long as file to check is still a symlink
     info = getFileInfo( file_to_check, false )
     while pcLinkToFile == info.kind:
       # expand symlink again
+      var splitted = file_to_check.splitFile()
       file_to_check = expandSymlink( file_to_check )
       # add absolute path
       if not file_to_check.isAbsolute:
-        file_to_check = joinPath( lib, file_to_check )
+        file_to_check = joinPath( splitted.dir, file_to_check )
       # get info again
       info = getFileInfo( file_to_check, false )
   let outp_shell = execProcess( "file " & file_to_check )
@@ -116,6 +120,18 @@ for file in walkDirRec( driver ):
         base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", target_folder )
       createDir( base_path )
       copyFile( file, joinPath( base_path, executable ) )
+
+#[
+# loop through files of folder including subfolders and adjust interpreter and run path for ramdisk
+for file in walkDirRec( joinPath( getCurrentDir(), "tmp", "ramdisk" ) ):
+  let outp_shell = execProcess( "file " & file )
+  if contains( outp_shell, ": ELF" ) and contains( outp_shell, "dynamically linked" ):
+    # Replace dynamic linker
+    if not contains( outp_shell, "LSB shared object" ):
+      discard execProcess( "patchelf --set-interpreter /ramdisk/lib/ld-bolthur.so " & file )
+    # Replace rpath
+    discard execProcess( "patchelf --set-rpath /ramdisk/lib " & file )
+]#
 
 # append testing stuff from current dir
 for kind, file in walkDir(getCurrentDir()):

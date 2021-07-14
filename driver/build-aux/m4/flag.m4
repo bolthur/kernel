@@ -25,6 +25,7 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
 
   # linker flags
   AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/ramdisk/lib/ld-bolthur.so])
+  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/ramdisk/lib,--enable-new-dtags])
 
   # debug parameter
   AS_IF([test "x$with_debug_symbols" == "xyes"], [
