@@ -151,10 +151,11 @@ void syscall_process_replace( void* context ) {
   const char* name = ( const char* )syscall_get_parameter( context, 1 );
   const char** argv = ( const char** )syscall_get_parameter( context, 2 );
   const char** env = ( const char** )syscall_get_parameter( context, 3 );
+  __maybe_unused size_t size = ( size_t )syscall_get_parameter( context, 4 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_replace( %#p, %s, %#p, %#p )\r\n",
-      addr, name, argv, env )
+    DEBUG_OUTPUT( "syscall_process_replace( %#p, %s, %#p, %#p, %#x )\r\n",
+      addr, name, argv, env, size )
   #endif
   task_process_ptr_t proc = task_thread_current_thread->process;
 
@@ -173,7 +174,10 @@ void syscall_process_replace( void* context ) {
 
   // save image temporary
   size_t image_size = elf_image_size( ( uintptr_t )addr );
-  void* image = ( void* )malloc( image_size );
+  void* image = ( void* )malloc( sizeof( char ) * image_size );
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "image = %#p, image_size = %#x\r\n", image, image_size )
+  #endif
   // handle error
   if ( ! image ) {
     free( tmp_argv );
@@ -325,6 +329,11 @@ void syscall_process_replace( void* context ) {
 
   // replace new current thread
   task_thread_current_thread = new_current;
+
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Replace done!\r\n" )
+  #endif
 }
 
 /**

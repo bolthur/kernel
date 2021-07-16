@@ -33,15 +33,16 @@ createDir( "tmp" )
 # check argument count
 let argc: int = paramCount()
 if argc != 3:
-  echo "Usage: ramdisk <driver path> <initrd name> <sysroot libdir>"
+  echo "Usage: ramdisk <driver path> <initrd name> <sysroot>"
   quit( 1 )
 
 # get command line arguments
 let driver: string = paramStr( 1 );
 let output: string = paramStr( 2 );
-let lib: string = paramStr( 3 );
+let sysroot: string = paramStr( 3 );
 
-for file in walkDirRec( lib, { pcFile, pcLinkToFile } ):
+# loop through libraries and iterate over them
+for file in walkDirRec( joinPath( sysroot, "lib" ), { pcFile, pcLinkToFile } ):
   var file_to_check = file
   var info = getFileInfo( file, false )
   var symlink_src = ""
@@ -84,6 +85,51 @@ for file in walkDirRec( lib, { pcFile, pcLinkToFile } ):
       # Add shared object compressed
       #writeFile( joinPath( base_path, library ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
       copyFile( file, joinPath( base_path, library ) )
+
+# loop through true type fonts and iterate over them
+for file in walkDirRec( joinPath( sysroot, "share", "font" ), { pcFile, pcLinkToFile } ):
+  var file_to_check = file
+  var info = getFileInfo( file, false )
+  var symlink_src = ""
+  if pcLinkToFile == info.kind:
+    # get info with follow symlink again
+    info = getFileInfo( file )
+    # skip non files
+    if pcFile != info.kind:
+      continue
+    var splitted = file.splitFile()
+    # expand symlink and use for check
+    file_to_check = expandSymlink( file )
+    if not file_to_check.isAbsolute:
+      file_to_check = joinPath( splitted.dir, file_to_check )
+    # determine symlink source and strip variable
+    symlink_src = strip( replace( file_to_check, splitted.dir & DirSep, "" ) )
+    # loop as long as file to check is still a symlink
+    info = getFileInfo( file_to_check, false )
+    while pcLinkToFile == info.kind:
+      # expand symlink again
+      var splitted = file_to_check.splitFile()
+      file_to_check = expandSymlink( file_to_check )
+      # add absolute path
+      if not file_to_check.isAbsolute:
+        file_to_check = joinPath( splitted.dir, file_to_check )
+      # get info again
+      info = getFileInfo( file_to_check, false )
+  let outp_shell = execProcess( "file " & file_to_check )
+  if contains( outp_shell, "TrueType Font" ):
+    # split file path
+    let split = splitPath( file )
+    #let splitted_head = split.head.split( DirSep )
+    let font = split.tail
+    # copy library
+    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", "share", "font" )
+    createDir( base_path )
+#    if not isEmptyOrWhitespace( symlink_src ):
+#      createSymlink( symlink_src, joinPath( base_path, font ) )
+#    else:
+#      # Add shared object compressed
+#      #writeFile( joinPath( base_path, font ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
+#      copyFile( file, joinPath( base_path, font ) )
 
 # loop through files of folder including subfolders
 for file in walkDirRec( driver ):

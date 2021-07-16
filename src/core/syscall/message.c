@@ -530,6 +530,17 @@ void syscall_message_has_by_name( void* context ) {
     syscall_populate_error( context, ( size_t )-ESRCH );
     return;
   }
+  // check for same process
+  list_item_ptr_t item = name_list->first;
+  while( item ) {
+    task_process_ptr_t proc = ( task_process_ptr_t )item->data;
+    if( task_thread_current_thread->process->id == proc->id ) {
+      // return success
+      syscall_populate_error( context, ( size_t )-ESRCH );
+      return;
+    }
+    item = item->next;
+  }
   // return success
   syscall_populate_error( context, 0 );
 }

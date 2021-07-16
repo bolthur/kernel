@@ -22,6 +22,9 @@
 #include <core/event.h>
 #include <core/panic.h>
 #include <core/interrupt.h>
+// process related stuff
+#include <core/task/process.h>
+#include <core/task/thread.h>
 
 /**
  * @brief Nested counter for undefined instruction exception handler
@@ -47,6 +50,11 @@ noreturn void vector_undefined_instruction_handler( cpu_register_context_ptr_t c
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu )
+    if ( EVENT_ORIGIN_USER == origin ) {
+      DEBUG_OUTPUT( "process id: %d, name: %s\r\n",
+        task_thread_current_thread->process->id,
+        task_thread_current_thread->process->name )
+    }
   #endif
 
   // kernel stack

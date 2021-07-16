@@ -169,6 +169,9 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
     uintptr_t memory_offset = program_header->p_vaddr % PAGE_SIZE;
     uintptr_t file_offset = program_header->p_offset;
     uintptr_t copy_size = program_header->p_memsz;
+    if ( program_header->p_memsz > program_header->p_filesz ) {
+      copy_size = program_header->p_filesz;
+    }
     // debug output
     #if defined ( PRINT_ELF )
       DEBUG_OUTPUT(
@@ -187,6 +190,10 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       // consider memory offset
       if ( memory_offset > 0 ) {
         to_copy = PAGE_SIZE - memory_offset;
+      }
+      // cap to copy to copy size
+      if ( to_copy > copy_size ) {
+        to_copy = copy_size;
       }
       // debug output
       #if defined ( PRINT_ELF )
@@ -244,21 +251,23 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
         // clear page
         memset( ( void* )tmp, 0, PAGE_SIZE );
       }
-      // debug output
-      #if defined ( PRINT_ELF )
-        DEBUG_OUTPUT(
-          "memcpy( %#"PRIxPTR", %#"PRIxPTR", %#"PRIxPTR" )\r\n",
-          tmp + memory_offset,
-          ( uintptr_t )header + file_offset,
+      if ( 0 < to_copy ) {
+        // debug output
+        #if defined ( PRINT_ELF )
+          DEBUG_OUTPUT(
+            "memcpy( %#"PRIxPTR", %#"PRIxPTR", %#"PRIxPTR" )\r\n",
+            tmp + memory_offset,
+            ( uintptr_t )header + file_offset,
+            to_copy
+          )
+        #endif
+        // copy data
+        memcpy(
+          ( void* )( tmp + memory_offset ),
+          ( void* )( ( uintptr_t )header + file_offset ),
           to_copy
-        )
-      #endif
-      // copy data
-      memcpy(
-        ( void* )( tmp + memory_offset ),
-        ( void* )( ( uintptr_t )header + file_offset ),
-        to_copy
-      );
+        );
+      }
       // unmap temporary again
       virt_unmap_temporary( tmp, PAGE_SIZE );
       // map it within process context if new page
@@ -332,20 +341,22 @@ size_t elf_image_size( uintptr_t elf ) {
   if ( ! elf_check( elf ) ) {
     return 0;
   }
-
+  // temporary max and size
+  size_t max = 0;
+  size_t sz = 0;
+  // transform to elf header
   Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
-  size_t size = 0;
-  // parse program header
-  for ( uint32_t index = 0; index < header->e_phnum; ++index ) {
-    // get program header
-    Elf32_Phdr* program_header = ( Elf32_Phdr* )(
-      elf + header->e_phoff + header->e_phentsize * index
+  // loop through section header informations
+  for ( uint32_t idx = 0; idx < header->e_shnum; ++idx ) {
+    Elf32_Shdr* section_header = ( Elf32_Shdr* )(
+      elf + header->e_shoff + header->e_shentsize * idx
     );
-    size_t tmp = program_header->p_offset + program_header->p_memsz;
-    if ( tmp > size ) {
-      size = tmp;
+    if ( section_header->sh_addr > max ) {
+      max = section_header->sh_addr;
+      sz = section_header->sh_size;
     }
   }
-  // return calculated size
-  return size;
+  // return size
+  return ( size_t )( header->e_shnum * header->e_shentsize )
+    + header->e_shoff + sz;
 }
