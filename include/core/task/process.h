@@ -101,5 +101,6 @@ task_process_ptr_t task_process_get_by_id( pid_t );
 list_manager_ptr_t task_process_get_by_name( const char* );
 task_process_name_ptr_t task_process_get_name_list( const char* );
 void task_process_prepare_kill( void*, task_process_ptr_t );
+int task_process_replace( task_process_ptr_t, uintptr_t, const char*, const char**, const char**, void* );
 
 #endif

@@ -124,7 +124,7 @@ void msg_handle_open( void ) {
   vfs_node_ptr_t dir_node = vfs_node_by_path( dir );
   if ( ! dir_node ) {
     // debug output
-    printf( "Error: \"%s/%s\" doesn't exist!\r\n", dir, base );
+    EARLY_STARTUP_PRINT( "Error: \"%s/%s\" doesn't exist!\r\n", dir, base )
     free( dir );
     free( base );
     // prepare error return
@@ -198,7 +198,7 @@ void msg_handle_open( void ) {
 
   // handle target directory with write or read write flags
   if (
-    ( base_node->flags & VFS_DIRECTORY )
+    ( S_ISDIR( base_node->st->st_mode ) )
     && (
       ( request->flags & O_WRONLY )
       || ( request->flags & O_RDWR )
@@ -235,7 +235,7 @@ void msg_handle_open( void ) {
   // handle error
   if ( ! container ) {
     // debug output
-    printf( "Error: Unable to generate new handle container!\r\n" );
+    EARLY_STARTUP_PRINT( "Error: Unable to generate new handle container!\r\n" )
     free( dir );
     free( base );
     // prepare error return

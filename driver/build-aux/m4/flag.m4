@@ -18,6 +18,7 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
 
   # third party stuff
   AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}/include])
+  AX_APPEND_COMPILE_FLAGS([-I$($BOLTHUR_READLINK -f ${srcdir})/include])
   AX_APPEND_COMPILE_FLAGS([-imacros\ $($BOLTHUR_READLINK -f ${srcdir})/include/core/config.h])
   # FIXME: NECESSARY BECAUSE OF NEWLIB
   AC_DEFINE_UNQUOTED([_GNU_SOURCE], [1], [Necessary newlib define])
@@ -31,30 +32,32 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   AS_IF([test "x$with_debug_symbols" == "xyes"], [
     # debug symbols and sanitizer
     # -fsanitize=undefined
-    AX_APPEND_COMPILE_FLAGS([-g])
+    AX_APPEND_COMPILE_FLAGS([-g -Og])
+  ], [
+    AX_APPEND_LINK_FLAGS([-Wl,-s -Wl,--gc-sections])
+    # optimization level
+    case "${with_optimization_level}" in
+      no | 0)
+        AX_APPEND_COMPILE_FLAGS([-O0])
+        ;;
+      1)
+        AX_APPEND_COMPILE_FLAGS([-O1])
+        ;;
+      2)
+        AX_APPEND_COMPILE_FLAGS([-O2])
+        ;;
+      3)
+        AX_APPEND_COMPILE_FLAGS([-O3])
+        ;;
+      s)
+        AX_APPEND_COMPILE_FLAGS([-Os])
+        ;;
+      g)
+        AX_APPEND_COMPILE_FLAGS([-Og])
+        ;;
+      *)
+        AX_APPEND_COMPILE_FLAGS([-Os])
+        ;;
+    esac
   ] )
-  # optimization level
-  case "${with_optimization_level}" in
-    no | 0)
-      AX_APPEND_COMPILE_FLAGS([-O0])
-      ;;
-    1)
-      AX_APPEND_COMPILE_FLAGS([-O1])
-      ;;
-    2)
-      AX_APPEND_COMPILE_FLAGS([-O2])
-      ;;
-    3)
-      AX_APPEND_COMPILE_FLAGS([-O3])
-      ;;
-    s)
-      AX_APPEND_COMPILE_FLAGS([-Os])
-      ;;
-    g)
-      AX_APPEND_COMPILE_FLAGS([-Og])
-      ;;
-    *)
-      AX_APPEND_COMPILE_FLAGS([-Os])
-      ;;
-  esac
 ])

@@ -69,7 +69,7 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
     // evaluate response
     if ( ! response.success ) {
       send = true;
-      printf( "FAILED, TRYING AGAIN!\r\n" );
+      EARLY_STARTUP_PRINT( "FAILED, TRYING AGAIN!\r\n" )
       continue;
     }
     // exit loop
@@ -79,48 +79,48 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
 
 int main( __unused int argc, __unused char* argv[] ) {
   // print something
-  printf( "system console processing!\r\n" );
+  EARLY_STARTUP_PRINT( "system console processing!\r\n" )
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
 
-  printf( "pushing /dev/stdin to vfs!\r\n" );
+  EARLY_STARTUP_PRINT( "pushing /dev/stdin to vfs!\r\n" )
   // STDIN
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
-  msg->entry_type = VFS_ENTRY_TYPE_FILE;
-  strcpy( msg->file_path, "/dev/stdin" );
+  msg->info.st_mode = S_IFCHR;
+  strncpy( msg->file_path, "/dev/stdin", PATH_MAX );
   // perform add request
   send_add_request( msg );
 
-  printf( "pushing /dev/stdout to vfs!\r\n" );
+  EARLY_STARTUP_PRINT( "pushing /dev/stdout to vfs!\r\n" )
   // STDOUT
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
-  msg->entry_type = VFS_ENTRY_TYPE_FILE;
-  strcpy( msg->file_path, "/dev/stdout" );
+  msg->info.st_mode = S_IFCHR;
+  strncpy( msg->file_path, "/dev/stdout", PATH_MAX );
   // perform add request
   send_add_request( msg );
 
-  printf( "pushing /dev/stderr to vfs!\r\n" );
+  EARLY_STARTUP_PRINT( "pushing /dev/stderr to vfs!\r\n" )
   // STDERR
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
-  msg->entry_type = VFS_ENTRY_TYPE_FILE;
-  strcpy( msg->file_path, "/dev/stderr" );
+  msg->info.st_mode = S_IFCHR;
+  strncpy( msg->file_path, "/dev/stderr", PATH_MAX );
   // perform add request
   send_add_request( msg );
 
-  printf( "pushing console device to vfs!\r\n" );
+  EARLY_STARTUP_PRINT( "pushing console device to vfs!\r\n" )
   // console device
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
-  msg->entry_type = VFS_ENTRY_TYPE_FILE;
-  strcpy( msg->file_path, "/dev/console" );
+  msg->info.st_mode = S_IFREG;
+  strncpy( msg->file_path, "/dev/console", PATH_MAX );
   // perform add request
   send_add_request( msg );
 

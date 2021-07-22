@@ -253,29 +253,29 @@ off_t _lseek(
 
 int main( __unused int argc, __unused char* argv[] ) {
   // print something
-  printf( "startup processing!\r\n" );
+  EARLY_STARTUP_PRINT( "startup processing!\r\n" )
   char buf[ 5 ];
 
   memset( buf, 0, 5 );
   int fd = open( "/ramdisk/test/hello.txt", 0 );
-  printf( "startup: _open( %s, 0, 0 ) = %d\r\n", "/ramdisk/test/hello.txt", fd );
-  printf( "startup: read( %d, %#"PRIxPTR", %d ) = %d\r\n", fd, ( uintptr_t )buf, 3, read( fd, ( void* )buf, 3 ) );
-  printf( "startup: buf = \"%s\"\r\n", buf );
-  printf( "startup: close( %d ) = %d\r\n", fd, close( fd ) );
+  EARLY_STARTUP_PRINT( "startup: _open( %s, 0, 0 ) = %d\r\n", "/ramdisk/test/hello.txt", fd )
+  EARLY_STARTUP_PRINT( "startup: read( %d, %#"PRIxPTR", %d ) = %d\r\n", fd, ( uintptr_t )buf, 3, read( fd, ( void* )buf, 3 ) )
+  EARLY_STARTUP_PRINT( "startup: buf = \"%s\"\r\n", buf )
+  EARLY_STARTUP_PRINT( "startup: close( %d ) = %d\r\n", fd, close( fd ) )
   memset( buf, 0, 5 );
   int fd2 = open( "/ramdisk/test/world.txt", O_CREAT, 1 );
-  printf( "startup: _open( %s, 0, 0 ) = %d\r\n", "/ramdisk/test/world.txt", fd2 );
-  printf( "startup: read( %d, %#"PRIxPTR", %d ) = %d\r\n", fd, ( uintptr_t )buf, 3, read( fd2, ( void* )buf, 3 ) );
-  printf( "startup: buf = \"%s\"\r\n", buf );
-  printf( "startup: _close( %d ) = %d\r\n", fd2, close( fd2 ) );
+  EARLY_STARTUP_PRINT( "startup: _open( %s, 0, 0 ) = %d\r\n", "/ramdisk/test/world.txt", fd2 )
+  EARLY_STARTUP_PRINT( "startup: read( %d, %#"PRIxPTR", %d ) = %d\r\n", fd, ( uintptr_t )buf, 3, read( fd2, ( void* )buf, 3 ) )
+  EARLY_STARTUP_PRINT( "startup: buf = \"%s\"\r\n", buf )
+  EARLY_STARTUP_PRINT( "startup: _close( %d ) = %d\r\n", fd2, close( fd2 ) )
   int tmp = close(fd2);
-  printf( "startup: close( %d ) = %d => %s\r\n", fd2, tmp, strerror( errno ) );
+  EARLY_STARTUP_PRINT( "startup: close( %d ) = %d => %s\r\n", fd2, tmp, strerror( errno ) )
   memset( buf, 0, 5 );
   int fd3 = open( "/ramdisk/test/multiline.txt", 0 );
-  printf( "startup: _open( %s, 0, 0 ) = %d\r\n", "/ramdisk/test/multiline.txt", fd3 );
-  printf( "startup: read( %d, %#"PRIxPTR", %d ) = %d\r\n", fd, ( uintptr_t )buf, 3, read( fd3, ( void* )buf, 3 ) );
-  printf( "startup: buf = \"%s\"\r\n", buf );
-  printf( "startup: close( %d ) = %d\r\n", fd3, close( fd3 ) );
+  EARLY_STARTUP_PRINT( "startup: _open( %s, 0, 0 ) = %d\r\n", "/ramdisk/test/multiline.txt", fd3 )
+  EARLY_STARTUP_PRINT( "startup: read( %d, %#"PRIxPTR", %d ) = %d\r\n", fd, ( uintptr_t )buf, 3, read( fd3, ( void* )buf, 3 ) )
+  EARLY_STARTUP_PRINT( "startup: buf = \"%s\"\r\n", buf )
+  EARLY_STARTUP_PRINT( "startup: close( %d ) = %d\r\n", fd3, close( fd3 ) )
 
   for(;;);
   return 0;

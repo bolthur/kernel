@@ -24,8 +24,8 @@
 #include <limits.h>
 #include <unistd.h>
 #include <inttypes.h>
+#include <sys/bolthur.h>
 #include "_dl-int.h"
-#include "debug.h"
 
 #include <sys/mman.h>
 
@@ -476,18 +476,25 @@ void* dl_map_load_section(
   int prot = 0;
   if ( flag & PF_R ) {
     prot |= PROT_READ;
+    EARLY_STARTUP_PRINT( "Read\r\n" )
   }
   if ( flag & PF_W ) {
     prot |= PROT_WRITE;
+    EARLY_STARTUP_PRINT( "Write\r\n" )
   }
   if ( flag & PF_X ) {
     prot |= PROT_EXEC;
+    EARLY_STARTUP_PRINT( "Executable\r\n" )
   }
   // mapping flags
   int mapping = MAP_PRIVATE;
   if ( base ) {
     mapping |= MAP_FIXED;
   }
+  EARLY_STARTUP_PRINT(
+    "mmap( %p, %#x, %#x, %#x, %#x, %#lx )\r\n",
+    base, size, prot, mapping, descriptor, offset
+  )
   // call to mmap
   return mmap( base, size, prot, mapping, descriptor, offset );
 }
@@ -501,7 +508,7 @@ void* dl_map_load_section(
  * @param descriptor
  * @return
  *
- * @todo add support for init array and fini array
+ * @todo map library read-only code into shared object
  */
 dl_image_handle_ptr_t dl_load_entry(
   const char* file,
@@ -622,15 +629,14 @@ dl_image_handle_ptr_t dl_load_entry(
   }
 
   // Load headers ( either one or two )
-  char *memory = NULL;
-  char *data = NULL;
+  char* memory = NULL;
+  char* data = NULL;
   if ( 1 == phdr_load_count ) {
     offset = ( off_t )ROUND_DOWN_TO_FULL_PAGE( load_header[ 0 ].p_offset );
-    size_t length = ROUND_UP_TO_FULL_PAGE( load_header[ 0 ].p_memsz + ROUND_PAGE_OFFSET( load_header[ 0 ].p_offset ) );
     // map loadable section
     memory = dl_map_load_section(
       ( void* )load_header[ 0 ].p_vaddr,
-      length,
+      load_header[ 0 ].p_memsz,
       load_header[ 0 ].p_flags,
       handle->descriptor,
       offset
@@ -640,9 +646,12 @@ dl_image_handle_ptr_t dl_load_entry(
       dl_free_handle( handle );
       return NULL;
     }
+    EARLY_STARTUP_PRINT( "loading to %#x with length %#lx\r\n",
+      ( uintptr_t )memory,
+      load_header[ 0 ].p_memsz )
     // populate memory start and length
     handle->memory_start = memory;
-    handle->memory_size = length;
+    handle->memory_size = load_header[ 0 ].p_memsz;
     handle->relocated = ( Elf32_Addr )memory != load_header[ 0 ].p_vaddr;
     // populate dynamic address
     if ( dyn ) {
@@ -655,16 +664,38 @@ dl_image_handle_ptr_t dl_load_entry(
     off_t text_offset = ( off_t )ROUND_DOWN_TO_FULL_PAGE( load_header[ 0 ].p_offset );
     off_t text_off = ROUND_PAGE_OFFSET( load_header[ 0 ].p_offset );
     size_t text_size = ROUND_UP_TO_FULL_PAGE( load_header[ 0 ].p_memsz + ( size_t )text_off );
+    EARLY_STARTUP_PRINT(
+      "text_address = %#"PRIxPTR", text_offset = %#lx, text_off = %#lx, text_size = %#x\r\n",
+      text_address, text_offset, text_off, text_size
+    )
+    EARLY_STARTUP_PRINT(
+      "load_header[ 0 ].p_vaddr = %#lx, load_header[ 0 ].p_offset = %#lx, "
+      "load_header[ 0 ].p_memsz = %#lx, load_header[ 0 ].p_filesz = %#lx\r\n",
+      load_header[ 0 ].p_vaddr, load_header[ 0 ].p_offset,
+      load_header[ 0 ].p_memsz, load_header[ 0 ].p_filesz
+    )
 
     uintptr_t data_address = ROUND_DOWN_TO_FULL_PAGE( load_header[ 1 ].p_vaddr );
     off_t data_offset = ( off_t )ROUND_DOWN_TO_FULL_PAGE( load_header[ 1 ].p_offset  );
     off_t data_off = ROUND_PAGE_OFFSET( load_header[ 1 ].p_offset );
     size_t data_size = ROUND_UP_TO_FULL_PAGE( load_header[ 1 ].p_memsz + ( size_t )data_off );
     size_t data_file_size = ROUND_UP_TO_FULL_PAGE( load_header[ 1 ].p_filesz + ( size_t )data_off );
+    EARLY_STARTUP_PRINT(
+      "data_address = %#"PRIxPTR", data_offset = %#lx, data_off = %#lx, "
+      "data_size = %#x, data_file_size = %#x\r\n",
+      data_address, data_offset, data_off, data_size, data_file_size
+    )
+    EARLY_STARTUP_PRINT(
+      "load_header[ 1 ].p_vaddr = %#lx, load_header[ 1 ].p_offset = %#lx, "
+      "load_header[ 1 ].p_memsz = %#lx, load_header[ 1 ].p_filesz = %#lx\r\n",
+      load_header[ 1 ].p_vaddr, load_header[ 1 ].p_offset,
+      load_header[ 1 ].p_memsz, load_header[ 1 ].p_filesz
+    )
+
     // map text section with data size to get everything loaded correctly
     memory = dl_map_load_section(
       ( void* )text_address,
-      text_size + data_size,
+      text_size,
       load_header[ 0 ].p_flags,
       handle->descriptor,
       text_offset
@@ -674,8 +705,11 @@ dl_image_handle_ptr_t dl_load_entry(
       dl_free_handle( handle );
       return NULL;
     }
-    // release previously probably wrong data section mapping
-    munmap( memory + data_address - text_address, data_size );
+    EARLY_STARTUP_PRINT(
+      "loaded to %#x with length %#x. File offset: %#lx, data = %p\r\n",
+      ( uintptr_t )memory, text_size, text_offset,
+      ( void* )( memory + load_header[ 1 ].p_vaddr - load_header[ 0 ].p_vaddr )
+    )
     // map data section again with only file size
     data = dl_map_load_section(
       ( void* )( memory + data_address - text_address ),
@@ -689,13 +723,31 @@ dl_image_handle_ptr_t dl_load_entry(
       dl_free_handle( handle );
       return NULL;
     }
+    size_t len = ( size_t )data_off + load_header[ 1 ].p_filesz;
+    memset( data + len, 0, data_file_size - len );
+    void* tmp_data = ( void* )( memory + load_header[ 1 ].p_vaddr - load_header[ 0 ].p_vaddr );
+    EARLY_STARTUP_PRINT( "data = %p, *data = %#lx\r\n", tmp_data, *( ( uint32_t* )tmp_data ) )
+    EARLY_STARTUP_PRINT( "loaded to %#x with length %#x. File offset: %#lx\r\n",
+      ( uintptr_t )data, data_file_size, data_offset )
     // map more space if necessary
     if ( data_size > data_file_size ) {
-      char* bss = mmap(
-        ( void* )( data + data_file_size ),
-        data_size - data_file_size,
-        PROT_READ|PROT_WRITE,
-        MAP_PRIVATE|MAP_FIXED|MAP_ANONYMOUS,
+      // calculate bss start and length
+      void* bss_start = ( void* )( data + data_file_size );
+      char* bss = ( char* )bss_start;
+      len = data_size - data_file_size;
+      // debug output
+      EARLY_STARTUP_PRINT(
+        "requesting more size for bss section. "
+        "data_size = %#x, data_file_size = %#x, "
+        "len = %#x, bss_start = %p\r\n",
+        data_size, data_file_size, len, bss_start
+      )
+      // acquire via mmap
+      bss = mmap(
+        bss_start,
+        len,
+        PROT_READ | PROT_WRITE,
+        MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS,
         -1,
         0
       );
@@ -705,6 +757,13 @@ dl_image_handle_ptr_t dl_load_entry(
         dl_free_handle( handle );
         return NULL;
       }
+      EARLY_STARTUP_PRINT(
+        "Allocated space of %#x at address %p.\r\n",
+        len,
+        ( void* )bss
+      )
+      // clear
+      memset( ( void* )bss, 0, len );
     }
 
     // populate memory start and length
@@ -952,11 +1011,15 @@ dl_image_handle_ptr_t dl_load_entry(
 dl_image_handle_ptr_t dl_post_init( dl_image_handle_ptr_t handle ) {
   // call for init if existing
   if ( handle->init ) {
+    EARLY_STARTUP_PRINT( "Calling init of %s\r\n", handle->filename )
     handle->init();
   }
   // handle existing init array
   if ( handle->init_array ) {
     for( size_t idx = 0; idx < handle->init_array_size; idx++ ) {
+      EARLY_STARTUP_PRINT(
+        "Calling init array %d of %s\r\n",
+        idx, handle->filename )
       handle->init_array[ idx ]();
     }
   }
@@ -1021,6 +1084,8 @@ void dl_handle_rel_symbol( dl_image_handle_ptr_t handle, void* address, size_t s
       if ( handle->relocated ) {
         target = ( uint32_t* )( handle->memory_start + ( uint32_t )target );
       }
+      /*EARLY_STARTUP_PRINT( "%s => %p = %#lx\r\n",
+        symbol_name, ( void* )target, ( uint32_t )symbol_value )*/
       // adjust memory
       *target = ( uint32_t )symbol_value;
     } else {
@@ -1184,6 +1249,14 @@ void* dlopen( const char* file, int mode ) {
       // return object
       return found;
     }
+    if ( '/' == file[ 0 ] ) {
+      EARLY_STARTUP_PRINT("Load %s\r\n", file )
+    } else {
+      EARLY_STARTUP_PRINT(
+        "%s - loading %s\r\n",
+        root_object_handle->filename,
+        dl_open_buffer )
+    }
     // error handling
     if ( -1 == fd ) {
       dl_error = E_DL_CANNOT_OPEN;
@@ -1209,8 +1282,6 @@ void* dlopen( const char* file, int mode ) {
  *
  * @param handle
  * @return
- *
- * @todo add support for fini array
  */
 static int dl_close( dl_image_handle_ptr_t handle ) {
   // decrease link count
@@ -1221,11 +1292,15 @@ static int dl_close( dl_image_handle_ptr_t handle ) {
   }
   // execute fini
   if ( handle->fini ) {
+    EARLY_STARTUP_PRINT( "Calling fini of %s\r\n", handle->filename )
     handle->fini();
   }
   // execute fini array
   if ( handle->fini_array ) {
     for( size_t idx = 0; idx < handle->fini_array_size; idx++ ) {
+      EARLY_STARTUP_PRINT(
+        "Calling fini array %d of %s\r\n",
+        idx, handle->filename )
       handle->fini_array[ idx ]();
     }
   }

@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/bolthur.h>
 #include "avl.h"
 
 /**
@@ -327,17 +328,17 @@ static void print_recursive( const avl_node_ptr_t node ) {
   if ( ! node ) {
     return;
   }
-  printf( "%p\r\n", node->data );
+  EARLY_STARTUP_PRINT( "%p\r\n", node->data )
 
   if ( node->left ) {
-    printf( "%s `--", level_buffer );
+    EARLY_STARTUP_PRINT( "%s `--", level_buffer )
     push_output_level( '|' );
     print_recursive( node->left );
     pop_output_level();
   }
 
   if ( node->right ) {
-    printf( "%s `--", level_buffer );
+    EARLY_STARTUP_PRINT( "%s `--", level_buffer )
     push_output_level( '|' );
     print_recursive( node->right );
     pop_output_level();

@@ -67,7 +67,7 @@ void msg_handle_remove( void ) {
   }
 
   // debug output
-  printf( "HANDLE REMOVE NOT YET IMPLEMENTED!\r\n" );
+  EARLY_STARTUP_PRINT( "HANDLE REMOVE NOT YET IMPLEMENTED!\r\n" )
   // prepare response
   response->state = -ENOSYS;
   // send response

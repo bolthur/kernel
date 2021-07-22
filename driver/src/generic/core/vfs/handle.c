@@ -199,8 +199,8 @@ int handle_generate(
   // copy path
   strcpy( ( *container )->path, path );
   // special handling for symlinks
-  if ( target->flags & VFS_SYMLINK ) {
-    while ( target && ( target->flags & VFS_SYMLINK ) ) {
+  if ( S_ISLNK( target->st->st_mode ) ) {
+    while ( target && S_ISLNK( target->st->st_mode ) ) {
       if ( '/' == target->target[ 0 ] ) {
         target = vfs_node_by_path( target->target );
       } else {

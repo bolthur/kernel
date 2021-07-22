@@ -38,7 +38,6 @@ void msg_handle_close( void );
 void msg_handle_read( void );
 void msg_handle_write( void );
 void msg_handle_seek( void );
-void msg_handle_size( void );
-void msg_handle_has( void );
+void msg_handle_stat( void );
 
 #endif

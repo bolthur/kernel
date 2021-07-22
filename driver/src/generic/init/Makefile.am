@@ -1,4 +1,6 @@
 
+AM_CFLAGS = -DPROGRAM_NAME=\"init\"
+
 bin_PROGRAMS = init
 init_LDADD = \
   -lz \

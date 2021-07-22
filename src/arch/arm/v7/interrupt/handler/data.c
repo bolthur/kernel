@@ -75,7 +75,7 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
       event_enqueue( EVENT_DEBUG, origin );
       PANIC( "Check fixup!" )
     } else {
-      PANIC( "data abort" )
+      PANIC( "data abort!" )
     }
   #else
     PANIC( "data abort!" )

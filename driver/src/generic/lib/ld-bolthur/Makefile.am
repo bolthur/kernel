@@ -1,5 +1,5 @@
 
-AM_CFLAGS = -fPIC -I$(srcdir)/include
+AM_CFLAGS = -fPIC -I$(srcdir)/include -DPROGRAM_NAME=\"ld-bolthur\"
 
 bin_PROGRAMS = ld-bolthur.so
 ld_bolthur_so_SOURCES = \

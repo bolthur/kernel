@@ -1,2 +1,2 @@
-*:/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include/*
-*:/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/11.1.0/include/*
+*:/opt/bolthur/sysroot/arm-rpi2-bolthur-eabi/include/*
+*:/opt/bolthur/cross/lib/gcc/arm-rpi2-bolthur-eabi/11.1.0/include/*

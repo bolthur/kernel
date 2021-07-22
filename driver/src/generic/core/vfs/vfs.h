@@ -25,41 +25,26 @@
 #if !defined( __VFS_H__ )
 #define __VFS_H__
 
-// exclusive vfs types
-#define VFS_FILE 0x01
-#define VFS_DIRECTORY 0x02
-#define VFS_CHARDEVICE 0x03
-#define VFS_BLOCKDEVICE 0x04
-#define VFS_PIPE 0x05
-#define VFS_SYMLINK 0x06
-#define VFS_HARDLINK 0x07
-// possible combinations for exclusive types
-#define VFS_MOUNTPOINT 0x10
-
 // forward declaration necessary due to circular referencing
 typedef struct vfs_node vfs_node_t;
 typedef struct vfs_node *vfs_node_ptr_t;
+
 // structure itself
 struct vfs_node {
-  char *name;
-  uint32_t permission_mask;
-  uint32_t user_id;
-  uint32_t group_id;
-  uint32_t flags;
-  uint32_t length;
-  vfs_node_ptr_t parent;
-  char* target;
   pid_t pid;
+  char *name;
+  char* target;
+  struct stat* st;
   list_manager_ptr_t children;
   list_manager_ptr_t handle;
+  vfs_node_ptr_t parent;
 };
 
 // functions
 vfs_node_ptr_t vfs_setup( pid_t );
 void vfs_destroy( vfs_node_ptr_t );
 void vfs_dump( vfs_node_ptr_t, const char* );
-bool vfs_add_path( vfs_node_ptr_t, pid_t, const char*, vfs_entry_type_t, char* );
-
+bool vfs_add_path( vfs_node_ptr_t, pid_t, const char*, char*, struct stat* );
 vfs_node_ptr_t vfs_node_by_name( vfs_node_ptr_t, const char* );
 vfs_node_ptr_t vfs_node_by_path( const char* );
 char* vfs_path_bottom_up( vfs_node_ptr_t );

@@ -47,7 +47,7 @@ size_t ramdisk_extract_size( uintptr_t address, size_t size ) {
   // init inflate for gzip
   err = inflateInit2( &stream, 15 + 32 );
   if ( Z_OK != err ) {
-    printf( "error on init zlib ( %d )!\r\n", err );
+    EARLY_STARTUP_PRINT( "error on init zlib ( %d )!\r\n", err )
     inflateEnd( &stream );
     return 0;
   }
@@ -61,7 +61,7 @@ size_t ramdisk_extract_size( uintptr_t address, size_t size ) {
     // inflate
     err = inflate( &stream, Z_NO_FLUSH );
     if ( Z_OK != err && Z_STREAM_END != err ) {
-      printf( "error during inflate ( %d )!\r\n", err );
+      EARLY_STARTUP_PRINT( "error during inflate ( %d )!\r\n", err )
       inflateEnd( &stream );
       return 0;
     }
@@ -101,7 +101,7 @@ void* ramdisk_extract( uintptr_t address, size_t size, size_t extract_size ) {
   // initialize inflate
   err = inflateInit2( &stream, 15 + 32 );
   if ( Z_OK != err ) {
-    printf( "ERROR ON INIT = %d!\r\n", err );
+    EARLY_STARTUP_PRINT( "ERROR ON INIT = %d!\r\n", err )
     inflateEnd( &stream );
     free( dec );
     return NULL;
@@ -109,7 +109,7 @@ void* ramdisk_extract( uintptr_t address, size_t size, size_t extract_size ) {
   // inflate in one step
   err = inflate( &stream, Z_FINISH);
   if ( err != Z_STREAM_END ) {
-    printf( "ERROR ON INFLATE = %d!\r\n", err );
+    EARLY_STARTUP_PRINT( "ERROR ON INFLATE = %d!\r\n", err )
     inflateEnd( &stream );
     free( dec );
     return NULL;
@@ -121,7 +121,7 @@ void* ramdisk_extract( uintptr_t address, size_t size, size_t extract_size ) {
   return dec;
 }
 
-void* ramdisk_lookup_file( TAR* t, const char* name ) {
+void* ramdisk_lookup_file( TAR* t, const char* name, size_t* size ) {
   // variables
   ramdisk_read_offset = 0;
   void* file = NULL;
@@ -137,11 +137,15 @@ void* ramdisk_lookup_file( TAR* t, const char* name ) {
         file = ( void* )(
           ( uint8_t* )ramdisk_decompressed + ramdisk_read_offset
         );
+        if ( size ) {
+          *size = th_get_size( t );
+        }
+        EARLY_STARTUP_PRINT( "%s size = %#x\r\n", filename, th_get_size( t ) )
         break;
       }
       // skip to next file
       if ( tar_skip_regfile( t ) != 0 ) {
-        printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
+        EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) )
         break;
       }
     }
@@ -158,14 +162,14 @@ void ramdisk_dump( TAR* t ) {
     if ( TH_ISREG( t ) ) {
       // get filename
       char* filename = th_get_pathname( t );
-      printf( "%10s - %s\r\n", "file", filename );
+      EARLY_STARTUP_PRINT( "%10s - %s\r\n", "file", filename )
       // skip to next file
       if ( tar_skip_regfile( t ) != 0 ) {
-        printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
+        EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) )
         break;
       }
     } else if ( TH_ISSYM( t ) ) {
-      printf( "%10s - %s -> %s\r\n", "symlink", th_get_pathname( t ), th_get_linkname( t ) );
+      EARLY_STARTUP_PRINT( "%10s - %s -> %s\r\n", "symlink", th_get_pathname( t ), th_get_linkname( t ) )
     }
   }
 }

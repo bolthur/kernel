@@ -26,33 +26,33 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   # debug parameter
   AS_IF([test "x$with_debug_symbols" == "xyes"], [
     # debug symbols and sanitizer
-    AX_APPEND_COMPILE_FLAGS([-g -fsanitize=undefined])
+    AX_APPEND_COMPILE_FLAGS([-g -Og -fsanitize=undefined])
+  ], [
+    # optimization level
+    case "${with_optimization_level}" in
+      no | 0)
+        AX_APPEND_COMPILE_FLAGS([-O0])
+        ;;
+      1)
+        AX_APPEND_COMPILE_FLAGS([-O1])
+        ;;
+      2)
+        AX_APPEND_COMPILE_FLAGS([-O2])
+        ;;
+      3)
+        AX_APPEND_COMPILE_FLAGS([-O3])
+        ;;
+      s)
+        AX_APPEND_COMPILE_FLAGS([-Os])
+        ;;
+      g)
+        AX_APPEND_COMPILE_FLAGS([-Og])
+        ;;
+      *)
+        AX_APPEND_COMPILE_FLAGS([-O2])
+        ;;
+    esac
   ])
-
-  # optimization level
-  case "${with_optimization_level}" in
-    no | 0)
-      AX_APPEND_COMPILE_FLAGS([-O0])
-      ;;
-    1)
-      AX_APPEND_COMPILE_FLAGS([-O1])
-      ;;
-    2)
-      AX_APPEND_COMPILE_FLAGS([-O2])
-      ;;
-    3)
-      AX_APPEND_COMPILE_FLAGS([-O3])
-      ;;
-    s)
-      AX_APPEND_COMPILE_FLAGS([-Os])
-      ;;
-    g)
-      AX_APPEND_COMPILE_FLAGS([-Og])
-      ;;
-    *)
-      AX_APPEND_COMPILE_FLAGS([-O2])
-      ;;
-  esac
 
   # default include directories
   AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}/include])

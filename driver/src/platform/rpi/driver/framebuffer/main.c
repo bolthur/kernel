@@ -56,39 +56,40 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
       message_id );
     // handle error / no message
     if ( errno ) {
+      EARLY_STARTUP_PRINT( "An error occurred: %s\r\n", strerror( errno ) )
       send = false;
       continue;
     }
+    EARLY_STARTUP_PRINT( "Received message!\r\n" )
     // evaluate response
     if ( ! response.success ) {
       send = true;
-      printf( "FAILED, TRYING AGAIN!\r\n" );
+      EARLY_STARTUP_PRINT( "FAILED, TRYING AGAIN!\r\n" )
       continue;
     }
-    // exit loop
-    break;
+    EARLY_STARTUP_PRINT( "Exit endless loop due to success!\r\n" )
+    // exit function
+    return;
   }
 }
 
 int main( __unused int argc, __unused char* argv[] ) {
   // print something
-  printf( "framebuffer processing!\r\n" );
+  EARLY_STARTUP_PRINT( "framebuffer processing!\r\n" )
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
-
-  printf( "pushing /dev/framebuffer to vfs!\r\n" );
-  // STDIN
+  // some output
+  EARLY_STARTUP_PRINT( "pushing /dev/framebuffer to vfs!\r\n" )
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
-  msg->entry_type = VFS_ENTRY_TYPE_FILE;
+  msg->info.st_mode = _IFREG;
   strcpy( msg->file_path, "/dev/framebuffer" );
   // perform add request
   send_add_request( msg );
-
-  // FIXME: REGISTER AT CONSOLE DAEMON FOR DEFAULT OUTPUT
-
+  // some output
+  EARLY_STARTUP_PRINT( "FIXME: REGISTER AT CONSOLE DAEMON FOR DEFAULT OUTPUT" )
   for(;;);
   return 0;
 }

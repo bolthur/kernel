@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/bolthur.h>
 #include "list.h"
 
 /**
@@ -385,7 +386,7 @@ void list_print( list_manager_ptr_t list ) {
 
   // loop through list until end
   while ( current ) {
-    printf( "list->data = %p", current->data );
+    EARLY_STARTUP_PRINT( "list->data = %p", current->data )
     // get next element
     current = current->next;
   }

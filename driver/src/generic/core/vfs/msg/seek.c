@@ -36,7 +36,6 @@
 void msg_handle_seek( void ) {
   pid_t sender;
   size_t message_id;
-  size_t size_message_id;
   vfs_seek_request_ptr_t request = ( vfs_seek_request_ptr_t )malloc(
     sizeof( vfs_seek_request_t ) );
   if ( ! request ) {
@@ -48,27 +47,10 @@ void msg_handle_seek( void ) {
     free( request );
     return;
   }
-  vfs_size_request_ptr_t size_request = ( vfs_size_request_ptr_t )malloc(
-    sizeof( vfs_size_request_t ) );
-  if ( ! size_request ) {
-    free( request );
-    free( response );
-    return;
-  }
-  vfs_size_response_ptr_t size_response = ( vfs_size_response_ptr_t )malloc(
-    sizeof( vfs_size_response_t ) );
-  if ( ! size_response ) {
-    free( request );
-    free( response );
-    free( size_request );
-    return;
-  }
   handle_container_ptr_t container;
   // clear variables
   memset( request, 0, sizeof( vfs_seek_request_t ) );
   memset( response, 0, sizeof( vfs_seek_response_t ) );
-  memset( size_request, 0, sizeof( vfs_size_request_t ) );
-  memset( size_response, 0, sizeof( vfs_size_response_t ) );
   // get message
   _message_receive(
     ( char* )request,
@@ -81,8 +63,6 @@ void msg_handle_seek( void ) {
     // free stuff
     free( request );
     free( response );
-    free( size_request );
-    free( size_response );
     return;
   }
   // try to get handle information
@@ -102,43 +82,15 @@ void msg_handle_seek( void ) {
     // free stuff
     free( request );
     free( response );
-    free( size_request );
-    free( size_response );
     // skip rest
     return;
   }
-  // get handling process
-  pid_t handling_process = container->target->pid;
-  // prepare size
-  size_message_id = 0;
-  bool send = true;
-  // prepare structure
-  size_request->handle = container->handle;
-  strcpy( size_request->file_path, container->path );
-  // get total size
-  while( true ) {
-    // send to handling process if not done
-    while ( send && 0 == size_message_id ) {
-      size_message_id = _message_send_by_pid(
-        handling_process,
-        VFS_SIZE_REQUEST,
-        ( const char* )size_request,
-        sizeof( vfs_size_request_t ),
-        0 );
-    };
-    // wait for response
-    _message_wait_for_response(
-      ( char* )size_response,
-      sizeof( vfs_size_response_t ),
-      size_message_id );
-    // handle error / no message
-    if ( errno ) {
-      send = false;
-      continue;
-    }
-    // exit loop
-    break;
-  }
+
+  /*EARLY_STARTUP_PRINT(
+    "%s - request->whence = %d, request->handle = %d, request->offset = %#lx\r\n",
+    container->path, request->whence, request->handle, request->offset
+  )*/
+
   // get current position
   off_t new_pos;
   // determine what to do
@@ -150,13 +102,15 @@ void msg_handle_seek( void ) {
       new_pos = container->pos + ( off_t )request->offset;
       break;
     case SEEK_END:
-      new_pos = ( off_t )size_response->total;
+      new_pos = ( off_t )container->target->st->st_size;
       break;
     default:
       new_pos = -1;
   }
+
+  //EARLY_STARTUP_PRINT( "container->pos = %#lx\r\n", new_pos )
   // build response
-  if ( 0 > new_pos || ( size_t )new_pos > size_response->total ) {
+  if ( 0 > new_pos || new_pos > container->target->st->st_size ) {
     // send errno via negative len
     response->position = -EINVAL;
   } else {
@@ -165,6 +119,7 @@ void msg_handle_seek( void ) {
     // push into response
     response->position = new_pos;
   }
+  //EARLY_STARTUP_PRINT( "container->pos = %#lx\r\n", new_pos )
   // send response
   _message_send_by_pid(
     sender,
@@ -176,6 +131,4 @@ void msg_handle_seek( void ) {
   // free stuff
   free( request );
   free( response );
-  free( size_request );
-  free( size_response );
 }

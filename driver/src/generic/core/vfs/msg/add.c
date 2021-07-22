@@ -74,7 +74,9 @@ void msg_handle_add( void ) {
   vfs_node_ptr_t node = vfs_node_by_path( request->file_path );
   if ( node ) {
     // debug output
-    printf( "Node \"%s\" already existing!\r\n", request->file_path );
+    EARLY_STARTUP_PRINT(
+      "Node \"%s\" already existing!\r\n",
+      request->file_path )
     // prepare response
     response->success = false;
     // send response
@@ -96,7 +98,9 @@ void msg_handle_add( void ) {
   node = vfs_node_by_path( str );
   if ( ! node ) {
     // debug output
-    printf( "Parent node \"%s\" for \"%s\" not found!\r\n", str, request->file_path );
+    EARLY_STARTUP_PRINT(
+      "Parent node \"%s\" for \"%s\" not found!\r\n",
+      str, request->file_path )
     free( str );
     // prepare response
     response->success = false;
@@ -119,7 +123,7 @@ void msg_handle_add( void ) {
   str = basename( request->file_path );
   // get target node
   char* target = NULL;
-  if ( VFS_ENTRY_TYPE_SYMLINK == request->entry_type ) {
+  if ( S_ISLNK( request->info.st_mode ) ) {
     // check for target is not set
     if ( 0 == strlen( request->linked_path ) ) {
       free( str );
@@ -162,9 +166,9 @@ void msg_handle_add( void ) {
     }
   }
   // add basename to path
-  if ( ! vfs_add_path( node, sender, str, request->entry_type, target ) ) {
+  if ( ! vfs_add_path( node, sender, str, target, &request->info ) ) {
     // debug output
-    printf( "Error: Couldn't add \"%s\"\r\n", request->file_path );
+    EARLY_STARTUP_PRINT( "Error: Couldn't add \"%s\"\r\n", request->file_path )
     free( str );
     if ( target ) {
       free( target );
@@ -186,7 +190,7 @@ void msg_handle_add( void ) {
     return;
   }
   // debug output
-  /*printf( "-------->VFS DEBUG_DUMP<--------\r\n" );
+  /*EARLY_STARTUP_PRINT( "-------->VFS DEBUG_DUMP<--------\r\n" )
   vfs_dump( NULL, NULL );*/
   free( str );
   if ( target ) {

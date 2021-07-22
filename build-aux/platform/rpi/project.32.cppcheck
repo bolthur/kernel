@@ -6,8 +6,8 @@
     <dir name="../../../include/lib/" />
     <dir name="../../../thirdparty/" />
     <dir name="../../../thirdparty/dtc/libfdt/" />
-    <dir name="/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/11.1.0/include/" />
-    <dir name="/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include/" />
+    <dir name="/opt/bolthur/cross/lib/gcc/arm-rpi2-bolthur-eabi/11.1.0/include/" />
+    <dir name="/opt/bolthur/sysroot/arm-rpi2-bolthur-eabi/include/" />
   </includedir>
   <exclude>
     <path name="../../../user_libc_test/"/>

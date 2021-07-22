@@ -69,7 +69,7 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
     // evaluate response
     if ( ! response.success ) {
       send = true;
-      printf( "FAILED, TRYING AGAIN!\r\n" );
+      EARLY_STARTUP_PRINT( "FAILED, TRYING AGAIN!\r\n" )
       continue;
     }
     // exit loop
@@ -79,7 +79,7 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
 
 int main( __unused int argc, __unused char* argv[] ) {
   // print something
-  printf( "tty processing!\r\n" );
+  EARLY_STARTUP_PRINT( "tty processing!\r\n" )
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
@@ -88,7 +88,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
-  msg->entry_type = VFS_ENTRY_TYPE_FILE;
+  msg->info.st_mode = _IFREG;
   strcpy( msg->file_path, "/dev/tty" );
   // perform add request
   send_add_request( msg );

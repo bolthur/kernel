@@ -40,8 +40,7 @@ static msg_command_handler_t handler_list[] = {
   { .type = VFS_READ_REQUEST, .handler = msg_handle_read, },
   { .type = VFS_WRITE_REQUEST, .handler = msg_handle_write, },
   { .type = VFS_SEEK_REQUEST, .handler = msg_handle_seek, },
-  { .type = VFS_SIZE_REQUEST, .handler = msg_handle_size, },
-  { .type = VFS_HAS_REQUEST, .handler = msg_handle_has, },
+  { .type = VFS_STAT_REQUEST, .handler = msg_handle_stat, },
 };
 
 /**
@@ -73,7 +72,7 @@ void msg_dispatch( vfs_message_type_t type ) {
   // handle invalid
   if ( ! handler ) {
     // debug output
-    printf( "Unknown message arrived - %d ( skip )\r\n", ( int )type );
+    EARLY_STARTUP_PRINT( "Unknown message arrived - %d ( skip )\r\n", ( int )type )
     // skip
     return;
   }

@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <sys/bolthur.h>
+#include <sys/sysmacros.h>
 #include <libgen.h>
 #include <stdnoreturn.h>
 #include <unistd.h>
@@ -180,63 +181,6 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
 }
 
 /**
- * @brief helper to check whether file exists or not
- *
- * @param str
- * @return true if exist, else false
- */
-__maybe_unused static bool check_for_path( const char* str ) {
-  vfs_has_request_ptr_t request = ( vfs_has_request_ptr_t )malloc(
-    sizeof( vfs_has_request_t ) );
-  if ( ! request ) {
-    return false;
-  }
-  vfs_has_response_ptr_t response = ( vfs_has_response_ptr_t )malloc(
-    sizeof( vfs_has_response_t ) );
-  if ( ! response ) {
-    free( request );
-    return false;
-  }
-  memset( request, 0, sizeof( vfs_has_request_t ) );
-  memset( response, 0, sizeof( vfs_has_response_t ) );
-  // prepare message
-  strcpy( request->path, str );
-  // message id variable
-  size_t message_id;
-  bool send = true;
-  // wait for response
-  while( true ) {
-    // send message
-    if ( send ) {
-      do {
-        message_id = _message_send_by_name(
-          "daemon:/vfs",
-          VFS_HAS_REQUEST,
-          ( const char* )request,
-          sizeof( vfs_has_request_t ),
-          0 );
-      } while ( 0 == message_id );
-    }
-    // wait for response
-    _message_wait_for_response(
-      ( char* )response,
-      sizeof( vfs_has_response_t ),
-      message_id );
-    // handle error / no message
-    if ( errno ) {
-      send = false;
-      continue;
-    }
-    bool success = response->success;
-    // free up
-    free( response );
-    free( request );
-    // return state
-    return success;
-  }
-}
-
-/**
  * @fn int execute_driver(char*)
  * @brief Helper to execute specific driver from ramdisk
  *
@@ -246,21 +190,21 @@ __maybe_unused static bool check_for_path( const char* str ) {
 static int execute_driver( char* name ) {
   pid_t forked_process = fork();
   if ( errno ) {
-    printf( "Unable to fork process for image replace: %s\r\n", strerror( errno ) );
+    EARLY_STARTUP_PRINT( "Unable to fork process for image replace: %s\r\n", strerror( errno ) );
     return -1;
   }
   // fork only
   if ( 0 == forked_process ) {
     char* base = basename( name );
     if ( ! base ) {
-      printf( "Basename failed!\r\n" );
+      EARLY_STARTUP_PRINT( "Basename failed!\r\n" );
       exit( -1 );
     }
     // build command
     char* cmd[] = { base, NULL, };
     // exec to replace
     if ( -1 == execv( name, cmd ) ) {
-      printf( "Exec failed: %s\r\n", strerror( errno ) );
+      EARLY_STARTUP_PRINT( "Exec failed: %s\r\n", strerror( errno ) );
       exit( 1 );
     }
   }
@@ -270,14 +214,14 @@ static int execute_driver( char* name ) {
 
 // noreturn function
 static void handle_normal_init( void ) {
-  execute_driver( "/ramdisk/core/console" );
+  //execute_driver( "/ramdisk/core/console" );
   execute_driver( "/ramdisk/driver/framebuffer" );
 
   // FIXME: FORK AND HANDLE FURTHER OUTCOMMENTED SETUP WITHIN FORKED PROCESS
 /*  // Get system console
   void* console_image = ramdisk_lookup_file( t, "core/console" );
   if ( ! console_image ) {
-    printf( "ERROR: console daemon not found!\r\n" );
+    EARLY_STARTUP_PRINT( "ERROR: console daemon not found!\r\n" );
     return -1;
   }
   // start startup and expect it to be third process
@@ -305,7 +249,7 @@ static void handle_normal_init( void ) {
   // Get tty
   void* tty_image = ramdisk_lookup_file( t, "core/tty" );
   if ( ! tty_image ) {
-    printf( "ERROR: tty daemon not found!\r\n" );
+    EARLY_STARTUP_PRINT( "ERROR: tty daemon not found!\r\n" );
     return -1;
   }
   // start startup and expect it to be third process
@@ -315,7 +259,7 @@ static void handle_normal_init( void ) {
   // startup image address
   void* startup_image = ramdisk_lookup_file( t, "core/startup" );
   if ( ! startup_image ) {
-    printf( "ERROR: console daemon not found!\r\n" );
+    EARLY_STARTUP_PRINT( "ERROR: console daemon not found!\r\n" );
     return -1;
   }
   // start startup and expect it to be third process
@@ -323,7 +267,7 @@ static void handle_normal_init( void ) {
   assert( -1 != startup_pid );*/
 
   // exit program!
-  printf( "Init done!\r\n" );
+  EARLY_STARTUP_PRINT( "Init done!\r\n" );
   exit( 0 );
 }
 
@@ -347,7 +291,7 @@ int main( int argc, char* argv[] ) {
   // ensure first process to be started
   assert( 1 == pid );
   // debug print
-  printf( "init processing\r\n" );
+  EARLY_STARTUP_PRINT( "init processing\r\n" );
 
   // transform arguments to hex
   ramdisk_compressed = strtoul( argv[ 1 ], NULL, 16 );
@@ -358,18 +302,18 @@ int main( int argc, char* argv[] ) {
 
   // check device tree
   if ( 0 != fdt_check_header( ( void* )device_tree ) ) {
-    printf( "ERROR: Invalid device tree header!\r\n" );
+    EARLY_STARTUP_PRINT( "ERROR: Invalid device tree header!\r\n" );
     return -1;
   }
 
   // debug print
-  printf( "ramdisk = %#0*"PRIxPTR"\r\n", address_size, ramdisk_compressed );
-  printf( "ramdisk_size = %zx\r\n", ramdisk_compressed_size );
-  printf( "device_tree = %#0*"PRIxPTR"\r\n", address_size, device_tree );
+  EARLY_STARTUP_PRINT( "ramdisk = %#0*"PRIxPTR"\r\n", address_size, ramdisk_compressed );
+  EARLY_STARTUP_PRINT( "ramdisk_size = %zx\r\n", ramdisk_compressed_size );
+  EARLY_STARTUP_PRINT( "device_tree = %#0*"PRIxPTR"\r\n", address_size, device_tree );
 
   tartype_t *mytype = malloc( sizeof( tartype_t ) );
   if ( !mytype ) {
-    printf( "ERROR: Cannot allocate necessary memory for tar stuff!\r\n" );
+    EARLY_STARTUP_PRINT( "ERROR: Cannot allocate necessary memory for tar stuff!\r\n" );
     return -1;
   }
   mytype->closefunc = my_tar_close;
@@ -377,38 +321,39 @@ int main( int argc, char* argv[] ) {
   mytype->readfunc = my_tar_read;
   mytype->writefunc = my_tar_write;
 
-  printf( "Starting deflate of init ramdisk\r\n" );
+  EARLY_STARTUP_PRINT( "Starting deflate of init ramdisk\r\n" );
   if ( 0 != tar_open( &disk, "/ramdisk.tar", mytype, O_RDONLY, 0, 0 ) ) {
-    printf( "ERROR: Cannot open ramdisk!\r\n" );
+    EARLY_STARTUP_PRINT( "ERROR: Cannot open ramdisk!\r\n" );
     return -1;
   }
 
   // dump ramdisk
   //ramdisk_dump( disk );
   // get vfs image
-  void* vfs_image = ramdisk_lookup_file( disk, "ramdisk/core/vfs" );
+  size_t vfs_size;
+  void* vfs_image = ramdisk_lookup_file( disk, "ramdisk/core/vfs", &vfs_size );
   assert( vfs_image );
   // fork process and handle possible error
-  printf( "Forking process for vfs start!\r\n" );
+  EARLY_STARTUP_PRINT( "Forking process for vfs start!\r\n" );
   pid_t forked_process = fork();
   if ( errno ) {
-    printf( "Unable to fork process for vfs replace: %s\r\n", strerror( errno ) );
+    EARLY_STARTUP_PRINT( "Unable to fork process for vfs replace: %s\r\n", strerror( errno ) );
     return -1;
   }
   // fork only
   if ( 0 == forked_process ) {
-    printf( "Replacing fork with vfs image!\r\n" );
+    EARLY_STARTUP_PRINT( "Replacing fork with vfs image!\r\n" );
     // call for replace and handle error
-    _process_replace( vfs_image, "daemon:/vfs", NULL, NULL );
+    _process_replace( vfs_image, "daemon:/vfs", NULL, NULL, vfs_size );
     if ( errno ) {
-      printf( "Unable to replace process with image: %s\r\n", strerror( errno ) );
+      EARLY_STARTUP_PRINT( "Unable to replace process with image: %s\r\n", strerror( errno ) );
       return -1;
     }
   }
-  printf( "Continuing with init startup!\r\n" );
+  EARLY_STARTUP_PRINT( "Continuing with init startup!\r\n" );
 
   // wait for vfs is available
-  printf( "Waiting until vfs is up!\r\n" );
+  EARLY_STARTUP_PRINT( "Waiting until vfs is up!\r\n" );
   while( true ) {
     // check for vfs is existing
     _message_has_by_name( "daemon:/vfs" );
@@ -420,87 +365,53 @@ int main( int argc, char* argv[] ) {
     break;
   }
 
-  printf( "Sending ramdisk files to vfs!\r\n" );
-  // FIXME: ADD IN THREE STEPS: 1st DIRECTORIES, 2nd FILES, 3rd SYMLINKS
+  EARLY_STARTUP_PRINT( "Sending ramdisk files to vfs!\r\n" );
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
   // create root ramdisk directory
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
 
-  printf( "SENDING FOLDERS TO VFS!\r\n" );
   // reset read offset
   ramdisk_read_offset = 0;
   // loop and add folders
   while ( th_read( disk ) == 0 ) {
     // handle directory, hard links, symbolic links and normal entries
-    if ( TH_ISDIR( disk ) ) {
-      // clear message structures
-      memset( msg, 0, sizeof( vfs_add_request_t ) );
-      msg->entry_type = VFS_ENTRY_TYPE_DIRECTORY;
-      // populate path into message
-      strcpy( msg->file_path, "/" );
-      strcat( msg->file_path, th_get_pathname( disk ) );
-      // send add request
-      send_add_request( msg );
-    }
-    // skip to next file
-    if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
-      printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
-      return -1;
-    }
-  }
-  printf( "SENDING FILES TO VFS!\r\n" );
-  // reset read offset
-  ramdisk_read_offset = 0;
-  // loop and add files
-  while ( th_read( disk ) == 0 ) {
-    // handle directory, hard links, symbolic links and normal entries
-    if ( TH_ISREG( disk ) ) {
-      // clear message structures
-      memset( msg, 0, sizeof( vfs_add_request_t ) );
-      msg->entry_type = VFS_ENTRY_TYPE_FILE;
-      // populate path into message
-      strcpy( msg->file_path, "/" );
-      strcat( msg->file_path, th_get_pathname( disk ) );
-      // send add request
-      send_add_request( msg );
-    }
-    // skip to next file
-    if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
-      printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
-      return -1;
-    }
-  }
-  printf( "SENDING LINKS TO VFS!\r\n" );
-  // reset read offset
-  ramdisk_read_offset = 0;
-  // loop and add links
-  while ( th_read( disk ) == 0 ) {
-    // handle directory, hard links, symbolic links and normal entries
+    // clear message structures
+    memset( msg, 0, sizeof( vfs_add_request_t ) );
+    // populate path into message
+    strncpy( msg->file_path, "/", PATH_MAX );
+    strncat( msg->file_path, th_get_pathname( disk ), PATH_MAX - 1 );
+    // add link name
     if ( TH_ISLNK( disk ) || TH_ISSYM( disk ) ) {
-      // clear message structures
-      memset( msg, 0, sizeof( vfs_add_request_t ) );
-      // set correct entry type
-      if ( TH_ISLNK( disk ) ) {
-        msg->entry_type = VFS_ENTRY_TYPE_HARDLINK;
-      } else if ( TH_ISSYM( disk ) ) {
-        msg->entry_type = VFS_ENTRY_TYPE_SYMLINK;
-      }
-
-      // get file and linkname
-      char* filename = th_get_pathname( disk );
-      char* linkname = th_get_linkname( disk );
-      // populate path into message
-      strcpy( msg->file_path, "/" );
-      strcat( msg->file_path, filename );
-      // populate linked path
-      strcpy( msg->linked_path, linkname );
-      // send add request
-      send_add_request( msg );
+      strncpy( msg->linked_path, th_get_linkname( disk ), PATH_MAX );
+      msg->info.st_size = ( off_t )strlen( msg->linked_path );
+    } else {
+      msg->info.st_size = ( off_t )th_get_size( disk );
     }
+    // populate stat info
+    msg->info.st_dev = makedev(
+      ( unsigned int )th_get_devmajor( disk ),
+      ( unsigned int )th_get_devminor( disk ) );
+    msg->info.st_ino = 0; // FIXME: ADD VALUE
+    msg->info.st_mode = th_get_mode( disk );
+    msg->info.st_nlink = 0; // FIXME: ADD VALUE
+    msg->info.st_uid = ( uid_t )oct_to_int( disk->th_buf.uid ); // th_get_uid( disk );
+    msg->info.st_gid = ( gid_t )oct_to_int( disk->th_buf.gid ); // th_get_gid( disk );
+    msg->info.st_rdev = 0; // FIXME: ADD VALUE
+    msg->info.st_atim.tv_sec = 0; // FIXME: ADD VALUE
+    msg->info.st_atim.tv_nsec = 0; // FIXME: ADD VALUE
+    msg->info.st_mtim.tv_sec = th_get_mtime( disk );
+    msg->info.st_mtim.tv_nsec = 0; // FIXME: ADD VALUE
+    msg->info.st_ctim.tv_sec = 0; // FIXME: ADD VALUE
+    msg->info.st_ctim.tv_nsec = 0; // FIXME: ADD VALUE
+    msg->info.st_blksize = T_BLOCKSIZE;
+    msg->info.st_blocks = ( msg->info.st_size / T_BLOCKSIZE )
+      + ( msg->info.st_size % T_BLOCKSIZE ? 1 : 0 );
+    // send add request
+    send_add_request( msg );
     // skip to next file
     if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
-      printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
+      EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
       return -1;
     }
   }
@@ -508,10 +419,10 @@ int main( int argc, char* argv[] ) {
   free( msg );
 
   // fork process and handle possible error
-  printf( "Forking process for further init!\r\n" );
+  EARLY_STARTUP_PRINT( "Forking process for further init!\r\n" );
   forked_process = fork();
   if ( errno ) {
-    printf( "Unable to fork process for init continue: %s\r\n", strerror( errno ) );
+    EARLY_STARTUP_PRINT( "Unable to fork process for init continue: %s\r\n", strerror( errno ) );
     return -1;
   }
   // handle ongoing init in forked process
@@ -519,7 +430,7 @@ int main( int argc, char* argv[] ) {
     handle_normal_init();
   }
 
-  printf( "Entering message loop!\r\n" );
+  EARLY_STARTUP_PRINT( "Entering message loop!\r\n" );
   while( true ) {
     // get message type
     vfs_message_type_t type = _message_receive_type();
@@ -553,7 +464,7 @@ int main( int argc, char* argv[] ) {
       );
       // handle error
       if ( errno ) {
-        printf( "Read error: %s\r\n", strerror( errno ) );
+        EARLY_STARTUP_PRINT( "Read error: %s\r\n", strerror( errno ) );
         free( request );
         free( response );
         continue;
@@ -561,7 +472,7 @@ int main( int argc, char* argv[] ) {
       // get rid of mount point
       char* file = request->file_path;
       char* buf = NULL;
-//      printf( "file = %s\r\n", file );
+//      EARLY_STARTUP_PRINT( "file = %s\r\n", file );
       // strip leading slash
       if ( '/' == *file ) {
         file++;
@@ -583,7 +494,7 @@ int main( int argc, char* argv[] ) {
           }
           // skip to next file
           if ( tar_skip_regfile( disk ) != 0 ) {
-            printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
+            EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
             return -1;
           }
         }
@@ -611,8 +522,9 @@ int main( int argc, char* argv[] ) {
       if ( total > total_size ) {
         amount -= ( total - total_size );
       }
-//      printf( "init->read: amount = %d ( %#x ), offset = %ld ( %#lx ), total = %d ( %#x )\r\n",
-//        amount, amount, request->offset, request->offset, total, total );
+      /*EARLY_STARTUP_PRINT(
+        "read amount = %d ( %#x ), offset = %ld ( %#lx ), total = %d ( %#x )\r\n",
+        amount, amount, request->offset, request->offset, total, total );*/
       // now copy
       memcpy( response->data, buf + request->offset, amount );
       response->len = ( ssize_t )amount;
@@ -624,75 +536,6 @@ int main( int argc, char* argv[] ) {
         sizeof( vfs_read_response_t ),
         message_id );
       // free stuff
-      free( request );
-      free( response );
-      continue;
-    // handle stat request
-    } else if ( VFS_SIZE_REQUEST == type ) {
-      vfs_size_request_ptr_t request = ( vfs_size_request_ptr_t )malloc(
-        sizeof( vfs_size_request_t ) );
-      if ( ! request ) {
-        continue;
-      }
-      vfs_size_response_ptr_t response = ( vfs_size_response_ptr_t )malloc(
-        sizeof( vfs_size_response_t ) );
-      if ( ! response ) {
-        free( request );
-        continue;
-      }
-      pid_t sender = 0;
-      size_t message_id = 0;
-      memset( request, 0, sizeof( vfs_size_request_t ) );
-      memset( response, 0, sizeof( vfs_size_response_t ) );
-      // get message
-      _message_receive(
-        ( char* )request,
-        sizeof( vfs_size_request_t ),
-        &sender,
-        &message_id
-      );
-      // handle error
-      if ( errno ) {
-        free( request );
-        free( response );
-        continue;
-      }
-      // get rid of mount point
-      char* file = request->file_path;
-      // strip leading slash
-      if ( '/' == *file ) {
-        file++;
-      }
-      size_t total_size = 0;
-      // reset read offset
-      ramdisk_read_offset = 0;
-      // try to find within ramdisk
-      while ( th_read( disk ) == 0 ) {
-        if ( TH_ISREG( disk ) ) {
-          // get filename
-          char* ramdisk_file = th_get_pathname( disk );
-          // check for match
-          if ( 0 == strcmp( file, ramdisk_file ) ) {
-            // set vfs image addr
-            total_size = th_get_size( disk );
-            break;
-          }
-          // skip to next file
-          if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
-            printf( "tar_skip_regfile(): %s\n", strerror( errno ) );
-            return -1;
-          }
-        }
-      }
-      // set message
-      response->total = total_size;
-      // send response
-      _message_send_by_pid(
-        sender,
-        VFS_SIZE_RESPONSE,
-        ( const char* )response,
-        sizeof( vfs_size_response_t ),
-        message_id );
       free( request );
       free( response );
       continue;

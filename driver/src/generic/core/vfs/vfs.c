@@ -44,6 +44,9 @@ static void vfs_destroy_node( vfs_node_ptr_t node ) {
   if ( node->name ) {
     free( node->name );
   }
+  if ( node->st ) {
+    free( node->st );
+  }
   if ( node->target ) {
     free( node->target );
   }
@@ -54,7 +57,7 @@ static void vfs_destroy_node( vfs_node_ptr_t node ) {
 }
 
 /**
- * @fn vfs_node_ptr_t vfs_prepare_node(pid_t, const char*, uint32_t, vfs_node_ptr_t, char*)
+ * @fn vfs_node_ptr_t vfs_prepare_node(pid_t, const char*, struct stat*, vfs_node_ptr_t, char*)
  * @brief Create and prepare vfs node
  *
  * @param pid
@@ -67,7 +70,7 @@ static void vfs_destroy_node( vfs_node_ptr_t node ) {
 static vfs_node_ptr_t vfs_prepare_node(
   pid_t pid,
   const char* name,
-  uint32_t flags,
+  struct stat* st,
   vfs_node_ptr_t parent,
   char* target
 ) {
@@ -84,10 +87,16 @@ static vfs_node_ptr_t vfs_prepare_node(
     vfs_destroy_node( node );
     return NULL;
   }
+  // allocate stat
+  node->st = malloc( sizeof( struct stat ) );
+  if ( ! node->name ) {
+    vfs_destroy_node( node );
+    return NULL;
+  }
   // copy name, save current pid as handler and set flag to directory
   strcpy( node->name, name );
+  memcpy( node->st, st, sizeof( struct stat ) );
   node->pid = pid;
-  node->flags = flags;
   if ( target ) {
     node->target = strdup( target );
     if ( ! node->target ) {
@@ -151,19 +160,30 @@ vfs_node_ptr_t vfs_setup( pid_t current_pid ) {
   // necessary variables
   vfs_node_ptr_t ipc;
   vfs_node_ptr_t dev;
+
+  // dummy stat structure for folders
+  struct stat st_dir;
+  struct stat st_file;
+  memset( &st_dir, 0, sizeof( struct stat ) );
+  memset( &st_file, 0, sizeof( struct stat ) );
+  // set only necessary attributes
+  st_dir.st_mode = _IFDIR;
+  st_file.st_mode = _IFREG;
+  st_file.st_size = 0;
+
   // allocate minimum necessary nodes
   if (
     // create root node
-    ! ( root = vfs_prepare_node( current_pid, "/", VFS_DIRECTORY, NULL, NULL ) )
+    ! ( root = vfs_prepare_node( current_pid, "/", &st_dir, NULL, NULL ) )
     // create process, ipc and dev node
-    || ! vfs_prepare_node( current_pid, "process", VFS_DIRECTORY, root, NULL )
-    || ! ( ipc = vfs_prepare_node( current_pid, "ipc", VFS_DIRECTORY, root, NULL ) )
-    || ! ( dev = vfs_prepare_node( current_pid, "dev", VFS_DIRECTORY, root, NULL ) )
+    || ! vfs_prepare_node( current_pid, "process", &st_dir, root, NULL )
+    || ! ( ipc = vfs_prepare_node( current_pid, "ipc", &st_dir, root, NULL ) )
+    || ! ( dev = vfs_prepare_node( current_pid, "dev", &st_dir, root, NULL ) )
     // populate dev null file node
-    || ! vfs_prepare_node( current_pid, "null", VFS_FILE, dev, NULL )
+    || ! vfs_prepare_node( current_pid, "null", &st_file, dev, NULL )
     // populate ipc node
-    || ! vfs_prepare_node( current_pid, "shared", VFS_DIRECTORY, ipc, NULL )
-    || ! vfs_prepare_node( current_pid, "message", VFS_DIRECTORY, ipc, NULL )
+    || ! vfs_prepare_node( current_pid, "shared", &st_dir, ipc, NULL )
+    || ! vfs_prepare_node( current_pid, "message", &st_dir, ipc, NULL )
   ) {
     // destroy recursively by starting with root
     vfs_destroy( root );
@@ -174,48 +194,30 @@ vfs_node_ptr_t vfs_setup( pid_t current_pid ) {
 }
 
 /**
- * @fn bool vfs_add_path(vfs_node_ptr_t, pid_t, const char*, vfs_entry_type_t, char*)
+ * @fn bool vfs_add_path(vfs_node_ptr_t, pid_t, const char*, char*, struct stat*)
  * @brief Add path to vfs
  *
  * @param node node object
  * @param handler handling process
  * @param path path to add
- * @param type file type
  * @param target optional target path necessary for links
+ * @param st
  * @return
  */
 bool vfs_add_path(
   vfs_node_ptr_t node,
   pid_t handler,
   const char* path,
-  vfs_entry_type_t type,
-  char* target
+  char* target,
+  struct stat* st
 ) {
-  // variables
-  uint32_t flags = 0;
-
   // handle no parent node
   if ( ! node ) {
     return false;
   }
 
-  // determine type
-  switch( type ) {
-    case VFS_ENTRY_TYPE_FILE:
-      flags |= VFS_FILE;
-      break;
-    case VFS_ENTRY_TYPE_DIRECTORY:
-      flags |= VFS_DIRECTORY;
-      break;
-    case VFS_ENTRY_TYPE_SYMLINK:
-      flags |= VFS_SYMLINK;
-      break;
-    default:
-      return false;
-  }
-
   // return prepared node
-  return vfs_prepare_node( handler, path, flags, node, target );
+  return vfs_prepare_node( handler, path, st, node, target );
 }
 
 /**
@@ -235,16 +237,15 @@ void vfs_dump( vfs_node_ptr_t node, const char* level_prefix ) {
   if ( ! level_prefix ) {
     prefix_len = 2;
   } else {
-    printf( "%s", level_prefix );
-    if ( strlen( level_prefix ) != strlen( "/" ) ) {
-      printf( "%c", '/' );
-    }
-    printf( "%s\r\n", node->name );
-    prefix_len = strlen( level_prefix ) + 1;
+    prefix_len = strlen( level_prefix );
+    EARLY_STARTUP_PRINT(
+      "%s%c%s\r\n",
+      level_prefix, prefix_len != strlen( "/" ) ? '/' : '\b', node->name )
+    prefix_len++;
   }
 
   // handle non folder
-  if ( node->flags != VFS_DIRECTORY ) {
+  if ( ! S_ISDIR( node->st->st_mode ) ) {
     return;
   }
 

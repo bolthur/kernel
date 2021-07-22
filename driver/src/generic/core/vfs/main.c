@@ -50,13 +50,16 @@ int main( __unused int argc, __unused char* argv[] ) {
   vfs_message_type_t type;
 
   // print something
-  //printf( "vfs processing!\r\n" );
+  EARLY_STARTUP_PRINT( "vfs processing!\r\n" )
   // cache current pid
+  EARLY_STARTUP_PRINT( "fetching pid!\r\n" )
   pid = getpid();
   // setup handle tree and vfs
+  EARLY_STARTUP_PRINT( "initializing!\r\n" )
   handle_init();
   assert( vfs_setup( pid ) );
 
+  EARLY_STARTUP_PRINT( "entering message loop!\r\n" )
   while( true ) {
     // get message type
     type = _message_receive_type();

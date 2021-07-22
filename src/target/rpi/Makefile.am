@@ -10,6 +10,7 @@ BUILT_SOURCES = \
   ${abs_top_builddir}/src/lib/collection/libcollection.la \
   ${abs_top_builddir}/src/lib/libc/libc.la \
   ${abs_top_builddir}/src/lib/tar/libtar.la \
+  ${abs_top_builddir}/src/lib/libduplicate.la \
   ${abs_top_builddir}/src/lib/libssp.la \
   ${abs_top_builddir}/src/lib/libubsan.la \
   libtarget.la \
@@ -30,6 +31,7 @@ libtarget_la_DEPENDENCIES = \
   ${abs_top_builddir}/src/lib/collection/libcollection.la \
   ${abs_top_builddir}/src/lib/libc/libc.la \
   ${abs_top_builddir}/src/lib/tar/libtar.la \
+  ${abs_top_builddir}/src/lib/libduplicate.la \
   ${abs_top_builddir}/src/lib/libssp.la \
   ${abs_top_builddir}/src/lib/libubsan.la
 libtarget_la_SOURCES =
@@ -44,6 +46,7 @@ libtarget_la_LIBADD = \
   ${abs_top_builddir}/src/lib/collection/libcollection.la \
   ${abs_top_builddir}/src/lib/libc/libc.la \
   ${abs_top_builddir}/src/lib/tar/libtar.la \
+  ${abs_top_builddir}/src/lib/libduplicate.la \
   ${abs_top_builddir}/src/lib/libssp.la \
   ${abs_top_builddir}/src/lib/libubsan.la
 libtarget_la_LDFLAGS = -all-static -Wl,-static

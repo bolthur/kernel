@@ -17,12 +17,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include <inttypes.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 #include <tar.h>
+#include <duplicate.h>
+#include <core/elf.h>
 #include <core/panic.h>
 #include <core/initrd.h>
 #include <core/event.h>
@@ -850,4 +853,216 @@ void task_process_prepare_kill( void* context, task_process_ptr_t proc ) {
   list_push_back( process_manager->process_to_cleanup, proc );
   // trigger schedule and cleanup
   event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+}
+
+/**
+ * @fn int task_process_replace(task_process_ptr_t, uintptr_t, const char*, const char**, const char**, void*)
+ * @brief Replace current process with elf image
+ *
+ * @param proc
+ * @param elf
+ * @param name
+ * @param argv
+ * @param env
+ * @param context
+ * @return
+ */
+int task_process_replace(
+  task_process_ptr_t proc,
+  uintptr_t elf,
+  const char* name,
+  const char** argv,
+  const char** env,
+  void* context
+) {
+  bool replace_current_thread = task_thread_current_thread->process == proc;
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "task_thread_current_thread->process = %p, proc = %p\r\n",
+      ( void* )task_thread_current_thread->process, ( void* )proc )
+  #endif
+
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Duplicate argv\r\n" )
+  #endif
+  // save argv and env if existing
+  char** tmp_argv = duplicate( argv );
+  if ( ! tmp_argv ) {
+    return -ENOMEM;
+  }
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Duplicate env\r\n" )
+  #endif
+  char** tmp_env = duplicate( env );
+  if ( ! tmp_env ) {
+    free( tmp_argv );
+    return -ENOMEM;
+  }
+
+  // save image temporary
+  size_t image_size = elf_image_size( ( uintptr_t )elf );
+  void* image = ( void* )malloc( sizeof( char ) * image_size );
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "image = %#p, image_size = %#x\r\n", image, image_size )
+  #endif
+  // handle error
+  if ( ! image ) {
+    free( tmp_argv );
+    free( tmp_env );
+    return -ENOMEM;
+  }
+  memcpy( image, ( void* )elf, image_size );
+
+  // save name temporary
+  size_t name_size = strlen( name ) + 1;
+  char* saved_name = ( char* )malloc( name_size * sizeof( char ) );
+  // handle error
+  if ( ! saved_name ) {
+    free( tmp_argv );
+    free( tmp_env );
+    free( image );
+    return -ENOMEM;
+  }
+  strcpy( saved_name, name );
+
+  // clear all assigned shared areas
+  if ( ! shared_memory_cleanup_process( proc ) ) {
+    free( tmp_argv );
+    free( tmp_env );
+    free( image );
+    free( saved_name );
+    task_process_prepare_kill( context, proc );
+    return -ENOMEM;
+  }
+
+  // destroy virtual context
+  if ( ! virt_destroy_context(
+    proc->virtual_context,
+    true
+  ) ) {
+    free( tmp_argv );
+    free( tmp_env );
+    free( image );
+    free( saved_name );
+    task_process_prepare_kill( context, proc );
+    return -ENOMEM;
+  }
+
+  // destroy thread manager
+  if ( proc->thread_manager ) {
+    task_thread_destroy( proc->thread_manager );
+  }
+  // destroy stack manager
+  if ( proc->thread_stack_manager ) {
+    task_stack_manager_destroy( proc->thread_stack_manager );
+  }
+
+  // recreate thread manager and stack manager
+  proc->thread_manager = task_thread_init();
+  if ( ! proc->thread_manager ) {
+    free( tmp_argv );
+    free( tmp_env );
+    free( image );
+    free( saved_name );
+    task_process_prepare_kill( context, proc );
+    return -ENOMEM;
+  }
+  proc->thread_stack_manager = task_stack_manager_create();
+  if ( ! proc->thread_stack_manager ) {
+    free( tmp_argv );
+    free( tmp_env );
+    free( image );
+    free( saved_name );
+    task_process_prepare_kill( context, proc );
+    return -ENOMEM;
+  }
+
+  // load elf image
+  uintptr_t init_entry = elf_load( ( uintptr_t )image, proc );
+  if ( ! init_entry ) {
+    free( tmp_argv );
+    free( tmp_env );
+    free( image );
+    free( saved_name );
+    task_process_prepare_kill( context, proc );
+    return -ENOMEM;
+  }
+  // add thread
+  task_thread_ptr_t new_current = task_thread_create( init_entry, proc, 0 );
+  if ( ! new_current ) {
+    free( tmp_argv );
+    free( tmp_env );
+    free( image );
+    free( saved_name );
+    task_process_prepare_kill( context, proc );
+    return -ENOMEM;
+  }
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "new_current->current_context = %p\r\n", new_current->current_context )
+  #endif
+  // remove old process name and pass new one
+  task_process_name_ptr_t name_entry = task_process_get_name_list( proc->name );
+  if ( name_entry ) {
+    list_remove_data( name_entry->process, proc );
+  }
+
+  // push arguments and environment
+  if ( ! task_thread_push_arguments( new_current, tmp_argv, tmp_env ) ) {
+    free( tmp_argv );
+    free( tmp_env );
+    free( image );
+    free( saved_name );
+    task_process_prepare_kill( context, proc );
+    return -ENOMEM;
+  }
+
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Replace process name\r\n" )
+  #endif
+  // replace process structure name
+  free( proc->name );
+  proc->name = ( char* )malloc( name_size * sizeof( char ) );
+  if ( ! proc->name ) {
+    free( tmp_argv );
+    free( tmp_env );
+    free( image );
+    free( saved_name );
+    task_process_prepare_kill( context, proc );
+    return -ENOMEM;
+  }
+  strcpy( proc->name, saved_name );
+
+  // remove old process name and pass new one
+  name_entry = task_process_get_name_list( saved_name );
+  if ( ! name_entry ) {
+    free( tmp_argv );
+    free( tmp_env );
+    free( image );
+    free( saved_name );
+    task_process_prepare_kill( context, proc );
+    return -ENOMEM;
+  }
+  // add new process name
+  if ( ! list_push_back( name_entry->process, proc ) ) {
+    free( tmp_argv );
+    free( tmp_env );
+    free( image );
+    free( saved_name );
+    task_process_prepare_kill( context, proc );
+    return -ENOMEM;
+  }
+
+  // free temporary stuff
+  free( tmp_argv );
+  free( tmp_env );
+  free( image );
+  free( saved_name );
+
+  // replace new current thread
+  if ( replace_current_thread ) {
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "Replace current thread!\r\n" );
+    #endif
+    task_thread_current_thread = new_current;
+  }
+  return 0;
 }
