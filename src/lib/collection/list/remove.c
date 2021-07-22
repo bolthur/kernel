@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,33 +17,33 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <list.h>
+#include <collection/list.h>
 
 /**
  * @brief Remove list item
  *
  * @param list
  * @param item
+ * @return true
+ * @return false
  */
-void list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
-  // assert existence
-  assert( NULL != list && NULL != item );
-
+bool list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
+  // handle invalid parameter
+  if ( ! list || ! item ) {
+    return false;
+  }
   // stop if not existing
-  if ( NULL == list_lookup_item( list, item ) ) {
-    return;
+  if ( ! list_lookup_item( list, item ) ) {
+    return false;
   }
 
   // set previous of next
-  if ( NULL != item->next ) {
+  if ( item->next ) {
     item->next->previous = item->previous;
   }
 
   // set next of previous
-  if ( NULL != item->previous ) {
+  if ( item->previous ) {
     item->previous->next = item->next;
   }
 
@@ -58,5 +57,50 @@ void list_remove( list_manager_ptr_t list, list_item_ptr_t item ) {
   }
 
   // free list item
-  free( item );
+  list->cleanup( item );
+  return true;
+}
+
+/**
+ * @brief Remove list item
+ *
+ * @param list
+ * @param data
+ * @return true
+ * @return false
+ */
+bool list_remove_data( list_manager_ptr_t list, void* data ) {
+  // handle invalid parameter
+  if ( ! list || ! data ) {
+    return false;
+  }
+
+  // stop if not existing
+  list_item_ptr_t item = list_lookup_data( list, data );
+  if ( ! item ) {
+    return false;
+  }
+
+  // set previous of next
+  if ( item->next ) {
+    item->next->previous = item->previous;
+  }
+
+  // set next of previous
+  if ( item->previous ) {
+    item->previous->next = item->next;
+  }
+
+  // handle head removal
+  if ( item == list->first ) {
+    list->first = item->next;
+  }
+  // handle foot removal
+  if ( item == list->last ) {
+    list->last = item->previous;
+  }
+
+  // free list item
+  list->cleanup( item );
+  return true;
 }

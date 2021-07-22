@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,10 +19,7 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <assert.h>
 
-#include <core/panic.h>
-#include <core/mm/virt.h>
 #include <core/mm/heap.h>
 
 /**
@@ -33,7 +29,11 @@
  * @param size size to allocate
  * @return void* reserved memory
  */
-void* aligned_alloc( size_t alignment, size_t size ) {
+__allocator void* aligned_alloc( size_t alignment, size_t size ) {
+  // standard conformance
+  if ( 0 == size ) {
+    return NULL;
+  }
   // use heap allocation
   return ( void* )heap_allocate_block( alignment, size );
 }

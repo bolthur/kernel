@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,10 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_PROCESS )
+  #include <core/debug/debug.h>
+#endif
 #include <core/task/stack.h>
 #include <core/task/process.h>
 
@@ -66,7 +66,7 @@ static int32_t task_stack_callback(
  */
 void task_stack_manager_destroy( task_stack_manager_ptr_t manager ) {
   // handle invalid
-  if ( NULL == manager ) {
+  if ( ! manager ) {
     return;
   }
 
@@ -86,12 +86,18 @@ task_stack_manager_ptr_t task_stack_manager_create( void ) {
   // allocate manager
   task_stack_manager_ptr_t manager = ( task_stack_manager_ptr_t )malloc(
     sizeof( task_stack_manager_t ) );
-  // assert allocation
-  assert( NULL != manager );
+  // check allocation
+  if ( ! manager ) {
+    return NULL;
+  }
   // prepare
   memset( ( void* )manager, 0, sizeof( task_stack_manager_t ) );
   // create tree
-  manager->tree = avl_create_tree( task_stack_callback );
+  manager->tree = avl_create_tree( task_stack_callback, NULL, NULL );
+  if ( ! manager->tree ) {
+    free( manager );
+    return NULL;
+  }
   // return manager
   return manager;
 }
@@ -100,15 +106,54 @@ task_stack_manager_ptr_t task_stack_manager_create( void ) {
  * @brief Add stack to manager
  *
  * @param stack stack to add
+ * @param manager task stack manager
+ * @return true
+ * @return false
  */
-void task_stack_manager_add(
+bool task_stack_manager_add(
   uintptr_t stack,
   task_stack_manager_ptr_t manager
 ) {
-  // assert manager
-  assert( NULL != manager );
+  // check manager
+  if ( ! manager ) {
+    return false;
+  }
   // create node
   avl_node_ptr_t node = avl_create_node( ( void* )stack );
+  // handle error
+  if ( ! node ) {
+    return false;
+  }
   // insert node
-  avl_insert_by_node( manager->tree, node );
+  return avl_insert_by_node( manager->tree, node );
+}
+
+/**
+ * @brief Remove stack from manager
+ *
+ * @param stack stack to remove
+ * @param manager manager
+ * @return true
+ * @return false
+ */
+bool task_stack_manager_remove(
+  uintptr_t stack,
+  task_stack_manager_ptr_t manager
+) {
+  // check manager
+  if ( ! manager ) {
+    return false;
+  }
+  // try to get node
+  avl_node_ptr_t node = avl_find_by_data( manager->tree, ( void* )stack );
+  // handle not found
+  if ( ! node ) {
+    return true;
+  }
+  // remove node
+  avl_remove_by_node( manager->tree, node );
+  // free node
+  free( node );
+  // return success
+  return true;
 }

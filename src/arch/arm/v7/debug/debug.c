@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,11 +19,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <stddef.h>
-#include <core/panic.h>
-#include <core/debug/debug.h>
-#include <arch/arm/barrier.h>
-#include <arch/arm/v7/cpu.h>
+#if defined( PRINT_EXCEPTION )
+  #include <core/debug/debug.h>
+#endif
 #include <arch/arm/v7/debug/debug.h>
 
 /**
@@ -35,7 +32,8 @@
  */
 bool debug_check_data_fault_status( void ) {
   // variable for data fault status register
-  uint32_t dfsr_content, dfsr_state;
+  uint32_t dfsr_content;
+  uint32_t dfsr_state;
   // read data fault status register
   __asm__ __volatile__(
     "mrc p15, 0, %0, c5, c0, 0"
@@ -51,7 +49,7 @@ bool debug_check_data_fault_status( void ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "dfsr_content = %#08x, dfsr_state = %#08x\r\n",
-      dfsr_content, dfsr_state );
+      dfsr_content, dfsr_state )
   #endif
   // check for debug event
   if ( dfsr_content & ( 1 << 9 ) ) {
@@ -68,7 +66,8 @@ bool debug_check_data_fault_status( void ) {
  */
 bool debug_check_instruction_fault( void ) {
   // variable for instruction fault status register
-  uint32_t ifsr_content, ifsr_state;
+  uint32_t ifsr_content;
+  uint32_t ifsr_state;
   // read instruction fault status register
   __asm__ __volatile__(
     "mrc p15, 0, %0, c5, c0, 1"
@@ -84,7 +83,7 @@ bool debug_check_instruction_fault( void ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "ifsr_content = %#08x, ifsr_state = %#08x\r\n",
-      ifsr_content, ifsr_state );
+      ifsr_content, ifsr_state )
   #endif
   // check for debug event
   if ( ifsr_content & ( 1 << 9 ) ) {

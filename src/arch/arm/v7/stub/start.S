@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -25,6 +24,8 @@
 #include <arch/arm/stack.h>
 
 .section .text
+
+IMPORT( kernel_main )
 
 EXPORT( arch_start )
 arch_start:

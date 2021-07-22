@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,9 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <assert.h>
-#include <list.h>
+#include <collection/list.h>
 
 /**
  * @brief Method checks for list is empty
@@ -29,13 +26,15 @@
  * @return false at least one item
  */
 bool list_empty( list_manager_ptr_t list ) {
-  // assert existence
-  assert( NULL != list );
+  // check parameter
+  if ( ! list ) {
+    return true;
+  }
 
   // check first and last item
   if (
-    NULL == list->first
-    && NULL == list->last
+    ! list->first
+    && ! list->last
   ) {
     // list empty
     return true;

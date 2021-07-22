@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -25,6 +24,12 @@
 
 // forward declaration for save of parameter
 IMPORT( firmware_info )
+// import used functions
+IMPORT( bss_startup_clear )
+IMPORT( fpu_enable )
+IMPORT( virt_startup_setup )
+IMPORT( firmware_startup_init )
+IMPORT( initrd_startup_init )
 
 // only when extension define is set
 #if defined( BCM2836 ) || defined( BCM2837 )
@@ -112,7 +117,7 @@ reset:
     mcrr p15, 1, r3, r1, c15
   #endif
 
-  // Disable caches within system controll register
+  // Disable caches within system control register
   mrc p15, 0, r3, c1, c0, 0
   // disable data cache
   bic r3, r3, #( 1 << 2 )

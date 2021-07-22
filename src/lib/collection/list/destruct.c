@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,10 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
 #include <stdlib.h>
-#include <assert.h>
-#include <list.h>
+#include <collection/list.h>
 
 /**
  * @brief Method to destruct list
@@ -29,20 +26,23 @@
  * @param list list to use
  */
 void list_destruct( list_manager_ptr_t list ) {
-  list_item_ptr_t current, next;
+  list_item_ptr_t current;
+  list_item_ptr_t next;
 
-  // assert list
-  assert( NULL != list );
+  // check parameter
+  if ( ! list ) {
+    return;
+  }
   // populate current
   current = list->first;
 
   // loop through list until end
-  while ( NULL != current ) {
+  while ( current ) {
     // get next element
     next = current->next;
 
-    // free current element
-    free( current );
+    // additional cleanup
+    list->cleanup( current );
 
     // overwrite current with next
     current = next;

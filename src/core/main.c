@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,13 +18,12 @@
  */
 
 #include <stdint.h>
+#include <string.h>
 #include <stdnoreturn.h>
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
 #include <core/arch.h>
-#include <core/elf/common.h>
+#include <core/elf.h>
 #include <core/tty.h>
 #include <core/interrupt.h>
 #include <core/timer.h>
@@ -33,9 +31,11 @@
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
 #include <core/mm/heap.h>
+#include <core/mm/shared.h>
 #include <core/event.h>
 #include <core/task/process.h>
 #include <core/syscall.h>
+#include <core/message.h>
 
 #if defined( REMOTE_DEBUG )
   #include <core/serial.h>
@@ -43,7 +43,6 @@
 #endif
 
 #include <tar.h>
-#include <core/panic.h>
 #include <core/initrd.h>
 
 #include <arch/arm/firmware.h>
@@ -58,11 +57,11 @@ void kernel_main( void );
  */
 noreturn void kernel_main( void ) {
   // Setup early heap for malloc / free support
-  DEBUG_OUTPUT( "[bolthur/kernel -> heap] early heap initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> heap] early heap initialize ...\r\n" )
   heap_init( HEAP_INIT_EARLY );
 
   // setup tty for output
-  DEBUG_OUTPUT( "[bolthur/kernel -> heap] tty initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel ->tty] initialize ...\r\n" )
   tty_init();
 
   // Some initial output :)
@@ -70,148 +69,98 @@ noreturn void kernel_main( void ) {
     "bolthur/kernel " PACKAGE_VERSION " ( commit #" PACKAGE_REVISION
     " ) compiled with " PACKAGE_COMPILER " for target " PACKAGE_ARCHITECTURE
     " \r\n"
-  );
+  )
 
   // Setup event system
-  DEBUG_OUTPUT( "[bolthur/kernel -> event] initialize ...\r\n" );
-  event_init();
+  DEBUG_OUTPUT( "[bolthur/kernel -> event] initialize ...\r\n" )
+  assert( event_init() )
 
   // Setup interrupt
-  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> interrupt] initialize ...\r\n" )
   interrupt_init();
 
   // remote gdb debugging
   #if defined( REMOTE_DEBUG )
     // initialize serial
-    DEBUG_OUTPUT( "[bolthur/kernel -> serial ] serial init ...\r\n" );
+    DEBUG_OUTPUT( "[bolthur/kernel -> serial ] serial init ...\r\n" )
     serial_init();
 
     // register serial interrupt ( irg/fiq )
-    DEBUG_OUTPUT( "[bolthur/kernel -> serial ] register interrupt ...\r\n" );
-    serial_register_interrupt();
+    DEBUG_OUTPUT( "[bolthur/kernel -> serial ] register interrupt ...\r\n" )
+    assert( serial_register_interrupt() )
 
     // Setup gdb stub
-    DEBUG_OUTPUT( "[bolthur/kernel -> debug -> gdb] initialize ...\r\n" );
+    DEBUG_OUTPUT( "[bolthur/kernel -> debug -> gdb] initialize ...\r\n" )
     debug_gdb_init();
   #endif
 
   // Setup arch related parts
-  DEBUG_OUTPUT( "[bolthur/kernel -> arch] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> arch] initialize ...\r\n" )
   arch_init();
 
   // Setup physical memory management
-  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> physical] initialize ...\r\n" )
   phys_init();
 
-  // print size
-  if ( initrd_exist() ) {
-    uintptr_t initrd = initrd_get_start_address();
-    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd );
-    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd_get_end_address() );
-    DEBUG_OUTPUT( "size = %zo\r\n", initrd_get_size() );
-    DEBUG_OUTPUT( "size = %zu\r\n", initrd_get_size() );
-
-    // set iterator
-    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
-
-    // loop through tar
-    while ( ! tar_end_reached( iter ) ) {
-      // debug output
-      DEBUG_OUTPUT( "%p: initrd file name: %s\r\n",
-        ( void* )iter, iter->file_name );
-
-      // next
-      iter = tar_next( iter );
-    }
-  }
-
-  uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
-  DEBUG_OUTPUT(
-    "atag_fdt = %#x, *atag_fdt = %#x\r\n",
-    atag_fdt,
-    *( ( uint32_t* )atag_fdt )
-  );
-
   // Setup virtual memory management
-  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" )
   virt_init();
 
-  // print size
-  if ( initrd_exist() ) {
-    uintptr_t initrd = initrd_get_start_address();
-    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd );
-    DEBUG_OUTPUT( "initrd = %p\r\n", ( void* )initrd_get_end_address() );
-    DEBUG_OUTPUT( "size = %zo\r\n", initrd_get_size() );
-    DEBUG_OUTPUT( "size = %zu\r\n", initrd_get_size() );
-
-    // set iterator
-    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd;
-
-    // loop through tar
-    while ( ! tar_end_reached( iter ) ) {
-      // debug output
-      DEBUG_OUTPUT( "%p: initrd file name: %s\r\n",
-        ( void* )iter, iter->file_name );
-
-      // next
-      iter = tar_next( iter );
-    }
-  }
-
-  atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
-  DEBUG_OUTPUT(
-    "atag_fdt = %#x, *atag_fdt = %#x\r\n",
-    atag_fdt,
-    *( ( uint32_t* )atag_fdt )
-  );
-
-  PANIC( "FOO" );
-
   // Setup heap
-  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" )
   heap_init( HEAP_INIT_NORMAL );
 
+  // Setup shared
+  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> shared] initialize ...\r\n" )
+  assert( shared_memory_init() )
+
   // Setup multitasking
-  DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" );
-  task_process_init();
+  DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" )
+  assert( task_process_init() )
 
-  // setup syscalls
-  DEBUG_OUTPUT( "[bolthur/kernel -> syscall] initialize ...\r\n" );;
-  syscall_init();
+  // Setup system calls
+  DEBUG_OUTPUT( "[bolthur/kernel -> syscall] initialize ...\r\n" )
+  assert( syscall_init() )
 
-  // FIXME: Create init process from initialramdisk and pass initrd to init process
-  // create processes for elf files
-  if ( initrd_exist() ) {
-    // get iterator
-    tar_header_ptr_t iter = ( tar_header_ptr_t )initrd_get_start_address();
+  // Setup message queues
+  DEBUG_OUTPUT( "[bolthur/kernel -> message] initialize ...\r\n" )
+  assert( message_init() )
 
-    // loop
-    while ( ! tar_end_reached( iter ) ) {
-      // get file
-      DEBUG_OUTPUT( "Current file %s\r\n", iter->file_name );
-      uintptr_t file = ( uintptr_t )tar_file( iter );
-
-      // skip non elf files
-      if ( elf_check( file ) ) {
-        // create process
-        uint64_t file_size = tar_size( iter );
-        DEBUG_OUTPUT( "Create process for file %s\r\n", iter->file_name );
-        DEBUG_OUTPUT( "File size: %#llx\r\n", file_size );
-
-        task_process_create( file, 0 );
-        task_process_create( file, 0 );
-        task_process_create( file, 0 );
-      }
-
-      // next task
-      iter = tar_next( iter );
-    }
-  }
+  // assert initrd necessary now
+  assert( initrd_exist() )
+  // Find init process
+  tar_header_ptr_t init = tar_lookup_file( initrd_get_start_address(), "init" );
+  assert( init )
+  // Get file address and size
+  uintptr_t elf_file = ( uintptr_t )tar_file( init );
+  size_t flat_file_size = tar_size( init );
+  // assert elf header
+  // FIXME: REMOVE DEBUG OUTPUT BELOW
+  DEBUG_OUTPUT( "Create process for file %s\r\n", init->file_name )
+  DEBUG_OUTPUT( "File size: %#zx\r\n", flat_file_size )
+  // Create process
+  DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] create ...\r\n" )
+  task_process_ptr_t proc = task_process_create( 0, 0, "daemon:/init" );
+  assert( proc )
+  // load flat image
+  uintptr_t init_entry = elf_load( elf_file, proc );
+  assert( init_entry )
+  // add thread
+  assert( task_thread_create( init_entry, proc, 0 ) );
+  // set to ready and kick start user mode init
+  proc->state = TASK_PROCESS_STATE_READY;
+  // further init process preparation
+  DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] prepare ...\r\n" )
+  assert( task_process_prepare_init( proc ) )
 
   // Setup timer
-  DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" );
+  DEBUG_OUTPUT( "[bolthur/kernel -> timer] initialize ...\r\n" )
   timer_init();
 
-  // kickstart multitasking
+  // Start multitasking in case that init has been created
+  DEBUG_OUTPUT( "[bolthur/kernel -> task] start multitasking ...\r\n" )
   task_process_start();
+
+  // Endless loop
+  for(;;);
 }

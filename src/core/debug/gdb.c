@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,13 +18,10 @@
  */
 
 #include <stdbool.h>
-#include <assert.h>
 #include <string.h>
-#include <stdlib.h>
 #include <core/event.h>
 #include <core/serial.h>
 #include <core/interrupt.h>
-#include <core/panic.h>
 #include <core/debug/debug.h>
 #include <core/debug/string.h>
 #include <core/debug/gdb.h>
@@ -44,7 +40,7 @@ static bool stub_first_entry = true;
 /**
  * @brief GDB debug context
  */
-static void *gdb_execution_context = NULL;
+static void* gdb_execution_context = NULL;
 
 /**
  * @brief debug command handler
@@ -110,7 +106,6 @@ int32_t debug_gdb_char2hex( char ch ) {
  * @brief Method to check calculated checksum against incoming
  *
  * @param in
- * @param chk
  * @return true
  * @return false
  */
@@ -131,22 +126,22 @@ static bool checksum( uint8_t in ) {
  */
 void debug_gdb_init( void ) {
   // setup breakpoint manager
-  DEBUG_OUTPUT( "Setup breakpoint manager\r\n" );
-  debug_breakpoint_init();
+  DEBUG_OUTPUT( "Setup breakpoint manager\r\n" )
+  assert( debug_breakpoint_init() )
 
   // setup debug traps
-  DEBUG_OUTPUT( "Setup debug traps\r\n" );
+  DEBUG_OUTPUT( "Setup debug traps\r\n" )
   debug_gdb_set_trap();
 
   // synchronize
-  DEBUG_OUTPUT( "Synchronize with remote GDB\r\n" );
+  DEBUG_OUTPUT( "Synchronize with remote GDB\r\n" )
   debug_gdb_breakpoint();
 }
-
 
 /**
  * @brief Receive a packet
  *
+ * @param buffer
  * @param max
  * @return unsigned* packet_receive
  */
@@ -154,12 +149,11 @@ uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
   size_t count = 0;
 
   while ( true ) {
-    char c;
     uint8_t calculated_checksum;
     bool cont;
 
     // wait until debug character drops in
-    while ( '$' != ( c = serial_getc() ) ) {}
+    while ( '$' != serial_getc() ) {}
 
     // prepare variables
     cont = false;
@@ -167,7 +161,7 @@ uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
     // read until max or #
     while ( count < max - 1 ) {
       // get next serial character
-      c = serial_getc();
+      char c = serial_getc();
       // handle invalid
       if ( '$' == c ) {
         cont = true;
@@ -209,10 +203,7 @@ uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
     // return normal buffer
     return buffer;
   }
-
-  return NULL;
 }
-
 
 /**
  * @brief Serial gdb handler
@@ -238,9 +229,9 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
  */
 void debug_gdb_set_trap( void ) {
   // register debug event
-  event_bind( EVENT_DEBUG, debug_gdb_handle_event, false );
+  assert( event_bind( EVENT_DEBUG, debug_gdb_handle_event, false ) )
   // register serial event
-  event_bind( EVENT_SERIAL, debug_gdb_serial_event, false );
+  assert( event_bind( EVENT_SERIAL, debug_gdb_serial_event, false ) )
   // set initialized
   stub_initialized = true;
 }
@@ -258,7 +249,7 @@ bool debug_gdb_initialized( void ) {
 /**
  * @brief Send packet
  *
- * @param char string to send
+ * @param p string to send
  */
 void debug_gdb_packet_send( uint8_t* p ) {
   // $<packet info>#<checksum>.
@@ -271,7 +262,7 @@ void debug_gdb_packet_send( uint8_t* p ) {
     packet_checksum = 0;
     count = 0;
     // send and calculate checksum
-    while ( NULL != p && ( ch = p[ count ] ) ) {
+    while ( p && ( ch = p[ count ] ) ) {
       serial_putc( ch );
       packet_checksum = ( uint8_t )( ( int )packet_checksum + ch );
       count++;

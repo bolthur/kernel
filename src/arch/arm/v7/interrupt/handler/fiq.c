@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,7 +21,6 @@
 #include <arch/arm/v7/debug/debug.h>
 #include <arch/arm/v7/interrupt/vector.h>
 #include <core/event.h>
-#include <core/panic.h>
 #include <core/interrupt.h>
 
 /**
@@ -36,9 +34,9 @@ static uint32_t nested_fast_interrupt = 0;
  * @param cpu cpu context
  */
 void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
-  // assert nesting
+  // nesting
   nested_fast_interrupt++;
-  assert( nested_fast_interrupt < INTERRUPT_NESTED_MAX );
+  assert( nested_fast_interrupt < INTERRUPT_NESTED_MAX )
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
@@ -46,15 +44,18 @@ void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DUMP_REGISTER( cpu );
+    DUMP_REGISTER( cpu )
   #endif
+
+  // kernel stack
+  interrupt_ensure_kernel_stack();
 
   // get pending interrupt
   int8_t interrupt = interrupt_get_pending( true );
-  // assert return
-  assert( -1 != interrupt );
   // handle bound fast interrupt handlers
-  interrupt_handle( ( uint8_t )interrupt, INTERRUPT_FAST, cpu );
+  if ( -1 != interrupt ) {
+    interrupt_handle( ( uint8_t )interrupt, INTERRUPT_FAST, cpu );
+  }
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
 

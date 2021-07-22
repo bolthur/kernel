@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,14 +18,10 @@
  */
 
 #include <limits.h>
-#include <stdbool.h>
 #include <stdarg.h>
-#include <stdint.h>
-#include <stdbool.h>
 
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 /**
  * @brief Simple vprintf for kernel

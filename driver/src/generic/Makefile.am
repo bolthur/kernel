@@ -1,0 +1,2 @@
+
+SUBDIRS = init core lib

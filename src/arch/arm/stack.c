@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,8 +20,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <arch/arm/stack.h>
-#include <core/debug/debug.h>
-#include <core/panic.h>
 #include <core/stack.h>
 
 extern void stack_supervisor_mode( void );
@@ -30,7 +27,7 @@ extern void stack_supervisor_mode( void );
 /**
  * @brief Determines whether stack is in kernel or user
  *
- * @param uintptr_t
+ * @param address
  * @return true
  * @return false
  */

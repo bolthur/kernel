@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,24 +22,26 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <list.h>
+#include <collection/list.h>
 
-typedef struct {
+struct debug_breakpoint_entry {
   uintptr_t address;
   uintptr_t instruction;
   bool step;
   bool enabled;
-} debug_breakpoint_entry_t, *debug_breakpoint_entry_ptr_t;
+};
+typedef struct debug_breakpoint_entry debug_breakpoint_entry_t;
+typedef struct debug_breakpoint_entry *debug_breakpoint_entry_ptr_t;
 
 extern list_manager_ptr_t debug_breakpoint_manager;
 
-void debug_breakpoint_remove( uintptr_t, bool );
-void debug_breakpoint_remove_step( void );
-void debug_breakpoint_add( uintptr_t, bool, bool );
+bool debug_breakpoint_remove( uintptr_t, bool );
+bool debug_breakpoint_remove_step( void );
+bool debug_breakpoint_add( uintptr_t, bool, bool );
 debug_breakpoint_entry_ptr_t debug_breakpoint_find( uintptr_t );
 void debug_breakpoint_enable( void );
 void debug_breakpoint_disable( void );
-void debug_breakpoint_init( void );
+bool debug_breakpoint_init( void );
 uintptr_t debug_breakpoint_get_instruction( void );
 
 #endif

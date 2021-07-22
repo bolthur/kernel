@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,9 +18,7 @@
  */
 
 #include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <avl.h>
+#include <collection/avl.h>
 
 /**
  * @brief Helper to destroy created tree
@@ -29,14 +26,19 @@
  * @param tree
  */
 void avl_destroy_tree( avl_tree_ptr_t tree ) {
+  // check parameter
+  if ( ! tree ) {
+    return;
+  }
+
   // loop as long a root node is existing
-  while ( NULL != tree->root ) {
+  while ( tree->root ) {
     // cache root node
     avl_node_ptr_t node = tree->root;
     // remove node from tree
     avl_remove_by_node( tree, node );
-    // free structure
-    free( ( void* )node );
+    // cleanup
+    tree->cleanup( node );
   }
   // finally free tree itself
   free( tree );

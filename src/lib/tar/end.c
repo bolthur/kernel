@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,7 +18,6 @@
  */
 
 #include <stdint.h>
-#include <stddef.h>
 #include <tar.h>
 
 /**
@@ -30,5 +28,5 @@
  * @return false there are more elements
  */
 bool tar_end_reached( tar_header_ptr_t current ) {
-  return NULL == current || NULL == ( uint8_t* )current->file_name;
+  return ! current || ! ( uint8_t* )current->file_name;
 }

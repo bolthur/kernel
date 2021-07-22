@@ -8,7 +8,8 @@ librpi_la_SOURCES = \
   mailbox/property.c \
   mm/phys.c \
   mm/virt.c \
-  framebuffer.c \
+  syscall/init.c \
+  syscall/mailbox.c \
   interrupt.c \
   peripheral.c \
   serial.c \

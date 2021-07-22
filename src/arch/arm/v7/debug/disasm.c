@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,7 +19,6 @@
 
 #include <string.h>
 #include <arch/arm/v7/cpu.h>
-#include <core/debug/debug.h>
 #include <core/debug/disasm.h>
 
 /**
@@ -70,7 +68,7 @@ uintptr_t* debug_disasm_next_instruction(
     // increase stack by registers to skip
     sp += pop_count;
     // push to array
-    next_instruction[ instruction_index++ ] = *sp;
+    next_instruction[ instruction_index ] = *sp;
     // return next address
     return next_instruction;
 
@@ -113,7 +111,7 @@ uintptr_t* debug_disasm_next_instruction(
     // get register context
     cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
     // get register to branch to
-    next_instruction[ instruction_index++ ] = cpu->raw[ reg ];
+    next_instruction[ instruction_index ] = cpu->raw[ reg ];
     // return next address
     return next_instruction;
   }

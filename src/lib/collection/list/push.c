@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,40 +17,84 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <list.h>
+#include <collection/list.h>
 
 /**
  * @brief Method to push node with data into list
  *
  * @param list list to use
  * @param data data to push into list
+ * @return true
+ * @return false
  */
-void list_push_front( list_manager_ptr_t list, void* data ) {
-  list_item_ptr_t first, node;
+bool list_push_front( list_manager_ptr_t list, void* data ) {
+  list_item_ptr_t first;
+  list_item_ptr_t node;
 
-  // assert list is initialized
-  assert( NULL != list );
+  // handle invalid parameter
+  if ( ! list || ! data ) {
+    return false;
+  }
   // set list head
   first = list->first;
 
   // create new node
   node = list_node_create( data );
+  // handle error
+  if ( ! node ) {
+    return false;
+  }
+
   // set next to first
   node->next = first;
   // set previous for first element
-  if ( NULL != first ) {
+  if ( first ) {
     first->previous = node;
   }
 
   // overwrite first element within list pointer
   list->first = node;
   // set last element if NULL
-  if ( NULL == list->last ) {
+  if ( ! list->last ) {
     list->last = list->first;
   }
+
+  return true;
+}
+
+/**
+ * @brief Method to push node with data into list
+ *
+ * @param list list to use
+ * @param node item to push
+ * @return true
+ * @return false
+ */
+bool list_push_front_node( list_manager_ptr_t list, list_item_ptr_t node ) {
+  list_item_ptr_t first;
+
+  // handle invalid parameter
+  if ( ! list || ! node ) {
+    return false;
+  }
+  // set list head
+  first = list->first;
+
+  // set next to first
+  node->next = first;
+  // set previous for first element
+  if ( first ) {
+    first->previous = node;
+  }
+
+  // overwrite first element within list pointer
+  list->first = node;
+  // set last element if NULL
+  if ( ! list->last ) {
+    list->last = list->first;
+  }
+
+  return true;
 }
 
 /**
@@ -59,28 +102,75 @@ void list_push_front( list_manager_ptr_t list, void* data ) {
  *
  * @param list list to use
  * @param data data to push into list
+ * @return true
+ * @return false
  */
-void list_push_back( list_manager_ptr_t list, void* data ) {
-  list_item_ptr_t last, node;
+bool list_push_back( list_manager_ptr_t list, void* data ) {
+  list_item_ptr_t last;
+  list_item_ptr_t node;
 
-  // assert list is initialized
-  assert( NULL != list );
+  // handle invalid parameter
+  if ( ! list || ! data ) {
+    return false;
+  }
   // set list head
   last = list->last;
 
   // create new node
   node = list_node_create( data );
+  // handle error
+  if ( ! node ) {
+    return false;
+  }
+
   // set previous to last
   node->previous = last;
   // set next for last element
-  if ( NULL != last ) {
+  if ( last ) {
     last->next = node;
   }
 
   // overwrite last element within list pointer
   list->last = node;
   // set first element if NULL
-  if ( NULL == list->first ) {
+  if ( ! list->first ) {
     list->first = list->last;
   }
+
+  return true;
+}
+
+/**
+ * @brief Method to push node with data into list
+ *
+ * @param list list to use
+ * @param node node to push into list
+ * @return true
+ * @return false
+ */
+bool list_push_back_node( list_manager_ptr_t list, list_item_ptr_t node ) {
+  list_item_ptr_t last;
+  // handle invalid parameter
+  if ( ! list || ! node ) {
+    return false;
+  }
+
+  // set list head
+  last = list->last;
+
+  // set previous to last
+  node->previous = last;
+  // set next for last element
+  if ( last ) {
+    last->next = node;
+  }
+
+  // overwrite last element within list pointer
+  list->last = node;
+  // set first element if NULL
+  if ( ! list->first ) {
+    list->first = list->last;
+  }
+
+  return true;
 }

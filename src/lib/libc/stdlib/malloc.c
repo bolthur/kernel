@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,10 +18,6 @@
  */
 
 #include <stddef.h>
-#include <assert.h>
-#include <stddef.h>
-
-#include <core/panic.h>
 #include <stdlib.h>
 
 /**
@@ -31,6 +26,6 @@
  * @param size size to allocate
  * @return void* allocated address or NULL
  */
-void* malloc( size_t size ) {
+__allocator void* malloc( size_t size ) {
   return aligned_alloc( __alignof( size ), size );
 }

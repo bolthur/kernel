@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,11 +20,9 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdbool.h>
 
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
 
 // Possible length types
 typedef enum {
@@ -44,7 +41,7 @@ typedef enum {
 typedef struct {
   const char* name;
   length_type_t length;
-} length_modifer_t;
+} length_modifier_t;
 
 /**
  * @brief
@@ -114,7 +111,7 @@ static int print(
   // handle possible prefix
   while( *prefix != '\0' ) {
     // write to buffer
-    if ( NULL != buffer ) {
+    if ( buffer ) {
       *buffer++ = *prefix;
     // put character without buffer
     } else if ( putchar( *prefix ) == EOF ) {
@@ -130,7 +127,7 @@ static int print(
     char c = zero_padding ? '0' : ' ';
 
     // write to buffer
-    if ( NULL != buffer ) {
+    if ( buffer ) {
       *buffer++ = c;
     // put character without buffer
     } else if ( putchar( c ) == EOF ) {
@@ -144,7 +141,7 @@ static int print(
   // print data
   for ( size_t i = 0; i < length; i++ ) {
     // write to buffer
-    if ( NULL != buffer ) {
+    if ( buffer ) {
       *buffer++ = bytes[ i ];
     // put character without buffer
     } else if ( putchar( bytes[ i ] ) == EOF ) {
@@ -162,7 +159,7 @@ static int print(
 /**
  * @brief Simple vsprintf for kernel
  *
- * @param buffer
+ * @param _buffer
  * @param format
  * @param parameter
  * @return int
@@ -199,7 +196,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       // increase format and written
       format += print_written;
       written += ( uint32_t )print_written;
-      if ( NULL != buffer ) {
+      if ( buffer ) {
         buffer += print_written;
       }
       continue;
@@ -239,8 +236,28 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
         field_width = 10 * field_width + ( *format++ - '0' );
       }
     }
+
+    // handle precision
+    size_t precision = SIZE_MAX;
+    if ( *format == '.' ) {
+      // get next character
+      format++;
+      precision = 0;
+      if ( *format == '*' ) {
+        // get next character
+        format++;
+        // get precision
+        int int_precision = va_arg( parameter, int );
+        precision = 0 <= int_precision ? ( size_t )int_precision : 0;
+      } else {
+        while ( '0' <= *format && *format <= '9' ) {
+          precision = 10 * precision + ( *format++ - '0' );
+        }
+      }
+    }
+
     // length modifier map
-    length_modifer_t length_modifier_map[] = {
+    length_modifier_t length_modifier_map[] = {
       { "hh", LENGTH_SHORT_SHORT },
       { "h", LENGTH_SHORT },
       { "", LENGTH_DEFAULT },
@@ -288,7 +305,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       }
       // increase written
       written += ( uint32_t )print_written;
-      if ( NULL != buffer ) {
+      if ( buffer ) {
         buffer += print_written;
       }
     // string handling
@@ -296,11 +313,21 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       // get string to print and string length
       const char* str = va_arg( parameter, const char* );
       // set str to value if not set
-      if ( NULL == str ) {
+      if ( ! str ) {
         str = "( null )";
       }
       // determine string length
-      size_t len = strlen( str );
+      size_t real_len = strlen( str );
+      // consider possible precision
+      size_t len = 0;
+      if ( precision != SIZE_MAX ) {
+        for ( size_t i = 0; i < precision && i < real_len; i++ ) {
+          len++;
+        }
+      } else {
+        len = real_len;
+      }
+
       print_written = print( buffer, str, "", len, zero_padding, field_width );
       // print string
       if ( EOF == print_written ) {
@@ -308,7 +335,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       }
       // increase written count
       written += ( uint32_t )print_written;
-      if ( NULL != buffer ) {
+      if ( buffer ) {
         buffer += print_written;
       }
     } else if (
@@ -411,7 +438,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       }
       // increase written and format
       written += ( uint32_t )print_written;
-      if ( NULL != buffer ) {
+      if ( buffer ) {
         buffer += print_written;
       }
     } else {
@@ -426,7 +453,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
       // increase written and format
       written += ( uint32_t )print_written;
       format += print_written;
-      if ( NULL != buffer ) {
+      if ( buffer ) {
         buffer += print_written;
       }
     }

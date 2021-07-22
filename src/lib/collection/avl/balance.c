@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <avl.h>
+#include <collection/avl.h>
 
 /**
  * @brief Calculate node height
@@ -28,7 +27,7 @@
  */
 static int32_t height( avl_node_ptr_t node ) {
   // handle null value
-  if ( NULL == node ) {
+  if ( ! node ) {
     return 0;
   }
 
@@ -50,7 +49,7 @@ static int32_t height( avl_node_ptr_t node ) {
  */
 static int32_t balance_factor( avl_node_ptr_t node ) {
   // handle invalid node ( balanced )
-  if ( NULL == node ) {
+  if ( ! node ) {
     return 0;
   }
 

@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,12 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <arch/arm/v7/debug/debug.h>
-#include <core/debug/gdb.h>
 #include <core/debug/breakpoint.h>
-#include <core/debug/string.h>
 
 /**
  * @brief Method to get breakpoint instruction

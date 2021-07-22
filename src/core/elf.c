@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,28 +17,36 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <inttypes.h>
+#include <stdbool.h>
 #include <string.h>
-#include <core/elf/common.h>
-#include <core/elf/elf32.h>
+#include <elf.h>
+#include <core/elf.h>
 #include <core/mm/phys.h>
 #include <core/entry.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_ELF )
+  #include <core/debug/debug.h>
+#endif
 
 /**
+ * @fn bool elf_check(uintptr_t)
  * @brief Check elf header for execution
  *
  * @param elf header address to check
- * @return true elf header valid
- * @return false elf header invalid
+ * @return
  */
 bool elf_check( uintptr_t elf ) {
-  Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #if defined( ELF32 )
+    Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #elif defined( ELF64 )
+    Elf64_Ehdr* header = ( Elf64_Ehdr* )elf;
+  #endif
 
   // handle invalid
-  if ( NULL == header ) {
+  if ( ! header ) {
     // debug output
     #if defined ( PRINT_ELF )
-      DEBUG_OUTPUT( "Invalid parameter!\r\n" );
+      DEBUG_OUTPUT( "Invalid parameter!\r\n" )
     #endif
     // return error
     return false;
@@ -54,7 +61,7 @@ bool elf_check( uintptr_t elf ) {
   ) {
     // debug output
     #if defined ( PRINT_ELF )
-      DEBUG_OUTPUT( "Invalid header magic value!\r\n" );
+      DEBUG_OUTPUT( "Invalid header magic value!\r\n" )
     #endif
     // return error
     return false;
@@ -63,23 +70,16 @@ bool elf_check( uintptr_t elf ) {
   // check architecture
   #if defined( ELF32 )
     if ( ELFCLASS32 != header->e_ident[ EI_CLASS ] ) {
-      // debug output
-      #if defined ( PRINT_ELF )
-        DEBUG_OUTPUT( "Invalid architecture!\r\n" );
-      #endif
-      // return error
-      return false;
-    }
   #elif defined( ELF64 )
     if ( ELFCLASS64 != header->e_ident[ EI_CLASS ] ) {
-      // debug output
-      #if defined ( PRINT_ELF )
-        DEBUG_OUTPUT( "Invalid architecture!\r\n" );
-      #endif
-      // return error
-      return false;
-    }
   #endif
+    // debug output
+    #if defined ( PRINT_ELF )
+      DEBUG_OUTPUT( "Invalid architecture!\r\n" )
+    #endif
+    // return error
+    return false;
+  }
 
   // architecture related checks
   if ( ! elf_arch_check( elf ) ) {
@@ -90,7 +90,7 @@ bool elf_check( uintptr_t elf ) {
   if ( 0 == header->e_phentsize ) {
     // debug output
     #if defined ( PRINT_ELF )
-      DEBUG_OUTPUT( "Program header missing!\r\n" );
+      DEBUG_OUTPUT( "Program header missing!\r\n" )
     #endif
     // return error
     return false;
@@ -100,7 +100,7 @@ bool elf_check( uintptr_t elf ) {
   if ( 0 == header->e_shentsize ) {
     // debug output
     #if defined ( PRINT_ELF )
-      DEBUG_OUTPUT( "Section header missing!\r\n" );
+      DEBUG_OUTPUT( "Section header missing!\r\n" )
     #endif
     // return error
     return false;
@@ -111,83 +111,208 @@ bool elf_check( uintptr_t elf ) {
 }
 
 /**
+ * @fn bool load_program_header(uintptr_t, task_process_ptr_t)
  * @brief Internal helper to parse and load program header
  *
- * @param elf adress to elf header
- * @param process process structure
+ * @param elf elf image address
+ * @param process process
+ * @return
  */
-static void load_program_header( uintptr_t elf, task_process_ptr_t process ) {
+static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
   // get header
-  Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #if defined( ELF32 )
+    Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #elif defined( ELF64 )
+    Elf64_Ehdr* header = ( Elf64_Ehdr* )elf;
+  #endif
 
   // parse program header
   for ( uint32_t index = 0; index < header->e_phnum; ++index ) {
     // get program header
-    Elf32_Phdr* program_header = ( Elf32_Phdr* )(
-      elf + header->e_phoff + header->e_phentsize * index
-    );
-
-    // skip non loadable sections
+    #if defined( ELF32 )
+      Elf32_Phdr* program_header = ( Elf32_Phdr* )(
+        elf + header->e_phoff + header->e_phentsize * index
+      );
+    #elif defined( ELF64 )
+      Elf64_Phdr* program_header = ( Elf64_Phdr* )(
+        elf + header->e_phoff + header->e_phentsize * index
+      );
+    #endif
+    // debug output
+    #if defined ( PRINT_ELF )
+      DEBUG_OUTPUT(
+        "type = %#x, vaddr = %#x, paddr = %#x, size = %#x, offset = %#x!\r\n",
+        program_header->p_type, program_header->p_vaddr, program_header->p_paddr,
+        program_header->p_memsz, program_header->p_offset )
+    #endif
+    // skip all sections except load
     if ( PT_LOAD != program_header->p_type ) {
       continue;
     }
 
-    // determine needed space
-    uintptr_t needed_size = program_header->p_memsz;
-    if ( needed_size % PAGE_SIZE ) {
-      needed_size += ( PAGE_SIZE - needed_size % PAGE_SIZE );
+    // determine start and end
+    uintptr_t start = program_header->p_vaddr;
+    uintptr_t end = start + program_header->p_memsz;
+    // debug output
+    #if defined ( PRINT_ELF )
+      DEBUG_OUTPUT( "start = %#"PRIxPTR", end = %#"PRIxPTR"\r\n", start, end )
+    #endif
+    // round down start and up end
+    start = ROUND_DOWN_TO_FULL_PAGE( start );
+    end = ROUND_UP_TO_FULL_PAGE( end );
+    // debug output
+    #if defined ( PRINT_ELF )
+      DEBUG_OUTPUT( "start = %#"PRIxPTR", end = %#"PRIxPTR"\r\n", start, end )
+    #endif
+
+    // determine copy offset and copy amount
+    uintptr_t memory_offset = program_header->p_vaddr % PAGE_SIZE;
+    uintptr_t file_offset = program_header->p_offset;
+    uintptr_t copy_size = program_header->p_memsz;
+    if ( program_header->p_memsz > program_header->p_filesz ) {
+      copy_size = program_header->p_filesz;
     }
+    // debug output
+    #if defined ( PRINT_ELF )
+      DEBUG_OUTPUT(
+        "memory_offset = %#"PRIxPTR", file_offset = %#"PRIxPTR", copy_size = %#"PRIxPTR"\r\n",
+        memory_offset, file_offset, copy_size )
+    #endif
 
-    // loop until needed size is zero
-    uintptr_t offset = 0;
-    while ( needed_size != 0 ) {
-      // get physical page
-      uint64_t phys = phys_find_free_page( PAGE_SIZE );
+    // loop from start to end, map and copy data
+    while( start < end ) {
+      // determine copy amount
+      uintptr_t to_copy = copy_size;
+      // handle page size exceeded
+      if ( to_copy > PAGE_SIZE ) {
+        to_copy = PAGE_SIZE;
+      }
+      // consider memory offset
+      if ( memory_offset > 0 ) {
+        to_copy = PAGE_SIZE - memory_offset;
+      }
+      // cap to copy to copy size
+      if ( to_copy > copy_size ) {
+        to_copy = copy_size;
+      }
+      // debug output
+      #if defined ( PRINT_ELF )
+        DEBUG_OUTPUT(
+          "copy_size = %#"PRIxPTR", to_copy = %#"PRIxPTR", file_offset = %#"PRIxPTR"\r\n",
+          copy_size, to_copy, file_offset )
+      #endif
 
-      // map it temporary
-      uintptr_t tmp = virt_map_temporary( phys, PAGE_SIZE );
-
-      // partial data copy
-      if ( offset < program_header->p_filesz ) {
-        // determine amount to copy
-        size_t to_copy = program_header->p_filesz - offset;
-        // copy up to one page size
-        if ( to_copy > PAGE_SIZE ) {
-          to_copy = PAGE_SIZE;
+      // physical page variable and clear flag
+      uint64_t phys;
+      bool clear = false;
+      // handle already mapped ( fetch physical page )
+      if ( virt_is_mapped_in_context( process->virtual_context, start ) ) {
+        // get physical address of already mapped one
+        phys = virt_get_mapped_address_in_context(
+          process->virtual_context,
+          start
+        );
+        // handle error
+        if ( ( uint64_t )-1 == phys ) {
+          return false;
         }
-        // copy over data
+      // handle not mapped ( acquire new physical page )
+      } else {
+        // get new physical page
+        phys = phys_find_free_page( PAGE_SIZE );
+        // handle error
+        if ( 0 == phys ) {
+          return false;
+        }
+        // set clear flag
+        clear = true;
+      }
+      // debug output
+      #if defined ( PRINT_ELF )
+        DEBUG_OUTPUT( "phys = %#016llx\r\n", phys )
+      #endif
+
+      // map temporary
+      uintptr_t tmp = virt_map_temporary( phys, PAGE_SIZE );
+      if ( 0 == tmp ) {
+        // free phys if new page is registered
+        if ( clear ) {
+          phys_free_page( phys );
+        }
+        // return error
+        return false;
+      }
+      // handle clear
+      if ( clear ) {
+        // debug output
+        #if defined( PRINT_ELF )
+          DEBUG_OUTPUT( "clear page at address %#"PRIxPTR"\r\n", tmp )
+        #endif
+        // clear page
+        memset( ( void* )tmp, 0, PAGE_SIZE );
+      }
+      if ( 0 < to_copy ) {
+        // debug output
+        #if defined ( PRINT_ELF )
+          DEBUG_OUTPUT(
+            "memcpy( %#"PRIxPTR", %#"PRIxPTR", %#"PRIxPTR" )\r\n",
+            tmp + memory_offset,
+            ( uintptr_t )header + file_offset,
+            to_copy
+          )
+        #endif
+        // copy data
         memcpy(
-          ( void* )tmp,
-          ( void* )( ( uintptr_t )header + program_header->p_offset + offset ),
-          program_header->p_filesz - offset
+          ( void* )( tmp + memory_offset ),
+          ( void* )( ( uintptr_t )header + file_offset ),
+          to_copy
         );
       }
-
-      // unmap temporary
+      // unmap temporary again
       virt_unmap_temporary( tmp, PAGE_SIZE );
+      // map it within process context if new page
+      if ( clear ) {
+        // get mapping flag for section
+        uint32_t mapping_flag = VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
+        if ( program_header->p_flags & PF_X ) {
+          mapping_flag |= VIRT_PAGE_TYPE_EXECUTABLE;
+        }
+        // map it
+        if ( ! virt_map_address(
+            process->virtual_context,
+            start,
+            phys,
+            VIRT_MEMORY_TYPE_NORMAL,
+            mapping_flag
+          )
+        ) {
+          // free phys if new page is registered
+          phys_free_page( phys );
+          // return error
+          return false;
+        }
+      }
 
-      // map it wotjom process context
-      virt_map_address(
-        process->virtual_context,
-        program_header->p_vaddr + offset,
-        phys,
-        VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_EXECUTABLE
-      );
-
-      // subtract one page
-      needed_size -= PAGE_SIZE;
-      offset += PAGE_SIZE;
+      // set offset to 0
+      memory_offset = 0;
+      // decrease copy size
+      copy_size -= to_copy;
+      // increase file offset
+      file_offset += to_copy;
+      // increase start
+      start += PAGE_SIZE;
     }
   }
+  return true;
 }
 
 /**
- * @brief Method to load elf for process
+ * @fn uintptr_t elf_load(uintptr_t, task_process_ptr_t)
+ * @brief Method to load simple elf for process ( used for init only )
  *
- * @param elf address to elf header
- * @param process process structure
- * @return uintptr_t program entry or 0 on error
+ * @param elf address to image
+ * @param process process where it shall be loaded into
+ * @return
  */
 uintptr_t elf_load( uintptr_t elf, task_process_ptr_t process ) {
   // check for elf
@@ -197,7 +322,41 @@ uintptr_t elf_load( uintptr_t elf, task_process_ptr_t process ) {
   // get header
   Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
   // load program header
-  load_program_header( elf, process );
+  if ( ! load_program_header( elf, process ) ) {
+    return 0;
+  }
   // return entry
   return ( uintptr_t )header->e_entry;
+}
+
+/**
+ * @fn size_t elf_image_size(uintptr_t)
+ * @brief Helper to get elf image size
+ *
+ * @param elf
+ * @return
+ */
+size_t elf_image_size( uintptr_t elf ) {
+  // check header
+  if ( ! elf_check( elf ) ) {
+    return 0;
+  }
+  // temporary max and size
+  size_t max = 0;
+  size_t sz = 0;
+  // transform to elf header
+  Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  // loop through section header informations
+  for ( uint32_t idx = 0; idx < header->e_shnum; ++idx ) {
+    Elf32_Shdr* section_header = ( Elf32_Shdr* )(
+      elf + header->e_shoff + header->e_shentsize * idx
+    );
+    if ( section_header->sh_addr > max ) {
+      max = section_header->sh_addr;
+      sz = section_header->sh_size;
+    }
+  }
+  // return size
+  return ( size_t )( header->e_shnum * header->e_shentsize )
+    + header->e_shoff + sz;
 }

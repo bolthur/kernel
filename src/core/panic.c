@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +18,7 @@
  */
 
 #include <stdint.h>
+#include <inttypes.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,7 +48,7 @@ noreturn void panic(
   panic_init();
 
   // print panic
-  printf( "PANIC( %s ) at %s:%u\r\n", message, file, line );
+  printf( "PANIC( %s ) at %s:%#"PRIu32"\r\n", message, file, line );
 
   // abort further execution
   abort();

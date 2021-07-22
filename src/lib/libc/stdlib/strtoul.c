@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -25,13 +24,13 @@
  * @brief strtoul
  *
  * @param str
- * @param endptr
+ * @param end
  * @param base
  * @return unsigned long int
  */
 unsigned long int strtoul(
   const char* str,
-  __unused char** endptr,
+  __unused char** end,
   int base
 ) {
   unsigned long int val = 0;

@@ -20,9 +20,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_PROCESS], [Define to 1 to enable output of process methods])
   AH_TEMPLATE([PRINT_EXCEPTION], [Define to 1 to enable output of exception handlers])
   AH_TEMPLATE([PRINT_ELF], [Define to 1 to enable output of elf routines])
-  AH_TEMPLATE([PRINT_PLATFORM], [Define to 1 to enable output of platform initialization])
   AH_TEMPLATE([PRINT_SYSCALL], [Define to 1 to enable output of syscall initialization])
   AH_TEMPLATE([PRINT_SERIAL], [Define to 1 to enable output of serial handling])
+  AH_TEMPLATE([PRINT_MM_SHARED], [Define to 1 to enable output of shared memory functions])
+  AH_TEMPLATE([PRINT_MESSAGE], [Define to 1 to enable output of message functions])
 
   # Test for debugging enabled
   AS_IF([test "x$enable_remote_debug" == "xyes"], [
@@ -47,6 +48,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   # Test for kernel heap output
   AS_IF([test "x$enable_output_mm_heap" == "xyes"], [
     AC_DEFINE([PRINT_MM_HEAP], [1])
+  ])
+
+  # Test for shared memory output
+  AS_IF([test "x$enable_output_mm_shared" == "xyes"], [
+    AC_DEFINE([PRINT_MM_SHARED],[1])
   ])
 
   # Test for mailbox output
@@ -89,11 +95,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     AC_DEFINE([PRINT_ELF], [1])
   ])
 
-  # Test for platform output
-  AS_IF([test "x$enable_output_platform" == "xyes"], [
-    AC_DEFINE([PRINT_PLATFORM],[1])
-  ])
-
   # Test for syscall output
   AS_IF([test "x$enable_output_syscall" == "xyes"], [
     AC_DEFINE([PRINT_SYSCALL],[1])
@@ -102,6 +103,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   # Test for serial output
   AS_IF([test "x$enable_output_serial" == "xyes"], [
     AC_DEFINE([PRINT_SERIAL],[1])
+  ])
+
+  # Test for serial output
+  AS_IF([test "x$enable_output_message" == "xyes"], [
+    AC_DEFINE([PRINT_MESSAGE],[1])
   ])
 
   case "${host_cpu}" in
@@ -133,6 +139,9 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE_UNQUOTED([FDT_BINARY], ["$($BOLTHUR_READLINK -f ${srcdir})/dts/rpi/bcm2836-rpi-2b.dtb"])
+      # necessary for cppcheck
+      AC_DEFINE([__arm__], [1], [ARM define for cppcheck])
+      AC_DEFINE([__ARMEL__], [1], [ARM define for cppcheck])
       ;;
     rpi_zero_w)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
@@ -143,6 +152,9 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE_UNQUOTED([FDT_BINARY], ["$($BOLTHUR_READLINK -f ${srcdir})/dts/rpi/bcm2835-rpi-zero-w.dtb"])
+      # necessary for cppcheck
+      AC_DEFINE([__arm__], [1], [ARM define for cppcheck])
+      AC_DEFINE([__ARMEL__], [1], [ARM define for cppcheck])
       ;;
     rpi3_b)
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard"
@@ -156,6 +168,9 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
+      # necessary for cppcheck
+      AC_DEFINE([__arm__], [1], [ARM define for cppcheck])
+      AC_DEFINE([__ARMEL__], [1], [ARM define for cppcheck])
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])
@@ -181,6 +196,9 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
+      # necessary for cppcheck
+      AC_DEFINE([__aarch64__], [1], [ARM define for cppcheck])
+      AC_DEFINE([__AARCH64EL__], [1], [ARM define for cppcheck])
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])

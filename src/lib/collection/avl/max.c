@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <avl.h>
+#include <collection/avl.h>
 
 /**
  * @brief Get the max object
@@ -32,7 +31,7 @@ static avl_node_ptr_t get_max(
   avl_node_ptr_t result
 ) {
   // break if we reached the maximum
-  if ( NULL == node ) {
+  if ( ! node ) {
     return result;
   }
 

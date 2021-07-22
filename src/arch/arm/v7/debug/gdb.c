@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,14 +19,10 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
 #include <endian.h>
 #include <core/panic.h>
-#include <core/interrupt.h>
-#include <core/debug/debug.h>
 #include <core/debug/string.h>
 #include <core/debug/disasm.h>
 #include <core/debug/gdb.h>
@@ -35,7 +30,6 @@
 #include <core/mm/virt.h>
 #include <arch/arm/v7/cpu.h>
 #include <arch/arm/barrier.h>
-#include <arch/arm/v7/cache.h>
 #include <arch/arm/v7/debug/debug.h>
 
 /**
@@ -64,12 +58,12 @@ static bool end_handler = false;
 uint8_t debug_gdb_output_buffer[ GDB_DEBUG_MAX_BUFFER ];
 
 /**
- * @brief input buffer used for incomming packages
+ * @brief input buffer used for incoming packages
  */
 uint8_t debug_gdb_input_buffer[ GDB_DEBUG_MAX_BUFFER ];
 
 /**
- * @brief Helper to etract hex value from buffer
+ * @brief Helper to extract hex value from buffer
  *
  * @param buffer
  * @param next
@@ -100,7 +94,7 @@ static uint32_t extract_hex_value( const uint8_t* buffer, uint8_t **next ) {
  * @return true
  * @return false
  */
-static bool read_memory_content( void *dest, uint32_t address, size_t length ) {
+static bool read_memory_content( void* dest, uint32_t address, size_t length ) {
   // handle not mapped as empty
   if ( virt_init_get() && ! virt_is_mapped( address ) ) {
     return false;
@@ -200,7 +194,7 @@ static int32_t write_register_invalid( uint8_t* dst ) {
 /**
  * @brief Helper to transform string to hex integer
  *
- * @param p
+ * @param buffer
  * @return uint32_t
  */
 static uint32_t str_to_hex( const uint8_t* buffer ) {
@@ -249,9 +243,9 @@ static bool read_field( const uint8_t** src, uint32_t* dest, char delim ) {
   const uint8_t* del = ( uint8_t* )debug_strchr( ( char* )*src, delim );
   uint8_t* next;
   // handle error
-  if ( NULL == del ) {
+  if ( ! del ) {
     return false;
-  };
+  }
   // extract hex value
   *dest = extract_hex_value( *src, &next );
   // check for read to be done until completely
@@ -267,7 +261,7 @@ static bool read_field( const uint8_t** src, uint32_t* dest, char delim ) {
 /**
  * @brief Helper to fetch address out of string
  *
- * @param p
+ * @param src
  * @param addr
  * @return bool
  */
@@ -278,7 +272,7 @@ static bool read_address_from_string( const uint8_t** src, uint32_t* addr ) {
 /**
  * @brief Helper to read length from string
  *
- * @param p
+ * @param src
  * @param len
  * @return bool
  */
@@ -289,8 +283,8 @@ static bool read_length_from_string( const uint8_t** src, uint32_t* len ) {
 /**
  * @brief Read byte from string into buffer
  *
- * @param p
- * @param b
+ * @param src
+ * @param dest
  */
 static void read_byte_from_string( const uint8_t** src, uint8_t* dest ) {
   uint8_t buf[ 3 ];
@@ -331,7 +325,7 @@ void debug_gdb_handler_read_register(
     )
   );
   // handle not enough memory
-  if ( NULL == p ) {
+  if ( ! p ) {
     debug_gdb_packet_send( ( uint8_t* )"E01" );
     return;
   }
@@ -350,7 +344,7 @@ void debug_gdb_handler_read_register(
   // push spsr
   buffer += write_register( buffer, cpu->reg.spsr );
   // ending
-  *buffer++ = '\0';
+  *buffer = '\0';
   // send packet
   debug_gdb_packet_send( p );
   // free again
@@ -395,8 +389,12 @@ void debug_gdb_handler_read_memory(
   const uint8_t* packet
 ) {
   // variables
-  uint8_t* buffer = NULL, *p, *next;
-  uint32_t addr, length, value;
+  uint8_t* buffer = NULL;
+  uint8_t* p;
+  uint8_t* next;
+  uint32_t addr;
+  uint32_t length;
+  uint32_t value;
   // skip packet identifier
   packet++;
   // read address from string
@@ -410,7 +408,7 @@ void debug_gdb_handler_read_memory(
   // allocate buffer
   p = ( uint8_t* )malloc( length * 2 + 1 );
   // handle not enough memory
-  if ( NULL == p ) {
+  if ( ! p ) {
     debug_gdb_packet_send( ( uint8_t* )"E01" );
     return;
   }
@@ -421,6 +419,7 @@ void debug_gdb_handler_read_memory(
     // read memory and stop on error
     if ( ! read_memory_content( &value, addr + i, 1 ) ) {
       debug_gdb_packet_send( ( uint8_t* )"E02" );
+      free( p );
       return;
     }
     // extract byte
@@ -449,7 +448,9 @@ void debug_gdb_handler_write_memory(
   const uint8_t* packet
 ) {
   const uint8_t* buffer;
-  uint32_t address, length, value;
+  uint32_t address;
+  uint32_t length;
+  uint32_t value;
   // skip identifier
   buffer = ++packet;
   // Read address
@@ -556,6 +557,7 @@ void debug_gdb_handler_stepping(
 ) {
   // transform context to correct structure
   cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  bool step_set = false;
 
   // get to next address
   uintptr_t* next_address = debug_disasm_next_instruction(
@@ -567,10 +569,15 @@ void debug_gdb_handler_stepping(
     if ( 0 == next_address[ x ] ) {
       continue;
     }
-    // some debug output
-    DEBUG_OUTPUT( "next_address: %p\r\n", ( void* )next_address[ x ] );
     // add breakpoint
     debug_breakpoint_add( next_address[ x ], true, true );
+    step_set = true;
+  }
+
+  // handle error
+  if ( ! step_set ) {
+    debug_gdb_packet_send( ( uint8_t* )"E01" );
+    return;
   }
 
   // set handler running to false
@@ -690,8 +697,10 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
     // get packet
     uint8_t* packet = debug_gdb_packet_receive(
       debug_gdb_input_buffer, GDB_DEBUG_MAX_BUFFER );
-    // assert existence
-    assert( packet != NULL );
+    // check packet existence
+    if ( ! packet ) {
+      continue;
+    }
     // execute handler
     debug_gdb_get_handler( packet )( context, packet );
   }
@@ -728,7 +737,7 @@ debug_gdb_signal_t debug_gdb_get_signal( void ) {
     return GDB_SIGNAL_TRAP;
   }
   // unhandled
-  PANIC( "Unknown / Unsupported gdb signal!" );
+  PANIC( "Unknown / Unsupported gdb signal!" )
 }
 
 /**

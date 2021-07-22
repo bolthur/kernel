@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,11 +18,10 @@
  */
 
 #include <assert.h>
-#include <arch/arm/v7/debug/debug.h>
 #include <arch/arm/v7/interrupt/vector.h>
 #include <core/event.h>
-#include <core/panic.h>
 #include <core/interrupt.h>
+#include <core/panic.h>
 
 /**
  * @brief Nested counter for software interrupt exception handler
@@ -34,13 +32,11 @@ static uint32_t nested_svc = 0;
  * @brief Software interrupt exception handler
  *
  * @param cpu cpu context
- *
- * @todo remove event timer enqueue from svc handler
  */
 void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
-  // assert nesting
+  // nesting
   nested_svc++;
-  assert( nested_svc < INTERRUPT_NESTED_MAX );
+  assert( nested_svc < INTERRUPT_NESTED_MAX )
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
@@ -49,31 +45,42 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "Entering software_interrupt_handler( %p )\r\n",
-      ( void* )cpu );
-    DUMP_REGISTER( cpu );
+      ( void* )cpu )
+    DUMP_REGISTER( cpu )
   #endif
 
-  // get svc number from instruction
-  uint32_t svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xffff;
-  // apply offset
-  cpu->reg.pc += 4;
+  // kernel stack
+  interrupt_ensure_kernel_stack();
+
+  uint32_t svc_num;
+  // thumb mode
+  if ( cpu->reg.spsr & CPSR_THUMB ) {
+    svc_num = *( ( uint16_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xff;
+    // apply offset
+    cpu->reg.pc += 2;
+  // arm mode
+  } else {
+    // get svc number from instruction
+    svc_num = *( ( uint32_t* )( ( uintptr_t )cpu->reg.pc ) ) & 0xffff;
+    // apply offset
+    cpu->reg.pc += 4;
+  }
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "address of cpu = %p\r\n", ( void* )cpu );
-    DEBUG_OUTPUT( "svc_num = %u\r\n", svc_num );
+    DEBUG_OUTPUT( "address of cpu = %p\r\n", ( void* )cpu )
+    DEBUG_OUTPUT( "svc_num = %u\r\n", svc_num )
   #endif
 
   // handle bound interrupt handlers
   interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu );
-  // enqueue timer event for testing
-  event_enqueue( EVENT_TIMER, origin );
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "Leaving software_interrupt_handler\r\n" );
+    DUMP_REGISTER( cpu )
+    DEBUG_OUTPUT( "Leaving software_interrupt_handler\r\n" )
   #endif
 
   // decrement nested counter

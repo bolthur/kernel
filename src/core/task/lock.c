@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -29,7 +28,7 @@
 void task_lock_mutex_release( task_lock_mutex_t* m ) {
   // set to released
   *m = TASK_LOCK_MUTEX_RELEASED;
-  // snychronize
+  // synchronize
   __sync_synchronize();
 }
 

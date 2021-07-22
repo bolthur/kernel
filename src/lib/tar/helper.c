@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -29,8 +28,8 @@
  * @param size
  * @return uint64_t
  */
-uint64_t octal_size_to_int( const char* in, size_t size ) {
-  uint64_t value = 0;
+size_t octal_size_to_int( const char* in, size_t size ) {
+  size_t value = 0;
 
   // skip bullshit data
   while ( ( '0' > *in || '7' < *in ) && 0 < size ) {
@@ -43,7 +42,7 @@ uint64_t octal_size_to_int( const char* in, size_t size ) {
     // multiply by base
     value *= 8;
     // add number
-    value += ( uint64_t )( *in - '0' );
+    value += ( size_t )( *in - '0' );
     // step to next
     ++in;
     --size;

@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,9 +20,10 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include <stdio.h>
 #include <assert.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_MM_PHYS )
+  #include <core/debug/debug.h>
+#endif
 #include <core/entry.h>
 #include <core/initrd.h>
 #include <core/mm/phys.h>
@@ -78,7 +78,7 @@ void phys_mark_page_free( uint64_t address ) {
   uint64_t offset = PAGE_OFFSET( frame );
 
   // mark page as free
-  phys_bitmap[ index ] &= ( uint32_t )( ~( 0x1 << offset ) );
+  phys_bitmap[ index ] &= ( uint32_t )( ~( 1U << offset ) );
 
   // debug output
   #if defined( PRINT_MM_PHYS )
@@ -124,14 +124,9 @@ void phys_use_page_range( uint64_t address, size_t amount ) {
   #endif
 
   // round down address to page start
-  if ( 0 != address % PAGE_SIZE ) {
-    address -= address % PAGE_SIZE;
-  }
-
+  address = ROUND_DOWN_TO_FULL_PAGE( address );
   // round up amount if necessary
-  if ( 0 != amount % PAGE_SIZE ) {
-    amount = amount + PAGE_SIZE - amount % PAGE_SIZE;
-  }
+  amount = ROUND_UP_TO_FULL_PAGE( amount );
 
   // loop until amount and mark as free
   for (
@@ -160,9 +155,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
   #endif
 
   // round up to full page
-  if ( 0 < memory_amount % PAGE_SIZE ) {
-    memory_amount += PAGE_SIZE - ( memory_amount % PAGE_SIZE );
-  }
+  memory_amount = ROUND_UP_TO_FULL_PAGE( memory_amount );
 
   // determine amount of pages
   size_t page_amount = memory_amount / PAGE_SIZE;
@@ -170,10 +163,10 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
 
   // found address range
   uint64_t address = 0;
-  uint64_t tmp = 0;
+  uint64_t tmp;
   bool stop = false;
 
-  // loop through bitmap to find free continouse space
+  // loop through bitmap to find free continuous space
   for ( size_t idx = 0; idx < phys_bitmap_length && !stop; idx++ ) {
     // skip completely used entries
     if ( PHYS_ALL_PAGES_OF_INDEX_USED == phys_bitmap[ idx ] ) {
@@ -214,8 +207,10 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
     }
   }
 
-  // assert found address
-  assert( 0 != address );
+  // handle no address
+  if ( 0 == address ) {
+    return address;
+  }
 
   // set temporary address
   tmp = address;
@@ -253,15 +248,11 @@ void phys_free_page( uint64_t address ) {
  */
 void phys_init( void ) {
   // execute platform initialization
-  phys_platform_init();
+  assert( phys_platform_init() )
 
   // determine start and end for kernel mapping
   uintptr_t start = 0;
-  uintptr_t end = VIRT_2_PHYS( &__kernel_end );
-  // round up to page size if necessary
-  if ( end % PAGE_SIZE ) {
-    end += ( PAGE_SIZE - end % PAGE_SIZE );
-  }
+  uintptr_t end = ROUND_UP_TO_FULL_PAGE( VIRT_2_PHYS( &__kernel_end ) );
 
   // debug output
   #if defined( PRINT_MM_PHYS )

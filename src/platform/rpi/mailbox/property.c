@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,9 +19,12 @@
 
 #include <stdarg.h>
 
+#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_MAILBOX )
+  #include <core/debug/debug.h>
+#endif
 #include <core/entry.h>
 #include <core/mm/phys.h>
 #include <platform/rpi/mailbox/mailbox.h>
@@ -44,8 +46,9 @@ volatile int32_t *ptb_buffer_phys = NULL;
  */
 void mailbox_property_init( void ) {
   // reserve memory if not yet done
-  if ( NULL == ptb_buffer ) {
+  if ( ! ptb_buffer ) {
     ptb_buffer = ( int32_t* )aligned_alloc( PAGE_SIZE, PAGE_SIZE );
+    assert( ptb_buffer )
     ptb_buffer_phys = ( int32_t* )VIRT_2_PHYS( ptb_buffer );
   }
   // clear out buffer
@@ -291,9 +294,7 @@ rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
 
   // Get the tag from the buffer and start with first available tag position
   int32_t index = 2;
-  int32_t size = 0;
-
-  size = ptb_buffer[ PT_OSIZE ] >> 2;
+  int32_t size = ptb_buffer[ PT_OSIZE ] >> 2;
 
   while ( index < size ) {
     // debug output
@@ -312,7 +313,7 @@ rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
   }
 
   // nothing found, return NULL
-  if ( tag_buffer == NULL ) {
+  if ( ! tag_buffer ) {
     return NULL;
   }
 

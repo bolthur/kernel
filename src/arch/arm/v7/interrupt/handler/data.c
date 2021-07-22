@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,11 +18,17 @@
  */
 
 #include <assert.h>
-#include <arch/arm/v7/debug/debug.h>
+#if defined( REMOTE_DEBUG )
+  #include <arch/arm/v7/debug/debug.h>
+#endif
 #include <arch/arm/v7/interrupt/vector.h>
+#include <arch/arm/mm/virt.h>
 #include <core/event.h>
 #include <core/interrupt.h>
 #include <core/panic.h>
+// process related stuff
+#include <core/task/process.h>
+#include <core/task/thread.h>
 
 /**
  * @brief Nested counter for data abort exception handler
@@ -31,32 +36,18 @@
 static uint32_t nested_data_abort = 0;
 
 /**
- * @brief Helper returns faulting address
- *
- * @return uintptr_t
- */
-__maybe_unused static uintptr_t fault_address( void ) {
-  // variable for faulting address
-  uintptr_t address;
-  // get faulting address
-  __asm__ __volatile__(
-    "mrc p15, 0, %0, c6, c0, 0" : "=r" ( address ) : : "cc"
-  );
-  // return faulting address
-  return address;
-}
-
-/**
  * @brief Data abort exception handler
  *
  * @param cpu cpu context
  *
- * @todo remove noreturn when handler is completed
+ * @todo kill task when data abort is triggered from user task
+ * @todo trigger schedule when prefetch abort source is user task
+ * @todo panic when data abort is triggered from kernel
  */
 noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
-  // assert nesting
+  // nesting
   nested_data_abort++;
-  assert( nested_data_abort < INTERRUPT_NESTED_MAX );
+  assert( nested_data_abort < INTERRUPT_NESTED_MAX )
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
@@ -64,20 +55,30 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "data abort interrupt at %p\r\n", ( void* )fault_address() );
-    DUMP_REGISTER( cpu );
+    DEBUG_OUTPUT( "data abort while accessing %p\r\n",
+      ( void* )virt_data_fault_address() )
+    DEBUG_OUTPUT( "fault_status = %#x\r\n", ( void* )virt_data_status() )
+    DUMP_REGISTER( cpu )
+    if ( EVENT_ORIGIN_USER == origin ) {
+      DEBUG_OUTPUT( "process id: %d, name: %s\r\n",
+        task_thread_current_thread->process->id,
+        task_thread_current_thread->process->name )
+    }
   #endif
+
+  // kernel stack
+  interrupt_ensure_kernel_stack();
 
   // special debug exception handling
   #if defined( REMOTE_DEBUG )
     if ( debug_is_debug_exception() ) {
       event_enqueue( EVENT_DEBUG, origin );
-      PANIC( "Check fixup!" );
+      PANIC( "Check fixup!" )
     } else {
-      PANIC( "data abort" );
+      PANIC( "data abort!" )
     }
   #else
-    PANIC( "prefetch abort!" );
+    PANIC( "data abort!" )
   #endif
 
   // enqueue cleanup

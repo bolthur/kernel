@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,12 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <assert.h>
-#include <stdio.h>
 #include <string.h>
-#include <stdlib.h>
-#include <avl.h>
+#include <collection/avl.h>
 
 /**
  * @brief Helper to remove by node
@@ -39,7 +34,7 @@ static avl_node_ptr_t remove_by_node(
   avl_node_ptr_t root
 ) {
   // recursive breakpoint
-  if ( NULL == root ) {
+  if ( ! root ) {
     return NULL;
   }
 
@@ -51,26 +46,26 @@ static avl_node_ptr_t remove_by_node(
     // equal but not the found one, check both sub trees
     if ( node != root ) {
       // continue on left subtree if existing
-      if ( NULL != root->left ) {
+      if ( root->left ) {
         root->left = remove_by_node( tree, node, root->left );
       }
 
       // continue on right subtree if existing
-      if ( NULL != root->right ) {
+      if ( root->right ) {
         root->right = remove_by_node( tree, node, root->right );
       }
     } else {
       avl_node_ptr_t tmp;
 
       // no child or one child, just return child or NULL
-      if ( NULL == root->left || NULL == root->right ) {
+      if ( ! root->left || ! root->right ) {
         // get temporary
-        tmp = NULL != root->left
+        tmp = root->left
           ? root->left
           : root->right;
 
         // no child
-        if ( NULL == tmp ) {
+        if ( ! tmp ) {
           root = NULL;
         // one child
         } else {
@@ -101,7 +96,7 @@ static avl_node_ptr_t remove_by_node(
   }
 
   // break if tree is empty
-  if ( NULL == root ) {
+  if ( ! root ) {
     return root;
   }
 
@@ -121,7 +116,7 @@ static avl_node_ptr_t remove_by_data(
   avl_node_ptr_t root
 ) {
   // recursive breakpoint
-  if ( NULL == root ) {
+  if ( ! root ) {
     return NULL;
   }
 
@@ -136,14 +131,14 @@ static avl_node_ptr_t remove_by_data(
     avl_node_ptr_t tmp;
 
     // no child or one child, just return child or NULL
-    if ( NULL == root->left || NULL == root->right ) {
+    if ( ! root->left || ! root->right ) {
       // get temporary
-      tmp = NULL != root->left
+      tmp = root->left
         ? root->left
         : root->right;
 
       // no child
-      if ( NULL == tmp ) {
+      if ( ! tmp ) {
         root = NULL;
       // one child
       } else {
@@ -167,7 +162,7 @@ static avl_node_ptr_t remove_by_data(
   }
 
   // break if tree is empty
-  if ( NULL == root ) {
+  if ( ! root ) {
     return root;
   }
 

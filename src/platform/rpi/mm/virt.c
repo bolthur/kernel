@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,24 +19,22 @@
 
 #include <stddef.h>
 
-#include <string.h>
-#include <core/panic.h>
-#include <core/debug/debug.h>
+#include <assert.h>
+#if defined( PRINT_MM_VIRT )
+  #include <core/debug/debug.h>
+#endif
 #include <core/entry.h>
 #include <platform/rpi/peripheral.h>
 #include <platform/rpi/mailbox/property.h>
-#include <arch/arm/mm/virt.h>
 #include <core/mm/phys.h>
 #include <core/mm/virt.h>
-#include <platform/rpi/framebuffer.h>
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
 #if defined( BCM2836 ) || defined( BCM2837 )
   #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
 #define MAILBOX_PROPERTY_AREA 0xF3040000
-#define FRAMEBUFFER_AREA 0xF3041000
-
+#
 /**
  * @brief Method to setup short descriptor paging
  */
@@ -82,31 +79,13 @@ void virt_platform_init( void ) {
   uintptr_t start;
   uintptr_t virtual;
 
-  // set start and virtual
-  start = framebuffer_base_get();
-  virtual = FRAMEBUFFER_AREA;
-  // map framebuffer
-  while ( start < framebuffer_end_get() ) {
-    // map framebuffer
-    virt_map_address(
-      kernel_context,
-      virtual,
-      start,
-      VIRT_MEMORY_TYPE_DEVICE,
-      VIRT_PAGE_TYPE_AUTO
-    );
-    // increase start and virtual
-    start += PAGE_SIZE;
-    virtual += PAGE_SIZE;
-  }
-
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
       "Map peripherals %p - %p\r\n",
       ( void* )peripheral_base_get( PERIPHERAL_GPIO ),
       ( void* )peripheral_end_get( PERIPHERAL_GPIO )
-    );
+    )
   #endif
 
   // set start and virtual
@@ -116,12 +95,13 @@ void virt_platform_init( void ) {
   // map peripherals
   while ( start < peripheral_end_get( PERIPHERAL_GPIO ) ) {
     // map
-    virt_map_address(
-      kernel_context,
+    assert( virt_map_address(
+      virt_current_kernel_context,
       virtual,
       start,
       VIRT_MEMORY_TYPE_DEVICE,
-      VIRT_PAGE_TYPE_AUTO );
+      VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
+    ) )
 
     // increase start and virtual
     start += PAGE_SIZE;
@@ -134,8 +114,7 @@ void virt_platform_init( void ) {
       DEBUG_OUTPUT(
         "Map local peripherals %p - %p\r\n",
         ( void* )peripheral_base_get( PERIPHERAL_LOCAL ),
-        ( void* )peripheral_end_get( PERIPHERAL_LOCAL )
-      );
+        ( void* )peripheral_end_get( PERIPHERAL_LOCAL ) )
     #endif
 
     // set start and virtual
@@ -144,12 +123,13 @@ void virt_platform_init( void ) {
     // map peripherals
     while ( start < peripheral_end_get( PERIPHERAL_LOCAL ) ) {
       // map
-      virt_map_address(
-        kernel_context,
+      assert( virt_map_address(
+        virt_current_kernel_context,
         virtual,
         start,
         VIRT_MEMORY_TYPE_DEVICE,
-        VIRT_PAGE_TYPE_AUTO );
+        VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
+      ) )
       // increase start and virtual
       start += PAGE_SIZE;
       virtual += PAGE_SIZE;
@@ -157,21 +137,19 @@ void virt_platform_init( void ) {
   #endif
 
   // map mailbox buffer
-  virt_map_address(
-    kernel_context,
+  assert( virt_map_address(
+    virt_current_kernel_context,
     MAILBOX_PROPERTY_AREA,
     ( uintptr_t )ptb_buffer_phys,
     VIRT_MEMORY_TYPE_DEVICE,
-    VIRT_PAGE_TYPE_AUTO
-  );
+    VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
+  ) )
 }
 
 /**
  * @brief Platform post initialization routine
  */
 void virt_platform_post_init( void ) {
-  // set framebuffer
-  framebuffer_base_set( FRAMEBUFFER_AREA );
   // set new peripheral base
   peripheral_base_set( GPIO_PERIPHERAL_BASE, PERIPHERAL_GPIO );
   // Adjust base address of cpu peripheral
@@ -181,13 +159,11 @@ void virt_platform_post_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "Set new framebuffer base to %p\r\n",
-      ( void* )FRAMEBUFFER_AREA );
     DEBUG_OUTPUT( "Set new gpio peripheral base to %p\r\n",
-      ( void* )GPIO_PERIPHERAL_BASE );
+      ( void* )GPIO_PERIPHERAL_BASE )
     DEBUG_OUTPUT( "Set new cpu peripheral base to %p\r\n",
-      ( void* )CPU_PERIPHERAL_BASE );
+      ( void* )CPU_PERIPHERAL_BASE )
     DEBUG_OUTPUT( "Set mailbox property buffer to %p\r\n",
-      ( void* )MAILBOX_PROPERTY_AREA );
+      ( void* )MAILBOX_PROPERTY_AREA )
   #endif
 }

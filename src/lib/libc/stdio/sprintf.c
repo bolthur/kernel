@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,14 +18,8 @@
  */
 
 #include <limits.h>
-#include <stdbool.h>
 #include <stdarg.h>
-#include <stdint.h>
-#include <stdbool.h>
-
 #include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
 
 /**
  * @brief Simple sprintf for kernel
@@ -41,5 +34,6 @@ int sprintf( char* buffer, const char* restrict format, ... ) {
   va_start( parameter, format );
   int written = vsprintf( buffer, format, parameter );
   va_end( parameter );
+  buffer[ written ] = '\0';
   return written;
 }

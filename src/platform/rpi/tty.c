@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,16 +17,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
 #include <core/tty.h>
-#include <platform/rpi/framebuffer.h>
+#if defined( OUTPUT_ENABLE )
+  #include <core/serial.h>
+#endif
 
 /**
  * @brief Initialize TTY
  */
 void tty_init( void ) {
   #if defined( OUTPUT_ENABLE )
-    framebuffer_init();
+    serial_init();
   #endif
 }
 
@@ -39,6 +39,6 @@ void tty_init( void ) {
 void tty_putc( __maybe_unused uint8_t c ) {
   // return if disabled
   #if defined( OUTPUT_ENABLE )
-    framebuffer_putc( c );
+    serial_putc( c );
   #endif
 }

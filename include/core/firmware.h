@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,6 +21,6 @@
 #define __CORE_FIRMWARE__
 
 void firmware_startup_init( void );
-void firmware_init( void );
+bool firmware_init( void );
 
 #endif

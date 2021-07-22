@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,8 +21,8 @@
 #include <arch/arm/v7/debug/debug.h>
 #include <arch/arm/v7/interrupt/vector.h>
 #include <core/event.h>
-#include <core/panic.h>
 #include <core/interrupt.h>
+#include <core/panic.h>
 
 /**
  * @brief Nested counter for interrupt exception handler
@@ -36,9 +35,9 @@ static uint32_t nested_interrupt = 0;
  * @param cpu cpu context
  */
 void vector_interrupt_handler( cpu_register_context_ptr_t cpu ) {
-  // assert nesting
+  // nesting
   nested_interrupt++;
-  assert( nested_interrupt < INTERRUPT_NESTED_MAX );
+  assert( nested_interrupt < INTERRUPT_NESTED_MAX )
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
@@ -46,17 +45,34 @@ void vector_interrupt_handler( cpu_register_context_ptr_t cpu ) {
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DUMP_REGISTER( cpu );
+    DEBUG_OUTPUT( "Entering interrupt_handler( %p )\r\n", ( void* )cpu )
+    DUMP_REGISTER( cpu )
   #endif
 
+  // kernel stack
+  interrupt_ensure_kernel_stack();
+
   // get pending interrupt
-  int8_t interrupt = interrupt_get_pending( false );
-  // assert return
-  assert( -1 != interrupt );
+  int8_t interrupt_bit = interrupt_get_pending( false );
   // handle bound interrupt handlers
-  interrupt_handle( ( uint8_t )interrupt, INTERRUPT_NORMAL, cpu );
+  if ( -1 != interrupt_bit ) {
+    // transform bit to interrupt
+    uint32_t interrupt = ( 1U << interrupt_bit );
+    // debug output
+    #if defined( PRINT_EXCEPTION )
+      DEBUG_OUTPUT( "pending interrupt: %#x\r\n", interrupt );
+    #endif
+    // call interrupt handler
+    interrupt_handle( interrupt, INTERRUPT_NORMAL, cpu );
+  }
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
+
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DEBUG_OUTPUT( "Leaving interrupt_handler\r\n" )
+    DUMP_REGISTER( cpu )
+  #endif
 
   // decrement nested counter
   nested_interrupt--;

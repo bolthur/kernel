@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -122,9 +121,9 @@
       uint32_t type: 1;
       uint32_t bufferable : 1;
       uint32_t cacheable : 1;
-      uint32_t access_permision_0 : 2;
+      uint32_t access_permission_0 : 2;
       uint32_t tex : 3;
-      uint32_t access_permision_1 : 1;
+      uint32_t access_permission_1 : 1;
       uint32_t shareable : 1;
       uint32_t not_global : 1;
       uint32_t frame : 20;
@@ -138,9 +137,9 @@
       uint32_t sbz_0 : 1;
       uint32_t bufferable : 1;
       uint32_t cacheable : 1;
-      uint32_t access_permision_0 : 2;
+      uint32_t access_permission_0 : 2;
       uint32_t sbz_1 : 3;
-      uint32_t access_permision_1 : 1;
+      uint32_t access_permission_1 : 1;
       uint32_t shareable : 1;
       uint32_t not_global : 1;
       uint32_t tex : 3;
@@ -162,7 +161,7 @@
     } data;
   } sd_context_table_t;
 
-  typedef union  __packed {
+  union __packed sd_context_section {
     uint32_t raw;
     struct {
       uint32_t privileged_execute_never : 1;
@@ -172,16 +171,18 @@
       uint32_t execute_never : 1;
       uint32_t domain : 4;
       uint32_t imp : 1;
-      uint32_t access_permision_0 : 2;
+      uint32_t access_permission_0 : 2;
       uint32_t tex : 3;
-      uint32_t access_permision_1 : 1;
+      uint32_t access_permission_1 : 1;
       uint32_t shareable : 1;
       uint32_t not_global : 1;
       uint32_t sbz : 1;
       uint32_t non_secure : 1;
       uint32_t frame: 12;
     } data;
-  } sd_context_section_t, *sd_context_section_ptr_t;
+  };
+  typedef union sd_context_section sd_context_section_t;
+  typedef union sd_context_section *sd_context_section_ptr_t;
 
   typedef union  __packed {
     uint32_t raw;
@@ -193,9 +194,9 @@
       uint32_t execute_never : 1;
       uint32_t base_bit_36_39 : 4;
       uint32_t imp : 1;
-      uint32_t access_permision_0 : 2;
+      uint32_t access_permission_0 : 2;
       uint32_t tex : 3;
-      uint32_t access_permision_1 : 1;
+      uint32_t access_permission_1 : 1;
       uint32_t shareable : 1;
       uint32_t not_global : 1;
       uint32_t sb1 : 1;

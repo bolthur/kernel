@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <avl.h>
+#include <collection/avl.h>
 #include <stdio.h>
 
 /**
@@ -58,7 +57,7 @@ static void pop_output_level( void ) {
  * @param node
  */
 static void print_recursive( const avl_node_ptr_t node ) {
-  if ( NULL == node ) {
+  if ( ! node ) {
     return;
   }
   printf( "%p\r\n", node->data );

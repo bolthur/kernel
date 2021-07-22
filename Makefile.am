@@ -1,8 +1,23 @@
 
 ACLOCAL_AMFLAGS = -I build-aux/m4
 
+SUBDIRS = thirdparty src driver
+
+# cppcheck stuff
 .PHONY: cppcheck
 cppcheck:
-	cppcheck -I $(top_srcdir)/include -I $(top_srcdir)/include/lib --quiet --inline-suppr -UCMC --force --enable=all --suppress-xml=$(top_srcdir)/build-aux/platform/rpi/cppcheck.suppression.xml --platform=$(top_srcdir)/build-aux/platform/rpi/cppcheck.32.xml --include=$(top_srcdir)/build/include/config.h --project=$(top_srcdir)/build-aux/platform/rpi/project.cppcheck $(top_srcdir)
+	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
+		--platform=$(CPPCHECK_PLATFORM) \
+		--include=$(CPPCHECK_INCLUDE) \
+		--project=$(CPPCHECK_PROJECT) \
+		--suppressions-list=$(CPPCHECK_SUPPRESS) \
+		-U__CYGWIN__ -U__APPLE__ -D__INTPTR_TYPE__=4 -v
+# FIXME: MOVE __INTPTR_TYPE__ DEFINE INTO MACRO PER HOST
 
-SUBDIRS = thirdparty src
+ramdisk:
+	cd $(ROOT_DIR)/tool && nim compile --run ramdisk.nim $(ROOT_DIR)/build/driver $(ROOT_DIR)/build-aux/platform/rpi/initrd $(SYSROOT_DIR)
+
+# doxygen related
+@DX_RULES@
+MOSTLYCLEANFILES = $(DX_CLEANFILES)
+

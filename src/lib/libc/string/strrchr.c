@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -36,7 +35,7 @@ char* strrchr( const char* str, int delimiter ) {
   const char* found = NULL;
   const char* current;
   // loop until last occurrence
-  while ( NULL != ( current = strchr( str, delimiter ) ) ) {
+  while ( ( current = strchr( str, delimiter ) ) ) {
     found = current;
     str = current + 1;
   }

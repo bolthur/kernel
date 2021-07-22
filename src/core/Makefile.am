@@ -6,7 +6,14 @@ libcore_la_SOURCES = \
   debug/string.c \
   mm/heap.c \
   mm/phys.c \
+  mm/shared.c \
   mm/virt.c \
+  syscall/dummy.c \
+  syscall/init.c \
+  syscall/interrupt.c \
+  syscall/memory.c \
+  syscall/message.c \
+  syscall/task.c \
   task/lock.c \
   task/process.c \
   task/queue.c \
@@ -19,5 +26,5 @@ libcore_la_SOURCES = \
   initrd.c \
   interrupt.c \
   main.c \
-  panic.c \
-  syscall.c
+  message.c \
+  panic.c

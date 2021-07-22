@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,12 +21,12 @@
 #define __CORE_TASK_QUEUE__
 
 #include <stddef.h>
-#include <avl.h>
-#include <list.h>
+#include <collection/avl.h>
+#include <collection/list.h>
 #include <core/task/thread.h>
 #include <core/task/process.h>
 
-typedef struct task_priority_queue {
+struct task_priority_queue {
   avl_node_t node;
   size_t priority;
 
@@ -35,7 +34,9 @@ typedef struct task_priority_queue {
   task_thread_ptr_t current;
 
   list_manager_ptr_t thread_list;
-} task_priority_queue_t, *task_priority_queue_ptr_t;
+};
+typedef struct task_priority_queue task_priority_queue_t;
+typedef struct task_priority_queue *task_priority_queue_ptr_t;
 
 #define TASK_QUEUE_GET_PRIORITY( n ) \
   ( task_priority_queue_ptr_t )( ( uint8_t* )n - offsetof( task_priority_queue_t, node ) )

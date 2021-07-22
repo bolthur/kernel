@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,11 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
-#include <assert.h>
-#include <core/panic.h>
 #include <core/mm/heap.h>
 
 /**
@@ -30,7 +26,7 @@
  *
  * @param ptr ptr to address to free
  */
-void free( void *ptr ) {
+void free( void* ptr ) {
   // free heap block
   heap_free_block( ( uintptr_t )ptr );
 }

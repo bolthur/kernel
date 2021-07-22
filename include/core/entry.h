@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,10 +23,17 @@
 #if defined( IS_HIGHER_HALF )
   #if defined( ELF32 )
     #define KERNEL_OFFSET 0xC0000000
+
+    #define USER_AREA_START 0x1000
+    #define USER_AREA_END 0x7FFFFFFF
+
+    #define KERNEL_AREA_START 0x80000000
+    #define KERNEL_AREA_END 0xFFFFFFFF
   #elif defined( ELF64 )
     #define KERNEL_OFFSET 0xffffffff80000000
   #endif
 #else
+  #error "Unsupported memory model"
   #define KERNEL_OFFSET 0
 #endif
 

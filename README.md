@@ -1,7 +1,7 @@
 # kernel
 
 bolthur/kernel project.
-_Copyright (C) 2018 - 2020 bolthur project_
+_Copyright (C) 2018 - 2021 bolthur project_
 
 ## Supported platforms
 
@@ -62,9 +62,10 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--with-debug-symbols` enables remote debugging mode
 * `--with-optimization-level=x` sets optimization from default ( 2 ) to specified one
 * `--enable-output` enables kernel output
-* `--enable-output-mm-phys` activate tty output of physical memory manager ( slows down kernel totally )
+* `--enable-output-mm-phys` activate tty output of physical memory manager
 * `--enable-output-mm-virt` activate tty output of virtual memory manager
 * `--enable-output-mm-heap` activate tty output of kernel heap
+* `--enable-output-mm-shared` activate tty output of shared memory
 * `--enable-output-mailbox` activate tty output of mailbox implementation
 * `--enable-output-timer` activate tty output of timer implementation
 * `--enable-output-initrd` activate initrd implementation output
@@ -73,9 +74,9 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-interrupt` activate interrupt request output
 * `--enable-output-exception` activate exception handler output
 * `--enable-output-elf` activate elf routine output
-* `--enable-output-platform` activate platform initialization output
 * `--enable-output-syscall` activate syscall output
 * `--enable-output-serial` activate serial handling output
+* `--enable-output-message` activate message system output
 * `--enable-remote-debug` activate remote debugging
 
 ### Building

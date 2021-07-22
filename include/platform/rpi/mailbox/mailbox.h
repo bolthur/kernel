@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -25,6 +24,7 @@
 
 #define MAILBOX_FULL 0x80000000
 #define MAILBOX_EMPTY 0x40000000
+#define MAILBOX_ERROR 0xFFFFFFFF
 
 typedef enum {
   GPU_MAILBOX = 0xB880,

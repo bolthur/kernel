@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,28 +21,33 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_MM_PHYS )
+  #include <core/debug/debug.h>
+#endif
 #include <core/entry.h>
 #include <core/mm/phys.h>
 #include <platform/rpi/peripheral.h>
+#include <platform/rpi/mailbox/mailbox.h>
 #include <platform/rpi/mailbox/property.h>
 
 /**
  * @brief Initialize physical memory manager for rpi
  */
-void phys_platform_init( void ) {
+bool phys_platform_init( void ) {
   // Get arm memory
   mailbox_property_init();
   mailbox_property_add_tag( TAG_GET_ARM_MEMORY );
   mailbox_property_add_tag( TAG_GET_VC_MEMORY );
-  mailbox_property_process();
+  if ( MAILBOX_ERROR == mailbox_property_process() ) {
+    return false;
+  }
 
   // max memory
-  uint32_t memory_amount = 0;
+  uint32_t memory_amount;
 
   // video core memory
-  uint32_t vc_memory_start = 0;
-  uint32_t vc_memory_end = 0;
+  uint32_t vc_memory_start;
+  uint32_t vc_memory_end;
 
   // get arm memory
   rpi_mailbox_property_t *buffer = mailbox_property_get( TAG_GET_ARM_MEMORY );
@@ -109,6 +113,9 @@ void phys_platform_init( void ) {
   phys_bitmap = ( uint32_t* )aligned_alloc(
     sizeof( phys_bitmap ),
     phys_bitmap_length * sizeof( uint32_t ) );
+  if ( ! phys_bitmap ) {
+    return false;
+  }
 
   // debug output
   #if defined( PRINT_MM_PHYS )
@@ -158,4 +165,5 @@ void phys_platform_init( void ) {
     // get next page
     start += PAGE_SIZE;
   }
+  return true;
 }

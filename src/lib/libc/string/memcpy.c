@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -25,18 +24,18 @@
 /**
  * @brief Copy memory
  *
- * @param dstptr
- * @param srcptr
+ * @param dst
+ * @param src
  * @param size
  * @return void*
  */
-void* memcpy( void* restrict dstptr, const void* restrict srcptr, size_t size ) {
-  uint8_t* dst = ( uint8_t * ) dstptr;
-  const uint8_t* src = ( const uint8_t * ) srcptr;
+void* memcpy( void* restrict dst, const void* restrict src, size_t size ) {
+  uint8_t* _dst = ( uint8_t * )dst;
+  const uint8_t* _src = ( const uint8_t * )src;
 
   for ( size_t i = 0; i < size; i++ ) {
-    dst[ i ] = src[ i ];
+    _dst[ i ] = _src[ i ];
   }
 
-  return dstptr;
+  return dst;
 }

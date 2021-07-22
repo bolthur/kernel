@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,16 +21,16 @@
 #define __CORE_EVENT__
 
 #include <stdbool.h>
-#include <list.h>
-#include <avl.h>
+#include <collection/list.h>
+#include <collection/avl.h>
 #include <core/stack.h>
 
 #define EVENT_DETERMINE_ORIGIN( o ) \
-  ( o == NULL || ! stack_is_kernel( ( uintptr_t )o ) ) \
+  ( ! o || ! stack_is_kernel( ( uintptr_t )o ) ) \
     ? EVENT_ORIGIN_USER : EVENT_ORIGIN_KERNEL
 
 typedef enum {
-  EVENT_TIMER = 1,
+  EVENT_PROCESS = 1,
   EVENT_SERIAL,
   EVENT_DEBUG,
   EVENT_INTERRUPT_CLEANUP
@@ -42,33 +41,40 @@ typedef enum {
   EVENT_ORIGIN_USER,
 } event_origin_t;
 
-typedef struct {
+struct event_manager {
   avl_tree_ptr_t tree;
   list_manager_ptr_t queue_kernel;
   list_manager_ptr_t queue_user;
-} event_manager_t, *event_manager_ptr_t;
+};
 
-typedef struct {
+struct event_block {
   avl_node_t node;
   event_type_t type;
   list_manager_ptr_t handler;
   list_manager_ptr_t post;
-} event_block_t, *event_block_ptr_t;
+};
 
 typedef void ( *event_callback_t )( event_origin_t, void* data );
 
-typedef struct {
+struct callback {
   event_callback_t callback;
-} event_callback_wrapper_t, *event_callback_wrapper_ptr_t;
+};
+
+typedef struct callback event_callback_wrapper_t;
+typedef struct callback *event_callback_wrapper_ptr_t;
+typedef struct event_manager event_manager_t;
+typedef struct event_manager *event_manager_ptr_t;
+typedef struct event_block event_block_t;
+typedef struct event_block *event_block_ptr_t;
 
 #define EVENT_GET_BLOCK( n ) \
   ( event_block_ptr_t )( ( uint8_t* )n - offsetof( event_block_t, node ) )
 
 bool event_init_get( void );
-void event_init( void );
+bool event_init( void );
 bool event_bind( event_type_t, event_callback_t, bool );
 void event_unbind( event_type_t, event_callback_t, bool );
 void event_handle( void* );
-void event_enqueue( event_type_t, event_origin_t );
+bool event_enqueue( event_type_t, event_origin_t );
 
 #endif

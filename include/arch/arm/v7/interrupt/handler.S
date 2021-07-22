@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -58,7 +57,7 @@ IMPORT( task_thread_current_thread )
   // adjust lr
   sub lr, #\fixup
   // switch mode and push lr and spsr to mode stack
-  srsdb sp!, #\mode
+  srsdb #\mode!
   // disable interrupts and switch to mode
   cpsid if, #\mode
 .endm
@@ -95,7 +94,7 @@ IMPORT( task_thread_current_thread )
     \privileged
 .endm
 
-.macro push_register name:req, mode:req
+.macro push_register name:req, mode:req, fixup:req, thumb_offset:req
   // privileged / unprivileged switch
   privileged_unprivileged_switch \
     4, \
@@ -118,10 +117,27 @@ _\name\()_entry_unprivileged:
   ldr r0, [ sp, #4 ]
   str r0, [ lr, #64 ]
 
+  // mask mode only for comparison
+  and r0, #CPSR_THUMB
+  // compare to passed mode
+  cmp r0, #CPSR_THUMB
+  // handle thumb mode
+  beq _\name\()_entry_unprivileged_thumb
+  // handle arm_mode
+  bne _\name\()_entry_unprivileged_arm
+
+  // thumb entry
+  _\name\()_entry_unprivileged_thumb:
+    ldr r0, [ lr, #60 ]
+    add r0, #\thumb_offset
+    str r0, [ lr, #60 ]
+  // arm entry
+  _\name\()_entry_unprivileged_arm:
+
   // adjust stack pointer back
   add sp, #8
 
-  // pass 0 as paramter to indicate user entry
+  // pass 0 as parameter to indicate user entry
   mov r1, #0
 
   // jump to finished
@@ -211,11 +227,11 @@ _\name\()_exit_privileged:
 _\name\()_exit_finished:
 .endm
 
-.macro exception_handler fixup:req, handler:req, mode:req, name:req, nested:req
+.macro exception_handler fixup:req, thumb_offset:req, handler:req, mode:req, name:req, nested:req
   // switch to svc mode with fixup
   switch_mode \mode, \fixup
   // push register
-  push_register \name, \mode
+  push_register \name, \mode, \fixup, \thumb_offset
 
   // remote debugging
   #if defined( REMOTE_DEBUG )

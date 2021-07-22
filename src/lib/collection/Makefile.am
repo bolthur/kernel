@@ -6,6 +6,7 @@ libcollection_la_SOURCES = \
   avl/destroy.c \
   avl/find.c \
   avl/insert.c \
+  avl/iterate.c \
   avl/max.c \
   avl/min.c \
   avl/prepare.c \

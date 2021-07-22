@@ -1,23 +1,20 @@
 
 LT_PREREQ([2.4.6])
-AC_PREREQ([2.69])
+AC_PREREQ([2.71])
 
 AC_INIT([bolthur-kernel], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2020 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2021 bolthur project])
 
 AC_CONFIG_AUX_DIR([build-aux/config])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
 AC_CONFIG_SRCDIR([src/core/main.c])
-AM_INIT_AUTOMAKE([nostdinc subdir-objects])
+AM_INIT_AUTOMAKE([nostdinc subdir-objects -Werror])
 AC_CONFIG_HEADERS([include/config.h])
 
 AC_LANG([C])
-
-# Prevent enter folder output
-AC_SUBST(MAKEFLAGS, "${MAKEFLAGS} --no-print-directory")
 
 AC_ARG_ENABLE([device],
   AS_HELP_STRING(
@@ -62,6 +59,15 @@ AC_ARG_ENABLE(
     [activate heap output [default: off]]
   ),
   [enable_output_mm_heap=yes]
+)
+
+AC_ARG_ENABLE(
+  [output-mm-shared],
+  AS_HELP_STRING(
+    [--enable-output-mm-shared],
+    [activate shared memory output [default: off]]
+  ),
+  [enable_output_mm_shared=yes]
 )
 
 AC_ARG_ENABLE(
@@ -137,15 +143,6 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_ENABLE(
-  [output-platform],
-  AS_HELP_STRING(
-    [--enable-output-platform],
-    [activate platform init output [default: off]]
-  ),
-  [enable_output_platform=yes]
-)
-
-AC_ARG_ENABLE(
   [output-syscall],
   AS_HELP_STRING(
     [--enable-output-syscall],
@@ -161,6 +158,15 @@ AC_ARG_ENABLE(
     [activate serial handling output [default: off]]
   ),
   [enable_output_serial=yes]
+)
+
+AC_ARG_ENABLE(
+  [output-message],
+  AS_HELP_STRING(
+    [--enable-output-message],
+    [activate message output [default: off]]
+  ),
+  [enable_output_message=yes]
 )
 
 AC_ARG_ENABLE(
@@ -190,6 +196,11 @@ AC_ARG_WITH(
   [with_debug_debug_symbols=yes]
 )
 
+# enable output and enable remote debugging together is not allowed
+AS_IF([test "x$enable_output" == "xyes" && test "x$enable_remote_debug" == "xyes"], [
+  AC_MSG_ERROR([Enabled kernel output and remote debug are not possible at the same time])
+])
+
 # check necessary programs
 BOLTHUR_KERNEL_PROG_READLINK
 
@@ -201,10 +212,29 @@ BOLTHUR_KERNEL_SET_HOST
 # set rest of flags
 BOLTHUR_KERNEL_SET_FLAG
 
+# prepare cppecheck stuff
+BOLTHUR_KERNEL_PREPARE_CPPCHECK
+# add directory for ramdisk
+AC_SUBST(ROOT_DIR, $($BOLTHUR_READLINK -f ${srcdir}))
+AC_SUBST(SYSROOT_DIR, $(dirname $(dirname $($BOLTHUR_READLINK -f $($CC $CFLAGS --print-file-name=libc.so)))))
+
+# doxygen stuff
+DX_DOXYGEN_FEATURE(ON)
+DX_HTML_FEATURE(ON)
+DX_MAN_FEATURE(ON)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_INIT_DOXYGEN([bolthur/kernel], [$(srcdir)/doxyfile], [doc])
+
 # checks for programs
 AC_PROG_CC
 AM_PROG_AS
 BOLTHUR_KERNEL_PROG_OBJCOPY
+BOLTHUR_KERNEL_PROG_STRIP
+
+# get host cpu count
+AX_COUNT_CPUS
+AC_SUBST(CPU_COUNT)
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -229,6 +259,11 @@ AC_DEFINE_UNQUOTED(
 )
 
 # Some compiler dependent features.
+AC_DEFINE_UNQUOTED(
+  [__allocator],
+  [__attribute__((malloc))],
+  [Keyword for mark something as allocator.]
+)
 AC_DEFINE_UNQUOTED(
   [__packed],
   [__attribute__((__packed__))],
@@ -309,7 +344,10 @@ AC_CONFIG_FILES([
   src/target/rpi/Makefile
   thirdparty/Makefile
   thirdparty/dtc/libfdt/Makefile
-  thirdparty/font/Makefile
+])
+
+AC_CONFIG_SUBDIRS([
+  driver
 ])
 
 AC_OUTPUT

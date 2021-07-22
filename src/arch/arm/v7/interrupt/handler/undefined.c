@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,11 +18,13 @@
  */
 
 #include <assert.h>
-#include <arch/arm/v7/debug/debug.h>
 #include <arch/arm/v7/interrupt/vector.h>
 #include <core/event.h>
 #include <core/panic.h>
 #include <core/interrupt.h>
+// process related stuff
+#include <core/task/process.h>
+#include <core/task/thread.h>
 
 /**
  * @brief Nested counter for undefined instruction exception handler
@@ -38,9 +39,9 @@ static uint32_t nested_undefined = 0;
  * @todo remove noreturn when handler is completed
  */
 noreturn void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
-  // assert nesting
+  // nesting
   nested_undefined++;
-  assert( nested_undefined < INTERRUPT_NESTED_MAX );
+  assert( nested_undefined < INTERRUPT_NESTED_MAX )
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
@@ -48,9 +49,19 @@ noreturn void vector_undefined_instruction_handler( cpu_register_context_ptr_t c
 
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DUMP_REGISTER( cpu );
+    DUMP_REGISTER( cpu )
+    if ( EVENT_ORIGIN_USER == origin ) {
+      DEBUG_OUTPUT( "process id: %d, name: %s\r\n",
+        task_thread_current_thread->process->id,
+        task_thread_current_thread->process->name )
+    }
   #endif
-  PANIC( "undefined" );
+
+  // kernel stack
+  interrupt_ensure_kernel_stack();
+
+  // just panic
+  PANIC( "undefined" )
 
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );

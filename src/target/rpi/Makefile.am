@@ -1,7 +1,6 @@
 
 # built sources determining things to be built first
 BUILT_SOURCES = \
-  ${abs_top_builddir}/thirdparty/font/libfont.la \
   ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.la \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
@@ -11,6 +10,7 @@ BUILT_SOURCES = \
   ${abs_top_builddir}/src/lib/collection/libcollection.la \
   ${abs_top_builddir}/src/lib/libc/libc.la \
   ${abs_top_builddir}/src/lib/tar/libtar.la \
+  ${abs_top_builddir}/src/lib/libduplicate.la \
   ${abs_top_builddir}/src/lib/libssp.la \
   ${abs_top_builddir}/src/lib/libubsan.la \
   libtarget.la \
@@ -22,7 +22,6 @@ noinst_PROGRAMS = kernel.elf kernel_qemu.elf ${output_img} ${output_img_qemu}
 noinst_LTLIBRARIES = libtarget.la
 
 libtarget_la_DEPENDENCIES = \
-  ${abs_top_builddir}/thirdparty/font/libfont.la \
   ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.la \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
@@ -32,12 +31,12 @@ libtarget_la_DEPENDENCIES = \
   ${abs_top_builddir}/src/lib/collection/libcollection.la \
   ${abs_top_builddir}/src/lib/libc/libc.la \
   ${abs_top_builddir}/src/lib/tar/libtar.la \
+  ${abs_top_builddir}/src/lib/libduplicate.la \
   ${abs_top_builddir}/src/lib/libssp.la \
   ${abs_top_builddir}/src/lib/libubsan.la
 libtarget_la_SOURCES =
 libtarget_la_LIBADD = \
-  ${CC_SPECIFIC_LDADD}  \
-  ${abs_top_builddir}/thirdparty/font/libfont.la \
+  ${CC_SPECIFIC_LDADD} \
   ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
   ${abs_top_builddir}/src/platform/${platform_subdir}/lib${platform_subdir}.la \
   ${abs_top_builddir}/src/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
@@ -47,9 +46,10 @@ libtarget_la_LIBADD = \
   ${abs_top_builddir}/src/lib/collection/libcollection.la \
   ${abs_top_builddir}/src/lib/libc/libc.la \
   ${abs_top_builddir}/src/lib/tar/libtar.la \
+  ${abs_top_builddir}/src/lib/libduplicate.la \
   ${abs_top_builddir}/src/lib/libssp.la \
   ${abs_top_builddir}/src/lib/libubsan.la
-libtarget_la_LDFLAGS = -all-static
+libtarget_la_LDFLAGS = -all-static -Wl,-static
 
 # Normal kernel building for physical device
 kernel_elf_SOURCES =
@@ -57,7 +57,8 @@ kernel_elf_DEPENDENCIES = libtarget.la
 kernel_elf_LDFLAGS = \
   -Wl,-L,${top_srcdir}/src/target \
   -Wl,-T,${top_srcdir}/src/target/rpi/physical.${subarch_subdir}.${executable_format}.ld \
-  -Wl,-Map,${output_map}
+  -Wl,-Map,${output_map} \
+  -all-static -Wl,-static
 kernel_elf_LDADD = libtarget.la
 
 # Normal kernel building for physical device
@@ -66,7 +67,8 @@ kernel_qemu_elf_DEPENDENCIES = libtarget.la
 kernel_qemu_elf_LDFLAGS = \
   -Wl,-L,${top_srcdir}/src/target \
   -Wl,-T,${top_srcdir}/src/target/rpi/qemu.${subarch_subdir}.${executable_format}.ld \
-  -Wl,-Map,${output_map_qemu}
+  -Wl,-Map,${output_map_qemu} \
+  -all-static -Wl,-static
 kernel_qemu_elf_LDADD = libtarget.la
 
 EXTRA_PROGRAMS = kernel.img kernel7.img kernel8.img kernel_qemu.img kernel7_qemu.img kernel8_qemu.img

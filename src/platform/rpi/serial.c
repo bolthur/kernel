@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
 #include <stdbool.h>
 #include <limits.h>
 
@@ -32,7 +30,9 @@
 #include <core/serial.h>
 #include <core/interrupt.h>
 #include <core/event.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_SERIAL )
+  #include <core/debug/debug.h>
+#endif
 
 #define MAX_SERIAL_BUFFER 500
 
@@ -131,7 +131,7 @@ void serial_init( void ) {
   io_out32( base + UARTIBRD, brd );
   io_out32( base + UARTFBRD, frd );
 
-  // Enable FIFO & 8 bit data transmissio (1 stop bit, no parity).
+  // Enable FIFO & 8 bit data transmission (1 stop bit, no parity).
   io_out32( base + UARTLCRH, ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 ) );
 
   // Mask incoming interrupt only
@@ -153,7 +153,7 @@ void serial_init( void ) {
 static void serial_clear( __unused void* context ) {
   // debug output
   #if defined( PRINT_SERIAL )
-    DEBUG_OUTPUT( "Clear interrupt source for serial!\r\n" );
+    DEBUG_OUTPUT( "Clear interrupt source for serial!\r\n" )
   #endif
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
@@ -202,15 +202,18 @@ static void serial_clear( __unused void* context ) {
 /**
  * @brief register serial interrupt
  */
-void serial_register_interrupt( void ) {
+bool serial_register_interrupt( void ) {
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // register interrupt
-  interrupt_register_handler( 57, serial_clear, INTERRUPT_FAST, true );
+  if ( ! interrupt_register_handler( 57, serial_clear, INTERRUPT_FAST, true ) ) {
+    return false;
+  }
   // mask interrupt
   io_out32( base + INTERRUPT_FIQ_CONTROL, 57 | 0x80 );
   // flush it
   serial_flush();
+  return true;
 }
 
 /**

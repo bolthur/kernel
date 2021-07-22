@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,8 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <avl.h>
-#include <assert.h>
+#include <collection/avl.h>
 
 /**
  * @brief Internal function for inserting a node
@@ -35,7 +33,7 @@ static avl_node_ptr_t insert(
   avl_node_ptr_t root
 ) {
   // handle empty root
-  if ( NULL == root ) {
+  if ( ! root ) {
     return node;
   }
 
@@ -56,11 +54,15 @@ static avl_node_ptr_t insert(
  *
  * @param tree
  * @param node
+ * @return true
+ * @return false
  */
-void avl_insert_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
-  // ensure existing tree
-  assert( NULL != tree && NULL != node );
-
-  // insert and rebalance
+bool avl_insert_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
+  // check parameter
+  if ( ! tree || ! node ) {
+    return false;
+  }
+  // insert and balance
   tree->root = insert( tree, node, tree->root );
+  return true;
 }

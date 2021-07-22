@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,34 +17,43 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_TASK_THREAD__ )
-#define __CORE_TASK_THREAD__
-
 #include <stdint.h>
 #include <stddef.h>
 #include <stdnoreturn.h>
-#include <avl.h>
+#include <collection/avl.h>
+#include <unistd.h>
+#include <core/event.h>
 
-typedef struct process task_process_t, *task_process_ptr_t;
-typedef struct task_priority_queue task_priority_queue_t, *task_priority_queue_ptr_t;
+#if ! defined( __CORE_TASK_THREAD__ )
+#define __CORE_TASK_THREAD__
+
+typedef struct task_process task_process_t;
+typedef struct task_process *task_process_ptr_t;
+typedef struct task_priority_queue task_priority_queue_t;
+typedef struct task_priority_queue *task_priority_queue_ptr_t;
 
 typedef enum {
-  TASK_THREAD_STATE_READY = 0,
+  TASK_THREAD_STATE_INIT = 0,
+  TASK_THREAD_STATE_READY,
   TASK_THREAD_STATE_ACTIVE,
   TASK_THREAD_STATE_HALT_SWITCH,
+  TASK_THREAD_STATE_KILL,
 } task_thread_state_t;
 
-typedef struct task_thread {
+struct task_thread {
   void* current_context;
-  void* initial_context;
   avl_node_t node_id;
-  size_t id;
+  pid_t id;
   size_t priority;
   uintptr_t stack_virtual;
   uint64_t stack_physical;
+  uintptr_t entry;
   task_thread_state_t state;
   task_process_ptr_t process;
-} task_thread_t, *task_thread_ptr_t;
+};
+
+typedef struct task_thread task_thread_t;
+typedef struct task_thread *task_thread_ptr_t;
 
 extern task_thread_ptr_t task_thread_current_thread;
 
@@ -54,12 +62,16 @@ extern task_thread_ptr_t task_thread_current_thread;
 #define TASK_THREAD_GET_CONTEXT  \
   ( NULL != task_thread_current_thread ? task_thread_current_thread->current_context : NULL )
 
-void task_thread_set_current( task_thread_ptr_t, task_priority_queue_ptr_t );
-size_t task_thread_generate_id( void );
+bool task_thread_set_current( task_thread_ptr_t, task_priority_queue_ptr_t );
+void task_thread_reset_current( void );
+pid_t task_thread_generate_id( task_process_ptr_t );
 avl_tree_ptr_t task_thread_init( void );
 void task_thread_destroy( avl_tree_ptr_t );
 task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t, size_t );
+task_thread_ptr_t task_thread_fork( task_process_ptr_t, task_thread_ptr_t );
 task_thread_ptr_t task_thread_next( void );
 noreturn void task_thread_switch_to( uintptr_t );
+bool task_thread_push_arguments( task_thread_ptr_t, char**, char** );
+void task_thread_cleanup( event_origin_t, void* );
 
 #endif

@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,7 +26,12 @@
  * @brief Debug output define
  */
 #define DEBUG_OUTPUT( ... ) \
-  printf( "[ %s:%4d ] ", __func__, __LINE__ ); \
-  printf( __VA_ARGS__ );
+  { \
+    const char* f = __func__; \
+    if ( f ) { \
+      printf( "[ %s:%4d ] ", f, __LINE__ ); \
+      printf( __VA_ARGS__ ); \
+    } \
+  }
 
 #endif

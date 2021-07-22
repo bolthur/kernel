@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -29,17 +28,22 @@
 #define PAGE_INDEX( address ) ( address / PAGE_PER_ENTRY )
 #define PAGE_OFFSET( address ) ( address % PAGE_PER_ENTRY )
 
-#define PHYS_NO_ALIGNMENT 0
-
 #define PHYS_ALL_PAGES_OF_INDEX_USED 0xFFFFFFFF
 
 #define PAGE_SIZE 0x1000
+#define ROUND_DOWN_TO_FULL_PAGE( a ) \
+  ( ( uintptr_t )( a ) & ( uintptr_t )( ~( ( PAGE_SIZE ) - 1 ) ) )
+#define ROUND_UP_TO_FULL_PAGE( a ) \
+  ( ( ( ( uintptr_t )( a ) & ( ( PAGE_SIZE ) - 1 ) ) ? ( PAGE_SIZE ) : 0 ) \
+    + ROUND_DOWN_TO_FULL_PAGE( ( a ) ) )
+#define ROUND_PAGE_OFFSET( a ) ( ( uintptr_t )( a ) & ( ( PAGE_SIZE ) -1 ) )
+
 
 extern uint32_t *phys_bitmap;
 extern uint32_t phys_bitmap_length;
 
 void phys_init( void );
-void phys_platform_init( void );
+bool phys_platform_init( void );
 
 void phys_mark_page_used( uint64_t );
 void phys_mark_page_free( uint64_t );

@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,10 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <core/debug/debug.h>
+#if defined( PRINT_PROCESS )
+  #include <core/debug/debug.h>
+#endif
 #include <core/task/queue.h>
 
 /**
@@ -37,10 +37,10 @@ static int32_t queue_compare_priority_callback(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b )
     DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n",
       ( size_t )a->data,
-      ( size_t )b->data );
+      ( size_t )b->data )
   #endif
 
   // -1 if address of a is greater than address of b
@@ -59,7 +59,7 @@ static int32_t queue_compare_priority_callback(
  * @brief Initialize task process manager
  */
 avl_tree_ptr_t task_queue_init( void ) {
-  return avl_create_tree( queue_compare_priority_callback );
+  return avl_create_tree( queue_compare_priority_callback, NULL, NULL );
 }
 
 /**
@@ -73,50 +73,60 @@ task_priority_queue_ptr_t task_queue_get_queue(
   task_manager_ptr_t manager,
   size_t priority
 ) {
-  // assert manager existence
-  assert( NULL != manager );
+  // check parameter
+  if ( ! manager ) {
+    return NULL;
+  }
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Called task_queue_get_queue( %zu )\r\n", priority );
+    DEBUG_OUTPUT( "Called task_queue_get_queue( %zu )\r\n", priority )
   #endif
   // get correct tree to use
-  avl_tree_ptr_t tree = manager->thread_priority_tree;
+  avl_tree_ptr_t tree = manager->thread_priority;
 
   // try to find node
   avl_node_ptr_t node = avl_find_by_data( tree, ( void* )priority );
   task_priority_queue_ptr_t queue;
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
+    DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node )
   #endif
   // handle not yet added
-  if ( NULL == node ) {
+  if ( ! node ) {
     // allocate block
     queue = ( task_priority_queue_ptr_t )malloc(
       sizeof( task_priority_queue_t ) );
-    // assert initialization
-    assert( NULL != queue );
+    // check parameter
+    if ( ! queue ) {
+      return NULL;
+    }
     // prepare memory
     memset( ( void* )queue, 0, sizeof( task_priority_queue_t ) );
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "Initialized new node at %p\r\n", ( void* )queue );
+      DEBUG_OUTPUT( "Initialized new node at %p\r\n", ( void* )queue )
     #endif
     // populate queue
     queue->priority = priority;
-    queue->thread_list = list_construct();
+    queue->thread_list = list_construct( NULL, NULL );
+    if ( ! queue->thread_list ) {
+      free( queue );
+      return NULL;
+    }
     queue->current = NULL;
     queue->last_handled = NULL;
     // prepare and insert node
     avl_prepare_node( &queue->node, ( void* )priority );
-    avl_insert_by_node( tree, &queue->node );
+    if ( ! avl_insert_by_node( tree, &queue->node ) ) {
+      list_destruct( queue->thread_list );
+      free( queue );
+      return NULL;
+    }
   // existing? => gather block
   } else {
     queue = TASK_QUEUE_GET_PRIORITY( node );
   }
 
-  // assert existence
-  assert( NULL != queue );
   // return queue
   return queue;
 }

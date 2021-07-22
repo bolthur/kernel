@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -37,5 +36,5 @@ uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
  * @brief Stack check failed callback
  */
 noreturn void __stack_chk_fail( void ) {
-  PANIC( "Stack smashing detected" );
+  PANIC( "Stack smashing detected" )
 }

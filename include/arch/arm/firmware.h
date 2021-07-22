@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -29,11 +28,14 @@
   typedef uint64_t firmware_register_t;
 #endif
 
-typedef struct {
+struct firmware {
   firmware_register_t unused;
   firmware_register_t machine;
   firmware_register_t atag_fdt;
-} firmware_t, *firmware_ptr_t;
+};
+
+typedef struct firmware firmware_t;
+typedef struct firmware *firmware_ptr_t;
 
 extern firmware_t firmware_info;
 

@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,21 +17,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// disable some warnings temporarily
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-
 #include <core/mm/virt.h>
 #include <core/mm/phys.h>
 #include <core/firmware.h>
 #include <arch/arm/firmware.h>
 #include <core/entry.h>
-#include <core/panic.h>
-#include <core/debug/debug.h>
-
 #include <atag.h>
+
+// disable some warnings temporarily
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+#pragma GCC diagnostic ignored "-Wsign-conversion"
+// include fdt library
 #include <libfdt.h>
+// enable again
+#pragma GCC diagnostic pop
 
 /**
  * @brief Handle firmware information related startup init
@@ -59,19 +58,22 @@ void __bootstrap firmware_startup_init( void ) {
 /**
  * @brief Handle firmware information related init
  */
-void firmware_init( void ) {
+bool firmware_init( void ) {
   // transfer to uintptr_t
   uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
 
   // handle atag
   if ( atag_check( atag_fdt ) ) {
-    if ( !virt_is_mapped( PHYS_2_VIRT( atag_fdt ) ) ) {
-      virt_map_address(
-        kernel_context,
+    if ( ! virt_is_mapped( PHYS_2_VIRT( atag_fdt ) ) ) {
+      if ( ! virt_map_address(
+        virt_current_kernel_context,
         PHYS_2_VIRT( atag_fdt ),
         atag_fdt,
         VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_EXECUTABLE );
+        VIRT_PAGE_TYPE_EXECUTABLE
+      ) ) {
+        return false;
+      }
     }
     // transform to virtual
     firmware_info.atag_fdt = PHYS_2_VIRT( atag_fdt );
@@ -84,12 +86,15 @@ void firmware_init( void ) {
     uintptr_t virtual = PHYS_2_VIRT( start );
     // map until end of dtb
     while ( start < end ) {
-      virt_map_address(
-        kernel_context,
+      if ( ! virt_map_address(
+        virt_current_kernel_context,
         virtual,
         start,
         VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_EXECUTABLE );
+        VIRT_PAGE_TYPE_EXECUTABLE
+      ) ) {
+        return false;
+      }
       // next page
       start += PAGE_SIZE;
       virtual += PAGE_SIZE;
@@ -97,7 +102,6 @@ void firmware_init( void ) {
     // overwrite
     firmware_info.atag_fdt = PHYS_2_VIRT( atag_fdt );
   }
-}
 
-// enable again
-#pragma GCC diagnostic pop
+  return true;
+}

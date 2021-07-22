@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,8 +18,7 @@
  */
 
 #include <stddef.h>
-#include <assert.h>
-#include <list.h>
+#include <collection/list.h>
 
 /**
  * @brief Search a list item by data
@@ -32,15 +30,16 @@
 list_item_ptr_t list_lookup_data( list_manager_ptr_t list, void* data ) {
   list_item_ptr_t current;
 
-  // assert existence
-  assert( NULL != list );
+  // check parameter
+  if ( ! list ) {
+    return NULL;
+  }
   // populate current
   current = list->first;
 
-
   // loop through list until end
-  while ( NULL != current ) {
-    if ( data == current->data ) {
+  while ( current ) {
+    if ( 0 == list->lookup( current, data ) ) {
       return current;
     }
     // check next one
@@ -61,14 +60,16 @@ list_item_ptr_t list_lookup_data( list_manager_ptr_t list, void* data ) {
 list_item_ptr_t list_lookup_item( list_manager_ptr_t list, list_item_ptr_t item ) {
   list_item_ptr_t current;
 
-  // assert existence
-  assert( NULL != list );
+  // check parameter
+  if ( ! list ) {
+    return NULL;
+  }
   // populate current
   current = list->first;
 
 
   // loop through list until end
-  while ( NULL != current ) {
+  while ( current ) {
     if ( item == current ) {
       return current;
     }

@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
-#include <core/debug/debug.h>
 #include <core/task/stack.h>
 #include <arch/arm/stack.h>
 
@@ -35,10 +32,14 @@
  *
  * @param manager
  * @return uintptr_t
+ *
+ * @todo revise stack handling
  */
 uintptr_t task_stack_manager_next( task_stack_manager_ptr_t manager ) {
-  // assert manager
-  assert( NULL != manager );
+  // check parameter
+  if ( ! manager ) {
+    return 0;
+  }
 
   // determine min and max
   uintptr_t current = THREAD_STACK_START_ADDRESS;
@@ -50,7 +51,7 @@ uintptr_t task_stack_manager_next( task_stack_manager_ptr_t manager ) {
   avl_node_ptr_t max = avl_get_max( manager->tree->root );
 
   // handle empty
-  if ( NULL == min && NULL == max ) {
+  if ( ! min && ! max ) {
     return current;
   }
 
@@ -59,16 +60,20 @@ uintptr_t task_stack_manager_next( task_stack_manager_ptr_t manager ) {
     // try to find
     avl_node_ptr_t tmp = avl_find_by_data( manager->tree, ( void* )current );
     // not found => free
-    if ( NULL == tmp ) {
+    if ( ! tmp ) {
       return current;
     }
     // next to probe
     current += STACK_SIZE;
   }
 
-  // assert address
-  assert( current >= min_stack );
-  assert( current <= max_stack );
+  // check address
+  if (
+    current < min_stack
+    || current > max_stack
+  ) {
+    return 0;
+  }
 
   // return new one
   return current + STACK_SIZE;

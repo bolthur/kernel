@@ -1,6 +1,5 @@
-
 /**
- * Copyright (C) 2018 - 2020 bolthur project.
+ * Copyright (C) 2018 - 2021 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,6 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+#include <inttypes.h>
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -39,7 +40,7 @@ noreturn void __assert(
   panic_init();
 
   // print assertion failed
-  printf( "ASSERTION-FAILED( %s ) at %s:%u\r\n", desc, file, line );
+  printf( "ASSERTION-FAILED( %s ) at %s:%"PRIu32"\r\n", desc, file, line );
 
   // abort further execution
   abort();
