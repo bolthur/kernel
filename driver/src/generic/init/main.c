@@ -132,6 +132,7 @@ static ssize_t my_tar_write( __unused int fd, __unused const void* src, __unused
 }
 
 /**
+ * @fn void send_add_request(vfs_add_request_ptr_t)
  * @brief helper to send add request with wait for response
  *
  * @param msg
@@ -142,7 +143,6 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
   if ( ! response ) {
     return;
   }
-  memset( response, 0, sizeof( vfs_add_response_t ) );
   // message id variable
   size_t message_id;
   bool send = true;
@@ -159,6 +159,8 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
           0 );
       } while ( 0 == message_id );
     }
+    // erase message
+    memset( response, 0, sizeof( vfs_add_response_t ) );
     // wait for response
     _message_wait_for_response(
       ( char* )response,
@@ -167,10 +169,12 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
     // handle error / no message
     if ( errno ) {
       send = false;
+      //EARLY_STARTUP_PRINT( "An error occurred: %s\r\n", strerror( errno ) )
       continue;
     }
     // stop on success
-    if ( response->success ) {
+    if ( VFS_MESSAGE_ADD_SUCCESS == response->status ) {
+      //EARLY_STARTUP_PRINT( "Successful added!\r\n" )
       break;
     }
     // set send to true again to retry
@@ -272,7 +276,8 @@ static void handle_normal_init( void ) {
 }
 
 /**
- * @brief main entry function
+ * @fn int main(int, char*[])
+ * @brief main entry point
  *
  * @param argc
  * @param argv

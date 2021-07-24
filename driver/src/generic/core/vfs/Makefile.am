@@ -1,6 +1,6 @@
 
 # -Os necessary when debugging due to a weird startup behaviour
-AM_CFLAGS = -DPROGRAM_NAME=\"vfs\" -Os
+AM_CFLAGS = -DPROGRAM_NAME=\"vfs\"
 
 bin_PROGRAMS = vfs
 vfs_SOURCES = \
@@ -20,4 +20,4 @@ vfs_SOURCES = \
   util.c \
   vfs.c
 # -Wl,-s -Wl,--gc-sections necessary when debugging due to a startup weird behaviour
-vfs_LDFLAGS = -all-static --static -Wl,-s -Wl,--gc-sections
+vfs_LDFLAGS = -all-static --static

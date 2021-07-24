@@ -33,13 +33,17 @@
 #include <sys/bolthur.h>
 
 /**
+ * @fn void send_add_request(vfs_add_request_ptr_t)
  * @brief helper to send add request with wait for response
  *
  * @param msg
  */
 static void send_add_request( vfs_add_request_ptr_t msg ) {
-  vfs_add_response_t response;
-  memset( &response, 0, sizeof( vfs_add_response_t ) );
+  vfs_add_response_ptr_t response = ( vfs_add_response_ptr_t )malloc(
+    sizeof( vfs_add_response_t ) );
+  if ( ! response ) {
+    return;
+  }
   // message id variable
   size_t message_id;
   bool send = true;
@@ -56,35 +60,47 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
           0 );
       } while ( 0 == message_id );
     }
+    // erase message
+    memset( response, 0, sizeof( vfs_add_response_t ) );
     // wait for response
     _message_wait_for_response(
-      ( char* )&response,
+      ( char* )response,
       sizeof( vfs_add_response_t ),
       message_id );
     // handle error / no message
     if ( errno ) {
       send = false;
+      //EARLY_STARTUP_PRINT( "An error occurred: %s\r\n", strerror( errno ) )
       continue;
     }
-    // evaluate response
-    if ( ! response.success ) {
-      send = true;
-      EARLY_STARTUP_PRINT( "FAILED, TRYING AGAIN!\r\n" )
-      continue;
+    // stop on success
+    if ( VFS_MESSAGE_ADD_SUCCESS == response->status ) {
+      //EARLY_STARTUP_PRINT( "Successful added!\r\n" )
+      break;
     }
-    // exit loop
-    break;
+    // set send to true again to retry
+    send = true;
   }
+  // free up response
+  free( response );
 }
 
+/**
+ * @fn int main(int, char*[])
+ * @brief main entry point
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main( __unused int argc, __unused char* argv[] ) {
   // print something
-  EARLY_STARTUP_PRINT( "system console processing!\r\n" )
+  EARLY_STARTUP_PRINT( "system console init starting!\r\n" )
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
 
-  EARLY_STARTUP_PRINT( "pushing /dev/stdin to vfs!\r\n" )
+  EARLY_STARTUP_PRINT( "-> pushing /dev/stdin to vfs!\r\n" )
   // STDIN
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -94,7 +110,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // perform add request
   send_add_request( msg );
 
-  EARLY_STARTUP_PRINT( "pushing /dev/stdout to vfs!\r\n" )
+  EARLY_STARTUP_PRINT( "-> pushing /dev/stdout to vfs!\r\n" )
   // STDOUT
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -104,7 +120,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // perform add request
   send_add_request( msg );
 
-  EARLY_STARTUP_PRINT( "pushing /dev/stderr to vfs!\r\n" )
+  EARLY_STARTUP_PRINT( "-> pushing /dev/stderr to vfs!\r\n" )
   // STDERR
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -114,7 +130,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // perform add request
   send_add_request( msg );
 
-  EARLY_STARTUP_PRINT( "pushing console device to vfs!\r\n" )
+  EARLY_STARTUP_PRINT( "-> pushing console device to vfs!\r\n" )
   // console device
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -123,6 +139,8 @@ int main( __unused int argc, __unused char* argv[] ) {
   strncpy( msg->file_path, "/dev/console", PATH_MAX );
   // perform add request
   send_add_request( msg );
+  // print something
+  EARLY_STARTUP_PRINT( "system console init done!\r\n" )
 
   for(;;);
   return 0;

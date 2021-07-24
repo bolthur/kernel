@@ -78,7 +78,8 @@ void msg_handle_add( void ) {
       "Node \"%s\" already existing!\r\n",
       request->file_path )
     // prepare response
-    response->success = false;
+    response->status = VFS_MESSAGE_ADD_ALREADY_EXIST;
+    response->handling_process = node->pid;
     // send response
     _message_send_by_pid(
       sender,
@@ -103,7 +104,7 @@ void msg_handle_add( void ) {
       str, request->file_path )
     free( str );
     // prepare response
-    response->success = false;
+    response->status = VFS_MESSAGE_ADD_ERROR;
     // send response
     _message_send_by_pid(
       sender,
@@ -128,7 +129,7 @@ void msg_handle_add( void ) {
     if ( 0 == strlen( request->linked_path ) ) {
       free( str );
       // prepare response
-      response->success = false;
+      response->status = VFS_MESSAGE_ADD_ERROR;
       // send response
       _message_send_by_pid(
         sender,
@@ -149,7 +150,7 @@ void msg_handle_add( void ) {
     if ( ! target ) {
       free( str );
       // prepare response
-      response->success = false;
+      response->status = VFS_MESSAGE_ADD_ERROR;
       // send response
       _message_send_by_pid(
         sender,
@@ -174,7 +175,7 @@ void msg_handle_add( void ) {
       free( target );
     }
     // prepare response
-    response->success = false;
+    response->status = VFS_MESSAGE_ADD_ERROR;
     // send response
     _message_send_by_pid(
       sender,
@@ -197,12 +198,15 @@ void msg_handle_add( void ) {
     free( target );
   }
   // prepare response
-  response->success = true;
+  response->status = VFS_MESSAGE_ADD_SUCCESS;
+  response->handling_process = sender;
+  /*EARLY_STARTUP_PRINT( "response->status = %d\r\n", response->status )
+  EARLY_STARTUP_PRINT( "response->handling_process = %d\r\n", response->handling_process )*/
   // send response
   _message_send_by_pid(
     sender,
     VFS_ADD_RESPONSE,
-    ( const char* )&response,
+    ( const char* )response,
     sizeof( vfs_add_response_t ),
     message_id
   );

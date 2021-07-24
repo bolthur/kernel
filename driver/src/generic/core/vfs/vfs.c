@@ -238,9 +238,31 @@ void vfs_dump( vfs_node_ptr_t node, const char* level_prefix ) {
     prefix_len = 2;
   } else {
     prefix_len = strlen( level_prefix );
-    EARLY_STARTUP_PRINT(
-      "%s%c%s\r\n",
-      level_prefix, prefix_len != strlen( "/" ) ? '/' : '\b', node->name )
+    size_t default_prefix_len = strlen( "/" );
+    // determine necessary total size
+    size_t total = prefix_len + 1;
+    if ( prefix_len != default_prefix_len ) {
+      total++;
+    }
+    total += strlen( node->name );
+    // allocate buffer
+    char* buffer = malloc( sizeof( char ) * total );
+    if ( ! buffer ) {
+      return;
+    }
+    // clear it
+    memset( buffer, 0, sizeof( char ) * total );
+    // push stuff into it
+    strcpy( buffer, level_prefix );
+    if ( prefix_len != default_prefix_len ) {
+      strcat( buffer, "/" );
+    }
+    strcat( buffer, node->name );
+    // print stuff
+    EARLY_STARTUP_PRINT( "%s\r\n", buffer )
+    // free again
+    free( buffer );
+    // increment prefix length
     prefix_len++;
   }
 

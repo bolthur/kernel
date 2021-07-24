@@ -26,13 +26,17 @@
 #include <sys/bolthur.h>
 
 /**
+ * @fn void send_add_request(vfs_add_request_ptr_t)
  * @brief helper to send add request with wait for response
  *
  * @param msg
  */
 static void send_add_request( vfs_add_request_ptr_t msg ) {
-  vfs_add_response_t response;
-  memset( &response, 0, sizeof( vfs_add_response_t ) );
+  vfs_add_response_ptr_t response = ( vfs_add_response_ptr_t )malloc(
+    sizeof( vfs_add_response_t ) );
+  if ( ! response ) {
+    return;
+  }
   // message id variable
   size_t message_id;
   bool send = true;
@@ -49,38 +53,47 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
           0 );
       } while ( 0 == message_id );
     }
+    // erase message
+    memset( response, 0, sizeof( vfs_add_response_t ) );
     // wait for response
     _message_wait_for_response(
-      ( char* )&response,
+      ( char* )response,
       sizeof( vfs_add_response_t ),
       message_id );
     // handle error / no message
     if ( errno ) {
-      EARLY_STARTUP_PRINT( "An error occurred: %s\r\n", strerror( errno ) )
       send = false;
+      //EARLY_STARTUP_PRINT( "An error occurred: %s\r\n", strerror( errno ) )
       continue;
     }
-    EARLY_STARTUP_PRINT( "Received message!\r\n" )
-    // evaluate response
-    if ( ! response.success ) {
-      send = true;
-      EARLY_STARTUP_PRINT( "FAILED, TRYING AGAIN!\r\n" )
-      continue;
+    // stop on success
+    if ( VFS_MESSAGE_ADD_SUCCESS == response->status ) {
+      //EARLY_STARTUP_PRINT( "Successful added!\r\n" )
+      break;
     }
-    EARLY_STARTUP_PRINT( "Exit endless loop due to success!\r\n" )
-    // exit function
-    return;
+    // set send to true again to retry
+    send = true;
   }
+  // free up response
+  free( response );
 }
 
+/**
+ * @fn int main(int, char*[])
+ * @brief main entry point
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main( __unused int argc, __unused char* argv[] ) {
   // print something
-  EARLY_STARTUP_PRINT( "framebuffer processing!\r\n" )
+  EARLY_STARTUP_PRINT( "framebuffer init starting!\r\n" )
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
   // some output
-  EARLY_STARTUP_PRINT( "pushing /dev/framebuffer to vfs!\r\n" )
+  EARLY_STARTUP_PRINT( "-> pushing /dev/framebuffer to vfs!\r\n" )
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
@@ -89,7 +102,9 @@ int main( __unused int argc, __unused char* argv[] ) {
   // perform add request
   send_add_request( msg );
   // some output
-  EARLY_STARTUP_PRINT( "FIXME: REGISTER AT CONSOLE DAEMON FOR DEFAULT OUTPUT" )
+  EARLY_STARTUP_PRINT( "-> FIXME: REGISTER AT CONSOLE DAEMON FOR DEFAULT OUTPUT\r\n" )
+  // print something
+  EARLY_STARTUP_PRINT( "framebuffer init done!\r\n" )
   for(;;);
   return 0;
 }
