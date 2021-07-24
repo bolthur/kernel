@@ -1066,3 +1066,36 @@ int task_process_replace(
   }
   return 0;
 }
+
+/**
+ * @fn void task_unblock_threads(task_process_ptr_t, task_thread_state_t, task_state_data_t)
+ * @brief Helper to unblock threads of process by thread state and data
+ *
+ * @param proc
+ * @param necessary_thread_state
+ * @param necessary_thread_data
+ */
+void task_unblock_threads(
+  task_process_ptr_t proc,
+  task_thread_state_t necessary_thread_state,
+  task_state_data_t necessary_thread_data
+) {
+  // get first thread
+  avl_node_ptr_t current_thread_node = avl_iterate_first( proc->thread_manager );
+  // loop until there is no more thread
+  while ( current_thread_node ) {
+    // get thread
+    task_thread_ptr_t possible_thread_to_unblock = TASK_THREAD_GET_BLOCK(
+      current_thread_node );
+    // try to unblock if blocked
+    task_thread_unblock(
+      possible_thread_to_unblock,
+      necessary_thread_state,
+      necessary_thread_data
+    );
+    // get next thread
+    current_thread_node = avl_iterate_next(
+      proc->thread_manager,
+      current_thread_node );
+  }
+}

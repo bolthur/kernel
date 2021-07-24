@@ -58,8 +58,8 @@
 #define SYSCALL_INTERRUPT_ACQUIRE 51
 #define SYSCALL_INTERRUPT_RELEASE 52
 
-#define SYSCALL_DUMMY_PUTC 101
-#define SYSCALL_DUMMY_PUTS 102
+#define SYSCALL_KERNEL_PUTC 101
+#define SYSCALL_KERNEL_PUTS 102
 
 bool syscall_init( void );
 bool syscall_init_platform( void );
@@ -101,7 +101,7 @@ void syscall_io_release( void* );
 void syscall_io_check( void* );
 void syscall_io_raise( void* );
 
-void syscall_dummy_putc( void* );
-void syscall_dummy_puts( void* );
+void syscall_kernel_putc( void* );
+void syscall_kernel_puts( void* );
 
 #endif

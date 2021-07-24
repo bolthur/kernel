@@ -23,22 +23,15 @@
 #include <collection/avl.h>
 #include <unistd.h>
 #include <core/event.h>
+#include <core/task/state.h>
 
 #if ! defined( __CORE_TASK_THREAD__ )
 #define __CORE_TASK_THREAD__
 
 typedef struct task_process task_process_t;
-typedef struct task_process *task_process_ptr_t;
+typedef struct task_process* task_process_ptr_t;
 typedef struct task_priority_queue task_priority_queue_t;
-typedef struct task_priority_queue *task_priority_queue_ptr_t;
-
-typedef enum {
-  TASK_THREAD_STATE_INIT = 0,
-  TASK_THREAD_STATE_READY,
-  TASK_THREAD_STATE_ACTIVE,
-  TASK_THREAD_STATE_HALT_SWITCH,
-  TASK_THREAD_STATE_KILL,
-} task_thread_state_t;
+typedef struct task_priority_queue* task_priority_queue_ptr_t;
 
 struct task_thread {
   void* current_context;
@@ -49,11 +42,12 @@ struct task_thread {
   uint64_t stack_physical;
   uintptr_t entry;
   task_thread_state_t state;
+  task_state_data_t state_data;
   task_process_ptr_t process;
 };
 
 typedef struct task_thread task_thread_t;
-typedef struct task_thread *task_thread_ptr_t;
+typedef struct task_thread* task_thread_ptr_t;
 
 extern task_thread_ptr_t task_thread_current_thread;
 
@@ -73,5 +67,7 @@ task_thread_ptr_t task_thread_next( void );
 noreturn void task_thread_switch_to( uintptr_t );
 bool task_thread_push_arguments( task_thread_ptr_t, char**, char** );
 void task_thread_cleanup( event_origin_t, void* );
+void task_thread_block( task_thread_ptr_t, task_thread_state_t, task_state_data_t );
+void task_thread_unblock( task_thread_ptr_t, task_thread_state_t, task_state_data_t );
 
 #endif

@@ -369,3 +369,58 @@ void task_thread_cleanup(
     list_remove( process_manager->thread_to_cleanup, remove );
   }
 }
+
+/**
+ * @fn void task_thread_block(task_thread_ptr_t, task_thread_state_t, task_state_data_t)
+ * @brief Block a thread with specific state and data
+ *
+ * @param thread
+ * @param state
+ * @param data
+ */
+void task_thread_block(
+  task_thread_ptr_t thread,
+  task_thread_state_t state,
+  task_state_data_t data
+) {
+  // no block if something different than ready or active
+  if (
+    TASK_THREAD_STATE_READY != thread->state
+    && TASK_THREAD_STATE_ACTIVE != thread->state
+  ) {
+    return;
+  }
+  // set state and data
+  thread->state = state;
+  thread->state_data = data;
+}
+
+/**
+ * @fn void task_thread_unblock(task_thread_ptr_t, task_thread_state_t, task_state_data_t)
+ * @brief Unblock a thread with set state passed as parameter
+ *
+ * @param thread
+ * @param necessary_state
+ * @param necessary_data
+ */
+void task_thread_unblock(
+  task_thread_ptr_t thread,
+  task_thread_state_t necessary_state,
+  task_state_data_t necessary_data
+) {
+  // validate state
+  if (
+    necessary_state != thread->state
+    || (
+      necessary_state != TASK_THREAD_WAITING_FOR_MESSAGE
+    )
+  ) {
+    return;
+  }
+  // validate data
+  if ( thread->state_data.data_ptr != necessary_data.data_ptr ) {
+    return;
+  }
+  // set back to ready
+  thread->state = TASK_THREAD_STATE_READY;
+}

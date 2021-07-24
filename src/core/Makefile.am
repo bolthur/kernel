@@ -8,7 +8,7 @@ libcore_la_SOURCES = \
   mm/phys.c \
   mm/shared.c \
   mm/virt.c \
-  syscall/dummy.c \
+  syscall/print.c \
   syscall/init.c \
   syscall/interrupt.c \
   syscall/memory.c \

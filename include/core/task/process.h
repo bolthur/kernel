@@ -24,25 +24,18 @@
 #include <collection/list.h>
 #include <core/mm/virt.h>
 #include <core/event.h>
+#include <core/task/state.h>
 
 #if ! defined( __CORE_TASK_PROCESS__ )
 #define __CORE_TASK_PROCESS__
 
 typedef struct task_thread task_thread_t;
-typedef struct task_thread *task_thread_ptr_t;
+typedef struct task_thread* task_thread_ptr_t;
 typedef struct task_thread_manager task_thread_manager_t;
-typedef struct task_thread_manager *task_thread_manager_ptr_t;
+typedef struct task_thread_manager* task_thread_manager_ptr_t;
 
 typedef struct task_stack_manager task_stack_manager_t;
-typedef struct task_stack_manager *task_stack_manager_ptr_t;
-
-typedef enum {
-  TASK_PROCESS_STATE_INIT = 0,
-  TASK_PROCESS_STATE_READY,
-  TASK_PROCESS_STATE_ACTIVE,
-  TASK_PROCESS_STATE_HALT_SWITCH,
-  TASK_PROCESS_STATE_KILL,
-} task_process_state_t;
+typedef struct task_stack_manager* task_stack_manager_ptr_t;
 
 struct task_process {
   avl_node_t node_id;
@@ -55,6 +48,7 @@ struct task_process {
   char* name;
   virt_context_ptr_t virtual_context;
   task_process_state_t state;
+  task_state_data_t state_data;
   list_manager_ptr_t message_queue;
 };
 
@@ -73,12 +67,12 @@ struct task_manager {
 };
 
 typedef struct task_process task_process_t;
-typedef struct task_process *task_process_ptr_t;
+typedef struct task_process* task_process_ptr_t;
 
 typedef struct task_process_name task_process_name_t;
-typedef struct task_process_name *task_process_name_ptr_t;
+typedef struct task_process_name* task_process_name_ptr_t;
 typedef struct task_manager task_manager_t;
-typedef struct task_manager *task_manager_ptr_t;
+typedef struct task_manager* task_manager_ptr_t;
 
 #define TASK_PROCESS_GET_BLOCK_ID( n ) \
   ( task_process_ptr_t )( ( uint8_t* )n - offsetof( task_process_t, node_id ) )
@@ -102,5 +96,6 @@ list_manager_ptr_t task_process_get_by_name( const char* );
 task_process_name_ptr_t task_process_get_name_list( const char* );
 void task_process_prepare_kill( void*, task_process_ptr_t );
 int task_process_replace( task_process_ptr_t, uintptr_t, const char*, const char**, const char**, void* );
+void task_unblock_threads( task_process_ptr_t, task_thread_state_t, task_state_data_t );
 
 #endif

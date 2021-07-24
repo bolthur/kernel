@@ -254,19 +254,19 @@ bool syscall_init( void ) {
   ) ) {
     return false;
   }
-  // dummy
+  // kernel output
   #if defined( OUTPUT_ENABLE )
     if ( ! interrupt_register_handler(
-      SYSCALL_DUMMY_PUTC,
-      syscall_dummy_putc,
+      SYSCALL_KERNEL_PUTC,
+      syscall_kernel_putc,
       INTERRUPT_SOFTWARE,
       false
     ) ) {
       return false;
     }
     if ( ! interrupt_register_handler(
-      SYSCALL_DUMMY_PUTS,
-      syscall_dummy_puts,
+      SYSCALL_KERNEL_PUTS,
+      syscall_kernel_puts,
       INTERRUPT_SOFTWARE,
       false
     ) ) {

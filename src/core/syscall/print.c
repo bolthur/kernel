@@ -23,28 +23,25 @@
 #include <core/panic.h>
 
 /**
- * @brief Dummy system call for testing purposes
+ * @fn void syscall_kernel_putc(void*)
+ * @brief Kernel put character system call
  *
  * @param context
- *
- * @todo remove with final syscall implementation
  */
-void syscall_dummy_putc( void* context ) {
+void syscall_kernel_putc( void* context ) {
   printf( "%c", ( uint8_t )syscall_get_parameter( context, 0 ) );
 }
 
 /**
- * @brief Dummy system call for testing purposes
+ * @fn void syscall_kernel_puts(void*)
+ * @brief Kernel put string system call
  *
  * @param context
- *
- * @todo remove with final syscall implementation
  */
-void syscall_dummy_puts( void* context ) {
+void syscall_kernel_puts( void* context ) {
   // get parameter
-  // int file = ( int )syscall_get_parameter( context, 0 );
-  char* str = ( char* )syscall_get_parameter( context, 1 );
-  int len = ( int )syscall_get_parameter( context, 2 );
+  char* str = ( char* )syscall_get_parameter( context, 0 );
+  int len = ( int )syscall_get_parameter( context, 1 );
   // handle errors
   if ( ! str ) {
     syscall_populate_error( context, ( size_t )-EINVAL );

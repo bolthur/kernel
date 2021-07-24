@@ -237,7 +237,7 @@ ssize_t _write(
   size_t len
 ) {
   if ( file == STDOUT_FILENO || file == STDERR_FILENO ) {
-    return _dummy_puts( file, ( char* )ptr, ( int )len );
+    return _kernel_puts( ( char* )ptr, ( int )len );
   }
   return -1;
 }

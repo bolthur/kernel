@@ -32,7 +32,8 @@
 #include <core/mm/heap.h>
 
 /**
- * @brief Create message queue
+ * @fn void syscall_message_create(void*)
+ * @brief Syscall to setup message queue
  *
  * @param context
  */
@@ -55,7 +56,8 @@ void syscall_message_create( void* context ) {
 }
 
 /**
- * @brief Delete message queue
+ * @fn void syscall_message_destroy(void*)
+ * @brief Syscall to destroy message queue
  *
  * @param context
  */
@@ -75,12 +77,10 @@ void syscall_message_destroy( __unused void* context ) {
 }
 
 /**
- * @brief Send message
+ * @fn void syscall_message_send_by_pid(void*)
+ * @brief Send a message to process by pid
  *
  * @param context
- *
- * @todo Check for target process is waiting for response of current message
- * @todo Set process back to ready when waiting for message id is matching
  */
 void syscall_message_send_by_pid( void* context ) {
   // get parameter
@@ -163,17 +163,21 @@ void syscall_message_send_by_pid( void* context ) {
   message_entry->request = sender_message_id;
   // push message to process queue
   list_push_back( target->message_queue, message_entry );
+  // unblock thread if blocked
+  task_unblock_threads(
+    target,
+    TASK_THREAD_WAITING_FOR_MESSAGE,
+    ( task_state_data_t ){ .data_size = sender_message_id }
+  );
   // return success
   syscall_populate_success( context, message_entry->id );
 }
 
 /**
+ * @fn void syscall_message_send_by_name(void*)
  * @brief Send message by name
  *
  * @param context
- *
- * @todo Check for target process is waiting for response of current message
- * @todo Set process back to ready when waiting for message id is matching
  */
 void syscall_message_send_by_name( void* context ) {
   // get parameter
@@ -265,6 +269,14 @@ void syscall_message_send_by_name( void* context ) {
       item = item->next;
       continue;
     }
+    // unblock thread if blocked
+    if ( 0 < sender_message_id ) {
+      task_unblock_threads(
+        proc,
+        TASK_THREAD_WAITING_FOR_MESSAGE,
+        ( task_state_data_t ){ .data_size = sender_message_id }
+      );
+    }
     // generate id
     if ( 0 == message_id ) {
       message_id = message_generate_id();
@@ -279,7 +291,8 @@ void syscall_message_send_by_name( void* context ) {
 }
 
 /**
- * @brief receive message
+ * @fn void syscall_message_receive(void*)
+ * @brief receive first message
  *
  * @param context
  *
@@ -360,7 +373,8 @@ void syscall_message_receive( void* context ) {
 }
 
 /**
- * @brief receive message
+ * @fn void syscall_message_receive_type(void*)
+ * @brief Receive message type
  *
  * @param context
  *
@@ -401,13 +415,10 @@ void syscall_message_receive_type( void* context ) {
 }
 
 /**
+ * @fn void syscall_message_wait_for_response(void*)
  * @brief Get response to a message by sent message id
  *
  * @param context
- *
- * @todo Set process to state waiting for response
- * @todo Store message id the process is waiting for somehow
- * @todo Trigger scheduling
  */
 void syscall_message_wait_for_response( void* context ) {
   // parameters
@@ -460,10 +471,17 @@ void syscall_message_wait_for_response( void* context ) {
   if ( ! found ) {
     // debug output
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "No response found for message!\r\n" )
+      DEBUG_OUTPUT( "No response found for message, blocking process with schedule!\r\n" )
     #endif
+    task_thread_block(
+      task_thread_current_thread,
+      TASK_THREAD_WAITING_FOR_MESSAGE,
+      ( task_state_data_t ){ .data_size = message_id }
+    );
     // set return and exit
     syscall_populate_error( context, ( size_t )-ENOMSG );
+    // enqueue schedule
+    event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
     return;
   }
   // check for length mismatch
@@ -488,6 +506,7 @@ void syscall_message_wait_for_response( void* context ) {
 }
 
 /**
+ * @fn void syscall_message_wait_for_response_type(void*)
  * @brief Get response type to a message by sent message id
  *
  * @param context
@@ -508,7 +527,7 @@ void syscall_message_wait_for_response_type( void* context ) {
 
 /**
  * @fn void syscall_message_wait_has_by_name(void*)
- * @brief Check for message box by name is possible
+ * @brief Check for process existing with message box by name
  *
  * @param context
  */
