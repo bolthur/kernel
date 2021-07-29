@@ -48,10 +48,10 @@ static int32_t compare_interrupt_callback(
   interrupt_block_ptr_t block_a = INTERRUPT_GET_BLOCK( a );
   interrupt_block_ptr_t block_b = INTERRUPT_GET_BLOCK( b );
 
-  // -1 if address of a is greater than address of b
+  // -1 if address of a->interrupt is greater than address of b->interrupt
   if ( block_a->interrupt > block_b->interrupt ) {
     return -1;
-  // 1 if address of b is greater than address of a
+  // 1 if address of b->interrupt is greater than address of a->interrupt
   } else if ( block_b->interrupt > block_a->interrupt ) {
     return 1;
   }

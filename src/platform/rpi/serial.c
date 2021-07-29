@@ -86,7 +86,7 @@ void serial_init( void ) {
   // Disable UART0.
   io_out32( base + UARTCR, 0 );
 
-  // Setup the GPIO pin 14 && 15
+  // Set up the GPIO pin 14 && 15
   uint32_t ra = io_in32( base + GPFSEL1 );
   ra = ( uint32_t )( ( int32_t ) ra & ~( 7 << 12 ) );
   ra |= 4 << 12;
@@ -174,7 +174,7 @@ static void serial_clear( __unused void* context ) {
 
     // read data register
     uint16_t data_register = io_in16( base + UARTDR );
-    // extract error related shit
+    // extract error related stuff
     uint8_t error = ( uint8_t )( data_register >> CHAR_BIT );
     // extract character
     uint8_t character = ( uint8_t )data_register;

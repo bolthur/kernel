@@ -43,7 +43,7 @@ static avl_node_ptr_t remove_by_node(
 
   // equal? => check for root is node and continue on subtrees if not
   if ( 0 == result ) {
-    // equal but not the found one, check both sub trees
+    // equal but not the found one, check both subtrees
     if ( node != root ) {
       // continue on left subtree if existing
       if ( root->left ) {
@@ -73,7 +73,7 @@ static avl_node_ptr_t remove_by_node(
           root = tmp;
         }
       } else {
-        // get smallest successor of right node
+        // get the smallest successor of right node
         tmp = avl_get_min( root->right );
 
         // remove tmp from right
@@ -146,7 +146,7 @@ static avl_node_ptr_t remove_by_data(
         root = tmp;
       }
     } else {
-      // get smallest successor of right node
+      // get the smallest successor of right node
       tmp = avl_get_min( root->right );
 
       // remove tmp from right

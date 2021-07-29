@@ -17,27 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_MESSAGE__ )
-#define __CORE_MESSAGE__
-
-#include <unistd.h>
 #include <stdbool.h>
-#include <collection/list.h>
 
-struct message_entry {
-  size_t id;
-  size_t type;
-  const char* data;
-  size_t length;
-  pid_t sender;
-  size_t request;
-};
+#if ! defined( __CORE_IPC_SIGNAL__ )
+#define __CORE_IPC_SIGNAL__
 
-typedef struct message_entry message_entry_t;
-typedef struct message_entry *message_entry_ptr_t;
-
-bool message_init( void );
-void message_cleanup( const list_item_ptr_t );
-size_t message_generate_id( void );
+bool signal_init( void );
+bool signal_register_handler( void );
+bool signal_unregister_handler( void );
 
 #endif

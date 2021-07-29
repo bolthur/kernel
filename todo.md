@@ -20,7 +20,7 @@
   * [ ] Add rpi 3 support ( armv8 32 bit with smp )
 * [ ] Documentation ( man pages or markdown )
   * [ ] Getting started after checkout
-  * [ ] Cross compiler toolchain
+  * [ ] Cross-compiler toolchain
   * [ ] Configuring target overview
 
 # Different projects, not kernel related things to be done

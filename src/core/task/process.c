@@ -39,7 +39,7 @@
 #include <core/task/process.h>
 #include <core/task/thread.h>
 #include <core/task/stack.h>
-#include <core/message.h>
+#include <core/ipc/message.h>
 
 /**
  * @brief Process management structure
@@ -65,10 +65,10 @@ static int32_t process_compare_id(
       ( size_t )b->data );
   #endif
 
-  // -1 if address of a is greater than address of b
+  // -1 if address of a->data is greater than address of b->data
   if ( ( pid_t )a->data > ( pid_t )b->data ) {
     return -1;
-  // 1 if address of b is greater than address of a
+  // 1 if address of b->data is greater than address of a->data
   } else if ( ( pid_t )b->data > ( pid_t )a->data ) {
     return 1;
   }
@@ -93,10 +93,10 @@ static int32_t process_lookup_id(
     DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
     DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n", ( size_t )a->data, b );
   #endif
-  // -1 if address of a is greater than address of b
+  // -1 if address of a->data is greater than address of b->data
   if ( ( pid_t )a->data > ( pid_t )b) {
     return -1;
-  // 1 if address of b is greater than address of a
+  // 1 if address of b->data is greater than address of a->data
   } else if ( ( pid_t )b > ( pid_t )a->data ) {
     return 1;
   }
@@ -849,7 +849,7 @@ list_manager_ptr_t task_process_get_by_name( const char* name ) {
 void task_process_prepare_kill( void* context, task_process_ptr_t proc ) {
   // set process state
   proc->state = TASK_PROCESS_STATE_KILL;
-  // push process to cleanup list
+  // push process to clean up list
   list_push_back( process_manager->process_to_cleanup, proc );
   // trigger schedule and cleanup
   event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );

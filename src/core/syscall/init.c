@@ -42,6 +42,14 @@ bool syscall_init( void ) {
     return false;
   }
   if ( ! interrupt_register_handler(
+    SYSCALL_PROCESS_PARENT_ID,
+    syscall_process_parent_id,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
     SYSCALL_PROCESS_FORK,
     syscall_process_fork,
     INTERRUPT_SOFTWARE,
@@ -191,14 +199,6 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_MESSAGE_HAS_BY_NAME,
     syscall_message_has_by_name,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_REGISTER_HANDLER,
-    syscall_message_register_handler,
     INTERRUPT_SOFTWARE,
     false
   ) ) {

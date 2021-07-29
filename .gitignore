@@ -9,6 +9,7 @@
 /include/config.h
 /driver/include/config.h
 /build-aux/platform/rpi/initrd
+*.sym
 
 # ---> Autotools
 # http://www.gnu.org/software/automake

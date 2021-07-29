@@ -50,7 +50,7 @@ void __bootstrap virt_startup_setup( void ) {
     return;
   }
 
-  // kick start
+  // kick-start
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_startup_supported_mode ) {
     v7_long_startup_setup();
   } else {

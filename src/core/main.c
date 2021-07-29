@@ -35,7 +35,8 @@
 #include <core/event.h>
 #include <core/task/process.h>
 #include <core/syscall.h>
-#include <core/message.h>
+#include <core/ipc/message.h>
+#include <core/ipc/signal.h>
 
 #if defined( REMOTE_DEBUG )
   #include <core/serial.h>
@@ -147,7 +148,7 @@ noreturn void kernel_main( void ) {
   assert( init_entry )
   // add thread
   assert( task_thread_create( init_entry, proc, 0 ) );
-  // set to ready and kick start user mode init
+  // set to ready and kick-start user mode init
   proc->state = TASK_PROCESS_STATE_READY;
   // further init process preparation
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] prepare ...\r\n" )

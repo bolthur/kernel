@@ -47,10 +47,10 @@ static int32_t task_stack_callback(
     DEBUG_OUTPUT( "a->data = %p, b->data = %p\r\n", a->data, b->data );
   #endif
 
-  // -1 if address of a is greater than address of b
+  // -1 if address of a->data is greater than address of b->data
   if ( ( uintptr_t )a->data > ( uintptr_t )b->data ) {
     return -1;
-  // 1 if address of b is greater than address of a
+  // 1 if address of b->data is greater than address of a->data
   } else if ( ( uintptr_t )b->data > ( uintptr_t )a->data ) {
     return 1;
   }

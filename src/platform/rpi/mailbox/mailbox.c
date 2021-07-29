@@ -47,7 +47,7 @@ uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
   while ( ( value & 0xF ) != channel ) {
     // wait while mailbox is empty
     while ( mbox0->status & MAILBOX_EMPTY ) {
-      // break if it takes to much time
+      // break if it takes too much time
       if ( count++ > ( 1 << 25 ) ) {
         return MAILBOX_ERROR;
       }
@@ -69,7 +69,9 @@ uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
  * @param data Data to write depending on function
  */
 void mailbox_write(
-  mailbox0_channel_t channel, mailbox_type_t type, uint32_t data
+  mailbox0_channel_t channel,
+  mailbox_type_t type,
+  uint32_t data
 ) {
   // add channel number at the lower 4 bit
   data = ( uint32_t )( ( int32_t )data & ~0xF );

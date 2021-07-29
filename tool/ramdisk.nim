@@ -21,7 +21,7 @@ import os
 import osproc
 import strutils
 # thirdparty
-#import zippy
+import zippy
 
 # remove tmp dir again
 removeDir( "tmp" )
@@ -77,7 +77,7 @@ for file in walkDirRec( joinPath( sysroot, "lib" ), { pcFile, pcLinkToFile } ):
     #let splitted_head = split.head.split( DirSep )
     let library = split.tail
     # copy library
-    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", "lib" )
+    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", "usr", "lib" )
     createDir( base_path )
     if not isEmptyOrWhitespace( symlink_src ):
       createSymlink( symlink_src, joinPath( base_path, library ) )
@@ -87,7 +87,7 @@ for file in walkDirRec( joinPath( sysroot, "lib" ), { pcFile, pcLinkToFile } ):
       copyFile( file, joinPath( base_path, library ) )
 
 # loop through true type fonts and iterate over them
-for file in walkDirRec( joinPath( sysroot, "share", "font" ), { pcFile, pcLinkToFile } ):
+for file in walkDirRec( joinPath( sysroot, "share", "font2" ), { pcFile, pcLinkToFile } ):
   var file_to_check = file
   var info = getFileInfo( file, false )
   var symlink_src = ""
@@ -124,12 +124,12 @@ for file in walkDirRec( joinPath( sysroot, "share", "font" ), { pcFile, pcLinkTo
     # copy library
     let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", "share", "font" )
     createDir( base_path )
-#    if not isEmptyOrWhitespace( symlink_src ):
-#      createSymlink( symlink_src, joinPath( base_path, font ) )
-#    else:
-#      # Add shared object compressed
-#      #writeFile( joinPath( base_path, font ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
-#      copyFile( file, joinPath( base_path, font ) )
+    if not isEmptyOrWhitespace( symlink_src ):
+      createSymlink( symlink_src, joinPath( base_path, font ) )
+    else:
+      # Add font compressed
+      writeFile( joinPath( base_path, font ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
+      #copyFile( file, joinPath( base_path, font ) )
 
 # loop through files of folder including subfolders
 for file in walkDirRec( driver ):
@@ -148,7 +148,7 @@ for file in walkDirRec( driver ):
     var skip_top_ramdisk = false
     var pos = -1
     for idx, value in splitted_head:
-      if value == "driver" or value == "core" or value == "lib":
+      if value == "driver" or value == "core" or value == "usr":
         pos = idx
     if not ( "src" in splitted_head[ pos..^1 ] ) and pos != -1:
       target_folder &= splitted_head[ pos..^2 ].join( $DirSep )

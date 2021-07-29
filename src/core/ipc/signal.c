@@ -17,37 +17,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <collection/list.h>
+#include <core/ipc/signal.h>
 
-/**
- * @brief Method to destruct list
- *
- * @param list list to use
- */
-void list_destruct( list_manager_ptr_t list ) {
-  list_item_ptr_t current;
-  list_item_ptr_t next;
+bool signal_init( void ) {
+  return true;
+}
 
-  // check parameter
-  if ( ! list ) {
-    return;
-  }
-  // populate current
-  current = list->first;
+bool signal_register_handler( void ) {
+  return true;
+}
 
-  // loop through list until end
-  while ( current ) {
-    // get next element
-    next = current->next;
-
-    // additional cleanup
-    list->cleanup( current );
-
-    // overwrite current with next
-    current = next;
-  }
-
-  // finally, free list
-  free( list );
+bool signal_unregister_handler( void ) {
+  return true;
 }

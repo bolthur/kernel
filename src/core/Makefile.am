@@ -4,6 +4,8 @@ libcore_la_SOURCES = \
   debug/breakpoint.c \
   debug/gdb.c \
   debug/string.c \
+  ipc/message.c \
+  ipc/signal.c \
   mm/heap.c \
   mm/phys.c \
   mm/shared.c \
@@ -26,5 +28,4 @@ libcore_la_SOURCES = \
   initrd.c \
   interrupt.c \
   main.c \
-  message.c \
   panic.c

@@ -40,6 +40,6 @@ void avl_destroy_tree( avl_tree_ptr_t tree ) {
     // cleanup
     tree->cleanup( node );
   }
-  // finally free tree itself
+  // finally, free tree itself
   free( tree );
 }

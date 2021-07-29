@@ -49,10 +49,10 @@ static int32_t compare_event_callback(
   event_block_ptr_t block_a = EVENT_GET_BLOCK( a );
   event_block_ptr_t block_b = EVENT_GET_BLOCK( b );
 
-  // -1 if address of a is greater than address of b
+  // -1 if address of a->type is greater than address of b->type
   if ( block_a->type > block_b->type ) {
     return -1;
-  // 1 if address of b is greater than address of a
+  // 1 if address of b->type is greater than address of a->type
   } else if ( block_b->type > block_a->type ) {
     return 1;
   }

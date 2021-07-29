@@ -176,7 +176,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
     bool zero_padding = false;
     bool alternate = false;
 
-    // print if current sign is not a place holder or second one
+    // print if current sign is not a placeholder or second one
     // is another placeholder
     if ( '%' != format[ 0 ] || '%' == format[ 1 ] ) {
       // skip first percent sign

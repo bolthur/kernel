@@ -9,7 +9,7 @@ There are no completely supported platforms yet.
 
 ## Planned support
 
-Currently the following targets are planned to be supported:
+Currently, the following targets are planned to be supported:
 
 ### Broadcom SoC
 
@@ -131,4 +131,4 @@ The files can be specified by using the parameter `-x`.
 /opt/bolthur/sysroot/arm/bin/arm-unknown-bolthur-eabi-gdb -x .gdbinit-remote
 ```
 
-When starting remote debugging, you need to specify the target, e.g. `target /dev/ttyUSB0` to connect to the running instance. Furthermore you need to configure the project with option `--enable-debug`.
+When starting remote debugging, you need to specify the target, e.g. `target /dev/ttyUSB0` to connect to the running instance. Furthermore, you need to configure the project with option `--enable-debug`.

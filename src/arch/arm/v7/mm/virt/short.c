@@ -1338,7 +1338,7 @@ bool v7_short_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
   unmap_temporary( ( uintptr_t )ctx_mapped, SD_TTBR_SIZE_2G );
   // free up context
   if ( ! unmap_only ) {
-    // free range
+    // free physical page range
     phys_free_page_range( ctx->context, SD_TTBR_SIZE_2G );
     // free structure
     free( ctx );

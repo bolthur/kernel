@@ -106,10 +106,10 @@ static int32_t compare_address_callback(
     DEBUG_OUTPUT( "a->data = %p, b->data = %p\r\n", a->data, b->data );
   #endif
 
-  // -1 if address of a is greater than address of b
+  // -1 if address of a->data is greater than address of b->data
   if ( a->data > b->data ) {
     return -1;
-  // 1 if address of b is greater than address of a
+  // 1 if address of b->data is greater than address of a->data
   } else if ( b->data > a->data ) {
     return 1;
   }
@@ -135,10 +135,10 @@ static int32_t compare_size_callback(
     DEBUG_OUTPUT( "a->data = %p, b->data = %p\r\n", a->data, b->data );
   #endif
 
-  // -1 if address of a is greater than address of b
+  // -1 if address of a->data is greater than address of b->data
   if ( ( size_t )a->data > ( size_t )b->data ) {
     return -1;
-  // 1 if address of b is greater than address of a
+  // 1 if address of b->data is greater than address of a->data
   } else if ( ( size_t )b->data > ( size_t )a->data ) {
     return 1;
   }
@@ -418,7 +418,7 @@ static void shrink_heap_space( void ) {
 
   // determine shrink size
   shrink_size = max_end - ( HEAP_START + HEAP_MIN_SIZE );
-  // do nothing if expand size is below the expand unit
+  // do nothing if expand size is below expand unit
   if (
     HEAP_EXTENSION > shrink_size
     || max_free_block->size < HEAP_EXTENSION
@@ -807,7 +807,7 @@ void heap_init( heap_init_state_t state ) {
     && avl_insert_by_node( &heap->free_size[ state ], &free_block->node_size )
   )
 
-  // finally set state
+  // finally, set state
   heap->state = state;
   // set kernel heap global if null
   if ( ! kernel_heap ) {

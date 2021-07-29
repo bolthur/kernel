@@ -17,37 +17,33 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
+#include <unistd.h>
+#include <stdbool.h>
 #include <collection/list.h>
+#include <core/task/process.h>
 
-/**
- * @brief Method to destruct list
- *
- * @param list list to use
- */
-void list_destruct( list_manager_ptr_t list ) {
-  list_item_ptr_t current;
-  list_item_ptr_t next;
+#if ! defined( __CORE_IPC_MESSAGE__ )
+#define __CORE_IPC_MESSAGE__
 
-  // check parameter
-  if ( ! list ) {
-    return;
-  }
-  // populate current
-  current = list->first;
+struct message_entry {
+  size_t id;
+  size_t type;
+  const char* data;
+  size_t length;
+  pid_t sender;
+  size_t request;
+};
 
-  // loop through list until end
-  while ( current ) {
-    // get next element
-    next = current->next;
+typedef struct message_entry message_entry_t;
+typedef struct message_entry *message_entry_ptr_t;
 
-    // additional cleanup
-    list->cleanup( current );
+bool message_init( void );
+void message_cleanup( const list_item_ptr_t );
+size_t message_generate_id( void );
 
-    // overwrite current with next
-    current = next;
-  }
+bool message_setup_process( task_process_ptr_t );
+void message_destroy_process( task_process_ptr_t );
+int message_send_by_pid( pid_t, pid_t, size_t, const char*, size_t, size_t, size_t* );
+int message_send_by_name( const char*, pid_t, size_t, const char*, size_t, size_t, size_t* );
 
-  // finally, free list
-  free( list );
-}
+#endif

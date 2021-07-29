@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <core/syscall.h>
-#include <core/message.h>
+#include <core/ipc/message.h>
 #include <core/task/process.h>
 #include <core/task/thread.h>
 #if defined( PRINT_SYSCALL )
@@ -42,16 +42,10 @@ void syscall_message_create( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_message_create()\r\n" )
   #endif
-  // handle already set
-  if( task_thread_current_thread->process->message_queue ) {
-    return;
-  }
-  // prepare message queue
-  task_thread_current_thread->process->message_queue = list_construct(
-    NULL, message_cleanup );
-  // handle error
-  if ( ! task_thread_current_thread->process->message_queue ) {
+  // setup message for process
+  if ( ! message_setup_process( task_thread_current_thread->process ) ) {
     syscall_populate_error( context, ( size_t )-EIO );
+    return;
   }
 }
 
@@ -66,14 +60,8 @@ void syscall_message_destroy( __unused void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_message_destroy()\r\n" )
   #endif
-  // handle no queue
-  if( ! task_thread_current_thread->process->message_queue ) {
-    return;
-  }
-  // destroy message queue
-  list_destruct( task_thread_current_thread->process->message_queue );
-  // set to NULL
-  task_thread_current_thread->process->message_queue = NULL;
+  // destroy process message queue
+  message_destroy_process( task_thread_current_thread->process );
 }
 
 /**
@@ -89,88 +77,35 @@ void syscall_message_send_by_pid( void* context ) {
   const char* data = ( const char* )syscall_get_parameter( context, 2 );
   size_t len = ( size_t )syscall_get_parameter( context, 3 );
   size_t sender_message_id = ( size_t )syscall_get_parameter( context, 4 );
+  size_t message_id = 0;
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "syscall_message_send_by_pid( %d, %#p, %zx )\r\n", pid, data, len )
+    DEBUG_OUTPUT( "message_id = %d\r\n", message_id )
   #endif
-  // get process by pid
-  task_process_ptr_t target = task_process_get_by_id( pid );
-  // handle error
-  if ( ! target ) {
-    // debug output
-    #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "Target process not found!\r\n" )
-    #endif
-      // set return and exit
-      syscall_populate_error( context, ( size_t )-EINVAL );
-      return;
-  }
-  // handle error
-  if ( ! target->message_queue ) {
-    // debug output
-    #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "Target process has no queue!\r\n" )
-    #endif
-    // set return and exit
-    syscall_populate_error( context, ( size_t )-EINVAL );
-    return;
-  }
-  // handle invalid length
-  if ( 0 == len ) {
-    // debug output
-    #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "Invalid length passed!\r\n" )
-    #endif
-    // set return and exit
-    syscall_populate_error( context, ( size_t )-EINVAL );
-    return;
-  }
 
-  // allocate message structure
-  message_entry_ptr_t message_entry = ( message_entry_ptr_t )malloc(
-    sizeof( message_entry_t ) );
-  if ( ! message_entry ) {
-    // debug output
-    #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "No free space left for message structure!\r\n" )
-    #endif
-    // set return and exit
-    syscall_populate_error( context, ( size_t )-EIO );
-    return;
-  }
-
-  // allocate message
-  char* message = ( char* )malloc( len );
-  if ( ! message ) {
-    // debug output
-    #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "No free space left for message data!\r\n" )
-    #endif
-    free( message_entry );
-    // set return and exit
-    syscall_populate_error( context, ( size_t )-EIO );
-    return;
-  }
-  // copy over content
-  memcpy( message, data, len );
-  // prepare structure
-  message_entry->data = message;
-  message_entry->length = len;
-  message_entry->type = type;
-  message_entry->sender = task_thread_current_thread->process->id;
-  message_entry->id = message_generate_id();
-  message_entry->request = sender_message_id;
-  // push message to process queue
-  list_push_back( target->message_queue, message_entry );
-  // unblock thread if blocked
-  task_unblock_threads(
-    target,
-    TASK_THREAD_WAITING_FOR_MESSAGE,
-    ( task_state_data_t ){ .data_size = sender_message_id }
+  // send message by pid
+  int err = message_send_by_pid(
+    pid, task_thread_current_thread->process->id,
+    type, data, len, sender_message_id, &message_id
   );
+  // handle error
+  if ( err ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "errno = %d\r\n", err );
+    #endif
+    // set return and exit
+    syscall_populate_error( context, ( size_t )-err );
+    return;
+  }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "message_id = %d\r\n", message_id )
+  #endif
   // return success
-  syscall_populate_success( context, message_entry->id );
+  syscall_populate_success( context, message_id );
 }
 
 /**
@@ -191,102 +126,18 @@ void syscall_message_send_by_name( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_message_send_by_name( %s, %#p, %zx )\r\n", name, data, len )
   #endif
-  // handle invalid length
-  if ( 0 == len ) {
-    // debug output
-    #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "Invalid length passed!\r\n" )
-    #endif
+  // send message by pid
+  int err = message_send_by_name(
+    name, task_thread_current_thread->process->id,
+    type, data, len, sender_message_id, &message_id
+  );
+  // handle error
+  if ( err ) {
     // set return and exit
-    syscall_populate_error( context, ( size_t )-EINVAL );
+    syscall_populate_error( context, ( size_t )-err );
     return;
   }
-  // debug output
-  #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "fetching list of processes with name \"%s\"\r\n", name )
-  #endif
-  // get name list
-  list_manager_ptr_t name_list = task_process_get_by_name( name );
-  if ( ! name_list ) {
-    syscall_populate_error( context, ( size_t )-EINVAL );
-    return;
-  }
-  // debug output
-  #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "name_list = %#x!\r\n", name_list )
-  #endif
-  // iterate
-  list_item_ptr_t item = name_list->first;
-  while( item ) {
-    // convert pushed data to process
-    task_process_ptr_t proc = ( task_process_ptr_t )item->data;
-    // handle error
-    if ( ! proc->message_queue ) {
-      // debug output
-      #if defined( PRINT_SYSCALL )
-        DEBUG_OUTPUT( "Target process has no queue!\r\n" )
-      #endif
-      item = item->next;
-      continue;
-    }
-    // allocate message structure
-    message_entry_ptr_t message_entry = ( message_entry_ptr_t )malloc(
-      sizeof( message_entry_t ) );
-    if ( ! message_entry ) {
-      // debug output
-      #if defined( PRINT_SYSCALL )
-        DEBUG_OUTPUT( "No free space left for message structure!\r\n" )
-      #endif
-      item = item->next;
-      continue;
-    }
-    // allocate message
-    char* message = ( char* )malloc( len );
-    if ( ! message ) {
-      // debug output
-      #if defined( PRINT_SYSCALL )
-        DEBUG_OUTPUT( "No free space left for message data!\r\n" )
-      #endif
-      free( message_entry );
-      item = item->next;
-      continue;
-    }
-    // copy over content
-    memcpy( message, data, len );
-    // prepare structure
-    message_entry->data = message;
-    message_entry->length = len;
-    message_entry->type = type;
-    message_entry->sender = task_thread_current_thread->process->id;
-    message_entry->request = sender_message_id;
-    // push message to process queue
-    if ( ! list_push_back( proc->message_queue, message_entry ) ) {
-      // debug output
-      #if defined( PRINT_SYSCALL )
-        DEBUG_OUTPUT( "Unable to push message to queue!\r\n" )
-      #endif
-      free( message_entry );
-      item = item->next;
-      continue;
-    }
-    // unblock thread if blocked
-    if ( 0 < sender_message_id ) {
-      task_unblock_threads(
-        proc,
-        TASK_THREAD_WAITING_FOR_MESSAGE,
-        ( task_state_data_t ){ .data_size = sender_message_id }
-      );
-    }
-    // generate id
-    if ( 0 == message_id ) {
-      message_id = message_generate_id();
-    }
-    // finally set message id
-    message_entry->id = message_id;
-    // next item
-    item = item->next;
-  }
-  // return error
+  // return success
   syscall_populate_success( context, message_id );
 }
 
@@ -562,19 +413,4 @@ void syscall_message_has_by_name( void* context ) {
   }
   // return success
   syscall_populate_error( context, 0 );
-}
-
-/**
- * @fn void syscall_message_register_handler(void*)
- * @brief System call to register message handler
- *
- * @param context
- *
- * @todo return error when handler with/without message type has been already registered
- * @todo create new thread for process with passed function as entry point
- * @todo save created thread with message type ( or 0 if generic ) in a list
- */
-void syscall_message_register_handler( void* context ) {
-  // return type of message
-  syscall_populate_error( context, ( size_t )-ENOSYS );
 }

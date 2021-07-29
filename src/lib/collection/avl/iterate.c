@@ -98,7 +98,7 @@ avl_node_ptr_t avl_iterate_next( avl_tree_ptr_t tree, avl_node_ptr_t node ) {
   if ( node->right ) {
     // step right
     node = node->right;
-    // return smallest node of right sub tree
+    // return smallest node of right subtree
     return avl_get_min( node->right );
   }
 

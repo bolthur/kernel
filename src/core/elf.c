@@ -191,7 +191,7 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       if ( memory_offset > 0 ) {
         to_copy = PAGE_SIZE - memory_offset;
       }
-      // cap to copy to copy size
+      // cap to copy size
       if ( to_copy > copy_size ) {
         to_copy = copy_size;
       }
@@ -346,7 +346,7 @@ size_t elf_image_size( uintptr_t elf ) {
   size_t sz = 0;
   // transform to elf header
   Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
-  // loop through section header informations
+  // loop through section header information
   for ( uint32_t idx = 0; idx < header->e_shnum; ++idx ) {
     Elf32_Shdr* section_header = ( Elf32_Shdr* )(
       elf + header->e_shoff + header->e_shentsize * idx

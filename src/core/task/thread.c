@@ -54,10 +54,10 @@ static int32_t thread_compare_id_callback(
       ( size_t )b->data );
   #endif
 
-  // -1 if address of a is greater than address of b
+  // -1 if address of a->data is greater than address of b->data
   if ( ( size_t )a->data > ( size_t )b->data ) {
     return -1;
-  // 1 if address of b is greater than address of a
+  // 1 if address of b->data is greater than address of a->data
   } else if ( ( size_t )b->data > ( size_t )a->data ) {
     return 1;
   }
@@ -383,7 +383,7 @@ void task_thread_block(
   task_thread_state_t state,
   task_state_data_t data
 ) {
-  // no block if something different than ready or active
+  // no block if state is not ready or active
   if (
     TASK_THREAD_STATE_READY != thread->state
     && TASK_THREAD_STATE_ACTIVE != thread->state

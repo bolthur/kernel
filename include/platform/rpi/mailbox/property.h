@@ -168,6 +168,7 @@ typedef struct {
   } data;
 } rpi_mailbox_property_t;
 
+extern int32_t ptb_index;
 extern int32_t *ptb_buffer;
 extern volatile int32_t *ptb_buffer_phys;
 

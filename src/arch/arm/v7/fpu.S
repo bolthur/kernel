@@ -26,14 +26,14 @@
  */
 EXPORT( fpu_enable )
 fpu_enable:
-  // read co processor access control register into r0
+  // read coprocessor access control register into r0
   mrc p15, 0, r0, c1, c0, 2
   // enable full access for everyone
   orr r0, #( 0xf << 20 )
   // write back changes
   mcr p15, 0, r0, c1, c0, 2
 
-  // read again co processor access control register into r0 to check for fpu
+  // read again coprocessor access control register into r0 to check for fpu
   mrc p15, 0, r0, c1, c0, 2
   // get 4 bits starting at bit 20
   ands r0, #( 0xf << 20 )

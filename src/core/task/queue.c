@@ -43,10 +43,10 @@ static int32_t queue_compare_priority_callback(
       ( size_t )b->data )
   #endif
 
-  // -1 if address of a is greater than address of b
+  // -1 if address of a->data is greater than address of b->data
   if ( ( size_t )a->data > ( size_t )b->data ) {
     return -1;
-  // 1 if address of b is greater than address of a
+  // 1 if address of b->data is greater than address of a->data
   } else if ( ( size_t )b->data > ( size_t )a->data ) {
     return 1;
   }

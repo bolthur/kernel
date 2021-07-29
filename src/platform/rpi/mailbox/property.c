@@ -33,7 +33,7 @@
 /**
  * @brief property tag buffer index used internally
  */
-static int32_t ptb_index = 0;
+int32_t ptb_index = 0;
 
 /**
  * @brief property tag buffer

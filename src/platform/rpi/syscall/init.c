@@ -28,16 +28,8 @@
 bool syscall_init_platform( void ) {
   // process system calls
   if ( ! interrupt_register_handler(
-    SYSCALL_MAILBOX_READ,
-    syscall_mailbox_read,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MAILBOX_WRITE,
-    syscall_mailbox_write,
+    SYSCALL_MAILBOX_ACTION,
+    syscall_mailbox_action,
     INTERRUPT_SOFTWARE,
     false
   ) ) {

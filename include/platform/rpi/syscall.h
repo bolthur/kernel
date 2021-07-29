@@ -20,10 +20,8 @@
 #if ! defined( __PLATFORM_RPI_SYSCALL__ )
 #define __PLATFORM_RPI_SYSCALL__
 
-#define SYSCALL_MAILBOX_READ 61
-#define SYSCALL_MAILBOX_WRITE 52
+#define SYSCALL_MAILBOX_ACTION 61
 
-void syscall_mailbox_read( void* );
-void syscall_mailbox_write( void* );
+void syscall_mailbox_action( void* );
 
 #endif
