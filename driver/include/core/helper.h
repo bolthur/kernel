@@ -17,20 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-// necessary for libc hacking
-#include <stdlib.h>
-#include <limits.h>
-#include <errno.h>
-#include <stdarg.h>
 #include <string.h>
-#include <assert.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <inttypes.h>
-#include <sys/types.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <errno.h>
 #include <sys/bolthur.h>
+
+#if ! defined( __HELPER__ )
+#define __HELPER__
 
 /**
  * @fn void send_add_request(vfs_add_request_ptr_t)
@@ -41,9 +35,8 @@
 static void send_add_request( vfs_add_request_ptr_t msg ) {
   vfs_add_response_ptr_t response = ( vfs_add_response_ptr_t )malloc(
     sizeof( vfs_add_response_t ) );
-  if ( ! response ) {
-    return;
-  }
+  assert( response );
+  assert( msg );
   // message id variable
   size_t message_id;
   bool send = true;
@@ -85,33 +78,4 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
   free( response );
 }
 
-/**
- * @fn int main(int, char*[])
- * @brief main entry point
- *
- * @param argc
- * @param argv
- * @return
- */
-int main( __unused int argc, __unused char* argv[] ) {
-  // print something
-  EARLY_STARTUP_PRINT( "system console init starting!\r\n" )
-  // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
-  assert( msg );
-
-  EARLY_STARTUP_PRINT( "-> pushing console device to vfs!\r\n" )
-  // console device
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFREG;
-  strncpy( msg->file_path, "/dev/console", PATH_MAX );
-  // perform add request
-  send_add_request( msg );
-  // print something
-  EARLY_STARTUP_PRINT( "system console init done!\r\n" )
-
-  for(;;);
-  return 0;
-}
+#endif

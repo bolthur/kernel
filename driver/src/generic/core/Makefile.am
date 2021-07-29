@@ -1,2 +1,2 @@
 
-SUBDIRS = console startup tty vfs
+SUBDIRS = startup terminal console pipe vfs

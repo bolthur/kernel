@@ -17,10 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <stdlib.h>
 #include <sys/bolthur.h>
 #include "list.h"
 
@@ -120,7 +118,7 @@ void list_destruct( list_manager_ptr_t list ) {
     current = next;
   }
 
-  // finally free list
+  // finally, free list
   free( list );
 }
 

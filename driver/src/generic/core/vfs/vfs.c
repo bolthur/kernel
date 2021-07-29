@@ -19,12 +19,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <inttypes.h>
-#include <libgen.h>
-#include <sys/bolthur.h>
-
 #include "list.h"
 #include "vfs.h"
 #include "util.h"
@@ -146,7 +140,7 @@ void vfs_destroy( vfs_node_ptr_t node ) {
       iter = iter->next;
     }
   }
-  // finally destroy the node
+  // finally, destroy the node
   vfs_destroy_node( node );
 }
 
@@ -181,6 +175,8 @@ vfs_node_ptr_t vfs_setup( pid_t current_pid ) {
     || ! ( dev = vfs_prepare_node( current_pid, "dev", &st_dir, root, NULL ) )
     // populate dev null file node
     || ! vfs_prepare_node( current_pid, "null", &st_file, dev, NULL )
+    // populate tmp node
+    || ! vfs_prepare_node( current_pid, "tmp", &st_file, dev, NULL )
     // populate ipc node
     || ! vfs_prepare_node( current_pid, "shared", &st_dir, ipc, NULL )
     || ! vfs_prepare_node( current_pid, "message", &st_dir, ipc, NULL )

@@ -17,13 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
 #include <libgen.h>
+#include <errno.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <limits.h>
+#include <string.h>
 #include <sys/bolthur.h>
 #include "../msg.h"
 #include "../vfs.h"
@@ -57,6 +54,9 @@ void msg_handle_stat( void ) {
   );
   // handle error
   if ( errno ) {
+    EARLY_STARTUP_PRINT(
+      "Unable to receive stat message: %s\r\n",
+      strerror( errno ) )
     // free message structures
     free( request );
     free( response );

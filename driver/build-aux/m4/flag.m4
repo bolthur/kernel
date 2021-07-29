@@ -25,7 +25,7 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   #AC_DEFINE_UNQUOTED([_FORTIFY_SOURCE], [2], [Necessary newlib define])
 
   # linker flags
-  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/ramdisk/lib/ld-bolthur.so])
+  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/ramdisk/usr/lib/ld-bolthur.so])
   AX_APPEND_LINK_FLAGS([-Wl,-rpath=/ramdisk/lib,--enable-new-dtags])
 
   # debug parameter

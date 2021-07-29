@@ -299,12 +299,13 @@ dl_image_handle_ptr_t dl_find_loaded_library( const char* file ) {
  * @todo add file lookup within DT_RPATH somehow if set within original executable
  * @todo add file lookup by environment
  * @todo add file lookup by config file
- * @todo use /lib:/usr/lib:/ramdisk/lib as fallback
+ * @todo use /lib:/usr/lib:/ramdisk/lib:/ramdisk/usr/lib as fallback
+ * @todo check whether it was loaded to shared area and use that one
  */
 int dl_lookup_library( char* buffer, size_t buffer_size, const char* file ) {
   // fallback path list
   char* path = NULL;
-  char* fallback_path = "/lib:/usr/lib:/ramdisk/lib";
+  char* fallback_path = "/lib:/usr/lib:/ramdisk/lib:/ramdisk/usr/lib";
   // use fallback as path if not set
   if ( ! path ) {
     path = strdup( fallback_path );
@@ -633,6 +634,7 @@ dl_image_handle_ptr_t dl_load_entry(
   char* data = NULL;
   if ( 1 == phdr_load_count ) {
     offset = ( off_t )ROUND_DOWN_TO_FULL_PAGE( load_header[ 0 ].p_offset );
+    // FIXME: MAP SECTION IN CASE OF DEPENDENCY INTO SHARED AREA
     // map loadable section
     memory = dl_map_load_section(
       ( void* )load_header[ 0 ].p_vaddr,
@@ -693,6 +695,7 @@ dl_image_handle_ptr_t dl_load_entry(
     )
 
     // map text section with data size to get everything loaded correctly
+    // FIXME: MAP SECTION IN CASE OF DEPENDENCY INTO SHARED AREA
     memory = dl_map_load_section(
       ( void* )text_address,
       text_size,
@@ -711,6 +714,7 @@ dl_image_handle_ptr_t dl_load_entry(
       ( void* )( memory + load_header[ 1 ].p_vaddr - load_header[ 0 ].p_vaddr )
     )
     // map data section again with only file size
+    // FIXME: MAP SECTION IN CASE OF DEPENDENCY INTO SHARED AREA
     data = dl_map_load_section(
       ( void* )( memory + data_address - text_address ),
       data_file_size,
@@ -743,6 +747,7 @@ dl_image_handle_ptr_t dl_load_entry(
         data_size, data_file_size, len, bss_start
       )
       // acquire via mmap
+      // FIXME: MAP SECTION IN CASE OF DEPENDENCY INTO SHARED AREA
       bss = mmap(
         bss_start,
         len,

@@ -142,12 +142,16 @@ AC_CONFIG_FILES([
   src/generic/Makefile
   src/generic/core/Makefile
   src/generic/core/console/Makefile
+  src/generic/core/pipe/Makefile
   src/generic/core/startup/Makefile
-  src/generic/core/tty/Makefile
+  src/generic/core/terminal/Makefile
+  src/generic/core/terminal/pty/Makefile
+  src/generic/core/terminal/tty/Makefile
   src/generic/core/vfs/Makefile
   src/generic/init/Makefile
-  src/generic/lib/Makefile
-  src/generic/lib/ld-bolthur/Makefile
+  src/generic/usr/Makefile
+  src/generic/usr/lib/Makefile
+  src/generic/usr/lib/ld-bolthur/Makefile
   src/platform/Makefile
   src/platform/rpi/Makefile
   src/platform/rpi/driver/Makefile

@@ -17,10 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sys/bolthur.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <sys/bolthur.h>
 #include "avl.h"
 
 /**
@@ -368,7 +367,7 @@ static avl_node_ptr_t remove_by_node(
 
   // equal? => check for root is node and continue on subtrees if not
   if ( 0 == result ) {
-    // equal but not the found one, check both sub trees
+    // equal but not the found one, check both subtrees
     if ( node != root ) {
       // continue on left subtree if existing
       if ( root->left ) {
@@ -398,7 +397,7 @@ static avl_node_ptr_t remove_by_node(
           root = tmp;
         }
       } else {
-        // get smallest successor of right node
+        // get the smallest successor of right node
         tmp = avl_get_min( root->right );
 
         // remove tmp from right
@@ -471,7 +470,7 @@ static avl_node_ptr_t remove_by_data(
         root = tmp;
       }
     } else {
-      // get smallest successor of right node
+      // get the smallest successor of right node
       tmp = avl_get_min( root->right );
 
       // remove tmp from right
@@ -648,7 +647,7 @@ void avl_destroy_tree( avl_tree_ptr_t tree ) {
     // cleanup
     tree->cleanup( node );
   }
-  // finally free tree itself
+  // finally, free tree itself
   free( tree );
 }
 
@@ -730,7 +729,7 @@ avl_node_ptr_t avl_iterate_next( avl_tree_ptr_t tree, avl_node_ptr_t node ) {
   if ( node->right ) {
     // step right
     node = node->right;
-    // return smallest node of right sub tree
+    // return smallest node of right subtree
     return avl_get_min( node->right );
   }
 

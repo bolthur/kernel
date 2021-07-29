@@ -95,21 +95,22 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
  */
 int main( __unused int argc, __unused char* argv[] ) {
   // print something
-  EARLY_STARTUP_PRINT( "tty init starting!\r\n" )
+  EARLY_STARTUP_PRINT( "system console init starting!\r\n" )
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
 
-  // tty device
+  EARLY_STARTUP_PRINT( "-> pushing console device to vfs!\r\n" )
+  // console device
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
-  msg->info.st_mode = _IFREG;
-  strcpy( msg->file_path, "/dev/tty" );
+  msg->info.st_mode = S_IFREG;
+  strncpy( msg->file_path, "/dev/console", PATH_MAX );
   // perform add request
   send_add_request( msg );
   // print something
-  EARLY_STARTUP_PRINT( "tty init done!\r\n" )
+  EARLY_STARTUP_PRINT( "system console init done!\r\n" )
 
   for(;;);
   return 0;

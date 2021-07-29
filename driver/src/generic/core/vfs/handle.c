@@ -18,10 +18,10 @@
  */
 
 #include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-#include <errno.h>
 #include <libgen.h>
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
 #include "handle.h"
 #include "avl.h"
 

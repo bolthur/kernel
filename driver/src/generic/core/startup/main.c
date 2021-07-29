@@ -17,19 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-// necessary for libc hacking
-#include <stdlib.h>
-#include <limits.h>
-#include <errno.h>
 #include <stdarg.h>
-#include <string.h>
-#include <assert.h>
+#include <errno.h>
 #include <fcntl.h>
+#include <string.h>
 #include <unistd.h>
-#include <stdint.h>
 #include <inttypes.h>
-#include <sys/types.h>
 #include <sys/bolthur.h>
 
 int _open( const char*, int, ... );
@@ -75,7 +68,7 @@ __weak_symbol int _open( const char* name, int flags, ... ) {
   request.mode = mode;
   // loop until message has been sent and answer has been received
   while( true ) {
-    // send message ( may be delayed when vfs is starting up )
+    // send message ( maybe delayed when vfs is starting up )
     while ( send && 0 == message_id ) {
       message_id = _message_send_by_name(
         "daemon:/vfs",
@@ -125,7 +118,7 @@ __weak_symbol int _close( int file ) {
   request.handle = file;
   // loop until message has been sent and answer has been received
   while( true ) {
-    // send message ( may be delayed when vfs is starting up )
+    // send message ( maybe delayed when vfs is starting up )
     while ( send && 0 == message_id ) {
       message_id = _message_send_by_name(
         "daemon:/vfs",
@@ -191,7 +184,7 @@ ssize_t _read( int file, void* ptr, size_t len ) {
     bool send = true;
     // loop until message has been sent and answer has been received
     while( true ) {
-      // send message ( may be delayed when vfs is starting up )
+      // send message ( maybe delayed when vfs is starting up )
       while ( send && 0 == message_id ) {
         message_id = _message_send_by_name(
           "daemon:/vfs",

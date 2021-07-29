@@ -17,13 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
 #include <libgen.h>
+#include <errno.h>
 #include <stdlib.h>
-#include <fcntl.h>
-#include <limits.h>
+#include <string.h>
 #include <sys/bolthur.h>
 #include "../msg.h"
 #include "../vfs.h"
@@ -132,11 +129,11 @@ void msg_handle_read( void ) {
   strcpy( nested_request->file_path, container->path );
   nested_request->offset = container->pos;
   nested_request->len = request->len;
-  EARLY_STARTUP_PRINT(
+  /*EARLY_STARTUP_PRINT(
     "%s: nested_request->len = %#x, nested_request->offset = %#lx, "
-    "SIZE_MAX = %#x, file size = %#lx\r\n",
+    "SIZE_MAX = %#x, file size = %#lx, process = %d\r\n",
     container->path, nested_request->len, nested_request->offset, SIZE_MAX,
-    container->target->st->st_size )
+    container->target->st->st_size, container->target->pid )*/
   // loop until message has been sent and answer has been received
   while( true ) {
     // send to handling process if not done

@@ -17,29 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// system stuff
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <inttypes.h>
-#include <ctype.h>
 #include <assert.h>
-#include <fcntl.h>
+#include <stdlib.h>
+#include <string.h>
+#include <inttypes.h>
 #include <errno.h>
-#include <stdbool.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <libgen.h>
+#include <sys/stat.h>
 #include <sys/bolthur.h>
 #include <sys/sysmacros.h>
-#include <libgen.h>
-#include <stdnoreturn.h>
-#include <unistd.h>
-// third party libraries
-#include <zlib.h>
-#include <libtar.h>
 #include <libfdt.h>
-#include <libfdt_env.h>
-#include <fdt.h>
-// local stuff
 #include "ramdisk.h"
 
 uintptr_t ramdisk_compressed;
@@ -185,41 +174,92 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
 }
 
 /**
+ * @fn bool path_exists(const char*)
+ * @brief Method to check if path exists
+ *
+ * @param path
+ * @return
+ */
+static bool device_exists( const char* path ) {
+  struct stat buffer;
+  return stat( path, &buffer ) == 0;
+}
+
+/**
+ * @fn void wait_for_device(const char*)
+ * @brief Wait for path exists
+ *
+ * @param path
+ */
+static void wait_for_device( const char* path ) {
+  while( ! device_exists( path ) ) {}
+}
+
+/**
  * @fn int execute_driver(char*)
  * @brief Helper to execute specific driver from ramdisk
  *
  * @param name
  * @return
  */
-static int execute_driver( char* name ) {
-  pid_t forked_process = fork();
+static pid_t execute_driver( char* name ) {
+  // pure kernel fork necessary here
+  pid_t forked_process = _process_fork();
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to fork process for image replace: %s\r\n", strerror( errno ) );
+    EARLY_STARTUP_PRINT( "Unable to fork process for image replace: %s\r\n", strerror( errno ) )
     return -1;
   }
   // fork only
   if ( 0 == forked_process ) {
     char* base = basename( name );
     if ( ! base ) {
-      EARLY_STARTUP_PRINT( "Basename failed!\r\n" );
+      EARLY_STARTUP_PRINT( "Basename failed!\r\n" )
       exit( -1 );
     }
     // build command
     char* cmd[] = { base, NULL, };
     // exec to replace
     if ( -1 == execv( name, cmd ) ) {
-      EARLY_STARTUP_PRINT( "Exec failed: %s\r\n", strerror( errno ) );
+      EARLY_STARTUP_PRINT( "Exec failed: %s\r\n", strerror( errno ) )
       exit( 1 );
     }
   }
   // non fork return 0
-  return 0;
+  return forked_process;
 }
 
-// noreturn function
+/**
+ * @fn void handle_normal_init(void)
+ * @brief Helper to get up the necessary additional drivers for a running system
+ *
+ * @todo rename to something betters
+ */
 static void handle_normal_init( void ) {
-  //execute_driver( "/ramdisk/core/console" );
-  execute_driver( "/ramdisk/driver/framebuffer" );
+  // start system console and wait for device to come up
+  pid_t console = execute_driver( "/ramdisk/core/console" );
+  wait_for_device( "/dev/console" );
+  // start tty and wait for device to come up
+  pid_t tty = execute_driver( "/ramdisk/core/terminal/tty" );
+  wait_for_device( "/dev/tty" );
+  // start pty and wait for device to come up
+  pid_t pty = execute_driver( "/ramdisk/core/terminal/pty" );
+  wait_for_device( "/dev/pty" );
+  // start framebuffer driver and wait for device to come up
+  pid_t framebuffer = execute_driver( "/ramdisk/driver/framebuffer" );
+  wait_for_device( "/dev/framebuffer" );
+
+  EARLY_STARTUP_PRINT(
+    "console = %d, tty = %d, pty = %d, framebuffer = %d\r\n",
+    console, tty, pty, framebuffer )
+
+  // start console to create /dev/console
+  // start framebuffer to create /dev/framebuffer
+  // start tty to create /dev/tty
+  // start pty to create /dev/pty ( will be added later )
+
+  // wait until console, framebuffer and tty are up
+  // register console with input none and output framebuffer
+  // wait until done and test whether printf prints to framebuffer
 
   // FIXME: FORK AND HANDLE FURTHER OUTCOMMENTED SETUP WITHIN FORKED PROCESS
 /*  // Get system console

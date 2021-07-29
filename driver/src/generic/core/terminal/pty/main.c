@@ -18,51 +18,34 @@
  */
 
 #include <assert.h>
-#include <errno.h>
-#include <unistd.h>
+#include <string.h>
+#include <stdlib.h>
 #include <sys/bolthur.h>
-#include "handle.h"
-#include "vfs.h"
-#include "msg.h"
-
-pid_t pid = 0;
-
+#include "core/helper.h"
 /**
- * @brief main entry function
+ * @fn int main(int, char*[])
+ * @brief main entry point
  *
  * @param argc
  * @param argv
  * @return
- *
- * @todo remove vfs debug output
- * @todo add return message for adding file / folder containing success / failure state
- * @todo add necessary message handling to loop
- * @todo move message handling into own thread
  */
 int main( __unused int argc, __unused char* argv[] ) {
-  vfs_message_type_t type;
-
   // print something
-  EARLY_STARTUP_PRINT( "vfs processing!\r\n" )
-  // cache current pid
-  EARLY_STARTUP_PRINT( "fetching pid!\r\n" )
-  pid = getpid();
-  // setup handle tree and vfs
-  EARLY_STARTUP_PRINT( "initializing!\r\n" )
-  handle_init();
-  assert( vfs_setup( pid ) );
+  EARLY_STARTUP_PRINT( "pty init starting!\r\n" )
+  // allocate memory for add request
+  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
+  assert( msg );
+  // clear memory
+  memset( msg, 0, sizeof( vfs_add_request_t ) );
+  // prepare message structure
+  msg->info.st_mode = S_IFCHR;
+  strcpy( msg->file_path, "/dev/pty" );
+  // perform add request
+  send_add_request( msg );
+  // print something
+  EARLY_STARTUP_PRINT( "pty init done!\r\n" )
 
-  EARLY_STARTUP_PRINT( "entering message loop!\r\n" )
-  while( true ) {
-    // get message type
-    type = _message_receive_type();
-    // skip on error / no message
-    if ( errno ) {
-      continue;
-    }
-    // dispatch message
-    msg_dispatch( type );
-  }
-  // return exit code 0
+  for(;;);
   return 0;
 }

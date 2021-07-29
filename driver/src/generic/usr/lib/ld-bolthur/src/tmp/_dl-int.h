@@ -69,7 +69,7 @@ struct dl_image_handle {
   size_t init_array_size;
   init_array_callback_t fini_array;
   size_t fini_array_size;
-  // more general informations for linking / loading
+  // more general information for linking / loading
   char* memory_start;
   size_t memory_size;
 

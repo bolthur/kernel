@@ -19,12 +19,10 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
-#include <stdbool.h>
 #include <zlib.h>
-#include <sys/bolthur.h>
 #include <errno.h>
 #include <tar.h>
+#include <sys/bolthur.h>
 #include "ramdisk.h"
 
 #define INFLATE_CHUNK 32
