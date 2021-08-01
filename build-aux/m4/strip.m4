@@ -1,5 +1,5 @@
 
-AC_DEFUN([BOLTHUR_KERNEL_PROG_STRIP], [
+AC_DEFUN([BOLTHUR_PROG_STRIP], [
   AC_CHECK_TOOL([BOLTHUR_STRIP], [strip])
   AC_CACHE_CHECK([whether strip generates $host_bfd],
     [ac_cv_strip_supports_host_bfd],

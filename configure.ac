@@ -10,9 +10,7 @@ AC_CONFIG_AUX_DIR([build-aux/config])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
-AC_CONFIG_SRCDIR([src/core/main.c])
 AM_INIT_AUTOMAKE([nostdinc subdir-objects -Werror])
-AC_CONFIG_HEADERS([include/config.h])
 
 AC_LANG([C])
 
@@ -202,18 +200,22 @@ AS_IF([test "x$enable_output" == "xyes" && test "x$enable_remote_debug" == "xyes
 ])
 
 # check necessary programs
-BOLTHUR_KERNEL_PROG_READLINK
+BOLTHUR_PROG_READLINK
 
 # set program
-BOLTHUR_KERNEL_LANG_PROGRAM
+BOLTHUR_LANG_PROGRAM
 # set target and flags
-BOLTHUR_KERNEL_SET_DEVICE
+BOLTHUR_SET_DEVICE
 BOLTHUR_KERNEL_SET_HOST
-# set rest of flags
-BOLTHUR_KERNEL_SET_FLAG
+
+# checks for programs
+AC_PROG_CC
+AM_PROG_AS
+BOLTHUR_PROG_OBJCOPY
+BOLTHUR_PROG_STRIP
 
 # prepare cppecheck stuff
-BOLTHUR_KERNEL_PREPARE_CPPCHECK
+BOLTHUR_PREPARE_CPPCHECK
 # add directory for ramdisk
 AC_SUBST(ROOT_DIR, $($BOLTHUR_READLINK -f ${srcdir}))
 AC_SUBST(SYSROOT_DIR, $(dirname $(dirname $($BOLTHUR_READLINK -f $($CC $CFLAGS --print-file-name=libc.so)))))
@@ -229,8 +231,8 @@ DX_INIT_DOXYGEN([bolthur/kernel], [$(srcdir)/doxyfile], [doc])
 # checks for programs
 AC_PROG_CC
 AM_PROG_AS
-BOLTHUR_KERNEL_PROG_OBJCOPY
-BOLTHUR_KERNEL_PROG_STRIP
+BOLTHUR_PROG_OBJCOPY
+BOLTHUR_PROG_STRIP
 
 # get host cpu count
 AX_COUNT_CPUS
@@ -320,34 +322,15 @@ AC_DEFINE_UNQUOTED(
   [Unused]
 )
 
-# conditional
-AM_CONDITIONAL([IS32], [test $executable_format -eq 32])
-AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
-
 AC_CONFIG_FILES([
   Makefile
-  src/Makefile
-  src/arch/Makefile
-  src/arch/arm/Makefile
-  src/arch/arm/v6/Makefile
-  src/arch/arm/v7/Makefile
-  src/arch/arm/v8/Makefile
-  src/core/Makefile
-  src/lib/Makefile
-  src/lib/atag/Makefile
-  src/lib/collection/Makefile
-  src/lib/libc/Makefile
-  src/lib/tar/Makefile
-  src/platform/Makefile
-  src/platform/rpi/Makefile
-  src/target/Makefile
-  src/target/rpi/Makefile
-  thirdparty/Makefile
-  thirdparty/dtc/libfdt/Makefile
+  bolthur/Makefile
 ])
 
 AC_CONFIG_SUBDIRS([
   driver
+  bolthur/kernel
+  bolthur/server
 ])
 
 AC_OUTPUT

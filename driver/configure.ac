@@ -5,8 +5,8 @@ AC_INIT([bolthur-driver], [0.1.0-dev], [https://github.com/bolthur/driver/issues
 
 AC_COPYRIGHT([Copyright (C) 2018 - 2021 bolthur project])
 
-AC_CONFIG_AUX_DIR([build-aux/config])
-AC_CONFIG_MACRO_DIR([build-aux/m4])
+AC_CONFIG_AUX_DIR([_aux/config])
+AC_CONFIG_MACRO_DIR([../build-aux/m4])
 
 AC_CANONICAL_HOST
 AC_CONFIG_SRCDIR([src/generic/init/main.c])
@@ -52,12 +52,12 @@ AC_ARG_WITH(
 )
 
 # check necessary programs
-BOLTHUR_DRIVER_PROG_READLINK
+BOLTHUR_PROG_READLINK
 
 # set program
-BOLTHUR_DRIVER_LANG_PROGRAM
+BOLTHUR_LANG_PROGRAM
 # set target and flags
-BOLTHUR_DRIVER_SET_DEVICE
+BOLTHUR_SET_DEVICE
 BOLTHUR_DRIVER_SET_HOST
 # set rest of flags
 BOLTHUR_DRIVER_SET_FLAG
@@ -65,8 +65,8 @@ BOLTHUR_DRIVER_SET_FLAG
 # checks for programs
 AC_PROG_CC
 AM_PROG_AS
-BOLTHUR_DRIVER_PROG_OBJCOPY
-BOLTHUR_DRIVER_PROG_STRIP
+BOLTHUR_PROG_OBJCOPY
+BOLTHUR_PROG_STRIP
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -147,7 +147,6 @@ AC_CONFIG_FILES([
   src/generic/core/terminal/Makefile
   src/generic/core/terminal/pty/Makefile
   src/generic/core/terminal/tty/Makefile
-  src/generic/core/vfs/Makefile
   src/generic/init/Makefile
   src/generic/usr/Makefile
   src/generic/usr/lib/Makefile

@@ -37,135 +37,90 @@ if argc != 3:
   quit( 1 )
 
 # get command line arguments
-let driver: string = paramStr( 1 );
-let output: string = paramStr( 2 );
-let sysroot: string = paramStr( 3 );
+let root_path: string = paramStr( 1 )
+let output: string = paramStr( 2 )
+let sysroot: string = paramStr( 3 )
 
-# loop through libraries and iterate over them
-for file in walkDirRec( joinPath( sysroot, "lib" ), { pcFile, pcLinkToFile } ):
-  var file_to_check = file
-  var info = getFileInfo( file, false )
-  var symlink_src = ""
-  if pcLinkToFile == info.kind:
-    # get info with follow symlink again
-    info = getFileInfo( file )
-    # skip non files
-    if pcFile != info.kind:
-      continue
-    var splitted = file.splitFile()
-    # expand symlink and use for check
-    file_to_check = expandSymlink( file )
-    if not file_to_check.isAbsolute:
-      file_to_check = joinPath( splitted.dir, file_to_check )
-    # determine symlink source and strip variable
-    symlink_src = strip( replace( file_to_check, splitted.dir & DirSep, "" ) )
-    # loop as long as file to check is still a symlink
-    info = getFileInfo( file_to_check, false )
-    while pcLinkToFile == info.kind:
-      # expand symlink again
-      var splitted = file_to_check.splitFile()
-      file_to_check = expandSymlink( file_to_check )
-      # add absolute path
+let driver: string = joinPath( root_path, "driver" )
+let server: string = joinPath( root_path, "bolthur", "server" )
+
+proc scan_directory( path: string, file_type: string, additional_info: string, sysroot: string, compress: bool ): void =
+  # loop through files of folder including subfolders
+  for file in walkDirRec( path, { pcFile, pcLinkToFile } ):
+    var file_to_check = file
+    var info = getFileInfo( file, false )
+    var symlink_src = ""
+    if pcLinkToFile == info.kind:
+      # get info with follow symlink again
+      info = getFileInfo( file )
+      # skip non files
+      if pcFile != info.kind: continue
+      var splitted = file.splitFile()
+      # expand symlink and use for check
+      file_to_check = expandSymlink( file )
       if not file_to_check.isAbsolute:
         file_to_check = joinPath( splitted.dir, file_to_check )
-      # get info again
+      # determine symlink source and strip variable
+      symlink_src = strip( replace( file_to_check, splitted.dir & DirSep, "" ) )
+      # loop as long as file to check is still a symlink
       info = getFileInfo( file_to_check, false )
-  let outp_shell = execProcess( "file " & file_to_check )
-  if contains( outp_shell, "LSB shared object" ):
-    # split file path
-    let split = splitPath( file )
-    #let splitted_head = split.head.split( DirSep )
-    let library = split.tail
-    # copy library
-    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", "usr", "lib" )
-    createDir( base_path )
-    if not isEmptyOrWhitespace( symlink_src ):
-      createSymlink( symlink_src, joinPath( base_path, library ) )
-    else:
-      # Add shared object compressed
-      #writeFile( joinPath( base_path, library ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
-      copyFile( file, joinPath( base_path, library ) )
+      while pcLinkToFile == info.kind:
+        # expand symlink again
+        var splitted = file_to_check.splitFile()
+        file_to_check = expandSymlink( file_to_check )
+        # add absolute path
+        if not file_to_check.isAbsolute:
+          file_to_check = joinPath( splitted.dir, file_to_check )
+        # get info again
+        info = getFileInfo( file_to_check, false )
+    let outp_shell = execProcess( "file " & file_to_check )
+    if contains( outp_shell, file_type ) and contains( outp_shell, additional_info ):
+      # split file path
+      let split = splitPath( file )
+      let splitted_head = split.head.split( DirSep )
+      let executable = split.tail
 
-# loop through true type fonts and iterate over them
-for file in walkDirRec( joinPath( sysroot, "share", "font2" ), { pcFile, pcLinkToFile } ):
-  var file_to_check = file
-  var info = getFileInfo( file, false )
-  var symlink_src = ""
-  if pcLinkToFile == info.kind:
-    # get info with follow symlink again
-    info = getFileInfo( file )
-    # skip non files
-    if pcFile != info.kind:
-      continue
-    var splitted = file.splitFile()
-    # expand symlink and use for check
-    file_to_check = expandSymlink( file )
-    if not file_to_check.isAbsolute:
-      file_to_check = joinPath( splitted.dir, file_to_check )
-    # determine symlink source and strip variable
-    symlink_src = strip( replace( file_to_check, splitted.dir & DirSep, "" ) )
-    # loop as long as file to check is still a symlink
-    info = getFileInfo( file_to_check, false )
-    while pcLinkToFile == info.kind:
-      # expand symlink again
-      var splitted = file_to_check.splitFile()
-      file_to_check = expandSymlink( file_to_check )
-      # add absolute path
-      if not file_to_check.isAbsolute:
-        file_to_check = joinPath( splitted.dir, file_to_check )
-      # get info again
-      info = getFileInfo( file_to_check, false )
-  let outp_shell = execProcess( "file " & file_to_check )
-  if contains( outp_shell, "TrueType Font" ):
-    # split file path
-    let split = splitPath( file )
-    #let splitted_head = split.head.split( DirSep )
-    let font = split.tail
-    # copy library
-    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", "share", "font" )
-    createDir( base_path )
-    if not isEmptyOrWhitespace( symlink_src ):
-      createSymlink( symlink_src, joinPath( base_path, font ) )
-    else:
-      # Add font compressed
-      writeFile( joinPath( base_path, font ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
-      #copyFile( file, joinPath( base_path, font ) )
+      # determine target folder
+      var target_folder = $DirSep
+      var last = len( splitted_head ) - 1
+      if executable == splitted_head[ last ]: last = last - 1
 
-# loop through files of folder including subfolders
-for file in walkDirRec( driver ):
-  let outp_shell = execProcess( "file " & file )
-  if contains( outp_shell, ": ELF" ) and contains( outp_shell, "executable" ):
-    # split file path
-    let split = splitPath( file )
-    let splitted_head = split.head.split( DirSep )
-    let executable = split.tail
-
-    # determine target folder
-    var target_folder = $DirSep
-    var last = len( splitted_head ) - 1
-    if executable == splitted_head[ last ]: last = last - 1
-
-    var skip_top_ramdisk = false
-    var pos = -1
-    for idx, value in splitted_head:
-      if value == "driver" or value == "core" or value == "usr":
-        pos = idx
-    if not ( "src" in splitted_head[ pos..^1 ] ) and pos != -1:
-      target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
-    else:
-      pos = -1
-
-    # special handling for init
-    if executable == "init" and -1 == pos:
-      copyFile( file, joinPath( getCurrentDir(), "tmp", executable ) )
-    else:
-      var base_path = ""
-      if skip_top_ramdisk:
-        base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", target_folder )
+      var pos = -1
+      for idx, value in splitted_head:
+        if value == "driver" or value == "server" or value == "core" or value == "usr":
+          pos = idx
+      if pos != -1:
+        if contains( file, sysroot ):
+          target_folder &= splitted_head[ pos..^1 ].join( $DirSep )
+        else:
+          if not ( "src" in splitted_head[ pos..^1 ] ):
+            target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
+          else:
+            pos = -1
       else:
-        base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", target_folder )
-      createDir( base_path )
-      copyFile( file, joinPath( base_path, executable ) )
+        pos = -1
+
+      var base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", target_folder )
+
+      # symlink handling
+      if not isEmptyOrWhitespace( symlink_src ):
+        createDir( base_path )
+        createSymlink( symlink_src, joinPath( base_path, executable ) )
+      else:
+        # special handling for init
+        if executable == "init" and -1 == pos:
+          copyFile( file, joinPath( getCurrentDir(), "tmp", executable ) )
+        else:
+          createDir( base_path )
+          if compress:
+            writeFile( joinPath( base_path, executable ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
+          else:
+            copyFile( file, joinPath( base_path, executable ) )
+
+scan_directory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
+scan_directory( joinPath( sysroot, "share", "font" ), "TrueType Font", "", sysroot, true )
+scan_directory( server, "ELF", "executable", sysroot, false )
+scan_directory( driver, "ELF", "executable", sysroot, false )
 
 #[
 # loop through files of folder including subfolders and adjust interpreter and run path for ramdisk

@@ -376,7 +376,7 @@ int main( int argc, char* argv[] ) {
   //ramdisk_dump( disk );
   // get vfs image
   size_t vfs_size;
-  void* vfs_image = ramdisk_lookup_file( disk, "ramdisk/core/vfs", &vfs_size );
+  void* vfs_image = ramdisk_lookup_file( disk, "ramdisk/server/vfs", &vfs_size );
   assert( vfs_image );
   // fork process and handle possible error
   EARLY_STARTUP_PRINT( "Forking process for vfs start!\r\n" );

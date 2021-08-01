@@ -1,5 +1,5 @@
 
-AC_DEFUN([BOLTHUR_KERNEL_SET_DEVICE], [
+AC_DEFUN([BOLTHUR_SET_DEVICE], [
   # set device depending on arguments
   case "${enable_device}" in
     rpi2_b_rev1)

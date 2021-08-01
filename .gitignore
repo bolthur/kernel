@@ -6,8 +6,6 @@
 **/*.disasm
 *.dtb
 /tool/ramdisk
-/include/config.h
-/driver/include/config.h
 /build-aux/platform/rpi/initrd
 *.sym
 

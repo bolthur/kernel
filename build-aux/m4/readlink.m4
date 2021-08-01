@@ -1,5 +1,5 @@
 
-AC_DEFUN([BOLTHUR_KERNEL_PROG_READLINK], [
+AC_DEFUN([BOLTHUR_PROG_READLINK], [
   # check for tools to exist
   AC_CHECK_TOOLS([BOLTHUR_READLINK],[greadlink readlink],[no])
   # handle missing

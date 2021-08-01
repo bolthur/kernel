@@ -1,5 +1,5 @@
 
-AC_DEFUN([BOLTHUR_KERNEL_PROG_OBJCOPY], [
+AC_DEFUN([BOLTHUR_PROG_OBJCOPY], [
   AC_CHECK_TOOL([BOLTHUR_OBJCOPY], [objcopy])
   AC_CACHE_CHECK([whether objcopy generates $host_bfd],
     [ac_cv_objcopy_supports_host_bfd],

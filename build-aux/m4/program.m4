@@ -1,5 +1,5 @@
 
-AC_DEFUN([BOLTHUR_KERNEL_LANG_PROGRAM], [
+AC_DEFUN([BOLTHUR_LANG_PROGRAM], [
   # overwrite c test program
   m4_define([AC_LANG_PROGRAM(C)], [ $1
     int main ( void ) {
