@@ -99,6 +99,63 @@ void message_destroy_process( task_process_ptr_t proc ) {
 }
 
 /**
+ * @fn message_entry_ptr_t message_allocate(size_t, char*, size_t*)
+ * @brief Helper to allocate message
+ *
+ * @param message_length
+ * @param message_data
+ * @return
+ */
+message_entry_ptr_t message_allocate(
+  size_t message_length,
+  const char* message_data,
+  size_t* message_id
+) {
+  // allocate message structure
+  message_entry_ptr_t message = ( message_entry_ptr_t )malloc(
+    sizeof( message_entry_t ) );
+  if ( ! message ) {
+    // debug output
+    #if defined( PRINT_MESSAGE )
+      DEBUG_OUTPUT( "No free space left for message structure!\r\n" )
+    #endif
+    // return NULL
+    return NULL;
+  }
+  // erase allocated space
+  memset( message, 0, sizeof( message_entry_t ) );
+  // allocate message data
+  char* data = ( char* )malloc( message_length );
+  if ( ! data ) {
+    // debug output
+    #if defined( PRINT_MESSAGE )
+      DEBUG_OUTPUT( "No free space left for message data!\r\n" )
+    #endif
+    // free allocation
+    free( message );
+    // return NULL
+    return NULL;
+  }
+  // copy over content
+  memcpy( data, message_data, message_length );
+  // prepare necessary data
+  message->data = data;
+  message->length = message_length;
+  // allocate message id
+  if ( ! message_id || 0 == *message_id ) {
+    message->id = message_generate_id();
+    // set message id
+    if ( message_id ) {
+      *message_id = message->id;
+    }
+  } else {
+    message->id = *message_id;
+  }
+  // return allocated structure
+  return message;
+}
+
+/**
  * @fn int message_send_by_pid(pid_t, pid_t, size_t, const char*, size_t, size_t, size_t*)
  * @brief Method to send message from one process to another one by pid
  *
@@ -123,7 +180,7 @@ int message_send_by_pid(
   // get process by pid
   task_process_ptr_t target_process = task_process_get_by_id( target );
   // handle error
-  if ( ! target ) {
+  if ( ! target_process ) {
     // debug output
     #if defined( PRINT_MESSAGE )
       DEBUG_OUTPUT( "Target process not found!\r\n" )
@@ -148,8 +205,11 @@ int message_send_by_pid(
   }
 
   // allocate message structure
-  message_entry_ptr_t message = ( message_entry_ptr_t )malloc(
-    sizeof( message_entry_t ) );
+  message_entry_ptr_t message = message_allocate(
+    message_length,
+    message_data,
+    message_id
+  );
   if ( ! message ) {
     // debug output
     #if defined( PRINT_MESSAGE )
@@ -157,29 +217,13 @@ int message_send_by_pid(
     #endif
     return EIO;
   }
-
-  // allocate message
-  char* data = ( char* )malloc( message_length );
-  if ( ! data ) {
-    // debug output
-    #if defined( PRINT_MESSAGE )
-      DEBUG_OUTPUT( "No free space left for message data!\r\n" )
-    #endif
-    free( message );
-    return EIO;
+  // Save message id in pointer if not null
+  if ( message_id ) {
+    *message_id = message->id;
   }
-  // generate message id if existing
-  if ( 0 == *message_id ) {
-    *message_id = message_generate_id();
-  }
-  // copy over content
-  memcpy( data, message_data, message_length );
   // prepare structure
-  message->data = data;
-  message->length = message_length;
   message->type = message_type;
   message->sender = sender;
-  message->id = *message_id;
   message->request = request_id;
   // push message to process queue
   list_push_back( target_process->message_queue, message );
@@ -192,7 +236,7 @@ int message_send_by_pid(
     #endif
     task_unblock_threads(
       target_process,
-      TASK_THREAD_WAITING_FOR_MESSAGE,
+      TASK_THREAD_STATE_WAITING_FOR_MESSAGE,
       ( task_state_data_t ){ .data_size = request_id }
     );
   }
@@ -277,7 +321,7 @@ int message_send_by_name(
     if ( 0 < request_id ) {
       task_unblock_threads(
         proc,
-        TASK_THREAD_WAITING_FOR_MESSAGE,
+        TASK_THREAD_STATE_WAITING_FOR_MESSAGE,
         ( task_state_data_t ){ .data_size = request_id }
       );
     }
@@ -286,4 +330,49 @@ int message_send_by_name(
   }
   // return success
   return 0;
+}
+
+/**
+ * @fn void message_remove(pid_t, size_t)
+ * @brief Helper to remove message from queue by id
+ *
+ * @param process
+ * @param message_id
+ */
+void message_remove( pid_t process, size_t message_id ) {
+  // get process by pid
+  task_process_ptr_t target_process = task_process_get_by_id( process );
+  // handle error
+  if ( ! target_process ) {
+    // debug output
+    #if defined( PRINT_MESSAGE )
+      DEBUG_OUTPUT( "Target process not found!\r\n" )
+    #endif
+    return;
+  }
+  // handle error
+  if ( ! target_process->message_queue ) {
+    // debug output
+    #if defined( PRINT_MESSAGE )
+      DEBUG_OUTPUT( "Target process has no queue!\r\n" )
+    #endif
+    return;
+  }
+  // Get message by id
+  list_item_ptr_t item = target_process->message_queue->first;
+  message_entry_ptr_t found = NULL;
+  while( item && ! found ) {
+    // get message
+    message_entry_ptr_t msg = ( message_entry_ptr_t )item->data;
+    // set found when matching
+    if( message_id == msg->id ) {
+      found = msg;
+    }
+    // head over to next
+    item = item->next;
+  }
+  // remove message if existing
+  if ( found ) {
+    list_remove_data( target_process->message_queue, ( void* )found );
+  }
 }

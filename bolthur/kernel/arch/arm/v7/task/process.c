@@ -35,7 +35,9 @@
 #include <arch/arm/firmware.h>
 
 /**
+ * @fn void task_process_start(void)
  * @brief Start multitasking with first ready task
+ *
  */
 void task_process_start( void ) {
   // debug output
@@ -85,12 +87,14 @@ void task_process_start( void ) {
 }
 
 /**
+ * @fn void task_process_schedule(event_origin_t, void*)
  * @brief Task process scheduler
  *
  * @param origin event origin
  * @param context cpu context
  *
  * @todo Add endless loop with enabled interrupts, when there are no more possible tasks left
+ * @todo Set correct status for current process if rpc handler active was set
  */
 void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // debug output
@@ -134,9 +138,13 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     // update running task to halt due to switch
     if ( TASK_PROCESS_STATE_ACTIVE == running_thread->process->state ) {
       running_thread->process->state = TASK_PROCESS_STATE_HALT_SWITCH;
+    } else if ( TASK_PROCESS_STATE_RPC_ACTIVE == running_thread->process->state ) {
+      running_thread->process->state = TASK_PROCESS_STATE_RPC_HALT_SWITCH;
     }
     if ( TASK_THREAD_STATE_ACTIVE == running_thread->state ) {
       running_thread->state = TASK_THREAD_STATE_HALT_SWITCH;
+    } else if ( TASK_THREAD_STATE_RPC_ACTIVE == running_thread->state ) {
+      running_thread->state = TASK_THREAD_STATE_RPC_HALT_SWITCH;
     }
     // update running task to kill in case of process kill
     if ( TASK_PROCESS_STATE_KILL == running_thread->process->state ) {
@@ -192,9 +200,13 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     // reset state to ready
     if ( TASK_PROCESS_STATE_HALT_SWITCH == running_thread->process->state ) {
       running_thread->process->state = TASK_PROCESS_STATE_READY;
+    } else if ( TASK_PROCESS_STATE_RPC_HALT_SWITCH == running_thread->process->state ) {
+      running_thread->process->state = TASK_PROCESS_STATE_RPC_QUEUED;
     }
     if ( TASK_THREAD_STATE_HALT_SWITCH == running_thread->state ) {
       running_thread->state = TASK_THREAD_STATE_READY;
+    } else if ( TASK_THREAD_STATE_RPC_HALT_SWITCH == running_thread->state ) {
+      running_thread->state = TASK_THREAD_STATE_RPC_QUEUED;
     }
   }
   // overwrite current running thread

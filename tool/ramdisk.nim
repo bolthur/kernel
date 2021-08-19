@@ -117,8 +117,8 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
           else:
             copyFile( file, joinPath( base_path, executable ) )
 
-scan_directory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
-scan_directory( joinPath( sysroot, "share", "font" ), "TrueType Font", "", sysroot, true )
+#scan_directory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
+#scan_directory( joinPath( sysroot, "share", "font" ), "TrueType Font", "", sysroot, true )
 scan_directory( server, "ELF", "executable", sysroot, false )
 scan_directory( driver, "ELF", "executable", sysroot, false )
 

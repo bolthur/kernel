@@ -20,7 +20,6 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdnoreturn.h> // FIXME: REMOVE IF NOT NEEDED ANY LONGER
 #include <syscall.h>
 #include <event.h>
 #include <task/process.h>

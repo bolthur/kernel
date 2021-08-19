@@ -1,4 +1,4 @@
 
 ACLOCAL_AMFLAGS = -I ../../build-aux/m4
 
-SUBDIRS = vfs
+SUBDIRS = console terminal vfs

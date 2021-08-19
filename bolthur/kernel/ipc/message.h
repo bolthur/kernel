@@ -40,10 +40,12 @@ typedef struct message_entry *message_entry_ptr_t;
 bool message_init( void );
 void message_cleanup( const list_item_ptr_t );
 size_t message_generate_id( void );
+message_entry_ptr_t message_allocate( size_t, const char*, size_t* );
 
 bool message_setup_process( task_process_ptr_t );
 void message_destroy_process( task_process_ptr_t );
 int message_send_by_pid( pid_t, pid_t, size_t, const char*, size_t, size_t, size_t* );
+void message_remove( pid_t, size_t );
 int message_send_by_name( const char*, pid_t, size_t, const char*, size_t, size_t, size_t* );
 
 #endif

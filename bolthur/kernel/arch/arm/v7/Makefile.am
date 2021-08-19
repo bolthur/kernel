@@ -15,6 +15,7 @@ libv7_la_SOURCES = \
   interrupt/handler/undefined.c \
   interrupt/stub.S \
   interrupt/vector.c \
+  ipc/rpc.c \
   mm/virt/long.c \
   mm/virt/short.c \
   mm/virt.c \

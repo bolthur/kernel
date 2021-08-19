@@ -25,6 +25,7 @@
 // process related stuff
 #include <task/process.h>
 #include <task/thread.h>
+#include <ipc/rpc.h>
 
 /**
  * @brief Nested counter for undefined instruction exception handler
@@ -35,10 +36,8 @@ static uint32_t nested_undefined = 0;
  * @brief Undefined instruction exception handler
  *
  * @param cpu cpu context
- *
- * @todo remove noreturn when handler is completed
  */
-noreturn void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
+void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
   // nesting
   nested_undefined++;
   assert( nested_undefined < INTERRUPT_NESTED_MAX )
@@ -51,14 +50,40 @@ noreturn void vector_undefined_instruction_handler( cpu_register_context_ptr_t c
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu )
     if ( EVENT_ORIGIN_USER == origin ) {
-      DEBUG_OUTPUT( "process id: %d, name: %s\r\n",
+      DEBUG_OUTPUT( "process id: %d, name: %s, thread state: %d\r\n",
         task_thread_current_thread->process->id,
-        task_thread_current_thread->process->name )
+        task_thread_current_thread->process->name,
+        task_thread_current_thread->state )
     }
   #endif
 
   // kernel stack
   interrupt_ensure_kernel_stack();
+
+  // try to restore from rpc call
+  if (
+    EVENT_ORIGIN_USER == origin
+    && TASK_THREAD_STATE_RPC_ACTIVE == task_thread_current_thread->state
+  ) {
+    // try to restore
+    if ( ! rpc_restore_thread( task_thread_current_thread, cpu ) ) {
+      PANIC( "undefined instruction during rpc handler => kill thread!" )
+    }
+    #if defined( PRINT_EXCEPTION )
+      DUMP_REGISTER( cpu )
+      if ( EVENT_ORIGIN_USER == origin ) {
+        DEBUG_OUTPUT( "process id: %d, name: %s, thread state: %d\r\n",
+          task_thread_current_thread->process->id,
+          task_thread_current_thread->process->name,
+          task_thread_current_thread->state )
+      }
+    #endif
+    // enqueue cleanup and return
+    event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
+    // decrement nested counter
+    nested_undefined--;
+    return;
+  }
 
   // just panic
   PANIC( "undefined" )

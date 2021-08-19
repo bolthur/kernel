@@ -77,6 +77,7 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-syscall` activate syscall output
 * `--enable-output-serial` activate serial handling output
 * `--enable-output-message` activate message system output
+* `--enable-output-rpc` activate rpc system output
 * `--enable-remote-debug` activate remote debugging
 
 ### Building

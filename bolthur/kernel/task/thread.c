@@ -123,12 +123,12 @@ pid_t task_thread_generate_id( task_process_ptr_t proc ) {
 }
 
 /**
+ * @fn bool task_thread_set_current(task_thread_ptr_t, task_priority_queue_ptr_t)
  * @brief Sets current running thread
  *
- * @param thread thread to set
- * @param queue thread queue
- * @return true
- * @return false
+ * @param thread
+ * @param queue
+ * @return
  */
 bool task_thread_set_current(
   task_thread_ptr_t thread,
@@ -143,8 +143,15 @@ bool task_thread_set_current(
   // update queue current
   queue->current = thread;
   // set state
-  task_thread_current_thread->state = TASK_THREAD_STATE_ACTIVE;
-  task_thread_current_thread->process->state = TASK_PROCESS_STATE_ACTIVE;
+  if ( task_thread_current_thread->state )
+  task_thread_current_thread->state =
+    task_thread_current_thread->state == TASK_THREAD_STATE_RPC_QUEUED
+      ? TASK_THREAD_STATE_RPC_ACTIVE
+      : TASK_THREAD_STATE_ACTIVE;
+  task_thread_current_thread->process->state =
+    task_thread_current_thread->process->state == TASK_PROCESS_STATE_RPC_QUEUED
+      ? TASK_PROCESS_STATE_RPC_ACTIVE
+      : TASK_PROCESS_STATE_ACTIVE;
   return true;
 }
 
@@ -160,9 +167,13 @@ void task_thread_reset_current( void ) {
   if ( task_thread_current_thread ) {
     if ( TASK_THREAD_STATE_HALT_SWITCH == task_thread_current_thread->state ) {
       task_thread_current_thread->state = TASK_THREAD_STATE_READY;
+    } else if ( TASK_THREAD_STATE_RPC_HALT_SWITCH == task_thread_current_thread->state ) {
+      task_thread_current_thread->state = TASK_THREAD_STATE_RPC_QUEUED;
     }
     if ( TASK_PROCESS_STATE_HALT_SWITCH == task_thread_current_thread->process->state ) {
       task_thread_current_thread->process->state = TASK_PROCESS_STATE_READY;
+    } else if ( TASK_PROCESS_STATE_RPC_HALT_SWITCH == task_thread_current_thread->process->state ) {
+      task_thread_current_thread->process->state = TASK_PROCESS_STATE_RPC_QUEUED;
     }
   }
   // unset current thread
@@ -194,9 +205,10 @@ void task_thread_destroy( avl_tree_ptr_t tree ) {
 }
 
 /**
+ * @fn task_thread_ptr_t task_thread_next(void)
  * @brief Function to get next thread for execution
  *
- * @return task_thread_ptr_t
+ * @return
  */
 task_thread_ptr_t task_thread_next( void ) {
   // check process manager
@@ -305,9 +317,13 @@ task_thread_ptr_t task_thread_next( void ) {
         (
           TASK_THREAD_STATE_READY == task->state
           || TASK_THREAD_STATE_HALT_SWITCH == task->state
+          || TASK_THREAD_STATE_RPC_QUEUED == task->state
+          || TASK_THREAD_STATE_RPC_HALT_SWITCH == task->state
         ) && (
           TASK_PROCESS_STATE_READY == proc->state
           || TASK_PROCESS_STATE_HALT_SWITCH == proc->state
+          || TASK_PROCESS_STATE_RPC_QUEUED == proc->state
+          || TASK_PROCESS_STATE_RPC_HALT_SWITCH == proc->state
         )
       ) {
         break;
@@ -387,6 +403,7 @@ void task_thread_block(
   if (
     TASK_THREAD_STATE_READY != thread->state
     && TASK_THREAD_STATE_ACTIVE != thread->state
+    && TASK_THREAD_STATE_RPC_ACTIVE != thread->state
   ) {
     return;
   }
@@ -412,7 +429,8 @@ void task_thread_unblock(
   if (
     necessary_state != thread->state
     || (
-      necessary_state != TASK_THREAD_WAITING_FOR_MESSAGE
+      necessary_state != TASK_THREAD_STATE_WAITING_FOR_MESSAGE
+      && necessary_state != TASK_THREAD_STATE_RPC_WAITING
     )
   ) {
     return;

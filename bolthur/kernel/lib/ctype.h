@@ -20,7 +20,6 @@
 #if ! defined( __LIB_CTYPE__ )
 #define __LIB_CTYPE__
 
-int isalpha( int );
 int isdigit( int );
 int islower( int );
 int isspace( int );

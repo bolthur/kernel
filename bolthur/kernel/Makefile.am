@@ -9,16 +9,17 @@ libkernel_la_SOURCES = \
   debug/gdb.c \
   debug/string.c \
   ipc/message.c \
-  ipc/signal.c \
+  ipc/rpc.c \
   mm/heap.c \
   mm/phys.c \
   mm/shared.c \
   mm/virt.c \
-  syscall/print.c \
   syscall/init.c \
   syscall/interrupt.c \
   syscall/memory.c \
   syscall/message.c \
+  syscall/print.c \
+  syscall/rpc.c \
   syscall/task.c \
   task/lock.c \
   task/process.c \

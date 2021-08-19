@@ -526,6 +526,7 @@ bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
 }
 
 /**
+ * @fn uint64_t virt_get_mapped_address_in_context(virt_context_ptr_t, uintptr_t)
  * @brief Get mapped physical address
  *
  * @param ctx

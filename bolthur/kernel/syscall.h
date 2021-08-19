@@ -49,14 +49,21 @@
 #define SYSCALL_MESSAGE_WAIT_FOR_RESPONSE 37
 #define SYSCALL_MESSAGE_WAIT_FOR_RESPONSE_TYPE 38
 #define SYSCALL_MESSAGE_HAS_BY_NAME 39
+#define SYSCALL_MESSAGE_GET_BY_MESSAGE_ID 40
 
-#define SYSCALL_IO_ACQUIRE 41
-#define SYSCALL_IO_RELEASE 42
-#define SYSCALL_IO_CHECK 43
-#define SYSCALL_IO_RAISE 44
+#define SYSCALL_RPC_ACQUIRE 41
+#define SYSCALL_RPC_RELEASE 42
+#define SYSCALL_RPC_RAISE 43
+#define SYSCALL_RPC_RAISE_WAIT 44
+#define SYSCALL_RPC_RAISE_RET 45
 
-#define SYSCALL_INTERRUPT_ACQUIRE 51
-#define SYSCALL_INTERRUPT_RELEASE 52
+#define SYSCALL_IO_ACQUIRE 51
+#define SYSCALL_IO_RELEASE 52
+#define SYSCALL_IO_CHECK 53
+#define SYSCALL_IO_RAISE 54
+
+#define SYSCALL_INTERRUPT_ACQUIRE 61
+#define SYSCALL_INTERRUPT_RELEASE 62
 
 #define SYSCALL_KERNEL_PUTC 101
 #define SYSCALL_KERNEL_PUTS 102
@@ -92,6 +99,7 @@ void syscall_message_receive_type( void* );
 void syscall_message_wait_for_response( void* );
 void syscall_message_wait_for_response_type( void* );
 void syscall_message_has_by_name( void* );
+void syscall_message_get_by_message_id( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );
@@ -100,6 +108,12 @@ void syscall_io_acquire( void* );
 void syscall_io_release( void* );
 void syscall_io_check( void* );
 void syscall_io_raise( void* );
+
+void syscall_rpc_acquire( void* );
+void syscall_rpc_release( void* );
+void syscall_rpc_raise( void* );
+void syscall_rpc_raise_wait( void* );
+void syscall_rpc_raise_ret( void* );
 
 void syscall_kernel_putc( void* );
 void syscall_kernel_puts( void* );

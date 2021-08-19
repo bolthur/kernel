@@ -204,18 +204,50 @@ bool syscall_init( void ) {
   ) ) {
     return false;
   }
-  // interrupt related
   if ( ! interrupt_register_handler(
-    SYSCALL_INTERRUPT_ACQUIRE,
-    syscall_interrupt_acquire,
+    SYSCALL_MESSAGE_GET_BY_MESSAGE_ID,
+    syscall_message_get_by_message_id,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  // rpc related
+  if ( ! interrupt_register_handler(
+    SYSCALL_RPC_ACQUIRE,
+    syscall_rpc_acquire,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_INTERRUPT_RELEASE,
-    syscall_interrupt_release,
+    SYSCALL_RPC_RELEASE,
+    syscall_rpc_release,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_RPC_RAISE,
+    syscall_rpc_raise,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_RPC_RAISE_WAIT,
+    syscall_rpc_raise_wait,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_RPC_RAISE_RET,
+    syscall_rpc_raise_ret,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -249,6 +281,23 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_IO_RELEASE,
     syscall_io_release,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  // interrupt related
+  if ( ! interrupt_register_handler(
+    SYSCALL_INTERRUPT_ACQUIRE,
+    syscall_interrupt_acquire,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_INTERRUPT_RELEASE,
+    syscall_interrupt_release,
     INTERRUPT_SOFTWARE,
     false
   ) ) {

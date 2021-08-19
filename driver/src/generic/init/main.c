@@ -228,6 +228,30 @@ static pid_t execute_driver( char* name ) {
   return forked_process;
 }
 
+static void dummy( pid_t source, size_t message ) {
+  pid_t current = getpid();
+  EARLY_STARTUP_PRINT( "source = %d, current = %d, message = %d\r\n",
+    source, current, message );
+  // local stuff for data with clear
+  char data[ 64 ];
+  memset( data, 0, sizeof( data ) );
+  // fetch message
+  if ( message ) {
+    // fetch message by id
+    _message_get_by_message_id(
+      data,
+      sizeof( char ) * 64,
+      message
+    );
+    // handle error
+    if ( errno ) {
+      EARLY_STARTUP_PRINT( "Fetch rpc data error: %s\r\n", strerror( errno ) );
+      return;
+    }
+  }
+  EARLY_STARTUP_PRINT( "data = %s\r\n", data )
+}
+
 /**
  * @fn void handle_normal_init(void)
  * @brief Helper to get up the necessary additional drivers for a running system
@@ -235,22 +259,39 @@ static pid_t execute_driver( char* name ) {
  * @todo rename to something betters
  */
 static void handle_normal_init( void ) {
+  EARLY_STARTUP_PRINT(
+    "Calling dummy handler from parent ( pid %d ) just for fun from child ( pid %d )!\r\n",
+    pid, getpid() )
+  _rpc_raise( "dummy", pid, "hello", strlen( "hello" ) + 1 );
+  // rpc for local testing
+  EARLY_STARTUP_PRINT( "local rpc register\r\n" )
+  _rpc_acquire( "dummy", ( uintptr_t )dummy );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to register rpc handler: %s\r\n", strerror( errno ) )
+  }
+  EARLY_STARTUP_PRINT( "Calling dummy handler from current just for fun!\r\n" )
+  _rpc_raise( "dummy", getpid(), "olleh", strlen( "olleh" ) + 1 );
+  _rpc_raise( "dummy", getpid(), NULL, 0 );
+
   // start system console and wait for device to come up
-  pid_t console = execute_driver( "/ramdisk/core/console" );
+  pid_t console = execute_driver( "/ramdisk/server/console" );
   wait_for_device( "/dev/console" );
-  // start tty and wait for device to come up
-  pid_t tty = execute_driver( "/ramdisk/core/terminal/tty" );
-  wait_for_device( "/dev/tty" );
-  // start pty and wait for device to come up
-  pid_t pty = execute_driver( "/ramdisk/core/terminal/pty" );
-  wait_for_device( "/dev/pty" );
+
   // start framebuffer driver and wait for device to come up
   pid_t framebuffer = execute_driver( "/ramdisk/driver/framebuffer" );
   wait_for_device( "/dev/framebuffer" );
 
-  EARLY_STARTUP_PRINT(
-    "console = %d, tty = %d, pty = %d, framebuffer = %d\r\n",
-    console, tty, pty, framebuffer )
+  // start tty and wait for device to come up
+  pid_t terminal = execute_driver( "/ramdisk/server/terminal" );
+  wait_for_device( "/dev/terminal" );
+
+  EARLY_STARTUP_PRINT( "Just looping around with nops :O\r\n" )
+  while( true ) {
+    __asm__ __volatile__( "nop" );
+  }
+
+  EARLY_STARTUP_PRINT( "console = %d, terminal = %d, framebuffer = %d\r\n",
+    console, terminal, framebuffer )
 
   // start console to create /dev/console
   // start framebuffer to create /dev/framebuffer
@@ -337,6 +378,13 @@ int main( int argc, char* argv[] ) {
   assert( 1 == pid );
   // debug print
   EARLY_STARTUP_PRINT( "init processing\r\n" );
+
+  // rpc testing
+  EARLY_STARTUP_PRINT( "register dummy system call\r\n" );
+  _rpc_acquire( "dummy", ( uintptr_t )dummy );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to register rpc handler: %s\r\n", strerror( errno ) )
+  }
 
   // transform arguments to hex
   ramdisk_compressed = strtoul( argv[ 1 ], NULL, 16 );
@@ -480,7 +528,7 @@ int main( int argc, char* argv[] ) {
     // get message type
     vfs_message_type_t type = _message_receive_type();
     // skip on error / no message
-    if ( errno ) {
+    if ( errno || ! type ) {
       continue;
     }
 

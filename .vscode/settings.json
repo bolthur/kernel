@@ -1,0 +1,16 @@
+{
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false,
+  "telemetry.enableCrashReporter": false,
+  "editor.renderControlCharacters": true,
+  "editor.renderWhitespace": "all",
+  "editor.rulers": [
+    80, 120
+  ],
+  "C_Cpp.autocompleteAddParentheses": true,
+  "files.associations": {
+    "message.h": "c",
+    "debug.h": "c",
+    "bolthur.h": "c"
+  }
+}

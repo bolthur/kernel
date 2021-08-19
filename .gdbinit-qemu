@@ -1,5 +1,8 @@
 
 set architecture armv7
-file build/src/target/rpi/kernel7_qemu.sym
-target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel build/src/target/rpi/kernel7_qemu.img -initrd build-aux/platform/rpi/initrd -dtb ./dts/rpi/bcm2836-rpi-2-b.dtb -gdb stdio -S
+file build/bolthur/kernel/target/rpi/kernel7_qemu.sym
+#file build/src/target/rpi/kernel7_qemu.sym
+add-symbol-file build/driver/src/generic/init/init 
+#target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -no-reboot -kernel build/src/target/rpi/kernel7_qemu.img -initrd build-aux/platform/rpi/initrd -dtb ./dts/rpi/bcm2836-rpi-2-b.dtb -gdb stdio -S
+target remote | qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -kernel build/bolthur/kernel/target/rpi/kernel7_qemu.img -initrd build-aux/platform/rpi/initrd -dtb ./dts/rpi/bcm2836-rpi-2-b.dtb -gdb stdio -S
 display /10i $pc

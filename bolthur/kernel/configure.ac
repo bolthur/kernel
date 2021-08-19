@@ -170,6 +170,15 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_ENABLE(
+  [output-rpc],
+  AS_HELP_STRING(
+    [--enable-output-rpc],
+    [activate rpc output [default: off]]
+  ),
+  [enable_output_rpc=yes]
+)
+
+AC_ARG_ENABLE(
   [remote-debug],
   AS_HELP_STRING(
     [--enable-remote-debug],

@@ -161,7 +161,7 @@ task_thread_ptr_t task_thread_create(
   thread->process = process;
   thread->stack_physical = stack_physical;
   thread->stack_virtual = stack_virtual;
-
+  thread->stack_size = PAGE_SIZE;
   // prepare node
   avl_prepare_node( &thread->node_id, ( void* )thread->id );
   // add to tree
@@ -234,6 +234,8 @@ task_thread_ptr_t task_thread_fork(
     thread->process->virtual_context,
     thread->stack_virtual
   );
+
+  thread->stack_size = thread_to_fork->stack_size;
   thread->state = TASK_THREAD_STATE_READY;
   // copy register context data
   memcpy(

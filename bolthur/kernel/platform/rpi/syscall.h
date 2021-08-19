@@ -20,7 +20,7 @@
 #if ! defined( __PLATFORM_RPI_SYSCALL__ )
 #define __PLATFORM_RPI_SYSCALL__
 
-#define SYSCALL_MAILBOX_ACTION 61
+#define SYSCALL_MAILBOX_ACTION 71
 
 void syscall_mailbox_action( void* );
 

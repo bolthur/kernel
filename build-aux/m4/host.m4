@@ -24,6 +24,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_SERIAL], [Define to 1 to enable output of serial handling])
   AH_TEMPLATE([PRINT_MM_SHARED], [Define to 1 to enable output of shared memory functions])
   AH_TEMPLATE([PRINT_MESSAGE], [Define to 1 to enable output of message functions])
+  AH_TEMPLATE([PRINT_RPC], [Define to 1 to enable output of rpc functions])
 
   # Test for debugging enabled
   AS_IF([test "x$enable_remote_debug" == "xyes"], [
@@ -108,6 +109,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   # Test for serial output
   AS_IF([test "x$enable_output_message" == "xyes"], [
     AC_DEFINE([PRINT_MESSAGE],[1])
+  ])
+
+  # Test for rpc output
+  AS_IF([test "x$enable_output_rpc" == "xyes"], [
+    AC_DEFINE([PRINT_RPC],[1])
   ])
 
   case "${host_cpu}" in
