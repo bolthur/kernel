@@ -429,7 +429,7 @@ void task_thread_unblock(
   if (
     necessary_state != thread->state
     || (
-      necessary_state != TASK_THREAD_STATE_WAITING_FOR_MESSAGE
+      necessary_state != TASK_THREAD_STATE_MESSAGE_WAITING
       && necessary_state != TASK_THREAD_STATE_RPC_WAITING
     )
   ) {

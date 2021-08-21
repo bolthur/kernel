@@ -554,3 +554,29 @@ void interrupt_toggle( interrupt_toggle_state_t state ) {
     }
   }
 }
+
+/**
+ * @fn void interrupt_handle_possible(void*, bool)
+ * @brief Method to enqueue possible interrupt handler
+ *
+ * @param context
+ * @param fast
+ */
+void interrupt_handle_possible( void* context, bool fast ) {
+  int8_t interrupt_bit;
+  // get pending interrupt
+  while( -1 != ( interrupt_bit = interrupt_get_pending( fast ) ) ) {
+    // transform bit to interrupt
+    uint32_t interrupt = ( 1U << interrupt_bit );
+    // debug output
+    #if defined( PRINT_INTERRUPT )
+      DEBUG_OUTPUT( "pending interrupt: %#x\r\n", interrupt );
+    #endif
+    // call interrupt handler
+    interrupt_handle(
+      interrupt,
+      fast ? INTERRUPT_FAST : INTERRUPT_NORMAL,
+      context
+    );
+  }
+}

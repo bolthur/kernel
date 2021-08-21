@@ -79,6 +79,7 @@ static void timer_clear( void* context ) {
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // enable timer 3
   io_out32( base + SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
+
   // set compare for timer 3
   uint32_t current_count = io_in32( base + SYSTEM_TIMER_COUNTER_LOWER );
   uint32_t next_count = current_count + TIMER_FREQUENCY_HZ / TIMER_INTERRUPT_PER_SECOND;
@@ -86,6 +87,13 @@ static void timer_clear( void* context ) {
     DEBUG_OUTPUT( "current = %#x, next = %#x\r\n", current_count, next_count );
   #endif
   io_out32( base + SYSTEM_TIMER_COMPARE_3, next_count );
+
+  // get pending interrupt from memory clear timer and overwrite
+  // should not be necessary but better safe than sorry
+  uint32_t interrupt_line = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
+  interrupt_line &= ( uint32_t )( ~( SYSTEM_TIMER_3_INTERRUPT ) );
+  io_out32( base + INTERRUPT_IRQ_PENDING_1, interrupt_line );
+
   // trigger timer event
   event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
 }

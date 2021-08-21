@@ -17,35 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <errno.h>
 #include <sys/bolthur.h>
-#include "core/helper.h"
-/**
- * @fn int main(int, char*[])
- * @brief main entry point
- *
- * @param argc
- * @param argv
- * @return
- */
-int main( __unused int argc, __unused char* argv[] ) {
-  // print something
-  EARLY_STARTUP_PRINT( "tty init starting!\r\n" )
-  // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
-  assert( msg );
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strcpy( msg->file_path, "/dev/tty" );
-  // perform add request
-  send_add_request( msg );
-  // print something
-  EARLY_STARTUP_PRINT( "tty init done!\r\n" )
 
-  for(;;);
-  return 0;
-}
+#if ! defined( __LIBFRAMEBUFFER__ )
+#define __LIBFRAMEBUFFER__
+
+enum framebuffer_command_type {
+};
+typedef enum terminal_command_type terminal_command_type_t;
+typedef enum terminal_command_type* terminal_command_type_ptr_t;
+
+#endif

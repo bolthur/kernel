@@ -1,2 +1,2 @@
 
-SUBDIRS = startup terminal console pipe
+SUBDIRS = startup pipe

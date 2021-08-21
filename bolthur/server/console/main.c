@@ -21,9 +21,43 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
-#include "helper.h"
+#include "../libhelper.h"
+#include "handler.h"
+#include "list.h"
+#include "console.h"
 
+list_manager_ptr_t console_list = NULL;
 pid_t pid = 0;
+
+/**
+ * @fn int32_t console_lookup(const list_item_ptr_t, const void*)
+ * @brief List lookup helper
+ *
+ * @param a
+ * @param data
+ * @return
+ */
+static int32_t console_lookup(
+  const list_item_ptr_t a,
+  const void* data
+) {
+  console_ptr_t console = a->data;
+  return strcmp( console->path, data );
+}
+
+/**
+ * @fn void console_cleanup(const list_item_ptr_t)
+ * @brief List cleanup helper
+ *
+ * @param a
+ */
+static void console_cleanup( const list_item_ptr_t a ) {
+  console_ptr_t console = a->data;
+  // destroy console
+  console_destroy( console );
+  // default cleanup
+  list_default_cleanup( a );
+}
 
 /**
  * @brief main entry function
@@ -31,11 +65,6 @@ pid_t pid = 0;
  * @param argc
  * @param argv
  * @return
- *
- * @todo remove vfs debug output
- * @todo add return message for adding file / folder containing success / failure state
- * @todo add necessary message handling to loop
- * @todo move message handling into own thread
  */
 int main( __unused int argc, __unused char* argv[] ) {
   // allocate memory for add request
@@ -45,6 +74,10 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "console processing!\r\n" )
   // cache current pid
   pid = getpid();
+
+  EARLY_STARTUP_PRINT( "-> preparing list!\r\n" )
+  console_list = list_construct( console_lookup, console_cleanup );
+  assert( console_list );
 
   EARLY_STARTUP_PRINT( "-> pushing /dev/stdin device to vfs!\r\n" )
   // console device
@@ -75,6 +108,14 @@ int main( __unused int argc, __unused char* argv[] ) {
   strncpy( msg->file_path, "/dev/stderr", PATH_MAX );
   // perform add request
   send_add_request( msg );
+
+  // register console add command
+  _rpc_acquire( "#/dev/console#add", ( uintptr_t )handler_console_add );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to register rpc handler: %s\r\n", strerror( errno ) )
+  }
+
+  // FIXME: REGISTER FURTHER RPC HANDLER FOR COMMANDS
 
   EARLY_STARTUP_PRINT( "-> pushing /dev/console device to vfs!\r\n" )
   // console device

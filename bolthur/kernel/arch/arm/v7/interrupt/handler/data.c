@@ -81,6 +81,8 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
     PANIC( "data abort!" )
   #endif
 
+  // handle possible hardware interrupt
+  interrupt_handle_possible( cpu, false );
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
 

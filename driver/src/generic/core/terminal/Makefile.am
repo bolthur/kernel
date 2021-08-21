@@ -1,2 +1,0 @@
-
-SUBDIRS = pty tty

@@ -238,7 +238,7 @@ static void dummy( pid_t source, size_t message ) {
   // fetch message
   if ( message ) {
     // fetch message by id
-    _message_get_by_message_id(
+    _rpc_get_data(
       data,
       sizeof( char ) * 64,
       message
@@ -252,6 +252,12 @@ static void dummy( pid_t source, size_t message ) {
   EARLY_STARTUP_PRINT( "data = %s\r\n", data )
 }
 
+static void dummy2( void ) {
+  static int a = 0;
+  a++;
+  _rpc_ret( &a, sizeof( a ) );
+}
+
 /**
  * @fn void handle_normal_init(void)
  * @brief Helper to get up the necessary additional drivers for a running system
@@ -263,15 +269,77 @@ static void handle_normal_init( void ) {
     "Calling dummy handler from parent ( pid %d ) just for fun from child ( pid %d )!\r\n",
     pid, getpid() )
   _rpc_raise( "dummy", pid, "hello", strlen( "hello" ) + 1 );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
+  }
   // rpc for local testing
   EARLY_STARTUP_PRINT( "local rpc register\r\n" )
   _rpc_acquire( "dummy", ( uintptr_t )dummy );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "unable to register rpc handler: %s\r\n", strerror( errno ) )
   }
+  _rpc_acquire( "dummy2", ( uintptr_t )dummy2 );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to register rpc handler: %s\r\n", strerror( errno ) )
+  }
   EARLY_STARTUP_PRINT( "Calling dummy handler from current just for fun!\r\n" )
   _rpc_raise( "dummy", getpid(), "olleh", strlen( "olleh" ) + 1 );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
+  }
   _rpc_raise( "dummy", getpid(), NULL, 0 );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
+  }
+
+  size_t response_message = _rpc_raise_wait( "dummy2", pid, NULL, 0 );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
+  }
+  EARLY_STARTUP_PRINT( "Response message: %d\r\n", response_message )
+  int result = 0;
+  _rpc_get_data( ( char* )&result, sizeof( int ), response_message );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to fetch return message: %s\r\n", strerror( errno ) )
+  }
+  EARLY_STARTUP_PRINT( "Result: %d\r\n", result )
+
+  response_message = _rpc_raise_wait( "dummy2", pid, NULL, 0 );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
+  }
+  EARLY_STARTUP_PRINT( "Response message: %d\r\n", response_message )
+  result = 0;
+  _rpc_get_data( ( char* )&result, sizeof( int ), response_message );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to fetch return message: %s\r\n", strerror( errno ) )
+  }
+  EARLY_STARTUP_PRINT( "Result: %d\r\n", result )
+
+  response_message = _rpc_raise_wait( "dummy2", pid, NULL, 0 );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
+  }
+  EARLY_STARTUP_PRINT( "Response message: %d\r\n", response_message )
+  result = 0;
+  _rpc_get_data( ( char* )&result, sizeof( int ), response_message );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to fetch return message: %s\r\n", strerror( errno ) )
+  }
+  EARLY_STARTUP_PRINT( "Result: %d\r\n", result )
+
+
+  EARLY_STARTUP_PRINT( "CALLING IN THREAD RPC WITH WAIT!\r\n" )
+  size_t response_message2 = _rpc_raise_wait( "dummy2", getpid(), NULL, 0 );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
+  }
+  EARLY_STARTUP_PRINT( "Response message: %d\r\n", response_message2 )
+  _rpc_get_data( ( char* )&result, sizeof( int ), response_message2 );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to fetch return message: %s\r\n", strerror( errno ) )
+  }
+  EARLY_STARTUP_PRINT( "Result: %d\r\n", result )
 
   // start system console and wait for device to come up
   pid_t console = execute_driver( "/ramdisk/server/console" );
@@ -382,6 +450,10 @@ int main( int argc, char* argv[] ) {
   // rpc testing
   EARLY_STARTUP_PRINT( "register dummy system call\r\n" );
   _rpc_acquire( "dummy", ( uintptr_t )dummy );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to register rpc handler: %s\r\n", strerror( errno ) )
+  }
+  _rpc_acquire( "dummy2", ( uintptr_t )dummy2 );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "unable to register rpc handler: %s\r\n", strerror( errno ) )
   }

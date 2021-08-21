@@ -17,35 +17,30 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
-#include <string.h>
 #include <stdlib.h>
-#include <sys/bolthur.h>
-#include "core/helper.h"
-/**
- * @fn int main(int, char*[])
- * @brief main entry point
- *
- * @param argc
- * @param argv
- * @return
- */
-int main( __unused int argc, __unused char* argv[] ) {
-  // print something
-  EARLY_STARTUP_PRINT( "pty init starting!\r\n" )
-  // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
-  assert( msg );
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strcpy( msg->file_path, "/dev/pty" );
-  // perform add request
-  send_add_request( msg );
-  // print something
-  EARLY_STARTUP_PRINT( "pty init done!\r\n" )
+#include "console.h"
 
-  for(;;);
-  return 0;
+/**
+ * @fn void console_destroy(console_ptr_t)
+ * @brief Helper to destroy console entry
+ *
+ * @param console
+ */
+void console_destroy( console_ptr_t console ) {
+  if ( ! console ) {
+    return;
+  }
+  if ( console->path ) {
+    free( console->path );
+  }
+  if ( console->stdin ) {
+    free( console->stdin );
+  }
+  if ( console->stdout ) {
+    free( console->stdout );
+  }
+  if ( console->stderr ) {
+    free( console->stderr );
+  }
+  free( console );
 }

@@ -21,7 +21,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -nodefaultlibs -std=c18])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer -fno-builtin])
   AX_APPEND_COMPILE_FLAGS([-ffreestanding -fno-common])
-  AX_APPEND_COMPILE_FLAGS([-ffreestanding])
   # FIXME: add compile flag "-fanalyzer" and check and fix warnings
 
   # debug parameter

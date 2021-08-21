@@ -85,5 +85,6 @@ void interrupt_post_init( void );
 void interrupt_handle( size_t, interrupt_type_t, void* );
 bool interrupt_register_handler( size_t, interrupt_callback_t, interrupt_type_t, bool );
 bool interrupt_unregister_handler( size_t, interrupt_callback_t, interrupt_type_t, bool );
+void interrupt_handle_possible( void*, bool );
 
 #endif

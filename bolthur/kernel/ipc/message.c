@@ -236,7 +236,7 @@ int message_send_by_pid(
     #endif
     task_unblock_threads(
       target_process,
-      TASK_THREAD_STATE_WAITING_FOR_MESSAGE,
+      TASK_THREAD_STATE_MESSAGE_WAITING,
       ( task_state_data_t ){ .data_size = request_id }
     );
   }
@@ -321,7 +321,7 @@ int message_send_by_name(
     if ( 0 < request_id ) {
       task_unblock_threads(
         proc,
-        TASK_THREAD_STATE_WAITING_FOR_MESSAGE,
+        TASK_THREAD_STATE_MESSAGE_WAITING,
         ( task_state_data_t ){ .data_size = request_id }
       );
     }

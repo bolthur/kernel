@@ -51,20 +51,8 @@ void vector_interrupt_handler( cpu_register_context_ptr_t cpu ) {
 
   // kernel stack
   interrupt_ensure_kernel_stack();
-
-  // get pending interrupt
-  int8_t interrupt_bit = interrupt_get_pending( false );
-  // handle bound interrupt handlers
-  if ( -1 != interrupt_bit ) {
-    // transform bit to interrupt
-    uint32_t interrupt = ( 1U << interrupt_bit );
-    // debug output
-    #if defined( PRINT_EXCEPTION )
-      DEBUG_OUTPUT( "pending interrupt: %#x\r\n", interrupt );
-    #endif
-    // call interrupt handler
-    interrupt_handle( interrupt, INTERRUPT_NORMAL, cpu );
-  }
+  // handle possible hardware interrupt
+  interrupt_handle_possible( cpu, false );
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
 

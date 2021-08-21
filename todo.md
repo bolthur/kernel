@@ -3,6 +3,7 @@
 
 * [ ] Replace `__CORE_` by `__` within header files
 * [ ] Change include from `<` and `>` for local files to `"`
+* [ ] Fix hang up when raising rpc happening from time to time
 
 * [ ] Replace thirdparty/dtc/libfdt by usage of the one from sysroot
 * [ ] Replace magic values at serial init by defines

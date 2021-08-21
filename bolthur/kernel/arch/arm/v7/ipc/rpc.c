@@ -305,6 +305,7 @@ bool rpc_prepare_invoke(
     backup->thread->process->state = TASK_PROCESS_STATE_RPC_QUEUED;
   }
   backup->prepared = true;
+  backup->active = true;
   // debug output
   #if defined( PRINT_RPC )
     DUMP_REGISTER( cpu )
@@ -389,6 +390,8 @@ bool rpc_restore_thread( task_thread_ptr_t thread, void* context ) {
     backup->context,
     sizeof( cpu_register_context_t )
   );
+  // data transfer barrier
+  barrier_data_mem();
   // set correct state
   backup->thread->state = TASK_THREAD_STATE_ACTIVE;
   backup->thread->process->state = TASK_PROCESS_STATE_ACTIVE;

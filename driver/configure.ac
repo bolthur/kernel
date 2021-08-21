@@ -141,12 +141,8 @@ AC_CONFIG_FILES([
   src/Makefile
   src/generic/Makefile
   src/generic/core/Makefile
-  src/generic/core/console/Makefile
   src/generic/core/pipe/Makefile
   src/generic/core/startup/Makefile
-  src/generic/core/terminal/Makefile
-  src/generic/core/terminal/pty/Makefile
-  src/generic/core/terminal/tty/Makefile
   src/generic/init/Makefile
   src/generic/usr/Makefile
   src/generic/usr/lib/Makefile

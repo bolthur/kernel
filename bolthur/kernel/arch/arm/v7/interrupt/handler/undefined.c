@@ -78,6 +78,8 @@ void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
           task_thread_current_thread->state )
       }
     #endif
+    // handle possible hardware interrupt
+    interrupt_handle_possible( cpu, false );
     // enqueue cleanup and return
     event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
     // decrement nested counter

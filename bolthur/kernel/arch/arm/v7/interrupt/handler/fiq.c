@@ -46,16 +46,10 @@ void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu )
   #endif
-
   // kernel stack
   interrupt_ensure_kernel_stack();
-
-  // get pending interrupt
-  int8_t interrupt = interrupt_get_pending( true );
-  // handle bound fast interrupt handlers
-  if ( -1 != interrupt ) {
-    interrupt_handle( ( uint8_t )interrupt, INTERRUPT_FAST, cpu );
-  }
+  // handle possible hardware interrupt
+  interrupt_handle_possible( cpu, true );
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
 

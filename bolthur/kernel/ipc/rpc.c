@@ -255,7 +255,7 @@ bool rpc_unregister_handler(
 }
 
 /**
- * @fn void rpc_raise(char*, task_thread_ptr_t, task_process_ptr_t, void*, size_t)
+ * @fn rpc_backup_ptr_t rpc_raise(char*, task_thread_ptr_t, task_process_ptr_t, void*, size_t)
  * @brief Raise an rpc in target from source
  *
  * @param identifier
@@ -263,11 +263,8 @@ bool rpc_unregister_handler(
  * @param target
  * @param data
  * @param length
- *
- * @todo add return of parameter message id
- * @todo add return of error codes
  */
-void rpc_raise(
+rpc_backup_ptr_t rpc_raise(
   char* identifier,
   task_thread_ptr_t source,
   task_process_ptr_t target,
@@ -283,7 +280,7 @@ void rpc_raise(
       DEBUG_OUTPUT( "No container found for identifier %s\r\n", identifier )
     #endif
     // skip if no such container is existing
-    return;
+    return NULL;
   }
   // container
   rpc_container_ptr_t container = container_item->data;
@@ -295,7 +292,7 @@ void rpc_raise(
       DEBUG_OUTPUT( "No handler bound for target %d\r\n", target->id )
     #endif
     // skip if nothing is there
-    return;
+    return NULL;
   }
   // get information entry
   rpc_entry_ptr_t entry = proc_item->data;
@@ -308,7 +305,7 @@ void rpc_raise(
       DEBUG_OUTPUT( "Error while creating backup for target %d\r\n", target->id )
     #endif
     // skip if backup could not be created
-    return;
+    return NULL;
   }
   // prepare thread
   if ( ! rpc_prepare_invoke( backup, entry ) ) {
@@ -319,6 +316,55 @@ void rpc_raise(
     free( backup->context );
     free( backup );
     // skip if error occurred during rpc invoke
-    return;
+    return NULL;
   }
+
+  return backup;
+}
+
+/**
+ * @fn rpc_backup_ptr_t rpc_get_active(task_thread_ptr_t)
+ * @brief Get active rpc backup
+ *
+ * @param thread
+ * @return
+ */
+rpc_backup_ptr_t rpc_get_active( task_thread_ptr_t thread ) {
+  // ensure proper states
+  if (
+    TASK_THREAD_STATE_RPC_ACTIVE != thread->state
+    || TASK_PROCESS_STATE_RPC_ACTIVE != thread->process->state
+  ) {
+    return false;
+  }
+  // variables
+  list_item_ptr_t current = rpc_list->first;
+  rpc_backup_ptr_t backup = NULL;
+  // try to find active rpc
+  while( current && ! backup ) {
+    rpc_container_ptr_t container = current->data;
+    // check for existing process mapping
+    list_item_ptr_t proc_item = list_lookup_data(
+      container->handler,
+      thread->process
+    );
+    // handle existing
+    if ( proc_item ) {
+      rpc_entry_ptr_t entry = proc_item->data;
+      list_item_ptr_t current_queued = entry->queue->first;
+      while ( current_queued && ! backup ) {
+        rpc_backup_ptr_t tmp = current_queued->data;
+        // check for match
+        if ( tmp->active ) {
+          backup = tmp;
+          break;
+        }
+        // get to next
+        current_queued = current_queued->next;
+      }
+    }
+    // switch to next
+    current = current->next;
+  }
+  return backup;
 }

@@ -32,6 +32,8 @@ static uint32_t nested_svc = 0;
  * @brief Software interrupt exception handler
  *
  * @param cpu cpu context
+ *
+ * @todo move interrupt check into function
  */
 void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   // nesting
@@ -74,6 +76,8 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
 
   // handle bound interrupt handlers
   interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu );
+  // handle possible hardware interrupt
+  interrupt_handle_possible( cpu, false );
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
 
