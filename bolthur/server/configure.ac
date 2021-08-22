@@ -139,6 +139,10 @@ AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 AC_CONFIG_FILES([
   Makefile
   console/Makefile
+  init/Makefile
+  platform/Makefile
+  platform/rpi/Makefile
+  platform/rpi/framebuffer/Makefile
   terminal/Makefile
   vfs/Makefile
 ])

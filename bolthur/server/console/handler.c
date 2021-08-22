@@ -17,14 +17,31 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <sys/bolthur.h>
+#include "handler.h"
 
-#if ! defined( __HANDLER__ )
-#define __HANDLER__
-
-void handler_console_add( pid_t, size_t );
-void handler_console_select( pid_t, size_t );
-void handler_register( void );
-
-#endif
+/**
+ * @fn void handler_register(void)
+ * @brief Registers necessary rpc handler
+ */
+void handler_register( void ) {
+  // register console add command
+  _rpc_acquire( "#/dev/console#add", ( uintptr_t )handler_console_add );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT(
+      "unable to register rpc handler: %s\r\n",
+      strerror( errno )
+    )
+  }
+  // register console activate command
+  _rpc_acquire( "#/dev/console#select", ( uintptr_t )handler_console_select );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT(
+      "unable to register rpc handler: %s\r\n",
+      strerror( errno )
+    )
+  }
+  // FIXME: REGISTER FURTHER RPC HANDLER FOR COMMANDS
+}

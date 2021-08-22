@@ -17,14 +17,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <unistd.h>
+#include "list.h"
 
-#if ! defined( __HANDLER__ )
-#define __HANDLER__
+#if ! defined( __TERMINAL__ )
+#define __TERMINAL__
 
-void handler_console_add( pid_t, size_t );
-void handler_console_select( pid_t, size_t );
-void handler_register( void );
+#define TERMINAL_BASE_PATH "/dev/tty"
+#define TERMINAL_MAX_PATH 32
+#define TERMINAL_MAX_NUM 7
+
+struct terminal {
+  char path[ TERMINAL_MAX_PATH ];
+  uint8_t* output_buffer;
+  uint32_t current_x;
+  uint32_t current_y;
+  uint32_t max_x;
+  uint32_t max_y;
+};
+typedef struct terminal terminal_t;
+typedef struct terminal* terminal_ptr_t;
+
+extern list_manager_ptr_t terminal_list;
+
+void terminal_init( void );
 
 #endif

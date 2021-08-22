@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -328,7 +329,6 @@ static void handle_normal_init( void ) {
   }
   EARLY_STARTUP_PRINT( "Result: %d\r\n", result )
 
-
   EARLY_STARTUP_PRINT( "CALLING IN THREAD RPC WITH WAIT!\r\n" )
   size_t response_message2 = _rpc_raise_wait( "dummy2", getpid(), NULL, 0 );
   if ( errno ) {
@@ -346,20 +346,57 @@ static void handle_normal_init( void ) {
   wait_for_device( "/dev/console" );
 
   // start framebuffer driver and wait for device to come up
-  pid_t framebuffer = execute_driver( "/ramdisk/driver/framebuffer" );
+  pid_t framebuffer = execute_driver( "/ramdisk/server/framebuffer" );
   wait_for_device( "/dev/framebuffer" );
 
   // start tty and wait for device to come up
+  // FIXME: either pass console and framebuffer pid per argument or extend vfs
+  // to get pid of a device by reading /dev/framebuffer and /dev/console
   pid_t terminal = execute_driver( "/ramdisk/server/terminal" );
   wait_for_device( "/dev/terminal" );
+
+  EARLY_STARTUP_PRINT( "console = %d, terminal = %d, framebuffer = %d\r\n",
+    console, terminal, framebuffer )
+
+  // ORDER NECESSARY HERE DUE TO THE DEFINES
+  EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
+  FILE* f = freopen( "/dev/stdin", "r", stdin );
+  if ( ! f ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
+    exit( 1 );
+  }
+  EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", f->_file )
+  f = freopen( "/dev/stdout", "w", stdout );
+  if ( ! f ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
+    exit( 1 );
+  }
+  EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", f->_file )
+  f = freopen( "/dev/stderr", "w", stderr );
+  if ( ! f ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
+    exit( 1 );
+  }
+    EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", f->_file )
+    EARLY_STARTUP_PRINT( "size_t max = %zu\r\n", SIZE_MAX )
+    EARLY_STARTUP_PRINT( "unsigned long long max = %llu\r\n", ULLONG_MAX )
+
+  printf(
+    "This text should be rendered on framebuffer "
+    "via \"init=>console=>terminal=>framebuffer\""
+  );
+  fflush( stdout );
+  fprintf(
+    stderr,
+    "This text should be rendered on framebuffer "
+    "via \"init=>console=>terminal=>framebuffer\""
+  );
+  fflush( stderr );
 
   EARLY_STARTUP_PRINT( "Just looping around with nops :O\r\n" )
   while( true ) {
     __asm__ __volatile__( "nop" );
   }
-
-  EARLY_STARTUP_PRINT( "console = %d, terminal = %d, framebuffer = %d\r\n",
-    console, terminal, framebuffer )
 
   // start console to create /dev/console
   // start framebuffer to create /dev/framebuffer

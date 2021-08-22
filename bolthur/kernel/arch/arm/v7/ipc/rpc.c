@@ -82,8 +82,44 @@ rpc_backup_ptr_t rpc_create_backup(
     DEBUG_OUTPUT( "Allocated backup object: %#p\r\n", backup )
   #endif
 
+  // variables
+  list_item_ptr_t current_list = rpc_list->first;
+  rpc_backup_ptr_t active = NULL;
+  // try to find matching rpc
+  while( current_list && ! active ) {
+    rpc_container_ptr_t container = current_list->data;
+    // check for existing process mapping
+    list_item_ptr_t proc_item = list_lookup_data(
+      container->handler,
+      thread->process
+    );
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "proc_item = %#x\r\n", proc_item )
+    #endif
+    // handle existing
+    if ( proc_item  && ! active ) {
+      rpc_entry_ptr_t entry = proc_item->data;
+      list_item_ptr_t current_list_queued = entry->queue->first;
+      while ( current_list_queued ) {
+        rpc_backup_ptr_t tmp = current_list_queued->data;
+        if ( tmp->active && tmp->thread == thread ) {
+          active = tmp;
+          break;
+        }
+        // get to next
+        current_list_queued = current_list_queued->next;
+      }
+    }
+
+    // switch to next
+    current_list = current_list->next;
+  }
+
   // get thread cpu context
-  cpu_register_context_ptr_t cpu = thread->current_context;
+  cpu_register_context_ptr_t cpu = active
+    ? active->context
+    : thread->current_context;
   // allocate backup context
   backup->context = malloc( sizeof( cpu_register_context_t ) );
   if ( ! backup->context ) {
@@ -98,46 +134,53 @@ rpc_backup_ptr_t rpc_create_backup(
   memset( backup->context, 0, sizeof( cpu_register_context_t ) );
   memcpy( backup->context, cpu, sizeof( cpu_register_context_t ) );
 
-  // get virtual address of return address
-  uintptr_t virtual = cpu->reg.pc;
-  uint32_t offset = virtual - ROUND_DOWN_TO_FULL_PAGE( virtual );
-  // debug output
-  #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "virtual = %#x, offset = %#x\r\n", virtual, offset )
-  #endif
-  // remove offset
-  virtual -= offset;
-  // get physical address
-  uint64_t phys = virt_get_mapped_address_in_context(
-    thread->process->virtual_context,
-    virtual
-  );
-  if ( ( uint64_t )-1 == phys ) {
-    free( backup->context );
-    free( backup );
-    return NULL;
-  }
+  uintptr_t virtual;
+  uint32_t offset;
+  if ( active ) {
+    backup->instruction_backup = active->instruction_backup;
+    virtual = active->instruction_address;
+    offset = 0;
+  } else {
+    // get virtual address of return address
+    virtual = cpu->reg.pc;
+    offset = virtual - ROUND_DOWN_TO_FULL_PAGE( virtual );
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "virtual = %#x, offset = %#x\r\n", virtual, offset )
+    #endif
+    // remove offset
+    virtual -= offset;
+    // get physical address
+    uint64_t phys = virt_get_mapped_address_in_context(
+      thread->process->virtual_context,
+      virtual
+    );
+    if ( ( uint64_t )-1 == phys ) {
+      free( backup->context );
+      free( backup );
+      return NULL;
+    }
 
-  // map temporary
-  uintptr_t tmp_map = virt_map_temporary( phys, PAGE_SIZE );
-  if ( ! tmp_map ) {
-    free( backup->context );
-    free( backup );
-    return NULL;
+    // map temporary
+    uintptr_t tmp_map = virt_map_temporary( phys, PAGE_SIZE );
+    if ( ! tmp_map ) {
+      free( backup->context );
+      free( backup );
+      return NULL;
+    }
+    // backup current instruction
+    memcpy(
+      &backup->instruction_backup,
+      ( void* )( tmp_map + offset ),
+      sizeof( uint32_t ) );
+    // unmap temporary again
+    virt_unmap_temporary( tmp_map, PAGE_SIZE );
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "Backed up instruction to be replaced later: %#x\r\n",
+        backup->instruction_backup )
+    #endif
   }
-  // backup current instruction
-  memcpy(
-    &backup->instruction_backup,
-    ( void* )( tmp_map + offset ),
-    sizeof( uint32_t ) );
-  // unmap temporary again
-  virt_unmap_temporary( tmp_map, PAGE_SIZE );
-
-  // debug output
-  #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "Backed up instruction to be replaced later: %#x\r\n",
-      backup->instruction_backup )
-  #endif
   // backup parameter data as message
   backup->message_id = 0;
   if ( data && data_size ) {
@@ -218,6 +261,10 @@ bool rpc_prepare_invoke(
     || TASK_THREAD_STATE_RPC_ACTIVE == backup->thread->state
     || TASK_THREAD_STATE_RPC_WAITING == backup->thread->state
   ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "backup->thread->state = %d\r\n", backup->thread->state )
+    #endif
     return true;
   }
 
@@ -270,7 +317,15 @@ bool rpc_prepare_invoke(
     #endif
     // replace with thumb undefined instruction
     volatile uint16_t* addr = ( volatile uint16_t* )( tmp_map + offset );
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "*addr = %#hx!\r\n", *addr )
+    #endif
     *addr = 0xdeff;
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "*addr = %#hx!\r\n", *addr )
+    #endif
   } else {
     // debug output
     #if defined( PRINT_RPC )
@@ -337,7 +392,7 @@ bool rpc_restore_thread( task_thread_ptr_t thread, void* context ) {
   rpc_entry_ptr_t entry_container = NULL;
   bool further_rpc_enqueued = false;
   // try to find matching rpc
-  while( current && ! backup ) {
+  while( current ) {
     rpc_container_ptr_t container = current->data;
     // check for existing process mapping
     list_item_ptr_t proc_item = list_lookup_data(
@@ -352,12 +407,29 @@ bool rpc_restore_thread( task_thread_ptr_t thread, void* context ) {
     if ( proc_item ) {
       rpc_entry_ptr_t entry = proc_item->data;
       list_item_ptr_t current_queued = entry->queue->first;
-      while ( current_queued && ! backup ) {
+      while ( current_queued ) {
         rpc_backup_ptr_t tmp = current_queued->data;
+        // debug output
+        #if defined( PRINT_RPC )
+          DEBUG_OUTPUT(
+            "tmp->instruction_address = %#x - cpu->reg.pc = %#x - "
+            "tmp->active = %d, tmp->instruction_address == cpu->reg.pc = %d\r\n",
+            tmp->instruction_address,
+            cpu->reg.pc,
+            tmp->active ? 1 : 0,
+            tmp->instruction_address == cpu->reg.pc ? 1 : 0 )
+        #endif
         // check for match
-        if ( tmp->instruction_address == cpu->reg.pc ) {
+        if (
+          tmp->active
+          && tmp->instruction_address == cpu->reg.pc
+        ) {
           backup = tmp;
           entry_container = entry;
+          // debug output
+          #if defined( PRINT_RPC )
+            DEBUG_OUTPUT( "backup = %#p, entry_container = %#p\r\n", backup, entry_container )
+          #endif
         } else {
           further_rpc_enqueued = true;
         }
@@ -369,8 +441,20 @@ bool rpc_restore_thread( task_thread_ptr_t thread, void* context ) {
     // switch to next
     current = current->next;
   }
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "backup = %#p, entry_container = %#p\r\n", backup, entry_container )
+    if ( further_rpc_enqueued ) {
+      DEBUG_OUTPUT( "RPC PENDING!\r\n" )
+    }
+  #endif
   // handle nothing to restore
   if ( ! backup || ! entry_container ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "NO BACKUP OR NO CONTAINER FOR RESTORE!\r\n" )
+      DEBUG_OUTPUT( "backup = %#p, entry_container = %#p\r\n", backup, entry_container )
+    #endif
     return false;
   }
   // debug output
@@ -429,6 +513,17 @@ bool rpc_restore_thread( task_thread_ptr_t thread, void* context ) {
     if ( next && entry ) {
       // debug output
       #if defined( PRINT_RPC )
+        DUMP_REGISTER( next->context )
+      #endif
+      // overwrite context after restore ( possibly wrong )
+      memcpy(
+        next->context,
+        thread->current_context,
+        sizeof( cpu_register_context_t )
+      );
+      // debug output
+      #if defined( PRINT_RPC )
+        DUMP_REGISTER( next->context )
         DEBUG_OUTPUT( "Preparing another queued rpc entry\r\n" )
       #endif
       // return prepared invoke

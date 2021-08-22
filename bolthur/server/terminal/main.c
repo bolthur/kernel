@@ -29,12 +29,10 @@
 
 #include "../libconsole.h"
 #include "../libhelper.h"
+#include "output.h"
+#include "terminal.h"
 
 pid_t pid = 0;
-
-#define BASE_TERMINAL_PATH "/dev/tty"
-#define MAX_TERMINAL_PATH 32
-#define NUM_MAX_TERMINAL 7
 
 #define CONSOLE_MANAGER "/dev/console"
 #define OUTPUT_DRIVER "/dev/framebuffer"
@@ -50,146 +48,23 @@ int main( __unused int argc, __unused char* argv[] ) {
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   assert( msg );
-  console_command_ptr_t command = malloc( sizeof( console_command_t ) );
-  assert( command );
   // print something
   EARLY_STARTUP_PRINT( "terminal processing!\r\n" )
   // cache current pid
   pid = getpid();
 
-  // open /dev/console for writing
-  int console_file = open( "/dev/console", O_WRONLY );
-  if ( -1 == console_file ) {
-    EARLY_STARTUP_PRINT( "Unable to open console device for writing: %s\r\n",
-      strerror( errno ) )
-    free( msg );
-    return -1;
-  }
-
-  // base path
-  char tty_path[ MAX_TERMINAL_PATH ];
-  char in_path[ MAX_TERMINAL_PATH ];
-  char out_path[ MAX_TERMINAL_PATH ];
-  char err_path[ MAX_TERMINAL_PATH ];
-  // push terminals
-  for ( uint32_t current = 0; current < NUM_MAX_TERMINAL; current++ ) {
-    // prepare device path
-    snprintf(
-      tty_path,
-      MAX_TERMINAL_PATH,
-      BASE_TERMINAL_PATH"%"PRIu32,
-      current
-    );
-    snprintf(
-      in_path,
-      MAX_TERMINAL_PATH,
-      "#"BASE_TERMINAL_PATH"%"PRIu32"#in",
-      current
-    );
-    snprintf(
-      out_path,
-      MAX_TERMINAL_PATH,
-      "#"BASE_TERMINAL_PATH"%"PRIu32"#out",
-      current
-    );
-    snprintf(
-      err_path,
-      MAX_TERMINAL_PATH,
-      "#"BASE_TERMINAL_PATH"%"PRIu32"#err",
-      current
-    );
-    EARLY_STARTUP_PRINT( "-> pushing %s device to vfs!\r\n", tty_path )
-    // clear memory
-    memset( msg, 0, sizeof( vfs_add_request_t ) );
-    // prepare message structure
-    msg->info.st_mode = S_IFCHR;
-    strncpy( msg->file_path, tty_path, PATH_MAX );
-    // perform add request
-    send_add_request( msg );
-
-    EARLY_STARTUP_PRINT( "-> preparing add command for console manager!\r\n" )
-    // erase
-    memset( command, 0, sizeof( console_command_t ) );
-    // prepare structure
-    command->command = CONSOLE_COMMAND_ADD;
-    strncpy( command->add.terminal, tty_path, PATH_MAX );
-    strncpy( command->add.in, in_path, PATH_MAX );
-    strncpy( command->add.out, out_path, PATH_MAX );
-    strncpy( command->add.err, err_path, PATH_MAX );
-    // perform sync rpc call
-    // FIXME: FETCH CONSOLE MANAGER PID FROM VFS
-    size_t response_info = _rpc_raise_wait(
-      "#/dev/console#add", 4, command, sizeof( console_command_t ) );
-    if ( errno ) {
-      EARLY_STARTUP_PRINT(
-        "unable to call rpc handler: %s\r\n",
-        strerror( errno )
-      )
-    }
-    if ( response_info ) {
-      int response;
-      _rpc_get_data( ( char* )&response, sizeof( int ), response_info );
-      EARLY_STARTUP_PRINT( "add response = %d\r\n", response );
-    }
-
-    // FIXME: SEND ADD AND CHANGE STDOUT COMMANDS TO CONSOLE MANAGER
-    // FIXME: USE SYNCHRONOUS REMOTE PROCEDURE CALL TO TALK TO CONSOLE MANAGER
-    continue;
-/*
-    EARLY_STARTUP_PRINT( "-> preparing add command for console manager!\r\n" )
-    // clear memory for add command
-    memset( add, 0, sizeof( console_command_add_t ) );
-    memset( container, 0, sizeof( console_command_container_t ) );
-    // fill add command and push to container
-    strncpy( add->path, tty_path, PATH_MAX );
-    memcpy( container->data, add, sizeof( console_command_add_t ) );
-    container->command = CONSOLE_COMMAND_ADD;
-
-    // sending command via normal write
-    EARLY_STARTUP_PRINT( "-> sending add command to console manager!\r\n" )
-    // write to file
-    if ( -1 == write(
-      console_file,
-      container,
-      sizeof( console_command_container_t )
-    ) ) {
-      EARLY_STARTUP_PRINT(
-        "Error while sending add command to console manager: %s\r\n",
-        strerror( errno ) )
-    }
-
-    EARLY_STARTUP_PRINT( "-> preparing change command for console manager to change stdout!\r\n" )
-    // clear memory for add command
-    memset( change, 0, sizeof( console_command_change_t ) );
-    memset( container, 0, sizeof( console_command_container_t ) );
-    // fill add command and push to container
-    strncpy( change->terminal_path, tty_path, PATH_MAX );
-    strncpy( change->destination_path, OUTPUT_DRIVER, PATH_MAX );
-    memcpy( container->data, change, sizeof( console_command_change_t ) );
-    container->command = CONSOLE_COMMAND_CHANGE_STDOUT;
-
-    // sending command via normal write
-    EARLY_STARTUP_PRINT( "-> sending change command to console manager!\r\n" )
-    // write to file
-    if ( -1 == write(
-      console_file,
-      container,
-      sizeof( console_command_container_t )
-    ) ) {
-      EARLY_STARTUP_PRINT(
-        "Error while sending change command to console manager: %s\r\n",
-        strerror( errno ) )
-    }
-*/
-  }
+  // generic output init
+  output_init();
+  // init terminal
+  terminal_init();
 
   // push alias to current tty
-  EARLY_STARTUP_PRINT( "-> pushing %s device to vfs!\r\n", BASE_TERMINAL_PATH )
+  EARLY_STARTUP_PRINT( "-> pushing %s device to vfs!\r\n", TERMINAL_BASE_PATH )
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, BASE_TERMINAL_PATH, PATH_MAX );
+  strncpy( msg->file_path, TERMINAL_BASE_PATH, PATH_MAX );
   // perform add request
   send_add_request( msg );
 

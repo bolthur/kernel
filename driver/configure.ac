@@ -9,7 +9,7 @@ AC_CONFIG_AUX_DIR([_aux/config])
 AC_CONFIG_MACRO_DIR([../build-aux/m4])
 
 AC_CANONICAL_HOST
-AC_CONFIG_SRCDIR([src/generic/init/main.c])
+AC_CONFIG_SRCDIR([src/generic/usr/lib/ld-bolthur/src/main.c])
 AM_INIT_AUTOMAKE([subdir-objects -Werror])
 AC_CONFIG_HEADERS([include/config.h])
 
@@ -143,14 +143,9 @@ AC_CONFIG_FILES([
   src/generic/core/Makefile
   src/generic/core/pipe/Makefile
   src/generic/core/startup/Makefile
-  src/generic/init/Makefile
   src/generic/usr/Makefile
   src/generic/usr/lib/Makefile
   src/generic/usr/lib/ld-bolthur/Makefile
-  src/platform/Makefile
-  src/platform/rpi/Makefile
-  src/platform/rpi/driver/Makefile
-  src/platform/rpi/driver/framebuffer/Makefile
 ])
 # FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO
 

@@ -27,8 +27,39 @@
 #define __LIBFRAMEBUFFER__
 
 enum framebuffer_command_type {
+  FRAMEBUFFER_GET_RESOLUTION = 0,
+  FRAMEBUFFER_CLEAR,
+  FRAMEBUFFER_RENDER_TEXT,
 };
-typedef enum terminal_command_type terminal_command_type_t;
-typedef enum terminal_command_type* terminal_command_type_ptr_t;
+typedef enum framebuffer_command_type framebuffer_command_type_t;
+typedef enum framebuffer_command_type* framebuffer_command_type_ptr_t;
+
+struct framebuffer_render_text {
+  uint32_t start_x;
+  uint32_t start_y;
+  uint32_t font_width;
+  uint32_t font_height;
+  char text[ MAX_WRITE_LEN ];
+};
+typedef struct framebuffer_render_text framebuffer_render_text_t;
+typedef struct framebuffer_render_text* framebuffer_render_text_ptr_t;
+
+struct framebuffer_command {
+  framebuffer_command_type_t command;
+  union {
+    framebuffer_render_text_t text;
+  };
+};
+typedef struct framebuffer_command framebuffer_command_t;
+typedef struct framebuffer_command* framebuffer_command_ptr_t;
+
+struct framebuffer_resolution {
+  int32_t success;
+  uint32_t width;
+  uint32_t height;
+  uint32_t depth;
+};
+typedef struct framebuffer_resolution framebuffer_resolution_t;
+typedef struct framebuffer_resolution* framebuffer_resolution_ptr_t;
 
 #endif

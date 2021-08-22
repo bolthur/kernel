@@ -35,6 +35,8 @@ typedef enum terminal_command_type* terminal_command_type_ptr_t;
 
 struct terminal_command_write {
   char data[ MAX_WRITE_LEN ];
+  char terminal[ PATH_MAX ];
+  size_t len;
 };
 typedef struct terminal_command_write terminal_command_write_t;
 typedef struct terminal_command_write* terminal_command_write_ptr_t;

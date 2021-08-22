@@ -94,7 +94,13 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
           target_folder &= splitted_head[ pos..^1 ].join( $DirSep )
         else:
           if not ( "src" in splitted_head[ pos..^1 ] ):
-            target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
+            if "platform" == splitted_head[ pos + 1 ]:
+              var tmp_info = splitted_head
+              tmp_info.delete( pos + 1 )
+              tmp_info.delete( pos + 2 )
+              target_folder &= tmp_info[ pos..^2 ].join( $DirSep )
+            else: 
+              target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
           else:
             pos = -1
       else:
@@ -108,7 +114,7 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
         createSymlink( symlink_src, joinPath( base_path, executable ) )
       else:
         # special handling for init
-        if executable == "init" and -1 == pos:
+        if executable == "init":
           copyFile( file, joinPath( getCurrentDir(), "tmp", executable ) )
         else:
           createDir( base_path )

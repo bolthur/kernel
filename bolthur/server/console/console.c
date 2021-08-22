@@ -44,3 +44,22 @@ void console_destroy( console_ptr_t console ) {
   }
   free( console );
 }
+
+/**
+ * @fn console_ptr_t console_get_active(void)
+ * @brief Helper to get active console
+ *
+ * @return
+ */
+console_ptr_t console_get_active( void ) {
+  console_ptr_t found = NULL;
+  list_item_ptr_t current = console_list->first;
+  while ( current ) {
+    found = current->data;
+    if ( found->active ) {
+      return found;
+    }
+    current = current->next;
+  }
+  return NULL;
+}

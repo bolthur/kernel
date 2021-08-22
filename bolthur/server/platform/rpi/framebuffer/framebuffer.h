@@ -17,14 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <unistd.h>
+#if ! defined( __FRAMEBUFFER__ )
+#define __FRAMEBUFFER__
 
-#if ! defined( __HANDLER__ )
-#define __HANDLER__
+#define FRAMEBUFFER_SCREEN_WIDTH 1024
+#define FRAMEBUFFER_SCREEN_HEIGHT 768
+#define FRAMEBUFFER_SCREEN_DEPTH 32
 
-void handler_console_add( pid_t, size_t );
-void handler_console_select( pid_t, size_t );
-void handler_register( void );
+bool framebuffer_init( void );
+bool framebuffer_register_rpc( void );
+
+void framebuffer_handle_resolution( pid_t, size_t );
+void framebuffer_handle_clear( pid_t, size_t );
+void framebuffer_handle_render_text( pid_t, size_t );
 
 #endif

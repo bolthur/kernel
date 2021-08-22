@@ -19,12 +19,18 @@
 
 #include <stddef.h>
 #include <unistd.h>
+#include "../libframebuffer.h"
 
-#if ! defined( __HANDLER__ )
-#define __HANDLER__
+#if ! defined( __OUTPUT__ )
+#define __OUTPUT__
 
-void handler_console_add( pid_t, size_t );
-void handler_console_select( pid_t, size_t );
-void handler_register( void );
+#define OUTPUT_FONT_WIDTH 12
+#define OUTPUT_FONT_HEIGHT 12
+
+extern framebuffer_resolution_t resolution_data;
+
+void output_init( void );
+void output_handle_out( pid_t, size_t );
+void output_handle_err( pid_t, size_t );
 
 #endif

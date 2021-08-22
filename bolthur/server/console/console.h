@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
 #include <unistd.h>
 #include "list.h"
 
@@ -24,6 +25,7 @@
 #define __CONSOLE__
 
 struct console {
+  bool active;
   pid_t handler;
   char* path;
   char* stdin;
@@ -36,5 +38,6 @@ typedef struct console* console_ptr_t;
 extern list_manager_ptr_t console_list;
 
 void console_destroy( console_ptr_t );
+console_ptr_t console_get_active( void );
 
 #endif

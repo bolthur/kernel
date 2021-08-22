@@ -53,7 +53,7 @@ void handler_console_add( pid_t origin, size_t data_info ) {
   // handle error
   if ( errno ) {
     free( container );
-    EARLY_STARTUP_PRINT( "Fetch rpc data error: %s\r\n", strerror( errno ) );
+    EARLY_STARTUP_PRINT( "Fetch rpc data error: %s\r\n", strerror( errno ) )
     _rpc_ret( &success, sizeof( success ) );
     return;
   }
@@ -65,7 +65,7 @@ void handler_console_add( pid_t origin, size_t data_info ) {
   // handle already existing
   if ( container_item ) {
     free( container );
-    EARLY_STARTUP_PRINT( "Console already existing!\r\n" );
+    EARLY_STARTUP_PRINT( "Console already existing!\r\n" )
     _rpc_ret( &success, sizeof( success ) );
     return;
   }
@@ -80,6 +80,7 @@ void handler_console_add( pid_t origin, size_t data_info ) {
   // copy over content
   memset( console, 0, sizeof( console_t ) );
   console->handler = origin;
+  console->active = false;
   console->path = strdup( container->add.terminal );
   if ( ! console->path ) {
     console_destroy( console );
