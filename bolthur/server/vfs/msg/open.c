@@ -70,11 +70,14 @@ void msg_handle_open( void ) {
     return;
   }
 
+  // output
+  // EARLY_STARTUP_PRINT( "Try to open %s\r\n", request->path )
   // check path name components
   do {
     // extract base and dir
     base = basename( !dir ? request->path : dir );
     dir = dirname( !dir ? request->path : dir );
+    // EARLY_STARTUP_PRINT( "base = %s, dir = %s\r\n", base, dir )
     // cleanup previous dir / base stuff
     if ( dir_old ) {
       free( dir_old );

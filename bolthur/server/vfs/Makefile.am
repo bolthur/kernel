@@ -20,4 +20,4 @@ vfs_SOURCES = \
   util.c \
   vfs.c
 # -Wl,-s -Wl,--gc-sections necessary when debugging due to a startup weird behaviour
-vfs_LDFLAGS = -all-static --static
+vfs_LDFLAGS = -all-static --static -Wl,-s -Wl,--gc-sections

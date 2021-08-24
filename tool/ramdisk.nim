@@ -41,6 +41,7 @@ let root_path: string = paramStr( 1 )
 let output: string = paramStr( 2 )
 let sysroot: string = paramStr( 3 )
 
+let font: string = joinPath( getCurrentDir(), "..", "font" )
 let driver: string = joinPath( root_path, "driver" )
 let server: string = joinPath( root_path, "bolthur", "server" )
 
@@ -87,18 +88,20 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
 
       var pos = -1
       for idx, value in splitted_head:
-        if value == "driver" or value == "server" or value == "core" or value == "usr":
+        if value == "driver" or value == "server" or value == "core" or value == "usr" or value == "font":
           pos = idx
       if pos != -1:
         if contains( file, sysroot ):
           target_folder &= splitted_head[ pos..^1 ].join( $DirSep )
         else:
           if not ( "src" in splitted_head[ pos..^1 ] ):
-            if "platform" == splitted_head[ pos + 1 ]:
+            if pos + 1 < len( splitted_head ) and "platform" == splitted_head[ pos + 1 ]:
               var tmp_info = splitted_head
               tmp_info.delete( pos + 1 )
               tmp_info.delete( pos + 2 )
               target_folder &= tmp_info[ pos..^2 ].join( $DirSep )
+            elif "font" == splitted_head[ pos ]:
+              target_folder &= splitted_head[ pos..^1 ].join( $DirSep )
             else: 
               target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
           else:
@@ -124,7 +127,7 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
             copyFile( file, joinPath( base_path, executable ) )
 
 #scan_directory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
-#scan_directory( joinPath( sysroot, "share", "font" ), "TrueType Font", "", sysroot, true )
+scan_directory( font, "PC Screen Font", "", sysroot, false )
 scan_directory( server, "ELF", "executable", sysroot, false )
 scan_directory( driver, "ELF", "executable", sysroot, false )
 

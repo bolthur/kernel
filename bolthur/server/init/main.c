@@ -674,6 +674,29 @@ int main( int argc, char* argv[] ) {
       // get rid of mount point
       char* file = request->file_path;
       char* buf = NULL;
+      void* shm_addr = NULL;
+      // map shared if set
+      if ( 0 != request->shm_id ) {
+        //EARLY_STARTUP_PRINT( "Map shared %#x\r\n", request->shm_id )
+        // attach shared area
+        shm_addr = _memory_shared_attach( request->shm_id, NULL );
+        if ( errno ) {
+          EARLY_STARTUP_PRINT( "Unable to attach shared area!\r\n" )
+          // prepare response
+          response->len = -EIO;
+          // send response
+          _message_send_by_pid(
+            sender,
+            VFS_READ_RESPONSE,
+            ( const char* )response,
+            sizeof( vfs_read_response_t ),
+            message_id );
+          // free stuff
+          free( request );
+          free( response );
+          continue;
+        }
+      }
 //      EARLY_STARTUP_PRINT( "file = %s\r\n", file );
       // strip leading slash
       if ( '/' == *file ) {
@@ -687,10 +710,12 @@ int main( int argc, char* argv[] ) {
         if ( TH_ISREG( disk ) ) {
           // get filename
           char* ramdisk_file = th_get_pathname( disk );
+          //EARLY_STARTUP_PRINT( "ramdisk_file = %s\r\n", ramdisk_file )
           // check for match
           if ( 0 == strcmp( file, ramdisk_file ) ) {
             // set vfs image addr
             total_size = th_get_size( disk );
+            //EARLY_STARTUP_PRINT( "total byte size = %#x\r\n", total_size )
             buf = ( char* )( ( uint8_t* )ramdisk_decompressed + ramdisk_read_offset );
             break;
           }
@@ -725,10 +750,38 @@ int main( int argc, char* argv[] ) {
         amount -= ( total - total_size );
       }
       /*EARLY_STARTUP_PRINT(
-        "read amount = %d ( %#x ), offset = %ld ( %#lx ), total = %d ( %#x )\r\n",
-        amount, amount, request->offset, request->offset, total, total );*/
+        "read amount = %d ( %#x ), offset = %ld ( %#lx ), total = %d ( %#x ), "
+        "first two byte = %#"PRIx16"\r\n",
+        amount, amount, request->offset, request->offset, total, total,
+        *( ( uint16_t* )( buf + request->offset ) ) );*/
       // now copy
-      memcpy( response->data, buf + request->offset, amount );
+      if ( shm_addr ) {
+        memcpy( shm_addr, buf + request->offset, amount );
+      } else {
+        memcpy( response->data, buf + request->offset, amount );
+      }
+
+      // detach shared area
+      if ( request->shm_id ) {
+        _memory_shared_detach( request->shm_id );
+        if ( errno ) {
+          EARLY_STARTUP_PRINT( "Unable to detach shared area!\r\n")
+          // prepare response
+          response->len = -EIO;
+          // send response
+          _message_send_by_pid(
+            sender,
+            VFS_READ_RESPONSE,
+            ( const char* )response,
+            sizeof( vfs_read_response_t ),
+            message_id );
+          // free stuff
+          free( request );
+          free( response );
+          continue;
+        }
+      }
+      // prepare read amount
       response->len = ( ssize_t )amount;
       // send response
       _message_send_by_pid(

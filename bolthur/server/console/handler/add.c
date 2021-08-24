@@ -89,24 +89,24 @@ void handler_console_add( pid_t origin, size_t data_info ) {
     _rpc_ret( &success, sizeof( success ) );
     return;
   }
-  console->stdin = strdup( container->add.in );
-  if ( ! console->stdin ) {
+  console->in = strdup( container->add.in );
+  if ( ! console->in ) {
     console_destroy( console );
     free( container );
     EARLY_STARTUP_PRINT( "malloc failed: %s\r\n", strerror( errno ) )
     _rpc_ret( &success, sizeof( success ) );
     return;
   }
-  console->stdout = strdup( container->add.out );
-  if ( ! console->stdout ) {
+  console->out = strdup( container->add.out );
+  if ( ! console->out ) {
     console_destroy( console );
     free( container );
     EARLY_STARTUP_PRINT( "malloc failed: %s\r\n", strerror( errno ) )
     _rpc_ret( &success, sizeof( success ) );
     return;
   }
-  console->stderr = strdup( container->add.err );
-  if ( ! console->stderr ) {
+  console->err = strdup( container->add.err );
+  if ( ! console->err ) {
     console_destroy( console );
     free( container );
     EARLY_STARTUP_PRINT( "malloc failed: %s\r\n", strerror( errno ) )
@@ -125,9 +125,9 @@ void handler_console_add( pid_t origin, size_t data_info ) {
   EARLY_STARTUP_PRINT( "Added following new terminal information\r\n" )
   EARLY_STARTUP_PRINT( "terminal: %s\r\n", console->path )
   EARLY_STARTUP_PRINT( "handler: %d\r\n", console->handler )
-  EARLY_STARTUP_PRINT( "stdin: %s\r\n", console->stdin )
-  EARLY_STARTUP_PRINT( "stdout: %s\r\n", console->stdout )
-  EARLY_STARTUP_PRINT( "stderr: %s\r\n", console->stderr )
+  EARLY_STARTUP_PRINT( "in: %s\r\n", console->in )
+  EARLY_STARTUP_PRINT( "out: %s\r\n", console->out )
+  EARLY_STARTUP_PRINT( "err: %s\r\n", console->err )
   // free all used temporary structures
   free( container );
   // set success flag and return

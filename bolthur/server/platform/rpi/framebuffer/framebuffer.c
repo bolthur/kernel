@@ -24,6 +24,7 @@
 #include <inttypes.h>
 #include <sys/bolthur.h>
 #include "framebuffer.h"
+#include "psf.h"
 #include "../../../libframebuffer.h"
 
 uint32_t width;
@@ -64,10 +65,10 @@ bool framebuffer_init( void ) {
   height = ( uint32_t )buffer[ 6 ];
   EARLY_STARTUP_PRINT( "width = %ld, height = %ld\r\n", width, height )
   // Use fallback if not set
-  if ( 0 == width && 0 == height ) {
+  //if ( 0 == width && 0 == height ) {
     width = FRAMEBUFFER_SCREEN_WIDTH;
     height = FRAMEBUFFER_SCREEN_HEIGHT;
-  }
+  //}
   EARLY_STARTUP_PRINT( "width = %ld, height = %ld\r\n", width, height )
 
   // build request data for screen setup
@@ -169,6 +170,74 @@ bool framebuffer_register_rpc( void ) {
 }
 
 /**
+ * @fn void framebuffer_render_char(uint8_t, uint32_t, uint32_t)
+ * @brief Render single character starting at x / y
+ *
+ * @param c
+ * @param start_x
+ * @param start_y
+ */
+void framebuffer_render_char( uint8_t c, uint32_t start_x, uint32_t start_y ) {
+  // get glyph of character
+  uint8_t* glyph = psf_char_to_glyph( c );
+  if ( ! glyph ) {
+    return;
+  }
+
+  uint32_t byte_per_pixel = FRAMEBUFFER_SCREEN_DEPTH / CHAR_BIT;
+  uint32_t off = ( start_y * pitch ) +
+    ( start_x * byte_per_pixel );
+  uint32_t bytesperline = ( psf_glyph_width() + 7 ) / 8;
+  uint32_t color = 0x00FF00;
+  uint32_t line = 0;
+  uint32_t mask = 0;
+  for ( uint32_t y = 0; y < psf_glyph_height(); y++ ) {
+    line = off;
+    mask = 1 << ( psf_glyph_width() - 1 );
+    for ( uint32_t x = 0; x < psf_glyph_width(); x++ ) {
+      *( ( uint32_t* )( screen + line ) ) =
+        glyph[ x / 8 ] & ( 0x80 >> ( x & 7 ) ) ? color : 0;
+      mask >>= 1;
+      line += 4;
+    }
+    *( ( uint32_t* )( screen + line ) ) = 0;
+    glyph += bytesperline;
+    off += pitch;
+  }
+}
+
+/**
+ * @fn void framebuffer_render_string(char*, uint32_t, uint32_t)
+ * @brief Helper to render a string
+ *
+ * @param str
+ * @param x
+ * @param y
+ */
+void framebuffer_render_string( char* str, uint32_t x, uint32_t y ) {
+  size_t len = strlen( str );
+  for ( size_t i = 0; i < len; i++ ) {
+    uint8_t c = str[ i ];
+    switch ( c ) {
+      case '\n':
+        y += psf_glyph_height();
+        break;
+      case '\r':
+        x = 0;
+        break;
+      case '\t':
+        x += psf_glyph_width() * 4;
+        break;
+      default:
+        // render character
+        framebuffer_render_char( c, x, y );
+        // increment x
+        x += psf_glyph_width();
+    }
+  }
+}
+
+/**
  * @fn void framebuffer_handle_resolution(pid_t, size_t)
  * @brief Handle resolution request currently only get
  *
@@ -211,7 +280,7 @@ void framebuffer_handle_resolution( pid_t origin, size_t data_info ) {
     return;
   }
   // build return
-  EARLY_STARTUP_PRINT( "Received resolution commant %d\r\n", command->command )
+  EARLY_STARTUP_PRINT( "Received resolution command %d\r\n", command->command )
   resolution_data.success = 0;
   resolution_data.width = width;
   resolution_data.height = height;
@@ -284,7 +353,8 @@ void framebuffer_handle_render_text( pid_t origin, size_t data_info ) {
   EARLY_STARTUP_PRINT( "font_width = %"PRIu32"\r\n", command->text.font_width )
   EARLY_STARTUP_PRINT( "font_height = %"PRIu32"\r\n", command->text.font_height )
   EARLY_STARTUP_PRINT( "text = %s\r\n", command->text.text )
-  // FIXME: Render text with freetype
+  // render text
+  framebuffer_render_string( command->text.text, command->text.start_x, command->text.start_y );
   // free all used temporary structures
   free( command );
 }

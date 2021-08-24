@@ -271,7 +271,11 @@ void syscall_memory_shared_attach( void* context ) {
       id, start )
   #endif
   uintptr_t addr = shared_memory_attach(
-    task_thread_current_thread->process, id, start );
+    task_thread_current_thread->process,
+    task_thread_current_thread,
+    id,
+    start
+  );
   // handle error
   if ( 0 == addr ) {
     syscall_populate_error( context, ( size_t )-ENOMEM );

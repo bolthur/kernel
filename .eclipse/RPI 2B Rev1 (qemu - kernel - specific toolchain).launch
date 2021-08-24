@@ -24,9 +24,9 @@
     <stringAttribute key="org.eclipse.cdt.launch.COREFILE_PATH" value=""/>
     <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_ID" value="gdbserver"/>
     <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_START_MODE" value="remote"/>
-    <booleanAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN" value="false"/>
+    <booleanAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN" value="true"/>
     <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN_SYMBOL" value="kernel_main"/>
-    <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="build/src/target/rpi/kernel7_qemu.sym"/>
+    <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="build/bolthur/kernel/target/rpi/kernel7_qemu.sym"/>
     <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="kernel"/>
     <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
     <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value=""/>

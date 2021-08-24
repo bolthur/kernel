@@ -172,10 +172,41 @@ static shared_memory_entry_ptr_t create_entry( size_t size ) {
   entry->id = generate_shared_memory_id();
   entry->size = size;
   entry->use_count = 0;
-  entry->address = NULL;
 
   // return address
   return entry;
+}
+
+/**
+ * @fn int32_t thread_compare_id_callback(const avl_node_ptr_t, const avl_node_ptr_t)
+ * @brief Helper necessary for avl thread manager tree
+ *
+ * @param a node a
+ * @param b node b
+ * @return
+ */
+static int32_t shared_compare_id_callback(
+  const avl_node_ptr_t a,
+  const avl_node_ptr_t b
+) {
+  // debug output
+  #if defined( PRINT_MM_SHARED )
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
+    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n",
+      ( size_t )a->data,
+      ( size_t )b->data );
+  #endif
+
+  // -1 if address of a->data is greater than address of b->data
+  if ( ( size_t )a->data > ( size_t )b->data ) {
+    return -1;
+  // 1 if address of b->data is greater than address of a->data
+  } else if ( ( size_t )b->data > ( size_t )a->data ) {
+    return 1;
+  }
+
+  // equal => return 0
+  return 0;
 }
 
 /**
@@ -190,7 +221,7 @@ bool shared_memory_init( void ) {
     DEBUG_OUTPUT( "shared_memory_init()\r\n" )
   #endif
   // create tree
-  shared_tree = avl_create_tree( NULL, NULL, NULL );
+  shared_tree = avl_create_tree( shared_compare_id_callback, NULL, NULL );
   if ( ! shared_tree ) {
     return false;
   }
@@ -231,18 +262,18 @@ size_t shared_memory_create( size_t len ) {
 }
 
 /**
- * @fn uintptr_t shared_memory_attach(task_process_ptr_t, size_t, uintptr_t)
+ * @fn uintptr_t shared_memory_attach(task_process_ptr_t, task_thread_ptr_t, size_t, uintptr_t)
  * @brief Attached shared memory area by id
  *
  * @param process
+ * @param thread
  * @param id
  * @param virt_start
  * @return
- *
- * @todo add support for start address usually passed by mmap as orientation
  */
 uintptr_t shared_memory_attach(
   task_process_ptr_t process,
+  task_thread_ptr_t thread,
   size_t id,
   uintptr_t virt_start
 ) {
@@ -254,42 +285,93 @@ uintptr_t shared_memory_attach(
   #endif
   // handle not initialized
   if ( ! shared_tree ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Not yet initialized\r\n" )
+    #endif
     return 0;
   }
   // try to get node by id
   avl_node_ptr_t node = avl_find_by_data( shared_tree, ( void* )id );
   // handle not existing
   if ( ! node ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Not such shared area existing\r\n" )
+    #endif
     return 0;
   }
   shared_memory_entry_ptr_t entry = SHARED_ENTRY_GET_BLOCK( node );
+  // debug output
+  #if defined( PRINT_MM_SHARED )
+    DEBUG_OUTPUT( "node = %#x, entry = %#x\r\n", node, entry )
+    DEBUG_OUTPUT( "looking up for mapping at %#p\r\n", entry->process_mapping )
+  #endif
   // lookup process
   list_item_ptr_t process_list_item = list_lookup_data(
     entry->process_mapping, process );
+  // debug output
+  #if defined( PRINT_MM_SHARED )
+    DEBUG_OUTPUT( "process_list_item = %#x\r\n", process_list_item )
+  #endif
   // handle already attached
   if ( process_list_item ) {
     // transform to mapped entry
     shared_memory_entry_mapped_ptr_t mapped = ( shared_memory_entry_mapped_ptr_t )
       process_list_item->data;
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Area %d already attached\r\n", id )
+    #endif
     // return start of mapping
     return mapped->start;
   }
+  // debug output
+  #if defined( PRINT_MM_SHARED )
+    DEBUG_OUTPUT( "Allocating new mapping\r\n" )
+  #endif
   // create mapping structure
   shared_memory_entry_mapped_ptr_t mapped = ( shared_memory_entry_mapped_ptr_t )
     malloc( sizeof( shared_memory_entry_mapped_t) );
   if ( ! mapped ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Error while allocating map entry\r\n" )
+    #endif
     return 0;
   }
   // clear out
   memset( mapped, 0, sizeof( shared_memory_entry_mapped_t ) );
-  // find free page range
-  uintptr_t virt = virt_find_free_page_range(
-    process->virtual_context,
-    entry->size,
-    virt_start
-  );
+
+  uintptr_t virt = 0;
+  // fixed handling means take address as start
+  if ( virt_start ) {
+    virt = virt_start;
+    // get min and max address of context
+    uintptr_t min = virt_get_context_min_address( process->virtual_context );
+    uintptr_t max = virt_get_context_max_address( process->virtual_context );
+    // ensure that address is in context
+    if ( min > virt || max <= virt || max <= virt + entry->size ) {
+      return 0;
+    }
+  // find free page range starting after thread entry point
+  } else {
+    // set address
+    virt = virt_find_free_page_range(
+      process->virtual_context,
+      entry->size,
+      ROUND_UP_TO_FULL_PAGE( thread->entry ) );
+  }
+  // debug output
+  #if defined( PRINT_MM_SHARED )
+    DEBUG_OUTPUT( "Mapping start = %#x\r\n", virt )
+  #endif
   // handle error
   if ( 0 == virt ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "No free virtual page range found\r\n" )
+    #endif
     free( mapped );
     return 0;
   }
@@ -300,6 +382,10 @@ uintptr_t shared_memory_attach(
   size_t idx = 0;
   // map addresses
   while ( start < end ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Mapping %#x to %#x\r\n", virt, entry->address[ idx ] )
+    #endif
     // map address
     if ( ! virt_map_address(
       process->virtual_context,
@@ -308,6 +394,10 @@ uintptr_t shared_memory_attach(
       VIRT_MEMORY_TYPE_NORMAL,
       VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
     ) ) {
+      // debug output
+      #if defined( PRINT_MM_SHARED )
+        DEBUG_OUTPUT( "Error while mapping shared area into process\r\n" )
+      #endif
       // unmap everything on error
       uintptr_t start_inner = virt;
       uintptr_t end_inner = start + entry->size;
@@ -321,8 +411,16 @@ uintptr_t shared_memory_attach(
     start += PAGE_SIZE;
     idx++;
   }
+  // populate structure
+  mapped->process = process;
+  mapped->size = entry->size;
+  mapped->start = virt;
   // push to entry list
   if ( ! list_push_back( entry->process_mapping, mapped ) ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Error while pushing mapping entry\r\n" )
+    #endif
     // unmap everything on error
      uintptr_t start_inner = virt;
      uintptr_t end_inner = start + entry->size;
@@ -333,6 +431,10 @@ uintptr_t shared_memory_attach(
     free( mapped );
     return 0;
   }
+  // debug output
+  #if defined( PRINT_MM_SHARED )
+    DEBUG_OUTPUT( "Area %d successfully mapped to %#x\r\n", id, mapped->start )
+  #endif
   // return mapped address
   return mapped->start;
 }
@@ -354,12 +456,20 @@ bool shared_memory_detach( task_process_ptr_t process, size_t id ) {
   #endif
   // handle not initialized
   if ( ! shared_tree ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Not initialized\r\n" )
+    #endif
     return false;
   }
   // try to get node by id
   avl_node_ptr_t node = avl_find_by_data( shared_tree, ( void* )id );
   // handle not existing
   if ( ! node ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "No area with id %d\r\n", id )
+    #endif
     return true;
   }
   shared_memory_entry_ptr_t entry = SHARED_ENTRY_GET_BLOCK( node );
@@ -368,16 +478,33 @@ bool shared_memory_detach( task_process_ptr_t process, size_t id ) {
     entry->process_mapping, process );
   // handle not attached
   if ( ! process_list_item ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Process has not mapped the area\r\n" )
+    #endif
     return true;
   }
   // remove from list with destruction of item
   if ( ! list_remove( entry->process_mapping, process_list_item ) ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Remove of process from mapping list failed\r\n" )
+    #endif
     return false;
   }
   // handle empty ( delete shared area )
   if ( list_empty( entry->process_mapping ) ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Remove area from available tree %#x, %#x\r\n",
+        shared_tree, &entry->node )
+    #endif
     // remove node from tree
     avl_remove_by_node( shared_tree, &entry->node );
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Remove area from available tree\r\n" )
+    #endif
     // destroy entry itself
     destroy_entry( entry );
   }

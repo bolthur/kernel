@@ -28,9 +28,9 @@ struct console {
   bool active;
   pid_t handler;
   char* path;
-  char* stdin;
-  char* stdout;
-  char* stderr;
+  char* in;
+  char* out;
+  char* err;
 };
 typedef struct console console_t;
 typedef struct console* console_ptr_t;

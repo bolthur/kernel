@@ -186,8 +186,8 @@ int main( __unused int argc, __unused char* argv[] ) {
       EARLY_STARTUP_PRINT( "Write data: '%s'\r\n", request->data )
       // get rpc to raise
       char* rpc = 0 == strcmp( "/dev/stdout", request->file_path )
-        ? console->stdout
-        : console->stderr;
+        ? console->out
+        : console->err;
       EARLY_STARTUP_PRINT( "rpc: %s\r\n", rpc )
       // build terminal command
       terminal_command_ptr_t terminal = malloc( sizeof( terminal_command_t ) );

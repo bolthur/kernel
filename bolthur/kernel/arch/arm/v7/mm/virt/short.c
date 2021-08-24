@@ -430,7 +430,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
   free_addr--;
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "free_addr = %d - max_addr = %d\r\n", next_addr, max_addr )
+    DEBUG_OUTPUT( "free_addr = %d - max_addr = %d\r\n", free_addr, max_addr )
     DEBUG_OUTPUT( "r = %p\r\n", ( void* )r )
   #endif
   // return address

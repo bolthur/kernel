@@ -25,6 +25,7 @@
 #include <collection/list.h>
 #include <collection/avl.h>
 #include <task/process.h>
+#include <task/thread.h>
 
 struct shared_memory_entry {
   avl_node_t node;
@@ -51,7 +52,7 @@ typedef struct shared_memory_entry_mapped *shared_memory_entry_mapped_ptr_t;
 
 bool shared_memory_init( void );
 size_t shared_memory_create( size_t );
-uintptr_t shared_memory_attach( task_process_ptr_t, size_t, uintptr_t );
+uintptr_t shared_memory_attach( task_process_ptr_t, task_thread_ptr_t, size_t, uintptr_t );
 bool shared_memory_detach( task_process_ptr_t, size_t );
 bool shared_memory_address_is_shared( task_process_ptr_t, uintptr_t, size_t );
 bool shared_memory_fork( task_process_ptr_t, task_process_ptr_t );

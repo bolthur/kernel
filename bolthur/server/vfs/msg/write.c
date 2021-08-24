@@ -132,6 +132,11 @@ void msg_handle_write( void ) {
   memcpy( nested_request->data, request->data, request->len );
   nested_request->offset = container->pos;
   nested_request->len = request->len;
+  /*EARLY_STARTUP_PRINT(
+    "%s: nested_request->len = %#x, nested_request->offset = %#lx, "
+    "SIZE_MAX = %#x, file size = %#lx, process = %d\r\n",
+    container->path, nested_request->len, nested_request->offset, SIZE_MAX,
+    container->target->st->st_size, container->target->pid )*/
   // loop until message has been sent and answer has been received
   while( true ) {
     // send to handling process if not done

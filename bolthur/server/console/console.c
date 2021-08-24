@@ -33,14 +33,14 @@ void console_destroy( console_ptr_t console ) {
   if ( console->path ) {
     free( console->path );
   }
-  if ( console->stdin ) {
-    free( console->stdin );
+  if ( console->in ) {
+    free( console->in );
   }
-  if ( console->stdout ) {
-    free( console->stdout );
+  if ( console->out ) {
+    free( console->out );
   }
-  if ( console->stderr ) {
-    free( console->stderr );
+  if ( console->err ) {
+    free( console->err );
   }
   free( console );
 }

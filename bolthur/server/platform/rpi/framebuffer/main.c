@@ -23,8 +23,10 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
+#include <inttypes.h>
 #include "../../../libhelper.h"
 #include "framebuffer.h"
+#include "psf.h"
 
 /**
  * @fn int main(int, char*[])
@@ -41,6 +43,7 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   // initialize framebuffer
   assert( framebuffer_init() );
+  assert( psf_init() );
 
   // some output
   EARLY_STARTUP_PRINT( "-> pushing /dev/framebuffer to vfs!\r\n" )

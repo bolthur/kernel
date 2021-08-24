@@ -38,7 +38,6 @@
     + ROUND_DOWN_TO_FULL_PAGE( ( a ) ) )
 #define ROUND_PAGE_OFFSET( a ) ( ( uintptr_t )( a ) & ( ( PAGE_SIZE ) -1 ) )
 
-
 extern uint32_t *phys_bitmap;
 extern uint32_t phys_bitmap_length;
 

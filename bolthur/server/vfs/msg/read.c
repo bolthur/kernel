@@ -129,11 +129,14 @@ void msg_handle_read( void ) {
   strcpy( nested_request->file_path, container->path );
   nested_request->offset = container->pos;
   nested_request->len = request->len;
+  nested_request->shm_id = request->shm_id;
   /*EARLY_STARTUP_PRINT(
     "%s: nested_request->len = %#x, nested_request->offset = %#lx, "
-    "SIZE_MAX = %#x, file size = %#lx, process = %d\r\n",
-    container->path, nested_request->len, nested_request->offset, SIZE_MAX,
-    container->target->st->st_size, container->target->pid )*/
+    "nested_request->shm_id = %d, SIZE_MAX = %#x, file size = %#lx, "
+    "process = %d\r\n",
+    container->path, nested_request->len, nested_request->offset,
+    nested_request->shm_id, SIZE_MAX, container->target->st->st_size,
+    container->target->pid )*/
   // loop until message has been sent and answer has been received
   while( true ) {
     // send to handling process if not done
@@ -158,7 +161,7 @@ void msg_handle_read( void ) {
     // exit loop
     break;
   }
-  // copy over read content to response for caller
+  // copy over nested response for return to caller
   memcpy( response, nested_response, sizeof( vfs_read_response_t ) );
   // update offset
   if ( 0 < nested_response->len ) {
