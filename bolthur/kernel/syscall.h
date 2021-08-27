@@ -56,6 +56,7 @@
 #define SYSCALL_RPC_RAISE_WAIT 44
 #define SYSCALL_RPC_RET 45
 #define SYSCALL_RPC_GET_DATA 46
+#define SYSCALL_RPC_GET_DATA_SIZE 47
 
 #define SYSCALL_IO_ACQUIRE 51
 #define SYSCALL_IO_RELEASE 52
@@ -114,6 +115,7 @@ void syscall_rpc_raise( void* );
 void syscall_rpc_raise_wait( void* );
 void syscall_rpc_ret( void* );
 void syscall_rpc_get_data( void* );
+void syscall_rpc_get_data_size( void* );
 
 void syscall_kernel_putc( void* );
 void syscall_kernel_puts( void* );

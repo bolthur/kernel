@@ -166,6 +166,13 @@ void syscall_memory_release( void* context ) {
   #endif
   // handle invalid stuff
   if ( 0 == len ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT(
+        "invalid length passed for address %#"PRIxPTR"\r\n",
+        address
+      )
+    #endif
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }

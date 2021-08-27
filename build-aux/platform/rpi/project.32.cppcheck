@@ -9,7 +9,7 @@
     <dir name="/opt/bolthur/sysroot/arm-rpi2-bolthur-eabi/usr/include/" />
   </includedir>
   <exclude>
-    <path name="../../../thirdparty/"/>
+    <path name="../../../bolthur/kernel/thirdparty/"/>
     <path name="../../../tool/"/>
   </exclude>
   <paths>

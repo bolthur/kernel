@@ -18,7 +18,6 @@
  */
 
 #include <stdio.h>
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
@@ -377,19 +376,24 @@ static void handle_normal_init( void ) {
     EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
     exit( 1 );
   }
-    EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", f->_file )
-    EARLY_STARTUP_PRINT( "size_t max = %zu\r\n", SIZE_MAX )
-    EARLY_STARTUP_PRINT( "unsigned long long max = %llu\r\n", ULLONG_MAX )
+  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", f->_file )
+  EARLY_STARTUP_PRINT( "size_t max = %zu\r\n", SIZE_MAX )
+  EARLY_STARTUP_PRINT( "unsigned long long max = %llu\r\n", ULLONG_MAX )
 
-  printf(
-    "This text should be rendered on framebuffer "
-    "via \"init=>console=>terminal=>framebuffer\""
-  );
+  printf( "äöüÄÖÜ\r\n" );
+  fflush( stdout );
+  printf( "Tab test: \"\t\" should be 4 spaces here!" );
+  fflush( stdout );
+  printf( "Testing newline without cr\nFoobar");
+  fflush( stdout );
+  printf( ", now with cr\r\nasdf\r\näöüÄÖÜ\r\n" );
+  fflush( stdout );
+
+  printf( "stdout: init=>console=>terminal=>framebuffer" );
   fflush( stdout );
   fprintf(
     stderr,
-    "This text should be rendered on framebuffer "
-    "via \"init=>console=>terminal=>framebuffer\""
+    "stderr: init=>console=>terminal=>framebuffer"
   );
   fflush( stderr );
 
@@ -406,55 +410,6 @@ static void handle_normal_init( void ) {
   // wait until console, framebuffer and tty are up
   // register console with input none and output framebuffer
   // wait until done and test whether printf prints to framebuffer
-
-  // FIXME: FORK AND HANDLE FURTHER OUTCOMMENTED SETUP WITHIN FORKED PROCESS
-/*  // Get system console
-  void* console_image = ramdisk_lookup_file( t, "core/console" );
-  if ( ! console_image ) {
-    EARLY_STARTUP_PRINT( "ERROR: console daemon not found!\r\n" );
-    return -1;
-  }
-  // start startup and expect it to be third process
-  pid_t console_pid = _process_create( console_image, "daemon:/console" );
-  assert( -1 != console_pid );
-
-  // loop until stdin, stdout and stderr are existing
-  while( true ) {
-    // check if stdin is existing
-    if ( ! check_for_path( "/stdin" ) ) {
-      continue;
-    }
-    // check if stdout is existing
-    if ( ! check_for_path( "/stdout" ) ) {
-      continue;
-    }
-    // check if stderr is existing
-    if ( ! check_for_path( "/stderr" ) ) {
-      continue;
-    }
-    // all are existing so break out
-    break;
-  }
-
-  // Get tty
-  void* tty_image = ramdisk_lookup_file( t, "core/tty" );
-  if ( ! tty_image ) {
-    EARLY_STARTUP_PRINT( "ERROR: tty daemon not found!\r\n" );
-    return -1;
-  }
-  // start startup and expect it to be third process
-  pid_t tty_pid = _process_create( tty_image, "daemon:/tty" );
-  assert( -1 != tty_pid );
-
-  // startup image address
-  void* startup_image = ramdisk_lookup_file( t, "core/startup" );
-  if ( ! startup_image ) {
-    EARLY_STARTUP_PRINT( "ERROR: console daemon not found!\r\n" );
-    return -1;
-  }
-  // start startup and expect it to be third process
-  pid_t startup_pid = _process_create( startup_image, "daemon:/startup" );
-  assert( -1 != startup_pid );*/
 
   // exit program!
   EARLY_STARTUP_PRINT( "Init done!\r\n" );
@@ -477,12 +432,23 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
 
+  // debug print
+  EARLY_STARTUP_PRINT( "boot processing\r\n" );
   // get current pid
   pid = getpid();
   // ensure first process to be started
-  assert( 1 == pid );
-  // debug print
-  EARLY_STARTUP_PRINT( "init processing\r\n" );
+  if ( 1 != pid ) {
+    EARLY_STARTUP_PRINT( "boot needs to have pid 1\r\n" )
+    return -1;
+  }
+
+  // allocate message structure
+  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
+  // ensure first process to be started
+  if ( ! msg ) {
+    EARLY_STARTUP_PRINT( "Allocation of message structure failed\r\n" )
+    return -1;
+  }
 
   // rpc testing
   EARLY_STARTUP_PRINT( "register dummy system call\r\n" );
@@ -534,7 +500,10 @@ int main( int argc, char* argv[] ) {
   // get vfs image
   size_t vfs_size;
   void* vfs_image = ramdisk_lookup_file( disk, "ramdisk/server/vfs", &vfs_size );
-  assert( vfs_image );
+  if ( ! vfs_image ) {
+    EARLY_STARTUP_PRINT( "VFS not found for start!\r\n" );
+    return -1;
+  }
   // fork process and handle possible error
   EARLY_STARTUP_PRINT( "Forking process for vfs start!\r\n" );
   pid_t forked_process = fork();
@@ -569,9 +538,6 @@ int main( int argc, char* argv[] ) {
 
   EARLY_STARTUP_PRINT( "Sending ramdisk files to vfs!\r\n" );
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
-  // create root ramdisk directory
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
-  assert( msg );
 
   // reset read offset
   ramdisk_read_offset = 0;

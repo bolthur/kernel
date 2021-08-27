@@ -104,7 +104,6 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
     # -fsanitize=undefined
     AX_APPEND_COMPILE_FLAGS([-g -Og])
   ], [
-    AX_APPEND_LINK_FLAGS([-Wl,-s -Wl,--gc-sections])
     # optimization level
     case "${with_optimization_level}" in
       no | 0)
@@ -167,7 +166,6 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
     # -fsanitize=undefined
     AX_APPEND_COMPILE_FLAGS([-g -Og])
   ], [
-    AX_APPEND_LINK_FLAGS([-Wl,-s -Wl,--gc-sections])
     # optimization level
     case "${with_optimization_level}" in
       no | 0)

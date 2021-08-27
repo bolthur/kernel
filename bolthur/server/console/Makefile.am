@@ -10,5 +10,4 @@ console_SOURCES = \
   handler.c \
   list.c \
   main.c
-# -Wl,-s -Wl,--gc-sections necessary when debugging due to a startup weird behaviour
 console_LDFLAGS = -all-static --static

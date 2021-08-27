@@ -293,3 +293,61 @@ void syscall_rpc_get_data( void* context ) {
     ( void* )found
   );
 }
+
+/**
+ * @fn void syscall_rpc_get_data_size(void*)
+ * @brief Get rpc data size
+ *
+ * @param context
+ */
+void syscall_rpc_get_data_size( void* context ) {
+  size_t message_id = ( size_t )syscall_get_parameter( context, 0 );
+
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_rpc_get_data_size( %#x )\r\n", message_id )
+  #endif
+  // cache process
+  task_process_ptr_t target_process = task_thread_current_thread->process;
+  // handle error
+  if ( ! target_process ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Target process not found!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-ESRCH );
+    return;
+  }
+  // handle error
+  if ( ! target_process->message_queue ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Target process has no queue!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // Get message by id
+  list_item_ptr_t item = target_process->message_queue->first;
+  message_entry_ptr_t found = NULL;
+  while( item && ! found ) {
+    // get message
+    message_entry_ptr_t msg = ( message_entry_ptr_t )item->data;
+    // set found when matching
+    if( message_id == msg->id ) {
+      found = msg;
+    }
+    // head over to next
+    item = item->next;
+  }
+  // handle not found
+  if ( ! found ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "No message with id found!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-ENOMSG );
+    return;
+  }
+  // return size of found message
+  syscall_populate_success( context, found->length );
+}

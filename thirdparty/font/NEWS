@@ -1,0 +1,96 @@
+.. -*- mode: rst; coding: utf-8 -*-
+
+======================================
+Linux Console Fonts from The ZAP Group
+======================================
+
+This package contains custom Linux console fonts from The ZAP Group.  The
+following history is presented in reverse chronological order.  If you
+would like to see a list of detailed changes to this project, you should
+browse the project’s `Git repository`__ on `The ZAP Group web server`__.
+
+__ https://www.zap.org.au/git-browser/console-fonts-zap.git
+__ https://www.zap.org.au/
+
+
+Version 2.3 (30th November, 2019)
+---------------------------------
+
+Converted all text files to reStructuredText (ReST) format.  This format
+is still quite readable as raw text, and is much more capable than the
+myriad all-slightly-incompatible variants of Markdown.
+
+Updated instructions on how to install the fonts on all Linux consoles.
+Updated the console-fonts-utils submodule to the latest version.
+
+
+Version 2.2 (13th May, 2017)
+----------------------------
+
+Updated the console-fonts-utils submodule to the latest version.
+
+
+Version 2.1 (9th May, 2017)
+---------------------------
+
+Moved the utility programs to their own repository on The ZAP Group web
+server at `<git://git.zap.org.au/data/git/console-fonts-utils.git>`_.
+Added one more program, ``psftx-screenshot``, that generates simulated
+screenshots of a font in use.
+
+Changed the definition of font constants ``MIN_WIDTH``, ``MAX_WIDTH``,
+``MIN_HEIGHT`` and ``MAX_HEIGHT`` to reflect what ``setfont``\(1) allows
+(from 1×1 to 32×32 pixel fonts, not 4×4 to 32×64).  Added some additional
+strings to ``psftx-sampler``.
+
+
+Version 2.0 (29th April, 2017)
+------------------------------
+
+Added six new extended fonts, each with 512 glyphs and covering 17 extra
+single-byte encodings.  These new fonts were designed to cover every
+current European language including those based on the Cyrillic and Greek
+alphabets.  Updated the `README` documentation to suit.
+
+Tweaked numerous glyphs in the existing fonts and rearranged the order of
+some of their glyphs to match the first 256 glyphs in the extended fonts.
+
+Added a new utility program, ``psftx-sampler``, to generate UTF-8 strings
+to the standard output.  Modified ``psftx-encodings`` to include the
+Linux kernel VT100 Unicode map.  Also updated the Makefile to generate
+and check the file `sha1sum`, to allow versioning of released font files.
+
+
+Version 1.2 (20th April, 2017)
+------------------------------
+
+Added two new fonts, **zap-light20** and **zap-light24**.  These fonts
+can be displayed on framebuffer-style consoles only; traditional VGA
+consoles can only display fonts that are eight pixels wide.  Also tweaked
+the glyph for U+00FE LATIN SMALL LETTER THORN in **zap-light16** and
+**zap-light18**, and added mappings for four additional box drawing
+characters (LIGHT ARC variants) to all fonts.
+
+
+Version 1.1 (17th April, 2017)
+------------------------------
+
+Added two new fonts: **zap-vga09** and **zap-light18**.
+
+
+Version 1.0 (15th April, 2017)
+------------------------------
+
+Released the first public version of the Linux Console Fonts package with
+two fonts: **zap-vga16** and **zap-light16**.
+
+
+Early history
+-------------
+
+A number of console fonts were designed by John Zaitseff between 2004 and
+2006, but were never released for general use.  Only one of these fonts,
+**zapdef-16**, was widely used on computers maintained by The ZAP Group.
+This particular font was used as an inspiration for **zap-vga16**;
+however, the glyph repertoire and Unicode mappings of the font were quite
+different from the current set.

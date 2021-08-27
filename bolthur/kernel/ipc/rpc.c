@@ -271,6 +271,11 @@ rpc_backup_ptr_t rpc_raise(
   void* data,
   size_t length
 ) {
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "rpc_raise( %s, %#p, %#p, %#p, %#x\r\n",
+      identifier, source, target, data, length )
+  #endif
   // get container
   list_item_ptr_t container_item = list_lookup_data( rpc_list, identifier );
   // add if not existing

@@ -116,8 +116,8 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
         createDir( base_path )
         createSymlink( symlink_src, joinPath( base_path, executable ) )
       else:
-        # special handling for init
-        if executable == "init":
+        # special handling for boot
+        if executable == "boot":
           copyFile( file, joinPath( getCurrentDir(), "tmp", executable ) )
         else:
           createDir( base_path )

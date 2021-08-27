@@ -253,6 +253,14 @@ bool syscall_init( void ) {
   ) ) {
     return false;
   }
+  if ( ! interrupt_register_handler(
+    SYSCALL_RPC_GET_DATA_SIZE,
+    syscall_rpc_get_data_size,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
   // io related
   if ( ! interrupt_register_handler(
     SYSCALL_IO_ACQUIRE,
