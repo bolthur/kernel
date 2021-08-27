@@ -17,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
 #include <errno.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
@@ -49,8 +48,14 @@ int main( __unused int argc, __unused char* argv[] ) {
   pid = getpid();
   // setup handle tree and vfs
   EARLY_STARTUP_PRINT( "initializing!\r\n" )
-  handle_init();
-  assert( vfs_setup( pid ) );
+  if ( ! handle_init() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup handle structures!\r\n" )
+    return -1;
+  }
+  if ( ! vfs_setup( pid ) ) {
+    EARLY_STARTUP_PRINT( "Unable to setup vfs structures!\r\n" )
+    return -1;
+  }
 
   EARLY_STARTUP_PRINT( "entering message loop!\r\n" )
   while( true ) {

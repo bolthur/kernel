@@ -32,44 +32,38 @@
  * @param origin
  * @param data_info
  */
-void handler_console_select( pid_t origin, size_t data_info ) {
+void handler_console_select( __unused pid_t origin, size_t data_info ) {
   int success = -1;
-  EARLY_STARTUP_PRINT(
-    "handler_console_activate( %d, %d )\r\n",
-    origin,
-    data_info
-  )
   // handle no data
   if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "no data passed to command handler!\r\n" )
+    _rpc_ret( &success, sizeof( success ) );
+    return;
+  }
+  // get size for allocation
+  size_t sz = _rpc_get_data_size( data_info );
+  if ( errno ) {
     _rpc_ret( &success, sizeof( success ) );
     return;
   }
   // allocate for data fetching
-  console_command_ptr_t container = malloc( sizeof( console_command_t ) );
-  if ( ! container ) {
-    EARLY_STARTUP_PRINT( "malloc failed: %s\r\n", strerror( errno ) )
+  console_command_select_ptr_t command = malloc( sz );
+  if ( ! command ) {
     _rpc_ret( &success, sizeof( success ) );
     return;
   }
   // fetch rpc data
-  _rpc_get_data( container, sizeof( console_command_t ), data_info );
+  _rpc_get_data( command, sz, data_info );
   // handle error
   if ( errno ) {
-    free( container );
-    EARLY_STARTUP_PRINT( "Fetch rpc data error: %s\r\n", strerror( errno ) );
+    free( command );
     _rpc_ret( &success, sizeof( success ) );
     return;
   }
   // try to lookup by name
-  list_item_ptr_t found = list_lookup_data(
-    console_list,
-    container->add.terminal
-  );
+  list_item_ptr_t found = list_lookup_data( console_list, command->path );
   // handle already existing
   if ( ! found ) {
-    free( container );
-    EARLY_STARTUP_PRINT( "Console not existing!\r\n" );
+    free( command );
     _rpc_ret( &success, sizeof( success ) );
     return;
   }
@@ -81,10 +75,8 @@ void handler_console_select( pid_t origin, size_t data_info ) {
   // activate found console
   console = found->data;
   console->active = true;
-  // some debugging output
-  EARLY_STARTUP_PRINT( "Activated terminal %s\r\n", console->path )
   // free all used temporary structures
-  free( container );
+  free( command );
   // set success flag and return
   success = 0;
   _rpc_ret( &success, sizeof( success ) );

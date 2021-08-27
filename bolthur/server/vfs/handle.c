@@ -17,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
 #include <libgen.h>
 #include <string.h>
 #include <stdlib.h>
@@ -128,10 +127,10 @@ static int generate_handle( handle_pid_ptr_t handle ) {
  *
  * @todo build handle tree per pid
  */
-void handle_init( void ) {
-  // create handle tree and assert creation
+bool handle_init( void ) {
+  // create handle tree
   handle_process_tree = avl_create_tree( compare_process, lookup_process, NULL );
-  assert( handle_process_tree );
+  return handle_process_tree;
 }
 
 /**

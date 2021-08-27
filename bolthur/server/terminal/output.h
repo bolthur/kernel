@@ -24,12 +24,9 @@
 #if ! defined( __OUTPUT__ )
 #define __OUTPUT__
 
-#define OUTPUT_FONT_WIDTH 12
-#define OUTPUT_FONT_HEIGHT 12
-
 extern framebuffer_resolution_t resolution_data;
 
-void output_init( void );
+bool output_init( void );
 void output_handle_out( pid_t, size_t );
 void output_handle_err( pid_t, size_t );
 

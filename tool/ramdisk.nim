@@ -41,7 +41,7 @@ let root_path: string = paramStr( 1 )
 let output: string = paramStr( 2 )
 let sysroot: string = paramStr( 3 )
 
-let font: string = joinPath( getCurrentDir(), "..", "font" )
+let font: string = joinPath( getCurrentDir(), "..", "thirdparty", "font" )
 let driver: string = joinPath( root_path, "driver" )
 let server: string = joinPath( root_path, "bolthur", "server" )
 

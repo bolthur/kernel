@@ -228,129 +228,25 @@ static pid_t execute_driver( char* name ) {
   return forked_process;
 }
 
-static void dummy( pid_t source, size_t message ) {
-  pid_t current = getpid();
-  EARLY_STARTUP_PRINT( "source = %d, current = %d, message = %d\r\n",
-    source, current, message );
-  // local stuff for data with clear
-  char data[ 64 ];
-  memset( data, 0, sizeof( data ) );
-  // fetch message
-  if ( message ) {
-    // fetch message by id
-    _rpc_get_data(
-      data,
-      sizeof( char ) * 64,
-      message
-    );
-    // handle error
-    if ( errno ) {
-      EARLY_STARTUP_PRINT( "Fetch rpc data error: %s\r\n", strerror( errno ) );
-      return;
-    }
-  }
-  EARLY_STARTUP_PRINT( "data = %s\r\n", data )
-}
-
-static void dummy2( void ) {
-  static int a = 0;
-  a++;
-  _rpc_ret( &a, sizeof( a ) );
-}
-
 /**
- * @fn void handle_normal_init(void)
+ * @fn void stage2_init(void)
  * @brief Helper to get up the necessary additional drivers for a running system
- *
- * @todo rename to something betters
  */
-static void handle_normal_init( void ) {
-  EARLY_STARTUP_PRINT(
-    "Calling dummy handler from parent ( pid %d ) just for fun from child ( pid %d )!\r\n",
-    pid, getpid() )
-  _rpc_raise( "dummy", pid, "hello", strlen( "hello" ) + 1 );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
-  }
-  // rpc for local testing
-  EARLY_STARTUP_PRINT( "local rpc register\r\n" )
-  _rpc_acquire( "dummy", ( uintptr_t )dummy );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "unable to register rpc handler: %s\r\n", strerror( errno ) )
-  }
-  _rpc_acquire( "dummy2", ( uintptr_t )dummy2 );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "unable to register rpc handler: %s\r\n", strerror( errno ) )
-  }
-  EARLY_STARTUP_PRINT( "Calling dummy handler from current just for fun!\r\n" )
-  _rpc_raise( "dummy", getpid(), "olleh", strlen( "olleh" ) + 1 );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
-  }
-  _rpc_raise( "dummy", getpid(), NULL, 0 );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
-  }
-
-  size_t response_message = _rpc_raise_wait( "dummy2", pid, NULL, 0 );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
-  }
-  EARLY_STARTUP_PRINT( "Response message: %d\r\n", response_message )
-  int result = 0;
-  _rpc_get_data( ( char* )&result, sizeof( int ), response_message );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to fetch return message: %s\r\n", strerror( errno ) )
-  }
-  EARLY_STARTUP_PRINT( "Result: %d\r\n", result )
-
-  response_message = _rpc_raise_wait( "dummy2", pid, NULL, 0 );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
-  }
-  EARLY_STARTUP_PRINT( "Response message: %d\r\n", response_message )
-  result = 0;
-  _rpc_get_data( ( char* )&result, sizeof( int ), response_message );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to fetch return message: %s\r\n", strerror( errno ) )
-  }
-  EARLY_STARTUP_PRINT( "Result: %d\r\n", result )
-
-  response_message = _rpc_raise_wait( "dummy2", pid, NULL, 0 );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
-  }
-  EARLY_STARTUP_PRINT( "Response message: %d\r\n", response_message )
-  result = 0;
-  _rpc_get_data( ( char* )&result, sizeof( int ), response_message );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to fetch return message: %s\r\n", strerror( errno ) )
-  }
-  EARLY_STARTUP_PRINT( "Result: %d\r\n", result )
-
-  EARLY_STARTUP_PRINT( "CALLING IN THREAD RPC WITH WAIT!\r\n" )
-  size_t response_message2 = _rpc_raise_wait( "dummy2", getpid(), NULL, 0 );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "unable to call rpc handler: %s\r\n", strerror( errno ) )
-  }
-  EARLY_STARTUP_PRINT( "Response message: %d\r\n", response_message2 )
-  _rpc_get_data( ( char* )&result, sizeof( int ), response_message2 );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to fetch return message: %s\r\n", strerror( errno ) )
-  }
-  EARLY_STARTUP_PRINT( "Result: %d\r\n", result )
-
+static void stage2_init( void ) {
   // start system console and wait for device to come up
+  EARLY_STARTUP_PRINT( "Starting and waiting for console server...\r\n" )
   pid_t console = execute_driver( "/ramdisk/server/console" );
   wait_for_device( "/dev/console" );
 
   // start framebuffer driver and wait for device to come up
+  EARLY_STARTUP_PRINT( "Starting and waiting for framebuffer server...\r\n" )
   pid_t framebuffer = execute_driver( "/ramdisk/server/framebuffer" );
   wait_for_device( "/dev/framebuffer" );
 
   // start tty and wait for device to come up
   // FIXME: either pass console and framebuffer pid per argument or extend vfs
   // to get pid of a device by reading /dev/framebuffer and /dev/console
+  EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )
   pid_t terminal = execute_driver( "/ramdisk/server/terminal" );
   wait_for_device( "/dev/terminal" );
 
@@ -383,11 +279,11 @@ static void handle_normal_init( void ) {
   printf( "äöüÄÖÜ\r\n" );
   fflush( stdout );
   printf( "Tab test: \"\t\" should be 4 spaces here!" );
-  fflush( stdout );
+  //fflush( stdout );
   printf( "Testing newline without cr\nFoobar");
-  fflush( stdout );
+  //fflush( stdout );
   printf( ", now with cr\r\nasdf\r\näöüÄÖÜ\r\n" );
-  fflush( stdout );
+  //fflush( stdout );
 
   printf( "stdout: init=>console=>terminal=>framebuffer" );
   fflush( stdout );
@@ -448,17 +344,6 @@ int main( int argc, char* argv[] ) {
   if ( ! msg ) {
     EARLY_STARTUP_PRINT( "Allocation of message structure failed\r\n" )
     return -1;
-  }
-
-  // rpc testing
-  EARLY_STARTUP_PRINT( "register dummy system call\r\n" );
-  _rpc_acquire( "dummy", ( uintptr_t )dummy );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "unable to register rpc handler: %s\r\n", strerror( errno ) )
-  }
-  _rpc_acquire( "dummy2", ( uintptr_t )dummy2 );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "unable to register rpc handler: %s\r\n", strerror( errno ) )
   }
 
   // transform arguments to hex
@@ -595,7 +480,7 @@ int main( int argc, char* argv[] ) {
   }
   // handle ongoing init in forked process
   if ( 0 == forked_process ) {
-    handle_normal_init();
+    stage2_init();
   }
 
   EARLY_STARTUP_PRINT( "Entering message loop!\r\n" );

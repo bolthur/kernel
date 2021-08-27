@@ -23,25 +23,20 @@
 #include "handler.h"
 
 /**
- * @fn void handler_register(void)
+ * @fn bool handler_register(void)
  * @brief Registers necessary rpc handler
  */
-void handler_register( void ) {
+bool handler_register( void ) {
   // register console add command
   _rpc_acquire( "#/dev/console#add", ( uintptr_t )handler_console_add );
   if ( errno ) {
-    EARLY_STARTUP_PRINT(
-      "unable to register rpc handler: %s\r\n",
-      strerror( errno )
-    )
+    return false;
   }
   // register console activate command
   _rpc_acquire( "#/dev/console#select", ( uintptr_t )handler_console_select );
   if ( errno ) {
-    EARLY_STARTUP_PRINT(
-      "unable to register rpc handler: %s\r\n",
-      strerror( errno )
-    )
+    return false;
   }
-  // FIXME: REGISTER FURTHER RPC HANDLER FOR COMMANDS
+  /// FIXME: REGISTER FURTHER RPC HANDLER FOR COMMANDS
+  return true;
 }

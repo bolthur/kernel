@@ -384,7 +384,7 @@ void list_print( list_manager_ptr_t list ) {
 
   // loop through list until end
   while ( current ) {
-    EARLY_STARTUP_PRINT( "list->data = %p", current->data )
+    printf( "list->data = %p", current->data );
     // get next element
     current = current->next;
   }

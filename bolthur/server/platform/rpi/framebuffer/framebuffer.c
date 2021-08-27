@@ -24,13 +24,17 @@
 #include <inttypes.h>
 #include <sys/bolthur.h>
 #include "framebuffer.h"
-#include "psf.h"
 #include "../../../libframebuffer.h"
 
 uint32_t width;
 uint32_t height;
+uint32_t physical_width;
+uint32_t physical_height;
 uint32_t pitch;
+uint32_t size;
 uint8_t* screen;
+uint8_t* front_buffer;
+uint8_t* back_buffer;
 
 /**
  * @fn bool framebuffer_init(void)
@@ -39,88 +43,90 @@ uint8_t* screen;
  * @return
  */
 bool framebuffer_init( void ) {
-  // some output
-  EARLY_STARTUP_PRINT( "-> initializing video driver!\r\n" )
   // mail buffer for following setup syscall
-  int32_t buffer[ 256 ];
+  int32_t buf[ 256 ];
 
   // try to get display size
-  buffer[ 0 ] = 8 * 4; // buffer size
-  buffer[ 1 ] = 0; // perform request
-  buffer[ 2 ] = 0x40003; // display size request
-  buffer[ 3 ] = 8; // buffer size
-  buffer[ 4 ] = 0; // request size
-  buffer[ 5 ] = 0; // space for horizontal resolution
-  buffer[ 6 ] = 0; // space for vertical resolution
-  buffer[ 7 ] = 0; // closing tag
+  buf[ 0 ] = 8 * 4; // buffer size
+  buf[ 1 ] = 0; // perform request
+  buf[ 2 ] = 0x40003; // display size request
+  buf[ 3 ] = 8; // buffer size
+  buf[ 4 ] = 0; // request size
+  buf[ 5 ] = 0; // space for horizontal resolution
+  buf[ 6 ] = 0; // space for vertical resolution
+  buf[ 7 ] = 0; // closing tag
   // perform mailbox action
-  _mailbox_action( buffer, sizeof( int32_t ) * 8 );
+  _mailbox_action( buf, sizeof( int32_t ) * 8 );
   // handle no valid return
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Mailbox error: %s\r\n", strerror( errno ) )
     return false;
   }
   // extract size
-  width = ( uint32_t )buffer[ 5 ];
-  height = ( uint32_t )buffer[ 6 ];
-  EARLY_STARTUP_PRINT( "width = %ld, height = %ld\r\n", width, height )
+  width = ( uint32_t )buf[ 5 ];
+  height = ( uint32_t )buf[ 6 ];
   // Use fallback if not set
-  //if ( 0 == width && 0 == height ) {
+  if ( 0 == width && 0 == height ) {
     width = FRAMEBUFFER_SCREEN_WIDTH;
     height = FRAMEBUFFER_SCREEN_HEIGHT;
-  //}
-  EARLY_STARTUP_PRINT( "width = %ld, height = %ld\r\n", width, height )
+  }
 
   // build request data for screen setup
   size_t idx = 1;
-  buffer[ idx++ ] = 0; // request
-  buffer[ idx++ ] = 0x00048003; // tag id (set physical size)
-  buffer[ idx++ ] = 8; // value buffer size (bytes)
-  buffer[ idx++ ] = 8; // request + value length (bytes)
-  buffer[ idx++ ] = ( int32_t )width; // horizontal resolution
-  buffer[ idx++ ] = ( int32_t )height; // vertical resolution
-  buffer[ idx++ ] = 0x00048004; // tag id (set virtual size)
-  buffer[ idx++ ] = 8; // value buffer size (bytes)
-  buffer[ idx++ ] = 8; // request + value length (bytes)
-  buffer[ idx++ ] = ( int32_t )width; // horizontal resolution
-  buffer[ idx++ ] = ( int32_t )height; // vertical resolution
-  buffer[ idx++ ] = 0x00048005; // tag id (set depth)
-  buffer[ idx++ ] = 4; // value buffer size (bytes)
-  buffer[ idx++ ] = 4; // request + value length (bytes)
-  buffer[ idx++ ] = FRAMEBUFFER_SCREEN_DEPTH; // 32 bpp
-  buffer[ idx++ ] = 0x00040001; // tag id (allocate framebuffer)
-  buffer[ idx++ ] = 8; // value buffer size (bytes)
-  buffer[ idx++ ] = 4; // request + value length (bytes)
-  buffer[ idx++ ] = 16; // alignment = 16
-  buffer[ idx++ ] = 0; // space for response
-  buffer[ idx++ ] = 0; // closing tag
-  buffer[ 0 ] = ( int32_t )idx * 4; // buffer size
+  buf[ idx++ ] = 0; // request
+  buf[ idx++ ] = 0x00048003; // tag id (set physical size)
+  buf[ idx++ ] = 8; // value buffer size (bytes)
+  buf[ idx++ ] = 8; // request + value length (bytes)
+  buf[ idx++ ] = ( int32_t )width; // horizontal resolution
+  buf[ idx++ ] = ( int32_t )height; // vertical resolution
+  buf[ idx++ ] = 0x00048004; // tag id (set virtual size)
+  buf[ idx++ ] = 8; // value buffer size (bytes)
+  buf[ idx++ ] = 8; // request + value length (bytes)
+  buf[ idx++ ] = ( int32_t )width; // horizontal resolution
+  buf[ idx++ ] = ( int32_t )height * 2; // vertical resolution
+  buf[ idx++ ] = 0x00048005; // tag id (set depth)
+  buf[ idx++ ] = 4; // value buffer size (bytes)
+  buf[ idx++ ] = 4; // request + value length (bytes)
+  buf[ idx++ ] = FRAMEBUFFER_SCREEN_DEPTH; // 32 bpp
+  buf[ idx++ ] = 0x00040001; // tag id (allocate framebuffer)
+  buf[ idx++ ] = 8; // value buffer size (bytes)
+  buf[ idx++ ] = 4; // request + value length (bytes)
+  buf[ idx++ ] = 16; // alignment = 16
+  buf[ idx++ ] = 0; // space for response
+  buf[ idx++ ] = 0; // closing tag
+  buf[ 0 ] = ( int32_t )idx * 4; // buffer size
   // perform mailbox action
-  _mailbox_action( buffer, sizeof( int32_t ) * idx );
+  _mailbox_action( buf, sizeof( int32_t ) * idx );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Mailbox error: %s\r\n", strerror( errno ) )
     return false;
   }
-  EARLY_STARTUP_PRINT( "Allocated buffer at %p with size of %#lx\r\n",
-    ( void* )buffer[ 19 ], buffer[ 20 ] )
-  screen = ( uint8_t* )buffer[ 19 ];
+
+  // extract virtual and physical sizes
+  width = ( uint32_t )buf[ 10 ];
+  height = ( uint32_t )buf[ 11 ];
+  physical_width = ( uint32_t )buf[ 5 ];
+  physical_height = ( uint32_t )buf[ 6 ];
+  // save screen addressas current and buffer size
+  screen = ( uint8_t* )buf[ 19 ];
+  size = ( uint32_t )buf[ 20 ];
 
   // get framebuffer pitch
-  buffer[ 0 ] = 7 * 4; // total size
-  buffer[ 1 ] = 0; // request
-  buffer[ 2 ] = 0x40008; // display size
-  buffer[ 3 ] = 4; // buffer size
-  buffer[ 4 ] = 0; // request size
-  buffer[ 5 ] = 0; // space for pitch
-  buffer[ 6 ] = 0; // closing tag
+  buf[ 0 ] = 7 * 4; // total size
+  buf[ 1 ] = 0; // request
+  buf[ 2 ] = 0x40008; // display size
+  buf[ 3 ] = 4; // buffer size
+  buf[ 4 ] = 0; // request size
+  buf[ 5 ] = 0; // space for pitch
+  buf[ 6 ] = 0; // closing tag
   // perform mailbox action
-  _mailbox_action( buffer, sizeof( int32_t ) * idx );
+  _mailbox_action( buf, sizeof( int32_t ) * idx );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Mailbox error: %s\r\n", strerror( errno ) )
     return false;
   }
-  pitch = ( uint32_t )buffer[ 5 ];
-  EARLY_STARTUP_PRINT( "pitch = %#lx\r\n", pitch )
+  pitch = ( uint32_t )buf[ 5 ];
+
+  // set front and back buffers
+  front_buffer = screen;
+  back_buffer = ( uint8_t* )( ( uintptr_t )screen + pitch * physical_height );
 
   // return with register of necessary rpc
   return framebuffer_register_rpc();
@@ -138,10 +144,6 @@ bool framebuffer_register_rpc( void ) {
     ( uintptr_t )framebuffer_handle_resolution
   );
   if ( errno ) {
-    EARLY_STARTUP_PRINT(
-      "unable to register rpc handler: %s\r\n",
-      strerror( errno )
-    )
     return false;
   }
   _rpc_acquire(
@@ -149,92 +151,52 @@ bool framebuffer_register_rpc( void ) {
     ( uintptr_t )framebuffer_handle_clear
   );
   if ( errno ) {
-    EARLY_STARTUP_PRINT(
-      "unable to register rpc handler: %s\r\n",
-      strerror( errno )
-    )
     return false;
   }
   _rpc_acquire(
-    "#/dev/framebuffer#render_text",
-    ( uintptr_t )framebuffer_handle_render_text
+    "#/dev/framebuffer#render_surface",
+    ( uintptr_t )framebuffer_handle_render_surface
   );
   if ( errno ) {
-    EARLY_STARTUP_PRINT(
-      "unable to register rpc handler: %s\r\n",
-      strerror( errno )
-    )
     return false;
   }
   return true;
 }
 
 /**
- * @fn void framebuffer_render_char(uint8_t, uint32_t, uint32_t)
- * @brief Render single character starting at x / y
- *
- * @param c
- * @param start_x
- * @param start_y
+ * @fn void framebuffer_flip(void)
+ * @brief Framebuffer flip to back buffer
  */
-void framebuffer_render_char( uint8_t c, uint32_t start_x, uint32_t start_y ) {
-  // get glyph of character
-  uint8_t* glyph = psf_char_to_glyph( c );
-  if ( ! glyph ) {
+void framebuffer_flip( void ) {
+  // mail buffer for following setup syscall
+  int32_t buf[ 256 ];
+  uint8_t* new_front_buffer = front_buffer;
+  uint8_t* new_back_buffer = back_buffer;
+  // build base request
+  buf[ 0 ] = 8 * 4; // buffer size
+  buf[ 1 ] = 0; // perform request
+  buf[ 2 ] = 0x48009; // display size request
+  buf[ 3 ] = 8; // buffer size
+  buf[ 4 ] = 0; // request size
+  buf[ 5 ] = 0; // space for x position
+  buf[ 6 ] = 0; // space for y position
+  buf[ 7 ] = 0; // closing tag
+  // handle switch back
+  if ( screen == front_buffer ) {
+    buf[ 6 ] = ( int32_t )height;
+    new_front_buffer = back_buffer;
+    new_back_buffer = front_buffer;
+  }
+  // perform mailbox action
+  _mailbox_action( buf, sizeof( int32_t ) * 8 );
+  // handle no valid return
+  if ( errno ) {
     return;
   }
-
-  uint32_t byte_per_pixel = FRAMEBUFFER_SCREEN_DEPTH / CHAR_BIT;
-  uint32_t off = ( start_y * pitch ) +
-    ( start_x * byte_per_pixel );
-  uint32_t bytesperline = ( psf_glyph_width() + 7 ) / 8;
-  uint32_t color = 0x00FF00;
-  uint32_t line = 0;
-  uint32_t mask = 0;
-  for ( uint32_t y = 0; y < psf_glyph_height(); y++ ) {
-    line = off;
-    mask = 1 << ( psf_glyph_width() - 1 );
-    for ( uint32_t x = 0; x < psf_glyph_width(); x++ ) {
-      *( ( uint32_t* )( screen + line ) ) =
-        glyph[ x / 8 ] & ( 0x80 >> ( x & 7 ) ) ? color : 0;
-      mask >>= 1;
-      line += 4;
-    }
-    *( ( uint32_t* )( screen + line ) ) = 0;
-    glyph += bytesperline;
-    off += pitch;
-  }
-}
-
-/**
- * @fn void framebuffer_render_string(char*, uint32_t, uint32_t)
- * @brief Helper to render a string
- *
- * @param str
- * @param x
- * @param y
- */
-void framebuffer_render_string( char* str, uint32_t x, uint32_t y ) {
-  size_t len = strlen( str );
-  for ( size_t i = 0; i < len; i++ ) {
-    uint8_t c = str[ i ];
-    switch ( c ) {
-      case '\n':
-        y += psf_glyph_height();
-        break;
-      case '\r':
-        x = 0;
-        break;
-      case '\t':
-        x += psf_glyph_width() * 4;
-        break;
-      default:
-        // render character
-        framebuffer_render_char( c, x, y );
-        // increment x
-        x += psf_glyph_width();
-    }
-  }
+  // set screen to new buffers
+  screen = new_front_buffer;
+  front_buffer = new_front_buffer;
+  back_buffer = new_back_buffer;
 }
 
 /**
@@ -244,49 +206,19 @@ void framebuffer_render_string( char* str, uint32_t x, uint32_t y ) {
  * @param origin
  * @param data_info
  */
-void framebuffer_handle_resolution( pid_t origin, size_t data_info ) {
+void framebuffer_handle_resolution(
+  __unused pid_t origin,
+  __unused size_t data_info
+) {
   // local variable for resolution data
   framebuffer_resolution_t resolution_data;
   memset( &resolution_data, 0, sizeof( framebuffer_resolution_t ) );
   resolution_data.success = -1;
-  // startup
-  EARLY_STARTUP_PRINT(
-    "framebuffer_handle_resolution( %d, %d )\r\n",
-    origin,
-    data_info
-  )
-  // handle no data
-  if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "no data passed to command handler!\r\n" )
-    _rpc_ret( &resolution_data, sizeof( framebuffer_resolution_t ) );
-    return;
-  }
-  // allocate for data fetching
-  framebuffer_command_ptr_t command = malloc(
-    sizeof( framebuffer_command_t )
-  );
-  if ( ! command ) {
-    EARLY_STARTUP_PRINT( "malloc failed: %s\r\n", strerror( errno ) )
-    _rpc_ret( &resolution_data, sizeof( framebuffer_resolution_t ) );
-    return;
-  }
-  // fetch rpc data
-  _rpc_get_data( command, sizeof( framebuffer_command_t ), data_info );
-  // handle error
-  if ( errno ) {
-    free( command );
-    EARLY_STARTUP_PRINT( "Fetch rpc data error: %s\r\n", strerror( errno ) )
-    _rpc_ret( &resolution_data, sizeof( framebuffer_resolution_t ) );
-    return;
-  }
   // build return
-  EARLY_STARTUP_PRINT( "Received resolution command %d\r\n", command->command )
   resolution_data.success = 0;
   resolution_data.width = width;
   resolution_data.height = height;
   resolution_data.depth = FRAMEBUFFER_SCREEN_DEPTH;
-  // free all used temporary structures
-  free( command );
   // return resolution data
   _rpc_ret( &resolution_data, sizeof( framebuffer_resolution_t ) );
 }
@@ -298,63 +230,60 @@ void framebuffer_handle_resolution( pid_t origin, size_t data_info ) {
  * @param origin
  * @param data_info
  */
-void framebuffer_handle_clear( pid_t origin, size_t data_info ) {
-  // startup
-  EARLY_STARTUP_PRINT(
-    "framebuffer_handle_clear( %d, %d )\r\n",
-    origin,
-    data_info
-  )
-  // erase last line
-  memset( screen, 0, width * height );
+void framebuffer_handle_clear(
+  __unused pid_t origin,
+  __unused size_t data_info
+) {
+  memset( back_buffer, 0, size );
+  framebuffer_flip();
 }
 
 /**
- * @fn void framebuffer_handle_resolution(pid_t, size_t)
- * @brief Handle resolution request currently only get
+ * @fn void framebuffer_handle_render_surface(pid_t, size_t)
+ * @brief RPC callback for rendering a surface
  *
  * @param origin
  * @param data_info
- *
- * @todo return info with new x and y position
  */
-void framebuffer_handle_render_text( pid_t origin, size_t data_info ) {
-  // startup
-  EARLY_STARTUP_PRINT(
-    "framebuffer_handle_render_text( %d, %d )\r\n",
-    origin,
-    data_info
-  )
+void framebuffer_handle_render_surface(
+  __unused pid_t origin,
+  size_t data_info
+) {
   // handle no data
   if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "no data passed to command handler!\r\n" )
     return;
   }
-  // allocate for data fetching
-  framebuffer_command_ptr_t command = malloc(
-    sizeof( framebuffer_command_t )
-  );
-  if ( ! command ) {
-    EARLY_STARTUP_PRINT( "malloc failed: %s\r\n", strerror( errno ) )
+  // get size for allocation
+  size_t sz = _rpc_get_data_size( data_info );
+  if ( errno ) {
+    return;
+  }
+  framebuffer_render_surface_ptr_t info = malloc( sz );
+  if ( ! info ) {
     return;
   }
   // fetch rpc data
-  _rpc_get_data( command, sizeof( framebuffer_command_t ), data_info );
+  _rpc_get_data( info, sz, data_info );
   // handle error
   if ( errno ) {
-    free( command );
-    EARLY_STARTUP_PRINT( "Fetch rpc data error: %s\r\n", strerror( errno ) )
+    free( info );
     return;
   }
-  // build return
-  EARLY_STARTUP_PRINT( "Render text command %d\r\n", command->command )
-  EARLY_STARTUP_PRINT( "start_x = %"PRIu32"\r\n", command->text.start_x )
-  EARLY_STARTUP_PRINT( "start_y = %"PRIu32"\r\n", command->text.start_y )
-  EARLY_STARTUP_PRINT( "font_width = %"PRIu32"\r\n", command->text.font_width )
-  EARLY_STARTUP_PRINT( "font_height = %"PRIu32"\r\n", command->text.font_height )
-  EARLY_STARTUP_PRINT( "text = %s\r\n", command->text.text )
-  // render text
-  framebuffer_render_string( command->text.text, command->text.start_x, command->text.start_y );
-  // free all used temporary structures
-  free( command );
+  for ( uint32_t y = 0; y < info->max_y / info->max_x; y++ ) {
+    for ( uint32_t x = 0; x < info->max_x; x += BYTE_PER_PIXEL ) {
+      // calculate x and y values for rendering
+      uint32_t final_x = info->x + ( x / BYTE_PER_PIXEL );
+      uint32_t final_y = info->y + y;
+      // extract color from data
+      uint32_t color = *( ( uint32_t* )&info->data[ y * info->max_x + x ] );
+      // determine render offset
+      uint32_t offset = final_y * pitch + final_x * BYTE_PER_PIXEL;
+      // push back color
+      *( ( uint32_t* )( back_buffer + offset ) ) = color;
+    }
+  }
+  // free again
+  free( info );
+  // flip it
+  framebuffer_flip();
 }

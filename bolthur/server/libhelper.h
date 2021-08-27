@@ -35,8 +35,10 @@
 static void send_add_request( vfs_add_request_ptr_t msg ) {
   vfs_add_response_ptr_t response = ( vfs_add_response_ptr_t )malloc(
     sizeof( vfs_add_response_t ) );
-  assert( response );
-  assert( msg );
+  if ( ! response || ! msg ) {
+    //EARLY_STARTUP_PRINT( "Allocation failed or invalid message passed!\r\n" )
+    exit( -1 );
+  }
   // message id variable
   size_t message_id;
   bool send = true;

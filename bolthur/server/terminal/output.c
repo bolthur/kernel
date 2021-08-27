@@ -20,50 +20,37 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include <assert.h>
 #include <inttypes.h>
 #include <sys/bolthur.h>
 #include "output.h"
 #include "list.h"
 #include "terminal.h"
+#include "psf.h"
+#include "render.h"
 #include "../libterminal.h"
 #include "../libframebuffer.h"
 
 framebuffer_resolution_t resolution_data;
 
 /**
- * @fn void output_init(void)
+ * @fn bool output_init(void)
  * @brief Generic output init
+ *
+ * @return
  *
  * @todo fetch framebuffer pid from vfs for rpc call
  */
-void output_init( void ) {
-  framebuffer_command_ptr_t command = malloc( sizeof( framebuffer_command_t ) );
-  assert( command );
-  EARLY_STARTUP_PRINT( "Fetching framebuffer data!\r\n" )
-  memset( command, 0, sizeof( framebuffer_command_t ) );
-  memset( &resolution_data, 0, sizeof( framebuffer_resolution_t ) );
-  // prepare structure
-  command->command = FRAMEBUFFER_GET_RESOLUTION;
+bool output_init( void ) {
   // perform sync rpc call
   size_t response_info = _rpc_raise_wait(
-    "#/dev/framebuffer#resolution", 5,
-    command, sizeof( framebuffer_command_t )
+    "#/dev/framebuffer#resolution", 5, NULL, 0
   );
   if ( errno ) {
-    EARLY_STARTUP_PRINT(
-      "unable to call rpc handler: %s\r\n",
-      strerror( errno )
-    )
-    return;
+    return false;
   }
   // fetch return
   _rpc_get_data( &resolution_data, sizeof( resolution_data ), response_info );
-  EARLY_STARTUP_PRINT(
-    "width = %"PRIu32", height = %"PRIu32", depth = %"PRIu32", success = %"PRIi32"\r\n",
-    resolution_data.width, resolution_data.height, resolution_data.depth,
-    resolution_data.success
-  );
+  return true;
 }
 
 /**
@@ -73,69 +60,41 @@ void output_init( void ) {
  * @param origin
  * @param data_info
  */
-void output_handle_out( pid_t origin, size_t data_info ) {
-  EARLY_STARTUP_PRINT( "output_handle_out( %d, %d )\r\n", origin, data_info )
+void output_handle_out( __unused pid_t origin, size_t data_info ) {
   // handle no data
   if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "no data passed to command handler!\r\n" )
+    return;
+  }
+  // get size for allocation
+  size_t sz = _rpc_get_data_size( data_info );
+  if ( errno ) {
     return;
   }
   // allocate for data fetching
-  terminal_command_ptr_t terminal = malloc( sizeof( terminal_command_t ) );
+  terminal_command_write_ptr_t terminal = malloc( sz );
   if ( ! terminal ) {
-    EARLY_STARTUP_PRINT( "malloc failed: %s\r\n", strerror( errno ) )
     return;
   }
   // fetch rpc data
-  _rpc_get_data( terminal, sizeof( terminal_command_t ), data_info );
+  _rpc_get_data( terminal, sz, data_info );
   // handle error
   if ( errno ) {
     free( terminal );
-    EARLY_STARTUP_PRINT( "Fetch rpc data error: %s\r\n", strerror( errno ) );
     return;
   }
-  // FIXME: ADD HANDLING
-  EARLY_STARTUP_PRINT( "Received output request\r\n" )
-  EARLY_STARTUP_PRINT( "terminal = %s\r\n", terminal->write.terminal )
-  EARLY_STARTUP_PRINT( "len = %#x\r\n", terminal->write.len )
-  EARLY_STARTUP_PRINT( "data = %s\r\n", terminal->write.data )
   // get terminal
   list_item_ptr_t found = list_lookup_data(
     terminal_list,
-    terminal->write.terminal
+    terminal->terminal
   );
   if ( ! found ) {
     free( terminal );
-    EARLY_STARTUP_PRINT(
-      "Terminal %s not handled here\r\n",
-      terminal->write.terminal
-    )
     return;
   }
-  terminal_ptr_t term = found->data;
-  // allocate data
-  framebuffer_command_ptr_t render = malloc( sizeof( framebuffer_command_t ) );
-  if ( ! render ) {
-    free( terminal );
-    EARLY_STARTUP_PRINT( "Unable to allocate text command\r\n" );
-    return;
-  }
-  memset( render, 0, sizeof( framebuffer_command_t ) );
-  render->command = FRAMEBUFFER_RENDER_TEXT;
-  render->text.font_width = OUTPUT_FONT_WIDTH;
-  render->text.font_height = OUTPUT_FONT_HEIGHT;
-  render->text.start_x = term->current_x;
-  render->text.start_y = term->current_y;
-  strcpy( render->text.text, terminal->write.data );
-  // raise without wait for return :)
-  _rpc_raise(
-    "#/dev/framebuffer#render_text", 5,
-    render,
-    sizeof( framebuffer_command_t )
-  );
-  // free all used temporary structures
+  // render
+  render_terminal( found->data, terminal->data );
+  // free terminal structure again
   free( terminal );
-  free( render );
 }
 
 /**
@@ -145,32 +104,41 @@ void output_handle_out( pid_t origin, size_t data_info ) {
  * @param origin
  * @param data_info
  */
-void output_handle_err( pid_t origin, size_t data_info ) {
-  EARLY_STARTUP_PRINT( "output_handle_err( %d, %d )\r\n", origin, data_info )
+void output_handle_err( __unused pid_t origin, size_t data_info ) {
   // handle no data
   if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "no data passed to command handler!\r\n" )
+    return;
+  }
+  // get size for allocation
+  size_t sz = _rpc_get_data_size( data_info );
+  if ( errno ) {
     return;
   }
   // allocate for data fetching
-  terminal_command_ptr_t terminal = malloc( sizeof( terminal_command_t ) );
+  terminal_command_write_ptr_t terminal = malloc( sz );
   if ( ! terminal ) {
-    EARLY_STARTUP_PRINT( "malloc failed: %s\r\n", strerror( errno ) )
     return;
   }
   // fetch rpc data
-  _rpc_get_data( terminal, sizeof( terminal_command_t ), data_info );
+  _rpc_get_data( terminal, sz, data_info );
   // handle error
   if ( errno ) {
     free( terminal );
-    EARLY_STARTUP_PRINT( "Fetch rpc data error: %s\r\n", strerror( errno ) );
     return;
   }
-  // FIXME: ADD HANDLING
-  EARLY_STARTUP_PRINT( "Received output request\r\n" )
-  EARLY_STARTUP_PRINT( "terminal = %s\r\n", terminal->write.terminal )
-  EARLY_STARTUP_PRINT( "len = %#x\r\n", terminal->write.len )
-  EARLY_STARTUP_PRINT( "data = %s\r\n", terminal->write.data )
+  // get terminal
+  list_item_ptr_t found = list_lookup_data(
+    terminal_list,
+    terminal->terminal
+  );
+  if ( ! found ) {
+    free( terminal );
+    return;
+  }
+  // render
+  render_terminal( found->data, terminal->data );
+  // free terminal structure again
+  free( terminal );
   // free all used temporary structures
   free( terminal );
 }

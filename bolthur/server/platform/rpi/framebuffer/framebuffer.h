@@ -23,17 +23,14 @@
 #define FRAMEBUFFER_SCREEN_WIDTH 1024
 #define FRAMEBUFFER_SCREEN_HEIGHT 768
 #define FRAMEBUFFER_SCREEN_DEPTH 32
-
-extern uint8_t* screen;
-extern uint32_t pitch;
+#define BYTE_PER_PIXEL ( FRAMEBUFFER_SCREEN_DEPTH / CHAR_BIT )
 
 bool framebuffer_init( void );
 bool framebuffer_register_rpc( void );
-void framebuffer_render_char( uint8_t, uint32_t, uint32_t );
-void framebuffer_render_string( char*, uint32_t, uint32_t );
+void framebuffer_flip( void );
 
 void framebuffer_handle_resolution( pid_t, size_t );
 void framebuffer_handle_clear( pid_t, size_t );
-void framebuffer_handle_render_text( pid_t, size_t );
+void framebuffer_handle_render_surface( pid_t, size_t );
 
 #endif

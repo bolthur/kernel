@@ -17,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
 #include <errno.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
@@ -70,18 +69,26 @@ static void console_cleanup( const list_item_ptr_t a ) {
 int main( __unused int argc, __unused char* argv[] ) {
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
-  assert( msg );
-  // print something
-  EARLY_STARTUP_PRINT( "console processing!\r\n" )
+  if ( ! msg ) {
+    return -1;
+  }
   // cache current pid
   pid = getpid();
 
-  EARLY_STARTUP_PRINT( "-> preparing list!\r\n" )
   console_list = list_construct( console_lookup, console_cleanup );
-  assert( console_list );
+  if ( ! console_list ) {
+    free( msg );
+    return -1;
+  }
 
-  EARLY_STARTUP_PRINT( "-> pushing /dev/stdin device to vfs!\r\n" )
-  // console device
+  // register rpc handler
+  if ( ! handler_register() ) {
+    free( msg );
+    list_destruct( console_list );
+    return -1;
+  }
+
+  // stdin device
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
@@ -90,8 +97,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // perform add request
   send_add_request( msg );
 
-  EARLY_STARTUP_PRINT( "-> pushing /dev/stdout device to vfs!\r\n" )
-  // console device
+  // stdout device
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
@@ -100,8 +106,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // perform add request
   send_add_request( msg );
 
-  EARLY_STARTUP_PRINT( "-> pushing /dev/stderr device to vfs!\r\n" )
-  // console device
+  // stderr device
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
@@ -110,10 +115,6 @@ int main( __unused int argc, __unused char* argv[] ) {
   // perform add request
   send_add_request( msg );
 
-  // register rpc handler
-  handler_register();
-
-  EARLY_STARTUP_PRINT( "-> pushing /dev/console device to vfs!\r\n" )
   // console device
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -122,6 +123,9 @@ int main( __unused int argc, __unused char* argv[] ) {
   strncpy( msg->file_path, "/dev/console", PATH_MAX );
   // perform add request
   send_add_request( msg );
+
+  // free again
+  free( msg );
 
   // endless loop
   while ( true ) {
@@ -133,7 +137,6 @@ int main( __unused int argc, __unused char* argv[] ) {
     }
     // possible messages to handle
     if ( VFS_WRITE_REQUEST == type ) {
-      EARLY_STARTUP_PRINT( "Incoming write request!\r\n" )
       // allocate space
       vfs_write_request_ptr_t request = ( vfs_write_request_ptr_t )malloc(
         sizeof( vfs_write_request_t ) );
@@ -160,7 +163,6 @@ int main( __unused int argc, __unused char* argv[] ) {
       );
       // handle error
       if ( errno ) {
-        EARLY_STARTUP_PRINT( "Read message error: %s\r\n", strerror( errno ) );
         free( request );
         free( response );
         continue;
@@ -168,7 +170,6 @@ int main( __unused int argc, __unused char* argv[] ) {
       // get active console
       console_ptr_t console = console_get_active();
       if ( ! console ) {
-        EARLY_STARTUP_PRINT( "No active console found!\r\n" );
         response->len = -EIO;
         // send response
         _message_send_by_pid(
@@ -183,16 +184,13 @@ int main( __unused int argc, __unused char* argv[] ) {
         free( response );
         continue;
       }
-      EARLY_STARTUP_PRINT( "Write data: '%s'\r\n", request->data )
       // get rpc to raise
       char* rpc = 0 == strcmp( "/dev/stdout", request->file_path )
         ? console->out
         : console->err;
-      EARLY_STARTUP_PRINT( "rpc: %s\r\n", rpc )
       // build terminal command
-      terminal_command_ptr_t terminal = malloc( sizeof( terminal_command_t ) );
+      terminal_command_write_ptr_t terminal = malloc( sizeof( terminal_command_write_t ) );
       if ( ! terminal ) {
-        EARLY_STARTUP_PRINT( "No active console found!\r\n" );
         response->len = -EIO;
         // send response
         _message_send_by_pid(
@@ -207,23 +205,18 @@ int main( __unused int argc, __unused char* argv[] ) {
         free( response );
         continue;
       }
-      memset( terminal, 0, sizeof( terminal_command_t ) );
-      terminal->command = TERMINAL_COMMAND_WRITE;
-      terminal->write.len = request->len;
-      memcpy( terminal->write.data, request->data, request->len );
-      strncpy( terminal->write.terminal, console->path, PATH_MAX );
+      memset( terminal, 0, sizeof( terminal_command_write_t ) );
+      terminal->len = request->len;
+      memcpy( terminal->data, request->data, request->len );
+      strncpy( terminal->terminal, console->path, PATH_MAX );
       // raise without wait for return :)
       _rpc_raise(
         rpc,
         console->handler,
         terminal,
-        sizeof( terminal_command_t )
+        sizeof( terminal_command_write_t )
       );
       if ( errno ) {
-        EARLY_STARTUP_PRINT(
-          "unable to call rpc handler: %s\r\n",
-          strerror( errno )
-        )
         response->len = -EIO;
         // send response
         _message_send_by_pid(
@@ -252,7 +245,7 @@ int main( __unused int argc, __unused char* argv[] ) {
       free( request );
       free( response );
     } else if ( VFS_READ_REQUEST == type ) {
-      EARLY_STARTUP_PRINT( "Incoming read request!\r\n" )
+      /// FIXME: ADD
     }
   }
   // return exit code 0

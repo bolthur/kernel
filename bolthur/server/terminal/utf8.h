@@ -17,32 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <errno.h>
-#include <sys/bolthur.h>
+#include <stdint.h>
+#include <stddef.h>
 
-#if ! defined( __LIBFRAMEBUFFER__ )
-#define __LIBFRAMEBUFFER__
+#if ! defined( __UTF8__ )
+#define __UTF8__
 
-struct framebuffer_render_surface {
-  uint32_t x;
-  uint32_t y;
-  uint32_t max_x;
-  uint32_t max_y;
-  uint8_t data[];
-};
-typedef struct framebuffer_render_surface framebuffer_render_surface_t;
-typedef struct framebuffer_render_surface* framebuffer_render_surface_ptr_t;
+#define isunicode( c ) ( ( ( c ) & 0xc0 ) == 0xc0 )
 
-struct framebuffer_resolution {
-  int32_t success;
-  uint32_t width;
-  uint32_t height;
-  uint32_t depth;
-};
-typedef struct framebuffer_resolution framebuffer_resolution_t;
-typedef struct framebuffer_resolution* framebuffer_resolution_ptr_t;
+uint16_t utf8_decode( const char*, size_t* );
 
 #endif

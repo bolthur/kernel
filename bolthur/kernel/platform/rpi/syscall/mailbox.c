@@ -87,6 +87,9 @@ void syscall_mailbox_action( void* context ) {
       #endif
       // loop from start to end
       while( start < end ) {
+        // mark page as used
+        /// FIXME: NECESSARY?
+        //phys_mark_page_used( buffer_start );
         // map framebuffer
         if ( ! virt_map_address(
           virtual_context,

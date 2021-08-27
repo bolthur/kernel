@@ -17,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -26,7 +25,6 @@
 #include <inttypes.h>
 #include "../../../libhelper.h"
 #include "framebuffer.h"
-#include "psf.h"
 
 /**
  * @fn int main(int, char*[])
@@ -37,19 +35,16 @@
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
-  pid_t pid = getpid();
-  // print something
-  EARLY_STARTUP_PRINT( "framebuffer init starting: %d!\r\n", pid )
-
   // initialize framebuffer
-  assert( framebuffer_init() );
-  assert( psf_init() );
+  if( ! framebuffer_init() ) {
+    return -1;
+  }
 
-  // some output
-  EARLY_STARTUP_PRINT( "-> pushing /dev/framebuffer to vfs!\r\n" )
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
-  assert( msg );
+  if ( ! msg ) {
+    return -1;
+  }
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
@@ -57,8 +52,9 @@ int main( __unused int argc, __unused char* argv[] ) {
   strcpy( msg->file_path, "/dev/framebuffer" );
   // perform add request
   send_add_request( msg );
-  // print something
-  EARLY_STARTUP_PRINT( "framebuffer init done!\r\n" )
+
+  // free again
+  free( msg );
 
   for(;;);
   return 0;

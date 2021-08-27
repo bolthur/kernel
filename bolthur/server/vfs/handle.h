@@ -53,7 +53,7 @@ typedef struct handle_container *handle_container_ptr_t;
 #define HANDLE_GET_PID( n ) \
   ( handle_pid_ptr_t )( ( uint8_t* )n - offsetof( handle_pid_t, node ) )
 
-void handle_init( void );
+bool handle_init( void );
 int handle_generate( handle_container_ptr_t*, pid_t, vfs_node_ptr_t, vfs_node_ptr_t, const char*, int, int );
 int handle_destory( pid_t, int );
 int handle_get( handle_container_ptr_t*, pid_t, int );

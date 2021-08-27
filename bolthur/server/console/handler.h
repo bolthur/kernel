@@ -18,6 +18,7 @@
  */
 
 #include <stddef.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 #if ! defined( __HANDLER__ )
@@ -25,6 +26,6 @@
 
 void handler_console_add( pid_t, size_t );
 void handler_console_select( pid_t, size_t );
-void handler_register( void );
+bool handler_register( void );
 
 #endif

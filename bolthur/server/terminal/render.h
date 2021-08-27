@@ -17,32 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <errno.h>
-#include <sys/bolthur.h>
+#include <stddef.h>
+#include <unistd.h>
+#include "terminal.h"
 
-#if ! defined( __LIBFRAMEBUFFER__ )
-#define __LIBFRAMEBUFFER__
+#if ! defined( __RENDER__ )
+#define __RENDER__
 
-struct framebuffer_render_surface {
-  uint32_t x;
-  uint32_t y;
-  uint32_t max_x;
-  uint32_t max_y;
-  uint8_t data[];
-};
-typedef struct framebuffer_render_surface framebuffer_render_surface_t;
-typedef struct framebuffer_render_surface* framebuffer_render_surface_ptr_t;
-
-struct framebuffer_resolution {
-  int32_t success;
-  uint32_t width;
-  uint32_t height;
-  uint32_t depth;
-};
-typedef struct framebuffer_resolution framebuffer_resolution_t;
-typedef struct framebuffer_resolution* framebuffer_resolution_ptr_t;
+void render_char_to_surface( uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
+void render_terminal( terminal_ptr_t term, const char* s );
 
 #endif

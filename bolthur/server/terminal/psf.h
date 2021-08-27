@@ -77,6 +77,9 @@ typedef enum psf_font_header_type psf_font_header_type_t;
 
 struct psf_font {
   psf_font_header_type_t type;
+  uint8_t* font_buffer;
+  uint32_t font_buffer_size;
+  uint16_t* unicode;
   union {
     psf_font_header_v1_t v1;
     psf_font_header_v2_t v2;
@@ -85,11 +88,15 @@ struct psf_font {
 typedef struct psf_font psf_font_t;
 typedef struct psf_font* psf_font_ptr_t;
 
+extern uint8_t* font_buffer;
+extern size_t font_buffer_size;
+
 bool psf_init( void );
 uint32_t psf_glyph_size( void );
 uint32_t psf_glyph_height( void );
 uint32_t psf_glyph_width( void );
 uint32_t psf_glyph_total( void );
-uint8_t* psf_char_to_glyph( uint8_t );
+uint8_t* psf_char_to_glyph( uint32_t );
+uint32_t psf_unicode_table_offset( void );
 
 #endif

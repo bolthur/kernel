@@ -26,17 +26,6 @@
 #if ! defined( __LIBCONSOLE__ )
 #define __LIBCONSOLE__
 
-enum console_command_type {
-  CONSOLE_COMMAND_ADD = 0,
-  CONSOLE_COMMAND_REMOVE,
-  CONSOLE_COMMAND_SELECT,
-  CONSOLE_COMMAND_CHANGE_STDIN,
-  CONSOLE_COMMAND_CHANGE_STDOUT,
-  CONSOLE_COMMAND_CHANGE_STDERR,
-};
-typedef enum console_command_type console_command_type_t;
-typedef enum console_command_type* console_command_type_ptr_t;
-
 struct console_command_add {
   char terminal[ PATH_MAX ];
   char in[ PATH_MAX ];
@@ -64,18 +53,5 @@ struct console_command_change {
 };
 typedef struct console_command_change console_command_change_t;
 typedef struct console_command_change* console_command_change_ptr_t;
-
-
-struct console_command {
-  console_command_type_t command;
-  union {
-    console_command_add_t add;
-    console_command_remove_t remove;
-    console_command_select_t select;
-    console_command_change_t change;
-  };
-};
-typedef struct console_command console_command_t;
-typedef struct console_command* console_command_ptr_t;
 
 #endif
