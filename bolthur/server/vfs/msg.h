@@ -19,8 +19,8 @@
 
 #include <sys/bolthur.h>
 
-#if !defined( __MSG_H__ )
-#define __MSG_H__
+#if !defined( _MSG_H )
+#define _MSG_H
 
 typedef void ( *msg_callback_t )( void );
 struct msg_command_handler {

@@ -1,2 +1,2 @@
 
-SUBDIRS = framebuffer
+SUBDIRS = framebuffer mailbox

@@ -22,8 +22,8 @@
 #include <sys/bolthur.h>
 #include "list.h"
 
-#if !defined( __VFS_H__ )
-#define __VFS_H__
+#if !defined( _VFS_H )
+#define _VFS_H
 
 // forward declaration necessary due to circular referencing
 typedef struct vfs_node vfs_node_t;

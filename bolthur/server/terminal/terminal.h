@@ -19,8 +19,8 @@
 
 #include "list.h"
 
-#if ! defined( __TERMINAL__ )
-#define __TERMINAL__
+#if ! defined( _TERMINAL_H )
+#define _TERMINAL_H
 
 #define TERMINAL_BASE_PATH "/dev/tty"
 #define TERMINAL_MAX_PATH 32

@@ -20,8 +20,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#if ! defined( __PSF__ )
-#define __PSF__
+#if ! defined( _PSF_H )
+#define _PSF_H
 
 // v1 magic
 #define PSF1_MAGIC0 0x36

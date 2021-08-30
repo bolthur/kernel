@@ -19,30 +19,39 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
-#include <errno.h>
+#include <stdint.h>
+#include <unistd.h>
 #include <sys/bolthur.h>
+#include <inttypes.h>
+#include "../../../libhelper.h"
 
-#if ! defined( _LIBFRAMEBUFFER_H )
-#define _LIBFRAMEBUFFER_H
+/**
+ * @fn int main(int, char*[])
+ * @brief main entry point
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
+int main( __unused int argc, __unused char* argv[] ) {
+  EARLY_STARTUP_PRINT( "Mailbox driver startup!\r\n" )
 
-struct framebuffer_render_surface {
-  uint32_t x;
-  uint32_t y;
-  uint32_t max_x;
-  uint32_t max_y;
-  uint8_t data[];
-};
-typedef struct framebuffer_render_surface framebuffer_render_surface_t;
-typedef struct framebuffer_render_surface* framebuffer_render_surface_ptr_t;
+  // allocate memory for add request
+  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
+  if ( ! msg ) {
+    return -1;
+  }
+  // clear memory
+  memset( msg, 0, sizeof( vfs_add_request_t ) );
+  // prepare message structure
+  msg->info.st_mode = S_IFCHR;
+  strcpy( msg->file_path, "/dev/mailbox" );
+  // perform add request
+  send_add_request( msg );
 
-struct framebuffer_resolution {
-  int32_t success;
-  uint32_t width;
-  uint32_t height;
-  uint32_t depth;
-};
-typedef struct framebuffer_resolution framebuffer_resolution_t;
-typedef struct framebuffer_resolution* framebuffer_resolution_ptr_t;
+  // free again
+  free( msg );
 
-#endif
+  while( true ) {}
+  return 0;
+}

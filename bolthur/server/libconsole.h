@@ -23,8 +23,8 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 
-#if ! defined( __LIBCONSOLE__ )
-#define __LIBCONSOLE__
+#if ! defined( _LIBCONSOLE_H )
+#define _LIBCONSOLE_H
 
 struct console_command_add {
   char terminal[ PATH_MAX ];

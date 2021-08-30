@@ -23,8 +23,8 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 
-#if ! defined( __LIBHELPER__ )
-#define __LIBHELPER__
+#if ! defined( _LIBHELPER_H )
+#define _LIBHELPER_H
 
 /**
  * @fn void send_add_request(vfs_add_request_ptr_t)

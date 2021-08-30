@@ -81,6 +81,7 @@ void msg_handle_write( void ) {
     free( nested_response );
     return;
   }
+  // EARLY_STARTUP_PRINT( "Write request to handle %d\r\n", request->handle )
   // try to get handle information
   int result = handle_get( &container, sender, request->handle );
   // handle error

@@ -23,8 +23,8 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 
-#if ! defined( __LIBTERMINAL__ )
-#define __LIBTERMINAL__
+#if ! defined( _LIBTERMINAL_H )
+#define _LIBTERMINAL_H
 
 struct terminal_command_write {
   char data[ MAX_WRITE_LEN ];

@@ -20,8 +20,8 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#if ! defined( __UTF8__ )
-#define __UTF8__
+#if ! defined( _UTF8_H )
+#define _UTF8_H
 
 #define isunicode( c ) ( ( ( c ) & 0xc0 ) == 0xc0 )
 

@@ -26,15 +26,19 @@
 #include "framebuffer.h"
 #include "../../../libframebuffer.h"
 
-uint32_t width;
-uint32_t height;
 uint32_t physical_width;
 uint32_t physical_height;
+uint32_t virtual_width;
+uint32_t virtual_height;
 uint32_t pitch;
 uint32_t size;
+uint32_t total_size;
 uint8_t* screen;
+uint8_t* current_back;
 uint8_t* front_buffer;
 uint8_t* back_buffer;
+
+static int32_t mailbox_buffer[ 256 ];
 
 /**
  * @fn bool framebuffer_init(void)
@@ -43,90 +47,99 @@ uint8_t* back_buffer;
  * @return
  */
 bool framebuffer_init( void ) {
-  // mail buffer for following setup syscall
-  int32_t buf[ 256 ];
-
   // try to get display size
-  buf[ 0 ] = 8 * 4; // buffer size
-  buf[ 1 ] = 0; // perform request
-  buf[ 2 ] = 0x40003; // display size request
-  buf[ 3 ] = 8; // buffer size
-  buf[ 4 ] = 0; // request size
-  buf[ 5 ] = 0; // space for horizontal resolution
-  buf[ 6 ] = 0; // space for vertical resolution
-  buf[ 7 ] = 0; // closing tag
+  mailbox_buffer[ 0 ] = 0; //8 * sizeof( int32_t ); // buffer size
+  mailbox_buffer[ 1 ] = 0; // perform request
+  mailbox_buffer[ 2 ] = 0x40003; // display size request
+  mailbox_buffer[ 3 ] = 8; // buffer size
+  mailbox_buffer[ 4 ] = 0; // request size
+  mailbox_buffer[ 5 ] = 0; // space for horizontal resolution
+  mailbox_buffer[ 6 ] = 0; // space for vertical resolution
   // perform mailbox action
-  _mailbox_action( buf, sizeof( int32_t ) * 8 );
+  _mailbox_action( mailbox_buffer, 8 );
   // handle no valid return
   if ( errno ) {
     return false;
   }
   // extract size
-  width = ( uint32_t )buf[ 5 ];
-  height = ( uint32_t )buf[ 6 ];
+  physical_width = ( uint32_t )mailbox_buffer[ 5 ];
+  physical_height = ( uint32_t )mailbox_buffer[ 6 ];
   // Use fallback if not set
-  if ( 0 == width && 0 == height ) {
-    width = FRAMEBUFFER_SCREEN_WIDTH;
-    height = FRAMEBUFFER_SCREEN_HEIGHT;
+  if ( 0 == physical_width && 0 == physical_height ) {
+    physical_width = FRAMEBUFFER_SCREEN_WIDTH;
+    physical_height = FRAMEBUFFER_SCREEN_HEIGHT;
   }
 
   // build request data for screen setup
   size_t idx = 1;
-  buf[ idx++ ] = 0; // request
-  buf[ idx++ ] = 0x00048003; // tag id (set physical size)
-  buf[ idx++ ] = 8; // value buffer size (bytes)
-  buf[ idx++ ] = 8; // request + value length (bytes)
-  buf[ idx++ ] = ( int32_t )width; // horizontal resolution
-  buf[ idx++ ] = ( int32_t )height; // vertical resolution
-  buf[ idx++ ] = 0x00048004; // tag id (set virtual size)
-  buf[ idx++ ] = 8; // value buffer size (bytes)
-  buf[ idx++ ] = 8; // request + value length (bytes)
-  buf[ idx++ ] = ( int32_t )width; // horizontal resolution
-  buf[ idx++ ] = ( int32_t )height * 2; // vertical resolution
-  buf[ idx++ ] = 0x00048005; // tag id (set depth)
-  buf[ idx++ ] = 4; // value buffer size (bytes)
-  buf[ idx++ ] = 4; // request + value length (bytes)
-  buf[ idx++ ] = FRAMEBUFFER_SCREEN_DEPTH; // 32 bpp
-  buf[ idx++ ] = 0x00040001; // tag id (allocate framebuffer)
-  buf[ idx++ ] = 8; // value buffer size (bytes)
-  buf[ idx++ ] = 4; // request + value length (bytes)
-  buf[ idx++ ] = 16; // alignment = 16
-  buf[ idx++ ] = 0; // space for response
-  buf[ idx++ ] = 0; // closing tag
-  buf[ 0 ] = ( int32_t )idx * 4; // buffer size
+  mailbox_buffer[ idx++ ] = 0; // request
+  // set physical size
+  mailbox_buffer[ idx++ ] = 0x00048003;
+  mailbox_buffer[ idx++ ] = 8; // value buffer size (bytes)
+  mailbox_buffer[ idx++ ] = 8; // request + value length (bytes)
+  mailbox_buffer[ idx++ ] = ( int32_t )physical_width; // horizontal resolution
+  mailbox_buffer[ idx++ ] = ( int32_t )physical_height; // vertical resolution
+  // set virtual size
+  mailbox_buffer[ idx++ ] = 0x00048004;
+  mailbox_buffer[ idx++ ] = 8; // value buffer size (bytes)
+  mailbox_buffer[ idx++ ] = 8; // request + value length (bytes)
+  mailbox_buffer[ idx++ ] = ( int32_t )physical_width * 2; // horizontal resolution
+  mailbox_buffer[ idx++ ] = ( int32_t )physical_height * 2; // vertical resolution
+  // set depth
+  mailbox_buffer[ idx++ ] = 0x00048005;
+  mailbox_buffer[ idx++ ] = 4; // value buffer size (bytes)
+  mailbox_buffer[ idx++ ] = 4; // request + value length (bytes)
+  mailbox_buffer[ idx++ ] = FRAMEBUFFER_SCREEN_DEPTH; // 32 bpp
+  // set virtual offset
+  mailbox_buffer[ idx++ ] = 0x00048009;
+  mailbox_buffer[ idx++ ] = 8; // value buffer size (bytes)
+  mailbox_buffer[ idx++ ] = 8; // request + value length (bytes)
+  mailbox_buffer[ idx++ ] = 0; // space for x
+  mailbox_buffer[ idx++ ] = 0; // space for y
+  // get pitch
+  mailbox_buffer[ idx++ ] = 0x00040008;
+  mailbox_buffer[ idx++ ] = 4; // buffer size
+  mailbox_buffer[ idx++ ] = 0; // request size
+  mailbox_buffer[ idx++ ] = 0; // space for pitch
+  // set pixel order
+  mailbox_buffer[ idx++ ] = 0x00048006;
+  mailbox_buffer[ idx++ ] = 4; // value buffer size (bytes)
+  mailbox_buffer[ idx++ ] = 4; // request + value length (bytes)
+  mailbox_buffer[ idx++ ] = 0; // RGB encoding /// FIXME: CORRECT VALUE HERE?
+  // allocate framebuffer
+  mailbox_buffer[ idx++ ] = 0x00040001;
+  mailbox_buffer[ idx++ ] = 8; // value buffer size (bytes)
+  mailbox_buffer[ idx++ ] = 4; // request + value length (bytes)
+  mailbox_buffer[ idx++ ] = 0x1000; // alignment = 0x1000
+  mailbox_buffer[ idx++ ] = 0; // space for response
+
   // perform mailbox action
-  _mailbox_action( buf, sizeof( int32_t ) * idx );
+  _mailbox_action( mailbox_buffer, idx );
   if ( errno ) {
     return false;
   }
 
-  // extract virtual and physical sizes
-  width = ( uint32_t )buf[ 10 ];
-  height = ( uint32_t )buf[ 11 ];
-  physical_width = ( uint32_t )buf[ 5 ];
-  physical_height = ( uint32_t )buf[ 6 ];
-  // save screen addressas current and buffer size
-  screen = ( uint8_t* )buf[ 19 ];
-  size = ( uint32_t )buf[ 20 ];
+  // save screen information
+  physical_width = ( uint32_t )mailbox_buffer[ 5 ];
+  physical_height = ( uint32_t )mailbox_buffer[ 6 ];
+  virtual_width = ( uint32_t )mailbox_buffer[ 10 ];
+  virtual_height = ( uint32_t )mailbox_buffer[ 11 ];
 
-  // get framebuffer pitch
-  buf[ 0 ] = 7 * 4; // total size
-  buf[ 1 ] = 0; // request
-  buf[ 2 ] = 0x40008; // display size
-  buf[ 3 ] = 4; // buffer size
-  buf[ 4 ] = 0; // request size
-  buf[ 5 ] = 0; // space for pitch
-  buf[ 6 ] = 0; // closing tag
-  // perform mailbox action
-  _mailbox_action( buf, sizeof( int32_t ) * idx );
-  if ( errno ) {
-    return false;
-  }
-  pitch = ( uint32_t )buf[ 5 ];
+  // save screen address as current and buffer size
+  screen = ( uint8_t* )mailbox_buffer[ 32 ];
+  total_size = ( uint32_t )mailbox_buffer[ 33 ];
+  // save pitch
+  pitch = ( uint32_t )mailbox_buffer[ 24 ];
+  // set correct sizes
+  size = pitch * physical_height;
+
+  // clear everything after init completely
+  memset( screen, 0, total_size );
 
   // set front and back buffers
   front_buffer = screen;
-  back_buffer = ( uint8_t* )( ( uintptr_t )screen + pitch * physical_height );
+  back_buffer = ( uint8_t* )( screen + size );
+  current_back = back_buffer;
 
   // return with register of necessary rpc
   return framebuffer_register_rpc();
@@ -168,35 +181,30 @@ bool framebuffer_register_rpc( void ) {
  * @brief Framebuffer flip to back buffer
  */
 void framebuffer_flip( void ) {
-  // mail buffer for following setup syscall
-  int32_t buf[ 256 ];
-  uint8_t* new_front_buffer = front_buffer;
-  uint8_t* new_back_buffer = back_buffer;
-  // build base request
-  buf[ 0 ] = 8 * 4; // buffer size
-  buf[ 1 ] = 0; // perform request
-  buf[ 2 ] = 0x48009; // display size request
-  buf[ 3 ] = 8; // buffer size
-  buf[ 4 ] = 0; // request size
-  buf[ 5 ] = 0; // space for x position
-  buf[ 6 ] = 0; // space for y position
-  buf[ 7 ] = 0; // closing tag
-  // handle switch back
+  // default request for screen flip
+  static int32_t buffer[] = { 0, 0, 0x00048009, 0x8, 0, 0, 0 };
+  // handle switch
   if ( screen == front_buffer ) {
-    buf[ 6 ] = ( int32_t )height;
-    new_front_buffer = back_buffer;
-    new_back_buffer = front_buffer;
+    mailbox_buffer[ 6 ] = ( int32_t )physical_height;
+    screen = back_buffer;
+    current_back = front_buffer;
+  } else {
+    mailbox_buffer[ 6 ] = 0;
+    screen = front_buffer;
+    current_back = back_buffer;
   }
   // perform mailbox action
-  _mailbox_action( buf, sizeof( int32_t ) * 8 );
+  _mailbox_action( buffer, 7 );
   // handle no valid return
   if ( errno ) {
     return;
   }
-  // set screen to new buffers
-  screen = new_front_buffer;
-  front_buffer = new_front_buffer;
-  back_buffer = new_back_buffer;
+  // copy over screen into back buffer
+  memcpy(
+    ( uint32_t* )current_back,
+    ( uint32_t* )screen,
+    ( size_t )size / sizeof( uint32_t )
+  );
 }
 
 /**
@@ -216,8 +224,8 @@ void framebuffer_handle_resolution(
   resolution_data.success = -1;
   // build return
   resolution_data.success = 0;
-  resolution_data.width = width;
-  resolution_data.height = height;
+  resolution_data.width = physical_width;
+  resolution_data.height = physical_height;
   resolution_data.depth = FRAMEBUFFER_SCREEN_DEPTH;
   // return resolution data
   _rpc_ret( &resolution_data, sizeof( framebuffer_resolution_t ) );
@@ -234,7 +242,7 @@ void framebuffer_handle_clear(
   __unused pid_t origin,
   __unused size_t data_info
 ) {
-  memset( back_buffer, 0, size );
+  memset( current_back, 0, size );
   framebuffer_flip();
 }
 
@@ -279,7 +287,7 @@ void framebuffer_handle_render_surface(
       // determine render offset
       uint32_t offset = final_y * pitch + final_x * BYTE_PER_PIXEL;
       // push back color
-      *( ( uint32_t* )( back_buffer + offset ) ) = color;
+      *( ( uint32_t* )( current_back + offset ) ) = color;
     }
   }
   // free again

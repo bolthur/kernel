@@ -21,8 +21,8 @@
 #include <unistd.h>
 #include "list.h"
 
-#if ! defined( __CONSOLE__ )
-#define __CONSOLE__
+#if ! defined( _CONSOLE_H )
+#define _CONSOLE_H
 
 struct console {
   bool active;

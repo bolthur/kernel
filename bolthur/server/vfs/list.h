@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIST_H__ )
-#define __LIST_H__
+#if ! defined( _LIST_H )
+#define _LIST_H
 
 #include <stdbool.h>
 #include <stdint.h>

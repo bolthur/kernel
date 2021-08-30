@@ -21,8 +21,8 @@
 #include <unistd.h>
 #include "terminal.h"
 
-#if ! defined( __RENDER__ )
-#define __RENDER__
+#if ! defined( _RENDER_H )
+#define _RENDER_H
 
 void render_char_to_surface( uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
 void render_terminal( terminal_ptr_t term, const char* s );

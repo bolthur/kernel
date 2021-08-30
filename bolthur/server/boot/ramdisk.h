@@ -19,8 +19,8 @@
 
 #include <libtar.h>
 
-#if !defined( __RAMDISK_H__ )
-#define __RAMDISK_H__
+#if !defined( _RAMDISK_H )
+#define _RAMDISK_H
 
 extern uintptr_t ramdisk_compressed;
 extern size_t ramdisk_compressed_size;

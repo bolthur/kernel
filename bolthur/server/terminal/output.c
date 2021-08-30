@@ -43,7 +43,7 @@ framebuffer_resolution_t resolution_data;
 bool output_init( void ) {
   // perform sync rpc call
   size_t response_info = _rpc_raise_wait(
-    "#/dev/framebuffer#resolution", 5, NULL, 0
+    "#/dev/framebuffer#resolution", 6, NULL, 0
   );
   if ( errno ) {
     return false;

@@ -21,8 +21,8 @@
 #include <stdbool.h>
 #include <unistd.h>
 
-#if ! defined( __HANDLER__ )
-#define __HANDLER__
+#if ! defined( _HANDLER_H )
+#define _HANDLER_H
 
 void handler_console_add( pid_t, size_t );
 void handler_console_select( pid_t, size_t );

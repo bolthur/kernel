@@ -21,8 +21,8 @@
 #include <unistd.h>
 #include "../libframebuffer.h"
 
-#if ! defined( __OUTPUT__ )
-#define __OUTPUT__
+#if ! defined( _OUTPUT_H )
+#define _OUTPUT_H
 
 extern framebuffer_resolution_t resolution_data;
 

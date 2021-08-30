@@ -143,6 +143,7 @@ AC_CONFIG_FILES([
   platform/Makefile
   platform/rpi/Makefile
   platform/rpi/framebuffer/Makefile
+  platform/rpi/mailbox/Makefile
   terminal/Makefile
   vfs/Makefile
 ])

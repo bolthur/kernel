@@ -136,7 +136,7 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
         c,
         start_x,
         start_y,
-        0x00FF00,
+        0xf0f0f0,
         0
       );
     }
@@ -150,7 +150,7 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
   // call for render surface
   _rpc_raise(
     "#/dev/framebuffer#render_surface",
-    5,
+    6,
     action,
     action_size
   );

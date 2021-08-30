@@ -22,8 +22,8 @@
 #include "avl.h"
 #include "vfs.h"
 
-#if !defined( __HANDLE_H__ )
-#define __HANDLE_H__
+#if !defined( _HANDLE_H )
+#define _HANDLE_H
 
 struct handle_pid {
   avl_node_t node;

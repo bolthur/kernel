@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __FRAMEBUFFER__ )
-#define __FRAMEBUFFER__
+#if ! defined( _FRAMEBUFFER_H )
+#define _FRAMEBUFFER_H
 
 #define FRAMEBUFFER_SCREEN_WIDTH 1024
 #define FRAMEBUFFER_SCREEN_HEIGHT 768

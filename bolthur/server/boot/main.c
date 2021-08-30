@@ -29,6 +29,7 @@
 #include <sys/bolthur.h>
 #include <sys/sysmacros.h>
 #include <libfdt.h>
+#include <assert.h>
 #include "ramdisk.h"
 
 uintptr_t ramdisk_compressed;
@@ -229,10 +230,15 @@ static pid_t execute_driver( char* name ) {
 }
 
 /**
- * @fn void stage2_init(void)
+ * @fn void stage2(void)
  * @brief Helper to get up the necessary additional drivers for a running system
  */
-static void stage2_init( void ) {
+static void stage2( void ) {
+  // start mailbox server
+  EARLY_STARTUP_PRINT( "Starting and waiting for mailbox server...\r\n" )
+  pid_t mailbox = execute_driver( "/ramdisk/server/mailbox" );
+  wait_for_device( "/dev/mailbox" );
+
   // start system console and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for console server...\r\n" )
   pid_t console = execute_driver( "/ramdisk/server/console" );
@@ -250,48 +256,78 @@ static void stage2_init( void ) {
   pid_t terminal = execute_driver( "/ramdisk/server/terminal" );
   wait_for_device( "/dev/terminal" );
 
-  EARLY_STARTUP_PRINT( "console = %d, terminal = %d, framebuffer = %d\r\n",
-    console, terminal, framebuffer )
+  EARLY_STARTUP_PRINT(
+    "mailbox = %d, console = %d, terminal = %d, framebuffer = %d\r\n",
+    mailbox, console, terminal, framebuffer )
 
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
-  FILE* f = freopen( "/dev/stdin", "r", stdin );
-  if ( ! f ) {
+  FILE* fp = freopen( "/dev/stdin", "r", stdin );
+  if ( ! fp ) {
     EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
     exit( 1 );
   }
-  EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", f->_file )
-  f = freopen( "/dev/stdout", "w", stdout );
-  if ( ! f ) {
-    EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
+  EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", fp->_file )
+  fp = freopen( "/dev/stdout", "w", stdout );
+  if ( ! fp ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
     exit( 1 );
   }
-  EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", f->_file )
-  f = freopen( "/dev/stderr", "w", stderr );
-  if ( ! f ) {
-    EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
+  EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", fp->_file )
+  fp = freopen( "/dev/stderr", "w", stderr );
+  if ( ! fp ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stderr\r\n" )
     exit( 1 );
   }
-  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", f->_file )
+  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fp->_file )
+
+  fp = fopen( "/dev/stderr", "w" );
+  if ( ! fp ) {
+    EARLY_STARTUP_PRINT( "Unable to open stderr\r\n" )
+    exit( 1 );
+  }
+  assert( 3 == fp->_file );
+  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fp->_file )
+  // should be 4
+  fp = fopen( "/dev/stderr", "w" );
+  if ( ! fp ) {
+    EARLY_STARTUP_PRINT( "Unable to open stderr\r\n" )
+    exit( 1 );
+  }
+  assert( 4 == fp->_file );
+  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fp->_file )
+
   EARLY_STARTUP_PRINT( "size_t max = %zu\r\n", SIZE_MAX )
   EARLY_STARTUP_PRINT( "unsigned long long max = %llu\r\n", ULLONG_MAX )
 
-  printf( "äöüÄÖÜ\r\n" );
+  EARLY_STARTUP_PRINT( "Adjust stdout / stderr buffering\r\n" )
+  // flush before usage
   fflush( stdout );
-  printf( "Tab test: \"\t\" should be 4 spaces here!" );
+  fflush( stderr );
+  // adjust buffering of stdout and stderr
+  setvbuf( stdout, NULL, _IOLBF, 0 );
+  setvbuf( stderr, NULL, _IONBF, 0 );
+
+  int a = printf( "äöüÄÖÜ\r\n" );
+
   //fflush( stdout );
-  printf( "Testing newline without cr\nFoobar");
+  int b = printf( "Tab test: \"\t\" should be 4 spaces here!\r\n" );
   //fflush( stdout );
-  printf( ", now with cr\r\nasdf\r\näöüÄÖÜ\r\n" );
+  int c = printf( "Testing newline without cr\nFoobar");
+  //fflush( stdout );
+  int d = printf( ", now with cr\r\nasdf\r\näöüÄÖÜ\r\n" );
   //fflush( stdout );
 
-  printf( "stdout: init=>console=>terminal=>framebuffer" );
+  int e = printf( "stdout: init=>console=>terminal=>framebuffer" );
   fflush( stdout );
-  fprintf(
+  int f = fprintf(
     stderr,
     "stderr: init=>console=>terminal=>framebuffer"
   );
-  fflush( stderr );
+  //fflush( stderr );
+
+  EARLY_STARTUP_PRINT( "a = %d, b = %d, c = %d, d = %d, e = %d, f = %d\r\n",
+    a, b, c, d, e, f )
 
   EARLY_STARTUP_PRINT( "Just looping around with nops :O\r\n" )
   while( true ) {
@@ -480,7 +516,7 @@ int main( int argc, char* argv[] ) {
   }
   // handle ongoing init in forked process
   if ( 0 == forked_process ) {
-    stage2_init();
+    stage2();
   }
 
   EARLY_STARTUP_PRINT( "Entering message loop!\r\n" );

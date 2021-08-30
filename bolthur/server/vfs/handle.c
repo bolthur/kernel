@@ -160,6 +160,7 @@ int handle_generate(
   avl_node_ptr_t found = avl_find_by_data(
     handle_process_tree,
     ( void* )process );
+
   // create if not existing
   if ( ! found ) {
     // allocate process handle
@@ -247,11 +248,39 @@ int handle_generate(
     // free again after copy
     free( destination );
   }
+  // special handling for stdin, stdout and stderr
+  bool is_stdin = 0 == strcmp( path, "/dev/stdin" );
+  bool is_stdout = 0 == strcmp( path, "/dev/stdout" );
+  bool is_stderr = 0 == strcmp( path, "/dev/stderr" );
+  if ( ! is_stdin && ! is_stdout && ! is_stderr ) {
+    ( *container )->handle = generate_handle( process_handle );
+  } else {
+    if ( is_stdin ) {
+      ( *container )->handle = STDIN_FILENO;
+    } else if ( is_stdout ) {
+      ( *container )->handle = STDOUT_FILENO;
+    } else if ( is_stderr ) {
+      ( *container )->handle = STDERR_FILENO;
+    }
+
+    // check for handle exists to use then the generate method,
+    // which should not happen at all
+    handle_container_ptr_t tmp_handle_container;
+    // try to get handle information
+    int tmp_handle_result = handle_get(
+      &tmp_handle_container,
+      process,
+      ( *container )->handle
+    );
+    // call to generate handle if return is 0
+    if ( 0 == tmp_handle_result ) {
+      ( *container )->handle = generate_handle( process_handle );
+    }
+  }
   // populate structure
   ( *container )->flags = flags;
   ( *container )->mode = mode;
   ( *container )->target = target;
-  ( *container )->handle = generate_handle( process_handle );
   // prepare and insert avl node
   avl_prepare_node( &(*container)->node, ( void* )(*container)->handle );
   if ( ! avl_insert_by_node( process_handle->tree, &(*container)->node ) ) {
