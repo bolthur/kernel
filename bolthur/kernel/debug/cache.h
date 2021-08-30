@@ -17,9 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_DEBUG_CACHE__ )
-#define __CORE_DEBUG_CACHE__
+#if ! defined( _DEBUG_CACHE_H )
+#define _DEBUG_CACHE_H
 
-void debug_cache_invalidate_instruction_cache( void );
+void debug_cache_finish_operation( void );
 
 #endif

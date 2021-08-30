@@ -17,23 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIB_STRING_H )
-#define _LIB_STRING_H
+#if ! defined( _ARCH_ARM_DEBUG_CACHE_H )
+#define _ARCH_ARM_DEBUG_CACHE_H
 
-#include <stddef.h>
-#include <stdint.h>
-
-void* memchr( const void*, int32_t, size_t );
-int memcmp( const void*, const void*, size_t );
-void* memcpy( void* restrict, const void* restrict, size_t );
-void* memset( void*, int, size_t );
-char* strchr( const char*, int );
-int strcmp( const char*, const char* );
-char* strcpy( char*, const char* );
-size_t strlen( const char* );
-int strncmp( const char*, const char*, size_t );
-void* memmove( void*, const void*, size_t );
-size_t strnlen( const char*, size_t );
-char* strrchr( const char*, int );
+void debug_cache_invalidate_instruction_cache( void );
+void debug_cache_invalidate_data_cache( void );
+void debug_cache_invalidate_prefetch_buffer( void );
 
 #endif

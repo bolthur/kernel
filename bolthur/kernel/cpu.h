@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( __CORE_CPU__ )
-#define __CORE_CPU__
+#if !defined( _CPU_H )
+#define _CPU_H
 
 #include <stdint.h>
 

@@ -22,8 +22,8 @@
 #include <collection/list.h>
 #include <task/process.h>
 
-#if ! defined( __CORE_IPC_MESSAGE__ )
-#define __CORE_IPC_MESSAGE__
+#if ! defined( _IPC_MESSAGE_H )
+#define _IPC_MESSAGE_H
 
 struct message_entry {
   size_t id;

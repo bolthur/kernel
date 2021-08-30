@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_COLLECTION_AVL__ )
-#define __LIB_COLLECTION_AVL__
+#if ! defined( _LIB_COLLECTION_AVL_H )
+#define _LIB_COLLECTION_AVL_H
 
 #include <stdint.h>
 #include <stddef.h>

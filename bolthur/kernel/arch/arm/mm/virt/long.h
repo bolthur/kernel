@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_MM_VIRT_LONG__ )
-#define __ARCH_ARM_MM_VIRT_LONG__
+#if ! defined( _ARCH_ARM_MM_VIRT_LONG_H )
+#define _ARCH_ARM_MM_VIRT_LONG_H
 
 #include <stdint.h>
 

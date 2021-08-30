@@ -21,8 +21,8 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#if ! defined( __CORE_MM_VIRT__ )
-#define __CORE_MM_VIRT__
+#if ! defined( _MM_VIRT_H )
+#define _MM_VIRT_H
 
 typedef enum {
   VIRT_MEMORY_TYPE_DEVICE,

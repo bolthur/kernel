@@ -20,8 +20,8 @@
 #include <mm/virt.h>
 #include <arch/arm/mm/virt/short.h>
 
-#if ! defined( __ARCH_ARM_V7_MM_VIRT_SHORT__ )
-#define __ARCH_ARM_V7_MM_VIRT_SHORT__
+#if ! defined( _ARCH_ARM_V7_MM_VIRT_SHORT_H )
+#define _ARCH_ARM_V7_MM_VIRT_SHORT_H
 
 #define SECTION_SIZE 0x100000
 #define ROUND_UP_TO_FULL_SECTION( a )  \

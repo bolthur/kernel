@@ -215,7 +215,7 @@ void debug_breakpoint_disable( void ) {
   }
 
   // flush after copy
-  debug_cache_invalidate_instruction_cache();
+  debug_cache_finish_operation();
 }
 
 /**
@@ -258,5 +258,5 @@ void debug_breakpoint_enable( void ) {
   }
 
   // flush cache
-  debug_cache_invalidate_instruction_cache();
+  debug_cache_finish_operation();
 }

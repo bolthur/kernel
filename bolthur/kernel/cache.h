@@ -17,9 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_V7_CACHE__ )
-#define __ARCH_ARM_V7_CACHE__
+#if ! defined( _CACHE_H )
+#define _CACHE_H
 
-void cache_invalidate_instruction_cache( void );
+void cache_enable( void );
+void cache_disable( void );
 
 #endif

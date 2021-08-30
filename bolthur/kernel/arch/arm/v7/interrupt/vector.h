@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_V7_INTERRUPT_VECTOR__ )
-#define __ARCH_ARM_V7_INTERRUPT_VECTOR__
+#if ! defined( _ARCH_ARM_V7_INTERRUPT_VECTOR_H )
+#define _ARCH_ARM_V7_INTERRUPT_VECTOR_H
 
 #include <assert.h>
 #include <stack.h>

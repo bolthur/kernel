@@ -19,8 +19,8 @@
 
 #include <stdint.h>
 
-#if ! defined( __ARCH_ARM_MM_VIRT__ )
-#define __ARCH_ARM_MM_VIRT__
+#if ! defined( _ARCH_ARM_MM_VIRT_H )
+#define _ARCH_ARM_MM_VIRT_H
 
 #if defined( ELF32 )
   // supported paging defines

@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_ENTRY__ )
-#define __CORE_ENTRY__
+#if ! defined( _ENTRY_H )
+#define _ENTRY_H
 
 #if defined( IS_HIGHER_HALF )
   #if defined( ELF32 )

@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __PLATFORM_RPI_GPIO__ )
-#define __PLATFORM_RPI_GPIO__
+#if ! defined( _PLATFORM_RPI_GPIO_H )
+#define _PLATFORM_RPI_GPIO_H
 
 #if defined( BCM2836 ) || defined( BCM2837 )
   #define CORE0_TIMER_IRQCNTL 0x40

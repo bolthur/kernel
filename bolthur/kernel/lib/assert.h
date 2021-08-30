@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_ASSERT__ )
-#define __LIB_ASSERT__
+#if ! defined( _LIB_ASSERT_H )
+#define _LIB_ASSERT_H
 
 #include <stdint.h>
 #include <stdnoreturn.h>

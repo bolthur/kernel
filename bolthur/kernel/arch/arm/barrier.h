@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_BARRIER__ )
-#define __ARCH_ARM_BARRIER__
+#if ! defined( _ARCH_ARM_BARRIER_H )
+#define _ARCH_ARM_BARRIER_H
 
 void barrier_data_mem( void );
 void barrier_data_sync( void );

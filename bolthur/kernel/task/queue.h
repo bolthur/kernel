@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( __CORE_TASK_QUEUE__ )
-#define __CORE_TASK_QUEUE__
+#if !defined( _TASK_QUEUE_H )
+#define _TASK_QUEUE_H
 
 #include <stddef.h>
 #include <collection/avl.h>

@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __PLATFORM_RPI_MAILBOX_PROPERTY__ )
-#define __PLATFORM_RPI_MAILBOX_PROPERTY__
+#if ! defined( _PLATFORM_RPI_MAILBOX_PROPERTY_H )
+#define _PLATFORM_RPI_MAILBOX_PROPERTY_H
 
 #include <stdint.h>
 

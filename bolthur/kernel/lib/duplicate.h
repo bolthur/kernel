@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_DUPLICATE__ )
-#define __LIB_DUPLICATE__
+#if ! defined( _LIB_DUPLICATE_H )
+#define _LIB_DUPLICATE_H
 
 char** duplicate( const char** );
 

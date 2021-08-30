@@ -44,6 +44,8 @@
  * @todo add mailbox request validation
  * @todo add allowed mailbox action check here
  * @todo fail in case action is not allowed explicitly
+ *
+ * @todo replace system call by driver managing access to mailbox via rpc and acquiring it with i/o syscalls
  */
 void syscall_mailbox_action( void* context ) {
   #if defined( PRINT_SYSCALL )
@@ -56,19 +58,25 @@ void syscall_mailbox_action( void* context ) {
   memcpy(
     ( uint8_t* )ptb_buffer,
     ( uint8_t* )data_buffer,
-    ( size_t )ptb_index * 4
+    ( size_t )ptb_index * sizeof( int32_t )
   );
   // get context
   virt_context_ptr_t virtual_context = task_thread_current_thread
     ->process
     ->virtual_context;
   // process property
-  mailbox_property_process();
+  uint32_t result = mailbox_property_process();
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "result = %#x / %d\r\n", result, result )
+  #endif
+  if ( MAILBOX_ERROR == result ) {
+    syscall_populate_error( context, ( size_t )-EIO );
+    return;
+  }
 
   // special handling
   size_t count = 2;
   while ( ptb_buffer[ count ] ) {
-
     if ( TAG_ALLOCATE_BUFFER == ptb_buffer[ count ] ) {
       uintptr_t buffer_start = ( uintptr_t )ptb_buffer[ count + 3 ];
       size_t buffer_size = ( size_t )ptb_buffer[ count + 4 ];
@@ -123,6 +131,6 @@ void syscall_mailbox_action( void* context ) {
   memcpy(
     ( uint8_t* )data_buffer,
     ( uint8_t* )ptb_buffer,
-    ( size_t )ptb_index * 4
+    ( size_t )ptb_index * sizeof( int32_t )
   );
 }

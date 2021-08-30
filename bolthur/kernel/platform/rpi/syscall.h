@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __PLATFORM_RPI_SYSCALL__ )
-#define __PLATFORM_RPI_SYSCALL__
+#if ! defined( _PLATFORM_RPI_SYSCALL_H )
+#define _PLATFORM_RPI_SYSCALL_H
 
 #define SYSCALL_MAILBOX_ACTION 71
 

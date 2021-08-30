@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_TTY__ )
-#define __CORE_TTY__
+#if ! defined( _TTY_H )
+#define _TTY_H
 
 #include <stdbool.h>
 #include <stdint.h>

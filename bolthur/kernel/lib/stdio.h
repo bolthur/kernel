@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_STDIO__ )
-#define __LIB_STDIO__
+#if ! defined( _LIB_STDIO_H )
+#define _LIB_STDIO_H
 
 #include <stdarg.h>
 

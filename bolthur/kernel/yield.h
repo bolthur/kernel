@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_YIELD__ )
-#define __CORE_YIELD__
+#if ! defined( _YIELD_H )
+#define _YIELD_H
 
 void yield( void );
 

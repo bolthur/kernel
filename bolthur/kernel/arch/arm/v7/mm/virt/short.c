@@ -27,7 +27,7 @@
   #include <debug/debug.h>
 #endif
 #include <arch/arm/barrier.h>
-#include <arch/arm/v7/cache.h>
+#include <arch/arm/cache.h>
 #include <mm/phys.h>
 #include <arch/arm/mm/virt/short.h>
 #include <arch/arm/v7/mm/virt/short.h>
@@ -888,6 +888,8 @@ void v7_short_flush_complete( void ) {
 
   // invalidate instruction cache
   cache_invalidate_instruction_cache();
+  cache_invalidate_data_cache();
+  cache_invalidate_prefetch_buffer();
   // invalidate entire tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
   // instruction synchronization barrier
@@ -902,6 +904,10 @@ void v7_short_flush_complete( void ) {
  * @param addr virtual address to flush
  */
 void v7_short_flush_address( uintptr_t addr ) {
+  // invalidate instruction cache
+  cache_invalidate_instruction_cache();
+  cache_invalidate_data_cache();
+  cache_invalidate_prefetch_buffer();
   // flush specific address
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 1" :: "r"( addr ) );
   // instruction synchronization barrier

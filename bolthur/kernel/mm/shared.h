@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_MM_SHARED__ )
-#define __CORE_MM_SHARED__
+#if ! defined( _MM_SHARED_H )
+#define _MM_SHARED_H
 
 #include <stddef.h>
 #include <stdbool.h>

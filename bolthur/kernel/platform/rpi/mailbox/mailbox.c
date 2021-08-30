@@ -33,7 +33,7 @@ uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
   uint32_t count = 0;
 
   // mbox address
-  volatile mailbox_t *mbox0;
+  volatile mailbox_t* mbox0;
 
   // set pointer
   if ( GPU_MAILBOX == type ) {

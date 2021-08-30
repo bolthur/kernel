@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_DEBUG_DISASM__ )
-#define __CORE_DEBUG_DISASM__
+#if ! defined( _DEBUG_DISASM_H )
+#define _DEBUG_DISASM_H
 
 #include <stdbool.h>
 #include <stdint.h>

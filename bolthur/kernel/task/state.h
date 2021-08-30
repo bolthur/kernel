@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_TASK_STATE__ )
-#define __CORE_TASK_STATE__
+#if ! defined( _TASK_STATE_H )
+#define _TASK_STATE_H
 
 typedef enum {
   TASK_PROCESS_STATE_INIT = 0,

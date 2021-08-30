@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_SERIAL__ )
-#define __CORE_SERIAL__
+#if ! defined( _SERIAL_H )
+#define _SERIAL_H
 
 #include <stdbool.h>
 #include <stdint.h>

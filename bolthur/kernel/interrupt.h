@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_INTERRUPT__ )
-#define __CORE_INTERRUPT__
+#if ! defined( _INTERRUPT_H )
+#define _INTERRUPT_H
 
 #include <assert.h>
 #include <collection/avl.h>

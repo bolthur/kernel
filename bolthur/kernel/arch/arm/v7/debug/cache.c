@@ -17,11 +17,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <debug/cache.h>
+#include <arch/arm/debug/cache.h>
 
 /**
+ * @fn void debug_cache_invalidate_instruction_cache(void)
  * @brief Invalidate instruction cache
  */
 void debug_cache_invalidate_instruction_cache( void ) {
   __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) : "memory" );
+}
+
+/**
+ * @fn void debug_cache_invalidate_data_cache(void)
+ * @brief Invalidate data cache
+ */
+void debug_cache_invalidate_data_cache( void ) {
+  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5,  4" : : "r"( 0 ) : "memory" );
+}
+
+/**
+ * @fn void debug_cache_invalidate_prefetch_buffer(void)
+ * @brief Invalidate prefetch buffer
+ */
+void debug_cache_invalidate_prefetch_buffer( void ) {;
+  __asm__ __volatile__( "mcr p15, 0, %0, c7, c6,  0" : : "r"( 0 ) : "memory" );
 }

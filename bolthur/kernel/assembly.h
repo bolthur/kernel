@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( __CORE_ASSEMBLY__ )
-#define __CORE_ASSEMBLY__
+#if !defined( _ASSEMBLY_H )
+#define _ASSEMBLY_H
 
 #define IMPORT( symbol ) .extern symbol
 #define EXPORT( symbol ) .global symbol

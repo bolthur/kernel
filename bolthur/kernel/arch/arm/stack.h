@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_STACK__ )
-#define __ARCH_ARM_STACK__
+#if ! defined( _ARCH_ARM_STACK_H )
+#define _ARCH_ARM_STACK_H
 
 /// FIXME: SOME RUNTIME ERROR OCURRES WHEN STACK SIZE IS BIGGER THAN 0x1000
 #define STACK_SIZE 0x1000

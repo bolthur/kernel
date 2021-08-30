@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( __CORE_TASK_LOCK__ )
-#define __CORE_TASK_LOCK__
+#if !defined( _TASK_LOCK_H )
+#define _TASK_LOCK_H
 
 #include <stdint.h>
 

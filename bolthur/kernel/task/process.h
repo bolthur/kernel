@@ -26,8 +26,8 @@
 #include <event.h>
 #include <task/state.h>
 
-#if ! defined( __CORE_TASK_PROCESS__ )
-#define __CORE_TASK_PROCESS__
+#if ! defined( _TASK_PROCESS_H )
+#define _TASK_PROCESS_H
 
 typedef struct task_thread task_thread_t;
 typedef struct task_thread* task_thread_ptr_t;

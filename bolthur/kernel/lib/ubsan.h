@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_UBSAN__ )
-#define __LIB_UBSAN__
+#if ! defined( _LIB_UBSAN_H )
+#define _LIB_UBSAN_H
 
 #include <stdint.h>
 

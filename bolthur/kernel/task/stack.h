@@ -20,8 +20,8 @@
 #include <collection/avl.h>
 #include <task/process.h>
 
-#if ! defined( __CORE_TASK_STACK__ )
-#define __CORE_TASK_STACK__
+#if ! defined( _TASK_STACK_H )
+#define _TASK_STACK_H
 
 struct task_stack_manager {
   avl_tree_ptr_t tree;

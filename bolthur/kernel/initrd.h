@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_INITRD__ )
-#define __CORE_INITRD__
+#if ! defined( _INITRD_H )
+#define _INITRD_H
 
 #include <stdbool.h>
 #include <stddef.h>

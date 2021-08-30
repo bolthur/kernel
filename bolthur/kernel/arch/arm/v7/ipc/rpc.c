@@ -24,6 +24,7 @@
 #include <mm/phys.h>
 #include <mm/virt.h>
 #include <ipc/rpc.h>
+#include <arch/arm/cache.h>
 #include <panic.h>
 #if defined( PRINT_RPC )
   #include <debug/debug.h>
@@ -345,6 +346,9 @@ bool rpc_prepare_invoke(
   }
   // data transfer barrier
   barrier_data_mem();
+  cache_invalidate_instruction_cache();
+  cache_invalidate_data_cache();
+  cache_invalidate_prefetch_buffer();
   // unmap temporary again
   virt_unmap_temporary( tmp_map, PAGE_SIZE );
 

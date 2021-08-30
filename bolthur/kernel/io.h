@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_IO__ )
-#define __CORE_IO__
+#if ! defined( _IO_H )
+#define _IO_H
 
 #include <stdint.h>
 

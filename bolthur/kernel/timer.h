@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_TIMER__ )
-#define __CORE_TIMER__
+#if ! defined( _TIMER_H )
+#define _TIMER_H
 
 void timer_init( void );
 

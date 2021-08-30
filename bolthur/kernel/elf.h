@@ -21,8 +21,8 @@
 #include <stdint.h>
 #include <task/process.h>
 
-#if ! defined( __CORE_ELF__ )
-#define __CORE_ELF__
+#if ! defined( _ELF_H )
+#define _ELF_H
 
 typedef uint16_t Elf32_Half;
 typedef uint16_t Elf64_Half;

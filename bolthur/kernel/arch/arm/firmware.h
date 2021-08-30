@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __ARCH_ARM_FIRMWARE__ )
-#define __ARCH_ARM_FIRMWARE__
+#if ! defined( _ARCH_ARM_FIRMWARE_H )
+#define _ARCH_ARM_FIRMWARE_H
 
 #include <stdint.h>
 

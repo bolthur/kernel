@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_SYSCALL__ )
-#define __CORE_SYSCALL__
+#if ! defined( _SYSCALL_H )
+#define _SYSCALL_H
 
 #include <stdint.h>
 #include <stddef.h>

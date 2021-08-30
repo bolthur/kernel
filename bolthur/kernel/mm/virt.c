@@ -28,6 +28,7 @@
 #include <entry.h>
 #include <initrd.h>
 #include <firmware.h>
+#include <cache.h>
 #include <mm/phys.h>
 #include <mm/virt.h>
 
@@ -123,6 +124,8 @@ void virt_init( void ) {
   virt_platform_init();
   // prepare temporary area
   assert( virt_prepare_temporary( virt_current_kernel_context ) )
+  // enable cpu caches
+  cache_enable();
 
   // firmware init stuff
   assert( firmware_init() )

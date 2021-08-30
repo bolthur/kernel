@@ -23,8 +23,8 @@
 #include <task/thread.h>
 #include <ipc/message.h>
 
-#if ! defined( __CORE_IPC_RPC__ )
-#define __CORE_IPC_RPC__
+#if ! defined( _IPC_RPC_H )
+#define _IPC_RPC_H
 
 struct rpc_backup {
   void* context;

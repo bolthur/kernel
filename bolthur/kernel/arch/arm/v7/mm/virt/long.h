@@ -20,8 +20,8 @@
 #include <mm/virt.h>
 #include <arch/arm/mm/virt/long.h>
 
-#if ! defined( __ARCH_ARM_V7_MM_VIRT_LONG__ )
-#define __ARCH_ARM_V7_MM_VIRT_LONG__
+#if ! defined( _ARCH_ARM_V7_MM_VIRT_LONG_H )
+#define _ARCH_ARM_V7_MM_VIRT_LONG_H
 
 void v7_long_startup_setup( void );
 void v7_long_startup_map( uint64_t, uintptr_t );

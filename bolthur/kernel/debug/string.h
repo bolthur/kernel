@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_DEBUG_STRING__ )
-#define __CORE_DEBUG_STRING__
+#if ! defined( _DEBUG_STRING_H )
+#define _DEBUG_STRING_H
 
 #include <stddef.h>
 #include <stdint.h>

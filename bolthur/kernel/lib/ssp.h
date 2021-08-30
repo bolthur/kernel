@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __LIB_SSP__ )
-#define __LIB_SSP__
+#if ! defined( _LIB_SSP_H )
+#define _LIB_SSP_H
 
 #include <stdnoreturn.h>
 

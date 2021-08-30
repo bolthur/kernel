@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_MM_PHYS__ )
-#define __CORE_MM_PHYS__
+#if ! defined( _MM_PHYS_H )
+#define _MM_PHYS_H
 
 #include <stdint.h>
 #include <stddef.h>

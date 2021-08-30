@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( __CORE_EVENT__ )
-#define __CORE_EVENT__
+#if ! defined( _EVENT_H )
+#define _EVENT_H
 
 #include <stdbool.h>
 #include <collection/list.h>
