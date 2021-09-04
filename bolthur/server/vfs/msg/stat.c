@@ -89,7 +89,7 @@ void msg_handle_stat( void ) {
   }
 
   // send response
-  _message_send_by_pid(
+  _message_send(
     sender,
     VFS_STAT_RESPONSE,
     ( const char* )response,

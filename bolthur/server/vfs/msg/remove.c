@@ -68,7 +68,7 @@ void msg_handle_remove( void ) {
   // prepare response
   response->state = -ENOSYS;
   // send response
-  _message_send_by_pid(
+  _message_send(
     sender,
     VFS_REMOVE_RESPONSE,
     ( const char* )response,

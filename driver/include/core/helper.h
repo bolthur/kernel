@@ -45,8 +45,8 @@ static void send_add_request( vfs_add_request_ptr_t msg ) {
     // send message
     if ( send ) {
       do {
-        message_id = _message_send_by_name(
-          "daemon:/vfs",
+        message_id = _message_send(
+          VFS_DAEMON_ID,
           VFS_ADD_REQUEST,
           ( const char* )msg,
           sizeof( vfs_add_request_t ),

@@ -65,12 +65,12 @@ void syscall_message_destroy( __unused void* context ) {
 }
 
 /**
- * @fn void syscall_message_send_by_pid(void*)
+ * @fn void syscall_message_send(void*)
  * @brief Send a message to process by pid
  *
  * @param context
  */
-void syscall_message_send_by_pid( void* context ) {
+void syscall_message_send( void* context ) {
   // get parameter
   pid_t pid = ( pid_t )syscall_get_parameter( context, 0 );
   size_t type = ( size_t )syscall_get_parameter( context, 1 );
@@ -81,12 +81,12 @@ void syscall_message_send_by_pid( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall_message_send_by_pid( %d, %#p, %zx )\r\n", pid, data, len )
+      "syscall_message_send( %d, %#p, %zx )\r\n", pid, data, len )
     DEBUG_OUTPUT( "message_id = %d\r\n", message_id )
   #endif
 
   // send message by pid
-  int err = message_send_by_pid(
+  int err = message_send(
     pid, task_thread_current_thread->process->id,
     type, data, len, sender_message_id, &message_id
   );
@@ -104,39 +104,6 @@ void syscall_message_send_by_pid( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "message_id = %d\r\n", message_id )
   #endif
-  // return success
-  syscall_populate_success( context, message_id );
-}
-
-/**
- * @fn void syscall_message_send_by_name(void*)
- * @brief Send message by name
- *
- * @param context
- */
-void syscall_message_send_by_name( void* context ) {
-  // get parameter
-  const char* name = ( const char* )syscall_get_parameter( context, 0 );
-  size_t type = ( size_t )syscall_get_parameter( context, 1 );
-  const char* data = ( const char* )syscall_get_parameter( context, 2 );
-  size_t len = ( size_t )syscall_get_parameter( context, 3 );
-  size_t sender_message_id = ( size_t )syscall_get_parameter( context, 4 );
-  size_t message_id = 0;
-  // debug output
-  #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_message_send_by_name( %s, %#p, %zx )\r\n", name, data, len )
-  #endif
-  // send message by pid
-  int err = message_send_by_name(
-    name, task_thread_current_thread->process->id,
-    type, data, len, sender_message_id, &message_id
-  );
-  // handle error
-  if ( err ) {
-    // set return and exit
-    syscall_populate_error( context, ( size_t )-err );
-    return;
-  }
   // return success
   syscall_populate_success( context, message_id );
 }
@@ -354,63 +321,4 @@ void syscall_message_wait_for_response( void* context ) {
     task_thread_current_thread->process->message_queue,
     ( void* )found
   );
-}
-
-/**
- * @fn void syscall_message_wait_for_response_type(void*)
- * @brief Get response type to a message by sent message id
- *
- * @param context
- *
- * @todo Set process to state waiting for response
- * @todo Store message id the process is waiting for somehow
- * @todo Trigger scheduling
- * @todo Add logic
- * @todo Return errno on error
- */
-void syscall_message_wait_for_response_type( void* context ) {
-  // parameters
-  /*__unused size_t message_type = ( size_t )syscall_get_parameter( context, 0 );
-  __unused size_t message_id = ( size_t )syscall_get_parameter( context, 1 );*/
-  // return type of message
-  syscall_populate_error( context, ( size_t )-ENOSYS );
-}
-
-/**
- * @fn void syscall_message_wait_has_by_name(void*)
- * @brief Check for process existing with message box by name
- *
- * @param context
- */
-void syscall_message_has_by_name( void* context ) {
-  // get parameter
-  const char* name = ( const char* )syscall_get_parameter( context, 0 );
-  // debug output
-  #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_message_has_by_name( %s )\r\n", name )
-  #endif
-  // get name list
-  list_manager_ptr_t name_list = task_process_get_by_name( name );
-  if ( ! name_list ) {
-    syscall_populate_error( context, ( size_t )-ESRCH );
-    return;
-  }
-  // handle empty
-  if ( ! name_list->first ) {
-    syscall_populate_error( context, ( size_t )-ESRCH );
-    return;
-  }
-  // check for same process
-  list_item_ptr_t item = name_list->first;
-  while( item ) {
-    task_process_ptr_t proc = ( task_process_ptr_t )item->data;
-    if( task_thread_current_thread->process->id == proc->id ) {
-      // return success
-      syscall_populate_error( context, ( size_t )-ESRCH );
-      return;
-    }
-    item = item->next;
-  }
-  // return success
-  syscall_populate_error( context, 0 );
 }

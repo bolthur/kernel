@@ -69,7 +69,7 @@ void msg_handle_seek( void ) {
     // send errno via negative len
     response->position = result;
     // send response
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_SEEK_RESPONSE,
       ( const char* )response,
@@ -118,7 +118,7 @@ void msg_handle_seek( void ) {
   }
   //EARLY_STARTUP_PRINT( "container->pos = %#lx\r\n", new_pos )
   // send response
-  _message_send_by_pid(
+  _message_send(
     sender,
     VFS_SEEK_RESPONSE,
     ( const char* )response,

@@ -45,22 +45,15 @@ struct task_process {
   pid_t parent;
   pid_t current_thread_id;
   size_t priority;
-  char* name;
   virt_context_ptr_t virtual_context;
   task_process_state_t state;
   task_state_data_t state_data;
   list_manager_ptr_t message_queue;
-};
-
-struct task_process_name {
-  avl_node_t node_name;
-  char* name;
-  list_manager_ptr_t process;
+  uintptr_t message_handler;
 };
 
 struct task_manager {
   avl_tree_ptr_t process_id;
-  avl_tree_ptr_t process_name;
   avl_tree_ptr_t thread_priority;
   list_manager_ptr_t process_to_cleanup;
   list_manager_ptr_t thread_to_cleanup;
@@ -69,16 +62,11 @@ struct task_manager {
 typedef struct task_process task_process_t;
 typedef struct task_process* task_process_ptr_t;
 
-typedef struct task_process_name task_process_name_t;
-typedef struct task_process_name* task_process_name_ptr_t;
 typedef struct task_manager task_manager_t;
 typedef struct task_manager* task_manager_ptr_t;
 
 #define TASK_PROCESS_GET_BLOCK_ID( n ) \
   ( task_process_ptr_t )( ( uint8_t* )n - offsetof( task_process_t, node_id ) )
-
-#define TASK_PROCESS_GET_BLOCK_NAME( n ) \
-  ( task_process_name_ptr_t )( ( uint8_t* )n - offsetof( task_process_name_t, node_name ) )
 
 extern task_manager_ptr_t process_manager;
 
@@ -87,15 +75,13 @@ void task_process_schedule( event_origin_t, void* );
 void task_process_cleanup( event_origin_t, void* );
 void task_process_start( void );
 pid_t task_process_generate_id( void );
-task_process_ptr_t task_process_create( size_t, pid_t, const char* );
+task_process_ptr_t task_process_create( size_t, pid_t );
 task_process_ptr_t task_process_fork( task_thread_ptr_t );
 bool task_process_prepare_init( task_process_ptr_t );
 uintptr_t task_process_prepare_init_arch( task_process_ptr_t );
 task_process_ptr_t task_process_get_by_id( pid_t );
-list_manager_ptr_t task_process_get_by_name( const char* );
-task_process_name_ptr_t task_process_get_name_list( const char* );
 void task_process_prepare_kill( void*, task_process_ptr_t );
-int task_process_replace( task_process_ptr_t, uintptr_t, const char*, const char**, const char**, void* );
+int task_process_replace( task_process_ptr_t, uintptr_t, const char**, const char**, void* );
 void task_unblock_threads( task_process_ptr_t, task_thread_state_t, task_state_data_t );
 
 #endif

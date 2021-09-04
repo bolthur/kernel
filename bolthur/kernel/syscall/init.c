@@ -149,16 +149,8 @@ bool syscall_init( void ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_SEND_BY_PID,
-    syscall_message_send_by_pid,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_SEND_BY_NAME,
-    syscall_message_send_by_name,
+    SYSCALL_MESSAGE_SEND,
+    syscall_message_send,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -183,22 +175,6 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_MESSAGE_WAIT_FOR_RESPONSE,
     syscall_message_wait_for_response,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_WAIT_FOR_RESPONSE_TYPE,
-    syscall_message_wait_for_response_type,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_HAS_BY_NAME,
-    syscall_message_has_by_name,
     INTERRUPT_SOFTWARE,
     false
   ) ) {

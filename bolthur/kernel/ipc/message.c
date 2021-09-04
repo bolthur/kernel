@@ -156,7 +156,7 @@ message_entry_ptr_t message_allocate(
 }
 
 /**
- * @fn int message_send_by_pid(pid_t, pid_t, size_t, const char*, size_t, size_t, size_t*)
+ * @fn int message_send(pid_t, pid_t, size_t, const char*, size_t, size_t, size_t*)
  * @brief Method to send message from one process to another one by pid
  *
  * @param target
@@ -168,7 +168,7 @@ message_entry_ptr_t message_allocate(
  * @param message_id
  * @return
  */
-int message_send_by_pid(
+int message_send(
   pid_t target,
   pid_t sender,
   size_t message_type,
@@ -239,94 +239,6 @@ int message_send_by_pid(
       TASK_THREAD_STATE_MESSAGE_WAITING,
       ( task_state_data_t ){ .data_size = request_id }
     );
-  }
-  // return success
-  return 0;
-}
-
-/**
- * @fn int message_send_by_name(const char*, pid_t, size_t, const char*, size_t, size_t, size_t*)
- * @brief Method to send a message to one or more other processes by name
- *
- * @param target
- * @param sender
- * @param message_type
- * @param message_data
- * @param message_length
- * @param request_id
- * @param message_id
- * @return
- */
-int message_send_by_name(
-  const char* target,
-  pid_t sender,
-  size_t message_type,
-  const char* message_data,
-  size_t message_length,
-  size_t request_id,
-  size_t* message_id
-) {
-  // handle invalid length
-  if ( 0 == message_length ) {
-    // debug output
-    #if defined( PRINT_MESSAGE )
-      DEBUG_OUTPUT( "Invalid length passed!\r\n" )
-    #endif
-    return EINVAL;
-  }
-  // debug output
-  #if defined( PRINT_MESSAGE )
-    DEBUG_OUTPUT( "fetching list of processes with name \"%s\"\r\n", target )
-  #endif
-  // get name list
-  list_manager_ptr_t name_list = task_process_get_by_name( target );
-  if ( ! name_list ) {
-    return EINVAL;
-  }
-  // debug output
-  #if defined( PRINT_MESSAGE )
-    DEBUG_OUTPUT( "name_list = %#x!\r\n", name_list )
-  #endif
-  // iterate
-  list_item_ptr_t item = name_list->first;
-  *message_id = message_generate_id();
-  while( item ) {
-    // convert pushed data to process
-    task_process_ptr_t proc = ( task_process_ptr_t )item->data;
-    // send by pid
-    int err = message_send_by_pid(
-      proc->id,
-      sender,
-      message_type,
-      message_data,
-      message_length,
-      request_id,
-      message_id
-    );
-    // debug output
-    #if defined( PRINT_MESSAGE )
-      DEBUG_OUTPUT(
-        "receiver = %d, sender = %d message_id = %d, request_id = %d\r\n",
-        proc->id, sender, *message_id, request_id )
-    #endif
-    if ( err ) {
-      // debug output
-      #if defined( PRINT_MESSAGE )
-        DEBUG_OUTPUT( "No free space left for message data!\r\n" )
-      #endif
-      item = item->next;
-      continue;
-    }
-    // unblock thread if blocked
-    if ( 0 < request_id ) {
-      task_unblock_threads(
-        proc,
-        TASK_THREAD_STATE_MESSAGE_WAITING,
-        ( task_state_data_t ){ .data_size = request_id }
-      );
-    }
-    // next item
-    item = item->next;
   }
   // return success
   return 0;

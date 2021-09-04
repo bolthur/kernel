@@ -50,7 +50,7 @@ bool phys_platform_init( void ) {
   uint32_t vc_memory_end;
 
   // get arm memory
-  rpi_mailbox_property_t *buffer = mailbox_property_get( TAG_GET_ARM_MEMORY );
+  rpi_mailbox_property_t* buffer = mailbox_property_get( TAG_GET_ARM_MEMORY );
 
   // debug output
   #if defined( PRINT_MM_PHYS )

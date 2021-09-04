@@ -105,49 +105,12 @@ static int32_t process_lookup_id(
 }
 
 /**
- * @brief Compare name callback necessary for avl tree
- *
- * @param a node a
- * @param b node b
- * @return int32_t
- */
-static int32_t process_compare_name(
-  const avl_node_ptr_t a,
-  const avl_node_ptr_t b
-) {
-  task_process_name_ptr_t node_a = TASK_PROCESS_GET_BLOCK_NAME( a );
-  task_process_name_ptr_t node_b = TASK_PROCESS_GET_BLOCK_NAME( b );
-  // return comparison
-  return strcmp( node_a->name, node_b->name );
-}
-
-/**
- * @brief Compare name callback necessary for avl tree lookup
- *
- * @param a node a
- * @param b node b
- * @return int32_t
- */
-static int32_t process_lookup_name(
-  const avl_node_ptr_t a,
-  const void* b
-) {
-  task_process_name_ptr_t node_a = TASK_PROCESS_GET_BLOCK_NAME( a );
-  // return comparison
-  return strcmp( node_a->name, ( char* ) b );
-}
-
-/**
- * @fn void task_process_free(task_process_ptr_t, task_process_name_ptr_t)
+ * @fn void task_process_free(task_process_ptr_t)
  * @brief Helper to destroy process structure
  *
  * @param proc process structure to free
- * @param name name entry list
  */
-static void task_process_free(
-  task_process_ptr_t proc,
-  task_process_name_ptr_t name
-) {
+static void task_process_free( task_process_ptr_t proc ) {
   // handle invalid
   if ( ! proc ) {
     return;
@@ -175,68 +138,8 @@ static void task_process_free(
   if ( proc->message_queue ) {
     list_destruct( proc->message_queue );
   }
-  // free up name
-  if ( proc->name ) {
-    free( proc->name );
-  }
-  // cleanup from name entry if set
-  if ( name ) {
-    list_remove_data( name->process, proc );
-  }
   // free finally structure itself
   free( proc );
-}
-
-/**
- * @fn task_process_name_ptr_t task_process_get_name_list(const char*)
- * @brief Helper to get or create process name list
- *
- * @param name process name to get list of
- * @return
- */
-task_process_name_ptr_t task_process_get_name_list( const char* name ) {
-  // get possible name node
-  avl_node_ptr_t name_node = avl_find_by_data(
-    process_manager->process_name, ( void* )name );
-  task_process_name_ptr_t name_entry = NULL;
-  if ( ! name_node ) {
-    name_entry = ( task_process_name_ptr_t )malloc(
-      sizeof( task_process_name_t ) );
-    // handle error
-    if ( ! name_entry ) {
-      return NULL;
-    }
-    // clear
-    memset( name_entry, 0, sizeof( task_process_name_t ) );
-    // allocate name
-    name_entry->name = ( char* )malloc( ( strlen( name ) + 1 ) * sizeof( char ) );
-    if ( ! name_entry->name ) {
-      free( name_entry );
-      return NULL;
-    }
-    name_entry->name = strcpy( name_entry->name, name );
-    // create process list
-    name_entry->process = list_construct( NULL, NULL );
-    if ( ! name_entry->process ) {
-      free( name_entry->name );
-      free( name_entry );
-      return NULL;
-    }
-    // push back
-    if ( ! avl_insert_by_node(
-      process_manager->process_name,
-      &name_entry->node_name
-    ) ) {
-      list_destruct( name_entry->process );
-      free( name_entry->name );
-      free( name_entry );
-      return NULL;
-    }
-  } else {
-    name_entry = TASK_PROCESS_GET_BLOCK_NAME( name_node );
-  }
-  // return found or created name entry
-  return name_entry;
 }
 
 /**
@@ -275,20 +178,9 @@ bool task_process_init( void ) {
     free( process_manager );
     return false;
   }
-  // create tree for managing processes by name
-  process_manager->process_name = avl_create_tree(
-    process_compare_name, process_lookup_name, NULL );
-  // handle error
-  if ( ! process_manager->process_name ) {
-    avl_destroy_tree( process_manager->process_id );
-    avl_destroy_tree( process_manager->thread_priority );
-    free( process_manager );
-    return false;
-  }
   // create cleanup list
   process_manager->process_to_cleanup = list_construct( NULL, NULL );
   if ( ! process_manager->process_to_cleanup ) {
-    avl_destroy_tree( process_manager->process_name );
     avl_destroy_tree( process_manager->process_id );
     avl_destroy_tree( process_manager->thread_priority );
     free( process_manager );
@@ -298,7 +190,6 @@ bool task_process_init( void ) {
   process_manager->thread_to_cleanup = list_construct( NULL, NULL );
   if ( ! process_manager->thread_to_cleanup ) {
     list_destruct( process_manager->process_to_cleanup );
-    avl_destroy_tree( process_manager->process_name );
     avl_destroy_tree( process_manager->process_id );
     avl_destroy_tree( process_manager->thread_priority );
     free( process_manager );
@@ -309,7 +200,6 @@ bool task_process_init( void ) {
   if ( ! event_bind( EVENT_PROCESS, task_process_schedule, true ) ) {
     list_destruct( process_manager->thread_to_cleanup );
     list_destruct( process_manager->process_to_cleanup );
-    avl_destroy_tree( process_manager->process_name );
     avl_destroy_tree( process_manager->thread_priority );
     avl_destroy_tree( process_manager->process_id );
     free( process_manager );
@@ -320,7 +210,6 @@ bool task_process_init( void ) {
     event_unbind( EVENT_PROCESS, task_process_schedule, true );
     list_destruct( process_manager->thread_to_cleanup );
     list_destruct( process_manager->process_to_cleanup );
-    avl_destroy_tree( process_manager->process_name );
     avl_destroy_tree( process_manager->thread_priority );
     avl_destroy_tree( process_manager->process_id );
     free( process_manager );
@@ -331,7 +220,6 @@ bool task_process_init( void ) {
     event_unbind( EVENT_PROCESS, task_process_schedule, true );
     list_destruct( process_manager->thread_to_cleanup );
     list_destruct( process_manager->process_to_cleanup );
-    avl_destroy_tree( process_manager->process_name );
     avl_destroy_tree( process_manager->thread_priority );
     avl_destroy_tree( process_manager->process_id );
     free( process_manager );
@@ -354,19 +242,14 @@ pid_t task_process_generate_id( void ) {
 }
 
 /**
- * @fn task_process_ptr_t task_process_create(size_t, pid_t, const char*)
+ * @fn task_process_ptr_t task_process_create(size_t, pid_t)
  * @brief Method to create new process
  *
  * @param priority process priority
  * @param parent parent process id
- * @param name process name
  * @return
  */
-task_process_ptr_t task_process_create(
-  size_t priority,
-  pid_t parent,
-  const char* name
-) {
+task_process_ptr_t task_process_create( size_t priority, pid_t parent ) {
   // check manager
   if ( ! process_manager ) {
     return NULL;
@@ -375,8 +258,8 @@ task_process_ptr_t task_process_create(
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "task_process_create( %zu, %d, %s ) called\r\n",
-      priority, parent, name );
+      "task_process_create( %zu, %d ) called\r\n",
+      priority, parent );
   #endif
 
   // allocate process structure
@@ -393,20 +276,12 @@ task_process_ptr_t task_process_create(
 
   // prepare structure
   memset( ( void* )process, 0, sizeof( task_process_t ) );
-  // allocate name
-  process->name = ( char* )malloc( ( strlen( name ) + 1 ) * sizeof( char ) );
-  if ( ! process->name ) {
-    task_process_free( process, NULL );
-    return NULL;
-  }
-  // copy name
-  process->name = strcpy( process->name, name );
   // populate process structure
   process->id = task_process_generate_id();
   process->thread_manager = task_thread_init();
   // handle error
   if ( ! process->thread_manager ) {
-    task_process_free( process, NULL );
+    task_process_free( process );
     return NULL;
   }
   process->state = TASK_PROCESS_STATE_INIT;
@@ -415,14 +290,14 @@ task_process_ptr_t task_process_create(
   process->thread_stack_manager = task_stack_manager_create();
   // handle error
   if ( ! process->thread_stack_manager ) {
-    task_process_free( process, NULL );
+    task_process_free( process );
     return NULL;
   }
   // create context only for user processes
   process->virtual_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
   // handle error
   if ( ! process->virtual_context ) {
-    task_process_free( process, NULL );
+    task_process_free( process );
     return NULL;
   }
 
@@ -430,22 +305,7 @@ task_process_ptr_t task_process_create(
   avl_prepare_node( &process->node_id, ( void* )process->id );
   // add process to tree
   if ( ! avl_insert_by_node( process_manager->process_id, &process->node_id ) ) {
-    task_process_free( process, NULL );
-    return NULL;
-  }
-
-  // get possible name node
-  task_process_name_ptr_t name_entry = task_process_get_name_list(
-    process->name
-  );
-  if ( ! name_entry ) {
-    task_process_free( process, NULL );
-    return NULL;
-  }
-
-  // push back process to name list
-  if ( ! list_push_back( name_entry->process, process ) ) {
-    task_process_free( process, name_entry );
+    task_process_free( process );
     return NULL;
   }
   // return allocated process
@@ -470,25 +330,20 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
   task_process_ptr_t proc = thread_calling->process;
 
   // prepare dynamic data structures
-  forked->name = ( char* )malloc( ( strlen( proc->name ) + 1 ) * sizeof( char ) );
-  if ( ! forked->name ) {
-    task_process_free( forked, NULL );
-    return NULL;
-  }
   forked->thread_manager = task_thread_init();
   if ( ! forked->thread_manager ) {
-    task_process_free( forked, NULL );
+    task_process_free( forked );
     return NULL;
   }
   forked->thread_stack_manager = task_stack_manager_create();
   if ( ! forked->thread_stack_manager ) {
-    task_process_free( forked, NULL );
+    task_process_free( forked );
     return NULL;
   }
   // fork virtual context
   forked->virtual_context = virt_fork_context( proc->virtual_context );
   if ( ! forked->virtual_context ) {
-    task_process_free( forked, NULL );
+    task_process_free( forked );
     return NULL;
   }
   // create message queue if existing
@@ -502,11 +357,10 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
   forked->parent = proc->id;
   forked->state = TASK_PROCESS_STATE_READY;
   forked->priority = proc->priority;
-  strcpy( forked->name, proc->name );
 
   // fork shared memory
   if ( ! shared_memory_fork( proc, forked ) ) {
-    task_process_free( forked, NULL );
+    task_process_free( forked );
     return NULL;
   }
 
@@ -514,22 +368,7 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
   avl_prepare_node( &forked->node_id, ( void* )forked->id );
   // add process to tree
   if ( ! avl_insert_by_node( process_manager->process_id, &forked->node_id ) ) {
-    task_process_free( forked, NULL );
-    return NULL;
-  }
-
-  // get possible name node
-  task_process_name_ptr_t name_entry = task_process_get_name_list(
-    forked->name
-  );
-  if ( ! name_entry ) {
-    task_process_free( forked, NULL );
-    return NULL;
-  }
-
-  // push back process to name list
-  if ( ! list_push_back( name_entry->process, forked ) ) {
-    task_process_free( forked, name_entry );
+    task_process_free( forked );
     return NULL;
   }
 
@@ -539,7 +378,7 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
     task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( current );
     // try to fork it
     if ( ! task_thread_fork( forked, thread ) ) {
-      task_process_free( forked, name_entry );
+      task_process_free( forked );
       return NULL;
     }
     // get next thread
@@ -671,7 +510,7 @@ void task_process_cleanup(
       DEBUG_OUTPUT( "Cleanup process with id %d!\r\n", proc->id );
     #endif
     // cleanup process
-    task_process_free( proc, task_process_get_name_list( proc->name ) );
+    task_process_free( proc );
 
     // cache current as remove
     list_item_ptr_t remove = current;
@@ -823,23 +662,6 @@ task_process_ptr_t task_process_get_by_id( pid_t pid ) {
 }
 
 /**
- * @brief Get list of processes by name
- *
- * @param name
- * @return
- */
-list_manager_ptr_t task_process_get_by_name( const char* name ) {
-  avl_node_ptr_t found = avl_find_by_data(
-    process_manager->process_name,
-    ( void* )name
-  );
-  if ( ! found ) {
-    return NULL;
-  }
-  return ( TASK_PROCESS_GET_BLOCK_NAME( found ) )->process;
-}
-
-/**
  * @fn void task_process_prepare_kill(void*, task_process_ptr_t)
  * @brief Prepare process kill
  *
@@ -856,12 +678,11 @@ void task_process_prepare_kill( void* context, task_process_ptr_t proc ) {
 }
 
 /**
- * @fn int task_process_replace(task_process_ptr_t, uintptr_t, const char*, const char**, const char**, void*)
+ * @fn int task_process_replace(task_process_ptr_t, uintptr_t, const char**, const char**, void*)
  * @brief Replace current process with elf image
  *
  * @param proc
  * @param elf
- * @param name
  * @param argv
  * @param env
  * @param context
@@ -870,7 +691,6 @@ void task_process_prepare_kill( void* context, task_process_ptr_t proc ) {
 int task_process_replace(
   task_process_ptr_t proc,
   uintptr_t elf,
-  const char* name,
   const char** argv,
   const char** env,
   void* context
@@ -912,24 +732,11 @@ int task_process_replace(
   }
   memcpy( image, ( void* )elf, image_size );
 
-  // save name temporary
-  size_t name_size = strlen( name ) + 1;
-  char* saved_name = ( char* )malloc( name_size * sizeof( char ) );
-  // handle error
-  if ( ! saved_name ) {
-    free( tmp_argv );
-    free( tmp_env );
-    free( image );
-    return -ENOMEM;
-  }
-  strcpy( saved_name, name );
-
   // clear all assigned shared areas
   if ( ! shared_memory_cleanup_process( proc ) ) {
     free( tmp_argv );
     free( tmp_env );
     free( image );
-    free( saved_name );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -942,7 +749,6 @@ int task_process_replace(
     free( tmp_argv );
     free( tmp_env );
     free( image );
-    free( saved_name );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -962,7 +768,6 @@ int task_process_replace(
     free( tmp_argv );
     free( tmp_env );
     free( image );
-    free( saved_name );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -971,7 +776,6 @@ int task_process_replace(
     free( tmp_argv );
     free( tmp_env );
     free( image );
-    free( saved_name );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -982,7 +786,6 @@ int task_process_replace(
     free( tmp_argv );
     free( tmp_env );
     free( image );
-    free( saved_name );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -992,61 +795,18 @@ int task_process_replace(
     free( tmp_argv );
     free( tmp_env );
     free( image );
-    free( saved_name );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "new_current->current_context = %p\r\n", new_current->current_context )
   #endif
-  // remove old process name and pass new one
-  task_process_name_ptr_t name_entry = task_process_get_name_list( proc->name );
-  if ( name_entry ) {
-    list_remove_data( name_entry->process, proc );
-  }
 
   // push arguments and environment
   if ( ! task_thread_push_arguments( new_current, tmp_argv, tmp_env ) ) {
     free( tmp_argv );
     free( tmp_env );
     free( image );
-    free( saved_name );
-    task_process_prepare_kill( context, proc );
-    return -ENOMEM;
-  }
-
-  #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Replace process name\r\n" )
-  #endif
-  // replace process structure name
-  free( proc->name );
-  proc->name = ( char* )malloc( name_size * sizeof( char ) );
-  if ( ! proc->name ) {
-    free( tmp_argv );
-    free( tmp_env );
-    free( image );
-    free( saved_name );
-    task_process_prepare_kill( context, proc );
-    return -ENOMEM;
-  }
-  strcpy( proc->name, saved_name );
-
-  // remove old process name and pass new one
-  name_entry = task_process_get_name_list( saved_name );
-  if ( ! name_entry ) {
-    free( tmp_argv );
-    free( tmp_env );
-    free( image );
-    free( saved_name );
-    task_process_prepare_kill( context, proc );
-    return -ENOMEM;
-  }
-  // add new process name
-  if ( ! list_push_back( name_entry->process, proc ) ) {
-    free( tmp_argv );
-    free( tmp_env );
-    free( image );
-    free( saved_name );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -1055,7 +815,6 @@ int task_process_replace(
   free( tmp_argv );
   free( tmp_env );
   free( image );
-  free( saved_name );
 
   // replace new current thread
   if ( replace_current_thread ) {

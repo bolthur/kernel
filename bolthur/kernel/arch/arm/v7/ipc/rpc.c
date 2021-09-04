@@ -185,7 +185,7 @@ rpc_backup_ptr_t rpc_create_backup(
   // backup parameter data as message
   backup->message_id = 0;
   if ( data && data_size ) {
-    int err = message_send_by_pid(
+    int err = message_send(
       thread->process->id,
       source->process->id,
       0, /// FIXME: ENSURE THAT THIS WON'T BREAL ANYTHING

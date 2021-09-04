@@ -63,7 +63,7 @@ void msg_handle_close( void ) {
   // destroy and push to state
   response->state = handle_destory( sender, request->handle );
   // send response
-  _message_send_by_pid(
+  _message_send(
     sender,
     VFS_OPEN_RESPONSE,
     ( const char* )response,

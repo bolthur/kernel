@@ -51,7 +51,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   strcpy( msg->file_path, "/dev/framebuffer" );
   // perform add request
-  send_add_request( msg );
+  send_vfs_add_request( msg );
 
   // free again
   free( msg );

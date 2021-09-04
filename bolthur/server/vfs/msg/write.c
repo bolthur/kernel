@@ -89,7 +89,7 @@ void msg_handle_write( void ) {
     // send errno via negative len
     response->len = result;
     // send response
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_WRITE_RESPONSE,
       ( const char* )response,
@@ -108,7 +108,7 @@ void msg_handle_write( void ) {
     // set written length just to requested length
     response->len = ( ssize_t )request->len;
     // send back success return
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_WRITE_RESPONSE,
       ( const char* )response,
@@ -142,7 +142,7 @@ void msg_handle_write( void ) {
   while( true ) {
     // send to handling process if not done
     while ( send && 0 == nested_message_id ) {
-      nested_message_id = _message_send_by_pid(
+      nested_message_id = _message_send(
         handling_process,
         VFS_WRITE_REQUEST,
         ( const char* )nested_request,
@@ -169,7 +169,7 @@ void msg_handle_write( void ) {
     container->pos += ( off_t )nested_response->len;
   }
   // send response
-  _message_send_by_pid(
+  _message_send(
     sender,
     VFS_WRITE_RESPONSE,
     ( const char* )response,

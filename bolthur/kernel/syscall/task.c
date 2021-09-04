@@ -114,14 +114,12 @@ void syscall_process_fork( void* context ) {
 void syscall_process_replace( void* context ) {
   // parameters
   void* addr = ( void* )syscall_get_parameter( context, 0 );
-  const char* name = ( const char* )syscall_get_parameter( context, 1 );
-  const char** argv = ( const char** )syscall_get_parameter( context, 2 );
-  const char** env = ( const char** )syscall_get_parameter( context, 3 );
-  __maybe_unused size_t size = ( size_t )syscall_get_parameter( context, 4 );
+  const char** argv = ( const char** )syscall_get_parameter( context, 1 );
+  const char** env = ( const char** )syscall_get_parameter( context, 2 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_replace( %#p, %s, %#p, %#p, %#x )\r\n",
-      addr, name, argv, env, size )
+    DEBUG_OUTPUT( "syscall_process_replace( %#p, %#p, %#p )\r\n",
+      addr, argv, env )
     DEBUG_OUTPUT(
       "task_thread_current_thread->current_context = %p\r\n",
       task_thread_current_thread->current_context )
@@ -130,7 +128,6 @@ void syscall_process_replace( void* context ) {
   int result = task_process_replace(
     task_thread_current_thread->process,
     ( uintptr_t )addr,
-    name,
     argv,
     env,
     context

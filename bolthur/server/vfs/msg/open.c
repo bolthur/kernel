@@ -93,7 +93,7 @@ void msg_handle_open( void ) {
       // prepare error return
       response->handle = -ENAMETOOLONG;
       // send response
-      _message_send_by_pid(
+      _message_send(
         sender,
         VFS_OPEN_RESPONSE,
         ( const char* )response,
@@ -131,7 +131,7 @@ void msg_handle_open( void ) {
     // prepare error return
     response->handle = ( request->flags & O_CREAT ) ? -ENOENT : -ENOTDIR;
     // send response
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_OPEN_RESPONSE,
       ( const char* )response,
@@ -152,7 +152,7 @@ void msg_handle_open( void ) {
     // prepare error return
     response->handle = -ENOENT;
     // send response
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_OPEN_RESPONSE,
       ( const char* )response,
@@ -176,7 +176,7 @@ void msg_handle_open( void ) {
     // prepare error return
     response->handle = -EEXIST;
     // send response
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_OPEN_RESPONSE,
       ( const char* )response,
@@ -208,7 +208,7 @@ void msg_handle_open( void ) {
     // prepare error return
     response->handle = -EISDIR;
     // send response
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_OPEN_RESPONSE,
       ( const char* )response,
@@ -242,7 +242,7 @@ void msg_handle_open( void ) {
     // prepare error return
     response->handle = result;
     // send response
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_OPEN_RESPONSE,
       ( const char* )response,
@@ -258,7 +258,7 @@ void msg_handle_open( void ) {
   // prepare return
   response->handle = container->handle;
   // send response
-  _message_send_by_pid(
+  _message_send(
     sender,
     VFS_OPEN_RESPONSE,
     ( const char* )response,

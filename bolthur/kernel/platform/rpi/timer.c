@@ -22,6 +22,7 @@
 
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
+#include <platform/rpi/mailbox/property.h>
 
 #if defined( PRINT_TIMER )
   #include <debug/debug.h>
@@ -104,6 +105,21 @@ static void timer_clear( void* context ) {
 void timer_init( void ) {
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+
+  // get max core clock rate
+  mailbox_property_init();
+  mailbox_property_add_tag( TAG_GET_MAX_CLOCK_RATE, TAG_CLOCK_CORE );
+  mailbox_property_process();
+  rpi_mailbox_property_t* p = mailbox_property_get( TAG_GET_MAX_CLOCK_RATE );
+  uint32_t clock_rate = p->data.buffer_u32[ 1 ];
+  #if defined( PRINT_TIMER )
+    DEBUG_OUTPUT( "clock_rate = %#x\r\n", clock_rate );
+  #endif
+  // overwrite max core clock rate
+  mailbox_property_init();
+  mailbox_property_add_tag( TAG_SET_CLOCK_RATE, TAG_CLOCK_ARM, clock_rate );
+  mailbox_property_process();
+
   // register handler
   interrupt_register_handler(
     SYSTEM_TIMER_3_INTERRUPT,

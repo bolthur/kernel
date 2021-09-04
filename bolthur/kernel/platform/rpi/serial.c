@@ -114,7 +114,7 @@ void serial_init( void ) {
   mailbox_property_process();
 
   // get clock rate property
-  rpi_mailbox_property_t *p = mailbox_property_get( TAG_GET_CLOCK_RATE );
+  rpi_mailbox_property_t* p = mailbox_property_get( TAG_GET_CLOCK_RATE );
   uint32_t clock_rate = p->data.buffer_u32[ 1 ];
 
   // calculate divider ( Divider = UART_CLOCK/(16 * Baud) )

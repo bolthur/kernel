@@ -44,8 +44,7 @@ message_entry_ptr_t message_allocate( size_t, const char*, size_t* );
 
 bool message_setup_process( task_process_ptr_t );
 void message_destroy_process( task_process_ptr_t );
-int message_send_by_pid( pid_t, pid_t, size_t, const char*, size_t, size_t, size_t* );
+int message_send( pid_t, pid_t, size_t, const char*, size_t, size_t, size_t* );
 void message_remove( pid_t, size_t );
-int message_send_by_name( const char*, pid_t, size_t, const char*, size_t, size_t, size_t* );
 
 #endif

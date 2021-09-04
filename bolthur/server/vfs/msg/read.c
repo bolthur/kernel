@@ -88,7 +88,7 @@ void msg_handle_read( void ) {
     // send errno via negative len
     response->len = result;
     // send response
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_READ_RESPONSE,
       ( const char* )response,
@@ -105,7 +105,7 @@ void msg_handle_read( void ) {
   // special handling for null device
   if ( 0 == strcmp( container->path, "/dev/null" ) ) {
     // send back zero return
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_READ_RESPONSE,
       ( const char* )response,
@@ -141,7 +141,7 @@ void msg_handle_read( void ) {
   while( true ) {
     // send to handling process if not done
     while ( send && 0 == nested_message_id ) {
-      nested_message_id = _message_send_by_pid(
+      nested_message_id = _message_send(
         handling_process,
         VFS_READ_REQUEST,
         ( const char* )nested_request,
@@ -168,7 +168,7 @@ void msg_handle_read( void ) {
     container->pos += ( off_t )nested_response->len;
   }
   // send response
-  _message_send_by_pid(
+  _message_send(
     sender,
     VFS_READ_RESPONSE,
     ( const char* )response,

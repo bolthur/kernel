@@ -70,8 +70,8 @@ __weak_symbol int _open( const char* name, int flags, ... ) {
   while( true ) {
     // send message ( maybe delayed when vfs is starting up )
     while ( send && 0 == message_id ) {
-      message_id = _message_send_by_name(
-        "daemon:/vfs",
+      message_id = _message_send(
+        VFS_DAEMON_ID,
         VFS_OPEN_REQUEST,
         ( const char* )&request,
         sizeof( vfs_open_request_t ),
@@ -120,8 +120,8 @@ __weak_symbol int _close( int file ) {
   while( true ) {
     // send message ( maybe delayed when vfs is starting up )
     while ( send && 0 == message_id ) {
-      message_id = _message_send_by_name(
-        "daemon:/vfs",
+      message_id = _message_send(
+        VFS_DAEMON_ID,
         VFS_CLOSE_REQUEST,
         ( const char* )&request,
         sizeof( vfs_close_request_t ),
@@ -186,8 +186,8 @@ ssize_t _read( int file, void* ptr, size_t len ) {
     while( true ) {
       // send message ( maybe delayed when vfs is starting up )
       while ( send && 0 == message_id ) {
-        message_id = _message_send_by_name(
-          "daemon:/vfs",
+        message_id = _message_send(
+          VFS_DAEMON_ID,
           VFS_READ_REQUEST,
           ( const char* )&request,
           sizeof( vfs_read_request_t ),

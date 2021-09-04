@@ -74,7 +74,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, TERMINAL_BASE_PATH, PATH_MAX );
   // perform add request
-  send_add_request( msg );
+  send_vfs_add_request( msg );
 
   // push terminal device as indicator init is done
   // clear memory
@@ -83,7 +83,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/terminal", PATH_MAX );
   // perform add request
-  send_add_request( msg );
+  send_vfs_add_request( msg );
 
   // free again
   free( msg );

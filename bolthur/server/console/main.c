@@ -95,7 +95,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFREG;
   strncpy( msg->file_path, "/dev/stdin", PATH_MAX );
   // perform add request
-  send_add_request( msg );
+  send_vfs_add_request( msg );
 
   // stdout device
   // clear memory
@@ -104,7 +104,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFREG;
   strncpy( msg->file_path, "/dev/stdout", PATH_MAX );
   // perform add request
-  send_add_request( msg );
+  send_vfs_add_request( msg );
 
   // stderr device
   // clear memory
@@ -113,7 +113,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFREG;
   strncpy( msg->file_path, "/dev/stderr", PATH_MAX );
   // perform add request
-  send_add_request( msg );
+  send_vfs_add_request( msg );
 
   // console device
   // clear memory
@@ -122,7 +122,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFREG;
   strncpy( msg->file_path, "/dev/console", PATH_MAX );
   // perform add request
-  send_add_request( msg );
+  send_vfs_add_request( msg );
 
   // free again
   free( msg );
@@ -172,7 +172,7 @@ int main( __unused int argc, __unused char* argv[] ) {
       if ( ! console ) {
         response->len = -EIO;
         // send response
-        _message_send_by_pid(
+        _message_send(
           sender,
           VFS_WRITE_RESPONSE,
           ( const char* )response,
@@ -193,7 +193,7 @@ int main( __unused int argc, __unused char* argv[] ) {
       if ( ! terminal ) {
         response->len = -EIO;
         // send response
-        _message_send_by_pid(
+        _message_send(
           sender,
           VFS_WRITE_RESPONSE,
           ( const char* )response,
@@ -219,7 +219,7 @@ int main( __unused int argc, __unused char* argv[] ) {
       if ( errno ) {
         response->len = -EIO;
         // send response
-        _message_send_by_pid(
+        _message_send(
           sender,
           VFS_WRITE_RESPONSE,
           ( const char* )response,
@@ -234,7 +234,7 @@ int main( __unused int argc, __unused char* argv[] ) {
       // prepare return
       response->len = ( ssize_t )strlen( request->data );
       // send response
-      _message_send_by_pid(
+      _message_send(
         sender,
         VFS_WRITE_RESPONSE,
         ( const char* )response,

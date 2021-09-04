@@ -145,7 +145,7 @@ noreturn void kernel_main( void ) {
   DEBUG_OUTPUT( "File size: %#zx\r\n", flat_file_size )
   // Create process
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] create ...\r\n" )
-  task_process_ptr_t proc = task_process_create( 0, 0, "daemon:/boot" );
+  task_process_ptr_t proc = task_process_create( 0, 0 );
   assert( proc )
   // load flat image
   uintptr_t init_entry = elf_load( elf_file, proc );

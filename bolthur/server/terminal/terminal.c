@@ -146,7 +146,7 @@ bool terminal_init( void ) {
     msg->info.st_mode = S_IFCHR;
     strncpy( msg->file_path, tty_path, PATH_MAX );
     // perform add request
-    send_add_request( msg );
+    send_vfs_add_request( msg );
 
     // register handler for streams
     _rpc_acquire( out, ( uintptr_t )output_handle_out );

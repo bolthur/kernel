@@ -78,7 +78,7 @@ void msg_handle_add( void ) {
     response->status = VFS_MESSAGE_ADD_ALREADY_EXIST;
     response->handling_process = node->pid;
     // send response
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_ADD_RESPONSE,
       ( const char* )response,
@@ -103,7 +103,7 @@ void msg_handle_add( void ) {
     // prepare response
     response->status = VFS_MESSAGE_ADD_ERROR;
     // send response
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_ADD_RESPONSE,
       ( const char* )response,
@@ -128,7 +128,7 @@ void msg_handle_add( void ) {
       // prepare response
       response->status = VFS_MESSAGE_ADD_ERROR;
       // send response
-      _message_send_by_pid(
+      _message_send(
         sender,
         VFS_ADD_RESPONSE,
         ( const char* )response,
@@ -149,7 +149,7 @@ void msg_handle_add( void ) {
       // prepare response
       response->status = VFS_MESSAGE_ADD_ERROR;
       // send response
-      _message_send_by_pid(
+      _message_send(
         sender,
         VFS_ADD_RESPONSE,
         ( const char* )response,
@@ -174,7 +174,7 @@ void msg_handle_add( void ) {
     // prepare response
     response->status = VFS_MESSAGE_ADD_ERROR;
     // send response
-    _message_send_by_pid(
+    _message_send(
       sender,
       VFS_ADD_RESPONSE,
       ( const char* )response,
@@ -200,7 +200,7 @@ void msg_handle_add( void ) {
   /*EARLY_STARTUP_PRINT( "response->status = %d\r\n", response->status )
   EARLY_STARTUP_PRINT( "response->handling_process = %d\r\n", response->handling_process )*/
   // send response
-  _message_send_by_pid(
+  _message_send(
     sender,
     VFS_ADD_RESPONSE,
     ( const char* )response,

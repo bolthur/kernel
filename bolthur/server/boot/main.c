@@ -31,6 +31,7 @@
 #include <libfdt.h>
 #include <assert.h>
 #include "ramdisk.h"
+#include "../libhelper.h"
 
 uintptr_t ramdisk_compressed;
 size_t ramdisk_compressed_size;
@@ -119,59 +120,6 @@ static ssize_t my_tar_read( __unused int fd, void* buffer, size_t count ) {
  */
 static ssize_t my_tar_write( __unused int fd, __unused const void* src, __unused size_t count ) {
   return 0;
-}
-
-/**
- * @fn void send_add_request(vfs_add_request_ptr_t)
- * @brief helper to send add request with wait for response
- *
- * @param msg
- */
-static void send_add_request( vfs_add_request_ptr_t msg ) {
-  vfs_add_response_ptr_t response = ( vfs_add_response_ptr_t )malloc(
-    sizeof( vfs_add_response_t ) );
-  if ( ! response ) {
-    return;
-  }
-  // message id variable
-  size_t message_id;
-  bool send = true;
-  // wait for response
-  while( true ) {
-    // send message
-    if ( send ) {
-      do {
-        message_id = _message_send_by_name(
-          "daemon:/vfs",
-          VFS_ADD_REQUEST,
-          ( const char* )msg,
-          sizeof( vfs_add_request_t ),
-          0 );
-      } while ( 0 == message_id );
-    }
-    // erase message
-    memset( response, 0, sizeof( vfs_add_response_t ) );
-    // wait for response
-    _message_wait_for_response(
-      ( char* )response,
-      sizeof( vfs_add_response_t ),
-      message_id );
-    // handle error / no message
-    if ( errno ) {
-      send = false;
-      //EARLY_STARTUP_PRINT( "An error occurred: %s\r\n", strerror( errno ) )
-      continue;
-    }
-    // stop on success
-    if ( VFS_MESSAGE_ADD_SUCCESS == response->status ) {
-      //EARLY_STARTUP_PRINT( "Successful added!\r\n" )
-      break;
-    }
-    // set send to true again to retry
-    send = true;
-  }
-  // free up response
-  free( response );
 }
 
 /**
@@ -318,6 +266,10 @@ static void stage2( void ) {
   int d = printf( ", now with cr\r\nasdf\r\näöüÄÖÜ\r\n" );
   //fflush( stdout );
 
+  for ( int i = 0; i < 25; i++ ) {
+    printf( "stdout: init=>console=>terminal=>framebuffer\r\n" );
+  }
+
   int e = printf( "stdout: init=>console=>terminal=>framebuffer" );
   fflush( stdout );
   int f = fprintf(
@@ -436,28 +388,18 @@ int main( int argc, char* argv[] ) {
   if ( 0 == forked_process ) {
     EARLY_STARTUP_PRINT( "Replacing fork with vfs image!\r\n" );
     // call for replace and handle error
-    _process_replace( vfs_image, "daemon:/vfs", NULL, NULL, vfs_size );
+    _process_replace( vfs_image, NULL, NULL );
     if ( errno ) {
       EARLY_STARTUP_PRINT( "Unable to replace process with image: %s\r\n", strerror( errno ) );
       return -1;
     }
   }
-  EARLY_STARTUP_PRINT( "Continuing with init startup!\r\n" );
-
-  // wait for vfs is available
-  EARLY_STARTUP_PRINT( "Waiting until vfs is up!\r\n" );
-  while( true ) {
-    // check for vfs is existing
-    _message_has_by_name( "daemon:/vfs" );
-    // continue on error
-    if ( errno ) {
-      continue;
-    }
-    // vfs is up, so end endless loop
-    break;
+  // handle unexpected vfs id returned
+  if ( VFS_DAEMON_ID != forked_process ) {
+    EARLY_STARTUP_PRINT( "Invalid process id for vfs daemon!\r\n" )
+    return -1;
   }
-
-  EARLY_STARTUP_PRINT( "Sending ramdisk files to vfs!\r\n" );
+  EARLY_STARTUP_PRINT( "Continuing with startup by sending ramdisk to vfs!\r\n" );
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
 
   // reset read offset
@@ -497,7 +439,7 @@ int main( int argc, char* argv[] ) {
     msg->info.st_blocks = ( msg->info.st_size / T_BLOCKSIZE )
       + ( msg->info.st_size % T_BLOCKSIZE ? 1 : 0 );
     // send add request
-    send_add_request( msg );
+    send_vfs_add_request( msg );
     // skip to next file
     if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
       EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
@@ -517,6 +459,7 @@ int main( int argc, char* argv[] ) {
   // handle ongoing init in forked process
   if ( 0 == forked_process ) {
     stage2();
+    return 1;
   }
 
   EARLY_STARTUP_PRINT( "Entering message loop!\r\n" );
@@ -572,7 +515,7 @@ int main( int argc, char* argv[] ) {
           // prepare response
           response->len = -EIO;
           // send response
-          _message_send_by_pid(
+          _message_send(
             sender,
             VFS_READ_RESPONSE,
             ( const char* )response,
@@ -618,7 +561,7 @@ int main( int argc, char* argv[] ) {
         // prepare response
         response->len = -EIO;
         // send response
-        _message_send_by_pid(
+        _message_send(
           sender,
           VFS_READ_RESPONSE,
           ( const char* )response,
@@ -656,7 +599,7 @@ int main( int argc, char* argv[] ) {
           // prepare response
           response->len = -EIO;
           // send response
-          _message_send_by_pid(
+          _message_send(
             sender,
             VFS_READ_RESPONSE,
             ( const char* )response,
@@ -671,7 +614,7 @@ int main( int argc, char* argv[] ) {
       // prepare read amount
       response->len = ( ssize_t )amount;
       // send response
-      _message_send_by_pid(
+      _message_send(
         sender,
         VFS_READ_RESPONSE,
         ( const char* )response,

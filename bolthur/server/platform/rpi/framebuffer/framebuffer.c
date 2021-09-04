@@ -83,7 +83,8 @@ bool framebuffer_init( void ) {
   mailbox_buffer[ idx++ ] = 0x00048004;
   mailbox_buffer[ idx++ ] = 8; // value buffer size (bytes)
   mailbox_buffer[ idx++ ] = 8; // request + value length (bytes)
-  mailbox_buffer[ idx++ ] = ( int32_t )physical_width * 2; // horizontal resolution
+  // FIXME: width and height multiplied by 2 for qemu framebuffer flipping
+  mailbox_buffer[ idx++ ] = ( int32_t )physical_width; // * 2; // horizontal resolution
   mailbox_buffer[ idx++ ] = ( int32_t )physical_height * 2; // vertical resolution
   // set depth
   mailbox_buffer[ idx++ ] = 0x00048005;
@@ -180,7 +181,7 @@ bool framebuffer_register_rpc( void ) {
  * @fn void framebuffer_flip(void)
  * @brief Framebuffer flip to back buffer
  */
-void framebuffer_flip( void ) {
+void framebuffer_flip( void ) {/*
   // default request for screen flip
   static int32_t buffer[] = { 0, 0, 0x00048009, 0x8, 0, 0, 0 };
   // handle switch
@@ -200,11 +201,9 @@ void framebuffer_flip( void ) {
     return;
   }
   // copy over screen into back buffer
-  memcpy(
-    ( uint32_t* )current_back,
-    ( uint32_t* )screen,
-    ( size_t )size / sizeof( uint32_t )
-  );
+  memcpy( current_back, screen, size );*/
+  // copy over back buffer into screen
+  memcpy( screen, current_back, size );
 }
 
 /**

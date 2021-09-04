@@ -184,7 +184,7 @@ void syscall_rpc_ret( void* context ) {
 
   // create response message
   size_t message_id = 0;
-  int err = message_send_by_pid(
+  int err = message_send(
     active->source->process->id,
     task_thread_current_thread->process->id,
     0, /// FIXME: ENSURE THAT THIS WON'T BREAL ANYTHING

@@ -63,9 +63,8 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
     DEBUG_OUTPUT( "fault_status = %#x\r\n", ( void* )virt_prefetch_status() )
     DUMP_REGISTER( cpu )
     if ( EVENT_ORIGIN_USER == origin ) {
-      DEBUG_OUTPUT( "process id: %d, name: %s\r\n",
-        task_thread_current_thread->process->id,
-        task_thread_current_thread->process->name )
+      DEBUG_OUTPUT( "process id: %d\r\n",
+        task_thread_current_thread->process->id )
     }
   #endif
 
