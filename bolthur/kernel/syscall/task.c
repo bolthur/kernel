@@ -118,12 +118,38 @@ void syscall_process_replace( void* context ) {
   const char** env = ( const char** )syscall_get_parameter( context, 2 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_replace( %#p, %#p, %#p )\r\n",
+    DEBUG_OUTPUT( "syscall_process_replace( %p, %p, %p )\r\n",
       addr, argv, env )
     DEBUG_OUTPUT(
       "task_thread_current_thread->current_context = %p\r\n",
       task_thread_current_thread->current_context )
   #endif
+  // get min and max by context
+  uintptr_t min = virt_get_context_min_address(
+    task_thread_current_thread->process->virtual_context
+  );
+  uintptr_t max = virt_get_context_max_address(
+    task_thread_current_thread->process->virtual_context
+  );
+  // validate memory first step
+  if (
+    ! addr
+    || ! ( ( uintptr_t )addr >= min && ( uintptr_t )addr <= max )
+    || ( argv && ! ( ( uintptr_t )argv >= min && ( uintptr_t )argv <= max ) )
+    || ( env &&  ! ( ( uintptr_t )env >= min && ( uintptr_t )env <= max ) )
+  ) {
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // get image size and validate address
+  size_t image_size = elf_image_size( ( uintptr_t )addr );
+  if (
+    0 == image_size
+    || ! syscall_validate_address( ( uintptr_t )addr, image_size )
+  ) {
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
   // replace process
   int result = task_process_replace(
     task_thread_current_thread->process,

@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
 #include <unistd.h>
@@ -39,6 +40,13 @@
 void syscall_rpc_acquire( void* context ) {
   char* identifier = ( char* )syscall_get_parameter( context, 0 );
   uintptr_t handler = ( uintptr_t )syscall_get_parameter( context, 1 );
+  // determine length with mapped check
+  size_t id_len = strlen_unsafe( identifier );
+  if ( ! id_len || ! syscall_validate_address( ( uintptr_t )identifier, id_len ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
+  // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "syscall_rpc_acquire( %s, %#"PRIxPTR" )\r\n",
@@ -65,6 +73,13 @@ void syscall_rpc_acquire( void* context ) {
 void syscall_rpc_release( void* context ) {
   char* identifier = ( char* )syscall_get_parameter( context, 0 );
   uintptr_t handler = ( uintptr_t )syscall_get_parameter( context, 1 );
+  // determine length with mapped check
+  size_t id_len = strlen_unsafe( identifier );
+  if ( ! id_len || ! syscall_validate_address( ( uintptr_t )identifier, id_len ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
+  // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "syscall_rpc_release( %s, %#"PRIxPTR" )\r\n",
@@ -92,22 +107,68 @@ void syscall_rpc_raise( void* context ) {
   char* identifier = ( char* )syscall_get_parameter( context, 0 );
   pid_t target = ( pid_t )syscall_get_parameter( context, 1 );
   void* data = ( void* )syscall_get_parameter( context, 2 );
-  size_t length = ( size_t )syscall_get_parameter( context, 3 );
+  size_t len = ( size_t )syscall_get_parameter( context, 3 );
+  // determine length with mapped check
+  size_t id_len = strlen_unsafe( identifier );
+  if ( ! id_len || ! syscall_validate_address( ( uintptr_t )identifier, id_len ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
+  // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "syscall_rpc_raise( %s, %d, %#p, %#x )\r\n",
-      identifier, target, data, length )
+      identifier, target, data, len )
   #endif
+  // validate addresses
+  if ( data && len && ! syscall_validate_address( ( uintptr_t )data, len ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid parameters received / not mapped!\r\n" )
+    #endif
+    // set return and exit
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // create data duplicate
+  char* dup = NULL;
+  if ( data && len ) {
+    dup = ( char* )malloc( sizeof( char ) * len );
+    if ( ! dup ) {
+      // debug output
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "duplicate allocate failed!\r\n" )
+      #endif
+      syscall_populate_error( context, ( size_t )-EINVAL );
+      return;
+    }
+    // copy from unsafe source
+    if ( ! memcpy_unsafe( dup, data, len ) ) {
+      // debug output
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "memcpy unsafe failed!\r\n" )
+      #endif
+      free( dup );
+      syscall_populate_error( context, ( size_t )-EINVAL );
+      return;
+    }
+  }
   // call rpc
   if ( ! rpc_raise(
     identifier,
     task_thread_current_thread,
     task_process_get_by_id( target ),
-    data,
-    length
+    dup,
+    len
   ) ) {
+    if ( dup ) {
+      free( dup );
+    }
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
+  }
+  if ( dup ) {
+    free( dup );
   }
 }
 
@@ -121,20 +182,65 @@ void syscall_rpc_raise_wait( void* context ) {
   char* identifier = ( char* )syscall_get_parameter( context, 0 );
   pid_t target = ( pid_t )syscall_get_parameter( context, 1 );
   void* data = ( void* )syscall_get_parameter( context, 2 );
-  size_t length = ( size_t )syscall_get_parameter( context, 3 );
+  size_t len = ( size_t )syscall_get_parameter( context, 3 );
+  // determine length with mapped check
+  size_t id_len = strlen_unsafe( identifier );
+  if ( ! id_len || ! syscall_validate_address( ( uintptr_t )identifier, id_len ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
+  // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "syscall_rpc_raise_wait( %s, %d, %#p, %#x )\r\n",
-      identifier, target, data, length )
+      identifier, target, data, len )
   #endif
+  // validate addresses
+  if ( data && len && ! syscall_validate_address( ( uintptr_t )data, len ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid parameters received / not mapped!\r\n" )
+    #endif
+    // set return and exit
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // create data duplicate
+  char* dup = NULL;
+  if ( data && len ) {
+    dup = ( char* )malloc( sizeof( char ) * len );
+    if ( ! dup ) {
+      // debug output
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "dup alloc failed %#x / %#x!\r\n",
+          len, sizeof( char ) * len )
+      #endif
+      syscall_populate_error( context, ( size_t )-EINVAL );
+      return;
+    }
+    // copy from unsafe source
+    if ( ! memcpy_unsafe( dup, data, len ) ) {
+      // debug output
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "memcpy unsafe failed!\r\n" )
+      #endif
+      free( dup );
+      syscall_populate_error( context, ( size_t )-EINVAL );
+      return;
+    }
+  }
   // call rpc
   rpc_backup_ptr_t rpc = rpc_raise(
     identifier,
     task_thread_current_thread,
     task_process_get_by_id( target ),
-    data,
-    length
+    dup,
+    len
   );
+  // free duplicate again
+  if ( dup ) {
+    free( dup );
+  }
   // handle error
   if ( ! rpc ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
@@ -161,10 +267,24 @@ void syscall_rpc_raise_wait( void* context ) {
  */
 void syscall_rpc_ret( void* context ) {
   void* data = ( void* )syscall_get_parameter( context, 0 );
-  size_t length = ( size_t )syscall_get_parameter( context, 1 );
+  size_t len = ( size_t )syscall_get_parameter( context, 1 );
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_rpc_ret( %#p, %#x )\r\n", data, length )
+    DEBUG_OUTPUT( "syscall_rpc_ret( %#p, %#x )\r\n", data, len )
   #endif
+  if ( ! data || 0 == len ) {
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // validate addresses
+  if ( ! syscall_validate_address( ( uintptr_t )data, len ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid parameters received / not mapped!\r\n" )
+    #endif
+    // set return and exit
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
   // get current active rpc
   rpc_backup_ptr_t active = rpc_get_active( task_thread_current_thread );
   if ( ! active ) {
@@ -181,18 +301,39 @@ void syscall_rpc_ret( void* context ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }
-
+  // create data duplicate
+  char* dup = ( char* )malloc( sizeof( char ) * len );
+  if ( ! dup ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "dup alloc failed!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // copy from unsafe source
+  if ( ! memcpy_unsafe( dup, data, len ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "memcpy unsafe failed!\r\n" )
+    #endif
+    free( dup );
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
   // create response message
   size_t message_id = 0;
   int err = message_send(
     active->source->process->id,
     task_thread_current_thread->process->id,
     0, /// FIXME: ENSURE THAT THIS WON'T BREAL ANYTHING
-    data,
-    length,
+    dup,
+    len,
     0, /// FIXME: ENSURE THAT THIS WON'T BREAL ANYTHING
     &message_id
   );
+  // free duplicate
+  free( dup );
   // handle error
   if ( err ) {
     syscall_populate_error( context, ( size_t )-err );
@@ -224,17 +365,16 @@ void syscall_rpc_ret( void* context ) {
 void syscall_rpc_get_data( void* context ) {
   // parameters
   char* data = ( char* )syscall_get_parameter( context, 0 );
-  size_t length = ( size_t )syscall_get_parameter( context, 1 );
+  size_t len = ( size_t )syscall_get_parameter( context, 1 );
   size_t message_id = ( size_t )syscall_get_parameter( context, 2 );
-
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_rpc_get_data( %#p, %#x, %d )\r\n",
-      data, length, message_id )
+      data, len, message_id )
   #endif
   // cache process
   task_process_ptr_t target_process = task_thread_current_thread->process;
   // handle error
-  if ( ! target_process || 0 == length ) {
+  if ( ! target_process || 0 == len || ! data ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Target process not found!\r\n" )
@@ -248,6 +388,16 @@ void syscall_rpc_get_data( void* context ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Target process has no queue!\r\n" )
     #endif
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // validate addresses
+  if ( ! syscall_validate_address( ( uintptr_t )data, len ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid parameters received / not mapped!\r\n" )
+    #endif
+    // set return and exit
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
@@ -273,20 +423,27 @@ void syscall_rpc_get_data( void* context ) {
     syscall_populate_error( context, ( size_t )-ENOMSG );
     return;
   }
-  // check for length mismatch
-  if ( found->length > length ) {
+  // check for len mismatch
+  if ( found->length > len ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
         "Not enough space for message existing ( %#zx - %#zx )!\r\n",
         found->length,
-        length );
+        len )
     #endif
     syscall_populate_error( context, ( size_t )-EMSGSIZE );
     return;
   }
   // copy over message content
-  memcpy( data, found->data, found->length );
+  if ( ! memcpy_unsafe( data, found->data, found->length ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Unsafe copy failed!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
   // remove list element
   list_remove_data(
     task_thread_current_thread->process->message_queue,
@@ -302,7 +459,6 @@ void syscall_rpc_get_data( void* context ) {
  */
 void syscall_rpc_get_data_size( void* context ) {
   size_t message_id = ( size_t )syscall_get_parameter( context, 0 );
-
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_rpc_get_data_size( %#x )\r\n", message_id )
   #endif

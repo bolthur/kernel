@@ -52,14 +52,31 @@ void syscall_mailbox_action( void* context ) {
     DEBUG_OUTPUT( "syscall_mailbox_action()\r\n" );
   #endif
   // get index
-  ptb_index = ( int32_t )syscall_get_parameter( context, 1 );
+  int32_t local_ptb_index = ( int32_t )syscall_get_parameter( context, 1 );
   int32_t* data_buffer = ( int32_t* )syscall_get_parameter( context, 0 );
+  // validate address
+  if (
+    ! data_buffer
+    || 0 >= local_ptb_index
+    || ! syscall_validate_address(
+      ( uintptr_t )data_buffer,
+      sizeof( int32_t ) * ( size_t )ptb_index
+    )
+  ) {
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
   // copy action data
-  memcpy(
+  if ( ! memcpy_unsafe(
     ( uint8_t* )ptb_buffer,
     ( uint8_t* )data_buffer,
-    ( size_t )ptb_index * sizeof( int32_t )
-  );
+    ( size_t )local_ptb_index * sizeof( int32_t )
+  ) ) {
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // overwrite ptb_index with local one
+  ptb_index = local_ptb_index;
   // get context
   virt_context_ptr_t virtual_context = task_thread_current_thread
     ->process
@@ -128,9 +145,14 @@ void syscall_mailbox_action( void* context ) {
     // get to next tag ( tag + size + value + buffer size )
     count += 3 + ( ( size_t )( ptb_buffer[ count + 1 ] >> 2 ) );
   }
-  memcpy(
+  // copy back mailbox result
+  if ( ! memcpy_unsafe(
     ( uint8_t* )data_buffer,
     ( uint8_t* )ptb_buffer,
     ( size_t )ptb_index * sizeof( int32_t )
-  );
+  ) ) {
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  syscall_populate_success( context, 0 );
 }

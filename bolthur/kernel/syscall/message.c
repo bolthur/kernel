@@ -84,12 +84,39 @@ void syscall_message_send( void* context ) {
       "syscall_message_send( %d, %#p, %zx )\r\n", pid, data, len )
     DEBUG_OUTPUT( "message_id = %d\r\n", message_id )
   #endif
-
+  // validate addresses
+  if ( ! syscall_validate_address( ( uintptr_t )data, len ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid parameters received / not mapped!\r\n" )
+    #endif
+    // set return and exit
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // allocate duplicate
+  char* dup = ( char* )malloc( sizeof( char ) * len );
+  if ( ! dup ) {
+    // set return and exit
+    syscall_populate_error( context, ( size_t )-ENOMEM );
+    return;
+  }
+  // copy over message content
+  if ( ! memcpy_unsafe( dup, data, sizeof( char ) * len ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Unsafe copy failed!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
   // send message by pid
   int err = message_send(
     pid, task_thread_current_thread->process->id,
-    type, data, len, sender_message_id, &message_id
+    type, dup, len, sender_message_id, &message_id
   );
+  // free duplicate again
+  free( dup );
   // handle error
   if ( err ) {
     // debug output
@@ -127,7 +154,6 @@ void syscall_message_receive( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_message_receive( %#"PRIxPTR", %zx )\r\n", target, len )
   #endif
-
   // handle error
   if ( ! task_thread_current_thread->process->message_queue ) {
     // debug output
@@ -143,6 +169,20 @@ void syscall_message_receive( void* context ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Invalid length or target passed!\r\n" )
+    #endif
+    // set return and exit
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // validate addresses
+  if (
+    ( pid && ! syscall_validate_address( ( uintptr_t )pid, sizeof( pid ) ) )
+    || ( mid && ! syscall_validate_address( ( uintptr_t )mid, sizeof( pid ) ) )
+    || ! syscall_validate_address( ( uintptr_t )target, len )
+  ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid parameters received / not mapped!\r\n" )
     #endif
     // set return and exit
     syscall_populate_error( context, ( size_t )-EINVAL );
@@ -168,13 +208,20 @@ void syscall_message_receive( void* context ) {
       DEBUG_OUTPUT(
         "Not enough space for message existing ( %#zx - %#zx )!\r\n",
         message_entry->length,
-        len );
+        len )
     #endif
     syscall_populate_error( context, ( size_t )-EMSGSIZE );
     return;
   }
   // copy over message content
-  memcpy( target, message_entry->data, message_entry->length );
+  if ( ! memcpy_unsafe( target, message_entry->data, message_entry->length ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Unsafe copy failed!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
   // copy pid if passed
   if ( pid ) {
     *pid = message_entry->sender;
@@ -269,6 +316,16 @@ void syscall_message_wait_for_response( void* context ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
+  // validate addresses
+  if ( ! syscall_validate_address( ( uintptr_t )target, len ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid parameters received / not mapped!\r\n" )
+    #endif
+    // set return and exit
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
   // loop through messages for a matching answer
   list_item_ptr_t item = NULL;
   message_entry_ptr_t found = NULL;
@@ -315,7 +372,14 @@ void syscall_message_wait_for_response( void* context ) {
     return;
   }
   // copy over message content
-  memcpy( target, found->data, found->length );
+  if ( ! memcpy_unsafe( target, found->data, found->length ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Unsafe copy failed!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
   // remove list element
   list_remove_data(
     task_thread_current_thread->process->message_queue,

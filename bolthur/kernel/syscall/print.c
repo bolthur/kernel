@@ -18,9 +18,10 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <errno.h>
 #include <syscall.h>
-#include <panic.h>
 
 /**
  * @fn void syscall_kernel_putc(void*)
@@ -41,14 +42,29 @@ void syscall_kernel_putc( void* context ) {
 void syscall_kernel_puts( void* context ) {
   // get parameter
   char* str = ( char* )syscall_get_parameter( context, 0 );
-  int len = ( int )syscall_get_parameter( context, 1 );
-  // handle errors
-  if ( ! str ) {
+  size_t len = ( size_t )syscall_get_parameter( context, 1 );
+  // handle invalid string ( NULL )
+  if ( ! str || ! syscall_validate_address( ( uintptr_t )str, len ) ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
+  // allocate space for duplicate and check for error
+  char* dup = ( char* )malloc( sizeof( char ) * ( len + 1 ) );
+  if ( ! dup ) {
+    syscall_populate_error( context, ( size_t )-ENOMEM );
+    return;
+  }
+  memset( dup, 0, sizeof( char ) * ( len + 1 ) );
+  // copy over
+  if ( ! memcpy_unsafe( dup, str, len ) ) {
+    free( dup );
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // print somewhere
+  int written = printf( "%.*s", len, dup );
+  // free dup and return written amount
+  free( dup );
   // print until end of string or len
-  syscall_populate_success(
-    context, ( size_t )printf( "%.*s", len, str )
-  );
+  syscall_populate_success( context, ( size_t )written );
 }

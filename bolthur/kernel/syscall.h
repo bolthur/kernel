@@ -71,6 +71,7 @@ bool syscall_init_platform( void );
 void syscall_populate_success( void*, size_t );
 void syscall_populate_error( void*, size_t );
 size_t syscall_get_parameter( void*, int32_t );
+bool syscall_validate_address( uintptr_t, size_t );
 
 void syscall_process_exit( void* );
 void syscall_process_id( void* );

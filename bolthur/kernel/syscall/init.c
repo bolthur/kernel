@@ -19,6 +19,9 @@
 
 #include <interrupt.h>
 #include <syscall.h>
+#include <mm/virt.h>
+#include <task/process.h>
+#include <task/thread.h>
 
 /**
  * @brief Initialize system calls
@@ -311,4 +314,20 @@ bool syscall_init( void ) {
     return false;
   }
   return true;
+}
+
+/**
+ * @fn bool syscall_validate_address(uintptr_t, size_t)
+ * @brief Function validates that address is user space address
+ *
+ * @param address
+ * @param len
+ * @return
+ */
+bool syscall_validate_address( uintptr_t address, size_t len ) {
+  return virt_is_mapped_in_context_range(
+    task_thread_current_thread->process->virtual_context,
+    address,
+    len
+  );
 }

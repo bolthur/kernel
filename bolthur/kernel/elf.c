@@ -334,10 +334,17 @@ uintptr_t elf_load( uintptr_t elf, task_process_ptr_t process ) {
  *
  * @param elf
  * @return
+ *
+ * @todo prepare for 64 bit
  */
 size_t elf_image_size( uintptr_t elf ) {
   // check header
-  if ( ! elf_check( elf ) ) {
+  if (
+    ! virt_is_mapped_range(
+      elf,
+      sizeof( Elf32_Ehdr )
+    ) || ! elf_check( elf )
+  ) {
     return 0;
   }
   // temporary max and size
@@ -350,6 +357,13 @@ size_t elf_image_size( uintptr_t elf ) {
     Elf32_Shdr* section_header = ( Elf32_Shdr* )(
       elf + header->e_shoff + header->e_shentsize * idx
     );
+    // check if mapped before access
+    if ( ! virt_is_mapped_range(
+      ( uintptr_t )section_header,
+      sizeof( Elf32_Shdr ) )
+    ) {
+      return 0;
+    }
     if ( section_header->sh_addr > max ) {
       max = section_header->sh_addr;
       sz = section_header->sh_size;

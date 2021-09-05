@@ -20,6 +20,7 @@
 #include <duplicate.h>
 #include <string.h>
 #include <stdlib.h>
+#include <mm/virt.h>
 
 /**
  * @fn char duplicate**(const char**)
@@ -27,21 +28,49 @@
  *
  * @param src
  * @return
- *
- * @todo Since this is some sort of unsafe copy it needs to be checked whether the area is mapped before copying it
  */
 char** duplicate( const char** src ) {
   char** dst = NULL;
   size_t len = 0;
   size_t count;
   size_t src_count = 0;
-  // determine source count
-  while ( src && src[ src_count ] ) {
+  // handle no source
+  if ( ! src ) {
+    // allocate buffer
+    dst = ( char** )malloc( ( src_count + 1 ) * sizeof( char* ) + len );
+    if ( ! dst ) {
+      return NULL;
+    }
+    // fill in termination only
+    dst[ src_count ] = NULL;
+    // return
+    return dst;
+  }
+  // determine row count
+  while ( true ) {
+    // return nothing if not mapped
+    if ( ! virt_is_mapped_range(
+      ( uintptr_t )&src[ src_count ],
+      sizeof( char* )
+    ) ) {
+      return NULL;
+    }
+    // break if NULL termination reached
+    if ( ! src[ src_count ] ) {
+      break;
+    }
+    // increment line count
     src_count++;
   }
   // Sum up all strings
   for ( count = 0; count < src_count; count++ ) {
-    len += strlen( src[ count ] ) + 1;
+    // unsafe strlen with check for error
+    size_t tmp_len = strlen_unsafe( src[ count ] );
+    if ( ! tmp_len ) {
+      return NULL;
+    }
+    // increase total length
+    len += tmp_len + 1;
   }
   // allocate new buffer
   dst = ( char** )malloc( ( src_count + 1 ) * sizeof( char* ) + len );
@@ -54,8 +83,17 @@ char** duplicate( const char** src ) {
     // set pointer to string
     dst[ count ] =
       &( ( ( char* )dst )[ ( src_count + 1 ) * sizeof( char* ) + len ] );
-    // copy string content
-    strcpy( dst[ count ], src[ count ] );
+    // get length from unsafe
+    size_t tmp_len = strlen_unsafe( src[ count ] );
+    if ( 0 == tmp_len ) {
+      free( dst );
+      return NULL;
+    }
+    // copy string content with unsafe copy
+    if ( ! memcpy_unsafe( dst[ count ], src[ count ], tmp_len ) ) {
+      free( dst );
+      return NULL;
+    }
     // increase length for next offset
     len += strlen( src[ count ] ) + 1;
   }

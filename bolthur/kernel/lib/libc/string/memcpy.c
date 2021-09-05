@@ -20,14 +20,16 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <string.h>
+#include <panic.h>
+#include <mm/virt.h>
 
 /**
- * @brief Copy memory
+ * @fn void memcpy*(void* restrict, const void* restrict, size_t)
+ * @brief memcpy implementation
  *
  * @param dst
  * @param src
  * @param size
- * @return void*
  */
 void* memcpy( void* restrict dst, const void* restrict src, size_t size ) {
   uint8_t* _dst = ( uint8_t * )dst;
@@ -38,4 +40,24 @@ void* memcpy( void* restrict dst, const void* restrict src, size_t size ) {
   }
 
   return dst;
+}
+
+/**
+ * @fn void memcpy_unsafe*(void* restrict, const void* restrict, size_t)
+ * @brief memcpy unsafe implementation with additional checks to prevent issues by malformed addresses
+ *
+ * @param dst
+ * @param src
+ * @param size
+ */
+void* memcpy_unsafe( void* restrict dst, const void* restrict src, size_t size ) {
+  // check if ranges are mapped
+  if (
+    ! virt_is_mapped_range( ( uintptr_t )dst, size )
+    || ! virt_is_mapped_range( ( uintptr_t )src, size )
+  ) {
+    return NULL;
+  }
+  // copy with normal memcpy
+  return memcpy( dst, src, size );
 }

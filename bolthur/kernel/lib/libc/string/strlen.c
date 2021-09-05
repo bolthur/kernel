@@ -17,14 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <mm/virt.h>
+#include <debug/debug.h>
 
 /**
+ * @fn size_t strlen(const char*)
  * @brief Get string length
  *
  * @param str
- * @return size_t
+ * @return
  */
 size_t strlen( const char* str ) {
   size_t len = 0;
@@ -33,5 +37,35 @@ size_t strlen( const char* str ) {
     len++;
   }
 
+  return len;
+}
+
+/**
+ * @fn size_t strlen_unsafe(const char*)
+ * @brief Unsafe strlen
+ *
+ * @param str
+ * @return
+ */
+size_t strlen_unsafe( const char* str ) {
+  size_t len = 0;
+  // handle null
+  if ( ! str ) {
+    return len;
+  }
+  // loop as long as not termination and check for mapping before
+  while( true ) {
+    // if something is strange, return no length
+    if ( ! virt_is_mapped_range( ( uintptr_t )&str[ len ], sizeof( char ) ) ) {
+      return 0;
+    }
+    // handle termination
+    if ( ! str[ len ] ) {
+      break;
+    }
+    // increment
+    len++;
+  }
+  // return found length
   return len;
 }
