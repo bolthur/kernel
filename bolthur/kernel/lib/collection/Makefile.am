@@ -15,6 +15,7 @@ libcollection_la_SOURCES = \
   list/construct.c \
   list/destruct.c \
   list/empty.c \
+  list/insert.c \
   list/lookup.c \
   list/node_create.c \
   list/peek.c \

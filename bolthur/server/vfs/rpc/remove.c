@@ -22,55 +22,57 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
-#include "../msg.h"
+#include "../rpc.h"
 #include "../vfs.h"
 #include "../handle.h"
 
 /**
- * @brief handle incoming close message
+ * @fn void rpc_handle_remove(pid_t, size_t)
+ * @brief handle remove request
+ *
+ * @param origin
+ * @param data_info
  */
-void msg_handle_close( void ) {
-  pid_t sender;
-  size_t message_id;
-  vfs_close_request_ptr_t request = ( vfs_close_request_ptr_t )malloc(
-    sizeof( vfs_close_request_t ) );
+void rpc_handle_remove( __unused pid_t origin, size_t data_info ) {
+  vfs_remove_request_ptr_t request = ( vfs_remove_request_ptr_t )malloc(
+    sizeof( vfs_remove_request_t ) );
   if ( ! request ) {
     return;
   }
-  vfs_close_response_ptr_t response = ( vfs_close_response_ptr_t )malloc(
-    sizeof( vfs_close_response_t) );
+  vfs_remove_response_ptr_t response = ( vfs_remove_response_ptr_t )malloc(
+    sizeof( vfs_remove_response_t ) );
   if ( ! response ) {
     free( request );
     return;
   }
   // clear variables
-  memset( request, 0, sizeof( vfs_close_request_t ) );
-  memset( response, 0, sizeof( vfs_close_response_t ) );
-  // get message
-  _message_receive(
-    ( char* )request,
-    sizeof( vfs_close_request_t ),
-    &sender,
-    &message_id
-  );
-  // handle error
-  if ( errno ) {
-    // free message structures
+  memset( request, 0, sizeof( vfs_remove_request_t ) );
+  memset( response, 0, sizeof( vfs_remove_response_t ) );
+  // handle no data
+  if( ! data_info ) {
+    response->state = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_remove_response_t ) );
     free( request );
     free( response );
     return;
   }
-  // destroy and push to state
-  response->state = handle_destory( sender, request->handle );
+  // fetch rpc data
+  _rpc_get_data( request, sizeof( vfs_remove_request_t ), data_info );
+  // handle error
+  if ( errno ) {
+    response->state = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_remove_response_t ) );
+    free( request );
+    free( response );
+    return;
+  }
+  // debug output
+  EARLY_STARTUP_PRINT( "HANDLE REMOVE NOT YET IMPLEMENTED!\r\n" )
+  // prepare response
+  response->state = -ENOSYS;
   // send response
-  _message_send(
-    sender,
-    VFS_OPEN_RESPONSE,
-    ( const char* )response,
-    sizeof( vfs_close_response_t ),
-    message_id
-  );
-  // free message structures
+  _rpc_ret( response, sizeof( vfs_remove_response_t ) );
+  // free stuff
   free( request );
   free( response );
 }

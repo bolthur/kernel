@@ -60,6 +60,102 @@ static void console_cleanup( const list_item_ptr_t a ) {
 }
 
 /**
+ * @fn void rpc_handle_write(pid_t, size_t)
+ * @brief rpc callback to handle write access
+ *
+ * @param origin
+ * @param data_info
+ */
+static void rpc_handle_write( __unused pid_t origin, size_t data_info ) {
+  // allocate space
+  vfs_write_request_ptr_t request = ( vfs_write_request_ptr_t )malloc(
+    sizeof( vfs_write_request_t ) );
+  if ( ! request ) {
+    return;
+  }
+  vfs_write_response_ptr_t response = ( vfs_write_response_ptr_t )malloc(
+    sizeof( vfs_write_response_t ) );
+  if ( ! response ) {
+    free( request );
+    return;
+  }
+  // prepare
+  memset( request, 0, sizeof( vfs_write_request_t ) );
+  memset( response, 0, sizeof( vfs_write_response_t ) );
+  // handle no data
+  if( ! data_info ) {
+    response->len = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_write_response_t ) );
+    free( request );
+    free( response );
+    return;
+  }
+  // fetch rpc data
+  _rpc_get_data( request, sizeof( vfs_write_request_t ), data_info );
+  // handle error
+  if ( errno ) {
+    response->len = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_write_response_t ) );
+    free( request );
+    free( response );
+    return;
+  }
+  // get active console
+  console_ptr_t console = console_get_active();
+  if ( ! console ) {
+    response->len = -EIO;
+    // return response
+    _rpc_ret( response, sizeof( vfs_write_response_t ) );
+    // free stuff
+    free( request );
+    free( response );
+    return;
+  }
+  // get rpc to raise
+  char* rpc = 0 == strcmp( "/dev/stdout", request->file_path )
+    ? console->out
+    : console->err;
+  // build terminal command
+  terminal_command_write_ptr_t terminal = malloc( sizeof( terminal_command_write_t ) );
+  if ( ! terminal ) {
+    response->len = -EIO;
+    // return response
+    _rpc_ret( response, sizeof( vfs_write_response_t ) );
+    // free stuff
+    free( request );
+    free( response );
+    return;
+  }
+  memset( terminal, 0, sizeof( terminal_command_write_t ) );
+  terminal->len = request->len;
+  memcpy( terminal->data, request->data, request->len );
+  strncpy( terminal->terminal, console->path, PATH_MAX );
+  // raise without wait for return :)
+  _rpc_raise(
+    rpc,
+    console->handler,
+    terminal,
+    sizeof( terminal_command_write_t )
+  );
+  if ( errno ) {
+    response->len = -EIO;
+    // return response
+    _rpc_ret( response, sizeof( vfs_write_response_t ) );
+    // free stuff
+    free( request );
+    free( response );
+    return;
+  }
+  // prepare return
+  response->len = ( ssize_t )strlen( request->data );
+  // return response
+  _rpc_ret( response, sizeof( vfs_write_response_t ) );
+  // free stuff
+  free( request );
+  free( response );
+}
+
+/**
  * @brief main entry function
  *
  * @param argc
@@ -74,6 +170,14 @@ int main( __unused int argc, __unused char* argv[] ) {
   }
   // cache current pid
   pid = getpid();
+
+  // set handler
+  _rpc_acquire( RPC_VFS_WRITE_OPERATION, ( uintptr_t )rpc_handle_write );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
+    return -1;
+  }
+  // FIXME: SET READ HANDLER FOR STDIN
 
   console_list = list_construct( console_lookup, console_cleanup );
   if ( ! console_list ) {
@@ -127,126 +231,8 @@ int main( __unused int argc, __unused char* argv[] ) {
   // free again
   free( msg );
 
-  // endless loop
-  while ( true ) {
-    // get message type
-    vfs_message_type_t type = _message_receive_type();
-    // skip on error / no message
-    if ( errno || ! type ) {
-      continue;
-    }
-    // possible messages to handle
-    if ( VFS_WRITE_REQUEST == type ) {
-      // allocate space
-      vfs_write_request_ptr_t request = ( vfs_write_request_ptr_t )malloc(
-        sizeof( vfs_write_request_t ) );
-      if ( ! request ) {
-        continue;
-      }
-      vfs_write_response_ptr_t response = ( vfs_write_response_ptr_t )malloc(
-        sizeof( vfs_write_response_t ) );
-      if ( ! response ) {
-        free( request );
-        continue;
-      }
-      // prepare
-      pid_t sender = 0;
-      size_t message_id = 0;
-      memset( request, 0, sizeof( vfs_write_request_t ) );
-      memset( response, 0, sizeof( vfs_write_response_t ) );
-      // get message
-      _message_receive(
-        ( char* )request,
-        sizeof( vfs_write_request_t ),
-        &sender,
-        &message_id
-      );
-      // handle error
-      if ( errno ) {
-        free( request );
-        free( response );
-        continue;
-      }
-      // get active console
-      console_ptr_t console = console_get_active();
-      if ( ! console ) {
-        response->len = -EIO;
-        // send response
-        _message_send(
-          sender,
-          VFS_WRITE_RESPONSE,
-          ( const char* )response,
-          sizeof( vfs_write_response_t ),
-          message_id
-        );
-        // free stuff
-        free( request );
-        free( response );
-        continue;
-      }
-      // get rpc to raise
-      char* rpc = 0 == strcmp( "/dev/stdout", request->file_path )
-        ? console->out
-        : console->err;
-      // build terminal command
-      terminal_command_write_ptr_t terminal = malloc( sizeof( terminal_command_write_t ) );
-      if ( ! terminal ) {
-        response->len = -EIO;
-        // send response
-        _message_send(
-          sender,
-          VFS_WRITE_RESPONSE,
-          ( const char* )response,
-          sizeof( vfs_write_response_t ),
-          message_id
-        );
-        // free stuff
-        free( request );
-        free( response );
-        continue;
-      }
-      memset( terminal, 0, sizeof( terminal_command_write_t ) );
-      terminal->len = request->len;
-      memcpy( terminal->data, request->data, request->len );
-      strncpy( terminal->terminal, console->path, PATH_MAX );
-      // raise without wait for return :)
-      _rpc_raise(
-        rpc,
-        console->handler,
-        terminal,
-        sizeof( terminal_command_write_t )
-      );
-      if ( errno ) {
-        response->len = -EIO;
-        // send response
-        _message_send(
-          sender,
-          VFS_WRITE_RESPONSE,
-          ( const char* )response,
-          sizeof( vfs_write_response_t ),
-          message_id
-        );
-        // free stuff
-        free( request );
-        free( response );
-        continue;
-      }
-      // prepare return
-      response->len = ( ssize_t )strlen( request->data );
-      // send response
-      _message_send(
-        sender,
-        VFS_WRITE_RESPONSE,
-        ( const char* )response,
-        sizeof( vfs_write_response_t ),
-        message_id
-      );
-      // free stuff
-      free( request );
-      free( response );
-    } else if ( VFS_READ_REQUEST == type ) {
-      /// FIXME: ADD
-    }
+  while( true ) {
+    _rpc_wait_for_call();
   }
   // return exit code 0
   return 0;

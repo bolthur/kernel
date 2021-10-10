@@ -21,6 +21,20 @@
 #include <collection/list.h>
 
 /**
+ * @brief Default lookup if not passed during creation
+ *
+ * @param a
+ * @param b
+ * @return int32_t
+ */
+int32_t list_default_lookup(
+  const list_item_ptr_t a,
+  const void* b
+) {
+  return a->data == b ? 0 : 1;
+}
+
+/**
  * @brief Search a list item by data
  *
  * @param list list to lookup

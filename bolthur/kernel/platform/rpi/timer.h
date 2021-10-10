@@ -17,27 +17,26 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/bolthur.h>
+#if ! defined( _PLATFORM_RPI_TIMER_H )
+#define _PLATFORM_RPI_TIMER_H
 
-#if !defined( _MSG_H )
-#define _MSG_H
+// free running counter incrementing at 1 MHz => Increments each microsecond
+#define TIMER_FREQUENCY_HZ 1000000
 
-typedef void ( *msg_callback_t )( void );
-struct msg_command_handler {
-  vfs_message_type_t type;
-  msg_callback_t handler;
-};
-typedef struct msg_command_handler msg_command_handler_t;
-typedef struct msg_command_handler *msg_command_handler_ptr_t;
+// interrupts per second
+#define TIMER_INTERRUPT_PER_SECOND 50
 
-void msg_dispatch( vfs_message_type_t );
-void msg_handle_add( void );
-void msg_handle_remove( void );
-void msg_handle_open( void );
-void msg_handle_close( void );
-void msg_handle_read( void );
-void msg_handle_write( void );
-void msg_handle_seek( void );
-void msg_handle_stat( void );
+// Timer match bits
+#define SYSTEM_TIMER_MATCH_0 ( 1 << 0 )
+#define SYSTEM_TIMER_MATCH_1 ( 1 << 1 )
+#define SYSTEM_TIMER_MATCH_2 ( 1 << 2 )
+#define SYSTEM_TIMER_MATCH_3 ( 1 << 3 )
+
+// timer interrupts
+#define SYSTEM_TIMER_0_INTERRUPT ( 1 << 0 )
+#define SYSTEM_TIMER_1_INTERRUPT ( 1 << 1 )
+#define SYSTEM_TIMER_2_INTERRUPT ( 1 << 2 )
+#define SYSTEM_TIMER_3_INTERRUPT ( 1 << 3 )
+
 
 #endif

@@ -22,20 +22,22 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
-#include "../msg.h"
+#include "../rpc.h"
 #include "../vfs.h"
 #include "../handle.h"
 
 /**
- * @brief handle incoming add message
+ * @fn void rpc_handle_add(pid_t, size_t)
+ * @brief handle add request
+ *
+ * @param origin
+ * @param data_info
  *
  * @todo add handle of variable parts in path
  * @todo handle invalid link targets somehow
  * @todo add handle for existing path
  */
-void msg_handle_add( void ) {
-  pid_t sender;
-  size_t message_id;
+void rpc_handle_add( pid_t origin, size_t data_info ) {
   char* str;
   vfs_add_request_ptr_t request = ( vfs_add_request_ptr_t )malloc(
     sizeof( vfs_add_request_t ) );
@@ -48,21 +50,23 @@ void msg_handle_add( void ) {
     free( request );
     return;
   }
-
   // clear variables
   memset( request, 0, sizeof( vfs_add_request_t ) );
   memset( response, 0, sizeof( vfs_add_response_t ) );
-
-  // get message
-  _message_receive(
-    ( char* )request,
-    sizeof( vfs_add_request_t ),
-    &sender,
-    &message_id
-  );
+  // handle no data
+  if( ! data_info ) {
+    response->status = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_add_response_t ) );
+    free( request );
+    free( response );
+    return;
+  }
+  // fetch rpc data
+  _rpc_get_data( request, sizeof( vfs_add_request_t ), data_info );
   // handle error
   if ( errno ) {
-    // free message structures
+    response->status = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_add_response_t ) );
     free( request );
     free( response );
     return;
@@ -75,16 +79,10 @@ void msg_handle_add( void ) {
       "Node \"%s\" already existing!\r\n",
       request->file_path )
     // prepare response
-    response->status = VFS_MESSAGE_ADD_ALREADY_EXIST;
+    response->status = VFS_ADD_ALREADY_EXIST;
     response->handling_process = node->pid;
-    // send response
-    _message_send(
-      sender,
-      VFS_ADD_RESPONSE,
-      ( const char* )response,
-      sizeof( vfs_add_response_t ),
-      message_id
-    );
+    // return response
+    _rpc_ret( response, sizeof( vfs_add_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -101,15 +99,9 @@ void msg_handle_add( void ) {
       str, request->file_path )
     free( str );
     // prepare response
-    response->status = VFS_MESSAGE_ADD_ERROR;
-    // send response
-    _message_send(
-      sender,
-      VFS_ADD_RESPONSE,
-      ( const char* )response,
-      sizeof( vfs_add_response_t ),
-      message_id
-    );
+    response->status = VFS_ADD_ERROR;
+    // return response
+    _rpc_ret( response, sizeof( vfs_add_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -126,15 +118,9 @@ void msg_handle_add( void ) {
     if ( 0 == strlen( request->linked_path ) ) {
       free( str );
       // prepare response
-      response->status = VFS_MESSAGE_ADD_ERROR;
-      // send response
-      _message_send(
-        sender,
-        VFS_ADD_RESPONSE,
-        ( const char* )response,
-        sizeof( vfs_add_response_t ),
-        message_id
-      );
+      response->status = VFS_ADD_ERROR;
+      // return response
+      _rpc_ret( response, sizeof( vfs_add_response_t ) );
       // free message structures
       free( request );
       free( response );
@@ -147,15 +133,9 @@ void msg_handle_add( void ) {
     if ( ! target ) {
       free( str );
       // prepare response
-      response->status = VFS_MESSAGE_ADD_ERROR;
-      // send response
-      _message_send(
-        sender,
-        VFS_ADD_RESPONSE,
-        ( const char* )response,
-        sizeof( vfs_add_response_t ),
-        message_id
-      );
+      response->status = VFS_ADD_ERROR;
+      // return response
+      _rpc_ret( response, sizeof( vfs_add_response_t ) );
       // free message structures
       free( request );
       free( response );
@@ -164,7 +144,7 @@ void msg_handle_add( void ) {
     }
   }
   // add basename to path
-  if ( ! vfs_add_path( node, sender, str, target, &request->info ) ) {
+  if ( ! vfs_add_path( node, origin, str, target, &request->info ) ) {
     // debug output
     EARLY_STARTUP_PRINT( "Error: Couldn't add \"%s\"\r\n", request->file_path )
     free( str );
@@ -172,15 +152,9 @@ void msg_handle_add( void ) {
       free( target );
     }
     // prepare response
-    response->status = VFS_MESSAGE_ADD_ERROR;
-    // send response
-    _message_send(
-      sender,
-      VFS_ADD_RESPONSE,
-      ( const char* )response,
-      sizeof( vfs_add_response_t ),
-      message_id
-    );
+    response->status = VFS_ADD_ERROR;
+    // return response
+    _rpc_ret( response, sizeof( vfs_add_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -188,25 +162,19 @@ void msg_handle_add( void ) {
     return;
   }
   // debug output
-  /*EARLY_STARTUP_PRINT( "-------->VFS DEBUG_DUMP<--------\r\n" )
-  vfs_dump( NULL, NULL );*/
+  //EARLY_STARTUP_PRINT( "-------->VFS DEBUG_DUMP<--------\r\n" )
+  //vfs_dump( NULL, NULL );
   free( str );
   if ( target ) {
     free( target );
   }
   // prepare response
-  response->status = VFS_MESSAGE_ADD_SUCCESS;
-  response->handling_process = sender;
+  response->status = VFS_ADD_SUCCESS;
+  response->handling_process = origin;
   /*EARLY_STARTUP_PRINT( "response->status = %d\r\n", response->status )
   EARLY_STARTUP_PRINT( "response->handling_process = %d\r\n", response->handling_process )*/
-  // send response
-  _message_send(
-    sender,
-    VFS_ADD_RESPONSE,
-    ( const char* )response,
-    sizeof( vfs_add_response_t ),
-    message_id
-  );
+  // return response
+  _rpc_ret( response, sizeof( vfs_add_response_t ) );
   // free message structures
   free( request );
   free( response );

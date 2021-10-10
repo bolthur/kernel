@@ -152,8 +152,6 @@ noreturn void kernel_main( void ) {
   assert( init_entry )
   // add thread
   assert( task_thread_create( init_entry, proc, 0 ) );
-  // set to ready and kick-start user mode init
-  proc->state = TASK_PROCESS_STATE_READY;
   // further init process preparation
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] prepare ...\r\n" )
   assert( task_process_prepare_init( proc ) )

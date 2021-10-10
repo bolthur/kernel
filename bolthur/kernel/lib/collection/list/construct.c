@@ -23,20 +23,6 @@
 #include <collection/list.h>
 
 /**
- * @brief Default lookup if not passed during creation
- *
- * @param a
- * @param b
- * @return int32_t
- */
-int32_t list_default_lookup(
-  const list_item_ptr_t a,
-  const void* b
-) {
-  return a->data == b ? 0 : 1;
-}
-
-/**
  * @brief Default cleanup if not passed during creation
  *
  * @param a
@@ -57,7 +43,8 @@ void list_default_cleanup(
  */
 list_manager_ptr_t list_construct(
   list_lookup_func_t lookup,
-  list_cleanup_func_t cleanup
+  list_cleanup_func_t cleanup,
+  list_insert_func_t insert
 ) {
   list_manager_ptr_t list;
 
@@ -73,17 +60,20 @@ list_manager_ptr_t list_construct(
   // preset elements
   list->first = NULL;
   list->last = NULL;
+  list->cleanup = list_default_cleanup;
+  list->lookup = list_default_lookup;
+  list->insert = list_default_insert;
   // lookup function
-  if( lookup ) {
+  if ( lookup ) {
     list->lookup = lookup;
-  } else {
-    list->lookup = list_default_lookup;
   }
   // cleanup function
-  if( cleanup ) {
+  if ( cleanup ) {
     list->cleanup = cleanup;
-  } else {
-    list->cleanup = list_default_cleanup;
+  }
+  // insert function
+  if ( insert ) {
+    list->insert = insert;
   }
 
   // return created list

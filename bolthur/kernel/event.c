@@ -94,7 +94,7 @@ bool event_init( void ) {
   }
 
   // create queue
-  event->queue_kernel = list_construct( NULL, NULL );
+  event->queue_kernel = list_construct( NULL, NULL, NULL );
   // check allocation
   if ( ! event->queue_kernel ) {
     free( event->tree );
@@ -102,7 +102,7 @@ bool event_init( void ) {
     return false;
   }
 
-  event->queue_user = list_construct( NULL, NULL );
+  event->queue_user = list_construct( NULL, NULL, NULL );
   // check allocation
   if ( ! event->queue_user ) {
     free( event->tree );
@@ -159,12 +159,12 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
     #endif
     // populate block
     block->type = type;
-    block->handler = list_construct( NULL, NULL );
+    block->handler = list_construct( NULL, NULL, NULL );
     if ( ! block->handler ) {
       free( block );
       return false;
     }
-    block->post = list_construct( NULL, NULL );
+    block->post = list_construct( NULL, NULL, NULL );
     if ( ! block->post ) {
       free( block->handler );
       free( block );

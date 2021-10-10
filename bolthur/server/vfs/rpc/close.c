@@ -22,60 +22,56 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
-#include "../msg.h"
+#include "../rpc.h"
 #include "../vfs.h"
 #include "../handle.h"
 
 /**
- * @brief handle incoming remove message
+ * @fn void rpc_handle_close(pid_t, size_t)
+ * @brief handle close request
+ *
+ * @param origin
+ * @param data_info
  */
-void msg_handle_remove( void ) {
-  pid_t sender;
-  size_t message_id;
-  vfs_remove_request_ptr_t request = ( vfs_remove_request_ptr_t )malloc(
-    sizeof( vfs_remove_request_t ) );
+void rpc_handle_close( pid_t origin, size_t data_info ) {
+  vfs_close_request_ptr_t request = ( vfs_close_request_ptr_t )malloc(
+    sizeof( vfs_close_request_t ) );
   if ( ! request ) {
     return;
   }
-  vfs_remove_response_ptr_t response = ( vfs_remove_response_ptr_t )malloc(
-    sizeof( vfs_remove_response_t ) );
+  vfs_close_response_ptr_t response = ( vfs_close_response_ptr_t )malloc(
+    sizeof( vfs_close_response_t) );
   if ( ! response ) {
     free( request );
     return;
   }
-
   // clear variables
-  memset( request, 0, sizeof( vfs_remove_request_t ) );
-  memset( response, 0, sizeof( vfs_remove_response_t ) );
-
-  // get message
-  _message_receive(
-    ( char* )request,
-    sizeof( vfs_remove_request_t ),
-    &sender,
-    &message_id
-  );
-  // handle error
-  if ( errno ) {
-    // free stuff
+  memset( request, 0, sizeof( vfs_close_request_t ) );
+  memset( response, 0, sizeof( vfs_close_response_t ) );
+  // handle no data
+  if( ! data_info ) {
+    response->state = -EINVAL;
+    _rpc_ret( response, sizeof( response ) );
     free( request );
     free( response );
     return;
   }
 
-  // debug output
-  EARLY_STARTUP_PRINT( "HANDLE REMOVE NOT YET IMPLEMENTED!\r\n" )
-  // prepare response
-  response->state = -ENOSYS;
-  // send response
-  _message_send(
-    sender,
-    VFS_REMOVE_RESPONSE,
-    ( const char* )response,
-    sizeof( vfs_remove_response_t ),
-    message_id
-  );
-  // free stuff
+  // fetch rpc data
+  _rpc_get_data( request, sizeof( vfs_close_request_t ), data_info );
+  // handle error
+  if ( errno ) {
+    response->state = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_close_response_t ) );
+    free( request );
+    free( response );
+    return;
+  }
+  // destroy and push to state
+  response->state = handle_destory( origin, request->handle );
+  // return response
+  _rpc_ret( response, sizeof( vfs_close_response_t ) );
+  // free message structures
   free( request );
   free( response );
 }

@@ -66,41 +66,6 @@ bool list_push_front( list_manager_ptr_t list, void* data ) {
  * @brief Method to push node with data into list
  *
  * @param list list to use
- * @param node item to push
- * @return true
- * @return false
- */
-bool list_push_front_node( list_manager_ptr_t list, list_item_ptr_t node ) {
-  list_item_ptr_t first;
-
-  // handle invalid parameter
-  if ( ! list || ! node ) {
-    return false;
-  }
-  // set list head
-  first = list->first;
-
-  // set next to first
-  node->next = first;
-  // set previous for first element
-  if ( first ) {
-    first->previous = node;
-  }
-
-  // overwrite first element within list pointer
-  list->first = node;
-  // set last element if NULL
-  if ( ! list->last ) {
-    list->last = list->first;
-  }
-
-  return true;
-}
-
-/**
- * @brief Method to push node with data into list
- *
- * @param list list to use
  * @param data data to push into list
  * @return true
  * @return false
@@ -122,41 +87,6 @@ bool list_push_back( list_manager_ptr_t list, void* data ) {
   if ( ! node ) {
     return false;
   }
-
-  // set previous to last
-  node->previous = last;
-  // set next for last element
-  if ( last ) {
-    last->next = node;
-  }
-
-  // overwrite last element within list pointer
-  list->last = node;
-  // set first element if NULL
-  if ( ! list->first ) {
-    list->first = list->last;
-  }
-
-  return true;
-}
-
-/**
- * @brief Method to push node with data into list
- *
- * @param list list to use
- * @param node node to push into list
- * @return true
- * @return false
- */
-bool list_push_back_node( list_manager_ptr_t list, list_item_ptr_t node ) {
-  list_item_ptr_t last;
-  // handle invalid parameter
-  if ( ! list || ! node ) {
-    return false;
-  }
-
-  // set list head
-  last = list->last;
 
   // set previous to last
   node->previous = last;

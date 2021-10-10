@@ -122,7 +122,49 @@ static void rpc_queue_cleanup( const list_item_ptr_t a ) {
  * @return
  */
 bool rpc_init( void ) {
-  rpc_list = list_construct( rpc_container_lookup, rpc_container_cleanup );
+  rpc_list = list_construct( rpc_container_lookup, rpc_container_cleanup, NULL );
+  return true;
+}
+
+/**
+ * @fn bool rpc_proc_bound(char*, task_process_ptr_t)
+ * @brief Helper to check if handler already bound
+ *
+ * @param identifier
+ * @param proc
+ * @return
+ */
+bool rpc_proc_bound(
+  char* identifier,
+  task_process_ptr_t proc
+) {
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "rpc_proc_bound( %s, %#p )\r\n", identifier, proc )
+  #endif
+  // get container
+  list_item_ptr_t container_item = list_lookup_data( rpc_list, identifier );
+  // add if not existing
+  if ( ! container_item ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "No container found for identifier %s\r\n", identifier )
+    #endif
+    // skip if no such container is existing
+    return false;
+  }
+  // container
+  rpc_container_ptr_t container = container_item->data;
+  // check for existing process mapping
+  list_item_ptr_t proc_item = list_lookup_data( container->handler, proc );
+  if ( ! proc_item ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "No handler bound for target %d\r\n", target->id )
+    #endif
+    // skip if nothing is there
+    return false;
+  }
   return true;
 }
 
@@ -157,7 +199,11 @@ bool rpc_register_handler(
     }
     strcpy( container->identifier, identifier );
     // construct list
-    container->handler = list_construct( rpc_entry_lookup, rpc_entry_cleanup );
+    container->handler = list_construct(
+      rpc_entry_lookup,
+      rpc_entry_cleanup,
+      NULL
+    );
     if ( ! container->handler ) {
       free( container->identifier );
       free( container );
@@ -202,7 +248,7 @@ bool rpc_register_handler(
   entry->handler = handler;
   entry->proc = proc;
   // generate queue
-  entry->queue = list_construct( NULL, rpc_queue_cleanup );
+  entry->queue = list_construct( NULL, rpc_queue_cleanup, NULL );
   if ( ! entry->queue ) {
     free( entry );
     return false;
@@ -255,7 +301,7 @@ bool rpc_unregister_handler(
 }
 
 /**
- * @fn rpc_backup_ptr_t rpc_raise(char*, task_thread_ptr_t, task_process_ptr_t, void*, size_t)
+ * @fn rpc_backup_ptr_t rpc_raise(char*, task_thread_ptr_t, task_process_ptr_t, void*, size_t, task_thread_ptr_t)
  * @brief Raise an rpc in target from source
  *
  * @param identifier
@@ -269,12 +315,13 @@ rpc_backup_ptr_t rpc_raise(
   task_thread_ptr_t source,
   task_process_ptr_t target,
   void* data,
-  size_t length
+  size_t length,
+  task_thread_ptr_t target_thread
 ) {
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "rpc_raise( %s, %#p, %#p, %#p, %#x\r\n",
-      identifier, source, target, data, length )
+    DEBUG_OUTPUT( "rpc_raise( %s, %#p, %#p, %#p, %#x, %#p\r\n",
+      identifier, source, target, data, length, target_thread )
   #endif
   // get container
   list_item_ptr_t container_item = list_lookup_data( rpc_list, identifier );
@@ -303,7 +350,13 @@ rpc_backup_ptr_t rpc_raise(
   rpc_entry_ptr_t entry = proc_item->data;
 
   // backup necessary stuff
-  rpc_backup_ptr_t backup = rpc_create_backup( source, target, data, length );
+  rpc_backup_ptr_t backup = rpc_create_backup(
+    source,
+    target,
+    data,
+    length,
+    target_thread
+  );
   if ( ! backup ) {
     // debug output
     #if defined( PRINT_RPC )
@@ -336,10 +389,7 @@ rpc_backup_ptr_t rpc_raise(
  */
 rpc_backup_ptr_t rpc_get_active( task_thread_ptr_t thread ) {
   // ensure proper states
-  if (
-    TASK_THREAD_STATE_RPC_ACTIVE != thread->state
-    || TASK_PROCESS_STATE_RPC_ACTIVE != thread->process->state
-  ) {
+  if ( TASK_THREAD_STATE_RPC_ACTIVE != thread->state ) {
     return false;
   }
   // variables

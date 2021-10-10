@@ -40,20 +40,15 @@
 #define SYSCALL_MEMORY_SHARED_ATTACH 24
 #define SYSCALL_MEMORY_SHARED_DETACH 25
 
-#define SYSCALL_MESSAGE_CREATE 31
-#define SYSCALL_MESSAGE_DESTROY 32
-#define SYSCALL_MESSAGE_SEND 33
-#define SYSCALL_MESSAGE_RECEIVE 34
-#define SYSCALL_MESSAGE_RECEIVE_TYPE 35
-#define SYSCALL_MESSAGE_WAIT_FOR_RESPONSE 36
-
-#define SYSCALL_RPC_ACQUIRE 41
-#define SYSCALL_RPC_RELEASE 42
-#define SYSCALL_RPC_RAISE 43
-#define SYSCALL_RPC_RAISE_WAIT 44
-#define SYSCALL_RPC_RET 45
-#define SYSCALL_RPC_GET_DATA 46
-#define SYSCALL_RPC_GET_DATA_SIZE 47
+#define SYSCALL_RPC_ACQUIRE 31
+#define SYSCALL_RPC_RELEASE 32
+#define SYSCALL_RPC_RAISE 33
+#define SYSCALL_RPC_RAISE_WAIT 34
+#define SYSCALL_RPC_RET 35
+#define SYSCALL_RPC_GET_DATA 36
+#define SYSCALL_RPC_GET_DATA_SIZE 37
+#define SYSCALL_RPC_WAIT_FOR_CALL 38
+#define SYSCALL_RPC_BOUND 39
 
 #define SYSCALL_IO_ACQUIRE 51
 #define SYSCALL_IO_RELEASE 52
@@ -62,6 +57,11 @@
 
 #define SYSCALL_INTERRUPT_ACQUIRE 61
 #define SYSCALL_INTERRUPT_RELEASE 62
+
+#define SYSCALL_TIMER_TICK_COUNT 81
+#define SYSCALL_TIMER_FREQUENCY 82
+#define SYSCALL_TIMER_ACQUIRE 83
+#define SYSCALL_TIMER_RELEASE 84
 
 #define SYSCALL_KERNEL_PUTC 101
 #define SYSCALL_KERNEL_PUTS 102
@@ -89,13 +89,6 @@ void syscall_memory_shared_create( void* );
 void syscall_memory_shared_attach( void* );
 void syscall_memory_shared_detach( void* );
 
-void syscall_message_create( void* );
-void syscall_message_destroy( void* );
-void syscall_message_send( void* );
-void syscall_message_receive( void* );
-void syscall_message_receive_type( void* );
-void syscall_message_wait_for_response( void* );
-
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );
 
@@ -111,6 +104,13 @@ void syscall_rpc_raise_wait( void* );
 void syscall_rpc_ret( void* );
 void syscall_rpc_get_data( void* );
 void syscall_rpc_get_data_size( void* );
+void syscall_rpc_wait_for_call( void* );
+void syscall_rpc_bound( void* );
+
+void syscall_timer_tick_count( void* );
+void syscall_timer_frequency( void* );
+void syscall_timer_acquire( void* );
+void syscall_timer_release( void* );
 
 void syscall_kernel_putc( void* );
 void syscall_kernel_puts( void* );

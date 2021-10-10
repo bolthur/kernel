@@ -77,7 +77,7 @@ bool message_setup_process( task_process_ptr_t proc ) {
     return true;
   }
   // prepare message queue
-  proc->message_queue = list_construct( NULL, message_cleanup );
+  proc->message_queue = list_construct( NULL, message_cleanup, NULL );
   return proc->message_queue;
 }
 

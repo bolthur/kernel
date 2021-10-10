@@ -43,6 +43,7 @@ struct task_thread {
   size_t stack_size;
   uintptr_t entry;
   task_thread_state_t state;
+  task_thread_state_t state_backup;
   task_state_data_t state_data;
   task_process_ptr_t process;
 };

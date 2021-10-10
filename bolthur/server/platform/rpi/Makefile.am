@@ -1,2 +1,2 @@
 
-SUBDIRS = framebuffer mailbox
+SUBDIRS = framebuffer mailbox mmio

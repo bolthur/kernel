@@ -22,7 +22,7 @@
 #include <sys/bolthur.h>
 #include "handle.h"
 #include "vfs.h"
-#include "msg.h"
+#include "rpc.h"
 
 pid_t pid = 0;
 
@@ -39,8 +39,6 @@ pid_t pid = 0;
  * @todo move message handling into own thread
  */
 int main( __unused int argc, __unused char* argv[] ) {
-  vfs_message_type_t type;
-
   // print something
   EARLY_STARTUP_PRINT( "vfs processing!\r\n" )
   // cache current pid
@@ -57,16 +55,51 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "entering message loop!\r\n" )
+  // register rpc handler
+  _rpc_acquire( RPC_VFS_ADD_OPERATION, ( uintptr_t )rpc_handle_add );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    return -1;
+  }
+  _rpc_acquire( RPC_VFS_REMOVE_OPERATION, ( uintptr_t )rpc_handle_remove );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    return -1;
+  }
+  _rpc_acquire( RPC_VFS_OPEN_OPERATION, ( uintptr_t )rpc_handle_open );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler open!\r\n" )
+    return -1;
+  }
+  _rpc_acquire( RPC_VFS_CLOSE_OPERATION, ( uintptr_t )rpc_handle_close );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler close!\r\n" )
+    return -1;
+  }
+  _rpc_acquire( RPC_VFS_READ_OPERATION, ( uintptr_t )rpc_handle_read );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    return -1;
+  }
+  _rpc_acquire( RPC_VFS_WRITE_OPERATION, ( uintptr_t )rpc_handle_write );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    return -1;
+  }
+  _rpc_acquire( RPC_VFS_SEEK_OPERATION, ( uintptr_t )rpc_handle_seek );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler seek!\r\n" )
+    return -1;
+  }
+  _rpc_acquire( RPC_VFS_STAT_OPERATION, ( uintptr_t )rpc_handle_stat );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
+    return -1;
+  }
+
+  EARLY_STARTUP_PRINT( "entering wait for rpc loop!\r\n" )
   while( true ) {
-    // get message type
-    type = _message_receive_type();
-    // skip on error / no message
-    if ( errno ) {
-      continue;
-    }
-    // dispatch message
-    msg_dispatch( type );
+    _rpc_wait_for_call();
   }
   // return exit code 0
   return 0;

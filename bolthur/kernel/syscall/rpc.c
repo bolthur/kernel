@@ -52,6 +52,11 @@ void syscall_rpc_acquire( void* context ) {
       "syscall_rpc_acquire( %s, %#"PRIxPTR" )\r\n",
       identifier, handler )
   #endif
+  // create queue if not existing
+  if ( ! message_setup_process( task_thread_current_thread->process ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
   // register handler
   if ( ! rpc_register_handler(
     identifier,
@@ -85,6 +90,11 @@ void syscall_rpc_release( void* context ) {
       "syscall_rpc_release( %s, %#"PRIxPTR" )\r\n",
       identifier, handler )
   #endif
+  // create queue if not existing
+  if ( ! message_setup_process( task_thread_current_thread->process ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
   // register handler
   if ( ! rpc_unregister_handler(
     identifier,
@@ -120,6 +130,11 @@ void syscall_rpc_raise( void* context ) {
       "syscall_rpc_raise( %s, %d, %#p, %#x )\r\n",
       identifier, target, data, len )
   #endif
+  // create queue if not existing
+  if ( ! message_setup_process( task_thread_current_thread->process ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
   // validate addresses
   if ( data && len && ! syscall_validate_address( ( uintptr_t )data, len ) ) {
     // debug output
@@ -159,7 +174,8 @@ void syscall_rpc_raise( void* context ) {
     task_thread_current_thread,
     task_process_get_by_id( target ),
     dup,
-    len
+    len,
+    NULL
   ) ) {
     if ( dup ) {
       free( dup );
@@ -195,6 +211,11 @@ void syscall_rpc_raise_wait( void* context ) {
       "syscall_rpc_raise_wait( %s, %d, %#p, %#x )\r\n",
       identifier, target, data, len )
   #endif
+  // create queue if not existing
+  if ( ! message_setup_process( task_thread_current_thread->process ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
   // validate addresses
   if ( data && len && ! syscall_validate_address( ( uintptr_t )data, len ) ) {
     // debug output
@@ -235,7 +256,8 @@ void syscall_rpc_raise_wait( void* context ) {
     task_thread_current_thread,
     task_process_get_by_id( target ),
     dup,
-    len
+    len,
+    NULL
   );
   // free duplicate again
   if ( dup ) {
@@ -251,7 +273,7 @@ void syscall_rpc_raise_wait( void* context ) {
     // block thread
     task_thread_block(
       task_thread_current_thread,
-      TASK_THREAD_STATE_RPC_WAITING,
+      TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
       ( task_state_data_t ){ .data_size = rpc->message_id }
     );
     // enqueue schedule
@@ -294,7 +316,7 @@ void syscall_rpc_ret( void* context ) {
   // source not blocked? => error
   if (
     (
-      active->source->state != TASK_THREAD_STATE_RPC_WAITING
+      active->source->state != TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN
       && active->source != task_thread_current_thread
     ) || active->source->state_data.data_size != active->message_id
   ) {
@@ -351,7 +373,7 @@ void syscall_rpc_ret( void* context ) {
   // unblock if necessary
   task_unblock_threads(
     active->source->process,
-    TASK_THREAD_STATE_RPC_WAITING,
+    TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
     ( task_state_data_t ){ .data_size = active->message_id }
   );
 }
@@ -506,4 +528,55 @@ void syscall_rpc_get_data_size( void* context ) {
   }
   // return size of found message
   syscall_populate_success( context, found->length );
+}
+
+/**
+ * @fn void syscall_rpc_wait_for_call(void*)
+ * @brief Get rpc data size
+ *
+ * @param context
+ */
+void syscall_rpc_wait_for_call( void* context ) {
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_rpc_wait_for_call()\r\n" )
+  #endif
+  // only active state allows block for next syscall
+  if ( TASK_THREAD_STATE_ACTIVE != task_thread_current_thread->state ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
+  // set state
+  task_thread_current_thread->state = TASK_THREAD_STATE_RPC_WAIT_FOR_CALL;
+  // enqueue schedule
+  event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+}
+
+/**
+ * @fn void syscall_rpc_bound(void*)
+ * @brief RPC bound system call
+ *
+ * @param context
+ */
+void syscall_rpc_bound( void* context ) {
+  char* identifier = ( char* )syscall_get_parameter( context, 0 );
+  // determine length with mapped check
+  size_t id_len = strlen_unsafe( identifier );
+  if ( ! id_len || ! syscall_validate_address( ( uintptr_t )identifier, id_len ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_rpc_bound( %s )\r\n", identifier )
+  #endif
+  // create queue if not existing
+  if ( ! message_setup_process( task_thread_current_thread->process ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
+  syscall_populate_success(
+    context,
+    rpc_proc_bound( identifier, task_thread_current_thread->process ) ? 1 : 0
+  );
 }

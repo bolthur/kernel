@@ -162,7 +162,11 @@ static shared_memory_entry_ptr_t create_entry( size_t size ) {
   }
 
   // generate process mapping list
-  entry->process_mapping = list_construct( lookup_process, cleanup_process );
+  entry->process_mapping = list_construct(
+    lookup_process,
+    cleanup_process,
+    NULL
+  );
   if ( ! entry->process_mapping ) {
     destroy_entry( entry );
     return NULL;

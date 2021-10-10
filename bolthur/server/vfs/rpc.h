@@ -17,32 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-// necessary for libc hacking
-#include <stdlib.h>
-#include <limits.h>
-#include <errno.h>
-#include <stdarg.h>
-#include <string.h>
-#include <assert.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <inttypes.h>
-#include <sys/types.h>
 #include <sys/bolthur.h>
 
-/**
- * @fn int main(int, char*[])
- * @brief main entry point
- *
- * @param argc
- * @param argv
- * @return
- */
-int main( __unused int argc, __unused char* argv[] ) {
-  // print something
-  EARLY_STARTUP_PRINT( "system pipe daemon!\r\n" )
-  for(;;);
-  return 0;
-}
+#if !defined( _RPC_H )
+#define _RPC_H
+
+void rpc_handle_add( pid_t, size_t );
+void rpc_handle_remove( pid_t, size_t );
+void rpc_handle_open( pid_t, size_t );
+void rpc_handle_close( pid_t, size_t );
+void rpc_handle_read( pid_t, size_t );
+void rpc_handle_write( pid_t, size_t );
+void rpc_handle_seek( pid_t, size_t );
+void rpc_handle_stat( pid_t, size_t );
+
+#endif

@@ -39,42 +39,30 @@ static void send_vfs_add_request( vfs_add_request_ptr_t msg ) {
     //EARLY_STARTUP_PRINT( "Allocation failed or invalid message passed!\r\n" )
     exit( -1 );
   }
-  // message id variable
-  size_t message_id;
-  bool send = true;
-  // wait for response
-  while( true ) {
-    // send message
-    if ( send ) {
-      do {
-        message_id = _message_send(
-          VFS_DAEMON_ID,
-          VFS_ADD_REQUEST,
-          ( const char* )msg,
-          sizeof( vfs_add_request_t ),
-          0 );
-      } while ( 0 == message_id );
-    }
-    // erase message
-    memset( response, 0, sizeof( vfs_add_response_t ) );
+  // response id
+  size_t response_id = 0;
+  // try to send until it worked
+  do {
     // wait for response
-    _message_wait_for_response(
-      ( char* )response,
-      sizeof( vfs_add_response_t ),
-      message_id );
-    // handle error / no message
-    if ( errno ) {
-      send = false;
-      //EARLY_STARTUP_PRINT( "An error occurred: %s\r\n", strerror( errno ) )
-      continue;
-    }
-    // stop on success
-    if ( VFS_MESSAGE_ADD_SUCCESS == response->status ) {
-      //EARLY_STARTUP_PRINT( "Successful added!\r\n" )
-      break;
-    }
-    // set send to true again to retry
-    send = true;
+    response_id = _rpc_raise_wait(
+      RPC_VFS_ADD_OPERATION,
+      VFS_DAEMON_ID,
+      ( char* )msg,
+      sizeof( vfs_add_request_t ) );
+  } while( errno );
+  // erase response
+  memset( response, 0, sizeof( vfs_add_response_t ) );
+  // get response data
+  _rpc_get_data( response, sizeof( vfs_add_response_t ), response_id );
+  // handle error / no message
+  if ( errno ) {
+    //EARLY_STARTUP_PRINT( "An error occurred: %s\r\n", strerror( errno ) )
+    exit( -1 );
+  }
+  // stop on success
+  if ( VFS_ADD_SUCCESS != response->status ) {
+    EARLY_STARTUP_PRINT( "Error while adding %s to vfs!\r\n", msg->file_path )
+    exit( -1 );
   }
   // free up response
   free( response );

@@ -136,19 +136,10 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     // set last handled within running queue
     running_queue->last_handled = running_thread;
     // update running task to halt due to switch
-    if ( TASK_PROCESS_STATE_ACTIVE == running_thread->process->state ) {
-      running_thread->process->state = TASK_PROCESS_STATE_HALT_SWITCH;
-    } else if ( TASK_PROCESS_STATE_RPC_ACTIVE == running_thread->process->state ) {
-      running_thread->process->state = TASK_PROCESS_STATE_RPC_HALT_SWITCH;
-    }
     if ( TASK_THREAD_STATE_ACTIVE == running_thread->state ) {
       running_thread->state = TASK_THREAD_STATE_HALT_SWITCH;
     } else if ( TASK_THREAD_STATE_RPC_ACTIVE == running_thread->state ) {
       running_thread->state = TASK_THREAD_STATE_RPC_HALT_SWITCH;
-    }
-    // update running task to kill in case of process kill
-    if ( TASK_PROCESS_STATE_KILL == running_thread->process->state ) {
-      running_thread->state = TASK_THREAD_STATE_KILL;
     }
   }
 
@@ -198,11 +189,6 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // save context of current thread
   if ( running_thread ) {
     // reset state to ready
-    if ( TASK_PROCESS_STATE_HALT_SWITCH == running_thread->process->state ) {
-      running_thread->process->state = TASK_PROCESS_STATE_READY;
-    } else if ( TASK_PROCESS_STATE_RPC_HALT_SWITCH == running_thread->process->state ) {
-      running_thread->process->state = TASK_PROCESS_STATE_RPC_QUEUED;
-    }
     if ( TASK_THREAD_STATE_HALT_SWITCH == running_thread->state ) {
       running_thread->state = TASK_THREAD_STATE_READY;
     } else if ( TASK_THREAD_STATE_RPC_HALT_SWITCH == running_thread->state ) {

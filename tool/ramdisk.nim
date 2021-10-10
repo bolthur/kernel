@@ -20,6 +20,7 @@
 import os
 import osproc
 import strutils
+import sequtils
 # thirdparty
 import zippy
 
@@ -88,7 +89,7 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
 
       var pos = -1
       for idx, value in splitted_head:
-        if value == "driver" or value == "server" or value == "core" or value == "usr" or value == "font":
+        if value == "driver" or value == "server" or value == "usr" or value == "font":
           pos = idx
       if pos != -1:
         if contains( file, sysroot ):
@@ -96,9 +97,9 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
         else:
           if not ( "src" in splitted_head[ pos..^1 ] ):
             if pos + 1 < len( splitted_head ) and "platform" == splitted_head[ pos + 1 ]:
+              # strip out platform and platform name from path
               var tmp_info = splitted_head
-              tmp_info.delete( pos + 1 )
-              tmp_info.delete( pos + 2 )
+              tmp_info.delete( pos + 1, pos + 2 )
               target_folder &= tmp_info[ pos..^2 ].join( $DirSep )
             elif "font" == splitted_head[ pos ]:
               target_folder &= splitted_head[ pos..^1 ].join( $DirSep )
@@ -129,7 +130,7 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
 #scan_directory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
 scan_directory( font, "PC Screen Font", "", sysroot, false )
 scan_directory( server, "ELF", "executable", sysroot, false )
-scan_directory( driver, "ELF", "executable", sysroot, false )
+#scan_directory( driver, "ELF", "executable", sysroot, false )
 
 #[
 # loop through files of folder including subfolders and adjust interpreter and run path for ramdisk

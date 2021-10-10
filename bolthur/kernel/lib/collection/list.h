@@ -33,9 +33,8 @@ typedef int32_t ( *list_lookup_func_t )(
   const list_item_ptr_t a,
   const void* data
 );
-typedef void ( *list_cleanup_func_t )(
-  const list_item_ptr_t a
-);
+typedef void ( *list_cleanup_func_t )( const list_item_ptr_t );
+typedef bool ( *list_insert_func_t )( list_manager_ptr_t, void* );
 
 // generic list item
 struct list_item {
@@ -49,21 +48,22 @@ struct list_manager {
   list_item_ptr_t last;
   list_lookup_func_t lookup;
   list_cleanup_func_t cleanup;
+  list_insert_func_t insert;
 };
 
-list_manager_ptr_t list_construct( list_lookup_func_t, list_cleanup_func_t );
+list_manager_ptr_t list_construct( list_lookup_func_t, list_cleanup_func_t, list_insert_func_t );
 void list_destruct( list_manager_ptr_t );
 bool list_empty( list_manager_ptr_t );
 list_item_ptr_t list_lookup_data( list_manager_ptr_t, void* );
 list_item_ptr_t list_lookup_item( list_manager_ptr_t, list_item_ptr_t );
 bool list_push_front( list_manager_ptr_t, void* );
-bool list_push_front_node( list_manager_ptr_t, list_item_ptr_t );
 bool list_push_back( list_manager_ptr_t, void* );
-bool list_push_back_node( list_manager_ptr_t, list_item_ptr_t );
 void* list_pop_front( list_manager_ptr_t );
 void* list_pop_back( list_manager_ptr_t );
 void* list_peek_front( list_manager_ptr_t );
 void* list_peek_back( list_manager_ptr_t );
+bool list_insert( list_manager_ptr_t, void* );
+bool list_insert_before( list_manager_ptr_t, list_item_ptr_t, void* );
 list_item_ptr_t list_node_create( void* );
 void list_print( list_manager_ptr_t );
 bool list_remove( list_manager_ptr_t, list_item_ptr_t );
@@ -71,5 +71,6 @@ bool list_remove_data( list_manager_ptr_t, void* );
 
 int32_t list_default_lookup( const list_item_ptr_t a, const void* );
 void list_default_cleanup( const list_item_ptr_t );
+bool list_default_insert( list_manager_ptr_t, void* );
 
 #endif

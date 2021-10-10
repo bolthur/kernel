@@ -148,10 +148,6 @@ bool task_thread_set_current(
     task_thread_current_thread->state == TASK_THREAD_STATE_RPC_QUEUED
       ? TASK_THREAD_STATE_RPC_ACTIVE
       : TASK_THREAD_STATE_ACTIVE;
-  task_thread_current_thread->process->state =
-    task_thread_current_thread->process->state == TASK_PROCESS_STATE_RPC_QUEUED
-      ? TASK_PROCESS_STATE_RPC_ACTIVE
-      : TASK_PROCESS_STATE_ACTIVE;
   return true;
 }
 
@@ -169,11 +165,6 @@ void task_thread_reset_current( void ) {
       task_thread_current_thread->state = TASK_THREAD_STATE_READY;
     } else if ( TASK_THREAD_STATE_RPC_HALT_SWITCH == task_thread_current_thread->state ) {
       task_thread_current_thread->state = TASK_THREAD_STATE_RPC_QUEUED;
-    }
-    if ( TASK_PROCESS_STATE_HALT_SWITCH == task_thread_current_thread->process->state ) {
-      task_thread_current_thread->process->state = TASK_PROCESS_STATE_READY;
-    } else if ( TASK_PROCESS_STATE_RPC_HALT_SWITCH == task_thread_current_thread->process->state ) {
-      task_thread_current_thread->process->state = TASK_PROCESS_STATE_RPC_QUEUED;
     }
   }
   // unset current thread
@@ -311,20 +302,12 @@ task_thread_ptr_t task_thread_next( void ) {
     while ( item ) {
       // get task object
       task_thread_ptr_t task = ( task_thread_ptr_t )item->data;
-      task_process_ptr_t proc = ( task_process_ptr_t )task->process;
       // check for ready
       if (
-        (
-          TASK_THREAD_STATE_READY == task->state
-          || TASK_THREAD_STATE_HALT_SWITCH == task->state
-          || TASK_THREAD_STATE_RPC_QUEUED == task->state
-          || TASK_THREAD_STATE_RPC_HALT_SWITCH == task->state
-        ) && (
-          TASK_PROCESS_STATE_READY == proc->state
-          || TASK_PROCESS_STATE_HALT_SWITCH == proc->state
-          || TASK_PROCESS_STATE_RPC_QUEUED == proc->state
-          || TASK_PROCESS_STATE_RPC_HALT_SWITCH == proc->state
-        )
+        TASK_THREAD_STATE_READY == task->state
+        || TASK_THREAD_STATE_HALT_SWITCH == task->state
+        || TASK_THREAD_STATE_RPC_QUEUED == task->state
+        || TASK_THREAD_STATE_RPC_HALT_SWITCH == task->state
       ) {
         break;
       }
@@ -407,6 +390,13 @@ void task_thread_block(
   ) {
     return;
   }
+  // backup current state
+  thread->state_backup = thread->state;
+  if ( TASK_THREAD_STATE_ACTIVE == thread->state ) {
+    thread->state_backup = TASK_THREAD_STATE_READY;
+  } else if ( TASK_THREAD_STATE_RPC_ACTIVE == thread->state ) {
+    thread->state_backup = TASK_THREAD_STATE_RPC_QUEUED;
+  }
   // set state and data
   thread->state = state;
   thread->state_data = data;
@@ -430,7 +420,7 @@ void task_thread_unblock(
     necessary_state != thread->state
     || (
       necessary_state != TASK_THREAD_STATE_MESSAGE_WAITING
-      && necessary_state != TASK_THREAD_STATE_RPC_WAITING
+      && necessary_state != TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN
     )
   ) {
     return;
@@ -439,6 +429,6 @@ void task_thread_unblock(
   if ( thread->state_data.data_ptr != necessary_data.data_ptr ) {
     return;
   }
-  // set back to ready
-  thread->state = TASK_THREAD_STATE_READY;
+  // set back to backup again
+  thread->state = thread->state_backup;
 }

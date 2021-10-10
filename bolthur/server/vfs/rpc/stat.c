@@ -22,13 +22,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
-#include "../msg.h"
+#include "../rpc.h"
 #include "../vfs.h"
 #include "../handle.h"
 
-void msg_handle_stat( void ) {
-  pid_t sender;
-  size_t message_id;
+/**
+ * @fn void rpc_handle_stat(pid_t, size_t)
+ * @brief Handle stat request
+ *
+ * @param origin
+ * @param data_info
+ */
+void rpc_handle_stat( __unused pid_t origin, __unused size_t data_info ) {
   // allocate message structures
   vfs_stat_request_ptr_t request = ( vfs_stat_request_ptr_t )malloc(
     sizeof( vfs_stat_request_t ) );
@@ -44,25 +49,24 @@ void msg_handle_stat( void ) {
   // clear variables
   memset( request, 0, sizeof( vfs_stat_request_t ) );
   memset( response, 0, sizeof( vfs_stat_response_t ) );
-
-  // get message
-  _message_receive(
-    ( char* )request,
-    sizeof( vfs_stat_request_t ),
-    &sender,
-    &message_id
-  );
-  // handle error
-  if ( errno ) {
-    EARLY_STARTUP_PRINT(
-      "Unable to receive stat message: %s\r\n",
-      strerror( errno ) )
-    // free message structures
+  // handle no data
+  if( ! data_info ) {
+    response->success = false;
+  _rpc_ret( response, sizeof( vfs_stat_response_t ) );
     free( request );
     free( response );
     return;
   }
-
+  // fetch rpc data
+  _rpc_get_data( request, sizeof( vfs_stat_request_t ), data_info );
+  // handle error
+  if ( errno ) {
+    response->success = false;
+    _rpc_ret( response, sizeof( vfs_stat_response_t ) );
+    free( request );
+    free( response );
+    return;
+  }
   // get target node
   vfs_node_ptr_t target = NULL;
   // get node by path
@@ -72,7 +76,7 @@ void msg_handle_stat( void ) {
   } else if ( 0 < request->handle ) {
     handle_container_ptr_t container;
     // try to get handle information
-    int result = handle_get( &container, sender, request->handle );
+    int result = handle_get( &container, origin, request->handle );
     // set target on no error
     if ( 0 == result ) {
       target = container->target;
@@ -88,14 +92,8 @@ void msg_handle_stat( void ) {
     memcpy( &response->info, target->st, sizeof( struct stat ) );
   }
 
-  // send response
-  _message_send(
-    sender,
-    VFS_STAT_RESPONSE,
-    ( const char* )response,
-    sizeof( vfs_stat_response_t ),
-    message_id
-  );
+  // return response
+  _rpc_ret( response, sizeof( vfs_stat_response_t ) );
   // free message structures
   free( request );
   free( response );

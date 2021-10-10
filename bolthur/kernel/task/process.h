@@ -46,16 +46,19 @@ struct task_process {
   pid_t current_thread_id;
   size_t priority;
   virt_context_ptr_t virtual_context;
-  task_process_state_t state;
   task_state_data_t state_data;
   list_manager_ptr_t message_queue;
   uintptr_t message_handler;
 };
 
 struct task_manager {
+  // process id tree
   avl_tree_ptr_t process_id;
+  // thread priority tree
   avl_tree_ptr_t thread_priority;
+  // list of processes to cleanup
   list_manager_ptr_t process_to_cleanup;
+  // list of threads to cleanup
   list_manager_ptr_t thread_to_cleanup;
 };
 

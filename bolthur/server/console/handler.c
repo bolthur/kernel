@@ -28,12 +28,18 @@
  */
 bool handler_register( void ) {
   // register console add command
-  _rpc_acquire( "#/dev/console#add", ( uintptr_t )handler_console_add );
+  _rpc_acquire(
+    "#/dev/console#add",
+    ( uintptr_t )handler_console_add
+  );
   if ( errno ) {
     return false;
   }
   // register console activate command
-  _rpc_acquire( "#/dev/console#select", ( uintptr_t )handler_console_select );
+  _rpc_acquire(
+    "#/dev/console#select",
+    ( uintptr_t )handler_console_select
+  );
   if ( errno ) {
     return false;
   }

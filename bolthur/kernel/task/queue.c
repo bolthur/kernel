@@ -108,7 +108,7 @@ task_priority_queue_ptr_t task_queue_get_queue(
     #endif
     // populate queue
     queue->priority = priority;
-    queue->thread_list = list_construct( NULL, NULL );
+    queue->thread_list = list_construct( NULL, NULL, NULL );
     if ( ! queue->thread_list ) {
       free( queue );
       return NULL;

@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <platform/rpi/timer.h>
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
 #include <platform/rpi/mailbox/property.h>
@@ -32,28 +33,13 @@
 #include <timer.h>
 #include <interrupt.h>
 
-// free running counter incrementing at 1 MHz => Increments each microsecond
-#define TIMER_FREQUENCY_HZ 1000000
-
-// interrupts per second
-#define TIMER_INTERRUPT_PER_SECOND 50
-
-// Timer match bits
-#define SYSTEM_TIMER_MATCH_0 ( 1 << 0 )
-#define SYSTEM_TIMER_MATCH_1 ( 1 << 1 )
-#define SYSTEM_TIMER_MATCH_2 ( 1 << 2 )
-#define SYSTEM_TIMER_MATCH_3 ( 1 << 3 )
-
-// timer interrupts
-#define SYSTEM_TIMER_0_INTERRUPT ( 1 << 0 )
-#define SYSTEM_TIMER_1_INTERRUPT ( 1 << 1 )
-#define SYSTEM_TIMER_2_INTERRUPT ( 1 << 2 )
-#define SYSTEM_TIMER_3_INTERRUPT ( 1 << 3 )
+size_t timer_tick_count;
 
 /**
+ * @fn bool timer_pending(void)
  * @brief Check for pending timer interrupt
  *
- * @return bool
+ * @return
  */
 static bool timer_pending( void ) {
   // get peripheral base
@@ -63,9 +49,10 @@ static bool timer_pending( void ) {
 }
 
 /**
+ * @fn void timer_clear(void*)
  * @brief Clear timer callback
  *
- * @param context cpu context
+ * @param context
  */
 static void timer_clear( void* context ) {
   // check for pending timer
@@ -83,7 +70,7 @@ static void timer_clear( void* context ) {
 
   // set compare for timer 3
   uint32_t current_count = io_in32( base + SYSTEM_TIMER_COUNTER_LOWER );
-  uint32_t next_count = current_count + TIMER_FREQUENCY_HZ / TIMER_INTERRUPT_PER_SECOND;
+  uint32_t next_count = current_count + timer_get_interval();
   #if defined( PRINT_TIMER )
     DEBUG_OUTPUT( "current = %#x, next = %#x\r\n", current_count, next_count );
   #endif
@@ -95,14 +82,22 @@ static void timer_clear( void* context ) {
   interrupt_line &= ( uint32_t )( ~( SYSTEM_TIMER_3_INTERRUPT ) );
   io_out32( base + INTERRUPT_IRQ_PENDING_1, interrupt_line );
 
+  // increment tick count by interval
+  timer_tick_count += timer_get_interval();
+  // handle timers
+  timer_handle_callback();
   // trigger timer event
   event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
 }
 
 /**
+ * @fn void timer_platform_init(void)
  * @brief Initialize timer
  */
-void timer_init( void ) {
+void timer_platform_init( void ) {
+  // initialise timer ticks
+  timer_tick_count = 0;
+
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
@@ -146,4 +141,34 @@ void timer_init( void ) {
   interrupt_line &= ( uint32_t )( ~( SYSTEM_TIMER_3_INTERRUPT ) );
   // overwrite
   io_out32( base + INTERRUPT_IRQ_PENDING_1, interrupt_line );
+}
+
+/**
+ * @fn size_t timer_get_frequency(void)
+ * @brief Helper to get timer frequency
+ *
+ * @return
+ */
+size_t timer_get_frequency( void ) {
+  return TIMER_FREQUENCY_HZ;
+}
+
+/**
+ * @fn size_t timer_get_interval(void)
+ * @brief Helper to get timer interval
+ *
+ * @return
+ */
+size_t timer_get_interval( void ) {
+  return TIMER_FREQUENCY_HZ / TIMER_INTERRUPT_PER_SECOND;
+}
+
+/**
+ * @fn size_t timer_get_tick(void)
+ * @brief Method to get timer tick counts
+ *
+ * @return
+ */
+size_t timer_get_tick( void ) {
+  return timer_tick_count;
 }

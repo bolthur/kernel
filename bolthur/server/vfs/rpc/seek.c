@@ -22,17 +22,18 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
-#include "../msg.h"
+#include "../rpc.h"
 #include "../vfs.h"
 #include "../handle.h"
 
 /**
- * @fn void msg_handle_seek(void)
- * @brief Message handling seek package request
+ * @fn void rpc_handle_seek(pid_t, size_t)
+ * @brief Handle seek request
+ *
+ * @param origin
+ * @param data_info
  */
-void msg_handle_seek( void ) {
-  pid_t sender;
-  size_t message_id;
+void rpc_handle_seek( pid_t origin, size_t data_info ) {
   vfs_seek_request_ptr_t request = ( vfs_seek_request_ptr_t )malloc(
     sizeof( vfs_seek_request_t ) );
   if ( ! request ) {
@@ -48,34 +49,32 @@ void msg_handle_seek( void ) {
   // clear variables
   memset( request, 0, sizeof( vfs_seek_request_t ) );
   memset( response, 0, sizeof( vfs_seek_response_t ) );
-  // get message
-  _message_receive(
-    ( char* )request,
-    sizeof( vfs_seek_request_t ),
-    &sender,
-    &message_id
-  );
+  // handle no data
+  if( ! data_info ) {
+    response->position = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_seek_response_t ) );
+    free( request );
+    free( response );
+    return;
+  }
+  // fetch rpc data
+  _rpc_get_data( request, sizeof( vfs_seek_request_t ), data_info );
   // handle error
   if ( errno ) {
-    // free stuff
+    response->position = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_seek_response_t ) );
     free( request );
     free( response );
     return;
   }
   // try to get handle information
-  int result = handle_get( &container, sender, request->handle );
+  int result = handle_get( &container, origin, request->handle );
   // handle error
   if ( 0 > result ) {
     // send errno via negative len
     response->position = result;
-    // send response
-    _message_send(
-      sender,
-      VFS_SEEK_RESPONSE,
-      ( const char* )response,
-      sizeof( vfs_seek_response_t ),
-      message_id
-    );
+    // return response
+    _rpc_ret( response, sizeof( vfs_seek_response_t ) );
     // free stuff
     free( request );
     free( response );
@@ -117,14 +116,8 @@ void msg_handle_seek( void ) {
     response->position = new_pos;
   }
   //EARLY_STARTUP_PRINT( "container->pos = %#lx\r\n", new_pos )
-  // send response
-  _message_send(
-    sender,
-    VFS_SEEK_RESPONSE,
-    ( const char* )response,
-    sizeof( vfs_seek_response_t ),
-    message_id
-  );
+  // return response
+  _rpc_ret( response, sizeof( vfs_seek_response_t ) );
   // free stuff
   free( request );
   free( response );

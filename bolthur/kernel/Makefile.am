@@ -17,10 +17,10 @@ libkernel_la_SOURCES = \
   syscall/init.c \
   syscall/interrupt.c \
   syscall/memory.c \
-  syscall/message.c \
   syscall/print.c \
   syscall/rpc.c \
   syscall/task.c \
+  syscall/timer.c \
   task/lock.c \
   task/process.c \
   task/queue.c \
@@ -33,4 +33,5 @@ libkernel_la_SOURCES = \
   initrd.c \
   interrupt.c \
   main.c \
-  panic.c
+  panic.c \
+  timer.c

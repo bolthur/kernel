@@ -217,7 +217,11 @@ bool terminal_init( void ) {
     strncpy( command_add->err, err, PATH_MAX );
     // perform sync rpc call
     size_t response_info = _rpc_raise_wait(
-      "#/dev/console#add", 5, command_add, sizeof( console_command_add_t ) );
+      "#/dev/console#add",
+      5,
+      command_add,
+      sizeof( console_command_add_t )
+    );
     if ( errno ) {
       free( command_add );
       free( command_select );

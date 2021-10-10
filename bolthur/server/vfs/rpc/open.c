@@ -23,19 +23,21 @@
 #include <string.h>
 #include <fcntl.h>
 #include <sys/bolthur.h>
-#include "../msg.h"
+#include "../rpc.h"
 #include "../vfs.h"
 #include "../handle.h"
 
 /**
- * @brief Handle open file request
+ * @fn void rpc_handle_open(pid_t, size_t)
+ * @brief Handle open request
+ *
+ * @param origin
+ * @param data_info
  *
  * @todo Add support for opening directories ( virtual files )
  * @todo Add support for non existent files with read write
  */
-void msg_handle_open( void ) {
-  pid_t sender;
-  size_t message_id;
+void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
   vfs_open_request_ptr_t request = ( vfs_open_request_ptr_t )malloc(
     sizeof( vfs_open_request_t ) );
   if ( ! request ) {
@@ -54,17 +56,20 @@ void msg_handle_open( void ) {
   // clear variables
   memset( request, 0, sizeof( vfs_open_request_t ) );
   memset( response, 0, sizeof( vfs_open_response_t ) );
-
-  // get message
-  _message_receive(
-    ( char* )request,
-    sizeof( vfs_open_request_t ),
-    &sender,
-    &message_id
-  );
+  // handle no data
+  if( ! data_info ) {
+    response->handle = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_open_response_t ) );
+    free( request );
+    free( response );
+    return;
+  }
+  // fetch rpc data
+  _rpc_get_data( request, sizeof( vfs_open_request_t ), data_info );
   // handle error
   if ( errno ) {
-    // free message structures
+    response->handle = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_open_response_t ) );
     free( request );
     free( response );
     return;
@@ -92,14 +97,8 @@ void msg_handle_open( void ) {
       free( dir );
       // prepare error return
       response->handle = -ENAMETOOLONG;
-      // send response
-      _message_send(
-        sender,
-        VFS_OPEN_RESPONSE,
-        ( const char* )response,
-        sizeof( vfs_open_response_t ),
-        message_id
-      );
+      // return response
+      _rpc_ret( response, sizeof( vfs_open_response_t ) );
       // free message structures
       free( request );
       free( response );
@@ -130,14 +129,8 @@ void msg_handle_open( void ) {
     free( base );
     // prepare error return
     response->handle = ( request->flags & O_CREAT ) ? -ENOENT : -ENOTDIR;
-    // send response
-    _message_send(
-      sender,
-      VFS_OPEN_RESPONSE,
-      ( const char* )response,
-      sizeof( vfs_open_response_t ),
-      message_id
-    );
+    // return response
+    _rpc_ret( response, sizeof( vfs_open_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -151,14 +144,8 @@ void msg_handle_open( void ) {
     free( base );
     // prepare error return
     response->handle = -ENOENT;
-    // send response
-    _message_send(
-      sender,
-      VFS_OPEN_RESPONSE,
-      ( const char* )response,
-      sizeof( vfs_open_response_t ),
-      message_id
-    );
+    // return response
+    _rpc_ret( response, sizeof( vfs_open_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -175,14 +162,8 @@ void msg_handle_open( void ) {
   ) {
     // prepare error return
     response->handle = -EEXIST;
-    // send response
-    _message_send(
-      sender,
-      VFS_OPEN_RESPONSE,
-      ( const char* )response,
-      sizeof( vfs_open_response_t ),
-      message_id
-    );
+    // return response
+    _rpc_ret( response, sizeof( vfs_open_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -207,14 +188,8 @@ void msg_handle_open( void ) {
   ) {
     // prepare error return
     response->handle = -EISDIR;
-    // send response
-    _message_send(
-      sender,
-      VFS_OPEN_RESPONSE,
-      ( const char* )response,
-      sizeof( vfs_open_response_t ),
-      message_id
-    );
+    // return response
+    _rpc_ret( response, sizeof( vfs_open_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -225,7 +200,7 @@ void msg_handle_open( void ) {
   handle_container_ptr_t container = NULL;
   int result = handle_generate(
     &container,
-    sender,
+    origin,
     dir_node,
     base_node,
     request->path,
@@ -241,14 +216,8 @@ void msg_handle_open( void ) {
     free( base );
     // prepare error return
     response->handle = result;
-    // send response
-    _message_send(
-      sender,
-      VFS_OPEN_RESPONSE,
-      ( const char* )response,
-      sizeof( vfs_open_response_t ),
-      message_id
-    );
+    // return response
+    _rpc_ret( response, sizeof( vfs_open_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -257,14 +226,8 @@ void msg_handle_open( void ) {
 
   // prepare return
   response->handle = container->handle;
-  // send response
-  _message_send(
-    sender,
-    VFS_OPEN_RESPONSE,
-    ( const char* )response,
-    sizeof( vfs_open_response_t ),
-    message_id
-  );
+  // return response
+  _rpc_ret( response, sizeof( vfs_open_response_t ) );
   // free message structures
   free( request );
   free( response );

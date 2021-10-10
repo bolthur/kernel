@@ -134,55 +134,6 @@ bool syscall_init( void ) {
   ) ) {
     return false;
   }
-  // message related
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_CREATE,
-    syscall_message_create,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_DESTROY,
-    syscall_message_destroy,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_SEND,
-    syscall_message_send,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_RECEIVE,
-    syscall_message_receive,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_RECEIVE_TYPE,
-    syscall_message_receive_type,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MESSAGE_WAIT_FOR_RESPONSE,
-    syscall_message_wait_for_response,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
   // rpc related
   if ( ! interrupt_register_handler(
     SYSCALL_RPC_ACQUIRE,
@@ -240,6 +191,22 @@ bool syscall_init( void ) {
   ) ) {
     return false;
   }
+  if ( ! interrupt_register_handler(
+    SYSCALL_RPC_WAIT_FOR_CALL,
+    syscall_rpc_wait_for_call,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_RPC_BOUND,
+    syscall_rpc_bound,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
   // io related
   if ( ! interrupt_register_handler(
     SYSCALL_IO_ACQUIRE,
@@ -285,6 +252,39 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_INTERRUPT_RELEASE,
     syscall_interrupt_release,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  // timer related
+  if ( ! interrupt_register_handler(
+    SYSCALL_TIMER_TICK_COUNT,
+    syscall_timer_tick_count,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_TIMER_FREQUENCY,
+    syscall_timer_frequency,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_TIMER_ACQUIRE,
+    syscall_timer_acquire,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_TIMER_RELEASE,
+    syscall_timer_release,
     INTERRUPT_SOFTWARE,
     false
   ) ) {

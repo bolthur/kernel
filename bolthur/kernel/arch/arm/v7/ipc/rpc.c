@@ -34,7 +34,7 @@
   ( ( sizeof( n ) + sizeof( uint32_t ) - 1 ) & ~( sizeof( uint32_t ) - 1 ) )
 
 /**
- * @fn rpc_backup_ptr_t rpc_create_backup(task_thread_ptr_t, task_process_ptr_t, void*, size_t)
+ * @fn rpc_backup_ptr_t rpc_create_backup(task_thread_ptr_t, task_process_ptr_t, void*, size_t, task_thread_ptr_t)
  * @brief Helper to create rpc backup
  *
  * @param source
@@ -47,11 +47,12 @@ rpc_backup_ptr_t rpc_create_backup(
   task_thread_ptr_t source,
   task_process_ptr_t target,
   void* data,
-  size_t data_size
+  size_t data_size,
+  task_thread_ptr_t target_thread
 ) {
   // get first inactive thread
   avl_node_ptr_t current = avl_iterate_first( target->thread_manager );
-  task_thread_ptr_t thread = NULL;
+  task_thread_ptr_t thread = target_thread;
   // loop until usable thread has been found
   while ( current && ! thread ) {
     // get thread
@@ -260,7 +261,7 @@ bool rpc_prepare_invoke(
   if (
     TASK_THREAD_STATE_RPC_QUEUED == backup->thread->state
     || TASK_THREAD_STATE_RPC_ACTIVE == backup->thread->state
-    || TASK_THREAD_STATE_RPC_WAITING == backup->thread->state
+    || TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN == backup->thread->state
   ) {
     // debug output
     #if defined( PRINT_RPC )
@@ -358,10 +359,8 @@ bool rpc_prepare_invoke(
   // set correct state ( set directly to active if it's the current thread )
   if ( backup->thread == task_thread_current_thread ) {
     backup->thread->state = TASK_THREAD_STATE_RPC_ACTIVE;
-    backup->thread->process->state = TASK_PROCESS_STATE_RPC_ACTIVE;
   } else {
     backup->thread->state = TASK_THREAD_STATE_RPC_QUEUED;
-    backup->thread->process->state = TASK_PROCESS_STATE_RPC_QUEUED;
   }
   backup->prepared = true;
   backup->active = true;
@@ -383,10 +382,7 @@ bool rpc_prepare_invoke(
  */
 bool rpc_restore_thread( task_thread_ptr_t thread, void* context ) {
   // ensure proper states
-  if (
-    TASK_THREAD_STATE_RPC_ACTIVE != thread->state
-    || TASK_PROCESS_STATE_RPC_ACTIVE != thread->process->state
-  ) {
+  if ( TASK_THREAD_STATE_RPC_ACTIVE != thread->state ) {
     return false;
   }
   // variables
@@ -482,7 +478,6 @@ bool rpc_restore_thread( task_thread_ptr_t thread, void* context ) {
   barrier_data_mem();
   // set correct state
   backup->thread->state = TASK_THREAD_STATE_ACTIVE;
-  backup->thread->process->state = TASK_PROCESS_STATE_ACTIVE;
   // finally remove found entry
   list_remove_data( entry_container->queue, backup );
   // handle enqueued stuff

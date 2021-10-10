@@ -136,12 +136,160 @@ static bool device_exists( const char* path ) {
 
 /**
  * @fn void wait_for_device(const char*)
- * @brief Wait for path exists
+ * @brief Wait for device exists by querying vfs with a sleep between
  *
  * @param path
  */
 static void wait_for_device( const char* path ) {
-  while( ! device_exists( path ) ) {}
+  while( ! device_exists( path ) ) {
+    sleep( 2 );
+  }
+}
+
+/**
+ * @fn void rpc_handle_read(pid_t, size_t)
+ * @brief Helper to handle read request from ramdisk
+ *
+ * @param origin
+ * @param data_info
+ */
+static void rpc_handle_read( __unused pid_t origin, size_t data_info ) {
+  vfs_read_request_ptr_t request = ( vfs_read_request_ptr_t )malloc(
+    sizeof( vfs_read_request_t ) );
+  if ( ! request ) {
+    return;
+  }
+  vfs_read_response_ptr_t response = ( vfs_read_response_ptr_t )malloc(
+    sizeof( vfs_read_response_t ) );
+  if ( ! response ) {
+    free( request );
+    return;
+  }
+  memset( request, 0, sizeof( vfs_read_request_t ) );
+  memset( response, 0, sizeof( vfs_read_response_t ) );
+  // handle no data
+  if( ! data_info ) {
+    response->len = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_read_response_t ) );
+    free( request );
+    free( response );
+    return;
+  }
+  // fetch rpc data
+  _rpc_get_data( request, sizeof( vfs_read_request_t ), data_info );
+  // handle error
+  if ( errno ) {
+    response->len = -EINVAL;
+    _rpc_ret( response, sizeof( vfs_read_response_t ) );
+    free( request );
+    free( response );
+    return;
+  }
+  // get rid of mount point
+  char* file = request->file_path;
+  char* buf = NULL;
+  void* shm_addr = NULL;
+  // map shared if set
+  if ( 0 != request->shm_id ) {
+    //EARLY_STARTUP_PRINT( "Map shared %#x\r\n", request->shm_id )
+    // attach shared area
+    shm_addr = _memory_shared_attach( request->shm_id, NULL );
+    if ( errno ) {
+      EARLY_STARTUP_PRINT( "Unable to attach shared area!\r\n" )
+      // prepare response
+      response->len = -EIO;
+      // return response
+      _rpc_ret( response, sizeof( vfs_read_response_t ) );
+      // free stuff
+      free( request );
+      free( response );
+      return;
+    }
+  }
+  //EARLY_STARTUP_PRINT( "file = %s\r\n", file );
+  // strip leading slash
+  if ( '/' == *file ) {
+    file++;
+  }
+  size_t total_size = 0;
+  // reset read offset
+  ramdisk_read_offset = 0;
+  // try to find within ramdisk
+  while ( th_read( disk ) == 0 ) {
+    if ( TH_ISREG( disk ) ) {
+      // get filename
+      char* ramdisk_file = th_get_pathname( disk );
+      //EARLY_STARTUP_PRINT( "ramdisk_file = %s\r\n", ramdisk_file )
+      // check for match
+      if ( 0 == strcmp( file, ramdisk_file ) ) {
+        // set vfs image addr
+        total_size = th_get_size( disk );
+        //EARLY_STARTUP_PRINT( "total byte size = %#x\r\n", total_size )
+        buf = ( char* )( ( uint8_t* )ramdisk_decompressed + ramdisk_read_offset );
+        break;
+      }
+      // skip to next file
+      if ( tar_skip_regfile( disk ) != 0 ) {
+        EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
+        // return response
+        response->len = -EIO;
+        _rpc_ret( response, sizeof( vfs_read_response_t ) );
+        return;
+      }
+    }
+  }
+  // handle error
+  if ( ! buf ) {
+    // prepare response
+    response->len = -EIO;
+    // return response
+    _rpc_ret( response, sizeof( vfs_read_response_t ) );
+    // free stuff
+    free( request );
+    free( response );
+    return;
+  }
+
+  // read until end / size
+  size_t amount = request->len;
+  size_t total = amount + ( size_t )request->offset;
+  if ( total > total_size ) {
+    amount -= ( total - total_size );
+  }
+  /*EARLY_STARTUP_PRINT(
+    "read amount = %d ( %#x ), offset = %ld ( %#lx ), total = %d ( %#x ), "
+    "first two byte = %#"PRIx16"\r\n",
+    amount, amount, request->offset, request->offset, total, total,
+    *( ( uint16_t* )( buf + request->offset ) ) )*/
+  // now copy
+  if ( shm_addr ) {
+    memcpy( shm_addr, buf + request->offset, amount );
+  } else {
+    memcpy( response->data, buf + request->offset, amount );
+  }
+
+  // detach shared area
+  if ( request->shm_id ) {
+    _memory_shared_detach( request->shm_id );
+    if ( errno ) {
+      EARLY_STARTUP_PRINT( "Unable to detach shared area!\r\n")
+      // prepare response
+      response->len = -EIO;
+      // return response
+      _rpc_ret( response, sizeof( vfs_read_response_t ) );
+      // free stuff
+      free( request );
+      free( response );
+      return;
+    }
+  }
+  // prepare read amount
+  response->len = ( ssize_t )amount;
+  // return response
+  _rpc_ret( response, sizeof( vfs_read_response_t ) );
+  // free stuff
+  free( request );
+  free( response );
 }
 
 /**
@@ -182,6 +330,12 @@ static pid_t execute_driver( char* name ) {
  * @brief Helper to get up the necessary additional drivers for a running system
  */
 static void stage2( void ) {
+  // start usb server
+  //EARLY_STARTUP_PRINT( "Starting and waiting for usb server...\r\n" )
+  //pid_t usb = execute_driver( "/ramdisk/server/usb/generic" );
+  //wait_for_device( "/dev/usb" );
+  pid_t usb = 1;
+
   // start mailbox server
   EARLY_STARTUP_PRINT( "Starting and waiting for mailbox server...\r\n" )
   pid_t mailbox = execute_driver( "/ramdisk/server/mailbox" );
@@ -205,8 +359,8 @@ static void stage2( void ) {
   wait_for_device( "/dev/terminal" );
 
   EARLY_STARTUP_PRINT(
-    "mailbox = %d, console = %d, terminal = %d, framebuffer = %d\r\n",
-    mailbox, console, terminal, framebuffer )
+    "usb = %d, mailbox = %d, console = %d, terminal = %d, framebuffer = %d\r\n",
+    usb, mailbox, console, terminal, framebuffer )
 
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
@@ -449,6 +603,13 @@ int main( int argc, char* argv[] ) {
   // free message structure
   free( msg );
 
+  // register rpc handler
+  _rpc_acquire( RPC_VFS_READ_OPERATION, ( uintptr_t )rpc_handle_read );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    return -1;
+  }
+
   // fork process and handle possible error
   EARLY_STARTUP_PRINT( "Forking process for further init!\r\n" );
   forked_process = fork();
@@ -462,174 +623,9 @@ int main( int argc, char* argv[] ) {
     return 1;
   }
 
-  EARLY_STARTUP_PRINT( "Entering message loop!\r\n" );
+  EARLY_STARTUP_PRINT( "Entering wait for rpc loop!\r\n" );
   while( true ) {
-    // get message type
-    vfs_message_type_t type = _message_receive_type();
-    // skip on error / no message
-    if ( errno || ! type ) {
-      continue;
-    }
-
-    if ( VFS_READ_REQUEST == type ) {
-      vfs_read_request_ptr_t request = ( vfs_read_request_ptr_t )malloc(
-        sizeof( vfs_read_request_t ) );
-      if ( ! request ) {
-        continue;
-      }
-      vfs_read_response_ptr_t response = ( vfs_read_response_ptr_t )malloc(
-        sizeof( vfs_read_response_t ) );
-      if ( ! response ) {
-        free( request );
-        continue;
-      }
-      pid_t sender = 0;
-      size_t message_id = 0;
-      memset( request, 0, sizeof( vfs_read_request_t ) );
-      memset( response, 0, sizeof( vfs_read_response_t ) );
-      // get message
-      _message_receive(
-        ( char* )request,
-        sizeof( vfs_read_request_t ),
-        &sender,
-        &message_id
-      );
-      // handle error
-      if ( errno ) {
-        EARLY_STARTUP_PRINT( "Read error: %s\r\n", strerror( errno ) );
-        free( request );
-        free( response );
-        continue;
-      }
-      // get rid of mount point
-      char* file = request->file_path;
-      char* buf = NULL;
-      void* shm_addr = NULL;
-      // map shared if set
-      if ( 0 != request->shm_id ) {
-        //EARLY_STARTUP_PRINT( "Map shared %#x\r\n", request->shm_id )
-        // attach shared area
-        shm_addr = _memory_shared_attach( request->shm_id, NULL );
-        if ( errno ) {
-          EARLY_STARTUP_PRINT( "Unable to attach shared area!\r\n" )
-          // prepare response
-          response->len = -EIO;
-          // send response
-          _message_send(
-            sender,
-            VFS_READ_RESPONSE,
-            ( const char* )response,
-            sizeof( vfs_read_response_t ),
-            message_id );
-          // free stuff
-          free( request );
-          free( response );
-          continue;
-        }
-      }
-//      EARLY_STARTUP_PRINT( "file = %s\r\n", file );
-      // strip leading slash
-      if ( '/' == *file ) {
-        file++;
-      }
-      size_t total_size = 0;
-      // reset read offset
-      ramdisk_read_offset = 0;
-      // try to find within ramdisk
-      while ( th_read( disk ) == 0 ) {
-        if ( TH_ISREG( disk ) ) {
-          // get filename
-          char* ramdisk_file = th_get_pathname( disk );
-          //EARLY_STARTUP_PRINT( "ramdisk_file = %s\r\n", ramdisk_file )
-          // check for match
-          if ( 0 == strcmp( file, ramdisk_file ) ) {
-            // set vfs image addr
-            total_size = th_get_size( disk );
-            //EARLY_STARTUP_PRINT( "total byte size = %#x\r\n", total_size )
-            buf = ( char* )( ( uint8_t* )ramdisk_decompressed + ramdisk_read_offset );
-            break;
-          }
-          // skip to next file
-          if ( tar_skip_regfile( disk ) != 0 ) {
-            EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
-            return -1;
-          }
-        }
-      }
-      // handle error
-      if ( ! buf ) {
-        // prepare response
-        response->len = -EIO;
-        // send response
-        _message_send(
-          sender,
-          VFS_READ_RESPONSE,
-          ( const char* )response,
-          sizeof( vfs_read_response_t ),
-          message_id );
-        // free stuff
-        free( request );
-        free( response );
-        continue;
-      }
-
-      // read until end / size
-      size_t amount = request->len;
-      size_t total = amount + ( size_t )request->offset;
-      if ( total > total_size ) {
-        amount -= ( total - total_size );
-      }
-      /*EARLY_STARTUP_PRINT(
-        "read amount = %d ( %#x ), offset = %ld ( %#lx ), total = %d ( %#x ), "
-        "first two byte = %#"PRIx16"\r\n",
-        amount, amount, request->offset, request->offset, total, total,
-        *( ( uint16_t* )( buf + request->offset ) ) );*/
-      // now copy
-      if ( shm_addr ) {
-        memcpy( shm_addr, buf + request->offset, amount );
-      } else {
-        memcpy( response->data, buf + request->offset, amount );
-      }
-
-      // detach shared area
-      if ( request->shm_id ) {
-        _memory_shared_detach( request->shm_id );
-        if ( errno ) {
-          EARLY_STARTUP_PRINT( "Unable to detach shared area!\r\n")
-          // prepare response
-          response->len = -EIO;
-          // send response
-          _message_send(
-            sender,
-            VFS_READ_RESPONSE,
-            ( const char* )response,
-            sizeof( vfs_read_response_t ),
-            message_id );
-          // free stuff
-          free( request );
-          free( response );
-          continue;
-        }
-      }
-      // prepare read amount
-      response->len = ( ssize_t )amount;
-      // send response
-      _message_send(
-        sender,
-        VFS_READ_RESPONSE,
-        ( const char* )response,
-        sizeof( vfs_read_response_t ),
-        message_id );
-      // free stuff
-      free( request );
-      free( response );
-      continue;
-    }
-
-    // FIXME: Handle incoming message request read
-    // FIXME: Handle incoming message request write by sending no access due to readonly fs
+    _rpc_wait_for_call();
   }
-
-  for(;;);
   return 0;
 }

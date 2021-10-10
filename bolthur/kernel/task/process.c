@@ -179,15 +179,14 @@ bool task_process_init( void ) {
     return false;
   }
   // create cleanup list
-  process_manager->process_to_cleanup = list_construct( NULL, NULL );
+  process_manager->process_to_cleanup = list_construct( NULL, NULL, NULL );
   if ( ! process_manager->process_to_cleanup ) {
     avl_destroy_tree( process_manager->process_id );
     avl_destroy_tree( process_manager->thread_priority );
     free( process_manager );
     return false;
   }
-  // create cleanup list
-  process_manager->thread_to_cleanup = list_construct( NULL, NULL );
+  process_manager->thread_to_cleanup = list_construct( NULL, NULL, NULL );
   if ( ! process_manager->thread_to_cleanup ) {
     list_destruct( process_manager->process_to_cleanup );
     avl_destroy_tree( process_manager->process_id );
@@ -195,7 +194,6 @@ bool task_process_init( void ) {
     free( process_manager );
     return false;
   }
-
   // register process switch event
   if ( ! event_bind( EVENT_PROCESS, task_process_schedule, true ) ) {
     list_destruct( process_manager->thread_to_cleanup );
@@ -284,7 +282,6 @@ task_process_ptr_t task_process_create( size_t priority, pid_t parent ) {
     task_process_free( process );
     return NULL;
   }
-  process->state = TASK_PROCESS_STATE_INIT;
   process->priority = priority;
   process->parent = parent;
   process->thread_stack_manager = task_stack_manager_create();
@@ -349,13 +346,12 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
   // create message queue if existing
   if( proc->message_queue ) {
     // prepare message queue
-    forked->message_queue = list_construct( NULL, message_cleanup );
+    forked->message_queue = list_construct( NULL, message_cleanup, NULL );
   }
 
   // populate data normal data
   forked->id = task_process_generate_id();
   forked->parent = proc->id;
-  forked->state = TASK_PROCESS_STATE_READY;
   forked->priority = proc->priority;
 
   // fork shared memory
@@ -669,8 +665,18 @@ task_process_ptr_t task_process_get_by_id( pid_t pid ) {
  * @param proc
  */
 void task_process_prepare_kill( void* context, task_process_ptr_t proc ) {
-  // set process state
-  proc->state = TASK_PROCESS_STATE_KILL;
+  // get first thread
+  avl_node_ptr_t current = avl_iterate_first( proc->thread_manager );
+  task_thread_ptr_t thread = NULL;
+  // loop through all threads set appropriate state for kill
+  while ( current ) {
+    // get thread
+    thread = TASK_THREAD_GET_BLOCK( current );
+    // set process state
+    thread->state = TASK_THREAD_STATE_KILL;
+    // get next thread
+    current = avl_iterate_next( proc->thread_manager, current );
+  }
   // push process to clean up list
   list_push_back( process_manager->process_to_cleanup, proc );
   // trigger schedule and cleanup

@@ -318,13 +318,13 @@ bool interrupt_register_handler(
     #endif
     // populate block
     block->interrupt = num;
-    block->handler = list_construct( NULL, NULL );
+    block->handler = list_construct( NULL, NULL, NULL );
     // check list
     if ( ! block->handler ) {
       free( block );
       return false;
     }
-    block->post = list_construct( NULL, NULL );
+    block->post = list_construct( NULL, NULL, NULL );
     // check list
     if ( ! block->post ) {
       free( block->handler );

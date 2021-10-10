@@ -55,7 +55,9 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   // free again
   free( msg );
-
-  for(;;);
+  // wait for rpc queue
+  while( true ) {
+    _rpc_wait_for_call();
+  }
   return 0;
 }

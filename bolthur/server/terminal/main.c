@@ -89,7 +89,9 @@ int main( __unused int argc, __unused char* argv[] ) {
   free( msg );
 
   // endless loop
-  while( true ) {}
+  while( true ) {
+    _rpc_wait_for_call();
+  }
   // return exit code 0
   return 0;
 }
