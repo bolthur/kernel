@@ -21,28 +21,34 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "handler.h"
+#include "../libconsole.h"
+
+struct console_rpc command_list[] = {
+  { .command = CONSOLE_ADD, .name = "add", .callback = ( uintptr_t )handler_console_add },
+  { .command = CONSOLE_SELECT, .name = "select", .callback = ( uintptr_t )handler_console_select },
+  { .command = CONSOLE_INFO, .name = "info", .callback = ( uintptr_t )handler_console_info },
+};
 
 /**
  * @fn bool handler_register(void)
  * @brief Registers necessary rpc handler
  */
 bool handler_register( void ) {
-  // register console add command
-  _rpc_acquire(
-    "#/dev/console#add",
-    ( uintptr_t )handler_console_add
-  );
-  if ( errno ) {
-    return false;
+  // register all handlers
+  size_t max = sizeof( command_list ) / sizeof( command_list[ 0 ] );
+  char path[ PATH_MAX ];
+  // loop through handler to identify used one
+  for ( size_t i = 0; i < max; i++ ) {
+    // erase local variable
+    memset( path, 0, sizeof( char ) * PATH_MAX );
+    // build path
+    strncpy( path, "#/dev/console#", PATH_MAX );
+    strncat( path, command_list[ i ].name, PATH_MAX - strlen( path ) );
+    // register rpc
+    _rpc_acquire( path, command_list[ i ].callback );
+    if ( errno ) {
+      return false;
+    }
   }
-  // register console activate command
-  _rpc_acquire(
-    "#/dev/console#select",
-    ( uintptr_t )handler_console_select
-  );
-  if ( errno ) {
-    return false;
-  }
-  /// FIXME: REGISTER FURTHER RPC HANDLER FOR COMMANDS
   return true;
 }

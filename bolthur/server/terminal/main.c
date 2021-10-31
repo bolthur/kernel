@@ -31,11 +31,11 @@
 #include "psf.h"
 #include "output.h"
 #include "terminal.h"
+#include "main.h"
 
 pid_t pid = 0;
-
-#define CONSOLE_MANAGER "/dev/console"
-#define OUTPUT_DRIVER "/dev/framebuffer"
+int output_driver_fd = 0;
+int console_manager_fd = 0;
 
 /**
  * @brief main entry function
@@ -45,6 +45,19 @@ pid_t pid = 0;
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
+  // open file to framebuffer device
+  output_driver_fd = open( OUTPUT_DRIVER, O_RDWR );
+  if ( -1 == output_driver_fd ) {
+    EARLY_STARTUP_PRINT( "Unable to open framebuffer device file!\r\n" )
+    return -1;
+  }
+  // open file to console manager device
+  console_manager_fd = open( CONSOLE_MANAGER, O_RDWR );
+  if ( -1 == console_manager_fd ) {
+    EARLY_STARTUP_PRINT( "Unable to open console manager device file!\r\n" )
+    return -1;
+  }
+
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {

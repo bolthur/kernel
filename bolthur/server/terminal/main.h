@@ -17,19 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/bolthur.h>
+#if ! defined( _MAIN_H )
+#define _MAIN_H
 
-#if !defined( _RPC_H )
-#define _RPC_H
+#define CONSOLE_MANAGER "/dev/console"
+#define OUTPUT_DRIVER "/dev/framebuffer"
 
-void rpc_handle_add( pid_t, size_t );
-void rpc_handle_remove( pid_t, size_t );
-void rpc_handle_open( pid_t, size_t );
-void rpc_handle_close( pid_t, size_t );
-void rpc_handle_read( pid_t, size_t );
-void rpc_handle_write( pid_t, size_t );
-void rpc_handle_seek( pid_t, size_t );
-void rpc_handle_stat( pid_t, size_t );
-void rpc_handle_ioctl( pid_t, size_t );
+extern int output_driver_fd;
+extern int console_manager_fd;
 
 #endif

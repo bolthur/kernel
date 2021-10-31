@@ -96,6 +96,11 @@ int main( __unused int argc, __unused char* argv[] ) {
     EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
     return -1;
   }
+  _rpc_acquire( RPC_VFS_IOCTL_OPERATION, ( uintptr_t )rpc_handle_ioctl );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler ioctl!\r\n" )
+    return -1;
+  }
 
   EARLY_STARTUP_PRINT( "entering wait for rpc loop!\r\n" )
   while( true ) {

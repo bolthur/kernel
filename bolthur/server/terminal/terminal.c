@@ -20,11 +20,13 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include "terminal.h"
 #include "output.h"
 #include "list.h"
 #include "psf.h"
 #include "utf8.h"
+#include "main.h"
 #include "../libconsole.h"
 #include "../libhelper.h"
 
@@ -147,7 +149,6 @@ bool terminal_init( void ) {
     strncpy( msg->file_path, tty_path, PATH_MAX );
     // perform add request
     send_vfs_add_request( msg );
-
     // register handler for streams
     _rpc_acquire( out, ( uintptr_t )output_handle_out );
     if ( errno ) {
@@ -159,6 +160,15 @@ bool terminal_init( void ) {
       return false;
     }
     _rpc_acquire( err, ( uintptr_t )output_handle_err );
+    if ( errno ) {
+      list_destruct( terminal_list );
+      free( command_add );
+      free( command_select );
+      free( msg );
+      free( terminal_list );
+      return false;
+    }
+    _rpc_acquire( in, ( uintptr_t )output_handle_in );
     if ( errno ) {
       list_destruct( terminal_list );
       free( command_add );
@@ -207,7 +217,6 @@ bool terminal_init( void ) {
       list_destruct( terminal_list );
       return false;
     }
-
     // erase
     memset( command_add, 0, sizeof( console_command_add_t ) );
     // prepare structure
@@ -215,42 +224,49 @@ bool terminal_init( void ) {
     strncpy( command_add->in, in, PATH_MAX );
     strncpy( command_add->out, out, PATH_MAX );
     strncpy( command_add->err, err, PATH_MAX );
-    // perform sync rpc call
-    size_t response_info = _rpc_raise_wait(
-      "#/dev/console#add",
-      5,
-      command_add,
-      sizeof( console_command_add_t )
+    command_add->origin = getpid();
+    // call console add
+    int result = ioctl(
+      console_manager_fd,
+      IOCTL_BUILD_REQUEST(
+        CONSOLE_ADD,
+        sizeof( console_command_add_t ),
+        IOCTL_RDWR
+      ),
+      command_add
     );
-    if ( errno ) {
+    if ( -1 == result ) {
       free( command_add );
       free( command_select );
       free( msg );
       list_destruct( terminal_list );
       return false;
     }
-    int response;
-    _rpc_get_data( ( char* )&response, sizeof( int ), response_info );
+    //int response = *( ( int* )command_add );
     /// FIXME: WHAT ABOUT RETURN?
   }
 
   memset( command_select, 0, sizeof( console_command_select_t ) );
   // prepare structure
   strncpy( command_select->path, "/dev/tty0", PATH_MAX );
-  // perform sync rpc call
-  size_t response_info = _rpc_raise_wait(
-    "#/dev/console#select", 5,
-    command_select, sizeof( console_command_select_t )
+  // call console select
+  int result = ioctl(
+    console_manager_fd,
+    IOCTL_BUILD_REQUEST(
+      CONSOLE_SELECT,
+      sizeof( console_command_select_t ),
+      IOCTL_RDWR
+    ),
+    command_select
   );
-  if ( errno ) {
+  if ( -1 == result ) {
     free( command_add );
     free( command_select );
     free( msg );
     list_destruct( terminal_list );
     return false;
   }
-  int response;
-  _rpc_get_data( ( char* )&response, sizeof( int ), response_info );
+  int response = *( ( int* )command_select );
   // free again
   free( msg );
   free( command_add );

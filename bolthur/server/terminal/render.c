@@ -21,10 +21,12 @@
 #include <string.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "render.h"
 #include "terminal.h"
 #include "psf.h"
+#include "main.h"
 #include "../libframebuffer.h"
 
 /**
@@ -147,15 +149,18 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
   action->y = start_row * font_height;
   action->max_x = max_x;
   action->max_y = max_y;
-  // call for render surface
-  _rpc_raise(
-    "#/dev/framebuffer#render_surface",
-    6,
-    action,
-    action_size
+  // call render surface
+  int result = ioctl(
+    output_driver_fd,
+    IOCTL_BUILD_REQUEST(
+      FRAMEBUFFER_RENDER_SURFACE,
+      action_size,
+      IOCTL_WRONLY
+    ),
+    action
   );
   // handle error
-  if ( errno ) {
+  if ( -1 == result ) {
     free( action );
     return;
   }

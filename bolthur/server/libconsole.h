@@ -26,11 +26,16 @@
 #if ! defined( _LIBCONSOLE_H )
 #define _LIBCONSOLE_H
 
+#define CONSOLE_ADD 1
+#define CONSOLE_SELECT 2
+#define CONSOLE_INFO 3
+
 struct console_command_add {
   char terminal[ PATH_MAX ];
   char in[ PATH_MAX ];
   char out[ PATH_MAX ];
   char err[ PATH_MAX ];
+  pid_t origin;
 };
 typedef struct console_command_add console_command_add_t;
 typedef struct console_command_add* console_command_add_ptr_t;

@@ -40,6 +40,26 @@ uint8_t* back_buffer;
 
 static int32_t mailbox_buffer[ 256 ];
 
+struct framebuffer_rpc command_list[] = {
+  {
+    .command = FRAMEBUFFER_GET_RESOLUTION,
+    .name = "resolution",
+    .callback = ( uintptr_t )framebuffer_handle_resolution
+  }, {
+    .command = FRAMEBUFFER_CLEAR,
+    .name = "clear",
+    .callback = ( uintptr_t )framebuffer_handle_clear
+  }, {
+    .command = FRAMEBUFFER_RENDER_SURFACE,
+    .name = "render_surface",
+    .callback = ( uintptr_t )framebuffer_handle_render_surface
+  }, {
+    .command = FRAMEBUFFER_INFO,
+    .name = "info",
+    .callback = ( uintptr_t )framebuffer_handle_info
+  },
+};
+
 /**
  * @fn bool framebuffer_init(void)
  * @brief Init framebuffer
@@ -153,26 +173,21 @@ bool framebuffer_init( void ) {
  * @return
  */
 bool framebuffer_register_rpc( void ) {
-  _rpc_acquire(
-    "#/dev/framebuffer#resolution",
-    ( uintptr_t )framebuffer_handle_resolution
-  );
-  if ( errno ) {
-    return false;
-  }
-  _rpc_acquire(
-    "#/dev/framebuffer#clear",
-    ( uintptr_t )framebuffer_handle_clear
-  );
-  if ( errno ) {
-    return false;
-  }
-  _rpc_acquire(
-    "#/dev/framebuffer#render_surface",
-    ( uintptr_t )framebuffer_handle_render_surface
-  );
-  if ( errno ) {
-    return false;
+  // register all handlers
+  size_t max = sizeof( command_list ) / sizeof( command_list[ 0 ] );
+  char path[ PATH_MAX ];
+  // loop through handler to identify used one
+  for ( size_t i = 0; i < max; i++ ) {
+    // erase local variable
+    memset( path, 0, sizeof( char ) * PATH_MAX );
+    // build path
+    strncpy( path, "#/dev/framebuffer#", PATH_MAX );
+    strncat( path, command_list[ i ].name, PATH_MAX - strlen( path ) );
+    // register rpc
+    _rpc_acquire( path, command_list[ i ].callback );
+    if ( errno ) {
+      return false;
+    }
   }
   return true;
 }
@@ -241,8 +256,10 @@ void framebuffer_handle_clear(
   __unused pid_t origin,
   __unused size_t data_info
 ) {
+  int ret = 0;
   memset( current_back, 0, size );
   framebuffer_flip();
+  _rpc_ret( &ret, sizeof( int ) );
 }
 
 /**
@@ -256,23 +273,32 @@ void framebuffer_handle_render_surface(
   __unused pid_t origin,
   size_t data_info
 ) {
+  int ret = 0;
   // handle no data
   if( ! data_info ) {
+    ret = -ENOMSG;
+    _rpc_ret( &ret, sizeof( int ) );
     return;
   }
   // get size for allocation
   size_t sz = _rpc_get_data_size( data_info );
   if ( errno ) {
+    ret = -EIO;
+    _rpc_ret( &ret, sizeof( int ) );
     return;
   }
   framebuffer_render_surface_ptr_t info = malloc( sz );
   if ( ! info ) {
+    ret = -ENOMEM;
+    _rpc_ret( &ret, sizeof( int ) );
     return;
   }
   // fetch rpc data
   _rpc_get_data( info, sz, data_info );
   // handle error
   if ( errno ) {
+    ret = -EIO;
+    _rpc_ret( &ret, sizeof( int ) );
     free( info );
     return;
   }
@@ -293,4 +319,75 @@ void framebuffer_handle_render_surface(
   free( info );
   // flip it
   framebuffer_flip();
+  _rpc_ret( &ret, sizeof( int ) );
+}
+
+/**
+ * @fn void framebuffer_handle_info(pid_t, size_t)
+ * @brief Handle ioctl info request
+ *
+ * @param origin
+ * @param data_info
+ */
+void framebuffer_handle_info( __unused pid_t origin, size_t data_info ) {
+  // dummy error response
+  vfs_ioctl_info_response_t err_response = { .status = -EINVAL };
+  // handle no data
+  if( ! data_info ) {
+    _rpc_ret( &err_response, sizeof( vfs_ioctl_info_response_t ) );
+    return;
+  }
+  // get size for allocation
+  size_t sz = _rpc_get_data_size( data_info );
+  if ( errno ) {
+    err_response.status = -EIO;
+    _rpc_ret( &err_response, sizeof( vfs_ioctl_info_response_t ) );
+    return;
+  }
+  // allocate
+  vfs_ioctl_info_request_ptr_t info = malloc( sz );
+  if ( ! info ) {
+    err_response.status = -ENOMEM;
+    _rpc_ret( &err_response, sizeof( vfs_ioctl_info_response_t ) );
+    return;
+  }
+  // get request data
+  memset( info, 0, sz );
+  _rpc_get_data( info, sz, data_info );
+  if ( errno ) {
+    err_response.status = -EIO;
+    _rpc_ret( &err_response, sizeof( vfs_ioctl_info_response_t ) );
+    free( info );
+    return;
+  }
+  // max handlers
+  size_t max = sizeof( command_list ) / sizeof( command_list[ 0 ] );
+  // loop through handler to identify used one
+  for ( size_t i = 0; i < max; i++ ) {
+    if ( command_list[ i ].command == info->command ) {
+      size_t response_size = sizeof( vfs_ioctl_info_response_t ) + (
+        sizeof( char ) * ( strlen( command_list[ i ].name ) + 1 )
+      );
+      // allocate
+      vfs_ioctl_info_response_ptr_t response = malloc( response_size );
+      if ( ! response ) {
+        err_response.status = -ENOMEM;
+        _rpc_ret( &err_response, sizeof( vfs_ioctl_info_response_t ) );
+        free( info );
+        return;
+      }
+      // fill response
+      memset( response, 0, response_size );
+      response->status = 0;
+      strcpy( response->name, command_list[ i ].name );
+      // return and exit
+      _rpc_ret( response, response_size );
+      free( info );
+      free( response );
+      return;
+    }
+  }
+  free( info );
+  err_response.status = -ENOSYS;
+  _rpc_ret( &err_response, sizeof( vfs_ioctl_info_response_t ) );
 }

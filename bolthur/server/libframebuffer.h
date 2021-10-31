@@ -26,6 +26,11 @@
 #if ! defined( _LIBFRAMEBUFFER_H )
 #define _LIBFRAMEBUFFER_H
 
+#define FRAMEBUFFER_GET_RESOLUTION 1
+#define FRAMEBUFFER_CLEAR 2
+#define FRAMEBUFFER_RENDER_SURFACE 3
+#define FRAMEBUFFER_INFO 4
+
 struct framebuffer_render_surface {
   uint32_t x;
   uint32_t y;

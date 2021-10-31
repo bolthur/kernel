@@ -21,12 +21,15 @@
 #include <string.h>
 #include <stdlib.h>
 #include <inttypes.h>
+#include <fcntl.h>
+#include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "output.h"
 #include "list.h"
 #include "terminal.h"
 #include "psf.h"
 #include "render.h"
+#include "main.h"
 #include "../libterminal.h"
 #include "../libframebuffer.h"
 
@@ -37,19 +40,24 @@ framebuffer_resolution_t resolution_data;
  * @brief Generic output init
  *
  * @return
- *
- * @todo fetch framebuffer pid from vfs for rpc call
  */
 bool output_init( void ) {
-  // perform sync rpc call
-  size_t response_info = _rpc_raise_wait(
-    "#/dev/framebuffer#resolution", 6, NULL, 0
+  // acquire stuff
+  int result = ioctl(
+    output_driver_fd,
+    IOCTL_BUILD_REQUEST(
+      FRAMEBUFFER_GET_RESOLUTION,
+      sizeof( resolution_data ),
+      IOCTL_RDONLY
+    ),
+    &resolution_data
   );
-  if ( errno ) {
+  // handle error
+  if ( -1 == result ) {
+    EARLY_STARTUP_PRINT( "ioctl error: %s\r\n", strerror( errno ) );
     return false;
   }
-  // fetch return
-  _rpc_get_data( &resolution_data, sizeof( resolution_data ), response_info );
+  // return success
   return true;
 }
 
@@ -141,4 +149,16 @@ void output_handle_err( __unused pid_t origin, size_t data_info ) {
   free( terminal );
   // free all used temporary structures
   free( terminal );
+}
+
+/**
+ * @fn void output_handle_in(pid_t, size_t)
+ * @brief Handler for stream input
+ *
+ * @param origin
+ * @param data_info
+ *
+ * @todo add logic
+ */
+void output_handle_in( __unused pid_t origin, __unused size_t data_info ) {
 }

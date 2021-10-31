@@ -32,7 +32,7 @@
  * @param origin
  * @param data_info
  */
-void handler_console_add( pid_t origin, size_t data_info ) {
+void handler_console_add( __unused pid_t origin, size_t data_info ) {
   int success = -1;
   // handle no data
   if( ! data_info ) {
@@ -78,7 +78,7 @@ void handler_console_add( pid_t origin, size_t data_info ) {
   }
   // copy over content
   memset( console, 0, sizeof( console_t ) );
-  console->handler = origin;
+  console->handler = command->origin;
   console->active = false;
   console->path = strdup( command->terminal );
   if ( ! console->path ) {

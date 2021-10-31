@@ -25,6 +25,12 @@
 #define FRAMEBUFFER_SCREEN_DEPTH 32
 #define BYTE_PER_PIXEL ( FRAMEBUFFER_SCREEN_DEPTH / CHAR_BIT )
 
+struct framebuffer_rpc {
+  uint32_t command;
+  uintptr_t callback;
+  char* name;
+};
+
 bool framebuffer_init( void );
 bool framebuffer_register_rpc( void );
 void framebuffer_flip( void );
@@ -32,5 +38,8 @@ void framebuffer_flip( void );
 void framebuffer_handle_resolution( pid_t, size_t );
 void framebuffer_handle_clear( pid_t, size_t );
 void framebuffer_handle_render_surface( pid_t, size_t );
+void framebuffer_handle_info( pid_t, size_t );
+
+extern struct framebuffer_rpc command_list[ 4 ];
 
 #endif
