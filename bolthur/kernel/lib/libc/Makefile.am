@@ -9,7 +9,6 @@ libc_la_SOURCES = \
   stdio/putchar.c \
   stdio/puts.c \
   stdio/sprintf.c \
-  stdio/vprintf.c \
   stdio/vsprintf.c \
   stdlib/abort.c \
   stdlib/aligned_alloc.c \

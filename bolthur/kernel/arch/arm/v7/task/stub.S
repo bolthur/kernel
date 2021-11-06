@@ -20,6 +20,7 @@
 #define ASSEMBLER_FILE 1
 #include <assembly.h>
 #include <arch/arm/v7/cpu.h>
+#include <arch/arm/v7/interrupt/handler.S>
 
 EXPORT( task_thread_switch_to )
 task_thread_switch_to:
@@ -28,9 +29,11 @@ task_thread_switch_to:
   // switch to system mode first
   cpsid if, #CPSR_MODE_SYSTEM
   // load spsr from passed context
-  ldr r0, [ fp, #64 ]
+  ldr r0, [ fp, #SPSR_OFFSET ]
   // set spsr used when returning
   msr SPSR_cxsf, r0
+  // restore floating point registers
+  pop_fpu_register fp
   // restore registers and switch to process
   ldm fp, { r0 - r15 }^
   nop

@@ -17,6 +17,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-Wmissing-prototypes -Wshadow])
   AX_APPEND_COMPILE_FLAGS([-Wmissing-noreturn -Wmissing-format-attribute])
   AX_APPEND_COMPILE_FLAGS([-Wduplicated-branches -Wduplicated-cond])
+  AX_APPEND_COMPILE_FLAGS([-Wformat=2 -Wformat-overflow=2 -Wformat-truncation=2])
   # generic
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -nodefaultlibs -std=c18])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer -fno-builtin])

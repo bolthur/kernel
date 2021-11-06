@@ -28,7 +28,6 @@ int printf( const char* restrict, ... );
 int putchar( int );
 int puts( const char* );
 int sprintf( char*, const char* restrict, ... );
-int vprintf( const char* restrict, va_list );
 int vsprintf( char*, const char* restrict, va_list );
 
 #endif

@@ -5,7 +5,7 @@
     <dir name="../../../bolthur/kernel/" />
     <dir name="../../../bolthur/kernel/lib/" />
     <dir name="../../../bolthur/kernel/thirdparty/dtc/libfdt/" />
-    <dir name="/opt/bolthur/cross/lib/gcc/arm-rpi2-bolthur-eabi/11.1.0/include/" />
+    <dir name="/opt/bolthur/cross/lib/gcc/arm-rpi2-bolthur-eabi/11.2.0/include/" />
     <dir name="/opt/bolthur/sysroot/arm-rpi2-bolthur-eabi/usr/include/" />
   </includedir>
   <exclude>

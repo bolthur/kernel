@@ -29,16 +29,13 @@
  */
 int printf( const char* restrict format, ... ) {
   // variables
-  int written;
   va_list parameter;
-
   // variable arguments
   va_start( parameter, format );
   // write
-  written = vprintf( format, parameter );
+  int written = vsprintf( NULL, format, parameter );
   // cleanup parameter
   va_end( parameter );
-
   // return written amount
   return written;
 }

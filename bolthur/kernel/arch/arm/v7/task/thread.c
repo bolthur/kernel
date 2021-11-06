@@ -113,6 +113,14 @@ task_thread_ptr_t task_thread_create(
   }
   // set stack pointer
   current_context->reg.sp = stack_virtual + STACK_SIZE - sizeof( int );
+  // push back current value of fpu
+  #if defined( ARM_CPU_HAS_NEON )
+    __asm__ __volatile__(
+      "vmrs %0, fpscr"
+      : "=r" ( current_context->reg.fpscr )
+      : : "cc", "memory"
+    );
+  #endif
   // debug output
   #if defined( PRINT_PROCESS )
     DUMP_REGISTER( current_context )

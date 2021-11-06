@@ -36,7 +36,21 @@
 #define CPSR_FIQ_INHIBIT 1 << 6
 #define CPSR_IRQ_INHIBIT 1 << 7
 
-#define STACK_FRAME_SIZE 68
+#define PC_OFFSET 60
+#define SPSR_OFFSET 64
+#define SP_OFFSET 52
+#define LR_OFFSET 56
+#if defined( ARM_CPU_HAS_NEON )
+  #define STACK_FRAME_SIZE 328
+  #define GENERAL_PURPOSE_REGISTER_END 68
+  #define PRIVILEGED_PC_OFFSET 328
+  #define PRIVILEGED_SPSR_OFFSET 332
+#else
+  #define STACK_FRAME_SIZE 68
+  #define GENERAL_PURPOSE_REGISTER_END 68
+  #define PRIVILEGED_PC_OFFSET 68
+  #define PRIVILEGED_SPSR_OFFSET 72
+#endif
 
 #define SYS_CTRL_REG_ENABLE_DATA_CACHE 1 << 2
 #define SYS_CTRL_REG_ENABLE_BRANCH_PREDICTION 1 << 11
@@ -44,33 +58,40 @@
 
 #if ! defined( ASSEMBLER_FILE )
   #include <stdint.h>
-  #include <inttypes.h>
   #include <debug/debug.h>
 
   /**
    * @brief CPU register context
    */
   union __packed cpu_register_context {
-    uintptr_t raw[ 17 ];
+    #if defined( ARM_CPU_HAS_NEON )
+      uint32_t raw[ 82 ];
+    #else
+      uint32_t raw[ 17 ];
+    #endif
     struct {
       /* general purpose register */
-      uintptr_t r0;
-      uintptr_t r1;
-      uintptr_t r2;
-      uintptr_t r3;
-      uintptr_t r4;
-      uintptr_t r5;
-      uintptr_t r6;
-      uintptr_t r7;
-      uintptr_t r8;
-      uintptr_t r9;
-      uintptr_t r10;
-      uintptr_t fp; /* r11 = frame pointer */
-      uintptr_t ip; /* r12 = intraprocess scratch */
-      uintptr_t sp; /* r13 = stack pointer */
-      uintptr_t lr; /* r14 = link register */
-      uintptr_t pc; /* r15 = program counter */
-      uintptr_t spsr;
+      uint32_t r0;
+      uint32_t r1;
+      uint32_t r2;
+      uint32_t r3;
+      uint32_t r4;
+      uint32_t r5;
+      uint32_t r6;
+      uint32_t r7;
+      uint32_t r8;
+      uint32_t r9;
+      uint32_t r10;
+      uint32_t fp; /* r11 = frame pointer */
+      uint32_t ip; /* r12 = intraprocess scratch */
+      uint32_t sp; /* r13 = stack pointer */
+      uint32_t lr; /* r14 = link register */
+      uint32_t pc; /* r15 = program counter */
+      uint32_t spsr;
+      #if defined( ARM_CPU_HAS_NEON )
+        uint32_t fpscr;
+        uint64_t neon[ 32 ];
+      #endif
     } reg;
   };
 
@@ -86,34 +107,89 @@
   typedef enum cpu_register_map cpu_register_map_t;
   typedef enum cpu_register_map *cpu_register_map_ptr_t;
 
-  #define PRIxPTR_WIDTH ( ( int )( sizeof( uintptr_t ) * 2 ) )
-  #define DUMP_REGISTER( context ) \
-    DEBUG_OUTPUT( \
-      "CPU register dump\r\n"\
-      "%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\r\n"\
-      "%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\r\n"\
-      "%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\r\n"\
-      "%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\r\n"\
-      "%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\r\n"\
-      "%4s: %#0*"PRIxPTR"\t%4s: %#0*"PRIxPTR"\r\n", \
-      "r0", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r0, \
-      "r1", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r1, \
-      "r2", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r2, \
-      "r3", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r3, \
-      "r4", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r4, \
-      "r5", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r5, \
-      "r6", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r6, \
-      "r7", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r7, \
-      "r8", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r8, \
-      "r9", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r9, \
-      "r10", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.r10, \
-      "fp", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.fp, \
-      "ip", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.ip, \
-      "sp", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.sp, \
-      "lr", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.lr, \
-      "pc", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.pc, \
-      "spsr", PRIxPTR_WIDTH, ( ( cpu_register_context_ptr_t )context )->reg.spsr \
-    )
+  #if defined( ARM_CPU_HAS_NEON )
+    #define DUMP_REGISTER( context ) \
+      DEBUG_OUTPUT( "CPU register dump:\r\n" ) \
+      DEBUG_OUTPUT( "r0: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r0 ) \
+      DEBUG_OUTPUT( "r1: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r1 ) \
+      DEBUG_OUTPUT( "r2: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r2 ) \
+      DEBUG_OUTPUT( "r3: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r3 ) \
+      DEBUG_OUTPUT( "r4: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r4 ) \
+      DEBUG_OUTPUT( "r5: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r5 ) \
+      DEBUG_OUTPUT( "r6: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r6 ) \
+      DEBUG_OUTPUT( "r7: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r7 ) \
+      DEBUG_OUTPUT( "r8: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r8 ) \
+      DEBUG_OUTPUT( "r9: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r9 ) \
+      DEBUG_OUTPUT( "r10: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r10 ) \
+      DEBUG_OUTPUT( "fp: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.fp ) \
+      DEBUG_OUTPUT( "ip: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.ip ) \
+      DEBUG_OUTPUT( "sp: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.sp ) \
+      DEBUG_OUTPUT( "lr: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.lr ) \
+      DEBUG_OUTPUT( "pc: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.pc ) \
+      DEBUG_OUTPUT( "spsr: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.spsr ) \
+      DEBUG_OUTPUT( "floating-point status and control register: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.fpscr )  \
+      DEBUG_OUTPUT( "floating-point register dump:\r\n" ) \
+      DEBUG_OUTPUT( "d0: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 0 ] ) \
+      DEBUG_OUTPUT( "d1: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 1 ] ) \
+      DEBUG_OUTPUT( "d2: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 2 ] ) \
+      DEBUG_OUTPUT( "d3: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 3 ] ) \
+      DEBUG_OUTPUT( "d4: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 4 ] ) \
+      DEBUG_OUTPUT( "d5: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 5 ] ) \
+      DEBUG_OUTPUT( "d6: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 6 ] ) \
+      DEBUG_OUTPUT( "d7: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 7 ] ) \
+      DEBUG_OUTPUT( "d8: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 8 ] ) \
+      DEBUG_OUTPUT( "d9: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 9 ] ) \
+      DEBUG_OUTPUT( "d10: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 10 ] ) \
+      DEBUG_OUTPUT( "d11: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 11 ] ) \
+      DEBUG_OUTPUT( "d12: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 12 ] ) \
+      DEBUG_OUTPUT( "d13: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 13 ] ) \
+      DEBUG_OUTPUT( "d14: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 14 ] ) \
+      DEBUG_OUTPUT( "d15: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 15 ] ) \
+      DEBUG_OUTPUT( "d16: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 16 ] ) \
+      DEBUG_OUTPUT( "d17: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 17 ] ) \
+      DEBUG_OUTPUT( "d18: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 18 ] ) \
+      DEBUG_OUTPUT( "d19: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 19 ] ) \
+      DEBUG_OUTPUT( "d20: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 20 ] ) \
+      DEBUG_OUTPUT( "d21: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 21 ] ) \
+      DEBUG_OUTPUT( "d22: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 22 ] ) \
+      DEBUG_OUTPUT( "d23: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 23 ] ) \
+      DEBUG_OUTPUT( "d24: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 24 ] ) \
+      DEBUG_OUTPUT( "d25: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 25 ] ) \
+      DEBUG_OUTPUT( "d26: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 26 ] ) \
+      DEBUG_OUTPUT( "d27: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 27 ] ) \
+      DEBUG_OUTPUT( "d28: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 28 ] ) \
+      DEBUG_OUTPUT( "d29: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 29 ] ) \
+      DEBUG_OUTPUT( "d30: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 30 ] ) \
+      DEBUG_OUTPUT( "d31: %#016llx\r\n\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 31 ] )
+  #else
+    #define DUMP_REGISTER( context ) \
+      DEBUG_OUTPUT( \
+        "CPU register dump\r\n"\
+        "%4s: %#08x\t%4s: %#08x\t%4s: %#08x\r\n"\
+        "%4s: %#08x\t%4s: %#08x\t%4s: %#08x\r\n"\
+        "%4s: %#08x\t%4s: %#08x\t%4s: %#08x\r\n"\
+        "%4s: %#08x\t%4s: %#08x\t%4s: %#08x\r\n"\
+        "%4s: %#08x\t%4s: %#08x\t%4s: %#08x\r\n"\
+        "%4s: %#08x\t%4s: %#08x\r\n", \
+        "r0", ( ( cpu_register_context_ptr_t )context )->reg.r0, \
+        "r1", ( ( cpu_register_context_ptr_t )context )->reg.r1, \
+        "r2", ( ( cpu_register_context_ptr_t )context )->reg.r2, \
+        "r3", ( ( cpu_register_context_ptr_t )context )->reg.r3, \
+        "r4", ( ( cpu_register_context_ptr_t )context )->reg.r4, \
+        "r5", ( ( cpu_register_context_ptr_t )context )->reg.r5, \
+        "r6", ( ( cpu_register_context_ptr_t )context )->reg.r6, \
+        "r7", ( ( cpu_register_context_ptr_t )context )->reg.r7, \
+        "r8", ( ( cpu_register_context_ptr_t )context )->reg.r8, \
+        "r9", ( ( cpu_register_context_ptr_t )context )->reg.r9, \
+        "r10", ( ( cpu_register_context_ptr_t )context )->reg.r10, \
+        "fp", ( ( cpu_register_context_ptr_t )context )->reg.fp, \
+        "ip", ( ( cpu_register_context_ptr_t )context )->reg.ip, \
+        "sp", ( ( cpu_register_context_ptr_t )context )->reg.sp, \
+        "lr", ( ( cpu_register_context_ptr_t )context )->reg.lr, \
+        "pc", ( ( cpu_register_context_ptr_t )context )->reg.pc, \
+        "spsr", ( ( cpu_register_context_ptr_t )context )->reg.spsr \
+      )
+  #endif
 #endif
 
 #endif
