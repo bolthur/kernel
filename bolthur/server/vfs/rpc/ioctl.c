@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <inttypes.h>
+#include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../vfs.h"
@@ -99,7 +100,7 @@ void rpc_handle_ioctl( __unused pid_t origin, size_t data_info ) {
   size_t info_strlen = base_strlen + strlen( "info" );
   size_t info_len = sizeof( char ) * info_strlen;
   char* info = ( char* )malloc( info_len );
-  if ( ! base ) {
+  if ( ! info ) {
     err_response.status = -ENOMEM;
     _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     free( base );
@@ -198,7 +199,27 @@ void rpc_handle_ioctl( __unused pid_t origin, size_t data_info ) {
   strncat( rpc, info_response->name, rpc_strlen - strlen( rpc ) );
   free( info_response );
   free( base );
-
+  // respond result if type is not none or write only
+  if ( IOCTL_NONE == request->type || IOCTL_WRONLY == request->type ) {
+    _rpc_raise(
+      rpc,
+      container->target->pid,
+      request->data,
+      message_size - sizeof( vfs_ioctl_perform_request_t )
+    );
+    if ( errno ) {
+      err_response.status = -EIO;
+      _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
+      free( rpc );
+      free( request );
+      return;
+    }
+    free( rpc );
+    free( request );
+    err_response.status = 0;
+    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
+    return;
+  }
   // raise rpc
   size_t rpc_response_id = _rpc_raise_wait(
     rpc,
@@ -254,9 +275,9 @@ void rpc_handle_ioctl( __unused pid_t origin, size_t data_info ) {
   // fill response structure
   response->status = 0;
   memcpy( response->data, rpc_response, rpc_response_size );
-  free( rpc_response );
-  free( rpc );
   // return response
   _rpc_ret( response, response_size );
+  free( rpc_response );
+  free( rpc );
   free( response );
 }

@@ -79,8 +79,8 @@ void syscall_timer_acquire( void* context ) {
     return;
   }
   size_t len = strlen_unsafe( rpc );
-  char* dup = ( char* )malloc( sizeof( char ) * len + 1 );
-  if ( ! dup ) {
+  char* dup_rpc = ( char* )malloc( sizeof( char ) * len + 1 );
+  if ( ! dup_rpc ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "duplicate allocate failed!\r\n" )
@@ -89,23 +89,23 @@ void syscall_timer_acquire( void* context ) {
     return;
   }
   // copy from unsafe source
-  if ( ! memcpy_unsafe( dup, rpc, len ) ) {
+  if ( ! memcpy_unsafe( dup_rpc, rpc, len ) ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "memcpy unsafe failed!\r\n" )
     #endif
-    free( dup );
+    free( dup_rpc );
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // add to timer
   timer_callback_entry_ptr_t item = timer_register_callback(
     task_thread_current_thread,
-    dup,
+    dup_rpc,
     timeout
   );
   // free duplicate again
-  free( dup );
+  free( dup_rpc );
   // handle error
   if ( ! item ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );

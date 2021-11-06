@@ -356,6 +356,7 @@ uintptr_t shared_memory_attach(
     uintptr_t max = virt_get_context_max_address( process->virtual_context );
     // ensure that address is in context
     if ( min > virt || max <= virt || max <= virt + entry->size ) {
+      free( mapped );
       return 0;
     }
   // find free page range starting after thread entry point

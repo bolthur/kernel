@@ -39,7 +39,6 @@ void* realloc( void* ptr, size_t size ) {
   void* new_ptr = malloc( size );
   // handle error
   if ( ! new_ptr ) {
-    free( ptr );
     return NULL;
   }
   // query original length

@@ -235,7 +235,6 @@ void framebuffer_handle_resolution(
   // local variable for resolution data
   framebuffer_resolution_t resolution_data;
   memset( &resolution_data, 0, sizeof( framebuffer_resolution_t ) );
-  resolution_data.success = -1;
   // build return
   resolution_data.success = 0;
   resolution_data.width = physical_width;
@@ -256,10 +255,8 @@ void framebuffer_handle_clear(
   __unused pid_t origin,
   __unused size_t data_info
 ) {
-  int ret = 0;
   memset( current_back, 0, size );
   framebuffer_flip();
-  _rpc_ret( &ret, sizeof( int ) );
 }
 
 /**
@@ -273,32 +270,23 @@ void framebuffer_handle_render_surface(
   __unused pid_t origin,
   size_t data_info
 ) {
-  int ret = 0;
   // handle no data
   if( ! data_info ) {
-    ret = -ENOMSG;
-    _rpc_ret( &ret, sizeof( int ) );
     return;
   }
   // get size for allocation
   size_t sz = _rpc_get_data_size( data_info );
   if ( errno ) {
-    ret = -EIO;
-    _rpc_ret( &ret, sizeof( int ) );
     return;
   }
   framebuffer_render_surface_ptr_t info = malloc( sz );
   if ( ! info ) {
-    ret = -ENOMEM;
-    _rpc_ret( &ret, sizeof( int ) );
     return;
   }
   // fetch rpc data
   _rpc_get_data( info, sz, data_info );
   // handle error
   if ( errno ) {
-    ret = -EIO;
-    _rpc_ret( &ret, sizeof( int ) );
     free( info );
     return;
   }
@@ -319,7 +307,6 @@ void framebuffer_handle_render_surface(
   free( info );
   // flip it
   framebuffer_flip();
-  _rpc_ret( &ret, sizeof( int ) );
 }
 
 /**

@@ -156,12 +156,38 @@ void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
   free( base );
 
   if (
+    ! base_node
+    && !( request->flags & O_CREAT )
+  ) {
+    // prepare error return
+    response->handle = -ENOENT;
+    // return response
+    _rpc_ret( response, sizeof( vfs_open_response_t ) );
+    // free message structures
+    free( request );
+    free( response );
+    return;
+  }
+
+  if (
     base_node
     && ( request->flags & O_CREAT )
     && ( request->flags & O_EXCL )
   ) {
     // prepare error return
     response->handle = -EEXIST;
+    // return response
+    _rpc_ret( response, sizeof( vfs_open_response_t ) );
+    // free message structures
+    free( request );
+    free( response );
+    return;
+  }
+
+  // FIXME: ADD SUPPORT FOR CREATION
+  if ( ! base_node && ( request->flags & O_CREAT ) ) {
+    // prepare error return
+    response->handle = -ENOSYS;
     // return response
     _rpc_ret( response, sizeof( vfs_open_response_t ) );
     // free message structures

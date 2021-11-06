@@ -138,7 +138,7 @@ void* ramdisk_lookup_file( TAR* t, const char* name, size_t* size ) {
         if ( size ) {
           *size = th_get_size( t );
         }
-        EARLY_STARTUP_PRINT( "%s size = %#x\r\n", filename, th_get_size( t ) )
+        EARLY_STARTUP_PRINT( "%s size = %#zx\r\n", filename, th_get_size( t ) )
         break;
       }
       // skip to next file

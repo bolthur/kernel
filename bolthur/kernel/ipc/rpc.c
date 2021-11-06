@@ -73,7 +73,7 @@ static int32_t rpc_entry_lookup(
 ) {
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "a->data = %#x, data = %#x\r\n", a->data, data )
+    DEBUG_OUTPUT( "a->data = %p, data = %p\r\n", a->data, data )
   #endif
   rpc_entry_ptr_t entry = a->data;
   return entry->proc == data ? 0 : 1;
@@ -223,7 +223,7 @@ bool rpc_register_handler(
   list_item_ptr_t proc_item = list_lookup_data( container->handler, proc );
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "proc_item = %#x\r\n", proc_item )
+    DEBUG_OUTPUT( "proc_item = %p\r\n", proc_item )
   #endif
   if ( proc_item ) {
     // debug output
@@ -320,7 +320,7 @@ rpc_backup_ptr_t rpc_raise(
 ) {
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "rpc_raise( %s, %#p, %#p, %#p, %#x, %#p\r\n",
+    DEBUG_OUTPUT( "rpc_raise( %s, %#p, %#p, %#p, %#zx, %#p\r\n",
       identifier, source, target, data, length, target_thread )
   #endif
   // get container

@@ -368,11 +368,19 @@ static uintptr_t get_new_table( uintptr_t table ) {
       // get another space of x tables
       max_addr *= 2;
       // reallocate array
-      addr = realloc( addr, max_addr );
+      uintptr_t* tmp = realloc( addr, max_addr );
       // handle error
-      if ( ! addr ) {
+      if ( ! tmp ) {
         PANIC( "reallocate failed for array holding free addresses!\r\n" );
+        // stupid hack to silence false positive from cppcheck
+        return 0;
       }
+      addr = tmp;
+    }
+    if ( ! addr ) {
+      PANIC( "No address container existing!\r\n" );
+      // stupid hack to silence false positive from cppcheck
+      return 0;
     }
     // add entry to list
     addr[ free_addr ] = table;
@@ -430,7 +438,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
   free_addr--;
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "free_addr = %d - max_addr = %d\r\n", free_addr, max_addr )
+    DEBUG_OUTPUT( "free_addr = %zu - max_addr = %zu\r\n", free_addr, max_addr )
     DEBUG_OUTPUT( "r = %p\r\n", ( void* )r )
   #endif
   // return address
@@ -958,9 +966,9 @@ bool v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       if ( tbl != prev_tbl ) {
-        DEBUG_OUTPUT( "tbl = %x, offset = %u, start = %u\r\n",
+        DEBUG_OUTPUT( "tbl = %#"PRIxPTR", offset = %u, start = %u\r\n",
           tbl, offset, start )
-        DEBUG_OUTPUT( "table = %x, calculated offset = %x\r\n",
+        DEBUG_OUTPUT( "table = %#"PRIxPTR", calculated offset = %x\r\n",
           table, ( offset - start ) * SD_TBL_SIZE )
         prev_tbl = tbl;
       }

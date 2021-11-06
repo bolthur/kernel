@@ -206,7 +206,7 @@ void timer_handle_callback( void ) {
     }
     // debug output
     #if defined( PRINT_TIMER )
-      DEBUG_OUTPUT( "rpc = %s, thread = %#x, thread->process = %#x\r\n",
+      DEBUG_OUTPUT( "rpc = %s, thread = %p, thread->process = %p\r\n",
         entry->rpc,
         entry->thread,
         entry->thread->process

@@ -146,10 +146,10 @@ void syscall_rpc_raise( void* context ) {
     return;
   }
   // create data duplicate
-  char* dup = NULL;
+  char* dup_data = NULL;
   if ( data && len ) {
-    dup = ( char* )malloc( sizeof( char ) * len );
-    if ( ! dup ) {
+    dup_data = ( char* )malloc( sizeof( char ) * len );
+    if ( ! dup_data ) {
       // debug output
       #if defined( PRINT_SYSCALL )
         DEBUG_OUTPUT( "duplicate allocate failed!\r\n" )
@@ -158,12 +158,12 @@ void syscall_rpc_raise( void* context ) {
       return;
     }
     // copy from unsafe source
-    if ( ! memcpy_unsafe( dup, data, len ) ) {
+    if ( ! memcpy_unsafe( dup_data, data, len ) ) {
       // debug output
       #if defined( PRINT_SYSCALL )
         DEBUG_OUTPUT( "memcpy unsafe failed!\r\n" )
       #endif
-      free( dup );
+      free( dup_data );
       syscall_populate_error( context, ( size_t )-EINVAL );
       return;
     }
@@ -173,18 +173,18 @@ void syscall_rpc_raise( void* context ) {
     identifier,
     task_thread_current_thread,
     task_process_get_by_id( target ),
-    dup,
+    dup_data,
     len,
     NULL
   ) ) {
-    if ( dup ) {
-      free( dup );
+    if ( dup_data ) {
+      free( dup_data );
     }
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }
-  if ( dup ) {
-    free( dup );
+  if ( dup_data ) {
+    free( dup_data );
   }
 }
 
@@ -227,25 +227,25 @@ void syscall_rpc_raise_wait( void* context ) {
     return;
   }
   // create data duplicate
-  char* dup = NULL;
+  char* dup_data = NULL;
   if ( data && len ) {
-    dup = ( char* )malloc( sizeof( char ) * len );
-    if ( ! dup ) {
+    dup_data = ( char* )malloc( sizeof( char ) * len );
+    if ( ! dup_data ) {
       // debug output
       #if defined( PRINT_SYSCALL )
-        DEBUG_OUTPUT( "dup alloc failed %#x / %#x!\r\n",
+        DEBUG_OUTPUT( "dup_data alloc failed %#x / %#x!\r\n",
           len, sizeof( char ) * len )
       #endif
       syscall_populate_error( context, ( size_t )-EINVAL );
       return;
     }
     // copy from unsafe source
-    if ( ! memcpy_unsafe( dup, data, len ) ) {
+    if ( ! memcpy_unsafe( dup_data, data, len ) ) {
       // debug output
       #if defined( PRINT_SYSCALL )
         DEBUG_OUTPUT( "memcpy unsafe failed!\r\n" )
       #endif
-      free( dup );
+      free( dup_data );
       syscall_populate_error( context, ( size_t )-EINVAL );
       return;
     }
@@ -255,13 +255,13 @@ void syscall_rpc_raise_wait( void* context ) {
     identifier,
     task_thread_current_thread,
     task_process_get_by_id( target ),
-    dup,
+    dup_data,
     len,
     NULL
   );
   // free duplicate again
-  if ( dup ) {
-    free( dup );
+  if ( dup_data ) {
+    free( dup_data );
   }
   // handle error
   if ( ! rpc ) {
@@ -324,22 +324,22 @@ void syscall_rpc_ret( void* context ) {
     return;
   }
   // create data duplicate
-  char* dup = ( char* )malloc( sizeof( char ) * len );
-  if ( ! dup ) {
+  char* dup_data = ( char* )malloc( sizeof( char ) * len );
+  if ( ! dup_data ) {
     // debug output
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "dup alloc failed!\r\n" )
+      DEBUG_OUTPUT( "dup_data alloc failed!\r\n" )
     #endif
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // copy from unsafe source
-  if ( ! memcpy_unsafe( dup, data, len ) ) {
+  if ( ! memcpy_unsafe( dup_data, data, len ) ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "memcpy unsafe failed!\r\n" )
     #endif
-    free( dup );
+    free( dup_data );
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
@@ -349,13 +349,13 @@ void syscall_rpc_ret( void* context ) {
     active->source->process->id,
     task_thread_current_thread->process->id,
     0, /// FIXME: ENSURE THAT THIS WON'T BREAL ANYTHING
-    dup,
+    dup_data,
     len,
     0, /// FIXME: ENSURE THAT THIS WON'T BREAL ANYTHING
     &message_id
   );
   // free duplicate
-  free( dup );
+  free( dup_data );
   // handle error
   if ( err ) {
     syscall_populate_error( context, ( size_t )-err );

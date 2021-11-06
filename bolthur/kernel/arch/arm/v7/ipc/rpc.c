@@ -97,10 +97,10 @@ rpc_backup_ptr_t rpc_create_backup(
     );
     // debug output
     #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "proc_item = %#x\r\n", proc_item )
+      DEBUG_OUTPUT( "proc_item = %p\r\n", proc_item )
     #endif
     // handle existing
-    if ( proc_item  && ! active ) {
+    if ( proc_item ) {
       rpc_entry_ptr_t entry = proc_item->data;
       list_item_ptr_t current_list_queued = entry->queue->first;
       while ( current_list_queued ) {
@@ -401,7 +401,7 @@ bool rpc_restore_thread( task_thread_ptr_t thread, void* context ) {
     );
     // debug output
     #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "proc_item = %#x\r\n", proc_item )
+      DEBUG_OUTPUT( "proc_item = %p\r\n", proc_item )
     #endif
     // handle existing
     if ( proc_item ) {
@@ -459,7 +459,7 @@ bool rpc_restore_thread( task_thread_ptr_t thread, void* context ) {
   }
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "backup = %#x\r\n", backup )
+    DEBUG_OUTPUT( "backup = %p\r\n", backup )
   #endif
 
   // restore instruction
@@ -496,7 +496,7 @@ bool rpc_restore_thread( task_thread_ptr_t thread, void* context ) {
       );
       // debug output
       #if defined( PRINT_RPC )
-        DEBUG_OUTPUT( "proc_item = %#x\r\n", proc_item )
+        DEBUG_OUTPUT( "proc_item = %p\r\n", proc_item )
       #endif
       // handle existing
       if ( proc_item ) {

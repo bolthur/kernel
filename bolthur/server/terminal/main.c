@@ -48,19 +48,20 @@ int main( __unused int argc, __unused char* argv[] ) {
   // open file to framebuffer device
   output_driver_fd = open( OUTPUT_DRIVER, O_RDWR );
   if ( -1 == output_driver_fd ) {
-    EARLY_STARTUP_PRINT( "Unable to open framebuffer device file!\r\n" )
     return -1;
   }
   // open file to console manager device
   console_manager_fd = open( CONSOLE_MANAGER, O_RDWR );
   if ( -1 == console_manager_fd ) {
-    EARLY_STARTUP_PRINT( "Unable to open console manager device file!\r\n" )
+    close( output_driver_fd );
     return -1;
   }
 
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
+    close( console_manager_fd );
+    close( output_driver_fd );
     return -1;
   }
   // cache current pid
@@ -68,15 +69,24 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   // generic output init
   if ( ! output_init() ) {
+    close( console_manager_fd );
+    close( output_driver_fd );
+    free( msg );
     return -1;
   }
   // psf init
   // FIXME: MOVE TO OUTPUT?
   if ( ! psf_init() ) {
+    close( console_manager_fd );
+    close( output_driver_fd );
+    free( msg );
     return -1;
   }
   // init terminal
   if ( ! terminal_init() ) {
+    close( console_manager_fd );
+    close( output_driver_fd );
+    free( msg );
     return -1;
   }
 

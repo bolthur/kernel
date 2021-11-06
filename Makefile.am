@@ -11,7 +11,7 @@ cppcheck:
 		--include=$(CPPCHECK_INCLUDE) \
 		--project=$(CPPCHECK_PROJECT) \
 		--suppressions-list=$(CPPCHECK_SUPPRESS) \
-		-U__CYGWIN__ -U__APPLE__ -D__INTPTR_TYPE__=4 -v
+		-U__CYGWIN__ -U__APPLE__ -v
 # FIXME: MOVE __INTPTR_TYPE__ DEFINE INTO MACRO PER HOST
 
 ramdisk:

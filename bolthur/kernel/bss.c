@@ -17,6 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdint.h>
+#include <stddef.h>
 #include <bss.h>
 #include <entry.h>
 
@@ -24,11 +26,11 @@
  * @brief Method to clear bss during initial boot
  */
 void __bootstrap bss_startup_clear( void ) {
-  bss_type_t* start = ( bss_type_t* )VIRT_2_PHYS( &__bss_start );
-  bss_type_t* end = ( bss_type_t* )VIRT_2_PHYS( &__bss_end );
-
-  // loop through bss end and overwrite with zero
-  while ( start < end ) {
-    *start++ = 0;
+  // overwrite bss
+  uintptr_t start = VIRT_2_PHYS( &__bss_start );
+  uintptr_t end = VIRT_2_PHYS( &__bss_end );
+  uint8_t* _buf = ( uint8_t* )start;
+  for ( size_t i = 0; i < end - start; i++ ) {
+    _buf[ i ] = 0;
   }
 }

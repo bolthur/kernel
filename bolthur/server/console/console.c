@@ -52,10 +52,9 @@ void console_destroy( console_ptr_t console ) {
  * @return
  */
 console_ptr_t console_get_active( void ) {
-  console_ptr_t found = NULL;
   list_item_ptr_t current = console_list->first;
   while ( current ) {
-    found = current->data;
+    console_ptr_t found = current->data;
     if ( found->active ) {
       return found;
     }

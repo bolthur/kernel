@@ -231,7 +231,7 @@ int message_send(
   if ( request_id ) {
     #if defined( PRINT_MESSAGE )
       DEBUG_OUTPUT(
-        "Unblocking threads waiting for message with id %d\r\n",
+        "Unblocking threads waiting for message with id %zu\r\n",
         request_id )
     #endif
     task_unblock_threads(

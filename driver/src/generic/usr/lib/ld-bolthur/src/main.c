@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <dlfcn.h>
 #include <sys/bolthur.h>
+#include <inttypes.h>
 #include "tmp/_dl-int.h"
 
 /**
@@ -73,7 +74,7 @@ int main( int argc, char* argv[] ) {
   // get main  object
   void* main_object = ( void* )( (  dl_image_handle_ptr_t ) handle )->header.e_entry;
   EARLY_STARTUP_PRINT( "main_object->header->e_entry = %p\r\n", main_object )
-  EARLY_STARTUP_PRINT( "Content of entry point address = %#lx\r\n", *( ( uint32_t* )main_object ) )
+  EARLY_STARTUP_PRINT( "Content of entry point address = %#"PRIx32"\r\n", *( ( uint32_t* )main_object ) )
   // FIXME: PUSH ARGC, ARGV and ENVIRONMENT
   // call main entry function
   ( ( main_entry_point )( (  dl_image_handle_ptr_t ) handle )->header.e_entry )();

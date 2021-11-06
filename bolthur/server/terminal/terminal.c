@@ -291,7 +291,7 @@ void terminal_scroll( terminal_ptr_t term ) {
    );
   }
   // erase last one
-  memset16(
+  memset(
     &term->buffer[ term->max_row - 1 ],
     ' ',
     sizeof( uint8_t ) * term->max_col

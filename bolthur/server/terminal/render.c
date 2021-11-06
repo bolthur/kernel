@@ -59,19 +59,14 @@ void render_char_to_surface(
   }
   uint32_t font_height = psf_glyph_height();
   uint32_t font_width = psf_glyph_width();
-  uint32_t byte_per_pixel = depth / CHAR_BIT;
   uint32_t off = ( start_y * pitch ) +
-    ( start_x * byte_per_pixel );
+    ( start_x * depth / CHAR_BIT );
   uint32_t bytesperline = ( font_width + 7 ) / 8;
-  uint32_t line = 0;
-  uint32_t mask = 0;
   for ( uint32_t y = 0; y < font_height; y++ ) {
-    line = off;
-    mask = 1 << ( font_width - 1 );
+    uint32_t line = off;
     for ( uint32_t x = 0; x < font_width; x++ ) {
       *( ( uint32_t* )( surface + line ) ) =
-        glyph[ x / 8 ] & ( 0x80 >> ( x & 7 ) ) ? color_fg : color_bg;
-      mask >>= 1;
+        ( glyph[ x / 8 ] & ( 0x80 >> ( x & 7 ) ) ) ? color_fg : color_bg;
       line += 4;
     }
     *( ( uint32_t* )( surface + line ) ) = 0;

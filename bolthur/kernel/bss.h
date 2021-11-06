@@ -22,12 +22,9 @@
 
 #include <stdint.h>
 
-// type definition for bss fields
-typedef uint8_t bss_type_t;
-
 // bss fields from linker script
-extern bss_type_t __bss_start;
-extern bss_type_t __bss_end;
+extern uint8_t __bss_start;
+extern uint8_t __bss_end;
 
 void bss_startup_clear( void );
 

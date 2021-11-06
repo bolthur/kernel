@@ -211,8 +211,6 @@ void* dl_lookup_symbol( dl_image_handle_ptr_t handle, const char* name ) {
     uint32_t nchain = current->hash.nchain;
     uint32_t* buckets = &current->hash.table[ 2 ];
     uint32_t* chain = &current->hash.table[ 2 + nbucket ];
-    Elf32_Sym* sym;
-    const char* sym_name;
     uint32_t index = buckets[ hash % nbucket ];
     while ( index != STN_UNDEF) {
       // skip if wrong
@@ -220,13 +218,13 @@ void* dl_lookup_symbol( dl_image_handle_ptr_t handle, const char* name ) {
         break;
       }
       // get symbol
-      sym = &current->symtab[ index ];
+      Elf32_Sym* sym = &current->symtab[ index ];
       // skip if wrong
       if ( sym->st_name > current->strsz ) {
         break;
       }
       // get symbol name
-      sym_name = current->strtab + sym->st_name;
+      const char* sym_name = current->strtab + sym->st_name;
       // check for matching symbol
       if ( 0 == strcmp( sym_name, name ) ) {
         // check for not undefined
@@ -303,13 +301,7 @@ dl_image_handle_ptr_t dl_find_loaded_library( const char* file ) {
  * @todo check whether it was loaded to shared area and use that one
  */
 int dl_lookup_library( char* buffer, size_t buffer_size, const char* file ) {
-  // fallback path list
-  char* path = NULL;
-  char* fallback_path = "/lib:/usr/lib:/ramdisk/lib:/ramdisk/usr/lib";
-  // use fallback as path if not set
-  if ( ! path ) {
-    path = strdup( fallback_path );
-  }
+  char* path = "/lib:/usr/lib:/ramdisk/lib:/ramdisk/usr/lib";
   char* part = NULL;
   char* last_part = NULL;
   for (
@@ -319,7 +311,7 @@ int dl_lookup_library( char* buffer, size_t buffer_size, const char* file ) {
   ) {
     char* p = buffer;
     size_t size_part = strlen( part );
-    size_t size_file = strlen( part );
+    size_t size_file = strlen( file );
     size_t buffer_size_backup = buffer_size;
     // copy first part of path
     strncpy( p, part, buffer_size_backup );
@@ -337,12 +329,9 @@ int dl_lookup_library( char* buffer, size_t buffer_size, const char* file ) {
     int fd = open( buffer, O_RDONLY );
     // stop if found
     if ( -1 != fd ) {
-      free( path );
       return fd;
     }
   }
-  // free path and return negative result
-  free( path );
   return -1;
 }
 
@@ -493,7 +482,7 @@ void* dl_map_load_section(
     mapping |= MAP_FIXED;
   }
   EARLY_STARTUP_PRINT(
-    "mmap( %p, %#x, %#x, %#x, %#x, %#lx )\r\n",
+    "mmap( %p, %#zx, %#x, %#x, %#x, %#lx )\r\n",
     base, size, prot, mapping, descriptor, offset
   )
   // call to mmap
@@ -667,7 +656,7 @@ dl_image_handle_ptr_t dl_load_entry(
     off_t text_off = ROUND_PAGE_OFFSET( load_header[ 0 ].p_offset );
     size_t text_size = ROUND_UP_TO_FULL_PAGE( load_header[ 0 ].p_memsz + ( size_t )text_off );
     EARLY_STARTUP_PRINT(
-      "text_address = %#"PRIxPTR", text_offset = %#lx, text_off = %#lx, text_size = %#x\r\n",
+      "text_address = %#"PRIxPTR", text_offset = %#lx, text_off = %#lx, text_size = %#zx\r\n",
       text_address, text_offset, text_off, text_size
     )
     EARLY_STARTUP_PRINT(
@@ -684,7 +673,7 @@ dl_image_handle_ptr_t dl_load_entry(
     size_t data_file_size = ROUND_UP_TO_FULL_PAGE( load_header[ 1 ].p_filesz + ( size_t )data_off );
     EARLY_STARTUP_PRINT(
       "data_address = %#"PRIxPTR", data_offset = %#lx, data_off = %#lx, "
-      "data_size = %#x, data_file_size = %#x\r\n",
+      "data_size = %#zx, data_file_size = %#zx\r\n",
       data_address, data_offset, data_off, data_size, data_file_size
     )
     EARLY_STARTUP_PRINT(
@@ -709,7 +698,7 @@ dl_image_handle_ptr_t dl_load_entry(
       return NULL;
     }
     EARLY_STARTUP_PRINT(
-      "loaded to %#x with length %#x. File offset: %#lx, data = %p\r\n",
+      "loaded to %#x with length %#zx. File offset: %#lx, data = %p\r\n",
       ( uintptr_t )memory, text_size, text_offset,
       ( void* )( memory + load_header[ 1 ].p_vaddr - load_header[ 0 ].p_vaddr )
     )
@@ -731,7 +720,7 @@ dl_image_handle_ptr_t dl_load_entry(
     memset( data + len, 0, data_file_size - len );
     void* tmp_data = ( void* )( memory + load_header[ 1 ].p_vaddr - load_header[ 0 ].p_vaddr );
     EARLY_STARTUP_PRINT( "data = %p, *data = %#lx\r\n", tmp_data, *( ( uint32_t* )tmp_data ) )
-    EARLY_STARTUP_PRINT( "loaded to %#x with length %#x. File offset: %#lx\r\n",
+    EARLY_STARTUP_PRINT( "loaded to %#x with length %#zx. File offset: %#lx\r\n",
       ( uintptr_t )data, data_file_size, data_offset )
     // map more space if necessary
     if ( data_size > data_file_size ) {
@@ -742,8 +731,8 @@ dl_image_handle_ptr_t dl_load_entry(
       // debug output
       EARLY_STARTUP_PRINT(
         "requesting more size for bss section. "
-        "data_size = %#x, data_file_size = %#x, "
-        "len = %#x, bss_start = %p\r\n",
+        "data_size = %#zx, data_file_size = %#zx, "
+        "len = %#zx, bss_start = %p\r\n",
         data_size, data_file_size, len, bss_start
       )
       // acquire via mmap
@@ -763,7 +752,7 @@ dl_image_handle_ptr_t dl_load_entry(
         return NULL;
       }
       EARLY_STARTUP_PRINT(
-        "Allocated space of %#x at address %p.\r\n",
+        "Allocated space of %#zx at address %p.\r\n",
         len,
         ( void* )bss
       )
@@ -1023,7 +1012,7 @@ dl_image_handle_ptr_t dl_post_init( dl_image_handle_ptr_t handle ) {
   if ( handle->init_array ) {
     for( size_t idx = 0; idx < handle->init_array_size; idx++ ) {
       EARLY_STARTUP_PRINT(
-        "Calling init array %d of %s\r\n",
+        "Calling init array %zu of %s\r\n",
         idx, handle->filename )
       handle->init_array[ idx ]();
     }
@@ -1226,11 +1215,11 @@ dl_image_handle_ptr_t dl_relocate( dl_image_handle_ptr_t handle ) {
 void* dlopen( const char* file, int mode ) {
   // set error location
   dl_error_location = "dlopen";
-  // some variables
-  int fd;
-  const char* p;
   // lookup file if path is given
   if ( file ) {
+    // some variables
+    const char* p;
+    int fd;
     // check for file path
     if ( '/' == file[ 0 ] ) {
       // open file
@@ -1304,7 +1293,7 @@ static int dl_close( dl_image_handle_ptr_t handle ) {
   if ( handle->fini_array ) {
     for( size_t idx = 0; idx < handle->fini_array_size; idx++ ) {
       EARLY_STARTUP_PRINT(
-        "Calling fini array %d of %s\r\n",
+        "Calling fini array %zu of %s\r\n",
         idx, handle->filename )
       handle->fini_array[ idx ]();
     }

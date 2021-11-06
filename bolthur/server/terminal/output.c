@@ -54,7 +54,6 @@ bool output_init( void ) {
   );
   // handle error
   if ( -1 == result ) {
-    EARLY_STARTUP_PRINT( "ioctl error: %s\r\n", strerror( errno ) );
     return false;
   }
   // return success
@@ -146,8 +145,6 @@ void output_handle_err( __unused pid_t origin, size_t data_info ) {
   // render
   render_terminal( found->data, terminal->data );
   // free terminal structure again
-  free( terminal );
-  // free all used temporary structures
   free( terminal );
 }
 
