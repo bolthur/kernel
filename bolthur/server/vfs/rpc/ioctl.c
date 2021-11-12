@@ -66,8 +66,8 @@ void rpc_handle_ioctl( __unused pid_t origin, size_t data_info ) {
     return;
   }
   /*EARLY_STARTUP_PRINT(
-    "handle: %d, command = %"PRIu32", data = %p\r\n",
-    request->handle, request->command, request->data )*/
+    "handle: %d, command = %"PRIu32", data = %p, size = %zx\r\n",
+    request->handle, request->command, request->data, message_size )*/
   // get handle
   handle_container_ptr_t container;
   // try to get handle information
@@ -234,13 +234,13 @@ void rpc_handle_ioctl( __unused pid_t origin, size_t data_info ) {
     free( request );
     return;
   }
+  free( rpc );
   free( request );
   // get message size
   size_t rpc_response_size = _rpc_get_data_size( rpc_response_id );
   if ( errno ) {
     err_response.status = -EIO;
     _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-    free( rpc );
     return;
   }
   // get data
@@ -248,7 +248,6 @@ void rpc_handle_ioctl( __unused pid_t origin, size_t data_info ) {
   if ( ! rpc_response ) {
     err_response.status = -ENOMEM;
     _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-    free( rpc );
     return;
   }
   memset( rpc_response, 0, rpc_response_size );
@@ -257,7 +256,6 @@ void rpc_handle_ioctl( __unused pid_t origin, size_t data_info ) {
     err_response.status = -EIO;
     _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     free( rpc_response );
-    free( rpc );
     return;
   }
   // build return request
@@ -269,7 +267,6 @@ void rpc_handle_ioctl( __unused pid_t origin, size_t data_info ) {
     err_response.status = -ENOMEM;
     _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     free( rpc_response );
-    free( rpc );
     return;
   }
   // fill response structure
@@ -278,6 +275,5 @@ void rpc_handle_ioctl( __unused pid_t origin, size_t data_info ) {
   // return response
   _rpc_ret( response, response_size );
   free( rpc_response );
-  free( rpc );
   free( response );
 }

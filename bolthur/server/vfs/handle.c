@@ -72,6 +72,17 @@ static int32_t lookup_handle(
 }
 
 /**
+ * @fn void cleanup_handle(avl_node_ptr_t)
+ * @brief handle cleanup
+ *
+ * @param node
+ */
+static void cleanup_handle( avl_node_ptr_t node ) {
+  handle_container_ptr_t item = HANDLE_GET_CONTAINER( node );
+  free( item );
+}
+
+/**
  * @brief Compare handle callback necessary for avl tree insert / delete
  *
  * @param a node a
@@ -114,6 +125,17 @@ static int32_t lookup_process(
 }
 
 /**
+ * @fn void cleanup_process(avl_node_ptr_t)
+ * @brief handle cleanup
+ *
+ * @param node
+ */
+static void cleanup_process( avl_node_ptr_t node ) {
+  handle_pid_ptr_t item = HANDLE_GET_PID( node );
+  free( item );
+}
+
+/**
  * @brief Method to generate next handle
  *
  * @return
@@ -129,8 +151,92 @@ static int generate_handle( handle_pid_ptr_t handle ) {
  */
 bool handle_init( void ) {
   // create handle tree
-  handle_process_tree = avl_create_tree( compare_process, lookup_process, NULL );
+  handle_process_tree = avl_create_tree(
+    compare_process,
+    lookup_process,
+    cleanup_process
+  );
   return handle_process_tree;
+}
+
+/**
+ * @fn handle_pid_ptr_t handle_generate_container(pid_t)
+ * @brief Generates container if not existing or returns current element
+ *
+ * @param process
+ * @return
+ */
+handle_pid_ptr_t handle_generate_container( pid_t process ) {
+  handle_pid_ptr_t process_handle;
+  // get handle tree
+  avl_node_ptr_t found = avl_find_by_data(
+    handle_process_tree,
+    ( void* )process );
+  // return if found
+  if ( found ) {
+    return HANDLE_GET_PID( found );
+  }
+
+  // allocate process handle
+  process_handle = malloc( sizeof( handle_pid_t ) );
+  if ( ! process_handle ) {
+    return NULL;
+  }
+  // clear
+  memset( process_handle, 0, sizeof( handle_pid_t ) );
+  // populate structure
+  process_handle->pid = process;
+  process_handle->handle = 3; // handles start at 3, everything below is reserved
+  process_handle->tree = avl_create_tree(
+    compare_handle,
+    lookup_handle,
+    cleanup_handle
+  );
+  // handle error
+  if ( ! process_handle->tree ) {
+    free( process_handle );
+    return NULL;
+  }
+  // prepare and insert node
+  avl_prepare_node( &process_handle->node, ( void* )process );
+  if ( ! avl_insert_by_node( handle_process_tree, &process_handle->node ) ) {
+    avl_destroy_tree( process_handle->tree );
+    free( process_handle );
+    return NULL;
+  }
+  // return created handle
+  return process_handle;
+}
+
+/**
+ * @fn bool handle_duplicate(handle_container_ptr_t, handle_pid_ptr_t)
+ * @brief
+ *
+ * @param container
+ * @param new_container
+ * @return
+ */
+bool handle_duplicate(
+  handle_container_ptr_t container,
+  handle_pid_ptr_t new_pid_container
+) {
+  // allocate new structure
+  handle_container_ptr_t new_container = malloc( sizeof( handle_container_t ) );
+  if ( ! new_container ) {
+    return false;
+  }
+  // clear structure
+  memset( new_container, 0, sizeof( handle_container_t ) );
+  // copy content
+  memcpy( new_container, container, sizeof( handle_container_t ) );
+  // prepare and insert avl node
+  avl_prepare_node( &new_container->node, ( void* )new_container->handle );
+  if ( ! avl_insert_by_node( new_pid_container->tree, &new_container->node ) ) {
+    free( new_container );
+    return false;
+  }
+  // return success
+  return true;
 }
 
 /**
@@ -143,8 +249,6 @@ bool handle_init( void ) {
  * @param flags
  * @param mode
  * @return
- *
- * @todo return negative error codes instead of -1
  */
 int handle_generate(
   handle_container_ptr_t* container,
@@ -155,45 +259,14 @@ int handle_generate(
   int flags,
   int mode
 ) {
-  handle_pid_ptr_t process_handle;
-  // get handle tree
-  avl_node_ptr_t found = avl_find_by_data(
-    handle_process_tree,
-    ( void* )process );
-
-  // create if not existing
-  if ( ! found ) {
-    // allocate process handle
-    process_handle = malloc( sizeof( handle_pid_t ) );
-    if ( ! process_handle ) {
-      return -1;
-    }
-    // clear
-    memset( process_handle, 0, sizeof( handle_pid_t ) );
-    // populate structure
-    process_handle->pid = process;
-    process_handle->handle = 3; // handles start at 3, everything below is reserved
-    process_handle->tree = avl_create_tree( compare_handle, lookup_handle, NULL );
-    // handle error
-    if ( ! process_handle->tree ) {
-      free( process_handle );
-      return -1;
-    }
-    // prepare and insert node
-    avl_prepare_node( &process_handle->node, ( void* )process );
-    if ( ! avl_insert_by_node( handle_process_tree, &process_handle->node ) ) {
-      avl_destroy_tree( process_handle->tree );
-      free( process_handle );
-      return -1;
-    }
-  // get process handle if found
-  } else {
-    process_handle = HANDLE_GET_PID( found );
+  handle_pid_ptr_t process_handle = handle_generate_container( process );
+  if ( ! process_handle ) {
+    return -ENOMEM;
   }
   // allocate and clear structure
   *container = malloc( sizeof( handle_container_t ) );
   if ( ! *container ) {
-    return -1;
+    return -ENOMEM;
   }
   memset( *container, 0, sizeof( handle_container_t ) );
   // copy path
@@ -208,13 +281,13 @@ int handle_generate(
         char* link_path = malloc( sizeof( char ) * PATH_MAX );
         if ( ! link_path ) {
           free( *container );
-          return -1;
+          return -ENOMEM;
         }
         char* target_path = vfs_path_bottom_up( target );
         if ( ! target_path ) {
           free( link_path );
           free( *container );
-          return -1;
+          return -ENOMEM;
         }
         // dir
         char* dir = dirname( target_path );
@@ -222,7 +295,7 @@ int handle_generate(
           free( target_path );
           free( link_path );
           free( *container );
-          return -1;
+          return -ENOMEM;
         }
         // build target path
         link_path = strncpy( link_path, dir, PATH_MAX );
@@ -241,7 +314,7 @@ int handle_generate(
     char* destination = vfs_path_bottom_up( target ) ;
     if ( ! destination ) {
       free( *container );
-      return -1;
+      return -ENOENT;
     }
     // copy link destination
     strcpy( ( *container )->path, destination );
@@ -285,10 +358,34 @@ int handle_generate(
   avl_prepare_node( &(*container)->node, ( void* )(*container)->handle );
   if ( ! avl_insert_by_node( process_handle->tree, &(*container)->node ) ) {
     free( *container );
-    return -1;
+    return -ENOMEM;
   }
   // return success
   return 0;
+}
+
+/**
+ * @fn void handle_destory_all(pid_t)
+ * @brief Destroy all handles of a process
+ *
+ * @param process
+ */
+void handle_destory_all( pid_t process ) {
+  handle_pid_ptr_t process_handle;
+  // get handle tree
+  avl_node_ptr_t found = avl_find_by_data(
+    handle_process_tree,
+    ( void* )process );
+  // create if not existing
+  if ( ! found ) {
+    return;
+  }
+  // get pid handle container
+  process_handle = HANDLE_GET_PID( found );
+  // destroy handle tree
+  avl_destroy_tree( process_handle->tree );
+  // remove from tree
+  avl_remove_by_node( handle_process_tree, &process_handle->node );
 }
 
 /**
@@ -322,8 +419,6 @@ int handle_destory( pid_t process, int handle ) {
   handle_container_ptr_t container = HANDLE_GET_CONTAINER( found );
   // remove from tree
   avl_remove_by_node( process_handle->tree, &container->node );
-  // free data
-  free( container );
   // return success
   return 0;
 }
@@ -358,4 +453,24 @@ int handle_get( handle_container_ptr_t* container, pid_t process, int handle ) {
   }
   *container = HANDLE_GET_CONTAINER( found );
   return 0;
+}
+
+/**
+ * @fn handle_pid_ptr_t handle_get_process_container(pid_t)
+ * @brief
+ *
+ * @param process
+ * @return
+ */
+handle_pid_ptr_t handle_get_process_container( pid_t process ) {
+  // get handle tree
+  avl_node_ptr_t found = avl_find_by_data(
+    handle_process_tree,
+    ( void* )process );
+  // create if not existing
+  if ( ! found ) {
+    return NULL;
+  }
+  // get process handle if found
+  return HANDLE_GET_PID( found );
 }

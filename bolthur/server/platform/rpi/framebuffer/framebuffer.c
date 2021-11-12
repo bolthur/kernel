@@ -54,6 +54,14 @@ struct framebuffer_rpc command_list[] = {
     .name = "render_surface",
     .callback = ( uintptr_t )framebuffer_handle_render_surface
   }, {
+    .command = FRAMEBUFFER_SCROLL,
+    .name = "scroll",
+    .callback = ( uintptr_t )framebuffer_handle_scroll
+  }, {
+    .command = FRAMEBUFFER_FLIP,
+    .name = "flip",
+    .callback = ( uintptr_t )framebuffer_handle_flip
+  }, {
     .command = FRAMEBUFFER_INFO,
     .name = "info",
     .callback = ( uintptr_t )framebuffer_handle_info
@@ -290,22 +298,72 @@ void framebuffer_handle_render_surface(
     free( info );
     return;
   }
-  for ( uint32_t y = 0; y < info->max_y / info->max_x; y++ ) {
-    for ( uint32_t x = 0; x < info->max_x; x += BYTE_PER_PIXEL ) {
-      // calculate x and y values for rendering
-      uint32_t final_x = info->x + ( x / BYTE_PER_PIXEL );
-      uint32_t final_y = info->y + y;
-      // extract color from data
-      uint32_t color = *( ( uint32_t* )&info->data[ y * info->max_x + x ] );
-      // determine render offset
-      uint32_t offset = final_y * pitch + final_x * BYTE_PER_PIXEL;
-      // push back color
-      *( ( uint32_t* )( current_back + offset ) ) = color;
-    }
+  // render stuff
+  for ( uint32_t idx = 0; idx < info->max_y; idx += info->bpp ) {
+    uint32_t y = idx / info->max_x;
+    uint32_t x = idx % info->max_x;
+    // calculate x and y values for rendering
+    uint32_t final_x = info->x + ( x / info->bpp );
+    uint32_t final_y = info->y + y;
+    // extract color from data
+    uint32_t color = *( ( uint32_t* )&info->data[ y * info->max_x + x ] );
+    // determine render offset
+    uint32_t offset = final_y * pitch + final_x * BYTE_PER_PIXEL;
+    // push back color
+    *( ( uint32_t* )( current_back + offset ) ) = color;
   }
   // free again
   free( info );
-  // flip it
+}
+
+/**
+ * @fn void framebuffer_handle_scroll(pid_t, size_t)
+ * @brief Handle ioctl scroll request
+ *
+ * @param origin
+ * @param data_info
+ */
+void framebuffer_handle_scroll( __unused pid_t origin, size_t data_info ) {
+  // handle no data
+  if( ! data_info ) {
+    return;
+  }
+  // get size for allocation
+  size_t sz = _rpc_get_data_size( data_info );
+  if ( errno ) {
+    return;
+  }
+  framebuffer_scroll_ptr_t info = malloc( sz );
+  if ( ! info ) {
+    return;
+  }
+  // fetch rpc data
+  _rpc_get_data( info, sz, data_info );
+  // handle error
+  if ( errno ) {
+    free( info );
+    return;
+  }
+  // determine offset
+  uint32_t offset = info->start_y * pitch;
+  // free info structure
+  free( info );
+  // move up and reset last line
+  memmove( current_back, current_back + offset, size - offset );
+  memset( current_back + size - offset, 0, offset );
+}
+
+/**
+ * @fn void framebuffer_handle_flip(pid_t, size_t)
+ * @brief Handle ioctl flip request
+ *
+ * @param origin
+ * @param data_info
+ */
+void framebuffer_handle_flip(
+  __unused pid_t origin,
+  __unused size_t data_info
+) {
   framebuffer_flip();
 }
 

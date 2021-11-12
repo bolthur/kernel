@@ -411,7 +411,6 @@ static void stage2( void ) {
   setvbuf( stderr, NULL, _IONBF, 0 );
 
   int a = printf( "äöüÄÖÜ\r\n" );
-
   //fflush( stdout );
   int b = printf( "Tab test: \"\t\" should be 4 spaces here!\r\n" );
   //fflush( stdout );
@@ -419,10 +418,23 @@ static void stage2( void ) {
   //fflush( stdout );
   int d = printf( ", now with cr\r\nasdf\r\näöüÄÖÜ\r\n" );
   //fflush( stdout );
-
-  for ( int i = 0; i < 25; i++ ) {
-    printf( "stdout: init=>console=>terminal=>framebuffer\r\n" );
+/*
+  pid_t forked_process = fork();
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to fork process: %s\r\n", strerror( errno ) );
+    exit( -1 );
   }
+  // fork only
+  if ( 0 == forked_process ) {
+    while ( true ) {
+      printf( "what the fork?\r\n" );
+      sleep( 2 );
+    }
+  }
+  for ( int i = 0; i < 100; i++ ) {
+    printf( "stdout: init - %d\r\n", i );
+  }
+*/
 
   int e = printf( "stdout: init=>console=>terminal=>framebuffer" );
   fflush( stdout );

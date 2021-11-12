@@ -68,6 +68,14 @@ bool syscall_init( void ) {
   ) ) {
     return false;
   }
+  if ( ! interrupt_register_handler(
+    SYSCALL_PROCESS_PARENT_BY_ID,
+    syscall_process_parent_by_id,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
   // thread related system calls
   if ( ! interrupt_register_handler(
     SYSCALL_THREAD_CREATE,

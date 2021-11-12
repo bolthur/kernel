@@ -41,7 +41,8 @@
 void syscall_process_id( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_id()\r\n" )
+    DEBUG_OUTPUT( "syscall_process_id() = %d\r\n",
+      task_thread_current_thread->process->id )
   #endif
   // populate return
   syscall_populate_success(
@@ -59,13 +60,38 @@ void syscall_process_id( void* context ) {
 void syscall_process_parent_id( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_parent_id()\r\n" )
+    DEBUG_OUTPUT( "syscall_process_parent_id() = %d\r\n",
+      task_thread_current_thread->process->parent )
   #endif
   // populate return
   syscall_populate_success(
     context,
     ( size_t )task_thread_current_thread->process->parent
   );
+}
+
+/**
+ * @fn void syscall_process_parent_id(void*)
+ * @brief return process id to calling thread
+ *
+ * @param context context of calling thread
+ */
+void syscall_process_parent_by_id( void* context ) {
+  // parameters
+  pid_t pid = ( pid_t )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_process_parent_by_id( %d )\r\n", pid )
+  #endif
+  // try to get process by pid
+  task_process_ptr_t proc = task_process_get_by_id( pid );
+  // handle error
+  if ( ! proc ) {
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // populate return
+  syscall_populate_success( context, ( size_t )proc->parent );
 }
 
 /**

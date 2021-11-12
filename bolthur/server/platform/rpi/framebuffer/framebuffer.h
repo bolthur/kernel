@@ -39,7 +39,9 @@ void framebuffer_handle_resolution( pid_t, size_t );
 void framebuffer_handle_clear( pid_t, size_t );
 void framebuffer_handle_render_surface( pid_t, size_t );
 void framebuffer_handle_info( pid_t, size_t );
+void framebuffer_handle_scroll( pid_t, size_t );
+void framebuffer_handle_flip( pid_t, size_t );
 
-extern struct framebuffer_rpc command_list[ 4 ];
+extern struct framebuffer_rpc command_list[ 6 ];
 
 #endif

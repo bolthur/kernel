@@ -50,7 +50,7 @@ void rpc_handle_remove( __unused pid_t origin, size_t data_info ) {
   memset( response, 0, sizeof( vfs_remove_response_t ) );
   // handle no data
   if( ! data_info ) {
-    response->state = -EINVAL;
+    response->status = -EINVAL;
     _rpc_ret( response, sizeof( vfs_remove_response_t ) );
     free( request );
     free( response );
@@ -60,7 +60,7 @@ void rpc_handle_remove( __unused pid_t origin, size_t data_info ) {
   _rpc_get_data( request, sizeof( vfs_remove_request_t ), data_info );
   // handle error
   if ( errno ) {
-    response->state = -EINVAL;
+    response->status = -EINVAL;
     _rpc_ret( response, sizeof( vfs_remove_response_t ) );
     free( request );
     free( response );
@@ -69,7 +69,7 @@ void rpc_handle_remove( __unused pid_t origin, size_t data_info ) {
   // debug output
   EARLY_STARTUP_PRINT( "HANDLE REMOVE NOT YET IMPLEMENTED!\r\n" )
   // prepare response
-  response->state = -ENOSYS;
+  response->status = -ENOSYS;
   // send response
   _rpc_ret( response, sizeof( vfs_remove_response_t ) );
   // free stuff

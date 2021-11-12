@@ -29,17 +29,26 @@
 #define FRAMEBUFFER_GET_RESOLUTION 1
 #define FRAMEBUFFER_CLEAR 2
 #define FRAMEBUFFER_RENDER_SURFACE 3
-#define FRAMEBUFFER_INFO 4
+#define FRAMEBUFFER_SCROLL 4
+#define FRAMEBUFFER_FLIP 5
+#define FRAMEBUFFER_INFO 6
 
 struct framebuffer_render_surface {
   uint32_t x;
   uint32_t y;
   uint32_t max_x;
   uint32_t max_y;
+  uint32_t bpp;
   uint8_t data[];
 };
 typedef struct framebuffer_render_surface framebuffer_render_surface_t;
 typedef struct framebuffer_render_surface* framebuffer_render_surface_ptr_t;
+
+struct framebuffer_scroll {
+  uint32_t start_y;
+};
+typedef struct framebuffer_scroll framebuffer_scroll_t;
+typedef struct framebuffer_scroll* framebuffer_scroll_ptr_t;
 
 struct framebuffer_resolution {
   int32_t success;

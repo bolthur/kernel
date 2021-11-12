@@ -203,6 +203,9 @@ void syscall_rpc_raise_wait( void* context ) {
   size_t id_len = strlen_unsafe( identifier );
   if ( ! id_len || ! syscall_validate_address( ( uintptr_t )identifier, id_len ) ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid identifier / invalid address!\r\n" )
+    #endif
     return;
   }
   // debug output
@@ -213,6 +216,9 @@ void syscall_rpc_raise_wait( void* context ) {
   #endif
   // create queue if not existing
   if ( ! message_setup_process( task_thread_current_thread->process ) ) {
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Error while preparing process!\r\n" )
+    #endif
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }
@@ -265,6 +271,10 @@ void syscall_rpc_raise_wait( void* context ) {
   }
   // handle error
   if ( ! rpc ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "rpc raise failed!\r\n" )
+    #endif
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }

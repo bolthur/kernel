@@ -53,9 +53,22 @@ typedef struct handle_container *handle_container_ptr_t;
 #define HANDLE_GET_PID( n ) \
   ( handle_pid_ptr_t )( ( uint8_t* )n - offsetof( handle_pid_t, node ) )
 
+#define process_handle_for_each( iter, item, tree ) \
+  for ( \
+    iter = avl_iterate_first( tree ), \
+    item = HANDLE_GET_CONTAINER( iter ); \
+    iter != NULL && item != NULL; \
+    iter = avl_iterate_next( tree, iter ), \
+    item = HANDLE_GET_CONTAINER( iter ) \
+  )
+
 bool handle_init( void );
 int handle_generate( handle_container_ptr_t*, pid_t, vfs_node_ptr_t, vfs_node_ptr_t, const char*, int, int );
 int handle_destory( pid_t, int );
+void handle_destory_all( pid_t );
 int handle_get( handle_container_ptr_t*, pid_t, int );
+handle_pid_ptr_t handle_get_process_container( pid_t );
+handle_pid_ptr_t handle_generate_container( pid_t );
+bool handle_duplicate( handle_container_ptr_t, handle_pid_ptr_t );
 
 #endif

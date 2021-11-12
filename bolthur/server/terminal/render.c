@@ -23,6 +23,7 @@
 #include <inttypes.h>
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
+#include <stdarg.h>
 #include "render.h"
 #include "terminal.h"
 #include "psf.h"
@@ -61,17 +62,21 @@ void render_char_to_surface(
   uint32_t font_width = psf_glyph_width();
   uint32_t off = ( start_y * pitch ) +
     ( start_x * depth / CHAR_BIT );
+  uint32_t line = off;
   uint32_t bytesperline = ( font_width + 7 ) / 8;
-  for ( uint32_t y = 0; y < font_height; y++ ) {
-    uint32_t line = off;
-    for ( uint32_t x = 0; x < font_width; x++ ) {
-      *( ( uint32_t* )( surface + line ) ) =
-        ( glyph[ x / 8 ] & ( 0x80 >> ( x & 7 ) ) ) ? color_fg : color_bg;
-      line += 4;
+  for ( uint32_t idx = 0; idx < font_width * font_height; idx++ ) {
+    uint32_t x = idx % font_width;
+    *( ( uint32_t* )( surface + line ) ) =
+      ( glyph[ x / 8 ] & ( 0x80 >> ( x & 7 ) ) ) ? color_fg : color_bg;
+    line += 4;
+    // handle new line
+    if ( 0 == ( idx + 1 ) % font_width ) {
+      *( ( uint32_t* )( surface + line ) ) = 0;
+      glyph += bytesperline;
+      off += pitch;
+      // reset line to new offset
+      line = off;
     }
-    *( ( uint32_t* )( surface + line ) ) = 0;
-    glyph += bytesperline;
-    off += pitch;
   }
 }
 
@@ -87,78 +92,133 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
   if ( 32 != term->bpp ) {
     return;
   }
-  // backup row and column before
-  uint32_t start_row = term->row;
-  // push string to terminal backup
-  bool scrolled = terminal_push( term, s );
-  // gather current column and row
-  uint32_t end_row = term->row;
-  // get glyph information for rendering
+  uint32_t start_row;
+  uint32_t end_row;
+  uint32_t start_col;
+  uint32_t end_col;
+  // push to terminal
+  uint32_t scrolled = terminal_push(
+    term,
+    s,
+    &start_col,
+    &start_row,
+    &end_col,
+    &end_row
+  );
+
+  // get some glyph information for rendering
   uint32_t font_width = psf_glyph_width();
   uint32_t font_height = psf_glyph_height();
   uint32_t byte_per_pixel = term->bpp / CHAR_BIT;
-  // adjust start and end row for total render
+
   if ( scrolled ) {
-    start_row = 0;
-    end_row = term->max_row - 1;
+    framebuffer_scroll_ptr_t scroll_action = malloc(
+      sizeof( framebuffer_scroll_t ) );
+    if ( ! scroll_action ) {
+      return;
+    }
+    // prepare rpc block
+    memset( scroll_action, 0, sizeof( framebuffer_scroll_t ) );
+    scroll_action->start_y = scrolled * font_height;
+    // call render surface
+    int result = ioctl(
+      output_driver_fd,
+      IOCTL_BUILD_REQUEST(
+        FRAMEBUFFER_SCROLL,
+        sizeof( framebuffer_scroll_t ),
+        IOCTL_WRONLY
+      ),
+      scroll_action
+    );
+    // handle error
+    if ( -1 == result ) {
+      free( scroll_action );
+      return;
+    }
+    // free again
+    free( scroll_action );
   }
 
-  // calculate row count, max x and max y
-  uint32_t row_count = ( end_row - start_row + 1 );
-  uint32_t max_x = term->max_col * font_width * byte_per_pixel;
-  uint32_t max_y = row_count * max_x * font_height;
-  // allocate action buffer
-  size_t action_size = sizeof( framebuffer_render_surface_t )
-    + max_y * sizeof( uint8_t );
-  framebuffer_render_surface_ptr_t action = malloc( action_size );
-  if ( ! action ) {
-    return;
-  }
-  // initialize space with 0
-  memset( action, 0, action_size );
-  // loop through rows to render
-  for ( uint32_t row = 0; row < row_count; row++ ) {
-    // loop through columns of row to render
-    for ( uint32_t col = 0; col < term->max_col; col++ ) {
-      // calculate start x and y for the buffer
-      uint32_t start_x = col * font_width;
-      uint32_t start_y = row * font_height;
+  for ( uint32_t row = start_row; row <= end_row; row++ ) {
+    // get correct start and end column
+    uint32_t tmp_start_col = 0;
+    if ( row == start_row ) {
+      tmp_start_col = start_col;
+    }
+    uint32_t tmp_end_col = term->max_col - 1;
+    if ( row == end_row ) {
+      tmp_end_col = end_col;
+    }
+    // column count
+    size_t row_size = ( tmp_end_col - tmp_start_col + 1 ) * font_width * byte_per_pixel;
+    // calculate action size
+    size_t action_size = sizeof( framebuffer_render_surface_t )
+        + row_size * font_height * sizeof( uint8_t );
+    // allocate rpc parameter block
+    framebuffer_render_surface_ptr_t action = malloc( action_size );
+    if ( ! action ) {
+      return;
+    }
+    // initialize space with 0
+    memset( action, 0, action_size );
+    // loop through columns
+    for (
+      uint32_t col = tmp_start_col, render_col = 0;
+      col <= tmp_end_col;
+      col++, render_col++
+    ) {
       // get character to print
-      uint16_t c = term->buffer[ ( start_row + row ) * term->max_col + col ];
+      uint16_t c = term->buffer[ row * term->max_col + col ];
       // render character to buffer
       render_char_to_surface(
         action->data,
         term->bpp,
-        max_x,
+        row_size,
         c,
-        start_x,
-        start_y,
+        render_col * font_width,
+        0,
         0xf0f0f0,
         0
       );
     }
+
+    // populate necessary data
+    action->x = tmp_start_col * font_width;
+    action->y = row * font_height;
+    action->max_x = row_size;
+    action->max_y = action->max_x * font_height;
+    action->bpp = term->bpp / CHAR_BIT;
+    // call render surface
+    int result = ioctl(
+      output_driver_fd,
+      IOCTL_BUILD_REQUEST(
+        FRAMEBUFFER_RENDER_SURFACE,
+        action_size,
+        IOCTL_WRONLY
+      ),
+      action
+    );
+    // handle error
+    if ( -1 == result ) {
+      free( action );
+      return;
+    }
+    // free again
+    free( action );
   }
 
-  // populate necessary data
-  action->x = 0;
-  action->y = start_row * font_height;
-  action->max_x = max_x;
-  action->max_y = max_y;
   // call render surface
   int result = ioctl(
     output_driver_fd,
     IOCTL_BUILD_REQUEST(
-      FRAMEBUFFER_RENDER_SURFACE,
-      action_size,
-      IOCTL_WRONLY
+      FRAMEBUFFER_FLIP,
+      0,
+      IOCTL_NONE
     ),
-    action
+    NULL
   );
   // handle error
   if ( -1 == result ) {
-    free( action );
     return;
   }
-  // free up space again
-  free( action );
 }

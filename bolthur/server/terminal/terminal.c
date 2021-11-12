@@ -44,8 +44,7 @@ static int32_t terminal_lookup(
   const list_item_ptr_t a,
   const void* data
 ) {
-  terminal_ptr_t term = a->data;
-  return strcmp( term->path, data );
+  return strcmp( ( ( terminal_ptr_t )a->data )->path, data );
 }
 
 /**
@@ -82,8 +81,6 @@ static void* memset16( void* buf, uint16_t value, size_t size ) {
  * @brief Generic terminal init
  *
  * @return
- *
- * @todo fetch console manager pid from vfs for rpc call
  */
 bool terminal_init( void ) {
   // construct list
@@ -282,47 +279,78 @@ bool terminal_init( void ) {
  * @param term
  */
 void terminal_scroll( terminal_ptr_t term ) {
-  // move up line by line
-  for ( uint32_t row = 1; row < term->max_row - 1; row++ ) {
-    memmove(
-      &term->buffer[ ( row - 1 ) * term->max_row ],
-      &term->buffer[ row * term->max_row ],
-      sizeof( uint8_t ) * term->max_col
-   );
-  }
+  // move up one line
+  memmove(
+    term->buffer,
+    &term->buffer[ 1 * term->max_col ],
+    sizeof( uint16_t ) * ( term->max_row - 1 ) * term->max_col
+  );
   // erase last one
-  memset(
-    &term->buffer[ term->max_row - 1 ],
+  memset16(
+    &term->buffer[ ( term->max_row - 1 ) * term->max_col ],
     ' ',
-    sizeof( uint8_t ) * term->max_col
+    sizeof( uint16_t ) * term->max_col / 2
   );
 }
 
 /**
- * @fn bool terminal_push(terminal_ptr_t, const char*)
+ * @fn uint32_t terminal_push(terminal_ptr_t, const char*, uint32_t*, uint32_t*, uint32_t*, uint32_t*)
  * @brief Push string to terminal buffer
  *
- * @param term
- * @param s
+ * @param term terminal to push to
+ * @param s utf8 string to push
+ * @param start_x pointer to return start_x if not null
+ * @param start_y pointer to return start_y if not null
+ * @param end_x pointer to return end_x if not null
+ * @param end_y pointer to return end_y if not null
  * @return
  */
-bool terminal_push( terminal_ptr_t term, const char* s ) {
-  bool scrolled = false;
+uint32_t terminal_push(
+  terminal_ptr_t term,
+  const char* s,
+  uint32_t* start_x,
+  uint32_t* start_y,
+  uint32_t* end_x,
+  uint32_t* end_y
+) {
+  uint32_t scrolled = 0;
+  // set start x and y
+  if ( start_x ) {
+    *start_x = term->col;
+  }
+  if ( start_y ) {
+    *start_y = term->row;
+  }
+  bool first = true;
+  bool newline_in_middle = false;
+  bool newline = false;
   while( *s ) {
+    // set flag indicating that a newline is in the middle
+    if ( newline ) {
+      newline_in_middle = true;
+    }
     // handle scroll
     if ( term->max_row <= term->row ) {
       // scroll up content
       terminal_scroll( term );
-      // set flag for rendering
-      scrolled = true;
+      // increase scrolled lines
+      scrolled++;
       // set row and col correctly
       term->row--;
       term->col = 0;
+      // set start x and y different if during first run
+      if ( first && start_x ) {
+        *start_x = term->col;
+      }
+      if ( first && start_y ) {
+        *start_y = term->row;
+      }
     }
     // handle end of row reached
     if ( term->max_col <= term->col ) {
       term->col = 0;
       term->row++;
+      newline = true;
     }
     // decode churrent character to unicode for save
     size_t len = 0;
@@ -333,24 +361,47 @@ bool terminal_push( terminal_ptr_t term, const char* s ) {
       // newline just increase row
       case '\n':
         term->row++;
+        newline = true;
         break;
       // carriage return reset column
       case '\r':
+        // set end x before reset
+        if ( end_x ) {
+          *end_x = term->col - 1;
+        }
         term->col = 0;
         break;
       case '\t':
         // insert 4 spaces
-        terminal_push( term, "    " );
+        if ( first ) {
+          terminal_push( term, "    ", start_x, start_y, end_x, end_y );
+        } else {
+          terminal_push( term, "    ", NULL, NULL, end_x, end_y );
+        }
         break;
       default:
         // push back character
         term->buffer[ term->row * term->max_col + term->col ] = c;
+        // set end x
+        if ( end_x ) {
+          *end_x = term->col;
+        }
         // increment column
         term->col++;
     }
 
     // next character
+    first = false;
     s++;
   }
+  // set start and end x / y in case of scroll action
+  if ( end_x && newline && newline_in_middle ) {
+    *end_x = term->col;
+  }
+  if ( end_y ) {
+    *end_y = ( newline && ! newline_in_middle )
+      ? term->row - 1 : term->row;
+  }
+  // return indicator whether scrolling was done or not
   return scrolled;
 }

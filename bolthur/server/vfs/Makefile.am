@@ -5,6 +5,7 @@ bin_PROGRAMS = vfs
 vfs_SOURCES = \
   rpc/add.c \
   rpc/close.c \
+  rpc/fork.c \
   rpc/ioctl.c \
   rpc/open.c \
   rpc/read.c \

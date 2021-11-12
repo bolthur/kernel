@@ -92,7 +92,7 @@ static bool psf_load_font( psf_font_ptr_t f ) {
  *
  * @return
  *
- * @todo add parse of unicode table
+ * @todo add parse of unicode table for v2
  */
 bool psf_init( void ) {
   // allocate management structure
@@ -142,7 +142,7 @@ bool psf_init( void ) {
     && PSF2_MAGIC2 == font->font_buffer[ 2 ]
     && PSF2_MAGIC3 == font->font_buffer[ 3 ]
   ) {
-    font->type= PSF_FONT_HEADER_TYPE_V2;
+    font->type = PSF_FONT_HEADER_TYPE_V2;
   } else {
     free( font->font_buffer );
     free( font );

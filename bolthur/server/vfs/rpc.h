@@ -31,5 +31,6 @@ void rpc_handle_write( pid_t, size_t );
 void rpc_handle_seek( pid_t, size_t );
 void rpc_handle_stat( pid_t, size_t );
 void rpc_handle_ioctl( pid_t, size_t );
+void rpc_handle_fork( pid_t, size_t );
 
 #endif

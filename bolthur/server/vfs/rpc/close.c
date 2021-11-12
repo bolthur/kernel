@@ -50,7 +50,7 @@ void rpc_handle_close( pid_t origin, size_t data_info ) {
   memset( response, 0, sizeof( vfs_close_response_t ) );
   // handle no data
   if( ! data_info ) {
-    response->state = -EINVAL;
+    response->status = -EINVAL;
     _rpc_ret( response, sizeof( response ) );
     free( request );
     free( response );
@@ -61,14 +61,14 @@ void rpc_handle_close( pid_t origin, size_t data_info ) {
   _rpc_get_data( request, sizeof( vfs_close_request_t ), data_info );
   // handle error
   if ( errno ) {
-    response->state = -EINVAL;
+    response->status = -EINVAL;
     _rpc_ret( response, sizeof( vfs_close_response_t ) );
     free( request );
     free( response );
     return;
   }
   // destroy and push to state
-  response->state = handle_destory( origin, request->handle );
+  response->status = handle_destory( origin, request->handle );
   // return response
   _rpc_ret( response, sizeof( vfs_close_response_t ) );
   // free message structures

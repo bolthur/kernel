@@ -116,7 +116,7 @@ static void rpc_handle_write( __unused pid_t origin, size_t data_info ) {
     ? console->out
     : console->err;
   // build terminal command
-  terminal_command_write_ptr_t terminal = malloc( sizeof( terminal_command_write_t ) );
+  terminal_write_request_ptr_t terminal = malloc( sizeof( terminal_write_request_t ) );
   if ( ! terminal ) {
     response->len = -EIO;
     // return response
@@ -126,7 +126,7 @@ static void rpc_handle_write( __unused pid_t origin, size_t data_info ) {
     free( response );
     return;
   }
-  memset( terminal, 0, sizeof( terminal_command_write_t ) );
+  memset( terminal, 0, sizeof( terminal_write_request_t ) );
   terminal->len = request->len;
   memcpy( terminal->data, request->data, request->len );
   strncpy( terminal->terminal, console->path, PATH_MAX );
@@ -135,13 +135,14 @@ static void rpc_handle_write( __unused pid_t origin, size_t data_info ) {
     rpc,
     console->handler,
     terminal,
-    sizeof( terminal_command_write_t )
+    sizeof( terminal_write_request_t )
   );
   if ( errno ) {
     response->len = -EIO;
     // return response
     _rpc_ret( response, sizeof( vfs_write_response_t ) );
     // free stuff
+    free( terminal );
     free( request );
     free( response );
     return;
@@ -151,6 +152,7 @@ static void rpc_handle_write( __unused pid_t origin, size_t data_info ) {
   // return response
   _rpc_ret( response, sizeof( vfs_write_response_t ) );
   // free stuff
+  free( terminal );
   free( request );
   free( response );
 }

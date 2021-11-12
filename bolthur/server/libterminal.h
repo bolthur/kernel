@@ -26,13 +26,13 @@
 #if ! defined( _LIBTERMINAL_H )
 #define _LIBTERMINAL_H
 
-struct terminal_command_write {
+struct terminal_write_request {
   char data[ MAX_WRITE_LEN ];
   char terminal[ PATH_MAX ];
   size_t len;
 };
-typedef struct terminal_command_write terminal_command_write_t;
-typedef struct terminal_command_write* terminal_command_write_ptr_t;
+typedef struct terminal_write_request terminal_write_request_t;
+typedef struct terminal_write_request* terminal_write_request_ptr_t;
 
 
 #endif

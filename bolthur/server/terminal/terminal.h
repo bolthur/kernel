@@ -42,6 +42,6 @@ extern list_manager_ptr_t terminal_list;
 
 bool terminal_init( void );
 void terminal_scroll( terminal_ptr_t );
-bool terminal_push( terminal_ptr_t, const char* );
+uint32_t terminal_push( terminal_ptr_t, const char*, uint32_t*, uint32_t*, uint32_t*, uint32_t* );
 
 #endif

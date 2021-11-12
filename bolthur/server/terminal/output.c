@@ -78,7 +78,7 @@ void output_handle_out( __unused pid_t origin, size_t data_info ) {
     return;
   }
   // allocate for data fetching
-  terminal_command_write_ptr_t terminal = malloc( sz );
+  terminal_write_request_ptr_t terminal = malloc( sz );
   if ( ! terminal ) {
     return;
   }
@@ -122,7 +122,7 @@ void output_handle_err( __unused pid_t origin, size_t data_info ) {
     return;
   }
   // allocate for data fetching
-  terminal_command_write_ptr_t terminal = malloc( sz );
+  terminal_write_request_ptr_t terminal = malloc( sz );
   if ( ! terminal ) {
     return;
   }
