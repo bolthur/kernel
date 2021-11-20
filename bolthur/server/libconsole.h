@@ -26,15 +26,14 @@
 #if ! defined( _LIBCONSOLE_H )
 #define _LIBCONSOLE_H
 
-#define CONSOLE_ADD 1
-#define CONSOLE_SELECT 2
-#define CONSOLE_INFO 3
+#define CONSOLE_ADD RPC_CUSTOM_START
+#define CONSOLE_SELECT RPC_CUSTOM_START + 1
 
 struct console_command_add {
   char terminal[ PATH_MAX ];
-  char in[ PATH_MAX ];
-  char out[ PATH_MAX ];
-  char err[ PATH_MAX ];
+  size_t in;
+  size_t out;
+  size_t err;
   pid_t origin;
 };
 typedef struct console_command_add console_command_add_t;

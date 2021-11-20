@@ -10,14 +10,15 @@
   </includedir>
   <exclude>
     <path name="../../../bolthur/kernel/thirdparty/dtc/"/>
-    <path name="../../../tool/"/>
   </exclude>
   <paths>
-    <dir name="../../../" />
+    <dir name="../../../bolthur/kernel/" />
   </paths>
   <defines>
     <define name="__cppcheck__=1" />
     <define name="__INTPTR_TYPE__=4" />
+    <define name="__arm__=1" />
+    <define name="__ARMEL__=1" />
   </defines>
   <suppressions>
     <suppression>unusedFunction</suppression>

@@ -25,6 +25,7 @@
 #include <sys/bolthur.h>
 #include "framebuffer.h"
 #include "../../../libframebuffer.h"
+#include "../../../libhelper.h"
 
 uint32_t physical_width;
 uint32_t physical_height;
@@ -43,28 +44,19 @@ static int32_t mailbox_buffer[ 256 ];
 struct framebuffer_rpc command_list[] = {
   {
     .command = FRAMEBUFFER_GET_RESOLUTION,
-    .name = "resolution",
-    .callback = ( uintptr_t )framebuffer_handle_resolution
+    .callback = framebuffer_handle_resolution
   }, {
     .command = FRAMEBUFFER_CLEAR,
-    .name = "clear",
-    .callback = ( uintptr_t )framebuffer_handle_clear
+    .callback = framebuffer_handle_clear
   }, {
     .command = FRAMEBUFFER_RENDER_SURFACE,
-    .name = "render_surface",
-    .callback = ( uintptr_t )framebuffer_handle_render_surface
+    .callback = framebuffer_handle_render_surface
   }, {
     .command = FRAMEBUFFER_SCROLL,
-    .name = "scroll",
-    .callback = ( uintptr_t )framebuffer_handle_scroll
+    .callback = framebuffer_handle_scroll
   }, {
     .command = FRAMEBUFFER_FLIP,
-    .name = "flip",
-    .callback = ( uintptr_t )framebuffer_handle_flip
-  }, {
-    .command = FRAMEBUFFER_INFO,
-    .name = "info",
-    .callback = ( uintptr_t )framebuffer_handle_info
+    .callback = framebuffer_handle_flip
   },
 };
 
@@ -183,16 +175,10 @@ bool framebuffer_init( void ) {
 bool framebuffer_register_rpc( void ) {
   // register all handlers
   size_t max = sizeof( command_list ) / sizeof( command_list[ 0 ] );
-  char path[ PATH_MAX ];
   // loop through handler to identify used one
   for ( size_t i = 0; i < max; i++ ) {
-    // erase local variable
-    memset( path, 0, sizeof( char ) * PATH_MAX );
-    // build path
-    strncpy( path, "#/dev/framebuffer#", PATH_MAX );
-    strncat( path, command_list[ i ].name, PATH_MAX - strlen( path ) );
     // register rpc
-    _rpc_acquire( path, command_list[ i ].callback );
+    bolthur_rpc_bind( command_list[ i ].command, command_list[ i ].callback );
     if ( errno ) {
       return false;
     }
@@ -230,13 +216,15 @@ void framebuffer_flip( void ) {/*
 }
 
 /**
- * @fn void framebuffer_handle_resolution(pid_t, size_t)
+ * @fn void framebuffer_handle_resolution(size_t, pid_t, size_t)
  * @brief Handle resolution request currently only get
  *
+ * @param type
  * @param origin
  * @param data_info
  */
 void framebuffer_handle_resolution(
+  size_t type,
   __unused pid_t origin,
   __unused size_t data_info
 ) {
@@ -249,17 +237,19 @@ void framebuffer_handle_resolution(
   resolution_data.height = physical_height;
   resolution_data.depth = FRAMEBUFFER_SCREEN_DEPTH;
   // return resolution data
-  _rpc_ret( &resolution_data, sizeof( framebuffer_resolution_t ) );
+  _rpc_ret( type, &resolution_data, sizeof( framebuffer_resolution_t ) );
 }
 
 /**
- * @fn void framebuffer_handle_clear(pid_t, size_t)
+ * @fn void framebuffer_handle_clear(size_t, pid_t, size_t)
  * @brief Handle clear request
  *
+ * @param type
  * @param origin
  * @param data_info
  */
 void framebuffer_handle_clear(
+  __unused size_t type,
   __unused pid_t origin,
   __unused size_t data_info
 ) {
@@ -268,13 +258,15 @@ void framebuffer_handle_clear(
 }
 
 /**
- * @fn void framebuffer_handle_render_surface(pid_t, size_t)
+ * @fn void framebuffer_handle_render_surface(size_t, pid_t, size_t)
  * @brief RPC callback for rendering a surface
  *
+ * @param type
  * @param origin
  * @param data_info
  */
 void framebuffer_handle_render_surface(
+  __unused size_t type,
   __unused pid_t origin,
   size_t data_info
 ) {
@@ -292,7 +284,7 @@ void framebuffer_handle_render_surface(
     return;
   }
   // fetch rpc data
-  _rpc_get_data( info, sz, data_info );
+  _rpc_get_data( info, sz, data_info, false );
   // handle error
   if ( errno ) {
     free( info );
@@ -317,13 +309,18 @@ void framebuffer_handle_render_surface(
 }
 
 /**
- * @fn void framebuffer_handle_scroll(pid_t, size_t)
+ * @fn void framebuffer_handle_scroll(size_t, pid_t, size_t)
  * @brief Handle ioctl scroll request
  *
+ * @param type
  * @param origin
  * @param data_info
  */
-void framebuffer_handle_scroll( __unused pid_t origin, size_t data_info ) {
+void framebuffer_handle_scroll(
+  __unused size_t type,
+  __unused pid_t origin,
+  size_t data_info
+) {
   // handle no data
   if( ! data_info ) {
     return;
@@ -338,7 +335,7 @@ void framebuffer_handle_scroll( __unused pid_t origin, size_t data_info ) {
     return;
   }
   // fetch rpc data
-  _rpc_get_data( info, sz, data_info );
+  _rpc_get_data( info, sz, data_info, false );
   // handle error
   if ( errno ) {
     free( info );
@@ -354,85 +351,17 @@ void framebuffer_handle_scroll( __unused pid_t origin, size_t data_info ) {
 }
 
 /**
- * @fn void framebuffer_handle_flip(pid_t, size_t)
+ * @fn void framebuffer_handle_flip(size_t, pid_t, size_t)
  * @brief Handle ioctl flip request
  *
+ * @param type
  * @param origin
  * @param data_info
  */
 void framebuffer_handle_flip(
+  __unused size_t type,
   __unused pid_t origin,
   __unused size_t data_info
 ) {
   framebuffer_flip();
-}
-
-/**
- * @fn void framebuffer_handle_info(pid_t, size_t)
- * @brief Handle ioctl info request
- *
- * @param origin
- * @param data_info
- */
-void framebuffer_handle_info( __unused pid_t origin, size_t data_info ) {
-  // dummy error response
-  vfs_ioctl_info_response_t err_response = { .status = -EINVAL };
-  // handle no data
-  if( ! data_info ) {
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_info_response_t ) );
-    return;
-  }
-  // get size for allocation
-  size_t sz = _rpc_get_data_size( data_info );
-  if ( errno ) {
-    err_response.status = -EIO;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_info_response_t ) );
-    return;
-  }
-  // allocate
-  vfs_ioctl_info_request_ptr_t info = malloc( sz );
-  if ( ! info ) {
-    err_response.status = -ENOMEM;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_info_response_t ) );
-    return;
-  }
-  // get request data
-  memset( info, 0, sz );
-  _rpc_get_data( info, sz, data_info );
-  if ( errno ) {
-    err_response.status = -EIO;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_info_response_t ) );
-    free( info );
-    return;
-  }
-  // max handlers
-  size_t max = sizeof( command_list ) / sizeof( command_list[ 0 ] );
-  // loop through handler to identify used one
-  for ( size_t i = 0; i < max; i++ ) {
-    if ( command_list[ i ].command == info->command ) {
-      size_t response_size = sizeof( vfs_ioctl_info_response_t ) + (
-        sizeof( char ) * ( strlen( command_list[ i ].name ) + 1 )
-      );
-      // allocate
-      vfs_ioctl_info_response_ptr_t response = malloc( response_size );
-      if ( ! response ) {
-        err_response.status = -ENOMEM;
-        _rpc_ret( &err_response, sizeof( vfs_ioctl_info_response_t ) );
-        free( info );
-        return;
-      }
-      // fill response
-      memset( response, 0, response_size );
-      response->status = 0;
-      strcpy( response->name, command_list[ i ].name );
-      // return and exit
-      _rpc_ret( response, response_size );
-      free( info );
-      free( response );
-      return;
-    }
-  }
-  free( info );
-  err_response.status = -ENOSYS;
-  _rpc_ret( &err_response, sizeof( vfs_ioctl_info_response_t ) );
 }

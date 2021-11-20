@@ -26,254 +26,151 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../vfs.h"
-#include "../handle.h"
+#include "../file/handle.h"
+#include "../ioctl/handler.h"
+#include "../../libhelper.h"
 
 /**
- * @fn void rpc_handle_ioctl(pid_t, size_t)
+ * @fn void rpc_handle_ioctl(size_t, pid_t, size_t)
  * @brief handle ioctl request
  *
+ * @param type
  * @param origin
  * @param data_info
+ *
+ * @todo save result of info to prevent similar requests somehow
  */
-void rpc_handle_ioctl( __unused pid_t origin, size_t data_info ) {
+void rpc_handle_ioctl( size_t type, pid_t origin, size_t data_info ) {
   // dummy error response
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
+    _rpc_ret( type, &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     return;
   }
   // get message size
   size_t message_size = _rpc_get_data_size( data_info );
   if ( errno ) {
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
+    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
+    _rpc_ret( type, &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     return;
   }
   // get request
-  vfs_ioctl_perform_request_ptr_t request = ( vfs_ioctl_perform_request_ptr_t )malloc(
-    message_size );
+  vfs_ioctl_perform_request_ptr_t request = malloc( message_size );
   if ( ! request ) {
+    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( ENOMEM ) )
     err_response.status = -ENOMEM;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
+    _rpc_ret( type, &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     return;
   }
   memset( request, 0, message_size );
-  _rpc_get_data( request, message_size, data_info );
+  _rpc_get_data( request, message_size, data_info, false );
   if ( errno ) {
+    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
     err_response.status = -EIO;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
+    _rpc_ret( type, &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     free( request );
     return;
   }
   /*EARLY_STARTUP_PRINT(
     "handle: %d, command = %"PRIu32", data = %p, size = %zx\r\n",
-    request->handle, request->command, request->data, message_size )*/
+    request->handle, request->command, request->container, message_size )*/
   // get handle
-  handle_container_ptr_t container;
+  handle_container_ptr_t handle_container;
   // try to get handle information
-  int result = handle_get( &container, origin, request->handle );
+  int result = handle_get( &handle_container, origin, request->handle );
   // handle error
   if ( 0 > result ) {
+    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( EBADF ) )
     err_response.status = -EBADF;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
+    _rpc_ret( type, &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     free( request );
     return;
   }
-  // build base rpc prefix
-  // base name: #[device path]#
-  size_t base_strlen = strlen( container->path ) + 3;
-  size_t base_len = sizeof( char ) * ( base_strlen );
-  char* base = ( char* )malloc( base_len );
-  if ( ! base ) {
-    err_response.status = -ENOMEM;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-    free( request );
-    return;
-  }
-  // fill base
-  memset( base, 0, base_len );
-  strncpy( base, "#", base_strlen );
-  strncat( base, container->path, base_strlen - strlen( base ) );
-  strncat( base, "#", base_strlen - strlen( base ) );
-
-  // query message from handling process
-  size_t info_strlen = base_strlen + strlen( "info" );
-  size_t info_len = sizeof( char ) * info_strlen;
-  char* info = ( char* )malloc( info_len );
-  if ( ! info ) {
-    err_response.status = -ENOMEM;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-    free( base );
-    free( request );
-    return;
-  }
-  // fill info
-  memset( info, 0, info_len );
-  strncpy( info, base, info_strlen );
-  strncat( info, "info", info_strlen - strlen( info ) );
-  // call rpc
-  vfs_ioctl_info_request_ptr_t info_request = ( vfs_ioctl_info_request_ptr_t )malloc(
-    sizeof( vfs_ioctl_info_request_t ) );
-  if ( ! info_request ) {
-    err_response.status = -ENOMEM;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-    free( info );
-    free( base );
-    free( request );
-    return;
-  }
-  info_request->command = request->command;
-  size_t info_response_id = _rpc_raise_wait(
-    info,
-    container->target->pid,
-    info_request,
-    sizeof( vfs_ioctl_info_request_t )
+  // get ioctl container
+  ioctl_container_ptr_t ioctl_container = ioctl_lookup_command(
+    request->command,
+    handle_container->target->pid
   );
-  if ( errno ) {
+  if ( ! ioctl_container ) {
+    EARLY_STARTUP_PRINT( "command = %ld, pid = %d\r\n", request->command, handle_container->target->pid )
+    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( EIO ) )
     err_response.status = -EIO;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-    free( info_request );
-    free( info );
-    free( base );
+    _rpc_ret( type, &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     free( request );
     return;
   }
-  // free unnecessary structure again
-  free( info_request );
-  free( info );
-  // get message size
-  size_t info_response_size = _rpc_get_data_size( info_response_id );
-  if ( errno ) {
-    err_response.status = -EIO;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-    free( base );
-    free( request );
-    return;
-  }
-  // get request
-  vfs_ioctl_info_response_ptr_t info_response = ( vfs_ioctl_info_response_ptr_t )malloc(
-    info_response_size );
-  if ( ! info_response ) {
-    err_response.status = -ENOMEM;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-    free( base );
-    free( request );
-    return;
-  }
-  memset( info_response, 0, info_response_size );
-  _rpc_get_data( info_response, info_response_size, info_response_id );
-  if ( errno ) {
-    err_response.status = -EIO;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-    free( info_response );
-    free( base );
-    free( request );
-    return;
-  }
-  // handle invalid status
-  if ( 0 > info_response->status ) {
-    err_response.status = info_response->status;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-    free( info_response );
-    free( base );
-    free( request );
-    return;
-  }
-  /*EARLY_STARTUP_PRINT(
-    "status: %d, name = %s\r\n", info_response->status, info_response->name )*/
-
-  // build rpc name
-  size_t rpc_strlen = base_strlen + strlen( info_response->name );
-  size_t rpc_len = sizeof( char ) * rpc_strlen;
-  char* rpc = ( char* )malloc( rpc_len );
-  if ( ! rpc ) {
-    err_response.status = -ENOMEM;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-    free( info_response );
-    free( base );
-    free( request );
-    return;
-  }
-  memset( rpc, 0, rpc_len );
-  strncpy( rpc, base, rpc_strlen );
-  strncat( rpc, info_response->name, rpc_strlen - strlen( rpc ) );
-  free( info_response );
-  free( base );
   // respond result if type is not none or write only
   if ( IOCTL_NONE == request->type || IOCTL_WRONLY == request->type ) {
     _rpc_raise(
-      rpc,
-      container->target->pid,
-      request->data,
-      message_size - sizeof( vfs_ioctl_perform_request_t )
+      ioctl_container->command,
+      handle_container->target->pid,
+      request->container,
+      message_size - sizeof( vfs_ioctl_perform_request_t ),
+      false
     );
-    if ( errno ) {
-      err_response.status = -EIO;
-      _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-      free( rpc );
-      free( request );
-      return;
-    }
-    free( rpc );
+    // set status depending on errno
+    err_response.status = errno ? -EIO : 0;
+    _rpc_ret( type, &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     free( request );
-    err_response.status = 0;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     return;
   }
   // raise rpc
-  size_t rpc_response_id = _rpc_raise_wait(
-    rpc,
-    container->target->pid,
-    request->data,
-    message_size - sizeof( vfs_ioctl_perform_request_t )
+  size_t response_data_id = _rpc_raise(
+    ioctl_container->command,
+    handle_container->target->pid,
+    request->container,
+    message_size - sizeof( vfs_ioctl_perform_request_t ),
+    true
   );
+  //EARLY_STARTUP_PRINT( "response_data_id = %d\r\n", response_data_id )
   if ( errno ) {
+    EARLY_STARTUP_PRINT( "ERROR: %s\r\n", strerror( errno ) )
     err_response.status = -EIO;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
-    free( rpc );
+    _rpc_ret( type, &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     free( request );
     return;
   }
-  free( rpc );
   free( request );
   // get message size
-  size_t rpc_response_size = _rpc_get_data_size( rpc_response_id );
+  size_t rpc_response_size = _rpc_get_data_size( response_data_id );
   if ( errno ) {
+    EARLY_STARTUP_PRINT( "ERROR: %s\r\n", strerror( errno ) )
     err_response.status = -EIO;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
+    _rpc_ret( type, &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     return;
   }
   // get data
-  char* rpc_response = ( char* )malloc( rpc_response_size );
+  char* rpc_response = malloc( rpc_response_size );
   if ( ! rpc_response ) {
     err_response.status = -ENOMEM;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
+    _rpc_ret( type, &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     return;
   }
   memset( rpc_response, 0, rpc_response_size );
-  _rpc_get_data( rpc_response, rpc_response_size, rpc_response_id );
+  _rpc_get_data( rpc_response, rpc_response_size, response_data_id, false );
   if ( errno ) {
+    EARLY_STARTUP_PRINT( "ERROR: %s\r\n", strerror( errno ) )
     err_response.status = -EIO;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
+    _rpc_ret( type, &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     free( rpc_response );
     return;
   }
   // build return request
   size_t response_size = sizeof( vfs_ioctl_perform_response_t )
     + ( sizeof( char ) * rpc_response_size );
-  vfs_ioctl_perform_response_ptr_t response = ( vfs_ioctl_perform_response_ptr_t )malloc(
-    response_size );
+  vfs_ioctl_perform_response_ptr_t response = malloc( response_size );
   if ( ! response ) {
     err_response.status = -ENOMEM;
-    _rpc_ret( &err_response, sizeof( vfs_ioctl_perform_response_t ) );
+    _rpc_ret( type, &err_response, sizeof( vfs_ioctl_perform_response_t ) );
     free( rpc_response );
     return;
   }
   // fill response structure
   response->status = 0;
-  memcpy( response->data, rpc_response, rpc_response_size );
+  memcpy( response->container, rpc_response, rpc_response_size );
   // return response
-  _rpc_ret( response, response_size );
+  _rpc_ret( type, response, response_size );
   free( rpc_response );
   free( response );
 }

@@ -22,7 +22,8 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "handle.h"
-#include "avl.h"
+#include "../collection/avl.h"
+#include "../../libhelper.h"
 
 /**
  * @brief tree managing file handles
@@ -146,8 +147,6 @@ static int generate_handle( handle_pid_ptr_t handle ) {
 
 /**
  * @brief Init file handle tree
- *
- * @todo build handle tree per pid
  */
 bool handle_init( void ) {
   // create handle tree

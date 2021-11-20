@@ -43,17 +43,15 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
-
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "Entering software_interrupt_handler( %p )\r\n",
       ( void* )cpu )
     DUMP_REGISTER( cpu )
   #endif
-
   // kernel stack
   interrupt_ensure_kernel_stack();
-
+  // svc number
   uint32_t svc_num;
   // thumb mode
   if ( cpu->reg.spsr & CPSR_THUMB ) {
@@ -67,26 +65,20 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
     // apply offset
     cpu->reg.pc += 4;
   }
-
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "address of cpu = %p\r\n", ( void* )cpu )
     DEBUG_OUTPUT( "svc_num = %u\r\n", svc_num )
   #endif
-
   // handle bound interrupt handlers
   interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu );
-  // handle possible hardware interrupt
-  interrupt_handle_possible( cpu, false );
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
-
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu )
     DEBUG_OUTPUT( "Leaving software_interrupt_handler\r\n" )
   #endif
-
   // decrement nested counter
   nested_svc--;
 }

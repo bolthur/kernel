@@ -25,7 +25,8 @@
 // process related stuff
 #include <task/process.h>
 #include <task/thread.h>
-#include <ipc/rpc.h>
+#include <rpc/backup.h>
+#include <rpc/generic.h>
 
 /**
  * @brief Nested counter for undefined instruction exception handler
@@ -65,27 +66,20 @@ void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
     && TASK_THREAD_STATE_RPC_ACTIVE == task_thread_current_thread->state
   ) {
     // try to restore
-    if ( ! rpc_restore_thread( task_thread_current_thread, cpu ) ) {
+    if ( ! rpc_generic_restore( task_thread_current_thread, cpu ) ) {
       PANIC( "undefined instruction during rpc handler => kill thread!" )
     }
+    // debug output
     #if defined( PRINT_EXCEPTION )
       DUMP_REGISTER( cpu )
       DEBUG_OUTPUT( "process id: %d, thread state: %d\r\n",
         task_thread_current_thread->process->id,
         task_thread_current_thread->state )
     #endif
-    // handle possible hardware interrupt
-    interrupt_handle_possible( cpu, false );
-    // enqueue cleanup and return
-    event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
-    // decrement nested counter
-    nested_undefined--;
-    return;
+  } else {
+    // just panic
+    PANIC( "undefined" )
   }
-
-  // just panic
-  PANIC( "undefined" )
-
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
   // decrement nested counter

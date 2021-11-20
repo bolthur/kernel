@@ -20,9 +20,10 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
-#include "handle.h"
+#include "file/handle.h"
 #include "vfs.h"
 #include "rpc.h"
+#include "ioctl/handler.h"
 
 pid_t pid = 0;
 
@@ -50,64 +51,70 @@ int main( __unused int argc, __unused char* argv[] ) {
     EARLY_STARTUP_PRINT( "Unable to setup handle structures!\r\n" )
     return -1;
   }
+  if ( ! ioctl_handler_init() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup ioctl handler structures!\r\n" )
+    return -1;
+  }
   if ( ! vfs_setup( pid ) ) {
     EARLY_STARTUP_PRINT( "Unable to setup vfs structures!\r\n" )
     return -1;
   }
 
   // register rpc handler
-  _rpc_acquire( RPC_VFS_ADD_OPERATION, ( uintptr_t )rpc_handle_add );
+  bolthur_rpc_bind( RPC_VFS_ADD, rpc_handle_add );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
     return -1;
   }
-  _rpc_acquire( RPC_VFS_REMOVE_OPERATION, ( uintptr_t )rpc_handle_remove );
+  bolthur_rpc_bind( RPC_VFS_REMOVE, rpc_handle_remove );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
     return -1;
   }
-  _rpc_acquire( RPC_VFS_OPEN_OPERATION, ( uintptr_t )rpc_handle_open );
+  bolthur_rpc_bind( RPC_VFS_OPEN, rpc_handle_open );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler open!\r\n" )
     return -1;
   }
-  _rpc_acquire( RPC_VFS_CLOSE_OPERATION, ( uintptr_t )rpc_handle_close );
+  bolthur_rpc_bind( RPC_VFS_CLOSE, rpc_handle_close );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler close!\r\n" )
     return -1;
   }
-  _rpc_acquire( RPC_VFS_READ_OPERATION, ( uintptr_t )rpc_handle_read );
+  bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
     return -1;
   }
-  _rpc_acquire( RPC_VFS_WRITE_OPERATION, ( uintptr_t )rpc_handle_write );
+  bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
     return -1;
   }
-  _rpc_acquire( RPC_VFS_SEEK_OPERATION, ( uintptr_t )rpc_handle_seek );
+  bolthur_rpc_bind( RPC_VFS_SEEK, rpc_handle_seek );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler seek!\r\n" )
     return -1;
   }
-  _rpc_acquire( RPC_VFS_STAT_OPERATION, ( uintptr_t )rpc_handle_stat );
+  bolthur_rpc_bind( RPC_VFS_STAT, rpc_handle_stat );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
     return -1;
   }
-  _rpc_acquire( RPC_VFS_IOCTL_OPERATION, ( uintptr_t )rpc_handle_ioctl );
+  bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_handle_ioctl );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler ioctl!\r\n" )
     return -1;
   }
-  _rpc_acquire( RPC_VFS_FORK_OPERATION, ( uintptr_t )rpc_handle_fork );
+  bolthur_rpc_bind( RPC_VFS_FORK, rpc_handle_fork );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler fork!\r\n" )
     return -1;
   }
 
   EARLY_STARTUP_PRINT( "entering wait for rpc loop!\r\n" )
+  // enable rpc and wait
+  _rpc_set_ready( true );
   while( true ) {
     _rpc_wait_for_call();
   }

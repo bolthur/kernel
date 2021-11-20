@@ -144,16 +144,8 @@ bool syscall_init( void ) {
   }
   // rpc related
   if ( ! interrupt_register_handler(
-    SYSCALL_RPC_ACQUIRE,
-    syscall_rpc_acquire,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_RPC_RELEASE,
-    syscall_rpc_release,
+    SYSCALL_RPC_SET_HANDLER,
+    syscall_rpc_set_handler,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -162,14 +154,6 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_RPC_RAISE,
     syscall_rpc_raise,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_RPC_RAISE_WAIT,
-    syscall_rpc_raise_wait,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -208,8 +192,16 @@ bool syscall_init( void ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_RPC_BOUND,
-    syscall_rpc_bound,
+    SYSCALL_RPC_ROUTE,
+    syscall_rpc_route,
+    INTERRUPT_SOFTWARE,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_RPC_SET_READY,
+    syscall_rpc_set_ready,
     INTERRUPT_SOFTWARE,
     false
   ) ) {

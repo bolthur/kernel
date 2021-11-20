@@ -29,6 +29,7 @@
 #include "psf.h"
 #include "main.h"
 #include "../libframebuffer.h"
+#include "../libhelper.h"
 
 /**
  * @fn void render_char_to_surface(uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t)
@@ -66,11 +67,16 @@ void render_char_to_surface(
   uint32_t bytesperline = ( font_width + 7 ) / 8;
   for ( uint32_t idx = 0; idx < font_width * font_height; idx++ ) {
     uint32_t x = idx % font_width;
+    //EARLY_STARTUP_PRINT( "surface + line = %p\r\n", ( void* )( ( uint32_t* )( surface + line ) ) )
     *( ( uint32_t* )( surface + line ) ) =
       ( glyph[ x / 8 ] & ( 0x80 >> ( x & 7 ) ) ) ? color_fg : color_bg;
     line += 4;
     // handle new line
-    if ( 0 == ( idx + 1 ) % font_width ) {
+    if (
+      0 == ( idx + 1 ) % font_width
+      && ( idx + 1 ) < font_width * font_height
+    ) {
+      //EARLY_STARTUP_PRINT( "surface + line = %p\r\n", ( void* )( ( uint32_t* )( surface + line ) ) )
       *( ( uint32_t* )( surface + line ) ) = 0;
       glyph += bytesperline;
       off += pitch;
@@ -90,12 +96,14 @@ void render_char_to_surface(
 void render_terminal( terminal_ptr_t term, const char* s ) {
   // FIXME: currently only 32 bit depth is supported
   if ( 32 != term->bpp ) {
+    //EARLY_STARTUP_PRINT( "Unsupported depth!\r\n" )
     return;
   }
   uint32_t start_row;
   uint32_t end_row;
   uint32_t start_col;
   uint32_t end_col;
+  //EARLY_STARTUP_PRINT( "Push \"%s\" to terminal!\r\n", s )
   // push to terminal
   uint32_t scrolled = terminal_push(
     term,
@@ -110,16 +118,21 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
   uint32_t font_width = psf_glyph_width();
   uint32_t font_height = psf_glyph_height();
   uint32_t byte_per_pixel = term->bpp / CHAR_BIT;
+  //EARLY_STARTUP_PRINT( "Scroll: %ld!\r\n", scrolled )
 
   if ( scrolled ) {
+    //EARLY_STARTUP_PRINT( "Scroll first!\r\n" )
     framebuffer_scroll_ptr_t scroll_action = malloc(
       sizeof( framebuffer_scroll_t ) );
     if ( ! scroll_action ) {
+      //EARLY_STARTUP_PRINT( "malloc error!\r\n" )
       return;
     }
+    //EARLY_STARTUP_PRINT( "Prepare rpc data for scrolling!\r\n" )
     // prepare rpc block
     memset( scroll_action, 0, sizeof( framebuffer_scroll_t ) );
     scroll_action->start_y = scrolled * font_height;
+    //EARLY_STARTUP_PRINT( "Perform ioctl call!\r\n" )
     // call render surface
     int result = ioctl(
       output_driver_fd,
@@ -132,14 +145,18 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
     );
     // handle error
     if ( -1 == result ) {
+      //EARLY_STARTUP_PRINT( "IOCTL ERROR!\r\n" )
       free( scroll_action );
       return;
     }
+    //EARLY_STARTUP_PRINT( "Continue rendering!\r\n" )
     // free again
     free( scroll_action );
   }
-
+  //EARLY_STARTUP_PRINT( "Render row by row!\r\n" )
+  //EARLY_STARTUP_PRINT( "start_row = %ld, end_row = %ld\r\n", start_row, end_row )
   for ( uint32_t row = start_row; row <= end_row; row++ ) {
+    //EARLY_STARTUP_PRINT( "row = %ld, end_row = %ld\r\n", row, end_row )
     // get correct start and end column
     uint32_t tmp_start_col = 0;
     if ( row == start_row ) {
@@ -149,16 +166,30 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
     if ( row == end_row ) {
       tmp_end_col = end_col;
     }
+    //EARLY_STARTUP_PRINT( "tmp_start_col = %ld, tmp_end_col = %ld\r\n", tmp_start_col, tmp_end_col )
     // column count
     size_t row_size = ( tmp_end_col - tmp_start_col + 1 ) * font_width * byte_per_pixel;
+    /*EARLY_STARTUP_PRINT(
+      "( %ld - %ld + 1 ) = %ld\r\n",
+      tmp_end_col,
+      tmp_start_col,
+      ( tmp_end_col - tmp_start_col + 1 )
+    )*/
     // calculate action size
     size_t action_size = sizeof( framebuffer_render_surface_t )
         + row_size * font_height * sizeof( uint8_t );
     // allocate rpc parameter block
     framebuffer_render_surface_ptr_t action = malloc( action_size );
     if ( ! action ) {
+      //EARLY_STARTUP_PRINT( "malloc error\r\n" )
       return;
     }
+    /*EARLY_STARTUP_PRINT(
+      "start = %p, data = %p, end = %p\r\n",
+      ( void* )action,
+      ( void* )action->data,
+      ( void* )( ( uintptr_t )action + action_size )
+    )*/
     // initialize space with 0
     memset( action, 0, action_size );
     // loop through columns
@@ -169,6 +200,8 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
     ) {
       // get character to print
       uint16_t c = term->buffer[ row * term->max_col + col ];
+      /*EARLY_STARTUP_PRINT( "render char %c / %ld / %ld to surface\r\n",
+        ( uint8_t )c, render_col, row * term->max_col + col )*/
       // render character to buffer
       render_char_to_surface(
         action->data,
@@ -188,6 +221,7 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
     action->max_x = row_size;
     action->max_y = action->max_x * font_height;
     action->bpp = term->bpp / CHAR_BIT;
+    //EARLY_STARTUP_PRINT( "send surface to framebuffer!\r\n" )
     // call render surface
     int result = ioctl(
       output_driver_fd,
@@ -200,13 +234,17 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
     );
     // handle error
     if ( -1 == result ) {
+      //EARLY_STARTUP_PRINT( "IOCTL error!\r\n" )
       free( action );
       return;
     }
+    //EARLY_STARTUP_PRINT( "Continue with next, action = %p!\r\n", ( void* )action )
     // free again
     free( action );
+    //EARLY_STARTUP_PRINT( "Continue with next after free!\r\n" )
   }
 
+  //EARLY_STARTUP_PRINT( "Flip request after completing rendering!\r\n" )
   // call render surface
   int result = ioctl(
     output_driver_fd,
@@ -219,6 +257,7 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
   );
   // handle error
   if ( -1 == result ) {
+    //EARLY_STARTUP_PRINT( "flip ioctl error!\r\n" )
     return;
   }
 }

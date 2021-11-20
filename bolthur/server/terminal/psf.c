@@ -28,6 +28,7 @@
 #include <inttypes.h>
 #include <sys/bolthur.h>
 #include "psf.h"
+#include "../libhelper.h"
 
 // FIXME: ADD VALUE CONVERSION FROM ENDIAN HEADER OVERALL
 
@@ -97,7 +98,7 @@ static bool psf_load_font( psf_font_ptr_t f ) {
 bool psf_init( void ) {
   // allocate management structure
   font = malloc( sizeof( *font ) );
-  if( ! font ) {
+  if ( ! font ) {
     return false;
   }
   // load font to memory
@@ -333,7 +334,7 @@ uint8_t* psf_char_to_glyph( uint32_t c ) {
 
   // determine glyph
   uint32_t off = 0;
-  if ( c > 0 && c < psf_glyph_total() ) {
+  if ( c < psf_glyph_total() ) {
     off += c * psf_glyph_size();
   }
   return ( uint8_t* )( font->font_buffer + header_size + off );

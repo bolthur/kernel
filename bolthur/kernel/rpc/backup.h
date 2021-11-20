@@ -21,49 +21,27 @@
 #include <collection/list.h>
 #include <task/process.h>
 #include <task/thread.h>
-#include <ipc/message.h>
 
-#if ! defined( _IPC_RPC_H )
-#define _IPC_RPC_H
+#if ! defined( _RPC_BACKUP_H )
+#define _RPC_BACKUP_H
 
 struct rpc_backup {
   void* context;
-  size_t message_id;
+  size_t data_id;
+  size_t type;
   uint32_t instruction_backup;
   uintptr_t instruction_address;
   task_thread_ptr_t thread;
   task_thread_ptr_t source;
   bool prepared;
   bool active;
+  bool sync;
 };
 typedef struct rpc_backup rpc_backup_t;
 typedef struct rpc_backup* rpc_backup_ptr_t;
 
-struct rpc_entry {
-  task_process_ptr_t proc;
-  uintptr_t handler;
-  list_manager_ptr_t queue;
-};
-typedef struct rpc_entry rpc_entry_t;
-typedef struct rpc_entry* rpc_entry_ptr_t;
-
-struct rpc_container {
-  char* identifier;
-  list_manager_ptr_t handler;
-};
-typedef struct rpc_container rpc_container_t;
-typedef struct rpc_container* rpc_container_ptr_t;
-
-extern list_manager_ptr_t rpc_list;
-
-bool rpc_init( void );
-bool rpc_register_handler( char*, task_process_ptr_t, uintptr_t );
-bool rpc_unregister_handler( char*, task_process_ptr_t, uintptr_t );
-bool rpc_proc_bound( char*, task_process_ptr_t );
-rpc_backup_ptr_t rpc_raise( char*, task_thread_ptr_t, task_process_ptr_t, void*, size_t, task_thread_ptr_t );
-rpc_backup_ptr_t rpc_create_backup( task_thread_ptr_t, task_process_ptr_t, void*, size_t, task_thread_ptr_t );
-bool rpc_prepare_invoke( rpc_backup_ptr_t, rpc_entry_ptr_t );
-bool rpc_restore_thread( task_thread_ptr_t, void* );
-rpc_backup_ptr_t rpc_get_active( task_thread_ptr_t );
+rpc_backup_ptr_t rpc_backup_get_active( task_thread_ptr_t );
+rpc_backup_ptr_t rpc_backup_create( task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool );
+void rpc_backup_destroy( rpc_backup_ptr_t );
 
 #endif

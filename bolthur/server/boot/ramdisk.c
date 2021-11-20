@@ -24,6 +24,7 @@
 #include <tar.h>
 #include <sys/bolthur.h>
 #include "ramdisk.h"
+#include "../libhelper.h"
 
 #define INFLATE_CHUNK 32
 
@@ -81,7 +82,7 @@ void* ramdisk_extract( uintptr_t address, size_t size, size_t extract_size ) {
   int err;
   // decompress
   z_stream stream = { 0 };
-  void* dec = ( void* )malloc( extract_size );
+  void* dec = malloc( extract_size );
   // handle allocate error
   if ( ! dec ) {
     return NULL;

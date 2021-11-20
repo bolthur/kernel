@@ -21,98 +21,91 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../vfs.h"
-#include "../handle.h"
+#include "../file/handle.h"
+#include "../../libhelper.h"
 
 /**
- * @fn void rpc_handle_read(pid_t, size_t)
+ * @fn void rpc_handle_read(size_t, pid_t, size_t)
  * @brief Handle read request
  *
+ * @param type
  * @param origin
  * @param data_info
  */
-void rpc_handle_read( pid_t origin, size_t data_info ) {
-  vfs_read_request_ptr_t request = ( vfs_read_request_ptr_t )malloc(
-    sizeof( vfs_read_request_t ) );
-  if ( ! request ) {
-    return;
-  }
-  vfs_read_response_ptr_t response = ( vfs_read_response_ptr_t )malloc(
-    sizeof( vfs_read_response_t ) );
+void rpc_handle_read( size_t type, pid_t origin, size_t data_info ) {
+  vfs_read_response_ptr_t response = malloc( sizeof( vfs_read_response_t ) );
   if ( ! response ) {
-    free( request );
+    EARLY_STARTUP_PRINT( "Unable to allocate space for response!\r\n" )
     return;
   }
-  vfs_read_request_ptr_t nested_request = ( vfs_read_request_ptr_t )malloc(
-    sizeof( vfs_read_request_t ) );
+  vfs_read_request_ptr_t request = malloc( sizeof( vfs_read_request_t ) );
+  if ( ! request ) {
+    EARLY_STARTUP_PRINT( "Unable to allocate space for request!\r\n" )
+    response->len = -ENOMEM;
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
+    free( response );
+    return;
+  }
+  vfs_read_request_ptr_t nested_request = malloc( sizeof( vfs_read_request_t ) );
   if ( ! nested_request ) {
-    free( request );
+    EARLY_STARTUP_PRINT( "Unable to allocate space for nested request!\r\n" )
+    response->len = -ENOMEM;
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
     free( response );
-    return;
-  }
-  vfs_read_response_ptr_t nested_response = ( vfs_read_response_ptr_t )malloc(
-    sizeof( vfs_read_response_t ) );
-  if ( ! nested_response ) {
     free( request );
-    free( response );
-    free( nested_request );
     return;
   }
   handle_container_ptr_t container;
   // clear variables
   memset( request, 0, sizeof( vfs_read_request_t ) );
-  memset( response, 0, sizeof( vfs_read_response_t ) );
   memset( nested_request, 0, sizeof( vfs_read_request_t ) );
-  memset( nested_response, 0, sizeof( vfs_read_response_t ) );
   // handle no data
   if( ! data_info ) {
+    EARLY_STARTUP_PRINT( "Invalid data block id!\r\n" )
     response->len = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_read_response_t ) );
-    free( request );
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
     free( response );
+    free( request );
     free( nested_request );
-    free( nested_response );
     return;
   }
   // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_read_request_t ), data_info );
+  _rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
   // handle error
   if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to retrieve data: %s!\r\n", strerror( errno ) )
     response->len = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_read_response_t ) );
-    free( request );
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
     free( response );
+    free( request );
     free( nested_request );
-    free( nested_response );
     return;
   }
   // try to get handle information
   int result = handle_get( &container, origin, request->handle );
+  //EARLY_STARTUP_PRINT( "handle = %d, origin = %d\r\n", request->handle, origin )
   // handle error
   if ( 0 > result ) {
-    // send errno via negative len
+    EARLY_STARTUP_PRINT( "Unable to get handle: %s!\r\n", strerror( result ) )
     response->len = result;
-    // return response
-    _rpc_ret( response, sizeof( vfs_read_response_t ) );
-    // free stuff
-    free( request );
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
     free( response );
+    free( request );
     free( nested_request );
-    free( nested_response );
     return;
   }
   // special handling for null device
   if ( 0 == strcmp( container->path, "/dev/null" ) ) {
-    // return zero return
-    _rpc_ret( response, sizeof( vfs_read_response_t ) );
-    // free stuff
-    free( request );
+    EARLY_STARTUP_PRINT( "/dev/null action!\r\n" )
+    response->len = 0;
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
     free( response );
+    free( request );
     free( nested_request );
-    free( nested_response );
-    // skip rest
     return;
   }
   // get handling process
@@ -130,43 +123,40 @@ void rpc_handle_read( pid_t origin, size_t data_info ) {
     nested_request->shm_id, SIZE_MAX, container->target->st->st_size,
     container->target->pid )*/
   // perform sync rpc call
-  size_t response_info = _rpc_raise_wait(
-    RPC_VFS_READ_OPERATION,
+  size_t response_data_id = _rpc_raise(
+    type,
     handling_process,
     nested_request,
-    sizeof( vfs_read_request_t )
+    sizeof( vfs_read_request_t ),
+    true
   );
   if ( errno ) {
+    EARLY_STARTUP_PRINT( "Error during rpc raise: %s!\r\n", strerror( errno ) )
     response->len = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_read_response_t ) );
-    free( request );
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
     free( response );
+    free( request );
     free( nested_request );
-    free( nested_response );
     return;
   }
-  // fetch return
-  _rpc_get_data( nested_response, sizeof( vfs_read_response_t ), response_info );
+  // fetch nested response
+  _rpc_get_data( response, sizeof( vfs_read_response_t ), response_data_id, false );
   if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to retrieve data: %s!\r\n", strerror( errno ) )
     response->len = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_read_response_t ) );
-    free( request );
+    response->data[ 0 ] = '\0';
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
     free( response );
+    free( request );
     free( nested_request );
-    free( nested_response );
     return;
   }
-  // copy over read content to response for caller
-  memcpy( response, nested_response, sizeof( vfs_read_response_t ) );
-  // update offset
-  if ( 0 < nested_response->len ) {
-    container->pos += ( off_t )nested_response->len;
+  // adjust handle position
+  if ( 0 < response->len ) {
+    container->pos += ( off_t )response->len;
   }
-  // return response
-  _rpc_ret( response, sizeof( vfs_read_response_t ) );
-  // free stuff
-  free( request );
+  _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
   free( response );
+  free( request );
   free( nested_request );
-  free( nested_response );
 }

@@ -22,41 +22,43 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../../libconsole.h"
+#include "../../libhelper.h"
 #include "../handler.h"
 #include "../console.h"
 
 /**
- * @fn void handler_console_activate(pid_t, size_t)
+ * @fn void handler_console_activate(size_t, pid_t, size_t)
  * @brief Console activate command handler
  *
+ * @param type
  * @param origin
  * @param data_info
  */
-void handler_console_select( __unused pid_t origin, size_t data_info ) {
+void handler_console_select( size_t type, __unused pid_t origin, size_t data_info ) {
   int success = -1;
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( &success, sizeof( success ) );
+    _rpc_ret( type, &success, sizeof( success ) );
     return;
   }
   // get size for allocation
   size_t sz = _rpc_get_data_size( data_info );
   if ( errno ) {
-    _rpc_ret( &success, sizeof( success ) );
+    _rpc_ret( type, &success, sizeof( success ) );
     return;
   }
   // allocate for data fetching
   console_command_select_ptr_t command = malloc( sz );
   if ( ! command ) {
-    _rpc_ret( &success, sizeof( success ) );
+    _rpc_ret( type, &success, sizeof( success ) );
     return;
   }
   // fetch rpc data
-  _rpc_get_data( command, sz, data_info );
+  _rpc_get_data( command, sz, data_info, false );
   // handle error
   if ( errno ) {
     free( command );
-    _rpc_ret( &success, sizeof( success ) );
+    _rpc_ret( type, &success, sizeof( success ) );
     return;
   }
   // try to lookup by name
@@ -64,7 +66,7 @@ void handler_console_select( __unused pid_t origin, size_t data_info ) {
   // handle already existing
   if ( ! found ) {
     free( command );
-    _rpc_ret( &success, sizeof( success ) );
+    _rpc_ret( type, &success, sizeof( success ) );
     return;
   }
   // get active console and deactivate
@@ -79,5 +81,5 @@ void handler_console_select( __unused pid_t origin, size_t data_info ) {
   free( command );
   // set success flag and return
   success = 0;
-  _rpc_ret( &success, sizeof( success ) );
+  _rpc_ret( type, &success, sizeof( success ) );
 }

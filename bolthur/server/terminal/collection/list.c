@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <sys/bolthur.h>
 #include "list.h"
+#include "../libhelper.h"
 
 /**
  * @brief Default lookup if not passed during creation
@@ -59,10 +60,8 @@ list_manager_ptr_t list_construct(
   list_lookup_func_t lookup,
   list_cleanup_func_t cleanup
 ) {
-  list_manager_ptr_t list;
-
   // allocate list
-  list = ( list_manager_ptr_t )malloc( sizeof( list_manager_t ) );
+  list_manager_ptr_t list = malloc( sizeof( list_manager_t ) );
   // handle error
   if ( ! list ) {
     return NULL;
@@ -216,7 +215,7 @@ list_item_ptr_t list_lookup_item( list_manager_ptr_t list, list_item_ptr_t item 
  */
 list_item_ptr_t list_node_create( void* data ) {
   // allocate new node
-  list_item_ptr_t node = ( list_item_ptr_t )malloc( sizeof( list_item_t ) );
+  list_item_ptr_t node = malloc( sizeof( list_item_t ) );
   // check malloc result
   if ( ! node ) {
     return NULL;

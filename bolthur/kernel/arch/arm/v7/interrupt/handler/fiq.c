@@ -41,7 +41,6 @@ void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
-
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu )
@@ -52,7 +51,6 @@ void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   interrupt_handle_possible( cpu, true );
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
-
   // decrement nested counter
   nested_fast_interrupt--;
 }

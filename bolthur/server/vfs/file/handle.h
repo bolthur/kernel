@@ -19,8 +19,8 @@
 
 #include <sys/syslimits.h>
 #include <sys/types.h>
-#include "avl.h"
-#include "vfs.h"
+#include "../collection/avl.h"
+#include "../vfs.h"
 
 #if !defined( _HANDLE_H )
 #define _HANDLE_H

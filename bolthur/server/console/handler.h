@@ -20,19 +20,18 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <unistd.h>
+#include <sys/bolthur.h>
 
 #if ! defined( _HANDLER_H )
 #define _HANDLER_H
 
 struct console_rpc {
   uint32_t command;
-  uintptr_t callback;
-  char* name;
+  handler_t callback;
 };
 
-void handler_console_add( pid_t, size_t );
-void handler_console_select( pid_t, size_t );
-void handler_console_info( pid_t, size_t );
+void handler_console_add( size_t, pid_t, size_t );
+void handler_console_select( size_t, pid_t, size_t );
 bool handler_register( void );
 
 extern struct console_rpc command_list[ 3 ];

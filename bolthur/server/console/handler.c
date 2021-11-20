@@ -24,9 +24,8 @@
 #include "../libconsole.h"
 
 struct console_rpc command_list[] = {
-  { .command = CONSOLE_ADD, .name = "add", .callback = ( uintptr_t )handler_console_add },
-  { .command = CONSOLE_SELECT, .name = "select", .callback = ( uintptr_t )handler_console_select },
-  { .command = CONSOLE_INFO, .name = "info", .callback = ( uintptr_t )handler_console_info },
+  { .command = CONSOLE_ADD, .callback = handler_console_add },
+  { .command = CONSOLE_SELECT, .callback = handler_console_select },
 };
 
 /**
@@ -36,16 +35,10 @@ struct console_rpc command_list[] = {
 bool handler_register( void ) {
   // register all handlers
   size_t max = sizeof( command_list ) / sizeof( command_list[ 0 ] );
-  char path[ PATH_MAX ];
   // loop through handler to identify used one
   for ( size_t i = 0; i < max; i++ ) {
-    // erase local variable
-    memset( path, 0, sizeof( char ) * PATH_MAX );
-    // build path
-    strncpy( path, "#/dev/console#", PATH_MAX );
-    strncat( path, command_list[ i ].name, PATH_MAX - strlen( path ) );
-    // register rpc
-    _rpc_acquire( path, command_list[ i ].callback );
+    // bind custom rpc handler
+    bolthur_rpc_bind( command_list[ i ].command, command_list[ i ].callback );
     if ( errno ) {
       return false;
     }

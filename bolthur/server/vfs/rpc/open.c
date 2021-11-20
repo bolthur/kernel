@@ -25,26 +25,26 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../vfs.h"
-#include "../handle.h"
+#include "../file/handle.h"
+#include "../../libhelper.h"
 
 /**
- * @fn void rpc_handle_open(pid_t, size_t)
+ * @fn void rpc_handle_open(size_t, pid_t, size_t)
  * @brief Handle open request
  *
+ * @param type
  * @param origin
  * @param data_info
  *
  * @todo Add support for opening directories ( virtual files )
  * @todo Add support for non existent files with read write
  */
-void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
-  vfs_open_request_ptr_t request = ( vfs_open_request_ptr_t )malloc(
-    sizeof( vfs_open_request_t ) );
+void rpc_handle_open( size_t type, pid_t origin, size_t data_info ) {
+  vfs_open_request_ptr_t request = malloc( sizeof( vfs_open_request_t ) );
   if ( ! request ) {
     return;
   }
-  vfs_open_response_ptr_t response = ( vfs_open_response_ptr_t )malloc(
-    sizeof( vfs_open_response_t ) );
+  vfs_open_response_ptr_t response = malloc( sizeof( vfs_open_response_t ) );
   if ( ! response ) {
     free( request );
     return;
@@ -59,17 +59,17 @@ void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
   // handle no data
   if( ! data_info ) {
     response->handle = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_open_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_open_response_t ) );
     free( request );
     free( response );
     return;
   }
   // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_open_request_t ), data_info );
+  _rpc_get_data( request, sizeof( vfs_open_request_t ), data_info, false );
   // handle error
   if ( errno ) {
     response->handle = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_open_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_open_response_t ) );
     free( request );
     free( response );
     return;
@@ -98,7 +98,7 @@ void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
       // prepare error return
       response->handle = -ENAMETOOLONG;
       // return response
-      _rpc_ret( response, sizeof( vfs_open_response_t ) );
+      _rpc_ret( type, response, sizeof( vfs_open_response_t ) );
       // free message structures
       free( request );
       free( response );
@@ -130,7 +130,7 @@ void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
     // prepare error return
     response->handle = ( request->flags & O_CREAT ) ? -ENOENT : -ENOTDIR;
     // return response
-    _rpc_ret( response, sizeof( vfs_open_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_open_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -145,7 +145,7 @@ void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
     // prepare error return
     response->handle = -ENOENT;
     // return response
-    _rpc_ret( response, sizeof( vfs_open_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_open_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -162,7 +162,7 @@ void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
     // prepare error return
     response->handle = -ENOENT;
     // return response
-    _rpc_ret( response, sizeof( vfs_open_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_open_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -177,7 +177,7 @@ void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
     // prepare error return
     response->handle = -EEXIST;
     // return response
-    _rpc_ret( response, sizeof( vfs_open_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_open_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -189,7 +189,7 @@ void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
     // prepare error return
     response->handle = -ENOSYS;
     // return response
-    _rpc_ret( response, sizeof( vfs_open_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_open_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -215,7 +215,7 @@ void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
     // prepare error return
     response->handle = -EISDIR;
     // return response
-    _rpc_ret( response, sizeof( vfs_open_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_open_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -243,7 +243,7 @@ void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
     // prepare error return
     response->handle = result;
     // return response
-    _rpc_ret( response, sizeof( vfs_open_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_open_response_t ) );
     // free message structures
     free( request );
     free( response );
@@ -253,7 +253,7 @@ void rpc_handle_open( __unused pid_t origin, __unused size_t data_info ) {
   // prepare return
   response->handle = container->handle;
   // return response
-  _rpc_ret( response, sizeof( vfs_open_response_t ) );
+  _rpc_ret( type, response, sizeof( vfs_open_response_t ) );
   // free message structures
   free( request );
   free( response );

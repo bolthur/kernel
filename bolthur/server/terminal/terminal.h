@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "list.h"
+#include "collection/list.h"
 
 #if ! defined( _TERMINAL_H )
 #define _TERMINAL_H

@@ -146,9 +146,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE_UNQUOTED([FDT_BINARY], ["$($BOLTHUR_READLINK -f ${srcdir})/dts/rpi/bcm2836-rpi-2b.dtb"])
       AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
-      # necessary for cppcheck
-      AC_DEFINE([__arm__], [1], [ARM define for cppcheck])
-      AC_DEFINE([__ARMEL__], [1], [ARM define for cppcheck])
       ;;
     rpi_zero_w)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
@@ -159,9 +156,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE_UNQUOTED([FDT_BINARY], ["$($BOLTHUR_READLINK -f ${srcdir})/dts/rpi/bcm2835-rpi-zero-w.dtb"])
-      # necessary for cppcheck
-      AC_DEFINE([__arm__], [1], [ARM define for cppcheck])
-      AC_DEFINE([__ARMEL__], [1], [ARM define for cppcheck])
       ;;
     rpi3_b)
       CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a53"
@@ -176,9 +170,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
-      # necessary for cppcheck
-      AC_DEFINE([__arm__], [1], [ARM define for cppcheck])
-      AC_DEFINE([__ARMEL__], [1], [ARM define for cppcheck])
       ;;
     rpi4_b)
       CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a72"
@@ -193,9 +184,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_CORTEX_A72], [1], [Define to 1 for ARM Cortex-A72 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
-      # necessary for cppcheck
-      AC_DEFINE([__arm__], [1], [ARM define for cppcheck])
-      AC_DEFINE([__ARMEL__], [1], [ARM define for cppcheck])
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])
@@ -222,9 +210,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
-      # necessary for cppcheck
-      AC_DEFINE([__aarch64__], [1], [ARM define for cppcheck])
-      AC_DEFINE([__AARCH64EL__], [1], [ARM define for cppcheck])
       ;;
     rpi4_b)
       CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a72"
@@ -239,9 +224,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_CORTEX_A72], [1], [Define to 1 for ARM Cortex-A72 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
-      # necessary for cppcheck
-      AC_DEFINE([__aarch64__], [1], [ARM define for cppcheck])
-      AC_DEFINE([__AARCH64EL__], [1], [ARM define for cppcheck])
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])

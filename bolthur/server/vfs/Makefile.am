@@ -3,6 +3,10 @@ AM_CFLAGS = -DPROGRAM_NAME=\"vfs\"
 
 bin_PROGRAMS = vfs
 vfs_SOURCES = \
+  collection/avl.c \
+  collection/list.c \
+  file/handle.c \
+  ioctl/handler.c \
   rpc/add.c \
   rpc/close.c \
   rpc/fork.c \
@@ -13,9 +17,6 @@ vfs_SOURCES = \
   rpc/seek.c \
   rpc/stat.c \
   rpc/write.c \
-  avl.c \
-  handle.c \
-  list.c \
   main.c \
   util.c \
   vfs.c

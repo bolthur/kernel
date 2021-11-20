@@ -55,7 +55,6 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
-
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "prefetch abort while accessing %p\r\n",
@@ -67,10 +66,8 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
         task_thread_current_thread->process->id )
     }
   #endif
-
   // kernel stack
   interrupt_ensure_kernel_stack();
-
   // special debug exception handling
   #if defined( REMOTE_DEBUG )
     if ( debug_is_debug_exception() ) {
@@ -81,12 +78,8 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   #else
     PANIC( "prefetch abort!" )
   #endif
-
-  // handle possible hardware interrupt
-  interrupt_handle_possible( cpu, false );
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
-
   // decrement nested counter
   nested_prefetch_abort--;
 }

@@ -17,34 +17,20 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <unistd.h>
 #include <stdbool.h>
 #include <collection/list.h>
 #include <task/process.h>
+#include <task/thread.h>
+#include <rpc/backup.h>
 
-#if ! defined( _IPC_MESSAGE_H )
-#define _IPC_MESSAGE_H
+#if ! defined( _RPC_GENERIC_H )
+#define _RPC_GENERIC_H
 
-struct message_entry {
-  size_t id;
-  size_t type;
-  const char* data;
-  size_t length;
-  pid_t sender;
-  size_t request;
-};
-
-typedef struct message_entry message_entry_t;
-typedef struct message_entry *message_entry_ptr_t;
-
-bool message_init( void );
-void message_cleanup( const list_item_ptr_t );
-size_t message_generate_id( void );
-message_entry_ptr_t message_allocate( size_t, const char*, size_t* );
-
-bool message_setup_process( task_process_ptr_t );
-void message_destroy_process( task_process_ptr_t );
-int message_send( pid_t, pid_t, size_t, const char*, size_t, size_t, size_t* );
-void message_remove( pid_t, size_t );
+bool rpc_generic_setup( task_process_ptr_t );
+void rpc_generic_destroy( task_process_ptr_t );
+bool rpc_generic_ready( task_process_ptr_t );
+bool rpc_generic_restore( task_thread_ptr_t, void* );
+bool rpc_generic_prepare_invoke( rpc_backup_ptr_t backup );
+rpc_backup_ptr_t rpc_generic_raise( task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool );
 
 #endif

@@ -51,9 +51,9 @@ void syscall_mailbox_action( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_mailbox_action()\r\n" );
   #endif
-  // get index
-  int32_t local_ptb_index = ( int32_t )syscall_get_parameter( context, 1 );
+  // get buffer and index
   int32_t* data_buffer = ( int32_t* )syscall_get_parameter( context, 0 );
+  int32_t local_ptb_index = ( int32_t )syscall_get_parameter( context, 1 );
   // validate address
   if (
     ! data_buffer
@@ -154,5 +154,4 @@ void syscall_mailbox_action( void* context ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
-  syscall_populate_success( context, 0 );
 }

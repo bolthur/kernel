@@ -342,7 +342,7 @@ void task_thread_cleanup(
   __unused event_origin_t origin,
   __unused void* context
 ) {
-  list_item_ptr_t current = process_manager->process_to_cleanup->first;
+  list_item_ptr_t current = process_manager->thread_to_cleanup->first;
   // loop
   while ( current ) {
     // get process from item
@@ -418,10 +418,7 @@ void task_thread_unblock(
   // validate state
   if (
     necessary_state != thread->state
-    || (
-      necessary_state != TASK_THREAD_STATE_MESSAGE_WAITING
-      && necessary_state != TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN
-    )
+    || necessary_state != TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN
   ) {
     return;
   }

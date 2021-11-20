@@ -17,6 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <sys/bolthur.h>
+
 #if ! defined( _FRAMEBUFFER_H )
 #define _FRAMEBUFFER_H
 
@@ -27,20 +29,18 @@
 
 struct framebuffer_rpc {
   uint32_t command;
-  uintptr_t callback;
-  char* name;
+  handler_t callback;
 };
 
 bool framebuffer_init( void );
 bool framebuffer_register_rpc( void );
 void framebuffer_flip( void );
 
-void framebuffer_handle_resolution( pid_t, size_t );
-void framebuffer_handle_clear( pid_t, size_t );
-void framebuffer_handle_render_surface( pid_t, size_t );
-void framebuffer_handle_info( pid_t, size_t );
-void framebuffer_handle_scroll( pid_t, size_t );
-void framebuffer_handle_flip( pid_t, size_t );
+void framebuffer_handle_resolution( size_t, pid_t, size_t );
+void framebuffer_handle_clear( size_t, pid_t, size_t );
+void framebuffer_handle_render_surface( size_t, pid_t, size_t );
+void framebuffer_handle_scroll( size_t, pid_t, size_t );
+void framebuffer_handle_flip( size_t, pid_t, size_t );
 
 extern struct framebuffer_rpc command_list[ 6 ];
 

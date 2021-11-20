@@ -24,23 +24,23 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../vfs.h"
-#include "../handle.h"
+#include "../file/handle.h"
+#include "../../libhelper.h"
 
 /**
- * @fn void rpc_handle_close(pid_t, size_t)
+ * @fn void rpc_handle_close(size_t, pid_t, size_t)
  * @brief handle close request
  *
+ * @param type
  * @param origin
  * @param data_info
  */
-void rpc_handle_close( pid_t origin, size_t data_info ) {
-  vfs_close_request_ptr_t request = ( vfs_close_request_ptr_t )malloc(
-    sizeof( vfs_close_request_t ) );
+void rpc_handle_close( size_t type, pid_t origin, size_t data_info ) {
+  vfs_close_request_ptr_t request = malloc( sizeof( vfs_close_request_t ) );
   if ( ! request ) {
     return;
   }
-  vfs_close_response_ptr_t response = ( vfs_close_response_ptr_t )malloc(
-    sizeof( vfs_close_response_t) );
+  vfs_close_response_ptr_t response = malloc( sizeof( vfs_close_response_t) );
   if ( ! response ) {
     free( request );
     return;
@@ -51,18 +51,18 @@ void rpc_handle_close( pid_t origin, size_t data_info ) {
   // handle no data
   if( ! data_info ) {
     response->status = -EINVAL;
-    _rpc_ret( response, sizeof( response ) );
+    _rpc_ret( type, response, sizeof( response ) );
     free( request );
     free( response );
     return;
   }
 
   // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_close_request_t ), data_info );
+  _rpc_get_data( request, sizeof( vfs_close_request_t ), data_info, false );
   // handle error
   if ( errno ) {
     response->status = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_close_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_close_response_t ) );
     free( request );
     free( response );
     return;
@@ -70,7 +70,7 @@ void rpc_handle_close( pid_t origin, size_t data_info ) {
   // destroy and push to state
   response->status = handle_destory( origin, request->handle );
   // return response
-  _rpc_ret( response, sizeof( vfs_close_response_t ) );
+  _rpc_ret( type, response, sizeof( vfs_close_response_t ) );
   // free message structures
   free( request );
   free( response );

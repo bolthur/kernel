@@ -23,7 +23,7 @@
 #include <sys/ioctl.h>
 #include "terminal.h"
 #include "output.h"
-#include "list.h"
+#include "collection/list.h"
 #include "psf.h"
 #include "utf8.h"
 #include "main.h"
@@ -89,7 +89,8 @@ bool terminal_init( void ) {
     return false;
   }
   // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
+  size_t msg_size = sizeof( vfs_add_request_t ) + sizeof( size_t ) * 3;
+  vfs_add_request_ptr_t msg = malloc( msg_size );
   if ( ! msg ) {
     list_destruct( terminal_list );
     return false;
@@ -109,9 +110,9 @@ bool terminal_init( void ) {
   }
   // base path
   char tty_path[ TERMINAL_MAX_PATH ];
-  char in[ TERMINAL_MAX_PATH ];
-  char out[ TERMINAL_MAX_PATH ];
-  char err[ TERMINAL_MAX_PATH ];
+  size_t in = RPC_CUSTOM_START;
+  size_t out = RPC_CUSTOM_START + 1;
+  size_t err = RPC_CUSTOM_START + 2;
   // push terminals
   for ( uint32_t current = 0; current < TERMINAL_MAX_NUM; current++ ) {
     // prepare device path
@@ -121,34 +122,17 @@ bool terminal_init( void ) {
       TERMINAL_BASE_PATH"%"PRIu32,
       current
     );
-    snprintf(
-      in,
-      TERMINAL_MAX_PATH,
-      "#"TERMINAL_BASE_PATH"%"PRIu32"#in",
-      current
-    );
-    snprintf(
-      out,
-      TERMINAL_MAX_PATH,
-      "#"TERMINAL_BASE_PATH"%"PRIu32"#out",
-      current
-    );
-    snprintf(
-      err,
-      TERMINAL_MAX_PATH,
-      "#"TERMINAL_BASE_PATH"%"PRIu32"#err",
-      current
-    );
     // clear memory
     memset( msg, 0, sizeof( vfs_add_request_t ) );
     // prepare message structure
     msg->info.st_mode = S_IFCHR;
     strncpy( msg->file_path, tty_path, PATH_MAX );
     // perform add request
-    send_vfs_add_request( msg );
+    send_vfs_add_request( msg, msg_size );
     // register handler for streams
-    _rpc_acquire( out, ( uintptr_t )output_handle_out );
+    bolthur_rpc_bind( out, output_handle_out );
     if ( errno ) {
+      EARLY_STARTUP_PRINT( "Unable to bind rpc %d: %s\r\n", out, strerror( errno ) )
       list_destruct( terminal_list );
       free( command_add );
       free( command_select );
@@ -156,8 +140,9 @@ bool terminal_init( void ) {
       free( terminal_list );
       return false;
     }
-    _rpc_acquire( err, ( uintptr_t )output_handle_err );
+    bolthur_rpc_bind( err, output_handle_err );
     if ( errno ) {
+      EARLY_STARTUP_PRINT( "Unable to bind rpc %d: %s\r\n", err, strerror( errno ) )
       list_destruct( terminal_list );
       free( command_add );
       free( command_select );
@@ -165,8 +150,9 @@ bool terminal_init( void ) {
       free( terminal_list );
       return false;
     }
-    _rpc_acquire( in, ( uintptr_t )output_handle_in );
+    bolthur_rpc_bind( in, output_handle_in );
     if ( errno ) {
+      EARLY_STARTUP_PRINT( "Unable to bind rpc %d: %s\r\n", in, strerror( errno ) )
       list_destruct( terminal_list );
       free( command_add );
       free( command_select );
@@ -218,10 +204,12 @@ bool terminal_init( void ) {
     memset( command_add, 0, sizeof( console_command_add_t ) );
     // prepare structure
     strncpy( command_add->terminal, tty_path, PATH_MAX );
-    strncpy( command_add->in, in, PATH_MAX );
-    strncpy( command_add->out, out, PATH_MAX );
-    strncpy( command_add->err, err, PATH_MAX );
+    command_add->in = in;
+    command_add->out = out;
+    command_add->err = err;
     command_add->origin = getpid();
+    /*EARLY_STARTUP_PRINT( "terminal = %s, in = %d, out = %d, err = %d, origin = %d\r\n",
+      command_add->terminal, in, out, err, command_add->origin )*/
     // call console add
     int result = ioctl(
       console_manager_fd,
@@ -239,8 +227,11 @@ bool terminal_init( void ) {
       list_destruct( terminal_list );
       return false;
     }
-    //int response = *( ( int* )command_add );
     /// FIXME: WHAT ABOUT RETURN?
+    //int response = *( ( int* )command_add );
+    in += 3;
+    out += 3;
+    err += 3;
   }
 
   memset( command_select, 0, sizeof( console_command_select_t ) );
@@ -329,6 +320,12 @@ uint32_t terminal_push(
     if ( newline ) {
       newline_in_middle = true;
     }
+    // handle end of row reached
+    if ( term->max_col <= term->col ) {
+      term->col = 0;
+      term->row++;
+      newline = true;
+    }
     // handle scroll
     if ( term->max_row <= term->row ) {
       // scroll up content
@@ -345,12 +342,6 @@ uint32_t terminal_push(
       if ( first && start_y ) {
         *start_y = term->row;
       }
-    }
-    // handle end of row reached
-    if ( term->max_col <= term->col ) {
-      term->col = 0;
-      term->row++;
-      newline = true;
     }
     // decode churrent character to unicode for save
     size_t len = 0;
@@ -380,6 +371,10 @@ uint32_t terminal_push(
         }
         break;
       default:
+        /*EARLY_STARTUP_PRINT(
+          "c = %c, idx = %ld\r\n",
+          c, term->row * term->max_col + term->col
+        )*/
         // push back character
         term->buffer[ term->row * term->max_col + term->col ] = c;
         // set end x
@@ -394,13 +389,17 @@ uint32_t terminal_push(
     first = false;
     s++;
   }
-  // set start and end x / y in case of scroll action
+  // set end x / y in case of scroll action
   if ( end_x && newline && newline_in_middle ) {
     *end_x = term->col;
   }
   if ( end_y ) {
     *end_y = ( newline && ! newline_in_middle )
       ? term->row - 1 : term->row;
+  }
+  // adjust start if scrolled with newline in middle
+  if ( start_y && scrolled && newline && newline_in_middle ) {
+    *start_y = term->row - 1;
   }
   // return indicator whether scrolling was done or not
   return scrolled;

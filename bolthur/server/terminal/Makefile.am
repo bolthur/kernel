@@ -3,7 +3,7 @@ AM_CFLAGS = -DPROGRAM_NAME=\"terminal\"
 
 bin_PROGRAMS = terminal
 terminal_SOURCES = \
-  list.c \
+  collection/list.c \
   main.c \
   output.c \
   psf.c \

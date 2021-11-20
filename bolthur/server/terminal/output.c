@@ -25,13 +25,14 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "output.h"
-#include "list.h"
+#include "collection/list.h"
 #include "terminal.h"
 #include "psf.h"
 #include "render.h"
 #include "main.h"
 #include "../libterminal.h"
 #include "../libframebuffer.h"
+#include "../libhelper.h"
 
 framebuffer_resolution_t resolution_data;
 
@@ -54,6 +55,7 @@ bool output_init( void ) {
   );
   // handle error
   if ( -1 == result ) {
+    EARLY_STARTUP_PRINT( "ioctl error!\r\n" )
     return false;
   }
   // return success
@@ -61,13 +63,18 @@ bool output_init( void ) {
 }
 
 /**
- * @fn void output_handle_out(pid_t, size_t)
+ * @fn void output_handle_out(size_t, pid_t, size_t)
  * @brief Handler for normal output stream
  *
+ * @param type
  * @param origin
  * @param data_info
  */
-void output_handle_out( __unused pid_t origin, size_t data_info ) {
+void output_handle_out(
+  __unused size_t type,
+  __unused pid_t origin,
+  size_t data_info
+) {
   // handle no data
   if( ! data_info ) {
     return;
@@ -83,7 +90,7 @@ void output_handle_out( __unused pid_t origin, size_t data_info ) {
     return;
   }
   // fetch rpc data
-  _rpc_get_data( terminal, sz, data_info );
+  _rpc_get_data( terminal, sz, data_info, false );
   // handle error
   if ( errno ) {
     free( terminal );
@@ -105,13 +112,18 @@ void output_handle_out( __unused pid_t origin, size_t data_info ) {
 }
 
 /**
- * @fn void output_handle_err(pid_t, size_t)
+ * @fn void output_handle_err(size_t, pid_t, size_t)
  * @brief Handler for error stream output
  *
+ * @param type
  * @param origin
  * @param data_info
  */
-void output_handle_err( __unused pid_t origin, size_t data_info ) {
+void output_handle_err(
+  __unused size_t type,
+  __unused pid_t origin,
+  size_t data_info
+) {
   // handle no data
   if( ! data_info ) {
     return;
@@ -127,7 +139,7 @@ void output_handle_err( __unused pid_t origin, size_t data_info ) {
     return;
   }
   // fetch rpc data
-  _rpc_get_data( terminal, sz, data_info );
+  _rpc_get_data( terminal, sz, data_info, false );
   // handle error
   if ( errno ) {
     free( terminal );
@@ -149,13 +161,18 @@ void output_handle_err( __unused pid_t origin, size_t data_info ) {
 }
 
 /**
- * @fn void output_handle_in(pid_t, size_t)
+ * @fn void output_handle_in(size_t, pid_t, size_t)
  * @brief Handler for stream input
  *
+ * @param type
  * @param origin
  * @param data_info
  *
  * @todo add logic
  */
-void output_handle_in( __unused pid_t origin, __unused size_t data_info ) {
+void output_handle_in(
+  __unused size_t type,
+  __unused pid_t origin,
+  __unused size_t data_info
+) {
 }

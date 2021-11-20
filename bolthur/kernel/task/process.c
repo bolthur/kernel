@@ -39,7 +39,9 @@
 #include <task/process.h>
 #include <task/thread.h>
 #include <task/stack.h>
-#include <ipc/message.h>
+#include <rpc/data.h>
+#include <rpc/queue.h>
+#include <rpc/generic.h>
 
 /**
  * @brief Process management structure
@@ -134,10 +136,8 @@ static void task_process_free( task_process_ptr_t proc ) {
   if ( proc->thread_stack_manager ) {
     task_stack_manager_destroy( proc->thread_stack_manager );
   }
-  // destroy message queue
-  if ( proc->message_queue ) {
-    list_destruct( proc->message_queue );
-  }
+  // destroy rpc stuff
+  rpc_generic_destroy( proc );
   // free finally structure itself
   free( proc );
 }
@@ -343,11 +343,19 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
     task_process_free( forked );
     return NULL;
   }
-  // create message queue if existing
-  if( proc->message_queue ) {
-    // prepare message queue
-    forked->message_queue = list_construct( NULL, message_cleanup, NULL );
+  // create rpc queues if existing
+  if ( proc->rpc_data_queue && ! rpc_data_queue_setup( forked ) ) {
+    task_process_free( forked );
+    return NULL;
   }
+  // create message queue if existing
+  if ( proc->rpc_queue &&  ! rpc_queue_setup( forked ) ) {
+    task_process_free( forked );
+    return NULL;
+  }
+  // copy rpc handler
+  forked->rpc_handler = proc->rpc_handler;
+  forked->rpc_ready = proc->rpc_ready;
 
   // populate data normal data
   forked->id = task_process_generate_id();
@@ -476,7 +484,6 @@ void task_process_cleanup(
   while ( current ) {
     // get process from item
     task_process_ptr_t proc = ( task_process_ptr_t )current->data;
-
     // check for running thread
     avl_node_ptr_t current_thread = avl_iterate_first( proc->thread_manager );
     bool skip = false;
@@ -491,7 +498,6 @@ void task_process_cleanup(
       // get next thread
       current_thread = avl_iterate_next( proc->thread_manager, current_thread );
     }
-
     // skip
     if ( skip ) {
       // debug output
@@ -500,19 +506,16 @@ void task_process_cleanup(
       #endif
       continue;
     }
-
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT( "Cleanup process with id %d!\r\n", proc->id );
     #endif
     // cleanup process
     task_process_free( proc );
-
     // cache current as remove
     list_item_ptr_t remove = current;
     // head over to next
     current = current->next;
-
     // remove list item
     list_remove( process_manager->process_to_cleanup, remove );
   }

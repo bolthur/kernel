@@ -20,7 +20,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
-#include "list.h"
+#include "collection/list.h"
 
 #if !defined( _VFS_H )
 #define _VFS_H
@@ -44,7 +44,7 @@ struct vfs_node {
 vfs_node_ptr_t vfs_setup( pid_t );
 void vfs_destroy( vfs_node_ptr_t );
 void vfs_dump( vfs_node_ptr_t, const char* );
-bool vfs_add_path( vfs_node_ptr_t, pid_t, const char*, char*, struct stat* );
+bool vfs_add_path( vfs_node_ptr_t, pid_t, const char*, char*, struct stat );
 vfs_node_ptr_t vfs_node_by_name( vfs_node_ptr_t, const char* );
 vfs_node_ptr_t vfs_node_by_path( const char* );
 char* vfs_path_bottom_up( vfs_node_ptr_t );

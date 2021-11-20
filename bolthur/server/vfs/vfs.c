@@ -19,9 +19,10 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "list.h"
+#include "collection/list.h"
 #include "vfs.h"
 #include "util.h"
+#include "../libhelper.h"
 
 static vfs_node_ptr_t root;
 
@@ -51,7 +52,7 @@ static void vfs_destroy_node( vfs_node_ptr_t node ) {
 }
 
 /**
- * @fn vfs_node_ptr_t vfs_prepare_node(pid_t, const char*, struct stat*, vfs_node_ptr_t, char*)
+ * @fn vfs_node_ptr_t vfs_prepare_node(pid_t, const char*, struct stat, vfs_node_ptr_t, char*)
  * @brief Create and prepare vfs node
  *
  * @param pid
@@ -64,7 +65,7 @@ static void vfs_destroy_node( vfs_node_ptr_t node ) {
 static vfs_node_ptr_t vfs_prepare_node(
   pid_t pid,
   const char* name,
-  struct stat* st,
+  struct stat st,
   vfs_node_ptr_t parent,
   char* target
 ) {
@@ -89,7 +90,7 @@ static vfs_node_ptr_t vfs_prepare_node(
   }
   // copy name, save current pid as handler and set flag to directory
   strcpy( node->name, name );
-  memcpy( node->st, st, sizeof( struct stat ) );
+  memcpy( node->st, &st, sizeof( struct stat ) );
   node->pid = pid;
   if ( target ) {
     node->target = strdup( target );
@@ -168,18 +169,18 @@ vfs_node_ptr_t vfs_setup( pid_t current_pid ) {
   // allocate minimum necessary nodes
   if (
     // create root node
-    ! ( root = vfs_prepare_node( current_pid, "/", &st_dir, NULL, NULL ) )
+    ! ( root = vfs_prepare_node( current_pid, "/", st_dir, NULL, NULL ) )
     // create process, ipc and dev node
-    || ! vfs_prepare_node( current_pid, "process", &st_dir, root, NULL )
-    || ! ( ipc = vfs_prepare_node( current_pid, "ipc", &st_dir, root, NULL ) )
-    || ! ( dev = vfs_prepare_node( current_pid, "dev", &st_dir, root, NULL ) )
+    || ! vfs_prepare_node( current_pid, "process", st_dir, root, NULL )
+    || ! ( ipc = vfs_prepare_node( current_pid, "ipc", st_dir, root, NULL ) )
+    || ! ( dev = vfs_prepare_node( current_pid, "dev", st_dir, root, NULL ) )
     // populate dev null file node
-    || ! vfs_prepare_node( current_pid, "null", &st_file, dev, NULL )
+    || ! vfs_prepare_node( current_pid, "null", st_file, dev, NULL )
     // populate tmp node
-    || ! vfs_prepare_node( current_pid, "tmp", &st_file, dev, NULL )
+    || ! vfs_prepare_node( current_pid, "tmp", st_file, dev, NULL )
     // populate ipc node
-    || ! vfs_prepare_node( current_pid, "shared", &st_dir, ipc, NULL )
-    || ! vfs_prepare_node( current_pid, "message", &st_dir, ipc, NULL )
+    || ! vfs_prepare_node( current_pid, "shared", st_dir, ipc, NULL )
+    || ! vfs_prepare_node( current_pid, "message", st_dir, ipc, NULL )
   ) {
     // destroy recursively by starting with root
     vfs_destroy( root );
@@ -190,7 +191,7 @@ vfs_node_ptr_t vfs_setup( pid_t current_pid ) {
 }
 
 /**
- * @fn bool vfs_add_path(vfs_node_ptr_t, pid_t, const char*, char*, struct stat*)
+ * @fn bool vfs_add_path(vfs_node_ptr_t, pid_t, const char*, char*, struct stat)
  * @brief Add path to vfs
  *
  * @param node node object
@@ -205,7 +206,7 @@ bool vfs_add_path(
   pid_t handler,
   const char* path,
   char* target,
-  struct stat* st
+  struct stat st
 ) {
   // handle no parent node
   if ( ! node ) {

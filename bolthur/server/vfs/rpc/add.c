@@ -24,51 +24,54 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../vfs.h"
-#include "../handle.h"
+#include "../file/handle.h"
+#include "../ioctl/handler.h"
+#include "../../libhelper.h"
 
 /**
- * @fn void rpc_handle_add(pid_t, size_t)
+ * @fn void rpc_handle_add(size_t, pid_t, size_t)
  * @brief handle add request
  *
+ * @param type
  * @param origin
  * @param data_info
  *
  * @todo add handle of variable parts in path
  * @todo handle invalid link targets somehow
  * @todo add handle for existing path
+ * @todo when adding a device the property container has to contain all possible commands as id value pair
  */
-void rpc_handle_add( pid_t origin, size_t data_info ) {
+void rpc_handle_add( size_t type, pid_t origin, size_t data_info ) {
   char* str;
-  vfs_add_request_ptr_t request = ( vfs_add_request_ptr_t )malloc(
-    sizeof( vfs_add_request_t ) );
-  if ( ! request ) {
-    return;
-  }
-  vfs_add_response_ptr_t response = ( vfs_add_response_ptr_t )malloc(
-    sizeof( vfs_add_response_t ) );
-  if ( ! response ) {
-    free( request );
-    return;
-  }
-  // clear variables
-  memset( request, 0, sizeof( vfs_add_request_t ) );
-  memset( response, 0, sizeof( vfs_add_response_t ) );
+  vfs_add_response_t res = { .status = -EINVAL, .handling_process = 0 };
   // handle no data
   if( ! data_info ) {
-    response->status = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_add_response_t ) );
-    free( request );
-    free( response );
+    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
     return;
   }
+  // get message size
+  size_t data_size = _rpc_get_data_size( data_info );
+  if ( errno ) {
+    res.status = -EIO;
+    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
+    return;
+  }
+  // allocate space for request
+  vfs_add_request_ptr_t request = malloc( data_size );
+  if ( ! request ) {
+    res.status = -ENOMEM;
+    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
+    return;
+  }
+  // clear request
+  memset( request, 0, data_size );
   // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_add_request_t ), data_info );
+  _rpc_get_data( request, data_size, data_info, false );
   // handle error
   if ( errno ) {
-    response->status = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_add_response_t ) );
+    res.status = -EIO;
+    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
     free( request );
-    free( response );
     return;
   }
   // check if existing
@@ -79,13 +82,12 @@ void rpc_handle_add( pid_t origin, size_t data_info ) {
       "Node \"%s\" already existing!\r\n",
       request->file_path )
     // prepare response
-    response->status = VFS_ADD_ALREADY_EXIST;
-    response->handling_process = node->pid;
+    res.status = VFS_ADD_ALREADY_EXIST;
+    res.handling_process = node->pid;
     // return response
-    _rpc_ret( response, sizeof( vfs_add_response_t ) );
+    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
     // free message structures
     free( request );
-    free( response );
     // skip
     return;
   }
@@ -93,19 +95,13 @@ void rpc_handle_add( pid_t origin, size_t data_info ) {
   str = dirname( request->file_path );
   node = vfs_node_by_path( str );
   if ( ! node ) {
-    // debug output
     EARLY_STARTUP_PRINT(
       "Parent node \"%s\" for \"%s\" not found!\r\n",
       str, request->file_path )
+    res.status = VFS_ADD_ERROR;
+    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
     free( str );
-    // prepare response
-    response->status = VFS_ADD_ERROR;
-    // return response
-    _rpc_ret( response, sizeof( vfs_add_response_t ) );
-    // free message structures
     free( request );
-    free( response );
-    // skip
     return;
   }
   free( str );
@@ -116,52 +112,50 @@ void rpc_handle_add( pid_t origin, size_t data_info ) {
   if ( S_ISLNK( request->info.st_mode ) ) {
     // check for target is not set
     if ( 0 == strlen( request->linked_path ) ) {
+      res.status = VFS_ADD_ERROR;
+      _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
       free( str );
-      // prepare response
-      response->status = VFS_ADD_ERROR;
-      // return response
-      _rpc_ret( response, sizeof( vfs_add_response_t ) );
-      // free message structures
       free( request );
-      free( response );
-      // skip
       return;
     }
     // duplicate link target ( either absolute or relative )
     target = strdup( request->linked_path );
-    // handle no target found
+    // handle duplicate failed
     if ( ! target ) {
+      res.status = VFS_ADD_ERROR;
+      _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
       free( str );
-      // prepare response
-      response->status = VFS_ADD_ERROR;
-      // return response
-      _rpc_ret( response, sizeof( vfs_add_response_t ) );
-      // free message structures
       free( request );
-      free( response );
-      // skip
       return;
     }
   }
   // add basename to path
-  if ( ! vfs_add_path( node, origin, str, target, &request->info ) ) {
-    // debug output
+  if ( ! vfs_add_path( node, origin, str, target, request->info ) ) {
     EARLY_STARTUP_PRINT( "Error: Couldn't add \"%s\"\r\n", request->file_path )
+    res.status = VFS_ADD_ERROR;
+    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
     free( str );
     if ( target ) {
       free( target );
     }
-    // prepare response
-    response->status = VFS_ADD_ERROR;
-    // return response
-    _rpc_ret( response, sizeof( vfs_add_response_t ) );
-    // free message structures
     free( request );
-    free( response );
-    // skip
     return;
   }
   // debug output
+  if ( sizeof( vfs_add_request_t ) < data_size ) {
+    size_t index_max = ( data_size - sizeof( vfs_add_request_t ) ) / sizeof( size_t );
+    //EARLY_STARTUP_PRINT( "index_max = %d\r\n", index_max )
+    //EARLY_STARTUP_PRINT( "request->file_path = %s\r\n", request->file_path )
+    for ( size_t index = 0; index < index_max; index++ ) {
+      //EARLY_STARTUP_PRINT( "request->device_info[ %d ] = %d\r\n", index, request->device_info[ index ] )
+      while ( true ) {
+        if ( ! ioctl_push_command( request->device_info[ index ], origin ) ) {
+          continue;
+        }
+        break;
+      }
+    }
+  }
   //EARLY_STARTUP_PRINT( "-------->VFS DEBUG_DUMP<--------\r\n" )
   //vfs_dump( NULL, NULL );
   free( str );
@@ -169,13 +163,12 @@ void rpc_handle_add( pid_t origin, size_t data_info ) {
     free( target );
   }
   // prepare response
-  response->status = VFS_ADD_SUCCESS;
-  response->handling_process = origin;
+  res.status = VFS_ADD_SUCCESS;
+  res.handling_process = origin;
   /*EARLY_STARTUP_PRINT( "response->status = %d\r\n", response->status )
   EARLY_STARTUP_PRINT( "response->handling_process = %d\r\n", response->handling_process )*/
   // return response
-  _rpc_ret( response, sizeof( vfs_add_response_t ) );
+  _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
   // free message structures
   free( request );
-  free( response );
 }

@@ -57,6 +57,10 @@ void syscall_memory_acquire( void* context ) {
 
   // handle invalid length
   if ( 0 == len ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid length specified\r\n" )
+    #endif
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
@@ -133,7 +137,7 @@ void syscall_memory_acquire( void* context ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Error during map of address!\r\n" )
     #endif
-    syscall_populate_error( context, ( size_t )-ENOMEM );
+    syscall_populate_error( context, ( size_t )-EIO );
     return;
   }
   // debug output
@@ -203,7 +207,7 @@ void syscall_memory_release( void* context ) {
     address,
     len
   ) ) {
-    syscall_populate_error( context, ( size_t )-EINVAL );
+    syscall_populate_error( context, ( size_t )-EADDRNOTAVAIL );
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Address is shared and handled differently!\r\n" )
@@ -213,7 +217,6 @@ void syscall_memory_release( void* context ) {
 
   // check if range is mapped in context
   if ( ! virt_is_mapped_in_context_range( virtual_context, address, len ) ) {
-    syscall_populate_success( context, 0 );
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Not mapped in context range!\r\n" )
@@ -222,7 +225,7 @@ void syscall_memory_release( void* context ) {
   }
   // try to unmap
   if ( ! virt_unmap_address_range( virtual_context, address, len, unmap_phys ) ) {
-    syscall_populate_error( context, ( size_t )-EINVAL );
+    syscall_populate_error( context, ( size_t )-EIO );
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Error during unmap!\r\n" )
@@ -233,8 +236,6 @@ void syscall_memory_release( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "Success!\r\n" )
   #endif
-  // return success
-  syscall_populate_success( context, 0 );
 }
 
 /**
@@ -247,6 +248,10 @@ void syscall_memory_shared_create( void* context ) {
   size_t len = ROUND_UP_TO_FULL_PAGE(
     ( size_t )syscall_get_parameter( context, 0 )
   );
+  if ( 0 == len ) {
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_memory_shared_acquire( %zx )\r\n", len )

@@ -57,13 +57,32 @@ void interrupt_vector_init( void ) {
 #endif
 
 /**
+ * @fn void post_interrupt_cleanup(event_origin_t, void*)
+ * @brief Post interrupt cleanup
+ *
+ * @param origin
+ * @param context
+ */
+static void post_interrupt_handling(
+  __unused event_origin_t origin,
+  void* context
+) {
+  // handle possible fast interrupt
+  //interrupt_handle_possible( context, true );
+  // handle possible interrupt
+  interrupt_handle_possible( context, false );
+}
+
+/**
  * @brief Post interrupt initialization
  */
 void interrupt_post_init( void ) {
   #if defined( REMOTE_DEBUG )
-    // bind cleanup event
+    // bind debug status cleanup event
     event_bind( EVENT_INTERRUPT_CLEANUP, debug_cleanup_status_flag, true );
   #endif
+  // bind interrupt handling event
+  event_bind( EVENT_INTERRUPT_CLEANUP, post_interrupt_handling, true );
 }
 
 /**

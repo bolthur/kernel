@@ -147,20 +147,19 @@ static void wait_for_device( const char* path ) {
 }
 
 /**
- * @fn void rpc_handle_read(pid_t, size_t)
+ * @fn void rpc_handle_read(size_t, pid_t, size_t)
  * @brief Helper to handle read request from ramdisk
  *
+ * @param type
  * @param origin
  * @param data_info
  */
-static void rpc_handle_read( __unused pid_t origin, size_t data_info ) {
-  vfs_read_request_ptr_t request = ( vfs_read_request_ptr_t )malloc(
-    sizeof( vfs_read_request_t ) );
+static void rpc_handle_read( size_t type, __unused pid_t origin, size_t data_info ) {
+  vfs_read_request_ptr_t request = malloc( sizeof( vfs_read_request_t ) );
   if ( ! request ) {
     return;
   }
-  vfs_read_response_ptr_t response = ( vfs_read_response_ptr_t )malloc(
-    sizeof( vfs_read_response_t ) );
+  vfs_read_response_ptr_t response = malloc( sizeof( vfs_read_response_t ) );
   if ( ! response ) {
     free( request );
     return;
@@ -170,17 +169,17 @@ static void rpc_handle_read( __unused pid_t origin, size_t data_info ) {
   // handle no data
   if( ! data_info ) {
     response->len = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_read_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
     free( request );
     free( response );
     return;
   }
   // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_read_request_t ), data_info );
+  _rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
   // handle error
   if ( errno ) {
     response->len = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_read_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
     free( request );
     free( response );
     return;
@@ -193,13 +192,13 @@ static void rpc_handle_read( __unused pid_t origin, size_t data_info ) {
   if ( 0 != request->shm_id ) {
     //EARLY_STARTUP_PRINT( "Map shared %#x\r\n", request->shm_id )
     // attach shared area
-    shm_addr = _memory_shared_attach( request->shm_id, NULL );
+    shm_addr = _memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
     if ( errno ) {
       EARLY_STARTUP_PRINT( "Unable to attach shared area!\r\n" )
       // prepare response
       response->len = -EIO;
       // return response
-      _rpc_ret( response, sizeof( vfs_read_response_t ) );
+      _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
       // free stuff
       free( request );
       free( response );
@@ -233,7 +232,7 @@ static void rpc_handle_read( __unused pid_t origin, size_t data_info ) {
         EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
         // return response
         response->len = -EIO;
-        _rpc_ret( response, sizeof( vfs_read_response_t ) );
+        _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
         return;
       }
     }
@@ -243,7 +242,7 @@ static void rpc_handle_read( __unused pid_t origin, size_t data_info ) {
     // prepare response
     response->len = -EIO;
     // return response
-    _rpc_ret( response, sizeof( vfs_read_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
     // free stuff
     free( request );
     free( response );
@@ -276,7 +275,7 @@ static void rpc_handle_read( __unused pid_t origin, size_t data_info ) {
       // prepare response
       response->len = -EIO;
       // return response
-      _rpc_ret( response, sizeof( vfs_read_response_t ) );
+      _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
       // free stuff
       free( request );
       free( response );
@@ -286,7 +285,7 @@ static void rpc_handle_read( __unused pid_t origin, size_t data_info ) {
   // prepare read amount
   response->len = ( ssize_t )amount;
   // return response
-  _rpc_ret( response, sizeof( vfs_read_response_t ) );
+  _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
   // free stuff
   free( request );
   free( response );
@@ -430,11 +429,10 @@ static void stage2( void ) {
       printf( "what the fork?\r\n" );
       sleep( 2 );
     }
-  }
-  for ( int i = 0; i < 100; i++ ) {
+  }*/
+  for ( int i = 0; i < 70; i++ ) {
     printf( "stdout: init - %d\r\n", i );
   }
-*/
 
   int e = printf( "stdout: init=>console=>terminal=>framebuffer" );
   fflush( stdout );
@@ -442,7 +440,7 @@ static void stage2( void ) {
     stderr,
     "stderr: init=>console=>terminal=>framebuffer"
   );
-  //fflush( stderr );
+  fflush( stderr );
 
   EARLY_STARTUP_PRINT( "a = %d, b = %d, c = %d, d = %d, e = %d, f = %d\r\n",
     a, b, c, d, e, f )
@@ -605,7 +603,7 @@ int main( int argc, char* argv[] ) {
     msg->info.st_blocks = ( msg->info.st_size / T_BLOCKSIZE )
       + ( msg->info.st_size % T_BLOCKSIZE ? 1 : 0 );
     // send add request
-    send_vfs_add_request( msg );
+    send_vfs_add_request( msg, 0 );
     // skip to next file
     if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
       EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
@@ -616,11 +614,13 @@ int main( int argc, char* argv[] ) {
   free( msg );
 
   // register rpc handler
-  _rpc_acquire( RPC_VFS_READ_OPERATION, ( uintptr_t )rpc_handle_read );
+  bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
     return -1;
   }
+  // enable rpc
+  _rpc_set_ready( true );
 
   // fork process and handle possible error
   EARLY_STARTUP_PRINT( "Forking process for further init!\r\n" );
@@ -636,6 +636,7 @@ int main( int argc, char* argv[] ) {
   }
 
   EARLY_STARTUP_PRINT( "Entering wait for rpc loop!\r\n" );
+  // wair for rpc
   while( true ) {
     _rpc_wait_for_call();
   }

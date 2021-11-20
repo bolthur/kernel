@@ -42,26 +42,22 @@ void vector_interrupt_handler( cpu_register_context_ptr_t cpu ) {
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
-
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "Entering interrupt_handler( %p )\r\n", ( void* )cpu )
     DUMP_REGISTER( cpu )
   #endif
-
   // kernel stack
   interrupt_ensure_kernel_stack();
   // handle possible hardware interrupt
   interrupt_handle_possible( cpu, false );
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
-
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "Leaving interrupt_handler\r\n" )
     DUMP_REGISTER( cpu )
   #endif
-
   // decrement nested counter
   nested_interrupt--;
 }

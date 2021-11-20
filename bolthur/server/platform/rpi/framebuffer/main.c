@@ -24,6 +24,7 @@
 #include <sys/bolthur.h>
 #include <inttypes.h>
 #include "../../../libhelper.h"
+#include "../../../libframebuffer.h"
 #include "framebuffer.h"
 
 /**
@@ -41,21 +42,27 @@ int main( __unused int argc, __unused char* argv[] ) {
   }
 
   // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
+  size_t msg_size = sizeof( vfs_add_request_t ) + 5 * sizeof( size_t );
+  vfs_add_request_ptr_t msg = malloc( msg_size );
   if ( ! msg ) {
     return -1;
   }
   // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
+  memset( msg, 0, msg_size );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   strcpy( msg->file_path, "/dev/framebuffer" );
+  msg->device_info[ 0 ] = FRAMEBUFFER_GET_RESOLUTION;
+  msg->device_info[ 1 ] = FRAMEBUFFER_CLEAR;
+  msg->device_info[ 2 ] = FRAMEBUFFER_RENDER_SURFACE;
+  msg->device_info[ 3 ] = FRAMEBUFFER_SCROLL;
+  msg->device_info[ 4 ] = FRAMEBUFFER_FLIP;
   // perform add request
-  send_vfs_add_request( msg );
-
+  send_vfs_add_request( msg, msg_size );
   // free again
   free( msg );
-  // wait for rpc queue
+  // enable rpc and wait
+  _rpc_set_ready( true );
   while( true ) {
     _rpc_wait_for_call();
   }

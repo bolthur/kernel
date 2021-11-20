@@ -8,8 +8,10 @@ libkernel_la_SOURCES = \
   debug/breakpoint.c \
   debug/gdb.c \
   debug/string.c \
-  ipc/message.c \
-  ipc/rpc.c \
+  rpc/backup.c \
+  rpc/data.c \
+  rpc/generic.c \
+  rpc/queue.c \
   mm/heap.c \
   mm/phys.c \
   mm/shared.c \

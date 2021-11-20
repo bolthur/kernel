@@ -184,6 +184,9 @@ void syscall_process_replace( void* context ) {
     env,
     context
   );
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "process replace result = %d\r\n", result )
+  #endif
   // handle error
   if ( result != 0 ) {
     syscall_populate_error( context, ( size_t )result );

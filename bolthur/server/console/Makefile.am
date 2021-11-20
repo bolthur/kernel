@@ -5,8 +5,8 @@ AM_CFLAGS = -DPROGRAM_NAME=\"console\"
 bin_PROGRAMS = console
 console_SOURCES = \
   handler/add.c \
-  handler/info.c \
   handler/select.c \
+  rpc/write.c \
   console.c \
   handler.c \
   list.c \

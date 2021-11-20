@@ -46,9 +46,10 @@ struct task_process {
   pid_t current_thread_id;
   size_t priority;
   virt_context_ptr_t virtual_context;
-  task_state_data_t state_data;
-  list_manager_ptr_t message_queue;
-  uintptr_t message_handler;
+  list_manager_ptr_t rpc_data_queue;
+  list_manager_ptr_t rpc_queue;
+  uintptr_t rpc_handler;
+  bool rpc_ready;
 };
 
 struct task_manager {

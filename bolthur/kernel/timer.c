@@ -22,7 +22,8 @@
 #include <assert.h>
 #include <timer.h>
 #include <collection/list.h>
-#include <ipc/rpc.h>
+#include <rpc/backup.h>
+#include <rpc/generic.h>
 #include <debug/debug.h>
 #include <panic.h>
 
@@ -83,14 +84,7 @@ static bool timer_insert(
 static void timer_cleanup( const list_item_ptr_t item ) {
   // free if data is valid
   if ( item->data ) {
-    // transform to entry
-    timer_callback_entry_ptr_t entry = item->data;
-    // free rpc identifier
-    if ( entry->rpc ) {
-      free( entry->rpc );
-    }
-    // free entry
-    free( entry );
+    free( item->data );
   }
   // continue with default list cleanup
   list_default_cleanup( item );
@@ -125,17 +119,17 @@ void timer_init( void ) {
 }
 
 /**
- * @fn timer_callback_entry_ptr_t timer_register_callback(task_thread_ptr_t, char*, size_t)
+ * @fn timer_callback_entry_ptr_t timer_register_callback(task_thread_ptr_t, size_t, size_t)
  * @brief Register timer callback
  *
  * @param thread
- * @param rpc
+ * @param rpc_num
  * @param timeout
  * @return
  */
 timer_callback_entry_ptr_t timer_register_callback(
   task_thread_ptr_t thread,
-  char* rpc,
+  size_t rpc_num,
   size_t timeout
 ) {
   // allocate new entry structure
@@ -145,22 +139,12 @@ timer_callback_entry_ptr_t timer_register_callback(
   if ( ! entry ) {
     return NULL;
   }
-  if ( rpc ) {
-    // allocate
-    entry->rpc = ( char* )malloc( strlen( rpc ) + 1 );
-    if ( ! entry->rpc ) {
-      free( entry );
-      return NULL;
-    }
-    // copy rpc content over
-    strcpy( entry->rpc, rpc );
-  }
   // push back information
+  entry->rpc = rpc_num;
   entry->thread = thread;
   entry->expire = timeout;
   // insert into ordered list
   if ( ! list_insert( timer_list, entry ) ) {
-    free( entry->rpc );
     free( entry );
     return NULL;
   }
@@ -187,7 +171,7 @@ bool timer_unregister_callback( size_t id ) {
 
 /**
  * @fn void timer_handle_callback(void)
- * @brief Handle timer callbacks
+ * @brief Handle expired timers
  */
 void timer_handle_callback( void ) {
   // skip if list is empty
@@ -206,23 +190,28 @@ void timer_handle_callback( void ) {
     }
     // debug output
     #if defined( PRINT_TIMER )
-      DEBUG_OUTPUT( "rpc = %s, thread = %p, thread->process = %p\r\n",
+      DEBUG_OUTPUT( "rpc = %d, thread = %p, thread->process = %p\r\n",
         entry->rpc,
         entry->thread,
         entry->thread->process
       )
     #endif
     // raise rpc without data
-    rpc_backup_ptr_t rpc = rpc_raise(
-      entry->rpc,
+    rpc_backup_ptr_t rpc = rpc_generic_raise(
       entry->thread,
       entry->thread->process,
+      entry->rpc,
       NULL,
       0,
-      entry->thread
+      entry->thread,
+      false
     );
     // handle error by skip
     if ( ! rpc ) {
+      // debug output
+      #if defined( PRINT_TIMER )
+        DEBUG_OUTPUT( "Unable to raise rpc\r\n" )
+      #endif
       current = current->next;
       continue;
     }

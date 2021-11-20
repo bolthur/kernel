@@ -24,68 +24,50 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../vfs.h"
-#include "../handle.h"
+#include "../file/handle.h"
+#include "../../libhelper.h"
 
 /**
- * @fn void rpc_handle_write(pid_t, size_t)
+ * @fn void rpc_handle_write(size_t, pid_t, size_t)
  * @brief Handle write request
  *
+ * @param type
  * @param origin
  * @param data_info
  */
-void rpc_handle_write( __unused pid_t origin, __unused size_t data_info ) {
-  vfs_write_request_ptr_t request = ( vfs_write_request_ptr_t )malloc(
-    sizeof( vfs_write_request_t ) );
+void rpc_handle_write( size_t type, pid_t origin, size_t data_info ) {
+  vfs_write_response_t response = { .len = -ENOMEM };
+  vfs_write_request_ptr_t request = malloc( sizeof( vfs_write_request_t ) );
   if ( ! request ) {
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
     return;
   }
-  vfs_write_response_ptr_t response = ( vfs_write_response_ptr_t )malloc(
-    sizeof( vfs_write_response_t ) );
-  if ( ! response ) {
-    free( request );
-    return;
-  }
-  vfs_write_request_ptr_t nested_request = ( vfs_write_request_ptr_t )malloc(
-    sizeof( vfs_write_request_t ) );
+  vfs_write_request_ptr_t nested_request = malloc( sizeof( vfs_write_request_t ) );
   if ( ! nested_request ) {
     free( request );
-    free( response );
-    return;
-  }
-  vfs_write_response_ptr_t nested_response = ( vfs_write_response_ptr_t )malloc(
-    sizeof( vfs_write_response_t ) );
-  if ( ! nested_response ) {
-    free( request );
-    free( response );
-    free( nested_request );
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
     return;
   }
   handle_container_ptr_t container;
   // clear variables
   memset( request, 0, sizeof( vfs_write_request_t ) );
-  memset( response, 0, sizeof( vfs_write_response_t ) );
   memset( nested_request, 0, sizeof( vfs_write_request_t ) );
-  memset( nested_response, 0, sizeof( vfs_write_response_t ) );
+  // switch error return
+  response.len = -EINVAL;
   // handle no data
   if( ! data_info ) {
-    response->len = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_write_response_t ) );
     free( request );
-    free( response );
     free( nested_request );
-    free( nested_response );
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
     return;
   }
   // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_write_request_t ), data_info );
+  _rpc_get_data( request, sizeof( vfs_write_request_t ), data_info, false );
   // handle error
   if ( errno ) {
-    response->len = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_write_response_t ) );
     free( request );
-    free( response );
     free( nested_request );
-    free( nested_response );
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
     return;
   }
   // EARLY_STARTUP_PRINT( "Write request to handle %d\r\n", request->handle )
@@ -93,29 +75,18 @@ void rpc_handle_write( __unused pid_t origin, __unused size_t data_info ) {
   int result = handle_get( &container, origin, request->handle );
   // handle error
   if ( 0 > result ) {
-    // send errno via negative len
-    response->len = result;
-    // send response
-    _rpc_ret( response, sizeof( vfs_write_response_t ) );
-    // free stuff
+    response.len = result;
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
     free( request );
-    free( response );
     free( nested_request );
-    free( nested_response );
     return;
   }
   // special handling for null device
   if ( 0 == strcmp( container->path, "/dev/null" ) ) {
-    // set written length just to requested length
-    response->len = ( ssize_t )request->len;
-    // send back success return
-    _rpc_ret( response, sizeof( vfs_write_response_t ) );
-    // free stuff
+    response.len = ( ssize_t )request->len;
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
     free( request );
-    free( response );
     free( nested_request );
-    free( nested_response );
-    // skip rest
     return;
   }
   // get handling process
@@ -130,43 +101,32 @@ void rpc_handle_write( __unused pid_t origin, __unused size_t data_info ) {
     "SIZE_MAX = %#x, file size = %#lx, process = %d\r\n",
     container->path, nested_request->len, nested_request->offset, SIZE_MAX,
     container->target->st->st_size, container->target->pid )*/
-  size_t response_info = _rpc_raise_wait(
-    RPC_VFS_WRITE_OPERATION,
+  size_t response_data_id = _rpc_raise(
+    RPC_VFS_WRITE,
     handling_process,
     nested_request,
-    sizeof( vfs_write_request_t )
+    sizeof( vfs_write_request_t ),
+    true
   );
   if ( errno ) {
-    response->len = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_write_response_t ) );
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
     free( request );
-    free( response );
     free( nested_request );
-    free( nested_response );
     return;
   }
-  // fetch return
-  _rpc_get_data( nested_response, sizeof( vfs_write_response_t ), response_info );
+  // fetch nested response
+  _rpc_get_data( &response, sizeof( vfs_write_response_t ), response_data_id, false );
   if ( errno ) {
-    response->len = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_write_response_t ) );
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
     free( request );
-    free( response );
     free( nested_request );
-    free( nested_response );
     return;
   }
-  // copy over read content to response for caller
-  memcpy( response, nested_response, sizeof( vfs_write_response_t ) );
   // update offset
-  if ( 0 < nested_response->len ) {
-    container->pos += ( off_t )nested_response->len;
+  if ( 0 < response.len ) {
+    container->pos += ( off_t )response.len;
   }
-  // return response
-  _rpc_ret( response, sizeof( vfs_write_response_t ) );
-  // free stuff
+  _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
   free( request );
-  free( response );
   free( nested_request );
-  free( nested_response );
 }

@@ -33,7 +33,6 @@
 #include "terminal.h"
 #include "main.h"
 
-pid_t pid = 0;
 int output_driver_fd = 0;
 int console_manager_fd = 0;
 
@@ -64,8 +63,6 @@ int main( __unused int argc, __unused char* argv[] ) {
     close( output_driver_fd );
     return -1;
   }
-  // cache current pid
-  pid = getpid();
 
   // generic output init
   if ( ! output_init() ) {
@@ -97,7 +94,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, TERMINAL_BASE_PATH, PATH_MAX );
   // perform add request
-  send_vfs_add_request( msg );
+  send_vfs_add_request( msg, 0 );
 
   // push terminal device as indicator init is done
   // clear memory
@@ -106,15 +103,18 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/terminal", PATH_MAX );
   // perform add request
-  send_vfs_add_request( msg );
+  send_vfs_add_request( msg, 0 );
 
   // free again
   free( msg );
 
-  // endless loop
+  // enable rpc and wait
+  _rpc_set_ready( true );
   while( true ) {
+    //EARLY_STARTUP_PRINT( "waiting for call!\r\n" )
     _rpc_wait_for_call();
   }
+  //EARLY_STARTUP_PRINT( "exit!\r\n" )
   // return exit code 0
   return 0;
 }

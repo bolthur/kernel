@@ -35,8 +35,6 @@
 #include <event.h>
 #include <task/process.h>
 #include <syscall.h>
-#include <ipc/message.h>
-#include <ipc/rpc.h>
 
 #if defined( REMOTE_DEBUG )
   #include <serial.h>
@@ -122,14 +120,6 @@ noreturn void kernel_main( void ) {
   // Setup system calls
   DEBUG_OUTPUT( "[bolthur/kernel -> syscall] initialize ...\r\n" )
   assert( syscall_init() )
-
-  // Setup messaging
-  DEBUG_OUTPUT( "[bolthur/kernel -> message] initialize ...\r\n" )
-  assert( message_init() )
-
-  // Setup rpc
-  DEBUG_OUTPUT( "[bolthur/kernel -> rpc] initialize ...\r\n" )
-  assert( rpc_init() )
 
   // assert initrd necessary now
   assert( initrd_exist() )

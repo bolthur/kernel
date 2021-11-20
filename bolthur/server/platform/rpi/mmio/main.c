@@ -34,8 +34,6 @@
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
-  EARLY_STARTUP_PRINT( "mmio server startup!\r\n" )
-
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
@@ -47,7 +45,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   strcpy( msg->file_path, "/dev/mmio" );
   // perform add request
-  send_vfs_add_request( msg );
+  send_vfs_add_request( msg, 0 );
 
   // free again
   free( msg );

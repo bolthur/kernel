@@ -30,7 +30,8 @@
  * @param context
  */
 void syscall_kernel_putc( void* context ) {
-  printf( "%c", ( uint8_t )syscall_get_parameter( context, 0 ) );
+  int written = printf( "%c", ( uint8_t )syscall_get_parameter( context, 0 ) );
+  syscall_populate_success( context, ( size_t )written );
 }
 
 /**
@@ -58,7 +59,7 @@ void syscall_kernel_puts( void* context ) {
   // copy over
   if ( ! memcpy_unsafe( dup, str, len ) ) {
     free( dup );
-    syscall_populate_error( context, ( size_t )-EINVAL );
+    syscall_populate_error( context, ( size_t )-EIO );
     return;
   }
   // print somewhere

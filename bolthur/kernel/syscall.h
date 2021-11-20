@@ -41,15 +41,14 @@
 #define SYSCALL_MEMORY_SHARED_ATTACH 24
 #define SYSCALL_MEMORY_SHARED_DETACH 25
 
-#define SYSCALL_RPC_ACQUIRE 31
-#define SYSCALL_RPC_RELEASE 32
-#define SYSCALL_RPC_RAISE 33
-#define SYSCALL_RPC_RAISE_WAIT 34
-#define SYSCALL_RPC_RET 35
-#define SYSCALL_RPC_GET_DATA 36
-#define SYSCALL_RPC_GET_DATA_SIZE 37
-#define SYSCALL_RPC_WAIT_FOR_CALL 38
-#define SYSCALL_RPC_BOUND 39
+#define SYSCALL_RPC_SET_HANDLER 31
+#define SYSCALL_RPC_RAISE 32
+#define SYSCALL_RPC_RET 33
+#define SYSCALL_RPC_GET_DATA 34
+#define SYSCALL_RPC_GET_DATA_SIZE 35
+#define SYSCALL_RPC_WAIT_FOR_CALL 36
+#define SYSCALL_RPC_ROUTE 37
+#define SYSCALL_RPC_SET_READY 38
 
 #define SYSCALL_IO_ACQUIRE 51
 #define SYSCALL_IO_RELEASE 52
@@ -99,15 +98,14 @@ void syscall_io_release( void* );
 void syscall_io_check( void* );
 void syscall_io_raise( void* );
 
-void syscall_rpc_acquire( void* );
-void syscall_rpc_release( void* );
+void syscall_rpc_set_handler( void* );
 void syscall_rpc_raise( void* );
-void syscall_rpc_raise_wait( void* );
 void syscall_rpc_ret( void* );
 void syscall_rpc_get_data( void* );
 void syscall_rpc_get_data_size( void* );
 void syscall_rpc_wait_for_call( void* );
-void syscall_rpc_bound( void* );
+void syscall_rpc_route( void* );
+void syscall_rpc_set_ready( void* );
 
 void syscall_timer_tick_count( void* );
 void syscall_timer_frequency( void* );

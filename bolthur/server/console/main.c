@@ -22,12 +22,14 @@
 #include <sys/bolthur.h>
 #include "../libhelper.h"
 #include "../libterminal.h"
+#include "../libhelper.h"
+#include "../libconsole.h"
 #include "handler.h"
 #include "list.h"
 #include "console.h"
+#include "rpc.h"
 
 list_manager_ptr_t console_list = NULL;
-pid_t pid = 0;
 
 /**
  * @fn int32_t console_lookup(const list_item_ptr_t, const void*)
@@ -60,104 +62,6 @@ static void console_cleanup( const list_item_ptr_t a ) {
 }
 
 /**
- * @fn void rpc_handle_write(pid_t, size_t)
- * @brief rpc callback to handle write access
- *
- * @param origin
- * @param data_info
- */
-static void rpc_handle_write( __unused pid_t origin, size_t data_info ) {
-  // allocate space
-  vfs_write_request_ptr_t request = ( vfs_write_request_ptr_t )malloc(
-    sizeof( vfs_write_request_t ) );
-  if ( ! request ) {
-    return;
-  }
-  vfs_write_response_ptr_t response = ( vfs_write_response_ptr_t )malloc(
-    sizeof( vfs_write_response_t ) );
-  if ( ! response ) {
-    free( request );
-    return;
-  }
-  // prepare
-  memset( request, 0, sizeof( vfs_write_request_t ) );
-  memset( response, 0, sizeof( vfs_write_response_t ) );
-  // handle no data
-  if( ! data_info ) {
-    response->len = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_write_response_t ) );
-    free( request );
-    free( response );
-    return;
-  }
-  // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_write_request_t ), data_info );
-  // handle error
-  if ( errno ) {
-    response->len = -EINVAL;
-    _rpc_ret( response, sizeof( vfs_write_response_t ) );
-    free( request );
-    free( response );
-    return;
-  }
-  // get active console
-  console_ptr_t console = console_get_active();
-  if ( ! console ) {
-    response->len = -EIO;
-    // return response
-    _rpc_ret( response, sizeof( vfs_write_response_t ) );
-    // free stuff
-    free( request );
-    free( response );
-    return;
-  }
-  // get rpc to raise
-  char* rpc = 0 == strcmp( "/dev/stdout", request->file_path )
-    ? console->out
-    : console->err;
-  // build terminal command
-  terminal_write_request_ptr_t terminal = malloc( sizeof( terminal_write_request_t ) );
-  if ( ! terminal ) {
-    response->len = -EIO;
-    // return response
-    _rpc_ret( response, sizeof( vfs_write_response_t ) );
-    // free stuff
-    free( request );
-    free( response );
-    return;
-  }
-  memset( terminal, 0, sizeof( terminal_write_request_t ) );
-  terminal->len = request->len;
-  memcpy( terminal->data, request->data, request->len );
-  strncpy( terminal->terminal, console->path, PATH_MAX );
-  // raise without wait for return :)
-  _rpc_raise(
-    rpc,
-    console->handler,
-    terminal,
-    sizeof( terminal_write_request_t )
-  );
-  if ( errno ) {
-    response->len = -EIO;
-    // return response
-    _rpc_ret( response, sizeof( vfs_write_response_t ) );
-    // free stuff
-    free( terminal );
-    free( request );
-    free( response );
-    return;
-  }
-  // prepare return
-  response->len = ( ssize_t )strlen( request->data );
-  // return response
-  _rpc_ret( response, sizeof( vfs_write_response_t ) );
-  // free stuff
-  free( terminal );
-  free( request );
-  free( response );
-}
-
-/**
  * @brief main entry function
  *
  * @param argc
@@ -170,11 +74,8 @@ int main( __unused int argc, __unused char* argv[] ) {
   if ( ! msg ) {
     return -1;
   }
-  // cache current pid
-  pid = getpid();
-
   // set handler
-  _rpc_acquire( RPC_VFS_WRITE_OPERATION, ( uintptr_t )rpc_handle_write );
+  bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
     return -1;
@@ -186,7 +87,6 @@ int main( __unused int argc, __unused char* argv[] ) {
     free( msg );
     return -1;
   }
-
   // register rpc handler
   if ( ! handler_register() ) {
     free( msg );
@@ -201,7 +101,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFREG;
   strncpy( msg->file_path, "/dev/stdin", PATH_MAX );
   // perform add request
-  send_vfs_add_request( msg );
+  send_vfs_add_request( msg, 0 );
 
   // stdout device
   // clear memory
@@ -210,7 +110,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFREG;
   strncpy( msg->file_path, "/dev/stdout", PATH_MAX );
   // perform add request
-  send_vfs_add_request( msg );
+  send_vfs_add_request( msg, 0 );
 
   // stderr device
   // clear memory
@@ -219,20 +119,30 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFREG;
   strncpy( msg->file_path, "/dev/stderr", PATH_MAX );
   // perform add request
-  send_vfs_add_request( msg );
+  send_vfs_add_request( msg, 0 );
+  free( msg );
 
   // console device
+  // allocate memory for add request
+  size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
+  msg = malloc( msg_size );
+  if ( ! msg ) {
+    return -1;
+  }
   // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
+  memset( msg, 0, msg_size );
   // prepare message structure
   msg->info.st_mode = S_IFREG;
+  msg->device_info[ 0 ] = CONSOLE_ADD;
+  msg->device_info[ 1 ] = CONSOLE_SELECT;
   strncpy( msg->file_path, "/dev/console", PATH_MAX );
   // perform add request
-  send_vfs_add_request( msg );
-
+  send_vfs_add_request( msg, msg_size );
   // free again
   free( msg );
 
+  // enable rpc and wait
+  _rpc_set_ready( true );
   while( true ) {
     _rpc_wait_for_call();
   }
