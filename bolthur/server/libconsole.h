@@ -27,7 +27,7 @@
 #define _LIBCONSOLE_H
 
 #define CONSOLE_ADD RPC_CUSTOM_START
-#define CONSOLE_SELECT RPC_CUSTOM_START + 1
+#define CONSOLE_SELECT CONSOLE_ADD + 1
 
 struct console_command_add {
   char terminal[ PATH_MAX ];

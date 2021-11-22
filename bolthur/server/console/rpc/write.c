@@ -30,28 +30,32 @@
 #include "../console.h"
 
 /**
- * @fn void rpc_handle_write(size_t, pid_t, size_t)
+ * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
  * @brief Handle write request
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  */
-void rpc_handle_write( size_t type, __unused pid_t origin, size_t data_info ) {
+void rpc_handle_write(
+  size_t type,
+  __unused pid_t origin,
+  size_t data_info,
+  __unused size_t response_info
+) {
   vfs_write_response_t response = { .len = -EINVAL };
   // allocate space
   vfs_write_request_ptr_t request = malloc( sizeof( vfs_write_request_t ) );
   if ( ! request ) {
-    EARLY_STARTUP_PRINT( "Unable to allocate request memory\r\n" )
-    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
     return;
   }
   // prepare
   memset( request, 0, sizeof( vfs_write_request_t ) );
   // handle no data
   if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "No data passed!\r\n" )
-    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
     free( request );
     return;
   }
@@ -59,17 +63,15 @@ void rpc_handle_write( size_t type, __unused pid_t origin, size_t data_info ) {
   _rpc_get_data( request, sizeof( vfs_write_request_t ), data_info, false );
   // handle error
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Error while retrieving data: %s\r\n", strerror( errno ) )
-    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
     free( request );
     return;
   }
   // get active console
   console_ptr_t console = console_get_active();
   if ( ! console ) {
-    EARLY_STARTUP_PRINT( "No active console found\r\n" )
     response.len = -EIO;
-    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
     free( request );
     return;
   }
@@ -80,9 +82,8 @@ void rpc_handle_write( size_t type, __unused pid_t origin, size_t data_info ) {
   // build terminal command
   terminal_write_request_ptr_t terminal = malloc( sizeof( terminal_write_request_t ) );
   if ( ! terminal ) {
-    EARLY_STARTUP_PRINT( "Unable to allocate terminal write request\r\n" )
     response.len = -EIO;
-    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
     free( request );
     return;
   }
@@ -99,18 +100,15 @@ void rpc_handle_write( size_t type, __unused pid_t origin, size_t data_info ) {
     false
   );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to raise rpc: %s\r\n", strerror( errno ) )
-    EARLY_STARTUP_PRINT( "rpc_num = %d, handler = %d\r\n", rpc_num, console->handler )
-    EARLY_STARTUP_PRINT( "terminal->data = %s\r\nterminal->terminal = %s\r\n", terminal->data, terminal->terminal )
     response.len = -EIO;
-    _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
+    _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
     free( terminal );
     free( request );
     return;
   }
   // prepare return
   response.len = ( ssize_t )strlen( request->data );
-  _rpc_ret( type, &response, sizeof( vfs_write_response_t ) );
+  _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
   free( terminal );
   free( request );
 }

@@ -24,6 +24,6 @@
 #if ! defined( _RPC_H )
 #define _RPC_H
 
-void rpc_handle_write( size_t, pid_t, size_t );
+void rpc_handle_write( size_t, pid_t, size_t, size_t );
 
 #endif

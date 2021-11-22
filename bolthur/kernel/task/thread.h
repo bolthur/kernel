@@ -71,5 +71,6 @@ bool task_thread_push_arguments( task_thread_ptr_t, char**, char** );
 void task_thread_cleanup( event_origin_t, void* );
 void task_thread_block( task_thread_ptr_t, task_thread_state_t, task_state_data_t );
 void task_thread_unblock( task_thread_ptr_t, task_thread_state_t, task_state_data_t );
+task_thread_ptr_t task_thread_get_blocked( task_thread_state_t, task_state_data_t );
 
 #endif

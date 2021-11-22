@@ -30,39 +30,45 @@
 #include "../../libhelper.h"
 
 /**
- * @fn void rpc_handle_fork(size_t, pid_t, size_t)
+ * @fn void rpc_handle_fork(size_t, pid_t, size_t, size_t)
  * @brief handle ioctl request
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  */
-void rpc_handle_fork( size_t type, pid_t origin, size_t data_info ) {
+void rpc_handle_fork(
+  size_t type,
+  pid_t origin,
+  size_t data_info,
+  __unused size_t response_info
+) {
   // dummy error response
   vfs_fork_response_t response = { .status = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( type, &response, sizeof( vfs_fork_response_t ) );
+    _rpc_ret( type, &response, sizeof( response ), 0 );
     return;
   }
   // get message size
   size_t message_size = _rpc_get_data_size( data_info );
   if ( errno ) {
-    _rpc_ret( type, &response, sizeof( vfs_fork_response_t ) );
+    _rpc_ret( type, &response, sizeof( response ), 0 );
     return;
   }
   // get request
   vfs_fork_request_ptr_t request = malloc( message_size );
   if ( ! request ) {
     response.status = -ENOMEM;
-    _rpc_ret( type, &response, sizeof( response ) );
+    _rpc_ret( type, &response, sizeof( response ), 0 );
     return;
   }
   memset( request, 0, message_size );
   _rpc_get_data( request, message_size, data_info, false );
   if ( errno ) {
     response.status = -EIO;
-    _rpc_ret( type, &response, sizeof( response ) );
+    _rpc_ret( type, &response, sizeof( response ), 0 );
     free( request );
     return;
   }
@@ -73,7 +79,7 @@ void rpc_handle_fork( size_t type, pid_t origin, size_t data_info ) {
       "origin = %d, origin parent = %d, request parent = %d\r\n",
       origin, origin_parent, request->parent )
     response.status = -EINVAL;
-    _rpc_ret( type, &response, sizeof( response ) );
+    _rpc_ret( type, &response, sizeof( response ), 0 );
     free( request );
     return;
   }
@@ -91,7 +97,7 @@ void rpc_handle_fork( size_t type, pid_t origin, size_t data_info ) {
       if ( ! handle_duplicate( container, process_container ) ) {
         // FIXME: DESTROY CONTAINER
         response.status = -EIO;
-        _rpc_ret( type, &response, sizeof( response ) );
+        _rpc_ret( type, &response, sizeof( response ), 0 );
         free( request );
         return;
       }
@@ -100,6 +106,6 @@ void rpc_handle_fork( size_t type, pid_t origin, size_t data_info ) {
   // fill response structure
   response.status = 0;
   // return response and free
-  _rpc_ret( type, &response, sizeof( response ) );
+  _rpc_ret( type, &response, sizeof( response ), 0 );
   free( request );
 }

@@ -118,7 +118,11 @@ static ssize_t my_tar_read( __unused int fd, void* buffer, size_t count ) {
  * @param count
  * @return
  */
-static ssize_t my_tar_write( __unused int fd, __unused const void* src, __unused size_t count ) {
+static ssize_t my_tar_write(
+  __unused int fd,
+  __unused const void* src,
+  __unused size_t count
+) {
   return 0;
 }
 
@@ -147,14 +151,20 @@ static void wait_for_device( const char* path ) {
 }
 
 /**
- * @fn void rpc_handle_read(size_t, pid_t, size_t)
+ * @fn void rpc_handle_read(size_t, pid_t, size_t, size_t)
  * @brief Helper to handle read request from ramdisk
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param respinse_info
  */
-static void rpc_handle_read( size_t type, __unused pid_t origin, size_t data_info ) {
+static void rpc_handle_read(
+  size_t type,
+  __unused pid_t origin,
+  size_t data_info,
+  __unused size_t response_info
+) {
   vfs_read_request_ptr_t request = malloc( sizeof( vfs_read_request_t ) );
   if ( ! request ) {
     return;
@@ -169,7 +179,7 @@ static void rpc_handle_read( size_t type, __unused pid_t origin, size_t data_inf
   // handle no data
   if( ! data_info ) {
     response->len = -EINVAL;
-    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
     free( request );
     free( response );
     return;
@@ -179,7 +189,7 @@ static void rpc_handle_read( size_t type, __unused pid_t origin, size_t data_inf
   // handle error
   if ( errno ) {
     response->len = -EINVAL;
-    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
     free( request );
     free( response );
     return;
@@ -198,7 +208,7 @@ static void rpc_handle_read( size_t type, __unused pid_t origin, size_t data_inf
       // prepare response
       response->len = -EIO;
       // return response
-      _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
+      _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
       // free stuff
       free( request );
       free( response );
@@ -232,7 +242,7 @@ static void rpc_handle_read( size_t type, __unused pid_t origin, size_t data_inf
         EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
         // return response
         response->len = -EIO;
-        _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
+        _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
         return;
       }
     }
@@ -242,7 +252,7 @@ static void rpc_handle_read( size_t type, __unused pid_t origin, size_t data_inf
     // prepare response
     response->len = -EIO;
     // return response
-    _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
+    _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
     // free stuff
     free( request );
     free( response );
@@ -275,7 +285,7 @@ static void rpc_handle_read( size_t type, __unused pid_t origin, size_t data_inf
       // prepare response
       response->len = -EIO;
       // return response
-      _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
+      _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
       // free stuff
       free( request );
       free( response );
@@ -285,7 +295,7 @@ static void rpc_handle_read( size_t type, __unused pid_t origin, size_t data_inf
   // prepare read amount
   response->len = ( ssize_t )amount;
   // return response
-  _rpc_ret( type, response, sizeof( vfs_read_response_t ) );
+  _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
   // free stuff
   free( request );
   free( response );
@@ -302,7 +312,10 @@ static pid_t execute_driver( char* name ) {
   // pure kernel fork necessary here
   pid_t forked_process = _process_fork();
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to fork process for image replace: %s\r\n", strerror( errno ) )
+    EARLY_STARTUP_PRINT(
+      "Unable to fork process for image replace: %s\r\n",
+      strerror( errno )
+    )
     return -1;
   }
   // fork only
@@ -512,13 +525,23 @@ int main( int argc, char* argv[] ) {
   }
 
   // debug print
-  EARLY_STARTUP_PRINT( "ramdisk = %#0*"PRIxPTR"\r\n", address_size, ramdisk_compressed );
-  EARLY_STARTUP_PRINT( "ramdisk_size = %zx\r\n", ramdisk_compressed_size );
-  EARLY_STARTUP_PRINT( "device_tree = %#0*"PRIxPTR"\r\n", address_size, device_tree );
+  EARLY_STARTUP_PRINT(
+    "ramdisk = %#0*"PRIxPTR"\r\n",
+    address_size,
+    ramdisk_compressed
+  )
+  EARLY_STARTUP_PRINT( "ramdisk_size = %zx\r\n", ramdisk_compressed_size )
+  EARLY_STARTUP_PRINT(
+    "device_tree = %#0*"PRIxPTR"\r\n",
+    address_size,
+    device_tree
+  )
 
   tartype_t *mytype = malloc( sizeof( tartype_t ) );
   if ( !mytype ) {
-    EARLY_STARTUP_PRINT( "ERROR: Cannot allocate necessary memory for tar stuff!\r\n" );
+    EARLY_STARTUP_PRINT(
+      "ERROR: Cannot allocate necessary memory for tar stuff!\r\n"
+    )
     return -1;
   }
   mytype->closefunc = my_tar_close;
@@ -545,7 +568,10 @@ int main( int argc, char* argv[] ) {
   EARLY_STARTUP_PRINT( "Forking process for vfs start!\r\n" );
   pid_t forked_process = fork();
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to fork process for vfs replace: %s\r\n", strerror( errno ) );
+    EARLY_STARTUP_PRINT(
+      "Unable to fork process for vfs replace: %s\r\n",
+      strerror( errno )
+    )
     return -1;
   }
   // fork only
@@ -554,7 +580,10 @@ int main( int argc, char* argv[] ) {
     // call for replace and handle error
     _process_replace( vfs_image, NULL, NULL );
     if ( errno ) {
-      EARLY_STARTUP_PRINT( "Unable to replace process with image: %s\r\n", strerror( errno ) );
+      EARLY_STARTUP_PRINT(
+        "Unable to replace process with image: %s\r\n",
+        strerror( errno )
+      )
       return -1;
     }
   }
@@ -563,7 +592,7 @@ int main( int argc, char* argv[] ) {
     EARLY_STARTUP_PRINT( "Invalid process id for vfs daemon!\r\n" )
     return -1;
   }
-  EARLY_STARTUP_PRINT( "Continuing with startup by sending ramdisk to vfs!\r\n" );
+  EARLY_STARTUP_PRINT( "Continuing with startup by sending ramdisk!\r\n" )
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
 
   // reset read offset
@@ -626,7 +655,10 @@ int main( int argc, char* argv[] ) {
   EARLY_STARTUP_PRINT( "Forking process for further init!\r\n" );
   forked_process = fork();
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to fork process for init continue: %s\r\n", strerror( errno ) );
+    EARLY_STARTUP_PRINT(
+      "Unable to fork process for init continue: %s\r\n",
+      strerror( errno )
+    )
     return -1;
   }
   // handle ongoing init in forked process

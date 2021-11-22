@@ -27,12 +27,12 @@
 #define _LIBFRAMEBUFFER_H
 
 #define FRAMEBUFFER_GET_RESOLUTION RPC_CUSTOM_START
-#define FRAMEBUFFER_CLEAR RPC_CUSTOM_START + 1
-#define FRAMEBUFFER_RENDER_SURFACE RPC_CUSTOM_START + 2
-#define FRAMEBUFFER_SCROLL RPC_CUSTOM_START + 3
-#define FRAMEBUFFER_FLIP RPC_CUSTOM_START + 4
+#define FRAMEBUFFER_CLEAR FRAMEBUFFER_GET_RESOLUTION + 1
+#define FRAMEBUFFER_RENDER_SURFACE FRAMEBUFFER_CLEAR + 1
+#define FRAMEBUFFER_FLIP FRAMEBUFFER_RENDER_SURFACE+ 1
 
 struct framebuffer_render_surface {
+  uint32_t scroll_y;
   uint32_t x;
   uint32_t y;
   uint32_t max_x;
@@ -42,12 +42,6 @@ struct framebuffer_render_surface {
 };
 typedef struct framebuffer_render_surface framebuffer_render_surface_t;
 typedef struct framebuffer_render_surface* framebuffer_render_surface_ptr_t;
-
-struct framebuffer_scroll {
-  uint32_t start_y;
-};
-typedef struct framebuffer_scroll framebuffer_scroll_t;
-typedef struct framebuffer_scroll* framebuffer_scroll_ptr_t;
 
 struct framebuffer_resolution {
   int32_t success;

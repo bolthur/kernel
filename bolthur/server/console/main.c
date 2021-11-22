@@ -132,7 +132,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // clear memory
   memset( msg, 0, msg_size );
   // prepare message structure
-  msg->info.st_mode = S_IFREG;
+  msg->info.st_mode = S_IFCHR;
   msg->device_info[ 0 ] = CONSOLE_ADD;
   msg->device_info[ 1 ] = CONSOLE_SELECT;
   strncpy( msg->file_path, "/dev/console", PATH_MAX );

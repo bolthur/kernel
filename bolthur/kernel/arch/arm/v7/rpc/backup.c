@@ -32,7 +32,7 @@
 #endif
 
 /**
- * @fn rpc_backup_ptr_t rpc_backup_create(task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool)
+ * @fn rpc_backup_ptr_t rpc_backup_create(task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t)
  * @brief Helper to create rpc backup
  *
  * @param source
@@ -42,6 +42,7 @@
  * @param data_size
  * @param target_thread
  * @param sync
+ * @param origin_data_id
  * @return
  */
 rpc_backup_ptr_t rpc_backup_create(
@@ -51,7 +52,8 @@ rpc_backup_ptr_t rpc_backup_create(
   void* data,
   size_t data_size,
   task_thread_ptr_t target_thread,
-  bool sync
+  bool sync,
+  size_t origin_data_id
 ) {
   // get first inactive thread
   avl_node_ptr_t current = avl_iterate_first( target->thread_manager );
@@ -201,6 +203,7 @@ rpc_backup_ptr_t rpc_backup_create(
   backup->source = source;
   backup->type = type;
   backup->sync = sync;
+  backup->origin_data_id = origin_data_id;
   // return created backup
   return backup;
 }

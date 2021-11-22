@@ -27,30 +27,36 @@
 #include "../console.h"
 
 /**
- * @fn void handler_console_activate(size_t, pid_t, size_t)
+ * @fn void handler_console_activate(size_t, pid_t, size_t, size_t)
  * @brief Console activate command handler
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  */
-void handler_console_select( size_t type, __unused pid_t origin, size_t data_info ) {
+void handler_console_select(
+  __unused size_t type,
+  __unused pid_t origin,
+  size_t data_info,
+  __unused size_t response_info
+) {
   int success = -1;
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( type, &success, sizeof( success ) );
+    _rpc_ret( RPC_VFS_IOCTL, &success, sizeof( success ), 0 );
     return;
   }
   // get size for allocation
   size_t sz = _rpc_get_data_size( data_info );
   if ( errno ) {
-    _rpc_ret( type, &success, sizeof( success ) );
+    _rpc_ret( RPC_VFS_IOCTL, &success, sizeof( success ), 0 );
     return;
   }
   // allocate for data fetching
   console_command_select_ptr_t command = malloc( sz );
   if ( ! command ) {
-    _rpc_ret( type, &success, sizeof( success ) );
+    _rpc_ret( RPC_VFS_IOCTL, &success, sizeof( success ), 0 );
     return;
   }
   // fetch rpc data
@@ -58,7 +64,7 @@ void handler_console_select( size_t type, __unused pid_t origin, size_t data_inf
   // handle error
   if ( errno ) {
     free( command );
-    _rpc_ret( type, &success, sizeof( success ) );
+    _rpc_ret( RPC_VFS_IOCTL, &success, sizeof( success ), 0 );
     return;
   }
   // try to lookup by name
@@ -66,7 +72,7 @@ void handler_console_select( size_t type, __unused pid_t origin, size_t data_inf
   // handle already existing
   if ( ! found ) {
     free( command );
-    _rpc_ret( type, &success, sizeof( success ) );
+    _rpc_ret( RPC_VFS_IOCTL, &success, sizeof( success ), 0 );
     return;
   }
   // get active console and deactivate
@@ -81,5 +87,5 @@ void handler_console_select( size_t type, __unused pid_t origin, size_t data_inf
   free( command );
   // set success flag and return
   success = 0;
-  _rpc_ret( type, &success, sizeof( success ) );
+  _rpc_ret( RPC_VFS_IOCTL, &success, sizeof( success ), 0 );
 }

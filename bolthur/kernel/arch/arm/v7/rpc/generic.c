@@ -200,6 +200,7 @@ bool rpc_generic_prepare_invoke( rpc_backup_ptr_t backup ) {
   cpu->reg.r0 = backup->type;
   cpu->reg.r1 = ( size_t )backup->source->process->id;
   cpu->reg.r2 = backup->data_id;
+  cpu->reg.r3 = backup->origin_data_id;
 
   // get virtual address
   uintptr_t virtual = cpu->reg.pc;
@@ -285,4 +286,3 @@ bool rpc_generic_prepare_invoke( rpc_backup_ptr_t backup ) {
   // return success
   return true;
 }
-

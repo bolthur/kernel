@@ -204,7 +204,8 @@ void timer_handle_callback( void ) {
       NULL,
       0,
       entry->thread,
-      false
+      false,
+      0
     );
     // handle error by skip
     if ( ! rpc ) {

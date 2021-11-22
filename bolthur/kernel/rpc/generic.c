@@ -31,7 +31,7 @@
 #endif
 
 /**
- * @fn rpc_backup_ptr_t rpc_generic_raise(task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool)
+ * @fn rpc_backup_ptr_t rpc_generic_raise(task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t)
  * @brief Raise an rpc in target from source
  *
  * @param source
@@ -41,6 +41,7 @@
  * @param length
  * @param target_thread
  * @param sync
+ * @param origin_data_id
  * @return
  */
 rpc_backup_ptr_t rpc_generic_raise(
@@ -50,7 +51,8 @@ rpc_backup_ptr_t rpc_generic_raise(
   void* data,
   size_t length,
   task_thread_ptr_t target_thread,
-  bool sync
+  bool sync,
+  size_t origin_data_id
 ) {
   // debug output
   #if defined( PRINT_RPC )
@@ -66,7 +68,8 @@ rpc_backup_ptr_t rpc_generic_raise(
     data,
     length,
     target_thread,
-    sync
+    sync,
+    origin_data_id
   );
   if ( ! backup ) {
     // debug output

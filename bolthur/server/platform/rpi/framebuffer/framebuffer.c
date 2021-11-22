@@ -52,9 +52,6 @@ struct framebuffer_rpc command_list[] = {
     .command = FRAMEBUFFER_RENDER_SURFACE,
     .callback = framebuffer_handle_render_surface
   }, {
-    .command = FRAMEBUFFER_SCROLL,
-    .callback = framebuffer_handle_scroll
-  }, {
     .command = FRAMEBUFFER_FLIP,
     .callback = framebuffer_handle_flip
   },
@@ -216,17 +213,19 @@ void framebuffer_flip( void ) {/*
 }
 
 /**
- * @fn void framebuffer_handle_resolution(size_t, pid_t, size_t)
+ * @fn void framebuffer_handle_resolution(size_t, pid_t, size_t, size_t)
  * @brief Handle resolution request currently only get
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  */
 void framebuffer_handle_resolution(
-  size_t type,
+  __unused size_t type,
   __unused pid_t origin,
-  __unused size_t data_info
+  __unused size_t data_info,
+  __unused size_t response_info
 ) {
   // local variable for resolution data
   framebuffer_resolution_t resolution_data;
@@ -237,38 +236,42 @@ void framebuffer_handle_resolution(
   resolution_data.height = physical_height;
   resolution_data.depth = FRAMEBUFFER_SCREEN_DEPTH;
   // return resolution data
-  _rpc_ret( type, &resolution_data, sizeof( framebuffer_resolution_t ) );
+  _rpc_ret( RPC_VFS_IOCTL, &resolution_data, sizeof( resolution_data ), 0 );
 }
 
 /**
- * @fn void framebuffer_handle_clear(size_t, pid_t, size_t)
+ * @fn void framebuffer_handle_clear(size_t, pid_t, size_t, size_t)
  * @brief Handle clear request
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  */
 void framebuffer_handle_clear(
   __unused size_t type,
   __unused pid_t origin,
-  __unused size_t data_info
+  __unused size_t data_info,
+  __unused size_t response_info
 ) {
   memset( current_back, 0, size );
   framebuffer_flip();
 }
 
 /**
- * @fn void framebuffer_handle_render_surface(size_t, pid_t, size_t)
+ * @fn void framebuffer_handle_render_surface(size_t, pid_t, size_t, size_t)
  * @brief RPC callback for rendering a surface
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  */
 void framebuffer_handle_render_surface(
   __unused size_t type,
   __unused pid_t origin,
-  size_t data_info
+  size_t data_info,
+  __unused size_t response_info
 ) {
   // handle no data
   if( ! data_info ) {
@@ -290,6 +293,14 @@ void framebuffer_handle_render_surface(
     free( info );
     return;
   }
+  // handle scroll up
+  if ( info->scroll_y ) {
+    // determine offset
+    uint32_t offset = info->scroll_y * pitch;
+    // move up and reset last line
+    memmove( current_back, current_back + offset, size - offset );
+    memset( current_back + size - offset, 0, offset );
+  }
   // render stuff
   for ( uint32_t idx = 0; idx < info->max_y; idx += info->bpp ) {
     uint32_t y = idx / info->max_x;
@@ -309,59 +320,19 @@ void framebuffer_handle_render_surface(
 }
 
 /**
- * @fn void framebuffer_handle_scroll(size_t, pid_t, size_t)
- * @brief Handle ioctl scroll request
- *
- * @param type
- * @param origin
- * @param data_info
- */
-void framebuffer_handle_scroll(
-  __unused size_t type,
-  __unused pid_t origin,
-  size_t data_info
-) {
-  // handle no data
-  if( ! data_info ) {
-    return;
-  }
-  // get size for allocation
-  size_t sz = _rpc_get_data_size( data_info );
-  if ( errno ) {
-    return;
-  }
-  framebuffer_scroll_ptr_t info = malloc( sz );
-  if ( ! info ) {
-    return;
-  }
-  // fetch rpc data
-  _rpc_get_data( info, sz, data_info, false );
-  // handle error
-  if ( errno ) {
-    free( info );
-    return;
-  }
-  // determine offset
-  uint32_t offset = info->start_y * pitch;
-  // free info structure
-  free( info );
-  // move up and reset last line
-  memmove( current_back, current_back + offset, size - offset );
-  memset( current_back + size - offset, 0, offset );
-}
-
-/**
- * @fn void framebuffer_handle_flip(size_t, pid_t, size_t)
+ * @fn void framebuffer_handle_flip(size_t, pid_t, size_t, size_t)
  * @brief Handle ioctl flip request
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  */
 void framebuffer_handle_flip(
   __unused size_t type,
   __unused pid_t origin,
-  __unused size_t data_info
+  __unused size_t data_info,
+  __unused size_t response_info
 ) {
   framebuffer_flip();
 }

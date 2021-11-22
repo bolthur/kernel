@@ -23,6 +23,7 @@
 #include <arch/arm/v7/cpu.h>
 
 /**
+ * @fn void syscall_populate_success(void*, size_t)
  * @brief Populate single return to caller
  *
  * @param context
@@ -39,7 +40,8 @@ void syscall_populate_success( void* context, size_t value ) {
 }
 
 /**
- * @brief Populate single return to caller
+ * @fn void syscall_populate_error(void*, size_t)
+ * @brief Populate error return to caller
  *
  * @param context
  * @param error
@@ -55,11 +57,12 @@ void syscall_populate_error( void* context, size_t error ) {
 }
 
 /**
+ * @fn size_t syscall_get_parameter(void*, int32_t)
  * @brief Helper to get parameter of context
  *
  * @param context
  * @param num
- * @return size_t
+ * @return
  */
 size_t syscall_get_parameter( void* context, int32_t num ) {
   // get context

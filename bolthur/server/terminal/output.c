@@ -63,17 +63,19 @@ bool output_init( void ) {
 }
 
 /**
- * @fn void output_handle_out(size_t, pid_t, size_t)
+ * @fn void output_handle_out(size_t, pid_t, size_t, size_t)
  * @brief Handler for normal output stream
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  */
 void output_handle_out(
   __unused size_t type,
   __unused pid_t origin,
-  size_t data_info
+  size_t data_info,
+  __unused size_t response_info
 ) {
   // handle no data
   if( ! data_info ) {
@@ -112,17 +114,19 @@ void output_handle_out(
 }
 
 /**
- * @fn void output_handle_err(size_t, pid_t, size_t)
+ * @fn void output_handle_err(size_t, pid_t, size_t, size_t)
  * @brief Handler for error stream output
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  */
 void output_handle_err(
   __unused size_t type,
   __unused pid_t origin,
-  size_t data_info
+  size_t data_info,
+  __unused size_t response_info
 ) {
   // handle no data
   if( ! data_info ) {
@@ -161,18 +165,20 @@ void output_handle_err(
 }
 
 /**
- * @fn void output_handle_in(size_t, pid_t, size_t)
+ * @fn void output_handle_in(size_t, pid_t, size_t, size_t)
  * @brief Handler for stream input
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  *
  * @todo add logic
  */
 void output_handle_in(
   __unused size_t type,
   __unused pid_t origin,
-  __unused size_t data_info
+  __unused size_t data_info,
+  __unused size_t response_info
 ) {
 }

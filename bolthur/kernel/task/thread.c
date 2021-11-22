@@ -429,3 +429,59 @@ void task_thread_unblock(
   // set back to backup again
   thread->state = thread->state_backup;
 }
+
+/**
+ * @fn task_thread_ptr_t task_thread_get_blocked(task_thread_state_t, task_state_data_t)
+ * @brief Get possible blocked thread
+ *
+ * @param necessary_thread_state
+ * @param necessary_thread_data
+ * @return
+ */
+task_thread_ptr_t task_thread_get_blocked(
+  task_thread_state_t necessary_thread_state,
+  task_state_data_t necessary_thread_data
+) {
+  // debug output
+  #if defined( PRINT_PROCESS )
+    avl_print( process_manager->process_id );
+  #endif
+  avl_node_ptr_t avl_proc = avl_iterate_first( process_manager->process_id );
+  while ( avl_proc ) {
+    // get process container
+    task_process_ptr_t proc = TASK_PROCESS_GET_BLOCK_ID( avl_proc );
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "proc->id = %d\r\n", proc->id )
+    #endif
+    // get first thread
+    avl_node_ptr_t avl_thread = avl_iterate_first( proc->thread_manager );
+    while ( avl_thread ) {
+      // get thread
+      task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( avl_thread );
+      // debug output
+      #if defined( PRINT_PROCESS )
+        DEBUG_OUTPUT(
+          "thread->state = %d, thread->state_data.data_ptr = %#p\r\n",
+          thread->state, thread->state_data.data_ptr
+        )
+        DEBUG_OUTPUT(
+          "necessary_thread_state = %d, necessary_thread_data.data_ptr = %#p\r\n",
+          necessary_thread_state, necessary_thread_data.data_ptr
+        )
+      #endif
+      // return thread if matching
+      if (
+        thread->state == necessary_thread_state
+        && thread->state_data.data_ptr == necessary_thread_data.data_ptr
+      ) {
+        return thread;
+      }
+      // get next thread
+      avl_thread = avl_iterate_next( proc->thread_manager, avl_thread );
+    }
+    // get next process
+    avl_proc = avl_iterate_next( process_manager->process_id, avl_proc );
+  }
+  return NULL;
+}

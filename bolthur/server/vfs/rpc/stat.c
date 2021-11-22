@@ -28,43 +28,41 @@
 #include "../../libhelper.h"
 
 /**
- * @fn void rpc_handle_stat(size_t, pid_t, size_t)
+ * @fn void rpc_handle_stat(size_t, pid_t, size_t, size_t)
  * @brief Handle stat request
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  */
-void rpc_handle_stat( size_t type, pid_t origin, size_t data_info ) {
+void rpc_handle_stat(
+  size_t type,
+  pid_t origin,
+  size_t data_info,
+  __unused size_t response_info
+) {
+  vfs_stat_response_t response = { .success = false };
   // allocate message structures
   vfs_stat_request_ptr_t request = malloc( sizeof( vfs_stat_request_t ) );
   if ( ! request ) {
-    return;
-  }
-  vfs_stat_response_ptr_t response = malloc( sizeof( vfs_stat_response_t ) );
-  if ( ! response ) {
-    free( request );
+    _rpc_ret( type, &response, sizeof( response ), 0 );
     return;
   }
   // clear variables
   memset( request, 0, sizeof( vfs_stat_request_t ) );
-  memset( response, 0, sizeof( vfs_stat_response_t ) );
   // handle no data
   if( ! data_info ) {
-    response->success = false;
-    _rpc_ret( type, response, sizeof( vfs_stat_response_t ) );
+    _rpc_ret( type, &response, sizeof( response ), 0 );
     free( request );
-    free( response );
     return;
   }
   // fetch rpc data
   _rpc_get_data( request, sizeof( vfs_stat_request_t ), data_info, false );
   // handle error
   if ( errno ) {
-    response->success = false;
-    _rpc_ret( type, response, sizeof( vfs_stat_response_t ) );
+    _rpc_ret( type, &response, sizeof( response ), 0 );
     free( request );
-    free( response );
     return;
   }
   // get target node
@@ -82,22 +80,15 @@ void rpc_handle_stat( size_t type, pid_t origin, size_t data_info ) {
       target = container->target;
     }
   }
-
-  // handle no node
-  if ( ! target ) {
-    response->success = false;
-  // handle found node
-  } else {
-    response->success = true;
-    memcpy( &response->info, target->st, sizeof( struct stat ) );
+  // populate response
+  response.success = target;
+  if ( target ) {
+    memcpy( &response.info, target->st, sizeof( struct stat ) );
   }
-
-  // return response
-  _rpc_ret( type, response, sizeof( vfs_stat_response_t ) );
+  _rpc_ret( type, &response, sizeof( response ), 0 );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "return error = %s\r\n", strerror( errno ) )
   }
   // free message structures
   free( request );
-  free( response );
 }

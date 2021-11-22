@@ -67,8 +67,8 @@ void syscall_rpc_raise( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall_rpc_raise( %d, %d, %#p, %#x )\r\n",
-      type, process, data, length )
+      "syscall_rpc_raise( %d, %d, %#p, %#x, %d )\r\n",
+      type, process, data, length, sync ? 1 : 0 )
   #endif
   // create queue if not existing
   if ( ! rpc_generic_setup( task_thread_current_thread->process ) ) {
@@ -137,7 +137,8 @@ void syscall_rpc_raise( void* context ) {
     dup_data,
     length,
     NULL,
-    sync
+    sync,
+    0
   );
   // free duplicate again
   if ( dup_data ) {
@@ -157,8 +158,10 @@ void syscall_rpc_raise( void* context ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
-        "blocking thread with id %d!\r\n",
-        task_thread_current_thread->process->id
+        "blocking process with id %d ( %d / %d )!\r\n",
+        task_thread_current_thread->process->id,
+        TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
+        rpc->data_id
       )
     #endif
     // block thread
@@ -169,6 +172,9 @@ void syscall_rpc_raise( void* context ) {
     );
     // enqueue schedule
     event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+  // return data id for async request to allow handling in user space
+  } else if ( ! sync ) {
+    syscall_populate_success( context, rpc->data_id );
   }
 }
 
@@ -182,10 +188,18 @@ void syscall_rpc_ret( void* context ) {
   size_t type = syscall_get_parameter( context, 0 );
   void* data = ( void* )syscall_get_parameter( context, 1 );
   size_t length = syscall_get_parameter( context, 2 );
+  size_t original_rpc_id = syscall_get_parameter( context, 3 );
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_rpc_ret( %#x, %#p, %#x )\r\n", type, data, length )
+    DEBUG_OUTPUT(
+      "syscall_rpc_ret( %d, %#p, %#x, %d )\r\n",
+      type, data, length, original_rpc_id
+    )
   #endif
   if ( ! data || 0 == length ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "No data / length passed!\r\n" )
+    #endif
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
@@ -229,12 +243,40 @@ void syscall_rpc_ret( void* context ) {
     syscall_populate_error( context, ( size_t )-EIO );
     return;
   }
+  // overwrite target in case original rpc id is set for correct unblock
+  task_thread_ptr_t target = active->source;
+  size_t blocked_data_id = active->data_id;
+  if ( original_rpc_id ) {
+    target = task_thread_get_blocked(
+      TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
+      ( task_state_data_t ){ .data_size = original_rpc_id }
+    );
+    // handle no target
+    if ( ! target ) {
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "No blocked thread found with %d / %d\r\n",
+          TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
+          original_rpc_id
+        )
+      #endif
+      // free duplicate
+      free( dup_data );
+      syscall_populate_error( context, ( size_t )-EINVAL );
+      return;
+    }
+    // overwrite blocked data id
+    blocked_data_id = original_rpc_id;
+  }
+
   // handle sync stuff
   if ( active->sync ) {
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Sync return!\r\n" )
+    #endif
     // generate data queue entry
     size_t data_id = 0;
     int err = rpc_data_queue_add(
-      active->source->process->id,
+      target->process->id,
       active->thread->process->id,
       dup_data,
       length,
@@ -247,28 +289,51 @@ void syscall_rpc_ret( void* context ) {
       // free duplicate
       free( dup_data );
       syscall_populate_error( context, ( size_t )-EAGAIN );
+      return;
     }
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "data_id = %d\r\n", data_id )
     #endif
-    // populate return
-    if ( active->source != task_thread_current_thread ) {
-      syscall_populate_success( active->source->current_context, data_id );
-    } else {
-      syscall_populate_success( active->context, data_id );
-    }
+    // populate return for sync request ( rpc raise is waiting at source )
+    syscall_populate_success(
+      target != task_thread_current_thread
+        ? target->current_context
+        : active->context,
+      data_id
+    );
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "unblock threads of process %d and blocked data %d\r\n",
+        target->process->id,
+        blocked_data_id )
+    #endif
+    // unblock if necessary
+    task_unblock_threads(
+      target->process,
+      TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
+      ( task_state_data_t ){ .data_size = blocked_data_id }
+    );
   // handle async stuff
   } else {
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Async return!\r\n" )
+    #endif
     // raise target
     rpc_backup_ptr_t backup = rpc_generic_raise(
       active->thread,
-      active->source->process,
+      target->process,
       type,
       dup_data,
       length,
       NULL,
-      false
+      true,
+      active->data_id
     );
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT(
+        "active->data_id = %d, backup->data_id = %d\r\n",
+        active->data_id, backup->data_id
+      )
+    #endif
     // handle error
     if ( ! backup ) {
       #if defined( PRINT_SYSCALL )
@@ -278,21 +343,9 @@ void syscall_rpc_ret( void* context ) {
       syscall_populate_error( context, ( size_t )-EAGAIN );
       return;
     }
-    // populate return
-    if ( active->source != task_thread_current_thread ) {
-      syscall_populate_success( active->source->current_context, 0 );
-    } else {
-      syscall_populate_success( active->context, 0 );
-    }
   }
   // free duplicate
   free( dup_data );
-  // unblock if necessary
-  task_unblock_threads(
-    active->source->process,
-    TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
-    ( task_state_data_t ){ .data_size = active->data_id }
-  );
 }
 
 /**
@@ -541,7 +594,8 @@ void syscall_rpc_route( void* context ) {
     ( void* )entry->data,
     entry->length,
     NULL,
-    current_backup->sync
+    current_backup->sync,
+    0
   );
   // handle error
   if ( ! backup ) {

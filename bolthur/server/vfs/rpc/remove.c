@@ -28,51 +28,48 @@
 #include "../../libhelper.h"
 
 /**
- * @fn void rpc_handle_remove(size_t, pid_t, size_t)
+ * @fn void rpc_handle_remove(size_t, pid_t, size_t, size_t)
  * @brief handle remove request
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  */
-void rpc_handle_remove( size_t type, __unused pid_t origin, size_t data_info ) {
+void rpc_handle_remove(
+  size_t type,
+  __unused pid_t origin,
+  size_t data_info,
+  __unused size_t response_info
+) {
+  vfs_remove_response_t response = { .status = -EINVAL };
   vfs_remove_request_ptr_t request = malloc( sizeof( vfs_remove_request_t ) );
   if ( ! request ) {
-    return;
-  }
-  vfs_remove_response_ptr_t response = malloc( sizeof( vfs_remove_response_t ) );
-  if ( ! response ) {
-    free( request );
+    _rpc_ret( type, &response, sizeof( response ), 0 );
     return;
   }
   // clear variables
   memset( request, 0, sizeof( vfs_remove_request_t ) );
-  memset( response, 0, sizeof( vfs_remove_response_t ) );
   // handle no data
   if( ! data_info ) {
-    response->status = -EINVAL;
-    _rpc_ret( type, response, sizeof( vfs_remove_response_t ) );
+    _rpc_ret( type, &response, sizeof( response ), 0 );
     free( request );
-    free( response );
     return;
   }
   // fetch rpc data
   _rpc_get_data( request, sizeof( vfs_remove_request_t ), data_info, false );
   // handle error
   if ( errno ) {
-    response->status = -EINVAL;
-    _rpc_ret( type, response, sizeof( vfs_remove_response_t ) );
+    _rpc_ret( type, &response, sizeof( response ), 0 );
     free( request );
-    free( response );
     return;
   }
   // debug output
   EARLY_STARTUP_PRINT( "HANDLE REMOVE NOT YET IMPLEMENTED!\r\n" )
   // prepare response
-  response->status = -ENOSYS;
+  response.status = -ENOSYS;
   // send response
-  _rpc_ret( type, response, sizeof( vfs_remove_response_t ) );
+  _rpc_ret( type, &response, sizeof( response ), 0 );
   // free stuff
   free( request );
-  free( response );
 }

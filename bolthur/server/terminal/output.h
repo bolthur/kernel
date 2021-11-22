@@ -27,8 +27,8 @@
 extern framebuffer_resolution_t resolution_data;
 
 bool output_init( void );
-void output_handle_out( size_t, pid_t, size_t );
-void output_handle_err( size_t, pid_t, size_t );
-void output_handle_in( size_t, pid_t, size_t );
+void output_handle_out( size_t, pid_t, size_t, size_t );
+void output_handle_err( size_t, pid_t, size_t, size_t );
+void output_handle_in( size_t, pid_t, size_t, size_t );
 
 #endif

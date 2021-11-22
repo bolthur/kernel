@@ -120,39 +120,6 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
   uint32_t byte_per_pixel = term->bpp / CHAR_BIT;
   //EARLY_STARTUP_PRINT( "Scroll: %ld!\r\n", scrolled )
 
-  if ( scrolled ) {
-    //EARLY_STARTUP_PRINT( "Scroll first!\r\n" )
-    framebuffer_scroll_ptr_t scroll_action = malloc(
-      sizeof( framebuffer_scroll_t ) );
-    if ( ! scroll_action ) {
-      //EARLY_STARTUP_PRINT( "malloc error!\r\n" )
-      return;
-    }
-    //EARLY_STARTUP_PRINT( "Prepare rpc data for scrolling!\r\n" )
-    // prepare rpc block
-    memset( scroll_action, 0, sizeof( framebuffer_scroll_t ) );
-    scroll_action->start_y = scrolled * font_height;
-    //EARLY_STARTUP_PRINT( "Perform ioctl call!\r\n" )
-    // call render surface
-    int result = ioctl(
-      output_driver_fd,
-      IOCTL_BUILD_REQUEST(
-        FRAMEBUFFER_SCROLL,
-        sizeof( framebuffer_scroll_t ),
-        IOCTL_WRONLY
-      ),
-      scroll_action
-    );
-    // handle error
-    if ( -1 == result ) {
-      //EARLY_STARTUP_PRINT( "IOCTL ERROR!\r\n" )
-      free( scroll_action );
-      return;
-    }
-    //EARLY_STARTUP_PRINT( "Continue rendering!\r\n" )
-    // free again
-    free( scroll_action );
-  }
   //EARLY_STARTUP_PRINT( "Render row by row!\r\n" )
   //EARLY_STARTUP_PRINT( "start_row = %ld, end_row = %ld\r\n", start_row, end_row )
   for ( uint32_t row = start_row; row <= end_row; row++ ) {
@@ -192,6 +159,11 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
     )*/
     // initialize space with 0
     memset( action, 0, action_size );
+    // push scrolled if set
+    if ( scrolled ) {
+      action->scroll_y = scrolled * font_height;
+      scrolled = 0;
+    }
     // loop through columns
     for (
       uint32_t col = tmp_start_col, render_col = 0;

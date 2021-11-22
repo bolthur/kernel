@@ -27,11 +27,11 @@
 
 struct console_rpc {
   uint32_t command;
-  handler_t callback;
+  rpc_handler_t callback;
 };
 
-void handler_console_add( size_t, pid_t, size_t );
-void handler_console_select( size_t, pid_t, size_t );
+void handler_console_add( size_t, pid_t, size_t, size_t );
+void handler_console_select( size_t, pid_t, size_t, size_t );
 bool handler_register( void );
 
 extern struct console_rpc command_list[ 3 ];

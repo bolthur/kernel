@@ -29,38 +29,44 @@
 #include "../../libhelper.h"
 
 /**
- * @fn void rpc_handle_add(size_t, pid_t, size_t)
+ * @fn void rpc_handle_add(size_t, pid_t, size_t, size_t)
  * @brief handle add request
  *
  * @param type
  * @param origin
  * @param data_info
+ * @param response_info
  *
  * @todo add handle of variable parts in path
  * @todo handle invalid link targets somehow
  * @todo add handle for existing path
  * @todo when adding a device the property container has to contain all possible commands as id value pair
  */
-void rpc_handle_add( size_t type, pid_t origin, size_t data_info ) {
+void rpc_handle_add(
+  size_t type,
+  pid_t origin,
+  size_t data_info,
+  __unused size_t response_info
+) {
   char* str;
   vfs_add_response_t res = { .status = -EINVAL, .handling_process = 0 };
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
+    _rpc_ret( type, &res, sizeof( res ), 0 );
     return;
   }
   // get message size
   size_t data_size = _rpc_get_data_size( data_info );
   if ( errno ) {
     res.status = -EIO;
-    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
+    _rpc_ret( type, &res, sizeof( res ), 0 );
     return;
   }
   // allocate space for request
   vfs_add_request_ptr_t request = malloc( data_size );
   if ( ! request ) {
     res.status = -ENOMEM;
-    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
+    _rpc_ret( type, &res, sizeof( res ), 0 );
     return;
   }
   // clear request
@@ -70,7 +76,7 @@ void rpc_handle_add( size_t type, pid_t origin, size_t data_info ) {
   // handle error
   if ( errno ) {
     res.status = -EIO;
-    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
+    _rpc_ret( type, &res, sizeof( res ), 0 );
     free( request );
     return;
   }
@@ -85,7 +91,7 @@ void rpc_handle_add( size_t type, pid_t origin, size_t data_info ) {
     res.status = VFS_ADD_ALREADY_EXIST;
     res.handling_process = node->pid;
     // return response
-    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
+    _rpc_ret( type, &res, sizeof( res ), 0 );
     // free message structures
     free( request );
     // skip
@@ -99,7 +105,7 @@ void rpc_handle_add( size_t type, pid_t origin, size_t data_info ) {
       "Parent node \"%s\" for \"%s\" not found!\r\n",
       str, request->file_path )
     res.status = VFS_ADD_ERROR;
-    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
+    _rpc_ret( type, &res, sizeof( res ), 0 );
     free( str );
     free( request );
     return;
@@ -113,7 +119,7 @@ void rpc_handle_add( size_t type, pid_t origin, size_t data_info ) {
     // check for target is not set
     if ( 0 == strlen( request->linked_path ) ) {
       res.status = VFS_ADD_ERROR;
-      _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
+      _rpc_ret( type, &res, sizeof( res ), 0 );
       free( str );
       free( request );
       return;
@@ -123,7 +129,7 @@ void rpc_handle_add( size_t type, pid_t origin, size_t data_info ) {
     // handle duplicate failed
     if ( ! target ) {
       res.status = VFS_ADD_ERROR;
-      _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
+      _rpc_ret( type, &res, sizeof( res ), 0 );
       free( str );
       free( request );
       return;
@@ -133,7 +139,7 @@ void rpc_handle_add( size_t type, pid_t origin, size_t data_info ) {
   if ( ! vfs_add_path( node, origin, str, target, request->info ) ) {
     EARLY_STARTUP_PRINT( "Error: Couldn't add \"%s\"\r\n", request->file_path )
     res.status = VFS_ADD_ERROR;
-    _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
+    _rpc_ret( type, &res, sizeof( res ), 0 );
     free( str );
     if ( target ) {
       free( target );
@@ -141,8 +147,11 @@ void rpc_handle_add( size_t type, pid_t origin, size_t data_info ) {
     free( request );
     return;
   }
-  // debug output
-  if ( sizeof( vfs_add_request_t ) < data_size ) {
+  // handle device info stuff if is device
+  if (
+    sizeof( vfs_add_request_t ) < data_size
+    && S_ISCHR( request->info.st_mode )
+  ) {
     size_t index_max = ( data_size - sizeof( vfs_add_request_t ) ) / sizeof( size_t );
     //EARLY_STARTUP_PRINT( "index_max = %d\r\n", index_max )
     //EARLY_STARTUP_PRINT( "request->file_path = %s\r\n", request->file_path )
@@ -168,7 +177,7 @@ void rpc_handle_add( size_t type, pid_t origin, size_t data_info ) {
   /*EARLY_STARTUP_PRINT( "response->status = %d\r\n", response->status )
   EARLY_STARTUP_PRINT( "response->handling_process = %d\r\n", response->handling_process )*/
   // return response
-  _rpc_ret( type, &res, sizeof( vfs_add_response_t ) );
+  _rpc_ret( type, &res, sizeof( res ), 0 );
   // free message structures
   free( request );
 }

@@ -29,19 +29,18 @@
 
 struct framebuffer_rpc {
   uint32_t command;
-  handler_t callback;
+  rpc_handler_t callback;
 };
 
 bool framebuffer_init( void );
 bool framebuffer_register_rpc( void );
 void framebuffer_flip( void );
 
-void framebuffer_handle_resolution( size_t, pid_t, size_t );
-void framebuffer_handle_clear( size_t, pid_t, size_t );
-void framebuffer_handle_render_surface( size_t, pid_t, size_t );
-void framebuffer_handle_scroll( size_t, pid_t, size_t );
-void framebuffer_handle_flip( size_t, pid_t, size_t );
+void framebuffer_handle_resolution( size_t, pid_t, size_t, size_t );
+void framebuffer_handle_clear( size_t, pid_t, size_t, size_t );
+void framebuffer_handle_render_surface( size_t, pid_t, size_t, size_t );
+void framebuffer_handle_flip( size_t, pid_t, size_t, size_t );
 
-extern struct framebuffer_rpc command_list[ 6 ];
+extern struct framebuffer_rpc command_list[ 4 ];
 
 #endif
