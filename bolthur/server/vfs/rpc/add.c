@@ -52,21 +52,21 @@ void rpc_handle_add(
   vfs_add_response_t res = { .status = -EINVAL, .handling_process = 0 };
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( type, &res, sizeof( res ), 0 );
+    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
     return;
   }
   // get message size
   size_t data_size = _rpc_get_data_size( data_info );
   if ( errno ) {
     res.status = -EIO;
-    _rpc_ret( type, &res, sizeof( res ), 0 );
+    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
     return;
   }
   // allocate space for request
   vfs_add_request_ptr_t request = malloc( data_size );
   if ( ! request ) {
     res.status = -ENOMEM;
-    _rpc_ret( type, &res, sizeof( res ), 0 );
+    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
     return;
   }
   // clear request
@@ -76,7 +76,7 @@ void rpc_handle_add(
   // handle error
   if ( errno ) {
     res.status = -EIO;
-    _rpc_ret( type, &res, sizeof( res ), 0 );
+    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
     free( request );
     return;
   }
@@ -91,7 +91,7 @@ void rpc_handle_add(
     res.status = VFS_ADD_ALREADY_EXIST;
     res.handling_process = node->pid;
     // return response
-    _rpc_ret( type, &res, sizeof( res ), 0 );
+    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
     // free message structures
     free( request );
     // skip
@@ -105,7 +105,7 @@ void rpc_handle_add(
       "Parent node \"%s\" for \"%s\" not found!\r\n",
       str, request->file_path )
     res.status = VFS_ADD_ERROR;
-    _rpc_ret( type, &res, sizeof( res ), 0 );
+    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
     free( str );
     free( request );
     return;
@@ -119,7 +119,7 @@ void rpc_handle_add(
     // check for target is not set
     if ( 0 == strlen( request->linked_path ) ) {
       res.status = VFS_ADD_ERROR;
-      _rpc_ret( type, &res, sizeof( res ), 0 );
+      bolthur_rpc_return( type, &res, sizeof( res ), NULL );
       free( str );
       free( request );
       return;
@@ -129,7 +129,7 @@ void rpc_handle_add(
     // handle duplicate failed
     if ( ! target ) {
       res.status = VFS_ADD_ERROR;
-      _rpc_ret( type, &res, sizeof( res ), 0 );
+      bolthur_rpc_return( type, &res, sizeof( res ), NULL );
       free( str );
       free( request );
       return;
@@ -139,7 +139,7 @@ void rpc_handle_add(
   if ( ! vfs_add_path( node, origin, str, target, request->info ) ) {
     EARLY_STARTUP_PRINT( "Error: Couldn't add \"%s\"\r\n", request->file_path )
     res.status = VFS_ADD_ERROR;
-    _rpc_ret( type, &res, sizeof( res ), 0 );
+    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
     free( str );
     if ( target ) {
       free( target );
@@ -177,7 +177,7 @@ void rpc_handle_add(
   /*EARLY_STARTUP_PRINT( "response->status = %d\r\n", response->status )
   EARLY_STARTUP_PRINT( "response->handling_process = %d\r\n", response->handling_process )*/
   // return response
-  _rpc_ret( type, &res, sizeof( res ), 0 );
+  bolthur_rpc_return( type, &res, sizeof( res ), NULL );
   // free message structures
   free( request );
 }

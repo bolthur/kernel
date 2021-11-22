@@ -45,7 +45,7 @@ void rpc_handle_seek(
   vfs_seek_response_t response = { .position = -EINVAL };
   vfs_seek_request_ptr_t request = malloc( sizeof( vfs_seek_request_t ) );
   if ( ! request ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   handle_container_ptr_t container;
@@ -53,7 +53,7 @@ void rpc_handle_seek(
   memset( request, 0, sizeof( vfs_seek_request_t ) );
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -61,7 +61,7 @@ void rpc_handle_seek(
   _rpc_get_data( request, sizeof( vfs_seek_request_t ), data_info, false );
   // handle error
   if ( errno ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -71,7 +71,7 @@ void rpc_handle_seek(
   if ( 0 > result ) {
     // send errno via negative len
     response.position = result;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     // free stuff
     free( request );
     // skip rest
@@ -113,7 +113,7 @@ void rpc_handle_seek(
   }
   //EARLY_STARTUP_PRINT( "container->pos = %#lx\r\n", new_pos )
   // return response
-  _rpc_ret( type, &response, sizeof( response ), 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   // free stuff
   free( request );
 }

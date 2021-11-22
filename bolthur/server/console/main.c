@@ -143,9 +143,7 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   // enable rpc and wait
   _rpc_set_ready( true );
-  while( true ) {
-    _rpc_wait_for_call();
-  }
+  bolthur_rpc_wait_block();
   // return exit code 0
   return 0;
 }

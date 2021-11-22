@@ -48,27 +48,27 @@ void rpc_handle_fork(
   vfs_fork_response_t response = { .status = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // get message size
   size_t message_size = _rpc_get_data_size( data_info );
   if ( errno ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // get request
   vfs_fork_request_ptr_t request = malloc( message_size );
   if ( ! request ) {
     response.status = -ENOMEM;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   memset( request, 0, message_size );
   _rpc_get_data( request, message_size, data_info, false );
   if ( errno ) {
     response.status = -EIO;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -79,7 +79,7 @@ void rpc_handle_fork(
       "origin = %d, origin parent = %d, request parent = %d\r\n",
       origin, origin_parent, request->parent )
     response.status = -EINVAL;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -97,7 +97,7 @@ void rpc_handle_fork(
       if ( ! handle_duplicate( container, process_container ) ) {
         // FIXME: DESTROY CONTAINER
         response.status = -EIO;
-        _rpc_ret( type, &response, sizeof( response ), 0 );
+        bolthur_rpc_return( type, &response, sizeof( response ), NULL );
         free( request );
         return;
       }
@@ -106,6 +106,6 @@ void rpc_handle_fork(
   // fill response structure
   response.status = 0;
   // return response and free
-  _rpc_ret( type, &response, sizeof( response ), 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( request );
 }

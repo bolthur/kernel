@@ -110,10 +110,7 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   // enable rpc and wait
   _rpc_set_ready( true );
-  while( true ) {
-    //EARLY_STARTUP_PRINT( "waiting for call!\r\n" )
-    _rpc_wait_for_call();
-  }
+  bolthur_rpc_wait_block();
   //EARLY_STARTUP_PRINT( "exit!\r\n" )
   // return exit code 0
   return 0;

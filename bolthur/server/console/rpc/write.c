@@ -40,22 +40,26 @@
  */
 void rpc_handle_write(
   size_t type,
-  __unused pid_t origin,
+  pid_t origin,
   size_t data_info,
   __unused size_t response_info
 ) {
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    return;
+  }
   vfs_write_response_t response = { .len = -EINVAL };
   // allocate space
   vfs_write_request_ptr_t request = malloc( sizeof( vfs_write_request_t ) );
   if ( ! request ) {
-    _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // prepare
   memset( request, 0, sizeof( vfs_write_request_t ) );
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -63,7 +67,7 @@ void rpc_handle_write(
   _rpc_get_data( request, sizeof( vfs_write_request_t ), data_info, false );
   // handle error
   if ( errno ) {
-    _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -71,7 +75,7 @@ void rpc_handle_write(
   console_ptr_t console = console_get_active();
   if ( ! console ) {
     response.len = -EIO;
-    _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -83,7 +87,7 @@ void rpc_handle_write(
   terminal_write_request_ptr_t terminal = malloc( sizeof( terminal_write_request_t ) );
   if ( ! terminal ) {
     response.len = -EIO;
-    _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -92,23 +96,41 @@ void rpc_handle_write(
   memcpy( terminal->data, request->data, request->len );
   strncpy( terminal->terminal, console->path, PATH_MAX );
   // raise without wait for return :)
-  _rpc_raise(
+  // FIXME: REPLACE RAISE BY IOCTL???
+  size_t response_data_id = bolthur_rpc_raise(
     rpc_num,
     console->handler,
     terminal,
     sizeof( terminal_write_request_t ),
-    false
+    true,
+    false,
+    rpc_num,
+    terminal,
+    sizeof( terminal_write_request_t ),
+    0,
+    0
   );
   if ( errno ) {
     response.len = -EIO;
-    _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( terminal );
     free( request );
     return;
   }
+  int status;
+  // fetch rpc data
+  _rpc_get_data( &status, sizeof( int ), response_data_id, false );
+  // handle error
+  if ( errno ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
   // prepare return
-  response.len = ( ssize_t )strlen( request->data );
-  _rpc_ret( type, &response, sizeof( vfs_write_response_t ), 0 );
+  response.len = 0 == status
+    ? ( ssize_t )strlen( request->data )
+    : -1;
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( terminal );
   free( request );
 }

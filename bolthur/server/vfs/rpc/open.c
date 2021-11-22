@@ -49,7 +49,7 @@ void rpc_handle_open(
   vfs_open_response_t response = { .handle = -EINVAL };
   vfs_open_request_ptr_t request = malloc( sizeof( vfs_open_request_t ) );
   if ( ! request ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   char* dir = NULL;
@@ -60,7 +60,7 @@ void rpc_handle_open(
   memset( request, 0, sizeof( vfs_open_request_t ) );
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -68,7 +68,7 @@ void rpc_handle_open(
   _rpc_get_data( request, sizeof( vfs_open_request_t ), data_info, false );
   // handle error
   if ( errno ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -95,7 +95,7 @@ void rpc_handle_open(
       free( dir );
       // prepare error return
       response.handle = -ENAMETOOLONG;
-      _rpc_ret( type, &response, sizeof( response ), 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
       // free message structures
       free( request );
       return;
@@ -125,7 +125,7 @@ void rpc_handle_open(
     free( base );
     // prepare error return
     response.handle = ( request->flags & O_CREAT ) ? -ENOENT : -ENOTDIR;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     // free message structures
     free( request );
     return;
@@ -138,7 +138,7 @@ void rpc_handle_open(
     free( base );
     // prepare error return
     response.handle = -ENOENT;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     // free message structures
     free( request );
     return;
@@ -153,7 +153,7 @@ void rpc_handle_open(
   ) {
     // prepare error return
     response.handle = -ENOENT;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     // free message structures
     free( request );
     return;
@@ -166,7 +166,7 @@ void rpc_handle_open(
   ) {
     // prepare error return
     response.handle = -EEXIST;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     // free message structures
     free( request );
     return;
@@ -176,7 +176,7 @@ void rpc_handle_open(
   if ( ! base_node && ( request->flags & O_CREAT ) ) {
     // prepare error return
     response.handle = -ENOSYS;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     // free message structures
     free( request );
     return;
@@ -200,7 +200,7 @@ void rpc_handle_open(
   ) {
     // prepare error return
     response.handle = -EISDIR;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     // free message structures
     free( request );
     return;
@@ -226,7 +226,7 @@ void rpc_handle_open(
     free( base );
     // prepare error return
     response.handle = result;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     // free message structures
     free( request );
     return;
@@ -234,7 +234,7 @@ void rpc_handle_open(
 
   // prepare return
   response.handle = container->handle;
-  _rpc_ret( type, &response, sizeof( response ), 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   // free message structures
   free( request );
 }

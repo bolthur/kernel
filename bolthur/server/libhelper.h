@@ -85,12 +85,18 @@ __maybe_unused static void send_vfs_add_request( vfs_add_request_ptr_t msg, size
   // try to send until it worked
   do {
     // wait for response
-    response_id = _rpc_raise(
+    response_id = bolthur_rpc_raise(
       RPC_VFS_ADD,
       VFS_DAEMON_ID,
-      ( char* )msg,
+      msg,
       size ? size : sizeof( vfs_add_request_t ),
-      true
+      true,
+      false,
+      RPC_VFS_ADD,
+      msg,
+      size ? size : sizeof( vfs_add_request_t ),
+      0,
+      0
     );
   } while( errno );
   // erase response

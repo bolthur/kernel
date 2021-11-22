@@ -37,26 +37,30 @@
  */
 void handler_console_select(
   __unused size_t type,
-  __unused pid_t origin,
+  pid_t origin,
   size_t data_info,
   __unused size_t response_info
 ) {
   int success = -1;
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    return;
+  }
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( RPC_VFS_IOCTL, &success, sizeof( success ), 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
     return;
   }
   // get size for allocation
   size_t sz = _rpc_get_data_size( data_info );
   if ( errno ) {
-    _rpc_ret( RPC_VFS_IOCTL, &success, sizeof( success ), 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
     return;
   }
   // allocate for data fetching
   console_command_select_ptr_t command = malloc( sz );
   if ( ! command ) {
-    _rpc_ret( RPC_VFS_IOCTL, &success, sizeof( success ), 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
     return;
   }
   // fetch rpc data
@@ -64,7 +68,7 @@ void handler_console_select(
   // handle error
   if ( errno ) {
     free( command );
-    _rpc_ret( RPC_VFS_IOCTL, &success, sizeof( success ), 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
     return;
   }
   // try to lookup by name
@@ -72,7 +76,7 @@ void handler_console_select(
   // handle already existing
   if ( ! found ) {
     free( command );
-    _rpc_ret( RPC_VFS_IOCTL, &success, sizeof( success ), 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
     return;
   }
   // get active console and deactivate
@@ -87,5 +91,5 @@ void handler_console_select(
   free( command );
   // set success flag and return
   success = 0;
-  _rpc_ret( RPC_VFS_IOCTL, &success, sizeof( success ), 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
 }

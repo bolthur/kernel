@@ -223,10 +223,14 @@ void framebuffer_flip( void ) {/*
  */
 void framebuffer_handle_resolution(
   __unused size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
+  pid_t origin,
+  size_t data_info,
   __unused size_t response_info
 ) {
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    return;
+  }
   // local variable for resolution data
   framebuffer_resolution_t resolution_data;
   memset( &resolution_data, 0, sizeof( framebuffer_resolution_t ) );
@@ -236,7 +240,7 @@ void framebuffer_handle_resolution(
   resolution_data.height = physical_height;
   resolution_data.depth = FRAMEBUFFER_SCREEN_DEPTH;
   // return resolution data
-  _rpc_ret( RPC_VFS_IOCTL, &resolution_data, sizeof( resolution_data ), 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &resolution_data, sizeof( resolution_data ), NULL );
 }
 
 /**
@@ -250,10 +254,14 @@ void framebuffer_handle_resolution(
  */
 void framebuffer_handle_clear(
   __unused size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
+  pid_t origin,
+  size_t data_info,
   __unused size_t response_info
 ) {
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    return;
+  }
   memset( current_back, 0, size );
   framebuffer_flip();
 }
@@ -269,10 +277,14 @@ void framebuffer_handle_clear(
  */
 void framebuffer_handle_render_surface(
   __unused size_t type,
-  __unused pid_t origin,
+  pid_t origin,
   size_t data_info,
   __unused size_t response_info
 ) {
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    return;
+  }
   // handle no data
   if( ! data_info ) {
     return;
@@ -321,7 +333,7 @@ void framebuffer_handle_render_surface(
 
 /**
  * @fn void framebuffer_handle_flip(size_t, pid_t, size_t, size_t)
- * @brief Handle ioctl flip request
+ * @brief Handle flip request
  *
  * @param type
  * @param origin
@@ -330,9 +342,13 @@ void framebuffer_handle_render_surface(
  */
 void framebuffer_handle_flip(
   __unused size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
+  pid_t origin,
+  size_t data_info,
   __unused size_t response_info
 ) {
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    return;
+  }
   framebuffer_flip();
 }

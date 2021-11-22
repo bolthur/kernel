@@ -161,16 +161,22 @@ static void wait_for_device( const char* path ) {
  */
 static void rpc_handle_read(
   size_t type,
-  __unused pid_t origin,
+  pid_t origin,
   size_t data_info,
   __unused size_t response_info
 ) {
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    return;
+  }
   vfs_read_request_ptr_t request = malloc( sizeof( vfs_read_request_t ) );
   if ( ! request ) {
+    bolthur_rpc_remove_data( data_info );
     return;
   }
   vfs_read_response_ptr_t response = malloc( sizeof( vfs_read_response_t ) );
   if ( ! response ) {
+    bolthur_rpc_remove_data( data_info );
     free( request );
     return;
   }
@@ -179,7 +185,7 @@ static void rpc_handle_read(
   // handle no data
   if( ! data_info ) {
     response->len = -EINVAL;
-    _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
+    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
     free( request );
     free( response );
     return;
@@ -189,7 +195,7 @@ static void rpc_handle_read(
   // handle error
   if ( errno ) {
     response->len = -EINVAL;
-    _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
+    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
     free( request );
     free( response );
     return;
@@ -208,7 +214,7 @@ static void rpc_handle_read(
       // prepare response
       response->len = -EIO;
       // return response
-      _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
+      bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
       // free stuff
       free( request );
       free( response );
@@ -242,7 +248,7 @@ static void rpc_handle_read(
         EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
         // return response
         response->len = -EIO;
-        _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
+        bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
         return;
       }
     }
@@ -252,7 +258,7 @@ static void rpc_handle_read(
     // prepare response
     response->len = -EIO;
     // return response
-    _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
+    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
     // free stuff
     free( request );
     free( response );
@@ -285,7 +291,7 @@ static void rpc_handle_read(
       // prepare response
       response->len = -EIO;
       // return response
-      _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
+      bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
       // free stuff
       free( request );
       free( response );
@@ -295,7 +301,7 @@ static void rpc_handle_read(
   // prepare read amount
   response->len = ( ssize_t )amount;
   // return response
-  _rpc_ret( type, response, sizeof( vfs_read_response_t ), 0 );
+  bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
   // free stuff
   free( request );
   free( response );
@@ -668,9 +674,6 @@ int main( int argc, char* argv[] ) {
   }
 
   EARLY_STARTUP_PRINT( "Entering wait for rpc loop!\r\n" );
-  // wair for rpc
-  while( true ) {
-    _rpc_wait_for_call();
-  }
+  bolthur_rpc_wait_block();
   return 0;
 }

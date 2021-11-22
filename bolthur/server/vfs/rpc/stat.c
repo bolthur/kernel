@@ -46,14 +46,14 @@ void rpc_handle_stat(
   // allocate message structures
   vfs_stat_request_ptr_t request = malloc( sizeof( vfs_stat_request_t ) );
   if ( ! request ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // clear variables
   memset( request, 0, sizeof( vfs_stat_request_t ) );
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -61,7 +61,7 @@ void rpc_handle_stat(
   _rpc_get_data( request, sizeof( vfs_stat_request_t ), data_info, false );
   // handle error
   if ( errno ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -85,7 +85,7 @@ void rpc_handle_stat(
   if ( target ) {
     memcpy( &response.info, target->st, sizeof( struct stat ) );
   }
-  _rpc_ret( type, &response, sizeof( response ), 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "return error = %s\r\n", strerror( errno ) )
   }

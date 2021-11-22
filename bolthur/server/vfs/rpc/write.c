@@ -43,53 +43,52 @@ static void rpc_handle_write_async(
   size_t response_info
 ) {
   vfs_write_response_t response = { .len = -ENOMEM };
+  // handle no data
+  if( ! data_info ) {
+    return;
+  }
   // get matching async data
   bolthur_async_data_ptr_t async_data = bolthur_rpc_pop_async(
     type,
     response_info
   );
   if ( ! async_data ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_remove_data( data_info );
     return;
   }
   // original request
   vfs_write_request_ptr_t request = async_data->original_data;
   // cache origin and rpc necessary for getting handle and return to correct target
-  pid_t correct_origin = async_data->original_origin;
-  size_t correct_rpc_id = async_data->original_rpc_id;
   if ( ! request ) {
-    _rpc_ret( type, &response, sizeof( response ), correct_rpc_id );
-    bolthur_rpc_destroy_async( async_data );
+    bolthur_rpc_remove_data( data_info );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
-  // cache handle
-  int handle = request->handle;
-  // destroy async data container
-  bolthur_rpc_destroy_async( async_data );
   // fetch response
   _rpc_get_data( &response, sizeof( response ), data_info, false );
   if ( errno ) {
-    _rpc_ret( type, &response, sizeof( response ), correct_rpc_id );
+    bolthur_rpc_remove_data( data_info );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
   handle_container_ptr_t container;
   // try to get handle information
   int result = handle_get(
     &container,
-    correct_origin,
-    handle
+    async_data->original_origin,
+    request->handle
   );
   // handle error
   if ( 0 > result ) {
     response.len = result;
-    _rpc_ret( type, &response, sizeof( response ), correct_rpc_id );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
   // update offsets and return
   if ( 0 < response.len ) {
     container->pos += ( off_t )response.len;
   }
-  _rpc_ret( type, &response, sizeof( response ), correct_rpc_id );
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
 }
 
 /**
@@ -116,13 +115,13 @@ void rpc_handle_write(
   vfs_write_response_t response = { .len = -ENOMEM };
   vfs_write_request_ptr_t request = malloc( sizeof( vfs_write_request_t ) );
   if ( ! request ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   vfs_write_request_ptr_t nested_request = malloc( sizeof( vfs_write_request_t ) );
   if ( ! nested_request ) {
     free( request );
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   handle_container_ptr_t container;
@@ -135,7 +134,7 @@ void rpc_handle_write(
   if( ! data_info ) {
     free( request );
     free( nested_request );
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // fetch rpc data
@@ -144,7 +143,7 @@ void rpc_handle_write(
   if ( errno ) {
     free( request );
     free( nested_request );
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // try to get handle information
@@ -152,7 +151,7 @@ void rpc_handle_write(
   // handle error
   if ( 0 > result ) {
     response.len = result;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     free( nested_request );
     return;
@@ -160,7 +159,7 @@ void rpc_handle_write(
   // special handling for null device
   if ( 0 == strcmp( container->path, "/dev/null" ) ) {
     response.len = ( ssize_t )request->len;
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     free( nested_request );
     return;
@@ -173,28 +172,25 @@ void rpc_handle_write(
   nested_request->offset = container->pos;
   nested_request->len = request->len;
   // perform async rpc
-  size_t response_data_id = _rpc_raise(
+  bolthur_rpc_raise(
     type,
     handling_process,
     nested_request,
     sizeof( vfs_write_request_t ),
-    false
-  );
-  if ( errno ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
-    free( request );
-    free( nested_request );
-    return;
-  }
-  // push to async rpc list
-  bolthur_rpc_push_async(
+    false,
+    false,
     type,
-    response_data_id,
-    ( char* )request,
+    nested_request,
     sizeof( vfs_write_request_t ),
     origin,
     data_info
   );
+  if ( errno ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    free( nested_request );
+    return;
+  }
   free( request );
   free( nested_request );
 }

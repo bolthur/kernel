@@ -45,14 +45,14 @@ void rpc_handle_close(
   vfs_close_response_t response = { .status = -EINVAL };
   vfs_close_request_ptr_t request = malloc( sizeof( vfs_close_request_t ) );
   if ( ! request ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // clear variables
   memset( request, 0, sizeof( vfs_close_request_t ) );
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -60,11 +60,11 @@ void rpc_handle_close(
   _rpc_get_data( request, sizeof( vfs_close_request_t ), data_info, false );
   // handle error
   if ( errno ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
   response.status = handle_destory( origin, request->handle );
-  _rpc_ret( type, &response, sizeof( response ), 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( request );
 }

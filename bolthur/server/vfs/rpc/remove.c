@@ -45,14 +45,14 @@ void rpc_handle_remove(
   vfs_remove_response_t response = { .status = -EINVAL };
   vfs_remove_request_ptr_t request = malloc( sizeof( vfs_remove_request_t ) );
   if ( ! request ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // clear variables
   memset( request, 0, sizeof( vfs_remove_request_t ) );
   // handle no data
   if( ! data_info ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -60,7 +60,7 @@ void rpc_handle_remove(
   _rpc_get_data( request, sizeof( vfs_remove_request_t ), data_info, false );
   // handle error
   if ( errno ) {
-    _rpc_ret( type, &response, sizeof( response ), 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -69,7 +69,7 @@ void rpc_handle_remove(
   // prepare response
   response.status = -ENOSYS;
   // send response
-  _rpc_ret( type, &response, sizeof( response ), 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   // free stuff
   free( request );
 }
