@@ -54,7 +54,6 @@ halt:
 
 
 // reserve space for system info block
-// FIXME: HANDLE 64 bit correctly
 #if defined( ELF32 )
   .comm firmware_info, 12, 32
 #elif defined( ELF64 )

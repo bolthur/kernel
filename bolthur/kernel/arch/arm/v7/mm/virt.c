@@ -34,8 +34,6 @@ static bool initial_setup_done __bootstrap_data = false;
 
 /**
  * @brief Method wraps setup of short / long descriptor mode
- *
- * @todo fix issue within startup setup and remove custom dtb mapping here
  */
 void __bootstrap virt_startup_setup( void ) {
   // setup modes for startup
@@ -49,24 +47,20 @@ void __bootstrap virt_startup_setup( void ) {
   ) {
     return;
   }
-
   // kick-start
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_startup_supported_mode ) {
     v7_long_startup_setup();
   } else {
     v7_short_startup_setup();
   }
-
   // setup platform related
   virt_startup_platform_setup();
-
   // enable initial mapping
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_startup_supported_mode ) {
     v7_long_startup_enable();
   } else {
     v7_short_startup_enable();
   }
-
   // set flag
   initial_setup_done = true;
 }

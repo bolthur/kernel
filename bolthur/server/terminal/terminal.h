@@ -18,6 +18,7 @@
  */
 
 #include "collection/list.h"
+#include "../libterminal.h"
 
 #if ! defined( _TERMINAL_H )
 #define _TERMINAL_H

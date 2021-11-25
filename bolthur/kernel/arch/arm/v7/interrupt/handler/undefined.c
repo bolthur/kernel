@@ -46,7 +46,6 @@ void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
-
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu )
@@ -56,29 +55,39 @@ void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
         task_thread_current_thread->state )
     }
   #endif
-
   // kernel stack
   interrupt_ensure_kernel_stack();
-
+  // handle undefined from kernel
+  if ( EVENT_ORIGIN_KERNEL == origin ) {
+    PANIC( "Undefined instruction from kernel" )
   // try to restore from rpc call
-  if (
-    EVENT_ORIGIN_USER == origin
-    && TASK_THREAD_STATE_RPC_ACTIVE == task_thread_current_thread->state
-  ) {
-    // try to restore
-    if ( ! rpc_generic_restore( task_thread_current_thread, cpu ) ) {
-      PANIC( "undefined instruction during rpc handler => kill thread!" )
+  } else if ( EVENT_ORIGIN_USER == origin ) {
+    if ( TASK_THREAD_STATE_RPC_ACTIVE == task_thread_current_thread->state ) {
+      // try to restore
+      if ( ! rpc_generic_restore( task_thread_current_thread, cpu ) ) {
+        // debug output
+        #if defined( PRINT_EXCEPTION )
+          DEBUG_OUTPUT( "No rpc for restore -> kill!\r\n" )
+        #endif
+        // kill thread and trigger scheduling
+        task_thread_kill( task_thread_current_thread, true, cpu );
+      } else {
+        // debug output
+        #if defined( PRINT_EXCEPTION )
+          DUMP_REGISTER( cpu )
+          DEBUG_OUTPUT( "process id: %d, thread state: %d\r\n",
+            task_thread_current_thread->process->id,
+            task_thread_current_thread->state )
+        #endif
+      }
+    } else {
+      // debug output
+      #if defined( PRINT_EXCEPTION )
+        DEBUG_OUTPUT( "Undefined instruction within thread -> kill!\r\n" )
+      #endif
+      // kill thread and trigger scheduling
+      task_thread_kill( task_thread_current_thread, true, cpu );
     }
-    // debug output
-    #if defined( PRINT_EXCEPTION )
-      DUMP_REGISTER( cpu )
-      DEBUG_OUTPUT( "process id: %d, thread state: %d\r\n",
-        task_thread_current_thread->process->id,
-        task_thread_current_thread->state )
-    #endif
-  } else {
-    // just panic
-    PANIC( "undefined" )
   }
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );

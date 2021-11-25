@@ -192,14 +192,6 @@ bool syscall_init( void ) {
     return false;
   }
   if ( ! interrupt_register_handler(
-    SYSCALL_RPC_ROUTE,
-    syscall_rpc_route,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
     SYSCALL_RPC_SET_READY,
     syscall_rpc_set_ready,
     INTERRUPT_SOFTWARE,

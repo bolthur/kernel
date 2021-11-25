@@ -38,17 +38,8 @@ uint32_t virt_startup_supported_mode __bootstrap_data;
 uint32_t virt_supported_mode;
 
 /**
- * @brief user context
- */
-virt_context_ptr_t virt_current_user_context;
-
-/**
- * @brief kernel context
- */
-virt_context_ptr_t virt_current_kernel_context;
-
-/**
- * @brief Method to get supported modes
+ * @fn void virt_startup_setup_supported_modes(void)
+ * @brief Setup supported modes startup
  */
 void __bootstrap virt_startup_setup_supported_modes( void ) {
   #if defined( ELF32 )
@@ -96,7 +87,8 @@ void __bootstrap virt_startup_setup_supported_modes( void ) {
 }
 
 /**
- * @brief Method to get supported modes
+ * @fn void virt_setup_supported_modes(void)
+ * @brief Prepare supported modes global
  */
 void virt_setup_supported_modes( void ) {
   #if defined( ELF32 )
@@ -161,37 +153,19 @@ void virt_setup_supported_modes( void ) {
 /**
  * @fn void virt_arch_init(void)
  * @brief Method to prepare virtual memory management by architecture
- *
- * @todo move calls to virt_create_context into core init
  */
 void virt_arch_init( void ) {
-  // setup supported mode global
+  // setup supported mode global and prepare
   virt_setup_supported_modes();
-
-  // prepare
   virt_arch_prepare();
-
-  // create a kernel context
-  virt_current_kernel_context = virt_create_context( VIRT_CONTEXT_TYPE_KERNEL );
-  assert( virt_current_kernel_context )
-
-  // create a dummy user context for all cores
-  virt_current_user_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
-  assert( virt_current_user_context )
-
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "virt_current_kernel_context: %p\r\n", ( void* )virt_current_kernel_context )
-    DEBUG_OUTPUT( "virt_current_user_context: %p\r\n", ( void* )virt_current_user_context )
-  #endif
 }
 
 /**
+ * @fn bool virt_is_mapped(uintptr_t)
  * @brief Method checks whether address is mapped or not without generating exceptions
  *
  * @param addr
- * @return true
- * @return false
+ * @return true if mapped, else false
  */
 bool virt_is_mapped( uintptr_t addr ) {
   return

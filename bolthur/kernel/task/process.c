@@ -522,13 +522,11 @@ void task_process_cleanup(
 }
 
 /**
- * @brief prepare init process by mapping ramdisk and device tree and adjusting initial context
+ * @fn bool task_process_prepare_init(task_process_ptr_t)
+ * @brief Prepare init process by mapping ramdisk and optional archticture depending and pass it via argv
  *
- * @param proc pointer to init process structure
+ * @param proc init process structure
  * @return bool true on success, else false
- *
- * @todo skip ramdisk if not existing
- * @todo skip device tree if not existing
  */
 bool task_process_prepare_init( task_process_ptr_t proc ) {
   // debug output

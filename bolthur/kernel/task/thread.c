@@ -332,6 +332,24 @@ task_thread_ptr_t task_thread_next( void ) {
 }
 
 /**
+ * @fn void task_thread_kill(task_thread_ptr_t, bool, void*)
+ * @brief Prepare kill of a thread
+ *
+ * @param thread thread to push to kill handling
+ * @param schedule flag to indicate scheduling
+ * @param context current valid context only necessary when schedule is true
+ */
+void task_thread_kill( task_thread_ptr_t thread, bool schedule, void* context ) {
+  // set thread state and push thread to clean up list
+  thread->state = TASK_THREAD_STATE_KILL;
+  list_push_back( process_manager->thread_to_cleanup, thread->process );
+  // trigger schedule if necessary
+  if ( schedule ) {
+    event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+  }
+}
+
+/**
  * @fn void task_thread_cleanup(event_origin_t, void*)
  * @brief thread cleanup handling
  *

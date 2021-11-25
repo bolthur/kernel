@@ -139,12 +139,12 @@ void syscall_process_fork( void* context ) {
  */
 void syscall_process_replace( void* context ) {
   // parameters
-  void* addr = ( void* )syscall_get_parameter( context, 0 );
+  uintptr_t addr = ( uintptr_t )syscall_get_parameter( context, 0 );
   const char** argv = ( const char** )syscall_get_parameter( context, 1 );
   const char** env = ( const char** )syscall_get_parameter( context, 2 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_replace( %p, %p, %p )\r\n",
+    DEBUG_OUTPUT( "syscall_process_replace( %#"PRIxPTR", %p, %p )\r\n",
       addr, argv, env )
     DEBUG_OUTPUT(
       "task_thread_current_thread->current_context = %p\r\n",
@@ -160,7 +160,7 @@ void syscall_process_replace( void* context ) {
   // validate memory first step
   if (
     ! addr
-    || ! ( ( uintptr_t )addr >= min && ( uintptr_t )addr <= max )
+    || ! ( addr >= min && addr <= max )
     || ( argv && ! ( ( uintptr_t )argv >= min && ( uintptr_t )argv <= max ) )
     || ( env &&  ! ( ( uintptr_t )env >= min && ( uintptr_t )env <= max ) )
   ) {
@@ -168,10 +168,10 @@ void syscall_process_replace( void* context ) {
     return;
   }
   // get image size and validate address
-  size_t image_size = elf_image_size( ( uintptr_t )addr );
+  size_t image_size = elf_image_size( addr );
   if (
     0 == image_size
-    || ! syscall_validate_address( ( uintptr_t )addr, image_size )
+    || ! syscall_validate_address( addr, image_size )
   ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
@@ -179,7 +179,7 @@ void syscall_process_replace( void* context ) {
   // replace process
   int result = task_process_replace(
     task_thread_current_thread->process,
-    ( uintptr_t )addr,
+    addr,
     argv,
     env,
     context
@@ -212,12 +212,10 @@ void syscall_thread_id( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "thread id called\r\n" )
   #endif
-
   if ( ! task_thread_current_thread ) {
     syscall_populate_error( context, ( size_t )-ESRCH );
     return;
   }
-  // populate return
   syscall_populate_success(
     context,
     ( size_t )task_thread_current_thread->id
@@ -230,7 +228,28 @@ void syscall_thread_id( void* context ) {
  *
  * @param context context of calling thread
  */
-void syscall_thread_create( __unused void* context ) {
+void syscall_thread_create( void* context ) {
+  uintptr_t entry = ( uintptr_t )syscall_get_parameter( context, 0 );
+  void* argument = ( void* )syscall_get_parameter( context, 1 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_thread_create( %#"PRIxPTR"\r\n",  )
+  #endif
+  // create new thread
+  task_thread_ptr_t new_thread = task_thread_create(
+    entry,
+    task_thread_current_thread->process,
+    task_thread_current_thread->priority
+  );
+  // handle error
+  if ( ! new_thread ) {
+    syscall_populate_error( context, ( size_t )-EIO );
+    return;
+  }
+  // populate argument pointer to new thread
+  syscall_populate_success( new_thread->current_context, ( size_t )argument );
+  // populate new thread id to current thread
+  syscall_populate_success( context, ( size_t )new_thread->id );
 }
 
 /**
@@ -244,13 +263,6 @@ void syscall_thread_exit( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "thread exit called\r\n" )
   #endif
-  // set process state
-  task_thread_current_thread->state = TASK_THREAD_STATE_KILL;
-  // push process to clean up list
-  list_push_back(
-    process_manager->thread_to_cleanup,
-    task_thread_current_thread->process
-  );
-  // trigger schedule and cleanup
-  event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+  // kill thread and trigger scheduling
+  task_thread_kill( task_thread_current_thread, true, context );
 }

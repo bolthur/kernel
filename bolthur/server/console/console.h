@@ -31,6 +31,7 @@ struct console {
   size_t in;
   size_t out;
   size_t err;
+  int fd;
 };
 typedef struct console console_t;
 typedef struct console* console_ptr_t;

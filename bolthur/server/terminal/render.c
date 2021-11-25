@@ -92,12 +92,13 @@ void render_char_to_surface(
  *
  * @param term
  * @param s
+ * @return rendered character length
  */
-void render_terminal( terminal_ptr_t term, const char* s ) {
+ssize_t render_terminal( terminal_ptr_t term, const char* s ) {
   // FIXME: currently only 32 bit depth is supported
   if ( 32 != term->bpp ) {
     //EARLY_STARTUP_PRINT( "Unsupported depth!\r\n" )
-    return;
+    return -ENOSYS;
   }
   uint32_t start_row;
   uint32_t end_row;
@@ -118,6 +119,7 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
   uint32_t font_width = psf_glyph_width();
   uint32_t font_height = psf_glyph_height();
   uint32_t byte_per_pixel = term->bpp / CHAR_BIT;
+  ssize_t character_rendered = 0;
   //EARLY_STARTUP_PRINT( "Scroll: %ld!\r\n", scrolled )
 
   //EARLY_STARTUP_PRINT( "Render row by row!\r\n" )
@@ -149,7 +151,7 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
     framebuffer_render_surface_ptr_t action = malloc( action_size );
     if ( ! action ) {
       //EARLY_STARTUP_PRINT( "malloc error\r\n" )
-      return;
+      return -ENOMEM;
     }
     /*EARLY_STARTUP_PRINT(
       "start = %p, data = %p, end = %p\r\n",
@@ -185,6 +187,7 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
         0xf0f0f0,
         0
       );
+      character_rendered++;
     }
 
     // populate necessary data
@@ -208,7 +211,7 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
     if ( -1 == result ) {
       //EARLY_STARTUP_PRINT( "IOCTL error!\r\n" )
       free( action );
-      return;
+      return -EIO;
     }
     //EARLY_STARTUP_PRINT( "Continue with next, action = %p!\r\n", ( void* )action )
     // free again
@@ -230,6 +233,7 @@ void render_terminal( terminal_ptr_t term, const char* s ) {
   // handle error
   if ( -1 == result ) {
     //EARLY_STARTUP_PRINT( "flip ioctl error!\r\n" )
-    return;
+    return -EIO;
   }
+  return character_rendered;
 }

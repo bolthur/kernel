@@ -38,19 +38,39 @@
 static bool virt_initialized = false;
 
 /**
+ * @brief user context
+ */
+virt_context_ptr_t virt_current_user_context;
+
+/**
+ * @brief kernel context
+ */
+virt_context_ptr_t virt_current_kernel_context;
+
+/**
  * @brief Generic initialization of virtual memory manager
  */
 void virt_init( void ) {
+  // skip if already initialized
   if ( virt_initialized ) {
     return;
   }
-
   // set global context to null
   virt_current_kernel_context = NULL;
   virt_current_user_context = NULL;
-
   // architecture related initialization
   virt_arch_init();
+  // create a kernel context
+  virt_current_kernel_context = virt_create_context( VIRT_CONTEXT_TYPE_KERNEL );
+  assert( virt_current_kernel_context )
+  // create a dummy user context for all cores
+  virt_current_user_context = virt_create_context( VIRT_CONTEXT_TYPE_USER );
+  assert( virt_current_user_context )
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "virt_current_kernel_context: %p\r\n", ( void* )virt_current_kernel_context )
+    DEBUG_OUTPUT( "virt_current_user_context: %p\r\n", ( void* )virt_current_user_context )
+  #endif
 
   // determine start and end for kernel mapping
   uintptr_t start = 0;

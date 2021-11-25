@@ -77,29 +77,29 @@ void output_handle_out(
   size_t data_info,
   __unused size_t response_info
 ) {
-  int success = -1;
+  vfs_write_response_t response = { .len = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_WRITE, &success, sizeof( success ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     return;
   }
   // get size for allocation
   size_t sz = _rpc_get_data_size( data_info );
   if ( errno ) {
-    bolthur_rpc_return( RPC_VFS_WRITE, &success, sizeof( success ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     return;
   }
   // allocate for data fetching
   terminal_write_request_ptr_t terminal = malloc( sz );
   if ( ! terminal ) {
-    bolthur_rpc_return( RPC_VFS_WRITE, &success, sizeof( success ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     return;
   }
   // fetch rpc data
   _rpc_get_data( terminal, sz, data_info, false );
   // handle error
   if ( errno ) {
-    bolthur_rpc_return( RPC_VFS_WRITE, &success, sizeof( success ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     free( terminal );
     return;
   }
@@ -109,16 +109,16 @@ void output_handle_out(
     terminal->terminal
   );
   if ( ! found ) {
-    bolthur_rpc_return( RPC_VFS_WRITE, &success, sizeof( success ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     free( terminal );
     return;
   }
   // render
   render_terminal( found->data, terminal->data );
+  response.len = ( ssize_t )strlen( terminal->data );
   // free terminal structure again
   free( terminal );
-  success = 0;
-  bolthur_rpc_return( RPC_VFS_WRITE, &success, sizeof( success ), NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
 }
 
 /**
@@ -136,29 +136,29 @@ void output_handle_err(
   size_t data_info,
   __unused size_t response_info
 ) {
-  int success = -1;
+  vfs_write_response_t response = { .len = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_WRITE, &success, sizeof( success ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     return;
   }
   // get size for allocation
   size_t sz = _rpc_get_data_size( data_info );
   if ( errno ) {
-    bolthur_rpc_return( RPC_VFS_WRITE, &success, sizeof( success ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     return;
   }
   // allocate for data fetching
   terminal_write_request_ptr_t terminal = malloc( sz );
   if ( ! terminal ) {
-    bolthur_rpc_return( RPC_VFS_WRITE, &success, sizeof( success ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     return;
   }
   // fetch rpc data
   _rpc_get_data( terminal, sz, data_info, false );
   // handle error
   if ( errno ) {
-    bolthur_rpc_return( RPC_VFS_WRITE, &success, sizeof( success ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     free( terminal );
     return;
   }
@@ -168,16 +168,15 @@ void output_handle_err(
     terminal->terminal
   );
   if ( ! found ) {
-    bolthur_rpc_return( RPC_VFS_WRITE, &success, sizeof( success ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     free( terminal );
     return;
   }
-  // render
-  render_terminal( found->data, terminal->data );
+  // render and populate return
+  response.len = render_terminal( found->data, terminal->data );
   // free terminal structure again
   free( terminal );
-  success = 0;
-  bolthur_rpc_return( RPC_VFS_WRITE, &success, sizeof( success ), NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
 }
 
 /**
@@ -197,6 +196,6 @@ void output_handle_in(
   __unused size_t data_info,
   __unused size_t response_info
 ) {
-  int success = -1;
-  bolthur_rpc_return( RPC_VFS_READ, &success, sizeof( success ), NULL );
+  vfs_write_response_t response = { .len = -ENOSYS };
+  bolthur_rpc_return( RPC_VFS_READ, &response, sizeof( response ), NULL );
 }

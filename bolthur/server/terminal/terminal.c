@@ -127,12 +127,19 @@ bool terminal_init( void ) {
     // prepare message structure
     msg->info.st_mode = S_IFCHR;
     strncpy( msg->file_path, tty_path, PATH_MAX );
+    msg->device_info[ 0 ] = in;
+    msg->device_info[ 1 ] = out;
+    msg->device_info[ 2 ] = err;
     // perform add request
     send_vfs_add_request( msg, msg_size );
     // register handler for streams
     bolthur_rpc_bind( out, output_handle_out );
     if ( errno ) {
-      EARLY_STARTUP_PRINT( "Unable to bind rpc %d: %s\r\n", out, strerror( errno ) )
+      EARLY_STARTUP_PRINT(
+        "Unable to bind rpc %d: %s\r\n",
+        out,
+        strerror( errno )
+      )
       list_destruct( terminal_list );
       free( command_add );
       free( command_select );
@@ -142,7 +149,11 @@ bool terminal_init( void ) {
     }
     bolthur_rpc_bind( err, output_handle_err );
     if ( errno ) {
-      EARLY_STARTUP_PRINT( "Unable to bind rpc %d: %s\r\n", err, strerror( errno ) )
+      EARLY_STARTUP_PRINT(
+        "Unable to bind rpc %d: %s\r\n",
+        err,
+        strerror( errno )
+      )
       list_destruct( terminal_list );
       free( command_add );
       free( command_select );
@@ -152,7 +163,11 @@ bool terminal_init( void ) {
     }
     bolthur_rpc_bind( in, output_handle_in );
     if ( errno ) {
-      EARLY_STARTUP_PRINT( "Unable to bind rpc %d: %s\r\n", in, strerror( errno ) )
+      EARLY_STARTUP_PRINT(
+        "Unable to bind rpc %d: %s\r\n",
+        in,
+        strerror( errno )
+      )
       list_destruct( terminal_list );
       free( command_add );
       free( command_select );

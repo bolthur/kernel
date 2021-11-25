@@ -153,10 +153,7 @@ void rpc_handle_add(
     && S_ISCHR( request->info.st_mode )
   ) {
     size_t index_max = ( data_size - sizeof( vfs_add_request_t ) ) / sizeof( size_t );
-    //EARLY_STARTUP_PRINT( "index_max = %d\r\n", index_max )
-    //EARLY_STARTUP_PRINT( "request->file_path = %s\r\n", request->file_path )
     for ( size_t index = 0; index < index_max; index++ ) {
-      //EARLY_STARTUP_PRINT( "request->device_info[ %d ] = %d\r\n", index, request->device_info[ index ] )
       while ( true ) {
         if ( ! ioctl_push_command( request->device_info[ index ], origin ) ) {
           continue;

@@ -9,6 +9,7 @@ vfs_SOURCES = \
   ioctl/handler.c \
   rpc/add.c \
   rpc/close.c \
+  rpc/exit.c \
   rpc/fork.c \
   rpc/ioctl.c \
   rpc/open.c \

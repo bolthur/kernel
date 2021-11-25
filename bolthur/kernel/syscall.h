@@ -47,8 +47,7 @@
 #define SYSCALL_RPC_GET_DATA 34
 #define SYSCALL_RPC_GET_DATA_SIZE 35
 #define SYSCALL_RPC_WAIT_FOR_CALL 36
-#define SYSCALL_RPC_ROUTE 37
-#define SYSCALL_RPC_SET_READY 38
+#define SYSCALL_RPC_SET_READY 37
 
 #define SYSCALL_IO_ACQUIRE 51
 #define SYSCALL_IO_RELEASE 52
@@ -104,7 +103,6 @@ void syscall_rpc_ret( void* );
 void syscall_rpc_get_data( void* );
 void syscall_rpc_get_data_size( void* );
 void syscall_rpc_wait_for_call( void* );
-void syscall_rpc_route( void* );
 void syscall_rpc_set_ready( void* );
 
 void syscall_timer_tick_count( void* );

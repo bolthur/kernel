@@ -29,11 +29,10 @@
 static uint32_t nested_svc = 0;
 
 /**
+ * @fn void vector_svc_handler(cpu_register_context_ptr_t)
  * @brief Software interrupt exception handler
  *
- * @param cpu cpu context
- *
- * @todo move interrupt check into function
+ * @param cpu current cpu context active before svc
  */
 void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   // nesting

@@ -330,8 +330,8 @@ void syscall_rpc_ret( void* context ) {
     );
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
-        "active->data_id = %d, backup->data_id = %d\r\n",
-        active->data_id, backup->data_id
+        "active->data_id = %d, backup->data_id = %d, type = %d\r\n",
+        active->data_id, backup->data_id, type
       )
     #endif
     // handle error
@@ -546,63 +546,6 @@ void syscall_rpc_wait_for_call( void* context ) {
   task_thread_current_thread->state = TASK_THREAD_STATE_RPC_WAIT_FOR_CALL;
   // enqueue schedule
   event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
-}
-
-/**
- * @fn void syscall_rpc_route(void*)
- * @brief Route call to other process
- *
- * @param context
- */
-void syscall_rpc_route( void* context ) {
-  // parameter
-  size_t rpc_data_id = ( size_t )syscall_get_parameter( context, 0 );
-  pid_t process_id = ( pid_t )syscall_get_parameter( context, 1 );
-  // get process
-  task_process_ptr_t target = task_process_get_by_id( process_id );
-  if ( ! target ) {
-    syscall_populate_error( context, ( size_t )-ESRCH );
-    return;
-  }
-  // handle target not yet ready
-  if ( ! rpc_generic_ready( target ) ) {
-    syscall_populate_error( context, ( size_t )-EAGAIN );
-    return;
-  }
-  // get data by id
-  list_item_ptr_t item = list_lookup_data(
-    task_thread_current_thread->process->rpc_data_queue,
-    ( void* )rpc_data_id );
-  // handle data has already been removed
-  if ( ! item ) {
-    syscall_populate_error( context, ( size_t )-ENOMSG );
-    return;
-  }
-  rpc_data_queue_entry_ptr_t entry = item->data;
-  // get current backup
-  rpc_backup_ptr_t current_backup = rpc_backup_get_active(
-    task_thread_current_thread );
-  if ( ! current_backup ) {
-    syscall_populate_error( context, ( size_t )-ESRCH );
-    return;
-  }
-  // raise target
-  rpc_backup_ptr_t backup = rpc_generic_raise(
-    current_backup->thread,
-    target,
-    current_backup->type,
-    ( void* )entry->data,
-    entry->length,
-    NULL,
-    current_backup->sync,
-    0
-  );
-  // handle error
-  if ( ! backup ) {
-    syscall_populate_error( context, ( size_t )-EAGAIN );
-    return;
-  }
-  // return, message has been passed over to process
 }
 
 /**

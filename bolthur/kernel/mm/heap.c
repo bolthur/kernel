@@ -1033,7 +1033,6 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     // handle proper block structure alignment
     if ( block_alignment ) {
       // calculate correct alignment
-      /// FIXME: CHECK BLOCK ALIGNMENT CALCULATION
       block_alignment = sizeof( heap_block_t )
         - block_alignment % sizeof( heap_block_t );
       // debug output
@@ -1285,7 +1284,6 @@ void heap_free_block( uintptr_t addr ) {
     avl_print( free_size );
   #endif
 
-  // FIXME: MERGE STARTING FROM ROOT UNTIL NOTHING CAN BE MERGED ANY LONGER
   bool merge_result;
   do {
     merge_result = merge_address_tree( free_address->root );

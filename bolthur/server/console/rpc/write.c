@@ -19,7 +19,9 @@
 
 #include <errno.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 #include <sys/bolthur.h>
+#include <fcntl.h>
 #include "../../libhelper.h"
 #include "../../libterminal.h"
 #include "../../libhelper.h"
@@ -95,9 +97,47 @@ void rpc_handle_write(
   terminal->len = request->len;
   memcpy( terminal->data, request->data, request->len );
   strncpy( terminal->terminal, console->path, PATH_MAX );
-  // raise without wait for return :)
-  // FIXME: REPLACE RAISE BY IOCTL???
-  size_t response_data_id = bolthur_rpc_raise(
+
+  if ( 0 == console->fd ) {
+    // open path
+    int fd = open( console->path, O_RDWR );
+    // handle error
+    if ( -1 == fd ) {
+      EARLY_STARTUP_PRINT( "Unable to open %s\r\n", console->path )
+      response.len = -EIO;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    // push back file handle
+    console->fd = fd;
+  }
+  // raise write request
+  int result = ioctl(
+    console->fd,
+    IOCTL_BUILD_REQUEST(
+      rpc_num,
+      sizeof( terminal_write_request_t ),
+      IOCTL_RDWR
+    ),
+    terminal
+  );
+  // handle error
+  if ( -1 == result ) {
+    EARLY_STARTUP_PRINT( "ioctl error!\r\n" )
+    response.len = -EIO;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // prepare return
+  response.len = *( ( int* )terminal );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  free( terminal );
+  free( request );
+
+  // FIXME: Remove when ioctl is battle proved
+  /*size_t response_data_id = bolthur_rpc_raise(
     rpc_num,
     console->handler,
     terminal,
@@ -127,10 +167,8 @@ void rpc_handle_write(
     return;
   }
   // prepare return
-  response.len = 0 == status
-    ? ( ssize_t )strlen( request->data )
-    : -1;
+  response.len = 0 == status ? ( ssize_t )strlen( request->data ) : -1;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( terminal );
-  free( request );
+  free( request );*/
 }

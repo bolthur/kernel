@@ -148,8 +148,6 @@ bool rpc_generic_restore( task_thread_ptr_t thread, void* context ) {
  *
  * @param backup
  * @return
- *
- * @todo add handling for possible stack extension if necessary
  */
 bool rpc_generic_prepare_invoke( rpc_backup_ptr_t backup ) {
   // debug output

@@ -35,24 +35,19 @@
 #include <event.h>
 #include <task/process.h>
 #include <syscall.h>
-
 #if defined( REMOTE_DEBUG )
   #include <serial.h>
   #include <debug/gdb.h>
 #endif
-
 #include <tar.h>
 #include <initrd.h>
-
-#include <arch/arm/firmware.h>
 
 // prototype declaration to get rid of a warning
 void kernel_main( void );
 
 /**
- * @brief Kernel main function
- *
- * @todo remove initrd test code later
+ * @fn void kernel_main(void)
+ * @brief Kernel main entry
  */
 noreturn void kernel_main( void ) {
   // Setup early heap for malloc / free support
@@ -128,11 +123,7 @@ noreturn void kernel_main( void ) {
   assert( boot )
   // Get file address and size
   uintptr_t elf_file = ( uintptr_t )tar_file( boot );
-  size_t flat_file_size = tar_size( boot );
-  // assert elf header
-  // FIXME: REMOVE DEBUG OUTPUT BELOW
-  DEBUG_OUTPUT( "Create process for file %s\r\n", boot->file_name )
-  DEBUG_OUTPUT( "File size: %#zx\r\n", flat_file_size )
+
   // Create process
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] create ...\r\n" )
   task_process_ptr_t proc = task_process_create( 0, 0 );
