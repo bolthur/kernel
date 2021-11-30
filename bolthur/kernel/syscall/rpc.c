@@ -78,6 +78,14 @@ void syscall_rpc_raise( void* context ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }
+  // handle invalid type
+  if ( type <= UINT8_MAX  ) {
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Interrupts are not allowed to be raised!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
   // validate target
   task_process_ptr_t target = task_process_get_by_id( process );
   if ( ! target ) {

@@ -17,23 +17,104 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <inttypes.h>
+#include <errno.h>
+#include <task/process.h>
+#include <task/thread.h>
+#include <interrupt.h>
 #include <syscall.h>
 #if defined( PRINT_SYSCALL )
   #include <debug/debug.h>
 #endif
 
 /**
+ * @fn void syscall_interrupt_acquire(void*)
  * @brief Acquire interrupt handler
  *
  * @param context
  */
-void syscall_interrupt_acquire( __unused void* context ) {
+void syscall_interrupt_acquire( void* context ) {
+  uint8_t num = ( uint8_t )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_interrupt_acquire( %"PRIu8" )\r\n", num )
+  #endif
+  task_process_ptr_t proc = task_thread_current_thread->process;
+  // ensure rpc handler
+  if ( ! proc->rpc_handler ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Interrupt handler has no rpc bound\r\n" )
+    #endif
+    // return error
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
+  // validate interrupt number
+  if ( ! interrupt_validate_number( num ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid interrupt passed!\r\n" )
+    #endif
+    // return error
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  if ( ! interrupt_register_handler(
+    num,
+    NULL,
+    proc,
+    INTERRUPT_NORMAL,
+    false
+  ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
+  syscall_populate_success( context, 0 );
 }
 
 /**
+ * @fn void syscall_interrupt_release(void*)
  * @brief Release interrupt handler
  *
  * @param context
  */
-void syscall_interrupt_release( __unused void* context ) {
+void syscall_interrupt_release( void* context ) {
+  uint8_t num = ( uint8_t )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_interrupt_release( %"PRIu8" )\r\n", num )
+  #endif
+  task_process_ptr_t proc = task_thread_current_thread->process;
+  // ensure rpc handler
+  if ( ! proc->rpc_handler ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Interrupt handler has no rpc bound\r\n" )
+    #endif
+    // return error
+    syscall_populate_success( context, 0 );
+    return;
+  }
+  // validate interrupt number
+  if ( ! interrupt_validate_number( num ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid interrupt passed!\r\n" )
+    #endif
+    // return error
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  if ( ! interrupt_unregister_handler(
+    num,
+    NULL,
+    proc,
+    INTERRUPT_NORMAL,
+    false
+  ) ) {
+    syscall_populate_error( context, ( size_t )-EAGAIN );
+    return;
+  }
+  syscall_populate_success( context, 0 );
 }

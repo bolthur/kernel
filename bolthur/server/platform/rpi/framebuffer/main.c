@@ -51,7 +51,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( msg, 0, msg_size );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
-  strcpy( msg->file_path, "/dev/framebuffer" );
+  strncpy( msg->file_path, "/dev/framebuffer", PATH_MAX );
   msg->device_info[ 0 ] = FRAMEBUFFER_GET_RESOLUTION;
   msg->device_info[ 1 ] = FRAMEBUFFER_CLEAR;
   msg->device_info[ 2 ] = FRAMEBUFFER_RENDER_SURFACE;

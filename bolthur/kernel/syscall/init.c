@@ -31,6 +31,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_PROCESS_EXIT,
     syscall_process_exit,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -39,6 +40,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_PROCESS_ID,
     syscall_process_id,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -47,6 +49,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_PROCESS_PARENT_ID,
     syscall_process_parent_id,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -55,6 +58,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_PROCESS_FORK,
     syscall_process_fork,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -63,6 +67,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_PROCESS_REPLACE,
     syscall_process_replace,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -71,6 +76,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_PROCESS_PARENT_BY_ID,
     syscall_process_parent_by_id,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -80,6 +86,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_THREAD_CREATE,
     syscall_thread_create,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -88,6 +95,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_THREAD_EXIT,
     syscall_thread_exit,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -96,6 +104,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_THREAD_ID,
     syscall_thread_id,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -105,6 +114,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_MEMORY_ACQUIRE,
     syscall_memory_acquire,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -113,6 +123,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_MEMORY_RELEASE,
     syscall_memory_release,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -121,6 +132,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_MEMORY_SHARED_CREATE,
     syscall_memory_shared_create,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -129,6 +141,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_MEMORY_SHARED_ATTACH,
     syscall_memory_shared_attach,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -137,6 +150,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_MEMORY_SHARED_DETACH,
     syscall_memory_shared_detach,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -146,6 +160,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_RPC_SET_HANDLER,
     syscall_rpc_set_handler,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -154,6 +169,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_RPC_RAISE,
     syscall_rpc_raise,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -162,6 +178,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_RPC_RET,
     syscall_rpc_ret,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -170,6 +187,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_RPC_GET_DATA,
     syscall_rpc_get_data,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -178,6 +196,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_RPC_GET_DATA_SIZE,
     syscall_rpc_get_data_size,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -186,6 +205,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_RPC_WAIT_FOR_CALL,
     syscall_rpc_wait_for_call,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -194,6 +214,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_RPC_SET_READY,
     syscall_rpc_set_ready,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -203,6 +224,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_IO_ACQUIRE,
     syscall_io_acquire,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -211,6 +233,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_IO_CHECK,
     syscall_io_check,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -219,6 +242,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_IO_RAISE,
     syscall_io_raise,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -227,6 +251,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_IO_RELEASE,
     syscall_io_release,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -236,6 +261,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_INTERRUPT_ACQUIRE,
     syscall_interrupt_acquire,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -244,6 +270,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_INTERRUPT_RELEASE,
     syscall_interrupt_release,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -253,6 +280,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_TIMER_TICK_COUNT,
     syscall_timer_tick_count,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -261,6 +289,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_TIMER_FREQUENCY,
     syscall_timer_frequency,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -269,6 +298,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_TIMER_ACQUIRE,
     syscall_timer_acquire,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -277,6 +307,7 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_TIMER_RELEASE,
     syscall_timer_release,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {
@@ -287,6 +318,7 @@ bool syscall_init( void ) {
     if ( ! interrupt_register_handler(
       SYSCALL_KERNEL_PUTC,
       syscall_kernel_putc,
+      NULL,
       INTERRUPT_SOFTWARE,
       false
     ) ) {
@@ -295,6 +327,7 @@ bool syscall_init( void ) {
     if ( ! interrupt_register_handler(
       SYSCALL_KERNEL_PUTS,
       syscall_kernel_puts,
+      NULL,
       INTERRUPT_SOFTWARE,
       false
     ) ) {

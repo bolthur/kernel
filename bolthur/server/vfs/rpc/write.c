@@ -167,7 +167,7 @@ void rpc_handle_write(
   // get handling process
   pid_t handling_process = container->target->pid;
   // prepare structure
-  strcpy( nested_request->file_path, container->path );
+  strncpy( nested_request->file_path, container->path, PATH_MAX );
   memcpy( nested_request->data, request->data, request->len );
   nested_request->offset = container->pos;
   nested_request->len = request->len;

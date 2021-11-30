@@ -268,8 +268,13 @@ int handle_generate(
     return -ENOMEM;
   }
   memset( *container, 0, sizeof( handle_container_t ) );
+  // ensure max path
+  if ( PATH_MAX < strlen( path ) ) {
+    free( *container );
+    return -EINVAL;
+  }
   // copy path
-  strcpy( ( *container )->path, path );
+  strncpy( ( *container )->path, path, PATH_MAX );
   // special handling for symlinks
   if ( S_ISLNK( target->st->st_mode ) ) {
     while ( target && S_ISLNK( target->st->st_mode ) ) {
@@ -315,8 +320,14 @@ int handle_generate(
       free( *container );
       return -ENOENT;
     }
+    // ensure max path
+    if ( PATH_MAX < strlen( destination ) ) {
+      free( *container );
+      free( destination );
+      return -EINVAL;
+    }
     // copy link destination
-    strcpy( ( *container )->path, destination );
+    strncpy( ( *container )->path, destination, PATH_MAX );
     // free again after copy
     free( destination );
   }

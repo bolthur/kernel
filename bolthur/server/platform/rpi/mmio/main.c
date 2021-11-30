@@ -43,7 +43,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
-  strcpy( msg->file_path, "/dev/mmio" );
+  strncpy( msg->file_path, "/dev/mmio", PATH_MAX );
   // perform add request
   send_vfs_add_request( msg, 0 );
 

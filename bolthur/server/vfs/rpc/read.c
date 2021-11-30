@@ -187,7 +187,7 @@ void rpc_handle_read(
   // get handling process
   pid_t handling_process = container->target->pid;
   // prepare structure
-  strcpy( nested_request->file_path, container->path );
+  strncpy( nested_request->file_path, container->path, PATH_MAX );
   nested_request->offset = container->pos;
   nested_request->len = request->len;
   nested_request->shm_id = request->shm_id;

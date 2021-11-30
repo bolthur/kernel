@@ -27,6 +27,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <task/thread.h>
+#include <task/process.h>
 
 #define INTERRUPT_NESTED_MAX 3
 #define INTERRUPT_DETERMINE_CONTEXT( c ) \
@@ -57,19 +58,21 @@ struct interrupt_block {
   avl_node_t node;
   size_t interrupt;
   list_manager_ptr_t handler;
+  list_manager_ptr_t process;
   list_manager_ptr_t post;
 };
 
-struct interrupt_callback {
+struct interrupt_callback_wrapper {
   interrupt_callback_t callback;
+  task_process_ptr_t process;
 };
 
 typedef struct interrupt_manager interrupt_manager_t;
 typedef struct interrupt_manager *interrupt_manager_ptr_t;
 typedef struct interrupt_block interrupt_block_t;
 typedef struct interrupt_block *interrupt_block_ptr_t;
-typedef struct interrupt_callback interrupt_callback_wrapper_t;
-typedef struct interrupt_callback *interrupt_callback_wrapper_ptr_t;
+typedef struct interrupt_callback_wrapper interrupt_callback_wrapper_t;
+typedef struct interrupt_callback_wrapper *interrupt_callback_wrapper_ptr_t;
 
 #define INTERRUPT_GET_BLOCK( n ) \
   ( interrupt_block_ptr_t )( ( uint8_t* )n - offsetof( interrupt_block_t, node ) )
@@ -83,8 +86,9 @@ void interrupt_init( void );
 void interrupt_arch_init( void );
 void interrupt_post_init( void );
 void interrupt_handle( size_t, interrupt_type_t, void* );
-bool interrupt_register_handler( size_t, interrupt_callback_t, interrupt_type_t, bool );
-bool interrupt_unregister_handler( size_t, interrupt_callback_t, interrupt_type_t, bool );
+bool interrupt_register_handler( size_t, interrupt_callback_t, task_process_ptr_t, interrupt_type_t, bool );
+bool interrupt_unregister_handler( size_t, interrupt_callback_t, task_process_ptr_t, interrupt_type_t, bool );
 void interrupt_handle_possible( void*, bool );
+void interrupt_unregister_process( task_process_ptr_t );
 
 #endif

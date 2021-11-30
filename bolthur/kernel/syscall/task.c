@@ -233,7 +233,7 @@ void syscall_thread_create( void* context ) {
   void* argument = ( void* )syscall_get_parameter( context, 1 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_thread_create( %#"PRIxPTR"\r\n",  )
+    DEBUG_OUTPUT( "syscall_thread_create( %#"PRIxPTR", %p)\r\n", entry, argument )
   #endif
   // create new thread
   task_thread_ptr_t new_thread = task_thread_create(

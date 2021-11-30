@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <tar.h>
 #include <duplicate.h>
+#include <interrupt.h>
 #include <elf.h>
 #include <panic.h>
 #include <initrd.h>
@@ -107,6 +108,22 @@ static int32_t process_lookup_id(
 }
 
 /**
+ * @fn int32_t cleanup_process_lookup_id(const list_item_ptr_t, const void*)
+ * @brief Compare id callback necessary for cleanup list
+ *
+ * @param a
+ * @param data
+ * @return
+ */
+static int32_t cleanup_process_lookup_id(
+  const list_item_ptr_t a,
+  const void* data
+) {
+  task_process_ptr_t process = a->data;
+  return process->id == ( pid_t )data ? 0 : 1;
+}
+
+/**
  * @fn void task_process_free(task_process_ptr_t)
  * @brief Helper to destroy process structure
  *
@@ -179,7 +196,11 @@ bool task_process_init( void ) {
     return false;
   }
   // create cleanup list
-  process_manager->process_to_cleanup = list_construct( NULL, NULL, NULL );
+  process_manager->process_to_cleanup = list_construct(
+    cleanup_process_lookup_id,
+    NULL,
+    NULL
+  );
   if ( ! process_manager->process_to_cleanup ) {
     avl_destroy_tree( process_manager->process_id );
     avl_destroy_tree( process_manager->thread_priority );
@@ -678,6 +699,8 @@ void task_process_prepare_kill( void* context, task_process_ptr_t proc ) {
     // get next thread
     current = avl_iterate_next( proc->thread_manager, current );
   }
+  // unregister possible interrupts
+  interrupt_unregister_process( proc );
   // push process to clean up list
   list_push_back( process_manager->process_to_cleanup, proc );
   // trigger schedule and cleanup

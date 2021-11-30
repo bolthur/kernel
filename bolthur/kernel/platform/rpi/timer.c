@@ -119,6 +119,7 @@ void timer_platform_init( void ) {
   interrupt_register_handler(
     SYSTEM_TIMER_3_INTERRUPT,
     timer_clear,
+    NULL,
     INTERRUPT_NORMAL,
     false
   );

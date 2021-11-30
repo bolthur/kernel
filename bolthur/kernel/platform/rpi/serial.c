@@ -206,7 +206,7 @@ bool serial_register_interrupt( void ) {
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // register interrupt
-  if ( ! interrupt_register_handler( 57, serial_clear, INTERRUPT_FAST, true ) ) {
+  if ( ! interrupt_register_handler( 57, serial_clear, NULL, INTERRUPT_FAST, true ) ) {
     return false;
   }
   // mask interrupt

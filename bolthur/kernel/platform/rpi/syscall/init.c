@@ -30,6 +30,7 @@ bool syscall_init_platform( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_MAILBOX_ACTION,
     syscall_mailbox_action,
+    NULL,
     INTERRUPT_SOFTWARE,
     false
   ) ) {

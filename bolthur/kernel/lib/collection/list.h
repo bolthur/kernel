@@ -69,7 +69,7 @@ void list_print( list_manager_ptr_t );
 bool list_remove( list_manager_ptr_t, list_item_ptr_t );
 bool list_remove_data( list_manager_ptr_t, void* );
 
-int32_t list_default_lookup( const list_item_ptr_t a, const void* );
+int32_t list_default_lookup( const list_item_ptr_t, const void* );
 void list_default_cleanup( const list_item_ptr_t );
 bool list_default_insert( list_manager_ptr_t, void* );
 

@@ -76,8 +76,9 @@ static vfs_node_ptr_t vfs_prepare_node(
   }
   // erase memory
   memset( node, 0, sizeof( vfs_node_t ) );
+  size_t name_length = strlen( name ) + 1;
   // allocate name
-  node->name = malloc( sizeof( char ) * ( strlen( name ) + 1 ) );
+  node->name = malloc( sizeof( char ) * name_length );
   if ( ! node->name ) {
     vfs_destroy_node( node );
     return NULL;
@@ -89,7 +90,7 @@ static vfs_node_ptr_t vfs_prepare_node(
     return NULL;
   }
   // copy name, save current pid as handler and set flag to directory
-  strcpy( node->name, name );
+  strncpy( node->name, name, name_length );
   memcpy( node->st, &st, sizeof( struct stat ) );
   node->pid = pid;
   if ( target ) {
@@ -250,11 +251,11 @@ void vfs_dump( vfs_node_ptr_t node, const char* level_prefix ) {
     // clear it
     memset( buffer, 0, sizeof( char ) * total );
     // push stuff into it
-    strcpy( buffer, level_prefix );
+    strncpy( buffer, level_prefix, total );
     if ( prefix_len != default_prefix_len ) {
-      strcat( buffer, "/" );
+      strncat( buffer, "/", total - strlen( buffer ) );
     }
-    strcat( buffer, node->name );
+    strncat( buffer, node->name, total - strlen( buffer ) );
     // print stuff
     EARLY_STARTUP_PRINT( "%s\r\n", buffer )
     // free again
@@ -270,21 +271,22 @@ void vfs_dump( vfs_node_ptr_t node, const char* level_prefix ) {
 
   // iterate children
   list_item_ptr_t children = node->children->first;
+  size_t inner_prefix_length = prefix_len + strlen( node->name ) + 1;
   // allocate new inner prefix
-  char* inner_prefix = malloc( sizeof( char ) * ( prefix_len + strlen( node->name ) + 1 ) );
+  char* inner_prefix = malloc( sizeof( char ) * inner_prefix_length );
   // prepare it
   if ( inner_prefix ) {
     // reset allocated memory
-    memset( inner_prefix, 0, sizeof( char ) * ( prefix_len + strlen( node->name ) + 1 ) );
+    memset( inner_prefix, 0, sizeof( char ) * inner_prefix_length );
     // push content
     if ( NULL == level_prefix ) {
-      strcat( inner_prefix, node->name );
+      strncat( inner_prefix, node->name, inner_prefix_length );
     } else {
-      strcpy( inner_prefix, level_prefix );
+      strncpy( inner_prefix, level_prefix, inner_prefix_length - strlen( inner_prefix ) );
       if ( strlen( inner_prefix ) != strlen( "/" ) ) {
-        strcat( inner_prefix, "/" );
+        strncat( inner_prefix, "/", inner_prefix_length - strlen( inner_prefix ) );
       }
-      strcat( inner_prefix, node->name );
+      strncat( inner_prefix, node->name, inner_prefix_length - strlen( inner_prefix ) );
     }
     // iterate children and dump
     while ( children ) {
@@ -423,7 +425,7 @@ char* vfs_path_bottom_up( vfs_node_ptr_t node ) {
   while ( node ) {
     // copy only
     if ( '\0' == path[ 0 ] ) {
-      strcpy( path, node->name );
+      strncpy( path, node->name, PATH_MAX );
     } else {
       // prepend!
       size_t offset = 0;

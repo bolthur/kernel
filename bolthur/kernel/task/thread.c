@@ -380,8 +380,21 @@ void task_thread_cleanup(
     // head over to next
     current = current->next;
     // remove node from tree and cleanup
-    avl_remove_by_node( thread->process->thread_manager, &thread->node_id );
-    thread->process->thread_manager->cleanup( &thread->node_id );
+    task_process_ptr_t process = thread->process;
+    avl_remove_by_node( process->thread_manager, &thread->node_id );
+    process->thread_manager->cleanup( &thread->node_id );
+    // check if threads are empty
+    avl_node_ptr_t avl_thread = avl_iterate_first( process->thread_manager );
+    if ( ! avl_thread ) {
+      list_item_ptr_t match = list_lookup_data
+        ( process_manager->process_to_cleanup,
+        ( void* )process->id
+      );
+      // push process to clean up list
+      if ( ! match ) {
+        list_push_back( process_manager->process_to_cleanup, process );
+      }
+    }
     // remove list item
     list_remove( process_manager->thread_to_cleanup, remove );
   }
