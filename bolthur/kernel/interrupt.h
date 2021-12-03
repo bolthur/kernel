@@ -86,9 +86,12 @@ void interrupt_init( void );
 void interrupt_arch_init( void );
 void interrupt_post_init( void );
 void interrupt_handle( size_t, interrupt_type_t, void* );
-bool interrupt_register_handler( size_t, interrupt_callback_t, task_process_ptr_t, interrupt_type_t, bool );
-bool interrupt_unregister_handler( size_t, interrupt_callback_t, task_process_ptr_t, interrupt_type_t, bool );
+bool interrupt_register_handler( size_t, interrupt_callback_t, task_process_ptr_t, interrupt_type_t, bool, bool );
+bool interrupt_unregister_handler( size_t, interrupt_callback_t, task_process_ptr_t, interrupt_type_t, bool, bool );
 void interrupt_handle_possible( void*, bool );
 void interrupt_unregister_process( task_process_ptr_t );
+
+void interrupt_mask_specific( int8_t );
+void interrupt_unmask_specific( int8_t );
 
 #endif

@@ -26,6 +26,9 @@
 #include <rpc/generic.h>
 #include <debug/debug.h>
 #include <panic.h>
+#if defined( PRINT_TIMER )
+  #include <debug/debug.h>
+#endif
 
 list_manager_ptr_t timer_list;
 
@@ -145,6 +148,9 @@ timer_callback_entry_ptr_t timer_register_callback(
   entry->expire = timeout;
   // insert into ordered list
   if ( ! list_insert( timer_list, entry ) ) {
+    #if defined( PRINT_TIMER )
+      DEBUG_OUTPUT( "Timer insert failed!\r\n" )
+    #endif
     free( entry );
     return NULL;
   }
@@ -181,9 +187,14 @@ void timer_handle_callback( void ) {
   // get current tick
   size_t tick = timer_get_tick();
   list_item_ptr_t current = timer_list->first;
+  // loop through handles
   while( current ) {
     timer_callback_entry_ptr_t entry =
       ( timer_callback_entry_ptr_t )current->data;
+    // debug output
+    #if defined( PRINT_TIMER )
+      DEBUG_OUTPUT( "tick = %d, entry->expire = %d\r\n", tick, entry->expire )
+    #endif
     // break if tick is smaller than expire
     if ( entry->expire > tick ) {
       break;

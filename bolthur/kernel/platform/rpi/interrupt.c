@@ -22,6 +22,7 @@
 #include <stddef.h>
 #include <io.h>
 #include <interrupt.h>
+#include <panic.h>
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
 
@@ -43,6 +44,82 @@ bool interrupt_validate_number( size_t num ) {
     && num != 54 && num != 55
     && num != 57
   );
+}
+
+/**
+ * @fn void interrupt_enable_specific(int8_t)
+ * @brief Enable specific interrupt
+ *
+ * @param num interrupt number to enable
+ */
+void interrupt_mask_specific( int8_t num ) {
+  uint32_t interrupt = ( uint32_t )num;
+  // get peripheral base
+  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  // get interrupt enable and pending
+  uint32_t interrupt_enable = base;
+  uint32_t interrupt_pending = base;
+  if ( 32 > interrupt ) {
+    interrupt_enable += INTERRUPT_ENABLE_IRQ_1;
+    interrupt_pending += INTERRUPT_IRQ_PENDING_1;
+  } else if ( 64 > interrupt ) {
+    interrupt_enable += INTERRUPT_ENABLE_IRQ_2;
+    interrupt_pending += INTERRUPT_IRQ_PENDING_2;
+  } else {
+    PANIC( "Unsupported interrupt number!" )
+  }
+  // get and set interrupt enable
+  uint32_t interrupt_line = io_in32( interrupt_enable );
+  // stop if already set
+  if ( interrupt_line & interrupt ) {
+    return;
+  }
+  interrupt_line |= interrupt;
+  // write changes
+  io_out32( interrupt_enable, interrupt_line );
+  // get and clear pending interrupt from memory
+  interrupt_line = io_in32( interrupt_pending );
+  interrupt_line &= ~interrupt;
+  // write changes
+  io_out32( interrupt_pending, interrupt_line );
+}
+
+/**
+ * @fn void interrupt_disable_specific(int8_t)
+ * @brief Disable specific interrupt
+ *
+ * @param num interrupt number to disable
+ */
+void interrupt_unmask_specific( int8_t num ) {
+  uint32_t interrupt = ( uint32_t )num;
+  // get peripheral base
+  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  // get interrupt enable and pending
+  uint32_t interrupt_enable = base;
+  uint32_t interrupt_pending = base;
+  if ( 32 > interrupt ) {
+    interrupt_enable += INTERRUPT_ENABLE_IRQ_1;
+    interrupt_pending += INTERRUPT_IRQ_PENDING_1;
+  } else if ( 64 > interrupt ) {
+    interrupt_enable += INTERRUPT_ENABLE_IRQ_2;
+    interrupt_pending += INTERRUPT_IRQ_PENDING_2;
+  } else {
+    PANIC( "Unsupported interrupt number!" )
+  }
+  // get and clear interrupt enable
+  uint32_t interrupt_line = io_in32( interrupt_enable );
+  // stop if already set
+  if ( interrupt_line & ~interrupt ) {
+    return;
+  }
+  interrupt_line &= ~interrupt;
+  // write changes
+  io_out32( interrupt_enable, interrupt_line );
+  // get and clear pending interrupt from memory
+  interrupt_line = io_in32( interrupt_pending );
+  interrupt_line &= ~interrupt;
+  // write changes
+  io_out32( interrupt_pending, interrupt_line );
 }
 
 /**

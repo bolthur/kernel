@@ -145,6 +145,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
 
   // get next thread
   task_thread_ptr_t next_thread;
+  bool halt_set = false;
   do {
     // get next thread
     next_thread = task_thread_next();
@@ -166,12 +167,26 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
       #endif
       // handle no next thread
       if ( ! next_thread ) {
-        // FIXME: HALT HERE WHEN THERE IS NO NEXT THREAD AFTER RESET WITH ENABLE OF EXCEPTIONS
+        /// FIXME: Check / Remove interrupt toggling with reentrant interrupts
+        // enable interrupts and set flag
+        if ( ! halt_set ) {
+          interrupt_enable();
+          halt_set = true;
+        }
         // wait for exception
         arch_halt();
       }
     }
   } while ( ! next_thread );
+  // disable interrupts again
+  if ( halt_set ) {
+    /// FIXME: Check / Remove interrupt toggling with reentrant interrupts
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "Halt was active, disabling interrupts!\r\n" )
+    #endif
+    interrupt_disable();
+  }
 
   // variable for next queue
   task_priority_queue_ptr_t next_queue = NULL;

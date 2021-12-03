@@ -46,10 +46,11 @@ int main( __unused int argc, __unused char* argv[] ) {
   strncpy( msg->file_path, "/dev/mmio", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, 0 );
-
   // free again
   free( msg );
 
-  while( true ) {}
+  // enable rpc and wait
+  _rpc_set_ready( true );
+  bolthur_rpc_wait_block();
   return 0;
 }

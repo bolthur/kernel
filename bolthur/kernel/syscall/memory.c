@@ -36,6 +36,7 @@
 
 #define MEMORY_FLAG_NONE 0x0
 #define MEMORY_FLAG_PHYS 0x1
+#define MEMORY_FLAG_DEVICE 0x2
 
 /**
  * @brief Acquire memory
@@ -147,6 +148,10 @@ void syscall_memory_acquire( void* context ) {
     map_flag |= VIRT_PAGE_TYPE_EXECUTABLE;
   }
 
+  virt_memory_type_t map_type = VIRT_MEMORY_TYPE_NORMAL;
+  if ( flag & MEMORY_FLAG_DEVICE ) {
+    map_type = VIRT_MEMORY_TYPE_DEVICE;
+  }
   // handle physical memory allocation
   if ( flag & MEMORY_FLAG_PHYS ) {
     if ( ! virt_map_address_range(
@@ -154,7 +159,7 @@ void syscall_memory_acquire( void* context ) {
       start,
       phys,
       len,
-      VIRT_MEMORY_TYPE_NORMAL,
+      map_type,
       map_flag
     ) ) {
       // debug output
@@ -171,7 +176,7 @@ void syscall_memory_acquire( void* context ) {
       virtual_context,
       start,
       len,
-      VIRT_MEMORY_TYPE_NORMAL,
+      map_type,
       map_flag
     ) ) {
       // debug output

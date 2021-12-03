@@ -38,10 +38,15 @@ int32_t ptb_index = 0;
 /**
  * @brief property tag buffer
  */
-int32_t *ptb_buffer = NULL;
-volatile int32_t *ptb_buffer_phys = NULL;
+int32_t* ptb_buffer = NULL;
 
 /**
+ * @brief phys property tag buffer
+ */
+volatile int32_t* ptb_buffer_phys = NULL;
+
+/**
+ * @fn void mailbox_property_init(void)
  * @brief Initialize mailbox property process
  */
 void mailbox_property_init( void ) {
@@ -64,6 +69,7 @@ void mailbox_property_init( void ) {
 }
 
 /**
+ * @fn void mailbox_property_add_tag(rpi_mailbox_tag_t, ...)
  * @brief Add tag to mailbox property process
  *
  * @param tag Tag to add
@@ -242,9 +248,10 @@ void mailbox_property_add_tag( rpi_mailbox_tag_t tag, ... ) {
 }
 
 /**
+ * @fn uint32_t mailbox_property_process(void)
  * @brief Execute mailbox property process
  *
- * @return uint32_t mailbox read result after write
+ * @return_t mailbox read result after write
  */
 uint32_t mailbox_property_process( void ) {
   uint32_t result;
@@ -282,10 +289,11 @@ uint32_t mailbox_property_process( void ) {
 }
 
 /**
+ * @fn rpi_mailbox_property_t mailbox_property_get*(rpi_mailbox_tag_t)
  * @brief Read tag from previous executed mailbox property process
  *
  * @param tag tag to read from mailbox property process
- * @return rpi_mailbox_property_t* Pointer to structure of tag or NULL
+ * @return pointer to structure of tag or NULL
  */
 rpi_mailbox_property_t* mailbox_property_get( rpi_mailbox_tag_t tag ) {
   // property structure for return and tag buffer

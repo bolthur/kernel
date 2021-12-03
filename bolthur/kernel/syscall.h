@@ -49,21 +49,16 @@
 #define SYSCALL_RPC_WAIT_FOR_CALL 36
 #define SYSCALL_RPC_SET_READY 37
 
-#define SYSCALL_IO_ACQUIRE 51
-#define SYSCALL_IO_RELEASE 52
-#define SYSCALL_IO_CHECK 53
-#define SYSCALL_IO_RAISE 54
+#define SYSCALL_INTERRUPT_ACQUIRE 41
+#define SYSCALL_INTERRUPT_RELEASE 42
 
-#define SYSCALL_INTERRUPT_ACQUIRE 61
-#define SYSCALL_INTERRUPT_RELEASE 62
+#define SYSCALL_TIMER_TICK_COUNT 61
+#define SYSCALL_TIMER_FREQUENCY 62
+#define SYSCALL_TIMER_ACQUIRE 63
+#define SYSCALL_TIMER_RELEASE 64
 
-#define SYSCALL_TIMER_TICK_COUNT 81
-#define SYSCALL_TIMER_FREQUENCY 82
-#define SYSCALL_TIMER_ACQUIRE 83
-#define SYSCALL_TIMER_RELEASE 84
-
-#define SYSCALL_KERNEL_PUTC 101
-#define SYSCALL_KERNEL_PUTS 102
+#define SYSCALL_KERNEL_PUTC 71
+#define SYSCALL_KERNEL_PUTS 72
 
 bool syscall_init( void );
 bool syscall_init_platform( void );
@@ -91,11 +86,6 @@ void syscall_memory_shared_detach( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );
-
-void syscall_io_acquire( void* );
-void syscall_io_release( void* );
-void syscall_io_check( void* );
-void syscall_io_raise( void* );
 
 void syscall_rpc_set_handler( void* );
 void syscall_rpc_raise( void* );

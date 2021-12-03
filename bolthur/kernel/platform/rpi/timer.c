@@ -19,12 +19,10 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
 #include <platform/rpi/timer.h>
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
 #include <platform/rpi/mailbox/property.h>
-
 #if defined( PRINT_TIMER )
   #include <debug/debug.h>
 #endif
@@ -121,6 +119,7 @@ void timer_platform_init( void ) {
     timer_clear,
     NULL,
     INTERRUPT_NORMAL,
+    false,
     false
   );
   // reset timer control
@@ -134,14 +133,8 @@ void timer_platform_init( void ) {
   io_out32( base + SYSTEM_TIMER_COMPARE_3, next_count );
   // enable timer 3
   io_out32( base + SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
-  // enable interrupt for timer 3
-  io_out32( base + INTERRUPT_ENABLE_IRQ_1, SYSTEM_TIMER_3_INTERRUPT );
-  // get pending interrupt from memory
-  uint32_t interrupt_line = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
-  // clear pending interrupt
-  interrupt_line &= ( uint32_t )( ~( SYSTEM_TIMER_3_INTERRUPT ) );
-  // overwrite
-  io_out32( base + INTERRUPT_IRQ_PENDING_1, interrupt_line );
+  // enable interrupt
+  interrupt_mask_specific( SYSTEM_TIMER_3_INTERRUPT );
 }
 
 /**

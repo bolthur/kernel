@@ -20,6 +20,7 @@
 #include <arch.h>
 
 /**
+ * @fn void arch_init(void)
  * @brief Method to initialize architecture related code
  */
 void arch_init( void ) {
@@ -28,8 +29,9 @@ void arch_init( void ) {
 }
 
 /**
- * @brief halt instruction
+ * @fn void arch_halt(void)
+ * @brief Halt and wait for interrupt
  */
 void arch_halt( void ) {
-  __asm__( "wfe" ::: "memory" );
+  __asm__ __volatile__( "wfe" ::: "cc", "memory" );
 }

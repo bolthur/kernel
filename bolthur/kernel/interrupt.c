@@ -176,7 +176,7 @@ static int32_t process_block_list_lookup( const list_item_ptr_t a, const void* d
 }
 
 /**
- * @fn bool interrupt_unregister_handler(size_t, interrupt_callback_t, task_process_ptr_t, interrupt_type_t, bool)
+ * @fn bool interrupt_unregister_handler(size_t, interrupt_callback_t, task_process_ptr_t, interrupt_type_t, bool, bool)
  * @brief Unregister interrupt handler
  *
  * @param num interrupt to unbind
@@ -184,6 +184,7 @@ static int32_t process_block_list_lookup( const list_item_ptr_t a, const void* d
  * @param process optional process if user handler
  * @param type interrupt type
  * @param post flag to bind as post callback
+ * @param disable disable interrupt if necessary
  * @return
  *
  * @todo Add removal of tree node, when all lists are empty
@@ -193,7 +194,8 @@ bool interrupt_unregister_handler(
   interrupt_callback_t callback,
   task_process_ptr_t process,
   interrupt_type_t type,
-  bool post
+  bool post,
+  bool disable
 ) {
   if ( ! heap_init_get() ) {
     return false;
@@ -268,12 +270,23 @@ bool interrupt_unregister_handler(
     #endif
     return true;
   }
+  // disable interrupt in case no further handler is bound
+  if (
+    type == INTERRUPT_NORMAL
+    && disable
+    && list_empty( block->process )
+    && list_empty( block->handler )
+    && list_empty( block->post )
+  ) {
+    // enable interrupt
+    interrupt_unmask_specific( ( int8_t )num );
+  }
   // remove element
   return list_remove( list, match );
 }
 
 /**
- * @fn bool interrupt_register_handler(size_t, interrupt_callback_t, task_process_ptr_t, interrupt_type_t, bool)
+ * @fn bool interrupt_register_handler(size_t, interrupt_callback_t, task_process_ptr_t, interrupt_type_t, bool, bool)
  * @brief Register interrupt handler
  *
  * @param num Interrupt to bind
@@ -281,6 +294,7 @@ bool interrupt_unregister_handler(
  * @param process optional process if user handler
  * @param type interrupt type
  * @param post flag to bind as post callback
+ * @param enable enable interrupt if necessary
  * @return
  */
 bool interrupt_register_handler(
@@ -288,7 +302,8 @@ bool interrupt_register_handler(
   interrupt_callback_t callback,
   task_process_ptr_t process,
   interrupt_type_t type,
-  bool post
+  bool post,
+  bool enable
 ) {
   if ( ! heap_init_get() ) {
     return false;
@@ -438,6 +453,10 @@ bool interrupt_register_handler(
     #endif
     // set data to wrapper
     data = ( void* )wrapper;
+  }
+  // enable interrupt if set
+  if ( type == INTERRUPT_NORMAL && enable ) {
+    interrupt_mask_specific( ( int8_t )num );
   }
   // push to list
   return list_push_back( list, data );

@@ -33,6 +33,7 @@ bool syscall_init( void ) {
     syscall_process_exit,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -42,6 +43,7 @@ bool syscall_init( void ) {
     syscall_process_id,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -51,6 +53,7 @@ bool syscall_init( void ) {
     syscall_process_parent_id,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -60,6 +63,7 @@ bool syscall_init( void ) {
     syscall_process_fork,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -69,6 +73,7 @@ bool syscall_init( void ) {
     syscall_process_replace,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -78,6 +83,7 @@ bool syscall_init( void ) {
     syscall_process_parent_by_id,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -88,6 +94,7 @@ bool syscall_init( void ) {
     syscall_thread_create,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -97,6 +104,7 @@ bool syscall_init( void ) {
     syscall_thread_exit,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -106,6 +114,7 @@ bool syscall_init( void ) {
     syscall_thread_id,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -116,6 +125,7 @@ bool syscall_init( void ) {
     syscall_memory_acquire,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -125,6 +135,7 @@ bool syscall_init( void ) {
     syscall_memory_release,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -134,6 +145,7 @@ bool syscall_init( void ) {
     syscall_memory_shared_create,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -143,6 +155,7 @@ bool syscall_init( void ) {
     syscall_memory_shared_attach,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -152,6 +165,7 @@ bool syscall_init( void ) {
     syscall_memory_shared_detach,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -162,6 +176,7 @@ bool syscall_init( void ) {
     syscall_rpc_set_handler,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -171,6 +186,7 @@ bool syscall_init( void ) {
     syscall_rpc_raise,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -180,6 +196,7 @@ bool syscall_init( void ) {
     syscall_rpc_ret,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -189,6 +206,7 @@ bool syscall_init( void ) {
     syscall_rpc_get_data,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -198,6 +216,7 @@ bool syscall_init( void ) {
     syscall_rpc_get_data_size,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -207,6 +226,7 @@ bool syscall_init( void ) {
     syscall_rpc_wait_for_call,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -216,43 +236,7 @@ bool syscall_init( void ) {
     syscall_rpc_set_ready,
     NULL,
     INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  // io related
-  if ( ! interrupt_register_handler(
-    SYSCALL_IO_ACQUIRE,
-    syscall_io_acquire,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_IO_CHECK,
-    syscall_io_check,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_IO_RAISE,
-    syscall_io_raise,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_IO_RELEASE,
-    syscall_io_release,
-    NULL,
-    INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -263,6 +247,7 @@ bool syscall_init( void ) {
     syscall_interrupt_acquire,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -272,6 +257,7 @@ bool syscall_init( void ) {
     syscall_interrupt_release,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -282,6 +268,7 @@ bool syscall_init( void ) {
     syscall_timer_tick_count,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -291,6 +278,7 @@ bool syscall_init( void ) {
     syscall_timer_frequency,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -300,6 +288,7 @@ bool syscall_init( void ) {
     syscall_timer_acquire,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -309,6 +298,7 @@ bool syscall_init( void ) {
     syscall_timer_release,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
@@ -320,6 +310,7 @@ bool syscall_init( void ) {
       syscall_kernel_putc,
       NULL,
       INTERRUPT_SOFTWARE,
+      false,
       false
     ) ) {
       return false;
@@ -329,6 +320,7 @@ bool syscall_init( void ) {
       syscall_kernel_puts,
       NULL,
       INTERRUPT_SOFTWARE,
+      false,
       false
     ) ) {
       return false;

@@ -348,16 +348,15 @@ static pid_t execute_driver( char* name ) {
  * @brief Helper to get up the necessary additional drivers for a running system
  */
 static void stage2( void ) {
-  // start usb server
-  //EARLY_STARTUP_PRINT( "Starting and waiting for usb server...\r\n" )
-  //pid_t usb = execute_driver( "/ramdisk/server/usb/generic" );
-  //wait_for_device( "/dev/usb" );
-  pid_t usb = 1;
-
   // start mailbox server
   EARLY_STARTUP_PRINT( "Starting and waiting for mailbox server...\r\n" )
   pid_t mailbox = execute_driver( "/ramdisk/server/mailbox" );
   wait_for_device( "/dev/mailbox" );
+
+  // start mmio server
+  EARLY_STARTUP_PRINT( "Starting and waiting for mmio server...\r\n" )
+  pid_t mmio = execute_driver( "/ramdisk/server/mmio" );
+  wait_for_device( "/dev/mmio" );
 
   // start system console and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for console server...\r\n" )
@@ -370,15 +369,13 @@ static void stage2( void ) {
   wait_for_device( "/dev/framebuffer" );
 
   // start tty and wait for device to come up
-  // FIXME: either pass console and framebuffer pid per argument or extend vfs
-  // to get pid of a device by reading /dev/framebuffer and /dev/console
   EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )
   pid_t terminal = execute_driver( "/ramdisk/server/terminal" );
   wait_for_device( "/dev/terminal" );
 
   EARLY_STARTUP_PRINT(
-    "usb = %d, mailbox = %d, console = %d, terminal = %d, framebuffer = %d\r\n",
-    usb, mailbox, console, terminal, framebuffer )
+    "mailbox = %d, mmio = %d, console = %d, terminal = %d, framebuffer = %d\r\n",
+    mailbox, mmio, console, terminal, framebuffer )
 
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )

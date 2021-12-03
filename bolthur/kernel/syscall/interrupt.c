@@ -65,7 +65,8 @@ void syscall_interrupt_acquire( void* context ) {
     NULL,
     proc,
     INTERRUPT_NORMAL,
-    false
+    false,
+    true
   ) ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
@@ -111,7 +112,8 @@ void syscall_interrupt_release( void* context ) {
     NULL,
     proc,
     INTERRUPT_NORMAL,
-    false
+    false,
+    true
   ) ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;

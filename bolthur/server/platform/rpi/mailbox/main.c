@@ -17,10 +17,23 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// initial setup of peripheral base
+#if defined( BCM2836 ) || defined( BCM2837 )
+  #define PERIPHERAL_GPIO_BASE 0x3F000000
+  #define PERIPHERAL_GPIO_SIZE 0xFFFFFF
+#else
+  #define PERIPHERAL_GPIO_BASE 0x20000000
+  #define PERIPHERAL_GPIO_SIZE 0xFFFFFF
+#endif
+
+#define GPU_MAILBOX_OFFSET 0xB880
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <errno.h>
+#include <sys/mman.h>
 #include <sys/bolthur.h>
 #include <inttypes.h>
 #include "../../../libhelper.h"
@@ -44,12 +57,29 @@ int main( __unused int argc, __unused char* argv[] ) {
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/mailbox", PATH_MAX - 1 );
+  // try to map mailbox buffer area
+  void* mailbox_area = mmap(
+    ( void* )( PERIPHERAL_GPIO_BASE + GPU_MAILBOX_OFFSET ),
+    0x1000,
+    PROT_READ | PROT_WRITE,
+    MAP_ANONYMOUS | MAP_PHYSICAL | MAP_DEVICE,
+    -1,
+    0
+  );
+  if ( MAP_FAILED == mailbox_area ) {
+    EARLY_STARTUP_PRINT(
+      "Unable to acquire mailbox area: %s\r\n",
+      strerror( errno )
+    )
+    return -1;
+  }
   // perform add request
   send_vfs_add_request( msg, 0 );
-
   // free again
   free( msg );
 
-  while( true ) {}
+  // enable rpc and wait
+  _rpc_set_ready( true );
+  bolthur_rpc_wait_block();
   return 0;
 }

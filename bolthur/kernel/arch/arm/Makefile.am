@@ -7,7 +7,6 @@ noinst_LTLIBRARIES = libarm.la
 libarm_la_SOURCES = \
   debug/cache.c \
   mm/virt.c \
-  syscall/io.c \
   arch.c \
   delay.c \
   elf.c \

@@ -32,6 +32,7 @@ bool syscall_init_platform( void ) {
     syscall_mailbox_action,
     NULL,
     INTERRUPT_SOFTWARE,
+    false,
     false
   ) ) {
     return false;
