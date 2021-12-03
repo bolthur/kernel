@@ -251,7 +251,7 @@ void vfs_dump( vfs_node_ptr_t node, const char* level_prefix ) {
     // clear it
     memset( buffer, 0, sizeof( char ) * total );
     // push stuff into it
-    strncpy( buffer, level_prefix, total );
+    memcpy( buffer, level_prefix, sizeof( char ) * prefix_len );
     if ( prefix_len != default_prefix_len ) {
       strncat( buffer, "/", total - strlen( buffer ) );
     }
@@ -425,7 +425,7 @@ char* vfs_path_bottom_up( vfs_node_ptr_t node ) {
   while ( node ) {
     // copy only
     if ( '\0' == path[ 0 ] ) {
-      strncpy( path, node->name, PATH_MAX );
+      strncpy( path, node->name, PATH_MAX - 1 );
     } else {
       // prepend!
       size_t offset = 0;

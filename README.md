@@ -59,9 +59,9 @@ cd build
 
 Possible additional parameters to `--host` and `--enable-device`:
 
-* `--with-debug-symbols` enables remote debugging mode
-* `--with-optimization-level=x` sets optimization from default ( 2 ) to specified one
-* `--enable-output` enables kernel output
+* `--with-debug-symbols` enables remote debugging mode ( blocks --enable-release )
+* `--with-optimization-level=x` sets optimization from default ( 2 ) to specified one ( ignored when --enable-release is set )
+* `--enable-output` enables kernel output ( blocks --enable-remote-debug )
 * `--enable-output-mm-phys` activate tty output of physical memory manager
 * `--enable-output-mm-virt` activate tty output of virtual memory manager
 * `--enable-output-mm-heap` activate tty output of kernel heap
@@ -78,7 +78,8 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-serial` activate serial handling output
 * `--enable-output-message` activate message system output
 * `--enable-output-rpc` activate rpc system output
-* `--enable-remote-debug` activate remote debugging
+* `--enable-remote-debug` activate remote debugging ( blocks --enable-output )
+* `--enable-release` activate release build ( blocks --enable-debug and ignores --with-optimization-level )
 
 ### Building
 

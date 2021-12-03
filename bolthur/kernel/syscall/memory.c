@@ -34,6 +34,9 @@
 #define MEMORY_ACQUIRE_PROTECTION_WRITE 0x2
 #define MEMORY_ACQUIRE_PROTECTION_EXECUTABLE 0x4
 
+#define MEMORY_FLAG_NONE 0x0
+#define MEMORY_FLAG_PHYS 0x1
+
 /**
  * @brief Acquire memory
  *
@@ -44,6 +47,7 @@ void syscall_memory_acquire( void* context ) {
   void* addr = ( void* )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   int protection = ( int )syscall_get_parameter( context, 2 );
+  int flag = ( int )syscall_get_parameter( context, 3 );
   // get context
   virt_context_ptr_t virtual_context = task_thread_current_thread
     ->process
@@ -51,8 +55,8 @@ void syscall_memory_acquire( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall memory acquire( %#p, %#x, %d )\r\n",
-      addr, len, protection )
+      "syscall memory acquire( %#p, %#x, %d, %d )\r\n",
+      addr, len, protection, flag )
   #endif
 
   // handle invalid length
@@ -67,6 +71,24 @@ void syscall_memory_acquire( void* context ) {
 
   // get full page count
   len = ROUND_UP_TO_FULL_PAGE( len );
+  // variable for physical mapping
+  uint64_t phys = 0;
+  // check if physical range is already in use for map physical
+  if ( flag & MEMORY_FLAG_PHYS ) {
+    // set phys to given address
+    phys = ( uintptr_t )addr;
+    // overwrite address with NULL
+    addr = NULL;
+    // check if already used
+    if ( phys_is_range_used( phys, len ) ) {
+      // debug output
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "Physical address already in use by some other\r\n" )
+      #endif
+      syscall_populate_error( context, ( size_t )-EADDRINUSE );
+      return;
+    }
+  }
   // determine start
   uintptr_t start;
   // fixed handling means take address as start
@@ -125,20 +147,40 @@ void syscall_memory_acquire( void* context ) {
     map_flag |= VIRT_PAGE_TYPE_EXECUTABLE;
   }
 
+  // handle physical memory allocation
+  if ( flag & MEMORY_FLAG_PHYS ) {
+    if ( ! virt_map_address_range(
+      virtual_context,
+      start,
+      phys,
+      len,
+      VIRT_MEMORY_TYPE_NORMAL,
+      map_flag
+    ) ) {
+      // debug output
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "Error during map of address!\r\n" )
+      #endif
+      syscall_populate_error( context, ( size_t )-EIO );
+      return;
+    }
   // map address range with random physical memory
-  if ( ! virt_map_address_range_random(
-    virtual_context,
-    start,
-    len,
-    VIRT_MEMORY_TYPE_NORMAL,
-    map_flag
-  ) ) {
-    // debug output
-    #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "Error during map of address!\r\n" )
-    #endif
-    syscall_populate_error( context, ( size_t )-EIO );
-    return;
+  } else {
+    // map address range with random physical memory
+    if ( ! virt_map_address_range_random(
+      virtual_context,
+      start,
+      len,
+      VIRT_MEMORY_TYPE_NORMAL,
+      map_flag
+    ) ) {
+      // debug output
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "Error during map of address!\r\n" )
+      #endif
+      syscall_populate_error( context, ( size_t )-EIO );
+      return;
+    }
   }
   // debug output
   #if defined( PRINT_SYSCALL )

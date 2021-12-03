@@ -609,11 +609,15 @@ int main( int argc, char* argv[] ) {
     // clear message structures
     memset( msg, 0, sizeof( vfs_add_request_t ) );
     // populate path into message
-    strncpy( msg->file_path, "/", PATH_MAX );
-    strncat( msg->file_path, th_get_pathname( disk ), PATH_MAX - 1 );
+    strncpy( msg->file_path, "/", PATH_MAX - 1 );
+    strncat(
+      msg->file_path,
+      th_get_pathname( disk ),
+      PATH_MAX - strlen( msg->file_path ) - 1
+    );
     // add link name
     if ( TH_ISLNK( disk ) || TH_ISSYM( disk ) ) {
-      strncpy( msg->linked_path, th_get_linkname( disk ), PATH_MAX );
+      strncpy( msg->linked_path, th_get_linkname( disk ), PATH_MAX - 1 );
       msg->info.st_size = ( off_t )strlen( msg->linked_path );
     } else {
       msg->info.st_size = ( off_t )th_get_size( disk );

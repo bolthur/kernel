@@ -274,7 +274,7 @@ int handle_generate(
     return -EINVAL;
   }
   // copy path
-  strncpy( ( *container )->path, path, PATH_MAX );
+  strncpy( ( *container )->path, path, PATH_MAX - 1 );
   // special handling for symlinks
   if ( S_ISLNK( target->st->st_mode ) ) {
     while ( target && S_ISLNK( target->st->st_mode ) ) {
@@ -302,9 +302,17 @@ int handle_generate(
           return -ENOMEM;
         }
         // build target path
-        link_path = strncpy( link_path, dir, PATH_MAX );
-        link_path = strncat( link_path, "/", PATH_MAX - strlen( link_path ) );
-        link_path = strncat( link_path, target->target, PATH_MAX - strlen( link_path ) );
+        link_path = strncpy( link_path, dir, PATH_MAX - 1 );
+        link_path = strncat(
+          link_path,
+          "/",
+          PATH_MAX - strlen( link_path ) - 1
+        );
+        link_path = strncat(
+          link_path,
+          target->target,
+          PATH_MAX - strlen( link_path ) - 1
+        );
         // free up base path again
         free( target_path );
         free( dir );
@@ -327,7 +335,7 @@ int handle_generate(
       return -EINVAL;
     }
     // copy link destination
-    strncpy( ( *container )->path, destination, PATH_MAX );
+    strncpy( ( *container )->path, destination, PATH_MAX - 1 );
     // free again after copy
     free( destination );
   }

@@ -50,11 +50,12 @@
 task_manager_ptr_t process_manager = NULL;
 
 /**
+ * @fn int32_t process_compare_id(const avl_node_ptr_t, const avl_node_ptr_t)
  * @brief Compare id callback necessary for avl tree
  *
- * @param a node a
- * @param b node b
- * @return int32_t
+ * @param a
+ * @param b
+ * @return
  */
 static int32_t process_compare_id(
   const avl_node_ptr_t a,
@@ -81,11 +82,12 @@ static int32_t process_compare_id(
 }
 
 /**
+ * @fn int32_t process_lookup_id(const avl_node_ptr_t, const void*)
  * @brief Compare id callback necessary for avl tree lookup
  *
- * @param a node a
- * @param b node b
- * @return int32_t
+ * @param a
+ * @param b
+ * @return
  */
 static int32_t process_lookup_id(
   const avl_node_ptr_t a,
@@ -105,22 +107,6 @@ static int32_t process_lookup_id(
   }
   // equal => return 0
   return 0;
-}
-
-/**
- * @fn int32_t cleanup_process_lookup_id(const list_item_ptr_t, const void*)
- * @brief Compare id callback necessary for cleanup list
- *
- * @param a
- * @param data
- * @return
- */
-static int32_t cleanup_process_lookup_id(
-  const list_item_ptr_t a,
-  const void* data
-) {
-  task_process_ptr_t process = a->data;
-  return process->id == ( pid_t )data ? 0 : 1;
 }
 
 /**
@@ -160,9 +146,41 @@ static void task_process_free( task_process_ptr_t proc ) {
 }
 
 /**
+ * @fn int32_t cleanup_process_lookup_id(const list_item_ptr_t, const void*)
+ * @brief Compare id callback necessary for cleanup list
+ *
+ * @param a
+ * @param data
+ * @return
+ */
+static int32_t cleanup_process_lookup_id(
+  const list_item_ptr_t a,
+  const void* data
+) {
+  task_process_ptr_t process = a->data;
+  return process->id == ( pid_t )data ? 0 : 1;
+}
+
+/**
+ * @fn void_t cleanup_process_delete(const list_item_ptr_t)
+ * @brief cleanup process list delete helper
+ *
+ * @param a
+ * @return
+ */
+static void cleanup_process_delete(
+  const list_item_ptr_t a
+) {
+  task_process_ptr_t process = a->data;
+  task_process_free( process );
+  list_default_cleanup( a );
+}
+
+/**
+ * @fn bool task_process_init(void)
  * @brief Initialize task process manager
- * @return true
- * @return false
+ *
+ * @return
  */
 bool task_process_init( void ) {
   // check parameter
@@ -198,7 +216,7 @@ bool task_process_init( void ) {
   // create cleanup list
   process_manager->process_to_cleanup = list_construct(
     cleanup_process_lookup_id,
-    NULL,
+    cleanup_process_delete,
     NULL
   );
   if ( ! process_manager->process_to_cleanup ) {
@@ -249,6 +267,7 @@ bool task_process_init( void ) {
 }
 
 /**
+ * @fn pid_t task_process_generate_id(void)
  * @brief Method to generate new process id
  *
  * @return size_t generated process id
@@ -333,6 +352,7 @@ task_process_ptr_t task_process_create( size_t priority, pid_t parent ) {
 /**
  * @fn task_process_ptr_t task_process_fork(task_thread_ptr_t)
  * @brief Generate complete copy of process to fork
+ *
  * @param thread_calling calling thread containing process information
  * @return forked process structure or null
  */
@@ -414,6 +434,7 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
 }
 
 /**
+ * @fn void task_process_queue_reset(void)
  * @brief Resets process priority queues
  */
 void task_process_queue_reset( void ) {
@@ -531,9 +552,7 @@ void task_process_cleanup(
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT( "Cleanup process with id %d!\r\n", proc->id );
     #endif
-    // cleanup process
-    task_process_free( proc );
-    // cache current as remove
+    // cache current for removal, cleanup helper destroys process completely
     list_item_ptr_t remove = current;
     // head over to next
     current = current->next;
@@ -660,6 +679,7 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
 }
 
 /**
+ * @fn task_process_ptr_t task_process_get_by_id(pid_t)
  * @brief Get task structure by id
  *
  * @param pid

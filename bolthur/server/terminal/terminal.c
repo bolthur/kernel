@@ -126,7 +126,7 @@ bool terminal_init( void ) {
     memset( msg, 0, sizeof( vfs_add_request_t ) );
     // prepare message structure
     msg->info.st_mode = S_IFCHR;
-    strncpy( msg->file_path, tty_path, PATH_MAX );
+    strncpy( msg->file_path, tty_path, PATH_MAX - 1 );
     msg->device_info[ 0 ] = in;
     msg->device_info[ 1 ] = out;
     msg->device_info[ 2 ] = err;
@@ -218,7 +218,7 @@ bool terminal_init( void ) {
     // erase
     memset( command_add, 0, sizeof( console_command_add_t ) );
     // prepare structure
-    strncpy( command_add->terminal, tty_path, PATH_MAX );
+    strncpy( command_add->terminal, tty_path, PATH_MAX - 1 );
     command_add->in = in;
     command_add->out = out;
     command_add->err = err;
@@ -251,7 +251,7 @@ bool terminal_init( void ) {
 
   memset( command_select, 0, sizeof( console_command_select_t ) );
   // prepare structure
-  strncpy( command_select->path, "/dev/tty0", PATH_MAX );
+  strncpy( command_select->path, "/dev/tty0", PATH_MAX - 1 );
   // call console select
   int result = ioctl(
     console_manager_fd,

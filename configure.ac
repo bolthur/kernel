@@ -185,6 +185,15 @@ AC_ARG_ENABLE(
   [enable_remote_debug=yes]
 )
 
+AC_ARG_ENABLE(
+  [release],
+  AS_HELP_STRING(
+    [--enable-release],
+    [activate release build [default: off]]
+  ),
+  [enable_rlease=yes]
+)
+
 AC_ARG_WITH(
   [optimization-level],
   AS_HELP_STRING(
@@ -206,6 +215,11 @@ AC_ARG_WITH(
 # enable output and enable remote debugging together is not allowed
 AS_IF([test "x$enable_output" == "xyes" && test "x$enable_remote_debug" == "xyes"], [
   AC_MSG_ERROR([Enabled kernel output and remote debug are not possible at the same time])
+])
+
+# enable output and enable remote debugging together is not allowed
+AS_IF([test "x$enable_debug" == "xyes" && test "x$enable_release" == "xyes"], [
+  AC_MSG_ERROR([Enabled debug and release are not possible at the same time])
 ])
 
 # check necessary programs

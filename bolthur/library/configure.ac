@@ -25,12 +25,12 @@ AC_ARG_ENABLE([device],
 )
 
 AC_ARG_ENABLE(
-  [output],
+  [release],
   AS_HELP_STRING(
-    [--enable-output],
-    [activate debug output [default: off]]
+    [--enable-release],
+    [activate release build [default: off]]
   ),
-  [enable_output=yes]
+  [enable_rlease=yes]
 )
 
 AC_ARG_WITH(
@@ -50,6 +50,11 @@ AC_ARG_WITH(
   ),
   [with_debug_debug_symbols=yes]
 )
+
+# enable output and enable remote debugging together is not allowed
+AS_IF([test "x$enable_debug" == "xyes" && test "x$enable_release" == "xyes"], [
+  AC_MSG_ERROR([Enabled debug and release are not possible at the same time])
+])
 
 # check necessary programs
 BOLTHUR_PROG_READLINK

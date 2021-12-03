@@ -89,7 +89,7 @@ bool event_init( void ) {
   #endif
   // handle error
   if ( ! event->tree ) {
-    free( event->tree );
+    free( event );
     return false;
   }
 
@@ -97,7 +97,7 @@ bool event_init( void ) {
   event->queue_kernel = list_construct( NULL, NULL, NULL );
   // check allocation
   if ( ! event->queue_kernel ) {
-    free( event->tree );
+    avl_destroy_tree( event->tree );
     free( event );
     return false;
   }
@@ -106,7 +106,7 @@ bool event_init( void ) {
   // check allocation
   if ( ! event->queue_user ) {
     free( event->tree );
-    free( event->queue_kernel );
+    avl_destroy_tree( event->tree );
     free( event );
     return false;
   }
@@ -247,7 +247,8 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
  * @param callback bound callback
  * @param post post callback
  *
- * @todo Add logic for method
+ * @todo add avl tree cleanup helper
+ * @todo check whether avl removal is enough as logic for this function
  */
 void event_unbind(
   __unused event_type_t type,
@@ -317,7 +318,7 @@ void event_handle( void* data ) {
   #endif
 
   // variables
-  list_item_ptr_t current_event = list_pop_front( queue );
+  void* current_event = list_pop_front( queue );
   // get correct tree to use
   avl_tree_ptr_t tree = event->tree;
 

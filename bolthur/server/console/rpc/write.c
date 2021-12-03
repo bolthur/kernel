@@ -96,7 +96,7 @@ void rpc_handle_write(
   memset( terminal, 0, sizeof( terminal_write_request_t ) );
   terminal->len = request->len;
   memcpy( terminal->data, request->data, request->len );
-  strncpy( terminal->terminal, console->path, PATH_MAX );
+  strncpy( terminal->terminal, console->path, PATH_MAX - 1 );
 
   if ( 0 == console->fd ) {
     // open path

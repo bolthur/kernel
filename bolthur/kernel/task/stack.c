@@ -31,11 +31,12 @@
 task_stack_manager_ptr_t task_stack_manager = NULL;
 
 /**
+ * @fn int32_t task_stack_callback(const avl_node_ptr_t, const avl_node_ptr_t)
  * @brief Compare stack callback necessary for avl tree
  *
- * @param a node a
- * @param b node b
- * @return int32_t
+ * @param a
+ * @param b
+ * @return
  */
 static int32_t task_stack_callback(
   const avl_node_ptr_t a,
@@ -57,6 +58,20 @@ static int32_t task_stack_callback(
 
   // equal => return 0
   return 0;
+}
+
+/**
+ * @fn void task_stack_cleanup(const avl_node_ptr_t)
+ * @brief Cleanup helper
+ *
+ * @param a
+ */
+static void task_stack_cleanup( const avl_node_ptr_t a ) {
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Cleanup a = %p\r\n", ( void* )a );
+  #endif
+  free( a );
 }
 
 /**
@@ -93,7 +108,11 @@ task_stack_manager_ptr_t task_stack_manager_create( void ) {
   // prepare
   memset( ( void* )manager, 0, sizeof( task_stack_manager_t ) );
   // create tree
-  manager->tree = avl_create_tree( task_stack_callback, NULL, NULL );
+  manager->tree = avl_create_tree(
+    task_stack_callback,
+    NULL,
+    task_stack_cleanup
+  );
   if ( ! manager->tree ) {
     free( manager );
     return NULL;

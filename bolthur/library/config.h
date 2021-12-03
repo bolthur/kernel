@@ -17,31 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _PLATFORM_RPI_PERIPHERAL_H )
-#define _PLATFORM_RPI_PERIPHERAL_H
+#if !defined( _CONFIG_H )
+#define _CONFIG_H
 
-#include <stdint.h>
-
-// initial setup of peripheral base
-#if defined( BCM2836 ) || defined( BCM2837 )
-  #define PERIPHERAL_GPIO_BASE 0x3F000000
-  #define PERIPHERAL_GPIO_SIZE 0xFFFFFF
-  #define PERIPHERAL_CPU_BASE 0x40000000
-  #define PERIPHERAL_CPU_SIZE 0x3FFFF
-#else
-  #define PERIPHERAL_GPIO_BASE 0x20000000
-  #define PERIPHERAL_GPIO_SIZE 0xFFFFFF
-  #define PERIPHERAL_CPU_BASE 0
-  #define PERIPHERAL_CPU_SIZE 0
+#if defined( HAVE_CONFIG_H )
+  #include <config.h>
 #endif
-
-typedef enum {
-  PERIPHERAL_GPIO,
-  PERIPHERAL_LOCAL,
-} peripheral_type_t;
-
-void peripheral_base_set( uintptr_t, peripheral_type_t );
-uintptr_t peripheral_base_get( peripheral_type_t );
-uintptr_t peripheral_end_get( peripheral_type_t );
 
 #endif

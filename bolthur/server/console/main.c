@@ -99,7 +99,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->info.st_mode = S_IFREG;
-  strncpy( msg->file_path, "/dev/stdin", PATH_MAX );
+  strncpy( msg->file_path, "/dev/stdin", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, 0 );
 
@@ -108,7 +108,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->info.st_mode = S_IFREG;
-  strncpy( msg->file_path, "/dev/stdout", PATH_MAX );
+  strncpy( msg->file_path, "/dev/stdout", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, 0 );
 
@@ -117,7 +117,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->info.st_mode = S_IFREG;
-  strncpy( msg->file_path, "/dev/stderr", PATH_MAX );
+  strncpy( msg->file_path, "/dev/stderr", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, 0 );
   free( msg );
@@ -135,7 +135,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   msg->device_info[ 0 ] = CONSOLE_ADD;
   msg->device_info[ 1 ] = CONSOLE_SELECT;
-  strncpy( msg->file_path, "/dev/console", PATH_MAX );
+  strncpy( msg->file_path, "/dev/console", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, msg_size );
   // free again

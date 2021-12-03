@@ -18,7 +18,6 @@
  */
 
 #include <stddef.h>
-
 #include <string.h>
 #include <stdlib.h>
 #if defined( PRINT_MM_PHYS )
@@ -31,7 +30,10 @@
 #include <platform/rpi/mailbox/property.h>
 
 /**
+ * @fn bool phys_platform_init(void)
  * @brief Initialize physical memory manager for rpi
+ *
+ * @return
  */
 bool phys_platform_init( void ) {
   // Get arm memory
@@ -41,17 +43,13 @@ bool phys_platform_init( void ) {
   if ( MAILBOX_ERROR == mailbox_property_process() ) {
     return false;
   }
-
   // max memory
   uint32_t memory_amount;
-
   // video core memory
   uint32_t vc_memory_start;
   uint32_t vc_memory_end;
-
   // get arm memory
   rpi_mailbox_property_t* buffer = mailbox_property_get( TAG_GET_ARM_MEMORY );
-
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length );
@@ -65,18 +63,14 @@ bool phys_platform_init( void ) {
     );
     DEBUG_OUTPUT( "buffer->tag: %#08x\r\n", buffer->tag );
   #endif
-
   // increase amount by arm amount
   memory_amount = buffer->data.buffer_u32[ 1 ];
-
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "memory amount: %#08x\r\n", memory_amount );
   #endif
-
   // get video core memory
   buffer = mailbox_property_get( TAG_GET_VC_MEMORY );
-
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
@@ -96,27 +90,28 @@ bool phys_platform_init( void ) {
       buffer->tag
     );
   #endif
-
   // populate video core start and end
   vc_memory_start = buffer->data.buffer_u32[ 0 ];
   vc_memory_end = vc_memory_start + buffer->data.buffer_u32[ 1 ];
-
   // increase amount by video core amount
   memory_amount += buffer->data.buffer_u32[ 1 ];
 
   // determine amount of pages for bitmap
   size_t pages_per_size = sizeof( phys_bitmap_length ) * 8;
   phys_bitmap_length = memory_amount / PAGE_SIZE / pages_per_size;
-
-  // allocate bitmap manually via aligned_alloc
-  // align it to page size
+  // allocate bitmap manually via aligned_alloc and align it to pointer
   phys_bitmap = ( uint32_t* )aligned_alloc(
     sizeof( phys_bitmap ),
     phys_bitmap_length * sizeof( uint32_t ) );
   if ( ! phys_bitmap ) {
     return false;
   }
-
+  phys_bitmap_check = ( uint32_t* )aligned_alloc(
+    sizeof( phys_bitmap ),
+    phys_bitmap_length * sizeof( uint32_t ) );
+  if ( ! phys_bitmap_check ) {
+    return false;
+  }
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "total memory amount: %#08x\r\n", memory_amount );
@@ -127,43 +122,43 @@ bool phys_platform_init( void ) {
   #endif
   // overwrite physical bitmap completely with zero
   memset( phys_bitmap, 0, phys_bitmap_length * sizeof( uint32_t ) );
-
   // set start and end for peripherals
-  uintptr_t start = peripheral_base_get( PERIPHERAL_GPIO );
-  uintptr_t end = peripheral_end_get( PERIPHERAL_GPIO ) + 1;
-
+  uintptr_t start = PERIPHERAL_GPIO_BASE;
+  uintptr_t end = start + PERIPHERAL_GPIO_SIZE + 1;
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "start: %p\r\n", ( void* )start );
     DEBUG_OUTPUT( "end: %p\r\n", ( void* )end );
   #endif
-
-  // map from start to end addresses as used
-  while ( start < end ) {
-    // mark used
-    phys_mark_page_used( start );
-
-    // get next page
-    start += PAGE_SIZE;
-  }
-
+  // mark as used in bitmap and free in check
+  phys_use_page_range( start, end - start );
+  phys_free_page_range_check( start, end - start );
   // set start and end video core
   start = vc_memory_start;
   end = vc_memory_end + 1;
-
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "start: %p\r\n", ( void* )start );
     DEBUG_OUTPUT( "end: %p\r\n", ( void* )end );
   #endif
-
-  // map from start to end addresses as used
-  while ( start < end ) {
-    // mark used
-    phys_mark_page_used( start );
-
-    // get next page
-    start += PAGE_SIZE;
-  }
+  // mark as used in bitmap and as free in check
+  phys_use_page_range( start, end - start );
+  phys_free_page_range_check( start, end - start );
+  // return success
   return true;
+}
+
+/**
+ * @fn bool phys_free_check_only(uintptr_t)
+ * @brief Method to check whether free has to be done for check only
+ *
+ * @param address
+ * @return
+ */
+bool phys_free_check_only( uint64_t address ) {
+  uint64_t start_gpio = PERIPHERAL_GPIO_BASE;
+  uint64_t end_gpio = start_gpio + PERIPHERAL_GPIO_SIZE + 1;
+  uint64_t address_end = address + PAGE_SIZE - 1;
+  return ( start_gpio >= address && end_gpio <= address )
+    || ( start_gpio >= address_end && end_gpio <= address_end );
 }

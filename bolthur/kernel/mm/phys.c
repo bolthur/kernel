@@ -31,7 +31,12 @@
 /**
  * @brief Physical bitmap
  */
-uint32_t *phys_bitmap;
+uint32_t* phys_bitmap;
+
+/**
+ * @brief Physical bitmap duplicate used for checking
+ */
+uint32_t* phys_bitmap_check;
 
 /**
  * @brief physical bitmap length set by platform
@@ -44,7 +49,8 @@ uint32_t phys_bitmap_length;
 static bool phys_initialized = false;
 
 /**
- * @brief Mark physical page as used on arm
+ * @fn void phys_mark_page_used(uint64_t)
+ * @brief Mark physical page as used
  *
  * @param address address to mark as free
  */
@@ -56,6 +62,7 @@ void phys_mark_page_used( uint64_t address ) {
 
   // mark page as used
   phys_bitmap[ index ] |= ( 1U << offset );
+  phys_bitmap_check[ index ] |= ( 1U << offset );
 
   // debug output
   #if defined( PRINT_MM_PHYS )
@@ -67,7 +74,8 @@ void phys_mark_page_used( uint64_t address ) {
 }
 
 /**
- * @brief Mark physical page as free on arm
+ * @fn void phys_mark_page_free(uint64_t)
+ * @brief Mark physical page as free
  *
  * @param address address to mark as free
  */
@@ -78,7 +86,10 @@ void phys_mark_page_free( uint64_t address ) {
   uint64_t offset = PAGE_OFFSET( frame );
 
   // mark page as free
-  phys_bitmap[ index ] &= ( uint32_t )( ~( 1U << offset ) );
+  if ( ! phys_free_check_only( address ) ) {
+    phys_bitmap[ index ] &= ( uint32_t )( ~( 1U << offset ) );
+  }
+  phys_bitmap_check[ index ] &= ( uint32_t )( ~( 1U << offset ) );
 
   // debug output
   #if defined( PRINT_MM_PHYS )
@@ -90,6 +101,31 @@ void phys_mark_page_free( uint64_t address ) {
 }
 
 /**
+ * @fn void phys_mark_page_free(uint64_t)
+ * @brief Mark physical page as free
+ *
+ * @param address address to mark as free
+ */
+void phys_mark_page_free_check( uint64_t address ) {
+  // get frame, index and offset
+  uint64_t frame = address / PAGE_SIZE;
+  uint64_t index = PAGE_INDEX( frame );
+  uint64_t offset = PAGE_OFFSET( frame );
+
+  // mark page as free
+  phys_bitmap_check[ index ] &= ( uint32_t )( ~( 1U << offset ) );
+
+  // debug output
+  #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT(
+      "frame: %06llu, index: %04llu, offset: %02llu, address: %#016llx, phys_bitmap[ %04llu ]: %#08x\r\n",
+      frame, index, offset, address, index, phys_bitmap[ index ]
+    );
+  #endif
+}
+
+/**
+ * @fn void phys_free_page_range(uint64_t, size_t)
  * @brief Method to free phys page range
  *
  * @param address start address
@@ -112,7 +148,31 @@ void phys_free_page_range( uint64_t address, size_t amount ) {
 }
 
 /**
+ * @fn void phys_free_page_range(uint64_t, size_t)
  * @brief Method to free phys page range
+ *
+ * @param address start address
+ * @param amount amount of memory
+ */
+void phys_free_page_range_check( uint64_t address, size_t amount ) {
+  // debug output
+  #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT( "address: %#016llx, amount: %zu\r\n", address, amount );
+  #endif
+
+  // loop until amount and mark as free
+  for (
+    size_t idx = 0;
+    idx < amount / PAGE_SIZE;
+    idx++, address += PAGE_SIZE
+  ) {
+    phys_mark_page_free_check( address );
+  }
+}
+
+/**
+ * @fn void phys_use_page_range(uint64_t, size_t)
+ * @brief Method to mark phys page range as used
  *
  * @param address start address
  * @param amount amount of memory
@@ -139,11 +199,12 @@ void phys_use_page_range( uint64_t address, size_t amount ) {
 }
 
 /**
+ * @fn uint64_t phys_find_free_page_range(size_t, size_t)
  * @brief Method to find free page range
  *
  * @param alignment wanted memory alignment
  * @param memory_amount amount of memory to find free page range for
- * @return uint64_t address of found memory
+ * @return address of found memory
  */
 uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
   // debug output
@@ -225,16 +286,18 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
 }
 
 /**
+ * @fn uint64_t phys_find_free_page(size_t)
  * @brief Shorthand to find single free page
  *
- * @param alignment
- * @return uint64_t
+ * @param alignment wanted alignment for memory address
+ * @return
  */
 uint64_t phys_find_free_page( size_t alignment ) {
   return phys_find_free_page_range( alignment, PAGE_SIZE );
 }
 
 /**
+ * @fn void phys_free_page(uint64_t)
  * @brief Shorthand for free one single page
  *
  * @param address address to free
@@ -244,6 +307,44 @@ void phys_free_page( uint64_t address ) {
 }
 
 /**
+ * @fn bool phys_is_range_used(uint64_t, size_t)
+ * @brief Helper to check if range is in use
+ *
+ * @param address start address
+ * @param len length
+ * @return
+ */
+bool phys_is_range_used( uint64_t address, size_t len ) {
+  // debug output
+  #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT(
+      "len: %zu, address: %#016zx\r\n",
+      len, address
+    );
+  #endif
+  // handle invalid size
+  if ( 0 == len ) {
+    return false;
+  }
+  // determine index and offset start
+  // calculate end address
+  uint64_t end = address + len;
+  while ( address < end ) {
+    uint64_t index = PAGE_INDEX( address );
+    uint64_t offset = PAGE_OFFSET( address );
+    // stop and return false if already used
+    if ( phys_bitmap_check[ index ] & ( 1U << offset ) ) {
+      return false;
+    }
+    // increase by page size
+    address += PAGE_SIZE;
+  }
+  // not yet mapped
+  return true;
+}
+
+/**
+ * @fn void phys_init(void)
  * @brief Generic initialization of physical memory manager
  */
 void phys_init( void ) {

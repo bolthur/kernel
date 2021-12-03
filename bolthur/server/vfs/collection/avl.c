@@ -25,8 +25,9 @@
 
 /**
  * @brief buffer helper for output
+ * @todo remove static output buffer and use some generic allocated by some constructor
  */
-static uint8_t level_buffer[ 4096 ];
+static uint8_t* level_buffer;
 
 /**
  * @brief depth index
@@ -493,6 +494,19 @@ static avl_node_ptr_t remove_by_data(
 
   // return rebalanced partial root
   return balance( root );
+}
+
+/**
+ * @fn void avl_constructor(void)
+ * @brief Avl internal setup
+ */
+void avl_constructor( void );
+void __attribute__(( __constructor__ )) avl_constructor( void ) {
+  // allocate avl dump output buffer
+  level_buffer = malloc( sizeof( char ) * 4096 );
+  if ( ! level_buffer ) {
+    exit( 1 );
+  }
 }
 
 /**

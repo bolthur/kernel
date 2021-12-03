@@ -185,6 +185,8 @@ static int32_t process_block_list_lookup( const list_item_ptr_t a, const void* d
  * @param type interrupt type
  * @param post flag to bind as post callback
  * @return
+ *
+ * @todo Add removal of tree node, when all lists are empty
  */
 bool interrupt_unregister_handler(
   size_t num,

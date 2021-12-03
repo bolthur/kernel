@@ -92,7 +92,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, TERMINAL_BASE_PATH, PATH_MAX );
+  strncpy( msg->file_path, TERMINAL_BASE_PATH, PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, 0 );
 
@@ -101,7 +101,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/terminal", PATH_MAX );
+  strncpy( msg->file_path, "/dev/terminal", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, 0 );
 

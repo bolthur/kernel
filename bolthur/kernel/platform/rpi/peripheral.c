@@ -23,17 +23,10 @@
 #include <platform/rpi/peripheral.h>
 
 // initial setup of peripheral base
-#if defined( BCM2836 ) || defined( BCM2837 )
-  uintptr_t gpio_peripheral_base = 0x3F000000;
-  size_t gpio_peripheral_size = 0xFFFFFF;
-  uintptr_t cpu_peripheral_base = 0x40000000;
-  size_t cpu_peripheral_size = 0x3FFFF;
-#else
-  uintptr_t gpio_peripheral_base = 0x20000000;
-  size_t gpio_peripheral_size = 0xFFFFFF;
-  uintptr_t cpu_peripheral_base = 0;
-  size_t cpu_peripheral_size = 0;
-#endif
+uintptr_t gpio_peripheral_base = PERIPHERAL_GPIO_BASE;
+size_t gpio_peripheral_size = PERIPHERAL_GPIO_SIZE;
+uintptr_t cpu_peripheral_base = PERIPHERAL_CPU_BASE;
+size_t cpu_peripheral_size = PERIPHERAL_CPU_SIZE;
 
 /**
  * @brief Method to set peripheral base address

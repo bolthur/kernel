@@ -39,7 +39,7 @@
  * @param data_info
  * @param response_info
  */
-static void rpc_handle_ioctl_async(
+void rpc_handle_ioctl_async(
   size_t type,
   __maybe_unused pid_t origin,
   size_t data_info,

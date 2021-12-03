@@ -1,5 +1,12 @@
 
 AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
+  # add symbol strip and garbage sections for release
+  AS_IF([test "x$enable_rlease" == "xyes"], [
+    AX_APPEND_COMPILE_FLAGS([-O2])
+    AX_APPEND_LINK_FLAGS([-Wl,-s])
+    AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
+  ])
+
   # Linker flags ( first due to stack protector and no standard library )
   AX_APPEND_LINK_FLAGS([-nostdlib])
   AX_APPEND_LINK_FLAGS([-ffreestanding])
@@ -29,30 +36,32 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
     # debug symbols and sanitizer
     AX_APPEND_COMPILE_FLAGS([-g -Og -fsanitize=undefined])
   ], [
-    # optimization level
-    case "${with_optimization_level}" in
-      no | 0)
-        AX_APPEND_COMPILE_FLAGS([-O0])
-        ;;
-      1)
-        AX_APPEND_COMPILE_FLAGS([-O1])
-        ;;
-      2)
-        AX_APPEND_COMPILE_FLAGS([-O2])
-        ;;
-      3)
-        AX_APPEND_COMPILE_FLAGS([-O3])
-        ;;
-      s)
-        AX_APPEND_COMPILE_FLAGS([-Os])
-        ;;
-      g)
-        AX_APPEND_COMPILE_FLAGS([-Og])
-        ;;
-      *)
-        AX_APPEND_COMPILE_FLAGS([-O2])
-        ;;
-    esac
+    # custom optimization level
+    AS_IF([test "x$enable_rlease" != "xyes"], [
+      case "${with_optimization_level}" in
+        no | 0)
+          AX_APPEND_COMPILE_FLAGS([-O0])
+          ;;
+        1)
+          AX_APPEND_COMPILE_FLAGS([-O1])
+          ;;
+        2)
+          AX_APPEND_COMPILE_FLAGS([-O2])
+          ;;
+        3)
+          AX_APPEND_COMPILE_FLAGS([-O3])
+          ;;
+        s)
+          AX_APPEND_COMPILE_FLAGS([-Os])
+          ;;
+        g)
+          AX_APPEND_COMPILE_FLAGS([-Og])
+          ;;
+        *)
+          AX_APPEND_COMPILE_FLAGS([-O2])
+          ;;
+      esac
+    ])
   ])
 
   # default include directories
@@ -71,6 +80,13 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
 ])
 
 AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
+  # add symbol strip and garbage sections for release
+  AS_IF([test "x$enable_rlease" == "xyes"], [
+    AX_APPEND_COMPILE_FLAGS([-O2])
+    AX_APPEND_LINK_FLAGS([-Wl,-s])
+    AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
+  ])
+
   # Compilation flags
   AX_APPEND_COMPILE_FLAGS([-fstack-protector-all -Wstack-protector])
   # warnings
@@ -105,34 +121,43 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
     # -fsanitize=undefined
     AX_APPEND_COMPILE_FLAGS([-g -Og])
   ], [
-    # optimization level
-    case "${with_optimization_level}" in
-      no | 0)
-        AX_APPEND_COMPILE_FLAGS([-O0])
-        ;;
-      1)
-        AX_APPEND_COMPILE_FLAGS([-O1])
-        ;;
-      2)
-        AX_APPEND_COMPILE_FLAGS([-O2])
-        ;;
-      3)
-        AX_APPEND_COMPILE_FLAGS([-O3])
-        ;;
-      s)
-        AX_APPEND_COMPILE_FLAGS([-Os])
-        ;;
-      g)
-        AX_APPEND_COMPILE_FLAGS([-Og])
-        ;;
-      *)
-        AX_APPEND_COMPILE_FLAGS([-Os])
-        ;;
-    esac
-  ] )
+    # custom optimization level
+    AS_IF([test "x$enable_rlease" != "xyes"], [
+      case "${with_optimization_level}" in
+        no | 0)
+          AX_APPEND_COMPILE_FLAGS([-O0])
+          ;;
+        1)
+          AX_APPEND_COMPILE_FLAGS([-O1])
+          ;;
+        2)
+          AX_APPEND_COMPILE_FLAGS([-O2])
+          ;;
+        3)
+          AX_APPEND_COMPILE_FLAGS([-O3])
+          ;;
+        s)
+          AX_APPEND_COMPILE_FLAGS([-Os])
+          ;;
+        g)
+          AX_APPEND_COMPILE_FLAGS([-Og])
+          ;;
+        *)
+          AX_APPEND_COMPILE_FLAGS([-O2])
+          ;;
+      esac
+    ])
+  ])
 ])
 
 AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
+  # add symbol strip and garbage sections for release
+  AS_IF([test "x$enable_rlease" == "xyes"], [
+    AX_APPEND_COMPILE_FLAGS([-O2])
+    AX_APPEND_LINK_FLAGS([-Wl,-s])
+    AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
+  ])
+
   # Compilation flags
   AX_APPEND_COMPILE_FLAGS([-fstack-protector-all -Wstack-protector])
   # warnings
@@ -167,29 +192,31 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
     # -fsanitize=undefined
     AX_APPEND_COMPILE_FLAGS([-g -Og])
   ], [
-    # optimization level
-    case "${with_optimization_level}" in
-      no | 0)
-        AX_APPEND_COMPILE_FLAGS([-O0])
-        ;;
-      1)
-        AX_APPEND_COMPILE_FLAGS([-O1])
-        ;;
-      2)
-        AX_APPEND_COMPILE_FLAGS([-O2])
-        ;;
-      3)
-        AX_APPEND_COMPILE_FLAGS([-O3])
-        ;;
-      s)
-        AX_APPEND_COMPILE_FLAGS([-Os])
-        ;;
-      g)
-        AX_APPEND_COMPILE_FLAGS([-Og])
-        ;;
-      *)
-        AX_APPEND_COMPILE_FLAGS([-Os])
-        ;;
-    esac
-  ] )
+    # custom optimization level
+    AS_IF([test "x$enable_rlease" != "xyes"], [
+      case "${with_optimization_level}" in
+        no | 0)
+          AX_APPEND_COMPILE_FLAGS([-O0])
+          ;;
+        1)
+          AX_APPEND_COMPILE_FLAGS([-O1])
+          ;;
+        2)
+          AX_APPEND_COMPILE_FLAGS([-O2])
+          ;;
+        3)
+          AX_APPEND_COMPILE_FLAGS([-O3])
+          ;;
+        s)
+          AX_APPEND_COMPILE_FLAGS([-Os])
+          ;;
+        g)
+          AX_APPEND_COMPILE_FLAGS([-Og])
+          ;;
+        *)
+          AX_APPEND_COMPILE_FLAGS([-O2])
+          ;;
+      esac
+    ])
+  ])
 ])
