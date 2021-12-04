@@ -40,5 +40,6 @@ extern list_manager_ptr_t console_list;
 
 void console_destroy( console_ptr_t );
 console_ptr_t console_get_active( void );
+console_ptr_t console_get_by_path( const char* );
 
 #endif

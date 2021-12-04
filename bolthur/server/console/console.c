@@ -18,6 +18,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include "console.h"
 
 /**
@@ -47,6 +48,25 @@ console_ptr_t console_get_active( void ) {
   while ( current ) {
     console_ptr_t found = current->data;
     if ( found->active ) {
+      return found;
+    }
+    current = current->next;
+  }
+  return NULL;
+}
+
+/**
+ * @fn console_ptr_t console_get_by_path(const char*)
+ * @brief Get console by path
+ *
+ * @param path
+ * @return
+ */
+console_ptr_t console_get_by_path( const char* path ) {
+  list_item_ptr_t current = console_list->first;
+  while ( current ) {
+    console_ptr_t found = current->data;
+    if ( 0 == strcmp( found->path, path ) ) {
       return found;
     }
     current = current->next;

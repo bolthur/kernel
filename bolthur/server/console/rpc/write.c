@@ -73,7 +73,7 @@ void rpc_handle_write(
     free( request );
     return;
   }
-  // get active console
+  // get current active console
   console_ptr_t console = console_get_active();
   if ( ! console ) {
     response.len = -EIO;
