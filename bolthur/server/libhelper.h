@@ -80,6 +80,7 @@ __maybe_unused static void send_vfs_add_request( vfs_add_request_ptr_t msg, size
     //EARLY_STARTUP_PRINT( "Allocation failed or invalid message passed!\r\n" )
     exit( -1 );
   }
+  size_t size_to_use = size ? size : sizeof( vfs_add_request_t );
   // response id
   size_t response_id = 0;
   // try to send until it worked
@@ -89,12 +90,12 @@ __maybe_unused static void send_vfs_add_request( vfs_add_request_ptr_t msg, size
       RPC_VFS_ADD,
       VFS_DAEMON_ID,
       msg,
-      size ? size : sizeof( vfs_add_request_t ),
+      size_to_use,
       true,
       false,
       RPC_VFS_ADD,
       msg,
-      size ? size : sizeof( vfs_add_request_t ),
+      size_to_use,
       0,
       0
     );

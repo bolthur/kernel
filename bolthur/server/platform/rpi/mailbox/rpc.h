@@ -17,25 +17,20 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <interrupt.h>
-#include <syscall.h>
-#include <platform/rpi/syscall.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <sys/bolthur.h>
 
-/**
- * @brief platform related syscall init
- * @return
- */
-bool syscall_init_platform( void ) {
-  // process system calls
-  if ( ! interrupt_register_handler(
-    SYSCALL_MAILBOX_ACTION,
-    syscall_mailbox_action,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  return true;
-}
+#if !defined( _RPC_H )
+#define _RPC_H
+
+struct mailbox_rpc {
+  uint32_t command;
+  rpc_handler_t callback;
+};
+extern struct mailbox_rpc command_list[ 1 ];
+
+bool rpc_register( void );
+void rpc_handle_request( size_t, pid_t, size_t, size_t );
+
+#endif

@@ -20,11 +20,12 @@
 #if ! defined( _MM_PHYS_H )
 #define _MM_PHYS_H
 
+#include <limits.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
 
-#define PAGE_PER_ENTRY ( sizeof( phys_bitmap_length ) * 8 )
+#define PAGE_PER_ENTRY ( sizeof( phys_bitmap_length ) * CHAR_BIT )
 #define PAGE_INDEX( address ) ( address / PAGE_PER_ENTRY )
 #define PAGE_OFFSET( address ) ( address % PAGE_PER_ENTRY )
 

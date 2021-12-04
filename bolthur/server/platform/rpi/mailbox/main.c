@@ -17,17 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// initial setup of peripheral base
-#if defined( BCM2836 ) || defined( BCM2837 )
-  #define PERIPHERAL_GPIO_BASE 0x3F000000
-  #define PERIPHERAL_GPIO_SIZE 0xFFFFFF
-#else
-  #define PERIPHERAL_GPIO_BASE 0x20000000
-  #define PERIPHERAL_GPIO_SIZE 0xFFFFFF
-#endif
-
-#define GPU_MAILBOX_OFFSET 0xB880
-
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -36,6 +25,10 @@
 #include <sys/mman.h>
 #include <sys/bolthur.h>
 #include <inttypes.h>
+#include "property.h"
+#include "mailbox.h"
+#include "rpc.h"
+#include "../libmailbox.h"
 #include "../../../libhelper.h"
 
 /**
@@ -47,34 +40,37 @@
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
+  // setup mailbox stuff
+  if ( ! mailbox_setup() ) {
+    EARLY_STARTUP_PRINT( "Error while setting up mailbox: %s\r\n", strerror( errno ) )
+    return -1;
+  }
+  // setup property stuff
+  if ( ! property_setup() ) {
+    EARLY_STARTUP_PRINT( "Error while setting up property\r\n" )
+    return -1;
+  }
+  // register handlers
+  if ( ! rpc_register() ) {
+    EARLY_STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
+    return -1;
+  }
+
+  // calculate add message size
+  size_t msg_size = sizeof( vfs_add_request_t ) + 1 * sizeof( size_t );
   // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
+  vfs_add_request_ptr_t msg = malloc( msg_size );
   if ( ! msg ) {
     return -1;
   }
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
+  // clear memory and prepare message structure
+  memset( msg, 0, msg_size );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/mailbox", PATH_MAX - 1 );
-  // try to map mailbox buffer area
-  void* mailbox_area = mmap(
-    ( void* )( PERIPHERAL_GPIO_BASE + GPU_MAILBOX_OFFSET ),
-    0x1000,
-    PROT_READ | PROT_WRITE,
-    MAP_ANONYMOUS | MAP_PHYSICAL | MAP_DEVICE,
-    -1,
-    0
-  );
-  if ( MAP_FAILED == mailbox_area ) {
-    EARLY_STARTUP_PRINT(
-      "Unable to acquire mailbox area: %s\r\n",
-      strerror( errno )
-    )
-    return -1;
-  }
+  msg->device_info[ 0 ] = MAILBOX_REQUEST;
   // perform add request
-  send_vfs_add_request( msg, 0 );
+  send_vfs_add_request( msg, msg_size );
   // free again
   free( msg );
 

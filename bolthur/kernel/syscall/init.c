@@ -170,6 +170,16 @@ bool syscall_init( void ) {
   ) ) {
     return false;
   }
+  if ( ! interrupt_register_handler(
+    SYSCALL_MEMORY_TRANSLATE_PHYSICAL,
+    syscall_memory_translate_physical,
+    NULL,
+    INTERRUPT_SOFTWARE,
+    false,
+    false
+  ) ) {
+    return false;
+  }
   // rpc related
   if ( ! interrupt_register_handler(
     SYSCALL_RPC_SET_HANDLER,
@@ -326,10 +336,6 @@ bool syscall_init( void ) {
       return false;
     }
   #endif
-  // platform related system calls
-  if ( ! syscall_init_platform() ) {
-    return false;
-  }
   return true;
 }
 

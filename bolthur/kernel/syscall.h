@@ -40,6 +40,7 @@
 #define SYSCALL_MEMORY_SHARED_CREATE 23
 #define SYSCALL_MEMORY_SHARED_ATTACH 24
 #define SYSCALL_MEMORY_SHARED_DETACH 25
+#define SYSCALL_MEMORY_TRANSLATE_PHYSICAL 26
 
 #define SYSCALL_RPC_SET_HANDLER 31
 #define SYSCALL_RPC_RAISE 32
@@ -52,16 +53,15 @@
 #define SYSCALL_INTERRUPT_ACQUIRE 41
 #define SYSCALL_INTERRUPT_RELEASE 42
 
-#define SYSCALL_TIMER_TICK_COUNT 61
-#define SYSCALL_TIMER_FREQUENCY 62
-#define SYSCALL_TIMER_ACQUIRE 63
-#define SYSCALL_TIMER_RELEASE 64
+#define SYSCALL_TIMER_TICK_COUNT 51
+#define SYSCALL_TIMER_FREQUENCY 52
+#define SYSCALL_TIMER_ACQUIRE 53
+#define SYSCALL_TIMER_RELEASE 54
 
-#define SYSCALL_KERNEL_PUTC 71
-#define SYSCALL_KERNEL_PUTS 72
+#define SYSCALL_KERNEL_PUTC 61
+#define SYSCALL_KERNEL_PUTS 62
 
 bool syscall_init( void );
-bool syscall_init_platform( void );
 void syscall_populate_success( void*, size_t );
 void syscall_populate_error( void*, size_t );
 size_t syscall_get_parameter( void*, int32_t );
@@ -83,6 +83,7 @@ void syscall_memory_release( void* );
 void syscall_memory_shared_create( void* );
 void syscall_memory_shared_attach( void* );
 void syscall_memory_shared_detach( void* );
+void syscall_memory_translate_physical( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );

@@ -97,8 +97,7 @@ bool phys_platform_init( void ) {
   memory_amount += buffer->data.buffer_u32[ 1 ];
 
   // determine amount of pages for bitmap
-  size_t pages_per_size = sizeof( phys_bitmap_length ) * 8;
-  phys_bitmap_length = memory_amount / PAGE_SIZE / pages_per_size;
+  phys_bitmap_length = memory_amount / PAGE_SIZE / PAGE_PER_ENTRY;
   // allocate bitmap manually via aligned_alloc and align it to pointer
   phys_bitmap = ( uint32_t* )aligned_alloc(
     sizeof( phys_bitmap ),

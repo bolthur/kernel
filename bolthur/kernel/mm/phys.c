@@ -318,7 +318,7 @@ bool phys_is_range_used( uint64_t address, size_t len ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
-      "len: %zu, address: %#016zx\r\n",
+      "len: %zu, address: %#016llx\r\n",
       len, address
     );
   #endif
@@ -330,17 +330,25 @@ bool phys_is_range_used( uint64_t address, size_t len ) {
   // calculate end address
   uint64_t end = address + len;
   while ( address < end ) {
-    uint64_t index = PAGE_INDEX( address );
-    uint64_t offset = PAGE_OFFSET( address );
+    uint64_t frame = address / PAGE_SIZE;
+    uint64_t index = PAGE_INDEX( frame );
+    uint64_t offset = PAGE_OFFSET( frame );
+    // debug output
+    #if defined( PRINT_MM_PHYS )
+      DEBUG_OUTPUT(
+        "index = %lld, offset = %lld, frame = %#016llx, address = %#016llx, end = %#016llx\r\n",
+        index, offset, frame, address, end
+      )
+    #endif
     // stop and return false if already used
     if ( phys_bitmap_check[ index ] & ( 1U << offset ) ) {
-      return false;
+      return true;
     }
     // increase by page size
     address += PAGE_SIZE;
   }
   // not yet mapped
-  return true;
+  return false;
 }
 
 /**

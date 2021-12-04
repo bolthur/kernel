@@ -2,7 +2,7 @@
 AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   # add symbol strip and garbage sections for release
   AS_IF([test "x$enable_rlease" == "xyes"], [
-    AX_APPEND_COMPILE_FLAGS([-O2])
+    AX_APPEND_COMPILE_FLAGS([-O2 -ffunction-sections -fdata-sections])
     AX_APPEND_LINK_FLAGS([-Wl,-s])
     AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
   ])
@@ -11,7 +11,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_LINK_FLAGS([-nostdlib])
   AX_APPEND_LINK_FLAGS([-ffreestanding])
   AX_APPEND_LINK_FLAGS([-Wl,-u,Entry])
-
   # Compilation flags
   # stack protector
   AX_APPEND_COMPILE_FLAGS([-fstack-protector-all -Wstack-protector])
@@ -82,7 +81,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
 AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
   # add symbol strip and garbage sections for release
   AS_IF([test "x$enable_rlease" == "xyes"], [
-    AX_APPEND_COMPILE_FLAGS([-O2])
+    AX_APPEND_COMPILE_FLAGS([-O2 -ffunction-sections -fdata-sections])
     AX_APPEND_LINK_FLAGS([-Wl,-s])
     AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
   ])
@@ -100,7 +99,6 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-Wduplicated-branches -Wduplicated-cond])
   # generic
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c18])
-  AX_APPEND_COMPILE_FLAGS([-ffunction-sections -fdata-sections])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
 
   # third party stuff
@@ -153,7 +151,7 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
 AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   # add symbol strip and garbage sections for release
   AS_IF([test "x$enable_rlease" == "xyes"], [
-    AX_APPEND_COMPILE_FLAGS([-O2])
+    AX_APPEND_COMPILE_FLAGS([-O2 -ffunction-sections -fdata-sections])
     AX_APPEND_LINK_FLAGS([-Wl,-s])
     AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
   ])
@@ -171,7 +169,6 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-Wduplicated-branches -Wduplicated-cond])
   # generic
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c18])
-  AX_APPEND_COMPILE_FLAGS([-ffunction-sections -fdata-sections])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
 
   # third party stuff

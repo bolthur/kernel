@@ -358,15 +358,15 @@ static void stage2( void ) {
   pid_t mmio = execute_driver( "/ramdisk/server/mmio" );
   wait_for_device( "/dev/mmio" );
 
-  // start system console and wait for device to come up
-  EARLY_STARTUP_PRINT( "Starting and waiting for console server...\r\n" )
-  pid_t console = execute_driver( "/ramdisk/server/console" );
-  wait_for_device( "/dev/console" );
-
   // start framebuffer driver and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for framebuffer server...\r\n" )
   pid_t framebuffer = execute_driver( "/ramdisk/server/framebuffer" );
   wait_for_device( "/dev/framebuffer" );
+
+  // start system console and wait for device to come up
+  EARLY_STARTUP_PRINT( "Starting and waiting for console server...\r\n" )
+  pid_t console = execute_driver( "/ramdisk/server/console" );
+  wait_for_device( "/dev/console" );
 
   // start tty and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )

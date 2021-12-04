@@ -17,11 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _PLATFORM_RPI_SYSCALL_H )
-#define _PLATFORM_RPI_SYSCALL_H
+#if ! defined( _GENERIC_H )
+#define _GENERIC_H
 
-#define SYSCALL_MAILBOX_ACTION 51
-
-void syscall_mailbox_action( void* );
+#define PAGE_SIZE 0x1000
 
 #endif

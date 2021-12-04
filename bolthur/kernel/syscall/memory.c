@@ -79,6 +79,9 @@ void syscall_memory_acquire( void* context ) {
     // set phys to given address
     phys = ( uintptr_t )addr;
     // overwrite address with NULL
+    uint64_t offset = phys - ROUND_DOWN_TO_FULL_PAGE( addr );
+    phys -= offset;
+    // overwrite address with NULL
     addr = NULL;
     // check if already used
     if ( phys_is_range_used( phys, len ) ) {
@@ -154,6 +157,13 @@ void syscall_memory_acquire( void* context ) {
   }
   // handle physical memory allocation
   if ( flag & MEMORY_FLAG_PHYS ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT(
+        "mapping %#016llx to address %p with type %d, flag %d and len %x\r\n",
+        phys, start,  map_type, map_flag, len
+      )
+    #endif
     if ( ! virt_map_address_range(
       virtual_context,
       start,
@@ -361,4 +371,43 @@ void syscall_memory_shared_detach( void* context ) {
     syscall_populate_error( context, ( size_t )-EIO );
     return;
   }
+}
+
+/**
+ * @fn void syscall_memory_translate_physical(void*)
+ * @brief Translate virtual into physical address
+ *
+ * @param context
+ */
+void syscall_memory_translate_physical( void* context ) {
+  // get parameters
+  uintptr_t address = ( uintptr_t )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_memory_translate_physical( %#"PRIxPTR" )\r\n", address )
+  #endif
+  // get context
+  virt_context_ptr_t virtual_context = task_thread_current_thread
+    ->process
+    ->virtual_context;
+  // get min and max address of context
+  uintptr_t min = virt_get_context_min_address( virtual_context );
+  uintptr_t max = virt_get_context_max_address( virtual_context );
+  // ensure that address is in context
+  if (
+    min > address
+    || max <= address
+    || ! virt_is_mapped_in_context( virtual_context, address )
+  ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid address received!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // get mapped address
+  uint64_t phys = virt_get_mapped_address_in_context( virtual_context, address );
+  // populate success
+  syscall_populate_success( context, ( uintptr_t )phys  );
 }
