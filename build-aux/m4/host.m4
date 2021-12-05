@@ -139,6 +139,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       output_sym=kernel7.sym
       output_img_qemu=kernel7_qemu.img
       output_sym_qemu=kernel7_qemu.sym
+      platform_name=bcm2836
       AC_DEFINE([ELF32])
       AC_DEFINE([BCM2836], [1], [Define to 1 for BCM2836 chip])
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets])
@@ -151,6 +152,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
       subarch_subdir=v6
       platform_subdir=rpi
+      platform_name=bcm2835
       AC_DEFINE([BCM2835], [1], [Define to 1 for BCM2835])
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets])
@@ -165,6 +167,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       output_sym=kernel8.sym
       output_img_qemu=kernel8_qemu.img
       output_sym_qemu=kernel8_qemu.sym
+      platform_name=bcm2837
       AC_DEFINE([BCM2837], [1], [Define to 1 for BCM2837 chip])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
@@ -179,6 +182,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       output_sym=kernel8.sym
       output_img_qemu=kernel8_qemu.img
       output_sym_qemu=kernel8_qemu.sym
+      platform_name=bcm2711
       AC_DEFINE([BCM2711], [1], [Define to 1 for BCM2711 chip])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A72], [1], [Define to 1 for ARM Cortex-A72 targets])
@@ -205,6 +209,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       output_sym=kernel8.sym
       output_img_qemu=kernel8_qemu.img
       output_sym_qemu=kernel8_qemu.sym
+      platform_name=bcm2837
       AC_DEFINE([BCM2837], [1], [Define to 1 for BCM2837 chip])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
@@ -219,6 +224,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       output_sym=kernel8.sym
       output_img_qemu=kernel8_qemu.img
       output_sym_qemu=kernel8_qemu.sym
+      platform_name=bcm2711
       AC_DEFINE([BCM2711], [1], [Define to 1 for BCM2711 chip])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A72], [1], [Define to 1 for ARM Cortex-A72 targets])
@@ -246,6 +252,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     ["$arch_subdir$subarch_subdir"],
     [Define to the target architecture for this package]
   )
+  AC_SUBST(platform_name)
   AC_SUBST(arch_subdir)
   AC_SUBST(subarch_subdir)
   AC_SUBST(platform_subdir)

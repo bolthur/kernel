@@ -145,9 +145,6 @@ AC_CONFIG_FILES([
   Makefile
   src/Makefile
   src/generic/Makefile
-  src/generic/core/Makefile
-  src/generic/core/pipe/Makefile
-  src/generic/core/startup/Makefile
   src/generic/usr/Makefile
   src/generic/usr/lib/Makefile
   src/generic/usr/lib/ld-bolthur/Makefile

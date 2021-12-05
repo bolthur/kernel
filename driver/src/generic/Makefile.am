@@ -1,2 +1,2 @@
 
-SUBDIRS = core usr
+SUBDIRS = usr

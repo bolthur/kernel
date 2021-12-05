@@ -33,14 +33,15 @@ createDir( "tmp" )
 
 # check argument count
 let argc: int = paramCount()
-if argc != 3:
-  echo "Usage: ramdisk <driver path> <initrd name> <sysroot>"
+if argc != 4:
+  echo "Usage: ramdisk <driver path> <initrd name> <sysroot> <platform>"
   quit( 1 )
 
 # get command line arguments
 let root_path: string = paramStr( 1 )
 let output: string = paramStr( 2 )
 let sysroot: string = paramStr( 3 )
+let config: string = paramStr( 4 )
 
 let font: string = joinPath( getCurrentDir(), "..", "thirdparty", "font" )
 let driver: string = joinPath( root_path, "driver" )
@@ -130,7 +131,7 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
 #scan_directory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
 scan_directory( font, "PC Screen Font", "", sysroot, false )
 scan_directory( server, "ELF", "executable", sysroot, false )
-#scan_directory( driver, "ELF", "executable", sysroot, false )
+scan_directory( driver, "ELF", "executable", sysroot, false )
 
 #[
 # loop through files of folder including subfolders and adjust interpreter and run path for ramdisk
@@ -144,16 +145,19 @@ for file in walkDirRec( joinPath( getCurrentDir(), "tmp", "ramdisk" ) ):
     discard execProcess( "patchelf --set-rpath /ramdisk/lib " & file )
 ]#
 
-# append testing stuff from current dir
-for kind, file in walkDir(getCurrentDir()):
-  # split file
-  let split = splitFile( file )
-  let file_name = split.name
-  let ending = split.ext
-  if ending == ".txt":
-    let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", "test" )
-    createDir( base_path )
-    copyFile( file, joinPath( base_path, file_name & ending ) )
+# configuration files
+if existsDir( config ):
+  # create base path
+  let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", "config" )
+  createDir( base_path )
+  for file in walkDirRec( config ):
+    # remove full path, and strip possible leading directory separator
+    let path = replace( file, config, "" ).strip( trailing = false, chars = { DirSep } )
+    # get folder path out of file
+    let splitted = splitPath( path )
+    if "" != splitted.head: createDir( joinPath( base_path, splitted.head ) )
+    # copy file
+    copyFile( file, joinPath( base_path, path ) )
 
 # create ramdisk and remove normal directory
 echo execProcess( "tar czvf ../ramdisk.tar.gz * --owner=0 --group=0", "tmp/ramdisk" )
