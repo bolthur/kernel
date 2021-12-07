@@ -20,6 +20,7 @@
 #if ! defined( _LIB_SSP_H )
 #define _LIB_SSP_H
 
+#include <stdint.h>
 #include <stdnoreturn.h>
 
 noreturn void __stack_chk_fail( void );

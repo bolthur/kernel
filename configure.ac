@@ -177,6 +177,15 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_ENABLE(
+  [output-ssp],
+  AS_HELP_STRING(
+    [--enable-output-ssp],
+    [activate ssp origin output [default: off]]
+  ),
+  [enable_output_ssp=yes]
+)
+
+AC_ARG_ENABLE(
   [remote-debug],
   AS_HELP_STRING(
     [--enable-remote-debug],

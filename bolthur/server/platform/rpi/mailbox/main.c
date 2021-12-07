@@ -40,22 +40,26 @@
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
+  EARLY_STARTUP_PRINT( "Setup mailboxes\r\n" )
   // setup mailbox stuff
   if ( ! mailbox_setup() ) {
     EARLY_STARTUP_PRINT( "Error while setting up mailbox: %s\r\n", strerror( errno ) )
     return -1;
   }
+  EARLY_STARTUP_PRINT( "Setup property stuff\r\n" )
   // setup property stuff
   if ( ! property_setup() ) {
     EARLY_STARTUP_PRINT( "Error while setting up property\r\n" )
     return -1;
   }
+  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
   // register handlers
   if ( ! rpc_register() ) {
     EARLY_STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
     return -1;
   }
 
+  EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
   // calculate add message size
   size_t msg_size = sizeof( vfs_add_request_t ) + 1 * sizeof( size_t );
   // allocate memory for add request
@@ -70,10 +74,11 @@ int main( __unused int argc, __unused char* argv[] ) {
   strncpy( msg->file_path, "/dev/mailbox", PATH_MAX - 1 );
   msg->device_info[ 0 ] = MAILBOX_REQUEST;
   // perform add request
-  send_vfs_add_request( msg, msg_size );
+  send_vfs_add_request( msg, msg_size, 0 );
   // free again
   free( msg );
 
+  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
   // enable rpc and wait
   _rpc_set_ready( true );
   bolthur_rpc_wait_block();

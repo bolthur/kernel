@@ -36,22 +36,17 @@ arch_start:
   ldr r0, =stack_supervisor_mode
   add r0, r0, #STACK_SIZE
   mov sp, r0
-
   // switch to system mode and setup stack
   msr cpsr_c, #( CPSR_MODE_SYSTEM | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
   ldr r0, =stack_system_mode
   add r0, r0, #STACK_SIZE
   mov sp, r0
-
   // branch and link to kernel main entry
   ldr r3, =kernel_main
   blx r3  // blx may switch to Thumb mode, depending on the target address
-
 halt:
   wfe // equivalent of x86 HLT instruction
   b halt
-
-
 
 // reserve space for system info block
 #if defined( ELF32 )

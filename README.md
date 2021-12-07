@@ -78,6 +78,7 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-serial` activate serial handling output
 * `--enable-output-message` activate message system output
 * `--enable-output-rpc` activate rpc system output
+* `--enable-output-ssp` activate ssp origin output in kernel
 * `--enable-remote-debug` activate remote debugging ( blocks --enable-output )
 * `--enable-release` activate release build ( blocks --enable-debug and ignores --with-optimization-level )
 

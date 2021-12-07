@@ -16,27 +16,3 @@
  * You should have received a copy of the GNU General Public License
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#if ! defined( _PLATFORM_RPI_TIMER_H )
-#define _PLATFORM_RPI_TIMER_H
-
-// free running counter incrementing at 1 MHz => Increments each microsecond
-#define TIMER_FREQUENCY_HZ 1000000
-
-// interrupts per second
-#define TIMER_INTERRUPT_PER_SECOND 1
-
-// Timer match bits
-#define SYSTEM_TIMER_MATCH_0 ( 1 << 0 )
-#define SYSTEM_TIMER_MATCH_1 ( 1 << 1 )
-#define SYSTEM_TIMER_MATCH_2 ( 1 << 2 )
-#define SYSTEM_TIMER_MATCH_3 ( 1 << 3 )
-
-// timer interrupts
-#define SYSTEM_TIMER_0_INTERRUPT ( 1 << 0 )
-#define SYSTEM_TIMER_1_INTERRUPT ( 1 << 1 )
-#define SYSTEM_TIMER_2_INTERRUPT ( 1 << 2 )
-#define SYSTEM_TIMER_3_INTERRUPT ( 1 << 3 )
-
-
-#endif

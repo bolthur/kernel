@@ -40,25 +40,25 @@ IMPORT( task_thread_current_thread )
 
 // ensure correct stack alignment before calling any c function
 .macro stack_wind register:req, additional:req, stack:req
-  mov \register, \stack
-  tst \stack, #4
-  subne \stack, #4
+  // test alignment
+  and \register, \stack, #4
+  sub \stack, \stack, #4
   push { \register, \additional }
 .endm
 
 // restore stack possibly changed due to stack alignment
 .macro stack_unwind register:req, additional:req, stack:req
   pop { \register, \additional }
-  mov \stack, \register
+  add \stack, \stack, \register
 .endm
 
 // macro to switch to mode
 .macro switch_mode mode:req, fixup:req
   // adjust lr
   sub lr, #\fixup
-  // switch mode and push lr and spsr to mode stack
-  srsdb #\mode!
-  // disable interrupts and switch to mode
+  // push return lr and spsr to modes stack
+  srsdb sp!, #\mode
+  // switch to given mode
   cpsid if, #\mode
 .endm
 
@@ -191,6 +191,8 @@ _\name\()_entry_finished:
 
 // non privileged exit
 _\name\()_exit_unprivileged:
+  // drop spsr and lr from stack
+  //add sp, sp, #8
   // get context from thread structure
   get_thread_context r0
   // call switch to thread
@@ -218,8 +220,9 @@ _\name\()_exit_privileged:
   str r0, [ sp, #PRIVILEGED_PC_OFFSET ]
   // restore previous state
   pop_fpu_register sp
+  // restore register without push back
   ldmia sp, { r0 - r12 }
-  // correct stack pointer again
+  // correct stack pointer by removing kernel stack frame
   add sp, #STACK_FRAME_SIZE
 
   // jump to finished
@@ -249,15 +252,14 @@ _\name\()_exit_finished:
 
   // ensure stack alignment
   stack_wind r0, r1, sp
+  // call handler routine with context parameter
   mov r0, r1
-  // call handler routine
   bl \handler
   // restore stack adjustments
   stack_unwind r0, r1, sp
 
   // ensure stack alignment
   stack_wind r0, r1 sp
-  mov r0, r1
   // enable interrupts
   .ifc \nested, all
     cpsie if
@@ -266,6 +268,7 @@ _\name\()_exit_finished:
     cpsie f
   .endif
   // handle events
+  mov r0, r1
   bl event_handle
   // disable interrupts
   .ifc \nested, all
@@ -299,7 +302,7 @@ _\name\()_exit_finished:
   #if defined( ARM_CPU_HAS_NEON )
     // save floating point control status
     vmrs r0, fpscr
-    str r0, [ \register, #68 ]
+    str r0, [ \register, #GENERAL_PURPOSE_REGISTER_END ]
     // start with first fpu registers
     add \register, #72
     // backup fpu registers
@@ -313,7 +316,7 @@ _\name\()_exit_finished:
 .macro pop_fpu_register register:req
   #if defined( ARM_CPU_HAS_NEON )
     // restore floating point control status
-    ldr r0, [ \register, #68 ]
+    ldr r0, [ \register, #GENERAL_PURPOSE_REGISTER_END ]
     vmsr fpscr, r0
     // start with first fpu registers
     add \register, #72

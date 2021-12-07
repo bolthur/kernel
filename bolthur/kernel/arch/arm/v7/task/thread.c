@@ -105,7 +105,7 @@ task_thread_ptr_t task_thread_create(
   // set content
   current_context->reg.pc = ( uint32_t )entry;
   // only user mode threads are possible
-  current_context->reg.spsr = CPSR_MODE_USER;
+  current_context->reg.spsr = 0x60000000 | CPSR_MODE_USER;
   // add arm thumb mode to spsr if necessary
   if ( ( uint32_t )entry & 0x1 ) {
     // add thumb mode to spsr
@@ -263,7 +263,6 @@ task_thread_ptr_t task_thread_fork(
     free( thread );
     return NULL;
   }
-
 
   // prepare node
   avl_prepare_node( &thread->node_id, ( void* )thread->id );

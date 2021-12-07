@@ -32,7 +32,9 @@ static bool cache_enabled = false;
  * @brief Invalidate instruction cache
  */
 void cache_invalidate_instruction_cache( void ) {
-  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) : "memory" );
+  if ( true == cache_enabled ) {
+    __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) : "memory" );
+  }
 }
 
 /**
@@ -40,7 +42,9 @@ void cache_invalidate_instruction_cache( void ) {
  * @brief Invalidate data cache
  */
 void cache_invalidate_data_cache( void ) {
-  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5,  4" : : "r"( 0 ) : "memory" );
+  if ( true == cache_enabled ) {
+    __asm__ __volatile__( "mcr p15, 0, %0, c7, c5,  4" : : "r"( 0 ) : "memory" );
+  }
 }
 
 /**
@@ -48,7 +52,9 @@ void cache_invalidate_data_cache( void ) {
  * @brief Invalidate prefetch buffer
  */
 void cache_invalidate_prefetch_buffer( void ) {;
-  __asm__ __volatile__( "mcr p15, 0, %0, c7, c6,  0" : : "r"( 0 ) : "memory" );
+  if ( true == cache_enabled ) {
+    __asm__ __volatile__( "mcr p15, 0, %0, c7, c6,  0" : : "r"( 0 ) : "memory" );
+  }
 }
 
 /**
@@ -56,6 +62,7 @@ void cache_invalidate_prefetch_buffer( void ) {;
  * @brief Enable caches
  */
 void cache_enable( void ) {
+  return;
   // check for enabled
   if ( true == cache_enabled ) {
     return;
@@ -78,6 +85,7 @@ void cache_enable( void ) {
  * @brief Disable caches
  */
 void cache_disable( void ) {
+  return;
   // check for disabled
   if ( false == cache_enabled ) {
     return;

@@ -21,6 +21,9 @@
 #if defined( REMOTE_DEBUG )
   #include <arch/arm/v7/debug/debug.h>
 #endif
+#if defined( PRINT_EXCEPTION )
+  #include <debug/debug.h>
+#endif
 #include <arch/arm/v7/interrupt/vector.h>
 #include <arch/arm/mm/virt.h>
 #include <event.h>
@@ -48,8 +51,16 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
   // nesting
   nested_data_abort++;
   assert( nested_data_abort < INTERRUPT_NESTED_MAX )
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DEBUG_OUTPUT( "cpu = %#p\r\n", cpu )
+  #endif
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DEBUG_OUTPUT( "origin = %d\r\n", origin )
+  #endif
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
   // debug output
@@ -74,7 +85,12 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
       PANIC( "data abort!" )
     }
   #else
-    PANIC( "data abort!" )
+    // handle undefined from kernel
+    if ( EVENT_ORIGIN_KERNEL == origin ) {
+      PANIC( "data abort from kernel" )
+    } else {
+      PANIC( "data abort from user space!" )
+    }
   #endif
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );

@@ -65,7 +65,7 @@ void interrupt_vector_init( void ) {
  */
 static void post_interrupt_handling(
   __unused event_origin_t origin,
-  void* context
+  __unused void* context
 ) {
   // handle possible fast interrupt
   //interrupt_handle_possible( context, true );

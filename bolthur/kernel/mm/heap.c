@@ -184,9 +184,13 @@ static void prepare_block(
 }
 
 /**
- * @brief Internal method for extending the heap
+ * @fn bool extend_heap_space(size_t)
+ * @brief Helper to extend heap size
+ *
+ * @param given_size size to extend by at minimum
+ * @return
  */
-static bool extend_heap_space( void ) {
+static bool extend_heap_space( size_t given_size ) {
   avl_node_ptr_t max;
   avl_node_ptr_t max_used;
   avl_node_ptr_t max_free;
@@ -236,28 +240,32 @@ static bool extend_heap_space( void ) {
   // get heap end and current size
   heap_end = block->address + block->size;
   heap_size = heap_end - HEAP_START;
+  size_t real_extension_size = 0;
+  while ( real_extension_size < given_size ) {
+    real_extension_size += HEAP_EXTENSION;
+  }
   // debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT(
       "End: %p, Size: %zx, New size: %zx\r\n",
       ( void* )heap_end,
       heap_size,
-      heap_size + HEAP_EXTENSION
+      heap_size + real_extension_size
     );
   #endif
   // check size against max size
-  if ( heap_size + HEAP_EXTENSION >= HEAP_MAX_SIZE ) {
+  if ( heap_size + real_extension_size >= HEAP_MAX_SIZE ) {
     return false;
   }
 
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "extend_heap_space()\r\n" );
+    DEBUG_OUTPUT( "extend_heap_space( %#x )\r\n", real_extension_size );
   #endif
 
   // map heap address space
   for (
     uintptr_t addr = heap_end;
-    addr < heap_end + HEAP_EXTENSION;
+    addr < heap_end + real_extension_size;
     addr += PAGE_SIZE
   ) {
     // debug output
@@ -288,7 +296,7 @@ static bool extend_heap_space( void ) {
     avl_remove_by_node( free_size, &free_block->node_size );
 
     // extend size
-    free_block->size += HEAP_EXTENSION;
+    free_block->size += real_extension_size;
   // Create total new block
   } else {
     // create free block
@@ -301,7 +309,7 @@ static bool extend_heap_space( void ) {
 
     // prepare free block
     free_block->address = ( uintptr_t )free_block + sizeof( heap_block_t );
-    free_block->size = HEAP_EXTENSION - sizeof( heap_block_t );
+    free_block->size = real_extension_size - sizeof( heap_block_t );
   }
 
   // populate node data
@@ -371,7 +379,7 @@ static void shrink_heap_space( void ) {
   max_used_node = avl_get_max( used_address->root );
   // Debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "max_node = %p\r\n", ( void* )max_node );
+    DEBUG_OUTPUT( "max_node = %p\r\n", ( void* )max_used_node );
   #endif
   // set max used block if something is there
   if ( max_used_node ) {
@@ -393,7 +401,7 @@ static void shrink_heap_space( void ) {
   max_free_block = HEAP_GET_BLOCK_ADDRESS( max_free_node );
   // Debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "max_block = %p\r\n", ( void* )max_block );
+    DEBUG_OUTPUT( "max_block = %p\r\n", ( void* )max_free_block );
   #endif
   // skip shrink if used block is greater than free one
   if ( max_used_block && max_used_block->address > max_free_block->address ) {
@@ -913,7 +921,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
         return 0;
       }
       // extend heap
-      if ( ! extend_heap_space() ) {
+      if ( ! extend_heap_space( real_size ) ) {
         return 0;
       }
       // try another allocation
@@ -946,7 +954,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
       return 0;
     }
     // extend heap
-    if ( ! extend_heap_space() ) {
+    if ( ! extend_heap_space( real_size ) ) {
       return 0;
     }
     // try another allocation
@@ -1003,7 +1011,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
         return 0;
       }
       // extend heap
-      if ( ! extend_heap_space() ) {
+      if ( ! extend_heap_space( real_size ) ) {
         return 0;
       }
       // try another allocation

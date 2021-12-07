@@ -36,11 +36,13 @@
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
+  EARLY_STARTUP_PRINT( "Setup framebuffer\r\n" )
   // initialize framebuffer
   if( ! framebuffer_init() ) {
     return -1;
   }
 
+  EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
   // allocate memory for add request
   size_t msg_size = sizeof( vfs_add_request_t ) + 4 * sizeof( size_t );
   vfs_add_request_ptr_t msg = malloc( msg_size );
@@ -57,9 +59,11 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->device_info[ 2 ] = FRAMEBUFFER_RENDER_SURFACE;
   msg->device_info[ 3 ] = FRAMEBUFFER_FLIP;
   // perform add request
-  send_vfs_add_request( msg, msg_size );
+  send_vfs_add_request( msg, msg_size, 0 );
   // free again
   free( msg );
+
+  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
   // enable rpc and wait
   _rpc_set_ready( true );
   bolthur_rpc_wait_block();

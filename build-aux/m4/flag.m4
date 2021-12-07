@@ -1,11 +1,12 @@
 
 AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   # add symbol strip and garbage sections for release
-  AS_IF([test "x$enable_rlease" == "xyes"], [
-    AX_APPEND_COMPILE_FLAGS([-O2 -ffunction-sections -fdata-sections])
-    AX_APPEND_LINK_FLAGS([-Wl,-s])
-    AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
-  ])
+  # FIXME: Not working on real hardware
+  #AS_IF([test "x$enable_rlease" == "xyes"], [
+  #  AX_APPEND_COMPILE_FLAGS([-O2 -ffunction-sections -fdata-sections])
+  #  AX_APPEND_LINK_FLAGS([-Wl,-s])
+  #  AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
+  #])
 
   # Linker flags ( first due to stack protector and no standard library )
   AX_APPEND_LINK_FLAGS([-nostdlib])

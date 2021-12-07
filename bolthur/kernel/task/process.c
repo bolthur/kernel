@@ -390,7 +390,7 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
     return NULL;
   }
   // create message queue if existing
-  if ( proc->rpc_queue &&  ! rpc_queue_setup( forked ) ) {
+  if ( proc->rpc_queue && ! rpc_queue_setup( forked ) ) {
     task_process_free( forked );
     return NULL;
   }
@@ -768,19 +768,25 @@ int task_process_replace(
     return -ENOMEM;
   }
 
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Preparing to load image\r\n" )
+  #endif
   // save image temporary
   size_t image_size = elf_image_size( ( uintptr_t )elf );
-  void* image = ( void* )malloc( sizeof( char ) * image_size );
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "image = %#p, image_size = %#x\r\n", image, image_size )
+    DEBUG_OUTPUT( "image_size = %#x\r\n", image_size )
   #endif
+  void* image = ( void* )malloc( sizeof( char ) * image_size );
   // handle error
   if ( ! image ) {
     free( tmp_argv );
     free( tmp_env );
     return -ENOMEM;
   }
-  memcpy( image, ( void* )elf, image_size );
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "image = %#p\r\n", image )
+  #endif
+  memcpy_unsafe( image, ( void* )elf, image_size );
 
   // clear all assigned shared areas
   if ( ! shared_memory_cleanup_process( proc ) ) {

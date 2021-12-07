@@ -131,7 +131,7 @@ bool terminal_init( void ) {
     msg->device_info[ 1 ] = out;
     msg->device_info[ 2 ] = err;
     // perform add request
-    send_vfs_add_request( msg, msg_size );
+    send_vfs_add_request( msg, msg_size, 0 );
     // register handler for streams
     bolthur_rpc_bind( out, output_handle_out );
     if ( errno ) {

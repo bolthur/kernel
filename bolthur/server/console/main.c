@@ -74,6 +74,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   if ( ! msg ) {
     return -1;
   }
+  EARLY_STARTUP_PRINT( "Bind specific vfs write request handler\r\n" )
   // set handler
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write );
   if ( errno ) {
@@ -87,6 +88,7 @@ int main( __unused int argc, __unused char* argv[] ) {
     free( msg );
     return -1;
   }
+  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
   // register rpc handler
   if ( ! handler_register() ) {
     free( msg );
@@ -94,6 +96,7 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
+  EARLY_STARTUP_PRINT( "Send stdin to vfs\r\n" )
   // stdin device
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -101,8 +104,9 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFREG;
   strncpy( msg->file_path, "/dev/stdin", PATH_MAX - 1 );
   // perform add request
-  send_vfs_add_request( msg, 0 );
+  send_vfs_add_request( msg, 0, 0 );
 
+  EARLY_STARTUP_PRINT( "Send stdout to vfs\r\n" )
   // stdout device
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -110,8 +114,9 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFREG;
   strncpy( msg->file_path, "/dev/stdout", PATH_MAX - 1 );
   // perform add request
-  send_vfs_add_request( msg, 0 );
+  send_vfs_add_request( msg, 0, 0 );
 
+  EARLY_STARTUP_PRINT( "Send stderr to vfs\r\n" )
   // stderr device
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -119,9 +124,10 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFREG;
   strncpy( msg->file_path, "/dev/stderr", PATH_MAX - 1 );
   // perform add request
-  send_vfs_add_request( msg, 0 );
+  send_vfs_add_request( msg, 0, 0 );
   free( msg );
 
+  EARLY_STARTUP_PRINT( "Send console device to vfs\r\n" )
   // console device
   // allocate memory for add request
   size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
@@ -137,10 +143,11 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->device_info[ 1 ] = CONSOLE_SELECT;
   strncpy( msg->file_path, "/dev/console", PATH_MAX - 1 );
   // perform add request
-  send_vfs_add_request( msg, msg_size );
+  send_vfs_add_request( msg, msg_size, 0 );
   // free again
   free( msg );
 
+  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
   // enable rpc and wait
   _rpc_set_ready( true );
   bolthur_rpc_wait_block();

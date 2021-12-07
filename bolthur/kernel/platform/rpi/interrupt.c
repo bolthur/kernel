@@ -25,6 +25,7 @@
 #include <panic.h>
 #include <platform/rpi/gpio.h>
 #include <platform/rpi/peripheral.h>
+#include <debug/debug.h>
 
 /**
  * @brief Helper to validate interrupt number
@@ -55,10 +56,10 @@ bool interrupt_validate_number( size_t num ) {
 void interrupt_mask_specific( int8_t num ) {
   uint32_t interrupt = ( uint32_t )num;
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  uintptr_t base = peripheral_base_get( PERIPHERAL_GPIO );
   // get interrupt enable and pending
-  uint32_t interrupt_enable = base;
-  uint32_t interrupt_pending = base;
+  uintptr_t interrupt_enable = base;
+  uintptr_t interrupt_pending = base;
   if ( 32 > interrupt ) {
     interrupt_enable += INTERRUPT_ENABLE_IRQ_1;
     interrupt_pending += INTERRUPT_IRQ_PENDING_1;

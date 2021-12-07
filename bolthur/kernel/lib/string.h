@@ -29,7 +29,6 @@ void* memcpy( void* restrict, const void* restrict, size_t );
 void* memcpy_unsafe( void* restrict, const void* restrict, size_t );
 void* memset( void*, int, size_t );
 char* strchr( const char*, int );
-int strcmp( const char*, const char* );
 char* strcpy( char*, const char* );
 size_t strlen( const char* );
 size_t strlen_unsafe( const char* str );

@@ -24,6 +24,7 @@
 #include <mm/phys.h>
 #include <mm/virt.h>
 #include <arch.h>
+#include <timer.h>
 #include <task/queue.h>
 #include <task/process.h>
 #if defined( PRINT_PROCESS )
@@ -49,6 +50,10 @@ void task_process_start( void ) {
   task_thread_ptr_t next_thread = task_thread_next();
   // handle no thread
   if ( ! next_thread ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "No next thread found!\r\n" )
+    #endif
     return;
   }
 
@@ -57,11 +62,19 @@ void task_process_start( void ) {
     process_manager, next_thread->priority );
   // check queue
   if ( ! next_queue ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "No next queue found!\r\n" )
+    #endif
     return;
   }
 
   // set current running thread
   if ( ! task_thread_set_current( next_thread, next_queue ) ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "Set current failed!\r\n" )
+    #endif
     return;
   }
 
@@ -73,9 +86,17 @@ void task_process_start( void ) {
 
   // set context and flush
   if ( ! virt_set_context( next_thread->process->virtual_context ) ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "Set context failed\r\n" )
+    #endif
     task_thread_reset_current();
     return;
   }
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Flushing virtual adresses!\r\n" )
+  #endif
   virt_flush_complete();
 
   // debug output
@@ -187,6 +208,15 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     #endif
     interrupt_disable();
   }
+  // debug output
+  #if defined( PRINT_PROCESS )
+    if ( running_thread != next_thread ) {
+      DEBUG_OUTPUT( "current_thread = %#p / %d, next_thread = %#p / %d\r\n",
+        running_thread, running_thread->process->id,
+        next_thread, next_thread->process->id
+      )
+    }
+  #endif
 
   // variable for next queue
   task_priority_queue_ptr_t next_queue = NULL;

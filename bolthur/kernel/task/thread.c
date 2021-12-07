@@ -245,6 +245,10 @@ task_thread_ptr_t task_thread_next( void ) {
       ( void* )priority );
     // skip if not existing
     if ( ! current_node ) {
+      // debug output
+      #if defined( PRINT_PROCESS )
+        DEBUG_OUTPUT( "no queue for prio %u\r\n", priority );
+      #endif
       // prevent endless loop by checking against 0
       if ( 0 == priority ) {
         break;
@@ -270,14 +274,14 @@ task_thread_ptr_t task_thread_next( void ) {
 
     // find next thread in queue ( default case: start with first one )
     list_item_ptr_t item = current->thread_list->first;
-    // debug output
-    #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT(
-        "current->last_handled = %p\r\n",
-        ( void* )current->last_handled );
-    #endif
     // handle already executed entry
     if ( current->last_handled ) {
+      // debug output
+      #if defined( PRINT_PROCESS )
+        DEBUG_OUTPUT(
+          "current->last_handled = %p\r\n",
+          ( void* )current->last_handled );
+      #endif
       // try to find element in list
       item = list_lookup_data(
         current->thread_list, ( void* )current->last_handled );
@@ -302,6 +306,10 @@ task_thread_ptr_t task_thread_next( void ) {
     while ( item ) {
       // get task object
       task_thread_ptr_t task = ( task_thread_ptr_t )item->data;
+      // debug output
+      #if defined( PRINT_PROCESS )
+        DEBUG_OUTPUT( "task %d with state %d\r\n", task->id, task->state );
+      #endif
       // check for ready
       if (
         TASK_THREAD_STATE_READY == task->state
@@ -317,6 +325,10 @@ task_thread_ptr_t task_thread_next( void ) {
 
     // skip if nothing is existing after last handled
     if ( ! item ) {
+      // debug output
+      #if defined( PRINT_PROCESS )
+        DEBUG_OUTPUT( "no next task set!\r\n" );
+      #endif
       // prevent endless loop by checking against 0
       if ( 0 == priority ) {
         break;
@@ -328,6 +340,10 @@ task_thread_ptr_t task_thread_next( void ) {
     return ( task_thread_ptr_t )item->data;
   }
 
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "no task found!\r\n" );
+  #endif
   return NULL;
 }
 

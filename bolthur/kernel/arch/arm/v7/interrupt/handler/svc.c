@@ -38,8 +38,16 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
   // nesting
   nested_svc++;
   assert( nested_svc < INTERRUPT_NESTED_MAX )
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DEBUG_OUTPUT( "cpu = %#p\r\n", cpu )
+  #endif
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DEBUG_OUTPUT( "origin = %d\r\n", origin )
+  #endif
   // get context
   INTERRUPT_DETERMINE_CONTEXT( cpu )
   // debug output

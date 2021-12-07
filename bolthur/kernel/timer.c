@@ -17,6 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define PRINT_TIMER 1
+
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
@@ -233,6 +235,10 @@ void timer_handle_callback( void ) {
     current = current->next;
     // remove from list
     if ( ! list_remove( timer_list, to_remove ) ) {
+      // debug output
+      #if defined( PRINT_TIMER )
+        DEBUG_OUTPUT( "Error while removing timer from list\r\n" )
+      #endif
       // FIXME: remove 'rpc'
     }
   }

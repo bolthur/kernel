@@ -119,14 +119,13 @@ void syscall_memory_acquire( void* context ) {
     #endif
     // set address
     uintptr_t tmp_addr = ROUND_UP_TO_FULL_PAGE(
-      task_thread_current_thread->entry );
+      task_thread_current_thread->entry
+    );
     // debug output
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "entry = %#x, address = %p\r\n",
-        tmp_addr, addr )
+      DEBUG_OUTPUT( "entry = %#x, address = %p\r\n", tmp_addr, addr )
     #endif
-    start = virt_find_free_page_range(
-      virtual_context, len, tmp_addr );
+    start = virt_find_free_page_range( virtual_context, len, tmp_addr );
   }
 
   // handle no address found

@@ -44,11 +44,14 @@ int console_manager_fd = 0;
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
+  EARLY_STARTUP_PRINT( "Open output driver device\r\n" )
   // open file to framebuffer device
   output_driver_fd = open( OUTPUT_DRIVER, O_RDWR );
   if ( -1 == output_driver_fd ) {
     return -1;
   }
+
+  EARLY_STARTUP_PRINT( "Open console manager device\r\n" )
   // open file to console manager device
   console_manager_fd = open( CONSOLE_MANAGER, O_RDWR );
   if ( -1 == console_manager_fd ) {
@@ -56,6 +59,32 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
+  EARLY_STARTUP_PRINT( "Setup output\r\n" )
+  // generic output init
+  if ( ! output_init() ) {
+    close( console_manager_fd );
+    close( output_driver_fd );
+    return -1;
+  }
+
+  EARLY_STARTUP_PRINT( "Setup pc screen font\r\n" )
+  // psf init
+  // FIXME: MOVE TO OUTPUT?
+  if ( ! psf_init() ) {
+    close( console_manager_fd );
+    close( output_driver_fd );
+    return -1;
+  }
+
+  EARLY_STARTUP_PRINT( "Setup terminal\r\n" )
+  // init terminal
+  if ( ! terminal_init() ) {
+    close( console_manager_fd );
+    close( output_driver_fd );
+    return -1;
+  }
+
+  EARLY_STARTUP_PRINT( "Allocate space for add device\r\n" )
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
@@ -64,29 +93,7 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
-  // generic output init
-  if ( ! output_init() ) {
-    close( console_manager_fd );
-    close( output_driver_fd );
-    free( msg );
-    return -1;
-  }
-  // psf init
-  // FIXME: MOVE TO OUTPUT?
-  if ( ! psf_init() ) {
-    close( console_manager_fd );
-    close( output_driver_fd );
-    free( msg );
-    return -1;
-  }
-  // init terminal
-  if ( ! terminal_init() ) {
-    close( console_manager_fd );
-    close( output_driver_fd );
-    free( msg );
-    return -1;
-  }
-
+  EARLY_STARTUP_PRINT( "Send device %s to terminal\r\n", TERMINAL_BASE_PATH )
   // push alias to current tty
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -94,8 +101,9 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, TERMINAL_BASE_PATH, PATH_MAX - 1 );
   // perform add request
-  send_vfs_add_request( msg, 0 );
+  send_vfs_add_request( msg, 0, 0 );
 
+  EARLY_STARTUP_PRINT( "Send terminal device to vfs\r\n" )
   // push terminal device as indicator init is done
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
@@ -103,15 +111,14 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/terminal", PATH_MAX - 1 );
   // perform add request
-  send_vfs_add_request( msg, 0 );
-
+  send_vfs_add_request( msg, 0, 0 );
   // free again
   free( msg );
 
+  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
   // enable rpc and wait
   _rpc_set_ready( true );
   bolthur_rpc_wait_block();
-  //EARLY_STARTUP_PRINT( "exit!\r\n" )
   // return exit code 0
   return 0;
 }

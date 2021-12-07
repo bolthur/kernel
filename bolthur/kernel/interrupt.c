@@ -565,7 +565,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
     // handle error by skip
     if ( ! rpc ) {
       // debug output
-      #if defined( PRINT_TIMER )
+      #if defined( PRINT_EVENT )
         DEBUG_OUTPUT( "Unable to raise rpc\r\n" )
       #endif
       current = current->next;

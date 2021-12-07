@@ -115,6 +115,13 @@ bool framebuffer_init( void ) {
     physical_width = FRAMEBUFFER_SCREEN_WIDTH;
     physical_height = FRAMEBUFFER_SCREEN_HEIGHT;
   }
+  physical_width = FRAMEBUFFER_SCREEN_WIDTH;
+  physical_height = FRAMEBUFFER_SCREEN_HEIGHT;
+  EARLY_STARTUP_PRINT(
+    "Using resolution %ldx%ld\r\n",
+    physical_width,
+    physical_height
+  )
 
   // build request
   request_size = sizeof( int32_t ) * 35;

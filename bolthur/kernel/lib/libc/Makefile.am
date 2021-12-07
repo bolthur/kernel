@@ -23,7 +23,6 @@ libc_la_SOURCES = \
   string/memmove.c \
   string/memset.c \
   string/strchr.c \
-  string/strcmp.c \
   string/strcpy.c \
   string/strlen.c \
   string/strncmp.c \

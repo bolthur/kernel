@@ -15,6 +15,9 @@ libv7_la_SOURCES = \
   interrupt/handler/undefined.c \
   interrupt/stub.S \
   interrupt/vector.c \
+  lib/libc/string/memcpy.S \
+  lib/libc/string/memset.S \
+  lib/libc/string/strlen.S \
   rpc/backup.c \
   rpc/generic.c \
   mm/virt/long.c \

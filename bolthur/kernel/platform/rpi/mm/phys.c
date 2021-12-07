@@ -95,6 +95,10 @@ bool phys_platform_init( void ) {
   vc_memory_end = vc_memory_start + buffer->data.buffer_u32[ 1 ];
   // increase amount by video core amount
   memory_amount += buffer->data.buffer_u32[ 1 ];
+  // debug output
+  #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT( "memory amount: %#08x\r\n", memory_amount );
+  #endif
 
   // determine amount of pages for bitmap
   phys_bitmap_length = memory_amount / PAGE_SIZE / PAGE_PER_ENTRY;

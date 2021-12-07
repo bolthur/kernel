@@ -25,6 +25,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_MM_SHARED], [Define to 1 to enable output of shared memory functions])
   AH_TEMPLATE([PRINT_MESSAGE], [Define to 1 to enable output of message functions])
   AH_TEMPLATE([PRINT_RPC], [Define to 1 to enable output of rpc functions])
+  AH_TEMPLATE([PRINT_SSP], [Define to 1 to enable more info from ssp faults])
 
   # Test for debugging enabled
   AS_IF([test "x$enable_remote_debug" == "xyes"], [
@@ -116,6 +117,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     AC_DEFINE([PRINT_RPC],[1])
   ])
 
+  # Test for rpc output
+  AS_IF([test "x$enable_output_ssp" == "xyes"], [
+    AC_DEFINE([PRINT_SSP],[1])
+  ])
+
   case "${host_cpu}" in
   arm)
     arch_subdir=arm
@@ -146,7 +152,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE_UNQUOTED([FDT_BINARY], ["$($BOLTHUR_READLINK -f ${srcdir})/dts/rpi/bcm2836-rpi-2b.dtb"])
-      AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
+      # AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
       ;;
     rpi_zero_w)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
@@ -172,7 +178,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
+      # AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
       ;;
     rpi4_b)
       CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a72"
@@ -187,7 +193,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A72], [1], [Define to 1 for ARM Cortex-A72 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
+      # AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])
@@ -214,7 +220,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
+      # AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
       ;;
     rpi4_b)
       CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a72"
@@ -229,7 +235,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A72], [1], [Define to 1 for ARM Cortex-A72 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
+      # AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])

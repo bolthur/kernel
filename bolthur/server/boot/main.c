@@ -146,7 +146,7 @@ static bool device_exists( const char* path ) {
  */
 static void wait_for_device( const char* path ) {
   while( ! device_exists( path ) ) {
-    sleep( 2 );
+    sleep( 5 );
   }
 }
 
@@ -505,6 +505,8 @@ int main( int argc, char* argv[] ) {
     EARLY_STARTUP_PRINT( "boot needs to have pid 1\r\n" )
     return -1;
   }
+  // debug print
+  EARLY_STARTUP_PRINT( "Started with pid %d\r\n", pid );
 
   // allocate message structure
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
@@ -569,7 +571,7 @@ int main( int argc, char* argv[] ) {
   }
   // fork process and handle possible error
   EARLY_STARTUP_PRINT( "Forking process for vfs start!\r\n" );
-  pid_t forked_process = fork();
+  pid_t forked_process = _process_fork();
   if ( errno ) {
     EARLY_STARTUP_PRINT(
       "Unable to fork process for vfs replace: %s\r\n",
@@ -596,8 +598,13 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
   EARLY_STARTUP_PRINT( "Continuing with startup by sending ramdisk!\r\n" )
+  // FIXME: Add sleep
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
-
+/*
+  while ( true ) {
+    __asm__ __volatile__ ( "nop" );
+  }
+*/
   // reset read offset
   ramdisk_read_offset = 0;
   // loop and add folders
@@ -639,7 +646,7 @@ int main( int argc, char* argv[] ) {
     msg->info.st_blocks = ( msg->info.st_size / T_BLOCKSIZE )
       + ( msg->info.st_size % T_BLOCKSIZE ? 1 : 0 );
     // send add request
-    send_vfs_add_request( msg, 0 );
+    send_vfs_add_request( msg, 0, 0 );
     // skip to next file
     if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
       EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );

@@ -16,38 +16,3 @@
  * You should have received a copy of the GNU General Public License
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <string.h>
-
-/**
- * @brief Compare two strings
- *
- * @param a
- * @param b
- * @return int
- */
-int strcmp( const char* a, const char* b ) {
-  size_t idx = 0;
-  // loop and check
-  while ( true ) {
-    uint8_t ac = a[ idx ];
-    uint8_t bc = b[ idx ];
-    // end reached? => equal
-    if ( '\0' == ac && '\0' == bc ) {
-      return 0;
-    }
-    // handle a smaller b
-    if ( ac < bc ) {
-      return -1;
-    }
-    // handle a greater b
-    if ( ac > bc ) {
-      return 1;
-    }
-    // next one
-    idx++;
-  }
-}
