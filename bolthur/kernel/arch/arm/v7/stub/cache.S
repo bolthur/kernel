@@ -16,3 +16,12 @@
  * You should have received a copy of the GNU General Public License
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
+
+.section .text
+
+#define ASSEMBLER_FILE 1
+#include <assembly.h>
+
+EXPORT( cache_clear_data )
+cache_clear_data:
+  bx lr

@@ -109,6 +109,7 @@ bool rpc_generic_restore( task_thread_ptr_t thread, void* context ) {
   );
   // data transfer barrier
   barrier_data_mem();
+  barrier_instruction_sync();
   // set correct state
   backup->thread->state = TASK_THREAD_STATE_ACTIVE;
   // finally remove found entry
@@ -260,9 +261,10 @@ bool rpc_generic_prepare_invoke( rpc_backup_ptr_t backup ) {
   }
   // data transfer barrier
   barrier_data_mem();
-  cache_invalidate_instruction_cache();
-  cache_invalidate_data_cache();
-  cache_invalidate_prefetch_buffer();
+  // instruction sync barrier
+  if ( backup->thread == task_thread_current_thread ) {
+    barrier_instruction_sync();
+  }
   // unmap temporary again
   virt_unmap_temporary( tmp_map, PAGE_SIZE );
 

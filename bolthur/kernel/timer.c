@@ -17,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define PRINT_TIMER 1
-
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>

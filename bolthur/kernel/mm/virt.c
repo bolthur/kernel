@@ -145,7 +145,7 @@ void virt_init( void ) {
   // prepare temporary area
   assert( virt_prepare_temporary( virt_current_kernel_context ) )
   // enable cpu caches
-  cache_enable();
+  //cache_enable();
 
   // firmware init stuff
   assert( firmware_init() )

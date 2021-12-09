@@ -205,6 +205,16 @@ bool framebuffer_init( void ) {
   size = pitch * physical_height;
   // free request again
   free( request );
+
+  // mask screen address ( necessary when caches are not enabled )
+  uintptr_t mask = 0xc0000000;
+  uintptr_t uscreen = ( uintptr_t )screen;
+  uscreen &= ~mask;
+  EARLY_STARTUP_PRINT( "Screen address from mailbox: %p\r\n", ( void* )screen )
+  EARLY_STARTUP_PRINT( "Screen address masked: %p\r\n", ( void* )uscreen )
+  // write back
+  screen = ( uint8_t* )uscreen;
+
   // try to map framebuffer area and handle possible error
   void* tmp = mmap(
     ( void* )screen,
@@ -218,6 +228,7 @@ bool framebuffer_init( void ) {
     close( mailbox_fd );
     return false;
   }
+  EARLY_STARTUP_PRINT( "Screen address returned by mmap: %p\r\n", tmp )
   // overwrite screen
   screen = ( uint8_t* )tmp;
   // clear everything after init completely

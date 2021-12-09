@@ -21,7 +21,8 @@
 #define _ARCH_ARM_CACHE_H
 
 void cache_invalidate_instruction_cache( void );
-void cache_invalidate_data_cache( void );
-void cache_invalidate_prefetch_buffer( void );
+void cache_flush_prefetch( void );
+void cache_flush_branch_target( void );
+void cache_clear_data( void );
 
 #endif

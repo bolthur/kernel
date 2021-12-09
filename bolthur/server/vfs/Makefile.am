@@ -21,4 +21,4 @@ vfs_SOURCES = \
   main.c \
   util.c \
   vfs.c
-vfs_LDFLAGS = -all-static --static -Wl,-s -Wl,--gc-sections
+vfs_LDFLAGS = -all-static --static

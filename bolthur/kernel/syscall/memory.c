@@ -39,6 +39,7 @@
 #define MEMORY_FLAG_DEVICE 0x2
 
 /**
+ * @fn void syscall_memory_acquire(void*)
  * @brief Acquire memory
  *
  * @param context

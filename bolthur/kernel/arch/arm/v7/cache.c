@@ -32,29 +32,34 @@ static bool cache_enabled = false;
  * @brief Invalidate instruction cache
  */
 void cache_invalidate_instruction_cache( void ) {
-  if ( true == cache_enabled ) {
-    __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) : "memory" );
+  if ( ! cache_enabled ) {
+    return;
   }
+  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 0" : : "r" ( 0 ) : "memory" );
 }
 
 /**
- * @fn void cache_invalidate_data_cache(void)
- * @brief Invalidate data cache
+ * @fn void cache_flush_prefetch(void)
+ * @brief Flush prefetch buffer
+ *
+ * @todo wrong implementation
  */
-void cache_invalidate_data_cache( void ) {
-  if ( true == cache_enabled ) {
-    __asm__ __volatile__( "mcr p15, 0, %0, c7, c5,  4" : : "r"( 0 ) : "memory" );
+void cache_flush_prefetch( void ) {
+  if ( ! cache_enabled ) {
+    return;
   }
+  __asm__ __volatile__ ( "isb" ::: "memory" );
 }
 
 /**
- * @fn void cache_invalidate_prefetch_buffer(void)
- * @brief Invalidate prefetch buffer
+ * @fn void cache_flush_branch_target(void)
+ * @brief flush branch target
  */
-void cache_invalidate_prefetch_buffer( void ) {;
-  if ( true == cache_enabled ) {
-    __asm__ __volatile__( "mcr p15, 0, %0, c7, c6,  0" : : "r"( 0 ) : "memory" );
+void cache_flush_branch_target( void ) {
+  if ( ! cache_enabled ) {
+    return;
   }
+  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 6" : : "r"( 0 ) : "memory" );
 }
 
 /**
@@ -62,16 +67,15 @@ void cache_invalidate_prefetch_buffer( void ) {;
  * @brief Enable caches
  */
 void cache_enable( void ) {
-  return;
   // check for enabled
   if ( true == cache_enabled ) {
     return;
   }
-
   uint32_t mode;
+
   // read current value from sctlr
-  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( mode ) );
-  // set necessary flags ( cache, branch prediction, instruction cache )
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( mode ) :: "memory" );
+  // set necessary enable flags ( cache, branch prediction, instruction cache )
   mode |= ( 1 << 2 ) | ( 1 << 11 ) | ( 1 << 12 );
   // write back value
   __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( mode ) : "memory" );
@@ -90,7 +94,6 @@ void cache_disable( void ) {
   if ( false == cache_enabled ) {
     return;
   }
-
   uint32_t mode;
   // read current value from sctlr
   __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( mode ) );
@@ -98,7 +101,6 @@ void cache_disable( void ) {
   mode &= ( uint32_t )~( ( 1 << 2 ) | ( 1 << 11 ) | ( 1 << 12 ) );
   // write back value
   __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( mode ) : "memory" );
-
   // set status flag
   cache_enabled = false;
 }

@@ -897,8 +897,8 @@ void v7_short_flush_complete( void ) {
 
   // invalidate instruction cache
   cache_invalidate_instruction_cache();
-  cache_invalidate_data_cache();
-  cache_invalidate_prefetch_buffer();
+  cache_flush_prefetch();
+  cache_flush_branch_target();
   // invalidate entire tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
   // instruction synchronization barrier
@@ -908,21 +908,24 @@ void v7_short_flush_complete( void ) {
 }
 
 /**
+ * @fn void v7_short_flush_address(uintptr_t)
  * @brief Flush address in short mode
  *
  * @param addr virtual address to flush
+ *
+ * @todo add correct logic
  */
-void v7_short_flush_address( uintptr_t addr ) {
-  // invalidate instruction cache
-  cache_invalidate_instruction_cache();
-  cache_invalidate_data_cache();
-  cache_invalidate_prefetch_buffer();
-  // flush specific address
-  __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 1" :: "r"( addr ) );
-  // instruction synchronization barrier
-  barrier_instruction_sync();
+void v7_short_flush_address( __unused uintptr_t addr ) {
+  // FIXME: Clean cache line [Translation table entry]
   // data synchronization barrier
   barrier_data_sync();
+  // flush specific address
+  __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 1" :: "r"( addr ) );
+  // invalidate branch prediction
+  cache_flush_branch_target();
+  // data and instruction barrier
+  barrier_data_sync();
+  barrier_instruction_sync();
 }
 
 /**

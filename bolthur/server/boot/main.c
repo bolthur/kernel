@@ -146,7 +146,7 @@ static bool device_exists( const char* path ) {
  */
 static void wait_for_device( const char* path ) {
   while( ! device_exists( path ) ) {
-    sleep( 5 );
+    sleep( 2 );
   }
 }
 
@@ -592,19 +592,15 @@ int main( int argc, char* argv[] ) {
       return -1;
     }
   }
+  // enable rpc
+  _rpc_set_ready( true );
   // handle unexpected vfs id returned
   if ( VFS_DAEMON_ID != forked_process ) {
     EARLY_STARTUP_PRINT( "Invalid process id for vfs daemon!\r\n" )
     return -1;
   }
   EARLY_STARTUP_PRINT( "Continuing with startup by sending ramdisk!\r\n" )
-  // FIXME: Add sleep
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
-/*
-  while ( true ) {
-    __asm__ __volatile__ ( "nop" );
-  }
-*/
   // reset read offset
   ramdisk_read_offset = 0;
   // loop and add folders
@@ -646,7 +642,7 @@ int main( int argc, char* argv[] ) {
     msg->info.st_blocks = ( msg->info.st_size / T_BLOCKSIZE )
       + ( msg->info.st_size % T_BLOCKSIZE ? 1 : 0 );
     // send add request
-    send_vfs_add_request( msg, 0, 0 );
+    send_vfs_add_request( msg, 0, 2 );
     // skip to next file
     if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
       EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
@@ -662,8 +658,6 @@ int main( int argc, char* argv[] ) {
     EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
     return -1;
   }
-  // enable rpc
-  _rpc_set_ready( true );
 
   // fork process and handle possible error
   EARLY_STARTUP_PRINT( "Forking process for further init!\r\n" );

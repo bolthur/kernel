@@ -28,17 +28,17 @@ void debug_cache_invalidate_instruction_cache( void ) {
 }
 
 /**
- * @fn void debug_cache_invalidate_data_cache(void)
- * @brief Invalidate data cache
+ * @fn void debug_cache_flush_prefetch(void)
+ * @brief Flush prefetch buffer
  */
-void debug_cache_invalidate_data_cache( void ) {
-  __asm__ __volatile__( "mcr p15, 0, %0, c7, c5,  4" : : "r"( 0 ) : "memory" );
+void debug_cache_flush_prefetch( void ) {
+  __asm__ __volatile__ ( "isb" ::: "memory" );
 }
 
 /**
- * @fn void debug_cache_invalidate_prefetch_buffer(void)
- * @brief Invalidate prefetch buffer
+ * @fn void debug_cache_flush_branch_target(void)
+ * @brief flush branch target
  */
-void debug_cache_invalidate_prefetch_buffer( void ) {;
-  __asm__ __volatile__( "mcr p15, 0, %0, c7, c6,  0" : : "r"( 0 ) : "memory" );
+void debug_cache_flush_branch_target( void ) {
+__asm__ __volatile__( "mcr p15, 0, %0, c7, c5, 6" : : "r"( 0 ) : "memory" );
 }

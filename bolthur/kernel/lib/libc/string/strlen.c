@@ -20,8 +20,13 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
+#include <mm/phys.h>
 #include <mm/virt.h>
 #include <debug/debug.h>
+
+#define U64_BLOCK_SIZE sizeof( uint64_t )
+#define BUFFER_UNALIGNED(val) ( ( uintptr_t )val & ( U64_BLOCK_SIZE - 1 ) )
+#define DETECT_NULL_ENDING(x) ( ( x - 0x0101010101010101) & ~x & 0x8080808080808080 )
 
 /**
  * @fn size_t strlen(const char*)
@@ -31,13 +36,32 @@
  * @return
  */
 size_t strlen( const char* str ) {
-  size_t len = 0;
-
-  while ( str[ len ] ) {
-    len++;
+  const char* start = str;
+  // handle invalid
+  if ( ! str ) {
+    return 0;
   }
-
-  return len;
+  // loop until alignment
+  while( BUFFER_UNALIGNED( str ) ) {
+    // handle end reached
+    if ( !*str ) {
+      return ( size_t )( str - start );
+    }
+    // increment
+    str++;
+  }
+  // use 64bit for checks
+  uint64_t* aligned = ( uint64_t* )str;
+  while ( ! DETECT_NULL_ENDING( *aligned ) ) {
+    aligned++;
+  }
+  // update str
+  str = ( const char* )str;
+  while ( *str ) {
+    str++;
+  }
+  // return difference
+  return ( size_t )( str - start );
 }
 
 /**
@@ -49,23 +73,56 @@ size_t strlen( const char* str ) {
  */
 size_t strlen_unsafe( const char* str ) {
   size_t len = 0;
+  const char* start = str;
   // handle null
   if ( ! str ) {
     return len;
   }
-  // loop as long as not termination and check for mapping before
-  while( true ) {
-    // if something is strange, return no length
-    if ( ! virt_is_mapped_range( ( uintptr_t )&str[ len ], sizeof( char ) ) ) {
+  uintptr_t last_check = ROUND_DOWN_TO_FULL_PAGE( str );
+  const char* next_check = ( const char* )( last_check + PAGE_SIZE );
+  do {
+    // check page size
+    if ( ! virt_is_mapped_range( last_check, PAGE_SIZE ) ) {
       return 0;
     }
-    // handle termination
-    if ( ! str[ len ] ) {
-      break;
+    // loop until alignment
+    while( BUFFER_UNALIGNED( str ) && str < next_check ) {
+      // handle end reached
+      if ( !*str ) {
+        return ( size_t )( str - start );
+      }
+      // increment
+      str++;
     }
-    // increment
-    len++;
-  }
-  // return found length
-  return len;
+    // handle page boundary reached
+    if ( str == next_check ) {
+      last_check = ( uintptr_t )next_check;
+      next_check = ( const char* )( last_check + PAGE_SIZE );
+      continue;
+    }
+    // use 64bit for checks
+    uint64_t* aligned = ( uint64_t* )str;
+    while ( ! DETECT_NULL_ENDING( *aligned ) && str < next_check ) {
+      aligned++;
+    }
+    // handle page boundary reached
+    if ( str == next_check ) {
+      last_check = ( uintptr_t )next_check;
+      next_check = ( const char* )( last_check + PAGE_SIZE );
+      continue;
+    }
+    // update str
+    str = ( const char* )str;
+    while ( *str && str < next_check ) {
+      str++;
+    }
+    // handle page boundary reached
+    if ( str == next_check ) {
+      last_check = ( uintptr_t )next_check;
+      next_check = ( const char* )( last_check + PAGE_SIZE );
+      continue;
+    }
+    // return difference
+    return ( size_t )( str - start );
+  } while( true );
 }
