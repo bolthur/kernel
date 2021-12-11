@@ -15,7 +15,6 @@ libc_la_SOURCES = \
   stdlib/calloc.c \
   stdlib/free.c \
   stdlib/malloc.c \
-  stdlib/realloc.c \
   stdlib/strtoul.c \
   string/memchr.c \
   string/memcmp.c \

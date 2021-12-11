@@ -30,7 +30,6 @@ IMPORT( kernel_main )
 EXPORT( arch_start )
 arch_start:
   // setup of other modes stacks not necessary as all exceptions use supervisor mode
-
   // switch to supervisor mode and setup stack
   msr cpsr_c, #( CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
   ldr r0, =stack_supervisor_mode

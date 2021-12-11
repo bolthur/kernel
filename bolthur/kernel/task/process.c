@@ -811,10 +811,16 @@ int task_process_replace(
 
   // destroy thread manager
   if ( proc->thread_manager ) {
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "image_size = %#p\r\n", proc->thread_manager )
+    #endif
     task_thread_destroy( proc->thread_manager );
   }
   // destroy stack manager
   if ( proc->thread_stack_manager ) {
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "image_size = %#p\r\n", proc->thread_stack_manager )
+    #endif
     task_stack_manager_destroy( proc->thread_stack_manager );
   }
 

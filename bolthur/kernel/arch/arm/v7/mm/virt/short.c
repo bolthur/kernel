@@ -272,6 +272,11 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
     tbl->page[ page_idx ].data.cacheable = 0;
     tbl->page[ page_idx ].data.access_permission_0 = SD_MAC_APX0_PRIVILEGED_RW;
 
+    // flush table change
+    // DCCMVAC
+    __asm__ __volatile__( "mcr p15, 0, %0, c7, c10, 1" :: "r"( tbl ) );
+    barrier_instruction_sync();
+
     // flush address
     virt_flush_address( virt_current_kernel_context, addr );
 
@@ -341,6 +346,11 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
     // unmap
     tbl->page[ page_idx ].raw = 0;
 
+    // flush table change
+    // DCCMVAC
+    __asm__ __volatile__( "mcr p15, 0, %0, c7, c10, 1" :: "r"( tbl ) );
+    barrier_instruction_sync();
+
     // flush address
     virt_flush_address( virt_current_kernel_context, addr );
 
@@ -366,16 +376,24 @@ static uintptr_t get_new_table( uintptr_t table ) {
   if ( 0 != table ) {
     // extend
     if ( max_addr == free_addr ) {
-      // get another space of x tables
+      // extend another space of x tables
       max_addr *= 2;
-      // reallocate array
-      uintptr_t* tmp = realloc( addr, max_addr );
+      // allocate new array
+      uintptr_t* tmp = malloc( sizeof( uintptr_t ) * max_addr );
       // handle error
       if ( ! tmp ) {
         PANIC( "reallocate failed for array holding free addresses!\r\n" );
         // stupid hack to silence false positive from cppcheck
         return 0;
       }
+      // clear
+      memset( tmp, 0, sizeof( uintptr_t ) * max_addr );
+      // copy over data
+      for ( size_t i = 0; i < max_addr / 2; i++ ) {
+        tmp[ i ] = addr[ i ];
+      }
+      // free addr and overwrite with tmp
+      free( addr );
       addr = tmp;
     }
     if ( ! addr ) {
@@ -383,10 +401,18 @@ static uintptr_t get_new_table( uintptr_t table ) {
       // stupid hack to silence false positive from cppcheck
       return 0;
     }
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "free_addr = %zu - max_addr = %zu\r\n", free_addr, max_addr )
+    #endif
     // add entry to list
-    addr[ free_addr ] = table;
-    // increase free address
-    free_addr++;
+    addr[ free_addr++ ] = table;
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      for ( size_t i = 0; i < max_addr; i++ ) {
+        DEBUG_OUTPUT( " addr[ %d ] = %#p\r\n", i,  addr[ i ] )
+      }
+    #endif
     // return here
     return 0;
   }
@@ -708,18 +734,20 @@ bool v7_short_map(
     // set tex
     table->page[ page_idx ].data.tex = 1;
   }
-
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "flush context\r\n" )
+  #endif
+  // flush context if running
+  virt_flush_address( ctx, vaddr );
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table->page[ %u ].raw = %#08x\r\n",
       page_idx, table->page[ page_idx ].raw )
   #endif
-
   // unmap temporary
   unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
-
-  // flush context if running
-  virt_flush_address( ctx, vaddr );
+  // return success
   return true;
 }
 
@@ -897,14 +925,13 @@ void v7_short_flush_complete( void ) {
 
   // invalidate instruction cache
   cache_invalidate_instruction_cache();
-  cache_flush_prefetch();
   cache_flush_branch_target();
   // invalidate entire tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
-  // instruction synchronization barrier
-  barrier_instruction_sync();
   // data synchronization barrier
   barrier_data_sync();
+  // flush prefetch buffer
+  cache_flush_prefetch();
 }
 
 /**
@@ -912,13 +939,8 @@ void v7_short_flush_complete( void ) {
  * @brief Flush address in short mode
  *
  * @param addr virtual address to flush
- *
- * @todo add correct logic
  */
-void v7_short_flush_address( __unused uintptr_t addr ) {
-  // FIXME: Clean cache line [Translation table entry]
-  // data synchronization barrier
-  barrier_data_sync();
+void v7_short_flush_address( uintptr_t addr ) {
   // flush specific address
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 1" :: "r"( addr ) );
   // invalidate branch prediction
@@ -1102,13 +1124,11 @@ bool v7_short_fork_table( sd_page_table_t* to_fork, sd_page_table_t* forked ) {
     }
 
     // map both pages temporarily
-    uintptr_t page_to_fork = ( uintptr_t )
-      map_temporary( phys_to_fork, PAGE_SIZE );
+    uintptr_t page_to_fork = map_temporary( phys_to_fork, PAGE_SIZE );
     if ( ! page_to_fork ) {
       return false;
     }
-    uintptr_t page_forked = ( uintptr_t )
-      map_temporary( phys_forked, PAGE_SIZE );
+    uintptr_t page_forked = map_temporary( phys_forked, PAGE_SIZE );
     if ( ! page_forked ) {
       unmap_temporary( ( uintptr_t )page_to_fork, PAGE_SIZE );
       return false;
@@ -1157,6 +1177,10 @@ bool v7_short_fork_global_directory(
     if ( 0 == pmd_phys_to_fork ) {
       continue;
     }
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "pmd_phys_to_fork = %#"PRIxPTR"\r\n", pmd_phys_to_fork )
+    #endif
 
     // create page table
     uintptr_t pmd_phys_forked = get_new_table( 0 );
@@ -1164,6 +1188,10 @@ bool v7_short_fork_global_directory(
     if ( 0 == pmd_phys_forked ) {
       return false;
     }
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "pmd_phys_forked = %#"PRIxPTR"\r\n", pmd_phys_forked )
+    #endif
 
     // copy all attributes
     memcpy(
@@ -1181,12 +1209,20 @@ bool v7_short_fork_global_directory(
     if ( ! pmd_to_fork ) {
       return false;
     }
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "pmd_to_fork = %#p\r\n", pmd_to_fork )
+    #endif
     sd_page_table_t* pmd_forked = ( sd_page_table_t* )
       map_temporary( pmd_phys_forked, SD_TBL_SIZE );
     if ( ! pmd_forked ) {
       unmap_temporary( ( uintptr_t )pmd_to_fork, SD_TBL_SIZE );
       return false;
     }
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "pmd_forked = %#p\r\n", pmd_to_fork )
+    #endif
     // prepare new table
     memset( ( void* )pmd_forked, 0, SD_TBL_SIZE );
 
@@ -1315,7 +1351,7 @@ bool v7_short_destroy_global_directory( sd_context_half_t* ctx ) {
     // unmap again
     unmap_temporary( ( uintptr_t )pmd_to_destroy, SD_TBL_SIZE );
     // destroy table
-    get_new_table( ( uintptr_t )pmd_to_destroy );
+    get_new_table( pmd_phys_to_destroy );
     // set to invalid
     ctx->table[ gpd_idx ].raw = 0;
   }

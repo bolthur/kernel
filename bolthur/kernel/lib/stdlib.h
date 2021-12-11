@@ -30,7 +30,6 @@ void* aligned_alloc( size_t, size_t );
 void* calloc( size_t, size_t );
 void free( void* );
 void* malloc( size_t );
-void* realloc( void*, size_t );
 unsigned long int strtoul( const char*, char**, int );
 
 #endif

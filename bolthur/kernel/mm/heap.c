@@ -29,6 +29,7 @@
 #include <mm/phys.h>
 #include <mm/virt.h>
 #include <mm/heap.h>
+#include <panic.h>
 
 /**
  * @brief Kernel heap
@@ -311,6 +312,16 @@ static bool extend_heap_space( size_t given_size ) {
     free_block->address = ( uintptr_t )free_block + sizeof( heap_block_t );
     free_block->size = real_extension_size - sizeof( heap_block_t );
   }
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT(
+      "free_block = %p, free_block->address = %#"PRIxPTR
+      ", free_block->size = %ux\r\n",
+      ( void* )free_block,
+      free_block->address,
+      free_block->size
+    )
+  #endif
 
   // populate node data
   avl_prepare_node( &free_block->node_address, ( void* )free_block->address );
@@ -321,6 +332,9 @@ static bool extend_heap_space( size_t given_size ) {
     avl_insert_by_node( free_address, &free_block->node_address )
     && avl_insert_by_node( free_size, &free_block->node_size )
   )
+
+  // increase size
+  kernel_heap->size += real_extension_size;
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -352,10 +366,7 @@ static void shrink_heap_space( void ) {
   avl_tree_ptr_t used_address;
   size_t old_size;
   bool early_exit;
-  // variable used for debug output only
-  #if defined( PRINT_MM_HEAP )
-    size_t to_remove;
-  #endif
+  size_t to_remove = 0;
 
   // stop if not setup
   if (
@@ -446,17 +457,11 @@ static void shrink_heap_space( void ) {
   // remove from free size tree
   avl_remove_by_node( free_size, &max_free_block->node_size );
 
-  // debug output stat only
-  #if defined( PRINT_MM_HEAP )
-    to_remove = 0;
-  #endif
   old_size = max_free_block->size;
   // adjust block size
   while ( max_free_block->size >= HEAP_EXTENSION && shrink_size > 0 ) {
     // debug output stat only
-    #if defined( PRINT_MM_HEAP )
-      to_remove += HEAP_EXTENSION;
-    #endif
+    to_remove += HEAP_EXTENSION;
     max_free_block->size -= HEAP_EXTENSION;
     shrink_size -= HEAP_EXTENSION;
   }
@@ -475,6 +480,17 @@ static void shrink_heap_space( void ) {
     max_free_block->address,
     max_free_block->size
   );
+
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT(
+      "max_free_block = %p, max_free_block->address = %#"PRIxPTR
+      ", max_free_block->size = %ux\r\n",
+      ( void* )max_free_block,
+      max_free_block->address,
+      max_free_block->size
+    )
+  #endif
   // reinsert block with assertion
   assert(
     avl_insert_by_node( free_address, &max_free_block->node_address )
@@ -507,6 +523,8 @@ static void shrink_heap_space( void ) {
     // unmap virtual address
     virt_unmap_address( virt_current_kernel_context, start, true );
   }
+  // increase size
+  kernel_heap->size -= to_remove;
 
   // Debug output
   #if defined( PRINT_MM_HEAP )
@@ -724,6 +742,8 @@ void heap_init( heap_init_state_t state ) {
 
   // map heap address space
   if ( HEAP_INIT_NORMAL == state ) {
+    // set size
+    kernel_heap->size = min_size;
     for (
       uintptr_t addr = start;
       addr < start + min_size;
@@ -1151,7 +1171,6 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 
   // prepare block
   prepare_block( new, ( uintptr_t )new + sizeof( heap_block_t ), size );
-
   // debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "new->size = %zu\r\n", new->size );
@@ -1178,6 +1197,7 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
 }
 
 /**
+ * @fn void heap_free_block(uintptr_t)
  * @brief Free block within heap
  *
  * @param addr address to free
@@ -1209,6 +1229,20 @@ void heap_free_block( uintptr_t addr ) {
     used_area = get_used_area_tree( kernel_heap->state, kernel_heap );
     free_address = get_free_address_tree( kernel_heap->state, kernel_heap );
     free_size = get_free_size_tree( kernel_heap->state, kernel_heap );
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT(
+        "HEAP_START = %#"PRIxPTR", HEAP_START + kernel_heap->size = %#"PRIxPTR
+        ", addr = %#"PRIxPTR"\r\n",
+        HEAP_START,
+        HEAP_START + kernel_heap->size,
+        addr
+      )
+    #endif
+    // assert address is within valid range
+    if ( addr < HEAP_START || addr > HEAP_START + kernel_heap->size ) {
+      PANIC( "Invalid address free tried!" )
+    }
   }
 
   // debug output
@@ -1313,59 +1347,4 @@ void heap_free_block( uintptr_t addr ) {
   if ( HEAP_INIT_NORMAL == kernel_heap->state ) {
     shrink_heap_space();
   }
-}
-
-/**
- * @fn size_t heap_block_length(uintptr_t)
- * @brief Get original heap block length
- *
- * @param addr address to get length for
- * @return
- */
-size_t heap_block_length( uintptr_t addr ) {
-  // variables
-  avl_node_ptr_t address_node;
-  heap_block_ptr_t current_block;
-  avl_tree_ptr_t used_area;
-  // stop if not setup
-  if ( ! kernel_heap ) {
-    return 0;
-  }
-  // start and end of early init
-  uintptr_t initial_start = ( uintptr_t )&__initial_heap_start;
-  uintptr_t initial_end = ( uintptr_t )&__initial_heap_end;
-  // consider block from early setup
-  if ( addr >= initial_start && addr <= initial_end ) {
-    used_area = get_used_area_tree( HEAP_INIT_EARLY, kernel_heap );
-  // else use heap state tree
-  } else {
-    used_area = get_used_area_tree( kernel_heap->state, kernel_heap );
-  }
-
-  // debug output
-  #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "addr = %p\r\n", ( void* )addr );
-  #endif
-  // find node by address within tree
-  address_node = avl_find_by_data( used_area, ( void* )addr );
-  // skip if nothing has been found
-  if ( ! address_node ) {
-    return 0;
-  }
-  // debug output
-  #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT(
-      "address_node = %p, data = %p\r\n",
-      ( void* )address_node,
-      address_node->data
-    );
-  #endif
-  // get memory block
-  current_block = HEAP_GET_BLOCK_ADDRESS( address_node );
-  // debug output
-  #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "current_block = %p\r\n", ( void* )current_block );
-  #endif
-
-  return current_block->size;
 }
