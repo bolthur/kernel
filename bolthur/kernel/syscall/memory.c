@@ -293,6 +293,8 @@ void syscall_memory_release( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "Success!\r\n" )
   #endif
+  // return success
+  syscall_populate_success( context, 0 );
 }
 
 /**
@@ -371,6 +373,8 @@ void syscall_memory_shared_detach( void* context ) {
     syscall_populate_error( context, ( size_t )-EIO );
     return;
   }
+  // return success
+  syscall_populate_success( context, 0 );
 }
 
 /**

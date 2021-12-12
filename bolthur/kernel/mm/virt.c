@@ -144,8 +144,6 @@ void virt_init( void ) {
   virt_platform_init();
   // prepare temporary area
   assert( virt_prepare_temporary( virt_current_kernel_context ) )
-  // enable cpu caches
-  cache_enable();
 
   // firmware init stuff
   assert( firmware_init() )
@@ -162,6 +160,8 @@ void virt_init( void ) {
 
   // post init
   virt_platform_post_init();
+  // enable cpu caches
+  cache_enable();
 
   // set static
   virt_initialized = true;
@@ -423,10 +423,11 @@ bool virt_map_address_range_random(
 }
 
 /**
+ * @fn uintptr_t virt_get_context_min_address(virt_context_ptr_t)
  * @brief Get context min address
  *
  * @param ctx
- * @return uintptr_t
+ * @return
  */
 uintptr_t virt_get_context_min_address( virt_context_ptr_t ctx ) {
   if ( ctx->type == VIRT_CONTEXT_TYPE_KERNEL ) {
@@ -439,10 +440,11 @@ uintptr_t virt_get_context_min_address( virt_context_ptr_t ctx ) {
 }
 
 /**
+ * @fn uintptr_t virt_get_context_max_address(virt_context_ptr_t)
  * @brief Get context max address
  *
  * @param ctx
- * @return uintptr_t
+ * @return
  */
 uintptr_t virt_get_context_max_address( virt_context_ptr_t ctx ) {
   if ( ctx->type == VIRT_CONTEXT_TYPE_KERNEL ) {

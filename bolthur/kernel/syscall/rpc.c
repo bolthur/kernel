@@ -50,6 +50,8 @@ void syscall_rpc_set_handler( void* context ) {
   }
   // set handler
   task_thread_current_thread->process->rpc_handler = handler;
+  // return success
+  syscall_populate_success( context, 0 );
 }
 
 /**
@@ -354,6 +356,10 @@ void syscall_rpc_ret( void* context ) {
   }
   // free duplicate
   free( dup_data );
+  // return success
+  if ( target != task_thread_current_thread ) {
+    syscall_populate_success( context, 0 );
+  }
 }
 
 /**
@@ -484,6 +490,8 @@ void syscall_rpc_get_data( void* context ) {
     return;
   }
   free( tmp );
+  // return success
+  syscall_populate_success( context, 0 );
 }
 
 /**
@@ -570,4 +578,6 @@ void syscall_rpc_set_ready( void* context ) {
       task_thread_current_thread->process->id,
       task_thread_current_thread->process->rpc_ready ? 1 : 0 )
   #endif
+  // return success
+  syscall_populate_success( context, 0 );
 }

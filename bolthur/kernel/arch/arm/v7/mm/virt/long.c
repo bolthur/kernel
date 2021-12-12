@@ -480,9 +480,7 @@ uint64_t v7_long_create_table(
     }
     pmd_tbl->raw = LD_PHYSICAL_TABLE_ADDRESS( phys_l1table );
     // set attribute
-    pmd_tbl->data.attr_ns_table = ( uint8_t )(
-      ctx->type == VIRT_CONTEXT_TYPE_USER ? 1 : 0
-    );
+    pmd_tbl->data.attr_ns_table = ctx->type == VIRT_CONTEXT_TYPE_USER ? 1 : 0;
     pmd_tbl->data.type = LD_TYPE_TABLE;
     // debug output
     #if defined( PRINT_MM_VIRT )
@@ -647,28 +645,33 @@ bool v7_long_map(
       memory == VIRT_MEMORY_TYPE_DEVICE_STRONG ? 0 : 1;
   } else {
     // mark as outer sharable
-    table->page[ page_idx ].data.lower_attr_shared = 0x3;
-    table->page[ page_idx ].data.lower_attr_memory_attribute =
-      1 << 2 | ( memory == VIRT_MEMORY_TYPE_NORMAL ? 3 : 1 );
+    table->page[ page_idx ].data.lower_attr_shared =
+      ( memory == VIRT_MEMORY_TYPE_NORMAL ? 0x3 : 0x1 );
+    table->page[ page_idx ].data.lower_attr_memory_attribute = 0;
+    if ( VIRT_MEMORY_TYPE_NORMAL == memory ) {
+      table->page[ page_idx ].data.lower_attr_memory_attribute |= 1 << 2;
+    }
+    if ( memory == VIRT_MEMORY_TYPE_NORMAL ) {
+      table->page[ page_idx ].data.lower_attr_memory_attribute |= 3;
+    } else {
+      table->page[ page_idx ].data.lower_attr_memory_attribute |= 1;
+    }
   }
-
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "flush context\r\n" )
+  #endif
+  // flush context if running
+  virt_flush_address( ctx, vaddr );
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
       "table->page[ %u ].data.raw = %#016llx\r\n",
       page_idx, table->page[ page_idx ].raw )
   #endif
-
   // unmap temporary
   unmap_temporary( ( uintptr_t )table, PAGE_SIZE );
-
-  // debug output
-  #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "flush context\r\n" )
-  #endif
-
-  // flush context if running
-  virt_flush_address( ctx, vaddr );
+  // return success
   return true;
 }
 
@@ -778,11 +781,11 @@ void v7_long_unmap_temporary( uintptr_t addr, size_t size ) {
 }
 
 /**
+ * @fn bool v7_long_set_context(virt_context_ptr_t)
  * @brief Internal v7 long descriptor enable context function
  *
  * @param ctx context structure
- * @return true
- * @return false
+ * @return
  */
 bool v7_long_set_context( virt_context_ptr_t ctx ) {
   // handle invalid
@@ -795,9 +798,18 @@ bool v7_long_set_context( virt_context_ptr_t ctx ) {
 
   // save context
   uint64_t context = ctx->context;
-  // add offset for kernel context
+  // add offset for kernel context ( necessary for required alignment? )
+  // FIXME: COMMENT WHY APPLYING OFFSET TO KERNEL IS NECESSARY!
   if ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type ) {
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "TTBR1: %#016llx\r\n", context )
+    #endif
     context += sizeof( uint64_t ) * 2;
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "TTBR1: %#016llx\r\n", context )
+    #endif
   }
   // extract low and high words
   uint32_t low = ( uint32_t )context;
@@ -854,6 +866,7 @@ void v7_long_flush_complete( void ) {
   ttbcr.data.ttbr1_outer_cachability = 1;
   ttbcr.data.ttbr1_shareability = 3;
   ttbcr.data.large_physical_address_extension = 1;
+  ttbcr.data.ttbr0_ttbr1_asid = 1;
   // push back value with ttbcr
   __asm__ __volatile__(
     "mcr p15, 0, %0, c2, c0, 2"
@@ -861,7 +874,6 @@ void v7_long_flush_complete( void ) {
     : "cc"
   );
 
-  // FIXME: clear data cache
   // invalidate instruction cache
   cache_invalidate_instruction_cache();
   cache_flush_branch_target();
@@ -871,6 +883,8 @@ void v7_long_flush_complete( void ) {
   barrier_data_sync();
   // flush prefetch buffer
   cache_flush_prefetch();
+  // invalidate data cache
+  cache_invalidate_data();
 }
 
 /**
@@ -878,11 +892,8 @@ void v7_long_flush_complete( void ) {
  * @brief Flush address in long mode
  *
  * @param addr virtual address to flush
- *
- * @todo add correct logic
  */
-void v7_long_flush_address( __unused uintptr_t addr ) {
-  // FIXME: Clean cache line [Translation table entry]
+void v7_long_flush_address( uintptr_t addr ) {
   // data synchronization barrier
   barrier_data_sync();
   // flush specific address
@@ -1592,7 +1603,8 @@ uintptr_t v7_long_prefetch_status( void ) {
 }
 
 /**
- * @brief Get data abort fault address
+ * @fn uintptr_t v7_long_data_fault_address(void)
+ * @brief Get data fault address
  *
  * @return
  */
@@ -1608,7 +1620,8 @@ uintptr_t v7_long_data_fault_address( void ) {
 }
 
 /**
- * @brief Get data abort status
+ * @fn uintptr_t v7_long_data_status(void)
+ * @brief Get data fault status
  *
  * @return
  */

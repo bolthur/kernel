@@ -928,6 +928,7 @@ void v7_short_flush_complete( void ) {
   barrier_data_sync();
   // flush prefetch buffer
   cache_flush_prefetch();
+  // invalidate data cache
   cache_invalidate_data();
 }
 

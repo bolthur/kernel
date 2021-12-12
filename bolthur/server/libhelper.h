@@ -67,6 +67,7 @@ __maybe_unused static void send_vfs_add_request(
       0
     );
     if ( errno ) {
+      EARLY_STARTUP_PRINT( "Received error \"%s\"\r\n", strerror( errno ) )
       if ( wait ) {
         sleep( wait );
       }
