@@ -162,8 +162,8 @@ void rpc_handle_add(
       }
     }
   }
-  //EARLY_STARTUP_PRINT( "-------->VFS DEBUG_DUMP<--------\r\n" )
-  //vfs_dump( NULL, NULL );
+  EARLY_STARTUP_PRINT( "-------->VFS DEBUG_DUMP<--------\r\n" )
+  vfs_dump( NULL, NULL );
   free( str );
   if ( target ) {
     free( target );

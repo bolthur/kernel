@@ -80,7 +80,7 @@ void __bootstrap virt_startup_setup_supported_modes( void ) {
     }
 
     // FIXME: uncomment for testing short descriptor mode
-    //virt_startup_supported_mode = ID_MMFR0_VSMA_V7_PAGING_PXN;
+    virt_startup_supported_mode = ID_MMFR0_VSMA_V7_PAGING_PXN;
   #elif defined( ELF64 )
     #error "Unsupported"
   #endif
@@ -144,7 +144,7 @@ void virt_setup_supported_modes( void ) {
     }
 
     // FIXME: uncomment for testing short descriptor mode
-    //virt_supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;
+    virt_supported_mode = ID_MMFR0_VSMA_V7_PAGING_PXN;
   #elif defined( ELF64 )
     #error "Unsupported"
   #endif

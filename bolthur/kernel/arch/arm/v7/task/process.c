@@ -23,6 +23,7 @@
 #include <string.h>
 #include <mm/phys.h>
 #include <mm/virt.h>
+#include <arch/arm/mm/virt.h>
 #include <arch.h>
 #include <timer.h>
 #include <task/queue.h>
@@ -114,8 +115,7 @@ void task_process_start( void ) {
  * @param origin event origin
  * @param context cpu context
  *
- * @todo Add endless loop with enabled interrupts, when there are no more possible tasks left
- * @todo Set correct status for current process if rpc handler active was set
+ * @todo check / remove interrupt toggling with reentrant interrupts
  */
 void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // debug output
@@ -188,7 +188,6 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
       #endif
       // handle no next thread
       if ( ! next_thread ) {
-        /// FIXME: Check / Remove interrupt toggling with reentrant interrupts
         // enable interrupts and set flag
         if ( ! halt_set ) {
           interrupt_enable();
@@ -201,7 +200,6 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   } while ( ! next_thread );
   // disable interrupts again
   if ( halt_set ) {
-    /// FIXME: Check / Remove interrupt toggling with reentrant interrupts
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT( "Halt was active, disabling interrupts!\r\n" )
@@ -222,8 +220,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   task_priority_queue_ptr_t next_queue = NULL;
   // get queue of next thread
   while ( next_thread && ! next_queue ) {
-    next_queue = task_queue_get_queue(
-      process_manager, next_thread->priority );
+    next_queue = task_queue_get_queue( process_manager, next_thread->priority );
   }
 
   // reset current if queue changed
@@ -250,10 +247,11 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     ! running_thread
     || running_thread->process != next_thread->process
   ) {
-    // set context and flush
+    // set context
     while ( ! virt_set_context( next_thread->process->virtual_context ) ) {
       __asm__ __volatile__ ( "nop" ::: "cc" );
     }
+    // flush everything
     virt_flush_complete();
     // debug output
     #if defined( PRINT_PROCESS )

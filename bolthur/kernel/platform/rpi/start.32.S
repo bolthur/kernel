@@ -25,6 +25,7 @@
 // forward declaration for save of parameter
 IMPORT( firmware_info )
 // import used functions
+IMPORT( cache_startup_setup )
 IMPORT( bss_startup_clear )
 IMPORT( fpu_enable )
 IMPORT( virt_startup_setup )
@@ -145,28 +146,26 @@ reset:
     stmia r1!,{ r2 - r9 }
     ldmia r0!,{ r2 - r9 }
     stmia r1!,{ r2 - r9 }
-
     // clear data cache
     mov r0, #0
     mcr p15, 0, r0, c7, c10, 1
     // ensure that it's written
     dsb
-
     // invalidate instruction cache
     mov r0, #0
     mcr p15, 0, r0, c7, c5, 0
     // flush branch target cache
     mov r0, #0
     mcr p15, 0, r0, c7, c5, 6
-
     // ensure actions to be done completely
     dsb
     isb
-
     // secure monitor call to reset scr
     smc #0
   #endif
 
+  // cache startup setup
+  bl cache_startup_setup
   // enable fpu
   bl fpu_enable
   // initial virtual memory setup
@@ -182,8 +181,6 @@ reset:
   mov sp, r3
   // set program counter
   mov pc, r3
-
-
 
 .section .text
 

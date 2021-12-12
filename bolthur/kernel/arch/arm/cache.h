@@ -23,6 +23,6 @@
 void cache_invalidate_instruction_cache( void );
 void cache_flush_prefetch( void );
 void cache_flush_branch_target( void );
-void cache_clear_data( void );
+void cache_invalidate_data( void );
 
 #endif

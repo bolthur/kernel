@@ -272,11 +272,6 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
     tbl->page[ page_idx ].data.cacheable = 0;
     tbl->page[ page_idx ].data.access_permission_0 = SD_MAC_APX0_PRIVILEGED_RW;
 
-    // flush table change
-    // DCCMVAC
-    __asm__ __volatile__( "mcr p15, 0, %0, c7, c10, 1" :: "r"( tbl ) );
-    barrier_instruction_sync();
-
     // flush address
     virt_flush_address( virt_current_kernel_context, addr );
 
@@ -345,11 +340,6 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
 
     // unmap
     tbl->page[ page_idx ].raw = 0;
-
-    // flush table change
-    // DCCMVAC
-    __asm__ __volatile__( "mcr p15, 0, %0, c7, c10, 1" :: "r"( tbl ) );
-    barrier_instruction_sync();
 
     // flush address
     virt_flush_address( virt_current_kernel_context, addr );
@@ -712,6 +702,11 @@ bool v7_short_map(
         ? SD_MAC_APX0_PRIVILEGED_RW
         : SD_MAC_APX0_FULL_RW;
   }
+  // set non global flag
+  table->page[ page_idx ].data.not_global =
+    ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type )
+      ? 0
+      : 1;
   // handle memory types
   if (
     memory == VIRT_MEMORY_TYPE_DEVICE_STRONG
@@ -728,11 +723,12 @@ bool v7_short_map(
   } else {
     // set cacheable and bufferable depending on type
     table->page[ page_idx ].data.cacheable =
-      memory == VIRT_MEMORY_TYPE_NORMAL ? 1 : 0;
+      memory == VIRT_MEMORY_TYPE_NORMAL_NC ? 0 : 1;
     table->page[ page_idx ].data.bufferable =
-      memory == VIRT_MEMORY_TYPE_NORMAL ? 1 : 0;
+      memory == VIRT_MEMORY_TYPE_NORMAL_NC ? 0 : 1;
     // set tex
-    table->page[ page_idx ].data.tex = 1;
+    table->page[ page_idx ].data.tex =
+      memory == VIRT_MEMORY_TYPE_NORMAL_NC ? 0 : 1;
   }
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -932,6 +928,7 @@ void v7_short_flush_complete( void ) {
   barrier_data_sync();
   // flush prefetch buffer
   cache_flush_prefetch();
+  cache_invalidate_data();
 }
 
 /**
