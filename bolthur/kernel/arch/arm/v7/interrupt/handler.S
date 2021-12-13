@@ -42,14 +42,14 @@ IMPORT( task_thread_current_thread )
 .macro stack_wind register:req, additional:req, stack:req
   // test alignment
   and \register, \stack, #4
-  sub \stack, \stack, #4
+  sub \stack, \register
   push { \register, \additional }
 .endm
 
 // restore stack possibly changed due to stack alignment
 .macro stack_unwind register:req, additional:req, stack:req
   pop { \register, \additional }
-  add \stack, \stack, \register
+  add \stack, \register
 .endm
 
 // macro to switch to mode
@@ -304,7 +304,7 @@ _\name\()_exit_finished:
     vmrs r0, fpscr
     str r0, [ \register, #GENERAL_PURPOSE_REGISTER_END ]
     // start with first fpu registers
-    add \register, #72
+    add \register, #NEON_REGISTER_START
     // backup fpu registers
     vstmia \register!, { d0 - d15 }
     vstmia \register!, { d16 - d31 }
@@ -319,7 +319,7 @@ _\name\()_exit_finished:
     ldr r0, [ \register, #GENERAL_PURPOSE_REGISTER_END ]
     vmsr fpscr, r0
     // start with first fpu registers
-    add \register, #72
+    add \register, #NEON_REGISTER_START
     // restore fpu registers
     vldmia \register!, { d0 - d15 }
     vldmia \register!, { d16 - d31 }

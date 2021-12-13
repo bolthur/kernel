@@ -551,16 +551,35 @@ void syscall_rpc_get_data_size( void* context ) {
 void syscall_rpc_wait_for_call( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_rpc_wait_for_call()\r\n" )
+    DEBUG_OUTPUT(
+      "syscall_rpc_wait_for_call() from %d\r\n",
+      task_thread_current_thread->process->id
+    )
   #endif
   // only active state allows block for next syscall
   if ( TASK_THREAD_STATE_ACTIVE != task_thread_current_thread->state ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT(
+        "Current thread not in active state, expected %d, but got %d!\r\n",
+        TASK_THREAD_STATE_ACTIVE, task_thread_current_thread->state
+      )
+    #endif
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }
   // set state
   task_thread_current_thread->state = TASK_THREAD_STATE_RPC_WAIT_FOR_CALL;
-  // enqueue schedule
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT(
+      "Switched state from %d to %d!\r\n",
+      TASK_THREAD_STATE_ACTIVE, task_thread_current_thread->state
+    )
+  #endif
+  // set dummy return
+  syscall_populate_success( context, 0 );
+  // enqueue scheduler
   event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
 }
 

@@ -33,5 +33,5 @@ void arch_init( void ) {
  * @brief Halt and wait for interrupt
  */
 void arch_halt( void ) {
-  __asm__ __volatile__( "wfe" ::: "cc", "memory" );
+  __asm__ __volatile__( "wfi" ::: "cc", "memory" );
 }

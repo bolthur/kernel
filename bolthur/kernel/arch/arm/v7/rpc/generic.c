@@ -95,25 +95,42 @@ bool rpc_generic_restore( task_thread_ptr_t thread, void* context ) {
     #endif
     return false;
   }
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT(
+      "backup->instruction = %#p, %#x\r\n",
+      ( void* )backup->instruction_address,
+      *((uint32_t*)backup->instruction_address)
+    )
+  #endif
   // restore instruction
   memcpy(
     ( void* )backup->instruction_address,
     &backup->instruction_backup,
     sizeof( uint32_t )
   );
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT(
+      "backup->instruction = %#p, %#x\r\n",
+      ( void* )backup->instruction_address,
+      *((uint32_t*)backup->instruction_address)
+    )
+  #endif
   // restore cpu registers
   memcpy(
     thread->current_context,
     backup->context,
     sizeof( cpu_register_context_t )
   );
-  // data transfer barrier
-  barrier_data_mem();
-  barrier_instruction_sync();
   /// FIXME: Evaluate whether cache operations are necessary
   cache_flush_prefetch();
   cache_flush_branch_target();
   cache_invalidate_instruction_cache();
+  cache_invalidate_data();
+  // data transfer barrier
+  barrier_data_mem();
+  barrier_instruction_sync();
   // set correct state
   backup->thread->state = TASK_THREAD_STATE_ACTIVE;
   // finally remove found entry

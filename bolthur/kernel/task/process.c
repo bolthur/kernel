@@ -707,6 +707,10 @@ task_process_ptr_t task_process_get_by_id( pid_t pid ) {
  * @param proc
  */
 void task_process_prepare_kill( void* context, task_process_ptr_t proc ) {
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Prepare kill of process %d\r\n", proc->id )
+  #endif
   // get first thread
   avl_node_ptr_t current = avl_iterate_first( proc->thread_manager );
   task_thread_ptr_t thread = NULL;
@@ -880,10 +884,14 @@ int task_process_replace(
 
   // replace new current thread
   if ( replace_current_thread ) {
+    // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT( "Replace current thread!\r\n" );
     #endif
+    // replace current thread pointer
     task_thread_current_thread = new_current;
+    // switch thread state to active
+    task_thread_current_thread->state = TASK_THREAD_STATE_ACTIVE;
   }
   return 0;
 }

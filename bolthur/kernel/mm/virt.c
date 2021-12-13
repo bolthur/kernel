@@ -161,7 +161,7 @@ void virt_init( void ) {
   // post init
   virt_platform_post_init();
   // enable cpu caches
-  cache_enable();
+  //cache_enable();
 
   // set static
   virt_initialized = true;

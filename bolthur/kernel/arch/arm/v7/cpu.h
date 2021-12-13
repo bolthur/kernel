@@ -43,6 +43,7 @@
 #if defined( ARM_CPU_HAS_NEON )
   #define STACK_FRAME_SIZE 328
   #define GENERAL_PURPOSE_REGISTER_END 68
+  #define NEON_REGISTER_START 72
   #define PRIVILEGED_PC_OFFSET 328
   #define PRIVILEGED_SPSR_OFFSET 332
 #else
@@ -160,7 +161,7 @@
       DEBUG_OUTPUT( "d28: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 28 ] ) \
       DEBUG_OUTPUT( "d29: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 29 ] ) \
       DEBUG_OUTPUT( "d30: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 30 ] ) \
-      DEBUG_OUTPUT( "d31: %#016llx\r\n\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 31 ] )
+      DEBUG_OUTPUT( "d31: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 31 ] )
   #else
     #define DUMP_REGISTER( context ) \
       DEBUG_OUTPUT( \

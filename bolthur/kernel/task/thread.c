@@ -143,7 +143,6 @@ bool task_thread_set_current(
   // update queue current
   queue->current = thread;
   // set state
-  if ( task_thread_current_thread->state )
   task_thread_current_thread->state =
     task_thread_current_thread->state == TASK_THREAD_STATE_RPC_QUEUED
       ? TASK_THREAD_STATE_RPC_ACTIVE
@@ -356,6 +355,14 @@ task_thread_ptr_t task_thread_next( void ) {
  * @param context current valid context only necessary when schedule is true
  */
 void task_thread_kill( task_thread_ptr_t thread, bool schedule, void* context ) {
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT(
+      "Prepare kill of thread %d of process %d\r\n",
+      thread->id,
+      thread->process->id
+    )
+  #endif
   // set thread state and push thread to clean up list
   thread->state = TASK_THREAD_STATE_KILL;
   list_push_back( process_manager->thread_to_cleanup, thread->process );
@@ -467,14 +474,41 @@ void task_thread_unblock(
     necessary_state != thread->state
     || necessary_state != TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN
   ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT(
+        "process %d with state %d, but one of the following"
+        " are matching: %d / %d\r\n",
+        thread->process->id,
+        thread->state,
+        necessary_state,
+        TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN
+      )
+    #endif
     return;
   }
   // validate data
   if ( thread->state_data.data_ptr != necessary_data.data_ptr ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT(
+        "invalid data ptr attribute %#x / %#x\r\n",
+        thread->state_data.data_ptr,
+        necessary_data.data_ptr
+      )
+    #endif
     return;
   }
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
+  #endif
   // set back to backup again
   thread->state = thread->state_backup;
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
+  #endif
 }
 
 /**

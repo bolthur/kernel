@@ -146,7 +146,7 @@ static bool device_exists( const char* path ) {
  */
 static void wait_for_device( const char* path ) {
   while( ! device_exists( path ) ) {
-    sleep( 2 );
+    sleep( 5 );
   }
 }
 
@@ -600,6 +600,7 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
   EARLY_STARTUP_PRINT( "Continuing with startup by sending ramdisk!\r\n" )
+  sleep( 10 );
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
   // reset read offset
   ramdisk_read_offset = 0;
