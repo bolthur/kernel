@@ -470,10 +470,7 @@ void task_thread_unblock(
   task_state_data_t necessary_data
 ) {
   // validate state
-  if (
-    necessary_state != thread->state
-    || necessary_state != TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN
-  ) {
+  if ( necessary_state != thread->state ) {
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT(

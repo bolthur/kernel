@@ -25,8 +25,6 @@
 // process related stuff
 #include <task/process.h>
 #include <task/thread.h>
-#include <rpc/backup.h>
-#include <rpc/generic.h>
 
 /**
  * @brief Nested counter for undefined instruction exception handler
@@ -62,32 +60,12 @@ void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
     PANIC( "Undefined instruction from kernel" )
   // try to restore from rpc call
   } else if ( EVENT_ORIGIN_USER == origin ) {
-    if ( TASK_THREAD_STATE_RPC_ACTIVE == task_thread_current_thread->state ) {
-      // try to restore
-      if ( ! rpc_generic_restore( task_thread_current_thread, cpu ) ) {
-        // debug output
-        #if defined( PRINT_EXCEPTION )
-          DEBUG_OUTPUT( "No rpc for restore -> kill!\r\n" )
-        #endif
-        // kill thread and trigger scheduling
-        task_thread_kill( task_thread_current_thread, true, cpu );
-      } else {
-        // debug output
-        #if defined( PRINT_EXCEPTION )
-          DUMP_REGISTER( cpu )
-          DEBUG_OUTPUT( "process id: %d, thread state: %d\r\n",
-            task_thread_current_thread->process->id,
-            task_thread_current_thread->state )
-        #endif
-      }
-    } else {
-      // debug output
-      #if defined( PRINT_EXCEPTION )
-        DEBUG_OUTPUT( "Undefined instruction within thread -> kill!\r\n" )
-      #endif
-      // kill thread and trigger scheduling
-      task_thread_kill( task_thread_current_thread, true, cpu );
-    }
+    // debug output
+    #if defined( PRINT_EXCEPTION )
+      DEBUG_OUTPUT( "Undefined instruction within thread -> kill!\r\n" )
+    #endif
+    // kill thread and trigger scheduling
+    task_thread_kill( task_thread_current_thread, true, cpu );
   }
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );

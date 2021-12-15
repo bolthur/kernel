@@ -21,6 +21,5 @@
 #define _CACHE_H
 
 void cache_enable( void );
-void cache_disable( void );
 
 #endif

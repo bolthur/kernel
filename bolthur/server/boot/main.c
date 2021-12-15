@@ -600,7 +600,7 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
   EARLY_STARTUP_PRINT( "Continuing with startup by sending ramdisk!\r\n" )
-  sleep( 10 );
+  _rpc_wait_for_ready( forked_process );
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
   // reset read offset
   ramdisk_read_offset = 0;
@@ -662,7 +662,7 @@ int main( int argc, char* argv[] ) {
 
   // fork process and handle possible error
   EARLY_STARTUP_PRINT( "Forking process for further init!\r\n" );
-  forked_process = fork();
+  forked_process = _process_fork();
   if ( errno ) {
     EARLY_STARTUP_PRINT(
       "Unable to fork process for init continue: %s\r\n",

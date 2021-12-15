@@ -35,6 +35,20 @@ interrupt_disable:
   cpsid if
   bx lr
 
+EXPORT( interrupt_enabled )
+interrupt_enabled:
+  push { r1, r2, lr }
+  // read cpsr
+  mrs r0, cpsr
+  // extract irq and fiq bits
+  and r1, r0, #CPSR_IRQ_INHIBIT
+  and r2, r0, #CPSR_FIQ_INHIBIT
+  // mov with orr to return
+  orr r0, r1, r2
+  // restore register
+  pop { r1, r2, lr }
+  bx lr
+
 // handler
 IMPORT( vector_undefined_instruction_handler )
 IMPORT( vector_svc_handler )

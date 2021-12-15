@@ -25,7 +25,6 @@
 // forward declaration for save of parameter
 IMPORT( firmware_info )
 // import used functions
-IMPORT( cache_startup_setup )
 IMPORT( bss_startup_clear )
 IMPORT( fpu_enable )
 IMPORT( virt_startup_setup )
@@ -164,8 +163,6 @@ reset:
     smc #0
   #endif
 
-  // cache startup setup
-  bl cache_startup_setup
   // enable fpu
   bl fpu_enable
   // initial virtual memory setup

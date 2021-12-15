@@ -31,6 +31,7 @@ typedef enum {
   TASK_THREAD_STATE_RPC_HALT_SWITCH,
   TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
   TASK_THREAD_STATE_RPC_WAIT_FOR_CALL,
+  TASK_THREAD_STATE_RPC_WAIT_FOR_READY,
 } task_thread_state_t;
 
 typedef union task_state_data task_state_data_t;

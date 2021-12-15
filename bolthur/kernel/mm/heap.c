@@ -248,9 +248,10 @@ static bool extend_heap_space( size_t given_size ) {
   // debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT(
-      "End: %p, Size: %zx, New size: %zx\r\n",
+      "End: %p, Size: %zx, new end: %p, New size: %zx\r\n",
       ( void* )heap_end,
       heap_size,
+      ( void* )( heap_end + heap_size + real_extension_size ),
       heap_size + real_extension_size
     );
   #endif
@@ -278,7 +279,7 @@ static bool extend_heap_space( size_t given_size ) {
     if ( ! virt_map_address_random(
       virt_current_kernel_context,
       addr,
-      VIRT_MEMORY_TYPE_NORMAL,
+      VIRT_MEMORY_TYPE_NORMAL_NC,
       VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
     ) ) {
       return false;
@@ -758,7 +759,7 @@ void heap_init( heap_init_state_t state ) {
       assert( virt_map_address_random(
         virt_current_kernel_context,
         addr,
-        VIRT_MEMORY_TYPE_NORMAL,
+        VIRT_MEMORY_TYPE_NORMAL_NC,
         VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
       ) )
     }

@@ -255,6 +255,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     virt_flush_complete();
     // debug output
     #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "Switch to %d\r\n", next_thread->process->id )
       DUMP_REGISTER( next_thread->current_context )
     #endif
   }

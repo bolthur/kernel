@@ -89,7 +89,7 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
     if ( EVENT_ORIGIN_KERNEL == origin ) {
       PANIC( "data abort from kernel" )
     } else {
-      PANIC( "data abort from user space!" )
+      PANIC( "data abort from user space => Kill it!" )
     }
   #endif
   // enqueue cleanup

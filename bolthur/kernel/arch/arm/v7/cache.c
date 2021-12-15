@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <cache.h>
 #include <arch/arm/cache.h>
+#include <interrupt.h>
 
 /**
  * @brief Internal flag for cache is enabled
@@ -67,40 +68,27 @@ void cache_flush_branch_target( void ) {
  * @brief Enable caches
  */
 void cache_enable( void ) {
-  // check for enabled
-  if ( true == cache_enabled ) {
-    return;
-  }
-  uint32_t mode;
+  cache_enable_stub( &cache_enabled );
 
-  // read current value from sctlr
-  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( mode ) :: "memory" );
-  // set necessary enable flags ( cache, branch prediction, instruction cache )
-  mode |= ( 1 << 2 ) | ( 1 << 11 ) | ( 1 << 12 );
-  // write back value
-  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( mode ) : "memory" );
-
-  // set status flag
-  cache_enabled = true;
 }
 
 /**
- * @fn void cache_disable(void)
- * @brief Disable caches
+ * @fn void cache_invalidate_save(void)
+ * @brief Invalidate data cache in a save way with disabled interrupts
  */
-void cache_disable( void ) {
-  return;
-  // check for disabled
-  if ( false == cache_enabled ) {
+void cache_invalidate_save( void ) {
+  // skip if not enabled
+  if ( ! cache_enabled ) {
     return;
   }
-  uint32_t mode;
-  // read current value from sctlr
-  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( mode ) );
-  // set necessary flags ( cache, branch prediction, instruction cache )
-  mode &= ( uint32_t )~( ( 1 << 2 ) | ( 1 << 11 ) | ( 1 << 12 ) );
-  // write back value
-  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( mode ) : "memory" );
-  // set status flag
-  cache_enabled = false;
+  // get enabled flag
+  bool enabled = interrupt_enabled();
+  // disable interrupts for cache operation
+  interrupt_disable();
+  // clean and invalidate data cache
+  cache_clean_data();
+  // enable interrupts again if previously enabled
+  if ( enabled ) {
+    interrupt_enable();
+  }
 }

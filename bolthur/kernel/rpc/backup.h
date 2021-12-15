@@ -29,8 +29,6 @@ struct rpc_backup {
   void* context;
   size_t data_id;
   size_t type;
-  uint32_t instruction_backup;
-  uintptr_t instruction_address;
   task_thread_ptr_t thread;
   task_thread_ptr_t source;
   bool prepared;

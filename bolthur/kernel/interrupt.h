@@ -81,6 +81,7 @@ int8_t interrupt_get_pending( bool );
 void interrupt_toggle( interrupt_toggle_state_t );
 void interrupt_disable( void );
 void interrupt_enable( void );
+bool interrupt_enabled( void );
 bool interrupt_validate_number( size_t );
 void interrupt_init( void );
 void interrupt_arch_init( void );

@@ -29,7 +29,7 @@
 bool rpc_generic_setup( task_process_ptr_t );
 void rpc_generic_destroy( task_process_ptr_t );
 bool rpc_generic_ready( task_process_ptr_t );
-bool rpc_generic_restore( task_thread_ptr_t, void* );
+bool rpc_generic_restore( task_thread_ptr_t );
 bool rpc_generic_prepare_invoke( rpc_backup_ptr_t );
 rpc_backup_ptr_t rpc_generic_raise( task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t );
 

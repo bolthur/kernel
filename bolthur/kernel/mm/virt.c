@@ -31,6 +31,7 @@
 #include <cache.h>
 #include <mm/phys.h>
 #include <mm/virt.h>
+#include <mm/heap.h>
 
 /**
  * @brief static initialized flag
@@ -87,16 +88,28 @@ void virt_init( void ) {
     );
   #endif
 
+  // map initial heap similar to normal heap non cachable
+  uintptr_t initial_heap_start = VIRT_2_PHYS( &__initial_heap_start );
+  uintptr_t initial_heap_end = VIRT_2_PHYS( &__initial_heap_end );
+
   // map from start to end addresses as used
   while ( start < end ) {
+    virt_memory_type_t type = VIRT_MEMORY_TYPE_NORMAL;
+    uint32_t page = VIRT_PAGE_TYPE_EXECUTABLE;
+    if ( start >= initial_heap_start && start <= initial_heap_end ) {
+      type = VIRT_MEMORY_TYPE_NORMAL_NC;
+      page = VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
+    }
+
     // map page
     assert( virt_map_address(
       virt_current_kernel_context,
       PHYS_2_VIRT( start ),
       start,
-      VIRT_MEMORY_TYPE_NORMAL,
-      VIRT_PAGE_TYPE_EXECUTABLE
+      type,
+      page
     ) )
+
 
     // get next page
     start += PAGE_SIZE;
@@ -160,8 +173,9 @@ void virt_init( void ) {
 
   // post init
   virt_platform_post_init();
+
   // enable cpu caches
-  //cache_enable();
+  cache_enable();
 
   // set static
   virt_initialized = true;

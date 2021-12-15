@@ -898,6 +898,7 @@ bool v7_short_set_context( virt_context_ptr_t ctx ) {
 }
 
 /**
+ * @fn void v7_short_flush_complete(void)
  * @brief Flush context
  */
 void v7_short_flush_complete( void ) {
@@ -919,17 +920,17 @@ void v7_short_flush_complete( void ) {
     : "cc"
   );
 
-  // invalidate instruction cache
-  cache_invalidate_instruction_cache();
-  cache_flush_branch_target();
-  // invalidate entire tlb
+  // invalidate entire unified tlb
   __asm__ __volatile__( "mcr p15, 0, %0, c8, c7, 0" : : "r" ( 0 ) );
+  // invalidate entire data tlb
+  __asm__ __volatile__( "mcr p15, 0, %0, c8, c6, 0" : : "r" ( 0 ) );
+  // invalidate entire instruction tlb
+  __asm__ __volatile__( "mcr p15, 0, %0, c8, c5, 0" : : "r" ( 0 ) );
   // data synchronization barrier
   barrier_data_sync();
-  // flush prefetch buffer
-  cache_flush_prefetch();
+  barrier_instruction_sync();
   // invalidate data cache
-  cache_invalidate_data();
+  cache_invalidate_save();
 }
 
 /**

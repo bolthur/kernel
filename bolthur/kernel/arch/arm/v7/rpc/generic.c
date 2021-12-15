@@ -33,20 +33,18 @@
 #endif
 
 /**
- * @fn bool rpc_restore_thread(task_thread_ptr_t, void*)
+ * @fn bool rpc_restore_thread(task_thread_ptr_t)
  * @brief Try thread restore
  *
  * @param thread
- * @param context
  * @return
  */
-bool rpc_generic_restore( task_thread_ptr_t thread, void* context ) {
+bool rpc_generic_restore( task_thread_ptr_t thread ) {
   // ensure proper states
   if ( TASK_THREAD_STATE_RPC_ACTIVE != thread->state ) {
     return false;
   }
   // variables
-  cpu_register_context_ptr_t cpu = context;
   rpc_backup_ptr_t backup = NULL;
   bool further_rpc_enqueued = false;
   // get backup for restore
@@ -58,19 +56,10 @@ bool rpc_generic_restore( task_thread_ptr_t thread, void* context ) {
     rpc_backup_ptr_t tmp = current->data;
     // debug output
     #if defined( PRINT_RPC )
-      DEBUG_OUTPUT(
-        "tmp->instruction_address = %#x - cpu->reg.pc = %#x - "
-        "tmp->active = %d, tmp->instruction_address == cpu->reg.pc = %d\r\n",
-        tmp->instruction_address,
-        cpu->reg.pc,
-        tmp->active ? 1 : 0,
-        tmp->instruction_address == cpu->reg.pc ? 1 : 0 )
+      DEBUG_OUTPUT( "tmp->active = %d\r\n", tmp->active ? 1 : 0 )
     #endif
     // check for match
-    if (
-      tmp->active
-      && tmp->instruction_address == cpu->reg.pc
-    ) {
+    if ( tmp->active ) {
       backup = tmp;
       // debug output
       #if defined( PRINT_RPC )
@@ -95,42 +84,12 @@ bool rpc_generic_restore( task_thread_ptr_t thread, void* context ) {
     #endif
     return false;
   }
-  // debug output
-  #if defined( PRINT_RPC )
-    DEBUG_OUTPUT(
-      "backup->instruction = %#p, %#x\r\n",
-      ( void* )backup->instruction_address,
-      *((uint32_t*)backup->instruction_address)
-    )
-  #endif
-  // restore instruction
-  memcpy(
-    ( void* )backup->instruction_address,
-    &backup->instruction_backup,
-    sizeof( uint32_t )
-  );
-  // debug output
-  #if defined( PRINT_RPC )
-    DEBUG_OUTPUT(
-      "backup->instruction = %#p, %#x\r\n",
-      ( void* )backup->instruction_address,
-      *((uint32_t*)backup->instruction_address)
-    )
-  #endif
   // restore cpu registers
   memcpy(
     thread->current_context,
     backup->context,
     sizeof( cpu_register_context_t )
   );
-  /// FIXME: Evaluate whether cache operations are necessary
-  cache_flush_prefetch();
-  cache_flush_branch_target();
-  cache_invalidate_instruction_cache();
-  cache_invalidate_data();
-  // data transfer barrier
-  barrier_data_mem();
-  barrier_instruction_sync();
   // set correct state
   backup->thread->state = TASK_THREAD_STATE_ACTIVE;
   // finally remove found entry
@@ -221,75 +180,6 @@ bool rpc_generic_prepare_invoke( rpc_backup_ptr_t backup ) {
   cpu->reg.r1 = ( size_t )backup->source->process->id;
   cpu->reg.r2 = backup->data_id;
   cpu->reg.r3 = backup->origin_data_id;
-
-  // get virtual address
-  uintptr_t virtual = cpu->reg.pc;
-  uintptr_t offset = virtual - ROUND_DOWN_TO_FULL_PAGE( virtual );
-  // debug output
-  #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "virtual = %#x, offset = %#x\r\n", virtual, offset )
-  #endif
-  // remove offset
-  virtual -= offset;
-  // get physical address
-  uint64_t phys = virt_get_mapped_address_in_context(
-    backup->thread->process->virtual_context,
-    virtual
-  );
-  if ( ( uint64_t )-1 == phys ) {
-    list_remove_data( proc->rpc_queue, backup );
-    return false;
-  }
-  // map temporary
-  uintptr_t tmp_map = virt_map_temporary( phys, PAGE_SIZE );
-  if ( ! tmp_map ) {
-    list_remove_data( proc->rpc_queue, backup );
-    return false;
-  }
-  // replace current instruction with permanent undefined
-  if ( cpu->reg.spsr & CPSR_THUMB ) {
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Replace with thumb undefined instruction!\r\n" )
-    #endif
-    // replace with thumb undefined instruction
-    volatile uint16_t* addr = ( volatile uint16_t* )( tmp_map + offset );
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "*addr = %#hx!\r\n", *addr )
-    #endif
-    *addr = 0xdeff;
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "*addr = %#hx!\r\n", *addr )
-    #endif
-  } else {
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Replace with arm undefined instruction!\r\n" )
-    #endif
-    // replace with arm undefined instruction
-    volatile uint32_t* addr = ( volatile uint32_t* )( tmp_map + offset );
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "*addr = %#x!\r\n", *addr )
-    #endif
-    *addr = 0xe7f000f0;
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "*addr = %#x!\r\n", *addr )
-    #endif
-  }
-  // data transfer barrier
-  barrier_data_mem();
-  barrier_instruction_sync();
-  /// FIXME: Evaluate whether cache operations are necessary
-  cache_flush_prefetch();
-  cache_flush_branch_target();
-  cache_invalidate_instruction_cache();
-  // unmap temporary again
-  virt_unmap_temporary( tmp_map, PAGE_SIZE );
-
   // set lr to pc and overwrite pc with handler
   cpu->reg.lr = cpu->reg.pc;
   cpu->reg.pc = proc->rpc_handler;

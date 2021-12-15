@@ -49,6 +49,8 @@
 #define SYSCALL_RPC_GET_DATA_SIZE 35
 #define SYSCALL_RPC_WAIT_FOR_CALL 36
 #define SYSCALL_RPC_SET_READY 37
+#define SYSCALL_RPC_END 38
+#define SYSCALL_RPC_WAIT_FOR_READY 39
 
 #define SYSCALL_INTERRUPT_ACQUIRE 41
 #define SYSCALL_INTERRUPT_RELEASE 42
@@ -95,6 +97,8 @@ void syscall_rpc_get_data( void* );
 void syscall_rpc_get_data_size( void* );
 void syscall_rpc_wait_for_call( void* );
 void syscall_rpc_set_ready( void* );
+void syscall_rpc_end( void* );
+void syscall_rpc_wait_for_ready( void* );
 
 void syscall_timer_tick_count( void* );
 void syscall_timer_frequency( void* );

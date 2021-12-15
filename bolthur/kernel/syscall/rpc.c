@@ -358,6 +358,9 @@ void syscall_rpc_ret( void* context ) {
   free( dup_data );
   // return success
   if ( target != task_thread_current_thread ) {
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Set dummy success value!\r\n" )
+    #endif
     syscall_populate_success( context, 0 );
   }
 }
@@ -380,6 +383,10 @@ void syscall_rpc_get_data( void* context ) {
   #endif
   // cache process
   task_process_ptr_t target_process = task_thread_current_thread->process;
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Validating parameter!\r\n" )
+  #endif
   // handle error
   if ( 0 == len || ! data || ! rpc_data_id ) {
     // debug output
@@ -389,6 +396,10 @@ void syscall_rpc_get_data( void* context ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Check for rpc data queue!\r\n" )
+  #endif
   // handle target not yet ready
   if ( ! target_process->rpc_data_queue ) {
     // debug output
@@ -398,6 +409,10 @@ void syscall_rpc_get_data( void* context ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "validate address!\r\n" )
+  #endif
   // validate addresses
   if ( ! syscall_validate_address( ( uintptr_t )data, len ) ) {
     // debug output
@@ -408,6 +423,10 @@ void syscall_rpc_get_data( void* context ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Searching for rpc data id %d!\r\n", rpc_data_id )
+  #endif
   // Get message by id
   list_item_ptr_t item = list_lookup_data(
     target_process->rpc_data_queue,
@@ -417,12 +436,16 @@ void syscall_rpc_get_data( void* context ) {
   if ( ! item ) {
     // debug output
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "No item with id found!\r\n" )
+      DEBUG_OUTPUT( "No item with id %d found!\r\n", rpc_data_id )
     #endif
     syscall_populate_error( context, ( size_t )-ENOMSG );
     return;
   }
   rpc_data_queue_entry_ptr_t found = item->data;
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Validate data length of found item!\r\n" )
+  #endif
   // check for len mismatch
   if ( found->length > len ) {
     // debug output
@@ -435,6 +458,10 @@ void syscall_rpc_get_data( void* context ) {
     syscall_populate_error( context, ( size_t )-EMSGSIZE );
     return;
   }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "allocate tmp buffer!\r\n" )
+  #endif
   uint8_t* tmp = malloc( found->length );
   if ( ! tmp ) {
     // debug output
@@ -444,6 +471,10 @@ void syscall_rpc_get_data( void* context ) {
     syscall_populate_error( context, ( size_t )-ENOMEM );
     return;
   }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Copy to tmp buffer!\r\n" )
+  #endif
   // copy over message content
   memcpy( tmp, found->data, found->length );
   size_t tmp_length = found->length;
@@ -454,6 +485,10 @@ void syscall_rpc_get_data( void* context ) {
       DEBUG_OUTPUT( "peek rpc parameter only with id %d!\r\n", rpc_data_id )
     #endif
   } else {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Removing from queue!\r\n" )
+    #endif
     if ( ! list_remove_data(
       task_thread_current_thread->process->rpc_data_queue,
       ( void* )rpc_data_id
@@ -467,8 +502,16 @@ void syscall_rpc_get_data( void* context ) {
       return;
     }
   }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Copy content!\r\n" )
+  #endif
   // copy over message content
-  if ( ! memcpy_unsafe( data, tmp, tmp_length ) ) {
+  if ( ! memcpy( data, tmp, tmp_length ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Unsafe copy failed, push back to list!\r\n" )
+    #endif
     if ( ! peek && ! list_push_back(
       task_thread_current_thread->process->rpc_data_queue,
       ( void* )tmp
@@ -490,6 +533,10 @@ void syscall_rpc_get_data( void* context ) {
     return;
   }
   free( tmp );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "return success!\r\n" )
+  #endif
   // return success
   syscall_populate_success( context, 0 );
 }
@@ -591,12 +638,122 @@ void syscall_rpc_wait_for_call( void* context ) {
  */
 void syscall_rpc_set_ready( void* context ) {
   bool ready = ( bool )syscall_get_parameter( context, 0 );
-  task_thread_current_thread->process->rpc_ready = ready;
+  // cache process
+  task_process_ptr_t process = task_thread_current_thread->process;
+  // set ready flag
+  process->rpc_ready = ready;
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "process %d ready %d\r\n",
       task_thread_current_thread->process->id,
       task_thread_current_thread->process->rpc_ready ? 1 : 0 )
   #endif
+  // unblock parent which might wait for process to be rpc ready!
+  task_process_ptr_t parent = task_process_get_by_id( process->parent );
+  if ( parent ) {
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Unblocking process %d\r\n", parent->id )
+    #endif
+    task_unblock_threads(
+      parent,
+      TASK_THREAD_STATE_RPC_WAIT_FOR_READY,
+      ( task_state_data_t ){ .data_size = ( size_t )process->id }
+    );
+  }
   // return success
   syscall_populate_success( context, 0 );
+}
+
+/**
+ * @fn void syscall_rpc_end(void*)
+ * @brief RPC ended, return to previous execution or next rpc if queued
+ *
+ * @param context
+ */
+void syscall_rpc_end( __unused void* context ) {
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT(
+      "syscall_rpc_end() from %d\r\n",
+      task_thread_current_thread->process->id
+    )
+  #endif
+  // check for correct state for rpc end
+  if ( TASK_THREAD_STATE_RPC_ACTIVE != task_thread_current_thread->state ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid state set for rpc end" )
+    #endif
+    return;
+  }
+  // try to restore
+  if ( ! rpc_generic_restore( task_thread_current_thread ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Error during rpc restore or no rpc for restore -> kill!\r\n" )
+    #endif
+    // kill thread and trigger scheduling
+    task_thread_kill( task_thread_current_thread, true, context );
+  }
+}
+
+/**
+ * @fn void syscall_rpc_wait_for_ready(void*)
+ * @brief Wait for pid to be ready for rpc
+ *
+ * @param context
+ */
+void syscall_rpc_wait_for_ready( void* context ) {
+  // get parameter
+  pid_t process = ( pid_t )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT(
+      "syscall_wait_for_ready( %d ) from %d\r\n",
+      process, task_thread_current_thread->process->id
+    )
+  #endif
+  // get target process
+  task_process_ptr_t target = task_process_get_by_id( process );
+  // handle no target
+  if ( ! target ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "target with id %d not found!\r\n", target->id )
+    #endif
+    syscall_populate_error( context, ( size_t )-ESRCH );
+    return;
+  }
+  // handle not parent
+  if ( target->parent != task_thread_current_thread->process->id ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT(
+        "target with id %d is not a child of current process!\r\n",
+        target->id )
+    #endif
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // populate success
+  syscall_populate_success( context, 0 );
+  // handle already switched to ready state
+  if ( target->rpc_ready ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "target %d already ready!\r\n", target->id )
+    #endif
+    return;
+  }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "blocking current thread!\r\n", target->id )
+  #endif
+  // block thread
+  task_thread_block(
+    task_thread_current_thread,
+    TASK_THREAD_STATE_RPC_WAIT_FOR_READY,
+    ( task_state_data_t ){ .data_size = ( size_t )process }
+  );
+  // enqueue schedule
+  event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
 }

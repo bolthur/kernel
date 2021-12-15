@@ -130,52 +130,6 @@ rpc_backup_ptr_t rpc_backup_create(
   // prepare and backup context area
   memset( backup->context, 0, sizeof( cpu_register_context_t ) );
   memcpy( backup->context, cpu, sizeof( cpu_register_context_t ) );
-
-  uintptr_t virtual;
-  uint32_t offset;
-  if ( active ) {
-    backup->instruction_backup = active->instruction_backup;
-    virtual = active->instruction_address;
-    offset = 0;
-  } else {
-    // get virtual address of return address
-    virtual = cpu->reg.pc;
-    offset = virtual - ROUND_DOWN_TO_FULL_PAGE( virtual );
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "virtual = %#x, offset = %#x\r\n", virtual, offset )
-    #endif
-    // remove offset
-    virtual -= offset;
-    // get physical address
-    uint64_t phys = virt_get_mapped_address_in_context(
-      thread->process->virtual_context,
-      virtual
-    );
-    if ( ( uint64_t )-1 == phys ) {
-      rpc_backup_destroy( backup );
-      return NULL;
-    }
-
-    // map temporary
-    uintptr_t tmp_map = virt_map_temporary( phys, PAGE_SIZE );
-    if ( ! tmp_map ) {
-      rpc_backup_destroy( backup );
-      return NULL;
-    }
-    // backup current instruction
-    memcpy(
-      &backup->instruction_backup,
-      ( void* )( tmp_map + offset ),
-      sizeof( uint32_t ) );
-    // unmap temporary again
-    virt_unmap_temporary( tmp_map, PAGE_SIZE );
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Backed up instruction to be replaced later: %#x\r\n",
-        backup->instruction_backup )
-    #endif
-  }
   // backup parameter data as message
   backup->data_id = 0;
   if ( data && data_size ) {
@@ -198,7 +152,6 @@ rpc_backup_ptr_t rpc_backup_create(
   }
   // populate remaining values
   backup->thread = thread;
-  backup->instruction_address = virtual + offset;
   backup->prepared = false;
   backup->source = source;
   backup->type = type;

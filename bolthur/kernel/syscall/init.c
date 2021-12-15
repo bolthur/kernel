@@ -24,7 +24,10 @@
 #include <task/thread.h>
 
 /**
+ * @fn bool syscall_init(void)
  * @brief Initialize system calls
+ *
+ * @return
  */
 bool syscall_init( void ) {
   // process system calls
@@ -244,6 +247,26 @@ bool syscall_init( void ) {
   if ( ! interrupt_register_handler(
     SYSCALL_RPC_SET_READY,
     syscall_rpc_set_ready,
+    NULL,
+    INTERRUPT_SOFTWARE,
+    false,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_RPC_END,
+    syscall_rpc_end,
+    NULL,
+    INTERRUPT_SOFTWARE,
+    false,
+    false
+  ) ) {
+    return false;
+  }
+  if ( ! interrupt_register_handler(
+    SYSCALL_RPC_WAIT_FOR_READY,
+    syscall_rpc_wait_for_ready,
     NULL,
     INTERRUPT_SOFTWARE,
     false,

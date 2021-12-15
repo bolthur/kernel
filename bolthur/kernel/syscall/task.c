@@ -104,7 +104,10 @@ void syscall_process_parent_by_id( void* context ) {
 void syscall_process_exit( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "process exit called\r\n" )
+    DEBUG_OUTPUT(
+      "process exit called from %d\r\n",
+      task_thread_current_thread->process->id
+    )
   #endif
   // enqueue kill
   task_process_prepare_kill( context, task_thread_current_thread->process );

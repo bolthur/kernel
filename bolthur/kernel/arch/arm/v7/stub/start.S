@@ -29,7 +29,36 @@ IMPORT( kernel_main )
 
 EXPORT( arch_start )
 arch_start:
-  // setup of other modes stacks not necessary as all exceptions use supervisor mode
+  // switch to irq mode and setup stack
+  msr cpsr_c, #( CPSR_MODE_IRQ | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
+  ldr r0, =stack_irq_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
+  // switch to fiq mode and setup stack
+  msr cpsr_c, #( CPSR_MODE_FIQ | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
+  ldr r0, =stack_fiq_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
+  // switch to supervisor mode and setup stack
+  msr cpsr_c, #( CPSR_MODE_ABORT | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
+  ldr r0, =stack_abort_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
+  // switch to undefined mode and setup stack
+  msr cpsr_c, #( CPSR_MODE_UNDEFINED | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
+  ldr r0, =stack_undefined_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
+  // switch to hypervisor mode and setup stack
+  msr cpsr_c, #( CPSR_MODE_HYPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
+  ldr r0, =stack_hypervisor_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
+  // switch to monitor mode and setup stack
+  msr cpsr_c, #( CPSR_MODE_MONITOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
+  ldr r0, =stack_monitor_mode
+  add r0, r0, #STACK_SIZE
+  mov sp, r0
   // switch to supervisor mode and setup stack
   msr cpsr_c, #( CPSR_MODE_SUPERVISOR | CPSR_FIQ_INHIBIT | CPSR_IRQ_INHIBIT )
   ldr r0, =stack_supervisor_mode

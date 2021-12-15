@@ -251,8 +251,16 @@ task_thread_ptr_t task_thread_fork(
     thread_to_fork->current_context,
     sizeof( cpu_register_context_t )
   );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DUMP_REGISTER( thread->current_context )
+  #endif
   // overwrite return on forked thread with 0
   syscall_populate_success( thread->current_context, 0 );
+  // debug output
+  #if defined( PRINT_PROCESS )
+    DUMP_REGISTER( thread->current_context )
+  #endif
 
   // create node for stack address management tree
   if ( ! task_stack_manager_add(
