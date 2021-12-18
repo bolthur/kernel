@@ -21,6 +21,6 @@
 #define _FIRMWARE_H
 
 void firmware_startup_init( void );
-bool firmware_init( void );
+bool firmware_init( uintptr_t );
 
 #endif

@@ -34,6 +34,7 @@
 #pragma GCC diagnostic pop
 
 /**
+ * @fn void firmware_startup_init(void)
  * @brief Handle firmware information related startup init
  */
 void __bootstrap firmware_startup_init( void ) {
@@ -56,18 +57,26 @@ void __bootstrap firmware_startup_init( void ) {
 }
 
 /**
+ * @fn bool firmware_init(uintptr_t)
  * @brief Handle firmware information related init
+ *
+ * @param virtual_start
+ * @return
  */
-bool firmware_init( void ) {
+bool firmware_init( uintptr_t virtual_start ) {
   // transfer to uintptr_t
   uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
 
   // handle atag
   if ( atag_check( atag_fdt ) ) {
-    if ( ! virt_is_mapped( PHYS_2_VIRT( atag_fdt ) ) ) {
+    // determine offset and subtract start
+    uintptr_t offset = atag_fdt % PAGE_SIZE;
+    atag_fdt -= offset;
+    // handle already mapped
+    if ( ! virt_is_mapped( virtual_start ) ) {
       if ( ! virt_map_address(
         virt_current_kernel_context,
-        PHYS_2_VIRT( atag_fdt ),
+        virtual_start,
         atag_fdt,
         VIRT_MEMORY_TYPE_NORMAL,
         VIRT_PAGE_TYPE_EXECUTABLE
@@ -76,14 +85,17 @@ bool firmware_init( void ) {
       }
     }
     // transform to virtual
-    firmware_info.atag_fdt = PHYS_2_VIRT( atag_fdt );
+    firmware_info.atag_fdt = virtual_start + offset;
   } else if ( 0 == fdt_check_header( ( void* )atag_fdt ) ) {
+    // determine offset and subtract start
+    uintptr_t offset = atag_fdt % PAGE_SIZE;
     // map device tree binary
-    uintptr_t start = atag_fdt;
+    uintptr_t start = atag_fdt - offset;
     uintptr_t end = start + fdt32_to_cpu(
       ( ( struct fdt_header* )atag_fdt )->totalsize
     );
-    uintptr_t virtual = PHYS_2_VIRT( start );
+    atag_fdt -= offset;
+    uintptr_t virtual = virtual_start;
     // map until end of dtb
     while ( start < end ) {
       if ( ! virt_map_address(
@@ -100,7 +112,7 @@ bool firmware_init( void ) {
       virtual += PAGE_SIZE;
     }
     // overwrite
-    firmware_info.atag_fdt = PHYS_2_VIRT( atag_fdt );
+    firmware_info.atag_fdt = virtual_start + offset;
   }
 
   return true;

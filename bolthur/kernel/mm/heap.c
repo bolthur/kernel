@@ -37,11 +37,12 @@
 heap_manager_ptr_t kernel_heap = NULL;
 
 /**
+ * @fn avl_tree_ptr_t get_free_address_tree(heap_init_state_t, heap_manager_ptr_t)
  * @brief Get the free address tree object
  *
  * @param state
  * @param heap
- * @return avl_tree_ptr_t
+ * @return
  */
 static avl_tree_ptr_t get_free_address_tree(
   heap_init_state_t state,
@@ -55,11 +56,12 @@ static avl_tree_ptr_t get_free_address_tree(
 }
 
 /**
+ * @fn avl_tree_ptr_t get_free_size_tree(heap_init_state_t, heap_manager_ptr_t)
  * @brief Get the free size tree object
  *
  * @param state
  * @param heap
- * @return avl_tree_ptr_t
+ * @return
  */
 static avl_tree_ptr_t get_free_size_tree(
   heap_init_state_t state,
@@ -73,11 +75,12 @@ static avl_tree_ptr_t get_free_size_tree(
 }
 
 /**
+ * @fn avl_tree_ptr_t get_used_area_tree(heap_init_state_t, heap_manager_ptr_t)
  * @brief Get the used area tree object
  *
  * @param state
  * @param heap
- * @return avl_tree_ptr_t
+ * @return
  */
 static avl_tree_ptr_t get_used_area_tree(
   heap_init_state_t state,
@@ -91,11 +94,12 @@ static avl_tree_ptr_t get_used_area_tree(
 }
 
 /**
+ * @fn int32_t compare_address_callback(const avl_node_ptr_t, const avl_node_ptr_t)
  * @brief Compare address callback necessary for avl tree
  *
  * @param a node a
  * @param b node b
- * @return int32_t
+ * @return
  */
 static int32_t compare_address_callback(
   const avl_node_ptr_t a,
@@ -120,11 +124,12 @@ static int32_t compare_address_callback(
 }
 
 /**
+ * @fn int32_t compare_size_callback(const avl_node_ptr_t, const avl_node_ptr_t)
  * @brief Compare address callback necessary for avl tree
  *
  * @param a node a
  * @param b node b
- * @return int32_t
+ * @return
  */
 static int32_t compare_size_callback(
   const avl_node_ptr_t a,
@@ -149,6 +154,7 @@ static int32_t compare_size_callback(
 }
 
 /**
+ * @fn void prepare_block(heap_block_ptr_t, uintptr_t, size_t)
  * @brief Helper to prepare a block
  *
  * @param block block to prepare
@@ -353,6 +359,7 @@ static bool extend_heap_space( size_t given_size ) {
 }
 
 /**
+ * @fn void shrink_heap_space(void)
  * @brief Helper to shrink heap if possible
  */
 static void shrink_heap_space( void ) {
@@ -541,11 +548,12 @@ static void shrink_heap_space( void ) {
 }
 
 /**
+ * @fn bool combinable(heap_block_ptr_t, heap_block_ptr_t)
  * @brief Helper to check whether merge of two passed blocks is possible
  *
  * @param a block a
  * @param b block b
- * @return bool
+ * @return
  */
 static bool combinable( heap_block_ptr_t a, heap_block_ptr_t b ) {
   uintptr_t a_end;
@@ -572,11 +580,12 @@ static bool combinable( heap_block_ptr_t a, heap_block_ptr_t b ) {
 }
 
 /**
+ * @fn heap_block_ptr_t merge(heap_block_ptr_t, heap_block_ptr_t)
  * @brief Method merges two blocks if possible
  *
  * @param a block a
  * @param b block b
- * @return heap_block_ptr_t
+ * @return
  */
 static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
   uintptr_t a_end;
@@ -646,7 +655,9 @@ static heap_block_ptr_t merge( heap_block_ptr_t a, heap_block_ptr_t b ) {
 }
 
 /**
+ * @fn bool merge_address_tree(avl_node_ptr_t)
  * @brief Iterate address tree and merge if possible
+ *
  * @param root
  * @return
  */
@@ -697,7 +708,10 @@ static bool merge_address_tree( avl_node_ptr_t root ) {
 }
 
 /**
+ * @fn void heap_init(heap_init_state_t)
  * @brief Initialize heap
+ *
+ * @param state
  */
 void heap_init( heap_init_state_t state ) {
   // correct state
@@ -857,21 +871,22 @@ void heap_init( heap_init_state_t state ) {
 }
 
 /**
+ * @fn bool heap_init_get(void)
  * @brief Getter for heap initialized flag
  *
- * @return true
- * @return false
+ * @return
  */
 bool heap_init_get( void ) {
   return ( bool )kernel_heap;
 }
 
 /**
+ * @fn uintptr_t heap_allocate_block(size_t, size_t)
  * @brief Allocate block within heap
  *
  * @param alignment memory alignment
  * @param size size to allocate
- * @return uintptr_t address of allocated block
+ * @return address of allocated block
  */
 uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   // variables

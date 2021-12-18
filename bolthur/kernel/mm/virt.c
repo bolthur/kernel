@@ -49,6 +49,7 @@ virt_context_ptr_t virt_current_user_context;
 virt_context_ptr_t virt_current_kernel_context;
 
 /**
+ * @fn void virt_init(void)
  * @brief Generic initialization of virtual memory manager
  */
 void virt_init( void ) {
@@ -59,8 +60,16 @@ void virt_init( void ) {
   // set global context to null
   virt_current_kernel_context = NULL;
   virt_current_user_context = NULL;
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "arch init!\r\n" )
+  #endif
   // architecture related initialization
   virt_arch_init();
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "creating kernel and dummy user context!\r\n" )
+  #endif
   // create a kernel context
   virt_current_kernel_context = virt_create_context( VIRT_CONTEXT_TYPE_KERNEL );
   assert( virt_current_kernel_context )
@@ -118,49 +127,76 @@ void virt_init( void ) {
   // consider possible initrd
   if ( initrd_exist() ) {
     // set start and end from initrd
-    start = initrd_get_start_address();
-    end = initrd_get_end_address();
-
+    uintptr_t initrd_start = initrd_get_start_address();
+    uintptr_t initrd_end = initrd_get_end_address();
+    // set start to end to map initrd following to the kernel
+    start = end;
+    uintptr_t new_initrd_start = start;
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
         "Map initrd space %p - %p to %p - %p \r\n",
-        ( void* )start,
-        ( void* )end,
+        ( void* )initrd_start,
+        ( void* )initrd_end,
         ( void* )PHYS_2_VIRT( start ),
-        ( void* )PHYS_2_VIRT( end )
+        ( void* )PHYS_2_VIRT( start + ( initrd_end - initrd_start ) )
       );
     #endif
 
     // map from start to end addresses as used
-    while ( start < end ) {
+    while ( initrd_start < initrd_end ) {
       // map page
       assert( virt_map_address(
         virt_current_kernel_context,
         PHYS_2_VIRT( start ),
-        start,
+        initrd_start,
         VIRT_MEMORY_TYPE_NORMAL,
         VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
       ) )
 
       // get next page
       start += PAGE_SIZE;
+      initrd_start += PAGE_SIZE;
     }
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT(
+        "Set new initrd start address to %p\r\n",
+        ( void* )PHYS_2_VIRT( new_initrd_start )
+      );
+    #endif
 
     // change initrd location
     initrd_set_start_address(
-      PHYS_2_VIRT( initrd_get_start_address() )
+      PHYS_2_VIRT( new_initrd_start )
     );
   }
 
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "prepare firmware!\r\n" )
+  #endif
+  // firmware init stuff
+  assert( firmware_init( PHYS_2_VIRT( start ) ) )
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "platform init!\r\n" )
+  #endif
   // initialize platform related
   virt_platform_init();
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "prepare temporary!\r\n" )
+  #endif
   // prepare temporary area
   assert( virt_prepare_temporary( virt_current_kernel_context ) )
 
-  // firmware init stuff
-  assert( firmware_init() )
-
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "set context!\r\n" )
+  #endif
   // set kernel context
   assert( virt_set_context( virt_current_kernel_context ) )
   // flush contexts to take effect
@@ -173,7 +209,15 @@ void virt_init( void ) {
 
   // post init
   virt_platform_post_init();
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "post init done!\r\n" )
+  #endif
 
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "enable cache!\r\n" )
+  #endif
   // enable cpu caches
   cache_enable();
 

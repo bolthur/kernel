@@ -493,6 +493,9 @@ int main( int argc, char* argv[] ) {
   uintptr_t device_tree;
   // check parameter count
   if ( argc < 4 ) {
+    EARLY_STARTUP_PRINT(
+      "Not enough parameters, expected 4 but received %d\r\n",
+      argc )
     return -1;
   }
 
