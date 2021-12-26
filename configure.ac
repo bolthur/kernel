@@ -200,7 +200,7 @@ AC_ARG_ENABLE(
     [--enable-release],
     [activate release build [default: off]]
   ),
-  [enable_rlease=yes]
+  [enable_release=yes]
 )
 
 AC_ARG_WITH(

@@ -168,15 +168,27 @@ void syscall_process_replace( void* context ) {
     || ( argv && ! ( ( uintptr_t )argv >= min && ( uintptr_t )argv <= max ) )
     || ( env &&  ! ( ( uintptr_t )env >= min && ( uintptr_t )env <= max ) )
   ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid address!\r\n" )
+    #endif
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
   // get image size and validate address
   size_t image_size = elf_image_size( addr );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "image_size = %#x!\r\n", image_size )
+  #endif
   if (
     0 == image_size
     || ! syscall_validate_address( addr, image_size )
   ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid image size or not mapped!\r\n" )
+    #endif
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }

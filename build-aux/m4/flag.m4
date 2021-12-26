@@ -2,8 +2,8 @@
 AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   # add symbol strip and garbage sections for release
   # FIXME: Not working on real hardware
-  #AS_IF([test "x$enable_rlease" == "xyes"], [
-  #  AX_APPEND_COMPILE_FLAGS([-O2 -ffunction-sections -fdata-sections])
+  #AS_IF([test "x$enable_release" == "xyes"], [
+  #  AX_APPEND_COMPILE_FLAGS([-O3 -ffunction-sections -fdata-sections])
   #  AX_APPEND_LINK_FLAGS([-Wl,-s])
   #  AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
   #])
@@ -31,37 +31,37 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-ffreestanding -fno-common])
   # FIXME: add compile flag "-fanalyzer" and check and fix warnings
 
-  # debug parameter
-  AS_IF([test "x$with_debug_symbols" == "xyes"], [
-    # debug symbols and sanitizer
-    AX_APPEND_COMPILE_FLAGS([-g -Og -fsanitize=undefined])
-  ], [
-    # custom optimization level
-    AS_IF([test "x$enable_rlease" != "xyes"], [
-      case "${with_optimization_level}" in
-        no | 0)
-          AX_APPEND_COMPILE_FLAGS([-O0])
-          ;;
-        1)
-          AX_APPEND_COMPILE_FLAGS([-O1])
-          ;;
-        2)
-          AX_APPEND_COMPILE_FLAGS([-O2])
-          ;;
-        3)
-          AX_APPEND_COMPILE_FLAGS([-O3])
-          ;;
-        s)
-          AX_APPEND_COMPILE_FLAGS([-Os])
-          ;;
-        g)
-          AX_APPEND_COMPILE_FLAGS([-Og])
-          ;;
-        *)
-          AX_APPEND_COMPILE_FLAGS([-O2])
-          ;;
-      esac
+  # custom optimization level
+  AS_IF([test "x$enable_release" != "xyes"], [
+    # debug parameter
+    AS_IF([test "x$with_debug_symbols" == "xyes"], [
+      # debug symbols and sanitizer
+      AX_APPEND_COMPILE_FLAGS([-g -Og -fsanitize=undefined])
     ])
+    # optimization level
+    case "${with_optimization_level}" in
+      no | 0)
+        AX_APPEND_COMPILE_FLAGS([-O0])
+        ;;
+      1)
+        AX_APPEND_COMPILE_FLAGS([-O1])
+        ;;
+      2)
+        AX_APPEND_COMPILE_FLAGS([-O2])
+        ;;
+      3)
+        AX_APPEND_COMPILE_FLAGS([-O3])
+        ;;
+      s)
+        AX_APPEND_COMPILE_FLAGS([-Os])
+        ;;
+      g)
+        AX_APPEND_COMPILE_FLAGS([-Og])
+        ;;
+      *)
+        AX_APPEND_COMPILE_FLAGS([-O2])
+        ;;
+    esac
   ])
 
   # default include directories
@@ -81,8 +81,8 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
 
 AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
   # add symbol strip and garbage sections for release
-  AS_IF([test "x$enable_rlease" == "xyes"], [
-    AX_APPEND_COMPILE_FLAGS([-O2 -ffunction-sections -fdata-sections])
+  AS_IF([test "x$enable_release" == "xyes"], [
+    AX_APPEND_COMPILE_FLAGS([-O3 -ffunction-sections -fdata-sections])
     AX_APPEND_LINK_FLAGS([-Wl,-s])
     AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
   ])
@@ -114,45 +114,45 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
   AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/ramdisk/usr/lib/ld-bolthur.so])
   AX_APPEND_LINK_FLAGS([-Wl,-rpath=/ramdisk/lib,--enable-new-dtags])
 
-  # debug parameter
-  AS_IF([test "x$with_debug_symbols" == "xyes"], [
-    # debug symbols and sanitizer
-    # -fsanitize=undefined
-    AX_APPEND_COMPILE_FLAGS([-g -Og])
-  ], [
-    # custom optimization level
-    AS_IF([test "x$enable_rlease" != "xyes"], [
-      case "${with_optimization_level}" in
-        no | 0)
-          AX_APPEND_COMPILE_FLAGS([-O0])
-          ;;
-        1)
-          AX_APPEND_COMPILE_FLAGS([-O1])
-          ;;
-        2)
-          AX_APPEND_COMPILE_FLAGS([-O2])
-          ;;
-        3)
-          AX_APPEND_COMPILE_FLAGS([-O3])
-          ;;
-        s)
-          AX_APPEND_COMPILE_FLAGS([-Os])
-          ;;
-        g)
-          AX_APPEND_COMPILE_FLAGS([-Og])
-          ;;
-        *)
-          AX_APPEND_COMPILE_FLAGS([-O2])
-          ;;
-      esac
+  # custom optimization level
+  AS_IF([test "x$enable_release" != "xyes"], [
+    # debug parameter
+    AS_IF([test "x$with_debug_symbols" == "xyes"], [
+      # debug symbols and sanitizer
+      # -fsanitize=undefined
+      AX_APPEND_COMPILE_FLAGS([-g -Og])
     ])
+    # optimization level
+    case "${with_optimization_level}" in
+      no | 0)
+        AX_APPEND_COMPILE_FLAGS([-O0])
+        ;;
+      1)
+        AX_APPEND_COMPILE_FLAGS([-O1])
+        ;;
+      2)
+        AX_APPEND_COMPILE_FLAGS([-O2])
+        ;;
+      3)
+        AX_APPEND_COMPILE_FLAGS([-O3])
+        ;;
+      s)
+        AX_APPEND_COMPILE_FLAGS([-Os])
+        ;;
+      g)
+        AX_APPEND_COMPILE_FLAGS([-Og])
+        ;;
+      *)
+        AX_APPEND_COMPILE_FLAGS([-O2])
+        ;;
+    esac
   ])
 ])
 
 AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   # add symbol strip and garbage sections for release
-  AS_IF([test "x$enable_rlease" == "xyes"], [
-    AX_APPEND_COMPILE_FLAGS([-O2 -ffunction-sections -fdata-sections])
+  AS_IF([test "x$enable_release" == "xyes"], [
+    AX_APPEND_COMPILE_FLAGS([-O3 -ffunction-sections -fdata-sections])
     AX_APPEND_LINK_FLAGS([-Wl,-s])
     AX_APPEND_LINK_FLAGS([-Wl,--gc-sections])
   ])
@@ -184,37 +184,37 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/ramdisk/usr/lib/ld-bolthur.so])
   AX_APPEND_LINK_FLAGS([-Wl,-rpath=/ramdisk/lib,--enable-new-dtags])
 
-  # debug parameter
-  AS_IF([test "x$with_debug_symbols" == "xyes"], [
-    # debug symbols and sanitizer
-    # -fsanitize=undefined
-    AX_APPEND_COMPILE_FLAGS([-g -Og])
-  ], [
-    # custom optimization level
-    AS_IF([test "x$enable_rlease" != "xyes"], [
-      case "${with_optimization_level}" in
-        no | 0)
-          AX_APPEND_COMPILE_FLAGS([-O0])
-          ;;
-        1)
-          AX_APPEND_COMPILE_FLAGS([-O1])
-          ;;
-        2)
-          AX_APPEND_COMPILE_FLAGS([-O2])
-          ;;
-        3)
-          AX_APPEND_COMPILE_FLAGS([-O3])
-          ;;
-        s)
-          AX_APPEND_COMPILE_FLAGS([-Os])
-          ;;
-        g)
-          AX_APPEND_COMPILE_FLAGS([-Og])
-          ;;
-        *)
-          AX_APPEND_COMPILE_FLAGS([-O2])
-          ;;
-      esac
+  # custom optimization level
+  AS_IF([test "x$enable_release" != "xyes"], [
+    # debug parameter
+    AS_IF([test "x$with_debug_symbols" == "xyes"], [
+      # debug symbols and sanitizer
+      # -fsanitize=undefined
+      AX_APPEND_COMPILE_FLAGS([-g -Og])
     ])
+    # optimization level
+    case "${with_optimization_level}" in
+      no | 0)
+        AX_APPEND_COMPILE_FLAGS([-O0])
+        ;;
+      1)
+        AX_APPEND_COMPILE_FLAGS([-O1])
+        ;;
+      2)
+        AX_APPEND_COMPILE_FLAGS([-O2])
+        ;;
+      3)
+        AX_APPEND_COMPILE_FLAGS([-O3])
+        ;;
+      s)
+        AX_APPEND_COMPILE_FLAGS([-Os])
+        ;;
+      g)
+        AX_APPEND_COMPILE_FLAGS([-Og])
+        ;;
+      *)
+        AX_APPEND_COMPILE_FLAGS([-O2])
+        ;;
+    esac
   ])
 ])

@@ -572,6 +572,7 @@ int main( int argc, char* argv[] ) {
     EARLY_STARTUP_PRINT( "VFS not found for start!\r\n" );
     return -1;
   }
+  EARLY_STARTUP_PRINT( "VFS image: %p!\r\n", vfs_image );
   // fork process and handle possible error
   EARLY_STARTUP_PRINT( "Forking process for vfs start!\r\n" );
   pid_t forked_process = _process_fork();
@@ -584,7 +585,7 @@ int main( int argc, char* argv[] ) {
   }
   // fork only
   if ( 0 == forked_process ) {
-    EARLY_STARTUP_PRINT( "Replacing fork with vfs image!\r\n" );
+    EARLY_STARTUP_PRINT( "Replacing fork with vfs image %p!\r\n", vfs_image );
     // call for replace and handle error
     _process_replace( vfs_image, NULL, NULL );
     if ( errno ) {

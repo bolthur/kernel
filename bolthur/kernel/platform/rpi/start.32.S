@@ -128,15 +128,7 @@ reset:
 
   // save boot parameter data
   push { r0 - r2 }
-  // clear bss section
-  bl bss_startup_clear
-  // restore boot parameter data
-  pop { r0 - r2 }
-
-  // store rpi boot parameters passed with first three registers at data array
-  ldr r3, =firmware_info - KERNEL_OFFSET
-  stmia r3!, { r0 - r2 }
-
+  // rpi >= 2b handling
   #if defined( BCM2836 ) || defined( BCM2837 )
     // get vbar
     mrc p15, 0, r1, c12, c0, 0
@@ -162,9 +154,17 @@ reset:
     // secure monitor call to reset scr
     smc #0
   #endif
-
   // enable fpu
   bl fpu_enable
+  // clear bss section
+  bl bss_startup_clear
+  // restore boot parameter data
+  pop { r0 - r2 }
+
+  // store rpi boot parameters passed with first three registers at data array
+  ldr r3, =firmware_info - KERNEL_OFFSET
+  stmia r3!, { r0 - r2 }
+
   // initial virtual memory setup
   bl virt_startup_setup
   // startup related init
