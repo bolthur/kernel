@@ -1,7 +1,7 @@
 # kernel
 
 bolthur/kernel project.
-_Copyright (C) 2018 - 2021 bolthur project_
+_Copyright (C) 2018 - 2022 bolthur project_
 
 ## Supported platforms
 
@@ -108,16 +108,24 @@ Emulation of the project with qemu during development is **not** recommended. Th
 Emulation of the kernel project with qemu during development may be done at all with the following commands. When kernel debugging is necessary, add the parameter shorthand `-s -S` or the long version `-gdb tcp:1234` to qemu call:
 
 ```bash
+# raspberry pi zero kernel emulation
+qemu-system-arm -M raspi0 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+
+# raspberry pi A+ kernel emulation
+qemu-system-arm -M raspi1ap -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+
 # raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
 
 # raspberry pi 2B rev 2 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
-qemu-system-aarch64 -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+qemu-system-aarch64 -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
 
 # raspberry pi 3B kernel emulation
-qemu-system-arm -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
-qemu-system-aarch64 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+
+# raspberry pi 3A+ kernel emulation
+qemu-system-aarch64 -M raspi3ap -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
 ```
 
 ### Debugging

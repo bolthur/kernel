@@ -33,6 +33,10 @@ ramdisk:
 		$(SYSROOT_DIR) \
 		$(ROOT_DIR)/config/ini/${platform_subdir}/${platform_name}/
 
+README: README.md
+	pandoc -f markdown -t plain --wrap=none $< -o $@
+CLEANFILES = README
+
 # doxygen related
 @DX_RULES@
 MOSTLYCLEANFILES = $(DX_CLEANFILES)
