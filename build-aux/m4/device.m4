@@ -2,14 +2,14 @@
 AC_DEFUN([BOLTHUR_SET_DEVICE], [
   # set device depending on arguments
   case "${enable_device}" in
-    rpi2_b_rev1)
-      DEVICE="rpi2_b_rev1"
+    raspi2b_r1)
+      DEVICE="raspi2b_r1"
       ;;
-    rpi3_b)
-      DEVICE="rpi3_b"
+    raspi3b)
+      DEVICE="raspi3b"
       ;;
-    rpi_zero_w)
-      DEVICE="rpi_zero_w"
+    raspi0_1)
+      DEVICE="raspi0_1"
       ;;
     *)
       AC_MSG_ERROR([Unknown target device])

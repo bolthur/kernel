@@ -137,10 +137,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     CFLAGS="${CFLAGS} -marm"
 
     case "${DEVICE}" in
-    rpi2_b_rev1)
+    raspi2b_r1)
       CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
       subarch_subdir=v7
-      platform_subdir=rpi
+      platform_subdir=raspi
       output_img=kernel7.img
       output_sym=kernel7.sym
       output_img_qemu=kernel7_qemu.img
@@ -151,49 +151,19 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE_UNQUOTED([FDT_BINARY], ["$($BOLTHUR_READLINK -f ${srcdir})/dts/rpi/bcm2836-rpi-2b.dtb"])
+      AC_DEFINE_UNQUOTED([FDT_BINARY], ["$($BOLTHUR_READLINK -f ${srcdir})/dts/raspi/bcm2836-raspi-2b.dtb"])
       AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
       ;;
-    rpi_zero_w)
+    raspi0_1)
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
       subarch_subdir=v6
-      platform_subdir=rpi
+      platform_subdir=raspi
       platform_name=bcm2835
       AC_DEFINE([BCM2835], [1], [Define to 1 for BCM2835])
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE_UNQUOTED([FDT_BINARY], ["$($BOLTHUR_READLINK -f ${srcdir})/dts/rpi/bcm2835-rpi-zero-w.dtb"])
-      ;;
-    rpi3_b)
-      CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a53"
-      subarch_subdir=v8
-      platform_subdir=rpi
-      output_img=kernel8.img
-      output_sym=kernel8.sym
-      output_img_qemu=kernel8_qemu.img
-      output_sym_qemu=kernel8_qemu.sym
-      platform_name=bcm2837
-      AC_DEFINE([BCM2837], [1], [Define to 1 for BCM2837 chip])
-      AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
-      AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
-      AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
-      ;;
-    rpi4_b)
-      CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a72"
-      subarch_subdir=v8
-      platform_subdir=rpi
-      output_img=kernel8.img
-      output_sym=kernel8.sym
-      output_img_qemu=kernel8_qemu.img
-      output_sym_qemu=kernel8_qemu.sym
-      platform_name=bcm2711
-      AC_DEFINE([BCM2711], [1], [Define to 1 for BCM2711 chip])
-      AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
-      AC_DEFINE([ARCH_ARM_CORTEX_A72], [1], [Define to 1 for ARM Cortex-A72 targets])
-      AC_DEFINE([IS_HIGHER_HALF], [1])
-      AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
+      AC_DEFINE_UNQUOTED([FDT_BINARY], ["$($BOLTHUR_READLINK -f ${srcdir})/dts/raspi/bcm2835-raspi-zero-w.dtb"])
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])
@@ -207,10 +177,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     AC_DEFINE([ELF64], [1])
 
     case "${DEVICE}" in
-    rpi3_b)
+    raspi3b)
       CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a53"
       subarch_subdir=v8
-      platform_subdir=rpi
+      platform_subdir=raspi
       output_img=kernel8.img
       output_sym=kernel8.sym
       output_img_qemu=kernel8_qemu.img
@@ -222,10 +192,10 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       AC_DEFINE([IS_HIGHER_HALF], [1])
       AC_DEFINE([ARM_CPU_HAS_NEON], [1], [Define to 1 if cpu supports arm neon registers])
       ;;
-    rpi4_b)
+    raspi4b)
       CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a72"
       subarch_subdir=v8
-      platform_subdir=rpi
+      platform_subdir=raspi
       output_img=kernel8.img
       output_sym=kernel8.sym
       output_img_qemu=kernel8_qemu.img
@@ -289,29 +259,17 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_HOST], [
     executable_format=32
 
     case "${DEVICE}" in
-    rpi2_b_rev1)
+    raspi2b_r1)
       AC_DEFINE([BCM2836], [1], [Define to 1 for BCM2836 chip])
       CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
       subarch_subdir=v7
-      platform_subdir=rpi
+      platform_subdir=raspi
       ;;
-    rpi_zero_w)
+    raspi0_1)
       AC_DEFINE([BCM2835], [1], [Define to 1 for BCM2835])
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
       subarch_subdir=v6
-      platform_subdir=rpi
-      ;;
-    rpi3_b)
-      AC_DEFINE([BCM2837], [1], [Define to 1 for BCM2837 chip])
-      CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard"
-      subarch_subdir=v8
-      platform_subdir=rpi
-      ;;
-    rpi4_b)
-      AC_DEFINE([BCM2711], [1], [Define to 1 for BCM2711 chip])
-      CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a72"
-      subarch_subdir=v8
-      platform_subdir=rpi
+      platform_subdir=raspi
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])
@@ -324,17 +282,17 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_HOST], [
     executable_format=64
 
     case "${DEVICE}" in
-    rpi3_b)
+    raspi3b)
       AC_DEFINE([BCM2837], [1], [Define to 1 for BCM2837 chip])
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
       subarch_subdir=v8
-      platform_subdir=rpi
+      platform_subdir=raspi
       ;;
-    rpi4_b)
+    raspi4b)
       AC_DEFINE([BCM2711], [1], [Define to 1 for BCM2711 chip])
       CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a72"
       subarch_subdir=v8
-      platform_subdir=rpi
+      platform_subdir=raspi
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])
@@ -380,29 +338,17 @@ AC_DEFUN([BOLTHUR_SERVER_SET_HOST], [
     executable_format=32
 
     case "${DEVICE}" in
-    rpi2_b_rev1)
+    raspi2b_r1)
       AC_DEFINE([BCM2836], [1], [Define to 1 for BCM2836 chip])
       CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
       subarch_subdir=v7
-      platform_subdir=rpi
+      platform_subdir=raspi
       ;;
-    rpi_zero_w)
+    raspi0_1)
       AC_DEFINE([BCM2835], [1], [Define to 1 for BCM2835])
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
       subarch_subdir=v6
-      platform_subdir=rpi
-      ;;
-    rpi3_b)
-      AC_DEFINE([BCM2837], [1], [Define to 1 for BCM2837 chip])
-      CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53 -mfpu=neon-vfpv4 -mfloat-abi=hard"
-      subarch_subdir=v8
-      platform_subdir=rpi
-      ;;
-    rpi4_b)
-      AC_DEFINE([BCM2711], [1], [Define to 1 for BCM2711 chip])
-      CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a72"
-      subarch_subdir=v8
-      platform_subdir=rpi
+      platform_subdir=raspi
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])
@@ -415,17 +361,17 @@ AC_DEFUN([BOLTHUR_SERVER_SET_HOST], [
     executable_format=64
 
     case "${DEVICE}" in
-    rpi3_b)
+    raspi3b)
       AC_DEFINE([BCM2837], [1], [Define to 1 for BCM2837 chip])
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
       subarch_subdir=v8
-      platform_subdir=rpi
+      platform_subdir=raspi
       ;;
-    rpi4_b)
+    raspi4b)
       AC_DEFINE([BCM2711], [1], [Define to 1 for BCM2711 chip])
       CFLAGS="${CFLAGS} -mfpu=crypto-neon-fp-armv8 -mfloat-abi=hard -march=armv8-a+crc -mcpu=cortex-a72"
       subarch_subdir=v8
-      platform_subdir=rpi
+      platform_subdir=raspi
       ;;
     *)
       AC_MSG_ERROR([unsupported host platform])

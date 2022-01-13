@@ -3,7 +3,7 @@
     <stringAttribute key="bad_container_name" value="/kernel/.ecl"/>
     <booleanAttribute key="org.eclipse.cdt.dsf.gdb.AUTO_SOLIB" value="true"/>
     <listAttribute key="org.eclipse.cdt.dsf.gdb.AUTO_SOLIB_LIST"/>
-    <stringAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_NAME" value="arm-rpi2-bolthur-eabi-gdb"/>
+    <stringAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_NAME" value="arm-raspi2b_r1-bolthur-eabi-gdb"/>
     <booleanAttribute key="org.eclipse.cdt.dsf.gdb.DEBUG_ON_FORK" value="false"/>
     <stringAttribute key="org.eclipse.cdt.dsf.gdb.DEV" value="/dev/ttyS0"/>
     <stringAttribute key="org.eclipse.cdt.dsf.gdb.DEV_SPEED" value="115200"/>
@@ -26,7 +26,7 @@
     <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_START_MODE" value="remote"/>
     <booleanAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN" value="true"/>
     <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN_SYMBOL" value="kernel_main"/>
-    <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="build/bolthur/kernel/target/rpi/kernel7_qemu.sym"/>
+    <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="build/bolthur/kernel/target/raspi/kernel7_qemu.sym"/>
     <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="kernel"/>
     <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false"/>
     <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="org.eclipse.linuxtools.cdt.autotools.core.configuration.build.debug.776478324"/>
@@ -36,7 +36,7 @@
     <stringAttribute key="org.eclipse.debug.core.ATTR_GDBSERVER_PORT" value="2345"/>
     <stringAttribute key="org.eclipse.debug.core.ATTR_PRERUN_CMDS" value=""/>
     <booleanAttribute key="org.eclipse.debug.core.ATTR_SKIP_DOWNLOAD_TO_TARGET" value="true"/>
-    <stringAttribute key="org.eclipse.debug.core.ATTR_TARGET_PATH" value="/home/christian/Development/bolthur/kernel/build/src/target/rpi/kernel7_qemu.sym"/>
+    <stringAttribute key="org.eclipse.debug.core.ATTR_TARGET_PATH" value="/home/christian/Development/bolthur/kernel/build/src/target/raspi/kernel7_qemu.sym"/>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
         <listEntry value="/kernel"/>
     </listAttribute>

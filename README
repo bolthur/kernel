@@ -17,8 +17,7 @@ Broadcom SoC
     -   RPI A+
     -   RPI B
     -   RPI B+
-    -   RPI zero
-    -   RPI zero w
+    -   RPI zero 1
 -   armv7-a ( 32 bit )
     -   RPI 2B r.1
 -   armv8-a ( 64 bit - rpi 2 r.2, rpi 3 and rpi 4 series )
@@ -26,6 +25,7 @@ Broadcom SoC
     -   RPI 3B
     -   RPI 3B+
     -   RPI 4
+    -   RPI zero 2
 
 List of real hardware for testing
 
@@ -46,9 +46,9 @@ Configuring
     mkdir build
     cd build
     ### configure with one of the following commands
-    ../configure --host arm-bolthur-eabi --enable-device=rpi2_b_rev1 --enable-debug --enable-output
-    ../configure --host aarch64-bolthur-elf --enable-device=rpi3_b --enable-debug --enable-output
-    ../configure --host arm-bolthur-eabi --enable-device=rpi_zero_w --enable-debug --enable-output
+    ../configure --host arm-bolthur-eabi --enable-device=raspi2b_r1 --enable-debug --enable-output
+    ../configure --host aarch64-bolthur-elf --enable-device=raspi3b --enable-debug --enable-output
+    ../configure --host arm-bolthur-eabi --enable-device=raspi0_1 --enable-debug --enable-output
 
 Possible additional parameters to --host and --enable-device:
 
@@ -97,23 +97,23 @@ Emulation of the project with qemu during development is not recommended. The pl
 Emulation of the kernel project with qemu during development may be done at all with the following commands. When kernel debugging is necessary, add the parameter shorthand -s -S or the long version -gdb tcp:1234 to qemu call:
 
     # raspberry pi zero kernel emulation
-    qemu-system-arm -M raspi0 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+    qemu-system-arm -M raspi0 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
 
     # raspberry pi A+ kernel emulation
-    qemu-system-arm -M raspi1ap -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+    qemu-system-arm -M raspi1ap -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
 
     # raspberry pi 2B rev 1 kernel emulation
-    qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+    qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
 
     # raspberry pi 2B rev 2 kernel emulation
-    qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
-    qemu-system-aarch64 -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+    qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
+    qemu-system-aarch64 -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
 
     # raspberry pi 3B kernel emulation
-    qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+    qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
 
     # raspberry pi 3A+ kernel emulation
-    qemu-system-aarch64 -M raspi3ap -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+    qemu-system-aarch64 -M raspi3ap -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
 
 Debugging
 

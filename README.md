@@ -18,8 +18,7 @@ Currently, the following targets are planned to be supported:
   * RPI A+
   * RPI B
   * RPI B+
-  * RPI zero
-  * RPI zero w
+  * RPI zero 1
 
 * armv7-a ( 32 bit )
   * RPI 2B r.1
@@ -29,6 +28,7 @@ Currently, the following targets are planned to be supported:
   * RPI 3B
   * RPI 3B+
   * RPI 4
+  * RPI zero 2
 
 ## List of real hardware for testing
 
@@ -52,9 +52,9 @@ autoreconf -iv
 mkdir build
 cd build
 ### configure with one of the following commands
-../configure --host arm-bolthur-eabi --enable-device=rpi2_b_rev1 --enable-debug --enable-output
-../configure --host aarch64-bolthur-elf --enable-device=rpi3_b --enable-debug --enable-output
-../configure --host arm-bolthur-eabi --enable-device=rpi_zero_w --enable-debug --enable-output
+../configure --host arm-bolthur-eabi --enable-device=raspi2b_r1 --enable-debug --enable-output
+../configure --host aarch64-bolthur-elf --enable-device=raspi3b --enable-debug --enable-output
+../configure --host arm-bolthur-eabi --enable-device=raspi0_1 --enable-debug --enable-output
 ```
 
 Possible additional parameters to `--host` and `--enable-device`:
@@ -109,23 +109,13 @@ Emulation of the kernel project with qemu during development may be done at all 
 
 ```bash
 # raspberry pi zero kernel emulation
-qemu-system-arm -M raspi0 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
-
-# raspberry pi A+ kernel emulation
-qemu-system-arm -M raspi1ap -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+qemu-system-arm -M raspi0 -cpu arm1176 -m 512M -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2835-raspi-zero.dtb -s -S
 
 # raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
-
-# raspberry pi 2B rev 2 kernel emulation
-qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
-qemu-system-aarch64 -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel7_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2836-raspi-2-b.dtb -s -S
 
 # raspberry pi 3B kernel emulation
-qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
-
-# raspberry pi 3A+ kernel emulation
-qemu-system-aarch64 -M raspi3ap -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel8_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2837-raspi-3-b.dtb -s -S
 ```
 
 ### Debugging

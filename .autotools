@@ -36,7 +36,7 @@
 <flagvalue id="cflags-gprof" value="false"/>
 <flagvalue id="cflags-gcov" value="false"/>
 </flag>
-<option id="user" value="--enable-device=rpi2_b_rev1 --enable-output"/>
+<option id="user" value="--enable-device=raspi2b_r1 --enable-output"/>
 <option id="autogen" value="autogen.sh"/>
 <option id="autogenOpts" value=""/>
 </configuration>
@@ -76,7 +76,7 @@
 <flagvalue id="cflags-gprof" value="false"/>
 <flagvalue id="cflags-gcov" value="false"/>
 </flag>
-<option id="user" value="--enable-device=rpi2_b_rev1 --enable-output --with-debug-symbols --with-optimization-level=0"/>
+<option id="user" value="--enable-device=raspi2b_r1 --enable-output --with-debug-symbols --with-optimization-level=0"/>
 <option id="autogen" value="autogen.sh"/>
 <option id="autogenOpts" value=""/>
 </configuration>

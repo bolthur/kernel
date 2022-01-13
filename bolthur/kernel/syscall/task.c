@@ -124,6 +124,8 @@ void syscall_process_fork( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "process fork called\r\n" )
   #endif
+  // invalidate cache to ensure everything is within memory
+  virt_flush_complete();
   // fork process
   task_process_ptr_t forked = task_process_fork( task_thread_current_thread );
   // handle error

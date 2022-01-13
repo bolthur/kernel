@@ -6,7 +6,7 @@
                 "${workspaceFolder}/**"
             ],
             "defines": [],
-            "compilerPath": "/opt/bolthur/cross/bin/arm-rpi2-bolthur-eabi-gcc",
+            "compilerPath": "/opt/bolthur/cross/bin/arm-raspi2b_r1-bolthur-eabi-gcc",
             "cStandard": "c17",
             "cppStandard": "gnu++17",
             "intelliSenseMode": "linux-gcc-x64"

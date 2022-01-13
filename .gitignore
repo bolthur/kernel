@@ -6,7 +6,7 @@
 **/*.disasm
 *.dtb
 /tool/ramdisk
-/build-aux/platform/rpi/initrd
+/build-aux/platform/raspi/initrd
 *.sym
 
 # ---> Autotools

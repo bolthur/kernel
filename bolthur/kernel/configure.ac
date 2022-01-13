@@ -19,7 +19,7 @@ AC_LANG([C])
 AC_ARG_ENABLE([device],
   AS_HELP_STRING(
     [--enable-device],
-    [set target device to compile for [possible targets: rpi2_b_rev1]]
+    [set target device to compile for [possible targets: raspi0_1, raspi2b_r1, raspi3b]]
   ),
   [enable_device=$enableval],
   [AC_MSG_ERROR([Target device missing])]
@@ -369,9 +369,9 @@ AC_CONFIG_FILES([
   lib/libc/Makefile
   lib/tar/Makefile
   platform/Makefile
-  platform/rpi/Makefile
+  platform/raspi/Makefile
   target/Makefile
-  target/rpi/Makefile
+  target/raspi/Makefile
   thirdparty/Makefile
   thirdparty/dtc/libfdt/Makefile
 ])
