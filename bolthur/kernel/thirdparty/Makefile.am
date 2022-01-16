@@ -1,0 +1,2 @@
+
+SUBDIRS = dtc/libfdt

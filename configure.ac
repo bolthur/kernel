@@ -1,28 +1,23 @@
 
 LT_PREREQ([2.4.6])
-AC_PREREQ([2.69])
+AC_PREREQ([2.71])
 
 AC_INIT([bolthur-kernel], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2020 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2022 bolthur project])
 
 AC_CONFIG_AUX_DIR([build-aux/config])
 AC_CONFIG_MACRO_DIR([build-aux/m4])
 
 AC_CANONICAL_HOST
-AC_CONFIG_SRCDIR([src/core/main.c])
-AM_INIT_AUTOMAKE([nostdinc subdir-objects])
-AC_CONFIG_HEADERS([include/config.h])
+AM_INIT_AUTOMAKE([nostdinc subdir-objects -Werror])
 
 AC_LANG([C])
-
-# Prevent enter folder output
-AC_SUBST(MAKEFLAGS, "${MAKEFLAGS} --no-print-directory")
 
 AC_ARG_ENABLE([device],
   AS_HELP_STRING(
     [--enable-device],
-    [set target device to compile for [possible targets: rpi2_b_rev1]]
+    [set target device to compile for [possible targets: raspi0_1, raspi2b_r1, raspi3b]]
   ),
   [enable_device=$enableval],
   [AC_MSG_ERROR([Target device missing])]
@@ -62,6 +57,15 @@ AC_ARG_ENABLE(
     [activate heap output [default: off]]
   ),
   [enable_output_mm_heap=yes]
+)
+
+AC_ARG_ENABLE(
+  [output-mm-shared],
+  AS_HELP_STRING(
+    [--enable-output-mm-shared],
+    [activate shared memory output [default: off]]
+  ),
+  [enable_output_mm_shared=yes]
 )
 
 AC_ARG_ENABLE(
@@ -137,15 +141,6 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_ENABLE(
-  [output-platform],
-  AS_HELP_STRING(
-    [--enable-output-platform],
-    [activate platform init output [default: off]]
-  ),
-  [enable_output_platform=yes]
-)
-
-AC_ARG_ENABLE(
   [output-syscall],
   AS_HELP_STRING(
     [--enable-output-syscall],
@@ -164,12 +159,48 @@ AC_ARG_ENABLE(
 )
 
 AC_ARG_ENABLE(
+  [output-message],
+  AS_HELP_STRING(
+    [--enable-output-message],
+    [activate message output [default: off]]
+  ),
+  [enable_output_message=yes]
+)
+
+AC_ARG_ENABLE(
+  [output-rpc],
+  AS_HELP_STRING(
+    [--enable-output-rpc],
+    [activate rpc output [default: off]]
+  ),
+  [enable_output_rpc=yes]
+)
+
+AC_ARG_ENABLE(
+  [output-ssp],
+  AS_HELP_STRING(
+    [--enable-output-ssp],
+    [activate ssp origin output [default: off]]
+  ),
+  [enable_output_ssp=yes]
+)
+
+AC_ARG_ENABLE(
   [remote-debug],
   AS_HELP_STRING(
     [--enable-remote-debug],
     [activate remote debugging [default: off]]
   ),
   [enable_remote_debug=yes]
+)
+
+AC_ARG_ENABLE(
+  [release],
+  AS_HELP_STRING(
+    [--enable-release],
+    [activate release build [default: off]]
+  ),
+  [enable_release=yes]
 )
 
 AC_ARG_WITH(
@@ -190,21 +221,54 @@ AC_ARG_WITH(
   [with_debug_debug_symbols=yes]
 )
 
+# enable output and enable remote debugging together is not allowed
+AS_IF([test "x$enable_output" == "xyes" && test "x$enable_remote_debug" == "xyes"], [
+  AC_MSG_ERROR([Enabled kernel output and remote debug are not possible at the same time])
+])
+
+# enable output and enable remote debugging together is not allowed
+AS_IF([test "x$enable_debug" == "xyes" && test "x$enable_release" == "xyes"], [
+  AC_MSG_ERROR([Enabled debug and release are not possible at the same time])
+])
+
 # check necessary programs
-BOLTHUR_KERNEL_PROG_READLINK
+BOLTHUR_PROG_READLINK
 
 # set program
-BOLTHUR_KERNEL_LANG_PROGRAM
+BOLTHUR_LANG_PROGRAM
 # set target and flags
-BOLTHUR_KERNEL_SET_DEVICE
+BOLTHUR_SET_DEVICE
 BOLTHUR_KERNEL_SET_HOST
-# set rest of flags
-BOLTHUR_KERNEL_SET_FLAG
 
 # checks for programs
 AC_PROG_CC
 AM_PROG_AS
-BOLTHUR_KERNEL_PROG_OBJCOPY
+BOLTHUR_PROG_OBJCOPY
+BOLTHUR_PROG_STRIP
+
+# prepare cppecheck stuff
+BOLTHUR_PREPARE_CPPCHECK
+# add directory for ramdisk
+AC_SUBST(ROOT_DIR, $($BOLTHUR_READLINK -f ${srcdir}))
+AC_SUBST(SYSROOT_DIR, $(dirname $(dirname $($BOLTHUR_READLINK -f $($CC $CFLAGS --print-file-name=libc.so)))))
+
+# doxygen stuff
+DX_DOXYGEN_FEATURE(ON)
+DX_HTML_FEATURE(ON)
+DX_MAN_FEATURE(ON)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
+DX_INIT_DOXYGEN([bolthur/kernel], [$(srcdir)/doxyfile], [doc])
+
+# checks for programs
+AC_PROG_CC
+AM_PROG_AS
+BOLTHUR_PROG_OBJCOPY
+BOLTHUR_PROG_STRIP
+
+# get host cpu count
+AX_COUNT_CPUS
+AC_SUBST(CPU_COUNT)
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -229,6 +293,11 @@ AC_DEFINE_UNQUOTED(
 )
 
 # Some compiler dependent features.
+AC_DEFINE_UNQUOTED(
+  [__allocator],
+  [__attribute__((malloc))],
+  [Keyword for mark something as allocator.]
+)
 AC_DEFINE_UNQUOTED(
   [__packed],
   [__attribute__((__packed__))],
@@ -285,31 +354,16 @@ AC_DEFINE_UNQUOTED(
   [Unused]
 )
 
-# conditional
-AM_CONDITIONAL([IS32], [test $executable_format -eq 32])
-AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
-
 AC_CONFIG_FILES([
   Makefile
-  src/Makefile
-  src/arch/Makefile
-  src/arch/arm/Makefile
-  src/arch/arm/v6/Makefile
-  src/arch/arm/v7/Makefile
-  src/arch/arm/v8/Makefile
-  src/core/Makefile
-  src/lib/Makefile
-  src/lib/atag/Makefile
-  src/lib/collection/Makefile
-  src/lib/libc/Makefile
-  src/lib/tar/Makefile
-  src/platform/Makefile
-  src/platform/rpi/Makefile
-  src/target/Makefile
-  src/target/rpi/Makefile
-  thirdparty/Makefile
-  thirdparty/dtc/libfdt/Makefile
-  thirdparty/font/Makefile
+  bolthur/Makefile
+])
+
+AC_CONFIG_SUBDIRS([
+  driver
+  bolthur/library
+  bolthur/kernel
+  bolthur/server
 ])
 
 AC_OUTPUT

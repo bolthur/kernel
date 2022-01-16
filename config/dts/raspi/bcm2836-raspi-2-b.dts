@@ -1,0 +1,96 @@
+/**
+ * Copyright (C) 2018 - 2022 bolthur project.
+ *
+ * This file is part of bolthur/kernel.
+ *
+ * bolthur/kernel is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * bolthur/kernel is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/dts-v1/;
+
+/ {
+  compatible = "raspberrypi,2-model-b", "brcm,bcm2836";
+  model = "Raspberry Pi 2 Model B";
+  #address-cells = <1>;
+  #size-cells = <1>;
+  interrupt-parent = <&intc>;
+
+  chosen {
+  };
+
+  alias {
+  };
+
+  memory@0 {
+    device_type = "memory";
+    reg = <0 0x40000000>;
+  };
+
+  soc: soc@f2000000 {
+    compatible = "simple-bus";
+    #address-cells = <1>;
+    #size-cells = <1>;
+    ranges = <0xf2000000 0x3f000000 0x1000000>,
+      <0xf3000000 0x40000000 0x1000>;
+    dma-ranges = <0xc0000000 0x0 0x3f000000>;
+
+    intc: interrupt-controller@f200b200 {
+      compatible = "brcm,bcm2835-armctrl-ic";
+      reg = <0xf200b200 0x200>;
+      interrupt-controller;
+      #interrupt-cells = <2>;
+    };
+
+    mailbox: mailbox@f200b880 {
+      compatible = "brcm,bcm2835-mbox";
+      reg = <0xf200b880 0x40>;
+      interrupts = <0 1>;
+      #mbox-cells = <0>;
+    };
+  };
+
+  cpus: cpus {
+    #address-cells = <1>;
+    #size-cells = <0>;
+    enable-method = "brcm,bcm2836-smp";
+
+    v7_cpu0: cpu@0 {
+      device_type = "cpu";
+      compatible = "arm,cortex-a7";
+      reg = <0xf00>;
+      clock-frequency = <800000000>;
+    };
+
+    v7_cpu1: cpu@1 {
+      device_type = "cpu";
+      compatible = "arm,cortex-a7";
+      reg = <0xf01>;
+      clock-frequency = <800000000>;
+    };
+
+    v7_cpu2: cpu@2 {
+      device_type = "cpu";
+      compatible = "arm,cortex-a7";
+      reg = <0xf02>;
+      clock-frequency = <800000000>;
+    };
+
+    v7_cpu3: cpu@3 {
+      device_type = "cpu";
+      compatible = "arm,cortex-a7";
+      reg = <0xf03>;
+      clock-frequency = <800000000>;
+    };
+  };
+};

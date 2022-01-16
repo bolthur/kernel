@@ -1,0 +1,386 @@
+.. -*- mode: rst; coding: utf-8 -*-
+
+======================================
+Linux Console Fonts from The ZAP Group
+======================================
+
+.. contents::
+
+
+Introduction
+============
+
+This package contains two varieties of Linux console fonts from The ZAP
+Group: one set that mimics the traditional VGA fonts, and a second that
+provides a lighter, easier to read look.  Both font varieties contain a
+somewhat more useful set of characters than traditional console fonts,
+and are available in versions with either 256 or 512 glyphs.
+
+The following font files contain 256 glyphs:
+
+* `zap-vga09.psf`        — ZAP Group traditional VGA font, 8×9 pixels
+* `zap-vga16.psf`        — ZAP Group traditional VGA font, 8×16 pixels
+
+..
+
+* `zap-light16.psf`      — ZAP Group lighter font, 8×16 pixels
+* `zap-light18.psf`      — ZAP Group lighter font, 8×18 pixels
+* `zap-light20.psf`      — ZAP Group lighter font, 10×20 pixels
+* `zap-light24.psf`      — ZAP Group lighter font, 10×24 pixels
+
+The following extended font files contain 512 glyphs:
+
+* `zap-ext-vga09.psf`    — ZAP Group traditional VGA font, 8×9 pixels
+* `zap-ext-vga16.psf`    — ZAP Group traditional VGA font, 8×16 pixels
+
+..
+
+* `zap-ext-light16.psf`  — ZAP Group lighter font, 8×16 pixels
+* `zap-ext-light18.psf`  — ZAP Group lighter font, 8×18 pixels
+* `zap-ext-light20.psf`  — ZAP Group lighter font, 10×20 pixels
+* `zap-ext-light24.psf`  — ZAP Group lighter font, 10×24 pixels
+
+Note that the 10×20 and 10×24 versions of these fonts can be displayed on
+framebuffer-style consoles only; traditional VGA consoles can only
+display fonts that are eight pixels wide.
+
+Traditional VGA-style video hardware uses a single bit to indicate either
+colour intensity or the presence of a 512-glyph font.  Thus, on such VGA
+consoles, using such an extended font will reduce the number of colours
+that can be displayed, from 16 down to 8.  Using a 256-glyph font will
+allow the use of all 16 colours.  Framebuffer-style consoles do not have
+this limitation.
+
+
+Unicode coverage
+================
+
+All fonts contain an extensive Unicode mapping table that covers as many
+European languages as possible.  Fonts containing 256 glyphs cover the
+following single-byte encodings (code pages):
+
+* **ascii** (US English)
+* **iso-8859-1** (Latin-1 Western European)
+* **iso-8859-9** (Latin-5 Turkish)
+* **iso-8859-15** (Latin-9 Western European)
+* **cp850** (DOS Latin-1 Western European) (four characters missing)
+* **cp857** (DOS Turkish) (three characters missing)
+* **windows-1252** (Windows Western European)
+* **windows-1254** (Windows Turkish)
+
+In addition to these encodings, fonts containing 512 glyphs also cover:
+
+* **iso-8859-2** (Latin-2 Central European)
+* **iso-8859-3** (Latin-3 South European)
+* **iso-8859-4** (Latin-4 North European)
+* **iso-8859-5** (Latin/Cyrillic)
+* **iso-8859-7** (Latin/Greek) (one character missing)
+* **iso-8859-10** (Latin-6 Nordic)
+* **iso-8859-13** (Latin-7 Baltic Rim)
+* **iso-8859-14** (Latin-8 Celtic)
+* **iso-8859-16** (Latin-10 South-Eastern European)
+* **cp775** (DOS Baltic Rim) (five characters missing)
+* **cp852** (DOS Latin-2 Central European) (three characters missing)
+* **cp855** (DOS Cyrillic) (three characters missing)
+* **cp869** (DOS Greek) (three characters missing)
+* **windows-1250** (Windows Central/Eastern European)
+* **windows-1251** (Windows Cyrillic)
+* **windows-1253** (Windows Greek)
+* **windows-1257** (Windows Baltic)
+
+Also included in all 256 and 512-glyph fonts are special VT100 characters
+used by Curses, including box drawing glyphs, and various symbols used in
+typography.  See also the section on `Utility programs`_ in this document
+for additional details on coverage.
+
+
+Installation
+============
+
+To create (or recreate) the binary PSF Linux console fonts shipped as
+part of this package, use the supplied Makefile by running::
+
+    make
+
+You can verify that the created binary fonts match what is distributed by
+The ZAP Group; each line of the output should end with ``OK``::
+
+    sha1sum --check sha1sum
+
+To use a particular font, such as `zap-light16.psf`, on the current Linux
+console, run the ``setfont`` utility program while in the current
+directory::
+
+    setfont zap-light16.psf
+
+Note that running ``setfont`` in this way only affects the *current*
+console, not any other consoles, and only until the next ``setfont``
+invocation or until the computer is rebooted.
+
+To use a particular font as the default on *all* consoles, follow the
+steps appropriate for your Linux distribution.  Instructions are included
+for Debian, Ubuntu, Fedora, Red Hat Enterprise Linux, CentOS and
+OpenSUSE, as well as distributions based on these.  If these instructions
+do not work for you or are incorrect or obsolete, please contact the
+author of this package; see `Feedback`_ for details.
+
+
+For Debian-based distributions
+------------------------------
+
+These instructions apply to Debian, Ubuntu and any distribution based on
+these.  Note that these steps must be done as root (system
+administrator).
+
+1.  Copy the font files to the `/etc/console-setup` directory::
+
+        cp -p *.psf /etc/console-setup
+
+2.  Modify the configuration file `/etc/default/console-setup` with a
+    text editor.  Comment out the lines with ``CODESET``, ``FONTFACE``
+    and ``FONTSIZE`` by placing “``#``” at the beginning of those lines,
+    and insert a line with a relevant ``FONT`` declaration::
+
+        # CODESET="guess"
+	# FONTFACE="Fixed"
+	# FONTSIZE="8x16"
+
+        FONT="/etc/console-setup/zap-light16.psf"
+
+3.  Recreate the file `/etc/console-setup/cached_setup_font.sh` while
+    logged into a console::
+
+        /etc/init.d/console-setup.sh force-reload
+
+4.  Recreate the file `/boot/initrd.img`::
+
+        update-initramfs -u
+
+5.  Reboot your computer.  You should now see your selected font in use
+    on all Linux consoles.
+
+
+For newer Fedora-based distributions
+------------------------------------
+
+These instructions apply to newer versions of Fedora, Red Hat Enterprise
+Linux, CentOS and any distribution based on these.  Note that these steps
+must be done as root (system administrator).
+
+1.  Copy the font files to the `/lib/kbd/consolefonts` system directory::
+
+        cp -p *.psf /lib/kbd/consolefonts
+
+2.  If the file `/etc/vconsole.conf` exists, edit the ``FONT`` line in
+    that file and set it to your preferred font::
+
+        FONT="zap-light16"
+
+    If the file `/etc/vconsole.conf` does *not* exist, you need to follow
+    the instructions for older Fedora-based distributions.
+
+3.  Rebuild the initramfs kernel files::
+
+        dracut --regenerate-all --force
+
+4.  Reboot your computer and enjoy.
+
+
+For older Fedora-based distributions
+------------------------------------
+
+These instructions apply to older versions of Fedora, Red Hat Enterprise
+Linux, CentOS and any distribution based on these; such distributions do
+not have the file `/etc/vconsole.conf`.  Note that these steps must be
+done as root (system administrator).
+
+1.  Copy the font files to the `/lib/kbd/consolefonts` system directory::
+
+        cp -p *.psf /lib/kbd/consolefonts
+
+2.  Edit the file `/etc/sysconfig/i18n` to select your font::
+
+        SYSFONT="zap-light16"
+
+3.  Edit the file `/etc/grub.conf` and replace every occurrence of
+    ``SYSFONT`` with your selected font::
+
+        kernel [...] SYSFONT=zap-light16 [...]
+
+4.  Rebuild the initramfs kernel files::
+
+        dracut -f
+
+5.  Reboot your computer.
+
+
+For newer OpenSUSE-based distributions
+--------------------------------------
+
+These instructions apply to newer versions of OpenSUSE and any
+distributions based on it.  Note that these steps must be done as root
+(system administrator).
+
+1.  Copy the font files to the `/usr/share/kbd/consolefonts` system
+    directory::
+
+        cp -p *.psf /usr/share/kbd/consolefonts
+
+2.  If the file `/etc/vconsole.conf` exists, edit the ``FONT`` line in
+    that file and set it to your preferred font::
+
+        FONT="zap-light16"
+
+    If the file `/etc/vconsole.conf` does *not* exist, you need to follow
+    the instructions for older OpenSUSE-based distributions.
+
+3.  Rebuild the initramfs kernel files::
+
+        dracut --regenerate-all --force
+
+4.  Reboot your computer and enjoy.
+
+
+For older OpenSUSE-based distributions
+--------------------------------------
+
+These instructions apply to older versions of OpenSUSE and any
+distribution based on it; these distributions do not have the file
+`/etc/vconsole.conf`.  Note that these steps must be done as root (system
+administrator).
+
+1.  Copy the font files to the `/usr/share/kbd/consolefonts` system
+    directory::
+
+        cp -p *.psf /usr/share/kbd/consolefonts
+
+2.  Modify the file `/etc/sysconfig/console` with a text editor, changing
+    the ``CONSOLE_FONT`` line to use your selected font::
+
+        CONSOLE_FONT="zap-light16.psf"
+
+3.  Rebuild the initramfs kernel files::
+
+        dracut --regenerate-all --force
+
+4.  Reboot your computer and enjoy.
+
+
+Utility programs
+================
+
+This font package includes utility programs from the console-fonts-utils
+package.  Five of these convert PSF and other binary fonts to and from a
+text representation, allowing easy font editing using an ordinary text
+editor.  Another five applications are included to further work with the
+text representation of a font.  These programs are located in the `utils`
+directory; see `utils/README` for more information.
+
+Four of these programs in particular may prove very useful:
+
+* ``psftx-codechart``   — Generate a PDF font coverage codechart
+* ``psftx-screenshot``  — Generate a simulated screenshot image
+* ``psftx-sampler``     — Generate a text output font coverage sampler
+* ``psftx-encodings``   — Check PSFTX for charmap encodings coverage
+
+To generate PDF codecharts from the fonts included in this package, use
+the supplied Makefile by running ``make pdfs``.  You will need the
+reportlab Python package installed to be able to do so.
+
+To generate simulated screenshot PNG images of the fonts, use the
+supplied Makefile by running ``make images``; this requires the Pillow
+Python package to be installed.
+
+To generate UTF-8 sample strings that can be displayed by a font, run the
+``psftx-sampler`` utility program::
+
+    ./utils/psftx-sampler zap-light16.psftx
+
+To check the details of character encodings, run ``psftx-encodings``::
+
+    ./utils/psftx-encodings zap-light16.psftx
+
+
+Glyph designs
+=============
+
+The VGA fonts **zap-vga09**, **zap-vga16**, **zap-ext-vga09** and
+**zap-ext-vga16** were inspired by the traditional VGA glyphs that are
+found in the ``kbd`` package, in the files `default8x9.psfu` and
+`default8x16.psfu` respectively.  However, many glyphs have been tweaked
+in some way, particularly the digit zero, many symbols and most uppercase
+accented letters.  In addition, the traditional fonts do not contain the
+glyphs needed for The ZAP Group fonts, so additional glyphs were designed
+in the VGA style.
+
+The VGA fonts are designed to work with both traditional VGA consoles, in
+which eight-pixel-wide glyphs are displayed in a 9-pixel-wide cell, and
+in newer framebuffer-style consoles, which use a character cell width the
+same as the font.
+
+The **zap-light16** and **zap-ext-light16** fonts were inspired by the
+GNU Unifont project, as released in the X11 font file `unifont.pcf`; this
+font has the X11 Logical Font Description (XFLD)
+``-gnu-unifont-medium-r-normal-sans-16-*-*-*-c-*-iso10646-1``.  However,
+similar to the VGA fonts, every glyph has been modified in some way; the
+font baseline, in particular, is one pixel higher.  In addition, the
+digits zero and seven, all lowercase letters with descenders or ascenders
+and many symbols have also been tweaked for greater clarity.
+
+The **zap-light18** and **zap-ext-light18** fonts were derived from
+**zap-light16** and **zap-ext-light16**, with one additional row of
+pixels above and one below; accents on capital letters were shifted one
+pixel higher.  The effect is to give an extra 12.5% space (called
+*leading*) between rows of text.
+
+The **zap-light20** and **zap-ext-light20** fonts were inspired by the
+**10x20** font that is distributed as part of X11 in the file
+`10x20.pcf.gz`; this font has the X11 XFLD
+``-misc-fixed-medium-r-normal--20-*-*-*-c-*-iso10646-1``.  Once again,
+however, most glyphs have been modified; all lowercase letters, for
+example, are one pixel taller, many symbols have been redesigned and the
+position of many accents has been tweaked.
+
+Finally, the **zap-light24** and **zap-ext-light24** fonts were derived
+from **zap-light20** and **zap-ext-light20**: these include an extra two
+pixels above and two pixels below each glyph, giving it an extra 20%
+leading between rows of text.  Descenders on lowercase letters have been
+lengthened to use this additional space; capital letters with accents are
+now full-size, with one more pixel between the letter and the accent.
+
+
+Feedback
+========
+
+Your comments, suggestions, corrections and enhancements are always
+warmly welcomed!  Please send these to:
+
+    :Postal:  | John Zaitseff,
+              | The ZAP Group,
+              | Unit 6, 116 Woodburn Road,
+              | Berala, NSW, 2141,
+              | Australia
+    :Email:   | J.Zaitseff@zap.org.au
+    :Web:     | https://www.zap.org.au/projects/console-fonts-zap/
+    :FTP:     | https://ftp.zap.org.au/pub/fonts/console-fonts-zap/
+              | ftp://ftp.zap.org.au/pub/fonts/console-fonts-zap/
+    :Git:     | https://www.zap.org.au/git-browser/console-fonts-zap.git
+              | https://git.zap.org.au/git/console-fonts-zap.git
+              | git://git.zap.org.au/data/git/console-fonts-zap.git
+
+
+Copyright
+=========
+
+**Copyright © 2004–19, John Zaitseff.**
+
+The Linux Console Fonts package is free software that is distributed
+under the terms of the GNU General Public License.  You can redistribute
+it and/or modify it under the terms of that License as published by the
+Free Software Foundation, either version 3 or (at your option) any later
+version.
+
+This font package is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General
+Public License in the file `COPYING` for more details.

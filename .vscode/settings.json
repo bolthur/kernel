@@ -1,23 +1,16 @@
 {
-  "C_Cpp.loggingLevel": "Error",
-  "C_Cpp.autoAddFileAssociations": false,
-  "cSpell.enabled": true,
-  "cSpell.language": "en",
-  "editor.insertSpaces": true,
+  "editor.tabSize": 2,
+  "editor.detectIndentation": false,
+  "telemetry.enableCrashReporter": false,
+  "editor.renderControlCharacters": true,
   "editor.renderWhitespace": "all",
   "editor.rulers": [
     80, 120
   ],
-  "editor.tabSize": 2,
+  "C_Cpp.autocompleteAddParentheses": true,
   "files.associations": {
-    "*.h": "c",
-    "*.c": "c",
-    "src/arch/arm/**/**.S": "arm",
-    "platform/rpi/**/**.S": "arm"
-  },
-  "files.insertFinalNewline": true,
-  "files.trimTrailingWhitespace": true,
-  "telemetry.enableTelemetry": false,
-  "telemetry.enableCrashReporter": false,
-  "workbench.colorTheme": "Default Dark+"
+    "message.h": "c",
+    "debug.h": "c",
+    "bolthur.h": "c"
+  }
 }

@@ -1,0 +1,5 @@
+
+set architecture armv7
+file build/bolthur/server/console/console
+target remote | qemu-system-arm -M raspi2b -cpu cortex-a7 -no-reboot -kernel build/bolthur/kernel/target/raspi/kernel7_qemu.img -initrd build-aux/platform/raspi/initrd -dtb config/dts/raspi/bcm2836-raspi-2-b.dtb -gdb stdio -S
+display /10i $pc

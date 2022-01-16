@@ -1,74 +1,16 @@
 {
-  "configurations": [
-    {
-      "name": "Mac",
-      "includePath": [
-        "${workspaceFolder}/include",
-        "${workspaceFolder}/include/lib",
-        "${workspaceFolder}/include/core",
-        "${workspaceFolder}/thirdparty",
-        "${workspaceFolder}/thirdparty/dtc/libfdt",
-        "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
-        "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
-        "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
-      ],
-      "defines": [],
-      "intelliSenseMode": "${default}",
-      "browse": {
-        "path": [
-          "${workspaceFolder}/src",
-          "${workspaceFolder}/include",
-          "${workspaceFolder}/include/lib",
-          "${workspaceFolder}/include/core",
-          "${workspaceFolder}/thirdparty",
-          "${workspaceFolder}/thirdparty/dtc/libfdt",
-          "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
-          "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
-          "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
-        ],
-        "limitSymbolsToIncludedHeaders": true,
-        "databaseFilename": ""
-      },
-      "macFrameworkPath": [],
-      "forcedInclude": [
-        "${workspaceFolder}/build/include/config.h"
-      ],
-      "cStandard": "c17"
-    },
-    {
-      "name": "Linux",
-      "includePath": [
-        "${workspaceFolder}/include",
-        "${workspaceFolder}/include/lib",
-        "${workspaceFolder}/include/core",
-        "${workspaceFolder}/thirdparty",
-        "${workspaceFolder}/thirdparty/dtc/libfdt",
-        "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
-        "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
-        "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
-      ],
-      "defines": [],
-      "intelliSenseMode": "${default}",
-      "browse": {
-        "path": [
-          "${workspaceFolder}/src",
-          "${workspaceFolder}/include",
-          "${workspaceFolder}/include/lib",
-          "${workspaceFolder}/include/core",
-          "${workspaceFolder}/thirdparty",
-          "${workspaceFolder}/thirdparty/dtc/libfdt",
-          "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include",
-          "/opt/bolthur/cross/lib/gcc/arm-unknown-bolthur-eabi/10.2.0/include-fixed",
-          "/opt/bolthur/sysroot/arm-unknown-bolthur-eabi/usr/include"
-        ],
-        "limitSymbolsToIncludedHeaders": true,
-        "databaseFilename": ""
-      },
-      "forcedInclude": [
-        "${workspaceFolder}/build/include/config.h"
-      ],
-      "cStandard": "c17"
-    }
-  ],
-  "version": 4
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**"
+            ],
+            "defines": [],
+            "compilerPath": "/opt/bolthur/cross/bin/arm-raspi2b_r1-bolthur-eabi-gcc",
+            "cStandard": "c17",
+            "cppStandard": "gnu++17",
+            "intelliSenseMode": "linux-gcc-x64"
+        }
+    ],
+    "version": 4
 }

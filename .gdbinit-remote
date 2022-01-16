@@ -3,4 +3,4 @@ set verbose on
 set debug remote 1
 set architecture armv7
 set serial baud 115200
-file build/src/target/rpi/kernel7.sym
+file build/src/target/raspi/kernel7.sym

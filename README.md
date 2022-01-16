@@ -1,7 +1,7 @@
 # kernel
 
 bolthur/kernel project.
-_Copyright (C) 2018 - 2020 bolthur project_
+_Copyright (C) 2018 - 2022 bolthur project_
 
 ## Supported platforms
 
@@ -9,7 +9,7 @@ There are no completely supported platforms yet.
 
 ## Planned support
 
-Currently the following targets are planned to be supported:
+Currently, the following targets are planned to be supported:
 
 ### Broadcom SoC
 
@@ -18,8 +18,7 @@ Currently the following targets are planned to be supported:
   * RPI A+
   * RPI B
   * RPI B+
-  * RPI zero
-  * RPI zero w
+  * RPI zero 1
 
 * armv7-a ( 32 bit )
   * RPI 2B r.1
@@ -29,6 +28,7 @@ Currently the following targets are planned to be supported:
   * RPI 3B
   * RPI 3B+
   * RPI 4
+  * RPI zero 2
 
 ## List of real hardware for testing
 
@@ -52,19 +52,20 @@ autoreconf -iv
 mkdir build
 cd build
 ### configure with one of the following commands
-../configure --host arm-bolthur-eabi --enable-device=rpi2_b_rev1 --enable-debug --enable-output
-../configure --host aarch64-bolthur-elf --enable-device=rpi3_b --enable-debug --enable-output
-../configure --host arm-bolthur-eabi --enable-device=rpi_zero_w --enable-debug --enable-output
+../configure --host arm-bolthur-eabi --enable-device=raspi2b_r1 --enable-debug --enable-output
+../configure --host aarch64-bolthur-elf --enable-device=raspi3b --enable-debug --enable-output
+../configure --host arm-bolthur-eabi --enable-device=raspi0_1 --enable-debug --enable-output
 ```
 
 Possible additional parameters to `--host` and `--enable-device`:
 
-* `--with-debug-symbols` enables remote debugging mode
-* `--with-optimization-level=x` sets optimization from default ( 2 ) to specified one
-* `--enable-output` enables kernel output
-* `--enable-output-mm-phys` activate tty output of physical memory manager ( slows down kernel totally )
+* `--with-debug-symbols` enables remote debugging mode ( blocks --enable-release )
+* `--with-optimization-level=x` sets optimization from default ( 2 ) to specified one ( ignored when --enable-release is set )
+* `--enable-output` enables kernel output ( blocks --enable-remote-debug )
+* `--enable-output-mm-phys` activate tty output of physical memory manager
 * `--enable-output-mm-virt` activate tty output of virtual memory manager
 * `--enable-output-mm-heap` activate tty output of kernel heap
+* `--enable-output-mm-shared` activate tty output of shared memory
 * `--enable-output-mailbox` activate tty output of mailbox implementation
 * `--enable-output-timer` activate tty output of timer implementation
 * `--enable-output-initrd` activate initrd implementation output
@@ -73,10 +74,13 @@ Possible additional parameters to `--host` and `--enable-device`:
 * `--enable-output-interrupt` activate interrupt request output
 * `--enable-output-exception` activate exception handler output
 * `--enable-output-elf` activate elf routine output
-* `--enable-output-platform` activate platform initialization output
 * `--enable-output-syscall` activate syscall output
 * `--enable-output-serial` activate serial handling output
-* `--enable-remote-debug` activate remote debugging
+* `--enable-output-message` activate message system output
+* `--enable-output-rpc` activate rpc system output
+* `--enable-output-ssp` activate ssp origin output in kernel
+* `--enable-remote-debug` activate remote debugging ( blocks --enable-output )
+* `--enable-release` activate release build ( blocks --enable-debug and ignores --with-optimization-level )
 
 ### Building
 
@@ -104,16 +108,14 @@ Emulation of the project with qemu during development is **not** recommended. Th
 Emulation of the kernel project with qemu during development may be done at all with the following commands. When kernel debugging is necessary, add the parameter shorthand `-s -S` or the long version `-gdb tcp:1234` to qemu call:
 
 ```bash
-# raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+# raspberry pi zero kernel emulation
+qemu-system-arm -M raspi0 -cpu arm1176 -m 512M -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2835-raspi-zero.dtb -s -S
 
-# raspberry pi 2B rev 2 kernel emulation
-qemu-system-arm -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
-qemu-system-aarch64 -M raspi2 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+# raspberry pi 2B rev 1 kernel emulation
+qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel7_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2836-raspi-2-b.dtb -s -S
 
 # raspberry pi 3B kernel emulation
-qemu-system-arm -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
-qemu-system-aarch64 -M raspi3 -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/rpi/kernel.elf -s -S
+qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel8_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2837-raspi-3-b.dtb -s -S
 ```
 
 ### Debugging
@@ -130,4 +132,4 @@ The files can be specified by using the parameter `-x`.
 /opt/bolthur/sysroot/arm/bin/arm-unknown-bolthur-eabi-gdb -x .gdbinit-remote
 ```
 
-When starting remote debugging, you need to specify the target, e.g. `target /dev/ttyUSB0` to connect to the running instance. Furthermore you need to configure the project with option `--enable-debug`.
+When starting remote debugging, you need to specify the target, e.g. `target /dev/ttyUSB0` to connect to the running instance. Furthermore, you need to configure the project with option `--enable-debug`.
