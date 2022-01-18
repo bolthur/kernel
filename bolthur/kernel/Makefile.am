@@ -1,7 +1,7 @@
 
 ACLOCAL_AMFLAGS = -I ../../build-aux/m4
 
-SUBDIRS = . thirdparty lib arch platform target
+SUBDIRS = . lib arch platform target
 
 noinst_LTLIBRARIES = libkernel.la
 libkernel_la_SOURCES = \

@@ -1,7 +1,6 @@
 
 # built sources determining things to be built first
 BUILT_SOURCES = \
-  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
   ${abs_top_builddir}/platform/${platform_subdir}/lib${platform_subdir}.la \
   ${abs_top_builddir}/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
   ${abs_top_builddir}/arch/${arch_subdir}/lib${arch_subdir}.la \
@@ -22,7 +21,6 @@ noinst_PROGRAMS = kernel.elf kernel_qemu.elf ${output_img} ${output_img_qemu}
 noinst_LTLIBRARIES = libtarget.la
 
 libtarget_la_DEPENDENCIES = \
-  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
   ${abs_top_builddir}/platform/${platform_subdir}/lib${platform_subdir}.la \
   ${abs_top_builddir}/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
   ${abs_top_builddir}/arch/${arch_subdir}/lib${arch_subdir}.la \
@@ -36,8 +34,6 @@ libtarget_la_DEPENDENCIES = \
   ${abs_top_builddir}/lib/libubsan.la
 libtarget_la_SOURCES =
 libtarget_la_LIBADD = \
-  ${CC_SPECIFIC_LDADD} \
-  ${abs_top_builddir}/thirdparty/dtc/libfdt/libfdt.la \
   ${abs_top_builddir}/platform/${platform_subdir}/lib${platform_subdir}.la \
   ${abs_top_builddir}/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
   ${abs_top_builddir}/arch/${arch_subdir}/lib${arch_subdir}.la \
@@ -58,8 +54,10 @@ kernel_elf_LDFLAGS = \
   -Wl,-L,${top_srcdir}/target \
   -Wl,-T,${top_srcdir}/target/raspi/physical.${subarch_subdir}.${executable_format}.ld \
   -Wl,-Map,${output_map} \
-  -all-static -Wl,-static
-kernel_elf_LDADD = libtarget.la
+  -all-static -Wl,-static \
+  -Wl,--start-group,-ltarget,-lgcc,-lfdt,--end-group
+kernel_elf_LDADD = -L./.libs
+  
 
 # Normal kernel building for physical device
 kernel_qemu_elf_SOURCES =
@@ -68,8 +66,9 @@ kernel_qemu_elf_LDFLAGS = \
   -Wl,-L,${top_srcdir}/target \
   -Wl,-T,${top_srcdir}/target/raspi/qemu.${subarch_subdir}.${executable_format}.ld \
   -Wl,-Map,${output_map_qemu} \
-  -all-static -Wl,-static
-kernel_qemu_elf_LDADD = libtarget.la
+  -all-static -Wl,-static \
+  -Wl,--start-group,-ltarget,-lgcc,-lfdt,--end-group
+kernel_qemu_elf_LDADD = -L./.libs
 
 EXTRA_PROGRAMS = kernel.img kernel7.img kernel8.img kernel_qemu.img kernel7_qemu.img kernel8_qemu.img
 kernel_img_DEPENDENCIES = kernel.elf

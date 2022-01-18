@@ -1,3 +1,0 @@
-[submodule "thirdparty/dtc"]
-	path = bolthur/kernel/thirdparty/dtc
-	url = git@github.com:bolthur/dtc.git
