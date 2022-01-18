@@ -19,16 +19,16 @@
 
 #include <stdarg.h>
 
-#include <assert.h>
-#include <string.h>
-#include <stdlib.h>
+#include "../../../lib/assert.h"
+#include "../../../lib/string.h"
+#include "../../../lib/stdlib.h"
 #if defined( PRINT_MAILBOX )
-  #include <debug/debug.h>
+  #include "../../../debug/debug.h"
 #endif
-#include <entry.h>
-#include <mm/phys.h>
-#include <platform/raspi/mailbox/mailbox.h>
-#include <platform/raspi/mailbox/property.h>
+#include "../../../entry.h"
+#include "../../../mm/phys.h"
+#include "mailbox.h"
+#include "property.h"
 
 /**
  * @brief property tag buffer index used internally

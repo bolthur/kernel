@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <collection/avl.h>
-#include <task/process.h>
+#include "../lib/collection/avl.h"
+#include "process.h"
 
 #if ! defined( _TASK_STACK_H )
 #define _TASK_STACK_H

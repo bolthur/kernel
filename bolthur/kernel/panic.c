@@ -20,10 +20,10 @@
 #include <stdint.h>
 #include <inttypes.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <interrupt.h>
-#include <panic.h>
+#include "lib/stdio.h"
+#include "lib/stdlib.h"
+#include "interrupt.h"
+#include "panic.h"
 
 /**
  * @brief Initialize panic process

@@ -20,9 +20,8 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
-
-#include <stdio.h>
-#include <string.h>
+#include "../../stdio.h"
+#include "../../string.h"
 
 // Possible length types
 typedef enum {

@@ -19,13 +19,13 @@
 
 #include <stddef.h>
 
-#include <entry.h>
-#include <panic.h>
-#include <initrd.h>
-#include <mm/virt.h>
-#include <arch/arm/mm/virt.h>
-#include <arch/arm/v7/mm/virt/short.h>
-#include <arch/arm/v7/mm/virt/long.h>
+#include "../../../../entry.h"
+#include "../../../../panic.h"
+#include "../../../../initrd.h"
+#include "../../../../mm/virt.h"
+#include "../../mm/virt.h"
+#include "virt/short.h"
+#include "virt/long.h"
 
 /**
  * @brief Initial setup done flag

@@ -18,7 +18,7 @@
  */
 
 #include <stddef.h>
-#include <collection/list.h>
+#include "../list.h"
 
 /**
  * @fn bool list_default_insert(list_manager_ptr_t, void*)

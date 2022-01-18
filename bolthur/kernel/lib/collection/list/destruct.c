@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <collection/list.h>
+#include "../../stdlib.h"
+#include "../list.h"
 
 /**
  * @brief Method to destruct list

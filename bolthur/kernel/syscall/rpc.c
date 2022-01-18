@@ -17,18 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
 #include <inttypes.h>
 #include <unistd.h>
-#include <syscall.h>
 #include <errno.h>
-#include <rpc/data.h>
-#include <rpc/generic.h>
-#include <task/process.h>
-#include <task/thread.h>
+#include "../lib/stdlib.h"
+#include "../lib/string.h"
+#include "../syscall.h"
+#include "../rpc/data.h"
+#include "../rpc/generic.h"
+#include "../task/process.h"
+#include "../task/thread.h"
 #if defined( PRINT_SYSCALL )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
 
 /**

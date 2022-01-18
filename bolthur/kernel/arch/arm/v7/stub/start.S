@@ -19,9 +19,9 @@
 
 #define ASSEMBLER_FILE 1
 
-#include <assembly.h>
-#include <arch/arm/v7/cpu.h>
-#include <arch/arm/stack.h>
+#include "../../../../assembly.h"
+#include "../cpu.h"
+#include "../../stack.h"
 
 .section .text
 

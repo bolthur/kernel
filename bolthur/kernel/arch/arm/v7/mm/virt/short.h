@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mm/virt.h>
-#include <arch/arm/mm/virt/short.h>
+#include "../../../../../mm/virt.h"
+#include "../../../mm/virt/short.h"
 
 #if ! defined( _ARCH_ARM_V7_MM_VIRT_SHORT_H )
 #define _ARCH_ARM_V7_MM_VIRT_SHORT_H

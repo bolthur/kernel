@@ -19,7 +19,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
+#include "../../string.h"
 
 /**
  * @brief Locate character in memory
@@ -29,7 +29,7 @@
  * @param n
  * @return void*
  */
-void* memchr( const void* buf, int32_t c, size_t n ) {
+void* memchr( const void* buf, int c, size_t n ) {
   uint8_t* current = ( uint8_t* )buf;
   uint8_t* end = current + n;
 

@@ -22,8 +22,8 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include <collection/avl.h>
-#include <entry.h>
+#include "../lib/collection/avl.h"
+#include "../entry.h"
 
 #if defined( ELF32 )
   #define HEAP_START 0xD0000000

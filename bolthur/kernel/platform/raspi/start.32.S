@@ -18,9 +18,9 @@
  */
 
 #define ASSEMBLER_FILE 1
-#include <arch/arm/v7/cpu.h>
-#include <assembly.h>
-#include <entry.h>
+#include "../../arch/arm/v7/cpu.h"
+#include "../../assembly.h"
+#include "../../entry.h"
 
 // forward declaration for save of parameter
 IMPORT( firmware_info )

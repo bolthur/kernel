@@ -18,7 +18,7 @@
  */
 
 #include <stdint.h>
-#include <cpu.h>
+#include "cpu.h"
 
 /**
  * @brief Get CPU num from data populated within early boot

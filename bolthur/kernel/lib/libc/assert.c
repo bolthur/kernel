@@ -19,10 +19,10 @@
 
 #include <inttypes.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <panic.h>
+#include "../stdio.h"
+#include "../stdlib.h"
+#include "../assert.h"
+#include "../../panic.h"
 
 /**
  * @brief Assert functionality
@@ -38,10 +38,8 @@ noreturn void __assert(
 ) {
   // panic init
   panic_init();
-
   // print assertion failed
   printf( "ASSERTION-FAILED( %s ) at %s:%"PRIu32"\r\n", desc, file, line );
-
   // abort further execution
   abort();
 }

@@ -18,7 +18,7 @@
  */
 
 #include <limits.h>
-#include <stdio.h>
+#include "../../stdio.h"
 
 /**
  * @brief Simple printf for kernel

@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <yield.h>
+#include "../../yield.h"
 
 /**
  * @brief Yield processor abstraction

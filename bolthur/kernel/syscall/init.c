@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <interrupt.h>
-#include <syscall.h>
-#include <mm/virt.h>
-#include <task/process.h>
-#include <task/thread.h>
+#include "../interrupt.h"
+#include "../syscall.h"
+#include "../mm/virt.h"
+#include "../task/process.h"
+#include "../task/thread.h"
 
 /**
  * @fn bool syscall_init(void)

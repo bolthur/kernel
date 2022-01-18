@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <collection/avl.h>
+#include "../avl.h"
 
 /**
  * @brief method to prepare some node

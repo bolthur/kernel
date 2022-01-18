@@ -18,11 +18,10 @@
  */
 
 #include <stdbool.h>
-#include <elf.h>
-#include <elf.h>
-#include <entry.h>
+#include "../../elf.h"
+#include "../../entry.h"
 #if defined ( PRINT_ELF )
-  #include <debug/debug.h>
+  #include "../../debug/debug.h"
 #endif
 
 /**

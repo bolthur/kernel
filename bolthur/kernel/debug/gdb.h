@@ -22,8 +22,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <collection/list.h>
-#include <event.h>
+#include "../lib/collection/list.h"
+#include "../event.h"
 
 /**
  * @brief Max buffer size

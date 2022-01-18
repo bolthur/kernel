@@ -19,30 +19,30 @@
 
 #include <errno.h>
 #include <inttypes.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <tar.h>
-#include <duplicate.h>
-#include <interrupt.h>
-#include <elf.h>
-#include <panic.h>
-#include <initrd.h>
-#include <event.h>
-#include <mm/phys.h>
-#include <mm/virt.h>
-#include <mm/shared.h>
+#include "../lib/assert.h"
+#include "../lib/stdlib.h"
+#include "../lib/string.h"
+#include "../lib/stdio.h"
+#include "../lib/tar.h"
+#include "../lib/duplicate.h"
+#include "../interrupt.h"
+#include "../elf.h"
+#include "../panic.h"
+#include "../initrd.h"
+#include "../event.h"
+#include "../mm/phys.h"
+#include "../mm/virt.h"
+#include "../mm/shared.h"
 #if defined( PRINT_PROCESS )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
-#include <task/queue.h>
-#include <task/process.h>
-#include <task/thread.h>
-#include <task/stack.h>
-#include <rpc/data.h>
-#include <rpc/queue.h>
-#include <rpc/generic.h>
+#include "queue.h"
+#include "process.h"
+#include "thread.h"
+#include "stack.h"
+#include "../rpc/data.h"
+#include "../rpc/queue.h"
+#include "../rpc/generic.h"
 
 /**
  * @brief Process management structure

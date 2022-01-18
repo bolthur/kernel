@@ -20,18 +20,18 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include <assert.h>
+#include "../lib/assert.h"
 #if defined( PRINT_MM_VIRT )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
-#include <panic.h>
-#include <entry.h>
-#include <initrd.h>
-#include <firmware.h>
-#include <cache.h>
-#include <mm/phys.h>
-#include <mm/virt.h>
-#include <mm/heap.h>
+#include "../panic.h"
+#include "../entry.h"
+#include "../initrd.h"
+#include "../firmware.h"
+#include "../cache.h"
+#include "../mm/phys.h"
+#include "../mm/virt.h"
+#include "../mm/heap.h"
 
 /**
  * @brief static initialized flag

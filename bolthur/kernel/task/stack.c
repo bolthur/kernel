@@ -17,13 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <stdlib.h>
+#include "../lib/string.h"
+#include "../lib/stdlib.h"
 #if defined( PRINT_PROCESS )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
-#include <task/stack.h>
-#include <task/process.h>
+#include "stack.h"
+#include "process.h"
 
 /**
  * @brief Stack management structure

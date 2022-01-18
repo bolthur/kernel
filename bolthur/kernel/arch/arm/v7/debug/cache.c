@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/debug/cache.h>
+#include "../../debug/cache.h"
 
 /**
  * @fn void debug_cache_invalidate_instruction_cache(void)

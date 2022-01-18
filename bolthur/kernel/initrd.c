@@ -19,9 +19,8 @@
 
 #include <stdint.h>
 #include <stddef.h>
-
-#include <tar.h>
-#include <initrd.h>
+#include "lib/tar.h"
+#include "initrd.h"
 
 /**
  * @brief internal initrd load address

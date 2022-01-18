@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <collection/list.h>
+#include "../list.h"
 
 /**
  * @brief Method to push node with data into list

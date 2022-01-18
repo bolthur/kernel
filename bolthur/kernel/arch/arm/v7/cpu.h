@@ -59,7 +59,7 @@
 
 #if ! defined( ASSEMBLER_FILE )
   #include <stdint.h>
-  #include <debug/debug.h>
+  #include "../../../debug/debug.h"
 
   /**
    * @brief CPU register context

@@ -18,16 +18,16 @@
  */
 
 #include <stddef.h>
-#include <string.h>
-#include <stdlib.h>
+#include "../../../lib/string.h"
+#include "../../../lib/stdlib.h"
 #if defined( PRINT_MM_PHYS )
-  #include <debug/debug.h>
+  #include "../../../debug/debug.h"
 #endif
-#include <entry.h>
-#include <mm/phys.h>
-#include <platform/raspi/peripheral.h>
-#include <platform/raspi/mailbox/mailbox.h>
-#include <platform/raspi/mailbox/property.h>
+#include "../../../entry.h"
+#include "../../../mm/phys.h"
+#include "../peripheral.h"
+#include "../mailbox/mailbox.h"
+#include "../mailbox/property.h"
 
 /**
  * @fn bool phys_platform_init(void)

@@ -18,16 +18,15 @@
  */
 
 #include <stddef.h>
-
-#include <assert.h>
+#include "../../../lib/assert.h"
 #if defined( PRINT_MM_VIRT )
-  #include <debug/debug.h>
+  #include "../../../debug/debug.h"
 #endif
-#include <entry.h>
-#include <platform/raspi/peripheral.h>
-#include <platform/raspi/mailbox/property.h>
-#include <mm/phys.h>
-#include <mm/virt.h>
+#include "../../../entry.h"
+#include "../peripheral.h"
+#include "../mailbox/property.h"
+#include "../../../mm/phys.h"
+#include "../../../mm/virt.h"
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
 #if defined( BCM2836 ) || defined( BCM2837 )

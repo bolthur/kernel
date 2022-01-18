@@ -18,21 +18,21 @@
  */
 
 #include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <panic.h>
-#include <arch/arm/stack.h>
-#include <mm/phys.h>
-#include <mm/virt.h>
-#include <syscall.h>
+#include "../../../../lib/stdlib.h"
+#include "../../../../lib/string.h"
+#include "../../../../panic.h"
+#include "../../stack.h"
+#include "../../../../mm/phys.h"
+#include "../../../../mm/virt.h"
+#include "../../../../syscall.h"
 #if defined( PRINT_PROCESS )
-  #include <debug/debug.h>
+  #include "../../../../debug/debug.h"
 #endif
-#include <task/queue.h>
-#include <task/process.h>
-#include <task/thread.h>
-#include <task/stack.h>
-#include <arch/arm/v7/cpu.h>
+#include "../../../../task/queue.h"
+#include "../../../../task/process.h"
+#include "../../../../task/thread.h"
+#include "../../../../task/stack.h"
+#include "../cpu.h"
 
 /**
  * @brief Method to create thread structure

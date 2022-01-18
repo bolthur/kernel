@@ -20,14 +20,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <collection/list.h>
-#include <panic.h>
+#include "lib/stdlib.h"
+#include "lib/string.h"
+#include "lib/collection/list.h"
+#include "panic.h"
 #if defined( PRINT_EVENT )
-  #include <debug/debug.h>
+  #include "debug/debug.h"
 #endif
-#include <event.h>
+#include "event.h"
 
 /**
  * @brief event manager structure

@@ -21,10 +21,10 @@
 #define _TASK_QUEUE_H
 
 #include <stddef.h>
-#include <collection/avl.h>
-#include <collection/list.h>
-#include <task/thread.h>
-#include <task/process.h>
+#include "../lib/collection/avl.h"
+#include "../lib/collection/list.h"
+#include "thread.h"
+#include "process.h"
 
 struct task_priority_queue {
   avl_node_t node;

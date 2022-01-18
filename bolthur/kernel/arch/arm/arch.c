@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch.h>
+#include "../../arch.h"
 
 /**
  * @fn void arch_init(void)

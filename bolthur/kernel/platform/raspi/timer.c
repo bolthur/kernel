@@ -19,17 +19,17 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <platform/raspi/timer.h>
-#include <platform/raspi/gpio.h>
-#include <platform/raspi/peripheral.h>
-#include <platform/raspi/mailbox/property.h>
+#include "timer.h"
+#include "gpio.h"
+#include "peripheral.h"
+#include "mailbox/property.h"
 #if defined( PRINT_TIMER )
-  #include <debug/debug.h>
+  #include "../../debug/debug.h"
 #endif
-#include <event.h>
-#include <io.h>
-#include <timer.h>
-#include <interrupt.h>
+#include "../../event.h"
+#include "../../io.h"
+#include "../../timer.h"
+#include "../../interrupt.h"
 
 size_t timer_tick_count;
 

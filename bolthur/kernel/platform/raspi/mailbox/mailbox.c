@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <platform/raspi/mailbox/mailbox.h>
-#include <platform/raspi/peripheral.h>
+#include "mailbox.h"
+#include "../peripheral.h"
 
 /**
  * @brief Function for reading mailbox

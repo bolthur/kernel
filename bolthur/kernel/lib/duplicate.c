@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <duplicate.h>
-#include <string.h>
-#include <stdlib.h>
-#include <mm/virt.h>
+#include "duplicate.h"
+#include "string.h"
+#include "stdlib.h"
+#include "../mm/virt.h"
 
 /**
  * @fn char duplicate**(const char**)

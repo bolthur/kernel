@@ -18,7 +18,7 @@
  */
 
 #include <stddef.h>
-#include <string.h>
+#include "../../string.h"
 
 /**
  * @brief Copy src into destination

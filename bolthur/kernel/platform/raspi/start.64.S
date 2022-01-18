@@ -18,7 +18,7 @@
  */
 
 #define ASSEMBLER_FILE 1
-#include <assembly.h>
+#include "../../assembly.h"
 
 .section .text
 

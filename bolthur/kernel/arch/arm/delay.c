@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <arch/arm/delay.h>
+#include "delay.h"
 
 /**
  * @brief Delay given amount of cpu cycles

@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <collection/avl.h>
+#include "../../stdlib.h"
+#include "../avl.h"
 
 /**
  * @brief Helper to destroy created tree

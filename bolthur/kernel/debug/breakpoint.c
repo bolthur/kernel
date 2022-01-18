@@ -18,13 +18,13 @@
  */
 
 #include <stdbool.h>
-#include <string.h>
-#include <stdlib.h>
-#include <debug/gdb.h>
-#include <debug/breakpoint.h>
-#include <debug/string.h>
-#include <debug/barrier.h>
-#include <debug/cache.h>
+#include "../lib/stdlib.h"
+#include "../lib/string.h"
+#include "gdb.h"
+#include "breakpoint.h"
+#include "string.h"
+#include "barrier.h"
+#include "cache.h"
 
 /**
  * @brief debug breakpoint manager

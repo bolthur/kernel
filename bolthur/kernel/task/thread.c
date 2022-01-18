@@ -17,16 +17,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
+#include "../lib/stdlib.h"
+#include "../lib/string.h"
 #if defined( PRINT_PROCESS )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
-#include <event.h>
-#include <task/queue.h>
-#include <task/thread.h>
-#include <task/stack.h>
-#include <mm/virt.h>
+#include "../event.h"
+#include "queue.h"
+#include "thread.h"
+#include "stack.h"
+#include "../mm/virt.h"
 
 /**
  * @brief Current running thread

@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
-#include <syscall.h>
-#include <interrupt.h>
-#include <arch/arm/v7/cpu.h>
+#include "../../../lib/assert.h"
+#include "../../../syscall.h"
+#include "../../../interrupt.h"
+#include "cpu.h"
 
 /**
  * @fn void syscall_populate_success(void*, size_t)

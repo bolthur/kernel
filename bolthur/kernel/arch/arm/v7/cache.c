@@ -19,9 +19,9 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <cache.h>
-#include <arch/arm/cache.h>
-#include <interrupt.h>
+#include "../../../cache.h"
+#include "../cache.h"
+#include "../../../interrupt.h"
 
 /**
  * @brief Internal flag for cache is enabled

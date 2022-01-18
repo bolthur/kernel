@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <collection/list.h>
-#include <stdio.h>
+#include "../list.h"
+#include "../../stdio.h"
 
 /**
  * @brief Method to print list

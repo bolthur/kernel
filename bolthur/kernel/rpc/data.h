@@ -18,9 +18,9 @@
  */
 
 #include <stdbool.h>
-#include <collection/list.h>
-#include <task/process.h>
-#include <task/thread.h>
+#include "../lib/collection/list.h"
+#include "../task/process.h"
+#include "../task/thread.h"
 
 #if ! defined( _RPC_DATA_H )
 #define _RPC_DATA_H

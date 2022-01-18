@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <ubsan.h>
-#include <stdlib.h>
-#include <panic.h>
+#include "stdio.h"
+#include "ubsan.h"
+#include "stdlib.h"
+#include "../panic.h"
 
 #define is_aligned( value, alignment ) !( value & ( alignment - 1 ) )
 

@@ -17,9 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <collection/avl.h>
+#include "../../stdlib.h"
+#include "../../string.h"
+#include "../avl.h"
 
 /**
  * @brief Default lookup if not passed during creation

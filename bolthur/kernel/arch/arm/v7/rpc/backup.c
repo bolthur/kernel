@@ -17,18 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <arch/arm/v7/cpu.h>
-#include <arch/arm/barrier.h>
-#include <mm/phys.h>
-#include <mm/virt.h>
-#include <rpc/backup.h>
-#include <rpc/data.h>
-#include <arch/arm/cache.h>
-#include <panic.h>
+#include "../../../../lib/stdlib.h"
+#include "../../../../lib/string.h"
+#include "../cpu.h"
+#include "../../barrier.h"
+#include "../../../../mm/phys.h"
+#include "../../../../mm/virt.h"
+#include "../../../../rpc/backup.h"
+#include "../../../../rpc/data.h"
+#include "../../cache.h"
+#include "../../../../panic.h"
 #if defined( PRINT_RPC )
-  #include <debug/debug.h>
+  #include "../../../../debug/debug.h"
 #endif
 
 /**

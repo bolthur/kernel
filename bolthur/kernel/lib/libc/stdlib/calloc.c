@@ -18,9 +18,8 @@
  */
 
 #include <stddef.h>
-
-#include <stdlib.h>
-#include <string.h>
+#include "../../stdlib.h"
+#include "../../string.h"
 
 /**
  * @brief continuous allocation

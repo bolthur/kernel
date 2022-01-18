@@ -19,9 +19,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
-#include <panic.h>
-#include <mm/virt.h>
+#include "../../string.h"
+#include "../../../panic.h"
+#include "../../../mm/virt.h"
 
 #define U64_BLOCK_SIZE sizeof( uint64_t )
 #define UNALIGNED(a, b) ((( uintptr_t )a & ( U64_BLOCK_SIZE - 1 )) | (( uintptr_t )b & ( U64_BLOCK_SIZE - 1 )))

@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <tar.h>
+#include "../tar.h"
 
 /**
  * @brief Method to get next element within tar file

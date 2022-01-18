@@ -19,18 +19,17 @@
 
 #include <errno.h>
 #include <inttypes.h>
-#include <string.h>
-#include <stdlib.h>
-#include <syscall.h>
-#include <event.h>
-#include <task/process.h>
-#include <task/stack.h>
-#include <task/thread.h>
-#include <mm/shared.h>
-#include <arch/arm/barrier.h>
-#include <elf.h>
+#include "../lib/string.h"
+#include "../lib/stdlib.h"
+#include "../syscall.h"
+#include "../event.h"
+#include "../task/process.h"
+#include "../task/stack.h"
+#include "../task/thread.h"
+#include "../mm/shared.h"
+#include "../elf.h"
 #if defined( PRINT_SYSCALL )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
 
 /**

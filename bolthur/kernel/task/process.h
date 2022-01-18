@@ -20,11 +20,11 @@
 #include <stddef.h>
 #include <stdnoreturn.h>
 #include <unistd.h>
-#include <collection/avl.h>
-#include <collection/list.h>
-#include <mm/virt.h>
-#include <event.h>
-#include <task/state.h>
+#include "../lib/collection/avl.h"
+#include "../lib/collection/list.h"
+#include "../mm/virt.h"
+#include "../event.h"
+#include "state.h"
 
 #if ! defined( _TASK_PROCESS_H )
 #define _TASK_PROCESS_H

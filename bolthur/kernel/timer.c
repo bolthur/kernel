@@ -17,17 +17,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <timer.h>
-#include <collection/list.h>
-#include <rpc/backup.h>
-#include <rpc/generic.h>
-#include <debug/debug.h>
-#include <panic.h>
+#include "lib/stdlib.h"
+#include "lib/string.h"
+#include "lib/assert.h"
+#include "timer.h"
+#include "lib/collection/list.h"
+#include "rpc/backup.h"
+#include "rpc/generic.h"
+#include "debug/debug.h"
+#include "panic.h"
 #if defined( PRINT_TIMER )
-  #include <debug/debug.h>
+  #include "debug/debug.h"
 #endif
 
 list_manager_ptr_t timer_list;

@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <interrupt.h>
+#include "../../stdlib.h"
+#include "../../../interrupt.h"
 
 /**
  * @brief Abort routine

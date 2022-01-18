@@ -19,7 +19,7 @@
 
 #include <limits.h>
 #include <stdarg.h>
-#include <stdio.h>
+#include "../../stdio.h"
 
 /**
  * @brief Simple sprintf for kernel

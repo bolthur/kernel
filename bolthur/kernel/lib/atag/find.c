@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <atag.h>
+#include "../atag.h"
 
 /**
  * @brief Small helper to get atag if existing

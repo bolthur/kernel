@@ -20,16 +20,16 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <inttypes.h>
-#include <assert.h>
-#include <string.h>
-#include <collection/avl.h>
+#include "../lib/assert.h"
+#include "../lib/string.h"
+#include "../lib/collection/avl.h"
 #if defined( PRINT_MM_HEAP )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
-#include <mm/phys.h>
-#include <mm/virt.h>
-#include <mm/heap.h>
-#include <panic.h>
+#include "../mm/phys.h"
+#include "../mm/virt.h"
+#include "../mm/heap.h"
+#include "../panic.h"
 
 /**
  * @brief Kernel heap

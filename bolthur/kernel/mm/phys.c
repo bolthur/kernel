@@ -20,13 +20,13 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include <assert.h>
+#include "../lib/assert.h"
 #if defined( PRINT_MM_PHYS )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
-#include <entry.h>
-#include <initrd.h>
-#include <mm/phys.h>
+#include "../entry.h"
+#include "../initrd.h"
+#include "../mm/phys.h"
 
 /**
  * @brief Physical bitmap

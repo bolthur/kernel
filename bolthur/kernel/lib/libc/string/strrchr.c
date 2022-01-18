@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
+#include "../../string.h"
 
 /**
  * @brief get string part starting with delimiter

@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <task/lock.h>
-#include <yield.h>
+#include "lock.h"
+#include "../yield.h"
 
 /**
  * @brief release lock

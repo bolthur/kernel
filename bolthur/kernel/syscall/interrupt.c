@@ -19,12 +19,12 @@
 
 #include <inttypes.h>
 #include <errno.h>
-#include <task/process.h>
-#include <task/thread.h>
-#include <interrupt.h>
-#include <syscall.h>
+#include "../task/process.h"
+#include "../task/thread.h"
+#include "../interrupt.h"
+#include "../syscall.h"
 #if defined( PRINT_SYSCALL )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
 
 /**

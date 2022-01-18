@@ -18,29 +18,28 @@
  */
 
 #include <stdint.h>
-#include <string.h>
 #include <stdnoreturn.h>
-
-#include <stdio.h>
-#include <arch.h>
-#include <elf.h>
-#include <tty.h>
-#include <interrupt.h>
-#include <timer.h>
-#include <debug/debug.h>
-#include <mm/phys.h>
-#include <mm/virt.h>
-#include <mm/heap.h>
-#include <mm/shared.h>
-#include <event.h>
-#include <task/process.h>
-#include <syscall.h>
+#include "lib/string.h"
+#include "lib/stdio.h"
+#include "lib/tar.h"
+#include "arch.h"
+#include "elf.h"
+#include "tty.h"
+#include "interrupt.h"
+#include "timer.h"
+#include "debug/debug.h"
+#include "mm/phys.h"
+#include "mm/virt.h"
+#include "mm/heap.h"
+#include "mm/shared.h"
+#include "event.h"
+#include "task/process.h"
+#include "syscall.h"
 #if defined( REMOTE_DEBUG )
-  #include <serial.h>
-  #include <debug/gdb.h>
+  #include "serial.h"
+  #include "debug/gdb.h"
 #endif
-#include <tar.h>
-#include <initrd.h>
+#include "initrd.h"
 
 // prototype declaration to get rid of a warning
 void kernel_main( void );

@@ -22,10 +22,10 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-#include <collection/list.h>
-#include <collection/avl.h>
-#include <task/process.h>
-#include <task/thread.h>
+#include "../lib/collection/list.h"
+#include "../lib/collection/avl.h"
+#include "../task/process.h"
+#include "../task/thread.h"
 
 struct shared_memory_entry {
   avl_node_t node;

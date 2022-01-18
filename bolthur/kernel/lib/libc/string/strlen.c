@@ -19,10 +19,10 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <string.h>
-#include <mm/phys.h>
-#include <mm/virt.h>
-#include <debug/debug.h>
+#include "../../string.h"
+#include "../../../mm/phys.h"
+#include "../../../mm/virt.h"
+#include "../../../debug/debug.h"
 
 #define U64_BLOCK_SIZE sizeof( uint64_t )
 #define BUFFER_UNALIGNED(val) ( ( uintptr_t )val & ( U64_BLOCK_SIZE - 1 ) )

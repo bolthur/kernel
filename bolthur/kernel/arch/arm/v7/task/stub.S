@@ -18,9 +18,9 @@
  */
 
 #define ASSEMBLER_FILE 1
-#include <assembly.h>
-#include <arch/arm/v7/cpu.h>
-#include <arch/arm/v7/interrupt/handler.S>
+#include "../../../../assembly.h"
+#include "../cpu.h"
+#include "../interrupt/handler.S"
 
 EXPORT( task_thread_switch_to )
 task_thread_switch_to:

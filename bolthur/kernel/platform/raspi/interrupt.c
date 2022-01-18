@@ -20,12 +20,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <io.h>
-#include <interrupt.h>
-#include <panic.h>
-#include <platform/raspi/gpio.h>
-#include <platform/raspi/peripheral.h>
-#include <debug/debug.h>
+#include "../../io.h"
+#include "../../interrupt.h"
+#include "../../panic.h"
+#include "gpio.h"
+#include "peripheral.h"
+#include "../../debug/debug.h"
 
 /**
  * @brief Helper to validate interrupt number

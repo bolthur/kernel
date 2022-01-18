@@ -18,8 +18,8 @@
  */
 
 #include <stdint.h>
-#include <stdlib.h>
-#include <mm/heap.h>
+#include "../../stdlib.h"
+#include "../../../mm/heap.h"
 
 /**
  * @brief Free allocated area
