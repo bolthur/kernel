@@ -20,7 +20,6 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
-#include "../libhelper.h"
 #include "../libterminal.h"
 #include "../libhelper.h"
 #include "../libconsole.h"

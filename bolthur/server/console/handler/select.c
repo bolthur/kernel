@@ -22,7 +22,6 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../../libconsole.h"
-#include "../../libhelper.h"
 #include "../handler.h"
 #include "../console.h"
 

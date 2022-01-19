@@ -193,7 +193,7 @@ void timer_handle_callback( void ) {
       ( timer_callback_entry_ptr_t )current->data;
     // debug output
     #if defined( PRINT_TIMER )
-      DEBUG_OUTPUT( "tick = %d, entry->expire = %d\r\n", tick, entry->expire )
+      DEBUG_OUTPUT( "tick = %zu, entry->expire = %zu\r\n", tick, entry->expire )
     #endif
     // break if tick is smaller than expire
     if ( entry->expire > tick ) {
@@ -201,7 +201,7 @@ void timer_handle_callback( void ) {
     }
     // debug output
     #if defined( PRINT_TIMER )
-      DEBUG_OUTPUT( "rpc = %d, thread = %p, thread->process = %p\r\n",
+      DEBUG_OUTPUT( "rpc = %zu, thread = %p, thread->process = %p\r\n",
         entry->rpc,
         entry->thread,
         entry->thread->process

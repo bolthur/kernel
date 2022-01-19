@@ -22,7 +22,6 @@
 #include "collection/list.h"
 #include "vfs.h"
 #include "util.h"
-#include "../libhelper.h"
 
 static vfs_node_ptr_t root;
 

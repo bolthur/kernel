@@ -307,16 +307,16 @@ raspi_property_t* property_get( raspi_mailbox_tag_t tag ) {
   static raspi_property_t property;
   int32_t* tag_buffer = NULL;
   // Get the tag from the buffer and start with first available tag position
-  int32_t index = 2;
+  int32_t selected_index = 2;
   int32_t size = property_buffer[ PT_OSIZE ] >> 2;
-  while ( index < size ) {
+  while ( selected_index < size ) {
     // test tag
-    if ( property_buffer[ index ] == ( int32_t )tag ) {
-      tag_buffer = &property_buffer[ index ];
+    if ( property_buffer[ selected_index ] == ( int32_t )tag ) {
+      tag_buffer = &property_buffer[ selected_index ];
       break;
     }
     // progress with next tag if we haven't yet discovered the wanted tag
-    index += ( property_buffer[ index + 1 ] >> 2 ) + 3;
+    selected_index += ( property_buffer[ selected_index + 1 ] >> 2 ) + 3;
   }
   // nothing found, return NULL
   if ( ! tag_buffer ) {

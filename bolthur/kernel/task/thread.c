@@ -246,7 +246,7 @@ task_thread_ptr_t task_thread_next( void ) {
     if ( ! current_node ) {
       // debug output
       #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "no queue for prio %u\r\n", priority );
+        DEBUG_OUTPUT( "no queue for prio %zu\r\n", priority );
       #endif
       // prevent endless loop by checking against 0
       if ( 0 == priority ) {
@@ -489,7 +489,7 @@ void task_thread_unblock(
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT(
-        "invalid data ptr attribute %#x / %#x\r\n",
+        "invalid data ptr attribute %#p / %#p\r\n",
         thread->state_data.data_ptr,
         necessary_data.data_ptr
       )

@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <sys/bolthur.h>
 #include "list.h"
-#include "../../libhelper.h"
 
 /**
  * @brief Default lookup if not passed during creation

@@ -159,9 +159,7 @@ bool phys_platform_init( void ) {
  * @return
  */
 bool phys_free_check_only( uint64_t address ) {
-  uint64_t start_gpio = PERIPHERAL_GPIO_BASE;
-  uint64_t end_gpio = start_gpio + PERIPHERAL_GPIO_SIZE + 1;
-  uint64_t address_end = address + PAGE_SIZE - 1;
-  return ( start_gpio >= address && end_gpio <= address )
-    || ( start_gpio >= address_end && end_gpio <= address_end );
+  return
+    PERIPHERAL_GPIO_BASE <= address
+    && address < ( PERIPHERAL_GPIO_BASE + PERIPHERAL_GPIO_SIZE + 1 );
 }

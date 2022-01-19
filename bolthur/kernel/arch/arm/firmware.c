@@ -86,7 +86,6 @@ bool firmware_init( uintptr_t virtual_start ) {
     uintptr_t end = start + fdt32_to_cpu(
       ( ( struct fdt_header* )atag_fdt )->totalsize
     );
-    atag_fdt -= offset;
     uintptr_t virtual = virtual_start;
     // map until end of dtb
     while ( start < end ) {

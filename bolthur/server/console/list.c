@@ -20,7 +20,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/bolthur.h>
-#include "../libhelper.h"
 #include "list.h"
 
 /**

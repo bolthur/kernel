@@ -25,7 +25,6 @@
 #include "../collection/avl.h"
 #include "../vfs.h"
 #include "handler.h"
-#include "../../libhelper.h"
 
 static avl_tree_ptr_t ioctl_tree = NULL;
 
@@ -176,23 +175,23 @@ ioctl_container_ptr_t ioctl_lookup_command(
     ioctl_tree,
     ( void* )process
   );
-  ioctl_tree_entry_ptr_t entry = NULL;
-  // handle existing tree
-  if ( found ) {
-    // get entry
-    entry = IOCTL_HANDLER_GET_ENTRY( found );
-    // lookup command
-    found = avl_find_by_data(
-      entry->tree,
-      ( void* )command
-    );
-    // handle existing
-    if ( found ) {
-      // return found entry
-      return IOCTL_HANDLER_GET_CONTAINER( found );
-    }
+  // handle nothing found
+  if ( ! found ) {
+    return NULL;
   }
-  return NULL;
+  // get entry
+  ioctl_tree_entry_ptr_t entry = IOCTL_HANDLER_GET_ENTRY( found );
+  // lookup command
+  found = avl_find_by_data(
+    entry->tree,
+    ( void* )command
+  );
+  // handle nothing found
+  if ( ! found ) {
+    return NULL;
+  }
+  // return found entry
+  return IOCTL_HANDLER_GET_CONTAINER( found );
 }
 
 /**

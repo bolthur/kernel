@@ -26,7 +26,6 @@
 #include "../vfs.h"
 #include "../file/handle.h"
 #include "../ioctl/handler.h"
-#include "../../libhelper.h"
 
 /**
  * @fn void rpc_handle_add(size_t, pid_t, size_t, size_t)
@@ -152,10 +151,10 @@ void rpc_handle_add(
     sizeof( vfs_add_request_t ) < data_size
     && S_ISCHR( request->info.st_mode )
   ) {
-    size_t index_max = ( data_size - sizeof( vfs_add_request_t ) ) / sizeof( size_t );
-    for ( size_t index = 0; index < index_max; index++ ) {
+    size_t idx_max = ( data_size - sizeof( vfs_add_request_t ) ) / sizeof( size_t );
+    for ( size_t idx = 0; idx < idx_max; idx++ ) {
       while ( true ) {
-        if ( ! ioctl_push_command( request->device_info[ index ], origin ) ) {
+        if ( ! ioctl_push_command( request->device_info[ idx ], origin ) ) {
           continue;
         }
         break;

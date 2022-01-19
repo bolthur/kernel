@@ -26,7 +26,6 @@
 #include "../rpc.h"
 #include "../vfs.h"
 #include "../file/handle.h"
-#include "../../libhelper.h"
 
 /**
  * @fn void rpc_handle_read_async(size_t, pid_t, size_t, size_t)

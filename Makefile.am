@@ -24,7 +24,6 @@ cppcheck:
 		--project=$(CPPCHECK_SERVER_PROJECT) \
 		--suppressions-list=$(CPPCHECK_SUPPRESS) \
 		-U__CYGWIN__ -U__APPLE__ -v
-# FIXME: MOVE __INTPTR_TYPE__ DEFINE INTO MACRO PER HOST
 
 ramdisk:
 	cd $(ROOT_DIR)/tool && nim compile --run ramdisk.nim \

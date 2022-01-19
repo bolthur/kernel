@@ -32,7 +32,6 @@
 #include "main.h"
 #include "../libterminal.h"
 #include "../libframebuffer.h"
-#include "../libhelper.h"
 
 framebuffer_resolution_t resolution_data;
 

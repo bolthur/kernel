@@ -22,9 +22,7 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include <fcntl.h>
-#include "../../libhelper.h"
 #include "../../libterminal.h"
-#include "../../libhelper.h"
 #include "../../libconsole.h"
 #include "../rpc.h"
 #include "../handler.h"

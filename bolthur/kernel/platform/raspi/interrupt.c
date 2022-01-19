@@ -58,26 +58,26 @@ void interrupt_mask_specific( int8_t num ) {
   // get peripheral base
   uintptr_t base = peripheral_base_get( PERIPHERAL_GPIO );
   // get interrupt enable and pending
-  uintptr_t interrupt_enable = base;
+  uintptr_t interrupt_to_enable = base;
   uintptr_t interrupt_pending = base;
   if ( 32 > interrupt ) {
-    interrupt_enable += INTERRUPT_ENABLE_IRQ_1;
+    interrupt_to_enable += INTERRUPT_ENABLE_IRQ_1;
     interrupt_pending += INTERRUPT_IRQ_PENDING_1;
   } else if ( 64 > interrupt ) {
-    interrupt_enable += INTERRUPT_ENABLE_IRQ_2;
+    interrupt_to_enable += INTERRUPT_ENABLE_IRQ_2;
     interrupt_pending += INTERRUPT_IRQ_PENDING_2;
   } else {
     PANIC( "Unsupported interrupt number!" )
   }
   // get and set interrupt enable
-  uint32_t interrupt_line = io_in32( interrupt_enable );
+  uint32_t interrupt_line = io_in32( interrupt_to_enable );
   // stop if already set
   if ( interrupt_line & interrupt ) {
     return;
   }
   interrupt_line |= interrupt;
   // write changes
-  io_out32( interrupt_enable, interrupt_line );
+  io_out32( interrupt_to_enable, interrupt_line );
   // get and clear pending interrupt from memory
   interrupt_line = io_in32( interrupt_pending );
   interrupt_line &= ~interrupt;
@@ -96,26 +96,26 @@ void interrupt_unmask_specific( int8_t num ) {
   // get peripheral base
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // get interrupt enable and pending
-  uint32_t interrupt_enable = base;
+  uint32_t interrupt_to_disable = base;
   uint32_t interrupt_pending = base;
   if ( 32 > interrupt ) {
-    interrupt_enable += INTERRUPT_ENABLE_IRQ_1;
+    interrupt_to_disable += INTERRUPT_ENABLE_IRQ_1;
     interrupt_pending += INTERRUPT_IRQ_PENDING_1;
   } else if ( 64 > interrupt ) {
-    interrupt_enable += INTERRUPT_ENABLE_IRQ_2;
+    interrupt_to_disable += INTERRUPT_ENABLE_IRQ_2;
     interrupt_pending += INTERRUPT_IRQ_PENDING_2;
   } else {
     PANIC( "Unsupported interrupt number!" )
   }
   // get and clear interrupt enable
-  uint32_t interrupt_line = io_in32( interrupt_enable );
+  uint32_t interrupt_line = io_in32( interrupt_to_disable );
   // stop if already set
   if ( interrupt_line & ~interrupt ) {
     return;
   }
   interrupt_line &= ~interrupt;
   // write changes
-  io_out32( interrupt_enable, interrupt_line );
+  io_out32( interrupt_to_disable, interrupt_line );
   // get and clear pending interrupt from memory
   interrupt_line = io_in32( interrupt_pending );
   interrupt_line &= ~interrupt;
