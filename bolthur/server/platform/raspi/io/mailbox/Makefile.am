@@ -1,5 +1,5 @@
 
-AM_CFLAGS = -DPROGRAM_NAME=\"mailbox\"
+AM_CFLAGS = -DPROGRAM_NAME=\"io/mailbox\"
 
 bin_PROGRAMS = mailbox
 mailbox_SOURCES = \

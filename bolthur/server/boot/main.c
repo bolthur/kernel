@@ -350,12 +350,12 @@ static pid_t execute_driver( char* name ) {
 static void stage2( void ) {
   // start mailbox server
   EARLY_STARTUP_PRINT( "Starting and waiting for mailbox server...\r\n" )
-  pid_t mailbox = execute_driver( "/ramdisk/server/mailbox" );
+  pid_t mailbox = execute_driver( "/ramdisk/server/io/mailbox" );
   wait_for_device( "/dev/mailbox" );
 
   // start mmio server
   EARLY_STARTUP_PRINT( "Starting and waiting for mmio server...\r\n" )
-  pid_t mmio = execute_driver( "/ramdisk/server/mmio" );
+  pid_t mmio = execute_driver( "/ramdisk/server/io/mmio" );
   wait_for_device( "/dev/mmio" );
 
   // start framebuffer driver and wait for device to come up
@@ -567,7 +567,7 @@ int main( int argc, char* argv[] ) {
   //ramdisk_dump( disk );
   // get vfs image
   size_t vfs_size;
-  void* vfs_image = ramdisk_lookup_file( disk, "ramdisk/server/vfs", &vfs_size );
+  void* vfs_image = ramdisk_lookup_file( disk, "ramdisk/server/fs/vfs", &vfs_size );
   if ( ! vfs_image ) {
     EARLY_STARTUP_PRINT( "VFS not found for start!\r\n" );
     return -1;
@@ -596,15 +596,15 @@ int main( int argc, char* argv[] ) {
       return -1;
     }
   }
-  // enable rpc
-  _rpc_set_ready( true );
   // handle unexpected vfs id returned
   if ( VFS_DAEMON_ID != forked_process ) {
     EARLY_STARTUP_PRINT( "Invalid process id for vfs daemon!\r\n" )
     return -1;
   }
-  EARLY_STARTUP_PRINT( "Continuing with startup by sending ramdisk!\r\n" )
+  // enable rpc and wait for process to be ready
+  _rpc_set_ready( true );
   _rpc_wait_for_ready( forked_process );
+  EARLY_STARTUP_PRINT( "Continuing with startup by sending ramdisk!\r\n" )
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
   // reset read offset
   ramdisk_read_offset = 0;

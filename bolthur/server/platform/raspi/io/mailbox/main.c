@@ -21,9 +21,15 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <errno.h>
+#include <sys/mman.h>
 #include <sys/bolthur.h>
 #include <inttypes.h>
-#include "../../../libhelper.h"
+#include "property.h"
+#include "mailbox.h"
+#include "rpc.h"
+#include "../../libmailbox.h"
+#include "../../../../libhelper.h"
 
 /**
  * @fn int main(int, char*[])
@@ -34,19 +40,41 @@
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
+  EARLY_STARTUP_PRINT( "Setup mailboxes\r\n" )
+  // setup mailbox stuff
+  if ( ! mailbox_setup() ) {
+    EARLY_STARTUP_PRINT( "Error while setting up mailbox: %s\r\n", strerror( errno ) )
+    return -1;
+  }
+  EARLY_STARTUP_PRINT( "Setup property stuff\r\n" )
+  // setup property stuff
+  if ( ! property_setup() ) {
+    EARLY_STARTUP_PRINT( "Error while setting up property\r\n" )
+    return -1;
+  }
+  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
+  // register handlers
+  if ( ! rpc_register() ) {
+    EARLY_STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
+    return -1;
+  }
+
   EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
+  // calculate add message size
+  size_t msg_size = sizeof( vfs_add_request_t ) + 1 * sizeof( size_t );
   // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
+  vfs_add_request_ptr_t msg = malloc( msg_size );
   if ( ! msg ) {
     return -1;
   }
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
+  // clear memory and prepare message structure
+  memset( msg, 0, msg_size );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/mmio", PATH_MAX - 1 );
+  strncpy( msg->file_path, "/dev/mailbox", PATH_MAX - 1 );
+  msg->device_info[ 0 ] = MAILBOX_REQUEST;
   // perform add request
-  send_vfs_add_request( msg, 0, 0 );
+  send_vfs_add_request( msg, msg_size, 0 );
   // free again
   free( msg );
 

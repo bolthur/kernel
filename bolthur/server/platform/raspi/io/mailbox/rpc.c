@@ -23,7 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "rpc.h"
-#include "../libmailbox.h"
+#include "../../libmailbox.h"
 
 struct mailbox_rpc command_list[] = {
   {

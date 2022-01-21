@@ -25,7 +25,7 @@
 #include "../mailbox.h"
 #include "../property.h"
 #include "../rpc.h"
-#include "../../libmailbox.h"
+#include "../../../libmailbox.h"
 
 /**
  * @fn void rpc_handle_request(size_t, pid_t, size_t, size_t)

@@ -5,7 +5,8 @@ bin_PROGRAMS = boot
 boot_LDADD = \
   -lz \
   -ltar \
-  -lfdt
+  -lfdt \
+  -lconfini
 boot_SOURCES = \
   main.c \
   ramdisk.c

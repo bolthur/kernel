@@ -1,5 +1,5 @@
 
-AM_CFLAGS = -DPROGRAM_NAME=\"vfs\"
+AM_CFLAGS = -DPROGRAM_NAME=\"fs/vfs\"
 
 bin_PROGRAMS = vfs
 vfs_SOURCES = \
