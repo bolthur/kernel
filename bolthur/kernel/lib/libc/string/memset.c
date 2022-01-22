@@ -19,7 +19,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
+#include "../../string.h"
 
 #define U64_BLOCK_SIZE sizeof( uint64_t )
 #define BUFFER_UNALIGNED(val) (( uintptr_t )val & ( U64_BLOCK_SIZE - 1 ))

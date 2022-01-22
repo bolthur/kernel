@@ -17,9 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <arch/arm/v7/cpu.h>
-#include <debug/disasm.h>
+#include "../../../../lib/string.h"
+#include "../cpu.h"
+#include "../../../../debug/disasm.h"
 
 /**
  * @brief Get next address for stepping

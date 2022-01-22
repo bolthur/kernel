@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <debug/cache.h>
-#include <arch/arm/debug/cache.h>
+#include "../../../debug/cache.h"
+#include "cache.h"
 
 /**
  * @fn void debug_cache_finish_operation(void)

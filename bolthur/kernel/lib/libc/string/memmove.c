@@ -19,7 +19,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <string.h>
+#include "../../string.h"
 
 /**
  * @brief Move Memory from src to destination with length

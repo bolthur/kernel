@@ -17,16 +17,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
+#include "../lib/stdlib.h"
+#include "../lib/string.h"
 #if defined( PRINT_PROCESS )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
-#include <event.h>
-#include <task/queue.h>
-#include <task/thread.h>
-#include <task/stack.h>
-#include <mm/virt.h>
+#include "../event.h"
+#include "queue.h"
+#include "thread.h"
+#include "stack.h"
+#include "../mm/virt.h"
 
 /**
  * @brief Current running thread
@@ -246,7 +246,7 @@ task_thread_ptr_t task_thread_next( void ) {
     if ( ! current_node ) {
       // debug output
       #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "no queue for prio %u\r\n", priority );
+        DEBUG_OUTPUT( "no queue for prio %zu\r\n", priority );
       #endif
       // prevent endless loop by checking against 0
       if ( 0 == priority ) {
@@ -489,7 +489,7 @@ void task_thread_unblock(
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT(
-        "invalid data ptr attribute %#x / %#x\r\n",
+        "invalid data ptr attribute %#p / %#p\r\n",
         thread->state_data.data_ptr,
         necessary_data.data_ptr
       )

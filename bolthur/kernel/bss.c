@@ -19,8 +19,8 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <bss.h>
-#include <entry.h>
+#include "bss.h"
+#include "entry.h"
 
 #if defined( ELF32 )
   #define BLOCK_TYPE uint32_t

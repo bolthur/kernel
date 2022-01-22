@@ -19,12 +19,12 @@
 
 #include <inttypes.h>
 #include <stdbool.h>
-#include <string.h>
-#include <elf.h>
-#include <mm/phys.h>
-#include <entry.h>
+#include "lib/string.h"
+#include "elf.h"
+#include "mm/phys.h"
+#include "entry.h"
 #if defined( PRINT_ELF )
-  #include <debug/debug.h>
+  #include "debug/debug.h"
 #endif
 
 /**

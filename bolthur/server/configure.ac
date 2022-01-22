@@ -145,13 +145,21 @@ AC_CONFIG_FILES([
   Makefile
   boot/Makefile
   console/Makefile
+  fs/Makefile
+  fs/dev/Makefile
+  fs/ext4/Makefile
+  fs/fat32/Makefile
+  fs/vfs/Makefile
   platform/Makefile
   platform/raspi/Makefile
   platform/raspi/framebuffer/Makefile
-  platform/raspi/mailbox/Makefile
-  platform/raspi/mmio/Makefile
+  platform/raspi/io/Makefile
+  platform/raspi/random/Makefile
+  platform/raspi/io/mailbox/Makefile
+  platform/raspi/io/mmio/Makefile
+  platform/raspi/storage/Makefile
+  platform/raspi/storage/sdcard/Makefile
   terminal/Makefile
-  vfs/Makefile
 ])
 # FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO
 

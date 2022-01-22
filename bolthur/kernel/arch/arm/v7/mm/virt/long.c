@@ -19,17 +19,17 @@
 
 #include <stddef.h>
 #include <inttypes.h>
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <entry.h>
-#include <mm/phys.h>
+#include "../../../../../lib/string.h"
+#include "../../../../../lib/stdlib.h"
+#include "../../../../../lib/assert.h"
+#include "../../../../../entry.h"
+#include "../../../../../mm/phys.h"
 #if defined( PRINT_MM_VIRT )
-  #include <debug/debug.h>
+  #include "../../../../../debug/debug.h"
 #endif
-#include <arch/arm/barrier.h>
-#include <arch/arm/cache.h>
-#include <arch/arm/v7/mm/virt/long.h>
+#include "../../../barrier.h"
+#include "../../../cache.h"
+#include "long.h"
 
 /**
  * @brief Temporary space start for long descriptor format

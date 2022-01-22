@@ -136,7 +136,7 @@ bool terminal_init( void ) {
     bolthur_rpc_bind( out, output_handle_out );
     if ( errno ) {
       EARLY_STARTUP_PRINT(
-        "Unable to bind rpc %d: %s\r\n",
+        "Unable to bind rpc %zu: %s\r\n",
         out,
         strerror( errno )
       )
@@ -150,7 +150,7 @@ bool terminal_init( void ) {
     bolthur_rpc_bind( err, output_handle_err );
     if ( errno ) {
       EARLY_STARTUP_PRINT(
-        "Unable to bind rpc %d: %s\r\n",
+        "Unable to bind rpc %zu: %s\r\n",
         err,
         strerror( errno )
       )
@@ -164,7 +164,7 @@ bool terminal_init( void ) {
     bolthur_rpc_bind( in, output_handle_in );
     if ( errno ) {
       EARLY_STARTUP_PRINT(
-        "Unable to bind rpc %d: %s\r\n",
+        "Unable to bind rpc %zu: %s\r\n",
         in,
         strerror( errno )
       )

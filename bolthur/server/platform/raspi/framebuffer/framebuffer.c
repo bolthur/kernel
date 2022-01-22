@@ -30,7 +30,6 @@
 #include "framebuffer.h"
 #include "../libmailbox.h"
 #include "../../../libframebuffer.h"
-#include "../../../libhelper.h"
 
 uint32_t physical_width;
 uint32_t physical_height;
@@ -115,8 +114,6 @@ bool framebuffer_init( void ) {
     physical_width = FRAMEBUFFER_SCREEN_WIDTH;
     physical_height = FRAMEBUFFER_SCREEN_HEIGHT;
   }
-  physical_width = FRAMEBUFFER_SCREEN_WIDTH;
-  physical_height = FRAMEBUFFER_SCREEN_HEIGHT;
   EARLY_STARTUP_PRINT(
     "Using resolution %ldx%ld\r\n",
     physical_width,

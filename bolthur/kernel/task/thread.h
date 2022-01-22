@@ -20,10 +20,10 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdnoreturn.h>
-#include <collection/avl.h>
 #include <unistd.h>
-#include <event.h>
-#include <task/state.h>
+#include "../lib/collection/avl.h"
+#include "../event.h"
+#include "state.h"
 
 #if ! defined( _TASK_THREAD_H )
 #define _TASK_THREAD_H

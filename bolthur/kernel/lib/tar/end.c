@@ -18,7 +18,7 @@
  */
 
 #include <stdint.h>
-#include <tar.h>
+#include "../tar.h"
 
 /**
  * @brief Check for tar end is reached

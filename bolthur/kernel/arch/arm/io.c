@@ -18,8 +18,8 @@
  */
 
 #include <stdint.h>
-#include <arch/arm/barrier.h>
-#include <io.h>
+#include "barrier.h"
+#include "../../io.h"
 
 /**
  * @brief Read 8 bit from memory mapped I/O

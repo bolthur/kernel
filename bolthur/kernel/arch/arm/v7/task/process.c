@@ -18,23 +18,24 @@
  */
 
 #include <stdbool.h>
-#include <collection/avl.h>
-#include <assert.h>
-#include <string.h>
-#include <mm/phys.h>
-#include <mm/virt.h>
-#include <arch/arm/mm/virt.h>
-#include <arch.h>
-#include <timer.h>
-#include <task/queue.h>
-#include <task/process.h>
+#include "../../../../lib/collection/avl.h"
+#include "../../../../lib/assert.h"
+#include "../../../../lib/string.h"
+#include "../../../../mm/phys.h"
+#include "../../../../mm/virt.h"
+#include "../../mm/virt.h"
+#include "../../../../arch.h"
+#include "../../../../timer.h"
+#include "../../../../task/queue.h"
+#include "../../../../task/process.h"
 #if defined( PRINT_PROCESS )
-  #include <debug/debug.h>
+  #include "../../../../debug/debug.h"
 #endif
-#include <interrupt.h>
-#include <arch/arm/stack.h>
-#include <arch/arm/v7/cpu.h>
-#include <arch/arm/firmware.h>
+#include "../../../../interrupt.h"
+#include "../../stack.h"
+#include "../cpu.h"
+#include "../../firmware.h"
+#include <libfdt.h>
 
 /**
  * @fn void task_process_start(void)
@@ -260,15 +261,6 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     #endif
   }
 }
-
-// disable some warnings temporarily
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-// include fdt library
-#include <libfdt.h>
-// enable again
-#pragma GCC diagnostic pop
 
 /**
  * @brief prepare init process by mapping device tree

@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <interrupt.h>
-#include <arch/arm/interrupt/vector.h>
+#include "../../interrupt.h"
+#include "interrupt/vector.h"
 
 /**
  * @brief Initialize interrupt requests

@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
-#include <arch/arm/v7/debug/debug.h>
-#include <arch/arm/v7/interrupt/vector.h>
-#include <event.h>
-#include <interrupt.h>
-#include <panic.h>
+#include "../../../../../lib/assert.h"
+  #include "../../debug/debug.h"
+#include "../vector.h"
+#include "../../../../../event.h"
+#include "../../../../../interrupt.h"
+#include "../../../../../panic.h"
 
 /**
  * @brief Nested counter for interrupt exception handler

@@ -20,7 +20,7 @@
 #if ! defined( _DEBUG_DEBUG_H )
 #define _DEBUG_DEBUG_H
 
-#include <stdio.h>
+#include "../lib/stdio.h"
 
 /**
  * @brief Debug output define

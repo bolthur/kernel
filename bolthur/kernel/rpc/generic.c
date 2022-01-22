@@ -17,17 +17,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <stdlib.h>
 #include <inttypes.h>
 #include <errno.h>
-#include <rpc/backup.h>
-#include <rpc/data.h>
-#include <rpc/queue.h>
-#include <rpc/generic.h>
-#include <panic.h>
+#include "../lib/string.h"
+#include "../lib/stdlib.h"
+#include "backup.h"
+#include "data.h"
+#include "queue.h"
+#include "generic.h"
+#include "../panic.h"
 #if defined( PRINT_RPC )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
 
 /**

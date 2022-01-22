@@ -18,16 +18,16 @@
  */
 
 #include <stddef.h>
-#include <string.h>
-#include <stdlib.h>
+#include "../../../lib/string.h"
+#include "../../../lib/stdlib.h"
 #if defined( PRINT_MM_PHYS )
-  #include <debug/debug.h>
+  #include "../../../debug/debug.h"
 #endif
-#include <entry.h>
-#include <mm/phys.h>
-#include <platform/raspi/peripheral.h>
-#include <platform/raspi/mailbox/mailbox.h>
-#include <platform/raspi/mailbox/property.h>
+#include "../../../entry.h"
+#include "../../../mm/phys.h"
+#include "../peripheral.h"
+#include "../mailbox/mailbox.h"
+#include "../mailbox/property.h"
 
 /**
  * @fn bool phys_platform_init(void)
@@ -159,9 +159,7 @@ bool phys_platform_init( void ) {
  * @return
  */
 bool phys_free_check_only( uint64_t address ) {
-  uint64_t start_gpio = PERIPHERAL_GPIO_BASE;
-  uint64_t end_gpio = start_gpio + PERIPHERAL_GPIO_SIZE + 1;
-  uint64_t address_end = address + PAGE_SIZE - 1;
-  return ( start_gpio >= address && end_gpio <= address )
-    || ( start_gpio >= address_end && end_gpio <= address_end );
+  return
+    PERIPHERAL_GPIO_BASE <= address
+    && address < ( PERIPHERAL_GPIO_BASE + PERIPHERAL_GPIO_SIZE + 1 );
 }

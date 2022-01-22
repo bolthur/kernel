@@ -29,7 +29,6 @@
 #include "psf.h"
 #include "main.h"
 #include "../libframebuffer.h"
-#include "../libhelper.h"
 
 /**
  * @fn void render_char_to_surface(uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t)

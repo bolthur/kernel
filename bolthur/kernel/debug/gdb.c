@@ -18,14 +18,14 @@
  */
 
 #include <stdbool.h>
-#include <string.h>
-#include <event.h>
-#include <serial.h>
-#include <interrupt.h>
-#include <debug/debug.h>
-#include <debug/string.h>
-#include <debug/gdb.h>
-#include <debug/breakpoint.h>
+#include "../lib/string.h"
+#include "../event.h"
+#include "../serial.h"
+#include "../interrupt.h"
+#include "debug.h"
+#include "string.h"
+#include "gdb.h"
+#include "breakpoint.h"
 
 /**
  * @brief stub initialized flag

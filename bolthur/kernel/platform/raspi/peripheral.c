@@ -19,8 +19,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-
-#include <platform/raspi/peripheral.h>
+#include "peripheral.h"
 
 // initial setup of peripheral base
 uintptr_t gpio_peripheral_base = PERIPHERAL_GPIO_BASE;

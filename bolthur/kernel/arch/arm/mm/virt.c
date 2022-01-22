@@ -17,15 +17,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
+#include "../../../lib/assert.h"
 #if defined( PRINT_MM_VIRT )
-  #include <debug/debug.h>
+  #include "../../../debug/debug.h"
 #endif
-#include <entry.h>
-#include <panic.h>
-#include <mm/phys.h>
-#include <mm/virt.h>
-#include <arch/arm/mm/virt.h>
+#include "../../../entry.h"
+#include "../../../panic.h"
+#include "../../../mm/phys.h"
+#include "../../../mm/virt.h"
+#include "virt.h"
 
 /**
  * @brief Supported mode

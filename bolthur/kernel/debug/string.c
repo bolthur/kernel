@@ -19,7 +19,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
-#include <debug/string.h>
+#include "string.h"
 
 /**
  * @brief Duplicate of memory copy function used during remote debugging

@@ -17,17 +17,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <timer.h>
-#include <collection/list.h>
-#include <rpc/backup.h>
-#include <rpc/generic.h>
-#include <debug/debug.h>
-#include <panic.h>
+#include "lib/stdlib.h"
+#include "lib/string.h"
+#include "lib/assert.h"
+#include "timer.h"
+#include "lib/collection/list.h"
+#include "rpc/backup.h"
+#include "rpc/generic.h"
+#include "debug/debug.h"
+#include "panic.h"
 #if defined( PRINT_TIMER )
-  #include <debug/debug.h>
+  #include "debug/debug.h"
 #endif
 
 list_manager_ptr_t timer_list;
@@ -193,7 +193,7 @@ void timer_handle_callback( void ) {
       ( timer_callback_entry_ptr_t )current->data;
     // debug output
     #if defined( PRINT_TIMER )
-      DEBUG_OUTPUT( "tick = %d, entry->expire = %d\r\n", tick, entry->expire )
+      DEBUG_OUTPUT( "tick = %zu, entry->expire = %zu\r\n", tick, entry->expire )
     #endif
     // break if tick is smaller than expire
     if ( entry->expire > tick ) {
@@ -201,7 +201,7 @@ void timer_handle_callback( void ) {
     }
     // debug output
     #if defined( PRINT_TIMER )
-      DEBUG_OUTPUT( "rpc = %d, thread = %p, thread->process = %p\r\n",
+      DEBUG_OUTPUT( "rpc = %zu, thread = %p, thread->process = %p\r\n",
         entry->rpc,
         entry->thread,
         entry->thread->process

@@ -18,14 +18,14 @@
  */
 
 #include <stddef.h>
-#include <string.h>
-#include <stdlib.h>
-#include <collection/avl.h>
-#include <mm/heap.h>
-#include <rpc/generic.h>
-#include <interrupt.h>
+#include "lib/string.h"
+#include "lib/stdlib.h"
+#include "lib/collection/avl.h"
+#include "mm/heap.h"
+#include "rpc/generic.h"
+#include "interrupt.h"
 #if defined( PRINT_EVENT )
-  #include <debug/debug.h>
+  #include "debug/debug.h"
 #endif
 
 /**

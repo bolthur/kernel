@@ -19,10 +19,10 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <string.h>
-#include <mm/phys.h>
-#include <mm/virt.h>
-#include <debug/debug.h>
+#include "../../string.h"
+#include "../../../mm/phys.h"
+#include "../../../mm/virt.h"
+#include "../../../debug/debug.h"
 
 #define U64_BLOCK_SIZE sizeof( uint64_t )
 #define BUFFER_UNALIGNED(val) ( ( uintptr_t )val & ( U64_BLOCK_SIZE - 1 ) )
@@ -56,7 +56,7 @@ size_t strlen( const char* str ) {
     aligned++;
   }
   // update str
-  str = ( const char* )str;
+  str = ( const char* )aligned;
   while ( *str ) {
     str++;
   }
@@ -72,14 +72,15 @@ size_t strlen( const char* str ) {
  * @return
  */
 size_t strlen_unsafe( const char* str ) {
-  size_t len = 0;
-  const char* start = str;
-  // handle null
+  // handle null / invalid address
   if ( ! str ) {
-    return len;
+    return 0;
   }
+  // variables
   uintptr_t last_check = ROUND_DOWN_TO_FULL_PAGE( str );
   const char* next_check = ( const char* )( last_check + PAGE_SIZE );
+  const char* start = str;
+  // loop until end is reached or some memory is not mapped
   do {
     // check page size
     if ( ! virt_is_mapped_range( last_check, PAGE_SIZE ) ) {
@@ -102,17 +103,19 @@ size_t strlen_unsafe( const char* str ) {
     }
     // use 64bit for checks
     uint64_t* aligned = ( uint64_t* )str;
-    while ( ! DETECT_NULL_ENDING( *aligned ) && str < next_check ) {
+    uint64_t* aligned_end = ( uint64_t* )next_check;
+    while ( ! DETECT_NULL_ENDING( *aligned ) && aligned < aligned_end ) {
       aligned++;
     }
+    // update str
+    str = ( const char* )aligned;
     // handle page boundary reached
     if ( str == next_check ) {
       last_check = ( uintptr_t )next_check;
       next_check = ( const char* )( last_check + PAGE_SIZE );
       continue;
     }
-    // update str
-    str = ( const char* )str;
+    // continue unaligned check
     while ( *str && str < next_check ) {
       str++;
     }

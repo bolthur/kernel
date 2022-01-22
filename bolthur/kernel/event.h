@@ -21,9 +21,9 @@
 #define _EVENT_H
 
 #include <stdbool.h>
-#include <collection/list.h>
-#include <collection/avl.h>
-#include <stack.h>
+#include "lib/collection/list.h"
+#include "lib/collection/avl.h"
+#include "stack.h"
 
 #define EVENT_DETERMINE_ORIGIN( o ) \
   ( ! o || ! stack_is_kernel( ( uintptr_t )o ) ) \

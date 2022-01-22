@@ -372,8 +372,6 @@ AC_CONFIG_FILES([
   platform/raspi/Makefile
   target/Makefile
   target/raspi/Makefile
-  thirdparty/Makefile
-  thirdparty/dtc/libfdt/Makefile
 ])
 
 AC_OUTPUT

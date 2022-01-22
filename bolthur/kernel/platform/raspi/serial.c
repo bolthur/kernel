@@ -20,18 +20,17 @@
 #include <stdbool.h>
 #include <limits.h>
 
-#include <arch/arm/delay.h>
+#include "../../arch/arm/delay.h"
+#include "peripheral.h"
+#include "gpio.h"
+#include "mailbox/property.h"
 
-#include <platform/raspi/peripheral.h>
-#include <platform/raspi/gpio.h>
-#include <platform/raspi/mailbox/property.h>
-
-#include <io.h>
-#include <serial.h>
-#include <interrupt.h>
-#include <event.h>
+#include "../../io.h"
+#include "../../serial.h"
+#include "../../interrupt.h"
+#include "../../event.h"
 #if defined( PRINT_SERIAL )
-  #include <debug/debug.h>
+  #include "../../debug/debug.h"
 #endif
 
 #define MAX_SERIAL_BUFFER 500

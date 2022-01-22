@@ -17,17 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// disable some warnings temporarily
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-
-#include <initrd.h>
-#include <mm/phys.h>
-#include <mm/virt.h>
-#include <arch/arm/firmware.h>
-#include <atag.h>
 #include <libfdt.h>
+#include "../../initrd.h"
+#include "../../mm/phys.h"
+#include "../../mm/virt.h"
+#include "firmware.h"
+#include "../../lib/atag.h"
 
 /**
  * @brief Prepare for initrd usage
@@ -106,6 +101,3 @@ void __bootstrap initrd_startup_init( void ) {
     }
   }
 }
-
-// enable again
-#pragma GCC diagnostic pop

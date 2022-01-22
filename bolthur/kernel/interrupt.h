@@ -20,14 +20,14 @@
 #if ! defined( _INTERRUPT_H )
 #define _INTERRUPT_H
 
-#include <assert.h>
-#include <collection/avl.h>
-#include <collection/list.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <task/thread.h>
-#include <task/process.h>
+#include "lib/assert.h"
+#include "lib/collection/avl.h"
+#include "lib/collection/list.h"
+#include "task/thread.h"
+#include "task/process.h"
 
 #define INTERRUPT_NESTED_MAX 3
 #define INTERRUPT_DETERMINE_CONTEXT( c ) \

@@ -23,7 +23,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-void* memchr( const void*, int32_t, size_t );
+void* memchr( const void*, int, size_t );
 int memcmp( const void*, const void*, size_t );
 void* memcpy( void* restrict, const void* restrict, size_t );
 void* memcpy_unsafe( void* restrict, const void* restrict, size_t );

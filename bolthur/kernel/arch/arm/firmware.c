@@ -17,21 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mm/virt.h>
-#include <mm/phys.h>
-#include <firmware.h>
-#include <arch/arm/firmware.h>
-#include <entry.h>
-#include <atag.h>
-
-// disable some warnings temporarily
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
-#pragma GCC diagnostic ignored "-Wsign-conversion"
-// include fdt library
 #include <libfdt.h>
-// enable again
-#pragma GCC diagnostic pop
+#include "../../mm/virt.h"
+#include "../../mm/phys.h"
+#include "../../firmware.h"
+#include "../../entry.h"
+#include "../../lib/atag.h"
+#include "firmware.h"
 
 /**
  * @fn void firmware_startup_init(void)
@@ -94,7 +86,6 @@ bool firmware_init( uintptr_t virtual_start ) {
     uintptr_t end = start + fdt32_to_cpu(
       ( ( struct fdt_header* )atag_fdt )->totalsize
     );
-    atag_fdt -= offset;
     uintptr_t virtual = virtual_start;
     // map until end of dtb
     while ( start < end ) {

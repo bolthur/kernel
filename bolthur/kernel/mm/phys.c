@@ -20,13 +20,13 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#include <assert.h>
+#include "../lib/assert.h"
 #if defined( PRINT_MM_PHYS )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
-#include <entry.h>
-#include <initrd.h>
-#include <mm/phys.h>
+#include "../entry.h"
+#include "../initrd.h"
+#include "../mm/phys.h"
 
 /**
  * @brief Physical bitmap
@@ -336,7 +336,7 @@ bool phys_is_range_used( uint64_t address, size_t len ) {
     // debug output
     #if defined( PRINT_MM_PHYS )
       DEBUG_OUTPUT(
-        "index = %lld, offset = %lld, frame = %#016llx, address = %#016llx, end = %#016llx\r\n",
+        "index = %llu, offset = %llu, frame = %#016llx, address = %#016llx, end = %#016llx\r\n",
         index, offset, frame, address, end
       )
     #endif

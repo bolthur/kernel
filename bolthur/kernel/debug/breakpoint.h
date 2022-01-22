@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <collection/list.h>
+#include "../lib/collection/list.h"
 
 struct debug_breakpoint_entry {
   uintptr_t address;

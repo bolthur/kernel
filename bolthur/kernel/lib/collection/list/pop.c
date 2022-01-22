@@ -18,7 +18,7 @@
  */
 
 #include <stddef.h>
-#include <collection/list.h>
+#include "../list.h"
 
 /**
  * @brief Method to pop element from list

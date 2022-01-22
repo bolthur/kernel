@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <tar.h>
+#include "../tar.h"
 
 /**
  * @brief Method to get total size of tar

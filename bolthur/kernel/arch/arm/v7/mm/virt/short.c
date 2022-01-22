@@ -19,20 +19,20 @@
 
 #include <inttypes.h>
 #include <stddef.h>
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
-#include <panic.h>
-#include <entry.h>
+#include "../../../../../lib/string.h"
+#include "../../../../../lib/stdlib.h"
+#include "../../../../../lib/assert.h"
+#include "../../../../../panic.h"
+#include "../../../../../entry.h"
 #if defined( PRINT_MM_VIRT )
-  #include <debug/debug.h>
+  #include "../../../../../debug/debug.h"
 #endif
-#include <arch/arm/barrier.h>
-#include <arch/arm/cache.h>
-#include <mm/phys.h>
-#include <arch/arm/mm/virt/short.h>
-#include <arch/arm/v7/mm/virt/short.h>
-#include <mm/virt.h>
+#include "../../../barrier.h"
+#include "../../../cache.h"
+#include "../../../../../mm/phys.h"
+#include "../../../mm/virt/short.h"
+#include "short.h"
+#include "../../../../../mm/virt.h"
 
 /**
  * @brief Temporary space start for short format

@@ -18,7 +18,7 @@
  */
 
 #include <stddef.h>
-#include <task/thread.h>
+#include "task/thread.h"
 
 #if ! defined( _TIMER_H )
 #define _TIMER_H

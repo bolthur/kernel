@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
+#include "../lib/stdlib.h"
+#include "../lib/string.h"
 #if defined( PRINT_PROCESS )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
-#include <task/queue.h>
+#include "queue.h"
 
 /**
  * @brief Compare id callback necessary for avl tree

@@ -20,9 +20,9 @@
 #if ! defined( _ARCH_ARM_V7_INTERRUPT_VECTOR_H )
 #define _ARCH_ARM_V7_INTERRUPT_VECTOR_H
 
-#include <assert.h>
-#include <stack.h>
-#include <arch/arm/v7/cpu.h>
+#include "../../../../lib/assert.h"
+#include "../../../../stack.h"
+#include "../cpu.h"
 
 void interrupt_vector_table( void );
 void interrupt_ensure_kernel_stack( void );

@@ -18,8 +18,8 @@
  */
 
 #include <stdint.h>
-#include <string.h>
-#include <tar.h>
+#include "../string.h"
+#include "../tar.h"
 
 /**
  * @brief Lookup for specific tar file

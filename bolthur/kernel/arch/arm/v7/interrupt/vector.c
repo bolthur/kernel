@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <interrupt.h>
-#include <event.h>
-#include <arch/arm/interrupt/vector.h>
-#include <arch/arm/v7/interrupt/vector.h>
+#include "../../../../interrupt.h"
+#include "../../../../event.h"
+#include "../../interrupt/vector.h"
+#include "vector.h"
 
 /**
  * @brief Method to initialize interrupt vector table

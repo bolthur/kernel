@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <ssp.h>
 #include <inttypes.h>
-#include <panic.h>
+#include "ssp.h"
+#include "../panic.h"
 
 #if defined( PRINT_SSP )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
   #if defined( ARCH_ARM_V7 ) || defined( ARCH_ARM_V6 )
     #define DUMP_SSP_ORIGIN { \
         uintptr_t lr; \

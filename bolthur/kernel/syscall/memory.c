@@ -19,15 +19,15 @@
 
 #include <inttypes.h>
 #include <errno.h>
-#include <syscall.h>
+#include "../syscall.h"
 #if defined( PRINT_SYSCALL )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
-#include <mm/phys.h>
-#include <mm/virt.h>
-#include <mm/shared.h>
-#include <task/process.h>
-#include <task/thread.h>
+#include "../mm/phys.h"
+#include "../mm/virt.h"
+#include "../mm/shared.h"
+#include "../task/process.h"
+#include "../task/thread.h"
 
 #define MEMORY_ACQUIRE_PROTECTION_NONE 0x0
 #define MEMORY_ACQUIRE_PROTECTION_READ 0x1

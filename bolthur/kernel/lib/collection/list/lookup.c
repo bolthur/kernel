@@ -18,7 +18,7 @@
  */
 
 #include <stddef.h>
-#include <collection/list.h>
+#include "../list.h"
 
 /**
  * @brief Default lookup if not passed during creation

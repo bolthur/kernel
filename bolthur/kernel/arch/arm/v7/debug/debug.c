@@ -20,9 +20,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #if defined( PRINT_EXCEPTION )
-  #include <debug/debug.h>
+  #include "../../../../debug/debug.h"
 #endif
-#include <arch/arm/v7/debug/debug.h>
+#include "debug.h"
 
 /**
  * @brief Helper to check dfsr for debug exception

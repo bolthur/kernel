@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <task/stack.h>
-#include <arch/arm/stack.h>
+#include "../../../../task/stack.h"
+#include "../../stack.h"
 
 #if defined( ELF32 )
   #define THREAD_STACK_START_ADDRESS 0x00001000

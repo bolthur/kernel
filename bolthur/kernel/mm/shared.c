@@ -17,18 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <collection/list.h>
-#include <collection/avl.h>
-#include <string.h>
-#include <task/process.h>
-#include <mm/phys.h>
-#include <mm/shared.h>
-#if defined( PRINT_MM_SHARED )
-#include <debug/debug.h>
-#endif
-
 #include <inttypes.h>
+
+#include "../lib/stdlib.h"
+#include "../lib/collection/list.h"
+#include "../lib/collection/avl.h"
+#include "../lib/string.h"
+#include "../task/process.h"
+#include "../mm/phys.h"
+#include "../mm/shared.h"
+#if defined( PRINT_MM_SHARED )
+  #include "../debug/debug.h"
+#endif
 
 /**
  * @brief Tree of shared memory items

@@ -17,18 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <string.h>
 #include <inttypes.h>
 #include <unistd.h>
-#include <syscall.h>
 #include <errno.h>
-#include <rpc/data.h>
-#include <rpc/generic.h>
-#include <task/process.h>
-#include <task/thread.h>
+#include "../lib/stdlib.h"
+#include "../lib/string.h"
+#include "../syscall.h"
+#include "../rpc/data.h"
+#include "../rpc/generic.h"
+#include "../task/process.h"
+#include "../task/thread.h"
 #if defined( PRINT_SYSCALL )
-  #include <debug/debug.h>
+  #include "../debug/debug.h"
 #endif
 
 /**
@@ -65,12 +65,12 @@ void syscall_rpc_raise( void* context ) {
   pid_t process = ( pid_t )syscall_get_parameter( context, 1 );
   void* data = ( void* )syscall_get_parameter( context, 2 );
   size_t length = syscall_get_parameter( context, 3 );
-  bool sync = ( bool )syscall_get_parameter( context, 4 );
+  bool synchronous = ( bool )syscall_get_parameter( context, 4 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "syscall_rpc_raise( %d, %d, %#p, %#x, %d )\r\n",
-      type, process, data, length, sync ? 1 : 0 )
+      type, process, data, length, synchronous ? 1 : 0 )
   #endif
   // create queue if not existing
   if ( ! rpc_generic_setup( task_thread_current_thread->process ) ) {
@@ -147,7 +147,7 @@ void syscall_rpc_raise( void* context ) {
     dup_data,
     length,
     NULL,
-    sync,
+    synchronous,
     0
   );
   // free duplicate again
@@ -163,8 +163,8 @@ void syscall_rpc_raise( void* context ) {
     syscall_populate_error( context, ( size_t )-ENOMEM );
     return;
   }
-  // block source thread if sync
-  if ( sync && task_thread_current_thread != rpc->thread ) {
+  // block source thread if synchronous
+  if ( synchronous && task_thread_current_thread != rpc->thread ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
@@ -183,7 +183,7 @@ void syscall_rpc_raise( void* context ) {
     // enqueue schedule
     event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
   // return data id for async request to allow handling in user space
-  } else if ( ! sync ) {
+  } else if ( ! synchronous ) {
     syscall_populate_success( context, rpc->data_id );
   }
 }
@@ -278,7 +278,7 @@ void syscall_rpc_ret( void* context ) {
     blocked_data_id = original_rpc_id;
   }
 
-  // handle sync stuff
+  // handle synchronous stuff
   if ( active->sync ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Sync return!\r\n" )

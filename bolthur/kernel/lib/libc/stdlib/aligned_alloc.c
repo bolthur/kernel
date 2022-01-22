@@ -18,9 +18,8 @@
  */
 
 #include <stddef.h>
-#include <stdlib.h>
-
-#include <mm/heap.h>
+#include "../../stdlib.h"
+#include "../../../mm/heap.h"
 
 /**
  * @brief aligned memory allocation

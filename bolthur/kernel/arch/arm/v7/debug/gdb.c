@@ -19,18 +19,18 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
+#include "../../../../lib/stdlib.h"
+#include "../../../../lib/string.h"
 #include <endian.h>
-#include <panic.h>
-#include <debug/string.h>
-#include <debug/disasm.h>
-#include <debug/gdb.h>
-#include <debug/breakpoint.h>
-#include <mm/virt.h>
-#include <arch/arm/v7/cpu.h>
-#include <arch/arm/barrier.h>
-#include <arch/arm/v7/debug/debug.h>
+#include "../../../../panic.h"
+#include "../../../../debug/string.h"
+#include "../../../../debug/disasm.h"
+#include "../../../../debug/gdb.h"
+#include "../../../../debug/breakpoint.h"
+#include "../../../../mm/virt.h"
+#include "../cpu.h"
+#include "../../barrier.h"
+#include "debug.h"
 
 /**
  * @brief Extra registers not filled

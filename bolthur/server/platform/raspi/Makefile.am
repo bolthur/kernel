@@ -1,2 +1,2 @@
 
-SUBDIRS = framebuffer mailbox mmio
+SUBDIRS = framebuffer io random storage

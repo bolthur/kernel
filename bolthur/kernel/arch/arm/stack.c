@@ -19,8 +19,8 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <arch/arm/stack.h>
-#include <stack.h>
+#include "stack.h"
+#include "../../stack.h"
 
 extern void stack_supervisor_mode( void );
 

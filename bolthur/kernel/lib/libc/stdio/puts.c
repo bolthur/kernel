@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#include "../../stdio.h"
 
 /**
  * @brief Print simple string

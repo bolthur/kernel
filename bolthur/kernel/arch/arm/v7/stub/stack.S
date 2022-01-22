@@ -19,7 +19,7 @@
 
 #define ASSEMBLER_FILE 1
 
-#include <arch/arm/stack.h>
+#include "../../stack.h"
 
 // stacks for other modes not necessary as all we use is supervisor mode
 // reserve areas for stack with 32 bit alignment

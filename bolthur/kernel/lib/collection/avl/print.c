@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <collection/avl.h>
-#include <stdio.h>
+#include "../avl.h"
+#include "../../stdio.h"
 
 /**
  * @brief buffer helper for output

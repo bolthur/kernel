@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <debug/barrier.h>
+#include "../../../../debug/barrier.h"
 
 /**
  * @brief Data memory barrier invalidation

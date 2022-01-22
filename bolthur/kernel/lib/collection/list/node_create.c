@@ -18,9 +18,9 @@
  */
 
 #include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <collection/list.h>
+#include "../../stdlib.h"
+#include "../../string.h"
+#include "../list.h"
 
 /**
  * @brief Helper for creating a list node

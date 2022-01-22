@@ -17,9 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include <stdint.h>
-#include <tty.h>
+#include "../../stdio.h"
+#include "../../../tty.h"
 
 /**
  * @brief Print character at tty

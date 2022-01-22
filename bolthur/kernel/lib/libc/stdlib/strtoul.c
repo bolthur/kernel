@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
-#include <ctype.h>
+#include "../../stdlib.h"
+#include "../../ctype.h"
 
 /**
  * @brief strtoul

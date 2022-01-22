@@ -19,7 +19,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <task/process.h>
+#include "task/process.h"
 
 #if ! defined( _ELF_H )
 #define _ELF_H

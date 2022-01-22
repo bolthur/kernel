@@ -18,7 +18,7 @@
  */
 
 #include <stddef.h>
-#include <string.h>
+#include "../../string.h"
 
 /**
  * @brief Compare two strings until end or max length

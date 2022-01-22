@@ -17,18 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
+#include "../../../../../lib/assert.h"
 #if defined( REMOTE_DEBUG )
-  #include <arch/arm/v7/debug/debug.h>
+  #include "../../debug/debug.h"
 #endif
-#include <arch/arm/v7/interrupt/vector.h>
-#include <arch/arm/mm/virt.h>
-#include <event.h>
-#include <interrupt.h>
-#include <panic.h>
+#include "../vector.h"
+#include "../../../mm/virt.h"
+#include "../../../../../event.h"
+#include "../../../../../interrupt.h"
+#include "../../../../../panic.h"
 // process related stuff
-#include <task/process.h>
-#include <task/thread.h>
+#include "../../../../../task/process.h"
+#include "../../../../../task/thread.h"
 
 /**
  * @brief Nested counter for prefetch abort exception handler
