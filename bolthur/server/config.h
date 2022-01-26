@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( _CONFIG_H )
-#define _CONFIG_H
+#if !defined( _CONFIG_SERVER_H )
+#define _CONFIG_SERVER_H
 
 #if defined( HAVE_CONFIG_H )
   #include <config.h>
