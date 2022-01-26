@@ -153,10 +153,8 @@ AC_CONFIG_FILES([
   platform/Makefile
   platform/raspi/Makefile
   platform/raspi/framebuffer/Makefile
-  platform/raspi/io/Makefile
+  platform/raspi/iomem/Makefile
   platform/raspi/random/Makefile
-  platform/raspi/io/mailbox/Makefile
-  platform/raspi/io/mmio/Makefile
   platform/raspi/storage/Makefile
   platform/raspi/storage/sdcard/Makefile
   terminal/Makefile

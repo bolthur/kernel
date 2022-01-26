@@ -17,20 +17,32 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+#include <stdlib.h>
 #include <stdbool.h>
-#include <stdint.h>
+#include <errno.h>
 #include <sys/bolthur.h>
 
-#if !defined( _RPC_H )
-#define _RPC_H
+#if ! defined( _LIBIOMEM_H )
+#define _LIBIOMEM_H
 
-struct mailbox_rpc {
-  uint32_t command;
-  rpc_handler_t callback;
+#define IOMEM_READ_MEMORY RPC_CUSTOM_START
+#define IOMEM_WRITE_MEMORY IOMEM_READ_MEMORY + 1
+#define IOMEM_MAILBOX IOMEM_WRITE_MEMORY + 1
+
+struct iomem_read_request {
+  uintptr_t offset;
+  size_t len;
 };
-extern struct mailbox_rpc command_list[ 1 ];
+typedef struct iomem_read_request iomem_read_request_t;
+typedef struct iomem_read_request* iomem_read_request_ptr_t;
 
-bool rpc_register( void );
-void rpc_handle_request( size_t, pid_t, size_t, size_t );
+struct iomem_write_request {
+  uintptr_t offset;
+  size_t len;
+  uint32_t data[];
+};
+typedef struct iomem_write_request iomem_write_request_t;
+typedef struct iomem_write_request* iomem_write_request_ptr_t;
 
 #endif

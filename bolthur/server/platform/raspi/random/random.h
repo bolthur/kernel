@@ -17,15 +17,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <stdlib.h>
 #include <stdbool.h>
-#include <errno.h>
+#include <stdint.h>
 #include <sys/bolthur.h>
 
-#if ! defined( _LIBMAILBOX_H )
-#define _LIBMAILBOX_H
+#if !defined( _RANDOM_H )
+#define _RANDOM_H
 
-#define MAILBOX_REQUEST RPC_CUSTOM_START
+extern int iomem_fd;
+
+bool random_setup( void );
+uint32_t random_generate_number( void );
 
 #endif

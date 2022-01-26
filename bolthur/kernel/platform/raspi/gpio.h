@@ -20,11 +20,6 @@
 #if ! defined( _PLATFORM_RASPI_GPIO_H )
 #define _PLATFORM_RASPI_GPIO_H
 
-#if defined( BCM2836 ) || defined( BCM2837 )
-  #define CORE0_TIMER_IRQCNTL 0x40
-  #define CORE0_IRQ_SOURCE 0x60
-#endif
-
 enum {
   GPIO_BASE = 0x00200000,
 

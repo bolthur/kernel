@@ -28,7 +28,7 @@
 #include <sys/mman.h>
 #include <sys/bolthur.h>
 #include "framebuffer.h"
-#include "../libmailbox.h"
+#include "../libiomem.h"
 #include "../../../libframebuffer.h"
 
 uint32_t physical_width;
@@ -43,7 +43,7 @@ uint8_t* current_back;
 uint8_t* front_buffer;
 uint8_t* back_buffer;
 
-int mailbox_fd;
+int iomem_fd;
 
 struct framebuffer_rpc command_list[] = {
   {
@@ -69,15 +69,15 @@ struct framebuffer_rpc command_list[] = {
  */
 bool framebuffer_init( void ) {
   // open mailbox device
-  mailbox_fd = open( "/dev/mailbox", O_RDWR );
-  if ( -1 == mailbox_fd ) {
+  iomem_fd = open( "/dev/iomem", O_RDWR );
+  if ( -1 == iomem_fd ) {
     return false;
   }
   // build request
   size_t request_size = sizeof( int32_t ) * 8;
   int32_t* request = malloc( request_size );
   if ( ! request ) {
-    close( mailbox_fd );
+    close( iomem_fd );
     return false;
   }
   memset( request, 0, request_size );
@@ -92,9 +92,9 @@ bool framebuffer_init( void ) {
   request[ 7 ] = 0; // end tag
   // perform request
   int result = ioctl(
-    mailbox_fd,
+    iomem_fd,
     IOCTL_BUILD_REQUEST(
-      MAILBOX_REQUEST,
+      IOMEM_MAILBOX,
       request_size,
       IOCTL_RDWR
     ),
@@ -102,7 +102,7 @@ bool framebuffer_init( void ) {
   );
   if ( -1 == result ) {
     free( request );
-    close( mailbox_fd );
+    close( iomem_fd );
     return false;
   }
   // set physical width and height from response
@@ -124,7 +124,7 @@ bool framebuffer_init( void ) {
   request_size = sizeof( int32_t ) * 35;
   request = malloc( request_size );
   if ( ! request ) {
-    close( mailbox_fd );
+    close( iomem_fd );
     return false;
   }
   memset( request, 0, request_size );
@@ -175,9 +175,9 @@ bool framebuffer_init( void ) {
   request[ idx++ ] = 0; // end tag
   // perform request
   result = ioctl(
-    mailbox_fd,
+    iomem_fd,
     IOCTL_BUILD_REQUEST(
-      MAILBOX_REQUEST,
+      IOMEM_MAILBOX,
       request_size,
       IOCTL_RDWR
     ),
@@ -185,7 +185,7 @@ bool framebuffer_init( void ) {
   );
   if ( -1 == result ) {
     free( request );
-    close( mailbox_fd );
+    close( iomem_fd );
     return false;
   }
   // save screen information
@@ -222,7 +222,7 @@ bool framebuffer_init( void ) {
     0
   );
   if( MAP_FAILED == tmp ) {
-    close( mailbox_fd );
+    close( iomem_fd );
     return false;
   }
   EARLY_STARTUP_PRINT( "Screen address returned by mmap: %p\r\n", tmp )

@@ -23,9 +23,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define MAILBOX_MEMORY_OFFSET 0xB880
-#define MAILBOX_MAPPED_OFFSET 0x880
-
 #define MAILBOX_FULL 0x80000000
 #define MAILBOX_EMPTY 0x40000000
 #define MAILBOX_ERROR 0xFFFFFFFF
@@ -53,7 +50,7 @@ typedef struct {
   volatile uint32_t write;
 } mailbox_t;
 
-bool mailbox_setup( void );
+void mailbox_setup( void );
 uint32_t mailbox_read( mailbox0_channel_t );
 void mailbox_write( mailbox0_channel_t, uint32_t );
 

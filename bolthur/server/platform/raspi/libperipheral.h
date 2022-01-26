@@ -17,21 +17,26 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <errno.h>
-#include <sys/bolthur.h>
+#if ! defined( _PERIPHERAL_H )
+#define _PERIPHERAL_H
 
-#if ! defined( _LIBTERMINAL_H )
-#define _LIBTERMINAL_H
+// initial setup of peripheral base
+#if defined( BCM2836 ) || defined( BCM2837 )
+  #define PERIPHERAL_BASE 0x3F000000
+  #define PERIPHERAL_SIZE 0xFFFFFF
+#else
+  #define PERIPHERAL_BASE 0x20000000
+  #define PERIPHERAL_SIZE 0xFFFFFF
+#endif
 
-struct terminal_write_request {
-  char data[ MAX_WRITE_LEN ];
-  char terminal[ PATH_MAX ];
-  size_t len;
-};
-typedef struct terminal_write_request terminal_write_request_t;
-typedef struct terminal_write_request* terminal_write_request_ptr_t;
+// mailbox offset
+#define PERIPHERAL_MAILBOX_OFFSET 0xB880
+
+// random number generator
+#define PERIPHERAL_RNG_OFFSET 0x104000
+#define PERIPHERAL_RNG_CONTROL PERIPHERAL_RNG_OFFSET + 0x00
+#define PERIPHERAL_RNG_STATUS PERIPHERAL_RNG_OFFSET + 0x04
+#define PERIPHERAL_RNG_DATA PERIPHERAL_RNG_OFFSET + 0x08
+#define PERIPHERAL_RNG_INTERRUPT PERIPHERAL_RNG_OFFSET + 0x10
 
 #endif

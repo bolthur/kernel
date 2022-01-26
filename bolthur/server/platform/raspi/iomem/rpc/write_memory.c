@@ -22,21 +22,20 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
-#include "../mailbox.h"
-#include "../property.h"
 #include "../rpc.h"
-#include "../../../libmailbox.h"
+#include "../mmio.h"
+#include "../../libiomem.h"
 
 /**
- * @fn void rpc_handle_request(size_t, pid_t, size_t, size_t)
- * @brief handle request
+ * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
+ * @brief handle write
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_request(
+void rpc_handle_write_memory(
   __unused size_t type,
   pid_t origin,
   size_t data_info,
@@ -62,13 +61,12 @@ void rpc_handle_request(
     return;
   }
   // allocate space for request
-  int32_t* request = malloc( data_size );
+  iomem_write_request_ptr_t request = malloc( data_size );
   if ( ! request ) {
     err = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
     return;
   }
-  int32_t count = ( int32_t )( data_size / sizeof( int32_t ) );
   // clear request
   memset( request, 0, data_size );
   // fetch rpc data
@@ -80,26 +78,14 @@ void rpc_handle_request(
     free( request );
     return;
   }
-  // copy stuff to property buffer
-  memcpy( property_buffer, request, data_size );
-  // overwrite current property index
-  property_index = count;
-  // process request
-  uint32_t result = property_process();
-  // handle error
-  if ( MAILBOX_ERROR == result ) {
-    err = -EIO;
+  if ( ! mmio_write( request->offset, request->data, request->len ) ) {
+    err = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    free( request );
     return;
   }
-  // copy response into original request
-  memcpy( request, property_buffer, data_size );
-  // return data and finish with free
-  bolthur_rpc_return(
-    RPC_VFS_IOCTL,
-    request,
-    data_size,
-    NULL
-  );
+  // set err to 0 and return
+  err = 0;
+  bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
   free( request );
 }

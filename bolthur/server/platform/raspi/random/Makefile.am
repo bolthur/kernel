@@ -3,5 +3,8 @@ AM_CFLAGS = -DPROGRAM_NAME=\"random\"
 
 bin_PROGRAMS = random
 random_SOURCES = \
-  main.c
+  rpc/read.c \
+  main.c \
+  random.c \
+  rpc.c
 random_LDFLAGS = -all-static --static

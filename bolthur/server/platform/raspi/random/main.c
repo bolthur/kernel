@@ -24,6 +24,8 @@
 #include <sys/bolthur.h>
 #include <inttypes.h>
 #include "../../../libhelper.h"
+#include "rpc.h"
+#include "random.h"
 
 /**
  * @fn int main(int, char*[])
@@ -34,7 +36,20 @@
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
-  EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
+  EARLY_STARTUP_PRINT( "Setup random\r\n" )
+  if ( ! random_setup() ) {
+    EARLY_STARTUP_PRINT( "Error while setting up random: %s\r\n", strerror( errno ) )
+    return -1;
+  }
+
+  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
+  // register handlers
+  if ( ! rpc_register() ) {
+    EARLY_STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
+    return -1;
+  }
+
+  EARLY_STARTUP_PRINT( "Sending device 1 to vfs\r\n" )
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
@@ -44,8 +59,23 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/random", PATH_MAX - 1 );
   strncpy( msg->file_path, "/dev/urandom", PATH_MAX - 1 );
+  // perform add request
+  send_vfs_add_request( msg, 0, 0 );
+  // free again
+  free( msg );
+
+  EARLY_STARTUP_PRINT( "Sending device 2 to vfs\r\n" )
+  // allocate memory for add request
+  msg = malloc( sizeof( vfs_add_request_t ) );
+  if ( ! msg ) {
+    return -1;
+  }
+  // clear memory
+  memset( msg, 0, sizeof( vfs_add_request_t ) );
+  // prepare message structure
+  msg->info.st_mode = S_IFCHR;
+  strncpy( msg->file_path, "/dev/random", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, 0, 0 );
   // free again

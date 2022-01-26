@@ -1,2 +1,2 @@
 
-SUBDIRS = framebuffer io random storage
+SUBDIRS = framebuffer iomem random storage

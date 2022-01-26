@@ -349,14 +349,14 @@ static pid_t execute_driver( char* name ) {
  */
 static void stage2( void ) {
   // start mailbox server
-  EARLY_STARTUP_PRINT( "Starting and waiting for mailbox server...\r\n" )
-  pid_t mailbox = execute_driver( "/ramdisk/server/io/mailbox" );
-  wait_for_device( "/dev/mailbox" );
+  EARLY_STARTUP_PRINT( "Starting and waiting for iomem server...\r\n" )
+  pid_t iomem = execute_driver( "/ramdisk/server/iomem" );
+  wait_for_device( "/dev/iomem" );
 
-  // start mmio server
-  EARLY_STARTUP_PRINT( "Starting and waiting for mmio server...\r\n" )
-  pid_t mmio = execute_driver( "/ramdisk/server/io/mmio" );
-  wait_for_device( "/dev/mmio" );
+  // start random server
+  EARLY_STARTUP_PRINT( "Starting and waiting for random server...\r\n" )
+  pid_t random = execute_driver( "/ramdisk/server/random" );
+  wait_for_device( "/dev/random" );
 
   // start framebuffer driver and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for framebuffer server...\r\n" )
@@ -374,8 +374,8 @@ static void stage2( void ) {
   wait_for_device( "/dev/terminal" );
 
   EARLY_STARTUP_PRINT(
-    "mailbox = %d, mmio = %d, console = %d, terminal = %d, framebuffer = %d\r\n",
-    mailbox, mmio, console, terminal, framebuffer )
+    "iomem = %d, random = %d, console = %d, terminal = %d, framebuffer = %d\r\n",
+    iomem, random, console, terminal, framebuffer )
 
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )

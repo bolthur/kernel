@@ -17,37 +17,20 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libgen.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
+#include <stdbool.h>
+#include <stdint.h>
 #include <sys/bolthur.h>
-#include "rpc.h"
-#include "../../libmailbox.h"
 
-struct mailbox_rpc command_list[] = {
-  {
-    .command = MAILBOX_REQUEST,
-    .callback = rpc_handle_request
-  },
+#if !defined( _RPC_H )
+#define _RPC_H
+
+struct random_rpc {
+  uint32_t command;
+  rpc_handler_t callback;
 };
+extern struct random_rpc command_list[ 1 ];
 
-/**
- * @fn bool rpc_register(void)
- * @brief Register necessary rpc handler
- *
- * @return
- */
-bool rpc_register( void ) {
-  // register all handlers
-  size_t max = sizeof( command_list ) / sizeof( command_list[ 0 ] );
-  // loop through handler to identify used one
-  for ( size_t i = 0; i < max; i++ ) {
-    // register rpc
-    bolthur_rpc_bind( command_list[ i ].command, command_list[ i ].callback );
-    if ( errno ) {
-      return false;
-    }
-  }
-  return true;
-}
+bool rpc_register( void );
+void rpc_handle_read( size_t, pid_t, size_t, size_t );
+
+#endif

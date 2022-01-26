@@ -17,21 +17,36 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
+#include <libgen.h>
 #include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/bolthur.h>
+#include "rpc.h"
 
-#if ! defined( _LIBTERMINAL_H )
-#define _LIBTERMINAL_H
-
-struct terminal_write_request {
-  char data[ MAX_WRITE_LEN ];
-  char terminal[ PATH_MAX ];
-  size_t len;
+struct random_rpc command_list[] = {
+  {
+    .command = RPC_VFS_READ,
+    .callback = rpc_handle_read
+  },
 };
-typedef struct terminal_write_request terminal_write_request_t;
-typedef struct terminal_write_request* terminal_write_request_ptr_t;
 
-#endif
+/**
+ * @fn bool rpc_register(void)
+ * @brief Register necessary rpc handler
+ *
+ * @return
+ */
+bool rpc_register( void ) {
+  // register all handlers
+  size_t max = sizeof( command_list ) / sizeof( command_list[ 0 ] );
+  // loop through handler to identify used one
+  for ( size_t i = 0; i < max; i++ ) {
+    // register rpc
+    bolthur_rpc_bind( command_list[ i ].command, command_list[ i ].callback );
+    if ( errno ) {
+      return false;
+    }
+  }
+  return true;
+}

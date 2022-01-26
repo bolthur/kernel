@@ -20,34 +20,22 @@
 #include <sys/mman.h>
 #include <errno.h>
 #include <unistd.h>
+#include "../libperipheral.h"
 #include "mailbox.h"
-#include "peripheral.h"
 #include "generic.h"
+#include "mmio.h"
 
 static volatile mailbox_t* mailbox = NULL;
 
 /**
- * @fn bool mailbox_setup(void)
+ * @fn void mailbox_setup(void)
  * @brief Setup mailbox
- *
- * @return
  */
-bool mailbox_setup( void ) {
-  // try to map mailbox buffer area and handle possible error
-  void* tmp = mmap(
-    ( void* )( PERIPHERAL_BASE + MAILBOX_MEMORY_OFFSET ),
-    PAGE_SIZE,
-    PROT_READ | PROT_WRITE,
-    MAP_ANONYMOUS | MAP_PHYSICAL | MAP_DEVICE,
-    -1,
-    0
+void mailbox_setup( void ) {
+  // set mailbox address
+  mailbox = ( volatile mailbox_t* )(
+    ( uintptr_t )mmio_start + PERIPHERAL_MAILBOX_OFFSET
   );
-  if( MAP_FAILED == tmp ) {
-    return false;
-  }
-  // save it globally and return success
-  mailbox = ( volatile mailbox_t* )( ( uintptr_t )tmp + MAILBOX_MAPPED_OFFSET );
-  return true;
 }
 
 /**

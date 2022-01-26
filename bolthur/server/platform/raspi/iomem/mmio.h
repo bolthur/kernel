@@ -17,21 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <stdlib.h>
 #include <stdbool.h>
-#include <errno.h>
+#include <stdint.h>
 #include <sys/bolthur.h>
 
-#if ! defined( _LIBTERMINAL_H )
-#define _LIBTERMINAL_H
+#if !defined( _MMIO_H )
+#define _MMIO_H
 
-struct terminal_write_request {
-  char data[ MAX_WRITE_LEN ];
-  char terminal[ PATH_MAX ];
-  size_t len;
-};
-typedef struct terminal_write_request terminal_write_request_t;
-typedef struct terminal_write_request* terminal_write_request_ptr_t;
+extern void* mmio_start;
+extern void* mmio_end;
+
+bool mmio_setup( void );
+void* mmio_read( uintptr_t, size_t );
+bool mmio_write( uintptr_t, uint32_t*, size_t );
 
 #endif

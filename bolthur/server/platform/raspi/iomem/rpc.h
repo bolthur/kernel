@@ -17,16 +17,22 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _PERIPHERAL_H )
-#define _PERIPHERAL_H
+#include <stdbool.h>
+#include <stdint.h>
+#include <sys/bolthur.h>
 
-// initial setup of peripheral base
-#if defined( BCM2836 ) || defined( BCM2837 )
-  #define PERIPHERAL_BASE 0x3F000000
-  #define PERIPHERAL_SIZE 0xFFFFFF
-#else
-  #define PERIPHERAL_BASE 0x20000000
-  #define PERIPHERAL_SIZE 0xFFFFFF
-#endif
+#if !defined( _RPC_H )
+#define _RPC_H
+
+struct mailbox_rpc {
+  uint32_t command;
+  rpc_handler_t callback;
+};
+extern struct mailbox_rpc command_list[ 3 ];
+
+bool rpc_register( void );
+void rpc_handle_mailbox( size_t, pid_t, size_t, size_t );
+void rpc_handle_read_memory( size_t, pid_t, size_t, size_t );
+void rpc_handle_write_memory( size_t, pid_t, size_t, size_t );
 
 #endif
