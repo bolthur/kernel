@@ -17,21 +17,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <sys/bolthur.h>
+#include "delay.h"
 
-#if !defined( _RPC_H )
-#define _RPC_H
-
-struct mailbox_rpc {
-  uint32_t command;
-  rpc_handler_t callback;
-};
-extern struct mailbox_rpc command_list[ 2 ];
-
-bool rpc_register( void );
-void rpc_handle_mailbox( size_t, pid_t, size_t, size_t );
-void rpc_handle_mmio( size_t, pid_t, size_t, size_t );
-
-#endif
+/**
+ * @brief Delay given amount of cpu cycles
+ *
+ * @param count Amount of cycles to delay
+ */
+inline void delay( uint32_t count ) {
+  __asm__ __volatile__(
+    "__delay_%=: subs %[count], #1; bne __delay_%=\n"
+    : "=r" ( count ) : [ count ] "0" ( count ) : "cc"
+  );
+}

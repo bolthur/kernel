@@ -49,7 +49,6 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Sending device 1 to vfs\r\n" )
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
@@ -61,11 +60,11 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/urandom", PATH_MAX - 1 );
   // perform add request
+  EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
   send_vfs_add_request( msg, 0, 0 );
   // free again
   free( msg );
 
-  EARLY_STARTUP_PRINT( "Sending device 2 to vfs\r\n" )
   // allocate memory for add request
   msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
@@ -77,6 +76,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/random", PATH_MAX - 1 );
   // perform add request
+  EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
   send_vfs_add_request( msg, 0, 0 );
   // free again
   free( msg );

@@ -70,89 +70,50 @@ bool mmio_setup( void ) {
 }
 
 /**
- * @fn void mmio_read*(uintptr_t, size_t)
- * @brief Perform mmio read
+ * @fn bool mmio_validate_offset(uintptr_t, size_t)
+ * @brief Method to validate a read / write
  *
  * @param address
  * @param len
- *
- * @exception EINVAL invalid address has been passed
- * @exception EINVAL invalid size has been passed
+ * @return
  */
-void* mmio_read( uintptr_t address, size_t len ) {
+bool mmio_validate_offset( uintptr_t address, size_t len ) {
   // determine read begin and end address since address contains only an offset
-  void* read_begin = ( void* )( ( uintptr_t )mmio_start + address );
-  void* read_end = ( void* )( ( uintptr_t )mmio_start + address + len );
-  // check for in range
-  if ( read_end > mmio_end || read_begin > mmio_end ) {
-    errno = EINVAL;
-    return NULL;
-  }
-  // check for multiple of word
-  if ( len % sizeof( uint32_t ) ) {
-    errno = EINVAL;
-    return NULL;
-  }
-  // allocate space for read return
-  uint32_t* ret = malloc( len );
-  // handle error
-  if ( ! ret ) {
-    errno = ENOMEM;
-    return NULL;
-  }
-  // determine number of words to read
-  size_t num_word = len / sizeof( uint32_t );
-  uintptr_t offset = 0;
-  // read word per word
-  for ( size_t i = 0; i < num_word; i++, offset += sizeof( uint32_t ) ) {
-    // barrier
-    dmb();
-    // read word
-    ret[ i ] = *( volatile uint32_t* )(
-      ( uintptr_t )read_begin + offset
-    );
-  }
-  // return copied content
-  return ret;
+  void* begin = ( void* )( ( uintptr_t )mmio_start + address );
+  void* end = ( void* )( ( uintptr_t )mmio_start + address + len );
+  // return whether it's in range or not
+  return !( end > mmio_end || begin > mmio_end );
 }
 
 /**
- * @fn bool mmio_write(uintptr_t, uint32_t*, size_t)
- * @brief Perform mmio write
+ * @fn uint32_t mmio_read(uintptr_t)
+ * @brief Perform single mmio read
+ *
+ * @param address
+ * @param len
+ * @return
+ */
+uint32_t mmio_read( uintptr_t address ) {
+  // determine read begin and end address since address contains only an offset
+  void* read_begin = ( void* )( ( uintptr_t )mmio_start + address );
+  // barrier
+  dmb();
+  // read word
+  return *( volatile uint32_t* )read_begin;
+}
+
+/**
+ * @fn void mmio_write(uintptr_t, uint32_t)
+ * @brief Perform single mmio write
  *
  * @param address
  * @param data
- * @param len
- * @return
- *
- * @exception EINVAL invalid address has been passed
  */
-bool mmio_write( uintptr_t address, uint32_t* data, size_t len ) {
+void mmio_write( uintptr_t address, uint32_t data ) {
   // determine write begin and end address since address contains only an offset
   void* write_begin = ( void* )( ( uintptr_t )mmio_start + address );
-  void* write_end = ( void* )( ( uintptr_t )mmio_start + address + len );
-  // check for in range
-  if ( write_end > mmio_end || write_begin > mmio_end ) {
-    errno = EINVAL;
-    return false;
-  }
-  // check for multiple of word
-  if ( len % sizeof( uint32_t ) ) {
-    errno = EINVAL;
-    return false;
-  }
-  // determine number of words to read
-  size_t num_word = len / sizeof( uint32_t );
-  uintptr_t offset = 0;
-  // read word per word
-  for ( size_t i = 0; i < num_word; i++, offset += sizeof( uint32_t ) ) {
-    // barrier, write and barrier
-    dmb();
-    *( volatile uint32_t* )(
-      ( uintptr_t )write_begin + offset
-    ) = data[ i ];
-    dmb();
-  }
-  // return copied content
-  return true;
+  // barrier, write and barrier
+  dmb();
+  *( volatile uint32_t* )write_begin  = data;
+  dmb();
 }

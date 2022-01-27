@@ -26,23 +26,29 @@
 #if ! defined( _LIBIOMEM_H )
 #define _LIBIOMEM_H
 
-#define IOMEM_READ_MEMORY RPC_CUSTOM_START
-#define IOMEM_WRITE_MEMORY IOMEM_READ_MEMORY + 1
-#define IOMEM_MAILBOX IOMEM_WRITE_MEMORY + 1
+#define IOMEM_MAILBOX RPC_CUSTOM_START
+#define IOMEM_MMIO IOMEM_MAILBOX + 1
 
-struct iomem_read_request {
-  uintptr_t offset;
-  size_t len;
-};
-typedef struct iomem_read_request iomem_read_request_t;
-typedef struct iomem_read_request* iomem_read_request_ptr_t;
+#define IOMEM_MMIO_LOOP_EQUAL 1
+#define IOMEM_MMIO_LOOP_NOT_EQUAL 2
+#define IOMEM_MMIO_READ 3
+#define IOMEM_MMIO_WRITE 4
+#define IOMEM_MMIO_WRITE_OR_PREVIOUS_READ 5
+#define IOMEM_MMIO_DELAY 6
+#define IOMEM_MMIO_SLEEP 7
 
-struct iomem_write_request {
-  uintptr_t offset;
-  size_t len;
-  uint32_t data[];
+#define IOMEM_MMIO_SHIFT_LEFT 1
+#define IOMEM_MMIO_SHIFT_RIGHT 2
+
+struct iomem_mmio_entry {
+  uint32_t type;
+  uint32_t offset;
+  uint32_t value;
+  uint32_t shift_type;
+  uint32_t shift_value;
 };
-typedef struct iomem_write_request iomem_write_request_t;
-typedef struct iomem_write_request* iomem_write_request_ptr_t;
+typedef struct iomem_mmio_entry iomem_mmio_entry_t;
+typedef struct iomem_mmio_entry* iomem_mmio_entry_ptr_t;
+typedef struct iomem_mmio_entry iomem_mmio_entry_array_t[];
 
 #endif

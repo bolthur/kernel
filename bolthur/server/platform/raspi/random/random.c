@@ -38,146 +38,62 @@ int iomem_fd;
  * @return
  */
 bool random_setup( void ) {
-  // open mailbox device
+  // open iomem device
   iomem_fd = open( "/dev/iomem", O_RDWR );
+  // handle error
   if ( -1 == iomem_fd ) {
     return false;
   }
-  iomem_read_request_ptr_t iomem_read = malloc( sizeof( iomem_read_request_t ) );
-  if ( ! iomem_read ) {
-    close( iomem_fd );
-    return false;
-  }
-  iomem_write_request_ptr_t iomem_write = malloc(
-    sizeof( iomem_write_request_t ) + sizeof( uint32_t ) );
-  if ( ! iomem_read ) {
-    close( iomem_fd );
-    free( iomem_read );
-    return false;
-  }
-
-  // prepare read
-  iomem_read->len = sizeof( uint32_t );
-  iomem_read->offset = PERIPHERAL_RNG_INTERRUPT;
-  // perform request
+  // build write data
+  iomem_mmio_entry_t data[] = {
+    // read interrupt
+    {
+      .type = IOMEM_MMIO_READ,
+      .offset = PERIPHERAL_RNG_INTERRUPT,
+      .value = 0,
+      .shift_type = 0,
+      .shift_value = 0,
+    },
+    // mask interrupt
+    {
+      .type = IOMEM_MMIO_WRITE_OR_PREVIOUS_READ,
+      .offset = PERIPHERAL_RNG_INTERRUPT,
+      .value = 0x1,
+      .shift_type = 0,
+      .shift_value = 0,
+    },
+    // rng warmup count
+    {
+      .type = IOMEM_MMIO_WRITE,
+      .offset = PERIPHERAL_RNG_STATUS,
+      .value = 0x40000,
+      .shift_type = 0,
+      .shift_value = 0,
+    },
+    // enable
+    {
+      .type = IOMEM_MMIO_WRITE,
+      .offset = PERIPHERAL_RNG_CONTROL,
+      .value = 0x1,
+      .shift_type = 0,
+      .shift_value = 0,
+    },
+  };
+  // perform ioctl
   int result = ioctl(
     iomem_fd,
     IOCTL_BUILD_REQUEST(
-      IOMEM_READ_MEMORY,
-      sizeof( *iomem_read ),
+      IOMEM_MMIO,
+      sizeof( data ),
       IOCTL_RDWR
     ),
-    iomem_read
+    data
   );
   // handle error
   if ( -1 == result ) {
     close( iomem_fd );
-    free( iomem_read );
-    free( iomem_write );
     return false;
   }
-  // get value
-  uint32_t val = *( ( uint32_t* )iomem_read );
-  // mask interrupt
-  val |= 0x1;
-
-  // prepare write
-  iomem_write->len = sizeof( uint32_t );
-  iomem_write->offset = PERIPHERAL_RNG_INTERRUPT;
-  memcpy( iomem_write->data, &val, sizeof( uint32_t ) );
-  // perform request
-  result = ioctl(
-    iomem_fd,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_WRITE_MEMORY,
-      sizeof( *iomem_write ),
-      IOCTL_RDWR
-    ),
-    iomem_write
-  );
-  // handle error
-  if ( -1 == result ) {
-    close( iomem_fd );
-    free( iomem_read );
-    free( iomem_write );
-    return false;
-  }
-
-  // prepare read
-  iomem_read->len = sizeof( uint32_t );
-  iomem_read->offset = PERIPHERAL_RNG_CONTROL;
-  // perform request
-  result = ioctl(
-    iomem_fd,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_READ_MEMORY,
-      sizeof( *iomem_read ),
-      IOCTL_RDWR
-    ),
-    iomem_read
-  );
-  // handle error
-  if ( -1 == result ) {
-    close( iomem_fd );
-    free( iomem_read );
-    free( iomem_write );
-    return false;
-  }
-  // get value
-  val = *( ( uint32_t* )iomem_read );
-  // skip below if already enabled
-  if ( val & 1 ) {
-    return true;
-  }
-
-  // set warm up count
-  val = 0x40000;
-  // prepare write
-  iomem_write->len = sizeof( uint32_t );
-  iomem_write->offset = PERIPHERAL_RNG_STATUS;
-  memcpy( iomem_write->data, &val, sizeof( uint32_t ) );
-  // perform request
-  result = ioctl(
-    iomem_fd,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_WRITE_MEMORY,
-      sizeof( *iomem_write ),
-      IOCTL_RDWR
-    ),
-    iomem_write
-  );
-  // handle error
-  if ( -1 == result ) {
-    close( iomem_fd );
-    free( iomem_read );
-    free( iomem_write );
-    return false;
-  }
-
-  // set status
-  val = 1;
-  // prepare write
-  iomem_write->len = sizeof( uint32_t );
-  iomem_write->offset = PERIPHERAL_RNG_CONTROL;
-  memcpy( iomem_write->data, &val, sizeof( uint32_t ) );
-  // perform request
-  result = ioctl(
-    iomem_fd,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_WRITE_MEMORY,
-      sizeof( *iomem_write ),
-      IOCTL_RDWR
-    ),
-    iomem_write
-  );
-  // handle error
-  if ( -1 == result ) {
-    close( iomem_fd );
-    free( iomem_read );
-    free( iomem_write );
-    return false;
-  }
-
   // return success
   return true;
 }
@@ -189,53 +105,40 @@ bool random_setup( void ) {
  * @return
  */
 uint32_t random_generate_number( void ) {
-  uint32_t rng_status;
-  // build read request
-  iomem_read_request_t iomem_read = {
-    .len = sizeof( uint32_t ),
-    .offset = PERIPHERAL_RNG_STATUS,
+  // build write data
+  iomem_mmio_entry_t data[] = {
+    // loop until rng is ready
+    {
+      .type = IOMEM_MMIO_LOOP_EQUAL,
+      .offset = PERIPHERAL_RNG_STATUS,
+      .value = 0,
+      .shift_type = IOMEM_MMIO_SHIFT_RIGHT,
+      .shift_value = 24,
+    },
+    // read data
+    {
+      .type = IOMEM_MMIO_READ,
+      .offset = PERIPHERAL_RNG_DATA,
+      .value = 0,
+      .shift_type = 0,
+      .shift_value = 0,
+    },
   };
-  void* read_pointer = &iomem_read;
-  // wait until ready
-  do {
-    // perform request
-    int result = ioctl(
-      iomem_fd,
-      IOCTL_BUILD_REQUEST(
-        IOMEM_READ_MEMORY,
-        sizeof( iomem_read ),
-        IOCTL_RDWR
-      ),
-      &iomem_read
-    );
-    // handle error
-    if ( -1 == result ) {
-      errno = EIO;
-      return 0;
-    }
-    // extract rng status
-    rng_status = *( ( uint32_t* )( read_pointer ) );
-  } while ( 0 == ( rng_status >> 24 ) );
-
-
-  // extract data
-  iomem_read.len = sizeof( uint32_t );
-  iomem_read.offset = PERIPHERAL_RNG_DATA;
   // perform request
   int result = ioctl(
     iomem_fd,
     IOCTL_BUILD_REQUEST(
-      IOMEM_READ_MEMORY,
-      sizeof( iomem_read ),
+      IOMEM_MMIO,
+      sizeof( data ),
       IOCTL_RDWR
     ),
-    &iomem_read
+    data
   );
   // handle error
   if ( -1 == result ) {
     errno = EIO;
     return 0;
   }
-  // return random number
-  return *( ( uint32_t* )( read_pointer ) );
+  // return read value
+  return data[ 1 ].value;
 }

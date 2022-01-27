@@ -28,7 +28,8 @@ extern void* mmio_start;
 extern void* mmio_end;
 
 bool mmio_setup( void );
-void* mmio_read( uintptr_t, size_t );
-bool mmio_write( uintptr_t, uint32_t*, size_t );
+uint32_t mmio_read( uintptr_t );
+void mmio_write( uintptr_t, uint32_t );
+bool mmio_validate_offset( uintptr_t, size_t );
 
 #endif

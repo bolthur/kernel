@@ -28,7 +28,7 @@
 #include "../../libiomem.h"
 
 /**
- * @fn void rpc_handle_request(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_handle_mailbox(size_t, pid_t, size_t, size_t)
  * @brief handle request
  *
  * @param type

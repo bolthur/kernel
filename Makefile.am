@@ -26,7 +26,7 @@ cppcheck:
 		-U__CYGWIN__ -U__APPLE__ -v
 
 ramdisk:
-	cd $(ROOT_DIR)/tool && nim compile --run ramdisk.nim \
+	cd $(ROOT_DIR)/tool && nim -d:release compile --run ramdisk.nim \
 		$(ROOT_DIR)/build \
 		$(ROOT_DIR)/build-aux/platform/${platform_subdir}/initrd \
 		$(SYSROOT_DIR) \

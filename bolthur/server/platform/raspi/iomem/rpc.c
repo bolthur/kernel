@@ -28,15 +28,11 @@
 struct mailbox_rpc command_list[] = {
   {
     .command = IOMEM_MAILBOX,
-    .callback = rpc_handle_mailbox
+    .callback = rpc_handle_mailbox,
   },
   {
-    .command = IOMEM_READ_MEMORY,
-    .callback = rpc_handle_read_memory
-  },
-  {
-    .command = IOMEM_WRITE_MEMORY,
-    .callback = rpc_handle_write_memory
+    .command = IOMEM_MMIO,
+    .callback = rpc_handle_mmio,
   },
 };
 
