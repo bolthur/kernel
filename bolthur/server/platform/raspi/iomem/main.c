@@ -65,6 +65,10 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
+  // enable rpc
+  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  _rpc_set_ready( true );
+
   EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
   // calculate add message size
   size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
@@ -85,9 +89,8 @@ int main( __unused int argc, __unused char* argv[] ) {
   // free again
   free( msg );
 
-  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
-  // enable rpc and wait
-  _rpc_set_ready( true );
+  // wait for rpc
+  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
   return 0;
 }

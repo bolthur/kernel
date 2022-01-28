@@ -126,6 +126,10 @@ int main( __unused int argc, __unused char* argv[] ) {
   send_vfs_add_request( msg, 0, 0 );
   free( msg );
 
+  // enable rpc
+  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  _rpc_set_ready( true );
+
   EARLY_STARTUP_PRINT( "Send console device to vfs\r\n" )
   // console device
   // allocate memory for add request
@@ -146,9 +150,8 @@ int main( __unused int argc, __unused char* argv[] ) {
   // free again
   free( msg );
 
-  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
-  // enable rpc and wait
-  _rpc_set_ready( true );
+  // wait for rpc
+  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
   // return exit code 0
   return 0;

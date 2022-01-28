@@ -49,6 +49,10 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
+  // enable rpc
+  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  _rpc_set_ready( true );
+
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
@@ -81,9 +85,8 @@ int main( __unused int argc, __unused char* argv[] ) {
   // free again
   free( msg );
 
-  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
-  // enable rpc and wait
-  _rpc_set_ready( true );
+  // wait for rpc
+  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
   return 0;
 }

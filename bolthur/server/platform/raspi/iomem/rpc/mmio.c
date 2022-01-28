@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <inttypes.h>
 #include <libgen.h>
 #include <errno.h>
 #include <stdlib.h>
@@ -40,7 +41,7 @@
  */
 static uint32_t apply_shift(
   uint32_t value,
-  uint32_t shift_type,
+  mmio_shift_t shift_type,
   uint32_t shift_value
 ) {
   // apply possible shift
@@ -113,10 +114,16 @@ void rpc_handle_mmio(
   for ( size_t i = 0; i < entry_count; i++ ) {
     // ensure that for write with or of previous read the previous is valid
     if (
-      IOMEM_MMIO_WRITE_OR_PREVIOUS_READ == ( *request )[ i ].type
-      && (
+      (
+        IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ == ( *request )[ i ].type
+        || IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ == ( *request )[ i ].type
+      ) && (
         0 == i
-        || IOMEM_MMIO_READ != ( *request )[ i - 1 ].type
+        || (
+          IOMEM_MMIO_ACTION_READ != ( *request )[ i - 1 ].type
+          && IOMEM_MMIO_ACTION_READ_OR != ( *request )[ i - 1 ].type
+          && IOMEM_MMIO_ACTION_READ_AND != ( *request )[ i - 1 ].type
+        )
       )
     ) {
       err = -EINVAL;
@@ -126,13 +133,16 @@ void rpc_handle_mmio(
     }
     // validate types
     if (
-      IOMEM_MMIO_LOOP_EQUAL != ( *request )[ i ].type
-      && IOMEM_MMIO_LOOP_NOT_EQUAL != ( *request )[ i ].type
-      && IOMEM_MMIO_READ != ( *request )[ i ].type
-      && IOMEM_MMIO_WRITE != ( *request )[ i ].type
-      && IOMEM_MMIO_WRITE_OR_PREVIOUS_READ != ( *request )[ i ].type
-      && IOMEM_MMIO_DELAY != ( *request )[ i ].type
-      && IOMEM_MMIO_SLEEP != ( *request )[ i ].type
+      IOMEM_MMIO_ACTION_LOOP_EQUAL != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_READ != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_READ_OR != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_READ_AND != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_WRITE != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_DELAY != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_SLEEP != ( *request )[ i ].type
     ) {
       err = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
@@ -153,7 +163,7 @@ void rpc_handle_mmio(
     // handle mmio actions
     switch ( ( *request )[ i ].type ) {
       // handle loop while read is equal
-      case IOMEM_MMIO_LOOP_EQUAL:
+      case IOMEM_MMIO_ACTION_LOOP_EQUAL:
         do {
           value = mmio_read( ( *request )[ i ].offset );
           value = apply_shift(
@@ -164,7 +174,7 @@ void rpc_handle_mmio(
         } while ( value == ( *request )[ i ].value );
         break;
       // handle loop while read is not equal
-      case IOMEM_MMIO_LOOP_NOT_EQUAL:
+      case IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL:
         do {
           value = apply_shift(
             mmio_read( ( *request )[ i ].offset ),
@@ -174,24 +184,39 @@ void rpc_handle_mmio(
         } while ( value != ( *request )[ i ].value );
         break;
       // handle read
-      case IOMEM_MMIO_READ:
+      case IOMEM_MMIO_ACTION_READ:
         ( *request )[ i ].value = mmio_read( ( *request )[ i ].offset );
         break;
+      // handle read
+      case IOMEM_MMIO_ACTION_READ_OR:
+        ( *request )[ i ].value =
+          mmio_read( ( *request )[ i ].offset ) | ( *request )[ i ].value;
+        break;
+      // handle read
+      case IOMEM_MMIO_ACTION_READ_AND:
+        ( *request )[ i ].value =
+          mmio_read( ( *request )[ i ].offset ) & ( *request )[ i ].value;
+        break;
       // handle normal write
-      case IOMEM_MMIO_WRITE:
+      case IOMEM_MMIO_ACTION_WRITE:
         mmio_write( ( *request )[ i ].offset, ( *request )[ i ].value );
         break;
-      // handle write with value orred to previous read value
-      case IOMEM_MMIO_WRITE_OR_PREVIOUS_READ:
+      // handle write "previous value | value"
+      case IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ:
         value = ( *request )[ i - 1 ].value | ( *request )[ i ].value;
         mmio_write( ( *request )[ i ].offset, value );
         break;
+      // handle write "previous value & value"
+      case IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ:
+        value = ( *request )[ i - 1 ].value & ( *request )[ i ].value;
+        mmio_write( ( *request )[ i ].offset, value );
+        break;
       // delay given amount of cycles
-      case IOMEM_MMIO_DELAY:
+      case IOMEM_MMIO_ACTION_DELAY:
         delay( ( *request )[ i ].value );
         break;
       // sleep given amount of seconds
-      case IOMEM_MMIO_SLEEP:
+      case IOMEM_MMIO_ACTION_SLEEP:
         sleep( ( *request )[ i ].value );
         break;
       // default shouldn't happen due to previous validation
@@ -202,7 +227,11 @@ void rpc_handle_mmio(
         return;
     }
     // apply shifting only for read operations
-    if ( IOMEM_MMIO_READ == ( *request )[ i ].type ) {
+    if (
+      IOMEM_MMIO_ACTION_READ == ( *request )[ i ].type
+      || IOMEM_MMIO_ACTION_READ_OR == ( *request )[ i ].type
+      || IOMEM_MMIO_ACTION_READ_AND == ( *request )[ i ].type
+    ) {
       ( *request )[ i ].value = apply_shift(
         ( *request )[ i ].value,
         ( *request )[ i ].shift_type,
@@ -211,6 +240,6 @@ void rpc_handle_mmio(
     }
   }
   // return data and finish with free
-  bolthur_rpc_return( RPC_VFS_IOCTL, request, data_size, NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, request_data, data_size, NULL );
   free( request_data );
 }

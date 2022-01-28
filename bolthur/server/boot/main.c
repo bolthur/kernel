@@ -353,6 +353,12 @@ static void stage2( void ) {
   pid_t iomem = execute_driver( "/ramdisk/server/iomem" );
   wait_for_device( "/dev/iomem" );
 
+  /// FIXME: MOVE BELOW RANDOM ONCE FINISHED
+  // start emmc server
+  EARLY_STARTUP_PRINT( "Starting and waiting for emmc server...\r\n" )
+  pid_t emmc = execute_driver( "/ramdisk/server/storage/emmc" );
+  wait_for_device( "/dev/emmc" );
+
   // start random server
   EARLY_STARTUP_PRINT( "Starting and waiting for random server...\r\n" )
   pid_t random = execute_driver( "/ramdisk/server/random" );
@@ -374,8 +380,8 @@ static void stage2( void ) {
   wait_for_device( "/dev/terminal" );
 
   EARLY_STARTUP_PRINT(
-    "iomem = %d, random = %d, console = %d, terminal = %d, framebuffer = %d\r\n",
-    iomem, random, console, terminal, framebuffer )
+    "iomem = %d, random = %d, console = %d, terminal = %d, framebuffer = %d, emmc = %d\r\n",
+    iomem, random, console, terminal, framebuffer, emmc )
 
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )

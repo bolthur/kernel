@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include <inttypes.h>
+#include "emmc.h"
 #include "../../../../libhelper.h"
 
 /**
@@ -34,6 +35,16 @@
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
+  EARLY_STARTUP_PRINT( "Setup emmc\r\n" )
+  // initialize framebuffer
+  if( ! emmc_init() ) {
+    return -1;
+  }
+
+  // enable rpc
+  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  _rpc_set_ready( true );
+
   EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
@@ -44,15 +55,14 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/sdcard", PATH_MAX - 1 );
+  strncpy( msg->file_path, "/dev/emmc", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, 0, 0 );
   // free again
   free( msg );
 
-  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
-  // enable rpc and wait
-  _rpc_set_ready( true );
+  // wait for rpc
+  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
   return 0;
 }

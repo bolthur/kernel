@@ -48,34 +48,34 @@ bool random_setup( void ) {
   iomem_mmio_entry_t data[] = {
     // read interrupt
     {
-      .type = IOMEM_MMIO_READ,
+      .type = IOMEM_MMIO_ACTION_READ,
       .offset = PERIPHERAL_RNG_INTERRUPT,
       .value = 0,
-      .shift_type = 0,
+      .shift_type = IOMEM_MMIO_SHIFT_NONE,
       .shift_value = 0,
     },
     // mask interrupt
     {
-      .type = IOMEM_MMIO_WRITE_OR_PREVIOUS_READ,
+      .type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ,
       .offset = PERIPHERAL_RNG_INTERRUPT,
       .value = 0x1,
-      .shift_type = 0,
+      .shift_type = IOMEM_MMIO_SHIFT_NONE,
       .shift_value = 0,
     },
     // rng warmup count
     {
-      .type = IOMEM_MMIO_WRITE,
+      .type = IOMEM_MMIO_ACTION_WRITE,
       .offset = PERIPHERAL_RNG_STATUS,
       .value = 0x40000,
-      .shift_type = 0,
+      .shift_type = IOMEM_MMIO_SHIFT_NONE,
       .shift_value = 0,
     },
     // enable
     {
-      .type = IOMEM_MMIO_WRITE,
+      .type = IOMEM_MMIO_ACTION_WRITE,
       .offset = PERIPHERAL_RNG_CONTROL,
       .value = 0x1,
-      .shift_type = 0,
+      .shift_type = IOMEM_MMIO_SHIFT_NONE,
       .shift_value = 0,
     },
   };
@@ -109,7 +109,7 @@ uint32_t random_generate_number( void ) {
   iomem_mmio_entry_t data[] = {
     // loop until rng is ready
     {
-      .type = IOMEM_MMIO_LOOP_EQUAL,
+      .type = IOMEM_MMIO_ACTION_LOOP_EQUAL,
       .offset = PERIPHERAL_RNG_STATUS,
       .value = 0,
       .shift_type = IOMEM_MMIO_SHIFT_RIGHT,
@@ -117,10 +117,10 @@ uint32_t random_generate_number( void ) {
     },
     // read data
     {
-      .type = IOMEM_MMIO_READ,
+      .type = IOMEM_MMIO_ACTION_READ,
       .offset = PERIPHERAL_RNG_DATA,
       .value = 0,
-      .shift_type = 0,
+      .shift_type = IOMEM_MMIO_SHIFT_NONE,
       .shift_value = 0,
     },
   };

@@ -29,22 +29,32 @@
 #define IOMEM_MAILBOX RPC_CUSTOM_START
 #define IOMEM_MMIO IOMEM_MAILBOX + 1
 
-#define IOMEM_MMIO_LOOP_EQUAL 1
-#define IOMEM_MMIO_LOOP_NOT_EQUAL 2
-#define IOMEM_MMIO_READ 3
-#define IOMEM_MMIO_WRITE 4
-#define IOMEM_MMIO_WRITE_OR_PREVIOUS_READ 5
-#define IOMEM_MMIO_DELAY 6
-#define IOMEM_MMIO_SLEEP 7
+enum mmio_action {
+  IOMEM_MMIO_ACTION_LOOP_EQUAL = 1,
+  IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL,
+  IOMEM_MMIO_ACTION_READ,
+  IOMEM_MMIO_ACTION_READ_OR,
+  IOMEM_MMIO_ACTION_READ_AND,
+  IOMEM_MMIO_ACTION_WRITE,
+  IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ,
+  IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ,
+  IOMEM_MMIO_ACTION_DELAY,
+  IOMEM_MMIO_ACTION_SLEEP,
+};
+typedef enum mmio_action mmio_action_t;
 
-#define IOMEM_MMIO_SHIFT_LEFT 1
-#define IOMEM_MMIO_SHIFT_RIGHT 2
+enum mmio_shift {
+  IOMEM_MMIO_SHIFT_NONE = 0,
+  IOMEM_MMIO_SHIFT_LEFT,
+  IOMEM_MMIO_SHIFT_RIGHT,
+};
+typedef enum mmio_shift mmio_shift_t;
 
 struct iomem_mmio_entry {
-  uint32_t type;
+  mmio_action_t type;
   uint32_t offset;
   uint32_t value;
-  uint32_t shift_type;
+  mmio_shift_t shift_type;
   uint32_t shift_value;
 };
 typedef struct iomem_mmio_entry iomem_mmio_entry_t;
