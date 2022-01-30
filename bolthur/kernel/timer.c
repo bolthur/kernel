@@ -67,6 +67,13 @@ static bool timer_insert(
   while ( item ) {
     // get pointer to current entry
     timer_callback_entry_ptr_t entry = ( timer_callback_entry_ptr_t )item->data;
+    // debug output
+    #if defined( PRINT_TIMER )
+      DEBUG_OUTPUT(
+        "entry->expire = %d, entry_to_add->expire = %d\r\n",
+        entry->expire, entry_to_add->expire
+      )
+    #endif
     // expire greater? => use previous one t
     if ( entry->expire > entry_to_add->expire ) {
       break;
@@ -74,8 +81,16 @@ static bool timer_insert(
     // get to next item
     item = item->next;
   }
-  // insert before last list item
-  return list_insert_before( list, item, data );
+  // debug output
+  #if defined( PRINT_TIMER )
+    DEBUG_OUTPUT( "list = %p, item = %p, data = %p\r\n", list, item, data )
+  #endif
+  // in case there is an item to insert before, insert it
+  if ( item ) {
+    return list_insert_before( list, item, data );
+  }
+  // there is no match, so insert it behind
+  return list_push_back( list, data );
 }
 
 /**
@@ -146,6 +161,8 @@ timer_callback_entry_ptr_t timer_register_callback(
   entry->rpc = rpc_num;
   entry->thread = thread;
   entry->expire = timeout;
+  // generate id
+  entry->id = timer_generate_id();
   // insert into ordered list
   if ( ! list_insert( timer_list, entry ) ) {
     #if defined( PRINT_TIMER )

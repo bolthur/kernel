@@ -50,9 +50,8 @@ bool random_setup( void ) {
     {
       .type = IOMEM_MMIO_ACTION_READ,
       .offset = PERIPHERAL_RNG_INTERRUPT,
-      .value = 0,
       .shift_type = IOMEM_MMIO_SHIFT_NONE,
-      .shift_value = 0,
+      .sleep_type = IOMEM_MMIO_SLEEP_NONE,
     },
     // mask interrupt
     {
@@ -60,7 +59,7 @@ bool random_setup( void ) {
       .offset = PERIPHERAL_RNG_INTERRUPT,
       .value = 0x1,
       .shift_type = IOMEM_MMIO_SHIFT_NONE,
-      .shift_value = 0,
+      .sleep_type = IOMEM_MMIO_SLEEP_NONE,
     },
     // rng warmup count
     {
@@ -68,7 +67,7 @@ bool random_setup( void ) {
       .offset = PERIPHERAL_RNG_STATUS,
       .value = 0x40000,
       .shift_type = IOMEM_MMIO_SHIFT_NONE,
-      .shift_value = 0,
+      .sleep_type = IOMEM_MMIO_SLEEP_NONE,
     },
     // enable
     {
@@ -76,7 +75,7 @@ bool random_setup( void ) {
       .offset = PERIPHERAL_RNG_CONTROL,
       .value = 0x1,
       .shift_type = IOMEM_MMIO_SHIFT_NONE,
-      .shift_value = 0,
+      .sleep_type = IOMEM_MMIO_SLEEP_NONE,
     },
   };
   // perform ioctl
@@ -114,14 +113,14 @@ uint32_t random_generate_number( void ) {
       .value = 0,
       .shift_type = IOMEM_MMIO_SHIFT_RIGHT,
       .shift_value = 24,
+      .sleep_type = IOMEM_MMIO_SLEEP_NONE,
     },
     // read data
     {
       .type = IOMEM_MMIO_ACTION_READ,
       .offset = PERIPHERAL_RNG_DATA,
-      .value = 0,
       .shift_type = IOMEM_MMIO_SHIFT_NONE,
-      .shift_value = 0,
+      .sleep_type = IOMEM_MMIO_SLEEP_NONE,
     },
   };
   // perform request

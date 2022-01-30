@@ -18,10 +18,36 @@
  */
 
 #include <stdbool.h>
+#include <stdint.h>
+#include "../../libiomem.h"
+#include "../../libperipheral.h"
 
 #if ! defined( _EMMC_H )
 #define _EMMC_H
 
-bool emmc_init( void );
+#define EMMC_ENABLE_DEBUG 1
+
+typedef enum {
+  EMMC_OK = 0,
+  EMMC_ERROR,
+  EMMC_TIMEOUT,
+  EMMC_BUSY,
+  EMMC_NO_RESP,
+  EMMC_ERROR_RESET,
+  EMMC_ERROR_CLOCK,
+  EMMC_ERROR_VOLTAGE,
+  EMMC_ERROR_APP_CMD,
+  EMMC_CARD_CHANGED,
+  EMMC_CARD_ABSENT,
+  EMMC_CARD_REINSERTED,
+} emmc_response_t;
+
+typedef enum {
+  EMMC_READ_BLOCK,
+  EMMC_WRITE_BLOCK,
+} emmc_operation_t;
+
+emmc_response_t emmc_init( void );
+emmc_response_t emmc_transfer_block( uint32_t, uint32_t, uint8_t*, emmc_operation_t );
 
 #endif

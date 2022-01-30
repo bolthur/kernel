@@ -17,6 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <time.h>
+#include <unistd.h>
 #include <inttypes.h>
 #include <libgen.h>
 #include <errno.h>
@@ -29,6 +31,32 @@
 #include "../rpc.h"
 #include "../delay.h"
 #include "../../libiomem.h"
+
+/**
+ * @fn int custom_nanosleep(const struct timespec*)
+ * @brief Custom nanosleep to be replaced once rpc can be interrupted correctly
+ *
+ * @param rqtp
+ * @return
+ */
+static void custom_nanosleep( const struct timespec* rqtp ) {
+  if ( 0 >= rqtp->tv_nsec ) {
+    errno = EINVAL;
+    return;
+  }
+  // get clock frequency
+  size_t frequency = _timer_frequency();
+  // calculate second timeout
+  size_t timeout = ( size_t )( rqtp->tv_sec * frequency );
+  // add nanosecond offset
+  timeout += ( size_t )( ( double )rqtp->tv_nsec * ( double )frequency / 1000000000.0 );
+  // add tick count to get an end time
+  timeout += _timer_tick_count();
+  // loop until timeout is reached
+  while ( _timer_tick_count() < timeout ) {
+    __asm__ __volatile__( "nop" );
+  }
+}
 
 /**
  * @fn uint32_t apply_shift(uint32_t, uint32_t, uint32_t)
@@ -52,6 +80,50 @@ static uint32_t apply_shift(
   }
   // return possible changed value
   return value;
+}
+
+/**
+ * @fn void apply_sleep(mmio_sleep_t, uint32_t)
+ * @brief Sleep helper
+ *
+ * @param sleep_type
+ * @param sleep_value
+ *
+ * @todo replace custom nanosleep with nanosleep when timers are working in activ rpc
+ */
+static void apply_sleep( mmio_sleep_t sleep_type, uint32_t sleep_value ) {
+  // variables
+  struct timespec ts;
+  //int res;
+  // handle invalid parameters
+  if (
+    // handle sleep of 0
+    0 == sleep_value
+    // handle no sleep
+    || IOMEM_MMIO_SLEEP_NONE == sleep_type
+    // handle invalid type
+    || (
+      IOMEM_MMIO_SLEEP_SECONDS != sleep_type
+      && IOMEM_MMIO_SLEEP_MILLISECONDS != sleep_type
+    )
+  ) {
+    return;
+  }
+  // change to long
+  long sleep_value_time = ( long )sleep_value;
+  // prepare timespec structure
+  if ( IOMEM_MMIO_SLEEP_SECONDS == sleep_type ) {
+    ts.tv_sec = sleep_value_time;
+    ts.tv_nsec = 0;
+  } else if ( IOMEM_MMIO_SLEEP_MILLISECONDS ) {
+    ts.tv_sec = sleep_value_time / 1000;
+    ts.tv_nsec = ( sleep_value_time % 1000 ) * 1000000;
+  }
+  custom_nanosleep( &ts );
+  // sleep as long as given
+  /*do {
+    res = nanosleep( &ts, &ts );
+  } while ( res && errno == EINTR );*/
 }
 
 /**
@@ -115,7 +187,8 @@ void rpc_handle_mmio(
     // ensure that for write with or of previous read the previous is valid
     if (
       (
-        IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ == ( *request )[ i ].type
+        IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ == ( *request )[ i ].type
+        || IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ == ( *request )[ i ].type
         || IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ == ( *request )[ i ].type
       ) && (
         0 == i
@@ -139,6 +212,7 @@ void rpc_handle_mmio(
       && IOMEM_MMIO_ACTION_READ_OR != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_READ_AND != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_WRITE != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_DELAY != ( *request )[ i ].type
@@ -160,28 +234,121 @@ void rpc_handle_mmio(
   // loop through entries and execute
   for ( size_t i = 0; i < entry_count; i++ ) {
     uint32_t value;
+    uint32_t value2;
+    int64_t loop_max_iteration = -1;
     // handle mmio actions
     switch ( ( *request )[ i ].type ) {
       // handle loop while read is equal
       case IOMEM_MMIO_ACTION_LOOP_EQUAL:
+        // prepare max iteration
+        if ( 0 < ( *request )[ i ].loop_max_iteration ) {
+          loop_max_iteration = ( *request )[ i ].loop_max_iteration;
+        }
+        // loop
         do {
+          // apply possible sleep
+          apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+          // read value
           value = mmio_read( ( *request )[ i ].offset );
+          // apply possible and
+          if ( 0 < ( *request )[ i ].loop_and ) {
+            value &= ( *request )[ i ].loop_and;
+          }
+          // apply shift
           value = apply_shift(
             value,
             ( *request )[ i ].shift_type,
             ( *request )[ i ].shift_value
           );
-        } while ( value == ( *request )[ i ].value );
+          // handle second
+          if ( ( *request )[ i ].loop_offset2 ) {
+            // read value
+            value2 = mmio_read( ( *request )[ i ].loop_offset2 );
+            // apply possible and
+            if ( 0 < ( *request )[ i ].loop_and2 ) {
+              value2 &= ( *request )[ i ].loop_and2;
+            }
+            // apply shift
+            value2 = apply_shift(
+              value2,
+              ( *request )[ i ].shift_type,
+              ( *request )[ i ].shift_value
+            );
+          } else {
+            value2 = 0;
+            ( *request )[ i ].loop_value2 = 0;
+          }
+        } while (
+          value == ( *request )[ i ].value
+          && value2 == ( *request )[ i ].loop_value2
+          && (
+            -1 == loop_max_iteration
+            || loop_max_iteration--
+          )
+        );
+        // handle loop iteration exceeded
+        if ( 0 == loop_max_iteration ) {
+          err = -EIO;
+          bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+          free( request_data );
+          return;
+        }
         break;
       // handle loop while read is not equal
       case IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL:
+        // prepare max iteration
+        if ( 0 < ( *request )[ i ].loop_max_iteration ) {
+          loop_max_iteration = ( *request )[ i ].loop_max_iteration;
+        }
+        // loop
         do {
+          // apply possible sleep
+          apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+          // read value
+          value = mmio_read( ( *request )[ i ].offset );
+          // apply possible and
+          if ( 0 < ( *request )[ i ].loop_and ) {
+            value &= ( *request )[ i ].loop_and;
+          }
+          // apply shift
           value = apply_shift(
-            mmio_read( ( *request )[ i ].offset ),
+            value,
             ( *request )[ i ].shift_type,
             ( *request )[ i ].shift_value
           );
-        } while ( value != ( *request )[ i ].value );
+          // handle second
+          if ( ( *request )[ i ].loop_offset2 ) {
+            // read value
+            value2 = mmio_read( ( *request )[ i ].loop_offset2 );
+            // apply possible and
+            if ( 0 < ( *request )[ i ].loop_and2 ) {
+              value2 &= ( *request )[ i ].loop_and2;
+            }
+            // apply shift
+            value2 = apply_shift(
+              value2,
+              ( *request )[ i ].shift_type,
+              ( *request )[ i ].shift_value
+            );
+          } else {
+            value2 = 1;
+            ( *request )[ i ].loop_value2 = 0;
+          }
+        } while (
+          value != ( *request )[ i ].value
+          && value2 != ( *request )[ i ].loop_value2
+          && (
+            -1 == loop_max_iteration
+            || loop_max_iteration--
+          )
+        );
+        // handle loop iteration exceeded
+        if ( 0 == loop_max_iteration ) {
+          err = -EIO;
+          bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+          free( request_data );
+          return;
+        }
         break;
       // handle read
       case IOMEM_MMIO_ACTION_READ:
@@ -201,6 +368,10 @@ void rpc_handle_mmio(
       case IOMEM_MMIO_ACTION_WRITE:
         mmio_write( ( *request )[ i ].offset, ( *request )[ i ].value );
         break;
+      // handle write "previous value"
+      case IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ:
+        mmio_write( ( *request )[ i ].offset, ( *request )[ i - 1 ].value );
+        break;
       // handle write "previous value | value"
       case IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ:
         value = ( *request )[ i - 1 ].value | ( *request )[ i ].value;
@@ -217,7 +388,7 @@ void rpc_handle_mmio(
         break;
       // sleep given amount of seconds
       case IOMEM_MMIO_ACTION_SLEEP:
-        sleep( ( *request )[ i ].value );
+        apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
         break;
       // default shouldn't happen due to previous validation
       default:

@@ -17,16 +17,42 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <inttypes.h>
+#include <unistd.h>
+#include <sys/fcntl.h>
+#include <sys/ioctl.h>
+#include <sys/bolthur.h>
 #include "emmc.h"
+// from iomem
 #include "../../libiomem.h"
 #include "../../libperipheral.h"
 
+int iomem_fd;
+uint32_t host_version;
+
 /**
- * @fn bool emmc_init(void)
- * @brief Init emmc handler
+ * @fn emmc_response_t emmc_init(void)
+ * @brief Init prepares necessary structures for emmc handling
  *
  * @return
  */
-bool emmc_init( void ) {
-  return true;
+emmc_response_t emmc_init( void ) {
+  // open iomem device
+  iomem_fd = open( "/dev/iomem", O_RDWR );
+  if ( -1 == iomem_fd ) {
+    return EMMC_ERROR;
+  }
+  return EMMC_ERROR;
+}
+
+emmc_response_t emmc_transfer_block(
+  __unused uint32_t lba,
+  __unused uint32_t num,
+  __unused uint8_t* buffer,
+  __unused emmc_operation_t operation
+) {
+  return EMMC_ERROR;
 }

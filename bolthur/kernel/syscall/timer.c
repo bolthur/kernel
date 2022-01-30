@@ -89,6 +89,10 @@ void syscall_timer_acquire( void* context ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "item->id = %d\r\n", item->id )
+  #endif
   // return success by returning timer id
   syscall_populate_success( context, item->id );
 }

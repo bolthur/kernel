@@ -36,6 +36,7 @@ enum mmio_action {
   IOMEM_MMIO_ACTION_READ_OR,
   IOMEM_MMIO_ACTION_READ_AND,
   IOMEM_MMIO_ACTION_WRITE,
+  IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ,
   IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ,
   IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ,
   IOMEM_MMIO_ACTION_DELAY,
@@ -50,12 +51,33 @@ enum mmio_shift {
 };
 typedef enum mmio_shift mmio_shift_t;
 
+enum mmio_sleep {
+  IOMEM_MMIO_SLEEP_NONE = 0,
+  IOMEM_MMIO_SLEEP_MILLISECONDS,
+  IOMEM_MMIO_SLEEP_SECONDS,
+};
+typedef enum mmio_sleep mmio_sleep_t;
+
 struct iomem_mmio_entry {
+  // action type
   mmio_action_t type;
+  // memory offset
   uint32_t offset;
+  // value ( usage depending on action type )
   uint32_t value;
+  // shift type and shift bits to be applied
   mmio_shift_t shift_type;
   uint32_t shift_value;
+  // value to be used for loop check
+  uint32_t loop_and;
+  uint32_t loop_max_iteration;
+  // optional second value for loop
+  uint32_t loop_offset2;
+  uint32_t loop_value2;
+  uint32_t loop_and2;
+  // sleep type and amount to sleep
+  mmio_sleep_t sleep_type;
+  uint32_t sleep;
 };
 typedef struct iomem_mmio_entry iomem_mmio_entry_t;
 typedef struct iomem_mmio_entry* iomem_mmio_entry_ptr_t;

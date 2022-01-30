@@ -35,11 +35,15 @@
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
+  // setup emmc
   EARLY_STARTUP_PRINT( "Setup emmc\r\n" )
-  // initialize framebuffer
-  if( ! emmc_init() ) {
+  if( EMMC_OK != emmc_init() ) {
     return -1;
   }
+
+  // FIXME: READ MBR
+  // FIXME: DETERMINE FILE SYSTEMS OF PARTITIONS
+  // FIXME: START NECESSARY DRIVERS (?)
 
   // enable rpc
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
