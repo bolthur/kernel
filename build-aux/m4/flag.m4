@@ -59,7 +59,9 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
         AX_APPEND_COMPILE_FLAGS([-Og])
         ;;
       *)
-        AX_APPEND_COMPILE_FLAGS([-O2])
+        AS_IF([test "x$with_debug_symbols" != "xyes"], [
+          AX_APPEND_COMPILE_FLAGS([-O2])
+        ] )
         ;;
     esac
   ])
@@ -139,7 +141,9 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
         AX_APPEND_COMPILE_FLAGS([-Og])
         ;;
       *)
-        AX_APPEND_COMPILE_FLAGS([-O2])
+        AS_IF([test "x$with_debug_symbols" != "xyes"], [
+          AX_APPEND_COMPILE_FLAGS([-O2])
+        ] )
         ;;
     esac
   ])
@@ -208,7 +212,9 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
         AX_APPEND_COMPILE_FLAGS([-Og])
         ;;
       *)
-        AX_APPEND_COMPILE_FLAGS([-O2])
+        AS_IF([test "x$with_debug_symbols" != "xyes"], [
+          AX_APPEND_COMPILE_FLAGS([-O2])
+        ] )
         ;;
     esac
   ])

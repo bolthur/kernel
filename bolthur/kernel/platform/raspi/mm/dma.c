@@ -17,23 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <sys/bolthur.h>
-
-#if !defined( _RPC_H )
-#define _RPC_H
-
-struct mailbox_rpc {
-  uint32_t command;
-  rpc_handler_t callback;
-};
-extern struct mailbox_rpc command_list[ 4 ];
-
-bool rpc_register( void );
-void rpc_handle_mailbox( size_t, pid_t, size_t, size_t );
-void rpc_handle_mmio( size_t, pid_t, size_t, size_t );
-void rpc_handle_lock( size_t, pid_t, size_t, size_t );
-void rpc_handle_unlock( size_t, pid_t, size_t, size_t );
-
+#if defined( PRINT_MM_DMA )
+  #include "../../../debug/debug.h"
 #endif
+#include "../../../mm/dma.h"
+
+void dma_init( void ) {
+}

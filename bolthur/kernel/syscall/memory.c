@@ -37,6 +37,7 @@
 #define MEMORY_FLAG_NONE 0x0
 #define MEMORY_FLAG_PHYS 0x1
 #define MEMORY_FLAG_DEVICE 0x2
+#define MEMORY_FLAG_DMA 0x4
 
 /**
  * @fn void syscall_memory_acquire(void*)

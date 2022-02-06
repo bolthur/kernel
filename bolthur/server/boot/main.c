@@ -353,16 +353,15 @@ static void stage2( void ) {
   pid_t iomem = execute_driver( "/ramdisk/server/iomem" );
   wait_for_device( "/dev/iomem" );
 
-  /// FIXME: MOVE BELOW RANDOM ONCE FINISHED
-  // start emmc server
-  EARLY_STARTUP_PRINT( "Starting and waiting for emmc server...\r\n" )
-  pid_t emmc = execute_driver( "/ramdisk/server/storage/emmc" );
-  wait_for_device( "/dev/emmc" );
-
   // start random server
   EARLY_STARTUP_PRINT( "Starting and waiting for random server...\r\n" )
   pid_t random = execute_driver( "/ramdisk/server/random" );
   wait_for_device( "/dev/random" );
+
+  // start emmc server
+  EARLY_STARTUP_PRINT( "Starting and waiting for emmc server...\r\n" )
+  pid_t emmc = execute_driver( "/ramdisk/server/storage/emmc" );
+  wait_for_device( "/dev/emmc" );
 
   // start framebuffer driver and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for framebuffer server...\r\n" )

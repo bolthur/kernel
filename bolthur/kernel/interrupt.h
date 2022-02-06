@@ -31,8 +31,8 @@
 
 #define INTERRUPT_NESTED_MAX 3
 #define INTERRUPT_DETERMINE_CONTEXT( c ) \
-  c = NULL != c ? c : TASK_THREAD_GET_CONTEXT; \
-  assert( c != NULL );
+  c = ! c ? TASK_THREAD_GET_CONTEXT : c; \
+  assert( c );
 
 typedef void ( *interrupt_callback_t )( void* );
 

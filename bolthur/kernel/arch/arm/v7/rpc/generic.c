@@ -85,11 +85,21 @@ bool rpc_generic_restore( task_thread_ptr_t thread ) {
     return false;
   }
   // restore cpu registers
+  // debug output
+  #if defined( PRINT_RPC )
+    DUMP_REGISTER( thread->current_context )
+    DEBUG_OUTPUT( "process id = %d\r\n", thread->process->id )
+  #endif
   memcpy(
     thread->current_context,
     backup->context,
     sizeof( cpu_register_context_t )
   );
+  // debug output
+  #if defined( PRINT_RPC )
+    DUMP_REGISTER( thread->current_context )
+    DEBUG_OUTPUT( "process id = %d\r\n", thread->process->id )
+  #endif
   // set correct state
   backup->thread->state = TASK_THREAD_STATE_ACTIVE;
   // finally remove found entry

@@ -28,10 +28,16 @@
 
 #define IOMEM_MAILBOX RPC_CUSTOM_START
 #define IOMEM_MMIO IOMEM_MAILBOX + 1
+#define IOMEM_LOCK IOMEM_MMIO + 1
+#define IOMEM_UNLOCK IOMEM_LOCK + 1
+
+#define IOMEM_DEVICE_PATH "/dev/iomem"
 
 enum mmio_action {
   IOMEM_MMIO_ACTION_LOOP_EQUAL = 1,
   IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL,
+  IOMEM_MMIO_ACTION_LOOP_TRUE,
+  IOMEM_MMIO_ACTION_LOOP_FALSE,
   IOMEM_MMIO_ACTION_READ,
   IOMEM_MMIO_ACTION_READ_OR,
   IOMEM_MMIO_ACTION_READ_AND,
@@ -58,6 +64,13 @@ enum mmio_sleep {
 };
 typedef enum mmio_sleep mmio_sleep_t;
 
+enum mmio_abort_type {
+  IOMEM_MMIO_ABORT_TYPE_NONE = 0,
+  IOMEM_MMIO_ABORT_TYPE_TIMEOUT,
+  IOMEM_MMIO_ABORT_TYPE_INVALID,
+};
+typedef enum mmio_abort_type mmio_abort_type_t;
+
 struct iomem_mmio_entry {
   // action type
   mmio_action_t type;
@@ -71,13 +84,12 @@ struct iomem_mmio_entry {
   // value to be used for loop check
   uint32_t loop_and;
   uint32_t loop_max_iteration;
-  // optional second value for loop
-  uint32_t loop_offset2;
-  uint32_t loop_value2;
-  uint32_t loop_and2;
   // sleep type and amount to sleep
   mmio_sleep_t sleep_type;
   uint32_t sleep;
+  // skipped & aborted flag
+  mmio_abort_type_t abort_type;
+  uint32_t skipped;
 };
 typedef struct iomem_mmio_entry iomem_mmio_entry_t;
 typedef struct iomem_mmio_entry* iomem_mmio_entry_ptr_t;

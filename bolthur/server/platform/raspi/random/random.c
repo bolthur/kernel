@@ -38,8 +38,8 @@ int iomem_fd;
  * @return
  */
 bool random_setup( void ) {
-  // open iomem device
-  iomem_fd = open( "/dev/iomem", O_RDWR );
+  // open device
+  iomem_fd = open( IOMEM_DEVICE_PATH, O_RDWR );
   // handle error
   if ( -1 == iomem_fd ) {
     return false;
@@ -108,9 +108,8 @@ uint32_t random_generate_number( void ) {
   iomem_mmio_entry_t data[] = {
     // loop until rng is ready
     {
-      .type = IOMEM_MMIO_ACTION_LOOP_EQUAL,
+      .type = IOMEM_MMIO_ACTION_LOOP_FALSE,
       .offset = PERIPHERAL_RNG_STATUS,
-      .value = 0,
       .shift_type = IOMEM_MMIO_SHIFT_RIGHT,
       .shift_value = 24,
       .sleep_type = IOMEM_MMIO_SLEEP_NONE,

@@ -3,8 +3,10 @@ AM_CFLAGS = -DPROGRAM_NAME=\"iomem\"
 
 bin_PROGRAMS = iomem
 iomem_SOURCES = \
+  rpc/lock.c \
   rpc/mailbox.c \
   rpc/mmio.c \
+  rpc/unlock.c \
   delay.c \
   mailbox.c \
   main.c \

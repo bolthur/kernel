@@ -22,44 +22,27 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
-#include "rpc.h"
-#include "../libiomem.h"
-
-struct mailbox_rpc command_list[] = {
-  {
-    .command = IOMEM_MAILBOX,
-    .callback = rpc_handle_mailbox,
-  },
-  {
-    .command = IOMEM_MMIO,
-    .callback = rpc_handle_mmio,
-  },
-  {
-    .command = IOMEM_LOCK,
-    .callback = rpc_handle_lock,
-  },
-  {
-    .command = IOMEM_UNLOCK,
-    .callback = rpc_handle_unlock,
-  },
-};
+#include "../mailbox.h"
+#include "../property.h"
+#include "../rpc.h"
+#include "../../libiomem.h"
 
 /**
- * @fn bool rpc_register(void)
- * @brief Register necessary rpc handler
+ * @fn void rpc_handle_unlock(size_t, pid_t, size_t, size_t)
+ * @brief handle unlock region request
  *
- * @return
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
  */
-bool rpc_register( void ) {
-  // register all handlers
-  size_t max = sizeof( command_list ) / sizeof( command_list[ 0 ] );
-  // loop through handler to identify used one
-  for ( size_t i = 0; i < max; i++ ) {
-    // register rpc
-    bolthur_rpc_bind( command_list[ i ].command, command_list[ i ].callback );
-    if ( errno ) {
-      return false;
-    }
-  }
-  return true;
+void rpc_handle_unlock(
+  __unused size_t type,
+  __unused pid_t origin,
+  __unused size_t data_info,
+  __unused size_t response_info
+) {
+  int err = -ENOSYS;
+  bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+  return;
 }

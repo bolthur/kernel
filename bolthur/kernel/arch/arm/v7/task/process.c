@@ -143,6 +143,8 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "cpu register context: %p\r\n", ( void* )cpu )
     DUMP_REGISTER( cpu )
+    DEBUG_OUTPUT( "process id = %d\r\n",
+      task_thread_current_thread->process->id )
   #endif
 
   // set running thread
@@ -204,6 +206,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT( "Halt was active, disabling interrupts!\r\n" )
+      DUMP_REGISTER( cpu )
     #endif
     interrupt_disable();
   }

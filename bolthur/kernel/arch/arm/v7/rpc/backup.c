@@ -130,6 +130,10 @@ rpc_backup_ptr_t rpc_backup_create(
   // prepare and backup context area
   memset( backup->context, 0, sizeof( cpu_register_context_t ) );
   memcpy( backup->context, cpu, sizeof( cpu_register_context_t ) );
+  // debug output
+  #if defined( PRINT_RPC )
+    DUMP_REGISTER( backup->context )
+  #endif
   // backup parameter data as message
   backup->data_id = 0;
   if ( data && data_size ) {

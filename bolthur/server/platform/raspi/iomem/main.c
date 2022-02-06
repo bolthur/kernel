@@ -81,7 +81,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( msg, 0, msg_size );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/iomem", PATH_MAX - 1 );
+  strncpy( msg->file_path, IOMEM_DEVICE_PATH, PATH_MAX - 1 );
   msg->device_info[ 0 ] = IOMEM_MAILBOX;
   msg->device_info[ 1 ] = IOMEM_MMIO;
   // perform add request

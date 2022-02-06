@@ -68,8 +68,8 @@ struct framebuffer_rpc command_list[] = {
  * @return
  */
 bool framebuffer_init( void ) {
-  // open mailbox device
-  iomem_fd = open( "/dev/iomem", O_RDWR );
+  // open device
+  iomem_fd = open( IOMEM_DEVICE_PATH, O_RDWR );
   if ( -1 == iomem_fd ) {
     return false;
   }

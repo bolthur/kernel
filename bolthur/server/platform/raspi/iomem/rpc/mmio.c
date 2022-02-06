@@ -208,6 +208,8 @@ void rpc_handle_mmio(
     if (
       IOMEM_MMIO_ACTION_LOOP_EQUAL != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_LOOP_TRUE != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_LOOP_FALSE != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_READ != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_READ_OR != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_READ_AND != ( *request )[ i ].type
@@ -231,11 +233,20 @@ void rpc_handle_mmio(
       return;
     }
   }
+  bool skip = false;
   // loop through entries and execute
   for ( size_t i = 0; i < entry_count; i++ ) {
+    // variables
     uint32_t value;
-    uint32_t value2;
     int64_t loop_max_iteration = -1;
+    // reset some command flags
+    ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_NONE;
+    ( *request )[ i ].skipped = 0;
+    // handle skip due to previous abort
+    if ( skip ) {
+      ( *request )[ i ].skipped = 1;
+      continue;
+    }
     // handle mmio actions
     switch ( ( *request )[ i ].type ) {
       // handle loop while read is equal
@@ -260,38 +271,23 @@ void rpc_handle_mmio(
             ( *request )[ i ].shift_type,
             ( *request )[ i ].shift_value
           );
-          // handle second
-          if ( ( *request )[ i ].loop_offset2 ) {
-            // read value
-            value2 = mmio_read( ( *request )[ i ].loop_offset2 );
-            // apply possible and
-            if ( 0 < ( *request )[ i ].loop_and2 ) {
-              value2 &= ( *request )[ i ].loop_and2;
-            }
-            // apply shift
-            value2 = apply_shift(
-              value2,
-              ( *request )[ i ].shift_type,
-              ( *request )[ i ].shift_value
-            );
-          } else {
-            value2 = 0;
-            ( *request )[ i ].loop_value2 = 0;
-          }
         } while (
           value == ( *request )[ i ].value
-          && value2 == ( *request )[ i ].loop_value2
           && (
             -1 == loop_max_iteration
             || loop_max_iteration--
           )
         );
+        // save last value
+        ( *request )[ i ].value = value;
         // handle loop iteration exceeded
         if ( 0 == loop_max_iteration ) {
-          err = -EIO;
-          bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
-          free( request_data );
-          return;
+          // set skip
+          skip = true;
+          // set aborted
+          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_TIMEOUT;
+          // skip
+          continue;
         }
         break;
       // handle loop while read is not equal
@@ -316,38 +312,105 @@ void rpc_handle_mmio(
             ( *request )[ i ].shift_type,
             ( *request )[ i ].shift_value
           );
-          // handle second
-          if ( ( *request )[ i ].loop_offset2 ) {
-            // read value
-            value2 = mmio_read( ( *request )[ i ].loop_offset2 );
-            // apply possible and
-            if ( 0 < ( *request )[ i ].loop_and2 ) {
-              value2 &= ( *request )[ i ].loop_and2;
-            }
-            // apply shift
-            value2 = apply_shift(
-              value2,
-              ( *request )[ i ].shift_type,
-              ( *request )[ i ].shift_value
-            );
-          } else {
-            value2 = 1;
-            ( *request )[ i ].loop_value2 = 0;
-          }
         } while (
           value != ( *request )[ i ].value
-          && value2 != ( *request )[ i ].loop_value2
           && (
             -1 == loop_max_iteration
             || loop_max_iteration--
           )
         );
+        // save last value
+        ( *request )[ i ].value = value;
         // handle loop iteration exceeded
         if ( 0 == loop_max_iteration ) {
-          err = -EIO;
-          bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
-          free( request_data );
-          return;
+          // set skip
+          skip = true;
+          // set aborted
+          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_TIMEOUT;
+          // skip
+          continue;
+        }
+        break;
+      // handle loop while read is true
+      case IOMEM_MMIO_ACTION_LOOP_TRUE:
+        // prepare max iteration
+        if ( 0 < ( *request )[ i ].loop_max_iteration ) {
+          loop_max_iteration = ( *request )[ i ].loop_max_iteration;
+        }
+        // loop
+        do {
+          // apply possible sleep
+          apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+          // read value
+          value = mmio_read( ( *request )[ i ].offset );
+          // apply possible and
+          if ( 0 < ( *request )[ i ].loop_and ) {
+            value &= ( *request )[ i ].loop_and;
+          }
+          // apply shift
+          value = apply_shift(
+            value,
+            ( *request )[ i ].shift_type,
+            ( *request )[ i ].shift_value
+          );
+        } while (
+          value
+          && (
+            -1 == loop_max_iteration
+            || loop_max_iteration--
+          )
+        );
+        // save last value
+        ( *request )[ i ].value = value;
+        // handle loop iteration exceeded
+        if ( 0 == loop_max_iteration ) {
+          // set skip
+          skip = true;
+          // set aborted
+          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_TIMEOUT;
+          // skip
+          continue;
+        }
+        break;
+      // handle loop while read is true
+      case IOMEM_MMIO_ACTION_LOOP_FALSE:
+        // prepare max iteration
+        if ( 0 < ( *request )[ i ].loop_max_iteration ) {
+          loop_max_iteration = ( *request )[ i ].loop_max_iteration;
+        }
+        // loop
+        do {
+          // apply possible sleep
+          apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+          // read value
+          value = mmio_read( ( *request )[ i ].offset );
+          // apply possible and
+          if ( 0 < ( *request )[ i ].loop_and ) {
+            value &= ( *request )[ i ].loop_and;
+          }
+          // apply shift
+          value = apply_shift(
+            value,
+            ( *request )[ i ].shift_type,
+            ( *request )[ i ].shift_value
+          );
+        } while (
+          ! value
+          && (
+            -1 == loop_max_iteration
+            || loop_max_iteration--
+          )
+        );
+        // save last value
+        ( *request )[ i ].value = value;
+        // handle loop iteration exceeded
+        if ( 0 == loop_max_iteration ) {
+          // set skip
+          skip = true;
+          // set aborted
+          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_TIMEOUT;
+          // skip
+          continue;
         }
         break;
       // handle read
@@ -392,10 +455,13 @@ void rpc_handle_mmio(
         break;
       // default shouldn't happen due to previous validation
       default:
-        err = -EINVAL;
-        bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
-        free( request_data );
-        return;
+        // set skip for following commands
+        skip = true;
+        // set skip and aborted flag
+        ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_INVALID;
+        ( *request )[ i ].skipped = 1;
+        // skip
+        continue;
     }
     // apply shifting only for read operations
     if (
@@ -412,5 +478,6 @@ void rpc_handle_mmio(
   }
   // return data and finish with free
   bolthur_rpc_return( RPC_VFS_IOCTL, request_data, data_size, NULL );
+  // free request data
   free( request_data );
 }
