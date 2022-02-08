@@ -55,7 +55,7 @@ void rpc_handle_mailbox(
     return;
   }
   // get message size
-  size_t data_size = _rpc_get_data_size( data_info );
+  size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
     err = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
@@ -72,7 +72,7 @@ void rpc_handle_mailbox(
   // clear request
   memset( request, 0, data_size );
   // fetch rpc data
-  _rpc_get_data( request, data_size, data_info, false );
+  _syscall_rpc_get_data( request, data_size, data_info, false );
   // handle error
   if ( errno ) {
     err = -EIO;

@@ -191,7 +191,7 @@ static void rpc_handle_read(
     return;
   }
   // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
   // handle error
   if ( errno ) {
     response->len = -EINVAL;
@@ -208,7 +208,7 @@ static void rpc_handle_read(
   if ( 0 != request->shm_id ) {
     //EARLY_STARTUP_PRINT( "Map shared %#x\r\n", request->shm_id )
     // attach shared area
-    shm_addr = _memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
+    shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
     if ( errno ) {
       EARLY_STARTUP_PRINT( "Unable to attach shared area!\r\n" )
       // prepare response
@@ -285,7 +285,7 @@ static void rpc_handle_read(
 
   // detach shared area
   if ( request->shm_id ) {
-    _memory_shared_detach( request->shm_id );
+    _syscall_memory_shared_detach( request->shm_id );
     if ( errno ) {
       EARLY_STARTUP_PRINT( "Unable to detach shared area!\r\n")
       // prepare response
@@ -316,7 +316,7 @@ static void rpc_handle_read(
  */
 static pid_t execute_driver( char* name ) {
   // pure kernel fork necessary here
-  pid_t forked_process = _process_fork();
+  pid_t forked_process = _syscall_process_fork();
   if ( errno ) {
     EARLY_STARTUP_PRINT(
       "Unable to fork process for image replace: %s\r\n",
@@ -353,15 +353,15 @@ static void stage2( void ) {
   pid_t iomem = execute_driver( "/ramdisk/server/iomem" );
   wait_for_device( "/dev/iomem" );
 
-  // start random server
-  EARLY_STARTUP_PRINT( "Starting and waiting for random server...\r\n" )
-  pid_t random = execute_driver( "/ramdisk/server/random" );
-  wait_for_device( "/dev/random" );
-
   // start emmc server
   EARLY_STARTUP_PRINT( "Starting and waiting for emmc server...\r\n" )
   pid_t emmc = execute_driver( "/ramdisk/server/storage/emmc" );
   wait_for_device( "/dev/emmc" );
+
+  // start random server
+  EARLY_STARTUP_PRINT( "Starting and waiting for random server...\r\n" )
+  pid_t rnd = execute_driver( "/ramdisk/server/random" );
+  wait_for_device( "/dev/random" );
 
   // start framebuffer driver and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for framebuffer server...\r\n" )
@@ -379,8 +379,8 @@ static void stage2( void ) {
   wait_for_device( "/dev/terminal" );
 
   EARLY_STARTUP_PRINT(
-    "iomem = %d, random = %d, console = %d, terminal = %d, framebuffer = %d, emmc = %d\r\n",
-    iomem, random, console, terminal, framebuffer, emmc )
+    "iomem = %d, rnd = %d, console = %d, terminal = %d, framebuffer = %d, emmc = %d\r\n",
+    iomem, rnd, console, terminal, framebuffer, emmc )
 
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
@@ -580,7 +580,7 @@ int main( int argc, char* argv[] ) {
   EARLY_STARTUP_PRINT( "VFS image: %p!\r\n", vfs_image );
   // fork process and handle possible error
   EARLY_STARTUP_PRINT( "Forking process for vfs start!\r\n" );
-  pid_t forked_process = _process_fork();
+  pid_t forked_process = _syscall_process_fork();
   if ( errno ) {
     EARLY_STARTUP_PRINT(
       "Unable to fork process for vfs replace: %s\r\n",
@@ -592,7 +592,7 @@ int main( int argc, char* argv[] ) {
   if ( 0 == forked_process ) {
     EARLY_STARTUP_PRINT( "Replacing fork with vfs image %p!\r\n", vfs_image );
     // call for replace and handle error
-    _process_replace( vfs_image, NULL, NULL );
+    _syscall_process_replace( vfs_image, NULL, NULL );
     if ( errno ) {
       EARLY_STARTUP_PRINT(
         "Unable to replace process with image: %s\r\n",
@@ -607,8 +607,8 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
   // enable rpc and wait for process to be ready
-  _rpc_set_ready( true );
-  _rpc_wait_for_ready( forked_process );
+  _syscall_rpc_set_ready( true );
+  _syscall_rpc_wait_for_ready( forked_process );
   EARLY_STARTUP_PRINT( "Continuing with startup by sending ramdisk!\r\n" )
   // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
   // reset read offset
@@ -671,7 +671,7 @@ int main( int argc, char* argv[] ) {
 
   // fork process and handle possible error
   EARLY_STARTUP_PRINT( "Forking process for further init!\r\n" );
-  forked_process = _process_fork();
+  forked_process = _syscall_process_fork();
   if ( errno ) {
     EARLY_STARTUP_PRINT(
       "Unable to fork process for init continue: %s\r\n",

@@ -60,7 +60,7 @@ void rpc_handle_ioctl_async(
     return;
   }
   // get message size
-  size_t rpc_response_size = _rpc_get_data_size( data_info );
+  size_t rpc_response_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
     err_response.status = -EIO;
     bolthur_rpc_remove_data( data_info );
@@ -76,7 +76,7 @@ void rpc_handle_ioctl_async(
     return;
   }
   memset( rpc_response, 0, rpc_response_size );
-  _rpc_get_data( rpc_response, rpc_response_size, data_info, false );
+  _syscall_rpc_get_data( rpc_response, rpc_response_size, data_info, false );
   if ( errno ) {
     err_response.status = -EIO;
     bolthur_rpc_remove_data( data_info );
@@ -132,7 +132,7 @@ void rpc_handle_ioctl(
     return;
   }
   // get message size
-  size_t data_size = _rpc_get_data_size( data_info );
+  size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     return;
@@ -145,7 +145,7 @@ void rpc_handle_ioctl(
     return;
   }
   memset( request, 0, data_size );
-  _rpc_get_data( request, data_size, data_info, false );
+  _syscall_rpc_get_data( request, data_size, data_info, false );
   if ( errno ) {
     err_response.status = -EIO;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );

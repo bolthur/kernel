@@ -68,7 +68,7 @@ bool property_setup( void ) {
   // push it to property buffer
   property_buffer = ( int32_t* )tmp_buffer;
   // get physical address
-  uintptr_t translated = _memory_translate_physical( ( uintptr_t )property_buffer );
+  uintptr_t translated = _syscall_memory_translate_physical( ( uintptr_t )property_buffer );
   if ( errno ) {
     return false;
   }

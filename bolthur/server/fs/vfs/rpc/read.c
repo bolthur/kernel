@@ -71,7 +71,7 @@ void rpc_handle_read_async(
     return;
   }
   // fetch response
-  _rpc_get_data( response, sizeof( vfs_read_response_t ), data_info, false );
+  _syscall_rpc_get_data( response, sizeof( vfs_read_response_t ), data_info, false );
   if ( errno ) {
     bolthur_rpc_remove_data( data_info );
     bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), async_data );
@@ -154,7 +154,7 @@ void rpc_handle_read(
     return;
   }
   // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );

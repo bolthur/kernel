@@ -67,7 +67,7 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   // enable rpc
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
-  _rpc_set_ready( true );
+  _syscall_rpc_set_ready( true );
 
   EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
   // calculate add message size

@@ -365,7 +365,7 @@ void framebuffer_handle_render_surface(
     return;
   }
   // get size for allocation
-  size_t sz = _rpc_get_data_size( data_info );
+  size_t sz = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
     return;
   }
@@ -374,7 +374,7 @@ void framebuffer_handle_render_surface(
     return;
   }
   // fetch rpc data
-  _rpc_get_data( info, sz, data_info, false );
+  _syscall_rpc_get_data( info, sz, data_info, false );
   // handle error
   if ( errno ) {
     free( info );

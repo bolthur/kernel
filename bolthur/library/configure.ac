@@ -144,6 +144,7 @@ AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 AC_CONFIG_FILES([
   Makefile
   framebuffer/Makefile
+  fs/Makefile
 ])
 # FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO
 

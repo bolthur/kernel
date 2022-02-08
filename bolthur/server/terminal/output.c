@@ -83,7 +83,7 @@ void output_handle_out(
     return;
   }
   // get size for allocation
-  size_t sz = _rpc_get_data_size( data_info );
+  size_t sz = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     return;
@@ -95,7 +95,7 @@ void output_handle_out(
     return;
   }
   // fetch rpc data
-  _rpc_get_data( terminal, sz, data_info, false );
+  _syscall_rpc_get_data( terminal, sz, data_info, false );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
@@ -142,7 +142,7 @@ void output_handle_err(
     return;
   }
   // get size for allocation
-  size_t sz = _rpc_get_data_size( data_info );
+  size_t sz = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     return;
@@ -154,7 +154,7 @@ void output_handle_err(
     return;
   }
   // fetch rpc data
-  _rpc_get_data( terminal, sz, data_info, false );
+  _syscall_rpc_get_data( terminal, sz, data_info, false );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );

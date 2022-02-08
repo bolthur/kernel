@@ -52,7 +52,7 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
   // enable rpc and wait
-  _rpc_set_ready( true );
+  _syscall_rpc_set_ready( true );
   bolthur_rpc_wait_block();
   return 0;
 }

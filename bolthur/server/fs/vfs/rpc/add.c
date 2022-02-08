@@ -55,7 +55,7 @@ void rpc_handle_add(
     return;
   }
   // get message size
-  size_t data_size = _rpc_get_data_size( data_info );
+  size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
     res.status = -EIO;
     bolthur_rpc_return( type, &res, sizeof( res ), NULL );
@@ -71,7 +71,7 @@ void rpc_handle_add(
   // clear request
   memset( request, 0, data_size );
   // fetch rpc data
-  _rpc_get_data( request, data_size, data_info, false );
+  _syscall_rpc_get_data( request, data_size, data_info, false );
   // handle error
   if ( errno ) {
     res.status = -EIO;

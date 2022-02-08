@@ -51,7 +51,7 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   // enable rpc
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
-  _rpc_set_ready( true );
+  _syscall_rpc_set_ready( true );
 
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );

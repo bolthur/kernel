@@ -45,15 +45,15 @@ static void custom_nanosleep( const struct timespec* rqtp ) {
     return;
   }
   // get clock frequency
-  size_t frequency = _timer_frequency();
+  size_t frequency = _syscall_timer_frequency();
   // calculate second timeout
   size_t timeout = ( size_t )( rqtp->tv_sec * frequency );
   // add nanosecond offset
   timeout += ( size_t )( ( double )rqtp->tv_nsec * ( double )frequency / 1000000000.0 );
   // add tick count to get an end time
-  timeout += _timer_tick_count();
+  timeout += _syscall_timer_tick_count();
   // loop until timeout is reached
-  while ( _timer_tick_count() < timeout ) {
+  while ( _syscall_timer_tick_count() < timeout ) {
     __asm__ __volatile__( "nop" );
   }
 }
@@ -80,6 +80,24 @@ static uint32_t apply_shift(
   }
   // return possible changed value
   return value;
+}
+
+/**
+ * @fn uint32_t read_helper(iomem_mmio_entry_ptr_t)
+ * @brief read helper
+ *
+ * @param request
+ * @return
+ */
+static uint32_t read_helper( iomem_mmio_entry_ptr_t request ) {
+  // read value
+  uint32_t value = mmio_read( request->offset );
+  // apply possible and
+  if ( 0 < request->loop_and ) {
+   value &= request->loop_and;
+  }
+  // apply shift and return
+  return apply_shift( value, request->shift_type, request->shift_value );
 }
 
 /**
@@ -154,7 +172,7 @@ void rpc_handle_mmio(
     return;
   }
   // get message size
-  size_t data_size = _rpc_get_data_size( data_info );
+  size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
     err = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
@@ -170,7 +188,7 @@ void rpc_handle_mmio(
   // clear request
   memset( request_data, 0, data_size );
   // fetch rpc data
-  _rpc_get_data( request_data, data_size, data_info, false );
+  _syscall_rpc_get_data( request_data, data_size, data_info, false );
   // handle error
   if ( errno ) {
     err = -EIO;
@@ -247,6 +265,7 @@ void rpc_handle_mmio(
       ( *request )[ i ].skipped = 1;
       continue;
     }
+    EARLY_STARTUP_PRINT( "( *request )[ %zd ].type = %d\r\n", i, ( *request )[ i ].type )
     // handle mmio actions
     switch ( ( *request )[ i ].type ) {
       // handle loop while read is equal
@@ -255,29 +274,14 @@ void rpc_handle_mmio(
         if ( 0 < ( *request )[ i ].loop_max_iteration ) {
           loop_max_iteration = ( *request )[ i ].loop_max_iteration;
         }
-        // loop
-        do {
+        while ( ( *request )[ i ].value == ( value = read_helper( &( ( *request )[ i ] ) ) ) ) {
+          // break
+          if ( -1 != loop_max_iteration && ! loop_max_iteration-- ) {
+            break;
+          }
           // apply possible sleep
           apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
-          // read value
-          value = mmio_read( ( *request )[ i ].offset );
-          // apply possible and
-          if ( 0 < ( *request )[ i ].loop_and ) {
-            value &= ( *request )[ i ].loop_and;
-          }
-          // apply shift
-          value = apply_shift(
-            value,
-            ( *request )[ i ].shift_type,
-            ( *request )[ i ].shift_value
-          );
-        } while (
-          value == ( *request )[ i ].value
-          && (
-            -1 == loop_max_iteration
-            || loop_max_iteration--
-          )
-        );
+        }
         // save last value
         ( *request )[ i ].value = value;
         // handle loop iteration exceeded
@@ -296,29 +300,14 @@ void rpc_handle_mmio(
         if ( 0 < ( *request )[ i ].loop_max_iteration ) {
           loop_max_iteration = ( *request )[ i ].loop_max_iteration;
         }
-        // loop
-        do {
+        while ( ( *request )[ i ].value != ( value = read_helper( &( ( *request )[ i ] ) ) ) ) {
+          // break
+          if ( -1 != loop_max_iteration && ! loop_max_iteration-- ) {
+            break;
+          }
           // apply possible sleep
           apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
-          // read value
-          value = mmio_read( ( *request )[ i ].offset );
-          // apply possible and
-          if ( 0 < ( *request )[ i ].loop_and ) {
-            value &= ( *request )[ i ].loop_and;
-          }
-          // apply shift
-          value = apply_shift(
-            value,
-            ( *request )[ i ].shift_type,
-            ( *request )[ i ].shift_value
-          );
-        } while (
-          value != ( *request )[ i ].value
-          && (
-            -1 == loop_max_iteration
-            || loop_max_iteration--
-          )
-        );
+        }
         // save last value
         ( *request )[ i ].value = value;
         // handle loop iteration exceeded
@@ -337,29 +326,14 @@ void rpc_handle_mmio(
         if ( 0 < ( *request )[ i ].loop_max_iteration ) {
           loop_max_iteration = ( *request )[ i ].loop_max_iteration;
         }
-        // loop
-        do {
+        while ( ( value = read_helper( &( ( *request )[ i ] ) ) ) ) {
+          // break
+          if ( -1 != loop_max_iteration && ! loop_max_iteration-- ) {
+            break;
+          }
           // apply possible sleep
           apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
-          // read value
-          value = mmio_read( ( *request )[ i ].offset );
-          // apply possible and
-          if ( 0 < ( *request )[ i ].loop_and ) {
-            value &= ( *request )[ i ].loop_and;
-          }
-          // apply shift
-          value = apply_shift(
-            value,
-            ( *request )[ i ].shift_type,
-            ( *request )[ i ].shift_value
-          );
-        } while (
-          value
-          && (
-            -1 == loop_max_iteration
-            || loop_max_iteration--
-          )
-        );
+        }
         // save last value
         ( *request )[ i ].value = value;
         // handle loop iteration exceeded
@@ -378,29 +352,14 @@ void rpc_handle_mmio(
         if ( 0 < ( *request )[ i ].loop_max_iteration ) {
           loop_max_iteration = ( *request )[ i ].loop_max_iteration;
         }
-        // loop
-        do {
+        while ( ! ( value = read_helper( &( ( *request )[ i ] ) ) ) ) {
+          // break
+          if ( -1 != loop_max_iteration && ! loop_max_iteration-- ) {
+            break;
+          }
           // apply possible sleep
           apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
-          // read value
-          value = mmio_read( ( *request )[ i ].offset );
-          // apply possible and
-          if ( 0 < ( *request )[ i ].loop_and ) {
-            value &= ( *request )[ i ].loop_and;
-          }
-          // apply shift
-          value = apply_shift(
-            value,
-            ( *request )[ i ].shift_type,
-            ( *request )[ i ].shift_value
-          );
-        } while (
-          ! value
-          && (
-            -1 == loop_max_iteration
-            || loop_max_iteration--
-          )
-        );
+        }
         // save last value
         ( *request )[ i ].value = value;
         // handle loop iteration exceeded

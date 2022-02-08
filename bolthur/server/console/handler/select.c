@@ -51,7 +51,7 @@ void handler_console_select(
     return;
   }
   // get size for allocation
-  size_t sz = _rpc_get_data_size( data_info );
+  size_t sz = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
     return;
@@ -63,7 +63,7 @@ void handler_console_select(
     return;
   }
   // fetch rpc data
-  _rpc_get_data( command, sz, data_info, false );
+  _syscall_rpc_get_data( command, sz, data_info, false );
   // handle error
   if ( errno ) {
     free( command );

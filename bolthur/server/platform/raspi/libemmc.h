@@ -158,6 +158,10 @@
 #define SLOTISR_VER_SDVERSION( a ) ( uint8_t )( ( ( a ) >> 16 ) & 0xff )
 #define SLOTISR_VER_SLOT_STATUS( a ) ( uint8_t )( ( a ) & 0xff )
 
+// capability 1
+#define EMMC_CAPABILITY1_HIGH_SPEED_SUPPORT ( 1 << 21 )
+#define EMMC_CAPABILITY1_SDMA_SUPPORT ( 1 << 22 )
+
 // helpers for command stuff
 #define EMMC_CMD_INDEX( a ) ( (a) << 24 )
 #define EMMC_CMD_RESERVED( a ) 0xFFFFFFFF

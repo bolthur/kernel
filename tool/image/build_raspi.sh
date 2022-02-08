@@ -175,7 +175,7 @@ sed -e 's/\s*\([\+0-9a-zA-Z]*\).*/\1/' << EOF | fdisk ${ld}
   1 # bootable partition is partition 1
   t # change partition type
   1 # change first partition
-  06 # change to FAT16
+  0c # change to FAT32 LBA
   p # print the in-memory partition table
   w # write the partition table
   q # and we're done
@@ -186,7 +186,7 @@ if [ $? != 0 ]; then
   exit 1
 fi
 #format loopback partitions
-mkfs -t fat "${ld}p1"
+mkfs.vfat -F32 "${ld}p1"
 if [ $? != 0 ]; then
   echo "unable to partition boot with fat"
   losetup -d $ld

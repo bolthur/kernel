@@ -64,7 +64,7 @@ void rpc_handle_write(
     return;
   }
   // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_write_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( vfs_write_request_t ), data_info, false );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -157,7 +157,7 @@ void rpc_handle_write(
   }
   int status;
   // fetch rpc data
-  _rpc_get_data( &status, sizeof( int ), response_data_id, false );
+  _syscall_rpc_get_data( &status, sizeof( int ), response_data_id, false );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );

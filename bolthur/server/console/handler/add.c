@@ -51,7 +51,7 @@ void handler_console_add(
     return;
   }
   // get size for allocation
-  size_t sz = _rpc_get_data_size( data_info );
+  size_t sz = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
     return;
   }
@@ -62,7 +62,7 @@ void handler_console_add(
     return;
   }
   // fetch rpc data
-  _rpc_get_data( command, sz, data_info, false );
+  _syscall_rpc_get_data( command, sz, data_info, false );
   // handle error
   if ( errno ) {
     free( command );

@@ -69,7 +69,7 @@ void rpc_handle_read(
     return;
   }
   // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
   // handle error
   if ( errno ) {
     response->len = -EINVAL;
@@ -87,7 +87,7 @@ void rpc_handle_read(
   // map shared if set
   if ( 0 != request->shm_id ) {
     // attach shared area
-    shm_addr = _memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
+    shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
     if ( errno ) {
       // prepare response
       response->len = -EIO;
@@ -109,7 +109,7 @@ void rpc_handle_read(
       response->len = -errno;
       // free shared stuff
       if ( request->shm_id ) {
-        _memory_shared_detach( request->shm_id );
+        _syscall_memory_shared_detach( request->shm_id );
       }
       // return response
       bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
@@ -123,7 +123,7 @@ void rpc_handle_read(
   }
   // detach shared area
   if ( request->shm_id ) {
-    _memory_shared_detach( request->shm_id );
+    _syscall_memory_shared_detach( request->shm_id );
     if ( errno ) {
       // prepare response
       response->len = -EIO;

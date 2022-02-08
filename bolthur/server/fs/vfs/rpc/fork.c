@@ -51,7 +51,7 @@ void rpc_handle_fork(
     return;
   }
   // get message size
-  size_t message_size = _rpc_get_data_size( data_info );
+  size_t message_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
@@ -64,7 +64,7 @@ void rpc_handle_fork(
     return;
   }
   memset( request, 0, message_size );
-  _rpc_get_data( request, message_size, data_info, false );
+  _syscall_rpc_get_data( request, message_size, data_info, false );
   if ( errno ) {
     response.status = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -72,7 +72,7 @@ void rpc_handle_fork(
     return;
   }
   // check origin parent against parent from request ( must match )
-  pid_t origin_parent = _process_parent_by_id( origin );
+  pid_t origin_parent = _syscall_process_parent_by_id( origin );
   if ( origin_parent != request->parent ) {
     EARLY_STARTUP_PRINT(
       "origin = %d, origin parent = %d, request parent = %d\r\n",
