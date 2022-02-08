@@ -454,7 +454,7 @@ bool virt_map_address_range_random(
   // loop and map
   while ( start < end ) {
     // get physical page
-    uint64_t phys = phys_find_free_page( PAGE_SIZE );
+    uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
     // handle error
     if (
       // handle physical error

@@ -218,7 +218,7 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       // handle not mapped ( acquire new physical page )
       } else {
         // get new physical page
-        phys = phys_find_free_page( PAGE_SIZE );
+        phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
         // handle error
         if ( 0 == phys ) {
           return false;

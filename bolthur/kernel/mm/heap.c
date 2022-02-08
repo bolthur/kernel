@@ -211,6 +211,10 @@ static bool extend_heap_space( size_t given_size ) {
 
   // stop if not setup
   if ( ! kernel_heap || HEAP_INIT_NORMAL != kernel_heap->state ) {
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "heap not extendable\r\n" )
+    #endif
     return false;
   }
 
@@ -241,6 +245,17 @@ static bool extend_heap_space( size_t given_size ) {
   if ( ! max ) {
     return false;
   }
+
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "max = %#x\r\n", max )
+    DEBUG_OUTPUT( "Used tree:\r\n" )
+    avl_print( used_area );
+    DEBUG_OUTPUT( "Free address tree:\r\n" )
+    avl_print( free_address );
+    DEBUG_OUTPUT( "Free size tree:\r\n" )
+    avl_print( free_size );
+  #endif
 
   // get block
   block = HEAP_GET_BLOCK_ADDRESS( max );
@@ -991,8 +1006,23 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     }
     // extend heap
     if ( ! extend_heap_space( real_size ) ) {
+      // debug output
+      #if defined( PRINT_MM_HEAP )
+        DEBUG_OUTPUT( "Heap extension failed!\r\n" )
+      #endif
       return 0;
     }
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "Used tree:\r\n" )
+      avl_print( used_area );
+
+      DEBUG_OUTPUT( "Free address tree:\r\n" )
+      avl_print( free_address );
+
+      DEBUG_OUTPUT( "Free size tree:\r\n" )
+      avl_print( free_size );
+    #endif
     // try another allocation
     return heap_allocate_block( alignment, size );
   }
@@ -1196,15 +1226,13 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
   // insert at used block
   assert( avl_insert_by_node( used_area, &new->node_address ) )
 
-  // Debug output
+  // debug output
   #if defined( PRINT_MM_HEAP )
-    DEBUG_OUTPUT( "Used tree:\r\n" );
+    DEBUG_OUTPUT( "Used tree:\r\n" )
     avl_print( used_area );
-
-    DEBUG_OUTPUT( "Free address tree:\r\n" );
+    DEBUG_OUTPUT( "Free address tree:\r\n" )
     avl_print( free_address );
-
-    DEBUG_OUTPUT( "Free size tree:\r\n" );
+    DEBUG_OUTPUT( "Free size tree:\r\n" )
     avl_print( free_size );
   #endif
 

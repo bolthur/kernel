@@ -23,6 +23,9 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include "interrupt.h"
+
+#define SYSCALL_BIND( id, handler ) interrupt_register_handler( id, handler, NULL, INTERRUPT_SOFTWARE, false, false )
 
 #define SYSCALL_PROCESS_EXIT 1
 #define SYSCALL_PROCESS_ID 2
@@ -41,6 +44,7 @@
 #define SYSCALL_MEMORY_SHARED_ATTACH 24
 #define SYSCALL_MEMORY_SHARED_DETACH 25
 #define SYSCALL_MEMORY_TRANSLATE_PHYSICAL 26
+#define SYSCALL_MEMORY_TRANSLATE_BUS 27
 
 #define SYSCALL_RPC_SET_HANDLER 31
 #define SYSCALL_RPC_RAISE 32
@@ -86,6 +90,7 @@ void syscall_memory_shared_create( void* );
 void syscall_memory_shared_attach( void* );
 void syscall_memory_shared_detach( void* );
 void syscall_memory_translate_physical( void* );
+void syscall_memory_translate_bus( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );

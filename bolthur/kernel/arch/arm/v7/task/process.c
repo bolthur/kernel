@@ -294,7 +294,8 @@ uintptr_t task_process_prepare_init_arch( task_process_ptr_t proc ) {
   // get physical area
   uint64_t phys_address_fdt = phys_find_free_page_range(
     PAGE_SIZE,
-    rounded_fdt_size
+    rounded_fdt_size,
+    PHYS_MEMORY_TYPE_NORMAL
   );
   // handle error
   if( ! phys_address_fdt ) {

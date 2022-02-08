@@ -107,6 +107,10 @@ noreturn void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> shared] initialize ...\r\n" )
   assert( shared_memory_init() )
 
+  // Setup dma
+  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> dma] initialize ...\r\n" )
+  assert( phys_dma_init() )
+
   // Setup multitasking
   DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" )
   assert( task_process_init() )

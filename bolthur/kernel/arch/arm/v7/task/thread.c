@@ -55,7 +55,7 @@ task_thread_ptr_t task_thread_create(
   #endif
 
   // create stack
-  uint64_t stack_physical = phys_find_free_page_range( STACK_SIZE, STACK_SIZE );
+  uint64_t stack_physical = phys_find_free_page_range( STACK_SIZE, STACK_SIZE, PHYS_MEMORY_TYPE_NORMAL );
   // handle error
   if ( 0 == stack_physical ) {
     return NULL;

@@ -29,6 +29,8 @@
 #include "../mailbox/mailbox.h"
 #include "../mailbox/property.h"
 
+#define DMA_POOL_SIZE 0x400000
+
 /**
  * @fn bool phys_platform_init(void)
  * @brief Initialize physical memory manager for raspi
@@ -123,8 +125,9 @@ bool phys_platform_init( void ) {
     DEBUG_OUTPUT( "content of __kernel_start: %p\r\n", ( void* )&__kernel_start );
     DEBUG_OUTPUT( "content of __kernel_end: %p\r\n", ( void* ) &__kernel_end );
   #endif
-  // overwrite physical bitmap completely with zero
+  // overwrite all bitmaps completely with zero
   memset( phys_bitmap, 0, phys_bitmap_length * sizeof( uint32_t ) );
+  memset( phys_bitmap_check, 0, phys_bitmap_length * sizeof( uint32_t ) );
   // set start and end for peripherals
   uintptr_t start = PERIPHERAL_GPIO_BASE;
   uintptr_t end = start + PERIPHERAL_GPIO_SIZE + 1;
@@ -162,4 +165,65 @@ bool phys_free_check_only( uint64_t address ) {
   return
     PERIPHERAL_GPIO_BASE <= address
     && address < ( PERIPHERAL_GPIO_BASE + PERIPHERAL_GPIO_SIZE + 1 );
+}
+
+/**
+ * @fn uint64_t phys_address_to_bus(uint64_t, size_t)
+ * @brief Translate physical address to bus
+ *
+ * @param address
+ * @param size
+ * @return
+ */
+uint64_t phys_address_to_bus( uint64_t address, size_t size ) {
+  // check for in range
+  if (
+    address >= phys_dma_start
+    && address <= phys_dma_end
+    && address + size <= phys_dma_start
+  ) {
+    return 0;
+  }
+  // return bus address
+  return address + 0xC0000000;
+}
+
+/**
+ * @fn bool phys_init_dma(void)
+ * @brief Setup dma
+ *
+ * @return
+ */
+bool phys_dma_init( void ) {
+  // just 4 MB of dma
+  phys_dma_length = DMA_POOL_SIZE / PAGE_SIZE / PAGE_PER_ENTRY * sizeof( uint32_t );
+  phys_dma_bitmap = ( uint32_t* )malloc( phys_dma_length );
+  if ( ! phys_dma_bitmap ) {
+    return false;
+  }
+  // debug output
+  #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT( "phys dma bitmap address: %p\r\n", ( void* )phys_dma_bitmap );
+    DEBUG_OUTPUT( "phys dma length: %u\r\n", phys_dma_length );
+  #endif
+  // clear area
+  memset( phys_dma_bitmap, 0, phys_dma_length );
+  // use contiguous area for dma
+  size_t dma_size = DMA_POOL_SIZE;
+  uint64_t dma_start = phys_find_free_page_range( PAGE_SIZE, dma_size, PHYS_MEMORY_TYPE_NORMAL );
+  if ( ! dma_start ) {
+    return false;
+  }
+  // debug output
+  #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT( "dma_start: %#llx\r\n", dma_start );
+    DEBUG_OUTPUT( "dma_size: %u\r\n", dma_size );
+  #endif
+  // set start and end of dma
+  phys_dma_start = dma_start;
+  phys_dma_end = dma_start + dma_size;
+  /// FIXME: REMOVE HACK ONCE ERROR HANDLING HAS BEEN REVISED
+  phys_dma_bitmap[ 0 ] = 1;
+  /// FIXME: REMOVE HACK ONCE ERROR HANDLING HAS BEEN REVISED
+  return true;
 }

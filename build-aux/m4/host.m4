@@ -13,7 +13,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AH_TEMPLATE([PRINT_MM_VIRT], [Define to 1 to enable output of virtual memory manager])
   AH_TEMPLATE([PRINT_MM_HEAP], [Define to 1 to enable output of kernel heap])
   AH_TEMPLATE([PRINT_MM_SHARED], [Define to 1 to enable output of shared memory functions])
-  AH_TEMPLATE([PRINT_MM_DMA], [Define to 1 to enable output of dma memory functions])
   AH_TEMPLATE([PRINT_MAILBOX], [Define to 1 to enable output of mailbox])
   AH_TEMPLATE([PRINT_TIMER], [Define to 1 to enable output of timer])
   AH_TEMPLATE([PRINT_INITRD], [Define to 1 to enable output of initrd])
@@ -56,11 +55,6 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   # Test for shared memory output
   AS_IF([test "x$enable_output_mm_shared" == "xyes"], [
     AC_DEFINE([PRINT_MM_SHARED],[1])
-  ])
-
-  # Test for dma memory output
-  AS_IF([test "x$enable_output_mm_dma" == "xyes"], [
-    AC_DEFINE([PRINT_MM_DMA],[1])
   ])
 
   # Test for mailbox output

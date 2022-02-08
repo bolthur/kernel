@@ -39,7 +39,10 @@
 void syscall_timer_tick_count( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_timer_tick_count()\r\n" )
+    DEBUG_OUTPUT(
+      "syscall_timer_tick_count() - %d\r\n",
+      task_thread_current_thread->process->id
+    )
   #endif
   syscall_populate_success( context, timer_get_tick() );
 }

@@ -153,7 +153,7 @@ static shared_memory_entry_ptr_t create_entry( size_t size ) {
   }
   // allocate pages
   for ( size_t idx = 0; idx < count; idx++ ) {
-    entry->address[ idx ] = phys_find_free_page( PAGE_SIZE );
+    entry->address[ idx ] = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
     // handle error
     if ( 0 == entry->address[ idx ] ) {
       destroy_entry( entry );

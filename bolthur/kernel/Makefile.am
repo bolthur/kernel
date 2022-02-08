@@ -12,7 +12,6 @@ libkernel_la_SOURCES = \
   rpc/data.c \
   rpc/generic.c \
   rpc/queue.c \
-  mm/dma.c \
   mm/heap.c \
   mm/phys.c \
   mm/shared.c \

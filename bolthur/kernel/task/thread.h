@@ -56,7 +56,7 @@ extern task_thread_ptr_t task_thread_current_thread;
 #define TASK_THREAD_GET_BLOCK( n ) \
   ( task_thread_ptr_t )( ( uint8_t* )n - offsetof( task_thread_t, node_id ) )
 #define TASK_THREAD_GET_CONTEXT  \
-  ( NULL != task_thread_current_thread ? task_thread_current_thread->current_context : NULL )
+  ( task_thread_current_thread ? task_thread_current_thread->current_context : NULL )
 
 bool task_thread_set_current( task_thread_ptr_t, task_priority_queue_ptr_t );
 void task_thread_reset_current( void );

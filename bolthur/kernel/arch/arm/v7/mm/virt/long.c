@@ -421,7 +421,7 @@ static uint64_t get_new_table( uint64_t table ) {
     return 0;
   }
   // get new page
-  uint64_t addr = phys_find_free_page( PAGE_SIZE );
+  uint64_t addr = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
   // handle error
   if ( 0 == addr ) {
     return addr;
@@ -747,7 +747,7 @@ bool v7_long_map_random(
   uint32_t page
 ) {
   // get physical address
-  uint64_t phys = phys_find_free_page( PAGE_SIZE );
+  uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
   // handle error
   if ( 0 == phys ) {
     return false;
@@ -1049,7 +1049,7 @@ virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
   // allocate context
   uint64_t ctx = ! virt_init_get()
     ? VIRT_2_PHYS( aligned_alloc( PAGE_SIZE, sizeof( ld_global_page_directory_t ) ) )
-    : phys_find_free_page_range( PAGE_SIZE, sizeof( ld_global_page_directory_t ) );
+    : phys_find_free_page_range( PAGE_SIZE, sizeof( ld_global_page_directory_t ), PHYS_MEMORY_TYPE_NORMAL );
   // handle error
   if ( 0 == ctx ) {
     return NULL;
@@ -1126,7 +1126,7 @@ bool v7_long_fork_table( ld_page_table_t* to_fork, ld_page_table_t* forked ) {
     uint64_t phys_to_fork = LD_PHYSICAL_PAGE_ADDRESS(
       to_fork->page[ page_idx ].raw
     );
-    uint64_t phys_forked = phys_find_free_page( PAGE_SIZE );
+    uint64_t phys_forked = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
     if ( 0 == phys_forked ) {
       return false;
     }

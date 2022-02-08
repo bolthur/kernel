@@ -6,7 +6,6 @@ noinst_LTLIBRARIES = libraspi.la
 libraspi_la_SOURCES = \
   mailbox/mailbox.c \
   mailbox/property.c \
-  mm/dma.c \
   mm/phys.c \
   mm/virt.c \
   interrupt.c \

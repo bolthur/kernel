@@ -192,6 +192,10 @@ bool task_process_init( void ) {
   process_manager = ( task_manager_ptr_t )malloc( sizeof( task_manager_t ) );
   // check parameter
   if ( ! process_manager ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "process manager malloc failed\r\n" )
+    #endif
     return false;
   }
   // prepare structure
@@ -202,6 +206,10 @@ bool task_process_init( void ) {
     process_compare_id, process_lookup_id, NULL );
   // handle error
   if ( ! process_manager->process_id ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "process id tree failed\r\n" )
+    #endif
     free( process_manager );
     return false;
   }
@@ -209,6 +217,10 @@ bool task_process_init( void ) {
   process_manager->thread_priority = task_queue_init();
   // handle error
   if ( ! process_manager->thread_priority ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "thread_priority failed\r\n" )
+    #endif
     avl_destroy_tree( process_manager->process_id );
     free( process_manager );
     return false;
@@ -220,6 +232,10 @@ bool task_process_init( void ) {
     NULL
   );
   if ( ! process_manager->process_to_cleanup ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "process_to_cleanup failed\r\n" )
+    #endif
     avl_destroy_tree( process_manager->process_id );
     avl_destroy_tree( process_manager->thread_priority );
     free( process_manager );
@@ -227,6 +243,10 @@ bool task_process_init( void ) {
   }
   process_manager->thread_to_cleanup = list_construct( NULL, NULL, NULL );
   if ( ! process_manager->thread_to_cleanup ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "thread_to_cleanup failed\r\n" )
+    #endif
     list_destruct( process_manager->process_to_cleanup );
     avl_destroy_tree( process_manager->process_id );
     avl_destroy_tree( process_manager->thread_priority );
@@ -235,6 +255,10 @@ bool task_process_init( void ) {
   }
   // register process switch event
   if ( ! event_bind( EVENT_PROCESS, task_process_schedule, true ) ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "bind failed\r\n" )
+    #endif
     list_destruct( process_manager->thread_to_cleanup );
     list_destruct( process_manager->process_to_cleanup );
     avl_destroy_tree( process_manager->thread_priority );
@@ -244,6 +268,10 @@ bool task_process_init( void ) {
   }
   // register cleanup
   if ( ! event_bind( EVENT_PROCESS, task_process_cleanup, true ) ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "bind failed\r\n" )
+    #endif
     event_unbind( EVENT_PROCESS, task_process_schedule, true );
     list_destruct( process_manager->thread_to_cleanup );
     list_destruct( process_manager->process_to_cleanup );
@@ -253,6 +281,10 @@ bool task_process_init( void ) {
     return false;
   }
   if ( ! event_bind( EVENT_PROCESS, task_thread_cleanup, true ) ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "bind failed\r\n" )
+    #endif
     event_unbind( EVENT_PROCESS, task_process_cleanup, true );
     event_unbind( EVENT_PROCESS, task_process_schedule, true );
     list_destruct( process_manager->thread_to_cleanup );
@@ -402,6 +434,7 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
   forked->id = task_process_generate_id();
   forked->parent = proc->id;
   forked->priority = proc->priority;
+  forked->current_thread_id = 0;
 
   // fork shared memory
   if ( ! shared_memory_fork( proc, forked ) ) {
@@ -599,7 +632,8 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
   // get physical area
   uint64_t phys_address_ramdisk = phys_find_free_page_range(
     PAGE_SIZE,
-    rounded_ramdisk_file_size
+    rounded_ramdisk_file_size,
+    PHYS_MEMORY_TYPE_NORMAL
   );
   // debug output
   #if defined( PRINT_PROCESS )
