@@ -61,12 +61,12 @@ static void* prepare_mailbox( size_t count, size_t* total ) {
 }
 
 /**
- * @fn emmc_response_t emmc_controller_shutdown(void)
+ * @fn emmc_response_t controller_shutdown(void)
  * @brief Shutdown emmc controller by using mailbox interface
  *
  * @return
  */
-emmc_response_t emmc_controller_shutdown( void ) {
+static emmc_response_t controller_shutdown( void ) {
   // allocate buffer
   size_t request_size;
   int32_t* request = prepare_mailbox( 8, &request_size );
@@ -136,12 +136,12 @@ emmc_response_t emmc_controller_shutdown( void ) {
 }
 
 /**
- * @fn emmc_response_t emmc_controller_startup(void)
+ * @fn emmc_response_t controller_startup(void)
  * @brief Startup emmc controller by usind mailbox interface
  *
  * @return
  */
-emmc_response_t emmc_controller_startup( void ) {
+static emmc_response_t controller_startup( void ) {
   // allocate buffer
   size_t request_size;
   int32_t* request = prepare_mailbox( 8, &request_size );
@@ -222,7 +222,7 @@ emmc_response_t emmc_controller_restart( void ) {
     EARLY_STARTUP_PRINT( "Shutdown emmc controller\r\n" )
   #endif
   // shutdown controller
-  emmc_response_t response = emmc_controller_shutdown();
+  emmc_response_t response = controller_shutdown();
   if ( EMMC_RESPONSE_OK != response ) {
     // restarting controller
     #if defined( EMMC_ENABLE_DEBUG )
@@ -244,7 +244,7 @@ emmc_response_t emmc_controller_restart( void ) {
     EARLY_STARTUP_PRINT( "Startup emmc controller again\r\n" )
   #endif
   // shutdown controller
-  response = emmc_controller_startup();
+  response = controller_startup();
   if ( EMMC_RESPONSE_OK != response ) {
     // restarting controller
     #if defined( EMMC_ENABLE_DEBUG )

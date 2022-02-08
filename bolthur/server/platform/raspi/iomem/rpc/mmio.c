@@ -92,12 +92,16 @@ static uint32_t apply_shift(
 static uint32_t read_helper( iomem_mmio_entry_ptr_t request ) {
   // read value
   uint32_t value = mmio_read( request->offset );
+  //EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   // apply possible and
   if ( 0 < request->loop_and ) {
    value &= request->loop_and;
   }
+  //EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   // apply shift and return
-  return apply_shift( value, request->shift_type, request->shift_value );
+  value = apply_shift( value, request->shift_type, request->shift_value );
+  //EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
+  return value;
 }
 
 /**
@@ -265,7 +269,7 @@ void rpc_handle_mmio(
       ( *request )[ i ].skipped = 1;
       continue;
     }
-    EARLY_STARTUP_PRINT( "( *request )[ %zd ].type = %d\r\n", i, ( *request )[ i ].type )
+    //EARLY_STARTUP_PRINT( "( *request )[ %zd ].type = %d\r\n", i, ( *request )[ i ].type )
     // handle mmio actions
     switch ( ( *request )[ i ].type ) {
       // handle loop while read is equal

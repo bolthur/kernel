@@ -36,16 +36,17 @@
 
 emmc_device_ptr_t device;
 
+/*
+ * Use interrupt handling instead of polling.
+ * According to https://elinux.org/BCM2835_datasheet_errata#p113 interrupt is IRQ 62
+ */
 
-
-
-/// SEE: https://elinux.org/BCM2835_datasheet_errata
-/// FIXME: USE INTERRUPTS INSTEAD OF POLLING.
-/// FIXME ACCORDING TO LINK ABOVE INTERRUPT FOR EMMC IS 62
-
-
-
-
+/**
+ * @fn emmc_response_t emmc_sd_setup(void)
+ * @brief Setup emmc sd card
+ *
+ * @return
+ */
 static emmc_response_t emmc_sd_setup( void ) {
   emmc_response_t response;
 
@@ -153,7 +154,7 @@ static emmc_response_t emmc_sd_setup( void ) {
         return response;
       }
     } else {
-      /// FIXME: SDIO CARDS NOT SUPPORTED
+      /// FIXME: ADD SUPPORT FOR SDIO card
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "SDIO card detected, but not yet supported\r\n" )
@@ -253,66 +254,6 @@ void* emmc_prepare_sequence( size_t count, size_t* total ) {
   return tmp;
 }
 
-emmc_response_t emmc_check_capability( void ) {
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Read capability register\r\n" )
-  #endif
-  size_t sequence_count;
-  iomem_mmio_entry_ptr_t sequence = emmc_prepare_sequence( 2, &sequence_count );
-  if ( ! sequence ) {
-    return EMMC_RESPONSE_ERROR_MEMORY;
-  }
-  // Send all interrupts to arm
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 0 ].offset = PERIPHERAL_EMMC_CAPABILITY1;
-  // reset interrupt flags
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 1 ].offset = PERIPHERAL_EMMC_CAPABILITY2;
-  // perform request
-  int result = ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_MMIO,
-      sequence_count,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
-  // handle ioctl error
-  if ( -1 == result ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "mmio rpc failed\r\n" )
-    #endif
-    free( sequence );
-    return EMMC_RESPONSE_ERROR_IO;
-  }
-  free( sequence );
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "capability %#"PRIx32" / %#"PRIx32"\r\n",
-      sequence[ 0 ].value, sequence[ 1 ].value )
-  #endif
-  // check for sdma support
-  if ( sequence[ 0 ].value & EMMC_CAPABILITY1_SDMA_SUPPORT ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "SDMA possible, set flag to true\r\n" )
-    #endif
-    device->dma_possible = true;
-  }
-  // check for sdma support
-  if ( sequence[ 0 ].value & EMMC_CAPABILITY1_HIGH_SPEED_SUPPORT ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "High speed supported!\r\n" )
-    #endif
-    /// FIXME: SET SOME FLAG
-  }
-  return EMMC_RESPONSE_OK;
-}
-
 /**
  * @fn emmc_response_t emmc_init(void)
  * @brief Init prepares necessary structures for emmc handling
@@ -343,42 +284,8 @@ emmc_response_t emmc_init( void ) {
     return EMMC_RESPONSE_ERROR_MEMORY;
   }
   memset( device, 0, sizeof( emmc_device_t ) );
-
-  // allocate dma buffer
-  device->dma_buffer_size = 0x1000;
-  device->dma_buffer_mapped = mmap(
-    NULL,
-    device->dma_buffer_size,
-    PROT_READ | PROT_WRITE,
-    MAP_ANONYMOUS | MAP_PHYSICAL | MAP_DEVICE | MAP_BUS,
-    -1,
-    0
-  );
-  if( MAP_FAILED == device->dma_buffer_mapped ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to map bus memory\r\n" )
-    #endif
-    return EMMC_RESPONSE_ERROR_MEMORY;
-  }
-  device->dma_buffer_bus = _syscall_memory_translate_bus(
-    ( uintptr_t )device->dma_buffer_mapped,
-    device->dma_buffer_size
-  );
-  if ( errno ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
-        "Unable to translate to bus address: %s\r\n",
-        strerror( errno )
-      )
-    #endif
-    return EMMC_RESPONSE_ERROR_IO;
-  }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "device->dma_buffer_mapped = %p\r\n", ( void* )device->dma_buffer_mapped )
-    EARLY_STARTUP_PRINT( "device->dma_buffer_bus = %p\r\n", ( void* )device->dma_buffer_bus )
     EARLY_STARTUP_PRINT(
       "Opening %s for mmio / mailbox operations\r\n",
       IOMEM_DEVICE_PATH
@@ -466,8 +373,7 @@ emmc_response_t emmc_init( void ) {
 
   // set init to false
   device->init = false;
-  device->use_dma = ! EMMC_ENABLE_DMA;
-  device->dma_possible = ! EMMC_ENABLE_DMA;
+
   /// FIXME: Check for card by using card interrupt
 
   // debug output
@@ -480,16 +386,6 @@ emmc_response_t emmc_init( void ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Initialize and Identify sd card failed\r\n" )
-    #endif
-    return response;
-  }
-
-  // parse capabilities
-  response = emmc_check_capability();
-  if ( EMMC_RESPONSE_OK != response ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Error during parse of capability registers\r\n" )
     #endif
     return response;
   }
@@ -744,7 +640,7 @@ emmc_response_t emmc_init( void ) {
     #endif
 
     // mask interrupt
-    response = emmc_mask_interrupt_mask( ( uint32_t )~EMMC_IRPT_MASK_CARD );
+    response = emmc_mask_interrupt_mask( 0xFFFFFFFF );
     if ( EMMC_RESPONSE_OK != response ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
@@ -1032,9 +928,6 @@ emmc_response_t emmc_transfer_block(
   uint32_t current_try;
   // send command with 3 retries
   for ( current_try = 0; current_try < 3; current_try++ ) {
-    // try dma only for first of all
-    device->use_dma = ( device->dma_possible && 0 == current_try )
-      ? EMMC_ENABLE_DMA : ! EMMC_ENABLE_DMA;
     // try command
     response = emmc_issue_command( command, block_number, 500000 );
     // handle success with break

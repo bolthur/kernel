@@ -222,8 +222,6 @@ bool phys_dma_init( void ) {
   // set start and end of dma
   phys_dma_start = dma_start;
   phys_dma_end = dma_start + dma_size;
-  /// FIXME: REMOVE HACK ONCE ERROR HANDLING HAS BEEN REVISED
-  phys_dma_bitmap[ 0 ] = 1;
-  /// FIXME: REMOVE HACK ONCE ERROR HANDLING HAS BEEN REVISED
+  // return success
   return true;
 }

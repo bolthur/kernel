@@ -26,7 +26,6 @@
 #define _EMMC_H
 
 #define EMMC_ENABLE_DEBUG 1
-#define EMMC_ENABLE_DMA true
 
 enum emmc_response {
   EMMC_RESPONSE_OK = 0,
@@ -78,13 +77,10 @@ struct emmc_device {
   uint32_t block_size;
   uint32_t block_count;
 
+  // buffer, file descriptor and init flag
   uint32_t* buffer;
-  // mapped dma buffer address
-  uint32_t* dma_buffer_mapped;
-  // bus dma buffer address
-  uintptr_t dma_buffer_bus;
-  // size of the dma buffer
-  size_t dma_buffer_size;
+  int fd_iomem;
+  bool init;
 
   // last command executed
   uint32_t last_command;
@@ -103,14 +99,6 @@ struct emmc_device {
   uint8_t version_host_controller;
   // status of slot
   uint8_t status_slot;
-  // file descriptor for mmio
-  int fd_iomem;
-
-  // init flag
-  bool init;
-  // use dma flag
-  bool use_dma;
-  bool dma_possible;
 };
 
 typedef enum emmc_response emmc_response_t;
@@ -131,21 +119,20 @@ emmc_response_t emmc_change_clock_frequency( uint32_t );
 emmc_response_t emmc_reset_interrupt( uint32_t );
 emmc_response_t emmc_mask_interrupt( uint32_t );
 emmc_response_t emmc_mask_interrupt_mask( uint32_t );
+emmc_response_t emmc_interrupt_fetch( uint32_t* );
+void emmc_interrupt_handle_card( void );
+void emmc_interrupt_handle( void );
 // helper to get version
 emmc_response_t emmc_get_version( void );
 // power up/down helper
-emmc_response_t emmc_controller_shutdown( void );
-emmc_response_t emmc_controller_startup( void );
 emmc_response_t emmc_controller_restart( void );
 // reset helper
 emmc_response_t emmc_reset( void );
 emmc_response_t emmc_reset_command( void );
 emmc_response_t emmc_reset_data( void );
-emmc_response_t emmc_stop_transmission( void );
 // issue a command to emmc
 emmc_response_t emmc_issue_command( uint32_t, uint32_t, useconds_t );
 emmc_response_t emmc_issue_command_ex( uint32_t, uint32_t, useconds_t );
-emmc_response_t emmc_check_capability( void );
 
 // init using helpers above
 emmc_response_t emmc_init( void );

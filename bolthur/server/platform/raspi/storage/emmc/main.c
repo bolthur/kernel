@@ -92,9 +92,6 @@ int main( __unused int argc, __unused char* argv[] ) {
     )
   }
 
-  // FIXME: READ MBR
-  // FIXME: DETERMINE FILE SYSTEMS OF PARTITIONS
-  // FIXME: START NECESSARY DRIVERS (?)
   return -1;
 
   // enable rpc

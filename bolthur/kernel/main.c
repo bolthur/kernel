@@ -99,6 +99,10 @@ noreturn void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" )
   virt_init();
 
+  // Setup dma
+  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> dma] initialize ...\r\n" )
+  assert( phys_dma_init() )
+
   // Setup heap
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" )
   heap_init( HEAP_INIT_NORMAL );
@@ -106,10 +110,6 @@ noreturn void kernel_main( void ) {
   // Setup shared
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> shared] initialize ...\r\n" )
   assert( shared_memory_init() )
-
-  // Setup dma
-  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> dma] initialize ...\r\n" )
-  assert( phys_dma_init() )
 
   // Setup multitasking
   DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" )
