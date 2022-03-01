@@ -94,7 +94,7 @@ bool framebuffer_init( void ) {
   int result = ioctl(
     iomem_fd,
     IOCTL_BUILD_REQUEST(
-      IOMEM_MAILBOX,
+      IOMEM_RPC_MAILBOX,
       request_size,
       IOCTL_RDWR
     ),
@@ -177,7 +177,7 @@ bool framebuffer_init( void ) {
   result = ioctl(
     iomem_fd,
     IOCTL_BUILD_REQUEST(
-      IOMEM_MAILBOX,
+      IOMEM_RPC_MAILBOX,
       request_size,
       IOCTL_RDWR
     ),

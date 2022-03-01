@@ -22,21 +22,21 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
-#include "../mailbox.h"
-#include "../property.h"
-#include "../rpc.h"
-#include "../../libiomem.h"
+#include "../../mailbox.h"
+#include "../../property.h"
+#include "../../rpc.h"
+#include "../../../libiomem.h"
 
 /**
- * @fn void rpc_handle_unlock(size_t, pid_t, size_t, size_t)
- * @brief handle unlock region request
+ * @fn void rpc_handle_gpio_unlock(size_t, pid_t, size_t, size_t)
+ * @brief handle unlock gpio pin request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_unlock(
+void rpc_handle_gpio_unlock(
   __unused size_t type,
   __unused pid_t origin,
   __unused size_t data_info,

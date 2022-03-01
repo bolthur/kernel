@@ -27,20 +27,48 @@
 
 struct mailbox_rpc command_list[] = {
   {
-    .command = IOMEM_MAILBOX,
+    .command = IOMEM_RPC_MAILBOX,
     .callback = rpc_handle_mailbox,
   },
   {
-    .command = IOMEM_MMIO,
-    .callback = rpc_handle_mmio,
+    .command = IOMEM_RPC_MMIO_PERFORM,
+    .callback = rpc_handle_mmio_perform,
   },
   {
-    .command = IOMEM_LOCK,
-    .callback = rpc_handle_lock,
+    .command = IOMEM_RPC_MMIO_LOCK,
+    .callback = rpc_handle_mmio_lock,
   },
   {
-    .command = IOMEM_UNLOCK,
-    .callback = rpc_handle_unlock,
+    .command = IOMEM_RPC_MMIO_UNLOCK,
+    .callback = rpc_handle_mmio_unlock,
+  },
+  {
+    .command = IOMEM_RPC_GPIO_SET_FUNCTION,
+    .callback = rpc_handle_gpio_set_function,
+  },
+  {
+    .command = IOMEM_RPC_GPIO_SET_PULL,
+    .callback = rpc_handle_gpio_set_pull,
+  },
+  {
+    .command = IOMEM_RPC_GPIO_SET_DETECT,
+    .callback = rpc_handle_gpio_set_detect,
+  },
+  {
+    .command = IOMEM_RPC_GPIO_STATUS,
+    .callback = rpc_handle_gpio_status,
+  },
+  {
+    .command = IOMEM_RPC_GPIO_EVENT,
+    .callback = rpc_handle_gpio_event,
+  },
+  {
+    .command = IOMEM_RPC_GPIO_LOCK,
+    .callback = rpc_handle_gpio_lock,
+  },
+  {
+    .command = IOMEM_RPC_GPIO_UNLOCK,
+    .callback = rpc_handle_gpio_unlock,
   },
 };
 

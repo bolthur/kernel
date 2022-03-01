@@ -74,8 +74,6 @@ void mailbox_property_init( void ) {
  *
  * @param tag Tag to add
  * @param ... Further data depending on tag to be added
- *
- * @todo check and complete
  */
 void mailbox_property_add_tag( raspi_mailbox_tag_t tag, ... ) {
   va_list vl;

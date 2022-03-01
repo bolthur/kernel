@@ -17,13 +17,32 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
+#include <libgen.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/bolthur.h>
+#include "../../mailbox.h"
+#include "../../property.h"
+#include "../../rpc.h"
+#include "../../../libiomem.h"
 
-#if ! defined( _UTIL_H )
-#define _UTIL_H
-
-
-uint32_t util_word_read( const uint8_t* );
-void util_word_write( uint32_t, uint8_t* );
-
-#endif
+/**
+ * @fn void rpc_handle_mmio_lock(size_t, pid_t, size_t, size_t)
+ * @brief handle lock mmio region request
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_mmio_lock(
+  __unused size_t type,
+  __unused pid_t origin,
+  __unused size_t data_info,
+  __unused size_t response_info
+) {
+  int err = -ENOSYS;
+  bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+  return;
+}

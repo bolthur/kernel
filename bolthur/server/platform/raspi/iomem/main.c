@@ -71,7 +71,7 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
   // calculate add message size
-  size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
+  size_t msg_size = sizeof( vfs_add_request_t ) + 11 * sizeof( size_t );
   // allocate memory for add request
   vfs_add_request_ptr_t msg = malloc( msg_size );
   if ( ! msg ) {
@@ -82,8 +82,17 @@ int main( __unused int argc, __unused char* argv[] ) {
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, IOMEM_DEVICE_PATH, PATH_MAX - 1 );
-  msg->device_info[ 0 ] = IOMEM_MAILBOX;
-  msg->device_info[ 1 ] = IOMEM_MMIO;
+  msg->device_info[  0 ] = IOMEM_RPC_MAILBOX;
+  msg->device_info[  1 ] = IOMEM_RPC_MMIO_LOCK;
+  msg->device_info[  2 ] = IOMEM_RPC_MMIO_PERFORM;
+  msg->device_info[  3 ] = IOMEM_RPC_MMIO_UNLOCK;
+  msg->device_info[  4 ] = IOMEM_RPC_GPIO_SET_FUNCTION;
+  msg->device_info[  5 ] = IOMEM_RPC_GPIO_SET_PULL;
+  msg->device_info[  6 ] = IOMEM_RPC_GPIO_SET_DETECT;
+  msg->device_info[  7 ] = IOMEM_RPC_GPIO_STATUS;
+  msg->device_info[  8 ] = IOMEM_RPC_GPIO_EVENT;
+  msg->device_info[  9 ] = IOMEM_RPC_GPIO_LOCK;
+  msg->device_info[ 10 ] = IOMEM_RPC_GPIO_UNLOCK;
   // perform add request
   send_vfs_add_request( msg, msg_size, 0 );
   // free again

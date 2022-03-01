@@ -29,24 +29,17 @@
 
 enum emmc_response {
   EMMC_RESPONSE_OK = 0,
-  EMMC_RESPONSE_ERROR,
-  EMMC_RESPONSE_ERROR_MEMORY,
-  EMMC_RESPONSE_ERROR_IO,
-  EMMC_RESPONSE_TIMEOUT,
-  EMMC_RESPONSE_BUSY,
-  EMMC_RESPONSE_NO_RESP,
-  EMMC_RESPONSE_ERROR_RESET,
-  EMMC_RESPONSE_ERROR_RESTART,
-  EMMC_RESPONSE_ERROR_CLOCK,
-  EMMC_RESPONSE_ERROR_VOLTAGE,
-  EMMC_RESPONSE_ERROR_APP_CMD,
-  EMMC_RESPONSE_ERROR_CMD_DONE,
-  EMMC_RESPONSE_ERROR_DATA_DONE,
-  EMMC_RESPONSE_CARD_CHANGED,
-  EMMC_RESPONSE_CARD_ABSENT,
-  EMMC_RESPONSE_CARD_REINSERTED,
-  EMMC_RESPONSE_CARD_ERROR,
+  EMMC_RESPONSE_MEMORY,
+  EMMC_RESPONSE_IO,
+  EMMC_RESPONSE_MAILBOX,
   EMMC_RESPONSE_NOT_IMPLEMENTED,
+  EMMC_RESPONSE_CARD_ABSENT,
+  EMMC_RESPONSE_CARD_EJECTED,
+  EMMC_RESPONSE_CARD_ERROR,
+  EMMC_RESPONSE_TIMEOUT,
+  EMMC_RESPONSE_INVALID_COMMAND,
+  EMMC_RESPONSE_COMMAND_ERROR,
+  EMMC_RESPONSE_UNKNOWN,
 };
 
 enum emmc_operation {
@@ -59,6 +52,7 @@ struct emmc_device {
   uint32_t card_ocr;
   // card identification register
   uint32_t card_cid[ 4 ];
+  uint32_t card_cid_backup[ 4 ];
   // card-specific data register
   uint32_t card_csd[ 4 ];
   // relative card address register
@@ -80,7 +74,6 @@ struct emmc_device {
   // buffer, file descriptor and init flag
   uint32_t* buffer;
   int fd_iomem;
-  bool init;
 
   // last command executed
   uint32_t last_command;
@@ -99,44 +92,28 @@ struct emmc_device {
   uint8_t version_host_controller;
   // status of slot
   uint8_t status_slot;
+
+  // flags for card is absent and ejected
+  bool card_absent;
+  bool card_ejected;
+
+  // initialization flags
+  bool initialized;
+};
+
+struct emmc_message_entry {
+  char* message;
 };
 
 typedef enum emmc_response emmc_response_t;
 typedef enum emmc_operation emmc_operation_t;
 typedef struct emmc_device emmc_device_t;
 typedef struct emmc_device* emmc_device_ptr_t;
+typedef struct emmc_message_entry emmc_message_entry_t;
+typedef struct emmc_message_entry* emmc_message_entry_ptr_t;
 
-// bunch of globals needed across file
-extern uint32_t emmc_command_list[ 64 ];
-extern uint32_t emmc_app_command_list[ 64 ];
-extern emmc_device_ptr_t device;
-
-// helper to allocate and prefill sequence with default
-void* emmc_prepare_sequence( size_t, size_t* );
-// helper to reset clock frequency
-emmc_response_t emmc_change_clock_frequency( uint32_t );
-// helper to reset interrupt state
-emmc_response_t emmc_reset_interrupt( uint32_t );
-emmc_response_t emmc_mask_interrupt( uint32_t );
-emmc_response_t emmc_mask_interrupt_mask( uint32_t );
-emmc_response_t emmc_interrupt_fetch( uint32_t* );
-void emmc_interrupt_handle_card( void );
-void emmc_interrupt_handle( void );
-// helper to get version
-emmc_response_t emmc_get_version( void );
-// power up/down helper
-emmc_response_t emmc_controller_restart( void );
-// reset helper
-emmc_response_t emmc_reset( void );
-emmc_response_t emmc_reset_command( void );
-emmc_response_t emmc_reset_data( void );
-// issue a command to emmc
-emmc_response_t emmc_issue_command( uint32_t, uint32_t, useconds_t );
-emmc_response_t emmc_issue_command_ex( uint32_t, uint32_t, useconds_t );
-
-// init using helpers above
 emmc_response_t emmc_init( void );
-// read / write block
+const char* emmc_error( emmc_response_t );
 emmc_response_t emmc_transfer_block( uint32_t*, size_t, uint32_t, emmc_operation_t );
 
 #endif

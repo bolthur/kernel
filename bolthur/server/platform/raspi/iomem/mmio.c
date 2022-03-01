@@ -23,6 +23,15 @@
 #include "../libperipheral.h"
 #include "mmio.h"
 
+// initial setup of peripheral base
+#if defined( BCM2836 ) || defined( BCM2837 )
+  #define PERIPHERAL_BASE 0x3F000000
+  #define PERIPHERAL_SIZE 0xFFFFFF
+#else
+  #define PERIPHERAL_BASE 0x20000000
+  #define PERIPHERAL_SIZE 0xFFFFFF
+#endif
+
 void* mmio_start = NULL;
 void* mmio_end = NULL;
 

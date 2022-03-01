@@ -3,10 +3,17 @@ AM_CFLAGS = -DPROGRAM_NAME=\"iomem\"
 
 bin_PROGRAMS = iomem
 iomem_SOURCES = \
-  rpc/lock.c \
+  rpc/gpio/detect.c \
+  rpc/gpio/event.c \
+  rpc/gpio/function.c \
+  rpc/gpio/lock.c \
+  rpc/gpio/pull.c \
+  rpc/gpio/status.c \
+  rpc/gpio/unlock.c \
+  rpc/mmio/lock.c \
+  rpc/mmio/perform.c \
+  rpc/mmio/unlock.c \
   rpc/mailbox.c \
-  rpc/mmio.c \
-  rpc/unlock.c \
   delay.c \
   mailbox.c \
   main.c \

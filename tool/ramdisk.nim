@@ -93,21 +93,15 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
         if value == "driver" or value == "server" or value == "usr" or value == "font":
           pos = idx
       if pos != -1:
-        if contains( file, sysroot ):
+        if pos + 1 < len( splitted_head ) and "platform" == splitted_head[ pos + 1 ]:
+          # strip out platform and platform name from path
+          var tmp_info = splitted_head
+          tmp_info.delete( pos + 1, pos + 2 )
+          target_folder &= tmp_info[ pos..^2 ].join( $DirSep )
+        elif "font" == splitted_head[ pos ]:
           target_folder &= splitted_head[ pos..^1 ].join( $DirSep )
-        else:
-          if not ( "src" in splitted_head[ pos..^1 ] ):
-            if pos + 1 < len( splitted_head ) and "platform" == splitted_head[ pos + 1 ]:
-              # strip out platform and platform name from path
-              var tmp_info = splitted_head
-              tmp_info.delete( pos + 1, pos + 2 )
-              target_folder &= tmp_info[ pos..^2 ].join( $DirSep )
-            elif "font" == splitted_head[ pos ]:
-              target_folder &= splitted_head[ pos..^1 ].join( $DirSep )
-            else: 
-              target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
-          else:
-            pos = -1
+        else: 
+          target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
       else:
         pos = -1
 

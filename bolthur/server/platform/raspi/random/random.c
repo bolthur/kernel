@@ -82,7 +82,7 @@ bool random_setup( void ) {
   int result = ioctl(
     iomem_fd,
     IOCTL_BUILD_REQUEST(
-      IOMEM_MMIO,
+      IOMEM_RPC_MMIO_PERFORM,
       sizeof( data ),
       IOCTL_RDWR
     ),
@@ -126,7 +126,7 @@ uint32_t random_generate_number( void ) {
   int result = ioctl(
     iomem_fd,
     IOCTL_BUILD_REQUEST(
-      IOMEM_MMIO,
+      IOMEM_RPC_MMIO_PERFORM,
       sizeof( data ),
       IOCTL_RDWR
     ),

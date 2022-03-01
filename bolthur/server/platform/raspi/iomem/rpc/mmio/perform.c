@@ -26,11 +26,11 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
-#include "../mmio.h"
-#include "../property.h"
-#include "../rpc.h"
-#include "../delay.h"
-#include "../../libiomem.h"
+#include "../../mmio.h"
+#include "../../property.h"
+#include "../../rpc.h"
+#include "../../delay.h"
+#include "../../../libiomem.h"
 
 /**
  * @fn int custom_nanosleep(const struct timespec*)
@@ -92,15 +92,21 @@ static uint32_t apply_shift(
 static uint32_t read_helper( iomem_mmio_entry_ptr_t request ) {
   // read value
   uint32_t value = mmio_read( request->offset );
-  //EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
+  #if defined( RPC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
+  #endif
   // apply possible and
   if ( 0 < request->loop_and ) {
    value &= request->loop_and;
   }
-  //EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
+  #if defined( RPC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
+  #endif
   // apply shift and return
   value = apply_shift( value, request->shift_type, request->shift_value );
-  //EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
+  #if defined( RPC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
+  #endif
   return value;
 }
 
@@ -149,15 +155,15 @@ static void apply_sleep( mmio_sleep_t sleep_type, uint32_t sleep_value ) {
 }
 
 /**
- * @fn void rpc_handle_mmio(size_t, pid_t, size_t, size_t)
- * @brief handle request
+ * @fn void rpc_handle_mmio_perform(size_t, pid_t, size_t, size_t)
+ * @brief handle mmio perform request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_mmio(
+void rpc_handle_mmio_perform(
   __unused size_t type,
   pid_t origin,
   size_t data_info,
@@ -269,7 +275,13 @@ void rpc_handle_mmio(
       ( *request )[ i ].skipped = 1;
       continue;
     }
-    //EARLY_STARTUP_PRINT( "( *request )[ %zd ].type = %d\r\n", i, ( *request )[ i ].type )
+    #if defined( RPC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT(
+        "( *request )[ %zd ].type = %d\r\n",
+        i,
+        ( *request )[ i ].type
+      )
+    #endif
     // handle mmio actions
     switch ( ( *request )[ i ].type ) {
       // handle loop while read is equal

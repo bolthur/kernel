@@ -24,16 +24,25 @@
 #if !defined( _RPC_H )
 #define _RPC_H
 
+#define RPC_ENABLE_DEBUG 1
+
 struct mailbox_rpc {
   uint32_t command;
   rpc_handler_t callback;
 };
-extern struct mailbox_rpc command_list[ 4 ];
+extern struct mailbox_rpc command_list[ 11 ];
 
 bool rpc_register( void );
 void rpc_handle_mailbox( size_t, pid_t, size_t, size_t );
-void rpc_handle_mmio( size_t, pid_t, size_t, size_t );
-void rpc_handle_lock( size_t, pid_t, size_t, size_t );
-void rpc_handle_unlock( size_t, pid_t, size_t, size_t );
+void rpc_handle_mmio_perform( size_t, pid_t, size_t, size_t );
+void rpc_handle_mmio_lock( size_t, pid_t, size_t, size_t );
+void rpc_handle_mmio_unlock( size_t, pid_t, size_t, size_t );
+void rpc_handle_gpio_set_function( size_t, pid_t, size_t, size_t );
+void rpc_handle_gpio_set_pull( size_t, pid_t, size_t, size_t );
+void rpc_handle_gpio_set_detect( size_t, pid_t, size_t, size_t );
+void rpc_handle_gpio_status( size_t, pid_t, size_t, size_t );
+void rpc_handle_gpio_event( size_t, pid_t, size_t, size_t );
+void rpc_handle_gpio_lock( size_t, pid_t, size_t, size_t );
+void rpc_handle_gpio_unlock( size_t, pid_t, size_t, size_t );
 
 #endif

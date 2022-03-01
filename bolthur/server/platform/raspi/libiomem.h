@@ -22,14 +22,22 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <sys/bolthur.h>
+#include "libgpio.h"
 
 #if ! defined( _LIBIOMEM_H )
 #define _LIBIOMEM_H
 
-#define IOMEM_MAILBOX RPC_CUSTOM_START
-#define IOMEM_MMIO IOMEM_MAILBOX + 1
-#define IOMEM_LOCK IOMEM_MMIO + 1
-#define IOMEM_UNLOCK IOMEM_LOCK + 1
+#define IOMEM_RPC_MAILBOX RPC_CUSTOM_START
+#define IOMEM_RPC_MMIO_PERFORM IOMEM_RPC_MAILBOX + 1
+#define IOMEM_RPC_MMIO_LOCK IOMEM_RPC_MMIO_PERFORM + 1
+#define IOMEM_RPC_MMIO_UNLOCK IOMEM_RPC_MMIO_LOCK + 1
+#define IOMEM_RPC_GPIO_SET_FUNCTION IOMEM_RPC_MMIO_UNLOCK + 1
+#define IOMEM_RPC_GPIO_SET_PULL IOMEM_RPC_GPIO_SET_FUNCTION + 1
+#define IOMEM_RPC_GPIO_SET_DETECT IOMEM_RPC_GPIO_SET_PULL + 1
+#define IOMEM_RPC_GPIO_STATUS IOMEM_RPC_GPIO_SET_DETECT + 1
+#define IOMEM_RPC_GPIO_EVENT IOMEM_RPC_GPIO_STATUS + 1
+#define IOMEM_RPC_GPIO_LOCK IOMEM_RPC_GPIO_EVENT + 1
+#define IOMEM_RPC_GPIO_UNLOCK IOMEM_RPC_GPIO_LOCK + 1
 
 #define IOMEM_DEVICE_PATH "/dev/iomem"
 
@@ -94,5 +102,41 @@ struct iomem_mmio_entry {
 typedef struct iomem_mmio_entry iomem_mmio_entry_t;
 typedef struct iomem_mmio_entry* iomem_mmio_entry_ptr_t;
 typedef struct iomem_mmio_entry iomem_mmio_entry_array_t[];
+
+struct iomem_gpio_function {
+  iomem_gpio_enum_pin_t pin;
+  iomem_gpio_enum_function_t function;
+};
+typedef struct iomem_gpio_function iomem_gpio_function_t;
+typedef struct iomem_gpio_function* iomem_gpio_function_ptr_t;
+
+struct iomem_gpio_pull {
+  iomem_gpio_enum_pin_t pin;
+  iomem_gpio_enum_pull_t pull;
+};
+typedef struct iomem_gpio_pull iomem_gpio_pull_t;
+typedef struct iomem_gpio_pull* iomem_gpio_pull_ptr_t;
+
+struct iomem_gpio_detect {
+  iomem_gpio_enum_pin_t pin;
+  iomem_gpio_enum_detect_type_t type;
+  uint32_t value;
+};
+typedef struct iomem_gpio_detect iomem_gpio_detect_t;
+typedef struct iomem_gpio_detect* iomem_gpio_detect_ptr_t;
+
+struct iomem_gpio_status {
+  iomem_gpio_enum_pin_t pin;
+  uint32_t value;
+};
+typedef struct iomem_gpio_status iomem_gpio_status_t;
+typedef struct iomem_gpio_status* iomem_gpio_status_ptr_t;
+
+struct iomem_gpio_event {
+  iomem_gpio_enum_pin_t pin;
+  uint32_t value;
+};
+typedef struct iomem_gpio_event iomem_gpio_event_t;
+typedef struct iomem_gpio_event* iomem_gpio_event_ptr_t;
 
 #endif

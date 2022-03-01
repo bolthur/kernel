@@ -23,7 +23,7 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include <inttypes.h>
-#include "emmc.h"
+#include "sd.h"
 #include "../../../../libhelper.h"
 
 // for testing
@@ -39,7 +39,7 @@
  */
 int main( __unused int argc, __unused char* argv[] ) {
   // allocate space for mbr
-  void* buffer = aligned_alloc( sizeof( uint32_t ), sizeof( mbr_t ) );
+  void* buffer = malloc( sizeof( mbr_t ) );
   if ( ! buffer ) {
     EARLY_STARTUP_PRINT( "Unable to allocate space for mbr: %s\r\n", strerror( errno ) )
     return -1;
@@ -50,22 +50,31 @@ int main( __unused int argc, __unused char* argv[] ) {
   )
   // setup emmc
   EARLY_STARTUP_PRINT( "Setup emmc\r\n" )
-  if( EMMC_RESPONSE_OK != emmc_init() ) {
+  if( ! sd_init() ) {
+    EARLY_STARTUP_PRINT(
+      "Error while initializing sd interface: %s\r\n",
+      sd_last_error()
+    )
     return -1;
   }
   // try to read mbr from card
-  if ( EMMC_RESPONSE_OK != emmc_transfer_block(
+  EARLY_STARTUP_PRINT( "Parsing mbr with partition information\r\n" )
+  if ( ! sd_transfer_block(
     ( uint32_t* )buffer,
     sizeof( mbr_t ),
     0,
-    EMMC_OPERATION_READ
+    SD_OPERATION_READ
   ) ) {
-    EARLY_STARTUP_PRINT( "Unable to read mbr from card\r\n" )
+    EARLY_STARTUP_PRINT(
+      "Error while reading mbr from card: %s\r\n",
+      sd_last_error()
+    )
     return -1;
   }
   mbr_ptr_t bpb = buffer;
 
   // check signature
+  EARLY_STARTUP_PRINT( "Check signature\r\n" )
   if (
     bpb->signatur[ 0 ] != 0x55
     && bpb->signatur[ 1 ] != 0xAA
@@ -77,12 +86,7 @@ int main( __unused int argc, __unused char* argv[] ) {
     )
     return -1;
   }
-  // print signature
-  EARLY_STARTUP_PRINT(
-    "mbr signature: %#"PRIx8"%"PRIx8"\r\n",
-    bpb->signatur[ 0 ],
-    bpb->signatur[ 1 ]
-  )
+
   // loop through partitions and print type
   for ( int i = 0; i < 4; i++ ) {
     EARLY_STARTUP_PRINT(

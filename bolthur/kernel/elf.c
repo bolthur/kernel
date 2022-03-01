@@ -319,7 +319,13 @@ uintptr_t elf_load( uintptr_t elf, task_process_ptr_t process ) {
     return 0;
   }
   // get header
-  Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #if defined( ELF32 )
+    Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #elif defined( ELF64 )
+    Elf64_Ehdr* header = ( Elf64_Ehdr* )elf;
+  #else
+    #error "Unsupported"
+  #endif
   // load program header
   if ( ! load_program_header( elf, process ) ) {
     return 0;
@@ -334,33 +340,50 @@ uintptr_t elf_load( uintptr_t elf, task_process_ptr_t process ) {
  *
  * @param elf
  * @return
- *
- * @todo prepare for 64 bit
  */
 size_t elf_image_size( uintptr_t elf ) {
+  size_t header_size;
+  #if defined( ELF32 )
+    header_size = sizeof( Elf32_Ehdr );
+  #elif defined( ELF64 )
+    header_size = sizeof( Elf64_Ehdr );
+  #else
+    #error "Unsupported"
+  #endif
+
   // check header
-  if (
-    ! virt_is_mapped_range(
-      elf,
-      sizeof( Elf32_Ehdr )
-    ) || ! elf_check( elf )
-  ) {
+  if ( ! virt_is_mapped_range( elf, header_size ) || ! elf_check( elf ) ) {
     return 0;
   }
   // temporary max and size
   size_t max = 0;
   size_t sz = 0;
+
   // transform to elf header
-  Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #if defined( ELF32 )
+    Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #elif defined( ELF64 )
+    Elf64_Ehdr* header = ( Elf64_Ehdr* )elf;
+  #else
+    #error "Unsupported"
+  #endif
   // loop through section header information
   for ( uint32_t idx = 0; idx < header->e_shnum; ++idx ) {
-    Elf32_Shdr* section_header = ( Elf32_Shdr* )(
-      elf + header->e_shoff + header->e_shentsize * idx
-    );
+    #if defined( ELF32 )
+      Elf32_Shdr* section_header = ( Elf32_Shdr* )(
+        elf + header->e_shoff + header->e_shentsize * idx
+      );
+    #elif defined( ELF64 )
+      Elf64_Shdr* section_header = ( Elf64_Shdr* )(
+        elf + header->e_shoff + header->e_shentsize * idx
+      );
+    #else
+      #error "Unsupported"
+    #endif
     // check if mapped before access
     if ( ! virt_is_mapped_range(
       ( uintptr_t )section_header,
-      sizeof( Elf32_Shdr ) )
+      sizeof( *section_header ) )
     ) {
       return 0;
     }

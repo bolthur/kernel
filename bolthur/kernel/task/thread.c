@@ -151,9 +151,8 @@ bool task_thread_set_current(
 }
 
 /**
- * @brief Reset current process
- *
- * @todo Rename to task_reset and move to somewhere more generic
+ * @fn void task_thread_reset_current(void)
+ * @brief Reset current thread and process queue
  */
 void task_thread_reset_current( void ) {
   // reset queue

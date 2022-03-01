@@ -17,18 +17,32 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "util.h"
+#include <libgen.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/bolthur.h>
+#include "../../mailbox.h"
+#include "../../property.h"
+#include "../../rpc.h"
+#include "../../../libiomem.h"
 
-uint32_t util_word_read( const uint8_t* buf ) {
-  return ( uint32_t )buf[ 0 ]
-    | ( uint32_t )( buf[ 1 ] << 8 )
-    | ( uint32_t )( buf[ 1 ] << 16 )
-    | ( uint32_t )( buf[ 1 ] << 24 );
-}
-
-void util_word_write( uint32_t val, uint8_t* buf ) {
-  buf[ 0 ] = ( uint8_t )( val & 0xff );
-  buf[ 1 ] = ( uint8_t )( ( val >> 8 ) & 0xff );
-  buf[ 2 ] = ( uint8_t )( ( val >> 16 ) & 0xff );
-  buf[ 3 ] = ( uint8_t )( ( val >> 24 ) & 0xff );
+/**
+ * @fn void rpc_handle_gpio_lock(size_t, pid_t, size_t, size_t)
+ * @brief handle lock gpio pin request
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_gpio_lock(
+  __unused size_t type,
+  __unused pid_t origin,
+  __unused size_t data_info,
+  __unused size_t response_info
+) {
+  int err = -ENOSYS;
+  bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+  return;
 }
