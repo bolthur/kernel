@@ -44,11 +44,12 @@ void rpc_handle_write(
   size_t data_info,
   __unused size_t response_info
 ) {
+  vfs_write_response_t response = { .len = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  vfs_write_response_t response = { .len = -EINVAL };
   // allocate space
   vfs_write_request_ptr_t request = malloc( sizeof( vfs_write_request_t ) );
   if ( ! request ) {
@@ -122,7 +123,6 @@ void rpc_handle_write(
   );
   // handle error
   if ( -1 == result ) {
-    EARLY_STARTUP_PRINT( "ioctl error!\r\n" )
     response.len = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
@@ -133,40 +133,4 @@ void rpc_handle_write(
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( terminal );
   free( request );
-
-  // FIXME: Remove when ioctl is battle proved
-  /*size_t response_data_id = bolthur_rpc_raise(
-    rpc_num,
-    console->handler,
-    terminal,
-    sizeof( terminal_write_request_t ),
-    true,
-    false,
-    rpc_num,
-    terminal,
-    sizeof( terminal_write_request_t ),
-    0,
-    0
-  );
-  if ( errno ) {
-    response.len = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( terminal );
-    free( request );
-    return;
-  }
-  int status;
-  // fetch rpc data
-  _syscall_rpc_get_data( &status, sizeof( int ), response_data_id, false );
-  // handle error
-  if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
-  // prepare return
-  response.len = 0 == status ? ( ssize_t )strlen( request->data ) : -1;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-  free( terminal );
-  free( request );*/
 }

@@ -560,7 +560,8 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
       0,
       NULL,
       false,
-      0
+      0,
+      true
     );
     // handle error by skip
     if ( ! rpc ) {

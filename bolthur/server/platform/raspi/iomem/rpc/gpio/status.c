@@ -48,47 +48,59 @@ void rpc_handle_gpio_status(
   size_t data_info,
   __unused size_t response_info
 ) {
-  int err = -ENOSYS;
+  vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // handle no data
-  err = -EINVAL;
+  error.status = -EINVAL;
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // get message size
   size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
-    err = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // handle invalid data size
   if ( data_size != sizeof( iomem_gpio_status_t ) ) {
-    err = -EINVAL;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    error.status = -EINVAL;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // allocate space for request
   iomem_gpio_status_ptr_t request = malloc( data_size );
   if ( ! request ) {
-    err = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // allocate space for response
+  size_t response_size = data_size * sizeof( char )
+    + sizeof( vfs_ioctl_perform_response_t );
+  vfs_ioctl_perform_response_ptr_t response = malloc( response_size );
+  if ( ! response ) {
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
     return;
   }
   // clear request
   memset( request, 0, data_size );
+  memset( response, 0, response_size );
   // fetch rpc data
   _syscall_rpc_get_data( request, data_size, data_info, false );
   // handle error
   if ( errno ) {
-    err = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( request );
+    free( response );
     return;
   }
   // some debug output
@@ -111,7 +123,10 @@ void rpc_handle_gpio_status(
   value &= ( 1 << request->pin );
   // fill return
   request->value = value ? 1 : 0;
+  // copy over to response container
+  memcpy( response->container, request, data_size );
   // return data and finish with free
-  bolthur_rpc_return( RPC_VFS_IOCTL, request, data_size, NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
   free( request );
+  free( response );
 }

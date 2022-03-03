@@ -169,56 +169,60 @@ void rpc_handle_mmio_perform(
   size_t data_info,
   __unused size_t response_info
 ) {
-  int err = -ENOSYS;
+  vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    #if defined( RPC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "error\r\n" )
-    #endif
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // handle no data
-  err = -EINVAL;
+  error.status = -EINVAL;
   if( ! data_info ) {
-    #if defined( RPC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "error\r\n" )
-    #endif
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // get message size
   size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
-    #if defined( RPC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "error\r\n" )
-    #endif
-    err = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // allocate space for request
   uint8_t* request_data = malloc( data_size );
   if ( ! request_data ) {
-    #if defined( RPC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "error\r\n" )
-    #endif
-    err = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
+  // allocate space for response
+  size_t response_size = data_size * sizeof( char )
+    + sizeof( vfs_ioctl_perform_response_t );
+  vfs_ioctl_perform_response_ptr_t response = malloc( response_size );
+  if ( ! response ) {
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request_data );
+    return;
+  }
+  #if defined( RPC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT(
+      "data_size = %#zx, response_size = %#zx\r\n",
+      data_size,
+      response_size
+    )
+  #endif
   // clear request
   memset( request_data, 0, data_size );
+  memset( response, 0, response_size );
   // fetch rpc data
   _syscall_rpc_get_data( request_data, data_size, data_info, false );
   // handle error
   if ( errno ) {
-    #if defined( RPC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "error\r\n" )
-    #endif
-    err = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( request_data );
+    free( response );
     return;
   }
   // transform data into contiguous array
@@ -242,12 +246,10 @@ void rpc_handle_mmio_perform(
         )
       )
     ) {
-      #if defined( RPC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "error\r\n" )
-      #endif
-      err = -EINVAL;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+      error.status = -EINVAL;
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
       free( request_data );
+      free( response );
       return;
     }
     // validate types
@@ -267,22 +269,18 @@ void rpc_handle_mmio_perform(
       && IOMEM_MMIO_ACTION_SLEEP != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_SYNC_BARRIER != ( *request )[ i ].type
     ) {
-      #if defined( RPC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "error\r\n" )
-      #endif
-      err = -EINVAL;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+      error.status = -EINVAL;
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
       free( request_data );
+      free( response );
       return;
     }
     // validate offsets to be in range
     if ( ! mmio_validate_offset( ( *request )[ i ].offset, sizeof( uint32_t ) ) ) {
-      #if defined( RPC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "error\r\n" )
-      #endif
-      err = -EINVAL;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+      error.status = -EINVAL;
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
       free( request_data );
+      free( response );
       return;
     }
   }
@@ -481,8 +479,11 @@ void rpc_handle_mmio_perform(
       );
     }
   }
+  // copy over data
+  memcpy( response->container, request_data, data_size );
   // return data and finish with free
-  bolthur_rpc_return( RPC_VFS_IOCTL, request_data, data_size, NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
   // free request data
   free( request_data );
+  free( response );
 }

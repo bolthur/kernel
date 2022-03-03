@@ -148,7 +148,8 @@ void syscall_rpc_raise( void* context ) {
     length,
     NULL,
     synchronous,
-    0
+    0,
+    false
   );
   // free duplicate again
   if ( dup_data ) {
@@ -184,6 +185,10 @@ void syscall_rpc_raise( void* context ) {
     event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
   // return data id for async request to allow handling in user space
   } else if ( ! synchronous ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "rpc->data_id = %d\r\n", rpc->data_id )
+    #endif
     syscall_populate_success( context, rpc->data_id );
   }
 }
@@ -336,7 +341,8 @@ void syscall_rpc_ret( void* context ) {
       length,
       NULL,
       true,
-      active->data_id
+      active->data_id,
+      false
     );
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(

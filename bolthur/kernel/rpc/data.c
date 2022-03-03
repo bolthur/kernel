@@ -293,6 +293,10 @@ void rpc_data_queue_remove( pid_t process, size_t rpc_id ) {
   }
   // remove entry if found
   if ( found ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "found something for removal!\r\n" )
+    #endif
     list_remove_data( target_process->rpc_data_queue, ( void* )found );
   }
 }

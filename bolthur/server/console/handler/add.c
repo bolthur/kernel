@@ -40,25 +40,28 @@ void handler_console_add(
   size_t data_info,
   __unused size_t response_info
 ) {
-  int success = -1;
+  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // get size for allocation
   size_t sz = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // allocate for data fetching
   console_command_add_ptr_t command = malloc( sz );
   if ( ! command ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // fetch rpc data
@@ -66,7 +69,8 @@ void handler_console_add(
   // handle error
   if ( errno ) {
     free( command );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
+    error.status = -errno;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // try to lookup by name
@@ -77,14 +81,16 @@ void handler_console_add(
   // handle already existing
   if ( container_item ) {
     free( command );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
+    error.status = -EEXIST;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // allocate new management structure
   console_ptr_t console = malloc( sizeof( console_t ) );
   if ( ! console ) {
     free( command );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
+    error.status = -ENODEV;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // copy over content
@@ -95,7 +101,8 @@ void handler_console_add(
   if ( ! console->path ) {
     console_destroy( console );
     free( command );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
+    error.status = -EINVAL;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   console->in = command->in;
@@ -105,12 +112,13 @@ void handler_console_add(
   if ( ! list_push_back( console_list, console ) ) {
     console_destroy( console );
     free( command );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // free all used temporary structures
   free( command );
   // set success flag and return
-  success = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &success, sizeof( success ), NULL );
+  error.status = 0;
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
 }

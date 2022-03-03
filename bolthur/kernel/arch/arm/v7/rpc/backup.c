@@ -32,7 +32,7 @@
 #endif
 
 /**
- * @fn rpc_backup_ptr_t rpc_backup_create(task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t)
+ * @fn rpc_backup_ptr_t rpc_backup_create(task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t, bool)
  * @brief Helper to create rpc backup
  *
  * @param source
@@ -43,6 +43,7 @@
  * @param target_thread
  * @param sync
  * @param origin_data_id
+ * @param disable_data
  * @return
  */
 rpc_backup_ptr_t rpc_backup_create(
@@ -53,7 +54,8 @@ rpc_backup_ptr_t rpc_backup_create(
   size_t data_size,
   task_thread_ptr_t target_thread,
   bool sync,
-  size_t origin_data_id
+  size_t origin_data_id,
+  bool disable_data
 ) {
   // get first inactive thread
   avl_node_ptr_t current = avl_iterate_first( target->thread_manager );
@@ -136,23 +138,44 @@ rpc_backup_ptr_t rpc_backup_create(
   #endif
   // backup parameter data as message
   backup->data_id = 0;
-  if ( data && data_size ) {
-    int err = rpc_data_queue_add(
-      thread->process->id,
-      source->process->id,
-      data,
-      data_size,
-      &backup->data_id
-    );
-    if ( err ) {
-      rpc_backup_destroy( backup );
-      return NULL;
+  if ( ! disable_data ) {
+    if ( data && data_size ) {
+      int err = rpc_data_queue_add(
+        thread->process->id,
+        source->process->id,
+        data,
+        data_size,
+        &backup->data_id
+      );
+      if ( err ) {
+        rpc_backup_destroy( backup );
+        return NULL;
+      }
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "Sent message from process %d to %d\r\n",
+          source->process->id, thread->process->id )
+      #endif
+    } else {
+      char dummy = '\0';
+      int err = rpc_data_queue_add(
+        thread->process->id,
+        source->process->id,
+        &dummy,
+        sizeof( char ),
+        &backup->data_id
+      );
+      if ( err ) {
+        rpc_backup_destroy( backup );
+        return NULL;
+      }
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "Sent dummy message from process %d to %d\r\n",
+          source->process->id, thread->process->id )
+        DEBUG_OUTPUT( "type = %d, data_id = %d\r\n", type, backup->data_id )
+      #endif
     }
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Sent message from process %d to %d\r\n",
-        source->process->id, thread->process->id )
-    #endif
   }
   // populate remaining values
   backup->thread = thread;

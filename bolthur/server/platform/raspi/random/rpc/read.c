@@ -28,6 +28,29 @@
 #include "../../libiomem.h"
 #include "../../libperipheral.h"
 
+static vfs_read_response_t read_error_response;
+
+/**
+ * @fn void read_error_return(size_t, int)
+ * @brief Helper to perform early rpc read error return
+ *
+ * @param type
+ * @param error
+ */
+static void read_error_return( size_t type, int error ) {
+  // clear error response
+  memset( &read_error_response, 0, sizeof( read_error_response ) );
+  // set error
+  read_error_response.len = error;
+  // perform return
+  bolthur_rpc_return(
+    type,
+    &read_error_response,
+    sizeof( read_error_response ),
+    NULL
+  );
+}
+
 /**
  * @fn void rpc_handle_read(size_t, pid_t, size_t, size_t)
  * @brief handle read
@@ -45,16 +68,17 @@ void rpc_handle_read(
 ) {
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    read_error_return( type, -EINVAL );
     return;
   }
   vfs_read_request_ptr_t request = malloc( sizeof( vfs_read_request_t ) );
   if ( ! request ) {
-    bolthur_rpc_remove_data( data_info );
+    read_error_return( type, -ENOMEM );
     return;
   }
   vfs_read_response_ptr_t response = malloc( sizeof( vfs_read_response_t ) );
   if ( ! response ) {
-    bolthur_rpc_remove_data( data_info );
+    read_error_return( type, -ENOMEM );
     free( request );
     return;
   }

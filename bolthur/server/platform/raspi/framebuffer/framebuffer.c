@@ -302,20 +302,36 @@ void framebuffer_handle_resolution(
   size_t data_info,
   __unused size_t response_info
 ) {
+  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
+  // allocate response
+  size_t response_size = sizeof( vfs_ioctl_perform_response_t )
+    + sizeof( framebuffer_resolution_t );
+  vfs_ioctl_perform_response_ptr_t response = malloc( response_size );
+  // handle error
+  if ( ! response ) {
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // clear out response
+  memset( response, 0, response_size );
   // local variable for resolution data
-  framebuffer_resolution_t resolution_data;
-  memset( &resolution_data, 0, sizeof( framebuffer_resolution_t ) );
-  // build return
-  resolution_data.success = 0;
-  resolution_data.width = physical_width;
-  resolution_data.height = physical_height;
-  resolution_data.depth = FRAMEBUFFER_SCREEN_DEPTH;
-  // return resolution data
-  bolthur_rpc_return( RPC_VFS_IOCTL, &resolution_data, sizeof( resolution_data ), NULL );
+  framebuffer_resolution_t resolution_data = {
+    .width = physical_width,
+    .height = physical_height,
+    .depth = FRAMEBUFFER_SCREEN_DEPTH,
+  };
+  // copy over data
+  memcpy( response->container, &resolution_data, sizeof( framebuffer_resolution_t ) );
+  // return from rpc
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
+  // free response
+  free( response );
 }
 
 /**
@@ -333,12 +349,19 @@ void framebuffer_handle_clear(
   size_t data_info,
   __unused size_t response_info
 ) {
+  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
+  // clear
   memset( current_back, 0, size );
+  // perform flip
   framebuffer_flip();
+  // set success and return
+  error.status = 0;
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
 }
 
 /**
@@ -356,27 +379,36 @@ void framebuffer_handle_render_surface(
   size_t data_info,
   __unused size_t response_info
 ) {
+  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // handle no data
   if( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // get size for allocation
   size_t sz = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
+    error.status = -errno;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   framebuffer_render_surface_ptr_t info = malloc( sz );
   if ( ! info ) {
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // fetch rpc data
   _syscall_rpc_get_data( info, sz, data_info, false );
   // handle error
   if ( errno ) {
+    error.status = -errno;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( info );
     return;
   }
@@ -404,6 +436,9 @@ void framebuffer_handle_render_surface(
   }
   // free again
   free( info );
+  // return success
+  error.status = 0;
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
 }
 
 /**
@@ -421,9 +456,15 @@ void framebuffer_handle_flip(
   size_t data_info,
   __unused size_t response_info
 ) {
+  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
+  // remove data
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   framebuffer_flip();
+  // return success
+  error.status = 0;
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
 }

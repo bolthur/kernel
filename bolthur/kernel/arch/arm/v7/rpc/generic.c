@@ -102,6 +102,8 @@ bool rpc_generic_restore( task_thread_ptr_t thread ) {
   #endif
   // set correct state
   backup->thread->state = TASK_THREAD_STATE_ACTIVE;
+  // remove data queue entry if existing
+  rpc_data_queue_remove( thread->process->id, backup->data_id );
   // finally remove found entry
   list_remove_data( thread->process->rpc_queue, backup );
   // handle enqueued stuff

@@ -40,7 +40,7 @@ typedef struct rpc_backup rpc_backup_t;
 typedef struct rpc_backup* rpc_backup_ptr_t;
 
 rpc_backup_ptr_t rpc_backup_get_active( task_thread_ptr_t );
-rpc_backup_ptr_t rpc_backup_create( task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t );
+rpc_backup_ptr_t rpc_backup_create( task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t, bool );
 void rpc_backup_destroy( rpc_backup_ptr_t );
 
 #endif

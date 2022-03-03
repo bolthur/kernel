@@ -42,7 +42,6 @@ void rpc_handle_mmio_lock(
   __unused size_t data_info,
   __unused size_t response_info
 ) {
-  int err = -ENOSYS;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
-  return;
+  vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
 }

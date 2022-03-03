@@ -44,7 +44,6 @@ typedef struct framebuffer_render_surface framebuffer_render_surface_t;
 typedef struct framebuffer_render_surface* framebuffer_render_surface_ptr_t;
 
 struct framebuffer_resolution {
-  int32_t success;
   uint32_t width;
   uint32_t height;
   uint32_t depth;

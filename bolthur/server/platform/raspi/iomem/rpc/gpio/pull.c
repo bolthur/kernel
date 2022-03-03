@@ -48,36 +48,36 @@ void rpc_handle_gpio_set_pull(
   size_t data_info,
   __unused size_t response_info
 ) {
-  int err = -ENOSYS;
+  vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // handle no data
-  err = -EINVAL;
+  error.status = -EINVAL;
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // get message size
   size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
-    err = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // handle invalid data size
   if ( data_size != sizeof( iomem_gpio_pull_t ) ) {
-    err = -EINVAL;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    error.status = -EINVAL;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // allocate space for request
   iomem_gpio_pull_ptr_t request = malloc( data_size );
   if ( ! request ) {
-    err = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // clear request
@@ -86,8 +86,8 @@ void rpc_handle_gpio_set_pull(
   _syscall_rpc_get_data( request, data_size, data_info, false );
   // handle error
   if ( errno ) {
-    err = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( request );
     return;
   }
@@ -117,6 +117,9 @@ void rpc_handle_gpio_set_pull(
   // reset updown register and address
   mmio_write( PERIPHERAL_GPIO_GPPUD, 0 );
   mmio_write( address, 0 );
+  // set status to 0
+  error.status = 0;
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
   // free request
   free( request );
 }

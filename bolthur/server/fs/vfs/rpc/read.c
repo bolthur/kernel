@@ -35,6 +35,8 @@
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo add return on error
  */
 void rpc_handle_read_async(
   size_t type,
@@ -42,38 +44,33 @@ void rpc_handle_read_async(
   size_t data_info,
   size_t response_info
 ) {
-  // handle no data
-  if( ! data_info ) {
-    return;
-  }
-  vfs_read_response_ptr_t response = malloc( sizeof( vfs_read_response_t ) );
-  if ( ! response ) {
-    bolthur_rpc_remove_data( data_info );
-    return;
-  }
-  memset( response, 0, sizeof( vfs_read_response_t ) );
-  response->len = -EINVAL;
   // get matching async data
   bolthur_async_data_ptr_t async_data = bolthur_rpc_pop_async(
     type,
     response_info
   );
   if ( ! async_data ) {
-    bolthur_rpc_remove_data( data_info );
-    free( response );
     return;
   }
+  // handle no data
+  if( ! data_info ) {
+    return;
+  }
+  vfs_read_response_ptr_t response = malloc( sizeof( vfs_read_response_t ) );
+  if ( ! response ) {
+    return;
+  }
+  memset( response, 0, sizeof( vfs_read_response_t ) );
+  response->len = -EINVAL;
   // original request
   vfs_read_request_ptr_t request = async_data->original_data;
   if ( ! request ) {
-    bolthur_rpc_remove_data( data_info );
     bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), async_data );
     return;
   }
   // fetch response
   _syscall_rpc_get_data( response, sizeof( vfs_read_response_t ), data_info, false );
   if ( errno ) {
-    bolthur_rpc_remove_data( data_info );
     bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), async_data );
     free( response );
     return;
@@ -108,6 +105,8 @@ void rpc_handle_read_async(
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo add return on error
  */
 void rpc_handle_read(
   size_t type,
@@ -122,7 +121,6 @@ void rpc_handle_read(
   }
   vfs_read_response_ptr_t response = malloc( sizeof( vfs_read_response_t ) );
   if ( ! response ) {
-    bolthur_rpc_remove_data( data_info );
     return;
   }
   memset( response, 0, sizeof( vfs_read_response_t ) );

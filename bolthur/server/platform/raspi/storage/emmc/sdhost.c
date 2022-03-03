@@ -614,7 +614,6 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
  * @return
  *
  * @todo allow more blocks than block_count
- * @todo check for command failure
  */
 static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   // debug output
