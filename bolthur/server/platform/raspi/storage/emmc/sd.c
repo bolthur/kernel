@@ -38,8 +38,6 @@
 
 static sd_device_ptr_t device;
 
-/// FIXME: ADD EMMC2 FOR RPI4
-
 /**
  * @fn bool sd_init(void)
  * @brief Setup sd interface
@@ -71,21 +69,41 @@ bool sd_init( void ) {
     memset( device, 0, sizeof( sd_device_t ) );
   }
 
-  // FIXME: USE EMMC FOR RPI3 AND ONGOING
-  // FIXME: USE SDHOST FOR RPI1, 2 AND ZERO
-
-  emmc_response_t response = emmc_init();
-  if ( EMMC_RESPONSE_OK != response ) {
-    // debug output
-    #if defined( SD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to init emmc\r\n" )
-    #endif
-    // cache last error
-    device->last_error = response;
-    // return error
-    return false;
-  }
-
+  // debug output
+  #if defined( SD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Initialize subsystem\r\n" )
+  #endif
+  // raspi before 3 use emmc
+  #if 3 > RASPI
+    emmc_response_t response = emmc_init();
+    if ( EMMC_RESPONSE_OK != response ) {
+      // debug output
+      #if defined( SD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Unable to init emmc\r\n" )
+      #endif
+      // cache last error
+      device->last_error = response;
+      // return error
+      return false;
+    }
+  // raspi 3 use sdhost
+  #elif 3 == RASPI
+    sdhost_response_t response = sdhost_init();
+    if ( SDHOST_RESPONSE_OK != response ) {
+      // debug output
+      #if defined( SD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Unable to init sdhost\r\n" )
+      #endif
+      // cache last error
+      device->last_error = response;
+      // return error
+      return false;
+    }
+  // everything after raspi3 use emmc2
+  #elif 3 < RASPI
+    #error "EMMC2 support not yet added"
+  #endif
+  // return success
   return true;
 }
 
@@ -100,17 +118,23 @@ const char* sd_last_error( void ) {
   #if defined( SD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "sd last error request\r\n" )
   #endif
-  // FIXME: USE EMMC FOR RPI3 AND ONGOING
-  // FIXME: USE SDHOST FOR RPI1, 2 AND ZERO
   if ( ! device || 0 == device->last_error ) {
     return NULL;
   }
   // debug output
   #if defined( SD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "return emmc last error\r\n" )
+    EARLY_STARTUP_PRINT( "return last error\r\n" )
   #endif
-  // emmc error
-  return emmc_error( device->last_error );
+  // raspi before 3 use emmc
+  #if 3 > RASPI
+    return emmc_error( device->last_error );
+  // raspi 3 use sdhost
+  #elif 3 == RASPI
+    return sdhost_error( device->last_error );
+  // everything after raspi3 use emmc2
+  #elif 3 < RASPI
+    #error "EMMC2 support not yet added"
+  #endif
 }
 
 /**
@@ -143,26 +167,51 @@ bool sd_transfer_block(
     return false;
   }
 
-  // FIXME: USE EMMC FOR RPI3 AND ONGOING
-  // FIXME: USE SDHOST FOR RPI1, 2 AND ZERO
-  emmc_response_t response;
-  if ( EMMC_RESPONSE_OK != (
-    response = emmc_transfer_block(
-      buffer,
-      buffer_size,
-      block_number,
-      SD_OPERATION_TO_EMMC(operation)
-    )
-  ) ) {
-    // debug output
-    #if defined( SD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "emmc transfer block failed\r\n" )
-    #endif
-    // set error to 0
-    device->last_error = response;
-    // return false
-    return false;
-  }
+
+  // raspi before 3 use emmc
+  #if 3 > RASPI
+    emmc_response_t response;
+    if ( EMMC_RESPONSE_OK != (
+      response = emmc_transfer_block(
+        buffer,
+        buffer_size,
+        block_number,
+        SD_OPERATION_TO_EMMC(operation)
+      )
+    ) ) {
+      // debug output
+      #if defined( SD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "emmc transfer block failed\r\n" )
+      #endif
+      // set error to 0
+      device->last_error = response;
+      // return false
+      return false;
+    }
+  // raspi 3 use sdhost
+  #elif 3 == RASPI
+    sdhost_response_t response;
+    if ( SDHOST_RESPONSE_OK != (
+      response = sdhost_transfer_block(
+        buffer,
+        buffer_size,
+        block_number,
+        SD_OPERATION_TO_SDHOST(operation)
+      )
+    ) ) {
+      // debug output
+      #if defined( SD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "sdhost transfer block failed\r\n" )
+      #endif
+      // set error to 0
+      device->last_error = response;
+      // return false
+      return false;
+    }
+  // everything after raspi3 use emmc2
+  #elif 3 < RASPI
+    #error "EMMC2 support not yet added"
+  #endif
   // return success
   return true;
 }

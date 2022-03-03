@@ -25,7 +25,7 @@
 #if ! defined( _EMMC_H )
 #define _EMMC_H
 
-#define EMMC_ENABLE_DEBUG 1
+//#define EMMC_ENABLE_DEBUG 1
 
 enum emmc_response {
   EMMC_RESPONSE_OK = 0,
@@ -74,6 +74,7 @@ struct emmc_device {
   // buffer, file descriptor and init flag
   uint32_t* buffer;
   int fd_iomem;
+  bool initialized;
 
   // last command executed
   uint32_t last_command;
@@ -96,9 +97,6 @@ struct emmc_device {
   // flags for card is absent and ejected
   bool card_absent;
   bool card_ejected;
-
-  // initialization flags
-  bool initialized;
 };
 
 struct emmc_message_entry {

@@ -55,6 +55,7 @@ enum mmio_action {
   IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ,
   IOMEM_MMIO_ACTION_DELAY,
   IOMEM_MMIO_ACTION_SLEEP,
+  IOMEM_MMIO_ACTION_SYNC_BARRIER,
 };
 typedef enum mmio_action mmio_action_t;
 

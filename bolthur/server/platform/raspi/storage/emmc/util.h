@@ -17,17 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define ASSEMBLER_FILE 1
+#include <stddef.h>
 
-#include "../../assembly.h"
+#if ! defined( _UTIL_H )
+#define _UTIL_H
 
-.section .fdt
+void* util_prepare_mmio_sequence( size_t, size_t* );
+void* util_prepare_mailbox( size_t, size_t* );
 
-EXPORT( fdt_file_start )
-EXPORT( fdt_file_end )
-
-fdt_file_start:
-  #if defined( FDT_BINARY ) && defined( FDT_EMBED )
-    .incbin FDT_BINARY
-  #endif
-fdt_file_end:
+#endif

@@ -24,7 +24,7 @@
 #if !defined( _RPC_H )
 #define _RPC_H
 
-#define RPC_ENABLE_DEBUG 1
+//#define RPC_ENABLE_DEBUG 1
 
 struct mailbox_rpc {
   uint32_t command;

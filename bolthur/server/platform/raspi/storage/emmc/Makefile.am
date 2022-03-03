@@ -6,5 +6,6 @@ emmc_SOURCES = \
   emmc.c \
   main.c \
   sd.c \
-  sdhost.c
+  sdhost.c \
+  util.c
 emmc_LDFLAGS = -all-static --static

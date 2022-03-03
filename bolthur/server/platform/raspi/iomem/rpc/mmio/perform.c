@@ -172,18 +172,27 @@ void rpc_handle_mmio_perform(
   int err = -ENOSYS;
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    #if defined( RPC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "error\r\n" )
+    #endif
     bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
     return;
   }
   // handle no data
   err = -EINVAL;
   if( ! data_info ) {
+    #if defined( RPC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "error\r\n" )
+    #endif
     bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
     return;
   }
   // get message size
   size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
+    #if defined( RPC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "error\r\n" )
+    #endif
     err = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
     return;
@@ -191,6 +200,9 @@ void rpc_handle_mmio_perform(
   // allocate space for request
   uint8_t* request_data = malloc( data_size );
   if ( ! request_data ) {
+    #if defined( RPC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "error\r\n" )
+    #endif
     err = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
     return;
@@ -201,6 +213,9 @@ void rpc_handle_mmio_perform(
   _syscall_rpc_get_data( request_data, data_size, data_info, false );
   // handle error
   if ( errno ) {
+    #if defined( RPC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "error\r\n" )
+    #endif
     err = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
     free( request_data );
@@ -227,6 +242,9 @@ void rpc_handle_mmio_perform(
         )
       )
     ) {
+      #if defined( RPC_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "error\r\n" )
+      #endif
       err = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
       free( request_data );
@@ -247,7 +265,11 @@ void rpc_handle_mmio_perform(
       && IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_DELAY != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_SLEEP != ( *request )[ i ].type
+      && IOMEM_MMIO_ACTION_SYNC_BARRIER != ( *request )[ i ].type
     ) {
+      #if defined( RPC_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "error\r\n" )
+      #endif
       err = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
       free( request_data );
@@ -255,6 +277,9 @@ void rpc_handle_mmio_perform(
     }
     // validate offsets to be in range
     if ( ! mmio_validate_offset( ( *request )[ i ].offset, sizeof( uint32_t ) ) ) {
+      #if defined( RPC_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "error\r\n" )
+      #endif
       err = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &err, sizeof( err ), NULL );
       free( request_data );
@@ -427,6 +452,11 @@ void rpc_handle_mmio_perform(
       // sleep given amount of seconds
       case IOMEM_MMIO_ACTION_SLEEP:
         apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+        break;
+      // synchronization barrier
+      case IOMEM_MMIO_ACTION_SYNC_BARRIER:
+        /// FIXME: REPLACE GCC BUILTIN
+        __sync_synchronize();
         break;
       // default shouldn't happen due to previous validation
       default:

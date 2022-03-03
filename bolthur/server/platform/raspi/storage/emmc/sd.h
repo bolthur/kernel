@@ -27,7 +27,7 @@
 #if ! defined( _SD_H )
 #define _SD_H
 
-#define SD_ENABLE_DEBUG 1
+//#define SD_ENABLE_DEBUG 1
 
 enum sd_operation {
   SD_OPERATION_READ = 0,

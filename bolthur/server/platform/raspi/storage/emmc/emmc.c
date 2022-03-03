@@ -29,6 +29,7 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "emmc.h"
+#include "util.h"
 // from iomem
 #include "../../libemmc.h"
 #include "../../libiomem.h"
@@ -192,65 +193,6 @@ static emmc_message_entry_t emmc_error_message[] = {
 };
 
 /**
- * @fn void prepare_mailbox*(size_t, size_t*)
- * @brief Helper to allocate and clear mailbox property array
- *
- * @param count
- * @param total
- */
-static void* prepare_mailbox( size_t count, size_t* total ) {
-  if ( 0 == count ) {
-    return NULL;
-  }
-  // allocate
-  size_t tmp_total = count * sizeof( uint32_t );
-  iomem_mmio_entry_ptr_t tmp = malloc( tmp_total );
-  if ( ! tmp ) {
-    return NULL;
-  }
-  // erase
-  memset( tmp, 0, tmp_total );
-  // set total if not null
-  if ( total ) {
-    *total = tmp_total;
-  }
-  // return
-  return tmp;
-}
-
-/**
- * @fn void prepare_sequence*(size_t, size_t*)
- * @brief Prepare emmc sequence
- *
- * @param count
- * @param total
- */
-static void* prepare_sequence( size_t count, size_t* total ) {
-  if ( 0 == count ) {
-    return NULL;
-  }
-  // allocate
-  size_t tmp_total = count * sizeof( iomem_mmio_entry_t );
-  iomem_mmio_entry_ptr_t tmp = malloc( count * sizeof( iomem_mmio_entry_t ) );
-  if ( ! tmp ) {
-    return NULL;
-  }
-  // erase
-  memset( tmp, 0, tmp_total );
-  // preset with defaults
-  for ( uint32_t i = 0; i < count; i++ ) {
-    tmp[ 0 ].shift_type = IOMEM_MMIO_SHIFT_NONE;
-    tmp[ 0 ].sleep_type = IOMEM_MMIO_SLEEP_NONE;
-  }
-  // set total if not null
-  if ( total ) {
-    *total = tmp_total;
-  }
-  // return
-  return tmp;
-}
-
-/**
  * @fn emmc_response_t controller_shutdown(void)
  * @brief Shutdown emmc controller by using mailbox interface
  *
@@ -259,7 +201,7 @@ static void* prepare_sequence( size_t count, size_t* total ) {
 static emmc_response_t controller_shutdown( void ) {
   // allocate buffer
   size_t request_size;
-  int32_t* request = prepare_mailbox( 8, &request_size );
+  int32_t* request = util_prepare_mailbox( 8, &request_size );
   if ( ! request ) {
     return EMMC_RESPONSE_MEMORY;
   }
@@ -334,7 +276,7 @@ static emmc_response_t controller_shutdown( void ) {
 static emmc_response_t controller_startup( void ) {
   // allocate buffer
   size_t request_size;
-  int32_t* request = prepare_mailbox( 8, &request_size );
+  int32_t* request = util_prepare_mailbox( 8, &request_size );
   if ( ! request ) {
     return EMMC_RESPONSE_MEMORY;
   }
@@ -860,7 +802,7 @@ static emmc_response_t gather_version_info( void ) {
   #endif
   // fetch host version
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t host_version_sequence = prepare_sequence(
+  iomem_mmio_entry_ptr_t host_version_sequence = util_prepare_mmio_sequence(
     1, &sequence_size );
   if ( ! host_version_sequence ) {
     return EMMC_RESPONSE_MEMORY;
@@ -1014,7 +956,7 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = prepare_sequence( 10, &sequence_size );
+  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 10, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -1126,7 +1068,7 @@ static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = prepare_sequence( 1, &sequence_size );
+  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 1, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -1218,7 +1160,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = prepare_sequence(
+  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence(
     sequence_entry_count,
     &sequence_size
   );
@@ -1570,7 +1512,7 @@ static emmc_response_t get_interrupt_status( uint32_t* destination ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = prepare_sequence( 1, &sequence_size );
+  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 1, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -1626,7 +1568,7 @@ static emmc_response_t reset_command( void ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = prepare_sequence( 4, &sequence_size );
+  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 4, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -2240,7 +2182,7 @@ static emmc_response_t reset( void ) {
   emmc_response_t response;
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = prepare_sequence( 7, &sequence_size );
+  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 7, &sequence_size );
   if ( ! sequence ) {
     return EMMC_RESPONSE_MEMORY;
   }
@@ -2313,7 +2255,7 @@ static emmc_response_t reset( void ) {
     return response;
   }
   // allocate sequence
-  sequence = prepare_sequence( 2, &sequence_size );
+  sequence = util_prepare_mmio_sequence( 2, &sequence_size );
   if ( ! sequence ) {
     return EMMC_RESPONSE_MEMORY;
   }
@@ -2772,7 +2714,7 @@ emmc_response_t emmc_init( void ) {
   #endif
   // set block size in register
   size_t sequence_count;
-  iomem_mmio_entry_ptr_t sequence = prepare_sequence(
+  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence(
     2, &sequence_count
   );
   if ( ! sequence ) {
@@ -2906,7 +2848,7 @@ emmc_response_t emmc_init( void ) {
         EARLY_STARTUP_PRINT( "Change transfer width in control0 register\r\n" )
       #endif
       // change bit mode for host
-      sequence = prepare_sequence( 2, &sequence_count );
+      sequence = util_prepare_mmio_sequence( 2, &sequence_count );
       if ( ! sequence ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
