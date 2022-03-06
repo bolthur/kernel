@@ -49,7 +49,7 @@ int main( __unused int argc, __unused char* argv[] ) {
     ( void* )( ( uintptr_t )buffer + sizeof( mbr_t ) )
   )
   // setup emmc
-  EARLY_STARTUP_PRINT( "Setup emmc\r\n" )
+  EARLY_STARTUP_PRINT( "Setup sd interface\r\n" )
   if( ! sd_init() ) {
     EARLY_STARTUP_PRINT(
       "Error while initializing sd interface: %s\r\n",

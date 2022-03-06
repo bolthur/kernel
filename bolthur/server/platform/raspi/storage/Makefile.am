@@ -1,2 +1,2 @@
 
-SUBDIRS = emmc
+SUBDIRS = sd

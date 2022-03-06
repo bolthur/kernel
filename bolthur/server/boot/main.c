@@ -377,11 +377,11 @@ static void stage2( void ) {
   pid_t iomem = execute_driver( "/ramdisk/server/iomem" );
   wait_for_device( "/dev/iomem" );
 
-  // start emmc server
-  EARLY_STARTUP_PRINT( "Starting and waiting for emmc server...\r\n" )
-  pid_t emmc = execute_driver( "/ramdisk/server/storage/emmc" );
-  wait_for_device( "/dev/emmc" );
-  //pid_t emmc = -1;
+  // start sd server
+  EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
+  pid_t sd = execute_driver( "/ramdisk/server/storage/sd" );
+  wait_for_device( "/dev/sd" );
+  //pid_t sd = -1;
 
   // start random server
   EARLY_STARTUP_PRINT( "Starting and waiting for random server...\r\n" )
@@ -404,8 +404,8 @@ static void stage2( void ) {
   wait_for_device( "/dev/terminal" );
 
   EARLY_STARTUP_PRINT(
-    "iomem = %d, rnd = %d, console = %d, terminal = %d, framebuffer = %d, emmc = %d\r\n",
-    iomem, rnd, console, terminal, framebuffer, emmc )
+    "iomem = %d, rnd = %d, console = %d, terminal = %d, framebuffer = %d, sd = %d\r\n",
+    iomem, rnd, console, terminal, framebuffer, sd )
 
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )

@@ -38,8 +38,11 @@
 #include "../../libgpio.h"
 
 /*
- * Use interrupt handling instead of polling.
- * According to https://elinux.org/BCM2835_datasheet_errata#p113 interrupt is IRQ 62
+ * Add and use interrupt routine instead of polling. This interrupt is listed in
+ * a more complete gpio overview of bcm2711 with 62, so it may be also used on
+ * other raspi platforms
+ *
+ * Use dma for transfer instead of polling data until it completed
  */
 
 static uint32_t emmc_command_list[] = {

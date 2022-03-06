@@ -37,6 +37,14 @@
 #include "../../libmailbox.h"
 #include "../../libgpio.h"
 
+/*
+ * Add and use interrupt routine. This interrupt is listed in a more complete
+ * gpio overview of bcm2711 with 56, so it may be also used on other raspi
+ * platforms
+ *
+ * Use dma for transfer instead of polling data until it completed
+ */
+
 static uint32_t sdhost_command_list[] = {
   SDHOST_CMD_INDEX( 0 ) | SDHOST_CMD_RESPONSE_NONE,
   SDHOST_CMD_RESERVED( 1 ), // reserved
@@ -622,8 +630,12 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
   #endif
   bool is_data = ( command & SDHOST_COMMAND_FLAG_READ )
     || ( command & SDHOST_COMMAND_FLAG_WRITE );
+  bool response_busy = command & SDHOST_COMMAND_FLAG_BUSY;
   // sequence size
   size_t sequence_entry_count = 12;
+  if ( response_busy ) {
+    sequence_entry_count += 2;
+  }
   // data command
   if ( is_data && 0 < device->block_count ) {
     // debug output
@@ -773,6 +785,23 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
     sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
     sequence[ idx ].sleep = 10;
     idx++;
+  }
+
+  // wait for transfer complete for data or if it's a busy command
+  if ( response_busy ) {
+    // wait until data is done
+    sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
+    sequence[ idx ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
+    sequence[ idx ].loop_and = SDHOST_HOST_STATUS_INT_BUSY;
+    sequence[ idx ].loop_max_iteration = timeout;
+    sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
+    sequence[ idx ].sleep = 10;
+    idx++;
+    // clear interrupt
+    sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
+    sequence[ idx ].value = SDHOST_HOST_STATUS_MASK_ERROR_ALL
+      | SDHOST_HOST_STATUS_INT_BUSY;
+    sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
   }
 
   // perform request
@@ -1095,7 +1124,7 @@ static sdhost_response_t reset( void ) {
 
   size_t sequence_size;
   iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence(
-    20, &sequence_size );
+    22, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -1181,6 +1210,13 @@ static sdhost_response_t reset( void ) {
   sequence[ 18 ].sleep = 300;
   // memory barrier
   sequence[ 19 ].type = IOMEM_MMIO_ACTION_SYNC_BARRIER;
+  // read host status
+  sequence[ 20 ].type = IOMEM_MMIO_ACTION_READ;
+  sequence[ 20 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
+  // enable necessary interrupts
+  sequence[ 21 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
+  sequence[ 21 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
+  sequence[ 21 ].value = SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY;
 
   // handle ioctl error
   if ( -1 == ioctl(
