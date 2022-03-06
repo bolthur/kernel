@@ -78,7 +78,9 @@
 #define EMMC_INTERRUPT_ENDBOOT ( 1 << 14 )
 #define EMMC_INTERRUPT_BOOTACK ( 1 << 13 )
 #define EMMC_INTERRUPT_RETUNE ( 1 << 12 )
-#define EMMC_INTERRUPT_CARD ( 1 << 8 )
+#define EMMC_INTERRUPT_CARD_INTERRUPT ( 1 << 8 )
+#define EMMC_INTERRUPT_CARD_REMOVAL ( 1 << 7 ) // should not be set
+#define EMMC_INTERRUPT_CARD_INSERTION ( 1 << 6 ) // should not be set
 #define EMMC_INTERRUPT_READ_RDY ( 1 << 5 )
 #define EMMC_INTERRUPT_WRITE_RDY ( 1 << 4 )
 #define EMMC_INTERRUPT_BLOCK_GAP ( 1 << 2 )
@@ -97,7 +99,9 @@
 #define EMMC_IRPT_MASK_ENDBOOT ( 1 << 14 )
 #define EMMC_IRPT_MASK_BOOTACK ( 1 << 13 )
 #define EMMC_IRPT_MASK_RETUNE ( 1 << 12 )
-#define EMMC_IRPT_MASK_CARD ( 1 << 8 )
+#define EMMC_IRPT_MASK_CARD_INTERRUPT ( 1 << 8 )
+#define EMMC_IRPT_MASK_CARD_REMOVAL ( 1 << 7 ) // should not be set
+#define EMMC_IRPT_MASK_CARD_INSERTION ( 1 << 6 ) // should not be set
 #define EMMC_IRPT_MASK_READ_RDY ( 1 << 5 )
 #define EMMC_IRPT_MASK_WRITE_RDY ( 1 << 4 )
 #define EMMC_IRPT_MASK_BLOCK_GAP ( 1 << 2 )
@@ -115,7 +119,9 @@
 #define EMMC_IRPT_ENABLE_ENDBOOT ( 1 << 14 )
 #define EMMC_IRPT_ENABLE_BOOTACK ( 1 << 13 )
 #define EMMC_IRPT_ENABLE_RETUNE ( 1 << 12 )
-#define EMMC_IRPT_ENABLE_CARD ( 1 << 8 )
+#define EMMC_IRPT_ENABLE_CARD_INTERRUPT ( 1 << 8 )
+#define EMMC_IRPT_ENABLE_CARD_REMOVAL ( 1 << 7 ) // should not be set
+#define EMMC_IRPT_ENABLE_CARD_INSERTION ( 1 << 6 ) // should not be set
 #define EMMC_IRPT_ENABLE_READ_RDY ( 1 << 5 )
 #define EMMC_IRPT_ENABLE_WRITE_RDY ( 1 << 4 )
 #define EMMC_IRPT_ENABLE_BLOCK_GAP ( 1 << 2 )
@@ -147,7 +153,9 @@
 #define EMMC_FORCE_IRPT_ENDBOOT ( 1 << 14 )
 #define EMMC_FORCE_IRPT_BOOTACK ( 1 << 13 )
 #define EMMC_FORCE_IRPT_RETUNE ( 1 << 12 )
-#define EMMC_FORCE_IRPT_CARD ( 1 << 8 )
+#define EMMC_FORCE_IRPT_CARD_INTERRUPT ( 1 << 8 )
+#define EMMC_FORCE_IRPT_CARD_REMOVAL ( 1 << 7 ) // should not be set
+#define EMMC_FORCE_IRPT_CARD_INSERTION ( 1 << 6 ) // should not be set
 #define EMMC_FORCE_IRPT_READ_RDY ( 1 << 5 )
 #define EMMC_FORCE_IRPT_WRITE_RDY ( 1 << 4 )
 #define EMMC_FORCE_IRPT_BLOCK_GAP ( 1 << 2 )

@@ -120,7 +120,23 @@ void rpc_handle_gpio_status(
   }
   // read data from GPIO pin level
   uint32_t value = mmio_read( address );
+  // some debug output
+  #if defined( RPC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT(
+      "mask = %#"PRIx32", value before = %#"PRIx32"\r\n",
+      ( uint32_t )( 1 << request->pin ),
+      value
+    )
+  #endif
   value &= ( 1 << request->pin );
+  // some debug output
+  #if defined( RPC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT(
+      "mask = %#"PRIx32", value after = %#"PRIx32"\r\n",
+      ( uint32_t )( 1 << request->pin ),
+      value
+    )
+  #endif
   // fill return
   request->value = value ? 1 : 0;
   // copy over to response container

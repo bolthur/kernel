@@ -46,8 +46,9 @@ void* util_prepare_mmio_sequence( size_t count, size_t* total ) {
   memset( tmp, 0, tmp_total );
   // preset with defaults
   for ( uint32_t i = 0; i < count; i++ ) {
-    tmp[ 0 ].shift_type = IOMEM_MMIO_SHIFT_NONE;
-    tmp[ 0 ].sleep_type = IOMEM_MMIO_SLEEP_NONE;
+    tmp[ i ].shift_type = IOMEM_MMIO_SHIFT_NONE;
+    tmp[ i ].sleep_type = IOMEM_MMIO_SLEEP_NONE;
+    tmp[ i ].failure_condition = IOMEM_MMIO_FAILURE_CONDITION_OFF;
   }
   // set total if not null
   if ( total ) {

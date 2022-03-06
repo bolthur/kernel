@@ -80,6 +80,12 @@ enum mmio_abort_type {
 };
 typedef enum mmio_abort_type mmio_abort_type_t;
 
+enum mmio_failure_condition {
+  IOMEM_MMIO_FAILURE_CONDITION_OFF = 0,
+  IOMEM_MMIO_FAILURE_CONDITION_ON,
+};
+typedef enum mmio_failure_condition mmio_failure_condition_t;
+
 struct iomem_mmio_entry {
   // action type
   mmio_action_t type;
@@ -93,6 +99,9 @@ struct iomem_mmio_entry {
   // value to be used for loop check
   uint32_t loop_and;
   uint32_t loop_max_iteration;
+  // only usable for loop
+  mmio_failure_condition_t failure_condition;
+  uint32_t failure_value;
   // sleep type and amount to sleep
   mmio_sleep_t sleep_type;
   uint32_t sleep;

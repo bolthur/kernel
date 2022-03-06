@@ -40,7 +40,7 @@
  * @return
  */
 static void custom_nanosleep( const struct timespec* rqtp ) {
-  if ( 0 >= rqtp->tv_nsec ) {
+  if ( 0 > rqtp->tv_nsec ) {
     errno = EINVAL;
     return;
   }
@@ -48,14 +48,21 @@ static void custom_nanosleep( const struct timespec* rqtp ) {
   size_t frequency = _syscall_timer_frequency();
   // calculate second timeout
   size_t timeout = ( size_t )( rqtp->tv_sec * frequency );
+  size_t tick;
   // add nanosecond offset
   timeout += ( size_t )( ( double )rqtp->tv_nsec * ( double )frequency / 1000000000.0 );
   // add tick count to get an end time
   timeout += _syscall_timer_tick_count();
   // loop until timeout is reached
-  while ( _syscall_timer_tick_count() < timeout ) {
+  while ( ( tick = _syscall_timer_tick_count() ) < timeout ) {
+    //#if defined( RPC_ENABLE_DEBUG )
+    //  EARLY_STARTUP_PRINT( "sleeping %d / %d\r\n", tick, timeout )
+    //#endif
     __asm__ __volatile__( "nop" );
   }
+  //#if defined( RPC_ENABLE_DEBUG )
+  //  EARLY_STARTUP_PRINT( "sleeping %d / %d\r\n", tick, timeout )
+  //#endif
 }
 
 /**
@@ -83,18 +90,23 @@ static uint32_t apply_shift(
 }
 
 /**
- * @fn uint32_t read_helper(iomem_mmio_entry_ptr_t)
+ * @fn uint32_t read_helper(iomem_mmio_entry_ptr_t, uint32_t*)
  * @brief read helper
  *
  * @param request
+ * @param val
  * @return
  */
-static uint32_t read_helper( iomem_mmio_entry_ptr_t request ) {
+static uint32_t read_helper( iomem_mmio_entry_ptr_t request, uint32_t* val ) {
   // read value
   uint32_t value = mmio_read( request->offset );
   #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
+  // save original value
+  if ( val ) {
+    *val = value;
+  }
   // apply possible and
   if ( 0 < request->loop_and ) {
    value &= request->loop_and;
@@ -147,6 +159,10 @@ static void apply_sleep( mmio_sleep_t sleep_type, uint32_t sleep_value ) {
     ts.tv_sec = sleep_value_time / 1000;
     ts.tv_nsec = ( sleep_value_time % 1000 ) * 1000000;
   }
+  //#if defined( RPC_ENABLE_DEBUG )
+  //  EARLY_STARTUP_PRINT( "tv_sec = %lld\r\n", ts.tv_sec )
+  //  EARLY_STARTUP_PRINT( "tv_nsec = %ld\r\n", ts.tv_nsec )
+  //#endif
   custom_nanosleep( &ts );
   // sleep as long as given
   /*do {
@@ -289,6 +305,7 @@ void rpc_handle_mmio_perform(
   for ( size_t i = 0; i < entry_count; i++ ) {
     // variables
     uint32_t value;
+    uint32_t original_value;
     int64_t loop_max_iteration = -1;
     // reset some command flags
     ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_NONE;
@@ -313,13 +330,51 @@ void rpc_handle_mmio_perform(
         if ( 0 < ( *request )[ i ].loop_max_iteration ) {
           loop_max_iteration = ( *request )[ i ].loop_max_iteration;
         }
-        while ( ( *request )[ i ].value == ( value = read_helper( &( ( *request )[ i ] ) ) ) ) {
+        while ( ( *request )[ i ].value == ( value = read_helper(
+          &( ( *request )[ i ] ),
+          &original_value
+        ) ) ) {
+          // handle failure
+          if (
+            IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
+            && ( original_value & ( *request )[ i ].failure_value )
+          ) {
+            // debug output
+            #if defined( RPC_ENABLE_DEBUG )
+              EARLY_STARTUP_PRINT(
+                "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
+                original_value,
+                ( *request )[ i ].failure_value
+              )
+            #endif
+            // treat as timeout
+            value = original_value;
+            loop_max_iteration = 0;
+            break;
+          }
           // break
           if ( -1 != loop_max_iteration && ! loop_max_iteration-- ) {
             break;
           }
           // apply possible sleep
           apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+        }
+        // handle failure
+        if (
+          IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
+          && ( original_value & ( *request )[ i ].failure_value )
+        ) {
+          // debug output
+          #if defined( RPC_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT(
+              "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
+              original_value,
+              ( *request )[ i ].failure_value
+            )
+          #endif
+          // treat as timeout
+          value = original_value;
+          loop_max_iteration = 0;
         }
         // save last value
         ( *request )[ i ].value = value;
@@ -339,13 +394,51 @@ void rpc_handle_mmio_perform(
         if ( 0 < ( *request )[ i ].loop_max_iteration ) {
           loop_max_iteration = ( *request )[ i ].loop_max_iteration;
         }
-        while ( ( *request )[ i ].value != ( value = read_helper( &( ( *request )[ i ] ) ) ) ) {
+        while ( ( *request )[ i ].value != ( value = read_helper(
+          &( ( *request )[ i ] ),
+          &original_value
+        ) ) ) {
+          // handle failure
+          if (
+            IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
+            && ( original_value & ( *request )[ i ].failure_value )
+          ) {
+            // debug output
+            #if defined( RPC_ENABLE_DEBUG )
+              EARLY_STARTUP_PRINT(
+                "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
+                original_value,
+                ( *request )[ i ].failure_value
+              )
+            #endif
+            // treat as timeout
+            value = original_value;
+            loop_max_iteration = 0;
+            break;
+          }
           // break
           if ( -1 != loop_max_iteration && ! loop_max_iteration-- ) {
             break;
           }
           // apply possible sleep
           apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+        }
+        // handle failure
+        if (
+          IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
+          && ( original_value & ( *request )[ i ].failure_value )
+        ) {
+          // debug output
+          #if defined( RPC_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT(
+              "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
+              original_value,
+              ( *request )[ i ].failure_value
+            )
+          #endif
+          // treat as timeout
+          value = original_value;
+          loop_max_iteration = 0;
         }
         // save last value
         ( *request )[ i ].value = value;
@@ -365,13 +458,51 @@ void rpc_handle_mmio_perform(
         if ( 0 < ( *request )[ i ].loop_max_iteration ) {
           loop_max_iteration = ( *request )[ i ].loop_max_iteration;
         }
-        while ( ( value = read_helper( &( ( *request )[ i ] ) ) ) ) {
+        while ( ( value = read_helper(
+          &( ( *request )[ i ] ),
+          &original_value
+        ) ) ) {
+          // handle failure
+          if (
+            IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
+            && ( original_value & ( *request )[ i ].failure_value )
+          ) {
+            // debug output
+            #if defined( RPC_ENABLE_DEBUG )
+              EARLY_STARTUP_PRINT(
+                "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
+                original_value,
+                ( *request )[ i ].failure_value
+              )
+            #endif
+            // treat as timeout
+            value = original_value;
+            loop_max_iteration = 0;
+            break;
+          }
           // break
           if ( -1 != loop_max_iteration && ! loop_max_iteration-- ) {
             break;
           }
           // apply possible sleep
           apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+        }
+        // handle failure
+        if (
+          IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
+          && ( original_value & ( *request )[ i ].failure_value )
+        ) {
+          // debug output
+          #if defined( RPC_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT(
+              "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
+              original_value,
+              ( *request )[ i ].failure_value
+            )
+          #endif
+          // treat as timeout
+          value = original_value;
+          loop_max_iteration = 0;
         }
         // save last value
         ( *request )[ i ].value = value;
@@ -391,13 +522,51 @@ void rpc_handle_mmio_perform(
         if ( 0 < ( *request )[ i ].loop_max_iteration ) {
           loop_max_iteration = ( *request )[ i ].loop_max_iteration;
         }
-        while ( ! ( value = read_helper( &( ( *request )[ i ] ) ) ) ) {
+        while ( ! ( value = read_helper(
+          &( ( *request )[ i ] ),
+          &original_value
+        ) ) ) {
+          // handle failure
+          if (
+            IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
+            && ( original_value & ( *request )[ i ].failure_value )
+          ) {
+            // debug output
+            #if defined( RPC_ENABLE_DEBUG )
+              EARLY_STARTUP_PRINT(
+                "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
+                original_value,
+                ( *request )[ i ].failure_value
+              )
+            #endif
+            // treat as timeout
+            value = original_value;
+            loop_max_iteration = 0;
+            break;
+          }
           // break
           if ( -1 != loop_max_iteration && ! loop_max_iteration-- ) {
             break;
           }
           // apply possible sleep
           apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+        }
+        // handle failure
+        if (
+          IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
+          && ( original_value & ( *request )[ i ].failure_value )
+        ) {
+          // debug output
+          #if defined( RPC_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT(
+              "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
+              original_value,
+              ( *request )[ i ].failure_value
+            )
+          #endif
+          // treat as timeout
+          value = original_value;
+          loop_max_iteration = 0;
         }
         // save last value
         ( *request )[ i ].value = value;

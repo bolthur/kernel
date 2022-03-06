@@ -125,6 +125,13 @@ void rpc_handle_gpio_set_function(
     free( request );
     return;
   }
+  // some debug output
+  #if defined( RPC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT(
+      "gpio function: pin = %d, function = %x\r\n",
+      request->pin, request->function
+    )
+  #endif
   // read value
   uint32_t value = mmio_read( address );
   // some debug output
@@ -145,10 +152,20 @@ void rpc_handle_gpio_set_function(
   value |= ( ( request->function & 7 ) << ( request->pin * 3 ) );
   // some debug output
   #if defined( RPC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT(
+      "bit = %#"PRIx32", value = %#"PRIx32"\r\n",
+      ( uint32_t )( ( request->function & 7 ) << ( request->pin * 3 ) ),
+      value
+    )
+  #endif
+  // some debug output
+  #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
   // write back changes
   mmio_write( address, value );
+  // delay 150 cycles
+  delay( 150 );
   // some debug output
   #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "wrote %#"PRIx32" to %#"PRIxPTR"\r\n", value, address )

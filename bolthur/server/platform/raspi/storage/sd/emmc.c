@@ -350,8 +350,11 @@ static emmc_response_t controller_startup( void ) {
  * @brief Restart controller with shutdown, sleep and startup via mailbox
  *
  * @return
+ *
+ * @todo check why this is not working and add again or remove completely
  */
 static emmc_response_t controller_restart( void ) {
+  return EMMC_RESPONSE_OK;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Shutdown emmc controller\r\n" )
@@ -699,8 +702,11 @@ static emmc_response_t init_gpio( void ) {
  * @brief Method to update card detection flags
  *
  * @return
+ *
+ * @todo check why this is not working and add again or remove completely
  */
 static emmc_response_t update_card_detect( void ) {
+  return EMMC_RESPONSE_OK;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Gather updates regarding card detection\r\n" )
@@ -1213,13 +1219,15 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   sequence[ idx ].value = command;
   sequence[ idx ].offset = PERIPHERAL_EMMC_CMDTM;
   idx++;
-  // wait until command is executed
+  // wait until command is executed / failed
   sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
   sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
   sequence[ idx ].loop_and = EMMC_INTERRUPT_CMD_DONE;
   sequence[ idx ].loop_max_iteration = timeout;
   sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
   sequence[ idx ].sleep = 10;
+  sequence[ idx ].failure_condition = IOMEM_MMIO_FAILURE_CONDITION_ON;
+  sequence[ idx ].failure_value = EMMC_INTERRUPT_ERR;
   idx++;
   // clear interrupt
   sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
@@ -1251,6 +1259,10 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
     // determine interrupt flag
     uint32_t interrupt = ( command & EMMC_CMDTM_CMD_TM_DAT_DIR_CH )
       ? EMMC_INTERRUPT_READ_RDY : EMMC_INTERRUPT_WRITE_RDY;
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "interrupt = %#"PRIx32"\r\n", interrupt )
+    #endif
     for ( uint32_t current = 0; current < device->block_count; current++ ) {
       // wait for flag
       sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
@@ -1259,6 +1271,8 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       sequence[ idx ].loop_max_iteration = timeout / 10;
       sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
       sequence[ idx ].sleep = 10;
+      sequence[ idx ].failure_condition = IOMEM_MMIO_FAILURE_CONDITION_ON;
+      sequence[ idx ].failure_value = EMMC_INTERRUPT_ERR;
       idx++;
       // clear interrupt
       sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
@@ -1281,7 +1295,6 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
         // copy write data
         if ( interrupt & EMMC_INTERRUPT_WRITE_RDY ) {
           memcpy( &sequence[ idx++ ].value, buffer32, sizeof( uint32_t ) );
-          //sequence[ idx ].value = *buffer32;
         }
         idx++;
       }
@@ -1329,8 +1342,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
     #endif
     // save last interrupt and specific error
     device->last_interrupt = sequence[ idx ].value;
-    device->last_error = sequence[ idx ].value
-      & ( EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_CMD_DONE );
+    device->last_error = sequence[ idx ].value & EMMC_INTERRUPT_MASK;
     // mask interrupts again
     while ( EMMC_RESPONSE_OK != interrupt_mark_handled(
       EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_CMD_DONE
@@ -1345,7 +1357,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Saving possible response information\r\n" )
   #endif
-  // fill last response
+  // fill last responseEMMC_INTERRUPT_MASK
   idx += 2;
   switch ( command & EMMC_CMDTM_CMD_RSPNS_TYPE_MASK ) {
     case EMMC_CMDTM_CMD_RSPNS_TYPE_48:
@@ -1383,8 +1395,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
         #endif
         // save last interrupt and specific error
         device->last_interrupt = sequence[ idx ].value;
-        device->last_error = sequence[ idx ].value
-          & ( EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE );
+        device->last_error = sequence[ idx ].value & EMMC_INTERRUPT_MASK;
         // mask interrupts again
         while ( EMMC_RESPONSE_OK != interrupt_mark_handled(
           EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE
@@ -1419,7 +1430,6 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
         buffer32++
       ) {
         memcpy( buffer32, &sequence[ idx++ ].value, sizeof( uint32_t ) );
-        //*buffer32 = sequence[ idx++ ].value;
         read_action++;
       }
     }
@@ -1450,11 +1460,11 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
         #endif
         // save last interrupt and specific error
         device->last_interrupt = sequence[ idx ].value;
-        device->last_error = sequence[ idx ].value & (
-          EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE
-        );
+        device->last_error = sequence[ idx ].value & EMMC_INTERRUPT_MASK;
         // mask interrupts again
-        while ( EMMC_RESPONSE_OK != interrupt_mark_handled( EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE ) ) {
+        while ( EMMC_RESPONSE_OK != interrupt_mark_handled(
+          EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE
+        ) ) {
           __asm__ __volatile__( "nop" );
         }
         // return failure
@@ -1560,7 +1570,7 @@ static emmc_response_t get_interrupt_status( uint32_t* destination ) {
 
 /**
  * @fn emmc_response_t reset_command(void)
- * @brief Reset command after timeout
+ * @brief Reset command
  *
  * @return
  */
@@ -1647,6 +1657,94 @@ static emmc_response_t reset_command( void ) {
 }
 
 /**
+ * @fn emmc_response_t reset_data(void)
+ * @brief Reset data
+ *
+ * @return
+ */
+static emmc_response_t reset_data( void ) {
+  // debug output
+  #if defined( EMMC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Reset data\r\n" )
+  #endif
+  // allocate sequence
+  size_t sequence_size;
+  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 4, &sequence_size );
+  if ( ! sequence ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Sequence allocation failed\r\n" )
+    #endif
+    // return error
+    return EMMC_RESPONSE_MEMORY;
+  }
+  // build request
+  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
+  sequence[ 0 ].offset = PERIPHERAL_EMMC_CONTROL1;
+  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
+  sequence[ 1 ].offset = PERIPHERAL_EMMC_CONTROL1;
+  sequence[ 1 ].value = EMMC_CONTROL1_SRST_DATA;
+  // wait for flag is unset
+  sequence[ 2 ].type = IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL;
+  sequence[ 2 ].offset = PERIPHERAL_EMMC_CONTROL1;
+  sequence[ 2 ].value = 0;
+  sequence[ 2 ].loop_and = EMMC_CONTROL1_SRST_DATA;
+  sequence[ 2 ].loop_max_iteration = 100000;
+  sequence[ 2 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
+  sequence[ 2 ].sleep = 10;
+  // read again
+  sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ;
+  sequence[ 3 ].offset = PERIPHERAL_EMMC_CONTROL1;
+  // perform request
+  int result = ioctl(
+    device->fd_iomem,
+    IOCTL_BUILD_REQUEST(
+      IOMEM_RPC_MMIO_PERFORM,
+      sequence_size,
+      IOCTL_RDWR
+    ),
+    sequence
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Reset command sequence failed\r\n" )
+    #endif
+    // free
+    free( sequence );
+    // return error
+    return EMMC_RESPONSE_IO;
+  }
+  // handle timeout
+  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 2 ].abort_type ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Wait for command reset timed out\r\n" )
+    #endif
+    // free
+    free( sequence );
+    // return error
+    return EMMC_RESPONSE_TIMEOUT;
+  }
+  // check last read for reset was unset
+  if ( sequence[ 3 ].value & EMMC_CONTROL1_SRST_DATA ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Command reset failed\r\n" )
+    #endif
+    // free
+    free( sequence );
+    // return error
+    return EMMC_RESPONSE_UNKNOWN;
+  }
+  // free
+  free( sequence );
+  // return success
+  return EMMC_RESPONSE_OK;
+}
+
+/**
  * @fn void handle_interrupt(void)
  * @brief Handle controller interrupts
  */
@@ -1668,6 +1766,10 @@ static void handle_interrupt( void ) {
   do {
     response = get_interrupt_status( &interrupt );
   } while ( EMMC_RESPONSE_OK != response );
+  // debug output
+  #if defined( EMMC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "interrupt = %#"PRIx32"\r\n", interrupt )
+  #endif
 
   // command complete
   if ( interrupt & EMMC_INTERRUPT_CMD_DONE ) {
@@ -1708,7 +1810,7 @@ static void handle_interrupt( void ) {
     // set reset mask
     reset |= EMMC_INTERRUPT_WRITE_RDY;
     // reset data
-    while( EMMC_RESPONSE_OK != reset_command() ) {
+    while( EMMC_RESPONSE_OK != reset_data() ) {
       __asm__ __volatile__( "nop" );
     }
   }
@@ -1721,16 +1823,40 @@ static void handle_interrupt( void ) {
     #endif
     // set reset mask
     reset |= EMMC_INTERRUPT_READ_RDY;
+    // reset data
+    while( EMMC_RESPONSE_OK != reset_data() ) {
+      __asm__ __volatile__( "nop" );
+    }
+  }
+
+  // card insertion
+  if ( interrupt & EMMC_INTERRUPT_CARD_INSERTION ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Card insertion!\r\n" )
+    #endif
+    // set reset mask
+    reset |= EMMC_INTERRUPT_CARD_INSERTION;
+  }
+
+  // card removal
+  if ( interrupt & EMMC_INTERRUPT_CARD_REMOVAL ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Card removal!\r\n" )
+    #endif
+    // set reset mask
+    reset |= EMMC_INTERRUPT_CARD_REMOVAL;
   }
 
   // card interrupt
-  if ( interrupt & EMMC_INTERRUPT_CARD ) {
+  if ( interrupt & EMMC_INTERRUPT_CARD_INTERRUPT ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Card interrupt!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_CARD;
+    reset |= EMMC_INTERRUPT_CARD_INTERRUPT;
     // handle card interrupts
     handle_card_interrupt();
   }
@@ -1854,6 +1980,11 @@ static void handle_interrupt( void ) {
     // set reset mask
     reset |= EMMC_INTERRUPT_ACMD_ERR;
   }
+
+  // debug output
+  #if defined( EMMC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "reset = %#"PRIx32"\r\n", reset )
+  #endif
 
   // write back reset
   while ( EMMC_RESPONSE_OK != interrupt_mark_handled( reset ) ) {
@@ -2025,7 +2156,9 @@ static emmc_response_t init_sd( void ) {
       return response;
     }
     // mark interrupt handled
-    if ( EMMC_RESPONSE_OK != ( response = interrupt_mark_handled( EMMC_INTERRUPT_CTO_ERR ) ) ) {
+    if ( EMMC_RESPONSE_OK != ( response = interrupt_mark_handled(
+      EMMC_INTERRUPT_CTO_ERR
+    ) ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Failed masking command timeout at interrupt register\r\n" )
@@ -2065,16 +2198,33 @@ static emmc_response_t init_sd( void ) {
   #endif
   // send cmd5, which returns only when card is a sdio card
   response = sd_command( EMMC_CMD_IO_SEND_OP_COND, 0 );
+  // debug output
+  #if defined( EMMC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT(
+      "response = %d, last_error = %#"PRIx32", last_interrupt = %#"PRIx32"\r\n",
+      response,
+      device->last_error,
+      device->last_interrupt
+    )
+  #endif
   // Exclude timeout
   if (
     EMMC_RESPONSE_OK != response
     && 0 != device->last_error
   ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Command failed for some reason\r\n" )
+    #endif
     // command timed out
     if (
       EMMC_RESPONSE_OK != response
       && ( device->last_error & EMMC_INTERRUPT_CTO_ERR )
     ) {
+      // debug output
+      #if defined( EMMC_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Command timed out, reset command\r\n" )
+      #endif
       // reset command
       if ( EMMC_RESPONSE_OK != ( response = reset_command() ) ) {
         // debug output
@@ -2084,6 +2234,10 @@ static emmc_response_t init_sd( void ) {
         // return error
         return response;
       }
+      // debug output
+      #if defined( EMMC_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Mask timeout interrupt\r\n" )
+      #endif
       // mask interrupt
       if ( EMMC_RESPONSE_OK != ( response = interrupt_mark_handled( EMMC_INTERRUPT_CTO_ERR ) ) ) {
         // debug output
@@ -2154,7 +2308,8 @@ static emmc_response_t init_sd( void ) {
     if ( device->last_response[ 0 ] >> 31 ) {
       // save ocr
       device->card_ocr = ( device->last_response[ 0 ] >> 8 ) & 0xFFFF;
-      device->card_support_sdhc = ( device->last_response[ 0 ] >> 31 ) & 0x1;
+      // check for sdhc support
+      device->card_support_sdhc = ( device->last_response[ 0 ] >> 30 ) & 0x1;
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT(
@@ -2775,6 +2930,8 @@ emmc_response_t emmc_init( void ) {
     // return error
     return response;
   }
+  // reset block size
+  device->block_size = 512;
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
@@ -2933,6 +3090,10 @@ emmc_response_t emmc_transfer_block(
 
   // check for card change
   if ( device ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Update card detection\r\n" )
+    #endif
     // update card detection
     if ( EMMC_RESPONSE_OK != ( response = update_card_detect() ) ) {
       // debug output
@@ -2942,6 +3103,10 @@ emmc_response_t emmc_transfer_block(
       // return error
       return response;
     }
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Check for card absent / ejected\r\n" )
+    #endif
     // handle absent
     if ( device->card_absent ) {
       // debug output
@@ -2999,6 +3164,10 @@ emmc_response_t emmc_transfer_block(
   }
   // get status
   uint32_t status = ( device->last_response[ 0 ] >> 9 ) & 0xf;
+  // debug output
+  #if defined( EMMC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "status = %#"PRIx32"\r\n", status )
+  #endif
   // stand by - try to select it
   if ( 3 == status ) {
     // debug output
