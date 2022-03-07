@@ -40,6 +40,15 @@ enum iomem_gpio_enum_pull {
 typedef enum iomem_gpio_enum_pull iomem_gpio_enum_pull_t;
 
 enum iomem_gpio_enum_pin {
+  // raspi 3 wifi pin
+  #if 3 == RASPI
+    IOMEM_GPIO_ENUM_PIN_WIFI0 = 34,
+    IOMEM_GPIO_ENUM_PIN_WIFI1 = 35,
+    IOMEM_GPIO_ENUM_PIN_WIFI2 = 36,
+    IOMEM_GPIO_ENUM_PIN_WIFI3 = 37,
+    IOMEM_GPIO_ENUM_PIN_WIFI4 = 38,
+    IOMEM_GPIO_ENUM_PIN_WIFI5 = 39,
+  #endif
   // emmc gpio pins
   IOMEM_GPIO_ENUM_PIN_CD = 47,
   IOMEM_GPIO_ENUM_PIN_CLK = 48,

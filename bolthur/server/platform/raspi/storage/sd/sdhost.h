@@ -37,6 +37,7 @@ enum sdhost_response {
   SDHOST_RESPONSE_CARD_ABSENT,
   SDHOST_RESPONSE_CARD_EJECTED,
   SDHOST_RESPONSE_CARD_ERROR,
+  SDHOST_RESPONSE_MAILBOX,
   SDHOST_RESPONSE_UNKNOWN,
 };
 
@@ -58,6 +59,9 @@ struct sdhost_device {
   uint16_t card_rca;
   // sdcard configuration register
   uint32_t card_scr[ 2 ];
+
+  // max clock information
+  uint32_t max_clock;
 
   // last command executed
   uint32_t last_command;

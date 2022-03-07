@@ -283,7 +283,6 @@ void rpc_handle_mmio_perform(
       && IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_DELAY != ( *request )[ i ].type
       && IOMEM_MMIO_ACTION_SLEEP != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_SYNC_BARRIER != ( *request )[ i ].type
     ) {
       error.status = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -619,11 +618,6 @@ void rpc_handle_mmio_perform(
       // sleep given amount of seconds
       case IOMEM_MMIO_ACTION_SLEEP:
         apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
-        break;
-      // synchronization barrier
-      case IOMEM_MMIO_ACTION_SYNC_BARRIER:
-        /// FIXME: REPLACE GCC BUILTIN
-        __sync_synchronize();
         break;
       // default shouldn't happen due to previous validation
       default:

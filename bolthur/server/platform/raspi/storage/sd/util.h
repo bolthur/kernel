@@ -18,11 +18,13 @@
  */
 
 #include <stddef.h>
+#include <stdbool.h>
 
 #if ! defined( _UTIL_H )
 #define _UTIL_H
 
 void* util_prepare_mmio_sequence( size_t, size_t* );
 void* util_prepare_mailbox( size_t, size_t* );
+bool util_update_card_detect( int, bool*, bool* );
 
 #endif
