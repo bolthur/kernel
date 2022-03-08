@@ -27,6 +27,21 @@
 #include "../../libmailbox.h"
 
 /**
+ * @fn uint32_t min(uint32_t, uint32_t)
+ * @brief Simple min implementation
+ *
+ * @param a
+ * @param b
+ * @return
+ */
+uint32_t util_min( uint32_t a, uint32_t b ) {
+  if ( a > b ) {
+    return b;
+  }
+  return a;
+}
+
+/**
  * @fn void util_prepare_mmio_sequence*(size_t, size_t*)
  * @brief Prepare mmio sequence
  *

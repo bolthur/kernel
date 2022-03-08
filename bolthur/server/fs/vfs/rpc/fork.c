@@ -64,7 +64,7 @@ void rpc_handle_fork(
     return;
   }
   memset( request, 0, message_size );
-  _syscall_rpc_get_data( request, message_size, data_info, false );
+  _syscall_rpc_get_data( request, message_size, data_info );
   if ( errno ) {
     response.status = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );

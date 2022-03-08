@@ -25,9 +25,9 @@
 
 // forward declaration
 typedef struct list_item list_item_t;
-typedef struct list_item *list_item_ptr_t;
+typedef struct list_item* list_item_ptr_t;
 typedef struct list_manager list_manager_t;
-typedef struct list_manager *list_manager_ptr_t;
+typedef struct list_manager* list_manager_ptr_t;
 
 typedef int32_t ( *list_lookup_func_t )(
   const list_item_ptr_t a,

@@ -57,7 +57,7 @@ void rpc_handle_seek(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_seek_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( vfs_seek_request_t ), data_info );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );

@@ -404,7 +404,7 @@ void framebuffer_handle_render_surface(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( info, sz, data_info, false );
+  _syscall_rpc_get_data( info, sz, data_info );
   // handle error
   if ( errno ) {
     error.status = -errno;

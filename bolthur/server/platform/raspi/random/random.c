@@ -22,9 +22,9 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/bolthur.h>
-#include <sys/fcntl.h>
+#include <fcntl.h>
 #include <sys/ioctl.h>
+#include <sys/bolthur.h>
 #include "random.h"
 #include "../libiomem.h"
 #include "../libperipheral.h"

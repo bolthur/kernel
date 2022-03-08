@@ -834,12 +834,10 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
   // min limit, set divisor at least to 2
   if ( 2 >= divisor ) {
     divisor = 2;
-    shift_count = 0;
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "divisor = %#"PRIx32", shift_count = %#"PRIx32"\r\n",
-      divisor, shift_count )
+    EARLY_STARTUP_PRINT( "divisor = %#"PRIx32"\r\n", divisor )
   #endif
   // update high bits if newer than v2 is active
   if ( EMMC_HOST_CONTROLLER_V2 < device->version_host_controller ) {
@@ -1183,7 +1181,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       // clear interrupt
       sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
       sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
-      sequence[ idx ].offset = EMMC_INTERRUPT_MASK | interrupt;
+      sequence[ idx ].value = EMMC_INTERRUPT_MASK | interrupt;
       idx++;
       // set buffer
       uint32_t* buffer32 = device->buffer;
@@ -1218,8 +1216,8 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
     idx++;
     // clear interrupt
     sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-    sequence[ idx ].value = EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE;
     sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
+    sequence[ idx ].value = EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE;
   }
   // perform request
   int result = ioctl(
@@ -1391,15 +1389,12 @@ static void handle_card_interrupt( void ) {
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Handle possible card interrupts\r\n" )
   #endif
-  emmc_response_t response;
   // get card status
   if ( device->card_rca ) {
     // get card status
-    if ( EMMC_RESPONSE_OK != (
-      response = issue_sd_command(
-        emmc_command_list[ EMMC_CMD_SEND_STATUS ],
-        device->card_rca << 16
-      )
+    if ( EMMC_RESPONSE_OK != issue_sd_command(
+      emmc_command_list[ EMMC_CMD_SEND_STATUS ],
+      device->card_rca << 16
     ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
@@ -1662,7 +1657,7 @@ static void handle_interrupt( void ) {
   // variable stuff
   uint32_t interrupt;
   emmc_response_t response;
-  uint32_t reset = 0;
+  uint32_t reset_mask = 0;
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
@@ -1684,7 +1679,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Command completed!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_CMD_DONE;
+    reset_mask |= EMMC_INTERRUPT_CMD_DONE;
   }
 
   // transfer done
@@ -1694,7 +1689,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Data transfer completed!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_DATA_DONE;
+    reset_mask |= EMMC_INTERRUPT_DATA_DONE;
   }
 
   // block gap
@@ -1704,7 +1699,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Block gap interrupt!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_BLOCK_GAP;
+    reset_mask |= EMMC_INTERRUPT_BLOCK_GAP;
   }
 
   // write ready
@@ -1714,7 +1709,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Write ready interrupt!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_WRITE_RDY;
+    reset_mask |= EMMC_INTERRUPT_WRITE_RDY;
     // reset data
     while( EMMC_RESPONSE_OK != reset_data() ) {
       __asm__ __volatile__( "nop" );
@@ -1728,7 +1723,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Read ready interrupt!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_READ_RDY;
+    reset_mask |= EMMC_INTERRUPT_READ_RDY;
     // reset data
     while( EMMC_RESPONSE_OK != reset_data() ) {
       __asm__ __volatile__( "nop" );
@@ -1742,7 +1737,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Card insertion!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_CARD_INSERTION;
+    reset_mask |= EMMC_INTERRUPT_CARD_INSERTION;
   }
 
   // card removal
@@ -1752,7 +1747,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Card removal!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_CARD_REMOVAL;
+    reset_mask |= EMMC_INTERRUPT_CARD_REMOVAL;
   }
 
   // card interrupt
@@ -1762,7 +1757,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Card interrupt!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_CARD_INTERRUPT;
+    reset_mask |= EMMC_INTERRUPT_CARD_INTERRUPT;
     // handle card interrupts
     handle_card_interrupt();
   }
@@ -1774,7 +1769,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Retune interrupt!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_RETUNE;
+    reset_mask |= EMMC_INTERRUPT_RETUNE;
   }
 
   // boot ack
@@ -1784,7 +1779,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Boot acknowledge!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_BOOTACK;
+    reset_mask |= EMMC_INTERRUPT_BOOTACK;
   }
 
   // endboot
@@ -1794,7 +1789,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Boot operation terminated!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_ENDBOOT;
+    reset_mask |= EMMC_INTERRUPT_ENDBOOT;
   }
 
   // err
@@ -1804,7 +1799,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Some generic error!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_ERR;
+    reset_mask |= EMMC_INTERRUPT_ERR;
   }
 
   // cto
@@ -1814,7 +1809,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Command timeout!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_CTO_ERR;
+    reset_mask |= EMMC_INTERRUPT_CTO_ERR;
   }
 
   // ccrc
@@ -1824,7 +1819,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Command CRC error!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_CCRC_ERR;
+    reset_mask |= EMMC_INTERRUPT_CCRC_ERR;
   }
 
   // cend
@@ -1834,7 +1829,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "End bit of command not 1!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_CEND_ERR;
+    reset_mask |= EMMC_INTERRUPT_CEND_ERR;
   }
 
   // cbad
@@ -1844,7 +1839,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Incorrect command index in response!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_CBAD_ERR;
+    reset_mask |= EMMC_INTERRUPT_CBAD_ERR;
   }
 
   // dto
@@ -1854,7 +1849,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Data transfer timeout!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_DTO_ERR;
+    reset_mask |= EMMC_INTERRUPT_DTO_ERR;
   }
 
   // dcrc
@@ -1864,7 +1859,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Data CRC error!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_DCRC_ERR;
+    reset_mask |= EMMC_INTERRUPT_DCRC_ERR;
   }
 
   // dend
@@ -1874,7 +1869,7 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "End bit of data not 1!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_DEND_ERR;
+    reset_mask |= EMMC_INTERRUPT_DEND_ERR;
   }
 
   // acmd
@@ -1884,16 +1879,16 @@ static void handle_interrupt( void ) {
       EARLY_STARTUP_PRINT( "Auto command error!\r\n" )
     #endif
     // set reset mask
-    reset |= EMMC_INTERRUPT_ACMD_ERR;
+    reset_mask |= EMMC_INTERRUPT_ACMD_ERR;
   }
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "reset = %#"PRIx32"\r\n", reset )
+    EARLY_STARTUP_PRINT( "reset = %#"PRIx32"\r\n", reset_mask )
   #endif
 
   // write back reset
-  while ( EMMC_RESPONSE_OK != interrupt_mark_handled( reset ) ) {
+  while ( EMMC_RESPONSE_OK != interrupt_mark_handled( reset_mask ) ) {
     __asm__ __volatile__ ( "nop" );
   }
 }
@@ -2123,10 +2118,7 @@ static emmc_response_t init_sd( void ) {
       EARLY_STARTUP_PRINT( "Command failed for some reason\r\n" )
     #endif
     // command timed out
-    if (
-      EMMC_RESPONSE_OK != response
-      && ( device->last_error & EMMC_INTERRUPT_CTO_ERR )
-    ) {
+    if ( device->last_error & EMMC_INTERRUPT_CTO_ERR ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Command timed out, reset command\r\n" )
@@ -2145,7 +2137,9 @@ static emmc_response_t init_sd( void ) {
         EARLY_STARTUP_PRINT( "Mask timeout interrupt\r\n" )
       #endif
       // mask interrupt
-      if ( EMMC_RESPONSE_OK != ( response = interrupt_mark_handled( EMMC_INTERRUPT_CTO_ERR ) ) ) {
+      if ( EMMC_RESPONSE_OK != ( response = interrupt_mark_handled(
+        EMMC_INTERRUPT_CTO_ERR
+      ) ) ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Failed masking command timeout at interrupt register\r\n" )
@@ -2408,14 +2402,8 @@ const char* emmc_error( emmc_response_t num ) {
   }
   // valid error code fill buffer
   char *buffer_pos = buffer;
-  size_t length;
-  // get length of message
-  length = strlen( emmc_error_message[ num - 1 ].message );
   // push message string to buffer
   strncpy( buffer_pos, emmc_error_message[ num - 1 ].message, total_length );
-  // decrement total length and increment buffer position
-  total_length -= length;
-  buffer_pos += length;
   // return buffer
   return buffer;
 }
@@ -2686,7 +2674,6 @@ emmc_response_t emmc_init( void ) {
   uint32_t crc_error = ( device->last_response[ 0 ] >> 15 ) & 0x1;
   uint32_t illegal_cmd = ( device->last_response[ 0 ] >> 14 ) & 0x1;
   uint32_t error = ( device->last_response[ 0 ] >> 13 ) & 0x1;
-  uint32_t status = ( device->last_response[ 0 ] >> 9 ) & 0xf;
   uint32_t ready = ( device->last_response[ 0 ] >> 8 ) & 0x1;
   // handle errors
   if ( crc_error ) {
@@ -2742,8 +2729,8 @@ emmc_response_t emmc_init( void ) {
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Check card selection status\r\n" )
   #endif
+  uint32_t status = ( device->last_response[ 0 ] >> 9 ) & 0xf;
   // handle invalid status
-  status = ( device->last_response[ 0 ] >> 9 ) & 0xf;
   if ( 3 != status && 4 != status ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -2903,9 +2890,7 @@ emmc_response_t emmc_init( void ) {
       EARLY_STARTUP_PRINT( "Switch to 4-bit data mode\r\n" )
     #endif
     // send ACMD6 to change the card's bit mode
-    if ( EMMC_RESPONSE_OK != (
-      response = sd_command( EMMC_APP_CMD_SET_BUS_WIDTH, 0x2 )
-    ) ) {
+    if ( EMMC_RESPONSE_OK != sd_command( EMMC_APP_CMD_SET_BUS_WIDTH, 0x2 ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Bus width set failed\r\n" )
@@ -3285,8 +3270,8 @@ emmc_response_t emmc_transfer_block(
     #if defined( EMMC_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to read / write data from card\r\n" )
     #endif
-    // return error
-    return EMMC_RESPONSE_IO;
+    // return last set error
+    return response;
   }
   // return success
   return EMMC_RESPONSE_OK;

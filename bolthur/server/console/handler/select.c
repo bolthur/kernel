@@ -66,7 +66,7 @@ void handler_console_select(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( command, sz, data_info, false );
+  _syscall_rpc_get_data( command, sz, data_info );
   // handle error
   if ( errno ) {
     free( command );

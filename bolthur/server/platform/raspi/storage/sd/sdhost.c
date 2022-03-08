@@ -673,21 +673,6 @@ static sdhost_response_t get_debug_status( uint32_t* destination ) {
 }
 
 /**
- * @fn uint32_t min(uint32_t, uint32_t)
- * @brief Simple min implementation
- *
- * @param a
- * @param b
- * @return
- */
-static uint32_t min( uint32_t a, uint32_t b ) {
-  if ( a > b ) {
-    return b;
-  }
-  return a;
-}
-
-/**
  * @fn sdhost_response_t finish_sd_data_command(uint32_t)
  * @brief Helper finishes data command by reading until everything is done
  *
@@ -746,7 +731,10 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
     sdhost_response_t response;
     size_t word_count;
     // burst word count
-    size_t burst_word_count = min( SDHOST_DATA_FIFO_PIO_BURST, necessary_word );
+    size_t burst_word_count = util_min(
+      SDHOST_DATA_FIFO_PIO_BURST,
+      necessary_word
+    );
     // load debug register
     if ( SDHOST_RESPONSE_OK != ( response = get_debug_status(
       &debug_register
@@ -871,7 +859,6 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Sending stop transmission finally\r\n" )
     #endif
-    // build read sequence with word count
     // allocate sequence
     sequence = util_prepare_mmio_sequence( 3, &sequence_size );
     // handle error
@@ -1114,6 +1101,9 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Issue SD Command sequence failed\r\n" )
     #endif
+    // free sequence
+    free( sequence );
+    // return error
     return SDHOST_RESPONSE_IO;
   }
   // test for command wait timeout
@@ -1161,6 +1151,8 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
     ) ) {
       usleep( 10 );
     }
+    // free sequence
+    free( sequence );
     // return failure
     return SDHOST_RESPONSE_TIMEOUT;
   }
@@ -1196,8 +1188,6 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
       device->last_response[ 3 ] = sequence[ idx + 3 ].value;
     }
   }
-  // now we're beyond the resp readings
-  idx += 4;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
@@ -1206,6 +1196,8 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
       device->block_count
     );
   #endif
+  // free sequence
+  free( sequence );
   // finish sd data command
   if ( is_data ) {
     // debug output
@@ -1454,6 +1446,11 @@ static sdhost_response_t max_clock_frequency( void ) {
   // allocate buffer
   request = util_prepare_mailbox( 8, &request_size );
   if ( ! request ) {
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to allocate mailbox area\r\n" )
+    #endif
+    // return error
     return SDHOST_RESPONSE_MEMORY;
   }
   // build request
@@ -1484,7 +1481,13 @@ static sdhost_response_t max_clock_frequency( void ) {
   );
   // handle ioctl error
   if ( -1 == result ) {
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Mailbox request error\r\n" )
+    #endif
+    // free request
     free( request );
+    // return error
     return SDHOST_RESPONSE_IO;
   }
   // handle invalid device id returned
@@ -1504,6 +1507,7 @@ static sdhost_response_t max_clock_frequency( void ) {
   #endif
   // set max clock
   device->max_clock = ( uint32_t )request[ 6 ];
+  // free request
   free( request );
   // return success
   return SDHOST_RESPONSE_OK;
@@ -2077,7 +2081,7 @@ sdhost_response_t sdhost_init( void ) {
   sequence[ 0 ].offset = PERIPHERAL_SDHOST_BLOCKSIZE;
   sequence[ 0 ].value = 512;
   // perform request
-  int result = ioctl(
+  if ( -1 == ioctl(
     device->fd_iomem,
     IOCTL_BUILD_REQUEST(
       IOMEM_RPC_MMIO_PERFORM,
@@ -2085,18 +2089,18 @@ sdhost_response_t sdhost_init( void ) {
       IOCTL_RDWR
     ),
     sequence
-  );
-  // free sequence
-  free( sequence );
-  // handle ioctl error
-  if ( -1 == result ) {
+  ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Populating block size count register failed\r\n" )
     #endif
+    // free sequence
+    free( sequence );
     // return error
     return SDHOST_RESPONSE_IO;
   }
+  // free sequence
+  free( sequence );
 
   // prepare for getting card scr
   device->block_size = 8;
@@ -2179,9 +2183,7 @@ sdhost_response_t sdhost_init( void ) {
       EARLY_STARTUP_PRINT( "Switch to 4-bit data mode\r\n" )
     #endif
     // send ACMD6 to change the card's bit mode
-    if ( SDHOST_RESPONSE_OK != (
-      response = sd_command( SDHOST_APP_CMD_SET_BUS_WIDTH, 0x2 )
-    ) ) {
+    if ( SDHOST_RESPONSE_OK != sd_command( SDHOST_APP_CMD_SET_BUS_WIDTH, 0x2 ) ) {
       // debug output
       #if defined( SDHOST_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Bus width set failed\r\n" )
@@ -2215,7 +2217,7 @@ sdhost_response_t sdhost_init( void ) {
     sequence[ 1 ].value |= SDHOST_HOST_CONFIG_EXTBUS_4BIT;
   }
   // perform request
-  result = ioctl(
+  if ( -1 == ioctl(
     device->fd_iomem,
     IOCTL_BUILD_REQUEST(
       IOMEM_RPC_MMIO_PERFORM,
@@ -2223,16 +2225,17 @@ sdhost_response_t sdhost_init( void ) {
       IOCTL_RDWR
     ),
     sequence
-  );
-  // handle ioctl error
-  if ( -1 == result ) {
+  ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Change transfer width in control0 failed\r\n" )
     #endif
+    // free
     free( sequence );
+    // return error
     return SDHOST_RESPONSE_IO;
   }
+  // free
   free( sequence );
 
   // debug output
@@ -2281,14 +2284,8 @@ const char* sdhost_error( sdhost_response_t num ) {
   }
   // valid error code fill buffer
   char *buffer_pos = buffer;
-  size_t length;
-  // get length of message
-  length = strlen( sdhost_error_message[ num - 1 ].message );
   // push message string to buffer
   strncpy( buffer_pos, sdhost_error_message[ num - 1 ].message, total_length );
-  // decrement total length and increment buffer position
-  total_length -= length;
-  buffer_pos += length;
   // return buffer
   return buffer;
 }
@@ -2589,10 +2586,9 @@ sdhost_response_t sdhost_transfer_block(
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to read / write data from card\r\n" )
     #endif
-    // return error
-    return SDHOST_RESPONSE_IO;
+    // return last set error
+    return response;
   }
   // return success
   return SDHOST_RESPONSE_OK;
 }
-

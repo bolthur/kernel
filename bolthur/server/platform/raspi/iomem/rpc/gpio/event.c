@@ -94,7 +94,7 @@ void rpc_handle_gpio_event(
   memset( request, 0, data_size );
   memset( response, 0, response_size );
   // fetch rpc data
-  _syscall_rpc_get_data( request, data_size, data_info, false );
+  _syscall_rpc_get_data( request, data_size, data_info );
   // handle error
   if ( errno ) {
     error.status = -EIO;

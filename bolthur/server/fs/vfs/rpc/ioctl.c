@@ -75,7 +75,7 @@ void rpc_handle_ioctl_async(
     return;
   }
   memset( rpc_response, 0, rpc_response_size );
-  _syscall_rpc_get_data( rpc_response, rpc_response_size, data_info, false );
+  _syscall_rpc_get_data( rpc_response, rpc_response_size, data_info );
   if ( errno ) {
     err_response.status = -EIO;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), async_data );
@@ -129,7 +129,7 @@ void rpc_handle_ioctl(
     return;
   }
   memset( request, 0, data_size );
-  _syscall_rpc_get_data( request, data_size, data_info, false );
+  _syscall_rpc_get_data( request, data_size, data_info );
   if ( errno ) {
     err_response.status = -EIO;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );

@@ -83,7 +83,7 @@ void rpc_handle_gpio_set_pull(
   // clear request
   memset( request, 0, data_size );
   // fetch rpc data
-  _syscall_rpc_get_data( request, data_size, data_info, false );
+  _syscall_rpc_get_data( request, data_size, data_info );
   // handle error
   if ( errno ) {
     error.status = -EIO;

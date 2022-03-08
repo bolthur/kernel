@@ -84,7 +84,7 @@ void rpc_handle_mailbox(
   memset( request, 0, data_size );
   memset( response, 0, response_size );
   // fetch rpc data
-  _syscall_rpc_get_data( request, data_size, data_info, false );
+  _syscall_rpc_get_data( request, data_size, data_info );
   // handle error
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to get data\r\n" )

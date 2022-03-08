@@ -56,7 +56,7 @@ void rpc_handle_remove(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_remove_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( vfs_remove_request_t ), data_info );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );

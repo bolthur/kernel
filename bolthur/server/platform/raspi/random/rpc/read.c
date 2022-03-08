@@ -93,7 +93,7 @@ void rpc_handle_read(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( vfs_read_request_t ), data_info );
   // handle error
   if ( errno ) {
     response->len = -EINVAL;
@@ -107,11 +107,10 @@ void rpc_handle_read(
   uint32_t max_word = max / sizeof( uint32_t );
   // determine buffer for data
   uint32_t* buf = ( uint32_t* )response->data;
-  void* shm_addr = NULL;
   // map shared if set
   if ( 0 != request->shm_id ) {
     // attach shared area
-    shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
+    void* shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
     if ( errno ) {
       // prepare response
       response->len = -EIO;

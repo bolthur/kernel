@@ -77,7 +77,7 @@ __maybe_unused static void send_vfs_add_request(
   // erase response
   memset( response, 0, sizeof( vfs_add_response_t ) );
   // get response data
-  _syscall_rpc_get_data( response, sizeof( vfs_add_response_t ), response_id, false );
+  _syscall_rpc_get_data( response, sizeof( vfs_add_response_t ), response_id );
   // handle error / no message
   if ( errno ) {
     //EARLY_STARTUP_PRINT( "An error occurred: %s\r\n", strerror( errno ) )
