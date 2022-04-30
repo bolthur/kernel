@@ -1,7 +1,7 @@
 
 AC_PREREQ([2.71])
 
-AC_INIT([bolthur-server], [0.1.0-dev], [https://github.com/bolthur/driver/issues], [bolthur-driver], [https://github.com/bolthur/driver])
+AC_INIT([bolthur-library], [0.1.0-dev], [https://github.com/bolthur/driver/issues], [bolthur-library], [https://github.com/bolthur/library])
 
 AC_COPYRIGHT([Copyright (C) 2018 - 2022 bolthur project])
 

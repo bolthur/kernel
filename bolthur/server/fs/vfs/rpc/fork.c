@@ -88,11 +88,15 @@ void rpc_handle_fork(
     request->parent
   );
   if ( parent_process_container ) {
+    process_container->handle = parent_process_container->handle;
     // local variables necessary for macro
     handle_container_ptr_t container;
     avl_node_ptr_t iter;
+    //EARLY_STARTUP_PRINT( "Duplicating open handles - start\r\n" )
     // loop through all open handles and duplicate them
     process_handle_for_each( iter, container, parent_process_container->tree ) {
+      //EARLY_STARTUP_PRINT(
+      //  "\titer = %p, container = %p\r\n", ( void* )iter, ( void* )container )
       if ( ! handle_duplicate( container, process_container ) ) {
         // FIXME: DESTROY CONTAINER
         response.status = -EIO;
@@ -101,6 +105,7 @@ void rpc_handle_fork(
         return;
       }
     }
+    //EARLY_STARTUP_PRINT( "Duplicating open handles - end\r\n" )
   }
   // fill response structure
   response.status = 0;

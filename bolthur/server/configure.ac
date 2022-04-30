@@ -1,7 +1,7 @@
 
 AC_PREREQ([2.71])
 
-AC_INIT([bolthur-server], [0.1.0-dev], [https://github.com/bolthur/driver/issues], [bolthur-driver], [https://github.com/bolthur/driver])
+AC_INIT([bolthur-server], [0.1.0-dev], [https://github.com/bolthur/driver/issues], [bolthur-server], [https://github.com/bolthur/driver])
 
 AC_COPYRIGHT([Copyright (C) 2018 - 2022 bolthur project])
 
@@ -55,6 +55,9 @@ AC_ARG_WITH(
 AS_IF([test "x$enable_debug" == "xyes" && test "x$enable_release" == "xyes"], [
   AC_MSG_ERROR([Enabled debug and release are not possible at the same time])
 ])
+
+# load check module for unit tests as private dependency
+AX_PKG_CHECK_MODULES([BOSL], [bosl >= 0.0.0], [])
 
 # check necessary programs
 BOLTHUR_PROG_READLINK

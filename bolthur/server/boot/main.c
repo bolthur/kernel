@@ -340,7 +340,7 @@ static void rpc_handle_read(
  */
 static pid_t execute_driver( char* name ) {
   // pure kernel fork necessary here
-  pid_t forked_process = _syscall_process_fork();
+  pid_t forked_process = fork();
   if ( errno ) {
     EARLY_STARTUP_PRINT(
       "Unable to fork process for image replace: %s\r\n",
@@ -377,12 +377,6 @@ static void stage2( void ) {
   pid_t iomem = execute_driver( "/ramdisk/server/iomem" );
   wait_for_device( "/dev/iomem" );
 
-  // start sd server
-  EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
-  pid_t sd = execute_driver( "/ramdisk/server/storage/sd" );
-  wait_for_device( "/dev/sd" );
-  //pid_t sd = -1;
-
   // start random server
   EARLY_STARTUP_PRINT( "Starting and waiting for random server...\r\n" )
   pid_t rnd = execute_driver( "/ramdisk/server/random" );
@@ -402,10 +396,6 @@ static void stage2( void ) {
   EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )
   pid_t terminal = execute_driver( "/ramdisk/server/terminal" );
   wait_for_device( "/dev/terminal" );
-
-  EARLY_STARTUP_PRINT(
-    "iomem = %d, rnd = %d, console = %d, terminal = %d, framebuffer = %d, sd = %d\r\n",
-    iomem, rnd, console, terminal, framebuffer, sd )
 
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
@@ -448,14 +438,21 @@ static void stage2( void ) {
   EARLY_STARTUP_PRINT( "unsigned long long max = %llu\r\n", ULLONG_MAX )
 
   EARLY_STARTUP_PRINT( "Adjust stdout / stderr buffering\r\n" )
-  // flush before usage
-  fflush( stdout );
-  fflush( stderr );
   // adjust buffering of stdout and stderr
   setvbuf( stdout, NULL, _IOLBF, 0 );
   setvbuf( stderr, NULL, _IONBF, 0 );
 
+  // start sd server
+  EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
+  pid_t sd = execute_driver( "/ramdisk/server/storage/sd" );
+  wait_for_device( "/dev/sd" );
+  EARLY_STARTUP_PRINT(
+    "iomem = %d, rnd = %d, console = %d, terminal = %d, framebuffer = %d, sd = %d\r\n",
+    iomem, rnd, console, terminal, framebuffer, sd )
+
+  EARLY_STARTUP_PRINT( "äöüÄÖÜ\r\n" )
   int a = printf( "äöüÄÖÜ\r\n" );
+  EARLY_STARTUP_PRINT( "äöüÄÖÜ\r\n" )
   //fflush( stdout );
   int b = printf( "Tab test: \"\t\" should be 4 spaces here!\r\n" );
   //fflush( stdout );
