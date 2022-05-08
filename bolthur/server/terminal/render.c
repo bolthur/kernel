@@ -64,17 +64,17 @@ void render_char_to_surface(
     ( start_x * depth / CHAR_BIT );
   uint32_t line = off;
   uint32_t bytesperline = ( font_width + 7 ) / 8;
-  for ( uint32_t idx = 0; idx < font_width * font_height; idx++ ) {
+  uint32_t idx = 0;
+  uint32_t max = font_width * font_height;
+  while( idx < max ) {
     uint32_t x = idx % font_width;
     //EARLY_STARTUP_PRINT( "surface + line = %p\r\n", ( void* )( ( uint32_t* )( surface + line ) ) )
     *( ( uint32_t* )( surface + line ) ) =
       ( glyph[ x / 8 ] & ( 0x80 >> ( x & 7 ) ) ) ? color_fg : color_bg;
     line += 4;
+    idx++;
     // handle new line
-    if (
-      0 == ( idx + 1 ) % font_width
-      && ( idx + 1 ) < font_width * font_height
-    ) {
+    if ( 0 == idx % font_width && idx < max ) {
       //EARLY_STARTUP_PRINT( "surface + line = %p\r\n", ( void* )( ( uint32_t* )( surface + line ) ) )
       *( ( uint32_t* )( surface + line ) ) = 0;
       glyph += bytesperline;

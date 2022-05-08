@@ -129,7 +129,7 @@ void syscall_rpc_raise( void* context ) {
       return;
     }
     // copy from unsafe source
-    if ( ! memcpy_unsafe( dup_data, data, length ) ) {
+    if ( ! memcpy_unsafe_src( dup_data, data, length ) ) {
       // debug output
       #if defined( PRINT_SYSCALL )
         DEBUG_OUTPUT( "memcpy unsafe failed!\r\n" )
@@ -181,8 +181,6 @@ void syscall_rpc_raise( void* context ) {
       TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
       ( task_state_data_t ){ .data_size = rpc->data_id }
     );
-    // enqueue schedule
-    event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
   // return data id for async request to allow handling in user space
   } else if ( ! synchronous ) {
     // debug output
@@ -190,6 +188,11 @@ void syscall_rpc_raise( void* context ) {
       DEBUG_OUTPUT( "rpc->data_id = %d\r\n", rpc->data_id )
     #endif
     syscall_populate_success( context, rpc->data_id );
+  }
+  // switch it
+  if ( task_thread_current_thread != rpc->thread ) {
+    // enqueue scheduler
+    event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
   }
 }
 
@@ -249,7 +252,7 @@ void syscall_rpc_ret( void* context ) {
     return;
   }
   // copy from unsafe source
-  if ( ! memcpy_unsafe( dup_data, data, length ) ) {
+  if ( ! memcpy_unsafe_src( dup_data, data, length ) ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "memcpy unsafe failed!\r\n" )
@@ -368,6 +371,8 @@ void syscall_rpc_ret( void* context ) {
       DEBUG_OUTPUT( "Set dummy success value!\r\n" )
     #endif
     syscall_populate_success( context, 0 );
+    // enqueue scheduler
+    event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
   }
 }
 
@@ -382,7 +387,6 @@ void syscall_rpc_get_data( void* context ) {
   char* data = ( char* )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   size_t rpc_data_id = ( size_t )syscall_get_parameter( context, 2 );
-  bool peek = ( bool )syscall_get_parameter( context, 3 );
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_rpc_get_data( %#p, %#x, %d )\r\n",
       data, len, rpc_data_id )
@@ -466,79 +470,33 @@ void syscall_rpc_get_data( void* context ) {
   }
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "allocate tmp buffer!\r\n" )
-  #endif
-  uint8_t* tmp = malloc( found->length );
-  if ( ! tmp ) {
-    // debug output
-    #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "heap allocation error!\r\n" )
-    #endif
-    syscall_populate_error( context, ( size_t )-ENOMEM );
-    return;
-  }
-  // debug output
-  #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "Copy to tmp buffer!\r\n" )
-  #endif
-  // copy over message content
-  memcpy( tmp, found->data, found->length );
-  size_t tmp_length = found->length;
-  // remove list element
-  if ( peek ) {
-    // debug output
-    #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "peek rpc parameter only with id %d!\r\n", rpc_data_id )
-    #endif
-  } else {
-    // debug output
-    #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "Removing from queue!\r\n" )
-    #endif
-    if ( ! list_remove_data(
-      task_thread_current_thread->process->rpc_data_queue,
-      ( void* )rpc_data_id
-    ) ) {
-      // debug output
-      #if defined( PRINT_SYSCALL )
-        DEBUG_OUTPUT( "Unable to remove data!\r\n" )
-      #endif
-      free( tmp );
-      syscall_populate_error( context, ( size_t )-EIO );
-      return;
-    }
-  }
-  // debug output
-  #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "Copy content!\r\n" )
   #endif
   // copy over message content
-  if ( ! memcpy( data, tmp, tmp_length ) ) {
-    // debug output
-    #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "Unsafe copy failed, push back to list!\r\n" )
-    #endif
-    if ( ! peek && ! list_push_back(
-      task_thread_current_thread->process->rpc_data_queue,
-      ( void* )tmp
-    ) ) {
-      // debug output
-      #if defined( PRINT_SYSCALL )
-        DEBUG_OUTPUT( "Add back after unsafe copy failed!\r\n" )
-      #endif
-      free( tmp );
-      syscall_populate_error( context, ( size_t )-EIO );
-      return;
-    }
+  if ( ! memcpy_unsafe_dst( data, found->data, found->length ) ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Unsafe copy failed!\r\n" )
     #endif
     syscall_populate_error( context, ( size_t )-EIO );
-    free( tmp );
     return;
   }
-  free( tmp );
+  // remove list element
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Removing from queue!\r\n" )
+  #endif
+  if ( ! list_remove_data(
+    task_thread_current_thread->process->rpc_data_queue,
+    ( void* )rpc_data_id
+  ) ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Unable to remove data!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-EIO );
+    return;
+  }
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "return success!\r\n" )
@@ -675,7 +633,7 @@ void syscall_rpc_set_ready( void* context ) {
  *
  * @param context
  */
-void syscall_rpc_end( __unused void* context ) {
+void syscall_rpc_end( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(

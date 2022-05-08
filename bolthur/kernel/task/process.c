@@ -824,7 +824,7 @@ int task_process_replace(
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "image = %#p\r\n", image )
   #endif
-  memcpy_unsafe( image, ( void* )elf, image_size );
+  memcpy_unsafe_src( image, ( void* )elf, image_size );
 
   // clear all assigned shared areas
   if ( ! shared_memory_cleanup_process( proc ) ) {

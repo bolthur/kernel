@@ -122,7 +122,7 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
         else:
           createDir( base_path )
           if compress:
-            writeFile( joinPath( base_path, executable ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
+            writeFile( joinPath( base_path, executable & ".gz" ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
           else:
             copyFile( file, joinPath( base_path, executable ) )
 

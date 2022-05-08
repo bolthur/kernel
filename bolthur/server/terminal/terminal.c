@@ -60,6 +60,10 @@ static void terminal_cleanup( const list_item_ptr_t a ) {
   list_default_cleanup( a );
 }
 
+#define U64_BLOCK_SIZE sizeof( uint64_t )
+#define BUFFER_UNALIGNED(val) (( uintptr_t )val & ( U64_BLOCK_SIZE - 1 ))
+#define SIZE_TOO_SMALL(size) ( size < U64_BLOCK_SIZE )
+
 /**
  * @fn void memset16*(void*, uint16_t, size_t)
  * @brief Internal memset implementation for 16 bit
@@ -69,10 +73,47 @@ static void terminal_cleanup( const list_item_ptr_t a ) {
  * @param size
  */
 static void* memset16( void* buf, uint16_t value, size_t size ) {
-  uint16_t* _buf = ( uint16_t* )buf;
-  for ( size_t i = 0; i < size; i++ ) {
-    _buf[ i ] = value;
+  uint16_t* u16_buf = ( uint16_t* )buf;
+  uint16_t u16_value = ( uint16_t )value;
+
+  // set until alignment fits
+  while( BUFFER_UNALIGNED( u16_buf ) ) {
+    // set if not reached end
+    if ( size-- ) {
+      *u16_buf++ = u16_value;
+    // return buf if end reached
+    } else {
+      return buf;
+    }
   }
+  // set in 8 byte steps as it's now aligned
+  if ( ! SIZE_TOO_SMALL( size ) ) {
+    // prepare value for set
+    uint64_t u64_value = ( uint64_t )u16_value << 48
+      | ( uint64_t )u16_value << 32
+      | ( uint64_t )u16_value << 16
+      | ( uint64_t )u16_value;
+    // set pointer
+    uint64_t* u64_buf = ( uint64_t* )u16_buf;
+    // set as much as possible at once
+    while ( size >= U64_BLOCK_SIZE * 4 ) {
+      *u64_buf++ = u64_value;
+      *u64_buf++ = u64_value;
+      *u64_buf++ = u64_value;
+      *u64_buf++ = u64_value;
+      size -= 4 * U64_BLOCK_SIZE;
+    }
+    // set remaining 64bit blocks
+    while ( size >= U64_BLOCK_SIZE ) {
+      *u64_buf++ = u64_value;
+      size -= U64_BLOCK_SIZE;
+    }
+  }
+  // set rest
+  while( size-- ) {
+    *u16_buf++ = u16_value;
+  }
+  // return buffer
   return buf;
 }
 

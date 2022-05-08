@@ -362,10 +362,8 @@ static bool extend_heap_space( size_t given_size ) {
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "Used tree:\r\n" );
     avl_print( used_area );
-
     DEBUG_OUTPUT( "Free address tree:\r\n" );
     avl_print( free_address );
-
     DEBUG_OUTPUT( "Free size tree:\r\n" );
     avl_print( free_size );
   #endif
@@ -448,7 +446,7 @@ static void shrink_heap_space( void ) {
   }
 
   // determine end of block
-  max_end = ( size_t )max_free_block ->address + max_free_block ->size;
+  max_end = ( size_t )max_free_block ->address + max_free_block->size;
   // Debug output
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "max_end = %p\r\n", ( void* )max_end );
@@ -553,10 +551,8 @@ static void shrink_heap_space( void ) {
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "Used tree:\r\n" );
     avl_print( used_address );
-
     DEBUG_OUTPUT( "Free address tree:\r\n" );
     avl_print( free_address );
-
     DEBUG_OUTPUT( "Free size tree:\r\n" );
     avl_print( free_size );
   #endif
@@ -876,10 +872,8 @@ void heap_init( heap_init_state_t state ) {
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "Used tree:\r\n" );
     avl_print( &kernel_heap->used_area[ state ] );
-
     DEBUG_OUTPUT( "Free address tree:\r\n" );
     avl_print( &kernel_heap->free_address[ state ] );
-
     DEBUG_OUTPUT( "Free size tree:\r\n" );
     avl_print( &kernel_heap->free_size[ state ] );
   #endif
@@ -1016,10 +1010,8 @@ uintptr_t heap_allocate_block( size_t alignment, size_t size ) {
     #if defined( PRINT_MM_HEAP )
       DEBUG_OUTPUT( "Used tree:\r\n" )
       avl_print( used_area );
-
       DEBUG_OUTPUT( "Free address tree:\r\n" )
       avl_print( free_address );
-
       DEBUG_OUTPUT( "Free size tree:\r\n" )
       avl_print( free_size );
     #endif
@@ -1315,10 +1307,8 @@ void heap_free_block( uintptr_t addr ) {
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "Used tree:\r\n" );
     avl_print( used_area );
-
     DEBUG_OUTPUT( "Free address tree:\r\n" );
     avl_print( free_address );
-
     DEBUG_OUTPUT( "Free size tree:\r\n" );
     avl_print( free_size );
   #endif
@@ -1338,13 +1328,10 @@ void heap_free_block( uintptr_t addr ) {
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "removed %p from tree\r\n",
       ( void* )&current_block->node_address );
-
     DEBUG_OUTPUT( "Used tree:\r\n" );
     avl_print( used_area );
-
     DEBUG_OUTPUT( "Free address tree:\r\n" );
     avl_print( free_address );
-
     DEBUG_OUTPUT( "Free size tree:\r\n" );
     avl_print( free_size );
   #endif
@@ -1362,10 +1349,8 @@ void heap_free_block( uintptr_t addr ) {
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "Used tree:\r\n" );
     avl_print( used_area );
-
     DEBUG_OUTPUT( "Free address tree:\r\n" );
     avl_print( free_address );
-
     DEBUG_OUTPUT( "Free size tree:\r\n" );
     avl_print( free_size );
   #endif
@@ -1379,10 +1364,8 @@ void heap_free_block( uintptr_t addr ) {
   #if defined( PRINT_MM_HEAP )
     DEBUG_OUTPUT( "Used tree:\r\n" );
     avl_print( used_area );
-
     DEBUG_OUTPUT( "Free address tree:\r\n" );
     avl_print( free_address );
-
     DEBUG_OUTPUT( "Free size tree:\r\n" );
     avl_print( free_size );
   #endif

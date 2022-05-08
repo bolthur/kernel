@@ -418,22 +418,6 @@ static void stage2( void ) {
   }
   EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fp->_file )
 
-  fp = fopen( "/dev/stderr", "w" );
-  if ( ! fp ) {
-    EARLY_STARTUP_PRINT( "Unable to open stderr\r\n" )
-    exit( 1 );
-  }
-  assert( 3 == fp->_file );
-  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fp->_file )
-  // should be 4
-  fp = fopen( "/dev/stderr", "w" );
-  if ( ! fp ) {
-    EARLY_STARTUP_PRINT( "Unable to open stderr\r\n" )
-    exit( 1 );
-  }
-  assert( 4 == fp->_file );
-  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fp->_file )
-
   EARLY_STARTUP_PRINT( "size_t max = %zu\r\n", SIZE_MAX )
   EARLY_STARTUP_PRINT( "unsigned long long max = %llu\r\n", ULLONG_MAX )
 

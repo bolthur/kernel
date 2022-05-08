@@ -262,29 +262,34 @@ bool framebuffer_register_rpc( void ) {
  * @fn void framebuffer_flip(void)
  * @brief Framebuffer flip to back buffer
  */
-void framebuffer_flip( void ) {/*
+void framebuffer_flip( void ) {
   // default request for screen flip
   static int32_t buffer[] = { 0, 0, 0x00048009, 0x8, 0, 0, 0 };
   // handle switch
   if ( screen == front_buffer ) {
-    mailbox_buffer[ 6 ] = ( int32_t )physical_height;
+    buffer[ 6 ] = ( int32_t )physical_height;
     screen = back_buffer;
     current_back = front_buffer;
   } else {
-    mailbox_buffer[ 6 ] = 0;
+    buffer[ 6 ] = 0;
     screen = front_buffer;
     current_back = back_buffer;
   }
-  // perform mailbox action
-  _mailbox_action( buffer, 7 );
-  // handle no valid return
-  if ( errno ) {
+  // perform request
+  int result = ioctl(
+    iomem_fd,
+    IOCTL_BUILD_REQUEST(
+      IOMEM_RPC_MAILBOX,
+      sizeof( int32_t ) * 7,
+      IOCTL_RDWR
+    ),
+    buffer
+  );
+  if ( -1 == result ) {
     return;
   }
   // copy over screen into back buffer
-  memcpy( current_back, screen, size );*/
-  // copy over back buffer into screen
-  memcpy( screen, current_back, size );
+  memcpy( current_back, screen, size );
 }
 
 /**

@@ -86,3 +86,39 @@ void* memcpy_unsafe( void* restrict dst, const void* restrict src, size_t size )
   // copy with normal memcpy
   return memcpy( dst, src, size );
 }
+
+
+/**
+ * @fn void memcpy_unsafe_dst*(void* restrict, const void* restrict, size_t)
+ * @brief memcpy unsafe implementation with additional checks to prevent issues by malformed addresses
+ *
+ * @param dst
+ * @param src
+ * @param size
+ */
+void* memcpy_unsafe_dst( void* restrict dst, const void* restrict src, size_t size ) {
+  // check if ranges are mapped
+  if ( ! virt_is_mapped_range( ( uintptr_t )dst, size ) ) {
+    return NULL;
+  }
+  // copy with normal memcpy
+  return memcpy( dst, src, size );
+}
+
+
+/**
+ * @fn void memcpy_unsafe_src*(void* restrict, const void* restrict, size_t)
+ * @brief memcpy unsafe implementation with additional checks to prevent issues by malformed addresses
+ *
+ * @param dst
+ * @param src
+ * @param size
+ */
+void* memcpy_unsafe_src( void* restrict dst, const void* restrict src, size_t size ) {
+  // check if ranges are mapped
+  if ( ! virt_is_mapped_range( ( uintptr_t )dst, size ) ) {
+    return NULL;
+  }
+  // copy with normal memcpy
+  return memcpy( dst, src, size );
+}

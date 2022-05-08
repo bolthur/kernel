@@ -33,6 +33,8 @@
  * @brief backup to destroy
  *
  * @param backup
+ *
+ * @todo ensure that everything from backup is destroyed
  */
 void rpc_backup_destroy( rpc_backup_ptr_t backup ) {
   if ( ! backup ) {
@@ -40,6 +42,9 @@ void rpc_backup_destroy( rpc_backup_ptr_t backup ) {
   }
   if ( backup->context ) {
     free( backup->context );
+  }
+  if ( backup->thread && backup->data_id ) {
+    rpc_data_queue_remove( backup->thread->process->id, backup->data_id );
   }
   free( backup );
 }

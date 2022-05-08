@@ -90,7 +90,7 @@ char** duplicate( const char** src ) {
       return NULL;
     }
     // copy string content with unsafe copy
-    if ( ! memcpy_unsafe( dst[ count ], src[ count ], tmp_len ) ) {
+    if ( ! memcpy_unsafe_src( dst[ count ], src[ count ], tmp_len ) ) {
       free( dst );
       return NULL;
     }

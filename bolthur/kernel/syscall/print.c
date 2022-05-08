@@ -84,7 +84,7 @@ void syscall_kernel_puts( void* context ) {
     DEBUG_OUTPUT( "Unsafe copy!\r\n" )
   #endif
   // copy over
-  if ( ! memcpy_unsafe( dup, str, len ) ) {
+  if ( ! memcpy_unsafe_src( dup, str, len ) ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Unsafe copy failed!\r\n" )

@@ -27,6 +27,8 @@ void* memchr( const void*, int, size_t );
 int memcmp( const void*, const void*, size_t );
 void* memcpy( void* restrict, const void* restrict, size_t );
 void* memcpy_unsafe( void* restrict, const void* restrict, size_t );
+void* memcpy_unsafe_src( void* restrict, const void* restrict, size_t );
+void* memcpy_unsafe_dst( void* restrict, const void* restrict, size_t );
 void* memset( void*, int, size_t );
 char* strchr( const char*, int );
 char* strcpy( char*, const char* );

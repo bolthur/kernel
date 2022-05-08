@@ -194,6 +194,21 @@ void task_thread_destroy( avl_tree_ptr_t tree ) {
 }
 
 /**
+ * @fn bool task_thread_is_ready(task_thread_ptr_t)
+ * @brief Helper to check if thread is ready for execution
+ *
+ * @param thread
+ * @return
+ */
+bool task_thread_is_ready( task_thread_ptr_t thread ) {
+  return
+    TASK_THREAD_STATE_READY == thread->state
+    || TASK_THREAD_STATE_HALT_SWITCH == thread->state
+    || TASK_THREAD_STATE_RPC_QUEUED == thread->state
+    || TASK_THREAD_STATE_RPC_HALT_SWITCH == thread->state;
+}
+
+/**
  * @fn task_thread_ptr_t task_thread_next(void)
  * @brief Function to get next thread for execution
  *
@@ -309,12 +324,7 @@ task_thread_ptr_t task_thread_next( void ) {
         DEBUG_OUTPUT( "task %d with state %d\r\n", task->id, task->state );
       #endif
       // check for ready
-      if (
-        TASK_THREAD_STATE_READY == task->state
-        || TASK_THREAD_STATE_HALT_SWITCH == task->state
-        || TASK_THREAD_STATE_RPC_QUEUED == task->state
-        || TASK_THREAD_STATE_RPC_HALT_SWITCH == task->state
-      ) {
+      if ( task_thread_is_ready( task ) ) {
         break;
       }
       // try next if not ready

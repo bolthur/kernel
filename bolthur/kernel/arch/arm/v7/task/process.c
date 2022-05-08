@@ -167,10 +167,10 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     }
   }
 
-  // get next thread
-  task_thread_ptr_t next_thread;
+  task_thread_ptr_t next_thread = NULL;
   bool halt_set = false;
-  do {
+  // loop while next thread is not set or it's not ready
+  while ( ! next_thread ) {
     // get next thread
     next_thread = task_thread_next();
     // debug output
@@ -200,7 +200,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
         arch_halt();
       }
     }
-  } while ( ! next_thread );
+  }
   // disable interrupts again
   if ( halt_set ) {
     // debug output
