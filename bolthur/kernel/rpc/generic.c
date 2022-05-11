@@ -88,8 +88,7 @@ rpc_backup_ptr_t rpc_generic_raise(
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "Error while preparing target %d\r\n", target->id )
     #endif
-    free( backup->context );
-    free( backup );
+    rpc_backup_destroy( backup );
     // skip if error occurred during rpc invoke
     return NULL;
   }

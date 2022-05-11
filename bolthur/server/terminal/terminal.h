@@ -29,12 +29,16 @@
 
 struct terminal {
   char path[ TERMINAL_MAX_PATH ];
-  uint16_t* buffer;
   uint32_t col;
   uint32_t row;
   uint32_t max_col;
   uint32_t max_row;
   uint32_t bpp;
+  // space for mapped surface, internal surface id and surface memory id
+  uint8_t* surface;
+  size_t surface_id;
+  size_t surface_memory_id;
+  uint32_t pitch;
 };
 typedef struct terminal terminal_t;
 typedef struct terminal* terminal_ptr_t;
@@ -42,7 +46,5 @@ typedef struct terminal* terminal_ptr_t;
 extern list_manager_ptr_t terminal_list;
 
 bool terminal_init( void );
-void terminal_scroll( terminal_ptr_t );
-uint32_t terminal_push( terminal_ptr_t, const char*, uint32_t*, uint32_t*, uint32_t*, uint32_t* );
 
 #endif

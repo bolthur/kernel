@@ -35,7 +35,7 @@ static bool initial_setup_done __bootstrap_data = false;
 /**
  * @brief Method wraps setup of short / long descriptor mode
  */
-void __bootstrap virt_startup_setup( void ) {
+__bootstrap void virt_startup_setup( void ) {
   // setup modes for startup
   virt_startup_setup_supported_modes();
   if (
@@ -71,7 +71,7 @@ void __bootstrap virt_startup_setup( void ) {
  * @param phys physical address
  * @param virt virtual address
  */
-void __bootstrap virt_startup_map( uint64_t phys, uintptr_t virt ) {
+__bootstrap void virt_startup_map( uint64_t phys, uintptr_t virt ) {
   // check for invalid paging support
   if (
     ! (
@@ -98,7 +98,7 @@ void __bootstrap virt_startup_map( uint64_t phys, uintptr_t virt ) {
 /**
  * @brief Flush set context
  */
-void __bootstrap virt_startup_flush( void ) {
+__bootstrap void virt_startup_flush( void ) {
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_startup_supported_mode ) {
     v7_long_startup_flush();
   } else {

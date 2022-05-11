@@ -64,7 +64,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/urandom", PATH_MAX - 1 );
   // perform add request
-  EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
+  EARLY_STARTUP_PRINT( "Sending device \"/dev/urandom\" to vfs\r\n" )
   send_vfs_add_request( msg, 0, 0 );
   // free again
   free( msg );
@@ -80,7 +80,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/random", PATH_MAX - 1 );
   // perform add request
-  EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
+  EARLY_STARTUP_PRINT( "Sending device \"/dev/random\" to vfs\r\n" )
   send_vfs_add_request( msg, 0, 0 );
   // free again
   free( msg );

@@ -104,12 +104,8 @@ void rpc_handle_open(
     base_old = base;
   } while ( dir && 1 < strlen( dir ) );
   // free dir and base again
-  if ( dir ) {
-    free( dir );
-  }
-  if ( base ) {
-    free( base );
-  }
+  free( dir );
+  free( base );
 
   // extract dir and base names
   dir = dirname( request->path );
@@ -221,8 +217,6 @@ void rpc_handle_open(
   if ( ! container ) {
     // debug output
     EARLY_STARTUP_PRINT( "Error: Unable to generate new handle container!\r\n" )
-    free( dir );
-    free( base );
     // prepare error return
     response.handle = result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );

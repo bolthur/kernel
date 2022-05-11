@@ -170,7 +170,7 @@ void syscall_memory_acquire( void* context ) {
   if ( flag & MEMORY_FLAG_DEVICE ) {
     map_type = VIRT_MEMORY_TYPE_DEVICE;
   }
-  // handle physical memory allocation
+  // handle physical memory mapping request
   if ( flag & MEMORY_FLAG_PHYS ) {
     // debug output
     #if defined( PRINT_SYSCALL )

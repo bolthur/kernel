@@ -65,11 +65,5 @@ SECTIONS {
     __bss_end = .;
   }
 
-  .fdt ALIGN( 4K ) : AT( ADDR( .fdt ) - KERNEL_OFFSET ) {
-    __fdt_start = .;
-    *( .fdt )
-    __fdt_end = .;
-  }
-
   __kernel_end = .;
 }

@@ -89,17 +89,17 @@ rpc_backup_ptr_t rpc_backup_create(
       thread->id, thread->process->id )
   #endif
 
-  // allocate backup object
+  // reserve space for backup object
   rpc_backup_ptr_t backup = malloc( sizeof( rpc_backup_t ) );
   if ( ! backup ) {
     #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Unable to allocate structure!\r\n" )
+      DEBUG_OUTPUT( "Unable to reserve memory for backup structure!\r\n" )
     #endif
     return NULL;
   }
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "Allocated backup object: %#p\r\n", backup )
+    DEBUG_OUTPUT( "Reserved backup object: %#p\r\n", backup )
   #endif
 
   // variables
@@ -119,7 +119,7 @@ rpc_backup_ptr_t rpc_backup_create(
   cpu_register_context_ptr_t cpu = active
     ? active->context
     : thread->current_context;
-  // allocate backup context
+  // reserve space for backup context
   backup->context = malloc( sizeof( cpu_register_context_t ) );
   if ( ! backup->context ) {
     rpc_backup_destroy( backup );
@@ -127,7 +127,7 @@ rpc_backup_ptr_t rpc_backup_create(
   }
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "Allocated backup cpu context: %#p\r\n", backup->context )
+    DEBUG_OUTPUT( "Reserved backup cpu context: %#p\r\n", backup->context )
   #endif
   // prepare and backup context area
   memset( backup->context, 0, sizeof( cpu_register_context_t ) );

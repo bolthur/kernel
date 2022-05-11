@@ -37,7 +37,7 @@
 /**
  * @brief Method to setup short descriptor paging
  */
-void __bootstrap virt_startup_platform_setup( void ) {
+__bootstrap void virt_startup_platform_setup( void ) {
   // cpu local peripherals
   #if defined( BCM2836 ) || defined( BCM2837 )
     uintptr_t cpu_peripheral_base = 0x40000000;

@@ -195,7 +195,6 @@ void rpc_handle_read(
     nested_request,
     sizeof( vfs_read_request_t ),
     false,
-    false,
     type,
     request,
     sizeof( vfs_read_request_t ),

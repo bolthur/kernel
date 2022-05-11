@@ -2,7 +2,7 @@
 <project version="1">
   <root name="." />
   <includedir>
-    <dir name="/opt/bolthur/cross/lib/gcc/arm-raspi2b_r1-bolthur-eabi/11.2.0/include/" />
+    <dir name="/opt/bolthur/cross/lib/gcc/arm-raspi2b_r1-bolthur-eabi/12.1.0/include/" />
     <dir name="/opt/bolthur/sysroot/arm-raspi2b_r1-bolthur-eabi/usr/include/" />
   </includedir>
   <paths>

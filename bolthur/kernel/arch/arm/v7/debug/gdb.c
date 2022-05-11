@@ -318,7 +318,7 @@ void debug_gdb_handler_read_register(
   void* context,
   __unused const uint8_t* packet
 ) {
-  // allocate memory
+  // reserve memory
   uint8_t* p = ( uint8_t* )malloc(
     sizeof( uint8_t ) + sizeof( uint8_t ) * (
       ( GDB_NORMAL_REGISTER + GDB_EXTRA_REGISTER ) * 8
@@ -405,7 +405,7 @@ void debug_gdb_handler_read_memory(
   }
   // read length to read
   length = extract_hex_value( next + 1, NULL );
-  // allocate buffer
+  // reserve buffer
   p = ( uint8_t* )malloc( length * 2 + 1 );
   // handle not enough memory
   if ( ! p ) {

@@ -62,7 +62,7 @@ static ld_global_page_directory_t initial_context
  * @fn void v7_long_startup_setup(void)
  * @brief Helper to setup initial paging with large page address extension
  */
-void __bootstrap v7_long_startup_setup( void ) {
+__bootstrap void v7_long_startup_setup( void ) {
   // variables
   ld_ttbcr_t ttbcr;
   uint32_t x;
@@ -130,7 +130,7 @@ void __bootstrap v7_long_startup_setup( void ) {
  * @param phys physical address
  * @param virt virtual address
  */
-void __bootstrap v7_long_startup_map( uint64_t phys, uintptr_t virt ) {
+__bootstrap void v7_long_startup_map( uint64_t phys, uintptr_t virt ) {
   // determine index for getting middle directory
   uint32_t pmd_index = LD_VIRTUAL_PMD_INDEX( virt );
   // determine index for getting table directory
@@ -154,7 +154,7 @@ void __bootstrap v7_long_startup_map( uint64_t phys, uintptr_t virt ) {
  * @fn void v7_long_startup_enable(void)
  * @brief Method to enable initial virtual memory
  */
-void __bootstrap v7_long_startup_enable( void ) {
+__bootstrap void v7_long_startup_enable( void ) {
   uint32_t reg;
   // Get content from control register
   __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
@@ -168,7 +168,7 @@ void __bootstrap v7_long_startup_enable( void ) {
  * @fn void v7_long_startup_flush(void)
  * @brief Flush startup context
  */
-void __bootstrap v7_long_startup_flush( void ) {
+__bootstrap void v7_long_startup_flush( void ) {
   ld_ttbcr_t ttbcr;
 
   // read ttbcr register
@@ -1046,7 +1046,7 @@ bool v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
  * @return
  */
 virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
-  // allocate context
+  // reserve space for context
   uint64_t ctx = ! virt_init_get()
     ? VIRT_2_PHYS( aligned_alloc( PAGE_SIZE, sizeof( ld_global_page_directory_t ) ) )
     : phys_find_free_page_range( PAGE_SIZE, sizeof( ld_global_page_directory_t ), PHYS_MEMORY_TYPE_NORMAL );

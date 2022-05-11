@@ -24,7 +24,7 @@
 #if ! defined( _RENDER_H )
 #define _RENDER_H
 
-void render_char_to_surface( uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
+void render_char_to_surface( volatile uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
 ssize_t render_terminal( terminal_ptr_t, const char* );
 
 #endif

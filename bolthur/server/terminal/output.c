@@ -54,7 +54,6 @@ bool output_init( void ) {
   );
   // handle error
   if ( -1 == result ) {
-    EARLY_STARTUP_PRINT( "ioctl error!\r\n" )
     return false;
   }
   // return success

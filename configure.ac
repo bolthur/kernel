@@ -329,13 +329,8 @@ AC_DEFINE_UNQUOTED(
   [disable stack protector mechanism]
 )
 AC_DEFINE_UNQUOTED(
-  [__no_tree_loop_distribute],
-  [__attribute__((__optimize__("no-tree-loop-distribute-patterns")))],
-  [disable stuff like replace logic with memset]
-)
-AC_DEFINE_UNQUOTED(
   [__bootstrap],
-  [__section(".text.boot") __no_sanitize __no_stack_protector __no_tree_loop_distribute],
+  [__attribute__((__section__(".text.boot"),__optimize__("O0","no-stack-protector"), no_sanitize("undefined")))],
   [Bootstrap function]
 )
 AC_DEFINE_UNQUOTED(

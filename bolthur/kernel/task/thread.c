@@ -103,7 +103,7 @@ static void thread_destroy_callback( const avl_node_ptr_t node ) {
   ) ) {
     // wait until removal was successful
   }
-  // free allocated space
+  // free context
   if ( thread->current_context ) {
     free( thread->current_context );
   }

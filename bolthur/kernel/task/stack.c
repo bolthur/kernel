@@ -98,10 +98,10 @@ void task_stack_manager_destroy( task_stack_manager_ptr_t manager ) {
  * @return task_stack_manager_ptr_t
  */
 task_stack_manager_ptr_t task_stack_manager_create( void ) {
-  // allocate manager
+  // reserve memory for manager
   task_stack_manager_ptr_t manager = ( task_stack_manager_ptr_t )malloc(
     sizeof( task_stack_manager_t ) );
-  // check allocation
+  // check
   if ( ! manager ) {
     return NULL;
   }

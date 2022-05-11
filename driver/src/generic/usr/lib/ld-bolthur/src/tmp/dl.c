@@ -1243,14 +1243,14 @@ void* dlopen( const char* file, int mode ) {
       // return object
       return found;
     }
-    if ( '/' == file[ 0 ] ) {
+    /*if ( '/' == file[ 0 ] ) {
       EARLY_STARTUP_PRINT("Load %s\r\n", file )
     } else {
       EARLY_STARTUP_PRINT(
         "%s - loading %s\r\n",
         root_object_handle->filename,
         dl_open_buffer )
-    }
+    }*/
     // error handling
     if ( -1 == fd ) {
       dl_error = E_DL_CANNOT_OPEN;

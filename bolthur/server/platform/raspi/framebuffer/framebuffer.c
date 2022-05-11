@@ -28,8 +28,12 @@
 #include <sys/mman.h>
 #include <sys/bolthur.h>
 #include "framebuffer.h"
+#include "collection/list.h"
 #include "../libiomem.h"
 #include "../../../libframebuffer.h"
+
+static size_t memory_counter = 1;
+static list_manager_t* memory_list = NULL;
 
 uint32_t physical_width;
 uint32_t physical_height;
@@ -45,7 +49,7 @@ uint8_t* back_buffer;
 
 int iomem_fd;
 
-struct framebuffer_rpc command_list[] = {
+framebuffer_rpc_t command_list[] = {
   {
     .command = FRAMEBUFFER_GET_RESOLUTION,
     .callback = framebuffer_handle_resolution
@@ -53,30 +57,83 @@ struct framebuffer_rpc command_list[] = {
     .command = FRAMEBUFFER_CLEAR,
     .callback = framebuffer_handle_clear
   }, {
-    .command = FRAMEBUFFER_RENDER_SURFACE,
-    .callback = framebuffer_handle_render_surface
-  }, {
     .command = FRAMEBUFFER_FLIP,
     .callback = framebuffer_handle_flip
+  }, {
+    .command = FRAMEBUFFER_SURFACE_RENDER,
+    .callback = framebuffer_handle_surface_render
+  }, {
+    .command = FRAMEBUFFER_SURFACE_ALLOCATE,
+    .callback = framebuffer_handle_surface_allocate
   },
 };
+
+
+/**
+ * @fn int32_t memory_lookup(const list_item_ptr_t, const void*)
+ * @brief List lookup helper
+ *
+ * @param a
+ * @param data
+ * @return
+ */
+static int32_t memory_lookup(
+  const list_item_ptr_t a,
+  const void* data
+) {
+  return ( ( framebuffer_memory_t* )a->data )->id == ( size_t )data
+    ? 0 : 1;
+}
+
+/**
+ * @fn void memory_cleanup(const list_item_ptr_t)
+ * @brief List cleanup helper
+ *
+ * @param a
+ */
+static void memory_cleanup( const list_item_ptr_t a ) {
+  // convert
+  framebuffer_memory_t* mem = a->data;
+  // handle shared memory id
+  if ( mem->shm_id ) {
+    // detach shared memory
+    while ( true ) {
+      _syscall_memory_shared_detach( mem->shm_id );
+      if ( errno ) {
+        continue;
+      }
+      break;
+    }
+  }
+  // default cleanup
+  list_default_cleanup( a );
+}
 
 /**
  * @fn bool framebuffer_init(void)
  * @brief Init framebuffer
  *
  * @return
+ *
+ * @todo create shared area with similar size than framebuffer
  */
 bool framebuffer_init( void ) {
+  // create list
+  memory_list = list_construct( memory_lookup, memory_cleanup );
+  if ( ! memory_list ) {
+    return false;
+  }
   // open device
   iomem_fd = open( IOMEM_DEVICE_PATH, O_RDWR );
   if ( -1 == iomem_fd ) {
+    list_destruct( memory_list );
     return false;
   }
   // build request
   size_t request_size = sizeof( int32_t ) * 8;
   int32_t* request = malloc( request_size );
   if ( ! request ) {
+    list_destruct( memory_list );
     close( iomem_fd );
     return false;
   }
@@ -101,6 +158,7 @@ bool framebuffer_init( void ) {
     request
   );
   if ( -1 == result ) {
+    list_destruct( memory_list );
     free( request );
     close( iomem_fd );
     return false;
@@ -124,6 +182,7 @@ bool framebuffer_init( void ) {
   request_size = sizeof( int32_t ) * 35;
   request = malloc( request_size );
   if ( ! request ) {
+    list_destruct( memory_list );
     close( iomem_fd );
     return false;
   }
@@ -184,6 +243,7 @@ bool framebuffer_init( void ) {
     request
   );
   if ( -1 == result ) {
+    list_destruct( memory_list );
     free( request );
     close( iomem_fd );
     return false;
@@ -222,6 +282,7 @@ bool framebuffer_init( void ) {
     0
   );
   if( MAP_FAILED == tmp ) {
+    list_destruct( memory_list );
     close( iomem_fd );
     return false;
   }
@@ -300,6 +361,8 @@ void framebuffer_flip( void ) {
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo return shared memory id
  */
 void framebuffer_handle_resolution(
   __unused size_t type,
@@ -370,83 +433,6 @@ void framebuffer_handle_clear(
 }
 
 /**
- * @fn void framebuffer_handle_render_surface(size_t, pid_t, size_t, size_t)
- * @brief RPC callback for rendering a surface
- *
- * @param type
- * @param origin
- * @param data_info
- * @param response_info
- */
-void framebuffer_handle_render_surface(
-  __unused size_t type,
-  pid_t origin,
-  size_t data_info,
-  __unused size_t response_info
-) {
-  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
-  // validate origin
-  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // get size for allocation
-  size_t sz = _syscall_rpc_get_data_size( data_info );
-  if ( errno ) {
-    error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  framebuffer_render_surface_ptr_t info = malloc( sz );
-  if ( ! info ) {
-    error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // fetch rpc data
-  _syscall_rpc_get_data( info, sz, data_info );
-  // handle error
-  if ( errno ) {
-    error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( info );
-    return;
-  }
-  // handle scroll up
-  if ( info->scroll_y ) {
-    // determine offset
-    uint32_t offset = info->scroll_y * pitch;
-    // move up and reset last line
-    memmove( current_back, current_back + offset, size - offset );
-    memset( current_back + size - offset, 0, offset );
-  }
-  // render stuff
-  for ( uint32_t idx = 0; idx < info->max_y; idx += info->bpp ) {
-    uint32_t y = idx / info->max_x;
-    uint32_t x = idx % info->max_x;
-    // calculate x and y values for rendering
-    uint32_t final_x = info->x + ( x / info->bpp );
-    uint32_t final_y = info->y + y;
-    // extract color from data
-    uint32_t color = *( ( uint32_t* )&info->data[ y * info->max_x + x ] );
-    // determine render offset
-    uint32_t offset = final_y * pitch + final_x * BYTE_PER_PIXEL;
-    // push back color
-    *( ( uint32_t* )( current_back + offset ) ) = color;
-  }
-  // free again
-  free( info );
-  // return success
-  error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-}
-
-/**
  * @fn void framebuffer_handle_flip(size_t, pid_t, size_t, size_t)
  * @brief Handle flip request
  *
@@ -472,4 +458,233 @@ void framebuffer_handle_flip(
   // return success
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+}
+
+/**
+ * @fn void framebuffer_handle_surface_render(size_t, pid_t, size_t, size_t)
+ * @brief RPC callback for rendering a surface
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void framebuffer_handle_surface_render(
+  __unused size_t type,
+  pid_t origin,
+  size_t data_info,
+  __unused size_t response_info
+) {
+  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // allocate  structure
+  framebuffer_surface_render_t* info = malloc(
+    sizeof( framebuffer_surface_render_t ) );
+  if ( ! info ) {
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // fetch rpc data
+  _syscall_rpc_get_data(
+    info, sizeof( framebuffer_surface_render_t ), data_info );
+  // handle error
+  if ( errno ) {
+    error.status = -errno;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( info );
+    return;
+  }
+  // get item
+  list_item_t* item = list_lookup_data( memory_list, ( void* )info->surface_id );
+  if ( ! item ) {
+    error.status = -errno;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( info );
+    return;
+  }
+  // get memory item
+  framebuffer_memory_t* mem = item->data;
+  memcpy( current_back, mem->address, size );
+  /*
+  // determine max width, height and pitch
+  uint32_t max_width = mem->width > physical_width
+    ? physical_width : mem->width;
+  uint32_t max_height = mem->height > physical_height
+    ? physical_height : mem->height;
+  uint32_t bpp = mem->depth / CHAR_BIT;
+  // render surface
+  for ( uint32_t idx = 0; idx < mem->height * mem->pitch; idx += bpp ) {
+    uint32_t y = idx / mem->width;
+    uint32_t x = idx % mem->height;
+    if (
+      x >= max_width
+      || y >= max_height
+    ) {
+      continue;
+    }
+    // calculate x and y values for rendering
+    uint32_t final_x = info->x + ( x / bpp );
+    uint32_t final_y = info->y + y;
+    // extract color from data
+    uint32_t color = *( ( uint32_t* )( &mem->address[ y * mem->pitch + x  ] ) );
+    / *EARLY_STARTUP_PRINT(
+      "x = %"PRId32", y = %"PRId32", final_x = %"PRId32", final_y = %"PRId32", color = %"PRIx32"\r\n",
+      x / bpp, y, final_x, final_y, color )* /
+    // determine render offset
+    uint32_t offset = final_y * pitch + final_x * BYTE_PER_PIXEL;
+    // push back color
+    *( ( uint32_t* )( current_back + offset ) ) = color;
+  }*/
+  // free again
+  free( info );
+  // return success
+  error.status = 0;
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+}
+
+/**
+ * @fn void framebuffer_handle_surface_allocate(size_t, pid_t, size_t, size_t)
+ * @brief RPC callback for allocate a surface
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void framebuffer_handle_surface_allocate(
+  __unused size_t type,
+  pid_t origin,
+  size_t data_info,
+  __unused size_t response_info
+) {
+  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // allocate space for data
+  framebuffer_surface_allocate_t* info = malloc(
+    sizeof( framebuffer_surface_allocate_t ) );
+  if ( ! info ) {
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // fetch rpc data
+  _syscall_rpc_get_data(
+    info, sizeof( framebuffer_surface_allocate_t ), data_info );
+  if ( errno ) {
+    error.status = -errno;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( info );
+    return;
+  }
+
+  // calculated line length
+  uint32_t allocate_pitch = info->width * ( info->depth / CHAR_BIT );
+  size_t memory_size = allocate_pitch * info->height;
+  // request shared memory
+  size_t shm_id = _syscall_memory_shared_create( memory_size );
+  if ( errno ) {
+    error.status = -errno;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( info );
+    return;
+  }
+  // attach shared area
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, 0 );
+  if ( errno ) {
+    error.status = -errno;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( info );
+    return;
+  }
+  // clearout shared memory
+  memset( shm_addr, 0, memory_size );
+  // allocate memory for management structure
+  framebuffer_memory_t* mem = malloc( sizeof( framebuffer_memory_t ) );
+  if ( ! mem ) {
+    while ( true ) {
+      _syscall_memory_shared_detach( shm_id );
+      if ( errno ) {
+        continue;
+      }
+      break;
+    }
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( info );
+    return;
+  }
+  // clearout and fill
+  memset( mem, 0, sizeof( framebuffer_memory_t ) );
+  mem->width = info->width;
+  mem->height = info->height;
+  mem->pitch = allocate_pitch;
+  mem->address = shm_addr;
+  mem->shm_id = shm_id;
+  mem->id = memory_counter++;
+  mem->depth = info->depth;
+  // push back
+  if ( ! list_push_back( memory_list, mem ) ) {
+    while ( true ) {
+      _syscall_memory_shared_detach( shm_id );
+      if ( errno ) {
+        continue;
+      }
+      break;
+    }
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( info );
+    return;
+  }
+
+  // fill response into structure
+  info->shm_id = shm_id;
+  info->surface_id = mem->id;
+  info->pitch = allocate_pitch;
+
+  // allocate response
+  size_t response_size = sizeof( vfs_ioctl_perform_response_t )
+    + sizeof( framebuffer_surface_allocate_t );
+  vfs_ioctl_perform_response_ptr_t response = malloc( response_size );
+  // handle error
+  if ( ! response ) {
+    while ( true ) {
+      _syscall_memory_shared_detach( shm_id );
+      if ( errno ) {
+        continue;
+      }
+      break;
+    }
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( info );
+    free( mem );
+    return;
+  }
+  // clear out response and copy data
+  memset( response, 0, response_size );
+  memcpy( response->container, info, sizeof( framebuffer_surface_allocate_t ) );
+  // return from rpc and free remaining stuff
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
+  free( response );
+  free( info );
 }

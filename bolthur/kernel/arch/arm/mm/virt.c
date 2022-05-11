@@ -41,7 +41,7 @@ uint32_t virt_supported_mode;
  * @fn void virt_startup_setup_supported_modes(void)
  * @brief Setup supported modes startup
  */
-void __bootstrap virt_startup_setup_supported_modes( void ) {
+__bootstrap void virt_startup_setup_supported_modes( void ) {
   #if defined( ELF32 )
     // get paging support from mmfr0
     __asm__ __volatile__(

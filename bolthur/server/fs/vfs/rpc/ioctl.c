@@ -165,7 +165,6 @@ void rpc_handle_ioctl(
     request->container,
     data_size - sizeof( vfs_ioctl_perform_request_t ),
     false,
-    false,
     type,
     request,
     data_size,

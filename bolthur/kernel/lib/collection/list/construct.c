@@ -48,7 +48,7 @@ list_manager_ptr_t list_construct(
 ) {
   list_manager_ptr_t list;
 
-  // allocate list
+  // reserve space for list
   list = ( list_manager_ptr_t )malloc( sizeof( list_manager_t ) );
   // handle error
   if ( ! list ) {

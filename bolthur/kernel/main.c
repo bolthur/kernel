@@ -49,7 +49,7 @@ void kernel_main( void );
  * @brief Kernel main entry
  */
 noreturn void kernel_main( void ) {
-  // Setup early heap for malloc / free support
+  // Setup early not extendable heap
   DEBUG_OUTPUT( "[bolthur/kernel -> heap] early heap initialize ...\r\n" )
   heap_init( HEAP_INIT_EARLY );
 

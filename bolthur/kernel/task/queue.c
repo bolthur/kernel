@@ -93,7 +93,7 @@ task_priority_queue_ptr_t task_queue_get_queue(
   #endif
   // handle not yet added
   if ( ! node ) {
-    // allocate block
+    // reserve block
     queue = ( task_priority_queue_ptr_t )malloc(
       sizeof( task_priority_queue_t ) );
     // check parameter

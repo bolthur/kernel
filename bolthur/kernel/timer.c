@@ -150,7 +150,7 @@ timer_callback_entry_ptr_t timer_register_callback(
   size_t rpc_num,
   size_t timeout
 ) {
-  // allocate new entry structure
+  // reserve new entry structure
   timer_callback_entry_ptr_t entry = ( timer_callback_entry_ptr_t )malloc(
     sizeof( timer_callback_entry_t )
   );

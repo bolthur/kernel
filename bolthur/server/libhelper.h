@@ -43,7 +43,6 @@ __maybe_unused static void send_vfs_add_request(
 ) {
   vfs_add_response_ptr_t response = malloc( sizeof( vfs_add_response_t ) );
   if ( ! response || ! msg ) {
-    //EARLY_STARTUP_PRINT( "Allocation failed or invalid message passed!\r\n" )
     exit( -1 );
   }
   size_t size_to_use = size ? size : sizeof( vfs_add_request_t );
@@ -58,7 +57,6 @@ __maybe_unused static void send_vfs_add_request(
       msg,
       size_to_use,
       true,
-      false,
       RPC_VFS_ADD,
       msg,
       size_to_use,
@@ -66,7 +64,6 @@ __maybe_unused static void send_vfs_add_request(
       0
     );
     if ( errno ) {
-      EARLY_STARTUP_PRINT( "Received error \"%s\"\r\n", strerror( errno ) )
       if ( wait ) {
         sleep( wait );
       }
@@ -80,12 +77,10 @@ __maybe_unused static void send_vfs_add_request(
   _syscall_rpc_get_data( response, sizeof( vfs_add_response_t ), response_id );
   // handle error / no message
   if ( errno ) {
-    //EARLY_STARTUP_PRINT( "An error occurred: %s\r\n", strerror( errno ) )
     exit( -1 );
   }
   // stop on success
   if ( VFS_ADD_SUCCESS != response->status ) {
-    EARLY_STARTUP_PRINT( "Error while adding %s to vfs!\r\n", msg->file_path )
     exit( -1 );
   }
   // free up response

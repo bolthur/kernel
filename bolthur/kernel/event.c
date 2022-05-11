@@ -24,10 +24,10 @@
 #include "lib/string.h"
 #include "lib/collection/list.h"
 #include "panic.h"
+#include "event.h"
 #if defined( PRINT_EVENT )
   #include "debug/debug.h"
 #endif
-#include "event.h"
 
 /**
  * @brief event manager structure
@@ -69,7 +69,7 @@ static int32_t compare_event_callback(
 bool event_init( void ) {
   // create manager structure
   event = ( event_manager_ptr_t )malloc( sizeof( event_manager_t ) );
-  // check allocation
+  // check
   if ( ! event ) {
     return false;
   }
@@ -95,7 +95,7 @@ bool event_init( void ) {
 
   // create queue
   event->queue_kernel = list_construct( NULL, NULL, NULL );
-  // check allocation
+  // check
   if ( ! event->queue_kernel ) {
     avl_destroy_tree( event->tree );
     free( event );
@@ -103,7 +103,7 @@ bool event_init( void ) {
   }
 
   event->queue_user = list_construct( NULL, NULL, NULL );
-  // check allocation
+  // check
   if ( ! event->queue_user ) {
     free( event->tree );
     avl_destroy_tree( event->tree );
@@ -145,9 +145,9 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   #endif
   // handle not yet added
   if ( ! node ) {
-    // allocate block
+    // create new block
     block = ( event_block_ptr_t )malloc( sizeof( event_block_t ) );
-    // check allocation
+    // check
     if ( ! block ) {
       return false;
     }
@@ -220,7 +220,7 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   // create wrapper
   event_callback_wrapper_ptr_t wrapper = ( event_callback_wrapper_ptr_t )malloc(
     sizeof( event_callback_wrapper_t ) );
-  // check allocation
+  // check
   if ( ! wrapper ) {
     return false;
   }

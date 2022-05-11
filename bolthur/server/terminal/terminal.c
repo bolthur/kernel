@@ -55,66 +55,19 @@ static int32_t terminal_lookup(
  */
 static void terminal_cleanup( const list_item_ptr_t a ) {
   terminal_ptr_t term = a->data;
-  free( term->buffer );
+  // detach shared memory
+  if ( term->surface_memory_id ) {
+    while ( true ) {
+      _syscall_memory_shared_detach( term->surface_memory_id );
+      if ( errno ) {
+        continue;
+      }
+      break;
+    }
+  }
+  /// FIXME: SEND DEALLOCATE TO FRAMEBUFFER
   // default cleanup
   list_default_cleanup( a );
-}
-
-#define U64_BLOCK_SIZE sizeof( uint64_t )
-#define BUFFER_UNALIGNED(val) (( uintptr_t )val & ( U64_BLOCK_SIZE - 1 ))
-#define SIZE_TOO_SMALL(size) ( size < U64_BLOCK_SIZE )
-
-/**
- * @fn void memset16*(void*, uint16_t, size_t)
- * @brief Internal memset implementation for 16 bit
- *
- * @param buf
- * @param value
- * @param size
- */
-static void* memset16( void* buf, uint16_t value, size_t size ) {
-  uint16_t* u16_buf = ( uint16_t* )buf;
-  uint16_t u16_value = ( uint16_t )value;
-
-  // set until alignment fits
-  while( BUFFER_UNALIGNED( u16_buf ) ) {
-    // set if not reached end
-    if ( size-- ) {
-      *u16_buf++ = u16_value;
-    // return buf if end reached
-    } else {
-      return buf;
-    }
-  }
-  // set in 8 byte steps as it's now aligned
-  if ( ! SIZE_TOO_SMALL( size ) ) {
-    // prepare value for set
-    uint64_t u64_value = ( uint64_t )u16_value << 48
-      | ( uint64_t )u16_value << 32
-      | ( uint64_t )u16_value << 16
-      | ( uint64_t )u16_value;
-    // set pointer
-    uint64_t* u64_buf = ( uint64_t* )u16_buf;
-    // set as much as possible at once
-    while ( size >= U64_BLOCK_SIZE * 4 ) {
-      *u64_buf++ = u64_value;
-      *u64_buf++ = u64_value;
-      *u64_buf++ = u64_value;
-      *u64_buf++ = u64_value;
-      size -= 4 * U64_BLOCK_SIZE;
-    }
-    // set remaining 64bit blocks
-    while ( size >= U64_BLOCK_SIZE ) {
-      *u64_buf++ = u64_value;
-      size -= U64_BLOCK_SIZE;
-    }
-  }
-  // set rest
-  while( size-- ) {
-    *u16_buf++ = u16_value;
-  }
-  // return buffer
-  return buf;
 }
 
 /**
@@ -154,6 +107,14 @@ bool terminal_init( void ) {
   size_t in = RPC_CUSTOM_START;
   size_t out = RPC_CUSTOM_START + 1;
   size_t err = RPC_CUSTOM_START + 2;
+
+  framebuffer_surface_allocate_t tmp = {
+    .width = resolution_data.width,
+    .height = resolution_data.height,
+    .depth = resolution_data.depth,
+    .shm_id = 0,
+    .surface_id = 0,
+  };
   // push terminals
   for ( uint32_t current = 0; current < TERMINAL_MAX_NUM; current++ ) {
     // prepare device path
@@ -217,6 +178,25 @@ bool terminal_init( void ) {
       return false;
     }
 
+    // request surface from framebuffer
+    tmp.surface_id = 0;
+    tmp.shm_id = 0;
+    int result = ioctl(
+      output_driver_fd,
+      IOCTL_BUILD_REQUEST(
+        FRAMEBUFFER_SURFACE_ALLOCATE,
+        sizeof( framebuffer_surface_allocate_t ),
+        IOCTL_RDWR
+      ),
+      &tmp
+    );
+    if ( -1 == result ) {
+      free( command_add );
+      free( command_select );
+      free( msg );
+      list_destruct( terminal_list );
+      return false;
+    }
     // allocate internal management structure
     terminal_ptr_t term = malloc( sizeof( terminal_t ) );
     if ( ! term ) {
@@ -234,21 +214,29 @@ bool terminal_init( void ) {
     term->max_row = resolution_data.height / psf_glyph_height();
     strncpy( term->path, tty_path, TERMINAL_MAX_PATH );
     term->bpp = resolution_data.depth;
-    // allocate terminal buffer
-    size_t buffer_size = sizeof( uint16_t ) * term->max_col * term->max_row;
-    term->buffer = malloc( buffer_size );
-    if ( ! term->buffer ) {
-      free( term );
+    // try to allocate shared memory
+    void* shm_addr = _syscall_memory_shared_attach( tmp.shm_id, 0 );
+    if ( errno ) {
       free( command_add );
       free( command_select );
       free( msg );
       list_destruct( terminal_list );
       return false;
     }
-    memset16( term->buffer, ' ', buffer_size / sizeof( uint16_t ) );
+    // fill into structure
+    term->surface = shm_addr;
+    term->surface_id = tmp.surface_id;
+    term->surface_memory_id = tmp.shm_id;
+    term->pitch = tmp.pitch;
     // push back
     if ( ! list_push_back( terminal_list, term ) ) {
-      free( term->buffer );
+      while ( true ) {
+        _syscall_memory_shared_detach( tmp.shm_id );
+        if ( errno ) {
+          continue;
+        }
+        break;
+      }
       free( term );
       free( command_add );
       free( command_select );
@@ -264,10 +252,8 @@ bool terminal_init( void ) {
     command_add->out = out;
     command_add->err = err;
     command_add->origin = getpid();
-    /*EARLY_STARTUP_PRINT( "terminal = %s, in = %d, out = %d, err = %d, origin = %d\r\n",
-      command_add->terminal, in, out, err, command_add->origin )*/
     // call console add
-    int result = ioctl(
+    result = ioctl(
       console_manager_fd,
       IOCTL_BUILD_REQUEST(
         CONSOLE_ADD,
@@ -317,146 +303,4 @@ bool terminal_init( void ) {
   free( command_select );
   // return success
   return 0 == response;
-}
-
-/**
- * @fn void terminal_scroll(terminal_ptr_t)
- * @brief Scroll up terminal buffer
- *
- * @param term
- */
-void terminal_scroll( terminal_ptr_t term ) {
-  // move up one line
-  memmove(
-    term->buffer,
-    &term->buffer[ 1 * term->max_col ],
-    sizeof( uint16_t ) * ( term->max_row - 1 ) * term->max_col
-  );
-  // erase last one
-  memset16(
-    &term->buffer[ ( term->max_row - 1 ) * term->max_col ],
-    ' ',
-    sizeof( uint16_t ) * term->max_col / 2
-  );
-}
-
-/**
- * @fn uint32_t terminal_push(terminal_ptr_t, const char*, uint32_t*, uint32_t*, uint32_t*, uint32_t*)
- * @brief Push string to terminal buffer
- *
- * @param term terminal to push to
- * @param s utf8 string to push
- * @param start_x pointer to return start_x if not null
- * @param start_y pointer to return start_y if not null
- * @param end_x pointer to return end_x if not null
- * @param end_y pointer to return end_y if not null
- * @return
- */
-uint32_t terminal_push(
-  terminal_ptr_t term,
-  const char* s,
-  uint32_t* start_x,
-  uint32_t* start_y,
-  uint32_t* end_x,
-  uint32_t* end_y
-) {
-  uint32_t scrolled = 0;
-  // set start x and y
-  if ( start_x ) {
-    *start_x = term->col;
-  }
-  if ( start_y ) {
-    *start_y = term->row;
-  }
-  bool first = true;
-  bool newline_in_middle = false;
-  bool newline = false;
-  while( *s ) {
-    // set flag indicating that a newline is in the middle
-    if ( newline ) {
-      newline_in_middle = true;
-    }
-    // handle end of row reached
-    if ( term->max_col <= term->col ) {
-      term->col = 0;
-      term->row++;
-      newline = true;
-    }
-    // handle scroll
-    if ( term->max_row <= term->row ) {
-      // scroll up content
-      terminal_scroll( term );
-      // increase scrolled lines
-      scrolled++;
-      // set row and col correctly
-      term->row--;
-      term->col = 0;
-      // set start x and y different if during first run
-      if ( first && start_x ) {
-        *start_x = term->col;
-      }
-      if ( first && start_y ) {
-        *start_y = term->row;
-      }
-    }
-    // decode churrent character to unicode for save
-    size_t len = 0;
-    uint16_t c = utf8_decode( s, &len );
-    s += --len;
-    // check character for actions
-    switch ( c ) {
-      // newline just increase row
-      case '\n':
-        term->row++;
-        newline = true;
-        break;
-      // carriage return reset column
-      case '\r':
-        // set end x before reset
-        if ( end_x ) {
-          *end_x = term->col - 1;
-        }
-        term->col = 0;
-        break;
-      case '\t':
-        // insert 4 spaces
-        if ( first ) {
-          terminal_push( term, "    ", start_x, start_y, end_x, end_y );
-        } else {
-          terminal_push( term, "    ", NULL, NULL, end_x, end_y );
-        }
-        break;
-      default:
-        /*EARLY_STARTUP_PRINT(
-          "c = %c, idx = %ld\r\n",
-          c, term->row * term->max_col + term->col
-        )*/
-        // push back character
-        term->buffer[ term->row * term->max_col + term->col ] = c;
-        // set end x
-        if ( end_x ) {
-          *end_x = term->col;
-        }
-        // increment column
-        term->col++;
-    }
-
-    // next character
-    first = false;
-    s++;
-  }
-  // set end x / y in case of scroll action
-  if ( end_x && newline && newline_in_middle ) {
-    *end_x = term->col;
-  }
-  if ( end_y ) {
-    *end_y = ( newline && ! newline_in_middle )
-      ? term->row - 1 : term->row;
-  }
-  // adjust start if scrolled with newline in middle
-  if ( start_y && scrolled && newline && newline_in_middle ) {
-    *start_y = term->row - 1;
-  }
-  // return indicator whether scrolling was done or not
-  return scrolled;
 }

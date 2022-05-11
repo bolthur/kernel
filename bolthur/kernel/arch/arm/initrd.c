@@ -27,7 +27,7 @@
 /**
  * @brief Prepare for initrd usage
  */
-void __bootstrap initrd_startup_init( void ) {
+void initrd_startup_init( void ) {
   // transfer to uintptr_t
   uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
 

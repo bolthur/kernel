@@ -29,7 +29,7 @@
  * @fn void firmware_startup_init(void)
  * @brief Handle firmware information related startup init
  */
-void __bootstrap firmware_startup_init( void ) {
+void firmware_startup_init( void ) {
   // transfer to uintptr_t
   uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
   // first mapping before access

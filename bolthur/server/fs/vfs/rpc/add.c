@@ -82,10 +82,6 @@ void rpc_handle_add(
   // check if existing
   vfs_node_ptr_t node = vfs_node_by_path( request->file_path );
   if ( node ) {
-    // debug output
-    EARLY_STARTUP_PRINT(
-      "Node \"%s\" already existing!\r\n",
-      request->file_path )
     // prepare response
     res.status = VFS_ADD_ALREADY_EXIST;
     res.handling_process = node->pid;
@@ -100,9 +96,6 @@ void rpc_handle_add(
   str = dirname( request->file_path );
   node = vfs_node_by_path( str );
   if ( ! node ) {
-    EARLY_STARTUP_PRINT(
-      "Parent node \"%s\" for \"%s\" not found!\r\n",
-      str, request->file_path )
     res.status = VFS_ADD_ERROR;
     bolthur_rpc_return( type, &res, sizeof( res ), NULL );
     free( str );
@@ -136,7 +129,6 @@ void rpc_handle_add(
   }
   // add basename to path
   if ( ! vfs_add_path( node, origin, str, target, request->info ) ) {
-    EARLY_STARTUP_PRINT( "Error: Couldn't add \"%s\"\r\n", request->file_path )
     res.status = VFS_ADD_ERROR;
     bolthur_rpc_return( type, &res, sizeof( res ), NULL );
     free( str );
@@ -161,8 +153,6 @@ void rpc_handle_add(
       }
     }
   }
-  //EARLY_STARTUP_PRINT( "-------->VFS DEBUG_DUMP<--------\r\n" )
-  //vfs_dump( NULL, NULL );
   free( str );
   if ( target ) {
     free( target );
@@ -170,8 +160,6 @@ void rpc_handle_add(
   // prepare response
   res.status = VFS_ADD_SUCCESS;
   res.handling_process = origin;
-  /*EARLY_STARTUP_PRINT( "response->status = %d\r\n", response->status )
-  EARLY_STARTUP_PRINT( "response->handling_process = %d\r\n", response->handling_process )*/
   // return response
   bolthur_rpc_return( type, &res, sizeof( res ), NULL );
   // free message structures

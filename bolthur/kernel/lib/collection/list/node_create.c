@@ -29,13 +29,13 @@
  * @return list_item_ptr_t pointer to created node
  */
 list_item_ptr_t list_node_create( void* data ) {
-  // allocate new node
+  // reserve space for new node
   list_item_ptr_t node = ( list_item_ptr_t )malloc( sizeof( list_item_t ) );
-  // check malloc result
+  // check result
   if ( ! node ) {
     return NULL;
   }
-  // overwrite allocated memory with 0
+  // erase
   memset( ( void* )node, 0, sizeof( list_item_t ) );
 
   // populate created node

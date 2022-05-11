@@ -18,7 +18,6 @@
  */
 
 #include <inttypes.h>
-
 #include "../lib/stdlib.h"
 #include "../lib/collection/list.h"
 #include "../lib/collection/avl.h"
@@ -133,12 +132,12 @@ static shared_memory_entry_ptr_t create_entry( size_t size ) {
   shared_memory_entry_ptr_t entry = ( shared_memory_entry_ptr_t )malloc(
     sizeof( shared_memory_entry_t )
   );
-  // check allocation
+  // check
   if ( ! entry ) {
     return NULL;
   }
   // prepare area
-  entry = memset( entry, 0, sizeof( shared_memory_entry_t ) );
+  memset( entry, 0, sizeof( shared_memory_entry_t ) );
 
   // round up to full size
   size = ROUND_UP_TO_FULL_PAGE( size );
@@ -146,12 +145,12 @@ static shared_memory_entry_ptr_t create_entry( size_t size ) {
   size_t count = size / PAGE_SIZE;
   // allocate address list
   entry->address = ( uint64_t* )calloc( count, sizeof( uint64_t ) );
-  // check allocation
+  // check
   if ( ! entry->address ) {
     destroy_entry( entry );
     return NULL;
   }
-  // allocate pages
+  // request necessary pages
   for ( size_t idx = 0; idx < count; idx++ ) {
     entry->address[ idx ] = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
     // handle error
@@ -332,7 +331,7 @@ uintptr_t shared_memory_attach(
   }
   // debug output
   #if defined( PRINT_MM_SHARED )
-    DEBUG_OUTPUT( "Allocating new mapping\r\n" )
+    DEBUG_OUTPUT( "Reserving space for new mapping\r\n" )
   #endif
   // create mapping structure
   shared_memory_entry_mapped_ptr_t mapped = ( shared_memory_entry_mapped_ptr_t )
@@ -340,7 +339,7 @@ uintptr_t shared_memory_attach(
   if ( ! mapped ) {
     // debug output
     #if defined( PRINT_MM_SHARED )
-      DEBUG_OUTPUT( "Error while allocating map entry\r\n" )
+      DEBUG_OUTPUT( "Error while reserving space for map entry\r\n" )
     #endif
     return 0;
   }
@@ -586,7 +585,7 @@ bool shared_memory_fork(
       // transform to mapped entry
       shared_memory_entry_mapped_ptr_t mapped_to_fork = ( shared_memory_entry_mapped_ptr_t )
         process_list_item->data;
-      // allocate new entry
+      // reserve space for fork
       shared_memory_entry_mapped_ptr_t mapped_fork = ( shared_memory_entry_mapped_ptr_t )
         malloc( sizeof( shared_memory_entry_mapped_t) );
       if ( ! mapped_fork ) {

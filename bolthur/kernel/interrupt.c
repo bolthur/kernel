@@ -28,6 +28,8 @@
   #include "debug/debug.h"
 #endif
 
+/// FIXME: USE EVENT MANAGER FOR INTERRUPTS?
+
 /**
  * @brief Interrupt management structure
  */
@@ -79,7 +81,7 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
   if ( ! interrupt_manager ) {
     // initialize interrupt manager
     interrupt_manager = malloc( sizeof( interrupt_manager_t ) );
-    // check allocation
+    // check
     if ( ! interrupt_manager ) {
       return NULL;
     }
@@ -88,14 +90,14 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
     // create trees for interrupt types
     interrupt_manager->normal_interrupt = avl_create_tree(
       compare_interrupt_callback, NULL, NULL );
-    // check allocation
+    // check
     if ( ! interrupt_manager->normal_interrupt ) {
       free( interrupt_manager );
       return NULL;
     }
     interrupt_manager->fast_interrupt = avl_create_tree(
       compare_interrupt_callback, NULL, NULL );
-    // check allocation
+    // check
     if ( ! interrupt_manager->fast_interrupt ) {
       free( interrupt_manager->normal_interrupt );
       free( interrupt_manager );
@@ -103,7 +105,7 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
     }
     interrupt_manager->software_interrupt = avl_create_tree(
       compare_interrupt_callback, NULL, NULL );
-    // check allocation
+    // check
     if ( ! interrupt_manager->software_interrupt ) {
       free( interrupt_manager->normal_interrupt );
       free( interrupt_manager->fast_interrupt );
@@ -351,9 +353,9 @@ bool interrupt_register_handler(
   #endif
   // handle not yet added
   if ( ! node ) {
-    // allocate block
+    // reserve block
     block = malloc( sizeof( interrupt_block_t ) );
-    // check allocation
+    // check
     if ( ! block ) {
       return false;
     }
@@ -439,7 +441,7 @@ bool interrupt_register_handler(
     interrupt_callback_wrapper_ptr_t wrapper = malloc(
       sizeof( interrupt_callback_wrapper_t )
     );
-    // check allocation
+    // check
     if ( ! wrapper ) {
       return false;
     }

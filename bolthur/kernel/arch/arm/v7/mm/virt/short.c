@@ -54,7 +54,7 @@ static sd_context_total_t initial_context
  * @fn void v7_short_startup_setup()
  * @brief Method to setup short descriptor paging
  */
-void __bootstrap v7_short_startup_setup() {
+__bootstrap void v7_short_startup_setup() {
   uint32_t x;
   sd_ttbcr_t ttbcr;
 
@@ -113,7 +113,7 @@ void __bootstrap v7_short_startup_setup() {
  * @param phys physical address
  * @param virt virtual address
  */
-void __bootstrap v7_short_startup_map( uintptr_t phys, uintptr_t virt ) {
+__bootstrap void v7_short_startup_map( uintptr_t phys, uintptr_t virt ) {
   uint32_t x = virt >> 20;
   uint32_t y = phys >> 20;
 
@@ -128,7 +128,7 @@ void __bootstrap v7_short_startup_map( uintptr_t phys, uintptr_t virt ) {
  * @fn void v7_short_startup_enable(void)
  * @brief Method to enable initial virtual memory
  */
-void __bootstrap v7_short_startup_enable( void ) {
+__bootstrap void v7_short_startup_enable( void ) {
   uint32_t reg;
   // Get content from control register
   __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
@@ -142,7 +142,7 @@ void __bootstrap v7_short_startup_enable( void ) {
  * @fn void v7_short_startup_flush(void)
  * @brief Startup flush context
  */
-void __bootstrap v7_short_startup_flush( void ) {
+__bootstrap void v7_short_startup_flush( void ) {
   sd_ttbcr_t ttbcr;
 
   // read ttbcr register
@@ -375,11 +375,11 @@ static uintptr_t get_new_table( uintptr_t table ) {
     if ( max_addr == free_addr ) {
       // extend another space of x tables
       max_addr *= 2;
-      // allocate new array
+      // reserve space for enlarged array
       uintptr_t* tmp = malloc( sizeof( uintptr_t ) * max_addr );
       // handle error
       if ( ! tmp ) {
-        PANIC( "reallocate failed for array holding free addresses!\r\n" );
+        PANIC( "Reserve space for free addresses failed!\r\n" );
         // stupid hack to silence false positive from cppcheck
         return 0;
       }
@@ -415,7 +415,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
   }
 
   if ( ! free_addr || ! addr ) {
-    // allocate page
+    // reserve page
     uintptr_t new_tables = ( uintptr_t )phys_find_free_page( SD_TBL_SIZE, PHYS_MEMORY_TYPE_NORMAL );
     // handle error
     if ( 0 == new_tables ) {
@@ -433,7 +433,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
     // unmap page again
     unmap_temporary( tmp, PAGE_SIZE );
 
-    // allocate addr
+    // reserve addr
     if ( ! addr ) {
       max_addr = PAGE_SIZE / SD_TBL_SIZE;
       // create handling array for free tables

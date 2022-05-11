@@ -62,9 +62,9 @@ avl_tree_ptr_t avl_create_tree(
   avl_lookup_func_t lookup,
   avl_cleanup_func_t cleanup
 ) {
-  // allocate new tree structure
+  // reserve space for new tree structure
   avl_tree_ptr_t new_tree = ( avl_tree_ptr_t )malloc( sizeof( avl_tree_t ) );
-  // check malloc return
+  // check
   if ( !new_tree ) {
     return NULL;
   }
@@ -97,9 +97,9 @@ avl_tree_ptr_t avl_create_tree(
  * @param data node data
  */
 avl_node_ptr_t avl_create_node( void* data ) {
-  // allocate node
+  // reserve space for new node
   avl_node_ptr_t node = ( avl_node_ptr_t )malloc( sizeof( avl_node_t ) );
-  // check malloc return
+  // check
   if ( ! node ) {
     return NULL;
   }

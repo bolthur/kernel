@@ -48,7 +48,7 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
   // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t ) + 4 * sizeof( size_t );
+  size_t msg_size = sizeof( vfs_add_request_t ) + 5 * sizeof( size_t );
   vfs_add_request_ptr_t msg = malloc( msg_size );
   if ( ! msg ) {
     return -1;
@@ -60,8 +60,9 @@ int main( __unused int argc, __unused char* argv[] ) {
   strncpy( msg->file_path, "/dev/framebuffer", PATH_MAX - 1 );
   msg->device_info[ 0 ] = FRAMEBUFFER_GET_RESOLUTION;
   msg->device_info[ 1 ] = FRAMEBUFFER_CLEAR;
-  msg->device_info[ 2 ] = FRAMEBUFFER_RENDER_SURFACE;
-  msg->device_info[ 3 ] = FRAMEBUFFER_FLIP;
+  msg->device_info[ 2 ] = FRAMEBUFFER_FLIP;
+  msg->device_info[ 3 ] = FRAMEBUFFER_SURFACE_RENDER;
+  msg->device_info[ 4 ] = FRAMEBUFFER_SURFACE_ALLOCATE;
   // perform add request
   send_vfs_add_request( msg, msg_size, 0 );
   // free again

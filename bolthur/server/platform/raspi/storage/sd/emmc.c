@@ -1392,23 +1392,21 @@ static void handle_card_interrupt( void ) {
   // get card status
   if ( device->card_rca ) {
     // get card status
-    if ( EMMC_RESPONSE_OK != issue_sd_command(
+    __maybe_unused emmc_response_t response = issue_sd_command(
       emmc_command_list[ EMMC_CMD_SEND_STATUS ],
       device->card_rca << 16
-    ) ) {
-      // debug output
-      #if defined( EMMC_ENABLE_DEBUG )
+    );
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      if ( EMMC_RESPONSE_OK != response ) {
         EARLY_STARTUP_PRINT( "Card status fetch failed!\r\n" )
-      #endif
-    } else {
-      // debug output
-      #if defined( EMMC_ENABLE_DEBUG )
+      } else {
         EARLY_STARTUP_PRINT(
           "Card status: %#"PRIx32"\r\n",
           device->last_response[ 0 ]
-       )
-      #endif
-    }
+        )
+      }
+    #endif
   }
 }
 

@@ -76,7 +76,7 @@ task_thread_ptr_t task_thread_create(
   // create thread structure
   task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
     sizeof( task_thread_t ) );
-  // check allocation
+  // check
   if ( ! thread ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
     return NULL;
@@ -85,7 +85,7 @@ task_thread_ptr_t task_thread_create(
   memset( ( void* )thread, 0, sizeof( task_thread_t ) );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Allocated thread structure at %p\r\n", ( void* )thread )
+    DEBUG_OUTPUT( "Reserved space for thread structure at %p\r\n", ( void* )thread )
   #endif
 
   // create context
@@ -146,7 +146,7 @@ task_thread_ptr_t task_thread_create(
     free( thread );
     return NULL;
   }
-  // map allocated stack
+  // map stack
   if ( ! virt_map_address(
     process->virtual_context,
     stack_virtual,
@@ -212,7 +212,7 @@ task_thread_ptr_t task_thread_fork(
   task_process_ptr_t forked_process,
   task_thread_ptr_t thread_to_fork
 ) {
-  // allocate new management structure
+  // reserve space for new management structure
   task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
     sizeof( task_thread_t ) );
   // handle error
@@ -222,7 +222,7 @@ task_thread_ptr_t task_thread_fork(
   // erase memory
   memset( thread, 0, sizeof( task_thread_t ) );
 
-  // allocate context
+  // reserve space for context
   thread->current_context = malloc( sizeof( cpu_register_context_t ) );
   // handle error
   if ( ! thread->current_context ) {

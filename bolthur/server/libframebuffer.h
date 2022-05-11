@@ -28,27 +28,29 @@
 
 #define FRAMEBUFFER_GET_RESOLUTION RPC_CUSTOM_START
 #define FRAMEBUFFER_CLEAR FRAMEBUFFER_GET_RESOLUTION + 1
-#define FRAMEBUFFER_RENDER_SURFACE FRAMEBUFFER_CLEAR + 1
-#define FRAMEBUFFER_FLIP FRAMEBUFFER_RENDER_SURFACE+ 1
+#define FRAMEBUFFER_FLIP FRAMEBUFFER_CLEAR + 1
+#define FRAMEBUFFER_SURFACE_RENDER FRAMEBUFFER_FLIP + 1
+#define FRAMEBUFFER_SURFACE_ALLOCATE FRAMEBUFFER_SURFACE_RENDER + 1
 
-struct framebuffer_render_surface {
-  uint32_t scroll_y;
+typedef struct {
   uint32_t x;
   uint32_t y;
-  uint32_t max_x;
-  uint32_t max_y;
-  uint32_t bpp;
-  uint8_t data[];
-};
-typedef struct framebuffer_render_surface framebuffer_render_surface_t;
-typedef struct framebuffer_render_surface* framebuffer_render_surface_ptr_t;
+  size_t surface_id;
+} framebuffer_surface_render_t;
 
-struct framebuffer_resolution {
+typedef struct {
   uint32_t width;
   uint32_t height;
   uint32_t depth;
-};
-typedef struct framebuffer_resolution framebuffer_resolution_t;
-typedef struct framebuffer_resolution* framebuffer_resolution_ptr_t;
+} framebuffer_resolution_t;
+
+typedef struct {
+  uint32_t width;
+  uint32_t height;
+  uint32_t depth;
+  size_t shm_id;
+  size_t surface_id;
+  uint32_t pitch;
+} framebuffer_surface_allocate_t;
 
 #endif

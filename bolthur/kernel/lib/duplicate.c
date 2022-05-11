@@ -36,7 +36,7 @@ char** duplicate( const char** src ) {
   size_t src_count = 0;
   // handle no source
   if ( ! src ) {
-    // allocate buffer
+    // reserve buffer
     dst = ( char** )malloc( ( src_count + 1 ) * sizeof( char* ) + len );
     if ( ! dst ) {
       return NULL;
@@ -72,7 +72,7 @@ char** duplicate( const char** src ) {
     // increase total length
     len += tmp_len + 1;
   }
-  // allocate new buffer
+  // reserve new buffer
   dst = ( char** )malloc( ( src_count + 1 ) * sizeof( char* ) + len );
   if ( ! dst ) {
     return NULL;

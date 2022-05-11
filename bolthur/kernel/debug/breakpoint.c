@@ -158,14 +158,14 @@ bool debug_breakpoint_add(
 
   // create if not existing
   if ( ! entry ) {
-    // allocate entry
+    // reserve space for entry
     entry = ( debug_breakpoint_entry_ptr_t )malloc(
       sizeof( debug_breakpoint_entry_t ) );
     // handle error
     if ( ! entry ) {
       return false;
     }
-    // erase allocated memory
+    // erase memory
     debug_memset( ( void* )entry, 0, sizeof( debug_breakpoint_entry_t ) );
     // push entry back
     if ( ! list_push_back( debug_breakpoint_manager, ( void* )entry ) ) {

@@ -137,7 +137,7 @@ rpc_data_queue_entry_ptr_t rpc_data_queue_allocate(
   const char* rpc_data,
   size_t* rpc_id
 ) {
-  // allocate data queue structure
+  // reserve space for data queue structure
   rpc_data_queue_entry_ptr_t data_queue_block = ( rpc_data_queue_entry_ptr_t )malloc(
     sizeof( rpc_data_queue_entry_t ) );
   if ( ! data_queue_block ) {
@@ -148,16 +148,16 @@ rpc_data_queue_entry_ptr_t rpc_data_queue_allocate(
     // return NULL
     return NULL;
   }
-  // erase allocated space
+  // erase
   memset( data_queue_block, 0, sizeof( rpc_data_queue_entry_t ) );
-  // allocate data_queue_block data
+  // reserve space for data_queue_block->data
   char* data = ( char* )malloc( rpc_data_length );
   if ( ! data ) {
     // debug output
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "No free space left for data_queue_block data!\r\n" )
     #endif
-    // free allocation
+    // free
     free( data_queue_block );
     // return NULL
     return NULL;
@@ -177,10 +177,9 @@ rpc_data_queue_entry_ptr_t rpc_data_queue_allocate(
   } else {
     data_queue_block->id = *rpc_id;
   }
-  // return allocated structure
+  // return data queue block
   return data_queue_block;
 }
-
 
 /**
  * @fn int rpc_data_queue_add(pid_t, pid_t, const char*, size_t, size_t*)
@@ -227,7 +226,7 @@ int rpc_data_queue_add(
     return EINVAL;
   }
 
-  // allocate message structure
+  // reserve space for message structure
   rpc_data_queue_entry_ptr_t message = rpc_data_queue_allocate(
     data_length,
     data,

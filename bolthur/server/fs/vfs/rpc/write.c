@@ -177,7 +177,6 @@ void rpc_handle_write(
     nested_request,
     sizeof( vfs_write_request_t ),
     false,
-    false,
     type,
     nested_request,
     sizeof( vfs_write_request_t ),
