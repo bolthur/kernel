@@ -129,22 +129,20 @@ static void destroy_entry( shared_memory_entry_ptr_t entry ) {
  */
 static shared_memory_entry_ptr_t create_entry( size_t size ) {
   // create list entry
-  shared_memory_entry_ptr_t entry = ( shared_memory_entry_ptr_t )malloc(
-    sizeof( shared_memory_entry_t )
-  );
+  shared_memory_entry_ptr_t entry = malloc( sizeof( *entry ) );
   // check
   if ( ! entry ) {
     return NULL;
   }
   // prepare area
-  memset( entry, 0, sizeof( shared_memory_entry_t ) );
+  memset( entry, 0, sizeof( *entry ) );
 
   // round up to full size
   size = ROUND_UP_TO_FULL_PAGE( size );
   // determine count
   size_t count = size / PAGE_SIZE;
   // allocate address list
-  entry->address = ( uint64_t* )calloc( count, sizeof( uint64_t ) );
+  entry->address = calloc( count, sizeof( uint64_t ) );
   // check
   if ( ! entry->address ) {
     destroy_entry( entry );
@@ -334,8 +332,7 @@ uintptr_t shared_memory_attach(
     DEBUG_OUTPUT( "Reserving space for new mapping\r\n" )
   #endif
   // create mapping structure
-  shared_memory_entry_mapped_ptr_t mapped = ( shared_memory_entry_mapped_ptr_t )
-    malloc( sizeof( shared_memory_entry_mapped_t) );
+  shared_memory_entry_mapped_ptr_t mapped = malloc( sizeof( *mapped ) );
   if ( ! mapped ) {
     // debug output
     #if defined( PRINT_MM_SHARED )
@@ -344,7 +341,7 @@ uintptr_t shared_memory_attach(
     return 0;
   }
   // clear out
-  memset( mapped, 0, sizeof( shared_memory_entry_mapped_t ) );
+  memset( mapped, 0, sizeof( *mapped ) );
 
   uintptr_t virt = 0;
   // fixed handling means take address as start
@@ -586,12 +583,11 @@ bool shared_memory_fork(
       shared_memory_entry_mapped_ptr_t mapped_to_fork = ( shared_memory_entry_mapped_ptr_t )
         process_list_item->data;
       // reserve space for fork
-      shared_memory_entry_mapped_ptr_t mapped_fork = ( shared_memory_entry_mapped_ptr_t )
-        malloc( sizeof( shared_memory_entry_mapped_t) );
+      shared_memory_entry_mapped_ptr_t mapped_fork = malloc( sizeof( *mapped_fork ) );
       if ( ! mapped_fork ) {
         return false;
       }
-      memset( mapped_fork, 0, sizeof( shared_memory_entry_mapped_t ) );
+      memset( mapped_fork, 0, sizeof( *mapped_fork ) );
       // duplicate data
       mapped_fork->process = process_fork;
       mapped_fork->size = mapped_to_fork->size;

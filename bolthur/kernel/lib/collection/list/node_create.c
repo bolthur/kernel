@@ -30,7 +30,7 @@
  */
 list_item_ptr_t list_node_create( void* data ) {
   // reserve space for new node
-  list_item_ptr_t node = ( list_item_ptr_t )malloc( sizeof( list_item_t ) );
+  list_item_ptr_t node = malloc( sizeof( *node ) );
   // check result
   if ( ! node ) {
     return NULL;

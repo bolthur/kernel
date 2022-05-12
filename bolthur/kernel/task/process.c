@@ -188,18 +188,18 @@ bool task_process_init( void ) {
     return false;
   }
 
-  // allocate management structures
-  process_manager = ( task_manager_ptr_t )malloc( sizeof( task_manager_t ) );
+  // reserve space for management structures
+  process_manager = malloc( sizeof( *process_manager ) );
   // check parameter
   if ( ! process_manager ) {
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "process manager malloc failed\r\n" )
+      DEBUG_OUTPUT( "error while reserving space for process manager\r\n" )
     #endif
     return false;
   }
   // prepare structure
-  memset( ( void* )process_manager, 0, sizeof( task_manager_t ) );
+  memset( ( void* )process_manager, 0, sizeof( *process_manager ) );
 
   // create tree for managing processes by id
   process_manager->process_id = avl_create_tree(
@@ -332,16 +332,15 @@ task_process_ptr_t task_process_create( size_t priority, pid_t parent ) {
       priority, parent );
   #endif
 
-  // allocate process structure
-  task_process_ptr_t process = ( task_process_ptr_t )malloc(
-    sizeof( task_process_t ) );
-  // check allocation
+  // reserve space for process structure
+  task_process_ptr_t process = malloc( sizeof( *process ) );
+  // check
   if ( ! process ) {
     return NULL;
   }
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Allocated process structure at %p\r\n", ( void* )process );
+    DEBUG_OUTPUT( "Reserved space for process structure at %p\r\n", ( void* )process );
   #endif
 
   // prepare structure
@@ -377,7 +376,7 @@ task_process_ptr_t task_process_create( size_t priority, pid_t parent ) {
     task_process_free( process );
     return NULL;
   }
-  // return allocated process
+  // return process
   return process;
 }
 
@@ -389,10 +388,8 @@ task_process_ptr_t task_process_create( size_t priority, pid_t parent ) {
  * @return forked process structure or null
  */
 task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
-  // allocate new process structure
-  task_process_ptr_t forked = ( task_process_ptr_t )malloc(
-    sizeof( task_process_t )
-  );
+  // reserve new process structure
+  task_process_ptr_t forked = malloc( sizeof( *forked ) );
   if ( ! forked ) {
     return NULL;
   }
@@ -814,7 +811,7 @@ int task_process_replace(
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "image_size = %#x\r\n", image_size )
   #endif
-  void* image = ( void* )malloc( sizeof( char ) * image_size );
+  void* image = malloc( sizeof( char ) * image_size );
   // handle error
   if ( ! image ) {
     free( tmp_argv );
@@ -889,12 +886,12 @@ int task_process_replace(
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
+
   // add thread
   task_thread_ptr_t new_current = task_thread_create( init_entry, proc, 0 );
   if ( ! new_current ) {
     free( tmp_argv );
     free( tmp_env );
-    free( image );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -906,15 +903,14 @@ int task_process_replace(
   if ( ! task_thread_push_arguments( new_current, tmp_argv, tmp_env ) ) {
     free( tmp_argv );
     free( tmp_env );
-    free( image );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
 
   // free temporary stuff
+  free( image );
   free( tmp_argv );
   free( tmp_env );
-  free( image );
 
   // replace new current thread
   if ( replace_current_thread ) {

@@ -68,13 +68,13 @@ static int32_t compare_event_callback(
  */
 bool event_init( void ) {
   // create manager structure
-  event = ( event_manager_ptr_t )malloc( sizeof( event_manager_t ) );
+  event = malloc( sizeof( *event ) );
   // check
   if ( ! event ) {
     return false;
   }
   // prepare
-  memset( ( void* )event, 0, sizeof( event_manager_t ) );
+  memset( ( void* )event, 0, sizeof( *event ) );
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Initialized event manager structure at %p\r\n",
@@ -146,13 +146,13 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   // handle not yet added
   if ( ! node ) {
     // create new block
-    block = ( event_block_ptr_t )malloc( sizeof( event_block_t ) );
+    block = malloc( sizeof( *block ) );
     // check
     if ( ! block ) {
       return false;
     }
     // prepare memory
-    memset( ( void* )block, 0, sizeof( event_block_t ) );
+    memset( ( void* )block, 0, sizeof( *block ) );
     // debug output
     #if defined( PRINT_EVENT )
       DEBUG_OUTPUT( "Initialized new node at %p\r\n", ( void* )block );
@@ -218,14 +218,13 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   }
 
   // create wrapper
-  event_callback_wrapper_ptr_t wrapper = ( event_callback_wrapper_ptr_t )malloc(
-    sizeof( event_callback_wrapper_t ) );
+  event_callback_wrapper_ptr_t wrapper = malloc( sizeof( *wrapper ) );
   // check
   if ( ! wrapper ) {
     return false;
   }
   // prepare memory
-  memset( ( void* )wrapper, 0, sizeof( event_callback_wrapper_t ) );
+  memset( ( void* )wrapper, 0, sizeof( *wrapper ) );
   // populate wrapper
   wrapper->callback = callback;
   // debug output

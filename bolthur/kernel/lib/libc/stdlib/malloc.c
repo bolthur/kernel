@@ -18,6 +18,7 @@
  */
 
 #include <stddef.h>
+#include <stdalign.h>
 #include "../../stdlib.h"
 
 /**
@@ -27,5 +28,5 @@
  * @return void* allocated address or NULL
  */
 __allocator void* malloc( size_t size ) {
-  return aligned_alloc( __alignof( size ), size );
+  return aligned_alloc( alignof( max_align_t ), size );
 }

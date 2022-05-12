@@ -138,8 +138,7 @@ rpc_data_queue_entry_ptr_t rpc_data_queue_allocate(
   size_t* rpc_id
 ) {
   // reserve space for data queue structure
-  rpc_data_queue_entry_ptr_t data_queue_block = ( rpc_data_queue_entry_ptr_t )malloc(
-    sizeof( rpc_data_queue_entry_t ) );
+  rpc_data_queue_entry_ptr_t data_queue_block = malloc( sizeof( *data_queue_block ) );
   if ( ! data_queue_block ) {
     // debug output
     #if defined( PRINT_RPC )
@@ -151,7 +150,7 @@ rpc_data_queue_entry_ptr_t rpc_data_queue_allocate(
   // erase
   memset( data_queue_block, 0, sizeof( rpc_data_queue_entry_t ) );
   // reserve space for data_queue_block->data
-  char* data = ( char* )malloc( rpc_data_length );
+  char* data = malloc( rpc_data_length );
   if ( ! data ) {
     // debug output
     #if defined( PRINT_RPC )
@@ -294,7 +293,8 @@ void rpc_data_queue_remove( pid_t process, size_t rpc_id ) {
   if ( found ) {
     // debug output
     #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "found something for removal!\r\n" )
+      DEBUG_OUTPUT( "found something for removal on process %d with id %d!\r\n",
+        process, rpc_id )
     #endif
     list_remove_data( target_process->rpc_data_queue, ( void* )found );
   }

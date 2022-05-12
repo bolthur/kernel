@@ -99,14 +99,13 @@ void task_stack_manager_destroy( task_stack_manager_ptr_t manager ) {
  */
 task_stack_manager_ptr_t task_stack_manager_create( void ) {
   // reserve memory for manager
-  task_stack_manager_ptr_t manager = ( task_stack_manager_ptr_t )malloc(
-    sizeof( task_stack_manager_t ) );
+  task_stack_manager_ptr_t manager = malloc( sizeof( *manager ) );
   // check
   if ( ! manager ) {
     return NULL;
   }
   // prepare
-  memset( ( void* )manager, 0, sizeof( task_stack_manager_t ) );
+  memset( ( void* )manager, 0, sizeof( *manager ) );
   // create tree
   manager->tree = avl_create_tree(
     task_stack_callback,

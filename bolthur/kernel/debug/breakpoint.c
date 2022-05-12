@@ -159,8 +159,7 @@ bool debug_breakpoint_add(
   // create if not existing
   if ( ! entry ) {
     // reserve space for entry
-    entry = ( debug_breakpoint_entry_ptr_t )malloc(
-      sizeof( debug_breakpoint_entry_t ) );
+    entry = malloc( sizeof( *entry ) );
     // handle error
     if ( ! entry ) {
       return false;

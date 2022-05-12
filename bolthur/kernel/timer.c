@@ -151,12 +151,12 @@ timer_callback_entry_ptr_t timer_register_callback(
   size_t timeout
 ) {
   // reserve new entry structure
-  timer_callback_entry_ptr_t entry = ( timer_callback_entry_ptr_t )malloc(
-    sizeof( timer_callback_entry_t )
-  );
+  timer_callback_entry_ptr_t entry = malloc( sizeof( *entry ) );
   if ( ! entry ) {
     return NULL;
   }
+  // clear out
+  memset( entry, 0, sizeof( *entry ) );
   // push back information
   entry->rpc = rpc_num;
   entry->thread = thread;

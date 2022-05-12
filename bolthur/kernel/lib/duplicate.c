@@ -41,6 +41,8 @@ char** duplicate( const char** src ) {
     if ( ! dst ) {
       return NULL;
     }
+    // clear out
+    memset( dst, 0, ( src_count + 1 ) * sizeof( char* ) + len );
     // fill in termination only
     dst[ src_count ] = NULL;
     // return
@@ -77,6 +79,8 @@ char** duplicate( const char** src ) {
   if ( ! dst ) {
     return NULL;
   }
+  // clear out
+  memset( dst, 0, ( src_count + 1 ) * sizeof( char* ) + len );
   // copy stuff over into contiguous buffer
   len = 0;
   for ( count = 0; count < src_count; count++ ) {

@@ -105,13 +105,13 @@ bool phys_platform_init( void ) {
   // determine amount of pages for bitmap
   phys_bitmap_length = memory_amount / PAGE_SIZE / PAGE_PER_ENTRY;
   // reserve space for bitmap and align it to pointer
-  phys_bitmap = ( uint32_t* )aligned_alloc(
+  phys_bitmap = aligned_alloc(
     sizeof( phys_bitmap ),
     phys_bitmap_length * sizeof( uint32_t ) );
   if ( ! phys_bitmap ) {
     return false;
   }
-  phys_bitmap_check = ( uint32_t* )aligned_alloc(
+  phys_bitmap_check = aligned_alloc(
     sizeof( phys_bitmap ),
     phys_bitmap_length * sizeof( uint32_t ) );
   if ( ! phys_bitmap_check ) {
@@ -197,7 +197,7 @@ uint64_t phys_address_to_bus( uint64_t address, size_t size ) {
 bool phys_dma_init( void ) {
   // just 4 MB of dma
   phys_dma_length = DMA_POOL_SIZE / PAGE_SIZE / PAGE_PER_ENTRY * sizeof( uint32_t );
-  phys_dma_bitmap = ( uint32_t* )malloc( phys_dma_length );
+  phys_dma_bitmap = malloc( phys_dma_length );
   if ( ! phys_dma_bitmap ) {
     return false;
   }

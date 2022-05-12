@@ -1083,9 +1083,7 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
   unmap_temporary( tmp, size );
 
   // create new context structure for return
-  virt_context_ptr_t context = ( virt_context_ptr_t )malloc(
-    sizeof( virt_context_t )
-  );
+  virt_context_ptr_t context = malloc( sizeof( *context ) );
   // handle error
   if ( ! context ) {
     // unmap temporary

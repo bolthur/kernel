@@ -90,13 +90,15 @@ rpc_backup_ptr_t rpc_backup_create(
   #endif
 
   // reserve space for backup object
-  rpc_backup_ptr_t backup = malloc( sizeof( rpc_backup_t ) );
+  rpc_backup_ptr_t backup = malloc( sizeof( *backup ) );
   if ( ! backup ) {
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "Unable to reserve memory for backup structure!\r\n" )
     #endif
     return NULL;
   }
+  // clear out
+  memset( backup, 0, sizeof( *backup ) );
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "Reserved backup object: %#p\r\n", backup )

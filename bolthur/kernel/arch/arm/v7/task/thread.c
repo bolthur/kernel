@@ -74,8 +74,7 @@ task_thread_ptr_t task_thread_create(
   #endif
 
   // create thread structure
-  task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
-    sizeof( task_thread_t ) );
+  task_thread_ptr_t thread = malloc( sizeof( *thread ) );
   // check
   if ( ! thread ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
@@ -213,8 +212,7 @@ task_thread_ptr_t task_thread_fork(
   task_thread_ptr_t thread_to_fork
 ) {
   // reserve space for new management structure
-  task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
-    sizeof( task_thread_t ) );
+  task_thread_ptr_t thread = malloc( sizeof( *thread ) );
   // handle error
   if ( ! thread ) {
     return NULL;

@@ -52,7 +52,7 @@ volatile int32_t* ptb_buffer_phys = NULL;
 void mailbox_property_init( void ) {
   // reserve memory if not yet done
   if ( ! ptb_buffer ) {
-    ptb_buffer = ( int32_t* )aligned_alloc( PAGE_SIZE, PAGE_SIZE );
+    ptb_buffer = aligned_alloc( PAGE_SIZE, PAGE_SIZE );
     assert( ptb_buffer )
     ptb_buffer_phys = ( int32_t* )VIRT_2_PHYS( ptb_buffer );
   }

@@ -46,10 +46,8 @@ list_manager_ptr_t list_construct(
   list_cleanup_func_t cleanup,
   list_insert_func_t insert
 ) {
-  list_manager_ptr_t list;
-
   // reserve space for list
-  list = ( list_manager_ptr_t )malloc( sizeof( list_manager_t ) );
+  list_manager_ptr_t list = malloc( sizeof( *list ) );
   // handle error
   if ( ! list ) {
     return NULL;

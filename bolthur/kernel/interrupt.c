@@ -80,13 +80,13 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
   // setup interrupt manager if not done existing
   if ( ! interrupt_manager ) {
     // initialize interrupt manager
-    interrupt_manager = malloc( sizeof( interrupt_manager_t ) );
+    interrupt_manager = malloc( sizeof( *interrupt_manager ) );
     // check
     if ( ! interrupt_manager ) {
       return NULL;
     }
     // prepare memory
-    memset( ( void* )interrupt_manager, 0, sizeof( interrupt_manager_t ) );
+    memset( ( void* )interrupt_manager, 0, sizeof( *interrupt_manager ) );
     // create trees for interrupt types
     interrupt_manager->normal_interrupt = avl_create_tree(
       compare_interrupt_callback, NULL, NULL );
@@ -354,13 +354,13 @@ bool interrupt_register_handler(
   // handle not yet added
   if ( ! node ) {
     // reserve block
-    block = malloc( sizeof( interrupt_block_t ) );
+    block = malloc( sizeof( *block ) );
     // check
     if ( ! block ) {
       return false;
     }
     // prepare memory
-    memset( ( void* )block, 0, sizeof( interrupt_block_t ) );
+    memset( ( void* )block, 0, sizeof( *block ) );
     // debug output
     #if defined( PRINT_INTERRUPT )
       DEBUG_OUTPUT( "Initialized new node at %p\r\n", ( void* )block );
@@ -438,9 +438,7 @@ bool interrupt_register_handler(
     data = process;
   } else {
     // create wrapper
-    interrupt_callback_wrapper_ptr_t wrapper = malloc(
-      sizeof( interrupt_callback_wrapper_t )
-    );
+    interrupt_callback_wrapper_ptr_t wrapper = malloc( sizeof( *wrapper ) );
     // check
     if ( ! wrapper ) {
       return false;

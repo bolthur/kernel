@@ -31,14 +31,12 @@
 __allocator void* calloc( size_t num, size_t size ) {
   // allocate memory
   void* ptr = malloc( num * size );
-  // handle malloc error
+  // handle error
   if ( ! ptr ) {
     return NULL;
   }
-
   // overwrite memory with 0
   ptr = memset( ptr, 0, num * size );
-
   // return prepared memory area
   return ptr;
 }

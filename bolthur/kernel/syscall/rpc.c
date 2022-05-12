@@ -118,7 +118,7 @@ void syscall_rpc_raise( void* context ) {
   // create data duplicate
   char* dup_data = NULL;
   if ( data && length ) {
-    dup_data = ( char* )malloc( sizeof( char ) * length );
+    dup_data = malloc( sizeof( char ) * length );
     if ( ! dup_data ) {
       // debug output
       #if defined( PRINT_SYSCALL )
@@ -242,7 +242,7 @@ void syscall_rpc_ret( void* context ) {
     return;
   }
   // create data duplicate
-  char* dup_data = ( char* )malloc( sizeof( char ) * length );
+  char* dup_data = malloc( sizeof( char ) * length );
   if ( ! dup_data ) {
     // debug output
     #if defined( PRINT_SYSCALL )

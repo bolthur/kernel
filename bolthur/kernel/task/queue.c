@@ -94,14 +94,13 @@ task_priority_queue_ptr_t task_queue_get_queue(
   // handle not yet added
   if ( ! node ) {
     // reserve block
-    queue = ( task_priority_queue_ptr_t )malloc(
-      sizeof( task_priority_queue_t ) );
+    queue = malloc( sizeof( *queue ) );
     // check parameter
     if ( ! queue ) {
       return NULL;
     }
     // prepare memory
-    memset( ( void* )queue, 0, sizeof( task_priority_queue_t ) );
+    memset( queue, 0, sizeof( *queue ) );
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT( "Initialized new node at %p\r\n", ( void* )queue )
