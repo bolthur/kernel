@@ -29,12 +29,12 @@
 static uint32_t nested_svc = 0;
 
 /**
- * @fn void vector_svc_handler(cpu_register_context_ptr_t)
+ * @fn void vector_svc_handler(cpu_register_context_t*)
  * @brief Software interrupt exception handler
  *
  * @param cpu current cpu context active before svc
  */
-void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
+void vector_svc_handler( cpu_register_context_t* cpu ) {
   // nesting
   nested_svc++;
   assert( nested_svc < INTERRUPT_NESTED_MAX )
@@ -49,7 +49,7 @@ void vector_svc_handler( cpu_register_context_ptr_t cpu ) {
     DEBUG_OUTPUT( "origin = %d\r\n", origin )
   #endif
   // get context
-  INTERRUPT_DETERMINE_CONTEXT( cpu )
+  cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "Entering software_interrupt_handler( %p )\r\n",

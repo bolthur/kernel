@@ -65,8 +65,8 @@ void syscall_kernel_puts( void* context ) {
     DEBUG_OUTPUT( "Allocate memory for unsafe copy!\r\n" )
   #endif
   // allocate space for duplicate and check for error
-  char* dup = ( char* )malloc( sizeof( char ) * ( len + 1 ) );
-  if ( ! dup ) {
+  char* data_dup = ( char* )malloc( sizeof( char ) * ( len + 1 ) );
+  if ( ! data_dup ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Allocation failed!\r\n" )
@@ -78,25 +78,25 @@ void syscall_kernel_puts( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "Clearing allocated memory!\r\n" )
   #endif
-  memset( dup, 0, sizeof( char ) * ( len + 1 ) );
+  memset( data_dup, 0, sizeof( char ) * ( len + 1 ) );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "Unsafe copy!\r\n" )
   #endif
   // copy over
-  if ( ! memcpy_unsafe_src( dup, str, len ) ) {
+  if ( ! memcpy_unsafe_src( data_dup, str, len ) ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Unsafe copy failed!\r\n" )
     #endif
-    free( dup );
+    free( data_dup );
     syscall_populate_error( context, ( size_t )-EIO );
     return;
   }
   // print somewhere
-  int written = printf( "%.*s", len, dup );
-  // free dup and return written amount
-  free( dup );
+  int written = printf( "%.*s", len, data_dup );
+  // free data_dup and return written amount
+  free( data_dup );
   // print until end of string or len
   syscall_populate_success( context, ( size_t )written );
 }

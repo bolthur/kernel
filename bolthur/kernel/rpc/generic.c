@@ -31,7 +31,7 @@
 #endif
 
 /**
- * @fn rpc_backup_ptr_t rpc_generic_raise(task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t, bool)
+ * @fn rpc_backup_t* rpc_generic_raise(task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool)
  * @brief Raise an rpc in target from source
  *
  * @param source
@@ -45,13 +45,13 @@
  * @param disable_data
  * @return
  */
-rpc_backup_ptr_t rpc_generic_raise(
-  task_thread_ptr_t source,
-  task_process_ptr_t target,
+rpc_backup_t* rpc_generic_raise(
+  task_thread_t* source,
+  task_process_t* target,
   size_t type,
   void* data,
   size_t length,
-  task_thread_ptr_t target_thread,
+  task_thread_t* target_thread,
   bool sync,
   size_t origin_data_id,
   bool disable_data
@@ -63,7 +63,7 @@ rpc_backup_ptr_t rpc_generic_raise(
       source, target, data, length, target_thread )
   #endif
   // backup necessary stuff
-  rpc_backup_ptr_t backup = rpc_backup_create(
+  rpc_backup_t* backup = rpc_backup_create(
     source,
     target,
     type,
@@ -96,13 +96,13 @@ rpc_backup_ptr_t rpc_generic_raise(
 }
 
 /**
- * @fn bool rpc_generic_setup(task_process_ptr_t)
+ * @fn bool rpc_generic_setup(task_process_t*)
  * @brief Setup rpc queue
  *
  * @param proc
  * @return
  */
-bool rpc_generic_setup( task_process_ptr_t proc ) {
+bool rpc_generic_setup( task_process_t* proc ) {
   if ( ! rpc_data_queue_setup( proc ) ) {
     return false;
   }
@@ -114,13 +114,13 @@ bool rpc_generic_setup( task_process_ptr_t proc ) {
 }
 
 /**
- * @fn bool rpc_generic_ready(task_process_ptr_t)
+ * @fn bool rpc_generic_ready(task_process_t*)
  * @brief Check if process is rpc ready
  *
  * @param proc
  * @return
  */
-bool rpc_generic_ready( task_process_ptr_t proc ) {
+bool rpc_generic_ready( task_process_t* proc ) {
   return rpc_data_queue_ready( proc )
     && rpc_queue_ready( proc )
     && proc->rpc_handler
@@ -128,12 +128,12 @@ bool rpc_generic_ready( task_process_ptr_t proc ) {
 }
 
 /**
- * @fn void rpc_generic_destroy(task_process_ptr_t)
+ * @fn void rpc_generic_destroy(task_process_t*)
  * @brief Destroy rpc queue
  *
  * @param proc
  */
-void rpc_generic_destroy( task_process_ptr_t proc ) {
+void rpc_generic_destroy( task_process_t* proc ) {
   rpc_data_queue_destroy( proc );
   rpc_queue_destroy( proc );
 }

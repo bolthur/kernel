@@ -42,7 +42,7 @@ void rpc_handle_remove(
   __unused size_t response_info
 ) {
   vfs_remove_response_t response = { .status = -EINVAL };
-  vfs_remove_request_ptr_t request = malloc( sizeof( vfs_remove_request_t ) );
+  vfs_remove_request_t* request = malloc( sizeof( vfs_remove_request_t ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;

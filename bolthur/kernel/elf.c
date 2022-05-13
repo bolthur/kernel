@@ -110,14 +110,14 @@ bool elf_check( uintptr_t elf ) {
 }
 
 /**
- * @fn bool load_program_header(uintptr_t, task_process_ptr_t)
+ * @fn bool load_program_header(uintptr_t, task_process_t*)
  * @brief Internal helper to parse and load program header
  *
  * @param elf elf image address
  * @param process process
  * @return
  */
-static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
+static bool load_program_header( uintptr_t elf, task_process_t* process ) {
   // get header
   #if defined( ELF32 )
     Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
@@ -306,14 +306,14 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
 }
 
 /**
- * @fn uintptr_t elf_load(uintptr_t, task_process_ptr_t)
+ * @fn uintptr_t elf_load(uintptr_t, task_process_t*)
  * @brief Method to load simple elf for process ( used for init only )
  *
  * @param elf address to image
  * @param process process where it shall be loaded into
  * @return
  */
-uintptr_t elf_load( uintptr_t elf, task_process_ptr_t process ) {
+uintptr_t elf_load( uintptr_t elf, task_process_t* process ) {
   // check for elf
   if ( ! elf_check( elf ) ) {
     return 0;

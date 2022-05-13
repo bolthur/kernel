@@ -86,7 +86,7 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   EARLY_STARTUP_PRINT( "Allocate space for add device\r\n" )
   // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
+  vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
     close( console_manager_fd );
     close( output_driver_fd );

@@ -193,12 +193,12 @@ static void rpc_handle_read(
     read_error_return( type, -EINVAL );
     return;
   }
-  vfs_read_request_ptr_t request = malloc( sizeof( vfs_read_request_t ) );
+  vfs_read_request_t* request = malloc( sizeof( vfs_read_request_t ) );
   if ( ! request ) {
     read_error_return( type, -ENOMEM );
     return;
   }
-  vfs_read_response_ptr_t response = malloc( sizeof( vfs_read_response_t ) );
+  vfs_read_response_t* response = malloc( sizeof( vfs_read_response_t ) );
   if ( ! response ) {
     read_error_return( type, -ENOMEM );
     free( request );
@@ -523,7 +523,7 @@ int main( int argc, char* argv[] ) {
   EARLY_STARTUP_PRINT( "Started with pid %d\r\n", pid );
 
   // allocate message structure
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
+  vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
   // ensure first process to be started
   if ( ! msg ) {
     EARLY_STARTUP_PRINT( "Allocation of message structure failed\r\n" )

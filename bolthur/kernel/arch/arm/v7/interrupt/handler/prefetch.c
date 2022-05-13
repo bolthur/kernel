@@ -47,7 +47,7 @@ static uint32_t nested_prefetch_abort = 0;
 #if ! defined( REMOTE_DEBUG )
 noreturn
 #endif
-void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
+void vector_prefetch_abort_handler( cpu_register_context_t* cpu ) {
   // nesting
   nested_prefetch_abort++;
   assert( nested_prefetch_abort < INTERRUPT_NESTED_MAX )
@@ -61,14 +61,15 @@ void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "origin = %d\r\n", origin )
   #endif
+  /// FIXME: COMMENT IN AGAIN ONCE USED!
   // get context
-  INTERRUPT_DETERMINE_CONTEXT( cpu )
+  //cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "prefetch abort while accessing %p\r\n",
       ( void* )virt_prefetch_fault_address() )
     DEBUG_OUTPUT( "fault_status = %#x\r\n", ( void* )virt_prefetch_status() )
-    DUMP_REGISTER( cpu )
+    DUMP_REGISTER( interrupt_get_context( cpu ) )
     if ( EVENT_ORIGIN_USER == origin ) {
       DEBUG_OUTPUT( "process id: %d\r\n",
         task_thread_current_thread->process->id )

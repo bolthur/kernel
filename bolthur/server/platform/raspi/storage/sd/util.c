@@ -54,7 +54,7 @@ void* util_prepare_mmio_sequence( size_t count, size_t* total ) {
   }
   // allocate
   size_t tmp_total = count * sizeof( iomem_mmio_entry_t );
-  iomem_mmio_entry_ptr_t tmp = malloc( count * sizeof( iomem_mmio_entry_t ) );
+  iomem_mmio_entry_t* tmp = malloc( count * sizeof( iomem_mmio_entry_t ) );
   if ( ! tmp ) {
     return NULL;
   }
@@ -87,7 +87,7 @@ void* util_prepare_mailbox( size_t count, size_t* total ) {
   }
   // allocate
   size_t tmp_total = count * sizeof( uint32_t );
-  iomem_mmio_entry_ptr_t tmp = malloc( tmp_total );
+  iomem_mmio_entry_t* tmp = malloc( tmp_total );
   if ( ! tmp ) {
     return NULL;
   }
@@ -113,13 +113,13 @@ void* util_prepare_mailbox( size_t count, size_t* total ) {
 bool util_update_card_detect( int fd, bool* absent, bool* ejected ) {
   return true;
   // allocate function parameter block
-  iomem_gpio_status_ptr_t status = malloc( sizeof( iomem_gpio_status_t ) );
+  iomem_gpio_status_t* status = malloc( sizeof( iomem_gpio_status_t ) );
   if ( ! status ) {
     // return error
     return false;
   }
   // allocate function parameter block
-  iomem_gpio_event_ptr_t event = malloc( sizeof( iomem_gpio_event_t ) );
+  iomem_gpio_event_t* event = malloc( sizeof( iomem_gpio_event_t ) );
   if ( ! event ) {
     free( status );
     // return error

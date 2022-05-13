@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "collection/list.h"
+#include "../../library/collection/list/list.h"
 #include "../libterminal.h"
 
 #if ! defined( _TERMINAL_H )
@@ -27,7 +27,7 @@
 #define TERMINAL_MAX_PATH 32
 #define TERMINAL_MAX_NUM 7
 
-struct terminal {
+typedef struct {
   char path[ TERMINAL_MAX_PATH ];
   uint32_t col;
   uint32_t row;
@@ -39,11 +39,9 @@ struct terminal {
   size_t surface_id;
   size_t surface_memory_id;
   uint32_t pitch;
-};
-typedef struct terminal terminal_t;
-typedef struct terminal* terminal_ptr_t;
+} terminal_t;
 
-extern list_manager_ptr_t terminal_list;
+extern list_manager_t* terminal_list;
 
 bool terminal_init( void );
 

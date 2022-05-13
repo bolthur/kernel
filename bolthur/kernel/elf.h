@@ -117,7 +117,7 @@ typedef struct {
 
 bool elf_check( uintptr_t );
 bool elf_arch_check( uintptr_t );
-uintptr_t elf_load( uintptr_t, task_process_ptr_t );
+uintptr_t elf_load( uintptr_t, task_process_t* );
 size_t elf_image_size( uintptr_t );
 
 #endif

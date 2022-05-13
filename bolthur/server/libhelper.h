@@ -29,7 +29,7 @@
 #define _LIBHELPER_H
 
 /**
- * @fn void send_vfs_add_request(vfs_add_request_ptr_t, size_t, unsigned int)
+ * @fn void send_vfs_add_request(vfs_add_request_t*, size_t, unsigned int)
  * @brief Helper to send add request with wait for response
  *
  * @param msg message to send
@@ -37,11 +37,11 @@
  * @param wait amount of seconds to sleep on rpc raise error
  */
 __maybe_unused static void send_vfs_add_request(
-  vfs_add_request_ptr_t msg,
+  vfs_add_request_t* msg,
   size_t size,
   unsigned int wait
 ) {
-  vfs_add_response_ptr_t response = malloc( sizeof( vfs_add_response_t ) );
+  vfs_add_response_t* response = malloc( sizeof( vfs_add_response_t ) );
   if ( ! response || ! msg ) {
     exit( -1 );
   }

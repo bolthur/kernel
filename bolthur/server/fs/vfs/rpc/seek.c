@@ -42,12 +42,12 @@ void rpc_handle_seek(
   __unused size_t response_info
 ) {
   vfs_seek_response_t response = { .position = -EINVAL };
-  vfs_seek_request_ptr_t request = malloc( sizeof( vfs_seek_request_t ) );
+  vfs_seek_request_t* request = malloc( sizeof( vfs_seek_request_t ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  handle_container_ptr_t container;
+  handle_container_t* container;
   // clear variables
   memset( request, 0, sizeof( vfs_seek_request_t ) );
   // handle no data

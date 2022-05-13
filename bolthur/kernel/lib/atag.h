@@ -25,27 +25,16 @@
 #include <stdbool.h>
 
 typedef struct atag_header atag_header_t;
-typedef struct atag_header *atag_header_ptr_t;
 typedef struct atag_core atag_core_t;
-typedef struct atag_core *atag_core_ptr_t;
 typedef struct atag_mem atag_mem_t;
-typedef struct atag_mem *atag_mem_ptr_t;
 typedef struct atag_initrd2 atag_initrd2_t;
-typedef struct atag_initrd2 *atag_initrd2_ptr_t;
 typedef struct atag_cmdline atag_cmdline_t;
-typedef struct atag_cmdline *atag_cmdline_ptr_t;
 typedef struct atag_ramdisk atag_ramdisk_t;
-typedef struct atag_ramdisk *atag_ramdisk_ptr_t;
 typedef struct atag_videotext atag_videotext_t;
-typedef struct atag_videotext *atag_videotext_ptr_t;
 typedef struct atag_serial atag_serial_t;
-typedef struct atag_serial *atag_serial_ptr_t;
 typedef struct atag_revision atag_revision_t;
-typedef struct atag_revision *atag_revision_ptr_t;
 typedef struct atag_videolfb atag_videolfb_t;
-typedef struct atag_videolfb *atag_videolfb_ptr_t;
 typedef struct atag atag_t;
-typedef struct atag *atag_ptr_t;
 
 typedef enum {
   ATAG_TAG_NONE = 0x00000000,
@@ -145,8 +134,8 @@ struct atag {
   };
 };
 
-atag_ptr_t atag_next( atag_ptr_t );
+atag_t* atag_next( atag_t* );
 bool atag_check( uintptr_t );
-atag_ptr_t atag_find( atag_ptr_t, atag_tag_t );
+atag_t* atag_find( atag_t*, atag_tag_t );
 
 #endif

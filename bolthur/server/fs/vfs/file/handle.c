@@ -22,12 +22,12 @@
 #include <stdlib.h>
 #include <errno.h>
 #include "handle.h"
-#include "../collection/avl.h"
+#include "../../../../library/collection/avl/avl.h"
 
 /**
  * @brief tree managing file handles
  */
-avl_tree_ptr_t handle_process_tree = NULL;
+avl_tree_t* handle_process_tree = NULL;
 
 /**
  * @brief Compare handle callback necessary for avl tree insert / delete
@@ -37,11 +37,11 @@ avl_tree_ptr_t handle_process_tree = NULL;
  * @return int32_t
  */
 static int32_t compare_handle(
-  const avl_node_ptr_t node_a,
-  const avl_node_ptr_t node_b
+  const avl_node_t* node_a,
+  const avl_node_t* node_b
 ) {
-  handle_container_ptr_t container_a = HANDLE_GET_CONTAINER( node_a );
-  handle_container_ptr_t container_b = HANDLE_GET_CONTAINER( node_b );
+  handle_container_t* container_a = HANDLE_GET_CONTAINER( node_a );
+  handle_container_t* container_b = HANDLE_GET_CONTAINER( node_b );
   // return 0 if equal
   if ( container_a->handle == container_b->handle ) {
     return 0;
@@ -58,11 +58,11 @@ static int32_t compare_handle(
  * @return int32_t
  */
 static int32_t lookup_handle(
-  const avl_node_ptr_t node,
+  const avl_node_t* node,
   const void* value
 ) {
   int handle = ( int )value;
-  handle_container_ptr_t container = HANDLE_GET_CONTAINER( node );
+  handle_container_t* container = HANDLE_GET_CONTAINER( node );
   // return 0 if equal
   if ( container->handle == handle ) {
     return 0;
@@ -72,13 +72,13 @@ static int32_t lookup_handle(
 }
 
 /**
- * @fn void cleanup_handle(avl_node_ptr_t)
+ * @fn void cleanup_handle(avl_node_t*)
  * @brief handle cleanup
  *
  * @param node
  */
-static void cleanup_handle( avl_node_ptr_t node ) {
-  handle_container_ptr_t item = HANDLE_GET_CONTAINER( node );
+static void cleanup_handle( avl_node_t* node ) {
+  handle_container_t* item = HANDLE_GET_CONTAINER( node );
   free( item );
 }
 
@@ -90,11 +90,11 @@ static void cleanup_handle( avl_node_ptr_t node ) {
  * @return int32_t
  */
 static int32_t compare_process(
-  const avl_node_ptr_t node_a,
-  const avl_node_ptr_t node_b
+  const avl_node_t* node_a,
+  const avl_node_t* node_b
 ) {
-  handle_pid_ptr_t container_a = HANDLE_GET_PID( node_a );
-  handle_pid_ptr_t container_b = HANDLE_GET_PID( node_b );
+  handle_pid_t* container_a = HANDLE_GET_PID( node_a );
+  handle_pid_t* container_b = HANDLE_GET_PID( node_b );
   // return 0 if equal
   if ( container_a->pid == container_b->pid ) {
     return 0;
@@ -111,11 +111,11 @@ static int32_t compare_process(
  * @return int32_t
  */
 static int32_t lookup_process(
-  const avl_node_ptr_t node,
+  const avl_node_t* node,
   const void* value
 ) {
   pid_t pid = ( int )value;
-  handle_pid_ptr_t container = HANDLE_GET_PID( node );
+  handle_pid_t* container = HANDLE_GET_PID( node );
   // return 0 if equal
   if ( container->pid == pid ) {
     return 0;
@@ -125,13 +125,13 @@ static int32_t lookup_process(
 }
 
 /**
- * @fn void cleanup_process(avl_node_ptr_t)
+ * @fn void cleanup_process(avl_node_t*)
  * @brief handle cleanup
  *
  * @param node
  */
-static void cleanup_process( avl_node_ptr_t node ) {
-  handle_pid_ptr_t item = HANDLE_GET_PID( node );
+static void cleanup_process( avl_node_t* node ) {
+  handle_pid_t* item = HANDLE_GET_PID( node );
   free( item );
 }
 
@@ -140,7 +140,7 @@ static void cleanup_process( avl_node_ptr_t node ) {
  *
  * @return
  */
-static int generate_handle( handle_pid_ptr_t handle ) {
+static int generate_handle( handle_pid_t* handle ) {
   return handle->handle++;
 }
 
@@ -158,16 +158,16 @@ bool handle_init( void ) {
 }
 
 /**
- * @fn handle_pid_ptr_t handle_generate_container(pid_t)
+ * @fn handle_pid_t* handle_generate_container(pid_t)
  * @brief Generates container if not existing or returns current element
  *
  * @param process
  * @return
  */
-handle_pid_ptr_t handle_generate_container( pid_t process ) {
-  handle_pid_ptr_t process_handle;
+handle_pid_t* handle_generate_container( pid_t process ) {
+  handle_pid_t* process_handle;
   // get handle tree
-  avl_node_ptr_t found = avl_find_by_data(
+  avl_node_t* found = avl_find_by_data(
     handle_process_tree,
     ( void* )process );
   // return if found
@@ -207,7 +207,7 @@ handle_pid_ptr_t handle_generate_container( pid_t process ) {
 }
 
 /**
- * @fn bool handle_duplicate(handle_container_ptr_t, handle_pid_ptr_t)
+ * @fn bool handle_duplicate(handle_container_t*, handle_pid_t*)
  * @brief
  *
  * @param container
@@ -215,11 +215,11 @@ handle_pid_ptr_t handle_generate_container( pid_t process ) {
  * @return
  */
 bool handle_duplicate(
-  handle_container_ptr_t container,
-  handle_pid_ptr_t new_pid_container
+  handle_container_t* container,
+  handle_pid_t* new_pid_container
 ) {
   // allocate new structure
-  handle_container_ptr_t new_container = malloc( sizeof( handle_container_t ) );
+  handle_container_t* new_container = malloc( sizeof( handle_container_t ) );
   if ( ! new_container ) {
     return false;
   }
@@ -249,15 +249,15 @@ bool handle_duplicate(
  * @return
  */
 int handle_generate(
-  handle_container_ptr_t* container,
+  handle_container_t** container,
   pid_t process,
-  __unused vfs_node_ptr_t parent,
-  vfs_node_ptr_t target,
+  __unused vfs_node_t* parent,
+  vfs_node_t* target,
   const char* path,
   int flags,
   int mode
 ) {
-  handle_pid_ptr_t process_handle = handle_generate_container( process );
+  handle_pid_t* process_handle = handle_generate_container( process );
   if ( ! process_handle ) {
     return -ENOMEM;
   }
@@ -355,7 +355,7 @@ int handle_generate(
 
     // check for handle exists to use then the generate method,
     // which should not happen at all
-    handle_container_ptr_t tmp_handle_container;
+    handle_container_t* tmp_handle_container;
     // try to get handle information
     int tmp_handle_result = handle_get(
       &tmp_handle_container,
@@ -388,9 +388,9 @@ int handle_generate(
  * @param process
  */
 void handle_destory_all( pid_t process ) {
-  handle_pid_ptr_t process_handle;
+  handle_pid_t* process_handle;
   // get handle tree
-  avl_node_ptr_t found = avl_find_by_data(
+  avl_node_t* found = avl_find_by_data(
     handle_process_tree,
     ( void* )process );
   // create if not existing
@@ -413,9 +413,9 @@ void handle_destory_all( pid_t process ) {
  * @return
  */
 int handle_destory( pid_t process, int handle ) {
-  handle_pid_ptr_t process_handle;
+  handle_pid_t* process_handle;
   // get handle tree
-  avl_node_ptr_t found = avl_find_by_data(
+  avl_node_t* found = avl_find_by_data(
     handle_process_tree,
     ( void* )process );
   // create if not existing
@@ -433,7 +433,7 @@ int handle_destory( pid_t process, int handle ) {
     return -EBADF;
   }
   // get structure
-  handle_container_ptr_t container = HANDLE_GET_CONTAINER( found );
+  handle_container_t* container = HANDLE_GET_CONTAINER( found );
   // remove from tree
   avl_remove_by_node( process_handle->tree, &container->node );
   // return success
@@ -448,10 +448,10 @@ int handle_destory( pid_t process, int handle ) {
  * @param handle
  * @return
  */
-int handle_get( handle_container_ptr_t* container, pid_t process, int handle ) {
-  handle_pid_ptr_t process_handle;
+int handle_get( handle_container_t** container, pid_t process, int handle ) {
+  handle_pid_t* process_handle;
   // get handle tree
-  avl_node_ptr_t found = avl_find_by_data(
+  avl_node_t* found = avl_find_by_data(
     handle_process_tree,
     ( void* )process );
   // create if not existing
@@ -473,15 +473,15 @@ int handle_get( handle_container_ptr_t* container, pid_t process, int handle ) {
 }
 
 /**
- * @fn handle_pid_ptr_t handle_get_process_container(pid_t)
+ * @fn handle_pid_t* handle_get_process_container(pid_t)
  * @brief
  *
  * @param process
  * @return
  */
-handle_pid_ptr_t handle_get_process_container( pid_t process ) {
+handle_pid_t* handle_get_process_container( pid_t process ) {
   // get handle tree
-  avl_node_ptr_t found = avl_find_by_data(
+  avl_node_t* found = avl_find_by_data(
     handle_process_tree,
     ( void* )process );
   // create if not existing

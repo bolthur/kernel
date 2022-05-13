@@ -117,7 +117,7 @@ __bootstrap void v7_short_startup_map( uintptr_t phys, uintptr_t virt ) {
   uint32_t x = virt >> 20;
   uint32_t y = phys >> 20;
 
-  sd_context_section_ptr_t sec = &initial_context.section[ x ];
+  sd_context_section_t* sec = &initial_context.section[ x ];
   sec->data.type = SD_TTBR_TYPE_SECTION;
   sec->data.execute_never = 0;
   sec->data.access_permission_0 = SD_MAC_APX0_PRIVILEGED_RW;
@@ -470,7 +470,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
 }
 
 /**
- * @fn uint64_t v7_short_create_table(virt_context_ptr_t, uintptr_t, uint64_t)
+ * @fn uint64_t v7_short_create_table(virt_context_t*, uintptr_t, uint64_t)
  * @brief Internal v7 short descriptor create table function
  *
  * @param ctx context to create table for
@@ -479,7 +479,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
  * @return address of created and prepared table
  */
 uint64_t v7_short_create_table(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t addr,
   uint64_t table
 ) {
@@ -629,7 +629,7 @@ uint64_t v7_short_create_table(
 }
 
 /**
- * @fn bool v7_short_map(virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t)
+ * @fn bool v7_short_map(virt_context_t*, uintptr_t, uint64_t, virt_memory_type_t, uint32_t)
  * @brief Internal v7 short descriptor mapping function
  *
  * @param ctx pointer to page context
@@ -640,7 +640,7 @@ uint64_t v7_short_create_table(
  * @return
  */
 bool v7_short_map(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t vaddr,
   uint64_t paddr,
   virt_memory_type_t memory,
@@ -756,7 +756,7 @@ bool v7_short_map(
 }
 
 /**
- * @fn bool v7_short_map_random(virt_context_ptr_t, uintptr_t, virt_memory_type_t, uint32_t)
+ * @fn bool v7_short_map_random(virt_context_t*, uintptr_t, virt_memory_type_t, uint32_t)
  * @brief Internal v7 short descriptor random mapping function
  *
  * @param ctx pointer to page context
@@ -766,7 +766,7 @@ bool v7_short_map(
  * @return
  */
 bool v7_short_map_random(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t vaddr,
   virt_memory_type_t memory,
   uint32_t page
@@ -794,7 +794,7 @@ uintptr_t v7_short_map_temporary( uint64_t paddr, size_t size ) {
 }
 
 /**
- * @fn bool v7_short_unmap(virt_context_ptr_t, uintptr_t, bool)
+ * @fn bool v7_short_unmap(virt_context_t*, uintptr_t, bool)
  * @brief Internal v7 short descriptor unmapping function
  *
  * @param ctx pointer to page context
@@ -802,7 +802,7 @@ uintptr_t v7_short_map_temporary( uint64_t paddr, size_t size ) {
  * @param free_phys flag to free also physical memory
  * @return
  */
-bool v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
+bool v7_short_unmap( virt_context_t* ctx, uintptr_t vaddr, bool free_phys ) {
   // get page index
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( vaddr );
 
@@ -864,13 +864,13 @@ void v7_short_unmap_temporary( uintptr_t addr, size_t size ) {
 }
 
 /**
- * @fn bool v7_short_set_context(virt_context_ptr_t)
+ * @fn bool v7_short_set_context(virt_context_t*)
  * @brief Internal v7 short descriptor set context function
  *
  * @param ctx context structure
  * @return
  */
-bool v7_short_set_context( virt_context_ptr_t ctx ) {
+bool v7_short_set_context( virt_context_t* ctx ) {
   // handle invalid
   if (
     VIRT_CONTEXT_TYPE_USER != ctx->type
@@ -966,13 +966,13 @@ void v7_short_flush_address( uintptr_t addr ) {
 }
 
 /**
- * @fn bool v7_short_prepare_temporary(virt_context_ptr_t)
+ * @fn bool v7_short_prepare_temporary(virt_context_t*)
  * @brief Helper to reserve temporary area for mappings
  *
  * @param ctx context structure
  * @return
  */
-bool v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
+bool v7_short_prepare_temporary( virt_context_t* ctx ) {
   // ensure kernel for temporary
   if( VIRT_CONTEXT_TYPE_KERNEL != ctx->type ) {
     return false;
@@ -1031,13 +1031,13 @@ bool v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
 }
 
 /**
- * @fn virt_context_ptr_t v7_short_create_context(virt_context_type_t)
+ * @fn virt_context_t* v7_short_create_context(virt_context_type_t)
  * @brief Create context for v7 short descriptor
  *
  * @param type context type to create
  * @return
  */
-virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
+virt_context_t* v7_short_create_context( virt_context_type_t type ) {
   size_t size;
   size_t alignment;
 
@@ -1083,7 +1083,7 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
   unmap_temporary( tmp, size );
 
   // create new context structure for return
-  virt_context_ptr_t context = malloc( sizeof( *context ) );
+  virt_context_t* context = malloc( sizeof( *context ) );
   // handle error
   if ( ! context ) {
     // unmap temporary
@@ -1254,14 +1254,14 @@ bool v7_short_fork_global_directory(
 }
 
 /**
- * @fn virt_context_ptr_t v7_short_fork_context(virt_context_ptr_t)
+ * @fn virt_context_t* v7_short_fork_context(virt_context_t*)
  * @brief Fork virtual context without long page address extension
  * @param ctx context to fork
  * @return forked context or NULL
  */
-virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t ctx ) {
+virt_context_t* v7_short_fork_context( virt_context_t* ctx ) {
   // create new context
-  virt_context_ptr_t forked = virt_create_context( ctx->type );
+  virt_context_t* forked = virt_create_context( ctx->type );
   if ( ! forked ) {
     return NULL;
   }
@@ -1372,14 +1372,14 @@ bool v7_short_destroy_global_directory( sd_context_half_t* ctx ) {
 }
 
 /**
- * @fn bool v7_short_destroy_context(virt_context_ptr_t, bool)
+ * @fn bool v7_short_destroy_context(virt_context_t*, bool)
  * @brief Destroy context for v7 short descriptor
  *
  * @param ctx context to destroy
  * @param unmap_only
  * @return
  */
-bool v7_short_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
+bool v7_short_destroy_context( virt_context_t* ctx, bool unmap_only ) {
   // check context to be not active
   if (
     (
@@ -1452,14 +1452,14 @@ void v7_short_prepare( void ) {
 }
 
 /**
- * @fn bool v7_short_is_mapped_in_context(virt_context_ptr_t, uintptr_t)
+ * @fn bool v7_short_is_mapped_in_context(virt_context_t*, uintptr_t)
  * @brief Checks whether address is mapped or not
  *
  * @param ctx
  * @param addr
  * @return
  */
-bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
+bool v7_short_is_mapped_in_context( virt_context_t* ctx, uintptr_t addr ) {
   // get page index
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( addr );
   bool mapped = false;
@@ -1500,7 +1500,7 @@ bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
 }
 
 /**
- * @fn uint64_t v7_short_get_mapped_address_in_context(virt_context_ptr_t, uintptr_t)
+ * @fn uint64_t v7_short_get_mapped_address_in_context(virt_context_t*, uintptr_t)
  * @brief Get mapped physical address
  *
  * @param ctx
@@ -1508,7 +1508,7 @@ bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
  * @return
  */
 uint64_t v7_short_get_mapped_address_in_context(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t addr
 ) {
   // get page index

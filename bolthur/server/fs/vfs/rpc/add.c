@@ -62,7 +62,7 @@ void rpc_handle_add(
     return;
   }
   // allocate space for request
-  vfs_add_request_ptr_t request = malloc( data_size );
+  vfs_add_request_t* request = malloc( data_size );
   if ( ! request ) {
     res.status = -ENOMEM;
     bolthur_rpc_return( type, &res, sizeof( res ), NULL );
@@ -80,7 +80,7 @@ void rpc_handle_add(
     return;
   }
   // check if existing
-  vfs_node_ptr_t node = vfs_node_by_path( request->file_path );
+  vfs_node_t* node = vfs_node_by_path( request->file_path );
   if ( node ) {
     // prepare response
     res.status = VFS_ADD_ALREADY_EXIST;

@@ -90,14 +90,14 @@ static uint32_t apply_shift(
 }
 
 /**
- * @fn uint32_t read_helper(iomem_mmio_entry_ptr_t, uint32_t*)
+ * @fn uint32_t read_helper(iomem_mmio_entry_t*, uint32_t*)
  * @brief read helper
  *
  * @param request
  * @param val
  * @return
  */
-static uint32_t read_helper( iomem_mmio_entry_ptr_t request, uint32_t* val ) {
+static uint32_t read_helper( iomem_mmio_entry_t* request, uint32_t* val ) {
   // read value
   uint32_t value = mmio_read( request->offset );
   #if defined( RPC_ENABLE_DEBUG )
@@ -214,7 +214,7 @@ void rpc_handle_mmio_perform(
   // allocate space for response
   size_t response_size = data_size * sizeof( char )
     + sizeof( vfs_ioctl_perform_response_t );
-  vfs_ioctl_perform_response_ptr_t response = malloc( response_size );
+  vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );

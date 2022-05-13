@@ -74,7 +74,7 @@ void rpc_handle_gpio_set_detect(
     return;
   }
   // allocate space for request
-  iomem_gpio_detect_ptr_t request = malloc( data_size );
+  iomem_gpio_detect_t* request = malloc( data_size );
   if ( ! request ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );

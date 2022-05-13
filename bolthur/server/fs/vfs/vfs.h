@@ -20,14 +20,13 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
-#include "collection/list.h"
+#include "../../../library/collection/list/list.h"
 
 #if !defined( _VFS_H )
 #define _VFS_H
 
 // forward declaration necessary due to circular referencing
 typedef struct vfs_node vfs_node_t;
-typedef struct vfs_node *vfs_node_ptr_t;
 
 // structure itself
 struct vfs_node {
@@ -35,18 +34,18 @@ struct vfs_node {
   char *name;
   char* target;
   struct stat* st;
-  list_manager_ptr_t children;
-  list_manager_ptr_t handle;
-  vfs_node_ptr_t parent;
+  list_manager_t* children;
+  list_manager_t* handle;
+  vfs_node_t* parent;
 };
 
 // functions
-vfs_node_ptr_t vfs_setup( pid_t );
-void vfs_destroy( vfs_node_ptr_t );
-void vfs_dump( vfs_node_ptr_t, const char* );
-bool vfs_add_path( vfs_node_ptr_t, pid_t, const char*, char*, struct stat );
-vfs_node_ptr_t vfs_node_by_name( vfs_node_ptr_t, const char* );
-vfs_node_ptr_t vfs_node_by_path( const char* );
-char* vfs_path_bottom_up( vfs_node_ptr_t );
+vfs_node_t* vfs_setup( pid_t );
+void vfs_destroy( vfs_node_t* );
+void vfs_dump( vfs_node_t*, const char* );
+bool vfs_add_path( vfs_node_t*, pid_t, const char*, char*, struct stat );
+vfs_node_t* vfs_node_by_name( vfs_node_t*, const char* );
+vfs_node_t* vfs_node_by_path( const char* );
+char* vfs_path_bottom_up( vfs_node_t* );
 
 #endif

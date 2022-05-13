@@ -46,7 +46,7 @@ void rpc_handle_open(
   __unused size_t response_info
 ) {
   vfs_open_response_t response = { .handle = -EINVAL };
-  vfs_open_request_ptr_t request = malloc( sizeof( vfs_open_request_t ) );
+  vfs_open_request_t* request = malloc( sizeof( vfs_open_request_t ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
@@ -112,7 +112,7 @@ void rpc_handle_open(
   base = basename( request->path );
 
   // get parent node by dir
-  vfs_node_ptr_t dir_node = vfs_node_by_path( dir );
+  vfs_node_t* dir_node = vfs_node_by_path( dir );
   if ( ! dir_node ) {
     // debug output
     EARLY_STARTUP_PRINT( "Error: \"%s/%s\" doesn't exist!\r\n", dir, base )
@@ -127,7 +127,7 @@ void rpc_handle_open(
   }
 
   // get file node of dir
-  vfs_node_ptr_t base_node = vfs_node_by_name( dir_node, base );
+  vfs_node_t* base_node = vfs_node_by_name( dir_node, base );
   if ( ! base_node && ! ( request->flags & O_CREAT ) ) {
     free( dir );
     free( base );
@@ -202,7 +202,7 @@ void rpc_handle_open(
   }
 
   // generate and get new handle container
-  handle_container_ptr_t container = NULL;
+  handle_container_t* container = NULL;
   int result = handle_generate(
     &container,
     origin,

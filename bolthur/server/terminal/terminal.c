@@ -23,17 +23,17 @@
 #include <sys/ioctl.h>
 #include "terminal.h"
 #include "output.h"
-#include "collection/list.h"
+#include "../../library/collection/list/list.h"
 #include "psf.h"
 #include "utf8.h"
 #include "main.h"
 #include "../libconsole.h"
 #include "../libhelper.h"
 
-list_manager_ptr_t terminal_list;
+list_manager_t* terminal_list;
 
 /**
- * @fn int32_t terminal_lookup(const list_item_ptr_t, const void*)
+ * @fn int32_t terminal_lookup(const list_item_t*, const void*)
  * @brief List lookup helper
  *
  * @param a
@@ -41,20 +41,20 @@ list_manager_ptr_t terminal_list;
  * @return
  */
 static int32_t terminal_lookup(
-  const list_item_ptr_t a,
+  const list_item_t* a,
   const void* data
 ) {
-  return strcmp( ( ( terminal_ptr_t )a->data )->path, data );
+  return strcmp( ( ( terminal_t* )a->data )->path, data );
 }
 
 /**
- * @fn void terminal_cleanup(const list_item_ptr_t)
+ * @fn void terminal_cleanup(list_item_t*)
  * @brief List cleanup helper
  *
  * @param a
  */
-static void terminal_cleanup( const list_item_ptr_t a ) {
-  terminal_ptr_t term = a->data;
+static void terminal_cleanup( list_item_t* a ) {
+  terminal_t* term = a->data;
   // detach shared memory
   if ( term->surface_memory_id ) {
     while ( true ) {
@@ -78,24 +78,24 @@ static void terminal_cleanup( const list_item_ptr_t a ) {
  */
 bool terminal_init( void ) {
   // construct list
-  terminal_list = list_construct( terminal_lookup, terminal_cleanup );
+  terminal_list = list_construct( terminal_lookup, terminal_cleanup, NULL );
   if ( ! terminal_list ) {
     return false;
   }
   // allocate memory for add request
   size_t msg_size = sizeof( vfs_add_request_t ) + sizeof( size_t ) * 3;
-  vfs_add_request_ptr_t msg = malloc( msg_size );
+  vfs_add_request_t* msg = malloc( msg_size );
   if ( ! msg ) {
     list_destruct( terminal_list );
     return false;
   }
-  console_command_add_ptr_t command_add = malloc( sizeof( console_command_add_t ) );
+  console_command_add_t* command_add = malloc( sizeof( console_command_add_t ) );
   if ( ! command_add ) {
     free( msg );
     list_destruct( terminal_list );
     return false;
   }
-  console_command_select_ptr_t command_select = malloc( sizeof( console_command_select_t ) );
+  console_command_select_t* command_select = malloc( sizeof( console_command_select_t ) );
   if ( ! command_select ) {
     free( command_add );
     free( msg );
@@ -198,7 +198,7 @@ bool terminal_init( void ) {
       return false;
     }
     // allocate internal management structure
-    terminal_ptr_t term = malloc( sizeof( terminal_t ) );
+    terminal_t* term = malloc( sizeof( terminal_t ) );
     if ( ! term ) {
       list_destruct( terminal_list );
       free( command_add );
@@ -229,7 +229,7 @@ bool terminal_init( void ) {
     term->surface_memory_id = tmp.shm_id;
     term->pitch = tmp.pitch;
     // push back
-    if ( ! list_push_back( terminal_list, term ) ) {
+    if ( ! list_push_back_data( terminal_list, term ) ) {
       while ( true ) {
         _syscall_memory_shared_detach( tmp.shm_id );
         if ( errno ) {

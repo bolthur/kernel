@@ -34,11 +34,9 @@ typedef enum {
   TASK_THREAD_STATE_RPC_WAIT_FOR_READY,
 } task_thread_state_t;
 
-typedef union task_state_data task_state_data_t;
-typedef union task_state_data* task_state_data_ptr_t;
-union task_state_data {
+typedef union task_state_data {
   size_t data_size;
   void* data_ptr;
-};
+} task_state_data_t;
 
 #endif

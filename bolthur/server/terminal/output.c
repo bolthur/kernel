@@ -25,7 +25,7 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "output.h"
-#include "collection/list.h"
+#include "../../library/collection/list/list.h"
 #include "terminal.h"
 #include "psf.h"
 #include "render.h"
@@ -89,7 +89,7 @@ void output_handle_out(
     return;
   }
   // allocate for data fetching
-  terminal_write_request_ptr_t terminal = malloc( sz );
+  terminal_write_request_t* terminal = malloc( sz );
   if ( ! terminal ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -105,7 +105,7 @@ void output_handle_out(
     return;
   }
   // get terminal
-  list_item_ptr_t found = list_lookup_data(
+  list_item_t* found = list_lookup_data(
     terminal_list,
     terminal->terminal
   );
@@ -118,7 +118,7 @@ void output_handle_out(
   // allocate response
   size_t response_size = sizeof( vfs_write_response_t )
     + sizeof( vfs_ioctl_perform_response_t );
-  vfs_ioctl_perform_response_ptr_t response = malloc( response_size );
+  vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -165,7 +165,7 @@ void output_handle_err(
     return;
   }
   // allocate for data fetching
-  terminal_write_request_ptr_t terminal = malloc( sz );
+  terminal_write_request_t* terminal = malloc( sz );
   if ( ! terminal ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -181,7 +181,7 @@ void output_handle_err(
     return;
   }
   // get terminal
-  list_item_ptr_t found = list_lookup_data(
+  list_item_t* found = list_lookup_data(
     terminal_list,
     terminal->terminal
   );
@@ -194,7 +194,7 @@ void output_handle_err(
   // allocate response
   size_t response_size = sizeof( vfs_write_response_t )
     + sizeof( vfs_ioctl_perform_response_t );
-  vfs_ioctl_perform_response_ptr_t response = malloc( response_size );
+  vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );

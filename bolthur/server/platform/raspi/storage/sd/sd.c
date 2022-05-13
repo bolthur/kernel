@@ -36,7 +36,7 @@
 #include "../../libmailbox.h"
 #include "../../libgpio.h"
 
-static sd_device_ptr_t device;
+static sd_device_t* device;
 
 /**
  * @fn bool sd_init(void)

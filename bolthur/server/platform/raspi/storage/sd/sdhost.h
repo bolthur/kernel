@@ -27,7 +27,7 @@
 
 //#define SDHOST_ENABLE_DEBUG 1
 
-enum sdhost_response {
+typedef enum {
   SDHOST_RESPONSE_OK = 0,
   SDHOST_RESPONSE_NOT_IMPLEMENTED,
   SDHOST_RESPONSE_INVALID_COMMAND,
@@ -39,14 +39,14 @@ enum sdhost_response {
   SDHOST_RESPONSE_CARD_ERROR,
   SDHOST_RESPONSE_MAILBOX,
   SDHOST_RESPONSE_UNKNOWN,
-};
+} sdhost_response_t;
 
-enum sdhost_operation {
+typedef enum {
   SDHOST_OPERATION_READ = 0,
   SDHOST_OPERATION_WRITE,
-};
+} sdhost_operation_t;
 
-struct sdhost_device {
+typedef struct {
   // operation conditions register
   uint32_t card_ocr;
   // card identification register
@@ -93,18 +93,11 @@ struct sdhost_device {
   // flags for card is absent and ejected
   bool card_absent;
   bool card_ejected;
-};
+} sdhost_device_t;
 
-struct sdhost_message_entry {
+typedef struct  {
   char* message;
-};
-
-typedef enum sdhost_response sdhost_response_t;
-typedef enum sdhost_operation sdhost_operation_t;
-typedef struct sdhost_device sdhost_device_t;
-typedef struct sdhost_device* sdhost_device_ptr_t;
-typedef struct sdhost_message_entry sdhost_message_entry_t;
-typedef struct sdhost_message_entry* sdhost_message_entry_ptr_t;
+} sdhost_message_entry_t;
 
 sdhost_response_t sdhost_init( void );
 const char* sdhost_error( sdhost_response_t );

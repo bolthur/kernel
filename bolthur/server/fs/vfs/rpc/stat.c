@@ -43,7 +43,7 @@ void rpc_handle_stat(
 ) {
   vfs_stat_response_t response = { .success = false };
   // allocate message structures
-  vfs_stat_request_ptr_t request = malloc( sizeof( vfs_stat_request_t ) );
+  vfs_stat_request_t* request = malloc( sizeof( vfs_stat_request_t ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
@@ -65,13 +65,13 @@ void rpc_handle_stat(
     return;
   }
   // get target node
-  vfs_node_ptr_t target = NULL;
+  vfs_node_t* target = NULL;
   // get node by path
   if ( 0 < strlen( request->file_path ) ) {
     target = vfs_node_by_path( request->file_path );
   // get node by handle
   } else if ( 0 < request->handle ) {
-    handle_container_ptr_t container;
+    handle_container_t* container;
     // try to get handle information
     int result = handle_get( &container, origin, request->handle );
     // set target on no error

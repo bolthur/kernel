@@ -71,12 +71,12 @@ void rpc_handle_read(
     read_error_return( type, -EINVAL );
     return;
   }
-  vfs_read_request_ptr_t request = malloc( sizeof( vfs_read_request_t ) );
+  vfs_read_request_t* request = malloc( sizeof( vfs_read_request_t ) );
   if ( ! request ) {
     read_error_return( type, -ENOMEM );
     return;
   }
-  vfs_read_response_ptr_t response = malloc( sizeof( vfs_read_response_t ) );
+  vfs_read_response_t* response = malloc( sizeof( vfs_read_response_t ) );
   if ( ! response ) {
     read_error_return( type, -ENOMEM );
     free( request );

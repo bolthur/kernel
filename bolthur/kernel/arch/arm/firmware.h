@@ -28,14 +28,11 @@
   typedef uint64_t firmware_register_t;
 #endif
 
-struct firmware {
+typedef struct {
   firmware_register_t unused;
   firmware_register_t machine;
   firmware_register_t atag_fdt;
-};
-
-typedef struct firmware firmware_t;
-typedef struct firmware *firmware_ptr_t;
+} firmware_t;
 
 extern firmware_t firmware_info;
 

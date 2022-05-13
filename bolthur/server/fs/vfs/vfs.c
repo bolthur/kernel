@@ -19,19 +19,19 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include "collection/list.h"
+#include "../../../library/collection/list/list.h"
 #include "vfs.h"
 #include "util.h"
 
-static vfs_node_ptr_t root;
+static vfs_node_t* root;
 
 /**
- * @fn void vfs_destroy_node(vfs_node_ptr_t)
+ * @fn void vfs_destroy_node(vfs_node_t*)
  * @brief helper to destroy a node
  *
  * @param node
  */
-static void vfs_destroy_node( vfs_node_ptr_t node ) {
+static void vfs_destroy_node( vfs_node_t* node ) {
   if ( ! node ) {
     return;
   }
@@ -51,7 +51,7 @@ static void vfs_destroy_node( vfs_node_ptr_t node ) {
 }
 
 /**
- * @fn vfs_node_ptr_t vfs_prepare_node(pid_t, const char*, struct stat, vfs_node_ptr_t, char*)
+ * @fn vfs_node_t* vfs_prepare_node(pid_t, const char*, struct stat, vfs_node_t*, char*)
  * @brief Create and prepare vfs node
  *
  * @param pid
@@ -61,15 +61,15 @@ static void vfs_destroy_node( vfs_node_ptr_t node ) {
  * @param target
  * @return
  */
-static vfs_node_ptr_t vfs_prepare_node(
+static vfs_node_t* vfs_prepare_node(
   pid_t pid,
   const char* name,
   struct stat st,
-  vfs_node_ptr_t parent,
+  vfs_node_t* parent,
   char* target
 ) {
   // allocate and error handling
-  vfs_node_ptr_t node = malloc( sizeof( vfs_node_t ) );
+  vfs_node_t* node = malloc( sizeof( vfs_node_t ) );
   if ( ! node ) {
     return NULL;
   }
@@ -101,7 +101,7 @@ static vfs_node_ptr_t vfs_prepare_node(
   }
   // create list
   // FIXME: Add lookup and cleanup functions
-  node->children = list_construct( NULL, NULL );
+  node->children = list_construct( NULL, NULL, NULL );
   if ( ! node->children ) {
     vfs_destroy_node( node );
     return NULL;
@@ -109,7 +109,7 @@ static vfs_node_ptr_t vfs_prepare_node(
   // append to parent
   if ( parent ) {
     // push dev item to root list
-    if ( ! list_push_back( parent->children, node ) ) {
+    if ( ! list_push_back_data( parent->children, node ) ) {
       vfs_destroy_node( node );
       return NULL;
     }
@@ -125,7 +125,7 @@ static vfs_node_ptr_t vfs_prepare_node(
  *
  * @param node
  */
-void vfs_destroy( vfs_node_ptr_t node ) {
+void vfs_destroy( vfs_node_t* node ) {
   // handle invalid value
   if ( ! node ) {
     return;
@@ -133,10 +133,10 @@ void vfs_destroy( vfs_node_ptr_t node ) {
 
   // handle children destroy first
   if ( node->children ) {
-    list_item_ptr_t iter = node->children->first;
+    list_item_t* iter = node->children->first;
     while( iter ) {
       // destroy recursively
-      vfs_destroy( ( vfs_node_ptr_t )iter->data );
+      vfs_destroy( ( vfs_node_t* )iter->data );
       // get to next
       iter = iter->next;
     }
@@ -151,10 +151,10 @@ void vfs_destroy( vfs_node_ptr_t node ) {
  * @param current_pid
  * @return root node
  */
-vfs_node_ptr_t vfs_setup( pid_t current_pid ) {
+vfs_node_t* vfs_setup( pid_t current_pid ) {
   // necessary variables
-  vfs_node_ptr_t ipc;
-  vfs_node_ptr_t dev;
+  vfs_node_t* ipc;
+  vfs_node_t* dev;
 
   // dummy stat structure for folders
   struct stat st_dir;
@@ -191,7 +191,7 @@ vfs_node_ptr_t vfs_setup( pid_t current_pid ) {
 }
 
 /**
- * @fn bool vfs_add_path(vfs_node_ptr_t, pid_t, const char*, char*, struct stat)
+ * @fn bool vfs_add_path(vfs_node_t*, pid_t, const char*, char*, struct stat)
  * @brief Add path to vfs
  *
  * @param node node object
@@ -202,7 +202,7 @@ vfs_node_ptr_t vfs_setup( pid_t current_pid ) {
  * @return
  */
 bool vfs_add_path(
-  vfs_node_ptr_t node,
+  vfs_node_t* node,
   pid_t handler,
   const char* path,
   char* target,
@@ -223,7 +223,7 @@ bool vfs_add_path(
  * @param node
  * @param level
  */
-void vfs_dump( vfs_node_ptr_t node, const char* level_prefix ) {
+void vfs_dump( vfs_node_t* node, const char* level_prefix ) {
   // handle no root
   if ( ! node ) {
     vfs_dump( root, level_prefix );
@@ -269,7 +269,7 @@ void vfs_dump( vfs_node_ptr_t node, const char* level_prefix ) {
   }
 
   // iterate children
-  list_item_ptr_t children = node->children->first;
+  list_item_t* children = node->children->first;
   size_t inner_prefix_length = prefix_len + strlen( node->name ) + 1;
   // allocate new inner prefix
   char* inner_prefix = malloc( sizeof( char ) * inner_prefix_length );
@@ -289,7 +289,7 @@ void vfs_dump( vfs_node_ptr_t node, const char* level_prefix ) {
     }
     // iterate children and dump
     while ( children ) {
-      vfs_dump( ( vfs_node_ptr_t )children->data, inner_prefix );
+      vfs_dump( ( vfs_node_t* )children->data, inner_prefix );
       children = children->next;
     }
     // free prefix again
@@ -304,8 +304,8 @@ void vfs_dump( vfs_node_ptr_t node, const char* level_prefix ) {
  * @param path path to lookup
  * @return found node or NULL
  */
-vfs_node_ptr_t vfs_node_by_name(
-  vfs_node_ptr_t node,
+vfs_node_t* vfs_node_by_name(
+  vfs_node_t* node,
   const char* path
 ) {
   // local pointer for path
@@ -315,10 +315,10 @@ vfs_node_ptr_t vfs_node_by_name(
     p++;
   }
   // try to find item out of list
-  list_item_ptr_t current = node->children->first;
+  list_item_t* current = node->children->first;
   while ( current ) {
     // get vfs node
-    vfs_node_ptr_t n = ( vfs_node_ptr_t )( current->data );
+    vfs_node_t* n = ( vfs_node_t* )( current->data );
     // check for match
     if ( 0 == strcmp( p, n->name ) ) {
       return n;
@@ -336,7 +336,7 @@ vfs_node_ptr_t vfs_node_by_name(
  * @param path path to lookup
  * @return found node or NULL
  */
-vfs_node_ptr_t vfs_node_by_path( const char* path ) {
+vfs_node_t* vfs_node_by_path( const char* path ) {
   // local pointer for path
   char* p = ( char* )path;
   // skip leading slash
@@ -345,7 +345,7 @@ vfs_node_ptr_t vfs_node_by_path( const char* path ) {
   }
 
   // start with root
-  vfs_node_ptr_t current = root;
+  vfs_node_t* current = root;
   // handle empty ( return root )
   if ( 0 == strlen( p ) ) {
     return current;
@@ -403,13 +403,13 @@ vfs_node_ptr_t vfs_node_by_path( const char* path ) {
 }
 
 /**
- * @fn char vfs_path_bottom_up*(vfs_node_ptr_t)
+ * @fn char vfs_path_bottom_up*(vfs_node_t*)
  * @brief Method to build path from bottom up
  *
  * @param node
  * @return
  */
-char* vfs_path_bottom_up( vfs_node_ptr_t node ) {
+char* vfs_path_bottom_up( vfs_node_t* node ) {
   // handle no node
   if ( ! node ) {
     return NULL;

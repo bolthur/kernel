@@ -33,12 +33,12 @@ void initrd_startup_init( void ) {
 
   // handle atag
   if ( atag_check( atag_fdt ) ) {
-    atag_ptr_t ramdisk = atag_find( ( atag_ptr_t )atag_fdt, ATAG_TAG_INITRD2 );
+    atag_t* ramdisk = atag_find( ( atag_t* )atag_fdt, ATAG_TAG_INITRD2 );
     if ( ramdisk ) {
       initrd_set_start_address( ramdisk->initrd.start );
       initrd_set_size( ramdisk->initrd.size );
     } else {
-      ramdisk = atag_find( ( atag_ptr_t )atag_fdt, ATAG_TAG_RAMDISK );
+      ramdisk = atag_find( ( atag_t* )atag_fdt, ATAG_TAG_RAMDISK );
       if ( ramdisk ) {
         initrd_set_start_address( ramdisk->ramdisk.start );
         initrd_set_size( ramdisk->ramdisk.size );

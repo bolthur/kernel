@@ -17,16 +17,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/bolthur.h>
-#include <stdlib.h>
-#include <string.h>
 #include "avl.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 /**
  * @brief buffer helper for output
- * @todo remove static output buffer and use some generic allocated by some constructor
  */
-static uint8_t* level_buffer;
+static uint8_t level_buffer[ 4096 ];
 
 /**
  * @brief depth index
@@ -34,77 +33,33 @@ static uint8_t* level_buffer;
 static int32_t level_index;
 
 /**
- * @brief Calculate node height
+ * @brief Internal function for inserting a node
  *
+ * @param tree
  * @param node
- * @return int32_t
+ * @param root
+ * @return avl_node_t*
  */
-static int32_t height( avl_node_ptr_t node ) {
-  // handle null value
-  if ( ! node ) {
-    return 0;
+static avl_node_t* insert(
+  avl_tree_t* tree,
+  avl_node_t* node,
+  avl_node_t* root
+) {
+  // handle empty root
+  if ( ! root ) {
+    return node;
   }
 
-  // calculate height of left and right
-  int32_t left = height( node->left );
-  int32_t right = height( node->right );
+  int32_t result = tree->compare( root, node );
 
-  // return bigger height
-  return left > right
-    ? ++left
-    : ++right;
-}
-
-/**
- * @brief Helper to get the balance factor for a node
- *
- * @param node
- * @return int32_t
- */
-static int32_t balance_factor( avl_node_ptr_t node ) {
-  // handle invalid node ( balanced )
-  if ( ! node ) {
-    return 0;
+  if ( -1 == result ) {
+    root->left = insert( tree, node, root->left );
+  } else {
+    root->right = insert( tree, node, root->right );
   }
 
-  // return tree balance by using height
-  return height( node->right ) - height( node->left );
-}
-
-/**
- * @brief Right rotation
- *
- * @param node
- * @return avl_node_ptr_t
- */
-static avl_node_ptr_t rotate_right( avl_node_ptr_t node ) {
-  // cache left node within temporary
-  avl_node_ptr_t left = node->left;
-
-  // set right of tmp as nodes left
-  node->left = left->right;
-  left->right = node;
-
-  // return new root node after rotation
-  return left;
-}
-
-/**
- * @brief Left rotation
- *
- * @param node
- * @return avl_node_ptr_t
- */
-static avl_node_ptr_t rotate_left( avl_node_ptr_t node ) {
-  // cache left node within temporary
-  avl_node_ptr_t right = node->right;
-
-  // set right of tmp as nodes left
-  node->right = right->left;
-  right->left = node;
-
-  // return new root node after rotation
-  return right;
+  // return
+  return balance( root );
 }
 
 /**
@@ -113,12 +68,12 @@ static avl_node_ptr_t rotate_left( avl_node_ptr_t node ) {
  * @param data data to lookup for
  * @param root root node
  * @param tree
- * @return avl_node_ptr_t
+ * @return avl_node_t*
  */
-static avl_node_ptr_t find_by_data(
+static avl_node_t* find_by_data(
   void* data,
-  avl_node_ptr_t root,
-  avl_tree_ptr_t tree
+  avl_node_t* root,
+  const avl_tree_t* tree
 ) {
   // end point
   if ( ! root || ! tree ) {
@@ -147,12 +102,12 @@ static avl_node_ptr_t find_by_data(
  * @param data data to lookup for
  * @param root root node
  * @param tree
- * @return avl_node_ptr_t
+ * @return avl_node_t*
  */
-static avl_node_ptr_t find_parent_by_data(
+static avl_node_t* find_parent_by_data(
   void* data,
-  avl_node_ptr_t root,
-  avl_tree_ptr_t tree
+  avl_node_t* root,
+  const avl_tree_t* tree
 ) {
   // end point
   if ( ! root || ! tree ) {
@@ -190,33 +145,77 @@ static avl_node_ptr_t find_parent_by_data(
 }
 
 /**
- * @brief Internal function for inserting a node
+ * @brief Calculate node height
  *
- * @param tree
  * @param node
- * @param root
- * @return avl_node_ptr_t
+ * @return int32_t
  */
-static avl_node_ptr_t insert(
-  avl_tree_ptr_t tree,
-  avl_node_ptr_t node,
-  avl_node_ptr_t root
-) {
-  // handle empty root
-  if ( ! root ) {
-    return node;
+static int32_t height( avl_node_t* node ) {
+  // handle null value
+  if ( ! node ) {
+    return 0;
   }
 
-  int32_t result = tree->compare( root, node );
+  // calculate height of left and right
+  int32_t left = height( node->left );
+  int32_t right = height( node->right );
 
-  if ( -1 == result ) {
-    root->left = insert( tree, node, root->left );
-  } else {
-    root->right = insert( tree, node, root->right );
+  // return bigger height
+  return left > right
+    ? ++left
+    : ++right;
+}
+
+/**
+ * @brief Helper to get the balance factor for a node
+ *
+ * @param node
+ * @return int32_t
+ */
+static int32_t balance_factor( avl_node_t* node ) {
+  // handle invalid node ( balanced )
+  if ( ! node ) {
+    return 0;
   }
 
-  // return
-  return balance( root );
+  // return tree balance by using height
+  return height( node->right ) - height( node->left );
+}
+
+/**
+ * @brief Right rotation
+ *
+ * @param node
+ * @return avl_node_t*
+ */
+static avl_node_t* rotate_right( avl_node_t* node ) {
+  // cache left node within temporary
+  avl_node_t* left = node->left;
+
+  // set right of tmp as nodes left
+  node->left = left->right;
+  left->right = node;
+
+  // return new root node after rotation
+  return left;
+}
+
+/**
+ * @brief Left rotation
+ *
+ * @param node
+ * @return avl_node_t*
+ */
+static avl_node_t* rotate_left( avl_node_t* node ) {
+  // cache left node within temporary
+  avl_node_t* right = node->right;
+
+  // set right of tmp as nodes left
+  node->right = right->left;
+  right->left = node;
+
+  // return new root node after rotation
+  return right;
 }
 
 /**
@@ -225,12 +224,12 @@ static avl_node_ptr_t insert(
  * @param current
  * @param root
  * @param tree
- * @return avl_node_ptr_t
+ * @return avl_node_t*
  */
-static avl_node_ptr_t find_previous_node(
-  avl_node_ptr_t current,
-  avl_node_ptr_t root,
-  avl_tree_ptr_t tree
+static avl_node_t* find_previous_node(
+  avl_node_t* current,
+  avl_node_t* root,
+  avl_tree_t* tree
 ) {
   if ( ! root ) {
     return NULL;
@@ -259,35 +258,15 @@ static avl_node_ptr_t find_previous_node(
 }
 
 /**
- * @brief Get the min object
- *
- * @param node current node
- * @param result result node
- * @return avl_node_ptr_t
- */
-static avl_node_ptr_t get_min(
-  avl_node_ptr_t node,
-  avl_node_ptr_t result
-) {
-  // break if we reached the maximum
-  if ( ! node ) {
-    return result;
-  }
-
-  // just step to right for max entry
-  return get_min( node->left, node );
-}
-
-/**
  * @brief Get the max object
  *
  * @param node current node
  * @param result result node
- * @return avl_node_ptr_t
+ * @return avl_node_t*
  */
-static avl_node_ptr_t get_max(
-  avl_node_ptr_t node,
-  avl_node_ptr_t result
+static avl_node_t* get_max(
+  avl_node_t* node,
+  avl_node_t* result
 ) {
   // break if we reached the maximum
   if ( ! node ) {
@@ -299,50 +278,23 @@ static avl_node_ptr_t get_max(
 }
 
 /**
- * @brief Push something to depth buffer
+ * @brief Get the min object
  *
- * @param c
+ * @param node current node
+ * @param result result node
+ * @return avl_node_t*
  */
-static void push_output_level( uint8_t c ) {
-  level_buffer[ level_index++ ] = ' ';
-  level_buffer[ level_index++ ] = c;
-  level_buffer[ level_index++ ] = ' ';
-  level_buffer[ level_index++ ] = ' ';
-  level_buffer[ level_index ] = 0;
-}
-
-/**
- * @brief Pop something from depth
- */
-static void pop_output_level( void ) {
-  level_index -= 4;
-  level_buffer[ level_index ] = 0;
-}
-
-/**
- * @brief Recursive print of tree
- *
- * @param node
- */
-static void print_recursive( const avl_node_ptr_t node ) {
+static avl_node_t* get_min(
+  avl_node_t* node,
+  avl_node_t* result
+) {
+  // break if we reached the maximum
   if ( ! node ) {
-    return;
-  }
-  EARLY_STARTUP_PRINT( "%p\r\n", node->data )
-
-  if ( node->left ) {
-    EARLY_STARTUP_PRINT( "%s `--", level_buffer )
-    push_output_level( '|' );
-    print_recursive( node->left );
-    pop_output_level();
+    return result;
   }
 
-  if ( node->right ) {
-    EARLY_STARTUP_PRINT( "%s `--", level_buffer )
-    push_output_level( '|' );
-    print_recursive( node->right );
-    pop_output_level();
-  }
+  // just step to right for max entry
+  return get_min( node->left, node );
 }
 
 /**
@@ -351,12 +303,12 @@ static void print_recursive( const avl_node_ptr_t node ) {
  * @param tree tree to work on
  * @param node node to remove
  * @param root current root
- * @return avl_node_ptr_t new root
+ * @return avl_node_t* new root
  */
-static avl_node_ptr_t remove_by_node(
-  const avl_tree_ptr_t tree,
-  avl_node_ptr_t node,
-  avl_node_ptr_t root
+static avl_node_t* remove_by_node(
+  avl_tree_t* tree,
+  avl_node_t* node,
+  avl_node_t* root
 ) {
   // recursive breakpoint
   if ( ! root ) {
@@ -380,7 +332,7 @@ static avl_node_ptr_t remove_by_node(
         root->right = remove_by_node( tree, node, root->right );
       }
     } else {
-      avl_node_ptr_t tmp;
+      avl_node_t* tmp;
 
       // no child or one child, just return child or NULL
       if ( ! root->left || ! root->right ) {
@@ -434,11 +386,11 @@ static avl_node_ptr_t remove_by_node(
  *
  * @param data data to remove
  * @param root root node
- * @return avl_node_ptr_t
+ * @return avl_node_t*
  */
-static avl_node_ptr_t remove_by_data(
+static avl_node_t* remove_by_data(
   void* data,
-  avl_node_ptr_t root
+  avl_node_t* root
 ) {
   // recursive breakpoint
   if ( ! root ) {
@@ -453,7 +405,7 @@ static avl_node_ptr_t remove_by_data(
     root->right = remove_by_data( data, root->right );
   // found node
   } else {
-    avl_node_ptr_t tmp;
+    avl_node_t* tmp;
 
     // no child or one child, just return child or NULL
     if ( ! root->left || ! root->right ) {
@@ -496,59 +448,50 @@ static avl_node_ptr_t remove_by_data(
 }
 
 /**
- * @fn void avl_constructor(void)
- * @brief Avl internal setup
- */
-void avl_constructor( void );
-void __attribute__(( __constructor__ )) avl_constructor( void ) {
-  // allocate avl dump output buffer
-  level_buffer = malloc( sizeof( char ) * 4096 );
-  if ( ! level_buffer ) {
-    exit( 1 );
-  }
-}
-
-/**
- * @brief Debug output avl tree
+ * @brief Push something to depth buffer
  *
- * @param tree
+ * @param c
  */
-void avl_print( const avl_tree_ptr_t tree ) {
-  print_recursive( tree->root );
+static void push_output_level( uint8_t c ) {
+  level_buffer[ level_index++ ] = ' ';
+  level_buffer[ level_index++ ] = c;
+  level_buffer[ level_index++ ] = ' ';
+  level_buffer[ level_index++ ] = ' ';
+  level_buffer[ level_index ] = 0;
 }
 
 /**
- * @brief Method to balance node with return of new root node
+ * @brief Pop something from depth
+ */
+static void pop_output_level( void ) {
+  level_index -= 4;
+  level_buffer[ level_index ] = 0;
+}
+
+/**
+ * @brief Recursive print of tree
  *
  * @param node
- * @return avl_node_ptr_t
  */
-avl_node_ptr_t balance( avl_node_ptr_t node ) {
-  // get balance factor
-  int32_t balance = balance_factor( node );
+static void print_recursive( const avl_node_t* node ) {
+  if ( ! node ) {
+    return;
+  }
+  printf( "%p\r\n", node->data );
 
-  // left / right left rotation
-  if ( 2 == balance ) {
-    // right rotation?
-    if ( 0 > balance_factor( node->right ) ) {
-      node->right = rotate_right( node->right );
-    }
-    // left rotation
-    return rotate_left( node );
+  if ( node->left ) {
+    printf( "%s `--", level_buffer );
+    push_output_level( '|' );
+    print_recursive( node->left );
+    pop_output_level();
   }
 
-  // left / left right rotation
-  if ( -2 == balance ) {
-    // left rotation
-    if ( 0 < balance_factor( node->left ) ) {
-      node->left = rotate_left( node->left );
-    }
-    // right rotation
-    return rotate_right( node );
+  if ( node->right ) {
+    printf( "%s `--", level_buffer );
+    push_output_level( '|' );
+    print_recursive( node->right );
+    pop_output_level();
   }
-
-  // no further balance necessary
-  return node;
 }
 
 /**
@@ -558,10 +501,7 @@ avl_node_ptr_t balance( avl_node_ptr_t node ) {
  * @param b
  * @return int32_t
  */
-int32_t avl_default_lookup(
-  const avl_node_ptr_t a,
-  const void* b
-) {
+int32_t avl_default_lookup( const avl_node_t* a, const void* b ) {
   if ( a->data == b ) {
     return 0;
   }
@@ -576,8 +516,7 @@ int32_t avl_default_lookup(
  *
  * @param a
  */
-void avl_default_cleanup( __unused const avl_node_ptr_t a ) {
-}
+void avl_default_cleanup( __unused avl_node_t* a ) {}
 
 /**
  * @brief Helper to create new tree
@@ -585,16 +524,16 @@ void avl_default_cleanup( __unused const avl_node_ptr_t a ) {
  * @param compare compare function to be used within tree
  * @param lookup
  * @param cleanup
- * @return avl_tree_ptr_t pointer to new tree
+ * @return avl_tree_t* pointer to new tree
  */
-avl_tree_ptr_t avl_create_tree(
+avl_tree_t* avl_create_tree(
   avl_compare_func_t compare,
   avl_lookup_func_t lookup,
   avl_cleanup_func_t cleanup
 ) {
-  // allocate new tree structure
-  avl_tree_ptr_t new_tree = ( avl_tree_ptr_t )malloc( sizeof( avl_tree_t ) );
-  // check malloc return
+  // reserve space for new tree structure
+  avl_tree_t* new_tree = ( avl_tree_t* )malloc( sizeof( avl_tree_t ) );
+  // check
   if ( !new_tree ) {
     return NULL;
   }
@@ -626,10 +565,10 @@ avl_tree_ptr_t avl_create_tree(
  *
  * @param data node data
  */
-avl_node_ptr_t avl_create_node( void* data ) {
-  // allocate node
-  avl_node_ptr_t node = ( avl_node_ptr_t )malloc( sizeof( avl_node_t ) );
-  // check malloc return
+avl_node_t* avl_create_node( void* data ) {
+  // reserve space for new node
+  avl_node_t* node = ( avl_node_t* )malloc( sizeof( avl_node_t ) );
+  // check
   if ( ! node ) {
     return NULL;
   }
@@ -646,7 +585,7 @@ avl_node_ptr_t avl_create_node( void* data ) {
  *
  * @param tree
  */
-void avl_destroy_tree( avl_tree_ptr_t tree ) {
+void avl_destroy_tree( avl_tree_t* tree ) {
   // check parameter
   if ( ! tree ) {
     return;
@@ -655,7 +594,7 @@ void avl_destroy_tree( avl_tree_ptr_t tree ) {
   // loop as long a root node is existing
   while ( tree->root ) {
     // cache root node
-    avl_node_ptr_t node = tree->root;
+    avl_node_t* node = tree->root;
     // remove node from tree
     avl_remove_by_node( tree, node );
     // cleanup
@@ -666,27 +605,6 @@ void avl_destroy_tree( avl_tree_ptr_t tree ) {
 }
 
 /**
- * @brief Find an avl node within tree
- *
- * @param tree tree to search
- * @param data data to lookup
- * @return avl_node_ptr_t found node or NULL
- */
-avl_node_ptr_t avl_find_by_data( const avl_tree_ptr_t tree, void* data ) {
-  return find_by_data( data, tree->root, tree );
-}
-
-/**
- * @brief Find parent
- *
- * @param tree tree to work on
- * @param data data to lookup
- */
-avl_node_ptr_t avl_find_parent_by_data( const avl_tree_ptr_t tree, void* data ) {
-  return find_parent_by_data( data, tree->root, tree );
-}
-
-/**
  * @brief Insert node into existing tree
  *
  * @param tree
@@ -694,7 +612,7 @@ avl_node_ptr_t avl_find_parent_by_data( const avl_tree_ptr_t tree, void* data ) 
  * @return true
  * @return false
  */
-bool avl_insert_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
+bool avl_insert_by_node( avl_tree_t* tree, avl_node_t* node ) {
   // check parameter
   if ( ! tree || ! node ) {
     return false;
@@ -705,11 +623,66 @@ bool avl_insert_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
 }
 
 /**
+ * @brief Find an avl node within tree
+ *
+ * @param tree tree to search
+ * @param data data to lookup
+ * @return avl_node_t* found node or NULL
+ */
+avl_node_t* avl_find_by_data( const avl_tree_t* tree, void* data ) {
+  return find_by_data( data, tree->root, tree );
+}
+
+/**
+ * @brief Find parent
+ *
+ * @param tree tree to work on
+ * @param data data to lookup
+ */
+avl_node_t* avl_find_parent_by_data( const avl_tree_t* tree, void* data ) {
+  return find_parent_by_data( data, tree->root, tree );
+}
+
+/**
+ * @brief Method to balance node with return of new root node
+ *
+ * @param node
+ * @return avl_node_t*
+ */
+avl_node_t* balance( avl_node_t* node ) {
+  // get balance factor
+  int32_t balance = balance_factor( node );
+
+  // left / right left rotation
+  if ( 2 == balance ) {
+    // right rotation?
+    if ( 0 > balance_factor( node->right ) ) {
+      node->right = rotate_right( node->right );
+    }
+    // left rotation
+    return rotate_left( node );
+  }
+
+  // left / left right rotation
+  if ( -2 == balance ) {
+    // left rotation
+    if ( 0 < balance_factor( node->left ) ) {
+      node->left = rotate_left( node->left );
+    }
+    // right rotation
+    return rotate_right( node );
+  }
+
+  // no further balance necessary
+  return node;
+}
+
+/**
  * @brief Get first node
  *
  * @param tree avl tree
  */
-avl_node_ptr_t avl_iterate_first( avl_tree_ptr_t tree ) {
+avl_node_t* avl_iterate_first( avl_tree_t* tree ) {
   if ( ! tree ) {
     return NULL;
   }
@@ -721,7 +694,7 @@ avl_node_ptr_t avl_iterate_first( avl_tree_ptr_t tree ) {
  *
  * @param tree avl tree
  */
-avl_node_ptr_t avl_iterate_last( avl_tree_ptr_t tree ) {
+avl_node_t* avl_iterate_last( avl_tree_t* tree ) {
   if ( ! tree ) {
     return NULL;
   }
@@ -734,7 +707,7 @@ avl_node_ptr_t avl_iterate_last( avl_tree_ptr_t tree ) {
  * @param tree avl tree
  * @param node node
  */
-avl_node_ptr_t avl_iterate_next( avl_tree_ptr_t tree, avl_node_ptr_t node ) {
+avl_node_t* avl_iterate_next( avl_tree_t* tree, avl_node_t* node ) {
   if ( ! tree || ! node || ! tree->root ) {
     return NULL;
   }
@@ -745,8 +718,8 @@ avl_node_ptr_t avl_iterate_next( avl_tree_ptr_t tree, avl_node_ptr_t node ) {
     return avl_get_min( node->right );
   }
 
-  avl_node_ptr_t next = NULL;
-  avl_node_ptr_t root = tree->root;
+  avl_node_t* next = NULL;
+  avl_node_t* root = tree->root;
   // search from root
   while ( root ) {
     // compare to determine result
@@ -774,7 +747,7 @@ avl_node_ptr_t avl_iterate_next( avl_tree_ptr_t tree, avl_node_ptr_t node ) {
  * @param tree avl tree
  * @param node node
  */
-avl_node_ptr_t avl_iterate_previous( avl_tree_ptr_t tree, avl_node_ptr_t node ) {
+avl_node_t* avl_iterate_previous( avl_tree_t* tree, avl_node_t* node ) {
   if ( ! tree || ! node ) {
     return NULL;
   }
@@ -785,9 +758,9 @@ avl_node_ptr_t avl_iterate_previous( avl_tree_ptr_t tree, avl_node_ptr_t node ) 
  * @brief Get max node of tree
  *
  * @param root root to get max node
- * @return avl_node_ptr_t found node or null if empty
+ * @return avl_node_t* found node or null if empty
  */
-avl_node_ptr_t avl_get_max( const avl_node_ptr_t root ) {
+avl_node_t* avl_get_max( avl_node_t* root ) {
   return get_max( root, NULL );
 }
 
@@ -795,9 +768,9 @@ avl_node_ptr_t avl_get_max( const avl_node_ptr_t root ) {
  * @brief Get min node of tree
  *
  * @param root node to get min value
- * @return avl_node_ptr_t found node or null if empty
+ * @return avl_node_t* found node or null if empty
  */
-avl_node_ptr_t avl_get_min( const avl_node_ptr_t root ) {
+avl_node_t* avl_get_min( avl_node_t* root ) {
   return get_min( root, NULL );
 }
 
@@ -807,10 +780,19 @@ avl_node_ptr_t avl_get_min( const avl_node_ptr_t root ) {
  * @param node node to prepare
  * @param data initial node data
  */
-void avl_prepare_node( avl_node_ptr_t node, void* data ) {
+void avl_prepare_node( avl_node_t* node, void* data ) {
   node->left = NULL;
   node->right = NULL;
   node->data = data;
+}
+
+/**
+ * @brief Debug output avl tree
+ *
+ * @param tree
+ */
+void avl_print( const avl_tree_t* tree ) {
+  print_recursive( tree->root );
 }
 
 /**
@@ -819,7 +801,7 @@ void avl_prepare_node( avl_node_ptr_t node, void* data ) {
  * @param tree tree to search in
  * @param data data of node to find
  */
-void avl_remove_by_data( const avl_tree_ptr_t tree, void* data ) {
+void avl_remove_by_data( avl_tree_t* tree, void* data ) {
   tree->root = remove_by_data( data, tree->root );
 }
 
@@ -829,6 +811,6 @@ void avl_remove_by_data( const avl_tree_ptr_t tree, void* data ) {
  * @param tree tree to work on
  * @param node node to remove
  */
-void avl_remove_by_node( const avl_tree_ptr_t tree, avl_node_ptr_t node ) {
+void avl_remove_by_node( avl_tree_t* tree, avl_node_t* node ) {
   tree->root = remove_by_node( tree, node, tree->root );
 }

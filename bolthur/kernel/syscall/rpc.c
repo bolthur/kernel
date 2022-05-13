@@ -89,7 +89,7 @@ void syscall_rpc_raise( void* context ) {
     return;
   }
   // validate target
-  task_process_ptr_t target = task_process_get_by_id( process );
+  task_process_t* target = task_process_get_by_id( process );
   if ( ! target ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Target not existing / not found: %p - %d!\r\n", target, process )
@@ -140,7 +140,7 @@ void syscall_rpc_raise( void* context ) {
     }
   }
   // call rpc
-  rpc_backup_ptr_t rpc = rpc_generic_raise(
+  rpc_backup_t* rpc = rpc_generic_raise(
     task_thread_current_thread,
     target,
     type,
@@ -232,7 +232,7 @@ void syscall_rpc_ret( void* context ) {
     return;
   }
   // get current active rpc
-  rpc_backup_ptr_t active = rpc_backup_get_active( task_thread_current_thread );
+  rpc_backup_t* active = rpc_backup_get_active( task_thread_current_thread );
   if ( ! active ) {
     // debug output
     #if defined( PRINT_SYSCALL )
@@ -262,7 +262,7 @@ void syscall_rpc_ret( void* context ) {
     return;
   }
   // overwrite target in case original rpc id is set for correct unblock
-  task_thread_ptr_t target = active->source;
+  task_thread_t* target = active->source;
   size_t blocked_data_id = active->data_id;
   if ( original_rpc_id ) {
     target = task_thread_get_blocked(
@@ -336,7 +336,7 @@ void syscall_rpc_ret( void* context ) {
       DEBUG_OUTPUT( "Async return!\r\n" )
     #endif
     // raise target
-    rpc_backup_ptr_t backup = rpc_generic_raise(
+    rpc_backup_t* backup = rpc_generic_raise(
       active->thread,
       target->process,
       type,
@@ -392,7 +392,7 @@ void syscall_rpc_get_data( void* context ) {
       data, len, rpc_data_id )
   #endif
   // cache process
-  task_process_ptr_t target_process = task_thread_current_thread->process;
+  task_process_t* target_process = task_thread_current_thread->process;
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "Validating parameter!\r\n" )
@@ -438,7 +438,7 @@ void syscall_rpc_get_data( void* context ) {
     DEBUG_OUTPUT( "Searching for rpc data id %d!\r\n", rpc_data_id )
   #endif
   // Get message by id
-  list_item_ptr_t item = list_lookup_data(
+  list_item_t* item = list_lookup_data(
     target_process->rpc_data_queue,
     ( void* )rpc_data_id
   );
@@ -451,7 +451,7 @@ void syscall_rpc_get_data( void* context ) {
     syscall_populate_error( context, ( size_t )-ENOMSG );
     return;
   }
-  rpc_data_queue_entry_ptr_t found = item->data;
+  rpc_data_queue_entry_t* found = item->data;
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "Validate data length of found item!\r\n" )
@@ -517,7 +517,7 @@ void syscall_rpc_get_data_size( void* context ) {
     DEBUG_OUTPUT( "syscall_rpc_get_data_size( %#x )\r\n", rpc_data_id )
   #endif
   // cache process
-  task_process_ptr_t target_process = task_thread_current_thread->process;
+  task_process_t* target_process = task_thread_current_thread->process;
   // handle target not yet ready
   if ( ! rpc_generic_ready( target_process ) ) {
     // debug output
@@ -528,11 +528,11 @@ void syscall_rpc_get_data_size( void* context ) {
     return;
   }
   // Get message by id
-  list_item_ptr_t item = target_process->rpc_data_queue->first;
-  rpc_data_queue_entry_ptr_t found = NULL;
+  list_item_t* item = target_process->rpc_data_queue->first;
+  rpc_data_queue_entry_t* found = NULL;
   while( item && ! found ) {
     // get message
-    rpc_data_queue_entry_ptr_t rpc = ( rpc_data_queue_entry_ptr_t )item->data;
+    rpc_data_queue_entry_t* rpc = ( rpc_data_queue_entry_t* )item->data;
     // set found when matching
     if( rpc_data_id == rpc->id ) {
       found = rpc;
@@ -603,7 +603,7 @@ void syscall_rpc_wait_for_call( void* context ) {
 void syscall_rpc_set_ready( void* context ) {
   bool ready = ( bool )syscall_get_parameter( context, 0 );
   // cache process
-  task_process_ptr_t process = task_thread_current_thread->process;
+  task_process_t* process = task_thread_current_thread->process;
   // set ready flag
   process->rpc_ready = ready;
   #if defined( PRINT_SYSCALL )
@@ -612,7 +612,7 @@ void syscall_rpc_set_ready( void* context ) {
       task_thread_current_thread->process->rpc_ready ? 1 : 0 )
   #endif
   // unblock parent which might wait for process to be rpc ready!
-  task_process_ptr_t parent = task_process_get_by_id( process->parent );
+  task_process_t* parent = task_process_get_by_id( process->parent );
   if ( parent ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Unblocking process %d\r\n", parent->id )
@@ -677,7 +677,7 @@ void syscall_rpc_wait_for_ready( void* context ) {
     )
   #endif
   // get target process
-  task_process_ptr_t target = task_process_get_by_id( process );
+  task_process_t* target = task_process_get_by_id( process );
   // handle no target
   if ( ! target ) {
     // debug output

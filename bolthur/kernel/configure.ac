@@ -360,7 +360,6 @@ AC_CONFIG_FILES([
   arch/arm/v8/Makefile
   lib/Makefile
   lib/atag/Makefile
-  lib/collection/Makefile
   lib/libc/Makefile
   lib/tar/Makefile
   platform/Makefile

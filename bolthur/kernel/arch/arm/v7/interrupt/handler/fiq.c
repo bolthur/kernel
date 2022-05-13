@@ -33,14 +33,14 @@ static uint32_t nested_fast_interrupt = 0;
  *
  * @param cpu cpu context
  */
-void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
+void vector_fast_interrupt_handler( cpu_register_context_t* cpu ) {
   // nesting
   nested_fast_interrupt++;
   assert( nested_fast_interrupt < INTERRUPT_NESTED_MAX )
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
-  INTERRUPT_DETERMINE_CONTEXT( cpu )
+  cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu )

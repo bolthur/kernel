@@ -58,7 +58,7 @@ void handler_console_add(
     return;
   }
   // allocate for data fetching
-  console_command_add_ptr_t command = malloc( sz );
+  console_command_add_t* command = malloc( sz );
   if ( ! command ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -74,7 +74,7 @@ void handler_console_add(
     return;
   }
   // try to lookup by name
-  list_item_ptr_t container_item = list_lookup_data(
+  list_item_t* container_item = list_lookup_data(
     console_list,
     command->terminal
   );
@@ -86,7 +86,7 @@ void handler_console_add(
     return;
   }
   // allocate new management structure
-  console_ptr_t console = malloc( sizeof( console_t ) );
+  console_t* console = malloc( sizeof( console_t ) );
   if ( ! console ) {
     free( command );
     error.status = -ENODEV;
@@ -109,7 +109,7 @@ void handler_console_add(
   console->out = command->out;
   console->err = command->err;
   // push to list
-  if ( ! list_push_back( console_list, console ) ) {
+  if ( ! list_push_back_data( console_list, console ) ) {
     console_destroy( console );
     free( command );
     error.status = -ENOMEM;

@@ -45,7 +45,7 @@ void rpc_handle_write_async(
 ) {
   vfs_write_response_t response = { .len = -EINVAL };
   // get matching async data
-  bolthur_async_data_ptr_t async_data = bolthur_rpc_pop_async(
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
     type,
     response_info
   );
@@ -58,7 +58,7 @@ void rpc_handle_write_async(
   }
   response.len = -ENOMEM;
   // original request
-  vfs_write_request_ptr_t request = async_data->original_data;
+  vfs_write_request_t* request = async_data->original_data;
   // cache origin and rpc necessary for getting handle and return to correct target
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
@@ -70,7 +70,7 @@ void rpc_handle_write_async(
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
-  handle_container_ptr_t container;
+  handle_container_t* container;
   // try to get handle information
   int result = handle_get(
     &container,
@@ -112,18 +112,18 @@ void rpc_handle_write(
   }
   // normal request handling starts here
   vfs_write_response_t response = { .len = -ENOMEM };
-  vfs_write_request_ptr_t request = malloc( sizeof( vfs_write_request_t ) );
+  vfs_write_request_t* request = malloc( sizeof( vfs_write_request_t ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  vfs_write_request_ptr_t nested_request = malloc( sizeof( vfs_write_request_t ) );
+  vfs_write_request_t* nested_request = malloc( sizeof( vfs_write_request_t ) );
   if ( ! nested_request ) {
     free( request );
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  handle_container_ptr_t container;
+  handle_container_t* container;
   // clear variables
   memset( request, 0, sizeof( vfs_write_request_t ) );
   memset( nested_request, 0, sizeof( vfs_write_request_t ) );

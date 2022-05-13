@@ -118,7 +118,7 @@ __bootstrap void virt_startup_flush( void ) {
  * @return false
  */
 bool virt_map_address(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t vaddr,
   uint64_t paddr,
   virt_memory_type_t type,
@@ -154,7 +154,7 @@ bool virt_map_address(
  * @return false
  */
 bool virt_map_address_random(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t vaddr,
   virt_memory_type_t type,
   uint32_t page
@@ -210,7 +210,7 @@ uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
  * @return true
  * @return false
  */
-bool virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr, bool free_phys ) {
+bool virt_unmap_address( virt_context_t* ctx, uintptr_t addr, bool free_phys ) {
   // check context
   if ( ! ctx ) {
     return false;
@@ -256,9 +256,9 @@ void virt_unmap_temporary( uintptr_t addr, size_t size ) {
  * @brief Method to create virtual context
  *
  * @param type context type
- * @return virt_context_ptr_t address of context
+ * @return virt_context_t* address of context
  */
-virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
+virt_context_t* virt_create_context( virt_context_type_t type ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_supported_mode ) {
     return v7_long_create_context( type );
@@ -275,12 +275,12 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
 }
 
 /**
- * @fn virt_context_ptr_t virt_fork_context(virt_context_ptr_t)
+ * @fn virt_context_t* virt_fork_context(virt_context_t*)
  * @brief Fork a virtual context
  * @param ctx context to fork
  * @return
  */
-virt_context_ptr_t virt_fork_context( virt_context_ptr_t ctx ) {
+virt_context_t* virt_fork_context( virt_context_t* ctx ) {
   // check context
   if ( ! ctx || ctx->type != VIRT_CONTEXT_TYPE_USER ) {
     return NULL;
@@ -302,14 +302,14 @@ virt_context_ptr_t virt_fork_context( virt_context_ptr_t ctx ) {
 }
 
 /**
- * @fn bool virt_destroy_context(virt_context_ptr_t, bool)
+ * @fn bool virt_destroy_context(virt_context_t*, bool)
  * @brief Method to destroy virtual context
  *
  * @param ctx
  * @param unmap_only
  * @return
  */
-bool virt_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
+bool virt_destroy_context( virt_context_t* ctx, bool unmap_only ) {
   // check context
   if ( ! ctx ) {
     return false;
@@ -339,7 +339,7 @@ bool virt_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
  * @return uint64_t address of table
  */
 uint64_t virt_create_table(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t addr,
   uint64_t table
 ) {
@@ -370,7 +370,7 @@ uint64_t virt_create_table(
  * @return true
  * @return false
  */
-bool virt_set_context( virt_context_ptr_t ctx ) {
+bool virt_set_context( virt_context_t* ctx ) {
   // handle invalid context
   if ( ! ctx ) {
     return false;
@@ -416,7 +416,7 @@ void virt_flush_complete( void ) {
  * @param ctx used context
  * @param addr virtual address to flush
  */
-void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
+void virt_flush_address( virt_context_t* ctx, uintptr_t addr ) {
   // no flush if not initialized or context currently not active
   if (
     ! virt_init_get()
@@ -451,7 +451,7 @@ void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
  * @return true
  * @return false
  */
-bool virt_prepare_temporary( virt_context_ptr_t ctx ) {
+bool virt_prepare_temporary( virt_context_t* ctx ) {
   // check context
   if ( ! ctx ) {
     return false;
@@ -498,7 +498,7 @@ void virt_arch_prepare( void ) {
  * @return true
  * @return false
  */
-bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
+bool virt_is_mapped_in_context( virt_context_t* ctx, uintptr_t addr ) {
   // check context
   if ( ! ctx ) {
     return false;
@@ -520,7 +520,7 @@ bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
 }
 
 /**
- * @fn uint64_t virt_get_mapped_address_in_context(virt_context_ptr_t, uintptr_t)
+ * @fn uint64_t virt_get_mapped_address_in_context(virt_context_t*, uintptr_t)
  * @brief Get mapped physical address
  *
  * @param ctx
@@ -528,7 +528,7 @@ bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
  * @return
  */
 uint64_t virt_get_mapped_address_in_context(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t addr
 ) {
   // check context

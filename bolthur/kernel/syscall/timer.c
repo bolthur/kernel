@@ -82,7 +82,7 @@ void syscall_timer_acquire( void* context ) {
     return;
   }
   // add to timer
-  timer_callback_entry_ptr_t item = timer_register_callback(
+  timer_callback_entry_t* item = timer_register_callback(
     task_thread_current_thread,
     rpc_num,
     timeout

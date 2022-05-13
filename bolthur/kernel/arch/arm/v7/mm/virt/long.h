@@ -29,32 +29,32 @@ void v7_long_startup_enable( void );
 void v7_long_startup_flush( void );
 
 bool v7_long_map(
-  virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
+  virt_context_t*, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
 bool v7_long_map_random(
-  virt_context_ptr_t, uintptr_t, virt_memory_type_t, uint32_t );
+  virt_context_t*, uintptr_t, virt_memory_type_t, uint32_t );
 uintptr_t v7_long_map_temporary( uint64_t, size_t );
-bool v7_long_unmap( virt_context_ptr_t, uintptr_t, bool );
+bool v7_long_unmap( virt_context_t*, uintptr_t, bool );
 void v7_long_unmap_temporary( uintptr_t, size_t );
-uint64_t v7_long_create_table( virt_context_ptr_t, uintptr_t, uint64_t );
-bool v7_long_set_context( virt_context_ptr_t );
-bool v7_long_prepare_temporary( virt_context_ptr_t );
-virt_context_ptr_t v7_long_create_context( virt_context_type_t );
+uint64_t v7_long_create_table( virt_context_t*, uintptr_t, uint64_t );
+bool v7_long_set_context( virt_context_t* );
+bool v7_long_prepare_temporary( virt_context_t* );
+virt_context_t* v7_long_create_context( virt_context_type_t );
 
 bool v7_long_fork_table( ld_page_table_t*, ld_page_table_t* );
 bool v7_long_fork_middle_directory( ld_middle_page_directory*, ld_middle_page_directory* );
 bool v7_long_fork_global_directory( ld_global_page_directory_t*, ld_global_page_directory_t* );
-virt_context_ptr_t v7_long_fork_context( virt_context_ptr_t );
+virt_context_t* v7_long_fork_context( virt_context_t* );
 
 bool v7_long_destroy_table( ld_page_table_t* );
 bool v7_long_destroy_middle_directory( ld_middle_page_directory* );
 bool v7_long_destroy_global_directory( ld_global_page_directory_t* );
-bool v7_long_destroy_context( virt_context_ptr_t, bool );
+bool v7_long_destroy_context( virt_context_t*, bool );
 
 void v7_long_prepare( void );
 void v7_long_flush_complete( void );
 void v7_long_flush_address( uintptr_t );
-bool v7_long_is_mapped_in_context( virt_context_ptr_t, uintptr_t );
-uint64_t v7_long_get_mapped_address_in_context( virt_context_ptr_t, uintptr_t );
+bool v7_long_is_mapped_in_context( virt_context_t*, uintptr_t );
+uint64_t v7_long_get_mapped_address_in_context( virt_context_t*, uintptr_t );
 uintptr_t v7_long_prefetch_fault_address( void );
 uintptr_t v7_long_prefetch_status( void );
 uintptr_t v7_long_data_fault_address( void );

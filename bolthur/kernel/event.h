@@ -21,8 +21,8 @@
 #define _EVENT_H
 
 #include <stdbool.h>
-#include "lib/collection/list.h"
-#include "lib/collection/avl.h"
+#include "../library/collection/list/list.h"
+#include "../library/collection/avl/avl.h"
 #include "stack.h"
 
 #define EVENT_DETERMINE_ORIGIN( o ) \
@@ -42,16 +42,16 @@ typedef enum {
 } event_origin_t;
 
 struct event_manager {
-  avl_tree_ptr_t tree;
-  list_manager_ptr_t queue_kernel;
-  list_manager_ptr_t queue_user;
+  avl_tree_t* tree;
+  list_manager_t* queue_kernel;
+  list_manager_t* queue_user;
 };
 
 struct event_block {
   avl_node_t node;
   event_type_t type;
-  list_manager_ptr_t handler;
-  list_manager_ptr_t post;
+  list_manager_t* handler;
+  list_manager_t* post;
 };
 
 typedef void ( *event_callback_t )( event_origin_t, void* data );
@@ -61,14 +61,11 @@ struct callback {
 };
 
 typedef struct callback event_callback_wrapper_t;
-typedef struct callback *event_callback_wrapper_ptr_t;
 typedef struct event_manager event_manager_t;
-typedef struct event_manager *event_manager_ptr_t;
 typedef struct event_block event_block_t;
-typedef struct event_block *event_block_ptr_t;
 
 #define EVENT_GET_BLOCK( n ) \
-  ( event_block_ptr_t )( ( uint8_t* )n - offsetof( event_block_t, node ) )
+  ( event_block_t* )( ( uint8_t* )n - offsetof( event_block_t, node ) )
 
 bool event_init_get( void );
 bool event_init( void );

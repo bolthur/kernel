@@ -21,6 +21,7 @@
 #include <stdnoreturn.h>
 #include "lib/string.h"
 #include "lib/stdio.h"
+#include "lib/assert.h"
 #include "lib/tar.h"
 #include "arch.h"
 #include "elf.h"
@@ -122,14 +123,14 @@ noreturn void kernel_main( void ) {
   // assert initrd necessary now
   assert( initrd_exist() )
   // Find init process
-  tar_header_ptr_t boot = tar_lookup_file( initrd_get_start_address(), "boot" );
+  tar_header_t* boot = tar_lookup_file( initrd_get_start_address(), "boot" );
   assert( boot )
   // Get file address and size
   uintptr_t elf_file = ( uintptr_t )tar_file( boot );
 
   // Create process
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] create ...\r\n" )
-  task_process_ptr_t proc = task_process_create( 0, 0 );
+  task_process_t* proc = task_process_create( 0, 0 );
   assert( proc )
   // load flat image
   uintptr_t init_entry = elf_load( elf_file, proc );

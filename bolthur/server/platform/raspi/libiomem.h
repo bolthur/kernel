@@ -41,7 +41,7 @@
 
 #define IOMEM_DEVICE_PATH "/dev/iomem"
 
-enum mmio_action {
+typedef enum {
   IOMEM_MMIO_ACTION_LOOP_EQUAL = 1,
   IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL,
   IOMEM_MMIO_ACTION_LOOP_TRUE,
@@ -55,35 +55,30 @@ enum mmio_action {
   IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ,
   IOMEM_MMIO_ACTION_DELAY,
   IOMEM_MMIO_ACTION_SLEEP,
-};
-typedef enum mmio_action mmio_action_t;
+} mmio_action_t;
 
-enum mmio_shift {
+typedef enum {
   IOMEM_MMIO_SHIFT_NONE = 0,
   IOMEM_MMIO_SHIFT_LEFT,
   IOMEM_MMIO_SHIFT_RIGHT,
-};
-typedef enum mmio_shift mmio_shift_t;
+} mmio_shift_t;
 
-enum mmio_sleep {
+typedef enum {
   IOMEM_MMIO_SLEEP_NONE = 0,
   IOMEM_MMIO_SLEEP_MILLISECONDS,
   IOMEM_MMIO_SLEEP_SECONDS,
-};
-typedef enum mmio_sleep mmio_sleep_t;
+} mmio_sleep_t;
 
-enum mmio_abort_type {
+typedef enum {
   IOMEM_MMIO_ABORT_TYPE_NONE = 0,
   IOMEM_MMIO_ABORT_TYPE_TIMEOUT,
   IOMEM_MMIO_ABORT_TYPE_INVALID,
-};
-typedef enum mmio_abort_type mmio_abort_type_t;
+} mmio_abort_type_t;
 
-enum mmio_failure_condition {
+typedef enum {
   IOMEM_MMIO_FAILURE_CONDITION_OFF = 0,
   IOMEM_MMIO_FAILURE_CONDITION_ON,
-};
-typedef enum mmio_failure_condition mmio_failure_condition_t;
+} mmio_failure_condition_t;
 
 struct iomem_mmio_entry {
   // action type
@@ -109,43 +104,32 @@ struct iomem_mmio_entry {
   uint32_t skipped;
 };
 typedef struct iomem_mmio_entry iomem_mmio_entry_t;
-typedef struct iomem_mmio_entry* iomem_mmio_entry_ptr_t;
 typedef struct iomem_mmio_entry iomem_mmio_entry_array_t[];
 
-struct iomem_gpio_function {
+typedef struct {
   iomem_gpio_enum_pin_t pin;
   iomem_gpio_enum_function_t function;
-};
-typedef struct iomem_gpio_function iomem_gpio_function_t;
-typedef struct iomem_gpio_function* iomem_gpio_function_ptr_t;
+} iomem_gpio_function_t;
 
-struct iomem_gpio_pull {
+typedef struct iomem_gpio_pull {
   iomem_gpio_enum_pin_t pin;
   iomem_gpio_enum_pull_t pull;
-};
-typedef struct iomem_gpio_pull iomem_gpio_pull_t;
-typedef struct iomem_gpio_pull* iomem_gpio_pull_ptr_t;
+} iomem_gpio_pull_t;
 
-struct iomem_gpio_detect {
+typedef struct {
   iomem_gpio_enum_pin_t pin;
   iomem_gpio_enum_detect_type_t type;
   uint32_t value;
-};
-typedef struct iomem_gpio_detect iomem_gpio_detect_t;
-typedef struct iomem_gpio_detect* iomem_gpio_detect_ptr_t;
+} iomem_gpio_detect_t;
 
-struct iomem_gpio_status {
+typedef struct iomem_gpio_status {
   iomem_gpio_enum_pin_t pin;
   uint32_t value;
-};
-typedef struct iomem_gpio_status iomem_gpio_status_t;
-typedef struct iomem_gpio_status* iomem_gpio_status_ptr_t;
+} iomem_gpio_status_t;
 
-struct iomem_gpio_event {
+typedef struct {
   iomem_gpio_enum_pin_t pin;
   uint32_t value;
-};
-typedef struct iomem_gpio_event iomem_gpio_event_t;
-typedef struct iomem_gpio_event* iomem_gpio_event_ptr_t;
+} iomem_gpio_event_t;
 
 #endif

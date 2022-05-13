@@ -42,7 +42,7 @@ void rpc_handle_close(
   __unused size_t response_info
 ) {
   vfs_close_response_t response = { .status = -EINVAL };
-  vfs_close_request_ptr_t request = malloc( sizeof( vfs_close_request_t ) );
+  vfs_close_request_t* request = malloc( sizeof( vfs_close_request_t ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;

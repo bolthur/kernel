@@ -41,12 +41,12 @@ static bool virt_initialized = false;
 /**
  * @brief user context
  */
-virt_context_ptr_t virt_current_user_context;
+virt_context_t* virt_current_user_context;
 
 /**
  * @brief kernel context
  */
-virt_context_ptr_t virt_current_kernel_context;
+virt_context_t* virt_current_kernel_context;
 
 /**
  * @fn void virt_init(void)
@@ -245,7 +245,7 @@ bool virt_init_get( void ) {
  * @return false range is not or incompletely mapped
  */
 bool virt_is_mapped_in_context_range(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t address,
   size_t size
 ) {
@@ -299,7 +299,7 @@ bool virt_is_mapped_range( uintptr_t address, size_t size ) {
  * @return false
  */
 bool virt_unmap_address_range(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t address,
   size_t size,
   bool free_phys
@@ -327,7 +327,7 @@ bool virt_unmap_address_range(
  * @return uintptr_t
  */
 uintptr_t virt_find_free_page_range(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   size_t size,
   uintptr_t start
 ) {
@@ -401,7 +401,7 @@ uintptr_t virt_find_free_page_range(
  * @return false
  */
 bool virt_map_address_range(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t address,
   uint64_t phys,
   size_t size,
@@ -442,7 +442,7 @@ bool virt_map_address_range(
  * @return false
  */
 bool virt_map_address_range_random(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t address,
   size_t size,
   virt_memory_type_t type,
@@ -481,13 +481,13 @@ bool virt_map_address_range_random(
 }
 
 /**
- * @fn uintptr_t virt_get_context_min_address(virt_context_ptr_t)
+ * @fn uintptr_t virt_get_context_min_address(virt_context_t*)
  * @brief Get context min address
  *
  * @param ctx
  * @return
  */
-uintptr_t virt_get_context_min_address( virt_context_ptr_t ctx ) {
+uintptr_t virt_get_context_min_address( virt_context_t* ctx ) {
   if ( ctx->type == VIRT_CONTEXT_TYPE_KERNEL ) {
     return KERNEL_AREA_START;
   } else if ( ctx->type == VIRT_CONTEXT_TYPE_USER ) {
@@ -498,13 +498,13 @@ uintptr_t virt_get_context_min_address( virt_context_ptr_t ctx ) {
 }
 
 /**
- * @fn uintptr_t virt_get_context_max_address(virt_context_ptr_t)
+ * @fn uintptr_t virt_get_context_max_address(virt_context_t*)
  * @brief Get context max address
  *
  * @param ctx
  * @return
  */
-uintptr_t virt_get_context_max_address( virt_context_ptr_t ctx ) {
+uintptr_t virt_get_context_max_address( virt_context_t* ctx ) {
   if ( ctx->type == VIRT_CONTEXT_TYPE_KERNEL ) {
     return KERNEL_AREA_END;
   } else if ( ctx->type == VIRT_CONTEXT_TYPE_USER ) {

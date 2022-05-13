@@ -54,7 +54,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   _syscall_rpc_set_ready( true );
 
   // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
+  vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
     return -1;
   }

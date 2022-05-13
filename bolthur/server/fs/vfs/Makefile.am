@@ -2,9 +2,13 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"fs/vfs\"
 
 bin_PROGRAMS = vfs
+vfs_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/collection/avl/libavl.la
+vfs_LDADD = \
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/collection/avl/libavl.la
 vfs_SOURCES = \
-  collection/avl.c \
-  collection/list.c \
   file/handle.c \
   ioctl/handler.c \
   rpc/add.c \

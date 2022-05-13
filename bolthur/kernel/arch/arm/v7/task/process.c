@@ -18,7 +18,7 @@
  */
 
 #include <stdbool.h>
-#include "../../../../lib/collection/avl.h"
+#include "../../../../../library/collection/avl/avl.h"
 #include "../../../../lib/assert.h"
 #include "../../../../lib/string.h"
 #include "../../../../mm/phys.h"
@@ -49,7 +49,7 @@ void task_process_start( void ) {
   #endif
 
   // get first thread to execute
-  task_thread_ptr_t next_thread = task_thread_next();
+  task_thread_t* next_thread = task_thread_next();
   // handle no thread
   if ( ! next_thread ) {
     // debug output
@@ -60,7 +60,7 @@ void task_process_start( void ) {
   }
 
   // variable for next thread queue
-  task_priority_queue_ptr_t next_queue = task_queue_get_queue(
+  task_priority_queue_t* next_queue = task_queue_get_queue(
     process_manager, next_thread->priority );
   // check queue
   if ( ! next_queue ) {
@@ -136,9 +136,9 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   }
 
   // convert context into cpu pointer
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
   // get context
-  INTERRUPT_DETERMINE_CONTEXT( cpu )
+  cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "cpu register context: %p\r\n", ( void* )cpu )
@@ -148,9 +148,9 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   #endif
 
   // set running thread
-  task_thread_ptr_t running_thread = task_thread_current_thread;
+  task_thread_t* running_thread = task_thread_current_thread;
   // get running queue if set
-  task_priority_queue_ptr_t running_queue = NULL;
+  task_priority_queue_t* running_queue = NULL;
   if ( running_thread ) {
     // load queue until success has been returned
     while ( ! running_queue ) {
@@ -167,7 +167,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     }
   }
 
-  task_thread_ptr_t next_thread = NULL;
+  task_thread_t* next_thread = NULL;
   bool halt_set = false;
   // loop while next thread is not set or it's not ready
   while ( ! next_thread ) {
@@ -221,7 +221,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   #endif
 
   // variable for next queue
-  task_priority_queue_ptr_t next_queue = NULL;
+  task_priority_queue_t* next_queue = NULL;
   // get queue of next thread
   while ( next_thread && ! next_queue ) {
     next_queue = task_queue_get_queue( process_manager, next_thread->priority );
@@ -271,7 +271,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
  * @param proc pointer to init process structure
  * @return bool true on success, else false
  */
-uintptr_t task_process_prepare_init_arch( task_process_ptr_t proc ) {
+uintptr_t task_process_prepare_init_arch( task_process_t* proc ) {
   // get possible device tree
   uintptr_t device_tree = firmware_info.atag_fdt;
   // return error if device tree is missing

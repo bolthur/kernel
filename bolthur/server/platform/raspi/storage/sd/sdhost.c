@@ -179,7 +179,7 @@ static uint32_t sdhost_app_command_list[] = {
   SDHOST_CMD_RESERVED( 63 ), // not existing according to specs but here to keep arrays equal
 };
 
-static sdhost_device_ptr_t device;
+static sdhost_device_t* device;
 
 static sdhost_message_entry_t sdhost_error_message[] = {
   { "Not implemented" },
@@ -206,7 +206,7 @@ static sdhost_response_t init_gpio( void ) {
     EARLY_STARTUP_PRINT( "Perform necessary gpio init\r\n" )
   #endif
   // allocate function parameter block
-  iomem_gpio_function_ptr_t func = malloc( sizeof( iomem_gpio_function_t ) );
+  iomem_gpio_function_t* func = malloc( sizeof( iomem_gpio_function_t ) );
   if ( ! func ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -216,7 +216,7 @@ static sdhost_response_t init_gpio( void ) {
     return SDHOST_RESPONSE_MEMORY;
   }
   // allocate pull parameter block
-  iomem_gpio_pull_ptr_t pull = malloc( sizeof( iomem_gpio_pull_t ) );
+  iomem_gpio_pull_t* pull = malloc( sizeof( iomem_gpio_pull_t ) );
   if ( ! pull ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -228,7 +228,7 @@ static sdhost_response_t init_gpio( void ) {
     return SDHOST_RESPONSE_MEMORY;
   }
   // allocate detect parameter block
-  iomem_gpio_detect_ptr_t detect = malloc( sizeof( iomem_gpio_detect_t ) );
+  iomem_gpio_detect_t* detect = malloc( sizeof( iomem_gpio_detect_t ) );
   if ( ! detect ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -519,7 +519,7 @@ static sdhost_response_t interrupt_mark_handled( uint32_t mask ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 1, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -571,7 +571,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 1, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -628,7 +628,7 @@ static sdhost_response_t get_debug_status( uint32_t* destination ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence(
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence(
     1, &sequence_size );
   if ( ! sequence ) {
     // debug output
@@ -689,7 +689,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   size_t offset = sizeof( uint32_t );
   uint32_t* buffer = device->buffer;
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence;
+  iomem_mmio_entry_t* sequence;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
@@ -981,7 +981,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
   }
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence(
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence(
     sequence_entry_count,
     &sequence_size
   );
@@ -1336,7 +1336,7 @@ static sdhost_response_t clock_frequency( uint32_t frequency ) {
     EARLY_STARTUP_PRINT( "frequency = %#"PRIx32"\r\n", frequency )
   #endif
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence;
+  iomem_mmio_entry_t* sequence;
   // if to small set to max val of divisor
   if ( 100000 > frequency ) {
     // allocate sequence
@@ -1525,7 +1525,7 @@ static sdhost_response_t reset( void ) {
     EARLY_STARTUP_PRINT( "Reset sdhost controller\r\n" )
   #endif
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence;
+  iomem_mmio_entry_t* sequence;
 
   // fetch max clock
   sdhost_response_t response = max_clock_frequency();
@@ -2066,7 +2066,7 @@ sdhost_response_t sdhost_init( void ) {
   #endif
   // set block size in register
   size_t sequence_count;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence(
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence(
     1, &sequence_count
   );
   if ( ! sequence ) {

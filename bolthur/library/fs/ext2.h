@@ -22,12 +22,10 @@
 #if ! defined( _EXT2_H )
 #define _EXT2_H
 
-struct ext2_superblock {
-};
-typedef struct ext2_superblock ext2_superblock_t;
-typedef struct ext2_superblock* ext2_superblock_ptr_t;
+typedef struct {
+} ext2_superblock_t;
 
-struct ext2_blockgroup {
+typedef struct {
   uint32_t block_bitmap;
   uint32_t inode_bitmap;
   uint32_t inode_table;
@@ -36,9 +34,7 @@ struct ext2_blockgroup {
   uint16_t directory_num;
   uint16_t padding;
   uint32_t unused[ 3 ];
-};
-typedef struct ext2_blockgroup ext2_blockgroup_t;
-typedef struct ext2_blockgroup* ext2_blockgroup_ptr_t;
+} ext2_blockgroup_t;
 
 #define INODE_TYPE_FIFO 0x1000
 #define INODE_TYPE_CHRDEV 0x2000
@@ -85,7 +81,7 @@ typedef struct ext2_blockgroup* ext2_blockgroup_ptr_t;
 #define INODE_FLAG_AFS_DIR 0x20000
 #define INODE_FLAG_JOURNAL_FILE_DATA 0x40000
 
-struct ext2_inode {
+typedef struct {
   uint16_t type_permission;
   uint16_t uid_lower;
   uint32_t size;
@@ -109,18 +105,14 @@ struct ext2_inode {
   uint16_t uid_upper;
   uint16_t gid_upper;
   uint32_t reserved3;
-};
-typedef struct ext2_inode ext2_inode_t;
-typedef struct ext2_inode* ext2_inode_ptr_t;
+} ext2_inode_t;
 
-struct ext2_directory_entry {
+typedef struct {
   uint32_t inode;
   uint16_t record_length;
   uint8_t name_length;
   uint8_t type;
   char name[];
-};
-typedef struct ext2_directory_entry ext2_directory_entry_t;
-typedef struct ext2_directory_entry* ext2_directory_entry_ptr_t;
+} ext2_directory_entry_t;
 
 #endif

@@ -57,7 +57,7 @@ void rpc_handle_fork(
     return;
   }
   // get request
-  vfs_fork_request_ptr_t request = malloc( message_size );
+  vfs_fork_request_t* request = malloc( message_size );
   if ( ! request ) {
     response.status = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -83,15 +83,15 @@ void rpc_handle_fork(
     return;
   }
   // get handles of parent
-  handle_pid_ptr_t process_container = handle_generate_container( origin );
-  handle_pid_ptr_t parent_process_container = handle_get_process_container(
+  handle_pid_t* process_container = handle_generate_container( origin );
+  handle_pid_t* parent_process_container = handle_get_process_container(
     request->parent
   );
   if ( parent_process_container ) {
     process_container->handle = parent_process_container->handle;
     // local variables necessary for macro
-    handle_container_ptr_t container;
-    avl_node_ptr_t iter;
+    handle_container_t* container;
+    avl_node_t* iter;
     //EARLY_STARTUP_PRINT( "Duplicating open handles - start\r\n" )
     // loop through all open handles and duplicate them
     process_handle_for_each( iter, container, parent_process_container->tree ) {

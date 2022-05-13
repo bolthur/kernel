@@ -64,7 +64,7 @@
   /**
    * @brief CPU register context
    */
-  union __packed cpu_register_context {
+  typedef union __packed {
     #if defined( ARM_CPU_HAS_NEON )
       uint32_t raw[ 82 ];
     #else
@@ -94,46 +94,41 @@
         uint64_t neon[ 32 ];
       #endif
     } reg;
-  };
-
-  typedef union cpu_register_context cpu_register_context_t;
-  typedef union cpu_register_context *cpu_register_context_ptr_t;
+  } cpu_register_context_t;
 
   /**
    * @brief Register map
    */
-  enum cpu_register_map {
+  typedef enum {
     R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, SP, LR, PC, CPSR
-  };
-  typedef enum cpu_register_map cpu_register_map_t;
-  typedef enum cpu_register_map *cpu_register_map_ptr_t;
+  } cpu_register_map_t;
 
   #if defined( ARM_CPU_HAS_NEON )
     #define DUMP_REGISTER( context ) \
       DEBUG_OUTPUT( "CPU register dump:\r\n" ) \
-      DEBUG_OUTPUT( "  r0: %#08x, r1: %#08x,  r2: %#08x, r3: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r0, ( ( cpu_register_context_ptr_t )context )->reg.r1,  ( ( cpu_register_context_ptr_t )context )->reg.r2, ( ( cpu_register_context_ptr_t )context )->reg.r3 ) \
-      DEBUG_OUTPUT( "  r4: %#08x, r5: %#08x,  r6: %#08x, r7: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r4, ( ( cpu_register_context_ptr_t )context )->reg.r5,  ( ( cpu_register_context_ptr_t )context )->reg.r6, ( ( cpu_register_context_ptr_t )context )->reg.r7 ) \
-      DEBUG_OUTPUT( "  r8: %#08x, r9: %#08x, r10: %#08x, fp: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.r8, ( ( cpu_register_context_ptr_t )context )->reg.r9, ( ( cpu_register_context_ptr_t )context )->reg.r10, ( ( cpu_register_context_ptr_t )context )->reg.fp ) \
-      DEBUG_OUTPUT( "  ip: %#08x, sp: %#08x,  lr: %#08x, pc: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.ip, ( ( cpu_register_context_ptr_t )context )->reg.sp,  ( ( cpu_register_context_ptr_t )context )->reg.lr, ( ( cpu_register_context_ptr_t )context )->reg.pc ) \
-      DEBUG_OUTPUT( "spsr: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.spsr ) \
-      DEBUG_OUTPUT( "floating-point status and control register: %#08x\r\n", ( ( cpu_register_context_ptr_t )context )->reg.fpscr )  \
+      DEBUG_OUTPUT( "  r0: %#08x, r1: %#08x,  r2: %#08x, r3: %#08x\r\n", ( ( cpu_register_context_t* )context )->reg.r0, ( ( cpu_register_context_t* )context )->reg.r1,  ( ( cpu_register_context_t* )context )->reg.r2, ( ( cpu_register_context_t* )context )->reg.r3 ) \
+      DEBUG_OUTPUT( "  r4: %#08x, r5: %#08x,  r6: %#08x, r7: %#08x\r\n", ( ( cpu_register_context_t* )context )->reg.r4, ( ( cpu_register_context_t* )context )->reg.r5,  ( ( cpu_register_context_t* )context )->reg.r6, ( ( cpu_register_context_t* )context )->reg.r7 ) \
+      DEBUG_OUTPUT( "  r8: %#08x, r9: %#08x, r10: %#08x, fp: %#08x\r\n", ( ( cpu_register_context_t* )context )->reg.r8, ( ( cpu_register_context_t* )context )->reg.r9, ( ( cpu_register_context_t* )context )->reg.r10, ( ( cpu_register_context_t* )context )->reg.fp ) \
+      DEBUG_OUTPUT( "  ip: %#08x, sp: %#08x,  lr: %#08x, pc: %#08x\r\n", ( ( cpu_register_context_t* )context )->reg.ip, ( ( cpu_register_context_t* )context )->reg.sp,  ( ( cpu_register_context_t* )context )->reg.lr, ( ( cpu_register_context_t* )context )->reg.pc ) \
+      DEBUG_OUTPUT( "spsr: %#08x\r\n", ( ( cpu_register_context_t* )context )->reg.spsr ) \
+      DEBUG_OUTPUT( "floating-point status and control register: %#08x\r\n", ( ( cpu_register_context_t* )context )->reg.fpscr )  \
       DEBUG_OUTPUT( "floating-point register dump:\r\n" ) \
-      DEBUG_OUTPUT( " d0: %#016llx,  d1: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 0 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 1 ] ) \
-      DEBUG_OUTPUT( " d2: %#016llx,  d3: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 2 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 3 ] ) \
-      DEBUG_OUTPUT( " d4: %#016llx,  d5: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 4 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 5 ] ) \
-      DEBUG_OUTPUT( " d6: %#016llx,  d7: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 6 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 7 ] ) \
-      DEBUG_OUTPUT( " d8: %#016llx,  d9: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 8 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 9 ] ) \
-      DEBUG_OUTPUT( "d10: %#016llx, d11: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 10 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 11 ] ) \
-      DEBUG_OUTPUT( "d12: %#016llx, d13: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 12 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 13 ] ) \
-      DEBUG_OUTPUT( "d14: %#016llx, d15: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 14 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 15 ] ) \
-      DEBUG_OUTPUT( "d16: %#016llx, d17: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 16 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 17 ] ) \
-      DEBUG_OUTPUT( "d18: %#016llx, d19: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 18 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 19 ] ) \
-      DEBUG_OUTPUT( "d20: %#016llx, d21: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 20 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 21 ] ) \
-      DEBUG_OUTPUT( "d22: %#016llx, d23: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 22 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 23 ] ) \
-      DEBUG_OUTPUT( "d24: %#016llx, d25: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 24 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 25 ] ) \
-      DEBUG_OUTPUT( "d26: %#016llx, d27: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 26 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 27 ] ) \
-      DEBUG_OUTPUT( "d28: %#016llx, d29: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 28 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 29 ] ) \
-      DEBUG_OUTPUT( "d30: %#016llx, d31: %#016llx\r\n", ( ( cpu_register_context_ptr_t )context )->reg.neon[ 30 ], ( ( cpu_register_context_ptr_t )context )->reg.neon[ 31 ] )
+      DEBUG_OUTPUT( " d0: %#016llx,  d1: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 0 ], ( ( cpu_register_context_t* )context )->reg.neon[ 1 ] ) \
+      DEBUG_OUTPUT( " d2: %#016llx,  d3: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 2 ], ( ( cpu_register_context_t* )context )->reg.neon[ 3 ] ) \
+      DEBUG_OUTPUT( " d4: %#016llx,  d5: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 4 ], ( ( cpu_register_context_t* )context )->reg.neon[ 5 ] ) \
+      DEBUG_OUTPUT( " d6: %#016llx,  d7: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 6 ], ( ( cpu_register_context_t* )context )->reg.neon[ 7 ] ) \
+      DEBUG_OUTPUT( " d8: %#016llx,  d9: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 8 ], ( ( cpu_register_context_t* )context )->reg.neon[ 9 ] ) \
+      DEBUG_OUTPUT( "d10: %#016llx, d11: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 10 ], ( ( cpu_register_context_t* )context )->reg.neon[ 11 ] ) \
+      DEBUG_OUTPUT( "d12: %#016llx, d13: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 12 ], ( ( cpu_register_context_t* )context )->reg.neon[ 13 ] ) \
+      DEBUG_OUTPUT( "d14: %#016llx, d15: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 14 ], ( ( cpu_register_context_t* )context )->reg.neon[ 15 ] ) \
+      DEBUG_OUTPUT( "d16: %#016llx, d17: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 16 ], ( ( cpu_register_context_t* )context )->reg.neon[ 17 ] ) \
+      DEBUG_OUTPUT( "d18: %#016llx, d19: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 18 ], ( ( cpu_register_context_t* )context )->reg.neon[ 19 ] ) \
+      DEBUG_OUTPUT( "d20: %#016llx, d21: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 20 ], ( ( cpu_register_context_t* )context )->reg.neon[ 21 ] ) \
+      DEBUG_OUTPUT( "d22: %#016llx, d23: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 22 ], ( ( cpu_register_context_t* )context )->reg.neon[ 23 ] ) \
+      DEBUG_OUTPUT( "d24: %#016llx, d25: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 24 ], ( ( cpu_register_context_t* )context )->reg.neon[ 25 ] ) \
+      DEBUG_OUTPUT( "d26: %#016llx, d27: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 26 ], ( ( cpu_register_context_t* )context )->reg.neon[ 27 ] ) \
+      DEBUG_OUTPUT( "d28: %#016llx, d29: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 28 ], ( ( cpu_register_context_t* )context )->reg.neon[ 29 ] ) \
+      DEBUG_OUTPUT( "d30: %#016llx, d31: %#016llx\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 30 ], ( ( cpu_register_context_t* )context )->reg.neon[ 31 ] )
   #else
     #define DUMP_REGISTER( context ) \
       DEBUG_OUTPUT( \
@@ -144,23 +139,23 @@
         "%4s: %#08x\t%4s: %#08x\t%4s: %#08x\r\n"\
         "%4s: %#08x\t%4s: %#08x\t%4s: %#08x\r\n"\
         "%4s: %#08x\t%4s: %#08x\r\n", \
-        "r0", ( ( cpu_register_context_ptr_t )context )->reg.r0, \
-        "r1", ( ( cpu_register_context_ptr_t )context )->reg.r1, \
-        "r2", ( ( cpu_register_context_ptr_t )context )->reg.r2, \
-        "r3", ( ( cpu_register_context_ptr_t )context )->reg.r3, \
-        "r4", ( ( cpu_register_context_ptr_t )context )->reg.r4, \
-        "r5", ( ( cpu_register_context_ptr_t )context )->reg.r5, \
-        "r6", ( ( cpu_register_context_ptr_t )context )->reg.r6, \
-        "r7", ( ( cpu_register_context_ptr_t )context )->reg.r7, \
-        "r8", ( ( cpu_register_context_ptr_t )context )->reg.r8, \
-        "r9", ( ( cpu_register_context_ptr_t )context )->reg.r9, \
-        "r10", ( ( cpu_register_context_ptr_t )context )->reg.r10, \
-        "fp", ( ( cpu_register_context_ptr_t )context )->reg.fp, \
-        "ip", ( ( cpu_register_context_ptr_t )context )->reg.ip, \
-        "sp", ( ( cpu_register_context_ptr_t )context )->reg.sp, \
-        "lr", ( ( cpu_register_context_ptr_t )context )->reg.lr, \
-        "pc", ( ( cpu_register_context_ptr_t )context )->reg.pc, \
-        "spsr", ( ( cpu_register_context_ptr_t )context )->reg.spsr \
+        "r0", ( ( cpu_register_context_t* )context )->reg.r0, \
+        "r1", ( ( cpu_register_context_t* )context )->reg.r1, \
+        "r2", ( ( cpu_register_context_t* )context )->reg.r2, \
+        "r3", ( ( cpu_register_context_t* )context )->reg.r3, \
+        "r4", ( ( cpu_register_context_t* )context )->reg.r4, \
+        "r5", ( ( cpu_register_context_t* )context )->reg.r5, \
+        "r6", ( ( cpu_register_context_t* )context )->reg.r6, \
+        "r7", ( ( cpu_register_context_t* )context )->reg.r7, \
+        "r8", ( ( cpu_register_context_t* )context )->reg.r8, \
+        "r9", ( ( cpu_register_context_t* )context )->reg.r9, \
+        "r10", ( ( cpu_register_context_t* )context )->reg.r10, \
+        "fp", ( ( cpu_register_context_t* )context )->reg.fp, \
+        "ip", ( ( cpu_register_context_t* )context )->reg.ip, \
+        "sp", ( ( cpu_register_context_t* )context )->reg.sp, \
+        "lr", ( ( cpu_register_context_t* )context )->reg.lr, \
+        "pc", ( ( cpu_register_context_t* )context )->reg.pc, \
+        "spsr", ( ( cpu_register_context_t* )context )->reg.spsr \
       )
   #endif
 #endif

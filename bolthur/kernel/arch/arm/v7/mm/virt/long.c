@@ -448,7 +448,7 @@ static uint64_t get_new_table( uint64_t table ) {
 }
 
 /**
- * @fn uint64_t v7_long_create_table(virt_context_ptr_t, uintptr_t, uint64_t)
+ * @fn uint64_t v7_long_create_table(virt_context_t*, uintptr_t, uint64_t)
  * @brief Internal v7 long descriptor create table function
  *
  * @param ctx context to create table for
@@ -457,7 +457,7 @@ static uint64_t get_new_table( uint64_t table ) {
  * @return address of created and prepared table
  */
 uint64_t v7_long_create_table(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t addr,
   __unused uint64_t table
 ) {
@@ -617,7 +617,7 @@ uint64_t v7_long_create_table(
 }
 
 /**
- * @fn bool v7_long_map(virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t)
+ * @fn bool v7_long_map(virt_context_t*, uintptr_t, uint64_t, virt_memory_type_t, uint32_t)
  * @brief Internal v7 long descriptor mapping function
  *
  * @param ctx pointer to page context
@@ -628,7 +628,7 @@ uint64_t v7_long_create_table(
  * @return
  */
 bool v7_long_map(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t vaddr,
   uint64_t paddr,
   virt_memory_type_t memory,
@@ -731,7 +731,7 @@ bool v7_long_map(
 }
 
 /**
- * @fn bool v7_long_map_random(virt_context_ptr_t, uintptr_t, virt_memory_type_t, uint32_t)
+ * @fn bool v7_long_map_random(virt_context_t*, uintptr_t, virt_memory_type_t, uint32_t)
  * @brief Internal v7 long descriptor mapping function
  *
  * @param ctx pointer to page context
@@ -741,7 +741,7 @@ bool v7_long_map(
  * @return
  */
 bool v7_long_map_random(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t vaddr,
   virt_memory_type_t memory,
   uint32_t page
@@ -769,7 +769,7 @@ uintptr_t v7_long_map_temporary( uint64_t paddr, size_t size ) {
 }
 
 /**
- * @fn bool v7_long_unmap(virt_context_ptr_t, uintptr_t, bool)
+ * @fn bool v7_long_unmap(virt_context_t*, uintptr_t, bool)
  * @brief Internal v7 long descriptor unmapping function
  *
  * @param ctx pointer to page context
@@ -777,7 +777,7 @@ uintptr_t v7_long_map_temporary( uint64_t paddr, size_t size ) {
  * @param free_phys flag to free also physical memory
  * @return
  */
-bool v7_long_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
+bool v7_long_unmap( virt_context_t* ctx, uintptr_t vaddr, bool free_phys ) {
   // get page index
   uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( vaddr );
   // get physical table
@@ -836,13 +836,13 @@ void v7_long_unmap_temporary( uintptr_t addr, size_t size ) {
 }
 
 /**
- * @fn bool v7_long_set_context(virt_context_ptr_t)
+ * @fn bool v7_long_set_context(virt_context_t*)
  * @brief Internal v7 long descriptor enable context function
  *
  * @param ctx context structure
  * @return
  */
-bool v7_long_set_context( virt_context_ptr_t ctx ) {
+bool v7_long_set_context( virt_context_t* ctx ) {
   // handle invalid
   if (
     VIRT_CONTEXT_TYPE_USER != ctx->type
@@ -977,13 +977,13 @@ void v7_long_flush_address( uintptr_t addr ) {
 }
 
 /**
- * @fn bool v7_long_prepare_temporary(virt_context_ptr_t)
+ * @fn bool v7_long_prepare_temporary(virt_context_t*)
  * @brief Helper to reserve temporary area for mappings
  *
  * @param ctx context structure
  * @return
  */
-bool v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
+bool v7_long_prepare_temporary( virt_context_t* ctx ) {
   // ensure kernel for temporary and not initialized
   if (
     VIRT_CONTEXT_TYPE_KERNEL != ctx->type
@@ -1039,13 +1039,13 @@ bool v7_long_prepare_temporary( virt_context_ptr_t ctx ) {
 }
 
 /**
- * @fn virt_context_ptr_t v7_long_create_context(virt_context_type_t)
+ * @fn virt_context_t* v7_long_create_context(virt_context_type_t)
  * @brief Create context for v7 long descriptor
  *
  * @param type context type to create
  * @return
  */
-virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
+virt_context_t* v7_long_create_context( virt_context_type_t type ) {
   // reserve space for context
   uint64_t ctx = ! virt_init_get()
     ? VIRT_2_PHYS( aligned_alloc( PAGE_SIZE, sizeof( ld_global_page_directory_t ) ) )
@@ -1077,7 +1077,7 @@ virt_context_ptr_t v7_long_create_context( virt_context_type_t type ) {
   unmap_temporary( tmp, PAGE_SIZE );
 
   // create new context structure for return
-  virt_context_ptr_t context = malloc( sizeof( *context ) );
+  virt_context_t* context = malloc( sizeof( *context ) );
   // handle error
   if ( ! context ) {
     // free stuff
@@ -1313,14 +1313,14 @@ bool v7_long_fork_global_directory(
 }
 
 /**
- * @fn virt_context_ptr_t v7_long_fork_context(virt_context_ptr_t)
+ * @fn virt_context_t* v7_long_fork_context(virt_context_t*)
  * @brief Fork virtual context with long page address extension
  * @param ctx context to fork
  * @return forked context or null
  */
-virt_context_ptr_t v7_long_fork_context( virt_context_ptr_t ctx ) {
+virt_context_t* v7_long_fork_context( virt_context_t* ctx ) {
   // create new context
-  virt_context_ptr_t forked = virt_create_context( ctx->type );
+  virt_context_t* forked = virt_create_context( ctx->type );
   if ( ! forked ) {
     return NULL;
   }
@@ -1471,7 +1471,7 @@ bool v7_long_destroy_global_directory( ld_global_page_directory_t* dir ) {
 }
 
 /**
- * @fn bool v7_long_destroy_context(virt_context_ptr_t, bool)
+ * @fn bool v7_long_destroy_context(virt_context_t*, bool)
  * @brief Destroy context for v7 long descriptor
  *
  * @param ctx
@@ -1480,7 +1480,7 @@ bool v7_long_destroy_global_directory( ld_global_page_directory_t* dir ) {
  *
  * @todo test implementation by stepping with gdb
  */
-bool v7_long_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
+bool v7_long_destroy_context( virt_context_t* ctx, bool unmap_only ) {
   // check context to be not active
   if (
     (
@@ -1550,14 +1550,14 @@ void v7_long_prepare( void ) {
 }
 
 /**
- * @fn bool v7_long_is_mapped_in_context(virt_context_ptr_t, uintptr_t)
+ * @fn bool v7_long_is_mapped_in_context(virt_context_t*, uintptr_t)
  * @brief Checks whether address is mapped or not
  *
  * @param ctx
  * @param addr
  * @return
  */
-bool v7_long_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
+bool v7_long_is_mapped_in_context( virt_context_t* ctx, uintptr_t addr ) {
   // get page index
   uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( addr );
   bool mapped = false;
@@ -1596,7 +1596,7 @@ bool v7_long_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
 }
 
 /**
- * @fn uint64_t v7_long_get_mapped_address_in_context(virt_context_ptr_t, uintptr_t)
+ * @fn uint64_t v7_long_get_mapped_address_in_context(virt_context_t*, uintptr_t)
  * @brief Get mapped physical address
  *
  * @param ctx
@@ -1604,7 +1604,7 @@ bool v7_long_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
  * @return
  */
 uint64_t v7_long_get_mapped_address_in_context(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t addr
 ) {
   // get page index

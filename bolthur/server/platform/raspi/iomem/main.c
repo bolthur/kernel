@@ -73,7 +73,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // calculate add message size
   size_t msg_size = sizeof( vfs_add_request_t ) + 11 * sizeof( size_t );
   // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( msg_size );
+  vfs_add_request_t* msg = malloc( msg_size );
   if ( ! msg ) {
     return -1;
   }

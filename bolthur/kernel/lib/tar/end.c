@@ -27,6 +27,6 @@
  * @return true end is reached
  * @return false there are more elements
  */
-bool tar_end_reached( tar_header_ptr_t current ) {
+bool tar_end_reached( tar_header_t* current ) {
   return ! current || ! current->file_name[ 0 ];
 }

@@ -32,12 +32,12 @@
 #endif
 
 /**
- * @fn void rpc_queue_cleanup(const list_item_ptr_t)
+ * @fn void rpc_queue_cleanup(list_item_t*)
  * @brief Helper for cleanup
  *
  * @param item
  */
-void rpc_queue_cleanup( const list_item_ptr_t item ) {
+void rpc_queue_cleanup( list_item_t* item ) {
   if ( item->data ) {
     // delete data
     rpc_backup_destroy( item->data );
@@ -47,13 +47,13 @@ void rpc_queue_cleanup( const list_item_ptr_t item ) {
 }
 
 /**
- * @fn bool rpc_queue_setup(task_process_ptr_t)
+ * @fn bool rpc_queue_setup(task_process_t*)
  * @brief Setup rpc queue
  *
  * @param proc
  * @return
  */
-bool rpc_queue_setup( task_process_ptr_t proc ) {
+bool rpc_queue_setup( task_process_t* proc ) {
   // stop if already setup
   if ( proc->rpc_queue ) {
     return true;
@@ -64,24 +64,24 @@ bool rpc_queue_setup( task_process_ptr_t proc ) {
 }
 
 /**
- * @fn bool rpc_queue_ready(task_process_ptr_t)
+ * @fn bool rpc_queue_ready(task_process_t*)
  * @brief Method to check if rpc queue is ready for process
  *
  * @param proc
  * @return
  */
-bool rpc_queue_ready( task_process_ptr_t proc ) {
+bool rpc_queue_ready( task_process_t* proc ) {
   return proc->rpc_queue;
 }
 
 
 /**
- * @fn void rpc_queue_destroy(task_process_ptr_t)
+ * @fn void rpc_queue_destroy(task_process_t*)
  * @brief Destroy rpc queue
  *
  * @param proc
  */
-void rpc_queue_destroy( task_process_ptr_t proc ) {
+void rpc_queue_destroy( task_process_t* proc ) {
   // handle no rpc data queue
   if ( ! proc->rpc_queue ) {
     return;

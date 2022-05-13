@@ -48,15 +48,13 @@
 #define PSF2_SEPARATOR 0xFF
 #define PSF2_STARTSEQ 0xFE
 
-struct psf_font_header_v1 {
+typedef struct {
   uint8_t magic[ 2 ];
   uint8_t mode;
   uint8_t height;
-};
-typedef struct psf_font_header_v1 psf_font_header_v1_t;
-typedef struct psf_font_header_v1* psf_font_header_v1_ptr_t;
+} psf_font_header_v1_t;
 
-struct psf_font_header_v2{
+typedef struct {
   uint8_t magic8[ 4 ];
   uint32_t version;
   uint32_t header_size;
@@ -65,17 +63,14 @@ struct psf_font_header_v2{
   uint32_t charsize;
   uint32_t height;
   uint32_t width;
-};
-typedef struct psf_font_header_v2 psf_font_header_v2_t;
-typedef struct psf_font_header_v2* psf_font_header_v2_ptr_t;
+} psf_font_header_v2_t;
 
-enum psf_font_header_type {
+typedef enum psf_font_header_type {
   PSF_FONT_HEADER_TYPE_V1 = 0,
   PSF_FONT_HEADER_TYPE_V2,
-};
-typedef enum psf_font_header_type psf_font_header_type_t;
+} psf_font_header_type_t;
 
-struct psf_font {
+typedef struct {
   psf_font_header_type_t type;
   uint8_t* font_buffer;
   uint32_t font_buffer_size;
@@ -84,9 +79,7 @@ struct psf_font {
     psf_font_header_v1_t v1;
     psf_font_header_v2_t v2;
   } header;
-};
-typedef struct psf_font psf_font_t;
-typedef struct psf_font* psf_font_ptr_t;
+} psf_font_t;
 
 extern uint8_t* font_buffer;
 extern size_t font_buffer_size;

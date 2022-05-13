@@ -36,7 +36,7 @@
 int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
   // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
+  vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
     return -1;
   }

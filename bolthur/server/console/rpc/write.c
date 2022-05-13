@@ -26,7 +26,7 @@
 #include "../../libconsole.h"
 #include "../rpc.h"
 #include "../handler.h"
-#include "../list.h"
+#include "../../../library/collection/list/list.h"
 #include "../console.h"
 
 /**
@@ -51,7 +51,7 @@ void rpc_handle_write(
     return;
   }
   // allocate space
-  vfs_write_request_ptr_t request = malloc( sizeof( vfs_write_request_t ) );
+  vfs_write_request_t* request = malloc( sizeof( vfs_write_request_t ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
@@ -73,7 +73,7 @@ void rpc_handle_write(
     return;
   }
   // get current active console
-  console_ptr_t console = console_get_active();
+  console_t* console = console_get_active();
   if ( ! console ) {
     response.len = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -85,7 +85,7 @@ void rpc_handle_write(
     ? console->out
     : console->err;
   // build terminal command
-  terminal_write_request_ptr_t terminal = malloc( sizeof( terminal_write_request_t ) );
+  terminal_write_request_t* terminal = malloc( sizeof( terminal_write_request_t ) );
   if ( ! terminal ) {
     response.len = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );

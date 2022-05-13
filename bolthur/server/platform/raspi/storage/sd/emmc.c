@@ -179,7 +179,7 @@ static uint32_t emmc_app_command_list[] = {
   EMMC_CMD_RESERVED( 63 ), // not existing according to specs but here to keep arrays equal
 };
 
-static emmc_device_ptr_t device;
+static emmc_device_t* device;
 
 static emmc_message_entry_t emmc_error_message[] = {
   { "Memory error" },
@@ -398,7 +398,7 @@ static emmc_response_t init_gpio( void ) {
     EARLY_STARTUP_PRINT( "Perform necessary gpio init\r\n" )
   #endif
   // allocate function parameter block
-  iomem_gpio_function_ptr_t func = malloc( sizeof( iomem_gpio_function_t ) );
+  iomem_gpio_function_t* func = malloc( sizeof( iomem_gpio_function_t ) );
   if ( ! func ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -408,7 +408,7 @@ static emmc_response_t init_gpio( void ) {
     return EMMC_RESPONSE_MEMORY;
   }
   // allocate pull parameter block
-  iomem_gpio_pull_ptr_t pull = malloc( sizeof( iomem_gpio_pull_t ) );
+  iomem_gpio_pull_t* pull = malloc( sizeof( iomem_gpio_pull_t ) );
   if ( ! pull ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -420,7 +420,7 @@ static emmc_response_t init_gpio( void ) {
     return EMMC_RESPONSE_MEMORY;
   }
   // allocate detect parameter block
-  iomem_gpio_detect_ptr_t detect = malloc( sizeof( iomem_gpio_detect_t ) );
+  iomem_gpio_detect_t* detect = malloc( sizeof( iomem_gpio_detect_t ) );
   if ( ! detect ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -710,7 +710,7 @@ static emmc_response_t gather_version_info( void ) {
   #endif
   // fetch host version
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t host_version_sequence = util_prepare_mmio_sequence(
+  iomem_mmio_entry_t* host_version_sequence = util_prepare_mmio_sequence(
     1, &sequence_size );
   if ( ! host_version_sequence ) {
     return EMMC_RESPONSE_MEMORY;
@@ -862,7 +862,7 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 10, &sequence_size );
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 10, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -974,7 +974,7 @@ static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 1, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -1073,7 +1073,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence(
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence(
     sequence_entry_count,
     &sequence_size
   );
@@ -1424,7 +1424,7 @@ static emmc_response_t get_interrupt_status( uint32_t* destination ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 1, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -1480,7 +1480,7 @@ static emmc_response_t reset_command( void ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 4, &sequence_size );
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 4, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -1568,7 +1568,7 @@ static emmc_response_t reset_data( void ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 4, &sequence_size );
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 4, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -2238,7 +2238,7 @@ static emmc_response_t reset( void ) {
   emmc_response_t response;
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence( 7, &sequence_size );
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 7, &sequence_size );
   if ( ! sequence ) {
     return EMMC_RESPONSE_MEMORY;
   }
@@ -2765,7 +2765,7 @@ emmc_response_t emmc_init( void ) {
   #endif
   // set block size in register
   size_t sequence_count;
-  iomem_mmio_entry_ptr_t sequence = util_prepare_mmio_sequence(
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence(
     2, &sequence_count
   );
   if ( ! sequence ) {

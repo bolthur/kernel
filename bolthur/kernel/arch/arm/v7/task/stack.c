@@ -35,7 +35,7 @@
  *
  * @todo revise stack handling
  */
-uintptr_t task_stack_manager_next( task_stack_manager_ptr_t manager ) {
+uintptr_t task_stack_manager_next( task_stack_manager_t* manager ) {
   // check parameter
   if ( ! manager ) {
     return 0;
@@ -47,8 +47,8 @@ uintptr_t task_stack_manager_next( task_stack_manager_ptr_t manager ) {
   uintptr_t max_stack = THREAD_STACK_END_ADDRESS;
 
   // get min and max nodes
-  avl_node_ptr_t min = avl_get_min( manager->tree->root );
-  avl_node_ptr_t max = avl_get_max( manager->tree->root );
+  avl_node_t* min = avl_get_min( manager->tree->root );
+  avl_node_t* max = avl_get_max( manager->tree->root );
 
   // handle empty
   if ( ! min && ! max ) {
@@ -58,7 +58,7 @@ uintptr_t task_stack_manager_next( task_stack_manager_ptr_t manager ) {
   // find possible hole
   while ( min != max ) {
     // try to find
-    avl_node_ptr_t tmp = avl_find_by_data( manager->tree, ( void* )current );
+    avl_node_t* tmp = avl_find_by_data( manager->tree, ( void* )current );
     // not found => free
     if ( ! tmp ) {
       return current;

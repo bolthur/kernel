@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#define PRINT_EXCEPTION 1
 #include "../../../../../lib/assert.h"
 #if defined( REMOTE_DEBUG )
   #include "../../debug/debug.h"
@@ -47,7 +47,7 @@ static uint32_t nested_data_abort = 0;
  * @todo trigger schedule when prefetch abort source is user thread
  * @todo panic when data abort is triggered from kernel
  */
-noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
+noreturn void vector_data_abort_handler( cpu_register_context_t* cpu ) {
   // nesting
   nested_data_abort++;
   assert( nested_data_abort < INTERRUPT_NESTED_MAX )
@@ -62,7 +62,7 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
     DEBUG_OUTPUT( "origin = %d\r\n", origin )
   #endif
   // get context
-  INTERRUPT_DETERMINE_CONTEXT( cpu )
+  cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "data abort while accessing %p\r\n",

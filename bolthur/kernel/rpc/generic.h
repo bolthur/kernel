@@ -18,7 +18,7 @@
  */
 
 #include <stdbool.h>
-#include "../lib/collection/list.h"
+#include "../../library/collection/list/list.h"
 #include "../task/process.h"
 #include "../task/thread.h"
 #include "backup.h"
@@ -26,11 +26,11 @@
 #if ! defined( _RPC_GENERIC_H )
 #define _RPC_GENERIC_H
 
-bool rpc_generic_setup( task_process_ptr_t );
-void rpc_generic_destroy( task_process_ptr_t );
-bool rpc_generic_ready( task_process_ptr_t );
-bool rpc_generic_restore( task_thread_ptr_t );
-bool rpc_generic_prepare_invoke( rpc_backup_ptr_t );
-rpc_backup_ptr_t rpc_generic_raise( task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t, bool );
+bool rpc_generic_setup( task_process_t* );
+void rpc_generic_destroy( task_process_t* );
+bool rpc_generic_ready( task_process_t* );
+bool rpc_generic_restore( task_thread_t* );
+bool rpc_generic_prepare_invoke( rpc_backup_t* );
+rpc_backup_t* rpc_generic_raise( task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool );
 
 #endif

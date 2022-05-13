@@ -34,12 +34,12 @@
 
 
 /**
- * @fn void terminal_scroll(terminal_ptr_t)
+ * @fn void terminal_scroll(terminal_t*)
  * @brief Scroll up terminal buffer
  *
  * @param term
  */
-static void terminal_scroll( terminal_ptr_t term ) {
+static void terminal_scroll( terminal_t* term ) {
   // calculate offset and size
   uint32_t offset = psf_glyph_height() * term->pitch;
   uint32_t size = resolution_data.height * term->pitch;
@@ -49,7 +49,7 @@ static void terminal_scroll( terminal_ptr_t term ) {
 }
 
 /**
- * @fn uint32_t terminal_push(terminal_ptr_t, const char*)
+ * @fn uint32_t terminal_push(terminal_t*, const char*)
  * @brief Push string to terminal buffer
  *
  * @param term terminal to push to
@@ -57,7 +57,7 @@ static void terminal_scroll( terminal_ptr_t term ) {
  * @return
  */
 __unused static uint32_t terminal_push(
-  terminal_ptr_t term,
+  terminal_t* term,
   const char* s
 ) {
   uint32_t rendered = 0;
@@ -172,14 +172,14 @@ void render_char_to_surface(
 }
 
 /**
- * @fn void render_terminal(terminal_ptr_t, const char*)
+ * @fn void render_terminal(terminal_t*, const char*)
  * @brief Internal terminal render
  *
  * @param term
  * @param s
  * @return rendered character length
  */
-ssize_t render_terminal( terminal_ptr_t term, const char* s ) {
+ssize_t render_terminal( terminal_t* term, const char* s ) {
   // FIXME: currently only 32 bit depth is supported
   if ( 32 != term->bpp ) {
     return -ENOSYS;

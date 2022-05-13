@@ -24,9 +24,9 @@
  *
  * @param head
  * @param tag
- * @return atag_ptr_t
+ * @return atag_t*
  */
-atag_ptr_t atag_find( atag_ptr_t head, atag_tag_t tag ) {
+atag_t* atag_find( atag_t* head, atag_tag_t tag ) {
   // loop until atag end reached
   while ( head ) {
     // return if found

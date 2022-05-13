@@ -45,7 +45,7 @@ void rpc_handle_read_async(
   size_t response_info
 ) {
   // get matching async data
-  bolthur_async_data_ptr_t async_data = bolthur_rpc_pop_async(
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
     type,
     response_info
   );
@@ -56,14 +56,14 @@ void rpc_handle_read_async(
   if( ! data_info ) {
     return;
   }
-  vfs_read_response_ptr_t response = malloc( sizeof( vfs_read_response_t ) );
+  vfs_read_response_t* response = malloc( sizeof( vfs_read_response_t ) );
   if ( ! response ) {
     return;
   }
   memset( response, 0, sizeof( vfs_read_response_t ) );
   response->len = -EINVAL;
   // original request
-  vfs_read_request_ptr_t request = async_data->original_data;
+  vfs_read_request_t* request = async_data->original_data;
   if ( ! request ) {
     bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), async_data );
     return;
@@ -75,7 +75,7 @@ void rpc_handle_read_async(
     free( response );
     return;
   }
-  handle_container_ptr_t container;
+  handle_container_t* container;
   // try to get handle information
   int result = handle_get(
     &container,
@@ -119,26 +119,26 @@ void rpc_handle_read(
     rpc_handle_read_async( type, origin, data_info, response_info );
     return;
   }
-  vfs_read_response_ptr_t response = malloc( sizeof( vfs_read_response_t ) );
+  vfs_read_response_t* response = malloc( sizeof( vfs_read_response_t ) );
   if ( ! response ) {
     return;
   }
   memset( response, 0, sizeof( vfs_read_response_t ) );
   response->len = -ENOMEM;
-  vfs_read_request_ptr_t request = malloc( sizeof( vfs_read_request_t ) );
+  vfs_read_request_t* request = malloc( sizeof( vfs_read_request_t ) );
   if ( ! request ) {
     bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
     free( response );
     return;
   }
-  vfs_read_request_ptr_t nested_request = malloc( sizeof( vfs_read_request_t ) );
+  vfs_read_request_t* nested_request = malloc( sizeof( vfs_read_request_t ) );
   if ( ! nested_request ) {
     bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
     free( response );
     free( request );
     return;
   }
-  handle_container_ptr_t container;
+  handle_container_t* container;
   // clear variables
   memset( request, 0, sizeof( vfs_read_request_t ) );
   memset( nested_request, 0, sizeof( vfs_read_request_t ) );

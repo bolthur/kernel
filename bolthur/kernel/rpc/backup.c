@@ -29,14 +29,14 @@
 #endif
 
 /**
- * @fn void rpc_backup_destroy(rpc_backup_ptr_t)
+ * @fn void rpc_backup_destroy(rpc_backup_t*)
  * @brief backup to destroy
  *
  * @param backup
  *
  * @todo ensure that everything from backup is destroyed
  */
-void rpc_backup_destroy( rpc_backup_ptr_t backup ) {
+void rpc_backup_destroy( rpc_backup_t* backup ) {
   if ( ! backup ) {
     return;
   }
@@ -50,22 +50,22 @@ void rpc_backup_destroy( rpc_backup_ptr_t backup ) {
 }
 
 /**
- * @fn rpc_backup_ptr_t rpc_backup_get_active(task_thread_ptr_t)
+ * @fn rpc_backup_t* rpc_backup_get_active(task_thread_t*)
  * @brief Get active rpc backup
  *
  * @param thread
  * @return
  */
-rpc_backup_ptr_t rpc_backup_get_active( task_thread_ptr_t thread ) {
+rpc_backup_t* rpc_backup_get_active( task_thread_t* thread ) {
   // ensure proper states
   if ( TASK_THREAD_STATE_RPC_ACTIVE != thread->state ) {
     return NULL;
   }
   // variables
-  list_item_ptr_t current = thread->process->rpc_queue->first;
+  list_item_t* current = thread->process->rpc_queue->first;
   // try to get active rpc backup
   while( current ) {
-    rpc_backup_ptr_t entry = current->data;
+    rpc_backup_t* entry = current->data;
     if ( entry->active ) {
       return entry;
     }

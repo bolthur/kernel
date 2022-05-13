@@ -74,7 +74,7 @@ void rpc_handle_gpio_set_function(
     return;
   }
   // allocate space for request
-  iomem_gpio_function_ptr_t request = malloc( data_size );
+  iomem_gpio_function_t* request = malloc( data_size );
   if ( ! request ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -100,21 +100,21 @@ void rpc_handle_gpio_set_function(
   #endif
   // determine register to set and adjust pin
   uintptr_t address = 0;
-  if ( /*0 <= request->pin &&*/ 10 > request->pin ) {
+  if ( 10 > request->pin ) {
     address = PERIPHERAL_GPIO_GPFSEL0;
-  } else if ( 10 <= request->pin && 20 > request->pin ) {
+  } else if ( 20 > request->pin ) {
     address = PERIPHERAL_GPIO_GPFSEL1;
     request->pin -= 10;
-  } else if ( 20 <= request->pin && 30 > request->pin ) {
+  } else if ( 30 > request->pin ) {
     address = PERIPHERAL_GPIO_GPFSEL2;
     request->pin -= 20;
-  } else if ( 30 <= request->pin && 40 > request->pin ) {
+  } else if ( 40 > request->pin ) {
     address = PERIPHERAL_GPIO_GPFSEL3;
     request->pin -= 30;
-  } else if ( 40 <= request->pin && 50 > request->pin ) {
+  } else if ( 50 > request->pin ) {
     address = PERIPHERAL_GPIO_GPFSEL4;
     request->pin -= 40;
-  } else if ( 50 <= request->pin && 54 > request->pin ) {
+  } else if ( 54 > request->pin ) {
     address = PERIPHERAL_GPIO_GPFSEL5;
     request->pin -= 50;
   }

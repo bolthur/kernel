@@ -20,7 +20,8 @@
 #include <stddef.h>
 #include "lib/string.h"
 #include "lib/stdlib.h"
-#include "lib/collection/avl.h"
+#include "../library/collection/avl/avl.h"
+#include "panic.h"
 #include "mm/heap.h"
 #include "rpc/generic.h"
 #include "interrupt.h"
@@ -33,7 +34,7 @@
 /**
  * @brief Interrupt management structure
  */
-interrupt_manager_ptr_t interrupt_manager = NULL;
+interrupt_manager_t* interrupt_manager = NULL;
 
 /**
  * @brief Compare interrupt callback necessary for avl tree
@@ -43,12 +44,12 @@ interrupt_manager_ptr_t interrupt_manager = NULL;
  * @return int32_t
  */
 static int32_t compare_interrupt_callback(
-  const avl_node_ptr_t a,
-  const avl_node_ptr_t b
+  const avl_node_t* a,
+  const avl_node_t* b
 ) {
   // get blocks
-  interrupt_block_ptr_t block_a = INTERRUPT_GET_BLOCK( a );
-  interrupt_block_ptr_t block_b = INTERRUPT_GET_BLOCK( b );
+  interrupt_block_t* block_a = INTERRUPT_GET_BLOCK( a );
+  interrupt_block_t* block_b = INTERRUPT_GET_BLOCK( b );
 
   // -1 if address of a->interrupt is greater than address of b->interrupt
   if ( block_a->interrupt > block_b->interrupt ) {
@@ -66,9 +67,9 @@ static int32_t compare_interrupt_callback(
  * @brief Helper to get interrupt manager tree by type
  *
  * @param type type to get tree from
- * @return avl_tree_ptr_t
+ * @return avl_tree_t*
  */
-static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
+static avl_tree_t* tree_by_type( interrupt_type_t type ) {
   // check heap existence
   if ( ! heap_init_get() ) {
     return NULL;
@@ -134,13 +135,13 @@ static avl_tree_ptr_t tree_by_type( interrupt_type_t type ) {
 }
 
 /**
- * @fn int32_t block_list_lookup(const list_item_ptr_t, const void*)
+ * @fn int32_t block_list_lookup(const list_item_t*, const void*)
  * @brief interrupt block list cleanup helper
  * @param a
  */
-static int32_t kernel_block_list_lookup( const list_item_ptr_t a, const void* data ) {
+static int32_t kernel_block_list_lookup( const list_item_t* a, const void* data ) {
   // get callback from data
-  interrupt_callback_wrapper_ptr_t wrapper = a->data;
+  interrupt_callback_wrapper_t* wrapper = a->data;
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Check bound callback at %p\r\n", ( void* )wrapper );
@@ -150,25 +151,25 @@ static int32_t kernel_block_list_lookup( const list_item_ptr_t a, const void* da
 }
 
 /**
- * @fn void block_list_cleanup(const list_item_ptr_t)
+ * @fn void block_list_cleanup(list_item_t*)
  * @brief interrupt block list cleanup helper
  * @param a
  */
-static void kernel_block_list_cleanup( const list_item_ptr_t a ) {
+static void kernel_block_list_cleanup( list_item_t* a ) {
   if ( a->data ) {
-    free( a );
+    free( a->data );
   }
   list_default_cleanup( a );
 }
 
 /**
- * @fn int32_t block_list_lookup(const list_item_ptr_t, const void*)
+ * @fn int32_t block_list_lookup(const list_item_t*, const void*)
  * @brief interrupt block list cleanup helper
  * @param a
  */
-static int32_t process_block_list_lookup( const list_item_ptr_t a, const void* data ) {
+static int32_t process_block_list_lookup( const list_item_t* a, const void* data ) {
   // get callback from data
-  task_process_ptr_t proc = a->data;
+  task_process_t* proc = a->data;
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Check bound callback at %p\r\n", ( void* )wrapper );
@@ -178,7 +179,7 @@ static int32_t process_block_list_lookup( const list_item_ptr_t a, const void* d
 }
 
 /**
- * @fn bool interrupt_unregister_handler(size_t, interrupt_callback_t, task_process_ptr_t, interrupt_type_t, bool, bool)
+ * @fn bool interrupt_unregister_handler(size_t, interrupt_callback_t, task_process_t*, interrupt_type_t, bool, bool)
  * @brief Unregister interrupt handler
  *
  * @param num interrupt to unbind
@@ -194,7 +195,7 @@ static int32_t process_block_list_lookup( const list_item_ptr_t a, const void* d
 bool interrupt_unregister_handler(
   size_t num,
   interrupt_callback_t callback,
-  task_process_ptr_t process,
+  task_process_t* process,
   interrupt_type_t type,
   bool post,
   bool disable
@@ -225,7 +226,7 @@ bool interrupt_unregister_handler(
   }
 
   // get correct tree to use
-  avl_tree_ptr_t tree = tree_by_type( type );
+  avl_tree_t* tree = tree_by_type( type );
   // handle no tree
   if ( ! tree ) {
     return false;
@@ -237,8 +238,8 @@ bool interrupt_unregister_handler(
   #endif
 
   // try to find node
-  avl_node_ptr_t node = avl_find_by_data( tree, ( void* )num );
-  interrupt_block_ptr_t block;
+  avl_node_t* node = avl_find_by_data( tree, ( void* )num );
+  interrupt_block_t* block;
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
@@ -254,8 +255,8 @@ bool interrupt_unregister_handler(
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Checking for not bound interrupt callback\r\n" );
   #endif
-  list_manager_ptr_t list = NULL;
-  list_item_ptr_t match = NULL;
+  list_manager_t* list = NULL;
+  list_item_t* match = NULL;
   // get matching element
   if ( process ) {
     list = block->process;
@@ -284,11 +285,11 @@ bool interrupt_unregister_handler(
     interrupt_unmask_specific( ( int8_t )num );
   }
   // remove element
-  return list_remove( list, match );
+  return list_remove_item( list, match );
 }
 
 /**
- * @fn bool interrupt_register_handler(size_t, interrupt_callback_t, task_process_ptr_t, interrupt_type_t, bool, bool)
+ * @fn bool interrupt_register_handler(size_t, interrupt_callback_t, task_process_t*, interrupt_type_t, bool, bool)
  * @brief Register interrupt handler
  *
  * @param num Interrupt to bind
@@ -302,7 +303,7 @@ bool interrupt_unregister_handler(
 bool interrupt_register_handler(
   size_t num,
   interrupt_callback_t callback,
-  task_process_ptr_t process,
+  task_process_t* process,
   interrupt_type_t type,
   bool post,
   bool enable
@@ -333,7 +334,7 @@ bool interrupt_register_handler(
   }
 
   // get correct tree to use
-  avl_tree_ptr_t tree = tree_by_type( type );
+  avl_tree_t* tree = tree_by_type( type );
   // check tree
   if ( ! tree ) {
     return false;
@@ -345,8 +346,8 @@ bool interrupt_register_handler(
   #endif
 
   // try to find node
-  avl_node_ptr_t node = avl_find_by_data( tree, ( void* )num );
-  interrupt_block_ptr_t block;
+  avl_node_t* node = avl_find_by_data( tree, ( void* )num );
+  interrupt_block_t* block;
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
@@ -414,8 +415,8 @@ bool interrupt_register_handler(
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT( "Checking for already bound interrupt callback\r\n" );
   #endif
-  list_manager_ptr_t list = NULL;
-  list_item_ptr_t match = NULL;
+  list_manager_t* list = NULL;
+  list_item_t* match = NULL;
   // try to find matching element
   if ( process ) {
     list = block->process;
@@ -438,7 +439,7 @@ bool interrupt_register_handler(
     data = process;
   } else {
     // create wrapper
-    interrupt_callback_wrapper_ptr_t wrapper = malloc( sizeof( *wrapper ) );
+    interrupt_callback_wrapper_t* wrapper = malloc( sizeof( *wrapper ) );
     // check
     if ( ! wrapper ) {
       return false;
@@ -459,7 +460,7 @@ bool interrupt_register_handler(
     interrupt_mask_specific( ( int8_t )num );
   }
   // push to list
-  return list_push_back( list, data );
+  return list_push_back_data( list, data );
 }
 
 /**
@@ -491,7 +492,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   #endif
 
   // get correct tree to use
-  avl_tree_ptr_t tree = tree_by_type( type );
+  avl_tree_t* tree = tree_by_type( type );
   // check tree
   if ( ! tree ) {
     return;
@@ -503,7 +504,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   #endif
 
   // try to get node by interrupt
-  avl_node_ptr_t node = avl_find_by_data( tree, ( void* )num );
+  avl_node_t* node = avl_find_by_data( tree, ( void* )num );
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
@@ -514,10 +515,10 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
     return;
   }
   // get interrupt block
-  interrupt_block_ptr_t block = INTERRUPT_GET_BLOCK( node );
+  interrupt_block_t* block = INTERRUPT_GET_BLOCK( node );
 
   // get first element of normal handler
-  list_item_ptr_t current = block->handler->first;
+  list_item_t* current = block->handler->first;
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Looping through mapped callbacks and execute them\r\n" );
@@ -525,7 +526,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   // loop through list
   while ( current ) {
     // get callback from data
-    interrupt_callback_wrapper_ptr_t wrapper = current->data;
+    interrupt_callback_wrapper_t* wrapper = current->data;
     // debug output
     #if defined( PRINT_INTERRUPT )
       DEBUG_OUTPUT( "Handling wrapper container %p\r\n", ( void* )wrapper );
@@ -539,20 +540,20 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   // get first element of process handlers
   current = block->process->first;
   while ( current ) {
-    task_process_ptr_t process = current->data;
+    task_process_t* process = current->data;
     // get first thread
-    avl_node_ptr_t first = avl_iterate_first( process->thread_manager );
+    avl_node_t* first = avl_iterate_first( process->thread_manager );
     // handle no thread with removal and skip
     if ( ! first ) {
-      list_item_ptr_t next = current->next;
-      list_remove( block->process, current );
+      list_item_t* next = current->next;
+      list_remove_item( block->process, current );
       current = next;
       continue;
     }
     // get thread
-    task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( first );
+    task_thread_t* thread = TASK_THREAD_GET_BLOCK( first );
     // try to raise rpc without data
-    rpc_backup_ptr_t rpc = rpc_generic_raise(
+    rpc_backup_t* rpc = rpc_generic_raise(
       thread,
       process,
       num,
@@ -585,7 +586,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   // loop through list
   while ( current ) {
     // get callback from data
-    interrupt_callback_wrapper_ptr_t wrapper = current->data;
+    interrupt_callback_wrapper_t* wrapper = current->data;
     // debug output
     #if defined( PRINT_INTERRUPT )
       DEBUG_OUTPUT( "Handling wrapper container %p\r\n", ( void* )wrapper );
@@ -689,27 +690,46 @@ void interrupt_handle_possible( void* context, bool fast ) {
 }
 
 /**
- * @fn void interrupt_unregister_process(task_process_ptr_t)
+ * @fn void interrupt_unregister_process(task_process_t*)
  * @brief Unregister process completely
  *
  * @param process
  */
-void interrupt_unregister_process( task_process_ptr_t process ) {
-  avl_tree_ptr_t tree = tree_by_type( INTERRUPT_NORMAL );
+void interrupt_unregister_process( task_process_t* process ) {
+  avl_tree_t* tree = tree_by_type( INTERRUPT_NORMAL );
   // get first entry
-  avl_node_ptr_t avl_list = avl_iterate_first( tree );
+  avl_node_t* avl_list = avl_iterate_first( tree );
   while ( avl_list ) {
-    interrupt_block_ptr_t block = INTERRUPT_GET_BLOCK( avl_list );
+    interrupt_block_t* block = INTERRUPT_GET_BLOCK( avl_list );
     // try to find process
-    list_item_ptr_t match = list_lookup_data(
+    list_item_t* match = list_lookup_data(
       block->process,
       ( void* )process->id
     );
     // remove if there is a match
     if ( match ) {
-      list_remove( block->process, match );
+      list_remove_item( block->process, match );
     }
     // get next list
     avl_list = avl_iterate_next( tree, avl_list );
   }
+}
+
+/**
+ * @fn void interrupt_get_context*(void*)
+ * @brief Method to get interrupt context
+ *
+ * @param context
+ */
+void* interrupt_get_context( void* context ) {
+  // return context if set
+  if ( context ) {
+    return context;
+  }
+  // return from task if set
+  if ( task_thread_current_thread ) {
+    return task_thread_current_thread->current_context;
+  }
+  // no context possible, panic
+  PANIC( "No valid context found!" )
 }

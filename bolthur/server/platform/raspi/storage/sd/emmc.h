@@ -27,7 +27,7 @@
 
 //#define EMMC_ENABLE_DEBUG 1
 
-enum emmc_response {
+typedef enum {
   EMMC_RESPONSE_OK = 0,
   EMMC_RESPONSE_MEMORY,
   EMMC_RESPONSE_IO,
@@ -40,14 +40,14 @@ enum emmc_response {
   EMMC_RESPONSE_INVALID_COMMAND,
   EMMC_RESPONSE_COMMAND_ERROR,
   EMMC_RESPONSE_UNKNOWN,
-};
+} emmc_response_t;
 
-enum emmc_operation {
+typedef enum {
   EMMC_OPERATION_READ = 0,
   EMMC_OPERATION_WRITE,
-};
+} emmc_operation_t;
 
-struct emmc_device {
+typedef struct {
   // operation conditions register
   uint32_t card_ocr;
   // card identification register
@@ -97,18 +97,11 @@ struct emmc_device {
   // flags for card is absent and ejected
   bool card_absent;
   bool card_ejected;
-};
+} emmc_device_t;
 
-struct emmc_message_entry {
+typedef struct {
   char* message;
-};
-
-typedef enum emmc_response emmc_response_t;
-typedef enum emmc_operation emmc_operation_t;
-typedef struct emmc_device emmc_device_t;
-typedef struct emmc_device* emmc_device_ptr_t;
-typedef struct emmc_message_entry emmc_message_entry_t;
-typedef struct emmc_message_entry* emmc_message_entry_ptr_t;
+} emmc_message_entry_t;
 
 emmc_response_t emmc_init( void );
 const char* emmc_error( emmc_response_t );

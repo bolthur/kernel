@@ -19,39 +19,34 @@
 
 #include <sys/syslimits.h>
 #include <sys/types.h>
-#include "../collection/avl.h"
+#include "../../../../library/collection/avl/avl.h"
 #include "../vfs.h"
 
 #if !defined( _HANDLE_H )
 #define _HANDLE_H
 
-struct handle_pid {
+typedef struct {
   avl_node_t node;
   pid_t pid;
   int handle;
-  avl_tree_ptr_t tree;
-};
+  avl_tree_t* tree;
+} handle_pid_t;
 
-struct handle_container {
+typedef struct {
   avl_node_t node;
   int handle;
   int flags;
   int mode;
   off_t pos;
   char path[ PATH_MAX ];
-  vfs_node_ptr_t target;
-};
-
-typedef struct handle_pid handle_pid_t;
-typedef struct handle_pid *handle_pid_ptr_t;
-typedef struct handle_container handle_container_t;
-typedef struct handle_container *handle_container_ptr_t;
+  vfs_node_t* target;
+} handle_container_t;
 
 #define HANDLE_GET_CONTAINER( n ) \
-  ( handle_container_ptr_t )( ( uint8_t* )n - offsetof( handle_container_t, node ) )
+  ( handle_container_t* )( ( uint8_t* )n - offsetof( handle_container_t, node ) )
 
 #define HANDLE_GET_PID( n ) \
-  ( handle_pid_ptr_t )( ( uint8_t* )n - offsetof( handle_pid_t, node ) )
+  ( handle_pid_t* )( ( uint8_t* )n - offsetof( handle_pid_t, node ) )
 
 #define process_handle_for_each( iter, item, tree ) \
   for ( \
@@ -63,12 +58,12 @@ typedef struct handle_container *handle_container_ptr_t;
   )
 
 bool handle_init( void );
-int handle_generate( handle_container_ptr_t*, pid_t, vfs_node_ptr_t, vfs_node_ptr_t, const char*, int, int );
+int handle_generate( handle_container_t**, pid_t, vfs_node_t*, vfs_node_t*, const char*, int, int );
 int handle_destory( pid_t, int );
 void handle_destory_all( pid_t );
-int handle_get( handle_container_ptr_t*, pid_t, int );
-handle_pid_ptr_t handle_get_process_container( pid_t );
-handle_pid_ptr_t handle_generate_container( pid_t );
-bool handle_duplicate( handle_container_ptr_t, handle_pid_ptr_t );
+int handle_get( handle_container_t**, pid_t, int );
+handle_pid_t* handle_get_process_container( pid_t );
+handle_pid_t* handle_generate_container( pid_t );
+bool handle_duplicate( handle_container_t*, handle_pid_t* );
 
 #endif

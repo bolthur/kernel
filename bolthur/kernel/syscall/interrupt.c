@@ -39,7 +39,7 @@ void syscall_interrupt_acquire( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_interrupt_acquire( %"PRIu8" )\r\n", num )
   #endif
-  task_process_ptr_t proc = task_thread_current_thread->process;
+  task_process_t* proc = task_thread_current_thread->process;
   // ensure rpc handler
   if ( ! proc->rpc_handler ) {
     // debug output
@@ -86,7 +86,7 @@ void syscall_interrupt_release( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_interrupt_release( %"PRIu8" )\r\n", num )
   #endif
-  task_process_ptr_t proc = task_thread_current_thread->process;
+  task_process_t* proc = task_thread_current_thread->process;
   // ensure rpc handler
   if ( ! proc->rpc_handler ) {
     // debug output

@@ -33,7 +33,7 @@
 // linux native file systems like ext2, ext3, ext4, ...
 #define PARTITION_TYPE_LINUX_NATIVE 0x83
 
-struct mbr_table_entry {
+typedef struct {
   union {
     uint32_t raw[ 4 ];
     struct {
@@ -49,16 +49,12 @@ struct mbr_table_entry {
       uint32_t total_sector;
     } data;
   };
-};
-typedef struct mbr_table_entry mbr_table_entry_t;
-typedef struct mbr_table_entry* mbr_table_entry_ptr_t;
+} mbr_table_entry_t;
 
-struct mbr {
+typedef struct __packed {
   uint8_t unused[ 446 ];
   mbr_table_entry_t partition_table[ 4 ];
   uint8_t signatur[ 2 ];
-} __packed;
-typedef struct mbr mbr_t;
-typedef struct mbr* mbr_ptr_t;
+} mbr_t;
 
 #endif

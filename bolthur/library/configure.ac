@@ -143,6 +143,9 @@ AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 
 AC_CONFIG_FILES([
   Makefile
+  collection/Makefile
+  collection/avl/Makefile
+  collection/list/Makefile
   framebuffer/Makefile
   fs/Makefile
 ])

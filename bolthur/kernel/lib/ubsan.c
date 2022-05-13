@@ -42,7 +42,7 @@ const char* type_check_kind[] = {
  *
  * @param location
  */
-static void print( ubsan_source_location_ptr_t location ) {
+static void print( ubsan_source_location_t* location ) {
   printf( "\tfile: %s\r\n\tline: %u\r\n\tcolumn: %u\r\n",
     location->file, location->line, location->column );
 }
@@ -54,7 +54,7 @@ static void print( ubsan_source_location_ptr_t location ) {
  * @param pointer
  */
 static void handle_type_mismatch_generic(
-  ubsan_type_mismatch_data_generic_ptr_t mismatch,
+  ubsan_type_mismatch_data_generic_t* mismatch,
   uintptr_t pointer
 ) {
   // null pointer access
@@ -85,7 +85,7 @@ static void handle_type_mismatch_generic(
  * @param ptr
  */
 noreturn void __ubsan_handle_type_mismatch_v1(
-  ubsan_type_mismatch_data_v1_ptr_t data,
+  ubsan_type_mismatch_data_v1_t* data,
   uintptr_t ptr
 ) {
   // build structure
@@ -108,7 +108,7 @@ noreturn void __ubsan_handle_type_mismatch_v1(
  * @param ptr
  */
 noreturn void __ubsan_handle_type_mismatch(
-  ubsan_type_mismatch_data_ptr_t data,
+  ubsan_type_mismatch_data_t* data,
   uintptr_t ptr
 ) {
   // build structure
@@ -132,7 +132,7 @@ noreturn void __ubsan_handle_type_mismatch(
  * @param after
  */
 noreturn void __ubsan_handle_pointer_overflow(
-  ubsan_pointer_overflow_data_ptr_t data,
+  ubsan_pointer_overflow_data_t* data,
   uint64_t before,
   uint64_t after
 ) {
@@ -151,7 +151,7 @@ noreturn void __ubsan_handle_pointer_overflow(
  * @param right
  */
 noreturn void __ubsan_handle_add_overflow(
-  __maybe_unused ubsan_overflow_data_ptr_t data,
+  __maybe_unused ubsan_overflow_data_t* data,
   __maybe_unused uint64_t left,
   __maybe_unused uint64_t right
 ) {
@@ -172,7 +172,7 @@ noreturn void __ubsan_handle_add_overflow(
  * @param right
  */
 noreturn void __ubsan_handle_sub_overflow(
-  ubsan_overflow_data_ptr_t data,
+  ubsan_overflow_data_t* data,
   uint64_t left,
   uint64_t right
 ) {
@@ -193,7 +193,7 @@ noreturn void __ubsan_handle_sub_overflow(
  * @param right
  */
 noreturn void __ubsan_handle_mul_overflow(
-  __maybe_unused ubsan_overflow_data_ptr_t data,
+  __maybe_unused ubsan_overflow_data_t* data,
   __maybe_unused uint64_t left,
   __maybe_unused uint64_t right
 ) {
@@ -214,7 +214,7 @@ noreturn void __ubsan_handle_mul_overflow(
  * @param right
  */
 noreturn void __ubsan_handle_divrem_overflow(
-  ubsan_overflow_data_ptr_t data,
+  ubsan_overflow_data_t* data,
   uint64_t left,
   uint64_t right
 ) {
@@ -235,7 +235,7 @@ noreturn void __ubsan_handle_divrem_overflow(
  * @param right
  */
 noreturn void __ubsan_handle_shift_out_of_bounds(
-  ubsan_shift_out_of_bounds_data_ptr_t data,
+  ubsan_shift_out_of_bounds_data_t* data,
   uint64_t left,
   uint64_t right
 ) {
@@ -255,7 +255,7 @@ noreturn void __ubsan_handle_shift_out_of_bounds(
  * @param index
  */
 noreturn void __ubsan_handle_out_of_bounds(
-  ubsan_out_of_bounds_data_ptr_t data,
+  ubsan_out_of_bounds_data_t* data,
   uint64_t index
 ) {
   printf( "Out of bounds!\r\narray_type: %s, index: %llu\r\n",
@@ -273,7 +273,7 @@ noreturn void __ubsan_handle_out_of_bounds(
  * @param value
  */
 noreturn void __ubsan_handle_load_invalid_value(
-  __maybe_unused ubsan_invalid_value_data_ptr_t data,
+  __maybe_unused ubsan_invalid_value_data_t* data,
   __maybe_unused uint64_t value
 ) {
   printf( "Load invalid value!\r\narray_type: %s, index: %llu\r\n",
@@ -291,7 +291,7 @@ noreturn void __ubsan_handle_load_invalid_value(
  * @param value
  */
 noreturn void __ubsan_handle_negate_overflow(
-  __maybe_unused ubsan_overflow_data_ptr_t data,
+  __maybe_unused ubsan_overflow_data_t* data,
   __maybe_unused uint64_t value
 ) {
   printf( "Negate value overflow!\r\narray_type: %s, index: %llu\r\n",

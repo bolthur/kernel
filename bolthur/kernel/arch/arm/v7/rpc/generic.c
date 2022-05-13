@@ -33,27 +33,27 @@
 #endif
 
 /**
- * @fn bool rpc_restore_thread(task_thread_ptr_t)
+ * @fn bool rpc_restore_thread(task_thread_t*)
  * @brief Try thread restore
  *
  * @param thread
  * @return
  */
-bool rpc_generic_restore( task_thread_ptr_t thread ) {
+bool rpc_generic_restore( task_thread_t* thread ) {
   // ensure proper states
   if ( TASK_THREAD_STATE_RPC_ACTIVE != thread->state ) {
     return false;
   }
   // variables
-  rpc_backup_ptr_t backup = NULL;
+  rpc_backup_t* backup = NULL;
   bool further_rpc_enqueued = false;
   // get backup for restore
   for (
-    list_item_ptr_t current = thread->process->rpc_queue->first;
+    list_item_t* current = thread->process->rpc_queue->first;
     current;
     current = current->next
   ) {
-    rpc_backup_ptr_t tmp = current->data;
+    rpc_backup_t* tmp = current->data;
     // debug output
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "tmp->active = %d\r\n", tmp->active ? 1 : 0 )
@@ -109,7 +109,7 @@ bool rpc_generic_restore( task_thread_ptr_t thread ) {
   // handle enqueued stuff
   if ( further_rpc_enqueued ) {
     // get next rpc to invoke
-    rpc_backup_ptr_t next = thread->process->rpc_queue->first->data;
+    rpc_backup_t* next = thread->process->rpc_queue->first->data;
     // handle next
     if ( next ) {
       // debug output
@@ -136,13 +136,13 @@ bool rpc_generic_restore( task_thread_ptr_t thread ) {
 }
 
 /**
- * @fn bool rpc_generic_prepare_invoke(rpc_backup_ptr_t)
+ * @fn bool rpc_generic_prepare_invoke(rpc_backup_t*)
  * @brief Prepare rpc invoke with backup data
  *
  * @param backup
  * @return
  */
-bool rpc_generic_prepare_invoke( rpc_backup_ptr_t backup ) {
+bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "rpc_generic_prepare_invoke( %#p )!\r\n", backup )
@@ -157,15 +157,15 @@ bool rpc_generic_prepare_invoke( rpc_backup_ptr_t backup ) {
     return true;
   }
   // get register context
-  task_process_ptr_t proc = backup->thread->process;
-  cpu_register_context_ptr_t cpu = backup->thread->current_context;
+  task_process_t* proc = backup->thread->process;
+  cpu_register_context_t* cpu = backup->thread->current_context;
   if ( ! list_lookup_data( proc->rpc_queue, backup ) ) {
     // debug output
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "Pushing backup object to rpc queue!\r\n" )
     #endif
     // push back backup to queue
-    if ( ! list_push_back( proc->rpc_queue, backup ) ) {
+    if ( ! list_push_back_data( proc->rpc_queue, backup ) ) {
       return false;
     }
   }

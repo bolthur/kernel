@@ -27,7 +27,7 @@
  * @param header
  * @return uint8_t*
  */
-uint8_t* tar_file( tar_header_ptr_t header ) {
+uint8_t* tar_file( tar_header_t* header ) {
   // check for invalid
   if ( '\0' == header->file_name[ 0 ] ) {
     return NULL;

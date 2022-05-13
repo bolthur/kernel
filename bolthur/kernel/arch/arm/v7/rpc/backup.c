@@ -32,7 +32,7 @@
 #endif
 
 /**
- * @fn rpc_backup_ptr_t rpc_backup_create(task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t, bool)
+ * @fn rpc_backup_t* rpc_backup_create(task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool)
  * @brief Helper to create rpc backup
  *
  * @param source
@@ -46,24 +46,24 @@
  * @param disable_data
  * @return
  */
-rpc_backup_ptr_t rpc_backup_create(
-  task_thread_ptr_t source,
-  task_process_ptr_t target,
+rpc_backup_t* rpc_backup_create(
+  task_thread_t* source,
+  task_process_t* target,
   size_t type,
   void* data,
   size_t data_size,
-  task_thread_ptr_t target_thread,
+  task_thread_t* target_thread,
   bool sync,
   size_t origin_data_id,
   bool disable_data
 ) {
   // get first inactive thread
-  avl_node_ptr_t current = avl_iterate_first( target->thread_manager );
-  task_thread_ptr_t thread = target_thread;
+  avl_node_t* current = avl_iterate_first( target->thread_manager );
+  task_thread_t* thread = target_thread;
   // loop until usable thread has been found
   while ( current && ! thread ) {
     // get thread
-    task_thread_ptr_t tmp = TASK_THREAD_GET_BLOCK( current );
+    task_thread_t* tmp = TASK_THREAD_GET_BLOCK( current );
     // FIXME: CHECK IF ACTIVE
     thread = tmp;
     // get next thread
@@ -90,7 +90,7 @@ rpc_backup_ptr_t rpc_backup_create(
   #endif
 
   // reserve space for backup object
-  rpc_backup_ptr_t backup = malloc( sizeof( *backup ) );
+  rpc_backup_t* backup = malloc( sizeof( *backup ) );
   if ( ! backup ) {
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "Unable to reserve memory for backup structure!\r\n" )
@@ -105,11 +105,11 @@ rpc_backup_ptr_t rpc_backup_create(
   #endif
 
   // variables
-  list_item_ptr_t current_list = target->rpc_queue->first;
-  rpc_backup_ptr_t active = NULL;
+  list_item_t* current_list = target->rpc_queue->first;
+  rpc_backup_t* active = NULL;
   // try to find matching rpc
   while( current_list && ! active ) {
-    rpc_backup_ptr_t tmp = current_list->data;
+    rpc_backup_t* tmp = current_list->data;
     if ( tmp->active && tmp->thread == thread ) {
       active = tmp;
       break;
@@ -118,7 +118,7 @@ rpc_backup_ptr_t rpc_backup_create(
     current_list = current_list->next;
   }
   // get thread cpu context
-  cpu_register_context_ptr_t cpu = active
+  cpu_register_context_t* cpu = active
     ? active->context
     : thread->current_context;
   // reserve space for backup context

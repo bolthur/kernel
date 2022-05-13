@@ -28,7 +28,7 @@
 #include <sys/mman.h>
 #include <sys/bolthur.h>
 #include "framebuffer.h"
-#include "collection/list.h"
+#include "../../../../library/collection/list/list.h"
 #include "../libiomem.h"
 #include "../../../libframebuffer.h"
 
@@ -70,7 +70,7 @@ framebuffer_rpc_t command_list[] = {
 
 
 /**
- * @fn int32_t memory_lookup(const list_item_ptr_t, const void*)
+ * @fn int32_t memory_lookup(const list_item_t*, const void*)
  * @brief List lookup helper
  *
  * @param a
@@ -78,7 +78,7 @@ framebuffer_rpc_t command_list[] = {
  * @return
  */
 static int32_t memory_lookup(
-  const list_item_ptr_t a,
+  const list_item_t* a,
   const void* data
 ) {
   return ( ( framebuffer_memory_t* )a->data )->id == ( size_t )data
@@ -86,12 +86,12 @@ static int32_t memory_lookup(
 }
 
 /**
- * @fn void memory_cleanup(const list_item_ptr_t)
+ * @fn void memory_cleanup(list_item_t*)
  * @brief List cleanup helper
  *
  * @param a
  */
-static void memory_cleanup( const list_item_ptr_t a ) {
+static void memory_cleanup( list_item_t* a ) {
   // convert
   framebuffer_memory_t* mem = a->data;
   // handle shared memory id
@@ -119,7 +119,7 @@ static void memory_cleanup( const list_item_ptr_t a ) {
  */
 bool framebuffer_init( void ) {
   // create list
-  memory_list = list_construct( memory_lookup, memory_cleanup );
+  memory_list = list_construct( memory_lookup, memory_cleanup, NULL );
   if ( ! memory_list ) {
     return false;
   }
@@ -379,7 +379,7 @@ void framebuffer_handle_resolution(
   // allocate response
   size_t response_size = sizeof( vfs_ioctl_perform_response_t )
     + sizeof( framebuffer_resolution_t );
-  vfs_ioctl_perform_response_ptr_t response = malloc( response_size );
+  vfs_ioctl_perform_response_t* response = malloc( response_size );
   // handle error
   if ( ! response ) {
     error.status = -ENOMEM;
@@ -642,7 +642,7 @@ void framebuffer_handle_surface_allocate(
   mem->id = memory_counter++;
   mem->depth = info->depth;
   // push back
-  if ( ! list_push_back( memory_list, mem ) ) {
+  if ( ! list_push_back_data( memory_list, mem ) ) {
     while ( true ) {
       _syscall_memory_shared_detach( shm_id );
       if ( errno ) {
@@ -664,7 +664,7 @@ void framebuffer_handle_surface_allocate(
   // allocate response
   size_t response_size = sizeof( vfs_ioctl_perform_response_t )
     + sizeof( framebuffer_surface_allocate_t );
-  vfs_ioctl_perform_response_ptr_t response = malloc( response_size );
+  vfs_ioctl_perform_response_t* response = malloc( response_size );
   // handle error
   if ( ! response ) {
     while ( true ) {

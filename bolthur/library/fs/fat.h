@@ -21,7 +21,7 @@
 #define _FAT_H
 
 // fat bios parameter block
-struct fat_bpb {
+typedef struct {
   uint8_t jmp_code[ 3 ];
   char os_name[ 8 ];
   uint16_t sector_size;
@@ -69,12 +69,10 @@ struct fat_bpb {
     uint8_t unused[ 474 ];
   };
   uint8_t partition_signature[ 2 ];
-};
-typedef struct fat_bpb fat_bpb_t;
-typedef struct fat_bpb* fat_bpb_ptr_t;
+} fat_bpb_t;
 
 // fat32 fs info
-struct fat32_fsinfo {
+typedef struct fat32_fsinfo {
   uint32_t lead_signature;
   uint8_t reserved[ 480 ];
   uint32_t signature;
@@ -82,8 +80,6 @@ struct fat32_fsinfo {
   uint32_t available_cluster_start;
   uint8_t reserved2[ 12 ];
   uint32_t trail_signature;
-};
-typedef struct fat32_fsinfo fat32_fsinfo_t;
-typedef struct fat32_fsinfo* fat32_fsinfo_ptr_t;
+} fat32_fsinfo_t;
 
 #endif

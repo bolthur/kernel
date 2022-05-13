@@ -17,23 +17,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../lib/collection/avl.h"
+#include "../../library/collection/avl/avl.h"
 #include "process.h"
 
 #if ! defined( _TASK_STACK_H )
 #define _TASK_STACK_H
 
-struct task_stack_manager {
-  avl_tree_ptr_t tree;
-};
-typedef struct task_stack_manager task_stack_manager_t;
-typedef struct task_stack_manager *task_stack_manager_ptr_t;
+typedef struct task_stack_manager {
+  avl_tree_t* tree;
+} task_stack_manager_t;
 
-extern task_stack_manager_ptr_t task_stack_manager;
-task_stack_manager_ptr_t task_stack_manager_create( void );
-void task_stack_manager_destroy( task_stack_manager_ptr_t );
-uintptr_t task_stack_manager_next( task_stack_manager_ptr_t );
-bool task_stack_manager_add( uintptr_t, task_stack_manager_ptr_t );
-bool task_stack_manager_remove( uintptr_t, task_stack_manager_ptr_t );
+extern task_stack_manager_t* task_stack_manager;
+task_stack_manager_t* task_stack_manager_create( void );
+void task_stack_manager_destroy( task_stack_manager_t* );
+uintptr_t task_stack_manager_next( task_stack_manager_t* );
+bool task_stack_manager_add( uintptr_t, task_stack_manager_t* );
+bool task_stack_manager_remove( uintptr_t, task_stack_manager_t* );
 
 #endif

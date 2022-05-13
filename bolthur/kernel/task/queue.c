@@ -32,8 +32,8 @@
  * @return int32_t
  */
 static int32_t queue_compare_priority_callback(
-  const avl_node_ptr_t a,
-  const avl_node_ptr_t b
+  const avl_node_t* a,
+  const avl_node_t* b
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
@@ -58,7 +58,7 @@ static int32_t queue_compare_priority_callback(
 /**
  * @brief Initialize task process manager
  */
-avl_tree_ptr_t task_queue_init( void ) {
+avl_tree_t* task_queue_init( void ) {
   return avl_create_tree( queue_compare_priority_callback, NULL, NULL );
 }
 
@@ -67,10 +67,10 @@ avl_tree_ptr_t task_queue_init( void ) {
  *
  * @param manager
  * @param priority
- * @return task_priority_queue_ptr_t
+ * @return task_priority_queue_t*
  */
-task_priority_queue_ptr_t task_queue_get_queue(
-  task_manager_ptr_t manager,
+task_priority_queue_t* task_queue_get_queue(
+  task_manager_t* manager,
   size_t priority
 ) {
   // check parameter
@@ -82,11 +82,11 @@ task_priority_queue_ptr_t task_queue_get_queue(
     DEBUG_OUTPUT( "Called task_queue_get_queue( %zu )\r\n", priority )
   #endif
   // get correct tree to use
-  avl_tree_ptr_t tree = manager->thread_priority;
+  avl_tree_t* tree = manager->thread_priority;
 
   // try to find node
-  avl_node_ptr_t node = avl_find_by_data( tree, ( void* )priority );
-  task_priority_queue_ptr_t queue;
+  avl_node_t* node = avl_find_by_data( tree, ( void* )priority );
+  task_priority_queue_t* queue;
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node )

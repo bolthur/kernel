@@ -23,11 +23,11 @@
  * @brief Check for atag existing
  *
  * @param atag
- * @return atag_ptr_t
+ * @return atag_t*
  */
 bool atag_check( uintptr_t atag ) {
   // convert to integer
-  atag_ptr_t p = ( atag_ptr_t )atag;
+  atag_t* p = ( atag_t* )atag;
   // atag has to start with core tag
   return ATAG_TAG_CORE == p->header.tag;
 }

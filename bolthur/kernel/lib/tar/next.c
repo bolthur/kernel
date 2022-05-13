@@ -25,13 +25,13 @@
  * @brief Method to get next element within tar file
  *
  * @param current
- * @return tar_header_ptr_t
+ * @return tar_header_t*
  */
-tar_header_ptr_t tar_next( tar_header_ptr_t current ) {
+tar_header_t* tar_next( tar_header_t* current ) {
   // variables
   uintptr_t address = ( uintptr_t )current;
   uint64_t size;
-  tar_header_ptr_t next = NULL;
+  tar_header_t* next = NULL;
 
   // check for invalid
   if ( tar_end_reached( current ) ) {
@@ -43,7 +43,7 @@ tar_header_ptr_t tar_next( tar_header_ptr_t current ) {
   // get to next file
   address +=( uintptr_t )( ( ( ( size + 511 ) / 512 ) + 1 ) * 512 );
   // transform to tar header
-  next = ( tar_header_ptr_t )address;
+  next = ( tar_header_t* )address;
 
   // check for end reached
   if ( '\0' == next->file_name[ 0 ] ) {

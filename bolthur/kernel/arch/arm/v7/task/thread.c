@@ -40,11 +40,11 @@
  * @param entry entry point of the thread
  * @param process thread process
  * @param priority thread priority
- * @return task_thread_ptr_t pointer to thread structure
+ * @return task_thread_t* pointer to thread structure
  */
-task_thread_ptr_t task_thread_create(
+task_thread_t* task_thread_create(
   uintptr_t entry,
-  task_process_ptr_t process,
+  task_process_t* process,
   size_t priority
 ) {
   // debug output
@@ -74,7 +74,7 @@ task_thread_ptr_t task_thread_create(
   #endif
 
   // create thread structure
-  task_thread_ptr_t thread = malloc( sizeof( *thread ) );
+  task_thread_t* thread = malloc( sizeof( *thread ) );
   // check
   if ( ! thread ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
@@ -97,8 +97,8 @@ task_thread_ptr_t task_thread_create(
   }
 
   // cache locally
-  cpu_register_context_ptr_t current_context =
-    ( cpu_register_context_ptr_t )thread->current_context;
+  cpu_register_context_t* current_context =
+    ( cpu_register_context_t* )thread->current_context;
   // prepare area
   memset( ( void* )current_context, 0, sizeof( cpu_register_context_t ) );
   // set content
@@ -181,12 +181,12 @@ task_thread_ptr_t task_thread_create(
   }
 
   // get thread queue by priority
-  task_priority_queue_ptr_t queue = task_queue_get_queue(
+  task_priority_queue_t* queue = task_queue_get_queue(
     process_manager, priority );
   if (
     ! queue
     // add thread to thread list for switching
-    || ! list_push_back( queue->thread_list, thread )
+    || ! list_push_back_data( queue->thread_list, thread )
   ) {
     avl_remove_by_node( process->thread_manager, &thread->node_id );
     task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
@@ -201,18 +201,18 @@ task_thread_ptr_t task_thread_create(
 }
 
 /**
- * @fn task_thread_ptr_t task_thread_fork(task_process_ptr_t, task_thread_ptr_t)
+ * @fn task_thread_t* task_thread_fork(task_process_t*, task_thread_t*)
  * @brief Create a copy of a thread of a process
  * @param forked_process process where thread shall be pushed into
  * @param thread_to_fork thread to be forked
  * @return new thread structure or null
  */
-task_thread_ptr_t task_thread_fork(
-  task_process_ptr_t forked_process,
-  task_thread_ptr_t thread_to_fork
+task_thread_t* task_thread_fork(
+  task_process_t* forked_process,
+  task_thread_t* thread_to_fork
 ) {
   // reserve space for new management structure
-  task_thread_ptr_t thread = malloc( sizeof( *thread ) );
+  task_thread_t* thread = malloc( sizeof( *thread ) );
   // handle error
   if ( ! thread ) {
     return NULL;
@@ -283,14 +283,14 @@ task_thread_ptr_t task_thread_fork(
     return NULL;
   }
   // get thread queue by priority
-  task_priority_queue_ptr_t queue = task_queue_get_queue(
+  task_priority_queue_t* queue = task_queue_get_queue(
     process_manager,
     thread->priority
   );
   if (
     ! queue
     // add thread to thread list for switching
-    || ! list_push_back( queue->thread_list, thread )
+    || ! list_push_back_data( queue->thread_list, thread )
   ) {
     task_stack_manager_remove(
       thread->stack_virtual,
@@ -307,7 +307,7 @@ task_thread_ptr_t task_thread_fork(
 
 
 /**
- * @fn bool task_thread_push_arguments(task_thread_ptr_t, char**)
+ * @fn bool task_thread_push_arguments(task_thread_t*, char**)
  * @brief Small helper to push parameter list for thread to stack
  *
  * @param thread
@@ -315,7 +315,7 @@ task_thread_ptr_t task_thread_fork(
  * @return
  */
 bool task_thread_push_arguments(
-  task_thread_ptr_t thread,
+  task_thread_t* thread,
   char** parameter,
   char** environment
 ) {
@@ -356,8 +356,8 @@ bool task_thread_push_arguments(
     return false;
   }
   // get stack offset
-  cpu_register_context_ptr_t cpu =
-    ( cpu_register_context_ptr_t )thread->current_context;
+  cpu_register_context_t* cpu =
+    ( cpu_register_context_t* )thread->current_context;
   size_t offset = cpu->reg.sp - thread->stack_virtual;
   // debug output
   #if defined( PRINT_PROCESS )

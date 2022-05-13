@@ -22,7 +22,6 @@
 #include <inttypes.h>
 #include "../lib/assert.h"
 #include "../lib/string.h"
-#include "../lib/collection/avl.h"
 #if defined( PRINT_MM_HEAP )
   #include "../debug/debug.h"
 #endif

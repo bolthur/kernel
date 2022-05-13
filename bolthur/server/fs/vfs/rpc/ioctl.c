@@ -49,7 +49,7 @@ void rpc_handle_ioctl_async(
   // dummy error response
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // get matching async data
-  bolthur_async_data_ptr_t async_data = bolthur_rpc_pop_async(
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
     type,
     response_info
   );
@@ -122,7 +122,7 @@ void rpc_handle_ioctl(
     return;
   }
   // get request
-  vfs_ioctl_perform_request_ptr_t request = malloc( data_size );
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
   if ( ! request ) {
     err_response.status = -ENOMEM;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
@@ -137,7 +137,7 @@ void rpc_handle_ioctl(
     return;
   }
   // get handle
-  handle_container_ptr_t handle_container;
+  handle_container_t* handle_container;
   // try to get handle information
   int result = handle_get( &handle_container, origin, request->handle );
   // handle error
@@ -148,7 +148,7 @@ void rpc_handle_ioctl(
     return;
   }
   // get ioctl container
-  ioctl_container_ptr_t ioctl_container = ioctl_lookup_command(
+  ioctl_container_t* ioctl_container = ioctl_lookup_command(
     request->command,
     handle_container->target->pid
   );

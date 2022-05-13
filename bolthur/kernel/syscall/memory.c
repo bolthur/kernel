@@ -52,7 +52,7 @@ void syscall_memory_acquire( void* context ) {
   int protection = ( int )syscall_get_parameter( context, 2 );
   int flag = ( int )syscall_get_parameter( context, 3 );
   // get context
-  virt_context_ptr_t virtual_context = task_thread_current_thread
+  virt_context_t* virtual_context = task_thread_current_thread
     ->process
     ->virtual_context;
   // debug output
@@ -231,7 +231,7 @@ void syscall_memory_release( void* context ) {
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   bool unmap_phys = true;
   // context
-  virt_context_ptr_t virtual_context = task_thread_current_thread
+  virt_context_t* virtual_context = task_thread_current_thread
     ->process
     ->virtual_context;
   // debug output
@@ -406,7 +406,7 @@ void syscall_memory_translate_physical( void* context ) {
     DEBUG_OUTPUT( "syscall_memory_translate_physical( %#"PRIxPTR" )\r\n", address )
   #endif
   // get context
-  virt_context_ptr_t virtual_context = task_thread_current_thread
+  virt_context_t* virtual_context = task_thread_current_thread
     ->process
     ->virtual_context;
   // get min and max address of context
@@ -446,7 +446,7 @@ void syscall_memory_translate_bus( void* context ) {
     DEBUG_OUTPUT( "syscall_memory_translate_physical( %#"PRIxPTR", %#zu )\r\n", address, size )
   #endif
   // get context
-  virt_context_ptr_t virtual_context = task_thread_current_thread
+  virt_context_t* virtual_context = task_thread_current_thread
     ->process
     ->virtual_context;
   // get min and max address of context

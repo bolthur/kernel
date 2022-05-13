@@ -84,7 +84,7 @@ void syscall_process_parent_by_id( void* context ) {
     DEBUG_OUTPUT( "syscall_process_parent_by_id( %d )\r\n", pid )
   #endif
   // try to get process by pid
-  task_process_ptr_t proc = task_process_get_by_id( pid );
+  task_process_t* proc = task_process_get_by_id( pid );
   // handle error
   if ( ! proc ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
@@ -126,7 +126,7 @@ void syscall_process_fork( void* context ) {
   // invalidate cache to ensure everything is within memory
   virt_flush_complete();
   // fork process
-  task_process_ptr_t forked = task_process_fork( task_thread_current_thread );
+  task_process_t* forked = task_process_fork( task_thread_current_thread );
   // handle error
   if ( ! forked ) {
     syscall_populate_error( context, ( size_t )-ENOMEM );
@@ -253,7 +253,7 @@ void syscall_thread_create( void* context ) {
     DEBUG_OUTPUT( "syscall_thread_create( %#"PRIxPTR", %p)\r\n", entry, argument )
   #endif
   // create new thread
-  task_thread_ptr_t new_thread = task_thread_create(
+  task_thread_t* new_thread = task_thread_create(
     entry,
     task_thread_current_thread->process,
     task_thread_current_thread->priority

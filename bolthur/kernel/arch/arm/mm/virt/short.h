@@ -182,7 +182,6 @@
     } data;
   };
   typedef union sd_context_section sd_context_section_t;
-  typedef union sd_context_section *sd_context_section_ptr_t;
 
   typedef union  __packed {
     uint32_t raw;

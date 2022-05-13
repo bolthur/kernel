@@ -24,14 +24,14 @@
 #include "../libhelper.h"
 #include "../libconsole.h"
 #include "handler.h"
-#include "list.h"
+#include "../../library/collection/list/list.h"
 #include "console.h"
 #include "rpc.h"
 
-list_manager_ptr_t console_list = NULL;
+list_manager_t* console_list = NULL;
 
 /**
- * @fn int32_t console_lookup(const list_item_ptr_t, const void*)
+ * @fn int32_t console_lookup(const list_item_t*, const void*)
  * @brief List lookup helper
  *
  * @param a
@@ -39,21 +39,21 @@ list_manager_ptr_t console_list = NULL;
  * @return
  */
 static int32_t console_lookup(
-  const list_item_ptr_t a,
+  const list_item_t* a,
   const void* data
 ) {
-  console_ptr_t console = a->data;
+  console_t* console = a->data;
   return strcmp( console->path, data );
 }
 
 /**
- * @fn void console_cleanup(const list_item_ptr_t)
+ * @fn void console_cleanup(list_item_t*)
  * @brief List cleanup helper
  *
  * @param a
  */
-static void console_cleanup( const list_item_ptr_t a ) {
-  console_ptr_t console = a->data;
+static void console_cleanup( list_item_t* a ) {
+  console_t* console = a->data;
   // destroy console
   console_destroy( console );
   // default cleanup
@@ -69,7 +69,7 @@ static void console_cleanup( const list_item_ptr_t a ) {
  */
 int main( __unused int argc, __unused char* argv[] ) {
   // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
+  vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
     return -1;
   }
@@ -82,7 +82,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   }
   // FIXME: SET READ HANDLER FOR STDIN
 
-  console_list = list_construct( console_lookup, console_cleanup );
+  console_list = list_construct( console_lookup, console_cleanup, NULL );
   if ( ! console_list ) {
     free( msg );
     return -1;

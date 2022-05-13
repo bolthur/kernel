@@ -59,7 +59,7 @@ void handler_console_select(
     return;
   }
   // allocate for data fetching
-  console_command_select_ptr_t command = malloc( sz );
+  console_command_select_t* command = malloc( sz );
   if ( ! command ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -75,7 +75,7 @@ void handler_console_select(
     return;
   }
   // try to lookup by name
-  list_item_ptr_t found = list_lookup_data( console_list, command->path );
+  list_item_t* found = list_lookup_data( console_list, command->path );
   // handle already existing
   if ( ! found ) {
     free( command );
@@ -84,7 +84,7 @@ void handler_console_select(
     return;
   }
   // get active console and deactivate
-  console_ptr_t console = console_get_active();
+  console_t* console = console_get_active();
   if ( console ) {
     console->active = false;
   }
