@@ -84,7 +84,7 @@
       uint32_t r9;
       uint32_t r10;
       uint32_t fp; /* r11 = frame pointer */
-      uint32_t ip; /* r12 = intraprocess scratch */
+      uint32_t ip; /* r12 = intra procedure call scratch */
       uint32_t sp; /* r13 = stack pointer */
       uint32_t lr; /* r14 = link register */
       uint32_t pc; /* r15 = program counter */

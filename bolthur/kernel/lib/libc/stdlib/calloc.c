@@ -36,7 +36,7 @@ __allocator void* calloc( size_t num, size_t size ) {
     return NULL;
   }
   // overwrite memory with 0
-  ptr = memset( ptr, 0, num * size );
+  memset( ptr, 0, num * size );
   // return prepared memory area
   return ptr;
 }

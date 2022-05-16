@@ -29,7 +29,8 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -nodefaultlibs -std=c18])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer -fno-builtin])
   AX_APPEND_COMPILE_FLAGS([-ffreestanding -fno-common])
-  # FIXME: add compile flag "-fanalyzer" and check and fix warnings
+  # FIXME: FIND A WAY TO ADD -Wanalyzer-too-complex
+  AX_APPEND_COMPILE_FLAGS([-fanalyzer])
 
   # custom optimization level
   AS_IF([test "x$enable_release" != "xyes"], [
@@ -100,6 +101,8 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
   # generic
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c18])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
+  # FIXME: FIND A WAY TO ADD -Wanalyzer-too-complex
+  AX_APPEND_COMPILE_FLAGS([-fanalyzer])
 
   # third party stuff
   AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}])

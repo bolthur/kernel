@@ -1,8 +1,7 @@
 
-AM_CFLAGS = -DPROGRAM_NAME=\"storage/sd\" $(BOSL_CFLAGS)
+AM_CFLAGS = -DPROGRAM_NAME=\"storage/sd\"
 
 bin_PROGRAMS = sd
-sd_LDADD = $(BOSL_LIBS)
 sd_SOURCES = \
   emmc.c \
   main.c \

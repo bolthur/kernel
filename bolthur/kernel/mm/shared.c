@@ -406,6 +406,7 @@ uintptr_t shared_memory_attach(
         virt_unmap_address( process->virtual_context, start_inner, false );
         start_inner += PAGE_SIZE;
       }
+      free( mapped );
       return 0;
     }
     // next one

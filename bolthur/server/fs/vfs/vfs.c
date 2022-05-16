@@ -84,7 +84,7 @@ static vfs_node_t* vfs_prepare_node(
   }
   // allocate stat
   node->st = malloc( sizeof( struct stat ) );
-  if ( ! node->name ) {
+  if ( ! node->st ) {
     vfs_destroy_node( node );
     return NULL;
   }
