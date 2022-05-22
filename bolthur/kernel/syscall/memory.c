@@ -393,6 +393,29 @@ void syscall_memory_shared_detach( void* context ) {
 }
 
 /**
+ * @fn void syscall_memory_shared_detach(void*)
+ * @brief get size of shared memory
+ *
+ * @param context
+ */
+void syscall_memory_shared_size( void* context ) {
+  // get parameters
+  size_t id = ( size_t )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_memory_shared_size( %d )\r\n", id )
+  #endif
+  // try to get size
+  size_t len = shared_memory_size( task_thread_current_thread->process, id );
+  if ( 0 == len ) {
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // return success
+  syscall_populate_success( context, len );
+}
+
+/**
  * @fn void syscall_memory_translate_physical(void*)
  * @brief Translate virtual into physical address
  *

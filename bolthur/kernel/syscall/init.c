@@ -56,6 +56,7 @@ bool syscall_init( void ) {
     || ! SYSCALL_BIND( SYSCALL_MEMORY_SHARED_CREATE, syscall_memory_shared_create )
     || ! SYSCALL_BIND( SYSCALL_MEMORY_SHARED_ATTACH, syscall_memory_shared_attach )
     || ! SYSCALL_BIND( SYSCALL_MEMORY_SHARED_DETACH, syscall_memory_shared_detach )
+    || ! SYSCALL_BIND( SYSCALL_MEMORY_SHARED_SIZE, syscall_memory_shared_size )
     || ! SYSCALL_BIND( SYSCALL_MEMORY_TRANSLATE_PHYSICAL, syscall_memory_translate_physical )
     || ! SYSCALL_BIND( SYSCALL_MEMORY_TRANSLATE_BUS, syscall_memory_translate_bus )
   ) {

@@ -49,6 +49,7 @@ bool shared_memory_init( void );
 size_t shared_memory_create( size_t );
 uintptr_t shared_memory_attach( task_process_t*, task_thread_t*, size_t, uintptr_t );
 bool shared_memory_detach( task_process_t*, size_t );
+size_t shared_memory_size( task_process_t*, size_t );
 bool shared_memory_address_is_shared( task_process_t*, uintptr_t, size_t );
 bool shared_memory_fork( task_process_t*, task_process_t* );
 bool shared_memory_cleanup_process( task_process_t* );

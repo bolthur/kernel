@@ -442,6 +442,60 @@ uintptr_t shared_memory_attach(
 }
 
 /**
+ * @fn size_t shared_memory_size(task_process_t*, size_t)
+ * @brief Get shared memory area size by id
+ *
+ * @param process
+ * @param id
+ * @return
+ */
+size_t shared_memory_size( task_process_t* process, size_t id ) {
+  // debug output
+  #if defined( PRINT_MM_SHARED )
+    DEBUG_OUTPUT(
+      "shared_memory_attach( %d, %zu )\r\n",
+      process->id, id )
+  #endif
+  // handle not initialized
+  if ( ! shared_tree ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Not yet initialized\r\n" )
+    #endif
+    return 0;
+  }
+  // try to get node by id
+  avl_node_t* node = avl_find_by_data( shared_tree, ( void* )id );
+  // handle not existing
+  if ( ! node ) {
+    // debug output
+    #if defined( PRINT_MM_SHARED )
+      DEBUG_OUTPUT( "Not such shared area existing\r\n" )
+    #endif
+    return 0;
+  }
+  shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
+  // debug output
+  #if defined( PRINT_MM_SHARED )
+    DEBUG_OUTPUT( "node = %#x, entry = %#x\r\n", node, entry )
+    DEBUG_OUTPUT( "looking up for mapping at %#p\r\n", entry->process_mapping )
+  #endif
+  // lookup process
+  list_item_t* process_list_item = list_lookup_data(
+    entry->process_mapping, process );
+  // debug output
+  #if defined( PRINT_MM_SHARED )
+    DEBUG_OUTPUT( "process_list_item = %#x\r\n", process_list_item )
+  #endif
+  // handle not mapped attached
+  if ( ! process_list_item ) {
+    return 0;
+  }
+  // return size
+  return entry->size;
+}
+
+/**
  * @fn bool shared_memory_detach(task_process_t*, size_t)
  * @brief Detach shared memory area by id
  *

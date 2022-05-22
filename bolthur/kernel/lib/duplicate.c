@@ -88,7 +88,7 @@ char** duplicate( const char** src ) {
     dst[ count ] =
       &( ( ( char* )dst )[ ( src_count + 1 ) * sizeof( char* ) + len ] );
     // get length from unsafe
-    size_t tmp_len = strlen_unsafe( src[ count ] );
+    size_t tmp_len = strlen_unsafe( src[ count ] ) + 1;
     if ( 0 == tmp_len ) {
       free( dst );
       return NULL;

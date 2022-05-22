@@ -18,6 +18,8 @@
  */
 
 #include <stddef.h>
+#include <stdalign.h>
+#include <inttypes.h>
 #include "../../../../lib/stdlib.h"
 #include "../../../../lib/string.h"
 #include "../../../../panic.h"
@@ -111,7 +113,13 @@ task_thread_t* task_thread_create(
     current_context->reg.spsr |= CPSR_THUMB;
   }
   // set stack pointer
-  current_context->reg.sp = stack_virtual + STACK_SIZE - sizeof( int );
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT(
+      "%#x / %#x\r\n",
+      stack_virtual + STACK_SIZE - sizeof( int ),
+      stack_virtual + STACK_SIZE - alignof( max_align_t ) )
+  #endif
+  current_context->reg.sp = stack_virtual + STACK_SIZE - alignof( max_align_t );
   // push back current value of fpu
   #if defined( ARM_CPU_HAS_NEON )
     __asm__ __volatile__(
@@ -338,14 +346,14 @@ bool task_thread_push_arguments(
     #endif
     total_size += strlen( environment[ env_count ] ) + 1;
     // increment count
-      env_count++;
+    env_count++;
   }
   // add argv and env array size
   total_size += sizeof( char* ) * entry_count + sizeof( char* ) * env_count;
   // NULL termination for argv and env
   total_size += sizeof( char* ) * 2;
   // add space for parameters argc, argv and env
-  total_size += sizeof( int ) + sizeof( char** ) + sizeof( char** );
+  total_size += alignof( max_align_t ) + sizeof( char** ) + sizeof( char** );
 
   // map stack temporarily
   uintptr_t stack_tmp = virt_map_temporary(

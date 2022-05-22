@@ -17,6 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <inttypes.h>
+#include <stdalign.h>
 #include "../../../../lib/stdlib.h"
 #include "../../../../lib/string.h"
 #include "../cpu.h"
@@ -195,6 +197,11 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   // set lr to pc and overwrite pc with handler
   cpu->reg.lr = cpu->reg.pc;
   cpu->reg.pc = proc->rpc_handler;
+  // align stack to max align
+  size_t alignment = cpu->reg.sp % alignof( max_align_t );
+  if ( alignment ) {
+    cpu->reg.sp -= alignment;
+  }
   // set correct state ( set directly to active if it's the current thread )
   if ( backup->thread == task_thread_current_thread ) {
     backup->thread->state = TASK_THREAD_STATE_RPC_ACTIVE;

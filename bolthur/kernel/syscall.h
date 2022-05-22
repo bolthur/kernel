@@ -43,8 +43,9 @@
 #define SYSCALL_MEMORY_SHARED_CREATE 23
 #define SYSCALL_MEMORY_SHARED_ATTACH 24
 #define SYSCALL_MEMORY_SHARED_DETACH 25
-#define SYSCALL_MEMORY_TRANSLATE_PHYSICAL 26
-#define SYSCALL_MEMORY_TRANSLATE_BUS 27
+#define SYSCALL_MEMORY_SHARED_SIZE 26
+#define SYSCALL_MEMORY_TRANSLATE_PHYSICAL 27
+#define SYSCALL_MEMORY_TRANSLATE_BUS 28
 
 #define SYSCALL_RPC_SET_HANDLER 31
 #define SYSCALL_RPC_RAISE 32
@@ -89,6 +90,7 @@ void syscall_memory_release( void* );
 void syscall_memory_shared_create( void* );
 void syscall_memory_shared_attach( void* );
 void syscall_memory_shared_detach( void* );
+void syscall_memory_shared_size( void* );
 void syscall_memory_translate_physical( void* );
 void syscall_memory_translate_bus( void* );
 
