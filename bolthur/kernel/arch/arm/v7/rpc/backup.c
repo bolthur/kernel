@@ -84,9 +84,8 @@ rpc_backup_t* rpc_backup_create(
 
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT(
-      "Using thread %d of process %d for rpc\r\n",
-      thread->id, thread->process->id )
+    DEBUG_OUTPUT( "thread->id = %d\r\n", thread->id )
+    DEBUG_OUTPUT( "thread->process->id = %d\r\n", thread->process->id )
   #endif
 
   // reserve space for backup object
@@ -181,6 +180,20 @@ rpc_backup_t* rpc_backup_create(
   }
   // populate remaining values
   backup->thread = thread;
+  backup->thread_state = thread->state;
+  memcpy(
+    &backup->thread_state_data,
+    &thread->state_data,
+    sizeof( task_state_data_t )
+  );
+  if ( TASK_THREAD_STATE_RPC_WAIT_FOR_CALL == backup->thread_state ) {
+    backup->thread_state = TASK_THREAD_STATE_ACTIVE;
+  }
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "backup->thread_state = %d, backup->thread_state_data.data_ptr = %d\r\n",
+      backup->thread_state, backup->thread_state_data.data_ptr )
+  #endif
   backup->prepared = false;
   backup->source = source;
   backup->type = type;

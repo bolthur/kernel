@@ -103,7 +103,17 @@ bool rpc_generic_restore( task_thread_t* thread ) {
     DEBUG_OUTPUT( "process id = %d\r\n", thread->process->id )
   #endif
   // set correct state
-  backup->thread->state = TASK_THREAD_STATE_ACTIVE;
+  backup->thread->state = backup->thread_state;
+  memcpy(
+    &thread->state_data,
+    &backup->thread->state_data,
+    sizeof( task_state_data_t )
+  );
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "backup->thread_state = %d, backup->thread_state_data.data_ptr = %d\r\n",
+      backup->thread_state, backup->thread_state_data.data_ptr )
+  #endif
   // remove data queue entry if existing
   rpc_data_queue_remove( thread->process->id, backup->data_id );
   // finally remove found entry
@@ -118,11 +128,17 @@ bool rpc_generic_restore( task_thread_t* thread ) {
       #if defined( PRINT_RPC )
         DUMP_REGISTER( next->context )
       #endif
-      // overwrite context after restore ( possibly wrong )
+      // overwrite context, state and state_data after restore ( possibly wrong )
       memcpy(
         next->context,
         thread->current_context,
         sizeof( cpu_register_context_t )
+      );
+      next->thread_state = thread->state;
+      memcpy(
+        &next->thread->state_data,
+        &thread->state_data,
+        sizeof( task_state_data_t )
       );
       // debug output
       #if defined( PRINT_RPC )
@@ -175,7 +191,6 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   if (
     TASK_THREAD_STATE_RPC_QUEUED == backup->thread->state
     || TASK_THREAD_STATE_RPC_ACTIVE == backup->thread->state
-    || TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN == backup->thread->state
   ) {
     // debug output
     #if defined( PRINT_RPC )

@@ -30,6 +30,8 @@ typedef struct {
   size_t data_id;
   size_t type;
   task_thread_t* thread;
+  task_thread_state_t thread_state;
+  task_state_data_t thread_state_data;
   task_thread_t* source;
   bool prepared;
   bool active;

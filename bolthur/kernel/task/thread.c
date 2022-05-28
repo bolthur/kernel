@@ -209,6 +209,19 @@ bool task_thread_is_ready( task_thread_t* thread ) {
 }
 
 /**
+ * @fn bool task_thread_is_active(task_thread_t*)
+ * @brief Helper to check if thread is active
+ *
+ * @param thread
+ * @return
+ */
+bool task_thread_is_active( task_thread_t* thread ) {
+  return
+    TASK_THREAD_STATE_ACTIVE == thread->state
+    || TASK_THREAD_STATE_RPC_ACTIVE == thread->state;
+}
+
+/**
  * @fn task_thread_t* task_thread_next(void)
  * @brief Function to get next thread for execution
  *

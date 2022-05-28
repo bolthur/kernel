@@ -874,6 +874,8 @@ int task_process_replace(
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
+  // reset thread id counter
+  proc->current_thread_id = 0;
 
   // load elf image
   uintptr_t init_entry = elf_load( ( uintptr_t )image, proc );

@@ -209,8 +209,9 @@ void syscall_rpc_ret( void* context ) {
   size_t original_rpc_id = syscall_get_parameter( context, 3 );
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall_rpc_ret( %d, %#p, %#x, %d )\r\n",
-      type, data, length, original_rpc_id
+      "syscall_rpc_ret( %d, %#p, %#x, %d ) from %d\r\n",
+      type, data, length, original_rpc_id,
+      task_thread_current_thread->process->id
     )
   #endif
   if ( ! data || 0 == length ) {
@@ -311,6 +312,8 @@ void syscall_rpc_ret( void* context ) {
     }
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "data_id = %d\r\n", data_id )
+      DEBUG_OUTPUT( "target->state = %d, target->state_data = %d\r\n",
+        target->state, target->state_data.data_ptr )
     #endif
     // populate return for sync request ( rpc raise is waiting at source )
     syscall_populate_success(
@@ -388,8 +391,8 @@ void syscall_rpc_get_data( void* context ) {
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   size_t rpc_data_id = ( size_t )syscall_get_parameter( context, 2 );
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_rpc_get_data( %#p, %#x, %d )\r\n",
-      data, len, rpc_data_id )
+    DEBUG_OUTPUT( "syscall_rpc_get_data( %#p, %#x, %d ) from %d\r\n",
+      data, len, rpc_data_id, task_thread_current_thread->process->id )
   #endif
   // cache process
   task_process_t* target_process = task_thread_current_thread->process;
@@ -658,6 +661,10 @@ void syscall_rpc_end( void* context ) {
     // kill thread and trigger scheduling
     task_thread_kill( task_thread_current_thread, true, context );
   }
+  // enqueue scheduler
+  if ( ! task_thread_is_active( task_thread_current_thread ) ) {
+    event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+  }
 }
 
 /**
@@ -682,7 +689,7 @@ void syscall_rpc_wait_for_ready( void* context ) {
   if ( ! target ) {
     // debug output
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "target with id %d not found!\r\n", target->id )
+      DEBUG_OUTPUT( "target with id %d not found!\r\n", process )
     #endif
     syscall_populate_error( context, ( size_t )-ESRCH );
     return;

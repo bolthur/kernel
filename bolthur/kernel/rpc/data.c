@@ -293,8 +293,9 @@ void rpc_data_queue_remove( pid_t process, size_t rpc_id ) {
   if ( found ) {
     // debug output
     #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "found something for removal on process %d with id %d!\r\n",
-        process, rpc_id )
+      DEBUG_OUTPUT(
+        "found something for removal on process %d with id %d ( %d )!\r\n",
+        process, rpc_id, found->id )
     #endif
     list_remove_data( target_process->rpc_data_queue, ( void* )found );
   }
