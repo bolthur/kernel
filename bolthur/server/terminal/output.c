@@ -96,7 +96,7 @@ void output_handle_out(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( terminal, sz, data_info );
+  _syscall_rpc_get_data( terminal, sz, data_info, false );
   // handle error
   if ( errno ) {
     error.status = -errno;
@@ -172,7 +172,7 @@ void output_handle_err(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( terminal, sz, data_info );
+  _syscall_rpc_get_data( terminal, sz, data_info, false );
   // handle error
   if ( errno ) {
     error.status = -errno;

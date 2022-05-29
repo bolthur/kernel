@@ -77,7 +77,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // set handler
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
+    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
     return -1;
   }
   // FIXME: SET READ HANDLER FOR STDIN
@@ -100,7 +100,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
-  msg->info.st_mode = S_IFREG;
+  msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/stdin", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, 0, 0 );
@@ -110,7 +110,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
-  msg->info.st_mode = S_IFREG;
+  msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/stdout", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, 0, 0 );
@@ -120,7 +120,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // clear memory
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
-  msg->info.st_mode = S_IFREG;
+  msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/stderr", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, 0, 0 );

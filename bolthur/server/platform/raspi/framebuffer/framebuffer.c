@@ -496,7 +496,7 @@ void framebuffer_handle_surface_render(
   }
   // fetch rpc data
   _syscall_rpc_get_data(
-    info, sizeof( framebuffer_surface_render_t ), data_info );
+    info, sizeof( framebuffer_surface_render_t ), data_info, false );
   // handle error
   if ( errno ) {
     error.status = -errno;
@@ -588,7 +588,7 @@ void framebuffer_handle_surface_allocate(
   }
   // fetch rpc data
   _syscall_rpc_get_data(
-    info, sizeof( framebuffer_surface_allocate_t ), data_info );
+    info, sizeof( framebuffer_surface_allocate_t ), data_info, false );
   if ( errno ) {
     error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );

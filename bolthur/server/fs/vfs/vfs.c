@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <libgen.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../../../library/collection/list/list.h"
@@ -152,10 +153,6 @@ void vfs_destroy( vfs_node_t* node ) {
  * @return root node
  */
 vfs_node_t* vfs_setup( pid_t current_pid ) {
-  // necessary variables
-  vfs_node_t* ipc;
-  vfs_node_t* dev;
-
   // dummy stat structure for folders
   struct stat st_dir;
   struct stat st_file;
@@ -166,22 +163,8 @@ vfs_node_t* vfs_setup( pid_t current_pid ) {
   st_file.st_mode = _IFREG;
   st_file.st_size = 0;
 
-  // allocate minimum necessary nodes
-  if (
-    // create root node
-    ! ( root = vfs_prepare_node( current_pid, "/", st_dir, NULL, NULL ) )
-    // create process, ipc and dev node
-    || ! vfs_prepare_node( current_pid, "process", st_dir, root, NULL )
-    || ! ( ipc = vfs_prepare_node( current_pid, "ipc", st_dir, root, NULL ) )
-    || ! ( dev = vfs_prepare_node( current_pid, "dev", st_dir, root, NULL ) )
-    // populate dev null file node
-    || ! vfs_prepare_node( current_pid, "null", st_file, dev, NULL )
-    // populate tmp node
-    || ! vfs_prepare_node( current_pid, "tmp", st_file, dev, NULL )
-    // populate ipc node
-    || ! vfs_prepare_node( current_pid, "shared", st_dir, ipc, NULL )
-    || ! vfs_prepare_node( current_pid, "message", st_dir, ipc, NULL )
-  ) {
+  // create root node
+  if ( ! ( root = vfs_prepare_node( current_pid, "/", st_dir, NULL, NULL ) ) ) {
     // destroy recursively by starting with root
     vfs_destroy( root );
     return NULL;
@@ -443,4 +426,58 @@ char* vfs_path_bottom_up( vfs_node_t* node ) {
   }
   // return build path
   return path;
+}
+
+/**
+ * @fn vfs_node_t vfs_extract_mountpoint*(const char*)
+ * @brief Extract mount point by path
+ *
+ * @param path
+ * @return
+ */
+vfs_node_t* vfs_extract_mountpoint( const char* path ) {
+  // handle invalid
+  if ( ! path ) {
+    return NULL;
+  }
+  // variables
+  char* dir = NULL;
+  char* dir_old = NULL;
+  // try to find mount point
+  vfs_node_t* dir_node = NULL;
+  while ( true ) {
+    // get dirname
+    dir = dirname( !dir ? ( char* )path : dir );
+    // get node by path
+    dir_node = vfs_node_by_path( dir );
+    if ( dir_node ) {
+      // cleanup previous dir / base stuff
+      if ( dir_old ) {
+        free( dir_old );
+      }
+      break;
+    }
+    // handle only slash remaining
+    if (
+      dir && dir_old
+      && strlen( dir ) == strlen( dir_old )
+      && 0 == strcmp( dir, dir_old )
+    ) {
+      // cleanup previous dir / base stuff
+      free( dir_old );
+      break;
+    }
+    // cleanup previous dir / base stuff
+    if ( dir_old ) {
+      free( dir_old );
+    }
+    // set old
+    dir_old = dir;
+  }
+  // output and dir free
+  if ( dir ) {
+    free( dir );
+  }
+  // return found
+  return dir_node;
 }

@@ -47,5 +47,6 @@ bool vfs_add_path( vfs_node_t*, pid_t, const char*, char*, struct stat );
 vfs_node_t* vfs_node_by_name( vfs_node_t*, const char* );
 vfs_node_t* vfs_node_by_path( const char* );
 char* vfs_path_bottom_up( vfs_node_t* );
+vfs_node_t* vfs_extract_mountpoint( const char* );
 
 #endif

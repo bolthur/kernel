@@ -28,6 +28,72 @@
 #include "../ioctl/handler.h"
 
 /**
+ * @fn void rpc_handle_add_async(size_t, pid_t, size_t, size_t)
+ * @brief Internal helper to continue asynchronous started open
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_add_async(
+  size_t type,
+  __maybe_unused pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  EARLY_STARTUP_PRINT( "type = %d\r\n", type )
+  vfs_add_response_t response = { .status = -EINVAL, .handler = 0 };
+  // get matching async data
+  bolthur_async_data_t* async_data =
+    bolthur_rpc_pop_async( type, response_info );
+  if ( ! async_data ) {
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    return;
+  }
+  // fetch rpc data
+  _syscall_rpc_get_data( &response, sizeof( response ), data_info, false );
+  // handle error
+  if ( errno ) {
+    response.status = -EIO;
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    return;
+  }
+  // handle add error
+  if ( response.status != VFS_ADD_SUCCESS ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    return;
+  }
+  // get original request
+  vfs_add_request_t* request = async_data->original_data;
+  // handle device info stuff if is device
+  if (
+    sizeof( vfs_add_request_t ) < async_data->length
+    && S_ISCHR( request->info.st_mode )
+  ) {
+    size_t idx_max =
+      ( async_data->length - sizeof( vfs_add_request_t ) ) / sizeof( size_t );
+    for ( size_t idx = 0; idx < idx_max; idx++ ) {
+      while ( true ) {
+        if ( ! ioctl_push_command(
+          request->device_info[ idx ],
+          request->handler
+        ) ) {
+          continue;
+        }
+        break;
+      }
+    }
+  }
+  // return response
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+}
+
+/**
  * @fn void rpc_handle_add(size_t, pid_t, size_t, size_t)
  * @brief handle add request
  *
@@ -47,35 +113,80 @@ void rpc_handle_add(
   size_t data_info,
   __unused size_t response_info
 ) {
+  // handle async return in case response info is set
+  if ( response_info ) {
+    rpc_handle_add_async( type, origin, data_info, response_info );
+    return;
+  }
   char* str;
-  vfs_add_response_t res = { .status = -EINVAL, .handling_process = 0 };
+  vfs_add_response_t response = { .status = -EINVAL, .handler = 0 };
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
+    EARLY_STARTUP_PRINT( "fail\r\n" )
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // get message size
   size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
-    res.status = -EIO;
-    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
+    EARLY_STARTUP_PRINT( "fail\r\n" )
+    response.status = -EIO;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // allocate space for request
   vfs_add_request_t* request = malloc( data_size );
   if ( ! request ) {
-    res.status = -ENOMEM;
-    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
+    EARLY_STARTUP_PRINT( "fail\r\n" )
+    response.status = -ENOMEM;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // clear request
   memset( request, 0, data_size );
   // fetch rpc data
-  _syscall_rpc_get_data( request, data_size, data_info );
+  _syscall_rpc_get_data( request, data_size, data_info, false );
   // handle error
   if ( errno ) {
-    res.status = -EIO;
-    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
+    EARLY_STARTUP_PRINT( "fail %s\r\n", request->file_path )
+    response.status = -EIO;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // handle invalid process compared to origin
+  if ( request->handler != origin ) {
+    EARLY_STARTUP_PRINT( "fail %s\r\n", request->file_path )
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // get mount point
+  vfs_node_t* mount_point = vfs_extract_mountpoint( request->file_path );
+  if ( ! mount_point ) {
+    EARLY_STARTUP_PRINT( "fail %s\r\n", request->file_path )
+    response.status = -EIO;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  EARLY_STARTUP_PRINT( "vfs_pid = %d, mount_point->pid = %d, file_path = %s\r\n",
+    vfs_pid, mount_point->pid, request->file_path )
+  // handle not own handling
+  if ( vfs_pid != mount_point->pid ) {
+    // perform async rpc
+    bolthur_rpc_raise(
+      type,
+      mount_point->pid,
+      request,
+      data_size,
+      false,
+      type,
+      request,
+      data_size,
+      origin,
+      data_info
+    );
     free( request );
     return;
   }
@@ -83,10 +194,10 @@ void rpc_handle_add(
   vfs_node_t* node = vfs_node_by_path( request->file_path );
   if ( node ) {
     // prepare response
-    res.status = VFS_ADD_ALREADY_EXIST;
-    res.handling_process = node->pid;
+    response.status = VFS_ADD_ALREADY_EXIST;
+    response.handler = node->pid;
     // return response
-    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     // free message structures
     free( request );
     // skip
@@ -96,8 +207,8 @@ void rpc_handle_add(
   str = dirname( request->file_path );
   node = vfs_node_by_path( str );
   if ( ! node ) {
-    res.status = VFS_ADD_ERROR;
-    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
+    response.status = VFS_ADD_ERROR;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( str );
     free( request );
     return;
@@ -110,8 +221,8 @@ void rpc_handle_add(
   if ( S_ISLNK( request->info.st_mode ) ) {
     // check for target is not set
     if ( 0 == strlen( request->linked_path ) ) {
-      res.status = VFS_ADD_ERROR;
-      bolthur_rpc_return( type, &res, sizeof( res ), NULL );
+      response.status = VFS_ADD_ERROR;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
       free( str );
       free( request );
       return;
@@ -120,8 +231,8 @@ void rpc_handle_add(
     target = strdup( request->linked_path );
     // handle duplicate failed
     if ( ! target ) {
-      res.status = VFS_ADD_ERROR;
-      bolthur_rpc_return( type, &res, sizeof( res ), NULL );
+      response.status = VFS_ADD_ERROR;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
       free( str );
       free( request );
       return;
@@ -129,8 +240,8 @@ void rpc_handle_add(
   }
   // add basename to path
   if ( ! vfs_add_path( node, origin, str, target, request->info ) ) {
-    res.status = VFS_ADD_ERROR;
-    bolthur_rpc_return( type, &res, sizeof( res ), NULL );
+    response.status = VFS_ADD_ERROR;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( str );
     if ( target ) {
       free( target );
@@ -158,10 +269,10 @@ void rpc_handle_add(
     free( target );
   }
   // prepare response
-  res.status = VFS_ADD_SUCCESS;
-  res.handling_process = origin;
+  response.status = VFS_ADD_SUCCESS;
+  response.handler = origin;
   // return response
-  bolthur_rpc_return( type, &res, sizeof( res ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   // free message structures
   free( request );
 }

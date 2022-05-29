@@ -41,6 +41,7 @@ void rpc_handle_exit(
   __unused size_t data_info,
   __unused size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "type = %d\r\n", type )
   vfs_close_response_t response = { .status = -EINVAL };
   // destroy all handles of origin
   handle_destory_all( origin );

@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/bolthur.h>
 #include <sys/sysmacros.h>
@@ -32,14 +33,19 @@
 #include <assert.h>
 #include "ramdisk.h"
 #include "../libhelper.h"
+#include "../libdev.h"
+
+#define MOUNT_POINT "/ramdisk-early"
 
 uintptr_t ramdisk_compressed;
 size_t ramdisk_compressed_size;
 uintptr_t ramdisk_decompressed;
 size_t ramdisk_decompressed_size;
+size_t ramdisk_shared_id;
 size_t ramdisk_read_offset = 0;
 pid_t pid = 0;
 TAR *disk = NULL;
+int fd_dev = 0;
 
 /**
  * @brief Simulate open, by decompressing ramdisk tar image
@@ -57,7 +63,8 @@ static int my_tar_open( __unused const char* path, __unused int b, ... ) {
   ramdisk_decompressed = ( uintptr_t )ramdisk_extract(
     ramdisk_compressed,
     ramdisk_compressed_size,
-    ramdisk_decompressed_size );
+    ramdisk_decompressed_size,
+    &ramdisk_shared_id );
   // handle error
   if ( ! ramdisk_decompressed ) {
     return -1;
@@ -73,7 +80,10 @@ static int my_tar_open( __unused const char* path, __unused int b, ... ) {
  * @return
  */
 static int my_tar_close( __unused int fd ) {
-  free( ( void* )ramdisk_decompressed );
+  _syscall_memory_shared_detach( ramdisk_shared_id );
+  if ( errno ) {
+    return 1;
+  }
   return 0;
 }
 
@@ -145,226 +155,175 @@ static bool device_exists( const char* path ) {
  * @param path
  */
 static void wait_for_device( const char* path ) {
-  while( ! device_exists( path ) ) {
-    sleep( 5 );
-  }
-}
-
-static vfs_read_response_t read_error_response;
-
-/**
- * @fn void read_error_return(size_t, int)
- * @brief Helper to perform early rpc read error return
- *
- * @param type
- * @param error
- */
-static void read_error_return( size_t type, int error ) {
-  // clear error response
-  memset( &read_error_response, 0, sizeof( read_error_response ) );
-  // set error
-  read_error_response.len = error;
-  // perform return
-  bolthur_rpc_return(
-    type,
-    &read_error_response,
-    sizeof( read_error_response ),
-    NULL
-  );
+  do {
+    sleep( 2 );
+  } while( ! device_exists( path ) );
 }
 
 /**
- * @fn void rpc_handle_read(size_t, pid_t, size_t, size_t)
- * @brief Helper to handle read request from ramdisk
+ * @fn pid_t execute_driver(const char*, const char*)
+ * @brief Helper wraps start of a server
  *
- * @param type
- * @param origin
- * @param data_info
- * @param respinse_info
- */
-static void rpc_handle_read(
-  size_t type,
-  pid_t origin,
-  size_t data_info,
-  __unused size_t response_info
-) {
-  // validate origin
-  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    read_error_return( type, -EINVAL );
-    return;
-  }
-  vfs_read_request_t* request = malloc( sizeof( vfs_read_request_t ) );
-  if ( ! request ) {
-    read_error_return( type, -ENOMEM );
-    return;
-  }
-  vfs_read_response_t* response = malloc( sizeof( vfs_read_response_t ) );
-  if ( ! response ) {
-    read_error_return( type, -ENOMEM );
-    free( request );
-    return;
-  }
-  memset( request, 0, sizeof( vfs_read_request_t ) );
-  memset( response, 0, sizeof( vfs_read_response_t ) );
-  // handle no data
-  if( ! data_info ) {
-    response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
-    free( request );
-    free( response );
-    return;
-  }
-  // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_read_request_t ), data_info );
-  // handle error
-  if ( errno ) {
-    response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
-    free( request );
-    free( response );
-    return;
-  }
-  // get rid of mount point
-  char* file = request->file_path;
-  char* buf = NULL;
-  void* shm_addr = NULL;
-  // map shared if set
-  if ( 0 != request->shm_id ) {
-    //EARLY_STARTUP_PRINT( "Map shared %#x\r\n", request->shm_id )
-    // attach shared area
-    shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
-    if ( errno ) {
-      EARLY_STARTUP_PRINT( "Unable to attach shared area!\r\n" )
-      // prepare response
-      response->len = -EIO;
-      // return response
-      bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
-      // free stuff
-      free( request );
-      free( response );
-      return;
-    }
-  }
-  //EARLY_STARTUP_PRINT( "file = %s\r\n", file );
-  // strip leading slash
-  if ( '/' == *file ) {
-    file++;
-  }
-  size_t total_size = 0;
-  // reset read offset
-  ramdisk_read_offset = 0;
-  // try to find within ramdisk
-  while ( th_read( disk ) == 0 ) {
-    if ( TH_ISREG( disk ) ) {
-      // get filename
-      char* ramdisk_file = th_get_pathname( disk );
-      //EARLY_STARTUP_PRINT( "ramdisk_file = %s\r\n", ramdisk_file )
-      // check for match
-      if ( 0 == strcmp( file, ramdisk_file ) ) {
-        // set vfs image addr
-        total_size = th_get_size( disk );
-        //EARLY_STARTUP_PRINT( "total byte size = %#x\r\n", total_size )
-        buf = ( char* )( ( uint8_t* )ramdisk_decompressed + ramdisk_read_offset );
-        break;
-      }
-      // skip to next file
-      if ( tar_skip_regfile( disk ) != 0 ) {
-        EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
-        // return response
-        response->len = -EIO;
-        bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
-        return;
-      }
-    }
-  }
-  // handle error
-  if ( ! buf ) {
-    // prepare response
-    response->len = -EIO;
-    // return response
-    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
-    // free stuff
-    free( request );
-    free( response );
-    return;
-  }
-
-  // read until end / size
-  size_t amount = request->len;
-  size_t total = amount + ( size_t )request->offset;
-  if ( total > total_size ) {
-    amount -= ( total - total_size );
-  }
-  /*EARLY_STARTUP_PRINT(
-    "read amount = %d ( %#x ), offset = %ld ( %#lx ), total = %d ( %#x ), "
-    "first two byte = %#"PRIx16"\r\n",
-    amount, amount, request->offset, request->offset, total, total,
-    *( ( uint16_t* )( buf + request->offset ) ) )*/
-  // now copy
-  if ( shm_addr ) {
-    memcpy( shm_addr, buf + request->offset, amount );
-  } else {
-    memcpy( response->data, buf + request->offset, amount );
-  }
-
-  // detach shared area
-  if ( request->shm_id ) {
-    _syscall_memory_shared_detach( request->shm_id );
-    if ( errno ) {
-      EARLY_STARTUP_PRINT( "Unable to detach shared area!\r\n")
-      // prepare response
-      response->len = -EIO;
-      // return response
-      bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
-      // free stuff
-      free( request );
-      free( response );
-      return;
-    }
-  }
-  // prepare read amount
-  response->len = ( ssize_t )amount;
-  // return response
-  bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
-  // free stuff
-  free( request );
-  free( response );
-}
-
-/**
- * @fn int execute_driver(char*)
- * @brief Helper to execute specific driver from ramdisk
- *
- * @param name
+ * @param path
+ * @param device
  * @return
  */
-static pid_t execute_driver( char* name ) {
-  // pure kernel fork necessary here
-  pid_t forked_process = fork();
+static pid_t execute_driver( const char* path, const char* device ) {
+  pid_t proc;
+  // allocate message
+  dev_command_start_t* start = malloc( sizeof( *start ) );
+  if ( ! start ) {
+    EARLY_STARTUP_PRINT( "Unable to allocate command\r\n" )
+    return 0;
+  }
+  // clear out
+  memset( start, 0, sizeof( *start ) );
+  // prepare command content
+  strncpy( start->path, path, PATH_MAX - 1 );
+  // raise request
+  int result = ioctl(
+    fd_dev,
+    IOCTL_BUILD_REQUEST(
+      DEV_START,
+      sizeof( *start ),
+      IOCTL_RDWR
+    ),
+    start
+  );
+  // handle error
+  if ( -1 == result ) {
+    free( start );
+    return 0;
+  }
+  // extract process
+  memcpy( &proc, start, sizeof( pid_t ) );
+  free( start );
+  // wait for device
+  wait_for_device( device );
+  // return pid finally
+  return proc;
+}
+
+/**
+ * @fn void stage1(void)
+ * @brief stage 1 early init stuff
+ */
+static void stage1( void ) {
+  // transform number to string
+  int len = snprintf( NULL, 0, "%zu", ramdisk_shared_id ) + 1;
+  char* shm_id_str = malloc( sizeof( char ) * ( size_t )len );
+  if ( ! shm_id_str ) {
+    EARLY_STARTUP_PRINT( "Unable to allocate space for parameter\r\n" )
+    exit( -1 );
+  }
+  memset( shm_id_str, 0, sizeof( char ) * ( size_t )len );
+  sprintf( shm_id_str, "%zu", ramdisk_shared_id );
+
+  // get vfs image
+  size_t vfs_size;
+  void* vfs_image = ramdisk_lookup_file( disk, "ramdisk/server/fs/vfs", &vfs_size );
+  if ( ! vfs_image ) {
+    EARLY_STARTUP_PRINT( "VFS not found for start!\r\n" );
+    exit( -1 );
+  }
+  EARLY_STARTUP_PRINT( "VFS image: %p!\r\n", vfs_image );
+  // fork process and handle possible error
+  EARLY_STARTUP_PRINT( "Forking process for vfs start!\r\n" );
+  pid_t forked_process = _syscall_process_fork();
   if ( errno ) {
     EARLY_STARTUP_PRINT(
-      "Unable to fork process for image replace: %s\r\n",
+      "Unable to fork process for vfs replace: %s\r\n",
       strerror( errno )
     )
-    return -1;
+    exit( -1 );
   }
   // fork only
   if ( 0 == forked_process ) {
-    char* base = basename( name );
-    if ( ! base ) {
-      EARLY_STARTUP_PRINT( "Basename failed!\r\n" )
+    // start /dev
+    EARLY_STARTUP_PRINT( "Starting for dev server...\r\n" )
+    size_t dev_size;
+    void* dev_image = ramdisk_lookup_file( disk, "ramdisk/server/fs/dev", &dev_size );
+    if ( ! dev_image ) {
       exit( -1 );
     }
-    // build command
-    char* cmd[] = { base, NULL, };
-    // exec to replace
-    if ( -1 == execv( name, cmd ) ) {
-      EARLY_STARTUP_PRINT( "Exec failed: %s\r\n", strerror( errno ) )
-      exit( 1 );
+    // fork process and handle possible error
+    pid_t inner_forked_process = _syscall_process_fork();
+    if ( errno ) {
+      EARLY_STARTUP_PRINT( "Unable to fork process: %s\r\n", strerror( errno ) )
+      exit( -1 );
+    }
+    // handle no fork
+    if ( 0 == inner_forked_process ) {
+      // start /dev/ramdisk
+      size_t ramdisk_size;
+      void* ramdisk_image = ramdisk_lookup_file( disk, "ramdisk/server/fs/ramdisk", &ramdisk_size );
+      if ( ! dev_image ) {
+        exit( -1 );
+      }
+      // fork process and handle possible error
+      inner_forked_process = _syscall_process_fork();
+      if ( errno ) {
+        EARLY_STARTUP_PRINT( "Unable to fork process: %s\r\n", strerror( errno ) )
+        exit( -1 );
+      }
+      _syscall_rpc_wait_for_ready( forked_process );
+      if ( 0 == inner_forked_process ) {
+        // build command
+        char* ramdisk_cmd[] = { "ramdisk", shm_id_str, NULL, };
+        // call for replace and handle error
+        _syscall_process_replace( ramdisk_image, ramdisk_cmd, NULL );
+        if ( errno ) {
+          EARLY_STARTUP_PRINT(
+            "Unable to replace process with image: %s\r\n",
+            strerror( errno )
+          )
+          exit( -1 );
+        }
+      } else {
+        // build command
+        char* dev_cmd[] = { "dev", NULL, };
+        // call for replace and handle error
+        _syscall_process_replace( dev_image, dev_cmd, NULL );
+        if ( errno ) {
+          EARLY_STARTUP_PRINT(
+            "Unable to replace process with image: %s\r\n",
+            strerror( errno )
+          )
+          exit( -1 );
+        }
+      }
+    }
+
+    EARLY_STARTUP_PRINT( "Replacing fork with vfs image %p!\r\n", vfs_image );
+    // call for replace and handle error
+    _syscall_process_replace( vfs_image, NULL, NULL );
+    if ( errno ) {
+      EARLY_STARTUP_PRINT(
+        "Unable to replace process with image: %s\r\n",
+        strerror( errno )
+      )
+      exit( -1 );
     }
   }
-  // non fork return 0
-  return forked_process;
+  // handle unexpected vfs id returned
+  if ( VFS_DAEMON_ID != forked_process ) {
+    EARLY_STARTUP_PRINT( "Invalid process id for vfs daemon!\r\n" )
+    exit( -1 );
+  }
+  // enable rpc and wait for process to be ready
+  _syscall_rpc_set_ready( true );
+  _syscall_rpc_wait_for_ready( forked_process );
+
+  wait_for_device( "/dev" );
+  wait_for_device( "/dev/manager" );
+  wait_for_device( "/dev/ramdisk" );
+  // close ramdisk
+  EARLY_STARTUP_PRINT( "Closing early ramdisk\r\n" );
+  if ( 0 != tar_close( disk ) ) {
+    EARLY_STARTUP_PRINT( "ERROR: Cannot close ramdisk!\r\n" );
+    exit( -1 );
+  }
+  free( shm_id_str );
 }
 
 /**
@@ -374,28 +333,23 @@ static pid_t execute_driver( char* name ) {
 static void stage2( void ) {
   // start mailbox server
   EARLY_STARTUP_PRINT( "Starting and waiting for iomem server...\r\n" )
-  pid_t iomem = execute_driver( "/ramdisk/server/iomem" );
-  wait_for_device( "/dev/iomem" );
+  pid_t iomem = execute_driver( "/ramdisk/server/iomem", "/dev/iomem" );
 
   // start random server
   EARLY_STARTUP_PRINT( "Starting and waiting for random server...\r\n" )
-  pid_t rnd = execute_driver( "/ramdisk/server/random" );
-  wait_for_device( "/dev/random" );
+  pid_t rnd = execute_driver( "/ramdisk/server/random", "/dev/random" );
 
   // start framebuffer driver and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for framebuffer server...\r\n" )
-  pid_t framebuffer = execute_driver( "/ramdisk/server/framebuffer" );
-  wait_for_device( "/dev/framebuffer" );
+  pid_t framebuffer = execute_driver( "/ramdisk/server/framebuffer", "/dev/framebuffer" );
 
   // start system console and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for console server...\r\n" )
-  pid_t console = execute_driver( "/ramdisk/server/console" );
-  wait_for_device( "/dev/console" );
+  pid_t console = execute_driver( "/ramdisk/server/console", "/dev/console" );
 
   // start tty and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )
-  pid_t terminal = execute_driver( "/ramdisk/server/terminal" );
-  wait_for_device( "/dev/terminal" );
+  pid_t terminal = execute_driver( "/ramdisk/server/terminal", "/dev/terminal" );
 
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
@@ -420,6 +374,9 @@ static void stage2( void ) {
 
   EARLY_STARTUP_PRINT( "size_t max = %zu\r\n", SIZE_MAX )
   EARLY_STARTUP_PRINT( "unsigned long long max = %llu\r\n", ULLONG_MAX )
+  EARLY_STARTUP_PRINT(
+    "iomem = %d, rnd = %d, console = %d, terminal = %d, framebuffer = %d\r\n",
+    iomem, rnd, console, terminal, framebuffer )
 
   EARLY_STARTUP_PRINT( "Adjust stdout / stderr buffering\r\n" )
   // adjust buffering of stdout and stderr
@@ -428,10 +385,10 @@ static void stage2( void ) {
 
   // start sd server
   EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
-  pid_t sd = execute_driver( "/ramdisk/server/storage/sd" );
-  wait_for_device( "/dev/sd" );
+  pid_t sd = execute_driver( "/ramdisk/server/storage/sd", "/dev/sd" );
   EARLY_STARTUP_PRINT(
-    "iomem = %d, rnd = %d, console = %d, terminal = %d, framebuffer = %d, sd = %d\r\n",
+    "iomem = %d, rnd = %d, console = %d, terminal = %d, "
+    "framebuffer = %d, sd = %d\r\n",
     iomem, rnd, console, terminal, framebuffer, sd )
 
   EARLY_STARTUP_PRINT( "äöüÄÖÜ\r\n" )
@@ -574,124 +531,19 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
 
-  // dump ramdisk
-  //ramdisk_dump( disk );
-  // get vfs image
-  size_t vfs_size;
-  void* vfs_image = ramdisk_lookup_file( disk, "ramdisk/server/fs/vfs", &vfs_size );
-  if ( ! vfs_image ) {
-    EARLY_STARTUP_PRINT( "VFS not found for start!\r\n" );
+  // stage 1 init
+  stage1();
+  // open /dev
+  //fd_dev = open( "/dev/manager", O_RDWR );
+  fd_dev = open( "/dev", O_RDWR );
+  if ( -1 == fd_dev ) {
+    EARLY_STARTUP_PRINT( "ERROR: Cannot open dev: %s!\r\n", strerror( errno ) );
     return -1;
   }
-  EARLY_STARTUP_PRINT( "VFS image: %p!\r\n", vfs_image );
-  // fork process and handle possible error
-  EARLY_STARTUP_PRINT( "Forking process for vfs start!\r\n" );
-  pid_t forked_process = _syscall_process_fork();
-  if ( errno ) {
-    EARLY_STARTUP_PRINT(
-      "Unable to fork process for vfs replace: %s\r\n",
-      strerror( errno )
-    )
-    return -1;
-  }
-  // fork only
-  if ( 0 == forked_process ) {
-    EARLY_STARTUP_PRINT( "Replacing fork with vfs image %p!\r\n", vfs_image );
-    // call for replace and handle error
-    _syscall_process_replace( vfs_image, NULL, NULL );
-    if ( errno ) {
-      EARLY_STARTUP_PRINT(
-        "Unable to replace process with image: %s\r\n",
-        strerror( errno )
-      )
-      return -1;
-    }
-  }
-  // handle unexpected vfs id returned
-  if ( VFS_DAEMON_ID != forked_process ) {
-    EARLY_STARTUP_PRINT( "Invalid process id for vfs daemon!\r\n" )
-    return -1;
-  }
-  // enable rpc and wait for process to be ready
-  _syscall_rpc_set_ready( true );
-  _syscall_rpc_wait_for_ready( forked_process );
-  EARLY_STARTUP_PRINT( "Continuing with startup by sending ramdisk!\r\n" )
-  // FIXME: SEND ADD REQUESTS WITH READONLY PARAMETER
-  // reset read offset
-  ramdisk_read_offset = 0;
-  // loop and add folders
-  while ( th_read( disk ) == 0 ) {
-    // handle directory, hard links, symbolic links and normal entries
-    // clear message structures
-    memset( msg, 0, sizeof( vfs_add_request_t ) );
-    // populate path into message
-    strncpy( msg->file_path, "/", PATH_MAX - 1 );
-    strncat(
-      msg->file_path,
-      th_get_pathname( disk ),
-      PATH_MAX - strlen( msg->file_path ) - 1
-    );
-    // add link name
-    if ( TH_ISLNK( disk ) || TH_ISSYM( disk ) ) {
-      strncpy( msg->linked_path, th_get_linkname( disk ), PATH_MAX - 1 );
-      msg->info.st_size = ( off_t )strlen( msg->linked_path );
-    } else {
-      msg->info.st_size = ( off_t )th_get_size( disk );
-    }
-    // populate stat info
-    msg->info.st_dev = makedev(
-      ( unsigned int )th_get_devmajor( disk ),
-      ( unsigned int )th_get_devminor( disk ) );
-    msg->info.st_ino = 0; // FIXME: ADD VALUE
-    msg->info.st_mode = th_get_mode( disk );
-    msg->info.st_nlink = 0; // FIXME: ADD VALUE
-    msg->info.st_uid = ( uid_t )oct_to_int( disk->th_buf.uid ); // th_get_uid( disk );
-    msg->info.st_gid = ( gid_t )oct_to_int( disk->th_buf.gid ); // th_get_gid( disk );
-    msg->info.st_rdev = 0; // FIXME: ADD VALUE
-    msg->info.st_atim.tv_sec = 0; // FIXME: ADD VALUE
-    msg->info.st_atim.tv_nsec = 0; // FIXME: ADD VALUE
-    msg->info.st_mtim.tv_sec = th_get_mtime( disk );
-    msg->info.st_mtim.tv_nsec = 0; // FIXME: ADD VALUE
-    msg->info.st_ctim.tv_sec = 0; // FIXME: ADD VALUE
-    msg->info.st_ctim.tv_nsec = 0; // FIXME: ADD VALUE
-    msg->info.st_blksize = T_BLOCKSIZE;
-    msg->info.st_blocks = ( msg->info.st_size / T_BLOCKSIZE )
-      + ( msg->info.st_size % T_BLOCKSIZE ? 1 : 0 );
-    // send add request
-    send_vfs_add_request( msg, 0, 2 );
-    // skip to next file
-    if ( TH_ISREG( disk ) && tar_skip_regfile( disk ) != 0 ) {
-      EARLY_STARTUP_PRINT( "tar_skip_regfile(): %s\n", strerror( errno ) );
-      return -1;
-    }
-  }
-  // free message structure
-  free( msg );
+  EARLY_STARTUP_PRINT( "fd_dev = %d\r\n", fd_dev )
+  // stage 2 init
+  stage2();
 
-  // register rpc handler
-  bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
-    return -1;
-  }
-
-  // fork process and handle possible error
-  EARLY_STARTUP_PRINT( "Forking process for further init!\r\n" );
-  forked_process = _syscall_process_fork();
-  if ( errno ) {
-    EARLY_STARTUP_PRINT(
-      "Unable to fork process for init continue: %s\r\n",
-      strerror( errno )
-    )
-    return -1;
-  }
-  // handle ongoing init in forked process
-  if ( 0 == forked_process ) {
-    stage2();
-    return 1;
-  }
-
-  EARLY_STARTUP_PRINT( "Entering wait for rpc loop!\r\n" );
-  bolthur_rpc_wait_block();
-  return 0;
+  while ( true ) {}
+  return 1;
 }

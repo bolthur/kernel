@@ -90,6 +90,7 @@ bool random_setup( void ) {
   );
   // handle error
   if ( -1 == result ) {
+    errno = ENOSYS;
     close( iomem_fd );
     return false;
   }

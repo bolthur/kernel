@@ -69,7 +69,7 @@ void rpc_handle_read_async(
     return;
   }
   // fetch response
-  _syscall_rpc_get_data( response, sizeof( vfs_read_response_t ), data_info );
+  _syscall_rpc_get_data( response, sizeof( vfs_read_response_t ), data_info, false );
   if ( errno ) {
     bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), async_data );
     free( response );
@@ -114,6 +114,7 @@ void rpc_handle_read(
   size_t data_info,
   size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "type = %d\r\n", type )
   // handle async return in case response info is set
   if ( response_info ) {
     rpc_handle_read_async( type, origin, data_info, response_info );
@@ -152,7 +153,7 @@ void rpc_handle_read(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_read_request_t ), data_info );
+  _syscall_rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
@@ -181,8 +182,6 @@ void rpc_handle_read(
     free( nested_request );
     return;
   }
-  // get handling process
-  pid_t handling_process = container->target->pid;
   // prepare structure
   strncpy( nested_request->file_path, container->path, PATH_MAX );
   nested_request->offset = container->pos;
@@ -191,7 +190,7 @@ void rpc_handle_read(
   // perform async rpc
   bolthur_rpc_raise(
     type,
-    handling_process,
+    container->handler,
     nested_request,
     sizeof( vfs_read_request_t ),
     false,

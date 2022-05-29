@@ -77,16 +77,23 @@ size_t ramdisk_extract_size( uintptr_t address, size_t size ) {
   return extract_len;
 }
 
-void* ramdisk_extract( uintptr_t address, size_t size, size_t extract_size ) {
+void* ramdisk_extract(
+  uintptr_t address,
+  size_t size,
+  size_t extract_size,
+  size_t* shared_id
+) {
   int err;
   // decompress
   z_stream stream = { 0 };
-  void* dec = malloc( extract_size );
-  // handle allocate error
-  if ( ! dec ) {
+  *shared_id = _syscall_memory_shared_create( extract_size );
+  if ( errno ) {
     return NULL;
   }
-
+  void* dec = _syscall_memory_shared_attach( *shared_id, ( uintptr_t )NULL );
+  if ( errno ) {
+    return NULL;
+  }
   // prepare stream
   stream.total_in = stream.avail_in = size;
   stream.total_out = stream.avail_out = extract_size;
@@ -95,7 +102,6 @@ void* ramdisk_extract( uintptr_t address, size_t size, size_t extract_size ) {
   stream.zalloc = Z_NULL;
   stream.zfree  = Z_NULL;
   stream.opaque = Z_NULL;
-
   // initialize inflate
   err = inflateInit2( &stream, 15 + 32 );
   if ( Z_OK != err ) {
@@ -114,7 +120,6 @@ void* ramdisk_extract( uintptr_t address, size_t size, size_t extract_size ) {
   }
   // end inflate
   inflateEnd( &stream );
-
   // return decompressed
   return dec;
 }

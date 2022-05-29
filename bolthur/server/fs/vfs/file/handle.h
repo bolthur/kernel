@@ -39,7 +39,10 @@ typedef struct {
   int mode;
   off_t pos;
   char path[ PATH_MAX ];
-  vfs_node_t* target;
+  vfs_node_t* mount_point;
+  vfs_node_t* target_node;
+  pid_t handler;
+  struct stat info;
 } handle_container_t;
 
 #define HANDLE_GET_CONTAINER( n ) \
@@ -58,7 +61,7 @@ typedef struct {
   )
 
 bool handle_init( void );
-int handle_generate( handle_container_t**, pid_t, vfs_node_t*, vfs_node_t*, const char*, int, int );
+int handle_generate( handle_container_t**, pid_t, pid_t, vfs_node_t*, vfs_node_t*, const char*, int, int );
 int handle_destory( pid_t, int );
 void handle_destory_all( pid_t );
 int handle_get( handle_container_t**, pid_t, int );

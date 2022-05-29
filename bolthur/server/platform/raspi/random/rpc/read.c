@@ -93,7 +93,7 @@ void rpc_handle_read(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_read_request_t ), data_info );
+  _syscall_rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
   // handle error
   if ( errno ) {
     response->len = -EINVAL;

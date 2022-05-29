@@ -69,8 +69,9 @@ void syscall_rpc_raise( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall_rpc_raise( %d, %d, %#p, %#x, %d )\r\n",
-      type, process, data, length, synchronous ? 1 : 0 )
+      "syscall_rpc_raise( %d, %d, %#p, %#x, %d ) from %d\r\n",
+      type, process, data, length, synchronous ? 1 : 0,
+      task_thread_current_thread->process->id )
   #endif
   // create queue if not existing
   if ( ! rpc_generic_setup( task_thread_current_thread->process ) ) {
@@ -272,7 +273,10 @@ void syscall_rpc_ret( void* context ) {
     );
     // handle no target
     if ( ! target ) {
-      #if defined( PRINT_SYSCALL )
+      // in case there is no target, use source and treat it as async
+      target = active->source;
+      active->sync = false;
+/*      #if defined( PRINT_SYSCALL )
         DEBUG_OUTPUT( "No blocked thread found with %d / %d\r\n",
           TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
           original_rpc_id
@@ -281,7 +285,7 @@ void syscall_rpc_ret( void* context ) {
       // free duplicate
       free( dup_data );
       syscall_populate_error( context, ( size_t )-EINVAL );
-      return;
+      return;*/
     }
     // overwrite blocked data id
     blocked_data_id = original_rpc_id;
@@ -390,9 +394,10 @@ void syscall_rpc_get_data( void* context ) {
   char* data = ( char* )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   size_t rpc_data_id = ( size_t )syscall_get_parameter( context, 2 );
+  bool peek = ( size_t )syscall_get_parameter( context, 3 );
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_rpc_get_data( %#p, %#x, %d ) from %d\r\n",
-      data, len, rpc_data_id, task_thread_current_thread->process->id )
+    DEBUG_OUTPUT( "syscall_rpc_get_data( %#p, %#x, %d, %d ) from %d\r\n",
+      data, len, rpc_data_id, peek ? 1 : 0, task_thread_current_thread->process->id )
   #endif
   // cache process
   task_process_t* target_process = task_thread_current_thread->process;
@@ -489,7 +494,7 @@ void syscall_rpc_get_data( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "Removing from queue!\r\n" )
   #endif
-  if ( ! list_remove_data(
+  if ( ! peek && ! list_remove_data(
     task_thread_current_thread->process->rpc_data_queue,
     ( void* )rpc_data_id
   ) ) {

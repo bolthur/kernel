@@ -45,6 +45,8 @@ __maybe_unused static void send_vfs_add_request(
   if ( ! response || ! msg ) {
     exit( -1 );
   }
+  // push in current pid
+  msg->handler = getpid();
   size_t size_to_use = size ? size : sizeof( vfs_add_request_t );
   // response id
   size_t response_id = 0;
@@ -74,13 +76,75 @@ __maybe_unused static void send_vfs_add_request(
   // erase response
   memset( response, 0, sizeof( vfs_add_response_t ) );
   // get response data
-  _syscall_rpc_get_data( response, sizeof( vfs_add_response_t ), response_id );
+  _syscall_rpc_get_data(
+    response,
+    sizeof( vfs_add_response_t ),
+    response_id,
+    false
+  );
   // handle error / no message
   if ( errno ) {
     exit( -1 );
   }
   // stop on success
   if ( VFS_ADD_SUCCESS != response->status ) {
+    exit( -1 );
+  }
+  // free up response
+  free( response );
+}
+
+/**
+ * @fn void send_vfs_add_request(vfs_add_request_t*, size_t, unsigned int)
+ * @brief Helper to send add request with wait for response
+ *
+ * @param msg message to send
+ * @param size message size or 0
+ * @param wait amount of seconds to sleep on rpc raise error
+ */
+__maybe_unused static void send_vfs_remove_request(
+  vfs_remove_request_t* msg,
+  unsigned int wait
+) {
+  vfs_remove_response_t* response = malloc( sizeof( vfs_remove_response_t ) );
+  if ( ! response || ! msg ) {
+    exit( -1 );
+  }
+  // response id
+  size_t response_id = 0;
+  // try to send until it worked
+  while ( true ) {
+    // wait for response
+    response_id = bolthur_rpc_raise(
+      RPC_VFS_REMOVE,
+      VFS_DAEMON_ID,
+      msg,
+      sizeof( *msg ),
+      true,
+      RPC_VFS_ADD,
+      msg,
+      sizeof( *msg ),
+      0,
+      0
+    );
+    if ( errno ) {
+      if ( wait ) {
+        sleep( wait );
+      }
+      continue;
+    }
+    break;
+  }
+  // erase response
+  memset( response, 0, sizeof( *response ) );
+  // get response data
+  _syscall_rpc_get_data( response, sizeof( *response ), response_id, false );
+  // handle error / no message
+  if ( errno ) {
+    exit( -1 );
+  }
+  // stop on success
+  if ( 0 != response->status ) {
     exit( -1 );
   }
   // free up response

@@ -2,6 +2,27 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"fs/dev\"
 
 bin_PROGRAMS = dev
+dev_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/collection/avl/libavl.la
+dev_LDADD = \
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/collection/avl/libavl.la
 dev_SOURCES = \
+  ioctl/handler.c \
+  rpc/custom/start.c \
+  rpc/add.c \
+  rpc/close.c \
+  rpc/exit.c \
+  rpc/fork.c \
+  rpc/init.c \
+  rpc/ioctl.c \
+  rpc/open.c \
+  rpc/read.c \
+  rpc/remove.c \
+  rpc/seek.c \
+  rpc/stat.c \
+  rpc/write.c \
+  handle.c \
   main.c
 dev_LDFLAGS = -all-static --static

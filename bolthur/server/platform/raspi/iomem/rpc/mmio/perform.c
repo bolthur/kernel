@@ -232,7 +232,7 @@ void rpc_handle_mmio_perform(
   memset( request_data, 0, data_size );
   memset( response, 0, response_size );
   // fetch rpc data
-  _syscall_rpc_get_data( request_data, data_size, data_info );
+  _syscall_rpc_get_data( request_data, data_size, data_info, false );
   // handle error
   if ( errno ) {
     error.status = -EIO;

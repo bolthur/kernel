@@ -238,12 +238,14 @@ bool handle_duplicate(
 }
 
 /**
+ * @fn int handle_generate(handle_container_t**, pid_t, pid_t, vfs_node_t*, const char*, int, int)
  * @brief Generate new handle
  *
  * @param container
  * @param process
- * @param target
- * @param parent
+ * @param handler
+ * @param mount_point
+ * @param path
  * @param flags
  * @param mode
  * @return
@@ -251,8 +253,9 @@ bool handle_duplicate(
 int handle_generate(
   handle_container_t** container,
   pid_t process,
-  __unused vfs_node_t* parent,
-  vfs_node_t* target,
+  pid_t handler,
+  vfs_node_t* mount_point,
+  vfs_node_t* target_node,
   const char* path,
   int flags,
   int mode
@@ -274,70 +277,6 @@ int handle_generate(
   }
   // copy path
   strncpy( ( *container )->path, path, PATH_MAX - 1 );
-  // special handling for symlinks
-  if ( S_ISLNK( target->st->st_mode ) ) {
-    while ( target && S_ISLNK( target->st->st_mode ) ) {
-      if ( '/' == target->target[ 0 ] ) {
-        target = vfs_node_by_path( target->target );
-      } else {
-        // allocate target
-        char* link_path = malloc( sizeof( char ) * PATH_MAX );
-        if ( ! link_path ) {
-          free( *container );
-          return -ENOMEM;
-        }
-        char* target_path = vfs_path_bottom_up( target );
-        if ( ! target_path ) {
-          free( link_path );
-          free( *container );
-          return -ENOMEM;
-        }
-        // dir
-        char* dir = dirname( target_path );
-        if ( ! dir ) {
-          free( target_path );
-          free( link_path );
-          free( *container );
-          return -ENOMEM;
-        }
-        // build target path
-        link_path = strncpy( link_path, dir, PATH_MAX - 1 );
-        link_path = strncat(
-          link_path,
-          "/",
-          PATH_MAX - strlen( link_path ) - 1
-        );
-        link_path = strncat(
-          link_path,
-          target->target,
-          PATH_MAX - strlen( link_path ) - 1
-        );
-        // free up base path again
-        free( target_path );
-        free( dir );
-        // overwrite target
-        target = vfs_node_by_path( link_path );
-        // free built link path
-        free( link_path );
-      }
-    }
-    // get link destination
-    char* destination = vfs_path_bottom_up( target ) ;
-    if ( ! destination ) {
-      free( *container );
-      return -ENOENT;
-    }
-    // ensure max path
-    if ( PATH_MAX < strlen( destination ) ) {
-      free( *container );
-      free( destination );
-      return -EINVAL;
-    }
-    // copy link destination
-    strncpy( ( *container )->path, destination, PATH_MAX - 1 );
-    // free again after copy
-    free( destination );
-  }
   // special handling for stdin, stdout and stderr
   bool is_stdin = 0 == strcmp( path, "/dev/stdin" );
   bool is_stdout = 0 == strcmp( path, "/dev/stdout" );
@@ -370,7 +309,9 @@ int handle_generate(
   // populate structure
   ( *container )->flags = flags;
   ( *container )->mode = mode;
-  ( *container )->target = target;
+  ( *container )->mount_point = mount_point;
+  ( *container )->target_node = target_node;
+  ( *container )->handler = handler;
   // prepare and insert avl node
   avl_prepare_node( &(*container)->node, ( void* )(*container)->handle );
   if ( ! avl_insert_by_node( process_handle->tree, &(*container)->node ) ) {

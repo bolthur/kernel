@@ -1,2 +1,2 @@
 
-SUBDIRS = dev ext4 fat32 manager vfs
+SUBDIRS = dev ramdisk vfs

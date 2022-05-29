@@ -43,6 +43,7 @@ void rpc_handle_fork(
   size_t data_info,
   __unused size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "type = %d\r\n", type )
   // dummy error response
   vfs_fork_response_t response = { .status = -EINVAL };
   // handle no data
@@ -64,7 +65,7 @@ void rpc_handle_fork(
     return;
   }
   memset( request, 0, message_size );
-  _syscall_rpc_get_data( request, message_size, data_info );
+  _syscall_rpc_get_data( request, message_size, data_info, false );
   if ( errno ) {
     response.status = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
