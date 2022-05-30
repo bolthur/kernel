@@ -41,7 +41,6 @@ void rpc_handle_close(
   size_t data_info,
   __unused size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "type = %d\r\n", type )
   vfs_close_response_t response = { .status = -EINVAL };
   vfs_close_request_t* request = malloc( sizeof( vfs_close_request_t ) );
   if ( ! request ) {

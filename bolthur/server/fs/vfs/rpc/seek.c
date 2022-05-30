@@ -41,7 +41,6 @@ void rpc_handle_seek(
   size_t data_info,
   __unused size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "type = %d\r\n", type )
   vfs_seek_response_t response = { .position = -EINVAL };
   vfs_seek_request_t* request = malloc( sizeof( vfs_seek_request_t ) );
   if ( ! request ) {
@@ -78,11 +77,6 @@ void rpc_handle_seek(
     return;
   }
 
-  /*EARLY_STARTUP_PRINT(
-    "%s - request->whence = %d, request->handle = %d, request->offset = %#lx\r\n",
-    container->path, request->whence, request->handle, request->offset
-  )*/
-
   // get current position
   off_t new_pos;
   // determine what to do
@@ -100,7 +94,6 @@ void rpc_handle_seek(
       new_pos = -1;
   }
 
-  //EARLY_STARTUP_PRINT( "container->pos = %#lx\r\n", new_pos )
   // build response
   if ( 0 > new_pos || new_pos > container->info.st_size ) {
     // send errno via negative len
@@ -111,7 +104,6 @@ void rpc_handle_seek(
     // push into response
     response.position = new_pos;
   }
-  //EARLY_STARTUP_PRINT( "container->pos = %#lx\r\n", new_pos )
   // return response
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   // free stuff

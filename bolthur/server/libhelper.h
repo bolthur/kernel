@@ -41,13 +41,13 @@ __maybe_unused static void send_vfs_add_request(
   size_t size,
   unsigned int wait
 ) {
-  vfs_add_response_t* response = malloc( sizeof( vfs_add_response_t ) );
+  vfs_add_response_t* response = malloc( sizeof( *response ) );
   if ( ! response || ! msg ) {
     exit( -1 );
   }
   // push in current pid
   msg->handler = getpid();
-  size_t size_to_use = size ? size : sizeof( vfs_add_request_t );
+  size_t size_to_use = size ? size : sizeof( *msg );
   // response id
   size_t response_id = 0;
   // try to send until it worked
@@ -74,11 +74,11 @@ __maybe_unused static void send_vfs_add_request(
     break;
   }
   // erase response
-  memset( response, 0, sizeof( vfs_add_response_t ) );
+  memset( response, 0, sizeof( *response ) );
   // get response data
   _syscall_rpc_get_data(
     response,
-    sizeof( vfs_add_response_t ),
+    sizeof( *response ),
     response_id,
     false
   );
@@ -106,7 +106,7 @@ __maybe_unused static void send_vfs_remove_request(
   vfs_remove_request_t* msg,
   unsigned int wait
 ) {
-  vfs_remove_response_t* response = malloc( sizeof( vfs_remove_response_t ) );
+  vfs_remove_response_t* response = malloc( sizeof( *response ) );
   if ( ! response || ! msg ) {
     exit( -1 );
   }

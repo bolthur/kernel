@@ -188,13 +188,12 @@ ssize_t render_terminal( terminal_t* term, const char* s ) {
   uint32_t character_rendered = terminal_push( term, s );
 
   // allocate rpc parameter block
-  framebuffer_surface_render_t* action = malloc(
-    sizeof( framebuffer_surface_render_t ) );
+  framebuffer_surface_render_t* action = malloc( sizeof( *action ) );
   if ( ! action ) {
     return -ENOMEM;
   }
   // initialize space with 0
-  memset( action, 0, sizeof( framebuffer_surface_render_t ) );
+  memset( action, 0, sizeof( *action ) );
   // populate
   action->surface_id = term->surface_id;
   action->x = 0;
@@ -204,7 +203,7 @@ ssize_t render_terminal( terminal_t* term, const char* s ) {
     output_driver_fd,
     IOCTL_BUILD_REQUEST(
       FRAMEBUFFER_SURFACE_RENDER,
-      sizeof( framebuffer_surface_render_t ),
+      sizeof( *action ),
       IOCTL_WRONLY
     ),
     action

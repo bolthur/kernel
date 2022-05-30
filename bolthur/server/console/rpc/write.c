@@ -51,13 +51,13 @@ void rpc_handle_write(
     return;
   }
   // allocate space
-  vfs_write_request_t* request = malloc( sizeof( vfs_write_request_t ) );
+  vfs_write_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // prepare
-  memset( request, 0, sizeof( vfs_write_request_t ) );
+  memset( request, 0, sizeof( *request ) );
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -65,7 +65,7 @@ void rpc_handle_write(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_write_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -85,14 +85,14 @@ void rpc_handle_write(
     ? console->out
     : console->err;
   // build terminal command
-  terminal_write_request_t* terminal = malloc( sizeof( terminal_write_request_t ) );
+  terminal_write_request_t* terminal = malloc( sizeof( *terminal ) );
   if ( ! terminal ) {
     response.len = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  memset( terminal, 0, sizeof( terminal_write_request_t ) );
+  memset( terminal, 0, sizeof( *terminal ) );
   terminal->len = request->len;
   memcpy( terminal->data, request->data, request->len );
   strncpy( terminal->terminal, console->path, PATH_MAX - 1 );
@@ -116,7 +116,7 @@ void rpc_handle_write(
     console->fd,
     IOCTL_BUILD_REQUEST(
       rpc_num,
-      sizeof( terminal_write_request_t ),
+      sizeof( *terminal ),
       IOCTL_RDWR
     ),
     terminal

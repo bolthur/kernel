@@ -212,9 +212,8 @@ void rpc_handle_open(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "type = %d, origin = %d\r\n", type, origin )
   // handle async return in case response info is set
-  if ( response_info ) {
+  if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
     rpc_handle_open_async( type, origin, data_info, response_info );
     return;
   }
@@ -222,7 +221,6 @@ void rpc_handle_open(
   vfs_open_response_t response = { .handle = -EINVAL };
   vfs_open_request_t* request = malloc( sizeof( vfs_open_request_t ) );
   if ( ! request ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
@@ -230,7 +228,6 @@ void rpc_handle_open(
   memset( request, 0, sizeof( vfs_open_request_t ) );
   // handle no data
   if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
@@ -239,25 +236,18 @@ void rpc_handle_open(
   _syscall_rpc_get_data( request, sizeof( vfs_open_request_t ), data_info, false );
   // handle error
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  EARLY_STARTUP_PRINT( "retrieved open message, path = %s\r\n", request->path )
   // try to find mount point
   vfs_node_t* mount_point = vfs_extract_mountpoint( request->path );
-  EARLY_STARTUP_PRINT( "mount_point = %p\r\n", ( void* )mount_point )
   // handle no mount point node found
   if ( ! mount_point ) {
-    EARLY_STARTUP_PRINT( "fail %s\r\n", request->path )
     free( request );
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  EARLY_STARTUP_PRINT( "found mount point\r\n" )
-  EARLY_STARTUP_PRINT( "vfs_pid = %d, mount_point->pid = %d, file_path = %s\r\n",
-    vfs_pid, mount_point->pid, request->path )
   if ( vfs_pid == mount_point->pid ) {
     vfs_node_t* by_path = vfs_node_by_path( request->path );
     if ( ! by_path ) {

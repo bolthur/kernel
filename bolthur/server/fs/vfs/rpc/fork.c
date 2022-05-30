@@ -43,7 +43,6 @@ void rpc_handle_fork(
   size_t data_info,
   __unused size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "type = %d\r\n", type )
   // dummy error response
   vfs_fork_response_t response = { .status = -EINVAL };
   // handle no data
@@ -75,9 +74,6 @@ void rpc_handle_fork(
   // check origin parent against parent from request ( must match )
   pid_t origin_parent = _syscall_process_parent_by_id( origin );
   if ( origin_parent != request->parent ) {
-    EARLY_STARTUP_PRINT(
-      "origin = %d, origin parent = %d, request parent = %d\r\n",
-      origin, origin_parent, request->parent )
     response.status = -EINVAL;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
@@ -93,11 +89,8 @@ void rpc_handle_fork(
     // local variables necessary for macro
     handle_container_t* container;
     avl_node_t* iter;
-    //EARLY_STARTUP_PRINT( "Duplicating open handles - start\r\n" )
     // loop through all open handles and duplicate them
     process_handle_for_each( iter, container, parent_process_container->tree ) {
-      //EARLY_STARTUP_PRINT(
-      //  "\titer = %p, container = %p\r\n", ( void* )iter, ( void* )container )
       if ( ! handle_duplicate( container, process_container ) ) {
         // FIXME: DESTROY CONTAINER
         response.status = -EIO;
@@ -106,7 +99,6 @@ void rpc_handle_fork(
         return;
       }
     }
-    //EARLY_STARTUP_PRINT( "Duplicating open handles - end\r\n" )
   }
   // fill response structure
   response.status = 0;

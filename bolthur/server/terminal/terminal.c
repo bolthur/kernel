@@ -83,19 +83,20 @@ bool terminal_init( void ) {
     return false;
   }
   // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t ) + sizeof( size_t ) * 3;
-  vfs_add_request_t* msg = malloc( msg_size );
+  vfs_add_request_t* msg = NULL;
+  size_t msg_size = sizeof( *msg ) + sizeof( size_t ) * 3;
+  msg = malloc( msg_size );
   if ( ! msg ) {
     list_destruct( terminal_list );
     return false;
   }
-  console_command_add_t* command_add = malloc( sizeof( console_command_add_t ) );
+  console_command_add_t* command_add = malloc( sizeof( *command_add ) );
   if ( ! command_add ) {
     free( msg );
     list_destruct( terminal_list );
     return false;
   }
-  console_command_select_t* command_select = malloc( sizeof( console_command_select_t ) );
+  console_command_select_t* command_select = malloc( sizeof( *command_select ) );
   if ( ! command_select ) {
     free( command_add );
     free( msg );
@@ -125,7 +126,7 @@ bool terminal_init( void ) {
       current
     );
     // clear memory
-    memset( msg, 0, sizeof( vfs_add_request_t ) );
+    memset( msg, 0, sizeof( *msg ) );
     // prepare message structure
     msg->info.st_mode = S_IFCHR;
     strncpy( msg->file_path, tty_path, PATH_MAX - 1 );
@@ -185,7 +186,7 @@ bool terminal_init( void ) {
       output_driver_fd,
       IOCTL_BUILD_REQUEST(
         FRAMEBUFFER_SURFACE_ALLOCATE,
-        sizeof( framebuffer_surface_allocate_t ),
+        sizeof( tmp ),
         IOCTL_RDWR
       ),
       &tmp
@@ -198,7 +199,7 @@ bool terminal_init( void ) {
       return false;
     }
     // allocate internal management structure
-    terminal_t* term = malloc( sizeof( terminal_t ) );
+    terminal_t* term = malloc( sizeof( *term ) );
     if ( ! term ) {
       list_destruct( terminal_list );
       free( command_add );
@@ -208,7 +209,7 @@ bool terminal_init( void ) {
       return false;
     }
     // erase allocated space
-    memset( term, 0, sizeof( terminal_t ) );
+    memset( term, 0, sizeof( *term ) );
     // push max columns and rows and tty path
     term->max_col = resolution_data.width / psf_glyph_width();
     term->max_row = resolution_data.height / psf_glyph_height();
@@ -245,7 +246,7 @@ bool terminal_init( void ) {
       return false;
     }
     // erase
-    memset( command_add, 0, sizeof( console_command_add_t ) );
+    memset( command_add, 0, sizeof( *command_add ) );
     // prepare structure
     strncpy( command_add->terminal, tty_path, PATH_MAX - 1 );
     command_add->in = in;
@@ -257,7 +258,7 @@ bool terminal_init( void ) {
       console_manager_fd,
       IOCTL_BUILD_REQUEST(
         CONSOLE_ADD,
-        sizeof( console_command_add_t ),
+        sizeof( *command_add ),
         IOCTL_RDWR
       ),
       command_add
@@ -276,7 +277,7 @@ bool terminal_init( void ) {
     err += 3;
   }
 
-  memset( command_select, 0, sizeof( console_command_select_t ) );
+  memset( command_select, 0, sizeof( *command_select ) );
   // prepare structure
   strncpy( command_select->path, "/dev/tty0", PATH_MAX - 1 );
   // call console select
@@ -284,7 +285,7 @@ bool terminal_init( void ) {
     console_manager_fd,
     IOCTL_BUILD_REQUEST(
       CONSOLE_SELECT,
-      sizeof( console_command_select_t ),
+      sizeof( *command_select ),
       IOCTL_RDWR
     ),
     command_select

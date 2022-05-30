@@ -44,27 +44,23 @@ void rpc_custom_handle_start(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "fail" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // handle no data
   if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "fail" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // get message size
   size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     bolthur_rpc_return( type, &error, sizeof( error ), NULL );
     return;
   }
   // get request
-  /*vfs_ioctl_perform_request_t* request = malloc( data_size );
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
   if ( ! request ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     error.status = -ENOMEM;
     bolthur_rpc_return( type, &error, sizeof( error ), NULL );
     return;
@@ -72,27 +68,15 @@ void rpc_custom_handle_start(
   memset( request, 0, data_size );
   _syscall_rpc_get_data( request, data_size, data_info, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     error.status = -EIO;
     bolthur_rpc_return( type, &error, sizeof( error ), NULL );
     free( request );
     return;
   }
-  dev_command_start_t* command = ( dev_command_start_t* )request->container;*/
-  dev_command_start_t* command = malloc( data_size );
+  dev_command_start_t* command = ( dev_command_start_t* )request->container;
   if ( ! command ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     error.status = -ENOMEM;
     bolthur_rpc_return( type, &error, sizeof( error ), NULL );
-    return;
-  }
-  memset( command, 0, data_size );
-  _syscall_rpc_get_data( command, data_size, data_info, true );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
-    error.status = -EIO;
-    bolthur_rpc_return( type, &error, sizeof( error ), NULL );
-    free( command );
     return;
   }
   // allocate response
@@ -100,8 +84,7 @@ void rpc_custom_handle_start(
     + sizeof( pid_t );
   vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
-    EARLY_STARTUP_PRINT( "fail" )
-    free( command );
+    free( request );
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
@@ -109,8 +92,7 @@ void rpc_custom_handle_start(
   // allocate space for fork
   pid_t* forked_process = malloc( sizeof( *forked_process ) );
   if ( ! forked_process ) {
-    EARLY_STARTUP_PRINT( "fail" )
-    free( command );
+    free( request );
     free( response );
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -119,9 +101,8 @@ void rpc_custom_handle_start(
   // fork process
   *forked_process = fork();
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail" )
     free( forked_process );
-    free( command );
+    free( request );
     free( response );
     error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -147,7 +128,7 @@ void rpc_custom_handle_start(
   response->status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
   // free all used temporary structures
-  free( command );
+  free( request );
   free( response );
   free( forked_process );
 }

@@ -116,9 +116,9 @@ void output_handle_out(
     return;
   }
   // allocate response
-  size_t response_size = sizeof( vfs_write_response_t )
-    + sizeof( vfs_ioctl_perform_response_t );
-  vfs_ioctl_perform_response_t* response = malloc( response_size );
+  vfs_ioctl_perform_response_t* response;
+  size_t response_size = sizeof( vfs_write_response_t ) + sizeof( *response );
+  response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -192,9 +192,9 @@ void output_handle_err(
     return;
   }
   // allocate response
-  size_t response_size = sizeof( vfs_write_response_t )
-    + sizeof( vfs_ioctl_perform_response_t );
-  vfs_ioctl_perform_response_t* response = malloc( response_size );
+  vfs_ioctl_perform_response_t* response;
+  size_t response_size = sizeof( vfs_write_response_t ) + sizeof( *response );
+  response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );

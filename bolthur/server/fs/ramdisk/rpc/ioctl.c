@@ -43,7 +43,6 @@ void rpc_handle_ioctl(
   __unused size_t data_info,
   __unused size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "handler!\r\n" )
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
 }

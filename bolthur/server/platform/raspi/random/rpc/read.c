@@ -71,38 +71,37 @@ void rpc_handle_read(
     read_error_return( type, -EINVAL );
     return;
   }
-  vfs_read_request_t* request = malloc( sizeof( vfs_read_request_t ) );
+  vfs_read_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     read_error_return( type, -ENOMEM );
     return;
   }
-  vfs_read_response_t* response = malloc( sizeof( vfs_read_response_t ) );
+  vfs_read_response_t* response = malloc( sizeof( *response ) );
   if ( ! response ) {
     read_error_return( type, -ENOMEM );
     free( request );
     return;
   }
-  memset( request, 0, sizeof( vfs_read_request_t ) );
-  memset( response, 0, sizeof( vfs_read_response_t ) );
+  memset( request, 0, sizeof( *request ) );
+  memset( response, 0, sizeof( *response ) );
   // handle no data
   if( ! data_info ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
     free( request );
     free( response );
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
   // handle error
   if ( errno ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
     free( request );
     free( response );
     return;
   }
-  //EARLY_STARTUP_PRINT( "random request: %#x\r\n", request->len )
   uint32_t max = request->len;
   uint32_t max_word = max / sizeof( uint32_t );
   // determine buffer for data
@@ -115,7 +114,7 @@ void rpc_handle_read(
       // prepare response
       response->len = -EIO;
       // return response
-      bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
       // free stuff
       free( request );
       free( response );
@@ -135,13 +134,12 @@ void rpc_handle_read(
         _syscall_memory_shared_detach( request->shm_id );
       }
       // return response
-      bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
       // free stuff
       free( request );
       free( response );
       return;
     }
-    // EARLY_STARTUP_PRINT( "val = %#lx\r\n", val )
     buf[ num ] = val;
   }
   // detach shared area
@@ -151,7 +149,7 @@ void rpc_handle_read(
       // prepare response
       response->len = -EIO;
       // return response
-      bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
       // free stuff
       free( request );
       free( response );
@@ -161,7 +159,7 @@ void rpc_handle_read(
   // prepare read amount
   response->len = ( ssize_t )( max_word * sizeof( uint32_t ) );
   // return response
-  bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+  bolthur_rpc_return( type, response, sizeof( *response ), NULL );
   // free again
   free( request );
   free( response );

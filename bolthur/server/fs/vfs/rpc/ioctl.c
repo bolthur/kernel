@@ -46,25 +46,21 @@ void rpc_handle_ioctl_async(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "IOCTL ASYNC HANDLER\r\n" )
   // dummy error response
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // get matching async data
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
     type, response_info );
   if ( ! async_data ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     return;
   }
   // handle no data
   if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     return;
   }
   // get message size
   size_t rpc_response_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     err_response.status = -EIO;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), async_data );
     return;
@@ -72,7 +68,6 @@ void rpc_handle_ioctl_async(
   // get data
   char* rpc_response = malloc( rpc_response_size );
   if ( ! rpc_response ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     err_response.status = -ENOMEM;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), async_data );
     return;
@@ -80,7 +75,6 @@ void rpc_handle_ioctl_async(
   memset( rpc_response, 0, rpc_response_size );
   _syscall_rpc_get_data( rpc_response, rpc_response_size, data_info, false );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     err_response.status = -EIO;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), async_data );
     free( rpc_response );
@@ -108,8 +102,7 @@ void rpc_handle_ioctl(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "type = %d\r\n", type )
-  if ( response_info ) {
+  if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
     rpc_handle_ioctl_async( type, origin, data_info, response_info );
     return;
   }
@@ -117,21 +110,18 @@ void rpc_handle_ioctl(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     return;
   }
   // get message size
   size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     return;
   }
   // get request
   vfs_ioctl_perform_request_t* request = malloc( data_size );
   if ( ! request ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     err_response.status = -ENOMEM;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     return;
@@ -139,7 +129,6 @@ void rpc_handle_ioctl(
   memset( request, 0, data_size );
   _syscall_rpc_get_data( request, data_size, data_info, false );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     err_response.status = -EIO;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     free( request );
@@ -151,14 +140,12 @@ void rpc_handle_ioctl(
   int result = handle_get( &handle_container, origin, request->handle );
   // handle error
   if ( 0 > result ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     err_response.status = result;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     free( request );
     return;
   }
-  /*if ( vfs_pid != handle_container->mount_point->pid ) {
-    EARLY_STARTUP_PRINT( "async redirect \"%s\"...\r\n", handle_container->path )
+  if ( vfs_pid != handle_container->mount_point->pid ) {
     // set handler and redirect request
     request->target_process = handle_container->handler;
     // perform async rpc
@@ -174,17 +161,20 @@ void rpc_handle_ioctl(
       origin,
       data_info
     );
+    if ( errno ) {
+      err_response.status = -errno;
+      bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
+      return;
+    }
     free( request );
     return;
-  }*/
-  EARLY_STARTUP_PRINT( "self handling \"%s\"...\r\n", handle_container->path )
+  }
   // get ioctl container
   ioctl_container_t* ioctl_container = ioctl_lookup_command(
     request->command,
     handle_container->handler
   );
   if ( ! ioctl_container ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
     err_response.status = -EIO;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     free( request );
@@ -204,8 +194,7 @@ void rpc_handle_ioctl(
     data_info
   );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail!\r\n" )
-    err_response.status = -EIO;
+    err_response.status = -errno;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     free( request );
     return;

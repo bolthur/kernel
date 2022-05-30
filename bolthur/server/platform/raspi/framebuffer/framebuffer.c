@@ -377,9 +377,10 @@ void framebuffer_handle_resolution(
     return;
   }
   // allocate response
-  size_t response_size = sizeof( vfs_ioctl_perform_response_t )
+  vfs_ioctl_perform_response_t* response;
+  size_t response_size = sizeof( *response )
     + sizeof( framebuffer_resolution_t );
-  vfs_ioctl_perform_response_t* response = malloc( response_size );
+  response = malloc( response_size );
   // handle error
   if ( ! response ) {
     error.status = -ENOMEM;
@@ -487,16 +488,14 @@ void framebuffer_handle_surface_render(
     return;
   }
   // allocate  structure
-  framebuffer_surface_render_t* info = malloc(
-    sizeof( framebuffer_surface_render_t ) );
+  framebuffer_surface_render_t* info = malloc( sizeof( *info ) );
   if ( ! info ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data(
-    info, sizeof( framebuffer_surface_render_t ), data_info, false );
+  _syscall_rpc_get_data( info, sizeof( *info ), data_info, false );
   // handle error
   if ( errno ) {
     error.status = -errno;
@@ -579,8 +578,7 @@ void framebuffer_handle_surface_allocate(
     return;
   }
   // allocate space for data
-  framebuffer_surface_allocate_t* info = malloc(
-    sizeof( framebuffer_surface_allocate_t ) );
+  framebuffer_surface_allocate_t* info = malloc( sizeof( *info ) );
   if ( ! info ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -588,7 +586,7 @@ void framebuffer_handle_surface_allocate(
   }
   // fetch rpc data
   _syscall_rpc_get_data(
-    info, sizeof( framebuffer_surface_allocate_t ), data_info, false );
+    info, sizeof( *info ), data_info, false );
   if ( errno ) {
     error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -618,7 +616,7 @@ void framebuffer_handle_surface_allocate(
   // clearout shared memory
   memset( shm_addr, 0, memory_size );
   // allocate memory for management structure
-  framebuffer_memory_t* mem = malloc( sizeof( framebuffer_memory_t ) );
+  framebuffer_memory_t* mem = malloc( sizeof( *mem ) );
   if ( ! mem ) {
     while ( true ) {
       _syscall_memory_shared_detach( shm_id );
@@ -633,7 +631,7 @@ void framebuffer_handle_surface_allocate(
     return;
   }
   // clearout and fill
-  memset( mem, 0, sizeof( framebuffer_memory_t ) );
+  memset( mem, 0, sizeof( *mem ) );
   mem->width = info->width;
   mem->height = info->height;
   mem->pitch = allocate_pitch;
@@ -662,9 +660,10 @@ void framebuffer_handle_surface_allocate(
   info->pitch = allocate_pitch;
 
   // allocate response
-  size_t response_size = sizeof( vfs_ioctl_perform_response_t )
+  vfs_ioctl_perform_response_t* response;
+  size_t response_size = sizeof( *response )
     + sizeof( framebuffer_surface_allocate_t );
-  vfs_ioctl_perform_response_t* response = malloc( response_size );
+  response = malloc( response_size );
   // handle error
   if ( ! response ) {
     while ( true ) {

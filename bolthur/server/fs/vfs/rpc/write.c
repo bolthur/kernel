@@ -43,7 +43,6 @@ void rpc_handle_write_async(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "type = %d\r\n", type )
   vfs_write_response_t response = { .len = -EINVAL };
   // get matching async data
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
@@ -62,14 +61,12 @@ void rpc_handle_write_async(
   vfs_write_request_t* request = async_data->original_data;
   // cache origin and rpc necessary for getting handle and return to correct target
   if ( ! request ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
   // fetch response
   _syscall_rpc_get_data( &response, sizeof( response ), data_info, false );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
@@ -82,7 +79,6 @@ void rpc_handle_write_async(
   );
   // handle error
   if ( 0 > result ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
     response.len = result;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
@@ -110,46 +106,33 @@ void rpc_handle_write(
   size_t response_info
 ) {
   // handle async return in case response info is set
-  if ( response_info ) {
+  if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
     rpc_handle_write_async( type, origin, data_info, response_info );
     return;
   }
   // normal request handling starts here
   vfs_write_response_t response = { .len = -ENOMEM };
-  vfs_write_request_t* request = malloc( sizeof( vfs_write_request_t ) );
+  vfs_write_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  vfs_write_request_t* nested_request = malloc( sizeof( vfs_write_request_t ) );
-  if ( ! nested_request ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
-    free( request );
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   handle_container_t* container;
   // clear variables
-  memset( request, 0, sizeof( vfs_write_request_t ) );
-  memset( nested_request, 0, sizeof( vfs_write_request_t ) );
+  memset( request, 0, sizeof( *request ) );
   // switch error return
   response.len = -EINVAL;
   // handle no data
   if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
     free( request );
-    free( nested_request );
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_write_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
   // handle error
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
     free( request );
-    free( nested_request );
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
@@ -157,11 +140,9 @@ void rpc_handle_write(
   int result = handle_get( &container, origin, request->handle );
   // handle error
   if ( 0 > result ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
     response.len = result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
-    free( nested_request );
     return;
   }
   // special handling for null device
@@ -169,34 +150,52 @@ void rpc_handle_write(
     response.len = ( ssize_t )request->len;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
-    free( nested_request );
     return;
   }
-  // prepare structure
-  strncpy( nested_request->file_path, container->path, PATH_MAX );
-  memcpy( nested_request->data, request->data, request->len );
-  nested_request->offset = container->pos;
-  nested_request->len = request->len;
+  // adjust path
+  strncpy( request->file_path, container->path, PATH_MAX );
+  if ( vfs_pid != container->mount_point->pid ) {
+    // set handler and path, and finally redirect request
+    request->target_process = container->handler;
+    // perform async rpc
+    bolthur_rpc_raise(
+      type,
+      container->mount_point->pid,
+      request,
+      sizeof( *request ),
+      false,
+      type,
+      request,
+      sizeof( *request ),
+      origin,
+      data_info
+    );
+    if ( errno ) {
+      response.len = -errno;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      return;
+    }
+    free( request );
+    return;
+  }
   // perform async rpc
   bolthur_rpc_raise(
     type,
     container->handler,
-    nested_request,
-    sizeof( vfs_write_request_t ),
+    request,
+    sizeof( *request ),
     false,
     type,
-    nested_request,
-    sizeof( vfs_write_request_t ),
+    request,
+    sizeof( *request ),
     origin,
     data_info
   );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
+    response.len = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
-    free( nested_request );
     return;
   }
   free( request );
-  free( nested_request );
 }

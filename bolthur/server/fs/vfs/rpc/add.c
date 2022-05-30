@@ -42,7 +42,6 @@ void rpc_handle_add_async(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "type = %d\r\n", type )
   vfs_add_response_t response = { .status = -EINVAL, .handler = 0 };
   // get matching async data
   bolthur_async_data_t* async_data =
@@ -111,10 +110,10 @@ void rpc_handle_add(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  size_t response_info
 ) {
   // handle async return in case response info is set
-  if ( response_info ) {
+  if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
     rpc_handle_add_async( type, origin, data_info, response_info );
     return;
   }
@@ -122,14 +121,12 @@ void rpc_handle_add(
   vfs_add_response_t response = { .status = -EINVAL, .handler = 0 };
   // handle no data
   if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // get message size
   size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
     response.status = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
@@ -137,7 +134,6 @@ void rpc_handle_add(
   // allocate space for request
   vfs_add_request_t* request = malloc( data_size );
   if ( ! request ) {
-    EARLY_STARTUP_PRINT( "fail\r\n" )
     response.status = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
@@ -148,7 +144,6 @@ void rpc_handle_add(
   _syscall_rpc_get_data( request, data_size, data_info, false );
   // handle error
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "fail %s\r\n", request->file_path )
     response.status = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
@@ -156,7 +151,6 @@ void rpc_handle_add(
   }
   // handle invalid process compared to origin
   if ( request->handler != origin ) {
-    EARLY_STARTUP_PRINT( "fail %s\r\n", request->file_path )
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
@@ -164,14 +158,11 @@ void rpc_handle_add(
   // get mount point
   vfs_node_t* mount_point = vfs_extract_mountpoint( request->file_path );
   if ( ! mount_point ) {
-    EARLY_STARTUP_PRINT( "fail %s\r\n", request->file_path )
     response.status = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  EARLY_STARTUP_PRINT( "vfs_pid = %d, mount_point->pid = %d, file_path = %s\r\n",
-    vfs_pid, mount_point->pid, request->file_path )
   // handle not own handling
   if ( vfs_pid != mount_point->pid ) {
     // perform async rpc

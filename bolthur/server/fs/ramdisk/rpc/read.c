@@ -118,7 +118,6 @@ void rpc_handle_read(
     // attach shared area
     shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
     if ( errno ) {
-      EARLY_STARTUP_PRINT( "Unable to attach shared area!\r\n" )
       // prepare response
       response->len = -EIO;
       // return response
@@ -145,7 +144,6 @@ void rpc_handle_read(
   if ( request->shm_id ) {
     _syscall_memory_shared_detach( request->shm_id );
     if ( errno ) {
-      EARLY_STARTUP_PRINT( "Unable to detach shared area!\r\n")
       // prepare response
       response->len = -EIO;
       // return response

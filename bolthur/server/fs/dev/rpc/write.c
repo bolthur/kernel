@@ -23,23 +23,142 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../handle.h"
 
 /**
- * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
- * @brief Handle write request
+ * @fn void rpc_handle_write_async(size_t, pid_t, size_t, size_t)
+ * @brief Internal helper to continue asynchronous started read
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo add return on error
+ */
+void rpc_handle_write_async(
+  size_t type,
+  __maybe_unused pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  // get matching async data
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
+    type,
+    response_info
+  );
+  if ( ! async_data ) {
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    return;
+  }
+  vfs_write_response_t* response = malloc( sizeof( *response ) );
+  if ( ! response ) {
+    return;
+  }
+  memset( response, 0, sizeof( *response ) );
+  response->len = -EINVAL;
+  // original request
+  vfs_write_request_t* request = async_data->original_data;
+  if ( ! request ) {
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    return;
+  }
+  // fetch response
+  _syscall_rpc_get_data( response, sizeof( *response ), data_info, false );
+  if ( errno ) {
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    free( response );
+    return;
+  }
+  // return and free
+  bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+  free( response );
+}
+
+/**
+ * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
+ * @brief Handle read request
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ *
+ * @todo add return on error
  */
 void rpc_handle_write(
   size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
-  __unused size_t response_info
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "handler!\r\n" )
-  vfs_write_response_t response = { .len = -ENOMEM };
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  // handle async return in case response info is set
+  if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
+    rpc_handle_write_async( type, origin, data_info, response_info );
+    return;
+  }
+  vfs_write_response_t* response = malloc( sizeof( *response ) );
+  if ( ! response ) {
+    return;
+  }
+  memset( response, 0, sizeof( *response ) );
+  response->len = -ENOMEM;
+  vfs_write_request_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    free( response );
+    return;
+  }
+  // clear variables
+  memset( request, 0, sizeof( *request ) );
+  response->len = -EINVAL;
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    free( response );
+    free( request );
+    return;
+  }
+  // fetch rpc data
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  // handle error
+  if ( errno ) {
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    free( response );
+    free( request );
+    return;
+  }
+  device_handle_t* handle = handle_get( request->file_path );
+  // handle error
+  if ( ! handle ) {
+    response->len = -ENOENT;
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    free( response );
+    free( request );
+    return;
+  }
+  // perform async rpc
+  bolthur_rpc_raise(
+    type,
+    handle->process,
+    request,
+    sizeof( *request ),
+    false,
+    type,
+    request,
+    sizeof( *request ),
+    origin,
+    data_info
+  );
+  if ( errno ) {
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    free( response );
+    free( request );
+    return;
+  }
+  free( response );
+  free( request );
 }

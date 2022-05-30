@@ -54,12 +54,12 @@ int main( __unused int argc, __unused char* argv[] ) {
   _syscall_rpc_set_ready( true );
 
   // allocate memory for add request
-  vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
+  vfs_add_request_t* msg = malloc( sizeof( *msg ) );
   if ( ! msg ) {
     return -1;
   }
   // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
+  memset( msg, 0, sizeof( *msg ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/urandom", PATH_MAX - 1 );
@@ -70,12 +70,12 @@ int main( __unused int argc, __unused char* argv[] ) {
   free( msg );
 
   // allocate memory for add request
-  msg = malloc( sizeof( vfs_add_request_t ) );
+  msg = malloc( sizeof( *msg ) );
   if ( ! msg ) {
     return -1;
   }
   // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
+  memset( msg, 0, sizeof( *msg ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/random", PATH_MAX - 1 );

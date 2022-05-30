@@ -71,9 +71,10 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
   // calculate add message size
-  size_t msg_size = sizeof( vfs_add_request_t ) + 11 * sizeof( size_t );
+  vfs_add_request_t* msg;
+  size_t msg_size = sizeof( *msg ) + 11 * sizeof( size_t );
   // allocate memory for add request
-  vfs_add_request_t* msg = malloc( msg_size );
+  msg = malloc( msg_size );
   if ( ! msg ) {
     return -1;
   }

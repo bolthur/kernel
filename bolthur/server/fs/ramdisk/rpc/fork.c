@@ -41,7 +41,6 @@ void rpc_handle_fork(
   __unused size_t data_info,
   __unused size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "handler!\r\n" )
   vfs_fork_response_t response = { .status = -EINVAL };
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
 }

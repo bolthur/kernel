@@ -212,9 +212,9 @@ void rpc_handle_mmio_perform(
     return;
   }
   // allocate space for response
-  size_t response_size = data_size * sizeof( char )
-    + sizeof( vfs_ioctl_perform_response_t );
-  vfs_ioctl_perform_response_t* response = malloc( response_size );
+  vfs_ioctl_perform_response_t* response;
+  size_t response_size = data_size * sizeof( char ) + sizeof( *response );
+  response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );

@@ -69,7 +69,7 @@ static void console_cleanup( list_item_t* a ) {
  */
 int main( __unused int argc, __unused char* argv[] ) {
   // allocate memory for add request
-  vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
+  vfs_add_request_t* msg = malloc( sizeof( *msg ) );
   if ( ! msg ) {
     return -1;
   }
@@ -98,7 +98,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Send stdin to vfs\r\n" )
   // stdin device
   // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
+  memset( msg, 0, sizeof( *msg ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/stdin", PATH_MAX - 1 );
@@ -108,7 +108,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Send stdout to vfs\r\n" )
   // stdout device
   // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
+  memset( msg, 0, sizeof( *msg ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/stdout", PATH_MAX - 1 );
@@ -118,7 +118,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Send stderr to vfs\r\n" )
   // stderr device
   // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
+  memset( msg, 0, sizeof( *msg ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/stderr", PATH_MAX - 1 );
@@ -133,7 +133,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Send console device to vfs\r\n" )
   // console device
   // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
+  size_t msg_size = sizeof( *msg ) + 2 * sizeof( size_t );
   msg = malloc( msg_size );
   if ( ! msg ) {
     return -1;

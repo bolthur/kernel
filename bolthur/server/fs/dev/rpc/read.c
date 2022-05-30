@@ -97,7 +97,7 @@ void rpc_handle_read(
   size_t response_info
 ) {
   // handle async return in case response info is set
-  if ( response_info ) {
+  if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
     rpc_handle_read_async( type, origin, data_info, response_info );
     return;
   }
@@ -107,14 +107,14 @@ void rpc_handle_read(
   }
   memset( response, 0, sizeof( *response ) );
   response->len = -ENOMEM;
-  vfs_read_request_t* request = malloc( sizeof( vfs_read_request_t ) );
+  vfs_read_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
     free( response );
     return;
   }
   // clear variables
-  memset( request, 0, sizeof( vfs_read_request_t ) );
+  memset( request, 0, sizeof( *request ) );
   response->len = -EINVAL;
   // handle no data
   if( ! data_info ) {
@@ -124,7 +124,7 @@ void rpc_handle_read(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_read_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
@@ -146,11 +146,11 @@ void rpc_handle_read(
     type,
     handle->process,
     request,
-    sizeof( vfs_read_request_t ),
+    sizeof( *request ),
     false,
     type,
     request,
-    sizeof( vfs_read_request_t ),
+    sizeof( *request ),
     origin,
     data_info
   );

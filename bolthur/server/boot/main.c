@@ -35,8 +35,6 @@
 #include "../libhelper.h"
 #include "../libdev.h"
 
-#define MOUNT_POINT "/ramdisk-early"
-
 uintptr_t ramdisk_compressed;
 size_t ramdisk_compressed_size;
 uintptr_t ramdisk_decompressed;
@@ -196,7 +194,7 @@ static pid_t execute_driver( const char* path, const char* device ) {
     return 0;
   }
   // extract process
-  memcpy( &proc, start, sizeof( pid_t ) );
+  memcpy( &proc, start, sizeof( proc ) );
   free( start );
   // wait for device
   wait_for_device( device );
@@ -480,7 +478,7 @@ int main( int argc, char* argv[] ) {
   EARLY_STARTUP_PRINT( "Started with pid %d\r\n", pid );
 
   // allocate message structure
-  vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
+  vfs_add_request_t* msg = malloc( sizeof( *msg ) );
   // ensure first process to be started
   if ( ! msg ) {
     EARLY_STARTUP_PRINT( "Allocation of message structure failed\r\n" )
@@ -513,7 +511,7 @@ int main( int argc, char* argv[] ) {
     device_tree
   )
 
-  tartype_t *mytype = malloc( sizeof( tartype_t ) );
+  tartype_t *mytype = malloc( sizeof( *mytype ) );
   if ( !mytype ) {
     EARLY_STARTUP_PRINT(
       "ERROR: Cannot allocate necessary memory for tar stuff!\r\n"
@@ -534,8 +532,7 @@ int main( int argc, char* argv[] ) {
   // stage 1 init
   stage1();
   // open /dev
-  //fd_dev = open( "/dev/manager", O_RDWR );
-  fd_dev = open( "/dev", O_RDWR );
+  fd_dev = open( "/dev/manager", O_RDWR );
   if ( -1 == fd_dev ) {
     EARLY_STARTUP_PRINT( "ERROR: Cannot open dev: %s!\r\n", strerror( errno ) );
     return -1;

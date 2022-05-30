@@ -86,7 +86,7 @@ void handler_console_add(
     return;
   }
   // allocate new management structure
-  console_t* console = malloc( sizeof( console_t ) );
+  console_t* console = malloc( sizeof( *console ) );
   if ( ! console ) {
     free( command );
     error.status = -ENODEV;
@@ -94,7 +94,7 @@ void handler_console_add(
     return;
   }
   // copy over content
-  memset( console, 0, sizeof( console_t ) );
+  memset( console, 0, sizeof( *console ) );
   console->handler = command->origin;
   console->active = false;
   console->path = strdup( command->terminal );
