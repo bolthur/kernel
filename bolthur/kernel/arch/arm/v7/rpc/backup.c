@@ -178,6 +178,10 @@ rpc_backup_t* rpc_backup_create(
       #endif
     }
   }
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "async: %d, type: %d\r\n", sync ? 0 : 1, type )
+  #endif
   // populate remaining values
   backup->thread = thread;
   backup->thread_state = thread->state;

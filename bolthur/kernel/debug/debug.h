@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../lib/stdio.h"
+
 #if ! defined( _DEBUG_DEBUG_H )
 #define _DEBUG_DEBUG_H
-
-#include "../lib/stdio.h"
 
 /**
  * @brief Debug output define

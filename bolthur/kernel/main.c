@@ -41,6 +41,7 @@
   #include "debug/gdb.h"
 #endif
 #include "initrd.h"
+#include "rpc/generic.h"
 
 // prototype declaration to get rid of a warning
 void kernel_main( void );
@@ -115,6 +116,10 @@ noreturn void kernel_main( void ) {
   // Setup multitasking
   DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" )
   assert( task_process_init() )
+
+  // Setup rpc
+  DEBUG_OUTPUT( "[bolthur/kernel -> rpc] initialize ...\r\n" )
+  assert( rpc_generic_init() )
 
   // Setup system calls
   DEBUG_OUTPUT( "[bolthur/kernel -> syscall] initialize ...\r\n" )

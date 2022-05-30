@@ -18,7 +18,7 @@
  */
 
 #include <stdbool.h>
-#include "../../library/collection/list/list.h"
+#include "../../library/collection/avl/avl.h"
 #include "../task/process.h"
 #include "../task/thread.h"
 #include "backup.h"
@@ -26,6 +26,20 @@
 #if ! defined( _RPC_GENERIC_H )
 #define _RPC_GENERIC_H
 
+typedef struct {
+  avl_node_t node;
+  size_t rpc_id;
+  size_t origin_rpc_id;
+  pid_t source_process;
+  bool sync;
+} rpc_origin_source_t;
+
+#define RPC_GET_ORIGIN_SOURCE( n ) \
+  ( rpc_origin_source_t* )( ( uint8_t* )n - offsetof( rpc_origin_source_t, node ) )
+
+bool rpc_generic_init( void );
+rpc_origin_source_t* rpc_generic_source_info( size_t );
+void rpc_generic_destroy_source_info( rpc_origin_source_t* );
 bool rpc_generic_setup( task_process_t* );
 void rpc_generic_destroy( task_process_t* );
 bool rpc_generic_ready( task_process_t* );

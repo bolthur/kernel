@@ -65,13 +65,14 @@ void syscall_rpc_raise( void* context ) {
   pid_t process = ( pid_t )syscall_get_parameter( context, 1 );
   void* data = ( void* )syscall_get_parameter( context, 2 );
   size_t length = syscall_get_parameter( context, 3 );
-  bool synchronous = ( bool )syscall_get_parameter( context, 4 );
+  size_t origin_rpc_data_id = syscall_get_parameter( context, 4 );
+  bool synchronous = ( bool )syscall_get_parameter( context, 5 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall_rpc_raise( %d, %d, %#p, %#x, %d ) from %d\r\n",
+      "syscall_rpc_raise( %d, %d, %#p, %#x, %d, %d ) from %d\r\n",
       type, process, data, length, synchronous ? 1 : 0,
-      task_thread_current_thread->process->id )
+      origin_rpc_data_id, task_thread_current_thread->process->id )
   #endif
   // create queue if not existing
   if ( ! rpc_generic_setup( task_thread_current_thread->process ) ) {
@@ -149,7 +150,7 @@ void syscall_rpc_raise( void* context ) {
     length,
     NULL,
     synchronous,
-    0,
+    origin_rpc_data_id,
     false
   );
   // free duplicate again
@@ -210,7 +211,7 @@ void syscall_rpc_ret( void* context ) {
   size_t original_rpc_id = syscall_get_parameter( context, 3 );
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall_rpc_ret( %d, %#p, %#x, %d ) from %d\r\n",
+      "syscall_rpc_ret( %d, %#p, %#d, %d ) from %d\r\n",
       type, data, length, original_rpc_id,
       task_thread_current_thread->process->id
     )
@@ -266,30 +267,93 @@ void syscall_rpc_ret( void* context ) {
   // overwrite target in case original rpc id is set for correct unblock
   task_thread_t* target = active->source;
   size_t blocked_data_id = active->data_id;
-  if ( original_rpc_id ) {
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "blocked_data_id = %d, original_rpc_id = %d\r\n", blocked_data_id, original_rpc_id )
+  #endif
+  rpc_origin_source_t* info = rpc_generic_source_info(
+    original_rpc_id ? original_rpc_id : active->data_id );
+  if ( ! active->sync || original_rpc_id ) {
+    // overwrite blocked data id
+    blocked_data_id = original_rpc_id ? original_rpc_id : active->data_id;
     target = task_thread_get_blocked(
       TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
       ( task_state_data_t ){ .data_size = original_rpc_id }
     );
     // handle no target
     if ( ! target ) {
-      // in case there is no target, use source and treat it as async
-      target = active->source;
-      active->sync = false;
-/*      #if defined( PRINT_SYSCALL )
-        DEBUG_OUTPUT( "No blocked thread found with %d / %d\r\n",
-          TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
-          original_rpc_id
-        )
+      if ( ! info ) {
+        #if defined( PRINT_SYSCALL )
+          DEBUG_OUTPUT( "No blocked thread found with %d / %d\r\n",
+            TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
+            original_rpc_id
+          )
+        #endif
+        // free duplicate
+        free( dup_data );
+        syscall_populate_error( context, ( size_t )-EINVAL );
+        return;
+      }
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "rpc_id: %d, source: %d\r\n",
+          info->rpc_id, info->source_process )
       #endif
-      // free duplicate
-      free( dup_data );
-      syscall_populate_error( context, ( size_t )-EINVAL );
-      return;*/
+      // try to get pid
+      task_process_t* proc = task_process_get_by_id( info->source_process );
+      if ( ! proc ) {
+        #if defined( PRINT_SYSCALL )
+          DEBUG_OUTPUT( "No process found by id %d\r\n",
+            info->source_process
+          )
+        #endif
+        // free duplicate
+        free( dup_data );
+        syscall_populate_error( context, ( size_t )-ESRCH );
+        return;
+      }
+      // in case there is no target, use source and treat it as async
+      // use first possible process
+      avl_node_t* current = avl_iterate_first( proc->thread_manager );
+      target = NULL;
+      // loop until usable thread has been found
+      while ( current && ! target ) {
+        // get thread
+        task_thread_t* tmp = TASK_THREAD_GET_BLOCK( current );
+        // FIXME: CHECK IF ACTIVE
+        target = tmp;
+        // get next thread
+        current = avl_iterate_next( proc->thread_manager, current );
+      }
+      // handle no inactive thread
+      if ( ! target ) {
+        #if defined( PRINT_SYSCALL )
+          DEBUG_OUTPUT( "No thread found for id %d\r\n", info->source_process )
+        #endif
+        // free duplicate
+        free( dup_data );
+        syscall_populate_error( context, ( size_t )-ESRCH );
+        return;
+      }
+      // reset sync to false
+      active->sync = false;
+      blocked_data_id = info->rpc_id;
     }
-    // overwrite blocked data id
-    blocked_data_id = original_rpc_id;
   }
+  // destroy info
+  rpc_generic_destroy_source_info( info );
+  // find and destroy possible for current
+  if ( original_rpc_id ) {
+    rpc_generic_destroy_source_info(
+      rpc_generic_source_info( active->data_id )
+    );
+  }
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT(
+      "blocked_data_id = %d, original_rpc_id = %d\r\n",
+      blocked_data_id, original_rpc_id
+    )
+    DEBUG_OUTPUT( "active = %p!\r\n", active )
+    DEBUG_OUTPUT( "backup = %p!\r\n", active )
+  #endif
 
   // handle synchronous stuff
   if ( active->sync ) {
@@ -340,7 +404,7 @@ void syscall_rpc_ret( void* context ) {
   // handle async stuff
   } else {
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "Async return!\r\n" )
+      DEBUG_OUTPUT( "async return!\r\n" )
     #endif
     // raise target
     rpc_backup_t* backup = rpc_generic_raise(
@@ -351,7 +415,7 @@ void syscall_rpc_ret( void* context ) {
       length,
       NULL,
       true,
-      active->data_id,
+      blocked_data_id,
       false
     );
     #if defined( PRINT_SYSCALL )

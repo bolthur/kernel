@@ -792,6 +792,10 @@ void avl_prepare_node( avl_node_t* node, void* data ) {
  * @param tree
  */
 void avl_print( const avl_tree_t* tree ) {
+  if ( ! tree->root ) {
+    printf( "( empty tree )\r\n" );
+    return;
+  }
   print_recursive( tree->root );
 }
 
