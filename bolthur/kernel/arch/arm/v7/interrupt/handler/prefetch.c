@@ -18,8 +18,12 @@
  */
 
 #include "../../../../../lib/assert.h"
+#include "../../../../../lib/inttypes.h"
 #if defined( REMOTE_DEBUG )
   #include "../../debug/debug.h"
+#endif
+#if defined( PRINT_EXCEPTION )
+  #include "../../../../../debug/debug.h"
 #endif
 #include "../vector.h"
 #include "../../../mm/virt.h"
@@ -44,7 +48,7 @@ static uint32_t nested_prefetch_abort = 0;
  * @todo trigger schedule when prefetch abort source is user thread
  * @todo panic when prefetch abort is triggered from kernel
  */
-#if ! defined( REMOTE_DEBUG )
+#ifndef REMOTE_DEBUG
 noreturn
 #endif
 void vector_prefetch_abort_handler( cpu_register_context_t* cpu ) {
@@ -53,7 +57,7 @@ void vector_prefetch_abort_handler( cpu_register_context_t* cpu ) {
   assert( nested_prefetch_abort < INTERRUPT_NESTED_MAX )
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "cpu = %#p\r\n", cpu )
+    DEBUG_OUTPUT( "cpu = %p\r\n", cpu )
   #endif
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
@@ -66,13 +70,17 @@ void vector_prefetch_abort_handler( cpu_register_context_t* cpu ) {
   //cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "prefetch abort while accessing %p\r\n",
-      ( void* )virt_prefetch_fault_address() )
-    DEBUG_OUTPUT( "fault_status = %#x\r\n", ( void* )virt_prefetch_status() )
+    DEBUG_OUTPUT(
+      "prefetch abort while accessing %#"PRIxPTR"\r\n",
+      virt_prefetch_fault_address()
+    )
+    DEBUG_OUTPUT( "fault_status = %#"PRIxPTR"\r\n", virt_prefetch_status() )
     DUMP_REGISTER( interrupt_get_context( cpu ) )
     if ( EVENT_ORIGIN_USER == origin ) {
-      DEBUG_OUTPUT( "process id: %d\r\n",
-        task_thread_current_thread->process->id )
+      DEBUG_OUTPUT(
+        "process id: %d\r\n",
+        task_thread_current_thread->process->id
+      )
     }
   #endif
   // kernel stack

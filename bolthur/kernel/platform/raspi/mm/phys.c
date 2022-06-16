@@ -20,6 +20,7 @@
 #include <stddef.h>
 #include "../../../lib/string.h"
 #include "../../../lib/stdlib.h"
+#include "../../../lib/inttypes.h"
 #if defined( PRINT_MM_PHYS )
   #include "../../../debug/debug.h"
 #endif
@@ -54,43 +55,37 @@ bool phys_platform_init( void ) {
   raspi_mailbox_property_t* buffer = mailbox_property_get( TAG_GET_ARM_MEMORY );
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length );
+    DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length )
     DEBUG_OUTPUT(
-      "buffer->data.buffer_u32[ 0 ]: %#08x\r\n",
+      "buffer->data.buffer_u32[ 0 ]: %#x\r\n",
       buffer->data.buffer_u32[ 0 ]
-    );
+    )
     DEBUG_OUTPUT(
-      "buffer->data.buffer_u32[ 1 ]: %#08x\r\n",
+      "buffer->data.buffer_u32[ 1 ]: %#x\r\n",
       buffer->data.buffer_u32[ 1 ]
-    );
-    DEBUG_OUTPUT( "buffer->tag: %#08x\r\n", buffer->tag );
+    )
+    DEBUG_OUTPUT( "buffer->tag: %#x\r\n", buffer->tag )
   #endif
   // increase amount by arm amount
   memory_amount = buffer->data.buffer_u32[ 1 ];
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "memory amount: %#08x\r\n", memory_amount );
+    DEBUG_OUTPUT( "memory amount: %#x\r\n", memory_amount )
   #endif
   // get video core memory
   buffer = mailbox_property_get( TAG_GET_VC_MEMORY );
   // debug output
   #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length )
     DEBUG_OUTPUT(
-      "buffer->byte_length: %d\r\n",
-      buffer->byte_length
-    );
-    DEBUG_OUTPUT(
-      "buffer->data.buffer_u32[ 0 ]: %#08x\r\n",
+      "buffer->data.buffer_u32[ 0 ]: %#x\r\n",
       buffer->data.buffer_u32[ 0 ]
-    );
+    )
     DEBUG_OUTPUT(
-      "buffer->data.buffer_u32[ 1 ]: %#08x\r\n",
+      "buffer->data.buffer_u32[ 1 ]: %#x\r\n",
       buffer->data.buffer_u32[ 1 ]
-    );
-    DEBUG_OUTPUT(
-      "buffer->tag: %#08x\r\n",
-      buffer->tag
-    );
+    )
+    DEBUG_OUTPUT( "buffer->tag: %#x\r\n", buffer->tag )
   #endif
   // populate video core start and end
   vc_memory_start = buffer->data.buffer_u32[ 0 ];
@@ -99,7 +94,7 @@ bool phys_platform_init( void ) {
   memory_amount += buffer->data.buffer_u32[ 1 ];
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "memory amount: %#08x\r\n", memory_amount );
+    DEBUG_OUTPUT( "memory amount: %#x\r\n", memory_amount )
   #endif
 
   // determine amount of pages for bitmap
@@ -119,11 +114,11 @@ bool phys_platform_init( void ) {
   }
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "total memory amount: %#08x\r\n", memory_amount );
-    DEBUG_OUTPUT( "bitmap length: %u\r\n", phys_bitmap_length );
-    DEBUG_OUTPUT( "phys bitmap address: %p\r\n", ( void* )phys_bitmap );
-    DEBUG_OUTPUT( "content of __kernel_start: %p\r\n", ( void* )&__kernel_start );
-    DEBUG_OUTPUT( "content of __kernel_end: %p\r\n", ( void* ) &__kernel_end );
+    DEBUG_OUTPUT( "total memory amount: %#x\r\n", memory_amount )
+    DEBUG_OUTPUT( "bitmap length: %u\r\n", phys_bitmap_length )
+    DEBUG_OUTPUT( "phys bitmap address: %p\r\n", phys_bitmap )
+    DEBUG_OUTPUT( "content of __kernel_start: %p\r\n", &__kernel_start )
+    DEBUG_OUTPUT( "content of __kernel_end: %p\r\n", &__kernel_end )
   #endif
   // overwrite all bitmaps completely with zero
   memset( phys_bitmap, 0, phys_bitmap_length * sizeof( uint32_t ) );
@@ -133,8 +128,8 @@ bool phys_platform_init( void ) {
   uintptr_t end = start + PERIPHERAL_GPIO_SIZE + 1;
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "start: %p\r\n", ( void* )start );
-    DEBUG_OUTPUT( "end: %p\r\n", ( void* )end );
+    DEBUG_OUTPUT( "start: %#"PRIxPTR"\r\n", start )
+    DEBUG_OUTPUT( "end: %#"PRIxPTR"\r\n", end )
   #endif
   // mark as used in bitmap and free in check
   phys_use_page_range( start, end - start );
@@ -144,8 +139,8 @@ bool phys_platform_init( void ) {
   end = vc_memory_end + 1;
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "start: %p\r\n", ( void* )start );
-    DEBUG_OUTPUT( "end: %p\r\n", ( void* )end );
+    DEBUG_OUTPUT( "start: %#"PRIxPTR"\r\n", start )
+    DEBUG_OUTPUT( "end: %#"PRIxPTR"\r\n", end )
   #endif
   // mark as used in bitmap and as free in check
   phys_use_page_range( start, end - start );
@@ -203,8 +198,8 @@ bool phys_dma_init( void ) {
   }
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "phys dma bitmap address: %p\r\n", ( void* )phys_dma_bitmap );
-    DEBUG_OUTPUT( "phys dma length: %u\r\n", phys_dma_length );
+    DEBUG_OUTPUT( "phys dma bitmap address: %p\r\n", phys_dma_bitmap )
+    DEBUG_OUTPUT( "phys dma length: %u\r\n", phys_dma_length )
   #endif
   // clear area
   memset( phys_dma_bitmap, 0, phys_dma_length );
@@ -216,8 +211,8 @@ bool phys_dma_init( void ) {
   }
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "dma_start: %#llx\r\n", dma_start );
-    DEBUG_OUTPUT( "dma_size: %u\r\n", dma_size );
+    DEBUG_OUTPUT( "dma_start: %#llx\r\n", dma_start )
+    DEBUG_OUTPUT( "dma_size: %zu\r\n", dma_size )
   #endif
   // set start and end of dma
   phys_dma_start = dma_start;

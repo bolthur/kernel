@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
+#include "../lib/inttypes.h"
 #include "../lib/stdlib.h"
 #include "../../library/collection/list/list.h"
 #include "../../library/collection/avl/avl.h"
@@ -192,10 +192,12 @@ static int32_t shared_compare_id_callback(
 ) {
   // debug output
   #if defined( PRINT_MM_SHARED )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
-    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n",
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
+    DEBUG_OUTPUT(
+      "a->data = %zu, b->data = %zu\r\n",
       ( size_t )a->data,
-      ( size_t )b->data );
+      ( size_t )b->data
+    )
   #endif
 
   // -1 if address of a->data is greater than address of b->data
@@ -282,7 +284,10 @@ uintptr_t shared_memory_attach(
   #if defined( PRINT_MM_SHARED )
     DEBUG_OUTPUT(
       "shared_memory_attach( %d, %zu, %#"PRIxPTR" )\r\n",
-      process->id, id, virt_start )
+      process->id,
+      id,
+      virt_start
+    )
   #endif
   // handle not initialized
   if ( ! shared_tree ) {
@@ -305,15 +310,15 @@ uintptr_t shared_memory_attach(
   shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
   // debug output
   #if defined( PRINT_MM_SHARED )
-    DEBUG_OUTPUT( "node = %#x, entry = %#x\r\n", node, entry )
-    DEBUG_OUTPUT( "looking up for mapping at %#p\r\n", entry->process_mapping )
+    DEBUG_OUTPUT( "node = %p, entry = %p\r\n", node, entry )
+    DEBUG_OUTPUT( "looking up for mapping at %p\r\n", entry->process_mapping )
   #endif
   // lookup process
   list_item_t* process_list_item = list_lookup_data(
     entry->process_mapping, process );
   // debug output
   #if defined( PRINT_MM_SHARED )
-    DEBUG_OUTPUT( "process_list_item = %#x\r\n", process_list_item )
+    DEBUG_OUTPUT( "process_list_item = %p\r\n", process_list_item )
   #endif
   // handle already attached
   if ( process_list_item ) {
@@ -322,7 +327,7 @@ uintptr_t shared_memory_attach(
       process_list_item->data;
     // debug output
     #if defined( PRINT_MM_SHARED )
-      DEBUG_OUTPUT( "Area %d already attached\r\n", id )
+      DEBUG_OUTPUT( "Area %zu already attached\r\n", id )
     #endif
     // return start of mapping
     return mapped->start;
@@ -368,7 +373,7 @@ uintptr_t shared_memory_attach(
     DEBUG_OUTPUT( "Mapping start = %#x\r\n", virt )
   #endif
   // handle error
-  if ( 0 == virt ) {
+  if ( ! virt ) {
     // debug output
     #if defined( PRINT_MM_SHARED )
       DEBUG_OUTPUT( "No free virtual page range found\r\n" )
@@ -385,7 +390,7 @@ uintptr_t shared_memory_attach(
   while ( start < end ) {
     // debug output
     #if defined( PRINT_MM_SHARED )
-      DEBUG_OUTPUT( "Mapping %#x to %#x\r\n", virt, entry->address[ idx ] )
+      DEBUG_OUTPUT( "Mapping %#"PRIxPTR" to %#"PRIx64"\r\n", virt, entry->address[ idx ] )
     #endif
     // map address
     if ( ! virt_map_address(
@@ -435,7 +440,11 @@ uintptr_t shared_memory_attach(
   }
   // debug output
   #if defined( PRINT_MM_SHARED )
-    DEBUG_OUTPUT( "Area %d successfully mapped to %#x\r\n", id, mapped->start )
+    DEBUG_OUTPUT(
+      "Area %zu successfully mapped to %#"PRIxPTR"\r\n",
+      id,
+      mapped->start
+    )
   #endif
   // return mapped address
   return mapped->start;
@@ -454,7 +463,9 @@ size_t shared_memory_size( task_process_t* process, size_t id ) {
   #if defined( PRINT_MM_SHARED )
     DEBUG_OUTPUT(
       "shared_memory_attach( %d, %zu )\r\n",
-      process->id, id )
+      process->id,
+      id
+    )
   #endif
   // handle not initialized
   if ( ! shared_tree ) {
@@ -477,15 +488,15 @@ size_t shared_memory_size( task_process_t* process, size_t id ) {
   shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
   // debug output
   #if defined( PRINT_MM_SHARED )
-    DEBUG_OUTPUT( "node = %#x, entry = %#x\r\n", node, entry )
-    DEBUG_OUTPUT( "looking up for mapping at %#p\r\n", entry->process_mapping )
+    DEBUG_OUTPUT( "node = %p, entry = %p\r\n", node, entry )
+    DEBUG_OUTPUT( "looking up for mapping at %p\r\n", entry->process_mapping )
   #endif
   // lookup process
   list_item_t* process_list_item = list_lookup_data(
     entry->process_mapping, process );
   // debug output
   #if defined( PRINT_MM_SHARED )
-    DEBUG_OUTPUT( "process_list_item = %#x\r\n", process_list_item )
+    DEBUG_OUTPUT( "process_list_item = %p\r\n", process_list_item )
   #endif
   // handle not mapped attached
   if ( ! process_list_item ) {
@@ -508,7 +519,9 @@ bool shared_memory_detach( task_process_t* process, size_t id ) {
   #if defined( PRINT_MM_SHARED )
     DEBUG_OUTPUT(
       "shared_memory_detach( %d, %zu )\r\n",
-      process->id, id )
+      process->id,
+      id
+    )
   #endif
   // handle not initialized
   if ( ! shared_tree ) {
@@ -524,7 +537,7 @@ bool shared_memory_detach( task_process_t* process, size_t id ) {
   if ( ! node ) {
     // debug output
     #if defined( PRINT_MM_SHARED )
-      DEBUG_OUTPUT( "No area with id %d\r\n", id )
+      DEBUG_OUTPUT( "No area with id %zu\r\n", id )
     #endif
     return true;
   }
@@ -552,8 +565,11 @@ bool shared_memory_detach( task_process_t* process, size_t id ) {
   if ( list_empty( entry->process_mapping ) ) {
     // debug output
     #if defined( PRINT_MM_SHARED )
-      DEBUG_OUTPUT( "Remove area from available tree %#x, %#x\r\n",
-        shared_tree, &entry->node )
+      DEBUG_OUTPUT(
+        "Remove area from available tree %p, %p\r\n",
+        shared_tree,
+        &entry->node
+      )
     #endif
     // remove node from tree
     avl_remove_by_node( shared_tree, &entry->node );

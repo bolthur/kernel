@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _PLATFORM_RASPI_PERIPHERAL_H )
+#ifndef _PLATFORM_RASPI_PERIPHERAL_H
 #define _PLATFORM_RASPI_PERIPHERAL_H
 
 #include <stdint.h>

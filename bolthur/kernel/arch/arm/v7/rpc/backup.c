@@ -19,6 +19,7 @@
 
 #include "../../../../lib/stdlib.h"
 #include "../../../../lib/string.h"
+#include "../../../../lib/inttypes.h"
 #include "../cpu.h"
 #include "../../barrier.h"
 #include "../../../../mm/phys.h"
@@ -100,7 +101,7 @@ rpc_backup_t* rpc_backup_create(
   memset( backup, 0, sizeof( *backup ) );
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "Reserved backup object: %#p\r\n", backup )
+    DEBUG_OUTPUT( "Reserved backup object: %p\r\n", backup )
   #endif
 
   // variables
@@ -128,7 +129,7 @@ rpc_backup_t* rpc_backup_create(
   }
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "Reserved backup cpu context: %#p\r\n", backup->context )
+    DEBUG_OUTPUT( "Reserved backup cpu context: %p\r\n", backup->context )
   #endif
   // prepare and backup context area
   memset( backup->context, 0, sizeof( cpu_register_context_t ) );
@@ -154,8 +155,11 @@ rpc_backup_t* rpc_backup_create(
       }
       // debug output
       #if defined( PRINT_RPC )
-        DEBUG_OUTPUT( "Sent message from process %d to %d\r\n",
-          source->process->id, thread->process->id )
+        DEBUG_OUTPUT(
+          "Sent message from process %d to %d\r\n",
+          source->process->id,
+          thread->process->id
+        )
       #endif
     } else {
       char dummy = '\0';
@@ -172,15 +176,18 @@ rpc_backup_t* rpc_backup_create(
       }
       // debug output
       #if defined( PRINT_RPC )
-        DEBUG_OUTPUT( "Sent dummy message from process %d to %d\r\n",
-          source->process->id, thread->process->id )
-        DEBUG_OUTPUT( "type = %d, data_id = %d\r\n", type, backup->data_id )
+        DEBUG_OUTPUT(
+          "Sent dummy message from process %d to %d\r\n",
+          source->process->id,
+          thread->process->id
+        )
+        DEBUG_OUTPUT( "type = %zu, data_id = %zu\r\n", type, backup->data_id )
       #endif
     }
   }
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "async: %d, type: %d\r\n", sync ? 0 : 1, type )
+    DEBUG_OUTPUT( "async: %d, type: %zu\r\n", sync ? 0 : 1, type )
   #endif
   // populate remaining values
   backup->thread = thread;
@@ -195,8 +202,11 @@ rpc_backup_t* rpc_backup_create(
   }
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "backup->thread_state = %d, backup->thread_state_data.data_ptr = %d\r\n",
-      backup->thread_state, backup->thread_state_data.data_ptr )
+    DEBUG_OUTPUT(
+      "backup->thread_state = %d, backup->thread_state_data.data_ptr = %p\r\n",
+      backup->thread_state,
+      backup->thread_state_data.data_ptr
+    )
   #endif
   backup->prepared = false;
   backup->source = source;

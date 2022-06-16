@@ -23,7 +23,7 @@
 #include "../task/thread.h"
 #include "backup.h"
 
-#if ! defined( _RPC_GENERIC_H )
+#ifndef _RPC_GENERIC_H
 #define _RPC_GENERIC_H
 
 typedef struct {

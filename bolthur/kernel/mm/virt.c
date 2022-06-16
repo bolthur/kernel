@@ -21,6 +21,7 @@
 #include <stdbool.h>
 
 #include "../lib/assert.h"
+#include "../lib/inttypes.h"
 #if defined( PRINT_MM_VIRT )
   #include "../debug/debug.h"
 #endif
@@ -78,8 +79,14 @@ void virt_init( void ) {
   assert( virt_current_user_context )
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "virt_current_kernel_context: %p\r\n", ( void* )virt_current_kernel_context )
-    DEBUG_OUTPUT( "virt_current_user_context: %p\r\n", ( void* )virt_current_user_context )
+    DEBUG_OUTPUT(
+      "virt_current_kernel_context: %p\r\n",
+      virt_current_kernel_context
+    )
+    DEBUG_OUTPUT(
+      "virt_current_user_context: %p\r\n",
+      virt_current_user_context
+    )
   #endif
 
   // determine start and end for kernel mapping
@@ -89,12 +96,13 @@ void virt_init( void ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "Map kernel space %p - %p to %p - %p \r\n",
-      ( void* )start,
-      ( void* )end,
-      ( void* )PHYS_2_VIRT( start ),
-      ( void* )PHYS_2_VIRT( end )
-    );
+      "Map kernel space %#"PRIxPTR" - %#"PRIxPTR
+      " to %#"PRIxPTR" - %#"PRIxPTR" \r\n",
+      start,
+      end,
+      PHYS_2_VIRT( start ),
+      PHYS_2_VIRT( end )
+    )
   #endif
 
   // map initial heap similar to normal heap non cachable
@@ -135,12 +143,12 @@ void virt_init( void ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "Map initrd space %p - %p to %p - %p \r\n",
-        ( void* )initrd_start,
-        ( void* )initrd_end,
-        ( void* )PHYS_2_VIRT( start ),
-        ( void* )PHYS_2_VIRT( start + ( initrd_end - initrd_start ) )
-      );
+        "Map initrd space %#"PRIxPTR" - %#"PRIxPTR
+        " to %#"PRIxPTR" - %#"PRIxPTR" \r\n",
+        initrd_start, initrd_end,
+        PHYS_2_VIRT( start ),
+        PHYS_2_VIRT( start + ( initrd_end - initrd_start ) )
+      )
     #endif
 
     // map from start to end addresses as used
@@ -161,9 +169,9 @@ void virt_init( void ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "Set new initrd start address to %p\r\n",
-        ( void* )PHYS_2_VIRT( new_initrd_start )
-      );
+        "Set new initrd start address to %#"PRIxPTR"\r\n",
+        PHYS_2_VIRT( new_initrd_start )
+      )
     #endif
 
     // change initrd location
@@ -344,7 +352,7 @@ uintptr_t virt_find_free_page_range(
       || max <= start + size
     )
   ) {
-    return ( uintptr_t )NULL;
+    return 0;
   }
 
   // consider start correctly

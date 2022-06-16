@@ -23,7 +23,7 @@
 #include "../task/thread.h"
 #include "backup.h"
 
-#if ! defined( _RPC_QUEUE_H )
+#ifndef _RPC_QUEUE_H
 #define _RPC_QUEUE_H
 
 void rpc_queue_cleanup( list_item_t* );

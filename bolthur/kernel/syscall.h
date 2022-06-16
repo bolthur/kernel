@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _SYSCALL_H )
+#ifndef _SYSCALL_H
 #define _SYSCALL_H
 
 #include <stdint.h>
@@ -71,7 +71,7 @@
 bool syscall_init( void );
 void syscall_populate_success( void*, size_t );
 void syscall_populate_error( void*, size_t );
-size_t syscall_get_parameter( void*, int32_t );
+size_t syscall_get_parameter( void*, size_t );
 bool syscall_validate_address( uintptr_t, size_t );
 
 void syscall_process_exit( void* );

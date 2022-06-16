@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include <errno.h>
+#include "../lib/inttypes.h"
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
 #include "data.h"
@@ -294,8 +294,11 @@ void rpc_data_queue_remove( pid_t process, size_t rpc_id ) {
     // debug output
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT(
-        "found something for removal on process %d with id %d ( %d )!\r\n",
-        process, rpc_id, found->id )
+        "found something for removal on process %d with id %zu ( %zu )!\r\n",
+        process,
+        rpc_id,
+        found->id
+      )
     #endif
     list_remove_data( target_process->rpc_data_queue, ( void* )found );
   }

@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _PLATFORM_RASPI_MAILBOX_PROPERTY_H )
+#ifndef _PLATFORM_RASPI_MAILBOX_PROPERTY_H
 #define _PLATFORM_RASPI_MAILBOX_PROPERTY_H
 
 #include <stdint.h>

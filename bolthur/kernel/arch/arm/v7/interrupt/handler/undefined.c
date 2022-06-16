@@ -18,6 +18,9 @@
  */
 
 #include "../../../../../lib/assert.h"
+#if defined( PRINT_EXCEPTION )
+  #include "../../../../../debug/debug.h"
+#endif
 #include "../vector.h"
 #include "../../../../../event.h"
 #include "../../../../../interrupt.h"
@@ -49,9 +52,11 @@ void vector_undefined_instruction_handler( cpu_register_context_t* cpu ) {
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu )
     if ( EVENT_ORIGIN_USER == origin ) {
-      DEBUG_OUTPUT( "process id: %d, thread state: %d\r\n",
+      DEBUG_OUTPUT(
+        "process id: %d, thread state: %d\r\n",
         task_thread_current_thread->process->id,
-        task_thread_current_thread->state )
+        task_thread_current_thread->state
+      )
     }
   #endif
   // kernel stack

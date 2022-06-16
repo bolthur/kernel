@@ -16,9 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include "../../../../../lib/assert.h"
+#if defined( REMOTE_DEBUG )
   #include "../../debug/debug.h"
+#endif
+#if defined( PRINT_EXCEPTION )
+  #include "../../../../../debug/debug.h"
+#endif
 #include "../vector.h"
 #include "../../../../../event.h"
 #include "../../../../../interrupt.h"

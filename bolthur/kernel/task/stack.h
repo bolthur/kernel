@@ -20,7 +20,7 @@
 #include "../../library/collection/avl/avl.h"
 #include "process.h"
 
-#if ! defined( _TASK_STACK_H )
+#ifndef _TASK_STACK_H
 #define _TASK_STACK_H
 
 typedef struct task_stack_manager {

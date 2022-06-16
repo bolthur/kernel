@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include <errno.h>
+#include "../lib/inttypes.h"
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
 #include "backup.h"
@@ -103,7 +103,7 @@ rpc_origin_source_t* rpc_generic_source_info( size_t id ) {
   if ( ! node ) {
     // debug output
     #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "origin information for id %d not found!\r\n", id )
+      DEBUG_OUTPUT( "origin information for id %zu not found!\r\n", id )
     #endif
     // return null
     return NULL;
@@ -157,8 +157,9 @@ rpc_backup_t* rpc_generic_raise(
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT(
-      "rpc_raise( %#p, %#p, %#p, %#zx, %#p )\r\n",
-      source, target, data, length, target_thread )
+      "rpc_raise( %p, %p, %p, %#zx, %p )\r\n",
+      source, target, data, length, target_thread
+    )
   #endif
   // backup necessary stuff
   rpc_backup_t* backup = rpc_backup_create(

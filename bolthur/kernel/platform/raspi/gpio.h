@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _PLATFORM_RASPI_GPIO_H )
+#ifndef _PLATFORM_RASPI_GPIO_H
 #define _PLATFORM_RASPI_GPIO_H
 
 enum {

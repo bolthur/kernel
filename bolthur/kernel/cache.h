@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _CACHE_H )
+#ifndef _CACHE_H
 #define _CACHE_H
 
 void cache_enable( void );

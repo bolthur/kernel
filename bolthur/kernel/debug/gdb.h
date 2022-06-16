@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _DEBUG_GDB_H )
+#ifndef _DEBUG_GDB_H
 #define _DEBUG_GDB_H
 
 #include <stdbool.h>

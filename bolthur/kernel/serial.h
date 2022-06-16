@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _SERIAL_H )
+#ifndef _SERIAL_H
 #define _SERIAL_H
 
 #include <stdbool.h>

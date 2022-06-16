@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include <stdalign.h>
+#include "../../../../lib/inttypes.h"
 #include "../../../../lib/stdlib.h"
 #include "../../../../lib/string.h"
 #include "../cpu.h"
@@ -65,7 +65,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
       backup = tmp;
       // debug output
       #if defined( PRINT_RPC )
-        DEBUG_OUTPUT( "backup = %#p\r\n", backup )
+        DEBUG_OUTPUT( "backup = %p\r\n", backup )
       #endif
     } else {
       further_rpc_enqueued = true;
@@ -73,7 +73,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
   }
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "backup = %#p\r\n", backup )
+    DEBUG_OUTPUT( "backup = %p\r\n", backup )
     if ( further_rpc_enqueued ) {
       DEBUG_OUTPUT( "Further RPC pending!\r\n" )
     }
@@ -111,8 +111,11 @@ bool rpc_generic_restore( task_thread_t* thread ) {
   );
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "backup->thread_state = %d, backup->thread_state_data.data_ptr = %d\r\n",
-      backup->thread_state, backup->thread_state_data.data_ptr )
+    DEBUG_OUTPUT(
+      "backup->thread_state = %d, backup->thread_state_data.data_ptr = %p\r\n",
+      backup->thread_state,
+      backup->thread_state_data.data_ptr
+    )
   #endif
   // remove data queue entry if existing
   rpc_data_queue_remove( thread->process->id, backup->data_id );
@@ -163,7 +166,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
 bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "rpc_generic_prepare_invoke( %#p )!\r\n", backup )
+    DEBUG_OUTPUT( "rpc_generic_prepare_invoke( %p )!\r\n", backup )
   #endif
   // handle already prepared
   if ( backup->prepared ) {

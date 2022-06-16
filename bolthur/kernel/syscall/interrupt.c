@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include <errno.h>
+#include "../lib/inttypes.h"
 #include "../task/process.h"
 #include "../task/thread.h"
 #include "../interrupt.h"

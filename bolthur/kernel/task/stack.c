@@ -19,6 +19,7 @@
 
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
+#include "../lib/inttypes.h"
 #if defined( PRINT_PROCESS )
   #include "../debug/debug.h"
 #endif
@@ -44,8 +45,8 @@ static int32_t task_stack_callback(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
-    DEBUG_OUTPUT( "a->data = %p, b->data = %p\r\n", a->data, b->data );
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
+    DEBUG_OUTPUT( "a->data = %p, b->data = %p\r\n", a->data, b->data )
   #endif
 
   // -1 if address of a->data is greater than address of b->data
@@ -69,7 +70,7 @@ static int32_t task_stack_callback(
 static void task_stack_cleanup( avl_node_t* a ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Cleanup a = %p\r\n", ( void* )a );
+    DEBUG_OUTPUT( "Cleanup a = %p\r\n", a )
   #endif
   free( ( void* )a );
 }

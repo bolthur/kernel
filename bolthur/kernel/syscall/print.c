@@ -21,6 +21,7 @@
 #include "../lib/stdio.h"
 #include "../lib/stdlib.h"
 #include "../lib/string.h"
+#include "../lib/inttypes.h"
 #include "../syscall.h"
 #if defined( PRINT_SYSCALL )
   #include "../debug/debug.h"
@@ -49,7 +50,7 @@ void syscall_kernel_puts( void* context ) {
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "str = %#p, len = %zu\r\n", str, len )
+    DEBUG_OUTPUT( "str = %p, len = %zu\r\n", str, len )
   #endif
   // handle invalid string ( NULL )
   if ( ! str || ! syscall_validate_address( ( uintptr_t )str, len ) ) {

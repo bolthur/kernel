@@ -82,8 +82,11 @@ void task_process_start( void ) {
 
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "next_thread = %p, next_queue = %p\r\n",
-      ( void* )next_thread, ( void* )next_queue )
+    DEBUG_OUTPUT(
+      "next_thread = %p, next_queue = %p\r\n",
+      next_thread,
+      next_queue
+    )
   #endif
 
   // set context and flush
@@ -128,8 +131,10 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   if ( context ) {
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "No scheduling in kernel level exception, context = %p\r\n",
-        context )
+      DEBUG_OUTPUT(
+        "No scheduling in kernel level exception, context = %p\r\n",
+        context
+      )
     #endif
     // skip scheduling code
     return;
@@ -141,10 +146,12 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "cpu register context: %p\r\n", ( void* )cpu )
+    DEBUG_OUTPUT( "cpu register context: %p\r\n", cpu )
     DUMP_REGISTER( cpu )
-    DEBUG_OUTPUT( "process id = %d\r\n",
-      task_thread_current_thread->process->id )
+    DEBUG_OUTPUT(
+      "process id = %d\r\n",
+      task_thread_current_thread->process->id
+    )
   #endif
 
   // set running thread
@@ -175,8 +182,8 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     next_thread = task_thread_next();
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "current_thread = %#p\r\n", running_thread )
-      DEBUG_OUTPUT( "next_thread = %#p\r\n", next_thread )
+      DEBUG_OUTPUT( "current_thread = %p\r\n", running_thread )
+      DEBUG_OUTPUT( "next_thread = %p\r\n", next_thread )
     #endif
     // reset queue if nothing found
     if ( ! next_thread ) {
@@ -187,7 +194,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
       next_thread = task_thread_next();
       // debug output
       #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "next_thread = %#p\r\n", next_thread )
+        DEBUG_OUTPUT( "next_thread = %p\r\n", next_thread )
       #endif
       // handle no next thread
       if ( ! next_thread ) {
@@ -213,7 +220,8 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // debug output
   #if defined( PRINT_PROCESS )
     if ( running_thread != next_thread ) {
-      DEBUG_OUTPUT( "current_thread = %#p / %d, next_thread = %#p / %d\r\n",
+      DEBUG_OUTPUT(
+        "current_thread = %p / %d, next_thread = %p / %d\r\n",
         running_thread, running_thread->process->id,
         next_thread, next_thread->process->id
       )

@@ -17,21 +17,26 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stddef.h>
-#include "../tar.h"
+#ifndef _LIB_INTTYPES_H
+#define _LIB_INTTYPES_H
 
-/**
- * @brief Method to get buffer
- *
- * @param header
- * @return uint8_t*
- */
-uint8_t* tar_file( tar_header_t* header ) {
-  // check for invalid
-  if ( ! header || '\0' == header->file_name[ 0 ] ) {
-    return NULL;
-  }
-  // build return
-  return ( uint8_t* )header + TAR_HEADER_SIZE;
-}
+#include <inttypes.h>
+
+/// following is necessary for freestanding built and cppcheck to work both
+#if defined( __PRI64 ) && ! defined( PRId64 )
+  #define PRId64 __PRI64(d)
+  #define PRIi64 __PRI64(i)
+  #define PRIo64 __PRI64(o)
+  #define PRIu64 __PRI64(u)
+  #define PRIx64 __PRI64(x)
+  #define PRIX64 __PRI64(X)
+#endif
+#if defined( __SCN64 ) && ! defined( SCNd64 )
+  #define SCNd64 __SCN64(d)
+  #define SCNi64 __SCN64(i)
+  #define SCNo64 __SCN64(o)
+  #define SCNu64 __SCN64(u)
+  #define SCNx64 __SCN64(x)
+#endif
+
+#endif

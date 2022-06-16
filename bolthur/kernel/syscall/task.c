@@ -18,7 +18,7 @@
  */
 
 #include <errno.h>
-#include <inttypes.h>
+#include "../lib/inttypes.h"
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
 #include "../syscall.h"
@@ -41,8 +41,10 @@
 void syscall_process_id( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_id() = %d\r\n",
-      task_thread_current_thread->process->id )
+    DEBUG_OUTPUT(
+      "syscall_process_id() = %d\r\n",
+      task_thread_current_thread->process->id
+    )
   #endif
   // populate return
   syscall_populate_success(
@@ -60,8 +62,10 @@ void syscall_process_id( void* context ) {
 void syscall_process_parent_id( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_parent_id() = %d\r\n",
-      task_thread_current_thread->process->parent )
+    DEBUG_OUTPUT(
+      "syscall_process_parent_id() = %d\r\n",
+      task_thread_current_thread->process->parent
+    )
   #endif
   // populate return
   syscall_populate_success(
@@ -149,11 +153,16 @@ void syscall_process_replace( void* context ) {
   const char** env = ( const char** )syscall_get_parameter( context, 2 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_replace( %#"PRIxPTR", %p, %p )\r\n",
-      addr, argv, env )
+    DEBUG_OUTPUT(
+      "syscall_process_replace( %p, %p, %p )\r\n",
+      addr,
+      argv,
+      env
+    )
     DEBUG_OUTPUT(
       "task_thread_current_thread->current_context = %p\r\n",
-      task_thread_current_thread->current_context )
+      task_thread_current_thread->current_context
+    )
   #endif
   // get min and max by context
   uintptr_t min = virt_get_context_min_address(
@@ -180,7 +189,7 @@ void syscall_process_replace( void* context ) {
   size_t image_size = elf_image_size( addr );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "image_size = %#x!\r\n", image_size )
+    DEBUG_OUTPUT( "image_size = %#zx!\r\n", image_size )
   #endif
   if (
     0 == image_size
@@ -213,7 +222,8 @@ void syscall_process_replace( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "task_thread_current_thread->current_context = %p\r\n",
-      task_thread_current_thread->current_context )
+      task_thread_current_thread->current_context
+    )
     DEBUG_OUTPUT( "Replace done!\r\n" )
   #endif
 }
@@ -250,7 +260,11 @@ void syscall_thread_create( void* context ) {
   void* argument = ( void* )syscall_get_parameter( context, 1 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_thread_create( %#"PRIxPTR", %p)\r\n", entry, argument )
+    DEBUG_OUTPUT(
+      "syscall_thread_create( %#"PRIxPTR", %p)\r\n",
+      entry,
+      argument
+    )
   #endif
   // create new thread
   task_thread_t* new_thread = task_thread_create(

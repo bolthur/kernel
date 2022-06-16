@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIB_ASSERT_H )
-#define _LIB_ASSERT_H
-
 #include <stdint.h>
 #include <stdnoreturn.h>
+
+#ifndef _LIB_ASSERT_H
+#define _LIB_ASSERT_H
 
 noreturn void __assert( const char* restrict, uint32_t, const char* restrict );
 

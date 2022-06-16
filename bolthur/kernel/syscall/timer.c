@@ -18,7 +18,7 @@
  */
 
 #include <errno.h>
-#include <inttypes.h>
+#include "../lib/inttypes.h"
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
 #include "../syscall.h"
@@ -73,7 +73,7 @@ void syscall_timer_acquire( void* context ) {
   size_t timeout = syscall_get_parameter( context, 1 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_timer_acquire( %d, %d )\r\n", rpc_num, timeout )
+    DEBUG_OUTPUT( "syscall_timer_acquire( %zu, %zu )\r\n", rpc_num, timeout )
   #endif
   // handle timeout already reached
   if ( timeout <= timer_get_tick() ) {
@@ -94,7 +94,7 @@ void syscall_timer_acquire( void* context ) {
   }
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "item->id = %d\r\n", item->id )
+    DEBUG_OUTPUT( "item->id = %zu\r\n", item->id )
   #endif
   // return success by returning timer id
   syscall_populate_success( context, item->id );
@@ -111,7 +111,7 @@ void syscall_timer_release( void* context ) {
   size_t id = syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_timer_release( %d )\r\n", id )
+    DEBUG_OUTPUT( "syscall_timer_release( %zu )\r\n", id )
   #endif
   // remove registered timer by id
   if ( ! timer_unregister_callback( id ) ) {

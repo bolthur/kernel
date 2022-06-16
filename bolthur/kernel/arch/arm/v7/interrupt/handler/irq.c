@@ -18,7 +18,13 @@
  */
 
 #include "../../../../../lib/assert.h"
+#include "../../../../../lib/inttypes.h"
+#if defined( REMOTE_DEBUG )
   #include "../../debug/debug.h"
+#endif
+#if defined( PRINT_EXCEPTION )
+  #include "../../../../../debug/debug.h"
+#endif
 #include "../vector.h"
 #include "../../../../../event.h"
 #include "../../../../../interrupt.h"
@@ -44,7 +50,7 @@ void vector_interrupt_handler( cpu_register_context_t* cpu ) {
   cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "Entering interrupt_handler( %p )\r\n", ( void* )cpu )
+    DEBUG_OUTPUT( "Entering interrupt_handler( %p )\r\n", cpu )
     DUMP_REGISTER( cpu )
   #endif
   // kernel stack

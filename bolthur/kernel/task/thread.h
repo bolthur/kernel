@@ -25,7 +25,7 @@
 #include "../event.h"
 #include "state.h"
 
-#if ! defined( _TASK_THREAD_H )
+#ifndef _TASK_THREAD_H
 #define _TASK_THREAD_H
 
 typedef struct task_process task_process_t;

@@ -19,7 +19,7 @@
 
 #include <stddef.h>
 #include <stdalign.h>
-#include <inttypes.h>
+#include "../../../../lib/inttypes.h"
 #include "../../../../lib/stdlib.h"
 #include "../../../../lib/string.h"
 #include "../../../../panic.h"
@@ -52,8 +52,11 @@ task_thread_t* task_thread_create(
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "task_thread_create( %p, %p, %zu ) called\r\n",
-      ( void* )entry, ( void* )process, priority )
+      "task_thread_create( %#"PRIxPTR", %p, %zu ) called\r\n",
+      entry,
+      process,
+      priority
+    )
   #endif
 
   // create stack
@@ -72,7 +75,7 @@ task_thread_t* task_thread_create(
   }
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "stack_virtual = %p\r\n", ( void* )stack_virtual )
+    DEBUG_OUTPUT( "stack_virtual = %#"PRIxPTR"\r\n", stack_virtual )
   #endif
 
   // create thread structure
@@ -83,10 +86,10 @@ task_thread_t* task_thread_create(
     return NULL;
   }
   // prepare
-  memset( ( void* )thread, 0, sizeof( task_thread_t ) );
+  memset( thread, 0, sizeof( task_thread_t ) );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Reserved space for thread structure at %p\r\n", ( void* )thread )
+    DEBUG_OUTPUT( "Reserved space for thread structure at %p\r\n", thread )
   #endif
 
   // create context
@@ -117,7 +120,8 @@ task_thread_t* task_thread_create(
     DEBUG_OUTPUT(
       "%#x / %#x\r\n",
       stack_virtual + STACK_SIZE - sizeof( int ),
-      stack_virtual + STACK_SIZE - alignof( max_align_t ) )
+      stack_virtual + STACK_SIZE - alignof( max_align_t )
+    )
   #endif
   current_context->reg.sp = stack_virtual + STACK_SIZE - alignof( max_align_t );
   // push back current value of fpu

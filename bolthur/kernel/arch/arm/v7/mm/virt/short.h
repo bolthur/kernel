@@ -20,7 +20,7 @@
 #include "../../../../../mm/virt.h"
 #include "../../../mm/virt/short.h"
 
-#if ! defined( _ARCH_ARM_V7_MM_VIRT_SHORT_H )
+#ifndef _ARCH_ARM_V7_MM_VIRT_SHORT_H
 #define _ARCH_ARM_V7_MM_VIRT_SHORT_H
 
 #define SECTION_SIZE 0x100000

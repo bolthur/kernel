@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _STACK_H )
+#ifndef _STACK_H
 #define _STACK_H
 
 #include <stdbool.h>

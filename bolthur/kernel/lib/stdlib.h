@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIB_STDLIB_H )
+#ifndef _LIB_STDLIB_H
 #define _LIB_STDLIB_H
 
 #include <stdint.h>

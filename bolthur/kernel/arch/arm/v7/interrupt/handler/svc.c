@@ -18,6 +18,10 @@
  */
 
 #include "../../../../../lib/assert.h"
+#include "../../../../../lib/inttypes.h"
+#if defined( PRINT_EXCEPTION )
+  #include "../../../../../debug/debug.h"
+#endif
 #include "../vector.h"
 #include "../../../../../event.h"
 #include "../../../../../interrupt.h"
@@ -40,7 +44,7 @@ void vector_svc_handler( cpu_register_context_t* cpu ) {
   assert( nested_svc < INTERRUPT_NESTED_MAX )
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "cpu = %#p\r\n", cpu )
+    DEBUG_OUTPUT( "cpu = %p\r\n", cpu )
   #endif
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
@@ -52,8 +56,7 @@ void vector_svc_handler( cpu_register_context_t* cpu ) {
   cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "Entering software_interrupt_handler( %p )\r\n",
-      ( void* )cpu )
+    DEBUG_OUTPUT( "Entering software_interrupt_handler( %p )\r\n", cpu )
     DUMP_REGISTER( cpu )
   #endif
   // kernel stack
@@ -74,8 +77,8 @@ void vector_svc_handler( cpu_register_context_t* cpu ) {
   }
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "address of cpu = %p\r\n", ( void* )cpu )
-    DEBUG_OUTPUT( "svc_num = %u\r\n", svc_num )
+    DEBUG_OUTPUT( "address of cpu = %p\r\n", cpu )
+    DEBUG_OUTPUT( "svc_num = %"PRIu32"\r\n", svc_num )
   #endif
   // handle bound interrupt handlers
   interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu );

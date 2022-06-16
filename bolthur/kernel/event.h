@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _EVENT_H )
+#ifndef _EVENT_H
 #define _EVENT_H
 
 #include <stdbool.h>

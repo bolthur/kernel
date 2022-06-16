@@ -88,11 +88,12 @@ char** duplicate( const char** src ) {
     dst[ count ] =
       &( ( ( char* )dst )[ ( src_count + 1 ) * sizeof( char* ) + len ] );
     // get length from unsafe
-    size_t tmp_len = strlen_unsafe( src[ count ] ) + 1;
+    size_t tmp_len = strlen_unsafe( src[ count ] );
     if ( 0 == tmp_len ) {
       free( dst );
       return NULL;
     }
+    tmp_len++;
     // copy string content with unsafe copy
     if ( ! memcpy_unsafe_src( dst[ count ], src[ count ], tmp_len ) ) {
       free( dst );

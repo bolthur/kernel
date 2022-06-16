@@ -22,7 +22,7 @@
 #include "../task/process.h"
 #include "../task/thread.h"
 
-#if ! defined( _RPC_BACKUP_H )
+#ifndef _RPC_BACKUP_H
 #define _RPC_BACKUP_H
 
 typedef struct {

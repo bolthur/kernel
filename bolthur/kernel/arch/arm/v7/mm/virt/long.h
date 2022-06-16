@@ -20,7 +20,7 @@
 #include "../../../../../mm/virt.h"
 #include "../../../mm/virt/long.h"
 
-#if ! defined( _ARCH_ARM_V7_MM_VIRT_LONG_H )
+#ifndef _ARCH_ARM_V7_MM_VIRT_LONG_H
 #define _ARCH_ARM_V7_MM_VIRT_LONG_H
 
 void v7_long_startup_setup( void );

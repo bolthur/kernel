@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include <stddef.h>
+#include "../../../../../lib/inttypes.h"
 #include "../../../../../lib/string.h"
 #include "../../../../../lib/stdlib.h"
 #include "../../../../../lib/assert.h"
@@ -196,8 +196,12 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "start = %p, page_amount = %u, offset = %p\r\n",
-      ( void* )start, page_amount, ( void* )offset )
+    DEBUG_OUTPUT(
+      "start = %#"PRIxPTR", page_amount = %u, offset = %#"PRIxPTR"\r\n",
+      start,
+      page_amount,
+      offset
+    )
   #endif
 
   // Find free area
@@ -242,7 +246,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "Found virtual address %p\r\n", ( void* )start_address )
+    DEBUG_OUTPUT( "Found virtual address %#"PRIxPTR"\r\n", start_address )
   #endif
 
   // map amount of pages
@@ -265,7 +269,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "tbl = %p\r\n", ( void* )tbl )
+      DEBUG_OUTPUT( "tbl = %p\r\n", tbl )
     #endif
 
     // map it non cacheable
@@ -287,7 +291,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "ret = %p\r\n", ( void* )( start_address + offset ) )
+    DEBUG_OUTPUT( "ret = %#"PRIxPTR"\r\n", start_address + offset )
   #endif
 
   // return address with offset
@@ -324,7 +328,8 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
     DEBUG_OUTPUT(
       "page_amount = %u - table_idx_offset = %u\r\n",
       page_amount,
-      table_idx_offset )
+      table_idx_offset
+    )
   #endif
 
   // calculate end
@@ -332,7 +337,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "end = %p\r\n", ( void* )end )
+    DEBUG_OUTPUT( "end = %#"PRIxPTR"\r\n", end )
   #endif
 
   // loop and unmap
@@ -407,7 +412,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       for ( size_t i = 0; i < max_addr; i++ ) {
-        DEBUG_OUTPUT( " addr[ %d ] = %#p\r\n", i,  addr[ i ] )
+        DEBUG_OUTPUT( " addr[ %d ] = %#"PRIxPTR"\r\n", i,  addr[ i ] )
       }
     #endif
     // return here
@@ -463,7 +468,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "free_addr = %zu - max_addr = %zu\r\n", free_addr, max_addr )
-    DEBUG_OUTPUT( "r = %p\r\n", ( void* )r )
+    DEBUG_OUTPUT( "r = %#"PRIxPTR"\r\n", r )
   #endif
   // return address
   return r;
@@ -488,7 +493,7 @@ uint64_t v7_short_create_table(
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "create short table for address %p\r\n", ( void* )addr )
+    DEBUG_OUTPUT( "create short table for address %#"PRIxPTR"\r\n", addr )
   #endif
 
   // kernel context
@@ -505,8 +510,11 @@ uint64_t v7_short_create_table(
     if ( 0 != context->table[ table_idx ].raw ) {
       // debug output
       #if defined( PRINT_MM_VIRT )
-        DEBUG_OUTPUT( "context->table[ %u ].data.raw = %#08x\r\n",
-          table_idx, context->table[ table_idx ].raw )
+        DEBUG_OUTPUT(
+          "context->table[ %u ].data.raw = %#x\r\n",
+          table_idx,
+          context->table[ table_idx ].raw
+        )
       #endif
 
       // return object
@@ -533,8 +541,10 @@ uint64_t v7_short_create_table(
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "created kernel table physical address = %p\r\n",
-        ( void* )tbl )
+      DEBUG_OUTPUT(
+        "created kernel table physical address = %#"PRIxPTR"\r\n",
+        tbl
+      )
       DEBUG_OUTPUT( "table_idx = %u\r\n", table_idx )
     #endif
 
@@ -548,8 +558,11 @@ uint64_t v7_short_create_table(
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "context->table[ %u ].data.raw = %#08x\r\n",
-        table_idx, context->table[ table_idx ].raw )
+      DEBUG_OUTPUT(
+        "context->table[ %u ].data.raw = %#x\r\n",
+        table_idx,
+        context->table[ table_idx ].raw
+      )
     #endif
 
     // unmap temporary
@@ -574,8 +587,11 @@ uint64_t v7_short_create_table(
     if ( 0 != context->table[ table_idx ].raw ) {
       // debug output
       #if defined( PRINT_MM_VIRT )
-        DEBUG_OUTPUT( "context->table[ %u ].data.raw = %#08x\r\n",
-          table_idx, context->table[ table_idx ].raw )
+        DEBUG_OUTPUT(
+          "context->table[ %u ].data.raw = %#x\r\n",
+          table_idx,
+          context->table[ table_idx ].raw
+        )
       #endif
 
       // return object
@@ -599,8 +615,10 @@ uint64_t v7_short_create_table(
       }
     }
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "created user table physical address = %p\r\n",
-        ( void* )tbl )
+      DEBUG_OUTPUT(
+        "created user table physical address = %#"PRIxPTR"\r\n",
+        tbl
+      )
     #endif
 
     // add table to context
@@ -613,8 +631,11 @@ uint64_t v7_short_create_table(
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "context->table[ %u ].data.raw = %#08x\r\n",
-        table_idx, context->table[ table_idx ].raw )
+      DEBUG_OUTPUT(
+        "context->table[ %u ].data.raw = %#x\r\n",
+        table_idx,
+        context->table[ table_idx ].raw
+      )
     #endif
 
     // unmap temporary
@@ -659,7 +680,7 @@ bool v7_short_map(
   }
 
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
+    DEBUG_OUTPUT( "table: %p\r\n", table )
   #endif
 
   // map temporary
@@ -671,9 +692,12 @@ bool v7_short_map(
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
-    DEBUG_OUTPUT( "table->page[ %u ].raw = %#08x\r\n",
-      page_idx, table->page[ page_idx ].raw )
+    DEBUG_OUTPUT( "table: %p\r\n", table )
+    DEBUG_OUTPUT(
+      "table->page[ %u ].raw = %#x\r\n",
+      page_idx,
+      table->page[ page_idx ].raw
+    )
   #endif
 
   // ensure not already mapped
@@ -684,7 +708,7 @@ bool v7_short_map(
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "page physical address = %#016llx\r\n", paddr )
+    DEBUG_OUTPUT( "page physical address = %#"PRIx64"\r\n", paddr )
   #endif
 
   // set page
@@ -746,8 +770,11 @@ bool v7_short_map(
   virt_flush_address( ctx, vaddr );
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table->page[ %u ].raw = %#08x\r\n",
-      page_idx, table->page[ page_idx ].raw )
+    DEBUG_OUTPUT(
+      "table->page[ %u ].raw = %#x\r\n",
+      page_idx,
+      table->page[ page_idx ].raw
+    )
   #endif
   // unmap temporary
   unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
@@ -835,7 +862,7 @@ bool v7_short_unmap( virt_context_t* ctx, uintptr_t vaddr, bool free_phys ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "page physical address = %p\r\n", ( void* )page )
+    DEBUG_OUTPUT( "page physical address = %#"PRIxPTR"\r\n", page )
   #endif
 
   // set page table entry as invalid
@@ -882,8 +909,10 @@ bool v7_short_set_context( virt_context_t* ctx ) {
   if ( VIRT_CONTEXT_TYPE_USER == ctx->type ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "list: %p\r\n",
-        ( void* )( ( ( sd_context_half_t* )( ( uintptr_t )ctx->context ) )->raw ) )
+      DEBUG_OUTPUT(
+        "list: %p\r\n",
+        ( ( sd_context_half_t* )( ( uintptr_t )ctx->context ) )->raw
+      )
     #endif
     // Copy page table address to cp15 ( ttbr0 )
     __asm__ __volatile__(
@@ -897,8 +926,10 @@ bool v7_short_set_context( virt_context_t* ctx ) {
   } else if ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "list: %p\r\n",
-        ( void* )( ( ( sd_context_total_t* )( ( uintptr_t )ctx->context ) )->raw ) )
+      DEBUG_OUTPUT(
+        "list: %p\r\n",
+        ( ( sd_context_total_t* )( ( uintptr_t )ctx->context ) )->raw
+      )
     #endif
     // Copy page table address to cp15 ( ttbr1 )
     __asm__ __volatile__(
@@ -1007,10 +1038,17 @@ bool v7_short_prepare_temporary( virt_context_t* ctx ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       if ( tbl != prev_tbl ) {
-        DEBUG_OUTPUT( "tbl = %#"PRIxPTR", offset = %u, start = %u\r\n",
-          tbl, offset, start )
-        DEBUG_OUTPUT( "table = %#"PRIxPTR", calculated offset = %x\r\n",
-          table, ( offset - start ) * SD_TBL_SIZE )
+        DEBUG_OUTPUT(
+          "tbl = %#"PRIxPTR", offset = %u, start = %u\r\n",
+          tbl,
+          offset,
+          start
+        )
+        DEBUG_OUTPUT(
+          "table = %#"PRIxPTR", calculated offset = %x\r\n",
+          table,
+          ( offset - start ) * SD_TBL_SIZE
+        )
         prev_tbl = tbl;
       }
     #endif
@@ -1062,7 +1100,7 @@ virt_context_t* v7_short_create_context( virt_context_type_t type ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "type: %d, ctx: %p\r\n", type, ( void* )ctx )
+    DEBUG_OUTPUT( "type: %d, ctx: %#"PRIxPTR"\r\n", type, ctx )
   #endif
 
   // map temporary
@@ -1099,11 +1137,11 @@ virt_context_t* v7_short_create_context( virt_context_type_t type ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "context: %p\r\n", ( void* )context )
+    DEBUG_OUTPUT( "context: %p\r\n", context )
   #endif
 
   // initialize with zero
-  memset( ( void* )context, 0, sizeof( virt_context_t ) );
+  memset( context, 0, sizeof( virt_context_t ) );
   // populate type and context
   context->context = ctx;
   context->type = type;
@@ -1223,7 +1261,7 @@ bool v7_short_fork_global_directory(
     }
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "pmd_to_fork = %#p\r\n", pmd_to_fork )
+      DEBUG_OUTPUT( "pmd_to_fork = %p\r\n", pmd_to_fork )
     #endif
     sd_page_table_t* pmd_forked = ( sd_page_table_t* )
       map_temporary( pmd_phys_forked, SD_TBL_SIZE );
@@ -1233,7 +1271,7 @@ bool v7_short_fork_global_directory(
     }
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "pmd_forked = %#p\r\n", pmd_to_fork )
+      DEBUG_OUTPUT( "pmd_forked = %p\r\n", pmd_to_fork )
     #endif
     // prepare new table
     memset( ( void* )pmd_forked, 0, SD_TBL_SIZE );
@@ -1430,7 +1468,7 @@ void v7_short_prepare( void ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "reg = %#08x\r\n", reg )
+    DEBUG_OUTPUT( "reg = %#x\r\n", reg )
   #endif
 
   // set access flag to 1 within sctlr
@@ -1440,7 +1478,7 @@ void v7_short_prepare( void ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "reg = %#08x\r\n", reg )
+    DEBUG_OUTPUT( "reg = %#x\r\n", reg )
   #endif
 
   // write back changes
@@ -1474,7 +1512,7 @@ bool v7_short_is_mapped_in_context( virt_context_t* ctx, uintptr_t addr ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
+    DEBUG_OUTPUT( "table: %p\r\n", table )
   #endif
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
@@ -1485,9 +1523,11 @@ bool v7_short_is_mapped_in_context( virt_context_t* ctx, uintptr_t addr ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
-    DEBUG_OUTPUT( "table->page[ %u ] = %#08x\r\n",
-      page_idx, table->page[ page_idx ].raw )
+    DEBUG_OUTPUT( "table: %p\r\n", table )
+    DEBUG_OUTPUT(
+      "table->page[ %u ] = %#x\r\n",
+      page_idx, table->page[ page_idx ].raw
+    )
   #endif
   // switch flag to true if mapped
   if ( 0 != table->page[ page_idx ].raw ) {
@@ -1525,7 +1565,7 @@ uint64_t v7_short_get_mapped_address_in_context(
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
+    DEBUG_OUTPUT( "table: %p\r\n", table )
   #endif
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
@@ -1540,9 +1580,12 @@ uint64_t v7_short_get_mapped_address_in_context(
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
-    DEBUG_OUTPUT( "table->page[ %u ] = %#08x\r\n",
-      page_idx, table->page[ page_idx ].raw )
+    DEBUG_OUTPUT( "table: %p\r\n", table )
+    DEBUG_OUTPUT(
+      "table->page[ %u ] = %#x\r\n",
+      page_idx,
+      table->page[ page_idx ].raw
+    )
   #endif
   // get mapped address
   phys = ( uint64_t )( table->page[ page_idx ].raw & 0xFFFFF000 );

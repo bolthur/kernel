@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _ARCH_ARM_V7_INTERRUPT_VECTOR_H )
+#ifndef _ARCH_ARM_V7_INTERRUPT_VECTOR_H
 #define _ARCH_ARM_V7_INTERRUPT_VECTOR_H
 
 #include "../../../../lib/assert.h"

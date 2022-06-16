@@ -19,7 +19,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <inttypes.h>
+#include "../lib/inttypes.h"
 #include "../lib/assert.h"
 #include "../lib/string.h"
 #if defined( PRINT_MM_HEAP )
@@ -82,7 +82,7 @@ void heap_init( heap_init_state_t state ) {
     ) {
       // debug output
       #if defined( PRINT_MM_HEAP )
-        DEBUG_OUTPUT( "Map %p with random physical address\r\n", ( void* )addr );
+        DEBUG_OUTPUT( "Map %#"PRIxPTR" with random physical address\r\n", addr )
       #endif
       // map address
       assert( virt_map_address_random(
@@ -334,7 +334,7 @@ void* heap_sbrk( intptr_t increment ) {
   if ( heap_end >= max_heap ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "Try to extend heap area with size %#x\r\n", increment );
+      DEBUG_OUTPUT( "Try to extend heap area with size %#"PRIxPTR"\r\n", increment )
     #endif
     // transform max heap to uintptr_t
     uintptr_t max_heap_extend = ( uintptr_t )max_heap;
@@ -362,7 +362,7 @@ void* heap_sbrk( intptr_t increment ) {
     }
     // debug output
     #if defined( PRINT_MM_HEAP )
-      DEBUG_OUTPUT( "max_heap = %#x\r\n", max_heap );
+      DEBUG_OUTPUT( "max_heap = %p\r\n", max_heap )
     #endif
     // try again
     return heap_sbrk( increment );

@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _ARCH_H )
+#ifndef _ARCH_H
 #define _ARCH_H
 
 void arch_init( void );

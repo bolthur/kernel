@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _PLATFORM_RASPI_TIMER_H )
+#ifndef _PLATFORM_RASPI_TIMER_H
 #define _PLATFORM_RASPI_TIMER_H
 
 // free running counter incrementing at 1 MHz => Increments each microsecond

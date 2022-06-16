@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include <stdbool.h>
+#include "lib/inttypes.h"
 #include "lib/string.h"
 #include "elf.h"
 #include "mm/phys.h"
@@ -140,9 +140,14 @@ static bool load_program_header( uintptr_t elf, task_process_t* process ) {
     // debug output
     #if defined ( PRINT_ELF )
       DEBUG_OUTPUT(
-        "type = %#x, vaddr = %#x, paddr = %#x, size = %#x, offset = %#x!\r\n",
-        program_header->p_type, program_header->p_vaddr, program_header->p_paddr,
-        program_header->p_memsz, program_header->p_offset )
+        "type = %#"PRIx32", vaddr = %#"PRIx32", paddr = %#"PRIx32", "
+        "size = %#"PRIx32", offset = %#"PRIx32"!\r\n",
+        program_header->p_type,
+        program_header->p_vaddr,
+        program_header->p_paddr,
+        program_header->p_memsz,
+        program_header->p_offset
+      )
     #endif
     // skip all sections except load
     if ( PT_LOAD != program_header->p_type ) {
@@ -174,8 +179,12 @@ static bool load_program_header( uintptr_t elf, task_process_t* process ) {
     // debug output
     #if defined ( PRINT_ELF )
       DEBUG_OUTPUT(
-        "memory_offset = %#"PRIxPTR", file_offset = %#"PRIxPTR", copy_size = %#"PRIxPTR"\r\n",
-        memory_offset, file_offset, copy_size )
+        "memory_offset = %#"PRIxPTR", file_offset = %#"PRIxPTR
+        ", copy_size = %#"PRIxPTR"\r\n",
+        memory_offset,
+        file_offset,
+        copy_size
+      )
     #endif
 
     // loop from start to end, map and copy data
@@ -197,8 +206,12 @@ static bool load_program_header( uintptr_t elf, task_process_t* process ) {
       // debug output
       #if defined ( PRINT_ELF )
         DEBUG_OUTPUT(
-          "copy_size = %#"PRIxPTR", to_copy = %#"PRIxPTR", file_offset = %#"PRIxPTR"\r\n",
-          copy_size, to_copy, file_offset )
+          "copy_size = %#"PRIxPTR", to_copy = %#"PRIxPTR
+          ", file_offset = %#"PRIxPTR"\r\n",
+          copy_size,
+          to_copy,
+          file_offset
+        )
       #endif
 
       // physical page variable and clear flag
@@ -228,7 +241,7 @@ static bool load_program_header( uintptr_t elf, task_process_t* process ) {
       }
       // debug output
       #if defined ( PRINT_ELF )
-        DEBUG_OUTPUT( "phys = %#016llx\r\n", phys )
+        DEBUG_OUTPUT( "phys = %#"PRIx64"\r\n", phys )
       #endif
 
       // map temporary

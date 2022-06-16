@@ -20,6 +20,7 @@
 #include <stddef.h>
 #include "lib/string.h"
 #include "lib/stdlib.h"
+#include "lib/inttypes.h"
 #include "../library/collection/avl/avl.h"
 #include "panic.h"
 #include "mm/heap.h"
@@ -76,7 +77,7 @@ static avl_tree_t* tree_by_type( interrupt_type_t type ) {
   }
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Called tree_by_type( %d )\r\n", type );
+    DEBUG_OUTPUT( "Called tree_by_type( %d )\r\n", type )
   #endif
   // setup interrupt manager if not done existing
   if ( ! interrupt_manager ) {
@@ -115,8 +116,10 @@ static avl_tree_t* tree_by_type( interrupt_type_t type ) {
     }
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Initialized interrupt manager with address %p\r\n",
-        ( void* )interrupt_manager );
+      DEBUG_OUTPUT(
+        "Initialized interrupt manager with address %p\r\n",
+        interrupt_manager
+      )
     #endif
   }
 
@@ -144,7 +147,7 @@ static int32_t kernel_block_list_lookup( const list_item_t* a, const void* data 
   interrupt_callback_wrapper_t* wrapper = a->data;
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Check bound callback at %p\r\n", ( void* )wrapper );
+    DEBUG_OUTPUT( "Check bound callback at %p\r\n", wrapper )
   #endif
   // handle match
   return ( uintptr_t )data == ( uintptr_t )wrapper->callback ? 0 : 1;
@@ -172,7 +175,7 @@ static int32_t process_block_list_lookup( const list_item_t* a, const void* data
   task_process_t* proc = a->data;
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Check bound callback at %p\r\n", ( void* )wrapper );
+    DEBUG_OUTPUT( "Check bound callback at %d\r\n", proc->id )
   #endif
   // handle match
   return ( pid_t )data == proc->id ? 0 : 1;
@@ -206,13 +209,17 @@ bool interrupt_unregister_handler(
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT(
-      "Called interrupt_unregister_handler( %zu, %p, %d, %s )\r\n",
-      num, callback, type, post  ? "true" : "false" );
+      "Called interrupt_unregister_handler( %zu, %#"PRIxPTR", %d, %s )\r\n",
+      num,
+      callback,
+      type,
+      post ? "true" : "false"
+    )
   #endif
 
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Try to unmap callback for interrupt %zu\r\n", num );
+    DEBUG_OUTPUT( "Try to unmap callback for interrupt %zu\r\n", num )
   #endif
 
   // validate interrupt number by vendor
@@ -233,8 +240,7 @@ bool interrupt_unregister_handler(
   }
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT(
-      "Using interrupt tree \"%p\" for lookup!\r\n", ( void* )tree );
+    DEBUG_OUTPUT( "Using interrupt tree \"%p\" for lookup!\r\n", tree )
   #endif
 
   // try to find node
@@ -242,7 +248,7 @@ bool interrupt_unregister_handler(
   interrupt_block_t* block;
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
+    DEBUG_OUTPUT( "Found node %p\r\n", node )
   #endif
   // handle not yet added
   if ( ! node ) {
@@ -253,7 +259,7 @@ bool interrupt_unregister_handler(
 
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Checking for not bound interrupt callback\r\n" );
+    DEBUG_OUTPUT( "Checking for not bound interrupt callback\r\n" )
   #endif
   list_manager_t* list = NULL;
   list_item_t* match = NULL;
@@ -269,7 +275,7 @@ bool interrupt_unregister_handler(
   if ( ! match ) {
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Callback not bound, returning success\r\n" );
+      DEBUG_OUTPUT( "Callback not bound, returning success\r\n" )
     #endif
     return true;
   }
@@ -314,13 +320,17 @@ bool interrupt_register_handler(
   // debug output
   #if defined( PRINT_EVENT )
     DEBUG_OUTPUT(
-      "Called interrupt_register_handler( %zu, %p, %d, %s )\r\n",
-      num, callback, type, post  ? "true" : "false" );
+      "Called interrupt_register_handler( %zu, %#"PRIxPTR", %d, %s )\r\n",
+      num,
+      callback,
+      type,
+      post ? "true" : "false"
+    )
   #endif
 
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Try to map callback for interrupt %zu\r\n", num );
+    DEBUG_OUTPUT( "Try to map callback for interrupt %zu\r\n", num )
   #endif
 
   // validate interrupt number by vendor
@@ -341,8 +351,7 @@ bool interrupt_register_handler(
   }
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT(
-      "Using interrupt tree \"%p\" for lookup!\r\n", ( void* )tree );
+    DEBUG_OUTPUT( "Using interrupt tree \"%p\" for lookup!\r\n", tree )
   #endif
 
   // try to find node
@@ -350,7 +359,7 @@ bool interrupt_register_handler(
   interrupt_block_t* block;
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
+    DEBUG_OUTPUT( "Found node %p\r\n", node )
   #endif
   // handle not yet added
   if ( ! node ) {
@@ -364,7 +373,7 @@ bool interrupt_register_handler(
     memset( ( void* )block, 0, sizeof( *block ) );
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Initialized new node at %p\r\n", ( void* )block );
+      DEBUG_OUTPUT( "Initialized new node at %p\r\n", block )
     #endif
     // populate block
     block->interrupt = num;
@@ -413,7 +422,7 @@ bool interrupt_register_handler(
 
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Checking for already bound interrupt callback\r\n" );
+    DEBUG_OUTPUT( "Checking for already bound interrupt callback\r\n" )
   #endif
   list_manager_t* list = NULL;
   list_item_t* match = NULL;
@@ -429,7 +438,7 @@ bool interrupt_register_handler(
   if ( match ) {
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Callback already bound, returning success\r\n" );
+      DEBUG_OUTPUT( "Callback already bound, returning success\r\n" )
     #endif
     return true;
   }
@@ -445,12 +454,12 @@ bool interrupt_register_handler(
       return false;
     }
     // prepare memory
-    memset( ( void* )wrapper, 0, sizeof( interrupt_callback_wrapper_t ) );
+    memset( wrapper, 0, sizeof( interrupt_callback_wrapper_t ) );
     // populate wrapper
     wrapper->callback = callback;
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Created wrapper container at %p\r\n", ( void* )wrapper );
+      DEBUG_OUTPUT( "Created wrapper container at %p\r\n", wrapper )
     #endif
     // set data to wrapper
     data = ( void* )wrapper;
@@ -488,7 +497,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
 
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Handle interrupt %zu\r\n", num );
+    DEBUG_OUTPUT( "Handle interrupt %zu\r\n", num )
   #endif
 
   // get correct tree to use
@@ -500,14 +509,14 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
 
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Using interrupt tree \"%p\" for lookup!\r\n", ( void* )tree );
+    DEBUG_OUTPUT( "Using interrupt tree \"%p\" for lookup!\r\n", tree )
   #endif
 
   // try to get node by interrupt
   avl_node_t* node = avl_find_by_data( tree, ( void* )num );
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
+    DEBUG_OUTPUT( "Found node %p\r\n", node )
   #endif
 
   // handle nothing found which means nothing bound
@@ -521,7 +530,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   list_item_t* current = block->handler->first;
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Looping through mapped callbacks and execute them\r\n" );
+    DEBUG_OUTPUT( "Looping through mapped callbacks and execute them\r\n" )
   #endif
   // loop through list
   while ( current ) {
@@ -529,7 +538,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
     interrupt_callback_wrapper_t* wrapper = current->data;
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Handling wrapper container %p\r\n", ( void* )wrapper );
+      DEBUG_OUTPUT( "Handling wrapper container %p\r\n", wrapper )
     #endif
     // fire with data
     wrapper->callback( context );
@@ -581,7 +590,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   current = block->post->first;
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Looping through mapped callbacks and execute them\r\n" );
+    DEBUG_OUTPUT( "Looping through mapped callbacks and execute them\r\n" )
   #endif
   // loop through list
   while ( current ) {
@@ -589,7 +598,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
     interrupt_callback_wrapper_t* wrapper = current->data;
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Handling wrapper container %p\r\n", ( void* )wrapper );
+      DEBUG_OUTPUT( "Handling wrapper container %p\r\n", wrapper )
     #endif
     // fire with data
     wrapper->callback( context );
@@ -598,7 +607,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
   }
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Handling of callbacks finished!\r\n" );
+    DEBUG_OUTPUT( "Handling of callbacks finished!\r\n" )
   #endif
 }
 
@@ -608,21 +617,21 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
 void interrupt_init( void ) {
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Calling arch related interrupt init\r\n" );
+    DEBUG_OUTPUT( "Calling arch related interrupt init\r\n" )
   #endif
   // arch related init part
   interrupt_arch_init();
 
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Calling post interrupt init\r\n" );
+    DEBUG_OUTPUT( "Calling post interrupt init\r\n" )
   #endif
   // possible post init
   interrupt_post_init();
 
   // debug output
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Toggle interrupts\r\n" );
+    DEBUG_OUTPUT( "Toggle interrupts\r\n" )
   #endif
   interrupt_toggle( INTERRUPT_TOGGLE_ON );
 }
@@ -678,7 +687,7 @@ void interrupt_handle_possible( void* context, bool fast ) {
     uint32_t interrupt = ( 1U << interrupt_bit );
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "pending interrupt: %#x\r\n", interrupt );
+      DEBUG_OUTPUT( "pending interrupt: %#"PRIx32"\r\n", interrupt )
     #endif
     // call interrupt handler
     interrupt_handle(

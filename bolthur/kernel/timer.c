@@ -20,6 +20,7 @@
 #include "lib/stdlib.h"
 #include "lib/string.h"
 #include "lib/assert.h"
+#include "lib/inttypes.h"
 #include "timer.h"
 #include "../library/collection/list/list.h"
 #include "rpc/backup.h"
@@ -70,7 +71,7 @@ static bool timer_insert(
     // debug output
     #if defined( PRINT_TIMER )
       DEBUG_OUTPUT(
-        "entry->expire = %d, entry_to_add->expire = %d\r\n",
+        "entry->expire = %zu, entry_to_add->expire = %zu\r\n",
         entry->expire, entry_to_add->expire
       )
     #endif
@@ -218,7 +219,8 @@ void timer_handle_callback( void ) {
     }
     // debug output
     #if defined( PRINT_TIMER )
-      DEBUG_OUTPUT( "rpc = %zu, thread = %p, thread->process = %p\r\n",
+      DEBUG_OUTPUT(
+        "rpc = %zu, thread = %p, thread->process = %p\r\n",
         entry->rpc,
         entry->thread,
         entry->thread->process

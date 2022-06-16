@@ -19,6 +19,7 @@
 
 #include "../lib/stdlib.h"
 #include "../lib/string.h"
+#include "../lib/inttypes.h"
 #if defined( PRINT_PROCESS )
   #include "../debug/debug.h"
 #endif
@@ -37,10 +38,12 @@ static int32_t queue_compare_priority_callback(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b )
-    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n",
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
+    DEBUG_OUTPUT(
+      "a->data = %zu, b->data = %zu\r\n",
       ( size_t )a->data,
-      ( size_t )b->data )
+      ( size_t )b->data
+    )
   #endif
 
   // -1 if address of a->data is greater than address of b->data
@@ -89,7 +92,7 @@ task_priority_queue_t* task_queue_get_queue(
   task_priority_queue_t* queue;
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node )
+    DEBUG_OUTPUT( "Found node %p\r\n", node )
   #endif
   // handle not yet added
   if ( ! node ) {
@@ -103,7 +106,7 @@ task_priority_queue_t* task_queue_get_queue(
     memset( queue, 0, sizeof( *queue ) );
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "Initialized new node at %p\r\n", ( void* )queue )
+      DEBUG_OUTPUT( "Initialized new node at %p\r\n", queue )
     #endif
     // populate queue
     queue->priority = priority;

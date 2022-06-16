@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _TTY_H )
+#ifndef _TTY_H
 #define _TTY_H
 
 #include <stdbool.h>

@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _DEBUG_BREAKPOINT_H )
+#ifndef _DEBUG_BREAKPOINT_H
 #define _DEBUG_BREAKPOINT_H
 
 #include <stdint.h>

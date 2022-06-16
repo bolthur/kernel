@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _TASK_STATE_H )
+#ifndef _TASK_STATE_H
 #define _TASK_STATE_H
 
 typedef enum {

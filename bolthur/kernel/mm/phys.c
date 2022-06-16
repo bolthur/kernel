@@ -21,6 +21,7 @@
 #include <stdbool.h>
 
 #include "../lib/assert.h"
+#include "../lib/inttypes.h"
 #if defined( PRINT_MM_PHYS )
   #include "../debug/debug.h"
 #endif
@@ -91,9 +92,10 @@ void phys_mark_page_used( uint64_t address ) {
     // debug output
     #if defined( PRINT_MM_PHYS )
       DEBUG_OUTPUT(
-        "frame: %06llu, index: %04llu, offset: %02llu, address: %#016llx, bitmap[ %04llu ]: %#08x\r\n",
+        "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
+        "address: %#"PRIx64", bitmap[ %04"PRIu64" ]: %#x\r\n",
         frame, index, offset, address, index, phys_dma_bitmap[ index ]
-      );
+      )
     #endif
   // normal handling
   } else {
@@ -102,9 +104,10 @@ void phys_mark_page_used( uint64_t address ) {
     // debug output
     #if defined( PRINT_MM_PHYS )
       DEBUG_OUTPUT(
-        "frame: %06llu, index: %04llu, offset: %02llu, address: %#016llx, phys_bitmap[ %04llu ]: %#08x\r\n",
+        "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
+        "address: %#"PRIx64", phys_bitmap[ %04"PRIu64" ]: %#x\r\n",
         frame, index, offset, address, index, phys_bitmap[ index ]
-      );
+      )
     #endif
   }
 }
@@ -133,9 +136,10 @@ void phys_mark_page_free( uint64_t address ) {
     // debug output
     #if defined( PRINT_MM_PHYS )
       DEBUG_OUTPUT(
-        "frame: %06llu, index: %04llu, offset: %02llu, address: %#016llx, phys_bitmap[ %04llu ]: %#08x\r\n",
+        "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
+        "address: %#"PRIx64", phys_bitmap[ %04"PRIu64" ]: %#x\r\n",
         frame, index, offset, address, index, phys_bitmap[ index ]
-      );
+      )
     #endif
   // normal handling
   } else {
@@ -147,9 +151,10 @@ void phys_mark_page_free( uint64_t address ) {
     // debug output
     #if defined( PRINT_MM_PHYS )
       DEBUG_OUTPUT(
-        "frame: %06llu, index: %04llu, offset: %02llu, address: %#016llx, phys_bitmap[ %04llu ]: %#08x\r\n",
+        "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
+        "address: %#"PRIx64", phys_bitmap[ %04"PRIu64" ]: %#x\r\n",
         frame, index, offset, address, index, phys_bitmap[ index ]
-      );
+      )
     #endif
   }
 }
@@ -176,9 +181,10 @@ void phys_mark_page_free_check( uint64_t address ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
-      "frame: %06llu, index: %04llu, offset: %02llu, address: %#016llx, phys_bitmap_check[ %04llu ]: %#08x\r\n",
+      "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
+      "address: %#"PRIx64", phys_bitmap_check[ %04"PRIu64" ]: %#x\r\n",
       frame, index, offset, address, index, phys_bitmap_check[ index ]
-    );
+    )
   #endif
 }
 
@@ -192,7 +198,7 @@ void phys_mark_page_free_check( uint64_t address ) {
 void phys_free_page_range( uint64_t address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "address: %#016llx, amount: %zu\r\n", address, amount );
+    DEBUG_OUTPUT( "address: %#"PRIx64", amount: %zu\r\n", address, amount )
   #endif
 
   // loop until amount and mark as free
@@ -215,7 +221,7 @@ void phys_free_page_range( uint64_t address, size_t amount ) {
 void phys_free_page_range_check( uint64_t address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "address: %#016llx, amount: %zu\r\n", address, amount );
+    DEBUG_OUTPUT( "address: %#"PRIx64", amount: %zu\r\n", address, amount )
   #endif
 
   // loop until amount and mark as free
@@ -238,7 +244,7 @@ void phys_free_page_range_check( uint64_t address, size_t amount ) {
 void phys_use_page_range( uint64_t address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "address: %#016llu, amount: %zu\r\n", address, amount );
+    DEBUG_OUTPUT( "address: %#"PRIx64", amount: %zu\r\n", address, amount )
   #endif
 
   // round down address to page start
@@ -269,9 +275,10 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
-      "memory_amount: %zu, alignment: %#016zx\r\n",
-      memory_amount, alignment
-    );
+      "memory_amount: %zu, alignment: %#zx\r\n",
+      memory_amount,
+      alignment
+    )
   #endif
 
   // round up to full page
@@ -313,7 +320,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
       if ( 0 == found_amount ) {
         address = idx * PAGE_SIZE * PAGE_PER_ENTRY + offset * PAGE_SIZE;
         #if defined( PRINT_MM_PHYS )
-          DEBUG_OUTPUT( "idx = %zu\r\n", idx );
+          DEBUG_OUTPUT( "idx = %zu\r\n", idx )
         #endif
 
         // check for alignment
@@ -387,9 +394,10 @@ bool phys_is_range_used( uint64_t address, size_t len ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
-      "len: %zu, address: %#016llx\r\n",
-      len, address
-    );
+      "len: %zu, address: %#"PRIx64"\r\n",
+      len,
+      address
+    )
   #endif
   // handle invalid size
   if ( 0 == len ) {
@@ -405,7 +413,8 @@ bool phys_is_range_used( uint64_t address, size_t len ) {
     // debug output
     #if defined( PRINT_MM_PHYS )
       DEBUG_OUTPUT(
-        "index = %llu, offset = %llu, frame = %#016llx, address = %#016llx, end = %#016llx\r\n",
+        "index = %"PRIu64", offset = %"PRIu64", frame = %#"PRIx64", "
+        "address = %#"PRIx64", end = %#"PRIx64"\r\n",
         index, offset, frame, address, end
       )
     #endif
@@ -434,8 +443,8 @@ void phys_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "start: %p\r\n", ( void* )start );
-    DEBUG_OUTPUT( "end: %p\r\n", ( void* )end );
+    DEBUG_OUTPUT( "start: %#"PRIxPTR"\r\n", start )
+    DEBUG_OUTPUT( "end: %#"PRIxPTR"\r\n", end )
   #endif
 
   // map from start to end addresses as used
@@ -455,8 +464,8 @@ void phys_init( void ) {
 
     // debug output
     #if defined( PRINT_MM_PHYS )
-      DEBUG_OUTPUT( "start: %p\r\n", ( void* )start );
-      DEBUG_OUTPUT( "end: %p\r\n", ( void* )end );
+      DEBUG_OUTPUT( "start: %#"PRIxPTR"\r\n", start )
+      DEBUG_OUTPUT( "end: %#"PRIxPTR"\r\n", end )
     #endif
 
     // map from start to end addresses as used

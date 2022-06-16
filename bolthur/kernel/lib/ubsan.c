@@ -18,6 +18,7 @@
  */
 
 #include "stdio.h"
+#include "inttypes.h"
 #include "ubsan.h"
 #include "stdlib.h"
 #include "../panic.h"
@@ -69,10 +70,12 @@ static void handle_type_mismatch_generic(
   // handle size mismatch
   } else {
       printf(
-        "Insufficient size\r\n%s address %p with insufficient space for object of type %s\n",
+        "Insufficient size\r\n%s address %#"PRIxPTR
+        " with insufficient space for object of type %s\n",
         type_check_kind[ mismatch->type_check_kind ],
-        ( void* )pointer,
-        mismatch->type->name );
+        pointer,
+        mismatch->type->name
+      );
   }
   // print location where it happened
   print( mismatch->location );

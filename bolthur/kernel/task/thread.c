@@ -19,6 +19,7 @@
 
 #include "../lib/stdlib.h"
 #include "../lib/string.h"
+#include "../lib/inttypes.h"
 #if defined( PRINT_PROCESS )
   #include "../debug/debug.h"
 #endif
@@ -48,10 +49,12 @@ static int32_t thread_compare_id_callback(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
-    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n",
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
+    DEBUG_OUTPUT(
+      "a->data = %zu, b->data = %zu\r\n",
       ( size_t )a->data,
-      ( size_t )b->data );
+      ( size_t )b->data
+    )
   #endif
 
   // -1 if address of a->data is greater than address of b->data
@@ -79,9 +82,11 @@ static void thread_destroy_callback( avl_node_t* node ) {
   virt_context_t* ctx = proc->virtual_context;
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Destroy thread with id %d of process with id %d!\r\n",
+    DEBUG_OUTPUT(
+      "Destroy thread with id %d of process with id %d!\r\n",
       thread->id,
-      thread->process->id );
+      thread->process->id
+    )
   #endif
   // unmap thread stack
   while (
@@ -244,7 +249,7 @@ task_thread_t* task_thread_next( void ) {
   max = avl_get_max( process_manager->thread_priority->root );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "min: %p, max: %p\r\n", ( void* )min, ( void* )max );
+    DEBUG_OUTPUT( "min: %p, max: %p\r\n", min, max )
   #endif
 
   // get nodes from min/max
@@ -273,7 +278,7 @@ task_thread_t* task_thread_next( void ) {
     if ( ! current_node ) {
       // debug output
       #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "no queue for prio %zu\r\n", priority );
+        DEBUG_OUTPUT( "no queue for prio %zu\r\n", priority )
       #endif
       // prevent endless loop by checking against 0
       if ( 0 == priority ) {
@@ -306,7 +311,8 @@ task_thread_t* task_thread_next( void ) {
       #if defined( PRINT_PROCESS )
         DEBUG_OUTPUT(
           "current->last_handled = %p\r\n",
-          ( void* )current->last_handled );
+          current->last_handled
+        )
       #endif
       // try to find element in list
       item = list_lookup_data(
@@ -322,7 +328,7 @@ task_thread_t* task_thread_next( void ) {
       }
       // debug output
       #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "item->data = %p\r\n", item->data );
+        DEBUG_OUTPUT( "item->data = %p\r\n", item->data )
       #endif
       // head to next
       item = item->next;
@@ -334,7 +340,7 @@ task_thread_t* task_thread_next( void ) {
       task_thread_t* task = ( task_thread_t* )item->data;
       // debug output
       #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "task %d with state %d\r\n", task->id, task->state );
+        DEBUG_OUTPUT( "task %d with state %d\r\n", task->id, task->state )
       #endif
       // check for ready
       if ( task_thread_is_ready( task ) ) {
@@ -348,7 +354,7 @@ task_thread_t* task_thread_next( void ) {
     if ( ! item ) {
       // debug output
       #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "no next task set!\r\n" );
+        DEBUG_OUTPUT( "no next task set!\r\n" )
       #endif
       // prevent endless loop by checking against 0
       if ( 0 == priority ) {
@@ -363,7 +369,7 @@ task_thread_t* task_thread_next( void ) {
 
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "no task found!\r\n" );
+    DEBUG_OUTPUT( "no task found!\r\n" )
   #endif
   return NULL;
 }
@@ -416,9 +422,11 @@ void task_thread_cleanup(
     }
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "Cleanup thread with id %d of process with id %d!\r\n",
+      DEBUG_OUTPUT(
+        "Cleanup thread with id %d of process with id %d!\r\n",
         thread->id,
-        thread->process->id );
+        thread->process->id
+      )
     #endif
     // cache current as remove
     list_item_t* remove = current;
@@ -511,7 +519,7 @@ void task_thread_unblock(
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT(
-        "invalid data ptr attribute %#p / %#p\r\n",
+        "invalid data ptr attribute%p / %p\r\n",
         thread->state_data.data_ptr,
         necessary_data.data_ptr
       )
@@ -562,12 +570,14 @@ task_thread_t* task_thread_get_blocked(
       // debug output
       #if defined( PRINT_PROCESS )
         DEBUG_OUTPUT(
-          "thread->state = %d, thread->state_data.data_ptr = %#p\r\n",
-          thread->state, thread->state_data.data_ptr
+          "thread->state = %d, thread->state_data.data_ptr = %p\r\n",
+          thread->state,
+          thread->state_data.data_ptr
         )
         DEBUG_OUTPUT(
-          "necessary_thread_state = %d, necessary_thread_data.data_ptr = %#p\r\n",
-          necessary_thread_state, necessary_thread_data.data_ptr
+          "necessary_thread_state = %d, necessary_thread_data.data_ptr = %p\r\n",
+          necessary_thread_state,
+          necessary_thread_data.data_ptr
         )
       #endif
       // return thread if matching

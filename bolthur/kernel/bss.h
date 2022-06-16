@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _BSS_H )
+#ifndef _BSS_H
 #define _BSS_H
 
 #include <stdint.h>

@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _INTERRUPT_H )
+#ifndef _INTERRUPT_H
 #define _INTERRUPT_H
 
 #include <stdint.h>

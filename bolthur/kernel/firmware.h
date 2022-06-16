@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _FIRMWARE_H )
+#ifndef _FIRMWARE_H
 #define _FIRMWARE_H
 
 void firmware_startup_init( void );

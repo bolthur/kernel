@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
+#include "inttypes.h"
 #include "ssp.h"
 #include "../panic.h"
 

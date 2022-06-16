@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include <errno.h>
+#include "../lib/inttypes.h"
 #include "../syscall.h"
 #if defined( PRINT_SYSCALL )
   #include "../debug/debug.h"
@@ -58,8 +58,12 @@ void syscall_memory_acquire( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall memory acquire( %#p, %#x, %d, %d )\r\n",
-      addr, len, protection, flag )
+      "syscall memory acquire( %p, %#zx, %d, %d )\r\n",
+      addr,
+      len,
+      protection,
+      flag
+    )
   #endif
 
   // handle invalid length
@@ -139,13 +143,13 @@ void syscall_memory_acquire( void* context ) {
     );
     // debug output
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "entry = %#x, address = %p\r\n", tmp_addr, addr )
+      DEBUG_OUTPUT( "entry = %#"PRIxPTR", address = %p\r\n", tmp_addr, addr )
     #endif
     start = virt_find_free_page_range( virtual_context, len, tmp_addr );
   }
 
   // handle no address found
-  if ( ( uintptr_t )NULL == start ) {
+  if ( ! start ) {
     syscall_populate_error( context, ( size_t )-ENOMEM );
     // debug output
     #if defined( PRINT_SYSCALL )
@@ -175,8 +179,13 @@ void syscall_memory_acquire( void* context ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
-        "mapping %#016llx to address %p with type %d, flag %d and len %x\r\n",
-        phys, start,  map_type, map_flag, len
+        "mapping %#"PRIx64" to address %#"PRIxPTR
+        " with type %d, flag %d and len %x\r\n",
+        phys,
+        start,
+        map_type,
+        map_flag,
+        len
       )
     #endif
     if ( ! virt_map_address_range(
@@ -238,7 +247,9 @@ void syscall_memory_release( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "syscall_memory_release( %#"PRIxPTR", %zx )\r\n",
-      address, len )
+      address,
+      len
+    )
   #endif
   // handle invalid stuff
   if ( 0 == len ) {
@@ -354,7 +365,9 @@ void syscall_memory_shared_attach( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "syscall_memory_shared_attach( %d, %#"PRIxPTR" )\r\n",
-      id, start )
+      id,
+      start
+    )
   #endif
   uintptr_t addr = shared_memory_attach(
     task_thread_current_thread->process,
@@ -381,7 +394,7 @@ void syscall_memory_shared_detach( void* context ) {
   size_t id = ( size_t )syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_memory_shared_detach( %d )\r\n", id )
+    DEBUG_OUTPUT( "syscall_memory_shared_detach( %zu )\r\n", id )
   #endif
   // try to detach
   if ( ! shared_memory_detach( task_thread_current_thread->process, id ) ) {
@@ -403,7 +416,7 @@ void syscall_memory_shared_size( void* context ) {
   size_t id = ( size_t )syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_memory_shared_size( %d )\r\n", id )
+    DEBUG_OUTPUT( "syscall_memory_shared_size( %zu )\r\n", id )
   #endif
   // try to get size
   size_t len = shared_memory_size( task_thread_current_thread->process, id );

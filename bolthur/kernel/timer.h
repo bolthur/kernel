@@ -20,7 +20,7 @@
 #include <stddef.h>
 #include "task/thread.h"
 
-#if ! defined( _TIMER_H )
+#ifndef _TIMER_H
 #define _TIMER_H
 
 typedef struct {

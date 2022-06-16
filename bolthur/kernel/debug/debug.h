@@ -19,7 +19,7 @@
 
 #include "../lib/stdio.h"
 
-#if ! defined( _DEBUG_DEBUG_H )
+#ifndef _DEBUG_DEBUG_H
 #define _DEBUG_DEBUG_H
 
 /**

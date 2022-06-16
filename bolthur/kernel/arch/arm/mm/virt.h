@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 
-#if ! defined( _ARCH_ARM_MM_VIRT_H )
+#ifndef _ARCH_ARM_MM_VIRT_H
 #define _ARCH_ARM_MM_VIRT_H
 
 #if defined( ELF32 )

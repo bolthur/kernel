@@ -18,7 +18,7 @@
  */
 
 #include <errno.h>
-#include <inttypes.h>
+#include "../lib/inttypes.h"
 #include "../lib/assert.h"
 #include "../lib/stdlib.h"
 #include "../lib/string.h"
@@ -63,10 +63,12 @@ static int32_t process_compare_id(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
-    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n",
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
+    DEBUG_OUTPUT(
+      "a->data = %zu, b->data = %zu\r\n",
       ( size_t )a->data,
-      ( size_t )b->data );
+      ( size_t )b->data
+    )
   #endif
 
   // -1 if address of a->data is greater than address of b->data
@@ -95,8 +97,12 @@ static int32_t process_lookup_id(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
-    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n", ( size_t )a->data, b );
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
+    DEBUG_OUTPUT(
+      "a->data = %d, b->data = %d\r\n",
+      ( pid_t )a->data,
+      ( pid_t )b
+    )
   #endif
   // -1 if address of a->data is greater than address of b->data
   if ( ( pid_t )a->data > ( pid_t )b) {
@@ -327,7 +333,9 @@ task_process_t* task_process_create( size_t priority, pid_t parent ) {
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
       "task_process_create( %zu, %d ) called\r\n",
-      priority, parent );
+      priority,
+      parent
+    )
   #endif
 
   // reserve space for process structure
@@ -338,7 +346,7 @@ task_process_t* task_process_create( size_t priority, pid_t parent ) {
   }
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Reserved space for process structure at %p\r\n", ( void* )process );
+    DEBUG_OUTPUT( "Reserved space for process structure at %p\r\n", process )
   #endif
 
   // prepare structure
@@ -474,7 +482,7 @@ void task_process_queue_reset( void ) {
 
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "task_process_queue_reset()\r\n" );
+    DEBUG_OUTPUT( "task_process_queue_reset()\r\n" )
   #endif
 
   // get min and max priority queue
@@ -482,7 +490,7 @@ void task_process_queue_reset( void ) {
   max = avl_get_max( process_manager->thread_priority->root );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "min: %p, max: %p\r\n", ( void* )min, ( void* )max );
+    DEBUG_OUTPUT( "min: %p, max: %p\r\n", min, max )
   #endif
 
   // get nodes from min/max
@@ -572,13 +580,13 @@ void task_process_cleanup(
     if ( skip ) {
       // debug output
       #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "Skip process with id %d!\r\n", proc->id );
+        DEBUG_OUTPUT( "Skip process with id %d!\r\n", proc->id )
       #endif
       continue;
     }
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "Cleanup process with id %d!\r\n", proc->id );
+      DEBUG_OUTPUT( "Cleanup process with id %d!\r\n", proc->id )
     #endif
     // cache current for removal, cleanup helper destroys process completely
     list_item_t* remove = current;
@@ -673,11 +681,10 @@ bool task_process_prepare_init( task_process_t* proc ) {
     return false;
   }
 
-  int addr_size = sizeof( uintptr_t ) * 2;
   char str_ramdisk[ 20 ];
   char str_ramdisk_size[ 20 ];
-  sprintf( str_ramdisk, "%#0*"PRIxPTR"\0", addr_size, proc_ramdisk_start );
-  sprintf( str_ramdisk_size, "%#0*zx\0", addr_size, ramdisk_file_size );
+  sprintf( str_ramdisk, "%#"PRIxPTR"\0", proc_ramdisk_start );
+  sprintf( str_ramdisk_size, "%#zx\0", ramdisk_file_size );
 
   // get thread
   avl_node_t* node = avl_iterate_first( proc->thread_manager );
@@ -693,7 +700,7 @@ bool task_process_prepare_init( task_process_t* proc ) {
   if ( proc_additional_start ) {
     char str_additional[ 20 ];
     sprintf(
-      str_additional, "%#0*"PRIxPTR"\0", addr_size, proc_additional_start
+      str_additional, "%#"PRIxPTR"\0", proc_additional_start
     );
 
     char* arg[] = {
@@ -742,11 +749,10 @@ void task_process_prepare_kill( void* context, task_process_t* proc ) {
   #endif
   // get first thread
   avl_node_t* current = avl_iterate_first( proc->thread_manager );
-  task_thread_t* thread = NULL;
   // loop through all threads set appropriate state for kill
   while ( current ) {
     // get thread
-    thread = TASK_THREAD_GET_BLOCK( current );
+    task_thread_t* thread = TASK_THREAD_GET_BLOCK( current );
     // set process state
     thread->state = TASK_THREAD_STATE_KILL;
     // get next thread
@@ -780,8 +786,10 @@ int task_process_replace(
 ) {
   bool replace_current_thread = task_thread_current_thread->process == proc;
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "task_thread_current_thread->process = %p, proc = %p\r\n",
-      ( void* )task_thread_current_thread->process, ( void* )proc )
+    DEBUG_OUTPUT(
+      "task_thread_current_thread->process = %p, proc = %p\r\n",
+      task_thread_current_thread->process, proc
+    )
   #endif
 
   #if defined( PRINT_PROCESS )
@@ -807,7 +815,7 @@ int task_process_replace(
   // save image temporary
   size_t image_size = elf_image_size( ( uintptr_t )elf );
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "image_size = %#x\r\n", image_size )
+    DEBUG_OUTPUT( "image_size = %#zx\r\n", image_size )
   #endif
   void* image = malloc( sizeof( char ) * image_size );
   // handle error
@@ -817,7 +825,7 @@ int task_process_replace(
     return -ENOMEM;
   }
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "image = %#p\r\n", image )
+    DEBUG_OUTPUT( "image = %p\r\n", image )
   #endif
   memcpy_unsafe_src( image, ( void* )elf, image_size );
 
@@ -845,14 +853,14 @@ int task_process_replace(
   // destroy thread manager
   if ( proc->thread_manager ) {
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "image_size = %#p\r\n", proc->thread_manager )
+      DEBUG_OUTPUT( "thread manager = %p\r\n", proc->thread_manager )
     #endif
     task_thread_destroy( proc->thread_manager );
   }
   // destroy stack manager
   if ( proc->thread_stack_manager ) {
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "image_size = %#p\r\n", proc->thread_stack_manager )
+      DEBUG_OUTPUT( "stack manager = %p\r\n", proc->thread_stack_manager )
     #endif
     task_stack_manager_destroy( proc->thread_stack_manager );
   }
@@ -896,7 +904,10 @@ int task_process_replace(
     return -ENOMEM;
   }
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "new_current->current_context = %p\r\n", new_current->current_context )
+    DEBUG_OUTPUT(
+      "new_current->current_context = %p\r\n",
+      new_current->current_context
+    )
   #endif
 
   // push arguments and environment
@@ -916,7 +927,7 @@ int task_process_replace(
   if ( replace_current_thread ) {
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "Replace current thread!\r\n" );
+      DEBUG_OUTPUT( "Replace current thread!\r\n" )
     #endif
     // replace current thread pointer
     task_thread_current_thread = new_current;

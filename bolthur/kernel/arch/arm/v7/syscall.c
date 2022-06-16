@@ -57,20 +57,20 @@ void syscall_populate_error( void* context, size_t error ) {
 }
 
 /**
- * @fn size_t syscall_get_parameter(void*, int32_t)
+ * @fn size_t syscall_get_parameter(void*, size_t)
  * @brief Helper to get parameter of context
  *
  * @param context
  * @param num
  * @return
  */
-size_t syscall_get_parameter( void* context, int32_t num ) {
+size_t syscall_get_parameter( void* context, size_t num ) {
   // get context
   context = interrupt_get_context( context );
   // transform to cpu structure
   cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
   // number sanitize
-  assert( num >= R0 && num <= CPSR )
+  assert( num <= CPSR )
   // return value
   return ( size_t )cpu->raw[ num ];
 }

@@ -16,8 +16,8 @@
  * You should have received a copy of the GNU General Public License
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
-#define PRINT_EXCEPTION 1
 #include "../../../../../lib/assert.h"
+#include "../../../../../lib/inttypes.h"
 #if defined( REMOTE_DEBUG )
   #include "../../debug/debug.h"
 #endif
@@ -53,7 +53,7 @@ noreturn void vector_data_abort_handler( cpu_register_context_t* cpu ) {
   assert( nested_data_abort < INTERRUPT_NESTED_MAX )
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "cpu = %#p\r\n", cpu )
+    DEBUG_OUTPUT( "cpu = %p\r\n", cpu )
   #endif
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
@@ -65,13 +65,17 @@ noreturn void vector_data_abort_handler( cpu_register_context_t* cpu ) {
   cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "data abort while accessing %p\r\n",
-      ( void* )virt_data_fault_address() )
-    DEBUG_OUTPUT( "fault_status = %#x\r\n", ( void* )virt_data_status() )
+    DEBUG_OUTPUT(
+      "data abort while accessing %#"PRIxPTR"\r\n",
+      virt_data_fault_address()
+    )
+    DEBUG_OUTPUT( "fault_status = %#"PRIxPTR"\r\n", virt_data_status() )
     DUMP_REGISTER( cpu )
     if ( EVENT_ORIGIN_USER == origin ) {
-      DEBUG_OUTPUT( "process id: %d\r\n",
-        task_thread_current_thread->process->id )
+      DEBUG_OUTPUT(
+        "process id: %d\r\n",
+        task_thread_current_thread->process->id
+      )
     }
   #endif
   // kernel stack

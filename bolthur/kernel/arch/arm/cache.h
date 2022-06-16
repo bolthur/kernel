@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _ARCH_ARM_CACHE_H )
+#ifndef _ARCH_ARM_CACHE_H
 #define _ARCH_ARM_CACHE_H
 
 void cache_enable_stub( bool* );

@@ -1,0 +1,1 @@
+root=/dev/sd1 rootfstype=ext2

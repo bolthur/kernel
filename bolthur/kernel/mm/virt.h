@@ -21,7 +21,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#if ! defined( _MM_VIRT_H )
+#ifndef _MM_VIRT_H
 #define _MM_VIRT_H
 
 typedef enum {

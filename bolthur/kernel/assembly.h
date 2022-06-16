@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( _ASSEMBLY_H )
+#ifndef _ASSEMBLY_H
 #define _ASSEMBLY_H
 
 #define IMPORT( symbol ) .extern symbol

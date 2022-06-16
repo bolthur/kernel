@@ -18,8 +18,8 @@
  */
 
 #include <stdint.h>
-#include <inttypes.h>
 
+#include "lib/inttypes.h"
 #include "lib/stdio.h"
 #include "lib/stdlib.h"
 #include "interrupt.h"

@@ -107,8 +107,11 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#08x, virt_supported_mode = %#08x\r\n",
-        reg, virt_supported_mode )
+      DEBUG_OUTPUT(
+        "reg = %#x, virt_supported_mode = %#x\r\n",
+        reg,
+        virt_supported_mode
+      )
     #endif
 
     // get memory size from mmfr3
@@ -120,7 +123,7 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#08x\r\n", reg )
+      DEBUG_OUTPUT( "reg = %#x\r\n", reg )
     #endif
 
     // get only cpu address bus size
@@ -128,7 +131,7 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#08x\r\n", reg )
+      DEBUG_OUTPUT( "reg = %#x\r\n", reg )
     #endif
 
     // set paging to v7 short descriptor if more
