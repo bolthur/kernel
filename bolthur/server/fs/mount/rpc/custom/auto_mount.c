@@ -17,32 +17,31 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/syslimits.h>
-#include <sys/types.h>
-#include "../../../../library/collection/avl/avl.h"
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>
+#include <libgen.h>
+#include <sys/bolthur.h>
+#include "../../rpc.h"
+#include "../../../../libmount.h"
 
-#ifndef _IOCTL_HANDLER_H
-#define _IOCTL_HANDLER_H
-
-typedef struct {
-  avl_node_t node;
-  pid_t pid;
-  avl_tree_t* tree;
-} ioctl_tree_entry_t;
-
-typedef struct {
-  avl_node_t node;
-  uint32_t command;
-} ioctl_container_t;
-
-#define IOCTL_HANDLER_GET_ENTRY( n ) \
-  ( ioctl_tree_entry_t* )( ( uint8_t* )n - offsetof( ioctl_tree_entry_t, node ) )
-
-#define IOCTL_HANDLER_GET_CONTAINER( n ) \
-  ( ioctl_container_t* )( ( uint8_t* )n - offsetof( ioctl_container_t, node ) )
-
-bool ioctl_handler_init( void );
-ioctl_container_t* ioctl_lookup_command( uint32_t, pid_t );
-bool ioctl_push_command( uint32_t, pid_t );
-
-#endif
+/**
+ * @fn void rpc_custom_handle_auto_mount(size_t, pid_t, size_t, size_t)
+ * @brief Handle auto mount request
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_custom_handle_auto_mount(
+  __unused size_t type,
+  __unused pid_t origin,
+  __unused size_t data_info,
+  __unused size_t response_info
+) {
+  EARLY_STARTUP_PRINT( "handler...\r\n" )
+  vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+}

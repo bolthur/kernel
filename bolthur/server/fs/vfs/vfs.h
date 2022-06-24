@@ -22,7 +22,7 @@
 #include <sys/bolthur.h>
 #include "../../../library/collection/list/list.h"
 
-#if !defined( _VFS_H )
+#ifndef _VFS_H
 #define _VFS_H
 
 // forward declaration necessary due to circular referencing

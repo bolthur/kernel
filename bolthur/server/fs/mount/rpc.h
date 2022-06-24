@@ -29,16 +29,15 @@ void rpc_handle_remove( size_t, pid_t, size_t, size_t );
 void rpc_handle_open( size_t, pid_t, size_t, size_t );
 void rpc_handle_close( size_t, pid_t, size_t, size_t );
 void rpc_handle_read( size_t, pid_t, size_t, size_t );
-void rpc_handle_read_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_write( size_t, pid_t, size_t, size_t );
-void rpc_handle_write_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_seek( size_t, pid_t, size_t, size_t );
 void rpc_handle_stat( size_t, pid_t, size_t, size_t );
 void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );
-void rpc_handle_ioctl_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_fork( size_t, pid_t, size_t, size_t );
 void rpc_handle_exit( size_t, pid_t, size_t, size_t );
 
-void rpc_custom_handle_start( size_t, pid_t, size_t, size_t );
+void rpc_custom_handle_mount( size_t, pid_t, size_t, size_t );
+void rpc_custom_handle_unmount( size_t, pid_t, size_t, size_t );
+void rpc_custom_handle_auto_mount( size_t, pid_t, size_t, size_t );
 
 #endif

@@ -18,9 +18,15 @@
  */
 
 #include <stdint.h>
+#include <assert.h>
 
-#if ! defined( _MBR_H )
+#ifndef _MBR_H
 #define _MBR_H
+
+#define PARTITION_TABLE_OFFSET 446
+#define PARTITION_TABLE_NUMBER 4
+#define PARTITION_TABLE_SIGNATURE_OFFSET 510
+#define PARTITION_TABLE_SIGNATURE 0xAA55
 
 #define PARTITION_TYPE_FAT12_CHS 0x01
 #define PARTITION_TYPE_FAT16_CHS 0x04
@@ -33,28 +39,20 @@
 // linux native file systems like ext2, ext3, ext4, ...
 #define PARTITION_TYPE_LINUX_NATIVE 0x83
 
-typedef struct {
-  union {
-    uint32_t raw[ 4 ];
-    struct {
-      uint8_t bootable;
-      uint8_t start_head;
-      uint16_t start_sector : 6;
-      uint16_t start_cylinder : 10;
-      uint8_t system_id;
-      uint8_t end_head;
-      uint16_t end_sector : 6;
-      uint16_t end_cylinder : 10;
-      uint32_t relative_sector;
-      uint32_t total_sector;
-    } data;
-  };
+typedef union __packed {
+  uint32_t raw[ 4 ];
+  struct {
+    uint8_t bootable;
+    uint8_t start_head;
+    uint16_t start_sector : 6;
+    uint16_t start_cylinder : 10;
+    uint8_t system_id;
+    uint8_t end_head;
+    uint16_t end_sector : 6;
+    uint16_t end_cylinder : 10;
+    uint32_t relative_sector;
+    uint32_t total_sector;
+  } data;
 } mbr_table_entry_t;
-
-typedef struct __packed {
-  uint8_t unused[ 446 ];
-  mbr_table_entry_t partition_table[ 4 ];
-  uint8_t signatur[ 2 ];
-} mbr_t;
 
 #endif

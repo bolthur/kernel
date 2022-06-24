@@ -17,32 +17,31 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/syslimits.h>
-#include <sys/types.h>
-#include "../../../../library/collection/avl/avl.h"
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <errno.h>
+#include <sys/bolthur.h>
 
-#ifndef _IOCTL_HANDLER_H
-#define _IOCTL_HANDLER_H
+#if ! defined( _LIBMOUNT_H )
+#define _LIBMOUNT_H
+
+#define MOUNT_MOUNT RPC_CUSTOM_START
+#define MOUNT_AUTO_MOUNT MOUNT_MOUNT + 1
+#define MOUNT_UNMOUNT MOUNT_AUTO_MOUNT + 1
 
 typedef struct {
-  avl_node_t node;
-  pid_t pid;
-  avl_tree_t* tree;
-} ioctl_tree_entry_t;
+  char handler[ PATH_MAX ];
+  char mount_point[ PATH_MAX ];
+} mount_mount_t;
 
 typedef struct {
-  avl_node_t node;
-  uint32_t command;
-} ioctl_container_t;
+  char handler[ PATH_MAX ];
+  char mount_point[ PATH_MAX ];
+} mount_auto_mount_t;
 
-#define IOCTL_HANDLER_GET_ENTRY( n ) \
-  ( ioctl_tree_entry_t* )( ( uint8_t* )n - offsetof( ioctl_tree_entry_t, node ) )
-
-#define IOCTL_HANDLER_GET_CONTAINER( n ) \
-  ( ioctl_container_t* )( ( uint8_t* )n - offsetof( ioctl_container_t, node ) )
-
-bool ioctl_handler_init( void );
-ioctl_container_t* ioctl_lookup_command( uint32_t, pid_t );
-bool ioctl_push_command( uint32_t, pid_t );
+typedef struct {
+  char mount_point[ PATH_MAX ];
+} mount_unmount_t;
 
 #endif

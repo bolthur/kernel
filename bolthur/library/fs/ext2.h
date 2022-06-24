@@ -18,22 +18,74 @@
  */
 
 #include <stdint.h>
+#include <assert.h>
 
-#if ! defined( _EXT2_H )
+#ifndef _EXT2_H
 #define _EXT2_H
 
-typedef struct {
+typedef union __packed {
+  uint8_t plain[ 1024 ];
+  struct {
+    uint32_t inodes_count;
+    uint32_t blocks_count;
+    uint32_t reserved_blocks_count;
+    uint32_t free_blocks_count;
+    uint32_t free_inodes_count;
+    uint32_t first_data_block;
+    uint32_t log_block_size;
+    uint32_t log_fragment_size;
+    uint32_t blocks_per_group;
+    uint32_t fragments_per_group;
+    uint32_t inodes_per_group;
+    uint32_t mount_time;
+    uint32_t write_time;
+    uint16_t mount_count;
+    uint16_t max_mount_count;
+    uint16_t signature;
+    uint16_t state;
+    uint16_t errors;
+    uint16_t minor_version;
+    uint32_t last_check_time;
+    uint32_t check_interval;
+    uint32_t creator_os;
+    uint32_t revision;
+    uint16_t default_uid_for_reserved_block;
+    uint16_t default_gid_for_reserved_block;
+
+    // extended stuff ( >= 1 )
+    uint32_t first_inode;
+    uint16_t inode_size;
+    uint16_t block_group_number;
+    uint32_t feature_compat;
+    uint32_t feature_incompat;
+    uint32_t feature_ro_incompat;
+    uint8_t uuid[ 16 ];
+    char volume_name[ 16 ];
+    char last_mount_path[ 64 ];
+    uint32_t algorithm_bitmap;
+    uint8_t preallocate_blocks;
+    uint8_t preallocate_directory_blocks;
+    uint16_t padding0;
+    uint8_t journal_uuid[ 16 ];
+    uint32_t journal_inode;
+    uint32_t journal_device;
+    uint32_t last_orphaned;
+    uint32_t reserved[ 197 ];
+  } data;
 } ext2_superblock_t;
 
-typedef struct {
-  uint32_t block_bitmap;
-  uint32_t inode_bitmap;
-  uint32_t inode_table;
-  uint16_t free_block_num;
-  uint16_t free_inode_num;
-  uint16_t directory_num;
-  uint16_t padding;
-  uint32_t unused[ 3 ];
+typedef union __packed {
+  uint8_t plain[ 32 ];
+  struct {
+    uint32_t block_bitmap;
+    uint32_t inode_bitmap;
+    uint32_t inode_table;
+    uint16_t free_block_num;
+    uint16_t free_inode_num;
+    uint16_t directory_num;
+    uint16_t padding;
+    uint8_t unused[ 12 ];
+  } data;
 } ext2_blockgroup_t;
 
 #define INODE_TYPE_FIFO 0x1000
@@ -81,30 +133,33 @@ typedef struct {
 #define INODE_FLAG_AFS_DIR 0x20000
 #define INODE_FLAG_JOURNAL_FILE_DATA 0x40000
 
-typedef struct {
-  uint16_t type_permission;
-  uint16_t uid_lower;
-  uint32_t size;
-  uint32_t access_time;
-  uint32_t creation_time;
-  uint32_t modification_time;
-  uint32_t deletion_time;
-  uint16_t gid_lower;
-  uint16_t link_count;
-  uint32_t sector_count;
-  uint32_t flags;
-  uint32_t reserved1;
-  uint32_t direct_block_pointer[ 15 ];
-  uint32_t version;
-  uint32_t file_acl;
-  uint32_t dir_acl;
-  uint32_t fragment_address;
-  uint8_t fragment_number;
-  uint8_t fragment_size;
-  uint16_t reserved2;
-  uint16_t uid_upper;
-  uint16_t gid_upper;
-  uint32_t reserved3;
+typedef union __packed {
+  uint8_t plain[ 72 ];
+  struct {
+    uint16_t type_permission;
+    uint16_t uid_lower;
+    uint32_t size;
+    uint32_t access_time;
+    uint32_t creation_time;
+    uint32_t modification_time;
+    uint32_t deletion_time;
+    uint16_t gid_lower;
+    uint16_t link_count;
+    uint32_t sector_count;
+    uint32_t flags;
+    uint32_t reserved1;
+    uint32_t direct_block_pointer[ 15 ];
+    uint32_t version;
+    uint32_t file_acl;
+    uint32_t dir_acl;
+    uint32_t fragment_address;
+    uint8_t fragment_number;
+    uint8_t fragment_size;
+    uint16_t reserved2;
+    uint16_t uid_upper;
+    uint16_t gid_upper;
+    uint32_t reserved3;
+  } data;
 } ext2_inode_t;
 
 typedef struct {

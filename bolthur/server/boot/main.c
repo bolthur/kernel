@@ -34,6 +34,7 @@
 #include "ramdisk.h"
 #include "../libhelper.h"
 #include "../libdev.h"
+#include "../libmount.h"
 
 uintptr_t ramdisk_compressed;
 size_t ramdisk_compressed_size;
@@ -44,6 +45,10 @@ size_t ramdisk_read_offset = 0;
 pid_t pid = 0;
 TAR *disk = NULL;
 int fd_dev = 0;
+// variables
+uintptr_t device_tree;
+char* bootargs;
+int bootargs_length;
 
 /**
  * @brief Simulate open, by decompressing ramdisk tar image
@@ -349,6 +354,18 @@ static void stage2( void ) {
   EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )
   pid_t terminal = execute_driver( "/ramdisk/server/terminal", "/dev/terminal" );
 
+  // start sd server
+  EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
+  pid_t sd = execute_driver( "/ramdisk/server/storage/sd", "/dev/sd" );
+
+  // start mount server
+  EARLY_STARTUP_PRINT( "Starting and waiting for mount server ...\r\n" );
+  pid_t mount = execute_driver( "/ramdisk/server/fs/mount", "/dev/mount" );
+
+  EARLY_STARTUP_PRINT(
+    "iomem = %d, rnd = %d, console = %d, terminal = %d, "
+    "framebuffer = %d, sd = %d, mount = %d\r\n",
+    iomem, rnd, console, terminal, framebuffer, sd, mount )
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
   FILE* fp = freopen( "/dev/stdin", "r", stdin );
@@ -372,22 +389,11 @@ static void stage2( void ) {
 
   EARLY_STARTUP_PRINT( "size_t max = %zu\r\n", SIZE_MAX )
   EARLY_STARTUP_PRINT( "unsigned long long max = %llu\r\n", ULLONG_MAX )
-  EARLY_STARTUP_PRINT(
-    "iomem = %d, rnd = %d, console = %d, terminal = %d, framebuffer = %d\r\n",
-    iomem, rnd, console, terminal, framebuffer )
 
   EARLY_STARTUP_PRINT( "Adjust stdout / stderr buffering\r\n" )
   // adjust buffering of stdout and stderr
   setvbuf( stdout, NULL, _IOLBF, 0 );
   setvbuf( stderr, NULL, _IONBF, 0 );
-
-  // start sd server
-  EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
-  pid_t sd = execute_driver( "/ramdisk/server/storage/sd", "/dev/sd" );
-  EARLY_STARTUP_PRINT(
-    "iomem = %d, rnd = %d, console = %d, terminal = %d, "
-    "framebuffer = %d, sd = %d\r\n",
-    iomem, rnd, console, terminal, framebuffer, sd )
 
   EARLY_STARTUP_PRINT( "äöüÄÖÜ\r\n" )
   int a = printf( "äöüÄÖÜ\r\n" );
@@ -427,6 +433,13 @@ static void stage2( void ) {
   EARLY_STARTUP_PRINT( "a = %d, b = %d, c = %d, d = %d, e = %d, f = %d\r\n",
     a, b, c, d, e, f )
 
+  mount_mount_t* mount_command = malloc( sizeof( *mount_command ) );
+  if ( ! mount_command ) {
+    EARLY_STARTUP_PRINT( "Unable to allocate space for mount request\r\n" )
+    exit( 1 );
+  }
+  memset( mount_command, 0, sizeof( *mount_command ) );
+
   EARLY_STARTUP_PRINT( "Just looping around with nops :O\r\n" )
   while( true ) {
     __asm__ __volatile__( "nop" );
@@ -455,8 +468,6 @@ static void stage2( void ) {
  * @return
  */
 int main( int argc, char* argv[] ) {
-  // variables
-  uintptr_t device_tree;
   // check parameter count
   if ( argc < 4 ) {
     EARLY_STARTUP_PRINT(
@@ -497,6 +508,15 @@ int main( int argc, char* argv[] ) {
     EARLY_STARTUP_PRINT( "ERROR: Invalid device tree header!\r\n" );
     return -1;
   }
+
+  // extract boot arguments
+  bootargs = ( char* )fdt_getprop(
+    ( void* )device_tree,
+    fdt_path_offset( ( void* )device_tree, "/chosen" ),
+    "bootargs",
+    &bootargs_length
+  );
+  EARLY_STARTUP_PRINT( "bootargs: %.*s\r\n", bootargs_length, bootargs )
 
   // debug print
   EARLY_STARTUP_PRINT(

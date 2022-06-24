@@ -10,8 +10,7 @@ cppcheck:
 		--platform=$(CPPCHECK_PLATFORM) \
 		--include=$(CPPCHECK_KERNEL_INCLUDE) \
 		--project=$(CPPCHECK_KERNEL_PROJECT) \
-		--suppressions-list=$(CPPCHECK_SUPPRESS) \
-		-U__CYGWIN__ -U__APPLE__ -v
+		-U__CYGWIN__ -U__APPLE__ -U__GNU_VISIBLE -UASSEMBLER_FILE -v
 	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
 		--platform=$(CPPCHECK_PLATFORM) \
 		--include=$(CPPCHECK_LIBRARY_INCLUDE) \

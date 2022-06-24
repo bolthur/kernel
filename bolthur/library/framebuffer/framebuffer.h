@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _FRAMEBUFFER_H )
+#ifndef _FRAMEBUFFER_H
 #define _FRAMEBUFFER_H
 
 #endif

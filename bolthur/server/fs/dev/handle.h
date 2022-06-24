@@ -22,7 +22,7 @@
 #include <sys/stat.h>
 #include "../../../library/collection/list/list.h"
 
-#if !defined( _HANDLE_H )
+#ifndef _HANDLE_H
 #define _HANDLE_H
 
 typedef struct {

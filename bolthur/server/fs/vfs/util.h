@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if !defined( _UTIL_H )
+#ifndef _UTIL_H
 #define _UTIL_H
 
 char* ltrim( char*, char );

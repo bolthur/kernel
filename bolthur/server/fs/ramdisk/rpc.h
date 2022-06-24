@@ -20,7 +20,7 @@
 #include <stdbool.h>
 #include <sys/bolthur.h>
 
-#if !defined( _RPC_H )
+#ifndef _RPC_H
 #define _RPC_H
 
 bool rpc_init( void );

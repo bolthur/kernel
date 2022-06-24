@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _AVL_H )
+#ifndef _AVL_H
 #define _AVL_H
 
 #include <stdint.h>

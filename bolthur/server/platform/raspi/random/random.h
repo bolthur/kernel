@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <sys/bolthur.h>
 
-#if !defined( _RANDOM_H )
+#ifndef _RANDOM_H
 #define _RANDOM_H
 
 extern int iomem_fd;

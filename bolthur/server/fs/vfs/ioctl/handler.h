@@ -23,7 +23,7 @@
 #include "../vfs.h"
 #include "../file/handle.h"
 
-#if !defined( _IOCTL_HANDLER_H )
+#ifndef _IOCTL_HANDLER_H
 #define _IOCTL_HANDLER_H
 
 typedef struct {

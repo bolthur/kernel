@@ -19,7 +19,7 @@
 
 #include <libtar.h>
 
-#if !defined( _RAMDISK_H )
+#ifndef _RAMDISK_H
 #define _RAMDISK_H
 
 #define MOUNT_POINT "/ramdisk"

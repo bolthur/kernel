@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include <sys/bolthur.h>
 
-#if !defined( _MMIO_H )
+#ifndef _MMIO_H
 #define _MMIO_H
 
 extern void* mmio_start;

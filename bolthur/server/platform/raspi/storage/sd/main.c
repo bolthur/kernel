@@ -28,6 +28,8 @@
 
 // for testing
 #include "../../../../../library/fs/mbr.h"
+#include "../../../../../library/fs/fat.h"
+#include "../../../../../library/fs/ext2.h"
 
 /**
  * @fn int main(int, char*[])
@@ -39,17 +41,19 @@
  */
 int main( __unused int argc, __unused char* argv[] ) {
   // allocate space for mbr
-  void* buffer = malloc( sizeof( mbr_t ) );
+  size_t mbr_size = sizeof( uint8_t ) * 512;
+  uint8_t* buffer = malloc( mbr_size );
   if ( ! buffer ) {
     EARLY_STARTUP_PRINT(
       "Unable to allocate space for mbr: %s\r\n",
       strerror( errno ) )
     return -1;
   }
+  // clearout
+  memset( buffer, 0, mbr_size );
+  // print something
   EARLY_STARTUP_PRINT( "buffer = %p, end = %p\r\n",
-    buffer,
-    ( void* )( ( uintptr_t )buffer + sizeof( mbr_t ) )
-  )
+    buffer, ( void* )( buffer + mbr_size ) )
   // setup emmc
   EARLY_STARTUP_PRINT( "Setup sd interface\r\n" )
   if( ! sd_init() ) {
@@ -61,50 +65,29 @@ int main( __unused int argc, __unused char* argv[] ) {
   }
   // try to read mbr from card
   EARLY_STARTUP_PRINT( "Parsing mbr with partition information\r\n" )
-  if ( ! sd_transfer_block(
-    ( uint32_t* )buffer,
-    sizeof( mbr_t ),
-    0,
-    SD_OPERATION_READ
-  ) ) {
+  if ( ! sd_transfer_block( ( uint32_t* )buffer, mbr_size, 0, SD_OPERATION_READ ) ) {
     EARLY_STARTUP_PRINT(
       "Error while reading mbr from card: %s\r\n",
       sd_last_error()
     )
     return -1;
   }
-  mbr_t* bpb = buffer;
 
+  uint16_t* signature = ( uint16_t* )( buffer + PARTITION_TABLE_SIGNATURE_OFFSET );
+  EARLY_STARTUP_PRINT( "Signature within mbr: %#"PRIx16"\r\n", *signature )
   // check signature
   EARLY_STARTUP_PRINT( "Check signature\r\n" )
-  if (
-    bpb->signatur[ 0 ] != 0x55
-    && bpb->signatur[ 1 ] != 0xAA
-  ) {
+  if ( *signature != PARTITION_TABLE_SIGNATURE ) {
     EARLY_STARTUP_PRINT(
-      "Invalid signature within mbr: %#"PRIx8", %#"PRIx8"\r\n",
-      bpb->signatur[ 0 ],
-      bpb->signatur[ 1 ]
-    )
+      "Invalid signature within mbr: %#"PRIx16"\r\n", *signature )
     return -1;
   }
-
-  // loop through partitions and print type
-  for ( int i = 0; i < 4; i++ ) {
-    EARLY_STARTUP_PRINT(
-      "partition %d has type %#"PRIx8"\r\n",
-      i,
-      bpb->partition_table[ i ].data.system_id
-    )
-  }
-
-  //return -1;
 
   // enable rpc
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
 
-  EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
+  /// FIXME: ADD IOCTL COMMANDS
   // allocate memory for add request
   vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
@@ -115,8 +98,30 @@ int main( __unused int argc, __unused char* argv[] ) {
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   strncpy( msg->file_path, "/dev/sd", PATH_MAX - 1 );
+  EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
   // perform add request
   send_vfs_add_request( msg, 0, 0 );
+
+  // loop through partitions and print type
+  for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
+    mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
+      buffer + PARTITION_TABLE_OFFSET + ( i * sizeof( mbr_table_entry_t ) ) );
+    EARLY_STARTUP_PRINT(
+      "partition %"PRIu32" has type %#"PRIx8"\r\n",
+      i, entry->data.system_id )
+    // handle invalid
+    if ( 0 == entry->data.system_id ) {
+      continue;
+    }
+    // clear memory
+    memset( msg, 0, sizeof( vfs_add_request_t ) );
+    // prepare message structure
+    msg->info.st_mode = S_IFCHR;
+    snprintf( msg->file_path, PATH_MAX, "/dev/sd%"PRIu32, i );
+    EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
+    // perform add request
+    send_vfs_add_request( msg, 0, 0 );
+  }
   // free again
   free( msg );
 
