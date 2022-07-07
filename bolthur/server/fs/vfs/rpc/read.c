@@ -190,6 +190,8 @@ void rpc_handle_read(
     if ( errno ) {
       response->len = -errno;
       bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+      free( request );
+      free( response );
       return;
     }
     free( request );

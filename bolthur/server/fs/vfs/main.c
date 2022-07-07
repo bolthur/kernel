@@ -118,6 +118,16 @@ int main( __unused int argc, __unused char* argv[] ) {
     EARLY_STARTUP_PRINT( "Unable to register handler exit!\r\n" )
     return -1;
   }
+  bolthur_rpc_bind( RPC_VFS_ACQUIRE, rpc_handle_acquire );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler acquire!\r\n" )
+    return -1;
+  }
+  bolthur_rpc_bind( RPC_VFS_RELEASE, rpc_handle_release );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler release!\r\n" )
+    return -1;
+  }
 
   EARLY_STARTUP_PRINT( "entering wait for rpc loop!\r\n" )
   // enable rpc and wait

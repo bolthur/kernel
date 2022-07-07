@@ -24,6 +24,9 @@
 
 extern pid_t vfs_pid;
 
+void rpc_handle_acquire( size_t, pid_t, size_t, size_t );
+void rpc_handle_acquire_async( size_t, pid_t, size_t, size_t );
+
 void rpc_handle_add( size_t, pid_t, size_t, size_t );
 void rpc_handle_add_async( size_t, pid_t, size_t, size_t );
 
@@ -36,6 +39,9 @@ void rpc_handle_close( size_t, pid_t, size_t, size_t );
 
 void rpc_handle_read( size_t, pid_t, size_t, size_t );
 void rpc_handle_read_async( size_t, pid_t, size_t, size_t );
+
+void rpc_handle_release( size_t, pid_t, size_t, size_t );
+void rpc_handle_release_async( size_t, pid_t, size_t, size_t );
 
 void rpc_handle_write( size_t, pid_t, size_t, size_t );
 void rpc_handle_write_async( size_t, pid_t, size_t, size_t );

@@ -44,8 +44,8 @@ void rpc_handle_exit(
   vfs_close_response_t response = { .status = -EINVAL };
   // destroy all handles of origin
   handle_destory_all( origin );
-  // FIXME: Destroy all handles where current origin is handler
-  // FIXME: Remove all files added by origin
+  // FIXME: Remove all files where current origin is handler, e.g. devices
+  // FIXME: Release all acquired mount points of current origin
   // return
   response.status = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );

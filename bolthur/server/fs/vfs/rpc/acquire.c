@@ -27,79 +27,55 @@
 #include "../file/handle.h"
 
 /**
- * @fn void rpc_handle_write_async(size_t, pid_t, size_t, size_t)
- * @brief Internal helper to continue asynchronous started write
+ * @fn void rpc_handle_acquire_async(size_t, pid_t, size_t, size_t)
+ * @brief Internal helper to continue asynchronous started acquire mount point
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
- *
- * @todo add return on error
  */
-void rpc_handle_write_async(
+void rpc_handle_acquire_async(
   size_t type,
   __unused pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
-  vfs_write_response_t response = { .len = -EINVAL };
+  vfs_acquire_response_t response = { .status = -EINVAL };
   // get matching async data
-  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
-    type,
-    response_info
-  );
+  bolthur_async_data_t* async_data =
+    bolthur_rpc_pop_async( type, response_info );
   if ( ! async_data ) {
     return;
   }
   // handle no data
   if( ! data_info ) {
-    return;
-  }
-  response.len = -ENOMEM;
-  // original request
-  vfs_write_request_t* request = async_data->original_data;
-  // cache origin and rpc necessary for getting handle and return to correct target
-  if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
   // fetch response
   _syscall_rpc_get_data( &response, sizeof( response ), data_info, false );
   if ( errno ) {
+    response.status = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
-  handle_container_t* container;
-  // try to get handle information
-  int result = handle_get(
-    &container,
-    async_data->original_origin,
-    request->handle
-  );
-  // handle error
-  if ( 0 > result ) {
-    response.len = result;
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
-    return;
-  }
-  // update offsets and return
-  if ( 0 < response.len ) {
-    container->pos += ( off_t )response.len;
-  }
+  // just return response
   bolthur_rpc_return( type, &response, sizeof( response ), async_data );
 }
 
 /**
- * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
- * @brief Handle write request
+ * @fn void rpc_handle_acquire(size_t, pid_t, size_t, size_t)
+ * @brief Handle acquire mount point request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo track acquired mount points for cleanup on exit
  */
-void rpc_handle_write(
+void rpc_handle_acquire(
   size_t type,
   pid_t origin,
   size_t data_info,
@@ -107,82 +83,69 @@ void rpc_handle_write(
 ) {
   // handle async return in case response info is set
   if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
-    rpc_handle_write_async( type, origin, data_info, response_info );
+    rpc_handle_open_async( type, origin, data_info, response_info );
     return;
   }
-  // normal request handling starts here
-  vfs_write_response_t response = { .len = -ENOMEM };
-  vfs_write_request_t* request = malloc( sizeof( *request ) );
+  vfs_acquire_response_t response = { .status = -EINVAL };
+  vfs_acquire_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  handle_container_t* container;
   // clear variables
   memset( request, 0, sizeof( *request ) );
-  // switch error return
-  response.len = -EINVAL;
   // handle no data
   if( ! data_info ) {
-    free( request );
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
     return;
   }
   // fetch rpc data
   _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
   // handle error
   if ( errno ) {
-    free( request );
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // try to get handle information
-  int result = handle_get( &container, origin, request->handle );
-  // handle error
-  if ( 0 > result ) {
-    response.len = result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  // special handling for null device
-  if ( 0 == strcmp( container->path, "/dev/null" ) ) {
-    response.len = ( ssize_t )request->len;
+  // get node by path
+  vfs_node_t* mount_point = vfs_extract_mountpoint( request->file_path );
+  vfs_node_t* by_path = vfs_node_by_path( request->file_path );
+  // check for path not found
+  if ( ! by_path || ! mount_point ) {
+    response.status = -EINVAL;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  // adjust path
-  strncpy( request->file_path, container->path, PATH_MAX );
-  if ( vfs_pid != container->mount_point->pid ) {
-    // set handler and path, and finally redirect request
-    request->target_process = container->handler;
-    // perform async rpc
-    bolthur_rpc_raise(
-      type,
-      container->mount_point->pid,
-      request,
-      sizeof( *request ),
-      false,
-      type,
-      request,
-      sizeof( *request ),
-      origin,
-      data_info
-    );
-    if ( errno ) {
-      response.len = -errno;
+  // get full path of mount point
+  char* mount_point_path = vfs_path_bottom_up( mount_point );
+  // check for handling by VFS
+  if (
+    strlen( mount_point_path ) == strlen( request->file_path )
+    && 0 == strcmp( mount_point_path, request->file_path )
+  ) {
+    // handle already transferred
+    if ( by_path->pid != vfs_pid ) {
+      response.status = -EPERM;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
       free( request );
       return;
     }
+    // just set current process as mount point owner
+    by_path->pid = origin;
+    // return success
+    response.status = 0;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
+  // set handler in request
+  request->handler = origin;
   // perform async rpc
   bolthur_rpc_raise(
     type,
-    container->handler,
+    mount_point->pid,
     request,
     sizeof( *request ),
     false,
@@ -193,7 +156,7 @@ void rpc_handle_write(
     data_info
   );
   if ( errno ) {
-    response.len = -errno;
+    response.status = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;

@@ -11,6 +11,7 @@ vfs_LDADD = \
 vfs_SOURCES = \
   file/handle.c \
   ioctl/handler.c \
+  rpc/acquire.c \
   rpc/add.c \
   rpc/close.c \
   rpc/exit.c \
@@ -18,6 +19,7 @@ vfs_SOURCES = \
   rpc/ioctl.c \
   rpc/open.c \
   rpc/read.c \
+  rpc/release.c \
   rpc/remove.c \
   rpc/seek.c \
   rpc/stat.c \
