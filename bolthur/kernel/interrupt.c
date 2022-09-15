@@ -26,7 +26,7 @@
 #include "mm/heap.h"
 #include "rpc/generic.h"
 #include "interrupt.h"
-#if defined( PRINT_EVENT )
+#if defined( PRINT_INTERRUPT  )
   #include "debug/debug.h"
 #endif
 
@@ -76,7 +76,7 @@ static avl_tree_t* tree_by_type( interrupt_type_t type ) {
     return NULL;
   }
   // debug output
-  #if defined( PRINT_EVENT )
+  #if defined( PRINT_INTERRUPT  )
     DEBUG_OUTPUT( "Called tree_by_type( %d )\r\n", type )
   #endif
   // setup interrupt manager if not done existing
@@ -146,7 +146,7 @@ static int32_t kernel_block_list_lookup( const list_item_t* a, const void* data 
   // get callback from data
   interrupt_callback_wrapper_t* wrapper = a->data;
   // debug output
-  #if defined( PRINT_EVENT )
+  #if defined( PRINT_INTERRUPT  )
     DEBUG_OUTPUT( "Check bound callback at %p\r\n", wrapper )
   #endif
   // handle match
@@ -174,7 +174,7 @@ static int32_t process_block_list_lookup( const list_item_t* a, const void* data
   // get callback from data
   task_process_t* proc = a->data;
   // debug output
-  #if defined( PRINT_EVENT )
+  #if defined( PRINT_INTERRUPT  )
     DEBUG_OUTPUT( "Check bound callback at %d\r\n", proc->id )
   #endif
   // handle match
@@ -207,7 +207,7 @@ bool interrupt_unregister_handler(
     return false;
   }
   // debug output
-  #if defined( PRINT_EVENT )
+  #if defined( PRINT_INTERRUPT  )
     DEBUG_OUTPUT(
       "Called interrupt_unregister_handler( %zu, %#"PRIxPTR", %d, %s )\r\n",
       num,
@@ -258,7 +258,7 @@ bool interrupt_unregister_handler(
   block = INTERRUPT_GET_BLOCK( node );
 
   // debug output
-  #if defined( PRINT_EVENT )
+  #if defined( PRINT_INTERRUPT  )
     DEBUG_OUTPUT( "Checking for not bound interrupt callback\r\n" )
   #endif
   list_manager_t* list = NULL;
@@ -274,7 +274,7 @@ bool interrupt_unregister_handler(
   // handle no match
   if ( ! match ) {
     // debug output
-    #if defined( PRINT_EVENT )
+    #if defined( PRINT_INTERRUPT  )
       DEBUG_OUTPUT( "Callback not bound, returning success\r\n" )
     #endif
     return true;
@@ -318,7 +318,7 @@ bool interrupt_register_handler(
     return false;
   }
   // debug output
-  #if defined( PRINT_EVENT )
+  #if defined( PRINT_INTERRUPT  )
     DEBUG_OUTPUT(
       "Called interrupt_register_handler( %zu, %#"PRIxPTR", %d, %s )\r\n",
       num,
@@ -421,7 +421,7 @@ bool interrupt_register_handler(
   }
 
   // debug output
-  #if defined( PRINT_EVENT )
+  #if defined( PRINT_INTERRUPT  )
     DEBUG_OUTPUT( "Checking for already bound interrupt callback\r\n" )
   #endif
   list_manager_t* list = NULL;
@@ -437,7 +437,7 @@ bool interrupt_register_handler(
   // if already existing, just return success
   if ( match ) {
     // debug output
-    #if defined( PRINT_EVENT )
+    #if defined( PRINT_INTERRUPT  )
       DEBUG_OUTPUT( "Callback already bound, returning success\r\n" )
     #endif
     return true;
@@ -576,7 +576,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
     // handle error by skip
     if ( ! rpc ) {
       // debug output
-      #if defined( PRINT_EVENT )
+      #if defined( PRINT_INTERRUPT  )
         DEBUG_OUTPUT( "Unable to raise rpc\r\n" )
       #endif
       current = current->next;

@@ -61,6 +61,7 @@ int main( __unused int argc, __unused char* argv[] ) {
       "Error while initializing sd interface: %s\r\n",
       sd_last_error()
     )
+    free( buffer );
     return -1;
   }
   // try to read mbr from card

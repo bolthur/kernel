@@ -18,7 +18,7 @@
  */
 
 #include <errno.h>
-#include "rpc.h"
+#include "../rpc.h"
 
 /**
  * @fn bool rpc_init(void)

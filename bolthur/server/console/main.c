@@ -78,6 +78,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    free( msg );
     return -1;
   }
   // FIXME: SET READ HANDLER FOR STDIN

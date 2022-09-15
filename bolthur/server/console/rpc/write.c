@@ -105,6 +105,7 @@ void rpc_handle_write(
       EARLY_STARTUP_PRINT( "Unable to open %s\r\n", console->path )
       response.len = -EIO;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( terminal );
       free( request );
       return;
     }
@@ -125,6 +126,7 @@ void rpc_handle_write(
   if ( -1 == result ) {
     response.len = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( terminal );
     free( request );
     return;
   }

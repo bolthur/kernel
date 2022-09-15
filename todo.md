@@ -1,9 +1,6 @@
 
 # Things to be done
 
-* [ ] Change include from `<` and `>` for local files to `"`
-
-* [ ] Replace thirdparty/dtc/libfdt by usage of the one from sysroot
 * [ ] Replace magic values at serial init by defines
 * [ ] FPU
   * [ ] Extend undefined exception to check for fpu error with clear of flag

@@ -1,7 +1,7 @@
 
 AC_PREREQ([2.71])
 
-AC_INIT([bolthur-library], [0.1.0-dev], [https://github.com/bolthur/driver/issues], [bolthur-library], [https://github.com/bolthur/library])
+AC_INIT([bolthur-library], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-library], [https://github.com/bolthur/kernel])
 
 AC_COPYRIGHT([Copyright (C) 2018 - 2022 bolthur project])
 
@@ -63,7 +63,7 @@ BOLTHUR_PROG_READLINK
 BOLTHUR_LANG_PROGRAM
 # set target and flags
 BOLTHUR_SET_DEVICE
-BOLTHUR_DRIVER_SET_HOST
+BOLTHUR_SERVER_SET_HOST
 # set rest of flags
 BOLTHUR_SERVER_SET_FLAG
 

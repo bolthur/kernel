@@ -61,8 +61,6 @@ noreturn void vector_data_abort_handler( cpu_register_context_t* cpu ) {
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "origin = %d\r\n", origin )
   #endif
-  // get context
-  cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT(
@@ -70,7 +68,8 @@ noreturn void vector_data_abort_handler( cpu_register_context_t* cpu ) {
       virt_data_fault_address()
     )
     DEBUG_OUTPUT( "fault_status = %#"PRIxPTR"\r\n", virt_data_status() )
-    DUMP_REGISTER( cpu )
+    // dump context
+    DUMP_REGISTER( interrupt_get_context( cpu ) )
     if ( EVENT_ORIGIN_USER == origin ) {
       DEBUG_OUTPUT(
         "process id: %d\r\n",
