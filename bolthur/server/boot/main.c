@@ -34,6 +34,7 @@
 #include "ramdisk.h"
 #include "../libhelper.h"
 #include "../libdev.h"
+#include "../libmanager.h"
 #include "../libmount.h"
 
 uintptr_t ramdisk_compressed;
@@ -44,7 +45,8 @@ size_t ramdisk_shared_id;
 size_t ramdisk_read_offset = 0;
 pid_t pid = 0;
 TAR *disk = NULL;
-int fd_dev = 0;
+int fd_dev_manager = 0;
+int fd_server_manager = 0;
 // variables
 uintptr_t device_tree;
 char* bootargs;
@@ -152,31 +154,30 @@ static bool device_exists( const char* path ) {
 }
 
 /**
- * @fn void wait_for_device(const char*)
+ * @fn void wait_for_vfs_path(const char*)
  * @brief Wait for device exists by querying vfs with a sleep between
  *
  * @param path
  */
-static void wait_for_device( const char* path ) {
+static void wait_for_vfs_path( const char* path ) {
   do {
     sleep( 2 );
   } while( ! device_exists( path ) );
 }
 
 /**
- * @fn pid_t execute_driver(const char*, const char*)
+ * @fn pid_t execute_server(const char*, const char*)
  * @brief Helper wraps start of a server
  *
  * @param path
  * @param device
  * @return
  */
-static pid_t execute_driver( const char* path, const char* device ) {
+static pid_t execute_server( const char* path, const char* device ) {
   pid_t proc;
   // allocate message
   dev_command_start_t* start = malloc( sizeof( *start ) );
   if ( ! start ) {
-    EARLY_STARTUP_PRINT( "Unable to allocate command\r\n" )
     return 0;
   }
   // clear out
@@ -185,7 +186,7 @@ static pid_t execute_driver( const char* path, const char* device ) {
   strncpy( start->path, path, PATH_MAX - 1 );
   // raise request
   int result = ioctl(
-    fd_dev,
+    fd_dev_manager,
     IOCTL_BUILD_REQUEST(
       DEV_START,
       sizeof( *start ),
@@ -202,7 +203,50 @@ static pid_t execute_driver( const char* path, const char* device ) {
   memcpy( &proc, start, sizeof( proc ) );
   free( start );
   // wait for device
-  wait_for_device( device );
+  wait_for_vfs_path( device );
+  // return pid finally
+  return proc;
+}
+
+/**
+ * @fn pid_t execute_manager(const char*, const char*)
+ * @brief Helper wraps start of a manager
+ *
+ * @param path
+ * @param device
+ * @return
+ */
+static pid_t execute_manager( const char* path, const char* manager ) {
+  pid_t proc;
+  // allocate message
+  manager_command_start_t* start = malloc( sizeof( *start ) );
+  if ( ! start ) {
+    return 0;
+  }
+  // clear out
+  memset( start, 0, sizeof( *start ) );
+  // prepare command content
+  strncpy( start->path, path, PATH_MAX - 1 );
+  // raise request
+  int result = ioctl(
+    fd_server_manager,
+    IOCTL_BUILD_REQUEST(
+      MANAGER_START,
+      sizeof( *start ),
+      IOCTL_RDWR
+    ),
+    start
+  );
+  // handle error
+  if ( -1 == result ) {
+    free( start );
+    return 0;
+  }
+  // extract process
+  memcpy( &proc, start, sizeof( proc ) );
+  free( start );
+  // wait for device
+  wait_for_vfs_path( manager );
   // return pid finally
   return proc;
 }
@@ -257,6 +301,8 @@ static void stage1( void ) {
     }
     // handle no fork
     if ( 0 == inner_forked_process ) {
+      // wait for vfs to be ready
+      _syscall_rpc_wait_for_ready( getppid() );
       // start /dev/ramdisk
       size_t ramdisk_size;
       void* ramdisk_image = ramdisk_lookup_file( disk, "ramdisk/server/fs/ramdisk", &ramdisk_size );
@@ -271,6 +317,8 @@ static void stage1( void ) {
       }
       _syscall_rpc_wait_for_ready( forked_process );
       if ( 0 == inner_forked_process ) {
+        // wait for parent to be ready
+        _syscall_rpc_wait_for_ready( getppid() );
         // build command
         char* ramdisk_cmd[] = { "ramdisk", shm_id_str, NULL, };
         // call for replace and handle error
@@ -317,9 +365,10 @@ static void stage1( void ) {
   _syscall_rpc_set_ready( true );
   _syscall_rpc_wait_for_ready( forked_process );
 
-  wait_for_device( "/dev" );
-  wait_for_device( "/dev/manager" );
-  wait_for_device( "/dev/ramdisk" );
+  wait_for_vfs_path( "/dev" );
+  wait_for_vfs_path( "/dev/manager" );
+  wait_for_vfs_path( "/dev/manager/device" );
+  wait_for_vfs_path( "/dev/ramdisk" );
   // close ramdisk
   EARLY_STARTUP_PRINT( "Closing early ramdisk\r\n" );
   if ( 0 != tar_close( disk ) ) {
@@ -334,58 +383,180 @@ static void stage1( void ) {
  * @brief Helper to get up the necessary additional drivers for a running system
  */
 static void stage2( void ) {
+  // start manager server
+  EARLY_STARTUP_PRINT( "Starting and waiting for server manager...\r\n" )
+  pid_t manager = execute_server( "/ramdisk/server/manager/server", "/dev/manager/server" );
+  // open manager device
+  fd_server_manager = open( "/dev/manager/server", O_RDWR );
+  if ( -1 == fd_server_manager ) {
+    EARLY_STARTUP_PRINT( "ERROR: Cannot open server manager: %s!\r\n", strerror( errno ) )
+    exit( -1 );
+  }
+  EARLY_STARTUP_PRINT( "fd_server_manager = %d\r\n", fd_server_manager )
+
   // start mailbox server
   EARLY_STARTUP_PRINT( "Starting and waiting for iomem server...\r\n" )
-  pid_t iomem = execute_driver( "/ramdisk/server/iomem", "/dev/iomem" );
+  pid_t iomem = execute_server( "/ramdisk/server/iomem", "/dev/iomem" );
 
   // start random server
   EARLY_STARTUP_PRINT( "Starting and waiting for random server...\r\n" )
-  pid_t rnd = execute_driver( "/ramdisk/server/random", "/dev/random" );
+  pid_t rnd = execute_server( "/ramdisk/server/random", "/dev/random" );
 
   // start framebuffer driver and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for framebuffer server...\r\n" )
-  pid_t framebuffer = execute_driver( "/ramdisk/server/framebuffer", "/dev/framebuffer" );
+  pid_t framebuffer = execute_server( "/ramdisk/server/framebuffer", "/dev/framebuffer" );
 
   // start system console and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for console server...\r\n" )
-  pid_t console = execute_driver( "/ramdisk/server/console", "/dev/console" );
+  pid_t console = execute_server( "/ramdisk/server/console", "/dev/console" );
 
   // start tty and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )
-  pid_t terminal = execute_driver( "/ramdisk/server/terminal", "/dev/terminal" );
+  pid_t terminal = execute_server( "/ramdisk/server/terminal", "/dev/terminal" );
 
   // start sd server
   EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
-  pid_t sd = execute_driver( "/ramdisk/server/storage/sd", "/dev/sd" );
+  pid_t sd = execute_server( "/ramdisk/server/storage/sd", "/dev/sd" );
 
   // start mount server
-  EARLY_STARTUP_PRINT( "Starting and waiting for mount server ...\r\n" );
-  pid_t mount = execute_driver( "/ramdisk/server/fs/mount", "/dev/mount" );
+  EARLY_STARTUP_PRINT( "Starting and waiting for mount server ...\r\n" )
+  pid_t mount = execute_manager( "/ramdisk/server/manager/mount", "/manager/mount" );
 
+  // redirect stdin, stdout and stderr
   EARLY_STARTUP_PRINT(
-    "iomem = %d, rnd = %d, console = %d, terminal = %d, "
+    "server_manager = %d, iomem = %d, rnd = %d, console = %d, terminal = %d, "
     "framebuffer = %d, sd = %d, mount = %d\r\n",
-    iomem, rnd, console, terminal, framebuffer, sd, mount )
+    manager, iomem, rnd, console, terminal, framebuffer, sd, mount )
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
-  FILE* fp = freopen( "/dev/stdin", "r", stdin );
-  if ( ! fp ) {
+  FILE* fpin = freopen( "/dev/stdin", "r", stdin );
+  if ( ! fpin ) {
     EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
     exit( 1 );
   }
-  EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", fp->_file )
-  fp = freopen( "/dev/stdout", "w", stdout );
-  if ( ! fp ) {
+  EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", fpin->_file )
+  FILE* fpout = freopen( "/dev/stdout", "w", stdout );
+  if ( ! fpout ) {
     EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
     exit( 1 );
   }
-  EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", fp->_file )
-  fp = freopen( "/dev/stderr", "w", stderr );
-  if ( ! fp ) {
+  EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", fpout->_file )
+  FILE* fperr = freopen( "/dev/stderr", "w", stderr );
+  if ( ! fperr ) {
     EARLY_STARTUP_PRINT( "Unable to reroute stderr\r\n" )
     exit( 1 );
   }
-  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fp->_file )
+  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fperr->_file )
+
+  // determine root device and partition type from config
+  EARLY_STARTUP_PRINT( "Extracting root device and partition type from config...\r\n" )
+  char* p = strtok( bootargs, " " );
+  char* root_device = NULL;
+  char* root_partition_type = NULL;
+  size_t len_root_device = 5;
+  size_t len_root_partition_type = 11;
+  while ( p ) {
+    EARLY_STARTUP_PRINT( "p = \"%s\"\r\n", p )
+    // handle root information
+    if ( 0 == strncmp( p, "root=", len_root_device ) && ! root_device ) {
+      size_t size = sizeof( char )* ( strlen( p ) - len_root_device + 1 );
+      // allocate space and clear out
+      root_device = malloc( size );
+      if ( ! root_device ) {
+        EARLY_STARTUP_PRINT( "Unable to allocate space for root partition\r\n" )
+        exit( 1 );
+      }
+      memset( root_device, 0, size );
+      // copy stuff
+      strcpy( root_device, p + len_root_device );
+    } else if (
+      0 == strncmp( p, "rootfstype=", len_root_partition_type )
+      && ! root_partition_type
+    ) {
+      size_t size = sizeof( char )* ( strlen( p ) - len_root_partition_type + 1 );
+      // allocate space and clear out
+      root_partition_type = malloc( size );
+      if ( ! root_partition_type ) {
+        EARLY_STARTUP_PRINT( "Unable to allocate space for root partition\r\n" )
+        exit( 1 );
+      }
+      memset( root_partition_type, 0, size );
+      // copy stuff
+      strcpy( root_partition_type, p + len_root_partition_type );
+    }
+    // get next one
+    p = strtok(NULL, " ");
+  }
+  // handle nothing found
+  if ( ! root_device || ! root_partition_type ) {
+    EARLY_STARTUP_PRINT( "No root device and/or no partition type found!\r\n" )
+    exit( 1 );
+  }
+  // print found device and partition
+  EARLY_STARTUP_PRINT(
+    "root device = \"%s\", partition = \"%s\"\n",
+    root_device,
+    root_partition_type
+  )
+  // open /dev/mount
+  int fd_mount = open( "/manager/mount", O_RDWR );
+  if ( -1 == fd_mount ) {
+    EARLY_STARTUP_PRINT( "ERROR: Cannot open /manager/mount: %s!\r\n", strerror( errno ) );
+    exit( 1 );
+  }
+  EARLY_STARTUP_PRINT( "fd_mount = %d\r\n", fd_mount )
+  // allocate mound command
+  EARLY_STARTUP_PRINT( "Allocating space for mount command...\r\n" )
+  mount_mount_t* mount_command = malloc( sizeof( *mount_command ) );
+  if ( ! mount_command ) {
+    EARLY_STARTUP_PRINT( "Unable to allocate space for mount request\r\n" )
+    exit( 1 );
+  }
+  // clear out space
+  memset( mount_command, 0, sizeof( *mount_command ) );
+  // populate mount command
+  EARLY_STARTUP_PRINT( "Populating mount command...\r\n" )
+  strncpy( mount_command->mount_point, "/", PATH_MAX - 1 );
+  strncpy( mount_command->device, root_device, PATH_MAX - 1 );
+  strncpy( mount_command->fs_type, root_partition_type, 99 );
+  // mount root partition
+  EARLY_STARTUP_PRINT( "Requesting mount...\r\n" )
+  // raise request
+  __unused int result = ioctl(
+    fd_mount,
+    IOCTL_BUILD_REQUEST(
+      MOUNT_MOUNT,
+      sizeof( *mount_command ),
+      IOCTL_RDWR
+    ),
+    mount_command
+  );
+  // handle error
+  /*if ( -1 == result ) {
+    EARLY_STARTUP_PRINT( "Unable to raise mount of root partition\r\n" )
+    exit( 1 );
+  }
+  // extract return
+  int ret = 0;
+  memcpy( &ret, mount_command, sizeof( ret ) );
+  if ( 0 != ret ) {
+    EARLY_STARTUP_PRINT( "Mount request failed: %s\r\n", strerror( ret ) )
+    exit( 1 );
+  }*/
+  // free command and close file
+  free( mount_command );
+  close( fd_mount );
+  // print message
+  EARLY_STARTUP_PRINT(
+    "successfully mounted \"%s\" with partition = \"%s\" to /\r\n",
+    root_device, root_partition_type )
+  // free up device and partition type strings
+  free( root_device );
+  free( root_partition_type );
+
+  /// FIXME: Start authentication manager
+  /// FIXME: Start USB driver with all attached devices
+  /// FIXME: Start login console
 
   EARLY_STARTUP_PRINT( "size_t max = %zu\r\n", SIZE_MAX )
   EARLY_STARTUP_PRINT( "unsigned long long max = %llu\r\n", ULLONG_MAX )
@@ -432,13 +603,6 @@ static void stage2( void ) {
 
   EARLY_STARTUP_PRINT( "a = %d, b = %d, c = %d, d = %d, e = %d, f = %d\r\n",
     a, b, c, d, e, f )
-
-  mount_mount_t* mount_command = malloc( sizeof( *mount_command ) );
-  if ( ! mount_command ) {
-    EARLY_STARTUP_PRINT( "Unable to allocate space for mount request\r\n" )
-    exit( 1 );
-  }
-  memset( mount_command, 0, sizeof( *mount_command ) );
 
   EARLY_STARTUP_PRINT( "Just looping around with nops :O\r\n" )
   while( true ) {
@@ -505,7 +669,8 @@ int main( int argc, char* argv[] ) {
 
   // check device tree
   if ( 0 != fdt_check_header( ( void* )device_tree ) ) {
-    EARLY_STARTUP_PRINT( "ERROR: Invalid device tree header!\r\n" );
+    EARLY_STARTUP_PRINT( "ERROR: Invalid device tree header!\r\n" )
+    free( msg );
     return -1;
   }
 
@@ -533,9 +698,8 @@ int main( int argc, char* argv[] ) {
 
   tartype_t *mytype = malloc( sizeof( *mytype ) );
   if ( !mytype ) {
-    EARLY_STARTUP_PRINT(
-      "ERROR: Cannot allocate necessary memory for tar stuff!\r\n"
-    )
+    EARLY_STARTUP_PRINT( "ERROR: Cannot allocate necessary memory for tar stuff!\r\n" )
+    free( msg );
     return -1;
   }
   mytype->closefunc = my_tar_close;
@@ -546,18 +710,20 @@ int main( int argc, char* argv[] ) {
   EARLY_STARTUP_PRINT( "Starting deflate of init ramdisk\r\n" );
   if ( 0 != tar_open( &disk, "/ramdisk.tar", mytype, O_RDONLY, 0, 0 ) ) {
     EARLY_STARTUP_PRINT( "ERROR: Cannot open ramdisk!\r\n" );
+    free( msg );
     return -1;
   }
 
   // stage 1 init
   stage1();
   // open /dev
-  fd_dev = open( "/dev/manager", O_RDWR );
-  if ( -1 == fd_dev ) {
+  fd_dev_manager = open( "/dev/manager/device", O_RDWR );
+  if ( -1 == fd_dev_manager ) {
     EARLY_STARTUP_PRINT( "ERROR: Cannot open dev: %s!\r\n", strerror( errno ) );
+    free( msg );
     return -1;
   }
-  EARLY_STARTUP_PRINT( "fd_dev = %d\r\n", fd_dev )
+  EARLY_STARTUP_PRINT( "fd_dev_manager = %d\r\n", fd_dev_manager )
   // stage 2 init
   stage2();
 

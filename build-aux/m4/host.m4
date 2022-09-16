@@ -242,7 +242,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
   AC_SUBST(executable_format)
 ])
 
-AC_DEFUN([BOLTHUR_DRIVER_SET_HOST], [
+AC_DEFUN([BOLTHUR_APPLICATION_SET_HOST], [
   AH_TEMPLATE([OUTPUT_ENABLE], [Define to 1 to enable kernel print])
 
   # Test for general output enable

@@ -1,7 +1,7 @@
 
 ACLOCAL_AMFLAGS = -I build-aux/m4
 
-SUBDIRS = bolthur driver
+SUBDIRS = bolthur
 
 # cppcheck stuff
 .PHONY: cppcheck
@@ -20,6 +20,11 @@ cppcheck:
 		--platform=$(CPPCHECK_PLATFORM) \
 		--include=$(CPPCHECK_SERVER_INCLUDE) \
 		--project=$(CPPCHECK_SERVER_PROJECT) \
+		-U__CYGWIN__ -U__APPLE__ -UVMS -v
+	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
+		--platform=$(CPPCHECK_PLATFORM) \
+		--include=$(CPPCHECK_APPLICATION_INCLUDE) \
+		--project=$(CPPCHECK_APPLICATION_PROJECT) \
 		-U__CYGWIN__ -U__APPLE__ -UVMS -v
 
 ramdisk:

@@ -59,7 +59,7 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Sending device \"/dev\" to vfs\r\n" )
+  EARLY_STARTUP_PRINT( "Sending node \"/dev\" to vfs\r\n" )
   // allocate memory for add request
   size_t msg_size = sizeof( vfs_add_request_t ) + 1 * sizeof( size_t );
   vfs_add_request_t* msg = malloc( msg_size );
@@ -79,13 +79,23 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Set rpc ready flag\r\n" )
   _syscall_rpc_set_ready( true );
 
-  EARLY_STARTUP_PRINT( "Sending device \"/dev/manager\" to vfs\r\n" )
+  EARLY_STARTUP_PRINT( "Sending node \"/dev/manager\" to vfs\r\n" )
   // clear memory
   memset( msg, 0, msg_size );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   msg->device_info[ 0 ] = DEV_START;
   strncpy( msg->file_path, "/dev/manager", PATH_MAX - 1 );
+  // perform add request
+  send_vfs_add_request( msg, msg_size, 0 );
+
+  EARLY_STARTUP_PRINT( "Sending device \"/dev/manager/device\" to vfs\r\n" )
+  // clear memory
+  memset( msg, 0, msg_size );
+  // prepare message structure
+  msg->info.st_mode = S_IFCHR;
+  msg->device_info[ 0 ] = DEV_START;
+  strncpy( msg->file_path, "/dev/manager/device", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, msg_size, 0 );
   // free again

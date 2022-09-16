@@ -1,2 +1,2 @@
 
-SUBDIRS = library kernel server
+SUBDIRS = library kernel server application

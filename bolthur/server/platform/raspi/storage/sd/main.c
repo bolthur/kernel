@@ -26,7 +26,7 @@
 #include "sd.h"
 #include "../../../../libhelper.h"
 
-// for testing
+// for compilation testing
 #include "../../../../../library/fs/mbr.h"
 #include "../../../../../library/fs/fat.h"
 #include "../../../../../library/fs/ext2.h"

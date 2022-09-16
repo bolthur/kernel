@@ -21,8 +21,11 @@ import os
 import osproc
 import strutils
 import sequtils
+import strformat
 # thirdparty
 import zippy
+import std/parsecfg
+import std/streams
 
 # remove tmp dir again
 removeDir( "tmp" )
@@ -34,7 +37,7 @@ createDir( "tmp" )
 # check argument count
 let argc: int = paramCount()
 if argc != 4:
-  echo "Usage: ramdisk <driver path> <initrd name> <sysroot> <platform>"
+  echo "Usage: ramdisk <root path> <initrd name> <sysroot> <platform>"
   quit( 1 )
 
 # get command line arguments
@@ -44,7 +47,7 @@ let sysroot: string = paramStr( 3 )
 let config: string = paramStr( 4 )
 
 let font: string = joinPath( root_path, "..", "thirdparty", "font" )
-let driver: string = joinPath( root_path, "driver" )
+let application: string = joinPath( root_path, "bolthur", "application" )
 let server: string = joinPath( root_path, "bolthur", "server" )
 let bosl: string = joinPath( root_path, "..", "bosl" )
 
@@ -84,52 +87,100 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
       let splitted_head = split.head.split( DirSep )
       let executable = split.tail
 
-      # determine target folder
-      var target_folder = $DirSep
-      var last = len( splitted_head ) - 1
-      if executable == splitted_head[ last ]: last = last - 1
-
-      var pos = -1
+      # get destination information
+      var info_file = fmt"{$DirSep}";
       for idx, value in splitted_head:
-        if value == "driver" or value == "server" or value == "usr" or value == "font" or value == "bosl":
-          pos = idx
-      if pos != -1:
-        if pos + 1 < len( splitted_head ) and "platform" == splitted_head[ pos + 1 ]:
-          # strip out platform and platform name from path
-          var tmp_info = splitted_head
-          tmp_info.delete( pos + 1, pos + 2 )
-          if tmp_info.contains( "bosl" ):
-            target_folder &= tmp_info[ pos..^1 ].join( $DirSep )
-          else:
-            target_folder &= tmp_info[ pos..^2 ].join( $DirSep )
-        elif "font" == splitted_head[ pos ]:
-          target_folder &= splitted_head[ pos..^1 ].join( $DirSep )
-        else: 
-          target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
-      else:
-        pos = -1
+        if "build" == value: continue
+        info_file = join_path( info_file, value )
+      info_file = join_path( info_file, "config.ini" )
+      if fileExists( info_file ):
+        # load config
+        var dict = loadConfig( info_file )
+        # get necessary information
+        let place_type = dict.getSectionValue("general", "type")
+        var inner_path = dict.getSectionValue("general", "path")
+        var inner_path_splitted = inner_path.split( "/" )
+        # skip ramdisk without inner path
+        if "ramdisk" == place_type and 0 >= len( inner_path ): continue
 
-      var base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", target_folder )
-
-      # symlink handling
-      if not isEmptyOrWhitespace( symlink_src ):
-        createDir( base_path )
-        createSymlink( symlink_src, joinPath( base_path, executable ) )
-      else:
-        # special handling for boot
-        if executable == "boot":
-          copyFile( file, joinPath( getCurrentDir(), "tmp", executable ) )
+        var base_path = "";
+        if "ramdisk_compressed" == place_type:
+          base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", joinPath( inner_path_splitted ) )
+        elif "ramdisk_uncompressed" == place_type:
+          base_path = joinPath( getCurrentDir(), "tmp" )
         else:
-          createDir( base_path )
-          if compress:
-            writeFile( joinPath( base_path, executable & ".gz" ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
-          else:
-            copyFile( file, joinPath( base_path, executable ) )
+          echo "unknown type ", $place_type , " for ", file, " with path ", inner_path
+          continue
 
-#scan_directory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
+        createDir( base_path )
+        if not isEmptyOrWhitespace( symlink_src ):
+          echo symlink_src
+          createSymlink( symlink_src, joinPath( base_path, executable ) )
+        else:
+          if "ramdisk_uncompressed" == place_type:
+            copyFile( file, joinPath( base_path, executable ) );
+          else:
+            if compress:
+              writeFile( joinPath( base_path, executable & ".gz" ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
+            else:
+              copyFile( file, joinPath( base_path, executable ) )
+        continue
+
+      if -1 != path.find(sysroot):
+        let place_type = "image"
+        if "image" == place_type:
+          echo "unknown type ", $place_type , " for ", file
+          continue
+        #FIXME: implement image creation
+
+        # determine target folder
+        var target_folder = $DirSep
+        var last = len( splitted_head ) - 1
+        if executable == splitted_head[ last ]: last = last - 1
+
+        var pos = -1
+        for idx, value in splitted_head:
+          if value == "application" or value == "server" or value == "usr" or value == "font" or value == "bosl":
+            pos = idx
+        if pos != -1:
+          if pos + 1 < len( splitted_head ) and "platform" == splitted_head[ pos + 1 ]:
+            # strip out platform and platform name from path
+            var tmp_info = splitted_head
+            let first = pos + 1;
+            let last = pos + 2;
+            tmp_info.delete( first..last )
+            if tmp_info.contains( "bosl" ):
+              target_folder &= tmp_info[ pos..^1 ].join( $DirSep )
+            else:
+              target_folder &= tmp_info[ pos..^2 ].join( $DirSep )
+          elif "font" == splitted_head[ pos ]:
+            target_folder &= splitted_head[ pos..^1 ].join( $DirSep )
+          else:
+            target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
+        else:
+          pos = -1
+
+        var base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", target_folder )
+
+        # symlink handling
+        if not isEmptyOrWhitespace( symlink_src ):
+          createDir( base_path )
+          createSymlink( symlink_src, joinPath( base_path, executable ) )
+        else:
+          # special handling for boot
+          if executable == "boot":
+            copyFile( file, joinPath( getCurrentDir(), "tmp", executable ) )
+          else:
+            createDir( base_path )
+            if compress:
+              writeFile( joinPath( base_path, executable & ".gz" ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
+            else:
+              copyFile( file, joinPath( base_path, executable ) )
+
+scan_directory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
 scan_directory( font, "PC Screen Font", "", sysroot, false )
 scan_directory( server, "ELF", "executable", sysroot, false )
-scan_directory( driver, "ELF", "executable", sysroot, false )
+scan_directory( application, "ELF", "executable", sysroot, false )
 scan_directory( bosl, "ASCII", "", sysroot, false )
 
 #[
@@ -144,8 +195,8 @@ for file in walkDirRec( joinPath( getCurrentDir(), "tmp", "ramdisk" ) ):
     discard execProcess( "patchelf --set-rpath /ramdisk/lib " & file )
 ]#
 
-# configuration files
-if existsDir( config ):
+# configuration file stuff
+if dirExists( config ):
   # create base path
   let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", "config" )
   createDir( base_path )

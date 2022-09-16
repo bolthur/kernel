@@ -99,6 +99,26 @@ void syscall_process_parent_by_id( void* context ) {
 }
 
 /**
+ * @fn void syscall_process_exist(void*)
+ * @brief return true if process is existing, else false
+ *
+ * @param context context of calling thread
+ */
+void syscall_process_exist( void* context ) {
+  pid_t process = ( pid_t )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_process_parent_id(%d)\r\n", process )
+  #endif
+  task_process_t* target = task_process_get_by_id( process );
+  // populate return
+  syscall_populate_success(
+    context,
+    ( size_t )( NULL != target && target->rpc_ready ? true : false )
+  );
+}
+
+/**
  * @fn void syscall_process_exit(void*)
  * @brief exit calling process
  *

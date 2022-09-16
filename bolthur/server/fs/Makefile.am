@@ -1,2 +1,2 @@
 
-SUBDIRS = dev mount ramdisk vfs
+SUBDIRS = dev ramdisk vfs

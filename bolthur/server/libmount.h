@@ -31,12 +31,13 @@
 #define MOUNT_UNMOUNT MOUNT_AUTO_MOUNT + 1
 
 typedef struct {
-  char handler[ PATH_MAX ];
+  char device[ PATH_MAX ];
   char mount_point[ PATH_MAX ];
+  char fs_type[ 100 ];
 } mount_mount_t;
 
 typedef struct {
-  char handler[ PATH_MAX ];
+  char device[ PATH_MAX ];
   char mount_point[ PATH_MAX ];
 } mount_auto_mount_t;
 

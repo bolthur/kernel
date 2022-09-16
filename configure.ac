@@ -355,7 +355,7 @@ AC_CONFIG_FILES([
 ])
 
 AC_CONFIG_SUBDIRS([
-  driver
+  bolthur/application
   bolthur/library
   bolthur/kernel
   bolthur/server
