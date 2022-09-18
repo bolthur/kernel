@@ -17,32 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <errno.h>
-#include <sys/bolthur.h>
+#include <stddef.h>
+#include <libtar.h>
 
-#if ! defined( _LIBMOUNT_H )
-#define _LIBMOUNT_H
+#ifndef _INIT_H
+#define _INIT_H
 
-#define MOUNT_MOUNT RPC_CUSTOM_START
-#define MOUNT_AUTO_MOUNT MOUNT_MOUNT + 1
-#define MOUNT_UNMOUNT MOUNT_AUTO_MOUNT + 1
-
-typedef struct {
-  char device[ PATH_MAX ];
-  char mount_point[ PATH_MAX ];
-  char fs_type[ 100 ];
-} mount_mount_t;
-
-typedef struct {
-  char device[ PATH_MAX ];
-  char mount_point[ PATH_MAX ];
-} mount_auto_mount_t;
-
-typedef struct {
-  char mount_point[ PATH_MAX ];
-} mount_unmount_t;
+void init_stage1( void );
+void init_stage2( void );
+void init_stage3( void );
 
 #endif

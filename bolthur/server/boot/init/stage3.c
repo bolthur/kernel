@@ -17,29 +17,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libgen.h>
-#include <errno.h>
+#include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <fcntl.h>
+#include <errno.h>
+#include <unistd.h>
 #include <sys/bolthur.h>
-#include "../rpc.h"
+#include "../ramdisk.h"
+#include "../init.h"
+#include "../util.h"
+#include "../global.h"
 
 /**
- * @fn void rpc_handle_open(size_t, pid_t, size_t, size_t)
- * @brief Handle open request slightly different since vfs needs open to retrieve stats on open
- *
- * @param type
- * @param origin
- * @param data_info
- * @param response_info
+ * @fn void init_stage1(void)
+ * @brief Final init stage starting servers from storage with finally starting shell
  */
-void rpc_handle_open(
-  size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
-  __unused size_t response_info
-) {
-  vfs_stat_response_t response = { .success = false };
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+void init_stage3( void ) {
 }

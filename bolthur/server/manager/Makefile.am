@@ -1,2 +1,2 @@
 
-SUBDIRS = mount server
+SUBDIRS = server

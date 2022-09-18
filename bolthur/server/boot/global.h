@@ -17,36 +17,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libgen.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/bolthur.h>
-#include "../rpc.h"
+#include <stddef.h>
+#include <libtar.h>
 
-/**
- * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
- * @brief Handle read request
- *
- * @param type
- * @param origin
- * @param data_info
- * @param response_info
- *
- * @todo add return on error
- */
-void rpc_handle_write(
-  size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
-  __unused size_t response_info
-) {
-  vfs_write_response_t* response = malloc( sizeof( *response ) );
-  if ( ! response ) {
-    return;
-  }
-  memset( response, 0, sizeof( *response ) );
-  response->len = -ENOMEM;
-  bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-  free( response );
-}
+#ifndef _GLOBAL_H
+#define _GLOBAL_H
+
+extern size_t ramdisk_shared_id;
+extern TAR *disk;
+extern int fd_dev_manager;
+extern int fd_server_manager;
+extern char* bootargs;
+
+#endif

@@ -8,6 +8,10 @@ boot_LDADD = \
   -lfdt \
   -lconfini
 boot_SOURCES = \
+  init/stage1.c\
+  init/stage2.c\
+  init/stage3.c\
   main.c \
-  ramdisk.c
+  ramdisk.c \
+  util.c
 boot_LDFLAGS = -all-static --static

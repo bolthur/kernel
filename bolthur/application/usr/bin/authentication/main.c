@@ -31,6 +31,6 @@
  */
 int main( __unused int argc, __unused char* argv[] ) {
   // print something
-  EARLY_STARTUP_PRINT( "mount processing!\r\n" )
+  EARLY_STARTUP_PRINT( "authentication manager processing!\r\n" )
   return -1;
 }

@@ -150,7 +150,6 @@ AC_CONFIG_FILES([
   fs/ramdisk/Makefile
   fs/vfs/Makefile
   manager/Makefile
-  manager/mount/Makefile
   manager/server/Makefile
   platform/Makefile
   platform/raspi/Makefile
