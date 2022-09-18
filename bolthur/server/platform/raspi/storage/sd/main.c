@@ -23,6 +23,7 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include <inttypes.h>
+#include "rpc.h"
 #include "sd.h"
 #include "../../../../libhelper.h"
 
@@ -64,6 +65,15 @@ int main( __unused int argc, __unused char* argv[] ) {
     free( buffer );
     return -1;
   }
+
+  // register rpc
+  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
+  if ( !rpc_init() ) {
+    EARLY_STARTUP_PRINT( "Unable to bind rpc handler" );
+    free( buffer );
+    return -1;
+  }
+
   // try to read mbr from card
   EARLY_STARTUP_PRINT( "Parsing mbr with partition information\r\n" )
   if ( ! sd_transfer_block( ( uint32_t* )buffer, mbr_size, 0, SD_OPERATION_READ ) ) {

@@ -17,11 +17,13 @@ dev_SOURCES = \
   rpc/fork.c \
   rpc/init.c \
   rpc/ioctl.c \
+  rpc/mount.c \
   rpc/open.c \
   rpc/read.c \
   rpc/remove.c \
   rpc/seek.c \
   rpc/stat.c \
+  rpc/umount.c \
   rpc/write.c \
   handle.c \
   main.c

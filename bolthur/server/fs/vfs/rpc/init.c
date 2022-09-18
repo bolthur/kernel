@@ -19,7 +19,6 @@
 
 #include <errno.h>
 #include "../rpc.h"
-#include "../../../libdev.h"
 
 /**
  * @fn bool rpc_init(void)
@@ -55,7 +54,7 @@ bool rpc_init( void ) {
   }
   bolthur_rpc_bind( RPC_VFS_MOUNT, rpc_handle_mount );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    EARLY_STARTUP_PRINT( "Unable to register handler acquire!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_OPEN, rpc_handle_open );
@@ -85,17 +84,12 @@ bool rpc_init( void ) {
   }
   bolthur_rpc_bind( RPC_VFS_UMOUNT, rpc_handle_umount );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    EARLY_STARTUP_PRINT( "Unable to register handler release!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
-    return false;
-  }
-  bolthur_rpc_bind( DEV_START, rpc_custom_handle_start );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler ioctl!\r\n" )
     return false;
   }
   return true;

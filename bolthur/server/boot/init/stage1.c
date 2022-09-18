@@ -32,6 +32,8 @@
 /**
  * @fn void init_stage1(void)
  * @brief Stage 1 init with start of necessary stuff ( VFS, DEV, and RAMDISK )
+ *
+ * @todo make startup of processes more stable, because it hangs from time to time
  */
 void init_stage1( void ) {
   // transform number to string

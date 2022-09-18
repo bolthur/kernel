@@ -26,19 +26,17 @@
 #include "../handle.h"
 
 /**
- * @fn void rpc_handle_write_async(size_t, pid_t, size_t, size_t)
- * @brief Internal helper to continue asynchronous started write
+ * @fn void rpc_handle_umount_async(size_t, pid_t, size_t, size_t)
+ * @brief Internal helper to continue asynchronous started umount point
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
- *
- * @todo add return on error
  */
-void rpc_handle_write_async(
+void rpc_handle_umount_async(
   size_t type,
-  __maybe_unused pid_t origin,
+  __unused pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
@@ -54,14 +52,14 @@ void rpc_handle_write_async(
   if( ! data_info ) {
     return;
   }
-  vfs_write_response_t* response = malloc( sizeof( *response ) );
+  vfs_umount_response_t* response = malloc( sizeof( *response ) );
   if ( ! response ) {
     return;
   }
   memset( response, 0, sizeof( *response ) );
-  response->len = -EINVAL;
+  response->result = -EINVAL;
   // original request
-  vfs_write_request_t* request = async_data->original_data;
+  vfs_umount_request_t* request = async_data->original_data;
   if ( ! request ) {
     bolthur_rpc_return( type, response, sizeof( *response ), async_data );
     return;
@@ -79,17 +77,15 @@ void rpc_handle_write_async(
 }
 
 /**
- * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
- * @brief Handle write request
+ * @fn void rpc_handle_umount(size_t, pid_t, size_t, size_t)
+* @brief Handle umount request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
- *
- * @todo add return on error
  */
-void rpc_handle_write(
+void rpc_handle_umount(
   size_t type,
   pid_t origin,
   size_t data_info,
@@ -97,16 +93,16 @@ void rpc_handle_write(
 ) {
   // handle async return in case response info is set
   if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
-    rpc_handle_write_async( type, origin, data_info, response_info );
+    rpc_handle_umount_async( type, origin, data_info, response_info );
     return;
   }
-  vfs_write_response_t* response = malloc( sizeof( *response ) );
+  vfs_umount_response_t* response = malloc( sizeof( *response ) );
   if ( ! response ) {
     return;
   }
   memset( response, 0, sizeof( *response ) );
-  response->len = -ENOMEM;
-  vfs_write_request_t* request = malloc( sizeof( *request ) );
+  response->result = -ENOMEM;
+  vfs_umount_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
     free( response );
@@ -114,7 +110,7 @@ void rpc_handle_write(
   }
   // clear variables
   memset( request, 0, sizeof( *request ) );
-  response->len = -EINVAL;
+  response->result = -EINVAL;
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
@@ -131,10 +127,10 @@ void rpc_handle_write(
     free( request );
     return;
   }
-  device_handle_t* handle = handle_get( request->file_path );
+  device_handle_t* handle = handle_get( request->target );
   // handle error
   if ( ! handle ) {
-    response->len = -ENOENT;
+    response->result = -ENOENT;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
     free( response );
     free( request );

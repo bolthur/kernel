@@ -27,21 +27,21 @@
 #include "../file/handle.h"
 
 /**
- * @fn void rpc_handle_release_async(size_t, pid_t, size_t, size_t)
- * @brief Internal helper to continue asynchronous started release mount point
+ * @fn void rpc_handle_mount_async(size_t, pid_t, size_t, size_t)
+ * @brief Internal helper to continue asynchronous started mount point
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_release_async(
+void rpc_handle_mount_async(
   size_t type,
   __unused pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
-  vfs_release_response_t response = { .status = -EINVAL };
+  vfs_mount_response_t response = { .result = -EINVAL };
   // get matching async data
   bolthur_async_data_t* async_data =
     bolthur_rpc_pop_async( type, response_info );
@@ -56,7 +56,7 @@ void rpc_handle_release_async(
   // fetch response
   _syscall_rpc_get_data( &response, sizeof( response ), data_info, false );
   if ( errno ) {
-    response.status = -errno;
+    response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
@@ -65,15 +65,17 @@ void rpc_handle_release_async(
 }
 
 /**
- * @fn void rpc_handle_release(size_t, pid_t, size_t, size_t)
- * @brief Handle release mount point request
+ * @fn void rpc_handle_mount(size_t, pid_t, size_t, size_t)
+ * @brief Handle mount point request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
+ *
+* @todo track mount points for cleanup on exit
  */
-void rpc_handle_release(
+void rpc_handle_mount(
   size_t type,
   pid_t origin,
   size_t data_info,
@@ -84,34 +86,34 @@ void rpc_handle_release(
     rpc_handle_open_async( type, origin, data_info, response_info );
     return;
   }
-  vfs_release_response_t response = { .status = -ENOMEM };
-  vfs_release_request_t* request = malloc( sizeof( *request ) );
+  vfs_mount_response_t response = { .result = -EINVAL };
+  vfs_mount_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
+  // clear variables
   memset( request, 0, sizeof( *request ) );
   // handle no data
   if( ! data_info ) {
-    response.status = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
   // fetch rpc data
   _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  // handle error
   if ( errno ) {
-    response.status = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
   // get node by path
-  vfs_node_t* mount_point = vfs_extract_mountpoint( request->file_path );
-  vfs_node_t* by_path = vfs_node_by_path( request->file_path );
+  vfs_node_t* mount_point = vfs_extract_mountpoint( request->target );
+  vfs_node_t* by_path = vfs_node_by_path( request->target );
   // check for path not found
   if ( ! by_path || ! mount_point ) {
-    response.status = -EINVAL;
+    response.result = -EINVAL;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
@@ -120,26 +122,25 @@ void rpc_handle_release(
   char* mount_point_path = vfs_path_bottom_up( mount_point );
   // check for handling by VFS
   if (
-    strlen( mount_point_path ) == strlen( request->file_path )
-    && 0 == strcmp( mount_point_path, request->file_path )
+    strlen( mount_point_path ) == strlen( request->target )
+    && 0 == strcmp( mount_point_path, request->target )
   ) {
-    // handle origin is not the owning process and it's not
-    // transferred back to vfs
-    if ( by_path->pid != origin && by_path->pid != vfs_pid ) {
-      response.status = -EPERM;
+    // handle already transferred
+    if ( by_path->pid != vfs_pid ) {
+      response.result = -EPERM;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
       free( request );
       return;
     }
-    // set vfs back in as owner
+    // just set current process as mount point owner
     by_path->pid = origin;
     // return success
-    response.status = 0;
+    response.result = 0;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  // set handler in request
+  // FIXME: set handler in request
   request->handler = origin;
   // perform async rpc
   bolthur_rpc_raise(
@@ -155,7 +156,7 @@ void rpc_handle_release(
     data_info
   );
   if ( errno ) {
-    response.status = -errno;
+    response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
