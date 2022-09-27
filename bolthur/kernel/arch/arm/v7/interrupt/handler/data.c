@@ -16,6 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
+
 #include "../../../../../lib/assert.h"
 #include "../../../../../lib/inttypes.h"
 #if defined( REMOTE_DEBUG )

@@ -75,7 +75,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   }
   EARLY_STARTUP_PRINT( "Bind specific vfs write request handler\r\n" )
   // set handler
-  bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write );
+  bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
     free( msg );

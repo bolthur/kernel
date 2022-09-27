@@ -48,32 +48,21 @@ void rpc_handle_mount_async(
   if ( ! async_data ) {
     return;
   }
+  vfs_mount_response_t response = { .result = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    return;
-  }
-  vfs_mount_response_t* response = malloc( sizeof( *response ) );
-  if ( ! response ) {
-    return;
-  }
-  memset( response, 0, sizeof( *response ) );
-  response->result = -EINVAL;
-  // original request
-  vfs_mount_request_t* request = async_data->original_data;
-  if ( ! request ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
   // fetch response
-  _syscall_rpc_get_data( response, sizeof( *response ), data_info, false );
+  _syscall_rpc_get_data( &response, sizeof( response ), data_info, false );
   if ( errno ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
-    free( response );
+    response.result = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
   // return and free
-  bolthur_rpc_return( type, response, sizeof( *response ), async_data );
-  free( response );
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
 }
 
 /**
@@ -98,25 +87,18 @@ void rpc_handle_mount(
     rpc_handle_mount_async( type, origin, data_info, response_info );
     return;
   }
-  vfs_mount_response_t* response = malloc( sizeof( *response ) );
-  if ( ! response ) {
-    return;
-  }
-  memset( response, 0, sizeof( *response ) );
-  response->result = -ENOMEM;
+  vfs_mount_response_t response = { .result = -ENOMEM };
   vfs_mount_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    free( response );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // clear variables
   memset( request, 0, sizeof( *request ) );
-  response->result = -EINVAL;
+  response.result = -EINVAL;
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    free( response );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -124,17 +106,16 @@ void rpc_handle_mount(
   _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
   // handle error
   if ( errno ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    free( response );
+    response.result = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  device_handle_t* handle = handle_get( request->target );
+  device_handle_t* handle = handle_get_by_path( request->source );
   // handle error
   if ( ! handle ) {
-    response->result = -ENOENT;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    free( response );
+    response.result = -ENOENT;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
@@ -152,11 +133,10 @@ void rpc_handle_mount(
     data_info
   );
   if ( errno ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    free( response );
+    response.result = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  free( response );
   free( request );
 }

@@ -28,6 +28,7 @@
 #include "../init.h"
 #include "../util.h"
 #include "../global.h"
+#include "../../libhelper.h"
 
 /**
  * @fn void init_stage1(void)
@@ -48,7 +49,7 @@ void init_stage1( void ) {
 
   // get vfs image
   size_t vfs_size;
-  void* vfs_image = ramdisk_lookup_file( disk, "ramdisk/server/fs/vfs", &vfs_size );
+  void* vfs_image = ramdisk_lookup( disk, "ramdisk/server/fs/vfs", &vfs_size );
   if ( ! vfs_image ) {
     EARLY_STARTUP_PRINT( "VFS not found for start!\r\n" );
     exit( -1 );
@@ -69,7 +70,7 @@ void init_stage1( void ) {
     // start /dev
     EARLY_STARTUP_PRINT( "Starting for dev server...\r\n" )
     size_t dev_size;
-    void* dev_image = ramdisk_lookup_file( disk, "ramdisk/server/fs/dev", &dev_size );
+    void* dev_image = ramdisk_lookup( disk, "ramdisk/server/fs/dev", &dev_size );
     if ( ! dev_image ) {
       exit( -1 );
     }
@@ -79,13 +80,27 @@ void init_stage1( void ) {
       EARLY_STARTUP_PRINT( "Unable to fork process: %s\r\n", strerror( errno ) )
       exit( -1 );
     }
+
+    // call for vfs replace
+    if ( 0 != inner_forked_process ) {
+      EARLY_STARTUP_PRINT( "Replacing fork with vfs image %p!\r\n", vfs_image );
+      _syscall_process_replace( vfs_image, NULL, NULL );
+      if ( errno ) {
+        EARLY_STARTUP_PRINT(
+          "Unable to replace process with image: %s\r\n",
+          strerror( errno )
+        )
+        exit( -1 );
+      }
+    }
+
     // handle no fork
     if ( 0 == inner_forked_process ) {
       // wait for vfs to be ready
       _syscall_rpc_wait_for_ready( getppid() );
       // start /dev/ramdisk
       size_t ramdisk_size;
-      void* ramdisk_image = ramdisk_lookup_file( disk, "ramdisk/server/fs/ramdisk", &ramdisk_size );
+      void* ramdisk_image = ramdisk_lookup( disk, "ramdisk/server/fs/ramdisk", &ramdisk_size );
       if ( ! dev_image ) {
         exit( -1 );
       }
@@ -95,7 +110,23 @@ void init_stage1( void ) {
         EARLY_STARTUP_PRINT( "Unable to fork process: %s\r\n", strerror( errno ) )
         exit( -1 );
       }
-      _syscall_rpc_wait_for_ready( forked_process );
+
+      if ( 0 != inner_forked_process ) {
+        // wait for parent process to be ready
+        _syscall_rpc_wait_for_ready( forked_process );
+        // build command
+        char* dev_cmd[] = { "dev", NULL, };
+        // call for replace and handle error
+        _syscall_process_replace( dev_image, dev_cmd, NULL );
+        if ( errno ) {
+          EARLY_STARTUP_PRINT(
+            "Unable to replace process with image: %s\r\n",
+            strerror( errno )
+          )
+          exit( -1 );
+        }
+      }
+
       if ( 0 == inner_forked_process ) {
         // wait for parent to be ready
         _syscall_rpc_wait_for_ready( getppid() );
@@ -110,30 +141,7 @@ void init_stage1( void ) {
           )
           exit( -1 );
         }
-      } else {
-        // build command
-        char* dev_cmd[] = { "dev", NULL, };
-        // call for replace and handle error
-        _syscall_process_replace( dev_image, dev_cmd, NULL );
-        if ( errno ) {
-          EARLY_STARTUP_PRINT(
-            "Unable to replace process with image: %s\r\n",
-            strerror( errno )
-          )
-          exit( -1 );
-        }
       }
-    }
-
-    EARLY_STARTUP_PRINT( "Replacing fork with vfs image %p!\r\n", vfs_image );
-    // call for replace and handle error
-    _syscall_process_replace( vfs_image, NULL, NULL );
-    if ( errno ) {
-      EARLY_STARTUP_PRINT(
-        "Unable to replace process with image: %s\r\n",
-        strerror( errno )
-      )
-      exit( -1 );
     }
   }
   // handle unexpected vfs id returned
@@ -143,12 +151,8 @@ void init_stage1( void ) {
   }
   // enable rpc and wait for process to be ready
   _syscall_rpc_set_ready( true );
-  _syscall_rpc_wait_for_ready( forked_process );
-
-  util_wait_for_path( "/dev" );
-  util_wait_for_path( "/dev/manager" );
-  util_wait_for_path( "/dev/manager/device" );
-  util_wait_for_path( "/dev/ramdisk" );
+  // enough to wait here for ramdisk, since ramdisk needs dev server
+  vfs_wait_for_path( "/dev/ramdisk" );
   // close ramdisk
   EARLY_STARTUP_PRINT( "Closing early ramdisk\r\n" );
   if ( 0 != tar_close( disk ) ) {

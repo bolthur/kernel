@@ -28,7 +28,7 @@
 
 /**
  * @fn void rpc_handle_umount_async(size_t, pid_t, size_t, size_t)
- * @brief Internal helper to continue asynchronous started umount point
+ * @brief Internal helper to continue asynchronous started mount point
  *
  * @param type
  * @param origin
@@ -60,18 +60,47 @@ void rpc_handle_umount_async(
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
+  // handle no success response
+  if ( 0 != response.result ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    return;
+  }
+  // get original request
+  vfs_umount_request_t* request = async_data->original_data;
+  vfs_node_t* target_umount_point = vfs_extract_mountpoint( request->target );
+  vfs_node_t* target_by_path = vfs_node_by_path( request->target );
+  // check for path not found
+  if ( ! target_by_path || ! target_umount_point ) {
+    response.result = -EINVAL;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // get full path of mount point
+  char* target_umount_point_path = vfs_path_bottom_up( target_umount_point );
+  // check for handling by VFS
+  if (
+    strlen( target_umount_point_path ) == strlen( request->target )
+    && 0 == strcmp( target_umount_point_path, request->target )
+  ) {
+    // set path handling
+    target_by_path->pid = vfs_pid;
+    target_by_path->locked = false;
+  }
   // just return response
   bolthur_rpc_return( type, &response, sizeof( response ), async_data );
 }
 
 /**
  * @fn void rpc_handle_umount(size_t, pid_t, size_t, size_t)
-* @brief Handle umount request
+ * @brief Handle mount point request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
+ *
+* @todo track mount points for cleanup on exit
  */
 void rpc_handle_umount(
   size_t type,
@@ -79,72 +108,67 @@ void rpc_handle_umount(
   size_t data_info,
   size_t response_info
 ) {
+  vfs_umount_response_t response = { .result = -EAGAIN };
   // handle async return in case response info is set
   if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
-    rpc_handle_open_async( type, origin, data_info, response_info );
+    rpc_handle_umount_async( type, origin, data_info, response_info );
     return;
   }
-  vfs_umount_response_t response = { .result = -ENOMEM };
   vfs_umount_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
+  // clear variables
   memset( request, 0, sizeof( *request ) );
   // handle no data
   if( ! data_info ) {
-    response.result = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
   // fetch rpc data
   _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  // handle error
   if ( errno ) {
-    response.result = -EIO;
+    response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
   // get node by path
-  vfs_node_t* mount_point = vfs_extract_mountpoint( request->target );
-  vfs_node_t* by_path = vfs_node_by_path( request->target );
+  vfs_node_t* target_umount_point = vfs_extract_mountpoint( request->target );
+  vfs_node_t* target_by_path = vfs_node_by_path( request->target );
   // check for path not found
-  if ( ! by_path || ! mount_point ) {
+  if ( ! target_by_path || ! target_umount_point ) {
     response.result = -EINVAL;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
   // get full path of mount point
-  char* mount_point_path = vfs_path_bottom_up( mount_point );
+  char* target_umount_point_path = vfs_path_bottom_up( target_umount_point );
   // check for handling by VFS
   if (
-    strlen( mount_point_path ) == strlen( request->target )
-    && 0 == strcmp( mount_point_path, request->target )
+    strlen( target_umount_point_path ) == strlen( request->target )
+    && 0 == strcmp( target_umount_point_path, request->target )
   ) {
-    // handle origin is not the owning process and it's not
-    // transferred back to vfs
-    if ( by_path->pid != origin && by_path->pid != vfs_pid ) {
+    // handle handler not vfs
+    if ( target_by_path->pid == vfs_pid || target_by_path->locked ) {
       response.result = -EPERM;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
       free( request );
       return;
     }
-    // set vfs back in as owner
-    by_path->pid = origin;
-    // return success
-    response.result = 0;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
+    // set target as locked
+    target_by_path->locked = true;
   }
   // set handler in request
   request->handler = origin;
   // perform async rpc
   bolthur_rpc_raise(
     type,
-    mount_point->pid,
+    target_umount_point->pid,
     request,
     sizeof( *request ),
     false,

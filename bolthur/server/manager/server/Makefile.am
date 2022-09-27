@@ -10,6 +10,7 @@ server_LDADD = \
   ${abs_top_builddir}/../library/collection/avl/libavl.la
 server_SOURCES = \
   ioctl/handler.c \
+  rpc/custom/kill.c \
   rpc/custom/start.c \
   rpc/add.c \
   rpc/close.c \

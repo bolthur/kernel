@@ -63,7 +63,7 @@ int bootargs_length;
  */
 static int my_tar_open( __unused const char* path, __unused int b, ... ) {
   // get extract size
-  ramdisk_decompressed_size = ramdisk_extract_size(
+  ramdisk_decompressed_size = ramdisk_size(
     ramdisk_compressed,
     ramdisk_compressed_size );
   // deflate

@@ -27,9 +27,14 @@
 #define _LIBDEV_H
 
 #define DEV_START RPC_CUSTOM_START
+#define DEV_KILL DEV_START + 1
 
 typedef struct {
   char path[ PATH_MAX ];
 } dev_command_start_t;
+
+typedef struct {
+  char path[ PATH_MAX ];
+} dev_command_kill_t;
 
 #endif

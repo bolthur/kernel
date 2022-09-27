@@ -60,6 +60,32 @@ void rpc_handle_mount_async(
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
+  // get original request
+  vfs_mount_request_t* request = async_data->original_data;
+  vfs_node_t* target_mount_point = vfs_extract_mountpoint( request->target );
+  vfs_node_t* target_by_path = vfs_node_by_path( request->target );
+  // check for path not found
+  if ( ! target_by_path || ! target_mount_point ) {
+    response.result = -EINVAL;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // get full path of mount point
+  char* target_mount_point_path = vfs_path_bottom_up( target_mount_point );
+  // check for handling by VFS
+  if (
+    strlen( target_mount_point_path ) == strlen( request->target )
+    && 0 == strcmp( target_mount_point_path, request->target )
+  ) {
+    // set path handling
+    if ( 0 == response.result ) {
+      target_by_path->pid = async_data->original_origin;
+    }
+    // reset lock again
+    EARLY_STARTUP_PRINT( "reset lock!\r\n" )
+    target_by_path->locked = false;
+  }
   // just return response
   bolthur_rpc_return( type, &response, sizeof( response ), async_data );
 }
@@ -81,12 +107,12 @@ void rpc_handle_mount(
   size_t data_info,
   size_t response_info
 ) {
+  vfs_mount_response_t response = { .result = -EAGAIN };
   // handle async return in case response info is set
   if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
-    rpc_handle_open_async( type, origin, data_info, response_info );
+    rpc_handle_mount_async( type, origin, data_info, response_info );
     return;
   }
-  vfs_mount_response_t response = { .result = -EINVAL };
   vfs_mount_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -104,48 +130,49 @@ void rpc_handle_mount(
   _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
   // handle error
   if ( errno ) {
+    response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
   // get node by path
-  vfs_node_t* mount_point = vfs_extract_mountpoint( request->target );
-  vfs_node_t* by_path = vfs_node_by_path( request->target );
+  vfs_node_t* target_mount_point = vfs_extract_mountpoint( request->target );
+  vfs_node_t* target_by_path = vfs_node_by_path( request->target );
+  vfs_node_t* source_mount_point = vfs_extract_mountpoint( request->source );
   // check for path not found
-  if ( ! by_path || ! mount_point ) {
+  if (
+    ! target_by_path
+    || ! target_mount_point
+    || ! source_mount_point
+  ) {
     response.result = -EINVAL;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
   // get full path of mount point
-  char* mount_point_path = vfs_path_bottom_up( mount_point );
+  char* target_mount_point_path = vfs_path_bottom_up( target_mount_point );
   // check for handling by VFS
   if (
-    strlen( mount_point_path ) == strlen( request->target )
-    && 0 == strcmp( mount_point_path, request->target )
+    strlen( target_mount_point_path ) == strlen( request->target )
+    && 0 == strcmp( target_mount_point_path, request->target )
   ) {
-    // handle already transferred
-    if ( by_path->pid != vfs_pid ) {
+    // handle handler not vfs
+    if ( target_by_path->pid != vfs_pid || target_by_path->locked ) {
       response.result = -EPERM;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
       free( request );
       return;
     }
-    // just set current process as mount point owner
-    by_path->pid = origin;
-    // return success
-    response.result = 0;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
+    // set target as locked
+    target_by_path->locked = true;
   }
-  // FIXME: set handler in request
+  // set handler in request
   request->handler = origin;
   // perform async rpc
   bolthur_rpc_raise(
     type,
-    mount_point->pid,
+    source_mount_point->pid,
     request,
     sizeof( *request ),
     false,

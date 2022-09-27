@@ -62,6 +62,11 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
 
+  // enable rpc
+  _syscall_rpc_set_ready( true );
+  // wait for device
+  vfs_wait_for_path( "/dev/manager/device" );
+
   // allocate memory for add request
   vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
@@ -104,8 +109,7 @@ int main( int argc, char* argv[] ) {
   free( msg );
 
   EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
-  // enable rpc and wait
-  _syscall_rpc_set_ready( true );
+  // wait for rpc
   bolthur_rpc_wait_block();
   return 0;
 }

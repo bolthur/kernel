@@ -39,4 +39,6 @@ void rpc_handle_umount(
   __unused size_t data_info,
   __unused size_t response_info
 ) {
+  vfs_umount_response_t response = { .result = -EAGAIN };
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
 }

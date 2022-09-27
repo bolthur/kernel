@@ -32,7 +32,8 @@ typedef struct {
 } device_handle_t;
 
 bool handle_init( void );
-device_handle_t* handle_get( const char* );
+device_handle_t* handle_get_by_path( const char* );
+device_handle_t* handle_get_by_id( pid_t );
 bool handle_add( const char*, struct stat, pid_t );
 
 #endif

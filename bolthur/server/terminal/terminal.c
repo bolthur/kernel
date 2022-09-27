@@ -136,7 +136,7 @@ bool terminal_init( void ) {
     // perform add request
     send_vfs_add_request( msg, msg_size, 0 );
     // register handler for streams
-    bolthur_rpc_bind( out, output_handle_out );
+    bolthur_rpc_bind( out, output_handle_out, false );
     if ( errno ) {
       EARLY_STARTUP_PRINT(
         "Unable to bind rpc %zu: %s\r\n",
@@ -150,7 +150,7 @@ bool terminal_init( void ) {
       free( terminal_list );
       return false;
     }
-    bolthur_rpc_bind( err, output_handle_err );
+    bolthur_rpc_bind( err, output_handle_err, false );
     if ( errno ) {
       EARLY_STARTUP_PRINT(
         "Unable to bind rpc %zu: %s\r\n",
@@ -164,7 +164,7 @@ bool terminal_init( void ) {
       free( terminal_list );
       return false;
     }
-    bolthur_rpc_bind( in, output_handle_in );
+    bolthur_rpc_bind( in, output_handle_in, false );
     if ( errno ) {
       EARLY_STARTUP_PRINT(
         "Unable to bind rpc %zu: %s\r\n",

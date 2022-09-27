@@ -311,7 +311,7 @@ bool framebuffer_register_rpc( void ) {
   // loop through handler to identify used one
   for ( size_t i = 0; i < max; i++ ) {
     // register rpc
-    bolthur_rpc_bind( command_list[ i ].command, command_list[ i ].callback );
+    bolthur_rpc_bind( command_list[ i ].command, command_list[ i ].callback, true );
     if ( errno ) {
       return false;
     }

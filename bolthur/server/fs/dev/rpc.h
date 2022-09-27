@@ -44,5 +44,6 @@ void rpc_handle_write( size_t, pid_t, size_t, size_t );
 void rpc_handle_write_async( size_t, pid_t, size_t, size_t );
 
 void rpc_custom_handle_start( size_t, pid_t, size_t, size_t );
+void rpc_custom_handle_kill( size_t, pid_t, size_t, size_t );
 
 #endif

@@ -30,7 +30,7 @@
  * @fn void init_stage2(void)
  * @brief Stage 2 init starting necessary stuff so that stage 3 with stuff from disk can be started
  */
-noreturn void init_stage2( void ) {
+void init_stage2( void ) {
   // start manager server
   EARLY_STARTUP_PRINT( "Starting and waiting for server manager...\r\n" )
   pid_t manager = util_execute_device_server( "/ramdisk/server/manager/server", "/dev/manager/server" );
@@ -155,66 +155,16 @@ noreturn void init_stage2( void ) {
   EARLY_STARTUP_PRINT(
     "successfully mounted \"%s\" with partition = \"%s\" to /\r\n",
     root_device, root_partition_type )
+
+  // umount root partition
+  EARLY_STARTUP_PRINT( "Unmounting root file system\r\n" )
+  result = umount( "/" );
+  if ( 0 != result ) {
+    EARLY_STARTUP_PRINT( "Unmount of \"/\" failed: \"%s\"\r\n", strerror( errno ) )
+    //exit( 1 );
+  }
+
   // free up device and partition type strings
   free( root_device );
   free( root_partition_type );
-
-  /// FIXME: Start authentication manager
-  /// FIXME: Start USB driver with all attached devices
-  /// FIXME: Start login console
-
-  EARLY_STARTUP_PRINT( "size_t max = %zu\r\n", SIZE_MAX )
-  EARLY_STARTUP_PRINT( "unsigned long long max = %llu\r\n", ULLONG_MAX )
-
-  EARLY_STARTUP_PRINT( "Adjust stdout / stderr buffering\r\n" )
-  // adjust buffering of stdout and stderr
-  setvbuf( stdout, NULL, _IOLBF, 0 );
-  setvbuf( stderr, NULL, _IONBF, 0 );
-
-  EARLY_STARTUP_PRINT( "äöüÄÖÜ\r\n" )
-  int a = printf( "äöüÄÖÜ\r\n" );
-  EARLY_STARTUP_PRINT( "äöüÄÖÜ\r\n" )
-  //fflush( stdout );
-  int b = printf( "Tab test: \"\t\" should be 4 spaces here!\r\n" );
-  //fflush( stdout );
-  int c = printf( "Testing newline without cr\nFoobar");
-  //fflush( stdout );
-  int d = printf( ", now with cr\r\nasdf\r\näöüÄÖÜ\r\n" );
-  //fflush( stdout );
-/*
-  pid_t forked_process = fork();
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to fork process: %s\r\n", strerror( errno ) );
-    exit( -1 );
-  }
-  // fork only
-  if ( 0 == forked_process ) {
-    while ( true ) {
-      printf( "what the fork?\r\n" );
-      sleep( 2 );
-    }
-  }*/
-  for ( int i = 0; i < 70; i++ ) {
-    printf( "stdout: init - %d\r\n", i );
-  }
-
-  int e = printf( "stdout: init=>console=>terminal=>framebuffer" );
-  fflush( stdout );
-  int f = fprintf(
-    stderr,
-    "stderr: init=>console=>terminal=>framebuffer"
-  );
-  fflush( stderr );
-
-  EARLY_STARTUP_PRINT( "a = %d, b = %d, c = %d, d = %d, e = %d, f = %d\r\n",
-    a, b, c, d, e, f )
-
-  EARLY_STARTUP_PRINT( "Just looping around with nops :O\r\n" )
-  while( true ) {
-    __asm__ __volatile__( "nop" );
-  }
-
-  // exit program!
-  EARLY_STARTUP_PRINT( "Init done!\r\n" );
-  exit( 0 );
 }

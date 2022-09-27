@@ -26,31 +26,7 @@
 #include "global.h"
 #include "../libdev.h"
 #include "../libmanager.h"
-
-/**
- * @fn bool path_exists(const char*)
- * @brief Method to check if path exists
- *
- * @param path
- * @return
- */
-static bool device_exists( const char* path ) {
-  struct stat buffer;
-  return stat( path, &buffer ) == 0;
-}
-
-/**
- * @fn void wait_for_path(const char*)
- * @brief Wait for vfs path is existing
- *
- * @param path
- */
-void util_wait_for_path( const char* path ) {
-  do {
-    //EARLY_STARTUP_PRINT( "path = %s\r\n", path )
-    sleep( 2 );
-  } while( ! device_exists( path ) );
-}
+#include "../libhelper.h"
 
 /**
  * @fn pid_t util_execute_device_server(const char*, const char*)
@@ -90,7 +66,7 @@ pid_t util_execute_device_server( const char* path, const char* device ) {
   memcpy( &proc, start, sizeof( proc ) );
   free( start );
   // wait for device
-  util_wait_for_path( device );
+  vfs_wait_for_path( device );
   // return pid finally
   return proc;
 }
@@ -133,7 +109,7 @@ pid_t util_execute_manager_server( const char* path, const char* manager ) {
   memcpy( &proc, start, sizeof( proc ) );
   free( start );
   // wait for device
-  util_wait_for_path( manager );
+  vfs_wait_for_path( manager );
   // return pid finally
   return proc;
 }

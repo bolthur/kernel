@@ -297,7 +297,7 @@ void syscall_rpc_ret( void* context ) {
     blocked_data_id = original_rpc_id ? original_rpc_id : active->data_id;
     target = task_thread_get_blocked(
       TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
-      ( task_state_data_t ){ .data_size = original_rpc_id }
+      ( task_state_data_t ){ .data_size = blocked_data_id }
     );
     // handle no target
     if ( ! target ) {
@@ -475,7 +475,7 @@ void syscall_rpc_ret( void* context ) {
     #endif
     syscall_populate_success( context, 0 );
     // enqueue scheduler
-    event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+    //event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
   }
 }
 
@@ -838,4 +838,81 @@ void syscall_rpc_wait_for_ready( void* context ) {
   );
   // enqueue schedule
   event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+}
+
+/**
+ * @fn void syscall_rpc_clear_data(void*)
+ * @brief Method to clear rpc data
+ *
+ * @param context
+ */
+void syscall_rpc_clear_data( void* context ) {
+  // parameters
+  size_t rpc_data_id = ( size_t )syscall_get_parameter( context, 0 );
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT(
+      "syscall_rpc_clear_data( %zu ) from %d\r\n",
+      rpc_data_id,
+      task_thread_current_thread->process->id
+    )
+  #endif
+  // cache process
+  task_process_t* target_process = task_thread_current_thread->process;
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Validating parameter!\r\n" )
+  #endif
+  // handle error
+  if ( ! rpc_data_id ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Target process not found!\r\n" )
+    #endif
+    syscall_populate_success( context, 0 );
+    return;
+  }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Check for rpc data queue!\r\n" )
+  #endif
+  // handle target not yet ready
+  if ( ! target_process->rpc_data_queue ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Target process not ready for rpc!\r\n" )
+    #endif
+    syscall_populate_success( context, 0 );
+    return;
+  }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Searching for rpc data id %zu!\r\n", rpc_data_id )
+  #endif
+  // Get message by id
+  list_item_t* item = list_lookup_data(
+    target_process->rpc_data_queue,
+    ( void* )rpc_data_id
+  );
+  // handle not found
+  if ( ! item ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "No item with id %zu found!\r\n", rpc_data_id )
+    #endif
+    syscall_populate_success( context, 0 );
+    return;
+  }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Removing from queue!\r\n" )
+  #endif
+  // remove list element
+  while (
+    ! list_remove_data(
+      task_thread_current_thread->process->rpc_data_queue,
+      ( void* )rpc_data_id
+    )
+  ) {}
+  // return success
+  syscall_populate_success( context, 0 );
 }

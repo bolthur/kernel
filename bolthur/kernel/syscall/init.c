@@ -74,6 +74,7 @@ bool syscall_init( void ) {
     || ! SYSCALL_BIND( SYSCALL_RPC_SET_READY, syscall_rpc_set_ready )
     || ! SYSCALL_BIND( SYSCALL_RPC_END, syscall_rpc_end )
     || ! SYSCALL_BIND( SYSCALL_RPC_WAIT_FOR_READY, syscall_rpc_wait_for_ready )
+    || ! SYSCALL_BIND( SYSCALL_RPC_CLEAR_DATA, syscall_rpc_clear_data )
   ) {
     return false;
   }

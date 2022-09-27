@@ -143,6 +143,7 @@ AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 
 AC_CONFIG_FILES([
   Makefile
+  authentication/Makefile
   boot/Makefile
   console/Makefile
   fs/Makefile
@@ -158,7 +159,16 @@ AC_CONFIG_FILES([
   platform/raspi/random/Makefile
   platform/raspi/storage/Makefile
   platform/raspi/storage/sd/Makefile
+  platform/raspi/usb/Makefile
+  platform/raspi/usb/hcd/Makefile
   terminal/Makefile
+  usb/Makefile
+  usb/device/Makefile
+  usb/device/hid/Makefile
+  usb/device/hid/keyboard/Makefile
+  usb/device/hub/Makefile
+  usb/device/storage/Makefile
+  usb/usbd/Makefile
 ])
 # FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO
 

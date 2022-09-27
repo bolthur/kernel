@@ -132,7 +132,7 @@ void rpc_handle_read(
     free( request );
     return;
   }
-  device_handle_t* handle = handle_get( request->file_path );
+  device_handle_t* handle = handle_get_by_path( request->file_path );
   // handle error
   if ( ! handle ) {
     response->len = -ENOENT;

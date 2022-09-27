@@ -1,2 +1,2 @@
 
-SUBDIRS = framebuffer iomem random storage
+SUBDIRS = framebuffer iomem random storage usb

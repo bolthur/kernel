@@ -22,7 +22,6 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
-void util_wait_for_path( const char* );
 pid_t util_execute_device_server( const char*, const char* );
 pid_t util_execute_manager_server( const char*, const char* );
 

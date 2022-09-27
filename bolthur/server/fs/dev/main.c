@@ -61,7 +61,7 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   EARLY_STARTUP_PRINT( "Sending node \"/dev\" to vfs\r\n" )
   // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t ) + 1 * sizeof( size_t );
+  size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
   vfs_add_request_t* msg = malloc( msg_size );
   if ( ! msg ) {
     return -1;
@@ -71,6 +71,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   msg->device_info[ 0 ] = DEV_START;
+  msg->device_info[ 1 ] = DEV_KILL;
   strncpy( msg->file_path, "/dev", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, msg_size, 0 );
@@ -85,6 +86,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   msg->device_info[ 0 ] = DEV_START;
+  msg->device_info[ 1 ] = DEV_KILL;
   strncpy( msg->file_path, "/dev/manager", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, msg_size, 0 );
@@ -95,6 +97,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   msg->device_info[ 0 ] = DEV_START;
+  msg->device_info[ 1 ] = DEV_KILL;
   strncpy( msg->file_path, "/dev/manager/device", PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, msg_size, 0 );

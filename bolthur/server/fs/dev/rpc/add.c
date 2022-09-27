@@ -85,7 +85,7 @@ void rpc_handle_add(
     return;
   }
   // check if already existing
-  device_handle_t* handle = handle_get( request->file_path );
+  device_handle_t* handle = handle_get_by_path( request->file_path );
   if ( handle ) {
     response.status = VFS_ADD_ALREADY_EXIST;
     response.handler = handle->process;

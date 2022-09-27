@@ -27,9 +27,14 @@
 #define _LIBMANAGER_H
 
 #define MANAGER_START RPC_CUSTOM_START
+#define MANAGER_KILL MANAGER_START + 1
 
 typedef struct {
   char path[ PATH_MAX ];
 } manager_command_start_t;
+
+typedef struct {
+  char path[ PATH_MAX ];
+} manager_command_kill_t;
 
 #endif

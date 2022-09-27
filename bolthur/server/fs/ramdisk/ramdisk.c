@@ -132,14 +132,20 @@ void ramdisk_copy_from_shared( char* id ) {
     exit( -1 );
   }
   // allocate duplicate
-  EARLY_STARTUP_PRINT( "Allocate local duplicate\r\n" )
+  EARLY_STARTUP_PRINT( "Allocate local duplicate with size %#zx\r\n", length )
   ramdisk = malloc( length );
+  EARLY_STARTUP_PRINT( "ramdisk = %p\r\n", ramdisk )
   if ( ! ramdisk ) {
     EARLY_STARTUP_PRINT( "Unable to allocate memory for ramdisk\r\n" )
     exit( -1 );
   }
   // copy over content
-  EARLY_STARTUP_PRINT( "Copy over content from shared to local\r\n" )
+  EARLY_STARTUP_PRINT(
+    "Copy over content from %p to %p with length %zu\r\n",
+    shm_addr,
+    ramdisk,
+    length
+  )
   memcpy( ramdisk, shm_addr, length );
   // unmap shared area again
   EARLY_STARTUP_PRINT( "Detach shared memory again\r\n" )

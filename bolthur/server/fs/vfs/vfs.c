@@ -93,6 +93,7 @@ static vfs_node_t* vfs_prepare_node(
   strncpy( node->name, name, name_length );
   memcpy( node->st, &st, sizeof( struct stat ) );
   node->pid = pid;
+  node->locked = false;
   if ( target ) {
     node->target = strdup( target );
     if ( ! node->target ) {
@@ -238,8 +239,6 @@ void vfs_dump( vfs_node_t* node, const char* level_prefix ) {
       strncat( buffer, "/", total - strlen( buffer ) );
     }
     strncat( buffer, node->name, total - strlen( buffer ) );
-    // print stuff
-    EARLY_STARTUP_PRINT( "%s\r\n", buffer )
     // free again
     free( buffer );
     // increment prefix length
@@ -322,20 +321,19 @@ vfs_node_t* vfs_node_by_name(
 vfs_node_t* vfs_node_by_path( const char* path ) {
   // local pointer for path
   char* p = ( char* )path;
+  size_t len = strlen( path );
   // skip leading slash
   if ( *p == '/' ) {
     p++;
+    len--;
   }
 
   // start with root
   vfs_node_t* current = root;
   // handle empty ( return root )
-  if ( 0 == strlen( p ) ) {
+  if ( 0 == len ) {
     return current;
   }
-
-  // setup index and length
-  size_t len = strlen( p );
 
   // begin and end of path
   char* begin = p;
@@ -475,7 +473,7 @@ vfs_node_t* vfs_extract_mountpoint( const char* path ) {
     dir_old = dir;
   }
   // output and dir free
-  if ( dir ) {
+  if ( dir && dir != path ) {
     free( dir );
   }
   // return found

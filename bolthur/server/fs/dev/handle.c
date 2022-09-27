@@ -107,14 +107,36 @@ bool handle_init( void ) {
 }
 
 /**
- * @fn device_handle_t* handle_get(const char*)
+ * @fn device_handle_t* handle_get_by_path(const char*)
  * @brief Method to get device by path
  *
  * @param name
  * @return
  */
-device_handle_t* handle_get( const char* path ) {
+device_handle_t* handle_get_by_path( const char* path ) {
   list_item_t* item = list_lookup_data( device_list, ( void* )path );
+  return item ? item->data : NULL;
+}
+
+/**
+ * @fn device_handle_t* handle_get_by_id(const char*)
+ * @brief Method to get device by path
+ *
+ * @param name
+ * @return
+ */
+device_handle_t* handle_get_by_id( pid_t id ) {
+  list_item_t* item = device_list->first;
+  while ( item ) {
+    // check for matching id
+    device_handle_t* possible = item->data;
+    if ( possible->process == id ) {
+      break;
+    }
+    // get next item
+    item = item->next;
+  }
+  // return found item or null
   return item ? item->data : NULL;
 }
 
@@ -129,7 +151,7 @@ device_handle_t* handle_get( const char* path ) {
  */
 bool handle_add( const char* path, struct stat info, pid_t process ) {
   // return false if existing
-  if ( handle_get( path ) ) {
+  if ( handle_get_by_path( path ) ) {
     return false;
   }
   // create device

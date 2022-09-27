@@ -23,6 +23,7 @@
 #include <malloc.h>
 #include <errno.h>
 #include <unistd.h>
+#include <sys/stat.h>
 #include <sys/bolthur.h>
 
 #if ! defined( _LIBHELPER_H )
@@ -149,6 +150,19 @@ __maybe_unused static void send_vfs_remove_request(
   }
   // free up response
   free( response );
+}
+
+/**
+ * @fn void wait_for_path(const char*)
+ * @brief Wait for vfs path is existing
+ *
+ * @param path
+ */
+__maybe_unused static void vfs_wait_for_path( const char* path ) {
+  struct stat buffer;
+  do {
+    sleep( 2 );
+  } while( 0 != stat( path, &buffer ) );
 }
 
 #endif

@@ -18,6 +18,7 @@
  */
 
 #include <stdint.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include "../../../library/collection/list/list.h"
@@ -31,6 +32,7 @@ typedef struct vfs_node vfs_node_t;
 // structure itself
 struct vfs_node {
   pid_t pid;
+  bool locked;
   char *name;
   char* target;
   struct stat* st;

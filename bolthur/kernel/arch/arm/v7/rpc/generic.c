@@ -89,6 +89,11 @@ bool rpc_generic_restore( task_thread_t* thread ) {
   // restore cpu registers
   // debug output
   #if defined( PRINT_RPC )
+    DEBUG_OUTPUT(
+      "backup->thread_state = %d, backup->thread_state_data.data_ptr = %p\r\n",
+      backup->thread_state,
+      backup->thread_state_data.data_ptr
+    )
     DUMP_REGISTER( thread->current_context )
     DEBUG_OUTPUT( "process id = %d\r\n", thread->process->id )
   #endif

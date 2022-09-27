@@ -69,7 +69,7 @@ void rpc_handle_open(
     return;
   }
   // get handle
-  device_handle_t* handle = handle_get( request->file_path );
+  device_handle_t* handle = handle_get_by_path( request->file_path );
   // handle not existing
   if ( ! handle ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );

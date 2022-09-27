@@ -1,0 +1,2 @@
+
+SUBDIRS = hid hub storage

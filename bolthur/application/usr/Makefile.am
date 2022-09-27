@@ -1,2 +1,2 @@
 
-SUBDIRS = lib bin
+SUBDIRS = lib
