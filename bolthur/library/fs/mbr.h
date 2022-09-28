@@ -55,4 +55,7 @@ typedef union __packed {
   } data;
 } mbr_table_entry_t;
 
+int32_t mbr_extract_partition_from_path( const char* );
+int32_t mbr_filesystem_to_type( const char* );
+
 #endif

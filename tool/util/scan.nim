@@ -17,41 +17,15 @@
 # along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import os
-import osproc
-import strutils
-import sequtils
-import strformat
-# thirdparty
-import zippy
+import std/os
+import std/osproc
+import std/strutils
+import std/strformat
 import std/parsecfg
-import std/streams
+import std/sequtils
+import zippy
 
-# remove tmp dir again
-removeDir( "tmp" )
-# create tmp directories
-createDir( "tmp" )
-
-# FIXME: USE PATCHELF TO REPLACE RPATH OF LIBRARIES AND EXECUTABLES
-
-# check argument count
-let argc: int = paramCount()
-if argc != 4:
-  echo "Usage: ramdisk <root path> <initrd name> <sysroot> <platform>"
-  quit( 1 )
-
-# get command line arguments
-let root_path: string = paramStr( 1 )
-let output: string = paramStr( 2 )
-let sysroot: string = paramStr( 3 )
-let config: string = paramStr( 4 )
-
-let font: string = joinPath( root_path, "..", "thirdparty", "font" )
-let application: string = joinPath( root_path, "bolthur", "application" )
-let server: string = joinPath( root_path, "bolthur", "server" )
-let bosl: string = joinPath( root_path, "..", "bosl" )
-
-proc scan_directory( path: string, file_type: string, additional_info: string, sysroot: string, compress: bool ): void =
+proc scan_directory*( path: string, file_type: string, additional_info: string, sysroot: string, compress: bool ): void =
   # loop through files of folder including subfolders
   for file in walkDirRec( path, { pcFile, pcLinkToFile } ):
     var file_to_check = file
@@ -103,11 +77,18 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
         # skip ramdisk without inner path
         if "ramdisk" == place_type and 0 >= len( inner_path ): continue
 
-        var base_path = "";
+        var base_path = ""
+        var compress_flag = compress
         if "ramdisk_compressed" == place_type:
-          base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", joinPath( inner_path_splitted ) )
+          base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "compressed", joinPath( inner_path_splitted ) )
         elif "ramdisk_uncompressed" == place_type:
-          base_path = joinPath( getCurrentDir(), "tmp" )
+          base_path = joinPath( getCurrentDir(), "tmp", "ramdisk" )
+        elif "image_root" == place_type:
+          base_path = joinPath( getCurrentDir(), "tmp", "partition", "root", joinPath( inner_path_splitted ) )
+          compress_flag = false
+        elif "image_boot" == place_type:
+          base_path = joinPath( getCurrentDir(), "tmp", "partition", "boot", joinPath( inner_path_splitted ) )
+          compress_flag = false
         else:
           echo "unknown type ", $place_type , " for ", file, " with path ", inner_path
           continue
@@ -118,21 +99,15 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
           createSymlink( symlink_src, joinPath( base_path, executable ) )
         else:
           if "ramdisk_uncompressed" == place_type:
-            copyFile( file, joinPath( base_path, executable ) );
+            copyFile( file, joinPath( base_path, executable ) )
           else:
-            if compress:
+            if compress_flag:
               writeFile( joinPath( base_path, executable & ".gz" ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
             else:
               copyFile( file, joinPath( base_path, executable ) )
         continue
 
       if -1 != path.find(sysroot):
-        let place_type = "image"
-        if "image" == place_type:
-          echo "unknown type ", $place_type , " for ", file
-          continue
-        #FIXME: implement image creation
-
         # determine target folder
         var target_folder = $DirSep
         var last = len( splitted_head ) - 1
@@ -153,69 +128,16 @@ proc scan_directory( path: string, file_type: string, additional_info: string, s
               target_folder &= tmp_info[ pos..^1 ].join( $DirSep )
             else:
               target_folder &= tmp_info[ pos..^2 ].join( $DirSep )
-          elif "font" == splitted_head[ pos ]:
-            target_folder &= splitted_head[ pos..^1 ].join( $DirSep )
           else:
-            target_folder &= splitted_head[ pos..^2 ].join( $DirSep )
+            target_folder &= splitted_head[ pos..^1 ].join( $DirSep )
         else:
           pos = -1
 
-        var base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", target_folder )
+        var base_path = joinPath( getCurrentDir(), "tmp", "partition", "root", target_folder )
 
         # symlink handling
         if not isEmptyOrWhitespace( symlink_src ):
           createDir( base_path )
           createSymlink( symlink_src, joinPath( base_path, executable ) )
         else:
-          # special handling for boot
-          if executable == "boot":
-            copyFile( file, joinPath( getCurrentDir(), "tmp", executable ) )
-          else:
-            createDir( base_path )
-            if compress:
-              writeFile( joinPath( base_path, executable & ".gz" ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
-            else:
-              copyFile( file, joinPath( base_path, executable ) )
-
-scan_directory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
-scan_directory( font, "PC Screen Font", "", sysroot, false )
-scan_directory( server, "ELF", "executable", sysroot, false )
-scan_directory( application, "ELF", "executable", sysroot, false )
-scan_directory( bosl, "ASCII", "", sysroot, false )
-
-#[
-# loop through files of folder including subfolders and adjust interpreter and run path for ramdisk
-for file in walkDirRec( joinPath( getCurrentDir(), "tmp", "ramdisk" ) ):
-  let outp_shell = execProcess( "file " & file )
-  if contains( outp_shell, ": ELF" ) and contains( outp_shell, "dynamically linked" ):
-    # Replace dynamic linker
-    if not contains( outp_shell, "LSB shared object" ):
-      discard execProcess( "patchelf --set-interpreter /ramdisk/lib/ld-bolthur.so " & file )
-    # Replace rpath
-    discard execProcess( "patchelf --set-rpath /ramdisk/lib " & file )
-]#
-
-# configuration file stuff
-if dirExists( config ):
-  # create base path
-  let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "ramdisk", "config" )
-  createDir( base_path )
-  for file in walkDirRec( config ):
-    # remove full path, and strip possible leading directory separator
-    let path = replace( file, config, "" ).strip( trailing = false, chars = { DirSep } )
-    # get folder path out of file
-    let splitted = splitPath( path )
-    if "" != splitted.head: createDir( joinPath( base_path, splitted.head ) )
-    # copy file
-    copyFile( file, joinPath( base_path, path ) )
-
-# create ramdisk and remove normal directory
-echo execProcess( "tar czvf ../ramdisk.tar.gz * --owner=0 --group=0", "tmp/ramdisk" )
-removeDir( "tmp/ramdisk" )
-# create initrd with init and compressed ramdisk and cleanup directory
-if output.isAbsolute:
-  echo execProcess( "tar cvf " & output & " * --owner=0 --group=0", "tmp" )
-else:
-  echo execProcess( "tar cvf ../" & output & " * --owner=0 --group=0", "tmp" )
-# remove tmp dir again
-removeDir( "tmp" )
+          copyFile( file, joinPath( base_path, executable ) )

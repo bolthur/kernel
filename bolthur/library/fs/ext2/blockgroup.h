@@ -17,20 +17,30 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <assert.h>
 
-#include "ext2/superblock.h"
-#include "ext2/blockgroup.h"
-#include "ext2/inode.h"
-#include "ext2/directory.h"
+#ifndef _EXT2_BLOCKGROUP_H
+#define _EXT2_BLOCKGROUP_H
 
-#ifndef _EXT2_H
-#define _EXT2_H
+#pragma pack(push, 1)
 
-typedef bool (*device_read_t)(uint32_t* dest, size_t size, uint32_t start );
+typedef struct {
+  uint32_t bg_block_bitmap;
+  uint32_t bg_inode_bitmap;
+  uint32_t bg_inode_table;
+  uint16_t bg_free_blocks_count;
+  uint16_t bg_free_inodes_count;
+  uint16_t bg_used_dirs_count;
+  uint16_t bg_pad;
+  uint8_t unused[ 12 ];
+} ext2_blockgroup_t;
 
-int32_t ext2_superblock_read( device_read_t, ext2_superblock_t*, uint32_t );
+static_assert(
+  32 == sizeof( ext2_blockgroup_t ),
+  "invalid ext2 block group size!"
+);
+
+#pragma pack(pop)
 
 #endif
