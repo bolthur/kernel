@@ -17,7 +17,7 @@
 # along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from std/os import fileExists, dirExists, createDir, copyDir, copyFile, removeFile, joinPath, getCurrentDir
+from std/os import fileExists, dirExists, createDir, copyDir, copyFile, removeFile, joinPath, getCurrentDir, walkDirRec, pcFile
 from system/io import File, open, fmAppend
 from std/strutils import intToStr, find, endsWith, replace
 from std/math import pow
@@ -70,6 +70,8 @@ proc image_create_partition( target: string, total_size: int, boot_folder: strin
   echo execProcess( "dd if=/dev/zero of=" & root_partition & " bs=" & intToStr( block_size ) & " count=" & intToStr( int( partition_size_root / block_size ) ) & " skip=" & intToStr( int( current_offset / block_size ) ) )
   # format raw files ( boot with fat32 and root with ext2 )
   echo execProcess( "mkfs.vfat -F32 " & boot_partition & " --mbr=no" )
+  for file in walkDirRec( joinPath( base_path, "partition", "boot" ), { pcFile } ):
+    echo execProcess( "mcopy -i " & boot_partition & " " & file & " ::" )
   echo execProcess( """mke2fs -d """" & joinPath( base_path, "partition", "root" ) & """" -r 1 -N 0 -m 5 """" & root_partition & """" """" & intToStr( int( partition_size_root / mega ) ) & """M"""" )
   #echo execProcess( "mkfs.ext2 " & root_partition )
   # FIXME: FIX USER IN GENERATED ext2 IMAGE
@@ -94,41 +96,6 @@ type=83, size=""" & intToStr( int( partition_size_root / block_size_image ) ) & 
   echo execProcess( "dd if=" & root_partition & " of=" & target & " bs=" & intToStr( block_size ) & " seek=" & intToStr( int( current_offset / block_size ) ) )
   # increment current offset
   current_offset += partition_size_root
-
-  # loop setup with udisks2
-  var outp_udisksctl: string = execProcess( "udisksctl loop-setup -f " & target ).replace( "\n", "" )
-  echo outp_udisksctl
-  let device_name: string = getDestinationPath( outp_udisksctl, " as /", 4 )
-  if "" == device_name:
-    echo "unable to extract device name"
-    echo outp_udisksctl
-    echo execProcess( "udisksctl loop-delete -b " & device_name )
-    quit( 1 )
-  # mount root and boot
-  outp_udisksctl = execProcess( "udisksctl mount -b " & device_name & "p1" ).replace( "\n", "" )
-  echo outp_udisksctl
-  var boot_mount_path: string = getDestinationPath( outp_udisksctl, " at /", 4 )
-  if "" == boot_mount_path:
-    echo "unable to extract boot mount path"
-    echo outp_udisksctl
-    echo execProcess( "udisksctl loop-delete -b " & device_name )
-    quit( 1 )
-  outp_udisksctl = execProcess( "udisksctl mount -b " & device_name & "p2" ).replace( "\n", "" )
-  echo outp_udisksctl
-  var root_mount_path: string = getDestinationPath( outp_udisksctl, " at /", 4 )
-  if "" == root_mount_path:
-    echo "unable to extract root mount name"
-    echo outp_udisksctl
-    echo execProcess( "udisksctl unmount -b " & device_name & "p1" )
-    echo execProcess( "udisksctl loop-delete -b " & device_name )
-    quit( 1 )
-  # copy over files
-  copyDir( joinPath( base_path, "partition", "boot" ), boot_mount_path )
-  # unmount again
-  echo execProcess( "udisksctl unmount -b " & device_name & "p1" )
-  echo execProcess( "udisksctl unmount -b " & device_name & "p2" )
-  # unattach
-  echo execProcess( "udisksctl loop-delete -b " & device_name )
 
 proc create_plain_image_file*( image_type: string ): void =
   # bunch of variables
