@@ -250,6 +250,7 @@ BOLTHUR_PROG_STRIP
 BOLTHUR_PREPARE_CPPCHECK
 # add directory for ramdisk
 AC_SUBST(ROOT_DIR, $($BOLTHUR_READLINK -f ${srcdir}))
+AC_SUBST(BUILD_DIR, $($BOLTHUR_READLINK -f ${ac_pwd}))
 AC_SUBST(SYSROOT_DIR, $(dirname $(dirname $($BOLTHUR_READLINK -f $($CC $CFLAGS --print-file-name=libc.a)))))
 
 # doxygen stuff

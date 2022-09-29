@@ -18,7 +18,7 @@
 #
 
 import std/os
-import std/osproc
+from std/osproc import execCmdEx
 import std/strutils
 import std/strformat
 import std/parsecfg
@@ -54,8 +54,11 @@ proc scan_directory*( path: string, file_type: string, additional_info: string, 
           file_to_check = joinPath( splitted.dir, file_to_check )
         # get info again
         info = getFileInfo( file_to_check, false )
-    let outp_shell = execProcess( "file " & file_to_check )
-    if contains( outp_shell, file_type ) and contains( outp_shell, additional_info ):
+    let cmd_result: tuple[output: string, exitCode: int] = execCmdEx( "file " & file_to_check )
+    if 0 != cmd_result.exitCode:
+      echo "unable to query info: " & cmd_result.output
+      quit( 1 )
+    if contains( cmd_result.output, file_type ) and contains( cmd_result.output, additional_info ):
       # split file path
       let split = splitPath( file )
       let splitted_head = split.head.split( DirSep )
@@ -95,7 +98,6 @@ proc scan_directory*( path: string, file_type: string, additional_info: string, 
 
         createDir( base_path )
         if not isEmptyOrWhitespace( symlink_src ):
-          echo symlink_src
           createSymlink( symlink_src, joinPath( base_path, executable ) )
         else:
           if "ramdisk_uncompressed" == place_type:

@@ -41,16 +41,13 @@ proc load_firmware_to_boot*( firmware_type: string ): void =
   if "raspi" == firmware_type:
     # load firmware
     if not fileExists( joinPath( cache_path, "firmware.tar.gz" ) ):
-      echo "Loading firmware for raspi"
       var client = newHttpClient()
       client.onProgressChanged = onProgressChanged
       client.downloadFile( "https://github.com/raspberrypi/firmware/archive/refs/tags/1.20220120.tar.gz", joinPath( cache_path, "firmware.tar.gz" ) )
       stdout.write "\r\n"
       stdout.flushFile()
       # unzip firmware
-      echo "Unzipping firmware"
       extractAll( joinPath( cache_path, "firmware.tar.gz" ), joinPath( cache_path, "firmware" ) )
-    echo "Copying firmware to boot folder"
     # copy over to boot
     for file in walkDirRec( joinPath( cache_path, "firmware", "firmware-1.20220120", "boot" ), { pcFile } ):
       let splitted = splitPath( file )

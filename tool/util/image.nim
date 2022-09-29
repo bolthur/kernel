@@ -18,36 +18,21 @@
 #
 
 from std/os import fileExists, dirExists, createDir, copyDir, copyFile, removeFile, joinPath, getCurrentDir, walkDirRec, pcFile
-from system/io import File, open, fmAppend
 from std/strutils import intToStr, find, endsWith, replace
 from std/math import pow
-from std/osproc import execProcess
+from std/osproc import execCmdEx
 
 var mega: int = int( pow( 2.0, 20.0 ) )
-var block_size: int = 512;
 
-proc image_dd( target: string, size: int ): void =
-  # ensure file is not existing
-  if fileExists( target ):
-    echo "file " & target & " already exists"
+proc image_dd( source: string, target: string, size: int, block_size: int, offset: int ): void =
+  var cmd:string = "dd if=" & source & " of=" & target & " bs=" & intToStr( block_size ) & " count=" & intToStr( int( size / block_size ) ) & " skip=" & intToStr( int( offset / block_size ) )
+  if -1 == size:
+    cmd = "dd if=" & source & " of=" & target & " bs=" & intToStr( block_size ) & " seek=" & intToStr( int( offset / block_size ) )
+
+  let result: tuple[output: string, exitCode: int] = execCmdEx( cmd )
+  if 0 != result.exitCode:
+    echo "Unable to create raw image: " & result.output
     quit( 1 )
-  # transfer MiB to byte
-  var byte_size: int = size * mega
-  # open file
-  var f:File = open( target, fmAppend )
-  # write byte per byte to target
-  for i in 0 .. byte_size:
-    write(f, '0')
-
-proc getDestinationPath( output: string, separator: string, offset: int ): string =
-  let position: int = output.find( separator )
-  if -1 == position:
-    return ""
-  var lower: int = position + offset
-  var upper: int = output.high
-  if output.endsWith( "." ):
-    upper -= 1
-  return output[ lower..upper ]
 
 proc image_create_partition( target: string, total_size: int, boot_folder: string, boot_type: string, boot_size: int, root_folder: string, root_type: string ): void =
   # use boot size - 1 for mbr
@@ -57,6 +42,8 @@ proc image_create_partition( target: string, total_size: int, boot_folder: strin
   # save partition table offset
   let partition_table_offset: int = mega
 
+  var cmd_result: tuple[output: string, exitCode: int];
+
   let block_size_image: int = 512
   let block_size: int = 1024
   var current_offset: int = 0
@@ -65,60 +52,69 @@ proc image_create_partition( target: string, total_size: int, boot_folder: strin
   let boot_partition: string = joinPath( base_path, "boot.img" )
   let root_partition: string = joinPath( base_path, "root.img" )
 
-  # create raw files for boot and root
-  echo execProcess( "dd if=/dev/zero of=" & boot_partition & " bs=" & intToStr( block_size ) & " count=" & intToStr( int( partition_size_boot / block_size ) ) & " skip=" & intToStr( int( current_offset / block_size ) ) )
-  echo execProcess( "dd if=/dev/zero of=" & root_partition & " bs=" & intToStr( block_size ) & " count=" & intToStr( int( partition_size_root / block_size ) ) & " skip=" & intToStr( int( current_offset / block_size ) ) )
-  # format raw files ( boot with fat32 and root with ext2 )
-  echo execProcess( "mkfs.vfat -F32 " & boot_partition & " --mbr=no" )
+  # create raw files for boot, root and destination image
+  image_dd( "/dev/zero", boot_partition, partition_size_boot, block_size, current_offset )
+  image_dd( "/dev/zero", root_partition, partition_size_root, block_size, current_offset )
+  image_dd( "/dev/zero", target, partition_table_offset + partition_size_boot + partition_size_root, block_size, current_offset )
+  # format boot image with fat 32
+  cmd_result = execCmdEx( "mkfs.vfat -F32 " & boot_partition & " --mbr=no" )
+  if 0 != cmd_result.exitCode:
+    echo "Unable to format boot partition with FAT32: " & cmd_result.output
+    quit( 1 )
+  # format root image with ext2
+  cmd_result = execCmdEx( """mke2fs -t ext2 -d """" & joinPath( base_path, "partition", "root" ) & """" -r 1 -N 0 -m 5 """" & root_partition & """" """" & intToStr( int( partition_size_root / mega ) ) & """M"""" )
+  if 0 != cmd_result.exitCode:
+    echo "Unable to format root partition with ext2: " & cmd_result.output
+    quit( 1 )
+  # copy files to boot partition
   for file in walkDirRec( joinPath( base_path, "partition", "boot" ), { pcFile } ):
-    echo execProcess( "mcopy -i " & boot_partition & " " & file & " ::" )
-  echo execProcess( """mke2fs -d """" & joinPath( base_path, "partition", "root" ) & """" -r 1 -N 0 -m 5 """" & root_partition & """" """" & intToStr( int( partition_size_root / mega ) ) & """M"""" )
-  #echo execProcess( "mkfs.ext2 " & root_partition )
+    cmd_result = execCmdEx( "mcopy -i " & boot_partition & " " & file & " ::" )
+    if 0 != cmd_result.exitCode:
+      echo "Unable to copy content to boot partition: " & cmd_result.output
+      quit( 1 )
   # FIXME: FIX USER IN GENERATED ext2 IMAGE
-  # create raw image file
-  echo execProcess( "dd if=/dev/zero of=" & target & " bs=" & intToStr( block_size ) & " count=" & intToStr( int( ( partition_table_offset + partition_size_boot + partition_size_root ) / block_size ) ) & " skip=" & intToStr( int( current_offset / block_size ) ) )
-
   # set partitions
-  let outp_partition_type = execProcess( """printf "
+  cmd_result = execCmdEx( """printf "
 type=0c, size=""" & intToStr( int( partition_size_boot / block_size_image ) ) & """
 
 type=83, size=""" & intToStr( int( partition_size_root / block_size_image ) ) & """
 " | sfdisk """" & target & """"""" )
-  echo outp_partition_type
+  if 0 != cmd_result.exitCode:
+    echo "Unable to set partition types in target image: " & cmd_result.output
+    quit( 1 )
 
   # increment current offset
   current_offset += partition_table_offset
   # copy boot partition
-  echo execProcess( "dd if=" & boot_partition & " of=" & target & " bs=" & intToStr( block_size ) & " seek=" & intToStr( int( current_offset / block_size ) ) )
+  image_dd( boot_partition, target, -1, block_size, current_offset )
   # increment current offset
   current_offset += partition_size_boot
   # copy root partition
-  echo execProcess( "dd if=" & root_partition & " of=" & target & " bs=" & intToStr( block_size ) & " seek=" & intToStr( int( current_offset / block_size ) ) )
+  image_dd( root_partition, target, -1, block_size, current_offset )
   # increment current offset
   current_offset += partition_size_root
 
-proc create_plain_image_file*( image_type: string ): void =
+proc create_plain_image_file*( image_type: string, root_path: string ): void =
   # bunch of variables
   let base_path: string = joinPath( getCurrentDir(), "tmp" )
   let image_path: string = joinPath( base_path, "image.img" )
   let boot_directory_path: string = joinPath( base_path, "partition", "boot" )
   let root_directory_path: string = joinPath( base_path, "partition", "root" )
-  let root_boot_directory_path: string = joinPath( root_directory_path, "boot" )
   let root_etc_directory_path: string = joinPath( root_directory_path, "etc" )
+  # create folder boot, root and etc in root image
+  createDir( joinPath( root_directory_path, "boot" ) )
+  createDir( root_etc_directory_path )
+  createDir( joinPath( root_directory_path, "root" ) )
+  # copy fstab to partition root etc folder
+  copyFile( joinPath( getCurrentDir(), "file", image_type, "fstab" ), joinPath( root_etc_directory_path, "fstab" ) )
   if "raspi" == image_type:
-    # create image file
-    echo "Creating plain image with size of 256M"
-    image_dd( image_path, 256 )
-    # create folder for boot mount point and etc folder for fstab
-    createDir( root_boot_directory_path )
-    createDir( root_etc_directory_path )
-    # copy fstab to partition root etc folder
-    copyFile( joinPath( getCurrentDir(), "file", image_type, "fstab" ), joinPath( root_etc_directory_path, "fstab" ) )
+    # copy necessary stuff to boot partition
+    let config_file: string = joinPath( root_path, "build-aux", "platform", image_type, "config.txt" )
+    let cmdline_file: string = joinPath( root_path, "build-aux", "platform", image_type, "cmdline.txt" )
+    if fileExists( config_file ): copyFile( config_file, joinPath( boot_directory_path, "config.txt" ) )
+    if fileExists( cmdline_file ): copyFile( cmdline_file, joinPath( boot_directory_path, "cmdline.txt" ) )
     # create boot partition
-    echo "Creating boot partition with 100M and root partition with rest"
     image_create_partition( image_path, 256, boot_directory_path, "fat32", 100, root_directory_path, "ext2" )
-    let destination_image_path: string = joinPath( getCurrentDir(), "..", "build-aux", "platform", image_type, "sdcard.img" )
-    echo "Copying image to build-aux"
-    if fileExists( destination_image_path ):
-      removeFile( destination_image_path );
+    let destination_image_path: string = joinPath( root_path, "build-aux", "platform", image_type, "sdcard.img" )
+    if fileExists( destination_image_path ): removeFile( destination_image_path )
     copyFile( image_path, destination_image_path )
