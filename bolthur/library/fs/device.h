@@ -18,31 +18,13 @@
  */
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
-#include "cache.h"
-#include "device.h"
-#include "fat/bpb.h"
-#include "fat/fs.h"
-#include "fat/fsinfo.h"
-#include "fat/node.h"
+#ifndef _DEVICE_H
+#define _DEVICE_H
 
-#ifndef _FAT_H
-#define _FAT_H
-
-// generic related functions
-fat_fs_t* fat_fs_init( dev_read_t, dev_write_t, uint32_t, uint32_t );
-bool fat_fs_mount( fat_fs_t* );
-bool fat_fs_unmount( fat_fs_t* );
-void fat_fs_sync( fat_fs_t* );
-
-// cache related functions
-
-cache_handle_t* fat_cache_construct( void*, uint32_t );
-void fat_cache_sync( cache_handle_t* );
-cache_block_t* fat_cache_block_allocate( cache_handle_t*, uint32_t, bool );
-bool fat_cache_block_free( cache_block_t*, bool );
-bool fat_cache_block_dirty( cache_block_t* );
-
-// FIXME: ADD FUNCTION PROTOTYPES HERE
+typedef bool ( *dev_read_t )( uint32_t* dest, size_t size, uint32_t start );
+typedef bool ( *dev_write_t )( uint32_t* src, size_t size, uint32_t start );
 
 #endif

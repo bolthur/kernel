@@ -17,30 +17,4 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <assert.h>
-
-#ifndef _EXT2_BLOCKGROUP_H
-#define _EXT2_BLOCKGROUP_H
-
-#pragma pack(push, 1)
-
-typedef struct {
-  uint32_t bg_block_bitmap;
-  uint32_t bg_inode_bitmap;
-  uint32_t bg_inode_table;
-  uint16_t bg_free_blocks_count;
-  uint16_t bg_free_inodes_count;
-  uint16_t bg_used_dirs_count;
-  uint16_t bg_pad;
-  uint8_t unused[ 12 ];
-} ext2_blockgroup_t;
-
-static_assert(
-  32 == sizeof( ext2_blockgroup_t ),
-  "invalid ext2 block group size!"
-);
-
-#pragma pack(pop)
-
-#endif
+#include "../ext.h"

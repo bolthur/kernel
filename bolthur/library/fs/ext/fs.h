@@ -18,31 +18,31 @@
  */
 
 #include <stdint.h>
+#include "superblock.h"
+#include "../cache.h"
+#include "../device.h"
 
-#include "cache.h"
-#include "device.h"
-#include "fat/bpb.h"
-#include "fat/fs.h"
-#include "fat/fsinfo.h"
-#include "fat/node.h"
+#ifndef _EXT_FS_H
+#define _EXT_FS_H
 
-#ifndef _FAT_H
-#define _FAT_H
+typedef struct {
+  dev_read_t dev_read;
+  dev_write_t dev_write;
 
-// generic related functions
-fat_fs_t* fat_fs_init( dev_read_t, dev_write_t, uint32_t, uint32_t );
-bool fat_fs_mount( fat_fs_t* );
-bool fat_fs_unmount( fat_fs_t* );
-void fat_fs_sync( fat_fs_t* );
+  cache_construct_t cache_construct;
+  cache_destruct_t cache_destruct;
+  cache_sync_t cache_sync;
+  cache_block_allocate_t cache_block_allocate;
+  cache_block_free_t cache_block_free;
+  cache_block_dirty_t cache_block_dirty;
 
-// cache related functions
+  uint32_t partition_offset;
+  uint32_t partition_block_size;
 
-cache_handle_t* fat_cache_construct( void*, uint32_t );
-void fat_cache_sync( cache_handle_t* );
-cache_block_t* fat_cache_block_allocate( cache_handle_t*, uint32_t, bool );
-bool fat_cache_block_free( cache_block_t*, bool );
-bool fat_cache_block_dirty( cache_block_t* );
+  ext_superblock_t* superblock;
 
-// FIXME: ADD FUNCTION PROTOTYPES HERE
+  uint8_t* boot_sector;
+  cache_handle_t* handle;
+} ext_fs_t;
 
 #endif

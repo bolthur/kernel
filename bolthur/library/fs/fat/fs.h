@@ -17,30 +17,30 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <errno.h>
-#include <inttypes.h>
-#include <sys/bolthur.h>
-#include "../ext2.h"
+#include <stdint.h>
+#include <assert.h>
+#include "../cache.h"
+#include "../device.h"
+#include "bpb.h"
 
-int32_t ext2_superblock_read(
-  device_read_t read,
-  ext2_superblock_t* superblock,
-  uint32_t offset
-) {
-  // try to read superblock
-  if ( ! read( ( uint32_t* )superblock, sizeof( ext2_superblock_t ), offset ) ) {
-    EARLY_STARTUP_PRINT( "UNABLE TO READ SUPERBLOCK!\r\n" )
-    return -EIO;
-  }
-  // validate partition
-  if ( EXT2_SUPER_MAGIC != superblock->s_magic ) {
-    EARLY_STARTUP_PRINT(
-      "Invalid signature, expected %"PRIx16" but received %"PRIx16"!\r\n",
-      EXT2_SUPER_MAGIC, superblock->s_magic
-    )
-    return -EINVAL;
-  }
-  EARLY_STARTUP_PRINT( "Signature: %"PRIx16"!\r\n", superblock->s_magic )
-  // return success
-  return 0;
-}
+#ifndef _FAT_FS_H
+#define _FAT_FS_H
+
+typedef struct {
+  dev_read_t dev_read;
+  dev_write_t dev_write;
+
+  cache_construct_t cache_construct;
+  cache_destruct_t cache_destruct;
+  cache_sync_t cache_sync;
+  cache_block_allocate_t cache_block_allocate;
+  cache_block_free_t cache_block_free;
+  cache_block_dirty_t cache_block_dirty;
+
+  uint32_t partition_offset;
+
+  fat_bpb_t* boot_sector;
+  void* handle;
+} fat_fs_t;
+
+#endif

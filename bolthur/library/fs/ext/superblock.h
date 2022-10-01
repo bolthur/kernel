@@ -20,50 +20,50 @@
 #include <stdint.h>
 #include <assert.h>
 
-#ifndef _EXT2_SUPERBLOCK_H
-#define _EXT2_SUPERBLOCK_H
+#ifndef _EXT_SUPERBLOCK_H
+#define _EXT_SUPERBLOCK_H
 
 // superblock magic
-#define EXT2_SUPER_MAGIC 0xEF53
+#define EXT_SUPER_MAGIC 0xEF53
 // state values
-#define EXT2_VALID_FS 1
-#define EXT2_ERROR_FS 2
+#define EXT_VALID_FS 1
+#define EXT_ERROR_FS 2
 // error values
-#define EXT2_ERRORS_CONTINUE 1
-#define EXT2_ERRORS_RO 2
-#define EXT2_ERRORS_PANIC 3
+#define EXT_ERRORS_CONTINUE 1
+#define EXT_ERRORS_RO 2
+#define EXT_ERRORS_PANIC 3
 // creator os values
-#define EXT2_OS_LINUX 0
-#define EXT2_OS_HURD 1
-#define EXT2_OS_MASIX 2
-#define EXT2_OS_FREEBSD 3
-#define EXT2_OS_LITES 4
+#define EXT_OS_LINUX 0
+#define EXT_OS_HURD 1
+#define EXT_OS_MASIX 2
+#define EXT_OS_FREEBSD 3
+#define EXT_OS_LITES 4
 // rev level values
-#define EXT2_GOOD_OLD_REV 0
-#define EXT2_DYNAMIC_REV 1
+#define EXT_GOOD_OLD_REV 0
+#define EXT_DYNAMIC_REV 1
 // feature compatibility flags
-#define EXT2_FEATURE_COMPAT_DIR_PREALLOC 0x0001
-#define EXT2_FEATURE_COMPAT_IMAGIC_INODES 0x0002
+#define EXT_FEATURE_COMPAT_DIR_PREALLOC 0x0001
+#define EXT_FEATURE_COMPAT_IMAGIC_INODES 0x0002
 #define EXT3_FEATURE_COMPAT_HAS_JOURNAL 0x0004
-#define EXT2_FEATURE_COMPAT_EXT_ATTR 0x0008
-#define EXT2_FEATURE_COMPAT_RESIZE_INO 0x0010
-#define EXT2_FEATURE_COMPAT_DIR_INDEX 0x0020
+#define EXT_FEATURE_COMPAT_EXT_ATTR 0x0008
+#define EXT_FEATURE_COMPAT_RESIZE_INO 0x0010
+#define EXT_FEATURE_COMPAT_DIR_INDEX 0x0020
 // feature incompatibility flags
-#define EXT2_FEATURE_INCOMPAT_COMPRESSION 0x0001
-#define EXT2_FEATURE_INCOMPAT_FILETYPE 0x0002
+#define EXT_FEATURE_INCOMPAT_COMPRESSION 0x0001
+#define EXT_FEATURE_INCOMPAT_FILETYPE 0x0002
 #define EXT3_FEATURE_INCOMPAT_RECOVER 0x0004
 #define EXT3_FEATURE_INCOMPAT_JOURNAL_DEV 0x0008
-#define EXT2_FEATURE_INCOMPAT_META_BG 0x0010
+#define EXT_FEATURE_INCOMPAT_META_BG 0x0010
 // feature read only compatibility flags
-#define EXT2_FEATURE_RO_COMPAT_SPARSE_SUPER 0x0001
-#define EXT2_FEATURE_RO_COMPAT_LARGE_FILE 0x0002
-#define EXT2_FEATURE_RO_COMPAT_BTREE_DIR 0x0004
+#define EXT_FEATURE_RO_COMPAT_SPARSE_SUPER 0x0001
+#define EXT_FEATURE_RO_COMPAT_LARGE_FILE 0x0002
+#define EXT_FEATURE_RO_COMPAT_BTREE_DIR 0x0004
 // algo bitmap values
-#define EXT2_LZV1_ALG 0
-#define EXT2_LZRW3A_ALG 1
-#define EXT2_GZIP_ALG 2
-#define EXT2_BZIP2_ALG  3
-#define EXT2_LZO_ALG  4
+#define EXT_LZV1_ALG 0
+#define EXT_LZRW3A_ALG 1
+#define EXT_GZIP_ALG 2
+#define EXT_BZIP2_ALG  3
+#define EXT_LZO_ALG  4
 
 #pragma pack(push, 1)
 
@@ -121,11 +121,11 @@ typedef struct {
   uint32_t s_default_mount_options;
   uint32_t s_first_meta_bg;
   uint32_t reserved[ 190 ];
-} ext2_superblock_t;
+} ext_superblock_t;
 
 static_assert(
-  1024 == sizeof( ext2_superblock_t ),
-  "invalid ext2 super block size!"
+  1024 == sizeof( ext_superblock_t ),
+  "invalid ext super block size!"
 );
 
 #pragma pack(pop)

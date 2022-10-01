@@ -21,18 +21,18 @@
 #include <stdint.h>
 #include <assert.h>
 
-#ifndef _EXT2_DIRECTORY_H
-#define _EXT2_DIRECTORY_H
+#ifndef _EXT_DIRECTORY_H
+#define _EXT_DIRECTORY_H
 
 // file_type
-#define EXT2_FT_UNKNOWN 0
-#define EXT2_FT_REG_FILE 1
-#define EXT2_FT_DIR 2
-#define EXT2_FT_CHRDEV 3
-#define EXT2_FT_BLKDEV 4
-#define EXT2_FT_FIFO 5
-#define EXT2_FT_SOCK 6
-#define EXT2_FT_SYMLINK 7
+#define EXT_FT_UNKNOWN 0
+#define EXT_FT_REG_FILE 1
+#define EXT_FT_DIR 2
+#define EXT_FT_CHRDEV 3
+#define EXT_FT_BLKDEV 4
+#define EXT_FT_FIFO 5
+#define EXT_FT_SOCK 6
+#define EXT_FT_SYMLINK 7
 
 typedef struct {
   uint32_t inode;
@@ -40,7 +40,7 @@ typedef struct {
   uint8_t name_len;
   uint8_t file_type;
   char name[];
-} ext2_directory_entry_t;
+} ext_directory_entry_t;
 
 // hash version
 #define DX_HASH_LEGACY 0
@@ -53,8 +53,11 @@ typedef struct {
   uint8_t info_length;
   uint8_t indirect_levels;
   uint8_t unused;
-} ext2_directory_entry_root_t;
+} ext_directory_entry_root_t;
 
-static_assert( 8 == sizeof( ext2_directory_entry_root_t ), "invalid ext2_directory_entry_root_t size!" );
+static_assert(
+  8 == sizeof( ext_directory_entry_root_t ),
+  "invalid ext_directory_entry_root_t size!"
+);
 
 #endif

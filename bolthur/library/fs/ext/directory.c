@@ -17,20 +17,4 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <assert.h>
-
-#include "ext2/superblock.h"
-#include "ext2/blockgroup.h"
-#include "ext2/inode.h"
-#include "ext2/directory.h"
-
-#ifndef _EXT2_H
-#define _EXT2_H
-
-typedef bool (*device_read_t)(uint32_t* dest, size_t size, uint32_t start );
-
-int32_t ext2_superblock_read( device_read_t, ext2_superblock_t*, uint32_t );
-
-#endif
+#include "../ext.h"

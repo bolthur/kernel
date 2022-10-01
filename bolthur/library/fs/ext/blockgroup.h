@@ -18,31 +18,31 @@
  */
 
 #include <stdint.h>
+#include <assert.h>
 
-#include "cache.h"
-#include "device.h"
-#include "fat/bpb.h"
-#include "fat/fs.h"
-#include "fat/fsinfo.h"
-#include "fat/node.h"
+#ifndef _EXT_BLOCKGROUP_H
+#define _EXT_BLOCKGROUP_H
 
-#ifndef _FAT_H
-#define _FAT_H
+#define EXT_FIRST_GROUP 0
 
-// generic related functions
-fat_fs_t* fat_fs_init( dev_read_t, dev_write_t, uint32_t, uint32_t );
-bool fat_fs_mount( fat_fs_t* );
-bool fat_fs_unmount( fat_fs_t* );
-void fat_fs_sync( fat_fs_t* );
+#pragma pack(push, 1)
 
-// cache related functions
+typedef struct {
+  uint32_t bg_block_bitmap;
+  uint32_t bg_inode_bitmap;
+  uint32_t bg_inode_table;
+  uint16_t bg_free_blocks_count;
+  uint16_t bg_free_inodes_count;
+  uint16_t bg_used_dirs_count;
+  uint16_t bg_pad;
+  uint8_t unused[ 12 ];
+} ext_blockgroup_t;
 
-cache_handle_t* fat_cache_construct( void*, uint32_t );
-void fat_cache_sync( cache_handle_t* );
-cache_block_t* fat_cache_block_allocate( cache_handle_t*, uint32_t, bool );
-bool fat_cache_block_free( cache_block_t*, bool );
-bool fat_cache_block_dirty( cache_block_t* );
+static_assert(
+  32 == sizeof( ext_blockgroup_t ),
+  "invalid ext block group size!"
+);
 
-// FIXME: ADD FUNCTION PROTOTYPES HERE
+#pragma pack(pop)
 
 #endif

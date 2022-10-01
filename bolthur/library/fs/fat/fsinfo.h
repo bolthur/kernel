@@ -17,7 +17,27 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../fat.h"
+#include <stdint.h>
+#include <assert.h>
 
-__unused static void dummy( void ) {
-}
+#ifndef _FAT_FSINFO_H
+#define _FAT_FSINFO_H
+
+#pragma pack(push, 1)
+
+// fat32 fs info
+typedef struct {
+  uint32_t lead_signature;
+  uint8_t reserved[ 480 ];
+  uint32_t signature;
+  uint32_t known_free_cluster_count;
+  uint32_t available_cluster_start;
+  uint8_t reserved2[ 12 ];
+  uint32_t trail_signature;
+} fat32_fsinfo_t;
+
+static_assert( 512 == sizeof( fat32_fsinfo_t ), "invalid fat32_fsinfo_t size!" );
+
+#pragma pack(pop)
+
+#endif

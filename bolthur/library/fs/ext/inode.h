@@ -17,63 +17,65 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _EXT_INODE_H
+#define _EXT_INODE_H
+
 #include <stdint.h>
 #include <assert.h>
 
-#ifndef _EXT2_INODE_H
-#define _EXT2_INODE_H
+#define EXT_FIRST_INODE 1
 
 // reserved inodes
-#define EXT2_BAD_INO 1
-#define EXT2_ROOT_INO 2
-#define EXT2_ACL_IDX_INO 3
-#define EXT2_ACL_DATA_INO 4
-#define EXT2_BOOT_LOADER_INO 5
-#define EXT2_UNDEL_DIR_INO 6
+#define EXT_BAD_INO 1
+#define EXT_ROOT_INO 2
+#define EXT_ACL_IDX_INO 3
+#define EXT_ACL_DATA_INO 4
+#define EXT_BOOT_LOADER_INO 5
+#define EXT_UNDEL_DIR_INO 6
 
 // mode values
-#define EXT2_S_IFSOCK 0xC000
-#define EXT2_S_IFLNK  0xA000
-#define EXT2_S_IFREG  0x8000
-#define EXT2_S_IFBLK  0x6000
-#define EXT2_S_IFDIR  0x4000
-#define EXT2_S_IFCHR  0x2000
-#define EXT2_S_IFIFO  0x1000
+#define EXT_S_IFSOCK 0xC000
+#define EXT_S_IFLNK  0xA000
+#define EXT_S_IFREG  0x8000
+#define EXT_S_IFBLK  0x6000
+#define EXT_S_IFDIR  0x4000
+#define EXT_S_IFCHR  0x2000
+#define EXT_S_IFIFO  0x1000
 // process execution user/group override
-#define EXT2_S_ISUID  0x0800
-#define EXT2_S_ISGID  0x0400
-#define EXT2_S_ISVTX  0x0200
+#define EXT_S_ISUID  0x0800
+#define EXT_S_ISGID  0x0400
+#define EXT_S_ISVTX  0x0200
 // access rights
-#define EXT2_S_IRUSR  0x0100
-#define EXT2_S_IWUSR  0x0080
-#define EXT2_S_IXUSR  0x0040
-#define EXT2_S_IRGRP  0x0020
-#define EXT2_S_IWGRP  0x0010
-#define EXT2_S_IXGRP  0x0008
-#define EXT2_S_IROTH  0x0004
-#define EXT2_S_IWOTH  0x0002
-#define EXT2_S_IXOTH  0x0001
+#define EXT_S_IRUSR  0x0100
+#define EXT_S_IWUSR  0x0080
+#define EXT_S_IXUSR  0x0040
+#define EXT_S_IRGRP  0x0020
+#define EXT_S_IWGRP  0x0010
+#define EXT_S_IXGRP  0x0008
+#define EXT_S_IROTH  0x0004
+#define EXT_S_IWOTH  0x0002
+#define EXT_S_IXOTH  0x0001
 
 // i_flags
-#define EXT2_SECRM_FL 0x00000001
-#define EXT2_UNRM_FL  0x00000002
-#define EXT2_COMPR_FL 0x00000004
-#define EXT2_SYNC_FL  0x00000008
-#define EXT2_IMMUTABLE_FL 0x00000010
-#define EXT2_APPEND_FL  0x00000020
-#define EXT2_NODUMP_FL  0x00000040
-#define EXT2_NOATIME_FL 0x00000080
+#define EXT_SECRM_FL 0x00000001
+#define EXT_UNRM_FL  0x00000002
+#define EXT_COMPR_FL 0x00000004
+#define EXT_SYNC_FL  0x00000008
+#define EXT_IMMUTABLE_FL 0x00000010
+#define EXT_APPEND_FL  0x00000020
+#define EXT_NODUMP_FL  0x00000040
+#define EXT_NOATIME_FL 0x00000080
 // Reserved for compression usage
-#define EXT2_DIRTY_FL 0x00000100
-#define EXT2_COMPRBLK_FL  0x00000200
-#define EXT2_NOCOMPR_FL 0x00000400
-#define EXT2_ECOMPR_FL  0x00000800
+#define EXT_DIRTY_FL 0x00000100
+#define EXT_COMPRBLK_FL  0x00000200
+#define EXT_NOCOMPR_FL 0x00000400
+#define EXT_ECOMPR_FL  0x00000800
 // End of compression flags
-#define EXT2_BTREE_FL 0x00001000
-#define EXT2_INDEX_FL 0x00001000
-#define EXT2_IMAGIC_FL  0x00002000
+#define EXT_BTREE_FL 0x00001000
+#define EXT_INDEX_FL 0x00001000
+#define EXT_IMAGIC_FL  0x00002000
 #define EXT3_JOURNAL_DATA_FL  0x00004000
-#define EXT2_RESERVED_FL  0x80000000
+#define EXT_RESERVED_FL  0x80000000
 
 #pragma pack(push, 1)
 
@@ -96,9 +98,9 @@ typedef struct {
   uint32_t i_dir_acl;
   uint32_t i_faddr;
   uint8_t osd2[ 12 ];
-} ext2_inode_t;
+} ext_inode_raw_t;
 
-static_assert( 128 == sizeof( ext2_inode_t ), "invalid ext2 inode size!" );
+static_assert( 128 == sizeof( ext_inode_raw_t ), "invalid ext_inode_raw_t size!" );
 
 #pragma pack(pop)
 

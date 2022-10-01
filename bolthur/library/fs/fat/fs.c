@@ -17,32 +17,24 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
+#include "../fat.h"
 
-#include "cache.h"
-#include "device.h"
-#include "fat/bpb.h"
-#include "fat/fs.h"
-#include "fat/fsinfo.h"
-#include "fat/node.h"
+fat_fs_t* fat_fs_init(
+  __unused dev_read_t read,
+  __unused dev_write_t write,
+  __unused uint32_t offset,
+  __unused uint32_t block_size
+) {
+  return NULL;
+}
 
-#ifndef _FAT_H
-#define _FAT_H
+bool fat_fs_mount( __unused fat_fs_t* fs ) {
+  return false;
+}
 
-// generic related functions
-fat_fs_t* fat_fs_init( dev_read_t, dev_write_t, uint32_t, uint32_t );
-bool fat_fs_mount( fat_fs_t* );
-bool fat_fs_unmount( fat_fs_t* );
-void fat_fs_sync( fat_fs_t* );
+bool fat_fs_unmount( __unused fat_fs_t* fs) {
+  return false;
+}
 
-// cache related functions
-
-cache_handle_t* fat_cache_construct( void*, uint32_t );
-void fat_cache_sync( cache_handle_t* );
-cache_block_t* fat_cache_block_allocate( cache_handle_t*, uint32_t, bool );
-bool fat_cache_block_free( cache_block_t*, bool );
-bool fat_cache_block_dirty( cache_block_t* );
-
-// FIXME: ADD FUNCTION PROTOTYPES HERE
-
-#endif
+void fat_fs_sync( __unused fat_fs_t* fs ) {
+}

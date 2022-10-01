@@ -83,7 +83,10 @@ int32_t mbr_extract_partition_from_path( const char* path ) {
  * @return
  */
 int32_t mbr_filesystem_to_type( const char* type ) {
-  if ( 0 == strcmp( type, "ext2" ) ) {
+  if (
+    strlen( "ext2") == strlen( type )
+    && 0 == strcmp( type, "ext2" )
+  ) {
     return PARTITION_TYPE_LINUX_NATIVE;
   }
   return -EINVAL;

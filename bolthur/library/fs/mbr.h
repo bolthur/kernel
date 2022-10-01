@@ -36,7 +36,7 @@
 #define PARTITION_TYPE_FAT32_CHS 0x0B
 #define PARTITION_TYPE_FAT32_LBA 0x0C
 #define PARTITION_TYPE_FAT16B_LBA 0x0E
-// linux native file systems like ext2, ext3, ext4, ...
+// linux native file systems like ext, ext3, ext4, ...
 #define PARTITION_TYPE_LINUX_NATIVE 0x83
 
 typedef union __packed {
