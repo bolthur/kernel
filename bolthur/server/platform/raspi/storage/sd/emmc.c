@@ -3274,3 +3274,16 @@ emmc_response_t emmc_transfer_block(
   // return success
   return EMMC_RESPONSE_OK;
 }
+
+/**
+ * @fn uint32_t emmc_device_block_size(void)
+ * @brief Wrapper to get device block size
+ *
+ * @return
+ */
+uint32_t emmc_device_block_size( void ) {
+  if ( ! device || ! device->initialized || 0 == device->card_rca ) {
+    return 0;
+  }
+  return device->block_size;
+}

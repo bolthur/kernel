@@ -2592,3 +2592,16 @@ sdhost_response_t sdhost_transfer_block(
   // return success
   return SDHOST_RESPONSE_OK;
 }
+
+/**
+ * @fn uint32_t sdhost_device_block_size(void)
+ * @brief Wrapper to get device block size
+ *
+ * @return
+ */
+uint32_t sdhost_device_block_size( void ) {
+  if ( ! device || ! device->initialized || 0 == device->card_rca ) {
+    return 0;
+  }
+  return device->block_size;
+}

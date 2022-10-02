@@ -36,8 +36,7 @@ typedef struct {
   cache_block_free_t cache_block_free;
   cache_block_dirty_t cache_block_dirty;
 
-  uint32_t partition_offset;
-  uint32_t partition_block_size;
+  uint32_t partition_sector_offset;
 
   ext_superblock_t* superblock;
 

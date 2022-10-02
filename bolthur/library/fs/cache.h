@@ -40,7 +40,7 @@ typedef struct {
 
 typedef cache_handle_t* ( *cache_construct_t )( void* fs, uint32_t block_size );
 typedef void ( *cache_destruct_t )( cache_handle_t* handle );
-typedef void ( *cache_sync_t )( cache_handle_t* handle );
+typedef bool ( *cache_sync_t )( cache_handle_t* handle );
 typedef cache_block_t* ( *cache_block_allocate_t )( cache_handle_t* handle, uint32_t block, bool read );
 typedef bool ( *cache_block_free_t )( cache_block_t* block, bool dirty );
 typedef bool ( *cache_block_dirty_t )( cache_block_t* block );

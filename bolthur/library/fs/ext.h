@@ -32,14 +32,14 @@
 #define _EXT_H
 
 // generic related functions
-ext_fs_t* ext_fs_init( dev_read_t, dev_write_t, uint32_t, uint32_t );
+ext_fs_t* ext_fs_init( dev_read_t, dev_write_t, uint32_t );
 bool ext_fs_mount( ext_fs_t* );
 bool ext_fs_unmount( ext_fs_t* );
-void ext_fs_sync( ext_fs_t* );
+bool ext_fs_sync( ext_fs_t* );
 
 // cache related functions
 cache_handle_t* ext_cache_construct( void*, uint32_t );
-void ext_cache_sync( cache_handle_t* );
+bool ext_cache_sync( cache_handle_t* );
 cache_block_t* ext_cache_block_allocate( cache_handle_t*, uint32_t, bool );
 bool ext_cache_block_free( cache_block_t*, bool );
 bool ext_cache_block_dirty( cache_block_t* );

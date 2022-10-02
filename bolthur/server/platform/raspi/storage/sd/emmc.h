@@ -106,5 +106,6 @@ typedef struct {
 emmc_response_t emmc_init( void );
 const char* emmc_error( emmc_response_t );
 emmc_response_t emmc_transfer_block( uint32_t*, size_t, uint32_t, emmc_operation_t );
+uint32_t emmc_device_block_size( void );
 
 #endif

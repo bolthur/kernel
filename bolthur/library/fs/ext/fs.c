@@ -25,13 +25,12 @@
 #include "../ext.h"
 
 /**
- * @fn ext_fs_t ext_fs_init*(dev_read_t, dev_write_t, uint32_t, uint32_t)
+ * @fn ext_fs_t ext_fs_init*(dev_read_t, dev_write_t, uint32_t)
  * @brief
  *
  * @param read
  * @param write
  * @param offset
- * @param block_size
  * @return
  *
  * @exception ENOMEM some allocation internally failed
@@ -39,10 +38,9 @@
 ext_fs_t* ext_fs_init(
   dev_read_t read,
   dev_write_t write,
-  uint32_t offset,
-  uint32_t block_size
+  uint32_t offset
 ) {
-  EARLY_STARTUP_PRINT( "offset = %"PRIu32", block_size = %"PRIu32"\r\n", offset, block_size );
+  EARLY_STARTUP_PRINT( "offset = %"PRIu32"\r\n", offset );
   // allocate data block
   ext_fs_t* data = malloc( sizeof( *data ) );
   if ( ! data ) {
@@ -61,8 +59,7 @@ ext_fs_t* ext_fs_init(
   data->cache_block_free = ext_cache_block_free;
   data->cache_block_dirty = ext_cache_block_dirty;
   // populate remaining properties
-  data->partition_offset = offset;
-  data->partition_block_size = block_size;
+  data->partition_sector_offset = offset;
   // return data
   return data;
 }
@@ -112,7 +109,7 @@ bool ext_fs_mount( ext_fs_t* fs ) {
   if ( ! fs->dev_read(
     ( uint32_t* )fs->boot_sector,
     sizeof( char ) * 1024,
-    fs->partition_offset
+    fs->partition_sector_offset
   ) ) {
     errno = EIO;
     free( fs->superblock );
@@ -167,11 +164,12 @@ bool ext_fs_unmount( ext_fs_t* fs) {
 }
 
 /**
- * @fn void ext_fs_sync(ext_fs_t*)
+ * @fn bool ext_fs_sync(ext_fs_t*)
  * @brief Wrapper to sync
  *
  * @param fs
+ * @return
  */
-void ext_fs_sync( ext_fs_t* fs ) {
-  fs->cache_sync( fs->handle );
+bool ext_fs_sync( ext_fs_t* fs ) {
+  return fs->cache_sync( fs->handle );
 }

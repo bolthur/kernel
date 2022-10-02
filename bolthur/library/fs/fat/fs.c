@@ -22,8 +22,7 @@
 fat_fs_t* fat_fs_init(
   __unused dev_read_t read,
   __unused dev_write_t write,
-  __unused uint32_t offset,
-  __unused uint32_t block_size
+  __unused uint32_t offset
 ) {
   return NULL;
 }
@@ -36,5 +35,14 @@ bool fat_fs_unmount( __unused fat_fs_t* fs) {
   return false;
 }
 
-void fat_fs_sync( __unused fat_fs_t* fs ) {
+/**
+ * @fn bool fat_fs_sync(fat_fs_t*)
+ * @brief Wrapper to sync
+ *
+ * @param fs
+ * @return
+ */
+bool fat_fs_sync( fat_fs_t* fs ) {
+  return fs->cache_sync( fs->handle );
+  return false;
 }

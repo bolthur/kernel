@@ -102,5 +102,6 @@ typedef struct  {
 sdhost_response_t sdhost_init( void );
 const char* sdhost_error( sdhost_response_t );
 sdhost_response_t sdhost_transfer_block( uint32_t*, size_t, uint32_t, sdhost_operation_t );
+uint32_t sdhost_device_block_size( void );
 
 #endif

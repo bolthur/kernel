@@ -23,8 +23,6 @@
 #include <stdint.h>
 #include <assert.h>
 
-#define EXT_FIRST_INODE 1
-
 // reserved inodes
 #define EXT_BAD_INO 1
 #define EXT_ROOT_INO 2

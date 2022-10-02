@@ -21,7 +21,7 @@
 #include <stdlib.h>
 #include "../fat.h"
 
-__unused static void cleanup_cache_block( list_item_t* a ) {
+static void cleanup_cache_block( list_item_t* a ) {
   // get cache block
   cache_block_t* cache = a->data;
   // free data if necessary
@@ -34,28 +34,155 @@ __unused static void cleanup_cache_block( list_item_t* a ) {
   list_default_cleanup( a );
 }
 
-cache_handle_t* fat_cache_construct(
-  __unused void* fs,
-  __unused uint32_t block_size
-) {
-  return NULL;
+/**
+ * @fn cache_handle_t fat_cache_construct*(void*, uint32_t)
+ * @brief Generate a new cache handle
+ *
+ * @param fs
+ * @param block_size
+ * @return
+ */
+cache_handle_t* fat_cache_construct( void* fs, uint32_t block_size ) {
+  // allocate handle
+  cache_handle_t* handle = malloc( sizeof( cache_handle_t ) );
+  if ( ! handle ) {
+    return NULL;
+  }
+  // clear memory
+  memset( handle, 0, sizeof( cache_handle_t ) );
+  // populate data
+  handle->block_size = block_size;
+  handle->fs = fs;
+  // create management list
+  handle->list = list_construct( NULL, cleanup_cache_block, NULL );
+  if ( ! handle->list ) {
+    free( handle );
+    return NULL;
+  }
+  return handle;
 }
 
-void fat_cache_sync( __unused cache_handle_t* handle ) {
+/**
+ * @fn bool fat_cache_sync(cache_handle_t*)
+ * @brief Synchronize fat cache
+ *
+ * @param handle
+ */
+bool fat_cache_sync( cache_handle_t* handle ) {
+  // get first item
+  list_item_t* current = handle->list->first;
+  // loop until end
+  while ( current ) {
+    // get cache block
+    cache_block_t* cache = current->data;
+    // write to storage
+    if ( ! fat_cache_block_dirty( cache ) ) {
+      return false;
+    }
+    // get next
+    current = current->next;
+  }
+  // return success
+  return true;
 }
 
+/**
+ * @fn cache_block_t fat_cache_block_allocate*(cache_handle_t*, uint32_t, bool)
+ * @brief Allocate cache block
+ *
+ * @param handle
+ * @param block
+ * @param read
+ * @return
+ */
 cache_block_t* fat_cache_block_allocate(
-  __unused cache_handle_t* handle,
-  __unused uint32_t block,
-  __unused bool read
+  cache_handle_t* handle,
+  uint32_t block,
+  bool read
 ) {
-  return NULL;
+  // allocate cache block
+  cache_block_t* cache = malloc( sizeof( cache_block_t ) );
+  if ( ! cache ) {
+    return NULL;
+  }
+  // clear memory
+  memset( cache, 0, sizeof( cache_block_t ) );
+  // allocate data block
+  cache->data = malloc( handle->block_size );
+  if ( ! cache->data ) {
+    free( cache );
+    return NULL;
+  }
+  // clear memory
+  memset( cache->data, 0, handle->block_size );
+  // populate data
+  cache->block_number = block;
+  cache->block_size = handle->block_size;
+  cache->handle = handle;
+  // handle read
+  if ( read ) {
+    // cache fs
+    fat_fs_t* fs = handle->fs;
+    // caculate block
+    uint32_t block_read_sector = fs->partition_sector_offset + (
+      block * handle->block_size
+    );
+    // try to read
+    if ( ! fs->dev_read(
+      ( uint32_t* )cache->data,
+      handle->block_size,
+      block_read_sector
+    ) ) {
+      free( cache->data );
+      free( cache );
+      return NULL;
+    }
+  }
+  // insert data
+  if ( ! list_insert_data( handle->list, cache ) ) {
+    free( cache->data );
+    free( cache );
+    return NULL;
+  }
+  // return cache block
+  return cache;
 }
 
-bool fat_cache_block_free( __unused cache_block_t* cache, __unused bool dirty ) {
-  return false;
+/**
+ * @fn bool fat_cache_block_free(cache_block_t*, bool)
+ * @brief Free cache block
+ *
+ * @param cache
+ * @param dirty
+ * @return
+ */
+bool fat_cache_block_free( cache_block_t* cache, bool dirty ) {
+  // handle possible write back
+  if ( dirty && ! fat_cache_block_dirty( cache ) ) {
+    return false;
+  }
+  // remove from list
+  return list_remove_data( cache->handle->list, cache );
 }
 
-bool fat_cache_block_dirty( __unused cache_block_t* cache ) {
-  return false;
+/**
+ * @fn bool fat_cache_block_dirty(cache_block_t*)
+ * @brief Write back dirty cache block
+ *
+ * @param block
+ * @return
+ */
+bool fat_cache_block_dirty( cache_block_t* cache ) {
+  // cache fs
+  fat_fs_t* fs = cache->handle->fs;
+  // caculate block
+  uint32_t block_write_sector = fs->partition_sector_offset + (
+    cache->block_number * cache->block_size
+  );
+  // try to write
+  return fs->dev_write(
+    ( uint32_t* )cache->data,
+    cache->block_size,
+    block_write_sector
+  );
 }

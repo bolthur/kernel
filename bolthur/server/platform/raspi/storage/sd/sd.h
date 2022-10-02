@@ -44,5 +44,8 @@ typedef struct {
 bool sd_init( void );
 const char* sd_last_error( void );
 bool sd_transfer_block( uint32_t*, size_t, uint32_t, sd_operation_t );
+bool sd_read_block( uint32_t*, size_t, uint32_t );
+bool sd_write_block( uint32_t*, size_t, uint32_t );
+uint32_t sd_device_block_size( void );
 
 #endif

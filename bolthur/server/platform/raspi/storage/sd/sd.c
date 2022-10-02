@@ -216,3 +216,70 @@ bool sd_transfer_block(
   return true;
 }
 
+/**
+ * @fn uint32_t sd_device_block_size(void)
+ * @brief Wrapper to get device block size
+ *
+ * @return
+ */
+uint32_t sd_device_block_size( void ) {
+  // debug output
+  #if defined( SD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "sd device block size request\r\n" )
+  #endif
+  // handle not initialized
+  if ( ! device ) {
+    // debug output
+    #if defined( SD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Interface not yet initialized\r\n" )
+    #endif
+    // return false
+    return 0;
+  }
+  // raspi before 3 use emmc
+  #if 3 > RASPI
+    return emmc_device_block_size();
+  // raspi 3 use sdhost
+  #elif 3 == RASPI
+    return sdhost_device_block_size();
+  // everything after raspi3 use emmc2
+  #elif 3 < RASPI
+    #error "EMMC2 support not yet added"
+  #endif
+}
+
+/**
+ * @fn bool sd_read_block(uint32_t*, size_t, uint32_t)
+ * @brief Shorthand for reading some block
+ *
+ * @param buffer
+ * @param buffer_size
+ * @param sector
+ * @return
+ */
+bool sd_read_block( uint32_t* buffer, size_t buffer_size, uint32_t sector ) {
+  return sd_transfer_block(
+    buffer,
+    buffer_size,
+    sector / sd_device_block_size(),
+    SD_OPERATION_READ
+  );
+}
+
+/**
+ * @fn bool sd_write_block(uint32_t*, size_t, uint32_t)
+ * @brief Shorthand for writing data
+ *
+ * @param buffer
+ * @param buffer_size
+ * @param sector
+ * @return
+ */
+bool sd_write_block( uint32_t* buffer, size_t buffer_size, uint32_t sector ) {
+  return sd_transfer_block(
+    buffer,
+    buffer_size,
+    sector / sd_device_block_size(),
+    SD_OPERATION_WRITE
+  );
+}

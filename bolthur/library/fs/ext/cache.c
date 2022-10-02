@@ -69,12 +69,12 @@ cache_handle_t* ext_cache_construct( void* fs, uint32_t block_size ) {
 }
 
 /**
- * @fn void ext_cache_sync(cache_handle_t*)
+ * @fn bool ext_cache_sync(cache_handle_t*)
  * @brief Synchronize ext cache
  *
  * @param handle
  */
-void ext_cache_sync( cache_handle_t* handle ) {
+bool ext_cache_sync( cache_handle_t* handle ) {
   // get first item
   list_item_t* current = handle->list->first;
   // loop until end
@@ -82,10 +82,14 @@ void ext_cache_sync( cache_handle_t* handle ) {
     // get cache block
     cache_block_t* cache = current->data;
     // write to storage
-    ext_cache_block_dirty( cache );
+    if ( ! ext_cache_block_dirty( cache ) ) {
+      return false;
+    }
     // get next
     current = current->next;
   }
+  // return success
+  return true;
 }
 
 /**
@@ -126,14 +130,14 @@ cache_block_t* ext_cache_block_allocate(
     // cache fs
     ext_fs_t* fs = handle->fs;
     // caculate block
-    uint32_t block_read_number = fs->partition_offset + (
-      block * handle->block_size / fs->partition_block_size
+    uint32_t block_read_sector = fs->partition_sector_offset + (
+      block * handle->block_size
     );
     // try to read
-    if ( !fs->dev_read(
+    if ( ! fs->dev_read(
       ( uint32_t* )cache->data,
       handle->block_size,
-      block_read_number
+      block_read_sector
     ) ) {
       free( cache->data );
       free( cache );
@@ -178,13 +182,13 @@ bool ext_cache_block_dirty( cache_block_t* cache ) {
   // cache fs
   ext_fs_t* fs = cache->handle->fs;
   // caculate block
-  uint32_t block_write_number = fs->partition_offset + (
-    cache->block_number * cache->block_size / fs->partition_block_size
+  uint32_t block_write_sector = fs->partition_sector_offset + (
+    cache->block_number * cache->block_size
   );
-  // try to read
-  return fs->dev_read(
+  // try to write
+  return fs->dev_write(
     ( uint32_t* )cache->data,
     cache->block_size,
-    block_write_number
+    block_write_sector
   );
 }

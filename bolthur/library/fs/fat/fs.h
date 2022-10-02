@@ -37,10 +37,10 @@ typedef struct {
   cache_block_free_t cache_block_free;
   cache_block_dirty_t cache_block_dirty;
 
-  uint32_t partition_offset;
+  uint32_t partition_sector_offset;
 
-  fat_bpb_t* boot_sector;
-  void* handle;
+  uint8_t* boot_sector;
+  cache_handle_t* handle;
 } fat_fs_t;
 
 #endif

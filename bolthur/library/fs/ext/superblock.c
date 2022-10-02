@@ -44,8 +44,8 @@ bool ext_superblock_read( ext_fs_t* fs, ext_superblock_t* superblock ) {
   if ( ! fs->dev_read(
     ( uint32_t* )superblock,
     sizeof( ext_superblock_t ),
-    // superblock is located at offset 1024 ( divided by 512 = 2 LBA ) of relative sector
-    fs->partition_offset + ( 1024 / fs->partition_block_size )
+    // superblock is located at offset 1024
+    fs->partition_sector_offset + 1024
   ) ) {
     EARLY_STARTUP_PRINT( "UNABLE TO READ SUPERBLOCK!\r\n" )
     errno = EIO;
