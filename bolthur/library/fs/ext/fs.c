@@ -52,11 +52,11 @@ ext_fs_t* ext_fs_init(
   // populate callbacks
   data->dev_read = read;
   data->dev_write = write;
-  data->cache_construct = ext_cache_construct;
+  data->cache_construct = cache_construct;
   data->cache_destruct = cache_destruct;
   data->cache_sync = ext_cache_sync;
   data->cache_block_allocate = ext_cache_block_allocate;
-  data->cache_block_free = ext_cache_block_free;
+  data->cache_block_release = ext_cache_block_release;
   data->cache_block_dirty = ext_cache_block_dirty;
   // populate remaining properties
   data->partition_sector_offset = offset;
@@ -153,6 +153,8 @@ bool ext_fs_unmount( ext_fs_t* fs) {
   // free cached data
   free( fs->boot_sector );
   free( fs->superblock );
+  // sync cache
+  fs->cache_sync( fs->handle );
   // cleanup cache
   fs->cache_destruct( fs->handle );
   // set boot sector, superblock and handle to null again

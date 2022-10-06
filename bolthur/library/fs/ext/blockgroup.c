@@ -18,6 +18,7 @@
  */
 
 #include <math.h>
+#include <string.h>
 #include "../ext.h"
 
 /**
@@ -59,4 +60,60 @@ bool ext_blockgroup_has_superblock(
     || is_power_of( group, 3 )
     || is_power_of( group, 5 )
     || is_power_of( group, 7 );
+}
+
+/**
+ * @fn bool ext_blockgroup_read(ext_fs_t*, uint32_t, ext_blockgroup_t*)
+ * @brief Helper to read a block group entry
+ *
+ * @param fs
+ * @param group_number
+ * @param blockgroup
+ * @return
+ */
+bool ext_blockgroup_read(
+  ext_fs_t* fs,
+  uint32_t group_number,
+  ext_blockgroup_t* blockgroup
+) {
+  // get block size
+  uint32_t block_size = ext_superblock_block_size( fs->superblock );
+  // calculate block number
+  uint32_t block_number = ext_superblock_start( fs->superblock )
+    + 1 + ( group_number * sizeof( ext_blockgroup_t ) ) / block_size;
+  // load cache via handle
+  cache_block_t* cache = fs->cache_block_allocate( fs->handle, block_number, true );
+  // handle error
+  if ( ! cache ) {
+    return NULL;
+  }
+  // copy content and return success
+  memcpy(
+    blockgroup,
+    cache->data + ( ( group_number * sizeof( ext_blockgroup_t ) ) % block_size ),
+    sizeof( ext_blockgroup_t )
+  );
+  // free cache again
+  fs->cache_block_release( cache, false );
+  // return success
+  return true;
+}
+
+/**
+ * @fn bool ext_blockgroup_write(ext_fs_t*, uint32_t, ext_blockgroup_t*)
+ * @brief Helper to write blockgroup to disk
+ *
+ * @param fs
+ * @param group_number
+ * @param blockgroup
+ * @return
+ *
+ * @todo implement function
+ */
+bool ext_blockgroup_write(
+  __unused ext_fs_t* fs,
+  __unused uint32_t group_number,
+  __unused ext_blockgroup_t* blockgroup
+) {
+  return false;
 }

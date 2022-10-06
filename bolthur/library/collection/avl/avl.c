@@ -477,17 +477,20 @@ static void print_recursive( const avl_node_t* node ) {
   if ( ! node ) {
     return;
   }
-  printf( "%p\r\n", node->data );
+
+  if ( level_index ) {
+    printf( "%s `--%p\r\n", level_buffer, node->data );
+  } else {
+    printf( "%p\r\n", node->data );
+  }
 
   if ( node->left ) {
-    printf( "%s `--", level_buffer );
     push_output_level( '|' );
     print_recursive( node->left );
     pop_output_level();
   }
 
   if ( node->right ) {
-    printf( "%s `--", level_buffer );
     push_output_level( '|' );
     print_recursive( node->right );
     pop_output_level();

@@ -21,19 +21,6 @@
 #include <stdlib.h>
 #include "../fat.h"
 
-static void cleanup_cache_block( list_item_t* a ) {
-  // get cache block
-  cache_block_t* cache = a->data;
-  // free data if necessary
-  if ( cache->data ) {
-    free( cache->data );
-  }
-  // free cache block
-  free( cache );
-  // default list cleanup
-  list_default_cleanup( a );
-}
-
 /**
  * @fn cache_handle_t fat_cache_construct*(void*, uint32_t)
  * @brief Generate a new cache handle
@@ -54,7 +41,11 @@ cache_handle_t* fat_cache_construct( void* fs, uint32_t block_size ) {
   handle->block_size = block_size;
   handle->fs = fs;
   // create management list
-  handle->list = list_construct( NULL, cleanup_cache_block, NULL );
+  handle->list = list_construct(
+    cache_lookup_block,
+    cache_cleanup_block,
+    cache_insert_block
+  );
   if ( ! handle->list ) {
     free( handle );
     return NULL;
@@ -149,14 +140,14 @@ cache_block_t* fat_cache_block_allocate(
 }
 
 /**
- * @fn bool fat_cache_block_free(cache_block_t*, bool)
+ * @fn bool fat_cache_block_release(cache_block_t*, bool)
  * @brief Free cache block
  *
  * @param cache
  * @param dirty
  * @return
  */
-bool fat_cache_block_free( cache_block_t* cache, bool dirty ) {
+bool fat_cache_block_release( cache_block_t* cache, bool dirty ) {
   // handle possible write back
   if ( dirty && ! fat_cache_block_dirty( cache ) ) {
     return false;

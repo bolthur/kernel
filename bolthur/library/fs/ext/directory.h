@@ -34,6 +34,8 @@
 #define EXT_FT_SOCK 6
 #define EXT_FT_SYMLINK 7
 
+#pragma pack(push, 1)
+
 typedef struct {
   uint32_t inode;
   uint16_t rec_len;
@@ -53,11 +55,13 @@ typedef struct {
   uint8_t info_length;
   uint8_t indirect_levels;
   uint8_t unused;
-} ext_directory_entry_root_t;
+} ext_directory_indexed_root_t;
 
 static_assert(
-  8 == sizeof( ext_directory_entry_root_t ),
-  "invalid ext_directory_entry_root_t size!"
+  8 == sizeof( ext_directory_indexed_root_t ),
+  "invalid ext_directory_indexed_root_t size!"
 );
+
+#pragma pack(pop)
 
 #endif

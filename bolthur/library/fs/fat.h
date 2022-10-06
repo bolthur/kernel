@@ -39,7 +39,7 @@ bool fat_fs_sync( fat_fs_t* );
 cache_handle_t* fat_cache_construct( void*, uint32_t );
 bool fat_cache_sync( cache_handle_t* );
 cache_block_t* fat_cache_block_allocate( cache_handle_t*, uint32_t, bool );
-bool fat_cache_block_free( cache_block_t*, bool );
+bool fat_cache_block_release( cache_block_t*, bool );
 bool fat_cache_block_dirty( cache_block_t* );
 
 // FIXME: ADD FUNCTION PROTOTYPES HERE

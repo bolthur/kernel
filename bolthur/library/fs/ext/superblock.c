@@ -83,16 +83,67 @@ bool ext_superblock_read( ext_fs_t* fs, ext_superblock_t* superblock ) {
 
 /**
  * @fn bool ext_superblock_write(ext_fs_t*, ext_superblock_t*)
- * @brief Write/update superblock
+ * @brief Helper to write superblock to disk
  *
  * @param data
  * @param superblock
  * @return
  */
-bool ext_superblock_write(
-  __unused ext_fs_t* fs,
-  __unused ext_superblock_t* superblock
-) {
+bool ext_superblock_write( ext_fs_t* fs, ext_superblock_t* superblock ) {
+  // get count of groups where an update might be necessary
+  uint32_t group_count = ( superblock->s_blocks_count + superblock->s_blocks_per_group - 1 ) /
+    superblock->s_blocks_per_group;
+  uint32_t block_size = ext_superblock_block_size( superblock );
+  size_t copy = sizeof( ext_superblock_t );
+  // loop and update block if necessary
+  for ( uint32_t idx = 0; idx < group_count; idx++ ) {
+    // skip if there is no superblock backup
+    if ( ! ext_blockgroup_has_superblock( superblock, idx ) ) {
+      continue;
+    }
+    // default start is 1024 => idx = 0 => root superblock
+    uint32_t start = 1024;
+    // handle superblock backup
+    if ( 0 < idx ) {
+      // get block group offset
+      uint32_t block_group_offset = idx * fs->superblock->s_blocks_per_group;
+      // calculate start
+      start = ( fs->superblock->s_first_data_block + block_group_offset )
+        * block_size;
+    }
+    // create cache without reading data
+    cache_block_t* cache = fs->cache_block_allocate(
+      fs->handle, start / block_size, false
+    );
+    // handle error
+    if ( ! cache ) {
+      return false;
+    }
+    // handle root superblock
+    if ( 0 == idx ) {
+      // memory copy offset
+      uint32_t offset = 0;
+      // handle bigger block sizes ( bootsector is stored there )
+      if ( 1024 < block_size ) {
+        // copy boot sector
+        memcpy( cache->data, fs->boot_sector, 1024 );
+        // set offset
+        offset = 1024;
+        // clear out rest at the end
+        memset( cache->data + offset + copy, 0, block_size - offset - copy );
+      }
+      // copy superblock data itself
+      memcpy( cache->data + offset, superblock, copy );
+    // handle superblock backup ( copy superblock and erase rest of block )
+    } else {
+      // copy superblock
+      memcpy( cache->data, superblock, copy );
+      // erase rest of block
+      memset( cache->data + copy, 0, block_size - copy );
+    }
+    // release cache again with dirty flag to force write back
+    fs->cache_block_release( cache, true );
+  }
   return false;
 }
 
@@ -143,6 +194,17 @@ uint32_t ext_superblock_total_group_by_inode( ext_superblock_t* superblock ) {
 }
 
 /**
+ * @fn uint32_t ext_superblock_start(ext_superblock_t*)
+ * @brief Method to get superblock start offset
+ *
+ * @param superblock
+ * @return
+ */
+uint32_t ext_superblock_start( ext_superblock_t* superblock ) {
+  return 1024 < ext_superblock_block_size( superblock ) ? 0 : 1;
+}
+
+/**
  * @fn uint32_t ext_superblock_inode_size(ext_superblock_t*)
  * @brief Helper to get inode size
  *
@@ -175,4 +237,6 @@ void ext_superblock_dump( ext_superblock_t* superblock ) {
   EARLY_STARTUP_PRINT( "superblock->s_feature_compat = %"PRIu32"\r\n", superblock->s_feature_compat )
   EARLY_STARTUP_PRINT( "superblock->s_feature_incompat = %"PRIu32"\r\n", superblock->s_feature_incompat )
   EARLY_STARTUP_PRINT( "superblock->s_feature_ro_incompat = %"PRIu32"\r\n", superblock->s_feature_ro_incompat )
+  EARLY_STARTUP_PRINT( "ext_superblock_block_size( %p ) = %"PRIu32"\r\n",
+    ( void* )superblock, ext_superblock_block_size( superblock ) )
 }

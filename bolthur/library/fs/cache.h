@@ -36,15 +36,22 @@ typedef struct {
   uint32_t block_size;
   uint8_t* data;
   cache_handle_t* handle;
+  uint32_t reference_count;
 } cache_block_t;
 
 typedef cache_handle_t* ( *cache_construct_t )( void* fs, uint32_t block_size );
 typedef void ( *cache_destruct_t )( cache_handle_t* handle );
 typedef bool ( *cache_sync_t )( cache_handle_t* handle );
 typedef cache_block_t* ( *cache_block_allocate_t )( cache_handle_t* handle, uint32_t block, bool read );
-typedef bool ( *cache_block_free_t )( cache_block_t* block, bool dirty );
+typedef bool ( *cache_block_release_t )( cache_block_t* block, bool dirty );
 typedef bool ( *cache_block_dirty_t )( cache_block_t* block );
 
+// internal management helper
+void cache_cleanup_block( list_item_t* );
+bool cache_insert_block( list_manager_t*, void* );
+int32_t cache_lookup_block( const list_item_t*, const void* );
+// generic functions
+cache_handle_t* cache_construct( void*, uint32_t );
 void cache_destruct( cache_handle_t* );
 
 #endif

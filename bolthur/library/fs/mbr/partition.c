@@ -84,10 +84,16 @@ int32_t mbr_extract_partition_from_path( const char* path ) {
  */
 int32_t mbr_filesystem_to_type( const char* type ) {
   if (
-    strlen( "ext2") == strlen( type )
+    strlen( "ext2" ) == strlen( type )
     && 0 == strcmp( type, "ext2" )
   ) {
     return PARTITION_TYPE_LINUX_NATIVE;
+  }
+  if (
+    strlen( "fat32" ) == strlen( type )
+    && 0 == strcmp( type, "fat32" )
+  ) {
+    return PARTITION_TYPE_FAT32_LBA;
   }
   return -EINVAL;
 }

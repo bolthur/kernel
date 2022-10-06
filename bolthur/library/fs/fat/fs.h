@@ -34,7 +34,7 @@ typedef struct {
   cache_destruct_t cache_destruct;
   cache_sync_t cache_sync;
   cache_block_allocate_t cache_block_allocate;
-  cache_block_free_t cache_block_free;
+  cache_block_release_t cache_block_release;
   cache_block_dirty_t cache_block_dirty;
 
   uint32_t partition_sector_offset;

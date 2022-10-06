@@ -38,10 +38,9 @@ bool ext_fs_unmount( ext_fs_t* );
 bool ext_fs_sync( ext_fs_t* );
 
 // cache related functions
-cache_handle_t* ext_cache_construct( void*, uint32_t );
 bool ext_cache_sync( cache_handle_t* );
 cache_block_t* ext_cache_block_allocate( cache_handle_t*, uint32_t, bool );
-bool ext_cache_block_free( cache_block_t*, bool );
+bool ext_cache_block_release( cache_block_t*, bool );
 bool ext_cache_block_dirty( cache_block_t* );
 
 // super block related functions
@@ -52,11 +51,26 @@ uint32_t ext_superblock_frag_size( ext_superblock_t* );
 uint32_t ext_superblock_total_group_by_blocks( ext_superblock_t* );
 uint32_t ext_superblock_total_group_by_inode( ext_superblock_t* );
 uint32_t ext_superblock_inode_size( ext_superblock_t* );
+uint32_t ext_superblock_start( ext_superblock_t* );
 void ext_superblock_dump( ext_superblock_t* );
 
 // block group related functions
 bool ext_blockgroup_has_superblock( ext_superblock_t*, uint32_t );
+bool ext_blockgroup_read( ext_fs_t*, uint32_t, ext_blockgroup_t* );
+bool ext_blockgroup_write( ext_fs_t*, uint32_t, ext_blockgroup_t* );
+
+// inode related functions
+bool ext_inode_read_inode( ext_fs_t*, uint32_t, ext_inode_t* );
+bool ext_inode_write_inode( ext_fs_t*, uint32_t, ext_inode_t* );
+bool ext_inode_release_inode( ext_inode_t* );
+uint32_t ext_inode_read_block( ext_inode_t*, uint32_t, uint8_t*, uint32_t );
+uint32_t ext_inode_write_block( ext_inode_t*, uint32_t, uint8_t* );
+bool ext_inode_read_data( ext_inode_t*, uint32_t, uint32_t, uint8_t* );
+bool ext_inode_write_data( ext_inode_t*, uint32_t, uint32_t, uint8_t* );
+void ext_inode_dump( ext_inode_t* );
 
 // directory related functions
+ext_directory_entry_t* ext_directory_get_directory( ext_inode_t*, const char* );
+bool ext_directory_get_inode( ext_fs_t*, const char*, ext_inode_t* );
 
 #endif

@@ -102,4 +102,11 @@ static_assert( 128 == sizeof( ext_inode_raw_t ), "invalid ext_inode_raw_t size!"
 
 #pragma pack(pop)
 
+typedef struct {
+  ext_fs_t* fs;
+  uint32_t inode_number;
+  ext_inode_raw_t* inode;
+  cache_block_t* cache;
+} ext_inode_t;
+
 #endif

@@ -22,53 +22,6 @@
 #include "../ext.h"
 
 /**
- * @fn void cleanup_cache_block(list_item_t*)
- * @brief Cleanup cache block helper
- *
- * @param a
- */
-static void cleanup_cache_block( list_item_t* a ) {
-  // get cache block
-  cache_block_t* cache = a->data;
-  // free data if necessary
-  if ( cache->data ) {
-    free( cache->data );
-  }
-  // free cache block
-  free( cache );
-  // default list cleanup
-  list_default_cleanup( a );
-}
-
-/**
- * @fn cache_handle_t ext_cache_construct*(void*, uint32_t)
- * @brief Generate a new cache handle
- *
- * @param fs
- * @param block_size
- * @return
- */
-cache_handle_t* ext_cache_construct( void* fs, uint32_t block_size ) {
-  // allocate handle
-  cache_handle_t* handle = malloc( sizeof( cache_handle_t ) );
-  if ( ! handle ) {
-    return NULL;
-  }
-  // clear memory
-  memset( handle, 0, sizeof( cache_handle_t ) );
-  // populate data
-  handle->block_size = block_size;
-  handle->fs = fs;
-  // create management list
-  handle->list = list_construct( NULL, cleanup_cache_block, NULL );
-  if ( ! handle->list ) {
-    free( handle );
-    return NULL;
-  }
-  return handle;
-}
-
-/**
  * @fn bool ext_cache_sync(cache_handle_t*)
  * @brief Synchronize ext cache
  *
@@ -106,6 +59,17 @@ cache_block_t* ext_cache_block_allocate(
   uint32_t block,
   bool read
 ) {
+  // check for block
+  list_item_t* item = list_lookup_data( handle->list, ( void* )block );
+  // handle already loaded
+  if ( item ) {
+    // get cache block
+    cache_block_t* cache = item->data;
+    // increment reference count
+    cache->reference_count++;
+    //return cache block
+    return cache;
+  }
   // allocate cache block
   cache_block_t* cache = malloc( sizeof( cache_block_t ) );
   if ( ! cache ) {
@@ -125,6 +89,7 @@ cache_block_t* ext_cache_block_allocate(
   cache->block_number = block;
   cache->block_size = handle->block_size;
   cache->handle = handle;
+  cache->reference_count = 1;
   // handle read
   if ( read ) {
     // cache fs
@@ -155,20 +120,26 @@ cache_block_t* ext_cache_block_allocate(
 }
 
 /**
- * @fn bool ext_cache_block_free(cache_block_t*, bool)
+ * @fn bool ext_cache_block_release(cache_block_t*, bool)
  * @brief Free cache block
  *
  * @param cache
  * @param dirty
  * @return
  */
-bool ext_cache_block_free( cache_block_t* cache, bool dirty ) {
+bool ext_cache_block_release( cache_block_t* cache, bool dirty ) {
   // handle possible write back
   if ( dirty && ! ext_cache_block_dirty( cache ) ) {
     return false;
   }
+  // decrement reference count
+  cache->reference_count--;
+  // don't free when it's still in use
+  if ( 0 < cache->reference_count ) {
+    return true;
+  }
   // remove from list
-  return list_remove_data( cache->handle->list, cache );
+  return list_remove_data( cache->handle->list, ( void* )cache->block_number );
 }
 
 /**

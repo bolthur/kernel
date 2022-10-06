@@ -17,7 +17,7 @@
 # along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from std/os import fileExists, dirExists, createDir, copyDir, copyFile, removeFile, joinPath, getCurrentDir, walkDirRec, pcFile
+from std/os import fileExists, dirExists, createDir, copyDir, copyFile, removeFile, joinPath, getCurrentDir, walkDirRec, pcFile, pcDir, getFileInfo
 from std/strutils import intToStr, find, endsWith, replace
 from std/math import pow
 from std/osproc import execCmdEx
@@ -67,8 +67,13 @@ proc image_create_partition( target: string, total_size: int, boot_folder: strin
     echo "Unable to format root partition with ext2: " & cmd_result.output
     quit( 1 )
   # copy files to boot partition
-  for file in walkDirRec( joinPath( base_path, "partition", "boot" ), { pcFile } ):
-    cmd_result = execCmdEx( "mcopy -i " & boot_partition & " " & file & " ::" )
+  for file in walkDirRec( joinPath( base_path, "partition", "boot" ), { pcFile, pcDir } ):
+    var info = getFileInfo( file )
+    if info.kind == pcDir:
+      var localfolder = file.replace( joinPath( base_path, "partition", "boot" ) )
+      cmd_result = execCmdEx( "mmd -i " & boot_partition & " ::" & localfolder )
+    else:
+      cmd_result = execCmdEx( "mcopy -i " & boot_partition & " " & file & " ::" )
     if 0 != cmd_result.exitCode:
       echo "Unable to copy content to boot partition: " & cmd_result.output
       quit( 1 )
