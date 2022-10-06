@@ -26,55 +26,88 @@
 #pragma pack(push, 1)
 
 typedef struct {
-  uint8_t jmp_code[ 3 ];
-  char os_name[ 8 ];
+  uint8_t bios_drive_number;
+  uint8_t reserved;
+  uint8_t boot_signature;
+  uint32_t volume_id;
+  char volume_label[ 11 ];
+  char fat_type_label[ 8 ];
+  uint8_t boot_code[ 448 ];
+} fat_bpb_extended_fat_t;
+
+typedef struct {
+  uint32_t table_size_32;
+  uint16_t extended_flags;
+  uint16_t fat_version;
+  uint32_t root_cluster;
+  uint16_t fat_info;
+  uint16_t backup_boot_sector;
+  uint8_t reserved0[ 12 ];
+  uint8_t drive_number;
+  uint8_t reserved1;
+  uint8_t boot_signature;
+  uint32_t volume_id;
+  char volume_label[ 11 ];
+  char fat_type_label[ 8 ];
+  uint8_t boot_code[ 420 ];
+} fat_bpb_extended_fat32_t;
+
+typedef struct {
+  uint8_t bootjmp[ 3 ];
+  char oem_name[ 8 ];
   uint16_t bytes_per_sector;
   uint8_t sectors_per_cluster;
   uint16_t reserved_sector_count;
-  uint8_t fat_table_count;
-  uint16_t directory_entry_count;
-  uint16_t sector_count_small;
+  uint8_t table_count;
+  uint16_t root_entry_count;
+  uint16_t total_sectors_16;
   uint8_t media_type;
-  uint16_t sectors_per_fat_small; // FAT12/16 only
+  uint16_t table_size_16; // FAT12/16 only
   uint16_t sectors_per_track;
-  uint16_t head_count;
+  uint16_t head_side_count;
   uint32_t hidden_sector_count;
-  uint32_t sector_count_large;
+  uint32_t total_sectors_32;
   // extended boot record data
   union {
     // FAT12 / FAT16 extended boot record
-    struct {
-      uint8_t drive_number;
-      uint8_t reserved;
-      uint8_t signature;
-      uint32_t serial;
-      char label[ 11 ];
-      char identifier[ 8 ];
-      uint8_t boot_code[ 448 ];
-    } ebr;
+    fat_bpb_extended_fat_t fat;
     // FAT32 extended boot record
-    struct {
-      uint32_t sectors_per_fat;
-      uint16_t flags;
-      uint16_t fat_version;
-      uint32_t directory_cluster_count;
-      uint16_t fsinfo_sector;
-      uint16_t backup_boot_sector;
-      uint8_t reserved[ 12 ];
-      uint8_t drive_number;
-      uint8_t flags_nt;
-      uint8_t signature;
-      uint32_t serial;
-      char label[ 11 ];
-      char identifier[ 8 ];
-      uint8_t boot_code[ 420 ];
-    } ebr32;
-  };
+    fat_bpb_extended_fat32_t fat32;
+    // raw data
+    uint8_t raw[ 474 ];
+  } extended;
   // signature
-  uint8_t boot_sector_signature[ 2 ];
+  uint16_t boot_sector_signature;
 } fat_bpb_t;
 
 static_assert( 512 == sizeof( fat_bpb_t ), "invalid fat_bpb_t size!" );
+
+typedef struct {
+  uint8_t bootjmp[ 3 ];
+  char oem_name[ 8 ];
+  uint8_t sbz[ 53 ];
+  uint64_t partition_offset;
+  uint64_t volume_length;
+  uint32_t fat_offset;
+  uint32_t fat_length;
+  uint32_t cluster_heap_offset;
+  uint32_t cluster_count;
+  uint32_t root_dir_cluster;
+  uint32_t serial_number;
+  uint16_t revision;
+  uint16_t flags;
+  uint8_t sector_shift;
+  uint8_t cluster_shift;
+  uint8_t fat_count;
+  uint8_t selected_drive;
+  uint8_t percentage_used;
+  uint8_t reserved[ 7 ];
+} fat_bpb_extended_t;
+
+static_assert(
+  120 == sizeof( fat_bpb_extended_t ),
+  "invalid fat_bpb_extended_t size!"
+);
 
 #pragma pack(pop)
 

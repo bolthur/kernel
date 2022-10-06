@@ -26,7 +26,14 @@
 #ifndef _FAT_FS_H
 #define _FAT_FS_H
 
-typedef struct {
+typedef enum {
+  FAT_EXFAT = 0,
+  FAT_FAT12 = 1,
+  FAT_FAT16 = 2,
+  FAT_FAT32 = 3,
+} fat_type_t;
+
+struct fat_fs {
   dev_read_t dev_read;
   dev_write_t dev_write;
 
@@ -39,8 +46,20 @@ typedef struct {
 
   uint32_t partition_sector_offset;
 
-  uint8_t* boot_sector;
+  fat_bpb_t* boot_sector;
+  fat_type_t type;
+  struct {
+    uint32_t total_sectors;
+    uint32_t fat_size;
+    uint32_t root_dir_sectors;
+    uint32_t first_data_sector;
+    uint32_t first_fat_sector;
+    uint32_t data_sectors;
+    uint32_t total_clusters;
+  } fat_data;
+
   cache_handle_t* handle;
-} fat_fs_t;
+};
+typedef struct fat_fs fat_fs_t;
 
 #endif

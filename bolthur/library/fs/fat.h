@@ -18,16 +18,39 @@
  */
 
 #include <stdint.h>
-
 #include "cache.h"
 #include "device.h"
-#include "fat/bpb.h"
-#include "fat/fs.h"
-#include "fat/fsinfo.h"
-#include "fat/node.h"
 
 #ifndef _FAT_H
 #define _FAT_H
+
+struct fat_fs_t;
+
+typedef struct fat_fs fat_fs_t;
+
+typedef struct {
+  uint32_t attrib;
+  uint32_t ctime;
+  uint32_t atime;
+  uint32_t mtime;
+  uint32_t cluster;
+  uint32_t size;
+  char name[ 256 ];
+} fat_entry_t;
+
+typedef struct {
+  fat_fs_t* fs;
+  cache_block_t* cache;
+  fat_entry_t entry;
+} fat_file_t;
+
+typedef struct {
+  fat_fs_t* fs;
+  fat_entry_t* entry_list;
+  uint32_t entry_count;
+  cache_block_t* cache;
+  uint32_t first_block;
+} fat_directory_t;
 
 // generic related functions
 fat_fs_t* fat_fs_init( dev_read_t, dev_write_t, uint32_t );
@@ -35,13 +58,14 @@ bool fat_fs_mount( fat_fs_t* );
 bool fat_fs_unmount( fat_fs_t* );
 bool fat_fs_sync( fat_fs_t* );
 
-// cache related functions
-cache_handle_t* fat_cache_construct( void*, uint32_t );
-bool fat_cache_sync( cache_handle_t* );
-cache_block_t* fat_cache_block_allocate( cache_handle_t*, uint32_t, bool );
-bool fat_cache_block_release( cache_block_t*, bool );
-bool fat_cache_block_dirty( cache_block_t* );
+// directory related functions
+bool fat_directory_open( fat_fs_t*, const char*, fat_directory_t* );
+bool fat_directory_read( fat_directory_t* );
+void fat_directory_close( fat_directory_t* );
 
-// FIXME: ADD FUNCTION PROTOTYPES HERE
+// file related functions
+bool fat_file_open( fat_fs_t*, const char*, fat_file_t* );
+bool fat_file_read( fat_file_t*, size_t, uint8_t*, size_t );
+void fat_file_close( fat_file_t* );
 
 #endif

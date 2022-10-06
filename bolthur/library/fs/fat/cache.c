@@ -19,39 +19,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "../fat.h"
-
-/**
- * @fn cache_handle_t fat_cache_construct*(void*, uint32_t)
- * @brief Generate a new cache handle
- *
- * @param fs
- * @param block_size
- * @return
- */
-cache_handle_t* fat_cache_construct( void* fs, uint32_t block_size ) {
-  // allocate handle
-  cache_handle_t* handle = malloc( sizeof( cache_handle_t ) );
-  if ( ! handle ) {
-    return NULL;
-  }
-  // clear memory
-  memset( handle, 0, sizeof( cache_handle_t ) );
-  // populate data
-  handle->block_size = block_size;
-  handle->fs = fs;
-  // create management list
-  handle->list = list_construct(
-    cache_lookup_block,
-    cache_cleanup_block,
-    cache_insert_block
-  );
-  if ( ! handle->list ) {
-    free( handle );
-    return NULL;
-  }
-  return handle;
-}
+#include "internal.h"
 
 /**
  * @fn bool fat_cache_sync(cache_handle_t*)
