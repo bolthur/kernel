@@ -30,7 +30,10 @@
 // for compilation testing
 #include "../../../../../library/fs/mbr.h"
 #include "../../../../../library/fs/fat.h"
-#include "../../../../../library/fs/ext2.h"
+#include "../../../../../library/fs/ext.h"
+
+size_t mbr_size = 0;
+uint8_t* mbr_data = NULL;
 
 /**
  * @fn int main(int, char*[])
@@ -42,19 +45,21 @@
  */
 int main( __unused int argc, __unused char* argv[] ) {
   // allocate space for mbr
-  size_t mbr_size = sizeof( uint8_t ) * 512;
-  uint8_t* buffer = malloc( mbr_size );
-  if ( ! buffer ) {
+  mbr_size = sizeof( uint8_t ) * 512;
+  mbr_data = malloc( mbr_size );
+  if ( ! mbr_data ) {
     EARLY_STARTUP_PRINT(
       "Unable to allocate space for mbr: %s\r\n",
       strerror( errno ) )
     return -1;
   }
-  // clearout
-  memset( buffer, 0, mbr_size );
+  // clear allocated space
+  memset( mbr_data, 0, mbr_size );
   // print something
-  EARLY_STARTUP_PRINT( "buffer = %p, end = %p\r\n",
-    buffer, ( void* )( buffer + mbr_size ) )
+  EARLY_STARTUP_PRINT(
+    "buffer = %p, end = %p\r\n",
+    mbr_data, ( void* )( mbr_data + mbr_size )
+  )
   // setup emmc
   EARLY_STARTUP_PRINT( "Setup sd interface\r\n" )
   if( ! sd_init() ) {
@@ -62,7 +67,7 @@ int main( __unused int argc, __unused char* argv[] ) {
       "Error while initializing sd interface: %s\r\n",
       sd_last_error()
     )
-    free( buffer );
+    free( mbr_data );
     return -1;
   }
 
@@ -70,13 +75,13 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
   if ( !rpc_init() ) {
     EARLY_STARTUP_PRINT( "Unable to bind rpc handler" );
-    free( buffer );
+    free( mbr_data );
     return -1;
   }
 
   // try to read mbr from card
   EARLY_STARTUP_PRINT( "Parsing mbr with partition information\r\n" )
-  if ( ! sd_transfer_block( ( uint32_t* )buffer, mbr_size, 0, SD_OPERATION_READ ) ) {
+  if ( ! sd_transfer_block( ( uint32_t* )mbr_data, mbr_size, 0, SD_OPERATION_READ ) ) {
     EARLY_STARTUP_PRINT(
       "Error while reading mbr from card: %s\r\n",
       sd_last_error()
@@ -84,7 +89,7 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
-  uint16_t* signature = ( uint16_t* )( buffer + PARTITION_TABLE_SIGNATURE_OFFSET );
+  uint16_t* signature = ( uint16_t* )( mbr_data + PARTITION_TABLE_SIGNATURE_OFFSET );
   EARLY_STARTUP_PRINT( "Signature within mbr: %#"PRIx16"\r\n", *signature )
   // check signature
   EARLY_STARTUP_PRINT( "Check signature\r\n" )
@@ -116,10 +121,30 @@ int main( __unused int argc, __unused char* argv[] ) {
   // loop through partitions and print type
   for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
     mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
-      buffer + PARTITION_TABLE_OFFSET + ( i * sizeof( mbr_table_entry_t ) ) );
+      mbr_data + PARTITION_TABLE_OFFSET + ( i * sizeof( mbr_table_entry_t ) ) );
     EARLY_STARTUP_PRINT(
       "partition %"PRIu32" has type %#"PRIx8"\r\n",
       i, entry->data.system_id )
+    uint16_t start_sector = entry->data.start_sector;
+    uint16_t start_cylinder = entry->data.start_cylinder;
+    uint16_t end_sector = entry->data.end_sector;
+    uint16_t end_cylinder = entry->data.end_cylinder;
+    EARLY_STARTUP_PRINT(
+      "bootable = %"PRIu8", start_head = %"PRIu8", start_sector = %"PRIu16", "
+      "start_cylinder = %"PRIu16", system_id = %"PRIu8", end_head = %"PRIu8", "
+      "end_sector = %"PRIu16", end_cylinder = %"PRIu16", relative_sector = %"PRIu32", "
+      "total_sector = %"PRIu32"\r\n",
+      entry->data.bootable,
+      entry->data.start_head,
+      start_sector,
+      start_cylinder,
+      entry->data.system_id,
+      entry->data.end_head,
+      end_sector,
+      end_cylinder,
+      entry->data.relative_sector,
+      entry->data.total_sector
+    );
     // handle invalid
     if ( 0 == entry->data.system_id ) {
       continue;

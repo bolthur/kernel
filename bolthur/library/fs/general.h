@@ -20,24 +20,9 @@
 #include <stdint.h>
 #include <assert.h>
 
-#ifndef _FAT_FSINFO_H
-#define _FAT_FSINFO_H
+#ifndef _GENERAL_H
+#define _GENERAL_H
 
-#pragma pack(push, 1)
-
-// fat32 fs info
-typedef struct {
-  uint32_t lead_signature;
-  uint8_t reserved[ 480 ];
-  uint32_t signature;
-  uint32_t known_free_cluster_count;
-  uint32_t available_cluster_start;
-  uint8_t reserved2[ 12 ];
-  uint32_t trail_signature;
-} fat32_fsinfo_t;
-
-static_assert( 512 == sizeof( fat32_fsinfo_t ), "invalid fat32_fsinfo_t size!" );
-
-#pragma pack(pop)
+#define PATH_DELIMITER "/"
 
 #endif

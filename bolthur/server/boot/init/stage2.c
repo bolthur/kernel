@@ -19,12 +19,151 @@
 
 #include <errno.h>
 #include <fcntl.h>
-#include <stdnoreturn.h>
 #include <sys/mount.h>
 #include <sys/bolthur.h>
 #include "../init.h"
 #include "../util.h"
 #include "../global.h"
+
+__weak_symbol int mount(
+  const char* source,
+  const char* target,
+  const char* filesystemtype,
+  unsigned long mountflags,
+  __unused const void* data
+) {
+  // allocate request
+  vfs_mount_request_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    errno = ENOMEM;
+    return -1;
+  }
+  // allocate response
+  vfs_mount_response_t* response = malloc( sizeof( *response ) );
+  if ( ! response ) {
+    free( request );
+    errno = ENOMEM;
+    return -1;
+  }
+  // clear out memory
+  memset( request, 0, sizeof( *request ) );
+  memset( response, 0, sizeof( *response ) );
+  // populate request
+  strncpy( request->source, source, PATH_MAX - 1 );
+  strncpy( request->target, target, PATH_MAX - 1 );
+  strncpy( request->type, filesystemtype, 99 );
+  request->flags = mountflags;
+  // ask vfs to perform mount with wait
+  size_t response_id = bolthur_rpc_raise(
+    RPC_VFS_MOUNT,
+    VFS_DAEMON_ID,
+    request,
+    sizeof( *request ),
+    true,
+    RPC_VFS_MOUNT,
+    request,
+    sizeof( *request ),
+    0,
+    0
+  );
+  // handle error
+  if ( errno ) {
+    free( request );
+    free( response );
+    return -1;
+  }
+  // get response data
+  _syscall_rpc_get_data( response, sizeof( *response ), response_id, false );
+  // handle error / no message
+  if ( errno ) {
+    free( request );
+    free( response );
+    return -1;
+  }
+  EARLY_STARTUP_PRINT( "response->result = %d\r\n", response->result );
+  // evaluate status
+  if ( 0 != response->result ) {
+    errno = abs( response->result );
+    // free request and response
+    free( request );
+    free( response );
+    // return result value
+    return -1;
+  }
+  // free request and response
+  free( request );
+  free( response );
+  // return success
+  return 0;
+}
+
+__weak_symbol int umount( const char* target ) {
+  return umount2( target, 0 );
+}
+
+__weak_symbol int umount2( const char* target, int flags ) {
+  // allocate request
+  vfs_umount_request_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    errno = ENOMEM;
+    return -1;
+  }
+  // allocate response
+  vfs_umount_response_t* response = malloc( sizeof( *response ) );
+  if ( ! response ) {
+    free( request );
+    errno = ENOMEM;
+    return -1;
+  }
+  // clear out memory
+  memset( request, 0, sizeof( *request ) );
+  memset( response, 0, sizeof( *response ) );
+  // populate request
+  strncpy( request->target, target, PATH_MAX - 1 );
+  request->flags = flags;
+  // ask vfs to perform mount with wait
+  size_t response_id = bolthur_rpc_raise(
+    RPC_VFS_UMOUNT,
+    VFS_DAEMON_ID,
+    request,
+    sizeof( *request ),
+    true,
+    RPC_VFS_UMOUNT,
+    request,
+    sizeof( *request ),
+    0,
+    0
+  );
+  // handle error
+  if ( errno ) {
+    free( request );
+    free( response );
+    return -1;
+  }
+  // get response data
+  _syscall_rpc_get_data( response, sizeof( *response ), response_id, false );
+  // handle error / no message
+  if ( errno ) {
+    free( request );
+    free( response );
+    return -1;
+  }
+  EARLY_STARTUP_PRINT( "response->result = %d\r\n", response->result );
+  // evaluate status
+  if ( 0 != response->result ) {
+    errno = abs( response->result );
+    // free request and response
+    free( request );
+    free( response );
+    // return result value
+    return -1;
+  }
+  // free request and response
+  free( request );
+  free( response );
+  // return success
+  return 0;
+}
 
 /**
  * @fn void init_stage2(void)
@@ -143,8 +282,16 @@ void init_stage2( void ) {
     root_partition_type
   )
   // mount root partition
-  EARLY_STARTUP_PRINT( "Mounting root file system\r\n" )
+  /*EARLY_STARTUP_PRINT( "Mounting root file system\r\n" )
   int result = mount( root_device, "/", root_partition_type, MS_MGC_VAL, "" );
+  if ( 0 != result ) {
+    EARLY_STARTUP_PRINT( "Mount of \"%s\" with type \"%s\" to / failed: \"%s\"\r\n",
+      root_device, root_partition_type, strerror( errno ) )
+    //exit( 1 );
+  }*/
+  // mount boot partition
+  EARLY_STARTUP_PRINT( "Mounting boot file system" )
+  int result = mount( "/dev/sd0", "/", "fat32", MS_MGC_VAL, "" );
   if ( 0 != result ) {
     EARLY_STARTUP_PRINT( "Mount of \"%s\" with type \"%s\" to / failed: \"%s\"\r\n",
       root_device, root_partition_type, strerror( errno ) )

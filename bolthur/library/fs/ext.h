@@ -27,6 +27,7 @@
 #include "ext/blockgroup.h"
 #include "ext/inode.h"
 #include "ext/directory.h"
+#include "general.h"
 
 #ifndef _EXT_H
 #define _EXT_H

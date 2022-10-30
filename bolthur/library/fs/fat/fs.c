@@ -18,7 +18,7 @@
  */
 
 #include <errno.h>
-#include "internal.h"
+#include "../fat.h"
 #include <inttypes.h>
 #include <sys/bolthur.h>
 

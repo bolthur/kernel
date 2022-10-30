@@ -33,7 +33,7 @@ typedef enum {
   FAT_FAT32 = 3,
 } fat_type_t;
 
-struct fat_fs {
+typedef struct {
   dev_read_t dev_read;
   dev_write_t dev_write;
 
@@ -59,7 +59,6 @@ struct fat_fs {
   } fat_data;
 
   cache_handle_t* handle;
-};
-typedef struct fat_fs fat_fs_t;
+} fat_fs_t;
 
 #endif

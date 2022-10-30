@@ -20,9 +20,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include "../ext.h"
 #include <inttypes.h>
 #include <sys/bolthur.h>
-#include "../ext.h"
 
 /**
  * @fn ext_fs_t ext_fs_init*(dev_read_t, dev_write_t, uint32_t)

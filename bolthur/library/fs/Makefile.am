@@ -14,6 +14,7 @@ libfs_la_SOURCES = \
   ext/inode.c \
   ext/superblock.c \
   fat/cache.c \
+  fat/cluster.c \
   fat/directory.c \
   fat/file.c \
   fat/fs.c \

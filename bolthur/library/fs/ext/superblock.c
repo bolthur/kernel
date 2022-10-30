@@ -18,9 +18,9 @@
  */
 
 #include <errno.h>
+#include "../ext.h"
 #include <inttypes.h>
 #include <sys/bolthur.h>
-#include "../ext.h"
 
 /**
  * @fn bool ext_superblock_read(ext_generic_data_t*, ext_superblock_t*)

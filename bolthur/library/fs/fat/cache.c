@@ -19,7 +19,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include "internal.h"
+#include "../fat.h"
 
 /**
  * @fn bool fat_cache_sync(cache_handle_t*)

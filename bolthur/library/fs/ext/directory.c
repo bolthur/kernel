@@ -19,6 +19,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include "../ext.h"
 
 /**
@@ -101,14 +102,18 @@ bool ext_directory_get_inode(
   const char* path,
   ext_inode_t* inode
 ) {
-  const char* delim = "/";
   uint32_t parent_inode_number = EXT_ROOT_INO;
   ext_inode_t parent_inode;
   ext_directory_entry_t* entry;
   // duplicate path
   char* path_dup = strdup( path );
+  // handle error
+  if ( ! path_dup ) {
+    errno = ENOMEM;
+    return false;
+  }
   // get first part of path
-  char* part = strtok( path_dup, delim );
+  char* part = strtok( path_dup, PATH_DELIMITER );
   // loop while part is valid
   while ( part ) {
     // if part has length, try to read inode
@@ -136,7 +141,7 @@ bool ext_directory_get_inode(
       free( entry );
     }
     // get next part
-    part = strtok( NULL, delim );
+    part = strtok( NULL, PATH_DELIMITER );
   }
   // free duplicate
   free( path_dup );

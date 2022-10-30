@@ -23,6 +23,25 @@
 #ifndef _FAT_BPB_H
 #define _FAT_BPB_H
 
+// file attribute defines
+#define FAT_DIRECTORY_FILE_ATTRIBUTE_READ_ONLY 0x01
+#define FAT_DIRECTORY_FILE_ATTRIBUTE_HIDDEN 0x02
+#define FAT_DIRECTORY_FILE_ATTRIBUTE_SYSTEM 0x04
+#define FAT_DIRECTORY_FILE_ATTRIBUTE_VOLUME_ID 0x08
+#define FAT_DIRECTORY_FILE_ATTRIBUTE_DIRECTORY 0x10
+#define FAT_DIRECTORY_FILE_ATTRIBUTE_ARCHIVE 0x20
+#define FAT_DIRECTORY_FILE_ATTRIBUTE_LONG_FILE_NAME \
+  ( FAT_DIRECTORY_FILE_ATTRIBUTE_READ_ONLY | FAT_DIRECTORY_FILE_ATTRIBUTE_HIDDEN \
+  | FAT_DIRECTORY_FILE_ATTRIBUTE_SYSTEM | FAT_DIRECTORY_FILE_ATTRIBUTE_VOLUME_ID )
+// helper to extract specific information from time field
+#define FAT_DIRECTORY_TIME_EXTRACT_HOUR(x) ((x & 0x7C00) >> 11)
+#define FAT_DIRECTORY_TIME_EXTRACT_MINUTE(x) ((x & 0x3F0) >> 5)
+#define FAT_DIRECTORY_TIME_EXTRACT_SECOND(x) (x & 0x1F)
+// helper to extract specific information from date field
+#define FAT_DIRECTORY_DATE_EXTRACT_HOUR(x) ((x & 0xFE00) >> 9)
+#define FAT_DIRECTORY_DATE_EXTRACT_MINUTE(x) ((x & 0x1E0) >> 5)
+#define FAT_DIRECTORY_DATE_EXTRACT_SECOND(x) (x & 0x1F)
+
 #pragma pack(push, 1)
 
 typedef struct {
@@ -108,6 +127,58 @@ static_assert(
   120 == sizeof( fat_bpb_extended_t ),
   "invalid fat_bpb_extended_t size!"
 );
+
+// fat directory
+typedef struct {
+  char name[ 8 ];
+  char extension[ 3 ];
+  uint8_t attributes;
+  uint8_t reserved0;
+  uint8_t creation_time_tenths;
+  uint16_t creation_time;
+  uint16_t creation_date;
+  uint16_t last_accessed_date;
+  uint16_t first_cluster_upper; // only for FAT32
+  uint16_t last_modification_time;
+  uint16_t last_modification_date;
+  uint16_t first_cluster_lower;
+  uint32_t file_size; // 0 for folders
+} fat_directory_entry_raw_t;
+
+static_assert(
+  32 == sizeof( fat_directory_entry_raw_t ),
+  "invalid fat_directory_entry_raw_t size!"
+);
+
+// long file name structure
+typedef struct {
+  uint8_t order;
+  uint8_t first_five_two_byte[ 10 ];
+  uint8_t attribute;
+  uint8_t type;
+  uint8_t checksum;
+  uint8_t next_six_two_byte[ 12 ];
+  uint16_t zero;
+  uint8_t final_two_byte[ 4 ];
+} fat_directory_entry_long_raw_t;
+
+static_assert(
+  32 == sizeof( fat_directory_entry_long_raw_t ),
+  "invalid fat_directory_entry_long_raw_t size!"
+);
+
+// fat32 fs info
+typedef struct {
+  uint32_t lead_signature;
+  uint8_t reserved[ 480 ];
+  uint32_t signature;
+  uint32_t known_free_cluster_count;
+  uint32_t available_cluster_start;
+  uint8_t reserved2[ 12 ];
+  uint32_t trail_signature;
+} fat32_fsinfo_t;
+
+static_assert( 512 == sizeof( fat32_fsinfo_t ), "invalid fat32_fsinfo_t size!" );
 
 #pragma pack(pop)
 

@@ -113,6 +113,8 @@ echo "Copying kernel and ramdisk to image boot folder"
 # copy project related stuff to boot partition
 copy_file_to_boot( kernel_path )
 copy_file_to_boot( output_ramdisk )
+# some dummy directory
+createDir( joinPath( getCurrentDir(), "tmp", "partition", "boot", "foobarlongfolder", "foo", "bar" ) )
 
 echo "Creating boot and root images from folders"
 # create image
