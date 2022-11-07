@@ -1,2 +1,2 @@
 
-SUBDIRS = dev ramdisk vfs
+SUBDIRS = dev ext fat ramdisk vfs

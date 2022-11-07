@@ -171,7 +171,7 @@ void rpc_handle_add(
       mount_point->pid,
       request,
       data_size,
-      false,
+      rpc_handle_add_async,
       type,
       request,
       data_size,

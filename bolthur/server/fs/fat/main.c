@@ -17,22 +17,20 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
+#include <stdio.h>
+#include <dlfcn.h>
 #include <sys/bolthur.h>
 
-#ifndef _RPC_H
-#define _RPC_H
-
-bool rpc_init( void );
-void rpc_handle_add( size_t, pid_t, size_t, size_t );
-void rpc_handle_remove( size_t, pid_t, size_t, size_t );
-void rpc_handle_close( size_t, pid_t, size_t, size_t );
-void rpc_handle_read( size_t, pid_t, size_t, size_t );
-void rpc_handle_write( size_t, pid_t, size_t, size_t );
-void rpc_handle_seek( size_t, pid_t, size_t, size_t );
-void rpc_handle_stat( size_t, pid_t, size_t, size_t );
-void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );
-void rpc_handle_fork( size_t, pid_t, size_t, size_t );
-void rpc_handle_exit( size_t, pid_t, size_t, size_t );
-
-#endif
+/**
+ * @fn int main(int, char*[])
+ * @brief main entry point
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
+int main( __unused int argc, __unused char* argv[] ) {
+  // print something
+  EARLY_STARTUP_PRINT( "fat fs server processing!\r\n" )
+  return -1;
+}

@@ -125,7 +125,7 @@ void rpc_handle_mount(
     handle->process,
     request,
     sizeof( *request ),
-    false,
+    rpc_handle_mount_async,
     type,
     request,
     sizeof( *request ),

@@ -175,7 +175,7 @@ void rpc_handle_mount(
     source_mount_point->pid,
     request,
     sizeof( *request ),
-    false,
+    rpc_handle_mount_async,
     type,
     request,
     sizeof( *request ),

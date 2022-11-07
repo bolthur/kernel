@@ -1,2 +1,2 @@
 
-SUBDIRS = server
+SUBDIRS = partition server

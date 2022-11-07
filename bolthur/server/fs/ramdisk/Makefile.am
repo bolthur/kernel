@@ -10,7 +10,6 @@ ramdisk_SOURCES = \
   rpc/fork.c \
   rpc/init.c \
   rpc/ioctl.c \
-  rpc/open.c \
   rpc/read.c \
   rpc/remove.c \
   rpc/seek.c \

@@ -136,7 +136,7 @@ void rpc_handle_stat(
       mount_point->pid,
       request,
       sizeof( *request ),
-      false,
+      rpc_handle_stat_async,
       type,
       request,
       sizeof( *request ),

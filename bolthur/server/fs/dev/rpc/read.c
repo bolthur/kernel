@@ -147,7 +147,7 @@ void rpc_handle_read(
     handle->process,
     request,
     sizeof( *request ),
-    false,
+    rpc_handle_read_async,
     type,
     request,
     sizeof( *request ),

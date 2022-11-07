@@ -235,7 +235,7 @@ void timer_handle_callback( void ) {
       0,
       entry->thread,
       false,
-      0,
+      entry->id,
       true
     );
     // handle error by skip

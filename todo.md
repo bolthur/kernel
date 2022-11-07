@@ -5,8 +5,7 @@
 * [ ] FPU
   * [ ] Extend undefined exception to check for fpu error with clear of flag
 * [ ] Add SMP support [see also](http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dai0425/ch04s07s01.html)
-  * [ ] Memory management
-    * [ ] Prepare virtual memory management per core if smp is active
+  * [ ] Prepare virtual memory management per core if smp is active
   * [ ] Determine current running core within exceptions
   * [ ] Extend irq check to check corresponding cpu interrupt registers
 * [ ] Documentation ( man pages or markdown )
@@ -18,6 +17,15 @@
 
 * [ ] Create a draft for "build" system to create ready to boot images with platform driver/app packaging
   * [ ] Per platform initial ramdisk creation
-* [ ] Create repository for building ported applications and libraries
-  * [ ] Add newlib with patch for compilation
-  * [ ] Add glibc with patch for compilation
+
+# VFS
+
+* [ ] Manage handles with a avl tree by complete path
+* [ ] Replace vfs node tree ( not used for handles ) by simple mount point list evaluated during actions
+* [ ] VFS shall have 3 different mount points before mount is called
+  * [ ] /dev
+  * [ ] /manager
+  * [ ] /ramdisk
+* [ ] VFS shall have 2 additional mount points when mounting root and boot was successful
+  * [ ] /
+  * [ ] /boot

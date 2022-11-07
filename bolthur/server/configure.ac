@@ -148,9 +148,12 @@ AC_CONFIG_FILES([
   console/Makefile
   fs/Makefile
   fs/dev/Makefile
+  fs/ext/Makefile
+  fs/fat/Makefile
   fs/ramdisk/Makefile
   fs/vfs/Makefile
   manager/Makefile
+  manager/partition/Makefile
   manager/server/Makefile
   platform/Makefile
   platform/raspi/Makefile

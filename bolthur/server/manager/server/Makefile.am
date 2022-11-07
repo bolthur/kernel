@@ -19,7 +19,6 @@ server_SOURCES = \
   rpc/init.c \
   rpc/ioctl.c \
   rpc/mount.c \
-  rpc/open.c \
   rpc/read.c \
   rpc/remove.c \
   rpc/seek.c \

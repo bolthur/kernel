@@ -146,7 +146,7 @@ void rpc_handle_write(
     handle->process,
     request,
     sizeof( *request ),
-    false,
+    rpc_handle_write_async,
     type,
     request,
     sizeof( *request ),

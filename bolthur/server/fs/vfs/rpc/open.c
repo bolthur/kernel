@@ -141,7 +141,7 @@ static void create_handle(
 
 /**
  * @fn void rpc_handle_open_async(size_t, pid_t, size_t, size_t)
- * @brief Internal helper to continue asynchronous started open
+ * @brief Open continue callback to continue after receiving stat information
  *
  * @param type
  * @param origin
@@ -149,7 +149,7 @@ static void create_handle(
  * @param response_info
  */
 void rpc_handle_open_async(
-  size_t type,
+  __unused size_t type,
   pid_t origin,
   size_t data_info,
   size_t response_info
@@ -157,19 +157,19 @@ void rpc_handle_open_async(
   vfs_open_response_t response = { .handle = -EINVAL };
   // get matching async data
   bolthur_async_data_t* async_data =
-    bolthur_rpc_pop_async( type, response_info );
+    bolthur_rpc_pop_async( RPC_VFS_OPEN, response_info );
   if ( ! async_data ) {
     return;
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
     return;
   }
   // allocate space for stat response and clear out
   vfs_stat_response_t* stat_response = malloc( sizeof( *stat_response ) );
   if ( ! stat_response ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
     return;
   }
   // clear out
@@ -177,18 +177,18 @@ void rpc_handle_open_async(
   // original request
   vfs_open_request_t* request = async_data->original_data;
   if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
     free( stat_response );
     return;
   }
   // fetch response
   _syscall_rpc_get_data( stat_response, sizeof( *stat_response ), data_info, false );
   if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
     free( stat_response );
     return;
   }
-  create_handle( type, origin, stat_response, request, &response, async_data );
+  create_handle( RPC_VFS_OPEN, origin, stat_response, request, &response, async_data );
   // free response
   free( stat_response );
 }
@@ -210,13 +210,8 @@ void rpc_handle_open(
   size_t type,
   pid_t origin,
   size_t data_info,
-  size_t response_info
+  __unused size_t response_info
 ) {
-  // handle async return in case response info is set
-  if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
-    rpc_handle_open_async( type, origin, data_info, response_info );
-    return;
-  }
   // variables
   vfs_open_response_t response = { .handle = -EINVAL };
   vfs_open_request_t* request = malloc( sizeof( vfs_open_request_t ) );
@@ -277,11 +272,11 @@ void rpc_handle_open(
   strcpy( stat_request->file_path, request->path );
   // perform async rpc
   bolthur_rpc_raise(
-    type,
+    RPC_VFS_STAT,
     mount_point->pid,
     stat_request,
     sizeof( *stat_request ),
-    false,
+    rpc_handle_open_async,
     type,
     request,
     sizeof( *request ),

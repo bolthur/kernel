@@ -142,7 +142,7 @@ void rpc_handle_umount(
     handle->process,
     request,
     sizeof( *request ),
-    false,
+    rpc_handle_umount_async,
     type,
     request,
     sizeof( *request ),
