@@ -25,6 +25,7 @@
 #include <libtar.h>
 #include <sys/bolthur.h>
 #include <sys/sysmacros.h>
+#include <sys/mount.h>
 #include "ramdisk.h"
 #include "rpc.h"
 #include "../../libhelper.h"
@@ -40,6 +41,7 @@ extern TAR* disk;
  * @return
  */
 int main( int argc, char* argv[] ) {
+  EARLY_STARTUP_PRINT( "ramdisk starting up!\r\n" )
   EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
   // beside the name also the shared memory id is passed per parameter
   if ( 2 != argc ) {
@@ -73,29 +75,10 @@ int main( int argc, char* argv[] ) {
     return -1;
   }
   // sending ramdisk to vfs
-  EARLY_STARTUP_PRINT( "Sending mount point %s to VFS\r\n", MOUNT_POINT )
+  EARLY_STARTUP_PRINT( "Sending mount point %s to VFS\r\n", MOUNT_POINT_DESTINATION )
+
   // send add of ramdisk folder
   memset( msg, 0, sizeof( *msg ) );
-  // collect time data
-  time_t sec = th_get_mtime( disk );
-  long nsec = 0;
-  // populate data
-  strncpy( msg->file_path, MOUNT_POINT, PATH_MAX - 1 );
-  msg->info.st_size = ( off_t )th_get_size( disk );
-  msg->info.st_dev = makedev(
-    ( unsigned int )th_get_devmajor( disk ),
-    ( unsigned int )th_get_devminor( disk )
-  );
-  msg->info.st_mode = th_get_mode( disk );
-  msg->info.st_mtim.tv_sec = sec;
-  msg->info.st_mtim.tv_nsec = nsec;
-  msg->info.st_ctim.tv_sec = sec;
-  msg->info.st_ctim.tv_nsec = nsec;
-  msg->info.st_blksize = T_BLOCKSIZE;
-  msg->info.st_blocks = ( msg->info.st_size / T_BLOCKSIZE )
-    + ( msg->info.st_size % T_BLOCKSIZE ? 1 : 0 );
-  // send add request
-  send_vfs_add_request( msg, 0, 2 );
   // send device to vfs
   EARLY_STARTUP_PRINT( "Sending device \"/dev/ramdisk\" to vfs\r\n" )
   // clear memory
@@ -107,6 +90,27 @@ int main( int argc, char* argv[] ) {
   send_vfs_add_request( msg, 0, 0 );
   // free again
   free( msg );
+
+  EARLY_STARTUP_PRINT( "trying to mount!\r\n" )
+  // try to mount /dev/ramdisk to /ramdisk
+  int result = mount(
+    MOUNT_POINT_DEVICE,
+    MOUNT_POINT_DESTINATION,
+    MOUNT_POINT_FILESYSTEM,
+    MS_MGC_VAL | MS_RDONLY,
+    ""
+  );
+  if ( 0 != result ) {
+    EARLY_STARTUP_PRINT(
+      "Mount of \"%s\" with type \"%s\" to \"%s\" failed: \"%s\"\r\n",
+      MOUNT_POINT_DEVICE,
+      MOUNT_POINT_FILESYSTEM,
+      MOUNT_POINT_DESTINATION,
+      strerror( errno )
+    )
+    // exit
+    return -1;
+  }
 
   EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
   // wait for rpc

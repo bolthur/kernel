@@ -25,7 +25,6 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
 #include "../file/handle.h"
 #include "../ioctl/handler.h"
 

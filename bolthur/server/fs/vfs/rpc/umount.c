@@ -23,7 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
+#include "../mountpoint/node.h"
 #include "../file/handle.h"
 
 /**
@@ -65,7 +65,11 @@ void rpc_handle_umount_async(
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
-  // get original request
+  /// FIXME: IMPLEMENT LOGIC
+  response.result = -EINVAL;
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  return;
+  /*// get original request
   vfs_umount_request_t* request = async_data->original_data;
   vfs_node_t* target_umount_point = vfs_extract_mountpoint( request->target );
   vfs_node_t* target_by_path = vfs_node_by_path( request->target );
@@ -88,7 +92,7 @@ void rpc_handle_umount_async(
     target_by_path->locked = false;
   }
   // just return response
-  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data );*/
 }
 
 /**
@@ -136,6 +140,12 @@ void rpc_handle_umount(
     free( request );
     return;
   }
+  /// FIXME: IMPLEMENT LOGIC
+  free( request );
+  response.result = -EINVAL;
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  return;
+  /*
   // get node by path
   vfs_node_t* target_umount_point = vfs_extract_mountpoint( request->target );
   vfs_node_t* target_by_path = vfs_node_by_path( request->target );
@@ -184,5 +194,5 @@ void rpc_handle_umount(
     free( request );
     return;
   }
-  free( request );
+  free( request );*/
 }

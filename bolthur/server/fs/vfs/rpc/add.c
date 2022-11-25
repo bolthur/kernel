@@ -23,7 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
+#include "../mountpoint/node.h"
 #include "../file/handle.h"
 #include "../ioctl/handler.h"
 
@@ -117,7 +117,6 @@ void rpc_handle_add(
     rpc_handle_add_async( type, origin, data_info, response_info );
     return;
   }
-  char* str;
   vfs_add_response_t response = { .status = -EINVAL, .handler = 0 };
   // handle no data
   if( ! data_info ) {
@@ -156,114 +155,25 @@ void rpc_handle_add(
     return;
   }
   // get mount point
-  vfs_node_t* mount_point = vfs_extract_mountpoint( request->file_path );
+  mountpoint_node_t* mount_point = mountpoint_node_extract( request->file_path );
   if ( ! mount_point ) {
     response.status = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  // handle not own handling
-  if ( vfs_pid != mount_point->pid ) {
-    // perform async rpc
-    bolthur_rpc_raise(
-      type,
-      mount_point->pid,
-      request,
-      data_size,
-      rpc_handle_add_async,
-      type,
-      request,
-      data_size,
-      origin,
-      data_info
-    );
-    free( request );
-    return;
-  }
-  // check if existing
-  vfs_node_t* node = vfs_node_by_path( request->file_path );
-  if ( node ) {
-    // prepare response
-    response.status = VFS_ADD_ALREADY_EXIST;
-    response.handler = node->pid;
-    // return response
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    // free message structures
-    free( request );
-    // skip
-    return;
-  }
-  // extract dirname and get parent node by dirname
-  str = dirname( request->file_path );
-  node = vfs_node_by_path( str );
-  if ( ! node ) {
-    response.status = VFS_ADD_ERROR;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( str );
-    free( request );
-    return;
-  }
-  free( str );
-  // get basename and create node
-  str = basename( request->file_path );
-  // get target node
-  char* target = NULL;
-  if ( S_ISLNK( request->info.st_mode ) ) {
-    // check for target is not set
-    if ( 0 == strlen( request->linked_path ) ) {
-      response.status = VFS_ADD_ERROR;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      free( str );
-      free( request );
-      return;
-    }
-    // duplicate link target ( either absolute or relative )
-    target = strdup( request->linked_path );
-    // handle duplicate failed
-    if ( ! target ) {
-      response.status = VFS_ADD_ERROR;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      free( str );
-      free( request );
-      return;
-    }
-  }
-  // add basename to path
-  if ( ! vfs_add_path( node, origin, str, target, request->info ) ) {
-    response.status = VFS_ADD_ERROR;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( str );
-    if ( target ) {
-      free( target );
-    }
-    free( request );
-    return;
-  }
-  // handle device info stuff if is device
-  if (
-    sizeof( vfs_add_request_t ) < data_size
-    && S_ISCHR( request->info.st_mode )
-  ) {
-    size_t idx_max = ( data_size - sizeof( vfs_add_request_t ) ) / sizeof( size_t );
-    for ( size_t idx = 0; idx < idx_max; idx++ ) {
-      while ( true ) {
-        if ( ! ioctl_push_command( request->device_info[ idx ], origin ) ) {
-          continue;
-        }
-        break;
-      }
-    }
-  }
-  free( str );
-  if ( target ) {
-    free( target );
-  }
-  // prepare response
-  response.status = VFS_ADD_SUCCESS;
-  response.handler = origin;
-  // return response
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-  // free message structures
+  // perform async rpc to handler
+  bolthur_rpc_raise(
+    type,
+    mount_point->pid,
+    request,
+    data_size,
+    rpc_handle_add_async,
+    type,
+    request,
+    data_size,
+    origin,
+    data_info
+  );
   free( request );
 }

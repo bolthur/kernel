@@ -25,12 +25,12 @@ import std/parsecfg
 import std/sequtils
 import zippy
 
-proc scan_directory*( path: string, file_type: string, additional_info: string, sysroot: string, compress: bool ): void =
+proc scanDirectory*( path: string, fileType: string, additionalInfo: string, sysroot: string, compress: bool ): void =
   # loop through files of folder including subfolders
   for file in walkDirRec( path, { pcFile, pcLinkToFile } ):
-    var file_to_check = file
+    var fileToCheck = file
     var info = getFileInfo( file, false )
-    var symlink_src = ""
+    var symlinkSrc = ""
     if pcLinkToFile == info.kind:
       # get info with follow symlink again
       info = getFileInfo( file )
@@ -38,108 +38,108 @@ proc scan_directory*( path: string, file_type: string, additional_info: string, 
       if pcFile != info.kind: continue
       var splitted = file.splitFile()
       # expand symlink and use for check
-      file_to_check = expandSymlink( file )
-      if not file_to_check.isAbsolute:
-        file_to_check = joinPath( splitted.dir, file_to_check )
+      fileToCheck = expandSymlink( file )
+      if not fileToCheck.isAbsolute:
+        fileToCheck = joinPath( splitted.dir, fileToCheck )
       # determine symlink source and strip variable
-      symlink_src = strip( replace( file_to_check, splitted.dir & DirSep, "" ) )
+      symlinkSrc = strip( replace( fileToCheck, splitted.dir & DirSep, "" ) )
       # loop as long as file to check is still a symlink
-      info = getFileInfo( file_to_check, false )
+      info = getFileInfo( fileToCheck, false )
       while pcLinkToFile == info.kind:
         # expand symlink again
-        var splitted = file_to_check.splitFile()
-        file_to_check = expandSymlink( file_to_check )
+        var splitted = fileToCheck.splitFile()
+        fileToCheck = expandSymlink( fileToCheck )
         # add absolute path
-        if not file_to_check.isAbsolute:
-          file_to_check = joinPath( splitted.dir, file_to_check )
+        if not fileToCheck.isAbsolute:
+          fileToCheck = joinPath( splitted.dir, fileToCheck )
         # get info again
-        info = getFileInfo( file_to_check, false )
-    let cmd_result: tuple[output: string, exitCode: int] = execCmdEx( "file " & file_to_check )
-    if 0 != cmd_result.exitCode:
-      echo "unable to query info: " & cmd_result.output
+        info = getFileInfo( fileToCheck, false )
+    let cmdResult: tuple[output: string, exitCode: int] = execCmdEx( "file " & fileToCheck )
+    if 0 != cmdResult.exitCode:
+      echo "unable to query info: " & cmdResult.output
       quit( 1 )
-    if contains( cmd_result.output, file_type ) and contains( cmd_result.output, additional_info ):
+    if contains( cmdResult.output, fileType ) and contains( cmdResult.output, additionalInfo ):
       # split file path
       let split = splitPath( file )
-      let splitted_head = split.head.split( DirSep )
+      let splittedHead = split.head.split( DirSep )
       let executable = split.tail
 
       # get destination information
-      var info_file = fmt"{$DirSep}";
-      for idx, value in splitted_head:
+      var infoFile = fmt"{$DirSep}";
+      for idx, value in splittedHead:
         if "build" == value: continue
-        info_file = join_path( info_file, value )
-      info_file = join_path( info_file, "config.ini" )
-      if fileExists( info_file ):
+        infoFile = joinPath( infoFile, value )
+      infoFile = joinPath( infoFile, "config.ini" )
+      if fileExists( infoFile ):
         # load config
-        var dict = loadConfig( info_file )
+        var dict = loadConfig( infoFile )
         # get necessary information
-        let place_type = dict.getSectionValue("general", "type")
-        var inner_path = dict.getSectionValue("general", "path")
-        var inner_path_splitted = inner_path.split( "/" )
+        let placeType = dict.getSectionValue("general", "type")
+        var innerPath = dict.getSectionValue("general", "path")
+        var innerPathSplitted = innerPath.split( "/" )
         # skip ramdisk without inner path
-        if "ramdisk" == place_type and 0 >= len( inner_path ): continue
+        if "ramdisk" == placeType and 0 >= len( innerPath ): continue
 
-        var base_path = ""
-        var compress_flag = compress
-        if "ramdisk_compressed" == place_type:
-          base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "compressed", joinPath( inner_path_splitted ) )
-        elif "ramdisk_uncompressed" == place_type:
-          base_path = joinPath( getCurrentDir(), "tmp", "ramdisk" )
-        elif "image_root" == place_type:
-          base_path = joinPath( getCurrentDir(), "tmp", "partition", "root", joinPath( inner_path_splitted ) )
-          compress_flag = false
-        elif "image_boot" == place_type:
-          base_path = joinPath( getCurrentDir(), "tmp", "partition", "boot", joinPath( inner_path_splitted ) )
-          compress_flag = false
+        var basePath = ""
+        var compressFlag = compress
+        if "ramdisk_compressed" == placeType:
+          basePath = joinPath( getCurrentDir(), "tmp", "ramdisk", "compressed", joinPath( innerPathSplitted ) )
+        elif "ramdisk_uncompressed" == placeType:
+          basePath = joinPath( getCurrentDir(), "tmp", "ramdisk" )
+        elif "image_root" == placeType:
+          basePath = joinPath( getCurrentDir(), "tmp", "partition", "root", joinPath( innerPathSplitted ) )
+          compressFlag = false
+        elif "image_boot" == placeType:
+          basePath = joinPath( getCurrentDir(), "tmp", "partition", "boot", joinPath( innerPathSplitted ) )
+          compressFlag = false
         else:
-          echo "unknown type ", $place_type , " for ", file, " with path ", inner_path
+          echo "unknown type ", $placeType , " for ", file, " with path ", innerPath
           continue
 
-        createDir( base_path )
-        if not isEmptyOrWhitespace( symlink_src ):
-          createSymlink( symlink_src, joinPath( base_path, executable ) )
+        createDir( basePath )
+        if not isEmptyOrWhitespace( symlinkSrc ):
+          createSymlink( symlinkSrc, joinPath( basePath, executable ) )
         else:
-          if "ramdisk_uncompressed" == place_type:
-            copyFile( file, joinPath( base_path, executable ) )
+          if "ramdisk_uncompressed" == placeType:
+            copyFile( file, joinPath( basePath, executable ) )
           else:
-            if compress_flag:
-              writeFile( joinPath( base_path, executable & ".gz" ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
+            if compressFlag:
+              writeFile( joinPath( basePath, executable & ".gz" ), zippy.compress( readFile( file ), zippy.DefaultCompression, zippy.dfGzip ) )
             else:
-              copyFile( file, joinPath( base_path, executable ) )
+              copyFile( file, joinPath( basePath, executable ) )
         continue
 
       if -1 != path.find(sysroot):
         # determine target folder
-        var target_folder = $DirSep
-        var last = len( splitted_head ) - 1
-        if executable == splitted_head[ last ]: last = last - 1
+        var targetFolder = $DirSep
+        var last = len( splittedHead ) - 1
+        if executable == splittedHead[ last ]: last = last - 1
 
         var pos = -1
-        for idx, value in splitted_head:
+        for idx, value in splittedHead:
           if value == "application" or value == "server" or value == "usr" or value == "font" or value == "bosl":
             pos = idx
         if pos != -1:
-          if pos + 1 < len( splitted_head ) and "platform" == splitted_head[ pos + 1 ]:
+          if pos + 1 < len( splittedHead ) and "platform" == splittedHead[ pos + 1 ]:
             # strip out platform and platform name from path
-            var tmp_info = splitted_head
+            var tmpInfo = splittedHead
             let first = pos + 1;
             let last = pos + 2;
-            tmp_info.delete( first..last )
-            if tmp_info.contains( "bosl" ):
-              target_folder &= tmp_info[ pos..^1 ].join( $DirSep )
+            tmpInfo.delete( first..last )
+            if tmpInfo.contains( "bosl" ):
+              targetFolder &= tmpInfo[ pos..^1 ].join( $DirSep )
             else:
-              target_folder &= tmp_info[ pos..^2 ].join( $DirSep )
+              targetFolder &= tmpInfo[ pos..^2 ].join( $DirSep )
           else:
-            target_folder &= splitted_head[ pos..^1 ].join( $DirSep )
+            targetFolder &= splittedHead[ pos..^1 ].join( $DirSep )
         else:
           pos = -1
 
-        var base_path = joinPath( getCurrentDir(), "tmp", "partition", "root", target_folder )
+        var basePath = joinPath( getCurrentDir(), "tmp", "partition", "root", targetFolder )
 
         # symlink handling
-        if not isEmptyOrWhitespace( symlink_src ):
-          createDir( base_path )
-          createSymlink( symlink_src, joinPath( base_path, executable ) )
+        if not isEmptyOrWhitespace( symlinkSrc ):
+          createDir( basePath )
+          createSymlink( symlinkSrc, joinPath( basePath, executable ) )
         else:
-          copyFile( file, joinPath( base_path, executable ) )
+          copyFile( file, joinPath( basePath, executable ) )

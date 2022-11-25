@@ -22,7 +22,9 @@
 #ifndef _RAMDISK_H
 #define _RAMDISK_H
 
-#define MOUNT_POINT "/ramdisk"
+#define MOUNT_POINT_DEVICE "/dev/ramdisk"
+#define MOUNT_POINT_DESTINATION "/ramdisk"
+#define MOUNT_POINT_FILESYSTEM "ramdisk"
 
 void ramdisk_copy_from_shared( char* );
 bool ramdisk_setup( void );

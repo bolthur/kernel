@@ -17,32 +17,20 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/syslimits.h>
-#include <sys/types.h>
-#include "../../../../library/collection/avl/avl.h"
+#include <stdio.h>
+#include <dlfcn.h>
+#include <sys/bolthur.h>
 
-#ifndef _IOCTL_HANDLER_H
-#define _IOCTL_HANDLER_H
-
-typedef struct {
-  avl_node_t node;
-  pid_t pid;
-  avl_tree_t* tree;
-} ioctl_tree_entry_t;
-
-typedef struct {
-  avl_node_t node;
-  uint32_t command;
-} ioctl_container_t;
-
-#define IOCTL_HANDLER_GET_ENTRY( n ) \
-  ( ioctl_tree_entry_t* )( ( uint8_t* )n - offsetof( ioctl_tree_entry_t, node ) )
-
-#define IOCTL_HANDLER_GET_CONTAINER( n ) \
-  ( ioctl_container_t* )( ( uint8_t* )n - offsetof( ioctl_container_t, node ) )
-
-bool ioctl_handler_init( void );
-ioctl_container_t* ioctl_lookup_command( uint32_t, pid_t );
-bool ioctl_push_command( uint32_t, pid_t );
-
-#endif
+/**
+ * @fn int main(int, char*[])
+ * @brief main entry point
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
+int main( __unused int argc, __unused char* argv[] ) {
+  // print something
+  EARLY_STARTUP_PRINT( "generic fs server processing!\r\n" )
+  return -1;
+}

@@ -96,6 +96,7 @@ void init_stage1( void ) {
 
     // handle no fork
     if ( 0 == inner_forked_process ) {
+      EARLY_STARTUP_PRINT( "waiting for parent to be ready!\r\n" )
       // wait for vfs to be ready
       _syscall_rpc_wait_for_ready( getppid() );
       // start /dev/ramdisk
@@ -112,8 +113,10 @@ void init_stage1( void ) {
       }
 
       if ( 0 != inner_forked_process ) {
+        EARLY_STARTUP_PRINT( "waiting for parent to be ready!\r\n" )
         // wait for parent process to be ready
         _syscall_rpc_wait_for_ready( forked_process );
+        EARLY_STARTUP_PRINT( "Replacing fork with dev image %p!\r\n", dev_image )
         // build command
         char* dev_cmd[] = { "dev", NULL, };
         // call for replace and handle error
@@ -128,8 +131,10 @@ void init_stage1( void ) {
       }
 
       if ( 0 == inner_forked_process ) {
+        EARLY_STARTUP_PRINT( "waiting for parent to be ready!\r\n" )
         // wait for parent to be ready
         _syscall_rpc_wait_for_ready( getppid() );
+        EARLY_STARTUP_PRINT( "Replacing fork with ramdisk image %p!\r\n", ramdisk_image )
         // build command
         char* ramdisk_cmd[] = { "ramdisk", shm_id_str, NULL, };
         // call for replace and handle error

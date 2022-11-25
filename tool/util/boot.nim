@@ -26,32 +26,32 @@ proc onProgressChanged(total, progress, speed: BiggestInt): void =
   stdout.write "\rDownloaded ", progress, " of ", total, " - Current rate: ", speed div 1000, "kb/s"
   stdout.flushFile()
 
-proc copy_file_to_boot*( path: string ): void =
+proc copyFileToBoot*( path: string ): void =
   if fileExists( path ):
     # create base path
-    let base_path = joinPath( getCurrentDir(), "tmp", "partition", "boot" )
-    createDir( base_path )
+    let basePath = joinPath( getCurrentDir(), "tmp", "partition", "boot" )
+    createDir( basePath )
     # get folder path out of file
     let splitted = splitPath( path )
-    copyFile( path, joinPath( base_path, splitted.tail ) )
+    copyFile( path, joinPath( basePath, splitted.tail ) )
 
-proc load_firmware_to_boot*( firmware_type: string ): void =
-  let cache_path = joinPath( getCurrentDir(), ".cache" )
-  createDir( cache_path )
-  if "raspi" == firmware_type:
+proc loadFirmwareToBoot*( firmwareType: string ): void =
+  let cachePath = joinPath( getCurrentDir(), ".cache" )
+  createDir( cachePath )
+  if "raspi" == firmwareType:
     # load firmware
-    if not fileExists( joinPath( cache_path, "firmware.tar.gz" ) ):
+    if not fileExists( joinPath( cachePath, "firmware.tar.gz" ) ):
       var client = newHttpClient()
       client.onProgressChanged = onProgressChanged
-      client.downloadFile( "https://github.com/raspberrypi/firmware/archive/refs/tags/1.20220120.tar.gz", joinPath( cache_path, "firmware.tar.gz" ) )
+      client.downloadFile( "https://github.com/raspberrypi/firmware/archive/refs/tags/1.20220120.tar.gz", joinPath( cachePath, "firmware.tar.gz" ) )
       stdout.write "\r\n"
       stdout.flushFile()
       # unzip firmware
-      extractAll( joinPath( cache_path, "firmware.tar.gz" ), joinPath( cache_path, "firmware" ) )
+      extractAll( joinPath( cachePath, "firmware.tar.gz" ), joinPath( cachePath, "firmware" ) )
     # copy over to boot
-    for file in walkDirRec( joinPath( cache_path, "firmware", "firmware-1.20220120", "boot" ), { pcFile } ):
+    for file in walkDirRec( joinPath( cachePath, "firmware", "firmware-1.20220120", "boot" ), { pcFile } ):
       let splitted = splitPath( file )
       if splitted.tail.startsWith( "kernel" ):
         continue
       # copy over to boot
-      copy_file_to_boot( file )
+      copyFileToBoot( file )

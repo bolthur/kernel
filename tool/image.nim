@@ -21,9 +21,9 @@ import std/os
 from std/osproc import execCmdEx
 import std/strutils
 # local stuff
-from util/scan import scan_directory
-from util/boot import copy_file_to_boot, load_firmware_to_boot
-from util/image import create_plain_image_file
+from util/scan import scanDirectory
+from util/boot import copyFileToBoot, loadFirmwareToBoot
+from util/image import createPlainImageFile
 
 # remove tmp dir again
 removeDir( "tmp" )
@@ -35,90 +35,90 @@ createDir( "tmp" )
 # check argument count
 let argc: int = paramCount()
 if argc != 6:
-  echo "Usage: ramdisk <root source path> <build path> <sysroot> <boot_config> <kernel build path> <firmware type>"
+  echo "Usage: ramdisk <root source path> <build path> <sysroot> <bootConfig> <kernel build path> <firmware type>"
   quit( 1 )
 
 # get command line arguments
-let root_path: string = paramStr( 1 )
-let build_path: string = paramStr( 2 )
+let rootPath: string = paramStr( 1 )
+let buildPath: string = paramStr( 2 )
 let sysroot: string = paramStr( 3 )
-let boot_config: string = paramStr( 4 )
-let kernel_path: string = paramStr( 5 )
-let firmware_type: string = paramStr( 6 )
-let output_ramdisk: string = joinPath( root_path, "build-aux", "platform", firmware_type, "initrd" )
+let bootConfig: string = paramStr( 4 )
+let kernelPath: string = paramStr( 5 )
+let firmwareType: string = paramStr( 6 )
+let outputRamdisk: string = joinPath( rootPath, "build-aux", "platform", firmwareType, "initrd" )
 
-let font: string = joinPath( root_path, "thirdparty", "font" )
-let application: string = joinPath( build_path, "bolthur", "application" )
-let server: string = joinPath( build_path, "bolthur", "server" )
-let bosl: string = joinPath( root_path, "bosl" )
+let font: string = joinPath( rootPath, "thirdparty", "font" )
+let application: string = joinPath( buildPath, "bolthur", "application" )
+let server: string = joinPath( buildPath, "bolthur", "server" )
+let bosl: string = joinPath( rootPath, "bosl" )
 
 echo "scanning directories to prepare content of boot, root and ramdisk"
 # scan directories and populate image and ramdisk folders
-scan_directory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
-scan_directory( font, "PC Screen Font", "", sysroot, false )
-scan_directory( server, "ELF", "executable", sysroot, false )
-scan_directory( application, "ELF", "executable", sysroot, false )
-scan_directory( bosl, "ASCII", "", sysroot, false )
+scanDirectory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
+scanDirectory( font, "PC Screen Font", "", sysroot, false )
+scanDirectory( server, "ELF", "executable", sysroot, false )
+scanDirectory( application, "ELF", "executable", sysroot, false )
+scanDirectory( bosl, "ASCII", "", sysroot, false )
 
 #[
 echo "Fixing up dynamic linker"
 # loop through files of folder including subfolders and adjust interpreter and run path for ramdisk
 for file in walkDirRec( joinPath( getCurrentDir(), "tmp", "ramdisk" ) ):
-  let outp_shell = execProcess( "file " & file )
-  if contains( outp_shell, ": ELF" ) and contains( outp_shell, "dynamically linked" ):
+  let outpShell = execProcess( "file " & file )
+  if contains( outpShell, ": ELF" ) and contains( outpShell, "dynamically linked" ):
     # Replace dynamic linker
-    if not contains( outp_shell, "LSB shared object" ):
+    if not contains( outpShell, "LSB shared object" ):
       discard execProcess( "patchelf --set-interpreter /ramdisk/lib/ld-bolthur.so " & file )
     # Replace rpath
     discard execProcess( "patchelf --set-rpath /ramdisk/lib " & file )
 ]#
 
 # configuration file for ramdisk is handled manually
-if dirExists( boot_config ):
+if dirExists( bootConfig ):
   echo "Copying over boot config to compressed ramdisk"
   # create base path
-  let base_path = joinPath( getCurrentDir(), "tmp", "ramdisk", "compressed", "ramdisk", "config" )
-  createDir( base_path )
-  for file in walkDirRec( boot_config ):
+  let basePath = joinPath( getCurrentDir(), "tmp", "ramdisk", "compressed", "ramdisk", "config" )
+  createDir( basePath )
+  for file in walkDirRec( bootConfig ):
     # remove full path, and strip possible leading directory separator
-    let path = replace( file, boot_config, "" ).strip( trailing = false, chars = { DirSep } )
+    let path = replace( file, bootConfig, "" ).strip( trailing = false, chars = { DirSep } )
     # get folder path out of file
     let splitted = splitPath( path )
-    if "" != splitted.head: createDir( joinPath( base_path, splitted.head ) )
+    if "" != splitted.head: createDir( joinPath( basePath, splitted.head ) )
     # copy file
-    copyFile( file, joinPath( base_path, path ) )
+    copyFile( file, joinPath( basePath, path ) )
 
 echo "Creating compressed ramdisk"
 # create ramdisk and remove normal directory
-var cmd_result: tuple[output: string, exitCode: int] = execCmdEx( "tar czvf ../ramdisk.tar.gz * --owner=0 --group=0", workingDir = "tmp/ramdisk/compressed" )
-if 0 != cmd_result.exitCode:
-  echo "Failed to generate compressed ramdisk: " & cmd_result.output
+var cmdResult: tuple[output: string, exitCode: int] = execCmdEx( "tar czvf ../ramdisk.tar.gz * --owner=0 --group=0", workingDir = "tmp/ramdisk/compressed" )
+if 0 != cmdResult.exitCode:
+  echo "Failed to generate compressed ramdisk: " & cmdResult.output
   quit( 1 )
 # cleanup directory
 removeDir( "tmp/ramdisk/compressed" )
 
 echo "Creating container around compressed ramdisk and boot process"
 # create initrd with init and compressed ramdisk
-cmd_result = execCmdEx( "tar cvf " & output_ramdisk & " * --owner=0 --group=0", workingDir = "tmp/ramdisk" )
-if 0 != cmd_result.exitCode:
-  echo "Failed to generate outer ramdisk container: " & cmd_result.output
+cmdResult = execCmdEx( "tar cvf " & outputRamdisk & " * --owner=0 --group=0", workingDir = "tmp/ramdisk" )
+if 0 != cmdResult.exitCode:
+  echo "Failed to generate outer ramdisk container: " & cmdResult.output
   quit( 1 )
 # cleanup directory
 removeDir( "tmp/ramdisk" )
 
 echo "Loading firmware to image boot folder"
 # load necessary firmware and populate into boot
-load_firmware_to_boot( firmware_type )
+loadFirmwareToBoot( firmwareType )
 echo "Copying kernel and ramdisk to image boot folder"
 # copy project related stuff to boot partition
-copy_file_to_boot( kernel_path )
-copy_file_to_boot( output_ramdisk )
+copyFileToBoot( kernelPath )
+copyFileToBoot( outputRamdisk )
 # some dummy directory
 createDir( joinPath( getCurrentDir(), "tmp", "partition", "boot", "foobarlongfolder", "foo", "bar" ) )
 
 echo "Creating boot and root images from folders"
 # create image
-create_plain_image_file( firmware_type, root_path )
+createPlainImageFile( firmwareType, rootPath )
 
 echo "Cleaning up temporary stuff"
 # remove tmp dir again

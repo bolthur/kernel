@@ -12,7 +12,7 @@ To report a bug, request a feature or simply ask a question, make use of GiHub I
 
 2. **Create an isolated and reproducible test case.** If you are reporting a bug, make sure you also have a minimal, runnable, code example that reproduces the problem you have. That makes it easier to fix something.
 
-3. **Share as much information as possible.** Include browser version affected, your OS, version of the library, steps to reproduce as also written within issue template. Something like "X isn't working!!!1!" will probably just be closed.
+3. **Share as much information as possible.** Include platform, version of the kernel and related software, steps to reproduce as also written within issue template. Something like "X isn't working!!!1!" will probably just be closed and is not really helpful.
 
 ## Contributing changes
 

@@ -238,7 +238,7 @@ bool handle_duplicate(
 }
 
 /**
- * @fn int handle_generate(handle_container_t**, pid_t, pid_t, vfs_node_t*, const char*, int, int)
+ * @fn int handle_generate(handle_container_t**, pid_t, pid_t, mountpoint_node_t*, const char*, int, int)
  * @brief Generate new handle
  *
  * @param container
@@ -254,8 +254,7 @@ int handle_generate(
   handle_container_t** container,
   pid_t process,
   pid_t handler,
-  vfs_node_t* mount_point,
-  vfs_node_t* target_node,
+  mountpoint_node_t* mount_point,
   const char* path,
   int flags,
   int mode
@@ -310,7 +309,6 @@ int handle_generate(
   ( *container )->flags = flags;
   ( *container )->mode = mode;
   ( *container )->mount_point = mount_point;
-  ( *container )->target_node = target_node;
   ( *container )->handler = handler;
   // prepare and insert avl node
   avl_prepare_node( &(*container)->node, ( void* )(*container)->handle );

@@ -21,9 +21,9 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include "file/handle.h"
-#include "vfs.h"
 #include "rpc.h"
 #include "ioctl/handler.h"
+#include "mountpoint/node.h"
 
 pid_t vfs_pid = 0;
 
@@ -45,6 +45,12 @@ int main( __unused int argc, __unused char* argv[] ) {
   // cache current pid
   EARLY_STARTUP_PRINT( "fetching pid!\r\n" )
   vfs_pid = getpid();
+  // setup mountpoint handling
+  EARLY_STARTUP_PRINT( "Setting up mountpoint handling!\r\n" )
+  if ( ! mountpoint_node_setup() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup mountpoint node handling!\r\n" )
+    return -1;
+  }
   // setup handle management
   EARLY_STARTUP_PRINT( "initializing!\r\n" )
   if ( ! handle_init() ) {
@@ -54,11 +60,6 @@ int main( __unused int argc, __unused char* argv[] ) {
   // setup ioctl management
   if ( ! ioctl_handler_init() ) {
     EARLY_STARTUP_PRINT( "Unable to setup ioctl handler structures!\r\n" )
-    return -1;
-  }
-  // setup vfs itself
-  if ( ! vfs_setup( vfs_pid ) ) {
-    EARLY_STARTUP_PRINT( "Unable to setup vfs structures!\r\n" )
     return -1;
   }
   // register rpc handler

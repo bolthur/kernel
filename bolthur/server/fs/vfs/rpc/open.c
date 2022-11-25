@@ -24,7 +24,7 @@
 #include <fcntl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
+#include "../mountpoint/node.h"
 #include "../file/handle.h"
 
 /**
@@ -99,18 +99,14 @@ static void create_handle(
     bolthur_rpc_return( type, response, sizeof( *response ), async_data );
     return;
   }
-  // try to find mount point
-  vfs_node_t* mount_point = vfs_extract_mountpoint( request->path );
-  vfs_node_t* by_path = vfs_node_by_path( request->path );
+  // get mount point
+  mountpoint_node_t* mount_point = mountpoint_node_extract( request->path );
   // handle no mount point node found
   if ( ! mount_point ) {
     bolthur_rpc_return( type, response, sizeof( *response ), async_data );
     return;
   }
-  if ( mount_point->pid == vfs_pid && by_path ) {
-    mount_point = by_path;
-  }
-  // generate and get new handle container
+  // generate container
   /// FIXME: PASS HANDLING PROCESS IN HERE INSTEAD OF MOUNT POINT
   handle_container_t* container = NULL;
   int result = handle_generate(
@@ -120,7 +116,6 @@ static void create_handle(
       : origin,
     stat_response->handler,
     mount_point,
-    by_path,
     request->path,
     request->flags,
     request->mode
@@ -235,29 +230,13 @@ void rpc_handle_open(
     free( request );
     return;
   }
-  // try to find mount point
-  vfs_node_t* mount_point = vfs_extract_mountpoint( request->path );
+  // get mount point
+  mountpoint_node_t* mount_point = mountpoint_node_extract( request->path );
   // handle no mount point node found
   if ( ! mount_point ) {
     free( request );
+    response.handle = -ENOENT;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  if ( vfs_pid == mount_point->pid ) {
-    vfs_node_t* by_path = vfs_node_by_path( request->path );
-    if ( ! by_path ) {
-      free( request );
-      response.handle = -ENOSYS;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      return;
-    }
-    vfs_stat_response_t st = {
-      .success = true,
-      .handler = by_path->pid,
-    };
-    memcpy( &st.info, by_path->st, sizeof( struct stat ) );
-    create_handle( type, origin, &st, request, &response, NULL );
-    free( request );
     return;
   }
   // allocate stat request

@@ -19,11 +19,11 @@
 
 #include <sys/syslimits.h>
 #include <sys/types.h>
+#include "../mountpoint/node.h"
 #include "../../../../library/collection/avl/avl.h"
-#include "../vfs.h"
 
-#ifndef _HANDLE_H
-#define _HANDLE_H
+#ifndef _FILE_HANDLE_H
+#define _FILE_HANDLE_H
 
 typedef struct {
   avl_node_t node;
@@ -39,8 +39,7 @@ typedef struct {
   int mode;
   off_t pos;
   char path[ PATH_MAX ];
-  vfs_node_t* mount_point;
-  vfs_node_t* target_node;
+  mountpoint_node_t* mount_point;
   pid_t handler;
   struct stat info;
 } handle_container_t;
@@ -61,7 +60,7 @@ typedef struct {
   )
 
 bool handle_init( void );
-int handle_generate( handle_container_t**, pid_t, pid_t, vfs_node_t*, vfs_node_t*, const char*, int, int );
+int handle_generate( handle_container_t**, pid_t, pid_t, mountpoint_node_t*, const char*, int, int );
 int handle_destory( pid_t, int );
 void handle_destory_all( pid_t );
 int handle_get( handle_container_t**, pid_t, int );

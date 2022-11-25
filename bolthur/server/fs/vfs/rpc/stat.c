@@ -23,7 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
+#include "../mountpoint/node.h"
 #include "../file/handle.h"
 
 /**
@@ -122,52 +122,25 @@ void rpc_handle_stat(
     strcpy( request->file_path, container->path );
   }
   // get mount point
-  vfs_node_t* mount_point = vfs_extract_mountpoint( request->file_path );
+  mountpoint_node_t* mount_point = mountpoint_node_extract( request->file_path );
   if ( ! mount_point ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  // handle not own handling
-  if ( vfs_pid != mount_point->pid ) {
-    // perform async rpc
-    bolthur_rpc_raise(
-      type,
-      mount_point->pid,
-      request,
-      sizeof( *request ),
-      rpc_handle_stat_async,
-      type,
-      request,
-      sizeof( *request ),
-      origin,
-      data_info
-    );
-    free( request );
-    return;
-  }
-  // get target node
-  vfs_node_t* target = NULL;
-  // get node by handle
-  if ( 0 < request->handle ) {
-    handle_container_t* container;
-    // try to get handle information
-    int result = handle_get( &container, origin, request->handle );
-    // set target on no error
-    if ( 0 == result ) {
-      target = container->mount_point;
-    }
-  // get node by path
-  } else if ( 0 < strlen( request->file_path ) ) {
-    target = vfs_node_by_path( request->file_path );
-  }
-  // populate response
-  response.success = target;
-  if ( target ) {
-    response.handler = target->pid;
-    memcpy( &response.info, target->st, sizeof( struct stat ) );
-  }
-  // return and free up
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  // perform async rpc
+  bolthur_rpc_raise(
+    type,
+    mount_point->pid,
+    request,
+    sizeof( *request ),
+    rpc_handle_stat_async,
+    type,
+    request,
+    sizeof( *request ),
+    origin,
+    data_info
+  );
   free( request );
+  return;
 }

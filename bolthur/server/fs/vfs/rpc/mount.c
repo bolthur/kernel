@@ -23,8 +23,12 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
+#include "../mountpoint/node.h"
 #include "../file/handle.h"
+
+static bool ramdisk_mounted = false;
+static bool dev_mounted = false;
+static bool manager_mounted = false;
 
 /**
  * @fn void rpc_handle_mount_async(size_t, pid_t, size_t, size_t)
@@ -60,6 +64,11 @@ void rpc_handle_mount_async(
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
+  /// FIXME: IMPLEMENT LOGIC
+  response.result = -EINVAL;
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+  return;
+/*
   // get original request
   vfs_mount_request_t* request = async_data->original_data;
   vfs_node_t* target_mount_point = vfs_extract_mountpoint( request->target );
@@ -87,7 +96,7 @@ void rpc_handle_mount_async(
     target_by_path->locked = false;
   }
   // just return response
-  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data );*/
 }
 
 /**
@@ -135,6 +144,95 @@ void rpc_handle_mount(
     free( request );
     return;
   }
+
+  // handle ramdisk
+  if (
+    strlen( request->type ) == strlen( "ramdisk" )
+    && 0 == strcmp( request->type, "ramdisk" )
+  ) {
+    // handle ramdisk already mounted
+    if ( ramdisk_mounted ) {
+      response.result = -EINVAL;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    // generate mount point
+    if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
+      response.result = -EIO;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    // set flag
+    ramdisk_mounted = true;
+    // return success
+    response.result = 0;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // handle dev
+  if (
+    strlen( request->type ) == strlen( "dev" )
+    && 0 == strcmp( request->type, "dev" )
+  ) {
+    // handle ramdisk already mounted
+    if ( dev_mounted ) {
+      response.result = -EINVAL;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    // generate mount point
+    if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
+      response.result = -EIO;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    // set flag
+    dev_mounted = true;
+    // return success
+    response.result = 0;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // handle manager
+  if (
+    strlen( request->type ) == strlen( "manager" )
+    && 0 == strcmp( request->type, "manager" )
+  ) {
+    // handle ramdisk already mounted
+    if ( manager_mounted ) {
+      response.result = -EINVAL;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    // generate mount point
+    if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
+      response.result = -EIO;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    // set flag
+    manager_mounted = true;
+    // return success
+    response.result = 0;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+
+  /// FIXME: IMPLEMENT LOGIC
+  response.result = -EINVAL;
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  free( request );
+  return;
+/*
   // get node by path
   vfs_node_t* target_mount_point = vfs_extract_mountpoint( request->target );
   vfs_node_t* target_by_path = vfs_node_by_path( request->target );
@@ -188,5 +286,5 @@ void rpc_handle_mount(
     free( request );
     return;
   }
-  free( request );
+  free( request );*/
 }

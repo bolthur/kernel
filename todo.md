@@ -20,8 +20,8 @@
 
 # VFS
 
-* [ ] Manage handles with a avl tree by complete path
-* [ ] Replace vfs node tree ( not used for handles ) by simple mount point list evaluated during actions
+* [ ] Revise vfs handles to tree built by complete path
+* [x] Replace vfs tree by simple mount point list
 * [ ] VFS shall have 3 different mount points before mount is called
   * [ ] /dev
   * [ ] /manager
@@ -29,3 +29,18 @@
 * [ ] VFS shall have 2 additional mount points when mounting root and boot was successful
   * [ ] /
   * [ ] /boot
+* [ ] Filesystem access
+  * [ ] Revise ramdisk
+    * [ ] Launch fs/fs after /dev was started
+    * [ ] fs/fs shall watch folder /dev/storage for changes
+    * [ ] Launch fs/ramdisk after fs/fs was started with registration for mount type "ramdisk"
+    * [ ] Boot registers ramdisk at /dev/storage/ramdisk
+    * [ ] fs manager queries "partitions" (there will be only one) of /dev/storage/ramdisk and adds them as /dev/storage/ramdiskX
+    * [ ] init stage 1 mounts /dev/storage/ramdisk1 to /ramdisk
+      * [ ] vfs routes the mount request, since it's not existing yet to fs/fs
+      * [ ] fs/fs saves mount point /ramdisk with handler type ( should be registered fs/ramdisk )
+    * [ ] file/folder access chain (boot is managing the direct ramdisk access):
+      * [ ] process->vfs->fs/fs->fs/ramdisk->boot->fs/ramdisk->fs/fs->vfs->process
+  * [ ] Mounting of / and /boot shall be done by a chains like the following:
+    * [ ] process->vfs->fs/fs->fs/ext->storage/sd->fs/ext->fs/fs->vfs->process
+    * [ ] process->vfs->fs/fs->fs/fat->storage/sd->fs/fat->fs/fs->vfs->process

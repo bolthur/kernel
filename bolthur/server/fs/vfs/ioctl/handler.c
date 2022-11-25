@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
 #include <sys/syslimits.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <stdlib.h>
 #include <errno.h>
-#include "../vfs.h"
 #include "handler.h"
 
 static avl_tree_t* ioctl_tree = NULL;

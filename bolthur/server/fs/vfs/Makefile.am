@@ -10,7 +10,9 @@ vfs_LDADD = \
   ${abs_top_builddir}/../library/collection/avl/libavl.la
 vfs_SOURCES = \
   file/handle.c \
+  file/tree.c \
   ioctl/handler.c \
+  mountpoint/node.c \
   rpc/add.c \
   rpc/close.c \
   rpc/exit.c \
@@ -26,6 +28,5 @@ vfs_SOURCES = \
   rpc/umount.c \
   rpc/write.c \
   main.c \
-  util.c \
-  vfs.c
+  util.c
 vfs_LDFLAGS = -all-static --static

@@ -17,38 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
 #include <stdbool.h>
-#include <unistd.h>
 #include <sys/bolthur.h>
-#include "../../../library/collection/list/list.h"
 
-#ifndef _VFS_H
-#define _VFS_H
+#ifndef _DEV_H
+#define _DEV_H
 
-// forward declaration necessary due to circular referencing
-typedef struct vfs_node vfs_node_t;
-
-// structure itself
-struct vfs_node {
-  pid_t pid;
-  bool locked;
-  char *name;
-  char* target;
-  struct stat* st;
-  list_manager_t* children;
-  list_manager_t* handle;
-  vfs_node_t* parent;
-};
-
-// functions
-vfs_node_t* vfs_setup( pid_t );
-void vfs_destroy( vfs_node_t* );
-void vfs_dump( vfs_node_t*, const char* );
-bool vfs_add_path( vfs_node_t*, pid_t, const char*, char*, struct stat );
-vfs_node_t* vfs_node_by_name( vfs_node_t*, const char* );
-vfs_node_t* vfs_node_by_path( const char* );
-char* vfs_path_bottom_up( vfs_node_t* );
-vfs_node_t* vfs_extract_mountpoint( const char* );
+#define MOUNT_POINT_DESTINATION "/dev"
+#define MOUNT_POINT_FILESYSTEM "dev"
 
 #endif

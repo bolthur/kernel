@@ -24,7 +24,6 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
 #include "../file/handle.h"
 
 /**

@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
+#include <sys/mount.h>
 #include <inttypes.h>
 #include "rpc.h"
 #include "handle.h"
@@ -29,6 +30,7 @@
 #include "../../libhelper.h"
 #include "../../libdev.h"
 #include "../../../library/collection/list/list.h"
+#include "dev.h"
 
 /**
  * @fn int main(int, char*[])
@@ -39,6 +41,7 @@
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
+  EARLY_STARTUP_PRINT( "dev starting up!\r\n" )
   EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
   // setup handle tree and vfs
   EARLY_STARTUP_PRINT( "setup handling!\r\n" )
@@ -59,25 +62,29 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Sending node \"/dev\" to vfs\r\n" )
-  // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t );
-  vfs_add_request_t* msg = malloc( msg_size );
-  if ( ! msg ) {
+  EARLY_STARTUP_PRINT( "trying to mount!\r\n" )
+  // try to mount /dev
+  int result = mount(
+    "",
+    MOUNT_POINT_DESTINATION,
+    MOUNT_POINT_FILESYSTEM,
+    MS_MGC_VAL | MS_RDONLY,
+    ""
+  );
+  if ( 0 != result ) {
+    EARLY_STARTUP_PRINT(
+      "Mount of special \"%s\" with type \"%s\" failed: \"%s\"\r\n",
+      MOUNT_POINT_DESTINATION,
+      MOUNT_POINT_FILESYSTEM,
+      strerror( errno )
+    )
+    // exit
     return -1;
   }
-  // clear memory
-  memset( msg, 0, msg_size );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
-  free( msg );
 
   // allocate memory for add request
-  msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
-  msg = malloc( msg_size );
+  size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
+  vfs_add_request_t* msg = malloc( msg_size );
   if ( ! msg ) {
     return -1;
   }

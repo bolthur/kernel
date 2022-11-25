@@ -17,32 +17,30 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/syslimits.h>
-#include <sys/types.h>
+#include <stdint.h>
+#include <stdbool.h>
+#include <unistd.h>
+#include <sys/bolthur.h>
 #include "../../../../library/collection/avl/avl.h"
+#include "../../../../library/collection/list/list.h"
 
-#ifndef _IOCTL_HANDLER_H
-#define _IOCTL_HANDLER_H
+#ifndef _FILE_TREE_H
+#define _FILE_TREE_H
 
-typedef struct {
+// forward declaration necessary due to circular referencing
+typedef struct file_tree_node file_tree_node_t;
+// structure itself
+struct file_tree_node {
   avl_node_t node;
   pid_t pid;
-  avl_tree_t* tree;
-} ioctl_tree_entry_t;
+  bool locked;
+  char* name;
+  struct stat* st;
+  list_manager_t* children;
+  list_manager_t* handle;
+  file_tree_node_t* parent;
+};
 
-typedef struct {
-  avl_node_t node;
-  uint32_t command;
-} ioctl_container_t;
-
-#define IOCTL_HANDLER_GET_ENTRY( n ) \
-  ( ioctl_tree_entry_t* )( ( uint8_t* )n - offsetof( ioctl_tree_entry_t, node ) )
-
-#define IOCTL_HANDLER_GET_CONTAINER( n ) \
-  ( ioctl_container_t* )( ( uint8_t* )n - offsetof( ioctl_container_t, node ) )
-
-bool ioctl_handler_init( void );
-ioctl_container_t* ioctl_lookup_command( uint32_t, pid_t );
-bool ioctl_push_command( uint32_t, pid_t );
+bool file_tree_setup(void);
 
 #endif

@@ -22,6 +22,7 @@
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
+#include <sys/mount.h>
 #include <inttypes.h>
 #include "rpc.h"
 #include "handle.h"
@@ -59,25 +60,21 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Sending node \"/manager\" to vfs\r\n" )
-  // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t );
-  vfs_add_request_t* msg = malloc( msg_size );
-  if ( ! msg ) {
+  EARLY_STARTUP_PRINT( "trying to mount!\r\n" )
+  // try to mount /dev
+  int result = mount( "", "/manager", "manager", MS_MGC_VAL, "" );
+  if ( 0 != result ) {
+    EARLY_STARTUP_PRINT(
+      "Mount of special \"/manager\" with type \"manager\" failed: \"%s\"\r\n",
+      strerror( errno )
+    )
+    // exit
     return -1;
   }
-  // clear memory
-  memset( msg, 0, msg_size );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/manager", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
-  free( msg );
 
   // allocate memory for add request
-  msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
-  msg = malloc( msg_size );
+  size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
+  vfs_add_request_t* msg = malloc( msg_size );
   if ( ! msg ) {
     return -1;
   }
