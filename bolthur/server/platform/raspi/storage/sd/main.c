@@ -113,13 +113,13 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/sd", PATH_MAX - 1 );
+  strncpy( msg->file_path, "/dev/storage/sd", PATH_MAX - 1 );
   EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
   // perform add request
   send_vfs_add_request( msg, 0, 0 );
 
   // loop through partitions and print type
-  for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
+  /*for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
     mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
       mbr_data + PARTITION_TABLE_OFFSET + ( i * sizeof( mbr_table_entry_t ) ) );
     EARLY_STARTUP_PRINT(
@@ -157,7 +157,7 @@ int main( __unused int argc, __unused char* argv[] ) {
     EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
     // perform add request
     send_vfs_add_request( msg, 0, 0 );
-  }
+  }*/
   // free again
   free( msg );
 

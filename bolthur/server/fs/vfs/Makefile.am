@@ -13,6 +13,9 @@ vfs_SOURCES = \
   file/tree.c \
   ioctl/handler.c \
   mountpoint/node.c \
+  rpc/watch/notify.c \
+  rpc/watch/register.c \
+  rpc/watch/release.c \
   rpc/add.c \
   rpc/close.c \
   rpc/exit.c \

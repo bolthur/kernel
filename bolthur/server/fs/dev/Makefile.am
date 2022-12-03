@@ -12,6 +12,9 @@ dev_SOURCES = \
   ioctl/handler.c \
   rpc/custom/kill.c \
   rpc/custom/start.c \
+  rpc/watch/notify.c \
+  rpc/watch/register.c \
+  rpc/watch/release.c \
   rpc/add.c \
   rpc/close.c \
   rpc/exit.c \

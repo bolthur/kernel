@@ -203,7 +203,7 @@ void init_stage2( void ) {
 
   // start sd server
   EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
-  pid_t sd = util_execute_device_server( "/ramdisk/server/storage/sd", "/dev/sd" );
+  pid_t sd = util_execute_device_server( "/ramdisk/server/storage/sd", "/dev/storage/sd" );
 
   // redirect stdin, stdout and stderr
   EARLY_STARTUP_PRINT(
@@ -288,7 +288,7 @@ void init_stage2( void ) {
     EARLY_STARTUP_PRINT( "Mount of \"%s\" with type \"%s\" to / failed: \"%s\"\r\n",
       root_device, root_partition_type, strerror( errno ) )
     //exit( 1 );
-  }*/
+  }
   // mount boot partition
   EARLY_STARTUP_PRINT( "Mounting boot file system" )
   int result = mount( "/dev/sd0", "/", "fat32", MS_MGC_VAL, "" );
@@ -309,7 +309,7 @@ void init_stage2( void ) {
   if ( 0 != result ) {
     EARLY_STARTUP_PRINT( "Unmount of \"/\" failed: \"%s\"\r\n", strerror( errno ) )
     //exit( 1 );
-  }
+  }*/
 
   // free up device and partition type strings
   free( root_device );

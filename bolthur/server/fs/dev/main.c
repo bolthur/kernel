@@ -33,6 +33,36 @@
 #include "dev.h"
 
 /**
+ * @fn bool dev_add_folder(const char*)
+ * @brief Helper to add a subfolder to dev
+ *
+ * @param path
+ * @return
+ */
+static bool dev_add_folder_file( const char* path ) {
+  // allocate memory for add request
+  size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
+  vfs_add_request_t* msg = malloc( msg_size );
+  if ( ! msg ) {
+    return false;
+  }
+  // clear memory
+  memset( msg, 0, msg_size );
+  // debug output
+  EARLY_STARTUP_PRINT( "Sending \"%s\" to vfs\r\n", path )
+  // prepare message structure
+  msg->info.st_mode = S_IFCHR;
+  msg->device_info[ 0 ] = DEV_START;
+  msg->device_info[ 1 ] = DEV_KILL;
+  strncpy( msg->file_path, path, PATH_MAX - 1 );
+  // perform add request
+  send_vfs_add_request( msg, msg_size, 0 );
+  // free stuff
+  free( msg );
+  return true;
+}
+
+/**
  * @fn int main(int, char*[])
  * @brief main entry point
  *
@@ -82,42 +112,25 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
-  // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
-  vfs_add_request_t* msg = malloc( msg_size );
-  if ( ! msg ) {
-    return -1;
-  }
-  // clear memory
-  memset( msg, 0, msg_size );
-
   // enable rpc
   EARLY_STARTUP_PRINT( "Set rpc ready flag\r\n" )
   _syscall_rpc_set_ready( true );
 
-  EARLY_STARTUP_PRINT( "Sending node \"/dev/manager\" to vfs\r\n" )
-  // clear memory
-  memset( msg, 0, msg_size );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  msg->device_info[ 0 ] = DEV_START;
-  msg->device_info[ 1 ] = DEV_KILL;
-  strncpy( msg->file_path, "/dev/manager", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
-
-  EARLY_STARTUP_PRINT( "Sending device \"/dev/manager/device\" to vfs\r\n" )
-  // clear memory
-  memset( msg, 0, msg_size );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  msg->device_info[ 0 ] = DEV_START;
-  msg->device_info[ 1 ] = DEV_KILL;
-  strncpy( msg->file_path, "/dev/manager/device", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
-  // free again
-  free( msg );
+  // add manager subfolder
+  if ( !dev_add_folder_file( "/dev/manager" ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add manager subfolder\r\n" )
+    return -1;
+  }
+  // add storage subfolder
+  if ( !dev_add_folder_file( "/dev/storage" ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
+    return -1;
+  }
+  // add device file
+  if ( !dev_add_folder_file( "/dev/manager/device" ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
+    return -1;
+  }
 
   // wait for rpc
   EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
