@@ -92,17 +92,17 @@ bool rpc_init( void ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
     return false;
   }
-  bolthur_rpc_bind( RPC_VFS_REGISTER_WATCH, rpc_handle_watch_register, true );
+  bolthur_rpc_bind( RPC_VFS_WATCH_REGISTER, rpc_handle_watch_register, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
     return false;
   }
-  bolthur_rpc_bind( RPC_VFS_RELEASE_WATCH, rpc_handle_watch_release, true );
+  bolthur_rpc_bind( RPC_VFS_WATCH_RELEASE, rpc_handle_watch_release, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
     return false;
   }
-  bolthur_rpc_bind( RPC_VFS_NOTIFY_WATCH, rpc_handle_watch_notify, true );
+  bolthur_rpc_bind( RPC_VFS_WATCH_NOTIFY, rpc_handle_watch_notify, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
     return false;

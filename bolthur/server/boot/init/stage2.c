@@ -169,7 +169,8 @@ __weak_symbol int umount2( const char* target, int flags ) {
  * @fn void init_stage2(void)
  * @brief Stage 2 init starting necessary stuff so that stage 3 with stuff from disk can be started
  */
-void init_stage2( void ) {
+#include <stdnoreturn.h>
+noreturn void init_stage2( void ) {
   // start manager server
   EARLY_STARTUP_PRINT( "Starting and waiting for server manager...\r\n" )
   pid_t manager = util_execute_device_server( "/ramdisk/server/manager/server", "/dev/manager/server" );
@@ -201,15 +202,36 @@ void init_stage2( void ) {
   EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )
   pid_t terminal = util_execute_device_server( "/ramdisk/server/terminal", "/dev/terminal" );
 
+  // start partition manager
+  EARLY_STARTUP_PRINT( "Starting and waiting for partition server...\r\n" )
+  /// FIXME: START VIA SERVER MANAGER ONCE WORKING AND START IS FIXED SOMEHOW
+  pid_t partition = util_execute_device_server( "/ramdisk/server/manager/partition", "/dev/partition" );
+  //pid_t partition = util_execute_manager_server( "/ramdisk/server/manager/partition", "/manager/partition" );
+
+  pid_t fat = 0;
+  pid_t ext = 0;
+  /*// start fat device and wait for device to come up
+  EARLY_STARTUP_PRINT( "Starting and waiting for fat server...\r\n" )
+  pid_t fat = util_execute_device_server( "/ramdisk/fs/fat", "/dev/fat" );
+
+  // start fat device and wait for device to come up
+  EARLY_STARTUP_PRINT( "Starting and waiting for ext server...\r\n" )
+  pid_t ext = util_execute_device_server( "/ramdisk/fs/ext", "/dev/ext" );*/
+
   // start sd server
   EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
   pid_t sd = util_execute_device_server( "/ramdisk/server/storage/sd", "/dev/storage/sd" );
 
+  for (;;) {
+    __asm__ __volatile__ ( "nop" );
+  }
+
   // redirect stdin, stdout and stderr
   EARLY_STARTUP_PRINT(
     "server_manager = %d, iomem = %d, rnd = %d, console = %d, terminal = %d, "
-    "framebuffer = %d, sd = %d\r\n",
-    manager, iomem, rnd, console, terminal, framebuffer, sd )
+    "framebuffer = %d, partition = %d, fat = %d, ext = %d, sd = %d\r\n",
+    manager, iomem, rnd, console, terminal, framebuffer, partition, fat, ext,
+    sd )
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
   FILE* fpin = freopen( "/dev/stdin", "r", stdin );

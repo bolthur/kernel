@@ -17,20 +17,30 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <dlfcn.h>
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <unistd.h>
+#include <libgen.h>
 #include <sys/bolthur.h>
+#include "../../rpc.h"
+#include "../../../../libdev.h"
 
 /**
- * @fn int main(int, char*[])
- * @brief main entry point
+ * @fn void rpc_custom_handle_register(size_t, pid_t, size_t, size_t)
+ * @brief Device kill command
  *
- * @param argc
- * @param argv
- * @return
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
  */
-int main( __unused int argc, __unused char* argv[] ) {
-  // print something
-  EARLY_STARTUP_PRINT( "generic fs server processing!\r\n" )
-  return -1;
+void rpc_custom_handle_register(
+  __unused size_t type,
+  __unused pid_t origin,
+  __unused size_t data_info,
+  __unused size_t response_info
+) {
+  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
 }

@@ -147,7 +147,6 @@ AC_CONFIG_FILES([
   collection/avl/Makefile
   collection/list/Makefile
   framebuffer/Makefile
-  fs/Makefile
 ])
 # FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO
 

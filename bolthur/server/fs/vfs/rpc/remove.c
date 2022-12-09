@@ -33,6 +33,8 @@
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo remove registered watchers for path
  */
 void rpc_handle_remove(
   size_t type,

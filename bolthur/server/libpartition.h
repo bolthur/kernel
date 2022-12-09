@@ -17,32 +17,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <assert.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <errno.h>
+#include <sys/bolthur.h>
 
-#ifndef _EXT_BLOCKGROUP_H
-#define _EXT_BLOCKGROUP_H
+#if ! defined( _LIBFS_H )
+#define _LIBFS_H
 
-#define EXT_FIRST_GROUP 0
-
-#pragma pack(push, 1)
-
-typedef struct {
-  uint32_t bg_block_bitmap;
-  uint32_t bg_inode_bitmap;
-  uint32_t bg_inode_table;
-  uint16_t bg_free_blocks_count;
-  uint16_t bg_free_inodes_count;
-  uint16_t bg_used_dirs_count;
-  uint16_t bg_pad;
-  uint8_t unused[ 12 ];
-} ext_blockgroup_t;
-
-static_assert(
-  32 == sizeof( ext_blockgroup_t ),
-  "invalid ext block group size!"
-);
-
-#pragma pack(pop)
+#define PARTITION_REGISTER_HANDLER RPC_CUSTOM_START
+#define PARTITION_RELEASE_HANDLER PARTITION_REGISTER_HANDLER + 1
 
 #endif

@@ -17,15 +17,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _FAT_DIRECTORY_H
-#define _FAT_DIRECTORY_H
+#include <libgen.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/bolthur.h>
+#include "../../rpc.h"
 
-typedef enum {
-  FAT_EXTRACT_ERROR,
-  FAT_EXTRACT_SUCCESS,
-  FAT_EXTRACT_END,
-  FAT_EXTRACT_SKIP
-} fat_extract_t;
-#define FAT_EXTR
-
-#endif
+/**
+ * @fn void rpc_handle_watch_release(size_t, pid_t, size_t, size_t)
+ * @brief handle watch register release
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_watch_release(
+  size_t type,
+  __unused pid_t origin,
+  __unused size_t data_info,
+  __unused size_t response_info
+) {
+  vfs_watch_release_response_t response = { .result = -EINVAL };
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+}

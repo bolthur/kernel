@@ -3,4 +3,10 @@ AM_CFLAGS = -DPROGRAM_NAME=\"manager/partition\"
 
 bin_PROGRAMS = partition
 partition_SOURCES = \
+  rpc/custom/register.c \
+  rpc/custom/release.c \
+  rpc/watch/notify.c \
+  rpc/watch/register.c \
+  rpc/watch/release.c \
+  rpc/init.c \
   main.c

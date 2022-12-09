@@ -29,5 +29,6 @@ dev_SOURCES = \
   rpc/umount.c \
   rpc/write.c \
   handle.c \
-  main.c
+  main.c \
+  watch.c
 dev_LDFLAGS = -all-static --static

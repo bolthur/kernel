@@ -26,12 +26,12 @@
 #include "rpc.h"
 #include "sd.h"
 #include "../../../../libhelper.h"
-
+/*
 // for compilation testing
 #include "../../../../../library/fs/mbr.h"
 #include "../../../../../library/fs/fat.h"
 #include "../../../../../library/fs/ext.h"
-
+*/
 size_t mbr_size = 0;
 uint8_t* mbr_data = NULL;
 
@@ -88,7 +88,7 @@ int main( __unused int argc, __unused char* argv[] ) {
     )
     return -1;
   }
-
+/*
   uint16_t* signature = ( uint16_t* )( mbr_data + PARTITION_TABLE_SIGNATURE_OFFSET );
   EARLY_STARTUP_PRINT( "Signature within mbr: %#"PRIx16"\r\n", *signature )
   // check signature
@@ -98,7 +98,7 @@ int main( __unused int argc, __unused char* argv[] ) {
       "Invalid signature within mbr: %#"PRIx16"\r\n", *signature )
     return -1;
   }
-
+*/
   // enable rpc
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );

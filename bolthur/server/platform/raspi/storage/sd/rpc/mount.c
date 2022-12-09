@@ -25,11 +25,10 @@
 #include <sys/bolthur.h>
 #include "../global.h"
 #include "../rpc.h"
-#include "../sd.h"
+#include "../sd.h"/*
 #include "../../../../../library/fs/mbr.h"
 #include "../../../../../library/fs/fat.h"
 #include "../../../../../library/fs/ext.h"
-
 
 static void ls_ext( ext_fs_t* fs, const char* path ) {
   // variable for inode
@@ -139,7 +138,7 @@ static void ls_fat( fat_fs_t* fs, const char* path ) {
     // print name and size
     EARLY_STARTUP_PRINT( "%"PRIu32" %s\r\n", entry->size, entry->name )
   }
-  /*for ( uint32_t idx = 0; idx < dir->entry_count; idx++ ) {
+  for ( uint32_t idx = 0; idx < dir->entry_count; idx++ ) {
     fat_extract_t extract = fat_directory_extract(
       dir, idx, entry, &idx );
     // handle error
@@ -157,13 +156,13 @@ static void ls_fat( fat_fs_t* fs, const char* path ) {
     }
     // print name and size
     EARLY_STARTUP_PRINT( "%"PRIu32" %s\r\n", entry->size, entry->name )
-  }*/
+  }
   // close directory again
   fat_directory_close( dir );
   free( dir );
   free( entry );
 }
-
+*/
 
 /**
  * @fn void rpc_handle_mount(size_t, pid_t, size_t, size_t)
@@ -180,6 +179,8 @@ void rpc_handle_mount(
   __unused size_t data_info,
   __unused size_t response_info
 ) {
+  vfs_mount_response_t response = { .result = -EAGAIN };
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );/*
   EARLY_STARTUP_PRINT( "fooo\r\n" )
   vfs_mount_response_t response = { .result = -EAGAIN };
   vfs_mount_request_t* request = malloc( sizeof( *request ) );
@@ -338,5 +339,5 @@ void rpc_handle_mount(
 
 
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-  free( request );
+  free( request );*/
 }

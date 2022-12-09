@@ -24,6 +24,7 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../handle.h"
+#include "../watch.h"
 #include "../ioctl/handler.h"
 
 /**
@@ -84,6 +85,25 @@ void rpc_handle_add(
     free( request );
     return;
   }
+  // extract base name
+  char* dir = dirname( request->file_path );
+  if ( ! dir ) {
+    response.status = -ENOMEM;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // debug output
+  EARLY_STARTUP_PRINT( "path = %s, base = %s\r\n", request->file_path, dir )
+  // check for notification
+  watch_node_t* node = watch_extract( dir, false );
+  if ( ! node && errno ) {
+    response.status = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    free( dir );
+    return;
+  }
   // check if already existing
   device_handle_t* handle = handle_get_by_path( request->file_path );
   if ( handle ) {
@@ -91,6 +111,7 @@ void rpc_handle_add(
     response.handler = handle->process;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
+    free( dir );
     return;
   }
   // try to add
@@ -98,6 +119,7 @@ void rpc_handle_add(
     response.status = VFS_ADD_ERROR;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
+    free( dir );
     return;
   }
   // handle device info stuff if is device
@@ -119,10 +141,18 @@ void rpc_handle_add(
       }
     }
   }
+  // notification
+  if ( node ) {
+    watch_tree_each(node->pid, watch_pid, n, {
+      EARLY_STARTUP_PRINT( "notification for %d with path %s\r\n",
+        n->process, node->name )
+    });
+  }
   // return success
   response.status = VFS_ADD_SUCCESS;
   response.handler = request->handler;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( request );
+  free( dir );
   return;
 }

@@ -2,10 +2,6 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"storage/sd\"
 
 bin_PROGRAMS = sd
-sd_DEPENDENCIES = \
-  ${abs_top_builddir}/../library/fs/libfs.la
-sd_LDADD = \
-  ${abs_top_builddir}/../library/fs/libfs.la
 sd_SOURCES = \
   rpc/add.c \
   rpc/close.c \

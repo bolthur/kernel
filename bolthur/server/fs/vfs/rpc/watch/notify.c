@@ -39,6 +39,6 @@ void rpc_handle_watch_notify(
   __unused size_t data_info,
   __unused size_t response_info
 ) {
-  vfs_notify_watch_response_t response = { .result = -EINVAL };
+  vfs_watch_notify_response_t response = { .result = -EINVAL };
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
 }

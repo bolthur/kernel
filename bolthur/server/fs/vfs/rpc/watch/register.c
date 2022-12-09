@@ -41,7 +41,7 @@ void rpc_handle_watch_register_async(
   size_t response_info
 ) {
   // allocate space for response
-  vfs_register_watch_response_t* response = malloc( sizeof( *response ) );
+  vfs_watch_register_response_t* response = malloc( sizeof( *response ) );
   if ( ! response ) {
     return;
   }
@@ -87,7 +87,7 @@ void rpc_handle_watch_register(
   __unused size_t response_info
 ) {
   // variables
-  vfs_register_watch_response_t response = { .result = -EINVAL };
+  vfs_watch_register_response_t response = { .result = -EINVAL };
   // handle no data
   if( ! data_info ) {
     response.result = -ENODATA;
@@ -95,7 +95,7 @@ void rpc_handle_watch_register(
     return;
   }
   // allocate space for request data
-  vfs_register_watch_request_t* request = malloc( sizeof( *request ) );
+  vfs_watch_register_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     response.result = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -104,13 +104,14 @@ void rpc_handle_watch_register(
   // clear variables
   memset( request, 0, sizeof( *request ) );
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_open_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
   if ( errno ) {
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
+  EARLY_STARTUP_PRINT( "%d :: %s\r\n", request->handler, request->target )
   // get mount point
   mountpoint_node_t* mount_point = mountpoint_node_extract( request->target );
   // handle no mount point node found
@@ -122,7 +123,7 @@ void rpc_handle_watch_register(
   }
   // route request to mount point
   bolthur_rpc_raise(
-    RPC_VFS_REGISTER_WATCH,
+    type,
     mount_point->pid,
     request,
     sizeof( *request ),

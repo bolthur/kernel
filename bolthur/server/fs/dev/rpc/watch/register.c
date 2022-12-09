@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../../rpc.h"
+#include "../../watch.h"
 
 /**
  * @fn void rpc_handle_watch_register(size_t, pid_t, size_t, size_t)
@@ -35,10 +36,51 @@
  */
 void rpc_handle_watch_register(
   size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
+  pid_t origin,
+  size_t data_info,
   __unused size_t response_info
 ) {
-  vfs_register_watch_response_t response = { .result = -EINVAL };
+  // variables
+  vfs_watch_register_response_t response = { .result = -EINVAL };
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    response.result = -ENODATA;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    return;
+  }
+  // allocate space for request data
+  vfs_watch_register_request_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    response.result = -ENOMEM;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    return;
+  }
+  // clear variables
+  memset( request, 0, sizeof( *request ) );
+  // fetch rpc data
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  if ( errno ) {
+    response.result = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // try to register watcher
+  response.result = watch_add( request->target , request->handler );
+  // debug output
+  EARLY_STARTUP_PRINT(
+    "handler %d is registering a watcher for %s: %d\r\n",
+    request->handler,
+    request->target,
+    response.result
+  )
+  // free request data
+  free( request );
+  // return result
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
 }

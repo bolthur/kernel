@@ -31,6 +31,7 @@
 #include "../../libdev.h"
 #include "../../../library/collection/list/list.h"
 #include "dev.h"
+#include "watch.h"
 
 /**
  * @fn bool dev_add_folder(const char*)
@@ -73,10 +74,16 @@ static bool dev_add_folder_file( const char* path ) {
 int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "dev starting up!\r\n" )
   EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
-  // setup handle tree and vfs
+  // setup handle tree
   EARLY_STARTUP_PRINT( "setup handling!\r\n" )
   if ( ! handle_init() ) {
     EARLY_STARTUP_PRINT( "Unable to setup handle structures!\r\n" )
+    return -1;
+  }
+  // setup watch stuff
+  EARLY_STARTUP_PRINT( "setup watch handling!\r\n" )
+  if ( ! watch_setup() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup watch infrastructure!\r\n" )
     return -1;
   }
   // register rpc handler
