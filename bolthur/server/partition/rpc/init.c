@@ -19,7 +19,7 @@
 
 #include <errno.h>
 #include "../rpc.h"
-#include "../../../libpartition.h"
+#include "../../libpartition.h"
 
 /**
  * @fn bool rpc_init(void)

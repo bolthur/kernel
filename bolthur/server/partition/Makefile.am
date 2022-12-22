@@ -1,5 +1,5 @@
 
-AM_CFLAGS = -DPROGRAM_NAME=\"manager/partition\"
+AM_CFLAGS = -DPROGRAM_NAME=\"partition\"
 
 bin_PROGRAMS = partition
 partition_SOURCES = \

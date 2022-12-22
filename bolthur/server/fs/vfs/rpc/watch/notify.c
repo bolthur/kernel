@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
+#include "../../mountpoint/node.h"
 #include "../../rpc.h"
 
 /**
@@ -35,10 +36,52 @@
  */
 void rpc_handle_watch_notify(
   size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
+  pid_t origin,
+  size_t data_info,
   __unused size_t response_info
 ) {
-  vfs_watch_notify_response_t response = { .result = -EINVAL };
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  // handle no data
+  if( ! data_info ) {
+    return;
+  }
+  // allocate space for request data
+  vfs_watch_notify_request_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    return;
+  }
+  // clear variables
+  memset( request, 0, sizeof( *request ) );
+  // fetch rpc data
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  if ( errno ) {
+    free( request );
+    return;
+  }
+  // get mount point
+  mountpoint_node_t* mount_point = mountpoint_node_extract( request->target );
+  // handle no mount point node found
+  if ( ! mount_point ) {
+    return;
+  }
+  // route request to mount point
+  bolthur_rpc_raise_generic(
+    type,
+    mount_point->pid,
+    request,
+    sizeof( *request ),
+    NULL,
+    type,
+    request,
+    sizeof( *request ),
+    origin,
+    data_info,
+    true
+  );
+  // handle error
+  if ( errno ) {
+    free( request );
+    return;
+  }
+  // free request data
+  free( request );
 }

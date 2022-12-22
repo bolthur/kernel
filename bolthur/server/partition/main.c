@@ -23,8 +23,8 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "rpc.h"
-#include "../../libhelper.h"
-#include "../../libpartition.h"
+#include "../libhelper.h"
+#include "../libpartition.h"
 
 /**
  * @fn bool dev_add_folder(const char*)
@@ -54,73 +54,6 @@ static bool dev_add_folder_file( const char* path ) {
   // free stuff
   free( msg );
   return true;
-}
-
-__weak_symbol void watch_path_register( const char* path ) {
-  // allocate request for notification
-  vfs_watch_register_request_t* request = malloc( sizeof( *request ) );
-  // handle error
-  if ( ! request ) {
-    errno = ENOMEM;
-    return;
-  }
-  // allocate dummy response for notification
-  vfs_watch_register_response_t* response = malloc( sizeof( *response ) );
-  // handle error
-  if ( ! response ) {
-    free( request );
-    errno = ENOMEM;
-    return;
-  }
-  // clear request
-  memset( request, 0, sizeof( *request ) );
-  // populate request
-  request->handler = getpid();
-  strncpy(request->target, path, PATH_MAX - 1);
-  EARLY_STARTUP_PRINT( "%d :: %s\r\n", request->handler, request->target )
-  // raise rpc without wait for return
-  size_t response_id = bolthur_rpc_raise(
-    RPC_VFS_WATCH_REGISTER,
-    VFS_DAEMON_ID,
-    request,
-    sizeof( *request ),
-    NULL,
-    RPC_VFS_WATCH_REGISTER,
-    request,
-    sizeof( *request ),
-    0,
-    0
-  );
-  // handle error
-  if ( 0 == response_id ) {
-    free( request );
-    free( response );
-    errno = EIO;
-    return;
-  }
-  // get response
-  _syscall_rpc_get_data(
-    response,
-    sizeof( vfs_watch_register_response_t ),
-    response_id,
-    false
-  );
-  // handle error
-  if ( errno ) {
-    free( request );
-    free( response );
-    return;
-  }
-  // handle error
-  if ( 0 > response->result ) {
-    errno = -response->result;
-    free( request );
-    free( response );
-    return;
-  }
-  // free up request again
-  free( request );
-  free( response );
 }
 
 /**

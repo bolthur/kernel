@@ -48,7 +48,6 @@ size_t ramdisk_read_offset = 0;
 pid_t pid = 0;
 TAR *disk = NULL;
 int fd_dev_manager = 0;
-int fd_server_manager = 0;
 // variables
 uintptr_t device_tree;
 char* bootargs;

@@ -24,10 +24,10 @@
 #include <libgen.h>
 #include <sys/bolthur.h>
 #include "../../rpc.h"
-#include "../../../../libdev.h"
+#include "../../../libdev.h"
 
 /**
- * @fn void rpc_custom_handle_register(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_custom_handle_release(size_t, pid_t, size_t, size_t)
  * @brief Device kill command
  *
  * @param type
@@ -35,7 +35,7 @@
  * @param data_info
  * @param response_info
  */
-void rpc_custom_handle_register(
+void rpc_custom_handle_release(
   __unused size_t type,
   __unused pid_t origin,
   __unused size_t data_info,

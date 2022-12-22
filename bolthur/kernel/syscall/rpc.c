@@ -67,16 +67,18 @@ void syscall_rpc_raise( void* context ) {
   size_t length = syscall_get_parameter( context, 3 );
   size_t origin_rpc_data_id = syscall_get_parameter( context, 4 );
   bool synchronous = ( bool )syscall_get_parameter( context, 5 );
+  bool no_return = ( bool )syscall_get_parameter( context, 6 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall_rpc_raise( %zu, %d, %p, %#zx, %d, %zu ) from %d\r\n",
+      "syscall_rpc_raise( %zu, %d, %p, %#zx, %zu, %d, %d ) from %d\r\n",
       type,
       process,
       data,
       length,
-      synchronous ? 1 : 0,
       origin_rpc_data_id,
+      synchronous ? 1 : 0,
+      no_return ? 1 : 0,
       task_thread_current_thread->process->id
     )
   #endif
@@ -179,8 +181,16 @@ void syscall_rpc_raise( void* context ) {
     syscall_populate_error( context, ( size_t )-ENOMEM );
     return;
   }
+  // handle no return
+  if ( no_return ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "no return rpc call\r\n" )
+    #endif
+    syscall_populate_success( context, 0 );
+    return;
   // block source thread if synchronous
-  if ( synchronous && task_thread_current_thread != rpc->thread ) {
+  } else if ( synchronous && task_thread_current_thread != rpc->thread ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(

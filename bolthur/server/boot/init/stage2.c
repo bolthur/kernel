@@ -171,17 +171,6 @@ __weak_symbol int umount2( const char* target, int flags ) {
  */
 #include <stdnoreturn.h>
 noreturn void init_stage2( void ) {
-  // start manager server
-  EARLY_STARTUP_PRINT( "Starting and waiting for server manager...\r\n" )
-  pid_t manager = util_execute_device_server( "/ramdisk/server/manager/server", "/dev/manager/server" );
-  // open manager device
-  fd_server_manager = open( "/dev/manager/server", O_RDWR );
-  if ( -1 == fd_server_manager ) {
-    EARLY_STARTUP_PRINT( "ERROR: Cannot open server manager: %s!\r\n", strerror( errno ) )
-    exit( -1 );
-  }
-  EARLY_STARTUP_PRINT( "fd_server_manager = %d\r\n", fd_server_manager )
-
   // start mailbox server
   EARLY_STARTUP_PRINT( "Starting and waiting for iomem server...\r\n" )
   pid_t iomem = util_execute_device_server( "/ramdisk/server/iomem", "/dev/iomem" );
@@ -205,8 +194,7 @@ noreturn void init_stage2( void ) {
   // start partition manager
   EARLY_STARTUP_PRINT( "Starting and waiting for partition server...\r\n" )
   /// FIXME: START VIA SERVER MANAGER ONCE WORKING AND START IS FIXED SOMEHOW
-  pid_t partition = util_execute_device_server( "/ramdisk/server/manager/partition", "/dev/partition" );
-  //pid_t partition = util_execute_manager_server( "/ramdisk/server/manager/partition", "/manager/partition" );
+  pid_t partition = util_execute_device_server( "/ramdisk/server/partition", "/dev/partition" );
 
   pid_t fat = 0;
   pid_t ext = 0;
@@ -228,10 +216,9 @@ noreturn void init_stage2( void ) {
 
   // redirect stdin, stdout and stderr
   EARLY_STARTUP_PRINT(
-    "server_manager = %d, iomem = %d, rnd = %d, console = %d, terminal = %d, "
+    "iomem = %d, rnd = %d, console = %d, terminal = %d, "
     "framebuffer = %d, partition = %d, fat = %d, ext = %d, sd = %d\r\n",
-    manager, iomem, rnd, console, terminal, framebuffer, partition, fat, ext,
-    sd )
+    iomem, rnd, console, terminal, framebuffer, partition, fat, ext, sd )
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
   FILE* fpin = freopen( "/dev/stdin", "r", stdin );

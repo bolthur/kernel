@@ -152,9 +152,7 @@ AC_CONFIG_FILES([
   fs/fat/Makefile
   fs/ramdisk/Makefile
   fs/vfs/Makefile
-  manager/Makefile
-  manager/partition/Makefile
-  manager/server/Makefile
+  partition/Makefile
   platform/Makefile
   platform/raspi/Makefile
   platform/raspi/framebuffer/Makefile

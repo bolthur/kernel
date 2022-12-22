@@ -22,23 +22,29 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
-#include "../rpc.h"
+#include "../../rpc.h"
 
 /**
- * @fn void rpc_handle_remove(size_t, pid_t, size_t, size_t)
- * @brief handle remove request
+ * @fn void rpc_handle_watch_notify(size_t, pid_t, size_t, size_t)
+ * @brief handle watch notification
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_remove(
-  size_t type,
+void rpc_handle_watch_notify(
+  __unused size_t type,
   __unused pid_t origin,
   __unused size_t data_info,
   __unused size_t response_info
 ) {
-  vfs_remove_response_t response = { .status = -EINVAL };
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    return;
+  }
+  /// FIXME: ADD FOLLOWING LOGIC
+  /// 1. request partition data from storage server
+  /// 2. register all valid partitions
+  EARLY_STARTUP_PRINT( "NOTIFY!\r\n" )
 }

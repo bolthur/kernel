@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../../rpc.h"
+#include "../../watch.h"
 
 /**
  * @fn void rpc_handle_watch_notify(size_t, pid_t, size_t, size_t)
@@ -35,10 +36,77 @@
  */
 void rpc_handle_watch_notify(
   size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
+  pid_t origin,
+  size_t data_info,
   __unused size_t response_info
 ) {
-  vfs_watch_notify_response_t response = { .result = -EINVAL };
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    return;
+  }
+  // allocate space for request data
+  vfs_watch_notify_request_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    return;
+  }
+  // clear variables
+  memset( request, 0, sizeof( *request ) );
+  // fetch rpc data
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  if ( errno ) {
+    free( request );
+    return;
+  }
+  // extract base name
+  char* dir = dirname( request->target );
+  if ( ! dir ) {
+    free( request );
+    return;
+  }
+  // check for notification
+  watch_node_t* node = watch_extract( dir, false );
+  if ( ! node && errno ) {
+    free( request );
+    free( dir );
+    return;
+  }
+  // free dir again
+  free( dir );
+  // check if handler pid is valid
+  bool valid = false;
+  watch_tree_each(node->pid, watch_pid, n, {
+    if ( n->process == request->handler ) {
+      valid = true;
+    }
+  });
+  // handle not valid
+  if ( ! valid ) {
+    free( request );
+    return;
+  }
+  // route request to mount point
+  bolthur_rpc_raise_generic(
+    type,
+    request->handler,
+    request,
+    sizeof( *request ),
+    NULL,
+    type,
+    request,
+    sizeof( *request ),
+    origin,
+    data_info,
+    true
+  );
+  // handle error
+  if ( errno ) {
+    free( request );
+    return;
+  }
+  // free request data
+  free( request );
 }
