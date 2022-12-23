@@ -23,7 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../handle.h"
+#include "../partition.h"
 
 /**
  * @fn void rpc_handle_mount_async(size_t, pid_t, size_t, size_t)
@@ -111,16 +111,19 @@ void rpc_handle_mount(
     free( request );
     return;
   }
-  device_handle_t* handle = handle_get_by_path( request->source );
-  // handle error
-  if ( ! handle ) {
+
+  partition_node_t* node = partition_extract( request->source, false );
+  if ( ! node ) {
     response.result = -ENOENT;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
+  /// FIXME: ADD FURTHER LOGIC
+  response.result = -ENOSYS;
+
   // perform async rpc
-  bolthur_rpc_raise(
+  /*bolthur_rpc_raise(
     type,
     handle->process,
     request,
@@ -137,6 +140,6 @@ void rpc_handle_mount(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
-  }
+  }*/
   free( request );
 }

@@ -17,23 +17,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
+#include <stdlib.h>
 #include <stdbool.h>
+#include <errno.h>
 #include <sys/bolthur.h>
+#include "libmbr.h"
 
-#ifndef _RPC_H
-#define _RPC_H
+#if ! defined( _LIBEXT_H )
+#define _LIBEXT_H
 
-bool rpc_init( void );
-void rpc_handle_mount_async( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount( size_t, pid_t, size_t, size_t );
+#define EXT_PROBE RPC_CUSTOM_START
 
-void rpc_handle_watch_notify( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_register( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_release( size_t, pid_t, size_t, size_t );
-
-void rpc_custom_handle_kill( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_register( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_release( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_start( size_t, pid_t, size_t, size_t );
+typedef struct {
+  const char device[ PATH_MAX ];
+  mbr_table_entry_t entry;
+} ext_probe_t;
 
 #endif

@@ -17,23 +17,30 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <sys/bolthur.h>
+#include <stdint.h>
+#include <assert.h>
 
-#ifndef _RPC_H
-#define _RPC_H
+#ifndef _EXTFS_BLOCKGROUP_H
+#define _EXTFS_BLOCKGROUP_H
 
-bool rpc_init( void );
-void rpc_handle_mount_async( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount( size_t, pid_t, size_t, size_t );
+#pragma pack(push, 1)
 
-void rpc_handle_watch_notify( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_register( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_release( size_t, pid_t, size_t, size_t );
+typedef struct {
+  uint32_t bg_block_bitmap;
+  uint32_t bg_inode_bitmap;
+  uint32_t bg_inode_table;
+  uint16_t bg_free_blocks_count;
+  uint16_t bg_free_inodes_count;
+  uint16_t bg_used_dirs_count;
+  uint16_t bg_pad;
+  uint8_t unused[ 12 ];
+} ext_blockgroup_t;
 
-void rpc_custom_handle_kill( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_register( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_release( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_start( size_t, pid_t, size_t, size_t );
+static_assert(
+  32 == sizeof( ext_blockgroup_t ),
+  "invalid ext block group size!"
+);
+
+#pragma pack(pop)
 
 #endif

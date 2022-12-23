@@ -183,10 +183,9 @@ noreturn void init_stage2( void ) {
   EARLY_STARTUP_PRINT( "Starting and waiting for partition server...\r\n" )
   pid_t partition = util_execute_device_server( "/ramdisk/server/partition", "/dev/partition" );
 
-  pid_t fat = 0;
   // start fat device and wait for device to come up
-  /*EARLY_STARTUP_PRINT( "Starting and waiting for fat server...\r\n" )
-  pid_t fat = util_execute_device_server( "/ramdisk/fs/fat", "/dev/fat" );*/
+  EARLY_STARTUP_PRINT( "Starting and waiting for fat server...\r\n" )
+  pid_t fat = util_execute_device_server( "/ramdisk/server/fs/fat", "/dev/fat" );
 
   // start fat device and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for ext server...\r\n" )
@@ -195,48 +194,6 @@ noreturn void init_stage2( void ) {
   // start sd server
   EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
   pid_t sd = util_execute_device_server( "/ramdisk/server/storage/sd", "/dev/storage/sd" );
-
-  for (;;) {
-    __asm__ __volatile__ ( "nop" );
-  }
-
-  // start framebuffer driver and wait for device to come up
-  EARLY_STARTUP_PRINT( "Starting and waiting for framebuffer server...\r\n" )
-  pid_t framebuffer = util_execute_device_server( "/ramdisk/server/framebuffer", "/dev/framebuffer" );
-
-  // start system console and wait for device to come up
-  EARLY_STARTUP_PRINT( "Starting and waiting for console server...\r\n" )
-  pid_t console = util_execute_device_server( "/ramdisk/server/console", "/dev/console" );
-
-  // start tty and wait for device to come up
-  EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )
-  pid_t terminal = util_execute_device_server( "/ramdisk/server/terminal", "/dev/terminal" );
-
-  // redirect stdin, stdout and stderr
-  EARLY_STARTUP_PRINT(
-    "iomem = %d, rnd = %d, console = %d, terminal = %d, "
-    "framebuffer = %d, partition = %d, fat = %d, ext = %d, sd = %d\r\n",
-    iomem, rnd, console, terminal, framebuffer, partition, fat, ext, sd )
-  // ORDER NECESSARY HERE DUE TO THE DEFINES
-  EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
-  FILE* fpin = freopen( "/dev/stdin", "r", stdin );
-  if ( ! fpin ) {
-    EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
-    exit( 1 );
-  }
-  EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", fpin->_file )
-  FILE* fpout = freopen( "/dev/stdout", "w", stdout );
-  if ( ! fpout ) {
-    EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
-    exit( 1 );
-  }
-  EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", fpout->_file )
-  FILE* fperr = freopen( "/dev/stderr", "w", stderr );
-  if ( ! fperr ) {
-    EARLY_STARTUP_PRINT( "Unable to reroute stderr\r\n" )
-    exit( 1 );
-  }
-  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fperr->_file )
 
   // determine root device and partition type from config
   EARLY_STARTUP_PRINT( "Extracting root device and partition type from config...\r\n" )
@@ -289,14 +246,14 @@ noreturn void init_stage2( void ) {
     root_partition_type
   )
   // mount root partition
-  /*EARLY_STARTUP_PRINT( "Mounting root file system\r\n" )
+  EARLY_STARTUP_PRINT( "Mounting root file system\r\n" )
   int result = mount( root_device, "/", root_partition_type, MS_MGC_VAL, "" );
   if ( 0 != result ) {
     EARLY_STARTUP_PRINT( "Mount of \"%s\" with type \"%s\" to / failed: \"%s\"\r\n",
       root_device, root_partition_type, strerror( errno ) )
     //exit( 1 );
   }
-  // mount boot partition
+  /*// mount boot partition
   EARLY_STARTUP_PRINT( "Mounting boot file system" )
   int result = mount( "/dev/sd0", "/", "fat32", MS_MGC_VAL, "" );
   if ( 0 != result ) {
@@ -317,6 +274,48 @@ noreturn void init_stage2( void ) {
     EARLY_STARTUP_PRINT( "Unmount of \"/\" failed: \"%s\"\r\n", strerror( errno ) )
     //exit( 1 );
   }*/
+
+  for (;;) {
+    __asm__ __volatile__ ( "nop" );
+  }
+
+  // start framebuffer driver and wait for device to come up
+  EARLY_STARTUP_PRINT( "Starting and waiting for framebuffer server...\r\n" )
+  pid_t framebuffer = util_execute_device_server( "/ramdisk/server/framebuffer", "/dev/framebuffer" );
+
+  // start system console and wait for device to come up
+  EARLY_STARTUP_PRINT( "Starting and waiting for console server...\r\n" )
+  pid_t console = util_execute_device_server( "/ramdisk/server/console", "/dev/console" );
+
+  // start tty and wait for device to come up
+  EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )
+  pid_t terminal = util_execute_device_server( "/ramdisk/server/terminal", "/dev/terminal" );
+
+  // redirect stdin, stdout and stderr
+  EARLY_STARTUP_PRINT(
+    "iomem = %d, rnd = %d, console = %d, terminal = %d, "
+    "framebuffer = %d, partition = %d, fat = %d, ext = %d, sd = %d\r\n",
+    iomem, rnd, console, terminal, framebuffer, partition, fat, ext, sd )
+  // ORDER NECESSARY HERE DUE TO THE DEFINES
+  EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
+  FILE* fpin = freopen( "/dev/stdin", "r", stdin );
+  if ( ! fpin ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
+    exit( 1 );
+  }
+  EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", fpin->_file )
+  FILE* fpout = freopen( "/dev/stdout", "w", stdout );
+  if ( ! fpout ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
+    exit( 1 );
+  }
+  EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", fpout->_file )
+  FILE* fperr = freopen( "/dev/stderr", "w", stderr );
+  if ( ! fperr ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stderr\r\n" )
+    exit( 1 );
+  }
+  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fperr->_file )
 
   // free up device and partition type strings
   free( root_device );
