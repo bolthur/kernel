@@ -119,8 +119,6 @@ void rpc_handle_mount(
     free( request );
     return;
   }
-  /// FIXME: ADD FURTHER LOGIC
-  response.result = -ENOSYS;
 
   // perform async rpc
   /*bolthur_rpc_raise(
@@ -141,5 +139,8 @@ void rpc_handle_mount(
     free( request );
     return;
   }*/
+  /// FIXME: ADD FURTHER LOGIC
+  response.result = -ENOSYS;
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( request );
 }

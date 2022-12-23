@@ -26,22 +26,22 @@
 #include "../sd.h"
 
 /**
- * @fn void rpc_handle_read(size_t, pid_t, size_t, size_t)
- * @brief Handle read request
+ * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
+ * @brief Handle write request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_read(
+void rpc_handle_write(
   size_t type,
   pid_t origin,
   size_t data_info,
   __unused size_t response_info
 ) {
   // allocate response
-  vfs_read_response_t* response = malloc( sizeof( *response ) );
+  vfs_write_response_t* response = malloc( sizeof( *response ) );
   // handle error
   if ( ! response ) {
     return;
@@ -63,7 +63,7 @@ void rpc_handle_read(
     return;
   }
   // allocate request
-  vfs_read_request_t* request = malloc( sizeof( *request ) );
+  vfs_write_request_t* request = malloc( sizeof( *request ) );
   // handle error
   if ( ! request ) {
     response->len = -ENOMEM;
@@ -113,9 +113,9 @@ void rpc_handle_read(
     }
   }
   // get target address, either from struct or shared memory
-  void* target_address = response->data;
+  void* source_address = request->data;
   if ( shm_addr ) {
-    target_address = shm_addr;
+    source_address = shm_addr;
   }
   // calculate block number
   off_t block_number = request->offset / sd_block_size;
@@ -125,8 +125,8 @@ void rpc_handle_read(
     request->len, request->offset, block_number
   )
   // try to read data
-  if ( ! sd_read_block(
-    ( uint32_t* )target_address,
+  if ( ! sd_write_block(
+    ( uint32_t* )source_address,
     request->len,
     ( uint32_t )block_number
   ) ) {

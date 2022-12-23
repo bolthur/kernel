@@ -7,6 +7,7 @@ sd_SOURCES = \
   rpc/mount.c \
   rpc/read.c \
   rpc/umount.c \
+  rpc/write.c \
   emmc.c \
   main.c \
   sd.c \

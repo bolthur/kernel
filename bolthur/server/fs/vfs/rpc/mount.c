@@ -28,7 +28,6 @@
 
 static bool ramdisk_mounted = false;
 static bool dev_mounted = false;
-static bool manager_mounted = false;
 
 /**
  * @fn void rpc_handle_mount_async(size_t, pid_t, size_t, size_t)
@@ -64,39 +63,26 @@ void rpc_handle_mount_async(
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
-  /// FIXME: IMPLEMENT LOGIC
-  response.result = -EINVAL;
-  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
-  return;
-/*
   // get original request
   vfs_mount_request_t* request = async_data->original_data;
-  vfs_node_t* target_mount_point = vfs_extract_mountpoint( request->target );
-  vfs_node_t* target_by_path = vfs_node_by_path( request->target );
-  // check for path not found
-  if ( ! target_by_path || ! target_mount_point ) {
-    response.result = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  // get destination
+  mountpoint_node_t* destination = mountpoint_node_extract( request->target );
+  if ( ! destination ) {
+    response.result = -EIO;
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     free( request );
     return;
   }
-  // get full path of mount point
-  char* target_mount_point_path = vfs_path_bottom_up( target_mount_point );
-  // check for handling by VFS
-  if (
-    strlen( target_mount_point_path ) == strlen( request->target )
-    && 0 == strcmp( target_mount_point_path, request->target )
-  ) {
-    // set path handling
-    if ( 0 == response.result ) {
-      target_by_path->pid = async_data->original_origin;
-    }
-    // reset lock again
-    EARLY_STARTUP_PRINT( "reset lock!\r\n" )
-    target_by_path->locked = false;
+  // get mount point
+  mountpoint_node_t* node = mountpoint_node_extract( request->source );
+  if ( ! node ) {
+    response.result = -ENOENT;
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    free( request );
+    return;
   }
   // just return response
-  bolthur_rpc_return( type, &response, sizeof( response ), async_data );*/
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
 }
 
 /**
@@ -199,78 +185,38 @@ void rpc_handle_mount(
     free( request );
     return;
   }
-  // handle manager
-  if (
-    strlen( request->type ) == strlen( "manager" )
-    && 0 == strcmp( request->type, "manager" )
-  ) {
-    // handle ramdisk already mounted
-    if ( manager_mounted ) {
-      response.result = -EINVAL;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      free( request );
-      return;
-    }
-    // generate mount point
-    if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
-      response.result = -EIO;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      free( request );
-      return;
-    }
-    // set flag
-    manager_mounted = true;
-    // return success
-    response.result = 0;
+
+  // get destination
+  mountpoint_node_t* destination = mountpoint_node_extract( request->target );
+  if ( destination ) {
+    response.result = -EEXIST;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // add destination mountpoint
+  if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
+    response.result = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
 
-  /// FIXME: IMPLEMENT LOGIC
-  response.result = -EINVAL;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-  free( request );
-  return;
-/*
-  // get node by path
-  vfs_node_t* target_mount_point = vfs_extract_mountpoint( request->target );
-  vfs_node_t* target_by_path = vfs_node_by_path( request->target );
-  vfs_node_t* source_mount_point = vfs_extract_mountpoint( request->source );
-  // check for path not found
-  if (
-    ! target_by_path
-    || ! target_mount_point
-    || ! source_mount_point
-  ) {
-    response.result = -EINVAL;
+  // get mount point
+  mountpoint_node_t* node = mountpoint_node_extract( request->source );
+  if ( ! node ) {
+    response.result = -ENOENT;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  // get full path of mount point
-  char* target_mount_point_path = vfs_path_bottom_up( target_mount_point );
-  // check for handling by VFS
-  if (
-    strlen( target_mount_point_path ) == strlen( request->target )
-    && 0 == strcmp( target_mount_point_path, request->target )
-  ) {
-    // handle handler not vfs
-    if ( target_by_path->pid != vfs_pid || target_by_path->locked ) {
-      response.result = -EPERM;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      free( request );
-      return;
-    }
-    // set target as locked
-    target_by_path->locked = true;
-  }
-  // set handler in request
+
+  // set handler to origin
   request->handler = origin;
   // perform async rpc
   bolthur_rpc_raise(
     type,
-    source_mount_point->pid,
+    node->pid,
     request,
     sizeof( *request ),
     rpc_handle_mount_async,
@@ -286,5 +232,5 @@ void rpc_handle_mount(
     free( request );
     return;
   }
-  free( request );*/
+  free( request );
 }
