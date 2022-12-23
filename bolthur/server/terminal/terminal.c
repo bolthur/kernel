@@ -82,24 +82,14 @@ bool terminal_init( void ) {
   if ( ! terminal_list ) {
     return false;
   }
-  // allocate memory for add request
-  vfs_add_request_t* msg = NULL;
-  size_t msg_size = sizeof( *msg ) + sizeof( size_t ) * 3;
-  msg = malloc( msg_size );
-  if ( ! msg ) {
-    list_destruct( terminal_list );
-    return false;
-  }
   console_command_add_t* command_add = malloc( sizeof( *command_add ) );
   if ( ! command_add ) {
-    free( msg );
     list_destruct( terminal_list );
     return false;
   }
   console_command_select_t* command_select = malloc( sizeof( *command_select ) );
   if ( ! command_select ) {
     free( command_add );
-    free( msg );
     list_destruct( terminal_list );
     return false;
   }
@@ -125,16 +115,16 @@ bool terminal_init( void ) {
       TERMINAL_BASE_PATH"%"PRIu32,
       current
     );
-    // clear memory
-    memset( msg, 0, sizeof( *msg ) );
-    // prepare message structure
-    msg->info.st_mode = S_IFCHR;
-    strncpy( msg->file_path, tty_path, PATH_MAX - 1 );
-    msg->device_info[ 0 ] = in;
-    msg->device_info[ 1 ] = out;
-    msg->device_info[ 2 ] = err;
-    // perform add request
-    send_vfs_add_request( msg, msg_size, 0 );
+    // add device file
+    uint32_t device_info[] = { in, out, err, };
+    if ( !dev_add_file( tty_path, device_info, 3 ) ) {
+      EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+      list_destruct( terminal_list );
+      free( command_add );
+      free( command_select );
+      free( terminal_list );
+      return false;
+    }
     // register handler for streams
     bolthur_rpc_bind( out, output_handle_out, false );
     if ( errno ) {
@@ -146,7 +136,6 @@ bool terminal_init( void ) {
       list_destruct( terminal_list );
       free( command_add );
       free( command_select );
-      free( msg );
       free( terminal_list );
       return false;
     }
@@ -160,7 +149,6 @@ bool terminal_init( void ) {
       list_destruct( terminal_list );
       free( command_add );
       free( command_select );
-      free( msg );
       free( terminal_list );
       return false;
     }
@@ -174,7 +162,6 @@ bool terminal_init( void ) {
       list_destruct( terminal_list );
       free( command_add );
       free( command_select );
-      free( msg );
       free( terminal_list );
       return false;
     }
@@ -194,7 +181,6 @@ bool terminal_init( void ) {
     if ( -1 == result ) {
       free( command_add );
       free( command_select );
-      free( msg );
       list_destruct( terminal_list );
       return false;
     }
@@ -204,7 +190,6 @@ bool terminal_init( void ) {
       list_destruct( terminal_list );
       free( command_add );
       free( command_select );
-      free( msg );
       free( terminal_list );
       return false;
     }
@@ -220,7 +205,6 @@ bool terminal_init( void ) {
     if ( errno ) {
       free( command_add );
       free( command_select );
-      free( msg );
       list_destruct( terminal_list );
       return false;
     }
@@ -241,7 +225,6 @@ bool terminal_init( void ) {
       free( term );
       free( command_add );
       free( command_select );
-      free( msg );
       list_destruct( terminal_list );
       return false;
     }
@@ -266,7 +249,6 @@ bool terminal_init( void ) {
     if ( -1 == result ) {
       free( command_add );
       free( command_select );
-      free( msg );
       list_destruct( terminal_list );
       return false;
     }
@@ -293,13 +275,11 @@ bool terminal_init( void ) {
   if ( -1 == result ) {
     free( command_add );
     free( command_select );
-    free( msg );
     list_destruct( terminal_list );
     return false;
   }
   int response = *( ( int* )command_select );
   // free again
-  free( msg );
   free( command_add );
   free( command_select );
   // return success

@@ -53,37 +53,15 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
 
-  // allocate memory for add request
-  vfs_add_request_t* msg = malloc( sizeof( *msg ) );
-  if ( ! msg ) {
-    return -1;
-  }
-  // clear memory
-  memset( msg, 0, sizeof( *msg ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/urandom", PATH_MAX - 1 );
-  // perform add request
-  EARLY_STARTUP_PRINT( "Sending device \"/dev/urandom\" to vfs\r\n" )
-  send_vfs_add_request( msg, 0, 0 );
-  // free again
-  free( msg );
 
-  // allocate memory for add request
-  msg = malloc( sizeof( *msg ) );
-  if ( ! msg ) {
+  if ( !dev_add_file( "/dev/urandom", NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
-  // clear memory
-  memset( msg, 0, sizeof( *msg ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/random", PATH_MAX - 1 );
-  // perform add request
-  EARLY_STARTUP_PRINT( "Sending device \"/dev/random\" to vfs\r\n" )
-  send_vfs_add_request( msg, 0, 0 );
-  // free again
-  free( msg );
+  if ( !dev_add_file( "/dev/random", NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    return -1;
+  }
 
   // wait for rpc
   EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )

@@ -25,13 +25,9 @@
 #include <inttypes.h>
 #include "rpc.h"
 #include "sd.h"
+#include "../../../../libmbr.h"
 #include "../../../../libhelper.h"
-/*
-// for compilation testing
-#include "../../../../../library/fs/mbr.h"
-#include "../../../../../library/fs/fat.h"
-#include "../../../../../library/fs/ext.h"
-*/
+
 size_t mbr_size = 0;
 uint8_t* mbr_data = NULL;
 
@@ -88,7 +84,7 @@ int main( __unused int argc, __unused char* argv[] ) {
     )
     return -1;
   }
-/*
+
   uint16_t* signature = ( uint16_t* )( mbr_data + PARTITION_TABLE_SIGNATURE_OFFSET );
   EARLY_STARTUP_PRINT( "Signature within mbr: %#"PRIx16"\r\n", *signature )
   // check signature
@@ -98,12 +94,22 @@ int main( __unused int argc, __unused char* argv[] ) {
       "Invalid signature within mbr: %#"PRIx16"\r\n", *signature )
     return -1;
   }
-*/
   // enable rpc
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
-
-  /// FIXME: ADD IOCTL COMMANDS
+  // loop through partitions and calculate total byte size
+  uint32_t total_size = 0;
+  for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
+    mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
+      mbr_data + PARTITION_TABLE_OFFSET + ( i * sizeof( mbr_table_entry_t ) ) );
+    // calculate total
+    uint32_t tmp_total = entry->data.start_sector * 512
+      + entry->data.total_sector * 512;
+    // overwrite total with temp if bigger
+    if ( tmp_total > total_size ) {
+      total_size = tmp_total;
+    }
+  }
   // allocate memory for add request
   vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
   if ( ! msg ) {
@@ -113,51 +119,13 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( msg, 0, sizeof( vfs_add_request_t ) );
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
+  msg->info.st_size = ( off_t )total_size;
+  msg->info.st_blksize = ( blksize_t )sd_device_block_size();
+  msg->info.st_blocks = msg->info.st_size / msg->info.st_blksize;
   strncpy( msg->file_path, "/dev/storage/sd", PATH_MAX - 1 );
   EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
   // perform add request
   send_vfs_add_request( msg, 0, 0 );
-
-  // loop through partitions and print type
-  /*for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
-    mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
-      mbr_data + PARTITION_TABLE_OFFSET + ( i * sizeof( mbr_table_entry_t ) ) );
-    EARLY_STARTUP_PRINT(
-      "partition %"PRIu32" has type %#"PRIx8"\r\n",
-      i, entry->data.system_id )
-    uint16_t start_sector = entry->data.start_sector;
-    uint16_t start_cylinder = entry->data.start_cylinder;
-    uint16_t end_sector = entry->data.end_sector;
-    uint16_t end_cylinder = entry->data.end_cylinder;
-    EARLY_STARTUP_PRINT(
-      "bootable = %"PRIu8", start_head = %"PRIu8", start_sector = %"PRIu16", "
-      "start_cylinder = %"PRIu16", system_id = %"PRIu8", end_head = %"PRIu8", "
-      "end_sector = %"PRIu16", end_cylinder = %"PRIu16", relative_sector = %"PRIu32", "
-      "total_sector = %"PRIu32"\r\n",
-      entry->data.bootable,
-      entry->data.start_head,
-      start_sector,
-      start_cylinder,
-      entry->data.system_id,
-      entry->data.end_head,
-      end_sector,
-      end_cylinder,
-      entry->data.relative_sector,
-      entry->data.total_sector
-    );
-    // handle invalid
-    if ( 0 == entry->data.system_id ) {
-      continue;
-    }
-    // clear memory
-    memset( msg, 0, sizeof( vfs_add_request_t ) );
-    // prepare message structure
-    msg->info.st_mode = S_IFCHR;
-    snprintf( msg->file_path, PATH_MAX, "/dev/sd%"PRIu32, i );
-    EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
-    // perform add request
-    send_vfs_add_request( msg, 0, 0 );
-  }*/
   // free again
   free( msg );
 

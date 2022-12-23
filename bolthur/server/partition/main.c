@@ -23,38 +23,10 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "rpc.h"
+#include "partition.h"
+#include "handler.h"
 #include "../libhelper.h"
 #include "../libpartition.h"
-
-/**
- * @fn bool dev_add_folder(const char*)
- * @brief Helper to add a subfolder to dev
- *
- * @param path
- * @return
- */
-static bool dev_add_folder_file( const char* path ) {
-  // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
-  vfs_add_request_t* msg = malloc( msg_size );
-  if ( ! msg ) {
-    return false;
-  }
-  // clear memory
-  memset( msg, 0, msg_size );
-  // debug output
-  EARLY_STARTUP_PRINT( "Sending \"%s\" to vfs\r\n", path )
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  msg->device_info[ 0 ] = PARTITION_REGISTER_HANDLER;
-  msg->device_info[ 1 ] = PARTITION_RELEASE_HANDLER;
-  strncpy( msg->file_path, path, PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
-  // free stuff
-  free( msg );
-  return true;
-}
 
 /**
  * @fn int main(int, char*[])
@@ -67,8 +39,16 @@ static bool dev_add_folder_file( const char* path ) {
 int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "generic fs server starting up!\r\n" )
   EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
-  // opening /dev
-  EARLY_STARTUP_PRINT( "open /dev for watcher\r\n" )
+  // initialize partition search tree
+  if ( ! partition_setup() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup partition search tree!\r\n" )
+    return -1;
+  }
+  // initialize handler search tree
+  if ( ! handler_setup() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup handler search tree!\r\n" )
+    return -1;
+  }
   // register rpc handler
   EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
   if ( ! rpc_init() ) {
@@ -78,14 +58,19 @@ int main( __unused int argc, __unused char* argv[] ) {
   // enable rpc
   EARLY_STARTUP_PRINT( "Set rpc ready flag\r\n" )
   _syscall_rpc_set_ready( true );
-  // register watch for /dev/storage
+  // register watcher for folder /dev/storage
   watch_path_register( "/dev/storage" );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "ERROR: Unable to register watcher: %s!\r\n", strerror( errno ) )
     return -1;
   }
+  // device info array
+  uint32_t device_info[] = {
+    PARTITION_REGISTER_HANDLER,
+    PARTITION_RELEASE_HANDLER,
+  };
   // add device file
-  if ( !dev_add_folder_file( "/dev/partition" ) ) {
+  if ( !dev_add_file( "/dev/partition", device_info, 2 ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

@@ -93,8 +93,6 @@ void rpc_handle_add(
     free( request );
     return;
   }
-  // debug output
-  EARLY_STARTUP_PRINT( "path = %s, base = %s\r\n", request->file_path, dir )
   // check for notification
   watch_node_t* node = watch_extract( dir, false );
   if ( ! node && errno ) {
@@ -144,10 +142,7 @@ void rpc_handle_add(
   // notification
   if ( node ) {
     watch_tree_each(node->pid, watch_pid, n, {
-      EARLY_STARTUP_PRINT(
-        "notification for \"%d\" with base \"%s\" and path \"%s\"\r\n",
-        n->process, node->name, request->file_path )
-      // notify
+      // notify if process and handler differ
       if ( n->process != request->handler ) {
         watch_path_notify( request->file_path, n->process );
       }

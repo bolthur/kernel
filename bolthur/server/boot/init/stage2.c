@@ -179,6 +179,27 @@ noreturn void init_stage2( void ) {
   EARLY_STARTUP_PRINT( "Starting and waiting for random server...\r\n" )
   pid_t rnd = util_execute_device_server( "/ramdisk/server/random", "/dev/random" );
 
+  // start partition manager
+  EARLY_STARTUP_PRINT( "Starting and waiting for partition server...\r\n" )
+  pid_t partition = util_execute_device_server( "/ramdisk/server/partition", "/dev/partition" );
+
+  pid_t fat = 0;
+  // start fat device and wait for device to come up
+  /*EARLY_STARTUP_PRINT( "Starting and waiting for fat server...\r\n" )
+  pid_t fat = util_execute_device_server( "/ramdisk/fs/fat", "/dev/fat" );*/
+
+  // start fat device and wait for device to come up
+  EARLY_STARTUP_PRINT( "Starting and waiting for ext server...\r\n" )
+  pid_t ext = util_execute_device_server( "/ramdisk/server/fs/ext", "/dev/ext" );
+
+  // start sd server
+  EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
+  pid_t sd = util_execute_device_server( "/ramdisk/server/storage/sd", "/dev/storage/sd" );
+
+  for (;;) {
+    __asm__ __volatile__ ( "nop" );
+  }
+
   // start framebuffer driver and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for framebuffer server...\r\n" )
   pid_t framebuffer = util_execute_device_server( "/ramdisk/server/framebuffer", "/dev/framebuffer" );
@@ -190,29 +211,6 @@ noreturn void init_stage2( void ) {
   // start tty and wait for device to come up
   EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )
   pid_t terminal = util_execute_device_server( "/ramdisk/server/terminal", "/dev/terminal" );
-
-  // start partition manager
-  EARLY_STARTUP_PRINT( "Starting and waiting for partition server...\r\n" )
-  /// FIXME: START VIA SERVER MANAGER ONCE WORKING AND START IS FIXED SOMEHOW
-  pid_t partition = util_execute_device_server( "/ramdisk/server/partition", "/dev/partition" );
-
-  pid_t fat = 0;
-  pid_t ext = 0;
-  /*// start fat device and wait for device to come up
-  EARLY_STARTUP_PRINT( "Starting and waiting for fat server...\r\n" )
-  pid_t fat = util_execute_device_server( "/ramdisk/fs/fat", "/dev/fat" );
-
-  // start fat device and wait for device to come up
-  EARLY_STARTUP_PRINT( "Starting and waiting for ext server...\r\n" )
-  pid_t ext = util_execute_device_server( "/ramdisk/fs/ext", "/dev/ext" );*/
-
-  // start sd server
-  EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
-  pid_t sd = util_execute_device_server( "/ramdisk/server/storage/sd", "/dev/storage/sd" );
-
-  for (;;) {
-    __asm__ __volatile__ ( "nop" );
-  }
 
   // redirect stdin, stdout and stderr
   EARLY_STARTUP_PRINT(

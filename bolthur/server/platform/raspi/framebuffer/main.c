@@ -46,28 +46,19 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
 
-  EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
-  // allocate memory for add request
-  vfs_add_request_t* msg;
-  size_t msg_size = sizeof( *msg ) + 5 * sizeof( size_t );
-  msg = malloc( msg_size );
-  if ( ! msg ) {
+  // device info array
+  uint32_t device_info[] = {
+    FRAMEBUFFER_GET_RESOLUTION,
+    FRAMEBUFFER_CLEAR,
+    FRAMEBUFFER_FLIP,
+    FRAMEBUFFER_SURFACE_RENDER,
+    FRAMEBUFFER_SURFACE_ALLOCATE,
+  };
+  // add device file
+  if ( !dev_add_file( "/dev/framebuffer", device_info, 5 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
-  // clear memory
-  memset( msg, 0, msg_size );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/framebuffer", PATH_MAX - 1 );
-  msg->device_info[ 0 ] = FRAMEBUFFER_GET_RESOLUTION;
-  msg->device_info[ 1 ] = FRAMEBUFFER_CLEAR;
-  msg->device_info[ 2 ] = FRAMEBUFFER_FLIP;
-  msg->device_info[ 3 ] = FRAMEBUFFER_SURFACE_RENDER;
-  msg->device_info[ 4 ] = FRAMEBUFFER_SURFACE_ALLOCATE;
-  // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
-  // free again
-  free( msg );
 
   // wait for rpc
   EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )

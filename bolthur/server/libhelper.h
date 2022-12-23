@@ -165,4 +165,80 @@ __maybe_unused static void vfs_wait_for_path( const char* path ) {
   } while( 0 != stat( path, &buffer ) );
 }
 
+/**
+ * @fn bool dev_add_folder_file(const char*, uint32_t*, size_t, mode_t)
+ * @brief Helper to add a subfolder or file
+ *
+ * @param path
+ * @param device_info
+ * @param count
+ * @param mode
+ * @return
+ */
+__maybe_unused static bool dev_add_folder_file(
+  const char* path,
+  uint32_t* device_info,
+  size_t count,
+  mode_t mode
+) {
+  // allocate memory for add request
+  size_t msg_size = sizeof( vfs_add_request_t ) + count * sizeof( size_t );
+  vfs_add_request_t* msg = malloc( msg_size );
+  if ( ! msg ) {
+    return false;
+  }
+  // clear memory
+  memset( msg, 0, msg_size );
+  // debug output
+  EARLY_STARTUP_PRINT( "Sending \"%s\" to vfs\r\n", path )
+  // prepare message structure
+  msg->info.st_mode = mode;
+  strncpy( msg->file_path, path, PATH_MAX - 1 );
+  // copy over device info stuff
+  if ( device_info ) {
+    for ( size_t idx = 0; idx < count; idx++ ) {
+      msg->device_info[ idx ] = device_info[ idx ];
+    }
+  }
+  // perform add request
+  send_vfs_add_request( msg, msg_size, 0 );
+  // free stuff
+  free( msg );
+  return true;
+}
+
+/**
+ * @fn bool dev_add_file(const char*, uint32_t*, size_t)
+ * @brief Wrapper to add a file
+ *
+ * @param path
+ * @param device_info
+ * @param count
+ * @return
+ */
+__maybe_unused static bool dev_add_file(
+  const char* path,
+  uint32_t* device_info,
+  size_t count
+) {
+  return dev_add_folder_file( path, device_info, count, S_IFCHR );
+}
+
+/**
+ * @fn bool dev_add_folder(const char*, uint32_t*, size_t)
+ * @brief Wrapper to add a folder
+ *
+ * @param path
+ * @param device_info
+ * @param count
+ * @return
+ */
+__maybe_unused static bool dev_add_folder(
+  const char* path,
+  uint32_t* device_info,
+  size_t count
+) {
+  return dev_add_folder_file( path, device_info, count, S_IFCHR /*| S_IFDIR*/ );
+}
+
 #endif

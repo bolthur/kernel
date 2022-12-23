@@ -9,4 +9,6 @@ partition_SOURCES = \
   rpc/watch/register.c \
   rpc/watch/release.c \
   rpc/init.c \
-  main.c
+  handler.c \
+  main.c \
+  partition.c

@@ -37,7 +37,6 @@
 #include "init.h"
 #include "../libhelper.h"
 #include "../libdev.h"
-#include "../libmanager.h"
 
 uintptr_t ramdisk_compressed;
 size_t ramdisk_compressed_size;

@@ -69,27 +69,11 @@ int main( int argc, char* argv[] ) {
   // wait for device
   vfs_wait_for_path( "/dev/manager/device" );
 
-  // allocate memory for add request
-  vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
-  if ( ! msg ) {
+  // add device file
+  if ( !dev_add_file( "/dev/ramdisk", NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
-  // sending ramdisk to vfs
-  EARLY_STARTUP_PRINT( "Sending mount point %s to VFS\r\n", MOUNT_POINT_DESTINATION )
-
-  // send add of ramdisk folder
-  memset( msg, 0, sizeof( *msg ) );
-  // send device to vfs
-  EARLY_STARTUP_PRINT( "Sending device \"/dev/ramdisk\" to vfs\r\n" )
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/ramdisk", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, 0, 0 );
-  // free again
-  free( msg );
 
   EARLY_STARTUP_PRINT( "trying to mount!\r\n" )
   // try to mount /dev/ramdisk to /ramdisk

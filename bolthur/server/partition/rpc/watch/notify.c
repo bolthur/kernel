@@ -21,8 +21,14 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <inttypes.h>
 #include <sys/bolthur.h>
 #include "../../rpc.h"
+#include "../../partition.h"
+#include "../../../libmbr.h"
+#include "../../../libhelper.h"
 
 /**
  * @fn void rpc_handle_watch_notify(size_t, pid_t, size_t, size_t)
@@ -35,16 +41,80 @@
  */
 void rpc_handle_watch_notify(
   __unused size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
+  pid_t origin,
+  size_t data_info,
   __unused size_t response_info
 ) {
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     return;
   }
-  /// FIXME: ADD FOLLOWING LOGIC
-  /// 1. request partition data from storage server
-  /// 2. register all valid partitions
-  EARLY_STARTUP_PRINT( "NOTIFY!\r\n" )
+  // handle no data
+  if( ! data_info ) {
+    return;
+  }
+  // allocate space for request data
+  vfs_watch_notify_request_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    return;
+  }
+  // clear variables
+  memset( request, 0, sizeof( *request ) );
+  // fetch rpc data
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  if ( errno ) {
+    free( request );
+    return;
+  }
+  // open path
+  int fd = open( request->target, O_RDONLY );
+  // handle error
+  if ( -1 == fd ) {
+    EARLY_STARTUP_PRINT( "Unable to open %s\r\n", request->target )
+    free( request );
+    return;
+  }
+  // read data
+  size_t mbr_size = sizeof( uint8_t ) * 512;
+  uint8_t* mbr = malloc( mbr_size );
+  if ( ! mbr ) {
+    free( request );
+    return;
+  }
+  ssize_t result = pread( fd, mbr, mbr_size, 0 );
+  if ( 512 != result ) {
+    free( mbr );
+    free( request );
+    return;
+  }
+  char* path = malloc( sizeof( *path ) * PATH_MAX );
+  if ( ! path ) {
+    free( mbr );
+    free( request );
+    return;
+  }
+  // loop through partitions and print type
+  for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
+    mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
+      mbr + PARTITION_TABLE_OFFSET + ( i * sizeof( *entry ) ) );
+    // handle invalid
+    if ( 0 == entry->data.system_id ) {
+      continue;
+    }
+    // generate file name
+    snprintf( path, PATH_MAX, "/dev/sd%"PRIu32, i );
+    // add device to tree
+    if ( 0 != partition_add( path, entry ) ) {
+      EARLY_STARTUP_PRINT( "Unable to push %s to search tree\r\n", path )
+    }
+    // add device
+    if ( ! dev_add_file( path, NULL, 0 ) ) {
+      EARLY_STARTUP_PRINT( "Unable to add device file\r\n" )
+      partition_remove( path );
+      return;
+    }
+  }
+  free( path );
+  free( mbr );
+  free( request );
 }

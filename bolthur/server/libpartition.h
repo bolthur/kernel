@@ -23,10 +23,20 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 
-#if ! defined( _LIBFS_H )
-#define _LIBFS_H
+#if ! defined( _LIBPARTITION_H )
+#define _LIBPARTITION_H
 
 #define PARTITION_REGISTER_HANDLER RPC_CUSTOM_START
 #define PARTITION_RELEASE_HANDLER PARTITION_REGISTER_HANDLER + 1
+
+typedef struct {
+  char filesystem[ 100 ];
+  char handler[ PATH_MAX ];
+} partition_register_t;
+
+typedef struct {
+  char filesystem[ 100 ];
+  char handler[ PATH_MAX ];
+} partition_release_t;
 
 #endif

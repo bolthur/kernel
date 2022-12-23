@@ -68,88 +68,52 @@ static void console_cleanup( list_item_t* a ) {
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
-  // allocate memory for add request
-  vfs_add_request_t* msg = malloc( sizeof( *msg ) );
-  if ( ! msg ) {
-    return -1;
-  }
   EARLY_STARTUP_PRINT( "Bind specific vfs write request handler\r\n" )
   // set handler
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
-    free( msg );
     return -1;
   }
   // FIXME: SET READ HANDLER FOR STDIN
 
   console_list = list_construct( console_lookup, console_cleanup, NULL );
   if ( ! console_list ) {
-    free( msg );
     return -1;
   }
   EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
   // register rpc handler
   if ( ! handler_register() ) {
-    free( msg );
     list_destruct( console_list );
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Send stdin to vfs\r\n" )
   // stdin device
-  // clear memory
-  memset( msg, 0, sizeof( *msg ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/stdin", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, 0, 0 );
-
-  EARLY_STARTUP_PRINT( "Send stdout to vfs\r\n" )
+  if ( !dev_add_file( "/dev/stdin", NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    return -1;
+  }
   // stdout device
-  // clear memory
-  memset( msg, 0, sizeof( *msg ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/stdout", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, 0, 0 );
-
-  EARLY_STARTUP_PRINT( "Send stderr to vfs\r\n" )
+  if ( !dev_add_file( "/dev/stdout", NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    return -1;
+  }
   // stderr device
-  // clear memory
-  memset( msg, 0, sizeof( *msg ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/stderr", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, 0, 0 );
-  free( msg );
+  if ( !dev_add_file( "/dev/stderr", NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    return -1;
+  }
 
   // enable rpc
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
 
-  EARLY_STARTUP_PRINT( "Send console device to vfs\r\n" )
   // console device
-  // allocate memory for add request
-  size_t msg_size = sizeof( *msg ) + 2 * sizeof( size_t );
-  msg = malloc( msg_size );
-  if ( ! msg ) {
+  uint32_t device_info[] = { CONSOLE_ADD, CONSOLE_SELECT, };
+  if ( !dev_add_file( "/dev/console", device_info, 2 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
-  // clear memory
-  memset( msg, 0, msg_size );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  msg->device_info[ 0 ] = CONSOLE_ADD;
-  msg->device_info[ 1 ] = CONSOLE_SELECT;
-  strncpy( msg->file_path, "/dev/console", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
-  // free again
-  free( msg );
 
   // wait for rpc
   EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )

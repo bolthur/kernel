@@ -69,35 +69,25 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
 
-  EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
-  // calculate add message size
-  vfs_add_request_t* msg;
-  size_t msg_size = sizeof( *msg ) + 11 * sizeof( size_t );
-  // allocate memory for add request
-  msg = malloc( msg_size );
-  if ( ! msg ) {
+  // device info data
+  uint32_t device_info[] = {
+    IOMEM_RPC_MAILBOX,
+    IOMEM_RPC_MMIO_LOCK,
+    IOMEM_RPC_MMIO_PERFORM,
+    IOMEM_RPC_MMIO_UNLOCK,
+    IOMEM_RPC_GPIO_SET_FUNCTION,
+    IOMEM_RPC_GPIO_SET_PULL,
+    IOMEM_RPC_GPIO_SET_DETECT,
+    IOMEM_RPC_GPIO_STATUS,
+    IOMEM_RPC_GPIO_EVENT,
+    IOMEM_RPC_GPIO_LOCK,
+    IOMEM_RPC_GPIO_UNLOCK,
+  };
+  // add device file
+  if ( !dev_add_file( IOMEM_DEVICE_PATH, device_info, 11 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
-  // clear memory and prepare message structure
-  memset( msg, 0, msg_size );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, IOMEM_DEVICE_PATH, PATH_MAX - 1 );
-  msg->device_info[  0 ] = IOMEM_RPC_MAILBOX;
-  msg->device_info[  1 ] = IOMEM_RPC_MMIO_LOCK;
-  msg->device_info[  2 ] = IOMEM_RPC_MMIO_PERFORM;
-  msg->device_info[  3 ] = IOMEM_RPC_MMIO_UNLOCK;
-  msg->device_info[  4 ] = IOMEM_RPC_GPIO_SET_FUNCTION;
-  msg->device_info[  5 ] = IOMEM_RPC_GPIO_SET_PULL;
-  msg->device_info[  6 ] = IOMEM_RPC_GPIO_SET_DETECT;
-  msg->device_info[  7 ] = IOMEM_RPC_GPIO_STATUS;
-  msg->device_info[  8 ] = IOMEM_RPC_GPIO_EVENT;
-  msg->device_info[  9 ] = IOMEM_RPC_GPIO_LOCK;
-  msg->device_info[ 10 ] = IOMEM_RPC_GPIO_UNLOCK;
-  // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
-  // free again
-  free( msg );
 
   // wait for rpc
   EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )

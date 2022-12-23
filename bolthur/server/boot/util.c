@@ -25,7 +25,6 @@
 #include "util.h"
 #include "global.h"
 #include "../libdev.h"
-#include "../libmanager.h"
 #include "../libhelper.h"
 
 /**

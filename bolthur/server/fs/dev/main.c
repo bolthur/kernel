@@ -34,36 +34,6 @@
 #include "watch.h"
 
 /**
- * @fn bool dev_add_folder(const char*)
- * @brief Helper to add a subfolder to dev
- *
- * @param path
- * @return
- */
-static bool dev_add_folder_file( const char* path ) {
-  // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
-  vfs_add_request_t* msg = malloc( msg_size );
-  if ( ! msg ) {
-    return false;
-  }
-  // clear memory
-  memset( msg, 0, msg_size );
-  // debug output
-  EARLY_STARTUP_PRINT( "Sending \"%s\" to vfs\r\n", path )
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  msg->device_info[ 0 ] = DEV_START;
-  msg->device_info[ 1 ] = DEV_KILL;
-  strncpy( msg->file_path, path, PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
-  // free stuff
-  free( msg );
-  return true;
-}
-
-/**
  * @fn int main(int, char*[])
  * @brief main entry point
  *
@@ -123,18 +93,21 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Set rpc ready flag\r\n" )
   _syscall_rpc_set_ready( true );
 
+  // device info data
+  uint32_t device_info[] = { DEV_START, DEV_KILL, };
+
   // add manager subfolder
-  if ( !dev_add_folder_file( "/dev/manager" ) ) {
+  if ( !dev_add_folder( "/dev/manager", device_info, 2 ) ) {
     EARLY_STARTUP_PRINT( "Unable to add manager subfolder\r\n" )
     return -1;
   }
   // add storage subfolder
-  if ( !dev_add_folder_file( "/dev/storage" ) ) {
+  if ( !dev_add_folder( "/dev/storage", device_info, 2 ) ) {
     EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
     return -1;
   }
   // add device file
-  if ( !dev_add_folder_file( "/dev/manager/device" ) ) {
+  if ( !dev_add_file( "/dev/manager/device", device_info, 2 ) ) {
     EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
     return -1;
   }
