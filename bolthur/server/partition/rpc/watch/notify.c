@@ -102,7 +102,10 @@ void rpc_handle_watch_notify(
       continue;
     }
     // generate file name
-    snprintf( path, PATH_MAX, "/dev/sd%"PRIu32, i );
+    /// FIXME: REPLACE HARD CODED PATH
+    size_t copied = strlen( request->target );
+    strncpy( path, request->target, PATH_MAX );
+    snprintf( path + copied, PATH_MAX - copied, "%"PRIu32, i );
     // add device to tree
     if ( 0 != partition_add( path, entry ) ) {
       EARLY_STARTUP_PRINT( "Unable to push %s to search tree\r\n", path )

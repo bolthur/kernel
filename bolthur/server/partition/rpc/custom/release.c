@@ -24,7 +24,8 @@
 #include <libgen.h>
 #include <sys/bolthur.h>
 #include "../../rpc.h"
-#include "../../../libdev.h"
+#include "../../handler.h"
+#include "../../../libpartition.h"
 
 /**
  * @fn void rpc_custom_handle_release(size_t, pid_t, size_t, size_t)
@@ -37,10 +38,54 @@
  */
 void rpc_custom_handle_release(
   __unused size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
+  pid_t origin,
+  size_t data_info,
   __unused size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // get message size
+  size_t data_size = _syscall_rpc_get_data_size( data_info );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // get request
+  partition_release_t* command = malloc( data_size );
+  if ( ! command ) {
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  memset( command, 0, data_size );
+  _syscall_rpc_get_data( command, data_size, data_info, true );
+  if ( errno ) {
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( command );
+    return;
+  }
+
+  // try to remove handler by filesystem
+  if ( 0 != handler_remove( command->filesystem ) ) {
+    error.status = -EAGAIN;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( command );
+    return;
+  }
+
+  // set success flag and return
+  error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+  // free all used temporary structures
+  free( command );
 }

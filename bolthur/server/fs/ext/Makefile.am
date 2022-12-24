@@ -9,4 +9,6 @@ ext_SOURCES = \
   extfs/superblock.c \
   rpc/custom/probe.c \
   rpc/init.c \
+  dev.c \
+  probe.c \
   main.c

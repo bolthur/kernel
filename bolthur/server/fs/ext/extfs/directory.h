@@ -26,14 +26,14 @@
 #pragma pack(push, 1)
 
 // file_type
-#define EXT_FT_UNKNOWN 0
-#define EXT_FT_REG_FILE 1
-#define EXT_FT_DIR 2
-#define EXT_FT_CHRDEV 3
-#define EXT_FT_BLKDEV 4
-#define EXT_FT_FIFO 5
-#define EXT_FT_SOCK 6
-#define EXT_FT_SYMLINK 7
+#define EXTFS_FT_UNKNOWN 0
+#define EXTFS_FT_REG_FILE 1
+#define EXTFS_FT_DIR 2
+#define EXTFS_FT_CHRDEV 3
+#define EXTFS_FT_BLKDEV 4
+#define EXTFS_FT_FIFO 5
+#define EXTFS_FT_SOCK 6
+#define EXTFS_FT_SYMLINK 7
 
 typedef struct {
   uint32_t inode;
@@ -41,11 +41,11 @@ typedef struct {
   uint8_t name_len;
   uint8_t file_type;
   char name[];
-} ext_directory_entry_t;
+} extfs_directory_entry_t;
 
 static_assert(
-  8 == sizeof( ext_directory_entry_t ),
-  "invalid ext_directory_indexed_root_t size!"
+  8 == sizeof( extfs_directory_entry_t ),
+  "invalid extfs_directory_indexed_root_t size!"
 );
 
 // hash version
@@ -59,11 +59,11 @@ typedef struct {
   uint8_t info_length;
   uint8_t indirect_levels;
   uint8_t unused;
-} ext_directory_indexed_root_t;
+} extfs_directory_indexed_root_t;
 
 static_assert(
-  8 == sizeof( ext_directory_indexed_root_t ),
-  "invalid ext_directory_indexed_root_t size!"
+  8 == sizeof( extfs_directory_indexed_root_t ),
+  "invalid extfs_directory_indexed_root_t size!"
 );
 
 #pragma pack(pop)

@@ -17,22 +17,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <sys/bolthur.h>
+#include <errno.h>
+#include "probe.h"
 
-#ifndef _RPC_H
-#define _RPC_H
-
-bool rpc_init( void );
-void rpc_handle_mount( size_t, pid_t, size_t, size_t );
-
-void rpc_handle_watch_notify( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_register( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_release( size_t, pid_t, size_t, size_t );
-
-void rpc_custom_handle_kill( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_register( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_release( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_start( size_t, pid_t, size_t, size_t );
-
-#endif
+/**
+ * @fn int probe(mbr_table_entry_t*)
+ * @brief Probe filesystem
+ *
+ * @param entry
+ * @return
+ */
+int probe( __unused const char* source, __unused mbr_table_entry_t* entry ) {
+  return -ENOSYS;
+}

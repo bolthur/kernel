@@ -111,11 +111,16 @@ partition_node_t* partition_extract( const char* path, bool create ) {
  *
  * @param path
  * @param handler
- * @param st
  * @return
  */
 int partition_add( const char* path, mbr_table_entry_t* mbr ) {
-  partition_node_t* node = partition_extract( path, true );
+  // ensure that it doesn't exists
+  partition_node_t* node = partition_extract( path, false );
+  if ( node ) {
+    return -EEXIST;
+  }
+  // try to create it
+  node = partition_extract( path, true );
   if ( ! node ) {
     return -ENOMEM;
   }
@@ -131,6 +136,28 @@ int partition_add( const char* path, mbr_table_entry_t* mbr ) {
     memset( node->data, 0, sizeof( *mbr ) );
     // copy data
     memcpy( node->data, mbr, sizeof( *mbr ) );
+  }
+  if ( ! node->device ) {
+    // allocate space
+    size_t device_length = sizeof( char ) * ( strlen( path ) + 1 );
+    char* device = malloc( device_length );
+    // handle errror
+    if ( ! device ) {
+      return -ENOMEM;
+    }
+    // clear space
+    memset( device, 0, device_length );
+    // loop through original and transfer everything except digit
+    size_t resultIdx = 0;
+    for ( size_t idx = 0; idx < device_length; idx++ ) {
+      if ( ! isdigit( ( int )path[ idx ] ) ) {
+        device[ resultIdx ] = path[ idx ];
+        resultIdx++;
+      }
+    }
+    EARLY_STARTUP_PRINT( "device = %s\r\n", device )
+    // duplicate device
+    node->device = device;
   }
   // return success
   return 0;

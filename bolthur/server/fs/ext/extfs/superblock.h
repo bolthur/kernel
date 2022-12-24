@@ -17,53 +17,55 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <assert.h>
-
 #ifndef _EXTFS_SUPERBLOCK_H
 #define _EXTFS_SUPERBLOCK_H
 
+#include <stdint.h>
+#include <assert.h>
+#include <stdbool.h>
+#include "../../../libmbr.h"
+
 // superblock magic
-#define EXT_SUPER_MAGIC 0xEF53
+#define EXTFS_SUPER_MAGIC 0xEF53
 // state values
-#define EXT_VALID_FS 1
-#define EXT_ERROR_FS 2
+#define EXTFS_VALID_FS 1
+#define EXTFS_ERROR_FS 2
 // error values
-#define EXT_ERRORS_CONTINUE 1
-#define EXT_ERRORS_RO 2
-#define EXT_ERRORS_PANIC 3
+#define EXTFS_ERRORS_CONTINUE 1
+#define EXTFS_ERRORS_RO 2
+#define EXTFS_ERRORS_PANIC 3
 // creator os values
-#define EXT_OS_LINUX 0
-#define EXT_OS_HURD 1
-#define EXT_OS_MASIX 2
-#define EXT_OS_FREEBSD 3
-#define EXT_OS_LITES 4
+#define EXTFS_OS_LINUX 0
+#define EXTFS_OS_HURD 1
+#define EXTFS_OS_MASIX 2
+#define EXTFS_OS_FREEBSD 3
+#define EXTFS_OS_LITES 4
 // rev level values
-#define EXT_GOOD_OLD_REV 0
-#define EXT_DYNAMIC_REV 1
+#define EXTFS_GOOD_OLD_REV 0
+#define EXTFS_DYNAMIC_REV 1
 // feature compatibility flags
-#define EXT_FEATURE_COMPAT_DIR_PREALLOC 0x0001
-#define EXT_FEATURE_COMPAT_IMAGIC_INODES 0x0002
+#define EXTFS_FEATURE_COMPAT_DIR_PREALLOC 0x0001
+#define EXTFS_FEATURE_COMPAT_IMAGIC_INODES 0x0002
 #define EXT3_FEATURE_COMPAT_HAS_JOURNAL 0x0004
-#define EXT_FEATURE_COMPAT_EXT_ATTR 0x0008
-#define EXT_FEATURE_COMPAT_RESIZE_INO 0x0010
-#define EXT_FEATURE_COMPAT_DIR_INDEX 0x0020
+#define EXTFS_FEATURE_COMPAT_EXTFS_ATTR 0x0008
+#define EXTFS_FEATURE_COMPAT_RESIZE_INO 0x0010
+#define EXTFS_FEATURE_COMPAT_DIR_INDEX 0x0020
 // feature incompatibility flags
-#define EXT_FEATURE_INCOMPAT_COMPRESSION 0x0001
-#define EXT_FEATURE_INCOMPAT_FILETYPE 0x0002
+#define EXTFS_FEATURE_INCOMPAT_COMPRESSION 0x0001
+#define EXTFS_FEATURE_INCOMPAT_FILETYPE 0x0002
 #define EXT3_FEATURE_INCOMPAT_RECOVER 0x0004
 #define EXT3_FEATURE_INCOMPAT_JOURNAL_DEV 0x0008
-#define EXT_FEATURE_INCOMPAT_META_BG 0x0010
+#define EXTFS_FEATURE_INCOMPAT_META_BG 0x0010
 // feature read only compatibility flags
-#define EXT_FEATURE_RO_COMPAT_SPARSE_SUPER 0x0001
-#define EXT_FEATURE_RO_COMPAT_LARGE_FILE 0x0002
-#define EXT_FEATURE_RO_COMPAT_BTREE_DIR 0x0004
+#define EXTFS_FEATURE_RO_COMPAT_SPARSE_SUPER 0x0001
+#define EXTFS_FEATURE_RO_COMPAT_LARGE_FILE 0x0002
+#define EXTFS_FEATURE_RO_COMPAT_BTREE_DIR 0x0004
 // algo bitmap values
-#define EXT_LZV1_ALG 0
-#define EXT_LZRW3A_ALG 1
-#define EXT_GZIP_ALG 2
-#define EXT_BZIP2_ALG  3
-#define EXT_LZO_ALG  4
+#define EXTFS_LZV1_ALG 0
+#define EXTFS_LZRW3A_ALG 1
+#define EXTFS_GZIP_ALG 2
+#define EXTFS_BZIP2_ALG  3
+#define EXTFS_LZO_ALG  4
 
 #pragma pack(push, 1)
 
@@ -121,13 +123,16 @@ typedef struct {
   uint32_t s_default_mount_options;
   uint32_t s_first_meta_bg;
   uint32_t reserved[ 190 ];
-} ext_superblock_t;
+} extfs_superblock_t;
 
 static_assert(
-  1024 == sizeof( ext_superblock_t ),
-  "invalid ext super block size!"
+  1024 == sizeof( extfs_superblock_t ),
+  "invalid extfs super block size!"
 );
 
 #pragma pack(pop)
+
+int extfs_superblock_read( extfs_superblock_t*, mbr_table_entry_t*, const char* );
+int extfs_superblock_write( extfs_superblock_t*, mbr_table_entry_t*, const char* );
 
 #endif

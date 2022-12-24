@@ -84,6 +84,7 @@
 typedef struct partition_node {
   char* name;
   mbr_table_entry_t* data;
+  char* device;
   SPLAY_ENTRY( partition_node ) node;
 } partition_node_t;
 

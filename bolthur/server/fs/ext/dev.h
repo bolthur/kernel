@@ -17,22 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdint.h>
 #include <stdbool.h>
 #include <sys/bolthur.h>
 
-#ifndef _RPC_H
-#define _RPC_H
+#ifndef _DEV_H
+#define _DEV_H
 
-bool rpc_init( void );
-void rpc_handle_mount( size_t, pid_t, size_t, size_t );
-
-void rpc_handle_watch_notify( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_register( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_release( size_t, pid_t, size_t, size_t );
-
-void rpc_custom_handle_kill( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_register( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_release( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_start( size_t, pid_t, size_t, size_t );
+int dev_read( void*, size_t, uint32_t, const char* );
+int dev_write( void*, size_t, uint32_t, const char* );
 
 #endif

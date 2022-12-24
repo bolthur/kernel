@@ -17,22 +17,39 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <sys/bolthur.h>
+#include <errno.h>
+#include "dev.h"
 
-#ifndef _RPC_H
-#define _RPC_H
+/**
+ * @fn int dev_read(void*, size_t, off_t)
+ * @brief Helper to read from device
+ *
+ * @param destination
+ * @param size
+ * @param offset
+ * @return
+ */
+int dev_read(
+  __unused void* destination,
+  __unused size_t size,
+  __unused off_t offset
+) {
+  return -ENOSYS;
+}
 
-bool rpc_init( void );
-void rpc_handle_mount( size_t, pid_t, size_t, size_t );
-
-void rpc_handle_watch_notify( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_register( size_t, pid_t, size_t, size_t );
-void rpc_handle_watch_release( size_t, pid_t, size_t, size_t );
-
-void rpc_custom_handle_kill( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_register( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_release( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_start( size_t, pid_t, size_t, size_t );
-
-#endif
+/**
+ * @fn int dev_write(void*, size_t, off_t)
+ * @brief Helper to write to device
+ *
+ * @param source
+ * @param size
+ * @param offset
+ * @return
+ */
+int dev_write(
+  __unused void* source,
+  __unused size_t size,
+  __unused off_t offset
+) {
+  return -ENOSYS;
+}

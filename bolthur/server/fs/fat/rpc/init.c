@@ -18,7 +18,7 @@
  */
 
 #include "../rpc.h"
-#include "../../../libfat.h"
+#include "../../../libfsimpl.h"
 
 /**
  * @fn bool rpc_init(void)
@@ -27,7 +27,7 @@
  * @return
  */
 bool rpc_init( void ) {
-  bolthur_rpc_bind( FAT_PROBE, rpc_custom_handle_probe, true );
+  bolthur_rpc_bind( FSIMPL_PROBE, rpc_custom_handle_probe, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register probe handler!\r\n" )
     return false;

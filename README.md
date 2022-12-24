@@ -109,13 +109,13 @@ Emulation of the kernel project with qemu during development may be done at all 
 
 ```bash
 # raspberry pi zero kernel emulation
-qemu-system-arm -M raspi0 -cpu arm1176 -m 512M -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2835-raspi-zero.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/sd1 rootfstype=ext2" -s -S
+qemu-system-arm -M raspi0 -cpu arm1176 -m 512M -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2835-raspi-zero.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/storage/sd1 rootfstype=ext2" -s -S
 
 # raspberry pi 2B rev 1 kernel emulation
-qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel7_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2836-raspi-2-b.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/sd1 rootfstype=ext2" -s -S
+qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel7_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2836-raspi-2-b.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/storage/sd1 rootfstype=ext2" -s -S
 
 # raspberry pi 3B kernel emulation
-qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel8_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2837-raspi-3-b.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/sd1 rootfstype=ext2" -s -S
+qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel8_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2837-raspi-3-b.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/storage/sd1 rootfstype=ext2" -s -S
 ```
 
 ### Debugging

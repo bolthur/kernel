@@ -17,21 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <stdlib.h>
 #include <stdbool.h>
-#include <errno.h>
 #include <sys/bolthur.h>
-#include "libmbr.h"
+#include "../../libmbr.h"
 
-#if ! defined( _LIBEXT_H )
-#define _LIBEXT_H
+#ifndef _PROBE_H
+#define _PROBE_H
 
-#define EXT_PROBE RPC_CUSTOM_START
-
-typedef struct {
-  const char device[ PATH_MAX ];
-  mbr_table_entry_t entry;
-} ext_probe_t;
+int probe( const char*, mbr_table_entry_t* );
 
 #endif

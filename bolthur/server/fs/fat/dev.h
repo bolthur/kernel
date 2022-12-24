@@ -17,21 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include <stdbool.h>
-#include <errno.h>
 #include <sys/bolthur.h>
-#include "libmbr.h"
 
-#if ! defined( _LIBFAT_H )
-#define _LIBFAT_H
+#ifndef _DEV_H
+#define _DEV_H
 
-#define FAT_PROBE RPC_CUSTOM_START
-
-typedef struct {
-  const char device[ PATH_MAX ];
-  mbr_table_entry_t entry;
-} fat_probe_t;
+int dev_read( void*, size_t, off_t );
+int dev_write( void*, size_t, off_t );
 
 #endif

@@ -21,49 +21,12 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../partition.h"
-
-/**
- * @fn void rpc_handle_mount_async(size_t, pid_t, size_t, size_t)
- * @brief Internal helper to continue asynchronous started mount point
- *
- * @param type
- * @param origin
- * @param data_info
- * @param response_info
- */
-void rpc_handle_mount_async(
-  size_t type,
-  __unused pid_t origin,
-  size_t data_info,
-  size_t response_info
-) {
-  // get matching async data
-  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
-    type,
-    response_info
-  );
-  if ( ! async_data ) {
-    return;
-  }
-  vfs_mount_response_t response = { .result = -EINVAL };
-  // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
-    return;
-  }
-  // fetch response
-  _syscall_rpc_get_data( &response, sizeof( response ), data_info, false );
-  if ( errno ) {
-    response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
-    return;
-  }
-  // return and free
-  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
-}
+#include "../handler.h"
+#include "../../libfsimpl.h"
 
 /**
  * @fn void rpc_handle_mount(size_t, pid_t, size_t, size_t)
@@ -80,14 +43,14 @@ void rpc_handle_mount(
   size_t type,
   pid_t origin,
   size_t data_info,
-  size_t response_info
+  __unused size_t response_info
 ) {
-  // handle async return in case response info is set
-  if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
-    rpc_handle_mount_async( type, origin, data_info, response_info );
+  vfs_mount_response_t response = { .result = -ENOMEM };
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
     return;
   }
-  vfs_mount_response_t response = { .result = -ENOMEM };
   vfs_mount_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -111,36 +74,63 @@ void rpc_handle_mount(
     free( request );
     return;
   }
-
-  partition_node_t* node = partition_extract( request->source, false );
-  if ( ! node ) {
+  // get partition node
+  partition_node_t* partition = partition_extract( request->source, false );
+  if ( ! partition ) {
     response.result = -ENOENT;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-
-  // perform async rpc
-  /*bolthur_rpc_raise(
-    type,
-    handle->process,
-    request,
-    sizeof( *request ),
-    rpc_handle_mount_async,
-    type,
-    request,
-    sizeof( *request ),
-    origin,
-    data_info
-  );
-  if ( errno ) {
-    response.result = -errno;
+  // get possible handler
+  handler_node_t* handler = handler_extract( request->type, false );
+  if ( ! handler ) {
+    response.result = -ENODEV;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
-  }*/
-  /// FIXME: ADD FURTHER LOGIC
-  response.result = -ENOSYS;
+  }
+
+  // build command
+  fsimpl_probe_t* cmd = malloc( sizeof( *cmd ) );
+  // handle error
+  if ( ! cmd ) {
+    response.result = -ENOMEM;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // clear memory
+  memset( cmd, 0, sizeof( *cmd ) );
+  // populate data
+  strncpy( cmd->device, handler->handler, PATH_MAX - 1 );
+  memcpy( &cmd->entry, partition->data, sizeof( mbr_table_entry_t ) );
+
+  // raise probe request
+  int result = ioctl(
+    handler->fd,
+    IOCTL_BUILD_REQUEST(
+      FSIMPL_PROBE,
+      sizeof( cmd ),
+      IOCTL_RDWR
+    ),
+    cmd
+  );
+  // handle error
+  if ( -1 == result ) {
+    response.result = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    free( cmd );
+    return;
+  }
+  /// FIXME: SAVE MOUNT RESPONSIBILITY SOMEWHERE
+  // some debug output
+  EARLY_STARTUP_PRINT( "%d\r\n", result )
+  EARLY_STARTUP_PRINT( "%s:%s:%d\r\n", handler->handler, handler->name, handler->fd )
+  // probe went well, so just return success result
+  response.result = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( request );
+  free( cmd );
 }

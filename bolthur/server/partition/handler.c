@@ -67,7 +67,7 @@ bool handler_setup( void ) {
  * @param create
  * @return
  */
-handler_node_t* handler_extract( const char* path, bool create ) {
+handler_node_t* handler_extract( const char* name, bool create ) {
   // allocate node
   handler_node_t* node = malloc( sizeof( *node ) );
   // handle error
@@ -77,7 +77,7 @@ handler_node_t* handler_extract( const char* path, bool create ) {
   // clear out node
   memset( node, 0, sizeof( *node ) );
   // populate name
-  node->name = strdup( path );
+  node->name = strdup( name );
   if ( ! node->name ) {
     free( node );
     return NULL;
@@ -106,29 +106,37 @@ handler_node_t* handler_extract( const char* path, bool create ) {
 }
 
 /**
- * @fn int handler_add(const char*, const char*)
+ * @fn int handler_add(const char*, const char*, int)
  * @brief Helper to add a watch node
  *
- * @param path
+ * @param filesystem
  * @param handler
- * @param st
+ * @param fd
  * @return
  */
-int handler_add( const char* path, const char* handler ) {
-  handler_node_t* node = handler_extract( path, true );
+int handler_add( const char* filesystem, const char* handler, int fd ) {
+  // ensure that it doesn't exists
+  handler_node_t* node = handler_extract( filesystem, false );
+  if ( node ) {
+    return -EEXIST;
+  }
+  // try to create it
+  node = handler_extract( filesystem, true );
   if ( ! node ) {
     return -ENOMEM;
   }
   // allocate handler if not allocated
   if ( ! node->handler ) {
-    // allocate node
-    node->handler = malloc( sizeof( *handler ) * ( strlen( handler ) + 1 ) );
+    // duplicate string
+    node->handler = strdup( handler );
     // handle error
     if ( ! node->handler ) {
       return -ENOMEM;
     }
-    // copy data
-    strcpy( node->handler, handler );
+  }
+  // push back file descriptor if not existing
+  if ( ! node->fd ) {
+    node->fd = fd;
   }
   // return success
   return 0;
@@ -142,16 +150,23 @@ int handler_add( const char* path, const char* handler ) {
  * @param handler
  * @return
  */
-int handler_remove( const char* path ) {
-  handler_node_t* node = handler_extract( path, false );
+int handler_remove( const char* filesystem ) {
+  handler_node_t* node = handler_extract( filesystem, false );
   if ( ! node ) {
     return 0;
   }
   // remove node tree
   handler_node_tree_remove( &management_tree, node );
   // free up data
-  free( node->name );
-  free( node->handler );
+  if ( node->name ) {
+    free( node->name );
+  }
+  if ( node->handler ) {
+    free( node->handler );
+  }
+  if ( node->fd ) {
+    close( node->fd );
+  }
   free( node );
   // return success
   return 0;

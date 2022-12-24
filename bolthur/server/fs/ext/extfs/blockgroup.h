@@ -34,10 +34,10 @@ typedef struct {
   uint16_t bg_used_dirs_count;
   uint16_t bg_pad;
   uint8_t unused[ 12 ];
-} ext_blockgroup_t;
+} extfs_blockgroup_t;
 
 static_assert(
-  32 == sizeof( ext_blockgroup_t ),
+  32 == sizeof( extfs_blockgroup_t ),
   "invalid ext block group size!"
 );
 

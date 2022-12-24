@@ -5,4 +5,6 @@ bin_PROGRAMS = fat
 fat_SOURCES = \
   rpc/custom/probe.c \
   rpc/init.c \
-  main.c
+  dev.c \
+  main.c \
+  probe.c
