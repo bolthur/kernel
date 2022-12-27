@@ -65,6 +65,12 @@ void rpc_handle_mount_async(
   }
   // get original request
   vfs_mount_request_t* request = async_data->original_data;
+  // handle failure
+  if ( 0 != response.result ) {
+    mountpoint_node_remove( request->target );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    return;
+  }
   // get destination
   mountpoint_node_t* destination = mountpoint_node_extract( request->target );
   if ( ! destination ) {

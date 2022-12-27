@@ -24,6 +24,7 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../mount.h"
 #include "../partition.h"
 #include "../handler.h"
 #include "../../libfsimpl.h"
@@ -90,7 +91,6 @@ void rpc_handle_mount(
     free( request );
     return;
   }
-
   // build command
   fsimpl_probe_t* cmd = malloc( sizeof( *cmd ) );
   // handle error
@@ -103,15 +103,15 @@ void rpc_handle_mount(
   // clear memory
   memset( cmd, 0, sizeof( *cmd ) );
   // populate data
-  strncpy( cmd->device, handler->handler, PATH_MAX - 1 );
+  strncpy( cmd->device, partition->device, PATH_MAX - 1 );
   memcpy( &cmd->entry, partition->data, sizeof( mbr_table_entry_t ) );
-
+  cmd->flags = request->flags;
   // raise probe request
   int result = ioctl(
     handler->fd,
     IOCTL_BUILD_REQUEST(
       FSIMPL_PROBE,
-      sizeof( cmd ),
+      sizeof( *cmd ),
       IOCTL_RDWR
     ),
     cmd
@@ -124,10 +124,20 @@ void rpc_handle_mount(
     free( cmd );
     return;
   }
-  /// FIXME: SAVE MOUNT RESPONSIBILITY SOMEWHERE
-  // some debug output
-  EARLY_STARTUP_PRINT( "%d\r\n", result )
-  EARLY_STARTUP_PRINT( "%s:%s:%d\r\n", handler->handler, handler->name, handler->fd )
+  result = mount_add(
+    request->target,
+    handler->name,
+    request->type,
+    request->flags
+  );
+  // add to mount tree
+  if ( 0 > result ) {
+    response.result = result;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    free( cmd );
+    return;
+  }
   // probe went well, so just return success result
   response.result = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );

@@ -24,7 +24,7 @@
 #ifndef _DEV_H
 #define _DEV_H
 
-int dev_read( void*, size_t, off_t );
-int dev_write( void*, size_t, off_t );
+int dev_read( void*, size_t, off_t, const char* );
+int dev_write( void*, size_t, off_t, const char* );
 
 #endif

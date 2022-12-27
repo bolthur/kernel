@@ -22,13 +22,14 @@
 #include "probe.h"
 
 /**
- * @fn int probe(mbr_table_entry_t*)
+ * @fn int probe(const char*, mbr_table_entry_t*)
  * @brief Probe filesystem
  *
+ * @param device
  * @param entry
  * @return
  */
-int probe( const char* source, mbr_table_entry_t* entry ) {
+int probe( const char* device, mbr_table_entry_t* entry ) {
   // allocate space for super block
   extfs_superblock_t* block = malloc( sizeof( *block ) );
   // handle error
@@ -38,7 +39,7 @@ int probe( const char* source, mbr_table_entry_t* entry ) {
   // clear out memory
   memset( block, 0, sizeof( *block ) );
   // read superblock
-  int result = extfs_superblock_read( block, entry, source );
+  int result = extfs_superblock_read( block, entry, device );
   // handle error
   if ( 0 != result ) {
     free( block );

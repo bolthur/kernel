@@ -155,7 +155,6 @@ int partition_add( const char* path, mbr_table_entry_t* mbr ) {
         resultIdx++;
       }
     }
-    EARLY_STARTUP_PRINT( "device = %s\r\n", device )
     // duplicate device
     node->device = device;
   }

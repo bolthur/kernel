@@ -25,6 +25,7 @@
 #include "rpc.h"
 #include "partition.h"
 #include "handler.h"
+#include "mount.h"
 #include "../libhelper.h"
 #include "../libpartition.h"
 
@@ -41,6 +42,11 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
   // initialize partition search tree
   if ( ! partition_setup() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup partition search tree!\r\n" )
+    return -1;
+  }
+  // initialize mount search tree
+  if ( ! mount_setup() ) {
     EARLY_STARTUP_PRINT( "Unable to setup partition search tree!\r\n" )
     return -1;
   }

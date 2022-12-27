@@ -40,26 +40,28 @@ int extfs_superblock_read(
 ) {
   // fetch stat information
   struct stat st;
-  if ( -1 == lstat( device, &st ) ) {
-    EARLY_STARTUP_PRINT( "Unable to fetch device stat information\r\n" )
-    return -errno;
+  if ( -1 == stat( device, &st ) ) {
+    EARLY_STARTUP_PRINT( "Unable to fetch device stat for %s\r\n", device )
+    return -EIO;
   }
   // get sector size from stat
-  uint32_t sector_size = ( uint32_t )st.st_blksize;
+  off_t sector_size = st.st_blksize;
   if ( 0 == sector_size ) {
     EARLY_STARTUP_PRINT( "Invalid stat information received\r\n" )
     return -EIO;
   }
+  // calculate offset ( superblock is located at offset 1024 relative to start )
+  off_t read_offset = ( ( off_t )mbr->data.relative_sector * sector_size )
+    + 1024;
   // try to read superblock
   int read_result = dev_read(
     block,
     sizeof( extfs_superblock_t ),
-    // superblock is located at offset 1024
-    ( mbr->data.relative_sector * sector_size ) + 1024,
+    read_offset,
     device
   );
-  if ( 0 != read_result ) {
-    EARLY_STARTUP_PRINT( "UNABLE TO READ SUPERBLOCK!\r\n" )
+  if ( 0 > read_result ) {
+    EARLY_STARTUP_PRINT( "Error while reading superblock!\r\n" )
     return read_result;
   }
   // validate partition

@@ -22,11 +22,12 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include <sys/tree.h>
+#include "../libmbr.h"
 
-#ifndef _MOUNTPOINT_NODE_H
-#define _MOUNTPOINT_NODE_H
+#ifndef _MOUNT_H
+#define _MOUNT_H
 
-#define MOUNTPOINT_TREE_DEFINE( name, type, field, cmp, attr ) \
+#define MOUNT_TREE_DEFINE( name, type, field, cmp, attr ) \
   SPLAY_HEAD( name, type ); \
   SPLAY_PROTOTYPE( name, type, field, cmp ) \
   SPLAY_GENERATE( name, type, field, cmp ) \
@@ -55,20 +56,20 @@
     return SPLAY_NEXT( name, t, e ); \
   } \
   attr void type##_tree_apply( struct name* t, void( *cb )( struct type* ) ) { \
-    mountpoint_node_tree_each( t, type, e, cb( e ) ); \
+    mount_tree_each( t, type, e, cb( e ) ); \
   } \
   attr void type##_tree_destroy( struct name* t, void( *free_cb )( struct type* ) ) { \
-    mountpoint_node_tree_each_safe( t, type, e, free_cb( type##_tree_remove( t, e ) ) ); \
+    mount_tree_each_safe( t, type, e, free_cb( type##_tree_remove( t, e ) ) ); \
   }
 
-#define mountpoint_node_tree_each( t, type, e, block ) { \
+#define mount_tree_each( t, type, e, block ) { \
     struct type* e; \
     for ( e = type##_tree_min( t ); e; e = type##_tree_next( t, e ) ) { \
       block; \
     }\
   }
 
-#define mountpoint_node_tree_each_safe( t, type, e, block ) { \
+#define mount_tree_each_safe( t, type, e, block ) { \
     struct type* e; \
     struct type* __tmp; \
     for ( \
@@ -80,17 +81,21 @@
     }\
   }
 
-typedef struct mountpoint_node {
-  char* name;
-  pid_t pid;
-  struct stat* st;
-  SPLAY_ENTRY( mountpoint_node ) node;
-} mountpoint_node_t;
+typedef struct mount_node {
+  char* path;
+  char* handler_name;
+  char* type;
+  unsigned long flags;
+  SPLAY_ENTRY( mount_node ) node;
+} mount_node_t;
 
-bool mountpoint_node_setup( void );
-mountpoint_node_t* mountpoint_node_extract( const char* );
-bool mountpoint_node_add( const char*, pid_t, struct stat* );
-void mountpoint_node_remove( const char* );
-void mountpoint_node_dump( void );
+// comparison stuff for splay
+int mount_cmp( struct mount_node*, struct mount_node* );
+// generic stuff
+bool mount_setup( void );
+mount_node_t* mount_extract( const char*, bool );
+int mount_add( const char*, const char*, const char*, unsigned long );
+int mount_remove( const char* );
+void mount_dump( void );
 
 #endif

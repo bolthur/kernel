@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
+#include <sys/bolthur.h>
 #include "handle.h"
 
 static list_manager_t* device_list;
@@ -54,7 +55,8 @@ static int32_t handle_lookup(
   const void* data
 ) {
   device_handle_t* device = a->data;
-  return strcmp( device->path, data );
+  const device_handle_t* tmp = data;
+  return strcmp( device->path, tmp->path );
 }
 
 /**
@@ -114,7 +116,24 @@ bool handle_init( void ) {
  * @return
  */
 device_handle_t* handle_get_by_path( const char* path ) {
-  list_item_t* item = list_lookup_data( device_list, ( void* )path );
+  // create temporary data item
+  device_handle_t* device = malloc( sizeof( *device ) );
+  if ( ! device ) {
+    return false;
+  }
+  // clear out
+  memset( device, 0, sizeof( *device ) );
+  // populate structure
+  device->path = strdup( path );
+  if ( ! device->path ) {
+    destroy_device( device );
+    return false;
+  }
+  // look up
+  list_item_t* item = list_lookup_data( device_list, device );
+  // destroy temporary device
+  destroy_device( device );
+  // return result
   return item ? item->data : NULL;
 }
 

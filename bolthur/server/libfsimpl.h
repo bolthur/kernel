@@ -32,6 +32,7 @@
 typedef struct {
   char device[ PATH_MAX ];
   mbr_table_entry_t entry;
+  unsigned long flags;
 } fsimpl_probe_t;
 
 #endif

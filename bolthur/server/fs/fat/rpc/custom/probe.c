@@ -24,6 +24,7 @@
 #include <libgen.h>
 #include <sys/bolthur.h>
 #include "../../rpc.h"
+#include "../../probe.h"
 #include "../../../../libpartition.h"
 #include "../../../../libfsimpl.h"
 
@@ -59,27 +60,35 @@ void rpc_custom_handle_probe(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // get request
+  // allocate command
   fsimpl_probe_t* command = malloc( data_size );
+  // handle error
   if ( ! command ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
+  // clear out
   memset( command, 0, data_size );
+  // fetch rpc data
   _syscall_rpc_get_data( command, data_size, data_info, true );
+  // handle error
   if ( errno ) {
-    error.status = -EIO;
+    error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( command );
     return;
   }
-
-  /// FIXME: ADD LOGIC
-
+  // probe filesystem
+  int result = probe( command->device, &command->entry );
+  if ( 0 != result ) {
+    error.status = result;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( command );
+    return;
+  }
   // set success flag and return
-  error.status = -ELOOP;
+  error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-  // free all used temporary structures
   free( command );
 }

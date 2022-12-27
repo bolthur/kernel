@@ -118,6 +118,29 @@ mountpoint_node_t* mountpoint_node_extract( const char* path ) {
 }
 
 /**
+ * @fn void mountpoint_node_remove(const char*)
+ * @brief Method to remove a mountpoint node
+ *
+ * @param path
+ */
+void mountpoint_node_remove( const char* path ) {
+  mountpoint_node_t* node = mountpoint_node_extract( path );
+  if ( ! node ) {
+    return;
+  }
+  // remove node tree
+  mountpoint_node_tree_remove( &management_tree, node );
+  // free up data
+  if ( node->name ) {
+    free( node->name );
+  }
+  if ( node->st ) {
+    free( node->st );
+  }
+  free( node );
+}
+
+/**
  * @fn bool mountpoint_node_add(const char*, pid_t, struct stat*)
  * @brief Helper to add a mountpoint node
  *

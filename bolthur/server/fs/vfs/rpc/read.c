@@ -168,8 +168,10 @@ void rpc_handle_read(
     free( request );
     return;
   }
-  // adjust path
+  // fill offset with current container position and copy container path
+  request->offset = container->pos;
   strncpy( request->file_path, container->path, PATH_MAX );
+  // mount point handling
   if ( vfs_pid != container->mount_point->pid ) {
     // set handler and path, and finally redirect request
     request->target_process = container->handler;

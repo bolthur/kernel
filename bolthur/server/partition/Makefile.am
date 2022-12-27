@@ -12,4 +12,5 @@ partition_SOURCES = \
   rpc/mount.c \
   handler.c \
   main.c \
+  mount.c \
   partition.c

@@ -89,7 +89,6 @@ void rpc_custom_handle_register(
   // grap stats
   int result = fstat( fd, &buffer );
   if ( 0 != result || !S_ISCHR( buffer.st_mode ) ) {
-    EARLY_STARTUP_PRINT( "File either doesn't exist or has wrong mode\r\n" )
     error.status = -ENOENT;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( command );
@@ -105,9 +104,6 @@ void rpc_custom_handle_register(
     close( fd );
     return;
   }
-
-  // some debug output
-  EARLY_STARTUP_PRINT( "%s:%s\r\n", command->filesystem, command->handler )
 
   // set success flag and return
   error.status = 0;
