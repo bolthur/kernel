@@ -73,29 +73,36 @@ int main( __unused int argc, __unused char* argv[] ) {
     close( fd );
     return -1;
   }
-  // clear out
-  memset( reg, 0, sizeof( *reg ) );
-  // populate with information
-  strcpy( reg->filesystem, "ext2" );
-  strcpy( reg->handler, "/dev/ext" );
-
-  // perform ioctl
-  int result = ioctl(
-    fd,
-    IOCTL_BUILD_REQUEST(
-      PARTITION_REGISTER_HANDLER,
-      sizeof( *reg ),
-      IOCTL_RDWR
-    ),
-    reg
-  );
-  // handle error
-  if ( -1 == result ) {
-    free( reg );
-    close( fd );
-    return -1;
+  for ( uint32_t idx = 2; idx <= 4; idx++ ) {
+    // clear out
+    memset( reg, 0, sizeof( *reg ) );
+    // populate with information
+    snprintf( reg->filesystem, 100, "ext%"PRIu32, idx );
+    reg->process = getpid();
+    // debug output
+    EARLY_STARTUP_PRINT(
+      "Registering %s for %d\r\n",
+      reg->filesystem,
+      reg->process
+    )
+    // perform ioctl
+    int result = ioctl(
+      fd,
+      IOCTL_BUILD_REQUEST(
+        PARTITION_REGISTER_HANDLER,
+        sizeof( *reg ),
+        IOCTL_RDWR
+      ),
+      reg
+    );
+    // handle error
+    if ( -1 == result ) {
+      free( reg );
+      close( fd );
+      return -1;
+    }
+    EARLY_STARTUP_PRINT( "register result: %d\r\n", result )
   }
-  EARLY_STARTUP_PRINT( "register result: %d\r\n", result )
 
   /// FIXME: REGISTER ext3 and ext4
 

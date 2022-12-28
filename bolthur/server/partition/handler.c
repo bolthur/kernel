@@ -114,7 +114,7 @@ handler_node_t* handler_extract( const char* name, bool create ) {
  * @param fd
  * @return
  */
-int handler_add( const char* filesystem, const char* handler, int fd ) {
+int handler_add( const char* filesystem, pid_t handler ) {
   // ensure that it doesn't exists
   handler_node_t* node = handler_extract( filesystem, false );
   if ( node ) {
@@ -128,15 +128,7 @@ int handler_add( const char* filesystem, const char* handler, int fd ) {
   // allocate handler if not allocated
   if ( ! node->handler ) {
     // duplicate string
-    node->handler = strdup( handler );
-    // handle error
-    if ( ! node->handler ) {
-      return -ENOMEM;
-    }
-  }
-  // push back file descriptor if not existing
-  if ( ! node->fd ) {
-    node->fd = fd;
+    node->handler = handler;
   }
   // return success
   return 0;
@@ -160,12 +152,6 @@ int handler_remove( const char* filesystem ) {
   // free up data
   if ( node->name ) {
     free( node->name );
-  }
-  if ( node->handler ) {
-    free( node->handler );
-  }
-  if ( node->fd ) {
-    close( node->fd );
   }
   free( node );
   // return success

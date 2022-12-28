@@ -83,8 +83,7 @@
 
 typedef struct handler_node {
   char* name;
-  char* handler;
-  int fd;
+  pid_t handler;
   SPLAY_ENTRY( handler_node ) node;
 } handler_node_t;
 
@@ -93,7 +92,7 @@ int handler_cmp( struct handler_node*, struct handler_node* );
 // generic stuff
 bool handler_setup( void );
 handler_node_t* handler_extract( const char*, bool );
-int handler_add( const char*, const char*, int );
+int handler_add( const char*, pid_t );
 int handler_remove( const char* );
 void handler_dump( void );
 

@@ -75,36 +75,13 @@ void rpc_custom_handle_register(
     free( command );
     return;
   }
-
-  // open handler
-  int fd = open( command->handler, O_RDWR );
-  if ( -1 == fd ) {
-    free( command );
-    error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // check if handler exists
-  struct stat buffer;
-  // grap stats
-  int result = fstat( fd, &buffer );
-  if ( 0 != result || !S_ISCHR( buffer.st_mode ) ) {
-    error.status = -ENOENT;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( command );
-    close( fd );
-    return;
-  }
-
   // register handler
-  if ( 0 != handler_add( command->filesystem, command->handler, fd ) ) {
+  if ( 0 != handler_add( command->filesystem, command->process ) ) {
     error.status = -EINVAL;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( command );
-    close( fd );
     return;
   }
-
   // set success flag and return
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );

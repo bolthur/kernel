@@ -330,6 +330,9 @@ uintptr_t task_process_prepare_init_arch( task_process_t* proc ) {
     rounded_fdt_size,
     0
   );
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "proc_fdt_start = %#"PRIxPTR"\r\n", proc_fdt_start )
+  #endif
   if ( ! proc_fdt_start ) {
     phys_free_page_range( phys_address_fdt, rounded_fdt_size );
     return 0;

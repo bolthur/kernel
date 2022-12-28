@@ -21,7 +21,6 @@
 
 #include "../../../../entry.h"
 #include "../../../../panic.h"
-#include "../../../../initrd.h"
 #include "../../../../mm/virt.h"
 #include "../../mm/virt.h"
 #include "virt/short.h"

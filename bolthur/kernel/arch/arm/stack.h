@@ -20,6 +20,6 @@
 #ifndef _ARCH_ARM_STACK_H
 #define _ARCH_ARM_STACK_H
 
-#define STACK_SIZE 0x1000
+#define STACK_SIZE 0x2000
 
 #endif

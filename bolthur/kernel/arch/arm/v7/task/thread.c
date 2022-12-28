@@ -60,14 +60,20 @@ task_thread_t* task_thread_create(
   #endif
 
   // create stack
-  uint64_t stack_physical = phys_find_free_page_range( STACK_SIZE, STACK_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+  uint64_t stack_physical = phys_find_free_page_range(
+    STACK_SIZE,
+    STACK_SIZE,
+    PHYS_MEMORY_TYPE_NORMAL
+  );
   // handle error
   if ( 0 == stack_physical ) {
     return NULL;
   }
 
   // get next stack address for user area
-  uintptr_t stack_virtual = task_stack_manager_next( process->thread_stack_manager );
+  uintptr_t stack_virtual = task_stack_manager_next(
+    process->thread_stack_manager
+  );
   // handle error
   if ( 0 == stack_virtual ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
@@ -150,26 +156,43 @@ task_thread_t* task_thread_create(
   memset( ( void* )tmp_virtual_user, 0, STACK_SIZE );
   // unmap again
   virt_unmap_temporary( tmp_virtual_user, STACK_SIZE );
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "stack_virtual = %#"PRIxPTR"\r\n", stack_virtual )
+    DEBUG_OUTPUT( "stack_physical = %#"PRIx64"\r\n", stack_physical )
+  #endif
   // create node for stack address management tree
-  if ( ! task_stack_manager_add( stack_virtual, process->thread_stack_manager ) ) {
+  if ( ! task_stack_manager_add(
+    stack_virtual,
+    process->thread_stack_manager
+  ) ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
     free( thread->current_context );
     free( thread );
     return NULL;
   }
-  // map stack
-  if ( ! virt_map_address(
-    process->virtual_context,
-    stack_virtual,
-    stack_physical,
-    VIRT_MEMORY_TYPE_NORMAL,
-    VIRT_PAGE_TYPE_EXECUTABLE
-  ) ) {
-    task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
-    phys_free_page_range( stack_physical, STACK_SIZE );
-    free( thread->current_context );
-    free( thread );
-    return NULL;
+  for(
+    uintptr_t stack_current = 0;
+    stack_current < STACK_SIZE;
+    stack_current += PAGE_SIZE
+  ) {
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "stack_virtual + stack_current = %#"PRIxPTR"\r\n", stack_virtual + PAGE_SIZE )
+      DEBUG_OUTPUT( "stack_physical + stack_current = %#"PRIx64"\r\n", stack_physical + PAGE_SIZE )
+    #endif
+    // map stack
+    if ( ! virt_map_address(
+      process->virtual_context,
+      stack_virtual + stack_current,
+      stack_physical + stack_current,
+      VIRT_MEMORY_TYPE_NORMAL,
+      VIRT_PAGE_TYPE_EXECUTABLE
+    ) ) {
+      task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
+      phys_free_page_range( stack_physical, STACK_SIZE );
+      free( thread->current_context );
+      free( thread );
+      return NULL;
+    }
   }
 
   // populate thread data
@@ -180,7 +203,7 @@ task_thread_t* task_thread_create(
   thread->process = process;
   thread->stack_physical = stack_physical;
   thread->stack_virtual = stack_virtual;
-  thread->stack_size = PAGE_SIZE;
+  thread->stack_size = STACK_SIZE;
   // prepare node
   avl_prepare_node( &thread->node_id, ( void* )thread->id );
   // add to tree
@@ -359,6 +382,9 @@ bool task_thread_push_arguments(
   // add space for parameters argc, argv and env
   total_size += alignof( max_align_t ) + sizeof( char** ) + sizeof( char** );
 
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "%"PRIx64" | %#x\r\n", thread->stack_physical, STACK_SIZE)
+  #endif
   // map stack temporarily
   uintptr_t stack_tmp = virt_map_temporary(
     thread->stack_physical,
@@ -439,12 +465,14 @@ bool task_thread_push_arguments(
   virt_unmap_temporary( stack_tmp, STACK_SIZE );
   // debug output
   #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "cpu->reg.sp = %#"PRIx32"\r\n", cpu->reg.sp )
     DUMP_REGISTER( cpu )
   #endif
   // adjust thread stack pointer register
   cpu->reg.sp = thread->stack_virtual + offset;
   // debug output
   #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "cpu->reg.sp = %#"PRIx32"\r\n", cpu->reg.sp )
     DUMP_REGISTER( cpu )
   #endif
 

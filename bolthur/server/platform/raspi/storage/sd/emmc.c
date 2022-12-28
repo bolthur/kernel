@@ -1034,11 +1034,24 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   uint32_t timeout = 50000;
   // sequence size
   size_t sequence_entry_count = 10;
+  // debug output
+  #if defined( EMMC_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT(
+      "device->block_size = %"PRIu32", device->block_count = %"PRIu32"\r\n",
+      device->block_size,
+      device->block_count
+    )
+  #endif
   // data command
   if ( is_data && 0 < device->block_count ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Extending entry count by data block count\r\n" )
+      EARLY_STARTUP_PRINT(
+        "device->block_size = %"PRIu32", device->block_count = %"PRIu32"\r\n",
+        device->block_size,
+        device->block_count
+      )
     #endif
     // entries to wait for transfer
     sequence_entry_count += device->block_count * 2;
@@ -1165,9 +1178,15 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       ? EMMC_INTERRUPT_READ_RDY : EMMC_INTERRUPT_WRITE_RDY;
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "EMMC_INTERRUPT_READ_RDY = %#x\r\n", EMMC_INTERRUPT_READ_RDY )
+      EARLY_STARTUP_PRINT( "EMMC_INTERRUPT_WRITE_RDY = %#x\r\n", EMMC_INTERRUPT_WRITE_RDY )
       EARLY_STARTUP_PRINT( "interrupt = %#"PRIx32"\r\n", interrupt )
     #endif
     for ( uint32_t current = 0; current < device->block_count; current++ ) {
+      // debug output
+      #if defined( EMMC_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "push block %"PRIu32" to sequence\r\n", current )
+      #endif
       // wait for flag
       sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
       sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
@@ -1198,11 +1217,25 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
         sequence[ idx ].offset = PERIPHERAL_EMMC_DATA;
         // copy write data
         if ( interrupt & EMMC_INTERRUPT_WRITE_RDY ) {
+          // debug output
+          #if defined( EMMC_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT(
+              "push byte %"PRIu32" | %"PRIu32" of block %"PRIu32"\r\n",
+              current_byte, idx, current
+            )
+          #endif
           memcpy( &sequence[ idx++ ].value, buffer32, sizeof( uint32_t ) );
+          // skip rest
+          continue;
         }
+        // just increment index
         idx++;
       }
     }
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "push blocks to sequence done\r\n" )
+    #endif
   }
   // wait for transfer complete for data or if it's a busy command
   if ( response_busy || is_data ) {

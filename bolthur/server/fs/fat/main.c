@@ -77,7 +77,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   memset( reg, 0, sizeof( *reg ) );
   // populate with information
   strcpy( reg->filesystem, "fat32" );
-  strcpy( reg->handler, "/dev/fat" );
+  reg->process = getpid();
 
   // perform ioctl
   int result = ioctl(

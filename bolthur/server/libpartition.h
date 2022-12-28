@@ -31,12 +31,12 @@
 
 typedef struct {
   char filesystem[ 100 ];
-  char handler[ PATH_MAX ];
+  pid_t process;
 } partition_register_t;
 
 typedef struct {
   char filesystem[ 100 ];
-  char handler[ PATH_MAX ];
+  pid_t process;
 } partition_release_t;
 
 #endif

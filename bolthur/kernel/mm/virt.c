@@ -360,7 +360,7 @@ uintptr_t virt_find_free_page_range(
     min = start;
   }
   // round up to full page
-  size= ROUND_UP_TO_FULL_PAGE( size );
+  size = ROUND_UP_TO_FULL_PAGE( size );
   // determine amount of pages
   size_t page_amount = size / PAGE_SIZE;
   size_t found_amount = 0;

@@ -56,6 +56,11 @@ AS_IF([test "x$enable_debug" == "xyes" && test "x$enable_release" == "xyes"], [
   AC_MSG_ERROR([Enabled debug and release are not possible at the same time])
 ])
 
+# dependencies
+PKG_CHECK_MODULES([LWEXT4], [lwext4 >= 1.0.0])
+PKG_CHECK_MODULES([CONFINI], [libconfini >= 1.16.4])
+PKG_CHECK_MODULES([ZLIB], [zlib >= 1.2.12])
+
 # check necessary programs
 BOLTHUR_PROG_READLINK
 

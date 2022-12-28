@@ -24,6 +24,6 @@
 #define _RPC_H
 
 bool rpc_init( void );
-void rpc_custom_handle_probe( size_t, pid_t, size_t, size_t );
+void rpc_handle_mount( size_t, pid_t, size_t, size_t );
 
 #endif
