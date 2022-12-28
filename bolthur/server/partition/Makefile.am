@@ -10,6 +10,10 @@ partition_SOURCES = \
   rpc/watch/release.c \
   rpc/init.c \
   rpc/mount.c \
+  rpc/read.c \
+  rpc/stat.c \
+  rpc/umount.c \
+  rpc/write.c \
   handler.c \
   main.c \
   mount.c \

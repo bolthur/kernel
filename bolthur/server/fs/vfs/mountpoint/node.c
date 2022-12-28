@@ -69,7 +69,7 @@ mountpoint_node_t* mountpoint_node_extract( const char* path ) {
   mountpoint_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return false;
+    return NULL;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -77,7 +77,7 @@ mountpoint_node_t* mountpoint_node_extract( const char* path ) {
   node->name = strdup( path );
   if ( ! node->name ) {
     free( node );
-    return false;
+    return NULL;
   }
 
   // local pointer for path

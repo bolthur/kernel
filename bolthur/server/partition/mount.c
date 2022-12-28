@@ -58,7 +58,7 @@ bool mount_setup( void ) {
 
 /**
  * @fn mount_node_t mount_extract*(const char*,bool)
- * @brief Extract watch information by name
+ * @brief Extract mount information by name
  *
  * @param name
  * @param create
@@ -103,20 +103,22 @@ mount_node_t* mount_extract( const char* path, bool create ) {
 }
 
 /**
- * @fn int mount_add(const char*, const char*, const char*, unsigned long)
+ * @fn int mount_add(const char*, const char*, const char*, unsigned long, pid_t)
  * @brief Helper to add a mount node
  *
  * @param path
  * @param handler
  * @param type
  * @param flags
+ * @param process
  * @return
  */
 int mount_add(
   const char* path,
   const char* handler,
   const char* type,
-  unsigned long flags
+  unsigned long flags,
+  pid_t process
 ) {
   // ensure that it doesn't exists
   mount_node_t* node = mount_extract( path, false );
@@ -144,6 +146,9 @@ int mount_add(
   if ( ! node->flags ) {
     node->flags = flags;
   }
+  if ( ! node->process ) {
+    node->process = process;
+  }
   // return success
   return 0;
 }
@@ -169,6 +174,66 @@ int mount_remove( const char* path ) {
   free( node );
   // return success
   return 0;
+}
+
+/**
+ * @fn mount_node_t mount_extract_by_path_walk*(const char*)
+ * @brief Method to get matching mount node by walking over the path
+ *
+ * @param path
+ * @return
+ */
+mount_node_t* mount_extract_by_path_walk( const char* path ) {
+  // allocate node
+  mount_node_t* node = malloc( sizeof( *node ) );
+  // handle error
+  if ( ! node ) {
+    return false;
+  }
+  // clear out node
+  memset( node, 0, sizeof( *node ) );
+  // populate name
+  node->path = strdup( path );
+  if ( ! node->path ) {
+    free( node );
+    return NULL;
+  }
+
+  // local pointer for path
+  char* p = ( char* )path;
+  // set loop path and found
+  char* loop_path = p;
+  mount_node_t* found = NULL;
+  // try to get mount point
+  while ( ! found && *loop_path ) {
+    // lookup
+    found = mount_node_tree_find( &management_tree, node );
+    // handle not found ( use basename next )
+    if ( ! found ) {
+      char* tmp = dirname( loop_path );
+      // handle null or no change
+      if ( ! tmp || tmp == loop_path ) {
+        break;
+      }
+      // handle loop path not equal to p
+      if ( loop_path != p ) {
+        free( loop_path );
+      }
+      // overwrite loop_path
+      loop_path = tmp;
+      // clear out
+      memset( node->path, 0, strlen( path ) );
+      strcpy( node->path, loop_path );
+    }
+  }
+  // free loop path
+  if ( loop_path != p ) {
+    free( loop_path );
+  }
+  free( node->path );
+  free( node );
+  // handle found
+  return found;
 }
 
 /**

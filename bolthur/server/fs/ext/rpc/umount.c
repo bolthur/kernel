@@ -17,17 +17,28 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
+#include <libgen.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/bolthur.h>
+#include "../rpc.h"
 
-#ifndef _RPC_H
-#define _RPC_H
-
-bool rpc_init( void );
-void rpc_handle_mount( size_t, pid_t, size_t, size_t );
-void rpc_handle_read( size_t, pid_t, size_t, size_t );
-void rpc_handle_stat( size_t, pid_t, size_t, size_t );
-void rpc_handle_umount( size_t, pid_t, size_t, size_t );
-void rpc_handle_write( size_t, pid_t, size_t, size_t );
-
-#endif
+/**
+ * @fn void rpc_handle_umount(size_t, pid_t, size_t, size_t)
+* @brief Handle umount request
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_umount(
+  __unused size_t type,
+  __unused pid_t origin,
+  __unused size_t data_info,
+  __unused size_t response_info
+) {
+  vfs_umount_response_t response = { .result = -EINVAL };
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+}

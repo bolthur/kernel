@@ -86,6 +86,7 @@ typedef struct mount_node {
   char* handler_name;
   char* type;
   unsigned long flags;
+  pid_t process;
   SPLAY_ENTRY( mount_node ) node;
 } mount_node_t;
 
@@ -94,8 +95,9 @@ int mount_cmp( struct mount_node*, struct mount_node* );
 // generic stuff
 bool mount_setup( void );
 mount_node_t* mount_extract( const char*, bool );
-int mount_add( const char*, const char*, const char*, unsigned long );
+int mount_add( const char*, const char*, const char*, unsigned long, pid_t );
 int mount_remove( const char* );
+mount_node_t* mount_extract_by_path_walk( const char* );
 void mount_dump( void );
 
 #endif

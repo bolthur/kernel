@@ -225,8 +225,17 @@ void rpc_handle_mount(
   EARLY_STARTUP_PRINT( "device = %s\r\n", device )
   EARLY_STARTUP_PRINT( "partition_index = %"PRIu32"\r\n", partition_index )
 
+  // block device and block cache handle
+  struct ext4_blockdev* bd = ext4_blockdev_get();
+  if ( ! bd ) {
+    response.result = -ENOMEM;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    free( device );
+    return;
+  }
   // set block device
-  result = ext4_blockdev_name_set( device );
+  result = ext4_blockdev_name_set( bd, device );
   if ( EOK != result ) {
     response.result = result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -234,10 +243,8 @@ void rpc_handle_mount(
     free( device );
     return;
   }
-
-  // block device and block cache handle
-  struct ext4_blockdev* bd = ext4_blockdev_get();
   // set correct partition offset
+  /// FIXME: SHOULD BE DONE WITHIN BLOCKDEV OPEN (?)
   bd->part_offset = entry.data.relative_sector * bd->bdif->ph_bsize;
   // verbose debug output
   ext4_dmask_set( DEBUG_ALL );
