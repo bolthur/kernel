@@ -87,6 +87,8 @@ void rpc_handle_mount_async(
     free( request );
     return;
   }
+  // overwrite handler of destination
+  destination->pid = response.handler;
   // just return response
   bolthur_rpc_return( type, &response, sizeof( response ), async_data );
 }

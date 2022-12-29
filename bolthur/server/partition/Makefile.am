@@ -6,14 +6,8 @@ partition_SOURCES = \
   rpc/custom/register.c \
   rpc/custom/release.c \
   rpc/watch/notify.c \
-  rpc/watch/register.c \
-  rpc/watch/release.c \
   rpc/init.c \
   rpc/mount.c \
-  rpc/read.c \
-  rpc/stat.c \
-  rpc/umount.c \
-  rpc/write.c \
   handler.c \
   main.c \
   mount.c \

@@ -25,6 +25,15 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 
+// ext4 library
+#include <lwext4/ext4.h>
+#include <lwext4/blockdev/bolthur/blockdev.h>
+// includes below are only for ide necessary
+#include <lwext4/ext4_types.h>
+#include <lwext4/ext4_errno.h>
+#include <lwext4/ext4_oflags.h>
+#include <lwext4/ext4_debug.h>
+
 /**
  * @fn void rpc_handle_read(size_t, pid_t, size_t, size_t)
  * @brief Handle read request
@@ -37,17 +46,117 @@
  * @todo add return on error
  */
 void rpc_handle_read(
-  __unused size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
+  size_t type,
+  pid_t origin,
+  size_t data_info,
   __unused size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "read stuff\r\n" )
   vfs_read_response_t* response = malloc( sizeof( *response ) );
   if ( ! response ) {
     return;
   }
   memset( response, 0, sizeof( *response ) );
   response->len = -EINVAL;
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    free( response );
+    return;
+  }
+  vfs_read_request_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    response->len = -ENOMEM;
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    free( response );
+    return;
+  }
+  // clear variables
+  memset( request, 0, sizeof( *request ) );
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    free( request );
+    free( response );
+    return;
+  }
+  // fetch rpc data
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  // handle error
+  if ( errno ) {
+    response->len = -errno;
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    free( request );
+    free( response );
+    return;
+  }
+  // handle possible shared memory
+  void* shm_addr = response->data;
+  // map shared if set
+  if ( 0 != request->shm_id ) {
+    // attach shared area
+    shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
+    if ( errno ) {
+      response->len = -errno;
+      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+      free( request );
+      free( response );
+      return;
+    }
+  }
+  // open path
+  ext4_file fd;
+  int result = ext4_fopen( &fd, request->file_path, "r" );
+  if ( EOK != result ) {
+    response->len = -result;
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    if ( request->shm_id ) {
+      _syscall_memory_shared_detach( request->shm_id );
+    }
+    free( request );
+    free( response );
+    return;
+  }
+  // set offset
+  result = ext4_fseek( &fd, request->offset, SEEK_SET );
+  if ( EOK != result ) {
+    response->len = -result;
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    if ( request->shm_id ) {
+      _syscall_memory_shared_detach( request->shm_id );
+    }
+    free( request );
+    free( response );
+    return;
+  }
+  // read content
+  size_t read_count = 0;
+  result = ext4_fread( &fd, shm_addr, request->len, &read_count );
+  if ( EOK != result ) {
+    response->len = -result;
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    if ( request->shm_id ) {
+      _syscall_memory_shared_detach( request->shm_id );
+    }
+    free( request );
+    free( response );
+    return;
+  }
+  // close again
+  result = ext4_fclose( &fd );
+  if ( EOK != result ) {
+    response->len = -result;
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    if ( request->shm_id ) {
+      _syscall_memory_shared_detach( request->shm_id );
+    }
+    free( request );
+    free( response );
+    return;
+  }
+  // set success and return
+  response->len = ( ssize_t )read_count;
   bolthur_rpc_return( type, response, sizeof( *response ), NULL );
   free( response );
+  free( request );
 }

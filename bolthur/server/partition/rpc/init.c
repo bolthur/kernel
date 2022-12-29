@@ -33,37 +33,7 @@ bool rpc_init( void ) {
     EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
     return false;
   }
-  bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read, true );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
-    return false;
-  }
-  bolthur_rpc_bind( RPC_VFS_STAT, rpc_handle_stat, true );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
-    return false;
-  }
-  bolthur_rpc_bind( RPC_VFS_UMOUNT, rpc_handle_umount, true );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler umount!\r\n" )
-    return false;
-  }
-  bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
-    return false;
-  }
   bolthur_rpc_bind( RPC_VFS_WATCH_NOTIFY, rpc_handle_watch_notify, true );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
-    return false;
-  }
-  bolthur_rpc_bind( RPC_VFS_WATCH_REGISTER, rpc_handle_watch_register, true );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
-    return false;
-  }
-  bolthur_rpc_bind( RPC_VFS_WATCH_RELEASE, rpc_handle_watch_release, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
     return false;

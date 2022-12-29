@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <sys/mount.h>
 #include <sys/bolthur.h>
 #include "../init.h"
@@ -253,6 +254,46 @@ noreturn void init_stage2( void ) {
       root_device, root_partition_type, strerror( errno ) )
     //exit( 1 );
   }
+
+  EARLY_STARTUP_PRINT( "Opening /etc/fstat for reading\r\n" )
+  // open fstap
+  int fstat = open( "/etc/fstab", O_RDONLY );
+  if ( -1 == fstat ) {
+    EARLY_STARTUP_PRINT( "unable to open /etc/fstat\r\n" )
+    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
+    exit( 1 );
+  }
+  EARLY_STARTUP_PRINT( "Looking for file size\r\n" )
+  off_t position = lseek( fstat, 0, SEEK_END );
+  if ( -1 == position ) {
+    EARLY_STARTUP_PRINT( "unable to set seek to end\r\n" )
+    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
+    exit( 1 );
+  }
+  size_t fstat_size = ( size_t )position;
+  // reset back to beginning
+  if ( -1 == lseek( fstat, 0, SEEK_SET ) ) {
+    EARLY_STARTUP_PRINT( "unable to set seek to start\r\n" )
+    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
+    exit( 1 );
+  }
+  // allocate
+  EARLY_STARTUP_PRINT( "Allocate buffer\r\n" )
+  char* str = malloc( fstat_size + 1 );
+  if ( ! str ) {
+    EARLY_STARTUP_PRINT( "unable to allocate buffer\r\n" )
+    exit( 1 );
+  }
+  // read whole file
+  EARLY_STARTUP_PRINT( "Reading whole file into buffer\r\n" )
+  read( fstat, str, fstat_size );
+  close( fstat );
+  str[ fstat_size ] = 0;
+  // print content
+  EARLY_STARTUP_PRINT( "str = %s\r\n", str )
+  EARLY_STARTUP_PRINT( "done :D\r\n" )
+
+
   /*// mount boot partition
   EARLY_STARTUP_PRINT( "Mounting boot file system" )
   int result = mount( "/dev/sd0", "/", "fat32", MS_MGC_VAL, "" );

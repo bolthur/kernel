@@ -36,7 +36,7 @@
  */
 void rpc_handle_stat(
   size_t type,
-  __unused pid_t origin,
+  pid_t origin,
   size_t data_info,
   __unused size_t response_info
 ) {

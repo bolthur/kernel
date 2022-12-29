@@ -147,7 +147,7 @@ static bool fetch_mbr_entry(
  * @param data_info
  * @param response_info
  *
-* @todo track mount points for cleanup on exit
+ * @todo add origin validation once called correctly
  */
 void rpc_handle_mount(
   size_t type,
@@ -299,8 +299,9 @@ void rpc_handle_mount(
     free( device );
     return;
   }
-  // mount went well, return success
+  // mount went well, return success with pid as handler
   response.result = 0;
+  response.handler = getpid();
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( request );
   free( device );

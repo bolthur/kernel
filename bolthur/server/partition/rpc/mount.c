@@ -77,7 +77,7 @@ void rpc_handle_mount_async(
     handler->name,
     request->type,
     request->flags,
-    request->handler
+    response.handler
   );
   if ( 0 != result ) {
     response.result = result;
@@ -164,8 +164,6 @@ void rpc_handle_mount(
   }
 
   EARLY_STARTUP_PRINT( "Routing mount request to %d\r\n", handler->handler )
-  // overwrite request handler
-  request->handler = handler->handler;
 
   // perform async rpc
   bolthur_rpc_raise(
