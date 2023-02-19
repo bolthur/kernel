@@ -27,7 +27,6 @@
 #include "../mount.h"
 #include "../partition.h"
 #include "../handler.h"
-#include "../../libfsimpl.h"
 
 /**
  * @fn void rpc_handle_mount_async(size_t, pid_t, size_t, size_t)
@@ -112,6 +111,7 @@ void rpc_handle_mount(
   size_t data_info,
   __unused size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "partition mounting\r\n" )
   // handle async return in case response info is set
   if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
     rpc_handle_mount_async( type, origin, data_info, response_info );

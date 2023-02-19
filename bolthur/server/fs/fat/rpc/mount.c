@@ -18,23 +18,21 @@
  */
 
 #include <libgen.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <sys/mount.h>
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../../../libmbr.h"
 
-// ext4 library
-#include <lwext4/ext4.h>
-#include <lwext4/blockdev/bolthur/blockdev.h>
-// includes below are only for ide necessary
-#include <lwext4/ext4_types.h>
-#include <lwext4/ext4_errno.h>
-#include <lwext4/ext4_oflags.h>
-#include <lwext4/ext4_debug.h>
+// fat library
+#include <bfs/blockdev/blockdev.h>
+#include <bfs/common/blockdev.h>
+#include <bfs/common/errno.h>
+#include <bfs/fat/mountpoint.h>
 
 /**
  * @fn char split_device_partition*(const char*, uint32_t*)
@@ -155,7 +153,7 @@ void rpc_handle_mount(
   size_t data_info,
   __unused size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "ext mounting\r\n" )
+  EARLY_STARTUP_PRINT( "fat mounting\r\n" )
   vfs_mount_response_t response = { .result = -ENOMEM };
   vfs_mount_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
@@ -182,14 +180,14 @@ void rpc_handle_mount(
   }
 
   // check whether target is already mounted
-  struct ext4_mount_stats stats;
+  /*struct ext4_mount_stats stats;
   int result = ext4_mount_point_stats( request->target, &stats );
   if ( ENOENT != result ) {
     response.result = -EALREADY;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
-  }
+  }*/
 
   // split device and partition index up
   uint32_t partition_index = 0;
@@ -227,7 +225,7 @@ void rpc_handle_mount(
   EARLY_STARTUP_PRINT( "partition_index = %"PRIu32"\r\n", partition_index )
 
   // block device and block cache handle
-  struct ext4_blockdev* bd = ext4_blockdev_get();
+  common_blockdev_t* bd = common_blockdev_get( device );
   if ( ! bd ) {
     response.result = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -235,22 +233,13 @@ void rpc_handle_mount(
     free( device );
     return;
   }
-  // set block device
-  result = ext4_blockdev_name_set( bd, device );
-  if ( EOK != result ) {
-    response.result = result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    free( device );
-    return;
-  }
   // set correct partition offset
   /// FIXME: SHOULD BE DONE WITHIN BLOCKDEV OPEN (?)
-  bd->part_offset = entry.data.relative_sector * bd->bdif->ph_bsize;
+  bd->part_offset = entry.data.relative_sector * bd->bdif->block_size;
   // verbose debug output
-  ext4_dmask_set( DEBUG_ALL );
+  // ext4_dmask_set( DEBUG_ALL );
   // register device
-  result = ext4_device_register( bd, request->source );
+  int result = common_blockdev_register_device( bd, request->source );
   // handle error
   if ( EOK != result ) {
     response.result = -result;
@@ -260,39 +249,12 @@ void rpc_handle_mount(
     return;
   }
   // perform mount
-  result = ext4_mount(
+  result = fat_mountpoint_mount(
     request->source,
     request->target,
     request->flags & MS_RDONLY
   );
   // handle error
-  if ( EOK != result ) {
-    response.result = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    free( device );
-    return;
-  }
-  // try recover
-  result = ext4_recover( "/" );
-  if ( EOK != result && ENOTSUP != result ) {
-    response.result = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    free( device );
-    return;
-  }
-  // start journal
-  result = ext4_journal_start( "/" );
-  if ( EOK != result ) {
-    response.result = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    free( device );
-    return;
-  }
-  // cache write back
-  result = ext4_cache_write_back( "/", 1 );
   if ( EOK != result ) {
     response.result = -result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );

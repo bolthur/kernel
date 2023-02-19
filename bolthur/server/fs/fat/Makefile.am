@@ -1,10 +1,11 @@
 
-AM_CFLAGS = -DPROGRAM_NAME=\"fs/fat\"
-
 bin_PROGRAMS = fat
+fat_LDADD = \
+  $(BFS_LIBS)
+fat_CFLAGS = \
+  -DPROGRAM_NAME=\"fs/fat\" \
+  $(BFS_CFLAGS)
 fat_SOURCES = \
-  rpc/custom/probe.c \
   rpc/init.c \
-  dev.c \
-  main.c \
-  probe.c
+  rpc/mount.c \
+  main.c

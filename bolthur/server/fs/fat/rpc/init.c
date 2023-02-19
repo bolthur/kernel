@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include "../rpc.h"
-#include "../../../libfsimpl.h"
 
 /**
  * @fn bool rpc_init(void)
@@ -27,9 +27,9 @@
  * @return
  */
 bool rpc_init( void ) {
-  bolthur_rpc_bind( FSIMPL_PROBE, rpc_custom_handle_probe, true );
+  bolthur_rpc_bind( RPC_VFS_MOUNT, rpc_handle_mount, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register probe handler!\r\n" )
+    EARLY_STARTUP_PRINT( "Unable to register handler mount!\r\n" )
     return false;
   }
   return true;

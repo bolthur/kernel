@@ -24,7 +24,6 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "rpc.h"
-#include "../../libfsimpl.h"
 #include "../../libhelper.h"
 #include "../../libpartition.h"
 
@@ -60,8 +59,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   _syscall_rpc_set_ready( true );
 
   // add device file
-  uint32_t device_info[] = { FSIMPL_PROBE, };
-  if ( !dev_add_file( "/dev/fat", device_info, 1 ) ) {
+  if ( !dev_add_file( "/dev/fat", NULL, 0 ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

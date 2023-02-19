@@ -196,6 +196,16 @@ noreturn void init_stage2( void ) {
   EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
   pid_t sd = util_execute_device_server( "/ramdisk/server/storage/sd", "/dev/storage/sd" );
 
+  // mount boot partition
+  /// FIXME: SHOULD BE HANDLED BY PARSING FSTAB
+  EARLY_STARTUP_PRINT( "Mounting boot file system\r\n" )
+  int result = mount( "/dev/storage/sd0", "/boot/", "fat32", MS_MGC_VAL, "" );
+  if ( 0 != result ) {
+    EARLY_STARTUP_PRINT( "Mount of \"%s\" with type \"%s\" to / failed: \"%s\"\r\n",
+      "/dev/storage/sd0", "fat32", strerror( errno ) )
+    //exit( 1 );
+  }
+
   // determine root device and partition type from config
   EARLY_STARTUP_PRINT( "Extracting root device and partition type from config...\r\n" )
   char* p = strtok( bootargs, " " );
@@ -248,7 +258,7 @@ noreturn void init_stage2( void ) {
   )
   // mount root partition
   EARLY_STARTUP_PRINT( "Mounting root file system\r\n" )
-  int result = mount( root_device, "/", root_partition_type, MS_MGC_VAL, "" );
+  result = mount( root_device, "/", root_partition_type, MS_MGC_VAL, "" );
   if ( 0 != result ) {
     EARLY_STARTUP_PRINT( "Mount of \"%s\" with type \"%s\" to / failed: \"%s\"\r\n",
       root_device, root_partition_type, strerror( errno ) )
@@ -292,7 +302,6 @@ noreturn void init_stage2( void ) {
   // print content
   EARLY_STARTUP_PRINT( "str = %s\r\n", str )
   EARLY_STARTUP_PRINT( "done :D\r\n" )
-
 
   /*// mount boot partition
   EARLY_STARTUP_PRINT( "Mounting boot file system" )
