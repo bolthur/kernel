@@ -1,4 +1,5 @@
-
-# <device>   <dir>  <type> <options> <dump> <fsck>
-/dev/sd0     /boot  fat32  noatime   0      2
-/dev/sd1     /      ext2   noatime   0      1
+#
+# <device>           <dir>  <type> <options>     <dump> <fsck>
+/dev/storage/sd1     /      ext2   rw,realtime   0      1
+/dev/storage/sd0     /boot  fat32  rw,realtime   0      2
+#

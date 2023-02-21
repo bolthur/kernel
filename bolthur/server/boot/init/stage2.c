@@ -22,6 +22,7 @@
 #include <unistd.h>
 #include <sys/mount.h>
 #include <sys/bolthur.h>
+#include <mntent.h>
 #include "../init.h"
 #include "../util.h"
 #include "../global.h"
@@ -196,16 +197,6 @@ noreturn void init_stage2( void ) {
   EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
   pid_t sd = util_execute_device_server( "/ramdisk/server/storage/sd", "/dev/storage/sd" );
 
-  // mount boot partition
-  /// FIXME: SHOULD BE HANDLED BY PARSING FSTAB
-  EARLY_STARTUP_PRINT( "Mounting boot file system\r\n" )
-  int result = mount( "/dev/storage/sd0", "/boot/", "fat32", MS_MGC_VAL, "" );
-  if ( 0 != result ) {
-    EARLY_STARTUP_PRINT( "Mount of \"%s\" with type \"%s\" to / failed: \"%s\"\r\n",
-      "/dev/storage/sd0", "fat32", strerror( errno ) )
-    //exit( 1 );
-  }
-
   // determine root device and partition type from config
   EARLY_STARTUP_PRINT( "Extracting root device and partition type from config...\r\n" )
   char* p = strtok( bootargs, " " );
@@ -258,60 +249,42 @@ noreturn void init_stage2( void ) {
   )
   // mount root partition
   EARLY_STARTUP_PRINT( "Mounting root file system\r\n" )
-  result = mount( root_device, "/", root_partition_type, MS_MGC_VAL, "" );
+  int result = mount( root_device, "/", root_partition_type, MS_MGC_VAL, "" );
   if ( 0 != result ) {
     EARLY_STARTUP_PRINT( "Mount of \"%s\" with type \"%s\" to / failed: \"%s\"\r\n",
       root_device, root_partition_type, strerror( errno ) )
     //exit( 1 );
   }
 
-  EARLY_STARTUP_PRINT( "Opening /etc/fstat for reading\r\n" )
-  // open fstap
-  int fstat = open( "/etc/fstab", O_RDONLY );
-  if ( -1 == fstat ) {
-    EARLY_STARTUP_PRINT( "unable to open /etc/fstat\r\n" )
-    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
-    exit( 1 );
-  }
-  EARLY_STARTUP_PRINT( "Looking for file size\r\n" )
-  off_t position = lseek( fstat, 0, SEEK_END );
-  if ( -1 == position ) {
-    EARLY_STARTUP_PRINT( "unable to set seek to end\r\n" )
-    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
-    exit( 1 );
-  }
-  size_t fstat_size = ( size_t )position;
-  // reset back to beginning
-  if ( -1 == lseek( fstat, 0, SEEK_SET ) ) {
-    EARLY_STARTUP_PRINT( "unable to set seek to start\r\n" )
-    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
-    exit( 1 );
-  }
-  // allocate
-  EARLY_STARTUP_PRINT( "Allocate buffer\r\n" )
-  char* str = malloc( fstat_size + 1 );
-  if ( ! str ) {
-    EARLY_STARTUP_PRINT( "unable to allocate buffer\r\n" )
-    exit( 1 );
-  }
-  // read whole file
-  EARLY_STARTUP_PRINT( "Reading whole file into buffer\r\n" )
-  read( fstat, str, fstat_size );
-  close( fstat );
-  str[ fstat_size ] = 0;
-  // print content
-  EARLY_STARTUP_PRINT( "str = %s\r\n", str )
-  EARLY_STARTUP_PRINT( "done :D\r\n" )
-
-  /*// mount boot partition
-  EARLY_STARTUP_PRINT( "Mounting boot file system" )
-  int result = mount( "/dev/sd0", "/", "fat32", MS_MGC_VAL, "" );
-  if ( 0 != result ) {
-    EARLY_STARTUP_PRINT( "Mount of \"%s\" with type \"%s\" to / failed: \"%s\"\r\n",
-      root_device, root_partition_type, strerror( errno ) )
-    //exit( 1 );
+  FILE* fstab = setmntent("/etc/fstab", "r");
+  struct mntent* m = NULL;
+  if ( fstab ) {
+    while( ( m = getmntent( fstab ) ) ) {
+      // skip root
+      if (
+        strlen( "/" ) == strlen( m->mnt_dir )
+        && 0 == strcmp( "/", m->mnt_dir )
+      ) {
+        continue;
+      }
+      /// FIXME: CHECK FOR NO AUTO MOUNT
+      // try to mount
+      EARLY_STARTUP_PRINT( "mounting %s to %s\r\n", m->mnt_fsname, m->mnt_dir )
+      /// FIXME: PARSE AND PASS MOUNT OPTS AS MOUNT FLAGS
+      result = mount( m->mnt_fsname, m->mnt_dir, m->mnt_type, MS_MGC_VAL, "" );
+      if ( 0 != result ) {
+        EARLY_STARTUP_PRINT(
+          "Mount of \"%s\" with type \"%s\" to \"%s\" failed: \"%s\"\r\n",
+          m->mnt_fsname, m->mnt_type, m->mnt_fsname, strerror( errno ) )
+        //exit( 1 );
+      }
+    }
+    endmntent( fstab );
   }
 
+  EARLY_STARTUP_PRINT( "done, yay\r\n" )
+
+  /*
   // print message
   EARLY_STARTUP_PRINT(
     "successfully mounted \"%s\" with partition = \"%s\" to /\r\n",

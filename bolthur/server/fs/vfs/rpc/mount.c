@@ -196,7 +196,8 @@ void rpc_handle_mount(
 
   // get destination
   mountpoint_node_t* destination = mountpoint_node_extract( request->target );
-  if ( destination ) {
+  /// FIXME: ADD CHECK WHETHER FOLDER IS EMPTY
+  if ( destination && 0 == strcmp( destination->name, request->target ) ) {
     response.result = -EEXIST;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );

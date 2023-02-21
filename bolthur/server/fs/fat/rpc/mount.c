@@ -248,6 +248,11 @@ void rpc_handle_mount(
     free( device );
     return;
   }
+  // add trailing slash necessary for library
+  size_t target_length = strlen( request->target );
+  if ( request->target[ target_length - 1 ] != '/' ) {
+    strcat( request->target, "/" );
+  }
   // perform mount
   result = fat_mountpoint_mount(
     request->source,

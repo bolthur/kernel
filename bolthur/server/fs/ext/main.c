@@ -102,8 +102,6 @@ int main( __unused int argc, __unused char* argv[] ) {
     EARLY_STARTUP_PRINT( "register result: %d\r\n", result )
   }
 
-  /// FIXME: REGISTER ext3 and ext4
-
   // wait for rpc
   EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
