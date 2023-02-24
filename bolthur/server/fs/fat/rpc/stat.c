@@ -21,19 +21,17 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
 
-// ext4 library
-#include <lwext4/ext4.h>
-#include <lwext4/ext4_inode.h>
-#include <lwext4/ext4_fs.h>
-#include <lwext4/blockdev/bolthur/blockdev.h>
-// includes below are only for ide necessary
-#include <lwext4/ext4_types.h>
-#include <lwext4/ext4_errno.h>
-#include <lwext4/ext4_oflags.h>
-#include <lwext4/ext4_debug.h>
+// fat library
+#include <bfs/blockdev/blockdev.h>
+#include <bfs/common/blockdev.h>
+#include <bfs/common/errno.h>
+#include <bfs/fat/mountpoint.h>
+#include <bfs/fat/type.h>
+#include <bfs/fat/file.h>
 
 /**
  * @fn void rpc_handle_stat(size_t, pid_t, size_t, size_t)
@@ -50,7 +48,7 @@ void rpc_handle_stat(
   size_t data_info,
   __unused size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "ext stat call\r\n" )
+  EARLY_STARTUP_PRINT( "fat stat call\r\n" )
   vfs_stat_response_t response = { .success = false };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -83,39 +81,30 @@ void rpc_handle_stat(
   uint32_t uid = 0;
   uint32_t gid = 0;
   uint16_t link_cnt = 0;
-  if (
-    EOK != ext4_mode_get( request->file_path, &mode )
-    || EOK != ext4_owner_get( request->file_path, &uid, &gid )
-    || EOK != ext4_links_cnt_get( request->file_path, &link_cnt )
-  ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
   // get times
-  uint32_t atime = 0;
-  uint32_t mtime = 0;
-  uint32_t ctime = 0;
-  if (
-    EOK != ext4_atime_get( request->file_path, &atime )
-    || EOK != ext4_mtime_get( request->file_path, &mtime )
-    || EOK != ext4_ctime_get( request->file_path, &ctime )
-  ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
-  // check whether target is already mounted
-  struct ext4_mount_stats stats;
-  int result = ext4_mount_point_stats( request->file_path, &stats );
+  time_t atime = 0;
+  time_t mtime = 0;
+  time_t ctime = 0;
+  // open path
+  fat_file_t fd;
+  int result = fat_file_open( &fd, request->file_path, "r" );
   if ( EOK != result ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  // open path
-  ext4_file fd;
-  result = ext4_fopen( &fd, request->file_path, "r" );
+  // extract times
+  if (
+    EOK != fat_file_atime( &fd, &atime )
+    || EOK != fat_file_mtime( &fd, &mtime )
+    || EOK != fat_file_ctime( &fd, &ctime )
+  ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  uint64_t size;
+  result = fat_file_size( &fd, &size );
   if ( EOK != result ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
@@ -123,25 +112,26 @@ void rpc_handle_stat(
   }
   // populate stats info
   response.info.st_dev = 0;
-  response.info.st_ino = ( ino_t )fd.inode;
+  response.info.st_ino = 0;
   response.info.st_mode = mode;
   response.info.st_nlink = link_cnt;
   response.info.st_uid = ( uid_t )uid;
   response.info.st_gid = ( gid_t )gid;
   response.info.st_rdev = 0;
-  response.info.st_size = ( off_t )ext4_fsize( &fd );
+  response.info.st_size = ( off_t )size;
   response.info.st_atim.tv_sec = atime;
   response.info.st_atim.tv_nsec = 0;
   response.info.st_mtim.tv_sec = mtime;
   response.info.st_mtim.tv_nsec = 0;
   response.info.st_ctim.tv_sec = ctime;
   response.info.st_ctim.tv_nsec = 0;
-  response.info.st_blksize = ( blksize_t )stats.block_size;
-  response.info.st_blocks = ( blkcnt_t )(
+  response.info.st_blksize = ( blksize_t )0; /// FIXME: FILL
+  response.info.st_blocks = ( blkcnt_t )0; /// FIXME: FILL
+   /*(
     (fd.fsize + stats.block_size - 1 ) / stats.block_size
-  );
+  )*/;
   // close again
-  if ( EOK != ext4_fclose( &fd ) ) {
+  if ( EOK != fat_file_close( &fd ) ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;

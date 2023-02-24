@@ -282,21 +282,44 @@ noreturn void init_stage2( void ) {
     endmntent( fstab );
   }
 
-  EARLY_STARTUP_PRINT( "done, yay\r\n" )
+  EARLY_STARTUP_PRINT( "done, yay!\r\n" )
+  EARLY_STARTUP_PRINT( "Opening /etc/fstat for reading\r\n" )
 
-  /*
-  // print message
-  EARLY_STARTUP_PRINT(
-    "successfully mounted \"%s\" with partition = \"%s\" to /\r\n",
-    root_device, root_partition_type )
-
-  // umount root partition
-  EARLY_STARTUP_PRINT( "Unmounting root file system\r\n" )
-  result = umount( "/" );
-  if ( 0 != result ) {
-    EARLY_STARTUP_PRINT( "Unmount of \"/\" failed: \"%s\"\r\n", strerror( errno ) )
-    //exit( 1 );
-  }*/
+  // open fstap
+  int fstat = open( "/boot/cmdline.txt", O_RDONLY );
+  if ( -1 == fstat ) {
+    EARLY_STARTUP_PRINT( "unable to open /etc/fstat\r\n" )
+    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
+    exit( 1 );
+  }
+  EARLY_STARTUP_PRINT( "Looking for file size\r\n" )
+  off_t position = lseek( fstat, 0, SEEK_END );
+  if ( -1 == position ) {
+    EARLY_STARTUP_PRINT( "unable to set seek to end\r\n" )
+    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
+    exit( 1 );
+  }
+  size_t fstat_size = ( size_t )position;
+  // reset back to beginning
+  if ( -1 == lseek( fstat, 0, SEEK_SET ) ) {
+    EARLY_STARTUP_PRINT( "unable to set seek to start\r\n" )
+    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
+    exit( 1 );
+  }
+  // allocate
+  EARLY_STARTUP_PRINT( "Allocate buffer\r\n" )
+  char* str = malloc( fstat_size + 1 );
+  if ( ! str ) {
+    EARLY_STARTUP_PRINT( "unable to allocate buffer\r\n" )
+    exit( 1 );
+     }
+  // read whole file
+  EARLY_STARTUP_PRINT( "Reading whole file into buffer\r\n" )
+  read( fstat, str, fstat_size );
+  close( fstat );
+  str[ fstat_size ] = 0;
+  // print content
+  EARLY_STARTUP_PRINT( "str = %s\r\n", str )
 
   for (;;) {
     __asm__ __volatile__ ( "nop" );

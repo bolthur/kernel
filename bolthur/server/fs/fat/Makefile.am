@@ -8,4 +8,8 @@ fat_CFLAGS = \
 fat_SOURCES = \
   rpc/init.c \
   rpc/mount.c \
+  rpc/read.c \
+  rpc/stat.c \
+  rpc/umount.c \
+  rpc/write.c \
   main.c
