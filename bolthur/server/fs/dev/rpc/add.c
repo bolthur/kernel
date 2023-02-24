@@ -85,21 +85,22 @@ void rpc_handle_add(
     free( request );
     return;
   }
-  // extract base name
-  char* dir = dirname( request->file_path );
-  if ( ! dir ) {
+  char* pathdup = strdup( request->file_path );
+  if ( ! pathdup ) {
     response.status = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
+  // extract base name
+  char* dir = dirname( pathdup );
   // check for notification
   watch_node_t* node = watch_extract( dir, false );
   if ( ! node && errno ) {
     response.status = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
-    free( dir );
+    free( pathdup );
     return;
   }
   // check if already existing
@@ -109,7 +110,7 @@ void rpc_handle_add(
     response.handler = handle->process;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
-    free( dir );
+    free( pathdup );
     return;
   }
   // try to add
@@ -117,7 +118,7 @@ void rpc_handle_add(
     response.status = VFS_ADD_ERROR;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
-    free( dir );
+    free( pathdup );
     return;
   }
   // handle device info stuff if is device
@@ -153,6 +154,5 @@ void rpc_handle_add(
   response.handler = request->handler;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( request );
-  free( dir );
-  return;
+  free( pathdup );
 }

@@ -43,13 +43,13 @@ proc loadFirmwareToBoot*( firmwareType: string ): void =
     if not fileExists( joinPath( cachePath, "firmware.tar.gz" ) ):
       var client = newHttpClient()
       client.onProgressChanged = onProgressChanged
-      client.downloadFile( "https://github.com/raspberrypi/firmware/archive/refs/tags/1.20220120.tar.gz", joinPath( cachePath, "firmware.tar.gz" ) )
+      client.downloadFile( "https://github.com/raspberrypi/firmware/archive/refs/tags/1.20230106.tar.gz", joinPath( cachePath, "firmware.tar.gz" ) )
       stdout.write "\r\n"
       stdout.flushFile()
       # unzip firmware
       extractAll( joinPath( cachePath, "firmware.tar.gz" ), joinPath( cachePath, "firmware" ) )
     # copy over to boot
-    for file in walkDirRec( joinPath( cachePath, "firmware", "firmware-1.20220120", "boot" ), { pcFile } ):
+    for file in walkDirRec( joinPath( cachePath, "firmware", "firmware-1.20230106", "boot" ), { pcFile } ):
       let splitted = splitPath( file )
       if splitted.tail.startsWith( "kernel" ):
         continue

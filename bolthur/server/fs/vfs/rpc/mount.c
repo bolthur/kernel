@@ -229,7 +229,7 @@ void rpc_handle_mount_stat(
  * @param data_info
  * @param response_info
  *
-* @todo track mount points for cleanup on exit
+ * @todo check whether device exists
  */
 void rpc_handle_mount(
   size_t type,

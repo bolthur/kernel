@@ -62,20 +62,21 @@ void rpc_handle_watch_notify(
     return;
   }
   // extract base name
-  char* dir = dirname( request->target );
-  if ( ! dir ) {
+  char* target_dup = strdup( request->target );
+  if ( ! target_dup ) {
     free( request );
     return;
   }
+  char* dir = dirname( target_dup );
   // check for notification
   watch_node_t* node = watch_extract( dir, false );
   if ( ! node && errno ) {
+    free( target_dup );
     free( request );
-    free( dir );
     return;
   }
-  // free dir again
-  free( dir );
+  // free target_dup again
+  free( target_dup );
   // check if handler pid is valid
   bool valid = false;
   watch_tree_each(node->pid, watch_pid, n, {

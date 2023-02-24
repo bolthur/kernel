@@ -80,25 +80,34 @@ mountpoint_node_t* mountpoint_node_extract( const char* path ) {
     return NULL;
   }
 
-  // local pointer for path
-  char* p = ( char* )path;
+  // local duplicate for path
+  char* p = strdup( path );
+  if ( ! p ) {
+    free( node->name );
+    free( node );
+    return NULL;
+  }
   // set loop path and found
   char* loop_path = p;
+  char* previous_loop = NULL;
   mountpoint_node_t* found = NULL;
   // try to get mount point
   while ( ! found && *loop_path ) {
     // lookup
     found = mountpoint_node_tree_find( &management_tree, node );
-    // handle not found ( use basename next )
+    // handle not found ( use dirname next )
     if ( ! found ) {
-      char* tmp = dirname( loop_path );
-      // handle null or no change
-      if ( ! tmp || tmp == loop_path ) {
+      if ( previous_loop ) {
+        free( previous_loop );
+      }
+      previous_loop = strdup( loop_path );
+      if ( ! previous_loop ) {
         break;
       }
-      // handle loop path not equal to p
-      if ( loop_path != p ) {
-        free( loop_path );
+      char* tmp = dirname( loop_path );
+      // break loop
+      if ( 0 == strcmp( previous_loop, tmp ) ) {
+        break;
       }
       // overwrite loop_path
       loop_path = tmp;
@@ -107,12 +116,12 @@ mountpoint_node_t* mountpoint_node_extract( const char* path ) {
       strcpy( node->name, loop_path );
     }
   }
-  // free loop path
-  if ( loop_path != p ) {
-    free( loop_path );
+  if ( previous_loop ) {
+    free( previous_loop );
   }
   free( node->name );
   free( node );
+  free( p );
   // handle found
   return found;
 }

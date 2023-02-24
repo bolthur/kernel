@@ -44,6 +44,7 @@ __maybe_unused static void send_vfs_add_request(
 ) {
   vfs_add_response_t* response = malloc( sizeof( *response ) );
   if ( ! response || ! msg ) {
+    EARLY_STARTUP_PRINT( "1\r\n" )
     exit( -1 );
   }
   // push in current pid
@@ -85,10 +86,12 @@ __maybe_unused static void send_vfs_add_request(
   );
   // handle error / no message
   if ( errno ) {
+    EARLY_STARTUP_PRINT( "%s\r\n", strerror(errno) )
     exit( -1 );
   }
   // stop on success
   if ( VFS_ADD_SUCCESS != response->status ) {
+    EARLY_STARTUP_PRINT( "Unable to add: %d\r\n", response->status )
     exit( -1 );
   }
   // free up response
