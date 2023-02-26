@@ -105,6 +105,7 @@ void rpc_handle_read(
   }
   // open path
   fat_file_t fd;
+  memset( &fd, 0, sizeof( fd ) );
   int result = fat_file_open( &fd, request->file_path, "r" );
   if ( EOK != result ) {
     response->len = -result;

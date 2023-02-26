@@ -106,6 +106,7 @@ void rpc_handle_read(
   }
   // open path
   ext4_file fd;
+  memset( &fd, 0, sizeof( fd ) );
   int result = ext4_fopen( &fd, request->file_path, "r" );
   if ( EOK != result ) {
     response->len = -result;

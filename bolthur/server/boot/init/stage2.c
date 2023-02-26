@@ -27,146 +27,6 @@
 #include "../util.h"
 #include "../global.h"
 
-__weak_symbol int mount(
-  const char* source,
-  const char* target,
-  const char* filesystemtype,
-  unsigned long mountflags,
-  __unused const void* data
-) {
-  // allocate request
-  vfs_mount_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    errno = ENOMEM;
-    return -1;
-  }
-  // allocate response
-  vfs_mount_response_t* response = malloc( sizeof( *response ) );
-  if ( ! response ) {
-    free( request );
-    errno = ENOMEM;
-    return -1;
-  }
-  // clear out memory
-  memset( request, 0, sizeof( *request ) );
-  memset( response, 0, sizeof( *response ) );
-  // populate request
-  strncpy( request->source, source, PATH_MAX - 1 );
-  strncpy( request->target, target, PATH_MAX - 1 );
-  strncpy( request->type, filesystemtype, 99 );
-  request->flags = mountflags;
-  // ask vfs to perform mount with wait
-  size_t response_id = bolthur_rpc_raise(
-    RPC_VFS_MOUNT,
-    VFS_DAEMON_ID,
-    request,
-    sizeof( *request ),
-    NULL,
-    RPC_VFS_MOUNT,
-    request,
-    sizeof( *request ),
-    0,
-    0
-  );
-  // handle error
-  if ( errno ) {
-    free( request );
-    free( response );
-    return -1;
-  }
-  // get response data
-  _syscall_rpc_get_data( response, sizeof( *response ), response_id, false );
-  // handle error / no message
-  if ( errno ) {
-    free( request );
-    free( response );
-    return -1;
-  }
-  EARLY_STARTUP_PRINT( "response->result = %d\r\n", response->result );
-  // evaluate status
-  if ( 0 != response->result ) {
-    errno = abs( response->result );
-    // free request and response
-    free( request );
-    free( response );
-    // return result value
-    return -1;
-  }
-  // free request and response
-  free( request );
-  free( response );
-  // return success
-  return 0;
-}
-
-__weak_symbol int umount( const char* target ) {
-  return umount2( target, 0 );
-}
-
-__weak_symbol int umount2( const char* target, int flags ) {
-  // allocate request
-  vfs_umount_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    errno = ENOMEM;
-    return -1;
-  }
-  // allocate response
-  vfs_umount_response_t* response = malloc( sizeof( *response ) );
-  if ( ! response ) {
-    free( request );
-    errno = ENOMEM;
-    return -1;
-  }
-  // clear out memory
-  memset( request, 0, sizeof( *request ) );
-  memset( response, 0, sizeof( *response ) );
-  // populate request
-  strncpy( request->target, target, PATH_MAX - 1 );
-  request->flags = flags;
-  // ask vfs to perform mount with wait
-  size_t response_id = bolthur_rpc_raise(
-    RPC_VFS_UMOUNT,
-    VFS_DAEMON_ID,
-    request,
-    sizeof( *request ),
-    NULL,
-    RPC_VFS_UMOUNT,
-    request,
-    sizeof( *request ),
-    0,
-    0
-  );
-  // handle error
-  if ( errno ) {
-    free( request );
-    free( response );
-    return -1;
-  }
-  // get response data
-  _syscall_rpc_get_data( response, sizeof( *response ), response_id, false );
-  // handle error / no message
-  if ( errno ) {
-    free( request );
-    free( response );
-    return -1;
-  }
-  EARLY_STARTUP_PRINT( "response->result = %d\r\n", response->result );
-  // evaluate status
-  if ( 0 != response->result ) {
-    errno = abs( response->result );
-    // free request and response
-    free( request );
-    free( response );
-    // return result value
-    return -1;
-  }
-  // free request and response
-  free( request );
-  free( response );
-  // return success
-  return 0;
-}
-
 /**
  * @fn void init_stage2(void)
  * @brief Stage 2 init starting necessary stuff so that stage 3 with stuff from disk can be started
@@ -283,41 +143,41 @@ noreturn void init_stage2( void ) {
   }
 
   EARLY_STARTUP_PRINT( "done, yay!\r\n" )
-  EARLY_STARTUP_PRINT( "Opening /etc/fstat for reading\r\n" )
+  EARLY_STARTUP_PRINT( "Opening /boot/cmdline for reading\r\n" )
 
   // open fstap
-  int fstat = open( "/boot/cmdline.txt", O_RDONLY );
-  if ( -1 == fstat ) {
+  int cmdline = open( "/boot/cmdline.txt", O_RDONLY );
+  if ( -1 == cmdline ) {
     EARLY_STARTUP_PRINT( "unable to open /etc/fstat\r\n" )
     EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
     exit( 1 );
   }
   EARLY_STARTUP_PRINT( "Looking for file size\r\n" )
-  off_t position = lseek( fstat, 0, SEEK_END );
+  off_t position = lseek( cmdline, 0, SEEK_END );
   if ( -1 == position ) {
     EARLY_STARTUP_PRINT( "unable to set seek to end\r\n" )
     EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
     exit( 1 );
   }
-  size_t fstat_size = ( size_t )position;
+  size_t cmdline_size = ( size_t )position;
   // reset back to beginning
-  if ( -1 == lseek( fstat, 0, SEEK_SET ) ) {
+  if ( -1 == lseek( cmdline, 0, SEEK_SET ) ) {
     EARLY_STARTUP_PRINT( "unable to set seek to start\r\n" )
     EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) )
     exit( 1 );
   }
   // allocate
   EARLY_STARTUP_PRINT( "Allocate buffer\r\n" )
-  char* str = malloc( fstat_size + 1 );
+  char* str = malloc( cmdline_size + 1 );
   if ( ! str ) {
     EARLY_STARTUP_PRINT( "unable to allocate buffer\r\n" )
     exit( 1 );
      }
   // read whole file
   EARLY_STARTUP_PRINT( "Reading whole file into buffer\r\n" )
-  read( fstat, str, fstat_size );
-  close( fstat );
-  str[ fstat_size ] = 0;
+  read( cmdline, str, cmdline_size );
+  close( cmdline );
+  str[ cmdline_size ] = 0;
   // print content
   EARLY_STARTUP_PRINT( "str = %s\r\n", str )
 

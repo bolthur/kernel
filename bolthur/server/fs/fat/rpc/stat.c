@@ -87,6 +87,7 @@ void rpc_handle_stat(
   time_t ctime = 0;
   // open path
   fat_file_t fd;
+  memset( &fd, 0, sizeof( fd ) );
   int result = fat_file_open( &fd, request->file_path, "r" );
   if ( EOK != result ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );

@@ -107,6 +107,7 @@ void rpc_handle_stat(
   }
   // check whether target is already mounted
   struct ext4_mount_stats stats;
+  memset( &stats, 0, sizeof( stats ) );
   int result = ext4_mount_point_stats( request->file_path, &stats );
   if ( EOK != result ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -115,6 +116,7 @@ void rpc_handle_stat(
   }
   // open path
   ext4_file fd;
+  memset( &fd, 0, sizeof( fd ) );
   result = ext4_fopen( &fd, request->file_path, "r" );
   if ( EOK != result ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
