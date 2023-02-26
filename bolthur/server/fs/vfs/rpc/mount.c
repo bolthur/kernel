@@ -218,6 +218,106 @@ void rpc_handle_mount_stat(
   );
   // free response
   free( stat_response );
+  bolthur_rpc_destroy_async( async_data );
+}
+
+/**
+ * @fn void rpc_handle_mount_device_stat(size_t, pid_t, size_t, size_t)
+ * @brief Handle mount device stat callback
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_mount_device_stat(
+  __unused size_t type,
+  __unused pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  EARLY_STARTUP_PRINT("MOUNT DEVICE CHECK\r\n")
+  vfs_mount_response_t response = { .result = -EAGAIN };
+  // get matching async data
+  bolthur_async_data_t* async_data =
+    bolthur_rpc_pop_async( RPC_VFS_MOUNT, response_info );
+  if ( ! async_data ) {
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // allocate space for stat response and clear out
+  vfs_stat_response_t* stat_response = malloc( sizeof( *stat_response ) );
+  if ( ! stat_response ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // clear out
+  memset( stat_response, 0, sizeof( *stat_response ) );
+  // original request
+  vfs_mount_request_t* request = async_data->original_data;
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( stat_response );
+    return;
+  }
+  // fetch response
+  _syscall_rpc_get_data( stat_response, sizeof( *stat_response ), data_info, false );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( stat_response );
+    return;
+  }
+  if ( ! stat_response->success ) {
+    response.result = -ENODEV;
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( stat_response );
+    return;
+  }
+  mountpoint_node_t* destination = mountpoint_node_extract( request->target );
+  if ( destination ) {
+    // allocate stat request
+    vfs_stat_request_t* stat_request = malloc( sizeof( *stat_request ) );
+    if ( ! stat_request ) {
+      free( request );
+      response.result = -ENOMEM;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      return;
+    }
+    memset( stat_request, 0, sizeof( *stat_request ) );
+    // populate stat_request
+    strcpy( stat_request->file_path, request->target );
+    // perform async rpc
+    bolthur_rpc_raise(
+      RPC_VFS_STAT,
+      destination->pid,
+      stat_request,
+      sizeof( *stat_request ),
+      rpc_handle_mount_stat,
+      async_data->type,
+      request,
+      sizeof( *request ),
+      async_data->original_origin,
+      async_data->original_rpc_id
+    );
+    free( stat_request );
+  } else {
+    // perform mount
+    rpc_handle_mount_perform(
+      RPC_VFS_MOUNT,
+      origin,
+      data_info,
+      response_info,
+      request,
+      async_data
+    );
+  }
+  // free response
+  free( stat_response );
+  bolthur_rpc_destroy_async( async_data );
 }
 
 /**
@@ -330,42 +430,40 @@ void rpc_handle_mount(
     free( request );
     return;
   }
-  if ( destination ) {
-    // allocate stat request
-    vfs_stat_request_t* stat_request = malloc( sizeof( *stat_request ) );
-    if ( ! stat_request ) {
-      free( request );
-      response.result = -ENOMEM;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      return;
-    }
-    memset( stat_request, 0, sizeof( *stat_request ) );
-    // populate stat_request
-    strcpy( stat_request->file_path, request->target );
-    // perform async rpc
-    bolthur_rpc_raise(
-      RPC_VFS_STAT,
-      destination->pid,
-      stat_request,
-      sizeof( *stat_request ),
-      rpc_handle_mount_stat,
-      type,
-      request,
-      sizeof( *request ),
-      origin,
-      data_info
-    );
-    free(stat_request);
-    free(request);
+
+  // get mount point
+  mountpoint_node_t* mount_point = mountpoint_node_extract( request->source );
+  // handle no mount point node found
+  if ( ! mount_point ) {
+    free( request );
+    response.result = -ENOENT;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // perform mount
-  rpc_handle_mount_perform(
+  // allocate stat request
+  vfs_stat_request_t* stat_request = malloc( sizeof( *stat_request ) );
+  if ( ! stat_request ) {
+    free( request );
+    response.result = -ENOMEM;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    return;
+  }
+  memset( stat_request, 0, sizeof( *stat_request ) );
+  // populate stat_request
+  strcpy( stat_request->file_path, request->source );
+  // perform async rpc
+  bolthur_rpc_raise(
+    RPC_VFS_STAT,
+    mount_point->pid,
+    stat_request,
+    sizeof( *stat_request ),
+    rpc_handle_mount_device_stat,
     type,
-    origin,
-    data_info,
-    response_info,
     request,
-    NULL
+    sizeof( *request ),
+    origin,
+    data_info
   );
+  free( stat_request );
+  free( request );
 }

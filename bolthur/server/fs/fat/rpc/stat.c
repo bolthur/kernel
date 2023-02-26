@@ -82,9 +82,9 @@ void rpc_handle_stat(
   uint32_t gid = 0;
   uint16_t link_cnt = 0;
   // get times
-  time_t atime = 0;
-  time_t mtime = 0;
-  time_t ctime = 0;
+  time_t access_time = 0;
+  time_t modify_time = 0;
+  time_t create_time = 0;
   // open path
   fat_file_t fd;
   memset( &fd, 0, sizeof( fd ) );
@@ -96,9 +96,9 @@ void rpc_handle_stat(
   }
   // extract times
   if (
-    EOK != fat_file_atime( &fd, &atime )
-    || EOK != fat_file_mtime( &fd, &mtime )
-    || EOK != fat_file_ctime( &fd, &ctime )
+    EOK != fat_file_atime( &fd, &access_time )
+    || EOK != fat_file_mtime( &fd, &modify_time )
+    || EOK != fat_file_ctime( &fd, &create_time )
   ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
@@ -120,11 +120,11 @@ void rpc_handle_stat(
   response.info.st_gid = ( gid_t )gid;
   response.info.st_rdev = 0;
   response.info.st_size = ( off_t )size;
-  response.info.st_atim.tv_sec = atime;
+  response.info.st_atim.tv_sec = access_time;
   response.info.st_atim.tv_nsec = 0;
-  response.info.st_mtim.tv_sec = mtime;
+  response.info.st_mtim.tv_sec = modify_time;
   response.info.st_mtim.tv_nsec = 0;
-  response.info.st_ctim.tv_sec = ctime;
+  response.info.st_ctim.tv_sec = create_time;
   response.info.st_ctim.tv_nsec = 0;
   response.info.st_blksize = ( blksize_t )0; /// FIXME: FILL
   response.info.st_blocks = ( blkcnt_t )0; /// FIXME: FILL

@@ -23,7 +23,7 @@
 #include <errno.h>
 #include <tar.h>
 #include <sys/bolthur.h>
-#include "ramdisk.h"
+#include "../ramdisk.h"
 
 #define INFLATE_CHUNK 32
 

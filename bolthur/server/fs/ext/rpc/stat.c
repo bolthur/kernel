@@ -93,13 +93,13 @@ void rpc_handle_stat(
     return;
   }
   // get times
-  uint32_t atime = 0;
-  uint32_t mtime = 0;
-  uint32_t ctime = 0;
+  uint32_t access_time = 0;
+  uint32_t modify_time = 0;
+  uint32_t create_time = 0;
   if (
-    EOK != ext4_atime_get( request->file_path, &atime )
-    || EOK != ext4_mtime_get( request->file_path, &mtime )
-    || EOK != ext4_ctime_get( request->file_path, &ctime )
+    EOK != ext4_atime_get( request->file_path, &access_time )
+    || EOK != ext4_mtime_get( request->file_path, &modify_time )
+    || EOK != ext4_ctime_get( request->file_path, &create_time )
   ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
@@ -132,11 +132,11 @@ void rpc_handle_stat(
   response.info.st_gid = ( gid_t )gid;
   response.info.st_rdev = 0;
   response.info.st_size = ( off_t )ext4_fsize( &fd );
-  response.info.st_atim.tv_sec = atime;
+  response.info.st_atim.tv_sec = access_time;
   response.info.st_atim.tv_nsec = 0;
-  response.info.st_mtim.tv_sec = mtime;
+  response.info.st_mtim.tv_sec = modify_time;
   response.info.st_mtim.tv_nsec = 0;
-  response.info.st_ctim.tv_sec = ctime;
+  response.info.st_ctim.tv_sec = create_time;
   response.info.st_ctim.tv_nsec = 0;
   response.info.st_blksize = ( blksize_t )stats.block_size;
   response.info.st_blocks = ( blkcnt_t )(

@@ -100,9 +100,12 @@ void init_stage1( void ) {
       // wait for vfs to be ready
       _syscall_rpc_wait_for_ready( getppid() );
       // start /dev/ramdisk
-      size_t ramdisk_size;
-      void* ramdisk_image = ramdisk_lookup( disk, "ramdisk/server/fs/ramdisk", &ramdisk_size );
-      if ( ! dev_image ) {
+      void* ramdisk_image = ramdisk_lookup(
+        disk,
+        "ramdisk/server/fs/ramdisk",
+        NULL
+      );
+      if ( ! ramdisk_image ) {
         exit( -1 );
       }
       // fork process and handle possible error

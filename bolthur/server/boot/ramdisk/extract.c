@@ -23,7 +23,7 @@
 #include <errno.h>
 #include <tar.h>
 #include <sys/bolthur.h>
-#include "ramdisk.h"
+#include "../ramdisk.h"
 
 /**
  * @fn void ramdisk_extract*(uintptr_t, size_t, size_t, size_t*)

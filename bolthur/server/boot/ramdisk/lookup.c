@@ -23,7 +23,7 @@
 #include <errno.h>
 #include <tar.h>
 #include <sys/bolthur.h>
-#include "ramdisk.h"
+#include "../ramdisk.h"
 
 /**
  * @fn void ramdisk_lookup*(TAR*, const char*, size_t*)
