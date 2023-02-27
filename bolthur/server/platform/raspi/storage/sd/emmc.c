@@ -1064,7 +1064,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
-      "sequence_entry_count = %zd\r\n",
+      "sequence_entry_count = %zu\r\n",
       sequence_entry_count
     )
   #endif
@@ -3214,7 +3214,7 @@ emmc_response_t emmc_transfer_block(
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "block_number = %ld\r\n", block_number )
-    EARLY_STARTUP_PRINT( "buffer_size = %d\r\n", buffer_size )
+    EARLY_STARTUP_PRINT( "buffer_size = %zu\r\n", buffer_size )
     EARLY_STARTUP_PRINT( "block_size = %ld\r\n", device->block_size )
   #endif
   // Minimum transfer size is one block ( HCSS 3.7.2.1 )
@@ -3222,7 +3222,7 @@ emmc_response_t emmc_transfer_block(
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT(
-        "Data command called with buffer size %zd less than block size %"PRId32"\r\n",
+        "Data command called with buffer size %zu less than block size %"PRId32"\r\n",
         buffer_size, device->block_size
       )
     #endif
@@ -3234,7 +3234,7 @@ emmc_response_t emmc_transfer_block(
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT(
-        "Data command called with buffer size %zd not a multiple of block size %"PRId32"\r\n",
+        "Data command called with buffer size %zu not a multiple of block size %"PRId32"\r\n",
         buffer_size, device->block_size
       )
     #endif

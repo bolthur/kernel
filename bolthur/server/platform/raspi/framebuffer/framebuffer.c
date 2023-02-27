@@ -173,7 +173,7 @@ bool framebuffer_init( void ) {
     physical_height = FRAMEBUFFER_SCREEN_HEIGHT;
   }
   EARLY_STARTUP_PRINT(
-    "Using resolution %ldx%ld\r\n",
+    "Using resolution %"PRIu32"x%"PRIu32"\r\n",
     physical_width,
     physical_height
   )

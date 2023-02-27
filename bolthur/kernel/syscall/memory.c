@@ -180,7 +180,7 @@ void syscall_memory_acquire( void* context ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
         "mapping %#"PRIx64" to address %#"PRIxPTR
-        " with type %d, flag %d and len %x\r\n",
+        " with type %d, flag %"PRIu32" and len %zx\r\n",
         phys,
         start,
         map_type,
@@ -364,7 +364,7 @@ void syscall_memory_shared_attach( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall_memory_shared_attach( %d, %#"PRIxPTR" )\r\n",
+      "syscall_memory_shared_attach( %zu, %#"PRIxPTR" )\r\n",
       id,
       start
     )

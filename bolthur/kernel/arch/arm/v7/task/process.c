@@ -295,7 +295,8 @@ uintptr_t task_process_prepare_init_arch( task_process_t* proc ) {
   // debug output
   #if defined( PRINT_PROCESS )
     uintptr_t fdt_end = fdt_start + fdt_size;
-    DEBUG_OUTPUT( "start: %#lx, end: %#lx\r\n", fdt_start, fdt_end )
+    DEBUG_OUTPUT( "start: %#"PRIxPTR", end: %#"PRIxPTR"\r\n",
+      fdt_start, fdt_end )
   #endif
   // round up size
   size_t rounded_fdt_size = ROUND_UP_TO_FULL_PAGE( fdt_size );

@@ -174,7 +174,7 @@ void syscall_process_replace( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall_process_replace( %p, %p, %p )\r\n",
+      "syscall_process_replace( %"PRIxPTR", %p, %p )\r\n",
       addr,
       argv,
       env

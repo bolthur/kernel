@@ -19,7 +19,6 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-
 #include "../lib/assert.h"
 #include "../lib/inttypes.h"
 #if defined( PRINT_MM_PHYS )
@@ -93,7 +92,7 @@ void phys_mark_page_used( uint64_t address ) {
     #if defined( PRINT_MM_PHYS )
       DEBUG_OUTPUT(
         "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
-        "address: %#"PRIx64", bitmap[ %04"PRIu64" ]: %#x\r\n",
+        "address: %#"PRIx64", bitmap[ %04"PRIu64" ]: %"PRIx32"\r\n",
         frame, index, offset, address, index, phys_dma_bitmap[ index ]
       )
     #endif
@@ -105,7 +104,7 @@ void phys_mark_page_used( uint64_t address ) {
     #if defined( PRINT_MM_PHYS )
       DEBUG_OUTPUT(
         "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
-        "address: %#"PRIx64", phys_bitmap[ %04"PRIu64" ]: %#x\r\n",
+        "address: %#"PRIx64", phys_bitmap[ %04"PRIu64" ]: %"PRIx32"\r\n",
         frame, index, offset, address, index, phys_bitmap[ index ]
       )
     #endif
@@ -137,7 +136,7 @@ void phys_mark_page_free( uint64_t address ) {
     #if defined( PRINT_MM_PHYS )
       DEBUG_OUTPUT(
         "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
-        "address: %#"PRIx64", phys_bitmap[ %04"PRIu64" ]: %#x\r\n",
+        "address: %#"PRIx64", phys_bitmap[ %04"PRIu64" ]: %"PRIx32"\r\n",
         frame, index, offset, address, index, phys_bitmap[ index ]
       )
     #endif
@@ -152,7 +151,7 @@ void phys_mark_page_free( uint64_t address ) {
     #if defined( PRINT_MM_PHYS )
       DEBUG_OUTPUT(
         "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
-        "address: %#"PRIx64", phys_bitmap[ %04"PRIu64" ]: %#x\r\n",
+        "address: %#"PRIx64", phys_bitmap[ %04"PRIu64" ]: %"PRIx32"\r\n",
         frame, index, offset, address, index, phys_bitmap[ index ]
       )
     #endif
@@ -182,7 +181,7 @@ void phys_mark_page_free_check( uint64_t address ) {
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
       "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
-      "address: %#"PRIx64", phys_bitmap_check[ %04"PRIu64" ]: %#x\r\n",
+      "address: %#"PRIx64", phys_bitmap_check[ %04"PRIu64" ]: %#"PRIx32"\r\n",
       frame, index, offset, address, index, phys_bitmap_check[ index ]
     )
   #endif

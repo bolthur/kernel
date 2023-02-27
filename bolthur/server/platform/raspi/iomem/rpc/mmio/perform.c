@@ -316,7 +316,7 @@ void rpc_handle_mmio_perform(
     }
     #if defined( RPC_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT(
-        "( *request )[ %zd ].type = %d\r\n",
+        "( *request )[ %zu ].type = %d\r\n",
         i,
         ( *request )[ i ].type
       )

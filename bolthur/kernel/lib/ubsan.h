@@ -22,7 +22,6 @@
 
 #include <stdint.h>
 
-
 typedef struct ubsan_source_location ubsan_source_location_t;
 typedef struct ubsan_type_descriptor ubsan_type_descriptor_t;
 typedef struct ubsan_out_of_bounds_data ubsan_out_of_bounds_data_t;

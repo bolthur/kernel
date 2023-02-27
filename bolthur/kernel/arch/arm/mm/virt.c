@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../../../lib/inttypes.h"
 #include "../../../lib/assert.h"
 #if defined( PRINT_MM_VIRT )
   #include "../../../debug/debug.h"
@@ -108,7 +109,7 @@ void virt_setup_supported_modes( void ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "reg = %#x, virt_supported_mode = %#x\r\n",
+        "reg = %#"PRIx32", virt_supported_mode = %#"PRIx32"\r\n",
         reg,
         virt_supported_mode
       )
@@ -123,7 +124,7 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#x\r\n", reg )
+      DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg )
     #endif
 
     // get only cpu address bus size
@@ -131,7 +132,7 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#x\r\n", reg )
+      DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg )
     #endif
 
     // set paging to v7 short descriptor if more

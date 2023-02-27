@@ -211,14 +211,14 @@ void* dl_lookup_symbol( dl_image_handle_ptr_t handle, const char* name ) {
     uint32_t nchain = current->hash.nchain;
     uint32_t* buckets = &current->hash.table[ 2 ];
     uint32_t* chain = &current->hash.table[ 2 + nbucket ];
-    uint32_t index = buckets[ hash % nbucket ];
-    while ( index != STN_UNDEF) {
+    uint32_t chain_index = buckets[ hash % nbucket ];
+    while ( chain_index != STN_UNDEF) {
       // skip if wrong
-      if ( index > nchain) {
+      if ( chain_index > nchain) {
         break;
       }
       // get symbol
-      Elf32_Sym* sym = &current->symtab[ index ];
+      Elf32_Sym* sym = &current->symtab[ chain_index ];
       // skip if wrong
       if ( sym->st_name > current->strsz ) {
         break;
@@ -243,7 +243,7 @@ void* dl_lookup_symbol( dl_image_handle_ptr_t handle, const char* name ) {
         }
       }
       // next index
-      index = chain[ index ];
+      chain_index = chain[ chain_index ];
     }
     // next handle
     current = current->next;

@@ -124,9 +124,9 @@ task_thread_t* task_thread_create(
   // set stack pointer
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "%#x / %#x\r\n",
-      stack_virtual + STACK_SIZE - sizeof( int ),
-      stack_virtual + STACK_SIZE - alignof( max_align_t )
+      "%#"PRIxPTR" / %#"PRIxPTR"\r\n",
+      ( uintptr_t )( stack_virtual + STACK_SIZE - sizeof( int ) ),
+      ( uintptr_t )( stack_virtual + STACK_SIZE - alignof( max_align_t ) )
     )
   #endif
   current_context->reg.sp = stack_virtual + STACK_SIZE - alignof( max_align_t );

@@ -693,7 +693,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
-      "block_size = %zx, is_write = %zd, buffer = %p\r\n",
+      "block_size = %zx, is_write = %zu, buffer = %p\r\n",
       block_size,
       block_count,
       ( void* )buffer
@@ -719,7 +719,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
-      "is_read = %d, is_write = %d, necessary_word = %zd\r\n",
+      "is_read = %d, is_write = %d, necessary_word = %zu\r\n",
       is_read ? 1 : 0,
       is_write ? 1 : 0,
       necessary_word
@@ -797,7 +797,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
     necessary_word -= word_count;
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Amount of words to read: %zd\r\n", word_count )
+      EARLY_STARTUP_PRINT( "Amount of words to read: %zu\r\n", word_count )
     #endif
     // build read sequence with word count
     // allocate sequence
@@ -963,7 +963,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
-      "sequence_entry_count = %zd\r\n",
+      "sequence_entry_count = %zu\r\n",
       sequence_entry_count
     )
   #endif
@@ -2499,7 +2499,7 @@ sdhost_response_t sdhost_transfer_block(
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "block_number = %ld\r\n", block_number )
-    EARLY_STARTUP_PRINT( "buffer_size = %d\r\n", buffer_size )
+    EARLY_STARTUP_PRINT( "buffer_size = %zu\r\n", buffer_size )
     EARLY_STARTUP_PRINT( "block_size = %ld\r\n", device->block_size )
   #endif
   // Minimum transfer size is one block ( HCSS 3.7.2.1 )
@@ -2507,7 +2507,7 @@ sdhost_response_t sdhost_transfer_block(
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT(
-        "Data command called with buffer size %zd less than block size %"PRId32"\r\n",
+        "Data command called with buffer size %zu less than block size %"PRId32"\r\n",
         buffer_size, device->block_size
       )
     #endif
@@ -2519,7 +2519,7 @@ sdhost_response_t sdhost_transfer_block(
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT(
-        "Data command called with buffer size %zd not a multiple of block size %"PRId32"\r\n",
+        "Data command called with buffer size %zu not a multiple of block size %"PRId32"\r\n",
         buffer_size, device->block_size
       )
     #endif

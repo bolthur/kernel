@@ -133,7 +133,7 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
     DEBUG_OUTPUT(
       "Called event_bind( %d, %#"PRIxPTR", %s )\r\n",
       type,
-      callback,
+      ( uintptr_t )callback,
       post ? "true" : "false"
     )
   #endif

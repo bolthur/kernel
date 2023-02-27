@@ -44,7 +44,7 @@ const char* type_check_kind[] = {
  * @param location
  */
 static void print( ubsan_source_location_t* location ) {
-  printf( "\tfile: %s\r\n\tline: %u\r\n\tcolumn: %u\r\n",
+  printf( "\tfile: %s\r\n\tline: %"PRIu32"\r\n\tcolumn: %"PRIu32"\r\n",
     location->file, location->line, location->column );
 }
 
@@ -139,7 +139,11 @@ noreturn void __ubsan_handle_pointer_overflow(
   uint64_t before,
   uint64_t after
 ) {
-  printf( "pointer overflow!\r\nbefore: %llu, after: %llu\r\n", before, after );
+  printf(
+    "pointer overflow!\r\nbefore: %"PRIu64", after: %"PRIu64"\r\n",
+    before,
+    after
+  );
   // print location
   print( &data->location );
   // abort execution
@@ -154,12 +158,12 @@ noreturn void __ubsan_handle_pointer_overflow(
  * @param right
  */
 noreturn void __ubsan_handle_add_overflow(
-  __maybe_unused ubsan_overflow_data_t* data,
-  __maybe_unused uint64_t left,
-  __maybe_unused uint64_t right
+  ubsan_overflow_data_t* data,
+  uint64_t left,
+  uint64_t right
 ) {
   printf(
-    "add overflow!\r\ntype: %s, value: %llu, value: %llu\r\n",
+    "add overflow!\r\ntype: %s, value: %"PRIu64", value: %"PRIu64"\r\n",
     data->type->name, left, right );
   // print location
   print( &data->location );
@@ -180,7 +184,7 @@ noreturn void __ubsan_handle_sub_overflow(
   uint64_t right
 ) {
   printf(
-    "sub overflow!\r\ntype: %s, value: %llu, value: %llu\r\n",
+    "sub overflow!\r\ntype: %s, value: %"PRIu64", value: %"PRIu64"\r\n",
     data->type->name, left, right );
   // print location
   print( &data->location );
@@ -196,12 +200,12 @@ noreturn void __ubsan_handle_sub_overflow(
  * @param right
  */
 noreturn void __ubsan_handle_mul_overflow(
-  __maybe_unused ubsan_overflow_data_t* data,
-  __maybe_unused uint64_t left,
-  __maybe_unused uint64_t right
+  ubsan_overflow_data_t* data,
+  uint64_t left,
+  uint64_t right
 ) {
   printf(
-    "mul overflow!\r\ntype: %s, value: %llu, value: %llu\r\n",
+    "mul overflow!\r\ntype: %s, value: %"PRIu64", value: %"PRIu64"\r\n",
     data->type->name, left, right );
   // print location
   print( &data->location );
@@ -222,7 +226,7 @@ noreturn void __ubsan_handle_divrem_overflow(
   uint64_t right
 ) {
   printf(
-    "divrem overflow!\r\ntype: %s, value: %llu, value: %llu\r\n",
+    "divrem overflow!\r\ntype: %s, value: %"PRIu64", value: %"PRIu64"\r\n",
     data->type->name, left, right );
   // print location
   print( &data->location );
@@ -243,7 +247,7 @@ noreturn void __ubsan_handle_shift_out_of_bounds(
   uint64_t right
 ) {
   printf(
-    "Shift out of bounds!\r\nleft: %s, value: %llu, right: %s, value: %llu\r\n",
+    "Shift out of bounds!\r\nleft: %s, value: %"PRIu64", right: %s, value: %"PRIu64"\r\n",
     data->left->name, left, data->right->name, right );
   // print location
   print( &data->location );
@@ -261,7 +265,7 @@ noreturn void __ubsan_handle_out_of_bounds(
   ubsan_out_of_bounds_data_t* data,
   uint64_t index
 ) {
-  printf( "Out of bounds!\r\narray_type: %s, index: %llu\r\n",
+  printf( "Out of bounds!\r\narray_type: %s, index: %"PRIu64"\r\n",
     data->array->name, index );
   // print location
   print( &data->location );
@@ -276,10 +280,10 @@ noreturn void __ubsan_handle_out_of_bounds(
  * @param value
  */
 noreturn void __ubsan_handle_load_invalid_value(
-  __maybe_unused ubsan_invalid_value_data_t* data,
-  __maybe_unused uint64_t value
+  ubsan_invalid_value_data_t* data,
+  uint64_t value
 ) {
-  printf( "Load invalid value!\r\narray_type: %s, index: %llu\r\n",
+  printf( "Load invalid value!\r\narray_type: %s, index: %"PRIu64"\r\n",
     data->type->name, value );
   // print location
   print( &data->location );
@@ -294,10 +298,10 @@ noreturn void __ubsan_handle_load_invalid_value(
  * @param value
  */
 noreturn void __ubsan_handle_negate_overflow(
-  __maybe_unused ubsan_overflow_data_t* data,
-  __maybe_unused uint64_t value
+  ubsan_overflow_data_t* data,
+  uint64_t value
 ) {
-  printf( "Negate value overflow!\r\narray_type: %s, index: %llu\r\n",
+  printf( "Negate value overflow!\r\narray_type: %s, index: %"PRIu64"\r\n",
     data->type->name, value );
   // print location
   print( &data->location );

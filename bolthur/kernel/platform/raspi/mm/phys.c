@@ -55,37 +55,37 @@ bool phys_platform_init( void ) {
   raspi_mailbox_property_t* buffer = mailbox_property_get( TAG_GET_ARM_MEMORY );
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length )
+    DEBUG_OUTPUT( "buffer->byte_length: %"PRId32"\r\n", buffer->byte_length )
     DEBUG_OUTPUT(
-      "buffer->data.buffer_u32[ 0 ]: %#x\r\n",
+      "buffer->data.buffer_u32[ 0 ]: %#"PRIx32"\r\n",
       buffer->data.buffer_u32[ 0 ]
     )
     DEBUG_OUTPUT(
-      "buffer->data.buffer_u32[ 1 ]: %#x\r\n",
+      "buffer->data.buffer_u32[ 1 ]: %#"PRIx32"\r\n",
       buffer->data.buffer_u32[ 1 ]
     )
-    DEBUG_OUTPUT( "buffer->tag: %#x\r\n", buffer->tag )
+    DEBUG_OUTPUT( "buffer->tag: %#"PRIx32"\r\n", ( uint32_t )buffer->tag )
   #endif
   // increase amount by arm amount
   memory_amount = buffer->data.buffer_u32[ 1 ];
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "memory amount: %#x\r\n", memory_amount )
+    DEBUG_OUTPUT( "memory amount: %"PRIx32"\r\n", memory_amount )
   #endif
   // get video core memory
   buffer = mailbox_property_get( TAG_GET_VC_MEMORY );
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "buffer->byte_length: %d\r\n", buffer->byte_length )
+    DEBUG_OUTPUT( "buffer->byte_length: %"PRId32"\r\n", buffer->byte_length )
     DEBUG_OUTPUT(
-      "buffer->data.buffer_u32[ 0 ]: %#x\r\n",
+      "buffer->data.buffer_u32[ 0 ]: %"PRIx32"\r\n",
       buffer->data.buffer_u32[ 0 ]
     )
     DEBUG_OUTPUT(
-      "buffer->data.buffer_u32[ 1 ]: %#x\r\n",
+      "buffer->data.buffer_u32[ 1 ]: %"PRIx32"\r\n",
       buffer->data.buffer_u32[ 1 ]
     )
-    DEBUG_OUTPUT( "buffer->tag: %#x\r\n", buffer->tag )
+    DEBUG_OUTPUT( "buffer->tag: %"PRIx32"\r\n", ( uint32_t )buffer->tag )
   #endif
   // populate video core start and end
   vc_memory_start = buffer->data.buffer_u32[ 0 ];
@@ -94,7 +94,7 @@ bool phys_platform_init( void ) {
   memory_amount += buffer->data.buffer_u32[ 1 ];
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "memory amount: %#x\r\n", memory_amount )
+    DEBUG_OUTPUT( "memory amount: %#"PRIx32"\r\n", memory_amount )
   #endif
 
   // determine amount of pages for bitmap
@@ -114,8 +114,8 @@ bool phys_platform_init( void ) {
   }
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "total memory amount: %#x\r\n", memory_amount )
-    DEBUG_OUTPUT( "bitmap length: %u\r\n", phys_bitmap_length )
+    DEBUG_OUTPUT( "total memory amount: %#"PRIx32"\r\n", memory_amount )
+    DEBUG_OUTPUT( "bitmap length: %"PRIu32"\r\n", phys_bitmap_length )
     DEBUG_OUTPUT( "phys bitmap address: %p\r\n", phys_bitmap )
     DEBUG_OUTPUT( "content of __kernel_start: %p\r\n", &__kernel_start )
     DEBUG_OUTPUT( "content of __kernel_end: %p\r\n", &__kernel_end )
@@ -199,7 +199,7 @@ bool phys_dma_init( void ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "phys dma bitmap address: %p\r\n", phys_dma_bitmap )
-    DEBUG_OUTPUT( "phys dma length: %u\r\n", phys_dma_length )
+    DEBUG_OUTPUT( "phys dma length: %"PRIu32"\r\n", phys_dma_length )
   #endif
   // clear area
   memset( phys_dma_bitmap, 0, phys_dma_length );
@@ -211,7 +211,7 @@ bool phys_dma_init( void ) {
   }
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "dma_start: %#llx\r\n", dma_start )
+    DEBUG_OUTPUT( "dma_start: %#"PRIx64"\r\n", dma_start )
     DEBUG_OUTPUT( "dma_size: %zu\r\n", dma_size )
   #endif
   // set start and end of dma

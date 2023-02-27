@@ -230,10 +230,10 @@ static uintptr_t map_temporary( uint64_t start, size_t size ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "start = %#"PRIx64", page_amount = %u, offset = %#"PRIx32"\r\n",
+      "start = %#"PRIx64", page_amount = %"PRIu32", offset = %#"PRIx32"\r\n",
       start,
       page_amount,
-      ( uintptr_t )offset
+      offset
     )
   #endif
 
@@ -293,8 +293,8 @@ static uintptr_t map_temporary( uint64_t start, size_t size ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "addr = %#"PRIxPTR", table_idx_offset = %u, table_idx = %u, "
-        "page_idx = %u\r\n",
+        "addr = %#"PRIxPTR", table_idx_offset = %"PRIu32", table_idx = %"PRIu32", "
+        "page_idx = %"PRIu32"\r\n",
         addr,
         table_idx_offset,
         table_idx,
@@ -341,7 +341,10 @@ static uintptr_t map_temporary( uint64_t start, size_t size ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "ret = %#"PRIxPTR"\r\n", start_address + offset )
+    DEBUG_OUTPUT(
+      "ret = %#"PRIxPTR"\r\n",
+      ( uintptr_t )( start_address + offset )
+    )
   #endif
 
   // return address with offset
@@ -376,7 +379,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "page_amount = %u - table_idx_offset = %u\r\n",
+      "page_amount = %"PRIu32" - table_idx_offset = %"PRIu32"\r\n",
       page_amount,
       table_idx_offset
     )
@@ -482,7 +485,7 @@ uint64_t v7_long_create_table(
       "create long descriptor table for address %#"PRIxPTR"\r\n",
       addr
     )
-    DEBUG_OUTPUT( "pmd_idx = %u, tbl_idx = %u\r\n", pmd_idx, tbl_idx )
+    DEBUG_OUTPUT( "pmd_idx = %"PRIu32", tbl_idx = %"PRIu32"\r\n", pmd_idx, tbl_idx )
   #endif
 
   // get context
@@ -669,7 +672,7 @@ bool v7_long_map(
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table: %p\r\n", table )
     DEBUG_OUTPUT(
-      "table->page[ %u ] = %#"PRIx64"\r\n",
+      "table->page[ %"PRIu32" ] = %#"PRIx64"\r\n",
       page_idx,
       table->page[ page_idx ].raw
     )
@@ -734,7 +737,7 @@ bool v7_long_map(
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "table->page[ %u ].data.raw = %#"PRIx64"\r\n",
+      "table->page[ %"PRIu32" ].data.raw = %#"PRIx64"\r\n",
       page_idx,
       table->page[ page_idx ].raw
     )
@@ -888,7 +891,7 @@ bool v7_long_set_context( virt_context_t* ctx ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "low = %#x, high = %#x\r\n", low, high )
+    DEBUG_OUTPUT( "low = %#"PRIx32", high = %#"PRIx32"\r\n", low, high )
     if ( 0 == ( context & 0x3 ) ) {
       DEBUG_OUTPUT( "ADDRESS IS 32bit aligned!\r\n" )
     }
@@ -1055,7 +1058,7 @@ bool v7_long_prepare_temporary( virt_context_t* ctx ) {
   }
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "mapped_temporary_tables = %u\r\n", mapped_temporary_tables )
+    DEBUG_OUTPUT( "mapped_temporary_tables = %"PRIu32"\r\n", mapped_temporary_tables )
   #endif
   return true;
 }
@@ -1545,14 +1548,10 @@ bool v7_long_destroy_context( virt_context_t* ctx, bool unmap_only ) {
 void v7_long_prepare( void ) {
   // populate mair0
   uint32_t mair0 =
-    // device nGnRnE / strongly ordered
-    0x00u << 0
-    // device nGnRE
-    | 0x04u << 8
-    // normal non cacheable
-    | 0x44u << 16
-    // normal
-    | 0xffu << 24;
+    0x00u << 0 // device nGnRnE / strongly ordered
+    | 0x04u << 8 // device nGnRE
+    | 0x44u << 16 // normal non cacheable
+    | 0xffu << 24; // normal
   // populate mair 0 and mair 1
   __asm__ __volatile__(
     "mcr p15, 0, %0, c10, c2, 0"
@@ -1566,8 +1565,8 @@ void v7_long_prepare( void ) {
   );
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "mair0 = %#x\r\n", mair0 )
-    DEBUG_OUTPUT( "mair1 = %#x\r\n", mair0 )
+    DEBUG_OUTPUT( "mair0 = %#"PRIx32"\r\n", mair0 )
+    DEBUG_OUTPUT( "mair1 = %#"PRIx32"\r\n", mair0 )
   #endif
 }
 
@@ -1602,7 +1601,7 @@ bool v7_long_is_mapped_in_context( virt_context_t* ctx, uintptr_t addr ) {
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table: %p\r\n", table )
     DEBUG_OUTPUT(
-      "table->page[ %u ].raw = %#"PRIx64"\r\n",
+      "table->page[ %"PRIu32" ].raw = %#"PRIx64"\r\n",
       page_idx,
       table->page[ page_idx ].raw
     )
@@ -1657,7 +1656,7 @@ uint64_t v7_long_get_mapped_address_in_context(
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table: %p\r\n", table )
     DEBUG_OUTPUT(
-      "table->page[ %u ].raw = %#"PRIx64"\r\n",
+      "table->page[ %"PRIu32" ].raw = %#"PRIx64"\r\n",
       page_idx,
       table->page[ page_idx ].raw
     )

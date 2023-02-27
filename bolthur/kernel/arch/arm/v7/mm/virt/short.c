@@ -197,7 +197,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "start = %#"PRIxPTR", page_amount = %u, offset = %#"PRIxPTR"\r\n",
+      "start = %#"PRIxPTR", page_amount = %"PRIu32", offset = %#"PRIxPTR"\r\n",
       start,
       page_amount,
       offset
@@ -259,7 +259,8 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "table_idx = %u, page_idx = %u\r\n", table_idx, page_idx )
+      DEBUG_OUTPUT( "table_idx = %"PRIu32", page_idx = %"PRIu32"\r\n",
+        table_idx, page_idx )
     #endif
 
     // get table
@@ -326,7 +327,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "page_amount = %u - table_idx_offset = %u\r\n",
+      "page_amount = %"PRIu32" - table_idx_offset = %"PRIu32"\r\n",
       page_amount,
       table_idx_offset
     )
@@ -412,7 +413,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       for ( size_t i = 0; i < max_addr; i++ ) {
-        DEBUG_OUTPUT( " addr[ %d ] = %#"PRIxPTR"\r\n", i,  addr[ i ] )
+        DEBUG_OUTPUT( " addr[ %zu ] = %#"PRIxPTR"\r\n", i,  addr[ i ] )
       }
     #endif
     // return here
@@ -511,7 +512,7 @@ uint64_t v7_short_create_table(
       // debug output
       #if defined( PRINT_MM_VIRT )
         DEBUG_OUTPUT(
-          "context->table[ %u ].data.raw = %#x\r\n",
+          "context->table[ %"PRIu32" ].data.raw = %#"PRIx32"\r\n",
           table_idx,
           context->table[ table_idx ].raw
         )
@@ -545,7 +546,7 @@ uint64_t v7_short_create_table(
         "created kernel table physical address = %#"PRIxPTR"\r\n",
         tbl
       )
-      DEBUG_OUTPUT( "table_idx = %u\r\n", table_idx )
+      DEBUG_OUTPUT( "table_idx = %"PRIu32"\r\n", table_idx )
     #endif
 
     // add table to context
@@ -559,7 +560,7 @@ uint64_t v7_short_create_table(
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "context->table[ %u ].data.raw = %#x\r\n",
+        "context->table[ %"PRIu32" ].data.raw = %#"PRIx32"\r\n",
         table_idx,
         context->table[ table_idx ].raw
       )
@@ -588,7 +589,7 @@ uint64_t v7_short_create_table(
       // debug output
       #if defined( PRINT_MM_VIRT )
         DEBUG_OUTPUT(
-          "context->table[ %u ].data.raw = %#x\r\n",
+          "context->table[ %"PRIu32" ].data.raw = %#"PRIx32"\r\n",
           table_idx,
           context->table[ table_idx ].raw
         )
@@ -632,7 +633,7 @@ uint64_t v7_short_create_table(
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "context->table[ %u ].data.raw = %#x\r\n",
+        "context->table[ %"PRIu32" ].data.raw = %#"PRIx32"\r\n",
         table_idx,
         context->table[ table_idx ].raw
       )
@@ -694,7 +695,7 @@ bool v7_short_map(
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table: %p\r\n", table )
     DEBUG_OUTPUT(
-      "table->page[ %u ].raw = %#x\r\n",
+      "table->page[ %"PRIu32" ].raw = %#"PRIx32"\r\n",
       page_idx,
       table->page[ page_idx ].raw
     )
@@ -771,7 +772,7 @@ bool v7_short_map(
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "table->page[ %u ].raw = %#x\r\n",
+      "table->page[ %"PRIu32" ].raw = %#"PRIx32"\r\n",
       page_idx,
       table->page[ page_idx ].raw
     )
@@ -1039,13 +1040,13 @@ bool v7_short_prepare_temporary( virt_context_t* ctx ) {
     #if defined( PRINT_MM_VIRT )
       if ( tbl != prev_tbl ) {
         DEBUG_OUTPUT(
-          "tbl = %#"PRIxPTR", offset = %u, start = %u\r\n",
+          "tbl = %#"PRIxPTR", offset = %"PRIu32", start = %"PRIu32"\r\n",
           tbl,
           offset,
           start
         )
         DEBUG_OUTPUT(
-          "table = %#"PRIxPTR", calculated offset = %x\r\n",
+          "table = %#"PRIxPTR", calculated offset = %"PRIx32"\r\n",
           table,
           ( offset - start ) * SD_TBL_SIZE
         )
@@ -1468,7 +1469,7 @@ void v7_short_prepare( void ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "reg = %#x\r\n", reg )
+    DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg )
   #endif
 
   // set access flag to 1 within sctlr
@@ -1478,7 +1479,7 @@ void v7_short_prepare( void ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "reg = %#x\r\n", reg )
+    DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg )
   #endif
 
   // write back changes
@@ -1525,7 +1526,7 @@ bool v7_short_is_mapped_in_context( virt_context_t* ctx, uintptr_t addr ) {
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table: %p\r\n", table )
     DEBUG_OUTPUT(
-      "table->page[ %u ] = %#x\r\n",
+      "table->page[ %"PRIu32" ] = %#"PRIx32"\r\n",
       page_idx, table->page[ page_idx ].raw
     )
   #endif
@@ -1582,7 +1583,7 @@ uint64_t v7_short_get_mapped_address_in_context(
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table: %p\r\n", table )
     DEBUG_OUTPUT(
-      "table->page[ %u ] = %#x\r\n",
+      "table->page[ %"PRIu32" ] = %#"PRIx32"\r\n",
       page_idx,
       table->page[ page_idx ].raw
     )

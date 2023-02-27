@@ -699,9 +699,7 @@ bool task_process_prepare_init( task_process_t* proc ) {
   uintptr_t proc_additional_start = task_process_prepare_init_arch( proc );
   if ( proc_additional_start ) {
     char str_additional[ 20 ];
-    sprintf(
-      str_additional, "%#"PRIxPTR"\0", proc_additional_start
-    );
+    sprintf( str_additional, "%#"PRIxPTR"\0", proc_additional_start );
 
     char* arg[] = {
       "daemon:/init", str_ramdisk, str_ramdisk_size, str_additional, NULL, };
