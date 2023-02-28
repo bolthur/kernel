@@ -43,9 +43,9 @@
     <define name="__ARMEL__=1" />
   </defines>
   <suppressions>
+    <suppression>constParameter</suppression>
     <suppression>unusedFunction</suppression>
     <suppression>unusedStructMember</suppression>
-    <suppression>ConfigurationNotChecked</suppression>
     <suppression>unmatchedSuppression</suppression>
     <suppression>objectIndex</suppression>
   </suppressions>

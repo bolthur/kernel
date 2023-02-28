@@ -28,4 +28,9 @@ extern TAR *disk;
 extern int fd_dev_manager;
 extern char* bootargs;
 
+extern pid_t own_pid;
+extern pid_t vfs_pid;
+extern pid_t dev_pid;
+extern pid_t ramdisk_pid;
+
 #endif

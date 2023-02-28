@@ -30,6 +30,10 @@
 #include "../global.h"
 #include "../../libhelper.h"
 
+pid_t vfs_pid = 2;
+pid_t dev_pid = 3;
+pid_t ramdisk_pid = 4;
+
 /**
  * @fn void init_stage1(void)
  * @brief Stage 1 init with start of necessary stuff ( VFS, DEV, and RAMDISK )

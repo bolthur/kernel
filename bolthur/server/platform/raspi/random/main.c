@@ -53,7 +53,6 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
 
-
   if ( !dev_add_file( "/dev/urandom", NULL, 0 ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;

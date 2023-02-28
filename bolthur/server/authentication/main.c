@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <dlfcn.h>
 #include <sys/bolthur.h>
+#include "../libhelper.h"
 
 /**
  * @fn int main(int, char*[])
@@ -29,8 +30,27 @@
  * @param argv
  * @return
  */
-int main( __unused int argc, __unused char* argv[] ) {
+int main( int argc, char* argv[] ) {
   // print something
   EARLY_STARTUP_PRINT( "authentication manager processing!\r\n" )
-  return -1;
+  if ( 2 <= argc ) {
+    EARLY_STARTUP_PRINT( "Registering following pids with root user\r\n" )
+    for ( int i = 1; i < argc; i++ ) {
+      EARLY_STARTUP_PRINT( "pid: %s\r\n", argv[ i ] )
+    }
+  }
+
+  if ( !dev_add_file( "/dev/authentication", NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev authenticate\r\n" )
+    return -1;
+  }
+
+  // enable rpc
+  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  _syscall_rpc_set_ready( true );
+
+  // wait for rpc
+  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  bolthur_rpc_wait_block();
+  return 0;
 }

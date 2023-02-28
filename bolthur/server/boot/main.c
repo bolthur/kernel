@@ -44,7 +44,7 @@ uintptr_t ramdisk_decompressed;
 size_t ramdisk_decompressed_size;
 size_t ramdisk_shared_id;
 size_t ramdisk_read_offset = 0;
-pid_t pid = 0;
+pid_t own_pid = 0;
 TAR *disk = NULL;
 int fd_dev_manager = 0;
 // variables
@@ -161,14 +161,14 @@ int main( int argc, char* argv[] ) {
   // debug print
   EARLY_STARTUP_PRINT( "boot processing\r\n" );
   // get current pid
-  pid = getpid();
+  own_pid = getpid();
   // ensure first process to be started
-  if ( 1 != pid ) {
+  if ( 1 != own_pid ) {
     EARLY_STARTUP_PRINT( "boot needs to have pid 1\r\n" )
     return -1;
   }
   // debug print
-  EARLY_STARTUP_PRINT( "Started with pid %d\r\n", pid );
+  EARLY_STARTUP_PRINT( "Started with pid %d\r\n", own_pid );
 
   // allocate message structure
   vfs_add_request_t* msg = malloc( sizeof( *msg ) );

@@ -231,7 +231,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   // variable for next queue
   task_priority_queue_t* next_queue = NULL;
   // get queue of next thread
-  while ( next_thread && ! next_queue ) {
+  while ( ! next_queue ) {
     next_queue = task_queue_get_queue( process_manager, next_thread->priority );
   }
 

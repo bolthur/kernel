@@ -311,7 +311,6 @@ int dl_lookup_library( char* buffer, size_t buffer_size, const char* file ) {
   ) {
     char* p = buffer;
     size_t size_part = strlen( part );
-    size_t size_file = strlen( file );
     size_t buffer_size_backup = buffer_size;
     // copy first part of path
     strncpy( p, part, buffer_size_backup );
@@ -323,8 +322,6 @@ int dl_lookup_library( char* buffer, size_t buffer_size, const char* file ) {
     p++;
     // copy file
     strncpy( p, file, buffer_size_backup );
-    buffer_size_backup -= size_file;
-    p += size_file;
     // try to open
     int fd = open( buffer, O_RDONLY );
     // stop if found
@@ -1084,9 +1081,8 @@ void dl_handle_rel_symbol( dl_image_handle_ptr_t handle, void* address, size_t s
       *target = ( uint32_t )symbol_value;
     } else {
       // determine relocation address
-      uint32_t* relocation = ( uint32_t* )rel->r_offset;
       if ( handle->relocated ) {
-        relocation = ( uint32_t* )( handle->memory_start + rel->r_offset );
+        uint32_t* relocation = ( uint32_t* )( handle->memory_start + rel->r_offset );
         *relocation += ( uint32_t )handle->memory_start;
       }
     }

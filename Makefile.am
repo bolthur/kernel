@@ -11,7 +11,7 @@ cppcheck:
 		--include=$(CPPCHECK_KERNEL_INCLUDE) \
 		--project=$(CPPCHECK_KERNEL_PROJECT) \
 		-U__CYGWIN__ -U__APPLE__ -U__GNU_VISIBLE -UASSEMBLER_FILE -UVMS \
-		-U__restrict__ -U_BSD_RUNE_T_ -v -j4 --force --max-configs=12
+		-v -j4 --force --max-configs=12
 	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
 		--platform=$(CPPCHECK_PLATFORM) \
 		--include=$(CPPCHECK_LIBRARY_INCLUDE) \

@@ -17,10 +17,10 @@
 # along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from std/os import fileExists, dirExists, createDir, copyDir, copyFile, removeFile, joinPath, getCurrentDir, walkDirRec, pcFile, pcDir, getFileInfo
-from std/strutils import intToStr, find, endsWith, replace
-from std/math import pow
-from std/osproc import execCmdEx
+import std/os
+import std/strutils
+import std/math
+import std/osproc
 
 var mega: int = int( pow( 2.0, 20.0 ) )
 
@@ -110,8 +110,11 @@ proc createPlainImageFile*( imageType: string, rootPath: string ): void =
   createDir( joinPath( rootDirectoryPath, "boot" ) )
   createDir( rootEtcDirectoryPath )
   createDir( joinPath( rootDirectoryPath, "root" ) )
-  # copy fstab to partition root etc folder
-  copyFile( joinPath( getCurrentDir(), "file", imageType, "fstab" ), joinPath( rootEtcDirectoryPath, "fstab" ) )
+  # copy default root folder stuff
+  let rootFileStuff: string = joinPath( getCurrentDir(), "file", imageType, "root" )
+  for file in walkDirRec( rootFileStuff, { pcFile } ):
+    var fileDestination = file.replace( rootFileStuff, "" )
+    copyFile( file, joinPath(rootDirectoryPath, fileDestination ) )
   if "raspi" == imageType:
     # copy necessary stuff to boot partition
     let configFile: string = joinPath( rootPath, "build-aux", "platform", imageType, "config.txt" )

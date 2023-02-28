@@ -1548,8 +1548,8 @@ bool v7_long_destroy_context( virt_context_t* ctx, bool unmap_only ) {
 void v7_long_prepare( void ) {
   // populate mair0
   uint32_t mair0 =
-    0x00u << 0 // device nGnRnE / strongly ordered
-    | 0x04u << 8 // device nGnRE
+    /*0x00u << 0 // device nGnRnE / strongly ordered
+    |*/ 0x04u << 8 // device nGnRE
     | 0x44u << 16 // normal non cacheable
     | 0xffu << 24; // normal
   // populate mair 0 and mair 1

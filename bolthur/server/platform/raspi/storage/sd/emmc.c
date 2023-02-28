@@ -353,7 +353,7 @@ static emmc_response_t controller_startup( void ) {
  *
  * @todo check why this is not working and add again or remove completely
  */
-static emmc_response_t controller_restart( void ) {
+__unused static emmc_response_t controller_restart( void ) {
   return EMMC_RESPONSE_OK;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
@@ -809,7 +809,6 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
       shift_count -= 2;
     }
     if ( ! ( value & 0x80000000 ) ) {
-      value <<= 1;
       shift_count -= 1;
     }
     // some additional restrictions
@@ -1425,10 +1424,17 @@ static void handle_card_interrupt( void ) {
   // get card status
   if ( device->card_rca ) {
     // get card status
-    __maybe_unused emmc_response_t response = issue_sd_command(
-      emmc_command_list[ EMMC_CMD_SEND_STATUS ],
-      device->card_rca << 16
-    );
+    #if defined( EMMC_ENABLE_DEBUG )
+      emmc_response_t response = issue_sd_command(
+        emmc_command_list[ EMMC_CMD_SEND_STATUS ],
+        device->card_rca << 16
+      );
+    #else
+      issue_sd_command(
+        emmc_command_list[ EMMC_CMD_SEND_STATUS ],
+        device->card_rca << 16
+      );
+    #endif
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       if ( EMMC_RESPONSE_OK != response ) {
@@ -2498,7 +2504,7 @@ emmc_response_t emmc_init( void ) {
       EARLY_STARTUP_PRINT( "Restarting emmc controller to get sane state\r\n" )
     #endif
     // shutdown controller
-    if ( EMMC_RESPONSE_OK != ( response = controller_restart() ) ) {
+    /*if ( EMMC_RESPONSE_OK != ( response = controller_restart() ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT(
@@ -2507,7 +2513,7 @@ emmc_response_t emmc_init( void ) {
         )
       #endif
       return response;
-    }
+    }*/
 
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
