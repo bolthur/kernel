@@ -3,7 +3,7 @@ AC_PREREQ([2.71])
 
 AC_INIT([bolthur-library], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-library], [https://github.com/bolthur/kernel])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2022 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2023 bolthur project])
 
 AC_CONFIG_AUX_DIR([_aux/config])
 AC_CONFIG_MACRO_DIR([../../build-aux/m4])

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -303,4 +303,3 @@ void rpc_data_queue_remove( pid_t process, size_t rpc_id ) {
     list_remove_data( target_process->rpc_data_queue, ( void* )found );
   }
 }
-
