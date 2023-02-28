@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <dlfcn.h>
 #include <sys/bolthur.h>
+#include "rpc.h"
 #include "../libhelper.h"
 
 /**
@@ -39,16 +40,20 @@ int main( int argc, char* argv[] ) {
       EARLY_STARTUP_PRINT( "pid: %s\r\n", argv[ i ] )
     }
   }
-
+  // register rpc handler
+  EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  if ( ! rpc_init() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    return -1;
+  }
+  // add device file
   if ( !dev_add_file( "/dev/authentication", NULL, 0 ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev authenticate\r\n" )
     return -1;
   }
-
   // enable rpc
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
-
   // wait for rpc
   EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
