@@ -19,7 +19,7 @@
 
 #include <errno.h>
 #include "../rpc.h"
-#include "../../libauthenticate.h"
+#include "../../libauthentication.h"
 
 /**
  * @fn bool rpc_init(void)

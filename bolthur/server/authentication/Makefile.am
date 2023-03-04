@@ -3,6 +3,7 @@ AM_CFLAGS = -DPROGRAM_NAME=\"authentication\"
 
 bin_PROGRAMS = authentication
 authentication_SOURCES = \
+  pid/node.c \
   rpc/custom/fetch.c \
   rpc/custom/request.c \
   rpc/init.c \

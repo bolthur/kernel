@@ -33,10 +33,14 @@ typedef struct {
   char user[ PATH_MAX ];
   char password[ PATH_MAX ];
   pid_t process;
-} authenticate_request_t;
+} authentication_request_request_t;
 
 typedef struct {
   pid_t process;
-} authenticate_fetch_t;
+} authentication_fetch_request_t;
+
+typedef struct {
+  uid_t uid;
+} authentication_fetch_response_t;
 
 #endif

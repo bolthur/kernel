@@ -24,7 +24,7 @@
 #include <libgen.h>
 #include <sys/bolthur.h>
 #include "../../rpc.h"
-#include "../../../libauthenticate.h"
+#include "../../../libauthentication.h"
 
 /**
  * @fn void rpc_custom_handle_request(size_t, pid_t, size_t, size_t)

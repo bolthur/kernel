@@ -21,6 +21,7 @@
 #include <dlfcn.h>
 #include <sys/bolthur.h>
 #include "rpc.h"
+#include "pid/node.h"
 #include "../libhelper.h"
 
 /**
@@ -34,10 +35,25 @@
 int main( int argc, char* argv[] ) {
   // print something
   EARLY_STARTUP_PRINT( "authentication manager processing!\r\n" )
+  // setup tree
+  EARLY_STARTUP_PRINT( "Setup management tree!\r\n" )
+  if ( ! pid_node_setup() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup management tree!\r\n" )
+    return -1;
+  }
+  // register root
   if ( 2 <= argc ) {
     EARLY_STARTUP_PRINT( "Registering following pids with root user\r\n" )
     for ( int i = 1; i < argc; i++ ) {
-      EARLY_STARTUP_PRINT( "pid: %s\r\n", argv[ i ] )
+      // transform string to pid
+      pid_t pid = ( pid_t )strtol( argv[ i ], ( char** )NULL, 10 );
+      // try to add it with user 0
+      if ( ! pid_node_add( pid, 0 ) ) {
+        EARLY_STARTUP_PRINT( "Unable to push pid %d to tree\r\n", pid )
+        return -1;
+      }
+      // some further printing
+      EARLY_STARTUP_PRINT( "pid: %s | %d\r\n", argv[ i ], pid )
     }
   }
   // register rpc handler
