@@ -28,14 +28,19 @@
  * @return
  */
 bool rpc_init( void ) {
+  bolthur_rpc_bind( RPC_VFS_FORK, rpc_handle_fork, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register fork!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( AUTHENTICATE_REQUEST, rpc_custom_handle_request, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler device start!\r\n" )
+    EARLY_STARTUP_PRINT( "Unable to register handler request!\r\n" )
     return false;
   }
   bolthur_rpc_bind( AUTHENTICATE_FETCH, rpc_custom_handle_fetch, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler device kill!\r\n" )
+    EARLY_STARTUP_PRINT( "Unable to register handler fetch!\r\n" )
     return false;
   }
   return true;

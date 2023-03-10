@@ -25,6 +25,8 @@
 
 bool rpc_init( void );
 
+void rpc_handle_fork( size_t, pid_t, size_t, size_t );
+
 void rpc_custom_handle_request( size_t, pid_t, size_t, size_t );
 void rpc_custom_handle_fetch( size_t, pid_t, size_t, size_t );
 

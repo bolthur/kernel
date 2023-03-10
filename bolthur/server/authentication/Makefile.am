@@ -6,6 +6,7 @@ authentication_SOURCES = \
   pid/node.c \
   rpc/custom/fetch.c \
   rpc/custom/request.c \
+  rpc/fork.c \
   rpc/init.c \
   main.c
 authentication_LDFLAGS = -all-static --static
