@@ -114,39 +114,87 @@ void rpc_handle_stat(
     free( request );
     return;
   }
-  // open path
-  ext4_file fd;
-  memset( &fd, 0, sizeof( fd ) );
-  result = ext4_fopen( &fd, request->file_path, "r" );
-  if ( EOK != result ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
-  // populate stats info
-  response.info.st_dev = 0;
-  response.info.st_ino = ( ino_t )fd.inode;
-  response.info.st_mode = mode;
-  response.info.st_nlink = link_cnt;
-  response.info.st_uid = ( uid_t )uid;
-  response.info.st_gid = ( gid_t )gid;
-  response.info.st_rdev = 0;
-  response.info.st_size = ( off_t )ext4_fsize( &fd );
-  response.info.st_atim.tv_sec = access_time;
-  response.info.st_atim.tv_nsec = 0;
-  response.info.st_mtim.tv_sec = modify_time;
-  response.info.st_mtim.tv_nsec = 0;
-  response.info.st_ctim.tv_sec = create_time;
-  response.info.st_ctim.tv_nsec = 0;
-  response.info.st_blksize = ( blksize_t )stats.block_size;
-  response.info.st_blocks = ( blkcnt_t )(
-    (fd.fsize + stats.block_size - 1 ) / stats.block_size
-  );
-  // close again
-  if ( EOK != ext4_fclose( &fd ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
+  ext4_dir dir;
+  memset( &dir, 0, sizeof( dir ) );
+  result = ext4_dir_open( &dir, request->file_path );
+  if ( EOK == result ) {
+    const ext4_direntry* dentry;
+    size_t count = 0;
+    while ( ( dentry = ext4_dir_entry_next( &dir ) ) ) {
+      if (
+        (
+          strlen( "." ) == strlen( ( char* )dentry->name )
+          && 0 == strcmp( ".", ( char* )dentry->name )
+        ) || (
+          strlen( ".." ) == strlen( ( char* )dentry->name )
+          && 0 == strcmp( "..", ( char* )dentry->name )
+        )
+      ) {
+        continue;
+      }
+      count++;
+    }
+    ext4_dir_entry_rewind( &dir );
+    // populate stats info
+    response.info.st_dev = 0;
+    response.info.st_ino = ( ino_t )dir.f.inode;
+    response.info.st_mode = mode;
+    response.info.st_nlink = link_cnt;
+    response.info.st_uid = ( uid_t )uid;
+    response.info.st_gid = ( gid_t )gid;
+    response.info.st_rdev = 0;
+    response.info.st_size = ( off_t )count;
+    response.info.st_atim.tv_sec = access_time;
+    response.info.st_atim.tv_nsec = 0;
+    response.info.st_mtim.tv_sec = modify_time;
+    response.info.st_mtim.tv_nsec = 0;
+    response.info.st_ctim.tv_sec = create_time;
+    response.info.st_ctim.tv_nsec = 0;
+    response.info.st_blksize = ( blksize_t )stats.block_size;
+    response.info.st_blocks = ( blkcnt_t )(
+      (dir.f.fsize + stats.block_size - 1 ) / stats.block_size
+    );
+    // close again
+    if ( EOK != ext4_dir_close( &dir ) ) {
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+  } else {
+    // open path
+    ext4_file fd;
+    memset( &fd, 0, sizeof( fd ) );
+    result = ext4_fopen( &fd, request->file_path, "r" );
+    if ( EOK != result ) {
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    // populate stats info
+    response.info.st_dev = 0;
+    response.info.st_ino = ( ino_t )fd.inode;
+    response.info.st_mode = mode;
+    response.info.st_nlink = link_cnt;
+    response.info.st_uid = ( uid_t )uid;
+    response.info.st_gid = ( gid_t )gid;
+    response.info.st_rdev = 0;
+    response.info.st_size = ( off_t )ext4_fsize( &fd );
+    response.info.st_atim.tv_sec = access_time;
+    response.info.st_atim.tv_nsec = 0;
+    response.info.st_mtim.tv_sec = modify_time;
+    response.info.st_mtim.tv_nsec = 0;
+    response.info.st_ctim.tv_sec = create_time;
+    response.info.st_ctim.tv_nsec = 0;
+    response.info.st_blksize = ( blksize_t )stats.block_size;
+    response.info.st_blocks = ( blkcnt_t )(
+      (fd.fsize + stats.block_size - 1 ) / stats.block_size
+    );
+    // close again
+    if ( EOK != ext4_fclose( &fd ) ) {
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
   }
   // populate remaining information
   response.success = true;

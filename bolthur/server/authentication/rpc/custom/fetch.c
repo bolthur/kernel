@@ -42,6 +42,7 @@ void rpc_custom_handle_fetch(
   size_t data_info,
   __unused size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "AUTHENTICATION FETCH IOCTL\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -97,6 +98,7 @@ void rpc_custom_handle_fetch(
   // create temporary response
   authentication_fetch_response_t r;
   r.uid = node->uid;
+  EARLY_STARTUP_PRINT( "uid: %d\r\n", r.uid )
   // copy over data
   memcpy( response->container, &r, sizeof( r ) );
   // return from rpc

@@ -58,21 +58,6 @@ noreturn void init_stage2( void ) {
   EARLY_STARTUP_PRINT( "Starting and waiting for sd server...\r\n" )
   pid_t sd = util_execute_device_server( "/ramdisk/server/storage/sd", "/dev/storage/sd" );
 
-  // start authentication
-  EARLY_STARTUP_PRINT( "Starting and waiting for auth server...\r\n" )
-  pid_t auth = fork();
-  if ( 0 == auth ) {
-    char* cmd[] = { "authentication", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", NULL, };
-    int result = execv( "/ramdisk/server/authentication", cmd );
-    EARLY_STARTUP_PRINT( "result = %d | %s\r\n", result, strerror( errno ) );
-    for ( int i = 0; cmd[i]; i++ ) {
-      EARLY_STARTUP_PRINT( "argv[ %d ] = %s\r\n", i, cmd[ i ] );
-    }
-    exit( 1 );
-  }
-  // wait for device
-  vfs_wait_for_path( "/dev/authentication" );
-
   // determine root device and partition type from config
   EARLY_STARTUP_PRINT( "Extracting root device and partition type from config...\r\n" )
   char* p = strtok( bootargs, " " );

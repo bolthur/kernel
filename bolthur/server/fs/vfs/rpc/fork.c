@@ -35,6 +35,8 @@
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo extend fork to route fork to /dev/authenticate
  */
 void rpc_handle_fork(
   size_t type,

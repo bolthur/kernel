@@ -22,6 +22,27 @@
 #ifndef _RIGHTS_H
 #define _RIGHTS_H
 
-void rights_fetch( size_t, pid_t, size_t, size_t, vfs_stat_response_t*, bolthur_async_data_t*, rpc_handler_t );
+typedef struct rights_check_context rights_check_context_t;
+
+typedef void ( *rights_handler_t )( rights_check_context_t*, bolthur_async_data_t* );
+
+typedef struct rights_check_context {
+  char* path;
+  size_t type;
+  pid_t origin;
+  size_t data_info;
+  rights_handler_t callback;
+  size_t request_size;
+  void* request;
+  vfs_stat_response_t* file_stat;
+  vfs_stat_response_t* authenticate_stat;
+  vfs_ioctl_perform_response_t* rights;
+  size_t rights_size;
+} rights_check_context_t;
+
+void rights_handle_permission( bolthur_async_data_t*, vfs_ioctl_perform_response_t*, size_t );
+void rights_handle_file_stat( bolthur_async_data_t*, vfs_stat_response_t*, rpc_handler_t );
+void rights_handle_authenticate_stat( bolthur_async_data_t*, vfs_stat_response_t*, rpc_handler_t );
+void rights_check( const char*, rights_handler_t, rpc_handler_t, void*, size_t, size_t, pid_t, size_t );
 
 #endif

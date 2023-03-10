@@ -23,6 +23,7 @@
 #include "rpc.h"
 #include "pid/node.h"
 #include "../libhelper.h"
+#include "../libauthentication.h"
 
 /**
  * @fn int main(int, char*[])
@@ -35,6 +36,7 @@
 int main( int argc, char* argv[] ) {
   // print something
   EARLY_STARTUP_PRINT( "authentication manager processing!\r\n" )
+  EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
   // setup tree
   EARLY_STARTUP_PRINT( "Setup management tree!\r\n" )
   if ( ! pid_node_setup() ) {
@@ -62,14 +64,18 @@ int main( int argc, char* argv[] ) {
     EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
     return -1;
   }
+  // enable rpc
+  _syscall_rpc_set_ready( true );
+  // wait for device
+  vfs_wait_for_path( "/dev/manager/device" );
   // add device file
-  if ( !dev_add_file( "/dev/authentication", NULL, 0 ) ) {
+  uint32_t device_info[] = { AUTHENTICATE_REQUEST, AUTHENTICATE_FETCH, };
+  EARLY_STARTUP_PRINT( "AUTHENTICATE_REQUEST = %d, AUTHENTICATE_FETCH = %d\r\n",
+    AUTHENTICATE_REQUEST, AUTHENTICATE_FETCH)
+  if ( !dev_add_file( AUTHENTICATION_DEVICE, device_info, 2 ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev authenticate\r\n" )
     return -1;
   }
-  // enable rpc
-  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
-  _syscall_rpc_set_ready( true );
   // wait for rpc
   EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();

@@ -25,6 +25,7 @@
 #include "../rpc.h"
 #include "../mountpoint/node.h"
 #include "../file/handle.h"
+#include "../rights.h"
 
 static bool ramdisk_mounted = false;
 static bool dev_mounted = false;
@@ -104,7 +105,7 @@ void rpc_handle_mount_async(
  * @param response_info
  * @param request
  */
-static void rpc_handle_mount_perform(
+void rpc_handle_mount_perform(
   size_t type,
   pid_t origin,
   size_t data_info,
@@ -150,24 +151,55 @@ static void rpc_handle_mount_perform(
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
+  bolthur_rpc_destroy_async( async_data );
 }
 
 /**
- * @fn void rpc_handle_mount_stat(size_t, pid_t, size_t, size_t)
- * @brief Handle mount stat callback
+ * @fn void rpc_handle_mount_target_check(rights_check_context_t*)
+ * @brief mount target check callback
+ *
+ * @param context
+ */
+void rpc_handle_mount_target_check(
+  rights_check_context_t* context,
+  bolthur_async_data_t* async_data
+) {
+  EARLY_STARTUP_PRINT("TARGET MOUNT CHECK CALLBACK\r\n")
+  EARLY_STARTUP_PRINT( "handler: %d\r\n", context->file_stat->handler )
+  EARLY_STARTUP_PRINT( "SIZE: %ld\r\n", context->file_stat->info.st_size )
+  vfs_mount_response_t response = { .result = -EAGAIN };
+  if ( context->file_stat->info.st_size > 0 ) {
+    response.result = -ENOTEMPTY;
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // perform mount
+  rpc_handle_mount_perform(
+    RPC_VFS_MOUNT,
+    context->origin,
+    context->data_info,
+    0,
+    context->request,
+    async_data
+  );
+}
+
+/**
+ * @fn void rpc_handle_mount_target_process_authentication(size_t, pid_t, size_t, size_t)
+ * @brief Handle mount target process authentication callback
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_mount_stat(
+void rpc_handle_mount_target_process_authentication(
   __unused size_t type,
-  pid_t origin,
+  __unused pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT("MOUNT CHECK\r\n")
+  EARLY_STARTUP_PRINT("TARGET MOUNT AUTHENTICATION IOCTL\r\n")
   vfs_mount_response_t response = { .result = -EAGAIN };
   // get matching async data
   bolthur_async_data_t* async_data =
@@ -180,64 +212,46 @@ void rpc_handle_mount_stat(
     bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
     return;
   }
+  size_t response_size = _syscall_rpc_get_data_size( data_info );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
   // allocate space for stat response and clear out
-  vfs_stat_response_t* stat_response = malloc( sizeof( *stat_response ) );
-  if ( ! stat_response ) {
+  vfs_ioctl_perform_response_t* ioctl_response = malloc( response_size );
+  if ( ! ioctl_response ) {
     bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
     return;
   }
   // clear out
-  memset( stat_response, 0, sizeof( *stat_response ) );
-  // original request
-  vfs_mount_request_t* request = async_data->original_data;
-  if ( ! request ) {
-    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
-    free( stat_response );
-    return;
-  }
+  memset( ioctl_response, 0, response_size );
   // fetch response
-  _syscall_rpc_get_data( stat_response, sizeof( *stat_response ), data_info, false );
+  _syscall_rpc_get_data( ioctl_response, response_size, data_info, false );
   if ( errno ) {
     bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
-    free( stat_response );
+    free( ioctl_response );
     return;
   }
-  if ( stat_response->info.st_size > 0 ) {
-    response.result = -ENOTEMPTY;
-    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
-    free( stat_response );
-    return;
-  }
-  // perform mount
-  rpc_handle_mount_perform(
-    RPC_VFS_MOUNT,
-    origin,
-    data_info,
-    response_info,
-    request,
-    async_data
-  );
-  // free response
-  free( stat_response );
-  bolthur_rpc_destroy_async( async_data );
+  EARLY_STARTUP_PRINT( "response: %d\r\n", ioctl_response->status )
+  rights_handle_permission( async_data, ioctl_response, response_size );
 }
 
 /**
- * @fn void rpc_handle_mount_device_stat(size_t, pid_t, size_t, size_t)
- * @brief Handle mount device stat callback
+ * @fn void rpc_handle_mount_target_target_stat(size_t, pid_t, size_t, size_t)
+ * @brief Handle mount target target stat callback
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_mount_device_stat(
+void rpc_handle_mount_target_target_stat(
   __unused size_t type,
   __unused pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT("MOUNT DEVICE CHECK\r\n")
+  EARLY_STARTUP_PRINT("TARGET MOUNT TARGET STAT\r\n")
   vfs_mount_response_t response = { .result = -EAGAIN };
   // get matching async data
   bolthur_async_data_t* async_data =
@@ -278,47 +292,276 @@ void rpc_handle_mount_device_stat(
     free( stat_response );
     return;
   }
+  rights_handle_file_stat(async_data, stat_response, rpc_handle_mount_target_process_authentication);
+  bolthur_rpc_destroy_async( async_data );
+}
+
+/**
+ * @fn void rpc_handle_mount_target_authenticate_stat(size_t, pid_t, size_t, size_t)
+ * @brief Handle target authenticate stat callback
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_mount_target_authenticate_stat(
+  __unused size_t type,
+  __unused pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  EARLY_STARTUP_PRINT("TARGET AUTHENTICATE STAT\r\n")
+  vfs_mount_response_t response = { .result = -EAGAIN };
+  // get matching async data
+  bolthur_async_data_t* async_data =
+    bolthur_rpc_pop_async( RPC_VFS_MOUNT, response_info );
+  if ( ! async_data ) {
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // allocate space for stat response and clear out
+  vfs_stat_response_t* stat_response = malloc( sizeof( *stat_response ) );
+  if ( ! stat_response ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // clear out
+  memset( stat_response, 0, sizeof( *stat_response ) );
+  // original request
+  vfs_mount_request_t* request = async_data->original_data;
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( stat_response );
+    return;
+  }
+  // fetch response
+  _syscall_rpc_get_data( stat_response, sizeof( *stat_response ), data_info, false );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( stat_response );
+    return;
+  }
+  if ( ! stat_response->success ) {
+    response.result = -ENODEV;
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( stat_response );
+    return;
+  }
+  rights_handle_authenticate_stat(async_data, stat_response, rpc_handle_mount_target_target_stat );
+  bolthur_rpc_destroy_async( async_data );
+}
+
+/**
+ * @fn void rpc_handle_mount_device_check(rights_check_context_t*)
+ * @brief mount device check callback
+ *
+ * @param context
+ */
+void rpc_handle_mount_device_check(
+  rights_check_context_t* context,
+  bolthur_async_data_t* async_data
+) {
+  EARLY_STARTUP_PRINT("DEVICE MOUNT RIGHT CHECK CALLBACK\r\n")
+  vfs_mount_request_t* request = context->request;
   mountpoint_node_t* destination = mountpoint_node_extract( request->target );
   if ( destination ) {
-    // allocate stat request
-    vfs_stat_request_t* stat_request = malloc( sizeof( *stat_request ) );
-    if ( ! stat_request ) {
-      free( request );
-      response.result = -ENOMEM;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      return;
-    }
-    memset( stat_request, 0, sizeof( *stat_request ) );
-    // populate stat_request
-    strcpy( stat_request->file_path, request->target );
-    // perform async rpc
-    bolthur_rpc_raise(
-      RPC_VFS_STAT,
-      destination->pid,
-      stat_request,
-      sizeof( *stat_request ),
-      rpc_handle_mount_stat,
-      async_data->type,
-      request,
-      sizeof( *request ),
-      async_data->original_origin,
-      async_data->original_rpc_id,
-      NULL
+    rights_check(
+      request->target,
+      rpc_handle_mount_target_check,
+      rpc_handle_mount_target_authenticate_stat,
+      context->request,
+      context->request_size,
+      context->type,
+      context->origin,
+      context->data_info
     );
-    free( stat_request );
   } else {
     // perform mount
     rpc_handle_mount_perform(
       RPC_VFS_MOUNT,
-      origin,
-      data_info,
-      response_info,
+      context->origin,
+      context->data_info,
+      0,
       request,
       async_data
     );
   }
-  // free response
-  free( stat_response );
+}
+
+/**
+ * @fn void rpc_handle_mount_device_process_authentication(size_t, pid_t, size_t, size_t)
+ * @brief Handle mount device process authentication callback
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_mount_device_process_authentication(
+  __unused size_t type,
+  __unused pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  EARLY_STARTUP_PRINT("DEVICE MOUNT AUTHENTICATION IOCTL\r\n")
+  vfs_mount_response_t response = { .result = -EAGAIN };
+  // get matching async data
+  bolthur_async_data_t* async_data =
+    bolthur_rpc_pop_async( RPC_VFS_MOUNT, response_info );
+  if ( ! async_data ) {
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  size_t response_size = _syscall_rpc_get_data_size( data_info );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // allocate space for stat response and clear out
+  vfs_ioctl_perform_response_t* ioctl_response = malloc( response_size );
+  if ( ! ioctl_response ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // clear out
+  memset( ioctl_response, 0, response_size );
+  // fetch response
+  _syscall_rpc_get_data( ioctl_response, response_size, data_info, false );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( ioctl_response );
+    return;
+  }
+  EARLY_STARTUP_PRINT( "response: %d\r\n", ioctl_response->status )
+  rights_handle_permission( async_data, ioctl_response, response_size );
+}
+
+/**
+ * @fn void rpc_handle_mount_device_device_stat(size_t, pid_t, size_t, size_t)
+ * @brief Handle mount device device stat callback
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_mount_device_device_stat(
+  __unused size_t type,
+  __unused pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  EARLY_STARTUP_PRINT("DEVICE MOUNT DEVICE STAT\r\n")
+  vfs_mount_response_t response = { .result = -EAGAIN };
+  // get matching async data
+  bolthur_async_data_t* async_data =
+    bolthur_rpc_pop_async( RPC_VFS_MOUNT, response_info );
+  if ( ! async_data ) {
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // allocate space for stat response and clear out
+  vfs_stat_response_t* stat_response = malloc( sizeof( *stat_response ) );
+  if ( ! stat_response ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // clear out
+  memset( stat_response, 0, sizeof( *stat_response ) );
+  // original request
+  vfs_mount_request_t* request = async_data->original_data;
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( stat_response );
+    return;
+  }
+  // fetch response
+  _syscall_rpc_get_data( stat_response, sizeof( *stat_response ), data_info, false );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( stat_response );
+    return;
+  }
+  if ( ! stat_response->success ) {
+    response.result = -ENODEV;
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( stat_response );
+    return;
+  }
+  rights_handle_file_stat(async_data, stat_response, rpc_handle_mount_device_process_authentication);
+  bolthur_rpc_destroy_async( async_data );
+}
+
+/**
+ * @fn void rpc_handle_mount_device_authenticate_stat(size_t, pid_t, size_t, size_t)
+ * @brief Handle device authenticate stat callback
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_mount_device_authenticate_stat(
+  __unused size_t type,
+  __unused pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  EARLY_STARTUP_PRINT("DEVICE AUTHENTICATE STAT\r\n")
+  vfs_mount_response_t response = { .result = -EAGAIN };
+  // get matching async data
+  bolthur_async_data_t* async_data =
+    bolthur_rpc_pop_async( RPC_VFS_MOUNT, response_info );
+  if ( ! async_data ) {
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // allocate space for stat response and clear out
+  vfs_stat_response_t* stat_response = malloc( sizeof( *stat_response ) );
+  if ( ! stat_response ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // clear out
+  memset( stat_response, 0, sizeof( *stat_response ) );
+  // original request
+  vfs_mount_request_t* request = async_data->original_data;
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( stat_response );
+    return;
+  }
+  // fetch response
+  _syscall_rpc_get_data( stat_response, sizeof( *stat_response ), data_info, false );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( stat_response );
+    return;
+  }
+  if ( ! stat_response->success ) {
+    response.result = -ENODEV;
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( stat_response );
+    return;
+  }
+  rights_handle_authenticate_stat(async_data, stat_response, rpc_handle_mount_device_device_stat );
   bolthur_rpc_destroy_async( async_data );
 }
 
@@ -442,31 +685,16 @@ void rpc_handle_mount(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // allocate stat request
-  vfs_stat_request_t* stat_request = malloc( sizeof( *stat_request ) );
-  if ( ! stat_request ) {
-    free( request );
-    response.result = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  memset( stat_request, 0, sizeof( *stat_request ) );
-  // populate stat_request
-  strcpy( stat_request->file_path, request->source );
-  // perform async rpc
-  bolthur_rpc_raise(
-    RPC_VFS_STAT,
-    mount_point->pid,
-    stat_request,
-    sizeof( *stat_request ),
-    rpc_handle_mount_device_stat,
-    type,
+  // start rights check routine
+  rights_check(
+    request->source,
+    rpc_handle_mount_device_check,
+    rpc_handle_mount_device_authenticate_stat,
     request,
     sizeof( *request ),
+    type,
     origin,
-    data_info,
-    NULL
+    data_info
   );
-  free( stat_request );
   free( request );
 }
