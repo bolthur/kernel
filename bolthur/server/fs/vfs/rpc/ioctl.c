@@ -158,7 +158,8 @@ void rpc_handle_ioctl(
       request,
       data_size,
       origin,
-      data_info
+      data_info,
+      NULL
     );
     if ( errno ) {
       err_response.status = -errno;
@@ -190,7 +191,8 @@ void rpc_handle_ioctl(
     request,
     data_size,
     origin,
-    data_info
+    data_info,
+    NULL
   );
   if ( errno ) {
     err_response.status = -errno;

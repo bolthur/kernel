@@ -133,7 +133,8 @@ void rpc_handle_umount(
     request,
     sizeof( *request ),
     origin,
-    data_info
+    data_info,
+    NULL
   );
   if ( errno ) {
     response.result = -errno;

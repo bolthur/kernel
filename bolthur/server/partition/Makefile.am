@@ -12,3 +12,4 @@ partition_SOURCES = \
   main.c \
   mount.c \
   partition.c
+partition_LDFLAGS = -all-static --static

@@ -139,7 +139,7 @@ void rpc_handle_ioctl(
     request->target_process
   );
   if ( ! ioctl_container ) {
-    err_response.status = -EIO;
+    err_response.status = -ENODEV;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     free( request );
     return;
@@ -177,7 +177,8 @@ void rpc_handle_ioctl(
     request,
     data_size,
     origin,
-    data_info
+    data_info,
+    NULL
   );
   if ( errno ) {
     err_response.status = -EIO;

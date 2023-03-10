@@ -131,7 +131,8 @@ void rpc_handle_watch_release(
     request,
     sizeof( *request ),
     origin,
-    data_info
+    data_info,
+    NULL
   );
   // handle error
   if ( errno ) {

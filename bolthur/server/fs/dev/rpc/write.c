@@ -151,7 +151,8 @@ void rpc_handle_write(
     request,
     sizeof( *request ),
     origin,
-    data_info
+    data_info,
+    NULL
   );
   if ( errno ) {
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );

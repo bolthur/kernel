@@ -142,7 +142,8 @@ static void rpc_handle_mount_perform(
     request,
     sizeof( *request ),
     async_data != NULL ? async_data->original_origin : origin,
-    async_data != NULL ? async_data->original_rpc_id : data_info
+    async_data != NULL ? async_data->original_rpc_id : data_info,
+    NULL
   );
   if ( errno ) {
     response.result = -errno;
@@ -301,7 +302,8 @@ void rpc_handle_mount_device_stat(
       request,
       sizeof( *request ),
       async_data->original_origin,
-      async_data->original_rpc_id
+      async_data->original_rpc_id,
+      NULL
     );
     free( stat_request );
   } else {
@@ -462,7 +464,8 @@ void rpc_handle_mount(
     request,
     sizeof( *request ),
     origin,
-    data_info
+    data_info,
+    NULL
   );
   free( stat_request );
   free( request );

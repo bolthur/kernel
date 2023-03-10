@@ -139,7 +139,8 @@ void rpc_handle_stat(
     request,
     sizeof( *request ),
     origin,
-    data_info
+    data_info,
+    NULL
   );
   free( request );
   return;

@@ -176,7 +176,8 @@ void rpc_handle_mount(
     request,
     sizeof( *request ),
     origin,
-    data_info
+    data_info,
+    NULL
   );
   if ( errno ) {
     response.result = -errno;

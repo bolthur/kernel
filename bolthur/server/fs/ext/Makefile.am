@@ -13,3 +13,4 @@ ext_SOURCES = \
   rpc/umount.c \
   rpc/write.c \
   main.c
+ext_LDFLAGS = -all-static --static

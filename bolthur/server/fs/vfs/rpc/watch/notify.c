@@ -75,6 +75,7 @@ void rpc_handle_watch_notify(
     sizeof( *request ),
     origin,
     data_info,
+    NULL,
     true
   );
   // handle error

@@ -65,7 +65,8 @@ __maybe_unused static void send_vfs_add_request(
       msg,
       size_to_use,
       0,
-      0
+      0,
+      NULL
     );
     if ( errno ) {
       if ( wait ) {
@@ -129,7 +130,8 @@ __maybe_unused static void send_vfs_remove_request(
       msg,
       sizeof( *msg ),
       0,
-      0
+      0,
+      NULL
     );
     if ( errno ) {
       if ( wait ) {

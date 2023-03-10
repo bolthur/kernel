@@ -260,7 +260,8 @@ void rpc_handle_open(
     request,
     sizeof( *request ),
     origin,
-    data_info
+    data_info,
+    NULL
   );
   // handle error
   if ( errno ) {

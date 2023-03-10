@@ -31,5 +31,6 @@ vfs_SOURCES = \
   rpc/umount.c \
   rpc/write.c \
   main.c \
+  rights.c \
   util.c
 vfs_LDFLAGS = -all-static --static

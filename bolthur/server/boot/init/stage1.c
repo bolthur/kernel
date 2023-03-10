@@ -98,7 +98,7 @@ void init_stage1( void ) {
       }
     }
 
-    // handle no fork
+    // handle fork
     if ( 0 == inner_forked_process ) {
       EARLY_STARTUP_PRINT( "waiting for parent to be ready!\r\n" )
       // wait for vfs to be ready

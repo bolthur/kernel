@@ -168,7 +168,8 @@ void rpc_handle_write(
       request,
       sizeof( *request ),
       origin,
-      data_info
+      data_info,
+      NULL
     );
     if ( errno ) {
       response.len = -errno;
@@ -190,7 +191,8 @@ void rpc_handle_write(
     request,
     sizeof( *request ),
     origin,
-    data_info
+    data_info,
+    NULL
   );
   if ( errno ) {
     response.len = -errno;
