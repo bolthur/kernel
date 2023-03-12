@@ -84,6 +84,7 @@ typedef struct pid_node {
   pid_t pid;
   uid_t uid;
   SPLAY_ENTRY( pid_node ) node;
+  //gid_t gid[];
 } pid_node_t;
 
 bool pid_node_setup( void );

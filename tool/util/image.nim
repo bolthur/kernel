@@ -108,6 +108,7 @@ proc createPlainImageFile*( imageType: string, rootPath: string ): void =
   let rootEtcDirectoryPath: string = joinPath( rootDirectoryPath, "etc" )
   # create folder boot, root and etc in root image
   createDir( joinPath( rootDirectoryPath, "boot" ) )
+  createDir( joinPath( rootDirectoryPath, "ramdisk" ) )
   createDir( rootEtcDirectoryPath )
   createDir( joinPath( rootDirectoryPath, "root" ) )
   # copy default root folder stuff

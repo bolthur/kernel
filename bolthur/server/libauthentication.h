@@ -41,6 +41,7 @@ typedef struct {
 
 typedef struct {
   uid_t uid;
+  //gid_t gid[];
 } authentication_fetch_response_t;
 
 #endif
