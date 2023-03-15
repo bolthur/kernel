@@ -17,7 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <pwd.h>
+#include <grp.h>
 #include <libgen.h>
+#include <sys/bolthur.h>
 #include "node.h"
 
 /**
@@ -74,8 +77,85 @@ pid_node_t* pid_node_extract( pid_t pid ) {
   memset( &node, 0, sizeof( node ) );
   // populate
   node.pid = pid;
-  // return lookup
-  return pid_node_tree_find( &management_tree, &node );
+  // lookup
+  pid_node_t* n = pid_node_tree_find( &management_tree, &node );
+  if ( ! n ) {
+    return n;
+  }
+  if ( 0 >= n->group_count ) {
+    // allocate group list
+    size_t old_size = 0;
+    gid_t* group_list = NULL;
+    // open groups and passwd
+    setgrent();
+    setpwent();
+    // loop through groups
+    struct group* grp;
+    while ( ( grp = getgrent() ) ) {
+      // loop through group members
+      for ( size_t idx = 0; grp->gr_mem[ idx ]; idx++ ) {
+        // get entry by name
+        struct passwd* pass = getpwnam( grp->gr_mem[ idx ] );
+        if ( ! pass ) {
+          free( group_list );
+          return NULL;
+        }
+        // handle no match
+        if ( pass->pw_uid != n->uid ) {
+          continue;
+        }
+        // reallocate
+        size_t new_size = old_size + 1;
+        gid_t* temp;
+        if ( group_list ) {
+          temp = realloc( group_list, new_size * sizeof( gid_t ) );
+        } else {
+          temp = malloc( new_size * sizeof( gid_t ) );
+        }
+        if ( ! temp ) {
+          free( group_list );
+          return NULL;
+        }
+        group_list = temp;
+        group_list[ old_size ] = grp->gr_gid;
+        old_size = new_size;
+      }
+    }
+    // close groups and passwd
+    endpwent();
+    endgrent();
+    if ( group_list ) {
+      // allocate new node
+      pid_node_t* new_node = malloc(
+        sizeof( *new_node ) + sizeof( gid_t ) * old_size );
+      if ( ! new_node ) {
+        free( group_list );
+        return NULL;
+      }
+      memset( new_node, 0, sizeof( *new_node ) + sizeof( gid_t ) * old_size );
+      // copy over stuff
+      new_node->pid = n->pid;
+      new_node->uid = n->uid;
+      new_node->group_count = old_size;
+      for ( size_t idx = 0; idx < old_size; idx++ ) {
+        new_node->gid[ idx ] = group_list[ idx ];
+      }
+      // remove old node
+      pid_node_tree_remove( &management_tree, n );
+      // add new node
+      if ( pid_node_tree_insert( &management_tree, new_node ) ) {
+        free( new_node );
+        free( group_list );
+        return NULL;
+      }
+      // overwrite found node
+      n = new_node;
+    }
+    // free again
+    free( group_list );
+  }
+  // return node
+  return n;
 }
 
 /**
@@ -116,6 +196,7 @@ bool pid_node_add( pid_t pid, uid_t user ) {
   // populate
   node->pid = pid;
   node->uid = user;
+  node->group_count = 0;
   // handle already existing and insert
   if (
     pid_node_tree_find( &management_tree, node )

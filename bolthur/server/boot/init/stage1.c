@@ -120,9 +120,11 @@ void init_stage1( void ) {
 
     // handle fork
     if ( 0 == inner_forked_process ) {
-      EARLY_STARTUP_PRINT( "waiting for parent to be ready!\r\n" )
+      // enable rpc
+      _syscall_rpc_set_ready( true );
       // wait for vfs to be ready
-      _syscall_rpc_wait_for_ready( getppid() );
+      EARLY_STARTUP_PRINT( "waiting for vfs!\r\n" )
+      vfs_wait_for_path( ":/vfs" );
       // start /dev/ramdisk
       void* ramdisk_image = ramdisk_lookup( disk, "ramdisk/server/fs/ramdisk", NULL );
       if ( ! ramdisk_image ) {
@@ -135,11 +137,6 @@ void init_stage1( void ) {
         exit( -1 );
       }
       if ( 0 == inner_forked_process ) {
-        // wait a few seconds
-        delay( 5 );
-        EARLY_STARTUP_PRINT( "waiting for parent to be ready!\r\n" )
-        // wait for parent to be ready
-        _syscall_rpc_wait_for_ready( getppid() );
         EARLY_STARTUP_PRINT( "Replacing fork with ramdisk image %p!\r\n", ramdisk_image )
         // build command
         char* ramdisk_cmd[] = { "ramdisk", shm_id_str, NULL, };
@@ -153,8 +150,6 @@ void init_stage1( void ) {
           exit( -1 );
         }
       }
-
-
 
       // start /dev/authentication
       void* authentication_image = ramdisk_lookup(
@@ -172,11 +167,6 @@ void init_stage1( void ) {
         exit( -1 );
       }
       if ( 0 == inner_forked_process ) {
-        // wait a few seconds
-        delay( 5 );
-        EARLY_STARTUP_PRINT( "waiting for parent to be ready!\r\n" )
-        // wait for parent to be ready
-        _syscall_rpc_wait_for_ready( getppid() );
         EARLY_STARTUP_PRINT( "Replacing fork with authentication image %p!\r\n", authentication_image )
         // build command
         char* authentication_cmd[] = { "authentication", "1", "2", "3", "4", "5", NULL, };
@@ -220,7 +210,6 @@ void init_stage1( void ) {
   // enable rpc and wait for process to be ready
   _syscall_rpc_set_ready( true );
   // enough to wait here for ramdisk and authentication, since both need dev server
-  // wait for device
   vfs_wait_for_path( AUTHENTICATION_DEVICE );
   vfs_wait_for_path( "/dev/ramdisk" );
   // close ramdisk

@@ -71,39 +71,56 @@ void rpc_custom_handle_fetch(
     free( info );
     return;
   }
+  // get process info to extract
+  pid_node_t* node = pid_node_extract( info->process );
+  if ( ! node ) {
+    error.status = -ESRCH;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( info );
+    return;
+  }
+  size_t fetch_size = sizeof( authentication_fetch_response_t )
+    + sizeof( gid_t ) * node->group_count;
+  authentication_fetch_response_t* fetch_response = malloc( fetch_size );
+  if ( ! fetch_response ) {
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( info );
+    return;
+  }
+  memset( fetch_response, 0, fetch_size );
   // allocate response
   vfs_ioctl_perform_response_t* response;
-  size_t response_size = sizeof( *response )
-    + sizeof( authentication_fetch_response_t );
+  size_t response_size = sizeof( *response ) + fetch_size;
   response = malloc( response_size );
   // handle error
   if ( ! response ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( fetch_response );
     free( response );
     free( info );
     return;
   }
   // clear out response
   memset( response, 0, response_size );
-  // get process info to extract
-  pid_node_t* node = pid_node_extract( info->process );
-  if ( ! node ) {
-    error.status = -ESRCH;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( response );
-    free( info );
-    return;
+  // copy over general stuff
+  fetch_response->uid = node->uid;
+  fetch_response->group_count = node->group_count;
+  // copy over groups
+  for ( size_t idx = 0; idx < node->group_count; idx++ ) {
+    fetch_response->gid[ idx ] = node->gid[ idx ];
+    EARLY_STARTUP_PRINT( "fetch_response->gid[ %d ]: %d\r\n",
+      idx, fetch_response->gid[ idx ] )
   }
   // create temporary response
-  authentication_fetch_response_t r;
-  r.uid = node->uid;
-  EARLY_STARTUP_PRINT( "uid: %d\r\n", r.uid )
+  EARLY_STARTUP_PRINT( "uid: %d\r\n", fetch_response->uid )
   // copy over data
-  memcpy( response->container, &r, sizeof( r ) );
+  memcpy( response->container, fetch_response, fetch_size );
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
   // free response and request
+  free( fetch_response );
   free( response );
   free( info );
 }

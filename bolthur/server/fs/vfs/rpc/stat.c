@@ -128,6 +128,16 @@ void rpc_handle_stat(
     free( request );
     return;
   }
+  // handle handled by itself
+  if ( getpid() == mount_point->pid ) {
+    response.success = true;
+    response.handler = getpid();
+    memset( &response.info, 0, sizeof( response.info ) );
+    // return response
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
   // perform async rpc
   bolthur_rpc_raise(
     type,

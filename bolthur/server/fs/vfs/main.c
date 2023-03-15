@@ -67,6 +67,11 @@ int main( __unused int argc, __unused char* argv[] ) {
     EARLY_STARTUP_PRINT( "Unable to bind rpc handler!\r\n" )
     return -1;
   }
+  // register vfs itself to /vfs
+  if ( ! mountpoint_node_add( ":/vfs", getpid(), NULL ) ) {
+    EARLY_STARTUP_PRINT( "Unable to register vfs itself!\r\n" )
+    return -1;
+  }
   EARLY_STARTUP_PRINT( "entering wait for rpc loop!\r\n" )
   // enable rpc and wait
   _syscall_rpc_set_ready( true );

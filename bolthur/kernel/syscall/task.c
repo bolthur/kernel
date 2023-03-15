@@ -32,6 +32,8 @@
   #include "../debug/debug.h"
 #endif
 
+#define VFS_DAEMON_ID 2
+
 /**
  * @fn void syscall_process_id(void*)
  * @brief return process id to calling thread
@@ -141,6 +143,8 @@ void syscall_process_exit( void* context ) {
  * @brief fork calling process
  *
  * @param context context of calling thread
+ *
+ * @todo set vfs fork rpc call
  */
 void syscall_process_fork( void* context ) {
   // debug output
@@ -155,6 +159,11 @@ void syscall_process_fork( void* context ) {
   if ( ! forked ) {
     syscall_populate_error( context, ( size_t )-ENOMEM );
     return;
+  }
+  // try to get vfs
+  task_process_t* vfs = task_process_get_by_id( VFS_DAEMON_ID );
+  if ( vfs && vfs != forked && vfs->rpc_ready ) {
+    /// FIXME: SETUP VFS FORK RPC CALL
   }
   // populate return
   syscall_populate_success( context, ( size_t )forked->id );

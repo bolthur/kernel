@@ -32,6 +32,7 @@
 #include <bfs/fat/mountpoint.h>
 #include <bfs/fat/type.h>
 #include <bfs/fat/file.h>
+#include <bfs/fat/directory.h>
 
 /**
  * @fn void rpc_handle_stat(size_t, pid_t, size_t, size_t)
@@ -77,7 +78,6 @@ void rpc_handle_stat(
     return;
   }
   // get mode and owner
-  uint32_t mode = 0;
   uint32_t uid = 0;
   uint32_t gid = 0;
   uint16_t link_cnt = 0;
@@ -85,57 +85,119 @@ void rpc_handle_stat(
   time_t access_time = 0;
   time_t modify_time = 0;
   time_t create_time = 0;
-  // open path
-  fat_file_t fd;
-  memset( &fd, 0, sizeof( fd ) );
-  int result = fat_file_open( &fd, request->file_path, "r" );
-  if ( EOK != result ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
-  // extract times
-  if (
-    EOK != fat_file_atime( &fd, &access_time )
-    || EOK != fat_file_mtime( &fd, &modify_time )
-    || EOK != fat_file_ctime( &fd, &create_time )
-  ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
-  uint64_t size;
-  result = fat_file_size( &fd, &size );
-  if ( EOK != result ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
-  // populate stats info
-  response.info.st_dev = 0;
-  response.info.st_ino = 0;
-  response.info.st_mode = mode;
-  response.info.st_nlink = link_cnt;
-  response.info.st_uid = ( uid_t )uid;
-  response.info.st_gid = ( gid_t )gid;
-  response.info.st_rdev = 0;
-  response.info.st_size = ( off_t )size;
-  response.info.st_atim.tv_sec = access_time;
-  response.info.st_atim.tv_nsec = 0;
-  response.info.st_mtim.tv_sec = modify_time;
-  response.info.st_mtim.tv_nsec = 0;
-  response.info.st_ctim.tv_sec = create_time;
-  response.info.st_ctim.tv_nsec = 0;
-  response.info.st_blksize = ( blksize_t )0; /// FIXME: FILL
-  response.info.st_blocks = ( blkcnt_t )0; /// FIXME: FILL
-   /*(
-    (fd.fsize + stats.block_size - 1 ) / stats.block_size
-  )*/;
-  // close again
-  if ( EOK != fat_file_close( &fd ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
+  fat_directory_t dir;
+  memset( &dir, 0, sizeof( dir ) );
+  int result = fat_directory_open( &dir, request->file_path );
+  if ( EOK == result ) {
+    size_t count = 0;
+    while ( EOK == ( result = fat_directory_next_entry( &dir ) ) ) {
+      // handle nothing in there
+      if ( ! dir.data && ! dir.entry ) {
+        break;
+      }
+      if (
+        (
+          strlen( "." ) == strlen( ( char* )dir.data->name )
+          && 0 == strcmp( ".", ( char* )dir.data->name )
+        ) || (
+          strlen( ".." ) == strlen( ( char* )dir.data->name )
+          && 0 == strcmp( "..", ( char* )dir.data->name )
+        )
+      ) {
+        continue;
+      }
+      count++;
+    }
+    fat_directory_rewind( &dir );
+    // extract times
+    if (
+      EOK != fat_directory_atime( &dir, &access_time )
+      || EOK != fat_directory_mtime( &dir, &modify_time )
+      || EOK != fat_directory_ctime( &dir, &create_time )
+    ) {
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    // populate stats info
+    response.info.st_dev = 0;
+    response.info.st_ino = 0;
+    response.info.st_mode = S_IFDIR;
+    response.info.st_nlink = link_cnt;
+    response.info.st_uid = ( uid_t )uid;
+    response.info.st_gid = ( gid_t )gid;
+    response.info.st_rdev = 0;
+    response.info.st_size = ( off_t )count;
+    response.info.st_atim.tv_sec = access_time;
+    response.info.st_atim.tv_nsec = 0;
+    response.info.st_mtim.tv_sec = modify_time;
+    response.info.st_mtim.tv_nsec = 0;
+    response.info.st_ctim.tv_sec = create_time;
+    response.info.st_ctim.tv_nsec = 0;
+    response.info.st_blksize = ( blksize_t )0; /// FIXME: FILL
+    response.info.st_blocks = ( blkcnt_t )0; /// FIXME: FILL
+     /*(
+      (fd.fsize + stats.block_size - 1 ) / stats.block_size
+    )*/;
+    // close again
+    if ( EOK != fat_directory_close( &dir ) ) {
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+  } else {
+    // open path
+    fat_file_t fd;
+    memset( &fd, 0, sizeof( fd ) );
+    result = fat_file_open( &fd, request->file_path, "r" );
+    if ( EOK != result ) {
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    // extract times
+    if (
+      EOK != fat_file_atime( &fd, &access_time )
+      || EOK != fat_file_mtime( &fd, &modify_time )
+      || EOK != fat_file_ctime( &fd, &create_time )
+    ) {
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    uint64_t size;
+    result = fat_file_size( &fd, &size );
+    if ( EOK != result ) {
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    // populate stats info
+    response.info.st_dev = 0;
+    response.info.st_ino = 0;
+    response.info.st_mode = S_IFREG;
+    response.info.st_nlink = link_cnt;
+    response.info.st_uid = ( uid_t )uid;
+    response.info.st_gid = ( gid_t )gid;
+    response.info.st_rdev = 0;
+    response.info.st_size = ( off_t )size;
+    response.info.st_atim.tv_sec = access_time;
+    response.info.st_atim.tv_nsec = 0;
+    response.info.st_mtim.tv_sec = modify_time;
+    response.info.st_mtim.tv_nsec = 0;
+    response.info.st_ctim.tv_sec = create_time;
+    response.info.st_ctim.tv_nsec = 0;
+    response.info.st_blksize = ( blksize_t )0; /// FIXME: FILL
+    response.info.st_blocks = ( blkcnt_t )0; /// FIXME: FILL
+     /*(
+      (fd.fsize + stats.block_size - 1 ) / stats.block_size
+    )*/;
+    // close again
+    if ( EOK != fat_file_close( &fd ) ) {
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
   }
   // populate remaining information
   response.success = true;
