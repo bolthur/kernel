@@ -128,16 +128,29 @@ noreturn void init_stage2( void ) {
       ) {
         continue;
       }
-      /// FIXME: CHECK FOR NO AUTO MOUNT
+      // skip in case no auto mount is set
+      if ( hasmntopt( m, MNTOPT_NOAUTO ) ) {
+        EARLY_STARTUP_PRINT( "Skipping %s to %s due to no auto mount",
+          m->mnt_fsname, m->mnt_dir )
+        continue;
+      }
       // try to mount
       EARLY_STARTUP_PRINT( "mounting %s to %s\r\n", m->mnt_fsname, m->mnt_dir )
-      /// FIXME: PARSE AND PASS MOUNT OPTS AS MOUNT FLAGS
-      result = mount( m->mnt_fsname, m->mnt_dir, m->mnt_type, MS_MGC_VAL, "" );
+      // build flags
+      unsigned long mount_flags = MS_MGC_VAL;
+      if ( hasmntopt( m, MNTOPT_RO ) ) {
+        mount_flags |= MS_RDONLY;
+      }
+      if ( hasmntopt( m, MNTOPT_NOSUID ) ) {
+        mount_flags |= MS_NOSUID;
+      }
+      // try to mount
+      result = mount( m->mnt_fsname, m->mnt_dir, m->mnt_type, mount_flags, "" );
       if ( 0 != result ) {
         EARLY_STARTUP_PRINT(
           "Mount of \"%s\" with type \"%s\" to \"%s\" failed: \"%s\"\r\n",
           m->mnt_fsname, m->mnt_type, m->mnt_fsname, strerror( errno ) )
-        //exit( 1 );
+        exit( 1 );
       }
     }
     endmntent( fstab );

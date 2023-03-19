@@ -111,10 +111,12 @@ void rpc_handle_mount_perform(
   size_t data_info,
   __unused size_t response_info,
   vfs_mount_request_t* request,
-  bolthur_async_data_t* async_data
+  bolthur_async_data_t* async_data,
+  __unused rights_check_context_t* context
 ) {
-  EARLY_STARTUP_PRINT("MOUNT PERFORM\r\n")
+  EARLY_STARTUP_PRINT("MOUNT PERFORM %s => %d\r\n", request->target, origin )
   vfs_mount_response_t response = { .result = -EAGAIN };
+  /// FIXME: Add user information to mount
   // add destination mountpoint
   if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
     response.result = -ENOMEM;
@@ -180,8 +182,11 @@ void rpc_handle_mount_target_check(
     context->data_info,
     0,
     context->request,
-    async_data
+    async_data,
+    context
   );
+  // destroy context
+  rights_destroy_context( context );
 }
 
 /**
@@ -378,7 +383,8 @@ void rpc_handle_mount_device_check(
       context->request_size,
       context->type,
       context->origin,
-      context->data_info
+      context->data_info,
+      context
     );
   } else {
     // perform mount
@@ -388,8 +394,11 @@ void rpc_handle_mount_device_check(
       context->data_info,
       0,
       request,
-      async_data
+      async_data,
+      context
     );
+    // destroy context
+    rights_destroy_context( context );
   }
 }
 
@@ -501,7 +510,11 @@ void rpc_handle_mount_device_device_stat(
     free( stat_response );
     return;
   }
-  rights_handle_file_stat(async_data, stat_response, rpc_handle_mount_device_process_authentication);
+  rights_handle_file_stat(
+    async_data,
+    stat_response,
+    rpc_handle_mount_device_process_authentication
+  );
   bolthur_rpc_destroy_async( async_data );
 }
 
@@ -561,7 +574,11 @@ void rpc_handle_mount_device_authenticate_stat(
     free( stat_response );
     return;
   }
-  rights_handle_authenticate_stat(async_data, stat_response, rpc_handle_mount_device_device_stat );
+  rights_handle_authenticate_stat(
+    async_data,
+    stat_response,
+    rpc_handle_mount_device_device_stat
+  );
   bolthur_rpc_destroy_async( async_data );
 }
 
@@ -669,7 +686,11 @@ void rpc_handle_mount(
 
   // get destination
   mountpoint_node_t* destination = mountpoint_node_extract( request->target );
-  if ( destination && 0 == strcmp( destination->name, request->target ) ) {
+  if (
+    destination
+    && strlen( destination->name ) == strlen( request->target )
+    && 0 == strcmp( destination->name, request->target )
+  ) {
     response.result = -EEXIST;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
@@ -694,7 +715,8 @@ void rpc_handle_mount(
     sizeof( *request ),
     type,
     origin,
-    data_info
+    data_info,
+    NULL
   );
   free( request );
 }

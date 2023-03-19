@@ -44,16 +44,10 @@ void rights_handle_permission(
     return;
   }
   // update context by stat response
-  context->rights = ioctl_response;
-  context->rights_size = size;
+  context->origin_right = ioctl_response;
+  context->origin_right_size = size;
   // call callback
   context->callback( context, async_data );
-  free( context->path );
-  free( context->file_stat );
-  free( context->authenticate_stat );
-  free( context->rights );
-  free( context->request );
-  free( context );
 }
 
 /**
@@ -174,6 +168,7 @@ void rights_handle_authenticate_stat(
  * @param type
  * @param origin
  * @param data_info
+ * @param parent
  */
 void rights_check(
   const char* path,
@@ -183,7 +178,8 @@ void rights_check(
   size_t request_size,
   size_t type,
   pid_t origin,
-  size_t data_info
+  size_t data_info,
+  rights_check_context_t* parent
 ) {
   rights_check_context_t* context = malloc( sizeof( *context ) );
   if ( ! context ) {
@@ -201,6 +197,7 @@ void rights_check(
   context->origin = origin;
   context->data_info = data_info;
   context->request_size = request_size;
+  context->parent = parent;
   context->request = malloc( request_size );
   if ( ! context->request ) {
     free( context->path );
@@ -243,4 +240,41 @@ void rights_check(
     context
   );
   free( stat_request );
+}
+
+/**
+ * @fn void rights_destroy_context(rights_check_context_t*)
+ * @brief Method to destroy rights context
+ *
+ * @param context
+ */
+void rights_destroy_context( rights_check_context_t* context ) {
+  if ( ! context ) {
+    return;
+  }
+  // destroy parent
+  if ( context->parent ) {
+    rights_destroy_context( context->parent );
+  }
+  // destroy authenticate stat if set
+  if ( context->authenticate_stat ) {
+    free( context->authenticate_stat );
+  }
+  // destroy file stat if set
+  if ( context->file_stat ) {
+    free( context->file_stat );
+  }
+  // destroy path if set
+  if ( context->path ) {
+    free( context->path );
+  }
+  // destroy request if set
+  if ( context->request ) {
+    free( context->request );
+  }
+  if ( context->origin_right ) {
+    free( context->origin_right );
+  }
+  // destroy context
+  free( context );
 }

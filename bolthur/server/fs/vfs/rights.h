@@ -36,13 +36,15 @@ typedef struct rights_check_context {
   void* request;
   vfs_stat_response_t* file_stat;
   vfs_stat_response_t* authenticate_stat;
-  vfs_ioctl_perform_response_t* rights;
-  size_t rights_size;
+  vfs_ioctl_perform_response_t* origin_right;
+  size_t origin_right_size;
+  rights_check_context_t* parent;
 } rights_check_context_t;
 
 void rights_handle_permission( bolthur_async_data_t*, vfs_ioctl_perform_response_t*, size_t );
 void rights_handle_file_stat( bolthur_async_data_t*, vfs_stat_response_t*, rpc_handler_t );
 void rights_handle_authenticate_stat( bolthur_async_data_t*, vfs_stat_response_t*, rpc_handler_t );
-void rights_check( const char*, rights_handler_t, rpc_handler_t, void*, size_t, size_t, pid_t, size_t );
+void rights_check( const char*, rights_handler_t, rpc_handler_t, void*, size_t, size_t, pid_t, size_t, rights_check_context_t* );
+void rights_destroy_context( rights_check_context_t* );
 
 #endif

@@ -145,6 +145,14 @@ void rpc_handle_umount(
   response.result = -EINVAL;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   return;
+
+  // step1: get mount point
+  // step2: get stat of mount point
+  // step3: get process user id
+  // step4: check for matching process user id and stat user id or group
+  // step5: delegate unmount to mount handler
+  // step6: remove mount point when there where no errors
+
   /*
   // get node by path
   vfs_node_t* target_umount_point = vfs_extract_mountpoint( request->target );
