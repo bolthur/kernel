@@ -112,15 +112,33 @@ void rpc_handle_mount_perform(
   __unused size_t response_info,
   vfs_mount_request_t* request,
   bolthur_async_data_t* async_data,
-  __unused rights_check_context_t* context
+  rights_check_context_t* context
 ) {
   EARLY_STARTUP_PRINT("MOUNT PERFORM %s => %d\r\n", request->target, origin )
   vfs_mount_response_t response = { .result = -EAGAIN };
-  /// FIXME: Add user information to mount
+  struct stat* st = NULL;
+  if ( context ) {
+    // duplicate stat structure
+    st = malloc( sizeof( *st ) );
+    // handle malloc error
+    if ( ! st ) {
+      response.result = -ENOMEM;
+      bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+      return;
+    }
+    // clear and copy information
+    memset( st, 0, sizeof( *st ) );
+    memcpy( st, &context->file_stat->info, sizeof( *st ) );
+  }
+
+  /// FIXME: Add user information to mount at least group ids
   // add destination mountpoint
-  if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
+  if ( ! mountpoint_node_add( request->target, origin, st ) ) {
     response.result = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    if ( st ) {
+      free( st );
+    }
     return;
   }
 
@@ -129,6 +147,9 @@ void rpc_handle_mount_perform(
   if ( ! node ) {
     response.result = -ENOENT;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    if ( st ) {
+      free( st );
+    }
     return;
   }
 
@@ -151,9 +172,15 @@ void rpc_handle_mount_perform(
   if ( errno ) {
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    if ( st ) {
+      free( st );
+    }
     return;
   }
   bolthur_rpc_destroy_async( async_data );
+  if ( st ) {
+    free( st );
+  }
 }
 
 /**
@@ -395,7 +422,7 @@ void rpc_handle_mount_device_check(
       0,
       request,
       async_data,
-      context
+      NULL
     );
     // destroy context
     rights_destroy_context( context );
@@ -590,8 +617,6 @@ void rpc_handle_mount_device_authenticate_stat(
  * @param origin
  * @param data_info
  * @param response_info
- *
- * @todo check whether device exists
  */
 void rpc_handle_mount(
   size_t type,
