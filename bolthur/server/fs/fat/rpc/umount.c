@@ -74,6 +74,10 @@ void rpc_handle_umount(
     free( request );
     return;
   }
+  // Add trailing slash if not set
+  if ( '/' != request->target[ strlen( request->target ) - 1 ] ) {
+    strcat( request->target, "/" );
+  }
   // try to unmount
   int result = fat_mountpoint_umount( request->target );
   if ( EOK != result ) {

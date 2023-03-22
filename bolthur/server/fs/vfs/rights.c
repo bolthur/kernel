@@ -106,6 +106,61 @@ void rights_handle_file_stat(
 }
 
 /**
+ * @fn void rights_handle_file_stat(bolthur_async_data_t*, vfs_stat_response_t*, rpc_handler_t)
+ * @brief Handle file stat helper saving response and performing permission fetch
+ *
+ * @param async_data
+ * @param stat_response
+ * @param handler
+ */
+void rights_handle_umount_authenticate_stat(
+  bolthur_async_data_t* async_data,
+  vfs_stat_response_t* stat_response,
+  rpc_handler_t handler
+) {
+  rights_check_context_t* context = async_data->context;
+  // get mount point
+  mountpoint_node_t* mount_point = mountpoint_node_extract( AUTHENTICATION_DEVICE );
+  // handle no mount point node found
+  if ( ! mount_point ) {
+    free( stat_response );
+    return;
+  }
+  // update context by stat response
+  context->authenticate_stat = stat_response;
+  // allocate ioctl request for authentication
+  vfs_ioctl_perform_request_t* request;
+  size_t data_size = sizeof( *request )
+    + sizeof( authentication_fetch_request_t );
+  request = malloc( data_size );
+  if ( ! request ) {
+    free( stat_response );
+    return;
+  }
+  // clear out
+  memset( request, 0, data_size );
+  request->target_process = context->authenticate_stat->handler;
+  request->command = AUTHENTICATE_FETCH;
+  request->type = IOCTL_RDONLY;
+  (( authentication_fetch_request_t* )( request->container ))->process =
+    context->origin;
+  // perform async rpc
+  bolthur_rpc_raise(
+    RPC_VFS_IOCTL,
+    mount_point->pid,
+    request,
+    data_size,
+    handler,
+    async_data->type,
+    async_data->original_data,
+    async_data->length,
+    async_data->original_origin,
+    async_data->original_rpc_id,
+    context
+  );
+}
+
+/**
  * @fn void rights_handle_authenticate_stat(bolthur_async_data_t*, vfs_stat_response_t*, rpc_handler_t)
  * @brief Handle authentication server stat helper saving stuff and executing file stat rpc
  *

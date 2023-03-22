@@ -176,7 +176,7 @@ bool sd_transfer_block(
         buffer,
         buffer_size,
         block_number,
-        SD_OPERATION_TO_EMMC(operation)
+        SD_OPERATION_TO_EMMC( operation )
       )
     ) ) {
       // debug output
@@ -196,7 +196,7 @@ bool sd_transfer_block(
         buffer,
         buffer_size,
         block_number,
-        SD_OPERATION_TO_SDHOST(operation)
+        SD_OPERATION_TO_SDHOST( operation )
       )
     ) ) {
       // debug output
@@ -258,6 +258,10 @@ uint32_t sd_device_block_size( void ) {
  * @return
  */
 bool sd_read_block( uint32_t* buffer, size_t buffer_size, uint32_t sector ) {
+  // debug output
+  #if defined( SD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Read a block into buffer\r\n" )
+  #endif
   return sd_transfer_block(
     buffer,
     buffer_size,
@@ -276,6 +280,10 @@ bool sd_read_block( uint32_t* buffer, size_t buffer_size, uint32_t sector ) {
  * @return
  */
 bool sd_write_block( uint32_t* buffer, size_t buffer_size, uint32_t sector ) {
+  // debug output
+  #if defined( SD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Write a block from buffer\r\n" )
+  #endif
   return sd_transfer_block(
     buffer,
     buffer_size,

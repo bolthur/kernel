@@ -2396,6 +2396,10 @@ sdhost_response_t sdhost_transfer_block(
   }
   // get status
   uint32_t status = ( device->last_response[ 0 ] >> 9 ) & 0xf;
+  // debug output
+  #if defined( SDHOST_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "status = %"PRIu32"\r\n", status )
+  #endif
   // stand by - try to select it
   if ( 3 == status ) {
     // debug output
@@ -2480,7 +2484,7 @@ sdhost_response_t sdhost_transfer_block(
     if ( 4 != status ) {
       // debug output
       #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Still not in transfer mode, giving up..." )
+        EARLY_STARTUP_PRINT( "Still not in transfer mode, giving up...\r\n" )
       #endif
       // reset rca
       device->card_rca = 0;
