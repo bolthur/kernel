@@ -195,6 +195,59 @@ static sdhost_message_entry_t sdhost_error_message[] = {
 };
 
 /**
+ * @fn sdhost_response_t enable_interrupt(bool)
+ * @brief Helper to enable interrupts
+ *
+ * @param is_data
+ * @return
+ */
+static sdhost_response_t enable_interrupt( bool is_data ) {
+  // change bit mode for host
+  size_t sequence_size;
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 2, &sequence_size );
+  if ( ! sequence ) {
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Error allocating sequence: %s\r\n", strerror( errno ) )
+    #endif
+    // return error
+    return SDHOST_RESPONSE_MEMORY;
+  }
+  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
+  sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
+  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
+  sequence[ 1 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
+  sequence[ 1 ].value = SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_SDIO
+    | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BLOCK
+    | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY;
+  if ( is_data ) {
+    sequence[ 1 ].value |= SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_DATA;
+  }
+  // perform request
+  if ( -1 == ioctl(
+    device->fd_iomem,
+    IOCTL_BUILD_REQUEST(
+      IOMEM_RPC_MMIO_PERFORM,
+      sequence_size,
+      IOCTL_RDWR
+    ),
+    sequence
+  ) ) {
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Change transfer width in control0 failed\r\n" )
+    #endif
+    // free
+    free( sequence );
+    // return error
+    return SDHOST_RESPONSE_IO;
+  }
+  // free
+  free( sequence );
+  return SDHOST_RESPONSE_OK;
+}
+
+/**
  * @fn sdhost_response_t init_gpio(void)
  * @brief Perform necessary gpio setup
  *
@@ -2238,6 +2291,16 @@ sdhost_response_t sdhost_init( void ) {
   // free
   free( sequence );
 
+  // enable interrupts
+  if ( SDHOST_RESPONSE_OK != ( response = enable_interrupt( true ) ) ) {
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Error while enabling interrupts\r\n" )
+    #endif
+    // return error
+    return response;
+  }
+
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "SDHost init finished!\r\n" )
@@ -2286,6 +2349,10 @@ const char* sdhost_error( sdhost_response_t num ) {
   char *buffer_pos = buffer;
   // push message string to buffer
   strncpy( buffer_pos, sdhost_error_message[ num - 1 ].message, total_length );
+  // debug output
+  #if defined( SDHOST_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "buffer = %s\r\n", buffer )
+  #endif
   // return buffer
   return buffer;
 }
@@ -2376,7 +2443,8 @@ sdhost_response_t sdhost_transfer_block(
   }
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Try to retrieve status\r\n" )
+    EARLY_STARTUP_PRINT( "Try to retrieve status %"PRIx32"\r\n",
+      ( uint32_t )device->card_rca << 16 )
   #endif
   // send status
   if ( SDHOST_RESPONSE_OK != (
@@ -2445,6 +2513,7 @@ sdhost_response_t sdhost_transfer_block(
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Try to init again since it's not in transfer state\r\n" )
     #endif
+    device->initialized = false;
     // try to init again
     if ( SDHOST_RESPONSE_OK != ( response = sdhost_init() ) ) {
       // debug output
@@ -2461,7 +2530,8 @@ sdhost_response_t sdhost_transfer_block(
   if ( 4 != status ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Try to retrieve status\r\n" )
+      EARLY_STARTUP_PRINT( "Try to retrieve status %"PRIx32"\r\n",
+        ( uint32_t )device->card_rca << 16 )
     #endif
     if ( SDHOST_RESPONSE_OK != (
       response = sd_command(
@@ -2480,6 +2550,10 @@ sdhost_response_t sdhost_transfer_block(
     }
     // get status
     status = ( device->last_response[ 0 ] >> 9 ) & 0xf;
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "status = %"PRIu32"\r\n", status )
+    #endif
     // handle still not in transfer state
     if ( 4 != status ) {
       // debug output
