@@ -155,10 +155,52 @@ noreturn void init_stage2( void ) {
     }
     endmntent( fstab );
   }
-
+  // free up device and partition type strings
+  free( root_device );
+  free( root_partition_type );
   EARLY_STARTUP_PRINT( "done, yay!\r\n" )
-  EARLY_STARTUP_PRINT( "Opening /boot/cmdline for reading\r\n" )
 
+  // start framebuffer driver and wait for device to come up
+  EARLY_STARTUP_PRINT( "Starting and waiting for framebuffer server...\r\n" )
+  pid_t framebuffer = util_execute_device_server( "/ramdisk/server/framebuffer", "/dev/framebuffer" );
+
+  // start system console and wait for device to come up
+  EARLY_STARTUP_PRINT( "Starting and waiting for console server...\r\n" )
+  pid_t console = util_execute_device_server( "/ramdisk/server/console", "/dev/console" );
+
+  // start tty and wait for device to come up
+  EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )
+  pid_t terminal = util_execute_device_server( "/ramdisk/server/terminal", "/dev/terminal" );
+
+  // redirect stdin, stdout and stderr
+  EARLY_STARTUP_PRINT(
+    "iomem = %d, rnd = %d, console = %d, terminal = %d, "
+    "framebuffer = %d, partition = %d, fat = %d, ext = %d, sd = %d\r\n",
+    iomem, rnd, console, terminal, framebuffer, partition, fat, ext, sd )
+  // ORDER NECESSARY HERE DUE TO THE DEFINES
+  EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
+  FILE* fpin = freopen( "/dev/stdin", "r", stdin );
+  if ( ! fpin ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
+    exit( 1 );
+  }
+  EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", fpin->_file )
+  FILE* fpout = freopen( "/dev/stdout", "w", stdout );
+  if ( ! fpout ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
+    exit( 1 );
+  }
+  EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", fpout->_file )
+  FILE* fperr = freopen( "/dev/stderr", "w", stderr );
+  if ( ! fperr ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stderr\r\n" )
+    exit( 1 );
+  }
+  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fperr->_file )
+
+  printf( "Hello World\r\n" );
+
+  EARLY_STARTUP_PRINT( "Opening /boot/cmdline for reading\r\n" )
   // open fstap
   int cmdline = open( "/boot/cmdline.txt", O_RDONLY );
   if ( -1 == cmdline ) {
@@ -199,46 +241,4 @@ noreturn void init_stage2( void ) {
   for (;;) {
     __asm__ __volatile__ ( "nop" );
   }
-
-  // start framebuffer driver and wait for device to come up
-  EARLY_STARTUP_PRINT( "Starting and waiting for framebuffer server...\r\n" )
-  pid_t framebuffer = util_execute_device_server( "/ramdisk/server/framebuffer", "/dev/framebuffer" );
-
-  // start system console and wait for device to come up
-  EARLY_STARTUP_PRINT( "Starting and waiting for console server...\r\n" )
-  pid_t console = util_execute_device_server( "/ramdisk/server/console", "/dev/console" );
-
-  // start tty and wait for device to come up
-  EARLY_STARTUP_PRINT( "Starting and waiting for terminal server...\r\n" )
-  pid_t terminal = util_execute_device_server( "/ramdisk/server/terminal", "/dev/terminal" );
-
-  // redirect stdin, stdout and stderr
-  EARLY_STARTUP_PRINT(
-    "iomem = %d, rnd = %d, console = %d, terminal = %d, "
-    "framebuffer = %d, partition = %d, fat = %d, ext = %d, sd = %d\r\n",
-    iomem, rnd, console, terminal, framebuffer, partition, fat, ext, sd )
-  // ORDER NECESSARY HERE DUE TO THE DEFINES
-  EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
-  FILE* fpin = freopen( "/dev/stdin", "r", stdin );
-  if ( ! fpin ) {
-    EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
-    exit( 1 );
-  }
-  EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", fpin->_file )
-  FILE* fpout = freopen( "/dev/stdout", "w", stdout );
-  if ( ! fpout ) {
-    EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
-    exit( 1 );
-  }
-  EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", fpout->_file )
-  FILE* fperr = freopen( "/dev/stderr", "w", stderr );
-  if ( ! fperr ) {
-    EARLY_STARTUP_PRINT( "Unable to reroute stderr\r\n" )
-    exit( 1 );
-  }
-  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fperr->_file )
-
-  // free up device and partition type strings
-  free( root_device );
-  free( root_partition_type );
 }
