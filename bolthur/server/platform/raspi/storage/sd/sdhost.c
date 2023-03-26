@@ -2490,7 +2490,7 @@ sdhost_response_t sdhost_transfer_block(
       return response;
     }
   // in data transfer, try to cancel
-  } else if ( 5 == status ) {
+  } else if ( 5 == status || 6 == status ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Try to stop data transmission\r\n" )
@@ -2513,7 +2513,6 @@ sdhost_response_t sdhost_transfer_block(
     #if defined( SDHOST_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Try to init again since it's not in transfer state\r\n" )
     #endif
-    device->initialized = false;
     // try to init again
     if ( SDHOST_RESPONSE_OK != ( response = sdhost_init() ) ) {
       // debug output
@@ -2622,10 +2621,22 @@ sdhost_response_t sdhost_transfer_block(
     command = 1 < device->block_count
       ? SDHOST_CMD_WRITE_MULTIPLE_BLOCK
       : SDHOST_CMD_WRITE_SINGLE_BLOCK;
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "command = %"PRIx32"\r\n", command )
+      EARLY_STARTUP_PRINT( "SDHOST_CMD_WRITE_MULTIPLE_BLOCK = %x\r\n", SDHOST_CMD_WRITE_MULTIPLE_BLOCK )
+      EARLY_STARTUP_PRINT( "SDHOST_CMD_WRITE_SINGLE_BLOCK = %x\r\n", SDHOST_CMD_WRITE_SINGLE_BLOCK )
+    #endif
   } else {
     command = 1 < device->block_count
       ? SDHOST_CMD_READ_MULTIPLE_BLOCK
       : SDHOST_CMD_READ_SINGLE_BLOCK;
+    // debug output
+    #if defined( SDHOST_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "command = %"PRIx32"\r\n", command )
+      EARLY_STARTUP_PRINT( "SDHOST_CMD_READ_MULTIPLE_BLOCK = %x\r\n", SDHOST_CMD_READ_MULTIPLE_BLOCK )
+      EARLY_STARTUP_PRINT( "SDHOST_CMD_READ_SINGLE_BLOCK = %x\r\n", SDHOST_CMD_READ_SINGLE_BLOCK )
+    #endif
   }
   uint32_t current_try;
   bool success = false;
