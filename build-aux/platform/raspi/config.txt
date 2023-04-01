@@ -1,6 +1,9 @@
 
 # initramfs to follow kernel
-initramfs initrd.img followkernel
+initramfs initrd followkernel
+
+# specify kernel
+kernel=kernel7.img
 
 # uart init
 init_uart_baud=115200

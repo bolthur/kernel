@@ -13,6 +13,7 @@ boot_SOURCES = \
   init/stage1.c \
   init/stage2.c \
   init/stage3.c \
+  configuration.c \
   ramdisk/dump.c \
   ramdisk/extract.c \
   ramdisk/lookup.c \
