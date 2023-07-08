@@ -81,6 +81,13 @@ void rpc_handle_watch_notify(
     free( request );
     return;
   }
+  // get stat information
+  struct stat target_stat;
+  if ( 0 != fstat( fd, &target_stat ) ) {
+    free( mbr );
+    free( request );
+    return;
+  }
   ssize_t result = pread( fd, mbr, mbr_size, 0 );
   if ( 512 != result ) {
     free( mbr );
@@ -111,10 +118,13 @@ void rpc_handle_watch_notify(
       EARLY_STARTUP_PRINT( "Unable to push %s to search tree\r\n", path )
     }
     struct stat st = {
-      .st_size = ( off_t )entry->data.total_sector * 512,
+      .st_size = ( off_t )entry->data.total_sector * target_stat.st_blksize,
       .st_mode = S_IFCHR,
+      .st_blksize = target_stat.st_blksize,
+      .st_blocks = ( blkcnt_t )entry->data.total_sector,
     };
     EARLY_STARTUP_PRINT("st_size = %#llx\r\n", st.st_size)
+    EARLY_STARTUP_PRINT("st_blksize = %#lx\r\n", st.st_blksize)
     // add device
     if ( ! dev_add_folder_file_stat( path, &st ) ) {
       EARLY_STARTUP_PRINT( "Unable to add device file\r\n" )

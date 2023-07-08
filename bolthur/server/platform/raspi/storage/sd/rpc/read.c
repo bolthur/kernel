@@ -121,14 +121,14 @@ void rpc_handle_read(
   /*off_t block_number = request->offset / sd_block_size;
   // try to read from card
   EARLY_STARTUP_PRINT(
-    "Reading %#zx bytes with offset of %llx ( block number: %llx ) from sd card\r\n",
-    request->len, request->offset, block_number
+    "Reading %#zx bytes with offset of %llx / %lx ( block number: %llx ) from sd card\r\n",
+    request->len, request->offset, ( uint32_t )request->offset, block_number
   )*/
   // try to read data
   if ( ! sd_read_block(
     ( uint32_t* )target_address,
     request->len,
-    ( uint32_t )request->offset
+    request->offset
   ) ) {
     EARLY_STARTUP_PRINT(
       "Error while reading mbr from card: %s\r\n",

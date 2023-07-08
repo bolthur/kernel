@@ -249,7 +249,7 @@ uint32_t sd_device_block_size( void ) {
 }
 
 /**
- * @fn bool sd_read_block(uint32_t*, size_t, uint32_t)
+ * @fn bool sd_read_block(uint32_t*, size_t, off_t)
  * @brief Shorthand for reading some block
  *
  * @param buffer
@@ -257,7 +257,7 @@ uint32_t sd_device_block_size( void ) {
  * @param sector
  * @return
  */
-bool sd_read_block( uint32_t* buffer, size_t buffer_size, uint32_t sector ) {
+bool sd_read_block( uint32_t* buffer, size_t buffer_size, off_t sector ) {
   // debug output
   #if defined( SD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Read a block into buffer\r\n" )
@@ -265,13 +265,13 @@ bool sd_read_block( uint32_t* buffer, size_t buffer_size, uint32_t sector ) {
   return sd_transfer_block(
     buffer,
     buffer_size,
-    sector / sd_device_block_size(),
+    ( uint32_t )( sector / sd_device_block_size() ),
     SD_OPERATION_READ
   );
 }
 
 /**
- * @fn bool sd_write_block(uint32_t*, size_t, uint32_t)
+ * @fn bool sd_write_block(uint32_t*, size_t, off_t)
  * @brief Shorthand for writing data
  *
  * @param buffer
@@ -279,7 +279,7 @@ bool sd_read_block( uint32_t* buffer, size_t buffer_size, uint32_t sector ) {
  * @param sector
  * @return
  */
-bool sd_write_block( uint32_t* buffer, size_t buffer_size, uint32_t sector ) {
+bool sd_write_block( uint32_t* buffer, size_t buffer_size, off_t sector ) {
   // debug output
   #if defined( SD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Write a block from buffer\r\n" )
@@ -287,7 +287,7 @@ bool sd_write_block( uint32_t* buffer, size_t buffer_size, uint32_t sector ) {
   return sd_transfer_block(
     buffer,
     buffer_size,
-    sector / sd_device_block_size(),
+    ( uint32_t )( sector / sd_device_block_size() ),
     SD_OPERATION_WRITE
   );
 }
