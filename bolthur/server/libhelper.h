@@ -171,6 +171,40 @@ __maybe_unused static void vfs_wait_for_path( const char* path ) {
 }
 
 /**
+ * @fn bool dev_add_folder_file_stat(const char*, struct stat* )
+ * @brief Helper to add a subfolder or file
+ *
+ * @param path
+ * @param device_info
+ * @param count
+ * @param mode
+ * @return
+ */
+__maybe_unused static bool dev_add_folder_file_stat(
+  const char* path,
+  struct stat* stat
+) {
+  // allocate memory for add request
+  size_t msg_size = sizeof( vfs_add_request_t ) + 0 * sizeof( size_t );
+  vfs_add_request_t* msg = malloc( msg_size );
+  if ( ! msg ) {
+    return false;
+  }
+  // clear memory
+  memset( msg, 0, msg_size );
+  // debug output
+  EARLY_STARTUP_PRINT( "Sending \"%s\" to vfs\r\n", path )
+  // prepare message structure
+  memcpy( &msg->info, stat, sizeof( struct stat ) );
+  strncpy( msg->file_path, path, PATH_MAX - 1 );
+  // perform add request
+  send_vfs_add_request( msg, msg_size, 0 );
+  // free stuff
+  free( msg );
+  return true;
+}
+
+/**
  * @fn bool dev_add_folder_file(const char*, uint32_t*, size_t, mode_t)
  * @brief Helper to add a subfolder or file
  *

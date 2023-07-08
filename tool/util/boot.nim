@@ -26,14 +26,19 @@ proc onProgressChanged(total, progress, speed: BiggestInt): void =
   stdout.write "\rDownloaded ", progress, " of ", total, " - Current rate: ", speed div 1000, "kb/s"
   stdout.flushFile()
 
-proc copyFileToBoot*( path: string ): void =
+proc copyFileToBoot*( path: string, subfolder:string = "" ): void =
   if fileExists( path ):
     # create base path
     let basePath = joinPath( getCurrentDir(), "tmp", "partition", "boot" )
     createDir( basePath )
+    if subfolder != "":
+      createDir( joinPath( basePath, subfolder ) )
     # get folder path out of file
     let splitted = splitPath( path )
-    copyFile( path, joinPath( basePath, splitted.tail ) )
+    if subfolder != "":
+      copyFile( path, joinPath( basePath, subfolder, splitted.tail ) )
+    else:
+      copyFile( path, joinPath( basePath, splitted.tail ) )
 
 proc loadFirmwareToBoot*( firmwareType: string ): void =
   let cachePath = joinPath( getCurrentDir(), ".cache" )
@@ -49,9 +54,18 @@ proc loadFirmwareToBoot*( firmwareType: string ): void =
       # unzip firmware
       extractAll( joinPath( cachePath, "firmware.tar.gz" ), joinPath( cachePath, "firmware" ) )
     # copy over to boot
-    for file in walkDirRec( joinPath( cachePath, "firmware", "firmware-1.20230106", "boot" ), { pcFile } ):
+    let basePath = joinPath( cachePath, "firmware", "firmware-1.20230106", "boot" )
+    for file in walkDirRec( basePath, { pcFile, pcDir } ):
       let splitted = splitPath( file )
       if splitted.tail.startsWith( "kernel" ):
         continue
-      # copy over to boot
-      copyFileToBoot( file )
+      var directory = splitted.head.replace(basePath, "")
+      if directory != "":
+        # replace possible starting directory separator
+        if directory.startsWith(DirSep):
+          directory.delete(0..0)
+        # copy over to boot
+        copyFileToBoot( file, directory )
+      else:
+        # copy over to boot
+        copyFileToBoot( file )

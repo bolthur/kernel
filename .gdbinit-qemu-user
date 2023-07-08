@@ -1,5 +1,5 @@
 
 set architecture armv7
-file build/bolthur/server/platform/raspi/storage/emmc/emmc
-target remote | qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -kernel build/bolthur/kernel/target/raspi/kernel7_qemu.img -initrd build-aux/platform/raspi/initrd -dtb config/dts/raspi/bcm2836-raspi-2-b.dtb -drive file=build-aux/platform/raspi/sdcard.img,format=raw -gdb stdio -S
+file build/bolthur/server/fs/ext/ext
+target remote | qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -kernel ./build/bolthur/kernel/target/raspi/kernel7_qemu.img -initrd build-aux/platform/raspi/initrd -dtb config/dts/raspi/bcm2836-raspi-2-b.dtb -drive file=build-aux/platform/raspi/sdcard2.img,format=raw -append "coherent_pool=1M snd_bcm2835.enable_compat_alsa=0 snd_bcm2835.enable_hdmi=1 snd_bcm2835.enable_headphones=1 bcm2708_fb.fbwidth=1280 bcm2708_fb.fbheight=1024 bcm2708_fb.fbswap=1 vc_mem.mem_base=0x3ec00000 vc_mem.mem_size=0x40000000 root=/dev/storage/sd1 rootfstype=ext2" -gdb stdio -S
 display /10i $pc

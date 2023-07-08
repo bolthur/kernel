@@ -1189,7 +1189,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       // wait for flag
       sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
       sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
-      sequence[ idx ].loop_and = EMMC_INTERRUPT_MASK | interrupt;
+      sequence[ idx ].loop_and = interrupt;
       sequence[ idx ].loop_max_iteration = timeout / 10;
       sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
       sequence[ idx ].sleep = 10;
@@ -3124,7 +3124,7 @@ emmc_response_t emmc_transfer_block(
       return response;
     }
   // in data transfer, try to cancel
-  } else if ( 5 == status ) {
+  } else if ( 5 == status || 6 == status ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Try to stop data transmission\r\n" )

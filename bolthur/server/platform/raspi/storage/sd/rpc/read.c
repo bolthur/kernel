@@ -121,7 +121,7 @@ void rpc_handle_read(
   /*off_t block_number = request->offset / sd_block_size;
   // try to read from card
   EARLY_STARTUP_PRINT(
-    "Reading %#zx bytes with offset of %lx ( block number: %lx ) from sd card\r\n",
+    "Reading %#zx bytes with offset of %llx ( block number: %llx ) from sd card\r\n",
     request->len, request->offset, block_number
   )*/
   // try to read data

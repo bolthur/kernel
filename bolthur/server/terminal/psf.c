@@ -50,7 +50,7 @@ static bool psf_load_font( psf_font_t* f ) {
     return false;
   }
   // get to end of file
-  long position = lseek( fd, 0, SEEK_END );
+  off_t position = lseek( fd, 0, SEEK_END );
   if ( -1 == position ) {
     close( fd );
     return false;

@@ -195,13 +195,14 @@ void rpc_handle_mount_target_check(
 ) {
   EARLY_STARTUP_PRINT("TARGET MOUNT CHECK CALLBACK\r\n")
   EARLY_STARTUP_PRINT( "handler: %d\r\n", context->file_stat->handler )
-  EARLY_STARTUP_PRINT( "SIZE: %ld\r\n", context->file_stat->info.st_size )
-  vfs_mount_response_t response = { .result = -EAGAIN };
+  EARLY_STARTUP_PRINT( "SIZE: %lld\r\n", context->file_stat->info.st_size )
+  /// FIXME: ADD CHECK FOR NOT EMPTY DIRECTORY
+  /*vfs_mount_response_t response = { .result = -EAGAIN };
   if ( context->file_stat->info.st_size > 0 ) {
     response.result = -ENOTEMPTY;
     bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
     return;
-  }
+  }*/
   // perform mount
   rpc_handle_mount_perform(
     RPC_VFS_MOUNT,

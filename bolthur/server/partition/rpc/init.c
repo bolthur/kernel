@@ -30,22 +30,22 @@
 bool rpc_init( void ) {
   bolthur_rpc_bind( RPC_VFS_MOUNT, rpc_handle_mount, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    EARLY_STARTUP_PRINT( "Unable to register handler mount!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WATCH_NOTIFY, rpc_handle_watch_notify, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    EARLY_STARTUP_PRINT( "Unable to register handler watch notify!\r\n" )
     return false;
   }
   bolthur_rpc_bind( PARTITION_REGISTER_HANDLER, rpc_custom_handle_register, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler device kill!\r\n" )
+    EARLY_STARTUP_PRINT( "Unable to register handler custom register!\r\n" )
     return false;
   }
   bolthur_rpc_bind( PARTITION_RELEASE_HANDLER, rpc_custom_handle_release, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler device kill!\r\n" )
+    EARLY_STARTUP_PRINT( "Unable to register handler custom release!\r\n" )
     return false;
   }
   return true;

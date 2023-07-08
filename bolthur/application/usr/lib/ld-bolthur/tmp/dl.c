@@ -479,7 +479,7 @@ void* dl_map_load_section(
     mapping |= MAP_FIXED;
   }
   EARLY_STARTUP_PRINT(
-    "mmap( %p, %#zx, %#x, %#x, %#x, %#lx )\r\n",
+    "mmap( %p, %#zx, %#x, %#x, %#x, %#llx )\r\n",
     base, size, prot, mapping, descriptor, offset
   )
   // call to mmap
@@ -653,7 +653,7 @@ dl_image_handle_ptr_t dl_load_entry(
     off_t text_off = ROUND_PAGE_OFFSET( load_header[ 0 ].p_offset );
     size_t text_size = ROUND_UP_TO_FULL_PAGE( load_header[ 0 ].p_memsz + ( size_t )text_off );
     EARLY_STARTUP_PRINT(
-      "text_address = %#"PRIxPTR", text_offset = %#lx, text_off = %#lx, text_size = %#zx\r\n",
+      "text_address = %#"PRIxPTR", text_offset = %#llx, text_off = %#llx, text_size = %#zx\r\n",
       text_address, text_offset, text_off, text_size
     )
     EARLY_STARTUP_PRINT(
@@ -669,7 +669,7 @@ dl_image_handle_ptr_t dl_load_entry(
     size_t data_size = ROUND_UP_TO_FULL_PAGE( load_header[ 1 ].p_memsz + ( size_t )data_off );
     size_t data_file_size = ROUND_UP_TO_FULL_PAGE( load_header[ 1 ].p_filesz + ( size_t )data_off );
     EARLY_STARTUP_PRINT(
-      "data_address = %#"PRIxPTR", data_offset = %#lx, data_off = %#lx, "
+      "data_address = %#"PRIxPTR", data_offset = %#llx, data_off = %#llx, "
       "data_size = %#zx, data_file_size = %#zx\r\n",
       data_address, data_offset, data_off, data_size, data_file_size
     )
@@ -695,7 +695,7 @@ dl_image_handle_ptr_t dl_load_entry(
       return NULL;
     }
     EARLY_STARTUP_PRINT(
-      "loaded to %#x with length %#zx. File offset: %#lx, data = %p\r\n",
+      "loaded to %#x with length %#zx. File offset: %#llx, data = %p\r\n",
       ( uintptr_t )memory, text_size, text_offset,
       ( void* )( memory + load_header[ 1 ].p_vaddr - load_header[ 0 ].p_vaddr )
     )
@@ -717,7 +717,7 @@ dl_image_handle_ptr_t dl_load_entry(
     memset( data + len, 0, data_file_size - len );
     void* tmp_data = ( void* )( memory + load_header[ 1 ].p_vaddr - load_header[ 0 ].p_vaddr );
     EARLY_STARTUP_PRINT( "data = %p, *data = %#lx\r\n", tmp_data, *( ( uint32_t* )tmp_data ) )
-    EARLY_STARTUP_PRINT( "loaded to %#x with length %#zx. File offset: %#lx\r\n",
+    EARLY_STARTUP_PRINT( "loaded to %#x with length %#zx. File offset: %#llx\r\n",
       ( uintptr_t )data, data_file_size, data_offset )
     // map more space if necessary
     if ( data_size > data_file_size ) {

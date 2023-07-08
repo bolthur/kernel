@@ -90,8 +90,8 @@ void rpc_handle_stat(
   response.info.st_ctim.tv_sec = sec;
   response.info.st_ctim.tv_nsec = nsec;
   response.info.st_blksize = T_BLOCKSIZE;
-  response.info.st_blocks = ( response.info.st_size / T_BLOCKSIZE )
-    + ( response.info.st_size % T_BLOCKSIZE ? 1 : 0 );
+  response.info.st_blocks = ( blkcnt_t )( ( response.info.st_size / T_BLOCKSIZE )
+    + ( response.info.st_size % T_BLOCKSIZE ? 1 : 0 ) );
   response.success = true;
   response.handler = getpid();
   // return response

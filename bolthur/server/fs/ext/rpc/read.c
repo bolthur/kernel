@@ -25,14 +25,13 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 
-// ext4 library
-#include <lwext4/ext4.h>
-#include <lwext4/blockdev/bolthur/blockdev.h>
-// includes below are only for ide necessary
-#include <lwext4/ext4_types.h>
-#include <lwext4/ext4_errno.h>
-#include <lwext4/ext4_oflags.h>
-#include <lwext4/ext4_debug.h>
+// fat library
+#include <bfs/blockdev/blockdev.h>
+#include <bfs/common/blockdev.h>
+#include <bfs/common/errno.h>
+#include <bfs/ext/mountpoint.h>
+#include <bfs/ext/type.h>
+#include <bfs/ext/file.h>
 
 /**
  * @fn void rpc_handle_read(size_t, pid_t, size_t, size_t)
@@ -105,9 +104,9 @@ void rpc_handle_read(
     }
   }
   // open path
-  ext4_file fd;
+  ext_file_t fd;
   memset( &fd, 0, sizeof( fd ) );
-  int result = ext4_fopen( &fd, request->file_path, "r" );
+  int result = ext_file_open( &fd, request->file_path, "r" );
   if ( EOK != result ) {
     response->len = -result;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
@@ -119,7 +118,7 @@ void rpc_handle_read(
     return;
   }
   // set offset
-  result = ext4_fseek( &fd, request->offset, SEEK_SET );
+  result = ext_file_seek( &fd, request->offset, SEEK_SET );
   if ( EOK != result ) {
     response->len = -result;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
@@ -131,8 +130,8 @@ void rpc_handle_read(
     return;
   }
   // read content
-  size_t read_count = 0;
-  result = ext4_fread( &fd, shm_addr, request->len, &read_count );
+  uint64_t read_count = 0;
+  result = ext_file_read( &fd, shm_addr, request->len, &read_count );
   if ( EOK != result ) {
     response->len = -result;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
@@ -144,7 +143,7 @@ void rpc_handle_read(
     return;
   }
   // close again
-  result = ext4_fclose( &fd );
+  result = ext_file_close( &fd );
   if ( EOK != result ) {
     response->len = -result;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );

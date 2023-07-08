@@ -35,12 +35,12 @@ proc imageDd( source: string, target: string, size: int, blockSize: int, offset:
     quit( 1 )
 
 proc imageCreatePartition( target: string, totalSize: int, bootFolder: string, bootType: string, bootSize: int, rootFolder: string, rootType: string ): void =
-  # use boot size - 1 for mbr
-  let partitionSizeBoot: int = ( bootSize - 1 ) * mega
-  # calculate partition root size
-  let partitionSizeRoot: int = ( totalSize - bootSize ) * mega
   # save partition table offset
   let partitionTableOffset: int = mega
+  # use boot size - 1 for mbr
+  let partitionSizeBoot: int = bootSize * mega
+  # calculate partition root size
+  let partitionSizeRoot: int = ( totalSize - bootSize ) * mega - partitionTableOffset
 
   var cmdResult: tuple[output: string, exitCode: int];
 
@@ -123,7 +123,7 @@ proc createPlainImageFile*( imageType: string, rootPath: string ): void =
     if fileExists( configFile ): copyFile( configFile, joinPath( bootDirectoryPath, "config.txt" ) )
     if fileExists( cmdlineFile ): copyFile( cmdlineFile, joinPath( bootDirectoryPath, "cmdline.txt" ) )
     # create boot partition
-    imageCreatePartition( imagePath, 256, bootDirectoryPath, "fat32", 100, rootDirectoryPath, "ext2" )
+    imageCreatePartition( imagePath, 1024, bootDirectoryPath, "fat32", 256, rootDirectoryPath, "ext2" )
     let destinationImagePath: string = joinPath( rootPath, "build-aux", "platform", imageType, "sdcard.img" )
     if fileExists( destinationImagePath ): removeFile( destinationImagePath )
     copyFile( imagePath, destinationImagePath )

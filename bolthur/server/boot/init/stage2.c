@@ -99,6 +99,7 @@ noreturn void init_stage2( void ) {
   struct mntent* m = NULL;
   if ( fstab ) {
     while( ( m = getmntent( fstab ) ) ) {
+      STARTUP_PRINT( "m->mnt_dir = %s\r\n", m->mnt_dir )
       // skip root
       if (
         strlen( "/" ) == strlen( m->mnt_dir )

@@ -98,17 +98,13 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
   // loop through partitions and calculate total byte size
-  uint32_t total_size = 0;
+  uint64_t total_size = 0;
   for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
     mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
       mbr_data + PARTITION_TABLE_OFFSET + ( i * sizeof( mbr_table_entry_t ) ) );
+    EARLY_STARTUP_PRINT( "entry->data.total_sector = %#lx\r\n", entry->data.total_sector )
     // calculate total
-    uint32_t tmp_total = entry->data.start_sector * 512
-      + entry->data.total_sector * 512;
-    // overwrite total with temp if bigger
-    if ( tmp_total > total_size ) {
-      total_size = tmp_total;
-    }
+    total_size += ( uint64_t )entry->data.total_sector * 512;
   }
   // allocate memory for add request
   vfs_add_request_t* msg = malloc( sizeof( vfs_add_request_t ) );
@@ -120,8 +116,9 @@ int main( __unused int argc, __unused char* argv[] ) {
   // prepare message structure
   msg->info.st_mode = S_IFCHR;
   msg->info.st_size = ( off_t )total_size;
+  EARLY_STARTUP_PRINT( "%#"PRIx64", %#llx\r\n", total_size, msg->info.st_size )
   msg->info.st_blksize = ( blksize_t )sd_device_block_size();
-  msg->info.st_blocks = msg->info.st_size / msg->info.st_blksize;
+  msg->info.st_blocks = ( blksize_t )( msg->info.st_size / msg->info.st_blksize );
   strncpy( msg->file_path, "/dev/storage/sd", PATH_MAX - 1 );
   EARLY_STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
   // perform add request

@@ -110,8 +110,13 @@ void rpc_handle_watch_notify(
     if ( 0 != partition_add( path, entry ) ) {
       EARLY_STARTUP_PRINT( "Unable to push %s to search tree\r\n", path )
     }
+    struct stat st = {
+      .st_size = ( off_t )entry->data.total_sector * 512,
+      .st_mode = S_IFCHR,
+    };
+    EARLY_STARTUP_PRINT("st_size = %#llx\r\n", st.st_size)
     // add device
-    if ( ! dev_add_file( path, NULL, 0 ) ) {
+    if ( ! dev_add_folder_file_stat( path, &st ) ) {
       EARLY_STARTUP_PRINT( "Unable to add device file\r\n" )
       partition_remove( path );
       return;

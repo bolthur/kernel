@@ -24,14 +24,11 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 
-// ext4 library
-#include <lwext4/ext4.h>
-#include <lwext4/blockdev/bolthur/blockdev.h>
-// includes below are only for ide necessary
-#include <lwext4/ext4_types.h>
-#include <lwext4/ext4_errno.h>
-#include <lwext4/ext4_oflags.h>
-#include <lwext4/ext4_debug.h>
+// fat library
+#include <bfs/blockdev/blockdev.h>
+#include <bfs/common/blockdev.h>
+#include <bfs/common/errno.h>
+#include <bfs/ext/mountpoint.h>
 
 /**
  * @fn void rpc_handle_umount(size_t, pid_t, size_t, size_t)
@@ -77,33 +74,12 @@ void rpc_handle_umount(
     free( request );
     return;
   }
-  // check whether target is already mounted
-  struct ext4_mount_stats stats;
-  int result = ext4_mount_point_stats( request->target, &stats );
-  if ( EOK != result ) {
-    response.result = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
+  // Add trailing slash if not set
+  if ( '/' != request->target[ strlen( request->target ) - 1 ] ) {
+    strcat( request->target, "/" );
   }
-  // cache write back
-  result = ext4_cache_write_back( request->target, 0 );
-  if ( EOK != result ) {
-    response.result = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
-  // stop journal
-  result = ext4_journal_stop( request->target );
-  if ( EOK != result ) {
-    response.result = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
-  // perform umouont
-  result = ext4_umount( request->target );
+  // try to unmount
+  int result = ext_mountpoint_umount( request->target );
   if ( EOK != result ) {
     response.result = -result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );

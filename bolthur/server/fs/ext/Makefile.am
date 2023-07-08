@@ -1,10 +1,10 @@
 
 bin_PROGRAMS = ext
 ext_LDADD = \
-  $(LWEXT4_LIBS)
+  $(BFS_LIBS)
 ext_CFLAGS = \
   -DPROGRAM_NAME=\"fs/ext\" \
-  $(LWEXT4_CFLAGS)
+  $(BFS_CFLAGS)
 ext_SOURCES = \
   rpc/init.c \
   rpc/mount.c \

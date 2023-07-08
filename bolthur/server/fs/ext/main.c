@@ -71,7 +71,7 @@ int main( __unused int argc, __unused char* argv[] ) {
     close( fd );
     return -1;
   }
-  for ( uint32_t idx = 2; idx <= 4; idx++ ) {
+  for ( uint32_t idx = 2; idx <= 2; idx++ ) {
     // clear out
     memset( reg, 0, sizeof( *reg ) );
     // populate with information

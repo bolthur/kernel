@@ -168,7 +168,13 @@ bool framebuffer_init( void ) {
   physical_height = ( uint32_t )request[ 6 ];
   free( request );
   // Use fallback if not set
-  if ( 0 == physical_width && 0 == physical_height ) {
+  if (
+    ( 0 == physical_width && 0 == physical_height )
+    || (
+      FRAMEBUFFER_SCREEN_WIDTH > physical_width
+      && FRAMEBUFFER_SCREEN_HEIGHT > physical_height
+    )
+  ) {
     physical_width = FRAMEBUFFER_SCREEN_WIDTH;
     physical_height = FRAMEBUFFER_SCREEN_HEIGHT;
   }
