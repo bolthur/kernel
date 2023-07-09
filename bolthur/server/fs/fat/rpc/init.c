@@ -52,5 +52,10 @@ bool rpc_init( void ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
     return false;
   }
+  bolthur_rpc_bind( RPC_VFS_DIRECTORY_EMPTY, rpc_handle_directory_empty, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
+    return false;
+  }
   return true;
 }

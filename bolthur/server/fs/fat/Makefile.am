@@ -6,6 +6,7 @@ fat_CFLAGS = \
   -DPROGRAM_NAME=\"fs/fat\" \
   $(BFS_CFLAGS)
 fat_SOURCES = \
+  rpc/empty.c \
   rpc/init.c \
   rpc/mount.c \
   rpc/read.c \

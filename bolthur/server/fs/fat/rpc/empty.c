@@ -29,11 +29,11 @@
 #include <bfs/blockdev/blockdev.h>
 #include <bfs/common/blockdev.h>
 #include <bfs/common/errno.h>
-#include <bfs/ext/mountpoint.h>
-#include <bfs/ext/type.h>
-#include <bfs/ext/file.h>
-#include <bfs/ext/stat.h>
-#include <bfs/ext/directory.h>
+#include <bfs/fat/mountpoint.h>
+#include <bfs/fat/type.h>
+#include <bfs/fat/file.h>
+#include <bfs/fat/stat.h>
+#include <bfs/fat/directory.h>
 
 /**
  * @fn void rpc_handle_directory_empty(size_t, pid_t, size_t, size_t)
@@ -78,19 +78,41 @@ void rpc_handle_directory_empty(
     return;
   }
   EARLY_STARTUP_PRINT( "directory empty check: %s\r\n", request->path )
-  ext_directory_t dir;
+  fat_directory_t dir;
   memset( &dir, 0, sizeof( dir ) );
-  int result = ext_directory_open( &dir, request->path );
+  int result = fat_directory_open( &dir, request->path );
   if ( EOK != result ) {
     response.result = -result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  // set result
-  response.result = 2 == dir.entry_size ? 0 : -ENOTEMPTY;
-  // close directory again
-  result = ext_directory_close( &dir );
+
+  bool empty = true;
+  while ( EOK == ( result = fat_directory_next_entry( &dir ) ) ) {
+    // handle nothing in there
+    if ( ! dir.data && ! dir.entry ) {
+      break;
+    }
+    if (
+      0 != strcmp( ".", ( char* )dir.data->name )
+      || 0 != strcmp( "..", ( char* )dir.data->name )
+    ) {
+      empty = false;
+      break;
+    }
+  }
+  result = fat_directory_rewind( &dir );
+  if ( EOK != result ) {
+    response.result = -result;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // set response result
+  response.result = empty ? 0 : -ENOTEMPTY;
+  // close directory
+  result = fat_directory_close( &dir );
   if ( EOK != result ) {
     response.result = -result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
