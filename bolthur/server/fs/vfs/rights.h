@@ -35,6 +35,7 @@ typedef struct rights_check_context {
   size_t request_size;
   void* request;
   vfs_stat_response_t* file_stat;
+  vfs_directory_empty_response_t* empty_response;
   vfs_stat_response_t* authenticate_stat;
   vfs_ioctl_perform_response_t* origin_right;
   size_t origin_right_size;
@@ -43,6 +44,7 @@ typedef struct rights_check_context {
 
 void rights_handle_permission( bolthur_async_data_t*, vfs_ioctl_perform_response_t*, size_t );
 void rights_handle_file_stat( bolthur_async_data_t*, vfs_stat_response_t*, rpc_handler_t );
+void rights_handle_empty( bolthur_async_data_t*, vfs_directory_empty_response_t*, rpc_handler_t );
 void rights_handle_authenticate_stat( bolthur_async_data_t*, vfs_stat_response_t*, rpc_handler_t );
 void rights_handle_umount_authenticate_stat( bolthur_async_data_t*, vfs_stat_response_t*, rpc_handler_t );
 void rights_check( const char*, rights_handler_t, rpc_handler_t, void*, size_t, size_t, pid_t, size_t, rights_check_context_t* );

@@ -65,7 +65,7 @@ void rights_handle_file_stat(
 ) {
   rights_check_context_t* context = async_data->context;
   // get mount point
-  mountpoint_node_t* mount_point = mountpoint_node_extract( AUTHENTICATION_DEVICE );
+  mountpoint_node_t* mount_point = mountpoint_node_extract( context->path );
   // handle no mount point node found
   if ( ! mount_point ) {
     free( stat_response );
@@ -74,12 +74,60 @@ void rights_handle_file_stat(
   // update context by stat response
   context->file_stat = stat_response;
   // allocate ioctl request for authentication
+  vfs_directory_empty_request_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    free( stat_response );
+    return;
+  }
+  // clear out
+  memset( request, 0, sizeof( *request ) );
+  strcpy( request->path, context->path );
+  // perform async rpc
+  bolthur_rpc_raise(
+    RPC_VFS_DIRECTORY_EMPTY,
+    mount_point->pid,
+    request,
+    sizeof( *request ),
+    handler,
+    async_data->type,
+    async_data->original_data,
+    async_data->length,
+    async_data->original_origin,
+    async_data->original_rpc_id,
+    context
+  );
+}
+
+/**
+ * @fn void rights_handle_empty(bolthur_async_data_t*, vfs_directory_empty_response_t*, rpc_handler_t)
+ * @brief
+ *
+ * @param async_data
+ * @param stat_response
+ * @param handler
+ */
+void rights_handle_empty(
+  bolthur_async_data_t* async_data,
+  vfs_directory_empty_response_t* empty_response,
+  rpc_handler_t handler
+) {
+  rights_check_context_t* context = async_data->context;
+  // get mount point
+  mountpoint_node_t* mount_point = mountpoint_node_extract( AUTHENTICATION_DEVICE );
+  // handle no mount point node found
+  if ( ! mount_point ) {
+    free( empty_response );
+    return;
+  }
+  // update context by stat response
+  context->empty_response = empty_response;
+  // allocate ioctl request for authentication
   vfs_ioctl_perform_request_t* request;
   size_t data_size = sizeof( *request )
     + sizeof( authentication_fetch_request_t );
   request = malloc( data_size );
   if ( ! request ) {
-    free( stat_response );
+    free( empty_response );
     return;
   }
   // clear out
@@ -329,6 +377,9 @@ void rights_destroy_context( rights_check_context_t* context ) {
   }
   if ( context->origin_right ) {
     free( context->origin_right );
+  }
+  if ( context->empty_response ) {
+    free( context->empty_response );
   }
   // destroy context
   free( context );

@@ -42,6 +42,7 @@ void rpc_handle_mount_device_check( rights_check_context_t*, bolthur_async_data_
 void rpc_handle_mount_target_authenticate_stat( size_t, pid_t, size_t, size_t );
 void rpc_handle_mount_target_target_stat( size_t, pid_t, size_t, size_t );
 void rpc_handle_mount_target_process_authentication( size_t, pid_t, size_t, size_t );
+void rpc_handle_mount_target_empty( size_t, pid_t, size_t, size_t );
 void rpc_handle_mount_target_check( rights_check_context_t*, bolthur_async_data_t* );
 void rpc_handle_mount_stat( size_t, pid_t, size_t, size_t );
 void rpc_handle_mount_perform( size_t, pid_t, size_t, size_t, vfs_mount_request_t*, bolthur_async_data_t*, rights_check_context_t* );

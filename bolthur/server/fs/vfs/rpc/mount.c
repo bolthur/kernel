@@ -197,12 +197,12 @@ void rpc_handle_mount_target_check(
   EARLY_STARTUP_PRINT( "handler: %d\r\n", context->file_stat->handler )
   EARLY_STARTUP_PRINT( "SIZE: %lld\r\n", context->file_stat->info.st_size )
   /// FIXME: ADD CHECK FOR NOT EMPTY DIRECTORY
-  /*vfs_mount_response_t response = { .result = -EAGAIN };
-  if ( context->file_stat->info.st_size > 0 ) {
+  vfs_mount_response_t response = { .result = -EAGAIN };
+  if ( 0 != context->empty_response->result ) {
     response.result = -ENOTEMPTY;
     bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
     return;
-  }*/
+  }
   // perform mount
   rpc_handle_mount_perform(
     RPC_VFS_MOUNT,
@@ -270,6 +270,66 @@ void rpc_handle_mount_target_process_authentication(
 }
 
 /**
+ * @fn void rpc_handle_mount_target_empty(size_t, pid_t, size_t, size_t)
+ * @brief Handle mount target empty callback
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_mount_target_empty(
+  __unused size_t type,
+  __unused pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  EARLY_STARTUP_PRINT("TARGET MOUNT TARGET EMPTY\r\n")
+  vfs_mount_response_t response = { .result = -EAGAIN };
+  // get matching async data
+  bolthur_async_data_t* async_data =
+    bolthur_rpc_pop_async( RPC_VFS_MOUNT, response_info );
+  if ( ! async_data ) {
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // allocate space for stat response and clear out
+  vfs_directory_empty_response_t* empty_response = malloc( sizeof( *empty_response ) );
+  if ( ! empty_response ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    return;
+  }
+  // clear out
+  memset( empty_response, 0, sizeof( *empty_response ) );
+  // original request
+  vfs_mount_request_t* request = async_data->original_data;
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( empty_response );
+    return;
+  }
+  // fetch response
+  _syscall_rpc_get_data( empty_response, sizeof( *empty_response ), data_info, false );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( empty_response );
+    return;
+  }
+  if ( 0 != empty_response->result ) {
+    response.result = empty_response->result;
+    bolthur_rpc_return( RPC_VFS_MOUNT, &response, sizeof( response ), async_data );
+    free( empty_response );
+    return;
+  }
+  rights_handle_empty(async_data, empty_response, rpc_handle_mount_target_process_authentication);
+  bolthur_rpc_destroy_async( async_data );
+}
+
+/**
  * @fn void rpc_handle_mount_target_target_stat(size_t, pid_t, size_t, size_t)
  * @brief Handle mount target target stat callback
  *
@@ -325,7 +385,7 @@ void rpc_handle_mount_target_target_stat(
     free( stat_response );
     return;
   }
-  rights_handle_file_stat(async_data, stat_response, rpc_handle_mount_target_process_authentication);
+  rights_handle_file_stat(async_data, stat_response, rpc_handle_mount_target_empty);
   bolthur_rpc_destroy_async( async_data );
 }
 

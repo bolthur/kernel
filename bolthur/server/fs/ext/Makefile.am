@@ -6,6 +6,7 @@ ext_CFLAGS = \
   -DPROGRAM_NAME=\"fs/ext\" \
   $(BFS_CFLAGS)
 ext_SOURCES = \
+  rpc/empty.c \
   rpc/init.c \
   rpc/mount.c \
   rpc/read.c \
