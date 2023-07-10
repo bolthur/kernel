@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../stat.h"
 
 // fat library
 #include <bfs/blockdev/blockdev.h>
@@ -77,6 +78,7 @@ void rpc_handle_stat(
     free( request );
     return;
   }
+  /// FIXME: FETCH STAT AND RETURN IF EXISTING
   // get mode and owner
   uint32_t uid = 0;
   uint32_t gid = 0;

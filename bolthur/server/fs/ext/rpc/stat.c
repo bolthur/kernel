@@ -24,6 +24,7 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../stat.h"
 
 // fat library
 #include <bfs/blockdev/blockdev.h>
@@ -79,15 +80,30 @@ void rpc_handle_stat(
   }
   EARLY_STARTUP_PRINT( "ext stat call \"%s\"\r\n", request->file_path )
   struct stat st;
-  int result = ext_stat( request->file_path, &st );
-  if ( EOK != result ) {
-    EARLY_STARTUP_PRINT( "ext stat call failed: %d => %s\r\n", result, strerror( result ) )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
+  struct stat* cached = stat_fetch( request->file_path );
+  if ( !cached ) {
+    // fetch stat information
+    int result = ext_stat( request->file_path, &st );
+    if ( EOK != result ) {
+      EARLY_STARTUP_PRINT( "ext stat call failed: %d => %s\r\n", result, strerror( result ) )
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    EARLY_STARTUP_PRINT("%s: %lld\r\n", request->file_path, st.st_size)
+    // try to push back
+    if ( ! stat_push( request->file_path, &st ) ) {
+      EARLY_STARTUP_PRINT( "Unable to push stat to cache!\r\n" )
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
+      return;
+    }
+    // set cached for copy
+    cached = &st;
+  } else {
+    EARLY_STARTUP_PRINT( "CACHE HIT!\r\n" )
   }
-  EARLY_STARTUP_PRINT("%s: %lld\r\n", request->file_path, st.st_size)
-  memcpy( &response.info, &st, sizeof( st ) );
+  memcpy( &response.info, cached, sizeof( *cached ) );
 
   // populate remaining information
   response.success = true;

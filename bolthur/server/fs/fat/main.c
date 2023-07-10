@@ -24,6 +24,7 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "rpc.h"
+#include "stat.h"
 #include "../../libhelper.h"
 #include "../../libpartition.h"
 
@@ -42,6 +43,13 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
   if ( ! rpc_init() ) {
     EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    return -1;
+  }
+
+  // setup stat cache
+  EARLY_STARTUP_PRINT( "Setup stat cache!\r\n" )
+  if ( ! stat_node_setup() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup stat cache!\r\n" )
     return -1;
   }
 

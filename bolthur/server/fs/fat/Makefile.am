@@ -13,5 +13,6 @@ fat_SOURCES = \
   rpc/stat.c \
   rpc/umount.c \
   rpc/write.c \
-  main.c
+  main.c \
+  stat.c
 fat_LDFLAGS = -all-static --static
