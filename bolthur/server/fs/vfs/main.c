@@ -24,6 +24,7 @@
 #include "rpc.h"
 #include "ioctl/handler.h"
 #include "mountpoint/node.h"
+#include "handler/node.h"
 
 pid_t vfs_pid = 0;
 
@@ -49,6 +50,11 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Setting up mountpoint handling!\r\n" )
   if ( ! mountpoint_node_setup() ) {
     EARLY_STARTUP_PRINT( "Unable to setup mountpoint node handling!\r\n" )
+    return -1;
+  }
+  // setup handler handling
+  if ( ! handler_node_setup() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup handler node handling!\r\n" )
     return -1;
   }
   // setup handle management

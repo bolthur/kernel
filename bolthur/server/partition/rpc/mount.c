@@ -28,6 +28,70 @@
 #include "../partition.h"
 #include "../handler.h"
 
+static int lstat_handler( const char* pathname, struct stat* buf, pid_t* handler ) {
+  // variables
+  vfs_stat_request_t* request = malloc( sizeof( vfs_stat_request_t ) );
+  if ( ! request ) {
+    errno = ENOMEM;
+    return -1;
+  }
+  vfs_stat_response_t* response = malloc( sizeof( vfs_stat_response_t ) );
+  if ( ! response ) {
+    free( request );
+    errno = ENOMEM;
+    return -1;
+  }
+  // clear message structures
+  memset( request, 0, sizeof( vfs_stat_request_t ) );
+  memset( response, 0, sizeof( vfs_stat_response_t ) );
+  // copy stuff to message
+  strncpy( request->file_path, pathname, PATH_MAX - 1 );
+  // raise rpc and wait for return
+  size_t response_id = bolthur_rpc_raise(
+    RPC_VFS_STAT,
+    VFS_DAEMON_ID,
+    request,
+    sizeof( vfs_stat_request_t ),
+    NULL,
+    RPC_VFS_STAT,
+    request,
+    sizeof( vfs_stat_request_t ),
+    0,
+    0,
+    NULL
+  );
+  // handle error
+  if ( 0 == response_id ) {
+    free( request );
+    free( response );
+    return -1;
+  }
+  // get response
+  _syscall_rpc_get_data(
+    response,
+    sizeof( vfs_stat_response_t ),
+    response_id,
+    false
+  );
+  // handle error
+  if ( errno ) {
+    free( request );
+    free( response );
+    return -1;
+  }
+  // handle failure
+  if ( ! response->success ) {
+    free( request );
+    free( response );
+    errno = EIO;
+    return -1;
+  }
+  // copy over stat content
+  memcpy( buf, &response->info, sizeof( struct stat ) );
+  *handler = response->handler;
+  return 0;
+}
+
 /**
  * @fn void rpc_handle_mount_async(size_t, pid_t, size_t, size_t)
  * @brief Internal helper to continue asynchronous started mount point
@@ -109,7 +173,7 @@ void rpc_handle_mount(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  size_t response_info
 ) {
   EARLY_STARTUP_PRINT( "partition mounting\r\n" )
   // handle async return in case response info is set
@@ -118,9 +182,20 @@ void rpc_handle_mount(
     return;
   }
   vfs_mount_response_t response = { .result = -ENOMEM };
+  // query stat and handler from mount device
+  struct stat st;
+  pid_t mount_pid;
+  if ( 0 != lstat_handler( MOUNT_DEVICE, &st, &mount_pid ) ) {
+    response.result = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    return;
+  }
   // validate origin
-  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
+  if (
+    ! bolthur_rpc_validate_origin( origin, data_info )
+    && mount_pid != origin
+  ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   vfs_mount_request_t* request = malloc( sizeof( *request ) );

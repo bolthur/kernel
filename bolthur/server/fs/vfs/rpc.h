@@ -19,7 +19,6 @@
 
 #include <stdbool.h>
 #include <sys/bolthur.h>
-#include "rights.h"
 
 #ifndef _RPC_H
 #define _RPC_H
@@ -31,21 +30,12 @@ void rpc_handle_add_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_close( size_t, pid_t, size_t, size_t );
 void rpc_handle_exit( size_t, pid_t, size_t, size_t );
 void rpc_handle_fork( size_t, pid_t, size_t, size_t );
+void rpc_handle_getdents( size_t, pid_t, size_t, size_t );
+void rpc_handle_getdents_async( size_t, pid_t, size_t, size_t );
 bool rpc_init( void );
 void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );
 void rpc_handle_ioctl_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_mount( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount_device_device_stat( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount_device_authenticate_stat( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount_device_process_authentication( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount_device_check( rights_check_context_t*, bolthur_async_data_t* );
-void rpc_handle_mount_target_authenticate_stat( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount_target_target_stat( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount_target_process_authentication( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount_target_empty( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount_target_check( rights_check_context_t*, bolthur_async_data_t* );
-void rpc_handle_mount_stat( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount_perform( size_t, pid_t, size_t, size_t, vfs_mount_request_t*, bolthur_async_data_t*, rights_check_context_t* );
 void rpc_handle_mount_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_open( size_t, pid_t, size_t, size_t );
 void rpc_handle_open_async( size_t, pid_t, size_t, size_t );
@@ -64,5 +54,7 @@ void rpc_handle_watch_release_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_watch_notify( size_t, pid_t, size_t, size_t );
 void rpc_handle_write( size_t, pid_t, size_t, size_t );
 void rpc_handle_write_async( size_t, pid_t, size_t, size_t );
+void rpc_handle_handler_register( size_t, pid_t, size_t, size_t );
+void rpc_handle_handler_release( size_t, pid_t, size_t, size_t );
 
 #endif

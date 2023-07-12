@@ -21,83 +21,68 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <sys/bolthur.h>
-#include "../rpc.h"
-
-// fat library
-#include <bfs/blockdev/blockdev.h>
-#include <bfs/common/blockdev.h>
-#include <bfs/common/errno.h>
-#include <bfs/ext/mountpoint.h>
-#include <bfs/ext/type.h>
-#include <bfs/ext/file.h>
-#include <bfs/ext/stat.h>
-#include <bfs/ext/directory.h>
+#include "../../handler/node.h"
+#include "../../rpc.h"
 
 /**
- * @fn void rpc_handle_directory_empty(size_t, pid_t, size_t, size_t)
- * @brief Handle directory empty request
+ * @fn void rpc_handle_watch_release(size_t, pid_t, size_t, size_t)
+ * @brief handle watch release
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_directory_empty(
+void rpc_handle_handler_release(
   size_t type,
-  pid_t origin,
+  __unused pid_t origin,
   size_t data_info,
   __unused size_t response_info
 ) {
-  vfs_directory_empty_response_t response = { .result = -EINVAL };
-  // validate origin
-  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+  EARLY_STARTUP_PRINT( "handler release called\r\n" )
+  vfs_release_handler_response_t response = { .result = -EINVAL };
+  // handle no data
+  if( ! data_info ) {
+    response.result = -ENODATA;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  vfs_directory_empty_request_t* request = malloc( sizeof( *request ) );
+  // allocate space for request data
+  vfs_release_handler_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
+    response.result = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // clear variables
   memset( request, 0, sizeof( *request ) );
-  // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
   // fetch rpc data
   _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
-  // handle error
   if ( errno ) {
+    response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  EARLY_STARTUP_PRINT( "directory empty check: %s\r\n", request->path )
-  ext_directory_t dir;
-  memset( &dir, 0, sizeof( dir ) );
-  int result = ext_directory_open( &dir, request->path );
-  if ( EOK != result ) {
-    response.result = -result;
+  handler_node_t* found = handler_node_extract( request->request );
+  if ( ! found ) {
+    response.result = 0;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  // set result
-  response.result = 2 == dir.entry_size ? 0 : -ENOTEMPTY;
-  // close directory again
-  result = ext_directory_close( &dir );
-  if ( EOK != result ) {
-    response.result = -result;
+  // check handler
+  if ( found->handler != origin ) {
+    response.result = -EPERM;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  // return data
+  // remove node
+  handler_node_remove( request->request );
+  // return success
+  response.result = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( request );
 }

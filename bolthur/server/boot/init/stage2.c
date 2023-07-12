@@ -36,7 +36,7 @@
 #include <stdnoreturn.h>
 noreturn void init_stage2( void ) {
   // start servers by configuration
-  configuration_handle( "/ramdisk/config/boot.ini" );
+  configuration_handle( "/ramdisk/config/stage2.ini" );
 
   // determine root device and partition type from config
   STARTUP_PRINT( "Extracting root device and partition type...\r\n" )

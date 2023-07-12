@@ -91,7 +91,7 @@ void rpc_handle_umount_async(
  *
  * @param context
  */
-static void rpc_handle_umount_check(
+/*static void rpc_handle_umount_check(
   rights_check_context_t* context,
   bolthur_async_data_t* async_data
 ) {
@@ -133,7 +133,7 @@ static void rpc_handle_umount_check(
   }
   // destroy context
   rights_destroy_context( context );
-}
+}*/
 
 /**
  * @fn void rpc_handle_umount_process_authentication(size_t, pid_t, size_t, size_t)
@@ -144,7 +144,7 @@ static void rpc_handle_umount_check(
  * @param data_info
  * @param response_info
  */
-static void rpc_handle_umount_process_authentication(
+/*static void rpc_handle_umount_process_authentication(
   __unused size_t type,
   __unused pid_t origin,
   size_t data_info,
@@ -193,7 +193,7 @@ static void rpc_handle_umount_process_authentication(
   EARLY_STARTUP_PRINT( "response: %d\r\n", ioctl_response->status )
   rights_handle_permission( async_data, ioctl_response, response_size );
   bolthur_rpc_destroy_async( async_data );
-}
+}*/
 
 /**
  * @fn void rpc_handle_mount_device_authenticate_stat(size_t, pid_t, size_t, size_t)
@@ -204,7 +204,7 @@ static void rpc_handle_umount_process_authentication(
  * @param data_info
  * @param response_info
  */
-static void rpc_handle_umount_authenticate_stat(
+/*static void rpc_handle_umount_authenticate_stat(
   __unused size_t type,
   __unused pid_t origin,
   size_t data_info,
@@ -257,7 +257,7 @@ static void rpc_handle_umount_authenticate_stat(
     rpc_handle_umount_process_authentication
   );
   bolthur_rpc_destroy_async( async_data );
-}
+}*/
 
 /**
  * @fn void rpc_handle_umount(size_t, pid_t, size_t, size_t)
@@ -306,6 +306,10 @@ void rpc_handle_umount(
     return;
   }
 
+  response.result = -ENOSYS;
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  free( request );
+/*
   // get mount point
   mountpoint_node_t* mount_point = mountpoint_node_extract( request->target );
   // handle no mount point found
@@ -343,5 +347,5 @@ void rpc_handle_umount(
     NULL
   );
 
-  free( request );
+  free( request );*/
 }

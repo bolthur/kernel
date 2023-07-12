@@ -58,7 +58,12 @@ static void delay( size_t sec ) {
  * @fn void init_stage1(void)
  * @brief Stage 1 init with start of necessary stuff ( VFS, DEV, and RAMDISK )
  *
- * @todo make startup of processes more stable, because it hangs from time to time
+ * @todo 1. start vfs and dev like it's done now
+ * @todo 2. wait in non fork for vfs and dev
+ * @todo 3. start mount server using dev
+ * @todo 4. start authentication server using dev
+ * @todo 5. start ramdisk server using dev
+ * @todo 6. wait for ramdisk mount
  */
 void init_stage1( void ) {
   // transform number to string

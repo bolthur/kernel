@@ -47,6 +47,11 @@ bool rpc_init( void ) {
     EARLY_STARTUP_PRINT( "Unable to register handler fork!\r\n" )
     return false;
   }
+  bolthur_rpc_bind( RPC_VFS_GETDENTS, rpc_handle_getdents, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler getdents!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_handle_ioctl, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler ioctl!\r\n" )
@@ -103,6 +108,16 @@ bool rpc_init( void ) {
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WATCH_NOTIFY, rpc_handle_watch_notify, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_REGISTER_HANDLER, rpc_handle_handler_register, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_RELEASE_HANDLER, rpc_handle_handler_release, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
     return false;

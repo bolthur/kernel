@@ -25,9 +25,6 @@
 
 bool rpc_init( void );
 void rpc_handle_mount( size_t, pid_t, size_t, size_t );
-void rpc_handle_read( size_t, pid_t, size_t, size_t );
-void rpc_handle_stat( size_t, pid_t, size_t, size_t );
 void rpc_handle_umount( size_t, pid_t, size_t, size_t );
-void rpc_handle_write( size_t, pid_t, size_t, size_t );
 
 #endif
