@@ -22,6 +22,7 @@
 #include <sys/mman.h>
 #include "../libperipheral.h"
 #include "mmio.h"
+#include "barrier.h"
 
 // initial setup of peripheral base
 #if defined( BCM2836 ) || defined( BCM2837 )
@@ -34,22 +35,6 @@
 
 void* mmio_start = NULL;
 void* mmio_end = NULL;
-
-/**
- * @fn void dmb(void)
- * @brief Data memory barrier
- */
-static void dmb( void ) {
-  #if defined( BCM2835 )
-    __asm__ __volatile__ ( "dmb" ::: "memory" );
-  #else
-    __asm__ __volatile__ (
-      "mcr p15, #0, %[zero], c7, c10, #5"
-      : : [ zero ] "r" ( 0 )
-      : "memory"
-    );
-  #endif
-}
 
 /**
  * @fn bool mmio_setup(void)
@@ -106,7 +91,7 @@ uint32_t mmio_read( uintptr_t address ) {
   // determine read begin and end address since address contains only an offset
   void* read_begin = ( void* )( ( uintptr_t )mmio_start + address );
   // barrier
-  dmb();
+  barrier_dmb();
   // read word
   return *( volatile uint32_t* )read_begin;
 }
@@ -122,7 +107,7 @@ void mmio_write( uintptr_t address, uint32_t data ) {
   // determine write begin and end address since address contains only an offset
   void* write_begin = ( void* )( ( uintptr_t )mmio_start + address );
   // barrier, write and barrier
-  dmb();
+  barrier_dmb();
   *( volatile uint32_t* )write_begin  = data;
-  dmb();
+  barrier_dmb();
 }

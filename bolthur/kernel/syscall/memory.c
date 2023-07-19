@@ -437,6 +437,9 @@ void syscall_memory_shared_size( void* context ) {
 void syscall_memory_translate_physical( void* context ) {
   // get parameters
   uintptr_t address = ( uintptr_t )syscall_get_parameter( context, 0 );
+  // calculate possible offset and remove it for translation
+  size_t offset = address - ROUND_DOWN_TO_FULL_PAGE( address );
+  address -= offset;
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_memory_translate_physical( %#"PRIxPTR" )\r\n", address )
@@ -464,7 +467,7 @@ void syscall_memory_translate_physical( void* context ) {
   // get mapped address
   uint64_t phys = virt_get_mapped_address_in_context( virtual_context, address );
   // populate success
-  syscall_populate_success( context, ( uintptr_t )phys  );
+  syscall_populate_success( context, ( uintptr_t )phys + offset  );
 }
 
 /**
@@ -472,6 +475,8 @@ void syscall_memory_translate_physical( void* context ) {
  * @brief Translate virtual into physical bus address
  *
  * @param context
+ *
+ * @todo remove syscall
  */
 void syscall_memory_translate_bus( void* context ) {
   // get parameters

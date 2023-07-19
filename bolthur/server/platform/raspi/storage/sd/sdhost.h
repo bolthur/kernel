@@ -25,7 +25,8 @@
 #if ! defined( _SDHOST_H )
 #define _SDHOST_H
 
-//#define SDHOST_ENABLE_DEBUG 1
+#define SDHOST_ENABLE_DEBUG 1
+#define EMMC_ENABLE_DMA 1
 
 typedef enum {
   SDHOST_RESPONSE_OK = 0,

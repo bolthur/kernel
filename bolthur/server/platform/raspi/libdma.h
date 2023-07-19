@@ -53,12 +53,15 @@
 
 #define LIBDMA_TI_0_6_NO_WIDE_BURSTS ( 1 << 26 )
 
-#define LIBDMA_TI_PREAPRE_WAITS ( a ) ( ( a & 0x1F ) << 21 )
-#define LIBDMA_TI_EXTRACT_WAITS ( a ) ( ( a >> 21 ) & 0x1F )
-#define LIBDMA_TI_PREAPRE_PERMAP ( a ) ( ( a & 0x1F ) << 16 )
-#define LIBDMA_TI_EXTRACT_PERMAP ( a ) ( ( a >> 16 ) & 0x1F )
-#define LIBDMA_TI_PREAPRE_BURST_LENGTH ( a ) ( ( a & 0xF ) << 12 )
-#define LIBDMA_TI_EXTRACT_BURST_LENGTH ( a ) ( ( a >> 12 ) & 0xF )
+#define LIBDMA_TI_PERMAP_EMMC 11
+#define LIBDMA_TI_PERMAP_SDHOST 13
+
+#define LIBDMA_TI_PREAPRE_WAITS(a) ( ( ( a ) & 0x1F ) << 21 )
+#define LIBDMA_TI_EXTRACT_WAITS(a) ( ( ( a ) >> 21 ) & 0x1F )
+#define LIBDMA_TI_PREAPRE_PERMAP(a) ( ( ( a ) & 0x1F ) << 16 )
+#define LIBDMA_TI_EXTRACT_PERMAP(a) ( ( ( a ) >> 16 ) & 0x1F )
+#define LIBDMA_TI_PREAPRE_BURST_LENGTH(a) ( ( ( a ) & 0xF ) << 12 )
+#define LIBDMA_TI_EXTRACT_BURST_LENGTH(a) ( ( ( a ) >> 12 ) & 0xF )
 // debug register
 #define LIBDMA_DEBUG_READ_LAST_NOT_SET_ERROR ( 1 << 0 )
 #define LIBDMA_DEBUG_FIFO_ERROR ( 1 << 1 )

@@ -55,6 +55,8 @@ typedef enum {
   IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ,
   IOMEM_MMIO_ACTION_DELAY,
   IOMEM_MMIO_ACTION_SLEEP,
+  IOMEM_MMIO_ACTION_DMA_READ,
+  IOMEM_MMIO_ACTION_DMA_WRITE,
 } mmio_action_t;
 
 typedef enum {
@@ -102,6 +104,8 @@ struct iomem_mmio_entry {
   // skipped & aborted flag
   mmio_abort_type_t abort_type;
   uint32_t skipped;
+  // dma stuff
+  uint32_t dma_copy_size;
 };
 typedef struct iomem_mmio_entry iomem_mmio_entry_t;
 typedef struct iomem_mmio_entry iomem_mmio_entry_array_t[];

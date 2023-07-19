@@ -349,6 +349,9 @@ uintptr_t shared_memory_attach(
   memset( mapped, 0, sizeof( *mapped ) );
 
   uintptr_t virt = 0;
+  #if defined( PRINT_MM_SHARED )
+    DEBUG_OUTPUT( "Looking up mapping start\r\n" )
+  #endif
   // fixed handling means take address as start
   if ( virt_start ) {
     virt = virt_start;
@@ -390,7 +393,7 @@ uintptr_t shared_memory_attach(
   while ( start < end ) {
     // debug output
     #if defined( PRINT_MM_SHARED )
-      DEBUG_OUTPUT( "Mapping %#"PRIxPTR" to %#"PRIx64"\r\n", virt, entry->address[ idx ] )
+      DEBUG_OUTPUT( "Mapping %#"PRIx64" to %#"PRIxPTR"\r\n", entry->address[ idx ], start )
     #endif
     // map address
     if ( ! virt_map_address(

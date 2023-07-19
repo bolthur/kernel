@@ -29,6 +29,7 @@
 #include "mailbox.h"
 #include "mmio.h"
 #include "rpc.h"
+#include "dma.h"
 #include "../libiomem.h"
 #include "../../../libhelper.h"
 
@@ -51,6 +52,9 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Setup mailboxes\r\n" )
   // setup mailbox stuff
   mailbox_setup();
+
+  EARLY_STARTUP_PRINT( "Setup dma stuff\r\n" )
+  dma_init();
 
   EARLY_STARTUP_PRINT( "Setup property stuff\r\n" )
   // setup property stuff
