@@ -24,6 +24,10 @@
 #ifndef _MM_VIRT_H
 #define _MM_VIRT_H
 
+#define VIRT_PAGE_PER_ENTRY ( sizeof( uint32_t ) * CHAR_BIT )
+#define VIRT_PAGE_INDEX( address, min ) ( ( address - min ) / PAGE_PER_ENTRY )
+#define VIRT_PAGE_OFFSET( address, min ) ( ( address - min ) % PAGE_PER_ENTRY )
+
 typedef enum {
   VIRT_MEMORY_TYPE_DEVICE,
   VIRT_MEMORY_TYPE_DEVICE_STRONG,
@@ -45,6 +49,8 @@ typedef enum {
 typedef struct {
   uint64_t context;
   virt_context_type_t type;
+  uint32_t* bitmap;
+  uint32_t bitmap_length;
 } virt_context_t;
 
 extern bool virt_use_physical_table;

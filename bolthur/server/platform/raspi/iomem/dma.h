@@ -52,10 +52,11 @@ int dma_block_transfer_info_dest_dreq( bool );
 int dma_block_transfer_info_interrupt_enable( bool );
 int dma_block_transfer_info_permap( uint32_t );
 
-void dma_init( void );
+int dma_init( void );
 int dma_start( void );
 int dma_wait( void );
 int dma_finish( void );
+int dma_last_error( void );
 void dma_dump( void );
 
 #endif

@@ -779,6 +779,13 @@ bool v7_short_map(
   #endif
   // unmap temporary
   unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
+
+  uintptr_t min = virt_get_context_min_address( ctx );
+  uintptr_t frame = ( vaddr - min ) / PAGE_SIZE;
+  uint32_t index = PAGE_INDEX( frame );
+  uint32_t offset = PAGE_OFFSET( frame );
+  ctx->bitmap[ index ] |= ( 1U << offset );
+
   // return success
   return true;
 }
@@ -877,6 +884,13 @@ bool v7_short_unmap( virt_context_t* ctx, uintptr_t vaddr, bool free_phys ) {
   unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
   // flush context if running
   virt_flush_address( ctx, vaddr );
+
+  uintptr_t min = virt_get_context_min_address( ctx );
+  uintptr_t frame = ( vaddr - min ) / PAGE_SIZE;
+  uint32_t index = PAGE_INDEX( frame );
+  uint32_t offset = PAGE_OFFSET( frame );
+  ctx->bitmap[ index ] &= ~( 1U << offset );
+
   return true;
 }
 
@@ -1304,6 +1318,8 @@ virt_context_t* v7_short_fork_context( virt_context_t* ctx ) {
   if ( ! forked ) {
     return NULL;
   }
+  memcpy( forked->bitmap, ctx->bitmap, ctx->bitmap_length );
+  forked->bitmap_length = ctx->bitmap_length;
 
   // map passed context temporarily
   uintptr_t ctx_to_fork = map_temporary(
@@ -1445,6 +1461,10 @@ bool v7_short_destroy_context( virt_context_t* ctx, bool unmap_only ) {
   if ( ! unmap_only ) {
     // free physical page range
     phys_free_page_range( ctx->context, SD_TTBR_SIZE_2G );
+    // free bitmap
+    if ( ctx->bitmap ) {
+      free( ctx->bitmap );
+    }
     // free structure
     free( ctx );
   } else {

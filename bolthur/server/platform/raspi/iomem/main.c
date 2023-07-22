@@ -54,7 +54,10 @@ int main( __unused int argc, __unused char* argv[] ) {
   mailbox_setup();
 
   EARLY_STARTUP_PRINT( "Setup dma stuff\r\n" )
-  dma_init();
+  if ( 0 != dma_init() ) {
+    EARLY_STARTUP_PRINT( "Error while setting up dma: %s\r\n", strerror( dma_last_error() ) )
+    return -1;
+  }
 
   EARLY_STARTUP_PRINT( "Setup property stuff\r\n" )
   // setup property stuff

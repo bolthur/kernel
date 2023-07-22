@@ -485,7 +485,7 @@ void syscall_rpc_ret( void* context ) {
     #endif
     syscall_populate_success( context, 0 );
     // enqueue scheduler
-    //event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
+    event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
   }
 }
 

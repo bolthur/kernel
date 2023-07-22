@@ -123,7 +123,6 @@ void phys_mark_page_free( uint64_t address ) {
   uint64_t index = PAGE_INDEX( frame );
   uint64_t offset = PAGE_OFFSET( frame );
 
-
   // dma handling
   if ( address >= phys_dma_start && address < phys_dma_end ) {
     // update variables
@@ -311,7 +310,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
       // not free? => reset counter and continue
       if ( bitmap[ idx ] & ( uint32_t )( 1U << offset ) ) {
         found_amount = 0;
-        address = 0;
+        address = ( uint64_t )-1;
         continue;
       }
 
@@ -325,7 +324,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
         // check for alignment
         if ( 0 < alignment && 0 != address % alignment ) {
           found_amount = 0;
-          address = 0;
+          address = ( uint64_t )-1;
           continue;
         }
       }
@@ -341,8 +340,12 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
   }
 
   // handle no address
-  if ( 0 == address ) {
+  if ( ( uint64_t )-1 == address ) {
     return address;
+  }
+  // apply possible offset
+  if ( PHYS_MEMORY_TYPE_DMA == type ) {
+    address += phys_dma_start;
   }
   // set temporary address
   tmp = address;
@@ -350,13 +353,8 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
   for ( size_t idx = 0; idx < found_amount; idx++, tmp += PAGE_SIZE ) {
     phys_mark_page_used( tmp );
   }
-  // possible offset
-  uint64_t offset = 0;
-  if ( PHYS_MEMORY_TYPE_DMA == type ) {
-    offset = phys_dma_start;
-  }
   // return found / not found address
-  return address + offset;
+  return address;
 }
 
 /**

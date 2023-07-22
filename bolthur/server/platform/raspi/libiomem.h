@@ -75,6 +75,7 @@ typedef enum {
   IOMEM_MMIO_ABORT_TYPE_NONE = 0,
   IOMEM_MMIO_ABORT_TYPE_TIMEOUT,
   IOMEM_MMIO_ABORT_TYPE_INVALID,
+  IOMEM_MMIO_ABORT_TYPE_DMA,
 } mmio_abort_type_t;
 
 typedef enum {

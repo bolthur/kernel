@@ -214,6 +214,8 @@ void init_stage1( void ) {
   }
   // enable rpc and wait for process to be ready
   _syscall_rpc_set_ready( true );
+  // delay necessary to not interrupt other startup
+  delay( 20 );
   // enough to wait here for ramdisk and authentication, since both need dev server
   vfs_wait_for_path( AUTHENTICATION_DEVICE );
   vfs_wait_for_path( "/dev/ramdisk" );

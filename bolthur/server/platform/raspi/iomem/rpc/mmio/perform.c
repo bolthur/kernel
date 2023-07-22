@@ -626,143 +626,142 @@ void rpc_handle_mmio_perform(
         break;
       case IOMEM_MMIO_ACTION_DMA_READ:
       {
-        //EARLY_STARTUP_PRINT( "translate to physical\r\n" )
         // translate mmio start to bus address
         uintptr_t bus = _syscall_memory_translate_physical( ( uintptr_t )mmio_start )
           + ( *request )[ i ].offset;
+        if ( errno ) {
+          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+          break;
+        }
         // get shared memory id
         size_t shm_id = ( *request )[ i ].value;
         // attach it
-        //EARLY_STARTUP_PRINT( "attaching shared memory\r\n" )
         void* shm_addr = _syscall_memory_shared_attach(
           shm_id,
           ( uintptr_t )NULL
         );
-        /// FIXME: HANDLE ERROR
+        if ( errno ) {
+          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+          break;
+        }
         // loop through pages and perform requests
+        bool dma_error = false;
         for (
           uint32_t size = 0;
-          size < ( *request )[ i ].dma_copy_size;
+          size < ( *request )[ i ].dma_copy_size && !dma_error;
           size += PAGE_SIZE
         ) {
           dma_block_prepare();
-          //EARLY_STARTUP_PRINT( "translate shared address to physical\r\n" )
           // get physical memory address
           uintptr_t physical = _syscall_memory_translate_physical(
             ( uintptr_t )shm_addr + size
           );
-          /*dma->transfer_information = LIBDMA_TI_WAIT_RESP
-            | LIBDMA_TI_DEST_INC | LIBDMA_TI_DEST_WIDTH
-            | LIBDMA_TI_SRC_DREQ | LIBDMA_TI_PERMAP_EMMC
-            | LIBDMA_TI_INTEN;
-          //EARLY_STARTUP_PRINT( "bus = %#"PRIxPTR"\r\n", bus )
-          //EARLY_STARTUP_PRINT( "( *request )[ i ].value = %#"PRIx32"\r\n", ( *request )[ i ].value )
-          dma->source_address = ( bus & 0x00FFFFFF ) | 0x7E000000;
-          dma->destination_address = physical | 0xC0000000; //( *request )[ i ].value; //( *request )[ i ].value | 0xC0000000;
-          //EARLY_STARTUP_PRINT( "dma->source_address = %#"PRIx32"\r\n", dma->source_address )
-          //EARLY_STARTUP_PRINT( "dma->destination_address = %#"PRIx32"\r\n", dma->destination_address )
-          dma->next_control_block = 0;
-          dma->stride = 0;
-          dma->transfer_length = ( *request )[ i ].dma_copy_size;
-          dma->reserved[ 0 ] = 0;
-          dma->reserved[ 1 ] = 0;*/
-          //EARLY_STARTUP_PRINT( "set addresses\r\n" )
+          if ( errno ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
           // set block address
-          dma_block_set_address(
+          if ( 0 != dma_block_set_address(
             ( bus & 0x00FFFFFF ) | 0x7E000000,
             physical | 0xC0000000
-          );
-          //EARLY_STARTUP_PRINT( "set transfer length stride and next\r\n" )
+          ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
           // set transfer length, stride and next
-          dma_block_set_transfer_length( ( *request )[ i ].dma_copy_size );
-          dma_block_set_stride( 0 );
-          dma_block_set_next( 0 );
-          //EARLY_STARTUP_PRINT( "set transfer information\r\n" )
+          if ( 0 != dma_block_set_transfer_length( ( *request )[ i ].dma_copy_size ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_set_stride( 0 ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          };
+          if ( 0 != dma_block_set_next( 0 ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
           // prepare transfer information
-          dma_block_transfer_info_wait_response( true );
-          dma_block_transfer_info_destination_increment( true );
-          dma_block_transfer_info_dest_width( true );
-          dma_block_transfer_info_src_dreq( true );
-          dma_block_transfer_info_permap( LIBDMA_TI_PERMAP_EMMC );
-          dma_block_transfer_info_interrupt_enable( true );
+          if ( 0 != dma_block_transfer_info_wait_response( true ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_destination_increment( true ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_dest_width( true ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_src_dreq( true ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_permap( LIBDMA_TI_PERMAP_EMMC ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_interrupt_enable( true ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
           // start dma
-          //EARLY_STARTUP_PRINT( "dma start\r\n" )
-          dma_start();
-          //EARLY_STARTUP_PRINT( "dma start\r\n" )
+          if ( 0 != dma_start() ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
           // wait until completed
-          //EARLY_STARTUP_PRINT( "dma wait\r\n" )
-          dma_wait();
-          //EARLY_STARTUP_PRINT( "dma wait\r\n" )
+          if ( 0 != dma_wait() ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
           // finish dma
-          //EARLY_STARTUP_PRINT( "dma finish\r\n" )
-          dma_finish();
-          //EARLY_STARTUP_PRINT( "dma finish\r\n" )
+          if ( 0 != dma_finish() ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
         }
-        //EARLY_STARTUP_PRINT( "dma done\r\n" )
         // detach shared memory
         _syscall_memory_shared_detach( shm_id );
-        /// FIXME: HANDLE ERROR
+        if ( errno ) {
+          _syscall_memory_shared_detach( shm_id );
+          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+          break;
+        }
         break;
       }
       case IOMEM_MMIO_ACTION_DMA_WRITE:
       {
-        /*// init dma block
-        dma_block_init( &dma );
-        // translate mmio start to bus address
-        uintptr_t bus = _syscall_memory_translate_physical( ( uintptr_t )mmio_start )
-          + ( *request )[ i ].offset;
-        // get shared memory id
-        size_t shm_id = ( *request )[ i ].value;
-        // attach it
-        void* shm_addr = _syscall_memory_shared_attach(
-          shm_id,
-          ( uintptr_t )NULL
-        );
-        /// FIXME: HANDLE ERROR
-        // loop through pages and perform requests
-        for (
-          uint32_t size = 0;
-          size < ( *request )[ i ].dma_copy_size;
-          size += PAGE_SIZE
-        ) {
-          // get physical memory address
-          uintptr_t physical = _syscall_memory_translate_physical(
-            ( uintptr_t )shm_addr + size
-          );
-          // set block address
-          dma_block_set_address(
-            dma,
-            physical | 0xC0000000,
-            ( bus & 0x00FFFFFF ) | 0x7E000000
-          );
-          // set transfer length, stride and next
-          dma_block_set_transfer_length( dma, ( *request )[ i ].dma_copy_size );
-          dma_block_set_stride( dma, 0 );
-          dma_block_set_next( dma, 0 );
-          // prepare transfer information
-          dma_block_transfer_info_wait_response( dma, true );
-          dma_block_transfer_info_source_increment( dma, true );
-          dma_block_transfer_info_src_width( dma, true );
-          dma_block_transfer_info_dest_dreq( dma, true );
-          dma_block_transfer_info_permap( dma, LIBDMA_TI_PERMAP_EMMC );
-          dma_block_transfer_info_interrupt_enable( dma, true );
-          // start dma
-          //EARLY_STARTUP_PRINT( "dma start\r\n" )
-          dma_start( dma );
-          // wait until completed
-          //EARLY_STARTUP_PRINT( "dma wait\r\n" )
-          dma_wait( dma );
-          // finish dma
-          //EARLY_STARTUP_PRINT( "dma finish\r\n" )
-          dma_finish( dma );
-        }
-        // destroy control block
-        //EARLY_STARTUP_PRINT( "dma destroy\r\n" )
-        dma_block_destroy( &dma );
-        EARLY_STARTUP_PRINT( "dma done\r\n" )
-        // detach shared memory
-        _syscall_memory_shared_detach( shm_id );
-        /// FIXME: HANDLE ERROR*/
+        /// FIXME: ADD LIKE READING
         break;
       }
       // default shouldn't happen due to previous validation

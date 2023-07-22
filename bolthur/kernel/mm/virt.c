@@ -368,32 +368,53 @@ uintptr_t virt_find_free_page_range(
   uintptr_t address = 0;
   bool stop = false;
 
-  while ( min <= max && !stop ) {
-    // skip if mapped
-    if ( virt_is_mapped_in_context( ctx, min ) ) {
-      // reset possible found amount and set address
-      found_amount = 0;
-      address = 0;
-      // next page
-      min += PAGE_SIZE;
+  uintptr_t min_address = virt_get_context_min_address( ctx );
+  uintptr_t frame = ( min - min_address ) / PAGE_SIZE;
+  uint32_t index = PAGE_INDEX( frame );
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "index = %#"PRIu32"\r\n", index )
+    DEBUG_OUTPUT( "ctx = %p\r\n", ctx )
+    DEBUG_OUTPUT( "ctx->bitmap_length = %#"PRIu32"\r\n", ctx->bitmap_length )
+  #endif
+  for ( uint32_t idx = index; idx < ctx->bitmap_length && !stop; idx++ ) {
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "ctx->bitmap[ %d ] = %#"PRIx32"\r\n", idx, ctx->bitmap[ idx ] )
+    #endif
+    // skip completely used entries
+    if ( PHYS_ALL_PAGES_OF_INDEX_USED == ctx->bitmap[ idx ] ) {
       continue;
     }
-    // set address if we start
-    if ( 0 == found_amount ) {
-      address = min;
+    // loop through bits per entry
+    for ( size_t offset = 0; offset < PAGE_PER_ENTRY && !stop; offset++ ) {
+      // not free? => reset counter and continue
+      if ( ctx->bitmap[ idx ] & ( uint32_t )( 1U << offset ) ) {
+        found_amount = 0;
+        address = ( uintptr_t )-1;
+        continue;
+      }
+      // set address if found is 0
+      if ( 0 == found_amount ) {
+        address = idx * PAGE_SIZE * PAGE_PER_ENTRY + offset * PAGE_SIZE;
+      }
+      // increase found amount
+      found_amount += 1;
+      // reached necessary amount? => stop loop
+      if ( found_amount == page_amount ) {
+        stop = true;
+      }
     }
-    // increase found amount
-    found_amount += 1;
-    // handle necessary amount reached
-    if ( found_amount == page_amount ) {
-      stop = true;
-    }
-    // next page
-    min += PAGE_SIZE;
   }
-
-  // return found address or null
-  return address;
+  if ( address == ( uintptr_t )-1 ) {
+    return 0;
+  }
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "address = %#"PRIxPTR"\r\n", address );
+  #endif
+  address += min_address;
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "address = %#"PRIxPTR"\r\n", address );
+  #endif
+  return address != ( uintptr_t )-1 ? address : 0;
 }
 
 /**

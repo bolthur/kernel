@@ -41,8 +41,6 @@
  * Add and use interrupt routine instead of polling. This interrupt is listed in
  * a more complete gpio overview of bcm2711 with 62, so it may be also used on
  * other raspi platforms
- *
- * Use dma for transfer instead of polling data until it completed
  */
 
 static uint32_t emmc_command_list[] = {
@@ -1020,7 +1018,6 @@ static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
  * @return
  *
  * @todo allow more blocks than block_count
- * @todo use sdma for data transfer instead of 4 byte reading
  */
 static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   // debug output
@@ -1442,6 +1439,14 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
     }
   #else
     if ( is_data && 0 < device->block_count && shm_id && shm_addr ) {
+      if ( IOMEM_MMIO_ABORT_TYPE_DMA == sequence[ idx ].abort_type ) {
+        // debug output
+        #if defined( EMMC_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "dma copy timed out\r\n" )
+        #endif
+        // return failure
+        return EMMC_RESPONSE_IO;
+      }
       // copy over from shared to block count
       memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
       // debug output
@@ -1450,7 +1455,14 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       #endif
       // release shared memory again
       _syscall_memory_shared_detach( shm_id );
-      /// FIXME: HANDLE ERROR
+      if ( errno ) {
+        // debug output
+        #if defined( EMMC_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "detach shared area failed\r\n" )
+        #endif
+        // return failure
+        return EMMC_RESPONSE_IO;
+      }
     }
   #endif
 

@@ -30,19 +30,27 @@
 #include "generic.h"
 
 static dma_control_block_t* block = NULL;
+static int last_error = 0;
 
+/**
+ * @fn int dma_block_init(dma_control_block_t**)
+ * @brief dma block init helper
+ *
+ * @param to_save
+ * @return
+ */
 static int dma_block_init( dma_control_block_t** to_save ) {
   // allocate control block
   block = mmap(
     NULL,
     sizeof( *block ),
     PROT_READ | PROT_WRITE,
-    MAP_ANONYMOUS | MAP_DEVICE,
+    MAP_ANONYMOUS | MAP_DEVICE | MAP_BUS,
     -1,
     0
   );
   if ( MAP_FAILED == block ) {
-    errno = ENOMEM;
+    last_error = -errno;
     return -1;
   }
   // clear out
@@ -51,6 +59,24 @@ static int dma_block_init( dma_control_block_t** to_save ) {
   *to_save = block;
   // return block
   return 0;
+}
+
+/**
+ * @fn void dma_reset_channel(uint32_t)
+ * @brief Reset channel helper
+ *
+ * @param channel_cs
+ */
+static void dma_reset_channel( uint32_t channel_cs ) {
+  // set reset and wait for outstanding writes
+  mmio_write(
+    channel_cs,
+    ( uint32_t )( LIBDMA_CS_RESET | LIBDMA_CS_WAIT_FOR_OUTSTANDING_WRITES )
+  );
+  // wait until reset bit clears
+  while ( mmio_read( channel_cs ) & ( uint32_t )LIBDMA_CS_RESET ) {
+    __asm__ __volatile__( "nop" );
+  }
 }
 
 /**
@@ -75,11 +101,18 @@ int dma_block_prepare( void ) {
  * @todo validate parameter
  */
 int dma_block_to_phys( uintptr_t* addr ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   // translate to physical
-  uintptr_t bus = _syscall_memory_translate_physical( ( uintptr_t )block );
+  uintptr_t bus = _syscall_memory_translate_bus(
+    ( uintptr_t )block,
+    sizeof( *block )
+  );
   // handle error
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "error: %s\r\n", strerror( errno ) );
+    last_error = -errno;
     return -1;
   }
   // set address
@@ -103,6 +136,10 @@ int dma_block_set_address(
   uint32_t source,
   uint32_t destination
 ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   block->source_address = source;
   block->destination_address = destination;
   return 0;
@@ -116,6 +153,10 @@ int dma_block_set_address(
  * @return
  */
 int dma_block_transfer_info_source_increment( bool value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   if ( value ) {
     block->transfer_information |= LIBDMA_TI_SRC_INC;
   } else {
@@ -132,6 +173,10 @@ int dma_block_transfer_info_source_increment( bool value ) {
  * @return
  */
 int dma_block_transfer_info_destination_increment( bool value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   if ( value ) {
     block->transfer_information |= LIBDMA_TI_DEST_INC;
   } else {
@@ -148,6 +193,10 @@ int dma_block_transfer_info_destination_increment( bool value ) {
  * @return
  */
 int dma_block_transfer_info_wait_response( bool value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   if ( value ) {
     block->transfer_information |= LIBDMA_TI_WAIT_RESP;
   } else {
@@ -156,7 +205,18 @@ int dma_block_transfer_info_wait_response( bool value ) {
   return 0;
 }
 
+/**
+ * @fn int dma_block_transfer_info_src_width(bool)
+ * @brief Set or reset source width transfer information
+ *
+ * @param value
+ * @return
+ */
 int dma_block_transfer_info_src_width( bool value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   if ( value ) {
     block->transfer_information |= LIBDMA_TI_SRC_WIDTH;
   } else {
@@ -165,7 +225,18 @@ int dma_block_transfer_info_src_width( bool value ) {
   return 0;
 }
 
+/**
+ * @fn int dma_block_transfer_info_dest_width(bool)
+ * @brief Set or reset destination width transfer information
+ *
+ * @param value
+ * @return
+ */
 int dma_block_transfer_info_dest_width( bool value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   if ( value ) {
     block->transfer_information |= LIBDMA_TI_DEST_WIDTH;
   } else {
@@ -174,7 +245,18 @@ int dma_block_transfer_info_dest_width( bool value ) {
   return 0;
 }
 
+/**
+ * @fn int dma_block_transfer_info_src_dreq(bool)
+ * @brief Set or reset source dreq
+ *
+ * @param value
+ * @return
+ */
 int dma_block_transfer_info_src_dreq( bool value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   if ( value ) {
     block->transfer_information |= LIBDMA_TI_SRC_DREQ;
   } else {
@@ -183,7 +265,18 @@ int dma_block_transfer_info_src_dreq( bool value ) {
   return 0;
 }
 
+/**
+ * @fn int dma_block_transfer_info_dest_dreq(bool)
+ * @brief Set or reset destination dreq
+ *
+ * @param value
+ * @return
+ */
 int dma_block_transfer_info_dest_dreq( bool value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   if ( value ) {
     block->transfer_information |= LIBDMA_TI_DEST_DREQ;
   } else {
@@ -192,7 +285,18 @@ int dma_block_transfer_info_dest_dreq( bool value ) {
   return 0;
 }
 
+/**
+ * @fn int dma_block_transfer_info_interrupt_enable(bool)
+ * @brief Set or reset interrupt enable
+ *
+ * @param value
+ * @return
+ */
 int dma_block_transfer_info_interrupt_enable( bool value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   if ( value ) {
     block->transfer_information |= LIBDMA_TI_INTEN;
   } else {
@@ -201,7 +305,18 @@ int dma_block_transfer_info_interrupt_enable( bool value ) {
   return 0;
 }
 
+/**
+ * @fn int dma_block_transfer_info_permap(uint32_t)
+ * @brief Set or reset permission map
+ *
+ * @param value
+ * @return
+ */
 int dma_block_transfer_info_permap( uint32_t value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   if ( value ) {
     block->transfer_information |= LIBDMA_TI_PREAPRE_PERMAP( value );
   } else {
@@ -219,6 +334,10 @@ int dma_block_transfer_info_permap( uint32_t value ) {
  * @return
  */
 int dma_block_set_transfer_length( uint32_t value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   block->transfer_length = value;
   return 0;
 }
@@ -232,6 +351,10 @@ int dma_block_set_transfer_length( uint32_t value ) {
  * @return
  */
 int dma_block_set_stride( uint32_t value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   block->stride = value;
   return 0;
 }
@@ -245,27 +368,12 @@ int dma_block_set_stride( uint32_t value ) {
  * @return
  */
 int dma_block_set_next( uint32_t value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   block->next_control_block = value;
   return 0;
-}
-
-/**
- * @fn void dma_reset_channel(uint32_t)
- * @brief Reset channel helper
- *
- * @param channel_cs
- */
-static void dma_reset_channel( uint32_t channel_cs ) {
-  // set reset and wait for outstanding writes
-  mmio_write(
-    channel_cs,
-    ( uint32_t )( LIBDMA_CS_RESET | LIBDMA_CS_WAIT_FOR_OUTSTANDING_WRITES )
-  );
-  // wait until reset bit clears
-  // wait until reset bit clears
-  while ( mmio_read( channel_cs ) & ( uint32_t )LIBDMA_CS_RESET ) {
-    __asm__ __volatile__( "nop" );
-  }
 }
 
 /**
@@ -288,7 +396,7 @@ void dma_block_dump( void ) {
  * @brief Setup dma handling
  *
  */
-void dma_init( void ) {
+int dma_init( void ) {
   // reset all channels
   dma_reset_channel( PERIPHERAL_DMA0_CS );
   dma_reset_channel( PERIPHERAL_DMA1_CS );
@@ -308,7 +416,7 @@ void dma_init( void ) {
   // disable all
   mmio_write( PERIPHERAL_DMA_ENABLE, 0 );
   // init dma block
-  dma_block_init( &block );
+  return dma_block_init( &block );
 }
 
 /**
@@ -318,35 +426,28 @@ void dma_init( void ) {
  * @return
  */
 int dma_start( void ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   // translate to bus address
   uintptr_t phys;
   if ( 0 != dma_block_to_phys( &phys ) ) {
-    //EARLY_STARTUP_PRINT( "dma block to phys failed!\r\n" )
     return -1;
   }
-  //dma_block_dump();
-  //EARLY_STARTUP_PRINT( "block = %#"PRIxPTR"\r\n", ( uintptr_t )block )
-  //EARLY_STARTUP_PRINT( "phys = %#"PRIxPTR"\r\n", phys )
-  //EARLY_STARTUP_PRINT( "Activate dma channel 0\r\n" )
   // activate dma
   uint32_t value = mmio_read( PERIPHERAL_DMA_ENABLE );
   value |= 1 << 0;
   mmio_write( PERIPHERAL_DMA_ENABLE, value );
-  //EARLY_STARTUP_PRINT( "Reset dma channel 0\r\n" )
+  // reset channel
   dma_reset_channel( PERIPHERAL_DMA0_CS );
-  //dma_dump();
-  //EARLY_STARTUP_PRINT( "Set conblk address\r\n" )
   // write callback
   mmio_write( PERIPHERAL_DMA0_CONBLK_AD, ( uint32_t )phys | 0xC0000000 );
-  //dma_dump();
-  //EARLY_STARTUP_PRINT( "Activate in CS\r\n" )
   // activate
-  //value = mmio_read( PERIPHERAL_DMA0_CS );
   mmio_write(
     PERIPHERAL_DMA0_CS,
     LIBDMA_CS_DISDEBUG | LIBDMA_CS_ACTIVE | LIBDMA_CS_END | LIBDMA_CS_INT
   );
-  //dma_dump();
   // return success
   return 0;
 }
@@ -358,10 +459,10 @@ int dma_start( void ) {
  * @return
  */
 int dma_wait( void ) {
-  // dump
-  //dma_dump();
-  // debug output
-  //EARLY_STARTUP_PRINT( "waiting for active copy ends\r\n" )
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   uint32_t value;
   do {
     // fetch value
@@ -373,9 +474,6 @@ int dma_wait( void ) {
       return -1;
     }
   } while ( ! ( value & LIBDMA_CS_END ) );
-  // dump
-  //dma_dump();
-  //EARLY_STARTUP_PRINT( "done\r\n" )
   return 0;
 }
 
@@ -386,6 +484,10 @@ int dma_wait( void ) {
  * @return
  */
 int dma_finish( void ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
   // read value
   uint32_t value = mmio_read( PERIPHERAL_DMA0_CS );
   // activate dma
@@ -425,4 +527,14 @@ void dma_dump( void ) {
   EARLY_STARTUP_PRINT( "INT_STATUS: %#"PRIx32"\r\n", value );
   value = mmio_read( PERIPHERAL_DMA_ENABLE );
   EARLY_STARTUP_PRINT( "ENABLE: %#"PRIx32"\r\n", value );
+}
+
+/**
+ * @fn int dma_last_error(void)
+ * @brief Get last error
+ *
+ * @return
+ */
+int dma_last_error( void ) {
+  return -last_error;
 }
