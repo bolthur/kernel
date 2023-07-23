@@ -217,6 +217,7 @@ void syscall_rpc_raise( void* context ) {
   // switch it
   if ( task_thread_current_thread != rpc->thread ) {
     // enqueue scheduler
+    task_thread_try_switch_to = rpc->thread;
     event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
   }
 }
@@ -375,7 +376,7 @@ void syscall_rpc_ret( void* context ) {
   }
   // destroy info
   rpc_generic_destroy_source_info( info );
-  // find and destroy possible for current
+  // find and destroy possible info for current
   if ( original_rpc_id ) {
     rpc_generic_destroy_source_info(
       rpc_generic_source_info( active->data_id )

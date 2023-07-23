@@ -230,6 +230,7 @@ void rpc_handle_open(
     free( request );
     return;
   }
+  EARLY_STARTUP_PRINT( "opening %s\r\n", request->path )
   // get mount point
   mountpoint_node_t* mount_point = mountpoint_node_extract( request->path );
   // handle no mount point node found

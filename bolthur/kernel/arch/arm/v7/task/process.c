@@ -175,6 +175,17 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   }
 
   task_thread_t* next_thread = NULL;
+  // try to switch to task thread try switch if set
+  if (
+    task_thread_try_switch_to
+    && (
+      task_thread_try_switch_to->state == TASK_THREAD_STATE_READY
+      || task_thread_try_switch_to->state == TASK_THREAD_STATE_RPC_QUEUED
+    )
+  ) {
+    next_thread = task_thread_try_switch_to;
+  }
+
   bool halt_set = false;
   // loop while next thread is not set or it's not ready
   while ( ! next_thread ) {

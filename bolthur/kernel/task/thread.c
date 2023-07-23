@@ -36,6 +36,11 @@
 task_thread_t* task_thread_current_thread = NULL;
 
 /**
+ * @brief next thread to try to switch to
+ */
+task_thread_t* task_thread_try_switch_to = NULL;
+
+/**
  * @fn int32_t thread_compare_id_callback(const avl_node_t*, const avl_node_t*)
  * @brief Helper necessary for avl thread manager tree
  *

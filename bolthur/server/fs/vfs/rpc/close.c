@@ -62,6 +62,7 @@ void rpc_handle_close(
     free( request );
     return;
   }
+  EARLY_STARTUP_PRINT( "closing %d\r\n", request->handle )
   response.status = handle_destory( origin, request->handle );
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( request );

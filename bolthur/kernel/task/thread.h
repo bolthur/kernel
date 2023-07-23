@@ -47,6 +47,7 @@ typedef struct  task_thread {
 } task_thread_t;
 
 extern task_thread_t* task_thread_current_thread;
+extern task_thread_t* task_thread_try_switch_to;
 
 #define TASK_THREAD_GET_BLOCK( n ) \
   ( task_thread_t* )( ( uint8_t* )n - offsetof( task_thread_t, node_id ) )
