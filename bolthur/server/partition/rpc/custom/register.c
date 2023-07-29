@@ -60,31 +60,31 @@ void rpc_custom_handle_register(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // get request
-  partition_register_t* command = malloc( data_size );
-  if ( ! command ) {
-    error.status = -ENOMEM;
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
+  if ( ! request ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  memset( command, 0, data_size );
-  _syscall_rpc_get_data( command, data_size, data_info, true );
+  _syscall_rpc_get_data( request, data_size, data_info, true );
   if ( errno ) {
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( command );
+    free( request );
     return;
   }
+  // get request
+  partition_register_t* command = ( partition_register_t* )request->container;
   // register handler
   if ( 0 != handler_add( command->filesystem, command->process ) ) {
     error.status = -EINVAL;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( command );
+    free( request );
     return;
   }
   // set success flag and return
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
   // free all used temporary structures
-  free( command );
+  free( request );
 }

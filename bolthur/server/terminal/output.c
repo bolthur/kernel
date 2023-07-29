@@ -88,22 +88,21 @@ void output_handle_out(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // allocate for data fetching
-  terminal_write_request_t* terminal = malloc( sz );
-  if ( ! terminal ) {
-    error.status = -ENOMEM;
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( sz );
+  if ( ! request ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // fetch rpc data
-  _syscall_rpc_get_data( terminal, sz, data_info, false );
-  // handle error
+  _syscall_rpc_get_data( request, sz, data_info, true );
   if ( errno ) {
-    error.status = -errno;
+    error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( terminal );
+    free( request );
     return;
   }
+  // allocate for data fetching
+  terminal_write_request_t* terminal = ( terminal_write_request_t* )request->container;
   // get terminal
   list_item_t* found = list_lookup_data(
     terminal_list,
@@ -112,7 +111,7 @@ void output_handle_out(
   if ( ! found ) {
     error.status = -ENODEV;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( terminal );
+    free( request );
     return;
   }
   // allocate response
@@ -122,7 +121,7 @@ void output_handle_out(
   if ( ! response ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( terminal );
+    free( request );
     return;
   }
   memset( response, 0, response_size );
@@ -133,7 +132,7 @@ void output_handle_out(
   memcpy( response->container, &dummy, sizeof( dummy ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
   // free terminal structure again
-  free( terminal );
+  free( request );
   free( response );
 }
 
@@ -164,22 +163,21 @@ void output_handle_err(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // allocate for data fetching
-  terminal_write_request_t* terminal = malloc( sz );
-  if ( ! terminal ) {
-    error.status = -ENOMEM;
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( sz );
+  if ( ! request ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // fetch rpc data
-  _syscall_rpc_get_data( terminal, sz, data_info, false );
-  // handle error
+  _syscall_rpc_get_data( request, sz, data_info, true );
   if ( errno ) {
-    error.status = -errno;
+    error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( terminal );
+    free( request );
     return;
   }
+  // allocate for data fetching
+  terminal_write_request_t* terminal = ( terminal_write_request_t* )request->container;
   // get terminal
   list_item_t* found = list_lookup_data(
     terminal_list,
@@ -188,7 +186,7 @@ void output_handle_err(
   if ( ! found ) {
     error.status = -ENODEV;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( terminal );
+    free( request );
     return;
   }
   // allocate response
@@ -198,7 +196,7 @@ void output_handle_err(
   if ( ! response ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( terminal );
+    free( request );
     return;
   }
   memset( response, 0, response_size );
@@ -209,7 +207,7 @@ void output_handle_err(
   memcpy( response->container, &dummy, sizeof( dummy ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
   // free terminal structure again
-  free( terminal );
+  free( request );
   free( response );
 }
 

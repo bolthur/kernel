@@ -46,25 +46,21 @@ void rpc_handle_mount_async(
   size_t response_info
 ) {
   EARLY_STARTUP_PRINT("MOUNT DONE\r\n")
-  EARLY_STARTUP_PRINT( "1\r\n" )
   vfs_mount_response_t response = { .result = -EINVAL };
   // get matching async data
   bolthur_async_data_t* async_data =
     bolthur_rpc_pop_async( type, response_info );
   if ( ! async_data ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     return;
   }
   // handle no data
   if( ! data_info ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
   // fetch response
   _syscall_rpc_get_data( &response, sizeof( response ), data_info, false );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
@@ -73,7 +69,6 @@ void rpc_handle_mount_async(
   vfs_mount_request_t* request = async_data->original_data;
   // handle failure
   if ( 0 != response.result ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
@@ -81,7 +76,6 @@ void rpc_handle_mount_async(
   struct stat* st = malloc( sizeof( *st ) );
   // handle malloc error
   if ( ! st ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
@@ -105,7 +99,6 @@ void rpc_handle_mount_async(
     free( request );
     return;
   }
-  EARLY_STARTUP_PRINT( "1\r\n" )
   // overwrite handler of destination
   destination->pid = response.handler;
   // just return response

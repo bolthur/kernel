@@ -57,21 +57,28 @@ void rpc_handle_mailbox(
   // get message size
   size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to get data size\r\n" )
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // allocate space for request
-  int32_t* request = malloc( data_size );
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
   if ( ! request ) {
-    error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
+  _syscall_rpc_get_data( request, data_size, data_info, true );
+  if ( errno ) {
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
+  // allocate space for request
+  int32_t* mailbox_request = ( int32_t* )request->container;
   // allocate space for response
   vfs_ioctl_perform_response_t* response;
-  size_t response_size = data_size * sizeof( char ) + sizeof( *response );
+  size_t response_size = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) * sizeof( char ) + sizeof( *response );
   response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
@@ -79,30 +86,17 @@ void rpc_handle_mailbox(
     free( request );
     return;
   }
-  int32_t count = ( int32_t )( data_size / sizeof( int32_t ) );
+  int32_t count = ( int32_t )( ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) / sizeof( int32_t ) );
   // clear request
-  memset( request, 0, data_size );
   memset( response, 0, response_size );
-  // fetch rpc data
-  _syscall_rpc_get_data( request, data_size, data_info, false );
-  // handle error
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to get data\r\n" )
-    error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( request );
-    free( response );
-    return;
-  }
   // copy stuff to property buffer
-  memcpy( property_buffer, request, data_size );
+  memcpy( property_buffer, mailbox_request, ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) );
   // overwrite current property index
   property_index = count;
   // process request
   uint32_t result = property_process();
   // handle error
   if ( MAILBOX_ERROR == result ) {
-    EARLY_STARTUP_PRINT( "mailbox error\r\n" )
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( request );
@@ -110,7 +104,7 @@ void rpc_handle_mailbox(
     return;
   }
   // copy response into original request
-  memcpy( response->container, property_buffer, data_size );
+  memcpy( response->container, property_buffer, ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) );
   // return data and finish with free
   bolthur_rpc_return(
     RPC_VFS_IOCTL,

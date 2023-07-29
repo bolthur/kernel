@@ -21,12 +21,12 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/bolthur.h>
-#include "../../libconsole.h"
-#include "../handler.h"
-#include "../console.h"
+#include "../../../libconsole.h"
+#include "../../rpc.h"
+#include "../../console.h"
 
 /**
- * @fn void handler_console_activate(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_custom_handle_console_select(size_t, pid_t, size_t, size_t)
  * @brief Console activate command handler
  *
  * @param type
@@ -34,7 +34,7 @@
  * @param data_info
  * @param response_info
  */
-void handler_console_select(
+void rpc_custom_handle_console_select(
   __unused size_t type,
   pid_t origin,
   size_t data_info,
@@ -58,27 +58,26 @@ void handler_console_select(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // allocate for data fetching
-  console_command_select_t* command = malloc( sz );
-  if ( ! command ) {
-    error.status = -ENOMEM;
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( sz );
+  if ( ! request ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // fetch rpc data
-  _syscall_rpc_get_data( command, sz, data_info, false );
-  // handle error
+  _syscall_rpc_get_data( request, sz, data_info, true );
   if ( errno ) {
-    free( command );
-    error.status = -errno;
+    error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
     return;
   }
+  // allocate for data fetching
+  console_command_select_t* command = ( console_command_select_t* )request->container;
   // try to lookup by name
   list_item_t* found = list_lookup_data( console_list, command->path );
   // handle already existing
   if ( ! found ) {
-    free( command );
+    free( request );
     error.status = -ENODEV;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
@@ -92,7 +91,7 @@ void handler_console_select(
   console = found->data;
   console->active = true;
   // free all used temporary structures
-  free( command );
+  free( request );
   // set success flag and return
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );

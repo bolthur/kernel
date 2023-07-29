@@ -8,10 +8,10 @@ console_DEPENDENCIES = \
 console_LDADD = \
   ${abs_top_builddir}/../library/collection/list/liblist.la
 console_SOURCES = \
-  handler/add.c \
-  handler/select.c \
+  rpc/custom/add.c \
+  rpc/custom/select.c \
+  rpc/init.c \
   rpc/write.c \
   console.c \
-  handler.c \
   main.c
 console_LDFLAGS = -all-static --static

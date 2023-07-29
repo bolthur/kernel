@@ -21,12 +21,12 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/bolthur.h>
-#include "../../libconsole.h"
-#include "../handler.h"
-#include "../console.h"
+#include "../../../libconsole.h"
+#include "../../rpc.h"
+#include "../../console.h"
 
 /**
- * @fn void handler_console_add(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_custom_handle_console_add(size_t, pid_t, size_t, size_t)
  * @brief Console add command handler
  *
  * @param type
@@ -34,7 +34,7 @@
  * @param data_info
  * @param response_info
  */
-void handler_console_add(
+void rpc_custom_handle_console_add(
   __unused size_t type,
   pid_t origin,
   size_t data_info,
@@ -57,22 +57,21 @@ void handler_console_add(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // allocate for data fetching
-  console_command_add_t* command = malloc( sz );
-  if ( ! command ) {
-    error.status = -ENOMEM;
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( sz );
+  if ( ! request ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // fetch rpc data
-  _syscall_rpc_get_data( command, sz, data_info, false );
-  // handle error
+  _syscall_rpc_get_data( request, sz, data_info, true );
   if ( errno ) {
-    free( command );
-    error.status = -errno;
+    error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
     return;
   }
+  // allocate for data fetching
+  console_command_add_t* command = ( console_command_add_t* )request->container;
   // try to lookup by name
   list_item_t* container_item = list_lookup_data(
     console_list,
@@ -80,7 +79,7 @@ void handler_console_add(
   );
   // handle already existing
   if ( container_item ) {
-    free( command );
+    free( request );
     error.status = -EEXIST;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
@@ -88,7 +87,7 @@ void handler_console_add(
   // allocate new management structure
   console_t* console = malloc( sizeof( *console ) );
   if ( ! console ) {
-    free( command );
+    free( request );
     error.status = -ENODEV;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
@@ -100,7 +99,7 @@ void handler_console_add(
   console->path = strdup( command->terminal );
   if ( ! console->path ) {
     console_destroy( console );
-    free( command );
+    free( request );
     error.status = -EINVAL;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
@@ -111,13 +110,13 @@ void handler_console_add(
   // push to list
   if ( ! list_push_back_data( console_list, console ) ) {
     console_destroy( console );
-    free( command );
+    free( request );
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
   // free all used temporary structures
-  free( command );
+  free( request );
   // set success flag and return
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );

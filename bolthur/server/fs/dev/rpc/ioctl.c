@@ -170,8 +170,8 @@ void rpc_handle_ioctl(
   bolthur_rpc_raise(
     ioctl_container->command,
     request->target_process,
-    request->container,
-    data_size - sizeof( vfs_ioctl_perform_request_t ),
+    request,
+    data_size,
     rpc_handle_ioctl_async,
     type,
     request,

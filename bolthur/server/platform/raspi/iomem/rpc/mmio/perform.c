@@ -207,99 +207,96 @@ void rpc_handle_mmio_perform(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // allocate space for request
-  uint8_t* request_data = malloc( data_size );
-  if ( ! request_data ) {
-    error.status = -ENOMEM;
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
+  if ( ! request ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
+  _syscall_rpc_get_data( request, data_size, data_info, true );
+  if ( errno ) {
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
+  // allocate space for request
+  uint8_t* request_data = ( uint8_t* )request->container;
   // allocate space for response
   vfs_ioctl_perform_response_t* response;
-  size_t response_size = data_size * sizeof( char ) + sizeof( *response );
+  size_t response_size = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) * sizeof( char ) + sizeof( *response );
   response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( request_data );
+    free( request );
     return;
   }
   #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
       "data_size = %#zx, response_size = %#zx\r\n",
-      data_size,
+      ( data_size - sizeof( vfs_ioctl_perform_request_t ) ),
       response_size
     )
   #endif
   // clear request
-  memset( request_data, 0, data_size );
   memset( response, 0, response_size );
-  // fetch rpc data
-  _syscall_rpc_get_data( request_data, data_size, data_info, false );
-  // handle error
-  if ( errno ) {
-    error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( request_data );
-    free( response );
-    return;
-  }
   // transform data into contiguous array
-  iomem_mmio_entry_array_t* request = ( iomem_mmio_entry_array_t* )request_data;
+  iomem_mmio_entry_array_t* mmio_request = ( iomem_mmio_entry_array_t* )request_data;
   // entry count
-  size_t entry_count = data_size / sizeof( iomem_mmio_entry_t );
+  size_t entry_count = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) / sizeof( iomem_mmio_entry_t );
   // loop through entries and validate
   for ( size_t i = 0; i < entry_count; i++ ) {
     // ensure that for write with or of previous read the previous is valid
     if (
       (
-        IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ == ( *request )[ i ].type
-        || IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ == ( *request )[ i ].type
-        || IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ == ( *request )[ i ].type
+        IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ == ( *mmio_request )[ i ].type
+        || IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ == ( *mmio_request )[ i ].type
+        || IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ == ( *mmio_request )[ i ].type
       ) && (
         0 == i
         || (
-          IOMEM_MMIO_ACTION_READ != ( *request )[ i - 1 ].type
-          && IOMEM_MMIO_ACTION_READ_OR != ( *request )[ i - 1 ].type
-          && IOMEM_MMIO_ACTION_READ_AND != ( *request )[ i - 1 ].type
+          IOMEM_MMIO_ACTION_READ != ( *mmio_request )[ i - 1 ].type
+          && IOMEM_MMIO_ACTION_READ_OR != ( *mmio_request )[ i - 1 ].type
+          && IOMEM_MMIO_ACTION_READ_AND != ( *mmio_request )[ i - 1 ].type
         )
       )
     ) {
       error.status = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-      free( request_data );
+      free( request );
       free( response );
       return;
     }
     // validate types
     if (
-      IOMEM_MMIO_ACTION_LOOP_EQUAL != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_LOOP_TRUE != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_LOOP_FALSE != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_READ != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_READ_OR != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_READ_AND != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_WRITE != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_DELAY != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_SLEEP != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_DMA_READ != ( *request )[ i ].type
-      && IOMEM_MMIO_ACTION_DMA_WRITE != ( *request )[ i ].type
+      IOMEM_MMIO_ACTION_LOOP_EQUAL != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_LOOP_TRUE != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_LOOP_FALSE != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_READ != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_READ_OR != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_READ_AND != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_WRITE != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_DELAY != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_SLEEP != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_DMA_READ != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_DMA_WRITE != ( *mmio_request )[ i ].type
     ) {
       error.status = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-      free( request_data );
+      free( request );
       free( response );
       return;
     }
     // validate offsets to be in range
-    if ( ! mmio_validate_offset( ( *request )[ i ].offset, sizeof( uint32_t ) ) ) {
+    if ( ! mmio_validate_offset( ( *mmio_request )[ i ].offset, sizeof( uint32_t ) ) ) {
       error.status = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-      free( request_data );
+      free( request );
       free( response );
       return;
     }
@@ -312,43 +309,43 @@ void rpc_handle_mmio_perform(
     uint32_t original_value;
     int64_t loop_max_iteration = -1;
     // reset some command flags
-    ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_NONE;
-    ( *request )[ i ].skipped = 0;
+    ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_NONE;
+    ( *mmio_request )[ i ].skipped = 0;
     // handle skip due to previous abort
     if ( skip ) {
-      ( *request )[ i ].skipped = 1;
+      ( *mmio_request )[ i ].skipped = 1;
       continue;
     }
     #if defined( RPC_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT(
-        "( *request )[ %zu ].type = %d\r\n",
+        "( *mmio_request )[ %zu ].type = %d\r\n",
         i,
-        ( *request )[ i ].type
+        ( *mmio_request )[ i ].type
       )
     #endif
     // handle mmio actions
-    switch ( ( *request )[ i ].type ) {
+    switch ( ( *mmio_request )[ i ].type ) {
       // handle loop while read is equal
       case IOMEM_MMIO_ACTION_LOOP_EQUAL:
         // prepare max iteration
-        if ( 0 < ( *request )[ i ].loop_max_iteration ) {
-          loop_max_iteration = ( *request )[ i ].loop_max_iteration;
+        if ( 0 < ( *mmio_request )[ i ].loop_max_iteration ) {
+          loop_max_iteration = ( *mmio_request )[ i ].loop_max_iteration;
         }
-        while ( ( *request )[ i ].value == ( value = read_helper(
-          &( ( *request )[ i ] ),
+        while ( ( *mmio_request )[ i ].value == ( value = read_helper(
+          &( ( *mmio_request )[ i ] ),
           &original_value
         ) ) ) {
           // handle failure
           if (
-            IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
-            && ( original_value & ( *request )[ i ].failure_value )
+            IOMEM_MMIO_FAILURE_CONDITION_ON == ( *mmio_request )[ i ].failure_condition
+            && ( original_value & ( *mmio_request )[ i ].failure_value )
           ) {
             // debug output
             #if defined( RPC_ENABLE_DEBUG )
               EARLY_STARTUP_PRINT(
                 "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
                 original_value,
-                ( *request )[ i ].failure_value
+                ( *mmio_request )[ i ].failure_value
               )
             #endif
             // treat as timeout
@@ -361,19 +358,19 @@ void rpc_handle_mmio_perform(
             break;
           }
           // apply possible sleep
-          apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+          apply_sleep( ( *mmio_request )[ i ].sleep_type, ( *mmio_request )[ i ].sleep );
         }
         // handle failure
         if (
-          IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
-          && ( original_value & ( *request )[ i ].failure_value )
+          IOMEM_MMIO_FAILURE_CONDITION_ON == ( *mmio_request )[ i ].failure_condition
+          && ( original_value & ( *mmio_request )[ i ].failure_value )
         ) {
           // debug output
           #if defined( RPC_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT(
               "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
               original_value,
-              ( *request )[ i ].failure_value
+              ( *mmio_request )[ i ].failure_value
             )
           #endif
           // treat as timeout
@@ -381,13 +378,13 @@ void rpc_handle_mmio_perform(
           loop_max_iteration = 0;
         }
         // save last value
-        ( *request )[ i ].value = value;
+        ( *mmio_request )[ i ].value = value;
         // handle loop iteration exceeded
         if ( 0 == loop_max_iteration ) {
           // set skip
           skip = true;
           // set aborted
-          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_TIMEOUT;
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_TIMEOUT;
           // skip
           continue;
         }
@@ -395,24 +392,24 @@ void rpc_handle_mmio_perform(
       // handle loop while read is not equal
       case IOMEM_MMIO_ACTION_LOOP_NOT_EQUAL:
         // prepare max iteration
-        if ( 0 < ( *request )[ i ].loop_max_iteration ) {
-          loop_max_iteration = ( *request )[ i ].loop_max_iteration;
+        if ( 0 < ( *mmio_request )[ i ].loop_max_iteration ) {
+          loop_max_iteration = ( *mmio_request )[ i ].loop_max_iteration;
         }
-        while ( ( *request )[ i ].value != ( value = read_helper(
-          &( ( *request )[ i ] ),
+        while ( ( *mmio_request )[ i ].value != ( value = read_helper(
+          &( ( *mmio_request )[ i ] ),
           &original_value
         ) ) ) {
           // handle failure
           if (
-            IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
-            && ( original_value & ( *request )[ i ].failure_value )
+            IOMEM_MMIO_FAILURE_CONDITION_ON == ( *mmio_request )[ i ].failure_condition
+            && ( original_value & ( *mmio_request )[ i ].failure_value )
           ) {
             // debug output
             #if defined( RPC_ENABLE_DEBUG )
               EARLY_STARTUP_PRINT(
                 "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
                 original_value,
-                ( *request )[ i ].failure_value
+                ( *mmio_request )[ i ].failure_value
               )
             #endif
             // treat as timeout
@@ -425,19 +422,19 @@ void rpc_handle_mmio_perform(
             break;
           }
           // apply possible sleep
-          apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+          apply_sleep( ( *mmio_request )[ i ].sleep_type, ( *mmio_request )[ i ].sleep );
         }
         // handle failure
         if (
-          IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
-          && ( original_value & ( *request )[ i ].failure_value )
+          IOMEM_MMIO_FAILURE_CONDITION_ON == ( *mmio_request )[ i ].failure_condition
+          && ( original_value & ( *mmio_request )[ i ].failure_value )
         ) {
           // debug output
           #if defined( RPC_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT(
               "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
               original_value,
-              ( *request )[ i ].failure_value
+              ( *mmio_request )[ i ].failure_value
             )
           #endif
           // treat as timeout
@@ -445,13 +442,13 @@ void rpc_handle_mmio_perform(
           loop_max_iteration = 0;
         }
         // save last value
-        ( *request )[ i ].value = value;
+        ( *mmio_request )[ i ].value = value;
         // handle loop iteration exceeded
         if ( 0 == loop_max_iteration ) {
           // set skip
           skip = true;
           // set aborted
-          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_TIMEOUT;
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_TIMEOUT;
           // skip
           continue;
         }
@@ -459,24 +456,24 @@ void rpc_handle_mmio_perform(
       // handle loop while read is true
       case IOMEM_MMIO_ACTION_LOOP_TRUE:
         // prepare max iteration
-        if ( 0 < ( *request )[ i ].loop_max_iteration ) {
-          loop_max_iteration = ( *request )[ i ].loop_max_iteration;
+        if ( 0 < ( *mmio_request )[ i ].loop_max_iteration ) {
+          loop_max_iteration = ( *mmio_request )[ i ].loop_max_iteration;
         }
         while ( ( value = read_helper(
-          &( ( *request )[ i ] ),
+          &( ( *mmio_request )[ i ] ),
           &original_value
         ) ) ) {
           // handle failure
           if (
-            IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
-            && ( original_value & ( *request )[ i ].failure_value )
+            IOMEM_MMIO_FAILURE_CONDITION_ON == ( *mmio_request )[ i ].failure_condition
+            && ( original_value & ( *mmio_request )[ i ].failure_value )
           ) {
             // debug output
             #if defined( RPC_ENABLE_DEBUG )
               EARLY_STARTUP_PRINT(
                 "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
                 original_value,
-                ( *request )[ i ].failure_value
+                ( *mmio_request )[ i ].failure_value
               )
             #endif
             // treat as timeout
@@ -489,19 +486,19 @@ void rpc_handle_mmio_perform(
             break;
           }
           // apply possible sleep
-          apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+          apply_sleep( ( *mmio_request )[ i ].sleep_type, ( *mmio_request )[ i ].sleep );
         }
         // handle failure
         if (
-          IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
-          && ( original_value & ( *request )[ i ].failure_value )
+          IOMEM_MMIO_FAILURE_CONDITION_ON == ( *mmio_request )[ i ].failure_condition
+          && ( original_value & ( *mmio_request )[ i ].failure_value )
         ) {
           // debug output
           #if defined( RPC_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT(
               "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
               original_value,
-              ( *request )[ i ].failure_value
+              ( *mmio_request )[ i ].failure_value
             )
           #endif
           // treat as timeout
@@ -509,13 +506,13 @@ void rpc_handle_mmio_perform(
           loop_max_iteration = 0;
         }
         // save last value
-        ( *request )[ i ].value = value;
+        ( *mmio_request )[ i ].value = value;
         // handle loop iteration exceeded
         if ( 0 == loop_max_iteration ) {
           // set skip
           skip = true;
           // set aborted
-          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_TIMEOUT;
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_TIMEOUT;
           // skip
           continue;
         }
@@ -523,24 +520,24 @@ void rpc_handle_mmio_perform(
       // handle loop while read is true
       case IOMEM_MMIO_ACTION_LOOP_FALSE:
         // prepare max iteration
-        if ( 0 < ( *request )[ i ].loop_max_iteration ) {
-          loop_max_iteration = ( *request )[ i ].loop_max_iteration;
+        if ( 0 < ( *mmio_request )[ i ].loop_max_iteration ) {
+          loop_max_iteration = ( *mmio_request )[ i ].loop_max_iteration;
         }
         while ( ! ( value = read_helper(
-          &( ( *request )[ i ] ),
+          &( ( *mmio_request )[ i ] ),
           &original_value
         ) ) ) {
           // handle failure
           if (
-            IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
-            && ( original_value & ( *request )[ i ].failure_value )
+            IOMEM_MMIO_FAILURE_CONDITION_ON == ( *mmio_request )[ i ].failure_condition
+            && ( original_value & ( *mmio_request )[ i ].failure_value )
           ) {
             // debug output
             #if defined( RPC_ENABLE_DEBUG )
               EARLY_STARTUP_PRINT(
                 "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
                 original_value,
-                ( *request )[ i ].failure_value
+                ( *mmio_request )[ i ].failure_value
               )
             #endif
             // treat as timeout
@@ -553,19 +550,19 @@ void rpc_handle_mmio_perform(
             break;
           }
           // apply possible sleep
-          apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+          apply_sleep( ( *mmio_request )[ i ].sleep_type, ( *mmio_request )[ i ].sleep );
         }
         // handle failure
         if (
-          IOMEM_MMIO_FAILURE_CONDITION_ON == ( *request )[ i ].failure_condition
-          && ( original_value & ( *request )[ i ].failure_value )
+          IOMEM_MMIO_FAILURE_CONDITION_ON == ( *mmio_request )[ i ].failure_condition
+          && ( original_value & ( *mmio_request )[ i ].failure_value )
         ) {
           // debug output
           #if defined( RPC_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT(
               "failure match = %#"PRIx32" / %#"PRIx32"\r\n",
               original_value,
-              ( *request )[ i ].failure_value
+              ( *mmio_request )[ i ].failure_value
             )
           #endif
           // treat as timeout
@@ -573,82 +570,82 @@ void rpc_handle_mmio_perform(
           loop_max_iteration = 0;
         }
         // save last value
-        ( *request )[ i ].value = value;
+        ( *mmio_request )[ i ].value = value;
         // handle loop iteration exceeded
         if ( 0 == loop_max_iteration ) {
           // set skip
           skip = true;
           // set aborted
-          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_TIMEOUT;
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_TIMEOUT;
           // skip
           continue;
         }
         break;
       // handle read
       case IOMEM_MMIO_ACTION_READ:
-        ( *request )[ i ].value = mmio_read( ( *request )[ i ].offset );
+        ( *mmio_request )[ i ].value = mmio_read( ( *mmio_request )[ i ].offset );
         break;
       // handle read
       case IOMEM_MMIO_ACTION_READ_OR:
-        ( *request )[ i ].value =
-          mmio_read( ( *request )[ i ].offset ) | ( *request )[ i ].value;
+        ( *mmio_request )[ i ].value =
+          mmio_read( ( *mmio_request )[ i ].offset ) | ( *mmio_request )[ i ].value;
         break;
       // handle read
       case IOMEM_MMIO_ACTION_READ_AND:
-        ( *request )[ i ].value =
-          mmio_read( ( *request )[ i ].offset ) & ( *request )[ i ].value;
+        ( *mmio_request )[ i ].value =
+          mmio_read( ( *mmio_request )[ i ].offset ) & ( *mmio_request )[ i ].value;
         break;
       // handle normal write
       case IOMEM_MMIO_ACTION_WRITE:
-        mmio_write( ( *request )[ i ].offset, ( *request )[ i ].value );
+        mmio_write( ( *mmio_request )[ i ].offset, ( *mmio_request )[ i ].value );
         break;
       // handle write "previous value"
       case IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ:
-        mmio_write( ( *request )[ i ].offset, ( *request )[ i - 1 ].value );
+        mmio_write( ( *mmio_request )[ i ].offset, ( *mmio_request )[ i - 1 ].value );
         break;
       // handle write "previous value | value"
       case IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ:
-        value = ( *request )[ i - 1 ].value | ( *request )[ i ].value;
-        mmio_write( ( *request )[ i ].offset, value );
+        value = ( *mmio_request )[ i - 1 ].value | ( *mmio_request )[ i ].value;
+        mmio_write( ( *mmio_request )[ i ].offset, value );
         break;
       // handle write "previous value & value"
       case IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ:
-        value = ( *request )[ i - 1 ].value & ( *request )[ i ].value;
-        mmio_write( ( *request )[ i ].offset, value );
+        value = ( *mmio_request )[ i - 1 ].value & ( *mmio_request )[ i ].value;
+        mmio_write( ( *mmio_request )[ i ].offset, value );
         break;
       // delay given amount of cycles
       case IOMEM_MMIO_ACTION_DELAY:
-        delay( ( *request )[ i ].value );
+        delay( ( *mmio_request )[ i ].value );
         break;
       // sleep given amount of seconds
       case IOMEM_MMIO_ACTION_SLEEP:
-        apply_sleep( ( *request )[ i ].sleep_type, ( *request )[ i ].sleep );
+        apply_sleep( ( *mmio_request )[ i ].sleep_type, ( *mmio_request )[ i ].sleep );
         break;
       case IOMEM_MMIO_ACTION_DMA_READ:
       {
         // translate mmio start to bus address
         uintptr_t bus = _syscall_memory_translate_physical( ( uintptr_t )mmio_start )
-          + ( *request )[ i ].offset;
+          + ( *mmio_request )[ i ].offset;
         if ( errno ) {
-          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
           break;
         }
         // get shared memory id
-        size_t shm_id = ( *request )[ i ].value;
+        size_t shm_id = ( *mmio_request )[ i ].value;
         // attach it
         void* shm_addr = _syscall_memory_shared_attach(
           shm_id,
           ( uintptr_t )NULL
         );
         if ( errno ) {
-          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
           break;
         }
         // loop through pages and perform requests
         bool dma_error = false;
         for (
           uint32_t size = 0;
-          size < ( *request )[ i ].dma_copy_size && !dma_error;
+          size < ( *mmio_request )[ i ].dma_copy_size && !dma_error;
           size += PAGE_SIZE
         ) {
           dma_block_prepare();
@@ -658,7 +655,7 @@ void rpc_handle_mmio_perform(
           );
           if ( errno ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
@@ -668,84 +665,84 @@ void rpc_handle_mmio_perform(
             physical | 0xC0000000
           ) ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           // set transfer length, stride and next
-          if ( 0 != dma_block_set_transfer_length( ( *request )[ i ].dma_copy_size ) ) {
+          if ( 0 != dma_block_set_transfer_length( ( *mmio_request )[ i ].dma_copy_size ) ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_set_stride( 0 ) ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           };
           if ( 0 != dma_block_set_next( 0 ) ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           // prepare transfer information
           if ( 0 != dma_block_transfer_info_wait_response( true ) ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_destination_increment( true ) ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_dest_width( true ) ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_src_dreq( true ) ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_permap( LIBDMA_TI_PERMAP_EMMC ) ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_interrupt_enable( true ) ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           // start dma
           if ( 0 != dma_start() ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           // wait until completed
           if ( 0 != dma_wait() ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           // finish dma
           if ( 0 != dma_finish() ) {
             _syscall_memory_shared_detach( shm_id );
-            ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
@@ -754,7 +751,7 @@ void rpc_handle_mmio_perform(
         _syscall_memory_shared_detach( shm_id );
         if ( errno ) {
           _syscall_memory_shared_detach( shm_id );
-          ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
           break;
         }
         break;
@@ -769,31 +766,31 @@ void rpc_handle_mmio_perform(
         // set skip for following commands
         skip = true;
         // set skip and aborted flag
-        ( *request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_INVALID;
-        ( *request )[ i ].skipped = 1;
+        ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_INVALID;
+        ( *mmio_request )[ i ].skipped = 1;
         // skip
         continue;
     }
     // apply shifting only for read operations
     if (
-      IOMEM_MMIO_ACTION_READ == ( *request )[ i ].type
-      || IOMEM_MMIO_ACTION_READ_OR == ( *request )[ i ].type
-      || IOMEM_MMIO_ACTION_READ_AND == ( *request )[ i ].type
+      IOMEM_MMIO_ACTION_READ == ( *mmio_request )[ i ].type
+      || IOMEM_MMIO_ACTION_READ_OR == ( *mmio_request )[ i ].type
+      || IOMEM_MMIO_ACTION_READ_AND == ( *mmio_request )[ i ].type
     ) {
-      ( *request )[ i ].value = apply_shift(
-        ( *request )[ i ].value,
-        ( *request )[ i ].shift_type,
-        ( *request )[ i ].shift_value
+      ( *mmio_request )[ i ].value = apply_shift(
+        ( *mmio_request )[ i ].value,
+        ( *mmio_request )[ i ].shift_type,
+        ( *mmio_request )[ i ].shift_value
       );
     }
   }
   //EARLY_STARTUP_PRINT( "copy over data\r\n" )
   // copy over data
-  memcpy( response->container, request_data, data_size );
+  memcpy( response->container, request_data, ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) );
   //EARLY_STARTUP_PRINT( "returning\r\n" )
   // return data and finish with free
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
   // free request data
-  free( request_data );
+  free( request );
   free( response );
 }

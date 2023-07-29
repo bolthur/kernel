@@ -67,64 +67,62 @@ void rpc_handle_gpio_set_detect(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  iomem_gpio_detect_t* request;
-  // handle invalid data size
-  if ( data_size != sizeof( *request ) ) {
-    error.status = -EINVAL;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // allocate space for request
-  request = malloc( data_size );
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
   if ( ! request ) {
-    error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // clear request
-  memset( request, 0, data_size );
-  // fetch rpc data
-  _syscall_rpc_get_data( request, data_size, data_info, false );
-  // handle error
+  _syscall_rpc_get_data( request, data_size, data_info, true );
   if ( errno ) {
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( request );
     return;
   }
+  iomem_gpio_detect_t* gpio_request;
+  // handle invalid data size
+  if ( data_size - sizeof( vfs_ioctl_perform_request_t ) != sizeof( *gpio_request ) ) {
+    error.status = -EINVAL;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
+  // allocate space for gpio_request
+  gpio_request = ( iomem_gpio_detect_t* )request->container;
   // some debug output
   #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
       "gpio detect: pin = %d, type = %x, value = %#"PRIx32"\r\n",
-      request->pin, request->type, request->value
+      gpio_request->pin, gpio_request->type, gpio_request->value
     )
   #endif
   // determine address to use
   uintptr_t address;
-  switch ( request->type ) {
+  switch ( gpio_request->type ) {
     case IOMEM_GPIO_ENUM_DETECT_TYPE_LOW:
-      if ( request->pin < 32 ) {
+      if ( gpio_request->pin < 32 ) {
         address = PERIPHERAL_GPIO_GPLEN0;
       } else {
         address = PERIPHERAL_GPIO_GPLEN1;
       }
       break;
     case IOMEM_GPIO_ENUM_DETECT_TYPE_HIGH:
-      if ( request->pin < 32 ) {
+      if ( gpio_request->pin < 32 ) {
         address = PERIPHERAL_GPIO_GPHEN0;
       } else {
         address = PERIPHERAL_GPIO_GPHEN1;
       }
       break;
     case IOMEM_GPIO_ENUM_DETECT_TYPE_RISING_EDGE:
-      if ( request->pin < 32 ) {
+      if ( gpio_request->pin < 32 ) {
         address = PERIPHERAL_GPIO_GPREN0;
       } else {
         address = PERIPHERAL_GPIO_GPREN1;
       }
       break;
     case IOMEM_GPIO_ENUM_DETECT_TYPE_FALLING_EDGE:
-      if ( request->pin < 32 ) {
+      if ( gpio_request->pin < 32 ) {
         address = PERIPHERAL_GPIO_GPFEN0;
       } else {
         address = PERIPHERAL_GPIO_GPFEN1;
@@ -137,8 +135,8 @@ void rpc_handle_gpio_set_detect(
       return;
   }
   // adjust pin if necessary
-  if ( request->pin >= 32 ) {
-    request->pin -= 32;
+  if ( gpio_request->pin >= 32 ) {
+    gpio_request->pin -= 32;
   }
   // read value
   uint32_t value = mmio_read( address );
@@ -147,11 +145,11 @@ void rpc_handle_gpio_set_detect(
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
   // unset bit if 0
-  if ( 0 == request->value ) {
-    value &= ( uint32_t )~( 1 << request->pin );
+  if ( 0 == gpio_request->value ) {
+    value &= ( uint32_t )~( 1 << gpio_request->pin );
   // otherwise set bit
   } else {
-    value |= ( 1 << request->pin );
+    value |= ( 1 << gpio_request->pin );
   }
   // some debug output
   #if defined( RPC_ENABLE_DEBUG )
@@ -166,6 +164,6 @@ void rpc_handle_gpio_set_detect(
   // set status to 0
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-  // free request
+  // free gpio_request
   free( request );
 }

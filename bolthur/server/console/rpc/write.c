@@ -25,7 +25,6 @@
 #include "../../libterminal.h"
 #include "../../libconsole.h"
 #include "../rpc.h"
-#include "../handler.h"
 #include "../../../library/collection/list/list.h"
 #include "../console.h"
 

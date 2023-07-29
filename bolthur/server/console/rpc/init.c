@@ -17,23 +17,31 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <stdbool.h>
-#include <unistd.h>
-#include <sys/bolthur.h>
+#include <errno.h>
+#include "../rpc.h"
+#include "../../libconsole.h"
 
-#if ! defined( _HANDLER_H )
-#define _HANDLER_H
-
-struct console_rpc {
-  uint32_t command;
-  rpc_handler_t callback;
-};
-
-void handler_console_add( size_t, pid_t, size_t, size_t );
-void handler_console_select( size_t, pid_t, size_t, size_t );
-bool handler_register( void );
-
-extern struct console_rpc command_list[ 3 ];
-
-#endif
+/**
+ * @fn bool rpc_init(void)
+ * @brief Setup rpc handling
+ *
+ * @return
+ */
+bool rpc_init( void ) {
+  bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    return false;
+  }
+  bolthur_rpc_bind( CONSOLE_ADD, rpc_custom_handle_console_add, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler console add!\r\n" )
+    return false;
+  }
+  bolthur_rpc_bind( CONSOLE_SELECT, rpc_custom_handle_console_select, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler console select!\r\n" )
+    return false;
+  }
+  return true;
+}

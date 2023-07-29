@@ -44,7 +44,6 @@ __maybe_unused static void send_vfs_add_request(
 ) {
   vfs_add_response_t* response = malloc( sizeof( *response ) );
   if ( ! response || ! msg ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
     exit( -1 );
   }
   // push in current pid

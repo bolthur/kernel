@@ -67,23 +67,32 @@ void rpc_handle_gpio_event(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  iomem_gpio_event_t* request;
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  _syscall_rpc_get_data( request, data_size, data_info, true );
+  if ( errno ) {
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
+  iomem_gpio_event_t* event_request;
   // handle invalid data size
-  if ( data_size != sizeof( *request ) ) {
+  if ( data_size - sizeof( vfs_ioctl_perform_request_t ) != sizeof( *event_request ) ) {
     error.status = -EINVAL;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
     return;
   }
-  // allocate space for request
-  request = malloc( data_size );
-  if ( ! request ) {
-    error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
+  // allocate space for event_request
+  event_request = ( iomem_gpio_event_t* )request->container;
   // allocate space for response
   vfs_ioctl_perform_response_t* response;
-  size_t response_size = data_size * sizeof( char ) + sizeof( *response );
+  size_t response_size = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) * sizeof( char ) + sizeof( *response );
   response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
@@ -91,33 +100,22 @@ void rpc_handle_gpio_event(
     free( request );
     return;
   }
-  // clear request
-  memset( request, 0, data_size );
+  // clear event_request
   memset( response, 0, response_size );
-  // fetch rpc data
-  _syscall_rpc_get_data( request, data_size, data_info, false );
-  // handle error
-  if ( errno ) {
-    error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( request );
-    free( response );
-    return;
-  }
   // some debug output
   #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
       "gpio event: pin = %d, value = %#"PRIx32"\r\n",
-      request->pin, request->value
+      event_request->pin, event_request->value
     )
   #endif
   uintptr_t address;
   // determine address and adjust pin
-  if ( request->pin < 32 ) {
+  if ( event_request->pin < 32 ) {
     address = PERIPHERAL_GPIO_GPEDS0;
   } else {
     address = PERIPHERAL_GPIO_GPEDS1;
-    request->pin -= 32;
+    event_request->pin -= 32;
   }
   // read data from event detect status
   uint32_t value = mmio_read( address );
@@ -125,23 +123,23 @@ void rpc_handle_gpio_event(
   #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
       "mask = %#"PRIx32", value before = %#"PRIx32"\r\n",
-      ( uint32_t )( 1 << request->pin ),
+      ( uint32_t )( 1 << event_request->pin ),
       value
     )
   #endif
-  value &= ( 1 << request->pin );
+  value &= ( 1 << event_request->pin );
   // some debug output
   #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
       "mask = %#"PRIx32", value after = %#"PRIx32"\r\n",
-      ( uint32_t )( 1 << request->pin ),
+      ( uint32_t )( 1 << event_request->pin ),
       value
     )
   #endif
   // fill return
-  request->value = value ? 1 : 0;
+  event_request->value = value ? 1 : 0;
   // copy over to response container
-  memcpy( response->container, request, data_size );
+  memcpy( response->container, event_request, ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) );
   // return data and finish with free
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
   free( request );

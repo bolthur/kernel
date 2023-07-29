@@ -382,6 +382,25 @@ void framebuffer_handle_resolution(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
+  // get message size
+  size_t data_size = _syscall_rpc_get_data_size( data_info );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  _syscall_rpc_get_data( request, data_size, data_info, true );
+  if ( errno ) {
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
   // allocate response
   vfs_ioctl_perform_response_t* response;
   size_t response_size = sizeof( *response )
@@ -391,6 +410,7 @@ void framebuffer_handle_resolution(
   if ( ! response ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
     return;
   }
   // clear out response
@@ -407,6 +427,7 @@ void framebuffer_handle_resolution(
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
   // free response
   free( response );
+  free( request );
 }
 
 /**
@@ -430,6 +451,25 @@ void framebuffer_handle_clear(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
+  // get message size
+  size_t data_size = _syscall_rpc_get_data_size( data_info );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  _syscall_rpc_get_data( request, data_size, data_info, true );
+  if ( errno ) {
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
   // clear
   memset( current_back, 0, size );
   // perform flip
@@ -437,6 +477,7 @@ void framebuffer_handle_clear(
   // set success and return
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+  free( request );
 }
 
 /**
@@ -455,16 +496,35 @@ void framebuffer_handle_flip(
   __unused size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
-  // remove data
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // get message size
+  size_t data_size = _syscall_rpc_get_data_size( data_info );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  _syscall_rpc_get_data( request, data_size, data_info, true );
+  if ( errno ) {
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
     return;
   }
   framebuffer_flip();
   // return success
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+  free( request );
 }
 
 /**
@@ -493,68 +553,43 @@ void framebuffer_handle_surface_render(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // allocate  structure
-  framebuffer_surface_render_t* info = malloc( sizeof( *info ) );
-  if ( ! info ) {
-    error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // fetch rpc data
-  _syscall_rpc_get_data( info, sizeof( *info ), data_info, false );
-  // handle error
+  // get message size
+  size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
-    error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( info );
     return;
   }
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  _syscall_rpc_get_data( request, data_size, data_info, true );
+  if ( errno ) {
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
+  // allocate  structure
+  framebuffer_surface_render_t* info = ( framebuffer_surface_render_t* )
+    request->container;
   // get item
   list_item_t* item = list_lookup_data( memory_list, ( void* )info->surface_id );
   if ( ! item ) {
     error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( info );
+    free( request );
     return;
   }
   // get memory item
   framebuffer_memory_t* mem = item->data;
   memcpy( current_back, mem->address, size );
-  /*
-  // determine max width, height and pitch
-  uint32_t max_width = mem->width > physical_width
-    ? physical_width : mem->width;
-  uint32_t max_height = mem->height > physical_height
-    ? physical_height : mem->height;
-  uint32_t bpp = mem->depth / CHAR_BIT;
-  // render surface
-  for ( uint32_t idx = 0; idx < mem->height * mem->pitch; idx += bpp ) {
-    uint32_t y = idx / mem->width;
-    uint32_t x = idx % mem->height;
-    if (
-      x >= max_width
-      || y >= max_height
-    ) {
-      continue;
-    }
-    // calculate x and y values for rendering
-    uint32_t final_x = info->x + ( x / bpp );
-    uint32_t final_y = info->y + y;
-    // extract color from data
-    uint32_t color = *( ( uint32_t* )( &mem->address[ y * mem->pitch + x  ] ) );
-    / *EARLY_STARTUP_PRINT(
-      "x = %"PRId32", y = %"PRId32", final_x = %"PRId32", final_y = %"PRId32", color = %"PRIx32"\r\n",
-      x / bpp, y, final_x, final_y, color )* /
-    // determine render offset
-    uint32_t offset = final_y * pitch + final_x * BYTE_PER_PIXEL;
-    // push back color
-    *( ( uint32_t* )( current_back + offset ) ) = color;
-  }*/
-  // free again
-  free( info );
   // return success
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+  free( request );
 }
 
 /**
@@ -583,23 +618,28 @@ void framebuffer_handle_surface_allocate(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // allocate space for data
-  framebuffer_surface_allocate_t* info = malloc( sizeof( *info ) );
-  if ( ! info ) {
-    error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // fetch rpc data
-  _syscall_rpc_get_data(
-    info, sizeof( *info ), data_info, false );
+  // get message size
+  size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
-    error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( info );
     return;
   }
-
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
+  _syscall_rpc_get_data( request, data_size, data_info, true );
+  if ( errno ) {
+    error.status = -EIO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
+  // allocate space for data
+  framebuffer_surface_allocate_t* info = ( framebuffer_surface_allocate_t* )
+    request->container;
   // calculated line length
   uint32_t allocate_pitch = info->width * ( info->depth / CHAR_BIT );
   size_t memory_size = allocate_pitch * info->height;
@@ -608,7 +648,7 @@ void framebuffer_handle_surface_allocate(
   if ( errno ) {
     error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( info );
+    free( request );
     return;
   }
   // attach shared area
@@ -616,7 +656,7 @@ void framebuffer_handle_surface_allocate(
   if ( errno ) {
     error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( info );
+    free( request );
     return;
   }
   // clearout shared memory
@@ -633,7 +673,7 @@ void framebuffer_handle_surface_allocate(
     }
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( info );
+    free( request );
     return;
   }
   // clearout and fill
@@ -656,7 +696,7 @@ void framebuffer_handle_surface_allocate(
     }
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( info );
+    free( request );
     return;
   }
 
@@ -681,7 +721,7 @@ void framebuffer_handle_surface_allocate(
     }
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( info );
+    free( request );
     free( mem );
     return;
   }
@@ -691,5 +731,5 @@ void framebuffer_handle_surface_allocate(
   // return from rpc and free remaining stuff
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
   free( response );
-  free( info );
+  free( request );
 }

@@ -23,7 +23,6 @@
 #include "../libterminal.h"
 #include "../libhelper.h"
 #include "../libconsole.h"
-#include "handler.h"
 #include "../../library/collection/list/list.h"
 #include "console.h"
 #include "rpc.h"
@@ -68,22 +67,14 @@ static void console_cleanup( list_item_t* a ) {
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
-  EARLY_STARTUP_PRINT( "Bind specific vfs write request handler\r\n" )
-  // set handler
-  bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
-    return -1;
-  }
-  // FIXME: SET READ HANDLER FOR STDIN
-
+  // create console list
   console_list = list_construct( console_lookup, console_cleanup, NULL );
   if ( ! console_list ) {
     return -1;
   }
-  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
   // register rpc handler
-  if ( ! handler_register() ) {
+  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
+  if ( ! rpc_init() ) {
     list_destruct( console_list );
     return -1;
   }

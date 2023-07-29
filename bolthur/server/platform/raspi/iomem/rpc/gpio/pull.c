@@ -67,52 +67,50 @@ void rpc_handle_gpio_set_pull(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  iomem_gpio_pull_t* request;
-  // handle invalid data size
-  if ( data_size != sizeof( *request ) ) {
-    error.status = -EINVAL;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // allocate space for request
-  request = malloc( data_size );
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
   if ( ! request ) {
-    error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // clear request
-  memset( request, 0, data_size );
-  // fetch rpc data
-  _syscall_rpc_get_data( request, data_size, data_info, false );
-  // handle error
+  _syscall_rpc_get_data( request, data_size, data_info, true );
   if ( errno ) {
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( request );
     return;
   }
+  iomem_gpio_pull_t* pull_request;
+  // handle invalid data size
+  if ( data_size - sizeof( vfs_ioctl_perform_request_t ) != sizeof( *pull_request ) ) {
+    error.status = -EINVAL;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
+  // allocate space for pull_request
+  pull_request = ( iomem_gpio_pull_t* )request->container;
   // some debug output
   #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
       "gpio pull: pin = %d, pull = %x\r\n",
-      request->pin, request->pull
+      pull_request->pin, pull_request->pull
     )
   #endif
   uintptr_t address;
   // determine address and adjust pin
-  if ( request->pin < 32 ) {
+  if ( pull_request->pin < 32 ) {
     address = PERIPHERAL_GPIO_GPPUDCLK0;
   } else {
     address = PERIPHERAL_GPIO_GPPUDCLK1;
-    request->pin -= 32;
+    pull_request->pin -= 32;
   }
   // write updown register with value
-  mmio_write( PERIPHERAL_GPIO_GPPUD, request->pull );
+  mmio_write( PERIPHERAL_GPIO_GPPUD, pull_request->pull );
   // delay 150 cycles
   delay( 150 );
   // write pin bit
-  mmio_write( address, 1 << request->pin );
+  mmio_write( address, 1 << pull_request->pin );
   // delay 150 cycles
   delay( 150 );
   // reset updown register and address
@@ -121,6 +119,6 @@ void rpc_handle_gpio_set_pull(
   // set status to 0
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-  // free request
+  // free pull_request
   free( request );
 }

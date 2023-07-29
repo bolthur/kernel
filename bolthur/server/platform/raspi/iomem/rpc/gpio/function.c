@@ -67,57 +67,55 @@ void rpc_handle_gpio_set_function(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  iomem_gpio_function_t* request;
-  // handle invalid data size
-  if ( data_size != sizeof( *request ) ) {
-    error.status = -EINVAL;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // allocate space for request
-  request = malloc( data_size );
+  // allocate request
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
   if ( ! request ) {
-    error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // clear request
-  memset( request, 0, data_size );
-  // fetch rpc data
-  _syscall_rpc_get_data( request, data_size, data_info, false );
-  // handle error
+  _syscall_rpc_get_data( request, data_size, data_info, true );
   if ( errno ) {
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( request );
     return;
   }
+  iomem_gpio_function_t* function_request;
+  // handle invalid data size
+  if ( data_size - sizeof( vfs_ioctl_perform_request_t ) != sizeof( *function_request ) ) {
+    error.status = -EINVAL;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
+  // allocate space for function_request
+  function_request = ( iomem_gpio_function_t* )request->container;
   // some debug output
   #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
       "gpio function: pin = %d, function = %x\r\n",
-      request->pin, request->function
+      function_request->pin, function_request->function
     )
   #endif
   // determine register to set and adjust pin
   uintptr_t address = 0;
-  if ( 10 > request->pin ) {
+  if ( 10 > function_request->pin ) {
     address = PERIPHERAL_GPIO_GPFSEL0;
-  } else if ( 20 > request->pin ) {
+  } else if ( 20 > function_request->pin ) {
     address = PERIPHERAL_GPIO_GPFSEL1;
-    request->pin -= 10;
-  } else if ( 30 > request->pin ) {
+    function_request->pin -= 10;
+  } else if ( 30 > function_request->pin ) {
     address = PERIPHERAL_GPIO_GPFSEL2;
-    request->pin -= 20;
-  } else if ( 40 > request->pin ) {
+    function_request->pin -= 20;
+  } else if ( 40 > function_request->pin ) {
     address = PERIPHERAL_GPIO_GPFSEL3;
-    request->pin -= 30;
-  } else if ( 50 > request->pin ) {
+    function_request->pin -= 30;
+  } else if ( 50 > function_request->pin ) {
     address = PERIPHERAL_GPIO_GPFSEL4;
-    request->pin -= 40;
-  } else if ( 54 > request->pin ) {
+    function_request->pin -= 40;
+  } else if ( 54 > function_request->pin ) {
     address = PERIPHERAL_GPIO_GPFSEL5;
-    request->pin -= 50;
+    function_request->pin -= 50;
   }
   // handle invalid
   if ( 0 == address ) {
@@ -130,7 +128,7 @@ void rpc_handle_gpio_set_function(
   #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
       "gpio function: pin = %d, function = %x\r\n",
-      request->pin, request->function
+      function_request->pin, function_request->function
     )
   #endif
   // read value
@@ -140,22 +138,22 @@ void rpc_handle_gpio_set_function(
     EARLY_STARTUP_PRINT( "value = %#"PRIx32"\r\n", value )
   #endif
   // mask bits
-  value &= ( uint32_t )~( 7 << ( request->pin * 3 ) );
+  value &= ( uint32_t )~( 7 << ( function_request->pin * 3 ) );
   // some debug output
   #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
       "mask = %#"PRIx32", value = %#"PRIx32"\r\n",
-      ( uint32_t )~( 7 << ( request->pin * 3 ) ),
+      ( uint32_t )~( 7 << ( function_request->pin * 3 ) ),
       value
     )
   #endif
   // set value
-  value |= ( ( request->function & 7 ) << ( request->pin * 3 ) );
+  value |= ( ( function_request->function & 7 ) << ( function_request->pin * 3 ) );
   // some debug output
   #if defined( RPC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
       "bit = %#"PRIx32", value = %#"PRIx32"\r\n",
-      ( uint32_t )( ( request->function & 7 ) << ( request->pin * 3 ) ),
+      ( uint32_t )( ( function_request->function & 7 ) << ( function_request->pin * 3 ) ),
       value
     )
   #endif
@@ -174,6 +172,6 @@ void rpc_handle_gpio_set_function(
   // set status to 0
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-  // free request
+  // free function_request
   free( request );
 }
