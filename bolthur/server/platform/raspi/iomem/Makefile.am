@@ -13,6 +13,7 @@ iomem_SOURCES = \
   rpc/mmio/lock.c \
   rpc/mmio/perform.c \
   rpc/mmio/unlock.c \
+  rpc/init.c \
   rpc/mailbox.c \
   barrier.c \
   delay.c \
@@ -20,6 +21,5 @@ iomem_SOURCES = \
   mailbox.c \
   main.c \
   mmio.c \
-  property.c \
-  rpc.c
+  property.c
 iomem_LDFLAGS = -all-static --static

@@ -24,13 +24,7 @@
 #ifndef _RPC_H
 #define _RPC_H
 
-struct random_rpc {
-  uint32_t command;
-  rpc_handler_t callback;
-};
-extern struct random_rpc command_list[ 1 ];
-
-bool rpc_register( void );
+bool rpc_init( void );
 void rpc_handle_read( size_t, pid_t, size_t, size_t );
 
 #endif

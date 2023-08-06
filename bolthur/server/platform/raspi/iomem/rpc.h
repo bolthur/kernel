@@ -26,13 +26,7 @@
 
 //#define RPC_ENABLE_DEBUG 1
 
-struct mailbox_rpc {
-  uint32_t command;
-  rpc_handler_t callback;
-};
-extern struct mailbox_rpc command_list[ 11 ];
-
-bool rpc_register( void );
+bool rpc_init( void );
 void rpc_handle_mailbox( size_t, pid_t, size_t, size_t );
 void rpc_handle_mmio_perform( size_t, pid_t, size_t, size_t );
 void rpc_handle_mmio_lock( size_t, pid_t, size_t, size_t );

@@ -67,7 +67,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   }
   EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
   // register handlers
-  if ( ! rpc_register() ) {
+  if ( ! rpc_init() ) {
     EARLY_STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
     return -1;
   }

@@ -17,36 +17,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libgen.h>
 #include <errno.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/bolthur.h>
-#include "rpc.h"
-
-struct random_rpc command_list[] = {
-  {
-    .command = RPC_VFS_READ,
-    .callback = rpc_handle_read
-  },
-};
+#include "../rpc.h"
+#include "../../../libdev.h"
 
 /**
- * @fn bool rpc_register(void)
- * @brief Register necessary rpc handler
+ * @fn bool rpc_init(void)
+ * @brief Setup rpc handling
  *
  * @return
  */
-bool rpc_register( void ) {
-  // register all handlers
-  size_t max = sizeof( command_list ) / sizeof( command_list[ 0 ] );
-  // loop through handler to identify used one
-  for ( size_t i = 0; i < max; i++ ) {
-    // register rpc
-    bolthur_rpc_bind( command_list[ i ].command, command_list[ i ].callback, true );
-    if ( errno ) {
-      return false;
-    }
+bool rpc_init( void ) {
+  bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    return false;
   }
   return true;
 }
