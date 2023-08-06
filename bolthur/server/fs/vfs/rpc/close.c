@@ -26,6 +26,51 @@
 #include "../file/handle.h"
 
 /**
+ * @fn void rpc_handle_close_async(size_t, pid_t, size_t, size_t)
+ * @brief Finish started close request
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_close_async(
+  size_t type,
+  __unused pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  vfs_close_response_t response = { .status = -EINVAL };
+  // get matching async data
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
+    type, response_info );
+  if ( ! async_data || ! data_info ) {
+    return;
+  }
+  // get original request
+  vfs_close_request_t* request = async_data->original_data;
+  // fetch rpc data
+  _syscall_rpc_get_data( &response, sizeof( response ), data_info, false );
+  if ( errno ) {
+    response.status = -EIO;
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    return;
+  }
+  EARLY_STARTUP_PRINT( "response.status = %d\r\n", response.status )
+  // handle error
+  if ( 0 > response.status ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    return;
+  }
+  // destroy handle
+  response.status = handle_destory(
+    async_data->original_origin,
+    request->handle
+  );
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+}
+
+/**
  * @fn void rpc_handle_close(size_t, pid_t, size_t, size_t)
  * @brief handle close request
  *
@@ -41,13 +86,13 @@ void rpc_handle_close(
   __unused size_t response_info
 ) {
   vfs_close_response_t response = { .status = -EINVAL };
-  vfs_close_request_t* request = malloc( sizeof( vfs_close_request_t ) );
+  vfs_close_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // clear variables
-  memset( request, 0, sizeof( vfs_close_request_t ) );
+  memset( request, 0, sizeof( *request ) );
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -55,15 +100,43 @@ void rpc_handle_close(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_close_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  EARLY_STARTUP_PRINT( "closing %d\r\n", request->handle )
-  response.status = handle_destory( origin, request->handle );
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  // get handle
+  handle_container_t* handle_container;
+  // try to get handle information
+  int result = handle_get( &handle_container, origin, request->handle );
+  // handle error
+  if ( 0 > result ) {
+    response.status = result;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // perform async rpc
+  bolthur_rpc_raise(
+    type,
+    handle_container->mount_point->pid,
+    request,
+    sizeof( vfs_close_request_t ),
+    rpc_handle_close_async,
+    type,
+    request,
+    sizeof( vfs_close_request_t ),
+    origin,
+    data_info,
+    NULL
+  );
+  if ( errno ) {
+    response.status = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    return;
+  }
   free( request );
+  return;
 }

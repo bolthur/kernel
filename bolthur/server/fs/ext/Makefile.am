@@ -9,6 +9,7 @@ ext_SOURCES = \
   rpc/getdents.c \
   rpc/init.c \
   rpc/mount.c \
+  rpc/open.c \
   rpc/read.c \
   rpc/stat.c \
   rpc/umount.c \

@@ -39,6 +39,6 @@ void rpc_handle_close(
   __unused size_t data_info,
   __unused size_t response_info
 ) {
-  vfs_close_response_t response = { .status = -EINVAL };
+  vfs_close_response_t response = { .status = 0 };
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
 }

@@ -145,7 +145,7 @@ void rpc_handle_ioctl(
     return;
   }
   if ( getpid() == request->target_process ) {
-    /// FIXME: RAISE LOCALLY
+    // get local handler
     rpc_handler_t handler = bolthur_rpc_get( request->command );
     if ( ! handler ) {
       err_response.status = -EIO;

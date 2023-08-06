@@ -17,15 +17,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
 #include <sys/syslimits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/tree.h>
+#include "handle.h"
 
-#ifndef _HANDLE_H
-#define _HANDLE_H
+#ifndef _PROCESS_H
+#define _PROCESS_H
 
-#define HANDLE_TREE_DEFINE( name, type, field, cmp, attr ) \
+#define PROCESS_TREE_DEFINE( name, type, field, cmp, attr ) \
   SPLAY_HEAD( name, type ); \
   SPLAY_PROTOTYPE( name, type, field, cmp ) \
   SPLAY_GENERATE( name, type, field, cmp ) \
@@ -54,20 +56,20 @@
     return SPLAY_NEXT( name, t, e ); \
   } \
   attr void type##_tree_apply( struct name* t, void( *cb )( struct type* ) ) { \
-    handle_node_tree_each( t, type, e, cb( e ) ); \
+    process_node_tree_each( t, type, e, cb( e ) ); \
   } \
   attr void type##_tree_destroy( struct name* t, void( *free_cb )( struct type* ) ) { \
-    handle_node_tree_each_safe( t, type, e, free_cb( type##_tree_remove( t, e ) ) ); \
+    process_node_tree_each_safe( t, type, e, free_cb( type##_tree_remove( t, e ) ) ); \
   }
 
-#define handle_node_tree_each( t, type, e, block ) { \
+#define process_node_tree_each( t, type, e, block ) { \
     struct type* e; \
     for ( e = type##_tree_min( t ); e; e = type##_tree_next( t, e ) ) { \
       block; \
     }\
   }
 
-#define handle_node_tree_each_safe( t, type, e, block ) { \
+#define process_node_tree_each_safe( t, type, e, block ) { \
     struct type* e; \
     struct type* __tmp; \
     for ( \
@@ -79,57 +81,19 @@
     }\
   }
 
-typedef struct handle_node {
-  /** @brief generated handle */
+typedef struct process_node {
+  /** @brief number where handles start */
   int handle;
-  /** @brief open flags */
-  int flags;
-  /** @brief mode */
-  int mode;
-  /** @brief current position */
-  off_t pos;
-  /** @brief file path */
-  char path[ PATH_MAX ];
-  /** @brief process handling file */
-  pid_t handler;
-  /** @brief stat information */
-  struct stat info;
-  /** @brief additional data */
-  void* data;
+  /** @brief process */
+  pid_t pid;
+  /** @brief handle tree */
+  struct handle_tree management_tree;
   /** @brief tree data */
-  SPLAY_ENTRY( handle_node ) node;
-} handle_node_t;
+  SPLAY_ENTRY( process_node ) node;
+} process_node_t;
 
-/**
- * @fn int handle_cmp(struct handle_node*, struct handle_node*)
- * @brief Comparison function for tree
- *
- * @param a
- * @param b
- * @return
- */
-static int handle_cmp(
-  struct handle_node* a,
-  struct handle_node* b
-) {
-  if ( a->handle == b->handle ) {
-    return 0;
-  }
-  return a->handle > b->handle ? 1 : -1;
-}
-
-// define tree
-HANDLE_TREE_DEFINE(
-  handle_tree,
-  handle_node,
-  node,
-  handle_cmp,
-  __unused static inline
-)
-
-int handle_get( handle_node_t**, pid_t, int );
-int handle_generate( handle_node_t**, pid_t, pid_t, void*, const char*, int, int );
-int handle_destory( pid_t, int );
-void handle_destory_all( pid_t );
-
+bool process_setup( void );
+process_node_t* process_generate( pid_t );
+void process_remove( process_node_t* );
+int process_duplicate( process_node_t*, handle_node_t* );
 #endif

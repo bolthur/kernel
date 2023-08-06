@@ -38,18 +38,17 @@
  * @param response
  * @param async_data
  */
-static void create_handle(
+__maybe_unused static void create_handle(
   size_t type,
   pid_t origin,
-  vfs_stat_response_t* stat_response,
+  vfs_open_response_t* open_response,
   vfs_open_request_t* request,
   vfs_open_response_t* response,
   bolthur_async_data_t* async_data
 ) {
-
   // handle error and no create set
   if (
-    ! stat_response->success
+    0 > open_response->handle
     && !( request->flags & O_CREAT )
   ) {
     response->handle = -ENOENT;
@@ -58,7 +57,7 @@ static void create_handle(
   }
   // handle success with combination of create and exclusive
   if (
-    stat_response->success
+    0 == open_response->handle
     && ( request->flags & O_CREAT )
     && ( request->flags & O_EXCL )
   ) {
@@ -67,13 +66,13 @@ static void create_handle(
     return;
   }
   // FIXME: ADD SUPPORT FOR CREATION
-  if ( ! stat_response->success && ( request->flags & O_CREAT ) ) {
+  if ( 0 > open_response->handle && ( request->flags & O_CREAT ) ) {
     response->handle = -ENOSYS;
     bolthur_rpc_return( type, response, sizeof( *response ), async_data );
     return;
   }
   // handle any other failure
-  if ( ! stat_response->success ) {
+  if ( 0 > open_response->handle ) {
     response->handle = -ENOENT;
     bolthur_rpc_return( type, response, sizeof( *response ), async_data );
     return;
@@ -89,7 +88,7 @@ static void create_handle(
 
   // handle target directory with write or read write flags
   if (
-    ( S_ISDIR( stat_response->info.st_mode ) )
+    ( S_ISDIR( open_response->st.st_mode ) )
     && (
       ( request->flags & O_WRONLY )
       || ( request->flags & O_RDWR )
@@ -114,7 +113,7 @@ static void create_handle(
     async_data
       ? async_data->original_origin
       : origin,
-    stat_response->handler,
+    open_response->handler,
     mount_point,
     request->path,
     request->flags,
@@ -128,7 +127,7 @@ static void create_handle(
     return;
   }
   // copy over stat stuff
-  memcpy( &container->info, &stat_response->info, sizeof( stat_response->info ) );
+  memcpy( &container->info, &open_response->st, sizeof( open_response->st ) );
   // prepare return
   response->handle = container->handle;
   bolthur_rpc_return( type, response, sizeof( *response ), async_data );
@@ -145,7 +144,7 @@ static void create_handle(
  */
 void rpc_handle_open_async(
   __unused size_t type,
-  pid_t origin,
+  __unused pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
@@ -162,30 +161,55 @@ void rpc_handle_open_async(
     return;
   }
   // allocate space for stat response and clear out
-  vfs_stat_response_t* stat_response = malloc( sizeof( *stat_response ) );
-  if ( ! stat_response ) {
+  vfs_open_response_t* open_response = malloc( sizeof( *open_response ) );
+  if ( ! open_response ) {
     bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
     return;
   }
   // clear out
-  memset( stat_response, 0, sizeof( *stat_response ) );
+  memset( open_response, 0, sizeof( *open_response ) );
   // original request
   vfs_open_request_t* request = async_data->original_data;
   if ( ! request ) {
     bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
-    free( stat_response );
+    free( open_response );
     return;
   }
   // fetch response
-  _syscall_rpc_get_data( stat_response, sizeof( *stat_response ), data_info, false );
+  _syscall_rpc_get_data( open_response, sizeof( *open_response ), data_info, false );
   if ( errno ) {
     bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
-    free( stat_response );
+    free( open_response );
     return;
   }
-  create_handle( RPC_VFS_OPEN, origin, stat_response, request, &response, async_data );
+  // handle error
+  if ( 0 > open_response->handle ) {
+    handle_destory( request->origin, request->handle );
+    response.handle = open_response->handle;
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    free( open_response );
+    return;
+  }
+  // try to get previously generated handle
+  handle_container_t* container;
+  int result = handle_get( &container, request->origin, request->handle );
+  if ( 0 > result ) {
+    response.handle = result;
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    free( open_response );
+    return;
+  }
+  // set handler and copy over stuff
+  container->handler = open_response->handler;
+  memcpy( &container->info, &open_response->st, sizeof( open_response->st ) );
+  // prepare return
+  response.handle = container->handle;
+  response.handler = container->handler;
+  memcpy( &response.st, &container->info, sizeof( open_response->st ) );
+  // return rpc
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
   // free response
-  free( stat_response );
+  free( open_response );
 }
 
 /**
@@ -209,13 +233,13 @@ void rpc_handle_open(
 ) {
   // variables
   vfs_open_response_t response = { .handle = -EINVAL };
-  vfs_open_request_t* request = malloc( sizeof( vfs_open_request_t ) );
+  vfs_open_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // clear variables
-  memset( request, 0, sizeof( vfs_open_request_t ) );
+  memset( request, 0, sizeof( *request ) );
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -223,7 +247,7 @@ void rpc_handle_open(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_open_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -240,22 +264,33 @@ void rpc_handle_open(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // allocate stat request
-  vfs_stat_request_t* stat_request = malloc( sizeof( *stat_request ) );
-  if ( ! stat_request ) {
-    free( request );
+  // generate handle
+  handle_container_t* container = NULL;
+  int result = handle_generate(
+    &container,
+    origin,
+    mount_point->pid,
+    mount_point,
+    request->path,
+    request->flags,
+    request->mode
+  );
+  // handle error
+  if ( ! container ) {
+    // prepare error return
+    response.handle = result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  memset( stat_request, 0, sizeof( *stat_request ) );
-  // populate stat_request
-  strcpy( stat_request->file_path, request->path );
+  // prepare internal stuff
+  request->handle = container->handle;
+  request->origin = origin;
   // perform async rpc
   bolthur_rpc_raise(
-    RPC_VFS_STAT,
+    type,
     mount_point->pid,
-    stat_request,
-    sizeof( *stat_request ),
+    request,
+    sizeof( *request ),
     rpc_handle_open_async,
     type,
     request,
@@ -268,10 +303,8 @@ void rpc_handle_open(
   if ( errno ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
-    free( stat_request );
     return;
   }
   // free request data
   free( request );
-  free( stat_request );
 }

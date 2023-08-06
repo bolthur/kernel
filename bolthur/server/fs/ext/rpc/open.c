@@ -21,81 +21,96 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <errno.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
-#include <sys/sysmacros.h>
-#include "../ramdisk.h"
 #include "../rpc.h"
 
+// fat library
+#include <bfs/blockdev/blockdev.h>
+#include <bfs/common/blockdev.h>
+#include <bfs/common/errno.h>
+#include <bfs/ext/mountpoint.h>
+#include <bfs/ext/type.h>
+#include <bfs/ext/file.h>
+#include <bfs/ext/directory.h>
+#include <bfs/ext/stat.h>
+
 /**
- * @fn void rpc_handle_stat(size_t, pid_t, size_t, size_t)
- * @brief Handle stat request
+ * @fn void rpc_handle_open(size_t, pid_t, size_t, size_t)
+ * @brief Handle open request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo add return on error
  */
-void rpc_handle_stat(
+void rpc_handle_open(
   size_t type,
   pid_t origin,
   size_t data_info,
   __unused size_t response_info
 ) {
-  vfs_stat_response_t response = { .success = false };
+  EARLY_STARTUP_PRINT( "open\r\n" )
+  vfs_open_response_t response = { .handle = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // handle no data
-  if ( ! data_info ) {
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // allocate message structures
-  vfs_stat_request_t* request = malloc( sizeof( *request ) );
+  vfs_open_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
+    response.handle = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // clear variables
   memset( request, 0, sizeof( *request ) );
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
   // fetch rpc data
   _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
   // handle error
   if ( errno ) {
+    response.handle = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  TAR* info = ramdisk_get_info( request->file_path );
-  if( ! info ) {
+  // stat result
+  struct stat st;
+  int result = ext_stat( request->path, &st );
+  if ( EOK != result ) {
+    response.handle = -result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  // get mtime
-  time_t sec = th_get_mtime( info );
-  long nsec = 0;
-  // populate data
-  response.info.st_size = ( off_t )th_get_size( info );
-  response.info.st_dev = makedev(
-    ( unsigned int )th_get_devmajor( info ),
-    ( unsigned int )th_get_devminor( info )
-  );
-  response.info.st_mode = th_get_mode( info );
-  response.info.st_mtim.tv_sec = sec;
-  response.info.st_mtim.tv_nsec = nsec;
-  response.info.st_ctim.tv_sec = sec;
-  response.info.st_ctim.tv_nsec = nsec;
-  response.info.st_blksize = T_BLOCKSIZE;
-  response.info.st_blocks = ( blkcnt_t )( ( response.info.st_size / T_BLOCKSIZE )
-    + ( response.info.st_size % T_BLOCKSIZE ? 1 : 0 ) );
-  response.success = true;
+  /// FIXME: IMPLEMENT
+  // open directory
+  if ( S_ISDIR( st.st_mode ) ) {
+    /*
+     * - Open directory
+     * - Push to handling tree by request->origin and handle
+     */
+  // open file
+  } else {
+    /*
+     * - Open file
+     * - Push to handling tree by request->origin and handle
+     */
+  }
+  // copy over stat content
+  memcpy( &response.st, &st, sizeof( st ) );
+  response.handle = request->handle;
   response.handler = getpid();
-  // return response
+  // return data
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-  // free stuff
   free( request );
 }

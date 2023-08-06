@@ -28,6 +28,7 @@ extern pid_t vfs_pid;
 void rpc_handle_add( size_t, pid_t, size_t, size_t );
 void rpc_handle_add_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_close( size_t, pid_t, size_t, size_t );
+void rpc_handle_close_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_exit( size_t, pid_t, size_t, size_t );
 void rpc_handle_fork( size_t, pid_t, size_t, size_t );
 void rpc_handle_getdents( size_t, pid_t, size_t, size_t );

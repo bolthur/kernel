@@ -28,49 +28,54 @@
 #include "../rpc.h"
 
 /**
- * @fn void rpc_handle_stat(size_t, pid_t, size_t, size_t)
- * @brief Handle stat request
+ * @fn void rpc_handle_open(size_t, pid_t, size_t, size_t)
+ * @brief handle open request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_stat(
+void rpc_handle_open(
   size_t type,
   pid_t origin,
   size_t data_info,
   __unused size_t response_info
 ) {
-  vfs_stat_response_t response = { .success = false };
+  vfs_open_response_t response = { .handle = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    EARLY_STARTUP_PRINT( "1\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // allocate message structures
-  vfs_stat_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
+    EARLY_STARTUP_PRINT( "1\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // clear variables
+  // allocate message structures
+  vfs_open_request_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    EARLY_STARTUP_PRINT( "1\r\n" )
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    return;
+  }
   memset( request, 0, sizeof( *request ) );
   // fetch rpc data
   _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
-  // handle error
   if ( errno ) {
+    EARLY_STARTUP_PRINT( "1\r\n" )
+    response.handle = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  TAR* info = ramdisk_get_info( request->file_path );
+  EARLY_STARTUP_PRINT( "opening %s\r\n", request->path )
+  TAR* info = ramdisk_get_info( request->path );
   if( ! info ) {
+    EARLY_STARTUP_PRINT( "1\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
@@ -79,20 +84,20 @@ void rpc_handle_stat(
   time_t sec = th_get_mtime( info );
   long nsec = 0;
   // populate data
-  response.info.st_size = ( off_t )th_get_size( info );
-  response.info.st_dev = makedev(
+  response.st.st_size = ( off_t )th_get_size( info );
+  response.st.st_dev = makedev(
     ( unsigned int )th_get_devmajor( info ),
     ( unsigned int )th_get_devminor( info )
   );
-  response.info.st_mode = th_get_mode( info );
-  response.info.st_mtim.tv_sec = sec;
-  response.info.st_mtim.tv_nsec = nsec;
-  response.info.st_ctim.tv_sec = sec;
-  response.info.st_ctim.tv_nsec = nsec;
-  response.info.st_blksize = T_BLOCKSIZE;
-  response.info.st_blocks = ( blkcnt_t )( ( response.info.st_size / T_BLOCKSIZE )
-    + ( response.info.st_size % T_BLOCKSIZE ? 1 : 0 ) );
-  response.success = true;
+  response.st.st_mode = th_get_mode( info );
+  response.st.st_mtim.tv_sec = sec;
+  response.st.st_mtim.tv_nsec = nsec;
+  response.st.st_ctim.tv_sec = sec;
+  response.st.st_ctim.tv_nsec = nsec;
+  response.st.st_blksize = T_BLOCKSIZE;
+  response.st.st_blocks = ( blkcnt_t )( ( response.st.st_size / T_BLOCKSIZE )
+    + ( response.st.st_size % T_BLOCKSIZE ? 1 : 0 ) );
+  response.handle = 0;
   response.handler = getpid();
   // return response
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );

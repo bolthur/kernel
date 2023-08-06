@@ -67,6 +67,11 @@ bool rpc_init( void ) {
     EARLY_STARTUP_PRINT( "Unable to register handler ioctl!\r\n" )
     return false;
   }
+  bolthur_rpc_bind( RPC_VFS_OPEN, rpc_handle_open, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler open!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( RPC_VFS_FORK, rpc_handle_fork, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler fork!\r\n" )

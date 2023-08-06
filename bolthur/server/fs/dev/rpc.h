@@ -24,11 +24,13 @@
 #define _RPC_H
 
 void rpc_handle_add( size_t, pid_t, size_t, size_t );
+void rpc_handle_close( size_t, pid_t, size_t, size_t );
 bool rpc_init( void );
 void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );
 void rpc_handle_ioctl_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_mount( size_t, pid_t, size_t, size_t );
 void rpc_handle_mount_async( size_t, pid_t, size_t, size_t );
+void rpc_handle_open( size_t, pid_t, size_t, size_t );
 void rpc_handle_read( size_t, pid_t, size_t, size_t );
 void rpc_handle_read_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_stat( size_t, pid_t, size_t, size_t );
