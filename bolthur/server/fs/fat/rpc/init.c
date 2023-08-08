@@ -27,9 +27,24 @@
  * @return
  */
 bool rpc_init( void ) {
+  bolthur_rpc_bind( RPC_VFS_CLOSE, rpc_handle_close, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_GETDENTS, rpc_handle_getdents, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( RPC_VFS_MOUNT, rpc_handle_mount, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler mount!\r\n" )
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_OPEN, rpc_handle_open, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read, true );
