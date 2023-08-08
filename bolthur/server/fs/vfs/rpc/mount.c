@@ -25,7 +25,6 @@
 #include "../rpc.h"
 #include "../mountpoint/node.h"
 #include "../handler/node.h"
-#include "../file/handle.h"
 
 static bool ramdisk_mounted = false;
 static bool dev_mounted = false;

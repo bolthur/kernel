@@ -24,7 +24,9 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../file/handle.h"
+#include "../mountpoint/node.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 /**
  * @fn void rpc_handle_read_async(size_t, pid_t, size_t, size_t)
@@ -79,7 +81,7 @@ void rpc_handle_getdents_async(
     free( response );
     return;
   }
-  handle_container_t* container;
+  handle_node_t* container;
   // try to get handle information
   int result = handle_get(
     &container,
@@ -135,7 +137,7 @@ void rpc_handle_getdents(
     free( response );
     return;
   }
-  handle_container_t* container;
+  handle_node_t* container;
   // clear variables
   memset( request, 0, sizeof( *request ) );
   response->result = -EINVAL;
@@ -168,12 +170,14 @@ void rpc_handle_getdents(
   // fill offset with current container position and copy container path
   request->offset = container->pos;
   strncpy( request->path, container->path, PATH_MAX );
+  request->origin = origin;
+  mountpoint_node_t* node = container->data;
   // mount point handling
-  if ( vfs_pid != container->mount_point->pid ) {
+  if ( vfs_pid != node->pid ) {
     // perform async rpc
     bolthur_rpc_raise(
       type,
-      container->mount_point->pid,
+      node->pid,
       request,
       sizeof( *request ),
       rpc_handle_getdents_async,

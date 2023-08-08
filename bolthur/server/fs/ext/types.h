@@ -17,20 +17,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <sys/bolthur.h>
+#ifndef _TYPES_H
+#define _TYPES_H
 
-#ifndef _RPC_H
-#define _RPC_H
+typedef enum {
+  HANDLE_TYPE_FILE,
+  HANDLE_TYPE_FOLDER,
+} handle_type_t;
 
-bool rpc_init( void );
-void rpc_handle_close( size_t, pid_t, size_t, size_t );
-void rpc_handle_getdents( size_t, pid_t, size_t, size_t );
-void rpc_handle_mount( size_t, pid_t, size_t, size_t );
-void rpc_handle_open( size_t, pid_t, size_t, size_t );
-void rpc_handle_read( size_t, pid_t, size_t, size_t );
-void rpc_handle_stat( size_t, pid_t, size_t, size_t );
-void rpc_handle_umount( size_t, pid_t, size_t, size_t );
-void rpc_handle_write( size_t, pid_t, size_t, size_t );
+typedef struct {
+  void* data;
+  handle_type_t type;
+} handle_container_t;
 
 #endif

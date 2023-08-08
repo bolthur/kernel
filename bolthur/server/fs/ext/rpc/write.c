@@ -24,6 +24,9 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../stat.h"
+#include "../types.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 // fat library
 #include <bfs/blockdev/blockdev.h>
@@ -103,22 +106,30 @@ void rpc_handle_write(
       return;
     }
   }
-  // open path
-  ext_file_t fd;
-  memset( &fd, 0, sizeof( fd ) );
-  int result = ext_file_open( &fd, request->file_path, "r+" );
-  if ( EOK != result ) {
-    response->len = -result;
+
+  // get handle
+  handle_node_t* node;
+  int result = handle_get( &node, request->origin, request->handle );
+  if ( 0 > result ) {
+    response->len = result;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    if ( request->shm_id ) {
-      _syscall_memory_shared_detach( request->shm_id );
-    }
     free( request );
     free( response );
     return;
   }
+  handle_container_t* container = node->data;
+  if ( container->type != HANDLE_TYPE_FILE ) {
+    response->len = -EINVAL;
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    free( request );
+    free( response );
+    return;
+  }
+
+  // open path
+  ext_file_t* fd = container->data;
   // set offset
-  result = ext_file_seek( &fd, request->offset, SEEK_SET );
+  result = ext_file_seek( fd, request->offset, SEEK_SET );
   if ( EOK != result ) {
     response->len = -result;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
@@ -131,19 +142,7 @@ void rpc_handle_write(
   }
   // read content
   uint64_t write_count = 0;
-  result = ext_file_write( &fd, shm_addr, request->len, &write_count );
-  if ( EOK != result ) {
-    response->len = -result;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    if ( request->shm_id ) {
-      _syscall_memory_shared_detach( request->shm_id );
-    }
-    free( request );
-    free( response );
-    return;
-  }
-  // close again
-  result = ext_file_close( &fd );
+  result = ext_file_write( fd, shm_addr, request->len, &write_count );
   if ( EOK != result ) {
     response->len = -result;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );

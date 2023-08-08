@@ -23,7 +23,9 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../file/handle.h"
+#include "../mountpoint/node.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 /**
  * @fn void rpc_handle_write_async(size_t, pid_t, size_t, size_t)
@@ -69,7 +71,7 @@ void rpc_handle_write_async(
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
-  handle_container_t* container;
+  handle_node_t* container;
   // try to get handle information
   int result = handle_get(
     &container,
@@ -116,7 +118,7 @@ void rpc_handle_write(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  handle_container_t* container;
+  handle_node_t* container;
   // clear variables
   memset( request, 0, sizeof( *request ) );
   // switch error return
@@ -153,14 +155,16 @@ void rpc_handle_write(
   }
   // fill offset with current container position and copy container path
   request->offset = container->pos;
+  request->origin = origin;
   strncpy( request->file_path, container->path, PATH_MAX );
-  if ( vfs_pid != container->mount_point->pid ) {
+  mountpoint_node_t* node = container->data;
+  if ( vfs_pid != node->pid ) {
     // set handler and path, and finally redirect request
     request->target_process = container->handler;
     // perform async rpc
     bolthur_rpc_raise(
       type,
-      container->mount_point->pid,
+      node->pid,
       request,
       sizeof( *request ),
       rpc_handle_write_async,

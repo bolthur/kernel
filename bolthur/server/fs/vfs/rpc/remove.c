@@ -23,7 +23,6 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../file/handle.h"
 
 /**
  * @fn void rpc_handle_remove(size_t, pid_t, size_t, size_t)

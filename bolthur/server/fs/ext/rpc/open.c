@@ -25,6 +25,9 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../types.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 // fat library
 #include <bfs/blockdev/blockdev.h>
@@ -92,19 +95,124 @@ void rpc_handle_open(
     free( request );
     return;
   }
+  handle_container_t* container = malloc( sizeof( *container ) );
+  if ( ! container ) {
+    response.handle = -ENOMEM;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
   /// FIXME: IMPLEMENT
   // open directory
   if ( S_ISDIR( st.st_mode ) ) {
-    /*
-     * - Open directory
-     * - Push to handling tree by request->origin and handle
-     */
+    // allocate space for directory
+    ext_directory_t* dir = malloc( sizeof( *dir ) );
+    if ( ! dir ) {
+      response.handle = -ENOMEM;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( container );
+      free( request );
+      return;
+    }
+    // clear out
+    memset( dir, 0, sizeof( *dir ) );
+    // try to open
+    result = ext_directory_open( dir, request->path );
+    if ( EOK != result ) {
+      response.handle = -result;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( dir );
+      free( container );
+      free( request );
+      return;
+    }
+    // get process handle
+    process_node_t* node = process_generate( request->origin );
+    if ( ! node ) {
+      response.handle = -result;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( dir );
+      free( container );
+      free( request );
+      return;
+    }
+    container->data = dir;
+    container->type = HANDLE_TYPE_FOLDER;
+    // push to handle
+    handle_node_t* handle;
+    result = handle_set(
+      &handle,
+      request->handle,
+      request->origin,
+      getpid(),
+      container,
+      request->path,
+      request->flags,
+      request->mode
+    );
+    if ( 0 != result ) {
+      response.handle = result;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( dir );
+      free( container );
+      free( request );
+      return;
+    }
   // open file
   } else {
-    /*
-     * - Open file
-     * - Push to handling tree by request->origin and handle
-     */
+    // allocate space for directory
+    ext_file_t* file = malloc( sizeof( *file ) );
+    if ( ! file ) {
+      response.handle = -ENOMEM;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( container );
+      free( request );
+      return;
+    }
+    // clear out
+    memset( file, 0, sizeof( *file ) );
+    // try to open
+    result = ext_file_open2( file, request->path, request->flags );
+    if ( EOK != result ) {
+      response.handle = -result;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( file );
+      free( container );
+      free( request );
+      return;
+    }
+    // get process handle
+    process_node_t* node = process_generate( request->origin );
+    if ( ! node ) {
+      response.handle = -result;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( file );
+      free( container );
+      free( request );
+      return;
+    }
+    container->data = file;
+    container->type = HANDLE_TYPE_FILE;
+    // push to handle
+    handle_node_t* handle;
+    result = handle_set(
+      &handle,
+      request->handle,
+      request->origin,
+      getpid(),
+      container,
+      request->path,
+      request->flags,
+      request->mode
+    );
+    if ( 0 != result ) {
+      response.handle = result;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( file );
+      free( container );
+      free( request );
+      return;
+    }
   }
   // copy over stat content
   memcpy( &response.st, &st, sizeof( st ) );

@@ -25,7 +25,9 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../file/handle.h"
+#include "../mountpoint/node.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 /**
  * @fn void rpc_handle_fork_fork(size_t, pid_t, size_t, size_t)
@@ -78,25 +80,22 @@ static void rpc_handle_fork_fork(
   // get request
   vfs_fork_request_t* original_request = async_data->original_data;
   // get handles of parent
-  handle_pid_t* process_container = handle_generate_container(
+  process_node_t* process_container = process_generate(
     async_data->original_origin );
-  handle_pid_t* parent_process_container = handle_get_process_container(
+  process_node_t* parent_process_container = process_generate(
     original_request->parent
   );
   if ( parent_process_container ) {
     process_container->handle = parent_process_container->handle;
-    // local variables necessary for macro
-    handle_container_t* container;
-    avl_node_t* iter;
-    // loop through all open handles and duplicate them
-    process_handle_for_each( iter, container, parent_process_container->tree ) {
-      if ( ! handle_duplicate( container, process_container ) ) {
+    // loop through all handles
+    handle_node_tree_each(&parent_process_container->management_tree, handle_node, n, {
+      if ( ! process_duplicate( process_container, n ) ) {
         // FIXME: DESTROY CONTAINER
         response.status = -EIO;
         bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
         return;
       }
-    }
+    });
   }
   // fill response structure
   response.status = 0;

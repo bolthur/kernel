@@ -25,6 +25,33 @@
 #include "handle.h"
 
 /**
+ * @fn int handle_cmp(struct handle_node*, struct handle_node*)
+ * @brief Comparison function for tree
+ *
+ * @param a
+ * @param b
+ * @return
+ */
+static int handle_cmp(
+  struct handle_node* a,
+  struct handle_node* b
+) {
+  if ( a->handle == b->handle ) {
+    return 0;
+  }
+  return a->handle > b->handle ? 1 : -1;
+}
+
+// define tree
+HANDLE_TREE_DEFINE(
+  handle_tree,
+  handle_node,
+  node,
+  handle_cmp,
+  __unused
+)
+
+/**
  * @fn void destroy_handle(handle_node_t*)
  * @brief Helper to free up a specific handle
  *
@@ -73,6 +100,63 @@ int handle_get( handle_node_t** container, pid_t process, int handle ) {
   }
   // handle found
   *container = found;
+  return 0;
+}
+
+/**
+ * @fn int handle_set(handle_node_t**, int, pid_t, pid_t, void*, const char*, int, int)
+ * @brief Handle set
+ *
+ * @param handle
+ * @param nhandle
+ * @param process
+ * @param handler
+ * @param data
+ * @param path
+ * @param flags
+ * @param mode
+ * @return
+ */
+int handle_set(
+  handle_node_t** handle,
+  int nhandle,
+  pid_t process,
+  pid_t handler,
+  void* data,
+  const char* path,
+  int flags,
+  int mode
+) {
+  process_node_t* process_container = process_generate( process );
+  if ( ! process_container ) {
+    return -ENOMEM;
+  }
+  // allocate and clear structure
+  *handle = malloc( sizeof( handle_node_t ) );
+  if ( ! *handle ) {
+    return -ENOMEM;
+  }
+  memset( *handle, 0, sizeof( handle_node_t ) );
+  // ensure max path
+  if ( PATH_MAX < strlen( path ) ) {
+    free( *handle );
+    *handle = NULL;
+    return -EINVAL;
+  }
+  // populate structure
+  strncpy( ( *handle )->path, path, PATH_MAX - 1 );
+  ( *handle )->handle = nhandle;
+  ( *handle )->flags = flags;
+  ( *handle )->mode = mode;
+  ( *handle )->data = data;
+  ( *handle )->handler = handler;
+  // insert
+  if ( handle_node_tree_insert( &process_container->management_tree, *handle ) ) {
+    free( *handle );
+    *handle = NULL;
+    return -EEXIST;
+  }
+  // return success
   return 0;
 }
 

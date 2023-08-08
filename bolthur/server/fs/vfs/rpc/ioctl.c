@@ -25,7 +25,9 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../file/handle.h"
+#include "../mountpoint/node.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 #include "../ioctl/handler.h"
 
 /**
@@ -134,7 +136,7 @@ void rpc_handle_ioctl(
     return;
   }
   // get handle
-  handle_container_t* handle_container;
+  handle_node_t* handle_container;
   // try to get handle information
   int result = handle_get( &handle_container, origin, request->handle );
   // handle error
@@ -144,13 +146,14 @@ void rpc_handle_ioctl(
     free( request );
     return;
   }
-  if ( vfs_pid != handle_container->mount_point->pid ) {
+  mountpoint_node_t* node = handle_container->data;
+  if ( vfs_pid != node->pid ) {
     // set handler and redirect request
     request->target_process = handle_container->handler;
     // perform async rpc
     bolthur_rpc_raise(
       type,
-      handle_container->mount_point->pid,
+      node->pid,
       request,
       data_size,
       rpc_handle_ioctl_async,

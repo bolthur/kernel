@@ -25,7 +25,8 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../mountpoint/node.h"
-#include "../file/handle.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 /**
  * @fn void create_handle(size_t, pid_t, vfs_stat_response_t*, vfs_open_request_t*, vfs_open_response_t*, bolthur_async_data_t*)
@@ -107,7 +108,7 @@ __maybe_unused static void create_handle(
   }
   // generate container
   /// FIXME: PASS HANDLING PROCESS IN HERE INSTEAD OF MOUNT POINT
-  handle_container_t* container = NULL;
+  handle_node_t* container = NULL;
   int result = handle_generate(
     &container,
     async_data
@@ -191,7 +192,7 @@ void rpc_handle_open_async(
     return;
   }
   // try to get previously generated handle
-  handle_container_t* container;
+  handle_node_t* container;
   int result = handle_get( &container, request->origin, request->handle );
   if ( 0 > result ) {
     response.handle = result;
@@ -265,7 +266,7 @@ void rpc_handle_open(
     return;
   }
   // generate handle
-  handle_container_t* container = NULL;
+  handle_node_t* container = NULL;
   int result = handle_generate(
     &container,
     origin,

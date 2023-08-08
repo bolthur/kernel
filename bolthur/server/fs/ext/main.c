@@ -27,6 +27,7 @@
 #include "stat.h"
 #include "../../libhelper.h"
 #include "../../libpartition.h"
+#include "../../../library/handle/process.h"
 
 /**
  * @fn int main(int, char*[])
@@ -50,6 +51,13 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Setup stat cache!\r\n" )
   if ( ! stat_node_setup() ) {
     EARLY_STARTUP_PRINT( "Unable to setup stat cache!\r\n" )
+    return -1;
+  }
+
+  // setup file handling
+  EARLY_STARTUP_PRINT( "Setup file handling!\r\n" )
+  if ( ! process_setup() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup process handling\r\n" )
     return -1;
   }
 

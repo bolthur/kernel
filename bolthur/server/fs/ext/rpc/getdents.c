@@ -25,6 +25,9 @@
 #include <sys/dirent.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../types.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 /// FIXME: REMOVE ONCE ITERATOR IS PUBLIC
 #define _BFS_COMPILING
@@ -37,6 +40,7 @@
 #include <bfs/ext/type.h>
 #include <bfs/ext/directory.h>
 #include <bfs/ext/iterator.h>
+#include <bfs/ext/structure.h>
 
 /**
  * @fn void rpc_handle_getdents(size_t, pid_t, size_t, size_t)
@@ -86,6 +90,23 @@ void rpc_handle_getdents(
     return;
   }
 
+  // get handle
+  handle_node_t* node;
+  int result = handle_get( &node, request->origin, request->fd );
+  if ( 0 > result ) {
+    dummy_response.result = result;
+    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL );
+    free( request );
+    return;
+  }
+  handle_container_t* container = node->data;
+  if ( container->type != HANDLE_TYPE_FOLDER ) {
+    dummy_response.result = -EINVAL;
+    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL );
+    free( request );
+    return;
+  }
+
   // allocate response
   size_t response_size = sizeof( vfs_getdents_response_t ) + ( size_t )request->count * sizeof( uint8_t );
   vfs_getdents_response_t* response = malloc( response_size );
@@ -98,20 +119,11 @@ void rpc_handle_getdents(
   memset( response, 0, response_size );
 
   // open folder
-  ext_directory_t dir;
-  memset( &dir, 0, sizeof( dir ) );
-  int result = ext_directory_open( &dir, request->path );
-  if ( EOK != result ) {
-    free( response );
-    dummy_response.result = -result;
-    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL );
-    free( request );
-    return;
-  }
+  ext_directory_t* dir = container->data;
   // setup iterator
   ext_iterator_directory_t it;
   memset( &it, 0, sizeof( it ) );
-  result = ext_iterator_directory_init( &it, &dir, ( uint64_t )request->offset );
+  result = ext_iterator_directory_init( &it, dir, ( uint64_t )request->offset );
   size_t buffer_pos = 0;
   off_t offset = request->offset;
   ssize_t read_count = 0;
@@ -140,16 +152,6 @@ void rpc_handle_getdents(
   }
   // close iterator
   result = ext_iterator_directory_fini( &it );
-  if ( EOK != result ) {
-    free( response );
-    dummy_response.result = -result;
-    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL );
-    free( request );
-    return;
-  }
-
-  // close directory
-  result = ext_directory_close( &dir );
   if ( EOK != result ) {
     free( response );
     dummy_response.result = -result;

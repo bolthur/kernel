@@ -23,7 +23,8 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../file/handle.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 /**
  * @fn void rpc_handle_seek(size_t, pid_t, size_t, size_t)
@@ -46,7 +47,7 @@ void rpc_handle_seek(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  handle_container_t* container;
+  handle_node_t* container;
   // clear variables
   memset( request, 0, sizeof( vfs_seek_request_t ) );
   // handle no data

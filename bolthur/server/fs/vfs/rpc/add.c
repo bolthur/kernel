@@ -24,7 +24,6 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../mountpoint/node.h"
-#include "../file/handle.h"
 #include "../ioctl/handler.h"
 
 /**

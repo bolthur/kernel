@@ -23,7 +23,9 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../file/handle.h"
+#include "../mountpoint/node.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 /**
  * @fn void rpc_handle_close_async(size_t, pid_t, size_t, size_t)
@@ -108,7 +110,7 @@ void rpc_handle_close(
     return;
   }
   // get handle
-  handle_container_t* handle_container;
+  handle_node_t* handle_container;
   // try to get handle information
   int result = handle_get( &handle_container, origin, request->handle );
   // handle error
@@ -118,10 +120,12 @@ void rpc_handle_close(
     free( request );
     return;
   }
+  // fill internal fields
+  request->origin = origin;
   // perform async rpc
   bolthur_rpc_raise(
     type,
-    handle_container->mount_point->pid,
+    ( ( mountpoint_node_t* ) handle_container->data )->pid,
     request,
     sizeof( vfs_close_request_t ),
     rpc_handle_close_async,

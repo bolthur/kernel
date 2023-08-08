@@ -20,11 +20,11 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
-#include "file/handle.h"
 #include "rpc.h"
 #include "ioctl/handler.h"
 #include "mountpoint/node.h"
 #include "handler/node.h"
+#include "../../../library/handle/process.h"
 
 pid_t vfs_pid = 0;
 
@@ -59,7 +59,7 @@ int main( __unused int argc, __unused char* argv[] ) {
   }
   // setup handle management
   EARLY_STARTUP_PRINT( "initializing!\r\n" )
-  if ( ! handle_init() ) {
+  if ( ! process_setup() ) {
     EARLY_STARTUP_PRINT( "Unable to setup handle structures!\r\n" )
     return -1;
   }

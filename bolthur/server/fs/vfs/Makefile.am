@@ -11,7 +11,6 @@ vfs_LDADD = \
   ${abs_top_builddir}/../library/collection/avl/libavl.la \
   ${abs_top_builddir}/../library/handle/libhandle.la
 vfs_SOURCES = \
-  file/handle.c \
   handler/node.c \
   ioctl/handler.c \
   mountpoint/node.c \

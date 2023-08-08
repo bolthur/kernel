@@ -25,8 +25,19 @@
 #ifndef _HANDLE_H
 #define _HANDLE_H
 
+SPLAY_HEAD( handle_tree, handle_node );
+void handle_node_tree_init( struct handle_tree* t );
+int handle_node_tree_empty( struct handle_tree* t );
+struct handle_node* handle_node_tree_insert( struct handle_tree* t, struct handle_node* e );
+struct handle_node* handle_node_tree_remove( struct handle_tree* t, struct handle_node* e );
+struct handle_node* handle_node_tree_find( struct handle_tree* t, struct handle_node* e );
+struct handle_node* handle_node_tree_min( struct handle_tree* t );
+struct handle_node* handle_node_tree_max( struct handle_tree* t );
+struct handle_node* handle_node_tree_next( struct handle_tree* t, struct handle_node* e );
+void handle_node_tree_apply( struct handle_tree* t, void( *cb )( struct handle_node* ) );
+void handle_node_tree_destroy( struct handle_tree* t, void( *free_cb )( struct handle_node* ) );
+
 #define HANDLE_TREE_DEFINE( name, type, field, cmp, attr ) \
-  SPLAY_HEAD( name, type ); \
   SPLAY_PROTOTYPE( name, type, field, cmp ) \
   SPLAY_GENERATE( name, type, field, cmp ) \
   attr void type##_tree_init( struct name* t ) { \
@@ -100,35 +111,9 @@ typedef struct handle_node {
   SPLAY_ENTRY( handle_node ) node;
 } handle_node_t;
 
-/**
- * @fn int handle_cmp(struct handle_node*, struct handle_node*)
- * @brief Comparison function for tree
- *
- * @param a
- * @param b
- * @return
- */
-static int handle_cmp(
-  struct handle_node* a,
-  struct handle_node* b
-) {
-  if ( a->handle == b->handle ) {
-    return 0;
-  }
-  return a->handle > b->handle ? 1 : -1;
-}
-
-// define tree
-HANDLE_TREE_DEFINE(
-  handle_tree,
-  handle_node,
-  node,
-  handle_cmp,
-  __unused static inline
-)
-
 int handle_get( handle_node_t**, pid_t, int );
 int handle_generate( handle_node_t**, pid_t, pid_t, void*, const char*, int, int );
+int handle_set( handle_node_t**, int, pid_t, pid_t, void*, const char*, int, int );
 int handle_destory( pid_t, int );
 void handle_destory_all( pid_t );
 

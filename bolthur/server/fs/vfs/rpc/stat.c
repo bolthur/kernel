@@ -24,7 +24,8 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../mountpoint/node.h"
-#include "../file/handle.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 /**
  * @fn void rpc_handle_add_async(size_t, pid_t, size_t, size_t)
@@ -111,7 +112,7 @@ void rpc_handle_stat(
   }
   // get path if it's a file handle
   if ( 0 < request->handle ) {
-    handle_container_t* container;
+    handle_node_t* container;
     // try to get handle information
     if ( handle_get( &container, origin, request->handle ) ) {
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
