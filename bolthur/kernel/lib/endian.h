@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIB_ENDIAN_H )
+#ifndef _LIB_ENDIAN_H
 #define _LIB_ENDIAN_H
 
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,8 +18,12 @@
  */
 
 #include "../../../../../lib/assert.h"
+#include "../../../../../lib/inttypes.h"
 #if defined( REMOTE_DEBUG )
   #include "../../debug/debug.h"
+#endif
+#if defined( PRINT_EXCEPTION )
+  #include "../../../../../debug/debug.h"
 #endif
 #include "../vector.h"
 #include "../../../mm/virt.h"
@@ -44,26 +48,39 @@ static uint32_t nested_prefetch_abort = 0;
  * @todo trigger schedule when prefetch abort source is user thread
  * @todo panic when prefetch abort is triggered from kernel
  */
-#if ! defined( REMOTE_DEBUG )
+#ifndef REMOTE_DEBUG
 noreturn
 #endif
-void vector_prefetch_abort_handler( cpu_register_context_ptr_t cpu ) {
+void vector_prefetch_abort_handler( cpu_register_context_t* cpu ) {
   // nesting
   nested_prefetch_abort++;
   assert( nested_prefetch_abort < INTERRUPT_NESTED_MAX )
-  // get event origin
-  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
-  // get context
-  INTERRUPT_DETERMINE_CONTEXT( cpu )
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "prefetch abort while accessing %p\r\n",
-      ( void* )virt_prefetch_fault_address() )
-    DEBUG_OUTPUT( "fault_status = %#x\r\n", ( void* )virt_prefetch_status() )
-    DUMP_REGISTER( cpu )
+    DEBUG_OUTPUT( "cpu = %p\r\n", cpu )
+  #endif
+  // get event origin
+  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DEBUG_OUTPUT( "origin = %d\r\n", origin )
+  #endif
+  /// FIXME: COMMENT IN AGAIN ONCE USED!
+  // get context
+  //cpu = interrupt_get_context( cpu );
+  // debug output
+  #if defined( PRINT_EXCEPTION )
+    DEBUG_OUTPUT(
+      "prefetch abort while accessing %#"PRIxPTR"\r\n",
+      virt_prefetch_fault_address()
+    )
+    DEBUG_OUTPUT( "fault_status = %#"PRIxPTR"\r\n", virt_prefetch_status() )
+    DUMP_REGISTER( interrupt_get_context( cpu ) )
     if ( EVENT_ORIGIN_USER == origin ) {
-      DEBUG_OUTPUT( "process id: %d\r\n",
-        task_thread_current_thread->process->id )
+      DEBUG_OUTPUT(
+        "process id: %d\r\n",
+        task_thread_current_thread->process->id
+      )
     }
   #endif
   // kernel stack

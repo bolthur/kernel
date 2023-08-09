@@ -2,7 +2,7 @@
 <project version="1">
   <root name="." />
   <includedir>
-    <dir name="/opt/bolthur/cross/lib/gcc/arm-raspi2b_r1-bolthur-eabi/11.2.0/include/" />
+    <dir name="/opt/bolthur/cross/lib/gcc/arm-raspi2b_r1-bolthur-eabi/12.2.0/include/" />
     <dir name="/opt/bolthur/sysroot/arm-raspi2b_r1-bolthur-eabi/usr/include/" />
   </includedir>
   <paths>
@@ -10,14 +10,42 @@
   </paths>
   <defines>
     <define name="__cppcheck__=1" />
-    <define name="__INTPTR_TYPE__=4" />
+    <define name="__INT8_TYPE__=signed char" />
+    <define name="__UINT8_TYPE__=unsigned char" />
+    <define name="__INT16_TYPE__=short int" />
+    <define name="__UINT16_TYPE__=short unsigned int" />
+    <define name="__INT32_TYPE__=long int" />
+    <define name="__UINT32_TYPE__=long unsigned int" />
+    <define name="__INT64_TYPE__=long long int" />
+    <define name="__UINT64_TYPE__=long long unsigned int" />
+    <define name="__INTPTR_TYPE__=int" />
+    <define name="__UINTPTR_TYPE__=unsigned int" />
+    <define name="__INTMAX_TYPE__=long long int" />
+    <define name="__UINTMAX_TYPE__=long long unsigned int" />
+    <define name="__INT_LEAST8_TYPE__=signed char" />
+    <define name="__UINT_LEAST8_TYPE__=unsigned char" />
+    <define name="__UINT_LEAST16_TYPE__=short unsigned int" />
+    <define name="__INT_LEAST16_TYPE__=short int" />
+    <define name="__INT_LEAST32_TYPE__=long int" />
+    <define name="__UINT_LEAST32_TYPE__=long unsigned int" />
+    <define name="__INT_LEAST64_TYPE__=long long int" />
+    <define name="__UINT_LEAST64_TYPE__=long long unsigned int" />
+    <define name="__INT_FAST8_TYPE__=int" />
+    <define name="__UINT_FAST8_TYPE__=unsigned int" />
+    <define name="__INT_FAST16_TYPE__=int" />
+    <define name="__UINT_FAST16_TYPE__=unsigned int" />
+    <define name="__INT_FAST32_TYPE__=int" />
+    <define name="__UINT_FAST32_TYPE__=unsigned int" />
+    <define name="__INT_FAST64_TYPE__=long long int" />
+    <define name="__UINT_FAST64_TYPE__=long long unsigned int" />
+    <define name="__UINT8_MAX__=0xff" />
     <define name="__arm__=1" />
     <define name="__ARMEL__=1" />
   </defines>
   <suppressions>
+    <suppression>constParameter</suppression>
     <suppression>unusedFunction</suppression>
     <suppression>unusedStructMember</suppression>
-    <suppression>ConfigurationNotChecked</suppression>
     <suppression>unmatchedSuppression</suppression>
     <suppression>objectIndex</suppression>
   </suppressions>

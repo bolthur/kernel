@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,8 +23,6 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
-#include "../file/handle.h"
 
 /**
  * @fn void rpc_handle_remove(size_t, pid_t, size_t, size_t)
@@ -34,6 +32,8 @@
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo remove registered watchers for path
  */
 void rpc_handle_remove(
   size_t type,
@@ -42,7 +42,7 @@ void rpc_handle_remove(
   __unused size_t response_info
 ) {
   vfs_remove_response_t response = { .status = -EINVAL };
-  vfs_remove_request_ptr_t request = malloc( sizeof( vfs_remove_request_t ) );
+  vfs_remove_request_t* request = malloc( sizeof( vfs_remove_request_t ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
@@ -56,7 +56,7 @@ void rpc_handle_remove(
     return;
   }
   // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_remove_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( vfs_remove_request_t ), data_info, false );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );

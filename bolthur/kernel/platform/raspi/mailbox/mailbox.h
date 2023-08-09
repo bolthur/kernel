@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _PLATFORM_RASPI_MAILBOX_MAILBOX_H )
+#ifndef _PLATFORM_RASPI_MAILBOX_MAILBOX_H
 #define _PLATFORM_RASPI_MAILBOX_MAILBOX_H
 
 #include <stdint.h>

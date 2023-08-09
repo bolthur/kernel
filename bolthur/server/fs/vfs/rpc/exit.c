@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,8 +23,8 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
-#include "../file/handle.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 /**
  * @fn void rpc_handle_exit(size_t, pid_t, size_t, size_t)
@@ -44,8 +44,9 @@ void rpc_handle_exit(
   vfs_close_response_t response = { .status = -EINVAL };
   // destroy all handles of origin
   handle_destory_all( origin );
-  // FIXME: Destroy all handles where current origin is handler
-  // FIXME: Remove all files added by origin
+  // FIXME: Remove all files where current origin is handler, e.g. devices
+  // FIXME: Release all acquired mount points of current origin
+  // FIXME: Send exit to all mount points
   // return
   response.status = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "../../../lib/inttypes.h"
 #include "../../../lib/assert.h"
 #if defined( PRINT_MM_VIRT )
   #include "../../../debug/debug.h"
@@ -41,7 +42,7 @@ uint32_t virt_supported_mode;
  * @fn void virt_startup_setup_supported_modes(void)
  * @brief Setup supported modes startup
  */
-void __bootstrap virt_startup_setup_supported_modes( void ) {
+__bootstrap void virt_startup_setup_supported_modes( void ) {
   #if defined( ELF32 )
     // get paging support from mmfr0
     __asm__ __volatile__(
@@ -107,8 +108,11 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#08x, virt_supported_mode = %#08x\r\n",
-        reg, virt_supported_mode )
+      DEBUG_OUTPUT(
+        "reg = %#"PRIx32", virt_supported_mode = %#"PRIx32"\r\n",
+        reg,
+        virt_supported_mode
+      )
     #endif
 
     // get memory size from mmfr3
@@ -120,7 +124,7 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#08x\r\n", reg )
+      DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg )
     #endif
 
     // get only cpu address bus size
@@ -128,7 +132,7 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#08x\r\n", reg )
+      DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg )
     #endif
 
     // set paging to v7 short descriptor if more

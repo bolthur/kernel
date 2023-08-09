@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,19 +21,17 @@
 #include <stddef.h>
 #include <stdnoreturn.h>
 #include <unistd.h>
-#include "../lib/collection/avl.h"
+#include "../../library/collection/avl/avl.h"
 #include "../event.h"
 #include "state.h"
 
-#if ! defined( _TASK_THREAD_H )
+#ifndef _TASK_THREAD_H
 #define _TASK_THREAD_H
 
 typedef struct task_process task_process_t;
-typedef struct task_process* task_process_ptr_t;
 typedef struct task_priority_queue task_priority_queue_t;
-typedef struct task_priority_queue* task_priority_queue_ptr_t;
 
-struct task_thread {
+typedef struct  task_thread {
   void* current_context;
   avl_node_t node_id;
   pid_t id;
@@ -45,33 +43,31 @@ struct task_thread {
   task_thread_state_t state;
   task_thread_state_t state_backup;
   task_state_data_t state_data;
-  task_process_ptr_t process;
-};
+  task_process_t* process;
+} task_thread_t;
 
-typedef struct task_thread task_thread_t;
-typedef struct task_thread* task_thread_ptr_t;
-
-extern task_thread_ptr_t task_thread_current_thread;
+extern task_thread_t* task_thread_current_thread;
+extern task_thread_t* task_thread_try_switch_to;
 
 #define TASK_THREAD_GET_BLOCK( n ) \
-  ( task_thread_ptr_t )( ( uint8_t* )n - offsetof( task_thread_t, node_id ) )
-#define TASK_THREAD_GET_CONTEXT  \
-  ( NULL != task_thread_current_thread ? task_thread_current_thread->current_context : NULL )
+  ( task_thread_t* )( ( uint8_t* )n - offsetof( task_thread_t, node_id ) )
 
-bool task_thread_set_current( task_thread_ptr_t, task_priority_queue_ptr_t );
+bool task_thread_set_current( task_thread_t*, task_priority_queue_t* );
 void task_thread_reset_current( void );
-pid_t task_thread_generate_id( task_process_ptr_t );
-avl_tree_ptr_t task_thread_init( void );
-void task_thread_destroy( avl_tree_ptr_t );
-task_thread_ptr_t task_thread_create( uintptr_t, task_process_ptr_t, size_t );
-task_thread_ptr_t task_thread_fork( task_process_ptr_t, task_thread_ptr_t );
-task_thread_ptr_t task_thread_next( void );
+pid_t task_thread_generate_id( task_process_t* );
+avl_tree_t* task_thread_init( void );
+void task_thread_destroy( avl_tree_t* );
+task_thread_t* task_thread_create( uintptr_t, task_process_t*, size_t );
+task_thread_t* task_thread_fork( task_process_t*, task_thread_t* );
+task_thread_t* task_thread_next( void );
 noreturn void task_thread_switch_to( uintptr_t );
-bool task_thread_push_arguments( task_thread_ptr_t, char**, char** );
+bool task_thread_push_arguments( task_thread_t*, char**, char** );
 void task_thread_cleanup( event_origin_t, void* );
-void task_thread_block( task_thread_ptr_t, task_thread_state_t, task_state_data_t );
-void task_thread_unblock( task_thread_ptr_t, task_thread_state_t, task_state_data_t );
-task_thread_ptr_t task_thread_get_blocked( task_thread_state_t, task_state_data_t );
-void task_thread_kill( task_thread_ptr_t, bool, void* );
+void task_thread_block( task_thread_t*, task_thread_state_t, task_state_data_t );
+void task_thread_unblock( task_thread_t*, task_thread_state_t, task_state_data_t );
+task_thread_t* task_thread_get_blocked( task_thread_state_t, task_state_data_t );
+void task_thread_kill( task_thread_t*, bool, void* );
+bool task_thread_is_ready( task_thread_t* );
+bool task_thread_is_active( task_thread_t* );
 
 #endif

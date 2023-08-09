@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -31,10 +31,10 @@
 
 // FIXME: ADD VALUE CONVERSION FROM ENDIAN HEADER OVERALL
 
-psf_font_ptr_t font = NULL;
+psf_font_t* font = NULL;
 
 /**
- * @fn bool psf_load_font(psf_font_ptr_t)
+ * @fn bool psf_load_font(psf_font_t*)
  * @brief Load font and push to passed structure
  *
  * @param f
@@ -42,7 +42,7 @@ psf_font_ptr_t font = NULL;
  *
  * @todo move path to font into parameter
  */
-static bool psf_load_font( psf_font_ptr_t f ) {
+static bool psf_load_font( psf_font_t* f ) {
   // open executable
   int fd = open( "/ramdisk/font/zap-vga09.psf", O_RDONLY );
   // check file descriptor return
@@ -50,7 +50,7 @@ static bool psf_load_font( psf_font_ptr_t f ) {
     return false;
   }
   // get to end of file
-  long position = lseek( fd, 0, SEEK_END );
+  off_t position = lseek( fd, 0, SEEK_END );
   if ( -1 == position ) {
     close( fd );
     return false;

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include <stdbool.h>
+#include "lib/inttypes.h"
 #include "lib/string.h"
 #include "elf.h"
 #include "mm/phys.h"
@@ -110,14 +110,14 @@ bool elf_check( uintptr_t elf ) {
 }
 
 /**
- * @fn bool load_program_header(uintptr_t, task_process_ptr_t)
+ * @fn bool load_program_header(uintptr_t, task_process_t*)
  * @brief Internal helper to parse and load program header
  *
  * @param elf elf image address
  * @param process process
  * @return
  */
-static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
+static bool load_program_header( uintptr_t elf, task_process_t* process ) {
   // get header
   #if defined( ELF32 )
     Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
@@ -140,9 +140,14 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
     // debug output
     #if defined ( PRINT_ELF )
       DEBUG_OUTPUT(
-        "type = %#x, vaddr = %#x, paddr = %#x, size = %#x, offset = %#x!\r\n",
-        program_header->p_type, program_header->p_vaddr, program_header->p_paddr,
-        program_header->p_memsz, program_header->p_offset )
+        "type = %#"PRIx32", vaddr = %#"PRIx32", paddr = %#"PRIx32", "
+        "size = %#"PRIx32", offset = %#"PRIx32"!\r\n",
+        program_header->p_type,
+        program_header->p_vaddr,
+        program_header->p_paddr,
+        program_header->p_memsz,
+        program_header->p_offset
+      )
     #endif
     // skip all sections except load
     if ( PT_LOAD != program_header->p_type ) {
@@ -174,8 +179,12 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
     // debug output
     #if defined ( PRINT_ELF )
       DEBUG_OUTPUT(
-        "memory_offset = %#"PRIxPTR", file_offset = %#"PRIxPTR", copy_size = %#"PRIxPTR"\r\n",
-        memory_offset, file_offset, copy_size )
+        "memory_offset = %#"PRIxPTR", file_offset = %#"PRIxPTR
+        ", copy_size = %#"PRIxPTR"\r\n",
+        memory_offset,
+        file_offset,
+        copy_size
+      )
     #endif
 
     // loop from start to end, map and copy data
@@ -197,8 +206,12 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       // debug output
       #if defined ( PRINT_ELF )
         DEBUG_OUTPUT(
-          "copy_size = %#"PRIxPTR", to_copy = %#"PRIxPTR", file_offset = %#"PRIxPTR"\r\n",
-          copy_size, to_copy, file_offset )
+          "copy_size = %#"PRIxPTR", to_copy = %#"PRIxPTR
+          ", file_offset = %#"PRIxPTR"\r\n",
+          copy_size,
+          to_copy,
+          file_offset
+        )
       #endif
 
       // physical page variable and clear flag
@@ -218,7 +231,7 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       // handle not mapped ( acquire new physical page )
       } else {
         // get new physical page
-        phys = phys_find_free_page( PAGE_SIZE );
+        phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
         // handle error
         if ( 0 == phys ) {
           return false;
@@ -228,7 +241,7 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
       }
       // debug output
       #if defined ( PRINT_ELF )
-        DEBUG_OUTPUT( "phys = %#016llx\r\n", phys )
+        DEBUG_OUTPUT( "phys = %#"PRIx64"\r\n", phys )
       #endif
 
       // map temporary
@@ -306,20 +319,26 @@ static bool load_program_header( uintptr_t elf, task_process_ptr_t process ) {
 }
 
 /**
- * @fn uintptr_t elf_load(uintptr_t, task_process_ptr_t)
+ * @fn uintptr_t elf_load(uintptr_t, task_process_t*)
  * @brief Method to load simple elf for process ( used for init only )
  *
  * @param elf address to image
  * @param process process where it shall be loaded into
  * @return
  */
-uintptr_t elf_load( uintptr_t elf, task_process_ptr_t process ) {
+uintptr_t elf_load( uintptr_t elf, task_process_t* process ) {
   // check for elf
   if ( ! elf_check( elf ) ) {
     return 0;
   }
   // get header
-  Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #if defined( ELF32 )
+    Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #elif defined( ELF64 )
+    Elf64_Ehdr* header = ( Elf64_Ehdr* )elf;
+  #else
+    #error "Unsupported"
+  #endif
   // load program header
   if ( ! load_program_header( elf, process ) ) {
     return 0;
@@ -334,33 +353,50 @@ uintptr_t elf_load( uintptr_t elf, task_process_ptr_t process ) {
  *
  * @param elf
  * @return
- *
- * @todo prepare for 64 bit
  */
 size_t elf_image_size( uintptr_t elf ) {
+  size_t header_size;
+  #if defined( ELF32 )
+    header_size = sizeof( Elf32_Ehdr );
+  #elif defined( ELF64 )
+    header_size = sizeof( Elf64_Ehdr );
+  #else
+    #error "Unsupported"
+  #endif
+
   // check header
-  if (
-    ! virt_is_mapped_range(
-      elf,
-      sizeof( Elf32_Ehdr )
-    ) || ! elf_check( elf )
-  ) {
+  if ( ! virt_is_mapped_range( elf, header_size ) || ! elf_check( elf ) ) {
     return 0;
   }
   // temporary max and size
   size_t max = 0;
   size_t sz = 0;
+
   // transform to elf header
-  Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #if defined( ELF32 )
+    Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
+  #elif defined( ELF64 )
+    Elf64_Ehdr* header = ( Elf64_Ehdr* )elf;
+  #else
+    #error "Unsupported"
+  #endif
   // loop through section header information
   for ( uint32_t idx = 0; idx < header->e_shnum; ++idx ) {
-    Elf32_Shdr* section_header = ( Elf32_Shdr* )(
-      elf + header->e_shoff + header->e_shentsize * idx
-    );
+    #if defined( ELF32 )
+      Elf32_Shdr* section_header = ( Elf32_Shdr* )(
+        elf + header->e_shoff + header->e_shentsize * idx
+      );
+    #elif defined( ELF64 )
+      Elf64_Shdr* section_header = ( Elf64_Shdr* )(
+        elf + header->e_shoff + header->e_shentsize * idx
+      );
+    #else
+      #error "Unsupported"
+    #endif
     // check if mapped before access
     if ( ! virt_is_mapped_range(
       ( uintptr_t )section_header,
-      sizeof( Elf32_Shdr ) )
+      sizeof( *section_header ) )
     ) {
       return 0;
     }

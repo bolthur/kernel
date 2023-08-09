@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _DEBUG_GDB_H )
+#ifndef _DEBUG_GDB_H
 #define _DEBUG_GDB_H
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../lib/collection/list.h"
+#include "../../library/collection/list/list.h"
 #include "../event.h"
 
 /**
@@ -42,12 +42,10 @@ typedef enum {
 
 typedef void ( *debug_gdb_callback_t )( void* context, const uint8_t* message );
 
-struct debug_gdb_command_handler {
+typedef struct {
   const char* prefix;
   debug_gdb_callback_t handler;
-};
-typedef struct debug_gdb_command_handler debug_gdb_command_handler_t;
-typedef struct debug_gdb_command_handler *debug_gdb_command_handler_ptr_t;
+} debug_gdb_command_handler_t;
 
 extern const char debug_gdb_hexchar[];
 extern char debug_gdb_print_buffer[];

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,17 +22,18 @@
 #include <stddef.h>
 #include "lib/stdlib.h"
 #include "lib/string.h"
-#include "lib/collection/list.h"
+#include "lib/inttypes.h"
+#include "../library/collection/list/list.h"
 #include "panic.h"
+#include "event.h"
 #if defined( PRINT_EVENT )
   #include "debug/debug.h"
 #endif
-#include "event.h"
 
 /**
  * @brief event manager structure
  */
-event_manager_ptr_t event = NULL;
+event_manager_t* event = NULL;
 
 /**
  * @brief Compare event callback necessary for avl tree
@@ -42,12 +43,12 @@ event_manager_ptr_t event = NULL;
  * @return int32_t
  */
 static int32_t compare_event_callback(
-  const avl_node_ptr_t a,
-  const avl_node_ptr_t b
+  const avl_node_t* a,
+  const avl_node_t* b
 ) {
   // get blocks
-  event_block_ptr_t block_a = EVENT_GET_BLOCK( a );
-  event_block_ptr_t block_b = EVENT_GET_BLOCK( b );
+  event_block_t* block_a = EVENT_GET_BLOCK( a );
+  event_block_t* block_b = EVENT_GET_BLOCK( b );
 
   // -1 if address of a->type is greater than address of b->type
   if ( block_a->type > block_b->type ) {
@@ -68,24 +69,23 @@ static int32_t compare_event_callback(
  */
 bool event_init( void ) {
   // create manager structure
-  event = ( event_manager_ptr_t )malloc( sizeof( event_manager_t ) );
-  // check allocation
+  event = malloc( sizeof( *event ) );
+  // check
   if ( ! event ) {
     return false;
   }
   // prepare
-  memset( ( void* )event, 0, sizeof( event_manager_t ) );
+  memset( ( void* )event, 0, sizeof( *event ) );
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Initialized event manager structure at %p\r\n",
-      ( void* )event )
+    DEBUG_OUTPUT( "Initialized event manager structure at %p\r\n", event )
   #endif
 
   // create tree
   event->tree = avl_create_tree( compare_event_callback, NULL, NULL );
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Created event tree at: %p\r\n", ( void* )event->tree )
+    DEBUG_OUTPUT( "Created event tree at: %p\r\n", event->tree )
   #endif
   // handle error
   if ( ! event->tree ) {
@@ -95,7 +95,7 @@ bool event_init( void ) {
 
   // create queue
   event->queue_kernel = list_construct( NULL, NULL, NULL );
-  // check allocation
+  // check
   if ( ! event->queue_kernel ) {
     avl_destroy_tree( event->tree );
     free( event );
@@ -103,7 +103,7 @@ bool event_init( void ) {
   }
 
   event->queue_user = list_construct( NULL, NULL, NULL );
-  // check allocation
+  // check
   if ( ! event->queue_user ) {
     free( event->tree );
     avl_destroy_tree( event->tree );
@@ -130,32 +130,36 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
 
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Called event_bind( %d, %p, %s )\r\n",
-      type, callback, post ? "true" : "false" )
+    DEBUG_OUTPUT(
+      "Called event_bind( %d, %#"PRIxPTR", %s )\r\n",
+      type,
+      ( uintptr_t )callback,
+      post ? "true" : "false"
+    )
   #endif
   // get correct tree to use
-  avl_tree_ptr_t tree = event->tree;
+  avl_tree_t* tree = event->tree;
 
   // try to find node
-  avl_node_ptr_t node = avl_find_by_data( tree, ( void* )type );
-  event_block_ptr_t block;
+  avl_node_t* node = avl_find_by_data( tree, ( void* )type );
+  event_block_t* block;
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
+    DEBUG_OUTPUT( "Found node %p\r\n", node )
   #endif
   // handle not yet added
   if ( ! node ) {
-    // allocate block
-    block = ( event_block_ptr_t )malloc( sizeof( event_block_t ) );
-    // check allocation
+    // create new block
+    block = malloc( sizeof( *block ) );
+    // check
     if ( ! block ) {
       return false;
     }
     // prepare memory
-    memset( ( void* )block, 0, sizeof( event_block_t ) );
+    memset( ( void* )block, 0, sizeof( *block ) );
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Initialized new node at %p\r\n", ( void* )block );
+      DEBUG_OUTPUT( "Initialized new node at %p\r\n", block )
     #endif
     // populate block
     block->type = type;
@@ -185,30 +189,30 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
 
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Checking for already bound event callback\r\n" );
+    DEBUG_OUTPUT( "Checking for already bound event callback\r\n" )
   #endif
   // get first element
-  list_item_ptr_t current = true != post
+  list_item_t* current = true != post
       ? block->handler->first
       : block->post->first;
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Used first element for looping at %p\r\n", ( void* )current );
+    DEBUG_OUTPUT( "Used first element for looping at %p\r\n", current )
   #endif
   // loop through list for check callback
   while ( current ) {
     // get callback from data
-    event_callback_wrapper_ptr_t wrapper =
-      ( event_callback_wrapper_ptr_t )current->data;
+    event_callback_wrapper_t* wrapper =
+      ( event_callback_wrapper_t* )current->data;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Check bound callback at %p\r\n", ( void* )wrapper );
+      DEBUG_OUTPUT( "Check bound callback at %p\r\n", wrapper )
     #endif
     // handle match
     if ( wrapper->callback == callback ) {
       // debug output
       #if defined( PRINT_EVENT )
-        DEBUG_OUTPUT( "Callback already existing\r\n" );
+        DEBUG_OUTPUT( "Callback already existing\r\n" )
       #endif
       // return success
       return true;
@@ -218,22 +222,21 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
   }
 
   // create wrapper
-  event_callback_wrapper_ptr_t wrapper = ( event_callback_wrapper_ptr_t )malloc(
-    sizeof( event_callback_wrapper_t ) );
-  // check allocation
+  event_callback_wrapper_t* wrapper = malloc( sizeof( *wrapper ) );
+  // check
   if ( ! wrapper ) {
     return false;
   }
   // prepare memory
-  memset( ( void* )wrapper, 0, sizeof( event_callback_wrapper_t ) );
+  memset( ( void* )wrapper, 0, sizeof( *wrapper ) );
   // populate wrapper
   wrapper->callback = callback;
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Created wrapper container at %p\r\n", ( void* )wrapper );
+    DEBUG_OUTPUT( "Created wrapper container at %p\r\n", wrapper )
   #endif
   // push to list
-  return list_push_back(
+  return list_push_back_data(
     true != post
       ? block->handler
       : block->post,
@@ -278,7 +281,7 @@ bool event_enqueue( event_type_t type, event_origin_t origin ) {
   }
 
   // push back event
-  return list_push_back(
+  return list_push_back_data(
     EVENT_ORIGIN_KERNEL == origin
       ? event->queue_kernel
       : event->queue_user,
@@ -299,42 +302,42 @@ void event_handle( void* data ) {
 
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Enter event_handle( %p )\r\n", data );
+    DEBUG_OUTPUT( "Enter event_handle( %p )\r\n", data )
   #endif
 
   // determine origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( data );
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "origin = %d\r\n", origin );
+    DEBUG_OUTPUT( "origin = %d\r\n", origin )
   #endif
   // queue to use
-  list_manager_ptr_t queue = EVENT_ORIGIN_KERNEL == origin
+  list_manager_t* queue = EVENT_ORIGIN_KERNEL == origin
     ? event->queue_kernel
     : event->queue_user;
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "queue = %p\r\n", ( void* )queue );
+    DEBUG_OUTPUT( "queue = %p\r\n", queue )
   #endif
 
   // variables
-  void* current_event = list_pop_front( queue );
+  void* current_event = list_pop_front_data( queue );
   // get correct tree to use
-  avl_tree_ptr_t tree = event->tree;
+  avl_tree_t* tree = event->tree;
 
   while ( current_event ) {
     // try to find node
-    avl_node_ptr_t node = avl_find_by_data( tree, current_event );
-    event_block_ptr_t block;
+    avl_node_t* node = avl_find_by_data( tree, current_event );
+    event_block_t* block;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node );
+      DEBUG_OUTPUT( "Found node %p\r\n", node )
     #endif
 
     // handle no existing
     if ( ! node ) {
       // pop next
-      current_event = list_pop_front( queue );
+      current_event = list_pop_front_data( queue );
       // skip rest
       continue;
     }
@@ -342,20 +345,19 @@ void event_handle( void* data ) {
     block = EVENT_GET_BLOCK( node );
 
     // get first element of normal callback list
-    list_item_ptr_t current = block->handler->first;
+    list_item_t* current = block->handler->first;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Used first normal element for looping at %p\r\n",
-        ( void* )current );
+      DEBUG_OUTPUT( "Used first normal element for looping at %p\r\n", current )
     #endif
     // loop through list
     while ( current ) {
       // get callback from data
-      event_callback_wrapper_ptr_t wrapper =
-        ( event_callback_wrapper_ptr_t )current->data;
+      event_callback_wrapper_t* wrapper =
+        ( event_callback_wrapper_t* )current->data;
       // debug output
       #if defined( PRINT_EVENT )
-        DEBUG_OUTPUT( "Executing bound callback %p\r\n", ( void* )wrapper );
+        DEBUG_OUTPUT( "Executing bound callback %p\r\n", wrapper )
       #endif
       // fire with data
       wrapper->callback( origin, data );
@@ -367,17 +369,16 @@ void event_handle( void* data ) {
     current = block->post->first;
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Used first post element for looping at %p\r\n",
-        ( void* )current );
+      DEBUG_OUTPUT( "Used first post element for looping at %p\r\n", current )
     #endif
     // loop through list
     while ( current ) {
       // get callback from data
-      event_callback_wrapper_ptr_t wrapper =
-        ( event_callback_wrapper_ptr_t )current->data;
+      event_callback_wrapper_t* wrapper =
+        ( event_callback_wrapper_t* )current->data;
       // debug output
       #if defined( PRINT_EVENT )
-        DEBUG_OUTPUT( "Executing bound callback %p\r\n", ( void* )wrapper );
+        DEBUG_OUTPUT( "Executing bound callback %p\r\n", wrapper )
       #endif
       // fire with data
       wrapper->callback( origin, data );
@@ -386,19 +387,19 @@ void event_handle( void* data ) {
     }
 
     // get next element
-    current_event = list_pop_front( queue );
+    current_event = list_pop_front_data( queue );
   }
 
   // debug output
   #if defined( PRINT_EVENT )
-    DEBUG_OUTPUT( "Leave event_handle\r\n" );
+    DEBUG_OUTPUT( "Leave event_handle\r\n" )
   #endif
 
   // recursive call if not empty
   if ( ! list_empty( queue ) ) {
     // debug output
     #if defined( PRINT_EVENT )
-      DEBUG_OUTPUT( "Further outstanding events, recursive call!\r\n" );
+      DEBUG_OUTPUT( "Further outstanding events, recursive call!\r\n" )
     #endif
     // recursive call for handle remaining events
     event_handle( data );

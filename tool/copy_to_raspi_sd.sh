@@ -9,13 +9,21 @@ project_directory=$(dirname "$script_directory")
 
 # files to copy
 kernel="$project_directory/build/bolthur/kernel/target/raspi/kernel7.img"
+cmdline="$project_directory/build-aux/platform/raspi/cmdline.txt"
 initrd="$project_directory/build-aux/platform/raspi/initrd"
+config="$project_directory/build-aux/platform/raspi/config.txt"
 # check for existance
 if [ ! -e "$kernel" ]; then
   echo "kernel to copy not found under \"$kernel\""
   exit;
 elif [ ! -e "$initrd" ]; then
   echo "initrd to copy not found under \"$initrd\""
+  exit;
+elif [ ! -e "$cmdline" ]; then
+  echo "cmdline.txt to copy not found under \"$cmdline\""
+  exit;
+elif [ ! -e "$config" ]; then
+  echo "config.txt to copy not found under \"$config\""
   exit;
 fi
 
@@ -73,6 +81,22 @@ fi
 # copy initrd
 echo "Copying initrd from \"$initrd\" to mount point at \"$tmp_directory\"..."
 cp $initrd $tmp_directory
+if [ $? != 0 ]; then
+  echo "error while copying initrd!"
+  exit 1
+fi
+
+# copy cmdline.txt
+echo "Copying cmdline.txt from \"$cmdline\" to mount point at \"$tmp_directory\"..."
+cp $cmdline $tmp_directory
+if [ $? != 0 ]; then
+  echo "error while copying initrd!"
+  exit 1
+fi
+
+# copy config.txt
+echo "Copying config.txt from \"$config\" to mount point at \"$tmp_directory\"..."
+cp $config $tmp_directory
 if [ $? != 0 ]; then
   echo "error while copying initrd!"
   exit 1

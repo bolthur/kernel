@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -318,8 +318,8 @@ void debug_gdb_handler_read_register(
   void* context,
   __unused const uint8_t* packet
 ) {
-  // allocate memory
-  uint8_t* p = ( uint8_t* )malloc(
+  // reserve memory
+  uint8_t* p = malloc(
     sizeof( uint8_t ) + sizeof( uint8_t ) * (
       ( GDB_NORMAL_REGISTER + GDB_EXTRA_REGISTER ) * 8
     )
@@ -332,7 +332,7 @@ void debug_gdb_handler_read_register(
   // pointer for writing
   uint8_t* buffer = p;
   // transform cpu
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
   // push registers from context
   for ( uint32_t m = R0; m <= PC; ++m ) {
     buffer += write_register( buffer, cpu->raw[ m ] );
@@ -359,7 +359,7 @@ void debug_gdb_handler_read_register(
  */
 void debug_gdb_handler_write_register( void* context, const uint8_t* packet ) {
   // transform context
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
   // skip command
   packet++;
   // Ensure packet size
@@ -405,8 +405,8 @@ void debug_gdb_handler_read_memory(
   }
   // read length to read
   length = extract_hex_value( next + 1, NULL );
-  // allocate buffer
-  p = ( uint8_t* )malloc( length * 2 + 1 );
+  // reserve buffer
+  p = malloc( length * 2 + 1 );
   // handle not enough memory
   if ( ! p ) {
     debug_gdb_packet_send( ( uint8_t* )"E01" );
@@ -556,7 +556,7 @@ void debug_gdb_handler_stepping(
   __unused const uint8_t* packet
 ) {
   // transform context to correct structure
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
   bool step_set = false;
 
   // get to next address
@@ -676,7 +676,7 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
   end_handler = false;
 
   // get context
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
   // handle first entry
   if ( debug_gdb_get_first_entry() ) {
     // add necessary offset to skip current address

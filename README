@@ -1,6 +1,6 @@
 kernel
 
-bolthur/kernel project. Copyright (C) 2018 - 2022 bolthur project
+bolthur/kernel project. Copyright (C) 2018 - 2023 bolthur project
 
 Supported platforms
 
@@ -97,23 +97,13 @@ Emulation of the project with qemu during development is not recommended. The pl
 Emulation of the kernel project with qemu during development may be done at all with the following commands. When kernel debugging is necessary, add the parameter shorthand -s -S or the long version -gdb tcp:1234 to qemu call:
 
     # raspberry pi zero kernel emulation
-    qemu-system-arm -M raspi0 -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
-
-    # raspberry pi A+ kernel emulation
-    qemu-system-arm -M raspi1ap -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
+    qemu-system-arm -M raspi0 -cpu arm1176 -m 512M -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2835-raspi-zero.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/sd1 rootfstype=ext2" -s -S
 
     # raspberry pi 2B rev 1 kernel emulation
-    qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
-
-    # raspberry pi 2B rev 2 kernel emulation
-    qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
-    qemu-system-aarch64 -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
+    qemu-system-arm -M raspi2b -cpu cortex-a7 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel7_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2836-raspi-2-b.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/sd1 rootfstype=ext2" -s -S
 
     # raspberry pi 3B kernel emulation
-    qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
-
-    # raspberry pi 3A+ kernel emulation
-    qemu-system-aarch64 -M raspi3ap -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./src/target/raspi/kernel.elf -s -S
+    qemu-system-aarch64 -M raspi3b -cpu cortex-a53 -m 1G -no-reboot -serial stdio -kernel ./bolthur/kernel/target/raspi/kernel8_qemu.img -initrd ../build-aux/platform/raspi/initrd -dtb ../config/dts/raspi/bcm2837-raspi-3-b.dtb -drive file=../build-aux/platform/raspi/sdcard.img,format=raw -append "root=/dev/sd1 rootfstype=ext2" -s -S
 
 Debugging
 

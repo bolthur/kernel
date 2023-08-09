@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,12 +19,12 @@
 
 #include <stdbool.h>
 #include <unistd.h>
-#include "list.h"
+#include "../../library/collection/list/list.h"
 
 #if ! defined( _CONSOLE_H )
 #define _CONSOLE_H
 
-struct console {
+typedef struct console {
   bool active;
   pid_t handler;
   char* path;
@@ -32,14 +32,12 @@ struct console {
   size_t out;
   size_t err;
   int fd;
-};
-typedef struct console console_t;
-typedef struct console* console_ptr_t;
+} console_t;
 
-extern list_manager_ptr_t console_list;
+extern list_manager_t* console_list;
 
-void console_destroy( console_ptr_t );
-console_ptr_t console_get_active( void );
-console_ptr_t console_get_by_path( const char* );
+void console_destroy( console_t* );
+console_t* console_get_active( void );
+console_t* console_get_by_path( const char* );
 
 #endif

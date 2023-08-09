@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,6 +18,7 @@
  */
 
 #include "../../../../../lib/assert.h"
+#include "../../../../../lib/inttypes.h"
 #if defined( REMOTE_DEBUG )
   #include "../../debug/debug.h"
 #endif
@@ -47,13 +48,13 @@ static uint32_t nested_data_abort = 0;
  * @todo trigger schedule when prefetch abort source is user thread
  * @todo panic when data abort is triggered from kernel
  */
-noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
+noreturn void vector_data_abort_handler( cpu_register_context_t* cpu ) {
   // nesting
   nested_data_abort++;
   assert( nested_data_abort < INTERRUPT_NESTED_MAX )
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "cpu = %#p\r\n", cpu )
+    DEBUG_OUTPUT( "cpu = %p\r\n", cpu )
   #endif
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
@@ -61,17 +62,20 @@ noreturn void vector_data_abort_handler( cpu_register_context_ptr_t cpu ) {
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "origin = %d\r\n", origin )
   #endif
-  // get context
-  INTERRUPT_DETERMINE_CONTEXT( cpu )
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "data abort while accessing %p\r\n",
-      ( void* )virt_data_fault_address() )
-    DEBUG_OUTPUT( "fault_status = %#x\r\n", ( void* )virt_data_status() )
-    DUMP_REGISTER( cpu )
+    DEBUG_OUTPUT(
+      "data abort while accessing %#"PRIxPTR"\r\n",
+      virt_data_fault_address()
+    )
+    DEBUG_OUTPUT( "fault_status = %#"PRIxPTR"\r\n", virt_data_status() )
+    // dump context
+    DUMP_REGISTER( interrupt_get_context( cpu ) )
     if ( EVENT_ORIGIN_USER == origin ) {
-      DEBUG_OUTPUT( "process id: %d\r\n",
-        task_thread_current_thread->process->id )
+      DEBUG_OUTPUT(
+        "process id: %d\r\n",
+        task_thread_current_thread->process->id
+      )
     }
   #endif
   // kernel stack

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "../../../../lib/inttypes.h"
 #if defined( PRINT_EXCEPTION )
   #include "../../../../debug/debug.h"
 #endif
@@ -48,8 +49,11 @@ bool debug_check_data_fault_status( void ) {
   }
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "dfsr_content = %#08x, dfsr_state = %#08x\r\n",
-      dfsr_content, dfsr_state )
+    DEBUG_OUTPUT(
+      "dfsr_content = %#"PRIx32", dfsr_state = %#"PRIx32"\r\n",
+      dfsr_content,
+      dfsr_state
+    )
   #endif
   // check for debug event
   if ( dfsr_content & ( 1 << 9 ) ) {
@@ -82,8 +86,11 @@ bool debug_check_instruction_fault( void ) {
   }
   // debug output
   #if defined( PRINT_EXCEPTION )
-    DEBUG_OUTPUT( "ifsr_content = %#08x, ifsr_state = %#08x\r\n",
-      ifsr_content, ifsr_state )
+    DEBUG_OUTPUT(
+      "ifsr_content = %#"PRIx32", ifsr_state = %#"PRIx32"\r\n",
+      ifsr_content,
+      ifsr_state
+    )
   #endif
   // check for debug event
   if ( ifsr_content & ( 1 << 9 ) ) {

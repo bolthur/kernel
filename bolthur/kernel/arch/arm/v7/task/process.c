@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,7 +18,7 @@
  */
 
 #include <stdbool.h>
-#include "../../../../lib/collection/avl.h"
+#include "../../../../../library/collection/avl/avl.h"
 #include "../../../../lib/assert.h"
 #include "../../../../lib/string.h"
 #include "../../../../mm/phys.h"
@@ -49,7 +49,7 @@ void task_process_start( void ) {
   #endif
 
   // get first thread to execute
-  task_thread_ptr_t next_thread = task_thread_next();
+  task_thread_t* next_thread = task_thread_next();
   // handle no thread
   if ( ! next_thread ) {
     // debug output
@@ -60,7 +60,7 @@ void task_process_start( void ) {
   }
 
   // variable for next thread queue
-  task_priority_queue_ptr_t next_queue = task_queue_get_queue(
+  task_priority_queue_t* next_queue = task_queue_get_queue(
     process_manager, next_thread->priority );
   // check queue
   if ( ! next_queue ) {
@@ -82,8 +82,11 @@ void task_process_start( void ) {
 
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "next_thread = %p, next_queue = %p\r\n",
-      ( void* )next_thread, ( void* )next_queue )
+    DEBUG_OUTPUT(
+      "next_thread = %p, next_queue = %p\r\n",
+      next_thread,
+      next_queue
+    )
   #endif
 
   // set context and flush
@@ -128,27 +131,33 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   if ( context ) {
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "No scheduling in kernel level exception, context = %p\r\n",
-        context )
+      DEBUG_OUTPUT(
+        "No scheduling in kernel level exception, context = %p\r\n",
+        context
+      )
     #endif
     // skip scheduling code
     return;
   }
 
   // convert context into cpu pointer
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
   // get context
-  INTERRUPT_DETERMINE_CONTEXT( cpu )
+  cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "cpu register context: %p\r\n", ( void* )cpu )
+    DEBUG_OUTPUT( "cpu register context: %p\r\n", cpu )
     DUMP_REGISTER( cpu )
+    DEBUG_OUTPUT(
+      "process id = %d\r\n",
+      task_thread_current_thread->process->id
+    )
   #endif
 
   // set running thread
-  task_thread_ptr_t running_thread = task_thread_current_thread;
+  task_thread_t* running_thread = task_thread_current_thread;
   // get running queue if set
-  task_priority_queue_ptr_t running_queue = NULL;
+  task_priority_queue_t* running_queue = NULL;
   if ( running_thread ) {
     // load queue until success has been returned
     while ( ! running_queue ) {
@@ -165,16 +174,27 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
     }
   }
 
-  // get next thread
-  task_thread_ptr_t next_thread;
+  task_thread_t* next_thread = NULL;
+  // try to switch to task thread try switch if set
+  if (
+    task_thread_try_switch_to
+    && (
+      task_thread_try_switch_to->state == TASK_THREAD_STATE_READY
+      || task_thread_try_switch_to->state == TASK_THREAD_STATE_RPC_QUEUED
+    )
+  ) {
+    next_thread = task_thread_try_switch_to;
+  }
+
   bool halt_set = false;
-  do {
+  // loop while next thread is not set or it's not ready
+  while ( ! next_thread ) {
     // get next thread
     next_thread = task_thread_next();
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "current_thread = %#p\r\n", running_thread )
-      DEBUG_OUTPUT( "next_thread = %#p\r\n", next_thread )
+      DEBUG_OUTPUT( "current_thread = %p\r\n", running_thread )
+      DEBUG_OUTPUT( "next_thread = %p\r\n", next_thread )
     #endif
     // reset queue if nothing found
     if ( ! next_thread ) {
@@ -185,7 +205,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
       next_thread = task_thread_next();
       // debug output
       #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "next_thread = %#p\r\n", next_thread )
+        DEBUG_OUTPUT( "next_thread = %p\r\n", next_thread )
       #endif
       // handle no next thread
       if ( ! next_thread ) {
@@ -198,19 +218,21 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
         arch_halt();
       }
     }
-  } while ( ! next_thread );
+  }
   // disable interrupts again
   if ( halt_set ) {
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT( "Halt was active, disabling interrupts!\r\n" )
+      DUMP_REGISTER( cpu )
     #endif
     interrupt_disable();
   }
   // debug output
   #if defined( PRINT_PROCESS )
     if ( running_thread != next_thread ) {
-      DEBUG_OUTPUT( "current_thread = %#p / %d, next_thread = %#p / %d\r\n",
+      DEBUG_OUTPUT(
+        "current_thread = %p / %d, next_thread = %p / %d\r\n",
         running_thread, running_thread->process->id,
         next_thread, next_thread->process->id
       )
@@ -218,9 +240,9 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
   #endif
 
   // variable for next queue
-  task_priority_queue_ptr_t next_queue = NULL;
+  task_priority_queue_t* next_queue = NULL;
   // get queue of next thread
-  while ( next_thread && ! next_queue ) {
+  while ( ! next_queue ) {
     next_queue = task_queue_get_queue( process_manager, next_thread->priority );
   }
 
@@ -268,7 +290,7 @@ void task_process_schedule( __unused event_origin_t origin, void* context ) {
  * @param proc pointer to init process structure
  * @return bool true on success, else false
  */
-uintptr_t task_process_prepare_init_arch( task_process_ptr_t proc ) {
+uintptr_t task_process_prepare_init_arch( task_process_t* proc ) {
   // get possible device tree
   uintptr_t device_tree = firmware_info.atag_fdt;
   // return error if device tree is missing
@@ -284,14 +306,16 @@ uintptr_t task_process_prepare_init_arch( task_process_ptr_t proc ) {
   // debug output
   #if defined( PRINT_PROCESS )
     uintptr_t fdt_end = fdt_start + fdt_size;
-    DEBUG_OUTPUT( "start: %#lx, end: %#lx\r\n", fdt_start, fdt_end )
+    DEBUG_OUTPUT( "start: %#"PRIxPTR", end: %#"PRIxPTR"\r\n",
+      fdt_start, fdt_end )
   #endif
   // round up size
   size_t rounded_fdt_size = ROUND_UP_TO_FULL_PAGE( fdt_size );
   // get physical area
   uint64_t phys_address_fdt = phys_find_free_page_range(
     PAGE_SIZE,
-    rounded_fdt_size
+    rounded_fdt_size,
+    PHYS_MEMORY_TYPE_NORMAL
   );
   // handle error
   if( ! phys_address_fdt ) {
@@ -318,6 +342,9 @@ uintptr_t task_process_prepare_init_arch( task_process_ptr_t proc ) {
     rounded_fdt_size,
     0
   );
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "proc_fdt_start = %#"PRIxPTR"\r\n", proc_fdt_start )
+  #endif
   if ( ! proc_fdt_start ) {
     phys_free_page_range( phys_address_fdt, rounded_fdt_size );
     return 0;

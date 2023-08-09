@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIB_STRING_H )
+#ifndef _LIB_STRING_H
 #define _LIB_STRING_H
 
 #include <stddef.h>
@@ -27,6 +27,8 @@ void* memchr( const void*, int, size_t );
 int memcmp( const void*, const void*, size_t );
 void* memcpy( void* restrict, const void* restrict, size_t );
 void* memcpy_unsafe( void* restrict, const void* restrict, size_t );
+void* memcpy_unsafe_src( void* restrict, const void* restrict, size_t );
+void* memcpy_unsafe_dst( void* restrict, const void* restrict, size_t );
 void* memset( void*, int, size_t );
 char* strchr( const char*, int );
 char* strcpy( char*, const char* );

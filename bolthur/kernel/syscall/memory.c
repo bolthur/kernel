@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include <errno.h>
+#include "../lib/inttypes.h"
 #include "../syscall.h"
 #if defined( PRINT_SYSCALL )
   #include "../debug/debug.h"
@@ -37,6 +37,7 @@
 #define MEMORY_FLAG_NONE 0x0
 #define MEMORY_FLAG_PHYS 0x1
 #define MEMORY_FLAG_DEVICE 0x2
+#define MEMORY_FLAG_BUS 0x4
 
 /**
  * @fn void syscall_memory_acquire(void*)
@@ -51,14 +52,18 @@ void syscall_memory_acquire( void* context ) {
   int protection = ( int )syscall_get_parameter( context, 2 );
   int flag = ( int )syscall_get_parameter( context, 3 );
   // get context
-  virt_context_ptr_t virtual_context = task_thread_current_thread
+  virt_context_t* virtual_context = task_thread_current_thread
     ->process
     ->virtual_context;
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall memory acquire( %#p, %#x, %d, %d )\r\n",
-      addr, len, protection, flag )
+      "syscall memory acquire( %p, %#zx, %d, %d )\r\n",
+      addr,
+      len,
+      protection,
+      flag
+    )
   #endif
 
   // handle invalid length
@@ -75,8 +80,22 @@ void syscall_memory_acquire( void* context ) {
   len = ROUND_UP_TO_FULL_PAGE( len );
   // variable for physical mapping
   uint64_t phys = 0;
+  // handle bus request
+  if ( flag & MEMORY_FLAG_BUS ) {
+    // try to get free dma page range
+    phys = phys_find_free_page_range( PAGE_SIZE, len, PHYS_MEMORY_TYPE_DMA );
+    // handle not enough memory
+    if ( 0 == phys ) {
+      // debug output
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "Not enough free dma memory\r\n" )
+      #endif
+      syscall_populate_error( context, ( size_t )-ENOMEM );
+      return;
+    }
+  }
   // check if physical range is already in use for map physical
-  if ( flag & MEMORY_FLAG_PHYS ) {
+  if ( ( flag & MEMORY_FLAG_PHYS ) && ! ( flag & MEMORY_FLAG_BUS ) ) {
     // set phys to given address
     phys = ( uintptr_t )addr;
     // overwrite address with NULL
@@ -124,13 +143,13 @@ void syscall_memory_acquire( void* context ) {
     );
     // debug output
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "entry = %#x, address = %p\r\n", tmp_addr, addr )
+      DEBUG_OUTPUT( "entry = %#"PRIxPTR", address = %p\r\n", tmp_addr, addr )
     #endif
     start = virt_find_free_page_range( virtual_context, len, tmp_addr );
   }
 
   // handle no address found
-  if ( ( uintptr_t )NULL == start ) {
+  if ( ! start ) {
     syscall_populate_error( context, ( size_t )-ENOMEM );
     // debug output
     #if defined( PRINT_SYSCALL )
@@ -155,13 +174,18 @@ void syscall_memory_acquire( void* context ) {
   if ( flag & MEMORY_FLAG_DEVICE ) {
     map_type = VIRT_MEMORY_TYPE_DEVICE;
   }
-  // handle physical memory allocation
+  // handle physical memory mapping request
   if ( flag & MEMORY_FLAG_PHYS ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
-        "mapping %#016llx to address %p with type %d, flag %d and len %x\r\n",
-        phys, start,  map_type, map_flag, len
+        "mapping %#"PRIx64" to address %#"PRIxPTR
+        " with type %d, flag %"PRIu32" and len %zx\r\n",
+        phys,
+        start,
+        map_type,
+        map_flag,
+        len
       )
     #endif
     if ( ! virt_map_address_range(
@@ -216,14 +240,16 @@ void syscall_memory_release( void* context ) {
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   bool unmap_phys = true;
   // context
-  virt_context_ptr_t virtual_context = task_thread_current_thread
+  virt_context_t* virtual_context = task_thread_current_thread
     ->process
     ->virtual_context;
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "syscall_memory_release( %#"PRIxPTR", %zx )\r\n",
-      address, len )
+      address,
+      len
+    )
   #endif
   // handle invalid stuff
   if ( 0 == len ) {
@@ -338,8 +364,10 @@ void syscall_memory_shared_attach( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
-      "syscall_memory_shared_attach( %d, %#"PRIxPTR" )\r\n",
-      id, start )
+      "syscall_memory_shared_attach( %zu, %#"PRIxPTR" )\r\n",
+      id,
+      start
+    )
   #endif
   uintptr_t addr = shared_memory_attach(
     task_thread_current_thread->process,
@@ -366,7 +394,7 @@ void syscall_memory_shared_detach( void* context ) {
   size_t id = ( size_t )syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_memory_shared_detach( %d )\r\n", id )
+    DEBUG_OUTPUT( "syscall_memory_shared_detach( %zu )\r\n", id )
   #endif
   // try to detach
   if ( ! shared_memory_detach( task_thread_current_thread->process, id ) ) {
@@ -378,6 +406,29 @@ void syscall_memory_shared_detach( void* context ) {
 }
 
 /**
+ * @fn void syscall_memory_shared_detach(void*)
+ * @brief get size of shared memory
+ *
+ * @param context
+ */
+void syscall_memory_shared_size( void* context ) {
+  // get parameters
+  size_t id = ( size_t )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_memory_shared_size( %zu )\r\n", id )
+  #endif
+  // try to get size
+  size_t len = shared_memory_size( task_thread_current_thread->process, id );
+  if ( 0 == len ) {
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // return success
+  syscall_populate_success( context, len );
+}
+
+/**
  * @fn void syscall_memory_translate_physical(void*)
  * @brief Translate virtual into physical address
  *
@@ -386,12 +437,15 @@ void syscall_memory_shared_detach( void* context ) {
 void syscall_memory_translate_physical( void* context ) {
   // get parameters
   uintptr_t address = ( uintptr_t )syscall_get_parameter( context, 0 );
+  // calculate possible offset and remove it for translation
+  size_t offset = address - ROUND_DOWN_TO_FULL_PAGE( address );
+  address -= offset;
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_memory_translate_physical( %#"PRIxPTR" )\r\n", address )
   #endif
   // get context
-  virt_context_ptr_t virtual_context = task_thread_current_thread
+  virt_context_t* virtual_context = task_thread_current_thread
     ->process
     ->virtual_context;
   // get min and max address of context
@@ -413,5 +467,67 @@ void syscall_memory_translate_physical( void* context ) {
   // get mapped address
   uint64_t phys = virt_get_mapped_address_in_context( virtual_context, address );
   // populate success
-  syscall_populate_success( context, ( uintptr_t )phys  );
+  syscall_populate_success( context, ( uintptr_t )phys + offset  );
+}
+
+/**
+ * @fn void syscall_memory_translate_bus(void*)
+ * @brief Translate virtual into physical bus address
+ *
+ * @param context
+ *
+ * @todo remove syscall
+ */
+void syscall_memory_translate_bus( void* context ) {
+  // get parameters
+  uintptr_t address = ( uintptr_t )syscall_get_parameter( context, 0 );
+  size_t size = ( size_t )syscall_get_parameter( context, 1 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_memory_translate_physical( %#"PRIxPTR", %#zu )\r\n", address, size )
+  #endif
+  // get context
+  virt_context_t* virtual_context = task_thread_current_thread
+    ->process
+    ->virtual_context;
+  // get min and max address of context
+  uintptr_t min = virt_get_context_min_address( virtual_context );
+  uintptr_t max = virt_get_context_max_address( virtual_context );
+  // ensure that address is in context
+  if (
+    min > address
+    || max <= address
+    || max <= address + size
+    || ! virt_is_mapped_in_context_range( virtual_context, address, size )
+  ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Invalid address received!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // get mapped address
+  uint64_t phys = virt_get_mapped_address_in_context( virtual_context, address );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "phys = %#llx\r\n", phys )
+  #endif
+  // get dma start
+  uint64_t dma = phys_address_to_bus( phys, size );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "dma = %#llx\r\n", dma )
+  #endif
+  // handle error
+  if ( 0 == dma ) {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "Not part of dma pool!\r\n" )
+    #endif
+    syscall_populate_error( context, ( size_t )-EINVAL );
+    return;
+  }
+  // populate success
+  syscall_populate_success( context, ( uintptr_t )dma  );
 }

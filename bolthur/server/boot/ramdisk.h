@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,7 +19,7 @@
 
 #include <libtar.h>
 
-#if !defined( _RAMDISK_H )
+#ifndef _RAMDISK_H
 #define _RAMDISK_H
 
 extern uintptr_t ramdisk_compressed;
@@ -28,9 +28,9 @@ extern uintptr_t ramdisk_decompressed;
 extern size_t ramdisk_decompressed_size;
 extern size_t ramdisk_read_offset;
 
-size_t ramdisk_extract_size( uintptr_t, size_t );
-void* ramdisk_extract( uintptr_t, size_t, size_t );
-void* ramdisk_lookup_file( TAR*, const char*, size_t* );
+size_t ramdisk_size( uintptr_t, size_t );
+void* ramdisk_extract( uintptr_t, size_t, size_t, size_t* );
+void* ramdisk_lookup( TAR*, const char*, size_t* );
 void ramdisk_dump( TAR* );
 
 #endif

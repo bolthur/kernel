@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -36,11 +36,13 @@ char** duplicate( const char** src ) {
   size_t src_count = 0;
   // handle no source
   if ( ! src ) {
-    // allocate buffer
+    // reserve buffer
     dst = ( char** )malloc( ( src_count + 1 ) * sizeof( char* ) + len );
     if ( ! dst ) {
       return NULL;
     }
+    // clear out
+    memset( dst, 0, ( src_count + 1 ) * sizeof( char* ) + len );
     // fill in termination only
     dst[ src_count ] = NULL;
     // return
@@ -72,11 +74,13 @@ char** duplicate( const char** src ) {
     // increase total length
     len += tmp_len + 1;
   }
-  // allocate new buffer
+  // reserve new buffer
   dst = ( char** )malloc( ( src_count + 1 ) * sizeof( char* ) + len );
   if ( ! dst ) {
     return NULL;
   }
+  // clear out
+  memset( dst, 0, ( src_count + 1 ) * sizeof( char* ) + len );
   // copy stuff over into contiguous buffer
   len = 0;
   for ( count = 0; count < src_count; count++ ) {
@@ -89,8 +93,9 @@ char** duplicate( const char** src ) {
       free( dst );
       return NULL;
     }
+    tmp_len++;
     // copy string content with unsafe copy
-    if ( ! memcpy_unsafe( dst[ count ], src[ count ], tmp_len ) ) {
+    if ( ! memcpy_unsafe_src( dst[ count ], src[ count ], tmp_len ) ) {
       free( dst );
       return NULL;
     }

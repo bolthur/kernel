@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,19 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
 #include <sys/syslimits.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <stdlib.h>
 #include <errno.h>
-#include "../collection/avl.h"
-#include "../vfs.h"
 #include "handler.h"
 
-static avl_tree_ptr_t ioctl_tree = NULL;
+static avl_tree_t* ioctl_tree = NULL;
 
 /**
- * @fn int32_t compare_ioctl(const avl_node_ptr_t, const avl_node_ptr_t)
+ * @fn int32_t compare_ioctl(const avl_node_t*, const avl_node_t*)
  * @brief Compare handle callback necessary for avl tree insert / delete
  *
  * @param node_a
@@ -37,11 +36,11 @@ static avl_tree_ptr_t ioctl_tree = NULL;
  * @return
  */
 static int32_t compare_ioctl(
-  const avl_node_ptr_t node_a,
-  const avl_node_ptr_t node_b
+  const avl_node_t* node_a,
+  const avl_node_t* node_b
 ) {
-  ioctl_tree_entry_ptr_t container_a = IOCTL_HANDLER_GET_ENTRY( node_a );
-  ioctl_tree_entry_ptr_t container_b = IOCTL_HANDLER_GET_ENTRY( node_b );
+  ioctl_tree_entry_t* container_a = IOCTL_HANDLER_GET_ENTRY( node_a );
+  ioctl_tree_entry_t* container_b = IOCTL_HANDLER_GET_ENTRY( node_b );
   // return 0 if equal
   if ( container_a->pid == container_b->pid ) {
     return 0;
@@ -51,7 +50,7 @@ static int32_t compare_ioctl(
 }
 
 /**
- * @fn int32_t lookup_ioctl(const avl_node_ptr_t, const void*)
+ * @fn int32_t lookup_ioctl(const avl_node_t*, const void*)
  * @brief Lookup handle callback necessary for avl tree search operations
  *
  * @param node
@@ -59,11 +58,11 @@ static int32_t compare_ioctl(
  * @return
  */
 static int32_t lookup_ioctl(
-  const avl_node_ptr_t node,
+  const avl_node_t* node,
   const void* value
 ) {
   pid_t pid = ( pid_t )value;
-  ioctl_tree_entry_ptr_t container = IOCTL_HANDLER_GET_ENTRY( node );
+  ioctl_tree_entry_t* container = IOCTL_HANDLER_GET_ENTRY( node );
   // return 0 if equal
   if ( container->pid == pid ) {
     return 0;
@@ -73,13 +72,13 @@ static int32_t lookup_ioctl(
 }
 
 /**
- * @fn void cleanup_ioctl(avl_node_ptr_t)
+ * @fn void cleanup_ioctl(avl_node_t*)
  * @brief handle cleanup
  *
  * @param node
  */
-static void cleanup_ioctl( avl_node_ptr_t node ) {
-  ioctl_tree_entry_ptr_t item = IOCTL_HANDLER_GET_ENTRY( node );
+static void cleanup_ioctl( avl_node_t* node ) {
+  ioctl_tree_entry_t* item = IOCTL_HANDLER_GET_ENTRY( node );
   // destroy tree
   avl_destroy_tree( item->tree );
   // free item
@@ -87,7 +86,7 @@ static void cleanup_ioctl( avl_node_ptr_t node ) {
 }
 
 /**
- * @fn int32_t compare_container(const avl_node_ptr_t, const avl_node_ptr_t)
+ * @fn int32_t compare_container(const avl_node_t*, const avl_node_t*)
  * @brief Compare handle callback necessary for avl tree insert / delete
  *
  * @param node_a
@@ -95,11 +94,11 @@ static void cleanup_ioctl( avl_node_ptr_t node ) {
  * @return
  */
 static int32_t compare_container(
-  const avl_node_ptr_t node_a,
-  const avl_node_ptr_t node_b
+  const avl_node_t* node_a,
+  const avl_node_t* node_b
 ) {
-  ioctl_container_ptr_t container_a = IOCTL_HANDLER_GET_CONTAINER( node_a );
-  ioctl_container_ptr_t container_b = IOCTL_HANDLER_GET_CONTAINER( node_b );
+  ioctl_container_t* container_a = IOCTL_HANDLER_GET_CONTAINER( node_a );
+  ioctl_container_t* container_b = IOCTL_HANDLER_GET_CONTAINER( node_b );
   // return 0 if equal
   if ( container_a->command == container_b->command ) {
     return 0;
@@ -109,7 +108,7 @@ static int32_t compare_container(
 }
 
 /**
- * @fn int32_t lookup_container(const avl_node_ptr_t, const void*)
+ * @fn int32_t lookup_container(const avl_node_t*, const void*)
  * @brief Lookup handle callback necessary for avl tree search operations
  *
  * @param node
@@ -117,11 +116,11 @@ static int32_t compare_container(
  * @return
  */
 static int32_t lookup_container(
-  const avl_node_ptr_t node,
+  const avl_node_t* node,
   const void* value
 ) {
   uint32_t command = ( uint32_t )value;
-  ioctl_container_ptr_t container = IOCTL_HANDLER_GET_CONTAINER( node );
+  ioctl_container_t* container = IOCTL_HANDLER_GET_CONTAINER( node );
   // return 0 if equal
   if ( container->command == command ) {
     return 0;
@@ -131,13 +130,13 @@ static int32_t lookup_container(
 }
 
 /**
- * @fn void cleanup_container(avl_node_ptr_t)
+ * @fn void cleanup_container(avl_node_t*)
  * @brief handle cleanup
  *
  * @param node
  */
-static void cleanup_container( avl_node_ptr_t node ) {
-  ioctl_container_ptr_t item = IOCTL_HANDLER_GET_CONTAINER( node );
+static void cleanup_container( avl_node_t* node ) {
+  ioctl_container_t* item = IOCTL_HANDLER_GET_CONTAINER( node );
   // free item
   free( item );
 }
@@ -159,19 +158,19 @@ bool ioctl_handler_init( void ) {
 }
 
 /**
- * @fn ioctl_container_ptr_t ioctl_lookup_command(uint32_t, pid_t)
+ * @fn ioctl_container_t* ioctl_lookup_command(uint32_t, pid_t)
  * @brief Helper for command lookup
  *
  * @param command
  * @param handle
  * @return
  */
-ioctl_container_ptr_t ioctl_lookup_command(
+ioctl_container_t* ioctl_lookup_command(
   uint32_t command,
   pid_t process
 ) {
   // try to find command within tree before querying info
-  avl_node_ptr_t found = avl_find_by_data(
+  avl_node_t* found = avl_find_by_data(
     ioctl_tree,
     ( void* )process
   );
@@ -180,7 +179,7 @@ ioctl_container_ptr_t ioctl_lookup_command(
     return NULL;
   }
   // get entry
-  ioctl_tree_entry_ptr_t entry = IOCTL_HANDLER_GET_ENTRY( found );
+  ioctl_tree_entry_t* entry = IOCTL_HANDLER_GET_ENTRY( found );
   // lookup command
   found = avl_find_by_data(
     entry->tree,
@@ -211,11 +210,11 @@ bool ioctl_push_command(
     return true;
   }
   // try to find command within tree before querying info
-  avl_node_ptr_t found = avl_find_by_data(
+  avl_node_t* found = avl_find_by_data(
     ioctl_tree,
     ( void* )process
   );
-  ioctl_tree_entry_ptr_t entry = NULL;
+  ioctl_tree_entry_t* entry = NULL;
   // handle existing tree
   if ( found ) {
     // get entry
@@ -246,7 +245,7 @@ bool ioctl_push_command(
     }
   }
   // allocate container
-  ioctl_container_ptr_t container = malloc( sizeof( ioctl_container_t ) );
+  ioctl_container_t* container = malloc( sizeof( ioctl_container_t ) );
   if ( ! container ) {
     return false;
   }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -29,7 +29,7 @@
  * @fn void firmware_startup_init(void)
  * @brief Handle firmware information related startup init
  */
-void __bootstrap firmware_startup_init( void ) {
+void firmware_startup_init( void ) {
   // transfer to uintptr_t
   uintptr_t atag_fdt = ( uintptr_t )firmware_info.atag_fdt;
   // first mapping before access

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,27 +18,25 @@
  */
 
 #include <stdbool.h>
-#include "../lib/collection/list.h"
+#include "../../library/collection/list/list.h"
 #include "../task/process.h"
 #include "../task/thread.h"
 
-#if ! defined( _RPC_DATA_H )
+#ifndef _RPC_DATA_H
 #define _RPC_DATA_H
 
-struct rpc_data_queue_entry {
+typedef struct {
   size_t id;
   pid_t sender;
   const char* data;
   size_t length;
-};
-typedef struct rpc_data_queue_entry rpc_data_queue_entry_t;
-typedef struct rpc_data_queue_entry *rpc_data_queue_entry_ptr_t;
+} rpc_data_queue_entry_t;
 
 size_t rpc_data_queue_generate_id( void );
-bool rpc_data_queue_setup( task_process_ptr_t );
-void rpc_data_queue_destroy( task_process_ptr_t );
-bool rpc_data_queue_ready( task_process_ptr_t );
-rpc_data_queue_entry_ptr_t rpc_data_queue_allocate( size_t, const char*, size_t* );
+bool rpc_data_queue_setup( task_process_t* );
+void rpc_data_queue_destroy( task_process_t* );
+bool rpc_data_queue_ready( task_process_t* );
+rpc_data_queue_entry_t* rpc_data_queue_allocate( size_t, const char*, size_t* );
 int rpc_data_queue_add( pid_t, pid_t, const char*, size_t, size_t* );
 void rpc_data_queue_remove( pid_t, size_t );
 

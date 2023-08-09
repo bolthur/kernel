@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,7 +24,7 @@
 #if ! defined( _RENDER_H )
 #define _RENDER_H
 
-void render_char_to_surface( uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
-ssize_t render_terminal( terminal_ptr_t, const char* );
+void render_char_to_surface( volatile uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
+ssize_t render_terminal( terminal_t*, const char* );
 
 #endif

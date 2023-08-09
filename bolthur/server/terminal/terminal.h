@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "collection/list.h"
+#include "../../library/collection/list/list.h"
 #include "../libterminal.h"
 
 #if ! defined( _TERMINAL_H )
@@ -27,22 +27,22 @@
 #define TERMINAL_MAX_PATH 32
 #define TERMINAL_MAX_NUM 7
 
-struct terminal {
+typedef struct {
   char path[ TERMINAL_MAX_PATH ];
-  uint16_t* buffer;
   uint32_t col;
   uint32_t row;
   uint32_t max_col;
   uint32_t max_row;
   uint32_t bpp;
-};
-typedef struct terminal terminal_t;
-typedef struct terminal* terminal_ptr_t;
+  // space for mapped surface, internal surface id and surface memory id
+  uint8_t* surface;
+  size_t surface_id;
+  size_t surface_memory_id;
+  uint32_t pitch;
+} terminal_t;
 
-extern list_manager_ptr_t terminal_list;
+extern list_manager_t* terminal_list;
 
 bool terminal_init( void );
-void terminal_scroll( terminal_ptr_t );
-uint32_t terminal_push( terminal_ptr_t, const char*, uint32_t*, uint32_t*, uint32_t*, uint32_t* );
 
 #endif

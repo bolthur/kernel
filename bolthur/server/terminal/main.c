@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -84,40 +84,24 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Allocate space for add device\r\n" )
-  // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
-  if ( ! msg ) {
-    close( console_manager_fd );
-    close( output_driver_fd );
+  // add alias to current tty
+  if ( !dev_add_file( TERMINAL_BASE_PATH, NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Send device %s to terminal\r\n", TERMINAL_BASE_PATH )
-  // push alias to current tty
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, TERMINAL_BASE_PATH, PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, 0, 0 );
+  // enable rpc
+  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  _syscall_rpc_set_ready( true );
 
-  EARLY_STARTUP_PRINT( "Send terminal device to vfs\r\n" )
   // push terminal device as indicator init is done
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/terminal", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, 0, 0 );
-  // free again
-  free( msg );
+  if ( !dev_add_file( "/dev/terminal", NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    return -1;
+  }
 
-  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
-  // enable rpc and wait
-  _rpc_set_ready( true );
+  // wait for rpc
+  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
   // return exit code 0
   return 0;

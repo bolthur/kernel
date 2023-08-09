@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIB_TAR_H )
+#ifndef _LIB_TAR_H
 #define _LIB_TAR_H
 
 #include <stdbool.h>
@@ -36,7 +36,7 @@ typedef enum {
   TAR_FILE_TYPE_NAMED_PIPE = '6',
 } tar_file_type_t;
 
-struct tar_header {
+typedef struct {
   char file_name[ 100 ];
   char file_mode[ 8 ];
   char user_id[ 8 ];
@@ -47,17 +47,14 @@ struct tar_header {
   char file_type;
   char linked_file_name[ 100 ];
   char __padding[ 255 ];
-};
-
-typedef struct tar_header tar_header_t;
-typedef struct tar_header *tar_header_ptr_t;
+}tar_header_t;
 
 size_t tar_total_size( uintptr_t );
-size_t tar_size( tar_header_ptr_t );
-tar_header_ptr_t tar_next( tar_header_ptr_t );
-tar_header_ptr_t tar_lookup_file( uintptr_t, const char* );
-uint8_t* tar_file( tar_header_ptr_t );
-bool tar_end_reached( tar_header_ptr_t );
+size_t tar_size( tar_header_t* );
+tar_header_t* tar_next( tar_header_t* );
+tar_header_t* tar_lookup_file( uintptr_t, const char* );
+uint8_t* tar_file( tar_header_t* );
+bool tar_end_reached( tar_header_t* );
 size_t octal_size_to_int( const char*, size_t );
 
 #endif

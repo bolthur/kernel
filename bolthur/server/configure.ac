@@ -1,9 +1,9 @@
 
 AC_PREREQ([2.71])
 
-AC_INIT([bolthur-server], [0.1.0-dev], [https://github.com/bolthur/driver/issues], [bolthur-driver], [https://github.com/bolthur/driver])
+AC_INIT([bolthur-server], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-server], [https://github.com/bolthur/kernel])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2022 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2023 bolthur project])
 
 AC_CONFIG_AUX_DIR([_aux/config])
 AC_CONFIG_MACRO_DIR([../../build-aux/m4])
@@ -55,6 +55,12 @@ AC_ARG_WITH(
 AS_IF([test "x$enable_debug" == "xyes" && test "x$enable_release" == "xyes"], [
   AC_MSG_ERROR([Enabled debug and release are not possible at the same time])
 ])
+
+# dependencies
+PKG_CHECK_MODULES([LWEXT4], [lwext4 >= 1.0.0])
+PKG_CHECK_MODULES([CONFINI], [libconfini >= 1.16.4])
+PKG_CHECK_MODULES([ZLIB], [zlib >= 1.2.12])
+PKG_CHECK_MODULES([BFS], [bfs >= 0.1.0])
 
 # check necessary programs
 BOLTHUR_PROG_READLINK
@@ -143,23 +149,34 @@ AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 
 AC_CONFIG_FILES([
   Makefile
+  authentication/Makefile
   boot/Makefile
   console/Makefile
   fs/Makefile
   fs/dev/Makefile
-  fs/ext4/Makefile
-  fs/fat32/Makefile
+  fs/ext/Makefile
+  fs/fat/Makefile
+  fs/ramdisk/Makefile
   fs/vfs/Makefile
+  mount/Makefile
+  partition/Makefile
   platform/Makefile
   platform/raspi/Makefile
   platform/raspi/framebuffer/Makefile
-  platform/raspi/io/Makefile
+  platform/raspi/iomem/Makefile
   platform/raspi/random/Makefile
-  platform/raspi/io/mailbox/Makefile
-  platform/raspi/io/mmio/Makefile
   platform/raspi/storage/Makefile
-  platform/raspi/storage/sdcard/Makefile
+  platform/raspi/storage/sd/Makefile
+  platform/raspi/usb/Makefile
+  platform/raspi/usb/hcd/Makefile
   terminal/Makefile
+  usb/Makefile
+  usb/device/Makefile
+  usb/device/hid/Makefile
+  usb/device/hid/keyboard/Makefile
+  usb/device/hub/Makefile
+  usb/device/storage/Makefile
+  usb/usbd/Makefile
 ])
 # FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO
 

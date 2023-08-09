@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,6 +21,7 @@
 #include <stdbool.h>
 
 #include "../lib/assert.h"
+#include "../lib/inttypes.h"
 #if defined( PRINT_MM_VIRT )
   #include "../debug/debug.h"
 #endif
@@ -41,12 +42,12 @@ static bool virt_initialized = false;
 /**
  * @brief user context
  */
-virt_context_ptr_t virt_current_user_context;
+virt_context_t* virt_current_user_context;
 
 /**
  * @brief kernel context
  */
-virt_context_ptr_t virt_current_kernel_context;
+virt_context_t* virt_current_kernel_context;
 
 /**
  * @fn void virt_init(void)
@@ -78,8 +79,14 @@ void virt_init( void ) {
   assert( virt_current_user_context )
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "virt_current_kernel_context: %p\r\n", ( void* )virt_current_kernel_context )
-    DEBUG_OUTPUT( "virt_current_user_context: %p\r\n", ( void* )virt_current_user_context )
+    DEBUG_OUTPUT(
+      "virt_current_kernel_context: %p\r\n",
+      virt_current_kernel_context
+    )
+    DEBUG_OUTPUT(
+      "virt_current_user_context: %p\r\n",
+      virt_current_user_context
+    )
   #endif
 
   // determine start and end for kernel mapping
@@ -89,12 +96,13 @@ void virt_init( void ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "Map kernel space %p - %p to %p - %p \r\n",
-      ( void* )start,
-      ( void* )end,
-      ( void* )PHYS_2_VIRT( start ),
-      ( void* )PHYS_2_VIRT( end )
-    );
+      "Map kernel space %#"PRIxPTR" - %#"PRIxPTR
+      " to %#"PRIxPTR" - %#"PRIxPTR" \r\n",
+      start,
+      end,
+      PHYS_2_VIRT( start ),
+      PHYS_2_VIRT( end )
+    )
   #endif
 
   // map initial heap similar to normal heap non cachable
@@ -135,12 +143,12 @@ void virt_init( void ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "Map initrd space %p - %p to %p - %p \r\n",
-        ( void* )initrd_start,
-        ( void* )initrd_end,
-        ( void* )PHYS_2_VIRT( start ),
-        ( void* )PHYS_2_VIRT( start + ( initrd_end - initrd_start ) )
-      );
+        "Map initrd space %#"PRIxPTR" - %#"PRIxPTR
+        " to %#"PRIxPTR" - %#"PRIxPTR" \r\n",
+        initrd_start, initrd_end,
+        PHYS_2_VIRT( start ),
+        PHYS_2_VIRT( start + ( initrd_end - initrd_start ) )
+      )
     #endif
 
     // map from start to end addresses as used
@@ -161,9 +169,9 @@ void virt_init( void ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "Set new initrd start address to %p\r\n",
-        ( void* )PHYS_2_VIRT( new_initrd_start )
-      );
+        "Set new initrd start address to %#"PRIxPTR"\r\n",
+        PHYS_2_VIRT( new_initrd_start )
+      )
     #endif
 
     // change initrd location
@@ -245,7 +253,7 @@ bool virt_init_get( void ) {
  * @return false range is not or incompletely mapped
  */
 bool virt_is_mapped_in_context_range(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t address,
   size_t size
 ) {
@@ -299,7 +307,7 @@ bool virt_is_mapped_range( uintptr_t address, size_t size ) {
  * @return false
  */
 bool virt_unmap_address_range(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t address,
   size_t size,
   bool free_phys
@@ -327,7 +335,7 @@ bool virt_unmap_address_range(
  * @return uintptr_t
  */
 uintptr_t virt_find_free_page_range(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   size_t size,
   uintptr_t start
 ) {
@@ -344,7 +352,7 @@ uintptr_t virt_find_free_page_range(
       || max <= start + size
     )
   ) {
-    return ( uintptr_t )NULL;
+    return 0;
   }
 
   // consider start correctly
@@ -352,7 +360,7 @@ uintptr_t virt_find_free_page_range(
     min = start;
   }
   // round up to full page
-  size= ROUND_UP_TO_FULL_PAGE( size );
+  size = ROUND_UP_TO_FULL_PAGE( size );
   // determine amount of pages
   size_t page_amount = size / PAGE_SIZE;
   size_t found_amount = 0;
@@ -360,32 +368,53 @@ uintptr_t virt_find_free_page_range(
   uintptr_t address = 0;
   bool stop = false;
 
-  while ( min <= max && !stop ) {
-    // skip if mapped
-    if ( virt_is_mapped_in_context( ctx, min ) ) {
-      // reset possible found amount and set address
-      found_amount = 0;
-      address = 0;
-      // next page
-      min += PAGE_SIZE;
+  uintptr_t min_address = virt_get_context_min_address( ctx );
+  uintptr_t frame = ( min - min_address ) / PAGE_SIZE;
+  uint32_t index = PAGE_INDEX( frame );
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "index = %#"PRIu32"\r\n", index )
+    DEBUG_OUTPUT( "ctx = %p\r\n", ctx )
+    DEBUG_OUTPUT( "ctx->bitmap_length = %#"PRIu32"\r\n", ctx->bitmap_length )
+  #endif
+  for ( uint32_t idx = index; idx < ctx->bitmap_length && !stop; idx++ ) {
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "ctx->bitmap[ %d ] = %#"PRIx32"\r\n", idx, ctx->bitmap[ idx ] )
+    #endif
+    // skip completely used entries
+    if ( PHYS_ALL_PAGES_OF_INDEX_USED == ctx->bitmap[ idx ] ) {
       continue;
     }
-    // set address if we start
-    if ( 0 == found_amount ) {
-      address = min;
+    // loop through bits per entry
+    for ( size_t offset = 0; offset < PAGE_PER_ENTRY && !stop; offset++ ) {
+      // not free? => reset counter and continue
+      if ( ctx->bitmap[ idx ] & ( uint32_t )( 1U << offset ) ) {
+        found_amount = 0;
+        address = ( uintptr_t )-1;
+        continue;
+      }
+      // set address if found is 0
+      if ( 0 == found_amount ) {
+        address = idx * PAGE_SIZE * PAGE_PER_ENTRY + offset * PAGE_SIZE;
+      }
+      // increase found amount
+      found_amount += 1;
+      // reached necessary amount? => stop loop
+      if ( found_amount == page_amount ) {
+        stop = true;
+      }
     }
-    // increase found amount
-    found_amount += 1;
-    // handle necessary amount reached
-    if ( found_amount == page_amount ) {
-      stop = true;
-    }
-    // next page
-    min += PAGE_SIZE;
   }
-
-  // return found address or null
-  return address;
+  if ( address == ( uintptr_t )-1 ) {
+    return 0;
+  }
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "address = %#"PRIxPTR"\r\n", address );
+  #endif
+  address += min_address;
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "address = %#"PRIxPTR"\r\n", address );
+  #endif
+  return address != ( uintptr_t )-1 ? address : 0;
 }
 
 /**
@@ -401,7 +430,7 @@ uintptr_t virt_find_free_page_range(
  * @return false
  */
 bool virt_map_address_range(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t address,
   uint64_t phys,
   size_t size,
@@ -442,7 +471,7 @@ bool virt_map_address_range(
  * @return false
  */
 bool virt_map_address_range_random(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t address,
   size_t size,
   virt_memory_type_t type,
@@ -454,7 +483,7 @@ bool virt_map_address_range_random(
   // loop and map
   while ( start < end ) {
     // get physical page
-    uint64_t phys = phys_find_free_page( PAGE_SIZE );
+    uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
     // handle error
     if (
       // handle physical error
@@ -481,13 +510,13 @@ bool virt_map_address_range_random(
 }
 
 /**
- * @fn uintptr_t virt_get_context_min_address(virt_context_ptr_t)
+ * @fn uintptr_t virt_get_context_min_address(virt_context_t*)
  * @brief Get context min address
  *
  * @param ctx
  * @return
  */
-uintptr_t virt_get_context_min_address( virt_context_ptr_t ctx ) {
+uintptr_t virt_get_context_min_address( virt_context_t* ctx ) {
   if ( ctx->type == VIRT_CONTEXT_TYPE_KERNEL ) {
     return KERNEL_AREA_START;
   } else if ( ctx->type == VIRT_CONTEXT_TYPE_USER ) {
@@ -498,13 +527,13 @@ uintptr_t virt_get_context_min_address( virt_context_ptr_t ctx ) {
 }
 
 /**
- * @fn uintptr_t virt_get_context_max_address(virt_context_ptr_t)
+ * @fn uintptr_t virt_get_context_max_address(virt_context_t*)
  * @brief Get context max address
  *
  * @param ctx
  * @return
  */
-uintptr_t virt_get_context_max_address( virt_context_ptr_t ctx ) {
+uintptr_t virt_get_context_max_address( virt_context_t* ctx ) {
   if ( ctx->type == VIRT_CONTEXT_TYPE_KERNEL ) {
     return KERNEL_AREA_END;
   } else if ( ctx->type == VIRT_CONTEXT_TYPE_USER ) {

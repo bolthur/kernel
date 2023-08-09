@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,12 +20,13 @@
 #include <errno.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
-#include "file/handle.h"
-#include "vfs.h"
 #include "rpc.h"
 #include "ioctl/handler.h"
+#include "mountpoint/node.h"
+#include "handler/node.h"
+#include "../../../library/handle/process.h"
 
-pid_t pid = 0;
+pid_t vfs_pid = 0;
 
 /**
  * @brief main entry function
@@ -44,82 +45,42 @@ int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "vfs processing!\r\n" )
   // cache current pid
   EARLY_STARTUP_PRINT( "fetching pid!\r\n" )
-  pid = getpid();
-  // setup handle tree and vfs
+  vfs_pid = getpid();
+  // setup mountpoint handling
+  EARLY_STARTUP_PRINT( "Setting up mountpoint handling!\r\n" )
+  if ( ! mountpoint_node_setup() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup mountpoint node handling!\r\n" )
+    return -1;
+  }
+  // setup handler handling
+  if ( ! handler_node_setup() ) {
+    EARLY_STARTUP_PRINT( "Unable to setup handler node handling!\r\n" )
+    return -1;
+  }
+  // setup handle management
   EARLY_STARTUP_PRINT( "initializing!\r\n" )
-  if ( ! handle_init() ) {
+  if ( ! process_setup() ) {
     EARLY_STARTUP_PRINT( "Unable to setup handle structures!\r\n" )
     return -1;
   }
+  // setup ioctl management
   if ( ! ioctl_handler_init() ) {
     EARLY_STARTUP_PRINT( "Unable to setup ioctl handler structures!\r\n" )
     return -1;
   }
-  if ( ! vfs_setup( pid ) ) {
-    EARLY_STARTUP_PRINT( "Unable to setup vfs structures!\r\n" )
-    return -1;
-  }
-
   // register rpc handler
-  bolthur_rpc_bind( RPC_VFS_ADD, rpc_handle_add );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+  if ( ! rpc_init() ) {
+    EARLY_STARTUP_PRINT( "Unable to bind rpc handler!\r\n" )
     return -1;
   }
-  bolthur_rpc_bind( RPC_VFS_REMOVE, rpc_handle_remove );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+  // register vfs itself to /vfs
+  if ( ! mountpoint_node_add( ":/vfs", getpid(), NULL ) ) {
+    EARLY_STARTUP_PRINT( "Unable to register vfs itself!\r\n" )
     return -1;
   }
-  bolthur_rpc_bind( RPC_VFS_OPEN, rpc_handle_open );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler open!\r\n" )
-    return -1;
-  }
-  bolthur_rpc_bind( RPC_VFS_CLOSE, rpc_handle_close );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler close!\r\n" )
-    return -1;
-  }
-  bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
-    return -1;
-  }
-  bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
-    return -1;
-  }
-  bolthur_rpc_bind( RPC_VFS_SEEK, rpc_handle_seek );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler seek!\r\n" )
-    return -1;
-  }
-  bolthur_rpc_bind( RPC_VFS_STAT, rpc_handle_stat );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
-    return -1;
-  }
-  bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_handle_ioctl );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler ioctl!\r\n" )
-    return -1;
-  }
-  bolthur_rpc_bind( RPC_VFS_FORK, rpc_handle_fork );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler fork!\r\n" )
-    return -1;
-  }
-  bolthur_rpc_bind( RPC_VFS_EXIT, rpc_handle_exit );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler exit!\r\n" )
-    return -1;
-  }
-
   EARLY_STARTUP_PRINT( "entering wait for rpc loop!\r\n" )
   // enable rpc and wait
-  _rpc_set_ready( true );
+  _syscall_rpc_set_ready( true );
   bolthur_rpc_wait_block();
   // return exit code 0
   return 0;

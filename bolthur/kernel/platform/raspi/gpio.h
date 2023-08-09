@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,13 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _PLATFORM_RASPI_GPIO_H )
+#ifndef _PLATFORM_RASPI_GPIO_H
 #define _PLATFORM_RASPI_GPIO_H
-
-#if defined( BCM2836 ) || defined( BCM2837 )
-  #define CORE0_TIMER_IRQCNTL 0x40
-  #define CORE0_IRQ_SOURCE 0x60
-#endif
 
 enum {
   GPIO_BASE = 0x00200000,

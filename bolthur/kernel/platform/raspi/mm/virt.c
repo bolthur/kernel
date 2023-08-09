@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,7 @@
 
 #include <stddef.h>
 #include "../../../lib/assert.h"
+#include "../../../lib/inttypes.h"
 #if defined( PRINT_MM_VIRT )
   #include "../../../debug/debug.h"
 #endif
@@ -37,7 +38,7 @@
 /**
  * @brief Method to setup short descriptor paging
  */
-void __bootstrap virt_startup_platform_setup( void ) {
+__bootstrap void virt_startup_platform_setup( void ) {
   // cpu local peripherals
   #if defined( BCM2836 ) || defined( BCM2837 )
     uintptr_t cpu_peripheral_base = 0x40000000;
@@ -81,9 +82,9 @@ void virt_platform_init( void ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "Map peripherals %p - %p\r\n",
-      ( void* )peripheral_base_get( PERIPHERAL_GPIO ),
-      ( void* )peripheral_end_get( PERIPHERAL_GPIO )
+      "Map peripherals %#"PRIxPTR" - %#"PRIxPTR"\r\n",
+      peripheral_base_get( PERIPHERAL_GPIO ),
+      peripheral_end_get( PERIPHERAL_GPIO )
     )
   #endif
 
@@ -111,9 +112,10 @@ void virt_platform_init( void ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "Map local peripherals %p - %p\r\n",
-        ( void* )peripheral_base_get( PERIPHERAL_LOCAL ),
-        ( void* )peripheral_end_get( PERIPHERAL_LOCAL ) )
+        "Map local peripherals %#"PRIxPTR" - %#"PRIxPTR"\r\n",
+        peripheral_base_get( PERIPHERAL_LOCAL ),
+        peripheral_end_get( PERIPHERAL_LOCAL )
+      )
     #endif
 
     // set start and virtual
@@ -158,11 +160,17 @@ void virt_platform_post_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "Set new gpio peripheral base to %p\r\n",
-      ( void* )GPIO_PERIPHERAL_BASE )
-    DEBUG_OUTPUT( "Set new cpu peripheral base to %p\r\n",
-      ( void* )CPU_PERIPHERAL_BASE )
-    DEBUG_OUTPUT( "Set mailbox property buffer to %p\r\n",
-      ( void* )MAILBOX_PROPERTY_AREA )
+    DEBUG_OUTPUT(
+      "Set new gpio peripheral base to %#"PRIxPTR"\r\n",
+      ( uintptr_t )GPIO_PERIPHERAL_BASE
+    )
+    DEBUG_OUTPUT(
+      "Set new cpu peripheral base to %#"PRIxPTR"\r\n",
+      ( uintptr_t )CPU_PERIPHERAL_BASE
+    )
+    DEBUG_OUTPUT(
+      "Set mailbox property buffer to %#"PRIxPTR"\r\n",
+      ( uintptr_t )MAILBOX_PROPERTY_AREA
+    )
   #endif
 }

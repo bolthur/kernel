@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,7 @@
 
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
+#include "../lib/inttypes.h"
 #if defined( PRINT_PROCESS )
   #include "../debug/debug.h"
 #endif
@@ -28,10 +29,10 @@
 /**
  * @brief Stack management structure
  */
-task_stack_manager_ptr_t task_stack_manager = NULL;
+task_stack_manager_t* task_stack_manager = NULL;
 
 /**
- * @fn int32_t task_stack_callback(const avl_node_ptr_t, const avl_node_ptr_t)
+ * @fn int32_t task_stack_callback(const avl_node_t*, const avl_node_t*)
  * @brief Compare stack callback necessary for avl tree
  *
  * @param a
@@ -39,13 +40,13 @@ task_stack_manager_ptr_t task_stack_manager = NULL;
  * @return
  */
 static int32_t task_stack_callback(
-  const avl_node_ptr_t a,
-  const avl_node_ptr_t b
+  const avl_node_t* a,
+  const avl_node_t* b
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
-    DEBUG_OUTPUT( "a->data = %p, b->data = %p\r\n", a->data, b->data );
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
+    DEBUG_OUTPUT( "a->data = %p, b->data = %p\r\n", a->data, b->data )
   #endif
 
   // -1 if address of a->data is greater than address of b->data
@@ -61,17 +62,17 @@ static int32_t task_stack_callback(
 }
 
 /**
- * @fn void task_stack_cleanup(const avl_node_ptr_t)
+ * @fn void task_stack_cleanup(avl_node_t*)
  * @brief Cleanup helper
  *
  * @param a
  */
-static void task_stack_cleanup( const avl_node_ptr_t a ) {
+static void task_stack_cleanup( avl_node_t* a ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Cleanup a = %p\r\n", ( void* )a );
+    DEBUG_OUTPUT( "Cleanup a = %p\r\n", a )
   #endif
-  free( a );
+  free( ( void* )a );
 }
 
 /**
@@ -79,7 +80,7 @@ static void task_stack_cleanup( const avl_node_ptr_t a ) {
  *
  * @param manager
  */
-void task_stack_manager_destroy( task_stack_manager_ptr_t manager ) {
+void task_stack_manager_destroy( task_stack_manager_t* manager ) {
   // handle invalid
   if ( ! manager ) {
     return;
@@ -95,18 +96,17 @@ void task_stack_manager_destroy( task_stack_manager_ptr_t manager ) {
 /**
  * @brief Create stack manager
  *
- * @return task_stack_manager_ptr_t
+ * @return task_stack_manager_t*
  */
-task_stack_manager_ptr_t task_stack_manager_create( void ) {
-  // allocate manager
-  task_stack_manager_ptr_t manager = ( task_stack_manager_ptr_t )malloc(
-    sizeof( task_stack_manager_t ) );
-  // check allocation
+task_stack_manager_t* task_stack_manager_create( void ) {
+  // reserve memory for manager
+  task_stack_manager_t* manager = malloc( sizeof( *manager ) );
+  // check
   if ( ! manager ) {
     return NULL;
   }
   // prepare
-  memset( ( void* )manager, 0, sizeof( task_stack_manager_t ) );
+  memset( ( void* )manager, 0, sizeof( *manager ) );
   // create tree
   manager->tree = avl_create_tree(
     task_stack_callback,
@@ -131,14 +131,14 @@ task_stack_manager_ptr_t task_stack_manager_create( void ) {
  */
 bool task_stack_manager_add(
   uintptr_t stack,
-  task_stack_manager_ptr_t manager
+  task_stack_manager_t* manager
 ) {
   // check manager
   if ( ! manager ) {
     return false;
   }
   // create node
-  avl_node_ptr_t node = avl_create_node( ( void* )stack );
+  avl_node_t* node = avl_create_node( ( void* )stack );
   // handle error
   if ( ! node ) {
     return false;
@@ -157,14 +157,14 @@ bool task_stack_manager_add(
  */
 bool task_stack_manager_remove(
   uintptr_t stack,
-  task_stack_manager_ptr_t manager
+  task_stack_manager_t* manager
 ) {
   // check manager
   if ( ! manager ) {
     return false;
   }
   // try to get node
-  avl_node_ptr_t node = avl_find_by_data( manager->tree, ( void* )stack );
+  avl_node_t* node = avl_find_by_data( manager->tree, ( void* )stack );
   // handle not found
   if ( ! node ) {
     return true;

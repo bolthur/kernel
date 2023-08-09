@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,6 +18,8 @@
  */
 
 #include <stddef.h>
+#include <stdalign.h>
+#include "../../../../lib/inttypes.h"
 #include "../../../../lib/stdlib.h"
 #include "../../../../lib/string.h"
 #include "../../../../panic.h"
@@ -40,29 +42,38 @@
  * @param entry entry point of the thread
  * @param process thread process
  * @param priority thread priority
- * @return task_thread_ptr_t pointer to thread structure
+ * @return task_thread_t* pointer to thread structure
  */
-task_thread_ptr_t task_thread_create(
+task_thread_t* task_thread_create(
   uintptr_t entry,
-  task_process_ptr_t process,
+  task_process_t* process,
   size_t priority
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
-      "task_thread_create( %p, %p, %zu ) called\r\n",
-      ( void* )entry, ( void* )process, priority )
+      "task_thread_create( %#"PRIxPTR", %p, %zu ) called\r\n",
+      entry,
+      process,
+      priority
+    )
   #endif
 
   // create stack
-  uint64_t stack_physical = phys_find_free_page_range( STACK_SIZE, STACK_SIZE );
+  uint64_t stack_physical = phys_find_free_page_range(
+    STACK_SIZE,
+    STACK_SIZE,
+    PHYS_MEMORY_TYPE_NORMAL
+  );
   // handle error
   if ( 0 == stack_physical ) {
     return NULL;
   }
 
   // get next stack address for user area
-  uintptr_t stack_virtual = task_stack_manager_next( process->thread_stack_manager );
+  uintptr_t stack_virtual = task_stack_manager_next(
+    process->thread_stack_manager
+  );
   // handle error
   if ( 0 == stack_virtual ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
@@ -70,22 +81,21 @@ task_thread_ptr_t task_thread_create(
   }
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "stack_virtual = %p\r\n", ( void* )stack_virtual )
+    DEBUG_OUTPUT( "stack_virtual = %#"PRIxPTR"\r\n", stack_virtual )
   #endif
 
   // create thread structure
-  task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
-    sizeof( task_thread_t ) );
-  // check allocation
+  task_thread_t* thread = malloc( sizeof( *thread ) );
+  // check
   if ( ! thread ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
     return NULL;
   }
   // prepare
-  memset( ( void* )thread, 0, sizeof( task_thread_t ) );
+  memset( thread, 0, sizeof( task_thread_t ) );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Allocated thread structure at %p\r\n", ( void* )thread )
+    DEBUG_OUTPUT( "Reserved space for thread structure at %p\r\n", thread )
   #endif
 
   // create context
@@ -98,8 +108,8 @@ task_thread_ptr_t task_thread_create(
   }
 
   // cache locally
-  cpu_register_context_ptr_t current_context =
-    ( cpu_register_context_ptr_t )thread->current_context;
+  cpu_register_context_t* current_context =
+    ( cpu_register_context_t* )thread->current_context;
   // prepare area
   memset( ( void* )current_context, 0, sizeof( cpu_register_context_t ) );
   // set content
@@ -112,7 +122,14 @@ task_thread_ptr_t task_thread_create(
     current_context->reg.spsr |= CPSR_THUMB;
   }
   // set stack pointer
-  current_context->reg.sp = stack_virtual + STACK_SIZE - sizeof( int );
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT(
+      "%#"PRIxPTR" / %#"PRIxPTR"\r\n",
+      ( uintptr_t )( stack_virtual + STACK_SIZE - sizeof( int ) ),
+      ( uintptr_t )( stack_virtual + STACK_SIZE - alignof( max_align_t ) )
+    )
+  #endif
+  current_context->reg.sp = stack_virtual + STACK_SIZE - alignof( max_align_t );
   // push back current value of fpu
   #if defined( ARM_CPU_HAS_NEON )
     __asm__ __volatile__(
@@ -139,26 +156,43 @@ task_thread_ptr_t task_thread_create(
   memset( ( void* )tmp_virtual_user, 0, STACK_SIZE );
   // unmap again
   virt_unmap_temporary( tmp_virtual_user, STACK_SIZE );
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "stack_virtual = %#"PRIxPTR"\r\n", stack_virtual )
+    DEBUG_OUTPUT( "stack_physical = %#"PRIx64"\r\n", stack_physical )
+  #endif
   // create node for stack address management tree
-  if ( ! task_stack_manager_add( stack_virtual, process->thread_stack_manager ) ) {
+  if ( ! task_stack_manager_add(
+    stack_virtual,
+    process->thread_stack_manager
+  ) ) {
     phys_free_page_range( stack_physical, STACK_SIZE );
     free( thread->current_context );
     free( thread );
     return NULL;
   }
-  // map allocated stack
-  if ( ! virt_map_address(
-    process->virtual_context,
-    stack_virtual,
-    stack_physical,
-    VIRT_MEMORY_TYPE_NORMAL,
-    VIRT_PAGE_TYPE_EXECUTABLE
-  ) ) {
-    task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
-    phys_free_page_range( stack_physical, STACK_SIZE );
-    free( thread->current_context );
-    free( thread );
-    return NULL;
+  for(
+    uintptr_t stack_current = 0;
+    stack_current < STACK_SIZE;
+    stack_current += PAGE_SIZE
+  ) {
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "stack_virtual + stack_current = %#"PRIxPTR"\r\n", stack_virtual + PAGE_SIZE )
+      DEBUG_OUTPUT( "stack_physical + stack_current = %#"PRIx64"\r\n", stack_physical + PAGE_SIZE )
+    #endif
+    // map stack
+    if ( ! virt_map_address(
+      process->virtual_context,
+      stack_virtual + stack_current,
+      stack_physical + stack_current,
+      VIRT_MEMORY_TYPE_NORMAL,
+      VIRT_PAGE_TYPE_EXECUTABLE
+    ) ) {
+      task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
+      phys_free_page_range( stack_physical, STACK_SIZE );
+      free( thread->current_context );
+      free( thread );
+      return NULL;
+    }
   }
 
   // populate thread data
@@ -169,7 +203,7 @@ task_thread_ptr_t task_thread_create(
   thread->process = process;
   thread->stack_physical = stack_physical;
   thread->stack_virtual = stack_virtual;
-  thread->stack_size = PAGE_SIZE;
+  thread->stack_size = STACK_SIZE;
   // prepare node
   avl_prepare_node( &thread->node_id, ( void* )thread->id );
   // add to tree
@@ -182,12 +216,12 @@ task_thread_ptr_t task_thread_create(
   }
 
   // get thread queue by priority
-  task_priority_queue_ptr_t queue = task_queue_get_queue(
+  task_priority_queue_t* queue = task_queue_get_queue(
     process_manager, priority );
   if (
     ! queue
     // add thread to thread list for switching
-    || ! list_push_back( queue->thread_list, thread )
+    || ! list_push_back_data( queue->thread_list, thread )
   ) {
     avl_remove_by_node( process->thread_manager, &thread->node_id );
     task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
@@ -202,19 +236,18 @@ task_thread_ptr_t task_thread_create(
 }
 
 /**
- * @fn task_thread_ptr_t task_thread_fork(task_process_ptr_t, task_thread_ptr_t)
+ * @fn task_thread_t* task_thread_fork(task_process_t*, task_thread_t*)
  * @brief Create a copy of a thread of a process
  * @param forked_process process where thread shall be pushed into
  * @param thread_to_fork thread to be forked
  * @return new thread structure or null
  */
-task_thread_ptr_t task_thread_fork(
-  task_process_ptr_t forked_process,
-  task_thread_ptr_t thread_to_fork
+task_thread_t* task_thread_fork(
+  task_process_t* forked_process,
+  task_thread_t* thread_to_fork
 ) {
-  // allocate new management structure
-  task_thread_ptr_t thread = ( task_thread_ptr_t )malloc(
-    sizeof( task_thread_t ) );
+  // reserve space for new management structure
+  task_thread_t* thread = malloc( sizeof( *thread ) );
   // handle error
   if ( ! thread ) {
     return NULL;
@@ -222,7 +255,7 @@ task_thread_ptr_t task_thread_fork(
   // erase memory
   memset( thread, 0, sizeof( task_thread_t ) );
 
-  // allocate context
+  // reserve space for context
   thread->current_context = malloc( sizeof( cpu_register_context_t ) );
   // handle error
   if ( ! thread->current_context ) {
@@ -285,14 +318,14 @@ task_thread_ptr_t task_thread_fork(
     return NULL;
   }
   // get thread queue by priority
-  task_priority_queue_ptr_t queue = task_queue_get_queue(
+  task_priority_queue_t* queue = task_queue_get_queue(
     process_manager,
     thread->priority
   );
   if (
     ! queue
     // add thread to thread list for switching
-    || ! list_push_back( queue->thread_list, thread )
+    || ! list_push_back_data( queue->thread_list, thread )
   ) {
     task_stack_manager_remove(
       thread->stack_virtual,
@@ -309,7 +342,7 @@ task_thread_ptr_t task_thread_fork(
 
 
 /**
- * @fn bool task_thread_push_arguments(task_thread_ptr_t, char**)
+ * @fn bool task_thread_push_arguments(task_thread_t*, char**)
  * @brief Small helper to push parameter list for thread to stack
  *
  * @param thread
@@ -317,7 +350,7 @@ task_thread_ptr_t task_thread_fork(
  * @return
  */
 bool task_thread_push_arguments(
-  task_thread_ptr_t thread,
+  task_thread_t* thread,
   char** parameter,
   char** environment
 ) {
@@ -340,15 +373,18 @@ bool task_thread_push_arguments(
     #endif
     total_size += strlen( environment[ env_count ] ) + 1;
     // increment count
-      env_count++;
+    env_count++;
   }
   // add argv and env array size
   total_size += sizeof( char* ) * entry_count + sizeof( char* ) * env_count;
   // NULL termination for argv and env
   total_size += sizeof( char* ) * 2;
   // add space for parameters argc, argv and env
-  total_size += sizeof( int ) + sizeof( char** ) + sizeof( char** );
+  total_size += alignof( max_align_t ) + sizeof( char** ) + sizeof( char** );
 
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "%"PRIx64" | %#x\r\n", thread->stack_physical, STACK_SIZE)
+  #endif
   // map stack temporarily
   uintptr_t stack_tmp = virt_map_temporary(
     thread->stack_physical,
@@ -358,8 +394,8 @@ bool task_thread_push_arguments(
     return false;
   }
   // get stack offset
-  cpu_register_context_ptr_t cpu =
-    ( cpu_register_context_ptr_t )thread->current_context;
+  cpu_register_context_t* cpu =
+    ( cpu_register_context_t* )thread->current_context;
   size_t offset = cpu->reg.sp - thread->stack_virtual;
   // debug output
   #if defined( PRINT_PROCESS )
@@ -429,12 +465,14 @@ bool task_thread_push_arguments(
   virt_unmap_temporary( stack_tmp, STACK_SIZE );
   // debug output
   #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "cpu->reg.sp = %#"PRIx32"\r\n", cpu->reg.sp )
     DUMP_REGISTER( cpu )
   #endif
   // adjust thread stack pointer register
   cpu->reg.sp = thread->stack_virtual + offset;
   // debug output
   #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "cpu->reg.sp = %#"PRIx32"\r\n", cpu->reg.sp )
     DUMP_REGISTER( cpu )
   #endif
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -29,33 +29,25 @@
 #define CONSOLE_ADD RPC_CUSTOM_START
 #define CONSOLE_SELECT CONSOLE_ADD + 1
 
-struct console_command_add {
+typedef struct console_command_add {
   char terminal[ PATH_MAX ];
   size_t in;
   size_t out;
   size_t err;
   pid_t origin;
-};
-typedef struct console_command_add console_command_add_t;
-typedef struct console_command_add* console_command_add_ptr_t;
+} console_command_add_t;
 
-struct console_command_remove {
+typedef struct {
   char path[ PATH_MAX ];
-};
-typedef struct console_command_remove console_command_remove_t;
-typedef struct console_command_remove* console_command_remove_ptr_t;
+} console_command_remove_t;
 
-struct console_command_select {
+typedef struct {
   char path[ PATH_MAX ];
-};
-typedef struct console_command_select console_command_select_t;
-typedef struct console_command_select* console_command_select_ptr_t;
+} console_command_select_t;
 
-struct console_command_change {
+typedef struct {
   char terminal_path[ PATH_MAX ];
   char destination_path[ PATH_MAX ];
-};
-typedef struct console_command_change console_command_change_t;
-typedef struct console_command_change* console_command_change_ptr_t;
+} console_command_change_t;
 
 #endif

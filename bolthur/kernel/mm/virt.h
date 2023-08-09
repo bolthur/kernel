@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,8 +21,12 @@
 #include <stdbool.h>
 #include <stddef.h>
 
-#if ! defined( _MM_VIRT_H )
+#ifndef _MM_VIRT_H
 #define _MM_VIRT_H
+
+#define VIRT_PAGE_PER_ENTRY ( sizeof( uint32_t ) * CHAR_BIT )
+#define VIRT_PAGE_INDEX( address, min ) ( ( address - min ) / PAGE_PER_ENTRY )
+#define VIRT_PAGE_OFFSET( address, min ) ( ( address - min ) % PAGE_PER_ENTRY )
 
 typedef enum {
   VIRT_MEMORY_TYPE_DEVICE,
@@ -42,17 +46,16 @@ typedef enum {
   VIRT_CONTEXT_TYPE_USER,
 } virt_context_type_t;
 
-struct virt_context {
+typedef struct {
   uint64_t context;
   virt_context_type_t type;
-};
-
-typedef struct virt_context virt_context_t;
-typedef struct virt_context *virt_context_ptr_t;
+  uint32_t* bitmap;
+  uint32_t bitmap_length;
+} virt_context_t;
 
 extern bool virt_use_physical_table;
-extern virt_context_ptr_t virt_current_user_context;
-extern virt_context_ptr_t virt_current_kernel_context;
+extern virt_context_t* virt_current_user_context;
+extern virt_context_t* virt_current_kernel_context;
 
 void virt_startup_setup( void );
 void virt_startup_platform_setup( void );
@@ -66,33 +69,33 @@ void virt_arch_prepare( void );
 bool virt_init_get( void );
 void virt_platform_post_init( void );
 
-virt_context_ptr_t virt_create_context( virt_context_type_t );
-bool virt_destroy_context( virt_context_ptr_t, bool );
-virt_context_ptr_t virt_fork_context( virt_context_ptr_t );
-uint64_t virt_create_table( virt_context_ptr_t, uintptr_t, uint64_t );
+virt_context_t* virt_create_context( virt_context_type_t );
+bool virt_destroy_context( virt_context_t*, bool );
+virt_context_t* virt_fork_context( virt_context_t* );
+uint64_t virt_create_table( virt_context_t*, uintptr_t, uint64_t );
 
-bool virt_map_address( virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
-bool virt_map_address_random( virt_context_ptr_t, uintptr_t, virt_memory_type_t, uint32_t );
-bool virt_map_address_range( virt_context_ptr_t, uintptr_t, uint64_t, size_t, virt_memory_type_t, uint32_t );
-bool virt_map_address_range_random( virt_context_ptr_t, uintptr_t, size_t, virt_memory_type_t, uint32_t );
+bool virt_map_address( virt_context_t*, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );
+bool virt_map_address_random( virt_context_t*, uintptr_t, virt_memory_type_t, uint32_t );
+bool virt_map_address_range( virt_context_t*, uintptr_t, uint64_t, size_t, virt_memory_type_t, uint32_t );
+bool virt_map_address_range_random( virt_context_t*, uintptr_t, size_t, virt_memory_type_t, uint32_t );
 uintptr_t virt_map_temporary( uint64_t, size_t );
-uint64_t virt_get_mapped_address_in_context( virt_context_ptr_t, uintptr_t );
+uint64_t virt_get_mapped_address_in_context( virt_context_t*, uintptr_t );
 
-bool virt_unmap_address( virt_context_ptr_t, uintptr_t, bool );
-bool virt_unmap_address_range( virt_context_ptr_t, uintptr_t, size_t, bool );
+bool virt_unmap_address( virt_context_t*, uintptr_t, bool );
+bool virt_unmap_address_range( virt_context_t*, uintptr_t, size_t, bool );
 void virt_unmap_temporary( uintptr_t, size_t );
 
-uintptr_t virt_find_free_page_range( virt_context_ptr_t, size_t, uintptr_t );
-uintptr_t virt_get_context_min_address( virt_context_ptr_t );
-uintptr_t virt_get_context_max_address( virt_context_ptr_t );
+uintptr_t virt_find_free_page_range( virt_context_t*, size_t, uintptr_t );
+uintptr_t virt_get_context_min_address( virt_context_t* );
+uintptr_t virt_get_context_max_address( virt_context_t* );
 uint32_t virt_get_supported_modes( void );
-bool virt_set_context( virt_context_ptr_t );
+bool virt_set_context( virt_context_t* );
 void virt_flush_complete( void );
-void virt_flush_address( virt_context_ptr_t, uintptr_t );
-bool virt_prepare_temporary( virt_context_ptr_t );
+void virt_flush_address( virt_context_t*, uintptr_t );
+bool virt_prepare_temporary( virt_context_t* );
 
-bool virt_is_mapped_in_context_range( virt_context_ptr_t, uintptr_t, size_t );
-bool virt_is_mapped_in_context( virt_context_ptr_t, uintptr_t );
+bool virt_is_mapped_in_context_range( virt_context_t*, uintptr_t, size_t );
+bool virt_is_mapped_in_context( virt_context_t*, uintptr_t );
 bool virt_is_mapped_range( uintptr_t, size_t );
 bool virt_is_mapped( uintptr_t );
 

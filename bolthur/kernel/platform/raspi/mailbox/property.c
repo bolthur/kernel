@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,10 +18,10 @@
  */
 
 #include <stdarg.h>
-
 #include "../../../lib/assert.h"
 #include "../../../lib/string.h"
 #include "../../../lib/stdlib.h"
+#include "../../../lib/inttypes.h"
 #if defined( PRINT_MAILBOX )
   #include "../../../debug/debug.h"
 #endif
@@ -52,7 +52,7 @@ volatile int32_t* ptb_buffer_phys = NULL;
 void mailbox_property_init( void ) {
   // reserve memory if not yet done
   if ( ! ptb_buffer ) {
-    ptb_buffer = ( int32_t* )aligned_alloc( PAGE_SIZE, PAGE_SIZE );
+    ptb_buffer = aligned_alloc( PAGE_SIZE, PAGE_SIZE );
     assert( ptb_buffer )
     ptb_buffer_phys = ( int32_t* )VIRT_2_PHYS( ptb_buffer );
   }
@@ -74,8 +74,6 @@ void mailbox_property_init( void ) {
  *
  * @param tag Tag to add
  * @param ... Further data depending on tag to be added
- *
- * @todo check and complete
  */
 void mailbox_property_add_tag( raspi_mailbox_tag_t tag, ... ) {
   va_list vl;
@@ -262,9 +260,10 @@ uint32_t mailbox_property_process( void ) {
 
   // debug output
   #if defined( PRINT_MAILBOX )
-    DEBUG_OUTPUT( "Length = %d\r\n", ptb_buffer[ PT_OSIZE ] );
+    DEBUG_OUTPUT( "Length = %"PRId32"\r\n", ptb_buffer[ PT_OSIZE ] )
     for ( int32_t i = 0; i < ( ptb_buffer[ PT_OSIZE ] >> 2 ); i++ ) {
-      DEBUG_OUTPUT( "Request = %3d %08x\r\n", i, ptb_buffer[ i ] );
+      DEBUG_OUTPUT( "Request = %3"PRId32" %"PRIx32"\r\n",
+        i, ( uint32_t )ptb_buffer[ i ] )
     }
   #endif
 
@@ -280,7 +279,11 @@ uint32_t mailbox_property_process( void ) {
   // debug output
   #if defined( PRINT_MAILBOX )
     for ( int32_t i = 0; i < ( ptb_buffer[ PT_OSIZE ] >> 2 ); i++ ) {
-      DEBUG_OUTPUT( "Response = %3d %08x\r\n", i, ptb_buffer[ i ] );
+      DEBUG_OUTPUT(
+        "Response = %3"PRId32" %"PRIx32"\r\n",
+        i,
+        ( uint32_t )ptb_buffer[ i ]
+      )
     }
   #endif
 
@@ -307,7 +310,8 @@ raspi_mailbox_property_t* mailbox_property_get( raspi_mailbox_tag_t tag ) {
   while ( index < size ) {
     // debug output
     #if defined( PRINT_MAILBOX )
-      DEBUG_OUTPUT( "testing tag[ %d ] = %08x\r\n", index, ptb_buffer[ index ] );
+      DEBUG_OUTPUT( "testing tag[ %"PRId32" ] = %"PRIx32"\r\n",
+        index, ( uint32_t )ptb_buffer[ index ] )
     #endif
 
     // test tag

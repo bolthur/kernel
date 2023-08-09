@@ -25,11 +25,16 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-Wmissing-noreturn -Wmissing-format-attribute])
   AX_APPEND_COMPILE_FLAGS([-Wduplicated-branches -Wduplicated-cond])
   AX_APPEND_COMPILE_FLAGS([-Wformat=2 -Wformat-overflow=2 -Wformat-truncation=2])
+  AX_APPEND_COMPILE_FLAGS([-Wsuggest-attribute=pure -Wsuggest-attribute=const])
+  AX_APPEND_COMPILE_FLAGS([-Wsuggest-attribute=noreturn])
+  AX_APPEND_COMPILE_FLAGS([-Wsuggest-attribute=malloc])
+  AX_APPEND_COMPILE_FLAGS([-Wsuggest-attribute=format -Wsuggest-attribute=cold])
   # generic
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -nodefaultlibs -std=c18])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer -fno-builtin])
   AX_APPEND_COMPILE_FLAGS([-ffreestanding -fno-common])
-  # FIXME: add compile flag "-fanalyzer" and check and fix warnings
+  # FIXME: FIND A WAY TO ADD -Wanalyzer-too-complex
+  AX_APPEND_COMPILE_FLAGS([-fanalyzer])
 
   # custom optimization level
   AS_IF([test "x$enable_release" != "xyes"], [
@@ -59,7 +64,9 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
         AX_APPEND_COMPILE_FLAGS([-Og])
         ;;
       *)
-        AX_APPEND_COMPILE_FLAGS([-O2])
+        AS_IF([test "x$with_debug_symbols" != "xyes"], [
+          AX_APPEND_COMPILE_FLAGS([-O2])
+        ] )
         ;;
     esac
   ])
@@ -98,6 +105,8 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
   # generic
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c18])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
+  # FIXME: FIND A WAY TO ADD -Wanalyzer-too-complex
+  AX_APPEND_COMPILE_FLAGS([-fanalyzer])
 
   # third party stuff
   AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}])
@@ -139,13 +148,15 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
         AX_APPEND_COMPILE_FLAGS([-Og])
         ;;
       *)
-        AX_APPEND_COMPILE_FLAGS([-O2])
+        AS_IF([test "x$with_debug_symbols" != "xyes"], [
+          AX_APPEND_COMPILE_FLAGS([-O2])
+        ] )
         ;;
     esac
   ])
 ])
 
-AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
+AC_DEFUN([BOLTHUR_APPLICATION_SET_FLAG], [
   # add symbol strip and garbage sections for release
   AS_IF([test "x$enable_release" == "xyes"], [
     AX_APPEND_COMPILE_FLAGS([-O3 -ffunction-sections -fdata-sections])
@@ -169,8 +180,8 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
 
   # third party stuff
-  AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}/include])
-  AX_APPEND_COMPILE_FLAGS([-imacros\ $($BOLTHUR_READLINK -f ${srcdir})/include/core/config.h])
+  AX_APPEND_COMPILE_FLAGS([-I${ac_pwd}])
+  AX_APPEND_COMPILE_FLAGS([-imacros\ $($BOLTHUR_READLINK -f ${srcdir})/config.h])
   # FIXME: NECESSARY BECAUSE OF NEWLIB
   AC_DEFINE_UNQUOTED([_GNU_SOURCE], [1], [Necessary newlib define])
   #AC_DEFINE_UNQUOTED([_FORTIFY_SOURCE], [2], [Necessary newlib define])
@@ -208,7 +219,9 @@ AC_DEFUN([BOLTHUR_DRIVER_SET_FLAG], [
         AX_APPEND_COMPILE_FLAGS([-Og])
         ;;
       *)
-        AX_APPEND_COMPILE_FLAGS([-O2])
+        AS_IF([test "x$with_debug_symbols" != "xyes"], [
+          AX_APPEND_COMPILE_FLAGS([-O2])
+        ] )
         ;;
     esac
   ])

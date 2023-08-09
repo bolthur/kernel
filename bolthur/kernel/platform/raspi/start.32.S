@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -167,6 +167,7 @@ reset:
 
   // initial virtual memory setup
   bl virt_startup_setup
+  // ongoing calls are higher half located
   // startup related init
   bl firmware_startup_init
   // startup related initrd init

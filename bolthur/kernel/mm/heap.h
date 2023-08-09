@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,12 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _MM_HEAP_H )
+#ifndef _MM_HEAP_H
 #define _MM_HEAP_H
 
 #include <stddef.h>
 #include <stdbool.h>
-#include "../lib/collection/avl.h"
 #include "../entry.h"
 
 #if defined( ELF32 )
@@ -40,40 +39,32 @@ typedef enum {
   HEAP_INIT_SIZE,
 } heap_init_state_t;
 
-struct heap_manager {
-  uintptr_t start;
-  size_t size;
-  heap_init_state_t state;
-  avl_tree_t free_address[ HEAP_INIT_SIZE ];
-  avl_tree_t free_size[ HEAP_INIT_SIZE ];
-  avl_tree_t used_area[ HEAP_INIT_SIZE ];
-};
-
-struct heap_block {
-  avl_node_t node_address;
-  avl_node_t node_size;
-  uintptr_t address;
-  size_t size;
-};
-
-typedef struct heap_manager heap_manager_t;
-typedef struct heap_manager *heap_manager_ptr_t;
 typedef struct heap_block heap_block_t;
-typedef struct heap_block *heap_block_ptr_t;
 
-#define HEAP_GET_BLOCK_ADDRESS( n ) \
-  ( heap_block_ptr_t )( ( uint8_t* )n - offsetof( heap_block_t, node_address ) )
-#define HEAP_GET_BLOCK_SIZE( n ) \
-  ( heap_block_ptr_t )( ( uint8_t* )n - offsetof( heap_block_t, node_size ) )
+typedef struct heap_block {
+  size_t size;
+  uintptr_t address;
+  // pointer to next and previous block
+  heap_block_t* next;
+  heap_block_t* previous;
+} heap_block_t;
 
-extern heap_manager_ptr_t kernel_heap;
+typedef struct {
+  uintptr_t start;
+  uintptr_t end;
+  heap_init_state_t state;
+  // pointers for traversing list a like
+  heap_block_t* used;
+  heap_block_t* free;
+} heap_manager_t;
 
 extern uintptr_t __initial_heap_start;
 extern uintptr_t __initial_heap_end;
 
 bool heap_init_get( void );
 void heap_init( heap_init_state_t );
-uintptr_t heap_allocate_block( size_t, size_t );
-void heap_free_block( uintptr_t );
+void* heap_allocate( size_t, size_t );
+void heap_free( void* );
+void* heap_sbrk( intptr_t );
 
 #endif

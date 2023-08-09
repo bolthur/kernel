@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -30,332 +30,76 @@
  * @return
  */
 bool syscall_init( void ) {
-  // process system calls
-  if ( ! interrupt_register_handler(
-    SYSCALL_PROCESS_EXIT,
-    syscall_process_exit,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
+  // process
+  if (
+    ! SYSCALL_BIND( SYSCALL_PROCESS_EXIT, syscall_process_exit )
+    || ! SYSCALL_BIND( SYSCALL_PROCESS_ID, syscall_process_id )
+    || ! SYSCALL_BIND( SYSCALL_PROCESS_PARENT_ID, syscall_process_parent_id )
+    || ! SYSCALL_BIND( SYSCALL_PROCESS_FORK, syscall_process_fork )
+    || ! SYSCALL_BIND( SYSCALL_PROCESS_REPLACE, syscall_process_replace )
+    || ! SYSCALL_BIND( SYSCALL_PROCESS_PARENT_BY_ID, syscall_process_parent_by_id )
+    || ! SYSCALL_BIND( SYSCALL_PROCESS_EXIST, syscall_process_exist )
+  ) {
     return false;
   }
-  if ( ! interrupt_register_handler(
-    SYSCALL_PROCESS_ID,
-    syscall_process_id,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
+  // thread
+  if (
+    ! SYSCALL_BIND( SYSCALL_THREAD_CREATE, syscall_thread_create )
+    || ! SYSCALL_BIND( SYSCALL_THREAD_EXIT, syscall_thread_exit )
+    || ! SYSCALL_BIND( SYSCALL_THREAD_ID, syscall_thread_id )
+  ) {
     return false;
   }
-  if ( ! interrupt_register_handler(
-    SYSCALL_PROCESS_PARENT_ID,
-    syscall_process_parent_id,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
+  // memory
+  if (
+    ! SYSCALL_BIND( SYSCALL_MEMORY_ACQUIRE, syscall_memory_acquire )
+    || ! SYSCALL_BIND( SYSCALL_MEMORY_RELEASE, syscall_memory_release )
+    || ! SYSCALL_BIND( SYSCALL_MEMORY_SHARED_CREATE, syscall_memory_shared_create )
+    || ! SYSCALL_BIND( SYSCALL_MEMORY_SHARED_ATTACH, syscall_memory_shared_attach )
+    || ! SYSCALL_BIND( SYSCALL_MEMORY_SHARED_DETACH, syscall_memory_shared_detach )
+    || ! SYSCALL_BIND( SYSCALL_MEMORY_SHARED_SIZE, syscall_memory_shared_size )
+    || ! SYSCALL_BIND( SYSCALL_MEMORY_TRANSLATE_PHYSICAL, syscall_memory_translate_physical )
+    || ! SYSCALL_BIND( SYSCALL_MEMORY_TRANSLATE_BUS, syscall_memory_translate_bus )
+  ) {
     return false;
   }
-  if ( ! interrupt_register_handler(
-    SYSCALL_PROCESS_FORK,
-    syscall_process_fork,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
+  // rpc
+  if (
+    ! SYSCALL_BIND( SYSCALL_RPC_SET_HANDLER, syscall_rpc_set_handler )
+    || ! SYSCALL_BIND( SYSCALL_RPC_RAISE, syscall_rpc_raise )
+    || ! SYSCALL_BIND( SYSCALL_RPC_RET, syscall_rpc_ret )
+    || ! SYSCALL_BIND( SYSCALL_RPC_GET_DATA, syscall_rpc_get_data )
+    || ! SYSCALL_BIND( SYSCALL_RPC_GET_DATA_SIZE, syscall_rpc_get_data_size )
+    || ! SYSCALL_BIND( SYSCALL_RPC_WAIT_FOR_CALL, syscall_rpc_wait_for_call )
+    || ! SYSCALL_BIND( SYSCALL_RPC_SET_READY, syscall_rpc_set_ready )
+    || ! SYSCALL_BIND( SYSCALL_RPC_END, syscall_rpc_end )
+    || ! SYSCALL_BIND( SYSCALL_RPC_WAIT_FOR_READY, syscall_rpc_wait_for_ready )
+    || ! SYSCALL_BIND( SYSCALL_RPC_CLEAR_DATA, syscall_rpc_clear_data )
+  ) {
     return false;
   }
-  if ( ! interrupt_register_handler(
-    SYSCALL_PROCESS_REPLACE,
-    syscall_process_replace,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
+  // interrupt
+  if (
+    ! SYSCALL_BIND( SYSCALL_INTERRUPT_ACQUIRE, syscall_interrupt_acquire )
+    || ! SYSCALL_BIND( SYSCALL_INTERRUPT_RELEASE, syscall_interrupt_release )
+  ) {
     return false;
   }
-  if ( ! interrupt_register_handler(
-    SYSCALL_PROCESS_PARENT_BY_ID,
-    syscall_process_parent_by_id,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  // thread related system calls
-  if ( ! interrupt_register_handler(
-    SYSCALL_THREAD_CREATE,
-    syscall_thread_create,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_THREAD_EXIT,
-    syscall_thread_exit,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_THREAD_ID,
-    syscall_thread_id,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  // memory related
-  if ( ! interrupt_register_handler(
-    SYSCALL_MEMORY_ACQUIRE,
-    syscall_memory_acquire,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MEMORY_RELEASE,
-    syscall_memory_release,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MEMORY_SHARED_CREATE,
-    syscall_memory_shared_create,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MEMORY_SHARED_ATTACH,
-    syscall_memory_shared_attach,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MEMORY_SHARED_DETACH,
-    syscall_memory_shared_detach,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_MEMORY_TRANSLATE_PHYSICAL,
-    syscall_memory_translate_physical,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  // rpc related
-  if ( ! interrupt_register_handler(
-    SYSCALL_RPC_SET_HANDLER,
-    syscall_rpc_set_handler,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_RPC_RAISE,
-    syscall_rpc_raise,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_RPC_RET,
-    syscall_rpc_ret,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_RPC_GET_DATA,
-    syscall_rpc_get_data,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_RPC_GET_DATA_SIZE,
-    syscall_rpc_get_data_size,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_RPC_WAIT_FOR_CALL,
-    syscall_rpc_wait_for_call,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_RPC_SET_READY,
-    syscall_rpc_set_ready,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_RPC_END,
-    syscall_rpc_end,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_RPC_WAIT_FOR_READY,
-    syscall_rpc_wait_for_ready,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  // interrupt related
-  if ( ! interrupt_register_handler(
-    SYSCALL_INTERRUPT_ACQUIRE,
-    syscall_interrupt_acquire,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_INTERRUPT_RELEASE,
-    syscall_interrupt_release,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  // timer related
-  if ( ! interrupt_register_handler(
-    SYSCALL_TIMER_TICK_COUNT,
-    syscall_timer_tick_count,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_TIMER_FREQUENCY,
-    syscall_timer_frequency,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_TIMER_ACQUIRE,
-    syscall_timer_acquire,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
-    return false;
-  }
-  if ( ! interrupt_register_handler(
-    SYSCALL_TIMER_RELEASE,
-    syscall_timer_release,
-    NULL,
-    INTERRUPT_SOFTWARE,
-    false,
-    false
-  ) ) {
+  // timer
+  if (
+    ! SYSCALL_BIND( SYSCALL_TIMER_TICK_COUNT, syscall_timer_tick_count )
+    || ! SYSCALL_BIND( SYSCALL_TIMER_FREQUENCY, syscall_timer_frequency )
+    || ! SYSCALL_BIND( SYSCALL_TIMER_ACQUIRE, syscall_timer_acquire )
+    || ! SYSCALL_BIND( SYSCALL_TIMER_RELEASE, syscall_timer_release )
+  ) {
     return false;
   }
   // kernel output
   #if defined( OUTPUT_ENABLE )
-    if ( ! interrupt_register_handler(
-      SYSCALL_KERNEL_PUTC,
-      syscall_kernel_putc,
-      NULL,
-      INTERRUPT_SOFTWARE,
-      false,
-      false
-    ) ) {
-      return false;
-    }
-    if ( ! interrupt_register_handler(
-      SYSCALL_KERNEL_PUTS,
-      syscall_kernel_puts,
-      NULL,
-      INTERRUPT_SOFTWARE,
-      false,
-      false
-    ) ) {
+    if (
+      ! SYSCALL_BIND( SYSCALL_KERNEL_PUTC, syscall_kernel_putc )
+      || ! SYSCALL_BIND( SYSCALL_KERNEL_PUTS, syscall_kernel_puts )
+    ) {
       return false;
     }
   #endif

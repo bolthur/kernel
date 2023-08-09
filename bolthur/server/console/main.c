@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,15 +23,14 @@
 #include "../libterminal.h"
 #include "../libhelper.h"
 #include "../libconsole.h"
-#include "handler.h"
-#include "list.h"
+#include "../../library/collection/list/list.h"
 #include "console.h"
 #include "rpc.h"
 
-list_manager_ptr_t console_list = NULL;
+list_manager_t* console_list = NULL;
 
 /**
- * @fn int32_t console_lookup(const list_item_ptr_t, const void*)
+ * @fn int32_t console_lookup(const list_item_t*, const void*)
  * @brief List lookup helper
  *
  * @param a
@@ -39,21 +38,21 @@ list_manager_ptr_t console_list = NULL;
  * @return
  */
 static int32_t console_lookup(
-  const list_item_ptr_t a,
+  const list_item_t* a,
   const void* data
 ) {
-  console_ptr_t console = a->data;
+  console_t* console = a->data;
   return strcmp( console->path, data );
 }
 
 /**
- * @fn void console_cleanup(const list_item_ptr_t)
+ * @fn void console_cleanup(list_item_t*)
  * @brief List cleanup helper
  *
  * @param a
  */
-static void console_cleanup( const list_item_ptr_t a ) {
-  console_ptr_t console = a->data;
+static void console_cleanup( list_item_t* a ) {
+  console_t* console = a->data;
   // destroy console
   console_destroy( console );
   // default cleanup
@@ -68,87 +67,47 @@ static void console_cleanup( const list_item_ptr_t a ) {
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
-  // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
-  if ( ! msg ) {
-    return -1;
-  }
-  EARLY_STARTUP_PRINT( "Bind specific vfs write request handler\r\n" )
-  // set handler
-  bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
-    return -1;
-  }
-  // FIXME: SET READ HANDLER FOR STDIN
-
-  console_list = list_construct( console_lookup, console_cleanup );
+  // create console list
+  console_list = list_construct( console_lookup, console_cleanup, NULL );
   if ( ! console_list ) {
-    free( msg );
     return -1;
   }
-  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
   // register rpc handler
-  if ( ! handler_register() ) {
-    free( msg );
+  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
+  if ( ! rpc_init() ) {
     list_destruct( console_list );
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Send stdin to vfs\r\n" )
   // stdin device
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFREG;
-  strncpy( msg->file_path, "/dev/stdin", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, 0, 0 );
-
-  EARLY_STARTUP_PRINT( "Send stdout to vfs\r\n" )
-  // stdout device
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFREG;
-  strncpy( msg->file_path, "/dev/stdout", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, 0, 0 );
-
-  EARLY_STARTUP_PRINT( "Send stderr to vfs\r\n" )
-  // stderr device
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFREG;
-  strncpy( msg->file_path, "/dev/stderr", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, 0, 0 );
-  free( msg );
-
-  EARLY_STARTUP_PRINT( "Send console device to vfs\r\n" )
-  // console device
-  // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t ) + 2 * sizeof( size_t );
-  msg = malloc( msg_size );
-  if ( ! msg ) {
+  if ( !dev_add_file( "/dev/stdin", NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
-  // clear memory
-  memset( msg, 0, msg_size );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  msg->device_info[ 0 ] = CONSOLE_ADD;
-  msg->device_info[ 1 ] = CONSOLE_SELECT;
-  strncpy( msg->file_path, "/dev/console", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
-  // free again
-  free( msg );
+  // stdout device
+  if ( !dev_add_file( "/dev/stdout", NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    return -1;
+  }
+  // stderr device
+  if ( !dev_add_file( "/dev/stderr", NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    return -1;
+  }
 
-  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
-  // enable rpc and wait
-  _rpc_set_ready( true );
+  // enable rpc
+  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  _syscall_rpc_set_ready( true );
+
+  // console device
+  uint32_t device_info[] = { CONSOLE_ADD, CONSOLE_SELECT, };
+  if ( !dev_add_file( "/dev/console", device_info, 2 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    return -1;
+  }
+
+  // wait for rpc
+  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
   // return exit code 0
   return 0;

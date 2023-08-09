@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include <errno.h>
+#include "../lib/inttypes.h"
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
 #include "backup.h"
@@ -29,38 +29,43 @@
 #endif
 
 /**
- * @fn void rpc_backup_destroy(rpc_backup_ptr_t)
+ * @fn void rpc_backup_destroy(rpc_backup_t*)
  * @brief backup to destroy
  *
  * @param backup
+ *
+ * @todo ensure that everything from backup is destroyed
  */
-void rpc_backup_destroy( rpc_backup_ptr_t backup ) {
+void rpc_backup_destroy( rpc_backup_t* backup ) {
   if ( ! backup ) {
     return;
   }
   if ( backup->context ) {
     free( backup->context );
   }
+  if ( backup->thread && backup->data_id ) {
+    rpc_data_queue_remove( backup->thread->process->id, backup->data_id );
+  }
   free( backup );
 }
 
 /**
- * @fn rpc_backup_ptr_t rpc_backup_get_active(task_thread_ptr_t)
+ * @fn rpc_backup_t* rpc_backup_get_active(task_thread_t*)
  * @brief Get active rpc backup
  *
  * @param thread
  * @return
  */
-rpc_backup_ptr_t rpc_backup_get_active( task_thread_ptr_t thread ) {
+rpc_backup_t* rpc_backup_get_active( task_thread_t* thread ) {
   // ensure proper states
   if ( TASK_THREAD_STATE_RPC_ACTIVE != thread->state ) {
     return NULL;
   }
   // variables
-  list_item_ptr_t current = thread->process->rpc_queue->first;
+  list_item_t* current = thread->process->rpc_queue->first;
   // try to get active rpc backup
   while( current ) {
-    rpc_backup_ptr_t entry = current->data;
+    rpc_backup_t* entry = current->data;
     if ( entry->active ) {
       return entry;
     }

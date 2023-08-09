@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _ARCH_ARM_V7_INTERRUPT_VECTOR_H )
+#ifndef _ARCH_ARM_V7_INTERRUPT_VECTOR_H
 #define _ARCH_ARM_V7_INTERRUPT_VECTOR_H
 
 #include "../../../../lib/assert.h"
@@ -27,11 +27,11 @@
 void interrupt_vector_table( void );
 void interrupt_ensure_kernel_stack( void );
 
-void vector_data_abort_handler( cpu_register_context_ptr_t );
-void vector_fast_interrupt_handler( cpu_register_context_ptr_t );
-void vector_interrupt_handler( cpu_register_context_ptr_t );
-void vector_prefetch_abort_handler( cpu_register_context_ptr_t );
-void vector_svc_handler( cpu_register_context_ptr_t );
-void vector_undefined_instruction_handler( cpu_register_context_ptr_t );
+void vector_data_abort_handler( cpu_register_context_t* );
+void vector_fast_interrupt_handler( cpu_register_context_t* );
+void vector_interrupt_handler( cpu_register_context_t* );
+void vector_prefetch_abort_handler( cpu_register_context_t* );
+void vector_svc_handler( cpu_register_context_t* );
+void vector_undefined_instruction_handler( cpu_register_context_t* );
 
 #endif

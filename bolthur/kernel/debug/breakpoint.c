@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -29,7 +29,7 @@
 /**
  * @brief debug breakpoint manager
  */
-list_manager_ptr_t debug_breakpoint_manager = NULL;
+list_manager_t* debug_breakpoint_manager = NULL;
 
 /**
  * @brief Setup breakpoint manager
@@ -48,20 +48,20 @@ bool debug_breakpoint_init( void ) {
  * @brief Helper to get a possible breakpoint
  *
  * @param address
- * @return debug_breakpoint_entry_ptr_t
+ * @return debug_breakpoint_entry_t*
  */
-debug_breakpoint_entry_ptr_t debug_breakpoint_find( uintptr_t address ) {
+debug_breakpoint_entry_t* debug_breakpoint_find( uintptr_t address ) {
   // handle not existing
   if ( ! debug_breakpoint_manager ) {
     return NULL;
   }
   // check for possible existence
-  list_item_ptr_t current = debug_breakpoint_manager->first;
+  list_item_t* current = debug_breakpoint_manager->first;
   // loop through list of entries
   while ( current ) {
     // get entry value
-    debug_breakpoint_entry_ptr_t entry =
-      ( debug_breakpoint_entry_ptr_t )current->data;
+    debug_breakpoint_entry_t* entry =
+      ( debug_breakpoint_entry_t* )current->data;
     // check for match
     if ( entry->address == address ) {
       return entry;
@@ -82,18 +82,18 @@ bool debug_breakpoint_remove_step( void ) {
     return false;
   }
   // variables
-  list_item_ptr_t current = debug_breakpoint_manager->first;
+  list_item_t* current = debug_breakpoint_manager->first;
 
   // loop through list of entries
   while ( current ) {
     // get entry value
-    debug_breakpoint_entry_ptr_t entry = ( debug_breakpoint_entry_ptr_t )current->data;
+    debug_breakpoint_entry_t* entry = ( debug_breakpoint_entry_t* )current->data;
     // next entry
-    list_item_ptr_t next = current->next;
+    list_item_t* next = current->next;
     // handle only stepping breakpoints
     if ( entry->step ) {
       // remove from breakpoint manager list
-      if ( ! list_remove( debug_breakpoint_manager, current ) ) {
+      if ( ! list_remove_item( debug_breakpoint_manager, current ) ) {
         return false;
       }
       // free stuff
@@ -113,7 +113,7 @@ bool debug_breakpoint_remove_step( void ) {
  */
 bool debug_breakpoint_remove( uintptr_t address, bool remove ) {
   // variables
-  debug_breakpoint_entry_ptr_t entry = debug_breakpoint_find( address );
+  debug_breakpoint_entry_t* entry = debug_breakpoint_find( address );
   // Do nothing if not existing
   if ( ! entry ) {
     return true;
@@ -123,12 +123,12 @@ bool debug_breakpoint_remove( uintptr_t address, bool remove ) {
   entry->enabled = false;
   // handle removal
   if ( remove ) {
-    list_item_ptr_t item = list_lookup_data( debug_breakpoint_manager, entry );
+    list_item_t* item = list_lookup_data( debug_breakpoint_manager, entry );
     if ( ! item ) {
       return false;
     }
     // remove from list
-    if ( ! list_remove( debug_breakpoint_manager, item ) ) {
+    if ( ! list_remove_item( debug_breakpoint_manager, item ) ) {
       return false;
     }
     // free stuff
@@ -150,7 +150,7 @@ bool debug_breakpoint_add(
   bool enable
 ) {
   // variables
-  debug_breakpoint_entry_ptr_t entry = debug_breakpoint_find( address );
+  debug_breakpoint_entry_t* entry = debug_breakpoint_find( address );
   // Don't add if already existing
   if ( entry && true == entry->enabled ) {
     return true;
@@ -158,17 +158,16 @@ bool debug_breakpoint_add(
 
   // create if not existing
   if ( ! entry ) {
-    // allocate entry
-    entry = ( debug_breakpoint_entry_ptr_t )malloc(
-      sizeof( debug_breakpoint_entry_t ) );
+    // reserve space for entry
+    entry = malloc( sizeof( *entry ) );
     // handle error
     if ( ! entry ) {
       return false;
     }
-    // erase allocated memory
+    // erase memory
     debug_memset( ( void* )entry, 0, sizeof( debug_breakpoint_entry_t ) );
     // push entry back
-    if ( ! list_push_back( debug_breakpoint_manager, ( void* )entry ) ) {
+    if ( ! list_push_back_data( debug_breakpoint_manager, ( void* )entry ) ) {
       free( entry );
       return false;
     }
@@ -193,13 +192,13 @@ void debug_breakpoint_disable( void ) {
     return;
   }
   // variables
-  list_item_ptr_t current = debug_breakpoint_manager->first;
+  list_item_t* current = debug_breakpoint_manager->first;
 
   // loop through list of entries
   while ( current ) {
     // get entry value
-    debug_breakpoint_entry_ptr_t entry =
-      ( debug_breakpoint_entry_ptr_t )current->data;
+    debug_breakpoint_entry_t* entry =
+      ( debug_breakpoint_entry_t* )current->data;
     // replace instruction if enabled
     if ( entry->enabled ) {
       // push back instruction
@@ -231,13 +230,13 @@ void debug_breakpoint_enable( void ) {
   }
   // variables
   uintptr_t bpi = debug_breakpoint_get_instruction();
-  list_item_ptr_t current = debug_breakpoint_manager->first;
+  list_item_t* current = debug_breakpoint_manager->first;
 
   // loop through list of entries
   while ( current ) {
     // get entry value
-    debug_breakpoint_entry_ptr_t entry =
-      ( debug_breakpoint_entry_ptr_t )current->data;
+    debug_breakpoint_entry_t* entry =
+      ( debug_breakpoint_entry_t* )current->data;
     // replace instruction if enabled
     if ( entry->enabled ) {
       // save instruction

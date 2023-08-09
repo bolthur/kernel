@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,7 +19,7 @@
 
 #include <stdint.h>
 
-#if ! defined( _ARCH_ARM_MM_VIRT_H )
+#ifndef _ARCH_ARM_MM_VIRT_H
 #define _ARCH_ARM_MM_VIRT_H
 
 #if defined( ELF32 )

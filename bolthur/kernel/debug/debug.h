@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _DEBUG_DEBUG_H )
-#define _DEBUG_DEBUG_H
-
 #include "../lib/stdio.h"
+
+#ifndef _DEBUG_DEBUG_H
+#define _DEBUG_DEBUG_H
 
 /**
  * @brief Debug output define

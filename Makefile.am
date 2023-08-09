@@ -1,7 +1,7 @@
 
 ACLOCAL_AMFLAGS = -I build-aux/m4
 
-SUBDIRS = bolthur driver
+SUBDIRS = bolthur
 
 # cppcheck stuff
 .PHONY: cppcheck
@@ -10,27 +10,32 @@ cppcheck:
 		--platform=$(CPPCHECK_PLATFORM) \
 		--include=$(CPPCHECK_KERNEL_INCLUDE) \
 		--project=$(CPPCHECK_KERNEL_PROJECT) \
-		--suppressions-list=$(CPPCHECK_SUPPRESS) \
-		-U__CYGWIN__ -U__APPLE__ -v
-#	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
-#		--platform=$(CPPCHECK_PLATFORM) \
-#		--include=$(CPPCHECK_LIBRARY_INCLUDE) \
-#		--project=$(CPPCHECK_LIBRARY_PROJECT) \
-#		--suppressions-list=$(CPPCHECK_SUPPRESS) \
-#		-U__CYGWIN__ -U__APPLE__ -v
+		-U__CYGWIN__ -U__APPLE__ -U__GNU_VISIBLE -UASSEMBLER_FILE -UVMS \
+		-v -j4 --force --max-configs=12
+	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
+		--platform=$(CPPCHECK_PLATFORM) \
+		--include=$(CPPCHECK_LIBRARY_INCLUDE) \
+		--project=$(CPPCHECK_LIBRARY_PROJECT) \
+		-U__CYGWIN__ -U__APPLE__ -UVMS -v -j4 --force --max-configs=12
 	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
 		--platform=$(CPPCHECK_PLATFORM) \
 		--include=$(CPPCHECK_SERVER_INCLUDE) \
 		--project=$(CPPCHECK_SERVER_PROJECT) \
-		--suppressions-list=$(CPPCHECK_SUPPRESS) \
-		-U__CYGWIN__ -U__APPLE__ -v
+		-U__CYGWIN__ -U__APPLE__ -UVMS -v -j4 --force --max-configs=12
+	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
+		--platform=$(CPPCHECK_PLATFORM) \
+	--include=$(CPPCHECK_APPLICATION_INCLUDE) \
+		--project=$(CPPCHECK_APPLICATION_PROJECT) \
+		-U__CYGWIN__ -U__APPLE__ -UVMS -v -j4 --force --max-configs=12
 
-ramdisk:
-	cd $(ROOT_DIR)/tool && nim compile --run ramdisk.nim \
-		$(ROOT_DIR)/build \
-		$(ROOT_DIR)/build-aux/platform/${platform_subdir}/initrd \
+image:
+	cd $(ROOT_DIR)/tool && nim -d:release -d:ssl compile --run image.nim \
+		$(ROOT_DIR) \
+		$(BUILD_DIR) \
 		$(SYSROOT_DIR) \
-		$(ROOT_DIR)/config/ini/${platform_subdir}/${platform_name}/
+		$(ROOT_DIR)/config/ini/${platform_subdir}/${platform_name}/ \
+		$(BUILD_DIR)/bolthur/kernel/target/${platform_subdir}/${output_img} \
+		${platform_subdir}
 
 README: README.md
 	pandoc -f markdown -t plain --wrap=none $< -o $@

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -31,9 +31,9 @@
  */
 void syscall_populate_success( void* context, size_t value ) {
   // get context
-  INTERRUPT_DETERMINE_CONTEXT( context )
+  context = interrupt_get_context( context );
   // get cpu context
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context ;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context ;
   // set return values
   cpu->reg.r0 = value;
   cpu->reg.r1 = 0;
@@ -48,29 +48,29 @@ void syscall_populate_success( void* context, size_t value ) {
  */
 void syscall_populate_error( void* context, size_t error ) {
   // get context
-  INTERRUPT_DETERMINE_CONTEXT( context )
+  context = interrupt_get_context( context );
   // get cpu context
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context ;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context ;
   // set return values
   cpu->reg.r0 = 0;
   cpu->reg.r1 = error;
 }
 
 /**
- * @fn size_t syscall_get_parameter(void*, int32_t)
+ * @fn size_t syscall_get_parameter(void*, size_t)
  * @brief Helper to get parameter of context
  *
  * @param context
  * @param num
  * @return
  */
-size_t syscall_get_parameter( void* context, int32_t num ) {
+size_t syscall_get_parameter( void* context, size_t num ) {
   // get context
-  INTERRUPT_DETERMINE_CONTEXT( context )
+  context = interrupt_get_context( context );
   // transform to cpu structure
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
   // number sanitize
-  assert( num >= R0 && num <= CPSR )
+  assert( num <= CPSR )
   // return value
   return ( size_t )cpu->raw[ num ];
 }

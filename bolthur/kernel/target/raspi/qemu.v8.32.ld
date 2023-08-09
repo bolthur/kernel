@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -63,12 +63,6 @@ SECTIONS {
     __initial_heap_end = .;
 
     __bss_end = .;
-  }
-
-  .fdt ALIGN( 4K ) : AT( ADDR( .fdt ) - KERNEL_OFFSET ) {
-    __fdt_start = .;
-    *( .fdt )
-    __fdt_end = .;
   }
 
   __kernel_end = .;

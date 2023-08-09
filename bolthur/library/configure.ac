@@ -1,9 +1,9 @@
 
 AC_PREREQ([2.71])
 
-AC_INIT([bolthur-server], [0.1.0-dev], [https://github.com/bolthur/driver/issues], [bolthur-driver], [https://github.com/bolthur/driver])
+AC_INIT([bolthur-library], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-library], [https://github.com/bolthur/kernel])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2022 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2023 bolthur project])
 
 AC_CONFIG_AUX_DIR([_aux/config])
 AC_CONFIG_MACRO_DIR([../../build-aux/m4])
@@ -63,7 +63,7 @@ BOLTHUR_PROG_READLINK
 BOLTHUR_LANG_PROGRAM
 # set target and flags
 BOLTHUR_SET_DEVICE
-BOLTHUR_DRIVER_SET_HOST
+BOLTHUR_SERVER_SET_HOST
 # set rest of flags
 BOLTHUR_SERVER_SET_FLAG
 
@@ -143,7 +143,11 @@ AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 
 AC_CONFIG_FILES([
   Makefile
+  collection/Makefile
+  collection/avl/Makefile
+  collection/list/Makefile
   framebuffer/Makefile
+  handle/Makefile
 ])
 # FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO
 

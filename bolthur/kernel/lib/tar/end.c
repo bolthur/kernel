@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,6 +27,6 @@
  * @return true end is reached
  * @return false there are more elements
  */
-bool tar_end_reached( tar_header_ptr_t current ) {
-  return ! current || ! ( uint8_t* )current->file_name;
+bool tar_end_reached( tar_header_t* current ) {
+  return ! current || ! current->file_name[ 0 ];
 }

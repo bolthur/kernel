@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,8 +18,8 @@
  */
 
 #include <stdint.h>
-#include <inttypes.h>
 
+#include "lib/inttypes.h"
 #include "lib/stdio.h"
 #include "lib/stdlib.h"
 #include "interrupt.h"

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _TASK_STATE_H )
+#ifndef _TASK_STATE_H
 #define _TASK_STATE_H
 
 typedef enum {
@@ -34,11 +34,9 @@ typedef enum {
   TASK_THREAD_STATE_RPC_WAIT_FOR_READY,
 } task_thread_state_t;
 
-typedef union task_state_data task_state_data_t;
-typedef union task_state_data* task_state_data_ptr_t;
-union task_state_data {
+typedef union task_state_data {
   size_t data_size;
   void* data_ptr;
-};
+} task_state_data_t;
 
 #endif

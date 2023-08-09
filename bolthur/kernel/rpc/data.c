@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include <errno.h>
+#include "../lib/inttypes.h"
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
 #include "data.h"
@@ -28,15 +28,15 @@
 #endif
 
 /**
- * @fn void rpc_data_queue_cleanup(const list_item_ptr_t)
+ * @fn void rpc_data_queue_cleanup(list_item_t*)
  * @brief Helper for cleanup
  *
  * @param item
  */
-static void rpc_data_queue_cleanup( const list_item_ptr_t item ) {
+static void rpc_data_queue_cleanup( list_item_t* item ) {
   if ( item->data ) {
     // transform to entry
-    const rpc_data_queue_entry_ptr_t entry = ( rpc_data_queue_entry_ptr_t )item->data;
+    rpc_data_queue_entry_t* entry = item->data;
     // free data if set
     if ( entry->data ) {
       free( ( void* )entry->data );
@@ -49,7 +49,7 @@ static void rpc_data_queue_cleanup( const list_item_ptr_t item ) {
 }
 
 /**
- * @fn int32_t rpc_data_queue_lookup(const list_item_ptr_t, const void*)
+ * @fn int32_t rpc_data_queue_lookup(const list_item_t*, const void*)
  * @brief Helper for lookup
  *
  * @param item
@@ -57,11 +57,11 @@ static void rpc_data_queue_cleanup( const list_item_ptr_t item ) {
  * @return
  */
 static int32_t rpc_data_queue_lookup(
-  const list_item_ptr_t item,
+  const list_item_t* item,
   const void* data
 ) {
   // transform to entry
-  const rpc_data_queue_entry_ptr_t entry = item->data;
+  const rpc_data_queue_entry_t* entry = item->data;
   return entry->id == ( size_t )data ? 0 : 1;
 }
 
@@ -76,12 +76,12 @@ size_t rpc_data_queue_generate_id( void ) {
 }
 
 /**
- * @fn void rpc_setup_data_queue(task_process_ptr_t)
+ * @fn void rpc_setup_data_queue(task_process_t*)
  * @brief Method to setup rpc data queue for process
  *
  * @param proc
  */
-bool rpc_data_queue_setup( task_process_ptr_t proc ) {
+bool rpc_data_queue_setup( task_process_t* proc ) {
   // stop if already setup
   if ( proc->rpc_data_queue ) {
     return true;
@@ -97,22 +97,22 @@ bool rpc_data_queue_setup( task_process_ptr_t proc ) {
 
 
 /**
- * @fn void rpc_data_queue_ready(task_process_ptr_t)
+ * @fn void rpc_data_queue_ready(task_process_t*)
  * @brief Method to check if rpc data queue is ready for process
  *
  * @param proc
  */
-bool rpc_data_queue_ready( task_process_ptr_t proc ) {
+bool rpc_data_queue_ready( task_process_t* proc ) {
   return proc->rpc_data_queue;
 }
 
 /**
- * @fn void rpc_destroy_data_queue(task_process_ptr_t)
+ * @fn void rpc_destroy_data_queue(task_process_t*)
  * @brief Method to destroy rpc data queue of a process
  *
  * @param proc
  */
-void rpc_data_queue_destroy( task_process_ptr_t proc ) {
+void rpc_data_queue_destroy( task_process_t* proc ) {
   // handle no rpc data queue
   if ( ! proc->rpc_data_queue ) {
     return;
@@ -124,7 +124,7 @@ void rpc_data_queue_destroy( task_process_ptr_t proc ) {
 }
 
 /**
- * @fn rpc_data_queue_entry_ptr_t rpc_data_queue_allocate(size_t, char*, size_t*)
+ * @fn rpc_data_queue_entry_t* rpc_data_queue_allocate(size_t, char*, size_t*)
  * @brief Helper to allocate rpc data queue entry
  *
  * @param rpc_data_length
@@ -132,14 +132,13 @@ void rpc_data_queue_destroy( task_process_ptr_t proc ) {
  * @param rpc_id
  * @return
  */
-rpc_data_queue_entry_ptr_t rpc_data_queue_allocate(
+rpc_data_queue_entry_t* rpc_data_queue_allocate(
   size_t rpc_data_length,
   const char* rpc_data,
   size_t* rpc_id
 ) {
-  // allocate data queue structure
-  rpc_data_queue_entry_ptr_t data_queue_block = ( rpc_data_queue_entry_ptr_t )malloc(
-    sizeof( rpc_data_queue_entry_t ) );
+  // reserve space for data queue structure
+  rpc_data_queue_entry_t* data_queue_block = malloc( sizeof( *data_queue_block ) );
   if ( ! data_queue_block ) {
     // debug output
     #if defined( PRINT_RPC )
@@ -148,16 +147,16 @@ rpc_data_queue_entry_ptr_t rpc_data_queue_allocate(
     // return NULL
     return NULL;
   }
-  // erase allocated space
+  // erase
   memset( data_queue_block, 0, sizeof( rpc_data_queue_entry_t ) );
-  // allocate data_queue_block data
-  char* data = ( char* )malloc( rpc_data_length );
+  // reserve space for data_queue_block->data
+  char* data = malloc( rpc_data_length );
   if ( ! data ) {
     // debug output
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "No free space left for data_queue_block data!\r\n" )
     #endif
-    // free allocation
+    // free
     free( data_queue_block );
     // return NULL
     return NULL;
@@ -177,10 +176,9 @@ rpc_data_queue_entry_ptr_t rpc_data_queue_allocate(
   } else {
     data_queue_block->id = *rpc_id;
   }
-  // return allocated structure
+  // return data queue block
   return data_queue_block;
 }
-
 
 /**
  * @fn int rpc_data_queue_add(pid_t, pid_t, const char*, size_t, size_t*)
@@ -201,7 +199,7 @@ int rpc_data_queue_add(
   size_t* rpc_data_queue_id
 ) {
   // get process by pid
-  task_process_ptr_t target_process = task_process_get_by_id( target );
+  task_process_t* target_process = task_process_get_by_id( target );
   // handle error
   if ( ! target_process ) {
     // debug output
@@ -227,8 +225,8 @@ int rpc_data_queue_add(
     return EINVAL;
   }
 
-  // allocate message structure
-  rpc_data_queue_entry_ptr_t message = rpc_data_queue_allocate(
+  // reserve space for message structure
+  rpc_data_queue_entry_t* message = rpc_data_queue_allocate(
     data_length,
     data,
     rpc_data_queue_id
@@ -247,7 +245,7 @@ int rpc_data_queue_add(
   // prepare structure
   message->sender = sender;
   // push message to process queue
-  list_push_back( target_process->rpc_data_queue, message );
+  list_push_back_data( target_process->rpc_data_queue, message );
   // return success
   return 0;
 }
@@ -261,7 +259,7 @@ int rpc_data_queue_add(
  */
 void rpc_data_queue_remove( pid_t process, size_t rpc_id ) {
   // get process by pid
-  task_process_ptr_t target_process = task_process_get_by_id( process );
+  task_process_t* target_process = task_process_get_by_id( process );
   // handle error
   if ( ! target_process ) {
     // debug output
@@ -279,11 +277,11 @@ void rpc_data_queue_remove( pid_t process, size_t rpc_id ) {
     return;
   }
   // Get rpc data queue entry by id
-  list_item_ptr_t item = target_process->rpc_data_queue->first;
-  rpc_data_queue_entry_ptr_t found = NULL;
+  list_item_t* item = target_process->rpc_data_queue->first;
+  rpc_data_queue_entry_t* found = NULL;
   while( item && ! found ) {
     // get entry
-    rpc_data_queue_entry_ptr_t rpc = ( rpc_data_queue_entry_ptr_t )item->data;
+    rpc_data_queue_entry_t* rpc = ( rpc_data_queue_entry_t* )item->data;
     // set found when matching
     if( rpc_id == rpc->id ) {
       found = rpc;
@@ -293,7 +291,15 @@ void rpc_data_queue_remove( pid_t process, size_t rpc_id ) {
   }
   // remove entry if found
   if ( found ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT(
+        "found something for removal on process %d with id %zu ( %zu )!\r\n",
+        process,
+        rpc_id,
+        found->id
+      )
+    #endif
     list_remove_data( target_process->rpc_data_queue, ( void* )found );
   }
 }
-

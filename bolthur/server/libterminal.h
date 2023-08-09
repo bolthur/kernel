@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -26,13 +26,10 @@
 #if ! defined( _LIBTERMINAL_H )
 #define _LIBTERMINAL_H
 
-struct terminal_write_request {
+typedef struct {
   char data[ MAX_WRITE_LEN ];
   char terminal[ PATH_MAX ];
   size_t len;
-};
-typedef struct terminal_write_request terminal_write_request_t;
-typedef struct terminal_write_request* terminal_write_request_ptr_t;
-
+} terminal_write_request_t;
 
 #endif

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,7 @@
 
 #include <stdbool.h>
 #include "../lib/string.h"
+#include "../lib/assert.h"
 #include "../event.h"
 #include "../serial.h"
 #include "../interrupt.h"

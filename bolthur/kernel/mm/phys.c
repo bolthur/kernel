@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,8 +19,8 @@
 
 #include <stddef.h>
 #include <stdbool.h>
-
 #include "../lib/assert.h"
+#include "../lib/inttypes.h"
 #if defined( PRINT_MM_PHYS )
   #include "../debug/debug.h"
 #endif
@@ -44,6 +44,26 @@ uint32_t* phys_bitmap_check;
 uint32_t phys_bitmap_length;
 
 /**
+ * @brief Physical bitmap
+ */
+uint32_t* phys_dma_bitmap;
+
+/**
+ * @brief physical bitmap length set by platform
+ */
+uint32_t phys_dma_length;
+
+/**
+ * @brief physical dma start
+ */
+uint64_t phys_dma_start;
+
+/**
+ * @brief physical dma start
+ */
+uint64_t phys_dma_end;
+
+/**
  * @brief static initialized flag
  */
 static bool phys_initialized = false;
@@ -60,17 +80,35 @@ void phys_mark_page_used( uint64_t address ) {
   uint64_t index = PAGE_INDEX( frame );
   uint64_t offset = PAGE_OFFSET( frame );
 
-  // mark page as used
-  phys_bitmap[ index ] |= ( 1U << offset );
-  phys_bitmap_check[ index ] |= ( 1U << offset );
-
-  // debug output
-  #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT(
-      "frame: %06llu, index: %04llu, offset: %02llu, address: %#016llx, phys_bitmap[ %04llu ]: %#08x\r\n",
-      frame, index, offset, address, index, phys_bitmap[ index ]
-    );
-  #endif
+  // dma handling
+  if ( address >= phys_dma_start && address < phys_dma_end ) {
+    // update variables
+    frame = ( address - phys_dma_start ) / PAGE_SIZE;
+    index = PAGE_INDEX( frame );
+    offset = PAGE_OFFSET( frame );
+    // mark used
+    phys_dma_bitmap[ index ] |= ( 1U << offset );
+    // debug output
+    #if defined( PRINT_MM_PHYS )
+      DEBUG_OUTPUT(
+        "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
+        "address: %#"PRIx64", bitmap[ %04"PRIu64" ]: %"PRIx32"\r\n",
+        frame, index, offset, address, index, phys_dma_bitmap[ index ]
+      )
+    #endif
+  // normal handling
+  } else {
+    phys_bitmap[ index ] |= ( 1U << offset );
+    phys_bitmap_check[ index ] |= ( 1U << offset );
+    // debug output
+    #if defined( PRINT_MM_PHYS )
+      DEBUG_OUTPUT(
+        "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
+        "address: %#"PRIx64", phys_bitmap[ %04"PRIu64" ]: %"PRIx32"\r\n",
+        frame, index, offset, address, index, phys_bitmap[ index ]
+      )
+    #endif
+  }
 }
 
 /**
@@ -85,19 +123,38 @@ void phys_mark_page_free( uint64_t address ) {
   uint64_t index = PAGE_INDEX( frame );
   uint64_t offset = PAGE_OFFSET( frame );
 
-  // mark page as free
-  if ( ! phys_free_check_only( address ) ) {
-    phys_bitmap[ index ] &= ( uint32_t )( ~( 1U << offset ) );
+  // dma handling
+  if ( address >= phys_dma_start && address < phys_dma_end ) {
+    // update variables
+    frame = ( address - phys_dma_start ) / PAGE_SIZE;
+    index = PAGE_INDEX( frame );
+    offset = PAGE_OFFSET( frame );
+    // mark used
+    phys_dma_bitmap[ index ] &= ( uint32_t )( ~( 1U << offset ) );
+    // debug output
+    #if defined( PRINT_MM_PHYS )
+      DEBUG_OUTPUT(
+        "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
+        "address: %#"PRIx64", phys_bitmap[ %04"PRIu64" ]: %"PRIx32"\r\n",
+        frame, index, offset, address, index, phys_bitmap[ index ]
+      )
+    #endif
+  // normal handling
+  } else {
+    // mark page as free
+    if ( ! phys_free_check_only( address ) ) {
+      phys_bitmap[ index ] &= ( uint32_t )( ~( 1U << offset ) );
+    }
+    phys_bitmap_check[ index ] &= ( uint32_t )( ~( 1U << offset ) );
+    // debug output
+    #if defined( PRINT_MM_PHYS )
+      DEBUG_OUTPUT(
+        "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
+        "address: %#"PRIx64", phys_bitmap[ %04"PRIu64" ]: %"PRIx32"\r\n",
+        frame, index, offset, address, index, phys_bitmap[ index ]
+      )
+    #endif
   }
-  phys_bitmap_check[ index ] &= ( uint32_t )( ~( 1U << offset ) );
-
-  // debug output
-  #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT(
-      "frame: %06llu, index: %04llu, offset: %02llu, address: %#016llx, phys_bitmap[ %04llu ]: %#08x\r\n",
-      frame, index, offset, address, index, phys_bitmap[ index ]
-    );
-  #endif
 }
 
 /**
@@ -112,15 +169,20 @@ void phys_mark_page_free_check( uint64_t address ) {
   uint64_t index = PAGE_INDEX( frame );
   uint64_t offset = PAGE_OFFSET( frame );
 
+  // dma handling
+  if ( address >= phys_dma_start && address < phys_dma_end ) {
+    return;
+  }
   // mark page as free
   phys_bitmap_check[ index ] &= ( uint32_t )( ~( 1U << offset ) );
 
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
-      "frame: %06llu, index: %04llu, offset: %02llu, address: %#016llx, phys_bitmap[ %04llu ]: %#08x\r\n",
-      frame, index, offset, address, index, phys_bitmap[ index ]
-    );
+      "frame: %06"PRIu64", index: %04"PRIu64", offset: %02"PRIu64", "
+      "address: %#"PRIx64", phys_bitmap_check[ %04"PRIu64" ]: %#"PRIx32"\r\n",
+      frame, index, offset, address, index, phys_bitmap_check[ index ]
+    )
   #endif
 }
 
@@ -134,7 +196,7 @@ void phys_mark_page_free_check( uint64_t address ) {
 void phys_free_page_range( uint64_t address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "address: %#016llx, amount: %zu\r\n", address, amount );
+    DEBUG_OUTPUT( "address: %#"PRIx64", amount: %zu\r\n", address, amount )
   #endif
 
   // loop until amount and mark as free
@@ -157,7 +219,7 @@ void phys_free_page_range( uint64_t address, size_t amount ) {
 void phys_free_page_range_check( uint64_t address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "address: %#016llx, amount: %zu\r\n", address, amount );
+    DEBUG_OUTPUT( "address: %#"PRIx64", amount: %zu\r\n", address, amount )
   #endif
 
   // loop until amount and mark as free
@@ -180,7 +242,7 @@ void phys_free_page_range_check( uint64_t address, size_t amount ) {
 void phys_use_page_range( uint64_t address, size_t amount ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "address: %#016llu, amount: %zu\r\n", address, amount );
+    DEBUG_OUTPUT( "address: %#"PRIx64", amount: %zu\r\n", address, amount )
   #endif
 
   // round down address to page start
@@ -199,20 +261,22 @@ void phys_use_page_range( uint64_t address, size_t amount ) {
 }
 
 /**
- * @fn uint64_t phys_find_free_page_range(size_t, size_t)
+ * @fn uint64_t phys_find_free_page_range(size_t, size_t, phys_memory_type_t)
  * @brief Method to find free page range
  *
  * @param alignment wanted memory alignment
  * @param memory_amount amount of memory to find free page range for
+ * @param type
  * @return address of found memory
  */
-uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
+uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys_memory_type_t type ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
-      "memory_amount: %zu, alignment: %#016zx\r\n",
-      memory_amount, alignment
-    );
+      "memory_amount: %zu, alignment: %#zx\r\n",
+      memory_amount,
+      alignment
+    )
   #endif
 
   // round up to full page
@@ -227,19 +291,26 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
   uint64_t tmp;
   bool stop = false;
 
+  size_t max_idx = phys_bitmap_length;
+  uint32_t* bitmap = phys_bitmap;
+  if ( PHYS_MEMORY_TYPE_DMA == type ) {
+    max_idx = phys_dma_length;
+    bitmap = phys_dma_bitmap;
+  }
+
   // loop through bitmap to find free continuous space
-  for ( size_t idx = 0; idx < phys_bitmap_length && !stop; idx++ ) {
+  for ( size_t idx = 0; idx < max_idx && !stop; idx++ ) {
     // skip completely used entries
-    if ( PHYS_ALL_PAGES_OF_INDEX_USED == phys_bitmap[ idx ] ) {
+    if ( PHYS_ALL_PAGES_OF_INDEX_USED == bitmap[ idx ] ) {
       continue;
     }
 
     // loop through bits per entry
     for ( size_t offset = 0; offset < PAGE_PER_ENTRY && !stop; offset++ ) {
       // not free? => reset counter and continue
-      if ( phys_bitmap[ idx ] & ( uint32_t )( 1U << offset ) ) {
+      if ( bitmap[ idx ] & ( uint32_t )( 1U << offset ) ) {
         found_amount = 0;
-        address = 0;
+        address = ( uint64_t )-1;
         continue;
       }
 
@@ -247,13 +318,13 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
       if ( 0 == found_amount ) {
         address = idx * PAGE_SIZE * PAGE_PER_ENTRY + offset * PAGE_SIZE;
         #if defined( PRINT_MM_PHYS )
-          DEBUG_OUTPUT( "idx = %zu\r\n", idx );
+          DEBUG_OUTPUT( "idx = %zu\r\n", idx )
         #endif
 
         // check for alignment
         if ( 0 < alignment && 0 != address % alignment ) {
           found_amount = 0;
-          address = 0;
+          address = ( uint64_t )-1;
           continue;
         }
       }
@@ -269,31 +340,33 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount ) {
   }
 
   // handle no address
-  if ( 0 == address ) {
+  if ( ( uint64_t )-1 == address ) {
     return address;
   }
-
+  // apply possible offset
+  if ( PHYS_MEMORY_TYPE_DMA == type ) {
+    address += phys_dma_start;
+  }
   // set temporary address
   tmp = address;
-
   // loop until amount and mark as used
   for ( size_t idx = 0; idx < found_amount; idx++, tmp += PAGE_SIZE ) {
     phys_mark_page_used( tmp );
   }
-
   // return found / not found address
   return address;
 }
 
 /**
- * @fn uint64_t phys_find_free_page(size_t)
+ * @fn uint64_t phys_find_free_page(size_t, phys_memory_type_t)
  * @brief Shorthand to find single free page
  *
- * @param alignment wanted alignment for memory address
+ * @param alignment
+ * @param type
  * @return
  */
-uint64_t phys_find_free_page( size_t alignment ) {
-  return phys_find_free_page_range( alignment, PAGE_SIZE );
+uint64_t phys_find_free_page( size_t alignment, phys_memory_type_t type ) {
+  return phys_find_free_page_range( alignment, PAGE_SIZE, type );
 }
 
 /**
@@ -318,9 +391,10 @@ bool phys_is_range_used( uint64_t address, size_t len ) {
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT(
-      "len: %zu, address: %#016llx\r\n",
-      len, address
-    );
+      "len: %zu, address: %#"PRIx64"\r\n",
+      len,
+      address
+    )
   #endif
   // handle invalid size
   if ( 0 == len ) {
@@ -336,7 +410,8 @@ bool phys_is_range_used( uint64_t address, size_t len ) {
     // debug output
     #if defined( PRINT_MM_PHYS )
       DEBUG_OUTPUT(
-        "index = %llu, offset = %llu, frame = %#016llx, address = %#016llx, end = %#016llx\r\n",
+        "index = %"PRIu64", offset = %"PRIu64", frame = %#"PRIx64", "
+        "address = %#"PRIx64", end = %#"PRIx64"\r\n",
         index, offset, frame, address, end
       )
     #endif
@@ -365,8 +440,8 @@ void phys_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "start: %p\r\n", ( void* )start );
-    DEBUG_OUTPUT( "end: %p\r\n", ( void* )end );
+    DEBUG_OUTPUT( "start: %#"PRIxPTR"\r\n", start )
+    DEBUG_OUTPUT( "end: %#"PRIxPTR"\r\n", end )
   #endif
 
   // map from start to end addresses as used
@@ -386,8 +461,8 @@ void phys_init( void ) {
 
     // debug output
     #if defined( PRINT_MM_PHYS )
-      DEBUG_OUTPUT( "start: %p\r\n", ( void* )start );
-      DEBUG_OUTPUT( "end: %p\r\n", ( void* )end );
+      DEBUG_OUTPUT( "start: %#"PRIxPTR"\r\n", start )
+      DEBUG_OUTPUT( "end: %#"PRIxPTR"\r\n", end )
     #endif
 
     // map from start to end addresses as used

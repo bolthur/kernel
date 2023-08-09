@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,17 +20,15 @@
 #include <stddef.h>
 #include "task/thread.h"
 
-#if ! defined( _TIMER_H )
+#ifndef _TIMER_H
 #define _TIMER_H
 
-struct timer_callback {
+typedef struct {
   size_t id;
   size_t expire;
-  task_thread_ptr_t thread;
+  task_thread_t* thread;
   size_t rpc;
-};
-typedef struct timer_callback timer_callback_entry_t;
-typedef struct timer_callback* timer_callback_entry_ptr_t;
+} timer_callback_entry_t;
 
 void timer_init( void );
 void timer_platform_init( void );
@@ -39,7 +37,7 @@ size_t timer_get_interval( void );
 size_t timer_get_tick( void );
 
 size_t timer_generate_id( void );
-timer_callback_entry_ptr_t timer_register_callback( task_thread_ptr_t, size_t, size_t );
+timer_callback_entry_t* timer_register_callback( task_thread_t*, size_t, size_t );
 bool timer_unregister_callback( size_t );
 void timer_handle_callback( void );
 

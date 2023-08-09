@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -41,7 +41,7 @@ IMPORT( task_thread_current_thread )
 // ensure correct stack alignment before calling any c function
 .macro stack_wind register:req, additional:req, stack:req
   // test alignment
-  and \register, \stack, #4
+  and \register, \stack, #8
   sub \stack, \register
   push { \register, \additional }
 .endm

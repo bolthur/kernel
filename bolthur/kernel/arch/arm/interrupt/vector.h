@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _ARCH_ARM_INTERRUPT_VECTOR_H )
+#ifndef _ARCH_ARM_INTERRUPT_VECTOR_H
 #define _ARCH_ARM_INTERRUPT_VECTOR_H
 
 void interrupt_vector_init( void );

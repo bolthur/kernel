@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _ARCH_ARM_MM_VIRT_SHORT_H )
+#ifndef _ARCH_ARM_MM_VIRT_SHORT_H
 #define _ARCH_ARM_MM_VIRT_SHORT_H
 
 #include <stdint.h>
 
-#if defined( ELF32 )
+#ifdef ELF32
   // memory access permissions
   #define SD_MAC_APX0_NO_ACCESS 0x0
   #define SD_MAC_APX0_PRIVILEGED_RW 0x1
@@ -182,7 +182,6 @@
     } data;
   };
   typedef union sd_context_section sd_context_section_t;
-  typedef union sd_context_section *sd_context_section_ptr_t;
 
   typedef union  __packed {
     uint32_t raw;

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,6 +18,9 @@
  */
 
 #include "../../../../../lib/assert.h"
+#if defined( PRINT_EXCEPTION )
+  #include "../../../../../debug/debug.h"
+#endif
 #include "../vector.h"
 #include "../../../../../event.h"
 #include "../../../../../interrupt.h"
@@ -32,25 +35,28 @@
 static uint32_t nested_undefined = 0;
 
 /**
+ * @fn void vector_undefined_instruction_handler(cpu_register_context_t*)
  * @brief Undefined instruction exception handler
  *
  * @param cpu cpu context
  */
-void vector_undefined_instruction_handler( cpu_register_context_ptr_t cpu ) {
+void vector_undefined_instruction_handler( cpu_register_context_t* cpu ) {
   // nesting
   nested_undefined++;
   assert( nested_undefined < INTERRUPT_NESTED_MAX )
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
-  INTERRUPT_DETERMINE_CONTEXT( cpu )
+  cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu )
     if ( EVENT_ORIGIN_USER == origin ) {
-      DEBUG_OUTPUT( "process id: %d, thread state: %d\r\n",
+      DEBUG_OUTPUT(
+        "process id: %d, thread state: %d\r\n",
         task_thread_current_thread->process->id,
-        task_thread_current_thread->state )
+        task_thread_current_thread->state
+      )
     }
   #endif
   // kernel stack

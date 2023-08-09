@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -16,9 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include "../../../../../lib/assert.h"
+#if defined( REMOTE_DEBUG )
   #include "../../debug/debug.h"
+#endif
+#if defined( PRINT_EXCEPTION )
+  #include "../../../../../debug/debug.h"
+#endif
 #include "../vector.h"
 #include "../../../../../event.h"
 #include "../../../../../interrupt.h"
@@ -33,14 +37,14 @@ static uint32_t nested_fast_interrupt = 0;
  *
  * @param cpu cpu context
  */
-void vector_fast_interrupt_handler( cpu_register_context_ptr_t cpu ) {
+void vector_fast_interrupt_handler( cpu_register_context_t* cpu ) {
   // nesting
   nested_fast_interrupt++;
   assert( nested_fast_interrupt < INTERRUPT_NESTED_MAX )
   // get event origin
   event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
-  INTERRUPT_DETERMINE_CONTEXT( cpu )
+  cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DUMP_REGISTER( cpu )

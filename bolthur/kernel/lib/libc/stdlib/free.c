@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -27,5 +27,5 @@
  * @param ptr ptr to address to free
  */
 void free( void* ptr ) {
-  heap_free_block( ( uintptr_t )ptr );
+  heap_free( ptr );
 }

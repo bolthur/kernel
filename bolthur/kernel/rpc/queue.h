@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,17 +18,17 @@
  */
 
 #include <stdbool.h>
-#include "../lib/collection/list.h"
+#include "../../library/collection/list/list.h"
 #include "../task/process.h"
 #include "../task/thread.h"
 #include "backup.h"
 
-#if ! defined( _RPC_QUEUE_H )
+#ifndef _RPC_QUEUE_H
 #define _RPC_QUEUE_H
 
-void rpc_queue_cleanup( const list_item_ptr_t );
-bool rpc_queue_setup( task_process_ptr_t );
-void rpc_queue_destroy( task_process_ptr_t );
-bool rpc_queue_ready( task_process_ptr_t );
+void rpc_queue_cleanup( list_item_t* );
+bool rpc_queue_setup( task_process_t* );
+void rpc_queue_destroy( task_process_t* );
+bool rpc_queue_ready( task_process_t* );
 
 #endif

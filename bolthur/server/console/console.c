@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,12 +22,12 @@
 #include "console.h"
 
 /**
- * @fn void console_destroy(console_ptr_t)
+ * @fn void console_destroy(console_t*)
  * @brief Helper to destroy console entry
  *
  * @param console
  */
-void console_destroy( console_ptr_t console ) {
+void console_destroy( console_t* console ) {
   if ( ! console ) {
     return;
   }
@@ -38,15 +38,15 @@ void console_destroy( console_ptr_t console ) {
 }
 
 /**
- * @fn console_ptr_t console_get_active(void)
+ * @fn console_t* console_get_active(void)
  * @brief Helper to get active console
  *
  * @return
  */
-console_ptr_t console_get_active( void ) {
-  list_item_ptr_t current = console_list->first;
+console_t* console_get_active( void ) {
+  list_item_t* current = console_list->first;
   while ( current ) {
-    console_ptr_t found = current->data;
+    console_t* found = current->data;
     if ( found->active ) {
       return found;
     }
@@ -56,16 +56,16 @@ console_ptr_t console_get_active( void ) {
 }
 
 /**
- * @fn console_ptr_t console_get_by_path(const char*)
+ * @fn console_t* console_get_by_path(const char*)
  * @brief Get console by path
  *
  * @param path
  * @return
  */
-console_ptr_t console_get_by_path( const char* path ) {
-  list_item_ptr_t current = console_list->first;
+console_t* console_get_by_path( const char* path ) {
+  list_item_t* current = console_list->first;
   while ( current ) {
-    console_ptr_t found = current->data;
+    console_t* found = current->data;
     if ( 0 == strcmp( found->path, path ) ) {
       return found;
     }

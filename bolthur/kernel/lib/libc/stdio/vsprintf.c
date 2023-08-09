@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,7 @@
 #include <limits.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <sys/types.h>
 #include "../../stdio.h"
 #include "../../string.h"
 
@@ -369,7 +370,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
         } else if ( length == LENGTH_INTMAX_T ) {
           signed_value = va_arg( parameter, intmax_t );
         } else if ( length == LENGTH_SIZE_T ) {
-          signed_value = va_arg( parameter, size_t );
+          signed_value = va_arg( parameter, ssize_t );
         } else if ( length == LENGTH_PTRDIFF_T ) {
           signed_value = va_arg( parameter, ptrdiff_t );
         } else {

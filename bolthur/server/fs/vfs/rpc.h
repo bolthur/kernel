@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,24 +17,45 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdbool.h>
 #include <sys/bolthur.h>
 
-#if !defined( _RPC_H )
+#ifndef _RPC_H
 #define _RPC_H
 
+extern pid_t vfs_pid;
+
 void rpc_handle_add( size_t, pid_t, size_t, size_t );
-void rpc_handle_remove( size_t, pid_t, size_t, size_t );
-void rpc_handle_open( size_t, pid_t, size_t, size_t );
+void rpc_handle_add_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_close( size_t, pid_t, size_t, size_t );
-void rpc_handle_read( size_t, pid_t, size_t, size_t );
-void rpc_handle_read_async( size_t, pid_t, size_t, size_t );
-void rpc_handle_write( size_t, pid_t, size_t, size_t );
-void rpc_handle_write_async( size_t, pid_t, size_t, size_t );
-void rpc_handle_seek( size_t, pid_t, size_t, size_t );
-void rpc_handle_stat( size_t, pid_t, size_t, size_t );
+void rpc_handle_close_async( size_t, pid_t, size_t, size_t );
+void rpc_handle_exit( size_t, pid_t, size_t, size_t );
+void rpc_handle_fork( size_t, pid_t, size_t, size_t );
+void rpc_handle_getdents( size_t, pid_t, size_t, size_t );
+void rpc_handle_getdents_async( size_t, pid_t, size_t, size_t );
+bool rpc_init( void );
 void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );
 void rpc_handle_ioctl_async( size_t, pid_t, size_t, size_t );
-void rpc_handle_fork( size_t, pid_t, size_t, size_t );
-void rpc_handle_exit( size_t, pid_t, size_t, size_t );
+void rpc_handle_mount( size_t, pid_t, size_t, size_t );
+void rpc_handle_mount_async( size_t, pid_t, size_t, size_t );
+void rpc_handle_open( size_t, pid_t, size_t, size_t );
+void rpc_handle_open_async( size_t, pid_t, size_t, size_t );
+void rpc_handle_read( size_t, pid_t, size_t, size_t );
+void rpc_handle_read_async( size_t, pid_t, size_t, size_t );
+void rpc_handle_remove( size_t, pid_t, size_t, size_t );
+void rpc_handle_seek( size_t, pid_t, size_t, size_t );
+void rpc_handle_stat( size_t, pid_t, size_t, size_t );
+void rpc_handle_stat_async( size_t, pid_t, size_t, size_t );
+void rpc_handle_umount( size_t, pid_t, size_t, size_t );
+void rpc_handle_umount_async( size_t, pid_t, size_t, size_t );
+void rpc_handle_watch_register( size_t, pid_t, size_t, size_t );
+void rpc_handle_watch_register_async( size_t, pid_t, size_t, size_t );
+void rpc_handle_watch_release( size_t, pid_t, size_t, size_t );
+void rpc_handle_watch_release_async( size_t, pid_t, size_t, size_t );
+void rpc_handle_watch_notify( size_t, pid_t, size_t, size_t );
+void rpc_handle_write( size_t, pid_t, size_t, size_t );
+void rpc_handle_write_async( size_t, pid_t, size_t, size_t );
+void rpc_handle_handler_register( size_t, pid_t, size_t, size_t );
+void rpc_handle_handler_release( size_t, pid_t, size_t, size_t );
 
 #endif

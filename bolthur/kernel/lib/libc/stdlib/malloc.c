@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,6 +18,7 @@
  */
 
 #include <stddef.h>
+#include <stdalign.h>
 #include "../../stdlib.h"
 
 /**
@@ -27,5 +28,5 @@
  * @return void* allocated address or NULL
  */
 __allocator void* malloc( size_t size ) {
-  return aligned_alloc( __alignof( size ), size );
+  return aligned_alloc( alignof( max_align_t ), size );
 }

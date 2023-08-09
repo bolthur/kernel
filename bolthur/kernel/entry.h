@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _ENTRY_H )
+#ifndef _ENTRY_H
 #define _ENTRY_H
 
 #if defined( IS_HIGHER_HALF )
@@ -37,7 +37,7 @@
   #define KERNEL_OFFSET 0
 #endif
 
-#if !defined( ASSEMBLER_FILE )
+#ifndef ASSEMBLER_FILE
   #include <stdint.h>
 
   #define PHYS_2_VIRT( a ) ( ( uintptr_t )a + KERNEL_OFFSET )

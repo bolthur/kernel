@@ -4,7 +4,7 @@ AC_PREREQ([2.71])
 
 AC_INIT([bolthur-kernel], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-kernel], [https://github.com/bolthur/kernel])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2022 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2023 bolthur project])
 
 AC_CONFIG_AUX_DIR([_aux/config])
 AC_CONFIG_MACRO_DIR([../../build-aux/m4])
@@ -244,12 +244,6 @@ BOLTHUR_KERNEL_SET_HOST
 # set rest of flags
 BOLTHUR_KERNEL_SET_FLAG
 
-# prepare cppecheck stuff
-BOLTHUR_PREPARE_CPPCHECK
-# add directory for ramdisk
-AC_SUBST(ROOT_DIR, $($BOLTHUR_READLINK -f ${srcdir}))
-AC_SUBST(SYSROOT_DIR, $(dirname $(dirname $($BOLTHUR_READLINK -f $($CC $CFLAGS --print-file-name=libc.so)))))
-
 # doxygen stuff
 DX_DOXYGEN_FEATURE(ON)
 DX_HTML_FEATURE(ON)
@@ -327,13 +321,8 @@ AC_DEFINE_UNQUOTED(
   [disable stack protector mechanism]
 )
 AC_DEFINE_UNQUOTED(
-  [__no_tree_loop_distribute],
-  [__attribute__((__optimize__("no-tree-loop-distribute-patterns")))],
-  [disable stuff like replace logic with memset]
-)
-AC_DEFINE_UNQUOTED(
   [__bootstrap],
-  [__section(".text.boot") __no_sanitize __no_stack_protector __no_tree_loop_distribute],
+  [__attribute__((__section__(".text.boot"),__optimize__("O0","no-stack-protector"), no_sanitize("undefined")))],
   [Bootstrap function]
 )
 AC_DEFINE_UNQUOTED(
@@ -365,7 +354,6 @@ AC_CONFIG_FILES([
   arch/arm/v8/Makefile
   lib/Makefile
   lib/atag/Makefile
-  lib/collection/Makefile
   lib/libc/Makefile
   lib/tar/Makefile
   platform/Makefile

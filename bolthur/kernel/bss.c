@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -35,7 +35,7 @@
  * @fn void bss_startup_clear(void)
  * @brief Method to clear bss during initial boot
  */
-void __bootstrap bss_startup_clear( void ) {
+__bootstrap void bss_startup_clear( void ) {
   // start and end values
   uintptr_t start = VIRT_2_PHYS( &__bss_start );
   uintptr_t end = VIRT_2_PHYS( &__bss_end );

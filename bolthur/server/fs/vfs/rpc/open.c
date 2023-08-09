@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -24,160 +24,58 @@
 #include <fcntl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
-#include "../file/handle.h"
+#include "../mountpoint/node.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 /**
- * @fn void rpc_handle_open(size_t, pid_t, size_t, size_t)
- * @brief Handle open request
+ * @fn void create_handle(size_t, pid_t, vfs_stat_response_t*, vfs_open_request_t*, vfs_open_response_t*, bolthur_async_data_t*)
+ * @brief Helper to create a file handle
  *
  * @param type
  * @param origin
- * @param data_info
- * @param response_info
- *
- * @todo Add support for opening directories ( virtual files )
- * @todo Add support for non existent files with read write
+ * @param stat_response
+ * @param request
+ * @param response
+ * @param async_data
  */
-void rpc_handle_open(
+__maybe_unused static void create_handle(
   size_t type,
   pid_t origin,
-  size_t data_info,
-  __unused size_t response_info
+  vfs_open_response_t* open_response,
+  vfs_open_request_t* request,
+  vfs_open_response_t* response,
+  bolthur_async_data_t* async_data
 ) {
-  vfs_open_response_t response = { .handle = -EINVAL };
-  vfs_open_request_ptr_t request = malloc( sizeof( vfs_open_request_t ) );
-  if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  char* dir = NULL;
-  char* base = NULL;
-  char* dir_old = NULL;
-  char* base_old = NULL;
-  // clear variables
-  memset( request, 0, sizeof( vfs_open_request_t ) );
-  // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
-  // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_open_request_t ), data_info, false );
-  // handle error
-  if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
-
-  // output
-  // EARLY_STARTUP_PRINT( "Try to open %s\r\n", request->path )
-  // check path name components
-  do {
-    // extract base and dir
-    base = basename( !dir ? request->path : dir );
-    dir = dirname( !dir ? request->path : dir );
-    // EARLY_STARTUP_PRINT( "base = %s, dir = %s\r\n", base, dir )
-    // cleanup previous dir / base stuff
-    if ( dir_old ) {
-      free( dir_old );
-    }
-    if ( base_old ) {
-      free( base_old );
-    }
-    // handle part to long
-    if ( NAME_MAX < strlen( base ) ) {
-      // free stuff
-      free( base );
-      free( dir );
-      // prepare error return
-      response.handle = -ENAMETOOLONG;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      // free message structures
-      free( request );
-      return;
-    }
-    // set old
-    dir_old = dir;
-    base_old = base;
-  } while ( dir && 1 < strlen( dir ) );
-  // free dir and base again
-  if ( dir ) {
-    free( dir );
-  }
-  if ( base ) {
-    free( base );
-  }
-
-  // extract dir and base names
-  dir = dirname( request->path );
-  base = basename( request->path );
-
-  // get parent node by dir
-  vfs_node_ptr_t dir_node = vfs_node_by_path( dir );
-  if ( ! dir_node ) {
-    // debug output
-    EARLY_STARTUP_PRINT( "Error: \"%s/%s\" doesn't exist!\r\n", dir, base )
-    free( dir );
-    free( base );
-    // prepare error return
-    response.handle = ( request->flags & O_CREAT ) ? -ENOENT : -ENOTDIR;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    // free message structures
-    free( request );
-    return;
-  }
-
-  // get file node of dir
-  vfs_node_ptr_t base_node = vfs_node_by_name( dir_node, base );
-  if ( ! base_node && ! ( request->flags & O_CREAT ) ) {
-    free( dir );
-    free( base );
-    // prepare error return
-    response.handle = -ENOENT;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    // free message structures
-    free( request );
-    return;
-  }
-  // free dir and base strings
-  free( dir );
-  free( base );
-
+  // handle error and no create set
   if (
-    ! base_node
+    0 > open_response->handle
     && !( request->flags & O_CREAT )
   ) {
-    // prepare error return
-    response.handle = -ENOENT;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    // free message structures
-    free( request );
+    response->handle = -ENOENT;
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
     return;
   }
-
+  // handle success with combination of create and exclusive
   if (
-    base_node
+    0 == open_response->handle
     && ( request->flags & O_CREAT )
     && ( request->flags & O_EXCL )
   ) {
-    // prepare error return
-    response.handle = -EEXIST;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    // free message structures
-    free( request );
+    response->handle = -EEXIST;
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
     return;
   }
-
   // FIXME: ADD SUPPORT FOR CREATION
-  if ( ! base_node && ( request->flags & O_CREAT ) ) {
-    // prepare error return
-    response.handle = -ENOSYS;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    // free message structures
-    free( request );
+  if ( 0 > open_response->handle && ( request->flags & O_CREAT ) ) {
+    response->handle = -ENOSYS;
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    return;
+  }
+  // handle any other failure
+  if ( 0 > open_response->handle ) {
+    response->handle = -ENOENT;
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
     return;
   }
 
@@ -191,49 +89,223 @@ void rpc_handle_open(
 
   // handle target directory with write or read write flags
   if (
-    ( S_ISDIR( base_node->st->st_mode ) )
+    ( S_ISDIR( open_response->st.st_mode ) )
     && (
       ( request->flags & O_WRONLY )
       || ( request->flags & O_RDWR )
     )
   ) {
-    // prepare error return
-    response.handle = -EISDIR;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    // free message structures
-    free( request );
+    response->handle = -EISDIR;
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
     return;
   }
-
-  // generate and get new handle container
-  handle_container_ptr_t container = NULL;
+  // get mount point
+  mountpoint_node_t* mount_point = mountpoint_node_extract( request->path );
+  // handle no mount point node found
+  if ( ! mount_point ) {
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    return;
+  }
+  // generate container
+  /// FIXME: PASS HANDLING PROCESS IN HERE INSTEAD OF MOUNT POINT
+  handle_node_t* container = NULL;
   int result = handle_generate(
     &container,
-    origin,
-    dir_node,
-    base_node,
+    async_data
+      ? async_data->original_origin
+      : origin,
+    open_response->handler,
+    mount_point,
     request->path,
     request->flags,
     request->mode
   );
-
   // handle error
   if ( ! container ) {
-    // debug output
-    EARLY_STARTUP_PRINT( "Error: Unable to generate new handle container!\r\n" )
-    free( dir );
-    free( base );
     // prepare error return
+    response->handle = result;
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    return;
+  }
+  // copy over stat stuff
+  memcpy( &container->info, &open_response->st, sizeof( open_response->st ) );
+  // prepare return
+  response->handle = container->handle;
+  bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+}
+
+/**
+ * @fn void rpc_handle_open_async(size_t, pid_t, size_t, size_t)
+ * @brief Open continue callback to continue after receiving stat information
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_open_async(
+  __unused size_t type,
+  __unused pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  vfs_open_response_t response = { .handle = -EINVAL };
+  // get matching async data
+  bolthur_async_data_t* async_data =
+    bolthur_rpc_pop_async( RPC_VFS_OPEN, response_info );
+  if ( ! async_data ) {
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    return;
+  }
+  // allocate space for stat response and clear out
+  vfs_open_response_t* open_response = malloc( sizeof( *open_response ) );
+  if ( ! open_response ) {
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    return;
+  }
+  // clear out
+  memset( open_response, 0, sizeof( *open_response ) );
+  // original request
+  vfs_open_request_t* request = async_data->original_data;
+  if ( ! request ) {
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    free( open_response );
+    return;
+  }
+  // fetch response
+  _syscall_rpc_get_data( open_response, sizeof( *open_response ), data_info, false );
+  if ( errno ) {
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    free( open_response );
+    return;
+  }
+  // handle error
+  if ( 0 > open_response->handle ) {
+    handle_destory( request->origin, request->handle );
+    response.handle = open_response->handle;
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    free( open_response );
+    return;
+  }
+  // try to get previously generated handle
+  handle_node_t* container;
+  int result = handle_get( &container, request->origin, request->handle );
+  if ( 0 > result ) {
     response.handle = result;
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    free( open_response );
+    return;
+  }
+  // set handler and copy over stuff
+  container->handler = open_response->handler;
+  memcpy( &container->info, &open_response->st, sizeof( open_response->st ) );
+  // prepare return
+  response.handle = container->handle;
+  response.handler = container->handler;
+  memcpy( &response.st, &container->info, sizeof( open_response->st ) );
+  // return rpc
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+  // free response
+  free( open_response );
+}
+
+/**
+ * @fn void rpc_handle_open(size_t, pid_t, size_t, size_t)
+ * @brief Handle open request
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ *
+ * @todo Add support for opening directories ( virtual files )
+ * @todo Add support for non existent files with read write
+ * @todo Add support for relative paths
+ */
+void rpc_handle_open(
+  size_t type,
+  pid_t origin,
+  size_t data_info,
+  __unused size_t response_info
+) {
+  // variables
+  vfs_open_response_t response = { .handle = -EINVAL };
+  vfs_open_request_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    // free message structures
+    return;
+  }
+  // clear variables
+  memset( request, 0, sizeof( *request ) );
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-
-  // prepare return
-  response.handle = container->handle;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-  // free message structures
+  // fetch rpc data
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  // handle error
+  if ( errno ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  EARLY_STARTUP_PRINT( "opening %s\r\n", request->path )
+  // get mount point
+  mountpoint_node_t* mount_point = mountpoint_node_extract( request->path );
+  // handle no mount point node found
+  if ( ! mount_point ) {
+    free( request );
+    response.handle = -ENOENT;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    return;
+  }
+  // generate handle
+  handle_node_t* container = NULL;
+  int result = handle_generate(
+    &container,
+    origin,
+    mount_point->pid,
+    mount_point,
+    request->path,
+    request->flags,
+    request->mode
+  );
+  // handle error
+  if ( ! container ) {
+    // prepare error return
+    response.handle = result;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    return;
+  }
+  // prepare internal stuff
+  request->handle = container->handle;
+  request->origin = origin;
+  // perform async rpc
+  bolthur_rpc_raise(
+    type,
+    mount_point->pid,
+    request,
+    sizeof( *request ),
+    rpc_handle_open_async,
+    type,
+    request,
+    sizeof( *request ),
+    origin,
+    data_info,
+    NULL
+  );
+  // handle error
+  if ( errno ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // free request data
   free( request );
 }

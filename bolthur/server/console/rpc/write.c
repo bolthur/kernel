@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -25,8 +25,7 @@
 #include "../../libterminal.h"
 #include "../../libconsole.h"
 #include "../rpc.h"
-#include "../handler.h"
-#include "../list.h"
+#include "../../../library/collection/list/list.h"
 #include "../console.h"
 
 /**
@@ -44,19 +43,20 @@ void rpc_handle_write(
   size_t data_info,
   __unused size_t response_info
 ) {
+  vfs_write_response_t response = { .len = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  vfs_write_response_t response = { .len = -EINVAL };
   // allocate space
-  vfs_write_request_ptr_t request = malloc( sizeof( vfs_write_request_t ) );
+  vfs_write_request_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // prepare
-  memset( request, 0, sizeof( vfs_write_request_t ) );
+  memset( request, 0, sizeof( *request ) );
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -64,7 +64,7 @@ void rpc_handle_write(
     return;
   }
   // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_write_request_t ), data_info, false );
+  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
   // handle error
   if ( errno ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -72,7 +72,7 @@ void rpc_handle_write(
     return;
   }
   // get current active console
-  console_ptr_t console = console_get_active();
+  console_t* console = console_get_active();
   if ( ! console ) {
     response.len = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -84,14 +84,14 @@ void rpc_handle_write(
     ? console->out
     : console->err;
   // build terminal command
-  terminal_write_request_ptr_t terminal = malloc( sizeof( terminal_write_request_t ) );
+  terminal_write_request_t* terminal = malloc( sizeof( *terminal ) );
   if ( ! terminal ) {
     response.len = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  memset( terminal, 0, sizeof( terminal_write_request_t ) );
+  memset( terminal, 0, sizeof( *terminal ) );
   terminal->len = request->len;
   memcpy( terminal->data, request->data, request->len );
   strncpy( terminal->terminal, console->path, PATH_MAX - 1 );
@@ -104,6 +104,7 @@ void rpc_handle_write(
       EARLY_STARTUP_PRINT( "Unable to open %s\r\n", console->path )
       response.len = -EIO;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( terminal );
       free( request );
       return;
     }
@@ -115,16 +116,16 @@ void rpc_handle_write(
     console->fd,
     IOCTL_BUILD_REQUEST(
       rpc_num,
-      sizeof( terminal_write_request_t ),
+      sizeof( *terminal ),
       IOCTL_RDWR
     ),
     terminal
   );
   // handle error
   if ( -1 == result ) {
-    EARLY_STARTUP_PRINT( "ioctl error!\r\n" )
     response.len = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( terminal );
     free( request );
     return;
   }
@@ -133,40 +134,4 @@ void rpc_handle_write(
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
   free( terminal );
   free( request );
-
-  // FIXME: Remove when ioctl is battle proved
-  /*size_t response_data_id = bolthur_rpc_raise(
-    rpc_num,
-    console->handler,
-    terminal,
-    sizeof( terminal_write_request_t ),
-    true,
-    false,
-    rpc_num,
-    terminal,
-    sizeof( terminal_write_request_t ),
-    0,
-    0
-  );
-  if ( errno ) {
-    response.len = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( terminal );
-    free( request );
-    return;
-  }
-  int status;
-  // fetch rpc data
-  _rpc_get_data( &status, sizeof( int ), response_data_id, false );
-  // handle error
-  if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
-  // prepare return
-  response.len = 0 == status ? ( ssize_t )strlen( request->data ) : -1;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-  free( terminal );
-  free( request );*/
 }

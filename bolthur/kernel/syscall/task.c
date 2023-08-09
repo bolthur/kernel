@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,7 +18,7 @@
  */
 
 #include <errno.h>
-#include <inttypes.h>
+#include "../lib/inttypes.h"
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
 #include "../syscall.h"
@@ -32,6 +32,8 @@
   #include "../debug/debug.h"
 #endif
 
+#define VFS_DAEMON_ID 2
+
 /**
  * @fn void syscall_process_id(void*)
  * @brief return process id to calling thread
@@ -41,8 +43,10 @@
 void syscall_process_id( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_id() = %d\r\n",
-      task_thread_current_thread->process->id )
+    DEBUG_OUTPUT(
+      "syscall_process_id() = %d\r\n",
+      task_thread_current_thread->process->id
+    )
   #endif
   // populate return
   syscall_populate_success(
@@ -60,8 +64,10 @@ void syscall_process_id( void* context ) {
 void syscall_process_parent_id( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_parent_id() = %d\r\n",
-      task_thread_current_thread->process->parent )
+    DEBUG_OUTPUT(
+      "syscall_process_parent_id() = %d\r\n",
+      task_thread_current_thread->process->parent
+    )
   #endif
   // populate return
   syscall_populate_success(
@@ -84,7 +90,7 @@ void syscall_process_parent_by_id( void* context ) {
     DEBUG_OUTPUT( "syscall_process_parent_by_id( %d )\r\n", pid )
   #endif
   // try to get process by pid
-  task_process_ptr_t proc = task_process_get_by_id( pid );
+  task_process_t* proc = task_process_get_by_id( pid );
   // handle error
   if ( ! proc ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
@@ -92,6 +98,26 @@ void syscall_process_parent_by_id( void* context ) {
   }
   // populate return
   syscall_populate_success( context, ( size_t )proc->parent );
+}
+
+/**
+ * @fn void syscall_process_exist(void*)
+ * @brief return true if process is existing, else false
+ *
+ * @param context context of calling thread
+ */
+void syscall_process_exist( void* context ) {
+  pid_t process = ( pid_t )syscall_get_parameter( context, 0 );
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "syscall_process_parent_id(%d)\r\n", process )
+  #endif
+  task_process_t* target = task_process_get_by_id( process );
+  // populate return
+  syscall_populate_success(
+    context,
+    ( size_t )( NULL != target && target->rpc_ready ? true : false )
+  );
 }
 
 /**
@@ -117,6 +143,8 @@ void syscall_process_exit( void* context ) {
  * @brief fork calling process
  *
  * @param context context of calling thread
+ *
+ * @todo set vfs fork rpc call
  */
 void syscall_process_fork( void* context ) {
   // debug output
@@ -126,11 +154,16 @@ void syscall_process_fork( void* context ) {
   // invalidate cache to ensure everything is within memory
   virt_flush_complete();
   // fork process
-  task_process_ptr_t forked = task_process_fork( task_thread_current_thread );
+  task_process_t* forked = task_process_fork( task_thread_current_thread );
   // handle error
   if ( ! forked ) {
     syscall_populate_error( context, ( size_t )-ENOMEM );
     return;
+  }
+  // try to get vfs
+  task_process_t* vfs = task_process_get_by_id( VFS_DAEMON_ID );
+  if ( vfs && vfs != forked && vfs->rpc_ready ) {
+    /// FIXME: SETUP VFS FORK RPC CALL
   }
   // populate return
   syscall_populate_success( context, ( size_t )forked->id );
@@ -149,11 +182,16 @@ void syscall_process_replace( void* context ) {
   const char** env = ( const char** )syscall_get_parameter( context, 2 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_process_replace( %#"PRIxPTR", %p, %p )\r\n",
-      addr, argv, env )
+    DEBUG_OUTPUT(
+      "syscall_process_replace( %"PRIxPTR", %p, %p )\r\n",
+      addr,
+      argv,
+      env
+    )
     DEBUG_OUTPUT(
       "task_thread_current_thread->current_context = %p\r\n",
-      task_thread_current_thread->current_context )
+      task_thread_current_thread->current_context
+    )
   #endif
   // get min and max by context
   uintptr_t min = virt_get_context_min_address(
@@ -180,7 +218,7 @@ void syscall_process_replace( void* context ) {
   size_t image_size = elf_image_size( addr );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "image_size = %#x!\r\n", image_size )
+    DEBUG_OUTPUT( "image_size = %#zx!\r\n", image_size )
   #endif
   if (
     0 == image_size
@@ -213,7 +251,8 @@ void syscall_process_replace( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "task_thread_current_thread->current_context = %p\r\n",
-      task_thread_current_thread->current_context )
+      task_thread_current_thread->current_context
+    )
     DEBUG_OUTPUT( "Replace done!\r\n" )
   #endif
 }
@@ -250,10 +289,14 @@ void syscall_thread_create( void* context ) {
   void* argument = ( void* )syscall_get_parameter( context, 1 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_thread_create( %#"PRIxPTR", %p)\r\n", entry, argument )
+    DEBUG_OUTPUT(
+      "syscall_thread_create( %#"PRIxPTR", %p)\r\n",
+      entry,
+      argument
+    )
   #endif
   // create new thread
-  task_thread_ptr_t new_thread = task_thread_create(
+  task_thread_t* new_thread = task_thread_create(
     entry,
     task_thread_current_thread->process,
     task_thread_current_thread->priority

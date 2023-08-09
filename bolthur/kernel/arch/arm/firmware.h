@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _ARCH_ARM_FIRMWARE_H )
+#ifndef _ARCH_ARM_FIRMWARE_H
 #define _ARCH_ARM_FIRMWARE_H
 
 #include <stdint.h>
@@ -28,14 +28,11 @@
   typedef uint64_t firmware_register_t;
 #endif
 
-struct firmware {
+typedef struct {
   firmware_register_t unused;
   firmware_register_t machine;
   firmware_register_t atag_fdt;
-};
-
-typedef struct firmware firmware_t;
-typedef struct firmware *firmware_ptr_t;
+} firmware_t;
 
 extern firmware_t firmware_info;
 

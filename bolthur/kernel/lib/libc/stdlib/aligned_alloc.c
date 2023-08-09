@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -34,5 +34,5 @@ __allocator void* aligned_alloc( size_t alignment, size_t size ) {
     return NULL;
   }
   // use heap allocation
-  return ( void* )heap_allocate_block( alignment, size );
+  return heap_allocate( alignment, size );
 }

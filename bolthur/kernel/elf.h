@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,7 +21,7 @@
 #include <stdint.h>
 #include "task/process.h"
 
-#if ! defined( _ELF_H )
+#ifndef _ELF_H
 #define _ELF_H
 
 typedef uint16_t Elf32_Half;
@@ -117,7 +117,7 @@ typedef struct {
 
 bool elf_check( uintptr_t );
 bool elf_arch_check( uintptr_t );
-uintptr_t elf_load( uintptr_t, task_process_ptr_t );
+uintptr_t elf_load( uintptr_t, task_process_t* );
 size_t elf_image_size( uintptr_t );
 
 #endif

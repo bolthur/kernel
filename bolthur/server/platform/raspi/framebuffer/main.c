@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2023 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -42,30 +42,26 @@ int main( __unused int argc, __unused char* argv[] ) {
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
-  // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t ) + 4 * sizeof( size_t );
-  vfs_add_request_ptr_t msg = malloc( msg_size );
-  if ( ! msg ) {
+  // enable rpc
+  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  _syscall_rpc_set_ready( true );
+
+  // device info array
+  uint32_t device_info[] = {
+    FRAMEBUFFER_GET_RESOLUTION,
+    FRAMEBUFFER_CLEAR,
+    FRAMEBUFFER_FLIP,
+    FRAMEBUFFER_SURFACE_RENDER,
+    FRAMEBUFFER_SURFACE_ALLOCATE,
+  };
+  // add device file
+  if ( !dev_add_file( "/dev/framebuffer", device_info, 5 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
-  // clear memory
-  memset( msg, 0, msg_size );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/framebuffer", PATH_MAX - 1 );
-  msg->device_info[ 0 ] = FRAMEBUFFER_GET_RESOLUTION;
-  msg->device_info[ 1 ] = FRAMEBUFFER_CLEAR;
-  msg->device_info[ 2 ] = FRAMEBUFFER_RENDER_SURFACE;
-  msg->device_info[ 3 ] = FRAMEBUFFER_FLIP;
-  // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
-  // free again
-  free( msg );
 
-  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
-  // enable rpc and wait
-  _rpc_set_ready( true );
+  // wait for rpc
+  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
   return 0;
 }
