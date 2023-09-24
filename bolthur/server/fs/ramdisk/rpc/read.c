@@ -111,22 +111,17 @@ void rpc_handle_read(
   }
   // get size of file
   size_t total_size = ramdisk_get_size( request->file_path );
-  // handle possible shared memory
-  void* shm_addr = NULL;
-  // map shared if set
-  if ( 0 != request->shm_id ) {
-    // attach shared area
-    shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
-    if ( errno ) {
-      // prepare response
-      response->len = -EIO;
-      // return response
-      bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
-      // free stuff
-      free( request );
-      free( response );
-      return;
-    }
+  // attach shared area
+  void* shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
+  if ( errno ) {
+    // prepare response
+    response->len = -EIO;
+    // return response
+    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+    // free stuff
+    free( request );
+    free( response );
+    return;
   }
   // read until end / size
   size_t amount = request->len;
@@ -135,24 +130,18 @@ void rpc_handle_read(
     amount -= ( total - total_size );
   }
   // copy
-  if ( shm_addr ) {
-    memcpy( shm_addr, start + request->offset, amount );
-  } else {
-    memcpy( response->data, start + request->offset, amount );
-  }
+  memcpy( shm_addr, start + request->offset, amount );
   // detach shared area
-  if ( request->shm_id ) {
-    _syscall_memory_shared_detach( request->shm_id );
-    if ( errno ) {
-      // prepare response
-      response->len = -EIO;
-      // return response
-      bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
-      // free stuff
-      free( request );
-      free( response );
-      return;
-    }
+  _syscall_memory_shared_detach( request->shm_id );
+  if ( errno ) {
+    // prepare response
+    response->len = -EIO;
+    // return response
+    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+    // free stuff
+    free( request );
+    free( response );
+    return;
   }
   // prepare read amount
   response->len = ( ssize_t )amount;

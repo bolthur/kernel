@@ -105,23 +105,18 @@ void rpc_handle_read(
   uint32_t max = request->len;
   uint32_t max_word = max / sizeof( uint32_t );
   // determine buffer for data
-  uint32_t* buf = ( uint32_t* )response->data;
-  // map shared if set
-  if ( 0 != request->shm_id ) {
-    // attach shared area
-    void* shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
-    if ( errno ) {
-      // prepare response
-      response->len = -EIO;
-      // return response
-      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-      // free stuff
-      free( request );
-      free( response );
-      return;
-    }
-    buf = ( uint32_t* )shm_addr;
+  void* shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
+  if ( errno ) {
+    // prepare response
+    response->len = -EIO;
+    // return response
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    // free stuff
+    free( request );
+    free( response );
+    return;
   }
+  uint32_t* buf = ( uint32_t* )shm_addr;
   // loop until max num words
   for ( uint32_t num = 0; num < max_word; num++ ) {
     // extract rng status
@@ -130,9 +125,7 @@ void rpc_handle_read(
       // prepare response
       response->len = -errno;
       // free shared stuff
-      if ( request->shm_id ) {
-        _syscall_memory_shared_detach( request->shm_id );
-      }
+      _syscall_memory_shared_detach( request->shm_id );
       // return response
       bolthur_rpc_return( type, response, sizeof( *response ), NULL );
       // free stuff
@@ -143,18 +136,16 @@ void rpc_handle_read(
     buf[ num ] = val;
   }
   // detach shared area
-  if ( request->shm_id ) {
-    _syscall_memory_shared_detach( request->shm_id );
-    if ( errno ) {
-      // prepare response
-      response->len = -EIO;
-      // return response
-      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-      // free stuff
-      free( request );
-      free( response );
-      return;
-    }
+  _syscall_memory_shared_detach( request->shm_id );
+  if ( errno ) {
+    // prepare response
+    response->len = -EIO;
+    // return response
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    // free stuff
+    free( request );
+    free( response );
+    return;
   }
   // prepare read amount
   response->len = ( ssize_t )( max_word * sizeof( uint32_t ) );

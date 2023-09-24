@@ -95,27 +95,17 @@ void rpc_handle_read(
     free( request );
     return;
   }
-  // handle possible shared memory
-  void* shm_addr = NULL;
-  // map shared if set
-  if ( 0 != request->shm_id ) {
-    // attach shared area
-    shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
-    if ( errno ) {
-      // prepare response
-      response->len = -EIO;
-      // return response
-      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-      // free stuff
-      free( request );
-      free( response );
-      return;
-    }
-  }
-  // get target address, either from struct or shared memory
-  void* target_address = response->data;
-  if ( shm_addr ) {
-    target_address = shm_addr;
+  // attach shared area
+  void* shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
+  if ( errno ) {
+    // prepare response
+    response->len = -EIO;
+    // return response
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    // free stuff
+    free( request );
+    free( response );
+    return;
   }
   // calculate block number
   /*off_t block_number = request->offset / sd_block_size;
@@ -126,7 +116,7 @@ void rpc_handle_read(
   )*/
   // try to read data
   if ( ! sd_read_block(
-    ( uint32_t* )target_address,
+    ( uint32_t* )shm_addr,
     request->len,
     request->offset
   ) ) {
@@ -135,9 +125,7 @@ void rpc_handle_read(
       sd_last_error()
     )
     // detach shared area
-    if ( request->shm_id ) {
-      _syscall_memory_shared_detach( request->shm_id );
-    }
+    _syscall_memory_shared_detach( request->shm_id );
     // prepare response
     response->len = -EIO;
     // return response
@@ -148,18 +136,16 @@ void rpc_handle_read(
     return;
   }
   // detach shared area
-  if ( request->shm_id ) {
-    _syscall_memory_shared_detach( request->shm_id );
-    if ( errno ) {
-      // prepare response
-      response->len = -EIO;
-      // return response
-      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-      // free stuff
-      free( request );
-      free( response );
-      return;
-    }
+  _syscall_memory_shared_detach( request->shm_id );
+  if ( errno ) {
+    // prepare response
+    response->len = -EIO;
+    // return response
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    // free stuff
+    free( request );
+    free( response );
+    return;
   }
   // prepare read amount
   response->len = ( ssize_t )request->len;

@@ -102,7 +102,6 @@ void rpc_handle_open(
     free( request );
     return;
   }
-  /// FIXME: IMPLEMENT
   // open directory
   if ( S_ISDIR( st.st_mode ) ) {
     // allocate space for directory

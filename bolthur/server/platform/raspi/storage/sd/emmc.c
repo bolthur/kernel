@@ -2012,14 +2012,15 @@ static void handle_interrupt( void ) {
     reset_mask |= EMMC_INTERRUPT_ACMD_ERR;
   }
 
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "reset = %#"PRIx32"\r\n", reset_mask )
-  #endif
-
-  // write back reset
-  while ( EMMC_RESPONSE_OK != interrupt_mark_handled( reset_mask ) ) {
-    __asm__ __volatile__ ( "nop" );
+  if ( reset_mask != 0 ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "reset = %#"PRIx32"\r\n", reset_mask )
+    #endif
+    // write back reset
+    while ( EMMC_RESPONSE_OK != interrupt_mark_handled( reset_mask ) ) {
+      __asm__ __volatile__ ( "nop" );
+    }
   }
 }
 
