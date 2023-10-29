@@ -1109,30 +1109,42 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
     size_t shm_id = 0;
     void* shm_addr = NULL;
     if ( is_data && 0 < device->block_count ) {
-      shm_id = _syscall_memory_shared_create(
-        device->block_count * device->block_size);
-      if ( errno ) {
-        free( sequence );
+      if ( device->shm_id ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+          EARLY_STARTUP_PRINT( "Using shared memory set in device\r\n" )
         #endif
-        // return error
-        return EMMC_RESPONSE_UNKNOWN;
-      }
-      // attach it
-      shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
-      if ( errno ) {
-        free( sequence );
+        shm_id = device->shm_id;
+      } else {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+          EARLY_STARTUP_PRINT( "Creating shared memory\r\n" )
         #endif
-        // return error
-        return EMMC_RESPONSE_MEMORY;
+        shm_id = _syscall_memory_shared_create(
+          device->block_count * device->block_size);
+        if ( errno ) {
+          free( sequence );
+          // debug output
+          #if defined( EMMC_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+          #endif
+          // return error
+          return EMMC_RESPONSE_UNKNOWN;
+        }
+        // attach it
+        shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+        if ( errno ) {
+          free( sequence );
+          // debug output
+          #if defined( EMMC_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+          #endif
+          // return error
+          return EMMC_RESPONSE_MEMORY;
+        }
+        // clear out space
+        memset( shm_addr, 0, device->block_count * device->block_size );
       }
-      // clear out space
-      memset( shm_addr, 0, device->block_count * device->block_size );
     }
   #endif
 
@@ -1277,7 +1289,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
     }
   #else
     // setup dma if enabled
-    if ( is_data && 0 < device->block_count && shm_id && shm_addr ) {
+    if ( is_data && 0 < device->block_count && shm_id ) {
       uint32_t interrupt = ( command & EMMC_CMDTM_CMD_TM_DAT_DIR_CH )
         ? EMMC_INTERRUPT_READ_RDY : EMMC_INTERRUPT_WRITE_RDY;
       sequence[ idx ].type = interrupt == EMMC_INTERRUPT_READ_RDY ?
@@ -1438,7 +1450,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       #endif
     }
   #else
-    if ( is_data && 0 < device->block_count && shm_id && shm_addr ) {
+    if ( is_data && 0 < device->block_count && shm_id ) {
       if ( IOMEM_MMIO_ABORT_TYPE_DMA == sequence[ idx ].abort_type ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
@@ -1447,21 +1459,23 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
         // return failure
         return EMMC_RESPONSE_IO;
       }
-      // copy over from shared to block count
-      memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Amount of reads: 1 dma read\r\n" )
       #endif
-      // release shared memory again
-      _syscall_memory_shared_detach( shm_id );
-      if ( errno ) {
-        // debug output
-        #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "detach shared area failed\r\n" )
-        #endif
-        // return failure
-        return EMMC_RESPONSE_IO;
+      // copy over from shared to block count
+      if ( shm_addr ) {
+        memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
+        // release shared memory again
+        _syscall_memory_shared_detach( shm_id );
+        if ( errno ) {
+          // debug output
+          #if defined( EMMC_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "detach shared area failed\r\n" )
+          #endif
+          // return failure
+          return EMMC_RESPONSE_IO;
+        }
       }
     }
   #endif
@@ -3079,20 +3093,22 @@ emmc_response_t emmc_init( void ) {
 }
 
 /**
- * @fn emmc_response_t emmc_transfer_block(uint32_t*, size_t, uint32_t, emmc_operation_t)
+ * @fn emmc_response_t emmc_transfer_block(uint32_t*, size_t, uint32_t, emmc_operation_t, size_t)
  * @brief Transfer block from / to sd card to / from buffer
  *
  * @param buffer
  * @param buffer_size
  * @param block_number
  * @param operation
+ * @param shm_id
  * @return
  */
 emmc_response_t emmc_transfer_block(
   uint32_t* buffer,
   size_t buffer_size,
   uint32_t block_number,
-  emmc_operation_t operation
+  emmc_operation_t operation,
+  size_t shm_id
 ) {
   emmc_response_t response;
   // debug output
@@ -3172,7 +3188,8 @@ emmc_response_t emmc_transfer_block(
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Try to retrieve status\r\n" )
+    EARLY_STARTUP_PRINT( "Try to retrieve status %"PRIx32"\r\n",
+      ( uint32_t )device->card_rca << 16 )
   #endif
   // send status
   if ( EMMC_RESPONSE_OK != (
@@ -3272,7 +3289,8 @@ emmc_response_t emmc_transfer_block(
   if ( 4 != status ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Try to retrieve status\r\n" )
+      EARLY_STARTUP_PRINT( "Try to retrieve status %"PRIx32"\r\n",
+        ( uint32_t )device->card_rca << 16 )
     #endif
     if ( EMMC_RESPONSE_OK != (
       response = sd_command(
@@ -3344,6 +3362,7 @@ emmc_response_t emmc_transfer_block(
   // fill blocks to transfer and buffer of structure
   device->block_count = buffer_size / device->block_size;
   device->buffer = buffer;
+  device->shm_id = shm_id;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "device->block_count = %ld\r\n", device->block_count )

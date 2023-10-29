@@ -27,8 +27,8 @@
 #if ! defined( _SD_H )
 #define _SD_H
 
-/*#define SD_ENABLE_DEBUG 1
-#undef RASPI
+//#define SD_ENABLE_DEBUG 1
+/*#undef RASPI
 #define RASPI 3*/
 
 typedef enum {
@@ -45,9 +45,9 @@ typedef struct {
 
 bool sd_init( void );
 const char* sd_last_error( void );
-bool sd_transfer_block( uint32_t*, size_t, uint32_t, sd_operation_t );
-bool sd_read_block( uint32_t*, size_t, off_t );
-bool sd_write_block( uint32_t*, size_t, off_t );
+bool sd_transfer_block( uint32_t*, size_t, uint32_t, sd_operation_t, size_t );
+bool sd_read_block( uint32_t*, size_t, off_t, size_t );
+bool sd_write_block( uint32_t*, size_t, off_t, size_t );
 uint32_t sd_device_block_size( void );
 
 #endif

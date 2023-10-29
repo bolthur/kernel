@@ -674,7 +674,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
  * @param destination
  * @return
  */
-static sdhost_response_t get_debug_status( uint32_t* destination ) {
+__maybe_unused static sdhost_response_t get_debug_status( uint32_t* destination ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Fetch debug register\r\n" )
@@ -740,7 +740,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   size_t block_size = device->block_size;
   size_t block_count = device->block_count;
   size_t offset = sizeof( uint32_t );
-  uint32_t* buffer = device->buffer;
+  __maybe_unused uint32_t* buffer = device->buffer;
   size_t sequence_size;
   iomem_mmio_entry_t* sequence;
   // debug output
@@ -768,7 +768,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   bool is_read = command & SDHOST_COMMAND_FLAG_READ;
   bool is_write = command & SDHOST_COMMAND_FLAG_WRITE;
   // calculate necessary word count
-  size_t necessary_word = ( block_size * block_count ) / offset;
+  __maybe_unused size_t necessary_word = ( block_size * block_count ) / offset;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
@@ -778,83 +778,177 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
       necessary_word
     )
   #endif
-  // loop until there are no words to copy left
-  while ( necessary_word && ( is_read || is_write ) ) {
-    uint32_t debug_register;
-    sdhost_response_t response;
-    size_t word_count;
-    // burst word count
-    size_t burst_word_count = util_min(
-      SDHOST_DATA_FIFO_PIO_BURST,
-      necessary_word
-    );
-    // load debug register
-    if ( SDHOST_RESPONSE_OK != ( response = get_debug_status(
-      &debug_register
-    ) ) ) {
-      // debug output
-      #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Error while loading debug register\r\n" )
-      #endif
-      // return error
-      return response;
-    }
-    // determine word count depending on read
-    word_count = is_read
-      ? SDHOST_DEBUG_FIFO_FILL( debug_register )
-      : SDHOST_FIFO_SIZE - SDHOST_DEBUG_FIFO_FILL( debug_register );
-    if ( word_count < burst_word_count ) {
-      uint32_t fsm_state = debug_register & SDHOST_DEBUG_FIFO_FILL_MASK;
-      // handle possible read / write error
-      if (
-        (
-          is_read
-          && SDHOST_DEBUG_FSM_READDATA != fsm_state
-          && SDHOST_DEBUG_FSM_READWAIT != fsm_state
-          && SDHOST_DEBUG_FSM_READCRC != fsm_state
-        ) || (
-          ! is_read
-          && SDHOST_DEBUG_FSM_WRITEDATA != fsm_state
-          && SDHOST_DEBUG_FSM_WRITEWAIT1 != fsm_state
-          && SDHOST_DEBUG_FSM_WRITEWAIT2 != fsm_state
-          && SDHOST_DEBUG_FSM_WRITECRC != fsm_state
-          && SDHOST_DEBUG_FSM_WRITESTART1 != fsm_state
-          && SDHOST_DEBUG_FSM_WRITESTART2 != fsm_state
-        )
-      ) {
-        uint32_t host_status;
-        // load host status register
-        while ( SDHOST_RESPONSE_OK != get_interrupt_status(
-          &host_status
-        ) ) {
-          __asm__ __volatile__( "nop" );
-        }
+  #if !defined( SDHOST_ENABLE_DMA )
+    // loop until there are no words to copy left
+    while ( necessary_word && ( is_read || is_write ) ) {
+      uint32_t debug_register;
+      sdhost_response_t response;
+      size_t word_count;
+      // burst word count
+      size_t burst_word_count = util_min(
+        SDHOST_DATA_FIFO_PIO_BURST,
+        necessary_word
+      );
+      // load debug register
+      if ( SDHOST_RESPONSE_OK != ( response = get_debug_status(
+        &debug_register
+      ) ) ) {
         // debug output
         #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT(
-            "fsm = %#"PRIx32", host status = %#"PRIx32"\r\n",
-            fsm_state, host_status
-          )
+          EARLY_STARTUP_PRINT( "Error while loading debug register\r\n" )
         #endif
-        // handle error
-        if ( host_status & SDHOST_HOST_STATUS_MASK_ERROR_ALL ) {
-          break;
+        // return error
+        return response;
+      }
+      // determine word count depending on read
+      word_count = is_read
+        ? SDHOST_DEBUG_FIFO_FILL( debug_register )
+        : SDHOST_FIFO_SIZE - SDHOST_DEBUG_FIFO_FILL( debug_register );
+      if ( word_count < burst_word_count ) {
+        uint32_t fsm_state = debug_register & SDHOST_DEBUG_FIFO_FILL_MASK;
+        // handle possible read / write error
+        if (
+          (
+            is_read
+            && SDHOST_DEBUG_FSM_READDATA != fsm_state
+            && SDHOST_DEBUG_FSM_READWAIT != fsm_state
+            && SDHOST_DEBUG_FSM_READCRC != fsm_state
+          ) || (
+            ! is_read
+            && SDHOST_DEBUG_FSM_WRITEDATA != fsm_state
+            && SDHOST_DEBUG_FSM_WRITEWAIT1 != fsm_state
+            && SDHOST_DEBUG_FSM_WRITEWAIT2 != fsm_state
+            && SDHOST_DEBUG_FSM_WRITECRC != fsm_state
+            && SDHOST_DEBUG_FSM_WRITESTART1 != fsm_state
+            && SDHOST_DEBUG_FSM_WRITESTART2 != fsm_state
+          )
+        ) {
+          uint32_t host_status;
+          // load host status register
+          while ( SDHOST_RESPONSE_OK != get_interrupt_status(
+            &host_status
+          ) ) {
+            __asm__ __volatile__( "nop" );
+          }
+          // debug output
+          #if defined( SDHOST_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT(
+              "fsm = %#"PRIx32", host status = %#"PRIx32"\r\n",
+              fsm_state, host_status
+            )
+          #endif
+          // handle error
+          if ( host_status & SDHOST_HOST_STATUS_MASK_ERROR_ALL ) {
+            break;
+          }
+        }
+        // skip until enough words are there
+        continue;
+      } else if (word_count > necessary_word) {
+        word_count = necessary_word;
+      }
+      // subtract from total
+      necessary_word -= word_count;
+      // debug output
+      #if defined( SDHOST_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Amount of words to read: %zu\r\n", word_count )
+      #endif
+      // build read sequence with word count
+      // allocate sequence
+      sequence = util_prepare_mmio_sequence( word_count, &sequence_size );
+      // handle error
+      if ( ! sequence ) {
+        // debug output
+        #if defined( SDHOST_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Unable to allocate sequence\r\n" )
+        #endif
+        // return error
+        return SDHOST_RESPONSE_MEMORY;
+      }
+      for ( size_t idx = 0; idx < word_count; idx++ ) {
+        sequence[ idx ].type = is_read
+          ? IOMEM_MMIO_ACTION_READ
+          : IOMEM_MMIO_ACTION_WRITE;
+        sequence[ idx ].offset = PERIPHERAL_SDHOST_DATAPORT;
+        // push value from buffer for write
+        if ( ! is_read ) {
+          // copy over data
+          memcpy( &sequence[ idx ].value, buffer, sizeof( uint32_t ) );
+          // increase buffer
+          buffer++;
         }
       }
-      // skip until enough words are there
-      continue;
-    } else if (word_count > necessary_word) {
-      word_count = necessary_word;
+      // perform request
+      if ( -1 == ioctl(
+        device->fd_iomem,
+        IOCTL_BUILD_REQUEST(
+          IOMEM_RPC_MMIO_PERFORM,
+          sequence_size,
+          IOCTL_RDWR
+        ),
+        sequence
+      ) ) {
+        // debug output
+        #if defined( SDHOST_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Issue data read sequence failed\r\n" )
+        #endif
+        // free
+        free( sequence );
+        // return error
+        return SDHOST_RESPONSE_IO;
+      }
+      // loop through result
+      for ( size_t idx = 0; idx < word_count && is_read; idx++ ) {
+        // copy over data
+        memcpy( buffer, &sequence[ idx ].value, sizeof( uint32_t ) );
+        // increase buffer
+        buffer++;
+      }
+      // free
+      free( sequence );
     }
-    // subtract from total
-    necessary_word -= word_count;
-    // debug output
-    #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Amount of words to read: %zu\r\n", word_count )
-    #endif
-    // build read sequence with word count
+  #else
+    // create shared memory
+    size_t shm_id = 0;
+    void* shm_addr = NULL;
+    if ( ( is_read || is_write ) && 0 < device->block_count ) {
+      if ( device->shm_id ) {
+        // debug output
+        #if defined( SDHOST_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Using shared memory set in device\r\n" )
+        #endif
+        shm_id = device->shm_id;
+      } else {
+        // debug output
+        #if defined( SDHOST_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Creating shared memory\r\n" )
+        #endif
+        shm_id = _syscall_memory_shared_create(
+          device->block_count * device->block_size);
+        if ( errno ) {
+          // debug output
+          #if defined( SDHOST_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+          #endif
+          // return error
+          return SDHOST_RESPONSE_UNKNOWN;
+        }
+        // attach it
+        shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+        if ( errno ) {
+          // debug output
+          #if defined( SDHOST_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+          #endif
+          // return error
+          return SDHOST_RESPONSE_MEMORY;
+        }
+        // clear out space
+        memset( shm_addr, 0, device->block_count * device->block_size );
+      }
+    }
     // allocate sequence
-    sequence = util_prepare_mmio_sequence( word_count, &sequence_size );
+    sequence = util_prepare_mmio_sequence( 1, &sequence_size );
     // handle error
     if ( ! sequence ) {
       // debug output
@@ -864,48 +958,63 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
       // return error
       return SDHOST_RESPONSE_MEMORY;
     }
-    for ( size_t idx = 0; idx < word_count; idx++ ) {
-      sequence[ idx ].type = is_read
-        ? IOMEM_MMIO_ACTION_READ
-        : IOMEM_MMIO_ACTION_WRITE;
-      sequence[ idx ].offset = PERIPHERAL_SDHOST_DATAPORT;
-      // push value from buffer for write
-      if ( ! is_read ) {
-        // copy over data
-        memcpy( &sequence[ idx ].value, buffer, sizeof( uint32_t ) );
-        // increase buffer
-        buffer++;
+    // setup dma if enabled
+    if ( ( is_read || is_write ) && 0 < device->block_count && shm_id ) {
+      sequence[ 0 ].type = is_read
+        ? IOMEM_MMIO_ACTION_DMA_READ
+        : IOMEM_MMIO_ACTION_DMA_WRITE;
+      sequence[ 0 ].value = shm_id;
+      sequence[ 0 ].offset = PERIPHERAL_SDHOST_DATAPORT;
+      sequence[ 0 ].dma_copy_size = device->block_count * device->block_size;
+      // perform request
+      if ( -1 == ioctl(
+        device->fd_iomem,
+        IOCTL_BUILD_REQUEST(
+          IOMEM_RPC_MMIO_PERFORM,
+          sequence_size,
+          IOCTL_RDWR
+        ),
+        sequence
+      ) ) {
+        // debug output
+        #if defined( SDHOST_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Issue data read sequence failed\r\n" )
+        #endif
+        // free
+        free( sequence );
+        // return error
+        return SDHOST_RESPONSE_IO;
       }
-    }
-    // perform request
-    if ( -1 == ioctl(
-      device->fd_iomem,
-      IOCTL_BUILD_REQUEST(
-        IOMEM_RPC_MMIO_PERFORM,
-        sequence_size,
-        IOCTL_RDWR
-      ),
-      sequence
-    ) ) {
+      if ( IOMEM_MMIO_ABORT_TYPE_DMA == sequence[ 0 ].abort_type ) {
+        // debug output
+        #if defined( SDHOST_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "dma copy timed out\r\n" )
+        #endif
+        // return failure
+        return SDHOST_RESPONSE_IO;
+      }
       // debug output
       #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Issue data read sequence failed\r\n" )
+        EARLY_STARTUP_PRINT( "Amount of reads: 1 dma read\r\n" )
       #endif
-      // free
-      free( sequence );
-      // return error
-      return SDHOST_RESPONSE_IO;
-    }
-    // loop through result
-    for ( size_t idx = 0; idx < word_count && is_read; idx++ ) {
-      // copy over data
-      memcpy( buffer, &sequence[ idx ].value, sizeof( uint32_t ) );
-      // increase buffer
-      buffer++;
+      // copy over from shared to block count
+      if ( shm_addr ) {
+        memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
+        // release shared memory again
+        _syscall_memory_shared_detach( shm_id );
+        if ( errno ) {
+          // debug output
+          #if defined( SDHOST_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "detach shared area failed\r\n" )
+          #endif
+          // return failure
+          return SDHOST_RESPONSE_IO;
+        }
+      }
     }
     // free
     free( sequence );
-  }
+  #endif
   // handle stop command
   if ( is_read || is_write ) {
     // debug output
@@ -2358,20 +2467,22 @@ const char* sdhost_error( sdhost_response_t num ) {
 }
 
 /**
- * @fn sdhost_response_t sdhost_transfer_block(uint32_t*, size_t, uint32_t, sdhost_operation_t)
+ * @fn sdhost_response_t sdhost_transfer_block(uint32_t*, size_t, uint32_t, sdhost_operation_t, size_t)
  * @brief Transfer block from / to sd card
  *
  * @param buffer
  * @param buffer_size
  * @param block_number
  * @param operation
+ * @param shm_id
  * @return
  */
 sdhost_response_t sdhost_transfer_block(
   uint32_t* buffer,
   size_t buffer_size,
   uint32_t block_number,
-  sdhost_operation_t operation
+  sdhost_operation_t operation,
+  size_t shm_id
 ) {
   sdhost_response_t response;
   // debug output
@@ -2606,6 +2717,7 @@ sdhost_response_t sdhost_transfer_block(
   // fill blocks to transfer and buffer of structure
   device->block_count = buffer_size / device->block_size;
   device->buffer = buffer;
+  device->shm_id = shm_id;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "device->block_count = %ld\r\n", device->block_count )

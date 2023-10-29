@@ -95,18 +95,6 @@ void rpc_handle_read(
     free( request );
     return;
   }
-  // attach shared area
-  void* shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
-  if ( errno ) {
-    // prepare response
-    response->len = -EIO;
-    // return response
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    // free stuff
-    free( request );
-    free( response );
-    return;
-  }
   // calculate block number
   /*off_t block_number = request->offset / sd_block_size;
   // try to read from card
@@ -116,28 +104,15 @@ void rpc_handle_read(
   )*/
   // try to read data
   if ( ! sd_read_block(
-    ( uint32_t* )shm_addr,
+    NULL,
     request->len,
-    request->offset
+    request->offset,
+    request->shm_id
   ) ) {
     EARLY_STARTUP_PRINT(
       "Error while reading mbr from card: %s\r\n",
       sd_last_error()
     )
-    // detach shared area
-    _syscall_memory_shared_detach( request->shm_id );
-    // prepare response
-    response->len = -EIO;
-    // return response
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    // free stuff
-    free( request );
-    free( response );
-    return;
-  }
-  // detach shared area
-  _syscall_memory_shared_detach( request->shm_id );
-  if ( errno ) {
     // prepare response
     response->len = -EIO;
     // return response

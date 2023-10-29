@@ -95,28 +95,6 @@ void rpc_handle_write(
     free( request );
     return;
   }
-  // handle possible shared memory
-  void* shm_addr = NULL;
-  // map shared if set
-  if ( 0 != request->shm_id ) {
-    // attach shared area
-    shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
-    if ( errno ) {
-      // prepare response
-      response->len = -EIO;
-      // return response
-      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-      // free stuff
-      free( request );
-      free( response );
-      return;
-    }
-  }
-  // get target address, either from struct or shared memory
-  void* source_address = request->data;
-  if ( shm_addr ) {
-    source_address = shm_addr;
-  }
   // calculate block number
   /*off_t block_number = request->offset / sd_block_size;
   // try to read from card
@@ -126,12 +104,13 @@ void rpc_handle_write(
   )*/
   // try to read data
   if ( ! sd_write_block(
-    ( uint32_t* )source_address,
+    NULL,
     request->len,
-    request->offset
+    request->offset,
+    request->shm_id
   ) ) {
     EARLY_STARTUP_PRINT(
-      "Error while reading mbr from card: %s\r\n",
+      "Error while writing block to card: %s\r\n",
       sd_last_error()
     )
     // detach shared area
@@ -146,20 +125,6 @@ void rpc_handle_write(
     free( request );
     free( response );
     return;
-  }
-  // detach shared area
-  if ( request->shm_id ) {
-    _syscall_memory_shared_detach( request->shm_id );
-    if ( errno ) {
-      // prepare response
-      response->len = -EIO;
-      // return response
-      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-      // free stuff
-      free( request );
-      free( response );
-      return;
-    }
   }
   // prepare read amount
   response->len = ( ssize_t )request->len;

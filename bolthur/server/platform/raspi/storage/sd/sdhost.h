@@ -25,8 +25,8 @@
 #if ! defined( _SDHOST_H )
 #define _SDHOST_H
 
-#define SDHOST_ENABLE_DEBUG 1
-#define EMMC_ENABLE_DMA 1
+//#define SDHOST_ENABLE_DEBUG 1
+#define SDHOST_ENABLE_DMA 1
 
 typedef enum {
   SDHOST_RESPONSE_OK = 0,
@@ -88,6 +88,7 @@ typedef struct {
 
   // buffer, file descriptor and initialized flag
   uint32_t* buffer;
+  size_t shm_id;
   int fd_iomem;
   bool initialized;
 
@@ -102,7 +103,7 @@ typedef struct  {
 
 sdhost_response_t sdhost_init( void );
 const char* sdhost_error( sdhost_response_t );
-sdhost_response_t sdhost_transfer_block( uint32_t*, size_t, uint32_t, sdhost_operation_t );
+sdhost_response_t sdhost_transfer_block( uint32_t*, size_t, uint32_t, sdhost_operation_t, size_t );
 uint32_t sdhost_device_block_size( void );
 
 #endif

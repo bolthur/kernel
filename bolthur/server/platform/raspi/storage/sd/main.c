@@ -77,7 +77,7 @@ int main( __unused int argc, __unused char* argv[] ) {
 
   // try to read mbr from card
   EARLY_STARTUP_PRINT( "Parsing mbr with partition information\r\n" )
-  if ( ! sd_transfer_block( ( uint32_t* )mbr_data, mbr_size, 0, SD_OPERATION_READ ) ) {
+  if ( ! sd_transfer_block( ( uint32_t* )mbr_data, mbr_size, 0, SD_OPERATION_READ, 0 ) ) {
     EARLY_STARTUP_PRINT(
       "Error while reading mbr from card: %s\r\n",
       sd_last_error()

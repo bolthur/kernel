@@ -25,7 +25,7 @@
 #if ! defined( _EMMC_H )
 #define _EMMC_H
 
-//#define EMMC_ENABLE_DEBUG 1
+#define EMMC_ENABLE_DEBUG 1
 #define EMMC_ENABLE_DMA 1
 
 typedef enum {
@@ -74,6 +74,7 @@ typedef struct {
 
   // buffer, file descriptor and init flag
   uint32_t* buffer;
+  size_t shm_id;
   int fd_iomem;
   bool initialized;
 
@@ -106,7 +107,7 @@ typedef struct {
 
 emmc_response_t emmc_init( void );
 const char* emmc_error( emmc_response_t );
-emmc_response_t emmc_transfer_block( uint32_t*, size_t, uint32_t, emmc_operation_t );
+emmc_response_t emmc_transfer_block( uint32_t*, size_t, uint32_t, emmc_operation_t, size_t );
 uint32_t emmc_device_block_size( void );
 
 #endif
