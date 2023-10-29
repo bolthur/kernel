@@ -206,6 +206,22 @@ int dma_block_transfer_info_wait_response( bool value ) {
 }
 
 /**
+ * @fn int dma_block_transfer_info_burst_length(uint32_t)
+ * @brief Set transfer burst length
+ *
+ * @param value
+ * @return
+ */
+int dma_block_transfer_info_burst_length( uint32_t value ) {
+  if ( ! block ) {
+    last_error = -EINVAL;
+    return -1;
+  }
+  block->transfer_information |= LIBDMA_TI_PREAPRE_BURST_LENGTH( value );
+  return 0;
+}
+
+/**
  * @fn int dma_block_transfer_info_src_width(bool)
  * @brief Set or reset source width transfer information
  *

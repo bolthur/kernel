@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <math.h>
 #include <sys/bolthur.h>
 #include "../../mmio.h"
 #include "../../property.h"
@@ -670,7 +671,12 @@ void rpc_handle_mmio_perform(
             continue;
           }
           // set transfer length, stride and next
-          if ( 0 != dma_block_set_transfer_length( ( *mmio_request )[ i ].dma_copy_size ) ) {
+          if ( 0 != dma_block_set_transfer_length(
+            ( uint32_t )fmin(
+              ( double )( *mmio_request )[ i ].dma_copy_size,
+              ( double )PAGE_SIZE
+            )
+          ) ) {
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -689,6 +695,14 @@ void rpc_handle_mmio_perform(
             continue;
           }
           // prepare transfer information
+          if ( 0 != dma_block_transfer_info_burst_length(
+            ( *mmio_request )[ i ].dma_burst_count
+          ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
           if ( 0 != dma_block_transfer_info_wait_response( true ) ) {
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
@@ -713,7 +727,7 @@ void rpc_handle_mmio_perform(
             dma_error = true;
             continue;
           }
-          if ( 0 != dma_block_transfer_info_permap( LIBDMA_TI_PERMAP_EMMC ) ) {
+          if ( 0 != dma_block_transfer_info_permap( ( *mmio_request )[ i ].dma_permap ) ) {
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;

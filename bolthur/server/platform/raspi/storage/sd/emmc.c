@@ -33,6 +33,7 @@
 // from iomem
 #include "../../libemmc.h"
 #include "../../libiomem.h"
+#include "../../libdma.h"
 #include "../../libperipheral.h"
 #include "../../libmailbox.h"
 #include "../../libgpio.h"
@@ -1297,6 +1298,8 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       sequence[ idx ].value = shm_id;
       sequence[ idx ].offset = PERIPHERAL_EMMC_DATA;
       sequence[ idx ].dma_copy_size = device->block_count * device->block_size;
+      sequence[ idx ].dma_permap = LIBDMA_TI_PERMAP_EMMC;
+      sequence[ idx ].dma_burst_count = 0;
       idx++;
     }
   #endif

@@ -45,6 +45,7 @@ int dma_block_set_next( uint32_t );
 int dma_block_transfer_info_source_increment( bool );
 int dma_block_transfer_info_destination_increment( bool );
 int dma_block_transfer_info_wait_response( bool );
+int dma_block_transfer_info_burst_length( uint32_t );
 int dma_block_transfer_info_src_width( bool );
 int dma_block_transfer_info_dest_width( bool );
 int dma_block_transfer_info_src_dreq( bool );
