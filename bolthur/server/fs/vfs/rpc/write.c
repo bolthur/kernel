@@ -157,33 +157,6 @@ void rpc_handle_write(
   request->offset = container->pos;
   request->origin = origin;
   strncpy( request->file_path, container->path, PATH_MAX );
-  mountpoint_node_t* node = container->data;
-  if ( vfs_pid != node->pid ) {
-    // set handler and path, and finally redirect request
-    request->target_process = container->handler;
-    // perform async rpc
-    bolthur_rpc_raise(
-      type,
-      node->pid,
-      request,
-      sizeof( *request ),
-      rpc_handle_write_async,
-      type,
-      request,
-      sizeof( *request ),
-      origin,
-      data_info,
-      NULL
-    );
-    if ( errno ) {
-      response.len = -errno;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      free( request );
-      return;
-    }
-    free( request );
-    return;
-  }
   // perform async rpc
   bolthur_rpc_raise(
     type,

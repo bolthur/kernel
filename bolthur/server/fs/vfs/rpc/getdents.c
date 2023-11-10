@@ -171,34 +171,6 @@ void rpc_handle_getdents(
   request->offset = container->pos;
   strncpy( request->path, container->path, PATH_MAX );
   request->origin = origin;
-  mountpoint_node_t* node = container->data;
-  // mount point handling
-  if ( vfs_pid != node->pid ) {
-    // perform async rpc
-    bolthur_rpc_raise(
-      type,
-      node->pid,
-      request,
-      sizeof( *request ),
-      rpc_handle_getdents_async,
-      type,
-      request,
-      sizeof( *request ),
-      origin,
-      data_info,
-      NULL
-    );
-    if ( errno ) {
-      response->result = -errno;
-      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-      free( request );
-      free( response );
-      return;
-    }
-    free( request );
-    free( response );
-    return;
-  }
   // perform async rpc
   bolthur_rpc_raise(
     type,

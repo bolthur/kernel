@@ -17,70 +17,71 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <libgen.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <inttypes.h>
+#include <sys/ioctl.h>
 #include <sys/bolthur.h>
-#include "../../rpc.h"
-#include "../../handler.h"
-#include "../../../libpartition.h"
+#include <unistd.h>
+#include "../rpc.h"
 
 /**
- * @fn void rpc_custom_handle_register(size_t, pid_t, size_t, size_t)
- * @brief Device kill command
+ * @fn void rpc_handle_ioctl(size_t, pid_t, size_t, size_t)
+ * @brief handle ioctl request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo save result of info to prevent similar requests somehow
  */
-void rpc_custom_handle_register(
-  __unused size_t type,
-  __unused pid_t origin,
+void rpc_handle_ioctl(
+  size_t type,
+  pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "Register\r\n" )
-  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
+  // dummy error response
+  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     return;
   }
   // get message size
   size_t data_size = _syscall_rpc_get_data_size( data_info );
   if ( errno ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // allocate request
-  vfs_ioctl_perform_request_t* request = malloc( data_size );
-  if ( ! request ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  _syscall_rpc_get_data( request, data_size, data_info, true );
-  if ( errno ) {
-    error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( request );
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     return;
   }
   // get request
-  partition_register_t* command = ( partition_register_t* )request->container;
-  // register handler
-  if ( 0 != handler_add( command->filesystem, command->process ) ) {
-    error.status = -EINVAL;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+  vfs_ioctl_perform_request_t* request = malloc( data_size );
+  if ( ! request ) {
+    err_response.status = -ENOMEM;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
+    return;
+  }
+  memset( request, 0, data_size );
+  _syscall_rpc_get_data( request, data_size, data_info, true );
+  if ( errno ) {
+    err_response.status = -EIO;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     free( request );
     return;
   }
-  // set success flag and return
-  error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-  // free all used temporary structures
+  // get local handler
+  rpc_handler_t handler = bolthur_rpc_get( request->command );
+  if ( ! handler ) {
+    err_response.status = -EIO;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
+    free( request );
+    return;
+  }
+  // execute handler
+  handler( type, origin, data_info, response_info );
   free( request );
+  return;
 }

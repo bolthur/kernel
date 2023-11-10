@@ -114,10 +114,12 @@ static bool fetch_mbr_entry(
   size_t mbr_size = sizeof( uint8_t ) * 512;
   uint8_t* mbr = malloc( mbr_size );
   if ( ! mbr ) {
+    close( fd );
     return false;
   }
   ssize_t result = pread( fd, mbr, mbr_size, 0 );
   if ( 512 != result ) {
+    close( fd );
     return false;
   }
   // close file descriptor again

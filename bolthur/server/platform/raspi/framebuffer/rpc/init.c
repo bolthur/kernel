@@ -17,26 +17,25 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _PLATFORM_RASPI_TIMER_H
-#define _PLATFORM_RASPI_TIMER_H
+#include <libgen.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/bolthur.h>
+#include "../rpc.h"
+#include "../../libiomem.h"
 
-// free running counter incrementing at 1 MHz => Increments each microsecond
-#define TIMER_FREQUENCY_HZ 1000000
-
-// interrupts per second
-#define TIMER_INTERRUPT_PER_SECOND 50
-
-// Timer match bits
-#define SYSTEM_TIMER_MATCH_0 ( 1 << 0 )
-#define SYSTEM_TIMER_MATCH_1 ( 1 << 1 )
-#define SYSTEM_TIMER_MATCH_2 ( 1 << 2 )
-#define SYSTEM_TIMER_MATCH_3 ( 1 << 3 )
-
-// timer interrupts
-#define SYSTEM_TIMER_0_INTERRUPT ( 1 << 0 )
-#define SYSTEM_TIMER_1_INTERRUPT ( 1 << 1 )
-#define SYSTEM_TIMER_2_INTERRUPT ( 1 << 2 )
-#define SYSTEM_TIMER_3_INTERRUPT ( 1 << 3 )
-
-
-#endif
+/**
+ * @fn bool rpc_init(void)
+ * @brief Register necessary rpc handler
+ *
+ * @return
+ */
+bool rpc_init( void ) {
+  bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_handle_ioctl, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler for ioctl\r\n" );
+    return false;
+  }
+  return true;
+}

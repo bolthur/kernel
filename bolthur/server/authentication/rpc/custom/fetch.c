@@ -110,7 +110,7 @@ void rpc_custom_handle_fetch(
   // copy over groups
   for ( size_t idx = 0; idx < node->group_count; idx++ ) {
     fetch_response->gid[ idx ] = node->gid[ idx ];
-    EARLY_STARTUP_PRINT( "fetch_response->gid[ %d ]: %d\r\n",
+    EARLY_STARTUP_PRINT( "fetch_response->gid[ %zu ]: %d\r\n",
       idx, fetch_response->gid[ idx ] )
   }
   // create temporary response

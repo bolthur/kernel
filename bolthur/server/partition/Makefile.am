@@ -7,6 +7,7 @@ partition_SOURCES = \
   rpc/custom/release.c \
   rpc/watch/notify.c \
   rpc/init.c \
+  rpc/ioctl.c \
   rpc/mount.c \
   handler.c \
   main.c \

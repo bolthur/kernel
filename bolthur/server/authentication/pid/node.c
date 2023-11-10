@@ -82,7 +82,7 @@ pid_node_t* pid_node_extract( pid_t pid ) {
   if ( ! n ) {
     return n;
   }
-  if ( 0 >= n->group_count ) {
+  if ( 0 == n->group_count ) {
     // allocate group list
     size_t old_size = 0;
     gid_t* group_list = NULL;

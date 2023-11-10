@@ -634,9 +634,9 @@ dl_image_handle_ptr_t dl_load_entry(
       dl_free_handle( handle );
       return NULL;
     }
-    EARLY_STARTUP_PRINT( "loading to %#x with length %#lx\r\n",
+    EARLY_STARTUP_PRINT( "loading to %#"PRIxPTR" with length %#"PRIx32"\r\n",
       ( uintptr_t )memory,
-      load_header[ 0 ].p_memsz )
+      ( uint32_t )load_header[ 0 ].p_memsz )
     // populate memory start and length
     handle->memory_start = memory;
     handle->memory_size = load_header[ 0 ].p_memsz;
@@ -657,10 +657,10 @@ dl_image_handle_ptr_t dl_load_entry(
       text_address, text_offset, text_off, text_size
     )
     EARLY_STARTUP_PRINT(
-      "load_header[ 0 ].p_vaddr = %#lx, load_header[ 0 ].p_offset = %#lx, "
-      "load_header[ 0 ].p_memsz = %#lx, load_header[ 0 ].p_filesz = %#lx\r\n",
-      load_header[ 0 ].p_vaddr, load_header[ 0 ].p_offset,
-      load_header[ 0 ].p_memsz, load_header[ 0 ].p_filesz
+      "load_header[ 0 ].p_vaddr = %#"PRIx32", load_header[ 0 ].p_offset = %#"PRIx32", "
+      "load_header[ 0 ].p_memsz = %#"PRIx32", load_header[ 0 ].p_filesz = %#"PRIx32"\r\n",
+      ( uint32_t )load_header[ 0 ].p_vaddr, ( uint32_t )load_header[ 0 ].p_offset,
+      ( uint32_t )load_header[ 0 ].p_memsz, ( uint32_t )load_header[ 0 ].p_filesz
     )
 
     uintptr_t data_address = ROUND_DOWN_TO_FULL_PAGE( load_header[ 1 ].p_vaddr );
@@ -674,10 +674,10 @@ dl_image_handle_ptr_t dl_load_entry(
       data_address, data_offset, data_off, data_size, data_file_size
     )
     EARLY_STARTUP_PRINT(
-      "load_header[ 1 ].p_vaddr = %#lx, load_header[ 1 ].p_offset = %#lx, "
-      "load_header[ 1 ].p_memsz = %#lx, load_header[ 1 ].p_filesz = %#lx\r\n",
-      load_header[ 1 ].p_vaddr, load_header[ 1 ].p_offset,
-      load_header[ 1 ].p_memsz, load_header[ 1 ].p_filesz
+      "load_header[ 1 ].p_vaddr = %#"PRIx32", load_header[ 1 ].p_offset = %#"PRIx32", "
+      "load_header[ 1 ].p_memsz = %#"PRIx32", load_header[ 1 ].p_filesz = %#"PRIx32"\r\n",
+      ( uint32_t )load_header[ 1 ].p_vaddr, ( uint32_t )load_header[ 1 ].p_offset,
+      ( uint32_t )load_header[ 1 ].p_memsz, ( uint32_t )load_header[ 1 ].p_filesz
     )
 
     // map text section with data size to get everything loaded correctly

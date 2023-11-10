@@ -182,6 +182,7 @@ void rpc_handle_mount(
     EARLY_STARTUP_PRINT( "UNABLE TO QUERY STAT OF AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
+    close( fd_source );
     return;
   }
   // close again

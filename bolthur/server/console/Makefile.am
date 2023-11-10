@@ -11,6 +11,7 @@ console_SOURCES = \
   rpc/custom/add.c \
   rpc/custom/select.c \
   rpc/init.c \
+  rpc/ioctl.c \
   rpc/write.c \
   console.c \
   main.c

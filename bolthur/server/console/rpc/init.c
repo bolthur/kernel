@@ -28,6 +28,11 @@
  * @return
  */
 bool rpc_init( void ) {
+  bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_handle_ioctl, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )

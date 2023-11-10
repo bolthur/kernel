@@ -233,13 +233,13 @@ bool shared_memory_init( void ) {
 }
 
 /**
- * @fn size_t shared_memory_create(size_t)
+ * @fn shared_memory_entry_t* shared_memory_create(size_t)
  * @brief Create new shared memory area
  *
  * @param len shared area size
  * @return
  */
-size_t shared_memory_create( size_t len ) {
+shared_memory_entry_t* shared_memory_create( size_t len ) {
   // debug output
   #if defined( PRINT_MM_SHARED )
     DEBUG_OUTPUT( "shared_memory_create( %zu )\r\n", len )
@@ -261,7 +261,7 @@ size_t shared_memory_create( size_t len ) {
     return 0;
   }
   // return id of new shared area
-  return entry->id;
+  return entry;
 }
 
 /**

@@ -1013,11 +1013,10 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
 
   // sequence size
   size_t sequence_entry_count = 12;
-  #if !defined( SDHOST_ENABLE_DMA )
-    if ( response_busy ) {
-      sequence_entry_count += 2;
-    }
-  #else
+  if ( response_busy ) {
+    sequence_entry_count += 2;
+  }
+  #if defined( SDHOST_ENABLE_DMA )
     if ( is_data ) {
       sequence_entry_count++;
     }
@@ -1131,26 +1130,24 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
   sequence[ idx ].offset = PERIPHERAL_SDHOST_RESPONSE3;
   idx++;
   // wait for transfer complete for data or if it's a busy command
-  #if !defined( SDHOST_ENABLE_DMA )
-    if ( response_busy ) {
-      // wait until data is done
-      sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
-      sequence[ idx ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
-      sequence[ idx ].loop_and = SDHOST_HOST_STATUS_INT_BUSY
-        | SDHOST_HOST_STATUS_INT_SDIO;
-      sequence[ idx ].loop_max_iteration = timeout;
-      sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-      sequence[ idx ].sleep = 10;
-      idx++;
-      // clear interrupt
-      sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-      sequence[ idx ].value = SDHOST_HOST_STATUS_MASK_ERROR_ALL
-        | SDHOST_HOST_STATUS_INT_BUSY
-        | SDHOST_HOST_STATUS_INT_SDIO;
-      sequence[ idx ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
-      idx++;
-    }
-  #endif
+  if ( response_busy ) {
+    // wait until data is done
+    sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
+    sequence[ idx ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
+    sequence[ idx ].loop_and = SDHOST_HOST_STATUS_INT_BUSY
+      | SDHOST_HOST_STATUS_INT_SDIO;
+    sequence[ idx ].loop_max_iteration = timeout;
+    sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
+    sequence[ idx ].sleep = 10;
+    idx++;
+    // clear interrupt
+    sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
+    sequence[ idx ].value = SDHOST_HOST_STATUS_MASK_ERROR_ALL
+      | SDHOST_HOST_STATUS_INT_BUSY
+      | SDHOST_HOST_STATUS_INT_SDIO;
+    sequence[ idx ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
+    idx++;
+  }
   // wait for transfer complete for data or if it's a busy command
   #if defined( SDHOST_ENABLE_DMA )
     // create shared memory
@@ -1192,11 +1189,6 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
         // clear out space
         memset( shm_addr, 0, device->block_count * device->block_size );
       }
-      // burst word count
-      size_t burst_word_count = util_min(
-        ( SDHOST_DATA_FIFO_PIO_BURST - 1 ) * 4,
-        device->block_count * device->block_size
-      );
       #if defined( SDHOST_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT(command & SDHOST_COMMAND_FLAG_READ
           ? "Perform DMA read\r\n"
@@ -1209,7 +1201,10 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
       sequence[ idx ].offset = PERIPHERAL_SDHOST_DATAPORT;
       sequence[ idx ].dma_copy_size = device->block_count * device->block_size;
       sequence[ idx ].dma_permap = LIBDMA_TI_PERMAP_SDHOST;
-      sequence[ idx ].dma_burst_count = burst_word_count / 4;
+      sequence[ idx ].dma_burst_count = 0;
+      #if defined( SDHOST_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "dma_burst_count = %"PRIu32"\r\n", sequence[ idx ].dma_burst_count )
+      #endif
       idx++;
     }
   #endif
@@ -1318,7 +1313,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
 
   #if defined( SDHOST_ENABLE_DMA )
     if ( is_data && 0 < device->block_count && shm_id ) {
-      idx = 12;
+      idx = 14;
       if ( IOMEM_MMIO_ABORT_TYPE_DMA == sequence[ idx ].abort_type ) {
         // debug output
         #if defined( SDHOST_ENABLE_DEBUG )

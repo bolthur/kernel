@@ -24,6 +24,7 @@
 #define _RPC_H
 
 bool rpc_init( void );
+void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );
 void rpc_handle_mount( size_t, pid_t, size_t, size_t );
 void rpc_handle_mount_async( size_t, pid_t, size_t, size_t );
 void rpc_handle_watch_notify( size_t, pid_t, size_t, size_t );

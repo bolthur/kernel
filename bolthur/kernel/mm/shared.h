@@ -46,7 +46,7 @@ typedef struct {
   ( shared_memory_entry_t* )( ( uint8_t* )n - offsetof( shared_memory_entry_t, node ) )
 
 bool shared_memory_init( void );
-size_t shared_memory_create( size_t );
+shared_memory_entry_t* shared_memory_create( size_t );
 uintptr_t shared_memory_attach( task_process_t*, task_thread_t*, size_t, uintptr_t );
 bool shared_memory_detach( task_process_t*, size_t );
 size_t shared_memory_size( task_process_t*, size_t );

@@ -11,22 +11,26 @@ cppcheck:
 		--include=$(CPPCHECK_KERNEL_INCLUDE) \
 		--project=$(CPPCHECK_KERNEL_PROJECT) \
 		-U__CYGWIN__ -U__APPLE__ -U__GNU_VISIBLE -UASSEMBLER_FILE -UVMS \
-		-v -j4 --force --max-configs=12
+		-v -j4 --force --max-configs=12 \
+		--check-level=exhaustive
 	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
 		--platform=$(CPPCHECK_PLATFORM) \
 		--include=$(CPPCHECK_LIBRARY_INCLUDE) \
 		--project=$(CPPCHECK_LIBRARY_PROJECT) \
-		-U__CYGWIN__ -U__APPLE__ -UVMS -v -j4 --force --max-configs=12
+		-U__CYGWIN__ -U__APPLE__ -UVMS -v -j4 --force --max-configs=12 \
+		--check-level=exhaustive
 	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
 		--platform=$(CPPCHECK_PLATFORM) \
 		--include=$(CPPCHECK_SERVER_INCLUDE) \
 		--project=$(CPPCHECK_SERVER_PROJECT) \
-		-U__CYGWIN__ -U__APPLE__ -UVMS -v -j4 --force --max-configs=12
+		-U__CYGWIN__ -U__APPLE__ -UVMS -v -j4 --force --max-configs=12 \
+		--check-level=exhaustive
 	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
 		--platform=$(CPPCHECK_PLATFORM) \
-	--include=$(CPPCHECK_APPLICATION_INCLUDE) \
+		--include=$(CPPCHECK_APPLICATION_INCLUDE) \
 		--project=$(CPPCHECK_APPLICATION_PROJECT) \
-		-U__CYGWIN__ -U__APPLE__ -UVMS -v -j4 --force --max-configs=12
+		-U__CYGWIN__ -U__APPLE__ -UVMS -v -j4 --force --max-configs=12 \
+		--check-level=exhaustive
 
 image:
 	cd $(ROOT_DIR)/tool && nim -d:release -d:ssl compile --run image.nim \

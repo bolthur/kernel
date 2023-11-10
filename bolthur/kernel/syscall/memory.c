@@ -342,14 +342,14 @@ void syscall_memory_shared_create( void* context ) {
     DEBUG_OUTPUT( "syscall_memory_shared_acquire( %zx )\r\n", len )
   #endif
   // create shared area
-  size_t id = shared_memory_create( len );
+  shared_memory_entry_t* entry = shared_memory_create( len );
   // handle error
-  if ( 0 == id ) {
+  if ( !entry ) {
     syscall_populate_error( context, ( size_t )-ENOMEM );
     return;
   }
   // create and populate return
-  syscall_populate_success( context, id );
+  syscall_populate_success( context, entry->id );
 }
 
 /**

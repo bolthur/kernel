@@ -26,6 +26,7 @@
 #include <inttypes.h>
 #include <fcntl.h>
 
+#include "rpc.h"
 #include "../libconsole.h"
 #include "../libhelper.h"
 #include "psf.h"
@@ -44,6 +45,11 @@ int console_manager_fd = 0;
  * @return
  */
 int main( __unused int argc, __unused char* argv[] ) {
+  EARLY_STARTUP_PRINT( "Setup rpc\r\n" )
+  if ( ! rpc_init() ) {
+    return -1;
+  }
+
   EARLY_STARTUP_PRINT( "Open output driver device\r\n" )
   // open file to framebuffer device
   output_driver_fd = open( OUTPUT_DRIVER, O_RDWR );

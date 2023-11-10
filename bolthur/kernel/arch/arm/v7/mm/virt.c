@@ -272,7 +272,7 @@ virt_context_t* virt_create_context( virt_context_type_t type ) {
     uintptr_t max = virt_get_context_max_address( context );
     context->bitmap_length = ( max - min ) / PAGE_SIZE / VIRT_PAGE_PER_ENTRY;
     context->bitmap = aligned_alloc(
-      sizeof( context->bitmap ),
+      sizeof( *( context->bitmap ) ),
       context->bitmap_length * sizeof( uint32_t ) );
     if ( ! context->bitmap ) {
       v7_long_destroy_context( context, false );
@@ -294,7 +294,7 @@ virt_context_t* virt_create_context( virt_context_type_t type ) {
     uintptr_t max = virt_get_context_max_address( context );
     context->bitmap_length = ( max - min ) / PAGE_SIZE / VIRT_PAGE_PER_ENTRY;
     context->bitmap = aligned_alloc(
-      sizeof( context->bitmap ),
+      sizeof( *( context->bitmap ) ),
       context->bitmap_length * sizeof( uint32_t ) );
     if ( ! context->bitmap ) {
       v7_long_destroy_context( context, false );

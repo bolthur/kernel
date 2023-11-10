@@ -78,24 +78,28 @@ void rpc_handle_watch_notify(
   size_t mbr_size = sizeof( uint8_t ) * 512;
   uint8_t* mbr = malloc( mbr_size );
   if ( ! mbr ) {
+    close( fd );
     free( request );
     return;
   }
   // get stat information
   struct stat target_stat;
   if ( 0 != fstat( fd, &target_stat ) ) {
+    close( fd );
     free( mbr );
     free( request );
     return;
   }
   ssize_t result = pread( fd, mbr, mbr_size, 0 );
   if ( 512 != result ) {
+    close( fd );
     free( mbr );
     free( request );
     return;
   }
   char* path = malloc( sizeof( *path ) * PATH_MAX );
   if ( ! path ) {
+    close( fd );
     free( mbr );
     free( request );
     return;
@@ -129,6 +133,7 @@ void rpc_handle_watch_notify(
     if ( ! dev_add_folder_file_stat( path, &st ) ) {
       EARLY_STARTUP_PRINT( "Unable to add device file\r\n" )
       partition_remove( path );
+      close( fd );
       return;
     }
   }

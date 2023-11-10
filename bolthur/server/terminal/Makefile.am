@@ -7,6 +7,8 @@ terminal_DEPENDENCIES = \
 terminal_LDADD = \
   ${abs_top_builddir}/../library/collection/list/liblist.la
 terminal_SOURCES = \
+  rpc/init.c \
+  rpc/ioctl.c \
   main.c \
   output.c \
   psf.c \

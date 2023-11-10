@@ -109,10 +109,7 @@ void rpc_handle_read(
     request->offset,
     request->shm_id
   ) ) {
-    EARLY_STARTUP_PRINT(
-      "Error while reading mbr from card: %s\r\n",
-      sd_last_error()
-    )
+    EARLY_STARTUP_PRINT( "Error while reading: %s\r\n", sd_last_error())
     // prepare response
     response->len = -EIO;
     // return response

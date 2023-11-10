@@ -240,6 +240,8 @@ rpc_backup_t* rpc_generic_raise(
       rpc_backup_destroy( backup );
       return NULL;
     }
+    // cache rpc info structure
+    backup->rpc_info = rpc_info;
   }
   // return created backup
   return backup;

@@ -124,10 +124,17 @@ void rpc_handle_getdents(
   ext_iterator_directory_t it;
   memset( &it, 0, sizeof( it ) );
   result = ext_iterator_directory_init( &it, dir, ( uint64_t )request->offset );
-  size_t buffer_pos = 0;
+  if ( EOK != result ) {
+    free( response );
+    dummy_response.result = -result;
+    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL );
+    free( request );
+    return;
+  }
   off_t offset = request->offset;
   ssize_t read_count = 0;
   if ( it.entry ) {
+    size_t buffer_pos = 0;
     do {
       // get pointer to directory entry
       struct dirent* dentry = ( struct dirent* )&response->buffer[ buffer_pos ];

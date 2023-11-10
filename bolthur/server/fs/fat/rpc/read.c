@@ -138,7 +138,6 @@ void rpc_handle_read(
     return;
   }
   // read content
-  EARLY_STARTUP_PRINT( "request->len = %d\r\n", request->len )
   uint64_t read_count = 0;
   result = fat_file_read( fd, shm_addr, request->len, &read_count );
   if ( EOK != result ) {
@@ -149,7 +148,6 @@ void rpc_handle_read(
     free( response );
     return;
   }
-  EARLY_STARTUP_PRINT( "read done!\r\n" )
   // set success and return
   response->len = ( ssize_t )read_count;
   bolthur_rpc_return( type, response, sizeof( *response ), NULL );

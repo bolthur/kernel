@@ -185,16 +185,11 @@ static void apply_sleep( mmio_sleep_t sleep_type, uint32_t sleep_value ) {
  */
 void rpc_handle_mmio_perform(
   __unused size_t type,
-  pid_t origin,
+  __unused pid_t origin,
   size_t data_info,
   __unused size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
-  // validate origin
-  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
   // handle no data
   error.status = -EINVAL;
   if( ! data_info ) {
@@ -284,8 +279,8 @@ void rpc_handle_mmio_perform(
       && IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ != ( *mmio_request )[ i ].type
       && IOMEM_MMIO_ACTION_DELAY != ( *mmio_request )[ i ].type
       && IOMEM_MMIO_ACTION_SLEEP != ( *mmio_request )[ i ].type
-      && IOMEM_MMIO_ACTION_DMA_READ != ( *mmio_request )[ i ].type
-      && IOMEM_MMIO_ACTION_DMA_WRITE != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_DMA_READ_DEV != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_ACTION_DMA_WRITE_DEV != ( *mmio_request )[ i ].type
     ) {
       error.status = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -602,17 +597,23 @@ void rpc_handle_mmio_perform(
         break;
       // handle write "previous value"
       case IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ:
-        mmio_write( ( *mmio_request )[ i ].offset, ( *mmio_request )[ i - 1 ].value );
+        if ( i > 0 ) {
+          mmio_write( ( *mmio_request )[ i ].offset, ( *mmio_request )[ i - 1 ].value );
+        }
         break;
       // handle write "previous value | value"
       case IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ:
-        value = ( *mmio_request )[ i - 1 ].value | ( *mmio_request )[ i ].value;
-        mmio_write( ( *mmio_request )[ i ].offset, value );
+        if ( i > 0 ) {
+          value = ( *mmio_request )[ i - 1 ].value | ( *mmio_request )[ i ].value;
+          mmio_write( ( *mmio_request )[ i ].offset, value );
+        }
         break;
       // handle write "previous value & value"
       case IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ:
-        value = ( *mmio_request )[ i - 1 ].value & ( *mmio_request )[ i ].value;
-        mmio_write( ( *mmio_request )[ i ].offset, value );
+        if ( i > 0 ) {
+          value = ( *mmio_request )[ i - 1 ].value & ( *mmio_request )[ i ].value;
+          mmio_write( ( *mmio_request )[ i ].offset, value );
+        }
         break;
       // delay given amount of cycles
       case IOMEM_MMIO_ACTION_DELAY:
@@ -622,7 +623,7 @@ void rpc_handle_mmio_perform(
       case IOMEM_MMIO_ACTION_SLEEP:
         apply_sleep( ( *mmio_request )[ i ].sleep_type, ( *mmio_request )[ i ].sleep );
         break;
-      case IOMEM_MMIO_ACTION_DMA_READ:
+      case IOMEM_MMIO_ACTION_DMA_READ_DEV:
       {
         // translate mmio start to bus address
         uintptr_t bus = _syscall_memory_translate_physical( ( uintptr_t )mmio_start )
@@ -695,14 +696,6 @@ void rpc_handle_mmio_perform(
             continue;
           }
           // prepare transfer information
-          if ( 0 != dma_block_transfer_info_burst_length(
-            ( *mmio_request )[ i ].dma_burst_count
-          ) ) {
-            _syscall_memory_shared_detach( shm_id );
-            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
-            dma_error = true;
-            continue;
-          }
           if ( 0 != dma_block_transfer_info_wait_response( true ) ) {
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
@@ -770,7 +763,7 @@ void rpc_handle_mmio_perform(
         }
         break;
       }
-      case IOMEM_MMIO_ACTION_DMA_WRITE:
+      case IOMEM_MMIO_ACTION_DMA_WRITE_DEV:
       {
         /// FIXME: ADD LIKE READING
         break;

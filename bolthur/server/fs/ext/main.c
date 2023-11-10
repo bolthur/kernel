@@ -111,6 +111,7 @@ int main( __unused int argc, __unused char* argv[] ) {
     );
     // handle error
     if ( -1 == result ) {
+      EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
       free( reg );
       close( fd );
       return -1;

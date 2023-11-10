@@ -28,6 +28,11 @@
  * @return
  */
 bool rpc_init( void ) {
+  bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_handle_ioctl, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler mount!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( RPC_VFS_MOUNT, rpc_handle_mount, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler mount!\r\n" )

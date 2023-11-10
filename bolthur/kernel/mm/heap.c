@@ -49,6 +49,9 @@ bool heap_init_get( void ) {
   return ( bool )kernel_heap;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-allocation-size"
+#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
 /**
  * @fn void heap_init(heap_init_state_t)
  * @brief new heap init implementation
@@ -105,7 +108,7 @@ void heap_init( heap_init_state_t state ) {
   assert( ! kernel_heap );
 
   // place right at the beginning
-  kernel_heap = ( heap_manager_t* )&__initial_heap_start;
+  kernel_heap = ( heap_manager_t* )start;
   // clear out space
   memset( kernel_heap, 0, sizeof( heap_manager_t ) );
 
@@ -130,6 +133,7 @@ void heap_init( heap_init_state_t state ) {
   block->next = NULL;
   block->previous = NULL;
 }
+#pragma GCC diagnostic pop
 
 /**
  * @fn void heap_allocate*(size_t, size_t)

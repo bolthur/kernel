@@ -1062,11 +1062,9 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       sequence_entry_count++;
     #endif
   }
-  #if !defined( EMMC_ENABLE_DMA )
-    if ( response_busy || is_data ) {
-        sequence_entry_count += 2;
-    }
-  #endif
+  if ( response_busy || is_data ) {
+      sequence_entry_count += 2;
+  }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
@@ -1294,32 +1292,29 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       uint32_t interrupt = ( command & EMMC_CMDTM_CMD_TM_DAT_DIR_CH )
         ? EMMC_INTERRUPT_READ_RDY : EMMC_INTERRUPT_WRITE_RDY;
       sequence[ idx ].type = interrupt == EMMC_INTERRUPT_READ_RDY ?
-        IOMEM_MMIO_ACTION_DMA_READ : IOMEM_MMIO_ACTION_DMA_WRITE;
+        IOMEM_MMIO_ACTION_DMA_READ_DEV : IOMEM_MMIO_ACTION_DMA_WRITE_DEV;
       sequence[ idx ].value = shm_id;
       sequence[ idx ].offset = PERIPHERAL_EMMC_DATA;
       sequence[ idx ].dma_copy_size = device->block_count * device->block_size;
       sequence[ idx ].dma_permap = LIBDMA_TI_PERMAP_EMMC;
-      sequence[ idx ].dma_burst_count = 0;
       idx++;
     }
   #endif
   // wait for transfer complete for data or if it's a busy command
-  #if !defined( EMMC_ENABLE_DMA )
-    if ( response_busy || is_data ) {
-      // wait until data is done
-      sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
-      sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
-      sequence[ idx ].loop_and = EMMC_INTERRUPT_DATA_DONE;
-      sequence[ idx ].loop_max_iteration = timeout;
-      sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-      sequence[ idx ].sleep = 10;
-      idx++;
-      // clear interrupt
-      sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
-      sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
-      sequence[ idx ].value = EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE;
-    }
-  #endif
+  if ( response_busy || is_data ) {
+    // wait until data is done
+    sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
+    sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
+    sequence[ idx ].loop_and = EMMC_INTERRUPT_DATA_DONE;
+    sequence[ idx ].loop_max_iteration = timeout;
+    sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
+    sequence[ idx ].sleep = 10;
+    idx++;
+    // clear interrupt
+    sequence[ idx ].type = IOMEM_MMIO_ACTION_WRITE;
+    sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
+    sequence[ idx ].value = EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE;
+  }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Executing command sequence with ioctl\r\n" )
@@ -1480,44 +1475,44 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
           return EMMC_RESPONSE_IO;
         }
       }
+      idx++;
     }
   #endif
 
   // response busy or data transfer
-  #if !defined( EMMC_ENABLE_DMA )
-    if ( response_busy || is_data ) {
-      if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ idx ].abort_type ) {
+
+  if ( response_busy || is_data ) {
+    if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ idx ].abort_type ) {
+      // debug output
+      #if defined( EMMC_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Handle possible data transfer timeout\r\n" )
+      #endif
+      // mask done and timeout done
+      uint32_t mask_done = EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE;
+      uint32_t timeout_done = ( EMMC_INTERRUPT_DTO_ERR | EMMC_INTERRUPT_DATA_DONE );
+      // transfer complete overwrites timeout
+      if (
+        EMMC_INTERRUPT_DATA_DONE != ( sequence[ idx ].value & mask_done )
+        && timeout_done != ( sequence[ idx ].value & mask_done )
+      ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Handle possible data transfer timeout\r\n" )
+          EARLY_STARTUP_PRINT( "wait for final data done timed out\r\n" )
         #endif
-        // mask done and timeout done
-        uint32_t mask_done = EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE;
-        uint32_t timeout_done = ( EMMC_INTERRUPT_DTO_ERR | EMMC_INTERRUPT_DATA_DONE );
-        // transfer complete overwrites timeout
-        if (
-          EMMC_INTERRUPT_DATA_DONE != ( sequence[ idx ].value & mask_done )
-          && timeout_done != ( sequence[ idx ].value & mask_done )
-        ) {
-          // debug output
-          #if defined( EMMC_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "wait for final data done timed out\r\n" )
-          #endif
-          // save last interrupt and specific error
-          device->last_interrupt = sequence[ idx ].value;
-          device->last_error = sequence[ idx ].value & EMMC_INTERRUPT_MASK;
-          // mask interrupts again
-          while ( EMMC_RESPONSE_OK != interrupt_mark_handled(
-            EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE
-          ) ) {
-            __asm__ __volatile__( "nop" );
-          }
-          // return failure
-          return EMMC_RESPONSE_TIMEOUT;
+        // save last interrupt and specific error
+        device->last_interrupt = sequence[ idx ].value;
+        device->last_error = sequence[ idx ].value & EMMC_INTERRUPT_MASK;
+        // mask interrupts again
+        while ( EMMC_RESPONSE_OK != interrupt_mark_handled(
+          EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE
+        ) ) {
+          __asm__ __volatile__( "nop" );
         }
+        // return failure
+        return EMMC_RESPONSE_TIMEOUT;
       }
     }
-  #endif
+  }
   // return success
   return EMMC_RESPONSE_OK;
 }

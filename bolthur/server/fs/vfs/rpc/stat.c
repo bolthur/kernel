@@ -130,7 +130,7 @@ void rpc_handle_stat(
     return;
   }
   // handle handled by itself
-  if ( getpid() == mount_point->pid ) {
+  if ( vfs_pid == mount_point->pid ) {
     response.success = true;
     response.handler = getpid();
     memset( &response.info, 0, sizeof( response.info ) );

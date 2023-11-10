@@ -37,6 +37,7 @@ typedef struct {
   bool active;
   bool sync;
   size_t origin_data_id;
+  void* rpc_info;
 } rpc_backup_t;
 
 rpc_backup_t* rpc_backup_get_active( task_thread_t* );

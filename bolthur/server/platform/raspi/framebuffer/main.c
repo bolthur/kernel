@@ -26,6 +26,7 @@
 #include "../../../libhelper.h"
 #include "../../../libframebuffer.h"
 #include "framebuffer.h"
+#include "rpc.h"
 
 /**
  * @fn int main(int, char*[])
@@ -37,6 +38,11 @@
  */
 int main( __unused int argc, __unused char* argv[] ) {
   EARLY_STARTUP_PRINT( "Setup framebuffer\r\n" )
+
+  // initialize rpc
+  if ( ! rpc_init() ) {
+    return -1;
+  }
   // initialize framebuffer
   if( ! framebuffer_init() ) {
     return -1;
