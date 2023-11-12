@@ -33,6 +33,8 @@
 #include "../../delay.h"
 #include "../../../libiomem.h"
 #include "../../../libdma.h"
+#include "../../../libperipheral.h"
+#include "../../../libsdhost.h"
 #include "../../dma.h"
 #include "../../generic.h"
 
@@ -281,6 +283,8 @@ void rpc_handle_mmio_perform(
       && IOMEM_MMIO_ACTION_SLEEP != ( *mmio_request )[ i ].type
       && IOMEM_MMIO_ACTION_DMA_READ_DEV != ( *mmio_request )[ i ].type
       && IOMEM_MMIO_ACTION_DMA_WRITE_DEV != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_SDHOST_DATA_READ != ( *mmio_request )[ i ].type
+      && IOMEM_MMIO_SDHOST_DATA_WRITE != ( *mmio_request )[ i ].type
     ) {
       error.status = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
@@ -630,7 +634,8 @@ void rpc_handle_mmio_perform(
           + ( *mmio_request )[ i ].offset;
         if ( errno ) {
           ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
-          break;
+          skip = true;
+          continue;
         }
         // get shared memory id
         size_t shm_id = ( *mmio_request )[ i ].value;
@@ -641,7 +646,8 @@ void rpc_handle_mmio_perform(
         );
         if ( errno ) {
           ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
-          break;
+          skip = true;
+          continue;
         }
         // loop through pages and perform requests
         bool dma_error = false;
@@ -674,7 +680,7 @@ void rpc_handle_mmio_perform(
           // set transfer length, stride and next
           if ( 0 != dma_block_set_transfer_length(
             ( uint32_t )fmin(
-              ( double )( *mmio_request )[ i ].dma_copy_size,
+              ( double )( *mmio_request )[ i ].dma_copy_size - size,
               ( double )PAGE_SIZE
             )
           ) ) {
@@ -759,13 +765,293 @@ void rpc_handle_mmio_perform(
         if ( errno ) {
           _syscall_memory_shared_detach( shm_id );
           ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
-          break;
+          // set skip
+          skip = true;
+          continue;
+        }
+        if ( dma_error ) {
+          // set skip for following commands
+          skip = true;
+          // skip
+          continue;
         }
         break;
       }
       case IOMEM_MMIO_ACTION_DMA_WRITE_DEV:
       {
-        /// FIXME: ADD LIKE READING
+        // translate mmio start to bus address
+        uintptr_t bus = _syscall_memory_translate_physical( ( uintptr_t )mmio_start )
+          + ( *mmio_request )[ i ].offset;
+        if ( errno ) {
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+          skip = true;
+          continue;
+        }
+        // get shared memory id
+        size_t shm_id = ( *mmio_request )[ i ].value;
+        // attach it
+        void* shm_addr = _syscall_memory_shared_attach(
+          shm_id,
+          ( uintptr_t )NULL
+        );
+        if ( errno ) {
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+          skip = true;
+          continue;
+        }
+        // loop through pages and perform requests
+        bool dma_error = false;
+        for (
+          uint32_t size = 0;
+          size < ( *mmio_request )[ i ].dma_copy_size && !dma_error;
+          size += PAGE_SIZE
+        ) {
+          dma_block_prepare();
+          // get physical memory address
+          uintptr_t physical = _syscall_memory_translate_physical(
+            ( uintptr_t )shm_addr + size
+          );
+          if ( errno ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          // set block address
+          if ( 0 != dma_block_set_address(
+            physical | 0xC0000000,
+            ( bus & 0x00FFFFFF ) | 0x7E000000
+          ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          // set transfer length, stride and next
+          if ( 0 != dma_block_set_transfer_length(
+            ( uint32_t )fmin(
+              ( double )( *mmio_request )[ i ].dma_copy_size - size,
+              ( double )PAGE_SIZE
+            )
+          ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_set_stride( 0 ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          };
+          if ( 0 != dma_block_set_next( 0 ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          // prepare transfer information
+          if ( 0 != dma_block_transfer_info_wait_response( true ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_source_increment( true ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_src_width( true ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_dest_dreq( true ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_permap( ( *mmio_request )[ i ].dma_permap ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_interrupt_enable( true ) ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          // start dma
+          if ( 0 != dma_start() ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          // wait until completed
+          if ( 0 != dma_wait() ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          // finish dma
+          if ( 0 != dma_finish() ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+        }
+        // detach shared memory
+        _syscall_memory_shared_detach( shm_id );
+        if ( errno ) {
+          _syscall_memory_shared_detach( shm_id );
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+          // set skip
+          skip = true;
+          continue;
+        }
+        if ( dma_error ) {
+          // set skip for following commands
+          skip = true;
+          // skip
+          continue;
+        }
+        break;
+      }
+      case IOMEM_MMIO_SDHOST_DATA_READ:
+      {
+        // get shared memory id
+        size_t shm_id = ( *mmio_request )[ i ].value;
+        // attach it
+        void* shm_addr = _syscall_memory_shared_attach(
+          shm_id,
+          ( uintptr_t )NULL
+        );
+        if ( errno ) {
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_IO;
+          skip = true;
+          continue;
+        }
+        // calculate necessary word count
+        size_t necessary_word = ( *mmio_request )[ i ].dma_copy_size / sizeof( uint32_t );
+        uint32_t* buffer = ( uint32_t* )shm_addr;
+        while ( necessary_word ) {
+          size_t word_count;
+          // burst word count
+          size_t burst_word_count = necessary_word > SDHOST_DATA_FIFO_PIO_BURST
+            ? SDHOST_DATA_FIFO_PIO_BURST : necessary_word;
+          uint32_t debug_register = mmio_read( PERIPHERAL_SDHOST_DEBUG );
+          // determine word count depending on read
+          word_count = SDHOST_DEBUG_FIFO_FILL( debug_register );
+          if ( word_count < burst_word_count ) {
+            uint32_t fsm_state = debug_register & SDHOST_DEBUG_FIFO_FILL_MASK;
+            // handle possible read / write error
+            if (
+              SDHOST_DEBUG_FSM_READDATA != fsm_state
+              && SDHOST_DEBUG_FSM_READWAIT != fsm_state
+              && SDHOST_DEBUG_FSM_READCRC != fsm_state
+            ) {
+              uint32_t host_status = mmio_read( PERIPHERAL_SDHOST_HOST_STATUS );
+              // handle error
+              if ( host_status & SDHOST_HOST_STATUS_MASK_ERROR_ALL ) {
+                break;
+              }
+            }
+            // skip until enough words are there
+            continue;
+          } else if (word_count > necessary_word) {
+            word_count = necessary_word;
+          }
+          // subtract from total
+          necessary_word -= word_count;
+          for ( size_t idx = 0; idx < word_count; idx++ ) {
+            uint32_t val = mmio_read( PERIPHERAL_SDHOST_DATAPORT );
+            memcpy( buffer++, &val, sizeof( uint32_t ) );
+          }
+        }
+        // detach shared memory
+        _syscall_memory_shared_detach( shm_id );
+        if ( errno ) {
+          _syscall_memory_shared_detach( shm_id );
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+          // set skip
+          skip = true;
+          continue;
+        }
+        break;
+      }
+      case IOMEM_MMIO_SDHOST_DATA_WRITE:
+      {
+        // get shared memory id
+        size_t shm_id = ( *mmio_request )[ i ].value;
+        // attach it
+        void* shm_addr = _syscall_memory_shared_attach(
+          shm_id,
+          ( uintptr_t )NULL
+        );
+        if ( errno ) {
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_IO;
+          skip = true;
+          continue;
+        }
+        // calculate necessary word count
+        size_t necessary_word = ( *mmio_request )[ i ].dma_copy_size / sizeof( uint32_t );
+        uint32_t* buffer = ( uint32_t* )shm_addr;
+        while ( necessary_word ) {
+          size_t word_count;
+          // burst word count
+          size_t burst_word_count = necessary_word > SDHOST_DATA_FIFO_PIO_BURST
+            ? SDHOST_DATA_FIFO_PIO_BURST : necessary_word;
+          uint32_t debug_register = mmio_read( PERIPHERAL_SDHOST_DEBUG );
+          // determine word count depending on read
+          word_count = SDHOST_FIFO_SIZE - SDHOST_DEBUG_FIFO_FILL( debug_register );
+          if ( word_count < burst_word_count ) {
+            uint32_t fsm_state = debug_register & SDHOST_DEBUG_FIFO_FILL_MASK;
+            // handle possible read / write error
+            if (
+              SDHOST_DEBUG_FSM_WRITEDATA != fsm_state
+              && SDHOST_DEBUG_FSM_WRITEWAIT1 != fsm_state
+              && SDHOST_DEBUG_FSM_WRITEWAIT2 != fsm_state
+              && SDHOST_DEBUG_FSM_WRITECRC != fsm_state
+              && SDHOST_DEBUG_FSM_WRITESTART1 != fsm_state
+              && SDHOST_DEBUG_FSM_WRITESTART2 != fsm_state
+            ) {
+              uint32_t host_status = mmio_read( PERIPHERAL_SDHOST_HOST_STATUS );
+              // handle error
+              if ( host_status & SDHOST_HOST_STATUS_MASK_ERROR_ALL ) {
+                break;
+              }
+            }
+            // skip until enough words are there
+            continue;
+          } else if (word_count > necessary_word) {
+            word_count = necessary_word;
+          }
+          // subtract from total
+          necessary_word -= word_count;
+          for ( size_t idx = 0; idx < word_count; idx++ ) {
+            mmio_write( PERIPHERAL_SDHOST_DATAPORT, *buffer );
+            buffer++;
+          }
+        }
+        // detach shared memory
+        _syscall_memory_shared_detach( shm_id );
+        if ( errno ) {
+          _syscall_memory_shared_detach( shm_id );
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_IO;
+          // set skip
+          skip = true;
+          continue;
+        }
         break;
       }
       // default shouldn't happen due to previous validation

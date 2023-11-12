@@ -473,6 +473,8 @@ int dma_start( void ) {
  * @brief Method to wait until dma finished
  *
  * @return
+ *
+ * @todo add timeout to dma wait
  */
 int dma_wait( void ) {
   if ( ! block ) {

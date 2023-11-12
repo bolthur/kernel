@@ -1480,7 +1480,6 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   #endif
 
   // response busy or data transfer
-
   if ( response_busy || is_data ) {
     if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ idx ].abort_type ) {
       // debug output
