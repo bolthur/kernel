@@ -27,6 +27,7 @@
 #include "barrier.h"
 #include "../libdma.h"
 #include "../libperipheral.h"
+#include "../libiomem.h"
 #include "generic.h"
 
 static dma_control_block_t* block = NULL;
@@ -473,10 +474,13 @@ int dma_start( void ) {
  * @brief Method to wait until dma finished
  *
  * @return
- *
- * @todo add timeout to dma wait
  */
-int dma_wait( void ) {
+int dma_wait(
+  int64_t loop_max_iteration,
+  mmio_sleep_t sleep_type,
+  uint32_t sleep_value,
+  void ( *apply_sleep )( mmio_sleep_t, uint32_t )
+) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -488,10 +492,20 @@ int dma_wait( void ) {
     // check for error
     if ( value & LIBDMA_CS_ERROR ) {
       //EARLY_STARTUP_PRINT( "DMA ERROR!\r\n" )
-      errno = EIO;
+      last_error = -EIO;
       return -1;
     }
+    // break
+    if ( -1 != loop_max_iteration && ! loop_max_iteration-- ) {
+      last_error = -ETIMEDOUT;
+      return -1;
+    }
+    // apply possible sleep
+    if ( ! ( value & LIBDMA_CS_END ) ) {
+      apply_sleep( sleep_type, sleep_value );
+    }
   } while ( ! ( value & LIBDMA_CS_END ) );
+  // return success
   return 0;
 }
 

@@ -25,6 +25,5 @@
 #define _RPC_H
 
 bool rpc_init( void );
-void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );
 
 #endif

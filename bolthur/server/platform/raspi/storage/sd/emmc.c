@@ -1297,6 +1297,9 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       sequence[ idx ].offset = PERIPHERAL_EMMC_DATA;
       sequence[ idx ].dma_copy_size = device->block_count * device->block_size;
       sequence[ idx ].dma_permap = LIBDMA_TI_PERMAP_EMMC;
+      sequence[ idx ].loop_max_iteration = timeout;
+      sequence[ idx ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
+      sequence[ idx ].sleep = 10;
       idx++;
     }
   #endif

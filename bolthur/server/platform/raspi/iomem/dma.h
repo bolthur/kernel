@@ -19,6 +19,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include "../libiomem.h"
 
 #ifndef _DMA_H
 #define _DMA_H
@@ -55,7 +56,7 @@ int dma_block_transfer_info_permap( uint32_t );
 
 int dma_init( void );
 int dma_start( void );
-int dma_wait( void );
+int dma_wait( int64_t, mmio_sleep_t, uint32_t, void ( *apply_sleep )( mmio_sleep_t, uint32_t ) );
 int dma_finish( void );
 int dma_last_error( void );
 void dma_dump( void );

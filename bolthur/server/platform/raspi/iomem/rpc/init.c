@@ -32,11 +32,6 @@
  * @return
  */
 bool rpc_init( void ) {
-  bolthur_rpc_bind( RPC_VFS_IOCTL, rpc_handle_ioctl, true );
-  if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler for ioctl\r\n" );
-    return false;
-  }
   bolthur_rpc_bind( IOMEM_RPC_MAILBOX, rpc_handle_mailbox, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )

@@ -14,7 +14,6 @@ iomem_SOURCES = \
   rpc/mmio/perform.c \
   rpc/mmio/unlock.c \
   rpc/init.c \
-  rpc/ioctl.c \
   rpc/mailbox.c \
   barrier.c \
   delay.c \

@@ -43,6 +43,11 @@ void rpc_custom_handle_release(
   __unused size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );

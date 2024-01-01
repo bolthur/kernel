@@ -8,7 +8,6 @@ framebuffer_LDADD = \
   ${abs_top_builddir}/../library/collection/list/liblist.la
 framebuffer_SOURCES = \
   rpc/init.c \
-  rpc/ioctl.c \
   framebuffer.c \
   main.c
 framebuffer_LDFLAGS = -all-static --static

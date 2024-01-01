@@ -187,11 +187,16 @@ static void apply_sleep( mmio_sleep_t sleep_type, uint32_t sleep_value ) {
  */
 void rpc_handle_mmio_perform(
   __unused size_t type,
-  __unused pid_t origin,
+  pid_t origin,
   size_t data_info,
   __unused size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    return;
+  }
   // handle no data
   error.status = -EINVAL;
   if( ! data_info ) {
@@ -629,6 +634,10 @@ void rpc_handle_mmio_perform(
         break;
       case IOMEM_MMIO_ACTION_DMA_READ_DEV:
       {
+        // prepare max iteration
+        if ( 0 < ( *mmio_request )[ i ].loop_max_iteration ) {
+          loop_max_iteration = ( *mmio_request )[ i ].loop_max_iteration;
+        }
         // translate mmio start to bus address
         uintptr_t bus = _syscall_memory_translate_physical( ( uintptr_t )mmio_start )
           + ( *mmio_request )[ i ].offset;
@@ -746,7 +755,12 @@ void rpc_handle_mmio_perform(
             continue;
           }
           // wait until completed
-          if ( 0 != dma_wait() ) {
+          if ( 0 != dma_wait(
+            loop_max_iteration,
+            ( *mmio_request )[ i ].sleep_type,
+            ( *mmio_request )[ i ].sleep,
+            apply_sleep
+          ) ) {
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -779,6 +793,10 @@ void rpc_handle_mmio_perform(
       }
       case IOMEM_MMIO_ACTION_DMA_WRITE_DEV:
       {
+        // prepare max iteration
+        if ( 0 < ( *mmio_request )[ i ].loop_max_iteration ) {
+          loop_max_iteration = ( *mmio_request )[ i ].loop_max_iteration;
+        }
         // translate mmio start to bus address
         uintptr_t bus = _syscall_memory_translate_physical( ( uintptr_t )mmio_start )
           + ( *mmio_request )[ i ].offset;
@@ -896,7 +914,12 @@ void rpc_handle_mmio_perform(
             continue;
           }
           // wait until completed
-          if ( 0 != dma_wait() ) {
+          if ( 0 != dma_wait(
+            loop_max_iteration,
+            ( *mmio_request )[ i ].sleep_type,
+            ( *mmio_request )[ i ].sleep,
+            apply_sleep
+          ) ) {
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -963,6 +986,8 @@ void rpc_handle_mmio_perform(
               uint32_t host_status = mmio_read( PERIPHERAL_SDHOST_HOST_STATUS );
               // handle error
               if ( host_status & SDHOST_HOST_STATUS_MASK_ERROR_ALL ) {
+                ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_IO;
+                skip = true;
                 break;
               }
             }
@@ -1028,6 +1053,8 @@ void rpc_handle_mmio_perform(
               uint32_t host_status = mmio_read( PERIPHERAL_SDHOST_HOST_STATUS );
               // handle error
               if ( host_status & SDHOST_HOST_STATUS_MASK_ERROR_ALL ) {
+                ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_IO;
+                skip = true;
                 break;
               }
             }
