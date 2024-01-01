@@ -3,7 +3,7 @@ AC_PREREQ([2.71])
 
 AC_INIT([bolthur-server], [0.1.0-dev], [https://github.com/bolthur/kernel/issues], [bolthur-server], [https://github.com/bolthur/kernel])
 
-AC_COPYRIGHT([Copyright (C) 2018 - 2023 bolthur project])
+AC_COPYRIGHT([Copyright (C) 2018 - 2024 bolthur project])
 
 AC_CONFIG_AUX_DIR([_aux/config])
 AC_CONFIG_MACRO_DIR([../../build-aux/m4])
@@ -57,7 +57,6 @@ AS_IF([test "x$enable_debug" == "xyes" && test "x$enable_release" == "xyes"], [
 ])
 
 # dependencies
-PKG_CHECK_MODULES([LWEXT4], [lwext4 >= 1.0.0])
 PKG_CHECK_MODULES([CONFINI], [libconfini >= 1.16.4])
 PKG_CHECK_MODULES([ZLIB], [zlib >= 1.2.12])
 PKG_CHECK_MODULES([BFS], [bfs >= 0.1.0])
