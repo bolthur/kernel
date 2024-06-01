@@ -24,11 +24,10 @@
 #define _TERMINAL_H
 
 #define TERMINAL_BASE_PATH "/dev/tty"
-#define TERMINAL_MAX_PATH 32
 #define TERMINAL_MAX_NUM 7
 
 typedef struct {
-  char path[ TERMINAL_MAX_PATH ];
+  char path[ PATH_MAX ];
   uint32_t col;
   uint32_t row;
   uint32_t max_col;

@@ -17,6 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include <libgen.h>
 #include <stdlib.h>
 #include <string.h>
@@ -80,6 +81,7 @@ static char* split_device_partition(
       if ( partition ) {
         *partition = strtoul( num, ( char** )NULL, 10 );
       }
+      free( num );
       break;
     }
   }

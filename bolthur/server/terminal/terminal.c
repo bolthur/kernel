@@ -94,7 +94,13 @@ bool terminal_init( void ) {
     return false;
   }
   // base path
-  char tty_path[ TERMINAL_MAX_PATH ];
+  char *tty_path = malloc( sizeof(char) * PATH_MAX);
+  if ( ! tty_path ) {
+    free( command_select );
+    free( command_add );
+    list_destruct( terminal_list );
+    return false;
+  }
   size_t in = RPC_CUSTOM_START;
   size_t out = RPC_CUSTOM_START + 1;
   size_t err = RPC_CUSTOM_START + 2;
@@ -111,7 +117,7 @@ bool terminal_init( void ) {
     // prepare device path
     snprintf(
       tty_path,
-      TERMINAL_MAX_PATH,
+      PATH_MAX,
       TERMINAL_BASE_PATH"%"PRIu32,
       current
     );
@@ -120,6 +126,7 @@ bool terminal_init( void ) {
     if ( !dev_add_file( tty_path, device_info, 3 ) ) {
       EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
       list_destruct( terminal_list );
+      free( tty_path );
       free( command_add );
       free( command_select );
       free( terminal_list );
@@ -134,6 +141,7 @@ bool terminal_init( void ) {
         strerror( errno )
       )
       list_destruct( terminal_list );
+      free( tty_path );
       free( command_add );
       free( command_select );
       free( terminal_list );
@@ -147,6 +155,7 @@ bool terminal_init( void ) {
         strerror( errno )
       )
       list_destruct( terminal_list );
+      free( tty_path );
       free( command_add );
       free( command_select );
       free( terminal_list );
@@ -160,6 +169,7 @@ bool terminal_init( void ) {
         strerror( errno )
       )
       list_destruct( terminal_list );
+      free( tty_path );
       free( command_add );
       free( command_select );
       free( terminal_list );
@@ -179,6 +189,8 @@ bool terminal_init( void ) {
       &tmp
     );
     if ( -1 == result ) {
+      list_destruct( terminal_list );
+      free( tty_path );
       free( command_add );
       free( command_select );
       list_destruct( terminal_list );
@@ -188,6 +200,7 @@ bool terminal_init( void ) {
     terminal_t* term = malloc( sizeof( *term ) );
     if ( ! term ) {
       list_destruct( terminal_list );
+      free( tty_path );
       free( command_add );
       free( command_select );
       free( terminal_list );
@@ -198,7 +211,7 @@ bool terminal_init( void ) {
     // push max columns and rows and tty path
     term->max_col = resolution_data.width / psf_glyph_width();
     term->max_row = resolution_data.height / psf_glyph_height();
-    strncpy( term->path, tty_path, TERMINAL_MAX_PATH );
+    strncpy( term->path, tty_path, PATH_MAX - 1 );
     term->bpp = resolution_data.depth;
     // try to allocate shared memory
     void* shm_addr = _syscall_memory_shared_attach( tmp.shm_id, 0 );
@@ -222,6 +235,7 @@ bool terminal_init( void ) {
         }
         break;
       }
+      free( tty_path );
       free( term );
       free( command_add );
       free( command_select );
@@ -247,6 +261,7 @@ bool terminal_init( void ) {
       command_add
     );
     if ( -1 == result ) {
+      free( tty_path );
       free( command_add );
       free( command_select );
       list_destruct( terminal_list );
@@ -273,6 +288,7 @@ bool terminal_init( void ) {
     command_select
   );
   if ( -1 == result ) {
+    free( tty_path );
     free( command_add );
     free( command_select );
     list_destruct( terminal_list );
@@ -280,6 +296,7 @@ bool terminal_init( void ) {
   }
   int response = *( ( int* )command_select );
   // free again
+  free( tty_path );
   free( command_add );
   free( command_select );
   // return success

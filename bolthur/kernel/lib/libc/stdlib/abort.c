@@ -17,6 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC diagnostic ignored "-Wanalyzer-infinite-loop"
+
 #include "../../stdlib.h"
 #include "../../../interrupt.h"
 

@@ -130,7 +130,6 @@ void heap_init( heap_init_state_t state ) {
   block->next = NULL;
   block->previous = NULL;
 }
-#pragma GCC diagnostic pop
 
 /**
  * @fn void heap_allocate*(size_t, size_t)

@@ -18,7 +18,6 @@
  */
 
 #include <stdint.h>
-#include <stdnoreturn.h>
 #include "lib/string.h"
 #include "lib/stdio.h"
 #include "lib/assert.h"
@@ -50,7 +49,7 @@ void kernel_main( void );
  * @fn void kernel_main(void)
  * @brief Kernel main entry
  */
-noreturn void kernel_main( void ) {
+void kernel_main( void ) {
   // Setup early not extendable heap
   DEBUG_OUTPUT( "[bolthur/kernel -> heap] early heap initialize ...\r\n" )
   heap_init( HEAP_INIT_EARLY );
@@ -153,7 +152,4 @@ noreturn void kernel_main( void ) {
   // Start multitasking in case that init has been created
   DEBUG_OUTPUT( "[bolthur/kernel -> task] start multitasking ...\r\n" )
   task_process_start();
-
-  // Endless loop
-  for(;;);
 }
