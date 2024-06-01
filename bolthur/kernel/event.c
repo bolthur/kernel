@@ -95,6 +95,10 @@ bool event_init( void ) {
 
   // create queue
   event->queue_kernel = list_construct( NULL, NULL, NULL );
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Created kernel queue at: %p\r\n", event->queue_kernel )
+  #endif
   // check
   if ( ! event->queue_kernel ) {
     avl_destroy_tree( event->tree );
@@ -103,6 +107,10 @@ bool event_init( void ) {
   }
 
   event->queue_user = list_construct( NULL, NULL, NULL );
+  // debug output
+  #if defined( PRINT_EVENT )
+    DEBUG_OUTPUT( "Created user queue at: %p\r\n", event->queue_user )
+  #endif
   // check
   if ( ! event->queue_user ) {
     free( event->tree );

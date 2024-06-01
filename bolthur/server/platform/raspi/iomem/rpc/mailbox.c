@@ -22,10 +22,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
+#include "../generic.h"
 #include "../mailbox.h"
 #include "../property.h"
 #include "../rpc.h"
 #include "../../libiomem.h"
+#include "../do_string.h"
 
 /**
  * @fn void rpc_handle_mailbox(size_t, pid_t, size_t, size_t)
@@ -76,9 +78,17 @@ void rpc_handle_mailbox(
   }
   // allocate space for request
   int32_t* mailbox_request = ( int32_t* )request->container;
+  size_t copy_size = data_size - sizeof( vfs_ioctl_perform_request_t );
+  // handle more than allowed
+  if ( copy_size > PAGE_SIZE ) {
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
   // allocate space for response
   vfs_ioctl_perform_response_t* response;
-  size_t response_size = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) * sizeof( char ) + sizeof( *response );
+  size_t response_size = copy_size + sizeof( *response );
   response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
@@ -86,11 +96,11 @@ void rpc_handle_mailbox(
     free( request );
     return;
   }
-  int32_t count = ( int32_t )( ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) / sizeof( int32_t ) );
+  int32_t count = ( int32_t )( copy_size / sizeof( int32_t ) );
   // clear request
   memset( response, 0, response_size );
   // copy stuff to property buffer
-  memcpy( property_buffer, mailbox_request, ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) );
+  do_memcpy( property_buffer, mailbox_request, copy_size );
   // overwrite current property index
   property_index = count;
   // process request
@@ -104,7 +114,7 @@ void rpc_handle_mailbox(
     return;
   }
   // copy response into original request
-  memcpy( response->container, property_buffer, ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) );
+  do_memcpy( response->container, property_buffer, copy_size );
   // return data and finish with free
   bolthur_rpc_return(
     RPC_VFS_IOCTL,

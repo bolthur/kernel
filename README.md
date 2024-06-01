@@ -52,9 +52,8 @@ autoreconf -iv
 mkdir build
 cd build
 ### configure with one of the following commands
-../configure --host arm-bolthur-eabi --enable-device=raspi2b_r1 --enable-debug --enable-output
-../configure --host aarch64-bolthur-elf --enable-device=raspi3b --enable-debug --enable-output
-../configure --host arm-bolthur-eabi --enable-device=raspi0_1 --enable-debug --enable-output
+../configure --host arm-raspbi2b_r1-bolthur-eabi --enable-device=raspi2b_r1 --enable-debug --enable-output
+../configure --host arm-raspi0_1-bolthur-eabi --enable-device=raspi0_1 --enable-debug --enable-output
 ```
 
 Possible additional parameters to `--host` and `--enable-device`:

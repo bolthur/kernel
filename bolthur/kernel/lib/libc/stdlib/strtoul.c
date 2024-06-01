@@ -60,12 +60,12 @@ unsigned long int strtoul(
       if ( *str - 'A' + 10 > base - 1 ) {
         break;
       }
-      digit = *str - 'A' + 10;
+      digit = (unsigned long int)(*str - 'A' + 10);
     } else if ( islower( *str ) ) {
       if ( *str - 'a' + 10 > base - 1 ) {
         break;
       }
-      digit = *str - 'a' + 10;
+      digit = (unsigned long int)(*str - 'a' + 10);
     } else {
       break;
     }

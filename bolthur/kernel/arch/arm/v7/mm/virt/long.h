@@ -45,7 +45,7 @@ bool v7_long_fork_middle_directory( ld_middle_page_directory*, ld_middle_page_di
 bool v7_long_fork_global_directory( ld_global_page_directory_t*, ld_global_page_directory_t* );
 virt_context_t* v7_long_fork_context( virt_context_t* );
 
-bool v7_long_destroy_table( ld_page_table_t* );
+void v7_long_destroy_table( ld_page_table_t* );
 bool v7_long_destroy_middle_directory( ld_middle_page_directory* );
 bool v7_long_destroy_global_directory( ld_global_page_directory_t* );
 bool v7_long_destroy_context( virt_context_t*, bool );

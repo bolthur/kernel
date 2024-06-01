@@ -18,6 +18,7 @@ iomem_SOURCES = \
   barrier.c \
   delay.c \
   dma.c \
+  do_string.c \
   mailbox.c \
   main.c \
   mmio.c \

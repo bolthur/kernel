@@ -27,9 +27,9 @@
 #include "property.h"
 #include "mailbox.h"
 #include "generic.h"
-
 #include <inttypes.h>
 #include <errno.h>
+#include "do_string.h"
 
 /**
  * @brief property tag buffer index used internally
@@ -84,7 +84,7 @@ bool property_setup( void ) {
  */
 void property_init( void ) {
   // clear out buffer
-  memset( property_buffer, 0, PAGE_SIZE );
+  do_memset( property_buffer, 0, PAGE_SIZE );
   // Add startup size
   property_buffer[ PT_OSIZE ] = 12;
   // process request, everything else seems to be reserved
@@ -281,7 +281,6 @@ void property_add_tag( raspi_mailbox_tag_t tag, ... ) {
  * @return_t mailbox read result after write
  */
 uint32_t property_process( void ) {
-  uint32_t result;
   // set correct size
   property_buffer[ PT_OSIZE ] = ( property_index + 1 ) << 2;
   property_buffer[ PT_OREQUEST_OR_RESPONSE ] = 0;
@@ -291,8 +290,7 @@ uint32_t property_process( void ) {
     ( uint32_t )property_buffer_phys
   );
   // read and return result
-  result = mailbox_read( MAILBOX0_TAGS_ARM_TO_VC );
-  return result;
+  return mailbox_read( MAILBOX0_TAGS_ARM_TO_VC );
 }
 
 /**

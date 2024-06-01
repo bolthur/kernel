@@ -48,7 +48,7 @@ bool v7_short_fork_table( sd_page_table_t*, sd_page_table_t* );
 bool v7_short_fork_global_directory( sd_context_half_t*, sd_context_half_t* );
 virt_context_t* v7_short_fork_context( virt_context_t* );
 
-bool v7_short_destroy_table( sd_page_table_t* );
+void v7_short_destroy_table( sd_page_table_t* );
 bool v7_short_destroy_global_directory( sd_context_half_t* );
 bool v7_short_destroy_context( virt_context_t*, bool );
 

@@ -1360,13 +1360,12 @@ virt_context_t* v7_short_fork_context( virt_context_t* ctx ) {
 }
 
 /**
- * @fn bool v7_short_destroy_table(sd_page_table_t*)
+ * @fn void v7_short_destroy_table(sd_page_table_t*)
  * @brief Helper to destroy passed page table
  *
  * @param table table to destroy
- * @return
  */
-bool v7_short_destroy_table( sd_page_table_t* table ) {
+void v7_short_destroy_table( sd_page_table_t* table ) {
   // copy pages with content
   for ( size_t page_idx = 0; page_idx < 256; page_idx++ ) {
     // just copy value if not mapped
@@ -1380,8 +1379,6 @@ bool v7_short_destroy_table( sd_page_table_t* table ) {
     // unset table entry
     table->page[ page_idx ].raw = 0;
   }
-  // return success
-  return true;
 }
 
 /**
@@ -1410,10 +1407,7 @@ bool v7_short_destroy_global_directory( sd_context_half_t* ctx ) {
     }
 
     // fork middle directory
-    if ( ! v7_short_destroy_table( pmd_to_destroy ) ) {
-      unmap_temporary( ( uintptr_t )pmd_to_destroy, SD_TBL_SIZE );
-      return false;
-    }
+    v7_short_destroy_table( pmd_to_destroy );
 
     // unmap again
     unmap_temporary( ( uintptr_t )pmd_to_destroy, SD_TBL_SIZE );

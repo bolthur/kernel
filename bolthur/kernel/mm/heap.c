@@ -49,9 +49,6 @@ bool heap_init_get( void ) {
   return ( bool )kernel_heap;
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wanalyzer-allocation-size"
-#pragma GCC diagnostic ignored "-Wanalyzer-out-of-bounds"
 /**
  * @fn void heap_init(heap_init_state_t)
  * @brief new heap init implementation
@@ -102,8 +99,8 @@ void heap_init( heap_init_state_t state ) {
   }
 
   // start and end of early init
-  uintptr_t start = ( uintptr_t )&__initial_heap_start;
-  uintptr_t end = ( uintptr_t )&__initial_heap_end;
+  uintptr_t start = ( uintptr_t )__builtin_assume_aligned( &__initial_heap_start, 0x1000);
+  uintptr_t end = ( uintptr_t )__builtin_assume_aligned( &__initial_heap_end, 0x1000);
   // assert structure to be invalid
   assert( ! kernel_heap );
 
@@ -151,27 +148,79 @@ void* heap_allocate( size_t alignment, size_t size ) {
   if ( HEAP_INIT_NORMAL == kernel_heap->state ) {
     return dlmemalign( alignment, size );
   }
+
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+  uintptr_t start = ( uintptr_t )&__initial_heap_start;
+  uintptr_t end = ( uintptr_t )&__initial_heap_end;
+    DEBUG_OUTPUT( "start = %#"PRIxPTR", end = %#"PRIxPTR"\r\n", start, end )
+    heap_block_t* print = kernel_heap->free;
+    while ( print ) {
+      DEBUG_OUTPUT( "Free: %#"PRIxPTR", %#zx\r\n", print->address, print->size )
+      print = print->next;
+    }
+  #endif
+
   // try to find matching one
   heap_block_t* current = kernel_heap->free;
   while ( current ) {
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "Loop while free elements existing!\r\n" )
+    #endif
     // handle to small
     if ( size > current->size ) {
       current = current->next;
       continue;
     }
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "current->address = %#"PRIxPTR"!\r\n", current->address )
+    #endif
     // save alignment result
     uintptr_t alignment_result = current->address % alignment;
     // handle case that no alignment adjustment is necessary
     if ( 0 == alignment_result ) {
       break;
     }
-    // calculate initial alignment offset
-    uintptr_t alignment_offset = alignment - alignment_result
-      - sizeof( *current );
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "alignment_result = %#"PRIxPTR"!\r\n", alignment_result )
+    #endif
+    // calculate alignment offset
+    uintptr_t next_address = current->address + alignment_result + sizeof( *current );
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "next_address = %#"PRIxPTR"!\r\n", next_address )
+    #endif
+    while (next_address % alignment) {
+      next_address += next_address % alignment;
+    }
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "next_address = %#"PRIxPTR"!\r\n", next_address )
+    #endif
+    uintptr_t alignment_offset = next_address - current->address;
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "alignment = %#zx!\r\n", alignment )
+      DEBUG_OUTPUT( "sizeof( *current ) = %#zx!\r\n", sizeof( *current ) )
+      DEBUG_OUTPUT( "alignment_offset = %#"PRIxPTR"!\r\n", alignment_offset )
+      DEBUG_OUTPUT( "current->size = %#zx!\r\n", current->size )
+      DEBUG_OUTPUT( "size = %#zx!\r\n", size )
+    #endif
     // handle alignment with split possible
     if ( current->size > alignment_offset + size ) {
+      // debug output
+      #if defined( PRINT_MM_HEAP )
+        DEBUG_OUTPUT( "found one!\r\n" )
+      #endif
       break;
     }
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "next one!\r\n" )
+    #endif
     // get to next
     current = current->next;
   }
@@ -195,9 +244,32 @@ void* heap_allocate( size_t alignment, size_t size ) {
   // handle alignment
   uintptr_t alignment_result = current->address % alignment;
   if ( alignment_result ) {
-    // calculate initial alignment offset
-    uintptr_t alignment_offset = alignment - alignment_result
-      - sizeof( *current );
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "alignment_result = %#"PRIxPTR"!\r\n", alignment_result )
+    #endif
+    // calculate alignment offset
+    uintptr_t next_address = current->address + alignment_result + sizeof( *current );
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "next_address = %#"PRIxPTR"!\r\n", next_address )
+    #endif
+    while (next_address % alignment) {
+      next_address += next_address % alignment;
+    }
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "next_address = %#"PRIxPTR"!\r\n", next_address )
+    #endif
+    uintptr_t alignment_offset = next_address - current->address - sizeof( *current );
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "alignment = %#zx!\r\n", alignment )
+      DEBUG_OUTPUT( "sizeof( *current ) = %#zx!\r\n", sizeof( *current ) )
+      DEBUG_OUTPUT( "alignment_offset = %#"PRIxPTR"!\r\n", alignment_offset )
+      DEBUG_OUTPUT( "current->size = %#zx!\r\n", current->size )
+      DEBUG_OUTPUT( "size = %#zx!\r\n", size )
+    #endif
     // new block with proper alignment
     heap_block_t* new_block = ( heap_block_t* )(
       ( uintptr_t )current->address + alignment_offset );
@@ -206,8 +278,20 @@ void* heap_allocate( size_t alignment, size_t size ) {
     new_block->size = current->size - alignment_offset;
     new_block->next = NULL;
     new_block->previous = NULL;
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "new_block = %#"PRIxPTR"!\r\n", (uintptr_t)new_block )
+      DEBUG_OUTPUT( "new_block->address = %#"PRIxPTR"!\r\n", new_block->address )
+      DEBUG_OUTPUT( "new_block->size = %#zx!\r\n", new_block->size )
+    #endif
     // update current
     current->size = ( uintptr_t )new_block - current->address;
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "current = %#"PRIxPTR"!\r\n", (uintptr_t)current )
+      DEBUG_OUTPUT( "current->address = %#"PRIxPTR"!\r\n", current->address )
+      DEBUG_OUTPUT( "current->size = %#zx!\r\n", current->size )
+    #endif
     // prepend current to free list
     current->next = kernel_heap->free;
     if ( kernel_heap->free ) {
@@ -225,6 +309,12 @@ void* heap_allocate( size_t alignment, size_t size ) {
     // set size and address of new block
     new_block->size = current->size - size - sizeof( *new_block );
     new_block->address = ( uintptr_t )new_block + sizeof( *new_block );
+    // debug output
+    #if defined( PRINT_MM_HEAP )
+      DEBUG_OUTPUT( "new_block = %#"PRIxPTR"!\r\n", (uintptr_t)new_block )
+      DEBUG_OUTPUT( "new_block->address = %#"PRIxPTR"!\r\n", new_block->address )
+      DEBUG_OUTPUT( "new_block->size = %#zx!\r\n", new_block->size )
+    #endif
     // prepend to free list
     new_block->next = kernel_heap->free;
     if ( kernel_heap->free ) {
@@ -240,7 +330,20 @@ void* heap_allocate( size_t alignment, size_t size ) {
   if ( kernel_heap->used ) {
     kernel_heap->used->previous = current;
   }
-  kernel_heap->used = current;
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    kernel_heap->used = current;print = kernel_heap->free;
+    while ( print ) {
+      DEBUG_OUTPUT( "Free: %#"PRIxPTR", %#zx\r\n", print->address, print->size )
+      print = print->next;
+    }
+  #endif
+  // debug output
+  #if defined( PRINT_MM_HEAP )
+    DEBUG_OUTPUT( "current->address = %#"PRIxPTR", current->size = %#zx!\r\n", current->address, current->size )
+    uintptr_t test = current->address % alignment;
+    DEBUG_OUTPUT( "current->address %% alignment = %#"PRIxPTR"!\r\n", test)
+  #endif
   // return address
   return ( void* )current->address;
 }

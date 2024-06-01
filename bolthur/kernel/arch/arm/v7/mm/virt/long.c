@@ -1403,15 +1403,14 @@ virt_context_t* v7_long_fork_context( virt_context_t* ctx ) {
 }
 
 /**
- * @fn bool v7_long_destroy_table(ld_page_table_t*)
+ * @fn void v7_long_destroy_table(ld_page_table_t*)
  * @brief Helper to destroy passed page table
  *
  * @param table
- * @return
  *
  * @todo test implementation by stepping with gdb
  */
-bool v7_long_destroy_table( ld_page_table_t* table ) {
+void v7_long_destroy_table( ld_page_table_t* table ) {
   // copy pages with content
   for ( size_t page_idx = 0; page_idx < 512; page_idx++ ) {
     // just copy value if not mapped
@@ -1427,8 +1426,6 @@ bool v7_long_destroy_table( ld_page_table_t* table ) {
     // unset table entry
     table->page[ page_idx ].raw = 0;
   }
-  // return success
-  return true;
 }
 
 /**
@@ -1455,10 +1452,7 @@ bool v7_long_destroy_middle_directory( ld_middle_page_directory* dir ) {
       return false;
     }
     // destroy table content
-    if ( ! v7_long_destroy_table( tbl_to_destroy ) ) {
-      unmap_temporary( ( uintptr_t )tbl_to_destroy, PAGE_SIZE );
-      return false;
-    }
+    v7_long_destroy_table( tbl_to_destroy );
     // unmap again
     unmap_temporary( ( uintptr_t )tbl_to_destroy, PAGE_SIZE );
     // free page
