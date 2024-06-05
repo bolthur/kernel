@@ -90,19 +90,14 @@ void rpc_handle_write(
     free( response );
     return;
   }
-  // handle possible shared memory
-  void* shm_addr = request->data;
-  // map shared if set
-  if ( 0 != request->shm_id ) {
-    // attach shared area
-    shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
-    if ( errno ) {
-      response->len = -errno;
-      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-      free( request );
-      free( response );
-      return;
-    }
+  // attach shared area
+  void* shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
+  if ( errno ) {
+    response->len = -errno;
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    free( request );
+    free( response );
+    return;
   }
 
   // get handle
@@ -112,9 +107,7 @@ void rpc_handle_write(
     EARLY_STARTUP_PRINT( "no handle found!\r\n" )
     response->len = result;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    if ( request->shm_id ) {
-      _syscall_memory_shared_detach( request->shm_id );
-    }
+    _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( response );
     return;
@@ -124,9 +117,7 @@ void rpc_handle_write(
     EARLY_STARTUP_PRINT( "invalid type set for found handle!\r\n" )
     response->len = -EINVAL;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    if ( request->shm_id ) {
-      _syscall_memory_shared_detach( request->shm_id );
-    }
+    _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( response );
     return;
@@ -139,9 +130,7 @@ void rpc_handle_write(
   if ( EOK != result ) {
     response->len = -result;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    if ( request->shm_id ) {
-      _syscall_memory_shared_detach( request->shm_id );
-    }
+    _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( response );
     return;
@@ -152,9 +141,7 @@ void rpc_handle_write(
   if ( EOK != result ) {
     response->len = -result;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    if ( request->shm_id ) {
-      _syscall_memory_shared_detach( request->shm_id );
-    }
+    _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( response );
     return;
@@ -162,6 +149,7 @@ void rpc_handle_write(
   // set success and return
   response->len = ( ssize_t )write_count;
   bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+  _syscall_memory_shared_detach( request->shm_id );
   free( response );
   free( request );
 }

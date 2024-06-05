@@ -84,16 +84,19 @@ void rpc_handle_write(
     ? console->out
     : console->err;
   // build terminal command
-  terminal_write_request_t* terminal = malloc( sizeof( *terminal ) );
+  size_t terminal_size = sizeof( terminal_write_request_t ) + request->len;
+  terminal_write_request_t* terminal = malloc( terminal_size );
   if ( ! terminal ) {
     response.len = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  memset( terminal, 0, sizeof( *terminal ) );
+
+
+  memset( terminal, 0, terminal_size );
   terminal->len = request->len;
-  memcpy( terminal->data, request->data, request->len );
+  terminal->shm_id = request->shm_id;
   strncpy( terminal->terminal, console->path, PATH_MAX - 1 );
 
   if ( 0 == console->fd ) {
@@ -116,7 +119,7 @@ void rpc_handle_write(
     console->fd,
     IOCTL_BUILD_REQUEST(
       rpc_num,
-      sizeof( *terminal ),
+      terminal_size,
       IOCTL_RDWR
     ),
     terminal

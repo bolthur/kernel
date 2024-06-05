@@ -114,11 +114,20 @@ void output_handle_out(
     free( request );
     return;
   }
+  // attach shared area
+  void* shm_addr = _syscall_memory_shared_attach( terminal->shm_id, ( uintptr_t )NULL );
+  if ( errno ) {
+    error.status = -errno;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
   // allocate response
   vfs_ioctl_perform_response_t* response;
   size_t response_size = sizeof( vfs_write_response_t ) + sizeof( *response );
   response = malloc( response_size );
   if ( ! response ) {
+    _syscall_memory_shared_detach( terminal->shm_id );
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( request );
@@ -126,9 +135,10 @@ void output_handle_out(
   }
   memset( response, 0, response_size );
   // render
-  render_terminal( found->data, terminal->data );
+  render_terminal( found->data, shm_addr );
   // fill dummy return
-  vfs_write_response_t dummy = { .len = ( ssize_t )strlen( terminal->data ) };
+  vfs_write_response_t dummy = { .len = ( ssize_t )strlen( shm_addr ) };
+  _syscall_memory_shared_detach( terminal->shm_id );
   memcpy( response->container, &dummy, sizeof( dummy ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
   // free terminal structure again
@@ -189,11 +199,20 @@ void output_handle_err(
     free( request );
     return;
   }
+  // attach shared area
+  void* shm_addr = _syscall_memory_shared_attach( terminal->shm_id, ( uintptr_t )NULL );
+  if ( errno ) {
+    error.status = -errno;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    free( request );
+    return;
+  }
   // allocate response
   vfs_ioctl_perform_response_t* response;
   size_t response_size = sizeof( vfs_write_response_t ) + sizeof( *response );
   response = malloc( response_size );
   if ( ! response ) {
+    _syscall_memory_shared_detach( terminal->shm_id );
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     free( request );
@@ -201,11 +220,12 @@ void output_handle_err(
   }
   memset( response, 0, response_size );
   // render
-  render_terminal( found->data, terminal->data );
+  render_terminal( found->data, shm_addr );
   // fill dummy return
-  vfs_write_response_t dummy = { .len = ( ssize_t )strlen( terminal->data ) };
+  vfs_write_response_t dummy = { .len = ( ssize_t )strlen( shm_addr ) };
   memcpy( response->container, &dummy, sizeof( dummy ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
+  _syscall_memory_shared_detach( terminal->shm_id );
   // free terminal structure again
   free( request );
   free( response );

@@ -86,6 +86,7 @@ void rpc_handle_open(
     free( request );
     return;
   }
+  EARLY_STARTUP_PRINT( "performing fat stat\r\n" )
   // stat result
   struct stat st;
   int result = fat_stat( request->path, &st );
@@ -102,6 +103,7 @@ void rpc_handle_open(
     free( request );
     return;
   }
+  EARLY_STARTUP_PRINT( "performing open depending on stat result\r\n" )
   // open directory
   if ( S_ISDIR( st.st_mode ) ) {
     // allocate space for directory

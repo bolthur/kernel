@@ -27,9 +27,9 @@
 #define _LIBTERMINAL_H
 
 typedef struct {
-  char data[ MAX_WRITE_LEN ];
   char terminal[ PATH_MAX ];
   size_t len;
+  size_t shm_id;
 } terminal_write_request_t;
 
 #endif

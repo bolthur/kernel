@@ -865,7 +865,12 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
         return SDHOST_RESPONSE_IO;
       }
       if ( shm_addr ) {
-        memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
+        if (
+          device->last_command == SDHOST_CMD_READ_MULTIPLE_BLOCK
+          || device->last_command == SDHOST_CMD_READ_SINGLE_BLOCK
+        ) {
+          memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
+        }
         // release shared memory again
         _syscall_memory_shared_detach( shm_id );
         if ( errno ) {
