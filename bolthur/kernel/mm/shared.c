@@ -348,7 +348,7 @@ uintptr_t shared_memory_attach(
   // clear out
   memset( mapped, 0, sizeof( *mapped ) );
 
-  uintptr_t virt = 0;
+  uintptr_t virt;
   #if defined( PRINT_MM_SHARED )
     DEBUG_OUTPUT( "Looking up mapping start\r\n" )
   #endif

@@ -739,7 +739,6 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   size_t block_size = device->block_size;
   size_t block_count = device->block_count;
   size_t offset = sizeof( uint32_t );
-  __maybe_unused uint32_t* buffer = device->buffer;
   size_t sequence_size;
   iomem_mmio_entry_t* sequence;
   // debug output
@@ -748,7 +747,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
       "block_size = %zx, block_count = %zu, buffer = %p\r\n",
       block_size,
       block_count,
-      ( void* )buffer
+      ( void* )device->buffer
     )
   #endif
   // check for word size in size
@@ -766,10 +765,10 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   // is read flag
   bool is_read = command & SDHOST_COMMAND_FLAG_READ;
   bool is_write = command & SDHOST_COMMAND_FLAG_WRITE;
-  // calculate necessary word count
-  __maybe_unused size_t necessary_word = ( block_size * block_count ) / offset;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
+    // calculate necessary word count
+    size_t necessary_word = ( block_size * block_count ) / offset;
     EARLY_STARTUP_PRINT(
       "is_read = %d, is_write = %d, necessary_word = %zu\r\n",
       is_read ? 1 : 0,
@@ -864,13 +863,12 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
         // return error
         return SDHOST_RESPONSE_IO;
       }
-      if ( shm_addr ) {
-        if (
-          device->last_command == SDHOST_CMD_READ_MULTIPLE_BLOCK
-          || device->last_command == SDHOST_CMD_READ_SINGLE_BLOCK
-        ) {
-          memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
-        }
+      if ( shm_addr && device->buffer ) {
+        // debug output
+        #if defined( SDHOST_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Copying from shared too buffer\r\n" )
+        #endif
+        memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
         // release shared memory again
         _syscall_memory_shared_detach( shm_id );
         if ( errno ) {
@@ -1108,7 +1106,6 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
   // read resp3
   sequence[ idx ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ idx ].offset = PERIPHERAL_SDHOST_RESPONSE3;
-  idx++;
   // wait for transfer complete for data or if it's a busy command
   #if defined( SDHOST_ENABLE_DMA )
     // create shared memory
@@ -1155,6 +1152,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
           ? "Perform DMA read\r\n"
           : "Perform DMA write\r\n" )
       #endif
+      idx++;
       sequence[ idx ].type = ( command & SDHOST_COMMAND_FLAG_READ )
         ? IOMEM_MMIO_ACTION_DMA_READ_DEV
         : IOMEM_MMIO_ACTION_DMA_WRITE_DEV;
@@ -1165,11 +1163,12 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
       #if defined( SDHOST_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "dma_copy_size = %"PRIu32"\r\n", sequence[ idx ].dma_copy_size )
       #endif
-      idx++;
     }
   #endif
   // wait for transfer complete for data or if it's a busy command
   if ( response_busy ) {
+    // hack for cppcheck
+    idx++;
     // wait until data is done
     sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
     sequence[ idx ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
@@ -1185,7 +1184,6 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
       | SDHOST_HOST_STATUS_INT_BUSY
       | SDHOST_HOST_STATUS_INT_SDIO;
     sequence[ idx ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
-    idx++;
   }
 
   // perform request

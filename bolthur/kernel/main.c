@@ -140,7 +140,7 @@ void kernel_main( void ) {
   uintptr_t init_entry = elf_load( elf_file, proc );
   assert( init_entry )
   // add thread
-  assert( task_thread_create( init_entry, proc, 0 ) );
+  assert( task_thread_create( init_entry, proc, 0 ) )
   // further init process preparation
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] prepare ...\r\n" )
   assert( task_process_prepare_init( proc ) )

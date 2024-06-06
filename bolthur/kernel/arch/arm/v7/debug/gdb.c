@@ -746,7 +746,7 @@ debug_gdb_signal_t debug_gdb_get_signal( void ) {
  * @return true
  * @return false
  */
-inline bool debug_gdb_get_running_flag( void ) {
+bool debug_gdb_get_running_flag( void ) {
   return handler_running;
 }
 

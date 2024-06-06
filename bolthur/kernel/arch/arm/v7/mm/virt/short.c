@@ -54,7 +54,7 @@ static sd_context_total_t initial_context
  * @fn void v7_short_startup_setup()
  * @brief Method to setup short descriptor paging
  */
-__bootstrap void v7_short_startup_setup() {
+__bootstrap void v7_short_startup_setup( void ) {
   uint32_t x;
   sd_ttbcr_t ttbcr;
 
@@ -385,7 +385,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
       uintptr_t* tmp = malloc( sizeof( uintptr_t ) * max_addr );
       // handle error
       if ( ! tmp ) {
-        PANIC( "Reserve space for free addresses failed!\r\n" );
+        PANIC( "Reserve space for free addresses failed!\r\n" )
         // stupid hack to silence false positive from cppcheck
         return 0;
       }
@@ -400,7 +400,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
       addr = tmp;
     }
     if ( ! addr ) {
-      PANIC( "No address container existing!\r\n" );
+      PANIC( "No address container existing!\r\n" )
       // stupid hack to silence false positive from cppcheck
       return 0;
     }
@@ -1326,7 +1326,7 @@ virt_context_t* v7_short_fork_context( virt_context_t* ctx ) {
     ( uintptr_t )ctx->context, SD_TTBR_SIZE_2G );
   // handle error
   if ( 0 == ctx_to_fork ) {
-    assert( virt_destroy_context( forked, false ) );
+    assert( virt_destroy_context( forked, false ) )
     return NULL;
   }
   // map new context temporarily
@@ -1335,7 +1335,7 @@ virt_context_t* v7_short_fork_context( virt_context_t* ctx ) {
   // handle error
   if ( 0 == ctx_forked ) {
     unmap_temporary( ctx_to_fork, SD_TTBR_SIZE_2G );
-    assert( virt_destroy_context( forked, false ) );
+    assert( virt_destroy_context( forked, false ) )
     return NULL;
   }
   // clear page
@@ -1348,7 +1348,7 @@ virt_context_t* v7_short_fork_context( virt_context_t* ctx ) {
   ) ) {
     unmap_temporary( ctx_to_fork, SD_TTBR_SIZE_2G );
     unmap_temporary( ctx_forked, SD_TTBR_SIZE_2G );
-    assert( virt_destroy_context( forked, false ) );
+    assert( virt_destroy_context( forked, false ) )
     return NULL;
   }
 
@@ -1568,7 +1568,7 @@ uint64_t v7_short_get_mapped_address_in_context(
 ) {
   // get page index
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( addr );
-  uint64_t phys = 0;
+  uint64_t phys;
 
   // get table for checking
   sd_page_table_t* table = ( sd_page_table_t* )(

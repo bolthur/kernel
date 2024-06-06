@@ -476,7 +476,7 @@ uint64_t v7_long_create_table(
   // get table idx
   uint32_t pmd_idx = LD_VIRTUAL_PMD_INDEX( addr );
   uint32_t tbl_idx = LD_VIRTUAL_TABLE_INDEX( addr );
-  uint64_t phys_l1table = 0;
+  uint64_t phys_l1table;
   bool l1table = false;
 
   // debug output
@@ -1370,7 +1370,7 @@ virt_context_t* v7_long_fork_context( virt_context_t* ctx ) {
   uintptr_t ctx_to_fork = map_temporary( ctx->context, PAGE_SIZE );
   // handle error
   if ( 0 == ctx_to_fork ) {
-    assert( virt_destroy_context( forked, false ) );
+    assert( virt_destroy_context( forked, false ) )
     return NULL;
   }
   // map new context temporarily
@@ -1378,7 +1378,7 @@ virt_context_t* v7_long_fork_context( virt_context_t* ctx ) {
   // handle error
   if ( 0 == ctx_forked ) {
     unmap_temporary( ctx_to_fork, PAGE_SIZE );
-    assert( virt_destroy_context( forked, false ) );
+    assert( virt_destroy_context( forked, false ) )
     return NULL;
   }
   // clear page
@@ -1391,7 +1391,7 @@ virt_context_t* v7_long_fork_context( virt_context_t* ctx ) {
   ) ) {
     unmap_temporary( ctx_to_fork, PAGE_SIZE );
     unmap_temporary( ctx_forked, PAGE_SIZE );
-    assert( virt_destroy_context( forked, false ) );
+    assert( virt_destroy_context( forked, false ) )
     return NULL;
   }
 
@@ -1647,7 +1647,7 @@ uint64_t v7_long_get_mapped_address_in_context(
 ) {
   // get page index
   uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( addr );
-  uint64_t phys = 0;
+  uint64_t phys;
   // determine page index
   uint64_t table_phys = v7_long_create_table( ctx, addr, 0 );
   if ( 0 == table_phys ) {

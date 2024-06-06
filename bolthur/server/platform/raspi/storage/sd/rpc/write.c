@@ -96,12 +96,12 @@ void rpc_handle_write(
     return;
   }
   // calculate block number
-  /*off_t block_number = request->offset / sd_block_size;
+  off_t block_number = request->offset / sd_block_size;
   // try to read from card
   EARLY_STARTUP_PRINT(
     "Writing %#zx bytes with offset of %llx / %lx ( block number: %llx ) to sd card\r\n",
     request->len, request->offset, ( uint32_t )request->offset, block_number
-  )*/
+  )
   // try to read data
   if ( ! sd_write_block(
     NULL,

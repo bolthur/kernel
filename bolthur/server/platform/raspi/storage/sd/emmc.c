@@ -1465,13 +1465,12 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
         EARLY_STARTUP_PRINT( "Amount of reads: 1 dma read\r\n" )
       #endif
       // copy over from shared to block count
-      if ( shm_addr ) {
-        if (
-          device->last_command == EMMC_CMD_READ_MULTIPLE_BLOCK
-          || device->last_command == EMMC_CMD_READ_SINGLE_BLOCK
-        ) {
-          memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
-        }
+      if ( shm_addr && device->buffer ) {
+        // debug output
+        #if defined( EMMC_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Copying from shared too buffer\r\n" )
+        #endif
+        memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
         // release shared memory again
         _syscall_memory_shared_detach( shm_id );
         if ( errno ) {

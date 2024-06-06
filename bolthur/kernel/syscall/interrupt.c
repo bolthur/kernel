@@ -18,12 +18,12 @@
  */
 
 #include <errno.h>
-#include "../lib/inttypes.h"
 #include "../task/process.h"
 #include "../task/thread.h"
 #include "../interrupt.h"
 #include "../syscall.h"
 #if defined( PRINT_SYSCALL )
+  #include "../lib/inttypes.h"
   #include "../debug/debug.h"
 #endif
 

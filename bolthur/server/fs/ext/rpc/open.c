@@ -23,6 +23,7 @@
 #include <string.h>
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../types.h"
@@ -32,12 +33,14 @@
 // fat library
 #include <bfs/blockdev/blockdev.h>
 #include <bfs/common/blockdev.h>
+#include <bfs/common/transaction.h>
 #include <bfs/common/errno.h>
-#include <bfs/ext/mountpoint.h>
+#include <bfs/common/mountpoint.h>
 #include <bfs/ext/type.h>
 #include <bfs/ext/file.h>
 #include <bfs/ext/directory.h>
 #include <bfs/ext/stat.h>
+#include <bfs/ext/fs.h>
 
 /**
  * @fn void rpc_handle_open(size_t, pid_t, size_t, size_t)
@@ -86,10 +89,30 @@ void rpc_handle_open(
     free( request );
     return;
   }
+  // get mountpoint
+  common_mountpoint_t* mp = common_mountpoint_find( request->path );
+  if ( ! mp ) {
+    response.handle = -EINVAL;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  // cache fs
+  ext_fs_t* fs = ( ext_fs_t* )mp->fs;
+  // start transaction
+  int result = common_transaction_begin( fs->bdev );
+  if ( EOK != result ) {
+    response.handle = -result;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
+    return;
+  }
+  EARLY_STARTUP_PRINT( "performing ext stat\r\n" )
   // stat result
   struct stat st;
-  int result = ext_stat( request->path, &st );
+  result = ext_stat( request->path, &st );
   if ( EOK != result ) {
+    common_transaction_rollback( fs->bdev );
     response.handle = -result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
@@ -97,17 +120,19 @@ void rpc_handle_open(
   }
   handle_container_t* container = malloc( sizeof( *container ) );
   if ( ! container ) {
+    common_transaction_rollback( fs->bdev );
     response.handle = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     free( request );
     return;
   }
-  /// FIXME: IMPLEMENT
+  EARLY_STARTUP_PRINT( "performing open depending on stat result\r\n" )
   // open directory
   if ( S_ISDIR( st.st_mode ) ) {
     // allocate space for directory
     ext_directory_t* dir = malloc( sizeof( *dir ) );
     if ( ! dir ) {
+      common_transaction_rollback( fs->bdev );
       response.handle = -ENOMEM;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
       free( container );
@@ -118,6 +143,16 @@ void rpc_handle_open(
     memset( dir, 0, sizeof( *dir ) );
     // try to open
     result = ext_directory_open( dir, request->path );
+    if ( EOK != result ) {
+      common_transaction_rollback( fs->bdev );
+      response.handle = -result;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( dir );
+      free( container );
+      free( request );
+      return;
+    }
+    result = common_transaction_rollback( fs->bdev );
     if ( EOK != result ) {
       response.handle = -result;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
@@ -163,6 +198,7 @@ void rpc_handle_open(
     // allocate space for directory
     ext_file_t* file = malloc( sizeof( *file ) );
     if ( ! file ) {
+      common_transaction_rollback( fs->bdev );
       response.handle = -ENOMEM;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
       free( container );
@@ -173,6 +209,21 @@ void rpc_handle_open(
     memset( file, 0, sizeof( *file ) );
     // try to open
     result = ext_file_open2( file, request->path, request->flags );
+    if ( EOK != result ) {
+      common_transaction_rollback( fs->bdev );
+      response.handle = -result;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( file );
+      free( container );
+      free( request );
+      return;
+    }
+    // commit transaction
+    if ( ( request->flags & O_CREAT ) || ( request->flags & O_TRUNC ) ) {
+      result = common_transaction_commit( fs->bdev );
+    } else {
+      result = common_transaction_rollback( fs->bdev );
+    }
     if ( EOK != result ) {
       response.handle = -result;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );

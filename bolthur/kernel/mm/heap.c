@@ -73,7 +73,7 @@ void heap_init( heap_init_state_t state ) {
   // handle normal heap init
   if ( HEAP_INIT_NORMAL == state ) {
     // assert kernel heap existence
-    assert( kernel_heap );
+    assert( kernel_heap )
     // allocate space for sbrk
     for (
       uintptr_t addr = HEAP_START;
@@ -102,7 +102,7 @@ void heap_init( heap_init_state_t state ) {
   uintptr_t start = ( uintptr_t )__builtin_assume_aligned( &__initial_heap_start, 0x1000);
   uintptr_t end = ( uintptr_t )__builtin_assume_aligned( &__initial_heap_end, 0x1000);
   // assert structure to be invalid
-  assert( ! kernel_heap );
+  assert( ! kernel_heap )
 
   // place right at the beginning
   kernel_heap = ( heap_manager_t* )start;
@@ -388,8 +388,10 @@ void heap_free( void* addr ) {
     kernel_heap->free->previous = current;
     current->next = kernel_heap->free;
     kernel_heap->free = current;
+    // skip rest
+    return;
   }
-  // use dlfree if normal state is setup
+  // use dlfree if normal state is set up
   if ( HEAP_INIT_NORMAL == kernel_heap->state ) {
     dlfree( addr );
   }
@@ -407,7 +409,7 @@ void heap_free( void* addr ) {
 void* heap_sbrk( intptr_t increment ) {
   static uint8_t* heap_end = NULL;
   static uint8_t* max_heap = NULL;
-  __unused static uint8_t* min_heap = NULL;
+  static uint8_t* min_heap = NULL;
   // handle no virtual memory manager
   if (
     ! virt_init_get()
@@ -424,32 +426,36 @@ void* heap_sbrk( intptr_t increment ) {
       DEBUG_OUTPUT( "sbrk init ( first call )!\r\n" )
     #endif
     heap_end = ( uint8_t* )HEAP_START;
-    max_heap = ( uint8_t* )( HEAP_START + HEAP_MIN_SIZE );
     min_heap = ( uint8_t* )( HEAP_START + HEAP_MIN_SIZE );
+    max_heap = ( uint8_t* )( HEAP_START + HEAP_MAX_SIZE );
   }
   // handle decrease
   if ( 0 > increment ) {
     PANIC( "sbrk doesn't support negative values!" )
-    return ( void* )-1;
   }
   // save previous heap end
   uint8_t* prev_heap_end = heap_end;
   // increment
   heap_end += increment;
   // handle max reached
-  if ( heap_end >= max_heap ) {
+  if ( heap_end >= min_heap ) {
     // debug output
     #if defined( PRINT_MM_HEAP )
       DEBUG_OUTPUT( "Try to extend heap area with size %#"PRIxPTR"\r\n", increment )
+      DEBUG_OUTPUT( "heap_end = %p, min_heap = %p\r\n", ( void* )heap_end, ( void* )min_heap )
     #endif
+    // handle max reached
+    if ( heap_end >= max_heap ) {
+      PANIC( "Kernel heap ran out of space!" )
+    }
     // transform max heap to uintptr_t
-    uintptr_t max_heap_extend = ( uintptr_t )max_heap;
+    uintptr_t min_heap_extend = ( uintptr_t )min_heap;
     // reset heap end
     heap_end = prev_heap_end;
     // extend heap space
     for (
-      uintptr_t addr = max_heap_extend;
-      addr < max_heap_extend + ( uintptr_t )increment;
+      uintptr_t addr = min_heap_extend;
+      addr < min_heap_extend + ( uintptr_t )increment;
       addr += PAGE_SIZE
     ) {
       // map address
@@ -459,12 +465,15 @@ void* heap_sbrk( intptr_t increment ) {
         VIRT_MEMORY_TYPE_NORMAL_NC,
         VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
       ) ) {
+        #if defined( PRINT_MM_HEAP )
+          DEBUG_OUTPUT( "Map of address %"PRIxPTR" failed\r\n", addr )
+        #endif
         return ( void* )-1;
       }
       // clear area
       memset( ( void* )addr, 0, PAGE_SIZE );
       // update max heap address
-      max_heap += PAGE_SIZE;
+      min_heap += PAGE_SIZE;
     }
     // debug output
     #if defined( PRINT_MM_HEAP )

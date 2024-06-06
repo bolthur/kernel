@@ -108,7 +108,7 @@ rpc_backup_t* rpc_backup_create(
   list_item_t* current_list = target->rpc_queue->first;
   rpc_backup_t* active = NULL;
   // try to find matching rpc
-  while( current_list && ! active ) {
+  while( current_list ) {
     rpc_backup_t* tmp = current_list->data;
     if ( tmp->active && tmp->thread == thread ) {
       active = tmp;

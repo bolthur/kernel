@@ -80,7 +80,7 @@ void mailbox_property_add_tag( raspi_mailbox_tag_t tag, ... ) {
   va_start( vl, tag );
 
   // start with adding the tag itself
-  ptb_buffer[ ptb_index++ ] = tag;
+  ptb_buffer[ ptb_index++ ] = ( int32_t )tag;
 
   switch( tag ) {
     case TAG_GET_FIRMWARE_VERSION:
@@ -332,7 +332,7 @@ raspi_mailbox_property_t* mailbox_property_get( raspi_mailbox_tag_t tag ) {
   // clear return
   memset( &property, 0, sizeof( property ) );
   // setup property structure to return
-  property.tag = tag;
+  property.tag = ( int32_t )tag;
   // set byte length
   property.byte_length = tag_buffer[ T_ORESPONSE ] & 0xFFFF;
   // copy necessary data into return structure

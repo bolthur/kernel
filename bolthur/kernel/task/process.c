@@ -131,9 +131,9 @@ static void task_process_free( task_process_t* proc ) {
   // destroy context if existing
   if ( proc->virtual_context ) {
     // unmap all mapped shared memory areas
-    assert( shared_memory_cleanup_process( proc ) );
+    assert( shared_memory_cleanup_process( proc ) )
     // destroy context
-    assert( virt_destroy_context( proc->virtual_context, false ) );
+    assert( virt_destroy_context( proc->virtual_context, false ) )
   }
   // set to null
   proc->virtual_context = NULL;
@@ -703,10 +703,10 @@ bool task_process_prepare_init( task_process_t* proc ) {
 
     char* arg[] = {
       "daemon:/init", str_ramdisk, str_ramdisk_size, str_additional, NULL, };
-    assert( task_thread_push_arguments( thread, arg, env ) );
+    assert( task_thread_push_arguments( thread, arg, env ) )
   } else {
     char* arg[] = { "daemon:/init", str_ramdisk, str_ramdisk_size, NULL, };
-    assert( task_thread_push_arguments( thread, arg, env ) );
+    assert( task_thread_push_arguments( thread, arg, env ) )
   }
 
   return true;

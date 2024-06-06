@@ -132,7 +132,7 @@ static int32_t timer_lookup(
 void timer_init( void ) {
   // construct list
   timer_list = list_construct( timer_lookup, timer_cleanup, timer_insert );
-  assert( timer_list );
+  assert( timer_list )
   // call platform init
   timer_platform_init();
 }
