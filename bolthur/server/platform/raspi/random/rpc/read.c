@@ -26,7 +26,6 @@
 #include "../random.h"
 #include "../rpc.h"
 #include "../../libiomem.h"
-#include "../../libperipheral.h"
 
 static vfs_read_response_t read_error_response;
 

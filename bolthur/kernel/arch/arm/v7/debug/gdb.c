@@ -17,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stdbool.h>
 #include "../../../../lib/stdlib.h"
 #include "../../../../lib/string.h"
 #include <endian.h>

@@ -18,9 +18,9 @@
  */
 
 #include <errno.h>
-#include "../lib/inttypes.h"
 #include "../syscall.h"
 #if defined( PRINT_SYSCALL )
+  #include "../lib/inttypes.h"
   #include "../debug/debug.h"
 #endif
 #include "../mm/phys.h"

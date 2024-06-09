@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "inttypes.h"
 #include "ssp.h"
 #include "../panic.h"
 
 #if defined( PRINT_SSP )
+  #include "inttypes.h"
   #include "../debug/debug.h"
   #if defined( ARCH_ARM_V7 ) || defined( ARCH_ARM_V6 )
     #define DUMP_SSP_ORIGIN { \

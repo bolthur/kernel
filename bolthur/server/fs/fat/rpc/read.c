@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../types.h"
@@ -29,10 +28,8 @@
 #include "../../../../library/handle/handle.h"
 
 // fat library
-#include <bfs/blockdev/blockdev.h>
 #include <bfs/common/blockdev.h>
 #include <bfs/common/errno.h>
-#include <bfs/fat/mountpoint.h>
 #include <bfs/fat/type.h>
 #include <bfs/fat/file.h>
 

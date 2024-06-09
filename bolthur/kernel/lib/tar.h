@@ -20,6 +20,7 @@
 #ifndef _LIB_TAR_H
 #define _LIB_TAR_H
 
+#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 

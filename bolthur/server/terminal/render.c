@@ -20,10 +20,8 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include <inttypes.h>
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
-#include <stdarg.h>
 #include "render.h"
 #include "terminal.h"
 #include "psf.h"

@@ -18,9 +18,7 @@
  */
 
 #include <string.h>
-#include <sys/syslimits.h>
 #include <sys/types.h>
-#include <sys/ioctl.h>
 #include <stdlib.h>
 #include <errno.h>
 #include "handler.h"

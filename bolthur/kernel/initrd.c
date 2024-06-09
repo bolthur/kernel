@@ -19,7 +19,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include "lib/tar.h"
 #include "initrd.h"
 
 /**

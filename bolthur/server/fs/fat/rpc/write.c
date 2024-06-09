@@ -28,10 +28,8 @@
 #include "../../../../library/handle/handle.h"
 
 // fat library
-#include <bfs/blockdev/blockdev.h>
 #include <bfs/common/blockdev.h>
 #include <bfs/common/errno.h>
-#include <bfs/fat/mountpoint.h>
 #include <bfs/fat/type.h>
 #include <bfs/fat/file.h>
 

@@ -18,16 +18,14 @@
  */
 
 #include <stddef.h>
-#include <stdalign.h>
-#include "../../../../lib/inttypes.h"
 #include "../../../../lib/stdlib.h"
 #include "../../../../lib/string.h"
-#include "../../../../panic.h"
 #include "../../stack.h"
 #include "../../../../mm/phys.h"
 #include "../../../../mm/virt.h"
 #include "../../../../syscall.h"
 #if defined( PRINT_PROCESS )
+  #include "../../../../lib/inttypes.h"
   #include "../../../../debug/debug.h"
 #endif
 #include "../../../../task/queue.h"

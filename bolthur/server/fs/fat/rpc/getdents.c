@@ -18,7 +18,6 @@
  */
 
 #include <libgen.h>
-#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
@@ -33,12 +32,8 @@
 #define _BFS_COMPILING
 
 // fat library
-#include <bfs/blockdev/blockdev.h>
-#include <bfs/common/blockdev.h>
 #include <bfs/common/errno.h>
-#include <bfs/fat/mountpoint.h>
 #include <bfs/fat/type.h>
-#include <bfs/fat/directory.h>
 #include <bfs/fat/iterator.h>
 #include <bfs/fat/structure.h>
 

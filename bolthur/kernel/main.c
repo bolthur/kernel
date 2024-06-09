@@ -17,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include "lib/string.h"
 #include "lib/stdio.h"
 #include "lib/assert.h"
 #include "lib/tar.h"

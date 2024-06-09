@@ -25,7 +25,6 @@
 #include "../vector.h"
 #include "../../../../../event.h"
 #include "../../../../../interrupt.h"
-#include "../../../../../panic.h"
 
 /**
  * @brief Nested counter for software interrupt exception handler

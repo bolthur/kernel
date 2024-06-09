@@ -21,7 +21,6 @@
 #include <string.h>
 #include <zlib.h>
 #include <errno.h>
-#include <tar.h>
 #include <sys/bolthur.h>
 #include "../ramdisk.h"
 

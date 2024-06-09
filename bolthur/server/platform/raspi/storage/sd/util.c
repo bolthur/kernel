@@ -24,7 +24,6 @@
 #include "util.h"
 // from iomem
 #include "../../libiomem.h"
-#include "../../libmailbox.h"
 
 /**
  * @fn uint32_t min(uint32_t, uint32_t)

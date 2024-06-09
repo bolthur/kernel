@@ -17,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <limits.h>
 #include <stdarg.h>
 #include "../../stdio.h"
 

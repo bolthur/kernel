@@ -21,7 +21,6 @@
 #include "inttypes.h"
 #include "ubsan.h"
 #include "stdlib.h"
-#include "../panic.h"
 
 #define is_aligned( value, alignment ) !( value & ( alignment - 1 ) )
 

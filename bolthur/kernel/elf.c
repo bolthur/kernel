@@ -17,13 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include "lib/inttypes.h"
 #include "lib/string.h"
 #include "elf.h"
 #include "mm/phys.h"
-#include "entry.h"
 #if defined( PRINT_ELF )
+  #include "lib/inttypes.h"
   #include "debug/debug.h"
 #endif
 

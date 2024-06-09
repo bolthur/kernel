@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <sys/dirent.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
@@ -33,12 +32,8 @@
 #define _BFS_COMPILING
 
 // fat library
-#include <bfs/blockdev/blockdev.h>
-#include <bfs/common/blockdev.h>
 #include <bfs/common/errno.h>
-#include <bfs/ext/mountpoint.h>
 #include <bfs/ext/type.h>
-#include <bfs/ext/directory.h>
 #include <bfs/ext/iterator.h>
 #include <bfs/ext/structure.h>
 

@@ -18,7 +18,6 @@
  */
 
 #include <stdio.h>
-#include <dlfcn.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>

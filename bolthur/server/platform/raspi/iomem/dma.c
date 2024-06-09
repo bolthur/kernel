@@ -24,11 +24,9 @@
 #include <sys/bolthur.h>
 #include "dma.h"
 #include "mmio.h"
-#include "barrier.h"
 #include "../libdma.h"
 #include "../libperipheral.h"
 #include "../libiomem.h"
-#include "generic.h"
 
 static dma_control_block_t* block = NULL;
 static int last_error = 0;
@@ -56,7 +54,7 @@ static int dma_block_init( dma_control_block_t** to_save ) {
   }
   // clear out
   memset( block, 0, sizeof( *block ) );
-  // push to to save
+  // push to save
   *to_save = block;
   // return block
   return 0;

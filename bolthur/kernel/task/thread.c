@@ -535,7 +535,7 @@ void task_thread_unblock(
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
   #endif
-  // set back to backup again
+  // set back to back up again
   thread->state = thread->state_backup;
   // debug output
   #if defined( PRINT_PROCESS )

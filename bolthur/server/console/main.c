@@ -17,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <errno.h>
-#include <unistd.h>
 #include <sys/bolthur.h>
 #include "../libterminal.h"
 #include "../libhelper.h"

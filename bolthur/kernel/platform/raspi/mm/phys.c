@@ -23,8 +23,8 @@
 #include "../../../lib/inttypes.h"
 #if defined( PRINT_MM_PHYS )
   #include "../../../debug/debug.h"
+  #include "../../../entry.h"
 #endif
-#include "../../../entry.h"
 #include "../../../mm/phys.h"
 #include "../peripheral.h"
 #include "../mailbox/mailbox.h"

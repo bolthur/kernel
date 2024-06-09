@@ -20,7 +20,6 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include <inttypes.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>

@@ -24,14 +24,9 @@
 #include <errno.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <libgen.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
 #include <sys/bolthur.h>
 #include <sys/sysmacros.h>
-#include <sys/mount.h>
 #include <libfdt.h>
-#include <assert.h>
 #include "ramdisk.h"
 #include "util.h"
 #include "init.h"

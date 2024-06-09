@@ -17,12 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../../../lib/inttypes.h"
 #include "../../../lib/assert.h"
 #if defined( PRINT_MM_VIRT )
+  #include "../../../lib/inttypes.h"
   #include "../../../debug/debug.h"
 #endif
-#include "../../../entry.h"
 #include "../../../panic.h"
 #include "../../../mm/phys.h"
 #include "../../../mm/virt.h"
@@ -136,7 +135,7 @@ void virt_setup_supported_modes( void ) {
     #endif
 
     // set paging to v7 short descriptor if more
-    // than 32 bit physical addresses arent supported
+    // than 32 bit physical addresses aren't supported
     if ( 0 == reg && ( ID_MMFR0_VSMA_V7_PAGING_LPAE & virt_supported_mode ) ) {
       if ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & virt_supported_mode ) {
         virt_supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;

@@ -17,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
 #include "../../../../lib/inttypes.h"
 #if defined( PRINT_EXCEPTION )
   #include "../../../../debug/debug.h"

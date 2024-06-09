@@ -20,7 +20,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "../../string.h"
-#include "../../../panic.h"
 #include "../../../mm/virt.h"
 
 #define U64_BLOCK_SIZE sizeof( uint64_t )

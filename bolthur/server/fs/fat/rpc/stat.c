@@ -27,14 +27,8 @@
 #include "../stat.h"
 
 // fat library
-#include <bfs/blockdev/blockdev.h>
-#include <bfs/common/blockdev.h>
 #include <bfs/common/errno.h>
-#include <bfs/fat/mountpoint.h>
-#include <bfs/fat/type.h>
-#include <bfs/fat/file.h>
 #include <bfs/fat/stat.h>
-#include <bfs/fat/directory.h>
 
 /**
  * @fn void rpc_handle_stat(size_t, pid_t, size_t, size_t)

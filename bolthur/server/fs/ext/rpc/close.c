@@ -21,7 +21,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
@@ -29,15 +28,11 @@
 #include "../../../../library/handle/process.h"
 #include "../../../../library/handle/handle.h"
 
-// fat library
-#include <bfs/blockdev/blockdev.h>
-#include <bfs/common/blockdev.h>
+// ext library
 #include <bfs/common/errno.h>
-#include <bfs/ext/mountpoint.h>
 #include <bfs/ext/type.h>
 #include <bfs/ext/file.h>
 #include <bfs/ext/directory.h>
-#include <bfs/ext/stat.h>
 
 /**
  * @fn void rpc_handle_close(size_t, pid_t, size_t, size_t)

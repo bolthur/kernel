@@ -17,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <unistd.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>

@@ -17,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libgen.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>

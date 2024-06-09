@@ -17,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
 #include <stddef.h>
 #include "../tar.h"
 

@@ -17,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
 #include "../../../cache.h"
 #include "../cache.h"
 #include "../../../interrupt.h"

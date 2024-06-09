@@ -25,8 +25,6 @@
 #include "../rpc.h"
 
 // fat library
-#include <bfs/blockdev/blockdev.h>
-#include <bfs/common/blockdev.h>
 #include <bfs/common/errno.h>
 #include <bfs/fat/mountpoint.h>
 

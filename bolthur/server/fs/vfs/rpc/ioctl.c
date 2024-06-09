@@ -21,8 +21,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <inttypes.h>
-#include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../mountpoint/node.h"

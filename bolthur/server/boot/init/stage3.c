@@ -22,7 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
-#include <unistd.h>
 #include <sys/bolthur.h>
 #include "../ramdisk.h"
 #include "../init.h"

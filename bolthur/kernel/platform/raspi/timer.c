@@ -17,14 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stdbool.h>
-#include "../../lib/inttypes.h"
 #include "timer.h"
 #include "gpio.h"
 #include "peripheral.h"
 #include "mailbox/property.h"
 #if defined( PRINT_TIMER )
+  #include "../../lib/inttypes.h"
   #include "../../debug/debug.h"
 #endif
 #include "../../event.h"

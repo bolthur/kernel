@@ -20,13 +20,10 @@
 #include <errno.h>
 #include "../lib/inttypes.h"
 #include "../lib/string.h"
-#include "../lib/stdlib.h"
 #include "../syscall.h"
-#include "../event.h"
 #include "../task/process.h"
 #include "../task/stack.h"
 #include "../task/thread.h"
-#include "../mm/shared.h"
 #include "../elf.h"
 #if defined( PRINT_SYSCALL )
   #include "../debug/debug.h"

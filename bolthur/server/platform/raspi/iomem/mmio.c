@@ -18,9 +18,7 @@
  */
 
 #include <limits.h>
-#include <errno.h>
 #include <sys/mman.h>
-#include "../libperipheral.h"
 #include "mmio.h"
 #include "barrier.h"
 

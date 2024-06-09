@@ -23,7 +23,6 @@
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include <sys/mount.h>
-#include <inttypes.h>
 #include "rpc.h"
 #include "handle.h"
 #include "ioctl/handler.h"

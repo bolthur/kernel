@@ -19,24 +19,22 @@
 
 #include <time.h>
 #include <unistd.h>
-#include <inttypes.h>
-#include <libgen.h>
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <unistd.h>
 #include <math.h>
 #include <sys/bolthur.h>
 #include "../../mmio.h"
-#include "../../property.h"
 #include "../../rpc.h"
 #include "../../delay.h"
 #include "../../../libiomem.h"
-#include "../../../libdma.h"
 #include "../../../libperipheral.h"
 #include "../../../libsdhost.h"
 #include "../../dma.h"
 #include "../../generic.h"
+#if defined( RPC_ENABLE_DEBUG )
+  #include <inttypes.h>
+#endif
 
 /**
  * @fn int custom_nanosleep(const struct timespec*)

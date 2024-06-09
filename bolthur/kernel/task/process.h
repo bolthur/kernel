@@ -53,9 +53,9 @@ typedef struct task_manager {
   avl_tree_t* process_id;
   // thread priority tree
   avl_tree_t* thread_priority;
-  // list of processes to cleanup
+  // list of processes to clean up
   list_manager_t* process_to_cleanup;
-  // list of threads to cleanup
+  // list of threads to clean up
   list_manager_t* thread_to_cleanup;
 } task_manager_t;
 

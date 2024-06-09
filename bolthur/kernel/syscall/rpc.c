@@ -19,7 +19,6 @@
 
 #include <unistd.h>
 #include <errno.h>
-#include "../lib/inttypes.h"
 #include "../lib/stdlib.h"
 #include "../lib/string.h"
 #include "../syscall.h"
@@ -28,6 +27,7 @@
 #include "../task/process.h"
 #include "../task/thread.h"
 #if defined( PRINT_SYSCALL )
+  #include "../lib/inttypes.h"
   #include "../debug/debug.h"
 #endif
 

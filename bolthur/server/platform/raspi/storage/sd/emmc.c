@@ -24,7 +24,6 @@
 #include <inttypes.h>
 #include <unistd.h>
 #include <endian.h>
-#include <sys/mman.h>
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
@@ -34,9 +33,7 @@
 #include "../../libemmc.h"
 #include "../../libiomem.h"
 #include "../../libdma.h"
-#include "../../libperipheral.h"
 #include "../../libmailbox.h"
-#include "../../libgpio.h"
 
 /*
  * Add and use interrupt routine instead of polling. This interrupt is listed in
@@ -2372,7 +2369,7 @@ static emmc_response_t init_sd( void ) {
     #if defined( EMMC_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Card is busy, retry after sleep\r\n" )
     #endif
-    // reached here, so card is busy and we'll try it after sleep again
+    // reached here, so card is busy, and we'll try it after sleep again
     usleep( 500000 );
   } while ( card_busy );
   // return success
@@ -3032,7 +3029,7 @@ emmc_response_t emmc_init( void ) {
       device->card_bus_width
     )
   #endif
-  // set 4 bit transfermode (ACMD6) if set
+  // set 4 bit transfer mode (ACMD6) if set
   if ( device->card_bus_width & 0x4 ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -3049,7 +3046,7 @@ emmc_response_t emmc_init( void ) {
       #if defined( EMMC_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Change transfer width in control0 register\r\n" )
       #endif
-      // change bit mode for host
+      // allocate sequence to change the bit mode for host
       sequence = util_prepare_mmio_sequence( 2, &sequence_count );
       if ( ! sequence ) {
         // debug output
@@ -3398,7 +3395,7 @@ emmc_response_t emmc_transfer_block(
         current_try
       )
     #endif
-    // try execute command and handle success with break
+    // try to execute command and handle success with break
     if ( EMMC_RESPONSE_OK == ( response = sd_command( command, block_number ) ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )

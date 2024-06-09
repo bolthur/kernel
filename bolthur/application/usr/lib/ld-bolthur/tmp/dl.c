@@ -18,7 +18,6 @@
  */
 
 #include <dlfcn.h>
-#include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 #include <limits.h>

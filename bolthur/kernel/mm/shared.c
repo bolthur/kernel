@@ -17,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../lib/inttypes.h"
 #include "../lib/stdlib.h"
 #include "../../library/collection/list/list.h"
 #include "../../library/collection/avl/avl.h"
@@ -26,6 +25,7 @@
 #include "../mm/phys.h"
 #include "../mm/shared.h"
 #if defined( PRINT_MM_SHARED )
+  #include "../lib/inttypes.h"
   #include "../debug/debug.h"
 #endif
 

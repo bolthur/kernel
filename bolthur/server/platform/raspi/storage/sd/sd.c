@@ -17,24 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 #include <inttypes.h>
-#include <unistd.h>
-#include <endian.h>
 #include <sys/mman.h>
-#include <sys/fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/bolthur.h>
 #include "sd.h"
 // from iomem
-#include "../../libsdhost.h"
 #include "../../libiomem.h"
-#include "../../libperipheral.h"
-#include "../../libmailbox.h"
-#include "../../libgpio.h"
 
 static sd_device_t* device;
 

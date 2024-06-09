@@ -18,7 +18,6 @@
  */
 
 #include <stdio.h>
-#include <dlfcn.h>
 #include <sys/bolthur.h>
 
 /**

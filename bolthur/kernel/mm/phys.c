@@ -18,7 +18,6 @@
  */
 
 #include <stddef.h>
-#include <stdbool.h>
 #include "../lib/assert.h"
 #include "../lib/inttypes.h"
 #if defined( PRINT_MM_PHYS )

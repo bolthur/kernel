@@ -19,12 +19,10 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <unistd.h>
 #include <inttypes.h>
 #include <libtar.h>
 #include <sys/bolthur.h>
-#include <sys/sysmacros.h>
 #include <sys/mount.h>
 #include "ramdisk.h"
 #include "rpc.h"

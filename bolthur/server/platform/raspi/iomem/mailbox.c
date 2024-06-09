@@ -17,12 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/mman.h>
 #include <errno.h>
-#include <unistd.h>
 #include "../libperipheral.h"
 #include "mailbox.h"
-#include "generic.h"
 #include "mmio.h"
 
 static volatile mailbox_t* mailbox = NULL;

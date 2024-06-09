@@ -20,14 +20,12 @@
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
 #include <sys/mman.h>
 #include "property.h"
 #include "mailbox.h"
 #include "generic.h"
-#include <inttypes.h>
 #include <errno.h>
 #include "do_string.h"
 

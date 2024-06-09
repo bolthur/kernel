@@ -20,8 +20,6 @@
 #include <libgen.h>
 #include <string.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <sys/bolthur.h>
 #include "handle.h"
 
 static list_manager_t* device_list;

@@ -18,13 +18,13 @@
  */
 
 #include <stddef.h>
-#include "../../../../../lib/inttypes.h"
 #include "../../../../../lib/string.h"
 #include "../../../../../lib/stdlib.h"
 #include "../../../../../lib/assert.h"
 #include "../../../../../entry.h"
 #include "../../../../../mm/phys.h"
 #if defined( PRINT_MM_VIRT )
+  #include "../../../../../lib/inttypes.h"
   #include "../../../../../debug/debug.h"
 #endif
 #include "../../../barrier.h"

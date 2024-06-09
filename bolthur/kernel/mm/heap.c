@@ -17,12 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
 #include <stddef.h>
-#include "../lib/inttypes.h"
 #include "../lib/assert.h"
 #include "../lib/string.h"
 #if defined( PRINT_MM_HEAP )
+  #include "../lib/inttypes.h"
   #include "../debug/debug.h"
 #endif
 #include "../mm/phys.h"

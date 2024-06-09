@@ -23,10 +23,6 @@
 #include <stddef.h>
 #include <limits.h>
 #include <string.h>
-#include <stdio.h>
-#include <endian.h>
-#include <inttypes.h>
-#include <sys/bolthur.h>
 #include "psf.h"
 
 // FIXME: ADD VALUE CONVERSION FROM ENDIAN HEADER OVERALL

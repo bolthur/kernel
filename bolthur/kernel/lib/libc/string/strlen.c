@@ -17,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
 #include <stddef.h>
 #include "../../string.h"
 #include "../../../mm/phys.h"

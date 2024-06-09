@@ -26,15 +26,9 @@
 #include "../rpc.h"
 #include "../stat.h"
 
-// fat library
-#include <bfs/blockdev/blockdev.h>
-#include <bfs/common/blockdev.h>
+// ext library
 #include <bfs/common/errno.h>
-#include <bfs/ext/mountpoint.h>
-#include <bfs/ext/type.h>
-#include <bfs/ext/file.h>
 #include <bfs/ext/stat.h>
-#include <bfs/ext/directory.h>
 
 /**
  * @fn void rpc_handle_stat(size_t, pid_t, size_t, size_t)

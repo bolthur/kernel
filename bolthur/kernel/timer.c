@@ -26,7 +26,6 @@
 #include "rpc/backup.h"
 #include "rpc/generic.h"
 #include "debug/debug.h"
-#include "panic.h"
 #if defined( PRINT_TIMER )
   #include "debug/debug.h"
 #endif

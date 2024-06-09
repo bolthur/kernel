@@ -17,13 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <errno.h>
-#include "../lib/inttypes.h"
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
 #include "backup.h"
 #include "data.h"
-#include "../panic.h"
 #if defined( PRINT_RPC )
   #include "../debug/debug.h"
 #endif

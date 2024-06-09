@@ -23,7 +23,6 @@
 #if defined( PRINT_MM_VIRT )
   #include "../../../debug/debug.h"
 #endif
-#include "../../../entry.h"
 #include "../peripheral.h"
 #include "../mailbox/property.h"
 #include "../../../mm/phys.h"

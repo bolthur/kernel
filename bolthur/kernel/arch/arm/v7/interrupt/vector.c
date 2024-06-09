@@ -18,9 +18,12 @@
  */
 
 #include "../../../../interrupt.h"
-#include "../../../../event.h"
 #include "../../interrupt/vector.h"
 #include "vector.h"
+
+#if defined( REMOTE_DEBUG )
+  #include "../../../../event.h"
+#endif
 
 /**
  * @brief Method to initialize interrupt vector table

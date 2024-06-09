@@ -24,9 +24,7 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 
-// fat library
-#include <bfs/blockdev/blockdev.h>
-#include <bfs/common/blockdev.h>
+// ext library
 #include <bfs/common/errno.h>
 #include <bfs/ext/mountpoint.h>
 

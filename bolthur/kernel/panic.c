@@ -17,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-
 #include "lib/inttypes.h"
 #include "lib/stdio.h"
 #include "lib/stdlib.h"

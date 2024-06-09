@@ -21,13 +21,9 @@
 #include "../../../../lib/string.h"
 #include "../../../../lib/inttypes.h"
 #include "../cpu.h"
-#include "../../barrier.h"
-#include "../../../../mm/phys.h"
 #include "../../../../mm/virt.h"
 #include "../../../../rpc/backup.h"
 #include "../../../../rpc/data.h"
-#include "../../cache.h"
-#include "../../../../panic.h"
 #if defined( PRINT_RPC )
   #include "../../../../debug/debug.h"
 #endif

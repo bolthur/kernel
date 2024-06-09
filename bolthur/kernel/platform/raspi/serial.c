@@ -17,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
 #include <limits.h>
 
 #include "../../arch/arm/delay.h"
@@ -28,7 +27,6 @@
 #include "../../io.h"
 #include "../../serial.h"
 #include "../../interrupt.h"
-#include "../../event.h"
 #if defined( PRINT_SERIAL )
   #include "../../debug/debug.h"
 #endif

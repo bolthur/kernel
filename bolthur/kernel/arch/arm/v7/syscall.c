@@ -19,7 +19,6 @@
 
 #include "../../../lib/assert.h"
 #include "../../../syscall.h"
-#include "../../../interrupt.h"
 #include "cpu.h"
 
 /**

@@ -17,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
 #include "../../../../../library/collection/avl/avl.h"
 #include "../../../../lib/assert.h"
 #include "../../../../lib/string.h"
@@ -32,7 +31,6 @@
   #include "../../../../debug/debug.h"
 #endif
 #include "../../../../interrupt.h"
-#include "../../stack.h"
 #include "../cpu.h"
 #include "../../firmware.h"
 #include <libfdt.h>
@@ -187,7 +185,7 @@ void task_process_schedule( [[maybe_unused]] event_origin_t origin, void* contex
   }
 
   bool halt_set = false;
-  // loop while next thread is not set or it's not ready
+  // loop while next thread is not set, or it's not ready
   while ( ! next_thread ) {
     // get next thread
     next_thread = task_thread_next();

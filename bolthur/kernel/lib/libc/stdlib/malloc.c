@@ -18,7 +18,6 @@
  */
 
 #include <stddef.h>
-#include <stdalign.h>
 #include "../../stdlib.h"
 
 /**
