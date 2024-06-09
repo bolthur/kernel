@@ -27,7 +27,7 @@ MOUNT_TREE_DEFINE(
   mount_node,
   node,
   mount_cmp,
-  __unused static inline
+  [[maybe_unused]] static inline
 )
 
 /**
@@ -188,7 +188,7 @@ mount_node_t* mount_extract_by_path_walk( const char* path ) {
   mount_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return false;
+    return NULL;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );

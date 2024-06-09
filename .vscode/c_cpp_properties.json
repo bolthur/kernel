@@ -1,0 +1,29 @@
+{
+  "configurations": [
+    {
+      "name": "rapsi 2b rev.1",
+      "includePath": [
+        "${workspaceFolder}/build",
+        "/opt/bolthur/sysroot/arm-raspi2b_r1-bolthur-eabi/usr/include/",
+        "/opt/bolthur/sysroot/arm-raspi2b_r1-bolthur-eabi/usr/include/bfs"
+      ],
+      "defines": [
+        "bool=_Bool",
+        "true=1",
+        "false=0"
+      ],
+      "compilerPath": "/opt/bolthur/cross/bin/arm-raspi2b_r1-bolthur-eabi-gcc",
+      "cStandard": "c23",
+      "cppStandard": "c++23",
+      "intelliSenseMode": "gcc-arm",
+      "browse": {
+        "path": [
+          "${workspaceFolder}/bolthur"
+        ],
+        "limitSymbolsToIncludedHeaders": true,
+        "databaseFilename": ""
+      }
+    }
+  ],
+  "version": 4
+}

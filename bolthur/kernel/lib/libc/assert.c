@@ -30,7 +30,7 @@
  * @param line
  * @param desc
  */
-noreturn void __assert(
+[[noreturn]] void __assert(
   const char* restrict file,
   uint32_t line,
   const char* restrict desc

@@ -24,7 +24,7 @@
 #define _INIT_H
 
 void init_stage1( void );
-void init_stage2( void );
-void init_stage3( void );
+[[noreturn]] void init_stage2( void );
+[[noreturn]] void init_stage3( void );
 
 #endif

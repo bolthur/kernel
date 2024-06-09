@@ -12,6 +12,7 @@
 /tool/.cache
 /build-aux/platform/raspi/initrd
 *.sym
+.cache
 
 # ---> Autotools
 # http://www.gnu.org/software/automake

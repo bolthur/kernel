@@ -49,7 +49,7 @@ static uint32_t nested_prefetch_abort = 0;
  * @todo panic when prefetch abort is triggered from kernel
  */
 #ifndef REMOTE_DEBUG
-noreturn
+[[noreturn]]
 #endif
 void vector_prefetch_abort_handler( cpu_register_context_t* cpu ) {
   // nesting

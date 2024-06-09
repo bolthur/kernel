@@ -37,10 +37,10 @@
  * @param response_info
  */
 void rpc_handle_gpio_lock(
-  __unused size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );

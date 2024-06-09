@@ -39,8 +39,8 @@ void interrupt_vector_init( void ) {
    * @param context
    */
   static void debug_cleanup_status_flag(
-    __unused event_origin_t origin,
-    __unused void* context
+    [[maybe_unused]] event_origin_t origin,
+    [[maybe_unused]] void* context
   ) {
     // reset data fault status register
     __asm__ __volatile__(

@@ -40,7 +40,7 @@ void rpc_handle_fork(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   // dummy error response
   vfs_fork_response_t response = { .status = -EINVAL };

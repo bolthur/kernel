@@ -40,7 +40,7 @@ void rpc_handle_stat(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_stat_response_t response = { .success = false };
   // validate origin

@@ -43,10 +43,10 @@
  * @param response_info
  */
 void rpc_handle_gpio_set_pull(
-  __unused size_t type,
+  [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin

@@ -25,7 +25,7 @@
 /**
  * @brief Abort routine
  */
-noreturn void abort( void ) {
+[[noreturn]] void abort( void ) {
   // disable all interrupts
   interrupt_toggle( INTERRUPT_TOGGLE_OFF );
   // loop without return

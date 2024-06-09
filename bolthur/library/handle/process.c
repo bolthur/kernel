@@ -46,7 +46,7 @@ PROCESS_TREE_DEFINE(
   process_node,
   node,
   process_cmp,
-  __unused static inline
+  [[maybe_unused]] static inline
 )
 
 // create static tree
@@ -132,4 +132,3 @@ int process_duplicate( process_node_t* new_container, handle_node_t* handle ) {
   // return success
   return 0;
 }
-

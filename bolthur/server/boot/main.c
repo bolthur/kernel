@@ -59,7 +59,7 @@ int bootargs_length;
  * @param b
  * @return
  */
-static int my_tar_open( __unused const char* path, __unused int b, ... ) {
+static int my_tar_open( [[maybe_unused]] const char* path, [[maybe_unused]] int b, ... ) {
   // get extract size
   ramdisk_decompressed_size = ramdisk_size(
     ramdisk_compressed,
@@ -84,7 +84,7 @@ static int my_tar_open( __unused const char* path, __unused int b, ... ) {
  * @param fd
  * @return
  */
-static int my_tar_close( __unused int fd ) {
+static int my_tar_close( [[maybe_unused]] int fd ) {
   _syscall_memory_shared_detach( ramdisk_shared_id );
   if ( errno ) {
     return 1;
@@ -100,7 +100,7 @@ static int my_tar_close( __unused int fd ) {
  * @param count
  * @return
  */
-static ssize_t my_tar_read( __unused int fd, void* buffer, size_t count ) {
+static ssize_t my_tar_read( [[maybe_unused]] int fd, void* buffer, size_t count ) {
   uint8_t* src = ( uint8_t* )ramdisk_decompressed + ramdisk_read_offset;
   uint8_t* dst = ( uint8_t* )buffer;
 
@@ -134,9 +134,9 @@ static ssize_t my_tar_read( __unused int fd, void* buffer, size_t count ) {
  * @return
  */
 static ssize_t my_tar_write(
-  __unused int fd,
-  __unused const void* src,
-  __unused size_t count
+  [[maybe_unused]] int fd,
+  [[maybe_unused]] const void* src,
+  [[maybe_unused]] size_t count
 ) {
   return 0;
 }

@@ -39,7 +39,7 @@ uint8_t* mbr_data = NULL;
  * @param argv
  * @return
  */
-int main( __unused int argc, __unused char* argv[] ) {
+int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // allocate space for mbr
   mbr_size = sizeof( uint8_t ) * 512;
   mbr_data = malloc( mbr_size );

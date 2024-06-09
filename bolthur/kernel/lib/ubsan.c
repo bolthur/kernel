@@ -87,7 +87,7 @@ static void handle_type_mismatch_generic(
  * @param data
  * @param ptr
  */
-noreturn void __ubsan_handle_type_mismatch_v1(
+[[noreturn]] void __ubsan_handle_type_mismatch_v1(
   ubsan_type_mismatch_data_v1_t* data,
   uintptr_t ptr
 ) {
@@ -110,7 +110,7 @@ noreturn void __ubsan_handle_type_mismatch_v1(
  * @param data
  * @param ptr
  */
-noreturn void __ubsan_handle_type_mismatch(
+[[noreturn]] void __ubsan_handle_type_mismatch(
   ubsan_type_mismatch_data_t* data,
   uintptr_t ptr
 ) {
@@ -134,7 +134,7 @@ noreturn void __ubsan_handle_type_mismatch(
  * @param before
  * @param after
  */
-noreturn void __ubsan_handle_pointer_overflow(
+[[noreturn]] void __ubsan_handle_pointer_overflow(
   ubsan_pointer_overflow_data_t* data,
   uint64_t before,
   uint64_t after
@@ -157,7 +157,7 @@ noreturn void __ubsan_handle_pointer_overflow(
  * @param left
  * @param right
  */
-noreturn void __ubsan_handle_add_overflow(
+[[noreturn]] void __ubsan_handle_add_overflow(
   ubsan_overflow_data_t* data,
   uint64_t left,
   uint64_t right
@@ -178,7 +178,7 @@ noreturn void __ubsan_handle_add_overflow(
  * @param left
  * @param right
  */
-noreturn void __ubsan_handle_sub_overflow(
+[[noreturn]] void __ubsan_handle_sub_overflow(
   ubsan_overflow_data_t* data,
   uint64_t left,
   uint64_t right
@@ -199,7 +199,7 @@ noreturn void __ubsan_handle_sub_overflow(
  * @param left
  * @param right
  */
-noreturn void __ubsan_handle_mul_overflow(
+[[noreturn]] void __ubsan_handle_mul_overflow(
   ubsan_overflow_data_t* data,
   uint64_t left,
   uint64_t right
@@ -220,7 +220,7 @@ noreturn void __ubsan_handle_mul_overflow(
  * @param left
  * @param right
  */
-noreturn void __ubsan_handle_divrem_overflow(
+[[noreturn]] void __ubsan_handle_divrem_overflow(
   ubsan_overflow_data_t* data,
   uint64_t left,
   uint64_t right
@@ -241,7 +241,7 @@ noreturn void __ubsan_handle_divrem_overflow(
  * @param left
  * @param right
  */
-noreturn void __ubsan_handle_shift_out_of_bounds(
+[[noreturn]] void __ubsan_handle_shift_out_of_bounds(
   ubsan_shift_out_of_bounds_data_t* data,
   uint64_t left,
   uint64_t right
@@ -261,7 +261,7 @@ noreturn void __ubsan_handle_shift_out_of_bounds(
  * @param data
  * @param index
  */
-noreturn void __ubsan_handle_out_of_bounds(
+[[noreturn]] void __ubsan_handle_out_of_bounds(
   ubsan_out_of_bounds_data_t* data,
   uint64_t index
 ) {
@@ -279,7 +279,7 @@ noreturn void __ubsan_handle_out_of_bounds(
  * @param data
  * @param value
  */
-noreturn void __ubsan_handle_load_invalid_value(
+[[noreturn]] void __ubsan_handle_load_invalid_value(
   ubsan_invalid_value_data_t* data,
   uint64_t value
 ) {
@@ -297,7 +297,7 @@ noreturn void __ubsan_handle_load_invalid_value(
  * @param data
  * @param value
  */
-noreturn void __ubsan_handle_negate_overflow(
+[[noreturn]] void __ubsan_handle_negate_overflow(
   ubsan_overflow_data_t* data,
   uint64_t value
 ) {

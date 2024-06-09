@@ -41,7 +41,7 @@
  * @param argv
  * @return
  */
-int main( __unused int argc, __unused char* argv[] ) {
+int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   EARLY_STARTUP_PRINT( "dev starting up!\r\n" )
   EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
   // setup handle tree

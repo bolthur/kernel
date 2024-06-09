@@ -48,7 +48,7 @@ static uint32_t nested_data_abort = 0;
  * @todo trigger schedule when prefetch abort source is user thread
  * @todo panic when data abort is triggered from kernel
  */
-noreturn void vector_data_abort_handler( cpu_register_context_t* cpu ) {
+[[noreturn]] void vector_data_abort_handler( cpu_register_context_t* cpu ) {
   // nesting
   nested_data_abort++;
   assert( nested_data_abort < INTERRUPT_NESTED_MAX )

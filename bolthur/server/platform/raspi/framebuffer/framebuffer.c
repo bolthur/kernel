@@ -371,10 +371,10 @@ void framebuffer_flip( void ) {
  * @todo return shared memory id
  */
 void framebuffer_handle_resolution(
-  __unused size_t type,
+  [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
@@ -440,10 +440,10 @@ void framebuffer_handle_resolution(
  * @param response_info
  */
 void framebuffer_handle_clear(
-  __unused size_t type,
+  [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
@@ -490,10 +490,10 @@ void framebuffer_handle_clear(
  * @param response_info
  */
 void framebuffer_handle_flip(
-  __unused size_t type,
+  [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
@@ -537,10 +537,10 @@ void framebuffer_handle_flip(
  * @param response_info
  */
 void framebuffer_handle_surface_render(
-  __unused size_t type,
+  [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
@@ -602,10 +602,10 @@ void framebuffer_handle_surface_render(
  * @param response_info
  */
 void framebuffer_handle_surface_allocate(
-  __unused size_t type,
+  [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin

@@ -19,7 +19,7 @@ AC_DEFUN([BOLTHUR_LIBRARY_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-Wmissing-noreturn -Wmissing-format-attribute])
   AX_APPEND_COMPILE_FLAGS([-Wduplicated-branches -Wduplicated-cond])
   # generic
-  AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c18])
+  AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c23])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
   # FIXME: FIND A WAY TO ADD -Wanalyzer-too-complex
   AX_APPEND_COMPILE_FLAGS([-fanalyzer -fno-builtin])
@@ -103,7 +103,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-Wsuggest-attribute=malloc])
   AX_APPEND_COMPILE_FLAGS([-Wsuggest-attribute=format -Wsuggest-attribute=cold])
   # generic
-  AX_APPEND_COMPILE_FLAGS([-fno-exceptions -nodefaultlibs -std=c18])
+  AX_APPEND_COMPILE_FLAGS([-fno-exceptions -nodefaultlibs -std=c23])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer -fno-builtin])
   AX_APPEND_COMPILE_FLAGS([-ffreestanding -fno-common])
   # FIXME: FIND A WAY TO ADD -Wanalyzer-too-complex
@@ -176,7 +176,7 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-Wmissing-noreturn -Wmissing-format-attribute])
   AX_APPEND_COMPILE_FLAGS([-Wduplicated-branches -Wduplicated-cond])
   # generic
-  AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c18])
+  AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c23])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
   # FIXME: FIND A WAY TO ADD -Wanalyzer-too-complex
   AX_APPEND_COMPILE_FLAGS([-fanalyzer])
@@ -249,7 +249,7 @@ AC_DEFUN([BOLTHUR_APPLICATION_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-Wmissing-noreturn -Wmissing-format-attribute])
   AX_APPEND_COMPILE_FLAGS([-Wduplicated-branches -Wduplicated-cond])
   # generic
-  AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c18])
+  AX_APPEND_COMPILE_FLAGS([-fno-exceptions -std=c23])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer])
 
   # third party stuff

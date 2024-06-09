@@ -149,7 +149,7 @@ void serial_init( void ) {
  *
  * @param context cpu context
  */
-static void serial_clear( __unused void* context ) {
+static void serial_clear( [[maybe_unused]] void* context ) {
   // debug output
   #if defined( PRINT_SERIAL )
     DEBUG_OUTPUT( "Clear interrupt source for serial!\r\n" )

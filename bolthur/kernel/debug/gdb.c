@@ -212,7 +212,7 @@ uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
  * @param origin origin
  * @param context cpu context
  */
-void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
+void debug_gdb_serial_event( [[maybe_unused]] event_origin_t origin, void* context ) {
   // get start of serial buffer
   uint8_t* pkg = serial_get_buffer();
 
@@ -301,8 +301,8 @@ void debug_gdb_set_first_entry( bool flag ) {
  * @param packet
  */
 void debug_gdb_handler_attach(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"1" );
 }
@@ -314,8 +314,8 @@ void debug_gdb_handler_attach(
  * @param packet
  */
 void debug_gdb_handler_continue_query(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
@@ -327,8 +327,8 @@ void debug_gdb_handler_continue_query(
  * @param packet
  */
 void debug_gdb_handler_continue_query_supported(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"" );
 }
@@ -340,8 +340,8 @@ void debug_gdb_handler_continue_query_supported(
  * @param packet
  */
 void debug_gdb_handler_unsupported(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   // send empty response as not supported
   debug_gdb_packet_send( ( uint8_t* )"\0" );
@@ -354,8 +354,8 @@ void debug_gdb_handler_unsupported(
  * @param packet
  */
 void debug_gdb_handler_continue(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   // set handler running to false
   debug_gdb_end_loop();
@@ -370,8 +370,8 @@ void debug_gdb_handler_continue(
  * @param packet
  */
 void debug_gdb_handler_detach(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_end_loop();
   debug_gdb_packet_send( ( uint8_t* )"OK" );
@@ -416,8 +416,8 @@ void debug_gdb_set_context( void* context ) {
  * @param packet
  */
 void debug_gdb_handler_stop_status(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_signal_t signal = debug_gdb_get_signal();
   uint8_t buffer[ 4 ];

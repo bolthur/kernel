@@ -36,8 +36,8 @@
  */
 void rpc_handle_watch_register_async(
   size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
   size_t response_info
 ) {
   // allocate space for response
@@ -84,7 +84,7 @@ void rpc_handle_watch_register(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   // variables
   vfs_watch_register_response_t response = { .result = -EINVAL };

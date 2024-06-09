@@ -37,7 +37,7 @@
  * @param size message size or 0
  * @param wait amount of seconds to sleep on rpc raise error
  */
-__maybe_unused static void send_vfs_add_request(
+[[maybe_unused]] static void send_vfs_add_request(
   vfs_add_request_t* msg,
   size_t size,
   unsigned int wait
@@ -106,7 +106,7 @@ __maybe_unused static void send_vfs_add_request(
  * @param size message size or 0
  * @param wait amount of seconds to sleep on rpc raise error
  */
-__maybe_unused static void send_vfs_remove_request(
+[[maybe_unused]] static void send_vfs_remove_request(
   vfs_remove_request_t* msg,
   unsigned int wait
 ) {
@@ -162,7 +162,7 @@ __maybe_unused static void send_vfs_remove_request(
  *
  * @param path
  */
-__maybe_unused static void vfs_wait_for_path( const char* path ) {
+[[maybe_unused]] static void vfs_wait_for_path( const char* path ) {
   struct stat buffer;
   do {
     sleep( 2 );
@@ -179,7 +179,7 @@ __maybe_unused static void vfs_wait_for_path( const char* path ) {
  * @param mode
  * @return
  */
-__maybe_unused static bool dev_add_folder_file_stat(
+[[maybe_unused]] static bool dev_add_folder_file_stat(
   const char* path,
   struct stat* stat
 ) {
@@ -213,7 +213,7 @@ __maybe_unused static bool dev_add_folder_file_stat(
  * @param mode
  * @return
  */
-__maybe_unused static bool dev_add_folder_file(
+[[maybe_unused]] static bool dev_add_folder_file(
   const char* path,
   uint32_t* device_info,
   size_t count,
@@ -254,7 +254,7 @@ __maybe_unused static bool dev_add_folder_file(
  * @param count
  * @return
  */
-__maybe_unused static bool dev_add_file(
+[[maybe_unused]] static bool dev_add_file(
   const char* path,
   uint32_t* device_info,
   size_t count
@@ -271,7 +271,7 @@ __maybe_unused static bool dev_add_file(
  * @param count
  * @return
  */
-__maybe_unused static bool dev_add_folder(
+[[maybe_unused]] static bool dev_add_folder(
   const char* path,
   uint32_t* device_info,
   size_t count

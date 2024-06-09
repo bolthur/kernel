@@ -38,7 +38,7 @@
  */
 void rpc_handle_close_async(
   size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
@@ -85,7 +85,7 @@ void rpc_handle_close(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_close_response_t response = { .status = -EINVAL };
   vfs_close_request_t* request = malloc( sizeof( *request ) );

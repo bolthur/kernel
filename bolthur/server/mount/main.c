@@ -21,7 +21,7 @@
 #include "rpc.h"
 #include "../libhelper.h"
 
-int main( __unused int argc, __unused char* argv[] ) {
+int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // print something
   EARLY_STARTUP_PRINT( "mount server processing!\r\n" )
   // register rpc handler

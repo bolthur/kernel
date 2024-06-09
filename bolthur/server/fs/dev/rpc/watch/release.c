@@ -38,7 +38,7 @@ void rpc_handle_watch_release(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   // variables
   vfs_watch_release_response_t response = { .result = -EINVAL };

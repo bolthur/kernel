@@ -471,7 +471,7 @@ static uint64_t get_new_table( uint64_t table ) {
 uint64_t v7_long_create_table(
   virt_context_t* ctx,
   uintptr_t addr,
-  __unused uint64_t table
+  [[maybe_unused]] uint64_t table
 ) {
   // get table idx
   uint32_t pmd_idx = LD_VIRTUAL_PMD_INDEX( addr );

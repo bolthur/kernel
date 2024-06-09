@@ -30,7 +30,7 @@
  */
 unsigned long int strtoul(
   const char* str,
-  __unused char** end,
+  [[maybe_unused]] char** end,
   int base
 ) {
   unsigned long int val = 0;

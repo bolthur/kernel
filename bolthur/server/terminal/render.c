@@ -56,7 +56,7 @@ static void terminal_scroll( terminal_t* term ) {
  * @param s utf8 string to push
  * @return
  */
-__unused static uint32_t terminal_push(
+[[maybe_unused]] static uint32_t terminal_push(
   terminal_t* term,
   const char* s
 ) {

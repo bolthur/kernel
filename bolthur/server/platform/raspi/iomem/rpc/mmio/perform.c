@@ -186,10 +186,10 @@ static void apply_sleep( mmio_sleep_t sleep_type, uint32_t sleep_value ) {
  * @param response_info
  */
 void rpc_handle_mmio_perform(
-  __unused size_t type,
+  [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin

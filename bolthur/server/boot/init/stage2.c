@@ -33,8 +33,7 @@
  * @fn void init_stage2(void)
  * @brief Stage 2 init starting necessary stuff so that stage 3 with stuff from disk can be started
  */
-#include <stdnoreturn.h>
-noreturn void init_stage2( void ) {
+[[noreturn]] void init_stage2( void ) {
   // start servers by configuration
   configuration_handle( "/ramdisk/config/stage2.ini" );
 

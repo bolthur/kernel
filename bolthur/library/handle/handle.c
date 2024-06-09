@@ -48,7 +48,7 @@ HANDLE_TREE_DEFINE(
   handle_node,
   node,
   handle_cmp,
-  __unused
+  [[maybe_unused]]
 )
 
 /**

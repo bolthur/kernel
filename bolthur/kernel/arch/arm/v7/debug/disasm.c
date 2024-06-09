@@ -34,7 +34,7 @@
 uintptr_t* debug_disasm_next_instruction(
   uintptr_t address,
   uintptr_t stack,
-  __maybe_unused void* context
+  [[maybe_unused]] void* context
 ) {
   // static array for up to two instruction addresses
   static uintptr_t next_instruction[ DEBUG_DISASM_MAX_INSTRUCTION ];

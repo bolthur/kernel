@@ -35,7 +35,7 @@
  * @param argv
  * @return
  */
-int main( __unused int argc, __unused char* argv[] ) {
+int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   EARLY_STARTUP_PRINT( "Setup random\r\n" )
   if ( ! random_setup() ) {
     EARLY_STARTUP_PRINT( "Error while setting up random: %s\r\n", strerror( errno ) )

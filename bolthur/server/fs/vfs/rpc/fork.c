@@ -39,8 +39,8 @@
  * @param response_info
  */
 static void rpc_handle_fork_fork(
-  __unused size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
@@ -113,8 +113,8 @@ static void rpc_handle_fork_fork(
  * @param response_info
  */
 static void rpc_handle_fork_stat(
-  __unused size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
@@ -191,7 +191,7 @@ void rpc_handle_fork(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   // dummy error response
   vfs_fork_response_t response = { .status = -EINVAL };

@@ -262,9 +262,9 @@ bool event_bind( event_type_t type, event_callback_t callback, bool post ) {
  * @todo check whether avl removal is enough as logic for this function
  */
 void event_unbind(
-  __unused event_type_t type,
-  __unused event_callback_t callback,
-  __unused bool post
+  [[maybe_unused]] event_type_t type,
+  [[maybe_unused]] event_callback_t callback,
+  [[maybe_unused]] bool post
 ) {
   // do nothing if not initialized
   if ( ! event ) {

@@ -27,14 +27,14 @@ WATCH_TREE_DEFINE(
   watch_node,
   node,
   watch_cmp,
-  __unused static inline
+  [[maybe_unused]] static inline
 )
 WATCH_TREE_DEFINE(
   watch_pid_tree,
   watch_pid,
   node,
   watch_pid_cmp,
-  __unused
+  [[maybe_unused]]
 )
 
 /**

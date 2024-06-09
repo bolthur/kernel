@@ -47,7 +47,7 @@ PID_TREE_DEFINE(
   pid_node,
   node,
   pid_cmp,
-  __unused static inline
+  [[maybe_unused]] static inline
 )
 // create static tree
 static struct pid_tree management_tree;

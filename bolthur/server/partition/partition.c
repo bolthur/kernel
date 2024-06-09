@@ -27,7 +27,7 @@ PARTITION_TREE_DEFINE(
   partition_node,
   node,
   partition_cmp,
-  __unused static inline
+  [[maybe_unused]] static inline
 )
 
 /**

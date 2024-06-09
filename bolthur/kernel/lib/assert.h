@@ -18,12 +18,11 @@
  */
 
 #include <stdint.h>
-#include <stdnoreturn.h>
 
 #ifndef _LIB_ASSERT_H
 #define _LIB_ASSERT_H
 
-noreturn void __assert( const char* restrict, uint32_t, const char* restrict );
+[[noreturn]] void __assert( const char* restrict, uint32_t, const char* restrict );
 
 #define assert( b ) if ( !( b ) ) { __assert( __FILE__, __LINE__, #b ); }
 

@@ -57,7 +57,7 @@ void rpc_handle_getdents(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   EARLY_STARTUP_PRINT( "getdents stuff\r\n" )
   vfs_getdents_response_t dummy_response = { .result = -EINVAL };

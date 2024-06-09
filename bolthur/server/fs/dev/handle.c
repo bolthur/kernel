@@ -119,7 +119,7 @@ device_handle_t* handle_get_by_path( const char* path ) {
   // create temporary data item
   device_handle_t* device = malloc( sizeof( *device ) );
   if ( ! device ) {
-    return false;
+    return NULL;
   }
   // clear out
   memset( device, 0, sizeof( *device ) );
@@ -127,7 +127,7 @@ device_handle_t* handle_get_by_path( const char* path ) {
   device->path = strdup( path );
   if ( ! device->path ) {
     destroy_device( device );
-    return false;
+    return NULL;
   }
   // look up
   list_item_t* item = list_lookup_data( device_list, device );

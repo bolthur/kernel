@@ -38,7 +38,7 @@ void rpc_handle_open(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_open_response_t response = { .handle = -EINVAL };
   // validate origin

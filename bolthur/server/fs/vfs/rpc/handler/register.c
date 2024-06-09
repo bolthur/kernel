@@ -39,7 +39,7 @@ void rpc_handle_handler_register(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   EARLY_STARTUP_PRINT( "handler register called\r\n" )
   vfs_register_handler_response_t response = { .result = -EINVAL };

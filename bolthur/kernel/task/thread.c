@@ -413,8 +413,8 @@ void task_thread_kill( task_thread_t* thread, bool schedule, void* context ) {
  * @param context
  */
 void task_thread_cleanup(
-  __unused event_origin_t origin,
-  __unused void* context
+  [[maybe_unused]] event_origin_t origin,
+  [[maybe_unused]] void* context
 ) {
   list_item_t* current = process_manager->thread_to_cleanup->first;
   // loop

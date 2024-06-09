@@ -352,7 +352,7 @@ static emmc_response_t controller_startup( void ) {
  *
  * @todo check why this is not working and add again or remove completely
  */
-__unused static emmc_response_t controller_restart( void ) {
+[[maybe_unused]] static emmc_response_t controller_restart( void ) {
   return EMMC_RESPONSE_OK;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )

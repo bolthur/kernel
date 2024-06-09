@@ -339,16 +339,6 @@ AC_DEFINE_UNQUOTED(
   [__section(".data.boot")],
   [Bootstrap data]
 )
-AC_DEFINE_UNQUOTED(
-  [__maybe_unused],
-  [__attribute__((unused))],
-  [Possibly unused]
-)
-AC_DEFINE_UNQUOTED(
-  [__unused],
-  [__attribute__((unused))],
-  [Unused]
-)
 
 AC_CONFIG_FILES([
   Makefile

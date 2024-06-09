@@ -21,8 +21,7 @@
 #define _LIB_SSP_H
 
 #include <stdint.h>
-#include <stdnoreturn.h>
 
-noreturn void __stack_chk_fail( void );
+[[noreturn]] void __stack_chk_fail( void );
 
 #endif

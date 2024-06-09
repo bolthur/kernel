@@ -50,7 +50,7 @@ void rpc_handle_write(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_write_response_t* response = malloc( sizeof( *response ) );
   if ( ! response ) {

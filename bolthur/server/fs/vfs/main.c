@@ -40,7 +40,7 @@ pid_t vfs_pid = 0;
  * @todo add necessary message handling to loop
  * @todo move message handling into own thread
  */
-int main( __unused int argc, __unused char* argv[] ) {
+int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // print something
   EARLY_STARTUP_PRINT( "vfs processing!\r\n" )
   // cache current pid

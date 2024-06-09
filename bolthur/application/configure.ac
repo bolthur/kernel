@@ -126,16 +126,6 @@ AC_DEFINE_UNQUOTED(
   [__attribute__((__optimize__("no-stack-protector")))],
   [disable stack protector mechanism]
 )
-AC_DEFINE_UNQUOTED(
-  [__maybe_unused],
-  [__attribute__((unused))],
-  [Possibly unused]
-)
-AC_DEFINE_UNQUOTED(
-  [__unused],
-  [__attribute__((unused))],
-  [Unused]
-)
 
 # conditional
 AM_CONDITIONAL([IS32], [test $executable_format -eq 32])

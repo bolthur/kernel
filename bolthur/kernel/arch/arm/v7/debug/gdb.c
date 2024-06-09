@@ -301,8 +301,8 @@ static void read_byte_from_string( const uint8_t** src, uint8_t* dest ) {
  * @param packet
  */
 void debug_gdb_handler_supported(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send(
     ( uint8_t* )"qSupported:PacketSize=256;multiprocess+;swbreak+" );
@@ -316,7 +316,7 @@ void debug_gdb_handler_supported(
  */
 void debug_gdb_handler_read_register(
   void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] const uint8_t* packet
 ) {
   // reserve memory
   uint8_t* p = malloc(
@@ -385,7 +385,7 @@ void debug_gdb_handler_write_register( void* context, const uint8_t* packet ) {
  * @param packet
  */
 void debug_gdb_handler_read_memory(
-  __unused void* context,
+  [[maybe_unused]] void* context,
   const uint8_t* packet
 ) {
   // variables
@@ -444,7 +444,7 @@ void debug_gdb_handler_read_memory(
  * @param packet
  */
 void debug_gdb_handler_write_memory(
-  __unused void* context,
+  [[maybe_unused]] void* context,
   const uint8_t* packet
 ) {
   const uint8_t* buffer;
@@ -500,7 +500,7 @@ void debug_gdb_handler_write_memory(
  * @param packet
  */
 void debug_gdb_handler_remove_breakpoint(
-  __unused void* context,
+  [[maybe_unused]] void* context,
   const uint8_t* packet
 ) {
   uint32_t address;
@@ -524,7 +524,7 @@ void debug_gdb_handler_remove_breakpoint(
  * @param packet
  */
 void debug_gdb_handler_insert_breakpoint(
-  __unused void* context,
+  [[maybe_unused]] void* context,
   const uint8_t* packet
 ) {
   // transform context to correct structure
@@ -553,7 +553,7 @@ void debug_gdb_handler_insert_breakpoint(
  */
 void debug_gdb_handler_stepping(
   void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] const uint8_t* packet
 ) {
   // transform context to correct structure
   cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
@@ -593,8 +593,8 @@ void debug_gdb_handler_stepping(
  * @param packet
  */
 void debug_gdb_handler_remove_write_watchpoint(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
@@ -606,8 +606,8 @@ void debug_gdb_handler_remove_write_watchpoint(
  * @param packet
  */
 void debug_gdb_handler_insert_write_watchpoint(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
@@ -619,8 +619,8 @@ void debug_gdb_handler_insert_write_watchpoint(
  * @param packet
  */
 void debug_gdb_handler_remove_read_watchpoint(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
@@ -632,8 +632,8 @@ void debug_gdb_handler_remove_read_watchpoint(
  * @param packet
  */
 void debug_gdb_handler_insert_read_watchpoint(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
@@ -645,8 +645,8 @@ void debug_gdb_handler_insert_read_watchpoint(
  * @param packet
  */
 void debug_gdb_handler_remove_access_watchpoint(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
@@ -658,8 +658,8 @@ void debug_gdb_handler_remove_access_watchpoint(
  * @param packet
  */
 void debug_gdb_handler_insert_access_watchpoint(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
@@ -670,7 +670,7 @@ void debug_gdb_handler_insert_access_watchpoint(
  * @param origin
  * @param context
  */
-void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
+void debug_gdb_handle_event( [[maybe_unused]] event_origin_t origin, void* context ) {
   // set exit handler flag
   handler_running = true;
   end_handler = false;

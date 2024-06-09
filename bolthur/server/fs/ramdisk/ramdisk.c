@@ -40,7 +40,7 @@ static size_t ramdisk_offset = 0;
  * @param b
  * @return
  */
-static int ramdisk_tar_open( __unused const char* path, __unused int b, ... ) {
+static int ramdisk_tar_open( [[maybe_unused]] const char* path, [[maybe_unused]] int b, ... ) {
   return 0;
 }
 
@@ -50,7 +50,7 @@ static int ramdisk_tar_open( __unused const char* path, __unused int b, ... ) {
  * @param fd
  * @return
  */
-static int ramdisk_tar_close( __unused int fd ) {
+static int ramdisk_tar_close( [[maybe_unused]] int fd ) {
   free( ramdisk );
   return 0;
 }
@@ -63,7 +63,7 @@ static int ramdisk_tar_close( __unused int fd ) {
  * @param count
  * @return
  */
-static ssize_t ramdisk_tar_read( __unused int fd, void* buffer, size_t count ) {
+static ssize_t ramdisk_tar_read( [[maybe_unused]] int fd, void* buffer, size_t count ) {
   uint8_t* src = ( uint8_t* )ramdisk + ramdisk_offset;
   uint8_t* dst = ( uint8_t* )buffer;
   uintptr_t end = ( uintptr_t )ramdisk + length;
@@ -95,9 +95,9 @@ static ssize_t ramdisk_tar_read( __unused int fd, void* buffer, size_t count ) {
  * @return
  */
 static ssize_t ramdisk_tar_write(
-  __unused int fd,
-  __unused const void* src,
-  __unused size_t count
+  [[maybe_unused]] int fd,
+  [[maybe_unused]] const void* src,
+  [[maybe_unused]] size_t count
 ) {
   return -ENOSYS;
 }

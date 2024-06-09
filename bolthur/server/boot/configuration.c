@@ -36,7 +36,7 @@ TAILQ_HEAD(head_s, configuration_node) head;
  */
 int configuration_confini_handler (
   IniDispatch* dispatch,
-  __unused void* v_null
+  [[maybe_unused]] void* v_null
 ) {
   // determine section information
   const char* section = dispatch->append_to;

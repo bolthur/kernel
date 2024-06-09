@@ -554,8 +554,8 @@ void task_process_queue_reset( void ) {
  * @param context
  */
 void task_process_cleanup(
-  __unused event_origin_t origin,
-  __unused void* context
+  [[maybe_unused]] event_origin_t origin,
+  [[maybe_unused]] void* context
 ) {
   list_item_t* current = process_manager->process_to_cleanup->first;
   // loop

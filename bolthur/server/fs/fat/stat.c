@@ -43,7 +43,7 @@ STAT_TREE_DEFINE(
   stat_node,
   node,
   stat_cmp,
-  __unused static inline
+  [[maybe_unused]] static inline
 )
 // create static tree
 static struct stat_tree management_tree;

@@ -153,9 +153,9 @@ static bool fetch_mbr_entry(
  */
 void rpc_handle_mount(
   size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   EARLY_STARTUP_PRINT( "ext mounting\r\n" )
   vfs_mount_response_t response = { .result = -ENOMEM };

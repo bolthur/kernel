@@ -35,9 +35,9 @@
  */
 void rpc_handle_write(
   size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_write_response_t response = { .len = -ENOMEM };
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );

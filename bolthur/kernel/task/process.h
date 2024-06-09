@@ -18,7 +18,6 @@
  */
 
 #include <stddef.h>
-#include <stdnoreturn.h>
 #include <unistd.h>
 #include "../../library/collection/avl/avl.h"
 #include "../../library/collection/list/list.h"

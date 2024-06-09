@@ -41,7 +41,7 @@
  * @param argv
  * @return
  */
-int main( __unused int argc, __unused char* argv[] ) {
+int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   EARLY_STARTUP_PRINT( "Setup mmio\r\n" )
   // setup mmio stuff
   if ( ! mmio_setup() ) {

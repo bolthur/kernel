@@ -39,7 +39,7 @@
  * @param response
  * @param async_data
  */
-__maybe_unused static void create_handle(
+[[maybe_unused]] static void create_handle(
   size_t type,
   pid_t origin,
   vfs_open_response_t* open_response,
@@ -144,8 +144,8 @@ __maybe_unused static void create_handle(
  * @param response_info
  */
 void rpc_handle_open_async(
-  __unused size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
@@ -230,7 +230,7 @@ void rpc_handle_open(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   // variables
   vfs_open_response_t response = { .handle = -EINVAL };

@@ -103,7 +103,7 @@ static int lstat_handler( const char* pathname, struct stat* buf, pid_t* handler
  */
 void rpc_handle_mount_async(
   size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
   size_t response_info
 ) {

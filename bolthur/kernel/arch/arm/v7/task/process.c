@@ -121,7 +121,7 @@ void task_process_start( void ) {
  *
  * @todo check / remove interrupt toggling with reentrant interrupts
  */
-void task_process_schedule( __unused event_origin_t origin, void* context ) {
+void task_process_schedule( [[maybe_unused]] event_origin_t origin, void* context ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Entered task_process_schedule( %p )\r\n", context )

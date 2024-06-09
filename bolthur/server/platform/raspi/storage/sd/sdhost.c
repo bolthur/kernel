@@ -673,7 +673,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
  * @param destination
  * @return
  */
-__maybe_unused static sdhost_response_t get_debug_status( uint32_t* destination ) {
+[[maybe_unused]] static sdhost_response_t get_debug_status( uint32_t* destination ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Fetch debug register\r\n" )

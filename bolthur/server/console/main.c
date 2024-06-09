@@ -66,7 +66,7 @@ static void console_cleanup( list_item_t* a ) {
  * @param argv
  * @return
  */
-int main( __unused int argc, __unused char* argv[] ) {
+int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // create console list
   console_list = list_construct( console_lookup, console_cleanup, NULL );
   if ( ! console_list ) {

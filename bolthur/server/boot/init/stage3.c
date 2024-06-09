@@ -29,13 +29,11 @@
 #include "../util.h"
 #include "../global.h"
 
-#include <stdnoreturn.h>
-
 /**
  * @fn void init_stage1(void)
  * @brief Final init stage starting servers from storage with finally starting shell
  */
-noreturn void init_stage3( void ) {
+[[noreturn]] void init_stage3( void ) {
   /// FIXME: Kill unnecessary ramdisk server again
   /// FIXME: Start authentication manager
   /// FIXME: Start USB driver with all attached devices

@@ -37,9 +37,9 @@
  */
 void rpc_handle_remove(
   size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_remove_response_t response = { .status = -EINVAL };
   vfs_remove_request_t* request = malloc( sizeof( vfs_remove_request_t ) );

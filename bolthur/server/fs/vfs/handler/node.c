@@ -45,7 +45,7 @@ HANDLER_TREE_DEFINE(
   handler_node,
   node,
   handler_cmp,
-  __unused static inline
+  [[maybe_unused]] static inline
 )
 // create static tree
 static struct handler_tree management_tree;

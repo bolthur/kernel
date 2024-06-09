@@ -36,9 +36,9 @@
  * @param response_info
  */
 void rpc_custom_handle_request(
-  __unused size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
 ) {
 }

@@ -1,0 +1,13 @@
+{
+  "editor.renderWhitespace": "all",
+  "editor.detectIndentation": false,
+  "editor.rulers": [ 80, 120 ],
+  "editor.tabSize": 2,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.renderFinalNewline": "on",
+  "editor.insertSpaces": true,
+  "editor.fontSize": 12,
+  "C_Cpp.intelliSenseEngine": "default",
+  "C_Cpp.autoAddFileAssociations": false
+}

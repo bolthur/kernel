@@ -41,7 +41,7 @@ MOUNTPOINT_TREE_DEFINE(
   mountpoint_node,
   node,
   mountpoint_cmp,
-  __unused static inline
+  [[maybe_unused]] static inline
 )
 // create static tree
 static struct mountpoint_tree management_tree;

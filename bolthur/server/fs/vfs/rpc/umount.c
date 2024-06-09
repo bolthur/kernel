@@ -38,7 +38,7 @@
  */
 void rpc_handle_umount_async(
   size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
@@ -144,8 +144,8 @@ void rpc_handle_umount_async(
  * @param response_info
  */
 /*static void rpc_handle_umount_process_authentication(
-  __unused size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
@@ -204,8 +204,8 @@ void rpc_handle_umount_async(
  * @param response_info
  */
 /*static void rpc_handle_umount_authenticate_stat(
-  __unused size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
   size_t response_info
 ) {

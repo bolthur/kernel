@@ -38,7 +38,7 @@ void rpc_handle_read(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   // allocate response
   vfs_read_response_t* response = malloc( sizeof( *response ) );

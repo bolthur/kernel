@@ -103,10 +103,10 @@ static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
  * @todo add origin validation once called correctly
  */
 void rpc_handle_mount(
-  __unused size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
 ) {
   EARLY_STARTUP_PRINT( "mount mounting\r\n" )
   vfs_mount_response_t response = { .result = -ENOTSUP };

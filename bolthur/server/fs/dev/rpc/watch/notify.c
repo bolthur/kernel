@@ -38,7 +38,7 @@ void rpc_handle_watch_notify(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {

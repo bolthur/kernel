@@ -519,7 +519,7 @@ int32_t avl_default_lookup( const avl_node_t* a, const void* b ) {
  *
  * @param a
  */
-void avl_default_cleanup( __unused avl_node_t* a ) {}
+void avl_default_cleanup( [[maybe_unused]] avl_node_t* a ) {}
 
 /**
  * @brief Helper to create new tree
