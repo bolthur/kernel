@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2018 - 2024 bolthur project.
+# Copyright (C) 2018 - 2025 bolthur project.
 #
 # This file is part of bolthur/kernel.
 #
