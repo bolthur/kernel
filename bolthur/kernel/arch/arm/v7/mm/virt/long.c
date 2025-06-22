@@ -1651,7 +1651,7 @@ uint64_t v7_long_get_mapped_address_in_context(
   // determine page index
   uint64_t table_phys = v7_long_create_table( ctx, addr, 0 );
   if ( 0 == table_phys ) {
-    return ( uint64_t )-1;
+    return INVALID_ADDRESS;
   }
 
   // map temporary
@@ -1659,11 +1659,11 @@ uint64_t v7_long_get_mapped_address_in_context(
     table_phys, PAGE_SIZE );
   // handle error
   if ( ! table ) {
-    return ( uint64_t )-1;
+    return INVALID_ADDRESS;
   }
   // handle not mapped
   if ( 0 == table->page[ page_idx ].raw ) {
-    return ( uint64_t )-1;
+    return INVALID_ADDRESS;
   }
 
   // debug output

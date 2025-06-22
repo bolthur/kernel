@@ -23,6 +23,8 @@
 #include "../lib/stdlib.h"
 #include "data.h"
 #include "../panic.h"
+#include "../mm/phys.h"
+#include "../mm/virt.h"
 #if defined( PRINT_RPC )
   #include "../debug/debug.h"
 #endif
@@ -242,10 +244,110 @@ int rpc_data_queue_add(
   if ( rpc_data_queue_id ) {
     *rpc_data_queue_id = message->id;
   }
+
+  // handle no mailbox
+  if ( !target_process->rpc_mailbox ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "No message queue allocated!\r\n" )
+    #endif
+    return EINVAL;
+  }
+  // map mailbox temporarily
+  uintptr_t mailbox = virt_map_temporary( target_process->rpc_mailbox, PAGE_SIZE );
+  if ( ! mailbox ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "Unable to map queue temporarily!\r\n" )
+    #endif
+    return EINVAL;
+  }
+  // set pointer to beginning
+  rpc_data_mailbox_entry_t* entry = ( rpc_data_mailbox_entry_t* )mailbox;
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "Mailbox temporarily mapped to 0x%"PRIxPTR", looking for free space \r\n", mailbox )
+  #endif
+  // handle empty
+  if ( entry->id ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "Mailbox not empty, checking ...\r\n" )
+      DEBUG_OUTPUT( "current id: %zx\r\n", entry->id )
+    #endif
+    // loop while there is an entry
+    while ( entry->id && data_length < PAGE_SIZE - ( ( uintptr_t )entry - mailbox - sizeof( rpc_data_mailbox_entry_t ) ) ) {
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "entry: %#"PRIxPTR"\r\n", (uintptr_t)entry )
+      #endif
+      entry = ( rpc_data_mailbox_entry_t* )( ( uintptr_t )entry + sizeof( rpc_data_mailbox_entry_t ) + entry->length );
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "entry: %#"PRIxPTR"\r\n", (uintptr_t)entry )
+      #endif
+    }
+  }
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "Looking for free space finished!\r\n" )
+  #endif
+  // handle no free entry found
+  if ( entry->id ) {
+    // unmap temporary again
+    virt_unmap_temporary( mailbox, PAGE_SIZE );
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "Mailbox full!\r\n" )
+    #endif
+    return ENOMEM;
+  }
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "data_length = %#zx, max = %#zx!\r\n", data_length, PAGE_SIZE - ( ( uintptr_t )entry - mailbox - sizeof( rpc_data_mailbox_entry_t ) ) )
+    DEBUG_OUTPUT( "entry = %#"PRIxPTR", mailbox = %#"PRIxPTR", sizeof( rpc_data_mailbox_entry_t ) = %#zx\r\n", ( uintptr_t )entry, mailbox, sizeof( rpc_data_mailbox_entry_t ) )
+  #endif
+  // handle to big
+  if ( data_length > PAGE_SIZE - ( ( uintptr_t )entry - mailbox - sizeof( rpc_data_mailbox_entry_t ) ) ) {
+    // unmap temporary again
+    virt_unmap_temporary( mailbox, PAGE_SIZE );
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "Mailbox full!\r\n" )
+    #endif
+    return ENOMEM;
+  }
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "Populating entry id and length( %zd, %#zx )\r\n", message->id, message->length )
+  #endif
+  // set id and length
+  entry->id = message->id;
+  entry->length = message->length;
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "Copying over data from %#"PRIxPTR" to %#"PRIxPTR"\r\n", ( uintptr_t )data, ( uintptr_t )entry->data )
+  #endif
+  // copy over data
+  memcpy( ( void* )entry->data, data, data_length );
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "Unmapping temporary again\r\n" )
+  #endif
+  // unmap temporary again
+  virt_unmap_temporary( mailbox, PAGE_SIZE );
+
   // prepare structure
   message->sender = sender;
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "pushing back data\r\n" )
+  #endif
   // push message to process queue
   list_push_back_data( target_process->rpc_data_queue, message );
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "Everything done!\r\n" )
+  #endif
   // return success
   return 0;
 }
@@ -300,6 +402,6 @@ void rpc_data_queue_remove( pid_t process, size_t rpc_id ) {
         found->id
       )
     #endif
-    list_remove_data( target_process->rpc_data_queue, ( void* )found );
+    list_remove_data( target_process->rpc_data_queue, ( void* )found->id );
   }
 }

@@ -223,7 +223,7 @@ static bool load_program_header( uintptr_t elf, task_process_t* process ) {
           start
         );
         // handle error
-        if ( ( uint64_t )-1 == phys ) {
+        if ( INVALID_ADDRESS == phys ) {
           return false;
         }
       // handle not mapped ( acquire new physical page )

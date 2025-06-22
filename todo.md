@@ -14,12 +14,15 @@
   * [ ] Getting started after checkout
   * [ ] Cross-compiler toolchain
   * [ ] Configuring target overview
+* [ ] Revise paging to use lpae or non lpae depending on define
 * [ ] Adjust message passing for rpc calls
-  * [ ] Allocate page size for mailbox ( linked message list )
+  * [x] Allocate page size for mailbox ( linked message list )
+  * [x] Consider mailbox in fork correctly by assigning new forked physical memory address
   * [ ] Map mailbox temporarily
   * [ ] Check for enough space is left
   * [ ] Add new rpc parameter to mailbox
-  * [ ] Try to switch to process handling rpc
+  * [x] Try to switch to process handling rpc
+  * [ ] Remove old in kernel data handling for rpc
 
 ## Different projects, not kernel related things to be done
 

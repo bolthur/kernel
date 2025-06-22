@@ -146,6 +146,10 @@ rpc_backup_t* rpc_backup_create(
         &backup->data_id
       );
       if ( err ) {
+        // debug output
+        #if defined( PRINT_RPC )
+          DEBUG_OUTPUT( "Adding to queue failed with code %d\r\n", err )
+        #endif
         rpc_backup_destroy( backup );
         return NULL;
       }
@@ -167,6 +171,10 @@ rpc_backup_t* rpc_backup_create(
         &backup->data_id
       );
       if ( err ) {
+        // debug output
+        #if defined( PRINT_RPC )
+          DEBUG_OUTPUT( "Adding to queue failed with code %d\r\n", err )
+        #endif
         rpc_backup_destroy( backup );
         return NULL;
       }

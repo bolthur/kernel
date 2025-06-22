@@ -26,6 +26,8 @@
 #include "../rpc/generic.h"
 #include "../task/process.h"
 #include "../task/thread.h"
+#include "../mm/phys.h"
+#include "../mm/virt.h"
 #if defined( PRINT_SYSCALL )
   #include "../lib/inttypes.h"
   #include "../debug/debug.h"
@@ -46,12 +48,16 @@ void syscall_rpc_set_handler( void* context ) {
   // create queue if not existing
   if ( ! rpc_generic_setup( task_thread_current_thread->process ) ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "rpc generic setup failed!\r\n" )
+    #endif
     return;
   }
   // set handler
   task_thread_current_thread->process->rpc_handler = handler;
   // return success
-  syscall_populate_success( context, 0 );
+  syscall_populate_success( context, task_thread_current_thread->process->rpc_mailbox_virt );
 }
 
 /**

@@ -39,6 +39,8 @@
     + ROUND_DOWN_TO_FULL_PAGE( ( a ) ) )
 #define ROUND_PAGE_OFFSET( a ) ( ( uintptr_t )( a ) & ( ( PAGE_SIZE ) -1 ) )
 
+#define INVALID_ADDRESS ( uint64_t )-1
+
 typedef enum {
   PHYS_MEMORY_TYPE_NORMAL,
   PHYS_MEMORY_TYPE_DMA,

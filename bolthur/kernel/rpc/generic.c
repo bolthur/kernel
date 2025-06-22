@@ -19,12 +19,15 @@
 
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
+#include "../mm/phys.h"
+#include "../mm/virt.h"
 #include "backup.h"
 #include "data.h"
 #include "queue.h"
 #include "generic.h"
 #if defined( PRINT_RPC )
   #include "../debug/debug.h"
+  #include <inttypes.h>
 #endif
 
 static avl_tree_t* origin_tree = NULL;
@@ -142,6 +145,124 @@ void rpc_generic_destroy_source_info( rpc_origin_source_t* info ) {
   #endif
   // free info
   free( info );
+}
+
+/**
+ * @fn size_t rpc_generic_setup_mailbox(task_process_t*)
+ * @brief Helper to setup mailbox
+ * @param proc
+ *
+ * @return 0 on success
+ */
+bool rpc_generic_setup_mailbox( task_process_t* proc ) {
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "proc->rpc_mailbox = %#"PRIx64", proc->rpc_mailbox_virt = %#"PRIxPTR", id = %d!\r\n", proc->rpc_mailbox, proc->rpc_mailbox_virt, proc->id )
+  #endif
+  // allocate mailbox if not allocated
+  if ( 0 == proc->rpc_mailbox ) {
+    // allocate mailbox
+    proc->rpc_mailbox = phys_find_free_page(PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL);
+    // handle allocation failed
+    if ( INVALID_ADDRESS == proc->rpc_mailbox ) {
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "No space for mailbox found!\r\n" )
+      #endif
+      return false;
+    }
+    // map page temporarily
+    uintptr_t tmp_map = virt_map_temporary( proc->rpc_mailbox, PAGE_SIZE );
+    if ( 0 == tmp_map ) {
+      // free mailbox again
+      phys_free_page( proc->rpc_mailbox );
+      proc->rpc_mailbox = 0;
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "map temporary failed!\r\n" )
+      #endif
+      // return error
+      return false;
+    }
+    // clear memory
+    memset( ( void* )tmp_map, 0, PAGE_SIZE );
+    // unmap again
+    virt_unmap_temporary( tmp_map, PAGE_SIZE );
+    // set address
+    uintptr_t tmp_addr = ROUND_UP_TO_FULL_PAGE( task_thread_current_thread->entry );
+    // find free space
+    proc->rpc_mailbox_virt = virt_find_free_page_range( proc->virtual_context, PAGE_SIZE, tmp_addr );
+    // handle no address found
+    if ( ! proc->rpc_mailbox_virt ) {
+      // free mailbox again
+      phys_free_page( proc->rpc_mailbox );
+      proc->rpc_mailbox = 0;
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "No start address found!\r\n" )
+      #endif
+      return false;
+    }
+    // mapping flags and type
+    uint32_t map_flag = VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
+    virt_memory_type_t map_type = VIRT_MEMORY_TYPE_NORMAL;
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT(
+        "mapping %#"PRIx64" to address %#"PRIxPTR
+        " with type %d, flag %"PRIu32" and len %zx for process %d\r\n",
+        proc->rpc_mailbox,
+        proc->rpc_mailbox_virt,
+        map_type,
+        map_flag,
+        PAGE_SIZE,
+        proc->id
+      )
+    #endif
+    // map address into context
+    if ( ! virt_map_address_range(
+      proc->virtual_context,
+      proc->rpc_mailbox_virt,
+      proc->rpc_mailbox,
+      PAGE_SIZE,
+      map_type,
+      map_flag
+    ) ) {
+      // free mailbox again
+      phys_free_page( proc->rpc_mailbox );
+      proc->rpc_mailbox = 0;
+      proc->rpc_mailbox_virt = 0;
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "Error during map of address!\r\n" )
+      #endif
+      return false;
+    }
+  }
+  // return success
+  return true;
+}
+
+/**
+ * @fn void destroy_mailbox(task_process_t*)
+ * @brief Wrapper to destroy possible mailbox
+ *
+ * @param proc
+ */
+void rpc_generic_destroy_mailbox( task_process_t* proc ) {
+  // unmap virtual
+  if ( proc->rpc_mailbox_virt ) {
+    // unmap
+    virt_unmap_address_range( proc->virtual_context, proc->rpc_mailbox_virt, PAGE_SIZE, false );
+    // reset virtual address
+    proc->rpc_mailbox_virt = 0;
+  }
+  // handle physical
+  if ( INVALID_ADDRESS != proc->rpc_mailbox ) {
+    // free up physical page
+    phys_free_page( proc->rpc_mailbox );
+    // reset physical page
+    proc->rpc_mailbox = 0;
+  }
 }
 
 /**
@@ -276,6 +397,10 @@ bool rpc_generic_setup( task_process_t* proc ) {
     rpc_generic_destroy( proc );
     return false;
   }
+  if ( ! rpc_generic_setup_mailbox( proc ) ) {
+    rpc_generic_destroy( proc );
+    return false;
+  }
   return true;
 }
 
@@ -289,6 +414,8 @@ bool rpc_generic_setup( task_process_t* proc ) {
 bool rpc_generic_ready( task_process_t* proc ) {
   return rpc_data_queue_ready( proc )
     && rpc_queue_ready( proc )
+    && proc->rpc_mailbox
+    && proc->rpc_mailbox_virt
     && proc->rpc_handler
     && proc->rpc_ready;
 }
@@ -302,4 +429,5 @@ bool rpc_generic_ready( task_process_t* proc ) {
 void rpc_generic_destroy( task_process_t* proc ) {
   rpc_data_queue_destroy( proc );
   rpc_queue_destroy( proc );
+  rpc_generic_destroy_mailbox( proc );
 }

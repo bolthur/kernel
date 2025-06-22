@@ -32,6 +32,12 @@ typedef struct {
   size_t length;
 } rpc_data_queue_entry_t;
 
+typedef struct {
+  size_t id;
+  size_t length;
+  const char data[];
+} rpc_data_mailbox_entry_t;
+
 size_t rpc_data_queue_generate_id( void );
 bool rpc_data_queue_setup( task_process_t* );
 void rpc_data_queue_destroy( task_process_t* );

@@ -205,6 +205,17 @@ void syscall_memory_acquire( void* context ) {
     }
   // map address range with random physical memory
   } else {
+    // debug output
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT(
+        "mapping %#"PRIxPTR" to random physical address "
+        " with type %d, flag %"PRIu32" and len %zx\r\n",
+        start,
+        map_type,
+        map_flag,
+        len
+      )
+    #endif
     // map address range with random physical memory
     if ( ! virt_map_address_range_random(
       virtual_context,

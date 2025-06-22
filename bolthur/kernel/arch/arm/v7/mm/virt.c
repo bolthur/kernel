@@ -567,7 +567,7 @@ uint64_t virt_get_mapped_address_in_context(
 ) {
   // check context
   if ( ! ctx ) {
-    return ( uint64_t )-1;
+    return INVALID_ADDRESS;
   }
 
   // check for v7 long descriptor format

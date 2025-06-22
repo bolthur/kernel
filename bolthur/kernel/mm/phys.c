@@ -309,7 +309,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
       // not free? => reset counter and continue
       if ( bitmap[ idx ] & ( uint32_t )( 1U << offset ) ) {
         found_amount = 0;
-        address = ( uint64_t )-1;
+        address = INVALID_ADDRESS;
         continue;
       }
 
@@ -323,7 +323,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
         // check for alignment
         if ( 0 < alignment && 0 != address % alignment ) {
           found_amount = 0;
-          address = ( uint64_t )-1;
+          address = INVALID_ADDRESS;
           continue;
         }
       }
@@ -339,7 +339,7 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
   }
 
   // handle no address
-  if ( ( uint64_t )-1 == address ) {
+  if ( INVALID_ADDRESS == address ) {
     return address;
   }
   // apply possible offset

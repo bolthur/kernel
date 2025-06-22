@@ -45,6 +45,8 @@ typedef struct task_process {
   list_manager_t* rpc_data_queue;
   list_manager_t* rpc_queue;
   uintptr_t rpc_handler;
+  uint64_t rpc_mailbox;
+  uintptr_t rpc_mailbox_virt;
   bool rpc_ready;
 } task_process_t;
 

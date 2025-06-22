@@ -34,6 +34,7 @@
 #if defined( PRINT_PROCESS )
   #include "../debug/debug.h"
 #endif
+#include "../debug/debug.h"
 #include "queue.h"
 #include "process.h"
 #include "thread.h"
@@ -427,7 +428,15 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
     task_process_free( forked );
     return NULL;
   }
-  // copy rpc handler
+  // create mailbox if existing
+  if ( proc->rpc_mailbox_virt && proc->rpc_mailbox ) {
+    // unmap if existing
+    virt_unmap_address( forked->virtual_context, proc->rpc_mailbox_virt, true );
+    // reset properties
+    forked->rpc_mailbox = 0;
+    forked->rpc_mailbox_virt = 0;
+  }
+  // copy rpc handler and rpc ready flag
   forked->rpc_handler = proc->rpc_handler;
   forked->rpc_ready = proc->rpc_ready;
 

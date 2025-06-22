@@ -1575,7 +1575,7 @@ uint64_t v7_short_get_mapped_address_in_context(
     ( uintptr_t )v7_short_create_table( ctx, addr, 0 ) );
   // handle error
   if ( ! table ) {
-    return ( uint64_t )-1;
+    return INVALID_ADDRESS;
   }
 
   // debug output
@@ -1586,11 +1586,11 @@ uint64_t v7_short_get_mapped_address_in_context(
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
   // not mapped if null
   if ( ! table ) {
-    return ( uint64_t )-1;
+    return INVALID_ADDRESS;
   }
   // handle not mapped
   if ( 0 == table->page[ page_idx ].raw ) {
-    return ( uint64_t )-1;
+    return INVALID_ADDRESS;
   }
 
   // debug output
