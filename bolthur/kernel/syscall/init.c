@@ -68,13 +68,10 @@ bool syscall_init( void ) {
     ! SYSCALL_BIND( SYSCALL_RPC_SET_HANDLER, syscall_rpc_set_handler )
     || ! SYSCALL_BIND( SYSCALL_RPC_RAISE, syscall_rpc_raise )
     || ! SYSCALL_BIND( SYSCALL_RPC_RET, syscall_rpc_ret )
-    || ! SYSCALL_BIND( SYSCALL_RPC_GET_DATA, syscall_rpc_get_data )
-    || ! SYSCALL_BIND( SYSCALL_RPC_GET_DATA_SIZE, syscall_rpc_get_data_size )
     || ! SYSCALL_BIND( SYSCALL_RPC_WAIT_FOR_CALL, syscall_rpc_wait_for_call )
     || ! SYSCALL_BIND( SYSCALL_RPC_SET_READY, syscall_rpc_set_ready )
     || ! SYSCALL_BIND( SYSCALL_RPC_END, syscall_rpc_end )
     || ! SYSCALL_BIND( SYSCALL_RPC_WAIT_FOR_READY, syscall_rpc_wait_for_ready )
-    || ! SYSCALL_BIND( SYSCALL_RPC_CLEAR_DATA, syscall_rpc_clear_data )
   ) {
     return false;
   }

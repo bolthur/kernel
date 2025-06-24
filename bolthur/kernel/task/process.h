@@ -42,7 +42,6 @@ typedef struct task_process {
   pid_t current_thread_id;
   size_t priority;
   virt_context_t* virtual_context;
-  list_manager_t* rpc_data_queue;
   list_manager_t* rpc_queue;
   uintptr_t rpc_handler;
   uint64_t rpc_mailbox;

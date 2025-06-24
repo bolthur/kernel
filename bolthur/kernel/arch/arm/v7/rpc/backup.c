@@ -140,7 +140,6 @@ rpc_backup_t* rpc_backup_create(
     if ( data && data_size ) {
       int err = rpc_data_queue_add(
         thread->process->id,
-        source->process->id,
         data,
         data_size,
         &backup->data_id
@@ -165,7 +164,6 @@ rpc_backup_t* rpc_backup_create(
       char dummy = '\0';
       int err = rpc_data_queue_add(
         thread->process->id,
-        source->process->id,
         &dummy,
         sizeof( char ),
         &backup->data_id

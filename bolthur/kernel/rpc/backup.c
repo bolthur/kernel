@@ -40,9 +40,6 @@ void rpc_backup_destroy( rpc_backup_t* backup ) {
   if ( backup->context ) {
     free( backup->context );
   }
-  if ( backup->thread && backup->data_id ) {
-    rpc_data_queue_remove( backup->thread->process->id, backup->data_id );
-  }
   free( backup );
 }
 

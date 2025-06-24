@@ -421,11 +421,6 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
     task_process_free( forked );
     return NULL;
   }
-  // create rpc queues if existing
-  if ( proc->rpc_data_queue && ! rpc_data_queue_setup( forked ) ) {
-    task_process_free( forked );
-    return NULL;
-  }
   // create message queue if existing
   if ( proc->rpc_queue && ! rpc_queue_setup( forked ) ) {
     task_process_free( forked );

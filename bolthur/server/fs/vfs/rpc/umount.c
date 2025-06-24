@@ -56,7 +56,8 @@ void rpc_handle_umount_async(
     return;
   }
   // fetch response
-  _syscall_rpc_get_data( &response, sizeof( response ), data_info, false );
+  size_t data_size;
+  bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, &response );
   if ( errno ) {
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
@@ -296,7 +297,8 @@ void rpc_handle_umount(
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  size_t data_size;
+  bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, request );
   // handle error
   if ( errno ) {
     response.result = -errno;

@@ -395,10 +395,6 @@ bool rpc_generic_init( void ) {
  * @return
  */
 bool rpc_generic_setup( task_process_t* proc ) {
-  // setup data queue handling
-  if ( ! rpc_data_queue_setup( proc ) ) {
-    return false;
-  }
   if ( ! rpc_queue_setup( proc ) ) {
     rpc_generic_destroy( proc );
     return false;
@@ -420,8 +416,6 @@ bool rpc_generic_setup( task_process_t* proc ) {
 bool rpc_generic_ready( task_process_t* proc ) {
   return rpc_data_queue_ready( proc )
     && rpc_queue_ready( proc )
-    && proc->rpc_mailbox
-    && proc->rpc_mailbox_virt
     && proc->rpc_handler
     && proc->rpc_ready;
 }
@@ -433,7 +427,6 @@ bool rpc_generic_ready( task_process_t* proc ) {
  * @param proc
  */
 void rpc_generic_destroy( task_process_t* proc ) {
-  rpc_data_queue_destroy( proc );
   rpc_queue_destroy( proc );
   rpc_generic_destroy_mailbox( proc );
 }
