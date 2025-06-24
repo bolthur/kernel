@@ -422,11 +422,12 @@ static uintptr_t get_new_table( uintptr_t table ) {
 
   if ( ! free_addr || ! addr ) {
     // reserve page
-    uintptr_t new_tables = ( uintptr_t )phys_find_free_page( SD_TBL_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+    uint64_t phys = phys_find_free_page( SD_TBL_SIZE, PHYS_MEMORY_TYPE_NORMAL );
     // handle error
-    if ( 0 == new_tables ) {
+    if ( INVALID_ADDRESS == phys ) {
       return 0;
     }
+    uintptr_t new_tables = ( uintptr_t )phys;
     // map temporarily
     uintptr_t tmp = map_temporary( new_tables, PAGE_SIZE );
     // handle error
@@ -809,7 +810,7 @@ bool v7_short_map_random(
   // get physical address
   uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
   // handle error
-  if ( 0 == phys ) {
+  if ( INVALID_ADDRESS == phys ) {
     return false;
   }
   // map it
@@ -1025,11 +1026,12 @@ bool v7_short_prepare_temporary( virt_context_t* ctx ) {
   }
 
   // free page table
-  uintptr_t table = ( uintptr_t )phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+  uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
   // handle error
-  if ( 0 == table ) {
-    return table;
+  if ( INVALID_ADDRESS == phys ) {
+    return false;
   }
+  uintptr_t table = ( uintptr_t )phys;
   // overwrite page with zero
   memset( ( void* )table, 0, PAGE_SIZE );
 
@@ -1104,14 +1106,23 @@ virt_context_t* v7_short_create_context( virt_context_type_t type ) {
     ? SD_TTBR_ALIGNMENT_4G
     : SD_TTBR_ALIGNMENT_2G;
 
-  // create new context
-  uintptr_t ctx = ! virt_init_get()
-    ? VIRT_2_PHYS( aligned_alloc( alignment, size ) )
-    : ( uintptr_t )phys_find_free_page_range( alignment, size, PHYS_MEMORY_TYPE_NORMAL );
-  // handle error
-  if ( 0 == ctx ) {
-    return NULL;
+  // reserve space for context
+  uint64_t phys;
+  if ( !virt_init_get() ) {
+    phys = ( uintptr_t )aligned_alloc( alignment, size );
+    // handle error
+    if ( ! phys ) {
+      return NULL;
+    }
+    phys = VIRT_2_PHYS( phys );
+  } else {
+    phys = phys_find_free_page_range( alignment, size, PHYS_MEMORY_TYPE_NORMAL );
+    // handle error
+    if ( INVALID_ADDRESS == phys ) {
+      return NULL;
+    }
   }
+  uintptr_t ctx = ( uintptr_t )phys;
 
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -1183,10 +1194,11 @@ bool v7_short_fork_table( sd_page_table_t* to_fork, sd_page_table_t* forked ) {
 
     // get mapped address
     uintptr_t phys_to_fork = to_fork->page[ page_idx ].raw & 0xFFFFF000;
-    uintptr_t phys_forked = ( uintptr_t )phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
-    if ( 0 == phys_forked ) {
+    uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+    if ( INVALID_ADDRESS == phys ) {
       return false;
     }
+    uintptr_t phys_forked = ( uintptr_t )phys;
 
     // map both pages temporarily
     uintptr_t page_to_fork = map_temporary( phys_to_fork, PAGE_SIZE );

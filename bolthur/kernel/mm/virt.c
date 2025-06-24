@@ -23,6 +23,7 @@
 #include "../lib/inttypes.h"
 #if defined( PRINT_MM_VIRT )
   #include "../debug/debug.h"
+  #include "../lib/inttypes.h"
 #endif
 #include "../panic.h"
 #include "../entry.h"
@@ -483,15 +484,18 @@ bool virt_map_address_range_random(
   while ( start < end ) {
     // get physical page
     uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "phys = %#"PRIx64"\r\n", phys )
+    #endif
     // handle error
     if (
       // handle physical error
-      0 == phys
+      INVALID_ADDRESS == phys
       // try to map and handle error
       || ! virt_map_address( ctx, start, phys, type, page )
     ) {
       // free page
-      if ( 0 != phys ) {
+      if ( INVALID_ADDRESS != phys ) {
         phys_free_page( phys );
       }
       // free already mapped stuff

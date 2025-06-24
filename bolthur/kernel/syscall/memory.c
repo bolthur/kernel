@@ -85,7 +85,7 @@ void syscall_memory_acquire( void* context ) {
     // try to get free dma page range
     phys = phys_find_free_page_range( PAGE_SIZE, len, PHYS_MEMORY_TYPE_DMA );
     // handle not enough memory
-    if ( 0 == phys ) {
+    if ( INVALID_ADDRESS == phys ) {
       // debug output
       #if defined( PRINT_SYSCALL )
         DEBUG_OUTPUT( "Not enough free dma memory\r\n" )
@@ -208,7 +208,7 @@ void syscall_memory_acquire( void* context ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
-        "mapping %#"PRIxPTR" to random physical address "
+        "mapping %#"PRIxPTR" to random physical address"
         " with type %d, flag %"PRIu32" and len %zx\r\n",
         start,
         map_type,

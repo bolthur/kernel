@@ -216,6 +216,11 @@ static uintptr_t map_temporary( uint64_t start, size_t size ) {
     return ( uintptr_t )start;
   }
 
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "start = %#"PRIx64"\r\n", start )
+  #endif
+
   // determine offset and subtract start
   uint32_t offset = start % PAGE_SIZE;
   start -= offset;
@@ -420,6 +425,51 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
 }
 
 /**
+ * @fn uint64_t get_temporary_mapping(uintptr_t)
+ * @brief Helper to get temporary mapping
+ *
+ * @param addr address to get mapping of
+ * @return
+ */
+static uint64_t get_temporary_mapping( uintptr_t addr ) {
+  // determine offset and subtract start
+  size_t offset = addr % PAGE_SIZE;
+  addr -= offset;
+
+  // stop here if not initialized
+  if ( true != virt_init_get() ) {
+    return INVALID_ADDRESS;
+  }
+
+  // determine table index offset
+  uint32_t table_idx_offset = LD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT(
+      "page_amount = %"PRIu32" - table_idx_offset = %"PRIu32"\r\n",
+      page_amount,
+      table_idx_offset
+    )
+  #endif
+
+  uint32_t table_idx = LD_VIRTUAL_TABLE_INDEX( addr ) - table_idx_offset;
+  uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( addr );
+
+  // get table
+  ld_page_table_t* tbl = ( ld_page_table_t* )(
+    TEMPORARY_SPACE_START + table_idx * PAGE_SIZE
+  );
+
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "tbl = %p\r\n", tbl )
+  #endif
+
+  return LD_PHYSICAL_PAGE_ADDRESS( tbl->page[ page_idx ].raw );
+}
+
+/**
  * @fn uint64_t get_new_table(uint64_t)
  * @brief Get the new table object
  *
@@ -434,9 +484,13 @@ static uint64_t get_new_table( uint64_t table ) {
   }
   // get new page
   uint64_t addr = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "addr = %#"PRIx64"\r\n", addr )
+  #endif
   // handle error
-  if ( 0 == addr ) {
-    return addr;
+  if ( INVALID_ADDRESS == addr ) {
+    return 0;
   }
   // debug output
   #if defined( PRINT_MM_VIRT )
@@ -446,7 +500,7 @@ static uint64_t get_new_table( uint64_t table ) {
   // map temporarily
   uintptr_t tmp = map_temporary( addr, PAGE_SIZE );
   // handle error
-  if ( 0 == tmp ) {
+  if ( ! tmp ) {
     phys_free_page( addr );
     return tmp;
   }
@@ -482,8 +536,8 @@ uint64_t v7_long_create_table(
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "create long descriptor table for address %#"PRIxPTR"\r\n",
-      addr
+      "create long descriptor table for address %#"PRIxPTR" for context %#"PRIxPTR"\r\n",
+      addr, ctx
     )
     DEBUG_OUTPUT( "pmd_idx = %"PRIu32", tbl_idx = %"PRIu32"\r\n", pmd_idx, tbl_idx )
   #endif
@@ -671,6 +725,7 @@ bool v7_long_map(
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "table: %p\r\n", table )
+    DEBUG_OUTPUT( "tyble_phys: %#"PRIx64"\r\n", table_phys );
     DEBUG_OUTPUT(
       "table->page[ %"PRIu32" ] = %#"PRIx64"\r\n",
       page_idx,
@@ -774,7 +829,7 @@ bool v7_long_map_random(
   // get physical address
   uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
   // handle error
-  if ( 0 == phys ) {
+  if ( INVALID_ADDRESS == phys ) {
     return false;
   }
   // map it
@@ -832,7 +887,7 @@ bool v7_long_unmap( virt_context_t* ctx, uintptr_t vaddr, bool free_phys ) {
   uint64_t page = LD_PHYSICAL_PAGE_ADDRESS( table->page[ page_idx ].raw );
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "page physical address = %#"PRIx64"\r\n", page )
+    DEBUG_OUTPUT( "page physical address = %#"PRIx64", vaddr = %#"PRIxPTR"\r\n", page, vaddr )
   #endif
 
   // set page table entry as invalid
@@ -1086,12 +1141,20 @@ bool v7_long_prepare_temporary( virt_context_t* ctx ) {
  */
 virt_context_t* v7_long_create_context( virt_context_type_t type ) {
   // reserve space for context
-  uint64_t ctx = ! virt_init_get()
-    ? VIRT_2_PHYS( aligned_alloc( PAGE_SIZE, sizeof( ld_global_page_directory_t ) ) )
-    : phys_find_free_page_range( PAGE_SIZE, sizeof( ld_global_page_directory_t ), PHYS_MEMORY_TYPE_NORMAL );
-  // handle error
-  if ( 0 == ctx ) {
-    return NULL;
+  uint64_t ctx;
+  if ( !virt_init_get() ) {
+    ctx = ( uintptr_t )aligned_alloc( PAGE_SIZE, sizeof( ld_global_page_directory_t ) );
+    // handle error
+    if ( ! ctx ) {
+      return NULL;
+    }
+    ctx = VIRT_2_PHYS( ctx );
+  } else {
+    ctx = phys_find_free_page_range( PAGE_SIZE, sizeof( ld_global_page_directory_t ), PHYS_MEMORY_TYPE_NORMAL );
+    // handle error
+    if ( INVALID_ADDRESS == ctx ) {
+      return NULL;
+    }
   }
 
   // debug output
@@ -1164,7 +1227,7 @@ bool v7_long_fork_table( ld_page_table_t* to_fork, ld_page_table_t* forked ) {
       to_fork->page[ page_idx ].raw
     );
     uint64_t phys_forked = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
-    if ( 0 == phys_forked ) {
+    if ( INVALID_ADDRESS == phys_forked ) {
       return false;
     }
 
@@ -1226,6 +1289,14 @@ bool v7_long_fork_middle_directory(
     if ( 0 == tbl_tbl_phys_forked ) {
       return false;
     }
+
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT(
+        "tbl_tbl_phys_forked = %#"PRIx64", "
+        "LD_PHYSICAL_TABLE_ADDRESS( to_fork->table[ tbl_idx ].raw ) = %#"PRIx64"\r\n",
+        tbl_tbl_phys_forked,
+        LD_PHYSICAL_TABLE_ADDRESS( to_fork->table[ tbl_idx ].raw ) )
+    #endif
 
     // copy all attributes
     memcpy(
@@ -1645,12 +1716,19 @@ uint64_t v7_long_get_mapped_address_in_context(
   virt_context_t* ctx,
   uintptr_t addr
 ) {
+  // handle temporary area
+  if ( addr >= TEMPORARY_SPACE_START && addr < TEMPORARY_SPACE_START + TEMPORARY_SPACE_SIZE ) {
+    return get_temporary_mapping( addr );
+  }
   // get page index
   uint32_t page_idx = LD_VIRTUAL_PAGE_INDEX( addr );
   uint64_t phys;
   // determine page index
   uint64_t table_phys = v7_long_create_table( ctx, addr, 0 );
   if ( 0 == table_phys ) {
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "Unable to get table!\r\n" )
+    #endif
     return INVALID_ADDRESS;
   }
 
@@ -1659,10 +1737,16 @@ uint64_t v7_long_get_mapped_address_in_context(
     table_phys, PAGE_SIZE );
   // handle error
   if ( ! table ) {
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "Unable to map table temporarily!\r\n" )
+    #endif
     return INVALID_ADDRESS;
   }
   // handle not mapped
   if ( 0 == table->page[ page_idx ].raw ) {
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "Address not mapped!\r\n" )
+    #endif
     return INVALID_ADDRESS;
   }
 

@@ -133,6 +133,9 @@ static void task_process_free( task_process_t* proc ) {
     assert( shared_memory_cleanup_process( proc ) )
     // destroy context
     assert( virt_destroy_context( proc->virtual_context, false ) )
+    // unset rpc mailbox stuff
+    proc->rpc_mailbox = 0;
+    proc->rpc_mailbox_virt = 0;
   }
   // set to null
   proc->virtual_context = NULL;
@@ -649,7 +652,7 @@ bool task_process_prepare_init( task_process_t* proc ) {
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "phys address: %#llx\r\n", phys_address_ramdisk )
   #endif
-  if( ! phys_address_ramdisk ) {
+  if( INVALID_ADDRESS == phys_address_ramdisk ) {
     return false;
   }
   // map temporary
@@ -854,6 +857,10 @@ int task_process_replace(
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
+
+  // unset rpc stuff
+  proc->rpc_mailbox = 0;
+  proc->rpc_mailbox_virt = 0;
 
   // destroy thread manager
   if ( proc->thread_manager ) {

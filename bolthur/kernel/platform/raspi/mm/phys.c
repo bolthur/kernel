@@ -206,7 +206,7 @@ bool phys_dma_init( void ) {
   // use contiguous area for dma
   size_t dma_size = DMA_POOL_SIZE;
   uint64_t dma_start = phys_find_free_page_range( PAGE_SIZE, dma_size, PHYS_MEMORY_TYPE_NORMAL );
-  if ( ! dma_start ) {
+  if ( INVALID_ADDRESS == dma_start ) {
     return false;
   }
   // debug output

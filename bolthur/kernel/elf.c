@@ -137,6 +137,7 @@ static bool load_program_header( uintptr_t elf, task_process_t* process ) {
     #endif
     // debug output
     #if defined ( PRINT_ELF )
+      DEBUG_OUTPUT( "program_header = %#"PRIxPTR"\r\n", ( uintptr_t )program_header )
       DEBUG_OUTPUT(
         "type = %#"PRIx32", vaddr = %#"PRIx32", paddr = %#"PRIx32", "
         "size = %#"PRIx32", offset = %#"PRIx32"!\r\n",
@@ -231,7 +232,7 @@ static bool load_program_header( uintptr_t elf, task_process_t* process ) {
         // get new physical page
         phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
         // handle error
-        if ( 0 == phys ) {
+        if ( INVALID_ADDRESS == phys ) {
           return false;
         }
         // set clear flag

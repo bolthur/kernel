@@ -273,6 +273,7 @@ int rpc_data_queue_add(
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "Mailbox not empty, checking ...\r\n" )
       DEBUG_OUTPUT( "current id: %zx\r\n", entry->id )
+      DEBUG_OUTPUT( "current size: %zx\r\n", entry->length )
     #endif
     // loop while there is an entry
     while ( entry->id && data_length < PAGE_SIZE - ( ( uintptr_t )entry - mailbox - sizeof( rpc_data_mailbox_entry_t ) ) ) {
@@ -281,9 +282,34 @@ int rpc_data_queue_add(
         DEBUG_OUTPUT( "entry: %#"PRIxPTR"\r\n", (uintptr_t)entry )
       #endif
       entry = ( rpc_data_mailbox_entry_t* )( ( uintptr_t )entry + sizeof( rpc_data_mailbox_entry_t ) + entry->length );
+      uintptr_t offset = ( uintptr_t )entry % sizeof( rpc_data_mailbox_entry_t );
+      if ( offset ) {
+        // debug output
+        #if defined( PRINT_RPC )
+          DEBUG_OUTPUT(
+            "entry: %#"PRIxPTR", offset = %#"PRIxPTR", "
+            "sizeof( rpc_data_mailbox_entry_t ) - offset = %#"PRIx32"\r\n",
+            (uintptr_t)entry, offset, sizeof( rpc_data_mailbox_entry_t ) - offset )
+        #endif
+        entry = ( rpc_data_mailbox_entry_t* )( ( uintptr_t )entry + ( sizeof( rpc_data_mailbox_entry_t ) - offset ) );
+        if ( ! ( ( uintptr_t )entry >= mailbox && ( uintptr_t )entry < mailbox + PAGE_SIZE ) ) {
+          #if defined( PRINT_RPC )
+            DEBUG_OUTPUT( "Entry malformed!\r\n" )
+            virt_unmap_temporary( mailbox, PAGE_SIZE );
+          #endif
+          return EFAULT;
+        }
+        #if defined( PRINT_RPC )
+          DEBUG_OUTPUT( "current id: %zx\r\n", entry->id )
+          DEBUG_OUTPUT( "current size: %zx\r\n", entry->length )
+        #endif
+      }
       // debug output
       #if defined( PRINT_RPC )
-        DEBUG_OUTPUT( "entry: %#"PRIxPTR"\r\n", (uintptr_t)entry )
+        DEBUG_OUTPUT(
+          "entry: %#"PRIxPTR", offset = %#"PRIxPTR", "
+          "sizeof( rpc_data_mailbox_entry_t ) = %#"PRIx32"\r\n",
+          (uintptr_t)entry, offset, sizeof( rpc_data_mailbox_entry_t ) )
       #endif
     }
   }

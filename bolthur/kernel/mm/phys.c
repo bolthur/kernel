@@ -22,6 +22,7 @@
 #include "../lib/inttypes.h"
 #if defined( PRINT_MM_PHYS )
   #include "../debug/debug.h"
+  #include "../lib/inttypes.h"
 #endif
 #include "../entry.h"
 #include "../initrd.h"
@@ -79,6 +80,10 @@ void phys_mark_page_used( uint64_t address ) {
   uint64_t index = PAGE_INDEX( frame );
   uint64_t offset = PAGE_OFFSET( frame );
 
+  #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT( "address = %#"PRIx64"\r\n", address )
+  #endif
+
   // dma handling
   if ( address >= phys_dma_start && address < phys_dma_end ) {
     // update variables
@@ -121,6 +126,10 @@ void phys_mark_page_free( uint64_t address ) {
   uint64_t frame = address / PAGE_SIZE;
   uint64_t index = PAGE_INDEX( frame );
   uint64_t offset = PAGE_OFFSET( frame );
+
+  #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT( "address = %#"PRIx64"\r\n", address )
+  #endif
 
   // dma handling
   if ( address >= phys_dma_start && address < phys_dma_end ) {
@@ -204,6 +213,9 @@ void phys_free_page_range( uint64_t address, size_t amount ) {
     idx < amount / PAGE_SIZE;
     idx++, address += PAGE_SIZE
   ) {
+    #if defined( PRINT_MM_PHYS )
+      DEBUG_OUTPUT("address = %#"PRIx64"\r\n", address)
+    #endif
     phys_mark_page_free( address );
   }
 }
@@ -340,6 +352,9 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
 
   // handle no address
   if ( INVALID_ADDRESS == address ) {
+    #if defined( PRINT_MM_PHYS )
+      DEBUG_OUTPUT( "No address found!\r\n" )
+    #endif
     return address;
   }
   // apply possible offset
@@ -352,6 +367,9 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
   for ( size_t idx = 0; idx < found_amount; idx++, tmp += PAGE_SIZE ) {
     phys_mark_page_used( tmp );
   }
+  #if defined( PRINT_MM_PHYS )
+    DEBUG_OUTPUT("address = %#"PRIx64"\r\n", address)
+  #endif
   // return found / not found address
   return address;
 }

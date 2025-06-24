@@ -27,7 +27,7 @@
 #include "generic.h"
 #if defined( PRINT_RPC )
   #include "../debug/debug.h"
-  #include <inttypes.h>
+  #include "../lib/inttypes.h"
 #endif
 
 static avl_tree_t* origin_tree = NULL;
@@ -168,6 +168,9 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
       #if defined( PRINT_RPC )
         DEBUG_OUTPUT( "No space for mailbox found!\r\n" )
       #endif
+      // reset rpc_mailbox
+      proc->rpc_mailbox = 0;
+      // return failure
       return false;
     }
     // map page temporarily
@@ -175,6 +178,7 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
     if ( 0 == tmp_map ) {
       // free mailbox again
       phys_free_page( proc->rpc_mailbox );
+      // reset rpc_mailbox
       proc->rpc_mailbox = 0;
       // debug output
       #if defined( PRINT_RPC )
@@ -195,6 +199,7 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
     if ( ! proc->rpc_mailbox_virt ) {
       // free mailbox again
       phys_free_page( proc->rpc_mailbox );
+      // reset rpc_mailbox
       proc->rpc_mailbox = 0;
       // debug output
       #if defined( PRINT_RPC )
@@ -229,6 +234,7 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
     ) ) {
       // free mailbox again
       phys_free_page( proc->rpc_mailbox );
+      // reset rpc_mailbox
       proc->rpc_mailbox = 0;
       proc->rpc_mailbox_virt = 0;
       // debug output

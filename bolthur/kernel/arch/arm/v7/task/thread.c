@@ -64,7 +64,7 @@ task_thread_t* task_thread_create(
     PHYS_MEMORY_TYPE_NORMAL
   );
   // handle error
-  if ( 0 == stack_physical ) {
+  if ( INVALID_ADDRESS == stack_physical ) {
     return NULL;
   }
 

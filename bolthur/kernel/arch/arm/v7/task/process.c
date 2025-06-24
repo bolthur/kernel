@@ -316,7 +316,7 @@ uintptr_t task_process_prepare_init_arch( task_process_t* proc ) {
     PHYS_MEMORY_TYPE_NORMAL
   );
   // handle error
-  if( ! phys_address_fdt ) {
+  if( INVALID_ADDRESS == phys_address_fdt ) {
     return 0;
   }
   // map temporary
