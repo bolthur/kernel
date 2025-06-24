@@ -40,29 +40,19 @@ void rpc_handle_watch_release_async(
   [[maybe_unused]] size_t data_info,
   size_t response_info
 ) {
-  // allocate space for response
-  vfs_watch_release_response_t* response = malloc( sizeof( *response ) );
-  if ( ! response ) {
-    return;
-  }
-  memset( response, 0, sizeof( *response ) );
   // get matching async data
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async( type, response_info );
   if ( ! async_data ) {
-    free( response );
     return;
   }
   // handle no data
   if( ! data_info ) {
-    response->result = -ENODATA;
-    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
     return;
   }
-  // fetch response
-  _syscall_rpc_get_data( response, sizeof( *response ), data_info, false );
+  // get message and data size
+  size_t data_size;
+  vfs_watch_release_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
-    free( response );
     return;
   }
   // pass back data
@@ -94,21 +84,12 @@ void rpc_handle_watch_release(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // allocate space for request data
-  vfs_watch_release_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    response.result = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // clear variables
-  memset( request, 0, sizeof( *request ) );
-  // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  // get message and data size
+  size_t data_size;
+  vfs_watch_release_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
   // get mount point

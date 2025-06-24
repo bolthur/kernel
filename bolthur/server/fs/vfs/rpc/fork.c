@@ -57,17 +57,12 @@ static void rpc_handle_fork_fork(
     bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
     return;
   }
-  vfs_fork_response_t* fork_response = malloc( sizeof( *fork_response ) );
-  if ( ! fork_response ) {
-    response.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
-    return;
-  }
-  // fetch response
-  _syscall_rpc_get_data( fork_response, sizeof( *fork_response ), data_info, false );
+  // get message and data size
+  size_t data_size;
+  vfs_fork_response_t* fork_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
+    response.status = -errno;
     bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
-    free( fork_response );
     return;
   }
   // handle failure
@@ -131,14 +126,14 @@ static void rpc_handle_fork_stat(
     bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
     return;
   }
-  // allocate space for stat response and clear out
-  vfs_stat_response_t* stat_response = malloc( sizeof( *stat_response ) );
-  if ( ! stat_response ) {
+  // get message and data size
+  size_t data_size;
+  vfs_stat_response_t* stat_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  if ( errno ) {
+    response.status = -errno;
     bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
     return;
   }
-  // clear out
-  memset( stat_response, 0, sizeof( *stat_response ) );
   // original request
   vfs_fork_request_t* request = async_data->original_data;
   if ( ! request ) {
@@ -147,13 +142,6 @@ static void rpc_handle_fork_stat(
     return;
   }
   request->process = async_data->original_origin;
-  // fetch response
-  _syscall_rpc_get_data( stat_response, sizeof( *stat_response ), data_info, false );
-  if ( errno ) {
-    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
-    free( stat_response );
-    return;
-  }
   if ( ! stat_response->success ) {
     response.status = -ENODEV;
     bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
@@ -200,19 +188,12 @@ void rpc_handle_fork(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // get request
-  vfs_fork_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    response.status = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  memset( request, 0, sizeof( *request ) );
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  // get message and data size
+  size_t data_size;
+  vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
-    response.status = -EIO;
+    response.status = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
   // check origin parent against parent from request ( must match )

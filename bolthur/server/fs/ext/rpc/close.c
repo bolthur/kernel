@@ -58,16 +58,13 @@ void rpc_handle_close(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  vfs_close_request_t request;
-  // clear variables
-  memset( &request, 0, sizeof( request ) );
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // fetch rpc data
-  _syscall_rpc_get_data( &request, sizeof( request ), data_info, false );
+  size_t data_size;
+  vfs_close_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
   if ( errno ) {
     response.status = -errno;
@@ -76,10 +73,11 @@ void rpc_handle_close(
   }
   // get handle
   handle_node_t* node;
-  int result = handle_get( &node, request.origin, request.handle );
+  int result = handle_get( &node, request->origin, request->handle );
   if ( 0 > result ) {
     response.status = result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    free( request );
     return;
   }
   handle_container_t* container = node->data;
@@ -90,12 +88,14 @@ void rpc_handle_close(
     if ( EOK != result ) {
       response.status = -result;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      free( request );
       return;
     }
   } else {
     ext_file_t* file = container->data;
     result = ext_file_close( file );
     if ( EOK != result ) {
+      free( request );
       response.status = -result;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
       return;
@@ -105,9 +105,10 @@ void rpc_handle_close(
   free( container->data );
   free( container );
   // destroy handle
-  handle_destory( request.origin, request.handle );
+  handle_destory( request->origin, request->handle );
   // set success
   response.status = 0;
   // return data
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  free( request );
 }

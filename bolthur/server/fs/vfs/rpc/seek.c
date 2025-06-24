@@ -42,26 +42,18 @@ void rpc_handle_seek(
   [[maybe_unused]] size_t response_info
 ) {
   vfs_seek_response_t response = { .position = -EINVAL };
-  vfs_seek_request_t* request = malloc( sizeof( vfs_seek_request_t ) );
-  if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
   handle_node_t* container;
-  // clear variables
-  memset( request, 0, sizeof( vfs_seek_request_t ) );
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
-  // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_seek_request_t ), data_info, false );
-  // handle error
+  // get message and data size
+  size_t data_size;
+  vfs_seek_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
+    response.position = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
   // try to get handle information

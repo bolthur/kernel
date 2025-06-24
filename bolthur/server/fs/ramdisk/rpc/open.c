@@ -55,21 +55,13 @@ void rpc_handle_open(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // allocate message structures
-  vfs_open_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    EARLY_STARTUP_PRINT( "1\r\n" )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  memset( request, 0, sizeof( *request ) );
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  size_t data_size;
+  vfs_open_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "1\r\n" )
     response.handle = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
   EARLY_STARTUP_PRINT( "opening %s\r\n", request->path )

@@ -55,20 +55,12 @@ void rpc_custom_handle_fetch(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // allocate  structure
-  authentication_fetch_request_t* info = malloc( sizeof( *info ) );
-  if ( ! info ) {
-    error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // fetch rpc data
-  _syscall_rpc_get_data( info, sizeof( *info ), data_info, false );
-  // handle error
+  // get message and data size
+  size_t data_size;
+  authentication_fetch_request_t* info = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( info );
     return;
   }
   // get process info to extract

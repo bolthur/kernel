@@ -57,13 +57,21 @@ void rpc_handle_mount_async(
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
-  // fetch response
-  _syscall_rpc_get_data( &response, sizeof( response ), data_info, false );
+  // extract message from mailbox
+  size_t data_size;
+  void* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
+  if ( data_size != sizeof( response ) ) {
+    response.result = -EINVAL;
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+        return;
+  }
+  memcpy( &response, response_data, sizeof( response ) );
+  free( response_data );
   // get original request
   vfs_mount_request_t* request = async_data->original_data;
   // handle failure
@@ -126,28 +134,20 @@ void rpc_handle_mount(
     rpc_handle_mount_async( type, origin, data_info, response_info );
     return;
   }
-  vfs_mount_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // clear variables
-  memset( request, 0, sizeof( *request ) );
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
-  // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
-  // handle error
+  // extract message from mailbox
+  size_t data_size;
+  void* request_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
+  vfs_mount_request_t* request = request_data;
 
   // handle ramdisk
   if (
@@ -158,14 +158,14 @@ void rpc_handle_mount(
     if ( ramdisk_mounted ) {
       response.result = -EINVAL;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      free( request );
+      free( request_data );
       return;
     }
     // generate mount point
     if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
       response.result = -EIO;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      free( request );
+      free( request_data );
       return;
     }
     // set flag
@@ -173,7 +173,7 @@ void rpc_handle_mount(
     // return success
     response.result = 0;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
+    free( request_data );
     return;
   }
   // handle dev
@@ -185,14 +185,14 @@ void rpc_handle_mount(
     if ( dev_mounted ) {
       response.result = -EINVAL;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      free( request );
+      free( request_data );
       return;
     }
     // generate mount point
     if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
       response.result = -EIO;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-      free( request );
+      free( request_data );
       return;
     }
     // set flag
@@ -200,7 +200,7 @@ void rpc_handle_mount(
     // return success
     response.result = 0;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
+    free( request_data );
     return;
   }
 
@@ -211,7 +211,7 @@ void rpc_handle_mount(
     handler_node_dump();
     response.result = -ESRCH;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
+    free( request_data );
     return;
   }
 
@@ -224,7 +224,7 @@ void rpc_handle_mount(
   ) {
     response.result = -EEXIST;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
+    free( request_data );
     return;
   }
 
@@ -247,8 +247,8 @@ void rpc_handle_mount(
   if ( errno ) {
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
+    free( request_data );
     return;
   }
-  free( request );
+  free( request_data );
 }

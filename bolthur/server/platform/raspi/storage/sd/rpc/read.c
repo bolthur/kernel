@@ -62,25 +62,13 @@ void rpc_handle_read(
     free( response );
     return;
   }
-  // allocate request
-  vfs_read_request_t* request = malloc( sizeof( *request ) );
-  // handle error
-  if ( ! request ) {
-    response->len = -ENOMEM;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    free( response );
-    return;
-  }
-  // clear out
-  memset( response, 0, sizeof( *response ) );
-  // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  size_t data_size;
+  vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
   if ( errno ) {
     response->len = -EIO;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
     free( response );
-    free( request );
     return;
   }
   off_t sd_block_size = ( off_t )sd_device_block_size();

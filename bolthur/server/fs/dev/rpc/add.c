@@ -53,29 +53,11 @@ void rpc_handle_add(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // get message size
-  size_t data_size = _syscall_rpc_get_data_size( data_info );
+  size_t data_size;
+  vfs_add_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
-    response.status = -EIO;
+    response.status = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // allocate space for request
-  vfs_add_request_t* request = malloc( data_size );
-  if ( ! request ) {
-    response.status = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // clear request
-  memset( request, 0, data_size );
-  // fetch rpc data
-  _syscall_rpc_get_data( request, data_size, data_info, false );
-  // handle error
-  if ( errno ) {
-    response.status = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
   // handle invalid type

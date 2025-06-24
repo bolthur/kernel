@@ -52,25 +52,12 @@ void rpc_custom_handle_start(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // get message size
-  size_t data_size = _syscall_rpc_get_data_size( data_info );
+  // get message and data size
+  size_t data_size;
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
+    error.status = -errno;
     bolthur_rpc_return( type, &error, sizeof( error ), NULL );
-    return;
-  }
-  // get request
-  vfs_ioctl_perform_request_t* request = malloc( data_size );
-  if ( ! request ) {
-    error.status = -ENOMEM;
-    bolthur_rpc_return( type, &error, sizeof( error ), NULL );
-    return;
-  }
-  memset( request, 0, data_size );
-  _syscall_rpc_get_data( request, data_size, data_info, true );
-  if ( errno ) {
-    error.status = -EIO;
-    bolthur_rpc_return( type, &error, sizeof( error ), NULL );
-    free( request );
     return;
   }
   dev_command_start_t* command = ( dev_command_start_t* )request->container;

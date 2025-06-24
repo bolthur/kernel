@@ -48,21 +48,12 @@ void rpc_handle_handler_release(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // allocate space for request data
-  vfs_release_handler_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    response.result = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // clear variables
-  memset( request, 0, sizeof( *request ) );
-  // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  // get message and data size
+  size_t data_size;
+  vfs_release_handler_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
   handler_node_t* found = handler_node_extract( request->request );

@@ -49,25 +49,12 @@ void rpc_handle_ioctl(
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
     return;
   }
-  // get message size
-  size_t data_size = _syscall_rpc_get_data_size( data_info );
+  // get message and data size
+  size_t data_size;
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
+    err_response.status = -errno;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
-    return;
-  }
-  // get request
-  vfs_ioctl_perform_request_t* request = malloc( data_size );
-  if ( ! request ) {
-    err_response.status = -ENOMEM;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
-    return;
-  }
-  memset( request, 0, data_size );
-  _syscall_rpc_get_data( request, data_size, data_info, true );
-  if ( errno ) {
-    err_response.status = -EIO;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
-    free( request );
     return;
   }
   // get local handler

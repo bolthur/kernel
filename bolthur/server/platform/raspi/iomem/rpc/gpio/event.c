@@ -57,24 +57,11 @@ void rpc_handle_gpio_event(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // get message size
-  size_t data_size = _syscall_rpc_get_data_size( data_info );
+  size_t data_size;
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // allocate request
-  vfs_ioctl_perform_request_t* request = malloc( data_size );
-  if ( ! request ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  _syscall_rpc_get_data( request, data_size, data_info, true );
-  if ( errno ) {
-    error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( request );
     return;
   }
   iomem_gpio_event_t* event_request;

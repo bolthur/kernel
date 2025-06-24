@@ -65,12 +65,20 @@ void rpc_handle_write_async(
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
-  // fetch response
-  _syscall_rpc_get_data( &response, sizeof( response ), data_info, false );
+  // get message and data size
+  size_t data_size;
+  vfs_write_response_t* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
+  if ( data_size != sizeof( response ) ) {
+    response.len = -EINVAL;
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    return;
+  }
+  memcpy( &response, response_data, data_size );
+  free( response_data );
   handle_node_t* container;
   // try to get handle information
   int result = handle_get(
@@ -113,27 +121,18 @@ void rpc_handle_write(
   }
   // normal request handling starts here
   vfs_write_response_t response = { .len = -ENOMEM };
-  vfs_write_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
   handle_node_t* container;
-  // clear variables
-  memset( request, 0, sizeof( *request ) );
   // switch error return
   response.len = -EINVAL;
   // handle no data
   if( ! data_info ) {
-    free( request );
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
-  // handle error
+  // get message and data size
+  size_t data_size;
+  vfs_write_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
-    free( request );
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }

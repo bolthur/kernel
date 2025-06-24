@@ -381,23 +381,11 @@ void framebuffer_handle_resolution(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // get message size
-  size_t data_size = _syscall_rpc_get_data_size( data_info );
-  if ( errno ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // allocate request
-  vfs_ioctl_perform_request_t* request = malloc( data_size );
-  if ( ! request ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  _syscall_rpc_get_data( request, data_size, data_info, true );
+  size_t data_size;
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( request );
     return;
   }
   // allocate response
@@ -450,23 +438,11 @@ void framebuffer_handle_clear(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // get message size
-  size_t data_size = _syscall_rpc_get_data_size( data_info );
-  if ( errno ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // allocate request
-  vfs_ioctl_perform_request_t* request = malloc( data_size );
-  if ( ! request ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  _syscall_rpc_get_data( request, data_size, data_info, true );
+  size_t data_size;
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( request );
     return;
   }
   // clear
@@ -500,23 +476,11 @@ void framebuffer_handle_flip(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // get message size
-  size_t data_size = _syscall_rpc_get_data_size( data_info );
-  if ( errno ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // allocate request
-  vfs_ioctl_perform_request_t* request = malloc( data_size );
-  if ( ! request ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  _syscall_rpc_get_data( request, data_size, data_info, true );
+  size_t data_size;
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( request );
     return;
   }
   framebuffer_flip();
@@ -552,23 +516,11 @@ void framebuffer_handle_surface_render(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // get message size
-  size_t data_size = _syscall_rpc_get_data_size( data_info );
-  if ( errno ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // allocate request
-  vfs_ioctl_perform_request_t* request = malloc( data_size );
-  if ( ! request ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  _syscall_rpc_get_data( request, data_size, data_info, true );
+  size_t data_size;
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( request );
     return;
   }
   // allocate  structure
@@ -617,23 +569,11 @@ void framebuffer_handle_surface_allocate(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
     return;
   }
-  // get message size
-  size_t data_size = _syscall_rpc_get_data_size( data_info );
-  if ( errno ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  // allocate request
-  vfs_ioctl_perform_request_t* request = malloc( data_size );
-  if ( ! request ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    return;
-  }
-  _syscall_rpc_get_data( request, data_size, data_info, true );
+  size_t data_size;
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
-    free( request );
     return;
   }
   // allocate space for data

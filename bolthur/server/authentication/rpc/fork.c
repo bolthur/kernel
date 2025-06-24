@@ -54,25 +54,12 @@ void rpc_handle_fork(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // get message size
-  size_t message_size = _syscall_rpc_get_data_size( data_info );
+  // get message and data size
+  size_t data_size;
+  vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
+    response.status = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // get request
-  vfs_fork_request_t* request = malloc( message_size );
-  if ( ! request ) {
-    response.status = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  memset( request, 0, message_size );
-  _syscall_rpc_get_data( request, message_size, data_info, false );
-  if ( errno ) {
-    response.status = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
   // check origin parent against parent from request ( must match )

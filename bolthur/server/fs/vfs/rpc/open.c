@@ -161,26 +161,18 @@ void rpc_handle_open_async(
     bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
     return;
   }
-  // allocate space for stat response and clear out
-  vfs_open_response_t* open_response = malloc( sizeof( *open_response ) );
-  if ( ! open_response ) {
-    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
-    return;
-  }
-  // clear out
-  memset( open_response, 0, sizeof( *open_response ) );
   // original request
   vfs_open_request_t* request = async_data->original_data;
   if ( ! request ) {
     bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
-    free( open_response );
     return;
   }
-  // fetch response
-  _syscall_rpc_get_data( open_response, sizeof( *open_response ), data_info, false );
+  // get message and data size
+  size_t data_size;
+  vfs_open_response_t* open_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
+    response.handle = -errno;
     bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
-    free( open_response );
     return;
   }
   // handle error
@@ -234,25 +226,18 @@ void rpc_handle_open(
 ) {
   // variables
   vfs_open_response_t response = { .handle = -EINVAL };
-  vfs_open_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // clear variables
-  memset( request, 0, sizeof( *request ) );
+
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
-  // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
-  // handle error
+  // get message and data size
+  size_t data_size;
+  vfs_open_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
+    response.handle = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
   EARLY_STARTUP_PRINT( "opening %s\r\n", request->path )

@@ -56,28 +56,17 @@ void rpc_handle_getdents_async(
   if( ! data_info ) {
     return;
   }
-  // get data size
-  size_t size = _syscall_rpc_get_data_size( data_info );
+  // get message and data size
+  size_t data_size;
+  vfs_getdents_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
     return;
   }
-  vfs_getdents_response_t* response = malloc( size );
-  if ( ! response ) {
-    return;
-  }
-  memset( response, 0, sizeof( *response ) );
-  response->result = -EINVAL;
   // original request
   vfs_getdents_request_t* request = async_data->original_data;
   if ( ! request ) {
-    bolthur_rpc_return( type, response, size, async_data );
-    return;
-  }
-  // fetch response
-  _syscall_rpc_get_data( response, size, data_info, false );
-  if ( errno ) {
-    bolthur_rpc_return( type, response, size, async_data );
-    free( response );
+    response->result = -EINVAL;
+    bolthur_rpc_return( type, response, data_size, async_data );
     return;
   }
   handle_node_t* container;
@@ -90,7 +79,7 @@ void rpc_handle_getdents_async(
   // handle error
   if ( 0 > result ) {
     response->result = result;
-    bolthur_rpc_return( type, response, size, async_data );
+    bolthur_rpc_return( type, response, data_size, async_data );
     free( response );
     return;
   }
@@ -98,7 +87,7 @@ void rpc_handle_getdents_async(
   if ( 0 < response->offset ) {
     container->pos = response->offset;
   }
-  bolthur_rpc_return( type, response, size, async_data );
+  bolthur_rpc_return( type, response, data_size, async_data );
   free( response );
 }
 
@@ -128,34 +117,25 @@ void rpc_handle_getdents(
   if ( ! response ) {
     return;
   }
-  memset( response, 0, sizeof( *response ) );
-  response->result = -ENOMEM;
-  vfs_getdents_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
+  // handle no data
+  if( ! data_info ) {
+    response->result = -EINVAL;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
     free( response );
+    return;
+  }
+  memset( response, 0, sizeof( *response ) );
+  response->result = -ENOMEM;
+  // get message and data size
+  size_t data_size;
+  vfs_getdents_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  if ( errno ) {
+    response->result = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   handle_node_t* container;
-  // clear variables
-  memset( request, 0, sizeof( *request ) );
   response->result = -EINVAL;
-  // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    free( response );
-    free( request );
-    return;
-  }
-  // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
-  // handle error
-  if ( errno ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    free( response );
-    free( request );
-    return;
-  }
   // try to get handle information
   int result = handle_get( &container, origin, request->fd );
   // handle error

@@ -42,25 +42,17 @@ void rpc_handle_remove(
   [[maybe_unused]] size_t response_info
 ) {
   vfs_remove_response_t response = { .status = -EINVAL };
-  vfs_remove_request_t* request = malloc( sizeof( vfs_remove_request_t ) );
-  if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // clear variables
-  memset( request, 0, sizeof( vfs_remove_request_t ) );
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
-  // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( vfs_remove_request_t ), data_info, false );
-  // handle error
+  // get message and data size
+  size_t data_size;
+  vfs_remove_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
+    response.status = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
   // debug output

@@ -53,14 +53,22 @@ void rpc_handle_add_async(
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
-  // fetch rpc data
-  _syscall_rpc_get_data( &response, sizeof( response ), data_info, false );
-  // handle error
+  // get message and data size
+  size_t data_size;
+  void* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
+    response.status = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    return;
+  }
+  if ( data_size != sizeof( response ) ) {
     response.status = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
     return;
   }
+  // copy over data
+  memcpy( &response, response_data, sizeof( response ) );
+  free( response_data );
   // handle add error
   if ( response.status != VFS_ADD_SUCCESS ) {
     bolthur_rpc_return( type, &response, sizeof( response ), async_data );
@@ -122,35 +130,20 @@ void rpc_handle_add(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // get message size
-  size_t data_size = _syscall_rpc_get_data_size( data_info );
+  // get message and data size
+  size_t data_size;
+  void* request_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
-    response.status = -EIO;
+    response.status = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
   // allocate space for request
-  vfs_add_request_t* request = malloc( data_size );
-  if ( ! request ) {
-    response.status = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // clear request
-  memset( request, 0, data_size );
-  // fetch rpc data
-  _syscall_rpc_get_data( request, data_size, data_info, false );
-  // handle error
-  if ( errno ) {
-    response.status = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
+  vfs_add_request_t* request = request_data;
   // handle invalid process compared to origin
   if ( request->handler != origin ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
+    free( request_data );
     return;
   }
   // get mount point
@@ -158,7 +151,7 @@ void rpc_handle_add(
   if ( ! mount_point ) {
     response.status = -EIO;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
+    free( request_data );
     return;
   }
   // perform async rpc to handler
@@ -175,5 +168,5 @@ void rpc_handle_add(
     data_info,
     NULL
   );
-  free( request );
+  free( request_data );
 }

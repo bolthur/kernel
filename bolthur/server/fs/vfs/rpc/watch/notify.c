@@ -44,17 +44,10 @@ void rpc_handle_watch_notify(
   if( ! data_info ) {
     return;
   }
-  // allocate space for request data
-  vfs_watch_notify_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    return;
-  }
-  // clear variables
-  memset( request, 0, sizeof( *request ) );
-  // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  // get message and data size
+  size_t data_size;
+  vfs_watch_notify_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
-    free( request );
     return;
   }
   // get mount point

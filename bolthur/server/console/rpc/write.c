@@ -49,26 +49,17 @@ void rpc_handle_write(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // allocate space
-  vfs_write_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // prepare
-  memset( request, 0, sizeof( *request ) );
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
-  // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
-  // handle error
+  // get message and data size
+  size_t data_size;
+  vfs_write_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( errno ) {
+    response.len = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
   // get current active console

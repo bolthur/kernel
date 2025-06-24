@@ -66,22 +66,13 @@ void rpc_handle_getdents(
     bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL );
     return;
   }
-  // allocate request
-  vfs_getdents_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    dummy_response.result = -ENOMEM;
-    bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL );
-    return;
-  }
-  // clear variables
-  memset( request, 0, sizeof( *request ) );
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  size_t data_size;
+  vfs_getdents_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
   if ( errno ) {
     dummy_response.result = -errno;
     bolthur_rpc_return( type, &dummy_response, sizeof( dummy_response ), NULL );
-    free( request );
     return;
   }
 

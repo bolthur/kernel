@@ -62,29 +62,19 @@ void rpc_handle_write(
     free( response );
     return;
   }
-  vfs_write_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    response->len = -ENOMEM;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    free( response );
-    return;
-  }
-  // clear variables
-  memset( request, 0, sizeof( *request ) );
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    free( request );
     free( response );
     return;
   }
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  size_t data_size;
+  vfs_write_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
   if ( errno ) {
     response->len = -errno;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL );
-    free( request );
     free( response );
     return;
   }

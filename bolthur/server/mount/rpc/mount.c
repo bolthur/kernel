@@ -34,15 +34,8 @@ static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
     errno = ENOMEM;
     return -1;
   }
-  vfs_stat_response_t* response = malloc( sizeof( vfs_stat_response_t ) );
-  if ( ! response ) {
-    free( request );
-    errno = ENOMEM;
-    return -1;
-  }
   // clear message structures
   memset( request, 0, sizeof( vfs_stat_request_t ) );
-  memset( response, 0, sizeof( vfs_stat_response_t ) );
   // copy stuff to message
   request->handle = file;
   // raise rpc and wait for return
@@ -62,20 +55,14 @@ static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
   // handle error
   if ( 0 == response_id ) {
     free( request );
-    free( response );
     return -1;
   }
   // get response
-  _syscall_rpc_get_data(
-    response,
-    sizeof( vfs_stat_response_t ),
-    response_id,
-    false
-  );
+  size_t data_size;
+  vfs_stat_response_t* response = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
   // handle error
   if ( errno ) {
     free( request );
-    free( response );
     return -1;
   }
   // handle failure
@@ -120,21 +107,13 @@ void rpc_handle_mount(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
     return;
   }
-  // allocate space for request
-  vfs_mount_request_t* request = malloc( sizeof( *request ) );
-  if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // clear variables
-  memset( request, 0, sizeof( *request ) );
   // fetch rpc data
-  _syscall_rpc_get_data( request, sizeof( *request ), data_info, false );
+  size_t data_size;
+  vfs_mount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
   if ( errno ) {
     response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
     return;
   }
 
@@ -260,12 +239,7 @@ void rpc_handle_mount(
     return;
   }
   // get response
-  _syscall_rpc_get_data(
-    &response,
-    sizeof( vfs_mount_response_t ),
-    response_id,
-    false
-  );
+  vfs_mount_response_t* response_data = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
   // handle error
   if ( errno ) {
     response.result = -errno;
@@ -276,6 +250,7 @@ void rpc_handle_mount(
 
   /// FIXME: copy over stat
 
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, response_data, sizeof( *response_data ), NULL );
   free( request );
+  free( response_data );
 }
