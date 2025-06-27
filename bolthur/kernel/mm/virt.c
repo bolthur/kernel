@@ -32,7 +32,7 @@
 #include "../cache.h"
 #include "../mm/phys.h"
 #include "../mm/virt.h"
-#include "../mm/heap.h"
+#include "../bss.h"
 
 /**
  * @brief static initialized flag
@@ -106,18 +106,22 @@ void virt_init( void ) {
   #endif
 
   // map initial heap similar to normal heap non cachable
-  uintptr_t initial_heap_start = VIRT_2_PHYS( &__initial_heap_start );
-  uintptr_t initial_heap_end = VIRT_2_PHYS( &__initial_heap_end );
+  uintptr_t phys_bss_start = VIRT_2_PHYS( &__bss_start );
+  uintptr_t phys_bss_end = VIRT_2_PHYS( &__bss_end );
+  uintptr_t phys_data_start = VIRT_2_PHYS( &__data_start );
+  uintptr_t phys_data_end = VIRT_2_PHYS( &__data_end );
 
   // map from start to end addresses as used
   while ( start < end ) {
     virt_memory_type_t type = VIRT_MEMORY_TYPE_NORMAL;
-    uint32_t page = VIRT_PAGE_TYPE_EXECUTABLE | VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
-    if ( start >= initial_heap_start && start <= initial_heap_end ) {
+    uint32_t page = VIRT_PAGE_TYPE_EXECUTABLE | VIRT_PAGE_TYPE_READ;
+    // map bss or data with read and write permissions
+    if (
+      ( start >= phys_bss_start && start <= phys_bss_end ) ||
+      ( start >= phys_data_start && start <= phys_data_end ) ) {
       type = VIRT_MEMORY_TYPE_NORMAL_NC;
       page = VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
     }
-
     // map page
     assert( virt_map_address(
       virt_current_kernel_context,
@@ -126,7 +130,6 @@ void virt_init( void ) {
       type,
       page
     ) )
-
     // get next page
     start += PAGE_SIZE;
   }

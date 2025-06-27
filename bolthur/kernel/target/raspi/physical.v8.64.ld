@@ -43,11 +43,13 @@ SECTIONS {
   /* higher half kernel sections */
   .text ALIGN( 4K ) : AT( ADDR( .text ) - KERNEL_OFFSET ) {
     *( .text )
+    *( .rodata )
   }
 
-  .rodata ALIGN( 4K ) : AT( ADDR( .rodata ) - KERNEL_OFFSET ) {
-    *( .rodata )
+  .data ALIGN( 4K ) : AT( ADDR( .data ) - KERNEL_OFFSET ) {
+    __data_start = .;
     *( .data )
+    __data_end = .;
   }
 
   .bss ALIGN( 4K ) : AT( ADDR( .bss ) - KERNEL_OFFSET ) {

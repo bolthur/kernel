@@ -706,6 +706,8 @@ uint64_t v7_short_create_table(
  * @param memory memory type
  * @param page page attributes
  * @return
+ *
+ * @todo check access, because read only mapped addresses are mapped writable
  */
 bool v7_short_map(
   virt_context_t* ctx,

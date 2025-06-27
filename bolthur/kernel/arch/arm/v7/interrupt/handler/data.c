@@ -17,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define PRINT_EXCEPTION
-
 #include "../../../../../lib/assert.h"
 #include "../../../../../lib/inttypes.h"
 #if defined( REMOTE_DEBUG )

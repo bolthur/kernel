@@ -47,7 +47,9 @@ SECTIONS {
   }
 
   .data ALIGN( 4K ) : AT( ADDR( .data ) - KERNEL_OFFSET ) {
+    __data_start = .;
     *( .data )
+    __data_end = .;
   }
 
   .bss ALIGN( 4K ) : AT( ADDR( .bss ) - KERNEL_OFFSET ) {

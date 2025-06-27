@@ -45,6 +45,9 @@
 
   extern uintptr_t __kernel_start;
   extern uintptr_t __kernel_end;
+
+  extern uintptr_t __data_start;
+  extern uintptr_t __data_end;
 #endif
 
 #endif
