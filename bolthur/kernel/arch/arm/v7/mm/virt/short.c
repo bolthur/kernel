@@ -600,7 +600,7 @@ uint64_t v7_short_create_table(
       uintptr_t ret = context->table[ table_idx ].raw  & 0xFFFFFC00;
 
       // unmap temporary
-      unmap_temporary( ( uintptr_t )context, SD_TTBR_SIZE_4G );
+      unmap_temporary( ( uintptr_t )context, SD_TTBR_SIZE_2G );
 
       // return table address
       return ret;
@@ -641,7 +641,7 @@ uint64_t v7_short_create_table(
     #endif
 
     // unmap temporary
-    unmap_temporary( ( uintptr_t )context, SD_TTBR_SIZE_4G );
+    unmap_temporary( ( uintptr_t )context, SD_TTBR_SIZE_2G );
 
     // return table address
     return tbl;
@@ -714,7 +714,7 @@ bool v7_short_map(
   #endif
 
   // set page
-  table->page[ page_idx ].raw = paddr & 0xFFFFF000;
+  table->page[ page_idx ].raw = (uint32_t)paddr & 0xFFFFF000;
 
   // set attributes
   table->page[ page_idx ].data.type = SD_TBL_SMALL_PAGE;
@@ -955,6 +955,10 @@ bool v7_short_set_context( virt_context_t* ctx ) {
     );
     // overwrite global pointer
     virt_current_kernel_context = ctx;
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "done: %p\r\n", ( ( sd_context_total_t* )( ( uintptr_t )ctx->context ) )->raw )
+    #endif
   }
 
   return true;

@@ -446,11 +446,7 @@ static uint64_t get_temporary_mapping( uintptr_t addr ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT(
-      "page_amount = %"PRIu32" - table_idx_offset = %"PRIu32"\r\n",
-      page_amount,
-      table_idx_offset
-    )
+    DEBUG_OUTPUT( "table_idx_offset = %"PRIu32"\r\n", table_idx_offset )
   #endif
 
   uint32_t table_idx = LD_VIRTUAL_TABLE_INDEX( addr ) - table_idx_offset;

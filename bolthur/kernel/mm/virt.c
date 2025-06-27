@@ -127,7 +127,6 @@ void virt_init( void ) {
       page
     ) )
 
-
     // get next page
     start += PAGE_SIZE;
   }
@@ -203,13 +202,17 @@ void virt_init( void ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "set context!\r\n" )
+    DEBUG_OUTPUT( "set and flush kernel context!\r\n" )
   #endif
   // set kernel context
   assert( virt_set_context( virt_current_kernel_context ) )
   // flush contexts to take effect
   virt_flush_complete();
 
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "set and flush dummy user context!\r\n" )
+  #endif
   // set dummy user context
   assert( virt_set_context( virt_current_user_context ) )
   // flush contexts to take effect
