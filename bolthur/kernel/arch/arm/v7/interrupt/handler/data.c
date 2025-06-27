@@ -17,6 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define PRINT_EXCEPTION
+
 #include "../../../../../lib/assert.h"
 #include "../../../../../lib/inttypes.h"
 #if defined( REMOTE_DEBUG )
@@ -71,13 +73,17 @@ static uint32_t nested_data_abort = 0;
     DEBUG_OUTPUT( "fault_status = %#"PRIxPTR"\r\n", virt_data_status() )
     DEBUG_OUTPUT( "mapped physical address = %#"PRIx64"\r\n",
       virt_get_mapped_address_in_context(
-        task_thread_current_thread->process->virtual_context,
+        EVENT_ORIGIN_USER == origin
+          ? task_thread_current_thread->process->virtual_context
+          : virt_current_kernel_context,
         virt_data_fault_address()
       )
     )
-    DEBUG_OUTPUT("thread context = %p, global user context = %p\r\n",
-      (void*)task_thread_current_thread->process->virtual_context,
-      (void*)virt_current_user_context)
+    if (EVENT_ORIGIN_USER == origin) {
+      DEBUG_OUTPUT("thread context = %p, global user context = %p\r\n",
+        (void*)task_thread_current_thread->process->virtual_context,
+        (void*)virt_current_user_context)
+    }
     // dump context
     DUMP_REGISTER( interrupt_get_context( cpu ) )
     if ( EVENT_ORIGIN_USER == origin ) {

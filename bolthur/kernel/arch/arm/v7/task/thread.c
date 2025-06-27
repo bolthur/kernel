@@ -183,7 +183,7 @@ task_thread_t* task_thread_create(
       stack_virtual + stack_current,
       stack_physical + stack_current,
       VIRT_MEMORY_TYPE_NORMAL,
-      VIRT_PAGE_TYPE_EXECUTABLE
+      VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
     ) ) {
       task_stack_manager_remove( stack_virtual, process->thread_stack_manager );
       phys_free_page_range( stack_physical, STACK_SIZE );

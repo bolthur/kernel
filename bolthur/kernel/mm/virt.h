@@ -37,8 +37,8 @@ typedef enum {
 
 typedef enum {
   VIRT_PAGE_TYPE_READ = 1,
-  VIRT_PAGE_TYPE_WRITE,
-  VIRT_PAGE_TYPE_EXECUTABLE,
+  VIRT_PAGE_TYPE_WRITE = 2,
+  VIRT_PAGE_TYPE_EXECUTABLE = 4,
 } virt_page_type_t;
 
 typedef enum {

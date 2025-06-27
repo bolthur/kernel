@@ -45,6 +45,11 @@
 #define TEMPORARY_SPACE_SIZE 0xFFFFFF
 
 /**
+ * @brief static variable holding temporary size
+ */
+static uint32_t temporary_size = 0;
+
+/**
  * @brief Initial context
  */
 static sd_context_total_t initial_context
@@ -207,7 +212,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
   // Find free area
   for (
     uintptr_t table = TEMPORARY_SPACE_START;
-    table < TEMPORARY_SPACE_START + PAGE_SIZE && !stop;
+    table < TEMPORARY_SPACE_START + temporary_size && !stop;
     table += SD_TBL_SIZE, ++current_table
   ) {
     // get table
@@ -360,6 +365,46 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
     // next page size
     addr += PAGE_SIZE;
   }
+}
+
+/**
+ * @fn uint64_t get_temporary_mapping(uintptr_t)
+ * @brief Helper to get temporary mapping
+ *
+ * @param addr address to get mapping of
+ * @return
+ */
+static uint64_t get_temporary_mapping( uintptr_t addr ) {
+  // determine offset and subtract it from address
+  size_t offset = addr % PAGE_SIZE;
+  addr = addr - offset;
+
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "offset = %zx, address = %#"PRIxPTR"\r\n", offset, addr )
+  #endif
+
+  // determine table index offset
+  uint32_t table_idx_offset = SD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
+
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table_idx_offset = %"PRIu32"\r\n", table_idx_offset )
+  #endif
+
+  // get table and page index
+  uint32_t table_idx = SD_VIRTUAL_TABLE_INDEX( addr ) - table_idx_offset;
+  uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( addr );
+
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table_idx = %"PRIu32", page_idx = %"PRIu32"\r\n", table_idx, page_idx )
+  #endif
+
+  // get table
+  sd_page_table_t* tbl = ( sd_page_table_t* )(
+    TEMPORARY_SPACE_START + table_idx * SD_TBL_SIZE
+  );
+
+  // return set page
+  return tbl->page[ page_idx ].raw & 0xFFFFF000;
 }
 
 /**
@@ -1029,15 +1074,16 @@ bool v7_short_prepare_temporary( virt_context_t* ctx ) {
     return false;
   }
 
+  temporary_size = ( TEMPORARY_SPACE_SIZE + 1 ) / SD_TBL_SIZE;
   // free page table
-  uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+  uint64_t phys = phys_find_free_page_range( PAGE_SIZE, temporary_size, PHYS_MEMORY_TYPE_NORMAL );
   // handle error
   if ( INVALID_ADDRESS == phys ) {
     return false;
   }
   uintptr_t table = ( uintptr_t )phys;
   // overwrite page with zero
-  memset( ( void* )table, 0, PAGE_SIZE );
+  memset( ( void* )table, 0, temporary_size );
 
   // determine offset
   uint32_t start = SD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
@@ -1079,14 +1125,23 @@ bool v7_short_prepare_temporary( virt_context_t* ctx ) {
     }
   }
 
-  // map page table
-  return v7_short_map(
-    ctx,
-    TEMPORARY_SPACE_START,
-    table,
-    VIRT_MEMORY_TYPE_NORMAL_NC,
-    VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
-  );
+  uintptr_t map_start = TEMPORARY_SPACE_START;
+  uintptr_t map_end = TEMPORARY_SPACE_START + temporary_size;
+  while ( map_start < map_end ) {
+    if ( ! v7_short_map(
+      ctx,
+      map_start,
+      table,
+      VIRT_MEMORY_TYPE_NORMAL_NC,
+      VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
+    ) ) {
+      return false;
+    }
+    map_start += PAGE_SIZE;
+    table += PAGE_SIZE;
+  }
+
+  return true;
 }
 
 /**
@@ -1582,6 +1637,11 @@ uint64_t v7_short_get_mapped_address_in_context(
   virt_context_t* ctx,
   uintptr_t addr
 ) {
+  // handle temporary area
+  if ( addr >= TEMPORARY_SPACE_START && addr < TEMPORARY_SPACE_START + TEMPORARY_SPACE_SIZE ) {
+    return get_temporary_mapping( addr );
+  }
+
   // get page index
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( addr );
   uint64_t phys;

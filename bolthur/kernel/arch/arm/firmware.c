@@ -71,7 +71,7 @@ bool firmware_init( uintptr_t virtual_start ) {
         virtual_start,
         atag_fdt,
         VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_EXECUTABLE
+        VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
       ) ) {
         return false;
       }
@@ -94,7 +94,7 @@ bool firmware_init( uintptr_t virtual_start ) {
         virtual,
         start,
         VIRT_MEMORY_TYPE_NORMAL,
-        VIRT_PAGE_TYPE_EXECUTABLE
+        VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
       ) ) {
         return false;
       }

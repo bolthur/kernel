@@ -112,7 +112,7 @@ void virt_init( void ) {
   // map from start to end addresses as used
   while ( start < end ) {
     virt_memory_type_t type = VIRT_MEMORY_TYPE_NORMAL;
-    uint32_t page = VIRT_PAGE_TYPE_EXECUTABLE;
+    uint32_t page = VIRT_PAGE_TYPE_EXECUTABLE | VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
     if ( start >= initial_heap_start && start <= initial_heap_end ) {
       type = VIRT_MEMORY_TYPE_NORMAL_NC;
       page = VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
