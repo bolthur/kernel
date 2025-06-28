@@ -155,7 +155,7 @@
 [[maybe_unused]] static void vfs_wait_for_path( const char* path ) {
   struct stat buffer;
   do {
-    sleep( 2 );
+    sleep( 1 );
   } while( 0 != stat( path, &buffer ) );
 }
 

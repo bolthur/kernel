@@ -161,7 +161,7 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
   // allocate mailbox if not allocated
   if ( 0 == proc->rpc_mailbox ) {
     // allocate mailbox
-    proc->rpc_mailbox = phys_find_free_page(PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL);
+    proc->rpc_mailbox = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
     // handle allocation failed
     if ( INVALID_ADDRESS == proc->rpc_mailbox ) {
       // debug output

@@ -33,6 +33,7 @@
 #include "../../libsdhost.h"
 #include "../../libiomem.h"
 #include "../../libmailbox.h"
+#include "../../libdma.h"
 
 /*
  * Add and use interrupt routine. This interrupt is listed in a more complete
@@ -209,14 +210,27 @@ static sdhost_response_t enable_interrupt( void ) {
     // return error
     return SDHOST_RESPONSE_MEMORY;
   }
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
-  sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
-  sequence[ 1 ].value = SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_SDIO
+  uint32_t all_interrupts = ( uint32_t )~(
+    SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_DATA
     | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BLOCK
     | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY
-    | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_DATA;
+  );
+  #if defined( SDHOST_ENABLE_DMA )
+    sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
+    sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
+    sequence[ 0 ].value = all_interrupts;
+    sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
+    sequence[ 1 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
+    sequence[ 1 ].value = SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY;
+  #else
+    sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
+    sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
+    sequence[ 0 ].value = all_interrupts;
+    sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
+    sequence[ 1 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
+    sequence[ 1 ].value = SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY
+      | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_DATA;
+  #endif
   // perform request
   if ( -1 == ioctl(
     device->fd_iomem,
@@ -732,18 +746,28 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
     EARLY_STARTUP_PRINT( "Finish sd data command\r\n" )
   #endif
   size_t block_size = device->block_size;
-  size_t block_count = device->block_count;
+  #if !defined( SDHOST_ENABLE_DMA )
+    size_t block_count = device->block_count;
+  #endif
   size_t offset = sizeof( uint32_t );
   size_t sequence_size;
   iomem_mmio_entry_t* sequence;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT(
-      "block_size = %zx, block_count = %zu, buffer = %p\r\n",
-      block_size,
-      block_count,
-      ( void* )device->buffer
-    )
+    #if defined ( SDHOST_ENABLE_DMA )
+      EARLY_STARTUP_PRINT(
+        "block_size = %zx, buffer = %p\r\n",
+        block_size,
+        ( void* )device->buffer
+      )
+    #else
+      EARLY_STARTUP_PRINT(
+        "block_size = %zx, block_count = %zu, buffer = %p\r\n",
+        block_size,
+        block_count,
+        ( void* )device->buffer
+      )
+    #endif
   #endif
   // check for word size in size
   if ( block_size % offset ) {
@@ -762,14 +786,16 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   bool is_write = command & SDHOST_COMMAND_FLAG_WRITE;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    // calculate necessary word count
-    size_t necessary_word = ( block_size * block_count ) / offset;
-    EARLY_STARTUP_PRINT(
-      "is_read = %d, is_write = %d, necessary_word = %zu\r\n",
-      is_read ? 1 : 0,
-      is_write ? 1 : 0,
-      necessary_word
-    )
+    #if !defined ( SDHOST_ENABLE_DMA )
+      // calculate necessary word count
+      size_t necessary_word = ( block_size * block_count ) / offset;
+      EARLY_STARTUP_PRINT(
+        "is_read = %d, is_write = %d, necessary_word = %zu\r\n",
+        is_read ? 1 : 0,
+        is_write ? 1 : 0,
+        necessary_word
+      )
+    #endif
   #endif
   #if !defined( SDHOST_ENABLE_DMA )
     if ( is_read || is_write ) {
@@ -1970,6 +1996,7 @@ static sdhost_response_t reset( void ) {
   device->last_argument = 0;
   memset( device->last_response, 0, sizeof( uint32_t ) * 4 );
   device->last_interrupt = 0;
+
   // return go idle state command result
   return sd_command( SDHOST_CMD_GO_IDLE_STATE, 0 );
 }
