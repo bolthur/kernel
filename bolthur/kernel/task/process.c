@@ -842,10 +842,7 @@ int task_process_replace(
   }
 
   // destroy virtual context
-  if ( ! virt_destroy_context(
-    proc->virtual_context,
-    true
-  ) ) {
+  if ( ! virt_destroy_context( proc->virtual_context, true ) ) {
     free( tmp_argv );
     free( tmp_env );
     free( image );

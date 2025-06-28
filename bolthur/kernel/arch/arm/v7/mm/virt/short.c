@@ -33,7 +33,10 @@
 #include "../../../mm/virt/short.h"
 #include "short.h"
 #include "../../../../../mm/virt.h"
+
 #include "../../register/sctlr.h"
+#include "../../register/ttbcr.h"
+#include "../../register/dacr.h"
 
 /**
  * @brief Temporary space start for short format
@@ -62,7 +65,7 @@ static sd_context_total_t initial_context
  */
 __bootstrap void v7_short_startup_setup( void ) {
   uint32_t x;
-  sd_ttbcr_t ttbcr;
+  ttbcr_t ttbcr;
 
   for ( x = 0; x < 4096; x++ ) {
     initial_context.raw[ x ] = 0;
@@ -102,8 +105,8 @@ __bootstrap void v7_short_startup_setup( void ) {
     : : "cc"
   );
   // set split to no split
-  ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_4G;
-  ttbcr.data.large_physical_address_extension = 0;
+  ttbcr.sd.ttbr_split = SD_TTBCR_N_TTBR0_4G;
+  ttbcr.sd.large_physical_address_extension = 0;
   // push back value with ttbcr
   __asm__ __volatile__(
     "mcr p15, 0, %0, c2, c0, 2"
@@ -149,13 +152,13 @@ __bootstrap void v7_short_startup_enable( void ) {
  * @brief Startup flush context
  */
 __bootstrap void v7_short_startup_flush( void ) {
-  sd_ttbcr_t ttbcr;
+  ttbcr_t ttbcr;
 
   // read ttbcr register
   __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
   // set split to use ttbr1 and ttbr2 as it will be used later on
-  ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_4G;
-  ttbcr.data.large_physical_address_extension = 0;
+  ttbcr.sd.ttbr_split = SD_TTBCR_N_TTBR0_4G;
+  ttbcr.sd.large_physical_address_extension = 0;
   // push back value with ttbcr
   __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
 
@@ -601,7 +604,6 @@ uint64_t v7_short_create_table(
 
     // set necessary attributes
     context->table[ table_idx ].data.type = SD_TTBR_TYPE_PAGE_TABLE;
-    context->table[ table_idx ].data.domain = SD_DOMAIN_CLIENT;
     context->table[ table_idx ].data.non_secure = 0;
 
     // debug output
@@ -674,7 +676,6 @@ uint64_t v7_short_create_table(
 
     // set necessary attributes
     context->table[ table_idx ].data.type = SD_TTBR_TYPE_PAGE_TABLE;
-    context->table[ table_idx ].data.domain = SD_DOMAIN_CLIENT;
     context->table[ table_idx ].data.non_secure = 1;
 
     // debug output
@@ -776,13 +777,15 @@ bool v7_short_map(
     table->page[ page_idx ].data.access_permission_0 =
       ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type )
         ? SD_MAC_APX1_PRIVILEGED_RO
-        : SD_MAC_APX1_USER_RO;
+        : SD_MAC_APX1_FULL_RO;
+    table->page[ page_idx ].data.access_permission_1 = 1;
   }
   if ( page & VIRT_PAGE_TYPE_WRITE ) {
     table->page[ page_idx ].data.access_permission_0 =
       ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type )
         ? SD_MAC_APX0_PRIVILEGED_RW
         : SD_MAC_APX0_FULL_RW;
+    table->page[ page_idx ].data.access_permission_1 = 0;
   }
   // set non global flag
   table->page[ page_idx ].data.not_global =
@@ -1017,7 +1020,7 @@ bool v7_short_set_context( virt_context_t* ctx ) {
  * @brief Flush context
  */
 void v7_short_flush_complete( void ) {
-  sd_ttbcr_t ttbcr;
+  ttbcr_t ttbcr;
 
   // read ttbcr register
   __asm__ __volatile__(
@@ -1026,8 +1029,8 @@ void v7_short_flush_complete( void ) {
     : : "cc"
   );
   // set split to use ttbr1 and ttbr2 as it will be used later on
-  ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_2G;
-  ttbcr.data.large_physical_address_extension = 0;
+  ttbcr.sd.ttbr_split = SD_TTBCR_N_TTBR0_2G;
+  ttbcr.sd.large_physical_address_extension = 0;
   // push back value with ttbcr
   __asm__ __volatile__(
     "mcr p15, 0, %0, c2, c0, 2"
@@ -1547,33 +1550,68 @@ bool v7_short_destroy_context( virt_context_t* ctx, bool unmap_only ) {
  * @brief Method to prepare
  */
 void v7_short_prepare( void ) {
-  sctlr_t reg;
+  sctlr_t sctlr;
   // load sctlr register content
   __asm__ __volatile__(
     "mrc p15, 0, %0, c1, c0, 0"
-    : "=r" ( reg.raw )
+    : "=r" ( sctlr.raw )
     : : "cc"
   );
-
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg.raw )
+    DEBUG_OUTPUT( "sctlr = %#"PRIx32"\r\n", sctlr.raw )
   #endif
-
   // set access flag to 0 within sctlr
-  reg.data.access_flag_enable = 0;
+  sctlr.data.access_flag_enable = 0;
   // set TRE flag to 0 within sctlr
-  reg.data.tex_remap_enable = 0;
-
+  sctlr.data.tex_remap_enable = 0;
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg.raw )
+    DEBUG_OUTPUT( "sctlr = %#"PRIx32"\r\n", sctlr.raw )
   #endif
-
   // write back changes
   __asm__ __volatile__(
     "mcr p15, 0, %0, c1, c0, 0"
-    : : "r" ( reg.raw )
+    : : "r" ( sctlr.raw )
+    : "cc"
+  );
+
+  dacr_t dacr;
+  // load dacr register content
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c3, c0, 0"
+    : "=r" ( dacr.raw )
+    : : "cc"
+  );
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "dacr = %#"PRIx32"\r\n", dacr.raw )
+  #endif
+  // set domains
+  dacr.data.d0 = SD_DOMAIN_CLIENT;
+  dacr.data.d1 = SD_DOMAIN_CLIENT;
+  dacr.data.d2 = SD_DOMAIN_CLIENT;
+  dacr.data.d3 = SD_DOMAIN_CLIENT;
+  dacr.data.d4 = SD_DOMAIN_CLIENT;
+  dacr.data.d5 = SD_DOMAIN_CLIENT;
+  dacr.data.d6 = SD_DOMAIN_CLIENT;
+  dacr.data.d7 = SD_DOMAIN_CLIENT;
+  dacr.data.d8 = SD_DOMAIN_CLIENT;
+  dacr.data.d9 = SD_DOMAIN_CLIENT;
+  dacr.data.d10 = SD_DOMAIN_CLIENT;
+  dacr.data.d11 = SD_DOMAIN_CLIENT;
+  dacr.data.d12 = SD_DOMAIN_CLIENT;
+  dacr.data.d13 = SD_DOMAIN_CLIENT;
+  dacr.data.d14 = SD_DOMAIN_CLIENT;
+  dacr.data.d15 = SD_DOMAIN_CLIENT;
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "dacr = %#"PRIx32"\r\n", dacr.raw )
+  #endif
+  // write back changes
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c3, c0, 0"
+    : : "r" ( dacr.raw )
     : "cc"
   );
 }

@@ -100,23 +100,6 @@
   typedef union __packed {
     uint32_t raw;
     struct {
-      uint32_t ttbr_split : 3;
-      uint32_t sbz_0 : 1;
-      union {
-        uint32_t sbz_1 : 2;
-        struct {
-          uint32_t walk_0 : 1;
-          uint32_t walk_1 : 1;
-        } table;
-      } disable;
-      uint32_t sbz_2 : 26;
-      uint32_t large_physical_address_extension : 1;
-    } data;
-  } sd_ttbcr_t;
-
-  typedef union __packed {
-    uint32_t raw;
-    struct {
       uint32_t execute_never : 1;
       uint32_t type: 1;
       uint32_t bufferable : 1;
@@ -161,7 +144,7 @@
     } data;
   } sd_context_table_t;
 
-  union __packed sd_context_section {
+  typedef union  __packed {
     uint32_t raw;
     struct {
       uint32_t privileged_execute_never : 1;
@@ -180,8 +163,7 @@
       uint32_t non_secure : 1;
       uint32_t frame: 12;
     } data;
-  };
-  typedef union sd_context_section sd_context_section_t;
+  } sd_context_section_t;
 
   typedef union  __packed {
     uint32_t raw;

@@ -31,6 +31,7 @@
 #include "../../../cache.h"
 #include "long.h"
 #include "../../register/sctlr.h"
+#include "../../register/ttbcr.h"
 
 /**
  * @brief Temporary space start for long descriptor format
@@ -65,7 +66,7 @@ static ld_global_page_directory_t initial_context
  */
 __bootstrap void v7_long_startup_setup( void ) {
   // variables
-  ld_ttbcr_t ttbcr;
+  ttbcr_t ttbcr;
   uint32_t x;
   uint32_t y;
 
@@ -115,7 +116,7 @@ __bootstrap void v7_long_startup_setup( void ) {
   // prepare ttbcr
   ttbcr.raw = 0;
   // set large physical address extension bit
-  ttbcr.data.large_physical_address_extension = 1;
+  ttbcr.lpae.large_physical_address_extension = 1;
   // push value to ttbcr
   __asm__ __volatile__(
     "mcr p15, 0, %0, c2, c0, 2"
@@ -170,7 +171,7 @@ __bootstrap void v7_long_startup_enable( void ) {
  * @brief Flush startup context
  */
 __bootstrap void v7_long_startup_flush( void ) {
-  ld_ttbcr_t ttbcr;
+  ttbcr_t ttbcr;
 
   // read ttbcr register
   __asm__ __volatile__(
@@ -179,7 +180,7 @@ __bootstrap void v7_long_startup_flush( void ) {
     : : "cc"
   );
   ttbcr.raw = 0;
-  ttbcr.data.large_physical_address_extension = 1;
+  ttbcr.lpae.large_physical_address_extension = 1;
   // push back value with ttbcr
   __asm__ __volatile__(
     "mcr p15, 0, %0, c2, c0, 2"
@@ -1006,7 +1007,7 @@ bool v7_long_set_context( virt_context_t* ctx ) {
  * @brief Flush context
  */
 void v7_long_flush_complete( void ) {
-  ld_ttbcr_t ttbcr;
+  ttbcr_t ttbcr;
 
   // read ttbcr register
   __asm__ __volatile__(
@@ -1015,16 +1016,16 @@ void v7_long_flush_complete( void ) {
     : : "cc"
   );
   // set split to use ttbr0 and ttbr1
-  ttbcr.data.ttbr0_size = 1;
-  ttbcr.data.ttbr1_size = 1;
-  ttbcr.data.ttbr0_inner_cachability = 0;
-  ttbcr.data.ttbr0_outer_cachability = 0;
-  ttbcr.data.ttbr0_shareability = 0;
-  ttbcr.data.ttbr1_inner_cachability = 0;
-  ttbcr.data.ttbr1_outer_cachability = 0;
-  ttbcr.data.ttbr1_shareability = 0;
-  ttbcr.data.large_physical_address_extension = 1;
-  ttbcr.data.ttbr0_ttbr1_asid = 0;
+  ttbcr.lpae.ttbr0_size = 1;
+  ttbcr.lpae.ttbr1_size = 1;
+  ttbcr.lpae.ttbr0_inner_cachability = 0;
+  ttbcr.lpae.ttbr0_outer_cachability = 0;
+  ttbcr.lpae.ttbr0_shareability = 0;
+  ttbcr.lpae.ttbr1_inner_cachability = 0;
+  ttbcr.lpae.ttbr1_outer_cachability = 0;
+  ttbcr.lpae.ttbr1_shareability = 0;
+  ttbcr.lpae.large_physical_address_extension = 1;
+  ttbcr.lpae.ttbr0_ttbr1_asid = 0;
   // push back value with ttbcr
   __asm__ __volatile__(
     "mcr p15, 0, %0, c2, c0, 2"
