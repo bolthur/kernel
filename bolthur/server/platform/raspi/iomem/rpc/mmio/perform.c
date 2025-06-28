@@ -643,6 +643,13 @@ void rpc_handle_mmio_perform(
           skip = true;
           continue;
         }
+        void* dma_block = dma_allocate_memory( ( *mmio_request )[ i ].dma_copy_size );
+        if ( ! dma_block ) {
+          _syscall_memory_shared_detach( shm_id );
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+          skip = true;
+          continue;
+        }
         // loop through pages and perform requests
         bool dma_error = false;
         for (
@@ -653,9 +660,10 @@ void rpc_handle_mmio_perform(
           dma_block_prepare();
           // get physical memory address
           uintptr_t physical = _syscall_memory_translate_physical(
-            ( uintptr_t )shm_addr + size
+            ( uintptr_t )dma_block + size
           );
           if ( errno ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -666,6 +674,7 @@ void rpc_handle_mmio_perform(
             ( bus & 0x00FFFFFF ) | 0x7E000000,
             physical | 0xC0000000
           ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -678,18 +687,21 @@ void rpc_handle_mmio_perform(
               ( double )PAGE_SIZE
             )
           ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_set_stride( 0 ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           };
           if ( 0 != dma_block_set_next( 0 ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -697,36 +709,42 @@ void rpc_handle_mmio_perform(
           }
           // prepare transfer information
           if ( 0 != dma_block_transfer_info_wait_response( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_destination_increment( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_dest_width( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_src_dreq( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_permap( ( *mmio_request )[ i ].dma_permap ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_interrupt_enable( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -734,6 +752,7 @@ void rpc_handle_mmio_perform(
           }
           // start dma
           if ( 0 != dma_start() ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -746,6 +765,7 @@ void rpc_handle_mmio_perform(
             ( *mmio_request )[ i ].sleep,
             apply_sleep
           ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -753,12 +773,17 @@ void rpc_handle_mmio_perform(
           }
           // finish dma
           if ( 0 != dma_finish() ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
         }
+        // copy over to shared memory
+        memcpy( shm_addr, dma_block, ( *mmio_request )[ i ].dma_copy_size );
+        // free dma memory block again
+        dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
         // detach shared memory
         _syscall_memory_shared_detach( shm_id );
         if ( errno ) {
@@ -802,6 +827,15 @@ void rpc_handle_mmio_perform(
           skip = true;
           continue;
         }
+        void* dma_block = dma_allocate_memory( ( *mmio_request )[ i ].dma_copy_size );
+        if ( ! dma_block ) {
+          _syscall_memory_shared_detach( shm_id );
+          ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+          skip = true;
+          continue;
+        }
+        // copy over data to write
+        memcpy( dma_block, shm_addr, ( *mmio_request )[ i ].dma_copy_size );
         // loop through pages and perform requests
         bool dma_error = false;
         for (
@@ -812,9 +846,10 @@ void rpc_handle_mmio_perform(
           dma_block_prepare();
           // get physical memory address
           uintptr_t physical = _syscall_memory_translate_physical(
-            ( uintptr_t )shm_addr + size
+            ( uintptr_t )dma_block + size
           );
           if ( errno ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -825,6 +860,7 @@ void rpc_handle_mmio_perform(
             physical | 0xC0000000,
             ( bus & 0x00FFFFFF ) | 0x7E000000
           ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -837,18 +873,21 @@ void rpc_handle_mmio_perform(
               ( double )PAGE_SIZE
             )
           ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_set_stride( 0 ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           };
           if ( 0 != dma_block_set_next( 0 ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -856,36 +895,42 @@ void rpc_handle_mmio_perform(
           }
           // prepare transfer information
           if ( 0 != dma_block_transfer_info_wait_response( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_source_increment( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_src_width( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_dest_dreq( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_permap( ( *mmio_request )[ i ].dma_permap ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
           if ( 0 != dma_block_transfer_info_interrupt_enable( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -893,6 +938,7 @@ void rpc_handle_mmio_perform(
           }
           // start dma
           if ( 0 != dma_start() ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -905,6 +951,7 @@ void rpc_handle_mmio_perform(
             ( *mmio_request )[ i ].sleep,
             apply_sleep
           ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
@@ -912,12 +959,15 @@ void rpc_handle_mmio_perform(
           }
           // finish dma
           if ( 0 != dma_finish() ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
             dma_error = true;
             continue;
           }
         }
+        // free dma memory block again
+        dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
         // detach shared memory
         _syscall_memory_shared_detach( shm_id );
         if ( errno ) {

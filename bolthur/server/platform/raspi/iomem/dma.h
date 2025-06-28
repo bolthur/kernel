@@ -61,4 +61,7 @@ int dma_finish( void );
 int dma_last_error( void );
 void dma_dump( void );
 
+void* dma_allocate_memory( size_t ) ;
+void dma_free_memory( void*, size_t );
+
 #endif

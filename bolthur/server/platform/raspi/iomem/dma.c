@@ -568,3 +568,34 @@ void dma_dump( void ) {
 int dma_last_error( void ) {
   return -last_error;
 }
+
+/**
+ * @fn void dma_allocate_memory*(size_t)
+ * @brief Wrapper to allocate dma memory
+ *
+ * @param size memory size to allocate
+ * @return void* allocated memory or null on error
+ */
+void* dma_allocate_memory( size_t size ) {
+  // allocate control block
+  void* dma_block = mmap( NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS, -1, 0 );
+  if ( MAP_FAILED == block ) {
+    last_error = -errno;
+    return NULL;
+  }
+  // clear out
+  memset( dma_block, 0, size );
+  // return block
+  return dma_block;
+}
+
+/**
+ * @fn void dma_free_memory(void*, size_t)
+ * @brief Wrapper to free up memory again
+ *
+ * @param address address to free
+ * @param size size to unmap
+ */
+void dma_free_memory( void* dma_block, size_t size ) {
+  munmap( dma_block, size );
+}
