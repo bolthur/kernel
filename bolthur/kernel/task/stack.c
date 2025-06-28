@@ -76,6 +76,7 @@ static void task_stack_cleanup( avl_node_t* a ) {
 }
 
 /**
+ * @fn void task_stack_manager_destroy(task_stack_manager_t*)
  * @brief Destroy task stack manager
  *
  * @param manager
@@ -94,6 +95,7 @@ void task_stack_manager_destroy( task_stack_manager_t* manager ) {
 }
 
 /**
+ * @fn task_stack_manager_t task_stack_manager_create*(void)
  * @brief Create stack manager
  *
  * @return task_stack_manager_t*
@@ -122,6 +124,7 @@ task_stack_manager_t* task_stack_manager_create( void ) {
 }
 
 /**
+ * @fn bool task_stack_manager_add(uintptr_t, task_stack_manager_t*)
  * @brief Add stack to manager
  *
  * @param stack stack to add
@@ -148,6 +151,7 @@ bool task_stack_manager_add(
 }
 
 /**
+ * @fn bool task_stack_manager_remove(uintptr_t, task_stack_manager_t*)
  * @brief Remove stack from manager
  *
  * @param stack stack to remove

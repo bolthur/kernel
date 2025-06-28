@@ -22,6 +22,7 @@
 #include "../../string.h"
 
 /**
+ * @fn int memcmp(const void*, const void*, size_t)
  * @brief Memory compare
  *
  * @param a

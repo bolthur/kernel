@@ -779,6 +779,8 @@ void task_process_prepare_kill( void* context, task_process_t* proc ) {
  * @param env
  * @param context
  * @return
+ *
+ * @todo don't allocate kernel heap for elf application
  */
 int task_process_replace(
   task_process_t* proc,

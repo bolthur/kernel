@@ -21,6 +21,7 @@
 #include "../../string.h"
 
 /**
+ * @fn char strcpy*(char*, const char*)
  * @brief Copy src into destination
  *
  * @param dst destination

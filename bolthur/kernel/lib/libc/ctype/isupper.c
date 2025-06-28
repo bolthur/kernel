@@ -19,6 +19,13 @@
 
 #include "../../ctype.h"
 
+/**
+ * @fn int isupper(int)
+ * @brief Is upper implementation
+ *
+ * @param c
+ * @return
+ */
 int isupper( int c ) {
   return (
     'A' <= c

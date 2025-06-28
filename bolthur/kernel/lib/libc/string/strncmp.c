@@ -21,6 +21,7 @@
 #include "../../string.h"
 
 /**
+ * @fn int strncmp(const char*, const char*, size_t)
  * @brief Compare two strings until end or max length
  *
  * @param a

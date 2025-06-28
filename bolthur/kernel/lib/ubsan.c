@@ -38,6 +38,7 @@ const char* type_check_kind[] = {
 };
 
 /**
+ * @fn void print(ubsan_source_location_t*)
  * @brief Internal helper to print location
  *
  * @param location
@@ -48,6 +49,7 @@ static void print( ubsan_source_location_t* location ) {
 }
 
 /**
+ * @fn void handle_type_mismatch_generic(ubsan_type_mismatch_data_generic_t*, uintptr_t)
  * @brief Helper with generic type mismatch handling
  *
  * @param mismatch
@@ -81,6 +83,7 @@ static void handle_type_mismatch_generic(
 }
 
 /**
+ * @fn void __ubsan_handle_type_mismatch_v1(ubsan_type_mismatch_data_v1_t*, uintptr_t)
  * @brief Type mismatch handling v1
  *
  * @param data
@@ -104,6 +107,7 @@ static void handle_type_mismatch_generic(
 }
 
 /**
+ * @fn void __ubsan_handle_type_mismatch(ubsan_type_mismatch_data_t*, uintptr_t)
  * @brief Type mismatch handling
  *
  * @param data
@@ -127,6 +131,7 @@ static void handle_type_mismatch_generic(
 }
 
 /**
+ * @fn void __ubsan_handle_pointer_overflow(ubsan_pointer_overflow_data_t*, uint64_t, uint64_t)
  * @brief Pointer overflow handling
  *
  * @param data
@@ -150,6 +155,7 @@ static void handle_type_mismatch_generic(
 }
 
 /**
+ * @fn void __ubsan_handle_add_overflow(ubsan_overflow_data_t*, uint64_t, uint64_t)
  * @brief Add overflow handling
  *
  * @param data
@@ -171,6 +177,7 @@ static void handle_type_mismatch_generic(
 }
 
 /**
+ * @fn void __ubsan_handle_sub_overflow(ubsan_overflow_data_t*, uint64_t, uint64_t)
  * @brief Subtract overflow handling
  *
  * @param data
@@ -192,6 +199,7 @@ static void handle_type_mismatch_generic(
 }
 
 /**
+ * @fn void __ubsan_handle_mul_overflow(ubsan_overflow_data_t*, uint64_t, uint64_t)
  * @brief Multiplication overflow handling
  *
  * @param data
@@ -213,7 +221,8 @@ static void handle_type_mismatch_generic(
 }
 
 /**
- * @brief
+ * @fn void __ubsan_handle_divrem_overflow(ubsan_overflow_data_t*, uint64_t, uint64_t)
+ * @brief divrem overflow handler
  *
  * @param data
  * @param left
@@ -234,7 +243,8 @@ static void handle_type_mismatch_generic(
 }
 
 /**
- * @brief Out of bounds handling
+ * @fn void __ubsan_handle_shift_out_of_bounds(ubsan_shift_out_of_bounds_data_t*, uint64_t, uint64_t)
+ * @brief Shift out of bounds handler
  *
  * @param data
  * @param left
@@ -255,6 +265,7 @@ static void handle_type_mismatch_generic(
 }
 
 /**
+ * @fn void __ubsan_handle_out_of_bounds(ubsan_out_of_bounds_data_t*, uint64_t)
  * @brief Out of bounds handling
  *
  * @param data
@@ -273,6 +284,7 @@ static void handle_type_mismatch_generic(
 }
 
 /**
+ * @fn void __ubsan_handle_load_invalid_value(ubsan_invalid_value_data_t*, uint64_t)
  * @brief Load invalid value handling
  *
  * @param data
@@ -291,6 +303,7 @@ static void handle_type_mismatch_generic(
 }
 
 /**
+ * @fn void __ubsan_handle_negate_overflow(ubsan_overflow_data_t*, uint64_t)
  * @brief Handle negative overflow
  *
  * @param data

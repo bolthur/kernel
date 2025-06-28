@@ -21,6 +21,7 @@
 #include "../tar.h"
 
 /**
+ * @fn size_t tar_total_size(uintptr_t)
  * @brief Method to get total size of tar
  *
  * @param address
@@ -50,6 +51,7 @@ size_t tar_total_size( uintptr_t address ) {
 }
 
 /**
+ * @fn size_t tar_size(tar_header_t*)
  * @brief Method to get size of file by header
  *
  * @param header

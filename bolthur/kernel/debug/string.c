@@ -22,6 +22,7 @@
 #include "string.h"
 
 /**
+ * @fn void debug_memcpy*(void* restrict, const void* restrict, size_t)
  * @brief Duplicate of memory copy function used during remote debugging
  *
  * @param dst
@@ -41,6 +42,7 @@ void* debug_memcpy( void* restrict dst, const void* restrict src, size_t size ) 
 }
 
 /**
+ * @fn void debug_memset*(void*, int, size_t)
  * @brief Copy of memset for remote debugging
  *
  * @param buf
@@ -59,6 +61,7 @@ void* debug_memset ( void* buf, int value, size_t size ) {
 }
 
 /**
+ * @fn char debug_strchr*(const char*, int)
  * @brief get string part starting with delimiter
  *
  * @param str
@@ -80,6 +83,7 @@ char* debug_strchr( const char *str, int delimiter ) {
 }
 
 /**
+ * @fn size_t debug_strlen(const char*)
  * @brief Get string length
  *
  * @param str

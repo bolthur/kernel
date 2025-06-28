@@ -19,6 +19,13 @@
 
 #include "../../ctype.h"
 
+/**
+ * @fn int islower(int)
+ * @brief Is lower implementation
+ *
+ * @param c
+ * @return
+ */
 int islower( int c ) {
   return (
     'a' <= c

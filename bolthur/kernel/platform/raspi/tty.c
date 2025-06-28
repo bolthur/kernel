@@ -23,6 +23,7 @@
 #endif
 
 /**
+ * @fn void tty_init(void)
  * @brief Initialize TTY
  */
 void tty_init( void ) {
@@ -32,6 +33,7 @@ void tty_init( void ) {
 }
 
 /**
+ * @fn void tty_putc(uint8_t)
  * @brief Print character to TTY
  *
  * @param c Character to print

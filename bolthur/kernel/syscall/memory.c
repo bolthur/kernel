@@ -241,6 +241,7 @@ void syscall_memory_acquire( void* context ) {
 }
 
 /**
+ * @fn void syscall_memory_release(void*)
  * @brief Release memory
  *
  * @param context
@@ -335,6 +336,7 @@ void syscall_memory_release( void* context ) {
 }
 
 /**
+ * @fn void syscall_memory_shared_create(void*)
  * @brief Acquire new or existing shared memory area
  *
  * @param context
@@ -364,6 +366,7 @@ void syscall_memory_shared_create( void* context ) {
 }
 
 /**
+ * @fn void syscall_memory_shared_attach(void*)
  * @brief attach shared memory
  *
  * @param context
@@ -396,6 +399,7 @@ void syscall_memory_shared_attach( void* context ) {
 }
 
 /**
+ * @fn void syscall_memory_shared_detach(void*)
  * @brief release shared memory
  *
  * @param context
@@ -417,7 +421,7 @@ void syscall_memory_shared_detach( void* context ) {
 }
 
 /**
- * @fn void syscall_memory_shared_detach(void*)
+ * @fn void syscall_memory_shared_size(void*)
  * @brief get size of shared memory
  *
  * @param context

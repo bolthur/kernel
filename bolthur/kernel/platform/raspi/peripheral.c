@@ -28,6 +28,7 @@ uintptr_t cpu_peripheral_base = PERIPHERAL_CPU_BASE;
 size_t cpu_peripheral_size = PERIPHERAL_CPU_SIZE;
 
 /**
+ * @fn void peripheral_base_set(uintptr_t, peripheral_type_t)
  * @brief Method to set peripheral base address
  *
  * @param addr Address to set peripheral base
@@ -42,10 +43,11 @@ void peripheral_base_set( uintptr_t addr, peripheral_type_t type ) {
 }
 
 /**
+ * @fn uintptr_t peripheral_base_get(peripheral_type_t)
  * @brief Method to get peripheral base address
  *
- * @return uintptr_t Peripheral base address
  * @param type peripheral type
+ * @return uintptr_t Peripheral base address
  */
 uintptr_t peripheral_base_get( peripheral_type_t type ) {
   if ( PERIPHERAL_LOCAL == type ) {
@@ -57,10 +59,11 @@ uintptr_t peripheral_base_get( peripheral_type_t type ) {
 }
 
 /**
+ * @fn uintptr_t peripheral_end_get(peripheral_type_t)
  * @brief Method to get peripheral base address
  *
- * @return uintptr_t Peripheral end address
  * @param type peripheral type
+ * @return uintptr_t Peripheral end address
  */
 uintptr_t peripheral_end_get( peripheral_type_t type ) {
   if ( PERIPHERAL_LOCAL == type ) {

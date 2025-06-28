@@ -20,6 +20,7 @@
 #include "../atag.h"
 
 /**
+ * @fn bool atag_check(uintptr_t)
  * @brief Check for atag existing
  *
  * @param atag

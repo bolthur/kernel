@@ -20,6 +20,7 @@
 #include "../atag.h"
 
 /**
+ * @fn atag_t atag_next*(atag_t*)
  * @brief Get next atag entry
  *
  * @param atag

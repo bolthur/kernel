@@ -21,6 +21,7 @@
 #include "../../stdio.h"
 
 /**
+ * @fn int printf(const char* restrict, ...)
  * @brief Simple printf for kernel
  *
  * @param format

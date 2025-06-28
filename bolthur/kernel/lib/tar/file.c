@@ -22,6 +22,7 @@
 #include "../tar.h"
 
 /**
+ * @fn uint8_t tar_file*(tar_header_t*)
  * @brief Method to get buffer
  *
  * @param header

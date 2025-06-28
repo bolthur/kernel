@@ -21,6 +21,7 @@
 #include "../../string.h"
 
 /**
+ * @fn size_t strnlen(const char*, size_t)
  * @brief Get string length with maximum
  *
  * @param str

@@ -240,6 +240,7 @@ void virt_init( void ) {
 }
 
 /**
+ * @fn bool virt_init_get(void)
  * @brief Get initialized flag
  *
  * @return true virtual memory management has been set up
@@ -250,6 +251,7 @@ bool virt_init_get( void ) {
 }
 
 /**
+ * @fn bool virt_is_mapped_in_context_range(virt_context_t*, uintptr_t, size_t)
  * @brief Method to check for range is mapped in context
  *
  * @param ctx context to use
@@ -279,6 +281,7 @@ bool virt_is_mapped_in_context_range(
 }
 
 /**
+ * @fn bool virt_is_mapped_range(uintptr_t, size_t)
  * @brief Method to check for range is mapped
  *
  * @param address start address of range
@@ -303,6 +306,7 @@ bool virt_is_mapped_range( uintptr_t address, size_t size ) {
 }
 
 /**
+ * @fn bool virt_unmap_address_range(virt_context_t*, uintptr_t, size_t, bool)
  * @brief Method to unmap address range
  *
  * @param ctx context to perform unmap in
@@ -333,6 +337,7 @@ bool virt_unmap_address_range(
 }
 
 /**
+ * @fn uintptr_t virt_find_free_page_range(virt_context_t*, size_t, uintptr_t)
  * @brief Find free page range within context
  *
  * @param ctx context to use for lookup
@@ -424,6 +429,7 @@ uintptr_t virt_find_free_page_range(
 }
 
 /**
+ * @fn bool virt_map_address_range(virt_context_t*, uintptr_t, uint64_t, size_t, virt_memory_type_t, uint32_t)
  * @brief Map physical address range to virtual address range
  *
  * @param ctx context
@@ -466,6 +472,7 @@ bool virt_map_address_range(
 }
 
 /**
+ * @fn bool virt_map_address_range_random(virt_context_t*, uintptr_t, size_t, virt_memory_type_t, uint32_t)
  * @brief Map random physical pages to virtual range
  *
  * @param ctx context

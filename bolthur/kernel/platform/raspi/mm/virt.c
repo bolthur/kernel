@@ -33,8 +33,9 @@
   #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
 #define MAILBOX_PROPERTY_AREA 0xF3040000
-#
+
 /**
+ * @fn void virt_startup_platform_setup(void)
  * @brief Method to setup short descriptor paging
  */
 __bootstrap void virt_startup_platform_setup( void ) {
@@ -72,6 +73,7 @@ __bootstrap void virt_startup_platform_setup( void ) {
 }
 
 /**
+ * @fn void virt_platform_init(void)
  * @brief Initialize virtual memory management
  */
 void virt_platform_init( void ) {
@@ -147,6 +149,7 @@ void virt_platform_init( void ) {
 }
 
 /**
+ * @fn void virt_platform_post_init(void)
  * @brief Platform post initialization routine
  */
 void virt_platform_post_init( void ) {

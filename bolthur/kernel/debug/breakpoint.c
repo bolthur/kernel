@@ -31,7 +31,11 @@
 list_manager_t* debug_breakpoint_manager = NULL;
 
 /**
+ * @fn bool debug_breakpoint_init(void)
  * @brief Setup breakpoint manager
+ *
+ * @return true
+ * @return false
  */
 bool debug_breakpoint_init( void ) {
   // handle initialized
@@ -44,6 +48,7 @@ bool debug_breakpoint_init( void ) {
 }
 
 /**
+ * @fn debug_breakpoint_entry_t debug_breakpoint_find*(uintptr_t)
  * @brief Helper to get a possible breakpoint
  *
  * @param address
@@ -73,7 +78,11 @@ debug_breakpoint_entry_t* debug_breakpoint_find( uintptr_t address ) {
 }
 
 /**
+ * @fn bool debug_breakpoint_remove_step(void)
  * @brief Method to remove all stepping breakpoints
+ *
+ * @return true
+ * @return false
  */
 bool debug_breakpoint_remove_step( void ) {
   // check for initialized
@@ -105,10 +114,13 @@ bool debug_breakpoint_remove_step( void ) {
 }
 
 /**
+ * @fn bool debug_breakpoint_remove(uintptr_t, bool)
  * @brief Helper to remove a breakpoint
  *
  * @param address
  * @param remove
+ * @return true
+ * @return false
  */
 bool debug_breakpoint_remove( uintptr_t address, bool remove ) {
   // variables
@@ -137,11 +149,14 @@ bool debug_breakpoint_remove( uintptr_t address, bool remove ) {
 }
 
 /**
+ * @fn bool debug_breakpoint_add(uintptr_t, bool, bool)
  * @brief Method to add breakpoint to list
  *
  * @param address
  * @param step
  * @param enable
+ * @return true
+ * @return false
  */
 bool debug_breakpoint_add(
   uintptr_t address,
@@ -180,6 +195,7 @@ bool debug_breakpoint_add(
 }
 
 /**
+ * @fn void debug_breakpoint_disable(void)
  * @brief Method deactivates all breakpoints
  */
 void debug_breakpoint_disable( void ) {
@@ -217,6 +233,7 @@ void debug_breakpoint_disable( void ) {
 }
 
 /**
+ * @fn void debug_breakpoint_enable(void)
  * @brief Method activates all enabled breakpoints
  */
 void debug_breakpoint_enable( void ) {

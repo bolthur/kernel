@@ -49,6 +49,7 @@ static uint8_t serial_buffer[ MAX_SERIAL_BUFFER ];
 static uint32_t index;
 
 /**
+ * @fn uint8_t serial_get_buffer*(void)
  * @brief Method to get serial buffer
  *
  * @return uint8_t*
@@ -58,6 +59,7 @@ uint8_t* serial_get_buffer( void ) {
 }
 
 /**
+ * @fn void serial_flush_buffer(void)
  * @brief Flush serial buffer
  */
 void serial_flush_buffer( void ) {
@@ -66,6 +68,7 @@ void serial_flush_buffer( void ) {
 }
 
 /**
+ * @fn void serial_init(void)
  * @brief Initialize serial port
  */
 void serial_init( void ) {
@@ -143,6 +146,7 @@ void serial_init( void ) {
 }
 
 /**
+ * @fn void serial_clear(void*)
  * @brief serial clear callback
  *
  * @param context cpu context
@@ -197,7 +201,11 @@ static void serial_clear( [[maybe_unused]] void* context ) {
 }
 
 /**
+ * @fn bool serial_register_interrupt(void)
  * @brief register serial interrupt
+ *
+ * @return true
+ * @return false
  */
 bool serial_register_interrupt( void ) {
   // get peripheral base
@@ -214,6 +222,7 @@ bool serial_register_interrupt( void ) {
 }
 
 /**
+ * @fn void serial_putc(uint8_t)
  * @brief Put character to serial
  *
  * @param c character to put
@@ -233,6 +242,7 @@ void serial_putc( uint8_t c ) {
 }
 
 /**
+ * @fn uint8_t serial_getc(void)
  * @brief Get character from serial
  *
  * @return uint8_t Character from serial
@@ -254,6 +264,7 @@ uint8_t serial_getc( void ) {
 }
 
 /**
+ * @fn void serial_flush(void)
  * @brief Flush serial
  */
 void serial_flush( void ) {

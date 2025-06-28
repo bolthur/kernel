@@ -497,6 +497,7 @@ void phys_init( void ) {
 }
 
 /**
+ * @fn bool phys_init_get(void)
  * @brief Get initialized flag
  *
  * @return true physical memory management has been set up

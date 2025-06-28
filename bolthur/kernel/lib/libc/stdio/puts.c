@@ -20,6 +20,7 @@
 #include "../../stdio.h"
 
 /**
+ * @fn int puts(const char*)
  * @brief Print simple string
  *
  * @param string

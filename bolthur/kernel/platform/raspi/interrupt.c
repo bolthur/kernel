@@ -26,6 +26,7 @@
 #include "../../debug/debug.h"
 
 /**
+ * @fn bool interrupt_validate_number(size_t)
  * @brief Helper to validate interrupt number
  *
  * @param num number to validate
@@ -122,6 +123,7 @@ void interrupt_unmask_specific( int8_t num ) {
 }
 
 /**
+ * @fn int8_t interrupt_get_pending(bool)
  * @brief Get pending interrupt
  *
  * @param fast use fast interrupts

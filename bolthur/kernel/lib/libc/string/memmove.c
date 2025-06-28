@@ -22,6 +22,7 @@
 #include "../../string.h"
 
 /**
+ * @fn void memmove*(void*, const void*, size_t)
  * @brief Move Memory from src to destination with length
  *
  * @param dst destination

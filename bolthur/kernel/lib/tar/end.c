@@ -20,6 +20,7 @@
 #include "../tar.h"
 
 /**
+ * @fn bool tar_end_reached(tar_header_t*)
  * @brief Check for tar end is reached
  *
  * @param current tar header to check for end reached

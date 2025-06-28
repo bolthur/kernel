@@ -20,6 +20,7 @@
 #include "../atag.h"
 
 /**
+ * @fn atag_t atag_find*(atag_t*, atag_tag_t)
  * @brief Small helper to get atag if existing
  *
  * @param head

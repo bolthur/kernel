@@ -22,6 +22,7 @@
 #include "../../string.h"
 
 /**
+ * @fn void memchr*(const void*, int, size_t)
  * @brief Locate character in memory
  *
  * @param buf

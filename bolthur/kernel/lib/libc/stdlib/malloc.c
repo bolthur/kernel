@@ -21,6 +21,7 @@
 #include "../../stdlib.h"
 
 /**
+ * @fn void malloc*(size_t)
  * @brief Malloc implementation
  *
  * @param size size to allocate

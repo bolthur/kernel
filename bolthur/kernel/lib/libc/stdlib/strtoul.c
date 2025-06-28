@@ -21,12 +21,15 @@
 #include "../../ctype.h"
 
 /**
+ * @fn unsigned long int strtoul(const char*, char**, int)
  * @brief strtoul
  *
  * @param str
  * @param end
  * @param base
  * @return unsigned long int
+ *
+ * @todo implement handling for end
  */
 unsigned long int strtoul(
   const char* str,

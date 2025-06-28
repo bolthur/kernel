@@ -22,6 +22,7 @@
 #include "../../string.h"
 
 /**
+ * @fn void calloc*(size_t, size_t)
  * @brief continuous allocation
  *
  * @param num amount of entries

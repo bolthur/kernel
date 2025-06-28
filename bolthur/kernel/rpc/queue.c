@@ -70,7 +70,6 @@ bool rpc_queue_ready( task_process_t* proc ) {
   return proc->rpc_queue;
 }
 
-
 /**
  * @fn void rpc_queue_destroy(task_process_t*)
  * @brief Destroy rpc queue

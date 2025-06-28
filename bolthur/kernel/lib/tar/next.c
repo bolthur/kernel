@@ -22,6 +22,7 @@
 #include "../tar.h"
 
 /**
+ * @fn tar_header_t tar_next*(tar_header_t*)
  * @brief Method to get next element within tar file
  *
  * @param current

@@ -30,6 +30,7 @@
 #endif
 
 /**
+ * @fn size_t rpc_data_queue_generate_id(void)
  * @brief Generates new rpc data queue id
  *
  * @return

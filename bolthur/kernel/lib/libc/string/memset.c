@@ -26,6 +26,7 @@
 #define SIZE_TOO_SMALL(size) ( size < U64_BLOCK_SIZE )
 
 /**
+ * @fn void memset*(void*, int, size_t)
  * @brief Fill address with value
  *
  * @param buf buffer to fill

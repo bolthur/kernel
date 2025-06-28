@@ -19,6 +19,13 @@
 
 #include "../../ctype.h"
 
+/**
+ * @fn int isspace(int)
+ * @brief Is space implementation
+ *
+ * @param c
+ * @return
+ */
 int isspace( int c ) {
   return (
     ' ' == c

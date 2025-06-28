@@ -22,6 +22,7 @@
 #include "../../../tty.h"
 
 /**
+ * @fn int putchar(int)
  * @brief Print character at tty
  *
  * @param ic

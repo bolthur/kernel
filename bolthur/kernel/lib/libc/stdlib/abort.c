@@ -23,6 +23,7 @@
 #include "../../../interrupt.h"
 
 /**
+ * @fn void abort(void)
  * @brief Abort routine
  */
 [[noreturn]] void abort( void ) {

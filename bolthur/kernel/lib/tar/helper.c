@@ -21,11 +21,12 @@
 #include "../tar.h"
 
 /**
+ * @fn size_t octal_size_to_int(const char*, size_t)
  * @brief Helper to transform size to integer
  *
  * @param in
  * @param size
- * @return uint64_t
+ * @return size_t
  */
 size_t octal_size_to_int( const char* in, size_t size ) {
   size_t value = 0;

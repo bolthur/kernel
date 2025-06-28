@@ -21,6 +21,7 @@
 #include "../yield.h"
 
 /**
+ * @fn void task_lock_mutex_release(task_lock_mutex_t*)
  * @brief release lock
  *
  * @param m mutex to unlock
@@ -33,6 +34,7 @@ void task_lock_mutex_release( task_lock_mutex_t* m ) {
 }
 
 /**
+ * @fn void task_lock_mutex_acquire(task_lock_mutex_t*)
  * @brief Acquire lock
  *
  * @param m mutex to lock

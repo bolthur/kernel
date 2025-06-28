@@ -26,6 +26,7 @@
 #include "queue.h"
 
 /**
+ * @fn int32_t queue_compare_priority_callback(const avl_node_t*, const avl_node_t*)
  * @brief Compare id callback necessary for avl tree
  *
  * @param a node a
@@ -59,13 +60,17 @@ static int32_t queue_compare_priority_callback(
 }
 
 /**
+ * @fn avl_tree_t task_queue_init*(void)
  * @brief Initialize task process manager
+ *
+ * @return avl_tree_t*
  */
 avl_tree_t* task_queue_init( void ) {
   return avl_create_tree( queue_compare_priority_callback, NULL, NULL );
 }
 
 /**
+ * @fn task_priority_queue_t task_queue_get_queue*(task_manager_t*, size_t)
  * @brief Get the thread queue object
  *
  * @param manager

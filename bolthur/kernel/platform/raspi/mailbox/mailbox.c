@@ -21,6 +21,7 @@
 #include "../peripheral.h"
 
 /**
+ * @fn uint32_t mailbox_read(mailbox0_channel_t, mailbox_type_t)
  * @brief Function for reading mailbox
  *
  * @param channel Function to read via mailbox
@@ -62,6 +63,7 @@ uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
 }
 
 /**
+ * @fn void mailbox_write(mailbox0_channel_t, mailbox_type_t, uint32_t)
  * @brief Function for writing to mailbox
  *
  * @param channel Function to use via mailbox

@@ -20,6 +20,7 @@
 #include "../../string.h"
 
 /**
+ * @fn char strrchr*(const char*, int)
  * @brief get string part starting with delimiter
  *
  * @param str

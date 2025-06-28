@@ -42,7 +42,8 @@ typedef struct {
 } length_modifier_t;
 
 /**
- * @brief
+ * @fn size_t convert_number(char*, uintmax_t, uintmax_t, const char*, bool)
+ * @brief Helper to convert number to string
  *
  * @param destination
  * @param value
@@ -83,6 +84,7 @@ static size_t convert_number(
 }
 
 /**
+ * @fn int print(char*, const char*, const char*, size_t, bool, int32_t)
  * @brief Internal helper for printing a string
  *
  * @param _buffer
@@ -91,8 +93,7 @@ static size_t convert_number(
  * @param length
  * @param zero_padding
  * @param pad
- * @return true
- * @return false
+ * @return int
  */
 static int print(
   char* _buffer,
@@ -155,6 +156,7 @@ static int print(
 }
 
 /**
+ * @fn int vsprintf(char*, const char* restrict, va_list)
  * @brief Simple vsprintf for kernel
  *
  * @param _buffer

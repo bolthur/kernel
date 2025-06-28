@@ -24,6 +24,7 @@
 #include "../../panic.h"
 
 /**
+ * @fn void __assert(const char* restrict, uint32_t, const char* restrict)
  * @brief Assert functionality
  *
  * @param file

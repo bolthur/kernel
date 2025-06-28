@@ -21,6 +21,7 @@
 #include "../../stdio.h"
 
 /**
+ * @fn int sprintf(char*, const char* restrict, ...)
  * @brief Simple sprintf for kernel
  *
  * @param buffer

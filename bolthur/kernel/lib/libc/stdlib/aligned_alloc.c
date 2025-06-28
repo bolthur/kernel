@@ -22,6 +22,7 @@
 #include "../../../mm/heap.h"
 
 /**
+ * @fn void aligned_alloc*(size_t, size_t)
  * @brief aligned memory allocation
  *
  * @param alignment alignment

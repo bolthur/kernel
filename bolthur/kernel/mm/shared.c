@@ -632,7 +632,7 @@ bool shared_memory_address_is_shared(
 
 /**
  * @fn bool shared_memory_fork(task_process_t*, task_process_t*)
-* @brief Method to duplicate shared memory entries during fork
+ * @brief Method to duplicate shared memory entries during fork
  *
  * @param process_to_fork
  * @param process_fork

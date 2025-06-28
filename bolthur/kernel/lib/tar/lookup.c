@@ -22,6 +22,7 @@
 #include "../tar.h"
 
 /**
+ * @fn tar_header_t tar_lookup_file*(uintptr_t, const char*)
  * @brief Lookup for specific tar file
  *
  * @param address

@@ -19,6 +19,13 @@
 
 #include "../../ctype.h"
 
+/**
+ * @fn int isdigit(int)
+ * @brief Is digit implementation
+ *
+ * @param c
+ * @return
+ */
 int isdigit( int c ) {
   return (
     '0' <= c

@@ -21,6 +21,7 @@
 #include "../../../mm/heap.h"
 
 /**
+ * @fn void free(void*)
  * @brief Free allocated area
  *
  * @param ptr ptr to address to free
