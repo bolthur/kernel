@@ -33,6 +33,7 @@
 #include "../../../mm/virt/short.h"
 #include "short.h"
 #include "../../../../../mm/virt.h"
+#include "../../register/sctlr.h"
 
 /**
  * @brief Temporary space start for short format
@@ -134,13 +135,13 @@ __bootstrap void v7_short_startup_map( uintptr_t phys, uintptr_t virt ) {
  * @brief Method to enable initial virtual memory
  */
 __bootstrap void v7_short_startup_enable( void ) {
-  uint32_t reg;
+  sctlr_t reg;
   // Get content from control register
-  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg.raw ) : : "cc" );
   // enable mmu by setting bit 0
-  reg |= 1;
+  reg.data.mmu = 1;
   // push back value with mmu enabled bit set
-  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
+  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg.raw ) : "cc" );
 }
 
 /**
@@ -1546,33 +1547,33 @@ bool v7_short_destroy_context( virt_context_t* ctx, bool unmap_only ) {
  * @brief Method to prepare
  */
 void v7_short_prepare( void ) {
-  uint32_t reg;
+  sctlr_t reg;
   // load sctlr register content
   __asm__ __volatile__(
     "mrc p15, 0, %0, c1, c0, 0"
-    : "=r" ( reg )
+    : "=r" ( reg.raw )
     : : "cc"
   );
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg )
+    DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg.raw )
   #endif
 
-  // set access flag to 1 within sctlr
-  reg |= ( 1 << 29 );
+  // set access flag to 0 within sctlr
+  reg.data.access_flag_enable = 0;
   // set TRE flag to 0 within sctlr
-  reg &= ( uint32_t )( ~( 1 << 29 ) );
+  reg.data.tex_remap_enable = 0;
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg )
+    DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg.raw )
   #endif
 
   // write back changes
   __asm__ __volatile__(
     "mcr p15, 0, %0, c1, c0, 0"
-    : : "r" ( reg )
+    : : "r" ( reg.raw )
     : "cc"
   );
 }

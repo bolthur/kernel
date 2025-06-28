@@ -30,6 +30,7 @@
 #include "../../../barrier.h"
 #include "../../../cache.h"
 #include "long.h"
+#include "../../register/sctlr.h"
 
 /**
  * @brief Temporary space start for long descriptor format
@@ -155,13 +156,13 @@ __bootstrap void v7_long_startup_map( uint64_t phys, uintptr_t virt ) {
  * @brief Method to enable initial virtual memory
  */
 __bootstrap void v7_long_startup_enable( void ) {
-  uint32_t reg;
+  sctlr_t reg;
   // Get content from control register
-  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg.raw ) : : "cc" );
   // enable mmu by setting bit 0
-  reg |= 1;
+  reg.data.mmu = 1;
   // push back value with mmu enabled bit set
-  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
+  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg.raw ) : "cc" );
 }
 
 /**
