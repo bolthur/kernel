@@ -19,5 +19,9 @@
 
 #include "../../../arch.h"
 
+/**
+ * @fn void arch_sub_init(void)
+ * @brief arch sub init stuff goes here
+ */
 void arch_sub_init( void ) {
 }

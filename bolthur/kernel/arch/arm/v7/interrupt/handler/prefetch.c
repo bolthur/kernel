@@ -40,6 +40,7 @@
 static uint32_t nested_prefetch_abort = 0;
 
 /**
+ * @fn void vector_prefetch_abort_handler(cpu_register_context_t*)
  * @brief Prefetch abort exception handler
  *
  * @param cpu cpu context

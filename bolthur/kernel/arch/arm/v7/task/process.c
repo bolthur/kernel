@@ -38,7 +38,6 @@
 /**
  * @fn void task_process_start(void)
  * @brief Start multitasking with first ready task
- *
  */
 void task_process_start( void ) {
   // debug output
@@ -283,10 +282,11 @@ void task_process_schedule( [[maybe_unused]] event_origin_t origin, void* contex
 }
 
 /**
+ * @fn uintptr_t task_process_prepare_init_arch(task_process_t*)
  * @brief prepare init process by mapping device tree
  *
  * @param proc pointer to init process structure
- * @return bool true on success, else false
+ * @return
  */
 uintptr_t task_process_prepare_init_arch( task_process_t* proc ) {
   // get possible device tree

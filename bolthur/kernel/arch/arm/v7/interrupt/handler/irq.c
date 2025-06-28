@@ -35,6 +35,7 @@
 static uint32_t nested_interrupt = 0;
 
 /**
+ * @fn void vector_interrupt_handler(cpu_register_context_t*)
  * @brief Interrupt request exception handler
  *
  * @param cpu cpu context

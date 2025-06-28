@@ -20,6 +20,7 @@
 #include "../../../../debug/breakpoint.h"
 
 /**
+ * @fn uintptr_t debug_breakpoint_get_instruction(void)
  * @brief Method to get breakpoint instruction
  *
  * @return uintptr_t

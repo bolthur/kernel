@@ -22,6 +22,7 @@
 #include "../../../../debug/disasm.h"
 
 /**
+ * @fn uintptr_t debug_disasm_next_instruction*(uintptr_t, uintptr_t, void*)
  * @brief Get next address for stepping
  *
  * @param address
@@ -34,7 +35,7 @@
 uintptr_t* debug_disasm_next_instruction(
   uintptr_t address,
   uintptr_t stack,
-  [[maybe_unused]] void* context
+  void* context
 ) {
   // static array for up to two instruction addresses
   static uintptr_t next_instruction[ DEBUG_DISASM_MAX_INSTRUCTION ];

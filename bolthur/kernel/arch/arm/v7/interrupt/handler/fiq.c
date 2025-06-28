@@ -33,6 +33,7 @@
 static uint32_t nested_fast_interrupt = 0;
 
 /**
+ * @fn void vector_fast_interrupt_handler(cpu_register_context_t*)
  * @brief Fast interrupt request exception handler
  *
  * @param cpu cpu context

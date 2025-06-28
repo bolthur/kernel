@@ -23,7 +23,6 @@
 /**
  * @fn void debug_cache_finish_operation(void)
  * @brief finish cache after operation
- *
  */
 void debug_cache_finish_operation( void ) {
   debug_cache_invalidate_instruction_cache();

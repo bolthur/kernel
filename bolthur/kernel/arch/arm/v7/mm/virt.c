@@ -35,6 +35,7 @@
 static bool initial_setup_done __bootstrap_data = false;
 
 /**
+ * @fn void virt_startup_setup(void)
  * @brief Method wraps setup of short / long descriptor mode
  */
 __bootstrap void virt_startup_setup( void ) {
@@ -68,6 +69,7 @@ __bootstrap void virt_startup_setup( void ) {
 }
 
 /**
+ * @fn void virt_startup_map(uint64_t, uintptr_t)
  * @brief Mapper function using short or long descriptor mapping depending on support
  *
  * @param phys physical address
@@ -98,6 +100,7 @@ __bootstrap void virt_startup_map( uint64_t phys, uintptr_t virt ) {
 }
 
 /**
+ * @fn void virt_startup_flush(void)
  * @brief Flush set context
  */
 __bootstrap void virt_startup_flush( void ) {
@@ -109,6 +112,7 @@ __bootstrap void virt_startup_flush( void ) {
 }
 
 /**
+ * @fn bool virt_map_address(virt_context_t*, uintptr_t, uint64_t, virt_memory_type_t, uint32_t)
  * @brief Map physical address to virtual one
  *
  * @param ctx pointer to page context
@@ -146,6 +150,7 @@ bool virt_map_address(
 }
 
 /**
+ * @fn bool virt_map_address_random(virt_context_t*, uintptr_t, virt_memory_type_t, uint32_t)
  * @brief Map virtual address with random physical one
  *
  * @param ctx pointer to context
@@ -181,6 +186,7 @@ bool virt_map_address_random(
 }
 
 /**
+ * @fn uintptr_t virt_map_temporary(uint64_t, size_t)
  * @brief Map a physical address within temporary space
  *
  * @param paddr physical address
@@ -204,6 +210,7 @@ uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
 }
 
 /**
+ * @fn bool virt_unmap_address(virt_context_t*, uintptr_t, bool)
  * @brief unmap virtual address
  *
  * @param ctx pointer to page context
@@ -233,6 +240,7 @@ bool virt_unmap_address( virt_context_t* ctx, uintptr_t addr, bool free_phys ) {
 }
 
 /**
+ * @fn void virt_unmap_temporary(uintptr_t, size_t)
  * @brief Unmap temporary mapped page again
  *
  * @param addr virtual temporary address
@@ -255,6 +263,7 @@ void virt_unmap_temporary( uintptr_t addr, size_t size ) {
 }
 
 /**
+ * @fn virt_context_t virt_create_context*(virt_context_type_t)
  * @brief Method to create virtual context
  *
  * @param type context type
@@ -365,6 +374,7 @@ bool virt_destroy_context( virt_context_t* ctx, bool unmap_only ) {
 }
 
 /**
+ * @fn uint64_t virt_create_table(virt_context_t*, uintptr_t, uint64_t)
  * @brief Method to create table
  *
  * @param ctx context to create table for
@@ -398,6 +408,7 @@ uint64_t virt_create_table(
 }
 
 /**
+ * @fn bool virt_set_context(virt_context_t*)
  * @brief Method to enable given context
  *
  * @param ctx context structure
@@ -426,6 +437,7 @@ bool virt_set_context( virt_context_t* ctx ) {
 }
 
 /**
+ * @fn void virt_flush_complete(void)
  * @brief Flush set context
  */
 void virt_flush_complete( void ) {
@@ -445,6 +457,7 @@ void virt_flush_complete( void ) {
 }
 
 /**
+ * @fn void virt_flush_address(virt_context_t*, uintptr_t)
  * @brief Flush specific address mapping
  *
  * @param ctx used context
@@ -479,6 +492,7 @@ void virt_flush_address( virt_context_t* ctx, uintptr_t addr ) {
 }
 
 /**
+ * @fn bool virt_prepare_temporary(virt_context_t*)
  * @brief Method to prepare temporary area
  *
  * @param ctx context structure
@@ -506,6 +520,7 @@ bool virt_prepare_temporary( virt_context_t* ctx ) {
 }
 
 /**
+ * @fn void virt_arch_prepare(void)
  * @brief Method to prepare
  */
 void virt_arch_prepare( void ) {
@@ -525,6 +540,7 @@ void virt_arch_prepare( void ) {
 }
 
 /**
+ * @fn bool virt_is_mapped_in_context(virt_context_t*, uintptr_t)
  * @brief Method checks whether address is mapped or not without generating exceptions
  *
  * @param ctx
@@ -586,6 +602,7 @@ uint64_t virt_get_mapped_address_in_context(
 }
 
 /**
+ * @fn uintptr_t virt_prefetch_fault_address(void)
  * @brief Get prefetch fault address
  *
  * @return
@@ -607,6 +624,7 @@ uintptr_t virt_prefetch_fault_address( void ) {
 }
 
 /**
+ * @fn uintptr_t virt_prefetch_status(void)
  * @brief Get prefetch abort status
  *
  * @return
@@ -628,6 +646,7 @@ uintptr_t virt_prefetch_status( void ) {
 }
 
 /**
+ * @fn uintptr_t virt_data_fault_address(void)
  * @brief Get data abort status
  *
  * @return
@@ -649,6 +668,7 @@ uintptr_t virt_data_fault_address( void ) {
 }
 
 /**
+ * @fn uintptr_t virt_data_status(void)
  * @brief Get data abort status
  *
  * @return data abort address

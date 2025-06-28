@@ -40,6 +40,7 @@
 static uint32_t nested_data_abort = 0;
 
 /**
+ * @fn void vector_data_abort_handler(cpu_register_context_t*)
  * @brief Data abort exception handler
  *
  * @param cpu cpu context

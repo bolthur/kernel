@@ -24,6 +24,7 @@
 #include "debug.h"
 
 /**
+ * @fn bool debug_check_data_fault_status(void)
  * @brief Helper to check dfsr for debug exception
  *
  * @return true
@@ -61,6 +62,7 @@ bool debug_check_data_fault_status( void ) {
 }
 
 /**
+ * @fn bool debug_check_instruction_fault(void)
  * @brief Helper to check ifsr for debug exception
  *
  * @return true
@@ -98,6 +100,7 @@ bool debug_check_instruction_fault( void ) {
 }
 
 /**
+ * @fn bool debug_is_debug_exception(void)
  * @brief Check for exception is a debug exception
  *
  * @return true

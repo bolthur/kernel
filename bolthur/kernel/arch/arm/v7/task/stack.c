@@ -28,6 +28,7 @@
 #endif
 
 /**
+ * @fn uintptr_t task_stack_manager_next(task_stack_manager_t*)
  * @brief Get next virtual stack address
  *
  * @param manager

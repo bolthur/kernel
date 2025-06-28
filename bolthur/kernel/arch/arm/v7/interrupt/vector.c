@@ -36,6 +36,7 @@ void interrupt_vector_init( void ) {
 
 #if defined( REMOTE_DEBUG )
   /**
+   * @fn void debug_cleanup_status_flag(event_origin_t, void*)
    * @brief Handler to cleanup status flags
    *
    * @param origin
@@ -60,6 +61,7 @@ void interrupt_vector_init( void ) {
 #endif
 
 /**
+ * @fn void interrupt_post_init(void)
  * @brief Post interrupt initialization
  */
 void interrupt_post_init( void ) {
@@ -70,6 +72,7 @@ void interrupt_post_init( void ) {
 }
 
 /**
+ * @fn void interrupt_ensure_kernel_stack(void)
  * @brief Helper to assert kernel stack!
  */
 void interrupt_ensure_kernel_stack( void ) {

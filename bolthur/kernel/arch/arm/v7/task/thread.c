@@ -35,6 +35,7 @@
 #include "../cpu.h"
 
 /**
+ * @fn task_thread_t task_thread_create*(uintptr_t, task_process_t*, size_t)
  * @brief Method to create thread structure
  *
  * @param entry entry point of the thread
@@ -337,7 +338,6 @@ task_thread_t* task_thread_fork(
 
   return thread;
 }
-
 
 /**
  * @fn bool task_thread_push_arguments(task_thread_t*, char**)

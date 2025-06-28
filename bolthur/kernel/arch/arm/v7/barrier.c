@@ -20,6 +20,7 @@
 #include "../barrier.h"
 
 /**
+ * @fn void barrier_data_mem(void)
  * @brief Data memory barrier invalidation
  */
 void barrier_data_mem( void ) {
@@ -27,6 +28,7 @@ void barrier_data_mem( void ) {
 }
 
 /**
+ * @fn void barrier_data_sync(void)
  * @brief Data sync barrier invalidation
  */
 void barrier_data_sync( void ) {
@@ -34,6 +36,7 @@ void barrier_data_sync( void ) {
 }
 
 /**
+ * @fn void barrier_instruction_sync(void)
  * @brief Instruction synchronization invalidation
  */
 void barrier_instruction_sync( void ) {
