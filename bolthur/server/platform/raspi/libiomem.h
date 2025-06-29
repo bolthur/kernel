@@ -111,6 +111,7 @@ struct iomem_mmio_entry {
   // dma stuff
   uint32_t dma_copy_size;
   uint32_t dma_permap;
+  uint32_t dma_burst_length;
 };
 typedef struct iomem_mmio_entry iomem_mmio_entry_t;
 typedef struct iomem_mmio_entry iomem_mmio_entry_array_t[];

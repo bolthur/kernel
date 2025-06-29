@@ -750,6 +750,13 @@ void rpc_handle_mmio_perform(
             dma_error = true;
             continue;
           }
+          if ( 0 != dma_block_transfer_info_burst_length( ( *mmio_request )[ i ].dma_burst_length ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
           // start dma
           if ( 0 != dma_start() ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
@@ -930,6 +937,13 @@ void rpc_handle_mmio_perform(
             continue;
           }
           if ( 0 != dma_block_transfer_info_interrupt_enable( true ) ) {
+            dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            dma_error = true;
+            continue;
+          }
+          if ( 0 != dma_block_transfer_info_burst_length( ( *mmio_request )[ i ].dma_burst_length ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
             ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;

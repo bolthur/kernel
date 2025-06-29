@@ -498,6 +498,30 @@ int dma_wait(
       last_error = -ETIMEDOUT;
       return -1;
     }
+    // handle possible error
+    if ( value & LIBDMA_CS_ERROR ) {
+      // query debug register of dma channel
+      uint32_t debug = mmio_read( PERIPHERAL_DMA0_DEBUG );
+      // check for read error
+      if ( debug & LIBDMA_DEBUG_READ_ERROR ) {
+        EARLY_STARTUP_PRINT( "ERROR WHILE READING!\r\n" );
+      }
+      // check for fifo error
+      if ( debug & LIBDMA_DEBUG_FIFO_ERROR ) {
+        EARLY_STARTUP_PRINT( "FIFO ERROR!\r\n" )
+      }
+      // check for read last not set error
+      if ( debug & LIBDMA_DEBUG_READ_LAST_NOT_SET_ERROR ) {
+        EARLY_STARTUP_PRINT( "READ LAST NOT SET ERROR\r\n" );
+      }
+      // dump everything
+      dma_dump();
+      // return error
+      return -1;
+    }
+    if ( value & LIBDMA_CS_INT ) {
+      EARLY_STARTUP_PRINT( "INTERRUPT PENDING!\r\n" );
+    }
     // apply possible sleep
     if ( ! ( value & LIBDMA_CS_END ) ) {
       apply_sleep( sleep_type, sleep_value );

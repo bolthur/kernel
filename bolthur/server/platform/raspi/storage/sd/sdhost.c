@@ -1174,13 +1174,16 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
           : "Perform DMA write\r\n" )
       #endif
       idx++;
+      uint32_t copy_size = device->block_count * device->block_size;
+      uint32_t necessary_word = copy_size / sizeof( uint32_t );
       sequence[ idx ].type = ( command & SDHOST_COMMAND_FLAG_READ )
         ? IOMEM_MMIO_ACTION_DMA_READ_DEV
         : IOMEM_MMIO_ACTION_DMA_WRITE_DEV;
       sequence[ idx ].value = shm_id;
       sequence[ idx ].offset = PERIPHERAL_SDHOST_DATAPORT;
-      sequence[ idx ].dma_copy_size = device->block_count * device->block_size;
+      sequence[ idx ].dma_copy_size = copy_size;
       sequence[ idx ].dma_permap = LIBDMA_TI_PERMAP_SDHOST;
+      sequence[ idx ].dma_burst_length = necessary_word > SDHOST_DATA_FIFO_PIO_BURST ? SDHOST_DATA_FIFO_PIO_BURST : necessary_word;
       #if defined( SDHOST_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "dma_copy_size = %"PRIu32"\r\n", sequence[ idx ].dma_copy_size )
       #endif
