@@ -37,6 +37,11 @@ bool rpc_init( void ) {
     EARLY_STARTUP_PRINT( "Unable to register handler close!\r\n" )
     return false;
   }
+  bolthur_rpc_bind( RPC_VFS_EXEC, rpc_handle_exec, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler exec!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( RPC_VFS_EXIT, rpc_handle_exit, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler exit!\r\n" )

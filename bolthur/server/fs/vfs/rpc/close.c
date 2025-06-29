@@ -73,7 +73,7 @@ void rpc_handle_close_async(
     return;
   }
   // destroy handle
-  response.status = handle_destory(
+  response.status = handle_destroy(
     async_data->original_origin,
     request->handle
   );

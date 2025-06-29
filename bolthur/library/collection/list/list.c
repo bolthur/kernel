@@ -23,6 +23,7 @@
 #include "list.h"
 
 /**
+ * @fn int32_t list_default_lookup(const list_item_t*, const void*)
  * @brief Default lookup if not passed during creation
  *
  * @param a
@@ -34,6 +35,7 @@ int32_t list_default_lookup( const list_item_t* a, const void* b ) {
 }
 
 /**
+ * @fn void list_default_cleanup(list_item_t*)
  * @brief Default cleanup if not passed during creation
  *
  * @param a
@@ -44,6 +46,7 @@ void list_default_cleanup( list_item_t* a ) {
 }
 
 /**
+ * @fn bool list_default_insert(list_manager_t*, void*)
  * @brief Default insert callback
  *
  * @param list
@@ -55,6 +58,7 @@ bool list_default_insert( list_manager_t* list, void* data ) {
 }
 
 /**
+ * @fn list_manager_t list_construct*(list_lookup_func_t, list_cleanup_func_t, list_insert_func_t)
  * @brief Method to construct list
  *
  * @param lookup
@@ -103,6 +107,7 @@ list_manager_t* list_construct(
 }
 
 /**
+ * @fn void list_destruct(list_manager_t*)
  * @brief Method to destruct list
  *
  * @param list list to use
@@ -135,8 +140,10 @@ void list_destruct( list_manager_t* list ) {
 }
 
 /**
+ * @fn bool list_empty(list_manager_t*)
  * @brief Method checks for list is empty
  *
+ * @param list
  * @return true empty list
  * @return false at least one item
  */
@@ -157,6 +164,7 @@ bool list_empty( list_manager_t* list ) {
 }
 
 /**
+ * @fn list_item_t list_lookup_data*(list_manager_t*, void*)
  * @brief Search a list item by data
  *
  * @param list list to lookup
@@ -187,6 +195,7 @@ list_item_t* list_lookup_data( list_manager_t* list, void* data ) {
 }
 
 /**
+ * @fn list_item_t list_lookup_item*(list_manager_t*, const list_item_t*)
  * @brief Search a list item by item
  *
  * @param list list to lookup
@@ -218,6 +227,7 @@ list_item_t* list_lookup_item( list_manager_t* list, const list_item_t* item ) {
 }
 
 /**
+ * @fn list_item_t list_item_create*(void*)
  * @brief Helper for creating a list node
  *
  * @param data data to populate
@@ -243,6 +253,7 @@ list_item_t* list_item_create( void* data ) {
 }
 
 /**
+ * @fn void list_peek_front_data*(list_manager_t*)
  * @brief Method to get element from list like pop without removal
  *
  * @param list list to use
@@ -267,6 +278,7 @@ void* list_peek_front_data( list_manager_t* list ) {
 }
 
 /**
+ * @fn void list_peek_back_data*(list_manager_t*)
  * @brief Method to get element from list like pop without removal
  *
  * @param list list to use
@@ -291,6 +303,7 @@ void* list_peek_back_data( list_manager_t* list ) {
 }
 
 /**
+ * @fn void list_pop_front_data*(list_manager_t*)
  * @brief Method to pop element from list
  *
  * @param list list to use
@@ -334,6 +347,7 @@ void* list_pop_front_data( list_manager_t* list ) {
 }
 
 /**
+ * @fn void list_pop_back_data*(list_manager_t*)
  * @brief Method to pop element from list
  *
  * @param list list to use
@@ -377,6 +391,7 @@ void* list_pop_back_data( list_manager_t* list ) {
 }
 
 /**
+ * @fn void list_print(list_manager_t*)
  * @brief Method to print list
  *
  * @param list list to use
@@ -400,6 +415,7 @@ void list_print( list_manager_t* list ) {
 }
 
 /**
+ * @fn bool list_push_front_data(list_manager_t*, void*)
  * @brief Method to push node with data into list
  *
  * @param list list to use
@@ -443,6 +459,7 @@ bool list_push_front_data( list_manager_t* list, void* data ) {
 }
 
 /**
+ * @fn bool list_push_back_data(list_manager_t*, void*)
  * @brief Method to push node with data into list
  *
  * @param list list to use
@@ -486,6 +503,7 @@ bool list_push_back_data( list_manager_t* list, void* data ) {
 }
 
 /**
+ * @fn bool list_remove_item(list_manager_t*, list_item_t*)
  * @brief Remove list item
  *
  * @param list
@@ -528,6 +546,7 @@ bool list_remove_item( list_manager_t* list, list_item_t* item ) {
 }
 
 /**
+ * @fn bool list_remove_data(list_manager_t*, void*)
  * @brief Remove list item
  *
  * @param list
@@ -572,6 +591,7 @@ bool list_remove_data( list_manager_t* list, void* data ) {
 }
 
 /**
+ * @fn bool list_insert_data(list_manager_t*, void*)
  * @brief Insert data with insert callback
  *
  * @param list
@@ -583,6 +603,7 @@ bool list_insert_data( list_manager_t* list, void* data ) {
 }
 
 /**
+ * @fn bool list_insert_data_before(list_manager_t*, list_item_t*, void*)
  * @brief Insert data before item
  *
  * @param list
@@ -618,6 +639,7 @@ bool list_insert_data_before(
 }
 
 /**
+ * @fn size_t list_count_item(list_manager_t*)
  * @brief Method to count list items
  *
  * @param list
@@ -634,6 +656,7 @@ size_t list_count_item( list_manager_t* list ) {
 }
 
 /**
+ * @fn list_item_t list_get_item_at_pos*(list_manager_t*, size_t)
  * @brief Helper to get item at position
  *
  * @param list

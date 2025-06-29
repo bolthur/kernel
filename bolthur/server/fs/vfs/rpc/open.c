@@ -177,7 +177,7 @@ void rpc_handle_open_async(
   }
   // handle error
   if ( 0 > open_response->handle ) {
-    handle_destory( request->origin, request->handle );
+    handle_destroy( request->origin, request->handle );
     response.handle = open_response->handle;
     bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
     free( open_response );

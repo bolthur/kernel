@@ -243,12 +243,12 @@ int handle_generate(
 }
 
 /**
- * @fn void handle_destory_all(pid_t)
+ * @fn void handle_destroy_all(pid_t)
  * @brief Destroy all handles of a process
  *
  * @param process
  */
-void handle_destory_all( pid_t process ) {
+void handle_destroy_all( pid_t process ) {
   // get process container
   process_node_t* process_container = process_generate( process );
   if ( ! process_container ) {
@@ -270,7 +270,7 @@ void handle_destory_all( pid_t process ) {
  * @param handle
  * @return
  */
-int handle_destory( pid_t process, int handle ) {
+int handle_destroy( pid_t process, int handle ) {
   // get process container
   process_node_t* process_container = process_generate( process );
   if ( ! process_container ) {

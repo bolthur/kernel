@@ -106,7 +106,7 @@ void rpc_handle_close(
   free( container->data );
   free( container );
   // destroy handle
-  handle_destory( request->origin, request->handle );
+  handle_destroy( request->origin, request->handle );
   // set success
   response.status = 0;
   // return data
