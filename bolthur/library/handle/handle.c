@@ -297,3 +297,21 @@ int handle_destroy( pid_t process, int handle ) {
   // return success
   return 0;
 }
+
+/**
+ * @fn handle_node_t handle_get_next*(pid_t)
+ * @brief Method to get next handl by node
+ *
+ * @param process
+ * @return
+ */
+handle_node_t* handle_get_next( pid_t process ) {
+  // get process container
+  process_node_t* process_container = process_generate( process );
+  if ( ! process_container ) {
+    errno = EBADF;
+    return NULL;
+  }
+  // get next handle
+  return handle_node_tree_min( &process_container->management_tree );
+}

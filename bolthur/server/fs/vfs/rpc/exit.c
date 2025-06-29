@@ -40,6 +40,7 @@ void rpc_handle_exit(
   [[maybe_unused]] size_t response_info
 ) {
   vfs_close_response_t response = { .status = -EINVAL };
+  /// FIXME: Perform async close calls as long as handle list is not empty
   // destroy all handles of origin
   handle_destroy_all( origin );
   // FIXME: Remove all files where current origin is handler, e.g. devices

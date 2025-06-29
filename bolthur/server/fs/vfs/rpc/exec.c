@@ -58,7 +58,7 @@ void rpc_handle_exec(
   }
   // free up unused request
   free( request );
-  /// FIXME: IMPLEMENT LOGIC
+  /// FIXME: Perform async close calls as long as handle list is not empty
   // send success
   response.result = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL );
