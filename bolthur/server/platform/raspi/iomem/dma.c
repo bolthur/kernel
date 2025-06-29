@@ -76,6 +76,13 @@ static void dma_reset_channel( uint32_t channel_cs ) {
   while ( mmio_read( channel_cs ) & ( uint32_t )LIBDMA_CS_RESET ) {
     __asm__ __volatile__( "nop" );
   }
+  // read value again
+  uint32_t value = mmio_read( channel_cs );
+  if ( value & LIBDMA_CS_INT ) {
+    value &= ( uint32_t )~LIBDMA_CS_INT;
+  }
+  // write back masked interrupt
+  mmio_write( channel_cs, value );
 }
 
 /**
