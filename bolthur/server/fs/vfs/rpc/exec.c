@@ -35,6 +35,8 @@
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo asynchronously close all open handles
  */
 void rpc_handle_exec(
   size_t type,

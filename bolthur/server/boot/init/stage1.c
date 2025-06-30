@@ -79,7 +79,7 @@ void init_stage1( void ) {
   size_t vfs_size;
   void* vfs_image = ramdisk_lookup( disk, "ramdisk/server/fs/vfs", &vfs_size );
   if ( ! vfs_image ) {
-    EARLY_STARTUP_PRINT( "VFS not found for start!\r\n" );
+    EARLY_STARTUP_PRINT( "VFS not found!\r\n" );
     exit( -1 );
   }
   EARLY_STARTUP_PRINT( "VFS image: %p!\r\n", vfs_image );
@@ -87,10 +87,8 @@ void init_stage1( void ) {
   EARLY_STARTUP_PRINT( "Forking process for vfs start!\r\n" );
   pid_t forked_process = _syscall_process_fork();
   if ( errno ) {
-    EARLY_STARTUP_PRINT(
-      "Unable to fork process for vfs replace: %s\r\n",
-      strerror( errno )
-    )
+    EARLY_STARTUP_PRINT( "Unable to fork process\r\n" )
+    EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
     exit( -1 );
   }
   // fork only
@@ -100,12 +98,15 @@ void init_stage1( void ) {
     size_t dev_size;
     void* dev_image = ramdisk_lookup( disk, "ramdisk/server/fs/dev", &dev_size );
     if ( ! dev_image ) {
+      EARLY_STARTUP_PRINT( "dev server not found!\r\n" )
       exit( -1 );
     }
     // fork process and handle possible error
+    EARLY_STARTUP_PRINT( "Forking process for dev start!\r\n" )
     pid_t inner_forked_process = _syscall_process_fork();
     if ( errno ) {
-      EARLY_STARTUP_PRINT( "Unable to fork process: %s\r\n", strerror( errno ) )
+      EARLY_STARTUP_PRINT( "Unable to fork process\r\n" )
+      EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
       exit( -1 );
     }
 
@@ -114,10 +115,8 @@ void init_stage1( void ) {
       EARLY_STARTUP_PRINT( "Replacing fork with vfs image %p!\r\n", vfs_image );
       _syscall_process_replace( vfs_image, NULL, NULL );
       if ( errno ) {
-        EARLY_STARTUP_PRINT(
-          "Unable to replace process with image: %s\r\n",
-          strerror( errno )
-        )
+        EARLY_STARTUP_PRINT( "Unable to replace process with image\r\n" )
+        EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
         exit( -1 );
       }
     }
@@ -132,12 +131,15 @@ void init_stage1( void ) {
       // start /dev/ramdisk
       void* ramdisk_image = ramdisk_lookup( disk, "ramdisk/server/fs/ramdisk", NULL );
       if ( ! ramdisk_image ) {
+        EARLY_STARTUP_PRINT( "ramdisk server not found!\r\n" )
         exit( -1 );
       }
       // fork process and handle possible error
+      EARLY_STARTUP_PRINT( "Forking process for ramdisk start!\r\n" )
       inner_forked_process = _syscall_process_fork();
       if ( errno ) {
-        EARLY_STARTUP_PRINT( "Unable to fork process: %s\r\n", strerror( errno ) )
+        EARLY_STARTUP_PRINT( "Unable to fork process\r\n" )
+        EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
         exit( -1 );
       }
       if ( 0 == inner_forked_process ) {
@@ -147,10 +149,8 @@ void init_stage1( void ) {
         // call for replace and handle error
         _syscall_process_replace( ramdisk_image, ramdisk_cmd, NULL );
         if ( errno ) {
-          EARLY_STARTUP_PRINT(
-            "Unable to replace process with image: %s\r\n",
-            strerror( errno )
-          )
+          EARLY_STARTUP_PRINT( "Unable to replace process with image\r\n" )
+          EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
           exit( -1 );
         }
       }
@@ -162,12 +162,15 @@ void init_stage1( void ) {
         NULL
       );
       if ( ! authentication_image ) {
+        EARLY_STARTUP_PRINT( "authentication server not found!\r\n" )
         exit( -1 );
       }
       // fork process and handle possible error
+      EARLY_STARTUP_PRINT( "Forking process for authenticate start!\r\n" )
       inner_forked_process = _syscall_process_fork();
       if ( errno ) {
-        EARLY_STARTUP_PRINT( "Unable to fork process: %s\r\n", strerror( errno ) )
+        EARLY_STARTUP_PRINT( "Unable to fork process\r\n" )
+        EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
         exit( -1 );
       }
       if ( 0 == inner_forked_process ) {
@@ -177,10 +180,8 @@ void init_stage1( void ) {
         // call for replace and handle error
         _syscall_process_replace( authentication_image, authentication_cmd, NULL );
         if ( errno ) {
-          EARLY_STARTUP_PRINT(
-            "Unable to replace process with image: %s\r\n",
-            strerror( errno )
-          )
+          EARLY_STARTUP_PRINT( "Unable to replace process with image\r\n" )
+          EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
           exit( -1 );
         }
       }
@@ -197,10 +198,8 @@ void init_stage1( void ) {
         // call for replace and handle error
         _syscall_process_replace( dev_image, dev_cmd, NULL );
         if ( errno ) {
-          EARLY_STARTUP_PRINT(
-            "Unable to replace process with image: %s\r\n",
-            strerror( errno )
-          )
+          EARLY_STARTUP_PRINT( "Unable to replace process with image\r\n" )
+          EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
           exit( -1 );
         }
       }
