@@ -396,6 +396,9 @@ task_process_t* task_process_create( size_t priority, pid_t parent ) {
  * @return forked process structure or null
  */
 task_process_t* task_process_fork( task_thread_t* thread_calling ) {
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Allocate process structure\r\n" )
+  #endif
   // reserve new process structure
   task_process_t* forked = malloc( sizeof( *forked ) );
   if ( ! forked ) {
@@ -405,29 +408,52 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
   task_process_t* proc = thread_calling->process;
 
   // prepare dynamic data structures
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Initialize thread manager\r\n" )
+  #endif
   forked->thread_manager = task_thread_init();
   if ( ! forked->thread_manager ) {
     task_process_free( forked );
     return NULL;
   }
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Initialize thread stack manager\r\n" )
+  #endif
   forked->thread_stack_manager = task_stack_manager_create();
   if ( ! forked->thread_stack_manager ) {
     task_process_free( forked );
     return NULL;
   }
+  // fork shared memory structures
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Handling shared memory\r\n" )
+  #endif
+  if ( ! shared_memory_fork( proc, forked ) ) {
+    task_process_free( forked );
+    return NULL;
+  }
   // fork virtual context
-  forked->virtual_context = virt_fork_context( proc->virtual_context );
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Fork virtual context\r\n" )
+  #endif
+  forked->virtual_context = virt_fork_context( proc->virtual_context, forked );
   if ( ! forked->virtual_context ) {
     task_process_free( forked );
     return NULL;
   }
   // create message queue if existing
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "RPC queue setup\r\n" )
+  #endif
   if ( proc->rpc_queue && ! rpc_queue_setup( forked ) ) {
     task_process_free( forked );
     return NULL;
   }
-  // create mailbox if existing
+  // erase mailbox if existing
   if ( proc->rpc_mailbox_virt && proc->rpc_mailbox ) {
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "Clearing mailbox stuff\r\n" )
+    #endif
     // unmap if existing
     virt_unmap_address( forked->virtual_context, proc->rpc_mailbox_virt, true );
     // reset properties
@@ -444,20 +470,20 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
   forked->priority = proc->priority;
   forked->current_thread_id = 0;
 
-  // fork shared memory
-  if ( ! shared_memory_fork( proc, forked ) ) {
-    task_process_free( forked );
-    return NULL;
-  }
-
   // prepare node
   avl_prepare_node( &forked->node_id, ( void* )forked->id );
   // add process to tree
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Insert node into process tree\r\n" )
+  #endif
   if ( ! avl_insert_by_node( process_manager->process_id, &forked->node_id ) ) {
     task_process_free( forked );
     return NULL;
   }
 
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Looping through threads\r\n" )
+  #endif
   avl_node_t* current = avl_iterate_first( proc->thread_manager );
   while ( current ) {
     // get thread
@@ -468,7 +494,13 @@ task_process_t* task_process_fork( task_thread_t* thread_calling ) {
       return NULL;
     }
     // get next thread
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "current = %p\r\n", ( void* )current )
+    #endif
     current = avl_iterate_next( proc->thread_manager, current );
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "current = %p\r\n", ( void* )current )
+    #endif
   }
 
   return forked;
