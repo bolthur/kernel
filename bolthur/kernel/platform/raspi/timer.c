@@ -40,7 +40,7 @@ size_t timer_tick_count;
  */
 static bool timer_pending( void ) {
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // return whether timer is pending
   return io_in32( base + SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
 }
@@ -61,7 +61,7 @@ static void timer_clear( void* context ) {
     DEBUG_OUTPUT( "timer_clear()\r\n" )
   #endif
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // enable timer 3
   io_out32( base + SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
 
@@ -100,7 +100,7 @@ void timer_platform_init( void ) {
   timer_tick_count = 0;
 
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // get max core clock rate
   mailbox_property_init();

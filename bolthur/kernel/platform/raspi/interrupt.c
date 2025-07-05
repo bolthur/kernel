@@ -53,9 +53,9 @@ bool interrupt_validate_number( size_t num ) {
  * @param num interrupt number to enable
  */
 void interrupt_mask_specific( int8_t num ) {
-  uint32_t interrupt = ( uint32_t )num;
+  const uint32_t interrupt = ( uint32_t )num;
   // get peripheral base
-  uintptr_t base = peripheral_base_get( PERIPHERAL_GPIO );
+  const uintptr_t base = peripheral_base_get( PERIPHERAL_GPIO );
   // get interrupt enable and pending
   uintptr_t interrupt_to_enable = base;
   uintptr_t interrupt_pending = base;
@@ -91,9 +91,9 @@ void interrupt_mask_specific( int8_t num ) {
  * @param num interrupt number to disable
  */
 void interrupt_unmask_specific( int8_t num ) {
-  uint32_t interrupt = ( uint32_t )num;
+  const uint32_t interrupt = ( uint32_t )num;
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // get interrupt enable and pending
   uint32_t interrupt_to_disable = base;
   uint32_t interrupt_pending = base;
@@ -130,17 +130,15 @@ void interrupt_unmask_specific( int8_t num ) {
  * @return int8_t pending interrupt number
  */
 int8_t interrupt_get_pending( bool fast ) {
-  uintptr_t base = ( uint32_t )peripheral_base_get(
-    PERIPHERAL_GPIO
-  );
+  const uintptr_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // normal interrupt
   if ( ! fast ) {
-    uint32_t pending1 = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
-    uint32_t pending2 = io_in32( base + INTERRUPT_IRQ_PENDING_2 );
+    const uint32_t pending1 = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
+    const uint32_t pending2 = io_in32( base + INTERRUPT_IRQ_PENDING_2 );
 
     for ( int8_t i = 0; i < 32; ++i ) {
-      uint32_t check_bit = ( 1U << i );
+      const uint32_t check_bit = ( 1U << i );
 
       // check first pending register
       if ( pending1 & check_bit ) {

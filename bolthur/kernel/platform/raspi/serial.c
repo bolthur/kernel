@@ -81,7 +81,7 @@ void serial_init( void ) {
   index = 0;
 
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // Disable UART0.
   io_out32( base + UARTCR, 0 );
@@ -118,14 +118,14 @@ void serial_init( void ) {
   uint32_t clock_rate = p->data.buffer_u32[ 1 ];
 
   // calculate divider ( Divider = UART_CLOCK/(16 * Baud) )
-  float divider = ( float )clock_rate / ( 16 * 115200 );
+  const float divider = ( float )clock_rate / ( 16 * 115200 );
   // cast to integer for later write to ibrd
-  uint32_t brd = ( uint32_t )divider;
+  const uint32_t brd = ( uint32_t )divider;
 
   // calculate fractional ( (Fractional part * 64) + 0.5 )
-  float fractional = divider - ( float )brd;
+  const float fractional = divider - ( float )brd;
   // calculate fractional for later write to fbrd
-  uint32_t frd = ( uint32_t )( ( fractional * 64 ) + 0.5 );
+  const uint32_t frd = ( uint32_t )( ( fractional * 64 ) + 0.5 );
 
   // write baud rate
   io_out32( base + UARTIBRD, brd );
@@ -157,9 +157,9 @@ static void serial_clear( [[maybe_unused]] void* context ) {
     DEBUG_OUTPUT( "Clear interrupt source for serial!\r\n" )
   #endif
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // get interrupt state
-  uint32_t state = io_in32( base + UARTMIS );
+  const uint32_t state = io_in32( base + UARTMIS );
 
   // loop until flag will be reset
   while (
@@ -174,11 +174,11 @@ static void serial_clear( [[maybe_unused]] void* context ) {
     }
 
     // read data register
-    uint16_t data_register = io_in16( base + UARTDR );
+    const uint16_t data_register = io_in16( base + UARTDR );
     // extract error related stuff
-    uint8_t error = ( uint8_t )( data_register >> CHAR_BIT );
+    const uint8_t error = ( uint8_t )( data_register >> CHAR_BIT );
     // extract character
-    uint8_t character = ( uint8_t )data_register;
+    const uint8_t character = ( uint8_t )data_register;
 
     // handle error by dropping packet
     if ( 0 != error ) {
@@ -209,7 +209,7 @@ static void serial_clear( [[maybe_unused]] void* context ) {
  */
 bool serial_register_interrupt( void ) {
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // register interrupt
   if ( ! interrupt_register_handler( 57, serial_clear, NULL, INTERRUPT_FAST, true, false ) ) {
     return false;
@@ -234,7 +234,7 @@ void serial_putc( uint8_t c ) {
   }
 
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // Wait for UART to become ready to transmit.
   while ( 0 != ( io_in32( base + UARTFR ) & ( 1 << 5 ) ) ) {
@@ -256,7 +256,7 @@ uint8_t serial_getc( void ) {
   }
 
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // Wait for UART to become ready for read
   while ( io_in32( base + UARTFR ) & ( 1 << 4 ) ) {

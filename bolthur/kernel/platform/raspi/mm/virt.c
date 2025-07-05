@@ -42,8 +42,8 @@ __bootstrap void virt_startup_platform_setup( void ) {
   // cpu local peripherals
   #if defined( BCM2836 ) || defined( BCM2837 )
     uintptr_t cpu_peripheral_base = 0x40000000;
-    size_t cpu_peripheral_size = 0x3FFFF;
-    uintptr_t cpu_peripheral_end = cpu_peripheral_base + cpu_peripheral_size;
+    const size_t cpu_peripheral_size = 0x3FFFF;
+    const uintptr_t cpu_peripheral_end = cpu_peripheral_base + cpu_peripheral_size;
 
     while ( cpu_peripheral_base < cpu_peripheral_end ) {
       // identity map gpio
@@ -56,12 +56,12 @@ __bootstrap void virt_startup_platform_setup( void ) {
   // GPIO related
   #if defined( BCM2836 ) || defined( BCM2837 )
     uintptr_t gpio_peripheral_base = 0x3F000000;
-    size_t gpio_peripheral_size = 0xFFFFFF;
+    const size_t gpio_peripheral_size = 0xFFFFFF;
   #else
     uintptr_t gpio_peripheral_base = 0x20000000;
-    size_t gpio_peripheral_size = 0xFFFFFF;
+    const size_t gpio_peripheral_size = 0xFFFFFF;
   #endif
-  uintptr_t gpio_peripheral_end = gpio_peripheral_base + gpio_peripheral_size;
+  const uintptr_t gpio_peripheral_end = gpio_peripheral_base + gpio_peripheral_size;
 
   // map gpio if set
   while ( gpio_peripheral_base < gpio_peripheral_end ) {

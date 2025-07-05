@@ -52,7 +52,8 @@ void peripheral_base_set( uintptr_t addr, peripheral_type_t type ) {
 uintptr_t peripheral_base_get( peripheral_type_t type ) {
   if ( PERIPHERAL_LOCAL == type ) {
     return cpu_peripheral_base;
-  } else if ( PERIPHERAL_GPIO == type ) {
+  }
+  if ( PERIPHERAL_GPIO == type ) {
     return gpio_peripheral_base;
   }
   return 0;
@@ -68,7 +69,8 @@ uintptr_t peripheral_base_get( peripheral_type_t type ) {
 uintptr_t peripheral_end_get( peripheral_type_t type ) {
   if ( PERIPHERAL_LOCAL == type ) {
     return cpu_peripheral_base + cpu_peripheral_size;
-  } else if ( PERIPHERAL_GPIO == type ) {
+  }
+ if ( PERIPHERAL_GPIO == type ) {
     return gpio_peripheral_base + gpio_peripheral_size;
   }
   return 0;
