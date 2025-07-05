@@ -28,7 +28,7 @@
  * @param type mailbox type to be used
  * @return uint32_t value from mailbox function or MAILBOX_ERROR
  */
-uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
+uint32_t mailbox_read( const mailbox0_channel_t channel, const mailbox_type_t type ) {
   // data and count
   uint32_t value = 0;
   uint32_t count = 0;
@@ -71,8 +71,8 @@ uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
  * @param data Data to write depending on function
  */
 void mailbox_write(
-  mailbox0_channel_t channel,
-  mailbox_type_t type,
+  const mailbox0_channel_t channel,
+  const mailbox_type_t type,
   uint32_t data
 ) {
   // add channel number at the lower 4 bit

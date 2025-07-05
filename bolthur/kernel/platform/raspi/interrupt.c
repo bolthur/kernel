@@ -33,7 +33,7 @@
  * @return true if interrupt is valid
  * @return false if interrupt is invalid
  */
-bool interrupt_validate_number( size_t num ) {
+bool interrupt_validate_number( const size_t num ) {
   return ! (
     num != 1 && num != 8
     && num != 29 && num != 43
@@ -52,7 +52,7 @@ bool interrupt_validate_number( size_t num ) {
  *
  * @param num interrupt number to enable
  */
-void interrupt_mask_specific( int8_t num ) {
+void interrupt_mask_specific( const int8_t num ) {
   const uint32_t interrupt = ( uint32_t )num;
   // get peripheral base
   const uintptr_t base = peripheral_base_get( PERIPHERAL_GPIO );
@@ -90,7 +90,7 @@ void interrupt_mask_specific( int8_t num ) {
  *
  * @param num interrupt number to disable
  */
-void interrupt_unmask_specific( int8_t num ) {
+void interrupt_unmask_specific( const int8_t num ) {
   const uint32_t interrupt = ( uint32_t )num;
   // get peripheral base
   const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
@@ -129,7 +129,7 @@ void interrupt_unmask_specific( int8_t num ) {
  * @param fast use fast interrupts
  * @return int8_t pending interrupt number
  */
-int8_t interrupt_get_pending( bool fast ) {
+int8_t interrupt_get_pending( const bool fast ) {
   const uintptr_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // normal interrupt

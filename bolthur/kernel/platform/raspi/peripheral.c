@@ -34,7 +34,7 @@ size_t cpu_peripheral_size = PERIPHERAL_CPU_SIZE;
  * @param addr Address to set peripheral base
  * @param type peripheral type
  */
-void peripheral_base_set( uintptr_t addr, peripheral_type_t type ) {
+void peripheral_base_set( const uintptr_t addr, const peripheral_type_t type ) {
   if ( PERIPHERAL_LOCAL == type ) {
     cpu_peripheral_base = addr;
   } else if ( PERIPHERAL_GPIO == type ) {
@@ -49,7 +49,7 @@ void peripheral_base_set( uintptr_t addr, peripheral_type_t type ) {
  * @param type peripheral type
  * @return uintptr_t Peripheral base address
  */
-uintptr_t peripheral_base_get( peripheral_type_t type ) {
+uintptr_t peripheral_base_get( const peripheral_type_t type ) {
   if ( PERIPHERAL_LOCAL == type ) {
     return cpu_peripheral_base;
   }
@@ -66,7 +66,7 @@ uintptr_t peripheral_base_get( peripheral_type_t type ) {
  * @param type peripheral type
  * @return uintptr_t Peripheral end address
  */
-uintptr_t peripheral_end_get( peripheral_type_t type ) {
+uintptr_t peripheral_end_get( const peripheral_type_t type ) {
   if ( PERIPHERAL_LOCAL == type ) {
     return cpu_peripheral_base + cpu_peripheral_size;
   }

@@ -75,7 +75,7 @@ void mailbox_property_init( void ) {
  * @param tag Tag to add
  * @param ... Further data depending on tag to be added
  */
-void mailbox_property_add_tag( raspi_mailbox_tag_t tag, ... ) {
+void mailbox_property_add_tag( const raspi_mailbox_tag_t tag, ... ) {
   va_list vl;
   va_start( vl, tag );
 
@@ -298,7 +298,7 @@ uint32_t mailbox_property_process( void ) {
  * @param tag tag to read from mailbox property process
  * @return pointer to structure of tag or NULL
  */
-raspi_mailbox_property_t* mailbox_property_get( raspi_mailbox_tag_t tag ) {
+raspi_mailbox_property_t* mailbox_property_get( const raspi_mailbox_tag_t tag ) {
   // property structure for return and tag buffer
   static raspi_mailbox_property_t property;
   int32_t* tag_buffer = NULL;

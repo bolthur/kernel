@@ -156,7 +156,7 @@ bool phys_platform_init( void ) {
  * @param address
  * @return
  */
-bool phys_free_check_only( uint64_t address ) {
+bool phys_free_check_only( const uint64_t address ) {
   return
     PERIPHERAL_GPIO_BASE <= address
     && address < ( PERIPHERAL_GPIO_BASE + PERIPHERAL_GPIO_SIZE + 1 );
@@ -170,7 +170,7 @@ bool phys_free_check_only( uint64_t address ) {
  * @param size
  * @return
  */
-uint64_t phys_address_to_bus( uint64_t address, size_t size ) {
+uint64_t phys_address_to_bus( const uint64_t address, const size_t size ) {
   // check for in range
   if (
     address >= phys_dma_start

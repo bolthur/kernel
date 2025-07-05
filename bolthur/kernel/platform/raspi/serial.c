@@ -227,7 +227,7 @@ bool serial_register_interrupt( void ) {
  *
  * @param c character to put
  */
-void serial_putc( uint8_t c ) {
+void serial_putc( const uint8_t c ) {
   // handle not initialized
   if ( ! serial_initialized ) {
     return;

@@ -38,7 +38,7 @@ void tty_init( void ) {
  *
  * @param c Character to print
  */
-void tty_putc( [[maybe_unused]] uint8_t c ) {
+void tty_putc( [[maybe_unused]] const uint8_t c ) {
   // return if disabled
   #if defined( OUTPUT_ENABLE )
     serial_putc( c );
