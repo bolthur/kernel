@@ -18,6 +18,7 @@
  */
 
 #include "../../../../../mm/virt.h"
+#include "../../../../../task/process.h"
 #include "../../../mm/virt/short.h"
 
 #ifndef _ARCH_ARM_V7_MM_VIRT_SHORT_H
@@ -44,9 +45,10 @@ bool v7_short_set_context( virt_context_t* );
 bool v7_short_prepare_temporary( virt_context_t* );
 virt_context_t* v7_short_create_context( virt_context_type_t );
 
-bool v7_short_fork_table( sd_page_table_t*, sd_page_table_t* );
-bool v7_short_fork_global_directory( sd_context_half_t*, sd_context_half_t* );
-virt_context_t* v7_short_fork_context( virt_context_t* );
+bool v7_short_fork_table( sd_page_table_t*, sd_page_table_t*, task_process_t* );
+bool v7_short_fork_global_directory(
+  sd_context_half_t*, sd_context_half_t*, task_process_t* );
+virt_context_t* v7_short_fork_context( virt_context_t*, task_process_t* );
 
 void v7_short_destroy_table( sd_page_table_t* );
 bool v7_short_destroy_global_directory( sd_context_half_t* );

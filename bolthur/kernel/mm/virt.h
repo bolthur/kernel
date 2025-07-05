@@ -24,6 +24,9 @@
 #ifndef _MM_VIRT_H
 #define _MM_VIRT_H
 
+// forward declarations
+typedef struct task_process task_process_t;
+
 #define VIRT_PAGE_PER_ENTRY ( sizeof( uint32_t ) * CHAR_BIT )
 #define VIRT_PAGE_INDEX( address, min ) ( ( address - min ) / PAGE_PER_ENTRY )
 #define VIRT_PAGE_OFFSET( address, min ) ( ( address - min ) % PAGE_PER_ENTRY )
@@ -71,7 +74,7 @@ void virt_platform_post_init( void );
 
 virt_context_t* virt_create_context( virt_context_type_t );
 bool virt_destroy_context( virt_context_t*, bool );
-virt_context_t* virt_fork_context( virt_context_t* );
+virt_context_t* virt_fork_context( virt_context_t*, task_process_t* );
 uint64_t virt_create_table( virt_context_t*, uintptr_t, uint64_t );
 
 bool virt_map_address( virt_context_t*, uintptr_t, uint64_t, virt_memory_type_t, uint32_t );

@@ -23,6 +23,8 @@
 #include "../../../../../lib/assert.h"
 #include "../../../../../entry.h"
 #include "../../../../../mm/phys.h"
+#include "../../../../../mm/shared.h"
+#include "../../../../../task/process.h"
 #if defined( PRINT_MM_VIRT )
   #include "../../../../../lib/inttypes.h"
   #include "../../../../../debug/debug.h"
@@ -1204,14 +1206,19 @@ virt_context_t* v7_long_create_context( virt_context_type_t type ) {
 }
 
 /**
- * @fn bool v7_long_fork_table(ld_page_table_t*, ld_page_table_t*)
+ * @fn bool v7_long_fork_table(ld_page_table_t*, ld_page_table_t*, task_process_t*)
  * @brief Helper to fork passed page table
  *
  * @param to_fork page table to fork
  * @param forked page table to be populated
+ * @param proc forked process structure
  * @return
  */
-bool v7_long_fork_table( ld_page_table_t* to_fork, ld_page_table_t* forked ) {
+bool v7_long_fork_table(
+  ld_page_table_t* to_fork,
+  ld_page_table_t* forked,
+  task_process_t* proc
+) {
   // copy pages with content
   for ( size_t page_idx = 0; page_idx < 512; page_idx++ ) {
     // just copy value if not mapped
@@ -1224,6 +1231,18 @@ bool v7_long_fork_table( ld_page_table_t* to_fork, ld_page_table_t* forked ) {
     uint64_t phys_to_fork = LD_PHYSICAL_PAGE_ADDRESS(
       to_fork->page[ page_idx ].raw
     );
+    // handle phys memory is shared
+    if ( shared_memory_phys_is_shared( proc, phys_to_fork ) ) {
+      // copy completely
+      memcpy(
+        &forked->page[ page_idx ],
+        &to_fork->page[ page_idx ],
+        sizeof( ld_context_page_t )
+      );
+      // skip forking logic
+      continue;
+    }
+    // find new page for fork
     uint64_t phys_forked = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
     if ( INVALID_ADDRESS == phys_forked ) {
       return false;
@@ -1264,16 +1283,18 @@ bool v7_long_fork_table( ld_page_table_t* to_fork, ld_page_table_t* forked ) {
 }
 
 /**
- * @fn bool v7_long_fork_middle_directory(ld_middle_page_directory*, ld_middle_page_directory*)
+ * @fn bool v7_long_fork_middle_directory(ld_middle_page_directory*, ld_middle_page_directory*, task_process_t*)
  * @brief Helper to fork passed middle page directory
  *
  * @param to_fork middle page directory to fork
  * @param forked middle page directory to be populated
+ * @param proc forked process structure
  * @return
  */
 bool v7_long_fork_middle_directory(
   ld_middle_page_directory* to_fork,
-  ld_middle_page_directory* forked
+  ld_middle_page_directory* forked,
+  task_process_t* proc
 ) {
   // loop and duplicate page tables
   for ( size_t tbl_idx = 0; tbl_idx < 512; tbl_idx++ ) {
@@ -1326,7 +1347,8 @@ bool v7_long_fork_middle_directory(
     // fork table content
     if ( ! v7_long_fork_table(
      tbl_to_fork,
-     tbl_forked
+     tbl_forked,
+     proc
     ) ) {
       unmap_temporary( ( uintptr_t )tbl_to_fork, PAGE_SIZE );
       unmap_temporary( ( uintptr_t )tbl_forked, PAGE_SIZE );
@@ -1342,16 +1364,18 @@ bool v7_long_fork_middle_directory(
 }
 
 /**
- * @fn bool v7_long_fork_global_directory(ld_global_page_directory_t*, ld_global_page_directory_t*)
+ * @fn bool v7_long_fork_global_directory(ld_global_page_directory_t*, ld_global_page_directory_t*, task_process_t*)
  * @brief Helper to fork passed global page directory
  *
  * @param to_fork global page directory to fork
  * @param forked global page directory to be populated
+ * @param proc forked process structure
  * @return
  */
 bool v7_long_fork_global_directory(
   ld_global_page_directory_t* to_fork,
-  ld_global_page_directory_t* forked
+  ld_global_page_directory_t* forked,
+  task_process_t* proc
 ) {
   for ( size_t gpd_idx = 0; gpd_idx < 512; gpd_idx++ ) {
     // get middle table
@@ -1405,7 +1429,8 @@ bool v7_long_fork_global_directory(
     // fork middle directory
     if ( ! v7_long_fork_middle_directory(
       pmd_to_fork,
-      pmd_forked
+      pmd_forked,
+      proc
     ) ) {
       unmap_temporary( ( uintptr_t )pmd_to_fork, PAGE_SIZE );
       unmap_temporary( ( uintptr_t )pmd_forked, PAGE_SIZE );
@@ -1421,12 +1446,14 @@ bool v7_long_fork_global_directory(
 }
 
 /**
- * @fn virt_context_t* v7_long_fork_context(virt_context_t*)
+ * @fn virt_context_t* v7_long_fork_context(virt_context_t*, task_process_t*)
  * @brief Fork virtual context with long page address extension
+ *
  * @param ctx context to fork
+ * @param proc forked process structure
  * @return forked context or null
  */
-virt_context_t* v7_long_fork_context( virt_context_t* ctx ) {
+virt_context_t* v7_long_fork_context( virt_context_t* ctx, task_process_t* proc ) {
   // create new context
   virt_context_t* forked = virt_create_context( ctx->type );
   if ( ! forked ) {
@@ -1456,7 +1483,8 @@ virt_context_t* v7_long_fork_context( virt_context_t* ctx ) {
   // kickstart forking
   if ( ! v7_long_fork_global_directory(
     ( ld_global_page_directory_t* )ctx_to_fork,
-    ( ld_global_page_directory_t* )ctx_forked
+    ( ld_global_page_directory_t* )ctx_forked,
+    proc
   ) ) {
     unmap_temporary( ctx_to_fork, PAGE_SIZE );
     unmap_temporary( ctx_forked, PAGE_SIZE );

@@ -73,6 +73,8 @@ static void cleanup_process( list_item_t* a ) {
     // get next page
     start += PAGE_SIZE;
   }
+  // free again list item
+  list_default_cleanup( a );
 }
 
 /**
@@ -588,6 +590,48 @@ bool shared_memory_detach( task_process_t* process, size_t id ) {
 }
 
 /**
+ * @fn bool shared_memory_phys_is_shared(task_process_t*, uint64_t)
+ * @brief Method to check if phys is shared memory
+ *
+ * @param process containing process
+ * @param start start address
+ * @return true
+ * @return false
+ */
+bool shared_memory_phys_is_shared(
+  task_process_t* process,
+  uint64_t start
+) {
+  // get start node
+  avl_node_t* node = avl_iterate_first( shared_tree );
+  // loop until end
+  while ( NULL != node ) {
+    // get mapped entry
+    shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
+    // lookup process
+    list_item_t* process_list_item = list_lookup_data(
+      entry->process_mapping, process );
+    // handle attached and address is set
+    if ( process_list_item && entry->address) {
+      // loop through pages
+      for (
+        size_t count = entry->size / PAGE_SIZE, idx = 0;
+        idx < count;
+        idx++
+      ) {
+        if ( start == entry->address[ idx ] ) {
+          return true;
+        }
+      }
+    }
+    // get next
+    node = avl_iterate_next( shared_tree, node );
+  }
+  // return false
+  return false;
+}
+
+/**
  * @fn bool shared_memory_address_is_shared(task_process_t*, uintptr_t, size_t)
  * @brief Check if area is somehow in shared
  *
@@ -626,7 +670,7 @@ bool shared_memory_address_is_shared(
     // get next
     node = avl_iterate_next( shared_tree, node );
   }
-  // return NULL
+  // return false
   return false;
 }
 

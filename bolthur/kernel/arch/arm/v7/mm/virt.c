@@ -25,6 +25,7 @@
 #include "../../../../panic.h"
 #include "../../../../mm/virt.h"
 #include "../../../../mm/phys.h"
+#include "../../../../task/process.h"
 #include "../../mm/virt.h"
 #include "virt/short.h"
 #include "virt/long.h"
@@ -318,12 +319,13 @@ virt_context_t* virt_create_context( virt_context_type_t type ) {
 }
 
 /**
- * @fn virt_context_t* virt_fork_context(virt_context_t*)
+ * @fn virt_context_t* virt_fork_context(virt_context_t*, task_process_t*)
  * @brief Fork a virtual context
  * @param ctx context to fork
+ * @param proc forked process structure
  * @return
  */
-virt_context_t* virt_fork_context( virt_context_t* ctx ) {
+virt_context_t* virt_fork_context( virt_context_t* ctx, task_process_t* proc ) {
   // check context
   if ( ! ctx || ctx->type != VIRT_CONTEXT_TYPE_USER ) {
     return NULL;
@@ -331,13 +333,13 @@ virt_context_t* virt_fork_context( virt_context_t* ctx ) {
 
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_supported_mode ) {
-    return v7_long_fork_context( ctx );
+    return v7_long_fork_context( ctx, proc );
   // check v7 short descriptor format
   } else if (
     ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == virt_supported_mode )
     || ( ID_MMFR0_VSMA_V7_PAGING_PXN == virt_supported_mode )
   ) {
-    return v7_short_fork_context( ctx );
+    return v7_short_fork_context( ctx, proc );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" )

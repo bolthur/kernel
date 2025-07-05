@@ -33,6 +33,8 @@
 #include "../../../mm/virt/short.h"
 #include "short.h"
 #include "../../../../../mm/virt.h"
+#include "../../../../../mm/shared.h"
+#include "../../../../../task/process.h"
 
 #include "../../register/sctlr.h"
 #include "../../register/ttbcr.h"
@@ -1241,14 +1243,21 @@ virt_context_t* v7_short_create_context( virt_context_type_t type ) {
 }
 
 /**
- * @fn bool v7_short_fork_table(sd_page_table_t*, sd_page_table_t*)
+ * @fn bool v7_short_fork_table(sd_page_table_t*, sd_page_table_t*, task_process_t*)
  * @brief Helper to fork page table
  *
  * @param to_fork table to fork
  * @param forked forked table
+ * @param proc forked process structure
  * @return
+ *
+ * @todo check if to fork is shared memory
  */
-bool v7_short_fork_table( sd_page_table_t* to_fork, sd_page_table_t* forked ) {
+bool v7_short_fork_table(
+  sd_page_table_t* to_fork,
+  sd_page_table_t* forked,
+  task_process_t* proc
+) {
   // copy pages with content
   for ( size_t page_idx = 0; page_idx < 256; page_idx++ ) {
     // just copy value if not mapped
@@ -1259,10 +1268,24 @@ bool v7_short_fork_table( sd_page_table_t* to_fork, sd_page_table_t* forked ) {
 
     // get mapped address
     uintptr_t phys_to_fork = to_fork->page[ page_idx ].raw & 0xFFFFF000;
+    // handle phys memory is shared
+    if ( shared_memory_phys_is_shared( proc, phys_to_fork ) ) {
+      // copy completely
+      memcpy(
+        &forked->page[ page_idx ],
+        &to_fork->page[ page_idx ],
+        sizeof( sd_page_small_t )
+      );
+      // skip forking logic
+      continue;
+    }
+    // find free page
     uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+    // handle invalid
     if ( INVALID_ADDRESS == phys ) {
       return false;
     }
+    // transform uint64_t into uintptr_t for short format
     uintptr_t phys_forked = ( uintptr_t )phys;
 
     // map both pages temporarily
@@ -1298,16 +1321,18 @@ bool v7_short_fork_table( sd_page_table_t* to_fork, sd_page_table_t* forked ) {
 }
 
 /**
- * @fn bool v7_short_fork_global_directory(sd_context_half_t*, sd_context_half_t*)
+ * @fn bool v7_short_fork_global_directory(sd_context_half_t*, sd_context_half_t*, task_process_t*)
  * @brief Helper to fork global directory / context
  *
  * @param to_fork context to fork
  * @param forked forked context
+ * @param proc forked process structure
  * @return
  */
 bool v7_short_fork_global_directory(
   sd_context_half_t* to_fork,
-  sd_context_half_t* forked
+  sd_context_half_t* forked,
+  task_process_t* proc
 ) {
   for ( size_t gpd_idx = 0; gpd_idx < 2048; gpd_idx++ ) {
     // get middle table
@@ -1369,7 +1394,7 @@ bool v7_short_fork_global_directory(
     memset( ( void* )pmd_forked, 0, SD_TBL_SIZE );
 
     // fork middle directory
-    if ( ! v7_short_fork_table( pmd_to_fork, pmd_forked ) ) {
+    if ( ! v7_short_fork_table( pmd_to_fork, pmd_forked, proc ) ) {
       unmap_temporary( ( uintptr_t )pmd_to_fork, SD_TBL_SIZE );
       unmap_temporary( ( uintptr_t )pmd_forked, SD_TBL_SIZE );
       return false;
@@ -1384,12 +1409,13 @@ bool v7_short_fork_global_directory(
 }
 
 /**
- * @fn virt_context_t* v7_short_fork_context(virt_context_t*)
+ * @fn virt_context_t* v7_short_fork_context(virt_context_t*, task_process_t*)
  * @brief Fork virtual context without long page address extension
  * @param ctx context to fork
+ * @param proc forked process structure
  * @return forked context or NULL
  */
-virt_context_t* v7_short_fork_context( virt_context_t* ctx ) {
+virt_context_t* v7_short_fork_context( virt_context_t* ctx, task_process_t* proc ) {
   // create new context
   virt_context_t* forked = virt_create_context( ctx->type );
   if ( ! forked ) {
@@ -1421,7 +1447,8 @@ virt_context_t* v7_short_fork_context( virt_context_t* ctx ) {
   // kickstart forking
   if ( ! v7_short_fork_global_directory(
     ( sd_context_half_t* )ctx_to_fork,
-    ( sd_context_half_t* )ctx_forked
+    ( sd_context_half_t* )ctx_forked,
+    proc
   ) ) {
     unmap_temporary( ctx_to_fork, SD_TTBR_SIZE_2G );
     unmap_temporary( ctx_forked, SD_TTBR_SIZE_2G );
