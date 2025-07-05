@@ -72,7 +72,7 @@ reset:
   // halt other cpus if smp enabled is set
   #if defined( BCM2836 ) || defined( BCM2837 )
     // Return current CPU ID (0..3)
-    cpsid if // Disable IRQ & FIQ
+    cpsid iaf // Disable IRQ & FIQ
     mrc p15, 0, r3, c0, c0, 5 // r3 = Multiprocessor Affinity Register (MPIDR)
     ands r3, #3 // r0 = CPU ID (Bits 0..1)
     bne 1f // If (CPU ID != 0) Branch To Infinite Loop (Core ID 1..3)

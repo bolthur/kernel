@@ -710,8 +710,6 @@ uint64_t v7_short_create_table(
  * @param memory memory type
  * @param page page attributes
  * @return
- *
- * @todo check access, because read only mapped addresses are mapped writable
  */
 bool v7_short_map(
   virt_context_t* ctx,
@@ -1262,7 +1260,9 @@ bool v7_short_fork_table(
   for ( size_t page_idx = 0; page_idx < 256; page_idx++ ) {
     // just copy value if not mapped
     if( 0 == to_fork->page[ page_idx ].raw ) {
+      // just copy raw
       forked->page[ page_idx ].raw = to_fork->page[ page_idx ].raw;
+      // skip rest
       continue;
     }
 
@@ -1271,11 +1271,7 @@ bool v7_short_fork_table(
     // handle phys memory is shared
     if ( shared_memory_phys_is_shared( proc, phys_to_fork ) ) {
       // copy completely
-      memcpy(
-        &forked->page[ page_idx ],
-        &to_fork->page[ page_idx ],
-        sizeof( sd_page_small_t )
-      );
+      forked->page[ page_idx ].raw = to_fork->page[ page_idx ].raw;
       // skip forking logic
       continue;
     }

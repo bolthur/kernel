@@ -35,6 +35,7 @@
 #define CPSR_THUMB 1 << 5
 #define CPSR_FIQ_INHIBIT 1 << 6
 #define CPSR_IRQ_INHIBIT 1 << 7
+#define CPSR_ASYNC_ABORT_INHIBIT 1 << 8
 
 #define PC_OFFSET 60
 #define SPSR_OFFSET 64

@@ -26,13 +26,13 @@
 
 EXPORT( interrupt_enable )
 interrupt_enable:
-  cpsie if
+  cpsie iaf
   bx lr
 
 EXPORT( interrupt_disable )
 interrupt_disable:
   mrs r0, cpsr
-  cpsid if
+  cpsid iaf
   bx lr
 
 EXPORT( interrupt_enabled )
@@ -45,9 +45,19 @@ interrupt_enabled:
   and r2, r0, #CPSR_FIQ_INHIBIT
   // mov with orr to return
   orr r0, r1, r2
+  // compare for activated
+  cmp r0, #0
+  beq 1f // 0 means active
+  bne 2f // not 0 means not active
+  1:
+    mov r0, #1
+    b 3f
+  2:
+    mov r0, #0
+  3:
   // restore register
   pop { r1, r2, lr }
-  bx lr
+  mov pc, lr
 
 // handler
 IMPORT( vector_undefined_instruction_handler )

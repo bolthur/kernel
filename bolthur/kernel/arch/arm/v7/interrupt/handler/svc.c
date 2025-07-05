@@ -78,6 +78,9 @@ void vector_svc_handler( cpu_register_context_t* cpu ) {
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "address of cpu = %p\r\n", cpu )
     DEBUG_OUTPUT( "svc_num = %"PRIu32"\r\n", svc_num )
+    uint32_t cpsr;
+    __asm__ __volatile__( "mrs %0, cpsr\n" : "=r" ( cpsr ) : : "cc" );
+    DEBUG_OUTPUT( "cpsr = %#"PRIx32"\r\n", cpsr )
   #endif
   // handle bound interrupt handlers
   interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu );

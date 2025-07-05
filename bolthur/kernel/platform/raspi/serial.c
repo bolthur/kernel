@@ -131,7 +131,7 @@ void serial_init( void ) {
   io_out32( base + UARTIBRD, brd );
   io_out32( base + UARTFBRD, frd );
 
-  // Enable FIFO & 8 bit data transmission (1 stop bit, no parity).
+  // Enable FIFO & 8-bit data transmission (1 stop bit, no parity).
   io_out32( base + UARTLCRH, ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 ) );
 
   // Mask incoming interrupt only
@@ -237,7 +237,9 @@ void serial_putc( uint8_t c ) {
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // Wait for UART to become ready to transmit.
-  while ( 0 != ( io_in32( base + UARTFR ) & ( 1 << 5 ) ) ) { }
+  while ( 0 != ( io_in32( base + UARTFR ) & ( 1 << 5 ) ) ) {
+    __asm__ __volatile__ ( "nop" );
+  }
   io_out8( base + UARTDR, c );
 }
 
@@ -257,7 +259,9 @@ uint8_t serial_getc( void ) {
   uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // Wait for UART to become ready for read
-  while ( io_in32( base + UARTFR ) & ( 1 << 4 ) ) { }
+  while ( io_in32( base + UARTFR ) & ( 1 << 4 ) ) {
+    __asm__ __volatile__ ( "nop" );
+  }
 
   // return data
   return io_in8( base + UARTDR );
@@ -274,7 +278,7 @@ void serial_flush( void ) {
   }
 
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // read from uart until as long as something is existing to flush
   while ( ! ( io_in32( base + UARTFR ) & ( 1 << 4 ) ) ) {

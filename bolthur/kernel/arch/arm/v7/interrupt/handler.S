@@ -58,8 +58,8 @@ IMPORT( task_thread_current_thread )
   sub lr, #\fixup
   // push return lr and spsr to modes stack
   srsdb sp!, #\mode
-  // switch to given mode
-  cpsid if, #\mode
+  // switch to given mode with interrupts disabled
+  cpsid iaf, #\mode
 .endm
 
 .macro equal_mode_switch offset:req, register:req, mode:req, equal:req, notequal:req
@@ -191,8 +191,6 @@ _\name\()_entry_finished:
 
 // non privileged exit
 _\name\()_exit_unprivileged:
-  // drop spsr and lr from stack
-  //add sp, sp, #8
   // get context from thread structure
   get_thread_context r0
   // call switch to thread
@@ -262,20 +260,20 @@ _\name\()_exit_finished:
   stack_wind r0, r1 sp
   // enable interrupts
   .ifc \nested, all
-    cpsie if
+    cpsie iaf
   .endif
   .ifc \nested, fast
-    cpsie f
+    cpsie af
   .endif
   // handle events
   mov r0, r1
   bl event_handle
   // disable interrupts
   .ifc \nested, all
-    cpsid if
+    cpsid iaf
   .endif
   .ifc \nested, fast
-    cpsid f
+    cpsid af
   .endif
   // restore stack adjustments
   stack_unwind r0, r1, sp
