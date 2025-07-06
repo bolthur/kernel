@@ -17,15 +17,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _TASK_THREAD_H
+#define _TASK_THREAD_H
+
 #include <stdint.h>
 #include <stddef.h>
 #include <unistd.h>
 #include "../../library/collection/avl/avl.h"
 #include "../event.h"
 #include "state.h"
-
-#ifndef _TASK_THREAD_H
-#define _TASK_THREAD_H
 
 typedef struct task_process task_process_t;
 typedef struct task_priority_queue task_priority_queue_t;

@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libtar.h>
-
 #ifndef _RAMDISK_H
 #define _RAMDISK_H
+
+#include <libtar.h>
 
 extern uintptr_t ramdisk_compressed;
 extern size_t ramdisk_compressed_size;

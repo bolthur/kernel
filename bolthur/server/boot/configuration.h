@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _CONFIGURATION_H
+#define _CONFIGURATION_H
+
 #include <stdbool.h>
 #include <sys/queue.h>
 #include <confini.h>
-
-#ifndef _CONFIGURATION_H
-#define _CONFIGURATION_H
 
 typedef struct configuration_node {
   // data

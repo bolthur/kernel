@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _RANDOM_H
+#define _RANDOM_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/bolthur.h>
-
-#ifndef _RANDOM_H
-#define _RANDOM_H
 
 extern int iomem_fd;
 

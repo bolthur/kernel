@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _DMA_H
+#define _DMA_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include "../libiomem.h"
-
-#ifndef _DMA_H
-#define _DMA_H
 
 typedef struct dma_control_block {
   uint32_t transfer_information;

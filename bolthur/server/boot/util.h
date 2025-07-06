@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/types.h>
-
 #ifndef _UTIL_H
 #define _UTIL_H
+
+#include <sys/types.h>
 
 pid_t util_execute_device_server( const char*, const char* );
 

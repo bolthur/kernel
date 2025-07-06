@@ -17,15 +17,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _PARTITION_H
+#define _PARTITION_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include <sys/tree.h>
 #include "../libmbr.h"
-
-#ifndef _PARTITION_H
-#define _PARTITION_H
 
 #define PARTITION_TREE_DEFINE( name, type, field, cmp, attr ) \
   SPLAY_HEAD( name, type ); \

@@ -17,14 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _RPC_QUEUE_H
+#define _RPC_QUEUE_H
+
 #include <stdbool.h>
 #include "../../library/collection/list/list.h"
 #include "../task/process.h"
 #include "../task/thread.h"
 #include "backup.h"
-
-#ifndef _RPC_QUEUE_H
-#define _RPC_QUEUE_H
 
 void rpc_queue_cleanup( list_item_t* );
 bool rpc_queue_setup( task_process_t* );

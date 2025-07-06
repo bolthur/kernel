@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/bolthur.h>
-
 #if ! defined( _FRAMEBUFFER_H )
 #define _FRAMEBUFFER_H
+
+#include <sys/bolthur.h>
 
 #define FRAMEBUFFER_SCREEN_WIDTH 800
 #define FRAMEBUFFER_SCREEN_HEIGHT 600

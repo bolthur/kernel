@@ -17,15 +17,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if ! defined( _LIBIOMEM_H )
+#define _LIBIOMEM_H
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "libgpio.h"
-
-#if ! defined( _LIBIOMEM_H )
-#define _LIBIOMEM_H
 
 #define IOMEM_RPC_MAILBOX RPC_CUSTOM_START
 #define IOMEM_RPC_MMIO_PERFORM IOMEM_RPC_MAILBOX + 1

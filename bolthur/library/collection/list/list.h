@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _LIST_H
+#define _LIST_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <stddef.h>
-
-#ifndef _LIST_H
-#define _LIST_H
 
 // forward declaration
 typedef struct list_item list_item_t;

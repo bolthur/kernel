@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _MM_VIRT_H
+#define _MM_VIRT_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
-#ifndef _MM_VIRT_H
-#define _MM_VIRT_H
 
 // forward declarations
 typedef struct task_process task_process_t;

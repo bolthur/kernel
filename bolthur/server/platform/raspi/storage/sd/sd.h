@@ -17,15 +17,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if ! defined( _SD_H )
+#define _SD_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include "sdhost.h"
 #include "emmc.h"
 #include "../../libiomem.h"
 #include "../../libperipheral.h"
-
-#if ! defined( _SD_H )
-#define _SD_H
 
 //#define SD_ENABLE_DEBUG 1
 /*#undef RASPI

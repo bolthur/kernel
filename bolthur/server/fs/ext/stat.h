@@ -17,15 +17,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _STAT_H
+#define _STAT_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include <sys/tree.h>
 #include <sys/stat.h>
-
-#ifndef _STAT_H
-#define _STAT_H
 
 #define STAT_TREE_DEFINE( name, type, field, cmp, attr ) \
   SPLAY_HEAD( name, type ); \

@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <libtar.h>
-
 #ifndef _INIT_H
 #define _INIT_H
+
+#include <stddef.h>
+#include <libtar.h>
 
 void init_stage1( void );
 [[noreturn]] void init_stage2( void );

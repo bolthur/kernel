@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if ! defined( _OUTPUT_H )
+#define _OUTPUT_H
+
 #include <stddef.h>
 #include <unistd.h>
 #include "../libframebuffer.h"
-
-#if ! defined( _OUTPUT_H )
-#define _OUTPUT_H
 
 extern framebuffer_resolution_t resolution_data;
 

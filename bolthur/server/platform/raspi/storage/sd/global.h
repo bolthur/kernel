@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include <stdint.h>
-
 #if ! defined( _GLOBAL_H )
 #define _GLOBAL_H
+
+#include <stddef.h>
+#include <stdint.h>
 
 extern size_t mbr_size;
 extern uint8_t* mbr_data;

@@ -17,6 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _TASK_PROCESS_H
+#define _TASK_PROCESS_H
+
 #include <stddef.h>
 #include <unistd.h>
 #include "../../library/collection/avl/avl.h"
@@ -24,9 +27,6 @@
 #include "../mm/virt.h"
 #include "../event.h"
 #include "state.h"
-
-#ifndef _TASK_PROCESS_H
-#define _TASK_PROCESS_H
 
 typedef struct task_thread task_thread_t;
 typedef struct task_thread_manager task_thread_manager_t;

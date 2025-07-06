@@ -17,13 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if ! defined( _EMMC_H )
+#define _EMMC_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include "../../libiomem.h"
 #include "../../libperipheral.h"
-
-#if ! defined( _EMMC_H )
-#define _EMMC_H
 
 //#define EMMC_ENABLE_DEBUG 1
 #define EMMC_ENABLE_DMA 1

@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libtar.h>
-
 #ifndef _RAMDISK_H
 #define _RAMDISK_H
+
+#include <libtar.h>
 
 #define MOUNT_POINT_DEVICE "/dev/ramdisk"
 #define MOUNT_POINT_DESTINATION "/ramdisk"

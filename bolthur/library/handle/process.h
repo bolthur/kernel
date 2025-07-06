@@ -17,15 +17,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _PROCESS_H
+#define _PROCESS_H
+
 #include <stdbool.h>
 #include <sys/syslimits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/tree.h>
 #include "handle.h"
-
-#ifndef _PROCESS_H
-#define _PROCESS_H
 
 #define PROCESS_TREE_DEFINE( name, type, field, cmp, attr ) \
   SPLAY_HEAD( name, type ); \

@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../../library/collection/avl/avl.h"
-#include "process.h"
-
 #ifndef _TASK_STACK_H
 #define _TASK_STACK_H
+
+#include "../../library/collection/avl/avl.h"
+#include "process.h"
 
 typedef struct task_stack_manager {
   avl_tree_t* tree;

@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _IOCTL_HANDLER_H
+#define _IOCTL_HANDLER_H
+
 #include <sys/syslimits.h>
 #include <sys/types.h>
 #include "../../../../library/collection/avl/avl.h"
-
-#ifndef _IOCTL_HANDLER_H
-#define _IOCTL_HANDLER_H
 
 typedef struct {
   avl_node_t node;

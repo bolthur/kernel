@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _ARCH_ARM_V7_MM_VIRT_LONG_H
+#define _ARCH_ARM_V7_MM_VIRT_LONG_H
+
 #include "../../../../../mm/virt.h"
 #include "../../../../../task/process.h"
 #include "../../../mm/virt/long.h"
-
-#ifndef _ARCH_ARM_V7_MM_VIRT_LONG_H
-#define _ARCH_ARM_V7_MM_VIRT_LONG_H
 
 void v7_long_startup_setup( void );
 void v7_long_startup_map( uint64_t, uintptr_t );

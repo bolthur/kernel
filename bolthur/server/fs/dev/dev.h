@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <sys/bolthur.h>
-
 #ifndef _DEV_H
 #define _DEV_H
+
+#include <stdbool.h>
+#include <sys/bolthur.h>
 
 #define MOUNT_POINT_DESTINATION "/dev"
 #define MOUNT_POINT_FILESYSTEM "dev"

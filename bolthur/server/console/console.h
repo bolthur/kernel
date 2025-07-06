@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if ! defined( _CONSOLE_H )
+#define _CONSOLE_H
+
 #include <stdbool.h>
 #include <unistd.h>
 #include "../../library/collection/list/list.h"
-
-#if ! defined( _CONSOLE_H )
-#define _CONSOLE_H
 
 typedef struct console {
   bool active;

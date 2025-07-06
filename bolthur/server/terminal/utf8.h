@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stddef.h>
-
 #if ! defined( _UTF8_H )
 #define _UTF8_H
+
+#include <stdint.h>
+#include <stddef.h>
 
 #define isunicode( c ) ( ( ( c ) & 0xc0 ) == 0xc0 )
 

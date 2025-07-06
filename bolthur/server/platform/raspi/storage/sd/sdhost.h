@@ -17,13 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if ! defined( _SDHOST_H )
+#define _SDHOST_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include "../../libiomem.h"
 #include "../../libperipheral.h"
-
-#if ! defined( _SDHOST_H )
-#define _SDHOST_H
 
 //#define SDHOST_ENABLE_DEBUG 1
 //#define SDHOST_ENABLE_DMA 1

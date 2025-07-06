@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-
 #ifndef _ARCH_ARM_V7_REGISTER_TTBCR_H
 #define _ARCH_ARM_V7_REGISTER_TTBCR_H
+
+#include <stdint.h>
 
 typedef union __packed {
   uint32_t raw;

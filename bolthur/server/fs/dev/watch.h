@@ -17,14 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _WATCH_H
+#define _WATCH_H
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
 #include <sys/bolthur.h>
 #include <sys/tree.h>
-
-#ifndef _WATCH_H
-#define _WATCH_H
 
 #define WATCH_TREE_DEFINE( name, type, field, cmp, attr ) \
   SPLAY_HEAD( name, type ); \

@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if ! defined( _RENDER_H )
+#define _RENDER_H
+
 #include <stddef.h>
 #include <unistd.h>
 #include "terminal.h"
-
-#if ! defined( _RENDER_H )
-#define _RENDER_H
 
 void render_char_to_surface( volatile uint8_t*, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t, uint32_t );
 ssize_t render_terminal( terminal_t*, const char* );

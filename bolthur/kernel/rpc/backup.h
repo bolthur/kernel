@@ -17,13 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _RPC_BACKUP_H
+#define _RPC_BACKUP_H
+
 #include <stdbool.h>
 #include "../../library/collection/list/list.h"
 #include "../task/process.h"
 #include "../task/thread.h"
-
-#ifndef _RPC_BACKUP_H
-#define _RPC_BACKUP_H
 
 typedef struct {
   void* context;

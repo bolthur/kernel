@@ -17,10 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-
 #if ! defined( _STRING_H )
 #define _STRING_H
+
+#include <stddef.h>
 
 void* do_memcpy( void* restrict, const void* restrict, size_t );
 void* do_memset( void*, int, size_t );

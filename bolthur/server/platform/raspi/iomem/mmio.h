@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _MMIO_H
+#define _MMIO_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include <sys/bolthur.h>
-
-#ifndef _MMIO_H
-#define _MMIO_H
 
 extern void* mmio_start;
 extern void* mmio_end;

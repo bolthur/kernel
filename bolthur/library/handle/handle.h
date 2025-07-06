@@ -17,13 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _HANDLE_H
+#define _HANDLE_H
+
 #include <sys/syslimits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/tree.h>
-
-#ifndef _HANDLE_H
-#define _HANDLE_H
 
 SPLAY_HEAD( handle_tree, handle_node );
 void handle_node_tree_init( struct handle_tree* t );

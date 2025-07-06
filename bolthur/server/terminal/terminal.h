@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "../../library/collection/list/list.h"
-#include "../libterminal.h"
-
 #if ! defined( _TERMINAL_H )
 #define _TERMINAL_H
+
+#include "../../library/collection/list/list.h"
+#include "../libterminal.h"
 
 #define TERMINAL_BASE_PATH "/dev/tty"
 #define TERMINAL_MAX_NUM 7

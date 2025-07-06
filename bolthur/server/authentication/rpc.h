@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <sys/bolthur.h>
-
 #ifndef _RPC_H
 #define _RPC_H
+
+#include <stdbool.h>
+#include <sys/bolthur.h>
 
 bool rpc_init( void );
 

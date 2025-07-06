@@ -17,13 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _RPC_DATA_H
+#define _RPC_DATA_H
+
 #include <stdbool.h>
 #include "../../library/collection/list/list.h"
 #include "../task/process.h"
 #include "../task/thread.h"
-
-#ifndef _RPC_DATA_H
-#define _RPC_DATA_H
 
 typedef struct {
   size_t id;

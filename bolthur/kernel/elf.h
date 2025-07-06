@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _ELF_H
+#define _ELF_H
+
 #include <stdbool.h>
 #include <stdint.h>
 #include "task/process.h"
-
-#ifndef _ELF_H
-#define _ELF_H
 
 typedef uint16_t Elf32_Half;
 typedef uint16_t Elf64_Half;

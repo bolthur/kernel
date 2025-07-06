@@ -17,14 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _RPC_GENERIC_H
+#define _RPC_GENERIC_H
+
 #include <stdbool.h>
 #include "../../library/collection/avl/avl.h"
 #include "../task/process.h"
 #include "../task/thread.h"
 #include "backup.h"
-
-#ifndef _RPC_GENERIC_H
-#define _RPC_GENERIC_H
 
 typedef struct {
   avl_node_t node;

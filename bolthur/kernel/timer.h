@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include "task/thread.h"
-
 #ifndef _TIMER_H
 #define _TIMER_H
+
+#include <stddef.h>
+#include "task/thread.h"
 
 typedef struct {
   size_t id;

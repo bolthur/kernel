@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#if ! defined( _RPC_H )
+#define _RPC_H
+
 #include <stdbool.h>
 #include <unistd.h>
 #include "../../library/collection/list/list.h"
-
-#if ! defined( _RPC_H )
-#define _RPC_H
 
 bool rpc_init( void );
 
