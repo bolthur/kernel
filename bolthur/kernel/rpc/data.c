@@ -195,10 +195,6 @@ int rpc_data_queue_add(
     #endif
     return ENOMEM;
   }
-  // debug output
-  #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "Populating entry id and length( %zd, %#zx )\r\n", message->id, message->length )
-  #endif
   // set id and length
   entry->id = message_id;
   entry->length = data_length;

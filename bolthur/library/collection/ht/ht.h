@@ -50,6 +50,7 @@ ht_t* ht_create( void );
 void ht_destroy( ht_t* );
 void* ht_get( const ht_t*, const char* );
 const char* ht_set( ht_t*, const char*, void* );
+void ht_unset( ht_t*, const char* );
 size_t ht_length( const ht_t* );
 hti_t ht_iterator( ht_t* );
 bool ht_next( hti_t* );

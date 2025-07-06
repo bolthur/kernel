@@ -241,6 +241,41 @@ const char* ht_set( ht_t* table, const char* key, void* value ) {
 }
 
 /**
+ * @fn void ht_unset(ht_t*, const char*)
+ * @brief Method to unset hash map key
+ * @param table table to unset key from
+ * @param key key to unset
+ */
+void ht_unset( ht_t* table, const char* key ) {
+  // handle no table or no key
+  if ( ! table || ! key ) {
+    return;
+  }
+  // create hash from key
+  const uint64_t hash = hash_key( key );
+  // get base index
+  size_t index = ( size_t )( hash & ( uint64_t )( table->capacity - 1 ) );
+  // loop while entries index key is valid
+  while ( table->entries[ index ].key ) {
+    // handle match
+    if ( strcmp( key, table->entries[ index ].key ) == 0 ) {
+      // free up key
+      free( ( void* )table->entries[ index ].key );
+      table->entries[ index ].key = NULL;
+      table->length--;
+      // return early
+      return;
+    }
+    // increment index
+    index++;
+    // reset index if greater than capacity
+    if ( index >= table->capacity ) {
+      index = 0;
+    }
+  }
+}
+
+/**
  * @fn size_t ht_length(const ht_t*)
  * @brief Wrapper to get hash table length
  * @param table hash table to get length of
