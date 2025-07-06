@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIBPERIPHERAL_H )
+#ifndef _LIBPERIPHERAL_H
 #define _LIBPERIPHERAL_H
 
 // mailbox offset

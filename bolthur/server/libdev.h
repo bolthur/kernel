@@ -17,14 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _LIBDEV_H
+#define _LIBDEV_H
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <errno.h>
 #include <sys/bolthur.h>
-
-#if ! defined( _LIBDEV_H )
-#define _LIBDEV_H
 
 #define DEV_START RPC_CUSTOM_START
 #define DEV_KILL DEV_START + 1

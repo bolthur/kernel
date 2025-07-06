@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIBSDHOST_H )
+#ifndef _LIBSDHOST_H
 #define _LIBSDHOST_H
 
 // command register

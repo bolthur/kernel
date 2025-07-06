@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIBMAILBOX_H )
+#ifndef _LIBMAILBOX_H
 #define _LIBMAILBOX_H
 
 #define MAILBOX_GET_POWER_STATE 0x20001

@@ -17,14 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _LIBCONSOLE_H
+#define _LIBCONSOLE_H
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <errno.h>
 #include <sys/bolthur.h>
-
-#if ! defined( _LIBCONSOLE_H )
-#define _LIBCONSOLE_H
 
 #define CONSOLE_ADD RPC_CUSTOM_START
 #define CONSOLE_SELECT CONSOLE_ADD + 1

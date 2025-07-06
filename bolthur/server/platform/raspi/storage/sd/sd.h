@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _SD_H )
+#ifndef _SD_H
 #define _SD_H
 
 #include <stdbool.h>

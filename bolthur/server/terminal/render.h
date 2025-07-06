@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _RENDER_H )
+#ifndef _RENDER_H
 #define _RENDER_H
 
 #include <stddef.h>

@@ -17,6 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _LIBHELPER_H
+#define _LIBHELPER_H
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -25,9 +28,6 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/bolthur.h>
-
-#if ! defined( _LIBHELPER_H )
-#define _LIBHELPER_H
 
 /**
  * @fn void send_vfs_add_request(vfs_add_request_t*, size_t, unsigned int)

@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _MAIN_H )
+#ifndef _MAIN_H
 #define _MAIN_H
 
 #define CONSOLE_MANAGER "/dev/console"

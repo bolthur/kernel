@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _BARRIER_H )
+#ifndef _BARRIER_H
 #define _BARRIER_H
 
 void barrier_dmb( void );

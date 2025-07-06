@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIBIOMEM_H )
+#ifndef _LIBIOMEM_H
 #define _LIBIOMEM_H
 
 #include <string.h>

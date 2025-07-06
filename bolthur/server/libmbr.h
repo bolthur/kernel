@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <assert.h>
-
 #ifndef _LIBMBR_H
 #define _LIBMBR_H
+
+#include <stdint.h>
+#include <assert.h>
 
 #define PARTITION_TABLE_OFFSET 446
 #define PARTITION_TABLE_NUMBER 4

@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIBEMMC_H )
+#ifndef _LIBEMMC_H
 #define _LIBEMMC_H
 
 // command register

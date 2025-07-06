@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _SDHOST_H )
+#ifndef _SDHOST_H
 #define _SDHOST_H
 
 #include <stdbool.h>

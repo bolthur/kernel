@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _GLOBAL_H )
+#ifndef _GLOBAL_H
 #define _GLOBAL_H
 
 #include <stddef.h>

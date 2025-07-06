@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _MAILBOX_H )
+#ifndef _MAILBOX_H
 #define _MAILBOX_H
 
 #include <stdint.h>

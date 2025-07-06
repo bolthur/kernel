@@ -17,14 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _LIBTERMINAL_H
+#define _LIBTERMINAL_H
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <errno.h>
 #include <sys/bolthur.h>
-
-#if ! defined( _LIBTERMINAL_H )
-#define _LIBTERMINAL_H
 
 typedef struct {
   char terminal[ PATH_MAX ];

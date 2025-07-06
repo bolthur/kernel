@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _PSF_H )
+#ifndef _PSF_H
 #define _PSF_H
 
 #include <stdint.h>

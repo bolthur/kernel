@@ -17,14 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _LIBFRAMEBUFFER_H
+#define _LIBFRAMEBUFFER_H
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <errno.h>
 #include <sys/bolthur.h>
-
-#if ! defined( _LIBFRAMEBUFFER_H )
-#define _LIBFRAMEBUFFER_H
 
 #define FRAMEBUFFER_GET_RESOLUTION RPC_CUSTOM_START
 #define FRAMEBUFFER_CLEAR FRAMEBUFFER_GET_RESOLUTION + 1

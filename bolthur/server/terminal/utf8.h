@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _UTF8_H )
+#ifndef _UTF8_H
 #define _UTF8_H
 
 #include <stdint.h>

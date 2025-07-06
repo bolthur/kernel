@@ -17,14 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _LIBPARTITION_H
+#define _LIBPARTITION_H
+
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <errno.h>
 #include <sys/bolthur.h>
-
-#if ! defined( _LIBPARTITION_H )
-#define _LIBPARTITION_H
 
 #define PARTITION_REGISTER_HANDLER RPC_CUSTOM_START
 #define PARTITION_RELEASE_HANDLER PARTITION_REGISTER_HANDLER + 1

@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _EMMC_H )
+#ifndef _EMMC_H
 #define _EMMC_H
 
 #include <stdbool.h>

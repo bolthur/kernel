@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _GENERIC_H )
+#ifndef _GENERIC_H
 #define _GENERIC_H
 
 #define PAGE_SIZE 0x1000

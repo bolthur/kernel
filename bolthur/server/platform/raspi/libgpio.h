@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIBGPIO_H )
+#ifndef _LIBGPIO_H
 #define _LIBGPIO_H
 
 enum iomem_gpio_enum_function {

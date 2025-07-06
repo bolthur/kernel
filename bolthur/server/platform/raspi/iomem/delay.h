@@ -17,7 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _DELAY_H )
+#ifndef _DELAY_H
 #define _DELAY_H
 
 #include <stdint.h>
