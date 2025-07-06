@@ -22,7 +22,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <unistd.h>
+#include <sys/types.h>
 #include "../../library/collection/avl/avl.h"
 #include "../event.h"
 #include "state.h"

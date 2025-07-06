@@ -19,6 +19,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <errno.h>
 #include <sys/bolthur.h>
 #include "configuration.h"
 #include "util.h"
@@ -150,18 +151,21 @@ bool configuration_handle( const char* path ) {
     // reroute handling
     if ( n->reroute ) {
       // ORDER NECESSARY HERE DUE TO THE DEFINES
+      // reroute stdin
       EARLY_STARTUP_PRINT( "Rerouting stdin, stdout and stderr\r\n" )
       FILE* fpin = freopen( "/dev/stdin", "r", stdin );
       if ( ! fpin ) {
         EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
         exit( 1 );
       }
+      // reroute stdout
       EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", fpin->_file )
       FILE* fpout = freopen( "/dev/stdout", "w", stdout );
       if ( ! fpout ) {
         EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
         exit( 1 );
       }
+      // reroute stderr
       EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", fpout->_file )
       FILE* fperr = freopen( "/dev/stderr", "w", stderr );
       if ( ! fperr ) {
@@ -169,6 +173,54 @@ bool configuration_handle( const char* path ) {
         exit( 1 );
       }
       EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fperr->_file )
+      // allocate request
+      vfs_boot_init_request_t* request = malloc( sizeof( vfs_boot_init_request_t ) );
+      // handle request error
+      if ( ! request ) {
+        EARLY_STARTUP_PRINT( "Unable to allocate memory\r\n" )
+        exit( 1 );
+      }
+      // clear and prepare memory
+      memset( request, 0, sizeof( *request ) );
+      strncpy( request->in, "/dev/stdin", PATH_MAX );
+      strncpy( request->out, "/dev/stdout", PATH_MAX );
+      strncpy( request->err, "/dev/stderr", PATH_MAX );
+      // wait for response
+      size_t response_id = bolthur_rpc_raise(
+        RPC_VFS_BOOT_INIT,
+        VFS_DAEMON_ID,
+        request,
+        sizeof( *request ),
+        NULL,
+        RPC_VFS_BOOT_INIT,
+        request,
+        sizeof( *request ),
+        0,
+        0,
+        NULL
+      );
+      if ( errno ) {
+        EARLY_STARTUP_PRINT( "Unable to call boot init: %s\r\n", strerror( errno ) )
+        exit( 1 );
+      }
+      // free request again
+      free( request );
+      // get message and data size
+      size_t data_size;
+      vfs_boot_init_response_t* response = bolthur_rpc_fetch_from_mailbox(
+        response_id, &data_size, true, NULL );
+      if ( errno ) {
+        EARLY_STARTUP_PRINT( "Unable to fetch boot init response: %s\r\n", strerror(errno) )
+        exit( -1 );
+      }
+      // handle success not one
+      if (response->result != 0) {
+        EARLY_STARTUP_PRINT( "Boot init request failed!\r\n" )
+        free( response );
+        exit( -1 );
+      }
+      // free response again
+      free( response );
     }
   }
   // free queue again

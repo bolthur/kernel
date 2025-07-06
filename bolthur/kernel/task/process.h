@@ -21,7 +21,7 @@
 #define _TASK_PROCESS_H
 
 #include <stddef.h>
-#include <unistd.h>
+#include <sys/types.h>
 #include "../../library/collection/avl/avl.h"
 #include "../../library/collection/list/list.h"
 #include "../mm/virt.h"

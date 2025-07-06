@@ -1,2 +1,2 @@
 
-SUBDIRS = avl list
+SUBDIRS = avl ht list

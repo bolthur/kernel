@@ -135,6 +135,7 @@ AC_CONFIG_FILES([
   Makefile
   collection/Makefile
   collection/avl/Makefile
+  collection/ht/Makefile
   collection/list/Makefile
   framebuffer/Makefile
   handle/Makefile
