@@ -54,14 +54,14 @@ void rpc_handle_close_async(
   // get message and data size
   size_t data_size;
   void* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! response_data ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   if ( data_size != sizeof( response ) ) {
     response.status = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   memcpy( &response, response_data, data_size );
@@ -69,7 +69,7 @@ void rpc_handle_close_async(
   EARLY_STARTUP_PRINT( "response.status = %d\r\n", response.status )
   // handle error
   if ( 0 > response.status ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // destroy handle
@@ -77,7 +77,7 @@ void rpc_handle_close_async(
     async_data->original_origin,
     request->handle
   );
-  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
 }
 
 /**
@@ -99,9 +99,9 @@ void rpc_handle_close(
   // get message and data size
   size_t data_size;
   vfs_close_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // get handle
@@ -111,7 +111,7 @@ void rpc_handle_close(
   // handle error
   if ( 0 > result ) {
     response.status = result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -133,9 +133,8 @@ void rpc_handle_close(
   );
   if ( errno ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   free( request );
-  return;
 }

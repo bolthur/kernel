@@ -25,6 +25,13 @@
 #include "../rpc.h"
 #include "../mountpoint/node.h"
 #include "../ioctl/handler.h"
+#include "../../../../library/collection/ht/ht.h"
+
+/**
+ * @brief Hash table for boot requests
+ */
+ht_t* boot_hash_table = NULL;
+ht_t* finished_table = NULL;
 
 /**
  * @fn void rpc_handle_boot_init_async(size_t, pid_t, size_t, size_t)
@@ -50,27 +57,111 @@ void rpc_handle_boot_init_async(
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   void* response_data = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! response_data ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
-  if ( data_size != sizeof( response ) ) {
+  // original request
+  vfs_boot_init_request_t* request = async_data->original_data;
+  if ( ! request ) {
+    free( response_data );
+    response.result = -EINVAL;
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
+    return;
+  }
+  // allocate string
+  char* str = malloc( sizeof( char ) * 256 );
+  if ( ! str ) {
+    free( response_data );
+    response.result = -ENOMEM;
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
+    return;
+  }
+  // transform original origin to string
+  snprintf( str, sizeof( *str ) * 256, "%zu", async_data->original_origin );
+  // get table
+  ht_t* table = ht_get( boot_hash_table, str );
+  if ( ! table ) {
+    // free string
+    free( str );
+    free( response_data );
+    // set response result
     response.result = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    // return it
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
+    // skip rest
+    return;
+  }
+  // transform current origin to string
+  snprintf( str, sizeof( *str ) * 256, "%zu", origin );
+  // unset entry
+  ht_unset( table, str );
+  // destroyed flag
+  bool finished = false;
+  // handle length 0
+  if ( ! table->length ) {
+    // get original origin
+    snprintf( str, sizeof( *str ) * 256, "%zu", async_data->original_origin );
+    // unset table
+    ht_unset( boot_hash_table, str );
+    // destroy hash table
+    ht_destroy( table );
+    // set finished flag
+    finished = true;
+  }
+  // get finished table
+  snprintf( str, sizeof( *str ) * 256, "%zu", async_data->original_origin );
+  int* data = ht_get( finished_table, str );
+  if ( ! data ) {
+    // free string
+    free( str );
+    free( response_data );
+    // set response result
+    response.result = -EIO;
+    // return it
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
+    // skip rest
+    return;
+  }
+  // handle invalid data size
+  if ( data_size != sizeof( response ) ) {
+    // free string and response data
+    free( str );
+    free( response_data );
+    // set response result
+    response.result = -EIO;
+    // return from rpc
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
+    // skip rest
     return;
   }
   // copy over data
   memcpy( &response, response_data, sizeof( response ) );
-  free( response_data );
-  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+  // check success
+  if ( 0 != response.result && 1 == *data ) {
+    *data = 2;
+  }
+  // handle finished
+  if ( finished ) {
+    // transform origin
+    snprintf( str, sizeof( *str ) * 256, "%zu", async_data->original_origin );
+    // unset finished table entry
+    ht_unset( finished_table, str );
+    // populate result
+    response.result = *data == 1 ? 0 : -EIO;
+    // free data
+    free( data );
+    // return from rpc
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
+  }
 }
 
 /**
@@ -90,25 +181,208 @@ void rpc_handle_boot_init(
 ) {
   // handle async return in case response info is set
   if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
-    rpc_handle_add_async( type, origin, data_info, response_info );
+    rpc_handle_boot_init_async( type, origin, data_info, response_info );
     return;
   }
+  // default response
   vfs_boot_init_response_t response = { .result = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_boot_init_request_t* request = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, NULL );
-  if ( errno ) {
+  // handle error
+  if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  response.result = 0;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  // allocate finished table
+  if ( ! finished_table ) {
+    // create hash table
+    finished_table = ht_create();
+    // handle failure
+    if ( ! finished_table ) {
+      // set result
+      response.result = -ENOMEM;
+      // free request
+      free( request );
+      // return error
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      // return execution
+      return;
+    }
+  }
+  // allocate hash table if not existing
+  if ( ! boot_hash_table ) {
+    // create hash table
+    boot_hash_table = ht_create();
+    // handle failure
+    if ( ! boot_hash_table ) {
+      // set result
+      response.result = -ENOMEM;
+      // free request
+      free( request );
+      // return error
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      // return execution
+      return;
+    }
+  }
+  // allocate space for string
+  char* str = malloc( sizeof( char ) * 256 );
+  if ( ! str ) {
+    // set result
+    response.result = -ENOMEM;
+    // free request
+    free( request );
+    // return error
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    // return execution
+    return;
+  }
+  // transform origin into string
+  snprintf( str, sizeof( *str ) * 256, "%zu", origin );
+  int* data = malloc( sizeof( int ) );
+  if ( ! data ) {
+    // set result
+    response.result = -ENOMEM;
+    // free request
+    free( request );
+    // return error
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    // return execution
+    return;
+  }
+  // set success
+  *data = 1;
+  // add data to finished table
+  if ( ! ht_set( finished_table, str, data ) ) {
+    // set result
+    response.result = -EIO;
+    // free request
+    free( request );
+    free( data );
+    // return error
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    // return execution
+    return;
+  }
+  // populate boot hash table
+  ht_t* table = ht_create();
+  if ( ! table ) {
+    // set result
+    response.result = -ENOMEM;
+    // free request
+    free( request );
+    // remove entry from finished table
+    ht_unset( finished_table, str );
+    free( data );
+    // return error
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    // return execution
+    return;
+  }
+  // push table into hash table
+  if ( ! ht_set( boot_hash_table, str, table ) ) {
+    // set result
+    response.result = -ENOMEM;
+    // destroy table
+    ht_destroy( table );
+    // remove entry from finished table
+    ht_unset( finished_table, str );
+    free( data );
+    // free request and str
+    free( request );
+    free( str );
+    // return error
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    // return execution
+    return;
+  }
+  // populate hash table
+  mountpoint_node_tree_each(mountpoint_get_tree(), mountpoint_node, n, {
+    // only dev is valid
+    if ( 0 != strncmp( n->name, "/dev", strlen( "/dev" ) ) ) {
+      continue;
+    }
+    // debug output
+    EARLY_STARTUP_PRINT( "mountpoint: %s\r\n", n->name )
+    // transfer pid to string
+    snprintf( str, sizeof( *str ) * 256, "%d", n->pid );
+    // push to table
+    if ( ! ht_set( table, str, ( void* )n->pid ) ) {
+      // set result
+      response.result = -ENOMEM;
+      // destroy table
+      ht_unset( boot_hash_table, str );
+      ht_destroy( table );
+      // remove entry from finished table
+      ht_unset( finished_table, str );
+      free( data );
+      // free request and str
+      free( request );
+      free( str );
+      // return error
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      // return execution
+      return;
+    }
+  });
+  // get hash table iterator
+  hti_t it = ht_iterator( table );
+  // flag for rpc was raised
+  bool raised = false;
+  // loop while hash table has next
+  while ( ht_next( &it ) ) {
+    EARLY_STARTUP_PRINT( "it.value = %d\r\n", ( pid_t )it.value );
+    // call rpc
+    bolthur_rpc_raise(
+      type,
+      ( pid_t )it.value,
+      request,
+      data_size,
+      rpc_handle_boot_init_async,
+      type,
+      request,
+      data_size,
+      origin,
+      data_info,
+      NULL
+    );
+    // handle error
+    if ( errno ) {
+      // set result
+      response.result = -errno;
+      // destroy table
+      ht_unset( boot_hash_table, str );
+      ht_destroy( table );
+      // remove entry from finished table
+      ht_unset( finished_table, str );
+      free( data );
+      // free request and str
+      free( request );
+      free( str );
+      // return error
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      // return execution
+      return;
+    }
+    // set flag
+    raised = true;
+  }
+  // free stuff
   free( request );
+  free( str );
+  // handle raised with early exit
+  if ( ! raised ) {
+    // set result to success
+    response.result = 0;
+    // return
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  }
 }

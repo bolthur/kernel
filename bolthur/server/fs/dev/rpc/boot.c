@@ -24,23 +24,25 @@
 #include <sys/bolthur.h>
 #include "../rpc.h"
 #include "../handle.h"
+#include "../watch.h"
+#include "../ioctl/handler.h"
 
 /**
- * @fn void rpc_handle_stat(size_t, pid_t, size_t, size_t)
- * @brief Handle stat request
+ * @fn void rpc_handle_add(size_t, pid_t, size_t, size_t)
+ * @brief handle add request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_stat(
+void rpc_handle_boot_init(
   size_t type,
   pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  vfs_stat_response_t response = { .success = false };
+  vfs_boot_init_response_t response = { .result = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
@@ -51,26 +53,44 @@ void rpc_handle_stat(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  // fetch rpc data
   size_t data_size;
-  vfs_stat_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  // handle error
+  vfs_boot_init_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
+    response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  // get handle
-  device_handle_t* handle = handle_get_by_path( request->file_path );
-  // handle not existing
-  if ( ! handle ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
-    free( request );
-    return;
+  // ORDER NECESSARY HERE DUE TO THE DEFINES
+  // reroute stdin
+  EARLY_STARTUP_PRINT( "Rerouting stdin to %s\r\n", request->in )
+  FILE* fpin = freopen( request->in, "r", stdin );
+  if ( ! fpin ) {
+    EARLY_STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) )
+    EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
+    exit( 1 );
   }
-  // copy over stuff, return and free
-  response.success = true;
-  response.handler = handle->process;
-  memcpy( &response.info, &handle->info, sizeof( response.info ) );
+  // reroute stdout
+  EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", fpin->_file )
+  EARLY_STARTUP_PRINT( "Rerouting stdout to %s\r\n", request->out )
+  FILE* fpout = freopen( request->out, "w", stdout );
+  if ( ! fpout ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
+    exit( 1 );
+  }
+  // reroute stderr
+  EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", fpout->_file )
+  EARLY_STARTUP_PRINT( "Rerouting stderr to %s\r\n", request->err )
+  FILE* fperr = freopen( request->err, "w", stderr );
+  if ( ! fperr ) {
+    EARLY_STARTUP_PRINT( "Unable to reroute stderr\r\n" )
+    exit( 1 );
+  }
+  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fperr->_file )
+
+  // FIXME: ROUTE THROUGH TO CHILD PROCESSES
+
+  // return success
+  response.result = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   free( request );
 }

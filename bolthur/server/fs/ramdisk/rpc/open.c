@@ -46,29 +46,29 @@ void rpc_handle_open(
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     EARLY_STARTUP_PRINT( "1\r\n" )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
     EARLY_STARTUP_PRINT( "1\r\n" )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // fetch rpc data
   size_t data_size;
   vfs_open_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     EARLY_STARTUP_PRINT( "1\r\n" )
     response.handle = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   EARLY_STARTUP_PRINT( "opening %s\r\n", request->path )
   TAR* info = ramdisk_get_info( request->path );
   if( ! info ) {
     EARLY_STARTUP_PRINT( "1\r\n" )
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -92,7 +92,7 @@ void rpc_handle_open(
   response.handle = 0;
   response.handler = getpid();
   // return response
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   // free stuff
   free( request );
 }

@@ -55,11 +55,11 @@ void rpc_handle_mount_async(
   // fetch response
   size_t data_size;
   vfs_mount_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! response ) {
     return;
   }
   // return and free
-  bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+  bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
 }
 
 /**
@@ -88,21 +88,21 @@ void rpc_handle_mount(
   response.result = -EINVAL;
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   size_t data_size;
   vfs_mount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   device_handle_t* handle = handle_get_by_path( request->source );
   // handle error
   if ( ! handle ) {
     response.result = -ENOENT;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -122,7 +122,7 @@ void rpc_handle_mount(
   );
   if ( errno ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }

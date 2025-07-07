@@ -55,20 +55,20 @@ void rpc_handle_close(
   vfs_close_response_t response = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   size_t data_size;
   vfs_close_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
-  if ( errno ) {
+  if ( ! request ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // get handle
@@ -76,7 +76,7 @@ void rpc_handle_close(
   int result = handle_get( &node, request->origin, request->handle );
   if ( 0 > result ) {
     response.status = result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -87,7 +87,7 @@ void rpc_handle_close(
     result = ext_directory_close( dir );
     if ( EOK != result ) {
       response.status = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
       free( request );
       return;
     }
@@ -97,7 +97,7 @@ void rpc_handle_close(
     if ( EOK != result ) {
       free( request );
       response.status = -result;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
       return;
     }
   }
@@ -109,6 +109,6 @@ void rpc_handle_close(
   // set success
   response.status = 0;
   // return data
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   free( request );
 }

@@ -77,15 +77,15 @@ void output_handle_out(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // allocate for data fetching
@@ -97,7 +97,7 @@ void output_handle_out(
   );
   if ( ! found ) {
     error.status = -ENODEV;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -105,7 +105,7 @@ void output_handle_out(
   void* shm_addr = _syscall_memory_shared_attach( terminal->shm_id, ( uintptr_t )NULL );
   if ( errno ) {
     error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -116,7 +116,7 @@ void output_handle_out(
   if ( ! response ) {
     _syscall_memory_shared_detach( terminal->shm_id );
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -127,7 +127,7 @@ void output_handle_out(
   vfs_write_response_t dummy = { .len = ( ssize_t )strlen( shm_addr ) };
   _syscall_memory_shared_detach( terminal->shm_id );
   memcpy( response->container, &dummy, sizeof( dummy ) );
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
   // free terminal structure again
   free( request );
   free( response );
@@ -151,15 +151,15 @@ void output_handle_err(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // allocate for data fetching
@@ -171,7 +171,7 @@ void output_handle_err(
   );
   if ( ! found ) {
     error.status = -ENODEV;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -179,7 +179,7 @@ void output_handle_err(
   void* shm_addr = _syscall_memory_shared_attach( terminal->shm_id, ( uintptr_t )NULL );
   if ( errno ) {
     error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -190,7 +190,7 @@ void output_handle_err(
   if ( ! response ) {
     _syscall_memory_shared_detach( terminal->shm_id );
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -200,7 +200,7 @@ void output_handle_err(
   // fill dummy return
   vfs_write_response_t dummy = { .len = ( ssize_t )strlen( shm_addr ) };
   memcpy( response->container, &dummy, sizeof( dummy ) );
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
   _syscall_memory_shared_detach( terminal->shm_id );
   // free terminal structure again
   free( request );
@@ -225,5 +225,5 @@ void output_handle_in(
   __unused size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
-  bolthur_rpc_return( RPC_VFS_READ, &error, sizeof( error ), NULL );
+  bolthur_rpc_return( RPC_VFS_READ, &error, sizeof( error ), NULL, 0 );
 }

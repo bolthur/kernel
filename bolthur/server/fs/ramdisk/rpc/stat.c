@@ -45,25 +45,25 @@ void rpc_handle_stat(
   vfs_stat_response_t response = { .success = false };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // fetch rpc data
   size_t data_size;
   vfs_stat_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
-  if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  if ( ! request ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   TAR* info = ramdisk_get_info( request->file_path );
   if( ! info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -87,7 +87,7 @@ void rpc_handle_stat(
   response.success = true;
   response.handler = getpid();
   // return response
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   // free stuff
   free( request );
 }

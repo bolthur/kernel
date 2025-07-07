@@ -378,14 +378,14 @@ void framebuffer_handle_resolution(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // allocate response
@@ -396,7 +396,7 @@ void framebuffer_handle_resolution(
   // handle error
   if ( ! response ) {
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -411,7 +411,7 @@ void framebuffer_handle_resolution(
   // copy over data
   memcpy( response->container, &resolution_data, sizeof( framebuffer_resolution_t ) );
   // return from rpc
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
   // free response
   free( response );
   free( request );
@@ -435,14 +435,14 @@ void framebuffer_handle_clear(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // clear
@@ -451,7 +451,7 @@ void framebuffer_handle_clear(
   framebuffer_flip();
   // set success and return
   error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
   free( request );
 }
 
@@ -473,20 +473,20 @@ void framebuffer_handle_flip(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   framebuffer_flip();
   // return success
   error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
   free( request );
 }
 
@@ -508,19 +508,19 @@ void framebuffer_handle_surface_render(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // allocate  structure
@@ -530,7 +530,7 @@ void framebuffer_handle_surface_render(
   list_item_t* item = list_lookup_data( memory_list, ( void* )info->surface_id );
   if ( ! item ) {
     error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -539,7 +539,7 @@ void framebuffer_handle_surface_render(
   memcpy( current_back, mem->address, size );
   // return success
   error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
   free( request );
 }
 
@@ -561,19 +561,19 @@ void framebuffer_handle_surface_allocate(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // allocate space for data
@@ -586,7 +586,7 @@ void framebuffer_handle_surface_allocate(
   size_t shm_id = _syscall_memory_shared_create( memory_size );
   if ( errno ) {
     error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -594,7 +594,7 @@ void framebuffer_handle_surface_allocate(
   void* shm_addr = _syscall_memory_shared_attach( shm_id, 0 );
   if ( errno ) {
     error.status = -errno;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -611,7 +611,7 @@ void framebuffer_handle_surface_allocate(
       break;
     }
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -634,7 +634,7 @@ void framebuffer_handle_surface_allocate(
       break;
     }
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -659,7 +659,7 @@ void framebuffer_handle_surface_allocate(
       break;
     }
     error.status = -ENOMEM;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     free( mem );
     return;
@@ -668,7 +668,7 @@ void framebuffer_handle_surface_allocate(
   memset( response, 0, response_size );
   memcpy( response->container, info, sizeof( framebuffer_surface_allocate_t ) );
   // return from rpc and free remaining stuff
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
   free( response );
   free( request );
 }

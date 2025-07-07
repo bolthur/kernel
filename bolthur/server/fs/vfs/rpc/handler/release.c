@@ -40,33 +40,32 @@ void rpc_handle_handler_release(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "handler release called\r\n" )
   vfs_release_handler_response_t response = { .result = -EINVAL };
   // handle no data
   if( ! data_info ) {
     response.result = -ENODATA;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_release_handler_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   handler_node_t* found = handler_node_extract( request->request );
   if ( ! found ) {
     response.result = 0;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
   // check handler
   if ( found->handler != origin ) {
     response.result = -EPERM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -74,6 +73,6 @@ void rpc_handle_handler_release(
   handler_node_remove( request->request );
   // return success
   response.result = 0;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   free( request );
 }

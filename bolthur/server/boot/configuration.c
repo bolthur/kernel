@@ -209,7 +209,7 @@ bool configuration_handle( const char* path ) {
       size_t data_size;
       vfs_boot_init_response_t* response = bolthur_rpc_fetch_from_mailbox(
         response_id, &data_size, true, NULL );
-      if ( errno ) {
+      if ( ! response ) {
         EARLY_STARTUP_PRINT( "Unable to fetch boot init response: %s\r\n", strerror(errno) )
         exit( -1 );
       }

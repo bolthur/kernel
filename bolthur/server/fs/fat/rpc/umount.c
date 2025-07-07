@@ -46,21 +46,21 @@ void rpc_handle_umount(
   vfs_umount_response_t response = { .result = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // fetch rpc data
   size_t data_size;
   vfs_umount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
-  if ( errno ) {
+  if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -72,12 +72,12 @@ void rpc_handle_umount(
   int result = fat_mountpoint_umount( request->target );
   if ( EOK != result ) {
     response.result = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
   // populate success
   response.result = 0;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   free( request );
 }

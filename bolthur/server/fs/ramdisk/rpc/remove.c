@@ -38,5 +38,5 @@ void rpc_handle_remove(
   [[maybe_unused]] size_t response_info
 ) {
   vfs_remove_response_t response = { .status = -EINVAL };
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
 }

@@ -59,14 +59,14 @@ void rpc_handle_getdents_async(
   // get message and data size
   size_t data_size;
   vfs_getdents_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! response ) {
     return;
   }
   // original request
   vfs_getdents_request_t* request = async_data->original_data;
   if ( ! request ) {
     response->result = -EINVAL;
-    bolthur_rpc_return( type, response, data_size, async_data );
+    bolthur_rpc_return( type, response, data_size, async_data, 0 );
     return;
   }
   handle_node_t* container;
@@ -79,7 +79,7 @@ void rpc_handle_getdents_async(
   // handle error
   if ( 0 > result ) {
     response->result = result;
-    bolthur_rpc_return( type, response, data_size, async_data );
+    bolthur_rpc_return( type, response, data_size, async_data, 0 );
     free( response );
     return;
   }
@@ -87,7 +87,7 @@ void rpc_handle_getdents_async(
   if ( 0 < response->offset ) {
     container->pos = response->offset;
   }
-  bolthur_rpc_return( type, response, data_size, async_data );
+  bolthur_rpc_return( type, response, data_size, async_data, 0 );
   free( response );
 }
 
@@ -120,7 +120,7 @@ void rpc_handle_getdents(
   // handle no data
   if( ! data_info ) {
     response->result = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
@@ -129,9 +129,9 @@ void rpc_handle_getdents(
   // get message and data size
   size_t data_size;
   vfs_getdents_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response->result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     return;
   }
   handle_node_t* container;
@@ -141,7 +141,7 @@ void rpc_handle_getdents(
   // handle error
   if ( 0 > result ) {
     response->result = result;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     free( request );
     return;
@@ -166,7 +166,7 @@ void rpc_handle_getdents(
   );
   if ( errno ) {
     response->result = -errno;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     free( request );
     return;

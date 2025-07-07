@@ -44,20 +44,20 @@ void rpc_handle_watch_register(
   vfs_watch_register_response_t response = { .result = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // handle no data
   if( ! data_info ) {
     response.result = -ENODATA;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   size_t data_size;
   vfs_watch_register_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // try to register watcher
@@ -72,5 +72,5 @@ void rpc_handle_watch_register(
   // free request data
   free( request );
   // return result
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
 }

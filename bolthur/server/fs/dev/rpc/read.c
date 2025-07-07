@@ -62,11 +62,11 @@ void rpc_handle_read_async(
   // fetch response
   size_t data_size;
   vfs_read_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! response ) {
     return;
   }
   // return and free
-  bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+  bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
   free( response );
 }
 
@@ -100,7 +100,7 @@ void rpc_handle_read(
   response->len = -EINVAL;
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
@@ -108,9 +108,9 @@ void rpc_handle_read(
   size_t data_size;
   vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
-  if ( errno ) {
+  if ( ! request ) {
     response->len = -errno;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
@@ -118,7 +118,7 @@ void rpc_handle_read(
   // handle error
   if ( ! handle ) {
     response->len = -ENOENT;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     free( request );
     return;
@@ -138,7 +138,7 @@ void rpc_handle_read(
     NULL
   );
   if ( errno ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     free( request );
     return;

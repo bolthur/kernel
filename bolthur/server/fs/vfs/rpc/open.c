@@ -53,7 +53,7 @@
     && !( request->flags & O_CREAT )
   ) {
     response->handle = -ENOENT;
-    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
     return;
   }
   // handle success with combination of create and exclusive
@@ -63,19 +63,19 @@
     && ( request->flags & O_EXCL )
   ) {
     response->handle = -EEXIST;
-    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
     return;
   }
   // FIXME: ADD SUPPORT FOR CREATION
   if ( 0 > open_response->handle && ( request->flags & O_CREAT ) ) {
     response->handle = -ENOSYS;
-    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
     return;
   }
   // handle any other failure
   if ( 0 > open_response->handle ) {
     response->handle = -ENOENT;
-    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
     return;
   }
 
@@ -96,14 +96,14 @@
     )
   ) {
     response->handle = -EISDIR;
-    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
     return;
   }
   // get mount point
   mountpoint_node_t* mount_point = mountpoint_node_extract( request->path );
   // handle no mount point node found
   if ( ! mount_point ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
     return;
   }
   // generate container
@@ -124,14 +124,14 @@
   if ( ! container ) {
     // prepare error return
     response->handle = result;
-    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
     return;
   }
   // copy over stat stuff
   memcpy( &container->info, &open_response->st, sizeof( open_response->st ) );
   // prepare return
   response->handle = container->handle;
-  bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+  bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
 }
 
 /**
@@ -158,37 +158,37 @@ void rpc_handle_open_async(
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // original request
   vfs_open_request_t* request = async_data->original_data;
   if ( ! request ) {
-    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_open_response_t* open_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! open_response ) {
     response.handle = -errno;
-    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // handle error
   if ( 0 > open_response->handle ) {
     handle_destroy( request->origin, request->handle );
     response.handle = open_response->handle;
-    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data, 0 );
     free( open_response );
     return;
   }
   // try to get previously generated handle
   handle_node_t* container;
-  int result = handle_get( &container, request->origin, request->handle );
+  const int result = handle_get( &container, request->origin, request->handle );
   if ( 0 > result ) {
     response.handle = result;
-    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data, 0 );
     free( open_response );
     return;
   }
@@ -200,7 +200,7 @@ void rpc_handle_open_async(
   response.handler = container->handler;
   memcpy( &response.st, &container->info, sizeof( open_response->st ) );
   // return rpc
-  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
   // free response
   free( open_response );
 }
@@ -229,25 +229,24 @@ void rpc_handle_open(
 
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_open_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response.handle = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  EARLY_STARTUP_PRINT( "opening %s\r\n", request->path )
   // get mount point
   mountpoint_node_t* mount_point = mountpoint_node_extract( request->path );
   // handle no mount point node found
   if ( ! mount_point ) {
     free( request );
     response.handle = -ENOENT;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // generate handle
@@ -265,7 +264,7 @@ void rpc_handle_open(
   if ( ! container ) {
     // prepare error return
     response.handle = result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // prepare internal stuff
@@ -287,7 +286,7 @@ void rpc_handle_open(
   );
   // handle error
   if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }

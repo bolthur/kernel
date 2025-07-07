@@ -162,16 +162,16 @@ void rpc_handle_mount(
   response.result = -EINVAL;
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // fetch rpc data
   size_t data_size;
   vfs_mount_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
-  if ( errno ) {
+  if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
 
@@ -180,7 +180,7 @@ void rpc_handle_mount(
   int result = ext4_mount_point_stats( request->target, &stats );
   if ( ENOENT != result ) {
     response.result = -EALREADY;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }*/
@@ -191,14 +191,14 @@ void rpc_handle_mount(
   // handle error
   if ( ! device ) {
     response.result = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
   // handle invalid partition
   if ( partition_index >= PARTITION_TABLE_NUMBER ) {
     response.result = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     free( device );
     return;
@@ -207,7 +207,7 @@ void rpc_handle_mount(
   mbr_table_entry_t entry;
   if ( ! fetch_mbr_entry( device, partition_index, &entry ) ) {
     response.result = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     free( device );
     return;
@@ -224,7 +224,7 @@ void rpc_handle_mount(
   common_blockdev_t* bd = common_blockdev_get( device );
   if ( ! bd ) {
     response.result = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     free( device );
     return;
@@ -239,7 +239,7 @@ void rpc_handle_mount(
   // handle error
   if ( EOK != result ) {
     response.result = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     free( device );
     return;
@@ -258,7 +258,7 @@ void rpc_handle_mount(
   // handle error
   if ( EOK != result ) {
     response.result = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     free( device );
     return;
@@ -266,7 +266,7 @@ void rpc_handle_mount(
   // mount went well, return success with pid as handler
   response.result = 0;
   response.handler = getpid();
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   free( request );
   free( device );
 }

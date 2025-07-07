@@ -40,5 +40,5 @@ void rpc_custom_handle_kill(
   [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
 }

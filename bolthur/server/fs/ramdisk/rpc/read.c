@@ -44,7 +44,8 @@ static void read_error_return( size_t type, int error ) {
     type,
     &read_error_response,
     sizeof( read_error_response ),
-    NULL
+    NULL,
+    0
   );
 }
 
@@ -77,7 +78,7 @@ void rpc_handle_read(
   // handle no data
   if( ! data_info ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL, 0 );
     free( response );
     return;
   }
@@ -85,9 +86,9 @@ void rpc_handle_read(
   size_t data_size;
   vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
-  if ( errno ) {
+  if ( ! request ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL, 0 );
     free( response );
     return;
   }
@@ -95,7 +96,7 @@ void rpc_handle_read(
   char* start = ramdisk_get_start( request->file_path );
   if( ! start ) {
     response->len = -ENOENT;
-    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL, 0 );
     free( request );
     free( response );
     return;
@@ -108,7 +109,7 @@ void rpc_handle_read(
     // prepare response
     response->len = -EIO;
     // return response
-    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL, 0 );
     // free stuff
     free( request );
     free( response );
@@ -128,7 +129,7 @@ void rpc_handle_read(
     // prepare response
     response->len = -EIO;
     // return response
-    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+    bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL, 0 );
     // free stuff
     free( request );
     free( response );
@@ -137,7 +138,7 @@ void rpc_handle_read(
   // prepare read amount
   response->len = ( ssize_t )amount;
   // return response
-  bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL );
+  bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL, 0 );
   // free stuff
   free( request );
   free( response );

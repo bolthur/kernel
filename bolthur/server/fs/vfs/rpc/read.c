@@ -64,7 +64,7 @@ void rpc_handle_read_async(
   // get message and data size
   size_t data_size;
   vfs_read_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! response ) {
     return;
   }
   handle_node_t* container;
@@ -77,7 +77,7 @@ void rpc_handle_read_async(
   // handle error
   if ( 0 > result ) {
     response->len = result;
-    bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+    bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
     free( response );
     return;
   }
@@ -85,7 +85,7 @@ void rpc_handle_read_async(
   if ( 0 < response->len ) {
     container->pos += ( off_t )response->len;
   }
-  bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+  bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
   free( response );
 }
 
@@ -120,16 +120,16 @@ void rpc_handle_read(
   response->len = -EINVAL;
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response->len= -errno;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
@@ -138,7 +138,7 @@ void rpc_handle_read(
   // handle error
   if ( 0 > result ) {
     response->len = result;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     free( request );
     return;
@@ -146,7 +146,7 @@ void rpc_handle_read(
   // special handling for null device
   if ( 0 == strcmp( container->path, "/dev/null" ) ) {
     response->len = 0;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     free( request );
     return;
@@ -171,7 +171,7 @@ void rpc_handle_read(
   );
   if ( errno ) {
     response->len = -errno;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     free( request );
     return;

@@ -38,5 +38,5 @@ void rpc_handle_add(
   [[maybe_unused]] size_t response_info
 ) {
   vfs_add_response_t response = { .status = -EINVAL, .handler = 0 };
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
 }

@@ -126,7 +126,7 @@ void init_stage1( void ) {
       // enable rpc
       _syscall_rpc_set_ready( true );
       // wait for vfs to be ready
-      EARLY_STARTUP_PRINT( "waiting for vfs!\r\n" )
+      EARLY_STARTUP_PRINT( "waiting for vfs and dev!\r\n" )
       vfs_wait_for_path( ":/vfs" );
       // start /dev/ramdisk
       void* ramdisk_image = ramdisk_lookup( disk, "ramdisk/server/fs/ramdisk", NULL );

@@ -44,7 +44,7 @@ void rpc_handle_exit(
   vfs_exit_response_t response = { .result = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // fetch data
@@ -52,7 +52,7 @@ void rpc_handle_exit(
   vfs_exit_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle no data
   if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   /// FIXME: Perform async close calls as long as handle list is not empty
@@ -63,7 +63,7 @@ void rpc_handle_exit(
   // FIXME: Send exit to all mount points
   // return
   response.result = 0;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   // free request
   free( request );
 }

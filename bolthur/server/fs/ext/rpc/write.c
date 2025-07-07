@@ -60,13 +60,13 @@ void rpc_handle_write(
   response->len = -EINVAL;
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
@@ -74,9 +74,9 @@ void rpc_handle_write(
   size_t data_size;
   vfs_write_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
-  if ( errno ) {
+  if ( ! request ) {
     response->len = -errno;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
@@ -84,7 +84,7 @@ void rpc_handle_write(
   void* shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
   if ( errno ) {
     response->len = -errno;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( request );
     free( response );
     return;
@@ -95,7 +95,7 @@ void rpc_handle_write(
   int result = handle_get( &node, request->origin, request->handle );
   if ( 0 > result ) {
     response->len = result;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( response );
@@ -104,7 +104,7 @@ void rpc_handle_write(
   handle_container_t* container = node->data;
   if ( container->type != HANDLE_TYPE_FILE ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( response );
@@ -117,7 +117,7 @@ void rpc_handle_write(
   result = ext_file_seek( fd, request->offset, SEEK_SET );
   if ( EOK != result ) {
     response->len = -result;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( response );
@@ -128,7 +128,7 @@ void rpc_handle_write(
   result = ext_file_write( fd, shm_addr, request->len, &write_count );
   if ( EOK != result ) {
     response->len = -result;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( response );
@@ -144,7 +144,7 @@ void rpc_handle_write(
   }
   // set success and return
   response->len = ( ssize_t )write_count;
-  bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+  bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
   _syscall_memory_shared_detach( request->shm_id );
   free( response );
   free( request );

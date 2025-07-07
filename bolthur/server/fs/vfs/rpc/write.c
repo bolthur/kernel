@@ -62,19 +62,19 @@ void rpc_handle_write_async(
   vfs_write_request_t* request = async_data->original_data;
   // cache origin and rpc necessary for getting handle and return to correct target
   if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_write_response_t* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+  if ( ! response_data ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   if ( data_size != sizeof( response ) ) {
     response.len = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   memcpy( &response, response_data, data_size );
@@ -89,14 +89,14 @@ void rpc_handle_write_async(
   // handle error
   if ( 0 > result ) {
     response.len = result;
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // update offsets and return
   if ( 0 < response.len ) {
     container->pos += ( off_t )response.len;
   }
-  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
 }
 
 /**
@@ -126,14 +126,14 @@ void rpc_handle_write(
   response.len = -EINVAL;
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_write_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  if ( ! request ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // try to get handle information
@@ -141,14 +141,14 @@ void rpc_handle_write(
   // handle error
   if ( 0 > result ) {
     response.len = result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
   // special handling for null device
   if ( 0 == strcmp( container->path, "/dev/null" ) ) {
     response.len = ( ssize_t )request->len;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -172,7 +172,7 @@ void rpc_handle_write(
   );
   if ( errno ) {
     response.len = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }

@@ -46,7 +46,8 @@ static void read_error_return( size_t type, int error ) {
     type,
     &read_error_response,
     sizeof( read_error_response ),
-    NULL
+    NULL,
+    0
   );
 }
 
@@ -79,7 +80,7 @@ void rpc_handle_read(
   // handle no data
   if( ! data_info ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
@@ -87,9 +88,9 @@ void rpc_handle_read(
   size_t data_size;
   vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
-  if ( errno ) {
+  if ( ! request ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
@@ -101,7 +102,7 @@ void rpc_handle_read(
     // prepare response
     response->len = -EIO;
     // return response
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     // free stuff
     free( request );
     free( response );
@@ -118,7 +119,7 @@ void rpc_handle_read(
       // free shared stuff
       _syscall_memory_shared_detach( request->shm_id );
       // return response
-      bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+      bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
       // free stuff
       free( request );
       free( response );
@@ -132,7 +133,7 @@ void rpc_handle_read(
     // prepare response
     response->len = -EIO;
     // return response
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     // free stuff
     free( request );
     free( response );
@@ -141,7 +142,7 @@ void rpc_handle_read(
   // prepare read amount
   response->len = ( ssize_t )( max_word * sizeof( uint32_t ) );
   // return response
-  bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+  bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
   // free again
   free( request );
   free( response );

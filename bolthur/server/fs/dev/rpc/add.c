@@ -45,32 +45,32 @@ void rpc_handle_add(
   vfs_add_response_t response = { .status = -EINVAL, .handler = 0 };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   size_t data_size;
   vfs_add_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // handle invalid type
   if ( ! S_ISCHR( request->info.st_mode ) ) {
     response.status = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
   char* pathdup = strdup( request->file_path );
   if ( ! pathdup ) {
     response.status = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -80,7 +80,7 @@ void rpc_handle_add(
   watch_node_t* node = watch_extract( dir, false );
   if ( ! node && errno ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     free( pathdup );
     return;
@@ -90,7 +90,7 @@ void rpc_handle_add(
   if ( handle ) {
     response.status = VFS_ADD_ALREADY_EXIST;
     response.handler = handle->process;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     free( pathdup );
     return;
@@ -98,7 +98,7 @@ void rpc_handle_add(
   // try to add
   if ( ! handle_add( request->file_path, request->info, request->handler ) ) {
     response.status = VFS_ADD_ERROR;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     free( pathdup );
     return;
@@ -136,7 +136,7 @@ void rpc_handle_add(
   // return success
   response.status = VFS_ADD_SUCCESS;
   response.handler = request->handler;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   free( request );
   free( pathdup );
 }

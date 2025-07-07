@@ -39,5 +39,5 @@ void rpc_handle_fork(
   [[maybe_unused]] size_t response_info
 ) {
   vfs_fork_response_t response = { .status = -EINVAL };
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
 }

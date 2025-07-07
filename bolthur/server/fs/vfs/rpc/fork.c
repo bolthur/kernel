@@ -56,21 +56,21 @@ static void rpc_handle_fork_fork(
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_fork_response_t* fork_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! fork_response ) {
     response.status = -errno;
-    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // handle failure
   if ( 0 > fork_response->status ) {
     response.status = fork_response->status;
-    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
     free( fork_response );
     return;
   }
@@ -86,10 +86,11 @@ static void rpc_handle_fork_fork(
     process_container->handle = parent_process_container->handle;
     // loop through all handles
     handle_node_tree_each(&parent_process_container->management_tree, handle_node, n, {
-      if ( ! process_duplicate( process_container, n ) ) {
+      int e = process_duplicate( process_container, n );
+      if ( e != 0 ) {
         // FIXME: DESTROY CONTAINER
-        response.status = -EIO;
-        bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
+        response.status = e;
+        bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
         return;
       }
     });
@@ -97,7 +98,7 @@ static void rpc_handle_fork_fork(
   // fill response structure
   response.status = 0;
   // return response and free
-  bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
+  bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
 }
 
 /**
@@ -125,28 +126,28 @@ static void rpc_handle_fork_stat(
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_stat_response_t* stat_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! stat_response ) {
     response.status = -errno;
-    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // original request
   vfs_fork_request_t* request = async_data->original_data;
   if ( ! request ) {
-    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
     free( stat_response );
     return;
   }
   request->process = async_data->original_origin;
   if ( ! stat_response->success ) {
     response.status = -ENODEV;
-    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
     free( stat_response );
     return;
   }
@@ -187,22 +188,22 @@ void rpc_handle_fork(
   vfs_fork_response_t response = { .status = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // check origin parent against parent from request ( must match )
   pid_t origin_parent = _syscall_process_parent_by_id( origin );
   if ( origin_parent != request->parent ) {
     response.status = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -211,7 +212,7 @@ void rpc_handle_fork(
   // handle no mount point node found
   if ( ! mount_point ) {
     response.status = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -219,7 +220,7 @@ void rpc_handle_fork(
   vfs_stat_request_t* stat_request = malloc( sizeof( *stat_request ) );
   if ( ! stat_request ) {
     response.status = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }

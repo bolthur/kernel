@@ -41,5 +41,5 @@ void rpc_handle_ioctl(
   [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
-  bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
+  bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
 }

@@ -50,7 +50,7 @@ void rpc_handle_watch_notify(
   }
   size_t data_size;
   vfs_watch_notify_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     return;
   }
   // extract base name

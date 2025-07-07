@@ -87,10 +87,24 @@ typedef struct mountpoint_node {
   SPLAY_ENTRY( mountpoint_node ) node;
 } mountpoint_node_t;
 
+// normally used public methods of mount points
 bool mountpoint_node_setup( void );
 mountpoint_node_t* mountpoint_node_extract( const char* );
 bool mountpoint_node_add( const char*, pid_t, struct stat* );
 void mountpoint_node_remove( const char* );
 void mountpoint_node_dump( void );
+struct mountpoint_tree* mountpoint_get_tree( void );
+
+// forward declare methods from define
+void mountpoint_node_tree_init( struct mountpoint_tree* );
+int mountpoint_node_tree_empty( struct mountpoint_tree* );
+struct mountpoint_node* mountpoint_node_tree_insert( struct mountpoint_tree*, struct mountpoint_node* );
+struct mountpoint_node* mountpoint_node_tree_remove( struct mountpoint_tree*, struct mountpoint_node* );
+struct mountpoint_node* mountpoint_node_tree_find( struct mountpoint_tree*, struct mountpoint_node* );
+struct mountpoint_node* mountpoint_node_tree_min( struct mountpoint_tree* );
+struct mountpoint_node* mountpoint_node_tree_max( struct mountpoint_tree* );
+struct mountpoint_node* mountpoint_node_tree_next( struct mountpoint_tree*, struct mountpoint_node* );
+void mountpoint_node_tree_apply( struct mountpoint_tree*, void( *cb )( struct mountpoint_node* ) );
+void mountpoint_node_tree_destroy( struct mountpoint_tree*, void( *free_cb )( struct mountpoint_node* ) );
 
 #endif

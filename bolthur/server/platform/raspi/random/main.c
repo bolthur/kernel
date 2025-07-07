@@ -34,34 +34,34 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  EARLY_STARTUP_PRINT( "Setup random\r\n" )
+  STARTUP_PRINT( "Setup random\r\n" )
   if ( ! random_setup() ) {
-    EARLY_STARTUP_PRINT( "Error while setting up random: %s\r\n", strerror( errno ) )
+    STARTUP_PRINT( "Error while setting up random: %s\r\n", strerror( errno ) )
     return -1;
   }
 
-  EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
+  STARTUP_PRINT( "Setup rpc handler\r\n" )
   // register handlers
   if ( ! rpc_init() ) {
-    EARLY_STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
+    STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
     return -1;
   }
 
   // enable rpc
-  EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
+  STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
 
   if ( !dev_add_file( "/dev/urandom", NULL, 0 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
   if ( !dev_add_file( "/dev/random", NULL, 0 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
 
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
   return 0;
 }

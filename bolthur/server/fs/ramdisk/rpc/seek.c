@@ -38,5 +38,5 @@ void rpc_handle_seek(
   [[maybe_unused]] size_t response_info
 ) {
   vfs_seek_response_t response = { .position = -EINVAL };
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
 }

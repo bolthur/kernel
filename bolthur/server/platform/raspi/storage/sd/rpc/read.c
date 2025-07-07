@@ -51,23 +51,23 @@ void rpc_handle_read(
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
   // handle no data
   if( ! data_info ) {
     response->len = -EINVAL;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
   size_t data_size;
   vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
-  if ( errno ) {
+  if ( ! request ) {
     response->len = -EIO;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;
   }
@@ -78,7 +78,7 @@ void rpc_handle_read(
     || request->offset % sd_block_size
   ) {
     response->len = -EAGAIN;
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     free( request );
     return;
@@ -101,7 +101,7 @@ void rpc_handle_read(
     // prepare response
     response->len = -EIO;
     // return response
-    bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+    bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     // free stuff
     free( request );
     free( response );
@@ -110,7 +110,7 @@ void rpc_handle_read(
   // prepare read amount
   response->len = ( ssize_t )request->len;
   // return response
-  bolthur_rpc_return( type, response, sizeof( *response ), NULL );
+  bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
   // free stuff
   free( request );
   free( response );

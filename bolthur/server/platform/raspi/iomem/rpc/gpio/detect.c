@@ -47,27 +47,27 @@ void rpc_handle_gpio_set_detect(
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // handle no data
   error.status = -EINVAL;
   if( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   iomem_gpio_detect_t* gpio_request;
   // handle invalid data size
   if ( data_size - sizeof( vfs_ioctl_perform_request_t ) != sizeof( *gpio_request ) ) {
     error.status = -EINVAL;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
   }
@@ -113,7 +113,7 @@ void rpc_handle_gpio_set_detect(
       break;
     default:
       error.status = -EIO;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
       free( request );
       return;
   }
@@ -146,7 +146,7 @@ void rpc_handle_gpio_set_detect(
   #endif
   // set status to 0
   error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
   // free gpio_request
   free( request );
 }

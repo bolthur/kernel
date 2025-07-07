@@ -36,13 +36,7 @@ static int mountpoint_cmp(
 }
 
 // define tree
-MOUNTPOINT_TREE_DEFINE(
-  mountpoint_tree,
-  mountpoint_node,
-  node,
-  mountpoint_cmp,
-  [[maybe_unused]] static inline
-)
+MOUNTPOINT_TREE_DEFINE( mountpoint_tree, mountpoint_node, node, mountpoint_cmp, [[maybe_unused]] )
 // create static tree
 static struct mountpoint_tree management_tree;
 
@@ -209,4 +203,13 @@ void mountpoint_node_dump( void ) {
   mountpoint_node_tree_each(&management_tree, mountpoint_node, n, {
       EARLY_STARTUP_PRINT("%s\r\n", n->name);
   });
+}
+
+/**
+ * @fn struct mountpoint_tree* mountpoint_get_tree(void)
+ * @brief Method to get mountpoint tree
+ * @return management tree address
+ */
+struct mountpoint_tree* mountpoint_get_tree( void ) {
+  return &management_tree;
 }

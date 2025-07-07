@@ -16,6 +16,7 @@ dev_SOURCES = \
   rpc/watch/register.c \
   rpc/watch/release.c \
   rpc/add.c \
+  rpc/boot.c \
   rpc/close.c \
   rpc/init.c \
   rpc/ioctl.c \

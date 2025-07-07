@@ -46,22 +46,22 @@ void rpc_handle_ioctl(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     err_response.status = -errno;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
     return;
   }
   // get local handler
   rpc_handler_t handler = bolthur_rpc_get( request->command );
   if ( ! handler ) {
     err_response.status = -EIO;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL );
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
     free( request );
     return;
   }

@@ -52,11 +52,11 @@ void rpc_handle_watch_release_async(
   // get message and data size
   size_t data_size;
   vfs_watch_release_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! response ) {
     return;
   }
   // pass back data
-  bolthur_rpc_return( type, response, sizeof( *response ), async_data );
+  bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
   // free response
   free( response );
 }
@@ -81,15 +81,15 @@ void rpc_handle_watch_release(
   // handle no data
   if( ! data_info ) {
     response.result = -ENODATA;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_watch_release_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // get mount point
@@ -97,7 +97,7 @@ void rpc_handle_watch_release(
   // handle no mount point node found
   if ( ! mount_point ) {
     response.result = -ENOENT;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -118,7 +118,7 @@ void rpc_handle_watch_release(
   // handle error
   if ( errno ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }

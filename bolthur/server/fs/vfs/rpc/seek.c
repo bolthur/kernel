@@ -45,15 +45,15 @@ void rpc_handle_seek(
   handle_node_t* container;
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_seek_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response.position = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // try to get handle information
@@ -62,7 +62,7 @@ void rpc_handle_seek(
   if ( 0 > result ) {
     // send errno via negative len
     response.position = result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     // free stuff
     free( request );
     // skip rest
@@ -97,7 +97,7 @@ void rpc_handle_seek(
     response.position = new_pos;
   }
   // return response
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   // free stuff
   free( request );
 }

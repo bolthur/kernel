@@ -77,7 +77,7 @@
   // get message and data size
   size_t data_size;
   vfs_add_response_t* response = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! response ) {
     EARLY_STARTUP_PRINT( "%s\r\n", strerror(errno) )
     exit( -1 );
   }
@@ -134,7 +134,7 @@
   // get message and data size
   size_t data_size;
   vfs_remove_response_t* response = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! response ) {
     EARLY_STARTUP_PRINT( "%s\r\n", strerror(errno) )
     exit( -1 );
   }

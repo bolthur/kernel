@@ -46,27 +46,27 @@ void rpc_handle_fork(
   vfs_fork_response_t response = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // check origin parent against parent from request ( must match )
   pid_t origin_process = _syscall_process_parent_by_id( request->process );
   if ( origin_process != request->parent ) {
     response.status = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
@@ -74,19 +74,19 @@ void rpc_handle_fork(
   pid_node_t* node = pid_node_extract( request->parent );
   if ( ! node ) {
     response.status = -ESRCH;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL, 0 );
     return;
   }
   EARLY_STARTUP_PRINT( "ADD %d with user %d\r\n", request->process, node->uid )
   // try to add it with same user as parent
   if ( ! pid_node_add( request->process, node->uid ) ) {
     response.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // fill response structure
   response.status = 0;
   // return response and free
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   free( request );
 }

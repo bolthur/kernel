@@ -44,7 +44,6 @@ void rpc_handle_mount_async(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT("MOUNT DONE\r\n")
   vfs_mount_response_t response = { .result = -EINVAL };
   // get matching async data
   bolthur_async_data_t* async_data =
@@ -54,20 +53,20 @@ void rpc_handle_mount_async(
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // extract message from mailbox
   size_t data_size;
   void* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! response_data ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   if ( data_size != sizeof( response ) ) {
     response.result = -EINVAL;
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
         return;
   }
   memcpy( &response, response_data, sizeof( response ) );
@@ -76,14 +75,14 @@ void rpc_handle_mount_async(
   vfs_mount_request_t* request = async_data->original_data;
   // handle failure
   if ( 0 != response.result ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // add destination mountpoint
   struct stat* st = malloc( sizeof( *st ) );
   // handle malloc error
   if ( ! st ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   // clear and copy information
@@ -93,7 +92,7 @@ void rpc_handle_mount_async(
   if ( ! mountpoint_node_add( request->target, origin, st ) ) {
     free( st );
     response.result = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
   free( st );
@@ -102,14 +101,14 @@ void rpc_handle_mount_async(
   if ( ! destination ) {
     mountpoint_node_remove( request->target );
     response.result = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     free( request );
     return;
   }
   // overwrite handler of destination
   destination->pid = response.handler;
   // just return response
-  bolthur_rpc_return( type, &response, sizeof( response ), async_data );
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
 }
 
 /**
@@ -127,7 +126,6 @@ void rpc_handle_mount(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT("MOUNT REQUEST\r\n")
   vfs_mount_response_t response = { .result = -EAGAIN };
   // handle async return in case response info is set
   if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
@@ -136,15 +134,15 @@ void rpc_handle_mount(
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // extract message from mailbox
   size_t data_size;
   void* request_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request_data ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   vfs_mount_request_t* request = request_data;
@@ -157,14 +155,14 @@ void rpc_handle_mount(
     // handle ramdisk already mounted
     if ( ramdisk_mounted ) {
       response.result = -EINVAL;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
       free( request_data );
       return;
     }
     // generate mount point
     if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
       response.result = -EIO;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
       free( request_data );
       return;
     }
@@ -172,7 +170,7 @@ void rpc_handle_mount(
     ramdisk_mounted = true;
     // return success
     response.result = 0;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request_data );
     return;
   }
@@ -184,14 +182,14 @@ void rpc_handle_mount(
     // handle ramdisk already mounted
     if ( dev_mounted ) {
       response.result = -EINVAL;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
       free( request_data );
       return;
     }
     // generate mount point
     if ( ! mountpoint_node_add( request->target, origin, NULL ) ) {
       response.result = -EIO;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
       free( request_data );
       return;
     }
@@ -199,7 +197,7 @@ void rpc_handle_mount(
     dev_mounted = true;
     // return success
     response.result = 0;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request_data );
     return;
   }
@@ -210,7 +208,7 @@ void rpc_handle_mount(
     EARLY_STARTUP_PRINT( "No handler found for %d\r\n", RPC_VFS_MOUNT )
     handler_node_dump();
     response.result = -ESRCH;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request_data );
     return;
   }
@@ -223,7 +221,7 @@ void rpc_handle_mount(
     && 0 == strcmp( destination->name, request->target )
   ) {
     response.result = -EEXIST;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request_data );
     return;
   }
@@ -246,7 +244,7 @@ void rpc_handle_mount(
   );
   if ( errno ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request_data );
     return;
   }

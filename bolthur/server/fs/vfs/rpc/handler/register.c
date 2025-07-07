@@ -40,39 +40,38 @@ void rpc_handle_handler_register(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "handler register called\r\n" )
   vfs_register_handler_response_t response = { .result = -EINVAL };
   // handle no data
   if( ! data_info ) {
     response.result = -ENODATA;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_register_handler_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( errno ) {
+  if ( ! request ) {
     response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // check if existing
   if ( handler_node_extract( request->request ) ) {
     response.result = -EEXIST;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
   // add new handler
   if ( ! handler_node_add( request->request, origin ) ) {
     response.result = -EAGAIN;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
   EARLY_STARTUP_PRINT( "Added %"PRIu32" with pid %d\r\n", request->request, origin )
   // return success
   response.result = 0;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   free( request );
 }

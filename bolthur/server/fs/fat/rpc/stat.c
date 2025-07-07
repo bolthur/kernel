@@ -48,20 +48,20 @@ void rpc_handle_stat(
   vfs_stat_response_t response = { .success = false };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // fetch rpc data
   size_t data_size;
   vfs_stat_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle error
-  if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  if ( ! request ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   EARLY_STARTUP_PRINT( "fat stat call \"%s\"\r\n", request->file_path )
@@ -72,7 +72,7 @@ void rpc_handle_stat(
     int result = fat_stat( request->file_path, &st );
     if ( EOK != result ) {
       EARLY_STARTUP_PRINT( "fat stat call failed: %d => %s\r\n", result, strerror( result ) )
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
       free( request );
       return;
     }
@@ -80,7 +80,7 @@ void rpc_handle_stat(
     // try to push back
     if ( ! stat_push( request->file_path, &st ) ) {
       EARLY_STARTUP_PRINT( "Unable to push stat to cache!\r\n" )
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
       free( request );
       return;
     }
@@ -95,6 +95,6 @@ void rpc_handle_stat(
   response.success = true;
   response.handler = getpid();
   // return data
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   free( request );
 }
