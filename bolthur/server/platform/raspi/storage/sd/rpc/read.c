@@ -86,7 +86,7 @@ void rpc_handle_read(
   // calculate block number
   off_t block_number = request->offset / sd_block_size;
   // try to read from card
-  EARLY_STARTUP_PRINT(
+  STARTUP_PRINT(
     "Reading %#zx bytes with offset of %llx / %lx ( block number: %llx ) from sd card\r\n",
     request->len, request->offset, ( uint32_t )request->offset, block_number
   )
@@ -97,7 +97,7 @@ void rpc_handle_read(
     request->offset,
     request->shm_id
   ) ) {
-    EARLY_STARTUP_PRINT( "Error while reading: %s\r\n", sd_last_error())
+    STARTUP_PRINT( "Error while reading: %s\r\n", sd_last_error())
     // prepare response
     response->len = -EIO;
     // return response

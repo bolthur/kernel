@@ -29,42 +29,42 @@
 bool rpc_init( void ) {
   bolthur_rpc_bind( RPC_VFS_CLOSE, rpc_handle_close, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
+    STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_GETDENTS, rpc_handle_getdents, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
+    STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_MOUNT, rpc_handle_mount, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler mount!\r\n" )
+    STARTUP_PRINT( "Unable to register handler mount!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_OPEN, rpc_handle_open, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
+    STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    STARTUP_PRINT( "Unable to register handler read!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_STAT, rpc_handle_stat, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler stat!\r\n" )
+    STARTUP_PRINT( "Unable to register handler stat!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_UMOUNT, rpc_handle_umount, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler umount!\r\n" )
+    STARTUP_PRINT( "Unable to register handler umount!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    STARTUP_PRINT( "Unable to register handler write!\r\n" )
     return false;
   }
   return true;

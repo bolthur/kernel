@@ -58,6 +58,7 @@ static void terminal_scroll( terminal_t* term ) {
   terminal_t* term,
   const char* s
 ) {
+  EARLY_STARTUP_PRINT( "RENDERING %s", s )
   uint32_t rendered = 0;
   while( *s ) {
     // handle end of row reached

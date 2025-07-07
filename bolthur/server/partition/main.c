@@ -38,36 +38,36 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  EARLY_STARTUP_PRINT( "generic fs server starting up!\r\n" )
-  EARLY_STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
+  STARTUP_PRINT( "generic fs server starting up!\r\n" )
+  STARTUP_PRINT( "%d / %d\r\n", getpid(), getppid() )
   // initialize partition search tree
   if ( ! partition_setup() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup partition search tree!\r\n" )
+    STARTUP_PRINT( "Unable to setup partition search tree!\r\n" )
     return -1;
   }
   // initialize mount search tree
   if ( ! mount_setup() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup partition search tree!\r\n" )
+    STARTUP_PRINT( "Unable to setup partition search tree!\r\n" )
     return -1;
   }
   // initialize handler search tree
   if ( ! handler_setup() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup handler search tree!\r\n" )
+    STARTUP_PRINT( "Unable to setup handler search tree!\r\n" )
     return -1;
   }
   // register rpc handler
-  EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  STARTUP_PRINT( "bind rpc handler!\r\n" )
   if ( ! rpc_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
     return -1;
   }
   // enable rpc
-  EARLY_STARTUP_PRINT( "Set rpc ready flag\r\n" )
+  STARTUP_PRINT( "Set rpc ready flag\r\n" )
   _syscall_rpc_set_ready( true );
   // register watcher for folder /dev/storage
   watch_path_register( "/dev/storage" );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "ERROR: Unable to register watcher: %s!\r\n", strerror( errno ) )
+    STARTUP_PRINT( "ERROR: Unable to register watcher: %s!\r\n", strerror( errno ) )
     return -1;
   }
   // device info array
@@ -77,10 +77,10 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   };
   // add device file
   if ( !dev_add_file( "/dev/partition", device_info, 2 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
 }

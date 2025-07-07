@@ -45,6 +45,7 @@
   size_t len_root_device = 5;
   size_t len_root_partition_type = 11;
   while ( p ) {
+    STARTUP_PRINT( "p = %s\r\n", p )
     // handle root information
     if ( 0 == strncmp( p, "root=", len_root_device ) && ! root_device ) {
       size_t size = sizeof( char )* ( strlen( p ) - len_root_device + 1 );
@@ -80,6 +81,8 @@
     STARTUP_PRINT( "No root device and/or no partition type found!\r\n" )
     exit( 1 );
   }
+  STARTUP_PRINT( "root_device = %s, root_partition_type = %s\r\n", root_device, root_partition_type )
+  STARTUP_PRINT( "waiting for %s\r\n", root_device )
   // wait for root device
   vfs_wait_for_path( root_device );
 

@@ -163,8 +163,8 @@ int handler_remove( const char* filesystem ) {
  * @brief Simple method to dump mount point nodes
  */
 void handler_dump( void ) {
-  EARLY_STARTUP_PRINT( "mountpoint node tree dump\r\n" )
+  STARTUP_PRINT( "mountpoint node tree dump\r\n" )
   handler_tree_each(&management_tree, handler_node, n, {
-      EARLY_STARTUP_PRINT("%s\r\n", n->name);
+      STARTUP_PRINT("%s\r\n", n->name);
   });
 }

@@ -127,7 +127,7 @@ void rpc_handle_add(
     watch_tree_each(node->pid, watch_pid, n, {
       // notify if process and handler differ
       if ( n->process != request->handler ) {
-        EARLY_STARTUP_PRINT( "try notify %d\r\n", n->process )
+        EARLY_STARTUP_PRINT( "try notify %d: %s\r\n", n->process, request->file_path )
         watch_path_notify( request->file_path, n->process );
       }
      });

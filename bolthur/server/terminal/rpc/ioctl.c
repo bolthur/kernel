@@ -58,7 +58,7 @@ void rpc_handle_ioctl(
     return;
   }
   // get local handler
-  rpc_handler_t handler = bolthur_rpc_get( request->command );
+  const rpc_handler_t handler = bolthur_rpc_get( request->command );
   if ( ! handler ) {
     err_response.status = -EIO;
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
@@ -68,5 +68,4 @@ void rpc_handle_ioctl(
   // execute handler
   handler( type, origin, data_info, response_info );
   free( request );
-  return;
 }

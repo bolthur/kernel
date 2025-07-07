@@ -38,44 +38,44 @@
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // print something
-  EARLY_STARTUP_PRINT( "ext fs server processing!\r\n" )
+  STARTUP_PRINT( "ext fs server processing!\r\n" )
   // register rpc handler
-  EARLY_STARTUP_PRINT( "bind rpc handler!\r\n" )
+  STARTUP_PRINT( "bind rpc handler!\r\n" )
   if ( ! rpc_init() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
     return -1;
   }
 
   // setup stat cache
-  EARLY_STARTUP_PRINT( "Setup stat cache!\r\n" )
+  STARTUP_PRINT( "Setup stat cache!\r\n" )
   if ( ! stat_node_setup() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup stat cache!\r\n" )
+    STARTUP_PRINT( "Unable to setup stat cache!\r\n" )
     return -1;
   }
 
   // setup file handling
-  EARLY_STARTUP_PRINT( "Setup file handling!\r\n" )
+  STARTUP_PRINT( "Setup file handling!\r\n" )
   if ( ! process_setup() ) {
-    EARLY_STARTUP_PRINT( "Unable to setup process handling\r\n" )
+    STARTUP_PRINT( "Unable to setup process handling\r\n" )
     return -1;
   }
 
   // open partition interface
-  EARLY_STARTUP_PRINT( "Opening /dev/partition\r\n" )
+  STARTUP_PRINT( "Opening /dev/partition\r\n" )
   int fd = open( "/dev/partition", O_RDWR );
   // handle error
   if ( -1 == fd ) {
-    EARLY_STARTUP_PRINT( "Unable to open /dev/partition\r\n" )
+    STARTUP_PRINT( "Unable to open /dev/partition\r\n" )
     return -1;
   }
 
   // enable rpc
-  EARLY_STARTUP_PRINT( "Set rpc ready flag\r\n" )
+  STARTUP_PRINT( "Set rpc ready flag\r\n" )
   _syscall_rpc_set_ready( true );
 
   // add device file
   if ( !dev_add_file( "/dev/ext", NULL, 0 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
 
@@ -93,7 +93,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     snprintf( reg->filesystem, 100, "ext%"PRIu32, idx );
     reg->process = getpid();
     // debug output
-    EARLY_STARTUP_PRINT(
+    STARTUP_PRINT(
       "Registering %s for %d\r\n",
       reg->filesystem,
       reg->process
@@ -110,15 +110,15 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     );
     // handle error
     if ( -1 == result ) {
-      EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
+      STARTUP_PRINT( "%s\r\n", strerror( errno ) )
       free( reg );
       close( fd );
       return -1;
     }
-    EARLY_STARTUP_PRINT( "register result: %d\r\n", result )
+    STARTUP_PRINT( "register result: %d\r\n", result )
   }
 
   // wait for rpc
-  EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )
+  STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
 }

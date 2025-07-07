@@ -55,7 +55,7 @@ void rpc_handle_open(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "open\r\n" )
+  STARTUP_PRINT( "open\r\n" )
   vfs_open_response_t response = { .handle = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -94,7 +94,7 @@ void rpc_handle_open(
     free( request );
     return;
   }
-  EARLY_STARTUP_PRINT( "performing fat stat\r\n" )
+  STARTUP_PRINT( "performing fat stat\r\n" )
   // stat result
   struct stat st;
   result = fat_stat( request->path, &st );
@@ -113,7 +113,7 @@ void rpc_handle_open(
     free( request );
     return;
   }
-  EARLY_STARTUP_PRINT( "performing open depending on stat result\r\n" )
+  STARTUP_PRINT( "performing open depending on stat result\r\n" )
   // open directory
   if ( S_ISDIR( st.st_mode ) ) {
     // allocate space for directory

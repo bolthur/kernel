@@ -239,7 +239,7 @@ static emmc_response_t controller_shutdown( void ) {
   if ( 0 != request[ 5 ] ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Invalid device id returned\r\n" )
+      STARTUP_PRINT( "Invalid device id returned\r\n" )
     #endif
     // free request
     free( request );
@@ -250,7 +250,7 @@ static emmc_response_t controller_shutdown( void ) {
   if ( 0 != request[ 6 ] ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "Device not powered of successfully: %#"PRIx32"\r\n",
         request[ 6 ]
       )
@@ -314,7 +314,7 @@ static emmc_response_t controller_startup( void ) {
   if ( 0 != request[ 5 ] ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Invalid device id returned\r\n" )
+      STARTUP_PRINT( "Invalid device id returned\r\n" )
     #endif
     // free
     free( request );
@@ -325,7 +325,7 @@ static emmc_response_t controller_startup( void ) {
   if ( ! ( request[ 6 ] & MAILBOX_SET_POWER_STATE_ON ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "Device not powered on successfully: %#"PRIx32"\r\n",
         request[ 6 ]
       )
@@ -353,27 +353,27 @@ static emmc_response_t controller_startup( void ) {
   return EMMC_RESPONSE_OK;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Shutdown emmc controller\r\n" )
+    STARTUP_PRINT( "Shutdown emmc controller\r\n" )
   #endif
   emmc_response_t response;
   // shutdown controller
   if ( EMMC_RESPONSE_OK != ( response = controller_shutdown() ) ) {
     // restarting controller
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to shutdown emmc controller\r\n" )
+      STARTUP_PRINT( "Unable to shutdown emmc controller\r\n" )
     #endif
     // return error
     return response;
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Startup emmc controller again\r\n" )
+    STARTUP_PRINT( "Startup emmc controller again\r\n" )
   #endif
   // shutdown controller
   if ( EMMC_RESPONSE_OK != ( response = controller_startup() ) ) {
     // restarting controller
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to startup emmc controller\r\n" )
+      STARTUP_PRINT( "Unable to startup emmc controller\r\n" )
     #endif
     // return error
     return response;
@@ -391,14 +391,14 @@ static emmc_response_t controller_startup( void ) {
 static emmc_response_t init_gpio( void ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Perform necessary gpio init\r\n" )
+    STARTUP_PRINT( "Perform necessary gpio init\r\n" )
   #endif
   // allocate function parameter block
   iomem_gpio_function_t* func = malloc( sizeof( iomem_gpio_function_t ) );
   if ( ! func ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate function block for rpc\r\n" )
+      STARTUP_PRINT( "Unable to allocate function block for rpc\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_MEMORY;
@@ -408,7 +408,7 @@ static emmc_response_t init_gpio( void ) {
   if ( ! pull ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate pull block for rpc\r\n" )
+      STARTUP_PRINT( "Unable to allocate pull block for rpc\r\n" )
     #endif
     // free memory
     free( func );
@@ -420,7 +420,7 @@ static emmc_response_t init_gpio( void ) {
   if ( ! detect ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate detect block for rpc\r\n" )
+      STARTUP_PRINT( "Unable to allocate detect block for rpc\r\n" )
     #endif
     // free memory
     free( func );
@@ -444,7 +444,7 @@ static emmc_response_t init_gpio( void ) {
   detect->value = 1;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT(
+    STARTUP_PRINT(
       "Set card detection function, pin pull and high pin detection\r\n"
     )
   #endif
@@ -488,7 +488,7 @@ static emmc_response_t init_gpio( void ) {
   pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set func and pull for pin dat 3\r\n" )
+    STARTUP_PRINT( "Set func and pull for pin dat 3\r\n" )
   #endif
   // execute and handle ioctl error
   if (
@@ -522,7 +522,7 @@ static emmc_response_t init_gpio( void ) {
   pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set func and pull for pin dat 2\r\n" )
+    STARTUP_PRINT( "Set func and pull for pin dat 2\r\n" )
   #endif
   // execute and handle ioctl error
   if (
@@ -556,7 +556,7 @@ static emmc_response_t init_gpio( void ) {
   pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set func and pull for pin dat 1\r\n" )
+    STARTUP_PRINT( "Set func and pull for pin dat 1\r\n" )
   #endif
   // execute and handle ioctl error
   if (
@@ -590,7 +590,7 @@ static emmc_response_t init_gpio( void ) {
   pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set func and pull for pin dat 0\r\n" )
+    STARTUP_PRINT( "Set func and pull for pin dat 0\r\n" )
   #endif
   // execute and handle ioctl error
   if (
@@ -624,7 +624,7 @@ static emmc_response_t init_gpio( void ) {
   pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set func and pull for pin cmd\r\n" )
+    STARTUP_PRINT( "Set func and pull for pin cmd\r\n" )
   #endif
   // execute and handle ioctl error
   if (
@@ -658,7 +658,7 @@ static emmc_response_t init_gpio( void ) {
   pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set func and pull for pin clk\r\n" )
+    STARTUP_PRINT( "Set func and pull for pin clk\r\n" )
   #endif
   // execute and handle ioctl error
   if (
@@ -702,7 +702,7 @@ static emmc_response_t init_gpio( void ) {
 static emmc_response_t gather_version_info( void ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Fetching host version information\r\n" )
+    STARTUP_PRINT( "Fetching host version information\r\n" )
   #endif
   // fetch host version
   size_t sequence_size;
@@ -727,7 +727,7 @@ static emmc_response_t gather_version_info( void ) {
   ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "mmio rpc failed\r\n" )
+      STARTUP_PRINT( "mmio rpc failed\r\n" )
     #endif
     // free
     free( host_version_sequence );
@@ -744,7 +744,7 @@ static emmc_response_t gather_version_info( void ) {
   device->status_slot = SLOTISR_VER_SLOT_STATUS( version_value );
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT(
+    STARTUP_PRINT(
       "version_vendor = %#"PRIx8", version_host_controller = %#"PRIx8", "
       "status_slot = %#"PRIx8"\r\n",
       device->version_vendor,
@@ -766,7 +766,7 @@ static emmc_response_t gather_version_info( void ) {
 static emmc_response_t clock_frequency( uint32_t frequency ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Clock frequency change request\r\n" )
+    STARTUP_PRINT( "Clock frequency change request\r\n" )
   #endif
   uint32_t divisor;
   uint32_t closest = 41666666 / frequency;

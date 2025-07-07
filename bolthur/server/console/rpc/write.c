@@ -70,6 +70,7 @@ void rpc_handle_write(
     free( request );
     return;
   }
+  EARLY_STARTUP_PRINT( "Writing to console: %s\r\n", request->file_path )
   // get rpc to raise
   size_t rpc_num = 0 == strcmp( "/dev/stdout", request->file_path )
     ? console->out
@@ -83,7 +84,6 @@ void rpc_handle_write(
     free( request );
     return;
   }
-
 
   memset( terminal, 0, terminal_size );
   terminal->len = request->len;

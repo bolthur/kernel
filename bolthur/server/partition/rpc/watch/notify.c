@@ -45,46 +45,58 @@ void rpc_handle_watch_notify(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  STARTUP_PRINT( "NOTIFY!\r\n" )
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    STARTUP_PRINT( "Invalid origin!\r\n" )
     return;
   }
+  STARTUP_PRINT( "Checking data info!\r\n" )
   // handle no data
   if( ! data_info ) {
+    STARTUP_PRINT( "No data passed!\r\n" )
     return;
   }
+  STARTUP_PRINT( "Fetching request\r\n" )
   // fetch rpc data
   size_t data_size;
   vfs_watch_notify_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
+    STARTUP_PRINT( "No notify request: %s\r\n", strerror( errno ) )
     return;
   }
+  STARTUP_PRINT( "Opening %s\r\n", request->target )
   // open path
-  int fd = open( request->target, O_RDONLY );
+  const int fd = open( request->target, O_RDONLY );
   // handle error
   if ( -1 == fd ) {
-    EARLY_STARTUP_PRINT( "Unable to open %s\r\n", request->target )
+    STARTUP_PRINT( "Unable to open %s\r\n", request->target )
     free( request );
     return;
   }
   // read data
-  size_t mbr_size = sizeof( uint8_t ) * 512;
+  const size_t mbr_size = sizeof( uint8_t ) * 512;
   uint8_t* mbr = malloc( mbr_size );
   if ( ! mbr ) {
+    STARTUP_PRINT( "Unable to allocate space for mbr\r\n" )
     close( fd );
     free( request );
     return;
   }
+  STARTUP_PRINT( "Fetching stat\r\n" )
   // get stat information
   struct stat target_stat;
   if ( 0 != fstat( fd, &target_stat ) ) {
+    STARTUP_PRINT( "Unable to get stat\r\n" )
     close( fd );
     free( mbr );
     free( request );
     return;
   }
-  ssize_t result = pread( fd, mbr, mbr_size, 0 );
+  STARTUP_PRINT( "Reading mbr\r\n" )
+  const ssize_t result = pread( fd, mbr, mbr_size, 0 );
   if ( 512 != result ) {
+    STARTUP_PRINT( "Unable to read mbr\r\n" )
     close( fd );
     free( mbr );
     free( request );
@@ -92,6 +104,7 @@ void rpc_handle_watch_notify(
   }
   char* path = malloc( sizeof( *path ) * PATH_MAX );
   if ( ! path ) {
+    STARTUP_PRINT( "Unable to allocate space for path\r\n" )
     close( fd );
     free( mbr );
     free( request );
@@ -110,9 +123,10 @@ void rpc_handle_watch_notify(
     size_t copied = strlen( request->target );
     strncpy( path, request->target, PATH_MAX );
     snprintf( path + copied, PATH_MAX - copied, "%"PRIu32, i );
+    STARTUP_PRINT( "Adding %s\r\n", path )
     // add device to tree
     if ( 0 != partition_add( path, entry ) ) {
-      EARLY_STARTUP_PRINT( "Unable to push %s to search tree\r\n", path )
+      STARTUP_PRINT( "Unable to push %s to search tree\r\n", path )
     }
     struct stat st = {
       .st_size = ( off_t )entry->data.total_sector * target_stat.st_blksize,
@@ -120,16 +134,20 @@ void rpc_handle_watch_notify(
       .st_blksize = target_stat.st_blksize,
       .st_blocks = ( blkcnt_t )entry->data.total_sector,
     };
-    EARLY_STARTUP_PRINT("st_size = %#llx\r\n", st.st_size)
-    EARLY_STARTUP_PRINT("st_blksize = %#lx\r\n", st.st_blksize)
+    STARTUP_PRINT("st_size = %#llx\r\n", st.st_size)
+    STARTUP_PRINT("st_blksize = %#lx\r\n", st.st_blksize)
     // add device
     if ( ! dev_add_folder_file_stat( path, &st ) ) {
-      EARLY_STARTUP_PRINT( "Unable to add device file\r\n" )
+      STARTUP_PRINT( "Unable to add device file\r\n" )
       partition_remove( path );
       close( fd );
+      free( path );
+      free( mbr );
+      free( request );
       return;
     }
   }
+  close( fd );
   free( path );
   free( mbr );
   free( request );

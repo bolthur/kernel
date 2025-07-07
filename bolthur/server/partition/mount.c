@@ -250,8 +250,8 @@ mount_node_t* mount_extract_by_path_walk( const char* path ) {
  * @brief Simple method to dump mount point nodes
  */
 void mount_dump( void ) {
-  EARLY_STARTUP_PRINT( "mountpoint node tree dump\r\n" )
+  STARTUP_PRINT( "mountpoint node tree dump\r\n" )
   mount_tree_each(&management_tree, mount_node, n, {
-      EARLY_STARTUP_PRINT("%s\r\n", n->path);
+      STARTUP_PRINT("%s\r\n", n->path);
   });
 }

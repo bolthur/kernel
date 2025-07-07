@@ -164,7 +164,7 @@ void rpc_handle_mount(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "partition mounting\r\n" )
+  STARTUP_PRINT( "partition mounting\r\n" )
   // handle async return in case response info is set
   if ( response_info && bolthur_rpc_has_async( type, response_info ) ) {
     rpc_handle_mount_async( type, origin, data_info, response_info );
@@ -219,7 +219,7 @@ void rpc_handle_mount(
     return;
   }
 
-  EARLY_STARTUP_PRINT( "Routing mount request to %d\r\n", handler->handler )
+  STARTUP_PRINT( "Routing mount request to %d\r\n", handler->handler )
 
   // perform async rpc
   bolthur_rpc_raise(

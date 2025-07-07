@@ -205,7 +205,7 @@ static sdhost_response_t enable_interrupt( void ) {
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Error allocating sequence: %s\r\n", strerror( errno ) )
+      STARTUP_PRINT( "Error allocating sequence: %s\r\n", strerror( errno ) )
     #endif
     // return error
     return SDHOST_RESPONSE_MEMORY;
@@ -243,7 +243,7 @@ static sdhost_response_t enable_interrupt( void ) {
   ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Change transfer width in control0 failed\r\n" )
+      STARTUP_PRINT( "Change transfer width in control0 failed\r\n" )
     #endif
     // free
     free( sequence );
@@ -264,14 +264,14 @@ static sdhost_response_t enable_interrupt( void ) {
 static sdhost_response_t init_gpio( void ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Perform necessary gpio init\r\n" )
+    STARTUP_PRINT( "Perform necessary gpio init\r\n" )
   #endif
   // allocate function parameter block
   iomem_gpio_function_t* func = malloc( sizeof( iomem_gpio_function_t ) );
   if ( ! func ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate function block for rpc\r\n" )
+      STARTUP_PRINT( "Unable to allocate function block for rpc\r\n" )
     #endif
     // return error
     return SDHOST_RESPONSE_MEMORY;
@@ -281,7 +281,7 @@ static sdhost_response_t init_gpio( void ) {
   if ( ! pull ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate pull block for rpc\r\n" )
+      STARTUP_PRINT( "Unable to allocate pull block for rpc\r\n" )
     #endif
     // free memory
     free( func );
@@ -293,7 +293,7 @@ static sdhost_response_t init_gpio( void ) {
   if ( ! detect ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate detect block for rpc\r\n" )
+      STARTUP_PRINT( "Unable to allocate detect block for rpc\r\n" )
     #endif
     // free memory
     free( func );
@@ -317,7 +317,7 @@ static sdhost_response_t init_gpio( void ) {
   detect->value = 1;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT(
+    STARTUP_PRINT(
       "Set card detection function, pin pull and high pin detection\r\n"
     )
   #endif
@@ -361,7 +361,7 @@ static sdhost_response_t init_gpio( void ) {
   pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set func and pull for pin dat 3\r\n" )
+    STARTUP_PRINT( "Set func and pull for pin dat 3\r\n" )
   #endif
   // execute and handle ioctl error
   if (
@@ -395,7 +395,7 @@ static sdhost_response_t init_gpio( void ) {
   pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set func and pull for pin dat 2\r\n" )
+    STARTUP_PRINT( "Set func and pull for pin dat 2\r\n" )
   #endif
   // execute and handle ioctl error
   if (
@@ -429,7 +429,7 @@ static sdhost_response_t init_gpio( void ) {
   pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set func and pull for pin dat 1\r\n" )
+    STARTUP_PRINT( "Set func and pull for pin dat 1\r\n" )
   #endif
   // execute and handle ioctl error
   if (
@@ -463,7 +463,7 @@ static sdhost_response_t init_gpio( void ) {
   pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set func and pull for pin dat 0\r\n" )
+    STARTUP_PRINT( "Set func and pull for pin dat 0\r\n" )
   #endif
   // execute and handle ioctl error
   if (
@@ -497,7 +497,7 @@ static sdhost_response_t init_gpio( void ) {
   pull->pull = IOMEM_GPIO_ENUM_PULL_UP;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set func and pull for pin cmd\r\n" )
+    STARTUP_PRINT( "Set func and pull for pin cmd\r\n" )
   #endif
   // execute and handle ioctl error
   if (
@@ -531,7 +531,7 @@ static sdhost_response_t init_gpio( void ) {
   pull->pull = IOMEM_GPIO_ENUM_NO_PULL;
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set func and pull for pin clk\r\n" )
+    STARTUP_PRINT( "Set func and pull for pin clk\r\n" )
   #endif
   // execute and handle ioctl error
   if (
@@ -576,7 +576,7 @@ static sdhost_response_t init_gpio( void ) {
 static sdhost_response_t interrupt_mark_handled( uint32_t mask ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Mark interrupts handled\r\n" )
+    STARTUP_PRINT( "Mark interrupts handled\r\n" )
   #endif
   // allocate sequence
   size_t sequence_size;
@@ -584,7 +584,7 @@ static sdhost_response_t interrupt_mark_handled( uint32_t mask ) {
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
+      STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
     #endif
     // return error
     return SDHOST_RESPONSE_MEMORY;
@@ -609,7 +609,7 @@ static sdhost_response_t interrupt_mark_handled( uint32_t mask ) {
   if ( -1 == result ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Mark interrupt as handled sequence failed\r\n" )
+      STARTUP_PRINT( "Mark interrupt as handled sequence failed\r\n" )
     #endif
     // return error
     return SDHOST_RESPONSE_IO;
@@ -628,7 +628,7 @@ static sdhost_response_t interrupt_mark_handled( uint32_t mask ) {
 static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Fetch interrupt status\r\n" )
+    STARTUP_PRINT( "Fetch interrupt status\r\n" )
   #endif
   // allocate sequence
   size_t sequence_size;
@@ -636,7 +636,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocate sequence failed\r\n" )
+      STARTUP_PRINT( "Allocate sequence failed\r\n" )
     #endif
     // return error
     return SDHOST_RESPONSE_MEMORY;
@@ -658,7 +658,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
   if ( -1 == result ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Get interrupt status sequence failed\r\n" )
+      STARTUP_PRINT( "Get interrupt status sequence failed\r\n" )
     #endif
     // free sequence
     free( sequence );
@@ -685,7 +685,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
 [[maybe_unused]] static sdhost_response_t get_debug_status( uint32_t* destination ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Fetch debug register\r\n" )
+    STARTUP_PRINT( "Fetch debug register\r\n" )
   #endif
   // allocate sequence
   size_t sequence_size;
@@ -694,7 +694,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocate sequence failed\r\n" )
+      STARTUP_PRINT( "Allocate sequence failed\r\n" )
     #endif
     // return error
     return SDHOST_RESPONSE_MEMORY;
@@ -716,7 +716,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
   if ( -1 == result ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Get interrupt status sequence failed\r\n" )
+      STARTUP_PRINT( "Get interrupt status sequence failed\r\n" )
     #endif
     // free sequence
     free( sequence );
@@ -743,7 +743,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
 static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Finish sd data command\r\n" )
+    STARTUP_PRINT( "Finish sd data command\r\n" )
   #endif
   size_t block_size = device->block_size;
   #if !defined( SDHOST_ENABLE_DMA )
@@ -755,13 +755,13 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   // debug output
   #if defined( SDHOST_ENABLE_DEBUG )
     #if defined ( SDHOST_ENABLE_DMA )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "block_size = %zx, buffer = %p\r\n",
         block_size,
         ( void* )device->buffer
       )
     #else
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "block_size = %zx, block_count = %zu, buffer = %p\r\n",
         block_size,
         block_count,
@@ -773,7 +773,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   if ( block_size % offset ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "Invalid block size, has to be multiple of %#zx\r\n",
         offset
       )
@@ -789,7 +789,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
     #if !defined ( SDHOST_ENABLE_DMA )
       // calculate necessary word count
       size_t necessary_word = ( block_size * block_count ) / offset;
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "is_read = %d, is_write = %d, necessary_word = %zu\r\n",
         is_read ? 1 : 0,
         is_write ? 1 : 0,
@@ -806,20 +806,20 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
       if ( device->shm_id ) {
         // debug output
         #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Using shared memory set in device\r\n" )
+          STARTUP_PRINT( "Using shared memory set in device\r\n" )
         #endif
         shm_id = device->shm_id;
       } else {
         // debug output
         #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Creating shared memory\r\n" )
+          STARTUP_PRINT( "Creating shared memory\r\n" )
         #endif
         shm_id = _syscall_memory_shared_create(
           device->block_count * device->block_size);
         if ( errno ) {
           // debug output
           #if defined( SDHOST_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+            STARTUP_PRINT( "Request shared area failed\r\n" )
           #endif
           // return error
           return SDHOST_RESPONSE_UNKNOWN;
@@ -829,7 +829,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
         if ( errno ) {
           // debug output
           #if defined( SDHOST_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+            STARTUP_PRINT( "Request shared area failed\r\n" )
           #endif
           // return error
           return SDHOST_RESPONSE_MEMORY;
@@ -842,7 +842,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
       if ( ! sequence ) {
         // debug output
         #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Allocate sequence failed\r\n" )
+          STARTUP_PRINT( "Allocate sequence failed\r\n" )
         #endif
         // return error
         return SDHOST_RESPONSE_MEMORY;
@@ -867,7 +867,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
       if ( -1 == result ) {
         // debug output
         #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "ioctl for transfer sequence failed\r\n" )
+          STARTUP_PRINT( "ioctl for transfer sequence failed\r\n" )
         #endif
         // free sequence
         free( sequence );
@@ -877,7 +877,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
       if ( IOMEM_MMIO_ABORT_TYPE_IO == sequence[ 0 ].abort_type ) {
         // debug output
         #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Perform ioctl transfer failed\r\n" )
+          STARTUP_PRINT( "Perform ioctl transfer failed\r\n" )
         #endif
         // free sequence
         free( sequence );
@@ -887,7 +887,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
       if ( shm_addr && device->buffer ) {
         // debug output
         #if defined( SDHOST_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Copying from shared too buffer\r\n" )
+          STARTUP_PRINT( "Copying from shared too buffer\r\n" )
         #endif
         memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
         // release shared memory again
@@ -895,7 +895,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
         if ( errno ) {
           // debug output
           #if defined( SDHOST_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "detach shared area failed\r\n" )
+            STARTUP_PRINT( "detach shared area failed\r\n" )
           #endif
           // return failure
           return SDHOST_RESPONSE_IO;
@@ -907,7 +907,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
   if ( device->block_count > 1 && ( is_read || is_write ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sending stop transmission finally\r\n" )
+      STARTUP_PRINT( "Sending stop transmission finally\r\n" )
     #endif
     // allocate sequence
     sequence = util_prepare_mmio_sequence( 3, &sequence_size );
@@ -915,7 +915,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
     if ( ! sequence ) {
       // debug output
       #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Unable to allocate sequence\r\n" )
+        STARTUP_PRINT( "Unable to allocate sequence\r\n" )
       #endif
       // return error
       return SDHOST_RESPONSE_MEMORY;
@@ -950,7 +950,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
     ) ) {
       // debug output
       #if defined( SDHOST_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Issue data read sequence failed\r\n" )
+        STARTUP_PRINT( "Issue data read sequence failed\r\n" )
       #endif
       // free
       free( sequence );

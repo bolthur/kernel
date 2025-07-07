@@ -29,12 +29,12 @@
 bool rpc_init( void ) {
   bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    STARTUP_PRINT( "Unable to register handler read!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
+    STARTUP_PRINT( "Unable to register handler write!\r\n" )
     return false;
   }
   return true;

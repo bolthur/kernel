@@ -50,7 +50,7 @@ void rpc_handle_read(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "read stuff\r\n" )
+  STARTUP_PRINT( "read stuff\r\n" )
   vfs_read_response_t* response = malloc( sizeof( *response ) );
   if ( ! response ) {
     return;
@@ -93,7 +93,7 @@ void rpc_handle_read(
   handle_node_t* node;
   int result = handle_get( &node, request->origin, request->handle );
   if ( 0 > result ) {
-    EARLY_STARTUP_PRINT( "no handle found!\r\n" )
+    STARTUP_PRINT( "no handle found!\r\n" )
     response->len = result;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     _syscall_memory_shared_detach( request->shm_id );
@@ -103,7 +103,7 @@ void rpc_handle_read(
   }
   handle_container_t* container = node->data;
   if ( container->type != HANDLE_TYPE_FILE ) {
-    EARLY_STARTUP_PRINT( "invalid type set for found handle!\r\n" )
+    STARTUP_PRINT( "invalid type set for found handle!\r\n" )
     response->len = -EINVAL;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     _syscall_memory_shared_detach( request->shm_id );

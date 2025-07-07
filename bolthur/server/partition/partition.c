@@ -190,8 +190,8 @@ int partition_remove( const char* path ) {
  * @brief Simple method to dump mount point nodes
  */
 void partition_dump( void ) {
-  EARLY_STARTUP_PRINT( "mountpoint node tree dump\r\n" )
+  STARTUP_PRINT( "mountpoint node tree dump\r\n" )
   partition_tree_each(&management_tree, partition_node, n, {
-      EARLY_STARTUP_PRINT("%s\r\n", n->name);
+      STARTUP_PRINT("%s\r\n", n->name);
   });
 }

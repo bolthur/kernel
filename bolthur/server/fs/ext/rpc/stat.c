@@ -64,22 +64,22 @@ void rpc_handle_stat(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  EARLY_STARTUP_PRINT( "ext stat call \"%s\"\r\n", request->file_path )
+  STARTUP_PRINT( "ext stat call \"%s\"\r\n", request->file_path )
   struct stat st;
   struct stat* cached = stat_fetch( request->file_path );
   if ( !cached ) {
     // fetch stat information
     int result = ext_stat( request->file_path, &st );
     if ( EOK != result ) {
-      EARLY_STARTUP_PRINT( "ext stat call failed: %d => %s\r\n", result, strerror( result ) )
+      STARTUP_PRINT( "ext stat call failed: %d => %s\r\n", result, strerror( result ) )
       bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
       free( request );
       return;
     }
-    EARLY_STARTUP_PRINT("%s: %lld\r\n", request->file_path, st.st_size)
+    STARTUP_PRINT("%s: %lld\r\n", request->file_path, st.st_size)
     // try to push back
     if ( ! stat_push( request->file_path, &st ) ) {
-      EARLY_STARTUP_PRINT( "Unable to push stat to cache!\r\n" )
+      STARTUP_PRINT( "Unable to push stat to cache!\r\n" )
       bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
       free( request );
       return;
@@ -87,7 +87,7 @@ void rpc_handle_stat(
     // set cached for copy
     cached = &st;
   } else {
-    EARLY_STARTUP_PRINT( "CACHE HIT!\r\n" )
+    STARTUP_PRINT( "CACHE HIT!\r\n" )
   }
   memcpy( &response.info, cached, sizeof( *cached ) );
 
