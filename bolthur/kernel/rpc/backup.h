@@ -38,6 +38,10 @@ typedef struct {
   bool sync;
   size_t origin_data_id;
   void* rpc_info;
+  // necessary for nested rpc to return sync on end
+  bool sync_return_on_end;
+  size_t sync_return_blocked_data_id;
+  size_t sync_return_data_id;
 } rpc_backup_t;
 
 rpc_backup_t* rpc_backup_get_active( task_thread_t* );

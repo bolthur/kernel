@@ -127,8 +127,13 @@ task_thread_t* task_thread_create(
       ( uintptr_t )( stack_virtual + STACK_SIZE - sizeof( int ) ),
       ( uintptr_t )( stack_virtual + STACK_SIZE - alignof( max_align_t ) )
     )
+    DUMP_REGISTER(current_context);
   #endif
   current_context->reg.sp = stack_virtual + STACK_SIZE - alignof( max_align_t );
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "%d\r\n", alignof( max_align_t ) )
+    DUMP_REGISTER(current_context);
+  #endif
   // push back current value of fpu
   #if defined( ARM_CPU_HAS_NEON )
     __asm__ __volatile__(
@@ -175,8 +180,8 @@ task_thread_t* task_thread_create(
     stack_current += PAGE_SIZE
   ) {
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "stack_virtual + stack_current = %#"PRIxPTR"\r\n", stack_virtual + PAGE_SIZE )
-      DEBUG_OUTPUT( "stack_physical + stack_current = %#"PRIx64"\r\n", stack_physical + PAGE_SIZE )
+      DEBUG_OUTPUT( "stack_virtual + stack_current = %#"PRIxPTR"\r\n", stack_virtual + stack_current )
+      DEBUG_OUTPUT( "stack_physical + stack_current = %#"PRIx64"\r\n", stack_physical + stack_current )
     #endif
     // map stack
     if ( ! virt_map_address(

@@ -306,9 +306,14 @@ void syscall_rpc_ret( void* context ) {
       blocked_data_id,
       original_rpc_id
     )
+    DEBUG_OUTPUT( "active->sync = %d\r\n", active->sync ? 1 : 0 )
   #endif
   rpc_origin_source_t* info = rpc_generic_source_info(
     original_rpc_id ? original_rpc_id : active->data_id );
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "active->sync = %d, info->sync = %d\r\n", active->sync ? 1 : 0,
+        info->sync ? 1 : 0 )
+  #endif
   if ( ! active->sync || original_rpc_id ) {
     // overwrite blocked data id
     blocked_data_id = original_rpc_id ? original_rpc_id : active->data_id;
@@ -375,8 +380,8 @@ void syscall_rpc_ret( void* context ) {
         syscall_populate_error( context, ( size_t )-ESRCH );
         return;
       }
-      // reset sync to false
-      active->sync = false;
+      // reset sync to one from info
+      active->sync = info->sync;
       blocked_data_id = info->rpc_id;
     }
   }
@@ -400,11 +405,11 @@ void syscall_rpc_ret( void* context ) {
   // handle synchronous stuff
   if ( active->sync ) {
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "Sync return!\r\n" )
+      DEBUG_OUTPUT( "Sync return to %d!\r\n", target->process->id )
     #endif
     // generate data queue entry
     size_t data_id = 0;
-    int err = rpc_data_queue_add(
+    const int err = rpc_data_queue_add(
       target->process->id,
       dup_data,
       length,
@@ -416,7 +421,9 @@ void syscall_rpc_ret( void* context ) {
       #endif
       // free duplicate
       free( dup_data );
-      syscall_populate_error( context, ( size_t )-EAGAIN );
+      // populate error
+      syscall_populate_error( context, ( size_t )-err );
+      // skip rest
       return;
     }
     #if defined( PRINT_SYSCALL )
@@ -426,31 +433,51 @@ void syscall_rpc_ret( void* context ) {
         target->state,
         target->state_data.data_ptr
       )
+      DEBUG_OUTPUT( "Using target: %d, using active: %d\r\n",
+        target != task_thread_current_thread ? 1 : 0,
+        target != task_thread_current_thread ? 0 : 1 )
     #endif
-    // populate return for sync request ( rpc raise is waiting at source )
-    syscall_populate_success(
-      target != task_thread_current_thread
-        ? target->current_context
-        : active->context,
-      data_id
-    );
+
+    // get possible active target backup
+    rpc_backup_t* target_active = NULL;
+    if ( target != task_thread_current_thread ) {
+      // get current active rpc
+      target_active = rpc_backup_get_active( target );
+    }
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT(
-        "unblock threads of process %d and blocked data %zu\r\n",
-        target->process->id,
-        blocked_data_id
-      )
+      DEBUG_OUTPUT( "target_active = %p\r\n", ( void* )target_active )
     #endif
-    // unblock if necessary
-    task_unblock_threads(
-      target->process,
-      TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
-      ( task_state_data_t ){ .data_size = blocked_data_id }
-    );
+    // handle not active
+    if ( ! target_active ) {
+      // populate return for sync request ( rpc raise is waiting at source )
+      syscall_populate_success(
+        target != task_thread_current_thread
+          ? target->current_context
+          : active->context,
+        data_id
+      );
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT(
+          "unblock threads of process %d and blocked data %zu\r\n",
+          target->process->id,
+          blocked_data_id
+        )
+      #endif
+      // unblock if necessary
+      task_unblock_threads(
+        target->process,
+        TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
+        ( task_state_data_t ){ .data_size = blocked_data_id }
+      );
+    } else {
+      target_active->sync_return_on_end = true;
+      target_active->sync_return_blocked_data_id = blocked_data_id;
+      target_active->sync_return_data_id = data_id;
+    }
   // handle async stuff
   } else {
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "async return!\r\n" )
+      DEBUG_OUTPUT( "async return to %d!\r\n", target->process->id )
     #endif
     // raise target
     rpc_backup_t* backup = rpc_generic_raise(
@@ -601,6 +628,8 @@ void syscall_rpc_end( void* context ) {
     #endif
     // kill thread and trigger scheduling
     task_thread_kill( task_thread_current_thread, true, context );
+    // skip rest
+    return;
   }
   // enqueue scheduler
   if ( ! task_thread_is_active( task_thread_current_thread ) ) {

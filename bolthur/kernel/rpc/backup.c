@@ -47,23 +47,36 @@ void rpc_backup_destroy( rpc_backup_t* backup ) {
  * @fn rpc_backup_t* rpc_backup_get_active(task_thread_t*)
  * @brief Get active rpc backup
  *
- * @param thread
- * @return
+ * @param thread thread to get backup from
+ * @return active backup or null if no rpc is active or not found
  */
 rpc_backup_t* rpc_backup_get_active( task_thread_t* thread ) {
   // ensure proper states
-  if ( TASK_THREAD_STATE_RPC_ACTIVE != thread->state ) {
+  if (
+    TASK_THREAD_STATE_RPC_ACTIVE != thread->state
+    && TASK_THREAD_STATE_RPC_QUEUED != thread->state
+  ) {
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
+    #endif
     return NULL;
   }
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
+  #endif
   // variables
   list_item_t* current = thread->process->rpc_queue->first;
+  rpc_backup_t* found = NULL;
   // try to get active rpc backup
   while( current ) {
     rpc_backup_t* entry = current->data;
+    // handle usual return not nested
     if ( entry->active ) {
-      return entry;
+      found = entry;
     }
+    // go to next
     current = current->next;
   }
-  return NULL;
+  // return null
+  return found;
 }

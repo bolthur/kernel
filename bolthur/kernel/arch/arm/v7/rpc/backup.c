@@ -105,18 +105,42 @@ rpc_backup_t* rpc_backup_create(
   rpc_backup_t* active = NULL;
   // try to find matching rpc
   while( current_list ) {
+    // get current backup
     rpc_backup_t* tmp = current_list->data;
-    if ( tmp->active && tmp->thread == thread ) {
-      active = tmp;
-      break;
+    // when backup is active, thread is the same and thread state is
+    // not wait for rpc call use current entry
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "process = %d, tmp->active = %d, tmp->thread = %p, thread = %p, tmp->data_id = %zu, thread->state = %d\r\n",
+        tmp->thread->process->id, tmp->active ? 1 : 0, tmp->thread, thread, tmp->data_id, thread->state )
+    #endif
+    // handle not active, different thread or wait for return
+    if ( ! tmp->active || tmp->thread != thread
+      || thread->state == TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN
+    ) {
+      // get to next item
+      current_list = current_list->next;
+      // skip rest
+      continue;
     }
-    // switch to next
-    current_list = current_list->next;
+    // some debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "tmp = %p\r\n", ( void* )tmp )
+      DEBUG_OUTPUT( "process = %d, tmp->active = %d, tmp->thread = %p, thread = %p, tmp->data_id = %zu\r\n",
+        tmp->thread->process->id, tmp->active ? 1 : 0, tmp->thread, thread, tmp->data_id )
+    #endif
+    // set active
+    active = tmp;
+    // break out of loop
+    break;
   }
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "active = %p\r\n", ( void* )active)
+  #endif
   // get thread cpu context
-  cpu_register_context_t* cpu = active
-    ? active->context
-    : thread->current_context;
+  const cpu_register_context_t* cpu = thread->current_context;
+  if ( active ) {
+    cpu = active->context;
+  }
   // reserve space for backup context
   backup->context = malloc( sizeof( cpu_register_context_t ) );
   if ( ! backup->context ) {
@@ -193,6 +217,11 @@ rpc_backup_t* rpc_backup_create(
   #endif
   // populate remaining values
   backup->thread = thread;
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "pid: %d, backup->thread_state = %d, thread->state = %d\r\n",
+      thread->process->id, backup->thread_state, thread->state )
+  #endif
   backup->thread_state = thread->state;
   memcpy(
     &backup->thread_state_data,
@@ -215,6 +244,9 @@ rpc_backup_t* rpc_backup_create(
   backup->type = type;
   backup->sync = sync;
   backup->origin_data_id = origin_data_id;
+  backup->sync_return_data_id = 0;
+  backup->sync_return_blocked_data_id = 0;
+  backup->sync_return_on_end = false;
   // return created backup
   return backup;
 }

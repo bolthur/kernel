@@ -21,6 +21,7 @@
 #include "../cpu.h"
 #include "../../../../mm/virt.h"
 #include "../../../../rpc/generic.h"
+#include "../../../../syscall.h"
 #include "../../../../rpc/backup.h"
 #include "../../../../rpc/data.h"
 #if defined( PRINT_RPC )
@@ -37,6 +38,10 @@
 bool rpc_generic_restore( task_thread_t* thread ) {
   // ensure proper states
   if ( TASK_THREAD_STATE_RPC_ACTIVE != thread->state ) {
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "Invalid state, expected %d but received %d\r\n",
+        TASK_THREAD_STATE_RPC_ACTIVE, thread->state )
+    #endif
     return false;
   }
   // variables
@@ -99,6 +104,8 @@ bool rpc_generic_restore( task_thread_t* thread ) {
   #if defined( PRINT_RPC )
     DUMP_REGISTER( thread->current_context )
     DEBUG_OUTPUT( "process id = %d\r\n", thread->process->id )
+    DEBUG_OUTPUT( "pid: %d, backup thread state = %d, thread state = %d\r\n",
+      backup->thread->process->id, backup->thread->state, backup->thread_state )
   #endif
   // set correct state
   backup->thread->state = backup->thread_state;
@@ -107,6 +114,26 @@ bool rpc_generic_restore( task_thread_t* thread ) {
     &backup->thread->state_data,
     sizeof( task_state_data_t )
   );
+
+  // handle sync return on end
+  if ( backup->sync_return_on_end ) {
+    // populate return for sync request ( rpc raise is waiting at source )
+    syscall_populate_success( thread->current_context, backup->sync_return_data_id );
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT(
+          "unblock threads of process %d and blocked data %zu\r\n",
+          thread->process->id,
+          backup->sync_return_blocked_data_id
+        )
+      #endif
+      // unblock if necessary
+      task_unblock_threads(
+        thread->process,
+        TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
+        ( task_state_data_t ){ .data_size = backup->sync_return_blocked_data_id }
+      );
+  }
+
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT(
@@ -119,13 +146,34 @@ bool rpc_generic_restore( task_thread_t* thread ) {
   list_remove_data( thread->process->rpc_queue, backup );
   // handle enqueued stuff
   if ( further_rpc_enqueued ) {
-    // get next rpc to invoke
-    rpc_backup_t* next = thread->process->rpc_queue->first->data;
+    // get first list item
+    list_item_t* item = thread->process->rpc_queue->first;
+    // initialize next backup
+    rpc_backup_t* next = NULL;
+    // loop through next
+    while ( item ) {
+      // get current item
+      rpc_backup_t* tmp = item->data;
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "tmp = %p, tmp->active = %d\r\n", ( void* )tmp, tmp->active ? 1 : 0 )
+      #endif
+      // handle not active
+      if ( ! tmp->active ) {
+        // set next
+        next = tmp;
+        // break
+        break;
+      }
+      // go to next item
+      item = item->next;
+    }
     // handle next
     if ( next ) {
       // debug output
       #if defined( PRINT_RPC )
         DUMP_REGISTER( next->context )
+        DEBUG_OUTPUT( "backup->thread_state = %d, next->thread_state = %d\r\n", backup->thread_state, next->thread_state )
       #endif
       // overwrite context, state and state_data after restore ( possibly wrong )
       memcpy(
@@ -133,7 +181,9 @@ bool rpc_generic_restore( task_thread_t* thread ) {
         thread->current_context,
         sizeof( cpu_register_context_t )
       );
+      // set thread state
       next->thread_state = thread->state;
+      // copy over thread state data
       memcpy(
         &next->thread->state_data,
         &thread->state_data,
@@ -215,6 +265,11 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   size_t alignment = cpu->reg.sp % alignof( max_align_t );
   if ( alignment ) {
     cpu->reg.sp -= alignment;
+  }
+  // thumb mode stuff
+  if ( ( uint32_t )proc->rpc_handler & 0x1 ) {
+    // add thumb mode to spsr
+    cpu->reg.spsr |= CPSR_THUMB;
   }
   // set correct state ( set directly to active if it's the current thread )
   if ( backup->thread == task_thread_current_thread ) {

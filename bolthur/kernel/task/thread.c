@@ -479,6 +479,9 @@ void task_thread_block(
   ) {
     return;
   }
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "process = %d\r\n", thread->process->id )
+  #endif
   // backup current state
   thread->state_backup = thread->state;
   if ( TASK_THREAD_STATE_ACTIVE == thread->state ) {
@@ -489,6 +492,10 @@ void task_thread_block(
   // set state and data
   thread->state = state;
   thread->state_data = data;
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "thread->state_backup = %d\r\n", thread->state_backup )
+    DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
+  #endif
 }
 
 /**
@@ -504,6 +511,9 @@ void task_thread_unblock(
   task_thread_state_t necessary_state,
   task_state_data_t necessary_data
 ) {
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "process = %d\r\n", thread->process->id )
+  #endif
   // validate state
   if ( necessary_state != thread->state ) {
     // debug output
@@ -524,7 +534,7 @@ void task_thread_unblock(
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT(
-        "invalid data ptr attribute%p / %p\r\n",
+        "invalid data ptr attribute %p / %p\r\n",
         thread->state_data.data_ptr,
         necessary_data.data_ptr
       )
