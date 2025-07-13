@@ -109,11 +109,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
   #endif
   // set correct state
   backup->thread->state = backup->thread_state;
-  memcpy(
-    &thread->state_data,
-    &backup->thread->state_data,
-    sizeof( task_state_data_t )
-  );
+  memcpy( &thread->state_data, &backup->thread->state_data, sizeof( task_state_data_t ) );
 
   // handle sync return on end
   if ( backup->sync_return_on_end ) {
@@ -147,7 +143,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
   // handle enqueued stuff
   if ( further_rpc_enqueued ) {
     // get first list item
-    list_item_t* item = thread->process->rpc_queue->first;
+    const list_item_t* item = thread->process->rpc_queue->first;
     // initialize next backup
     rpc_backup_t* next = NULL;
     // loop through next
@@ -236,16 +232,52 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
       return false;
     }
   }
+  // get active rpc
+  rpc_backup_t* existing = rpc_backup_get_active( backup->thread, 0 );
   // enqueue only when state is set
   if (
     TASK_THREAD_STATE_RPC_QUEUED == backup->thread->state
     || TASK_THREAD_STATE_RPC_ACTIVE == backup->thread->state
+    || TASK_THREAD_STATE_RPC_HALT_SWITCH == backup->thread->state
   ) {
     // debug output
     #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "backup->thread->state = %d\r\n", backup->thread->state )
+      DEBUG_OUTPUT( "backup->thread->state = %d, pid = %d\r\n", backup->thread->state,
+        backup->thread->process->id )
     #endif
+    // return success
     return true;
+  }
+
+  // handle rpc active
+  if ( existing ) {
+    // traverse source up to initiating process
+    const rpc_origin_source_t* rpc_source = existing->rpc_info;
+    while ( rpc_source && rpc_source->origin_rpc_id ) {
+      rpc_source = rpc_generic_source_info( rpc_source->origin_rpc_id );
+    }
+    // traverse current up to initiating process
+    const rpc_origin_source_t* rpc_backup = NULL;
+    if ( backup->origin_data_id ) {
+      rpc_backup = rpc_generic_source_info( backup->origin_data_id );
+      while ( rpc_backup->origin_rpc_id ) {
+        rpc_backup = rpc_generic_source_info( rpc_backup->origin_rpc_id );
+      }
+    }
+    // allow recursive rpc only for same process
+    if (
+      rpc_source
+      && rpc_backup
+      && rpc_source->source_process != rpc_backup->source_process
+      && rpc_backup->source_process != backup->thread->process->id
+    ) {
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "Nested not allowed!\r\n" )
+      #endif
+      // return success
+      return true;
+    }
   }
 
   // debug output

@@ -44,17 +44,20 @@ void rpc_backup_destroy( rpc_backup_t* backup ) {
 }
 
 /**
- * @fn rpc_backup_t* rpc_backup_get_active(task_thread_t*)
+ * @fn rpc_backup_t* rpc_backup_get_active(task_thread_t*, size_t)
  * @brief Get active rpc backup
  *
  * @param thread thread to get backup from
+ * @param data_id data id to get backup from
  * @return active backup or null if no rpc is active or not found
  */
-rpc_backup_t* rpc_backup_get_active( task_thread_t* thread ) {
+rpc_backup_t* rpc_backup_get_active( task_thread_t* thread, size_t data_id ) {
   // ensure proper states
   if (
     TASK_THREAD_STATE_RPC_ACTIVE != thread->state
     && TASK_THREAD_STATE_RPC_QUEUED != thread->state
+    && TASK_THREAD_STATE_RPC_HALT_SWITCH != thread->state
+    && TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN != thread->state
   ) {
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
@@ -67,6 +70,34 @@ rpc_backup_t* rpc_backup_get_active( task_thread_t* thread ) {
   // variables
   list_item_t* current = thread->process->rpc_queue->first;
   rpc_backup_t* found = NULL;
+  // handle data id set
+  if ( data_id ) {
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "Trying to get rpc backup by data id %zu\r\n", data_id )
+    #endif
+    while ( current ) {
+      rpc_backup_t* entry = current->data;
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "entry->data_id = %zu, entry->origin_data_id = %zu\r\n",
+          entry->data_id, entry->origin_data_id )
+      #endif
+      // handle data id match
+      if ( entry->origin_data_id == data_id ) {
+        #if defined( PRINT_RPC )
+          DEBUG_OUTPUT( "Found rpc backup by data id %zu\r\n", data_id )
+        #endif
+        // return found entry
+        return entry;
+      }
+      // go to next
+      current = current->next;
+    }
+    // return null
+    return found;
+  }
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "Trying to get last active thread\r\n" )
+  #endif
   // try to get active rpc backup
   while( current ) {
     rpc_backup_t* entry = current->data;

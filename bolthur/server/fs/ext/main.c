@@ -73,12 +73,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   STARTUP_PRINT( "Set rpc ready flag\r\n" )
   _syscall_rpc_set_ready( true );
 
-  // add device file
-  if ( !dev_add_file( "/dev/ext", NULL, 0 ) ) {
-    STARTUP_PRINT( "Unable to add dev fs\r\n" )
-    return -1;
-  }
-
   // allocate space for ioctl
   partition_register_t* reg = malloc( sizeof( *reg ) );
   // handle error
@@ -116,6 +110,14 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       return -1;
     }
     STARTUP_PRINT( "register result: %d\r\n", result )
+  }
+
+  // add device file
+  if ( !dev_add_file( "/dev/ext", NULL, 0 ) ) {
+    STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    free( reg );
+    close( fd );
+    return -1;
   }
 
   // wait for rpc

@@ -26,8 +26,6 @@
 #include "../rpc/generic.h"
 #include "../task/process.h"
 #include "../task/thread.h"
-#include "../mm/phys.h"
-#include "../mm/virt.h"
 #if defined( PRINT_SYSCALL )
   #include "../lib/inttypes.h"
   #include "../debug/debug.h"
@@ -184,7 +182,9 @@ void syscall_rpc_raise( void* context ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "rpc raise failed!\r\n" )
     #endif
+    // set error response
     syscall_populate_error( context, ( size_t )-ENOMEM );
+    // skip rest
     return;
   }
   // handle no return
@@ -193,10 +193,13 @@ void syscall_rpc_raise( void* context ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "no return rpc call\r\n" )
     #endif
+    // set success response
     syscall_populate_success( context, 0 );
+    // skip rest
     return;
+  }
   // block source thread if synchronous
-  } else if ( synchronous && task_thread_current_thread != rpc->thread ) {
+  if ( synchronous && task_thread_current_thread != rpc->thread ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
@@ -268,11 +271,11 @@ void syscall_rpc_ret( void* context ) {
     return;
   }
   // get current active rpc
-  rpc_backup_t* active = rpc_backup_get_active( task_thread_current_thread );
+  rpc_backup_t* active = rpc_backup_get_active( task_thread_current_thread, 0 );
   if ( ! active ) {
     // debug output
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "No activ rpc found!\r\n" )
+      DEBUG_OUTPUT( "No activ rpc found for %zu!\r\n", original_rpc_id )
     #endif
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
@@ -442,7 +445,7 @@ void syscall_rpc_ret( void* context ) {
     rpc_backup_t* target_active = NULL;
     if ( target != task_thread_current_thread ) {
       // get current active rpc
-      target_active = rpc_backup_get_active( target );
+      target_active = rpc_backup_get_active( target, blocked_data_id );
     }
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "target_active = %p\r\n", ( void* )target_active )

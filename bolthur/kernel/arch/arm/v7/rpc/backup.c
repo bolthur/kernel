@@ -116,6 +116,7 @@ rpc_backup_t* rpc_backup_create(
     // handle not active, different thread or wait for return
     if ( ! tmp->active || tmp->thread != thread
       || thread->state == TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN
+      || thread->state == TASK_THREAD_STATE_RPC_HALT_SWITCH
     ) {
       // get to next item
       current_list = current_list->next;
@@ -223,11 +224,7 @@ rpc_backup_t* rpc_backup_create(
       thread->process->id, backup->thread_state, thread->state )
   #endif
   backup->thread_state = thread->state;
-  memcpy(
-    &backup->thread_state_data,
-    &thread->state_data,
-    sizeof( task_state_data_t )
-  );
+  memcpy( &backup->thread_state_data, &thread->state_data, sizeof( task_state_data_t ) );
   if ( TASK_THREAD_STATE_RPC_WAIT_FOR_CALL == backup->thread_state ) {
     backup->thread_state = TASK_THREAD_STATE_ACTIVE;
   }

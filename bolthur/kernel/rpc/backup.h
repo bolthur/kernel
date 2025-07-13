@@ -44,7 +44,7 @@ typedef struct {
   size_t sync_return_data_id;
 } rpc_backup_t;
 
-rpc_backup_t* rpc_backup_get_active( task_thread_t* );
+rpc_backup_t* rpc_backup_get_active( task_thread_t*, size_t );
 rpc_backup_t* rpc_backup_create( task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool );
 void rpc_backup_destroy( rpc_backup_t* );
 

@@ -54,11 +54,7 @@ static void terminal_scroll( terminal_t* term ) {
  * @param s utf8 string to push
  * @return
  */
-[[maybe_unused]] static uint32_t terminal_push(
-  terminal_t* term,
-  const char* s
-) {
-  EARLY_STARTUP_PRINT( "RENDERING %s", s )
+static uint32_t terminal_push( terminal_t* term, const char* s ) {
   uint32_t rendered = 0;
   while( *s ) {
     // handle end of row reached
@@ -74,9 +70,9 @@ static void terminal_scroll( terminal_t* term ) {
       term->row--;
       term->col = 0;
     }
-    // decode churrent character to unicode for save
+    // decode current character to utf8 for save
     size_t len = 0;
-    uint16_t c = utf8_decode( s, &len );
+    const uint16_t c = utf8_decode( s, &len );
     s += --len;
     // check character for actions
     switch ( c ) {
