@@ -130,11 +130,11 @@ const char* sd_last_error( void ) {
  * @fn sd_response_t sd_transfer_block(uint32_t*, size_t, uint32_t, sd_operation_t, size_t)
  * @brief Transfer block from / to sd card
  *
- * @param buffer
- * @param buffer_size
- * @param block_number
- * @param operation
- * @param shm_id
+ * @param buffer buffer
+ * @param buffer_size buffer size
+ * @param block_number block number
+ * @param operation operation to execute
+ * @param shm_id shared memory id
  * @return
  */
 bool sd_transfer_block(

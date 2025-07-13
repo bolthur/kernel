@@ -85,7 +85,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  uint16_t* signature = ( uint16_t* )( mbr_data + PARTITION_TABLE_SIGNATURE_OFFSET );
+  const uint16_t* signature = ( uint16_t* )( mbr_data + PARTITION_TABLE_SIGNATURE_OFFSET );
   STARTUP_PRINT( "Signature within mbr: %#"PRIx16"\r\n", *signature )
   // check signature
   STARTUP_PRINT( "Check signature\r\n" )
@@ -100,7 +100,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // loop through partitions and calculate total byte size
   uint64_t total_size = 0;
   for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
-    mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
+    const mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
       mbr_data + PARTITION_TABLE_OFFSET + ( i * sizeof( mbr_table_entry_t ) ) );
     STARTUP_PRINT( "entry->data.total_sector = %#lx\r\n", entry->data.total_sector )
     // calculate total

@@ -128,7 +128,8 @@ void phys_mark_page_free( uint64_t address ) {
   uint64_t offset = PAGE_OFFSET( frame );
 
   #if defined( PRINT_MM_PHYS )
-    DEBUG_OUTPUT( "address = %#"PRIx64"\r\n", address )
+    DEBUG_OUTPUT( "address = %#"PRIx64", phys_dma_start = %#"PRIx64", phys_dma_end = %#"PRIx64"\r\n",
+      address, phys_dma_start, phys_dma_end )
   #endif
 
   // dma handling
@@ -137,7 +138,7 @@ void phys_mark_page_free( uint64_t address ) {
     frame = ( address - phys_dma_start ) / PAGE_SIZE;
     index = PAGE_INDEX( frame );
     offset = PAGE_OFFSET( frame );
-    // mark used
+    // mark unused
     phys_dma_bitmap[ index ] &= ( uint32_t )( ~( 1U << offset ) );
     // debug output
     #if defined( PRINT_MM_PHYS )
@@ -359,7 +360,13 @@ uint64_t phys_find_free_page_range( size_t alignment, size_t memory_amount, phys
   }
   // apply possible offset
   if ( PHYS_MEMORY_TYPE_DMA == type ) {
+    #if defined( PRINT_MM_PHYS )
+      DEBUG_OUTPUT( "address = %#"PRIx64"\r\n", address )
+    #endif
     address += phys_dma_start;
+    #if defined( PRINT_MM_PHYS )
+      DEBUG_OUTPUT( "address = %#"PRIx64"\r\n", address )
+    #endif
   }
   // set temporary address
   tmp = address;

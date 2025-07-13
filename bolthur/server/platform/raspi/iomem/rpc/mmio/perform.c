@@ -20,6 +20,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <errno.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -644,6 +645,10 @@ void rpc_handle_mmio_perform(
           continue;
         }
         void* dma_block = dma_allocate_memory( ( *mmio_request )[ i ].dma_copy_size );
+        // debug output
+        #if defined( RPC_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "dma_block = %p / %"PRIx32"\r\n", dma_block, ( *mmio_request )[ i ].dma_copy_size );
+        #endif
         if ( ! dma_block ) {
           _syscall_memory_shared_detach( shm_id );
           ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
@@ -669,6 +674,11 @@ void rpc_handle_mmio_perform(
             dma_error = true;
             continue;
           }
+          // debug output
+          #if defined( RPC_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "physical = %#"PRIxPTR", virtual = %#"PRIxPTR"\r\n",
+              physical, ( uintptr_t )( ( uintptr_t )dma_block + size ) )
+          #endif
           // set block address
           if ( 0 != dma_block_set_address(
             ( bus & 0x00FFFFFF ) | 0x7E000000,
@@ -787,6 +797,23 @@ void rpc_handle_mmio_perform(
             continue;
           }
         }
+        if ( dma_error ) {
+          // free dma memory block again
+          dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
+          // detach shared memory
+          _syscall_memory_shared_detach( shm_id );
+          if ( errno ) {
+            _syscall_memory_shared_detach( shm_id );
+            ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
+            // set skip
+            skip = true;
+            continue;
+          }
+          // set skip for following commands
+          skip = true;
+          // skip
+          continue;
+        }
         // copy over to shared memory
         memcpy( shm_addr, dma_block, ( *mmio_request )[ i ].dma_copy_size );
         // free dma memory block again
@@ -798,12 +825,6 @@ void rpc_handle_mmio_perform(
           ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
           // set skip
           skip = true;
-          continue;
-        }
-        if ( dma_error ) {
-          // set skip for following commands
-          skip = true;
-          // skip
           continue;
         }
         break;
@@ -835,6 +856,10 @@ void rpc_handle_mmio_perform(
           continue;
         }
         void* dma_block = dma_allocate_memory( ( *mmio_request )[ i ].dma_copy_size );
+        // debug output
+        #if defined( RPC_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "dma_block = %p / %"PRIx32"\r\n", dma_block, ( *mmio_request )[ i ].dma_copy_size );
+        #endif
         if ( ! dma_block ) {
           _syscall_memory_shared_detach( shm_id );
           ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
@@ -862,6 +887,11 @@ void rpc_handle_mmio_perform(
             dma_error = true;
             continue;
           }
+          // debug output
+          #if defined( RPC_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "physical = %#"PRIxPTR", virtual = %#"PRIxPTR"\r\n",
+              physical, ( uintptr_t )( ( uintptr_t )dma_block + size ) )
+          #endif
           // set block address
           if ( 0 != dma_block_set_address(
             physical | 0xC0000000,

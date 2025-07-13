@@ -93,6 +93,9 @@ void syscall_memory_acquire( void* context ) {
       syscall_populate_error( context, ( size_t )-ENOMEM );
       return;
     }
+    #if defined( PRINT_SYSCALL )
+      DEBUG_OUTPUT( "phys = %#"PRIx64"\r\n", phys )
+    #endif
   }
   // check if physical range is already in use for map physical
   if ( ( flag & MEMORY_FLAG_PHYS ) && ! ( flag & MEMORY_FLAG_BUS ) ) {
@@ -113,6 +116,9 @@ void syscall_memory_acquire( void* context ) {
       return;
     }
   }
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "phys = %#"PRIx64"\r\n", phys )
+  #endif
   // determine start
   uintptr_t start;
   // fixed handling means take address as start
@@ -175,7 +181,7 @@ void syscall_memory_acquire( void* context ) {
     map_type = VIRT_MEMORY_TYPE_DEVICE;
   }
   // handle physical memory mapping request
-  if ( flag & MEMORY_FLAG_PHYS ) {
+  if ( flag & MEMORY_FLAG_PHYS || flag & MEMORY_FLAG_BUS ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
@@ -295,6 +301,13 @@ void syscall_memory_release( void* context ) {
     #endif
     return;
   }
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Unmap %#"PRIxPTR" with unmap phys = %d, phys = %#"PRIx64"\r\n",
+      address, unmap_phys ? 1 : 0, virt_get_mapped_address_in_context(
+        virtual_context, address
+      )
+    )
+  #endif
 
   // check for shared area
   if ( shared_memory_address_is_shared(
@@ -305,10 +318,19 @@ void syscall_memory_release( void* context ) {
     syscall_populate_error( context, ( size_t )-EADDRNOTAVAIL );
     // debug output
     #if defined( PRINT_SYSCALL )
-      DEBUG_OUTPUT( "Address is shared and handled differently!\r\n" )
+      DEBUG_OUTPUT( "Address %#"PRIxPTR" is shared and handled differently!\r\n",
+        address )
     #endif
     return;
   }
+
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "Unmap %#"PRIxPTR" with unmap phys = %d, phys = %#"PRIx64"\r\n",
+      address, unmap_phys ? 1 : 0, virt_get_mapped_address_in_context(
+        virtual_context, address
+      )
+    )
+  #endif
 
   // check if range is mapped in context
   if ( ! virt_is_mapped_in_context_range( virtual_context, address, len ) ) {

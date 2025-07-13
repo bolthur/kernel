@@ -773,12 +773,12 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
   uint32_t high_value = 0;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "frequency = %#"PRIx32", closest = %#"PRIx32"\r\n",
+    STARTUP_PRINT( "frequency = %#"PRIx32", closest = %#"PRIx32"\r\n",
       frequency, closest )
   #endif
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Determine closest shift count\r\n" )
+    STARTUP_PRINT( "Determine closest shift count\r\n" )
   #endif
   // determine shift count
   uint32_t shift_count = 32;
@@ -817,7 +817,7 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Determine divisor\r\n" )
+    STARTUP_PRINT( "Determine divisor\r\n" )
   #endif
   // more bits for host controller after version 2, so use closest directly there
   if ( EMMC_HOST_CONTROLLER_V2 < device->version_host_controller ) {
@@ -832,13 +832,13 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "divisor = %#"PRIx32"\r\n", divisor )
+    STARTUP_PRINT( "divisor = %#"PRIx32"\r\n", divisor )
   #endif
   // update high bits if newer than v2 is active
   if ( EMMC_HOST_CONTROLLER_V2 < device->version_host_controller ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Fill high value\r\n" )
+      STARTUP_PRINT( "Fill high value\r\n" )
     #endif
     high_value = ( divisor & 0x300 ) >> 2;
   }
@@ -846,12 +846,12 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
   divisor = ( ( divisor & 0x0ff ) << 8 ) | high_value;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "divisor = %#"PRIx32", high_value = %#"PRIx32"\r\n",
+    STARTUP_PRINT( "divisor = %#"PRIx32", high_value = %#"PRIx32"\r\n",
       divisor, high_value )
   #endif
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT(
+    STARTUP_PRINT(
       "Disable clock, write clock divisor and wait for clock to become stable\r\n"
     )
   #endif
@@ -861,7 +861,7 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
+      STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_MEMORY;
@@ -920,7 +920,7 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
   ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Clock frequency change sequence failed\r\n" )
+      STARTUP_PRINT( "Clock frequency change sequence failed\r\n" )
     #endif
     // free
     free( sequence );
@@ -931,7 +931,7 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
   if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 0 ].abort_type ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Wait for cmd done timed out\r\n" )
+      STARTUP_PRINT( "Wait for cmd done timed out\r\n" )
     #endif
     // free sequence
     free( sequence );
@@ -942,7 +942,7 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
   if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 9 ].abort_type ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Wait for clock ready timed out\r\n" )
+      STARTUP_PRINT( "Wait for clock ready timed out\r\n" )
     #endif
     // free sequence
     free( sequence );
@@ -965,7 +965,7 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
 static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Mark interrupts handled\r\n" )
+    STARTUP_PRINT( "Mark interrupts handled\r\n" )
   #endif
   // allocate sequence
   size_t sequence_size;
@@ -973,7 +973,7 @@ static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
+      STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_MEMORY;
@@ -998,7 +998,7 @@ static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
   if ( -1 == result ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Mark interrupt as handled sequence failed\r\n" )
+      STARTUP_PRINT( "Mark interrupt as handled sequence failed\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_IO;
@@ -1020,7 +1020,7 @@ static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
 static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Issue SD command\r\n" )
+    STARTUP_PRINT( "Issue SD command\r\n" )
   #endif
   // some flags
   bool response_busy = ( command & EMMC_CMDTM_CMD_RSPNS_TYPE_MASK ) == EMMC_CMDTM_CMD_RSPNS_TYPE_48B;
@@ -1031,7 +1031,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   size_t sequence_entry_count = 10;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT(
+    STARTUP_PRINT(
       "device->block_size = %"PRIu32", device->block_count = %"PRIu32"\r\n",
       device->block_size,
       device->block_count
@@ -1041,19 +1041,19 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   if ( is_data && 0 < device->block_count ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Extending entry count by data block count\r\n" )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT( "Extending entry count by data block count\r\n" )
+      STARTUP_PRINT(
         "device->block_size = %"PRIu32", device->block_count = %"PRIu32"\r\n",
         device->block_size,
         device->block_count
       )
     #endif
     // space for transfers if no dma is used
-    #if !defined(EMMC_ENABLE_DMA)
+    #if !defined( EMMC_ENABLE_DMA )
       // entries to wait for transfer
       sequence_entry_count += device->block_count * 2;
       // space for data read / write transfers
-      sequence_entry_count += device->block_count * ( device->block_size / 4 );
+      sequence_entry_count += device->block_count;
     #else
       // space for read / write from dma
       sequence_entry_count++;
@@ -1064,7 +1064,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT(
+    STARTUP_PRINT(
       "sequence_entry_count = %zu\r\n",
       sequence_entry_count
     )
@@ -1073,7 +1073,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   if( device->block_count > 0xFFFF ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "To much blocks to transfer: %"PRIu32"\r\n",
         device->block_count
       )
@@ -1083,7 +1083,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Allocating space for sequence\r\n" )
+    STARTUP_PRINT( "Allocating space for sequence\r\n" )
   #endif
   // allocate sequence
   size_t sequence_size;
@@ -1094,7 +1094,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocate command sequence failed" )
+      STARTUP_PRINT( "Allocate command sequence failed" )
     #endif
     // return error
     return EMMC_RESPONSE_MEMORY;
@@ -1108,21 +1108,21 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       if ( device->shm_id ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Using shared memory set in device\r\n" )
+          STARTUP_PRINT( "Using shared memory set in device\r\n" )
         #endif
         shm_id = device->shm_id;
       } else {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Creating shared memory\r\n" )
+          STARTUP_PRINT( "Creating shared memory\r\n" )
         #endif
         shm_id = _syscall_memory_shared_create(
-          device->block_count * device->block_size);
+          device->block_count * device->block_size );
         if ( errno ) {
           free( sequence );
           // debug output
           #if defined( EMMC_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+            STARTUP_PRINT( "Request shared area failed\r\n" )
           #endif
           // return error
           return EMMC_RESPONSE_UNKNOWN;
@@ -1133,7 +1133,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
           free( sequence );
           // debug output
           #if defined( EMMC_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "Request shared area failed\r\n" )
+            STARTUP_PRINT( "Request shared area failed\r\n" )
           #endif
           // return error
           return EMMC_RESPONSE_MEMORY;
@@ -1146,7 +1146,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Update command if necessary\r\n" )
+    STARTUP_PRINT( "Update command if necessary\r\n" )
   #endif
   // set status compare depending on type
   uint32_t status_compare = EMMC_STATUS_CMD_INHIBIT;
@@ -1155,7 +1155,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Filling command sequence for execution\r\n" )
+    STARTUP_PRINT( "Filling command sequence for execution\r\n" )
   #endif
   uint32_t idx = 0;
   // fill sequence to execute
@@ -1214,25 +1214,65 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   idx++;
   // data command stuff without
   #if !defined( EMMC_ENABLE_DMA )
+    // handle device shared memory id
+    uint8_t* device_shm_addr = NULL;
+    if ( device->shm_id ) {
+      device_shm_addr = _syscall_memory_shared_attach( device->shm_id, ( uintptr_t )NULL );
+      if ( errno ) {
+        // debug output
+        #if defined( EMMC_ENABLE_DEBUG )
+          STARTUP_PRINT( "Attaching device shared memory failed!\r\n" )
+        #endif
+        // return error
+        return EMMC_RESPONSE_MEMORY;
+      }
+    }
+    // allocate space for arrays
+    void** shm_addr = NULL;
+    size_t* shm_id = NULL;
     if ( is_data && 0 < device->block_count ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Queuing read / write commands\r\n" )
+        STARTUP_PRINT( "Queuing read / write commands\r\n" )
       #endif
       // determine interrupt flag
       uint32_t interrupt = ( command & EMMC_CMDTM_CMD_TM_DAT_DIR_CH )
         ? EMMC_INTERRUPT_READ_RDY : EMMC_INTERRUPT_WRITE_RDY;
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "EMMC_INTERRUPT_READ_RDY = %#x\r\n", EMMC_INTERRUPT_READ_RDY )
-        EARLY_STARTUP_PRINT( "EMMC_INTERRUPT_WRITE_RDY = %#x\r\n", EMMC_INTERRUPT_WRITE_RDY )
-        EARLY_STARTUP_PRINT( "interrupt = %#"PRIx32"\r\n", interrupt )
+        STARTUP_PRINT( "EMMC_INTERRUPT_READ_RDY = %#x\r\n", EMMC_INTERRUPT_READ_RDY )
+        STARTUP_PRINT( "EMMC_INTERRUPT_WRITE_RDY = %#x\r\n", EMMC_INTERRUPT_WRITE_RDY )
+        STARTUP_PRINT( "interrupt = %#"PRIx32"\r\n", interrupt )
       #endif
+      // generate shared memory ids for blocks
+      shm_addr = calloc( device->block_count, sizeof( void* ) ); /// FIXME: ADD ERROR HANDLING!
+      shm_id = calloc( device->block_count, sizeof( size_t ) ); /// FIXME: ADD ERROR HANDLING!
+      size_t offset = 0;
+      for ( uint32_t i = 0; i < device->block_count; i++ ) {
+        shm_id[ i ] = _syscall_memory_shared_create( device->block_size );
+        if ( errno ) {
+          // debug output
+          #if defined( EMMC_ENABLE_DEBUG )
+            STARTUP_PRINT( "Request shared area failed\r\n" )
+          #endif
+          // return error
+          return EMMC_RESPONSE_MEMORY;
+        }
+        // attach it
+        shm_addr[ i ] = _syscall_memory_shared_attach( shm_id[ i ], ( uintptr_t )NULL );
+        if ( errno ) {
+          // debug output
+          #if defined( EMMC_ENABLE_DEBUG )
+            STARTUP_PRINT( "Request shared area failed\r\n" )
+          #endif
+          // return error
+          return EMMC_RESPONSE_MEMORY;
+        }
+        // clear out space
+        memset( shm_addr[ i ], 0, device->block_size * device->block_count );
+      }
+      // add read block commands
       for ( uint32_t current = 0; current < device->block_count; current++ ) {
-        // debug output
-        #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "push block %"PRIu32" to sequence\r\n", current )
-        #endif
         // wait for flag
         sequence[ idx ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
         sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
@@ -1248,39 +1288,25 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
         sequence[ idx ].offset = PERIPHERAL_EMMC_INTERRUPT;
         sequence[ idx ].value = EMMC_INTERRUPT_MASK | interrupt;
         idx++;
-        // set buffer
-        uint32_t* buffer32 = device->buffer;
-        // extend sequence by data to write sequence
-        for (
-          uint32_t current_byte = device->block_size;
-          current_byte > 0;
-          current_byte -= 4,
-          buffer32++
-        ) {
-          // read / write data
-          sequence[ idx ].type = EMMC_INTERRUPT_WRITE_RDY == interrupt
-            ? IOMEM_MMIO_ACTION_WRITE : IOMEM_MMIO_ACTION_READ;
-          sequence[ idx ].offset = PERIPHERAL_EMMC_DATA;
-          // copy write data
-          if ( interrupt & EMMC_INTERRUPT_WRITE_RDY ) {
-            // debug output
-            #if defined( EMMC_ENABLE_DEBUG )
-              EARLY_STARTUP_PRINT(
-                "push byte %"PRIu32" | %"PRIu32" of block %"PRIu32"\r\n",
-                current_byte, idx, current
-              )
-            #endif
-            sequence[ idx++ ].value = *buffer32;
-            // skip rest
-            continue;
+        // push data to shared areas
+        if ( EMMC_INTERRUPT_WRITE_RDY == interrupt ) {
+          if ( device->buffer ) {
+            memcpy( shm_addr[ current ], ( ( uint8_t* )device->buffer ) + offset, device->block_size );
+          } else if ( device_shm_addr ) {
+            memcpy( shm_addr[ current ], device_shm_addr + offset, device->block_size );
           }
-          // just increment index
-          idx++;
+          offset += device->block_size;
         }
+        // insert read / write operation
+        sequence[ idx ].type = EMMC_INTERRUPT_WRITE_RDY == interrupt
+          ? IOMEM_MMIO_EMMC_DATA_WRITE : IOMEM_MMIO_EMMC_DATA_READ;
+        sequence[ idx ].dma_copy_size = device->block_size * device->block_count;
+        sequence[ idx ].value = shm_id[ current ];
+        idx++;
       }
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "push blocks to sequence done\r\n" )
+        STARTUP_PRINT( "push blocks to sequence done\r\n" )
       #endif
     }
   #else
@@ -1317,7 +1343,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Executing command sequence with ioctl\r\n" )
+    STARTUP_PRINT( "Executing command sequence with ioctl\r\n" )
   #endif
   // perform request
   int result = ioctl(
@@ -1333,20 +1359,20 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   if ( -1 == result ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Issue SD Command sequence failed\r\n" )
+      STARTUP_PRINT( "Issue SD Command sequence failed\r\n" )
     #endif
     return EMMC_RESPONSE_IO;
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Checking responses of command sequence\r\n" )
+    STARTUP_PRINT( "Checking responses of command sequence\r\n" )
   #endif
   // test for command loop timeout
   idx = 4;
   if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ idx ].abort_type ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Wait for cmd done timed out\r\n" )
+      STARTUP_PRINT( "Wait for cmd done timed out\r\n" )
     #endif
     // save last interrupt and specific error
     device->last_interrupt = sequence[ idx ].value;
@@ -1363,7 +1389,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Saving possible response information\r\n" )
+    STARTUP_PRINT( "Saving possible response information\r\n" )
   #endif
   // fill last responseEMMC_INTERRUPT_MASK
   idx += 2;
@@ -1391,16 +1417,16 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
     if ( is_data && 0 < device->block_count ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Gathering read / write command stuff\r\n" )
+        STARTUP_PRINT( "Gathering read / write command stuff\r\n" )
       #endif
-      // check for timeout
-      uint32_t idx_backup = idx;
-      uint32_t read_action = 0;
+      // setup offset
+      size_t offset = 0;
       for ( uint32_t current = 0; current < device->block_count; current++ ) {
+        // check for timeout
         if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ idx ].abort_type ) {
           // debug output
           #if defined( EMMC_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "wait for data done timed out\r\n" )
+            STARTUP_PRINT( "wait for data done timed out\r\n" )
           #endif
           // save last interrupt and specific error
           device->last_interrupt = sequence[ idx ].value;
@@ -1415,57 +1441,47 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
           return EMMC_RESPONSE_TIMEOUT;
         }
         // get beyond block
-        idx++; // reset
-        idx += device->block_size / 4;
-      }
-
-      // set buffer
-      uint32_t* buffer32 = device->buffer;
-      // copy data to buffer
-      idx = idx_backup;
-      // debug output
-      #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Handle possible read data\r\n" )
-      #endif
-      for ( uint32_t current = 0; current < device->block_count; current++ ) {
-        // skip loop and reset
-        idx += 2;
-        // handle read
-        for (
-          uint32_t i = device->block_size;
-          IOMEM_MMIO_ACTION_READ == sequence[ idx ].type
-            && i > 0;
-          i -= 4,
-          buffer32++
-        ) {
-          *buffer32 = sequence[ idx++ ].value;
-          read_action++;
+        idx += 2; // reset
+        // copy from shm address to buffer
+        if ( IOMEM_MMIO_EMMC_DATA_READ == sequence[ idx ].type && shm_addr[ current ] ) {
+          if ( device->buffer ) {
+            memcpy( ( ( uint8_t* )device->buffer ) + offset, shm_addr[ current ], device->block_size );
+          } else if ( device_shm_addr ) {
+            memcpy( device_shm_addr + offset, shm_addr[ current ], device->block_size );
+          }
+          offset += device->block_size;
+        }
+        // release shared memory again
+        _syscall_memory_shared_detach( shm_id[ current ] );
+        if ( errno ) {
+          // debug output
+          #if defined( EMMC_ENABLE_DEBUG )
+            STARTUP_PRINT( "detach shared area failed\r\n" )
+          #endif
+          // return failure
+          return EMMC_RESPONSE_IO;
         }
       }
-      // debug output
-      #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Amount of reads: %"PRId32"\r\n", read_action )
-      #endif
     }
   #else
     if ( is_data && 0 < device->block_count && shm_id ) {
       if ( IOMEM_MMIO_ABORT_TYPE_DMA == sequence[ idx ].abort_type ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "dma copy timed out\r\n" )
+          STARTUP_PRINT( "dma copy timed out\r\n" )
         #endif
         // return failure
         return EMMC_RESPONSE_IO;
       }
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Amount of reads: 1 dma read\r\n" )
+        STARTUP_PRINT( "Amount of reads: 1 dma read\r\n" )
       #endif
       // copy over from shared to block count
       if ( shm_addr && device->buffer ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Copying from shared too buffer\r\n" )
+          STARTUP_PRINT( "Copying from shared too buffer\r\n" )
         #endif
         memcpy( device->buffer, shm_addr, device->block_count * device->block_size );
         // release shared memory again
@@ -1473,7 +1489,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
         if ( errno ) {
           // debug output
           #if defined( EMMC_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "detach shared area failed\r\n" )
+            STARTUP_PRINT( "detach shared area failed\r\n" )
           #endif
           // return failure
           return EMMC_RESPONSE_IO;
@@ -1488,7 +1504,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
     if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ idx ].abort_type ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Handle possible data transfer timeout\r\n" )
+        STARTUP_PRINT( "Handle possible data transfer timeout\r\n" )
       #endif
       // mask done and timeout done
       uint32_t mask_done = EMMC_INTERRUPT_MASK | EMMC_INTERRUPT_DATA_DONE;
@@ -1500,7 +1516,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "wait for final data done timed out\r\n" )
+          STARTUP_PRINT( "wait for final data done timed out\r\n" )
         #endif
         // save last interrupt and specific error
         device->last_interrupt = sequence[ idx ].value;
@@ -1527,7 +1543,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
 static void handle_card_interrupt( void ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Handle possible card interrupts\r\n" )
+    STARTUP_PRINT( "Handle possible card interrupts\r\n" )
   #endif
   // get card status
   if ( device->card_rca ) {
@@ -1546,9 +1562,9 @@ static void handle_card_interrupt( void ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       if ( EMMC_RESPONSE_OK != response ) {
-        EARLY_STARTUP_PRINT( "Card status fetch failed!\r\n" )
+        STARTUP_PRINT( "Card status fetch failed!\r\n" )
       } else {
-        EARLY_STARTUP_PRINT(
+        STARTUP_PRINT(
           "Card status: %#"PRIx32"\r\n",
           device->last_response[ 0 ]
         )
@@ -1567,7 +1583,7 @@ static void handle_card_interrupt( void ) {
 static emmc_response_t get_interrupt_status( uint32_t* destination ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Fetch interrupt status\r\n" )
+    STARTUP_PRINT( "Fetch interrupt status\r\n" )
   #endif
   // allocate sequence
   size_t sequence_size;
@@ -1575,7 +1591,7 @@ static emmc_response_t get_interrupt_status( uint32_t* destination ) {
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocate sequence failed\r\n" )
+      STARTUP_PRINT( "Allocate sequence failed\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_MEMORY;
@@ -1597,7 +1613,7 @@ static emmc_response_t get_interrupt_status( uint32_t* destination ) {
   if ( -1 == result ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Get interrupt status sequence failed\r\n" )
+      STARTUP_PRINT( "Get interrupt status sequence failed\r\n" )
     #endif
     // free sequence
     free( sequence );
@@ -1623,7 +1639,7 @@ static emmc_response_t get_interrupt_status( uint32_t* destination ) {
 static emmc_response_t reset_command( void ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Reset command\r\n" )
+    STARTUP_PRINT( "Reset command\r\n" )
   #endif
   // allocate sequence
   size_t sequence_size;
@@ -1631,7 +1647,7 @@ static emmc_response_t reset_command( void ) {
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence allocation failed\r\n" )
+      STARTUP_PRINT( "Sequence allocation failed\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_MEMORY;
@@ -1667,7 +1683,7 @@ static emmc_response_t reset_command( void ) {
   if ( -1 == result ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Reset command sequence failed\r\n" )
+      STARTUP_PRINT( "Reset command sequence failed\r\n" )
     #endif
     // free
     free( sequence );
@@ -1678,7 +1694,7 @@ static emmc_response_t reset_command( void ) {
   if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 2 ].abort_type ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Wait for command reset timed out\r\n" )
+      STARTUP_PRINT( "Wait for command reset timed out\r\n" )
     #endif
     // free
     free( sequence );
@@ -1689,7 +1705,7 @@ static emmc_response_t reset_command( void ) {
   if ( sequence[ 3 ].value & EMMC_CONTROL1_SRST_CMD ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Command reset failed\r\n" )
+      STARTUP_PRINT( "Command reset failed\r\n" )
     #endif
     // free
     free( sequence );
@@ -1711,7 +1727,7 @@ static emmc_response_t reset_command( void ) {
 static emmc_response_t reset_data( void ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Reset data\r\n" )
+    STARTUP_PRINT( "Reset data\r\n" )
   #endif
   // allocate sequence
   size_t sequence_size;
@@ -1719,7 +1735,7 @@ static emmc_response_t reset_data( void ) {
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Sequence allocation failed\r\n" )
+      STARTUP_PRINT( "Sequence allocation failed\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_MEMORY;
@@ -1755,7 +1771,7 @@ static emmc_response_t reset_data( void ) {
   if ( -1 == result ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Reset command sequence failed\r\n" )
+      STARTUP_PRINT( "Reset command sequence failed\r\n" )
     #endif
     // free
     free( sequence );
@@ -1766,7 +1782,7 @@ static emmc_response_t reset_data( void ) {
   if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 2 ].abort_type ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Wait for command reset timed out\r\n" )
+      STARTUP_PRINT( "Wait for command reset timed out\r\n" )
     #endif
     // free
     free( sequence );
@@ -1777,7 +1793,7 @@ static emmc_response_t reset_data( void ) {
   if ( sequence[ 3 ].value & EMMC_CONTROL1_SRST_DATA ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Command reset failed\r\n" )
+      STARTUP_PRINT( "Command reset failed\r\n" )
     #endif
     // free
     free( sequence );
@@ -1797,7 +1813,7 @@ static emmc_response_t reset_data( void ) {
 static void handle_interrupt( void ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Handling possible interrupts\r\n" )
+    STARTUP_PRINT( "Handling possible interrupts\r\n" )
   #endif
   // variable stuff
   uint32_t interrupt;
@@ -1806,7 +1822,7 @@ static void handle_interrupt( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Fetch interrupt register\r\n" )
+    STARTUP_PRINT( "Fetch interrupt register\r\n" )
   #endif
   // get interrupt register
   do {
@@ -1814,14 +1830,14 @@ static void handle_interrupt( void ) {
   } while ( EMMC_RESPONSE_OK != response );
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "interrupt = %#"PRIx32"\r\n", interrupt )
+    STARTUP_PRINT( "interrupt = %#"PRIx32"\r\n", interrupt )
   #endif
 
   // command complete
   if ( interrupt & EMMC_INTERRUPT_CMD_DONE ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Command completed!\r\n" )
+      STARTUP_PRINT( "Command completed!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_CMD_DONE;
@@ -1831,7 +1847,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_DATA_DONE ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Data transfer completed!\r\n" )
+      STARTUP_PRINT( "Data transfer completed!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_DATA_DONE;
@@ -1841,7 +1857,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_BLOCK_GAP ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Block gap interrupt!\r\n" )
+      STARTUP_PRINT( "Block gap interrupt!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_BLOCK_GAP;
@@ -1851,7 +1867,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_WRITE_RDY ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Write ready interrupt!\r\n" )
+      STARTUP_PRINT( "Write ready interrupt!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_WRITE_RDY;
@@ -1865,7 +1881,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_READ_RDY ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Read ready interrupt!\r\n" )
+      STARTUP_PRINT( "Read ready interrupt!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_READ_RDY;
@@ -1879,7 +1895,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_CARD_INSERTION ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Card insertion!\r\n" )
+      STARTUP_PRINT( "Card insertion!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_CARD_INSERTION;
@@ -1889,7 +1905,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_CARD_REMOVAL ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Card removal!\r\n" )
+      STARTUP_PRINT( "Card removal!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_CARD_REMOVAL;
@@ -1899,7 +1915,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_CARD_INTERRUPT ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Card interrupt!\r\n" )
+      STARTUP_PRINT( "Card interrupt!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_CARD_INTERRUPT;
@@ -1911,7 +1927,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_RETUNE ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Retune interrupt!\r\n" )
+      STARTUP_PRINT( "Retune interrupt!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_RETUNE;
@@ -1921,7 +1937,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_BOOTACK ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Boot acknowledge!\r\n" )
+      STARTUP_PRINT( "Boot acknowledge!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_BOOTACK;
@@ -1931,7 +1947,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_ENDBOOT ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Boot operation terminated!\r\n" )
+      STARTUP_PRINT( "Boot operation terminated!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_ENDBOOT;
@@ -1941,7 +1957,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_ERR ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Some generic error!\r\n" )
+      STARTUP_PRINT( "Some generic error!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_ERR;
@@ -1951,7 +1967,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_CTO_ERR ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Command timeout!\r\n" )
+      STARTUP_PRINT( "Command timeout!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_CTO_ERR;
@@ -1961,7 +1977,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_CCRC_ERR ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Command CRC error!\r\n" )
+      STARTUP_PRINT( "Command CRC error!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_CCRC_ERR;
@@ -1971,7 +1987,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_CEND_ERR ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "End bit of command not 1!\r\n" )
+      STARTUP_PRINT( "End bit of command not 1!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_CEND_ERR;
@@ -1981,7 +1997,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_CBAD_ERR ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Incorrect command index in response!\r\n" )
+      STARTUP_PRINT( "Incorrect command index in response!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_CBAD_ERR;
@@ -1991,7 +2007,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_DTO_ERR ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Data transfer timeout!\r\n" )
+      STARTUP_PRINT( "Data transfer timeout!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_DTO_ERR;
@@ -2001,7 +2017,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_DCRC_ERR ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Data CRC error!\r\n" )
+      STARTUP_PRINT( "Data CRC error!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_DCRC_ERR;
@@ -2011,7 +2027,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_DEND_ERR ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "End bit of data not 1!\r\n" )
+      STARTUP_PRINT( "End bit of data not 1!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_DEND_ERR;
@@ -2021,7 +2037,7 @@ static void handle_interrupt( void ) {
   if ( interrupt & EMMC_INTERRUPT_ACMD_ERR ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Auto command error!\r\n" )
+      STARTUP_PRINT( "Auto command error!\r\n" )
     #endif
     // set reset mask
     reset_mask |= EMMC_INTERRUPT_ACMD_ERR;
@@ -2030,7 +2046,7 @@ static void handle_interrupt( void ) {
   if ( reset_mask != 0 ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "reset = %#"PRIx32"\r\n", reset_mask )
+      STARTUP_PRINT( "reset = %#"PRIx32"\r\n", reset_mask )
     #endif
     // write back reset
     while ( EMMC_RESPONSE_OK != interrupt_mark_handled( reset_mask ) ) {
@@ -2053,12 +2069,12 @@ static emmc_response_t sd_command( uint32_t command, uint32_t argument ) {
   emmc_response_t response;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Execute SD command\r\n" )
+    STARTUP_PRINT( "Execute SD command\r\n" )
   #endif
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Handle interrupts first\r\n" )
+    STARTUP_PRINT( "Handle interrupts first\r\n" )
   #endif
   // handle possible pending interrupts
   handle_interrupt();
@@ -2069,13 +2085,13 @@ static emmc_response_t sd_command( uint32_t command, uint32_t argument ) {
     command = EMMC_APP_CMD_TO_CMD( command );
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Issue command ACMD%"PRId32"\r\n", command )
+      STARTUP_PRINT( "Issue command ACMD%"PRId32"\r\n", command )
     #endif
     // handle invalid commands
     if ( EMMC_CMD_IS_RESERVED( emmc_app_command_list[ command ] ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Command ACMD%"PRId32" is invalid\r\n", command )
+        STARTUP_PRINT( "Command ACMD%"PRId32" is invalid\r\n", command )
       #endif
       // return error
       return EMMC_RESPONSE_INVALID_COMMAND;
@@ -2097,14 +2113,14 @@ static emmc_response_t sd_command( uint32_t command, uint32_t argument ) {
     if ( response != EMMC_RESPONSE_OK ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Command CMD%d failed\r\n", EMMC_CMD_APP_CMD )
+        STARTUP_PRINT( "Command CMD%d failed\r\n", EMMC_CMD_APP_CMD )
       #endif
       // return response
       return response;
     }
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Issue command ACMD%"PRId32"\r\n", command )
+      STARTUP_PRINT( "Issue command ACMD%"PRId32"\r\n", command )
     #endif
     // set last command and argument of acmd
     device->last_command = EMMC_CMD_TO_APP_CMD( command );
@@ -2118,7 +2134,7 @@ static emmc_response_t sd_command( uint32_t command, uint32_t argument ) {
     if ( response != EMMC_RESPONSE_OK ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Command ACMD%"PRId32" failed\r\n", command )
+        STARTUP_PRINT( "Command ACMD%"PRId32" failed\r\n", command )
       #endif
       // return response
       return response;
@@ -2127,13 +2143,13 @@ static emmc_response_t sd_command( uint32_t command, uint32_t argument ) {
   } else {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Issue command CMD%"PRId32"\r\n", command )
+      STARTUP_PRINT( "Issue command CMD%"PRId32"\r\n", command )
     #endif
     // handle invalid commands
     if ( EMMC_CMD_IS_RESERVED( emmc_command_list[ command ] ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Command CMD%"PRId32" is invalid\r\n", command )
+        STARTUP_PRINT( "Command CMD%"PRId32" is invalid\r\n", command )
       #endif
       // return error
       return EMMC_RESPONSE_INVALID_COMMAND;
@@ -2150,7 +2166,7 @@ static emmc_response_t sd_command( uint32_t command, uint32_t argument ) {
     if ( response != EMMC_RESPONSE_OK ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Command CMD%"PRId32" failed\r\n", command )
+        STARTUP_PRINT( "Command CMD%"PRId32" failed\r\n", command )
       #endif
       // return response
       return response;
@@ -2173,12 +2189,12 @@ static emmc_response_t init_sd( void ) {
   bool v2_later;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Initialize sd card\r\n" )
+    STARTUP_PRINT( "Initialize sd card\r\n" )
   #endif
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Query voltage information\r\n" )
+    STARTUP_PRINT( "Query voltage information\r\n" )
   #endif
   // send cmd8
   response = sd_command( EMMC_CMD_SEND_IF_COND, 0x1AA );
@@ -2197,7 +2213,7 @@ static emmc_response_t init_sd( void ) {
     if ( EMMC_RESPONSE_OK != ( response = reset_command() ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Command reset failed\r\n" )
+        STARTUP_PRINT( "Command reset failed\r\n" )
       #endif
       // return error
       return response;
@@ -2208,7 +2224,7 @@ static emmc_response_t init_sd( void ) {
     ) ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Failed masking command timeout at interrupt register\r\n" )
+        STARTUP_PRINT( "Failed masking command timeout at interrupt register\r\n" )
       #endif
       // return error
       return response;
@@ -2218,7 +2234,7 @@ static emmc_response_t init_sd( void ) {
   } else if ( EMMC_RESPONSE_OK != response ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Failed sending CMD8\r\n" )
+      STARTUP_PRINT( "Failed sending CMD8\r\n" )
     #endif
     // return error
     return response;
@@ -2226,7 +2242,7 @@ static emmc_response_t init_sd( void ) {
     if ( ( device->last_response[ 0 ] & 0xFFF ) != 0x1AA ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Unusable sd card\r\n" )
+        STARTUP_PRINT( "Unusable sd card\r\n" )
       #endif
       // return error
       return EMMC_RESPONSE_CARD_ERROR;
@@ -2236,18 +2252,18 @@ static emmc_response_t init_sd( void ) {
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "v2_later = %d\r\n", v2_later ? 1 : 0 )
+    STARTUP_PRINT( "v2_later = %d\r\n", v2_later ? 1 : 0 )
   #endif
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Check for sdio card\r\n" )
+    STARTUP_PRINT( "Check for sdio card\r\n" )
   #endif
   // send cmd5, which returns only when card is a sdio card
   response = sd_command( EMMC_CMD_IO_SEND_OP_COND, 0 );
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT(
+    STARTUP_PRINT(
       "response = %d, last_error = %#"PRIx32", last_interrupt = %#"PRIx32"\r\n",
       response,
       device->last_error,
@@ -2261,26 +2277,26 @@ static emmc_response_t init_sd( void ) {
   ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Command failed for some reason\r\n" )
+      STARTUP_PRINT( "Command failed for some reason\r\n" )
     #endif
     // command timed out
     if ( device->last_error & EMMC_INTERRUPT_CTO_ERR ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Command timed out, reset command\r\n" )
+        STARTUP_PRINT( "Command timed out, reset command\r\n" )
       #endif
       // reset command
       if ( EMMC_RESPONSE_OK != ( response = reset_command() ) ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "command reset failed\r\n" )
+          STARTUP_PRINT( "command reset failed\r\n" )
         #endif
         // return error
         return response;
       }
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Mask timeout interrupt\r\n" )
+        STARTUP_PRINT( "Mask timeout interrupt\r\n" )
       #endif
       // mask interrupt
       if ( EMMC_RESPONSE_OK != ( response = interrupt_mark_handled(
@@ -2288,7 +2304,7 @@ static emmc_response_t init_sd( void ) {
       ) ) ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Failed masking command timeout at interrupt register\r\n" )
+          STARTUP_PRINT( "Failed masking command timeout at interrupt register\r\n" )
         #endif
         // return error
         return response;
@@ -2296,7 +2312,7 @@ static emmc_response_t init_sd( void ) {
     } else {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "SDIO detected, not yet supported\r\n" )
+        STARTUP_PRINT( "SDIO detected, not yet supported\r\n" )
       #endif
       // return error
       return EMMC_RESPONSE_NOT_IMPLEMENTED;
@@ -2305,7 +2321,7 @@ static emmc_response_t init_sd( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Fetch ocr\r\n" )
+    STARTUP_PRINT( "Fetch ocr\r\n" )
   #endif
   // call an inquiry ACMD41 (voltage window = 0) to get the OCR
   if ( EMMC_RESPONSE_OK != (
@@ -2313,7 +2329,7 @@ static emmc_response_t init_sd( void ) {
   ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "EMMC_APP_CMD_SD_SEND_OP_COND failed\r\n" )
+      STARTUP_PRINT( "EMMC_APP_CMD_SD_SEND_OP_COND failed\r\n" )
     #endif
     // return error
     return response;
@@ -2321,7 +2337,7 @@ static emmc_response_t init_sd( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Start and wait for card initialization\r\n" )
+    STARTUP_PRINT( "Start and wait for card initialization\r\n" )
   #endif
   // call initialization ACMD41
   bool card_busy = true;
@@ -2334,7 +2350,7 @@ static emmc_response_t init_sd( void ) {
     }
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Try card initialization\r\n" )
+      STARTUP_PRINT( "Try card initialization\r\n" )
     #endif
     // execute command
     response = sd_command(
@@ -2345,7 +2361,7 @@ static emmc_response_t init_sd( void ) {
     if ( EMMC_RESPONSE_OK != response && 0 != device->last_error ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Initialization failed\r\n" )
+        STARTUP_PRINT( "Initialization failed\r\n" )
       #endif
       // return error
       return response;
@@ -2358,7 +2374,7 @@ static emmc_response_t init_sd( void ) {
       device->card_support_sdhc = ( device->last_response[ 0 ] >> 30 ) & 0x1;
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT(
+        STARTUP_PRINT(
           "device->card_ocr = %#"PRIx32", device->card_support_sdhc=%#"PRIx32"\r\n",
           device->card_ocr, device->card_support_sdhc )
       #endif
@@ -2367,7 +2383,7 @@ static emmc_response_t init_sd( void ) {
     }
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Card is busy, retry after sleep\r\n" )
+      STARTUP_PRINT( "Card is busy, retry after sleep\r\n" )
     #endif
     // reached here, so card is busy, and we'll try it after sleep again
     usleep( 500000 );
@@ -2429,7 +2445,7 @@ static emmc_response_t reset( void ) {
   ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "mmio rpc to reset circuit failed\r\n" )
+      STARTUP_PRINT( "mmio rpc to reset circuit failed\r\n" )
     #endif
     // free
     free( sequence );
@@ -2440,7 +2456,7 @@ static emmc_response_t reset( void ) {
   if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 3 ].abort_type ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Wait for EMMC_CONTROL1 to finish failed\r\n" )
+      STARTUP_PRINT( "Wait for EMMC_CONTROL1 to finish failed\r\n" )
     #endif
     // free
     free( sequence );
@@ -2453,7 +2469,7 @@ static emmc_response_t reset( void ) {
   if ( EMMC_RESPONSE_OK != ( response = clock_frequency( EMMC_CLOCK_FREQUENCY_LOW ) ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to change clock frequency\r\n" )
+      STARTUP_PRINT( "Unable to change clock frequency\r\n" )
     #endif
     // return error
     return response;
@@ -2485,7 +2501,7 @@ static emmc_response_t reset( void ) {
   ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "mmio rpc to enable interrupts failed\r\n" )
+      STARTUP_PRINT( "mmio rpc to enable interrupts failed\r\n" )
     #endif
     // free
     free( sequence );
@@ -2565,7 +2581,7 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Asserting command list and app command list\r\n" )
+    STARTUP_PRINT( "Asserting command list and app command list\r\n" )
   #endif
   // assert command arrays
   static_assert( sizeof( emmc_command_list ) == sizeof( uint32_t ) * 64 );
@@ -2575,14 +2591,14 @@ emmc_response_t emmc_init( void ) {
   if ( ! device ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocating device structure\r\n" )
+      STARTUP_PRINT( "Allocating device structure\r\n" )
     #endif
     // allocate device structure
     device = malloc( sizeof( emmc_device_t ) );
     if ( ! device ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Unable to allocate device structure\r\n" )
+        STARTUP_PRINT( "Unable to allocate device structure\r\n" )
       #endif
       return EMMC_RESPONSE_MEMORY;
     }
@@ -2592,7 +2608,7 @@ emmc_response_t emmc_init( void ) {
   if ( ! device->fd_iomem ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "Opening %s for mmio / mailbox operations\r\n",
         IOMEM_DEVICE_PATH
       )
@@ -2601,7 +2617,7 @@ emmc_response_t emmc_init( void ) {
     if ( -1 == ( device->fd_iomem = open( IOMEM_DEVICE_PATH, O_RDWR ) ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Unable to open device\r\n" )
+        STARTUP_PRINT( "Unable to open device\r\n" )
       #endif
       return EMMC_RESPONSE_IO;
     }
@@ -2610,13 +2626,13 @@ emmc_response_t emmc_init( void ) {
   if ( ! device->initialized ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Restarting emmc controller to get sane state\r\n" )
+      STARTUP_PRINT( "Restarting emmc controller to get sane state\r\n" )
     #endif
     // shutdown controller
     /*if ( EMMC_RESPONSE_OK != ( response = controller_restart() ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT(
+        STARTUP_PRINT(
           "Failed to restart controller: %s\r\n",
           emmc_error( response )
         )
@@ -2626,13 +2642,13 @@ emmc_response_t emmc_init( void ) {
 
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "GPIO setup\r\n" )
+      STARTUP_PRINT( "GPIO setup\r\n" )
     #endif
     // gpio init
     if ( EMMC_RESPONSE_OK != ( response = init_gpio() ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT(
+        STARTUP_PRINT(
           "Failed to setup gpio: %s\r\n",
           emmc_error( response )
         )
@@ -2644,7 +2660,7 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Update card detection\r\n" )
+    STARTUP_PRINT( "Update card detection\r\n" )
     // cache previous absent flag
     bool was_absent = device->card_absent;
   #endif
@@ -2656,7 +2672,7 @@ emmc_response_t emmc_init( void ) {
   ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Failed to update card detection\r\n" )
+      STARTUP_PRINT( "Failed to update card detection\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_UNKNOWN;
@@ -2666,7 +2682,7 @@ emmc_response_t emmc_init( void ) {
   if ( device->card_absent ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "No card present\r\n" )
+      STARTUP_PRINT( "No card present\r\n" )
     #endif
     // reset flags
     device->initialized = false;
@@ -2674,7 +2690,7 @@ emmc_response_t emmc_init( void ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       if ( ! was_absent ) {
-        EARLY_STARTUP_PRINT( "No card detected\r\n" )
+        STARTUP_PRINT( "No card detected\r\n" )
       }
     #endif
     // return card absent
@@ -2697,13 +2713,13 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Gather version information\r\n" )
+    STARTUP_PRINT( "Gather version information\r\n" )
   #endif
   // collect necessary version info
   if ( EMMC_RESPONSE_OK != ( response = gather_version_info() ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "Unable to request version information: %s\r\n",
         emmc_error( response )
       )
@@ -2714,13 +2730,13 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Reset card\r\n" )
+    STARTUP_PRINT( "Reset card\r\n" )
   #endif
   // Reset card controller
   if ( EMMC_RESPONSE_OK != ( response = reset() ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "Unable to reset card: %s\r\n",
         emmc_error( response )
       )
@@ -2731,13 +2747,13 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "sd card init sequence\r\n" )
+    STARTUP_PRINT( "sd card init sequence\r\n" )
   #endif
   // Reset card controller
   if ( EMMC_RESPONSE_OK != ( response = init_sd() ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "Unable to perform sd card init sequence: %s\r\n",
         emmc_error( response )
       )
@@ -2748,7 +2764,7 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set clock frequency to normal\r\n" )
+    STARTUP_PRINT( "Set clock frequency to normal\r\n" )
   #endif
   // change clock frequency
   if ( EMMC_RESPONSE_OK != (
@@ -2756,7 +2772,7 @@ emmc_response_t emmc_init( void ) {
   ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Set clock frequency failed\r\n" )
+      STARTUP_PRINT( "Set clock frequency failed\r\n" )
     #endif
     // return error
     return response;
@@ -2764,7 +2780,7 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Retrieve card id\r\n" )
+    STARTUP_PRINT( "Retrieve card id\r\n" )
   #endif
   // get card id
   if ( EMMC_RESPONSE_OK != (
@@ -2772,7 +2788,7 @@ emmc_response_t emmc_init( void ) {
   ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Get card id failed\r\n" )
+      STARTUP_PRINT( "Get card id failed\r\n" )
     #endif
     // return error
     return response;
@@ -2782,7 +2798,7 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Retrieve card rca\r\n" )
+    STARTUP_PRINT( "Retrieve card rca\r\n" )
   #endif
   // send CMD3 to get rca
   while( true ) {
@@ -2790,7 +2806,7 @@ emmc_response_t emmc_init( void ) {
     if ( EMMC_RESPONSE_OK != ( response = sd_command( EMMC_CMD_SEND_RELATIVE_ADDR, 0 ) ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Enter data state failed\r\n" )
+        STARTUP_PRINT( "Enter data state failed\r\n" )
       #endif
       // return error
       return response;
@@ -2803,7 +2819,7 @@ emmc_response_t emmc_init( void ) {
       device->card_rca = rca;
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "card_rca = %#"PRIx16"\r\n", device->card_rca )
+        STARTUP_PRINT( "card_rca = %#"PRIx16"\r\n", device->card_rca )
       #endif
       // break
       break;
@@ -2814,7 +2830,7 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Perform bunch of error checks from last command\r\n" )
+    STARTUP_PRINT( "Perform bunch of error checks from last command\r\n" )
   #endif
   // some error checks
   uint32_t crc_error = ( device->last_response[ 0 ] >> 15 ) & 0x1;
@@ -2825,7 +2841,7 @@ emmc_response_t emmc_init( void ) {
   if ( crc_error ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "crc error\r\n" )
+      STARTUP_PRINT( "crc error\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_COMMAND_ERROR;
@@ -2833,7 +2849,7 @@ emmc_response_t emmc_init( void ) {
   if ( illegal_cmd ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "illegal command\r\n" )
+      STARTUP_PRINT( "illegal command\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_COMMAND_ERROR;
@@ -2841,7 +2857,7 @@ emmc_response_t emmc_init( void ) {
   if ( error ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "generic error\r\n" )
+      STARTUP_PRINT( "generic error\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_COMMAND_ERROR;
@@ -2849,7 +2865,7 @@ emmc_response_t emmc_init( void ) {
   if ( ! ready ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Card not ready for data\r\n" )
+      STARTUP_PRINT( "Card not ready for data\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_COMMAND_ERROR;
@@ -2857,7 +2873,7 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Select card\r\n" )
+    STARTUP_PRINT( "Select card\r\n" )
   #endif
   // select card ( cmd7 )
   if ( EMMC_RESPONSE_OK != (
@@ -2865,7 +2881,7 @@ emmc_response_t emmc_init( void ) {
   ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Error while selecting card\r\n" )
+      STARTUP_PRINT( "Error while selecting card\r\n" )
     #endif
     // return error
     return response;
@@ -2873,14 +2889,14 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Check card selection status\r\n" )
+    STARTUP_PRINT( "Check card selection status\r\n" )
   #endif
   uint32_t status = ( device->last_response[ 0 ] >> 9 ) & 0xf;
   // handle invalid status
   if ( 3 != status && 4 != status ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Invalid status received: %"PRId32"\r\n", status )
+      STARTUP_PRINT( "Invalid status received: %"PRId32"\r\n", status )
     #endif
     // return error
     return EMMC_RESPONSE_UNKNOWN;
@@ -2890,7 +2906,7 @@ emmc_response_t emmc_init( void ) {
   if ( ! device->card_support_sdhc ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Set block length to 512 for non sdhc\r\n" )
+      STARTUP_PRINT( "Set block length to 512 for non sdhc\r\n" )
     #endif
     // set block length
     if ( EMMC_RESPONSE_OK != (
@@ -2898,7 +2914,7 @@ emmc_response_t emmc_init( void ) {
     ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Error setting block length to 512\r\n" )
+        STARTUP_PRINT( "Error setting block length to 512\r\n" )
       #endif
       // return error
       return response;
@@ -2909,7 +2925,7 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Populate block size register\r\n" )
+    STARTUP_PRINT( "Populate block size register\r\n" )
   #endif
   // set block size in register
   size_t sequence_count;
@@ -2919,7 +2935,7 @@ emmc_response_t emmc_init( void ) {
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Error allocating sequence: %s\r\n", strerror( errno ) )
+      STARTUP_PRINT( "Error allocating sequence: %s\r\n", strerror( errno ) )
     #endif
     // return error
     return EMMC_RESPONSE_MEMORY;
@@ -2946,7 +2962,7 @@ emmc_response_t emmc_init( void ) {
   if ( -1 == result ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Populating block size count register failed\r\n" )
+      STARTUP_PRINT( "Populating block size count register failed\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_IO;
@@ -2954,7 +2970,7 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Load card scr\r\n" )
+    STARTUP_PRINT( "Load card scr\r\n" )
   #endif
   // prepare for getting card scr
   device->block_size = 8;
@@ -2966,7 +2982,7 @@ emmc_response_t emmc_init( void ) {
   ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Error while reading scr\r\n" )
+      STARTUP_PRINT( "Error while reading scr\r\n" )
     #endif
     // return error
     return response;
@@ -2976,7 +2992,7 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Determine card version\r\n" )
+    STARTUP_PRINT( "Determine card version\r\n" )
   #endif
   // default: unknown
   device->card_version = EMMC_CARD_VERSION_UNKNOWN;
@@ -3013,17 +3029,17 @@ emmc_response_t emmc_init( void ) {
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT(
+    STARTUP_PRINT(
       "scr[ 0 ] = %#"PRIx32", scr[ 0 ] = %#"PRIx32"\r\n",
       device->card_scr[ 0 ],
       device->card_scr[ 1 ]
     )
-    EARLY_STARTUP_PRINT(
+    STARTUP_PRINT(
       "scr: 0x%08"PRIx32"%08"PRIx32"\r\n",
       be32toh( device->card_scr[ 0 ] ),
       be32toh( device->card_scr[ 1 ] )
     )
-    EARLY_STARTUP_PRINT(
+    STARTUP_PRINT(
       "card version: %"PRId32", bus width: %"PRId32"\r\n",
       device->card_version,
       device->card_bus_width
@@ -3033,25 +3049,25 @@ emmc_response_t emmc_init( void ) {
   if ( device->card_bus_width & 0x4 ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Switch to 4-bit data mode\r\n" )
+      STARTUP_PRINT( "Switch to 4-bit data mode\r\n" )
     #endif
     // send ACMD6 to change the card's bit mode
     if ( EMMC_RESPONSE_OK != sd_command( EMMC_APP_CMD_SET_BUS_WIDTH, 0x2 ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Bus width set failed\r\n" )
+        STARTUP_PRINT( "Bus width set failed\r\n" )
       #endif
     } else {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Change transfer width in control0 register\r\n" )
+        STARTUP_PRINT( "Change transfer width in control0 register\r\n" )
       #endif
       // allocate sequence to change the bit mode for host
       sequence = util_prepare_mmio_sequence( 2, &sequence_count );
       if ( ! sequence ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Error allocating sequence: %s\r\n", strerror( errno ) )
+          STARTUP_PRINT( "Error allocating sequence: %s\r\n", strerror( errno ) )
         #endif
         // return error
         return EMMC_RESPONSE_MEMORY;
@@ -3075,7 +3091,7 @@ emmc_response_t emmc_init( void ) {
       if ( -1 == result ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "Change transfer width in control0 failed\r\n" )
+          STARTUP_PRINT( "Change transfer width in control0 failed\r\n" )
         #endif
         free( sequence );
         return EMMC_RESPONSE_IO;
@@ -3085,7 +3101,7 @@ emmc_response_t emmc_init( void ) {
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "EMMC init finished!\r\n" )
+    STARTUP_PRINT( "EMMC init finished!\r\n" )
   #endif
   // finally set init
   device->initialized = true;
@@ -3114,7 +3130,7 @@ emmc_response_t emmc_transfer_block(
   emmc_response_t response;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Perform transfer block\r\n" )
+    STARTUP_PRINT( "Perform transfer block\r\n" )
   #endif
   // handle invalid operation
   if (
@@ -3123,7 +3139,7 @@ emmc_response_t emmc_transfer_block(
   ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Invalid operation passed\r\n" )
+      STARTUP_PRINT( "Invalid operation passed\r\n" )
     #endif
     // return error
     return EMMC_RESPONSE_UNKNOWN;
@@ -3133,7 +3149,7 @@ emmc_response_t emmc_transfer_block(
   if ( device ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Update card detection\r\n" )
+      STARTUP_PRINT( "Update card detection\r\n" )
     #endif
     // Update card detection
     if ( ! util_update_card_detect(
@@ -3143,20 +3159,20 @@ emmc_response_t emmc_transfer_block(
     ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Failed to update card detection\r\n" )
+        STARTUP_PRINT( "Failed to update card detection\r\n" )
       #endif
       // return error
       return EMMC_RESPONSE_UNKNOWN;
     }
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Check for card absent / ejected\r\n" )
+      STARTUP_PRINT( "Check for card absent / ejected\r\n" )
     #endif
     // handle absent
     if ( device->card_absent ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Card absent\r\n" )
+        STARTUP_PRINT( "Card absent\r\n" )
       #endif
       // return error
       return EMMC_RESPONSE_CARD_ABSENT;
@@ -3164,7 +3180,7 @@ emmc_response_t emmc_transfer_block(
     } else if ( device->card_ejected ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Card ejected\r\n" )
+        STARTUP_PRINT( "Card ejected\r\n" )
       #endif
       // return error
       return EMMC_RESPONSE_CARD_EJECTED;
@@ -3175,13 +3191,13 @@ emmc_response_t emmc_transfer_block(
   if ( ! device || ! device->initialized || 0 == device->card_rca ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Initialize / Reinitialize emmc\r\n" )
+      STARTUP_PRINT( "Initialize / Reinitialize emmc\r\n" )
     #endif
     // handle previous error ( rca reset ) / card change
     if ( EMMC_RESPONSE_OK != ( response = emmc_init() ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Unable to init emmc again\r\n" )
+        STARTUP_PRINT( "Unable to init emmc again\r\n" )
       #endif
       // return error
       return response;
@@ -3189,7 +3205,7 @@ emmc_response_t emmc_transfer_block(
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Try to retrieve status %"PRIx32"\r\n",
+    STARTUP_PRINT( "Try to retrieve status %"PRIx32"\r\n",
       ( uint32_t )device->card_rca << 16 )
   #endif
   // send status
@@ -3201,7 +3217,7 @@ emmc_response_t emmc_transfer_block(
   ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Error while retrieving status\r\n" )
+      STARTUP_PRINT( "Error while retrieving status\r\n" )
     #endif
     // set rca to 0
     device->card_rca = 0;
@@ -3212,13 +3228,13 @@ emmc_response_t emmc_transfer_block(
   uint32_t status = ( device->last_response[ 0 ] >> 9 ) & 0xf;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "status = %#"PRIx32"\r\n", status )
+    STARTUP_PRINT( "status = %#"PRIx32"\r\n", status )
   #endif
   // stand by - try to select it
   if ( 3 == status ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Try to select sd card\r\n" )
+      STARTUP_PRINT( "Try to select sd card\r\n" )
     #endif
     if ( EMMC_RESPONSE_OK != (
       response = sd_command(
@@ -3228,7 +3244,7 @@ emmc_response_t emmc_transfer_block(
     ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Error while trying to select card\r\n" )
+        STARTUP_PRINT( "Error while trying to select card\r\n" )
       #endif
       // set rca to 0
       device->card_rca = 0;
@@ -3239,14 +3255,14 @@ emmc_response_t emmc_transfer_block(
   } else if ( 5 == status || 6 == status ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Try to stop data transmission\r\n" )
+      STARTUP_PRINT( "Try to stop data transmission\r\n" )
     #endif
     if ( EMMC_RESPONSE_OK != (
       response = sd_command( EMMC_CMD_STOP_TRANSMISSION, 0 )
     ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Error while stopping transmission\r\n" )
+        STARTUP_PRINT( "Error while stopping transmission\r\n" )
       #endif
       // set rca to 0
       device->card_rca = 0;
@@ -3255,13 +3271,13 @@ emmc_response_t emmc_transfer_block(
     }
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Perform command reset\r\n" )
+      STARTUP_PRINT( "Perform command reset\r\n" )
     #endif
     // reset data
     if ( EMMC_RESPONSE_OK != ( response = reset_command() ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Error while resetting data\r\n" )
+        STARTUP_PRINT( "Error while resetting data\r\n" )
       #endif
       // set rca to 0
       device->card_rca = 0;
@@ -3272,13 +3288,13 @@ emmc_response_t emmc_transfer_block(
   } else if ( 4 != status ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Try to init again since it's not in transfer state\r\n" )
+      STARTUP_PRINT( "Try to init again since it's not in transfer state\r\n" )
     #endif
     // try to init again
     if ( EMMC_RESPONSE_OK != ( response = emmc_init() ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Unable to init emmc again" )
+        STARTUP_PRINT( "Unable to init emmc again" )
       #endif
       // reset rca
       device->card_rca = 0;
@@ -3290,7 +3306,7 @@ emmc_response_t emmc_transfer_block(
   if ( 4 != status ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Try to retrieve status %"PRIx32"\r\n",
+      STARTUP_PRINT( "Try to retrieve status %"PRIx32"\r\n",
         ( uint32_t )device->card_rca << 16 )
     #endif
     if ( EMMC_RESPONSE_OK != (
@@ -3301,7 +3317,7 @@ emmc_response_t emmc_transfer_block(
     ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Unable to query status" )
+        STARTUP_PRINT( "Unable to query status" )
       #endif
       // reset rca
       device->card_rca = 0;
@@ -3314,7 +3330,7 @@ emmc_response_t emmc_transfer_block(
     if ( 4 != status ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Still not in transfer mode, giving up..." )
+        STARTUP_PRINT( "Still not in transfer mode, giving up..." )
       #endif
       // reset rca
       device->card_rca = 0;
@@ -3326,21 +3342,21 @@ emmc_response_t emmc_transfer_block(
   if ( ! device->card_support_sdhc ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Adjusting block number due to no sdhc\r\n" )
+      STARTUP_PRINT( "Adjusting block number due to no sdhc\r\n" )
     #endif
     block_number *= 512;
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "block_number = %ld\r\n", block_number )
-    EARLY_STARTUP_PRINT( "buffer_size = %zu\r\n", buffer_size )
-    EARLY_STARTUP_PRINT( "block_size = %ld\r\n", device->block_size )
+    STARTUP_PRINT( "block_number = %ld\r\n", block_number )
+    STARTUP_PRINT( "buffer_size = %zu\r\n", buffer_size )
+    STARTUP_PRINT( "block_size = %ld\r\n", device->block_size )
   #endif
   // Minimum transfer size is one block ( HCSS 3.7.2.1 )
   if ( buffer_size < device->block_size ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "Data command called with buffer size %zu less than block size %"PRId32"\r\n",
         buffer_size, device->block_size
       )
@@ -3352,7 +3368,7 @@ emmc_response_t emmc_transfer_block(
   if ( buffer_size % device->block_size ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "Data command called with buffer size %zu not a multiple of block size %"PRId32"\r\n",
         buffer_size, device->block_size
       )
@@ -3366,12 +3382,12 @@ emmc_response_t emmc_transfer_block(
   device->shm_id = shm_id;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "device->block_count = %ld\r\n", device->block_count )
-    EARLY_STARTUP_PRINT( "device->block_size = %ld\r\n", device->block_size )
+    STARTUP_PRINT( "device->block_count = %ld\r\n", device->block_count )
+    STARTUP_PRINT( "device->block_size = %ld\r\n", device->block_size )
   #endif
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Determining command to execute\r\n" )
+    STARTUP_PRINT( "Determining command to execute\r\n" )
   #endif
   // determine command to execute
   uint32_t command;
@@ -3390,7 +3406,7 @@ emmc_response_t emmc_transfer_block(
   for ( current_try = 1; current_try < 4; current_try++ ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "Try to send command, attempt %"PRId32"\r\n",
         current_try
       )
@@ -3399,7 +3415,7 @@ emmc_response_t emmc_transfer_block(
     if ( EMMC_RESPONSE_OK == ( response = sd_command( command, block_number ) ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Command successfully sent\r\n" )
+        STARTUP_PRINT( "Command successfully sent\r\n" )
       #endif
       // set success flag
       success = true;
@@ -3408,7 +3424,7 @@ emmc_response_t emmc_transfer_block(
     }
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT(
+      STARTUP_PRINT(
         "CMD%"PRId32" failed with error %#"PRIx32". Trying again...\r\n",
         command,
         device->last_error
@@ -3419,7 +3435,7 @@ emmc_response_t emmc_transfer_block(
   if ( 4 == current_try && ! success ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to read / write data from card\r\n" )
+      STARTUP_PRINT( "Unable to read / write data from card\r\n" )
     #endif
     // return last set error
     return response;

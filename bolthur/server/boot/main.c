@@ -27,6 +27,8 @@
 #include <sys/bolthur.h>
 #include <sys/sysmacros.h>
 #include <libfdt.h>
+#include <sys/mman.h>
+
 #include "ramdisk.h"
 #include "util.h"
 #include "init.h"
@@ -69,6 +71,8 @@ static int my_tar_open( [[maybe_unused]] const char* path, [[maybe_unused]] int 
   if ( ! ramdisk_decompressed ) {
     return -1;
   }
+  // unmap compressed stuff
+  munmap( ( void* ) ramdisk_compressed, ramdisk_compressed_size );
   // use 0 as file descriptor
   return 0;
 }

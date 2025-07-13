@@ -650,20 +650,25 @@ bool shared_memory_address_is_shared(
   // loop until end
   while ( NULL != node ) {
     // get mapped entry
-    shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
+    const shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
     // lookup process
-    list_item_t* process_list_item = list_lookup_data(
+    const list_item_t* process_list_item = list_lookup_data(
       entry->process_mapping, process );
     // handle attached
     if ( process_list_item ) {
       // transform to mapped entry
-      shared_memory_entry_mapped_t* mapped = ( shared_memory_entry_mapped_t* )
-        process_list_item->data;
+      const shared_memory_entry_mapped_t* mapped = process_list_item->data;
       // handle match
       if (
-        start <= ( mapped->start + mapped->size )
+        start <= ( mapped->start + mapped->size - 1 )
         && ( start + len ) >= mapped->start
-      ) {
+        ) {
+        // debug output
+        #if defined( PRINT_MM_SHARED )
+          DEBUG_OUTPUT( "mapped->start = %#"PRIxPTR", mapped->size = %zx, start=%#"PRIxPTR", size = %zx\r\n",
+            mapped->start, mapped->size, start, len )
+        #endif
+        // return match
         return true;
       }
     }

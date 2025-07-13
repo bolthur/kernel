@@ -609,7 +609,7 @@ int dma_last_error( void ) {
  */
 void* dma_allocate_memory( size_t size ) {
   // allocate control block
-  void* dma_block = mmap( NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS, -1, 0 );
+  void* dma_block = mmap( NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS | MAP_DEVICE , -1, 0 );
   if ( MAP_FAILED == block ) {
     last_error = -errno;
     return NULL;
