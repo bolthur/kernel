@@ -68,9 +68,9 @@ for file in walkDirRec( joinPath( getCurrentDir(), "tmp", "ramdisk" ) ):
   if contains( outpShell, ": ELF" ) and contains( outpShell, "dynamically linked" ):
     # Replace dynamic linker
     if not contains( outpShell, "LSB shared object" ):
-      discard execProcess( "patchelf --set-interpreter /ramdisk/lib/ld-bolthur.so " & file )
+      discard execProcess( "patchelf --set-interpreter /usr/bin/ld-bolthur.so " & file )
     # Replace rpath
-    discard execProcess( "patchelf --set-rpath /ramdisk/lib " & file )
+    discard execProcess( "patchelf --set-rpath /usr/bin " & file )
 ]#
 
 # configuration file for ramdisk is handled manually
@@ -113,8 +113,6 @@ echo "Copying kernel and ramdisk to image boot folder"
 # copy project related stuff to boot partition
 copyFileToBoot( kernelPath )
 copyFileToBoot( outputRamdisk )
-# some dummy directory
-createDir( joinPath( getCurrentDir(), "tmp", "partition", "boot", "foobarlongfolder", "foo", "bar" ) )
 
 echo "Creating boot and root images from folders"
 # create image
