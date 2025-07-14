@@ -26,7 +26,6 @@
 #include "../../libperipheral.h"
 
 //#define EMMC_ENABLE_DEBUG 1
-#define EMMC_ENABLE_DMA 1
 
 typedef enum {
   EMMC_RESPONSE_OK = 0,
