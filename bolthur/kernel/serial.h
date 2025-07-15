@@ -23,6 +23,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define SERIAL_BAUD_RATE 115200
+
 void serial_init( void );
 bool serial_register_interrupt( void );
 void serial_putc( uint8_t );

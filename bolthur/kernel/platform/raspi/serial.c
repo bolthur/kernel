@@ -108,6 +108,8 @@ void serial_init( void ) {
   // Clear pending interrupts.
   io_out32( base + UARTICR, 0x7FF );
 
+  /// FIXME: CHECK WHETHER FOR RPI3 ONWARDS THE UART CLOCK NEEDS TO BE SET TO 3Mhz
+
   // query mailbox to get uart clock rate
   mailbox_property_init();
   mailbox_property_add_tag( TAG_GET_CLOCK_RATE, TAG_CLOCK_UART );
@@ -117,8 +119,8 @@ void serial_init( void ) {
   raspi_mailbox_property_t* p = mailbox_property_get( TAG_GET_CLOCK_RATE );
   uint32_t clock_rate = p->data.buffer_u32[ 1 ];
 
-  // calculate divider ( Divider = UART_CLOCK/(16 * Baud) )
-  const float divider = ( float )clock_rate / ( 16 * 115200 );
+  // calculate divider ( Divider = UART_CLOCK / ( 16 * Baud ) )
+  const float divider = ( float )clock_rate / ( 16 * SERIAL_BAUD_RATE );
   // cast to integer for later write to ibrd
   const uint32_t brd = ( uint32_t )divider;
 
