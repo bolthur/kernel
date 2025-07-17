@@ -30,6 +30,8 @@
 #include "utf8.h"
 #include "../libframebuffer.h"
 
+static uint32_t foreground_color = 0xf0f0f0;
+static uint32_t background_color = 0;
 
 /**
  * @fn void terminal_scroll(terminal_t*)
@@ -47,6 +49,46 @@ static void terminal_scroll( terminal_t* term ) {
 }
 
 /**
+ * @fn uint32_t terminal_evaluate_foreground_color(const uint32_t)
+ * @brief Method to evaluate foreground color
+ * @param color
+ * @return
+ */
+static uint32_t terminal_evaluate_foreground_color( const uint32_t color ) {
+  switch (color) {
+    case 30: return 0;
+    case 31: return 0xaa0000;
+    case 32: return 0x00aa00;
+    case 33: return 0xe5e510;
+    case 34: return 0x0000aa;
+    case 35: return 0xaa00aa;
+    case 36: return 0x00aaaa;
+    case 37: return 0xf0f0f0;
+    default: return foreground_color;
+  }
+}
+
+/**
+ * @fn uint32_t terminal_evaluate_background_color(const uint32_t)
+ * @brief Method to evaluate background color
+ * @param color
+ * @return
+ */
+static uint32_t terminal_evaluate_background_color( const uint32_t color ) {
+  switch (color) {
+    case 40: return 0;
+    case 41: return 0xaa0000;
+    case 42: return 0x00aa00;
+    case 43: return 0xe5e510;
+    case 44: return 0x0000aa;
+    case 45: return 0xaa00aa;
+    case 46: return 0x00aaaa;
+    case 47: return 0xf0f0f0;
+    default: return background_color;
+  }
+}
+
+/**
  * @fn uint32_t terminal_push(terminal_t*, const char*)
  * @brief Push string to terminal buffer
  *
@@ -54,9 +96,47 @@ static void terminal_scroll( terminal_t* term ) {
  * @param s utf8 string to push
  * @return
  */
-static uint32_t terminal_push( terminal_t* term, const char* s ) {
+static uint32_t terminal_push( terminal_t* term, char* s ) {
   uint32_t rendered = 0;
   while( *s ) {
+    if ( *s == '\x1b' && s[ 1 ] == '[' ) {
+      // skip control character and opening brackets
+      s += 2;
+      // loop while end is reached
+      char* end = s;
+      while ( *end && *end != 'm' && *end != ',' ) {
+        end++;
+      }
+      // set terminating flag
+      const bool terminating = *end == 'm';
+      // convert to unsigned integer
+      uint32_t color = ( uint32_t )strtoul( s, &s, 10 );
+      // skip separator
+      s++;
+      // evaluate color
+      foreground_color = terminal_evaluate_foreground_color( color );
+      background_color = terminal_evaluate_background_color( color );
+      // handle reset
+      if ( terminating && 0 == color ) {
+        foreground_color = terminal_evaluate_foreground_color( 37 );
+        background_color = terminal_evaluate_background_color( 40 );
+      }
+      // handle not yet terminating
+      if ( ! terminating ) {
+        end = s;
+        // loop until end
+        while ( *end && *end != 'm' ) {
+          end++;
+        }
+        // convert to unsigned integer
+        color = ( uint32_t )strtoul( s, &s, 10 );
+        // evaluate color
+        foreground_color = terminal_evaluate_foreground_color( color );
+        background_color = terminal_evaluate_background_color( color );
+        // skip terminating sequence
+        s++;
+      }
+    }
     // handle end of row reached
     if ( term->max_col <= term->col ) {
       term->col = 0;
@@ -98,8 +178,8 @@ static uint32_t terminal_push( terminal_t* term, const char* s ) {
           c,
           term->col * psf_glyph_width(),
           term->row * psf_glyph_height(),
-          0xf0f0f0,
-          0
+          foreground_color,
+          background_color
         );
         // increment column
         term->col++;
@@ -179,8 +259,9 @@ ssize_t render_terminal( terminal_t* term, const char* s ) {
   if ( 32 != term->bpp ) {
     return -ENOSYS;
   }
+  auto char* p = ( char* )s;
   // push to terminal
-  uint32_t character_rendered = terminal_push( term, s );
+  const uint32_t character_rendered = terminal_push( term, p );
 
   // allocate rpc parameter block
   framebuffer_surface_render_t* action = malloc( sizeof( *action ) );

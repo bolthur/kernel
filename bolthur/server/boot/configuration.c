@@ -154,6 +154,12 @@ bool configuration_handle( const char* path, const char* bootarg ) {
     } else {
       util_execute_device_server( n->path, n->device, nullptr );
     }
+    // output
+    if ( n->early ) {
+      EARLY_STARTUP_PRINT( "\x1b[32mStarted server %s\x1b[0m\r\n", n->name )
+    } else {
+      STARTUP_PRINT( "\x1b[32mStarted server %s\x1b[0m\r\n", n->name )
+    }
     // reroute handling
     if ( n->reroute ) {
       // ORDER NECESSARY HERE DUE TO THE DEFINES
