@@ -33,7 +33,7 @@
  * @param b
  * @return
  */
-uint32_t util_min( uint32_t a, uint32_t b ) {
+uint32_t util_min( const uint32_t a, const uint32_t b ) {
   if ( a > b ) {
     return b;
   }
@@ -47,12 +47,12 @@ uint32_t util_min( uint32_t a, uint32_t b ) {
  * @param count
  * @param total
  */
-void* util_prepare_mmio_sequence( size_t count, size_t* total ) {
+void* util_prepare_mmio_sequence( const size_t count, size_t* total ) {
   if ( 0 == count ) {
     return NULL;
   }
   // allocate
-  size_t tmp_total = count * sizeof( iomem_mmio_entry_t );
+  const size_t tmp_total = count * sizeof( iomem_mmio_entry_t );
   iomem_mmio_entry_t* tmp = malloc( count * sizeof( iomem_mmio_entry_t ) );
   if ( ! tmp ) {
     return NULL;
@@ -80,12 +80,12 @@ void* util_prepare_mmio_sequence( size_t count, size_t* total ) {
  * @param count
  * @param total
  */
-void* util_prepare_mailbox( size_t count, size_t* total ) {
+void* util_prepare_mailbox( const size_t count, size_t* total ) {
   if ( 0 == count ) {
     return NULL;
   }
   // allocate
-  size_t tmp_total = count * sizeof( uint32_t );
+  const size_t tmp_total = count * sizeof( uint32_t );
   iomem_mmio_entry_t* tmp = malloc( tmp_total );
   if ( ! tmp ) {
     return NULL;

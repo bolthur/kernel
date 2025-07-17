@@ -17,6 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// disable a bunch of warnings
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wanalyzer-fd-leak"
+
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
@@ -216,12 +220,12 @@ static emmc_response_t controller_shutdown( void ) {
   request[ 4 ] = 8;
   // device id
   request[ 5 ] = MAILBOX_POWER_STATE_DEVICE_SD_CARD;
-  // set power off
+  // set power off and wait
   request[ 6 ] = MAILBOX_SET_POWER_STATE_WAIT;
   // end tag
   request[ 7 ] = 0;
   // perform request
-  int result = ioctl(
+  const int result = ioctl(
     device->fd_iomem,
     IOCTL_BUILD_REQUEST(
       IOMEM_RPC_MAILBOX,
@@ -235,6 +239,18 @@ static emmc_response_t controller_shutdown( void ) {
     free( request );
     return EMMC_RESPONSE_IO;
   }
+  // handle not successful
+  if ( MAILBOX_REQUEST_SUCCESSFUL != ( uint32_t )request[ 1 ] ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      STARTUP_PRINT( "Request not successful: %#"PRIx32"\r\n",
+        ( uint32_t )request[ 1 ] )
+    #endif
+    // free request
+    free( request );
+    // return error
+    return EMMC_RESPONSE_MAILBOX;
+  }
   // handle invalid device id returned
   if ( 0 != request[ 5 ] ) {
     // debug output
@@ -247,11 +263,11 @@ static emmc_response_t controller_shutdown( void ) {
     return EMMC_RESPONSE_MAILBOX;
   }
   // check for powered off correctly
-  if ( 0 != request[ 6 ] ) {
+  if ( 0 != ( request[ 6 ] & 0x3 ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       STARTUP_PRINT(
-        "Device not powered of successfully: %#"PRIx32"\r\n",
+        "Device not powered off successfully: %#"PRIx32"\r\n",
         request[ 6 ]
       )
     #endif
@@ -296,7 +312,7 @@ static emmc_response_t controller_startup( void ) {
   // end tag
   request[ 7 ] = 0;
   // perform request
-  int result = ioctl(
+  const int result = ioctl(
     device->fd_iomem,
     IOCTL_BUILD_REQUEST(
       IOMEM_RPC_MAILBOX,
@@ -310,6 +326,18 @@ static emmc_response_t controller_startup( void ) {
     free( request );
     return EMMC_RESPONSE_IO;
   }
+  // handle not successful
+  if ( MAILBOX_REQUEST_SUCCESSFUL != ( uint32_t )request[ 1 ] ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      STARTUP_PRINT( "Request not successful: %#"PRIx32"\r\n",
+        ( uint32_t )request[ 1 ] )
+    #endif
+    // free request
+    free( request );
+    // return error
+    return EMMC_RESPONSE_MAILBOX;
+  }
   // handle invalid device id returned
   if ( 0 != request[ 5 ] ) {
     // debug output
@@ -322,12 +350,12 @@ static emmc_response_t controller_startup( void ) {
     return EMMC_RESPONSE_MAILBOX;
   }
   // check for powered on correctly
-  if ( ! ( request[ 6 ] & MAILBOX_SET_POWER_STATE_ON ) ) {
+  if ( ( request[ 6 ] & 0x3 ) != MAILBOX_SET_POWER_STATE_ON ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       STARTUP_PRINT(
         "Device not powered on successfully: %#"PRIx32"\r\n",
-        request[ 6 ]
+        ( request[ 6 ] & 0x3 )
       )
     #endif
     // free
@@ -346,10 +374,8 @@ static emmc_response_t controller_startup( void ) {
  * @brief Restart controller with shutdown, sleep and startup via mailbox
  *
  * @return
- *
- * @todo check why this is not working and add again or remove completely
  */
-[[maybe_unused]] static emmc_response_t controller_restart( void ) {
+static emmc_response_t controller_restart( void ) {
   return EMMC_RESPONSE_OK;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
@@ -365,6 +391,8 @@ static emmc_response_t controller_startup( void ) {
     // return error
     return response;
   }
+  // sleep some time before starting up again
+  usleep( 5000 );
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     STARTUP_PRINT( "Startup emmc controller again\r\n" )
@@ -735,7 +763,7 @@ static emmc_response_t gather_version_info( void ) {
     return EMMC_RESPONSE_IO;
   }
   // cache value
-  uint32_t version_value = host_version_sequence[ 0 ].value;
+  const uint32_t version_value = host_version_sequence[ 0 ].value;
   // free sequence
   free( host_version_sequence );
   // populate properties
@@ -763,13 +791,13 @@ static emmc_response_t gather_version_info( void ) {
  * @param frequency
  * @return
  */
-static emmc_response_t clock_frequency( uint32_t frequency ) {
+static emmc_response_t clock_frequency( const uint32_t frequency ) {
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     STARTUP_PRINT( "Clock frequency change request\r\n" )
   #endif
   uint32_t divisor;
-  uint32_t closest = 41666666 / frequency;
+  const uint32_t closest = 41666666 / frequency;
   uint32_t high_value = 0;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
@@ -874,11 +902,11 @@ static emmc_response_t clock_frequency( uint32_t frequency ) {
   sequence[ 0 ].loop_max_iteration = 10000;
   sequence[ 0 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
   sequence[ 0 ].sleep = 10;
-  // disable clock
+  // disable clock and interrupts
   sequence[ 1 ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ 1 ].offset = PERIPHERAL_EMMC_CONTROL1;
   sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
-  sequence[ 2 ].value = ( uint32_t )( ~EMMC_CONTROL1_CLK_EN );
+  sequence[ 2 ].value = ( uint32_t )( ( int ) ~EMMC_CONTROL1_CLK_EN | ( int ) ~EMMC_CONTROL1_CLK_INTLEN );
   sequence[ 2 ].offset = PERIPHERAL_EMMC_CONTROL1;
   sequence[ 3 ].type = IOMEM_MMIO_ACTION_SLEEP;
   sequence[ 3 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
@@ -983,7 +1011,7 @@ static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
   sequence[ 0 ].offset = PERIPHERAL_EMMC_INTERRUPT;
   sequence[ 0 ].value = mask;
   // perform request
-  int result = ioctl(
+  const int result = ioctl(
     device->fd_iomem,
     IOCTL_BUILD_REQUEST(
       IOMEM_RPC_MMIO_PERFORM,
@@ -1014,8 +1042,6 @@ static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
  * @param command
  * @param argument
  * @return
- *
- * @todo allow more blocks than block_count
  */
 static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   // debug output
@@ -1283,11 +1309,10 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   #endif
   // fill last responseEMMC_INTERRUPT_MASK
   idx += 2;
+
+  // handle command response type
   switch ( command & EMMC_CMDTM_CMD_RSPNS_TYPE_MASK ) {
     case EMMC_CMDTM_CMD_RSPNS_TYPE_48:
-      device->last_response[ 0 ] = sequence[ idx ].value;
-      break;
-
     case EMMC_CMDTM_CMD_RSPNS_TYPE_48B:
       device->last_response[ 0 ] = sequence[ idx ].value;
       break;
@@ -1298,6 +1323,12 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       device->last_response[ 2 ] = sequence[ idx + 2 ].value;
       device->last_response[ 3 ] = sequence[ idx + 3 ].value;
       break;
+
+    default:
+      #if defined( EMMC_ENABLE_DEBUG )
+        STARTUP_PRINT( "command & EMMC_CMDTM_CMD_RSPNS_TYPE_MASK = %#"PRIx32"\r\n",
+          command & EMMC_CMDTM_CMD_RSPNS_TYPE_MASK )
+      #endif
   }
   // now we're beyond the resp readings
   idx += 4;
@@ -1385,7 +1416,7 @@ static void handle_card_interrupt( void ) {
   if ( device->card_rca ) {
     // get card status
     #if defined( EMMC_ENABLE_DEBUG )
-      emmc_response_t response = issue_sd_command(
+      const emmc_response_t response = issue_sd_command(
         emmc_command_list[ EMMC_CMD_SEND_STATUS ],
         device->card_rca << 16
       );
@@ -1436,7 +1467,7 @@ static emmc_response_t get_interrupt_status( uint32_t* destination ) {
   sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ 0 ].offset = PERIPHERAL_EMMC_INTERRUPT;
   // perform request
-  int result = ioctl(
+  const int result = ioctl(
     device->fd_iomem,
     IOCTL_BUILD_REQUEST(
       IOMEM_RPC_MMIO_PERFORM,
@@ -1506,7 +1537,7 @@ static emmc_response_t reset_command( void ) {
   sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ 3 ].offset = PERIPHERAL_EMMC_CONTROL1;
   // perform request
-  int result = ioctl(
+  const int result = ioctl(
     device->fd_iomem,
     IOCTL_BUILD_REQUEST(
       IOMEM_RPC_MMIO_PERFORM,
@@ -1594,7 +1625,7 @@ static emmc_response_t reset_data( void ) {
   sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ 3 ].offset = PERIPHERAL_EMMC_CONTROL1;
   // perform request
-  int result = ioctl(
+  const int result = ioctl(
     device->fd_iomem,
     IOCTL_BUILD_REQUEST(
       IOMEM_RPC_MMIO_PERFORM,
@@ -1892,16 +1923,14 @@ static void handle_interrupt( void ) {
 }
 
 /**
- * @fn emmc_response_t sd_command(uint32_t, uint32_t)
+ * @fn emmc_response_t sd_command(uint32_t, const uint32_t)
  * @brief Issue sd command
  *
  * @param command
  * @param argument
  * @return
- *
- * @todo add dma support for read / write multiple
  */
-static emmc_response_t sd_command( uint32_t command, uint32_t argument ) {
+static emmc_response_t sd_command( uint32_t command, const uint32_t argument ) {
   emmc_response_t response;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
@@ -1934,9 +1963,18 @@ static emmc_response_t sd_command( uint32_t command, uint32_t argument ) {
     }
     // provide rca argument
     uint32_t app_cmd_argument = 0;
+    #if defined( EMMC_ENABLE_DEBUG )
+      STARTUP_PRINT( "device->card_rca %#"PRIx16"\r\n", device->card_rca )
+    #endif
     if ( device->card_rca ) {
       app_cmd_argument = ( uint32_t )device->card_rca << 16;
+      #if defined( EMMC_ENABLE_DEBUG )
+        STARTUP_PRINT( "app_cmd_argument = %#"PRIx32"\r\n", app_cmd_argument )
+      #endif
     }
+    #if defined( EMMC_ENABLE_DEBUG )
+      STARTUP_PRINT( "app_cmd_argument = %#"PRIx32"\r\n", app_cmd_argument )
+    #endif
     // set last command and argument
     device->last_command = EMMC_CMD_APP_CMD;
     device->last_argument = app_cmd_argument;
@@ -2365,17 +2403,17 @@ static emmc_response_t reset( void ) {
 }
 
 /**
- * @fn const char emmc_error*(emmc_response_t_t)
+ * @fn const char emmc_error*(const emmc_response_t_t)
  * @brief Translate emmc response to printable error
  *
  * @param num
  * @return
  */
-const char* emmc_error( emmc_response_t num ) {
+const char* emmc_error( const emmc_response_t num ) {
   // static buffer
   static char buffer[ 1024 ];
   // set total length to length - 1 to leave space for 0 termination
-  size_t total_length = sizeof( buffer ) - 1;
+  constexpr size_t total_length = sizeof( buffer ) - 1;
   // handle no error
   if ( 0 == num ) {
     strncpy( buffer, "no error", total_length );
@@ -2385,7 +2423,7 @@ const char* emmc_error( emmc_response_t num ) {
   // clear buffer
   memset( buffer, 0, sizeof( buffer ) );
   // determine entry count
-  size_t error_count = sizeof( emmc_error_message )
+  constexpr size_t error_count = sizeof( emmc_error_message )
     / sizeof( emmc_message_entry_t );
   // handle invalid error code
   if ( num >= error_count ) {
@@ -2398,10 +2436,8 @@ const char* emmc_error( emmc_response_t num ) {
     // return buffer
     return buffer;
   }
-  // valid error code fill buffer
-  char *buffer_pos = buffer;
   // push message string to buffer
-  strncpy( buffer_pos, emmc_error_message[ num - 1 ].message, total_length );
+  strncpy( buffer, emmc_error_message[ num - 1 ].message, total_length );
   // return buffer
   return buffer;
 }
@@ -2465,7 +2501,7 @@ emmc_response_t emmc_init( void ) {
       STARTUP_PRINT( "Restarting emmc controller to get sane state\r\n" )
     #endif
     // shutdown controller
-    /*if ( EMMC_RESPONSE_OK != ( response = controller_restart() ) ) {
+    if ( EMMC_RESPONSE_OK != ( response = controller_restart() ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         STARTUP_PRINT(
@@ -2474,7 +2510,7 @@ emmc_response_t emmc_init( void ) {
         )
       #endif
       return response;
-    }*/
+    }
 
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -2498,7 +2534,7 @@ emmc_response_t emmc_init( void ) {
   #if defined( EMMC_ENABLE_DEBUG )
     STARTUP_PRINT( "Update card detection\r\n" )
     // cache previous absent flag
-    bool was_absent = device->card_absent;
+    const bool was_absent = device->card_absent;
   #endif
   // Update card detection
   if ( ! util_update_card_detect(
@@ -2600,22 +2636,6 @@ emmc_response_t emmc_init( void ) {
 
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    STARTUP_PRINT( "Set clock frequency to normal\r\n" )
-  #endif
-  // change clock frequency
-  if ( EMMC_RESPONSE_OK != (
-    response = clock_frequency( EMMC_CLOCK_FREQUENCY_NORMAL )
-  ) ) {
-    // debug output
-    #if defined( EMMC_ENABLE_DEBUG )
-      STARTUP_PRINT( "Set clock frequency failed\r\n" )
-    #endif
-    // return error
-    return response;
-  }
-
-  // debug output
-  #if defined( EMMC_ENABLE_DEBUG )
     STARTUP_PRINT( "Retrieve card id\r\n" )
   #endif
   // get card id
@@ -2648,7 +2668,7 @@ emmc_response_t emmc_init( void ) {
       return response;
     }
     // extract rca
-    uint16_t rca = ( uint16_t )( ( device->last_response[ 0 ] >> 16 ) & 0xFFFF );
+    const uint16_t rca = ( uint16_t )( ( device->last_response[ 0 ] >> 16 ) & 0xFFFF );
     // handle successful return
     if ( 0 < rca ) {
       // save rca
@@ -2669,10 +2689,10 @@ emmc_response_t emmc_init( void ) {
     STARTUP_PRINT( "Perform bunch of error checks from last command\r\n" )
   #endif
   // some error checks
-  uint32_t crc_error = ( device->last_response[ 0 ] >> 15 ) & 0x1;
-  uint32_t illegal_cmd = ( device->last_response[ 0 ] >> 14 ) & 0x1;
-  uint32_t error = ( device->last_response[ 0 ] >> 13 ) & 0x1;
-  uint32_t ready = ( device->last_response[ 0 ] >> 8 ) & 0x1;
+  const uint32_t crc_error = ( device->last_response[ 0 ] >> 15 ) & 0x1;
+  const uint32_t illegal_cmd = ( device->last_response[ 0 ] >> 14 ) & 0x1;
+  const uint32_t error = ( device->last_response[ 0 ] >> 13 ) & 0x1;
+  const uint32_t ready = ( device->last_response[ 0 ] >> 8 ) & 0x1;
   // handle errors
   if ( crc_error ) {
     // debug output
@@ -2708,6 +2728,22 @@ emmc_response_t emmc_init( void ) {
   }
 
   // debug output
+  /*#if defined( EMMC_ENABLE_DEBUG )
+    STARTUP_PRINT( "Set clock frequency to normal\r\n" )
+  #endif
+  // change clock frequency
+  if ( EMMC_RESPONSE_OK != (
+    response = clock_frequency( EMMC_CLOCK_FREQUENCY_NORMAL )
+  ) ) {
+    // debug output
+    #if defined( EMMC_ENABLE_DEBUG )
+      STARTUP_PRINT( "Set clock frequency failed\r\n" )
+    #endif
+    // return error
+    return response;
+  }*/
+
+  // debug output
   #if defined( EMMC_ENABLE_DEBUG )
     STARTUP_PRINT( "Select card\r\n" )
   #endif
@@ -2727,7 +2763,7 @@ emmc_response_t emmc_init( void ) {
   #if defined( EMMC_ENABLE_DEBUG )
     STARTUP_PRINT( "Check card selection status\r\n" )
   #endif
-  uint32_t status = ( device->last_response[ 0 ] >> 9 ) & 0xf;
+  const uint32_t status = ( device->last_response[ 0 ] >> 9 ) & 0xf;
   // handle invalid status
   if ( 3 != status && 4 != status ) {
     // debug output
@@ -2778,7 +2814,7 @@ emmc_response_t emmc_init( void ) {
   }
   sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
   sequence[ 0 ].offset = PERIPHERAL_EMMC_BLKSIZECNT;
-  sequence[ 0 ].value = ( uint32_t )~0xFFF;
+  sequence[ 0 ].value = ( uint32_t )( ( int )~0xFFF );
   sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
   sequence[ 1 ].offset = PERIPHERAL_EMMC_BLKSIZECNT;
   sequence[ 1 ].value = 0x200;
@@ -2833,12 +2869,12 @@ emmc_response_t emmc_init( void ) {
   // default: unknown
   device->card_version = EMMC_CARD_VERSION_UNKNOWN;
   // get big endian scr0 and convert
-  uint32_t scr0 = be32toh( device->card_scr[ 0 ] );
+  const uint32_t scr0 = be32toh( device->card_scr[ 0 ] );
   // load spec fields
-  uint32_t sd_spec = ( scr0 >> ( 56 - 32 ) ) & 0xF;
-  uint32_t sd_spec3 = ( scr0 >> ( 47 - 32 ) ) & 0x1;
-  uint32_t sd_spec4 = ( scr0 >> ( 42 - 32 ) ) & 0x1;
-  uint32_t sd_specX = ( scr0 >> ( 41 - 32 ) ) & 0xF;
+  const uint32_t sd_spec = ( scr0 >> ( 56 - 32 ) ) & 0xF;
+  const uint32_t sd_spec3 = ( scr0 >> ( 47 - 32 ) ) & 0x1;
+  const uint32_t sd_spec4 = ( scr0 >> ( 42 - 32 ) ) & 0x1;
+  const uint32_t sd_specX = ( scr0 >> ( 41 - 32 ) ) & 0xF;
   device->card_bus_width = ( scr0 >> ( 48 - 32 ) ) & 0xF;
   if ( 0 == sd_spec ) {
     device->card_version = EMMC_CARD_VERSION_1;
@@ -2946,7 +2982,7 @@ emmc_response_t emmc_init( void ) {
 }
 
 /**
- * @fn emmc_response_t emmc_transfer_block(uint32_t*, size_t, uint32_t, emmc_operation_t, size_t)
+ * @fn emmc_response_t emmc_transfer_block(uint32_t*, const size_t, uint32_t, const emmc_operation_t, const size_t)
  * @brief Transfer block from / to sd card to / from buffer
  *
  * @param buffer
@@ -2958,10 +2994,10 @@ emmc_response_t emmc_init( void ) {
  */
 emmc_response_t emmc_transfer_block(
   uint32_t* buffer,
-  size_t buffer_size,
+  const size_t buffer_size,
   uint32_t block_number,
-  emmc_operation_t operation,
-  size_t shm_id
+  const emmc_operation_t operation,
+  const size_t shm_id
 ) {
   emmc_response_t response;
   // debug output
@@ -3012,8 +3048,9 @@ emmc_response_t emmc_transfer_block(
       #endif
       // return error
       return EMMC_RESPONSE_CARD_ABSENT;
+    }
     // handle ejected
-    } else if ( device->card_ejected ) {
+    if ( device->card_ejected ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
         STARTUP_PRINT( "Card ejected\r\n" )
@@ -3292,3 +3329,6 @@ uint32_t emmc_device_block_size( void ) {
   }
   return device->block_size;
 }
+
+// enable warnings again
+#pragma GCC diagnostic pop

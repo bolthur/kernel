@@ -102,7 +102,7 @@ static uint32_t apply_shift(
  * @param val
  * @return
  */
-static uint32_t read_helper( iomem_mmio_entry_t* request, uint32_t* val ) {
+static uint32_t read_helper( const iomem_mmio_entry_t* request, uint32_t* val ) {
   // read value
   uint32_t value = mmio_read( request->offset );
   #if defined( RPC_ENABLE_DEBUG )
@@ -678,6 +678,10 @@ void rpc_handle_mmio_perform(
           #if defined( RPC_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "physical = %#"PRIxPTR", virtual = %#"PRIxPTR"\r\n",
               physical, ( uintptr_t )( ( uintptr_t )dma_block + size ) )
+            EARLY_STARTUP_PRINT( "reading %#"PRIx32"\r\n", ( uint32_t )fmin(
+              ( double )( *mmio_request )[ i ].dma_copy_size - size,
+              ( double )PAGE_SIZE
+            ) )
           #endif
           // set block address
           if ( 0 != dma_block_set_address(
@@ -891,6 +895,10 @@ void rpc_handle_mmio_perform(
           #if defined( RPC_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "physical = %#"PRIxPTR", virtual = %#"PRIxPTR"\r\n",
               physical, ( uintptr_t )( ( uintptr_t )dma_block + size ) )
+            EARLY_STARTUP_PRINT( "writing %#"PRIx32"\r\n", ( uint32_t )fmin(
+              ( double )( *mmio_request )[ i ].dma_copy_size - size,
+              ( double )PAGE_SIZE
+            ) )
           #endif
           // set block address
           if ( 0 != dma_block_set_address(
