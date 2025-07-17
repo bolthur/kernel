@@ -143,9 +143,9 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       output_sym=kernel7.sym
       output_img_qemu=kernel7_qemu.img
       output_sym_qemu=kernel7_qemu.sym
-      platform_name=bcm2836
+      platform_name=bcm2709
       AC_DEFINE([RASPI], [2], [Raspi version])
-      AC_DEFINE([BCM2836], [1], [Define to 1 for BCM2836 chip])
+      AC_DEFINE([BCM2709], [1], [Define to 1 for BCM2709 chip])
       AC_DEFINE([ARCH_ARM_V7], [1], [Define to 1 for ARMv7 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A7], [1], [Define to 1 for ARM Cortex-A7 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
@@ -155,9 +155,13 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
       subarch_subdir=v6
       platform_subdir=raspi
-      platform_name=bcm2835
+      output_img=kernel.img
+      output_sym=kernel.sym
+      output_img_qemu=kernel_qemu.img
+      output_sym_qemu=kernel_qemu.sym
+      platform_name=bcm2708
       AC_DEFINE([RASPI], [0], [Raspi version])
-      AC_DEFINE([BCM2835], [1], [Define to 1 for BCM2835])
+      AC_DEFINE([BCM2708], [1], [Define to 1 for BCM2708])
       AC_DEFINE([ARCH_ARM_V6], [1], [Define to 1 for ARMv6 targets])
       AC_DEFINE([ARCH_ARM_ARM1176JZF_S], [1], [Define to 1 for ARM ARM1176JZF-S targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
@@ -182,9 +186,9 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
       output_sym=kernel8.sym
       output_img_qemu=kernel8_qemu.img
       output_sym_qemu=kernel8_qemu.sym
-      platform_name=bcm2837
+      platform_name=bcm2710
       AC_DEFINE([RASPI], [3], [Raspi version])
-      AC_DEFINE([BCM2837], [1], [Define to 1 for BCM2837 chip])
+      AC_DEFINE([BCM2710], [1], [Define to 1 for BCM2710 chip])
       AC_DEFINE([ARCH_ARM_V8], [1], [Define to 1 for ARMv8 targets])
       AC_DEFINE([ARCH_ARM_CORTEX_A53], [1], [Define to 1 for ARM Cortex-A53 targets])
       AC_DEFINE([IS_HIGHER_HALF], [1])
@@ -260,14 +264,14 @@ AC_DEFUN([BOLTHUR_APPLICATION_SET_HOST], [
     case "${DEVICE}" in
     raspi2b_r1)
       AC_DEFINE([RASPI], [2], [Raspi version])
-      AC_DEFINE([BCM2836], [1], [Define to 1 for BCM2836 chip])
+      AC_DEFINE([BCM2709], [1], [Define to 1 for BCM2709 chip])
       CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
       subarch_subdir=v7
       platform_subdir=raspi
       ;;
     raspi0_1)
       AC_DEFINE([RASPI], [0], [Raspi version])
-      AC_DEFINE([BCM2835], [1], [Define to 1 for BCM2835])
+      AC_DEFINE([BCM2708], [1], [Define to 1 for BCM2708])
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
       subarch_subdir=v6
       platform_subdir=raspi
@@ -285,7 +289,7 @@ AC_DEFUN([BOLTHUR_APPLICATION_SET_HOST], [
     case "${DEVICE}" in
     raspi3b)
       AC_DEFINE([RASPI], [3], [Raspi version])
-      AC_DEFINE([BCM2837], [1], [Define to 1 for BCM2837 chip])
+      AC_DEFINE([BCM2710], [1], [Define to 1 for BCM2710 chip])
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
       subarch_subdir=v8
       platform_subdir=raspi
@@ -343,14 +347,14 @@ AC_DEFUN([BOLTHUR_SERVER_SET_HOST], [
     case "${DEVICE}" in
     raspi2b_r1)
       AC_DEFINE([RASPI], [2], [Raspi version])
-      AC_DEFINE([BCM2836], [1], [Define to 1 for BCM2836 chip])
+      AC_DEFINE([BCM2709], [1], [Define to 1 for BCM2709 chip])
       CFLAGS="${CFLAGS} -march=armv7-a -mtune=cortex-a7 -mfpu=neon-vfpv4 -mfloat-abi=hard"
       subarch_subdir=v7
       platform_subdir=raspi
       ;;
     raspi0_1)
       AC_DEFINE([RASPI], [0], [Raspi version])
-      AC_DEFINE([BCM2835], [1], [Define to 1 for BCM2835])
+      AC_DEFINE([BCM2708], [1], [Define to 1 for BCM2708])
       CFLAGS="${CFLAGS} -march=armv6zk -mtune=arm1176jzf-s -mfpu=vfpv2 -mfloat-abi=hard"
       subarch_subdir=v6
       platform_subdir=raspi
@@ -368,7 +372,7 @@ AC_DEFUN([BOLTHUR_SERVER_SET_HOST], [
     case "${DEVICE}" in
     raspi3b)
       AC_DEFINE([RASPI], [3], [Raspi version])
-      AC_DEFINE([BCM2837], [1], [Define to 1 for BCM2837 chip])
+      AC_DEFINE([BCM2710], [1], [Define to 1 for BCM2710 chip])
       CFLAGS="${CFLAGS} -march=armv8-a -mtune=cortex-a53"
       subarch_subdir=v8
       platform_subdir=raspi

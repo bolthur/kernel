@@ -32,7 +32,7 @@ IMPORT( firmware_startup_init )
 IMPORT( initrd_startup_init )
 
 // only when extension define is set
-#if defined( BCM2836 ) || defined( BCM2837 )
+#if defined( BCM2709 ) || defined( BCM2710 )
   .arch_extension virt
   .arch_extension sec
 #endif
@@ -42,7 +42,7 @@ IMPORT( initrd_startup_init )
 EXPORT( startup )
 startup:
   b reset
-  #if defined( BCM2836 ) || defined( BCM2837 )
+  #if defined( BCM2709 ) || defined( BCM2710 )
     b hang
     b smc
     b hang
@@ -52,7 +52,7 @@ startup:
     b hang
   #endif
 
-#if defined( BCM2836 ) || defined( BCM2837 )
+#if defined( BCM2709 ) || defined( BCM2710 )
   hang:
     b hang
 
@@ -72,7 +72,7 @@ reset:
   mov sp, r3
 
   // halt other cpus if smp enabled is set
-  #if defined( BCM2836 ) || defined( BCM2837 )
+  #if defined( BCM2709 ) || defined( BCM2710 )
     // Return current CPU ID (0..3)
     cpsid iaf // Disable IRQ & FIQ
     mrc p15, 0, r3, c0, c0, 5 // r3 = Multiprocessor Affinity Register (MPIDR)
@@ -86,7 +86,7 @@ reset:
   #endif
 
   // switch to svc mode if necessary
-  #if defined( BCM2836 ) || defined( BCM2837 )
+  #if defined( BCM2709 ) || defined( BCM2710 )
     // check for hypervisor mode and switch back to supervisor mode for raspi2b and raspi3b
     mrs r3, cpsr
     eor r3, #CPSR_MODE_HYPERVISOR
@@ -107,12 +107,12 @@ reset:
   #endif
 
   // smp bit
-  #if defined( BCM2836 )
+  #if defined( BCM2709 )
     // Set SMP bit within auxiliary control register
     mrc p15, 0, r3, c1, c0, 1
     orr r3, r3, #( 1 << 6 )
     mcr p15, 0, r3, c1, c0, 1
-  #elif defined( BCM2837 )
+  #elif defined( BCM2710 )
     // Set SMP bit within extended control register
     mrrc p15, 1, r3, r1, c15
     orr r3, r3, #( 1 << 6 )
@@ -131,7 +131,7 @@ reset:
   // save boot parameter data
   push { r0 - r2 }
   // raspi >= 2b handling
-/*  #if defined( BCM2836 ) || defined( BCM2837 )
+/*  #if defined( BCM2709 ) || defined( BCM2710 )
     bl boot_serial_putc
     // get vbar
     mrc p15, 0, r1, c12, c0, 0

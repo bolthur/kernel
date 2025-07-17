@@ -20,10 +20,10 @@
 /dts-v1/;
 
 /include/ "../skeleton.dtsi"
-/include/ "bcm2837.dtsi"
+/include/ "bcm2710.dtsi"
 
 / {
-  compatible = "raspberrypi,3-model-a-plus", "brcm,bcm2837";
+  compatible = "raspberrypi,3-model-a-plus", "brcm,bcm2710";
   model = "Raspberry Pi 3 Model A+";
 
   memory@0 {

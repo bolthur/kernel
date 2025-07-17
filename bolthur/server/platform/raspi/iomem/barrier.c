@@ -24,7 +24,7 @@
  * @brief data memory barrier
  */
 void barrier_dmb( void ) {
-  #if defined( BCM2835 )
+  #if defined( BCM2708 )
     __asm__ __volatile__ (
       "mcr p15, #0, %[zero], c7, c10, #5"
       : : [ zero ] "r" ( 0 )
@@ -40,7 +40,7 @@ void barrier_dmb( void ) {
  * @brief data synchronization barrier
  */
 void barrier_dsb( void ) {
-  #if defined( BCM2835 )
+  #if defined( BCM2708 )
     __asm__ __volatile__ (
       "mcr p15, #0, %[zero], c7, c10, #4"
       : : [ zero ] "r" ( 0 )

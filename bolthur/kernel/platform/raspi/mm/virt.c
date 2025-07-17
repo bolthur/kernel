@@ -29,7 +29,7 @@
 #include "../../../mm/virt.h"
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
-#if defined( BCM2836 ) || defined( BCM2837 )
+#if defined( BCM2709 ) || defined( BCM2710 )
   #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
 #define MAILBOX_PROPERTY_AREA 0xF3040000
@@ -40,7 +40,7 @@
  */
 __bootstrap void virt_startup_platform_setup( void ) {
   // cpu local peripherals
-  #if defined( BCM2836 ) || defined( BCM2837 )
+  #if defined( BCM2709 ) || defined( BCM2710 )
     uintptr_t cpu_peripheral_base = 0x40000000;
     const size_t cpu_peripheral_size = 0x3FFFF;
     const uintptr_t cpu_peripheral_end = cpu_peripheral_base + cpu_peripheral_size;
@@ -54,7 +54,7 @@ __bootstrap void virt_startup_platform_setup( void ) {
   #endif
 
   // GPIO related
-  #if defined( BCM2836 ) || defined( BCM2837 )
+  #if defined( BCM2709 ) || defined( BCM2710 )
     uintptr_t gpio_peripheral_base = 0x3F000000;
     const size_t gpio_peripheral_size = 0xFFFFFF;
   #else
@@ -109,7 +109,7 @@ void virt_platform_init( void ) {
     virtual += PAGE_SIZE;
   }
   // handle local peripherals
-  #if defined( BCM2836 ) || defined( BCM2837 )
+  #if defined( BCM2709 ) || defined( BCM2710 )
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
@@ -156,7 +156,9 @@ void virt_platform_post_init( void ) {
   // set new peripheral base
   peripheral_base_set( GPIO_PERIPHERAL_BASE, PERIPHERAL_GPIO );
   // Adjust base address of cpu peripheral
-  peripheral_base_set( CPU_PERIPHERAL_BASE, PERIPHERAL_LOCAL );
+  #if defined( BCM2709 )
+    peripheral_base_set( CPU_PERIPHERAL_BASE, PERIPHERAL_LOCAL );
+  #endif
   // set mailbox property pointer
   ptb_buffer = ( int32_t* )MAILBOX_PROPERTY_AREA;
 

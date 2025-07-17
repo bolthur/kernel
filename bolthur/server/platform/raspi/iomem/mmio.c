@@ -23,7 +23,7 @@
 #include "barrier.h"
 
 // initial setup of peripheral base
-#if defined( BCM2836 ) || defined( BCM2837 )
+#if defined( BCM2709 ) || defined( BCM2710 )
   #define PERIPHERAL_BASE 0x3F000000
   #define PERIPHERAL_SIZE 0xFFFFFF
 #else

@@ -17,17 +17,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/dts-v1/;
-
-/include/ "../skeleton.dtsi"
-/include/ "bcm2837.dtsi"
-
 / {
-  compatible = "raspberrypi,3-model-b", "brcm,bcm2837";
-  model = "Raspberry Pi 3 Model B";
+  compatible = "brcm,bcm2708";
 
-  memory@0 {
-    device_type = "memory";
-    reg = <0 0x40000000>;
+  cpus {
+    #address-cells = <1>;
+    #size-cells = <0>;
+
+    cpu@0 {
+      device_type = "cpu";
+      compatible = "arm,arm1176jzf-s";
+      reg = <0x0>;
+    };
   };
 };
