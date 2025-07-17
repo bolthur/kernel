@@ -8,6 +8,7 @@ libraspi_la_SOURCES = \
   mailbox/property.c \
   mm/phys.c \
   mm/virt.c \
+  boot.c \
   interrupt.c \
   peripheral.c \
   serial.c \

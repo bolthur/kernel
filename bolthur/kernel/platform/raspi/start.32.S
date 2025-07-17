@@ -57,10 +57,12 @@ startup:
     b hang
 
   smc:
-    // reset scr
+    // reset scr to secure mode
     mov r1, #0
     mcr p15, 0, r1, c1, c1, 0
+    // wait for instruction sync
     isb
+    // return from smc handler
     movs pc, lr
 #endif
 
@@ -129,7 +131,8 @@ reset:
   // save boot parameter data
   push { r0 - r2 }
   // raspi >= 2b handling
-  #if defined( BCM2836 ) || defined( BCM2837 )
+/*  #if defined( BCM2836 ) || defined( BCM2837 )
+    bl boot_serial_putc
     // get vbar
     mrc p15, 0, r1, c12, c0, 0
     ldr r0, =startup
@@ -153,7 +156,7 @@ reset:
     isb
     // secure monitor call to reset scr
     smc #0
-  #endif
+  #endif*/
   // enable fpu
   bl fpu_enable
   // clear bss section
