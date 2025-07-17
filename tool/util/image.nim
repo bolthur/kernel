@@ -73,7 +73,8 @@ proc imageCreatePartition( target: string, totalSize: int, bootFolder: string, b
       var localfolder = file.replace( joinPath( basePath, "partition", "boot" ) )
       cmdResult = execCmdEx( "mmd -i " & bootPartition & " ::" & localfolder )
     else:
-      cmdResult = execCmdEx( "mcopy -i " & bootPartition & " " & file & " ::" )
+      var localdestination = file.replace( joinPath( basePath, "partition", "boot" ) )
+      cmdResult = execCmdEx( "mcopy -i " & bootPartition & " " & file & " ::" & localdestination )
     if 0 != cmdResult.exitCode:
       echo "Unable to copy content to boot partition: " & cmdResult.output
       quit( 1 )
@@ -106,7 +107,7 @@ proc createPlainImageFile*( imageType: string, rootPath: string ): void =
   let bootDirectoryPath: string = joinPath( basePath, "partition", "boot" )
   let rootDirectoryPath: string = joinPath( basePath, "partition", "root" )
   let rootEtcDirectoryPath: string = joinPath( rootDirectoryPath, "etc" )
-  # create folder boot, root and etc in root image
+  # create folder boot, root, ramdisk and etc in root image
   createDir( joinPath( rootDirectoryPath, "boot" ) )
   createDir( joinPath( rootDirectoryPath, "ramdisk" ) )
   createDir( rootEtcDirectoryPath )

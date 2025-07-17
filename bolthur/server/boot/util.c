@@ -26,32 +26,43 @@
 #include "../libhelper.h"
 
 /**
- * @fn pid_t util_execute_device_server(const char*, const char*)
+ * @fn pid_t util_execute_device_server(const char*, const char*, const char*)
  * @brief Helper wraps start of a device server
  *
- * @param path
- * @param device
+ * @param path path to start
+ * @param device device
+ * @param args arguments to push
  * @return
  */
-pid_t util_execute_device_server( const char* path, const char* device ) {
+pid_t util_execute_device_server( const char* path, const char* device, const char* args ) {
   pid_t proc;
+  // calculate message size
+  size_t msg_size = sizeof( dev_command_start_t );
+  if ( args ) {
+    msg_size += sizeof( char ) * ( strlen( args ) + 1 );
+  } else {
+    msg_size += sizeof( char );
+  }
   // allocate message
-  dev_command_start_t* start = malloc( sizeof( *start ) );
+  dev_command_start_t* start = malloc( msg_size );
+  // handle allocation failed
   if ( ! start ) {
     return 0;
   }
   // clear out
-  memset( start, 0, sizeof( *start ) );
-  // prepare command content
+  memset( start, 0, msg_size );
+  // prepare command content by copy path
   strncpy( start->path, path, PATH_MAX - 1 );
+  // copy possible arguments
+  if ( args ) {
+    strcpy( start->args, args );
+  } else {
+    start->args[0] = '\0';
+  }
   // raise request
-  int result = ioctl(
+  const int result = ioctl(
     fd_dev_manager,
-    IOCTL_BUILD_REQUEST(
-      DEV_START,
-      sizeof( *start ),
-      IOCTL_RDWR
-    ),
+    IOCTL_BUILD_REQUEST( DEV_START, msg_size, IOCTL_RDWR ),
     start
   );
   // handle error

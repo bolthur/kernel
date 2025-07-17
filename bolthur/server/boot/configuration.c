@@ -78,6 +78,8 @@ int configuration_confini_handler (
     n->early = 0 == strcmp( value, "true" );
   } else if ( 0 == strcmp( name, "reroute") ) {
     n->reroute = 0 == strcmp( value, "true" );
+  } else if ( 0 == strcmp( name, "pass_boot_arguments" ) ) {
+    n->pass_boot_arguments = 0 == strcmp( value, "true" );
   } else {
     EARLY_STARTUP_PRINT(
       "unknown key \"%s\" in section \"%s\"\r\n", name, section )
@@ -110,13 +112,13 @@ configuration_node_t* by_name( const char* name ) {
 }
 
 /**
- * @fn bool configuration_handle(const char*)
+ * @fn bool configuration_handle(const char*, const char*)
  * @brief Parse and handle configuration
  *
  * @param path
  * @return
  */
-bool configuration_handle( const char* path ) {
+bool configuration_handle( const char* path, const char* bootarg ) {
   // init list
   TAILQ_INIT(&head);
   // open file
@@ -147,7 +149,11 @@ bool configuration_handle( const char* path ) {
       STARTUP_PRINT( "Starting server %s...\r\n", n->name )
     }
     // start server
-    util_execute_device_server( n->path, n->device );
+    if ( n->pass_boot_arguments && bootarg ) {
+      util_execute_device_server( n->path, n->device, bootarg );
+    } else {
+      util_execute_device_server( n->path, n->device, nullptr );
+    }
     // reroute handling
     if ( n->reroute ) {
       // ORDER NECESSARY HERE DUE TO THE DEFINES

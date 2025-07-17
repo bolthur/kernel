@@ -22,7 +22,7 @@
 #include "mailbox.h"
 #include "mmio.h"
 
-static volatile mailbox_t* mailbox = NULL;
+static volatile mailbox_t* mailbox = nullptr;
 
 /**
  * @fn void mailbox_setup(void)
@@ -36,12 +36,13 @@ void mailbox_setup( void ) {
 }
 
 /**
+ * @fn uint32_t mailbox_read(const mailbox0_channel_t)
  * @brief Function for reading mailbox
  *
  * @param channel Function to read via mailbox
  * @return uint32_t value from mailbox function or MAILBOX_ERROR
  */
-uint32_t mailbox_read( mailbox0_channel_t channel ) {
+uint32_t mailbox_read( const mailbox0_channel_t channel ) {
   // data and count
   uint32_t value = 0;
   uint32_t count = 0;
@@ -62,12 +63,13 @@ uint32_t mailbox_read( mailbox0_channel_t channel ) {
 }
 
 /**
+ * @fn void mailbox_write(const mailbox0_channel_t, uint32_t)
  * @brief Function for writing to mailbox
  *
  * @param channel Function to use via mailbox
  * @param data Data to write depending on function
  */
-void mailbox_write( mailbox0_channel_t channel, uint32_t data ) {
+void mailbox_write( const mailbox0_channel_t channel, uint32_t data ) {
   // add channel number at the lower 4 bit
   data = ( uint32_t )( ( int32_t )data & ~0xF );
   data |= channel;

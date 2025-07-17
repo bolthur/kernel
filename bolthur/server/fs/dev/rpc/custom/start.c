@@ -60,7 +60,7 @@ void rpc_custom_handle_start(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
-  dev_command_start_t* command = ( dev_command_start_t* )request->container;
+  auto dev_command_start_t* command = ( dev_command_start_t* )request->container;
   if ( ! command ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
@@ -101,12 +101,24 @@ void rpc_custom_handle_start(
     if ( ! base ) {
       exit( -1 );
     }
-    // build command
-    char* cmd[] = { base, NULL, };
-    // exec to replace
-    if ( -1 == execv( command->path, cmd ) ) {
-      exit( 1 );
+    // handle additional boot args
+    if ( 0 < strlen( command->args ) ) {
+      // build command
+      char* cmd[] = { base, command->args, NULL, };
+      // exec to replace
+      if ( -1 == execv( command->path, cmd ) ) {
+        exit( 1 );
+      }
+    // handle no additional boot args
+    } else {
+      // build command
+      char* cmd[] = { base, NULL, };
+      // exec to replace
+      if ( -1 == execv( command->path, cmd ) ) {
+        exit( 1 );
+      }
     }
+    // exit
     exit( 1 );
   }
   // copy over pid

@@ -63,8 +63,8 @@ void rpc_handle_mailbox(
     return;
   }
   // allocate space for request
-  int32_t* mailbox_request = ( int32_t* )request->container;
-  size_t copy_size = data_size - sizeof( vfs_ioctl_perform_request_t );
+  const int32_t* mailbox_request = ( int32_t* )request->container;
+  const size_t copy_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // handle more than allowed
   if ( copy_size > PAGE_SIZE ) {
     error.status = -ENOMEM;
@@ -74,7 +74,7 @@ void rpc_handle_mailbox(
   }
   // allocate space for response
   vfs_ioctl_perform_response_t* response;
-  size_t response_size = copy_size + sizeof( *response );
+  const size_t response_size = copy_size + sizeof( *response );
   response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
@@ -82,7 +82,7 @@ void rpc_handle_mailbox(
     free( request );
     return;
   }
-  int32_t count = ( int32_t )( copy_size / sizeof( int32_t ) );
+  const int32_t count = ( int32_t )( copy_size / sizeof( int32_t ) );
   // clear request
   memset( response, 0, response_size );
   // copy stuff to property buffer
@@ -90,7 +90,7 @@ void rpc_handle_mailbox(
   // overwrite current property index
   property_index = count;
   // process request
-  uint32_t result = property_process();
+  const uint32_t result = property_process();
   // handle error
   if ( MAILBOX_ERROR == result ) {
     error.status = -EIO;

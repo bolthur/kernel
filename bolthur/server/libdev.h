@@ -31,6 +31,7 @@
 
 typedef struct {
   char path[ PATH_MAX ];
+  char args[];
 } dev_command_start_t;
 
 typedef struct {

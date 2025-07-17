@@ -22,6 +22,6 @@
 
 #include <sys/types.h>
 
-pid_t util_execute_device_server( const char*, const char* );
+pid_t util_execute_device_server( const char*, const char*, const char* );
 
 #endif

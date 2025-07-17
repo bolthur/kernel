@@ -31,19 +31,26 @@
  * @fn int main(int, char*[])
  * @brief main entry point
  *
- * @param argc
- * @param argv
+ * @param argc argument count
+ * @param argv arguments
  * @return
  */
-int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
+int main( int argc, char* argv[] ) {
   EARLY_STARTUP_PRINT( "Setup framebuffer\r\n" )
+  // validate argument count
+  if ( 2 != argc ) {
+    EARLY_STARTUP_PRINT( "Usage: framebuffer <bootargs>\r\n" )
+    return -1;
+  }
+
+  EARLY_STARTUP_PRINT( "argc = %d\r\n", argc )
 
   // initialize rpc
   if ( ! rpc_init() ) {
     return -1;
   }
   // initialize framebuffer
-  if( ! framebuffer_init() ) {
+  if( ! framebuffer_init( argv[ 1 ] ) ) {
     return -1;
   }
 

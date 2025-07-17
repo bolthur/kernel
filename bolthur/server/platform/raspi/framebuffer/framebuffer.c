@@ -67,6 +67,19 @@ framebuffer_rpc_t command_list[] = {
   },
 };
 
+/**
+ * @fn int strpos(const char*, const char*)
+ * @brief strpos implementation
+ * @param haystack haystack to search through
+ * @param needle needle to search
+ * @return
+ */
+static int strpos( const char* haystack, const char* needle ) {
+  // find needle in haystack
+  const char* p = strstr( haystack, needle );
+  // return position or -1 if not found
+  return p ? p - haystack : -1;
+}
 
 /**
  * @fn int32_t memory_lookup(const list_item_t*, const void*)
@@ -92,7 +105,7 @@ static int32_t memory_lookup(
  */
 static void memory_cleanup( list_item_t* a ) {
   // convert
-  framebuffer_memory_t* mem = a->data;
+  const framebuffer_memory_t* mem = a->data;
   // handle shared memory id
   if ( mem->shm_id ) {
     // detach shared memory
@@ -116,7 +129,26 @@ static void memory_cleanup( list_item_t* a ) {
  *
  * @todo create shared area with similar size than framebuffer
  */
-bool framebuffer_init( void ) {
+bool framebuffer_init( const char* bootargs ) {
+  // extract possible width and height from args
+  EARLY_STARTUP_PRINT( "bootargs = %s\r\n", bootargs )
+  char* p = strtok( ( char* )bootargs, " " );
+  uint32_t fbwidth = 0;
+  uint32_t fbheight = 0;
+  while ( p ) {
+    // handle width information
+    if ( 0 == fbwidth && -1 != strpos( p, "fbwidth=" ) ) {
+      fbwidth = ( uint32_t )strtoul( p + strpos( p, "=" ) + 1, NULL, 10 );
+      EARLY_STARTUP_PRINT( "fbwidth = %"PRIu32"\r\n", fbwidth )
+    // handle height information
+    } else if ( 0 == fbheight && -1 != strpos( p, "fbheight=" ) ) {
+      fbheight = ( uint32_t )strtoul( p + strpos( p, "=" ) + 1, NULL, 10 );
+      EARLY_STARTUP_PRINT( "fbheight = %"PRIu32"\r\n", fbheight )
+    }
+    // get next one
+    p = strtok(NULL, " ");
+  }
+
   // create list
   memory_list = list_construct( memory_lookup, memory_cleanup, NULL );
   if ( ! memory_list ) {
@@ -177,6 +209,19 @@ bool framebuffer_init( void ) {
     physical_width = FRAMEBUFFER_SCREEN_WIDTH;
     physical_height = FRAMEBUFFER_SCREEN_HEIGHT;
   }
+  // handle framebuffer width / height set in bootargs
+  if (
+    fbwidth != 0
+    && fbheight != 0
+    && (
+      fbwidth != physical_width
+      || fbheight != physical_height
+    )
+  ) {
+    physical_width = fbwidth;
+    physical_height = fbheight;
+  }
+  // some output
   EARLY_STARTUP_PRINT(
     "Using resolution %"PRIu32"x%"PRIu32"\r\n",
     physical_width,
@@ -236,7 +281,7 @@ bool framebuffer_init( void ) {
   request[ idx++ ] = 4; // request + value length (bytes)
   request[ idx++ ] = 0x1000; // alignment = 0x1000
   request[ idx++ ] = 0; // space for response
-  request[ idx++ ] = 0; // end tag
+  request[ idx ] = 0; // end tag
   // perform request
   result = ioctl(
     iomem_fd,
@@ -312,7 +357,7 @@ bool framebuffer_init( void ) {
  */
 bool framebuffer_register_rpc( void ) {
   // register all handlers
-  size_t max = sizeof( command_list ) / sizeof( command_list[ 0 ] );
+  constexpr size_t max = sizeof( command_list ) / sizeof( command_list[ 0 ] );
   // loop through handler to identify used one
   for ( size_t i = 0; i < max; i++ ) {
     // register rpc
@@ -390,7 +435,7 @@ void framebuffer_handle_resolution(
   }
   // allocate response
   vfs_ioctl_perform_response_t* response;
-  size_t response_size = sizeof( *response )
+  constexpr size_t response_size = sizeof( *response )
     + sizeof( framebuffer_resolution_t );
   response = malloc( response_size );
   // handle error
@@ -524,7 +569,7 @@ void framebuffer_handle_surface_render(
     return;
   }
   // allocate  structure
-  framebuffer_surface_render_t* info = ( framebuffer_surface_render_t* )
+  auto const framebuffer_surface_render_t* info = ( framebuffer_surface_render_t* )
     request->container;
   // get item
   list_item_t* item = list_lookup_data( memory_list, ( void* )info->surface_id );
@@ -577,13 +622,13 @@ void framebuffer_handle_surface_allocate(
     return;
   }
   // allocate space for data
-  framebuffer_surface_allocate_t* info = ( framebuffer_surface_allocate_t* )
+  auto framebuffer_surface_allocate_t* info = ( framebuffer_surface_allocate_t* )
     request->container;
   // calculated line length
-  uint32_t allocate_pitch = info->width * ( info->depth / CHAR_BIT );
-  size_t memory_size = allocate_pitch * info->height;
+  const uint32_t allocate_pitch = info->width * ( info->depth / CHAR_BIT );
+  const size_t memory_size = allocate_pitch * info->height;
   // request shared memory
-  size_t shm_id = _syscall_memory_shared_create( memory_size );
+  const size_t shm_id = _syscall_memory_shared_create( memory_size );
   if ( errno ) {
     error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
@@ -598,7 +643,7 @@ void framebuffer_handle_surface_allocate(
     free( request );
     return;
   }
-  // clearout shared memory
+  // clear out shared memory
   memset( shm_addr, 0, memory_size );
   // allocate memory for management structure
   framebuffer_memory_t* mem = malloc( sizeof( *mem ) );
@@ -615,7 +660,7 @@ void framebuffer_handle_surface_allocate(
     free( request );
     return;
   }
-  // clearout and fill
+  // clear out and fill
   memset( mem, 0, sizeof( *mem ) );
   mem->width = info->width;
   mem->height = info->height;
@@ -646,7 +691,7 @@ void framebuffer_handle_surface_allocate(
 
   // allocate response
   vfs_ioctl_perform_response_t* response;
-  size_t response_size = sizeof( *response )
+  constexpr size_t response_size = sizeof( *response )
     + sizeof( framebuffer_surface_allocate_t );
   response = malloc( response_size );
   // handle error

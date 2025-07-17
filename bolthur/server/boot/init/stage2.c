@@ -30,12 +30,13 @@
 #include "../../libhelper.h"
 
 /**
- * @fn void init_stage2(void)
+ * @fn void init_stage2(const char*)
  * @brief Stage 2 init starting necessary stuff so that stage 3 with stuff from disk can be started
+ * @param bootarg boot arguments
  */
-[[noreturn]] void init_stage2( void ) {
+[[noreturn]] void init_stage2( const char* bootarg ) {
   // start servers by configuration
-  configuration_handle( "/ramdisk/config/stage2.ini" );
+  configuration_handle( "/ramdisk/config/stage2.ini", bootarg );
 
   // determine root device and partition type from config
   STARTUP_PRINT( "Extracting root device and partition type...\r\n" )

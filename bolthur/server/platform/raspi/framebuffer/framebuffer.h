@@ -42,7 +42,7 @@ typedef struct {
   uint32_t depth;
 } framebuffer_memory_t;
 
-bool framebuffer_init( void );
+bool framebuffer_init( const char* );
 bool framebuffer_register_rpc( void );
 void framebuffer_flip( void );
 

@@ -31,12 +31,13 @@ typedef struct configuration_node {
   char device[ PATH_MAX ];
   bool early;
   bool reroute;
+  bool pass_boot_arguments;
   // list stuff
   TAILQ_ENTRY( configuration_node ) queue;
 } configuration_node_t;
 
 configuration_node_t* by_name( const char* name );
 int configuration_confini_handler( IniDispatch*, void* );
-bool configuration_handle( const char* path );
+bool configuration_handle( const char* path, const char* bootarg );
 
 #endif

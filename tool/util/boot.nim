@@ -30,13 +30,7 @@ proc onProgressChanged(total, progress, speed: BiggestInt): void =
   stdout.flushFile()
 
 proc uncompressFirmware( archive: string, destination: string ): void =
-  ### FIXME: Replace tar usage by zippy once .xz is supported
-  #extractAll( joinPath( cachePath, "firmware.tar.xz" ), joinPath( cachePath, "firmware" ) )
-  # Create destination directory if not existing
-  if not dirExists( destination ):
-    createDir( destination )
-  # uncompress firmware by using tar
-  echo execProcess( """tar -xf """ & archive & """ -C """ & destination )
+  extractAll( joinPath( archive ), joinPath( destination ) )
 
 proc copyFileToBoot*( path: string, subfolder:string = "" ): void =
   if fileExists( path ):
@@ -57,18 +51,18 @@ proc loadFirmwareToBoot*( firmwareType: string ): void =
   createDir( cachePath )
   if "raspi" == firmwareType:
     # load firmware if not existing
-    if not fileExists( joinPath( cachePath, "firmware.tar.xz" ) ):
+    if not fileExists( joinPath( cachePath, "firmware.tar.gz" ) ):
       var client = newHttpClient()
       client.onProgressChanged = onProgressChanged
-      client.downloadFile( """https://github.com/raspberrypi/firmware/releases/download/""" & firmware_version & """/raspi-firmware_""" &  firmware_version & """.orig.tar.xz""", joinPath( cachePath, "firmware.tar.xz" ) )
+      client.downloadFile( """https://github.com/raspberrypi/firmware/archive/refs/tags/""" &  firmware_version & """.tar.gz""", joinPath( cachePath, "firmware.tar.gz" ) )
       stdout.write "\r\n"
       stdout.flushFile()
     # uncompress firmware if not existing
     if not dirExists( joinPath( cachePath, "firmware" ) ):
       # unzip firmware
-      uncompressFirmware( joinPath( cachePath, "firmware.tar.xz" ), joinPath( cachePath, "firmware" ) )
+      uncompressFirmware( joinPath( cachePath, "firmware.tar.gz" ), joinPath( cachePath, "firmware" ) )
     # copy over to boot
-    let basePath = joinPath( cachePath, "firmware", """raspi-firmware-""" & firmware_version, "boot" )
+    let basePath = joinPath( cachePath, "firmware", """firmware-""" & firmware_version, "boot" )
     for file in walkDirRec( basePath, { pcFile, pcDir } ):
       let splitted = splitPath( file )
       if splitted.tail.startsWith( "kernel" ):

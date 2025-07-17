@@ -182,7 +182,7 @@ int main( int argc, char* argv[] ) {
   ramdisk_compressed_size = strtoul( argv[ 2 ], NULL, 16 );
   device_tree = strtoul( argv[ 3 ], NULL, 16 );
   // address size constant
-  const int address_size = ( int )( sizeof( uintptr_t ) * 2 );
+  constexpr int address_size = ( int )( sizeof( uintptr_t ) * 2 );
 
   // check device tree
   if ( 0 != fdt_check_header( ( void* )device_tree ) ) {
@@ -199,6 +199,14 @@ int main( int argc, char* argv[] ) {
     &bootargs_length
   );
   EARLY_STARTUP_PRINT( "bootargs: %.*s\r\n", bootargs_length, bootargs )
+  char* nbootargs = malloc( ( size_t )( bootargs_length + 1 ) );
+  if ( ! nbootargs ) {
+    EARLY_STARTUP_PRINT( "ERROR: Unable to allocate space for null terminated bootargs!\r\n" )
+    free( msg );
+    return -1;
+  }
+  memset( nbootargs, 0, ( size_t )( bootargs_length + 1 ) );
+  strncpy( nbootargs, bootargs, ( size_t )bootargs_length );
 
   // debug print
   EARLY_STARTUP_PRINT(
@@ -217,6 +225,7 @@ int main( int argc, char* argv[] ) {
   if ( !mytype ) {
     EARLY_STARTUP_PRINT( "ERROR: Cannot allocate necessary memory for tar stuff!\r\n" )
     free( msg );
+    free( nbootargs );
     return -1;
   }
   mytype->closefunc = my_tar_close;
@@ -228,6 +237,8 @@ int main( int argc, char* argv[] ) {
   if ( 0 != tar_open( &disk, "/ramdisk.tar", mytype, O_RDONLY, 0, 0 ) ) {
     EARLY_STARTUP_PRINT( "ERROR: Cannot open ramdisk!\r\n" );
     free( msg );
+    free( nbootargs );
+    free( mytype );
     return -1;
   }
 
@@ -238,11 +249,12 @@ int main( int argc, char* argv[] ) {
   if ( -1 == fd_dev_manager ) {
     EARLY_STARTUP_PRINT( "ERROR: Cannot open dev: %s!\r\n", strerror( errno ) );
     free( msg );
+    free( nbootargs );
     return -1;
   }
   EARLY_STARTUP_PRINT( "fd_dev_manager = %d\r\n", fd_dev_manager )
   // stage 2 init
-  init_stage2();
+  init_stage2( nbootargs );
   // stage 3 init
   init_stage3();
 
