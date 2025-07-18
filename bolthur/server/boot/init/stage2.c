@@ -40,16 +40,16 @@
 
   // determine root device and partition type from config
   STARTUP_PRINT( "Extracting root device and partition type...\r\n" )
-  char* p = strtok( bootargs, " " );
+  char* p = strtok( ( char* )bootarg, " " );
   char* root_device = NULL;
   char* root_partition_type = NULL;
-  size_t len_root_device = 5;
-  size_t len_root_partition_type = 11;
   while ( p ) {
+    constexpr size_t len_root_device = 5;
+    constexpr size_t len_root_partition_type = 11;
     STARTUP_PRINT( "p = %s\r\n", p )
     // handle root information
-    if ( 0 == strncmp( p, "root=", len_root_device ) && ! root_device ) {
-      size_t size = sizeof( char )* ( strlen( p ) - len_root_device + 1 );
+    if ( ! root_device && 0 == strncmp( p, "root=", len_root_device ) ) {
+      const size_t size = sizeof( char ) * ( strlen( p ) - len_root_device + 1 );
       // allocate space and clear out
       root_device = malloc( size );
       if ( ! root_device ) {
@@ -60,10 +60,10 @@
       // copy stuff
       strcpy( root_device, p + len_root_device );
     } else if (
-      0 == strncmp( p, "rootfstype=", len_root_partition_type )
-      && ! root_partition_type
+      ! root_partition_type
+      && 0 == strncmp( p, "rootfstype=", len_root_partition_type )
     ) {
-      size_t size = sizeof( char )* ( strlen( p ) - len_root_partition_type + 1 );
+      const size_t size = sizeof( char ) * ( strlen( p ) - len_root_partition_type + 1 );
       // allocate space and clear out
       root_partition_type = malloc( size );
       if ( ! root_partition_type ) {
@@ -75,7 +75,7 @@
       strcpy( root_partition_type, p + len_root_partition_type );
     }
     // get next one
-    p = strtok(NULL, " ");
+    p = strtok( NULL, " " );
   }
   // handle no root device and/or file system type found
   if ( ! root_device || ! root_partition_type ) {
@@ -178,6 +178,12 @@
   // print content
   STARTUP_PRINT( "str: %s\r\n", str )
   STARTUP_PRINT( "continue with stage3!!!\r\n")
+
+  EARLY_STARTUP_PRINT( "umount /boot again for testing...\r\n" )
+  int umount_result = umount( "/boot" );
+  if ( 0 != umount_result ) {
+    EARLY_STARTUP_PRINT( "umount failed: %s\r\n", strerror( errno ) )
+  }
 
   for (;;) {
     __asm__ __volatile__ ( "nop" );

@@ -33,8 +33,8 @@
  * @return
  */
 static int handle_cmp(
-  struct handle_node* a,
-  struct handle_node* b
+  const struct handle_node* a,
+  const struct handle_node* b
 ) {
   if ( a->handle == b->handle ) {
     return 0;
@@ -81,7 +81,7 @@ static int generate_handle( process_node_t* process ) {
  * @param handle
  * @return
  */
-int handle_get( handle_node_t** container, pid_t process, int handle ) {
+int handle_get( handle_node_t** container, const pid_t process, const int handle ) {
   // generate process container
   process_node_t* process_container = process_generate( process );
   if ( ! process_container ) {
@@ -119,13 +119,13 @@ int handle_get( handle_node_t** container, pid_t process, int handle ) {
  */
 int handle_set(
   handle_node_t** handle,
-  int nhandle,
-  pid_t process,
-  pid_t handler,
+  const int nhandle,
+  const pid_t process,
+  const pid_t handler,
   void* data,
   const char* path,
-  int flags,
-  int mode
+  const int flags,
+  const int mode
 ) {
   process_node_t* process_container = process_generate( process );
   if ( ! process_container ) {
@@ -175,12 +175,12 @@ int handle_set(
  */
 int handle_generate(
   handle_node_t** handle,
-  pid_t process,
-  pid_t handler,
+  const pid_t process,
+  const pid_t handler,
   void* data,
   const char* path,
-  int flags,
-  int mode
+  const int flags,
+  const int mode
 ) {
   process_node_t* process_container = process_generate( process );
   if ( ! process_container ) {
@@ -200,9 +200,9 @@ int handle_generate(
   // copy path
   strncpy( ( *handle )->path, path, PATH_MAX - 1 );
   // special handling for stdin, stdout and stderr
-  bool is_stdin = 0 == strcmp( path, "/dev/stdin" );
-  bool is_stdout = 0 == strcmp( path, "/dev/stdout" );
-  bool is_stderr = 0 == strcmp( path, "/dev/stderr" );
+  const bool is_stdin = 0 == strcmp( path, "/dev/stdin" );
+  const bool is_stdout = 0 == strcmp( path, "/dev/stdout" );
+  const bool is_stderr = 0 == strcmp( path, "/dev/stderr" );
   if ( ! is_stdin && ! is_stdout && ! is_stderr ) {
     ( *handle )->handle = generate_handle( process_container );
   } else {
@@ -218,7 +218,7 @@ int handle_generate(
     // which should not happen at all
     handle_node_t* tmp_handle_container;
     // try to get handle information
-    int tmp_handle_result = handle_get(
+    const int tmp_handle_result = handle_get(
       &tmp_handle_container,
       process,
       ( *handle )->handle
@@ -248,7 +248,7 @@ int handle_generate(
  *
  * @param process
  */
-void handle_destroy_all( pid_t process ) {
+void handle_destroy_all( const pid_t process ) {
   // get process container
   process_node_t* process_container = process_generate( process );
   if ( ! process_container ) {
@@ -270,7 +270,7 @@ void handle_destroy_all( pid_t process ) {
  * @param handle
  * @return
  */
-int handle_destroy( pid_t process, int handle ) {
+int handle_destroy( const pid_t process, const int handle ) {
   // get process container
   process_node_t* process_container = process_generate( process );
   if ( ! process_container ) {
@@ -305,7 +305,7 @@ int handle_destroy( pid_t process, int handle ) {
  * @param process
  * @return
  */
-handle_node_t* handle_get_next( pid_t process ) {
+handle_node_t* handle_get_next( const pid_t process ) {
   // get process container
   process_node_t* process_container = process_generate( process );
   if ( ! process_container ) {

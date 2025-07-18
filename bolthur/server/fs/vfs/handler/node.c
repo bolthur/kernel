@@ -30,8 +30,8 @@
  * @return
  */
 static int handler_cmp(
-  struct handler_node* a,
-  struct handler_node* b
+  const struct handler_node* a,
+  const struct handler_node* b
 ) {
   if ( a->type == b->type ) {
     return 0;
@@ -65,10 +65,10 @@ bool handler_node_setup( void ) {
  * @fn handler_node_t handler_node_extract*(uint32_t)
  * @brief Extract mount point node by name
  *
- * @param name
+ * @param type
  * @return
  */
-handler_node_t* handler_node_extract( uint32_t type ) {
+handler_node_t* handler_node_extract( const uint32_t type ) {
   handler_node_t node = { .type = type, };
   return handler_node_tree_find( &management_tree, &node );
 }
@@ -77,9 +77,9 @@ handler_node_t* handler_node_extract( uint32_t type ) {
  * @fn void handler_node_remove(uint32_t)
  * @brief Method to remove a handler type
  *
- * @param path
+ * @param type
  */
-void handler_node_remove( uint32_t type ) {
+void handler_node_remove( const uint32_t type ) {
   handler_node_t* node = handler_node_extract( type );
   if ( ! node ) {
     return;
@@ -94,12 +94,11 @@ void handler_node_remove( uint32_t type ) {
  * @fn bool handler_node_add(uint32_t, pid_t)
  * @brief Helper to add a handler node
  *
- * @param path
+ * @param type
  * @param handler
- * @param st
  * @return
  */
-bool handler_node_add( uint32_t type, pid_t handler ) {
+bool handler_node_add( const uint32_t type, const pid_t handler ) {
   // allocate node
   handler_node_t* node = malloc( sizeof( *node ) );
   // handle error

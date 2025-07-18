@@ -119,6 +119,8 @@ void rpc_handle_mount_async(
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo add authentication check
  */
 void rpc_handle_mount(
   size_t type,
@@ -214,7 +216,7 @@ void rpc_handle_mount(
   }
 
   // get destination
-  mountpoint_node_t* destination = mountpoint_node_extract( request->target );
+  const mountpoint_node_t* destination = mountpoint_node_extract( request->target );
   if (
     destination
     && strlen( destination->name ) == strlen( request->target )

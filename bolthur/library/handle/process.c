@@ -31,8 +31,8 @@
  * @return
  */
 static int process_cmp(
-  struct process_node* a,
-  struct process_node* b
+  const struct process_node* a,
+  const struct process_node* b
 ) {
   if ( a->pid == b->pid ) {
     return 0;
@@ -46,11 +46,11 @@ PROCESS_TREE_DEFINE(
   process_node,
   node,
   process_cmp,
-  [[maybe_unused]] static inline
+  inline
 )
 
 // create static tree
-static struct process_tree management_tree;
+struct process_tree process_management_tree;
 
 /**
  * @fn bool process_setup(void)
@@ -59,7 +59,7 @@ static struct process_tree management_tree;
  * @return
  */
 bool process_setup( void ) {
-  process_node_tree_init( &management_tree );
+  process_node_tree_init( &process_management_tree );
   return true;
 }
 
@@ -70,7 +70,7 @@ bool process_setup( void ) {
  * @param proc
  * @return
  */
-process_node_t* process_generate( pid_t proc ) {
+process_node_t* process_generate( const pid_t proc ) {
   // allocate node
   process_node_t* node = malloc( sizeof( *node ) );
   // handle error
@@ -82,16 +82,16 @@ process_node_t* process_generate( pid_t proc ) {
   // populate
   node->pid = proc;
   // try to find one and return if existing
-  process_node_t* found = process_node_tree_find( &management_tree, node );
+  process_node_t* found = process_node_tree_find( &process_management_tree, node );
   if ( found ) {
     free( node );
     return found;
   }
   // further setup
   node->handle = 3;
-  handle_node_tree_init(&node->management_tree);
+  handle_node_tree_init( &node->management_tree );
   // handle already existing and insert
-  if ( process_node_tree_insert( &management_tree, node ) ) {
+  if ( process_node_tree_insert( &process_management_tree, node ) ) {
     free( node );
     return NULL;
   }
@@ -105,19 +105,19 @@ process_node_t* process_generate( pid_t proc ) {
  * @param node
  */
 void process_remove( process_node_t* node ) {
-  process_node_tree_remove( &management_tree, node );
+  process_node_tree_remove( &process_management_tree, node );
   free( node );
 }
 
 /**
- * @fn int process_duplicate(process_node_t*, handle_node_t*)
+ * @fn int process_duplicate(process_node_t*, const handle_node_t*)
  * @brief Method to duplicate a given handle
  *
  * @param new_container
  * @param handle
  * @return
  */
-int process_duplicate( process_node_t* new_container, handle_node_t* handle ) {
+int process_duplicate( process_node_t* new_container, const handle_node_t* handle ) {
   handle_node_t* new_handle = malloc( sizeof( *new_handle ) );
   if ( ! new_handle ) {
     return -ENOMEM;

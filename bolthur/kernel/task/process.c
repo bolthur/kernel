@@ -165,7 +165,7 @@ static int32_t cleanup_process_lookup_id(
   const list_item_t* a,
   const void* data
 ) {
-  task_process_t* process = a->data;
+  const task_process_t* process = a->data;
   return process->id == ( pid_t )data ? 0 : 1;
 }
 
@@ -598,13 +598,13 @@ void task_process_cleanup(
   // loop
   while ( current ) {
     // get process from item
-    task_process_t* proc = ( task_process_t* )current->data;
+    auto task_process_t* proc = ( task_process_t* )current->data;
     // check for running thread
     avl_node_t* current_thread = avl_iterate_first( proc->thread_manager );
     bool skip = false;
     while ( current_thread ) {
       // get thread
-      task_thread_t* thread = TASK_THREAD_GET_BLOCK( current_thread );
+      auto const task_thread_t* thread = TASK_THREAD_GET_BLOCK( current_thread );
       // check for active
       if ( thread->state != TASK_THREAD_STATE_KILL ) {
         skip = true;
@@ -993,7 +993,7 @@ void task_unblock_threads(
   // loop until there is no more thread
   while ( current_thread_node ) {
     // get thread
-    task_thread_t* possible_thread_to_unblock = TASK_THREAD_GET_BLOCK(
+    auto task_thread_t* possible_thread_to_unblock = TASK_THREAD_GET_BLOCK(
       current_thread_node );
     // try to unblock if blocked
     task_thread_unblock(

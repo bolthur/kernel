@@ -47,7 +47,7 @@
  */
 void syscall_memory_acquire( void* context ) {
   // get parameter
-  void* addr = ( void* )syscall_get_parameter( context, 0 );
+  auto void* addr = ( void* )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   int protection = ( int )syscall_get_parameter( context, 2 );
   int flag = ( int )syscall_get_parameter( context, 3 );
@@ -284,8 +284,8 @@ void syscall_memory_release( void* context ) {
   // get at least full page size
   len = ROUND_UP_TO_FULL_PAGE( len );
   // check range
-  uintptr_t min = virt_get_context_min_address( virtual_context );
-  uintptr_t max = virt_get_context_max_address( virtual_context );
+  const uintptr_t min = virt_get_context_min_address( virtual_context );
+  const uintptr_t max = virt_get_context_max_address( virtual_context );
   // handle invalid address
   if (
     ! (
@@ -405,7 +405,7 @@ void syscall_memory_shared_attach( void* context ) {
       start
     )
   #endif
-  uintptr_t addr = shared_memory_attach(
+  const uintptr_t addr = shared_memory_attach(
     task_thread_current_thread->process,
     task_thread_current_thread,
     id,
@@ -475,7 +475,7 @@ void syscall_memory_translate_physical( void* context ) {
   // get parameters
   uintptr_t address = ( uintptr_t )syscall_get_parameter( context, 0 );
   // calculate possible offset and remove it for translation
-  size_t offset = address - ROUND_DOWN_TO_FULL_PAGE( address );
+  const size_t offset = address - ROUND_DOWN_TO_FULL_PAGE( address );
   address -= offset;
   // debug output
   #if defined( PRINT_SYSCALL )
@@ -528,8 +528,8 @@ void syscall_memory_translate_bus( void* context ) {
     ->process
     ->virtual_context;
   // get min and max address of context
-  uintptr_t min = virt_get_context_min_address( virtual_context );
-  uintptr_t max = virt_get_context_max_address( virtual_context );
+  const uintptr_t min = virt_get_context_min_address( virtual_context );
+  const uintptr_t max = virt_get_context_max_address( virtual_context );
   // ensure that address is in context
   if (
     min > address

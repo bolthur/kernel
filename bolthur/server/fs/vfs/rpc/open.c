@@ -34,16 +34,16 @@
  *
  * @param type
  * @param origin
- * @param stat_response
+ * @param open_response
  * @param request
  * @param response
  * @param async_data
  */
 [[maybe_unused]] static void create_handle(
-  size_t type,
-  pid_t origin,
-  vfs_open_response_t* open_response,
-  vfs_open_request_t* request,
+  const size_t type,
+  const pid_t origin,
+  const vfs_open_response_t* open_response,
+  const vfs_open_request_t* request,
   vfs_open_response_t* response,
   bolthur_async_data_t* async_data
 ) {

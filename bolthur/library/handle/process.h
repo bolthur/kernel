@@ -27,8 +27,19 @@
 #include <sys/tree.h>
 #include "handle.h"
 
+SPLAY_HEAD( process_tree, process_node );
+void process_node_tree_init( struct process_tree* t );
+int process_node_tree_empty( struct process_tree* t );
+struct process_node* process_node_tree_insert( struct process_tree* t, struct process_node* e );
+struct process_node* process_node_tree_remove( struct process_tree* t, struct process_node* e );
+struct process_node* process_node_tree_find( struct process_tree* t, struct process_node* e );
+struct process_node* process_node_tree_min( struct process_tree* t );
+struct process_node* process_node_tree_max( struct process_tree* t );
+struct process_node* process_node_tree_next( struct process_tree* t, struct process_node* e );
+void process_node_tree_apply( struct process_tree* t, void( *cb )( struct process_node* ) );
+void process_node_tree_destroy( struct process_tree* t, void( *free_cb )( struct process_node* ) );
+
 #define PROCESS_TREE_DEFINE( name, type, field, cmp, attr ) \
-  SPLAY_HEAD( name, type ); \
   SPLAY_PROTOTYPE( name, type, field, cmp ) \
   SPLAY_GENERATE( name, type, field, cmp ) \
   attr void type##_tree_init( struct name* t ) { \
@@ -92,8 +103,11 @@ typedef struct process_node {
   SPLAY_ENTRY( process_node ) node;
 } process_node_t;
 
+extern struct process_tree process_management_tree;
+
 bool process_setup( void );
 process_node_t* process_generate( pid_t );
 void process_remove( process_node_t* );
-int process_duplicate( process_node_t*, handle_node_t* );
+int process_duplicate( process_node_t*, const handle_node_t* );
+
 #endif

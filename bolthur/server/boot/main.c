@@ -44,10 +44,6 @@ size_t ramdisk_read_offset = 0;
 pid_t own_pid = 0;
 TAR *disk = NULL;
 int fd_dev_manager = 0;
-// variables
-uintptr_t device_tree;
-char* bootargs;
-int bootargs_length;
 
 /**
  * @brief Simulate open, by decompressing ramdisk tar image
@@ -180,7 +176,7 @@ int main( int argc, char* argv[] ) {
   // transform arguments to hex
   ramdisk_compressed = strtoul( argv[ 1 ], NULL, 16 );
   ramdisk_compressed_size = strtoul( argv[ 2 ], NULL, 16 );
-  device_tree = strtoul( argv[ 3 ], NULL, 16 );
+  uintptr_t device_tree = strtoul( argv[ 3 ], NULL, 16 );
   // address size constant
   constexpr int address_size = ( int )( sizeof( uintptr_t ) * 2 );
 
@@ -192,21 +188,36 @@ int main( int argc, char* argv[] ) {
   }
 
   // extract boot arguments
-  bootargs = ( char* )fdt_getprop(
+  int bootargs_length;
+  char* bootargs = ( char* )fdt_getprop(
     ( void* )device_tree,
     fdt_path_offset( ( void* )device_tree, "/chosen" ),
     "bootargs",
     &bootargs_length
   );
   EARLY_STARTUP_PRINT( "bootargs: %.*s\r\n", bootargs_length, bootargs )
+  // allocate space for bootargs
   char* nbootargs = malloc( ( size_t )( bootargs_length + 1 ) );
   if ( ! nbootargs ) {
     EARLY_STARTUP_PRINT( "ERROR: Unable to allocate space for null terminated bootargs!\r\n" )
     free( msg );
     return -1;
   }
+  // clear space
   memset( nbootargs, 0, ( size_t )( bootargs_length + 1 ) );
+  // copy over bootargs
   strncpy( nbootargs, bootargs, ( size_t )bootargs_length );
+  // get device tree total size
+  size_t device_tree_size = fdt32_to_cpu(
+    ( ( struct fdt_header* )device_tree )->totalsize
+  );
+  // unmap device tree
+  if ( 0 != munmap( ( void* )device_tree, device_tree_size ) ) {
+    EARLY_STARTUP_PRINT( "Unable to unmap device tree!\r\n" )
+    free( msg );
+    free( nbootargs );
+    return -1;
+  }
 
   // debug print
   EARLY_STARTUP_PRINT(
