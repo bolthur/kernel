@@ -124,7 +124,7 @@ bool configuration_handle( const char* path, const char* bootarg ) {
   // open file
   FILE* ini_file = fopen( path, "rb" );
   if ( ! ini_file ) {
-    EARLY_STARTUP_PRINT( "Unable to open test ini file\r\n" )
+    EARLY_STARTUP_PRINT( "Unable to open %s\r\n", path )
     return false;
   }
 
@@ -246,5 +246,11 @@ bool configuration_handle( const char* path, const char* bootarg ) {
     // set pointer to null
     n = NULL;
   }
-  return 0;
+  // close file again;
+  if ( 0 != fclose( ini_file ) ) {
+    EARLY_STARTUP_PRINT( "Unable to close ini file again: %s\r\n", strerror( errno ) )
+    return false;
+  }
+  // return success
+  return true;
 }

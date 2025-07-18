@@ -102,6 +102,8 @@ typedef struct process_node {
   struct handle_tree management_tree;
   /** @brief fork table hash set */
   ht_t* fork_table;
+  /** @brief fork failed flag */
+  bool fork_failed;
   /** @brief tree data */
   SPLAY_ENTRY( process_node ) node;
 } process_node_t;
@@ -111,6 +113,6 @@ extern struct process_tree process_management_tree;
 bool process_setup( void );
 process_node_t* process_generate( pid_t );
 void process_remove( process_node_t* );
-int process_duplicate( process_node_t*, const handle_node_t* );
+handle_node_t* process_duplicate( process_node_t*, const handle_node_t* );
 
 #endif

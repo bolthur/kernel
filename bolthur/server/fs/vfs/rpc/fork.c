@@ -30,6 +30,129 @@
 #include "../../../../library/handle/handle.h"
 
 /**
+ * @fn void rpc_handle_fork_table(size_t, pid_t, size_t, size_t)
+ * @brief Handle ongoing fork
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+static void rpc_handle_fork_table(
+  [[maybe_unused]] size_t type,
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  // response object
+  vfs_fork_response_t response = { .status = -EINVAL };
+  // get matching async data
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async( RPC_VFS_FORK, response_info );
+  // handle no async data
+  if ( ! async_data ) {
+    // skip rest
+    return;
+  }
+  // handle no data
+  if ( ! data_info ) {
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
+    // skip rest
+    return;
+  }
+  // get message and data size
+  size_t data_size;
+  vfs_fork_response_t* fork_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  if ( ! fork_response ) {
+    // set response status
+    response.status = -errno;
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
+    // skip rest
+    return;
+  }
+  // get request
+  const vfs_fork_request_t* original_request = async_data->original_data;
+  // get handles of parent and origin process
+  process_node_t* process_container = process_generate( async_data->original_origin );
+  process_node_t* parent_process_container = process_generate( original_request->parent );
+  // cache handle of responding process
+  const pid_t responding_process = origin;
+  // handle not successful
+  if ( 0 > fork_response->status ) {
+    // set failed flag
+    process_container->fork_failed = true;
+    // set response status
+    response.status = fork_response->status;
+    EARLY_STARTUP_PRINT( "FORK FAILED %s\r\n", strerror( -fork_response->status ) )
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
+    // free response
+    free( fork_response );
+    // skip rest
+    return;
+  }
+  // handle failed flag
+  if ( process_container->fork_failed ) {
+    // free fork response
+    free( fork_response );
+    // skip rest
+    return;
+  }
+  // loop through all handles
+  handle_node_tree_each( &parent_process_container->management_tree, handle_node, n, {
+    // check for handler match
+    if ( n->handler != responding_process ) {
+      continue;
+    }
+    EARLY_STARTUP_PRINT( "DUPLICATING %s\r\n", n->path )
+    // duplicate process
+    handle_node_t* new_handle = process_duplicate( process_container, n );
+    // handle error
+    if ( ! new_handle ) {
+      // FIXME: DESTROY CONTAINER
+      // set failed flag
+      process_container->fork_failed = true;
+      // set status
+      response.status = -errno;
+      // return from rpc
+      bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
+      // free response
+      free( fork_response );
+      // skip rest
+      return;
+    }
+  } );
+  // transform responding process into string
+  char* pid;
+  const int res = asprintf(&pid, "%jd", ( intmax_t )responding_process );
+  // handle error
+  if ( -1 == res ) {
+    // FIXME: DESTROY CONTAINER
+    // set failed flag
+    process_container->fork_failed = true;
+    // set status
+    response.status = -ENOMEM;
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
+    // free response
+    free( fork_response );
+    // skip rest
+    return;
+  }
+  // unset pid from fork table
+  ht_unset( process_container->fork_table, pid );
+  // free pid again
+  free( pid );
+  // check for hash table is empty => fork is finished
+  if ( ! ht_length( process_container->fork_table ) ) {
+    // set status to success
+    response.status = 0;
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
+  }
+}
+
+/**
  * @fn void rpc_handle_fork_fork(size_t, pid_t, size_t, size_t)
  * @brief Handle remaining fork in vfs
  *
@@ -37,8 +160,6 @@
  * @param origin
  * @param data_info
  * @param response_info
- *
- * @todo pass fork of handles through to handling processes
  */
 static void rpc_handle_fork_fork(
   [[maybe_unused]] size_t type,
@@ -55,7 +176,7 @@ static void rpc_handle_fork_fork(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
     return;
   }
@@ -75,29 +196,97 @@ static void rpc_handle_fork_fork(
     return;
   }
   // get request
-  const vfs_fork_request_t* original_request = async_data->original_data;
+  vfs_fork_request_t* original_request = async_data->original_data;
   // get handles of parent
   process_node_t* process_container = process_generate( async_data->original_origin );
   process_node_t* parent_process_container = process_generate( original_request->parent );
   if ( parent_process_container ) {
     process_container->handle = parent_process_container->handle;
-    // loop through all handles
+    // initialize hash table for fork handlers
+    process_container->fork_table = ht_create();
+    if ( ! process_container->fork_table ) {
+      response.status = -ENOMEM;
+      bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
+      free( fork_response );
+      return;
+    }
+    // build hash table
     handle_node_tree_each( &parent_process_container->management_tree, handle_node, n, {
-      /// FIXME: PREPARE HASHMAP WITH HANDLERS
-      /// FIXME: CALL ASYNC FORK FOR EACH HANDLER
-      const int e = process_duplicate( process_container, n );
-      if ( e != 0 ) {
-        // FIXME: DESTROY CONTAINER
-        response.status = e;
+      // transform pid to string
+      char* pid;
+      const int res = asprintf(&pid, "%jd", ( intmax_t )n->handler );
+      // handle error
+      if ( -1 == res ) {
+        EARLY_STARTUP_PRINT( "FAILED!\r\n" )
+        response.status = -ENOMEM;
         bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
+        free( fork_response );
         return;
       }
+      // set pid
+      ht_set( process_container->fork_table, pid, ( void* )n->handler );
+      EARLY_STARTUP_PRINT( "pid = %s, path = %s\r\n", pid, n->path )
+      // free pid again
+      free( pid );
     } );
+    // set raised flag
+    bool raised = false;
+    // get hash table iterator
+    hti_t it = ht_iterator( process_container->fork_table );
+    // loop through hash table and fire up forks
+    while ( ht_next( &it ) ) {
+      EARLY_STARTUP_PRINT( "it.value = %d\r\n", ( pid_t )it.value );
+      // call rpc
+      bolthur_rpc_raise(
+        RPC_VFS_FORK,
+        ( pid_t )it.value,
+        original_request,
+        sizeof( *original_request ),
+        rpc_handle_fork_table,
+        async_data->type,
+        async_data->original_data,
+        async_data->length,
+        async_data->original_origin,
+        async_data->original_rpc_id,
+        NULL
+      );
+      // handle error
+      if ( errno ) {
+        // set result
+        response.status = -errno;
+        // destroy table
+        ht_destroy( process_container->fork_table );
+        // free request and str
+        free( fork_response );
+        // return error
+        bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
+        // return execution
+        return;
+      }
+      // set flag
+      raised = true;
+    }
+    // handle raised with early exit
+    if ( ! raised ) {
+      // loop through all handles
+      handle_node_tree_each( &parent_process_container->management_tree, handle_node, n, {
+        handle_node_t* new_handle = process_duplicate( process_container, n );
+        if ( ! new_handle ) {
+          // FIXME: DESTROY CONTAINER
+          // set errno response
+          response.status = -errno;
+          // return from rpc
+          bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
+          // skip rest
+          return;
+        }
+      } );
+      // set result to success
+      response.status = 0;
+      // return
+      bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
+    }
   }
-  // fill response structure
-  response.status = 0;
-  // return response and free
-  bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
 }
 
 /**
@@ -199,13 +388,16 @@ void rpc_handle_fork(
     return;
   }
   // check origin parent against parent from request ( must match )
-  pid_t origin_parent = _syscall_process_parent_by_id( origin );
+  const pid_t origin_parent = _syscall_process_parent_by_id( origin );
   if ( origin_parent != request->parent ) {
     response.status = -EINVAL;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
+  // overwrite parent and process
+  request->parent = origin_parent;
+  request->process = origin;
   // get mount point
   mountpoint_node_t* mount_point = mountpoint_node_extract( AUTHENTICATION_DEVICE );
   // handle no mount point node found

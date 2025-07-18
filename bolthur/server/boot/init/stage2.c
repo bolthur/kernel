@@ -36,7 +36,10 @@
  */
 [[noreturn]] void init_stage2( const char* bootarg ) {
   // start servers by configuration
-  configuration_handle( "/ramdisk/config/stage2.ini", bootarg );
+  if ( ! configuration_handle( "/ramdisk/config/stage2.ini", bootarg ) ) {
+    EARLY_STARTUP_PRINT( "Something went wrong with stage2 startup!\r\n" )
+    exit( 1 );
+  }
 
   // determine root device and partition type from config
   STARTUP_PRINT( "Extracting root device and partition type...\r\n" )
@@ -179,11 +182,16 @@
   STARTUP_PRINT( "str: %s\r\n", str )
   STARTUP_PRINT( "continue with stage3!!!\r\n")
 
-  EARLY_STARTUP_PRINT( "umount /boot again for testing...\r\n" )
-  int umount_result = umount( "/boot" );
-  if ( 0 != umount_result ) {
-    EARLY_STARTUP_PRINT( "umount failed: %s\r\n", strerror( errno ) )
+  // open dummy
+  FILE* fp = fopen( "/boot/cmdline.txt", "r" );
+  if ( ! fp ) {
+    STARTUP_PRINT( "unable to open: %s\r\n", strerror( errno ) )
+    exit( 1 );
   }
+  // fork process
+  pid_t boot_forked = fork();
+  EARLY_STARTUP_PRINT( "error = %s\r\n", strerror( errno ) )
+  EARLY_STARTUP_PRINT( "boot_forked = %d\r\n", boot_forked )
 
   for (;;) {
     __asm__ __volatile__ ( "nop" );

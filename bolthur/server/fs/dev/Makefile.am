@@ -18,6 +18,7 @@ dev_SOURCES = \
   rpc/add.c \
   rpc/boot.c \
   rpc/close.c \
+  rpc/fork.c \
   rpc/init.c \
   rpc/ioctl.c \
   rpc/mount.c \

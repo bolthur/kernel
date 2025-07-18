@@ -107,13 +107,15 @@ typedef struct handle_node {
   struct stat info;
   /** @brief additional data */
   void* data;
+  /** @brief data size */
+  size_t data_size;
   /** @brief tree data */
   SPLAY_ENTRY( handle_node ) node;
 } handle_node_t;
 
 int handle_get( handle_node_t**, pid_t, int );
 int handle_generate( handle_node_t**, pid_t, pid_t, void*, const char*, int, int );
-int handle_set( handle_node_t**, int, pid_t, pid_t, void*, const char*, int, int );
+int handle_set( handle_node_t**, int, pid_t, pid_t, void*, size_t, const char*, int, int );
 int handle_destroy( pid_t, int );
 void handle_destroy_all( pid_t );
 handle_node_t* handle_get_next( pid_t );

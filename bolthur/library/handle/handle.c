@@ -104,7 +104,7 @@ int handle_get( handle_node_t** container, const pid_t process, const int handle
 }
 
 /**
- * @fn int handle_set(handle_node_t**, int, pid_t, pid_t, void*, const char*, int, int)
+ * @fn int handle_set(handle_node_t**, int, pid_t, pid_t, void*, size_t, const char*, int, int)
  * @brief Handle set
  *
  * @param handle
@@ -112,6 +112,7 @@ int handle_get( handle_node_t** container, const pid_t process, const int handle
  * @param process
  * @param handler
  * @param data
+ * @param data_size
  * @param path
  * @param flags
  * @param mode
@@ -123,6 +124,7 @@ int handle_set(
   const pid_t process,
   const pid_t handler,
   void* data,
+  size_t data_size,
   const char* path,
   const int flags,
   const int mode
@@ -149,6 +151,7 @@ int handle_set(
   ( *handle )->flags = flags;
   ( *handle )->mode = mode;
   ( *handle )->data = data;
+  ( *handle )->data_size = data_size;
   ( *handle )->handler = handler;
   // insert
   if ( handle_node_tree_insert( &process_container->management_tree, *handle ) ) {

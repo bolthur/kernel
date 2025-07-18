@@ -10,6 +10,7 @@ console_LDADD = \
 console_SOURCES = \
   rpc/custom/add.c \
   rpc/custom/select.c \
+  rpc/fork.c \
   rpc/init.c \
   rpc/write.c \
   console.c \

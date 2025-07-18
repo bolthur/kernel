@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include "../rpc.h"
+#include "../../../../library/handle/process.h"
 
 /**
  * @fn void rpc_handle_fork(size_t, pid_t, size_t, size_t)
@@ -39,19 +40,41 @@ void rpc_handle_fork(
   vfs_fork_response_t response = { .status = -EINVAL };
   // handle no data
   if( ! data_info ) {
+    // return from rpc
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    // return
     return;
   }
   // get message and data size
   size_t data_size;
   vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
+    // set status
     response.status = -errno;
+    // return from rpc
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    // return
     return;
   }
+  // get handles of parent
+  process_node_t* process_container = process_generate( request->process );
+  process_node_t* parent_process_container = process_generate( request->parent );
+  // iterate through all handles
+  handle_node_tree_each( &parent_process_container->management_tree, handle_node, n, {
+    handle_node_t* new_handle = process_duplicate( process_container, n );
+    if ( ! new_handle ) {
+      /// FIXME: DESTROY CONTAINER
+      // set status
+      response.status = -errno;
+      // return from rpc
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      // return
+      return;
+    }
+  } );
   // return success
   response.status = 0;
+  // return from rpc
   bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   // free request
   free( request );

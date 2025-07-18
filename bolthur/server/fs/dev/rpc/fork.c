@@ -17,29 +17,26 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <libgen.h>
-#include <sys/bolthur.h>
 #include <errno.h>
-
 #include "../rpc.h"
 
 /**
- * @fn void rpc_handle_close(size_t, pid_t, size_t, size_t)
- * @brief handle close request
+ * @fn void rpc_handle_fork(size_t, pid_t, size_t, size_t)
+ * @brief handle fork request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_close(
+void rpc_handle_fork(
   size_t type,
-  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]]  pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
-  ) {
+) {
   // dummy error response
-  vfs_close_response_t response = { .status = -EINVAL };
+  vfs_fork_response_t response = { .status = -EINVAL };
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );

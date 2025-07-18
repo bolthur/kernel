@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include "../rpc.h"
+#include "../../../../library/handle/process.h"
 
 /**
  * @fn void rpc_handle_fork(size_t, pid_t, size_t, size_t)
@@ -50,6 +51,22 @@ void rpc_handle_fork(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
+  // get handles of parent
+  process_node_t* process_container = process_generate( request->process );
+  process_node_t* parent_process_container = process_generate( request->parent );
+  // iterate through all handles
+  handle_node_tree_each( &parent_process_container->management_tree, handle_node, n, {
+    handle_node_t* new_handle = process_duplicate( process_container, n );
+    if ( ! new_handle ) {
+      /// FIXME: DESTROY CONTAINER
+      // set status
+      response.status = -errno;
+      // return from rpc
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      // return
+      return;
+    }
+  } );
   // return success
   response.status = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );

@@ -110,25 +110,41 @@ void process_remove( process_node_t* node ) {
 }
 
 /**
- * @fn int process_duplicate(process_node_t*, const handle_node_t*)
+ * @fn handle_node_t* process_duplicate(process_node_t*, const handle_node_t*)
  * @brief Method to duplicate a given handle
  *
- * @param new_container
- * @param handle
- * @return
+ * @param new_container container to add duplicate to
+ * @param handle handle to duplicate
+ * @return newly generated handle
  */
-int process_duplicate( process_node_t* new_container, const handle_node_t* handle ) {
+handle_node_t* process_duplicate( process_node_t* new_container, const handle_node_t* handle ) {
   handle_node_t* new_handle = malloc( sizeof( *new_handle ) );
   if ( ! new_handle ) {
-    return -ENOMEM;
+    errno = ENOMEM;
+    return NULL;
   }
   // copy over contents
   memcpy( new_handle, handle, sizeof( *new_handle ) );
+  // duplicate data
+  if ( new_handle->data && new_handle->data_size ) {
+    // allocate space for data
+    new_handle->data = malloc( new_handle->data_size );
+    // handle error
+    if ( ! new_handle->data ) {
+      free( new_handle );
+      errno = ENOMEM;
+      return NULL;
+    }
+    // copy over content
+    memcpy( new_handle->data, handle->data, new_handle->data_size );
+  }
   // try to add to new container tree
   if ( handle_node_tree_insert( &new_container->management_tree, new_handle ) ) {
+    free( new_handle->data );
     free( new_handle );
-    return -EEXIST;
+    errno = EEXIST;
+    return NULL;
   }
   // return success
-  return 0;
+  return new_handle;
 }

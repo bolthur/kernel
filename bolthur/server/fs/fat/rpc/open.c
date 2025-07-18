@@ -169,6 +169,7 @@ void rpc_handle_open(
       request->origin,
       getpid(),
       container,
+      sizeof( *container ),
       request->path,
       request->flags,
       request->mode
@@ -240,6 +241,7 @@ void rpc_handle_open(
       request->origin,
       getpid(),
       container,
+      sizeof( *container ),
       request->path,
       request->flags,
       request->mode

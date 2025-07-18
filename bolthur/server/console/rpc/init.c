@@ -28,9 +28,14 @@
  * @return
  */
 bool rpc_init( void ) {
+  bolthur_rpc_bind( RPC_VFS_FORK, rpc_handle_fork, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler fork!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
   if ( errno ) {
-    EARLY_STARTUP_PRINT( "Unable to register handler add!\r\n" )
+    EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )
     return false;
   }
   bolthur_rpc_bind( CONSOLE_ADD, rpc_custom_handle_console_add, true );
