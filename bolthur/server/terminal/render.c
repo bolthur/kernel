@@ -275,7 +275,7 @@ ssize_t render_terminal( terminal_t* term, const char* s ) {
   action->x = 0;
   action->y = 0;
   // call render surface
-  int result = ioctl(
+  const int result = ioctl(
     output_driver_fd,
     IOCTL_BUILD_REQUEST(
       FRAMEBUFFER_SURFACE_RENDER,
@@ -289,20 +289,6 @@ ssize_t render_terminal( terminal_t* term, const char* s ) {
     free( action );
     return -EIO;
   }
-  // call render surface
-  result = ioctl(
-    output_driver_fd,
-    IOCTL_BUILD_REQUEST(
-      FRAMEBUFFER_FLIP,
-      0,
-      IOCTL_NONE
-    ),
-    NULL
-  );
-  // handle error
-  if ( -1 == result ) {
-    free( action );
-    return -EIO;
-  }
+  // return rendered character
   return ( ssize_t )character_rendered;
 }

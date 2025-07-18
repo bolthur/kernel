@@ -62,12 +62,11 @@ int main( int argc, char* argv[] ) {
   uint32_t device_info[] = {
     FRAMEBUFFER_GET_RESOLUTION,
     FRAMEBUFFER_CLEAR,
-    FRAMEBUFFER_FLIP,
     FRAMEBUFFER_SURFACE_RENDER,
     FRAMEBUFFER_SURFACE_ALLOCATE,
   };
   // add device file
-  if ( !dev_add_file( "/dev/framebuffer", device_info, 5 ) ) {
+  if ( !dev_add_file( "/dev/framebuffer", device_info, 4 ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

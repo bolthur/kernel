@@ -56,9 +56,6 @@ framebuffer_rpc_t command_list[] = {
     .command = FRAMEBUFFER_CLEAR,
     .callback = framebuffer_handle_clear
   }, {
-    .command = FRAMEBUFFER_FLIP,
-    .callback = framebuffer_handle_flip
-  }, {
     .command = FRAMEBUFFER_SURFACE_RENDER,
     .callback = framebuffer_handle_surface_render
   }, {
@@ -501,41 +498,6 @@ void framebuffer_handle_clear(
 }
 
 /**
- * @fn void framebuffer_handle_flip(size_t, pid_t, size_t, size_t)
- * @brief Handle flip request
- *
- * @param type
- * @param origin
- * @param data_info
- * @param response_info
- */
-void framebuffer_handle_flip(
-  [[maybe_unused]] size_t type,
-  pid_t origin,
-  size_t data_info,
-  [[maybe_unused]] size_t response_info
-) {
-  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
-  // validate origin
-  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
-    return;
-  }
-  size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  if ( ! request ) {
-    error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
-    return;
-  }
-  framebuffer_flip();
-  // return success
-  error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
-  free( request );
-}
-
-/**
  * @fn void framebuffer_handle_surface_render(size_t, pid_t, size_t, size_t)
  * @brief RPC callback for rendering a surface
  *
@@ -582,6 +544,8 @@ void framebuffer_handle_surface_render(
   // get memory item
   const framebuffer_memory_t* mem = item->data;
   memcpy( current_back, mem->address, size );
+  // flip it
+  framebuffer_flip();
   // return success
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );

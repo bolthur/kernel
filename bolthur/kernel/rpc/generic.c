@@ -67,7 +67,7 @@ static int32_t lookup_callback(
   const avl_node_t* a,
   const void* b
 ) {
-  rpc_origin_source_t* block = RPC_GET_ORIGIN_SOURCE( a );
+  const rpc_origin_source_t* block = RPC_GET_ORIGIN_SOURCE( a );
   // -1 if address of a->data is greater than address of b->data
   if ( block->rpc_id > ( size_t )b) {
     return -1;
@@ -86,7 +86,7 @@ static int32_t lookup_callback(
  * @param a
  */
 static void cleanup_callback( avl_node_t* a ) {
-  rpc_origin_source_t* block = RPC_GET_ORIGIN_SOURCE( a );
+  auto rpc_origin_source_t* block = RPC_GET_ORIGIN_SOURCE( a );
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "removing block %p!\r\n", block )
@@ -121,8 +121,6 @@ rpc_origin_source_t* rpc_generic_source_info( size_t id ) {
  * @brief Helper to remove source info from tree
  *
  * @param info
- *
- * @todo function doesn't end in cleanup
  */
 void rpc_generic_destroy_source_info( rpc_origin_source_t* info ) {
   if ( ! info || ! info->rpc_id ) {
@@ -130,6 +128,7 @@ void rpc_generic_destroy_source_info( rpc_origin_source_t* info ) {
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "Invalid info or rpc id!\r\n" )
     #endif
+    // early exit
     return;
   }
   // debug output
@@ -137,10 +136,10 @@ void rpc_generic_destroy_source_info( rpc_origin_source_t* info ) {
     DEBUG_OUTPUT( "Trying to remove source info %d!\r\n", info->rpc_id )
     avl_print( origin_tree );
   #endif
-    // remove from tree
-  avl_remove_by_data( origin_tree, ( void* )( info->rpc_id ) );
-  //avl_remove_by_node( origin_tree, &info->node );
+  // remove from tree
+  avl_remove_by_node( origin_tree, &info->node );
   #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "DUMPING ORIGIN TREE AFTER REMOVAL!\r\n" )
     avl_print( origin_tree );
   #endif
   // free info

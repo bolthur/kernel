@@ -88,23 +88,30 @@ void syscall_rpc_raise( void* context ) {
   #endif
   // create queue if not existing
   if ( ! rpc_generic_setup( task_thread_current_thread->process ) ) {
+    // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Error while preparing process!\r\n" )
     #endif
+    // error return
     syscall_populate_error( context, ( size_t )-EAGAIN );
+    // early exit
     return;
   }
   // handle invalid type
   if ( type <= UINT8_MAX  ) {
+    // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Interrupts are not allowed to be raised!\r\n" )
     #endif
+    // populate error
     syscall_populate_error( context, ( size_t )-EINVAL );
+    // early exit
     return;
   }
   // validate target
   task_process_t* target = task_process_get_by_id( process );
   if ( ! target ) {
+    // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT(
         "Target not existing / not found: %p - %d!\r\n",
@@ -112,15 +119,20 @@ void syscall_rpc_raise( void* context ) {
         process
       )
     #endif
+    // populate error
     syscall_populate_error( context, ( size_t )-ESRCH );
+    // early exit
     return;
   }
   // check if prepared
   if ( ! rpc_generic_ready( target ) ) {
+    // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Target not ready!\r\n" )
     #endif
+    // populate error
     syscall_populate_error( context, ( size_t )-EAGAIN );
+    // early exit
     return;
   }
   // validate addresses
@@ -131,6 +143,7 @@ void syscall_rpc_raise( void* context ) {
     #endif
     // set return and exit
     syscall_populate_error( context, ( size_t )-EINVAL );
+    // early exit
     return;
   }
   // create data duplicate
@@ -146,7 +159,9 @@ void syscall_rpc_raise( void* context ) {
           sizeof( char ) * length
         )
       #endif
+      // populate error
       syscall_populate_error( context, ( size_t )-ENOMEM );
+      // early exit
       return;
     }
     // copy from unsafe source
@@ -155,8 +170,11 @@ void syscall_rpc_raise( void* context ) {
       #if defined( PRINT_SYSCALL )
         DEBUG_OUTPUT( "memcpy unsafe failed!\r\n" )
       #endif
+      // free again duplicated data
       free( dup_data );
+      // populate error
       syscall_populate_error( context, ( size_t )-EIO );
+      // early exit
       return;
     }
   }
@@ -221,12 +239,14 @@ void syscall_rpc_raise( void* context ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "rpc->data_id = %zu\r\n", rpc->data_id )
     #endif
+    // populate data id
     syscall_populate_success( context, rpc->data_id );
   }
   // switch it
   if ( task_thread_current_thread != rpc->thread ) {
     // enqueue scheduler
     task_thread_try_switch_to = rpc->thread;
+    // enqueue process event
     event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
   }
 }
@@ -516,9 +536,11 @@ void syscall_rpc_ret( void* context ) {
   free( dup_data );
   // return success
   if ( target != task_thread_current_thread ) {
+    // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Set dummy success value!\r\n" )
     #endif
+    // dummy success
     syscall_populate_success( context, 0 );
     // enqueue scheduler
     event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );

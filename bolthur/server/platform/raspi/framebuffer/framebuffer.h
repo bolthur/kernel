@@ -48,7 +48,6 @@ void framebuffer_flip( void );
 
 void framebuffer_handle_resolution( size_t, pid_t, size_t, size_t );
 void framebuffer_handle_clear( size_t, pid_t, size_t, size_t );
-void framebuffer_handle_flip( size_t, pid_t, size_t, size_t );
 void framebuffer_handle_surface_render( size_t, pid_t, size_t, size_t );
 void framebuffer_handle_surface_allocate( size_t, pid_t, size_t, size_t );
 
