@@ -24,6 +24,8 @@
 #include "process.h"
 #include "handle.h"
 
+#include <stdio.h>
+
 /**
  * @fn int handle_cmp(struct handle_node*, struct handle_node*)
  * @brief Comparison function for tree
@@ -58,6 +60,13 @@ HANDLE_TREE_DEFINE(
  * @param node
  */
 static void destroy_handle( handle_node_t* node ) {
+  if ( ! node ) {
+    return;
+  }
+  if ( node->data ) {
+    free( node->data );
+    node->data = NULL;
+  }
   free( node );
 }
 
@@ -243,6 +252,29 @@ int handle_generate(
   }
   // return success
   return 0;
+}
+
+void handle_destroy_all_except_standard( const pid_t process ) {
+  // get container
+  process_node_t* process_container = process_generate( process );
+  if ( ! process_container ) {
+    return;
+  }
+  // iterate and destroy everything except stdin, stdout and stderr
+  handle_node_tree_each_safe( &process_container->management_tree, handle_node, n, {
+    // handle standard in, out, err
+    if (
+      n->handle == STDIN_FILENO
+      || n->handle == STDOUT_FILENO
+      || n->handle == STDERR_FILENO
+    ) {
+      continue;
+    }
+    // handle everything else
+    n = handle_node_tree_remove( &process_container->management_tree, n );
+    // destroy removed item
+    destroy_handle( n );
+  } );
 }
 
 /**

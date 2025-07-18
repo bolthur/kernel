@@ -35,5 +35,6 @@ void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );
 void rpc_handle_open( size_t, pid_t, size_t, size_t );
 void rpc_handle_fork( size_t, pid_t, size_t, size_t );
 void rpc_handle_exit( size_t, pid_t, size_t, size_t );
+void rpc_handle_exec( size_t, pid_t, size_t, size_t );
 
 #endif

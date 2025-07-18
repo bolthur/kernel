@@ -28,6 +28,16 @@
  * @return
  */
 bool rpc_init( void ) {
+  bolthur_rpc_bind( RPC_VFS_EXEC, rpc_handle_exec, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler exec!\r\n" )
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_EXIT, rpc_handle_exit, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler exit!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( RPC_VFS_FORK, rpc_handle_fork, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler fork!\r\n" )

@@ -118,6 +118,7 @@ int handle_generate( handle_node_t**, pid_t, pid_t, void*, const char*, int, int
 int handle_set( handle_node_t**, int, pid_t, pid_t, void*, size_t, const char*, int, int );
 int handle_destroy( pid_t, int );
 void handle_destroy_all( pid_t );
+void handle_destroy_all_except_standard( pid_t );
 handle_node_t* handle_get_next( pid_t );
 
 #endif

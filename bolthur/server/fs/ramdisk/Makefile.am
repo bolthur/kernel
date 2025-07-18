@@ -6,6 +6,7 @@ ramdisk_LDADD = -ltar
 ramdisk_SOURCES = \
   rpc/add.c \
   rpc/close.c \
+  rpc/exec.c \
   rpc/exit.c \
   rpc/fork.c \
   rpc/init.c \

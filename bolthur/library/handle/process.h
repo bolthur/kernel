@@ -104,6 +104,14 @@ typedef struct process_node {
   ht_t* fork_table;
   /** @brief fork failed flag */
   bool fork_failed;
+  /** @brief exit table hash set */
+  ht_t* exit_table;
+  /** @brief exit failed flag */
+  bool exit_failed;
+  /** @brief exec table hash set */
+  ht_t* exec_table;
+  /** @brief exit failed flag */
+  bool exec_failed;
   /** @brief tree data */
   SPLAY_ENTRY( process_node ) node;
 } process_node_t;

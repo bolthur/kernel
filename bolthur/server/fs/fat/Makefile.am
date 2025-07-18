@@ -10,6 +10,7 @@ fat_CFLAGS = \
   $(BFS_CFLAGS)
 fat_SOURCES = \
   rpc/close.c \
+  rpc/exec.c \
   rpc/fork.c \
   rpc/getdents.c \
   rpc/exit.c \

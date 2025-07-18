@@ -37,7 +37,7 @@ void rpc_handle_exit(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  vfs_close_response_t response = { .status = -EINVAL };
+  vfs_exit_response_t response = { .result = -EINVAL };
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
@@ -47,11 +47,12 @@ void rpc_handle_exit(
   size_t data_size;
   vfs_close_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
-    response.status = -errno;
+    response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // just return
+  response.result = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   // free request
   free( request );

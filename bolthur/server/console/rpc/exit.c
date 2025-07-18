@@ -18,6 +18,7 @@
  */
 
 #include <errno.h>
+#include <sys/bolthur.h>
 #include "../rpc.h"
 
 /**
@@ -28,8 +29,6 @@
  * @param origin
  * @param data_info
  * @param response_info
- *
- * @todo implement
  */
 void rpc_handle_exit(
   size_t type,
@@ -37,22 +36,22 @@ void rpc_handle_exit(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  // dummy error response
   vfs_exit_response_t response = { .result = -EINVAL };
   // handle no data
-  if ( ! data_info ) {
+  if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  // fetch data
+  // get message and data size
   size_t data_size;
   vfs_exit_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
-  // handle no data
   if ( ! request ) {
+    response.result = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  /// FIXME: CLEAR ALL HANDLES OF PROCESS THAT TRIGGERED EXIT
-  // return
+  // return success
   response.result = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   // free request

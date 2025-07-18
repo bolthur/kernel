@@ -26,6 +26,8 @@
 
 bool rpc_init( void );
 
+void rpc_handle_exec( size_t, pid_t,size_t, size_t );
+void rpc_handle_exit( size_t, pid_t,size_t, size_t );
 void rpc_handle_fork( size_t, pid_t, size_t, size_t );
 void rpc_handle_write( size_t, pid_t, size_t, size_t );
 void rpc_custom_handle_console_add( size_t, pid_t, size_t, size_t );

@@ -21,8 +21,8 @@
 #include "../rpc.h"
 
 /**
- * @fn void rpc_handle_exit(size_t, pid_t, size_t, size_t)
- * @brief handle exit request
+ * @fn void rpc_handle_exec(size_t, pid_t, size_t, size_t)
+ * @brief handle exec request
  *
  * @param type
  * @param origin
@@ -31,13 +31,13 @@
  *
  * @todo implement
  */
-void rpc_handle_exit(
+void rpc_handle_exec(
   size_t type,
   [[maybe_unused]]  pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  vfs_exit_response_t response = { .result = -EINVAL };
+  vfs_exec_response_t response = { .result = -EINVAL };
   // handle no data
   if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
@@ -45,13 +45,13 @@ void rpc_handle_exit(
   }
   // fetch data
   size_t data_size;
-  vfs_exit_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_exec_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   // handle no data
   if ( ! request ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  /// FIXME: CLEAR ALL HANDLES OF PROCESS THAT TRIGGERED EXIT
+  /// FIXME: CLEAR ALL HANDLES OF PROCESS THAT TRIGGERED EXEC
   // return
   response.result = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );

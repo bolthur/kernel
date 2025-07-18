@@ -42,6 +42,11 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
     return false;
   }
+  bolthur_rpc_bind( RPC_VFS_EXEC, rpc_handle_exec, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register handler exec!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( RPC_VFS_EXIT, rpc_handle_exit, true );
   if ( errno ) {
     STARTUP_PRINT( "Unable to register handler exit!\r\n" )

@@ -28,6 +28,8 @@
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo implement
  */
 void rpc_handle_exit(
   size_t type,

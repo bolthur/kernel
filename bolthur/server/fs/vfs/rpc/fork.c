@@ -83,7 +83,6 @@ static void rpc_handle_fork_table(
     process_container->fork_failed = true;
     // set response status
     response.status = fork_response->status;
-    EARLY_STARTUP_PRINT( "FORK FAILED %s\r\n", strerror( -fork_response->status ) )
     // return from rpc
     bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
     // free response
@@ -104,7 +103,6 @@ static void rpc_handle_fork_table(
     if ( n->handler != responding_process ) {
       continue;
     }
-    EARLY_STARTUP_PRINT( "DUPLICATING %s\r\n", n->path )
     // duplicate process
     handle_node_t* new_handle = process_duplicate( process_container, n );
     // handle error
@@ -217,7 +215,6 @@ static void rpc_handle_fork_fork(
       const int res = asprintf(&pid, "%jd", ( intmax_t )n->handler );
       // handle error
       if ( -1 == res ) {
-        EARLY_STARTUP_PRINT( "FAILED!\r\n" )
         response.status = -ENOMEM;
         bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
         free( fork_response );
@@ -225,7 +222,6 @@ static void rpc_handle_fork_fork(
       }
       // set pid
       ht_set( process_container->fork_table, pid, ( void* )n->handler );
-      EARLY_STARTUP_PRINT( "pid = %s, path = %s\r\n", pid, n->path )
       // free pid again
       free( pid );
     } );
@@ -235,7 +231,6 @@ static void rpc_handle_fork_fork(
     hti_t it = ht_iterator( process_container->fork_table );
     // loop through hash table and fire up forks
     while ( ht_next( &it ) ) {
-      EARLY_STARTUP_PRINT( "it.value = %d\r\n", ( pid_t )it.value );
       // call rpc
       bolthur_rpc_raise(
         RPC_VFS_FORK,
@@ -256,6 +251,7 @@ static void rpc_handle_fork_fork(
         response.status = -errno;
         // destroy table
         ht_destroy( process_container->fork_table );
+        process_container->fork_failed = true;
         // free request and str
         free( fork_response );
         // return error
@@ -384,6 +380,13 @@ void rpc_handle_fork(
   vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
     response.status = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    return;
+  }
+  // check if fork request already happened
+  const process_node_t* process_container = process_generate( origin );
+  if ( process_container && process_container->fork_table ) {
+    response.status = -ECANCELED;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
