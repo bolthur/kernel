@@ -19,6 +19,7 @@
 
 #include <errno.h>
 #include "../rpc.h"
+#include "../../../../library/handle/handle.h"
 
 /**
  * @fn void rpc_handle_exit(size_t, pid_t, size_t, size_t)
@@ -28,8 +29,6 @@
  * @param origin
  * @param data_info
  * @param response_info
- *
- * @todo implement
  */
 void rpc_handle_exit(
   size_t type,
@@ -51,7 +50,8 @@ void rpc_handle_exit(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  /// FIXME: CLEAR ALL HANDLES OF PROCESS THAT TRIGGERED EXIT
+  // destroy all handles
+  handle_destroy_all( request->origin );
   // return
   response.result = 0;
   bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
