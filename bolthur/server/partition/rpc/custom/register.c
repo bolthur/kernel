@@ -63,7 +63,7 @@ void rpc_custom_handle_register(
     return;
   }
   // get request
-  partition_register_t* command = ( partition_register_t* )request->container;
+  auto const partition_register_t* command = ( const partition_register_t* )request->container;
   // register handler
   if ( 0 != handler_add( command->filesystem, command->process ) ) {
     error.status = -EINVAL;

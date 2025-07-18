@@ -90,9 +90,9 @@ static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
  * @todo add origin validation once called correctly
  */
 void rpc_handle_mount(
-  [[maybe_unused]] size_t type,
+  size_t type,
   [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
+  size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   EARLY_STARTUP_PRINT( "mount mounting\r\n" )
@@ -141,8 +141,11 @@ void rpc_handle_mount(
     EARLY_STARTUP_PRINT( "UNABLE TO QUERY STAT OF AUTHENTICATION DEVICE %s!\r\n", strerror( errno ) )
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
+    close( fd_auth );
     return;
   }
+  // FIXME: FETCH RIGHTS OF PROCESS AND CHECK IF ALLOWED
+  close( fd_auth );
 
   // open source
   int fd_source = open( request->source, O_RDONLY );
@@ -207,8 +210,6 @@ void rpc_handle_mount(
       return;
     }
   }
-
-  // FIXME: FETCH RIGHTS OF PROCESS AND CHECK IF ALLOWED
 
   // perform sync rpc
   size_t response_id = bolthur_rpc_raise(

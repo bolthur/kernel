@@ -50,7 +50,7 @@ void rpc_custom_handle_fetch(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     error.status = -ENOMSG;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
@@ -71,7 +71,7 @@ void rpc_custom_handle_fetch(
     free( info );
     return;
   }
-  size_t fetch_size = sizeof( authentication_fetch_response_t )
+  const size_t fetch_size = sizeof( authentication_fetch_response_t )
     + sizeof( gid_t ) * node->group_count;
   authentication_fetch_response_t* fetch_response = malloc( fetch_size );
   if ( ! fetch_response ) {
@@ -83,7 +83,7 @@ void rpc_custom_handle_fetch(
   memset( fetch_response, 0, fetch_size );
   // allocate response
   vfs_ioctl_perform_response_t* response;
-  size_t response_size = sizeof( *response ) + fetch_size;
+  const size_t response_size = sizeof( *response ) + fetch_size;
   response = malloc( response_size );
   // handle error
   if ( ! response ) {

@@ -17,36 +17,19 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBDEV_H
-#define _LIBDEV_H
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <errno.h>
+#include <stdio.h>
 #include <sys/bolthur.h>
 
-#define AUTHENTICATE_REQUEST RPC_CUSTOM_START
-#define AUTHENTICATE_FETCH AUTHENTICATE_REQUEST + 1
-
-typedef struct {
-  char user[ PATH_MAX ];
-  char password[ PATH_MAX ];
-  pid_t process;
-} authentication_request_request_t;
-
-typedef struct {
-  int result;
-} authentication_request_response_t;
-
-typedef struct {
-  pid_t process;
-} authentication_fetch_request_t;
-
-typedef struct {
-  uid_t uid;
-  size_t group_count;
-  gid_t gid[];
-} authentication_fetch_response_t;
-
-#endif
+/**
+ * @fn int main(int, char*[])
+ * @brief main entry point
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
+int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
+  // print something
+  EARLY_STARTUP_PRINT( "usb hid mouse processing!\r\n" )
+  return -1;
+}

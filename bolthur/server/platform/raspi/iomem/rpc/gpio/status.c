@@ -76,7 +76,7 @@ void rpc_handle_gpio_status(
   status_request = ( iomem_gpio_status_t* )request->container;
   // allocate space for response
   vfs_ioctl_perform_response_t* response;
-  size_t response_size = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) * sizeof( char ) + sizeof( *response );
+  const size_t response_size = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) * sizeof( char ) + sizeof( *response );
   response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;

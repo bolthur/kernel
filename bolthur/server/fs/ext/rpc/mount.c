@@ -161,7 +161,7 @@ void rpc_handle_mount(
   vfs_mount_response_t response = { .result = -ENOMEM };
   response.result = -EINVAL;
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }

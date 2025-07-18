@@ -60,8 +60,7 @@ void rpc_custom_handle_release(
     return;
   }
   // get request
-  partition_release_t* command = ( partition_release_t* )request->container;
-
+  auto const partition_release_t* command = ( const partition_release_t* )request->container;
   // try to remove handler by filesystem
   if ( 0 != handler_remove( command->filesystem ) ) {
     error.status = -EAGAIN;
@@ -69,7 +68,6 @@ void rpc_custom_handle_release(
     free( request );
     return;
   }
-
   // set success flag and return
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );

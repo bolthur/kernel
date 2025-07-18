@@ -36,7 +36,7 @@ static vfs_read_response_t read_error_response;
  * @param type
  * @param error
  */
-static void read_error_return( size_t type, int error ) {
+static void read_error_return( const size_t type, const int error ) {
   // clear error response
   memset( &read_error_response, 0, sizeof( read_error_response ) );
   // set error
@@ -94,8 +94,8 @@ void rpc_handle_read(
     free( response );
     return;
   }
-  uint32_t max = request->len;
-  uint32_t max_word = max / sizeof( uint32_t );
+  const uint32_t max = request->len;
+  const uint32_t max_word = max / sizeof( uint32_t );
   // determine buffer for data
   void* shm_addr = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
   if ( errno ) {
@@ -108,11 +108,11 @@ void rpc_handle_read(
     free( response );
     return;
   }
-  uint32_t* buf = ( uint32_t* )shm_addr;
+  auto uint32_t* buf = ( uint32_t* )shm_addr;
   // loop until max num words
   for ( uint32_t num = 0; num < max_word; num++ ) {
     // extract rng status
-    uint32_t val = random_generate_number();
+    const uint32_t val = random_generate_number();
     if ( errno ) {
       // prepare response
       response->len = -errno;

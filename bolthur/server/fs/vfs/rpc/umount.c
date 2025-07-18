@@ -26,6 +26,7 @@
 #include "../rpc.h"
 #include "../mountpoint/node.h"
 #include "../../../../library/handle/process.h"
+#include "handler/node.h"
 
 /**
  * @fn void rpc_handle_umount_async(size_t, pid_t, size_t, size_t)
@@ -121,6 +122,15 @@ void rpc_handle_umount(
     free( request );
     return;
   }
+  // extract handler information
+  handler_node_t* handler = handler_node_extract( RPC_VFS_MOUNT );
+  if ( ! handler ) {
+    EARLY_STARTUP_PRINT( "No handler found for %d\r\n", RPC_VFS_MOUNT )
+    response.result = -ESRCH;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    free( request );
+    return;
+  }
   // get mount point
   mountpoint_node_t* mount_point = mountpoint_node_extract( request->target );
   // handle no mount point found
@@ -169,10 +179,13 @@ void rpc_handle_umount(
       }
     } );
   } );
+  // populate internal fields
+  request->handler = mount_point->pid;
+  request->origin = origin;
   // raise async syscall
   bolthur_rpc_raise(
     type,
-    mount_point->pid,
+    handler->handler,
     request,
     request_size,
     rpc_handle_umount_async,

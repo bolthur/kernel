@@ -46,7 +46,7 @@ void rpc_handle_fork(
   vfs_fork_response_t response = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // handle no data
@@ -63,7 +63,7 @@ void rpc_handle_fork(
     return;
   }
   // check origin parent against parent from request ( must match )
-  pid_t origin_process = _syscall_process_parent_by_id( request->process );
+  const pid_t origin_process = _syscall_process_parent_by_id( request->process );
   if ( origin_process != request->parent ) {
     response.status = -EINVAL;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
@@ -81,7 +81,7 @@ void rpc_handle_fork(
   // try to add it with same user as parent
   if ( ! pid_node_add( request->process, node->uid ) ) {
     response.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // fill response structure

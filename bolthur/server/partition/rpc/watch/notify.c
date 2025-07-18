@@ -75,7 +75,7 @@ void rpc_handle_watch_notify(
     return;
   }
   // read data
-  const size_t mbr_size = sizeof( uint8_t ) * 512;
+  constexpr size_t mbr_size = sizeof( uint8_t ) * 512;
   uint8_t* mbr = malloc( mbr_size );
   if ( ! mbr ) {
     STARTUP_PRINT( "Unable to allocate space for mbr\r\n" )
@@ -112,7 +112,7 @@ void rpc_handle_watch_notify(
   }
   // loop through partitions and print type
   for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
-    mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
+    auto mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
       mbr + PARTITION_TABLE_OFFSET + ( i * sizeof( *entry ) ) );
     // handle invalid
     if ( 0 == entry->data.system_id ) {

@@ -123,6 +123,8 @@
       STARTUP_PRINT( "Mounting \"%s\" with type \"%s\" to \"%s\" ...\r\n",
         m->mnt_fsname, m->mnt_type, m->mnt_dir )
       fflush( stdout );
+      // wait for device, just to be sure
+      vfs_wait_for_path( m->mnt_fsname );
       // build flags
       unsigned long mount_flags = MS_MGC_VAL;
       if ( hasmntopt( m, MNTOPT_RO ) ) {

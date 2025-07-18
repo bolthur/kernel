@@ -39,18 +39,13 @@
  */
 void rpc_handle_umount(
   size_t type,
-  pid_t origin,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   vfs_umount_response_t response = { .result = -EINVAL };
-  // validate origin
-  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
-    return;
-  }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
@@ -69,7 +64,7 @@ void rpc_handle_umount(
     strcat( request->target, "/" );
   }
   // try to unmount
-  int result = fat_mountpoint_umount( request->target );
+  const int result = fat_mountpoint_umount( request->target );
   if ( EOK != result ) {
     response.result = -result;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );

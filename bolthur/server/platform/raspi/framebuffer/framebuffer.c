@@ -387,7 +387,7 @@ void framebuffer_flip( void ) {
     current_back = back_buffer;
   }
   // perform request
-  int result = ioctl(
+  const int result = ioctl(
     iomem_fd,
     IOCTL_BUILD_REQUEST(
       IOMEM_RPC_MAILBOX,
@@ -448,7 +448,7 @@ void framebuffer_handle_resolution(
   // clear out response
   memset( response, 0, response_size );
   // local variable for resolution data
-  framebuffer_resolution_t resolution_data = {
+  const framebuffer_resolution_t resolution_data = {
     .width = physical_width,
     .height = physical_height,
     .depth = FRAMEBUFFER_SCREEN_DEPTH,
@@ -580,7 +580,7 @@ void framebuffer_handle_surface_render(
     return;
   }
   // get memory item
-  framebuffer_memory_t* mem = item->data;
+  const framebuffer_memory_t* mem = item->data;
   memcpy( current_back, mem->address, size );
   // return success
   error.status = 0;

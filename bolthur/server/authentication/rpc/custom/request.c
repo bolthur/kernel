@@ -37,4 +37,28 @@ void rpc_custom_handle_request(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "AUTHENTICATION REQUEST IOCTL\r\n" )
+  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    return;
+  }
+  // handle no data
+  if ( ! data_info ) {
+    error.status = -ENOMSG;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    return;
+  }
+  // get message and data size
+  size_t data_size;
+  authentication_request_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  if ( ! request ) {
+    error.status = -errno;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    return;
+  }
+  error.status = -ENOSYS;
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  free( request );
 }

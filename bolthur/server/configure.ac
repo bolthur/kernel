@@ -163,6 +163,7 @@ AC_CONFIG_FILES([
   usb/device/Makefile
   usb/device/hid/Makefile
   usb/device/hid/keyboard/Makefile
+  usb/device/hid/mouse/Makefile
   usb/device/hub/Makefile
   usb/device/storage/Makefile
   usb/usbd/Makefile

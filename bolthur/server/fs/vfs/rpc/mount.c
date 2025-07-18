@@ -203,18 +203,15 @@ void rpc_handle_mount(
     free( request_data );
     return;
   }
-
   // extract handler information
   handler_node_t* handler = handler_node_extract( RPC_VFS_MOUNT );
   if ( ! handler ) {
     EARLY_STARTUP_PRINT( "No handler found for %d\r\n", RPC_VFS_MOUNT )
-    handler_node_dump();
     response.result = -ESRCH;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request_data );
     return;
   }
-
   // get destination
   const mountpoint_node_t* destination = mountpoint_node_extract( request->target );
   if (
@@ -227,7 +224,6 @@ void rpc_handle_mount(
     free( request_data );
     return;
   }
-
   // save origin
   request->origin = origin;
   // raise rpc to handler

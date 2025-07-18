@@ -226,7 +226,6 @@ void rpc_handle_open(
 ) {
   // variables
   vfs_open_response_t response = { .handle = -EINVAL };
-
   // handle no data
   if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );

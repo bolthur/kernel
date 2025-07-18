@@ -71,11 +71,11 @@ void rpc_handle_write(
     return;
   }
   // get rpc to raise
-  size_t rpc_num = 0 == strcmp( "/dev/stdout", request->file_path )
+  const size_t rpc_num = 0 == strcmp( "/dev/stdout", request->file_path )
     ? console->out
     : console->err;
   // build terminal command
-  size_t terminal_size = sizeof( terminal_write_request_t ) + request->len;
+  const size_t terminal_size = sizeof( terminal_write_request_t ) + request->len;
   terminal_write_request_t* terminal = malloc( terminal_size );
   if ( ! terminal ) {
     response.len = -EIO;
@@ -91,7 +91,7 @@ void rpc_handle_write(
 
   if ( 0 == console->fd ) {
     // open path
-    int fd = open( console->path, O_RDWR );
+    const int fd = open( console->path, O_RDWR );
     // handle error
     if ( -1 == fd ) {
       EARLY_STARTUP_PRINT( "Unable to open %s\r\n", console->path )
@@ -105,7 +105,7 @@ void rpc_handle_write(
     console->fd = fd;
   }
   // raise write request
-  int result = ioctl(
+  const int result = ioctl(
     console->fd,
     IOCTL_BUILD_REQUEST(
       rpc_num,

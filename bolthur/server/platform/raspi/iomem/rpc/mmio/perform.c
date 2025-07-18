@@ -210,7 +210,7 @@ void rpc_handle_mmio_perform(
     return;
   }
   // allocate space for request
-  uint8_t* request_data = ( uint8_t* )request->container;
+  const uint8_t* request_data = ( const uint8_t* )request->container;
   // allocate space for response
   vfs_ioctl_perform_response_t* response;
   size_t response_size = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) * sizeof( char ) + sizeof( *response );
@@ -231,7 +231,7 @@ void rpc_handle_mmio_perform(
   // clear request
   memset( response, 0, response_size );
   // transform data into contiguous array
-  iomem_mmio_entry_array_t* mmio_request = ( iomem_mmio_entry_array_t* )request_data;
+  auto iomem_mmio_entry_array_t* mmio_request = ( iomem_mmio_entry_array_t* )request_data;
   // entry count
   size_t entry_count = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) / sizeof( iomem_mmio_entry_t );
   // loop through entries and validate
