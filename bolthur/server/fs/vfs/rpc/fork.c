@@ -75,25 +75,24 @@ static void rpc_handle_fork_fork(
     return;
   }
   // get request
-  vfs_fork_request_t* original_request = async_data->original_data;
+  const vfs_fork_request_t* original_request = async_data->original_data;
   // get handles of parent
-  process_node_t* process_container = process_generate(
-    async_data->original_origin );
-  process_node_t* parent_process_container = process_generate(
-    original_request->parent
-  );
+  process_node_t* process_container = process_generate( async_data->original_origin );
+  process_node_t* parent_process_container = process_generate( original_request->parent );
   if ( parent_process_container ) {
     process_container->handle = parent_process_container->handle;
     // loop through all handles
-    handle_node_tree_each(&parent_process_container->management_tree, handle_node, n, {
-      int e = process_duplicate( process_container, n );
+    handle_node_tree_each( &parent_process_container->management_tree, handle_node, n, {
+      /// FIXME: PREPARE HASHMAP WITH HANDLERS
+      /// FIXME: CALL ASYNC FORK FOR EACH HANDLER
+      const int e = process_duplicate( process_container, n );
       if ( e != 0 ) {
         // FIXME: DESTROY CONTAINER
         response.status = e;
         bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
         return;
       }
-    });
+    } );
   }
   // fill response structure
   response.status = 0;

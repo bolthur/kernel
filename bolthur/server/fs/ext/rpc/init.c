@@ -32,9 +32,19 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
     return false;
   }
+  bolthur_rpc_bind( RPC_VFS_FORK, rpc_handle_fork, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register handler fork!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( RPC_VFS_GETDENTS, rpc_handle_getdents, true );
   if ( errno ) {
     STARTUP_PRINT( "Unable to register handler directory empty!\r\n" )
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_EXIT, rpc_handle_exit, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register handler exit!\r\n" )
     return false;
   }
   bolthur_rpc_bind( RPC_VFS_MOUNT, rpc_handle_mount, true );

@@ -26,8 +26,9 @@
 #include <sys/stat.h>
 #include <sys/tree.h>
 #include "handle.h"
+#include "../collection/ht/ht.h"
 
-SPLAY_HEAD( process_tree, process_node );
+SPLAY_HEAD(process_tree, process_node);
 void process_node_tree_init( struct process_tree* t );
 int process_node_tree_empty( struct process_tree* t );
 struct process_node* process_node_tree_insert( struct process_tree* t, struct process_node* e );
@@ -99,6 +100,8 @@ typedef struct process_node {
   pid_t pid;
   /** @brief handle tree */
   struct handle_tree management_tree;
+  /** @brief fork table hash set */
+  ht_t* fork_table;
   /** @brief tree data */
   SPLAY_ENTRY( process_node ) node;
 } process_node_t;

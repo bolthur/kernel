@@ -10,7 +10,9 @@ ext_CFLAGS = \
   $(BFS_CFLAGS)
 ext_SOURCES = \
   rpc/close.c \
+  rpc/fork.c \
   rpc/getdents.c \
+  rpc/exit.c \
   rpc/init.c \
   rpc/mount.c \
   rpc/open.c \
