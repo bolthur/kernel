@@ -34,7 +34,11 @@
  * @param args arguments to push
  * @return
  */
-pid_t util_execute_device_server( const char* path, const char* device, const char* args ) {
+pid_t util_execute_device_server(
+  const char* path,
+  const char* device,
+  const char* args
+) {
   pid_t proc;
   // calculate message size
   size_t msg_size = sizeof( dev_command_start_t );
@@ -56,8 +60,6 @@ pid_t util_execute_device_server( const char* path, const char* device, const ch
   // copy possible arguments
   if ( args ) {
     strcpy( start->args, args );
-  } else {
-    start->args[0] = '\0';
   }
   // raise request
   const int result = ioctl(
@@ -72,6 +74,7 @@ pid_t util_execute_device_server( const char* path, const char* device, const ch
   }
   // extract process
   memcpy( &proc, start, sizeof( proc ) );
+  // free ioctl start object
   free( start );
   // wait for device
   vfs_wait_for_path( device );

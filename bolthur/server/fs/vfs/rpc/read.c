@@ -167,7 +167,8 @@ void rpc_handle_read(
     sizeof( *request ),
     origin,
     data_info,
-    NULL
+    NULL,
+    false
   );
   if ( errno ) {
     response->len = -errno;

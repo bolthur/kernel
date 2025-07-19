@@ -168,7 +168,8 @@ void rpc_handle_write(
     sizeof( *request ),
     origin,
     data_info,
-    NULL
+    NULL,
+    false
   );
   if ( errno ) {
     response.len = -errno;

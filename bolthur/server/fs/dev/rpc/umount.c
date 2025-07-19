@@ -124,7 +124,8 @@ void rpc_handle_umount(
     sizeof( *request ),
     origin,
     data_info,
-    NULL
+    NULL,
+    false
   );
   if ( errno ) {
     response.result = -errno;

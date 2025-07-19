@@ -39,7 +39,7 @@ static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
   // copy stuff to message
   request->handle = file;
   // raise rpc and wait for return
-  size_t response_id = bolthur_rpc_raise(
+  const size_t response_id = bolthur_rpc_raise(
     RPC_VFS_STAT,
     VFS_DAEMON_ID,
     request,
@@ -50,7 +50,8 @@ static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
     sizeof( vfs_stat_request_t ),
     0,
     0,
-    NULL
+    NULL,
+    false
   );
   // handle error
   if ( 0 == response_id ) {
@@ -223,7 +224,8 @@ void rpc_handle_mount(
     sizeof( *request ),
     0,
     0,
-    NULL
+    NULL,
+    false
   );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "UNABLE TO ROUTE MOUNT REQUEST %s!\r\n", strerror( errno ) )

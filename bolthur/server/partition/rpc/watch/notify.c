@@ -151,4 +151,6 @@ void rpc_handle_watch_notify(
   free( path );
   free( mbr );
   free( request );
+  // cleanup current syscall since we're not returning from here
+  _syscall_rpc_cleanup();
 }

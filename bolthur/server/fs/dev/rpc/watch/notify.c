@@ -94,6 +94,7 @@ void rpc_handle_watch_notify(
     origin,
     data_info,
     NULL,
+    true,
     true
   );
   // handle error

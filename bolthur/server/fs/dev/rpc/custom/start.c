@@ -87,7 +87,7 @@ void rpc_custom_handle_start(
   }
   // fork process
   *forked_process = fork();
-  if ( errno ) {
+  if ( 0 > *forked_process ) {
     free( forked_process );
     free( request );
     free( response );

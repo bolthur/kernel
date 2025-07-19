@@ -61,7 +61,7 @@ bool rpc_data_queue_ready( task_process_t* proc ) {
  * @return
  */
 int rpc_data_queue_add(
-  pid_t target,
+  const pid_t target,
   const char* data,
   size_t data_length,
   size_t* rpc_data_queue_id
@@ -116,7 +116,7 @@ int rpc_data_queue_add(
     return EINVAL;
   }
   // set pointer to beginning
-  rpc_data_mailbox_entry_t* entry = ( rpc_data_mailbox_entry_t* )mailbox;
+  auto rpc_data_mailbox_entry_t* entry = ( rpc_data_mailbox_entry_t* )mailbox;
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "Mailbox temporarily mapped to 0x%"PRIxPTR", looking for free space \r\n", mailbox )
   #endif

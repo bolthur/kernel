@@ -27,11 +27,18 @@
 #include "backup.h"
 
 typedef struct {
+  /** @brief avl node */
   avl_node_t node;
+  /** @brief rpc id */
   size_t rpc_id;
+  /** @brief original rpc id */
   size_t origin_rpc_id;
+  /** @brief source process */
   pid_t source_process;
+  /** @brief sync flag */
   bool sync;
+  /** @brief rpc type */
+  size_t type;
 } rpc_origin_source_t;
 
 #define RPC_GET_ORIGIN_SOURCE( n ) \

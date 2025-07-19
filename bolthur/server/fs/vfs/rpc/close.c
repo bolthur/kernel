@@ -129,7 +129,8 @@ void rpc_handle_close(
     sizeof( vfs_close_request_t ),
     origin,
     data_info,
-    NULL
+    NULL,
+    false
   );
   if ( errno ) {
     response.status = -errno;

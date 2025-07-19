@@ -147,7 +147,8 @@ void rpc_handle_stat(
     sizeof( *request ),
     origin,
     data_info,
-    NULL
+    NULL,
+    false
   );
   free( request );
 }

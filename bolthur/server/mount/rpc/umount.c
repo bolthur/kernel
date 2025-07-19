@@ -106,7 +106,8 @@ void rpc_handle_umount(
     sizeof( *request ),
     0,
     0,
-    NULL
+    NULL,
+    false
   );
   if ( ! response_id ) {
     EARLY_STARTUP_PRINT( "UNABLE TO ROUTE MOUNT REQUEST %s!\r\n", strerror( errno ) )

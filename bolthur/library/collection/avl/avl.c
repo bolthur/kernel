@@ -483,31 +483,41 @@ static void pop_output_level( void ) {
 }
 
 /**
- * @fn void print_recursive(const avl_node_t*)
+ * @fn void print_recursive(const avl_node_t*, avl_print_func_t)
  * @brief Recursive print of tree
  *
- * @param node
+ * @param node node to print
+ * @param print printing function
  */
-static void print_recursive( const avl_node_t* node ) {
+static void print_recursive( const avl_node_t* node, const avl_print_func_t print ) {
   if ( ! node ) {
     return;
   }
-
-  if ( level_index ) {
-    printf( "%s `--%p\r\n", level_buffer, node->data );
+  // print information
+  if ( ! print ) {
+    if ( level_index ) {
+      printf( "%s `--%p\r\n", ( const char* )level_buffer, node->data );
+    } else {
+      printf( "%p\r\n", node->data );
+    }
   } else {
-    printf( "%p\r\n", node->data );
+    if ( level_index ) {
+      printf( "%s `--", ( const char* )level_buffer );
+      print( ( avl_node_t* )node );
+    } else {
+      print( ( avl_node_t* )node );
+    }
   }
-
+  // go to left
   if ( node->left ) {
     push_output_level( '|' );
-    print_recursive( node->left );
+    print_recursive( node->left, print );
     pop_output_level();
   }
-
+  // go to right
   if ( node->right ) {
     push_output_level( '|' );
-    print_recursive( node->right );
+    print_recursive( node->right, print );
     pop_output_level();
   }
 }
@@ -827,17 +837,18 @@ void avl_prepare_node( avl_node_t* node, void* data ) {
 }
 
 /**
- * @fn void avl_print(const avl_tree_t*)
+ * @fn void avl_print(const avl_tree_t*, avl_print_func_t)
  * @brief Debug output avl tree
  *
- * @param tree
+ * @param tree tree to dump
+ * @param print function to use for printing
  */
-void avl_print( const avl_tree_t* tree ) {
+void avl_print( const avl_tree_t* tree, const avl_print_func_t print ) {
   if ( ! tree->root ) {
     printf( "( empty tree )\r\n" );
     return;
   }
-  print_recursive( tree->root );
+  print_recursive( tree->root, print );
 }
 
 /**

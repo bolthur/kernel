@@ -30,6 +30,8 @@
   #include "../lib/inttypes.h"
 #endif
 
+#include "../debug/debug.h"
+#include "../lib/inttypes.h"
 static avl_tree_t* origin_tree = NULL;
 
 /**
@@ -42,8 +44,8 @@ static avl_tree_t* origin_tree = NULL;
  */
 static int32_t compare_callback( const avl_node_t* a, const avl_node_t* b ) {
   // get blocks
-  rpc_origin_source_t* block_a = RPC_GET_ORIGIN_SOURCE( a );
-  rpc_origin_source_t* block_b = RPC_GET_ORIGIN_SOURCE( b );
+  auto const rpc_origin_source_t* block_a = RPC_GET_ORIGIN_SOURCE( a );
+  auto const rpc_origin_source_t* block_b = RPC_GET_ORIGIN_SOURCE( b );
   // -1 if address of a->type is greater than address of b->type
   if ( block_a->rpc_id > block_b->rpc_id ) {
     return -1;
@@ -78,6 +80,19 @@ static int32_t lookup_callback(
   // equal => return 0
   return 0;
 }
+
+#if defined ( PRINT_RPC )
+  /**
+   * @fn void print_callback(avl_node_t*)
+   * @brief Callback used for printing avl tree
+   * @param node node to print
+   */
+  static void print_callback( avl_node_t* node ) {
+    const rpc_origin_source_t* block = RPC_GET_ORIGIN_SOURCE( node );
+    printf( "(rpc_id: %zu, origin_rpc_id: %zu, type: %zu)\r\n",
+      block->rpc_id, block->origin_rpc_id, block->type );
+  }
+#endif
 
 /**
  * @fn void cleanup_callback(avl_node_t*)
@@ -134,13 +149,13 @@ void rpc_generic_destroy_source_info( rpc_origin_source_t* info ) {
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "Trying to remove source info %d!\r\n", info->rpc_id )
-    avl_print( origin_tree );
+    avl_print( origin_tree, NULL );
   #endif
   // remove from tree
   avl_remove_by_node( origin_tree, &info->node );
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "DUMPING ORIGIN TREE AFTER REMOVAL!\r\n" )
-    avl_print( origin_tree );
+    avl_print( origin_tree, print_callback );
   #endif
   // free info
   free( info );
@@ -351,6 +366,7 @@ rpc_backup_t* rpc_generic_raise(
     rpc_info->rpc_id = backup->data_id;
     rpc_info->origin_rpc_id = origin_data_id;
     rpc_info->sync = sync;
+    rpc_info->type = type;
     // prepare node
     avl_prepare_node( &rpc_info->node, ( void* )backup->data_id );
     // add to tree

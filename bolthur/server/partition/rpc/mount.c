@@ -40,7 +40,7 @@ static int lstat_handler( const char* pathname, struct stat* buf, pid_t* handler
   // copy stuff to message
   strncpy( request->file_path, pathname, PATH_MAX - 1 );
   // raise rpc and wait for return
-  size_t response_id = bolthur_rpc_raise(
+  const size_t response_id = bolthur_rpc_raise(
     RPC_VFS_STAT,
     VFS_DAEMON_ID,
     request,
@@ -51,7 +51,8 @@ static int lstat_handler( const char* pathname, struct stat* buf, pid_t* handler
     sizeof( vfs_stat_request_t ),
     0,
     0,
-    NULL
+    NULL,
+    false
   );
   // handle error
   if ( 0 == response_id ) {
@@ -122,7 +123,7 @@ void rpc_handle_mount_async(
     return;
   }
   // add mount point
-  int result = mount_add(
+  const int result = mount_add(
     request->target,
     handler->name,
     request->type,
@@ -233,7 +234,8 @@ void rpc_handle_mount(
     sizeof( *request ),
     origin,
     data_info,
-    NULL
+    NULL,
+    false
   );
   if ( errno ) {
     response.result = -errno;

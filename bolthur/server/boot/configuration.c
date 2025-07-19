@@ -149,11 +149,21 @@ bool configuration_handle( const char* path, const char* bootarg ) {
       STARTUP_PRINT( "Starting server %s...\r\n", n->name )
     }
     // start server
-    if ( n->pass_boot_arguments && bootarg ) {
-      util_execute_device_server( n->path, n->device, bootarg );
-    } else {
-      util_execute_device_server( n->path, n->device, nullptr );
+    int start_pid = util_execute_device_server(
+      n->path,
+      n->device,
+      n->pass_boot_arguments && bootarg ? bootarg : nullptr
+    );
+    // handle error
+    if ( 0 == start_pid ) {
+      if ( n->early ) {
+        EARLY_STARTUP_PRINT( "Unable to start server %s...\r\n", n->name )
+      } else {
+        STARTUP_PRINT( "Unable to start server %s...\r\n", n->name )
+      }
+      exit( 1 );
     }
+
     // output
     if ( n->early ) {
       EARLY_STARTUP_PRINT( "\x1b[32mStarted server %s\x1b[0m\r\n", n->name )
@@ -209,7 +219,8 @@ bool configuration_handle( const char* path, const char* bootarg ) {
         sizeof( *request ),
         0,
         0,
-        NULL
+        NULL,
+        false
       );
       if ( errno ) {
         EARLY_STARTUP_PRINT( "Unable to call boot init: %s\r\n", strerror( errno ) )

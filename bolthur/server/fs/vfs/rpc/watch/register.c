@@ -114,7 +114,8 @@ void rpc_handle_watch_register(
     sizeof( *request ),
     origin,
     data_info,
-    NULL
+    NULL,
+    false
   );
   // handle error
   if ( errno ) {

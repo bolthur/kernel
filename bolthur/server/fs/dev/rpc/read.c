@@ -135,7 +135,8 @@ void rpc_handle_read(
     sizeof( *request ),
     origin,
     data_info,
-    NULL
+    NULL,
+    false
   );
   if ( errno ) {
     bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );

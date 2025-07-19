@@ -567,7 +567,7 @@ task_thread_t* task_thread_get_blocked(
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    avl_print( process_manager->process_id );
+    avl_print( process_manager->process_id, NULL );
   #endif
   avl_node_t* avl_proc = avl_iterate_first( process_manager->process_id );
   while ( avl_proc ) {

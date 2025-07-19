@@ -64,7 +64,8 @@
       size_to_use,
       0,
       0,
-      NULL
+      NULL,
+      false
     );
     if ( errno ) {
       if ( wait ) {
@@ -121,7 +122,8 @@
       sizeof( *msg ),
       0,
       0,
-      NULL
+      NULL,
+      false
     );
     if ( errno ) {
       if ( wait ) {

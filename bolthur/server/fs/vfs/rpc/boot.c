@@ -352,7 +352,8 @@ void rpc_handle_boot_init(
       data_size,
       origin,
       data_info,
-      NULL
+      NULL,
+      false
     );
     // handle error
     if ( errno ) {

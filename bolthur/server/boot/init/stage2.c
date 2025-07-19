@@ -135,6 +135,7 @@
       }
       // try to mount
       result = mount( m->mnt_fsname, m->mnt_dir, m->mnt_type, mount_flags, "" );
+      // handle error
       if ( 0 != result ) {
         STARTUP_PRINT(
           "Mount of \"%s\" with type \"%s\" to \"%s\" failed: \"%s\"\r\n",
@@ -185,7 +186,7 @@
   STARTUP_PRINT( "continue with stage3!!!\r\n")
 
   // open dummy
-  FILE* fp = fopen( "/boot/cmdline.txt", "r" );
+  /*FILE* fp = fopen( "/boot/cmdline.txt", "r" );
   if ( ! fp ) {
     STARTUP_PRINT( "unable to open: %s\r\n", strerror( errno ) )
     exit( 1 );
@@ -193,7 +194,7 @@
   // fork process
   pid_t boot_forked = fork();
   EARLY_STARTUP_PRINT( "error = %s\r\n", strerror( errno ) )
-  EARLY_STARTUP_PRINT( "boot_forked = %d\r\n", boot_forked )
+  EARLY_STARTUP_PRINT( "boot_forked = %d\r\n", boot_forked )*/
 
   for (;;) {
     __asm__ __volatile__ ( "nop" );

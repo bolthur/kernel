@@ -262,7 +262,7 @@ shared_memory_entry_t* shared_memory_create( size_t len ) {
   }
   // debug output
   #if defined( PRINT_MM_SHARED )
-    avl_print( shared_tree );
+    avl_print( shared_tree, NULL );
   #endif
   // return id of new shared area
   return entry;
@@ -591,7 +591,7 @@ bool shared_memory_detach( task_process_t* process, size_t id ) {
   }
   // debug output
   #if defined( PRINT_MM_SHARED )
-    avl_print( shared_tree );
+    avl_print( shared_tree, NULL );
   #endif
   // return success
   return true;

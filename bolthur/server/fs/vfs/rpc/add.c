@@ -166,7 +166,8 @@ void rpc_handle_add(
     data_size,
     origin,
     data_info,
-    NULL
+    NULL,
+    false
   );
   free( request_data );
 }

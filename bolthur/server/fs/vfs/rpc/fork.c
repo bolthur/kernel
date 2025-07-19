@@ -243,7 +243,8 @@ static void rpc_handle_fork_fork(
         async_data->length,
         async_data->original_origin,
         async_data->original_rpc_id,
-        NULL
+        NULL,
+        true
       );
       // handle error
       if ( errno ) {
@@ -347,7 +348,8 @@ static void rpc_handle_fork_stat(
     async_data->length,
     async_data->original_origin,
     async_data->original_rpc_id,
-    NULL
+    NULL,
+    true
   );
 }
 
@@ -433,7 +435,8 @@ void rpc_handle_fork(
     sizeof( *request ),
     origin,
     data_info,
-    NULL
+    NULL,
+    false
   );
   free( stat_request );
   free( request );

@@ -233,7 +233,7 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     }
   }
   // get active rpc
-  rpc_backup_t* existing = rpc_backup_get_active( backup->thread, 0 );
+  const rpc_backup_t* existing = rpc_backup_get_active( backup->thread, 0 );
   // enqueue only when state is set
   if (
     TASK_THREAD_STATE_RPC_QUEUED == backup->thread->state
@@ -294,7 +294,7 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   cpu->reg.lr = cpu->reg.pc;
   cpu->reg.pc = proc->rpc_handler;
   // align stack to max align
-  size_t alignment = cpu->reg.sp % alignof( max_align_t );
+  const size_t alignment = cpu->reg.sp % alignof( max_align_t );
   if ( alignment ) {
     cpu->reg.sp -= alignment;
   }
