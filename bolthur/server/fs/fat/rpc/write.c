@@ -23,6 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../stat.h"
 #include "../types.h"
 #include "../../../../library/handle/process.h"
 #include "../../../../library/handle/handle.h"
@@ -32,6 +33,7 @@
 #include <bfs/common/errno.h>
 #include <bfs/fat/type.h>
 #include <bfs/fat/file.h>
+#include <bfs/fat/stat.h>
 
 /**
  * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
@@ -92,7 +94,6 @@ void rpc_handle_write(
   handle_node_t* node;
   int result = handle_get( &node, request->origin, request->handle );
   if ( 0 > result ) {
-    STARTUP_PRINT( "no handle found!\r\n" )
     response->len = result;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     _syscall_memory_shared_detach( request->shm_id );
@@ -100,9 +101,8 @@ void rpc_handle_write(
     free( response );
     return;
   }
-  handle_container_t* container = node->data;
+  const handle_container_t* container = node->data;
   if ( container->type != HANDLE_TYPE_FILE ) {
-    STARTUP_PRINT( "invalid type set for found handle!\r\n" )
     response->len = -EINVAL;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     _syscall_memory_shared_detach( request->shm_id );
@@ -133,6 +133,14 @@ void rpc_handle_write(
     free( request );
     free( response );
     return;
+  }
+  // gather stats for cache
+  struct stat st;
+  result = fat_stat( request->file_path, &st );
+  // continue with push if succeeded
+  if ( EOK == result ) {
+    // try to push with ignore on error
+    stat_push( request->file_path, &st );
   }
   // set success and return
   response->len = ( ssize_t )write_count;

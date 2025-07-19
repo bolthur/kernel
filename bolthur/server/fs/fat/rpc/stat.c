@@ -69,7 +69,7 @@ void rpc_handle_stat(
   struct stat* cached = stat_fetch( request->file_path );
   if ( !cached ) {
     // fetch stat information
-    int result = fat_stat( request->file_path, &st );
+    const int result = fat_stat( request->file_path, &st );
     if ( EOK != result ) {
       STARTUP_PRINT( "fat stat call failed: %d => %s\r\n", result, strerror( result ) )
       bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
