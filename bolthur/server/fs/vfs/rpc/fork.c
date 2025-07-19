@@ -147,6 +147,9 @@ static void rpc_handle_fork_table(
     response.status = 0;
     // return from rpc
     bolthur_rpc_return( RPC_VFS_FORK, &response, sizeof( response ), async_data, 0 );
+  } else {
+    // cleanup since we're not returning as we're not finished yet
+    _syscall_rpc_cleanup();
   }
 }
 
