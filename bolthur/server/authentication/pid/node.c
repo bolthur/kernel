@@ -86,8 +86,9 @@ pid_node_t* pid_node_extract( pid_t pid ) {
     // allocate group list
     size_t old_size = 0;
     gid_t* group_list = NULL;
-    // open groups
+    // open groups and passwd
     setgrent();
+    setpwent();
     // loop through groups
     struct group* grp;
     while ( ( grp = getgrent() ) ) {
@@ -120,8 +121,9 @@ pid_node_t* pid_node_extract( pid_t pid ) {
         old_size = new_size;
       }
     }
-    // close groups
+    // close groups and passwd
     endgrent();
+    endpwent();
     // iterate over group list
     if ( group_list ) {
       // allocate new node

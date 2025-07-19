@@ -27,6 +27,7 @@
 #include "../types.h"
 #include "../../../../library/handle/process.h"
 #include "../../../../library/handle/handle.h"
+#include "../stat.h"
 
 // fat library
 #include <bfs/common/transaction.h>
@@ -85,7 +86,7 @@ void rpc_handle_open(
     return;
   }
   // cache fs
-  fat_fs_t* fs = ( fat_fs_t* )mp->fs;
+  auto const fat_fs_t* fs = ( fat_fs_t* )mp->fs;
   // start transaction
   int result = common_transaction_begin( fs->bdev );
   if ( EOK != result ) {
@@ -94,16 +95,26 @@ void rpc_handle_open(
     free( request );
     return;
   }
-  STARTUP_PRINT( "performing fat stat\r\n" )
-  // stat result
+  struct stat* cached = stat_fetch( request->path );
   struct stat st;
-  result = fat_stat( request->path, &st );
-  if ( EOK != result ) {
-    common_transaction_rollback( fs->bdev );
-    response.handle = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
-    free( request );
-    return;
+  if ( ! cached ) {
+    // stat result
+    result = fat_stat( request->path, &st );
+    if ( EOK != result ) {
+      common_transaction_rollback( fs->bdev );
+      response.handle = -result;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      free( request );
+      return;
+    }
+    // try to push back
+    if ( ! stat_push( request->path, &st ) ) {
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      free( request );
+      return;
+    }
+  } else {
+    memcpy( &st, cached, sizeof( st ) );
   }
   handle_container_t* container = malloc( sizeof( *container ) );
   if ( ! container ) {

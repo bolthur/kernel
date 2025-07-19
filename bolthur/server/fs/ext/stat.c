@@ -30,8 +30,8 @@
  * @return
  */
 static int stat_cmp(
-  struct stat_node* a,
-  struct stat_node* b
+  const struct stat_node* a,
+  const struct stat_node* b
 ) {
   return strcmp( a->path, b->path );
 }
@@ -62,7 +62,7 @@ bool stat_node_setup( void ) {
  * @fn stat_node_t stat_node_extract*(const char*)
  * @brief Extract node
  *
- * @param name
+ * @param path
  * @return
  */
 stat_node_t* stat_node_extract( const char* path ) {
@@ -103,7 +103,6 @@ void stat_node_remove( const char* path ) {
  * @brief Helper to add a new node
  *
  * @param path
- * @param handler
  * @param st
  * @return
  */

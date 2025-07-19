@@ -38,6 +38,7 @@
 #include <bfs/ext/directory.h>
 #include <bfs/ext/stat.h>
 #include <bfs/ext/fs.h>
+#include "../stat.h"
 
 /**
  * @fn void rpc_handle_open(size_t, pid_t, size_t, size_t)
@@ -86,7 +87,7 @@ void rpc_handle_open(
     return;
   }
   // cache fs
-  ext_fs_t* fs = ( ext_fs_t* )mp->fs;
+  auto const ext_fs_t* fs = ( ext_fs_t* )mp->fs;
   // start transaction
   int result = common_transaction_begin( fs->bdev );
   if ( EOK != result ) {
@@ -95,16 +96,26 @@ void rpc_handle_open(
     free( request );
     return;
   }
-  STARTUP_PRINT( "performing ext stat\r\n" )
-  // stat result
+  struct stat* cached = stat_fetch( request->path );
   struct stat st;
-  result = ext_stat( request->path, &st );
-  if ( EOK != result ) {
-    common_transaction_rollback( fs->bdev );
-    response.handle = -result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
-    free( request );
-    return;
+  if ( ! cached ) {
+    // stat result
+    result = ext_stat( request->path, &st );
+    if ( EOK != result ) {
+      common_transaction_rollback( fs->bdev );
+      response.handle = -result;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      free( request );
+      return;
+    }
+    // try to push back
+    if ( ! stat_push( request->path, &st ) ) {
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      free( request );
+      return;
+    }
+  } else {
+    memcpy( &st, cached, sizeof( st ) );
   }
   handle_container_t* container = malloc( sizeof( *container ) );
   if ( ! container ) {
