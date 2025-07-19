@@ -99,7 +99,7 @@ void serial_init( void ) {
   delay( 150 );
 
   // Disable pull up/down for pin 14,15 & delay for 150 cycles.
-  io_out32( base + GPPUDCLK0, ( 1 << 14 ) | ( 1 << 15 ) );
+  io_out32( base + GPPUDCLK0, 1 << 14 | 1 << 15 );
   delay( 150 );
 
   // Write 0 to GPPUDCLK0 to make it take effect.
@@ -127,21 +127,21 @@ void serial_init( void ) {
   // calculate fractional ( (Fractional part * 64) + 0.5 )
   const float fractional = divider - ( float )brd;
   // calculate fractional for later write to fbrd
-  const uint32_t frd = ( uint32_t )( ( fractional * 64 ) + 0.5 );
+  const uint32_t frd = ( uint32_t )( fractional * 64 + 0.5 );
 
   // write baud rate
   io_out32( base + UARTIBRD, brd );
   io_out32( base + UARTFBRD, frd );
 
   // Enable FIFO & 8-bit data transmission (1 stop bit, no parity).
-  io_out32( base + UARTLCRH, ( 1 << 4 ) | ( 1 << 5 ) | ( 1 << 6 ) );
+  io_out32( base + UARTLCRH, 1 << 4 | 1 << 5 | 1 << 6 );
 
   // Mask incoming interrupt only
   #if defined( REMOTE_DEBUG )
-    io_out32( base + UARTIMSC, ( 1 << 4 ) );
+    io_out32( base + UARTIMSC, 1 << 4 );
   #endif
   // Enable UART0, receive & transfer part of UART.
-  io_out32( base + UARTCR, ( 1 << 0 ) | ( 1 << 8 ) | ( 1 << 9 ) );
+  io_out32( base + UARTCR, 1 << 0 | 1 << 8 | 1 << 9 );
 
   // set flag
   serial_initialized = true;
@@ -165,13 +165,11 @@ static void serial_clear( [[maybe_unused]] void* context ) {
 
   // loop until flag will be reset
   while (
-    (
-      ( io_in32( base + UARTRIS ) & ( 1 << 4 ) )
-      && ! ( io_in32( base + UARTFR ) & ( 1 << 4 ) )
-    )
+    io_in32( base + UARTRIS ) & 1 << 4
+    && ! ( io_in32( base + UARTFR ) & 1 << 4 )
   ) {
     // clear out serial buffer to prevent overrun
-    if ( MAX_SERIAL_BUFFER <= ( index + 1 ) ) {
+    if ( MAX_SERIAL_BUFFER <= index + 1 ) {
       serial_flush_buffer();
     }
 
@@ -261,7 +259,7 @@ uint8_t serial_getc( void ) {
   const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // Wait for UART to become ready for read
-  while ( io_in32( base + UARTFR ) & ( 1 << 4 ) ) {
+  while ( io_in32( base + UARTFR ) & 1 << 4 ) {
     __asm__ __volatile__ ( "nop" );
   }
 
@@ -283,7 +281,7 @@ void serial_flush( void ) {
   const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // read from uart until as long as something is existing to flush
-  while ( ! ( io_in32( base + UARTFR ) & ( 1 << 4 ) ) ) {
+  while ( ! ( io_in32( base + UARTFR ) & 1 << 4 ) ) {
     serial_getc();
   }
 }

@@ -30,16 +30,17 @@
  * @brief backup to destroy
  *
  * @param backup
- *
- * @todo ensure that everything from backup is destroyed
  */
 void rpc_backup_destroy( rpc_backup_t* backup ) {
+  // handle null
   if ( ! backup ) {
     return;
   }
+  // free context
   if ( backup->context ) {
     free( backup->context );
   }
+  // free backup
   free( backup );
 }
 

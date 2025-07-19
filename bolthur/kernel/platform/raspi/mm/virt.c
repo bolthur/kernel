@@ -42,7 +42,7 @@ __bootstrap void virt_startup_platform_setup( void ) {
   // cpu local peripherals
   #if defined( BCM2709 ) || defined( BCM2710 )
     uintptr_t cpu_peripheral_base = 0x40000000;
-    const size_t cpu_peripheral_size = 0x3FFFF;
+    constexpr size_t cpu_peripheral_size = 0x3FFFF;
     const uintptr_t cpu_peripheral_end = cpu_peripheral_base + cpu_peripheral_size;
 
     while ( cpu_peripheral_base < cpu_peripheral_end ) {
@@ -52,17 +52,15 @@ __bootstrap void virt_startup_platform_setup( void ) {
       cpu_peripheral_base += PAGE_SIZE;
     }
   #endif
-
   // GPIO related
   #if defined( BCM2709 ) || defined( BCM2710 )
     uintptr_t gpio_peripheral_base = 0x3F000000;
-    const size_t gpio_peripheral_size = 0xFFFFFF;
+    constexpr size_t gpio_peripheral_size = 0xFFFFFF;
   #else
     uintptr_t gpio_peripheral_base = 0x20000000;
-    const size_t gpio_peripheral_size = 0xFFFFFF;
+    constexpr size_t gpio_peripheral_size = 0xFFFFFF;
   #endif
   const uintptr_t gpio_peripheral_end = gpio_peripheral_base + gpio_peripheral_size;
-
   // map gpio if set
   while ( gpio_peripheral_base < gpio_peripheral_end ) {
     // identity map gpio
@@ -79,7 +77,6 @@ __bootstrap void virt_startup_platform_setup( void ) {
 void virt_platform_init( void ) {
   uintptr_t start;
   uintptr_t virtual;
-
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
@@ -88,11 +85,9 @@ void virt_platform_init( void ) {
       peripheral_end_get( PERIPHERAL_GPIO )
     )
   #endif
-
   // set start and virtual
   start = peripheral_base_get( PERIPHERAL_GPIO );
   virtual = GPIO_PERIPHERAL_BASE;
-
   // map peripherals
   while ( start < peripheral_end_get( PERIPHERAL_GPIO ) ) {
     // map
@@ -103,7 +98,6 @@ void virt_platform_init( void ) {
       VIRT_MEMORY_TYPE_DEVICE,
       VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
     ) )
-
     // increase start and virtual
     start += PAGE_SIZE;
     virtual += PAGE_SIZE;
@@ -118,7 +112,6 @@ void virt_platform_init( void ) {
         peripheral_end_get( PERIPHERAL_LOCAL )
       )
     #endif
-
     // set start and virtual
     start = peripheral_base_get( PERIPHERAL_LOCAL );
     virtual = CPU_PERIPHERAL_BASE;
@@ -137,7 +130,6 @@ void virt_platform_init( void ) {
       virtual += PAGE_SIZE;
     }
   #endif
-
   // map mailbox buffer
   assert( virt_map_address(
     virt_current_kernel_context,
@@ -161,7 +153,6 @@ void virt_platform_post_init( void ) {
   #endif
   // set mailbox property pointer
   ptb_buffer = ( int32_t* )MAILBOX_PROPERTY_AREA;
-
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(

@@ -32,10 +32,8 @@ uint32_t mailbox_read( const mailbox0_channel_t channel, const mailbox_type_t ty
   // data and count
   uint32_t value = 0;
   uint32_t count = 0;
-
   // mbox address
   volatile mailbox_t* mbox0;
-
   // set pointer
   if ( GPU_MAILBOX == type ) {
     mbox0 = ( volatile mailbox_t* )( ( uint32_t )peripheral_base_get(
@@ -44,7 +42,7 @@ uint32_t mailbox_read( const mailbox0_channel_t channel, const mailbox_type_t ty
   } else {
     mbox0 = ( volatile mailbox_t* )type;
   }
-
+  // read while channel is not set
   while ( ( value & 0xF ) != channel ) {
     // wait while mailbox is empty
     while ( mbox0->status & MAILBOX_EMPTY ) {
@@ -53,11 +51,9 @@ uint32_t mailbox_read( const mailbox0_channel_t channel, const mailbox_type_t ty
         return MAILBOX_ERROR;
       }
     }
-
     // extract read value
     value = mbox0->read;
   }
-
   // return value without channel information
   return value >> 4;
 }
@@ -78,10 +74,8 @@ void mailbox_write(
   // add channel number at the lower 4 bit
   data = ( uint32_t )( ( int32_t )data & ~0xF );
   data |= channel;
-
   // get mailbox address
   volatile mailbox_t *mbox0;
-
   // set pointer
   if ( GPU_MAILBOX == type ) {
     mbox0 = ( volatile mailbox_t* )( ( uint32_t )peripheral_base_get(
@@ -90,10 +84,8 @@ void mailbox_write(
   } else {
     mbox0 = ( volatile mailbox_t* )type;
   }
-
   // wait for mailbox to be ready
   while ( ( mbox0->status & MAILBOX_FULL ) != 0 ) { }
-
   // write data to mailbox
   mbox0->write = data;
 }

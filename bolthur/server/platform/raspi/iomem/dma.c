@@ -112,10 +112,8 @@ int dma_block_to_phys( uintptr_t* addr ) {
     return -1;
   }
   // translate to physical
-  uintptr_t bus = _syscall_memory_translate_bus(
-    ( uintptr_t )block,
-    sizeof( *block )
-  );
+  const uintptr_t bus = _syscall_memory_translate_bus(
+    ( uintptr_t )block, sizeof( *block ) );
   // handle error
   if ( errno ) {
     last_error = -errno;

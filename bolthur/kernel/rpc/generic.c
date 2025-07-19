@@ -101,11 +101,13 @@ static int32_t lookup_callback(
  * @param a
  */
 static void cleanup_callback( avl_node_t* a ) {
+  // get block from node
   auto rpc_origin_source_t* block = RPC_GET_ORIGIN_SOURCE( a );
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "removing block %p!\r\n", block )
   #endif
+  // free block
   free( block );
 }
 
@@ -163,7 +165,7 @@ void rpc_generic_destroy_source_info( rpc_origin_source_t* info ) {
 
 /**
  * @fn size_t rpc_generic_setup_mailbox(task_process_t*)
- * @brief Helper to setup mailbox
+ * @brief Helper to set up mailbox
  * @param proc
  *
  * @return 0 on success
@@ -286,8 +288,8 @@ void rpc_generic_destroy_mailbox( task_process_t* proc ) {
 }
 
 /**
- * @fn rpc_backup_t* rpc_generic_raise(task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool)
- * @brief Raise an rpc in target from source
+ * @fn rpc_backup_t* rpc_generic_raise(task_thread_t*, task_process_t*, const size_t, void*, size_t, task_thread_t*, const bool, const size_t, const bool)
+ * @brief Raise a rpc in target from source
  *
  * @param source
  * @param target
@@ -303,13 +305,13 @@ void rpc_generic_destroy_mailbox( task_process_t* proc ) {
 rpc_backup_t* rpc_generic_raise(
   task_thread_t* source,
   task_process_t* target,
-  size_t type,
+  const size_t type,
   void* data,
   size_t length,
   task_thread_t* target_thread,
-  bool sync,
-  size_t origin_data_id,
-  bool disable_data
+  const bool sync,
+  const size_t origin_data_id,
+  const bool disable_data
 ) {
   // debug output
   #if defined( PRINT_RPC )

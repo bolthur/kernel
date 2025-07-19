@@ -305,7 +305,7 @@ raspi_mailbox_property_t* mailbox_property_get( const raspi_mailbox_tag_t tag ) 
 
   // Get the tag from the buffer and start with first available tag position
   int32_t index = 2;
-  int32_t size = ptb_buffer[ PT_OSIZE ] >> 2;
+  const int32_t size = ptb_buffer[ PT_OSIZE ] >> 2;
 
   while ( index < size ) {
     // debug output

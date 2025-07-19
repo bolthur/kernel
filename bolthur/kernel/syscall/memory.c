@@ -512,8 +512,6 @@ void syscall_memory_translate_physical( void* context ) {
  * @brief Translate virtual into physical bus address
  *
  * @param context
- *
- * @todo remove syscall
  */
 void syscall_memory_translate_bus( void* context ) {
   // get parameters
