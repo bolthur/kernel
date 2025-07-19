@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBDEV_H
-#define _LIBDEV_H
+#ifndef _LIBAUTHENTICATION_H
+#define _LIBAUTHENTICATION_H
 
 #include <string.h>
 #include <stdlib.h>
@@ -28,6 +28,7 @@
 
 #define AUTHENTICATE_REQUEST RPC_CUSTOM_START
 #define AUTHENTICATE_FETCH AUTHENTICATE_REQUEST + 1
+#define AUTHENTICATE_RELOAD AUTHENTICATE_FETCH + 1
 
 typedef struct {
   char user[ PATH_MAX ];
@@ -48,5 +49,13 @@ typedef struct {
   size_t group_count;
   gid_t gid[];
 } authentication_fetch_response_t;
+
+typedef struct {
+  pid_t process;
+} authenticate_reload_request_t;
+
+typedef struct {
+  int result;
+} authenticate_reload_response_t;
 
 #endif

@@ -5,6 +5,7 @@ bin_PROGRAMS = authentication
 authentication_SOURCES = \
   pid/node.c \
   rpc/custom/fetch.c \
+  rpc/custom/reload.c \
   rpc/custom/request.c \
   rpc/fork.c \
   rpc/init.c \

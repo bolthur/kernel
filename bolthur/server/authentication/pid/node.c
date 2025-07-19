@@ -31,10 +31,7 @@
  * @param b
  * @return
  */
-static int pid_cmp(
-  struct pid_node* a,
-  struct pid_node* b
-) {
+static int pid_cmp( const struct pid_node* a, const struct pid_node* b ) {
   if ( a->pid == b->pid ) {
     return 0;
   }
@@ -67,10 +64,10 @@ bool pid_node_setup( void ) {
  * @fn pid_node_t pid_node_extract*(pid_t)
  * @brief Extract node
  *
- * @param name
+ * @param pid
  * @return
  */
-pid_node_t* pid_node_extract( pid_t pid ) {
+pid_node_t* pid_node_extract( const pid_t pid ) {
   // allocate node
   pid_node_t node;
   // clear out node
@@ -86,20 +83,21 @@ pid_node_t* pid_node_extract( pid_t pid ) {
     // allocate group list
     size_t old_size = 0;
     gid_t* group_list = NULL;
-    // open groups and passwd
+    // open group
     setgrent();
-    setpwent();
     // loop through groups
     struct group* grp;
     while ( ( grp = getgrent() ) ) {
       // loop through group members
       for ( size_t idx = 0; grp->gr_mem[ idx ]; idx++ ) {
+        EARLY_STARTUP_PRINT( "grp->gr_mem[ %zu ] = %s\r\n", idx, grp->gr_mem[ idx ] )
         // get entry by name
         struct passwd* pass = getpwnam( grp->gr_mem[ idx ] );
         if ( ! pass ) {
           free( group_list );
           return NULL;
         }
+        EARLY_STARTUP_PRINT( "pass->pw_name = %s\r\n", pass->pw_name )
         // handle no match
         if ( pass->pw_uid != n->uid ) {
           continue;
@@ -121,9 +119,8 @@ pid_node_t* pid_node_extract( pid_t pid ) {
         old_size = new_size;
       }
     }
-    // close groups and passwd
+    // close groups
     endgrent();
-    endpwent();
     // iterate over group list
     if ( group_list ) {
       // allocate new node
@@ -163,9 +160,9 @@ pid_node_t* pid_node_extract( pid_t pid ) {
  * @fn void pid_node_remove(pid_t)
  * @brief Method to remove a node
  *
- * @param path
+ * @param pid
  */
-void pid_node_remove( pid_t pid ) {
+void pid_node_remove( const pid_t pid ) {
   pid_node_t* node = pid_node_extract( pid );
   if ( ! node ) {
     return;
@@ -180,12 +177,11 @@ void pid_node_remove( pid_t pid ) {
  * @fn bool pid_node_add(pid_t, uid_t)
  * @brief Helper to add a new node
  *
- * @param path
- * @param handler
- * @param st
+ * @param pid
+ * @param user
  * @return
  */
-bool pid_node_add( pid_t pid, uid_t user ) {
+bool pid_node_add( const pid_t pid, const uid_t user ) {
   // allocate node
   pid_node_t* node = malloc( sizeof( *node ) );
   // handle error

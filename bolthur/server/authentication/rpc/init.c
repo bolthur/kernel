@@ -43,5 +43,10 @@ bool rpc_init( void ) {
     EARLY_STARTUP_PRINT( "Unable to register handler fetch!\r\n" )
     return false;
   }
+  bolthur_rpc_bind( AUTHENTICATE_RELOAD, rpc_custom_handle_reload, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register reload!\r\n" )
+    return false;
+  }
   return true;
 }

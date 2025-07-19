@@ -96,13 +96,18 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   uint32_t device_info[] = { DEV_START, DEV_KILL, };
 
   // add manager subfolder
-  if ( !dev_add_folder( "/dev/manager", device_info, 2 ) ) {
+  if ( !dev_add_folder( "/dev/manager", NULL, 0 ) ) {
     EARLY_STARTUP_PRINT( "Unable to add manager subfolder\r\n" )
     return -1;
   }
   // add storage subfolder
-  if ( !dev_add_folder( "/dev/storage", device_info, 2 ) ) {
+  if ( !dev_add_folder( "/dev/storage", NULL, 0 ) ) {
     EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
+    return -1;
+  }
+  // add usb subfolder
+  if ( ! dev_add_folder( "/dev/usb", NULL, 0 ) ) {
+    EARLY_STARTUP_PRINT( "Unable to add USB subfolder\r\n" )
     return -1;
   }
   // add device file
