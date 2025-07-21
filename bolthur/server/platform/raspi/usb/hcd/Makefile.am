@@ -5,6 +5,7 @@ bin_PROGRAMS = hcd
 hcd_SOURCES = \
   rpc/interrupt/handle.c \
   rpc/init.c \
+  rpc/submit_control_message.c \
   dwhci.c \
   main.c \
   response.c \

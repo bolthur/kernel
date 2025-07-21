@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBIOMEM_H
-#define _LIBIOMEM_H
+#ifndef _PLATFORM_RASPI_LIBIOMEM_H
+#define _PLATFORM_RASPI_LIBIOMEM_H
 
 #include <string.h>
 #include <stdlib.h>

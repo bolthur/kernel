@@ -30,8 +30,18 @@ response_t dwhci_power_on( void );
 response_t dwhci_enable_global_interrupts( void );
 response_t dwhci_disable_global_interrupts( void );
 response_t dwhci_register_interrupt( void );
+response_t dwhci_reset_device( void );
+response_t dwhci_enable_common_interrupts( void );
+response_t dwhci_read_core_cfg2( uint32_t* );
+response_t dwhci_read_core_cfg( uint32_t* );
 response_t dwhci_init_core( void );
+response_t dwhci_read_host_cfg( uint32_t* );
+response_t dwhci_core_flush_tx_fifo( uint32_t );
+response_t dwhci_core_flush_rx_fifo( void );
+response_t dwhci_read_host_port( uint32_t* );
+response_t dwhci_enable_host_interrupts( void );
 response_t dwhci_init_host( void );
+response_t dwhci_enable_root_port( void );
 response_t dwhci_init( void );
 
 #endif //_DWHCI_H

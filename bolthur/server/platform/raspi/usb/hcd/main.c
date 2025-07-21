@@ -24,6 +24,9 @@
 #include "dwhci.h"
 #include "response.h"
 #include "rpc.h"
+// driver includes
+#include "../../../../libhcd.h"
+#include "../../../../libhelper.h"
 
 /**
  * @fn int main(int, char*[])
@@ -49,10 +52,21 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  /// FIXME: IMPLEMENT
+  // enable rpc
+  STARTUP_PRINT( "Enable rpc\r\n" )
+  _syscall_rpc_set_ready( true );
 
-  while ( true ) {
-    __asm__ __volatile__ ( "nop" );
+  // add device file
+  STARTUP_PRINT( "Sending device to vfs\r\n" )
+  uint32_t device_info[] = { HCD_SUBMIT_CONTROL_MESSAGE, };
+  STARTUP_PRINT( "HCD_SUBMIT_CONTROL_MESSAGE = %d\r\n", HCD_SUBMIT_CONTROL_MESSAGE )
+  if ( !dev_add_file( "/dev/usb/hcd", device_info, 1 ) ) {
+    STARTUP_PRINT( "Unable to add dev hcd\r\n" )
+    return -1;
   }
-  return -1;
+
+  // wait for rpc
+  STARTUP_PRINT( "Wait for rpc\r\n" )
+  bolthur_rpc_wait_block();
+  return 0;
 }

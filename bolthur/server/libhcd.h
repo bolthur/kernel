@@ -17,32 +17,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// system includes
-#include <errno.h>
-// local includes
-#include "../rpc.h"
-// driver includes
-#include "../../../libhcd.h"
-#include "../../../../../libhcd.h"
+#ifndef _LIBHCD_H
+#define _LIBHCD_H
 
-/**
- * @fn bool rpc_init(void)
- * @brief Init rpc handler method
- * @return
- */
-bool rpc_init( void ) {
-  // bind interrupt handler
-  bolthur_rpc_bind( ARM_IRQ_USB, rpc_interrupt_handle, true );
-  if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler read!\r\n" )
-    return false;
-  }
-  // bind rpc handler for communication
-  bolthur_rpc_bind( HCD_SUBMIT_CONTROL_MESSAGE, rpc_submit_control_message, true );
-  if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler submit control message!\r\n" )
-    return false;
-  }
-  // return success
-  return true;
-}
+#include <string.h>
+#include <stdlib.h>
+#include <stdbool.h>
+#include <errno.h>
+#include <sys/bolthur.h>
+#include "libusb.h"
+
+#define HCD_SUBMIT_CONTROL_MESSAGE RPC_CUSTOM_START
+
+#endif

@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBPERIPHERAL_H
-#define _LIBPERIPHERAL_H
+#ifndef _PLATFORM_RASPI_LIBPERIPHERAL_H
+#define _PLATFORM_RASPI_LIBPERIPHERAL_H
 
 // mailbox offset
 #define PERIPHERAL_MAILBOX_OFFSET 0xB880

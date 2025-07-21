@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBEMMC_H
-#define _LIBEMMC_H
+#ifndef _PLATFORM_RASPI_LIBEMMC_H
+#define _PLATFORM_RASPI_LIBEMMC_H
 
 // command register
 #define EMMC_CMDTM_CMD_TYPE_NORMAL ( 0 << 22 )

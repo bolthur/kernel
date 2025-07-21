@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBGPIO_H
-#define _LIBGPIO_H
+#ifndef _PLATFORM_RASPI_LIBGPIO_H
+#define _PLATFORM_RASPI_LIBGPIO_H
 
 enum iomem_gpio_enum_function {
   IOMEM_GPIO_ENUM_FUNCTION_INPUT = 0x0,

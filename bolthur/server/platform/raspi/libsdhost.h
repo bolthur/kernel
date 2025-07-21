@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBSDHOST_H
-#define _LIBSDHOST_H
+#ifndef _PLATFORM_RASPI_LIBSDHOST_H
+#define _PLATFORM_RASPI_LIBSDHOST_H
 
 // command register
 #define SDHOST_COMMAND_FLAG_ENABLE ( 1 << 15 )

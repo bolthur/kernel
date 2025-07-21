@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBMAILBOX_H
-#define _LIBMAILBOX_H
+#ifndef _PLATFORM_RASPI_LIBMAILBOX_H
+#define _PLATFORM_RASPI_LIBMAILBOX_H
 
 #define MAILBOX_REQUEST_SUCCESSFUL 0x80000000
 

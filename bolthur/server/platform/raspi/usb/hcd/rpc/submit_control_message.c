@@ -17,32 +17,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// system includes
-#include <errno.h>
-// local includes
 #include "../rpc.h"
-// driver includes
-#include "../../../libhcd.h"
-#include "../../../../../libhcd.h"
 
 /**
- * @fn bool rpc_init(void)
- * @brief Init rpc handler method
- * @return
+ * @fn void rpc_submit_control_message(size_t, pid_t, size_t, size_t)
+ * @brief Interrupt handler
+ * @param type message type
+ * @param origin origin of the message
+ * @param data_info data id
+ * @param response_info response info
  */
-bool rpc_init( void ) {
-  // bind interrupt handler
-  bolthur_rpc_bind( ARM_IRQ_USB, rpc_interrupt_handle, true );
-  if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler read!\r\n" )
-    return false;
-  }
-  // bind rpc handler for communication
-  bolthur_rpc_bind( HCD_SUBMIT_CONTROL_MESSAGE, rpc_submit_control_message, true );
-  if ( errno ) {
-    STARTUP_PRINT( "Unable to register handler submit control message!\r\n" )
-    return false;
-  }
-  // return success
-  return true;
+void rpc_submit_control_message(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+  STARTUP_PRINT( "Interrupt handler called\r\n" )
 }
