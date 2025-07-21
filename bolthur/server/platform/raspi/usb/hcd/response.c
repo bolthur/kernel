@@ -25,6 +25,7 @@ static response_message_entry_t response_error_message[] = {
   { "Memory error" },
   { "I/O error" },
   { "Mailbox error" },
+  { "Invalid arguments" },
   { "Not implemented" },
   { "Timeout while waiting for completion" },
   { "Unknown error" },

@@ -17,35 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <sys/bolthur.h>
+#ifndef _UTIL_H
+#define _UTIL_H
 
-#include "dwhci.h"
-#include "response.h"
-#include "../../libperipheral.h"
+#include <stddef.h>
 
-/**
- * @fn int main(int, char*[])
- * @brief main entry point
- *
- * @param argc
- * @param argv
- * @return
- */
-int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  // print starting
-  STARTUP_PRINT( "Setup hcd interface!\r\n" )
+void* util_prepare_mmio_sequence( size_t, size_t* );
+void* util_prepare_mailbox( size_t, size_t* );
 
-  // init dwhci
-  const response_t result = dwhci_init();
-  // handle error
-  if ( HCD_RESPONSE_OK != result ) {
-    STARTUP_PRINT( "Unable to init dwhci: %s\r\n", response_error( result ) );
-    return -1;
-  }
-
-  while ( true ) {
-    __asm__ __volatile__ ( "nop" );
-  }
-  return -1;
-}
+#endif //_UTIL_H

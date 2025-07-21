@@ -17,35 +17,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <sys/bolthur.h>
+#ifndef _DWHCI_H
+#define _DWHCI_H
 
-#include "dwhci.h"
+#include <stdint.h>
 #include "response.h"
-#include "../../libperipheral.h"
 
-/**
- * @fn int main(int, char*[])
- * @brief main entry point
- *
- * @param argc
- * @param argv
- * @return
- */
-int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  // print starting
-  STARTUP_PRINT( "Setup hcd interface!\r\n" )
+#define DWHCI_ENABLE_DEBUG 1
 
-  // init dwhci
-  const response_t result = dwhci_init();
-  // handle error
-  if ( HCD_RESPONSE_OK != result ) {
-    STARTUP_PRINT( "Unable to init dwhci: %s\r\n", response_error( result ) );
-    return -1;
-  }
+response_t dwhci_query_vendor( uint32_t* destination );
+response_t dwhci_init( void );
 
-  while ( true ) {
-    __asm__ __volatile__ ( "nop" );
-  }
-  return -1;
-}
+#endif //_DWHCI_H
