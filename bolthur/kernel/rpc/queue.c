@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,27 +17,23 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
-#include <errno.h>
 #include "../lib/string.h"
-#include "../lib/stdlib.h"
 #include "backup.h"
 #include "data.h"
 #include "generic.h"
 #include "backup.h"
 #include "queue.h"
-#include "../panic.h"
 #if defined( PRINT_RPC )
   #include "../debug/debug.h"
 #endif
 
 /**
- * @fn void rpc_queue_cleanup(const list_item_ptr_t)
+ * @fn void rpc_queue_cleanup(list_item_t*)
  * @brief Helper for cleanup
  *
  * @param item
  */
-void rpc_queue_cleanup( const list_item_ptr_t item ) {
+void rpc_queue_cleanup( list_item_t* item ) {
   if ( item->data ) {
     // delete data
     rpc_backup_destroy( item->data );
@@ -47,13 +43,13 @@ void rpc_queue_cleanup( const list_item_ptr_t item ) {
 }
 
 /**
- * @fn bool rpc_queue_setup(task_process_ptr_t)
+ * @fn bool rpc_queue_setup(task_process_t*)
  * @brief Setup rpc queue
  *
  * @param proc
  * @return
  */
-bool rpc_queue_setup( task_process_ptr_t proc ) {
+bool rpc_queue_setup( task_process_t* proc ) {
   // stop if already setup
   if ( proc->rpc_queue ) {
     return true;
@@ -64,24 +60,23 @@ bool rpc_queue_setup( task_process_ptr_t proc ) {
 }
 
 /**
- * @fn bool rpc_queue_ready(task_process_ptr_t)
+ * @fn bool rpc_queue_ready(task_process_t*)
  * @brief Method to check if rpc queue is ready for process
  *
  * @param proc
  * @return
  */
-bool rpc_queue_ready( task_process_ptr_t proc ) {
+bool rpc_queue_ready( task_process_t* proc ) {
   return proc->rpc_queue;
 }
 
-
 /**
- * @fn void rpc_queue_destroy(task_process_ptr_t)
+ * @fn void rpc_queue_destroy(task_process_t*)
  * @brief Destroy rpc queue
  *
  * @param proc
  */
-void rpc_queue_destroy( task_process_ptr_t proc ) {
+void rpc_queue_destroy( task_process_t* proc ) {
   // handle no rpc data queue
   if ( ! proc->rpc_queue ) {
     return;

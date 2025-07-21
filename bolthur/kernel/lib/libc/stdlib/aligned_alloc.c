@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,6 +22,7 @@
 #include "../../../mm/heap.h"
 
 /**
+ * @fn void aligned_alloc*(size_t, size_t)
  * @brief aligned memory allocation
  *
  * @param alignment alignment
@@ -34,5 +35,5 @@ __allocator void* aligned_alloc( size_t alignment, size_t size ) {
     return NULL;
   }
   // use heap allocation
-  return ( void* )heap_allocate_block( alignment, size );
+  return heap_allocate( alignment, size );
 }

@@ -1,0 +1,31 @@
+
+[all]
+# initramfs to follow kernel
+initramfs initrd followkernel
+
+# Set gpu memory to 64
+gpu_mem=64
+
+[pi1]
+
+[pi2]
+
+[pi3]
+# Necessary pi 3 configurations to get uart like before
+dtoverlay=pi3-disable-bt
+
+[pi3+]
+
+[pi4]
+
+[pi5]
+
+[pi400]
+
+[pi500]
+
+[pi0]
+
+[pi0w]
+
+[pi02]

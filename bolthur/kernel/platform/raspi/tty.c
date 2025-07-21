@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,6 +23,7 @@
 #endif
 
 /**
+ * @fn void tty_init(void)
  * @brief Initialize TTY
  */
 void tty_init( void ) {
@@ -32,12 +33,12 @@ void tty_init( void ) {
 }
 
 /**
+ * @fn void tty_putc(uint8_t)
  * @brief Print character to TTY
  *
  * @param c Character to print
  */
-void tty_putc( __maybe_unused uint8_t c ) {
-  // return if disabled
+void tty_putc( [[maybe_unused]] const uint8_t c ) {
   #if defined( OUTPUT_ENABLE )
     serial_putc( c );
   #endif

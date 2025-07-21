@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,21 +17,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
-
+#include "../inttypes.h"
 #include "../stdio.h"
 #include "../stdlib.h"
 #include "../assert.h"
 #include "../../panic.h"
 
 /**
+ * @fn void __assert(const char* restrict, uint32_t, const char* restrict)
  * @brief Assert functionality
  *
  * @param file
  * @param line
  * @param desc
  */
-noreturn void __assert(
+[[noreturn]] void __assert(
   const char* restrict file,
   uint32_t line,
   const char* restrict desc

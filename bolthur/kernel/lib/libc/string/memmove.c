@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,6 +22,7 @@
 #include "../../string.h"
 
 /**
+ * @fn void memmove*(void*, const void*, size_t)
  * @brief Move Memory from src to destination with length
  *
  * @param dst destination

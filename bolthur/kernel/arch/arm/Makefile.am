@@ -10,7 +10,6 @@ libarm_la_SOURCES = \
   arch.c \
   delay.c \
   elf.c \
-  fdt.S \
   firmware.c \
   initrd.c \
   interrupt.c \

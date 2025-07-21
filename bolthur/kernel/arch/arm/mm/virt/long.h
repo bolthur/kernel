@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _ARCH_ARM_MM_VIRT_LONG_H )
+#ifndef _ARCH_ARM_MM_VIRT_LONG_H
 #define _ARCH_ARM_MM_VIRT_LONG_H
 
 #include <stdint.h>
 
-#if defined( ELF32 )
+#ifdef ELF32
   // entry types
   #define LD_TYPE_INVALID 0
   #define LD_TYPE_SECTION 0x1
@@ -44,28 +44,6 @@
   #define LD_PHYSICAL_SECTION_L2_ADDRESS( a ) ( ( uint64_t )a & 0x7FFFE00000 )
   #define LD_PHYSICAL_TABLE_ADDRESS( a ) ( ( uint64_t )a & 0xFFFFFFF000 )
   #define LD_PHYSICAL_PAGE_ADDRESS( a ) ( ( uint64_t )a & 0xFFFFFFF000 )
-
-  typedef union __packed {
-    uint32_t raw;
-    struct {
-      uint32_t ttbr0_size : 3;
-      uint32_t sbz_0 : 4;
-      uint32_t ttbr0_disable_table_walk : 1;
-      uint32_t ttbr0_inner_cachability : 2;
-      uint32_t ttbr0_outer_cachability : 2;
-      uint32_t ttbr0_shareability : 2;
-      uint32_t sbz_1 : 2;
-      uint32_t ttbr1_size : 3;
-      uint32_t sbz_2 : 3;
-      uint32_t ttbr0_ttbr1_asid : 1;
-      uint32_t ttbr1_disable_table_walk : 1;
-      uint32_t ttbr1_inner_cachability : 2;
-      uint32_t ttbr1_outer_cachability : 2;
-      uint32_t ttbr1_shareability : 2;
-      uint32_t imp : 1;
-      uint32_t large_physical_address_extension : 1;
-    } data;
-  } ld_ttbcr_t;
 
   typedef union __packed {
     uint64_t raw;

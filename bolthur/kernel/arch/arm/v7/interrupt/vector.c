@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,9 +18,12 @@
  */
 
 #include "../../../../interrupt.h"
-#include "../../../../event.h"
 #include "../../interrupt/vector.h"
 #include "vector.h"
+
+#if defined( REMOTE_DEBUG )
+  #include "../../../../event.h"
+#endif
 
 /**
  * @brief Method to initialize interrupt vector table
@@ -33,14 +36,15 @@ void interrupt_vector_init( void ) {
 
 #if defined( REMOTE_DEBUG )
   /**
+   * @fn void debug_cleanup_status_flag(event_origin_t, void*)
    * @brief Handler to cleanup status flags
    *
    * @param origin
    * @param context
    */
   static void debug_cleanup_status_flag(
-    __unused event_origin_t origin,
-    __unused void* context
+    [[maybe_unused]] event_origin_t origin,
+    [[maybe_unused]] void* context
   ) {
     // reset data fault status register
     __asm__ __volatile__(
@@ -57,6 +61,7 @@ void interrupt_vector_init( void ) {
 #endif
 
 /**
+ * @fn void interrupt_post_init(void)
  * @brief Post interrupt initialization
  */
 void interrupt_post_init( void ) {
@@ -67,6 +72,7 @@ void interrupt_post_init( void ) {
 }
 
 /**
+ * @fn void interrupt_ensure_kernel_stack(void)
  * @brief Helper to assert kernel stack!
  */
 void interrupt_ensure_kernel_stack( void ) {

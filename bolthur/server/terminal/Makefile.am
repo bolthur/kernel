@@ -2,8 +2,13 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"terminal\"
 
 bin_PROGRAMS = terminal
+terminal_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/collection/list/liblist.la
+terminal_LDADD = \
+  ${abs_top_builddir}/../library/collection/list/liblist.la
 terminal_SOURCES = \
-  collection/list.c \
+  rpc/init.c \
+  rpc/ioctl.c \
   main.c \
   output.c \
   psf.c \

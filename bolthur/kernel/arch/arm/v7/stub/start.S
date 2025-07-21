@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -26,6 +26,15 @@
 .section .text
 
 IMPORT( kernel_main )
+
+IMPORT( stack_irq_mode )
+IMPORT( stack_fiq_mode )
+IMPORT( stack_abort_mode )
+IMPORT( stack_undefined_mode )
+IMPORT( stack_hypervisor_mode )
+IMPORT( stack_monitor_mode )
+IMPORT( stack_supervisor_mode )
+IMPORT( stack_system_mode )
 
 EXPORT( arch_start )
 arch_start:

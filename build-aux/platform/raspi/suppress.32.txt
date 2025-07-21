@@ -1,2 +1,0 @@
-*:/opt/bolthur/sysroot/arm-raspi2b_r1-bolthur-eabi/usr/include/*
-*:/opt/bolthur/cross/lib/gcc/arm-raspi2b_r1-bolthur-eabi/11.1.0/include/*

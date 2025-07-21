@@ -1,0 +1,2 @@
+
+SUBDIRS = avl ht list

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stdbool.h>
 #include "../../../../lib/stdlib.h"
 #include "../../../../lib/string.h"
 #include <endian.h>
@@ -63,6 +61,7 @@ uint8_t debug_gdb_output_buffer[ GDB_DEBUG_MAX_BUFFER ];
 uint8_t debug_gdb_input_buffer[ GDB_DEBUG_MAX_BUFFER ];
 
 /**
+ * @fn uint32_t extract_hex_value(const uint8_t*, uint8_t**)
  * @brief Helper to extract hex value from buffer
  *
  * @param buffer
@@ -86,6 +85,7 @@ static uint32_t extract_hex_value( const uint8_t* buffer, uint8_t **next ) {
 }
 
 /**
+ * @fn bool read_memory_content(void*, uint32_t, size_t)
  * @brief Helper to read memory content
  *
  * @param dest
@@ -120,6 +120,7 @@ static bool read_memory_content( void* dest, uint32_t address, size_t length ) {
 }
 
 /**
+ * @fn bool write_memory_content(const void*, uint32_t, size_t)
  * @brief Helper to write from src to dest
  *
  * @param src
@@ -154,6 +155,7 @@ static bool write_memory_content( const void* src, uint32_t dest, size_t length 
 }
 
 /**
+ * @fn int32_t write_register(uint8_t*, uint32_t)
  * @brief Helper to push register into destination buffer
  *
  * @param dst
@@ -177,6 +179,7 @@ static int32_t write_register( uint8_t* dst, uint32_t r ) {
 }
 
 /**
+ * @fn int32_t write_register_invalid(uint8_t*)
  * @brief Helper to put invalid register into destination
  *
  * @param dst
@@ -192,6 +195,7 @@ static int32_t write_register_invalid( uint8_t* dst ) {
 }
 
 /**
+ * @fn uint32_t str_to_hex(const uint8_t*)
  * @brief Helper to transform string to hex integer
  *
  * @param buffer
@@ -214,6 +218,7 @@ static uint32_t str_to_hex( const uint8_t* buffer ) {
 }
 
 /**
+ * @fn uint32_t read_register_from_string(const uint8_t*)
  * @brief Helper to read register from string
  *
  * @param str
@@ -230,6 +235,7 @@ static uint32_t read_register_from_string( const uint8_t* str ) {
 }
 
 /**
+ * @fn bool read_field(const uint8_t**, uint32_t*, char)
  * @brief Helper to extract field from string
  *
  * @param src
@@ -259,6 +265,7 @@ static bool read_field( const uint8_t** src, uint32_t* dest, char delim ) {
 }
 
 /**
+ * @fn bool read_address_from_string(const uint8_t**, uint32_t*)
  * @brief Helper to fetch address out of string
  *
  * @param src
@@ -270,6 +277,7 @@ static bool read_address_from_string( const uint8_t** src, uint32_t* addr ) {
 }
 
 /**
+ * @fn bool read_length_from_string(const uint8_t**, uint32_t*)
  * @brief Helper to read length from string
  *
  * @param src
@@ -281,6 +289,7 @@ static bool read_length_from_string( const uint8_t** src, uint32_t* len ) {
 }
 
 /**
+ * @fn void read_byte_from_string(const uint8_t**, uint8_t*)
  * @brief Read byte from string into buffer
  *
  * @param src
@@ -295,20 +304,22 @@ static void read_byte_from_string( const uint8_t** src, uint8_t* dest ) {
 }
 
 /**
+ * @fn void debug_gdb_handler_supported(void*, const uint8_t*)
  * @brief Supported packet handler
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_supported(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send(
     ( uint8_t* )"qSupported:PacketSize=256;multiprocess+;swbreak+" );
 }
 
 /**
+ * @fn void debug_gdb_handler_read_register(void*, const uint8_t*)
  * @brief Handle to perform register read
  *
  * @param context
@@ -316,10 +327,10 @@ void debug_gdb_handler_supported(
  */
 void debug_gdb_handler_read_register(
   void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] const uint8_t* packet
 ) {
-  // allocate memory
-  uint8_t* p = ( uint8_t* )malloc(
+  // reserve memory
+  uint8_t* p = malloc(
     sizeof( uint8_t ) + sizeof( uint8_t ) * (
       ( GDB_NORMAL_REGISTER + GDB_EXTRA_REGISTER ) * 8
     )
@@ -332,7 +343,7 @@ void debug_gdb_handler_read_register(
   // pointer for writing
   uint8_t* buffer = p;
   // transform cpu
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
   // push registers from context
   for ( uint32_t m = R0; m <= PC; ++m ) {
     buffer += write_register( buffer, cpu->raw[ m ] );
@@ -352,6 +363,7 @@ void debug_gdb_handler_read_register(
 }
 
 /**
+ * @fn void debug_gdb_handler_write_register(void*, const uint8_t*)
  * @brief Handler to write register change
  *
  * @param context
@@ -359,7 +371,7 @@ void debug_gdb_handler_read_register(
  */
 void debug_gdb_handler_write_register( void* context, const uint8_t* packet ) {
   // transform context
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
   // skip command
   packet++;
   // Ensure packet size
@@ -379,13 +391,14 @@ void debug_gdb_handler_write_register( void* context, const uint8_t* packet ) {
 }
 
 /**
+ * @fn void debug_gdb_handler_read_memory(void*, const uint8_t*)
  * @brief Handler to read memory content
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_read_memory(
-  __unused void* context,
+  [[maybe_unused]] void* context,
   const uint8_t* packet
 ) {
   // variables
@@ -405,8 +418,8 @@ void debug_gdb_handler_read_memory(
   }
   // read length to read
   length = extract_hex_value( next + 1, NULL );
-  // allocate buffer
-  p = ( uint8_t* )malloc( length * 2 + 1 );
+  // reserve buffer
+  p = malloc( length * 2 + 1 );
   // handle not enough memory
   if ( ! p ) {
     debug_gdb_packet_send( ( uint8_t* )"E01" );
@@ -438,13 +451,14 @@ void debug_gdb_handler_read_memory(
 }
 
 /**
+ * @fn void debug_gdb_handler_write_memory(void*, const uint8_t*)
  * @brief Handler to write to memory
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_write_memory(
-  __unused void* context,
+  [[maybe_unused]] void* context,
   const uint8_t* packet
 ) {
   const uint8_t* buffer;
@@ -494,13 +508,14 @@ void debug_gdb_handler_write_memory(
 }
 
 /**
+ * @fn void debug_gdb_handler_remove_breakpoint(void*, const uint8_t*)
  * @brief Handler to remove breakpoint to memory
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_remove_breakpoint(
-  __unused void* context,
+  [[maybe_unused]] void* context,
   const uint8_t* packet
 ) {
   uint32_t address;
@@ -518,13 +533,14 @@ void debug_gdb_handler_remove_breakpoint(
 }
 
 /**
+ * @fn void debug_gdb_handler_insert_breakpoint(void*, const uint8_t*)
  * @brief Handler to insert breakpoint to memory
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_insert_breakpoint(
-  __unused void* context,
+  [[maybe_unused]] void* context,
   const uint8_t* packet
 ) {
   // transform context to correct structure
@@ -546,6 +562,7 @@ void debug_gdb_handler_insert_breakpoint(
 }
 
 /**
+ * @fn void debug_gdb_handler_stepping(void*, const uint8_t*)
  * @brief Handle single detach
  *
  * @param context
@@ -553,10 +570,10 @@ void debug_gdb_handler_insert_breakpoint(
  */
 void debug_gdb_handler_stepping(
   void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] const uint8_t* packet
 ) {
   // transform context to correct structure
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
   bool step_set = false;
 
   // get to next address
@@ -587,96 +604,103 @@ void debug_gdb_handler_stepping(
 }
 
 /**
+ * @fn void debug_gdb_handler_remove_write_watchpoint(void*, const uint8_t*)
  * @brief Remove write watchpoint
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_remove_write_watchpoint(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
 
 /**
+ * @fn void debug_gdb_handler_insert_write_watchpoint(void*, const uint8_t*)
  * @brief Add write watchpoint
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_insert_write_watchpoint(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
 
 /**
+ * @fn void debug_gdb_handler_remove_read_watchpoint(void*, const uint8_t*)
  * @brief Remove read watchpoint
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_remove_read_watchpoint(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
 
 /**
+ * @fn void debug_gdb_handler_insert_read_watchpoint(void*, const uint8_t*)
  * @brief Add read watchpoint
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_insert_read_watchpoint(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
 
 /**
+ * @fn void debug_gdb_handler_remove_access_watchpoint(void*, const uint8_t*)
  * @brief Remove access watchpoint
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_remove_access_watchpoint(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
 
 /**
+ * @fn void debug_gdb_handler_insert_access_watchpoint(void*, const uint8_t*)
  * @brief Add access watchpoint
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_insert_access_watchpoint(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
 
 /**
+ * @fn void debug_gdb_handle_event(event_origin_t, void*)
  * @brief Handle debug event
  *
  * @param origin
  * @param context
  */
-void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
+void debug_gdb_handle_event( [[maybe_unused]] event_origin_t origin, void* context ) {
   // set exit handler flag
   handler_running = true;
   end_handler = false;
 
   // get context
-  cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
   // handle first entry
   if ( debug_gdb_get_first_entry() ) {
     // add necessary offset to skip current address
@@ -712,6 +736,7 @@ void debug_gdb_handle_event( __unused event_origin_t origin, void* context ) {
 }
 
 /**
+ * @fn void debug_gdb_breakpoint(void)
  * @brief debug breakpoint
  */
 void debug_gdb_breakpoint( void ) {
@@ -722,6 +747,7 @@ void debug_gdb_breakpoint( void ) {
 }
 
 /**
+ * @fn debug_gdb_signal_t debug_gdb_get_signal(void)
  * @brief Transform current state into gdb signal
  *
  * @return debug_gdb_signal_t
@@ -741,16 +767,18 @@ debug_gdb_signal_t debug_gdb_get_signal( void ) {
 }
 
 /**
+ * @fn bool debug_gdb_get_running_flag(void)
  * @brief Method to get handler running flag
  *
  * @return true
  * @return false
  */
-inline bool debug_gdb_get_running_flag( void ) {
+bool debug_gdb_get_running_flag( void ) {
   return handler_running;
 }
 
 /**
+ * @fn void debug_gdb_end_loop(void)
  * @brief End debug loop
  */
 void debug_gdb_end_loop( void ) {

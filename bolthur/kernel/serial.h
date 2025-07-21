@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,11 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _SERIAL_H )
+#ifndef _SERIAL_H
 #define _SERIAL_H
 
 #include <stdbool.h>
 #include <stdint.h>
+
+#define SERIAL_BAUD_RATE 115200
 
 void serial_init( void );
 bool serial_register_interrupt( void );

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,20 +21,19 @@
 #include "../peripheral.h"
 
 /**
+ * @fn uint32_t mailbox_read(mailbox0_channel_t, mailbox_type_t)
  * @brief Function for reading mailbox
  *
  * @param channel Function to read via mailbox
  * @param type mailbox type to be used
  * @return uint32_t value from mailbox function or MAILBOX_ERROR
  */
-uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
+uint32_t mailbox_read( const mailbox0_channel_t channel, const mailbox_type_t type ) {
   // data and count
   uint32_t value = 0;
   uint32_t count = 0;
-
   // mbox address
   volatile mailbox_t* mbox0;
-
   // set pointer
   if ( GPU_MAILBOX == type ) {
     mbox0 = ( volatile mailbox_t* )( ( uint32_t )peripheral_base_get(
@@ -43,7 +42,7 @@ uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
   } else {
     mbox0 = ( volatile mailbox_t* )type;
   }
-
+  // read while channel is not set
   while ( ( value & 0xF ) != channel ) {
     // wait while mailbox is empty
     while ( mbox0->status & MAILBOX_EMPTY ) {
@@ -52,16 +51,15 @@ uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
         return MAILBOX_ERROR;
       }
     }
-
     // extract read value
     value = mbox0->read;
   }
-
   // return value without channel information
   return value >> 4;
 }
 
 /**
+ * @fn void mailbox_write(mailbox0_channel_t, mailbox_type_t, uint32_t)
  * @brief Function for writing to mailbox
  *
  * @param channel Function to use via mailbox
@@ -69,17 +67,15 @@ uint32_t mailbox_read( mailbox0_channel_t channel, mailbox_type_t type ) {
  * @param data Data to write depending on function
  */
 void mailbox_write(
-  mailbox0_channel_t channel,
-  mailbox_type_t type,
+  const mailbox0_channel_t channel,
+  const mailbox_type_t type,
   uint32_t data
 ) {
   // add channel number at the lower 4 bit
   data = ( uint32_t )( ( int32_t )data & ~0xF );
   data |= channel;
-
   // get mailbox address
   volatile mailbox_t *mbox0;
-
   // set pointer
   if ( GPU_MAILBOX == type ) {
     mbox0 = ( volatile mailbox_t* )( ( uint32_t )peripheral_base_get(
@@ -88,10 +84,8 @@ void mailbox_write(
   } else {
     mbox0 = ( volatile mailbox_t* )type;
   }
-
   // wait for mailbox to be ready
   while ( ( mbox0->status & MAILBOX_FULL ) != 0 ) { }
-
   // write data to mailbox
   mbox0->write = data;
 }

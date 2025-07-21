@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,13 @@
 
 #include "../../ctype.h"
 
+/**
+ * @fn int islower(int)
+ * @brief Is lower implementation
+ *
+ * @param c
+ * @return
+ */
 int islower( int c ) {
   return (
     'a' <= c

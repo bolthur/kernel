@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,6 +21,7 @@
 #include "../../string.h"
 
 /**
+ * @fn char strcpy*(char*, const char*)
  * @brief Copy src into destination
  *
  * @param dst destination

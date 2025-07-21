@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,12 +19,14 @@
 
 #include "../lib/stdlib.h"
 #include "../lib/string.h"
+#include "../lib/inttypes.h"
 #if defined( PRINT_PROCESS )
   #include "../debug/debug.h"
 #endif
 #include "queue.h"
 
 /**
+ * @fn int32_t queue_compare_priority_callback(const avl_node_t*, const avl_node_t*)
  * @brief Compare id callback necessary for avl tree
  *
  * @param a node a
@@ -32,15 +34,17 @@
  * @return int32_t
  */
 static int32_t queue_compare_priority_callback(
-  const avl_node_ptr_t a,
-  const avl_node_ptr_t b
+  const avl_node_t* a,
+  const avl_node_t* b
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b )
-    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n",
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
+    DEBUG_OUTPUT(
+      "a->data = %zu, b->data = %zu\r\n",
       ( size_t )a->data,
-      ( size_t )b->data )
+      ( size_t )b->data
+    )
   #endif
 
   // -1 if address of a->data is greater than address of b->data
@@ -56,21 +60,25 @@ static int32_t queue_compare_priority_callback(
 }
 
 /**
+ * @fn avl_tree_t task_queue_init*(void)
  * @brief Initialize task process manager
+ *
+ * @return avl_tree_t*
  */
-avl_tree_ptr_t task_queue_init( void ) {
+avl_tree_t* task_queue_init( void ) {
   return avl_create_tree( queue_compare_priority_callback, NULL, NULL );
 }
 
 /**
+ * @fn task_priority_queue_t task_queue_get_queue*(task_manager_t*, size_t)
  * @brief Get the thread queue object
  *
  * @param manager
  * @param priority
- * @return task_priority_queue_ptr_t
+ * @return task_priority_queue_t*
  */
-task_priority_queue_ptr_t task_queue_get_queue(
-  task_manager_ptr_t manager,
+task_priority_queue_t* task_queue_get_queue(
+  task_manager_t* manager,
   size_t priority
 ) {
   // check parameter
@@ -82,29 +90,28 @@ task_priority_queue_ptr_t task_queue_get_queue(
     DEBUG_OUTPUT( "Called task_queue_get_queue( %zu )\r\n", priority )
   #endif
   // get correct tree to use
-  avl_tree_ptr_t tree = manager->thread_priority;
+  avl_tree_t* tree = manager->thread_priority;
 
   // try to find node
-  avl_node_ptr_t node = avl_find_by_data( tree, ( void* )priority );
-  task_priority_queue_ptr_t queue;
+  avl_node_t* node = avl_find_by_data( tree, ( void* )priority );
+  task_priority_queue_t* queue;
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Found node %p\r\n", ( void* )node )
+    DEBUG_OUTPUT( "Found node %p\r\n", node )
   #endif
   // handle not yet added
   if ( ! node ) {
-    // allocate block
-    queue = ( task_priority_queue_ptr_t )malloc(
-      sizeof( task_priority_queue_t ) );
+    // reserve block
+    queue = malloc( sizeof( *queue ) );
     // check parameter
     if ( ! queue ) {
       return NULL;
     }
     // prepare memory
-    memset( ( void* )queue, 0, sizeof( task_priority_queue_t ) );
+    memset( queue, 0, sizeof( *queue ) );
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "Initialized new node at %p\r\n", ( void* )queue )
+      DEBUG_OUTPUT( "Initialized new node at %p\r\n", queue )
     #endif
     // populate queue
     queue->priority = priority;

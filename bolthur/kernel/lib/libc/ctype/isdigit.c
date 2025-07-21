@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,6 +19,13 @@
 
 #include "../../ctype.h"
 
+/**
+ * @fn int isdigit(int)
+ * @brief Is digit implementation
+ *
+ * @param c
+ * @return
+ */
 int isdigit( int c ) {
   return (
     '0' <= c

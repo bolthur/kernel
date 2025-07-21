@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,10 +18,10 @@
  */
 
 #include <stdint.h>
-#include <stdbool.h>
 #include "../tar.h"
 
 /**
+ * @fn size_t tar_total_size(uintptr_t)
  * @brief Method to get total size of tar
  *
  * @param address
@@ -32,7 +32,7 @@ size_t tar_total_size( uintptr_t address ) {
 
   while ( true ) {
     // get tar header
-    tar_header_ptr_t header = ( tar_header_ptr_t )address;
+    tar_header_t* header = ( tar_header_t* )address;
 
     // check for end reached
     if ( '\0' == header->file_name[ 0 ] ) {
@@ -51,12 +51,13 @@ size_t tar_total_size( uintptr_t address ) {
 }
 
 /**
+ * @fn size_t tar_size(tar_header_t*)
  * @brief Method to get size of file by header
  *
  * @param header
  * @return size_t
  */
-size_t tar_size( tar_header_ptr_t header ) {
+size_t tar_size( tar_header_t* header ) {
   // check for end reached
   if ( '\0' == header->file_name[ 0 ] ) {
     return 0;

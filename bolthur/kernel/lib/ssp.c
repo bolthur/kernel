@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include "ssp.h"
 #include "../panic.h"
 
 #if defined( PRINT_SSP )
+  #include "inttypes.h"
   #include "../debug/debug.h"
   #if defined( ARCH_ARM_V7 ) || defined( ARCH_ARM_V6 )
     #define DUMP_SSP_ORIGIN { \
@@ -46,9 +46,10 @@
 uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 
 /**
+ * @fn void __stack_chk_fail(void)
  * @brief Stack check failed callback
  */
-noreturn void __stack_chk_fail( void ) {
+[[noreturn]] void __stack_chk_fail( void ) {
   #if defined( PRINT_SSP )
     DUMP_SSP_ORIGIN
   #endif

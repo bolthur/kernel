@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,6 +22,7 @@
 #include "../../../../debug/disasm.h"
 
 /**
+ * @fn uintptr_t debug_disasm_next_instruction*(uintptr_t, uintptr_t, void*)
  * @brief Get next address for stepping
  *
  * @param address
@@ -34,7 +35,7 @@
 uintptr_t* debug_disasm_next_instruction(
   uintptr_t address,
   uintptr_t stack,
-  __maybe_unused void* context
+  void* context
 ) {
   // static array for up to two instruction addresses
   static uintptr_t next_instruction[ DEBUG_DISASM_MAX_INSTRUCTION ];
@@ -109,7 +110,7 @@ uintptr_t* debug_disasm_next_instruction(
     // get branch register
     uint32_t reg = instruction & 0x0000000f;
     // get register context
-    cpu_register_context_ptr_t cpu = ( cpu_register_context_ptr_t )context;
+    cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
     // get register to branch to
     next_instruction[ instruction_index ] = cpu->raw[ reg ];
     // return next address

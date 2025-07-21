@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,16 +21,19 @@
 #include "../../ctype.h"
 
 /**
+ * @fn unsigned long int strtoul(const char*, char**, int)
  * @brief strtoul
  *
  * @param str
  * @param end
  * @param base
  * @return unsigned long int
+ *
+ * @todo implement handling for end
  */
 unsigned long int strtoul(
   const char* str,
-  __unused char** end,
+  [[maybe_unused]] char** end,
   int base
 ) {
   unsigned long int val = 0;
@@ -60,12 +63,12 @@ unsigned long int strtoul(
       if ( *str - 'A' + 10 > base - 1 ) {
         break;
       }
-      digit = *str - 'A' + 10;
+      digit = (unsigned long int)(*str - 'A' + 10);
     } else if ( islower( *str ) ) {
       if ( *str - 'a' + 10 > base - 1 ) {
         break;
       }
-      digit = *str - 'a' + 10;
+      digit = (unsigned long int)(*str - 'a' + 10);
     } else {
       break;
     }

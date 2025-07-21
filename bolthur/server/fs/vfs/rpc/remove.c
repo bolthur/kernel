@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,8 +23,6 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
-#include "../file/handle.h"
 
 /**
  * @fn void rpc_handle_remove(size_t, pid_t, size_t, size_t)
@@ -34,33 +32,27 @@
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo remove registered watchers for path
  */
 void rpc_handle_remove(
   size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_remove_response_t response = { .status = -EINVAL };
-  vfs_remove_request_ptr_t request = malloc( sizeof( vfs_remove_request_t ) );
-  if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  // clear variables
-  memset( request, 0, sizeof( vfs_remove_request_t ) );
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_remove_request_t ), data_info, false );
-  // handle error
-  if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
+  // get message and data size
+  size_t data_size;
+  vfs_remove_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  if ( ! request ) {
+    response.status = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // debug output
@@ -68,7 +60,7 @@ void rpc_handle_remove(
   // prepare response
   response.status = -ENOSYS;
   // send response
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   // free stuff
   free( request );
 }

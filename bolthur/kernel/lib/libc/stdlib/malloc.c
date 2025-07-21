@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,11 +21,12 @@
 #include "../../stdlib.h"
 
 /**
+ * @fn void malloc*(size_t)
  * @brief Malloc implementation
  *
  * @param size size to allocate
  * @return void* allocated address or NULL
  */
 __allocator void* malloc( size_t size ) {
-  return aligned_alloc( __alignof( size ), size );
+  return aligned_alloc( alignof( max_align_t ), size );
 }

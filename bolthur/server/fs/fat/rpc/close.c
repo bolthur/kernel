@@ -1,0 +1,115 @@
+/**
+ * Copyright (C) 2018 - 2025 bolthur project.
+ *
+ * This file is part of bolthur/kernel.
+ *
+ * bolthur/kernel is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * bolthur/kernel is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <libgen.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/bolthur.h>
+#include "../rpc.h"
+#include "../types.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
+
+// fat library
+#include <bfs/common/errno.h>
+#include <bfs/fat/type.h>
+#include <bfs/fat/file.h>
+#include <bfs/fat/directory.h>
+
+/**
+ * @fn void rpc_handle_close(size_t, pid_t, size_t, size_t)
+ * @brief Handle close request
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ *
+ * @todo add return on error
+ */
+void rpc_handle_close(
+  size_t type,
+  pid_t origin,
+  size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+  STARTUP_PRINT( "close\r\n" )
+  vfs_close_response_t response = { .status = -EINVAL };
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    return;
+  }
+  // handle no data
+  if( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    return;
+  }
+  // fetch rpc data
+  size_t data_size;
+  vfs_close_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  // handle error
+  if ( ! request ) {
+    response.status = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    return;
+  }
+  // get handle
+  handle_node_t* node;
+  int result = handle_get( &node, request->origin, request->handle );
+  if ( 0 > result ) {
+    response.status = result;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    free( request );
+    return;
+  }
+  handle_container_t* container = node->data;
+  // close action
+  if ( container->type == HANDLE_TYPE_FOLDER ) {
+    fat_directory_t* dir = container->data;
+    result = fat_directory_close( dir );
+    if ( EOK != result ) {
+      response.status = -result;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      free( request );
+      return;
+    }
+  } else {
+    fat_file_t* file = container->data;
+    result = fat_file_close( file );
+    if ( EOK != result ) {
+      response.status = -result;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      free( request );
+      return;
+    }
+  }
+  // free up data
+  free( container->data );
+  free( container );
+  // destroy handle
+  handle_destroy( request->origin, request->handle );
+  // set success
+  response.status = 0;
+  // return data
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  free( request );
+}

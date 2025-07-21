@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,10 +19,13 @@
 
 #include <stddef.h>
 
+#include "../../../../lib/string.h"
+#include "../../../../lib/stdlib.h"
 #include "../../../../entry.h"
 #include "../../../../panic.h"
-#include "../../../../initrd.h"
 #include "../../../../mm/virt.h"
+#include "../../../../mm/phys.h"
+#include "../../../../task/process.h"
 #include "../../mm/virt.h"
 #include "virt/short.h"
 #include "virt/long.h"
@@ -33,9 +36,10 @@
 static bool initial_setup_done __bootstrap_data = false;
 
 /**
+ * @fn void virt_startup_setup(void)
  * @brief Method wraps setup of short / long descriptor mode
  */
-void __bootstrap virt_startup_setup( void ) {
+__bootstrap void virt_startup_setup( void ) {
   // setup modes for startup
   virt_startup_setup_supported_modes();
   if (
@@ -66,12 +70,13 @@ void __bootstrap virt_startup_setup( void ) {
 }
 
 /**
+ * @fn void virt_startup_map(uint64_t, uintptr_t)
  * @brief Mapper function using short or long descriptor mapping depending on support
  *
  * @param phys physical address
  * @param virt virtual address
  */
-void __bootstrap virt_startup_map( uint64_t phys, uintptr_t virt ) {
+__bootstrap void virt_startup_map( uint64_t phys, uintptr_t virt ) {
   // check for invalid paging support
   if (
     ! (
@@ -96,9 +101,10 @@ void __bootstrap virt_startup_map( uint64_t phys, uintptr_t virt ) {
 }
 
 /**
+ * @fn void virt_startup_flush(void)
  * @brief Flush set context
  */
-void __bootstrap virt_startup_flush( void ) {
+__bootstrap void virt_startup_flush( void ) {
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_startup_supported_mode ) {
     v7_long_startup_flush();
   } else {
@@ -107,6 +113,7 @@ void __bootstrap virt_startup_flush( void ) {
 }
 
 /**
+ * @fn bool virt_map_address(virt_context_t*, uintptr_t, uint64_t, virt_memory_type_t, uint32_t)
  * @brief Map physical address to virtual one
  *
  * @param ctx pointer to page context
@@ -118,7 +125,7 @@ void __bootstrap virt_startup_flush( void ) {
  * @return false
  */
 bool virt_map_address(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t vaddr,
   uint64_t paddr,
   virt_memory_type_t type,
@@ -144,6 +151,7 @@ bool virt_map_address(
 }
 
 /**
+ * @fn bool virt_map_address_random(virt_context_t*, uintptr_t, virt_memory_type_t, uint32_t)
  * @brief Map virtual address with random physical one
  *
  * @param ctx pointer to context
@@ -154,7 +162,7 @@ bool virt_map_address(
  * @return false
  */
 bool virt_map_address_random(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t vaddr,
   virt_memory_type_t type,
   uint32_t page
@@ -179,6 +187,7 @@ bool virt_map_address_random(
 }
 
 /**
+ * @fn uintptr_t virt_map_temporary(uint64_t, size_t)
  * @brief Map a physical address within temporary space
  *
  * @param paddr physical address
@@ -202,6 +211,7 @@ uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
 }
 
 /**
+ * @fn bool virt_unmap_address(virt_context_t*, uintptr_t, bool)
  * @brief unmap virtual address
  *
  * @param ctx pointer to page context
@@ -210,7 +220,7 @@ uintptr_t virt_map_temporary( uint64_t paddr, size_t size ) {
  * @return true
  * @return false
  */
-bool virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr, bool free_phys ) {
+bool virt_unmap_address( virt_context_t* ctx, uintptr_t addr, bool free_phys ) {
   // check context
   if ( ! ctx ) {
     return false;
@@ -231,6 +241,7 @@ bool virt_unmap_address( virt_context_ptr_t ctx, uintptr_t addr, bool free_phys 
 }
 
 /**
+ * @fn void virt_unmap_temporary(uintptr_t, size_t)
  * @brief Unmap temporary mapped page again
  *
  * @param addr virtual temporary address
@@ -253,21 +264,54 @@ void virt_unmap_temporary( uintptr_t addr, size_t size ) {
 }
 
 /**
+ * @fn virt_context_t virt_create_context*(virt_context_type_t)
  * @brief Method to create virtual context
  *
  * @param type context type
- * @return virt_context_ptr_t address of context
+ * @return virt_context_t* address of context
  */
-virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
+virt_context_t* virt_create_context( virt_context_type_t type ) {
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_supported_mode ) {
-    return v7_long_create_context( type );
+    virt_context_t* context = v7_long_create_context( type );
+    if ( ! context ) {
+      return NULL;
+    }
+    // allocate bitmap for lookup
+    uintptr_t min = virt_get_context_min_address( context );
+    uintptr_t max = virt_get_context_max_address( context );
+    context->bitmap_length = ( max - min ) / PAGE_SIZE / VIRT_PAGE_PER_ENTRY;
+    context->bitmap = aligned_alloc(
+      sizeof( *( context->bitmap ) ),
+      context->bitmap_length * sizeof( uint32_t ) );
+    if ( ! context->bitmap ) {
+      v7_long_destroy_context( context, false );
+      return NULL;
+    }
+    memset( context->bitmap, 0, context->bitmap_length * sizeof( uint32_t ) );
+    return context;
   // check v7 short descriptor format
   } else if (
     ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == virt_supported_mode )
     || ( ID_MMFR0_VSMA_V7_PAGING_PXN == virt_supported_mode )
   ) {
-    return v7_short_create_context( type );
+    virt_context_t* context = v7_short_create_context( type );
+    if ( ! context ) {
+      return NULL;
+    }
+    // allocate bitmap for lookup
+    uintptr_t min = virt_get_context_min_address( context );
+    uintptr_t max = virt_get_context_max_address( context );
+    context->bitmap_length = ( max - min ) / PAGE_SIZE / VIRT_PAGE_PER_ENTRY;
+    context->bitmap = aligned_alloc(
+      sizeof( *( context->bitmap ) ),
+      context->bitmap_length * sizeof( uint32_t ) );
+    if ( ! context->bitmap ) {
+      v7_long_destroy_context( context, false );
+      return NULL;
+    }
+    memset( context->bitmap, 0, context->bitmap_length * sizeof( uint32_t ) );
+    return context;
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" )
@@ -275,12 +319,13 @@ virt_context_ptr_t virt_create_context( virt_context_type_t type ) {
 }
 
 /**
- * @fn virt_context_ptr_t virt_fork_context(virt_context_ptr_t)
+ * @fn virt_context_t* virt_fork_context(virt_context_t*, task_process_t*)
  * @brief Fork a virtual context
  * @param ctx context to fork
+ * @param proc forked process structure
  * @return
  */
-virt_context_ptr_t virt_fork_context( virt_context_ptr_t ctx ) {
+virt_context_t* virt_fork_context( virt_context_t* ctx, task_process_t* proc ) {
   // check context
   if ( ! ctx || ctx->type != VIRT_CONTEXT_TYPE_USER ) {
     return NULL;
@@ -288,13 +333,13 @@ virt_context_ptr_t virt_fork_context( virt_context_ptr_t ctx ) {
 
   // check for v7 long descriptor format
   if ( ID_MMFR0_VSMA_V7_PAGING_LPAE == virt_supported_mode ) {
-    return v7_long_fork_context( ctx );
+    return v7_long_fork_context( ctx, proc );
   // check v7 short descriptor format
   } else if (
     ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS == virt_supported_mode )
     || ( ID_MMFR0_VSMA_V7_PAGING_PXN == virt_supported_mode )
   ) {
-    return v7_short_fork_context( ctx );
+    return v7_short_fork_context( ctx, proc );
   // Panic when mode is unsupported
   } else {
     PANIC( "Unsupported mode!" )
@@ -302,14 +347,14 @@ virt_context_ptr_t virt_fork_context( virt_context_ptr_t ctx ) {
 }
 
 /**
- * @fn bool virt_destroy_context(virt_context_ptr_t, bool)
+ * @fn bool virt_destroy_context(virt_context_t*, bool)
  * @brief Method to destroy virtual context
  *
  * @param ctx
  * @param unmap_only
  * @return
  */
-bool virt_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
+bool virt_destroy_context( virt_context_t* ctx, bool unmap_only ) {
   // check context
   if ( ! ctx ) {
     return false;
@@ -331,6 +376,7 @@ bool virt_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
 }
 
 /**
+ * @fn uint64_t virt_create_table(virt_context_t*, uintptr_t, uint64_t)
  * @brief Method to create table
  *
  * @param ctx context to create table for
@@ -339,7 +385,7 @@ bool virt_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
  * @return uint64_t address of table
  */
 uint64_t virt_create_table(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t addr,
   uint64_t table
 ) {
@@ -364,13 +410,14 @@ uint64_t virt_create_table(
 }
 
 /**
+ * @fn bool virt_set_context(virt_context_t*)
  * @brief Method to enable given context
  *
  * @param ctx context structure
  * @return true
  * @return false
  */
-bool virt_set_context( virt_context_ptr_t ctx ) {
+bool virt_set_context( virt_context_t* ctx ) {
   // handle invalid context
   if ( ! ctx ) {
     return false;
@@ -392,6 +439,7 @@ bool virt_set_context( virt_context_ptr_t ctx ) {
 }
 
 /**
+ * @fn void virt_flush_complete(void)
  * @brief Flush set context
  */
 void virt_flush_complete( void ) {
@@ -411,12 +459,13 @@ void virt_flush_complete( void ) {
 }
 
 /**
+ * @fn void virt_flush_address(virt_context_t*, uintptr_t)
  * @brief Flush specific address mapping
  *
  * @param ctx used context
  * @param addr virtual address to flush
  */
-void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
+void virt_flush_address( virt_context_t* ctx, uintptr_t addr ) {
   // no flush if not initialized or context currently not active
   if (
     ! virt_init_get()
@@ -445,13 +494,14 @@ void virt_flush_address( virt_context_ptr_t ctx, uintptr_t addr ) {
 }
 
 /**
+ * @fn bool virt_prepare_temporary(virt_context_t*)
  * @brief Method to prepare temporary area
  *
  * @param ctx context structure
  * @return true
  * @return false
  */
-bool virt_prepare_temporary( virt_context_ptr_t ctx ) {
+bool virt_prepare_temporary( virt_context_t* ctx ) {
   // check context
   if ( ! ctx ) {
     return false;
@@ -472,6 +522,7 @@ bool virt_prepare_temporary( virt_context_ptr_t ctx ) {
 }
 
 /**
+ * @fn void virt_arch_prepare(void)
  * @brief Method to prepare
  */
 void virt_arch_prepare( void ) {
@@ -491,6 +542,7 @@ void virt_arch_prepare( void ) {
 }
 
 /**
+ * @fn bool virt_is_mapped_in_context(virt_context_t*, uintptr_t)
  * @brief Method checks whether address is mapped or not without generating exceptions
  *
  * @param ctx
@@ -498,7 +550,7 @@ void virt_arch_prepare( void ) {
  * @return true
  * @return false
  */
-bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
+bool virt_is_mapped_in_context( virt_context_t* ctx, uintptr_t addr ) {
   // check context
   if ( ! ctx ) {
     return false;
@@ -520,7 +572,7 @@ bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
 }
 
 /**
- * @fn uint64_t virt_get_mapped_address_in_context(virt_context_ptr_t, uintptr_t)
+ * @fn uint64_t virt_get_mapped_address_in_context(virt_context_t*, uintptr_t)
  * @brief Get mapped physical address
  *
  * @param ctx
@@ -528,12 +580,12 @@ bool virt_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
  * @return
  */
 uint64_t virt_get_mapped_address_in_context(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t addr
 ) {
   // check context
   if ( ! ctx ) {
-    return ( uint64_t )-1;
+    return INVALID_ADDRESS;
   }
 
   // check for v7 long descriptor format
@@ -552,6 +604,7 @@ uint64_t virt_get_mapped_address_in_context(
 }
 
 /**
+ * @fn uintptr_t virt_prefetch_fault_address(void)
  * @brief Get prefetch fault address
  *
  * @return
@@ -573,6 +626,7 @@ uintptr_t virt_prefetch_fault_address( void ) {
 }
 
 /**
+ * @fn uintptr_t virt_prefetch_status(void)
  * @brief Get prefetch abort status
  *
  * @return
@@ -594,6 +648,7 @@ uintptr_t virt_prefetch_status( void ) {
 }
 
 /**
+ * @fn uintptr_t virt_data_fault_address(void)
  * @brief Get data abort status
  *
  * @return
@@ -615,6 +670,7 @@ uintptr_t virt_data_fault_address( void ) {
 }
 
 /**
+ * @fn uintptr_t virt_data_status(void)
  * @brief Get data abort status
  *
  * @return data abort address

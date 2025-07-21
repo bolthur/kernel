@@ -1,4 +1,4 @@
 
 ACLOCAL_AMFLAGS = -I ../../build-aux/m4
 
-SUBDIRS = boot console fs platform terminal
+SUBDIRS = authentication boot console fs mount partition platform terminal usb

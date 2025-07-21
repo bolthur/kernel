@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,7 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
 #include <stddef.h>
 #include "../../../../../lib/string.h"
 #include "../../../../../lib/stdlib.h"
@@ -25,6 +24,7 @@
 #include "../../../../../panic.h"
 #include "../../../../../entry.h"
 #if defined( PRINT_MM_VIRT )
+  #include "../../../../../lib/inttypes.h"
   #include "../../../../../debug/debug.h"
 #endif
 #include "../../../barrier.h"
@@ -33,6 +33,12 @@
 #include "../../../mm/virt/short.h"
 #include "short.h"
 #include "../../../../../mm/virt.h"
+#include "../../../../../mm/shared.h"
+#include "../../../../../task/process.h"
+
+#include "../../register/sctlr.h"
+#include "../../register/ttbcr.h"
+#include "../../register/dacr.h"
 
 /**
  * @brief Temporary space start for short format
@@ -45,6 +51,11 @@
 #define TEMPORARY_SPACE_SIZE 0xFFFFFF
 
 /**
+ * @brief static variable holding temporary size
+ */
+static uint32_t temporary_size = 0;
+
+/**
  * @brief Initial context
  */
 static sd_context_total_t initial_context
@@ -54,9 +65,9 @@ static sd_context_total_t initial_context
  * @fn void v7_short_startup_setup()
  * @brief Method to setup short descriptor paging
  */
-void __bootstrap v7_short_startup_setup() {
+__bootstrap void v7_short_startup_setup( void ) {
   uint32_t x;
-  sd_ttbcr_t ttbcr;
+  ttbcr_t ttbcr;
 
   for ( x = 0; x < 4096; x++ ) {
     initial_context.raw[ x ] = 0;
@@ -96,8 +107,8 @@ void __bootstrap v7_short_startup_setup() {
     : : "cc"
   );
   // set split to no split
-  ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_4G;
-  ttbcr.data.large_physical_address_extension = 0;
+  ttbcr.sd.ttbr_split = SD_TTBCR_N_TTBR0_4G;
+  ttbcr.sd.large_physical_address_extension = 0;
   // push back value with ttbcr
   __asm__ __volatile__(
     "mcr p15, 0, %0, c2, c0, 2"
@@ -113,11 +124,11 @@ void __bootstrap v7_short_startup_setup() {
  * @param phys physical address
  * @param virt virtual address
  */
-void __bootstrap v7_short_startup_map( uintptr_t phys, uintptr_t virt ) {
+__bootstrap void v7_short_startup_map( uintptr_t phys, uintptr_t virt ) {
   uint32_t x = virt >> 20;
   uint32_t y = phys >> 20;
 
-  sd_context_section_ptr_t sec = &initial_context.section[ x ];
+  sd_context_section_t* sec = &initial_context.section[ x ];
   sec->data.type = SD_TTBR_TYPE_SECTION;
   sec->data.execute_never = 0;
   sec->data.access_permission_0 = SD_MAC_APX0_PRIVILEGED_RW;
@@ -128,28 +139,28 @@ void __bootstrap v7_short_startup_map( uintptr_t phys, uintptr_t virt ) {
  * @fn void v7_short_startup_enable(void)
  * @brief Method to enable initial virtual memory
  */
-void __bootstrap v7_short_startup_enable( void ) {
-  uint32_t reg;
+__bootstrap void v7_short_startup_enable( void ) {
+  sctlr_t reg;
   // Get content from control register
-  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg ) : : "cc" );
+  __asm__ __volatile__( "mrc p15, 0, %0, c1, c0, 0" : "=r" ( reg.raw ) : : "cc" );
   // enable mmu by setting bit 0
-  reg |= 1;
+  reg.data.mmu = 1;
   // push back value with mmu enabled bit set
-  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg ) : "cc" );
+  __asm__ __volatile__( "mcr p15, 0, %0, c1, c0, 0" : : "r" ( reg.raw ) : "cc" );
 }
 
 /**
  * @fn void v7_short_startup_flush(void)
  * @brief Startup flush context
  */
-void __bootstrap v7_short_startup_flush( void ) {
-  sd_ttbcr_t ttbcr;
+__bootstrap void v7_short_startup_flush( void ) {
+  ttbcr_t ttbcr;
 
   // read ttbcr register
   __asm__ __volatile__( "mrc p15, 0, %0, c2, c0, 2" : "=r" ( ttbcr.raw ) : : "cc" );
   // set split to use ttbr1 and ttbr2 as it will be used later on
-  ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_4G;
-  ttbcr.data.large_physical_address_extension = 0;
+  ttbcr.sd.ttbr_split = SD_TTBCR_N_TTBR0_4G;
+  ttbcr.sd.large_physical_address_extension = 0;
   // push back value with ttbcr
   __asm__ __volatile__( "mcr p15, 0, %0, c2, c0, 2" : : "r" ( ttbcr.raw ) : "cc" );
 
@@ -196,14 +207,18 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "start = %p, page_amount = %u, offset = %p\r\n",
-      ( void* )start, page_amount, ( void* )offset )
+    DEBUG_OUTPUT(
+      "start = %#"PRIxPTR", page_amount = %"PRIu32", offset = %#"PRIxPTR"\r\n",
+      start,
+      page_amount,
+      offset
+    )
   #endif
 
   // Find free area
   for (
     uintptr_t table = TEMPORARY_SPACE_START;
-    table < TEMPORARY_SPACE_START + PAGE_SIZE && !stop;
+    table < TEMPORARY_SPACE_START + temporary_size && !stop;
     table += SD_TBL_SIZE, ++current_table
   ) {
     // get table
@@ -242,7 +257,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "Found virtual address %p\r\n", ( void* )start_address )
+    DEBUG_OUTPUT( "Found virtual address %#"PRIxPTR"\r\n", start_address )
   #endif
 
   // map amount of pages
@@ -255,7 +270,8 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "table_idx = %u, page_idx = %u\r\n", table_idx, page_idx )
+      DEBUG_OUTPUT( "table_idx = %"PRIu32", page_idx = %"PRIu32"\r\n",
+        table_idx, page_idx )
     #endif
 
     // get table
@@ -265,7 +281,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "tbl = %p\r\n", ( void* )tbl )
+      DEBUG_OUTPUT( "tbl = %p\r\n", tbl )
     #endif
 
     // map it non cacheable
@@ -287,7 +303,7 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "ret = %p\r\n", ( void* )( start_address + offset ) )
+    DEBUG_OUTPUT( "ret = %#"PRIxPTR"\r\n", start_address + offset )
   #endif
 
   // return address with offset
@@ -322,9 +338,10 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "page_amount = %u - table_idx_offset = %u\r\n",
+      "page_amount = %"PRIu32" - table_idx_offset = %"PRIu32"\r\n",
       page_amount,
-      table_idx_offset )
+      table_idx_offset
+    )
   #endif
 
   // calculate end
@@ -332,7 +349,7 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "end = %p\r\n", ( void* )end )
+    DEBUG_OUTPUT( "end = %#"PRIxPTR"\r\n", end )
   #endif
 
   // loop and unmap
@@ -357,6 +374,46 @@ static void unmap_temporary( uintptr_t addr, size_t size ) {
 }
 
 /**
+ * @fn uint64_t get_temporary_mapping(uintptr_t)
+ * @brief Helper to get temporary mapping
+ *
+ * @param addr address to get mapping of
+ * @return
+ */
+static uint64_t get_temporary_mapping( uintptr_t addr ) {
+  // determine offset and subtract it from address
+  size_t offset = addr % PAGE_SIZE;
+  addr = addr - offset;
+
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "offset = %zx, address = %#"PRIxPTR"\r\n", offset, addr )
+  #endif
+
+  // determine table index offset
+  uint32_t table_idx_offset = SD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
+
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table_idx_offset = %"PRIu32"\r\n", table_idx_offset )
+  #endif
+
+  // get table and page index
+  uint32_t table_idx = SD_VIRTUAL_TABLE_INDEX( addr ) - table_idx_offset;
+  uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( addr );
+
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "table_idx = %"PRIu32", page_idx = %"PRIu32"\r\n", table_idx, page_idx )
+  #endif
+
+  // get table
+  sd_page_table_t* tbl = ( sd_page_table_t* )(
+    TEMPORARY_SPACE_START + table_idx * SD_TBL_SIZE
+  );
+
+  // return set page
+  return tbl->page[ page_idx ].raw & 0xFFFFF000;
+}
+
+/**
  * @fn uintptr_t get_new_table(uintptr_t)
  * @brief Method to get new table or free one if passed
  *
@@ -375,11 +432,11 @@ static uintptr_t get_new_table( uintptr_t table ) {
     if ( max_addr == free_addr ) {
       // extend another space of x tables
       max_addr *= 2;
-      // allocate new array
+      // reserve space for enlarged array
       uintptr_t* tmp = malloc( sizeof( uintptr_t ) * max_addr );
       // handle error
       if ( ! tmp ) {
-        PANIC( "reallocate failed for array holding free addresses!\r\n" );
+        PANIC( "Reserve space for free addresses failed!\r\n" )
         // stupid hack to silence false positive from cppcheck
         return 0;
       }
@@ -394,7 +451,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
       addr = tmp;
     }
     if ( ! addr ) {
-      PANIC( "No address container existing!\r\n" );
+      PANIC( "No address container existing!\r\n" )
       // stupid hack to silence false positive from cppcheck
       return 0;
     }
@@ -407,7 +464,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       for ( size_t i = 0; i < max_addr; i++ ) {
-        DEBUG_OUTPUT( " addr[ %d ] = %#p\r\n", i,  addr[ i ] )
+        DEBUG_OUTPUT( " addr[ %zu ] = %#"PRIxPTR"\r\n", i,  addr[ i ] )
       }
     #endif
     // return here
@@ -415,12 +472,13 @@ static uintptr_t get_new_table( uintptr_t table ) {
   }
 
   if ( ! free_addr || ! addr ) {
-    // allocate page
-    uintptr_t new_tables = ( uintptr_t )phys_find_free_page( SD_TBL_SIZE );
+    // reserve page
+    uint64_t phys = phys_find_free_page( SD_TBL_SIZE, PHYS_MEMORY_TYPE_NORMAL );
     // handle error
-    if ( 0 == new_tables ) {
+    if ( INVALID_ADDRESS == phys ) {
       return 0;
     }
+    uintptr_t new_tables = ( uintptr_t )phys;
     // map temporarily
     uintptr_t tmp = map_temporary( new_tables, PAGE_SIZE );
     // handle error
@@ -433,7 +491,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
     // unmap page again
     unmap_temporary( tmp, PAGE_SIZE );
 
-    // allocate addr
+    // reserve addr
     if ( ! addr ) {
       max_addr = PAGE_SIZE / SD_TBL_SIZE;
       // create handling array for free tables
@@ -463,14 +521,14 @@ static uintptr_t get_new_table( uintptr_t table ) {
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "free_addr = %zu - max_addr = %zu\r\n", free_addr, max_addr )
-    DEBUG_OUTPUT( "r = %p\r\n", ( void* )r )
+    DEBUG_OUTPUT( "r = %#"PRIxPTR"\r\n", r )
   #endif
   // return address
   return r;
 }
 
 /**
- * @fn uint64_t v7_short_create_table(virt_context_ptr_t, uintptr_t, uint64_t)
+ * @fn uint64_t v7_short_create_table(virt_context_t*, uintptr_t, uint64_t)
  * @brief Internal v7 short descriptor create table function
  *
  * @param ctx context to create table for
@@ -479,7 +537,7 @@ static uintptr_t get_new_table( uintptr_t table ) {
  * @return address of created and prepared table
  */
 uint64_t v7_short_create_table(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t addr,
   uint64_t table
 ) {
@@ -488,7 +546,7 @@ uint64_t v7_short_create_table(
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "create short table for address %p\r\n", ( void* )addr )
+    DEBUG_OUTPUT( "create short table for address %#"PRIxPTR"\r\n", addr )
   #endif
 
   // kernel context
@@ -505,8 +563,11 @@ uint64_t v7_short_create_table(
     if ( 0 != context->table[ table_idx ].raw ) {
       // debug output
       #if defined( PRINT_MM_VIRT )
-        DEBUG_OUTPUT( "context->table[ %u ].data.raw = %#08x\r\n",
-          table_idx, context->table[ table_idx ].raw )
+        DEBUG_OUTPUT(
+          "context->table[ %"PRIu32" ].data.raw = %#"PRIx32"\r\n",
+          table_idx,
+          context->table[ table_idx ].raw
+        )
       #endif
 
       // return object
@@ -533,9 +594,11 @@ uint64_t v7_short_create_table(
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "created kernel table physical address = %p\r\n",
-        ( void* )tbl )
-      DEBUG_OUTPUT( "table_idx = %u\r\n", table_idx )
+      DEBUG_OUTPUT(
+        "created kernel table physical address = %#"PRIxPTR"\r\n",
+        tbl
+      )
+      DEBUG_OUTPUT( "table_idx = %"PRIu32"\r\n", table_idx )
     #endif
 
     // add table to context
@@ -543,13 +606,15 @@ uint64_t v7_short_create_table(
 
     // set necessary attributes
     context->table[ table_idx ].data.type = SD_TTBR_TYPE_PAGE_TABLE;
-    context->table[ table_idx ].data.domain = SD_DOMAIN_CLIENT;
     context->table[ table_idx ].data.non_secure = 0;
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "context->table[ %u ].data.raw = %#08x\r\n",
-        table_idx, context->table[ table_idx ].raw )
+      DEBUG_OUTPUT(
+        "context->table[ %"PRIu32" ].data.raw = %#"PRIx32"\r\n",
+        table_idx,
+        context->table[ table_idx ].raw
+      )
     #endif
 
     // unmap temporary
@@ -574,15 +639,18 @@ uint64_t v7_short_create_table(
     if ( 0 != context->table[ table_idx ].raw ) {
       // debug output
       #if defined( PRINT_MM_VIRT )
-        DEBUG_OUTPUT( "context->table[ %u ].data.raw = %#08x\r\n",
-          table_idx, context->table[ table_idx ].raw )
+        DEBUG_OUTPUT(
+          "context->table[ %"PRIu32" ].data.raw = %#"PRIx32"\r\n",
+          table_idx,
+          context->table[ table_idx ].raw
+        )
       #endif
 
       // return object
       uintptr_t ret = context->table[ table_idx ].raw  & 0xFFFFFC00;
 
       // unmap temporary
-      unmap_temporary( ( uintptr_t )context, SD_TTBR_SIZE_4G );
+      unmap_temporary( ( uintptr_t )context, SD_TTBR_SIZE_2G );
 
       // return table address
       return ret;
@@ -599,8 +667,10 @@ uint64_t v7_short_create_table(
       }
     }
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "created user table physical address = %p\r\n",
-        ( void* )tbl )
+      DEBUG_OUTPUT(
+        "created user table physical address = %#"PRIxPTR"\r\n",
+        tbl
+      )
     #endif
 
     // add table to context
@@ -608,17 +678,19 @@ uint64_t v7_short_create_table(
 
     // set necessary attributes
     context->table[ table_idx ].data.type = SD_TTBR_TYPE_PAGE_TABLE;
-    context->table[ table_idx ].data.domain = SD_DOMAIN_CLIENT;
     context->table[ table_idx ].data.non_secure = 1;
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "context->table[ %u ].data.raw = %#08x\r\n",
-        table_idx, context->table[ table_idx ].raw )
+      DEBUG_OUTPUT(
+        "context->table[ %"PRIu32" ].data.raw = %#"PRIx32"\r\n",
+        table_idx,
+        context->table[ table_idx ].raw
+      )
     #endif
 
     // unmap temporary
-    unmap_temporary( ( uintptr_t )context, SD_TTBR_SIZE_4G );
+    unmap_temporary( ( uintptr_t )context, SD_TTBR_SIZE_2G );
 
     // return table address
     return tbl;
@@ -629,7 +701,7 @@ uint64_t v7_short_create_table(
 }
 
 /**
- * @fn bool v7_short_map(virt_context_ptr_t, uintptr_t, uint64_t, virt_memory_type_t, uint32_t)
+ * @fn bool v7_short_map(virt_context_t*, uintptr_t, uint64_t, virt_memory_type_t, uint32_t)
  * @brief Internal v7 short descriptor mapping function
  *
  * @param ctx pointer to page context
@@ -640,7 +712,7 @@ uint64_t v7_short_create_table(
  * @return
  */
 bool v7_short_map(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t vaddr,
   uint64_t paddr,
   virt_memory_type_t memory,
@@ -659,7 +731,7 @@ bool v7_short_map(
   }
 
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
+    DEBUG_OUTPUT( "table: %p\r\n", table )
   #endif
 
   // map temporary
@@ -671,9 +743,12 @@ bool v7_short_map(
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
-    DEBUG_OUTPUT( "table->page[ %u ].raw = %#08x\r\n",
-      page_idx, table->page[ page_idx ].raw )
+    DEBUG_OUTPUT( "table: %p\r\n", table )
+    DEBUG_OUTPUT(
+      "table->page[ %"PRIu32" ].raw = %#"PRIx32"\r\n",
+      page_idx,
+      table->page[ page_idx ].raw
+    )
   #endif
 
   // ensure not already mapped
@@ -684,11 +759,11 @@ bool v7_short_map(
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "page physical address = %#016llx\r\n", paddr )
+    DEBUG_OUTPUT( "page physical address = %#"PRIx64"\r\n", paddr )
   #endif
 
   // set page
-  table->page[ page_idx ].raw = paddr & 0xFFFFF000;
+  table->page[ page_idx ].raw = (uint32_t)paddr & 0xFFFFF000;
 
   // set attributes
   table->page[ page_idx ].data.type = SD_TBL_SMALL_PAGE;
@@ -702,13 +777,15 @@ bool v7_short_map(
     table->page[ page_idx ].data.access_permission_0 =
       ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type )
         ? SD_MAC_APX1_PRIVILEGED_RO
-        : SD_MAC_APX1_USER_RO;
+        : SD_MAC_APX1_FULL_RO;
+    table->page[ page_idx ].data.access_permission_1 = 1;
   }
   if ( page & VIRT_PAGE_TYPE_WRITE ) {
     table->page[ page_idx ].data.access_permission_0 =
       ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type )
         ? SD_MAC_APX0_PRIVILEGED_RW
         : SD_MAC_APX0_FULL_RW;
+    table->page[ page_idx ].data.access_permission_1 = 0;
   }
   // set non global flag
   table->page[ page_idx ].data.not_global =
@@ -746,17 +823,27 @@ bool v7_short_map(
   virt_flush_address( ctx, vaddr );
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table->page[ %u ].raw = %#08x\r\n",
-      page_idx, table->page[ page_idx ].raw )
+    DEBUG_OUTPUT(
+      "table->page[ %"PRIu32" ].raw = %#"PRIx32"\r\n",
+      page_idx,
+      table->page[ page_idx ].raw
+    )
   #endif
   // unmap temporary
   unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
+
+  uintptr_t min = virt_get_context_min_address( ctx );
+  uintptr_t frame = ( vaddr - min ) / PAGE_SIZE;
+  uint32_t index = PAGE_INDEX( frame );
+  uint32_t offset = PAGE_OFFSET( frame );
+  ctx->bitmap[ index ] |= ( 1U << offset );
+
   // return success
   return true;
 }
 
 /**
- * @fn bool v7_short_map_random(virt_context_ptr_t, uintptr_t, virt_memory_type_t, uint32_t)
+ * @fn bool v7_short_map_random(virt_context_t*, uintptr_t, virt_memory_type_t, uint32_t)
  * @brief Internal v7 short descriptor random mapping function
  *
  * @param ctx pointer to page context
@@ -766,15 +853,15 @@ bool v7_short_map(
  * @return
  */
 bool v7_short_map_random(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t vaddr,
   virt_memory_type_t memory,
   uint32_t page
 ) {
   // get physical address
-  uint64_t phys = phys_find_free_page( PAGE_SIZE );
+  uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
   // handle error
-  if ( 0 == phys ) {
+  if ( INVALID_ADDRESS == phys ) {
     return false;
   }
   // map it
@@ -794,7 +881,7 @@ uintptr_t v7_short_map_temporary( uint64_t paddr, size_t size ) {
 }
 
 /**
- * @fn bool v7_short_unmap(virt_context_ptr_t, uintptr_t, bool)
+ * @fn bool v7_short_unmap(virt_context_t*, uintptr_t, bool)
  * @brief Internal v7 short descriptor unmapping function
  *
  * @param ctx pointer to page context
@@ -802,7 +889,7 @@ uintptr_t v7_short_map_temporary( uint64_t paddr, size_t size ) {
  * @param free_phys flag to free also physical memory
  * @return
  */
-bool v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
+bool v7_short_unmap( virt_context_t* ctx, uintptr_t vaddr, bool free_phys ) {
   // get page index
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( vaddr );
 
@@ -835,7 +922,7 @@ bool v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "page physical address = %p\r\n", ( void* )page )
+    DEBUG_OUTPUT( "page physical address = %#"PRIxPTR"\r\n", page )
   #endif
 
   // set page table entry as invalid
@@ -849,6 +936,13 @@ bool v7_short_unmap( virt_context_ptr_t ctx, uintptr_t vaddr, bool free_phys ) {
   unmap_temporary( ( uintptr_t )table, SD_TBL_SIZE );
   // flush context if running
   virt_flush_address( ctx, vaddr );
+
+  uintptr_t min = virt_get_context_min_address( ctx );
+  uintptr_t frame = ( vaddr - min ) / PAGE_SIZE;
+  uint32_t index = PAGE_INDEX( frame );
+  uint32_t offset = PAGE_OFFSET( frame );
+  ctx->bitmap[ index ] &= ~( 1U << offset );
+
   return true;
 }
 
@@ -864,13 +958,13 @@ void v7_short_unmap_temporary( uintptr_t addr, size_t size ) {
 }
 
 /**
- * @fn bool v7_short_set_context(virt_context_ptr_t)
+ * @fn bool v7_short_set_context(virt_context_t*)
  * @brief Internal v7 short descriptor set context function
  *
  * @param ctx context structure
  * @return
  */
-bool v7_short_set_context( virt_context_ptr_t ctx ) {
+bool v7_short_set_context( virt_context_t* ctx ) {
   // handle invalid
   if (
     VIRT_CONTEXT_TYPE_USER != ctx->type
@@ -882,8 +976,10 @@ bool v7_short_set_context( virt_context_ptr_t ctx ) {
   if ( VIRT_CONTEXT_TYPE_USER == ctx->type ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "list: %p\r\n",
-        ( void* )( ( ( sd_context_half_t* )( ( uintptr_t )ctx->context ) )->raw ) )
+      DEBUG_OUTPUT(
+        "list: %p\r\n",
+        ( ( sd_context_half_t* )( ( uintptr_t )ctx->context ) )->raw
+      )
     #endif
     // Copy page table address to cp15 ( ttbr0 )
     __asm__ __volatile__(
@@ -897,8 +993,10 @@ bool v7_short_set_context( virt_context_ptr_t ctx ) {
   } else if ( VIRT_CONTEXT_TYPE_KERNEL == ctx->type ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "list: %p\r\n",
-        ( void* )( ( ( sd_context_total_t* )( ( uintptr_t )ctx->context ) )->raw ) )
+      DEBUG_OUTPUT(
+        "list: %p\r\n",
+        ( ( sd_context_total_t* )( ( uintptr_t )ctx->context ) )->raw
+      )
     #endif
     // Copy page table address to cp15 ( ttbr1 )
     __asm__ __volatile__(
@@ -908,6 +1006,10 @@ bool v7_short_set_context( virt_context_ptr_t ctx ) {
     );
     // overwrite global pointer
     virt_current_kernel_context = ctx;
+    // debug output
+    #if defined( PRINT_MM_VIRT )
+      DEBUG_OUTPUT( "done: %p\r\n", ( ( sd_context_total_t* )( ( uintptr_t )ctx->context ) )->raw )
+    #endif
   }
 
   return true;
@@ -918,7 +1020,7 @@ bool v7_short_set_context( virt_context_ptr_t ctx ) {
  * @brief Flush context
  */
 void v7_short_flush_complete( void ) {
-  sd_ttbcr_t ttbcr;
+  ttbcr_t ttbcr;
 
   // read ttbcr register
   __asm__ __volatile__(
@@ -927,8 +1029,8 @@ void v7_short_flush_complete( void ) {
     : : "cc"
   );
   // set split to use ttbr1 and ttbr2 as it will be used later on
-  ttbcr.data.ttbr_split = SD_TTBCR_N_TTBR0_2G;
-  ttbcr.data.large_physical_address_extension = 0;
+  ttbcr.sd.ttbr_split = SD_TTBCR_N_TTBR0_2G;
+  ttbcr.sd.large_physical_address_extension = 0;
   // push back value with ttbcr
   __asm__ __volatile__(
     "mcr p15, 0, %0, c2, c0, 2"
@@ -966,26 +1068,28 @@ void v7_short_flush_address( uintptr_t addr ) {
 }
 
 /**
- * @fn bool v7_short_prepare_temporary(virt_context_ptr_t)
+ * @fn bool v7_short_prepare_temporary(virt_context_t*)
  * @brief Helper to reserve temporary area for mappings
  *
  * @param ctx context structure
  * @return
  */
-bool v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
+bool v7_short_prepare_temporary( virt_context_t* ctx ) {
   // ensure kernel for temporary
   if( VIRT_CONTEXT_TYPE_KERNEL != ctx->type ) {
     return false;
   }
 
+  temporary_size = ( TEMPORARY_SPACE_SIZE + 1 ) / SD_TBL_SIZE;
   // free page table
-  uintptr_t table = ( uintptr_t )phys_find_free_page( PAGE_SIZE );
+  uint64_t phys = phys_find_free_page_range( PAGE_SIZE, temporary_size, PHYS_MEMORY_TYPE_NORMAL );
   // handle error
-  if ( 0 == table ) {
-    return table;
+  if ( INVALID_ADDRESS == phys ) {
+    return false;
   }
+  uintptr_t table = ( uintptr_t )phys;
   // overwrite page with zero
-  memset( ( void* )table, 0, PAGE_SIZE );
+  memset( ( void* )table, 0, temporary_size );
 
   // determine offset
   uint32_t start = SD_VIRTUAL_TABLE_INDEX( TEMPORARY_SPACE_START );
@@ -1007,10 +1111,17 @@ bool v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
     // debug output
     #if defined( PRINT_MM_VIRT )
       if ( tbl != prev_tbl ) {
-        DEBUG_OUTPUT( "tbl = %#"PRIxPTR", offset = %u, start = %u\r\n",
-          tbl, offset, start )
-        DEBUG_OUTPUT( "table = %#"PRIxPTR", calculated offset = %x\r\n",
-          table, ( offset - start ) * SD_TBL_SIZE )
+        DEBUG_OUTPUT(
+          "tbl = %#"PRIxPTR", offset = %"PRIu32", start = %"PRIu32"\r\n",
+          tbl,
+          offset,
+          start
+        )
+        DEBUG_OUTPUT(
+          "table = %#"PRIxPTR", calculated offset = %"PRIx32"\r\n",
+          table,
+          ( offset - start ) * SD_TBL_SIZE
+        )
         prev_tbl = tbl;
       }
     #endif
@@ -1020,24 +1131,33 @@ bool v7_short_prepare_temporary( virt_context_ptr_t ctx ) {
     }
   }
 
-  // map page table
-  return v7_short_map(
-    ctx,
-    TEMPORARY_SPACE_START,
-    table,
-    VIRT_MEMORY_TYPE_NORMAL_NC,
-    VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
-  );
+  uintptr_t map_start = TEMPORARY_SPACE_START;
+  uintptr_t map_end = TEMPORARY_SPACE_START + temporary_size;
+  while ( map_start < map_end ) {
+    if ( ! v7_short_map(
+      ctx,
+      map_start,
+      table,
+      VIRT_MEMORY_TYPE_NORMAL_NC,
+      VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
+    ) ) {
+      return false;
+    }
+    map_start += PAGE_SIZE;
+    table += PAGE_SIZE;
+  }
+
+  return true;
 }
 
 /**
- * @fn virt_context_ptr_t v7_short_create_context(virt_context_type_t)
+ * @fn virt_context_t* v7_short_create_context(virt_context_type_t)
  * @brief Create context for v7 short descriptor
  *
  * @param type context type to create
  * @return
  */
-virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
+virt_context_t* v7_short_create_context( virt_context_type_t type ) {
   size_t size;
   size_t alignment;
 
@@ -1051,18 +1171,27 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
     ? SD_TTBR_ALIGNMENT_4G
     : SD_TTBR_ALIGNMENT_2G;
 
-  // create new context
-  uintptr_t ctx = ! virt_init_get()
-    ? VIRT_2_PHYS( aligned_alloc( alignment, size ) )
-    : ( uintptr_t )phys_find_free_page_range( alignment, size );
-  // handle error
-  if ( 0 == ctx ) {
-    return NULL;
+  // reserve space for context
+  uint64_t phys;
+  if ( !virt_init_get() ) {
+    phys = ( uintptr_t )aligned_alloc( alignment, size );
+    // handle error
+    if ( ! phys ) {
+      return NULL;
+    }
+    phys = VIRT_2_PHYS( phys );
+  } else {
+    phys = phys_find_free_page_range( alignment, size, PHYS_MEMORY_TYPE_NORMAL );
+    // handle error
+    if ( INVALID_ADDRESS == phys ) {
+      return NULL;
+    }
   }
+  uintptr_t ctx = ( uintptr_t )phys;
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "type: %d, ctx: %p\r\n", type, ( void* )ctx )
+    DEBUG_OUTPUT( "type: %d, ctx: %#"PRIxPTR"\r\n", type, ctx )
   #endif
 
   // map temporary
@@ -1083,9 +1212,7 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
   unmap_temporary( tmp, size );
 
   // create new context structure for return
-  virt_context_ptr_t context = ( virt_context_ptr_t )malloc(
-    sizeof( virt_context_t )
-  );
+  virt_context_t* context = malloc( sizeof( *context ) );
   // handle error
   if ( ! context ) {
     // unmap temporary
@@ -1101,11 +1228,11 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "context: %p\r\n", ( void* )context )
+    DEBUG_OUTPUT( "context: %p\r\n", context )
   #endif
 
   // initialize with zero
-  memset( ( void* )context, 0, sizeof( virt_context_t ) );
+  memset( context, 0, sizeof( virt_context_t ) );
   // populate type and context
   context->context = ctx;
   context->type = type;
@@ -1114,28 +1241,48 @@ virt_context_ptr_t v7_short_create_context( virt_context_type_t type ) {
 }
 
 /**
- * @fn bool v7_short_fork_table(sd_page_table_t*, sd_page_table_t*)
+ * @fn bool v7_short_fork_table(sd_page_table_t*, sd_page_table_t*, task_process_t*)
  * @brief Helper to fork page table
  *
  * @param to_fork table to fork
  * @param forked forked table
+ * @param proc forked process structure
  * @return
+ *
+ * @todo check if to fork is shared memory
  */
-bool v7_short_fork_table( sd_page_table_t* to_fork, sd_page_table_t* forked ) {
+bool v7_short_fork_table(
+  sd_page_table_t* to_fork,
+  sd_page_table_t* forked,
+  task_process_t* proc
+) {
   // copy pages with content
   for ( size_t page_idx = 0; page_idx < 256; page_idx++ ) {
     // just copy value if not mapped
     if( 0 == to_fork->page[ page_idx ].raw ) {
+      // just copy raw
       forked->page[ page_idx ].raw = to_fork->page[ page_idx ].raw;
+      // skip rest
       continue;
     }
 
     // get mapped address
     uintptr_t phys_to_fork = to_fork->page[ page_idx ].raw & 0xFFFFF000;
-    uintptr_t phys_forked = ( uintptr_t )phys_find_free_page( PAGE_SIZE );
-    if ( 0 == phys_forked ) {
+    // handle phys memory is shared
+    if ( shared_memory_phys_is_shared( proc, phys_to_fork ) ) {
+      // copy completely
+      forked->page[ page_idx ].raw = to_fork->page[ page_idx ].raw;
+      // skip forking logic
+      continue;
+    }
+    // find free page
+    uint64_t phys = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+    // handle invalid
+    if ( INVALID_ADDRESS == phys ) {
       return false;
     }
+    // transform uint64_t into uintptr_t for short format
+    uintptr_t phys_forked = ( uintptr_t )phys;
 
     // map both pages temporarily
     uintptr_t page_to_fork = map_temporary( phys_to_fork, PAGE_SIZE );
@@ -1170,16 +1317,18 @@ bool v7_short_fork_table( sd_page_table_t* to_fork, sd_page_table_t* forked ) {
 }
 
 /**
- * @fn bool v7_short_fork_global_directory(sd_context_half_t*, sd_context_half_t*)
+ * @fn bool v7_short_fork_global_directory(sd_context_half_t*, sd_context_half_t*, task_process_t*)
  * @brief Helper to fork global directory / context
  *
  * @param to_fork context to fork
  * @param forked forked context
+ * @param proc forked process structure
  * @return
  */
 bool v7_short_fork_global_directory(
   sd_context_half_t* to_fork,
-  sd_context_half_t* forked
+  sd_context_half_t* forked,
+  task_process_t* proc
 ) {
   for ( size_t gpd_idx = 0; gpd_idx < 2048; gpd_idx++ ) {
     // get middle table
@@ -1225,7 +1374,7 @@ bool v7_short_fork_global_directory(
     }
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "pmd_to_fork = %#p\r\n", pmd_to_fork )
+      DEBUG_OUTPUT( "pmd_to_fork = %p\r\n", pmd_to_fork )
     #endif
     sd_page_table_t* pmd_forked = ( sd_page_table_t* )
       map_temporary( pmd_phys_forked, SD_TBL_SIZE );
@@ -1235,13 +1384,13 @@ bool v7_short_fork_global_directory(
     }
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "pmd_forked = %#p\r\n", pmd_to_fork )
+      DEBUG_OUTPUT( "pmd_forked = %p\r\n", pmd_to_fork )
     #endif
     // prepare new table
     memset( ( void* )pmd_forked, 0, SD_TBL_SIZE );
 
     // fork middle directory
-    if ( ! v7_short_fork_table( pmd_to_fork, pmd_forked ) ) {
+    if ( ! v7_short_fork_table( pmd_to_fork, pmd_forked, proc ) ) {
       unmap_temporary( ( uintptr_t )pmd_to_fork, SD_TBL_SIZE );
       unmap_temporary( ( uintptr_t )pmd_forked, SD_TBL_SIZE );
       return false;
@@ -1256,24 +1405,27 @@ bool v7_short_fork_global_directory(
 }
 
 /**
- * @fn virt_context_ptr_t v7_short_fork_context(virt_context_ptr_t)
+ * @fn virt_context_t* v7_short_fork_context(virt_context_t*, task_process_t*)
  * @brief Fork virtual context without long page address extension
  * @param ctx context to fork
+ * @param proc forked process structure
  * @return forked context or NULL
  */
-virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t ctx ) {
+virt_context_t* v7_short_fork_context( virt_context_t* ctx, task_process_t* proc ) {
   // create new context
-  virt_context_ptr_t forked = virt_create_context( ctx->type );
+  virt_context_t* forked = virt_create_context( ctx->type );
   if ( ! forked ) {
     return NULL;
   }
+  memcpy( forked->bitmap, ctx->bitmap, ctx->bitmap_length );
+  forked->bitmap_length = ctx->bitmap_length;
 
   // map passed context temporarily
   uintptr_t ctx_to_fork = map_temporary(
     ( uintptr_t )ctx->context, SD_TTBR_SIZE_2G );
   // handle error
   if ( 0 == ctx_to_fork ) {
-    assert( virt_destroy_context( forked, false ) );
+    assert( virt_destroy_context( forked, false ) )
     return NULL;
   }
   // map new context temporarily
@@ -1282,7 +1434,7 @@ virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t ctx ) {
   // handle error
   if ( 0 == ctx_forked ) {
     unmap_temporary( ctx_to_fork, SD_TTBR_SIZE_2G );
-    assert( virt_destroy_context( forked, false ) );
+    assert( virt_destroy_context( forked, false ) )
     return NULL;
   }
   // clear page
@@ -1291,11 +1443,12 @@ virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t ctx ) {
   // kickstart forking
   if ( ! v7_short_fork_global_directory(
     ( sd_context_half_t* )ctx_to_fork,
-    ( sd_context_half_t* )ctx_forked
+    ( sd_context_half_t* )ctx_forked,
+    proc
   ) ) {
     unmap_temporary( ctx_to_fork, SD_TTBR_SIZE_2G );
     unmap_temporary( ctx_forked, SD_TTBR_SIZE_2G );
-    assert( virt_destroy_context( forked, false ) );
+    assert( virt_destroy_context( forked, false ) )
     return NULL;
   }
 
@@ -1307,13 +1460,12 @@ virt_context_ptr_t v7_short_fork_context( virt_context_ptr_t ctx ) {
 }
 
 /**
- * @fn bool v7_short_destroy_table(sd_page_table_t*)
+ * @fn void v7_short_destroy_table(sd_page_table_t*)
  * @brief Helper to destroy passed page table
  *
  * @param table table to destroy
- * @return
  */
-bool v7_short_destroy_table( sd_page_table_t* table ) {
+void v7_short_destroy_table( sd_page_table_t* table ) {
   // copy pages with content
   for ( size_t page_idx = 0; page_idx < 256; page_idx++ ) {
     // just copy value if not mapped
@@ -1327,8 +1479,6 @@ bool v7_short_destroy_table( sd_page_table_t* table ) {
     // unset table entry
     table->page[ page_idx ].raw = 0;
   }
-  // return success
-  return true;
 }
 
 /**
@@ -1357,10 +1507,7 @@ bool v7_short_destroy_global_directory( sd_context_half_t* ctx ) {
     }
 
     // fork middle directory
-    if ( ! v7_short_destroy_table( pmd_to_destroy ) ) {
-      unmap_temporary( ( uintptr_t )pmd_to_destroy, SD_TBL_SIZE );
-      return false;
-    }
+    v7_short_destroy_table( pmd_to_destroy );
 
     // unmap again
     unmap_temporary( ( uintptr_t )pmd_to_destroy, SD_TBL_SIZE );
@@ -1374,14 +1521,14 @@ bool v7_short_destroy_global_directory( sd_context_half_t* ctx ) {
 }
 
 /**
- * @fn bool v7_short_destroy_context(virt_context_ptr_t, bool)
+ * @fn bool v7_short_destroy_context(virt_context_t*, bool)
  * @brief Destroy context for v7 short descriptor
  *
  * @param ctx context to destroy
  * @param unmap_only
  * @return
  */
-bool v7_short_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
+bool v7_short_destroy_context( virt_context_t* ctx, bool unmap_only ) {
   // check context to be not active
   if (
     (
@@ -1408,6 +1555,10 @@ bool v7_short_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
   if ( ! unmap_only ) {
     // free physical page range
     phys_free_page_range( ctx->context, SD_TTBR_SIZE_2G );
+    // free bitmap
+    if ( ctx->bitmap ) {
+      free( ctx->bitmap );
+    }
     // free structure
     free( ctx );
   } else {
@@ -1422,46 +1573,81 @@ bool v7_short_destroy_context( virt_context_ptr_t ctx, bool unmap_only ) {
  * @brief Method to prepare
  */
 void v7_short_prepare( void ) {
-  uint32_t reg;
+  sctlr_t sctlr;
   // load sctlr register content
   __asm__ __volatile__(
     "mrc p15, 0, %0, c1, c0, 0"
-    : "=r" ( reg )
+    : "=r" ( sctlr.raw )
     : : "cc"
   );
-
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "reg = %#08x\r\n", reg )
+    DEBUG_OUTPUT( "sctlr = %#"PRIx32"\r\n", sctlr.raw )
   #endif
-
-  // set access flag to 1 within sctlr
-  reg |= ( 1 << 29 );
+  // set access flag to 0 within sctlr
+  sctlr.data.access_flag_enable = 0;
   // set TRE flag to 0 within sctlr
-  reg &= ( uint32_t )( ~( 1 << 29 ) );
-
+  sctlr.data.tex_remap_enable = 0;
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "reg = %#08x\r\n", reg )
+    DEBUG_OUTPUT( "sctlr = %#"PRIx32"\r\n", sctlr.raw )
   #endif
-
   // write back changes
   __asm__ __volatile__(
     "mcr p15, 0, %0, c1, c0, 0"
-    : : "r" ( reg )
+    : : "r" ( sctlr.raw )
+    : "cc"
+  );
+
+  dacr_t dacr;
+  // load dacr register content
+  __asm__ __volatile__(
+    "mrc p15, 0, %0, c3, c0, 0"
+    : "=r" ( dacr.raw )
+    : : "cc"
+  );
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "dacr = %#"PRIx32"\r\n", dacr.raw )
+  #endif
+  // set domains
+  dacr.data.d0 = SD_DOMAIN_CLIENT;
+  dacr.data.d1 = SD_DOMAIN_CLIENT;
+  dacr.data.d2 = SD_DOMAIN_CLIENT;
+  dacr.data.d3 = SD_DOMAIN_CLIENT;
+  dacr.data.d4 = SD_DOMAIN_CLIENT;
+  dacr.data.d5 = SD_DOMAIN_CLIENT;
+  dacr.data.d6 = SD_DOMAIN_CLIENT;
+  dacr.data.d7 = SD_DOMAIN_CLIENT;
+  dacr.data.d8 = SD_DOMAIN_CLIENT;
+  dacr.data.d9 = SD_DOMAIN_CLIENT;
+  dacr.data.d10 = SD_DOMAIN_CLIENT;
+  dacr.data.d11 = SD_DOMAIN_CLIENT;
+  dacr.data.d12 = SD_DOMAIN_CLIENT;
+  dacr.data.d13 = SD_DOMAIN_CLIENT;
+  dacr.data.d14 = SD_DOMAIN_CLIENT;
+  dacr.data.d15 = SD_DOMAIN_CLIENT;
+  // debug output
+  #if defined( PRINT_MM_VIRT )
+    DEBUG_OUTPUT( "dacr = %#"PRIx32"\r\n", dacr.raw )
+  #endif
+  // write back changes
+  __asm__ __volatile__(
+    "mcr p15, 0, %0, c3, c0, 0"
+    : : "r" ( dacr.raw )
     : "cc"
   );
 }
 
 /**
- * @fn bool v7_short_is_mapped_in_context(virt_context_ptr_t, uintptr_t)
+ * @fn bool v7_short_is_mapped_in_context(virt_context_t*, uintptr_t)
  * @brief Checks whether address is mapped or not
  *
  * @param ctx
  * @param addr
  * @return
  */
-bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
+bool v7_short_is_mapped_in_context( virt_context_t* ctx, uintptr_t addr ) {
   // get page index
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( addr );
   bool mapped = false;
@@ -1476,7 +1662,7 @@ bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
+    DEBUG_OUTPUT( "table: %p\r\n", table )
   #endif
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
@@ -1487,9 +1673,11 @@ bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
-    DEBUG_OUTPUT( "table->page[ %u ] = %#08x\r\n",
-      page_idx, table->page[ page_idx ].raw )
+    DEBUG_OUTPUT( "table: %p\r\n", table )
+    DEBUG_OUTPUT(
+      "table->page[ %"PRIu32" ] = %#"PRIx32"\r\n",
+      page_idx, table->page[ page_idx ].raw
+    )
   #endif
   // switch flag to true if mapped
   if ( 0 != table->page[ page_idx ].raw ) {
@@ -1502,7 +1690,7 @@ bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
 }
 
 /**
- * @fn uint64_t v7_short_get_mapped_address_in_context(virt_context_ptr_t, uintptr_t)
+ * @fn uint64_t v7_short_get_mapped_address_in_context(virt_context_t*, uintptr_t)
  * @brief Get mapped physical address
  *
  * @param ctx
@@ -1510,41 +1698,49 @@ bool v7_short_is_mapped_in_context( virt_context_ptr_t ctx, uintptr_t addr ) {
  * @return
  */
 uint64_t v7_short_get_mapped_address_in_context(
-  virt_context_ptr_t ctx,
+  virt_context_t* ctx,
   uintptr_t addr
 ) {
+  // handle temporary area
+  if ( addr >= TEMPORARY_SPACE_START && addr < TEMPORARY_SPACE_START + TEMPORARY_SPACE_SIZE ) {
+    return get_temporary_mapping( addr );
+  }
+
   // get page index
   uint32_t page_idx = SD_VIRTUAL_PAGE_INDEX( addr );
-  uint64_t phys = 0;
+  uint64_t phys;
 
   // get table for checking
   sd_page_table_t* table = ( sd_page_table_t* )(
     ( uintptr_t )v7_short_create_table( ctx, addr, 0 ) );
   // handle error
   if ( ! table ) {
-    return ( uint64_t )-1;
+    return INVALID_ADDRESS;
   }
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
+    DEBUG_OUTPUT( "table: %p\r\n", table )
   #endif
   // map temporary
   table = ( sd_page_table_t* )map_temporary( ( uintptr_t )table, SD_TBL_SIZE );
   // not mapped if null
   if ( ! table ) {
-    return ( uint64_t )-1;
+    return INVALID_ADDRESS;
   }
   // handle not mapped
   if ( 0 == table->page[ page_idx ].raw ) {
-    return ( uint64_t )-1;
+    return INVALID_ADDRESS;
   }
 
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "table: %p\r\n", ( void* )table )
-    DEBUG_OUTPUT( "table->page[ %u ] = %#08x\r\n",
-      page_idx, table->page[ page_idx ].raw )
+    DEBUG_OUTPUT( "table: %p\r\n", table )
+    DEBUG_OUTPUT(
+      "table->page[ %"PRIu32" ] = %#"PRIx32"\r\n",
+      page_idx,
+      table->page[ page_idx ].raw
+    )
   #endif
   // get mapped address
   phys = ( uint64_t )( table->page[ page_idx ].raw & 0xFFFFF000 );

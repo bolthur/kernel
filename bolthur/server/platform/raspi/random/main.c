@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,11 +19,11 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdint.h>
-#include <unistd.h>
 #include <sys/bolthur.h>
 #include <inttypes.h>
 #include "../../../libhelper.h"
+#include "rpc.h"
+#include "random.h"
 
 /**
  * @fn int main(int, char*[])
@@ -33,27 +33,35 @@
  * @param argv
  * @return
  */
-int main( __unused int argc, __unused char* argv[] ) {
-  EARLY_STARTUP_PRINT( "Sending device to vfs\r\n" )
-  // allocate memory for add request
-  vfs_add_request_ptr_t msg = malloc( sizeof( vfs_add_request_t ) );
-  if ( ! msg ) {
+int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
+  STARTUP_PRINT( "Setup random\r\n" )
+  if ( ! random_setup() ) {
+    STARTUP_PRINT( "Error while setting up random: %s\r\n", strerror( errno ) )
     return -1;
   }
-  // clear memory
-  memset( msg, 0, sizeof( vfs_add_request_t ) );
-  // prepare message structure
-  msg->info.st_mode = S_IFCHR;
-  strncpy( msg->file_path, "/dev/random", PATH_MAX - 1 );
-  strncpy( msg->file_path, "/dev/urandom", PATH_MAX - 1 );
-  // perform add request
-  send_vfs_add_request( msg, 0, 0 );
-  // free again
-  free( msg );
 
-  EARLY_STARTUP_PRINT( "Enable rpc and wait\r\n" )
-  // enable rpc and wait
-  _rpc_set_ready( true );
+  STARTUP_PRINT( "Setup rpc handler\r\n" )
+  // register handlers
+  if ( ! rpc_init() ) {
+    STARTUP_PRINT( "Error while binding rpc: %s\r\n", strerror( errno ) )
+    return -1;
+  }
+
+  // enable rpc
+  STARTUP_PRINT( "Enable rpc\r\n" )
+  _syscall_rpc_set_ready( true );
+
+  if ( !dev_add_file( "/dev/urandom", NULL, 0 ) ) {
+    STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    return -1;
+  }
+  if ( !dev_add_file( "/dev/random", NULL, 0 ) ) {
+    STARTUP_PRINT( "Unable to add dev fs\r\n" )
+    return -1;
+  }
+
+  // wait for rpc
+  STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
   return 0;
 }

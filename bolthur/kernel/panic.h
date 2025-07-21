@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,14 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _PANIC_H )
+#ifndef _PANIC_H
 #define _PANIC_H
 
 #include <stdint.h>
-#include <stdnoreturn.h>
 
 void panic_init( void );
-noreturn void panic( const char* restrict, const char* restrict, uint32_t );
+[[noreturn]] void panic( const char* restrict, const char* restrict, uint32_t );
 
 #define PANIC( msg ) panic( msg, __FILE__, __LINE__ );
 

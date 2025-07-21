@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,7 @@
 #include "../../../../debug/breakpoint.h"
 
 /**
+ * @fn uintptr_t debug_breakpoint_get_instruction(void)
  * @brief Method to get breakpoint instruction
  *
  * @return uintptr_t

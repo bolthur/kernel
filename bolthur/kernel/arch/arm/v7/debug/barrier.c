@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,7 @@
 #include "../../../../debug/barrier.h"
 
 /**
+ * @fn void debug_barrier_data_mem(void)
  * @brief Data memory barrier invalidation
  */
 void debug_barrier_data_mem( void ) {
@@ -27,6 +28,7 @@ void debug_barrier_data_mem( void ) {
 }
 
 /**
+ * @fn void debug_barrier_data_sync(void)
  * @brief Data sync barrier invalidation
  */
 void debug_barrier_data_sync( void ) {
@@ -34,6 +36,7 @@ void debug_barrier_data_sync( void ) {
 }
 
 /**
+ * @fn void debug_barrier_instruction_sync(void)
  * @brief Instruction synchronization invalidation
  */
 void debug_barrier_instruction_sync( void ) {

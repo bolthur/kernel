@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,30 +19,31 @@
 
 #include <stddef.h>
 #include "../../../lib/assert.h"
+#include "../../../lib/inttypes.h"
 #if defined( PRINT_MM_VIRT )
   #include "../../../debug/debug.h"
 #endif
-#include "../../../entry.h"
 #include "../peripheral.h"
 #include "../mailbox/property.h"
 #include "../../../mm/phys.h"
 #include "../../../mm/virt.h"
 
 #define GPIO_PERIPHERAL_BASE 0xF2000000
-#if defined( BCM2836 ) || defined( BCM2837 )
+#if defined( BCM2709 ) || defined( BCM2710 )
   #define CPU_PERIPHERAL_BASE 0xF3000000
 #endif
 #define MAILBOX_PROPERTY_AREA 0xF3040000
-#
+
 /**
+ * @fn void virt_startup_platform_setup(void)
  * @brief Method to setup short descriptor paging
  */
-void __bootstrap virt_startup_platform_setup( void ) {
+__bootstrap void virt_startup_platform_setup( void ) {
   // cpu local peripherals
-  #if defined( BCM2836 ) || defined( BCM2837 )
+  #if defined( BCM2709 ) || defined( BCM2710 )
     uintptr_t cpu_peripheral_base = 0x40000000;
-    size_t cpu_peripheral_size = 0x3FFFF;
-    uintptr_t cpu_peripheral_end = cpu_peripheral_base + cpu_peripheral_size;
+    constexpr size_t cpu_peripheral_size = 0x3FFFF;
+    const uintptr_t cpu_peripheral_end = cpu_peripheral_base + cpu_peripheral_size;
 
     while ( cpu_peripheral_base < cpu_peripheral_end ) {
       // identity map gpio
@@ -51,17 +52,15 @@ void __bootstrap virt_startup_platform_setup( void ) {
       cpu_peripheral_base += PAGE_SIZE;
     }
   #endif
-
   // GPIO related
-  #if defined( BCM2836 ) || defined( BCM2837 )
+  #if defined( BCM2709 ) || defined( BCM2710 )
     uintptr_t gpio_peripheral_base = 0x3F000000;
-    size_t gpio_peripheral_size = 0xFFFFFF;
+    constexpr size_t gpio_peripheral_size = 0xFFFFFF;
   #else
     uintptr_t gpio_peripheral_base = 0x20000000;
-    size_t gpio_peripheral_size = 0xFFFFFF;
+    constexpr size_t gpio_peripheral_size = 0xFFFFFF;
   #endif
-  uintptr_t gpio_peripheral_end = gpio_peripheral_base + gpio_peripheral_size;
-
+  const uintptr_t gpio_peripheral_end = gpio_peripheral_base + gpio_peripheral_size;
   // map gpio if set
   while ( gpio_peripheral_base < gpio_peripheral_end ) {
     // identity map gpio
@@ -72,25 +71,23 @@ void __bootstrap virt_startup_platform_setup( void ) {
 }
 
 /**
+ * @fn void virt_platform_init(void)
  * @brief Initialize virtual memory management
  */
 void virt_platform_init( void ) {
   uintptr_t start;
   uintptr_t virtual;
-
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
-      "Map peripherals %p - %p\r\n",
-      ( void* )peripheral_base_get( PERIPHERAL_GPIO ),
-      ( void* )peripheral_end_get( PERIPHERAL_GPIO )
+      "Map peripherals %#"PRIxPTR" - %#"PRIxPTR"\r\n",
+      peripheral_base_get( PERIPHERAL_GPIO ),
+      peripheral_end_get( PERIPHERAL_GPIO )
     )
   #endif
-
   // set start and virtual
   start = peripheral_base_get( PERIPHERAL_GPIO );
   virtual = GPIO_PERIPHERAL_BASE;
-
   // map peripherals
   while ( start < peripheral_end_get( PERIPHERAL_GPIO ) ) {
     // map
@@ -101,21 +98,20 @@ void virt_platform_init( void ) {
       VIRT_MEMORY_TYPE_DEVICE,
       VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
     ) )
-
     // increase start and virtual
     start += PAGE_SIZE;
     virtual += PAGE_SIZE;
   }
   // handle local peripherals
-  #if defined( BCM2836 ) || defined( BCM2837 )
+  #if defined( BCM2709 ) || defined( BCM2710 )
     // debug output
     #if defined( PRINT_MM_VIRT )
       DEBUG_OUTPUT(
-        "Map local peripherals %p - %p\r\n",
-        ( void* )peripheral_base_get( PERIPHERAL_LOCAL ),
-        ( void* )peripheral_end_get( PERIPHERAL_LOCAL ) )
+        "Map local peripherals %#"PRIxPTR" - %#"PRIxPTR"\r\n",
+        peripheral_base_get( PERIPHERAL_LOCAL ),
+        peripheral_end_get( PERIPHERAL_LOCAL )
+      )
     #endif
-
     // set start and virtual
     start = peripheral_base_get( PERIPHERAL_LOCAL );
     virtual = CPU_PERIPHERAL_BASE;
@@ -134,7 +130,6 @@ void virt_platform_init( void ) {
       virtual += PAGE_SIZE;
     }
   #endif
-
   // map mailbox buffer
   assert( virt_map_address(
     virt_current_kernel_context,
@@ -146,23 +141,31 @@ void virt_platform_init( void ) {
 }
 
 /**
+ * @fn void virt_platform_post_init(void)
  * @brief Platform post initialization routine
  */
 void virt_platform_post_init( void ) {
   // set new peripheral base
   peripheral_base_set( GPIO_PERIPHERAL_BASE, PERIPHERAL_GPIO );
   // Adjust base address of cpu peripheral
-  peripheral_base_set( CPU_PERIPHERAL_BASE, PERIPHERAL_LOCAL );
+  #if defined( BCM2709 )
+    peripheral_base_set( CPU_PERIPHERAL_BASE, PERIPHERAL_LOCAL );
+  #endif
   // set mailbox property pointer
   ptb_buffer = ( int32_t* )MAILBOX_PROPERTY_AREA;
-
   // debug output
   #if defined( PRINT_MM_VIRT )
-    DEBUG_OUTPUT( "Set new gpio peripheral base to %p\r\n",
-      ( void* )GPIO_PERIPHERAL_BASE )
-    DEBUG_OUTPUT( "Set new cpu peripheral base to %p\r\n",
-      ( void* )CPU_PERIPHERAL_BASE )
-    DEBUG_OUTPUT( "Set mailbox property buffer to %p\r\n",
-      ( void* )MAILBOX_PROPERTY_AREA )
+    DEBUG_OUTPUT(
+      "Set new gpio peripheral base to %#"PRIxPTR"\r\n",
+      ( uintptr_t )GPIO_PERIPHERAL_BASE
+    )
+    DEBUG_OUTPUT(
+      "Set new cpu peripheral base to %#"PRIxPTR"\r\n",
+      ( uintptr_t )CPU_PERIPHERAL_BASE
+    )
+    DEBUG_OUTPUT(
+      "Set mailbox property buffer to %#"PRIxPTR"\r\n",
+      ( uintptr_t )MAILBOX_PROPERTY_AREA
+    )
   #endif
 }

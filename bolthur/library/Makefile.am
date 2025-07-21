@@ -1,4 +1,4 @@
 
 ACLOCAL_AMFLAGS = -I ../../build-aux/m4
 
-SUBDIRS = framebuffer
+SUBDIRS = collection framebuffer handle

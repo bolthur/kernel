@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,13 +20,14 @@
 #include "../atag.h"
 
 /**
+ * @fn atag_t atag_find*(atag_t*, atag_tag_t)
  * @brief Small helper to get atag if existing
  *
  * @param head
  * @param tag
- * @return atag_ptr_t
+ * @return atag_t*
  */
-atag_ptr_t atag_find( atag_ptr_t head, atag_tag_t tag ) {
+atag_t* atag_find( atag_t* head, atag_tag_t tag ) {
   // loop until atag end reached
   while ( head ) {
     // return if found

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -106,7 +106,7 @@ inval_levels:
   movw  r4, #0x3ff
   // find maximum number on the way size
   ands  r4, r4, r1, lsr #3
-  // find bit position of way size increment
+  // find a bit position of way size increment
   clz r5, r4
   movw  r7, #0x7fff
   // extract max number of the index size
@@ -182,7 +182,7 @@ flush_levels:
   movw  r4, #0x3ff
   // find maximum number on the way size
   ands  r4, r4, r1, lsr #3
-  // find bit position of way size increment
+  // find a bit position of way size increment
   clz r5, r4
   movw  r7, #0x7fff
   // extract max number of the index size

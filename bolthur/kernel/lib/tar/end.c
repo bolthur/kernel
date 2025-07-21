@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,16 +17,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
 #include "../tar.h"
 
 /**
+ * @fn bool tar_end_reached(tar_header_t*)
  * @brief Check for tar end is reached
  *
  * @param current tar header to check for end reached
  * @return true end is reached
  * @return false there are more elements
  */
-bool tar_end_reached( tar_header_ptr_t current ) {
-  return ! current || ! ( uint8_t* )current->file_name;
+bool tar_end_reached( tar_header_t* current ) {
+  return ! current || ! current->file_name[ 0 ];
 }

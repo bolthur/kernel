@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,7 +18,7 @@
  */
 
 #include <errno.h>
-#include <inttypes.h>
+#include "../lib/inttypes.h"
 #include "../lib/assert.h"
 #include "../lib/stdlib.h"
 #include "../lib/string.h"
@@ -27,15 +27,14 @@
 #include "../lib/duplicate.h"
 #include "../interrupt.h"
 #include "../elf.h"
-#include "../panic.h"
 #include "../initrd.h"
-#include "../event.h"
 #include "../mm/phys.h"
 #include "../mm/virt.h"
 #include "../mm/shared.h"
 #if defined( PRINT_PROCESS )
   #include "../debug/debug.h"
 #endif
+#include "../debug/debug.h"
 #include "queue.h"
 #include "process.h"
 #include "thread.h"
@@ -47,10 +46,10 @@
 /**
  * @brief Process management structure
  */
-task_manager_ptr_t process_manager = NULL;
+task_manager_t* process_manager = NULL;
 
 /**
- * @fn int32_t process_compare_id(const avl_node_ptr_t, const avl_node_ptr_t)
+ * @fn int32_t process_compare_id(const avl_node_t*, const avl_node_t*)
  * @brief Compare id callback necessary for avl tree
  *
  * @param a
@@ -58,15 +57,17 @@ task_manager_ptr_t process_manager = NULL;
  * @return
  */
 static int32_t process_compare_id(
-  const avl_node_ptr_t a,
-  const avl_node_ptr_t b
+  const avl_node_t* a,
+  const avl_node_t* b
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
-    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n",
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
+    DEBUG_OUTPUT(
+      "a->data = %zu, b->data = %zu\r\n",
       ( size_t )a->data,
-      ( size_t )b->data );
+      ( size_t )b->data
+    )
   #endif
 
   // -1 if address of a->data is greater than address of b->data
@@ -82,7 +83,7 @@ static int32_t process_compare_id(
 }
 
 /**
- * @fn int32_t process_lookup_id(const avl_node_ptr_t, const void*)
+ * @fn int32_t process_lookup_id(const avl_node_t*, const void*)
  * @brief Compare id callback necessary for avl tree lookup
  *
  * @param a
@@ -90,13 +91,17 @@ static int32_t process_compare_id(
  * @return
  */
 static int32_t process_lookup_id(
-  const avl_node_ptr_t a,
+  const avl_node_t* a,
   const void* b
 ) {
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "a = %p, b = %p\r\n", ( void* )a, ( void* )b );
-    DEBUG_OUTPUT( "a->data = %zu, b->data = %zu\r\n", ( size_t )a->data, b );
+    DEBUG_OUTPUT( "a = %p, b = %p\r\n", a, b )
+    DEBUG_OUTPUT(
+      "a->data = %d, b->data = %d\r\n",
+      ( pid_t )a->data,
+      ( pid_t )b
+    )
   #endif
   // -1 if address of a->data is greater than address of b->data
   if ( ( pid_t )a->data > ( pid_t )b) {
@@ -110,12 +115,12 @@ static int32_t process_lookup_id(
 }
 
 /**
- * @fn void task_process_free(task_process_ptr_t)
+ * @fn void task_process_free(task_process_t*)
  * @brief Helper to destroy process structure
  *
  * @param proc process structure to free
  */
-static void task_process_free( task_process_ptr_t proc ) {
+static void task_process_free( task_process_t* proc ) {
   // handle invalid
   if ( ! proc ) {
     return;
@@ -125,9 +130,12 @@ static void task_process_free( task_process_ptr_t proc ) {
   // destroy context if existing
   if ( proc->virtual_context ) {
     // unmap all mapped shared memory areas
-    assert( shared_memory_cleanup_process( proc ) );
+    assert( shared_memory_cleanup_process( proc ) )
     // destroy context
-    assert( virt_destroy_context( proc->virtual_context, false ) );
+    assert( virt_destroy_context( proc->virtual_context, false ) )
+    // unset rpc mailbox stuff
+    proc->rpc_mailbox = 0;
+    proc->rpc_mailbox_virt = 0;
   }
   // set to null
   proc->virtual_context = NULL;
@@ -146,7 +154,7 @@ static void task_process_free( task_process_ptr_t proc ) {
 }
 
 /**
- * @fn int32_t cleanup_process_lookup_id(const list_item_ptr_t, const void*)
+ * @fn int32_t cleanup_process_lookup_id(const list_item_t*, const void*)
  * @brief Compare id callback necessary for cleanup list
  *
  * @param a
@@ -154,24 +162,22 @@ static void task_process_free( task_process_ptr_t proc ) {
  * @return
  */
 static int32_t cleanup_process_lookup_id(
-  const list_item_ptr_t a,
+  const list_item_t* a,
   const void* data
 ) {
-  task_process_ptr_t process = a->data;
+  const task_process_t* process = a->data;
   return process->id == ( pid_t )data ? 0 : 1;
 }
 
 /**
- * @fn void_t cleanup_process_delete(const list_item_ptr_t)
+ * @fn void_t cleanup_process_delete(list_item_t*)
  * @brief cleanup process list delete helper
  *
  * @param a
  * @return
  */
-static void cleanup_process_delete(
-  const list_item_ptr_t a
-) {
-  task_process_ptr_t process = a->data;
+static void cleanup_process_delete( list_item_t* a ) {
+  task_process_t* process = a->data;
   task_process_free( process );
   list_default_cleanup( a );
 }
@@ -188,20 +194,28 @@ bool task_process_init( void ) {
     return false;
   }
 
-  // allocate management structures
-  process_manager = ( task_manager_ptr_t )malloc( sizeof( task_manager_t ) );
+  // reserve space for management structures
+  process_manager = malloc( sizeof( *process_manager ) );
   // check parameter
   if ( ! process_manager ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "error while reserving space for process manager\r\n" )
+    #endif
     return false;
   }
   // prepare structure
-  memset( ( void* )process_manager, 0, sizeof( task_manager_t ) );
+  memset( ( void* )process_manager, 0, sizeof( *process_manager ) );
 
   // create tree for managing processes by id
   process_manager->process_id = avl_create_tree(
     process_compare_id, process_lookup_id, NULL );
   // handle error
   if ( ! process_manager->process_id ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "process id tree failed\r\n" )
+    #endif
     free( process_manager );
     return false;
   }
@@ -209,6 +223,10 @@ bool task_process_init( void ) {
   process_manager->thread_priority = task_queue_init();
   // handle error
   if ( ! process_manager->thread_priority ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "thread_priority failed\r\n" )
+    #endif
     avl_destroy_tree( process_manager->process_id );
     free( process_manager );
     return false;
@@ -220,6 +238,10 @@ bool task_process_init( void ) {
     NULL
   );
   if ( ! process_manager->process_to_cleanup ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "process_to_cleanup failed\r\n" )
+    #endif
     avl_destroy_tree( process_manager->process_id );
     avl_destroy_tree( process_manager->thread_priority );
     free( process_manager );
@@ -227,6 +249,10 @@ bool task_process_init( void ) {
   }
   process_manager->thread_to_cleanup = list_construct( NULL, NULL, NULL );
   if ( ! process_manager->thread_to_cleanup ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "thread_to_cleanup failed\r\n" )
+    #endif
     list_destruct( process_manager->process_to_cleanup );
     avl_destroy_tree( process_manager->process_id );
     avl_destroy_tree( process_manager->thread_priority );
@@ -235,6 +261,10 @@ bool task_process_init( void ) {
   }
   // register process switch event
   if ( ! event_bind( EVENT_PROCESS, task_process_schedule, true ) ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "bind failed\r\n" )
+    #endif
     list_destruct( process_manager->thread_to_cleanup );
     list_destruct( process_manager->process_to_cleanup );
     avl_destroy_tree( process_manager->thread_priority );
@@ -244,6 +274,10 @@ bool task_process_init( void ) {
   }
   // register cleanup
   if ( ! event_bind( EVENT_PROCESS, task_process_cleanup, true ) ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "bind failed\r\n" )
+    #endif
     event_unbind( EVENT_PROCESS, task_process_schedule, true );
     list_destruct( process_manager->thread_to_cleanup );
     list_destruct( process_manager->process_to_cleanup );
@@ -253,6 +287,10 @@ bool task_process_init( void ) {
     return false;
   }
   if ( ! event_bind( EVENT_PROCESS, task_thread_cleanup, true ) ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "bind failed\r\n" )
+    #endif
     event_unbind( EVENT_PROCESS, task_process_cleanup, true );
     event_unbind( EVENT_PROCESS, task_process_schedule, true );
     list_destruct( process_manager->thread_to_cleanup );
@@ -280,14 +318,14 @@ pid_t task_process_generate_id( void ) {
 }
 
 /**
- * @fn task_process_ptr_t task_process_create(size_t, pid_t)
+ * @fn task_process_t* task_process_create(size_t, pid_t)
  * @brief Method to create new process
  *
  * @param priority process priority
  * @param parent parent process id
  * @return
  */
-task_process_ptr_t task_process_create( size_t priority, pid_t parent ) {
+task_process_t* task_process_create( size_t priority, pid_t parent ) {
   // check manager
   if ( ! process_manager ) {
     return NULL;
@@ -297,19 +335,20 @@ task_process_ptr_t task_process_create( size_t priority, pid_t parent ) {
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
       "task_process_create( %zu, %d ) called\r\n",
-      priority, parent );
+      priority,
+      parent
+    )
   #endif
 
-  // allocate process structure
-  task_process_ptr_t process = ( task_process_ptr_t )malloc(
-    sizeof( task_process_t ) );
-  // check allocation
+  // reserve space for process structure
+  task_process_t* process = malloc( sizeof( *process ) );
+  // check
   if ( ! process ) {
     return NULL;
   }
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "Allocated process structure at %p\r\n", ( void* )process );
+    DEBUG_OUTPUT( "Reserved space for process structure at %p\r\n", process )
   #endif
 
   // prepare structure
@@ -345,56 +384,83 @@ task_process_ptr_t task_process_create( size_t priority, pid_t parent ) {
     task_process_free( process );
     return NULL;
   }
-  // return allocated process
+  // return process
   return process;
 }
 
 /**
- * @fn task_process_ptr_t task_process_fork(task_thread_ptr_t)
+ * @fn task_process_t* task_process_fork(task_thread_t*)
  * @brief Generate complete copy of process to fork
  *
  * @param thread_calling calling thread containing process information
  * @return forked process structure or null
  */
-task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
-  // allocate new process structure
-  task_process_ptr_t forked = ( task_process_ptr_t )malloc(
-    sizeof( task_process_t )
-  );
+task_process_t* task_process_fork( task_thread_t* thread_calling ) {
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Allocate process structure\r\n" )
+  #endif
+  // reserve new process structure
+  task_process_t* forked = malloc( sizeof( *forked ) );
   if ( ! forked ) {
     return NULL;
   }
   memset( ( void* )forked, 0, sizeof( task_process_t ) );
-  task_process_ptr_t proc = thread_calling->process;
+  task_process_t* proc = thread_calling->process;
 
   // prepare dynamic data structures
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Initialize thread manager\r\n" )
+  #endif
   forked->thread_manager = task_thread_init();
   if ( ! forked->thread_manager ) {
     task_process_free( forked );
     return NULL;
   }
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Initialize thread stack manager\r\n" )
+  #endif
   forked->thread_stack_manager = task_stack_manager_create();
   if ( ! forked->thread_stack_manager ) {
     task_process_free( forked );
     return NULL;
   }
+  // fork shared memory structures
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Handling shared memory\r\n" )
+  #endif
+  if ( ! shared_memory_fork( proc, forked ) ) {
+    task_process_free( forked );
+    return NULL;
+  }
   // fork virtual context
-  forked->virtual_context = virt_fork_context( proc->virtual_context );
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Fork virtual context\r\n" )
+  #endif
+  forked->virtual_context = virt_fork_context( proc->virtual_context, forked );
   if ( ! forked->virtual_context ) {
     task_process_free( forked );
     return NULL;
   }
-  // create rpc queues if existing
-  if ( proc->rpc_data_queue && ! rpc_data_queue_setup( forked ) ) {
-    task_process_free( forked );
-    return NULL;
-  }
   // create message queue if existing
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "RPC queue setup\r\n" )
+  #endif
   if ( proc->rpc_queue && ! rpc_queue_setup( forked ) ) {
     task_process_free( forked );
     return NULL;
   }
-  // copy rpc handler
+  // erase mailbox if existing
+  if ( proc->rpc_mailbox_virt && proc->rpc_mailbox ) {
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "Clearing mailbox stuff\r\n" )
+    #endif
+    // unmap if existing
+    virt_unmap_address( forked->virtual_context, proc->rpc_mailbox_virt, true );
+    // reset properties
+    forked->rpc_mailbox = 0;
+    forked->rpc_mailbox_virt = 0;
+  }
+  // copy rpc handler and rpc ready flag
   forked->rpc_handler = proc->rpc_handler;
   forked->rpc_ready = proc->rpc_ready;
 
@@ -402,32 +468,39 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
   forked->id = task_process_generate_id();
   forked->parent = proc->id;
   forked->priority = proc->priority;
-
-  // fork shared memory
-  if ( ! shared_memory_fork( proc, forked ) ) {
-    task_process_free( forked );
-    return NULL;
-  }
+  forked->current_thread_id = 0;
 
   // prepare node
   avl_prepare_node( &forked->node_id, ( void* )forked->id );
   // add process to tree
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Insert node into process tree\r\n" )
+  #endif
   if ( ! avl_insert_by_node( process_manager->process_id, &forked->node_id ) ) {
     task_process_free( forked );
     return NULL;
   }
 
-  avl_node_ptr_t current = avl_iterate_first( proc->thread_manager );
+  #if defined( PRINT_PROCESS )
+    DEBUG_OUTPUT( "Looping through threads\r\n" )
+  #endif
+  avl_node_t* current = avl_iterate_first( proc->thread_manager );
   while ( current ) {
     // get thread
-    task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( current );
+    task_thread_t* thread = TASK_THREAD_GET_BLOCK( current );
     // try to fork it
     if ( ! task_thread_fork( forked, thread ) ) {
       task_process_free( forked );
       return NULL;
     }
     // get next thread
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "current = %p\r\n", ( void* )current )
+    #endif
     current = avl_iterate_next( proc->thread_manager, current );
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT( "current = %p\r\n", ( void* )current )
+    #endif
   }
 
   return forked;
@@ -439,14 +512,14 @@ task_process_ptr_t task_process_fork( task_thread_ptr_t thread_calling ) {
  */
 void task_process_queue_reset( void ) {
   // min / max queue
-  task_priority_queue_ptr_t min_queue = NULL;
-  task_priority_queue_ptr_t max_queue = NULL;
-  avl_node_ptr_t min = NULL;
-  avl_node_ptr_t max = NULL;
+  task_priority_queue_t* min_queue = NULL;
+  task_priority_queue_t* max_queue = NULL;
+  avl_node_t* min = NULL;
+  avl_node_t* max = NULL;
 
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "task_process_queue_reset()\r\n" );
+    DEBUG_OUTPUT( "task_process_queue_reset()\r\n" )
   #endif
 
   // get min and max priority queue
@@ -454,7 +527,7 @@ void task_process_queue_reset( void ) {
   max = avl_get_max( process_manager->thread_priority->root );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "min: %p, max: %p\r\n", ( void* )min, ( void* )max );
+    DEBUG_OUTPUT( "min: %p, max: %p\r\n", min, max )
   #endif
 
   // get nodes from min/max
@@ -476,7 +549,7 @@ void task_process_queue_reset( void ) {
     priority--
   ) {
     // try to find queue for priority
-    avl_node_ptr_t current_node = avl_find_by_data(
+    avl_node_t* current_node = avl_find_by_data(
       process_manager->thread_priority,
       ( void* )priority );
     // skip if not existing
@@ -490,7 +563,7 @@ void task_process_queue_reset( void ) {
     }
 
     // get queue
-    task_priority_queue_ptr_t current = TASK_QUEUE_GET_PRIORITY( current_node );
+    task_priority_queue_t* current = TASK_QUEUE_GET_PRIORITY( current_node );
     // check for empty
     if ( list_empty( current->thread_list ) ) {
       // prevent endless loop by checking against 0
@@ -518,20 +591,20 @@ void task_process_queue_reset( void ) {
  * @param context
  */
 void task_process_cleanup(
-  __unused event_origin_t origin,
-  __unused void* context
+  [[maybe_unused]] event_origin_t origin,
+  [[maybe_unused]] void* context
 ) {
-  list_item_ptr_t current = process_manager->process_to_cleanup->first;
+  list_item_t* current = process_manager->process_to_cleanup->first;
   // loop
   while ( current ) {
     // get process from item
-    task_process_ptr_t proc = ( task_process_ptr_t )current->data;
+    auto task_process_t* proc = ( task_process_t* )current->data;
     // check for running thread
-    avl_node_ptr_t current_thread = avl_iterate_first( proc->thread_manager );
+    avl_node_t* current_thread = avl_iterate_first( proc->thread_manager );
     bool skip = false;
     while ( current_thread ) {
       // get thread
-      task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( current_thread );
+      auto const task_thread_t* thread = TASK_THREAD_GET_BLOCK( current_thread );
       // check for active
       if ( thread->state != TASK_THREAD_STATE_KILL ) {
         skip = true;
@@ -544,37 +617,37 @@ void task_process_cleanup(
     if ( skip ) {
       // debug output
       #if defined( PRINT_PROCESS )
-        DEBUG_OUTPUT( "Skip process with id %d!\r\n", proc->id );
+        DEBUG_OUTPUT( "Skip process with id %d!\r\n", proc->id )
       #endif
       continue;
     }
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "Cleanup process with id %d!\r\n", proc->id );
+      DEBUG_OUTPUT( "Cleanup process with id %d!\r\n", proc->id )
     #endif
     // cache current for removal, cleanup helper destroys process completely
-    list_item_ptr_t remove = current;
+    list_item_t* remove = current;
     // head over to next
     current = current->next;
     // remove list item
-    list_remove( process_manager->process_to_cleanup, remove );
+    list_remove_item( process_manager->process_to_cleanup, remove );
   }
 }
 
 /**
- * @fn bool task_process_prepare_init(task_process_ptr_t)
+ * @fn bool task_process_prepare_init(task_process_t*)
  * @brief Prepare init process by mapping ramdisk and optional archticture depending and pass it via argv
  *
  * @param proc init process structure
  * @return bool true on success, else false
  */
-bool task_process_prepare_init( task_process_ptr_t proc ) {
+bool task_process_prepare_init( task_process_t* proc ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "task_process_prepare_init( %p )\r\n", proc )
   #endif
 
-  tar_header_ptr_t ramdisk = tar_lookup_file(
+  tar_header_t* ramdisk = tar_lookup_file(
     initrd_get_start_address(),
     "ramdisk.tar.gz"
   );
@@ -599,13 +672,14 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
   // get physical area
   uint64_t phys_address_ramdisk = phys_find_free_page_range(
     PAGE_SIZE,
-    rounded_ramdisk_file_size
+    rounded_ramdisk_file_size,
+    PHYS_MEMORY_TYPE_NORMAL
   );
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "phys address: %#llx\r\n", phys_address_ramdisk )
   #endif
-  if( ! phys_address_ramdisk ) {
+  if( INVALID_ADDRESS == phys_address_ramdisk ) {
     return false;
   }
   // map temporary
@@ -644,18 +718,17 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
     return false;
   }
 
-  int addr_size = sizeof( uintptr_t ) * 2;
   char str_ramdisk[ 20 ];
   char str_ramdisk_size[ 20 ];
-  sprintf( str_ramdisk, "%#0*"PRIxPTR"\0", addr_size, proc_ramdisk_start );
-  sprintf( str_ramdisk_size, "%#0*zx\0", addr_size, ramdisk_file_size );
+  sprintf( str_ramdisk, "%#"PRIxPTR"\0", proc_ramdisk_start );
+  sprintf( str_ramdisk_size, "%#zx\0", ramdisk_file_size );
 
   // get thread
-  avl_node_ptr_t node = avl_iterate_first( proc->thread_manager );
+  avl_node_t* node = avl_iterate_first( proc->thread_manager );
   if ( ! node ) {
     return false;
   }
-  task_thread_ptr_t thread = TASK_THREAD_GET_BLOCK( node );
+  task_thread_t* thread = TASK_THREAD_GET_BLOCK( node );
 
   // empty env for init
   char* env[] = { NULL, };
@@ -663,31 +736,29 @@ bool task_process_prepare_init( task_process_ptr_t proc ) {
   uintptr_t proc_additional_start = task_process_prepare_init_arch( proc );
   if ( proc_additional_start ) {
     char str_additional[ 20 ];
-    sprintf(
-      str_additional, "%#0*"PRIxPTR"\0", addr_size, proc_additional_start
-    );
+    sprintf( str_additional, "%#"PRIxPTR"\0", proc_additional_start );
 
     char* arg[] = {
       "daemon:/init", str_ramdisk, str_ramdisk_size, str_additional, NULL, };
-    assert( task_thread_push_arguments( thread, arg, env ) );
+    assert( task_thread_push_arguments( thread, arg, env ) )
   } else {
     char* arg[] = { "daemon:/init", str_ramdisk, str_ramdisk_size, NULL, };
-    assert( task_thread_push_arguments( thread, arg, env ) );
+    assert( task_thread_push_arguments( thread, arg, env ) )
   }
 
   return true;
 }
 
 /**
- * @fn task_process_ptr_t task_process_get_by_id(pid_t)
+ * @fn task_process_t* task_process_get_by_id(pid_t)
  * @brief Get task structure by id
  *
  * @param pid
  * @return
  */
-task_process_ptr_t task_process_get_by_id( pid_t pid ) {
+task_process_t* task_process_get_by_id( pid_t pid ) {
   // lookup process id tree
-  avl_node_ptr_t found = avl_find_by_data(
+  avl_node_t* found = avl_find_by_data(
     process_manager->process_id,
     ( void* )pid
   );
@@ -700,24 +771,23 @@ task_process_ptr_t task_process_get_by_id( pid_t pid ) {
 }
 
 /**
- * @fn void task_process_prepare_kill(void*, task_process_ptr_t)
+ * @fn void task_process_prepare_kill(void*, task_process_t*)
  * @brief Prepare process kill
  *
  * @param context
  * @param proc
  */
-void task_process_prepare_kill( void* context, task_process_ptr_t proc ) {
+void task_process_prepare_kill( void* context, task_process_t* proc ) {
   // debug output
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "Prepare kill of process %d\r\n", proc->id )
   #endif
   // get first thread
-  avl_node_ptr_t current = avl_iterate_first( proc->thread_manager );
-  task_thread_ptr_t thread = NULL;
+  avl_node_t* current = avl_iterate_first( proc->thread_manager );
   // loop through all threads set appropriate state for kill
   while ( current ) {
     // get thread
-    thread = TASK_THREAD_GET_BLOCK( current );
+    task_thread_t* thread = TASK_THREAD_GET_BLOCK( current );
     // set process state
     thread->state = TASK_THREAD_STATE_KILL;
     // get next thread
@@ -726,13 +796,13 @@ void task_process_prepare_kill( void* context, task_process_ptr_t proc ) {
   // unregister possible interrupts
   interrupt_unregister_process( proc );
   // push process to clean up list
-  list_push_back( process_manager->process_to_cleanup, proc );
+  list_push_back_data( process_manager->process_to_cleanup, proc );
   // trigger schedule and cleanup
   event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
 }
 
 /**
- * @fn int task_process_replace(task_process_ptr_t, uintptr_t, const char**, const char**, void*)
+ * @fn int task_process_replace(task_process_t*, uintptr_t, const char**, const char**, void*)
  * @brief Replace current process with elf image
  *
  * @param proc
@@ -741,9 +811,11 @@ void task_process_prepare_kill( void* context, task_process_ptr_t proc ) {
  * @param env
  * @param context
  * @return
+ *
+ * @todo don't allocate kernel heap for elf application
  */
 int task_process_replace(
-  task_process_ptr_t proc,
+  task_process_t* proc,
   uintptr_t elf,
   const char** argv,
   const char** env,
@@ -751,8 +823,10 @@ int task_process_replace(
 ) {
   bool replace_current_thread = task_thread_current_thread->process == proc;
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "task_thread_current_thread->process = %p, proc = %p\r\n",
-      ( void* )task_thread_current_thread->process, ( void* )proc )
+    DEBUG_OUTPUT(
+      "task_thread_current_thread->process = %p, proc = %p\r\n",
+      task_thread_current_thread->process, proc
+    )
   #endif
 
   #if defined( PRINT_PROCESS )
@@ -778,9 +852,9 @@ int task_process_replace(
   // save image temporary
   size_t image_size = elf_image_size( ( uintptr_t )elf );
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "image_size = %#x\r\n", image_size )
+    DEBUG_OUTPUT( "image_size = %#zx\r\n", image_size )
   #endif
-  void* image = ( void* )malloc( sizeof( char ) * image_size );
+  void* image = malloc( sizeof( char ) * image_size );
   // handle error
   if ( ! image ) {
     free( tmp_argv );
@@ -788,9 +862,9 @@ int task_process_replace(
     return -ENOMEM;
   }
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "image = %#p\r\n", image )
+    DEBUG_OUTPUT( "image = %p\r\n", image )
   #endif
-  memcpy_unsafe( image, ( void* )elf, image_size );
+  memcpy_unsafe_src( image, ( void* )elf, image_size );
 
   // clear all assigned shared areas
   if ( ! shared_memory_cleanup_process( proc ) ) {
@@ -802,10 +876,7 @@ int task_process_replace(
   }
 
   // destroy virtual context
-  if ( ! virt_destroy_context(
-    proc->virtual_context,
-    true
-  ) ) {
+  if ( ! virt_destroy_context( proc->virtual_context, true ) ) {
     free( tmp_argv );
     free( tmp_env );
     free( image );
@@ -813,17 +884,21 @@ int task_process_replace(
     return -ENOMEM;
   }
 
+  // unset rpc stuff
+  proc->rpc_mailbox = 0;
+  proc->rpc_mailbox_virt = 0;
+
   // destroy thread manager
   if ( proc->thread_manager ) {
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "image_size = %#p\r\n", proc->thread_manager )
+      DEBUG_OUTPUT( "thread manager = %p\r\n", proc->thread_manager )
     #endif
     task_thread_destroy( proc->thread_manager );
   }
   // destroy stack manager
   if ( proc->thread_stack_manager ) {
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "image_size = %#p\r\n", proc->thread_stack_manager )
+      DEBUG_OUTPUT( "stack manager = %p\r\n", proc->thread_stack_manager )
     #endif
     task_stack_manager_destroy( proc->thread_stack_manager );
   }
@@ -845,6 +920,8 @@ int task_process_replace(
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
+  // reset thread id counter
+  proc->current_thread_id = 0;
 
   // load elf image
   uintptr_t init_entry = elf_load( ( uintptr_t )image, proc );
@@ -855,38 +932,40 @@ int task_process_replace(
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
+
   // add thread
-  task_thread_ptr_t new_current = task_thread_create( init_entry, proc, 0 );
+  task_thread_t* new_current = task_thread_create( init_entry, proc, 0 );
   if ( ! new_current ) {
     free( tmp_argv );
     free( tmp_env );
-    free( image );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "new_current->current_context = %p\r\n", new_current->current_context )
+    DEBUG_OUTPUT(
+      "new_current->current_context = %p\r\n",
+      new_current->current_context
+    )
   #endif
 
   // push arguments and environment
   if ( ! task_thread_push_arguments( new_current, tmp_argv, tmp_env ) ) {
     free( tmp_argv );
     free( tmp_env );
-    free( image );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
 
   // free temporary stuff
+  free( image );
   free( tmp_argv );
   free( tmp_env );
-  free( image );
 
   // replace new current thread
   if ( replace_current_thread ) {
     // debug output
     #if defined( PRINT_PROCESS )
-      DEBUG_OUTPUT( "Replace current thread!\r\n" );
+      DEBUG_OUTPUT( "Replace current thread!\r\n" )
     #endif
     // replace current thread pointer
     task_thread_current_thread = new_current;
@@ -897,7 +976,7 @@ int task_process_replace(
 }
 
 /**
- * @fn void task_unblock_threads(task_process_ptr_t, task_thread_state_t, task_state_data_t)
+ * @fn void task_unblock_threads(task_process_t*, task_thread_state_t, task_state_data_t)
  * @brief Helper to unblock threads of process by thread state and data
  *
  * @param proc
@@ -905,16 +984,16 @@ int task_process_replace(
  * @param necessary_thread_data
  */
 void task_unblock_threads(
-  task_process_ptr_t proc,
+  task_process_t* proc,
   task_thread_state_t necessary_thread_state,
   task_state_data_t necessary_thread_data
 ) {
   // get first thread
-  avl_node_ptr_t current_thread_node = avl_iterate_first( proc->thread_manager );
+  avl_node_t* current_thread_node = avl_iterate_first( proc->thread_manager );
   // loop until there is no more thread
   while ( current_thread_node ) {
     // get thread
-    task_thread_ptr_t possible_thread_to_unblock = TASK_THREAD_GET_BLOCK(
+    auto task_thread_t* possible_thread_to_unblock = TASK_THREAD_GET_BLOCK(
       current_thread_node );
     // try to unblock if blocked
     task_thread_unblock(

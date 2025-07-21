@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,30 +17,35 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _RPC_BACKUP_H
+#define _RPC_BACKUP_H
+
 #include <stdbool.h>
-#include "../lib/collection/list.h"
+#include "../../library/collection/list/list.h"
 #include "../task/process.h"
 #include "../task/thread.h"
 
-#if ! defined( _RPC_BACKUP_H )
-#define _RPC_BACKUP_H
-
-struct rpc_backup {
+typedef struct {
   void* context;
   size_t data_id;
   size_t type;
-  task_thread_ptr_t thread;
-  task_thread_ptr_t source;
+  task_thread_t* thread;
+  task_thread_state_t thread_state;
+  task_state_data_t thread_state_data;
+  task_thread_t* source;
   bool prepared;
   bool active;
   bool sync;
   size_t origin_data_id;
-};
-typedef struct rpc_backup rpc_backup_t;
-typedef struct rpc_backup* rpc_backup_ptr_t;
+  void* rpc_info;
+  // necessary for nested rpc to return sync on end
+  bool sync_return_on_end;
+  size_t sync_return_blocked_data_id;
+  size_t sync_return_data_id;
+} rpc_backup_t;
 
-rpc_backup_ptr_t rpc_backup_get_active( task_thread_ptr_t );
-rpc_backup_ptr_t rpc_backup_create( task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t );
-void rpc_backup_destroy( rpc_backup_ptr_t );
+rpc_backup_t* rpc_backup_get_active( task_thread_t*, size_t );
+rpc_backup_t* rpc_backup_create( task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool );
+void rpc_backup_destroy( rpc_backup_t* );
 
 #endif

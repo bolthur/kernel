@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,15 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIB_STDLIB_H )
+#ifndef _LIB_STDLIB_H
 #define _LIB_STDLIB_H
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdnoreturn.h>
 
-noreturn void abort( void );
+[[noreturn]] void abort( void );
 void* aligned_alloc( size_t, size_t );
 void* calloc( size_t, size_t );
 void free( void* );

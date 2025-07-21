@@ -1,12 +1,13 @@
 
 # built sources determining things to be built first
 BUILT_SOURCES = \
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/collection/avl/libavl.la \
   ${abs_top_builddir}/platform/${platform_subdir}/lib${platform_subdir}.la \
   ${abs_top_builddir}/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
   ${abs_top_builddir}/arch/${arch_subdir}/lib${arch_subdir}.la \
   ${abs_top_builddir}/libkernel.la \
   ${abs_top_builddir}/lib/atag/libatag.la \
-  ${abs_top_builddir}/lib/collection/libcollection.la \
   ${abs_top_builddir}/lib/libc/libc.la \
   ${abs_top_builddir}/lib/tar/libtar.la \
   ${abs_top_builddir}/lib/libduplicate.la \
@@ -21,12 +22,13 @@ noinst_PROGRAMS = kernel.elf kernel_qemu.elf ${output_img} ${output_img_qemu}
 noinst_LTLIBRARIES = libtarget.la
 
 libtarget_la_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/collection/avl/libavl.la \
   ${abs_top_builddir}/platform/${platform_subdir}/lib${platform_subdir}.la \
   ${abs_top_builddir}/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
   ${abs_top_builddir}/arch/${arch_subdir}/lib${arch_subdir}.la \
   ${abs_top_builddir}/libkernel.la \
   ${abs_top_builddir}/lib/atag/libatag.la \
-  ${abs_top_builddir}/lib/collection/libcollection.la \
   ${abs_top_builddir}/lib/libc/libc.la \
   ${abs_top_builddir}/lib/tar/libtar.la \
   ${abs_top_builddir}/lib/libduplicate.la \
@@ -34,12 +36,13 @@ libtarget_la_DEPENDENCIES = \
   ${abs_top_builddir}/lib/libubsan.la
 libtarget_la_SOURCES =
 libtarget_la_LIBADD = \
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/collection/avl/libavl.la \
   ${abs_top_builddir}/platform/${platform_subdir}/lib${platform_subdir}.la \
   ${abs_top_builddir}/arch/${arch_subdir}/${subarch_subdir}/lib${subarch_subdir}.la \
   ${abs_top_builddir}/arch/${arch_subdir}/lib${arch_subdir}.la \
   ${abs_top_builddir}/libkernel.la \
   ${abs_top_builddir}/lib/atag/libatag.la \
-  ${abs_top_builddir}/lib/collection/libcollection.la \
   ${abs_top_builddir}/lib/libc/libc.la \
   ${abs_top_builddir}/lib/tar/libtar.la \
   ${abs_top_builddir}/lib/libduplicate.la \

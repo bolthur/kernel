@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <limits.h>
 #include <stdarg.h>
 #include "../../stdio.h"
 
 /**
+ * @fn int sprintf(char*, const char* restrict, ...)
  * @brief Simple sprintf for kernel
  *
  * @param buffer

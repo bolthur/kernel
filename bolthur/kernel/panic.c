@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,9 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <inttypes.h>
-
+#include "lib/inttypes.h"
 #include "lib/stdio.h"
 #include "lib/stdlib.h"
 #include "interrupt.h"
@@ -39,7 +37,7 @@ void panic_init( void ) {
  * @param file File that invoked the panic
  * @param line Line where panic was called
  */
-noreturn void panic(
+[[noreturn]] void panic(
   const char* restrict message,
   const char* restrict file,
   uint32_t line

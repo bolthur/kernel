@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -26,6 +26,7 @@
 #define SIZE_TOO_SMALL(size) ( size < U64_BLOCK_SIZE )
 
 /**
+ * @fn void memset*(void*, int, size_t)
  * @brief Fill address with value
  *
  * @param buf buffer to fill

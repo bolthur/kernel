@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,15 +20,16 @@
 #include "../atag.h"
 
 /**
+ * @fn atag_t atag_next*(atag_t*)
  * @brief Get next atag entry
  *
  * @param atag
- * @return atag_ptr_t
+ * @return atag_t*
  */
-atag_ptr_t atag_next( atag_ptr_t atag ) {
+atag_t* atag_next( atag_t* atag ) {
   if ( atag->header.tag == ATAG_TAG_NONE ) {
     return NULL;
   }
 
-  return ( atag_ptr_t )( ( uint32_t* )atag + atag->header.size );
+  return ( atag_t* )( ( uint32_t* )atag + atag->header.size );
 }

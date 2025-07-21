@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -25,7 +25,7 @@
 EXPORT( task_thread_switch_to )
 task_thread_switch_to:
   // switch to svc mode
-  cpsid if, #CPSR_MODE_SUPERVISOR
+  cpsid iaf, #CPSR_MODE_SUPERVISOR
   // push parameter into fp
   mov fp, r0
   // load return from passed context

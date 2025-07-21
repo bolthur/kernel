@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,16 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#pragma GCC diagnostic ignored "-Wanalyzer-infinite-loop"
+
 #include "../../stdlib.h"
 #include "../../../interrupt.h"
 
 /**
+ * @fn void abort(void)
  * @brief Abort routine
  */
-noreturn void abort( void ) {
+[[noreturn]] void abort( void ) {
   // disable all interrupts
   interrupt_toggle( INTERRUPT_TOGGLE_OFF );
   // loop without return
   while ( 1 ) {}
 }
-

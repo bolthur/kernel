@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,9 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
 #include "../../elf.h"
-#include "../../entry.h"
 #if defined ( PRINT_ELF )
   #include "../../debug/debug.h"
 #endif
@@ -39,8 +37,11 @@ bool elf_arch_check( uintptr_t elf ) {
     if ( EM_ARM != header->e_machine ) {
       // debug output
       #if defined ( PRINT_ELF )
-        DEBUG_OUTPUT( "Invalid machine type, expected %x and received %x!\r\n",
-          EM_ARM, header->e_machine )
+        DEBUG_OUTPUT(
+          "Invalid machine type, expected %x and received %x!\r\n",
+          EM_ARM,
+          header->e_machine
+        )
       #endif
       // return error
       return false;
@@ -49,8 +50,11 @@ bool elf_arch_check( uintptr_t elf ) {
     if ( EM_AARCH64 != header->e_machine ) {
       // debug output
       #if defined ( PRINT_ELF )
-        DEBUG_OUTPUT( "Invalid machine type, expected %x and received %x!\r\n",
-          EM_AARCH64, header->e_machine )
+        DEBUG_OUTPUT(
+          "Invalid machine type, expected %x and received %x!\r\n",
+          EM_AARCH64,
+          header->e_machine
+        )
       #endif
       // return error
       return false;

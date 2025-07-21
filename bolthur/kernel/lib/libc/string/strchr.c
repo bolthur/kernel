@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -20,6 +20,7 @@
 #include "../../string.h"
 
 /**
+ * @fn char strchr*(const char*, int)
  * @brief get string part starting with delimiter
  *
  * @param str

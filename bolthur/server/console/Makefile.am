@@ -3,12 +3,18 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"console\"
 
 bin_PROGRAMS = console
+console_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/collection/list/liblist.la
+console_LDADD = \
+  ${abs_top_builddir}/../library/collection/list/liblist.la
 console_SOURCES = \
-  handler/add.c \
-  handler/select.c \
+  rpc/custom/add.c \
+  rpc/custom/select.c \
+  rpc/exec.c \
+  rpc/exit.c \
+  rpc/fork.c \
+  rpc/init.c \
   rpc/write.c \
   console.c \
-  handler.c \
-  list.c \
   main.c
 console_LDFLAGS = -all-static --static

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,12 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#if ! defined( _LIB_SSP_H )
+#ifndef _LIB_SSP_H
 #define _LIB_SSP_H
 
 #include <stdint.h>
-#include <stdnoreturn.h>
 
-noreturn void __stack_chk_fail( void );
+[[noreturn]] void __stack_chk_fail( void );
 
 #endif

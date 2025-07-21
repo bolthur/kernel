@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,17 +22,17 @@
 #include "../tar.h"
 
 /**
+ * @fn uint8_t tar_file*(tar_header_t*)
  * @brief Method to get buffer
  *
  * @param header
  * @return uint8_t*
  */
-uint8_t* tar_file( tar_header_ptr_t header ) {
+uint8_t* tar_file( tar_header_t* header ) {
   // check for invalid
-  if ( '\0' == header->file_name[ 0 ] ) {
+  if ( ! header || '\0' == header->file_name[ 0 ] ) {
     return NULL;
   }
-
   // build return
-  return ( uint8_t* )( ( uintptr_t )header + TAR_HEADER_SIZE );
+  return ( uint8_t* )header + TAR_HEADER_SIZE;
 }

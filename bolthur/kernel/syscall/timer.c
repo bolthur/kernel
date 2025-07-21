@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -18,11 +18,8 @@
  */
 
 #include <errno.h>
-#include <inttypes.h>
 #include "../lib/string.h"
-#include "../lib/stdlib.h"
 #include "../syscall.h"
-#include "../event.h"
 #include "../task/process.h"
 #include "../task/thread.h"
 #include "../timer.h"
@@ -39,7 +36,10 @@
 void syscall_timer_tick_count( void* context ) {
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_timer_tick_count()\r\n" )
+    DEBUG_OUTPUT(
+      "syscall_timer_tick_count() - %d\r\n",
+      task_thread_current_thread->process->id
+    )
   #endif
   syscall_populate_success( context, timer_get_tick() );
 }
@@ -70,7 +70,7 @@ void syscall_timer_acquire( void* context ) {
   size_t timeout = syscall_get_parameter( context, 1 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_timer_acquire( %d, %d )\r\n", rpc_num, timeout )
+    DEBUG_OUTPUT( "syscall_timer_acquire( %zu, %zu )\r\n", rpc_num, timeout )
   #endif
   // handle timeout already reached
   if ( timeout <= timer_get_tick() ) {
@@ -79,7 +79,7 @@ void syscall_timer_acquire( void* context ) {
     return;
   }
   // add to timer
-  timer_callback_entry_ptr_t item = timer_register_callback(
+  timer_callback_entry_t* item = timer_register_callback(
     task_thread_current_thread,
     rpc_num,
     timeout
@@ -89,6 +89,10 @@ void syscall_timer_acquire( void* context ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }
+  // debug output
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "item->id = %zu\r\n", item->id )
+  #endif
   // return success by returning timer id
   syscall_populate_success( context, item->id );
 }
@@ -104,7 +108,7 @@ void syscall_timer_release( void* context ) {
   size_t id = syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "syscall_timer_release( %d )\r\n", id )
+    DEBUG_OUTPUT( "syscall_timer_release( %zu )\r\n", id )
   #endif
   // remove registered timer by id
   if ( ! timer_unregister_callback( id ) ) {

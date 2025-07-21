@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,13 +17,20 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <unistd.h>
-#include "list.h"
-
-#if ! defined( _RPC_H )
+#ifndef _RPC_H
 #define _RPC_H
 
+#include <stdbool.h>
+#include <unistd.h>
+#include "../../library/collection/list/list.h"
+
+bool rpc_init( void );
+
+void rpc_handle_exec( size_t, pid_t,size_t, size_t );
+void rpc_handle_exit( size_t, pid_t,size_t, size_t );
+void rpc_handle_fork( size_t, pid_t, size_t, size_t );
 void rpc_handle_write( size_t, pid_t, size_t, size_t );
+void rpc_custom_handle_console_add( size_t, pid_t, size_t, size_t );
+void rpc_custom_handle_console_select( size_t, pid_t, size_t, size_t );
 
 #endif

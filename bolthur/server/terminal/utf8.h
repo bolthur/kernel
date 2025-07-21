@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,11 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _UTF8_H
+#define _UTF8_H
+
 #include <stdint.h>
 #include <stddef.h>
-
-#if ! defined( _UTF8_H )
-#define _UTF8_H
 
 #define isunicode( c ) ( ( ( c ) & 0xc0 ) == 0xc0 )
 

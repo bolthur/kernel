@@ -1,16 +1,13 @@
 {
-  "editor.tabSize": 2,
-  "editor.detectIndentation": false,
-  "telemetry.enableCrashReporter": false,
-  "editor.renderControlCharacters": true,
   "editor.renderWhitespace": "all",
-  "editor.rulers": [
-    80, 120
-  ],
-  "C_Cpp.autocompleteAddParentheses": true,
-  "files.associations": {
-    "message.h": "c",
-    "debug.h": "c",
-    "bolthur.h": "c"
-  }
+  "editor.detectIndentation": false,
+  "editor.rulers": [ 80, 120 ],
+  "editor.tabSize": 2,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.renderFinalNewline": "on",
+  "editor.insertSpaces": true,
+  "editor.fontSize": 12,
+  "C_Cpp.intelliSenseEngine": "default",
+  "C_Cpp.autoAddFileAssociations": false
 }

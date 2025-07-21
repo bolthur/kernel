@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
 #include "../lib/string.h"
+#include "../lib/assert.h"
 #include "../event.h"
 #include "../serial.h"
 #include "../interrupt.h"
@@ -81,6 +81,7 @@ const char debug_gdb_hexchar[] = "0123456789abcdef";
 char debug_gdb_print_buffer[ GDB_DEBUG_MAX_BUFFER ];
 
 /**
+ * @fn int32_t debug_gdb_char2hex(char)
  * @brief Transform character to hex value
  *
  * @param ch
@@ -103,6 +104,7 @@ int32_t debug_gdb_char2hex( char ch ) {
 }
 
 /**
+ * @fn bool checksum(uint8_t)
  * @brief Method to check calculated checksum against incoming
  *
  * @param in
@@ -122,6 +124,7 @@ static bool checksum( uint8_t in ) {
 }
 
 /**
+ * @fn void debug_gdb_init(void)
  * @brief Setup gdb debugging
  */
 void debug_gdb_init( void ) {
@@ -139,11 +142,12 @@ void debug_gdb_init( void ) {
 }
 
 /**
+ * @fn uint8_t debug_gdb_packet_receive*(uint8_t*, size_t)
  * @brief Receive a packet
  *
  * @param buffer
  * @param max
- * @return unsigned* packet_receive
+ * @return uint8_t*
  */
 uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
   size_t count = 0;
@@ -206,12 +210,13 @@ uint8_t* debug_gdb_packet_receive( uint8_t* buffer, size_t max ) {
 }
 
 /**
+ * @fn void debug_gdb_serial_event(event_origin_t, void*)
  * @brief Serial gdb handler
  *
  * @param origin origin
  * @param context cpu context
  */
-void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
+void debug_gdb_serial_event( [[maybe_unused]] event_origin_t origin, void* context ) {
   // get start of serial buffer
   uint8_t* pkg = serial_get_buffer();
 
@@ -225,6 +230,7 @@ void debug_gdb_serial_event( __unused event_origin_t origin, void* context ) {
 }
 
 /**
+ * @fn void debug_gdb_set_trap(void)
  * @brief Setup gdb debug traps
  */
 void debug_gdb_set_trap( void ) {
@@ -237,6 +243,7 @@ void debug_gdb_set_trap( void ) {
 }
 
 /**
+ * @fn bool debug_gdb_initialized(void)
  * @brief Return initialized state
  *
  * @return true
@@ -247,6 +254,7 @@ bool debug_gdb_initialized( void ) {
 }
 
 /**
+ * @fn void debug_gdb_packet_send(uint8_t*)
  * @brief Send packet
  *
  * @param p string to send
@@ -275,6 +283,7 @@ void debug_gdb_packet_send( uint8_t* p ) {
 }
 
 /**
+ * @fn bool debug_gdb_get_first_entry(void)
  * @brief Get first entry flag
  *
  * @return true
@@ -285,6 +294,7 @@ bool debug_gdb_get_first_entry( void ) {
 }
 
 /**
+ * @fn void debug_gdb_set_first_entry(bool)
  * @brief Set first entry flag
  *
  * @param flag
@@ -294,67 +304,72 @@ void debug_gdb_set_first_entry( bool flag ) {
 }
 
 /**
+ * @fn void debug_gdb_handler_attach(void*, const uint8_t*)
  * @brief Handle attach
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_attach(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"1" );
 }
 
 /**
+ * @fn void debug_gdb_handler_continue_query(void*, const uint8_t*)
  * @brief Handler to continue with query
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_continue_query(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"E01" );
 }
 
 /**
+ * @fn void debug_gdb_handler_continue_query_supported(void*, const uint8_t*)
  * @brief Handler to return continue supported actions
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_continue_query_supported(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_packet_send( ( uint8_t* )"" );
 }
 
 /**
+ * @fn void debug_gdb_handler_unsupported(void*, const uint8_t*)
  * @brief Unsupported packet response
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_unsupported(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   // send empty response as not supported
   debug_gdb_packet_send( ( uint8_t* )"\0" );
 }
 
 /**
+ * @fn void debug_gdb_handler_continue(void*, const uint8_t*)
  * @brief Handle continue
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_continue(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   // set handler running to false
   debug_gdb_end_loop();
@@ -363,20 +378,22 @@ void debug_gdb_handler_continue(
 }
 
 /**
+ * @fn void debug_gdb_handler_detach(void*, const uint8_t*)
  * @brief Handle detach
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_detach(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_end_loop();
   debug_gdb_packet_send( ( uint8_t* )"OK" );
 }
 
 /**
+ * @fn debug_gdb_callback_t debug_gdb_get_handler(const uint8_t*)
  * @brief Helper to identify handler to call
  *
  * @param packet
@@ -400,6 +417,7 @@ debug_gdb_callback_t debug_gdb_get_handler( const uint8_t* packet ) {
 }
 
 /**
+ * @fn void debug_gdb_set_context(void*)
  * @brief Set execution context
  *
  * @param context
@@ -409,14 +427,15 @@ void debug_gdb_set_context( void* context ) {
 }
 
 /**
+ * @fn void debug_gdb_handler_stop_status(void*, const uint8_t*)
  * @brief Handler to get stop status
  *
  * @param context
  * @param packet
  */
 void debug_gdb_handler_stop_status(
-  __unused void* context,
-  __unused const uint8_t* packet
+  [[maybe_unused]] void* context,
+  [[maybe_unused]] const uint8_t* packet
 ) {
   debug_gdb_signal_t signal = debug_gdb_get_signal();
   uint8_t buffer[ 4 ];

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,15 +17,15 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
 #include "../../stdlib.h"
 #include "../../../mm/heap.h"
 
 /**
+ * @fn void free(void*)
  * @brief Free allocated area
  *
  * @param ptr ptr to address to free
  */
 void free( void* ptr ) {
-  heap_free_block( ( uintptr_t )ptr );
+  heap_free( ptr );
 }

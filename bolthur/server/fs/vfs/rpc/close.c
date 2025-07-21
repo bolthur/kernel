@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,8 +23,62 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
-#include "../file/handle.h"
+#include "../mountpoint/node.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
+
+/**
+ * @fn void rpc_handle_close_async(size_t, pid_t, size_t, size_t)
+ * @brief Finish started close request
+ *
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+void rpc_handle_close_async(
+  size_t type,
+  [[maybe_unused]] pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  vfs_close_response_t response = { .status = -EINVAL };
+  // get matching async data
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
+    type, response_info );
+  if ( ! async_data || ! data_info ) {
+    return;
+  }
+  // get original request
+  vfs_close_request_t* request = async_data->original_data;
+  // get message and data size
+  size_t data_size;
+  void* response_data = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  if ( ! response_data ) {
+    response.status = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
+    return;
+  }
+  if ( data_size != sizeof( response ) ) {
+    response.status = -EINVAL;
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
+    return;
+  }
+  memcpy( &response, response_data, data_size );
+  free( response_data );
+  EARLY_STARTUP_PRINT( "response.status = %d\r\n", response.status )
+  // handle error
+  if ( 0 > response.status ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
+    return;
+  }
+  // destroy handle
+  response.status = handle_destroy(
+    async_data->original_origin,
+    request->handle
+  );
+  bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
+}
 
 /**
  * @fn void rpc_handle_close(size_t, pid_t, size_t, size_t)
@@ -39,31 +93,49 @@ void rpc_handle_close(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_close_response_t response = { .status = -EINVAL };
-  vfs_close_request_ptr_t request = malloc( sizeof( vfs_close_request_t ) );
+  // get message and data size
+  size_t data_size;
+  vfs_close_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    response.status = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  // clear variables
-  memset( request, 0, sizeof( vfs_close_request_t ) );
-  // handle no data
-  if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
-    return;
-  }
-  // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_close_request_t ), data_info, false );
+  // get handle
+  handle_node_t* handle_container;
+  // try to get handle information
+  int result = handle_get( &handle_container, origin, request->handle );
   // handle error
-  if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  if ( 0 > result ) {
+    response.status = result;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     free( request );
     return;
   }
-  response.status = handle_destory( origin, request->handle );
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  // fill internal fields
+  request->origin = origin;
+  // perform async rpc
+  bolthur_rpc_raise(
+    type,
+    ( ( mountpoint_node_t* ) handle_container->data )->pid,
+    request,
+    sizeof( vfs_close_request_t ),
+    rpc_handle_close_async,
+    type,
+    request,
+    sizeof( vfs_close_request_t ),
+    origin,
+    data_info,
+    NULL,
+    false
+  );
+  if ( errno ) {
+    response.status = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    return;
+  }
   free( request );
 }

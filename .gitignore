@@ -1,13 +1,18 @@
 
 # ---> Custom
+/nbproject
 /build
 *~
 /doc
 **/*.disasm
 *.dtb
-/tool/ramdisk
+/tool/image
+!/tool/image.nim
+/tool/tmp
+/tool/.cache
 /build-aux/platform/raspi/initrd
 *.sym
+.cache
 
 # ---> Autotools
 # http://www.gnu.org/software/automake

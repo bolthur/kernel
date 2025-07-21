@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -47,7 +47,12 @@ SECTIONS {
 
   .rodata ALIGN( 4K ) : AT( ADDR( .rodata ) - KERNEL_OFFSET ) {
     *( .rodata )
+  }
+
+  .data ALIGN( 4K ) : AT( ADDR( .data ) - KERNEL_OFFSET ) {
+    __data_start = .;
     *( .data )
+    __data_end = .;
   }
 
   .bss ALIGN( 4K ) : AT( ADDR( .bss ) - KERNEL_OFFSET ) {
@@ -63,12 +68,6 @@ SECTIONS {
     __initial_heap_end = .;
 
     __bss_end = .;
-  }
-
-  .fdt ALIGN( 4K ) : AT( ADDR( .fdt ) - KERNEL_OFFSET ) {
-    __fdt_start = .;
-    *( .fdt )
-    __fdt_end = .;
   }
 
   __kernel_end = .;

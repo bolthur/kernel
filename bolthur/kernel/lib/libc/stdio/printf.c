@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -21,6 +21,7 @@
 #include "../../stdio.h"
 
 /**
+ * @fn int printf(const char* restrict, ...)
  * @brief Simple printf for kernel
  *
  * @param format

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,22 +17,279 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <inttypes.h>
-#include <errno.h>
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
+#include "../mm/phys.h"
+#include "../mm/virt.h"
 #include "backup.h"
 #include "data.h"
 #include "queue.h"
 #include "generic.h"
-#include "../panic.h"
 #if defined( PRINT_RPC )
   #include "../debug/debug.h"
+  #include "../lib/inttypes.h"
+#endif
+
+#include "../debug/debug.h"
+#include "../lib/inttypes.h"
+static avl_tree_t* origin_tree = NULL;
+
+/**
+ * @fn int32_t compare_callback(const avl_node_t*, const avl_node_t*)
+ * @brief Compare callback
+ *
+ * @param a
+ * @param b
+ * @return
+ */
+static int32_t compare_callback( const avl_node_t* a, const avl_node_t* b ) {
+  // get blocks
+  auto const rpc_origin_source_t* block_a = RPC_GET_ORIGIN_SOURCE( a );
+  auto const rpc_origin_source_t* block_b = RPC_GET_ORIGIN_SOURCE( b );
+  // -1 if address of a->type is greater than address of b->type
+  if ( block_a->rpc_id > block_b->rpc_id ) {
+    return -1;
+  // 1 if address of b->type is greater than address of a->type
+  } else if ( block_b->rpc_id > block_a->rpc_id ) {
+    return 1;
+  }
+  // equal => return 0
+  return 0;
+}
+
+/**
+ * @fn int32_t lookup_callback(const avl_node_t*, const void*)
+ * @brief Lookup callback helper
+ *
+ * @param a
+ * @param b
+ * @return
+ */
+static int32_t lookup_callback(
+  const avl_node_t* a,
+  const void* b
+) {
+  const rpc_origin_source_t* block = RPC_GET_ORIGIN_SOURCE( a );
+  // -1 if address of a->data is greater than address of b->data
+  if ( block->rpc_id > ( size_t )b) {
+    return -1;
+  // 1 if address of b->data is greater than address of a->data
+  } else if ( ( size_t )b > block->rpc_id ) {
+    return 1;
+  }
+  // equal => return 0
+  return 0;
+}
+
+#if defined ( PRINT_RPC )
+  /**
+   * @fn void print_callback(avl_node_t*)
+   * @brief Callback used for printing avl tree
+   * @param node node to print
+   */
+  static void print_callback( avl_node_t* node ) {
+    const rpc_origin_source_t* block = RPC_GET_ORIGIN_SOURCE( node );
+    printf( "(rpc_id: %zu, origin_rpc_id: %zu, type: %zu)\r\n",
+      block->rpc_id, block->origin_rpc_id, block->type );
+  }
 #endif
 
 /**
- * @fn rpc_backup_ptr_t rpc_generic_raise(task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t)
- * @brief Raise an rpc in target from source
+ * @fn void cleanup_callback(avl_node_t*)
+ * @brief Cleanup callback helper
+ *
+ * @param a
+ */
+static void cleanup_callback( avl_node_t* a ) {
+  // get block from node
+  auto rpc_origin_source_t* block = RPC_GET_ORIGIN_SOURCE( a );
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "removing block %p!\r\n", block )
+  #endif
+  // free block
+  free( block );
+}
+
+/**
+ * @fn rpc_origin_source_t rpc_generic_source_info*(size_t)
+ * @brief Helper to get origin source information data
+ *
+ * @param id
+ * @return
+ */
+rpc_origin_source_t* rpc_generic_source_info( size_t id ) {
+  // try to find node by data
+  avl_node_t* node = avl_find_by_data( origin_tree, ( void* )id );
+  if ( ! node ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "origin information for id %zu not found!\r\n", id )
+    #endif
+    // return null
+    return NULL;
+  }
+  // return block
+  return RPC_GET_ORIGIN_SOURCE( node );
+}
+
+/**
+ * @fn void rpc_generic_remove_source_info(rpc_origin_source_t*)
+ * @brief Helper to remove source info from tree
+ *
+ * @param info
+ */
+void rpc_generic_destroy_source_info( rpc_origin_source_t* info ) {
+  if ( ! info || ! info->rpc_id ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "Invalid info or rpc id!\r\n" )
+    #endif
+    // early exit
+    return;
+  }
+  // debug output
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "Trying to remove source info %d!\r\n", info->rpc_id )
+    avl_print( origin_tree, NULL );
+  #endif
+  // remove from tree
+  avl_remove_by_node( origin_tree, &info->node );
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "DUMPING ORIGIN TREE AFTER REMOVAL!\r\n" )
+    avl_print( origin_tree, print_callback );
+  #endif
+  // free info
+  free( info );
+}
+
+/**
+ * @fn size_t rpc_generic_setup_mailbox(task_process_t*)
+ * @brief Helper to set up mailbox
+ * @param proc
+ *
+ * @return 0 on success
+ */
+bool rpc_generic_setup_mailbox( task_process_t* proc ) {
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "proc->rpc_mailbox = %#"PRIx64", proc->rpc_mailbox_virt = %#"PRIxPTR", id = %d!\r\n", proc->rpc_mailbox, proc->rpc_mailbox_virt, proc->id )
+  #endif
+  // allocate mailbox if not allocated
+  if ( 0 == proc->rpc_mailbox ) {
+    // allocate mailbox
+    proc->rpc_mailbox = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+    // handle allocation failed
+    if ( INVALID_ADDRESS == proc->rpc_mailbox ) {
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "No space for mailbox found!\r\n" )
+      #endif
+      // reset rpc_mailbox
+      proc->rpc_mailbox = 0;
+      // return failure
+      return false;
+    }
+    // map page temporarily
+    uintptr_t tmp_map = virt_map_temporary( proc->rpc_mailbox, PAGE_SIZE );
+    if ( 0 == tmp_map ) {
+      // free mailbox again
+      phys_free_page( proc->rpc_mailbox );
+      // reset rpc_mailbox
+      proc->rpc_mailbox = 0;
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "map temporary failed!\r\n" )
+      #endif
+      // return error
+      return false;
+    }
+    // clear memory
+    memset( ( void* )tmp_map, 0, PAGE_SIZE );
+    // unmap again
+    virt_unmap_temporary( tmp_map, PAGE_SIZE );
+    // set address
+    uintptr_t tmp_addr = ROUND_UP_TO_FULL_PAGE( task_thread_current_thread->entry );
+    // find free space
+    proc->rpc_mailbox_virt = virt_find_free_page_range( proc->virtual_context, PAGE_SIZE, tmp_addr );
+    // handle no address found
+    if ( ! proc->rpc_mailbox_virt ) {
+      // free mailbox again
+      phys_free_page( proc->rpc_mailbox );
+      // reset rpc_mailbox
+      proc->rpc_mailbox = 0;
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "No start address found!\r\n" )
+      #endif
+      return false;
+    }
+    // mapping flags and type
+    uint32_t map_flag = VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE;
+    virt_memory_type_t map_type = VIRT_MEMORY_TYPE_NORMAL;
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT(
+        "mapping %#"PRIx64" to address %#"PRIxPTR
+        " with type %d, flag %"PRIu32" and len %zx for process %d\r\n",
+        proc->rpc_mailbox,
+        proc->rpc_mailbox_virt,
+        map_type,
+        map_flag,
+        PAGE_SIZE,
+        proc->id
+      )
+    #endif
+    // map address into context
+    if ( ! virt_map_address_range(
+      proc->virtual_context,
+      proc->rpc_mailbox_virt,
+      proc->rpc_mailbox,
+      PAGE_SIZE,
+      map_type,
+      map_flag
+    ) ) {
+      // free mailbox again
+      phys_free_page( proc->rpc_mailbox );
+      // reset rpc_mailbox
+      proc->rpc_mailbox = 0;
+      proc->rpc_mailbox_virt = 0;
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "Error during map of address!\r\n" )
+      #endif
+      return false;
+    }
+  }
+  // return success
+  return true;
+}
+
+/**
+ * @fn void destroy_mailbox(task_process_t*)
+ * @brief Wrapper to destroy possible mailbox
+ *
+ * @param proc
+ */
+void rpc_generic_destroy_mailbox( task_process_t* proc ) {
+  // unmap virtual
+  if ( proc->rpc_mailbox_virt ) {
+    // unmap
+    virt_unmap_address_range( proc->virtual_context, proc->rpc_mailbox_virt, PAGE_SIZE, false );
+    // reset virtual address
+    proc->rpc_mailbox_virt = 0;
+  }
+  // handle physical
+  if ( INVALID_ADDRESS != proc->rpc_mailbox ) {
+    // free up physical page
+    phys_free_page( proc->rpc_mailbox );
+    // reset physical page
+    proc->rpc_mailbox = 0;
+  }
+}
+
+/**
+ * @fn rpc_backup_t* rpc_generic_raise(task_thread_t*, task_process_t*, const size_t, void*, size_t, task_thread_t*, const bool, const size_t, const bool)
+ * @brief Raise a rpc in target from source
  *
  * @param source
  * @param target
@@ -42,26 +299,29 @@
  * @param target_thread
  * @param sync
  * @param origin_data_id
+ * @param disable_data
  * @return
  */
-rpc_backup_ptr_t rpc_generic_raise(
-  task_thread_ptr_t source,
-  task_process_ptr_t target,
-  size_t type,
+rpc_backup_t* rpc_generic_raise(
+  task_thread_t* source,
+  task_process_t* target,
+  const size_t type,
   void* data,
   size_t length,
-  task_thread_ptr_t target_thread,
-  bool sync,
-  size_t origin_data_id
+  task_thread_t* target_thread,
+  const bool sync,
+  const size_t origin_data_id,
+  const bool disable_data
 ) {
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT(
-      "rpc_raise( %#p, %#p, %#p, %#zx, %#p\r\n",
-      source, target, data, length, target_thread )
+      "rpc_raise( %p, %p, %p, %#zx, %p )\r\n",
+      source, target, data, length, target_thread
+    )
   #endif
   // backup necessary stuff
-  rpc_backup_ptr_t backup = rpc_backup_create(
+  rpc_backup_t* backup = rpc_backup_create(
     source,
     target,
     type,
@@ -69,7 +329,8 @@ rpc_backup_ptr_t rpc_generic_raise(
     length,
     target_thread,
     sync,
-    origin_data_id
+    origin_data_id,
+    disable_data
   );
   if ( ! backup ) {
     // debug output
@@ -85,26 +346,77 @@ rpc_backup_ptr_t rpc_generic_raise(
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "Error while preparing target %d\r\n", target->id )
     #endif
-    free( backup->context );
-    free( backup );
+    rpc_backup_destroy( backup );
     // skip if error occurred during rpc invoke
     return NULL;
   }
+  // allocate new structure for tree
+  if ( backup->data_id ) {
+    rpc_origin_source_t* rpc_info = malloc( sizeof( *rpc_info ) );
+    if ( ! rpc_info ) {
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "Error while allocating rpc info object\r\n" )
+      #endif
+      rpc_backup_destroy( backup );
+      return NULL;
+    }
+    // clear out
+    memset( rpc_info, 0, sizeof( *rpc_info ) );
+    // prepare structure
+    rpc_info->source_process = source->process->id;
+    rpc_info->rpc_id = backup->data_id;
+    rpc_info->origin_rpc_id = origin_data_id;
+    rpc_info->sync = sync;
+    rpc_info->type = type;
+    // prepare node
+    avl_prepare_node( &rpc_info->node, ( void* )backup->data_id );
+    // add to tree
+    if ( ! avl_insert_by_node( origin_tree, &rpc_info->node ) ) {
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "Error while adding information to origin tree\r\n" )
+      #endif
+      free( rpc_info );
+      rpc_backup_destroy( backup );
+      return NULL;
+    }
+    // cache rpc info structure
+    backup->rpc_info = rpc_info;
+  }
+  // return created backup
   return backup;
 }
 
 /**
- * @fn bool rpc_generic_setup(task_process_ptr_t)
+ * @fn bool rpc_generic_init(void)
+ * @brief Setup necessary stuff for rpc handling
+ *
+ * @return
+ */
+bool rpc_generic_init( void ) {
+  // create tree for origin source handling
+  origin_tree = avl_create_tree(
+    compare_callback,
+    lookup_callback,
+    cleanup_callback
+  );
+  return origin_tree;
+}
+
+/**
+ * @fn bool rpc_generic_setup(task_process_t*)
  * @brief Setup rpc queue
  *
  * @param proc
  * @return
  */
-bool rpc_generic_setup( task_process_ptr_t proc ) {
-  if ( ! rpc_data_queue_setup( proc ) ) {
+bool rpc_generic_setup( task_process_t* proc ) {
+  if ( ! rpc_queue_setup( proc ) ) {
+    rpc_generic_destroy( proc );
     return false;
   }
-  if ( ! rpc_queue_setup( proc ) ) {
+  if ( ! rpc_generic_setup_mailbox( proc ) ) {
     rpc_generic_destroy( proc );
     return false;
   }
@@ -112,13 +424,13 @@ bool rpc_generic_setup( task_process_ptr_t proc ) {
 }
 
 /**
- * @fn bool rpc_generic_ready(task_process_ptr_t)
+ * @fn bool rpc_generic_ready(task_process_t*)
  * @brief Check if process is rpc ready
  *
  * @param proc
  * @return
  */
-bool rpc_generic_ready( task_process_ptr_t proc ) {
+bool rpc_generic_ready( task_process_t* proc ) {
   return rpc_data_queue_ready( proc )
     && rpc_queue_ready( proc )
     && proc->rpc_handler
@@ -126,12 +438,12 @@ bool rpc_generic_ready( task_process_ptr_t proc ) {
 }
 
 /**
- * @fn void rpc_generic_destroy(task_process_ptr_t)
+ * @fn void rpc_generic_destroy(task_process_t*)
  * @brief Destroy rpc queue
  *
  * @param proc
  */
-void rpc_generic_destroy( task_process_ptr_t proc ) {
-  rpc_data_queue_destroy( proc );
+void rpc_generic_destroy( task_process_t* proc ) {
   rpc_queue_destroy( proc );
+  rpc_generic_destroy_mailbox( proc );
 }

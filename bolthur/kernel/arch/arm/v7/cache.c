@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdbool.h>
-#include <stdint.h>
 #include "../../../cache.h"
 #include "../cache.h"
 #include "../../../interrupt.h"
@@ -69,7 +67,6 @@ void cache_flush_branch_target( void ) {
  */
 void cache_enable( void ) {
   cache_enable_stub( &cache_enabled );
-
 }
 
 /**
@@ -82,7 +79,7 @@ void cache_invalidate_save( void ) {
     return;
   }
   // get enabled flag
-  bool enabled = interrupt_enabled();
+  const int enabled = interrupt_enabled();
   // disable interrupts for cache operation
   interrupt_disable();
   // clean and invalidate data cache

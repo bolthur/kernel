@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,8 +23,8 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../vfs.h"
-#include "../file/handle.h"
+#include "../../../../library/handle/process.h"
+#include "../../../../library/handle/handle.h"
 
 /**
  * @fn void rpc_handle_seek(size_t, pid_t, size_t, size_t)
@@ -39,29 +39,21 @@ void rpc_handle_seek(
   size_t type,
   pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_seek_response_t response = { .position = -EINVAL };
-  vfs_seek_request_ptr_t request = malloc( sizeof( vfs_seek_request_t ) );
-  if ( ! request ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    return;
-  }
-  handle_container_ptr_t container;
-  // clear variables
-  memset( request, 0, sizeof( vfs_seek_request_t ) );
+  handle_node_t* container;
   // handle no data
   if( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  // fetch rpc data
-  _rpc_get_data( request, sizeof( vfs_seek_request_t ), data_info, false );
-  // handle error
-  if ( errno ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
-    free( request );
+  // get message and data size
+  size_t data_size;
+  vfs_seek_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  if ( ! request ) {
+    response.position = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // try to get handle information
@@ -70,17 +62,12 @@ void rpc_handle_seek(
   if ( 0 > result ) {
     // send errno via negative len
     response.position = result;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     // free stuff
     free( request );
     // skip rest
     return;
   }
-
-  /*EARLY_STARTUP_PRINT(
-    "%s - request->whence = %d, request->handle = %d, request->offset = %#lx\r\n",
-    container->path, request->whence, request->handle, request->offset
-  )*/
 
   // get current position
   off_t new_pos;
@@ -93,15 +80,14 @@ void rpc_handle_seek(
       new_pos = container->pos + ( off_t )request->offset;
       break;
     case SEEK_END:
-      new_pos = ( off_t )container->target->st->st_size;
+      new_pos = ( off_t )container->info.st_size;
       break;
     default:
       new_pos = -1;
   }
 
-  //EARLY_STARTUP_PRINT( "container->pos = %#lx\r\n", new_pos )
   // build response
-  if ( 0 > new_pos || new_pos > container->target->st->st_size ) {
+  if ( 0 > new_pos || new_pos > container->info.st_size ) {
     // send errno via negative len
     response.position = -EINVAL;
   } else {
@@ -110,9 +96,8 @@ void rpc_handle_seek(
     // push into response
     response.position = new_pos;
   }
-  //EARLY_STARTUP_PRINT( "container->pos = %#lx\r\n", new_pos )
   // return response
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL );
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   // free stuff
   free( request );
 }

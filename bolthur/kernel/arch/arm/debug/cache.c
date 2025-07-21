@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -23,7 +23,6 @@
 /**
  * @fn void debug_cache_finish_operation(void)
  * @brief finish cache after operation
- *
  */
 void debug_cache_finish_operation( void ) {
   debug_cache_invalidate_instruction_cache();

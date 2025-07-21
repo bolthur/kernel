@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,13 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stdbool.h>
 #include "timer.h"
 #include "gpio.h"
 #include "peripheral.h"
 #include "mailbox/property.h"
 #if defined( PRINT_TIMER )
+  #include "../../lib/inttypes.h"
   #include "../../debug/debug.h"
 #endif
 #include "../../event.h"
@@ -41,7 +40,7 @@ size_t timer_tick_count;
  */
 static bool timer_pending( void ) {
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // return whether timer is pending
   return io_in32( base + SYSTEM_TIMER_CONTROL ) & SYSTEM_TIMER_MATCH_3;
 }
@@ -62,7 +61,7 @@ static void timer_clear( void* context ) {
     DEBUG_OUTPUT( "timer_clear()\r\n" )
   #endif
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // enable timer 3
   io_out32( base + SYSTEM_TIMER_CONTROL, SYSTEM_TIMER_MATCH_3 );
 
@@ -70,7 +69,11 @@ static void timer_clear( void* context ) {
   uint32_t current_count = io_in32( base + SYSTEM_TIMER_COUNTER_LOWER );
   uint32_t next_count = current_count + timer_get_interval();
   #if defined( PRINT_TIMER )
-    DEBUG_OUTPUT( "current = %#x, next = %#x\r\n", current_count, next_count );
+    DEBUG_OUTPUT(
+      "current = %#"PRIx32", next = %#"PRIx32"\r\n",
+      current_count,
+      next_count
+    )
   #endif
   io_out32( base + SYSTEM_TIMER_COMPARE_3, next_count );
 
@@ -97,7 +100,7 @@ void timer_platform_init( void ) {
   timer_tick_count = 0;
 
   // get peripheral base
-  uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
+  const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
 
   // get max core clock rate
   mailbox_property_init();
@@ -106,7 +109,7 @@ void timer_platform_init( void ) {
   raspi_mailbox_property_t* p = mailbox_property_get( TAG_GET_MAX_CLOCK_RATE );
   uint32_t clock_rate = p->data.buffer_u32[ 1 ];
   #if defined( PRINT_TIMER )
-    DEBUG_OUTPUT( "clock_rate = %#x\r\n", clock_rate );
+    DEBUG_OUTPUT( "clock_rate = %#"PRIx32"\r\n", clock_rate )
   #endif
   // overwrite max core clock rate
   mailbox_property_init();
@@ -128,7 +131,11 @@ void timer_platform_init( void ) {
   uint32_t current_count = io_in32( base + SYSTEM_TIMER_COUNTER_LOWER );
   uint32_t next_count = current_count + TIMER_FREQUENCY_HZ / TIMER_INTERRUPT_PER_SECOND;
   #if defined( PRINT_TIMER )
-    DEBUG_OUTPUT( "current = %#x, next = %#x\r\n", current_count, next_count );
+    DEBUG_OUTPUT(
+      "current = %#"PRIx32", next = %#"PRIx32"\r\n",
+      current_count,
+      next_count
+    )
   #endif
   io_out32( base + SYSTEM_TIMER_COMPARE_3, next_count );
   // enable timer 3

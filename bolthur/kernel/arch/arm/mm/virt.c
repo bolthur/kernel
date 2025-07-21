@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,9 +19,9 @@
 
 #include "../../../lib/assert.h"
 #if defined( PRINT_MM_VIRT )
+  #include "../../../lib/inttypes.h"
   #include "../../../debug/debug.h"
 #endif
-#include "../../../entry.h"
 #include "../../../panic.h"
 #include "../../../mm/phys.h"
 #include "../../../mm/virt.h"
@@ -41,7 +41,7 @@ uint32_t virt_supported_mode;
  * @fn void virt_startup_setup_supported_modes(void)
  * @brief Setup supported modes startup
  */
-void __bootstrap virt_startup_setup_supported_modes( void ) {
+__bootstrap void virt_startup_setup_supported_modes( void ) {
   #if defined( ELF32 )
     // get paging support from mmfr0
     __asm__ __volatile__(
@@ -107,8 +107,11 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#08x, virt_supported_mode = %#08x\r\n",
-        reg, virt_supported_mode )
+      DEBUG_OUTPUT(
+        "reg = %#"PRIx32", virt_supported_mode = %#"PRIx32"\r\n",
+        reg,
+        virt_supported_mode
+      )
     #endif
 
     // get memory size from mmfr3
@@ -120,7 +123,7 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#08x\r\n", reg )
+      DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg )
     #endif
 
     // get only cpu address bus size
@@ -128,11 +131,11 @@ void virt_setup_supported_modes( void ) {
 
     // debug output
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "reg = %#08x\r\n", reg )
+      DEBUG_OUTPUT( "reg = %#"PRIx32"\r\n", reg )
     #endif
 
     // set paging to v7 short descriptor if more
-    // than 32 bit physical addresses arent supported
+    // than 32 bit physical addresses aren't supported
     if ( 0 == reg && ( ID_MMFR0_VSMA_V7_PAGING_LPAE & virt_supported_mode ) ) {
       if ( ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS & virt_supported_mode ) {
         virt_supported_mode = ID_MMFR0_VSMA_V7_PAGING_REMAP_ACCESS;

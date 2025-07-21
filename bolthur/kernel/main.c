@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,10 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdint.h>
-#include <stdnoreturn.h>
-#include "lib/string.h"
 #include "lib/stdio.h"
+#include "lib/assert.h"
 #include "lib/tar.h"
 #include "arch.h"
 #include "elf.h"
@@ -40,6 +38,7 @@
   #include "debug/gdb.h"
 #endif
 #include "initrd.h"
+#include "rpc/generic.h"
 
 // prototype declaration to get rid of a warning
 void kernel_main( void );
@@ -48,8 +47,8 @@ void kernel_main( void );
  * @fn void kernel_main(void)
  * @brief Kernel main entry
  */
-noreturn void kernel_main( void ) {
-  // Setup early heap for malloc / free support
+void kernel_main( void ) {
+  // Setup early not extendable heap
   DEBUG_OUTPUT( "[bolthur/kernel -> heap] early heap initialize ...\r\n" )
   heap_init( HEAP_INIT_EARLY );
 
@@ -99,6 +98,10 @@ noreturn void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> virtual] initialize ...\r\n" )
   virt_init();
 
+  // Setup dma
+  DEBUG_OUTPUT( "[bolthur/kernel -> memory -> dma] initialize ...\r\n" )
+  assert( phys_dma_init() )
+
   // Setup heap
   DEBUG_OUTPUT( "[bolthur/kernel -> memory -> heap] initialize ...\r\n" )
   heap_init( HEAP_INIT_NORMAL );
@@ -111,6 +114,10 @@ noreturn void kernel_main( void ) {
   DEBUG_OUTPUT( "[bolthur/kernel -> process] initialize ...\r\n" )
   assert( task_process_init() )
 
+  // Setup rpc
+  DEBUG_OUTPUT( "[bolthur/kernel -> rpc] initialize ...\r\n" )
+  assert( rpc_generic_init() )
+
   // Setup system calls
   DEBUG_OUTPUT( "[bolthur/kernel -> syscall] initialize ...\r\n" )
   assert( syscall_init() )
@@ -118,20 +125,20 @@ noreturn void kernel_main( void ) {
   // assert initrd necessary now
   assert( initrd_exist() )
   // Find init process
-  tar_header_ptr_t boot = tar_lookup_file( initrd_get_start_address(), "boot" );
+  tar_header_t* boot = tar_lookup_file( initrd_get_start_address(), "boot" );
   assert( boot )
   // Get file address and size
   uintptr_t elf_file = ( uintptr_t )tar_file( boot );
 
   // Create process
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] create ...\r\n" )
-  task_process_ptr_t proc = task_process_create( 0, 0 );
+  task_process_t* proc = task_process_create( 0, 0 );
   assert( proc )
   // load flat image
   uintptr_t init_entry = elf_load( elf_file, proc );
   assert( init_entry )
   // add thread
-  assert( task_thread_create( init_entry, proc, 0 ) );
+  assert( task_thread_create( init_entry, proc, 0 ) )
   // further init process preparation
   DEBUG_OUTPUT( "[bolthur/kernel -> process -> init] prepare ...\r\n" )
   assert( task_process_prepare_init( proc ) )
@@ -143,7 +150,4 @@ noreturn void kernel_main( void ) {
   // Start multitasking in case that init has been created
   DEBUG_OUTPUT( "[bolthur/kernel -> task] start multitasking ...\r\n" )
   task_process_start();
-
-  // Endless loop
-  for(;;);
 }

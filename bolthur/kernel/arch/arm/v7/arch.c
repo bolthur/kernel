@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -19,5 +19,9 @@
 
 #include "../../../arch.h"
 
+/**
+ * @fn void arch_sub_init(void)
+ * @brief arch sub init stuff goes here
+ */
 void arch_sub_init( void ) {
 }

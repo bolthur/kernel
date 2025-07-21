@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,9 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <limits.h>
-#include <stdbool.h>
 #include <stdint.h>
+#include <sys/types.h>
 #include "../../stdio.h"
 #include "../../string.h"
 
@@ -43,7 +42,8 @@ typedef struct {
 } length_modifier_t;
 
 /**
- * @brief
+ * @fn size_t convert_number(char*, uintmax_t, uintmax_t, const char*, bool)
+ * @brief Helper to convert number to string
  *
  * @param destination
  * @param value
@@ -84,6 +84,7 @@ static size_t convert_number(
 }
 
 /**
+ * @fn int print(char*, const char*, const char*, size_t, bool, int32_t)
  * @brief Internal helper for printing a string
  *
  * @param _buffer
@@ -92,8 +93,7 @@ static size_t convert_number(
  * @param length
  * @param zero_padding
  * @param pad
- * @return true
- * @return false
+ * @return int
  */
 static int print(
   char* _buffer,
@@ -156,6 +156,7 @@ static int print(
 }
 
 /**
+ * @fn int vsprintf(char*, const char* restrict, va_list)
  * @brief Simple vsprintf for kernel
  *
  * @param _buffer
@@ -369,7 +370,7 @@ int vsprintf( char* _buffer, const char* restrict format, va_list parameter ) {
         } else if ( length == LENGTH_INTMAX_T ) {
           signed_value = va_arg( parameter, intmax_t );
         } else if ( length == LENGTH_SIZE_T ) {
-          signed_value = va_arg( parameter, size_t );
+          signed_value = va_arg( parameter, ssize_t );
         } else if ( length == LENGTH_PTRDIFF_T ) {
           signed_value = va_arg( parameter, ptrdiff_t );
         } else {

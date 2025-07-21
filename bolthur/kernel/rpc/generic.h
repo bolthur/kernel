@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2022 bolthur project.
+ * Copyright (C) 2018 - 2025 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -17,20 +17,44 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _RPC_GENERIC_H
+#define _RPC_GENERIC_H
+
 #include <stdbool.h>
-#include "../lib/collection/list.h"
+#include "../../library/collection/avl/avl.h"
 #include "../task/process.h"
 #include "../task/thread.h"
 #include "backup.h"
 
-#if ! defined( _RPC_GENERIC_H )
-#define _RPC_GENERIC_H
+typedef struct {
+  /** @brief avl node */
+  avl_node_t node;
+  /** @brief rpc id */
+  size_t rpc_id;
+  /** @brief original rpc id */
+  size_t origin_rpc_id;
+  /** @brief source process */
+  pid_t source_process;
+  /** @brief sync flag */
+  bool sync;
+  /** @brief rpc type */
+  size_t type;
+} rpc_origin_source_t;
 
-bool rpc_generic_setup( task_process_ptr_t );
-void rpc_generic_destroy( task_process_ptr_t );
-bool rpc_generic_ready( task_process_ptr_t );
-bool rpc_generic_restore( task_thread_ptr_t );
-bool rpc_generic_prepare_invoke( rpc_backup_ptr_t );
-rpc_backup_ptr_t rpc_generic_raise( task_thread_ptr_t, task_process_ptr_t, size_t, void*, size_t, task_thread_ptr_t, bool, size_t );
+#define RPC_GET_ORIGIN_SOURCE( n ) \
+  ( rpc_origin_source_t* )( ( uint8_t* )n - offsetof( rpc_origin_source_t, node ) )
+
+bool rpc_generic_init( void );
+rpc_origin_source_t* rpc_generic_source_info( size_t );
+void rpc_generic_destroy_source_info( rpc_origin_source_t* );
+bool rpc_generic_setup( task_process_t* );
+void rpc_generic_destroy( task_process_t* );
+bool rpc_generic_ready( task_process_t* );
+bool rpc_generic_restore( task_thread_t* );
+bool rpc_generic_prepare_invoke( rpc_backup_t* );
+rpc_backup_t* rpc_generic_raise( task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool );
+bool rpc_generic_setup_mailbox( task_process_t* );
+void rpc_generic_destroy_mailbox( task_process_t* );
+
 
 #endif
