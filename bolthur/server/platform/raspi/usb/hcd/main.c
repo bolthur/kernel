@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <sys/bolthur.h>
+#include "../../libperipheral.h"
 
 /**
  * @fn int main(int, char*[])
@@ -30,6 +31,6 @@
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // print something
-  EARLY_STARTUP_PRINT( "usb hcd processing!\r\n" )
+  STARTUP_PRINT( "usb hcd processing!\r\n" )
   return -1;
 }

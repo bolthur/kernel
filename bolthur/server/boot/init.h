@@ -24,7 +24,7 @@
 #include <libtar.h>
 
 void init_stage1( void );
-[[noreturn]] void init_stage2( const char* );
+void init_stage2( const char* );
 [[noreturn]] void init_stage3( void );
 
 #endif

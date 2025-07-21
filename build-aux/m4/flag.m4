@@ -32,8 +32,8 @@ AC_DEFUN([BOLTHUR_LIBRARY_SET_FLAG], [
   #AC_DEFINE_UNQUOTED([_FORTIFY_SOURCE], [2], [Necessary newlib define])
 
   # linker flags
-  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/ramdisk/usr/lib/ld-bolthur.so])
-  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/ramdisk/lib,--enable-new-dtags])
+  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/usr/lib/ld-bolthur.so])
+  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/usr/lib,--enable-new-dtags])
 
   # custom optimization level
   AS_IF([test "x$enable_release" != "xyes"], [
@@ -189,8 +189,8 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
   #AC_DEFINE_UNQUOTED([_FORTIFY_SOURCE], [2], [Necessary newlib define])
 
   # linker flags
-  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/ramdisk/usr/lib/ld-bolthur.so])
-  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/ramdisk/lib,--enable-new-dtags])
+  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/usr/lib/ld-bolthur.so])
+  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/usr/lib,--enable-new-dtags])
 
   # custom optimization level
   AS_IF([test "x$enable_release" != "xyes"], [
@@ -260,8 +260,8 @@ AC_DEFUN([BOLTHUR_APPLICATION_SET_FLAG], [
   #AC_DEFINE_UNQUOTED([_FORTIFY_SOURCE], [2], [Necessary newlib define])
 
   # linker flags
-  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/ramdisk/usr/lib/ld-bolthur.so])
-  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/ramdisk/lib,--enable-new-dtags])
+  AX_APPEND_LINK_FLAGS([-Wl,--dynamic-linker=/usr/lib/ld-bolthur.so])
+  AX_APPEND_LINK_FLAGS([-Wl,-rpath=/usr/lib,--enable-new-dtags])
 
   # custom optimization level
   AS_IF([test "x$enable_release" != "xyes"], [

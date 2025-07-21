@@ -17,19 +17,24 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
-#include <sys/bolthur.h>
+#ifndef _RESPONSE_H
+#define _RESPONSE_H
 
-/**
- * @fn int main(int, char*[])
- * @brief main entry point
- *
- * @param argc
- * @param argv
- * @return
- */
-int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  // print something
-  STARTUP_PRINT( "usb hid mouse processing!\r\n" )
-  return -1;
-}
+typedef enum{
+  HCD_RESPONSE_OK = 0,
+  HCD_RESPONSE_ERROR_MEMORY,
+  HCD_RESPONSE_ERROR_IO,
+  HCD_RESPONSE_ERROR_MAILBOX,
+  HCD_RESPONSE_ERROR_NOT_IMPLEMENTED,
+  HCD_RESPONSE_ERROR_TIMEOUT,
+  HCD_RESPONSE_ERROR_UNKNOWN,
+  HCD_RESPONSE_ERROR_INCOMPATIBLE,
+} response_t;
+
+typedef struct {
+  char* message;
+} response_message_entry_t;
+
+const char* response_error( response_t );
+
+#endif //_RESPONSE_H

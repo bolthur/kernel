@@ -23,6 +23,8 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/bolthur.h>
+
+#include "configuration.h"
 #include "../ramdisk.h"
 #include "../init.h"
 #include "../util.h"
@@ -33,8 +35,17 @@
  * @brief Final init stage starting servers from storage with finally starting shell
  */
 [[noreturn]] void init_stage3( void ) {
+  // start servers by configuration
+  if ( ! configuration_handle( "/ramdisk/config/stage3.ini", nullptr ) ) {
+    EARLY_STARTUP_PRINT( "Something went wrong with stage3 startup!\r\n" )
+    exit( 1 );
+  }
+
+  while ( true ) {
+    __asm__ __volatile__( "nop" );
+  }
+
   /// FIXME: Kill unnecessary ramdisk server again
-  /// FIXME: Start authentication manager
   /// FIXME: Start USB driver with all attached devices
   /// FIXME: Start login console
 

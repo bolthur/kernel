@@ -100,7 +100,6 @@ int dma_block_prepare( void ) {
  * @fn int dma_block_to_phys(uintptr_t*)
  * @brief Translate control block to bus address
  *
- * @param block
  * @param addr
  * @return
  *
@@ -137,8 +136,8 @@ int dma_block_to_phys( uintptr_t* addr ) {
  * @todo validate parameter
  */
 int dma_block_set_address(
-  uint32_t source,
-  uint32_t destination
+  const uint32_t source,
+  const uint32_t destination
 ) {
   if ( ! block ) {
     last_error = -EINVAL;
@@ -156,7 +155,7 @@ int dma_block_set_address(
  * @param value
  * @return
  */
-int dma_block_transfer_info_source_increment( bool value ) {
+int dma_block_transfer_info_source_increment( const bool value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -176,7 +175,7 @@ int dma_block_transfer_info_source_increment( bool value ) {
  * @param value
  * @return
  */
-int dma_block_transfer_info_destination_increment( bool value ) {
+int dma_block_transfer_info_destination_increment( const bool value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -196,7 +195,7 @@ int dma_block_transfer_info_destination_increment( bool value ) {
  * @param value
  * @return
  */
-int dma_block_transfer_info_wait_response( bool value ) {
+int dma_block_transfer_info_wait_response( const bool value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -216,7 +215,7 @@ int dma_block_transfer_info_wait_response( bool value ) {
  * @param value
  * @return
  */
-int dma_block_transfer_info_burst_length( uint32_t value ) {
+int dma_block_transfer_info_burst_length( const uint32_t value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -232,7 +231,7 @@ int dma_block_transfer_info_burst_length( uint32_t value ) {
  * @param value
  * @return
  */
-int dma_block_transfer_info_src_width( bool value ) {
+int dma_block_transfer_info_src_width( const bool value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -252,7 +251,7 @@ int dma_block_transfer_info_src_width( bool value ) {
  * @param value
  * @return
  */
-int dma_block_transfer_info_dest_width( bool value ) {
+int dma_block_transfer_info_dest_width( const bool value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -272,7 +271,7 @@ int dma_block_transfer_info_dest_width( bool value ) {
  * @param value
  * @return
  */
-int dma_block_transfer_info_src_dreq( bool value ) {
+int dma_block_transfer_info_src_dreq( const bool value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -292,7 +291,7 @@ int dma_block_transfer_info_src_dreq( bool value ) {
  * @param value
  * @return
  */
-int dma_block_transfer_info_dest_dreq( bool value ) {
+int dma_block_transfer_info_dest_dreq( const bool value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -312,7 +311,7 @@ int dma_block_transfer_info_dest_dreq( bool value ) {
  * @param value
  * @return
  */
-int dma_block_transfer_info_interrupt_enable( bool value ) {
+int dma_block_transfer_info_interrupt_enable( const bool value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -332,7 +331,7 @@ int dma_block_transfer_info_interrupt_enable( bool value ) {
  * @param value
  * @return
  */
-int dma_block_transfer_info_permap( uint32_t value ) {
+int dma_block_transfer_info_permap( const uint32_t value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -349,11 +348,10 @@ int dma_block_transfer_info_permap( uint32_t value ) {
  * @fn int dma_block_set_transfer_length(uint32_t)
  * @brief Set transfer length information
  *
- * @param block
  * @param value
  * @return
  */
-int dma_block_set_transfer_length( uint32_t value ) {
+int dma_block_set_transfer_length( const uint32_t value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -366,11 +364,10 @@ int dma_block_set_transfer_length( uint32_t value ) {
  * @fn int dma_block_set_stride(uint32_t)
  * @brief Set stride
  *
- * @param block
  * @param value
  * @return
  */
-int dma_block_set_stride( uint32_t value ) {
+int dma_block_set_stride( const uint32_t value ) {
   if ( ! block ) {
     last_error = -EINVAL;
     return -1;
@@ -399,16 +396,16 @@ int dma_block_set_next( uint32_t value ) {
 /**
  * @fn void dma_block_dump(void)
  * @brief Dump dma block
- *
- * @param block
  */
 void dma_block_dump( void ) {
-  EARLY_STARTUP_PRINT( "block->destination_address: %#"PRIx32"\r\n", block->destination_address );
-  EARLY_STARTUP_PRINT( "block->next_control_block: %#"PRIx32"\r\n", block->next_control_block );
-  EARLY_STARTUP_PRINT( "block->source_address: %#"PRIx32"\r\n", block->source_address );
-  EARLY_STARTUP_PRINT( "block->stride: %#"PRIx32"\r\n", block->stride );
-  EARLY_STARTUP_PRINT( "block->transfer_information: %#"PRIx32"\r\n", block->transfer_information );
-  EARLY_STARTUP_PRINT( "block->transfer_length: %#"PRIx32"\r\n", block->transfer_length );
+  #if defined( DMA_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "block->destination_address: %#"PRIx32"\r\n", block->destination_address );
+    EARLY_STARTUP_PRINT( "block->next_control_block: %#"PRIx32"\r\n", block->next_control_block );
+    EARLY_STARTUP_PRINT( "block->source_address: %#"PRIx32"\r\n", block->source_address );
+    EARLY_STARTUP_PRINT( "block->stride: %#"PRIx32"\r\n", block->stride );
+    EARLY_STARTUP_PRINT( "block->transfer_information: %#"PRIx32"\r\n", block->transfer_information );
+    EARLY_STARTUP_PRINT( "block->transfer_length: %#"PRIx32"\r\n", block->transfer_length );
+  #endif
 }
 
 /**
@@ -480,8 +477,8 @@ int dma_start( void ) {
  */
 int dma_wait(
   int64_t loop_max_iteration,
-  mmio_sleep_t sleep_type,
-  uint32_t sleep_value,
+  const mmio_sleep_t sleep_type,
+  const uint32_t sleep_value,
   void ( *apply_sleep )( mmio_sleep_t, uint32_t )
 ) {
   if ( ! block ) {
@@ -506,18 +503,24 @@ int dma_wait(
     // handle possible error
     if ( value & LIBDMA_CS_ERROR ) {
       // query debug register of dma channel
-      uint32_t debug = mmio_read( PERIPHERAL_DMA0_DEBUG );
+      const uint32_t debug = mmio_read( PERIPHERAL_DMA0_DEBUG );
       // check for read error
       if ( debug & LIBDMA_DEBUG_READ_ERROR ) {
-        EARLY_STARTUP_PRINT( "ERROR WHILE READING!\r\n" );
+        #if defined( DMA_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "ERROR WHILE READING!\r\n" );
+        #endif
       }
       // check for fifo error
       if ( debug & LIBDMA_DEBUG_FIFO_ERROR ) {
-        EARLY_STARTUP_PRINT( "FIFO ERROR!\r\n" )
+        #if defined( DMA_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "FIFO ERROR!\r\n" )
+        #endif
       }
       // check for read last not set error
       if ( debug & LIBDMA_DEBUG_READ_LAST_NOT_SET_ERROR ) {
-        EARLY_STARTUP_PRINT( "READ LAST NOT SET ERROR\r\n" );
+        #if defined( DMA_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "READ LAST NOT SET ERROR\r\n" );
+        #endif
       }
       // dump everything
       dma_dump();
@@ -525,7 +528,9 @@ int dma_wait(
       return -1;
     }
     if ( value & LIBDMA_CS_INT ) {
-      EARLY_STARTUP_PRINT( "INTERRUPT PENDING!\r\n" );
+      #if defined( DMA_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "INTERRUPT PENDING!\r\n" );
+      #endif
     }
     // apply possible sleep
     if ( ! ( value & LIBDMA_CS_END ) ) {
@@ -564,28 +569,30 @@ int dma_finish( void ) {
  * @brief Dump dma registers
  */
 void dma_dump( void ) {
-  uint32_t value = mmio_read( PERIPHERAL_DMA0_CS );
-  EARLY_STARTUP_PRINT( "CS: %#"PRIx32"\r\n", value );
-  value = mmio_read( PERIPHERAL_DMA0_CONBLK_AD );
-  EARLY_STARTUP_PRINT( "CONBLK_AD: %#"PRIx32"\r\n", value );
-  value = mmio_read( PERIPHERAL_DMA0_TI );
-  EARLY_STARTUP_PRINT( "TI: %#"PRIx32"\r\n", value );
-  value = mmio_read( PERIPHERAL_DMA0_SOURCE_AD );
-  EARLY_STARTUP_PRINT( "SOURCE_AD: %#"PRIx32"\r\n", value );
-  value = mmio_read( PERIPHERAL_DMA0_DEST_AD );
-  EARLY_STARTUP_PRINT( "DEST_AD: %#"PRIx32"\r\n", value );
-  value = mmio_read( PERIPHERAL_DMA0_TXFR_LEN );
-  EARLY_STARTUP_PRINT( "TXFR_LEN: %#"PRIx32"\r\n", value );
-  value = mmio_read( PERIPHERAL_DMA0_STRIDE );
-  EARLY_STARTUP_PRINT( "STRIDE: %#"PRIx32"\r\n", value );
-  value = mmio_read( PERIPHERAL_DMA0_NEXTCONBK );
-  EARLY_STARTUP_PRINT( "NEXTCONBK: %#"PRIx32"\r\n", value );
-  value = mmio_read( PERIPHERAL_DMA0_DEBUG );
-  EARLY_STARTUP_PRINT( "DEBUG: %#"PRIx32"\r\n", value );
-  value = mmio_read( PERIPHERAL_DMA_INT_STATUS );
-  EARLY_STARTUP_PRINT( "INT_STATUS: %#"PRIx32"\r\n", value );
-  value = mmio_read( PERIPHERAL_DMA_ENABLE );
-  EARLY_STARTUP_PRINT( "ENABLE: %#"PRIx32"\r\n", value );
+  #if defined( DMA_ENABLE_DEBUG )
+    uint32_t value = mmio_read( PERIPHERAL_DMA0_CS );
+    EARLY_STARTUP_PRINT( "CS: %#"PRIx32"\r\n", value );
+    value = mmio_read( PERIPHERAL_DMA0_CONBLK_AD );
+    EARLY_STARTUP_PRINT( "CONBLK_AD: %#"PRIx32"\r\n", value );
+    value = mmio_read( PERIPHERAL_DMA0_TI );
+    EARLY_STARTUP_PRINT( "TI: %#"PRIx32"\r\n", value );
+    value = mmio_read( PERIPHERAL_DMA0_SOURCE_AD );
+    EARLY_STARTUP_PRINT( "SOURCE_AD: %#"PRIx32"\r\n", value );
+    value = mmio_read( PERIPHERAL_DMA0_DEST_AD );
+    EARLY_STARTUP_PRINT( "DEST_AD: %#"PRIx32"\r\n", value );
+    value = mmio_read( PERIPHERAL_DMA0_TXFR_LEN );
+    EARLY_STARTUP_PRINT( "TXFR_LEN: %#"PRIx32"\r\n", value );
+    value = mmio_read( PERIPHERAL_DMA0_STRIDE );
+    EARLY_STARTUP_PRINT( "STRIDE: %#"PRIx32"\r\n", value );
+    value = mmio_read( PERIPHERAL_DMA0_NEXTCONBK );
+    EARLY_STARTUP_PRINT( "NEXTCONBK: %#"PRIx32"\r\n", value );
+    value = mmio_read( PERIPHERAL_DMA0_DEBUG );
+    EARLY_STARTUP_PRINT( "DEBUG: %#"PRIx32"\r\n", value );
+    value = mmio_read( PERIPHERAL_DMA_INT_STATUS );
+    EARLY_STARTUP_PRINT( "INT_STATUS: %#"PRIx32"\r\n", value );
+    value = mmio_read( PERIPHERAL_DMA_ENABLE );
+    EARLY_STARTUP_PRINT( "ENABLE: %#"PRIx32"\r\n", value );
+  #endif
 }
 
 /**

@@ -30,6 +30,6 @@
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // print something
-  EARLY_STARTUP_PRINT( "usb hid keyboard processing!\r\n" )
+  STARTUP_PRINT( "usb hid keyboard processing!\r\n" )
   return -1;
 }

@@ -25,6 +25,7 @@
 #include <sys/bolthur.h>
 
 //#define RPC_ENABLE_DEBUG 1
+//#define DMA_ENABLE_DEBUG 1
 
 bool rpc_init( void );
 void rpc_handle_ioctl( size_t, pid_t, size_t, size_t );

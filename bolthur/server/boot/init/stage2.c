@@ -34,7 +34,7 @@
  * @brief Stage 2 init starting necessary stuff so that stage 3 with stuff from disk can be started
  * @param bootarg boot arguments
  */
-[[noreturn]] void init_stage2( const char* bootarg ) {
+void init_stage2( const char* bootarg ) {
   // start servers by configuration
   if ( ! configuration_handle( "/ramdisk/config/stage2.ini", bootarg ) ) {
     EARLY_STARTUP_PRINT( "Something went wrong with stage2 startup!\r\n" )
@@ -163,7 +163,7 @@
     STARTUP_PRINT( "unable to set seek end: %s\r\n", strerror( errno ) )
     exit( 1 );
   }
-  size_t cmdline_size = ( size_t )position;
+  const size_t cmdline_size = ( size_t )position;
   // reset back to beginning
   if ( -1 == lseek( cmdline, 0, SEEK_SET ) ) {
     STARTUP_PRINT( "unable to set seek start: %s\r\n", strerror( errno ) )
@@ -183,20 +183,6 @@
   str[ cmdline_size ] = 0;
   // print content
   STARTUP_PRINT( "str: %s\r\n", str )
+  free( str );
   STARTUP_PRINT( "continue with stage3!!!\r\n")
-
-  // open dummy
-  FILE* fp = fopen( "/boot/cmdline.txt", "r" );
-  if ( ! fp ) {
-    STARTUP_PRINT( "unable to open: %s\r\n", strerror( errno ) )
-    exit( 1 );
-  }
-  // fork process
-  pid_t boot_forked = fork();
-  EARLY_STARTUP_PRINT( "error = %s\r\n", strerror( errno ) )
-  EARLY_STARTUP_PRINT( "boot_forked = %d\r\n", boot_forked )
-
-  for (;;) {
-    __asm__ __volatile__ ( "nop" );
-  }
 }
