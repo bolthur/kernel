@@ -624,8 +624,8 @@ void rpc_handle_mmio_perform(
         if ( 0 < ( *mmio_request )[ i ].loop_max_iteration ) {
           loop_max_iteration = ( *mmio_request )[ i ].loop_max_iteration;
         }
-        // translate mmio start to bus address
-        uintptr_t bus = _syscall_memory_translate_physical( ( uintptr_t )mmio_start )
+        // translate mmio start to physical address
+        uintptr_t mmio_phys = _syscall_memory_translate_physical( ( uintptr_t )mmio_start )
           + ( *mmio_request )[ i ].offset;
         if ( errno ) {
           ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
@@ -664,8 +664,8 @@ void rpc_handle_mmio_perform(
         ) {
           dma_block_prepare();
           // get physical memory address
-          uintptr_t physical = _syscall_memory_translate_physical(
-            ( uintptr_t )dma_block + size
+          uintptr_t physical = _syscall_memory_translate_bus(
+            ( uintptr_t )dma_block + size, PAGE_SIZE
           );
           if ( errno ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
@@ -685,8 +685,8 @@ void rpc_handle_mmio_perform(
           #endif
           // set block address
           if ( 0 != dma_block_set_address(
-            ( bus & 0x00FFFFFF ) | 0x7E000000,
-            physical | 0xC0000000
+            ( mmio_phys & 0x00FFFFFF ) | 0x7E000000,
+            physical
           ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );
@@ -839,8 +839,8 @@ void rpc_handle_mmio_perform(
         if ( 0 < ( *mmio_request )[ i ].loop_max_iteration ) {
           loop_max_iteration = ( *mmio_request )[ i ].loop_max_iteration;
         }
-        // translate mmio start to bus address
-        uintptr_t bus = _syscall_memory_translate_physical( ( uintptr_t )mmio_start )
+        // translate mmio start to physical address
+        uintptr_t mmio_phys = _syscall_memory_translate_physical( ( uintptr_t )mmio_start )
           + ( *mmio_request )[ i ].offset;
         if ( errno ) {
           ( *mmio_request )[ i ].abort_type = IOMEM_MMIO_ABORT_TYPE_DMA;
@@ -881,8 +881,8 @@ void rpc_handle_mmio_perform(
         ) {
           dma_block_prepare();
           // get physical memory address
-          uintptr_t physical = _syscall_memory_translate_physical(
-            ( uintptr_t )dma_block + size
+          uintptr_t physical = _syscall_memory_translate_bus(
+            ( uintptr_t )dma_block + size, PAGE_SIZE
           );
           if ( errno ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
@@ -902,8 +902,8 @@ void rpc_handle_mmio_perform(
           #endif
           // set block address
           if ( 0 != dma_block_set_address(
-            physical | 0xC0000000,
-            ( bus & 0x00FFFFFF ) | 0x7E000000
+            physical,
+            ( mmio_phys & 0x00FFFFFF ) | 0x7E000000
           ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
             _syscall_memory_shared_detach( shm_id );

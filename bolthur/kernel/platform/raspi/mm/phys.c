@@ -175,12 +175,13 @@ uint64_t phys_address_to_bus( const uint64_t address, const size_t size ) {
   if (
     address >= phys_dma_start
     && address <= phys_dma_end
-    && address + size <= phys_dma_start
+    && address + size <= phys_dma_end
   ) {
-    return 0;
+    // return bus address
+    return address + 0xC0000000;
   }
-  // return bus address
-  return address + 0xC0000000;
+  // return 0
+  return 0;
 }
 
 /**
