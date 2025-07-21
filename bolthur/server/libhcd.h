@@ -20,13 +20,15 @@
 #ifndef _LIBHCD_H
 #define _LIBHCD_H
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <errno.h>
 #include <sys/bolthur.h>
 #include "libusb.h"
 
 #define HCD_SUBMIT_CONTROL_MESSAGE RPC_CUSTOM_START
+
+typedef struct {
+  libusb_pipe_address_t pipe_address;
+  libusb_device_request_t request;
+  uint8_t buffer[];
+} hcd_submit_control_message_t;
 
 #endif
