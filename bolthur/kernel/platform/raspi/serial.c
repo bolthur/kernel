@@ -23,6 +23,7 @@
 #include "peripheral.h"
 #include "gpio.h"
 #include "mailbox/property.h"
+#include "interrupt.h"
 
 #include "../../io.h"
 #include "../../serial.h"
@@ -211,11 +212,11 @@ bool serial_register_interrupt( void ) {
   // get peripheral base
   const uint32_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
   // register interrupt
-  if ( ! interrupt_register_handler( 57, serial_clear, NULL, INTERRUPT_FAST, true, false ) ) {
+  if ( ! interrupt_register_handler( IRQ_UART, serial_clear, NULL, INTERRUPT_FAST, true, false ) ) {
     return false;
   }
   // mask interrupt
-  io_out32( base + INTERRUPT_FIQ_CONTROL, 57 | 0x80 );
+  io_out32( base + INTERRUPT_FIQ_CONTROL, IRQ_UART | 0x80 );
   // flush it
   serial_flush();
   return true;

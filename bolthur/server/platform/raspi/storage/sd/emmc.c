@@ -339,7 +339,7 @@ static emmc_response_t controller_startup( void ) {
     return EMMC_RESPONSE_MAILBOX;
   }
   // handle invalid device id returned
-  if ( 0 != request[ 5 ] ) {
+  if ( MAILBOX_POWER_STATE_DEVICE_SD_CARD != request[ 5 ] ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       STARTUP_PRINT( "Invalid device id returned\r\n" )

@@ -17,21 +17,25 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DWHCI_H
-#define _DWHCI_H
+// system includes
+#include <errno.h>
+// local includes
+#include "../rpc.h"
+// driver includes
+#include "../../../libhcd.h"
 
-#include <stdint.h>
-#include "response.h"
-
-#define DWHCI_ENABLE_DEBUG 1
-
-response_t dwhci_query_vendor( uint32_t* destination );
-response_t dwhci_power_on( void );
-response_t dwhci_enable_global_interrupts( void );
-response_t dwhci_disable_global_interrupts( void );
-response_t dwhci_register_interrupt( void );
-response_t dwhci_init_core( void );
-response_t dwhci_init_host( void );
-response_t dwhci_init( void );
-
-#endif //_DWHCI_H
+/**
+ * @fn bool rpc_init(void)
+ * @brief Init rpc handler method
+ * @return
+ */
+bool rpc_init( void ) {
+  // bind interrupt handler
+  bolthur_rpc_bind( ARM_IRQ_USB, rpc_interrupt_handle, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    return false;
+  }
+  // return success
+  return true;
+}

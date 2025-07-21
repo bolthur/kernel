@@ -17,12 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// system includes
 #include <stdio.h>
 #include <sys/bolthur.h>
-
+// local includes
 #include "dwhci.h"
 #include "response.h"
-#include "../../libperipheral.h"
+#include "rpc.h"
 
 /**
  * @fn int main(int, char*[])
@@ -33,16 +34,22 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  // print starting
-  STARTUP_PRINT( "Setup hcd interface!\r\n" )
+  // register rpc
+  STARTUP_PRINT( "Setup rpc handler\r\n" )
+  if ( !rpc_init() ) {
+    STARTUP_PRINT( "Unable to bind rpc handler" );
+    return -1;
+  }
 
-  // init dwhci
+  // setup hcd interface
+  STARTUP_PRINT( "Setup hcd interface!\r\n" )
   const response_t result = dwhci_init();
-  // handle error
   if ( HCD_RESPONSE_OK != result ) {
     STARTUP_PRINT( "Unable to init dwhci: %s\r\n", response_error( result ) );
     return -1;
   }
+
+  /// FIXME: IMPLEMENT
 
   while ( true ) {
     __asm__ __volatile__ ( "nop" );

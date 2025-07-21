@@ -17,21 +17,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DWHCI_H
-#define _DWHCI_H
+#include "../../rpc.h"
 
-#include <stdint.h>
-#include "response.h"
-
-#define DWHCI_ENABLE_DEBUG 1
-
-response_t dwhci_query_vendor( uint32_t* destination );
-response_t dwhci_power_on( void );
-response_t dwhci_enable_global_interrupts( void );
-response_t dwhci_disable_global_interrupts( void );
-response_t dwhci_register_interrupt( void );
-response_t dwhci_init_core( void );
-response_t dwhci_init_host( void );
-response_t dwhci_init( void );
-
-#endif //_DWHCI_H
+/**
+ * @fn void rpc_interrupt_handle(size_t, pid_t, size_t, size_t)
+ * @brief Interrupt handler
+ * @param type message type
+ * @param origin origin of the message
+ * @param data_info data id
+ * @param response_info response info
+ */
+void rpc_interrupt_handle(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+  STARTUP_PRINT( "Interrupt handler called\r\n" )
+}

@@ -17,21 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DWHCI_H
-#define _DWHCI_H
+#ifndef _RPC_H
+#define _RPC_H
 
-#include <stdint.h>
-#include "response.h"
+#include <stdbool.h>
+#include <sys/bolthur.h>
 
-#define DWHCI_ENABLE_DEBUG 1
+bool rpc_init( void );
+void rpc_interrupt_handle( size_t, pid_t, size_t, size_t );
 
-response_t dwhci_query_vendor( uint32_t* destination );
-response_t dwhci_power_on( void );
-response_t dwhci_enable_global_interrupts( void );
-response_t dwhci_disable_global_interrupts( void );
-response_t dwhci_register_interrupt( void );
-response_t dwhci_init_core( void );
-response_t dwhci_init_host( void );
-response_t dwhci_init( void );
-
-#endif //_DWHCI_H
+#endif

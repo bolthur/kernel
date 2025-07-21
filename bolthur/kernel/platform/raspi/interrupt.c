@@ -24,6 +24,7 @@
 #include "gpio.h"
 #include "peripheral.h"
 #include "../../debug/debug.h"
+#include "interrupt.h"
 
 /**
  * @fn bool interrupt_validate_number(size_t)
@@ -35,14 +36,14 @@
  */
 bool interrupt_validate_number( const size_t num ) {
   return ! (
-    num != 1 && num != 8
-    && num != 29 && num != 43
-    && num != 45 && num != 46
-    && num != 48 && num != 49
-    && num != 50 && num != 51
-    && num != 52 && num != 53
-    && num != 54 && num != 55
-    && num != 57
+    num != IRQ_MAILBOX && num != 8
+    && num != IRQ_USB && num != IRQ_AUX
+    && num != IRQ_I2C_SPI && num != IRQ_PWA0
+    && num != IRQ_PWA1 && num != IRQ_SMI
+    && num != IRQ_GPIO0 && num != IRQ_GPIO1
+    && num != IRQ_GPIO2 && num != IRQ_GPIO3
+    && num != IRQ_I2C && num != IRQ_SPI
+    && num != IRQ_PCM && num != IRQ_UART
   );
 }
 

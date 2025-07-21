@@ -17,21 +17,25 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _DWHCI_H
-#define _DWHCI_H
+#ifndef _PLATFORM_RASPI_INTERRUPT_H
+#define _PLATFORM_RASPI_INTERRUPT_H
 
-#include <stdint.h>
-#include "response.h"
+// undocumented irq
+#define IRQ_USB 9
+// documented irq
+#define IRQ_MAILBOX 1
+#define IRQ_AUX 29
+#define IRQ_I2C_SPI 43
+#define IRQ_PWA0 45
+#define IRQ_PWA1 46
+#define IRQ_SMI 48
+#define IRQ_GPIO0 49
+#define IRQ_GPIO1 50
+#define IRQ_GPIO2 51
+#define IRQ_GPIO3 52
+#define IRQ_I2C 53
+#define IRQ_SPI 54
+#define IRQ_PCM 55
+#define IRQ_UART 57
 
-#define DWHCI_ENABLE_DEBUG 1
-
-response_t dwhci_query_vendor( uint32_t* destination );
-response_t dwhci_power_on( void );
-response_t dwhci_enable_global_interrupts( void );
-response_t dwhci_disable_global_interrupts( void );
-response_t dwhci_register_interrupt( void );
-response_t dwhci_init_core( void );
-response_t dwhci_init_host( void );
-response_t dwhci_init( void );
-
-#endif //_DWHCI_H
+#endif

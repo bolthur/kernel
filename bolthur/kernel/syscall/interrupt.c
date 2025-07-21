@@ -17,6 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define PRINT_SYSCALL
+
 #include <errno.h>
 #include "../task/process.h"
 #include "../task/thread.h"
@@ -34,7 +36,7 @@
  * @param context
  */
 void syscall_interrupt_acquire( void* context ) {
-  uint8_t num = ( uint8_t )syscall_get_parameter( context, 0 );
+  const uint8_t num = ( uint8_t )syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_interrupt_acquire( %"PRIu8" )\r\n", num )
@@ -81,7 +83,7 @@ void syscall_interrupt_acquire( void* context ) {
  * @param context
  */
 void syscall_interrupt_release( void* context ) {
-  uint8_t num = ( uint8_t )syscall_get_parameter( context, 0 );
+  const uint8_t num = ( uint8_t )syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_interrupt_release( %"PRIu8" )\r\n", num )
