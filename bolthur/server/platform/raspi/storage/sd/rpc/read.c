@@ -84,12 +84,12 @@ void rpc_handle_read(
     return;
   }
   // calculate block number
-  const off_t block_number = request->offset / sd_block_size;
+  /*const off_t block_number = request->offset / sd_block_size;
   // try to read from card
   STARTUP_PRINT(
     "Reading %#zx bytes with offset of %llx / %lx ( block number: %llx ) from sd card\r\n",
     request->len, request->offset, ( uint32_t )request->offset, block_number
-  )
+  )*/
   // try to read data
   if ( ! sd_read_block(
     NULL,
