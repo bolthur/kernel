@@ -32,9 +32,9 @@
 #include "../../libmailbox.h"
 
 /**
- * @brief Static file descriptor for iomem operations
+ * @brief file descriptor for iomem operations
  */
-static int fd_iomem = -1;
+int fd_iomem = -1;
 
 /**
  * @fn uint32_t dwhci_query_vendor(uint32_t*)
@@ -858,7 +858,8 @@ response_t dwhci_init_core( void ) {
   // free sequence
   free( sequence );
   // manipulate config
-  ahb_cfg |= HCD_DWHCI_CORE_AHB_CFG_GLOBAL_DMA_ENABLE;
+  /// FIXME: ENABLE DMA AND WORK WITH INTERRUPTS
+  //ahb_cfg |= HCD_DWHCI_CORE_AHB_CFG_GLOBAL_DMA_ENABLE;
   ahb_cfg |= HCD_DWHCI_CORE_AHB_CFG_GLOBAL_WAIT_AXI_WRITES;
   ahb_cfg &= ( uint32_t )~HCD_DWHCI_CORE_AHB_CFG_GLOBAL_MAX_AXI_BURST_MASK;
   // allocate sequence to write it back
@@ -1171,6 +1172,60 @@ response_t dwhci_core_flush_rx_fifo( void ) {
 }
 
 /**
+ * @fn response_t dwhci_write_host_port(uint32_t)
+ * @brief Helper to write back host port value
+ * @param port
+ * @return
+ */
+response_t dwhci_write_host_port( uint32_t port ) {
+  // debug output
+  #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Writing host port value %#"PRIx32"\r\n", port )
+  #endif
+  // allocate sequence
+  size_t sequence_size;
+  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+  if ( ! sequence ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
+    #endif
+    // return error
+    return HCD_RESPONSE_ERROR_MEMORY;
+  }
+  // read config
+  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
+  sequence[ 0 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
+  sequence[ 1 ].value = port;
+  // perform request
+  const int ioctl_result = ioctl(
+    fd_iomem,
+    IOCTL_BUILD_REQUEST(
+      IOMEM_RPC_MMIO_PERFORM,
+      sequence_size,
+      IOCTL_RDWR
+    ),
+    sequence
+  );
+  // handle ioctl error
+  if ( -1 == ioctl_result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Read of hw cfg2 failed\r\n" )
+    #endif
+    // free sequence
+    free( sequence );
+    // return error
+    return HCD_RESPONSE_ERROR_IO;
+  }
+  // free sequence
+  free( sequence );
+  // return success
+  return HCD_RESPONSE_OK;
+
+}
+
+/**
  * @fn response_t dwhci_read_host_cfg(uint32_t*)
  * @brief Wrapper to read cfg
  * @param port
@@ -1179,7 +1234,7 @@ response_t dwhci_core_flush_rx_fifo( void ) {
 response_t dwhci_read_host_port( uint32_t* port ) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
-    STARTUP_PRINT( "Read usb host cfg\r\n" )
+    STARTUP_PRINT( "Read host port\r\n" )
   #endif
   // validate parameter
   if ( ! port ) {

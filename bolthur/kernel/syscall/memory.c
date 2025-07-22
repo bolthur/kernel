@@ -433,6 +433,8 @@ void syscall_memory_shared_detach( void* context ) {
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_memory_shared_detach( %zu )\r\n", id )
   #endif
+  // drain possible cached stuff by performing complete flush
+  virt_flush_complete();
   // try to detach
   if ( ! shared_memory_detach( task_thread_current_thread->process, id ) ) {
     syscall_populate_error( context, ( size_t )-EIO );
@@ -456,7 +458,7 @@ void syscall_memory_shared_size( void* context ) {
     DEBUG_OUTPUT( "syscall_memory_shared_size( %zu )\r\n", id )
   #endif
   // try to get size
-  size_t len = shared_memory_size( task_thread_current_thread->process, id );
+  const size_t len = shared_memory_size( task_thread_current_thread->process, id );
   if ( 0 == len ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
@@ -486,8 +488,8 @@ void syscall_memory_translate_physical( void* context ) {
     ->process
     ->virtual_context;
   // get min and max address of context
-  uintptr_t min = virt_get_context_min_address( virtual_context );
-  uintptr_t max = virt_get_context_max_address( virtual_context );
+  const uintptr_t min = virt_get_context_min_address( virtual_context );
+  const uintptr_t max = virt_get_context_max_address( virtual_context );
   // ensure that address is in context
   if (
     min > address
@@ -502,7 +504,7 @@ void syscall_memory_translate_physical( void* context ) {
     return;
   }
   // get mapped address
-  uint64_t phys = virt_get_mapped_address_in_context( virtual_context, address );
+  const uint64_t phys = virt_get_mapped_address_in_context( virtual_context, address );
   // populate success
   syscall_populate_success( context, ( uintptr_t )phys + offset  );
 }

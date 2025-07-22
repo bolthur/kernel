@@ -17,27 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBHCD_H
-#define _LIBHCD_H
+#ifndef _DWHCIROOTHUB
+#define _DWHCIROOTHUB
 
-#include <sys/bolthur.h>
-#include "libusb.h"
+#include <stddef.h>
+#include "../../../../libusb.h"
 
-#define HCD_DEVICE_PATH "/dev/usb/hcd"
+extern uint32_t dwhciroothub_root_hub_device_number;
 
-#define HCD_SUBMIT_CONTROL_MESSAGE RPC_CUSTOM_START
-
-typedef struct {
-  size_t shm_id;
-} hcd_submit_control_message_t;
-
-typedef struct {
-  libusb_device_t device;
-  libusb_pipe_address_t pipe_address;
-  libusb_device_request_t request;
-  size_t buffer_length;
-  size_t timeout;
-  uint8_t buffer[];
-} hcd_control_message_t;
+int dwhciroothub_process( libusb_device_t*, libusb_pipe_address_t, void*, size_t, libusb_device_request_t* );
 
 #endif

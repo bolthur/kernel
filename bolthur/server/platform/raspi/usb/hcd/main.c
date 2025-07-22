@@ -60,7 +60,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   STARTUP_PRINT( "Sending device to vfs\r\n" )
   uint32_t device_info[] = { HCD_SUBMIT_CONTROL_MESSAGE, };
   STARTUP_PRINT( "HCD_SUBMIT_CONTROL_MESSAGE = %d\r\n", HCD_SUBMIT_CONTROL_MESSAGE )
-  if ( !dev_add_file( "/dev/usb/hcd", device_info, 1 ) ) {
+  if ( !dev_add_file( HCD_DEVICE_PATH, device_info, 1 ) ) {
     STARTUP_PRINT( "Unable to add dev hcd\r\n" )
     return -1;
   }

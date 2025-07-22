@@ -7,6 +7,7 @@ hcd_SOURCES = \
   rpc/init.c \
   rpc/submit_control_message.c \
   dwhci.c \
+  dwhciroothub.c \
   main.c \
   response.c \
   util.c

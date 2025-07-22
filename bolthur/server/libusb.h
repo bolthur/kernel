@@ -225,11 +225,65 @@ typedef enum {
   LIBUSB_PACKET_SIZE_BITS_64,
 } libusb_packet_size_t;
 
+/**
+ * @brief Get packet size from number
+ * @param size
+ * @return
+ */
+[[maybe_unused]] static libusb_packet_size_t usb_packet_size_from_number(
+  const uint32_t size
+) {
+  if (size <= 8) {
+    return LIBUSB_PACKET_SIZE_BITS_8;
+  }
+  if (size <= 16) {
+    return LIBUSB_PACKET_SIZE_BITS_16;
+  }
+  if (size <= 32) {
+    return LIBUSB_PACKET_SIZE_BITS_32;
+  }
+  return LIBUSB_PACKET_SIZE_BITS_64;
+}
+
+/**
+ * @brief Transform size to number
+ * @param size
+ * @return
+ */
+[[maybe_unused]] static uint32_t usb_number_from_packet_size(
+  const libusb_packet_size_t size
+) {
+  switch ( size ) {
+    case LIBUSB_PACKET_SIZE_BITS_8: return 8;
+    case LIBUSB_PACKET_SIZE_BITS_16: return 16;
+    case LIBUSB_PACKET_SIZE_BITS_32: return 32;
+    default: return 64;
+  }
+}
+
 typedef enum {
   LIBUSB_SPEED_HIGH = 0,
   LIBUSB_SPEED_FULL = 1,
   LIBUSB_SPEED_LOW = 2,
 } libusb_speed_t;
+
+/**
+ * @brief Small static function to turn speed into string for printing purposes
+ * @param speed speed to translate
+ * @return translated speed
+ */
+[[maybe_unused]] static char* usb_speed_to_string( const libusb_speed_t speed ) {
+  if ( LIBUSB_SPEED_HIGH == speed ) {
+    return "480 Mb/s";
+  }
+  if ( LIBUSB_SPEED_LOW == speed ) {
+    return "1.5 Mb/s";
+  }
+  if ( LIBUSB_SPEED_FULL == speed ) {
+    return "12 Mb/s";
+  }
+  return "Unknown Mb/s";
+}
 
 typedef struct __packed {
   libusb_packet_size_t max_size : 2;
@@ -305,6 +359,7 @@ typedef struct libusb_device {
   libusb_speed_t speed;
   libusb_device_status_t status;
   uint8_t configuration_index;
+  uint8_t port_number;
   libusb_transfer_error_t error __aligned( 4 );
 
   /** Handler for detaching the device. The device driver should not issue further requests to the device. */
@@ -322,13 +377,117 @@ typedef struct libusb_device {
 
   libusb_device_descriptor_t descriptor __aligned( 4 );
   libusb_configuration_descriptor_t configuration __aligned( 4 );
-  libusb_interface_descriptor_t Interfaces[ MAX_INTERFACES_PER_DEVICE ] __aligned( 4 );
-  libusb_endpoint_descriptor_t Endpoints[ MAX_INTERFACES_PER_DEVICE ][ MAX_ENDPOINTS_PER_DEVICE ] __aligned( 4 );
+  libusb_interface_descriptor_t interfaces[ MAX_INTERFACES_PER_DEVICE ] __aligned( 4 );
+  libusb_endpoint_descriptor_t endpoints[ MAX_INTERFACES_PER_DEVICE ][ MAX_ENDPOINTS_PER_DEVICE ] __aligned( 4 );
   libusb_device_t* parent __aligned( 4 );
   void *full_configuration;
   libusb_driver_data_header* driver_data;
   uint32_t last_transfer;
+
+  // pointer to next usb device
+  libusb_device_t* next;
+  libusb_device_t* prev;
 } libusb_device_t;
+
+typedef enum {
+  LIBUSB_HUB_PORT_CONTROL_GLOBAL = 0,
+  LIBUSB_HUB_PORT_CONTROL_INDIVIDUAL = 1,
+} libusb_hub_port_control_t;
+
+typedef struct __packed {
+  uint8_t descriptor_length;
+  libusb_descriptor_type_t descriptor_type;
+  uint8_t port_count;
+  struct __packed {
+    libusb_hub_port_control_t power_switching_mode : 2;
+    bool compound : 1;
+    libusb_hub_port_control_t over_current_protection : 2;
+    uint8_t think_time : 2;
+    bool indicators : 1;
+    uint8_t reserved : 8;
+  } attributes;
+  uint8_t power_good_delay;
+  uint8_t maximum_hub_power;
+  uint8_t data[];
+} libusb_hub_descriptor_t;
+
+typedef struct __packed {
+  bool local_power : 1;
+  bool over_current : 1;
+  uint16_t reserved : 14;
+} libusb_hub_status_t;
+
+typedef struct __packed {
+  bool local_power_changed : 1;
+  bool over_current_changed : 1;
+  uint16_t reserved : 14;
+} libusb_hub_status_change_t;
+
+typedef struct __packed {
+  libusb_hub_status_t status;
+  libusb_hub_status_change_t change;
+} libusb_hub_full_status_t;
+
+typedef struct __packed {
+  bool connected : 1;
+  bool enabled : 1;
+  bool suspended : 1;
+  bool over_current : 1;
+  bool reset : 1;
+  uint8_t reserved0 : 3;
+  bool power : 1;
+  bool low_speed_attached : 1;
+  bool high_speed_attached : 1;
+  bool test_mode : 1;
+  bool indicator_control : 1;
+  uint8_t reserved1 : 3;
+} libusb_hub_port_status_t;
+
+typedef struct __packed {
+  bool connected_changed : 1;
+  bool enabled_changed : 1;
+  bool suspended_changed : 1;
+  bool over_current_changed : 1;
+  bool reset_changed : 1;
+  uint16_t reserved : 11;
+} libusb_hub_port_status_change_t;
+
+typedef struct __packed {
+  libusb_hub_port_status_t status;
+  libusb_hub_port_status_change_t change;
+} libusb_hub_port_full_status_t;
+
+typedef enum {
+  LIBUSB_HUB_PORT_FEATURE_CONNECTION = 0,
+  LIBUSB_HUB_PORT_FEATURE_ENABLE = 1,
+  LIBUSB_HUB_PORT_FEATURE_SUSPEND = 2,
+  LIBUSB_HUB_PORT_FEATURE_OVER_CURRENT = 3,
+  LIBUSB_HUB_PORT_FEATURE_RESET = 4,
+  LIBUSB_HUB_PORT_FEATURE_POWER = 8,
+  LIBUSB_HUB_PORT_FEATURE_LOW_SPEED = 9,
+  LIBUSB_HUB_PORT_FEATURE_HIGH_SPEED = 10,
+  LIBUSB_HUB_PORT_FEATURE_CONNECTION_CHANGE = 16,
+  LIBUSB_HUB_PORT_FEATURE_ENABLE_CHANGE = 17,
+  LIBUSB_HUB_PORT_FEATURE_SUSPENDED_CHANGE = 18,
+  LIBUSB_HUB_PORT_FEATURE_OVER_CURRENT_CHANGE = 19,
+  LIBUSB_HUB_PORT_FEATURE_RESET_CHANGE = 20,
+} libusb_hub_port_feature_t;
+
+#define DEVICE_DRIVER_HUB 0x48554230
+
+typedef struct {
+  libusb_driver_data_header header;
+  libusb_hub_full_status_t status;
+  libusb_hub_descriptor_t* descriptor;
+  uint32_t max_children;
+  libusb_hub_port_full_status_t port_status[ MAX_CHILDREN_PER_DEVICE ];
+  libusb_device_t* children[ MAX_CHILDREN_PER_DEVICE ];
+} libusb_hub_device_t;
+
+typedef enum {
+  LIBUSB_HUB_FEATURE_POWER = 0,
+  LIBUSB_HUB_FEATURE_OVER_CURRENT = 1,
+} libusb_hub_feature_t;
 
 // enable warnings again
 #pragma GCC diagnostic pop
