@@ -24,6 +24,9 @@
 
 #define USBD_ENABLE_DEBUG 1
 
+extern int fd_hcd;
+extern libusb_device_t* head;
+
 void usbd_deallocate_device( libusb_device_t* );
 int usbd_allocate_device( libusb_device_t**, bool );
 int usbd_control_message( libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t );

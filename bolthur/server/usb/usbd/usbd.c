@@ -33,12 +33,12 @@
 /**
  * @brief Static file descriptor for hcd operations
  */
-static int fd_hcd = -1;
+int fd_hcd = -1;
 
 /**
  * @brief Head of device list
  */
-static libusb_device_t* head = nullptr;
+libusb_device_t* head = nullptr;
 
 /**
  * @brief Default timeout for control messages
@@ -180,6 +180,13 @@ int usbd_allocate_device( libusb_device_t** dev, bool insert_head ) {
   ( *dev )->device_check_for_change = nullptr;
   ( *dev )->device_child_detached = nullptr;
   ( *dev )->device_child_reset = nullptr;
+  // setup handlers with invalid pid
+  ( *dev )->device_detached_handler = -1;
+  ( *dev )->device_deallocate_handler = -1;
+  ( *dev )->device_check_for_change_handler = -1;
+  ( *dev )->device_child_detached_handler = -1;
+  ( *dev )->device_child_reset_handler = -1;
+  ( *dev )->device_check_connection_handler = -1;
   // return success
   return 0;
 }

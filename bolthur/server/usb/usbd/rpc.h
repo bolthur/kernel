@@ -24,5 +24,7 @@
 #include <sys/bolthur.h>
 
 bool rpc_init( void );
+void rpc_handler_register( size_t, pid_t, size_t, size_t );
+void rpc_handler_unregister( size_t, pid_t, size_t, size_t );
 
 #endif

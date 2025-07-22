@@ -38,7 +38,7 @@ void rpc_submit_control_message(
   pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
-  ) {
+) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {

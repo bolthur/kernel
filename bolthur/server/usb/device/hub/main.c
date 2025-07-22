@@ -17,9 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// system includes
 #include <stdio.h>
 #include <sys/bolthur.h>
-
+// local includes
 #include "hub.h"
 #include "rpc.h"
 

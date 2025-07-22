@@ -21,6 +21,7 @@
 #include <errno.h>
 // local includes
 #include "../rpc.h"
+#include "../../../libusb.h"
 
 /**
  * @fn bool rpc_init(void)
@@ -28,5 +29,17 @@
  * @return
  */
 bool rpc_init( void ) {
+  // register handler register
+  bolthur_rpc_bind( USBD_REGISTER_DEVICE_HANDLER, rpc_handler_register, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register handler register device handler!\r\n" )
+    return false;
+  }
+  // register handler unregister
+  bolthur_rpc_bind( USBD_UNREGISTER_DEVICE_HANDLER, rpc_handler_unregister, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register handler unregister device handler!\r\n" )
+    return false;
+  }
   return true;
 }

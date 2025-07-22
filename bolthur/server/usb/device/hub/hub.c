@@ -17,8 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// system includes
 #include <errno.h>
+// local includes
 #include "hub.h"
+// driver includes
+#include "../../../libusb.h"
 
 int hub_init( void ) {
   return ENOSYS;

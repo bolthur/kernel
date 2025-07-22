@@ -55,9 +55,10 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // add device file
   /// FIXME: PREPARE RPC AND FILL THEN DEVICE INFO
   STARTUP_PRINT( "Sending device to vfs\r\n" )
-  /*uint32_t device_info[] = { HCD_SUBMIT_CONTROL_MESSAGE, };
-  STARTUP_PRINT( "HCD_SUBMIT_CONTROL_MESSAGE = %d\r\n", HCD_SUBMIT_CONTROL_MESSAGE )*/
-  if ( !dev_add_file( USBD_DEVICE_PATH, NULL, 0 ) ) {
+  uint32_t device_info[] = {
+    USBD_REGISTER_DEVICE_HANDLER,
+    USBD_UNREGISTER_DEVICE_HANDLER, };
+  if ( !dev_add_file( USBD_DEVICE_PATH, device_info, 2 ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

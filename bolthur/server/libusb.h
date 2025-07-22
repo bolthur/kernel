@@ -20,7 +20,37 @@
 #ifndef _LIBUSB_H
 #define _LIBUSB_H
 
+#include <stdint.h>
+#include <sys/types.h>
+
 #define USBD_DEVICE_PATH "/dev/usb/usbd"
+
+#define USBD_REGISTER_DEVICE_HANDLER RPC_CUSTOM_START
+#define USBD_UNREGISTER_DEVICE_HANDLER USBD_REGISTER_DEVICE_HANDLER + 1
+
+// external rpc declarations
+
+typedef enum {
+  DEVICE_HANDLER_TYPE_DETACHED = 1,
+  DEVICE_HANDLER_TYPE_DEALLOCATE = 2,
+  DEVICE_HANDLER_TYPE_CHECK_FOR_CHANGE = 3,
+  DEVICE_HANDLER_TYPE_CHILD_DETACHED = 4,
+  DEVICE_HANDLER_TYPE_CHILD_RESET = 5,
+  DEVICE_HANDLER_TYPE_CHECK_CONNECTION = 6,
+} device_handler_type_t;
+
+typedef struct {
+  uint32_t device_number;
+  device_handler_type_t type;
+  pid_t handler;
+} usbd_register_device_handler_t;
+
+typedef struct {
+  uint32_t device_number;
+  device_handler_type_t type;
+} usbd_unregister_device_handler_t;
+
+// internal usb declarations
 
 #define MAX_CHILDREN_PER_DEVICE 10
 #define MAX_INTERFACES_PER_DEVICE 8
@@ -31,8 +61,6 @@
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpacked"
 #pragma GCC diagnostic ignored "-Wattributes"
-
-#include <stdint.h>
 
 typedef enum {
   LIBUSB_DESCRIPTOR_DEVICE = 1,
@@ -364,6 +392,16 @@ typedef struct libusb_device {
   uint8_t port_number;
   libusb_transfer_error_t error __aligned( 4 );
 
+  // processes responsible for generic detach and deallocate
+  pid_t device_detached_handler;
+  pid_t device_deallocate_handler;
+  // processes responsible for hub actions check for change, child detached
+  // child reset and check connection
+  pid_t device_check_for_change_handler;
+  pid_t device_child_detached_handler;
+  pid_t device_child_reset_handler;
+  pid_t device_check_connection_handler;
+
   /** Handler for detaching the device. The device driver should not issue further requests to the device. */
   void ( *device_detached )( libusb_device_t* device ) __aligned( 4 );
   /** Handler for deallocation of the device. All memory in use by the device driver should be deallocated. */
@@ -372,9 +410,9 @@ typedef struct libusb_device {
   void ( *device_check_for_change )( libusb_device_t* device );
   /** Handler for removing a child device from this device. Only hubs need handle with this. */
   void ( *device_child_detached )( libusb_device_t* device, libusb_device_t* child );
-  /** Handler for reseting a child device of this device. Only hubs need handle with this. */
+  /** Handler for resetting a child device of this device. Only hubs need handle with this. */
   int ( *device_child_reset )( libusb_device_t* device, libusb_device_t* child );
-  /** Handler for reseting a child device of this device. Only hubs need handle with this. */
+  /** Handler for resetting a child device of this device. Only hubs need handle with this. */
   int ( *device_check_connection )( libusb_device_t* device, libusb_device_t* child );
 
   libusb_device_descriptor_t descriptor __aligned( 4 );
