@@ -26,6 +26,7 @@
 #define HCD_SUBMIT_CONTROL_MESSAGE RPC_CUSTOM_START
 
 typedef struct {
+  libusb_device_t device;
   libusb_pipe_address_t pipe_address;
   libusb_device_request_t request;
   uint8_t buffer[];

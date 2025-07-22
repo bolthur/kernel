@@ -20,6 +20,10 @@
 #ifndef _LIBUSB_H
 #define _LIBUSB_H
 
+#define MAX_CHILDREN_PER_DEVICE 10
+#define MAX_INTERFACES_PER_DEVICE 8
+#define MAX_ENDPOINTS_PER_DEVICE 16
+
 // disable a bunch of warnings necessary to build packed structures
 // for usb communication
 #pragma GCC diagnostic push
@@ -266,6 +270,65 @@ typedef struct __packed {
   uint16_t index;
   uint16_t length;
 } libusb_device_request_t;
+
+typedef enum {
+  LIBUSB_DEVICE_STATUS_ATTACHED = 0,
+  LIBUSB_DEVICE_STATUS_POWERED = 1,
+  LIBUSB_DEVICE_STATUS_DEFAULT = 2,
+  LIBUSB_DEVICE_STATUS_ADDRESSED = 3,
+  LIBUSB_DEVICE_STATUS_CONFIGURED = 4,
+} libusb_device_status_t;
+
+typedef enum {
+  LIBUSB_TRANSFER_ERROR_NO_ERROR = 0,
+  LIBUSB_TRANSFER_ERROR_STALL = 1 << 1,
+  LIBUSB_TRANSFER_ERROR_BUFFER_ERROR = 1 << 2,
+  LIBUSB_TRANSFER_ERROR_BABBLE = 1 << 3,
+  LIBUSB_TRANSFER_ERROR_NO_ACKNOWLEDGE = 1 << 4,
+  LIBUSB_TRANSFER_ERROR_CRC_ERROR = 1 << 5,
+  LIBUSB_TRANSFER_ERROR_BIT_ERROR = 1 << 6,
+  LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR = 1 << 7,
+  LIBUSB_TRANSFER_ERROR_AHB_ERROR = 1 << 8,
+  LIBUSB_TRANSFER_ERROR_NOT_YET_ERROR = 1 << 9,
+  LIBUSB_TRANSFER_ERROR_PROCESSING = 1 << 10,
+} libusb_transfer_error_t;
+
+typedef struct {
+  uint32_t device_driver;
+  uint32_t data_size;
+} libusb_driver_data_header;
+
+typedef struct libusb_device libusb_device_t;
+typedef struct libusb_device {
+  uint32_t number;
+
+  libusb_speed_t speed;
+  libusb_device_status_t status;
+  uint8_t configuration_index;
+  libusb_transfer_error_t error __aligned( 4 );
+
+  /** Handler for detaching the device. The device driver should not issue further requests to the device. */
+  void ( *device_detached )( libusb_device_t* device ) __aligned( 4 );
+  /** Handler for deallocation of the device. All memory in use by the device driver should be deallocated. */
+  void ( *device_deallocate )( libusb_device_t* device );
+  /** Handler for checking for changes to the USB device tree. Only hubs need handle with this. */
+  void ( *device_check_for_change )( libusb_device_t* device );
+  /** Handler for removing a child device from this device. Only hubs need handle with this. */
+  void ( *device_child_detached )( libusb_device_t* device, libusb_device_t* child );
+  /** Handler for reseting a child device of this device. Only hubs need handle with this. */
+  int ( *device_child_reset )( libusb_device_t* device, libusb_device_t* child );
+  /** Handler for reseting a child device of this device. Only hubs need handle with this. */
+  int ( *device_check_connection )( libusb_device_t* device, libusb_device_t* child );
+
+  libusb_device_descriptor_t descriptor __aligned( 4 );
+  libusb_configuration_descriptor_t configuration __aligned( 4 );
+  libusb_interface_descriptor_t Interfaces[ MAX_INTERFACES_PER_DEVICE ] __aligned( 4 );
+  libusb_endpoint_descriptor_t Endpoints[ MAX_INTERFACES_PER_DEVICE ][ MAX_ENDPOINTS_PER_DEVICE ] __aligned( 4 );
+  libusb_device_t* parent __aligned( 4 );
+  void *full_configuration;
+  libusb_driver_data_header* driver_data;
+  uint32_t last_transfer;
+} libusb_device_t;
 
 // enable warnings again
 #pragma GCC diagnostic pop

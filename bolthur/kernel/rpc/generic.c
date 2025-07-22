@@ -190,7 +190,7 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
       return false;
     }
     // map page temporarily
-    uintptr_t tmp_map = virt_map_temporary( proc->rpc_mailbox, PAGE_SIZE );
+    const uintptr_t tmp_map = virt_map_temporary( proc->rpc_mailbox, PAGE_SIZE );
     if ( 0 == tmp_map ) {
       // free mailbox again
       phys_free_page( proc->rpc_mailbox );
@@ -208,7 +208,7 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
     // unmap again
     virt_unmap_temporary( tmp_map, PAGE_SIZE );
     // set address
-    uintptr_t tmp_addr = ROUND_UP_TO_FULL_PAGE( task_thread_current_thread->entry );
+    const uintptr_t tmp_addr = ROUND_UP_TO_FULL_PAGE( task_thread_current_thread->entry );
     // find free space
     proc->rpc_mailbox_virt = virt_find_free_page_range( proc->virtual_context, PAGE_SIZE, tmp_addr );
     // handle no address found

@@ -18,38 +18,13 @@
  */
 
 #include <errno.h>
-#include <stdio.h>
-#include <sys/bolthur.h>
 #include "usbd.h"
-#include "rpc.h"
 
 /**
- * @fn int main(int, char*[])
- * @brief main entry point
- *
- * @param argc
- * @param argv
- * @return
+ * @fn int usbd_init(void)
+ * @brief Method to init usbd
+ * @return 0 on success, else errno code
  */
-int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  // register rpc
-  STARTUP_PRINT( "Setup rpc handler\r\n" )
-  if ( !rpc_init() ) {
-    STARTUP_PRINT( "Unable to bind rpc handler" );
-    return -1;
-  }
-
-  // setup hcd interface
-  STARTUP_PRINT( "Setup usbd interface!\r\n" )
-  const int result = usbd_init();
-  if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to init usbd: %s\r\n", strerror( result ) );
-    return -1;
-  }
-
-  while ( true ) {
-    __asm__ __volatile__( "nop" );
-  }
-
-  return -1;
+int usbd_init( void ) {
+  return ENOSYS;
 }
