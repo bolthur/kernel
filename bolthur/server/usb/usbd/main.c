@@ -22,6 +22,7 @@
 #include <sys/bolthur.h>
 #include "usbd.h"
 #include "rpc.h"
+#include "../../libhelper.h"
 
 /**
  * @fn int main(int, char*[])
@@ -47,9 +48,22 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  while ( true ) {
-    __asm__ __volatile__( "nop" );
+  // enable rpc
+  STARTUP_PRINT( "Enable rpc\r\n" )
+  _syscall_rpc_set_ready( true );
+
+  // add device file
+  /// FIXME: PREPARE RPC AND FILL THEN DEVICE INFO
+  STARTUP_PRINT( "Sending device to vfs\r\n" )
+  /*uint32_t device_info[] = { HCD_SUBMIT_CONTROL_MESSAGE, };
+  STARTUP_PRINT( "HCD_SUBMIT_CONTROL_MESSAGE = %d\r\n", HCD_SUBMIT_CONTROL_MESSAGE )*/
+  if ( !dev_add_file( USBD_DEVICE_PATH, NULL, 0 ) ) {
+    STARTUP_PRINT( "Unable to add dev usbd\r\n" )
+    return -1;
   }
 
-  return -1;
+  // wait for rpc
+  STARTUP_PRINT( "Wait for rpc\r\n" )
+  bolthur_rpc_wait_block();
+  return 0;
 }

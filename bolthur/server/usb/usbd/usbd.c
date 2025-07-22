@@ -1105,7 +1105,10 @@ int usbd_attach_device( libusb_device_t* dev ) {
   if ( buffer ) {
     free( buffer );
   }
-  /// FIXME: ENUMERATE ALL DEVICES
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    STARTUP_PRINT( "dev->interfaces[ 0 ].class = %d\r\n", dev->interfaces[ 0 ].class )
+  #endif
   // return success
   return 0;
 }

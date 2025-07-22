@@ -20,6 +20,8 @@
 #ifndef _LIBUSB_H
 #define _LIBUSB_H
 
+#define USBD_DEVICE_PATH "/dev/usb/usbd"
+
 #define MAX_CHILDREN_PER_DEVICE 10
 #define MAX_INTERFACES_PER_DEVICE 8
 #define MAX_ENDPOINTS_PER_DEVICE 16
