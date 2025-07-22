@@ -36,11 +36,11 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // register rpc
   STARTUP_PRINT( "Setup rpc handler\r\n" )
   if ( !rpc_init() ) {
-    STARTUP_PRINT( "Unable to bind rpc handler" );
+    STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
     return -1;
   }
 
-  // setup hcd interface
+  // setup usbd interface
   STARTUP_PRINT( "Setup usbd interface!\r\n" )
   const int result = usbd_init();
   if ( 0 != result ) {

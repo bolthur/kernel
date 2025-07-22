@@ -47,4 +47,4 @@ response_t dwhci_init_host( void );
 response_t dwhci_enable_root_port( void );
 response_t dwhci_init( void );
 
-#endif //_DWHCI_H
+#endif

@@ -20,6 +20,9 @@
 #include <stdio.h>
 #include <sys/bolthur.h>
 
+#include "hub.h"
+#include "rpc.h"
+
 /**
  * @fn int main(int, char*[])
  * @brief main entry point
@@ -29,7 +32,23 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  // print something
-  STARTUP_PRINT( "usb hub processing!\r\n" )
+  // register rpc
+  STARTUP_PRINT( "Setup rpc handler\r\n" )
+  if ( !rpc_init() ) {
+    STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    return -1;
+  }
+
+  // setup hub interface
+  STARTUP_PRINT( "Setup hub interface!\r\n" )
+  const int result = hub_init();
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable initialize hub\r\n" );
+    return -1;
+  }
+
+  while ( true ) {
+    __asm__ __volatile__ ( "nop" );
+  }
   return -1;
 }

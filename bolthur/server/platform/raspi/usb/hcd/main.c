@@ -40,7 +40,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // register rpc
   STARTUP_PRINT( "Setup rpc handler\r\n" )
   if ( !rpc_init() ) {
-    STARTUP_PRINT( "Unable to bind rpc handler" );
+    STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
     return -1;
   }
 

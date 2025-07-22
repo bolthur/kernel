@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _UTIL_H
-#define _UTIL_H
+#ifndef _RPC_H
+#define _RPC_H
 
-#include <stddef.h>
+#include <stdbool.h>
+#include <sys/bolthur.h>
 
-void* util_prepare_mmio_sequence( size_t, size_t* );
-void* util_prepare_mailbox( size_t, size_t* );
+bool rpc_init( void );
 
 #endif

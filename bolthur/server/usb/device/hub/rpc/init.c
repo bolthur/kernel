@@ -17,12 +17,16 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _UTIL_H
-#define _UTIL_H
+// system includes
+#include <errno.h>
+// local includes
+#include "../rpc.h"
 
-#include <stddef.h>
-
-void* util_prepare_mmio_sequence( size_t, size_t* );
-void* util_prepare_mailbox( size_t, size_t* );
-
-#endif
+/**
+ * @fn bool rpc_init(void)
+ * @brief Init rpc handler method
+ * @return
+ */
+bool rpc_init( void ) {
+  return true;
+}

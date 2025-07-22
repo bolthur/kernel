@@ -23,4 +23,4 @@
 void boot_serial_init( void );
 void boot_serial_putc();
 
-#endif //_PLATFORM_RASPI_BOOT_H
+#endif

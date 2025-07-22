@@ -17,12 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _UTIL_H
-#define _UTIL_H
+#include <errno.h>
+#include "hub.h"
 
-#include <stddef.h>
-
-void* util_prepare_mmio_sequence( size_t, size_t* );
-void* util_prepare_mailbox( size_t, size_t* );
-
-#endif
+int hub_init( void ) {
+  return ENOSYS;
+}

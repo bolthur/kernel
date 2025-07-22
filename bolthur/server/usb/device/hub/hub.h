@@ -17,12 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _UTIL_H
-#define _UTIL_H
+#ifndef _HUB_H
+#define _HUB_H
 
-#include <stddef.h>
+#define HUB_ENABLE_DEBUG 1
 
-void* util_prepare_mmio_sequence( size_t, size_t* );
-void* util_prepare_mailbox( size_t, size_t* );
+int hub_init( void );
 
 #endif

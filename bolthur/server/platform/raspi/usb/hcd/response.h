@@ -38,4 +38,4 @@ typedef struct {
 
 const char* response_error( response_t );
 
-#endif //_RESPONSE_H
+#endif
