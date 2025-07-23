@@ -17,21 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _HUB_H
-#define _HUB_H
+#ifndef _USB_H
+#define _USB_H
 
-#include "../../../libusb.h"
+#include "../../server/libusb.h"
 
-#define HUB_ENABLE_DEBUG 1
+#define LIBUSB_ENABLE_DEBUG 1
 
-int hub_read_descriptor( const libusb_device_t* );
-int hub_get_status( libusb_device_t* );
-int hub_get_port_status( libusb_device_t*, uint8_t );
-int hub_change_port_feature( libusb_device_t*, libusb_hub_port_feature_t, uint8_t, bool );
-int hub_power_on( libusb_device_t* );
-int hub_port_reset( libusb_device_t*, uint8_t );
-int hub_port_connection_changed( libusb_device_t*, uint8_t);
-int hub_check_connection( libusb_device_t*, uint8_t, bool );
-int hub_init( void );
+int usb_init( void );
+const char* usb_get_description( const libusb_device_t* );
+int usb_control_message( libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t );
+libusb_device_t* usb_get_root_hub( void );
+int usb_get_descriptor( const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t );
+int usb_attach_device( uint32_t, uint32_t, libusb_speed_t );
 
 #endif

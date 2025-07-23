@@ -17,23 +17,25 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// system includes
 #include <errno.h>
-#include <inttypes.h>
+#include <stddef.h>
 #include <sys/bolthur.h>
-#include "../rpc.h"
-#include "../dwhci.h"
-#include "../dwhciroothub.h"
-#include "../../../../../libhcd.h"
+// local includes
+#include "../../rpc.h"
+// driver includes
+#include "../../usbd.h"
+#include "../../../../libusb.h"
 
 /**
- * @fn void rpc_submit_control_message(size_t, pid_t, size_t, size_t)
- * @brief Interrupt handler
+ * @fn void rpc_get_descriptor(size_t, pid_t, size_t, size_t)
+ * @brief Get usb descriptor device
  * @param type message type
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
  */
-void rpc_submit_control_message(
+void rpc_get_descriptor(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
@@ -60,11 +62,11 @@ void rpc_submit_control_message(
   }
   const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate space for pull_request
-  const hcd_submit_control_message_t* submit_control_message =
-    ( hcd_submit_control_message_t* )request->container;
+  const usbd_get_descriptor_t* control_message =
+    ( usbd_get_descriptor_t* )request->container;
   // attach shared memory
   void* shm_addr = _syscall_memory_shared_attach(
-    submit_control_message->shm_id, ( uintptr_t )NULL );
+    control_message->shm_id, ( uintptr_t )NULL );
   // handle error
   if ( errno ) {
     // set error
@@ -76,58 +78,35 @@ void rpc_submit_control_message(
     return;
   }
   // transform shared memory into message
-  hcd_control_message_t* message = ( hcd_control_message_t* )shm_addr;
+  usb_descriptor_message_t* message = ( usb_descriptor_message_t* )shm_addr;
   // allocate response structure
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
-    // free request
-    free( request );
-    // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
-    return;
-  }
-  // handle root hub device
-  if ( dwhciroothub_root_hub_device_number == message->pipe_address.device ) {
-    // try to process root hub
-    const int result = dwhciroothub_process(
-      &message->device,
-      message->pipe_address,
-      message->buffer,
-      message->buffer_length,
-      &message->request
-    );
-    // handle error
-    if ( result != 0 ) {
-      // set error
-      error.status = -result;
-      // detach shared memory
-      _syscall_memory_shared_detach( submit_control_message->shm_id );
-      // free request
-      free( request );
-      free( response );
-      // return from rpc
-      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
-      return;
-    }
-  } else {
-    STARTUP_PRINT( "PERFORM MESSAGE!\r\n" )
-    // set error
-    error.status = -ENOSYS;
     // detach shared memory
-    _syscall_memory_shared_detach( submit_control_message->shm_id );
+    _syscall_memory_shared_detach( control_message->shm_id );
     // free request
     free( request );
-    free( response );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
+  // perform get descriptor
+  const int result = usbd_get_descriptor(
+    &message->device,
+    message->type,
+    message->index,
+    message->lang_id,
+    message->buffer_length ? message->buffer : nullptr,
+    message->buffer_length,
+    message->minimum_length,
+    message->recipient
+  );
   // detach shared memory
-  _syscall_memory_shared_detach( submit_control_message->shm_id );
+  _syscall_memory_shared_detach( control_message->shm_id );
   // populate status and just copy over data from request
-  response->status = 0;
+  response->status = -result;
   memcpy( response->container, request->container, container_size );
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );

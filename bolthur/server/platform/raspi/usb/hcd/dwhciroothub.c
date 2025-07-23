@@ -208,6 +208,7 @@ int dwhciroothub_process(
             dev->error = LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR;
             break;
           }
+          STARTUP_PRINT( "host_port = %"PRIx32"\r\n", host_port )
           // push to local variable
           libusb_hub_port_full_status_t status = {
             .status = {
@@ -236,6 +237,7 @@ int dwhciroothub_process(
           const uint32_t val = 0;
           memcpy( buffer, &val, sizeof( val ) );
           memcpy( buffer, &status, sizeof( status ) );
+          reply_length = 4;
           break;
         default:
           dev->error = LIBUSB_TRANSFER_ERROR_STALL;
@@ -250,6 +252,7 @@ int dwhciroothub_process(
         case 0x23:
           switch ( ( libusb_hub_port_feature_t)request->value ) {
             case LIBUSB_HUB_PORT_FEATURE_ENABLE:
+              STARTUP_PRINT( "roothub port feature enable!\r\n" )
               // read host port
               dwhci_result = dwhci_read_host_port( &host_port );
               if ( HCD_RESPONSE_OK != dwhci_result ) {
@@ -259,13 +262,14 @@ int dwhciroothub_process(
               // set enable
               host_port |= HCD_DWHCI_HOST_PORT_ENABLE;
               // write back host port
-              dwhci_result = dwhci_write_host_port( host_port );
+              dwhci_result = dwhci_write_host_port( host_port | 0x4 );
               if ( HCD_RESPONSE_OK != dwhci_result ) {
                 dev->error = LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR;
                 break;
               }
               break;
             case LIBUSB_HUB_PORT_FEATURE_SUSPEND:
+              STARTUP_PRINT( "roothub port feature suspend!\r\n" )
               // allocate sequence
               sequence = util_prepare_mmio_sequence( 7, &sequence_size );
               if ( ! sequence ) {
@@ -286,7 +290,7 @@ int dwhciroothub_process(
               sequence[ 2 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
               sequence[ 2 ].value = HCD_DWHCI_HOST_PORT_RESUME;
               // write host port with resume enabled
-              sequence[ 3 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
+              sequence[ 3 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
               sequence[ 3 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
               sequence[ 3 ].value = 0x40;
               // delay 200 milliseconds
@@ -299,9 +303,9 @@ int dwhciroothub_process(
               sequence[ 5 ].value = ( uint32_t )~( HCD_DWHCI_HOST_PORT_RESUME
                 | HCD_DWHCI_HOST_PORT_SUSPEND );
               // write back with suspend false
-              sequence[ 6 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
+              sequence[ 6 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
               sequence[ 6 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-              sequence[ 6 ].value = ( uint32_t )0xc0;
+              sequence[ 6 ].value = 0xc0;
               // execute sequence
               ioctl_result = ioctl(
                 fd_iomem,
@@ -321,6 +325,7 @@ int dwhciroothub_process(
               }
               break;
             case LIBUSB_HUB_PORT_FEATURE_POWER:
+              STARTUP_PRINT( "roothub port feature power!\r\n" )
               // read host port
               dwhci_result = dwhci_read_host_port( &host_port );
               if ( HCD_RESPONSE_OK != dwhci_result ) {
@@ -330,13 +335,14 @@ int dwhciroothub_process(
               // reset power bit
               host_port &= ( uint32_t )~HCD_DWHCI_HOST_PORT_POWER;
               // write back host port
-              dwhci_result = dwhci_write_host_port( host_port );
+              dwhci_result = dwhci_write_host_port( host_port | 0x1000 );
               if ( HCD_RESPONSE_OK != dwhci_result ) {
                 dev->error = LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR;
                 break;
               }
               break;
             case LIBUSB_HUB_PORT_FEATURE_CONNECTION_CHANGE:
+              STARTUP_PRINT( "roothub port feature connection change!\r\n" )
               // read host port
               dwhci_result = dwhci_read_host_port( &host_port );
               if ( HCD_RESPONSE_OK != dwhci_result ) {
@@ -346,13 +352,14 @@ int dwhciroothub_process(
               // set connect changed
               host_port |= HCD_DWHCI_HOST_PORT_CONNECT_CHANGED;
               // write back host port
-              dwhci_result = dwhci_write_host_port( host_port );
+              dwhci_result = dwhci_write_host_port( host_port | 0x2 );
               if ( HCD_RESPONSE_OK != dwhci_result ) {
                 dev->error = LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR;
                 break;
               }
               break;
             case LIBUSB_HUB_PORT_FEATURE_ENABLE_CHANGE:
+              STARTUP_PRINT( "roothub port feature enable change!\r\n" )
               // read host port
               dwhci_result = dwhci_read_host_port( &host_port );
               if ( HCD_RESPONSE_OK != dwhci_result ) {
@@ -362,13 +369,14 @@ int dwhciroothub_process(
               // set enable changed
               host_port |= HCD_DWHCI_HOST_PORT_ENABLE_CHANGED;
               // write back host port
-              dwhci_result = dwhci_write_host_port( host_port );
+              dwhci_result = dwhci_write_host_port( host_port | 0x8 );
               if ( HCD_RESPONSE_OK != dwhci_result ) {
                 dev->error = LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR;
                 break;
               }
               break;
             case LIBUSB_HUB_PORT_FEATURE_OVER_CURRENT_CHANGE:
+              STARTUP_PRINT( "roothub port feature over current change!\r\n" )
               // read host port
               dwhci_result = dwhci_read_host_port( &host_port );
               if ( HCD_RESPONSE_OK != dwhci_result ) {
@@ -378,7 +386,7 @@ int dwhciroothub_process(
               // set over current changed
               host_port |= HCD_DWHCI_HOST_PORT_OVERCURRENT_CHANGED;
               // write back host port
-              dwhci_result = dwhci_write_host_port( host_port );
+              dwhci_result = dwhci_write_host_port( host_port | 0x20 );
               if ( HCD_RESPONSE_OK != dwhci_result ) {
                 dev->error = LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR;
                 break;
@@ -398,6 +406,7 @@ int dwhciroothub_process(
         case 0x23:
           switch ( ( libusb_hub_port_feature_t )request->value ) {
             case LIBUSB_HUB_PORT_FEATURE_RESET:
+              STARTUP_PRINT( "roothub port feature reset!\r\n" )
               // allocate sequence
               sequence = util_prepare_mmio_sequence( 8, &sequence_size );
               if ( ! sequence ) {
@@ -422,8 +431,8 @@ int dwhciroothub_process(
               sequence[ 3 ].value = ( uint32_t )~HCD_DWHCI_HOST_PORT_SUSPEND;
               // write back power with enabled reset and power flag and disabled suspend flag
               sequence[ 4 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-              sequence[ 4 ].offset = PERIPHERAL_USB_POWER_OFFSET;
-              sequence[ 4 ].value = HCD_DWHCI_HOST_PORT_RESET | HCD_DWHCI_HOST_PORT_POWER;
+              sequence[ 4 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
+              sequence[ 4 ].value = HCD_DWHCI_HOST_PORT_RESET | HCD_DWHCI_HOST_PORT_POWER | 0x1180;
               // delay 200 milliseconds
               sequence[ 5 ].type = IOMEM_MMIO_ACTION_SLEEP;
               sequence[ 5 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
@@ -433,8 +442,9 @@ int dwhciroothub_process(
               sequence[ 6 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
               sequence[ 6 ].value = ( uint32_t )~HCD_DWHCI_HOST_PORT_RESET;
               // write back previous read
-              sequence[ 7 ].type = IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ;
+              sequence[ 7 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
               sequence[ 7 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
+              sequence[ 7 ].value = 0x1000;
               // execute sequence
               ioctl_result = ioctl(
                 fd_iomem,
@@ -454,6 +464,7 @@ int dwhciroothub_process(
               }
               break;
             case LIBUSB_HUB_PORT_FEATURE_POWER:
+              STARTUP_PRINT( "roothub port feature power!\r\n" )
               // read host port
               dwhci_result = dwhci_read_host_port( &host_port );
               if ( HCD_RESPONSE_OK != dwhci_result ) {
@@ -463,7 +474,7 @@ int dwhciroothub_process(
               // set over current changed
               host_port |= HCD_DWHCI_HOST_PORT_POWER;
               // write back host port
-              dwhci_result = dwhci_write_host_port( host_port );
+              dwhci_result = dwhci_write_host_port( host_port | 0x1000 );
               if ( HCD_RESPONSE_OK != dwhci_result ) {
                 dev->error = LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR;
                 break;

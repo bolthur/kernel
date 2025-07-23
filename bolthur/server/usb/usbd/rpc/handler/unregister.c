@@ -33,6 +33,8 @@
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
+ *
+ * @todo request real origin via syscall and check compare it to handler
  */
 void rpc_handler_unregister(
   [[maybe_unused]] size_t type,

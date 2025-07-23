@@ -27,6 +27,8 @@
 // local includes
 #include "usbd.h"
 // driver includes
+#include <stddef.h>
+
 #include "../../libusb.h"
 #include "../../libhcd.h"
 
@@ -1163,6 +1165,17 @@ int usbd_attach_root_hub( void ) {
   // return success
   return 0;
 }
+
+/**
+ * @fn libusb_device_t* usbd_get_root_hub(void)
+ * @brief Wrapper to get root hub
+ * @return
+ */
+libusb_device_t* usbd_get_root_hub( void ) {
+  // return first device or null if not set
+  return head;
+}
+
 
 /**
  * @fn int usbd_init(void)

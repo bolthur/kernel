@@ -749,14 +749,20 @@ response_t dwhci_init_core( void ) {
     HCD_DWHCI_CORE_HW_CFG2_HS_PHY_TYPE( cfg2 ) == HCD_DWHCI_CORE_HW_CFG2_HS_PHY_TYPE_ULPI
     && HCD_DWHCI_CORE_HW_CFG2_FS_PHY_TYPE( cfg2 ) == HCD_DWHCI_CORE_HW_CFG2_FS_PHY_TYPE_DEDICATED
   ) {
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT("SET ULPI_FSLS AND CLK_SUS_M\r\n")
+    #endif
+    // enable configuration
     cfg |=
-      HCD_DWHCI_CORE_USB_CFG_ULPI_FSLS
-      | HCD_DWHCI_CORE_USB_CFG_ULPI_CLK_SUS_M;
-  } else {
-    cfg &= ( uint32_t )(
-      ~HCD_DWHCI_CORE_USB_CFG_ULPI_FSLS
-      & ~HCD_DWHCI_CORE_USB_CFG_ULPI_CLK_SUS_M
-    );
+      HCD_DWHCI_CORE_USB_CFG_ULPI_FSLS | HCD_DWHCI_CORE_USB_CFG_ULPI_CLK_SUS_M;
+  }
+  else {
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT("UNSET ULPI_FSLS AND CLK_SUS_M\r\n")
+    #endif
+    // disable configuration
+    cfg &= (uint32_t)~(
+      HCD_DWHCI_CORE_USB_CFG_ULPI_FSLS | HCD_DWHCI_CORE_USB_CFG_ULPI_CLK_SUS_M );
   }
 
   // write back cfg
@@ -858,8 +864,7 @@ response_t dwhci_init_core( void ) {
   // free sequence
   free( sequence );
   // manipulate config
-  /// FIXME: ENABLE DMA AND WORK WITH INTERRUPTS
-  //ahb_cfg |= HCD_DWHCI_CORE_AHB_CFG_GLOBAL_DMA_ENABLE;
+  ahb_cfg |= HCD_DWHCI_CORE_AHB_CFG_GLOBAL_DMA_ENABLE;
   ahb_cfg |= HCD_DWHCI_CORE_AHB_CFG_GLOBAL_WAIT_AXI_WRITES;
   ahb_cfg &= ( uint32_t )~HCD_DWHCI_CORE_AHB_CFG_GLOBAL_MAX_AXI_BURST_MASK;
   // allocate sequence to write it back
@@ -1036,10 +1041,10 @@ response_t dwhci_core_flush_tx_fifo( const uint32_t num_fifo ) {
   #endif
 
   // set initial reset fifo flush
-  const uint32_t reset = (
-    HCD_DWHCI_CORE_RESET_TX_FIFO_FLUSH
-    & ( uint32_t )~HCD_DWHCI_CORE_RESET_TX_FIFO_NUM_MASK
-  ) | ( num_fifo << HCD_DWHCI_CORE_RESET_TX_FIFO_NUM_SHIFT );
+  uint32_t reset = 0;
+  reset |= HCD_DWHCI_CORE_RESET_TX_FIFO_FLUSH;
+  reset &= ( uint32_t )~HCD_DWHCI_CORE_RESET_TX_FIFO_NUM_MASK;
+  reset |= num_fifo << HCD_DWHCI_CORE_RESET_TX_FIFO_NUM_SHIFT;
 
   // allocate sequence
   size_t sequence_size;
@@ -1177,7 +1182,7 @@ response_t dwhci_core_flush_rx_fifo( void ) {
  * @param port
  * @return
  */
-response_t dwhci_write_host_port( uint32_t port ) {
+response_t dwhci_write_host_port( const uint32_t port ) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
     STARTUP_PRINT( "Writing host port value %#"PRIx32"\r\n", port )
@@ -1488,7 +1493,7 @@ response_t dwhci_init_host( void ) {
   if (
     HCD_DWHCI_CORE_HW_CFG2_HS_PHY_TYPE( core_cfg2 ) == HCD_DWHCI_CORE_HW_CFG2_HS_PHY_TYPE_ULPI
     && HCD_DWHCI_CORE_HW_CFG2_FS_PHY_TYPE( core_cfg2 ) == HCD_DWHCI_CORE_HW_CFG2_FS_PHY_TYPE_DEDICATED
-    && HCD_DWHCI_CORE_USB_CFG_ULPI_FSLS == core_cfg
+    && HCD_DWHCI_CORE_USB_CFG_ULPI_FSLS & core_cfg
   ) {
     host_cfg |= HCD_DWHCI_HOST_CFG_FSLS_PCLK_SEL_48_MHZ;
   } else {
@@ -1524,7 +1529,7 @@ response_t dwhci_init_host( void ) {
   if ( -1 == ioctl_result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
-      STARTUP_PRINT( "Phy power reset failed\r\n" )
+      STARTUP_PRINT( "Set host config failed\r\n" )
     #endif
     // free sequence
     free( sequence );
@@ -1751,7 +1756,7 @@ response_t dwhci_enable_root_port( void ) {
 
   // read host port
   uint32_t host_port;
-  response_t result = dwhci_read_host_port( &host_port );
+  const response_t result = dwhci_read_host_port( &host_port );
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output

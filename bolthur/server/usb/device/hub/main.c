@@ -18,11 +18,14 @@
  */
 
 // system includes
+#include <errno.h>
 #include <stdio.h>
 #include <sys/bolthur.h>
 // local includes
 #include "hub.h"
 #include "rpc.h"
+// library includes
+#include "../../../../library/usb/usb.h"
 
 /**
  * @fn int main(int, char*[])
@@ -37,6 +40,13 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   STARTUP_PRINT( "Setup rpc handler\r\n" )
   if ( !rpc_init() ) {
     STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    return -1;
+  }
+
+  // intialize usb library
+  STARTUP_PRINT( "Setup usb library\r\n" )
+  if ( 0 != usb_init() ) {
+    STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( errno ) );
     return -1;
   }
 

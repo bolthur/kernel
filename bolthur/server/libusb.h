@@ -23,33 +23,6 @@
 #include <stdint.h>
 #include <sys/types.h>
 
-#define USBD_DEVICE_PATH "/dev/usb/usbd"
-
-#define USBD_REGISTER_DEVICE_HANDLER RPC_CUSTOM_START
-#define USBD_UNREGISTER_DEVICE_HANDLER USBD_REGISTER_DEVICE_HANDLER + 1
-
-// external rpc declarations
-
-typedef enum {
-  DEVICE_HANDLER_TYPE_DETACHED = 1,
-  DEVICE_HANDLER_TYPE_DEALLOCATE = 2,
-  DEVICE_HANDLER_TYPE_CHECK_FOR_CHANGE = 3,
-  DEVICE_HANDLER_TYPE_CHILD_DETACHED = 4,
-  DEVICE_HANDLER_TYPE_CHILD_RESET = 5,
-  DEVICE_HANDLER_TYPE_CHECK_CONNECTION = 6,
-} device_handler_type_t;
-
-typedef struct {
-  uint32_t device_number;
-  device_handler_type_t type;
-  pid_t handler;
-} usbd_register_device_handler_t;
-
-typedef struct {
-  uint32_t device_number;
-  device_handler_type_t type;
-} usbd_unregister_device_handler_t;
-
 // internal usb declarations
 
 #define MAX_CHILDREN_PER_DEVICE 10
@@ -531,5 +504,85 @@ typedef enum {
 
 // enable warnings again
 #pragma GCC diagnostic pop
+
+#define USBD_DEVICE_PATH "/dev/usb/usbd"
+
+#define USBD_REGISTER_DEVICE_HANDLER RPC_CUSTOM_START
+#define USBD_UNREGISTER_DEVICE_HANDLER USBD_REGISTER_DEVICE_HANDLER + 1
+#define USBD_CONTROL_MESSAGE USBD_UNREGISTER_DEVICE_HANDLER + 1
+#define USBD_GET_DESCRIPTION USBD_CONTROL_MESSAGE + 1
+#define USBD_GET_ROOTHUB USBD_GET_DESCRIPTION + 1
+#define USBD_GET_DESCRIPTOR USBD_GET_ROOTHUB + 1
+#define USBD_ATTACH_DEVICE USBD_GET_DESCRIPTOR + 1
+
+// external rpc declarations
+
+typedef enum {
+  DEVICE_HANDLER_TYPE_DETACHED = 1,
+  DEVICE_HANDLER_TYPE_DEALLOCATE = 2,
+  DEVICE_HANDLER_TYPE_CHECK_FOR_CHANGE = 3,
+  DEVICE_HANDLER_TYPE_CHILD_DETACHED = 4,
+  DEVICE_HANDLER_TYPE_CHILD_RESET = 5,
+  DEVICE_HANDLER_TYPE_CHECK_CONNECTION = 6,
+} device_handler_type_t;
+
+typedef struct {
+  uint32_t device_number;
+  device_handler_type_t type;
+  pid_t handler;
+} usbd_register_device_handler_t;
+
+typedef struct {
+  uint32_t device_number;
+  device_handler_type_t type;
+} usbd_unregister_device_handler_t;
+
+typedef struct {
+  size_t shm_id;
+} usbd_control_message_t;
+
+typedef struct {
+  libusb_device_status_t status;
+  uint16_t usb_version;
+  uint16_t vendor_id;
+  uint16_t product_id;
+  libusb_interface_class_t class;
+  uint8_t protocol;
+  char buffer[ 256 ];
+} usbd_get_description_t;
+
+typedef struct {
+  size_t shm_id;
+} usbd_get_roothub_t;
+
+typedef struct {
+  size_t shm_id;
+} usbd_get_descriptor_t;
+
+typedef struct {
+  uint32_t parent_number;
+  uint32_t port_number;
+  libusb_speed_t speed;
+} usbd_attach_device_t;
+
+typedef struct {
+  libusb_device_t device;
+  libusb_pipe_address_t pipe_address;
+  libusb_device_request_t request;
+  size_t buffer_length;
+  size_t timeout;
+  uint8_t buffer[];
+} usb_control_message_t;
+
+typedef struct {
+  libusb_device_t device;
+  libusb_descriptor_type_t type;
+  uint8_t index;
+  uint16_t lang_id;
+  size_t buffer_length;
+  size_t minimum_length;
+  uint8_t recipient;
+  uint8_t buffer[];
+} usb_descriptor_message_t;
 
 #endif

@@ -41,6 +41,7 @@ int usbd_configure( libusb_device_t*, uint8_t );
 const char* usbd_get_description( const libusb_device_t* );
 int usbd_attach_device( libusb_device_t* );
 int usbd_attach_root_hub( void );
+libusb_device_t* usbd_get_root_hub( void );
 int usbd_init( void );
 
 #endif

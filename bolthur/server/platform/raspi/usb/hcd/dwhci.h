@@ -21,11 +21,24 @@
 #define _DWHCI_H
 
 #include <stdint.h>
+#include "../../../../libusb.h"
 #include "response.h"
 
 #define DWHCI_ENABLE_DEBUG 1
 
 extern int fd_iomem;
+
+typedef enum {
+  DWHCI_CHANNEL_STATE_DATA0 = 0,
+  DWHCI_CHANNEL_STATE_DATA1 = 2,
+  DWHCI_CHANNEL_STATE_DATA2 = 1,
+  DWHCI_CHANNEL_STATE_MDATA = 3,
+  DWHCI_CHANNEL_STATE_SETUP = 3,
+} dwhci_channel_state_t;
+
+response_t dwhci_prepare_channel( libusb_device_t*, uint8_t, uint32_t, dwhci_channel_state_t, libusb_pipe_address_t* );
+response_t dwhci_channel_send_wait_one( libusb_device_t*, libusb_pipe_address_t*, uint8_t, void*, size_t, uint32_t, libusb_device_request_t* );
+response_t dwhci_channel_send_wait( libusb_device_t*, libusb_pipe_address_t*, uint8_t, void*, size_t, libusb_device_request_t*, dwhci_channel_state_t );
 
 response_t dwhci_query_vendor( uint32_t* destination );
 response_t dwhci_power_on( void );
