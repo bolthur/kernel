@@ -47,10 +47,22 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register get description handler!\r\n" )
     return false;
   }
-  // register handler get description
+  // register handler get descriptor
   bolthur_rpc_bind( USBD_GET_DESCRIPTOR, rpc_get_descriptor, true );
   if ( errno ) {
     STARTUP_PRINT( "Unable to register get descriptor handler!\r\n" )
+    return false;
+  }
+  // register handler get endpoint
+  bolthur_rpc_bind( USBD_GET_ENDPOINT, rpc_get_endpoint, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register get endpoint handler!\r\n" )
+    return false;
+  }
+  // register handler get description
+  bolthur_rpc_bind( USBD_GET_INTERFACE, rpc_get_interface, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register get interface handler!\r\n" )
     return false;
   }
   // register handler get roothub
@@ -60,13 +72,13 @@ bool rpc_init( void ) {
     return false;
   }
   // register handler register
-  bolthur_rpc_bind( USBD_REGISTER_DEVICE_HANDLER, rpc_handler_register, true );
+  bolthur_rpc_bind( USBD_REGISTER_HANDLER, rpc_handler_register, true );
   if ( errno ) {
     STARTUP_PRINT( "Unable to register register device handler!\r\n" )
     return false;
   }
   // register handler unregister
-  bolthur_rpc_bind( USBD_UNREGISTER_DEVICE_HANDLER, rpc_handler_unregister, true );
+  bolthur_rpc_bind( USBD_UNREGISTER_HANDLER, rpc_handler_unregister, true );
   if ( errno ) {
     STARTUP_PRINT( "Unable to register unregister device handler!\r\n" )
     return false;

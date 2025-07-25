@@ -32,7 +32,11 @@ typedef struct {
 } hcd_submit_control_message_t;
 
 typedef struct {
-  libusb_device_t device;
+  uint32_t device_number;
+  uint32_t parent_device_number;
+  uint32_t port_number;
+  uint32_t last_transfer;
+  libusb_transfer_error_t error;
   libusb_pipe_address_t pipe_address;
   libusb_device_request_t request;
   size_t buffer_length;

@@ -22,9 +22,9 @@
 #include <stdio.h>
 #include <sys/bolthur.h>
 // local includes
-#include "hub.h"
 #include "rpc.h"
 // library includes
+#include "../../../libhelper.h"
 #include "../../../../library/usb/usb.h"
 
 /**
@@ -45,21 +45,36 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // intialize usb library
   STARTUP_PRINT( "Setup usb library\r\n" )
-  if ( 0 != usb_init() ) {
-    STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( errno ) );
-    return -1;
-  }
-
-  // setup hub interface
-  STARTUP_PRINT( "Setup hub interface!\r\n" )
-  const int result = hub_init();
+  int result = usb_init();
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable initialize hub\r\n" );
+    STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
     return -1;
   }
 
-  while ( true ) {
-    __asm__ __volatile__ ( "nop" );
+  // registering handler
+  STARTUP_PRINT( "Registering handler at usbd\r\n" )
+  result = usb_register_handler( LIBUSB_INTERFACE_CLASS_HUB );
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to register handler at usbd\r\n" )
+    return -1;
   }
-  return -1;
+
+  // enable rpc
+  STARTUP_PRINT( "Enable rpc\r\n" )
+  _syscall_rpc_set_ready( true );
+
+  // add device file
+  STARTUP_PRINT( "Sending device to vfs\r\n" )
+  uint32_t device_info[] = {
+    HUB_ATTACH,
+  };
+  if ( !dev_add_file( HUB_DEVICE_PATH, device_info, 1 ) ) {
+    STARTUP_PRINT( "Unable to add dev usbd\r\n" )
+    return -1;
+  }
+
+  // wait for rpc
+  STARTUP_PRINT( "Wait for rpc\r\n" )
+  bolthur_rpc_wait_block();
+  return 0;
 }

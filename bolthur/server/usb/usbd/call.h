@@ -17,9 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _HUB_H
-#define _HUB_H
+#ifndef CALL_H
+#define CALL_H
 
-#define HUB_ENABLE_DEBUG 1
+#include "../../libusb.h"
+
+#define CALL_ENABLE_DEBUG 1
+
+int call_attach( libusb_device_t*, uint32_t );
 
 #endif

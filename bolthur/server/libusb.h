@@ -375,6 +375,7 @@ typedef struct libusb_device {
   pid_t device_child_reset_handler;
   pid_t device_check_connection_handler;
 
+  /// FIXME: REPLACE POINTER TO FUNCTIONS BY PID CALLS
   /** Handler for detaching the device. The device driver should not issue further requests to the device. */
   void ( *device_detached )( libusb_device_t* device ) __aligned( 4 );
   /** Handler for deallocation of the device. All memory in use by the device driver should be deallocated. */
@@ -493,8 +494,8 @@ typedef struct {
   libusb_hub_full_status_t status;
   libusb_hub_descriptor_t* descriptor;
   uint32_t max_children;
-  libusb_hub_port_full_status_t port_status[ MAX_CHILDREN_PER_DEVICE ];
-  libusb_device_t* children[ MAX_CHILDREN_PER_DEVICE ];
+  libusb_hub_port_full_status_t port_status[ 255 ];
+  uint32_t children[ 255 ];
 } libusb_hub_device_t;
 
 typedef enum {
@@ -505,77 +506,48 @@ typedef enum {
 // enable warnings again
 #pragma GCC diagnostic pop
 
+// device paths
 #define USBD_DEVICE_PATH "/dev/usb/usbd"
+#define HUB_DEVICE_PATH "/dev/usb/hub"
 
-#define USBD_REGISTER_DEVICE_HANDLER RPC_CUSTOM_START
-#define USBD_UNREGISTER_DEVICE_HANDLER USBD_REGISTER_DEVICE_HANDLER + 1
-#define USBD_CONTROL_MESSAGE USBD_UNREGISTER_DEVICE_HANDLER + 1
-#define USBD_GET_DESCRIPTION USBD_CONTROL_MESSAGE + 1
-#define USBD_GET_ROOTHUB USBD_GET_DESCRIPTION + 1
-#define USBD_GET_DESCRIPTOR USBD_GET_ROOTHUB + 1
-#define USBD_ATTACH_DEVICE USBD_GET_DESCRIPTOR + 1
+// hub rpc
+#define HUB_ATTACH RPC_CUSTOM_START
 
-// external rpc declarations
+// usbd rpc
+#define USBD_REGISTER_HANDLER RPC_CUSTOM_START
+#define USBD_UNREGISTER_HANDLER USBD_REGISTER_HANDLER + 1
+#define USBD_GET_DESCRIPTOR USBD_UNREGISTER_HANDLER + 1
+#define USBD_GET_ENDPOINT USBD_GET_DESCRIPTOR + 1
+#define USBD_GET_INTERFACE USBD_GET_ENDPOINT + 1
+#define USBD_GET_DESCRIPTION USBD_GET_INTERFACE + 1
+#define USBD_CONTROL_MESSAGE USBD_GET_DESCRIPTION + 1
+#define USBD_ATTACH_DEVICE USBD_CONTROL_MESSAGE + 1
+#define USBD_GET_ROOTHUB USBD_ATTACH_DEVICE + 1
 
-typedef enum {
-  DEVICE_HANDLER_TYPE_DETACHED = 1,
-  DEVICE_HANDLER_TYPE_DEALLOCATE = 2,
-  DEVICE_HANDLER_TYPE_CHECK_FOR_CHANGE = 3,
-  DEVICE_HANDLER_TYPE_CHILD_DETACHED = 4,
-  DEVICE_HANDLER_TYPE_CHILD_RESET = 5,
-  DEVICE_HANDLER_TYPE_CHECK_CONNECTION = 6,
-} device_handler_type_t;
-
+// generic usb rpc structures
 typedef struct {
+  uint32_t parent_device_number;
   uint32_t device_number;
-  device_handler_type_t type;
+  uint32_t interface_number;
+} usb_generic_attach_t;
+
+// usbd rpc structures
+typedef struct {
+  libusb_interface_class_t type;
   pid_t handler;
 } usbd_register_device_handler_t;
 
 typedef struct {
-  uint32_t device_number;
-  device_handler_type_t type;
+  libusb_interface_class_t type;
+  pid_t handler;
 } usbd_unregister_device_handler_t;
-
-typedef struct {
-  size_t shm_id;
-} usbd_control_message_t;
-
-typedef struct {
-  libusb_device_status_t status;
-  uint16_t usb_version;
-  uint16_t vendor_id;
-  uint16_t product_id;
-  libusb_interface_class_t class;
-  uint8_t protocol;
-  char buffer[ 256 ];
-} usbd_get_description_t;
-
-typedef struct {
-  size_t shm_id;
-} usbd_get_roothub_t;
 
 typedef struct {
   size_t shm_id;
 } usbd_get_descriptor_t;
 
 typedef struct {
-  uint32_t parent_number;
-  uint32_t port_number;
-  libusb_speed_t speed;
-} usbd_attach_device_t;
-
-typedef struct {
-  libusb_device_t device;
-  libusb_pipe_address_t pipe_address;
-  libusb_device_request_t request;
-  size_t buffer_length;
-  size_t timeout;
-  uint8_t buffer[];
-} usb_control_message_t;
-
-typedef struct {
-  libusb_device_t device;
+  uint32_t device_number;
   libusb_descriptor_type_t type;
   uint8_t index;
   uint16_t lang_id;
@@ -584,5 +556,53 @@ typedef struct {
   uint8_t recipient;
   uint8_t buffer[];
 } usb_descriptor_message_t;
+
+typedef struct {
+  // parameters
+  uint32_t device_number;
+  uint32_t interface_number;
+  uint32_t endpoint_number;
+  // space for return object
+  libusb_endpoint_descriptor_t descriptor;
+} usbd_get_endpoint_t;
+
+typedef struct {
+  // parameters
+  uint32_t device_number;
+  uint32_t interface_number;
+  // space for return
+  libusb_interface_descriptor_t interface;
+} usbd_get_interface_t;
+
+typedef struct {
+  uint32_t device_number;
+  char buffer[ 256 ];
+} usbd_get_description_t;
+
+typedef struct {
+  size_t shm_id;
+} usbd_control_message_t;
+
+typedef struct {
+  uint32_t device_number;
+} usbd_get_roothub_t;
+
+typedef struct {
+  uint32_t parent_number;
+  uint32_t port_number;
+  libusb_speed_t speed;
+} usbd_attach_device_t;
+
+typedef struct {
+  uint32_t device_number;
+  libusb_transfer_t transfer;
+  libusb_direction_t direction;
+  size_t buffer_length;
+  libusb_device_request_t request;
+  size_t timeout;
+  uint32_t last_transfer;
+  libusb_transfer_error_t error;
+  uint8_t buffer[];
+} usb_control_message_t;
 
 #endif

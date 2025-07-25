@@ -7,7 +7,7 @@ hub_DEPENDENCIES = \
 hub_LDADD = \
   ${abs_top_builddir}/../library/usb/libusb.la
 hub_SOURCES = \
+  rpc/hub/attach.c \
   rpc/init.c \
-  hub.c \
   main.c
 hub_LDFLAGS = -all-static --static

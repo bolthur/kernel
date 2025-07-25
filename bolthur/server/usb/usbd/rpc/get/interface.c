@@ -28,20 +28,20 @@
 #include "../../../../libusb.h"
 
 /**
- * @fn void rpc_get_description(size_t, pid_t, size_t, size_t)
- * @brief Get usb device description
+ * @fn void rpc_get_endpoint(size_t, pid_t, size_t, size_t)
+ * @brief Get usb endpoint data
  * @param type message type
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
  */
-void rpc_get_description(
+void rpc_get_interface(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  STARTUP_PRINT( "GET DESCRIPTION\r\n" )
+  STARTUP_PRINT( "GET INTERFACE\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -61,30 +61,11 @@ void rpc_get_description(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
+  const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate space for pull_request
-  const usbd_get_description_t* description = ( usbd_get_description_t* )request->container;
-  // find device
-  const libusb_device_t* dev = head;
-  while ( dev ) {
-    if ( dev->number == description->device_number ) {
-      break;
-    }
-    dev = dev->next;
-  }
-  // handle no device
-  if ( ! dev ) {
-    error.status = -EIO;
-    free( request );
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
-    return;
-  }
-  // get description with dummy device
-  const char* desc = usbd_get_description( dev );
-  STARTUP_PRINT( "desc = %s\r\n", desc )
+  const usbd_get_endpoint_t* control_message = ( usbd_get_endpoint_t* )request->container;
   // allocate response structure
-  const size_t response_size = sizeof( vfs_ioctl_perform_response_t )
-    + sizeof(char) * ( strlen( desc ) + 1 );
-  STARTUP_PRINT( "response_size = %zu\r\n", response_size )
+  const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
@@ -94,11 +75,28 @@ void rpc_get_description(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
-  // clear out
-  memset( response, 0, response_size );
-  // copy over description
+  // find device
+  libusb_device_t* device = head;
+  while ( device ) {
+    if ( device->number == control_message->device_number ) {
+      break;
+    }
+    device = device->next;
+  }
+  // handle not found
+  if ( ! device ) {
+    error.status = -ENODATA;
+    // free request
+    free( request );
+    free( response );
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    return;
+  }
+  // populate response
   response->status = 0;
-  strcpy( response->container, desc );
+  memcpy( response->container, &device->interfaces[ control_message->interface_number ],
+    sizeof( libusb_endpoint_descriptor_t ) );
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
   // free up memory

@@ -28,6 +28,8 @@ void rpc_attach_device( size_t, pid_t, size_t, size_t );
 void rpc_control_message( size_t, pid_t, size_t, size_t );
 void rpc_get_description( size_t, pid_t, size_t, size_t );
 void rpc_get_descriptor( size_t, pid_t, size_t, size_t );
+void rpc_get_endpoint( size_t, pid_t, size_t, size_t );
+void rpc_get_interface( size_t, pid_t, size_t, size_t );
 void rpc_get_roothub( size_t, pid_t, size_t, size_t );
 void rpc_handler_register( size_t, pid_t, size_t, size_t );
 void rpc_handler_unregister( size_t, pid_t, size_t, size_t );

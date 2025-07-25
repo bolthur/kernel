@@ -284,9 +284,9 @@ ssize_t render_terminal( terminal_t* term, const char* s ) {
     ),
     action
   );
+  free( action );
   // handle error
   if ( -1 == result ) {
-    free( action );
     return -EIO;
   }
   // return rendered character

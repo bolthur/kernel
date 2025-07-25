@@ -41,6 +41,7 @@ void rpc_get_descriptor(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  STARTUP_PRINT( "GET DESCRIPTOR\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -92,9 +93,29 @@ void rpc_get_descriptor(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
+  // find device
+  libusb_device_t* device = head;
+  while ( device ) {
+    if ( device->number == message->device_number ) {
+      break;
+    }
+    device = device->next;
+  }
+  // handle not found
+  if ( ! device ) {
+    error.status = -ENODATA;
+    // detach shared memory
+    _syscall_memory_shared_detach( control_message->shm_id );
+    // free request
+    free( request );
+    free( response );
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    return;
+  }
   // perform get descriptor
   const int result = usbd_get_descriptor(
-    &message->device,
+    device,
     message->type,
     message->index,
     message->lang_id,

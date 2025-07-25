@@ -21,14 +21,14 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <math.h>
+#include <stddef.h>
 #include <sys/_default_fcntl.h>
 #include <sys/bolthur.h>
 #include <sys/ioctl.h>
 // local includes
 #include "usbd.h"
+#include "call.h"
 // driver includes
-#include <stddef.h>
-
 #include "../../libusb.h"
 #include "../../libhcd.h"
 
@@ -41,6 +41,11 @@ int fd_hcd = -1;
  * @brief Head of device list
  */
 libusb_device_t* head = nullptr;
+
+/**
+ * @brief Array of class handlers
+ */
+pid_t* class_handler;
 
 /**
  * @brief Default timeout for control messages
@@ -101,6 +106,10 @@ void usbd_deallocate_device( libusb_device_t* dev ) {
   if ( dev->full_configuration ) {
     free( dev->full_configuration );
   }
+  // free up driver data
+  if ( dev->driver_data ) {
+    free( dev->driver_data );
+  }
   // free up device
   free( dev );
 }
@@ -138,7 +147,7 @@ int usbd_allocate_device( libusb_device_t** dev, bool insert_head ) {
     // loop until end
     while ( current ) {
       // increment number
-      number++;
+      number = ( uint32_t )fmax( current->number, number );
       // save previous
       prev = current;
       // go to next
@@ -243,7 +252,9 @@ int usbd_control_message(
   }
   hcd_control_message_t* message = ( hcd_control_message_t* )shm_addr;
   // populate real message in shared memory
-  memcpy( &message->device, dev, sizeof( libusb_device_t ) );
+  message->device_number = dev->number;
+  message->parent_device_number = dev->parent ? dev->parent->number : 0;
+  message->port_number = dev->port_number;
   memcpy( &message->pipe_address, &pipe, sizeof( pipe ) );
   memcpy( &message->request, request, sizeof( *request ) );
   message->buffer_length = buffer_length;
@@ -291,7 +302,7 @@ int usbd_control_message(
     return EIO;
   }
   // response is equal to input
-  if ( message->device.error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+  if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       STARTUP_PRINT( "Message to %s timeout reached\r\n", usbd_get_description( dev ) )
@@ -304,7 +315,7 @@ int usbd_control_message(
     return ETIMEDOUT;
   }
   // handle error
-  if ( message->device.error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+  if ( message->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // handle check for connection
     if ( dev->parent && dev->parent->device_check_connection ) {
       // debug output
@@ -335,8 +346,8 @@ int usbd_control_message(
     memcpy( buffer, message->buffer, buffer_length );
   }
   // copy over static fields into device populated via shared memory
-  dev->error = message->device.error;
-  dev->last_transfer = message->device.last_transfer;
+  dev->error = message->error;
+  dev->last_transfer = message->last_transfer;
   // detach shared memory
   _syscall_memory_shared_detach( shm_id );
   // free control message
@@ -1118,6 +1129,17 @@ int usbd_attach_device( libusb_device_t* dev ) {
   #if defined( USBD_ENABLE_DEBUG )
     STARTUP_PRINT( "dev->interfaces[ 0 ].class = %d\r\n", dev->interfaces[ 0 ].class )
   #endif
+  // call to attach the device
+  result = call_attach( dev, 0 );
+  // handle error
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Failed calling attach: %s\r\n", strerror( result ) )
+    #endif
+    // return result
+    return result;
+  }
   // return success
   return 0;
 }
@@ -1215,6 +1237,106 @@ int usbd_init( void ) {
     // return result
     return result;
   }
+  // return success
+  return 0;
+}
+
+/**
+ * @fn int usbd_init_handler(void)
+ * @brief Init handler
+ * @return
+ */
+int usbd_init_handler( void ) {
+  // allocate handler
+  class_handler = calloc( 256, sizeof( pid_t ) );
+  // handle error
+  if ( ! class_handler ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate memory\r\n" )
+    #endif
+    // return nomem
+    return ENOMEM;
+  }
+  // clear out
+  for ( size_t i = 0; i < 256; i++ ) {
+    class_handler[i] = -1;
+  }
+  // return success
+  return 0;
+}
+
+int usbd_register_handler( const libusb_interface_class_t type, const pid_t handler ) {
+  // handle not initialized
+  if ( ! class_handler ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Handler data not initialized\r\n" )
+    #endif
+    // return protocol error
+    return EPROTO;
+  }
+  // handle already set
+  if ( -1 != class_handler[ type ] ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Handler already registered\r\n" )
+    #endif
+    // return exist
+    return EEXIST;
+  }
+  // set handler
+  class_handler[ type ] = handler;
+  // return success
+  return 0;
+}
+
+int usbd_unregister_handler( const libusb_interface_class_t type, const pid_t handler ) {
+  // handle not initialized
+  if ( ! class_handler ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Handler data not initialized\r\n" )
+    #endif
+    // return protocol error
+    return EPROTO;
+  }
+  // handle already set
+  if ( handler != class_handler[ type ] ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Handler already registered\r\n" )
+    #endif
+    // return exist
+    return EINVAL;
+  }
+  // clear handler
+  class_handler[ type ] = -1;
+  // return success
+  return 0;
+}
+
+int usbd_get_handler( const libusb_interface_class_t type, pid_t* handler ) {
+  // handle not initialized
+  if ( ! class_handler ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Handler data not initialized\r\n" )
+    #endif
+    // return protocol error
+    return EPROTO;
+  }
+  // handle no handler
+  if ( ! handler ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Invalid handler passed\r\n" )
+    #endif
+    // return protocol error
+    return EPROTO;
+  }
+  // set handler
+  *handler = class_handler[ type ];
   // return success
   return 0;
 }

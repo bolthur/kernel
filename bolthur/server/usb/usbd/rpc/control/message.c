@@ -41,6 +41,7 @@ void rpc_control_message(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  STARTUP_PRINT( "CONTROL MESSAGE\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -92,15 +93,46 @@ void rpc_control_message(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
+  // find device
+  libusb_device_t* device = head;
+  while ( device ) {
+    if ( device->number == message->device_number ) {
+      break;
+    }
+    device = device->next;
+  }
+  if ( ! device ) {
+    error.status = -ENODEV;
+    // detach shared memory
+    _syscall_memory_shared_detach( control_message->shm_id );
+    // free request
+    free( request );
+    free( response );
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    return;
+  }
   // perform hcd control message
   const int result = usbd_control_message(
-    &message->device,
-    message->pipe_address,
+    device,
+    ( libusb_pipe_address_t ) {
+      .type = message->transfer,
+      .speed = device->speed,
+      .end_point = 0,
+      .device = ( uint8_t )device->number,
+      .direction = message->direction,
+      .max_size = usb_packet_size_from_number(
+        device->descriptor.max_packet_size0
+      ),
+    },
     message->buffer_length ? message->buffer : nullptr,
     message->buffer_length,
     &message->request,
     message->timeout
   );
+  // set last error and transfer
+  message->error = device->error;
+  message->last_transfer = device->last_transfer;
   // detach shared memory
   _syscall_memory_shared_detach( control_message->shm_id );
   // populate status and just copy over data from request

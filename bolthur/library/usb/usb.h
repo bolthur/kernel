@@ -25,10 +25,13 @@
 #define LIBUSB_ENABLE_DEBUG 1
 
 int usb_init( void );
-const char* usb_get_description( const libusb_device_t* );
-int usb_control_message( libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t );
-libusb_device_t* usb_get_root_hub( void );
-int usb_get_descriptor( const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t );
+int usb_control_message( uint32_t, libusb_transfer_t, libusb_direction_t, void*, size_t, const libusb_device_request_t*, size_t, libusb_transfer_error_t*, uint32_t* );
+const char* usb_get_description( uint32_t );
+int usb_get_descriptor( uint32_t, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t );
 int usb_attach_device( uint32_t, uint32_t, libusb_speed_t );
+int usb_register_handler( libusb_interface_class_t );
+int usb_get_endpoint( uint32_t, uint32_t, uint32_t, libusb_endpoint_descriptor_t* );
+int usb_get_interface( uint32_t, uint32_t, libusb_interface_descriptor_t* );
+int usb_get_root_hub( uint32_t* );
 
 #endif

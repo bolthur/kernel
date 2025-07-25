@@ -24,5 +24,6 @@
 #include <sys/bolthur.h>
 
 bool rpc_init( void );
+void rpc_hub_attach( size_t, pid_t, size_t, size_t );
 
 #endif

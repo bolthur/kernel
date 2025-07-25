@@ -41,6 +41,7 @@ void rpc_attach_device(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  STARTUP_PRINT( "ATTACH DEVICE CALLED\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -109,6 +110,9 @@ void rpc_attach_device(
   }
   // populate speed into new device
   new_device->speed = message->speed;
+  // set parent and port number
+  new_device->parent = device;
+  new_device->port_number = device->port_number;
   // allocate new device
   // perform hcd control message
   result = usbd_attach_device( new_device );

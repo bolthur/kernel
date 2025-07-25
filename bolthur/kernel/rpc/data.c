@@ -22,7 +22,6 @@
 #include "../lib/string.h"
 #include "../lib/stdlib.h"
 #include "data.h"
-#include "../panic.h"
 #include "../mm/phys.h"
 #include "../mm/virt.h"
 #if defined( PRINT_RPC )
@@ -176,7 +175,7 @@ int rpc_data_queue_add(
     virt_unmap_temporary( mailbox, PAGE_SIZE );
     // debug output
     #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Mailbox full!\r\n" )
+      DEBUG_OUTPUT( "Mailbox full of %d!\r\n", target )
     #endif
     return ENOMEM;
   }
@@ -191,7 +190,7 @@ int rpc_data_queue_add(
     virt_unmap_temporary( mailbox, PAGE_SIZE );
     // debug output
     #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Mailbox full!\r\n" )
+      DEBUG_OUTPUT( "Mailbox full of %d!\r\n", target )
     #endif
     return ENOMEM;
   }

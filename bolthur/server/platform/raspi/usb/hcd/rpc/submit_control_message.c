@@ -23,6 +23,8 @@
 #include "../rpc.h"
 #include "../dwhci.h"
 #include "../dwhciroothub.h"
+#include "../../../libhcd.h"
+#include "../../../libperipheral.h"
 #include "../../../../../libhcd.h"
 
 /**
@@ -92,7 +94,8 @@ void rpc_submit_control_message(
   if ( dwhciroothub_root_hub_device_number == message->pipe_address.device ) {
     // try to process root hub
     const int result = dwhciroothub_process(
-      &message->device,
+      &message->error,
+      &message->last_transfer,
       message->pipe_address,
       message->buffer,
       message->buffer_length,
@@ -112,17 +115,141 @@ void rpc_submit_control_message(
       return;
     }
   } else {
-    STARTUP_PRINT( "PERFORM MESSAGE!\r\n" )
-    // set error
-    error.status = -ENOSYS;
-    // detach shared memory
-    _syscall_memory_shared_detach( submit_control_message->shm_id );
-    // free request
-    free( request );
-    free( response );
-    // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
-    return;
+    // setup device error and last transfer
+    message->error = LIBUSB_TRANSFER_ERROR_PROCESSING;
+    message->last_transfer = 0;
+    // create temporary pipe
+    libusb_pipe_address_t temporary_pipe = {
+      .speed = message->pipe_address.speed,
+      .device = message->pipe_address.device,
+      .end_point = message->pipe_address.end_point,
+      .max_size = message->pipe_address.max_size,
+      .type = LIBUSB_TRANSFER_CONTROL,
+      .direction = LIBUSB_DIRECTION_OUT,
+    };
+    uint32_t transferred = 0;
+    // push request into data buffer
+    memcpy( databuffer, &message->request, sizeof( libusb_device_request_t ) );
+    // setup channel
+    int result = dwhci_channel_send_wait(
+      message->parent_device_number,
+      message->port_number,
+      &message->error,
+      &temporary_pipe,
+      0,
+      databuffer,
+      sizeof( libusb_device_request_t ),
+      DWHCI_CHANNEL_STATE_SETUP,
+      &transferred
+    );
+    // handle error
+    if ( 0 != result ) {
+      STARTUP_PRINT( "Setup failed with %s\r\n", response_error( result ) )
+      // set error
+      error.status = -result;
+      // detach shared memory
+      _syscall_memory_shared_detach( submit_control_message->shm_id );
+      // free request
+      free( request );
+      free( response );
+      // return from rpc
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      return;
+    }
+
+    // handle data
+    if ( message->buffer_length ) {
+      STARTUP_PRINT( "buffer_length = %zu\r\n", message->buffer_length )
+      // handle out
+      if ( message->pipe_address.direction == LIBUSB_DIRECTION_OUT ) {
+        memcpy( databuffer, message->buffer, message->buffer_length );
+      }
+      temporary_pipe.speed = message->pipe_address.speed;
+      temporary_pipe.device = message->pipe_address.device;
+      temporary_pipe.end_point = message->pipe_address.end_point;
+      temporary_pipe.max_size = message->pipe_address.max_size;
+      temporary_pipe.type = LIBUSB_TRANSFER_CONTROL;
+      temporary_pipe.direction = message->pipe_address.direction;
+      // query data
+      result = dwhci_channel_send_wait(
+        message->parent_device_number,
+        message->port_number,
+        &message->error,
+        &temporary_pipe,
+        0,
+        databuffer,
+        message->buffer_length,
+        DWHCI_CHANNEL_STATE_DATA1,
+        &transferred
+      );
+      // handle error
+      if ( 0 != result ) {
+        STARTUP_PRINT( "Data failed with %s\r\n", response_error( result ) )
+        // set error
+        error.status = -result;
+        // detach shared memory
+        _syscall_memory_shared_detach( submit_control_message->shm_id );
+        // free request
+        free( request );
+        free( response );
+        // return from rpc
+        bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+        return;
+      }
+      // populate last transfer
+      if ( message->pipe_address.direction == LIBUSB_DIRECTION_IN ) {
+        message->last_transfer = message->buffer_length;
+        if ( transferred <= message->buffer_length ) {
+          message->last_transfer = message->buffer_length - transferred;
+        }
+        // copy back data
+        memcpy( message->buffer, databuffer, message->last_transfer );
+      } else {
+        message->last_transfer = message->buffer_length;
+      }
+    }
+    // adjust temporary pipe
+    temporary_pipe.speed = message->pipe_address.speed;
+    temporary_pipe.device = message->pipe_address.device;
+    temporary_pipe.end_point = message->pipe_address.end_point;
+    temporary_pipe.max_size = message->pipe_address.max_size;
+    temporary_pipe.type = LIBUSB_TRANSFER_CONTROL;
+    temporary_pipe.direction = message->buffer_length == 0
+      || message->pipe_address.direction == LIBUSB_DIRECTION_OUT
+        ? LIBUSB_DIRECTION_IN
+        : LIBUSB_DIRECTION_OUT;
+    // perform data request
+    result = dwhci_channel_send_wait(
+      message->parent_device_number,
+      message->port_number,
+      &message->error,
+      &temporary_pipe,
+      0,
+      databuffer,
+      0,
+      DWHCI_CHANNEL_STATE_DATA1,
+      &transferred
+    );
+    // handle error
+    if ( 0 != result ) {
+      STARTUP_PRINT( "Final transmit failed with %s\r\n", response_error( result ) )
+      // set error
+      error.status = -result;
+      // detach shared memory
+      _syscall_memory_shared_detach( submit_control_message->shm_id );
+      // free request
+      free( request );
+      free( response );
+      // return from rpc
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      return;
+    }
+    // handle transfer size not null
+    if ( transferred ) {
+      STARTUP_PRINT( "Warning non zero status transfer: %"PRIu32"\r\n", transferred )
+    }
+    // set error to no error
+    message->error = LIBUSB_TRANSFER_ERROR_NO_ERROR;
   }
   // detach shared memory
   _syscall_memory_shared_detach( submit_control_message->shm_id );

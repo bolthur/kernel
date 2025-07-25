@@ -43,5 +43,9 @@ int usbd_attach_device( libusb_device_t* );
 int usbd_attach_root_hub( void );
 libusb_device_t* usbd_get_root_hub( void );
 int usbd_init( void );
+int usbd_init_handler( void );
+int usbd_register_handler( libusb_interface_class_t, pid_t );
+int usbd_unregister_handler( libusb_interface_class_t, pid_t );
+int usbd_get_handler( libusb_interface_class_t, pid_t* );
 
 #endif

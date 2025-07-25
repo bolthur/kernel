@@ -25,6 +25,6 @@
 
 extern uint32_t dwhciroothub_root_hub_device_number;
 
-int dwhciroothub_process( libusb_device_t*, libusb_pipe_address_t, void*, size_t, libusb_device_request_t* );
+int dwhciroothub_process( libusb_transfer_error_t*, uint32_t*, libusb_pipe_address_t, void*, size_t, libusb_device_request_t* );
 
 #endif

@@ -22,6 +22,7 @@
 #include <sys/bolthur.h>
 #include "usbd.h"
 #include "rpc.h"
+#include "../../libhcd.h"
 #include "../../libhelper.h"
 
 /**
@@ -40,11 +41,11 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  // setup usbd interface
-  STARTUP_PRINT( "Setup usbd interface!\r\n" )
-  const int result = usbd_init();
+  // initialize usbd handler
+  STARTUP_PRINT( "Setup handler array\r\n" )
+  int result = usbd_init_handler();
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to init usbd: %s\r\n", strerror( result ) );
+    STARTUP_PRINT( "Unable to setup handler: %s\r\n", strerror( result ) );
     return -1;
   }
 
@@ -55,16 +56,29 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // add device file
   STARTUP_PRINT( "Sending device to vfs\r\n" )
   uint32_t device_info[] = {
-    USBD_REGISTER_DEVICE_HANDLER,
-    USBD_UNREGISTER_DEVICE_HANDLER,
-    USBD_CONTROL_MESSAGE,
-    USBD_GET_DESCRIPTION,
-    USBD_GET_ROOTHUB,
+    USBD_REGISTER_HANDLER,
+    USBD_UNREGISTER_HANDLER,
     USBD_GET_DESCRIPTOR,
+    USBD_GET_ENDPOINT,
+    USBD_GET_INTERFACE,
+    USBD_GET_DESCRIPTION,
+    USBD_CONTROL_MESSAGE,
+    USBD_GET_ROOTHUB,
     USBD_ATTACH_DEVICE,
   };
-  if ( !dev_add_file( USBD_DEVICE_PATH, device_info, 7 ) ) {
+  if ( !dev_add_file( USBD_DEVICE_PATH, device_info, 9 ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
+    return -1;
+  }
+
+  // wait for hcd to be populated
+  vfs_wait_for_path( HCD_DEVICE_PATH );
+
+  // setup usbd interface
+  STARTUP_PRINT( "Setup usbd\r\n" )
+  result = usbd_init();
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to init usbd: %s\r\n", strerror( result ) );
     return -1;
   }
 

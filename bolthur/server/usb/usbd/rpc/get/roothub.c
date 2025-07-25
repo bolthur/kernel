@@ -29,7 +29,7 @@
 
 /**
  * @fn void rpc_get_roothub(size_t, pid_t, size_t, size_t)
- * @brief Get usb roothub device
+ * @brief Get usb roothub device number
  * @param type message type
  * @param origin origin of the message
  * @param data_info data id
@@ -41,6 +41,7 @@ void rpc_get_roothub(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  STARTUP_PRINT( "GET ROOT HUB\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -61,31 +62,11 @@ void rpc_get_roothub(
     return;
   }
   const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
-  // allocate space for pull_request
-  const usbd_get_roothub_t* control_message =
-    ( usbd_get_roothub_t* )request->container;
-  // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach(
-    control_message->shm_id, ( uintptr_t )NULL );
-  // handle error
-  if ( errno ) {
-    // set error
-    error.status = -errno;
-    // free request
-    free( request );
-    // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
-    return;
-  }
-  // transform shared memory into message
-  libusb_device_t* dev = ( libusb_device_t* )shm_addr;
   // allocate response structure
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;
-    // detach shared memory
-    _syscall_memory_shared_detach( control_message->shm_id );
     // free request
     free( request );
     // return from rpc
@@ -96,8 +77,6 @@ void rpc_get_roothub(
   libusb_device_t* roothub = usbd_get_root_hub();
   if ( ! roothub ) {
     error.status = -EIO;
-    // detach shared memory
-    _syscall_memory_shared_detach( control_message->shm_id );
     // free request
     free( request );
     free( response );
@@ -105,13 +84,9 @@ void rpc_get_roothub(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
-  // copy over root hub
-  memcpy( dev, roothub, sizeof( libusb_device_t ) );
-  // detach shared memory
-  _syscall_memory_shared_detach( control_message->shm_id );
-  // populate status and just copy over data from request
+  // populate status and just copy over data
   response->status = 0;
-  memcpy( response->container, request->container, container_size );
+  memcpy( response->container, &roothub->number, sizeof( uint32_t ) );
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
   // free up memory

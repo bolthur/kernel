@@ -54,12 +54,12 @@ int usb_init( void ) {
 }
 
 /**
- * @fn const char* usb_get_description(const libusb_device_t*)
+ * @fn const char* usb_get_description(uint32_t)
  * @brief Wrapper to get description for device
- * @param dev
+ * @param device_number
  * @return
  */
-const char* usb_get_description( const libusb_device_t* dev ) {
+const char* usb_get_description( const uint32_t device_number ) {
   // local buffer for description
   static char buffer[ 256 ];
   // debug message
@@ -82,12 +82,7 @@ const char* usb_get_description( const libusb_device_t* dev ) {
   // clear out
   memset( request, 0, sizeof( *request ) );
   // copy over necessary data
-  request->status = dev->status;
-  request->usb_version = dev->descriptor.usb_version;
-  request->product_id = dev->descriptor.product_id;
-  request->vendor_id = dev->descriptor.vendor_id;
-  request->protocol = dev->interfaces[ 0 ].protocol;
-  request->class = dev->interfaces[ 0 ].class;
+  request->device_number = device_number;
   // perform ioctl command
   // perform request
   const int result = ioctl(
@@ -119,23 +114,29 @@ const char* usb_get_description( const libusb_device_t* dev ) {
 }
 
 /**
- * @fn int usb_control_message(libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t)
+ * @fn int usb_control_message(uint32_t, libusb_transfer_t, libusb_direction_t, void*, size_t, const libusb_device_request_t*, size_t, libusb_transfer_error_t*, uint32_t*)
  * @brief Wrapper to perform usb control message
- * @param dev
- * @param pipe
+ * @param device_number
+ * @param transfer
+ * @param direction
  * @param buffer
  * @param buffer_length
  * @param request
  * @param timeout
+ * @param error
+ * @param last_transfer
  * @return
  */
 int usb_control_message(
-  libusb_device_t* dev,
-  const libusb_pipe_address_t pipe,
+  const uint32_t device_number,
+  const libusb_transfer_t transfer,
+  const libusb_direction_t direction,
   void* buffer,
   const size_t buffer_length,
   const libusb_device_request_t* request,
-  const size_t timeout
+  const size_t timeout,
+  libusb_transfer_error_t* error,
+  uint32_t* last_transfer
 ) {
   // debug output
   #if defined( LIBUSB_ENABLE_DEBUG )
@@ -168,12 +169,14 @@ int usb_control_message(
   }
   usb_control_message_t* message = ( usb_control_message_t* )shm_addr;
   // populate real message in shared memory
-  memcpy( &message->device, dev, sizeof( libusb_device_t ) );
-  memcpy( &message->pipe_address, &pipe, sizeof( pipe ) );
+  message->device_number = device_number;
+  message->transfer = transfer;
+  message->direction = direction;
+  message->buffer_length = buffer_length;
   memcpy( &message->request, request, sizeof( *request ) );
   message->buffer_length = buffer_length;
   message->timeout = timeout;
-  if ( LIBUSB_DIRECTION_OUT == pipe.direction && buffer ) {
+  if ( LIBUSB_DIRECTION_OUT == direction && buffer ) {
     memcpy( &message->buffer, buffer, buffer_length );
   }
   // allocate request
@@ -215,11 +218,15 @@ int usb_control_message(
     // return eio
     return EIO;
   }
+  // populate error and last transfer
+  *error = message->error;
+  *last_transfer = message->last_transfer;
   // response is equal to input
-  if ( message->device.error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+  if ( *error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
     #if defined( LIBUSB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Message to %s timeout reached\r\n", usb_get_description( dev ) )
+      STARTUP_PRINT( "Message to %s timeout reached\r\n",
+        usb_get_description( device_number ) )
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -229,12 +236,9 @@ int usb_control_message(
     return ETIMEDOUT;
   }
   // copy over data
-  if ( LIBUSB_DIRECTION_IN == pipe.direction && buffer ) {
+  if ( LIBUSB_DIRECTION_IN == direction && buffer ) {
     memcpy( buffer, message->buffer, buffer_length );
   }
-  // copy over static fields into device populated via shared memory
-  dev->error = message->device.error;
-  dev->last_transfer = message->device.last_transfer;
   // detach shared memory
   _syscall_memory_shared_detach( shm_id );
   // free control message
@@ -248,39 +252,19 @@ int usb_control_message(
  * @brief Wrapper to get root hub
  * @return
  */
-libusb_device_t* usb_get_root_hub( void ) {
+int usb_get_root_hub( uint32_t* device_number ) {
   // debug output
   #if defined( LIBUSB_ENABLE_DEBUG )
     STARTUP_PRINT( "firing usb get root hub\r\n" )
   #endif
-  // allocate shared memory
-  const size_t shm_id = _syscall_memory_shared_create( sizeof( libusb_device_t ) );
-  // handle error
-  if ( errno ) {
-    const int e = errno;
-    // debug output
+  // handle invalid parameter
+  if ( ! device_number ) {
     #if defined( LIBUSB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
+      STARTUP_PRINT( "Invalid parameter passed!\r\n" )
     #endif
-    // return error
-    errno = e;
-    return nullptr;
+    // return einval
+    return EINVAL;
   }
-  // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
-  // handle error
-  if ( errno ) {
-    const int e = errno;
-    // debug output
-    #if defined( LIBUSB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
-    #endif
-    // return error
-    errno = e;
-    return nullptr;
-  }
-  // clear out
-  memset( shm_addr, 0, sizeof( libusb_device_t ) );
   // allocate request
   usbd_get_roothub_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
@@ -288,16 +272,11 @@ libusb_device_t* usb_get_root_hub( void ) {
     #if defined( LIBUSB_ENABLE_DEBUG )
       STARTUP_PRINT( "Unable to allocate request\r\n" )
     #endif
-    // detach shared memory
-    _syscall_memory_shared_detach( shm_id );
     // return error
-    errno = ENOMEM;
-    return nullptr;
+    return ENOMEM;
   }
   // clear out everything
   memset( request, 0, sizeof( *request ) );
-  // populate shm_id
-  request->shm_id = shm_id;
   // perform request
   const int result = ioctl(
     fd_usbd,
@@ -314,38 +293,23 @@ libusb_device_t* usb_get_root_hub( void ) {
     #if defined( LIBUSB_ENABLE_DEBUG )
       STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
     #endif
-    // detach shared memory
-    _syscall_memory_shared_detach( shm_id );
     // free request
     free( request );
     // return eio
-    errno = EIO;
-    return nullptr;
+    return EIO;
   }
-  // allocate device locally
-  libusb_device_t* dev = malloc( sizeof( *dev ) );
-  // handle error
-  if ( ! dev ) {
-    #if defined( LIBUSB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to allocate space for return\r\n" )
-    #endif
-    errno = ENOMEM;
-    return nullptr;
-  }
-  // copy over
-  memcpy( dev, shm_addr, sizeof( *dev ) );
-  // detach shared memory
-  _syscall_memory_shared_detach( shm_id );
+  // copy over response
+  memcpy( device_number, request, sizeof ( uint32_t ) );
   // free request
   free( request );
   // return device
-  return dev;
+  return 0;
 }
 
 /**
- * @fn int usb_get_descriptor(libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t)
+ * @fn int usb_get_descriptor(uint32_t, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t)
  * @brief Wrapper to get usb descriptor
- * @param dev
+ * @param device_number
  * @param type
  * @param index
  * @param lang_id
@@ -356,7 +320,7 @@ libusb_device_t* usb_get_root_hub( void ) {
  * @return
  */
 int usb_get_descriptor(
-  const libusb_device_t* dev,
+  const uint32_t device_number,
   const libusb_descriptor_type_t type,
   const uint8_t index,
   const uint16_t lang_id,
@@ -396,7 +360,7 @@ int usb_get_descriptor(
   }
   usb_descriptor_message_t* message = ( usb_descriptor_message_t* )shm_addr;
   // populate real message in shared memory
-  memcpy( &message->device, dev, sizeof( libusb_device_t ) );
+  message->device_number = device_number;
   message->type = type;
   message->index = index;
   message->lang_id = lang_id;
@@ -458,14 +422,16 @@ int usb_get_descriptor(
 }
 
 /**
- * @fn int usb_attach_device(uint32_t, uint32_t)
+ * @fn int usb_attach_device(uint32_t, uint32_t, libusb_speed_t)
  * @brief Method to attach a new discovered device
  * @param parent_number
  * @param port_number
  * @param speed
  * @return
+ *
+ * @todo return child id
  */
-int usb_attach_device( const uint32_t parent_number, const uint32_t port_number, libusb_speed_t speed ) {
+int usb_attach_device( const uint32_t parent_number, const uint32_t port_number, const libusb_speed_t speed ) {
   // debug message
   #if defined( LIBUSB_ENABLE_DEBUG )
     STARTUP_PRINT( "Attaching device %"PRIu32" to %"PRIu32"\r\n",
@@ -508,5 +474,187 @@ int usb_attach_device( const uint32_t parent_number, const uint32_t port_number,
     free( request );
     return EIO;
   }
+  // free request
+  free( request );
+  // return success
+  return 0;
+}
+
+/**
+ * @fn int usb_register_handler(libusb_interface_class_t)
+ * @brief Method to attach a new discovered device
+ * @param type
+ * @return
+ */
+int usb_register_handler( const libusb_interface_class_t type ) {
+  const pid_t pid = getpid();
+  // debug message
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "Registering pid %d for type %d\r\n", pid, type )
+  #endif
+  // allocate device
+  usbd_register_device_handler_t* request = malloc( sizeof( *request ) );
+  // handle error
+  if ( ! request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // return nomem
+    return ENOMEM;
+  }
+  // clear out
+  memset( request, 0, sizeof( *request ) );
+  // copy over necessary data
+  request->type = type;
+  request->handler = pid;
+  // perform request
+  const int result = ioctl(
+    fd_usbd,
+    IOCTL_BUILD_REQUEST(
+      USBD_REGISTER_HANDLER,
+      sizeof( *request ),
+      IOCTL_RDWR
+    ),
+    request
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+    #endif
+    // free request
+    free( request );
+    return EIO;
+  }
+  // free request
+  free( request );
+  // return success
+  return 0;
+}
+
+/**
+ * @fn int usb_get_endpoint(uint32_t, uint32_t, uint32_t, libusb_endpoint_descriptor_t*)
+ * @brief Helper to get usb endpoint data
+ * @param device_number
+ * @param interface_number
+ * @param endpoint_number
+ * @param descriptor
+ * @return
+ */
+int usb_get_endpoint(
+  const uint32_t device_number,
+  const uint32_t interface_number,
+  const uint32_t endpoint_number,
+  libusb_endpoint_descriptor_t* descriptor
+) {
+  // debug message
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "Get endpoint information\r\n" )
+  #endif
+  // allocate device
+  usbd_get_endpoint_t* request = malloc( sizeof( *request ) );
+  // handle error
+  if ( ! request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // return nomem
+    return ENOMEM;
+  }
+  // clear out
+  memset( request, 0, sizeof( *request ) );
+  // copy over necessary data
+  request->device_number = device_number;
+  request->interface_number = interface_number;
+  request->endpoint_number = endpoint_number;
+  // perform request
+  const int result = ioctl(
+    fd_usbd,
+    IOCTL_BUILD_REQUEST(
+      USBD_GET_ENDPOINT,
+      sizeof( *request ),
+      IOCTL_RDWR
+    ),
+    request
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+    #endif
+    // free request
+    free( request );
+    return EIO;
+  }
+  // copy over endpoint data
+  memcpy( descriptor, request, sizeof( *descriptor ) );
+  // free request
+  free( request );
+  // return success
+  return 0;
+}
+
+/**
+ * @fn int usb_get_interface(uint32_t, uint32_t, libusb_interface_descriptor_t*)
+ * @brief Wrapper to get interface data
+ * @param device_number
+ * @param interface_number
+ * @param descriptor
+ * @return
+ */
+int usb_get_interface(
+  const uint32_t device_number,
+  const uint32_t interface_number,
+  libusb_interface_descriptor_t* descriptor
+) {
+  // debug message
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "Get interface" )
+  #endif
+  // allocate device
+  usbd_get_interface_t* request = malloc( sizeof( *request ) );
+  // handle error
+  if ( ! request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // return nomem
+    return ENOMEM;
+  }
+  // clear out
+  memset( request, 0, sizeof( *request ) );
+  // copy over necessary data
+  request->device_number = device_number;
+  request->interface_number = interface_number;
+  // perform request
+  const int result = ioctl(
+    fd_usbd,
+    IOCTL_BUILD_REQUEST(
+      USBD_GET_INTERFACE,
+      sizeof( *request ),
+      IOCTL_RDWR
+    ),
+    request
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+    #endif
+    // free request
+    free( request );
+    return EIO;
+  }
+  // copy over data
+  memcpy( descriptor, request, sizeof( *descriptor ) );
+  // free request
+  free( request );
+  // return success
   return 0;
 }

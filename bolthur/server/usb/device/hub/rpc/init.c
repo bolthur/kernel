@@ -21,6 +21,7 @@
 #include <errno.h>
 // local includes
 #include "../rpc.h"
+#include "../../../../libusb.h"
 
 /**
  * @fn bool rpc_init(void)
@@ -28,5 +29,11 @@
  * @return
  */
 bool rpc_init( void ) {
+  // register attach handler
+  bolthur_rpc_bind( HUB_ATTACH, rpc_hub_attach, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register attach handler!\r\n" )
+    return false;
+  }
   return true;
 }
