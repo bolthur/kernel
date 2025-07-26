@@ -25,7 +25,7 @@
 // local includes
 #include "usb.h"
 // server includes
-#include "../../server/libusb.h"
+#include "../../server/libusbd.h"
 
 static int fd_usbd = -1;
 

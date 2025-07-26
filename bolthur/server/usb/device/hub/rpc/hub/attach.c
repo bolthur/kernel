@@ -24,7 +24,7 @@
 // local includes
 #include "../../hub.h"
 #include "../../rpc.h"
-#include "../../../../../libusb.h"
+#include "../../../../../libusbd.h"
 #include "../../../../../../library/usb/usb.h"
 
 static void custom_nanosleep( const struct timespec* rqtp ) {
@@ -178,31 +178,6 @@ static int attach_hub_change_port_feature(
     &error,
     &last_transfer
   );
-  /*
-    return usb_control_message(
-      dev,
-      ( libusb_pipe_address_t ){
-        .type = LIBUSB_TRANSFER_CONTROL,
-        .speed = dev->speed,
-        .end_point = 0,
-        .device = ( uint8_t )dev->number,
-        .direction = LIBUSB_DIRECTION_OUT,
-        .max_size = usb_packet_size_from_number(
-          dev->descriptor.max_packet_size0
-        ),
-      },
-      NULL,
-      0,
-      &( libusb_device_request_t ){
-        .request = set
-          ? LIBUSB_DEVICE_REQUEST_SET_FEATURE
-          : LIBUSB_DEVICE_REQUEST_CLEAR_FEATURE,
-        .type = 0x23,
-        .value = ( uint16_t )feature,
-        .index = port + 1,
-      },
-      10 /// FIXME: REPLACE WITH CONSTANT
-    );*/
 }
 
 static int attach_hub_power_on(
@@ -269,29 +244,7 @@ static int attach_hub_get_port_status(
     10, /// FIXME: REPLACE WITH CONSTANT
     &error,
     &last_transfer
-  );/*
-  const int result = usb_control_message(
-    dev,
-    ( libusb_pipe_address_t ){
-      .type = LIBUSB_TRANSFER_CONTROL,
-      .speed = dev->speed,
-      .end_point = 0,
-      .device = ( uint8_t )dev->number,
-      .direction = LIBUSB_DIRECTION_IN,
-      .max_size = usb_packet_size_from_number(
-        dev->descriptor.max_packet_size0
-      ),
-    },
-    &( ( libusb_hub_device_t* )dev->driver_data )->port_status[ port ],
-    sizeof( libusb_hub_port_full_status_t ),
-    &( libusb_device_request_t ){
-      .request = LIBUSB_DEVICE_REQUEST_GET_STATUS,
-      .type = 0xa3,
-      .index = port + 1,
-      .length = sizeof( libusb_hub_port_full_status_t ),
-    },
-    10
-  );*/
+  );
   // handle result wrong
   if ( 0 != result ) {
     // debug output
@@ -495,37 +448,6 @@ static int attach_hub_port_connection_changed(
   }
   // return success
   return 0;
-
-
-  /*
-  *
-  if ((result = UsbAllocateDevice(&data->Children[port])) != OK) {
-    LOGF("HUB: Could not allocate a new device entry for %s.Port%d.\n", UsbGetDescription(device), port + 1);
-    return result;
-  }
-
-  if ((result = HubPortGetStatus(device, port)) != OK) {
-    LOGF("HUB: Hub failed to get status (3) for %s.Port%d.\n", UsbGetDescription(device), port + 1);
-    return result;
-  }
-
-  LOG_DEBUGF("HUB: %s.Port%d Status %x:%x.\n", UsbGetDescription(device), port + 1, *(u16*)&portStatus->Status, *(u16*)&portStatus->Change);
-
-  if (portStatus->Status.HighSpeedAttatched) data->Children[port]->Speed = High;
-  else if (portStatus->Status.LowSpeedAttatched) data->Children[port]->Speed = Low;
-  else data->Children[port]->Speed = Full;
-  data->Children[port]->Parent = device;
-  data->Children[port]->PortNumber = port;
-  if ((result = UsbAttachDevice(data->Children[port])) != OK) {
-    LOGF("HUB: Could not connect to new device in %s.Port%d. Disabling.\n", UsbGetDescription(device), port + 1);
-    UsbDeallocateDevice(data->Children[port]);
-    data->Children[port] = NULL;
-    if (HubChangePortFeature(device, FeatureEnable, port, false) != OK) {
-      LOGF("HUB: Failed to disable %s.Port%d.\n", UsbGetDescription(device), port + 1);
-    }
-    return result;
-  }
-  return OK;*/
 }
 
 static int attach_hub_check_connection(
@@ -595,12 +517,9 @@ static int attach_hub_check_connection(
           "%s. Port %d has been disabled but is connected. This can be caused by interference. Enabling it again\r\n",
           usb_get_description( device_number ), port + 1 )
       #endif
-    }/*
-    // This may indicate EM interference.
-    if (!portStatus->Status.Enabled && portStatus->Status.Connected && data->Children[port] != NULL) {
-      LOGF("HUB: %s.Port%d has been disabled, but is connected. This can be cause by interference. Reenabling!\n", UsbGetDescription(device), port + 1);
-      HubPortConnectionChanged(device, port);
-    }*/
+      // call connection changed
+      attach_hub_port_connection_changed( device_number, device_data, port );
+    }
   }
   if ( port_status->status.suspended ) {
     STARTUP_PRINT( "SUSPENDED!\r\n" )
@@ -768,6 +687,7 @@ void rpc_hub_attach(
   if (
     LIBUSB_HUB_PORT_CONTROL_GLOBAL != descriptor->attributes.power_switching_mode
     && LIBUSB_HUB_PORT_CONTROL_INDIVIDUAL != descriptor->attributes.power_switching_mode
+    && LIBUSB_HUB_PORT_CONTROL_NO_POWER_SWITCHING != descriptor->attributes.power_switching_mode
   ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
@@ -789,6 +709,9 @@ void rpc_hub_attach(
       case LIBUSB_HUB_PORT_CONTROL_INDIVIDUAL:
         STARTUP_PRINT( "Power mode is individual\r\n" )
         break;
+      case LIBUSB_HUB_PORT_CONTROL_NO_POWER_SWITCHING:
+        STARTUP_PRINT( "Power mode is no power switching supported\r\n" )
+        break;
     }
     if ( descriptor->attributes.compound ) {
       STARTUP_PRINT( "Hub nature is compound\r\n" )
@@ -800,6 +723,7 @@ void rpc_hub_attach(
   if (
     LIBUSB_HUB_PORT_CONTROL_GLOBAL != descriptor->attributes.over_current_protection
     && LIBUSB_HUB_PORT_CONTROL_INDIVIDUAL != descriptor->attributes.over_current_protection
+    && LIBUSB_HUB_PORT_CONTROL_NO_POWER_SWITCHING != descriptor->attributes.over_current_protection
   ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
@@ -821,6 +745,9 @@ void rpc_hub_attach(
       case LIBUSB_HUB_PORT_CONTROL_INDIVIDUAL:
         STARTUP_PRINT( "Hub over current protection is individual\r\n" )
         break;
+      case LIBUSB_HUB_PORT_CONTROL_NO_POWER_SWITCHING:
+        STARTUP_PRINT( "Hub has no over current protection\r\n" )
+        break;
     }
     STARTUP_PRINT( "Hub power to good: %"PRIu8"ms\r\n", descriptor->power_good_delay * 2 )
     STARTUP_PRINT( "Hub current required: %"PRIu8"mA.\r\n", descriptor->maximum_hub_power * 2 )
@@ -841,7 +768,7 @@ void rpc_hub_attach(
     return;
   }
   // cache status locally
-  libusb_hub_full_status_t* status = &hub->status;
+  const libusb_hub_full_status_t* status = &hub->status;
   // some debug output
   #if defined ( HUB_ENABLE_DEBUG )
     STARTUP_PRINT( "Hub power: %s\r\n",

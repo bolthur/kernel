@@ -25,7 +25,7 @@
 #include "../../rpc.h"
 // driver includes
 #include "../../usbd.h"
-#include "../../../../libusb.h"
+#include "../../../../libusbd.h"
 
 /**
  * @fn void rpc_attach_device(size_t, pid_t, size_t, size_t)

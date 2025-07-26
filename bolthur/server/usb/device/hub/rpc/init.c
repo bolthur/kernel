@@ -21,7 +21,7 @@
 #include <errno.h>
 // local includes
 #include "../rpc.h"
-#include "../../../../libusb.h"
+#include "../../../../libusbd.h"
 
 /**
  * @fn bool rpc_init(void)

@@ -25,6 +25,7 @@
 #include "rpc.h"
 // library includes
 #include "../../../libhelper.h"
+#include "../../../libusbd.h"
 #include "../../../../library/usb/usb.h"
 
 /**

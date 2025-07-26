@@ -31,7 +31,7 @@
 // driver includes
 #include <wchar.h>
 
-#include "../../libusb.h"
+#include "../../libusbd.h"
 #include "../../libhcd.h"
 
 /**
@@ -929,6 +929,10 @@ const char* usbd_get_description( const libusb_device_t* dev ) {
     case LIBUSB_DEVICE_CLASS_VENDOR_SPECIFIC:
       if ( dev->descriptor.vendor_id == 0x424 && dev->descriptor.product_id == 0xec00 ) {
         return "SMSC LAN9512";
+      }
+      // qemu cdc ethernet adapter
+      if ( dev->descriptor.vendor_id == 0x525 && dev->descriptor.product_id == 0xa4a2 ) {
+        return "QEMU CDC LAN";
       }
       return "Vendor specific";
     // interfaces

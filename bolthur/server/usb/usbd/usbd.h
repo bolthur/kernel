@@ -20,7 +20,7 @@
 #ifndef USBD_H
 #define USBD_H
 
-#include "../../libusb.h"
+#include "../../libusbd.h"
 
 #define USBD_ENABLE_DEBUG 1
 
