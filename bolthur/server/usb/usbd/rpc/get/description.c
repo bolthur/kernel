@@ -41,7 +41,6 @@ void rpc_get_description(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  STARTUP_PRINT( "GET DESCRIPTION\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -80,11 +79,9 @@ void rpc_get_description(
   }
   // get description with dummy device
   const char* desc = usbd_get_description( dev );
-  STARTUP_PRINT( "desc = %s\r\n", desc )
   // allocate response structure
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t )
     + sizeof(char) * ( strlen( desc ) + 1 );
-  STARTUP_PRINT( "response_size = %zu\r\n", response_size )
   vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;

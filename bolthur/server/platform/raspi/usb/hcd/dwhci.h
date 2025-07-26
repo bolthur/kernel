@@ -24,7 +24,7 @@
 #include "../../../../libusb.h"
 #include "response.h"
 
-#define DWHCI_ENABLE_DEBUG 1
+//#define DWHCI_ENABLE_DEBUG 1
 
 extern int fd_iomem;
 extern void* databuffer;
@@ -44,23 +44,9 @@ response_t dwhci_channel_send_wait_one( libusb_transfer_error_t*, uint8_t, void*
 response_t dwhci_channel_send_wait( uint32_t, uint32_t, libusb_transfer_error_t*, libusb_pipe_address_t*, uint8_t, void*, size_t, dwhci_channel_state_t, uint32_t* );
 response_t dwhci_read_port( uint32_t, uint32_t* );
 response_t dwhci_write_port( uint32_t, uint32_t );
-
-response_t dwhci_query_vendor( uint32_t* destination );
 response_t dwhci_power_on( void );
-response_t dwhci_enable_global_interrupts( void );
-response_t dwhci_disable_global_interrupts( void );
-response_t dwhci_register_interrupt( void );
-response_t dwhci_reset_device( void );
-response_t dwhci_enable_common_interrupts( void );
-response_t dwhci_init_core( void );
 response_t dwhci_core_flush_tx_fifo( uint32_t );
 response_t dwhci_core_flush_rx_fifo( void );
-response_t dwhci_write_host_port( uint32_t );
-response_t dwhci_read_host_port( uint32_t* );
-response_t dwhci_enable_host_interrupts( void );
-response_t dwhci_init_host( void );
-response_t dwhci_enable_root_port( void );
 response_t dwhci_init( void );
-response_t dwhci_init2( void );
 
 #endif

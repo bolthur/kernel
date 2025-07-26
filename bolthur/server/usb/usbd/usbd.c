@@ -29,6 +29,8 @@
 #include "usbd.h"
 #include "call.h"
 // driver includes
+#include <wchar.h>
+
 #include "../../libusb.h"
 #include "../../libhcd.h"
 
@@ -479,7 +481,7 @@ int usbd_read_string_lang(
   const int result = usbd_get_string( dev, string_index, lang_id, buffer,
     ( size_t )fmin( 2, buffer_length ) );
   // handle error
-  if ( 0 != result ) {
+  if ( 0 != result || dev->last_transfer == buffer_length ) {
     return result;
   }
   // read string
@@ -532,9 +534,6 @@ int usbd_read_string(
   }
   // transform buffer
   libusb_string_descriptor_t* descriptor = ( libusb_string_descriptor_t* )buffer;
-  if ( ! descriptor ) {
-    return ENOMEM;
-  }
   // read string again
   result = usbd_read_string_lang( dev, string_index, lang_id[ 1 ], descriptor, buffer_length );
   // handle error
@@ -551,13 +550,13 @@ int usbd_read_string(
   const uint8_t descriptor_length = descriptor->descriptor_length;
   // translate data into buffer
   uint8_t i;
-  for ( i = 0; i < ( descriptor_length - 2 ) >> 2; i++ ) {
-    ( ( uint8_t* )buffer )[ i ] = descriptor->data[ i ] > 0xff
-      ? '?' : ( uint8_t )descriptor->data[ i ];
+  uint8_t data_index = 0;
+  for ( i = 0; i < ( descriptor_length - 2 ) >> 1; i++ ) {
+    ( ( uint8_t* )buffer )[ i ] = ( uint8_t )wctob( descriptor->data[ data_index++ ] );
   }
   // add null termination
   if ( i < buffer_length ) {
-    ( ( uint8_t* )buffer)[ i++ ] = '\0';
+    ( ( uint8_t* )buffer)[ i ] = '\0';
   }
   // return success
   return 0;

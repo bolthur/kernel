@@ -23,6 +23,7 @@
 #include <string.h>
 #include <errno.h>
 #include <sys/bolthur.h>
+#include <sys/unistd.h>
 
 #include "configuration.h"
 #include "../ramdisk.h"
@@ -42,6 +43,7 @@
   }
 
   while ( true ) {
+    sleep( 10 );
     __asm__ __volatile__( "nop" );
   }
 

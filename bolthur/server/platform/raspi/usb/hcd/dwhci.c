@@ -39,9 +39,13 @@
  */
 int fd_iomem = -1;
 
+/**
+ * @brief Data buffer used for data transfer
+ */
 void* databuffer = nullptr;
 
 /**
+ * @fn response_t dwhci_read_port(uint32_t, uint32_t*)
  * @brief Helper to read a port
  * @param port
  * @param value
@@ -105,6 +109,7 @@ response_t dwhci_read_port( const uint32_t port, uint32_t* value ) {
 }
 
 /**
+ * @fn response_t dwhci_write_port(uint32_t, uint32_t)
  * @brief Helper to write to a port
  * @param port
  * @param value
@@ -233,6 +238,7 @@ response_t dwhci_transmit_channel( const uint8_t channel, void* buffer ) {
 }
 
 /**
+ * @fn response_t dwhci_channel_interrupt_to_error(libusb_transfer_error_t*, uint8_t, bool)
  * @brief Translate channel interrupt to error
  * @param error
  * @param channel
@@ -247,56 +253,81 @@ response_t dwhci_channel_interrupt_to_error( libusb_transfer_error_t* error, con
   }
   result = HCD_RESPONSE_OK;
   if ( interrupt & HCD_CHANNEL_INTERRUPT_AHB_ERROR ) {
-    STARTUP_PRINT( "AHB ERROR\r\n" )
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "AHB ERROR\r\n" )
+    #endif
     *error = LIBUSB_TRANSFER_ERROR_AHB_ERROR;
     return HCD_RESPONSE_ERROR_UNKNOWN;
   }
   if ( interrupt & HCD_CHANNEL_INTERRUPT_STALL ) {
-    STARTUP_PRINT( "STALL ERROR\r\n" )
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "STALL ERROR\r\n" )
+    #endif
     *error = LIBUSB_TRANSFER_ERROR_STALL;
     return HCD_RESPONSE_ERROR_UNKNOWN;
   }
   if ( interrupt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT ) {
-    STARTUP_PRINT( "NEGATIVE ACK ERROR\r\n" )
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "NEGATIVE ACK ERROR\r\n" )
+    #endif
     *error = LIBUSB_TRANSFER_ERROR_NO_ACKNOWLEDGE;
     return HCD_RESPONSE_ERROR_UNKNOWN;
   }
   if ( interrupt & HCD_CHANNEL_INTERRUPT_ACKNOWLEDGEMENT ) {
-    STARTUP_PRINT( "ACK ERROR\r\n" )
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "ACK ERROR\r\n" )
+    #endif
     result = HCD_RESPONSE_ERROR_TIMEOUT;
   }
   if ( interrupt & HCD_CHANNEL_INTERRUPT_NOT_YET ) {
-    STARTUP_PRINT( "NOT_YET ERROR\r\n" )
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "NOT_YET ERROR\r\n" )
+    #endif
     *error = LIBUSB_TRANSFER_ERROR_NOT_YET_ERROR;
     return HCD_RESPONSE_ERROR_UNKNOWN;
   }
   if ( interrupt & HCD_CHANNEL_INTERRUPT_BABBLE_ERROR ) {
-    STARTUP_PRINT( "BABBLE_ERROR\r\n" )
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "BABBLE_ERROR\r\n" )
+    #endif
     *error = LIBUSB_TRANSFER_ERROR_BABBLE;
     return HCD_RESPONSE_ERROR_UNKNOWN;
   }
   if ( interrupt & HCD_CHANNEL_INTERRUPT_FRAME_OVERRUN ) {
-    STARTUP_PRINT( "OVERRUN ERROR\r\n" )
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "OVERRUN ERROR\r\n" )
+    #endif
     *error = LIBUSB_TRANSFER_ERROR_BUFFER_ERROR;
     return HCD_RESPONSE_ERROR_UNKNOWN;
   }
   if ( interrupt & HCD_CHANNEL_INTERRUPT_DATA_TOGGLE_ERROR ) {
-    STARTUP_PRINT( "DATA_TOGGLE_ERROR\r\n" )
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "DATA_TOGGLE_ERROR\r\n" )
+    #endif
     *error = LIBUSB_TRANSFER_ERROR_BIT_ERROR;
     return HCD_RESPONSE_ERROR_UNKNOWN;
   }
   if ( interrupt & HCD_CHANNEL_INTERRUPT_TRANSACTION_ERROR ) {
-    STARTUP_PRINT( "TRANSACTION_ERROR\r\n" )
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "TRANSACTION_ERROR\r\n" )
+    #endif
     *error = LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR;
     return HCD_RESPONSE_ERROR_UNKNOWN;
   }
   if ( !( interrupt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE ) && completed ) {
-    STARTUP_PRINT( "COMPLETED BUT FLAG NOT COMPLETED\r\n" )
+    #if defined ( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "COMPLETED BUT FLAG NOT COMPLETED\r\n" )
+    #endif
     result = HCD_RESPONSE_ERROR_TIMEOUT;
   }
   return result;
 }
 
+/**
+ * @fn void custom_nanosleep(const struct timespec*)
+ * @brief Custom nano sleep
+ * @param rqtp
+ */
 static void custom_nanosleep( const struct timespec* rqtp ) {
   if ( 0 > rqtp->tv_nsec ) {
     errno = EINVAL;
@@ -323,6 +354,16 @@ static void custom_nanosleep( const struct timespec* rqtp ) {
   //#endif
 }
 
+/**
+ * @fn response_t dwhci_channel_send_wait_one(libusb_transfer_error_t*, uint8_t, void*, uint32_t, libusb_speed_t)
+ * @brief Send on channel one and wait for response
+ * @param error
+ * @param channel
+ * @param buffer
+ * @param buffer_offset
+ * @param speed
+ * @return
+ */
 response_t dwhci_channel_send_wait_one(
   libusb_transfer_error_t* error,
   const uint8_t channel,
@@ -386,7 +427,9 @@ response_t dwhci_channel_send_wait_one(
       }
 
       if ( interrupt & HCD_CHANNEL_INTERRUPT_HALT ) {
-        STARTUP_PRINT( "Halt interrupt: %#"PRIx32"!\r\n", interrupt )
+        #if defined ( DWHCI_ENABLE_DEBUG )
+          STARTUP_PRINT( "Halt interrupt: %#"PRIx32"!\r\n", interrupt )
+        #endif
         break;
       }
 
@@ -556,6 +599,17 @@ response_t dwhci_channel_send_wait_one(
   return HCD_RESPONSE_OK;
 }
 
+/**
+ * @fn response_t dwhci_prepare_channel(uint32_t, uint32_t, uint8_t, uint32_t, dwhci_channel_state_t, libusb_pipe_address_t*)
+ * @brief Prepare channel for transfer
+ * @param parent_device_number
+ * @param port_number
+ * @param channel
+ * @param buffer_length
+ * @param packet_id
+ * @param pipe
+ * @return
+ */
 response_t dwhci_prepare_channel(
   const uint32_t parent_device_number,
   const uint32_t port_number,
@@ -564,8 +618,10 @@ response_t dwhci_prepare_channel(
   const dwhci_channel_state_t packet_id,
   libusb_pipe_address_t* pipe
 ) {
-  STARTUP_PRINT( "%d / %d / %"PRIu8" / %"PRIu8" / %d / %d\r\n",
-    pipe->max_size, pipe->speed, pipe->end_point, pipe->device, pipe->type, pipe->direction )
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "%d / %d / %"PRIu8" / %"PRIu8" / %d / %d\r\n",
+      pipe->max_size, pipe->speed, pipe->end_point, pipe->device, pipe->type, pipe->direction
+  #endif
   // prepare characteristic
   const uint32_t characteristic = HCD_DWHCI_CHAN_CHARACTER_DEVICE_ADDRESS( pipe->device )
     | HCD_DWHCI_CHAN_CHARACTER_END_POINT_NUMBER( pipe->end_point )
@@ -588,8 +644,10 @@ response_t dwhci_prepare_channel(
     | HCD_DWHCI_CHAN_XFER_SIZE_PACKET_ID( packet_id );
 
   uint32_t packet_count = ( buffer_length + 7 ) / 8;
-  STARTUP_PRINT( "characteristic = %#"PRIx32", split_control = %#"PRIx32", transfer_data = %#"PRIx32", packet_count = %#"PRIx32"\r\n",
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "characteristic = %#"PRIx32", split_control = %#"PRIx32", transfer_data = %#"PRIx32", packet_count = %#"PRIx32"\r\n",
     characteristic, split_control, transfer_data, packet_count )
+  #endif
   if ( LIBUSB_SPEED_LOW != pipe->speed ) {
     packet_count = (
       buffer_length + usb_number_from_packet_size( pipe->max_size ) - 1 ) / usb_number_from_packet_size( pipe->max_size );
@@ -598,8 +656,10 @@ response_t dwhci_prepare_channel(
     packet_count = 1;
   }
   transfer_data |= HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT( packet_count );
-  STARTUP_PRINT( "characteristic = %#"PRIx32", split_control = %#"PRIx32", transfer_data = %#"PRIx32", packet_count = %#"PRIx32"\r\n",
-    characteristic, split_control, transfer_data, packet_count )
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "characteristic = %#"PRIx32", split_control = %#"PRIx32", transfer_data = %#"PRIx32", packet_count = %#"PRIx32"\r\n",
+      characteristic, split_control, transfer_data, packet_count )
+  #endif
   // allocate mmio sequence
   size_t sequence_size;
   iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 3, &sequence_size );
@@ -650,6 +710,20 @@ response_t dwhci_prepare_channel(
   return HCD_RESPONSE_OK;
 }
 
+/**
+ * @fn response_t dwhci_channel_send_wait(uint32_t, uint32_t, libusb_transfer_error_t*, libusb_pipe_address_t*, uint8_t, void*, size_t, dwhci_channel_state_t, uint32_t*)
+ * @brief Send command to channel and wait
+ * @param parent_device_number
+ * @param port_number
+ * @param error
+ * @param pipe
+ * @param channel
+ * @param buffer
+ * @param buffer_length
+ * @param packet_id
+ * @param transfer_out
+ * @return
+ */
 response_t dwhci_channel_send_wait(
   const uint32_t parent_device_number,
   const uint32_t port_number,
@@ -719,9 +793,13 @@ response_t dwhci_channel_send_wait(
         // return result
         return result;
       }
-      STARTUP_PRINT( "transferred = %#zx, packets = %"PRIu32"\r\n", transferred, packets );
+      #if defined ( DWHCI_ENABLE_DEBUG )
+        STARTUP_PRINT( "transferred = %#zx, packets = %"PRIu32"\r\n", transferred, packets );
+      #endif
       transferred = buffer_length - HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_TRANSFER_SIZE( transfer_data );
-      STARTUP_PRINT( "transferred = %#zx, packets = %"PRIu32"\r\n", transferred, HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_PACKET_COUNT( transfer_data ) );
+      #if defined ( DWHCI_ENABLE_DEBUG )
+        STARTUP_PRINT( "transferred = %#zx, packets = %"PRIu32"\r\n", transferred, HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_PACKET_COUNT( transfer_data ) );
+      #endif
       if ( packets == HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_PACKET_COUNT( transfer_data ) ) {
         break;
       }
@@ -1004,7 +1082,12 @@ response_t dwhci_core_flush_rx_fifo( void ) {
   return HCD_RESPONSE_OK;
 }
 
-response_t dwhci_init2( void ) {
+/**
+ * @fn response_t dwhci_init(void)
+ * @brief Init dwhci otg
+ * @return
+ */
+response_t dwhci_init( void ) {
   // open file descriptor for mmio actions
   if ( -1 == ( fd_iomem = open( IOMEM_DEVICE_PATH, O_RDWR ) ) ) {
     // debug output
@@ -1079,11 +1162,11 @@ response_t dwhci_init2( void ) {
   }
   // cache everything locally
   const uint32_t vendor = sequence[ 0 ].value;
-  const uint32_t user = sequence[ 1 ].value;
-  const uint32_t hw_cfg1 = sequence[ 2 ].value;
+  [[maybe_unused]] const uint32_t user = sequence[ 1 ].value;
+  [[maybe_unused]] const uint32_t hw_cfg1 = sequence[ 2 ].value;
   const uint32_t hw_cfg2 = sequence[ 3 ].value;
-  const uint32_t hw_cfg3 = sequence[ 4 ].value;
-  const uint32_t hw_cfg4 = sequence[ 5 ].value;
+  [[maybe_unused]] const uint32_t hw_cfg3 = sequence[ 4 ].value;
+  [[maybe_unused]] const uint32_t hw_cfg4 = sequence[ 5 ].value;
   uint32_t host_cfg = sequence[ 6 ].value;
   // free sequence
   free( sequence );
@@ -1486,11 +1569,10 @@ response_t dwhci_init2( void ) {
   result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, usb_cfg );
   if ( HCD_RESPONSE_OK != result ) {
     #if defined( DWHCI_ENABLE_DEBUG )
-    STARTUP_PRINT( "Write port failed\r\n" )
+      STARTUP_PRINT( "Write port failed\r\n" )
     #endif
     return result;
   }
-
 
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
@@ -1704,9 +1786,9 @@ response_t dwhci_init2( void ) {
             channel )
         #endif
       }
-      // free sequence
-      free( sequence );
     }
+    // free sequence
+    free( sequence );
   }
 
   uint32_t host_port;

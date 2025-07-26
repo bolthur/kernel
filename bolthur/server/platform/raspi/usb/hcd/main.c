@@ -46,7 +46,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // setup hcd interface
   STARTUP_PRINT( "Setup hcd interface!\r\n" )
-  const response_t result = dwhci_init2();
+  const response_t result = dwhci_init();
   if ( HCD_RESPONSE_OK != result ) {
     STARTUP_PRINT( "Unable to init dwhci: %s\r\n", response_error( result ) );
     return -1;
