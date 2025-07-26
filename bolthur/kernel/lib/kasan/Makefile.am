@@ -1,4 +1,6 @@
 
 noinst_LTLIBRARIES = libkasan.la
 libkasan_la_SOURCES = \
-  kasan.c
+  heap.c \
+  kasan.c \
+  list.c

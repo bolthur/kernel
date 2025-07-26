@@ -312,7 +312,7 @@ AC_DEFINE_UNQUOTED(
 )
 AC_DEFINE_UNQUOTED(
   [__no_sanitize],
-  [__attribute__((no_sanitize("undefined")))],
+  [__attribute__((no_sanitize("undefined"), no_sanitize("kernel-address")))],
   [disable undefined behaviour sanitization]
 )
 AC_DEFINE_UNQUOTED(
