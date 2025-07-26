@@ -17,19 +17,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RPC_H
-#define _RPC_H
-
-#include <stdbool.h>
 #include <sys/bolthur.h>
+#include "../../rpc.h"
 
-bool rpc_init( void );
-void rpc_hub_check_change( size_t, pid_t, size_t, size_t );
-void rpc_hub_check_connection( size_t, pid_t, size_t, size_t );
-void rpc_hub_child_detach( size_t, pid_t, size_t, size_t );
-void rpc_hub_child_reset( size_t, pid_t, size_t, size_t );
-void rpc_hub_attach( size_t, pid_t, size_t, size_t );
-void rpc_hub_deallocate( size_t, pid_t, size_t, size_t );
-void rpc_hub_detach( size_t, pid_t, size_t, size_t );
-
-#endif
+/**
+ * @fn void rpc_hub_deallocate(size_t, pid_t, size_t, size_t)
+ * @brief Register rpc handler deallocate
+ * @param type message type
+ * @param origin origin of the message
+ * @param data_info data id
+ * @param response_info response info
+ */
+void rpc_hub_deallocate(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+}

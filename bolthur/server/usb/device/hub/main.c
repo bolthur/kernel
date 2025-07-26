@@ -26,6 +26,8 @@
 // library includes
 #include "../../../libhelper.h"
 #include "../../../libusbd.h"
+#include "../../../libusbd.h"
+#include "../../../libusbd.h"
 #include "../../../../library/usb/usb.h"
 
 /**
@@ -67,9 +69,15 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // add device file
   STARTUP_PRINT( "Sending device to vfs\r\n" )
   uint32_t device_info[] = {
-    HUB_ATTACH,
+    GENERIC_ATTACH,
+    GENERIC_DETACH,
+    GENERIC_DEALLOCATE,
+    HUB_CHECK_CHANGE,
+    HUB_CHILD_DETACH,
+    HUB_CHILD_RESET,
+    HUB_CHECK_CONNECTION,
   };
-  if ( !dev_add_file( HUB_DEVICE_PATH, device_info, 1 ) ) {
+  if ( !dev_add_file( HUB_DEVICE_PATH, device_info, 7 ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

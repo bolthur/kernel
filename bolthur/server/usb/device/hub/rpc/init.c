@@ -30,10 +30,47 @@
  */
 bool rpc_init( void ) {
   // register attach handler
-  bolthur_rpc_bind( HUB_ATTACH, rpc_hub_attach, true );
+  bolthur_rpc_bind( GENERIC_ATTACH, rpc_hub_attach, true );
   if ( errno ) {
     STARTUP_PRINT( "Unable to register attach handler!\r\n" )
     return false;
   }
+  // register detach handler
+  bolthur_rpc_bind( GENERIC_DETACH, rpc_hub_detach, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register detach handler!\r\n" )
+    return false;
+  }
+  // register deallocate handler
+  bolthur_rpc_bind( GENERIC_DEALLOCATE, rpc_hub_deallocate, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register deallocate handler!\r\n" )
+    return false;
+  }
+  // register check change handler
+  bolthur_rpc_bind( HUB_CHECK_CHANGE, rpc_hub_check_change, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register check change!\r\n" )
+    return false;
+  }
+  // register child detach handler
+  bolthur_rpc_bind( HUB_CHILD_DETACH, rpc_hub_child_detach, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register child detach!\r\n" )
+    return false;
+  }
+  // register child reset handler
+  bolthur_rpc_bind( HUB_CHILD_RESET, rpc_hub_child_reset, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register child reset!\r\n" )
+    return false;
+  }
+  // register check connection handler
+  bolthur_rpc_bind( HUB_CHECK_CONNECTION, rpc_hub_check_connection, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register check connection!\r\n" )
+    return false;
+  }
+  // return success
   return true;
 }

@@ -17,19 +17,19 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RPC_H
-#define _RPC_H
-
-#include <stdbool.h>
+#include <stdio.h>
 #include <sys/bolthur.h>
 
-bool rpc_init( void );
-void rpc_hub_check_change( size_t, pid_t, size_t, size_t );
-void rpc_hub_check_connection( size_t, pid_t, size_t, size_t );
-void rpc_hub_child_detach( size_t, pid_t, size_t, size_t );
-void rpc_hub_child_reset( size_t, pid_t, size_t, size_t );
-void rpc_hub_attach( size_t, pid_t, size_t, size_t );
-void rpc_hub_deallocate( size_t, pid_t, size_t, size_t );
-void rpc_hub_detach( size_t, pid_t, size_t, size_t );
-
-#endif
+/**
+ * @fn int main(int, char*[])
+ * @brief main entry point
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
+int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
+  // print something
+  STARTUP_PRINT( "usb hid hid processing!\r\n" )
+  return -1;
+}
