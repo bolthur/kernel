@@ -488,7 +488,12 @@ typedef enum {
   LIBUSB_HUB_PORT_FEATURE_RESET_CHANGE = 20,
 } libusb_hub_port_feature_t;
 
-#define DEVICE_DRIVER_HUB 0x48554230
+typedef enum {
+  DEVICE_DRIVER_HUB = 0x48554230,
+  DEVICE_DRIVER_HID = 0x48494430,
+  DEVICE_DRIVER_KEYBOARD = 0x4b424430,
+  DEVICE_DRIVER_MOUSE = 0x4b424431,
+} device_driver_t;
 
 typedef struct {
   libusb_driver_data_header header;

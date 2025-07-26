@@ -17,27 +17,17 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
+#ifndef _RPC_H
+#define _RPC_H
+
+#include <stdbool.h>
 #include <sys/bolthur.h>
-#include "rpc.h"
 
-/**
- * @fn int main(int, char*[])
- * @brief main entry point
- *
- * @param argc
- * @param argv
- * @return
- */
-int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  // register rpc
-  STARTUP_PRINT( "Setup rpc handler\r\n" )
-  if ( !rpc_init() ) {
-    STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
-    return -1;
-  }
+void rpc_handler_register( size_t, pid_t, size_t, size_t );
+void rpc_handler_unregister( size_t, pid_t, size_t, size_t );
+void rpc_hid_attach( size_t, pid_t, size_t, size_t );
+void rpc_hid_deallocate( size_t, pid_t, size_t, size_t );
+void rpc_hid_detach( size_t, pid_t, size_t, size_t );
+bool rpc_init( void );
 
-  // print something
-  STARTUP_PRINT( "usb hid hid processing!\r\n" )
-  return -1;
-}
+#endif

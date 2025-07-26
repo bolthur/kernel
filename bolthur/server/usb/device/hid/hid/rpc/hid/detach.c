@@ -17,27 +17,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include <sys/bolthur.h>
-#include "rpc.h"
+#include "../../rpc.h"
 
 /**
- * @fn int main(int, char*[])
- * @brief main entry point
- *
- * @param argc
- * @param argv
- * @return
+ * @fn void rpc_hid_detach(size_t, pid_t, size_t, size_t)
+ * @brief Register rpc handler detach
+ * @param type message type
+ * @param origin origin of the message
+ * @param data_info data id
+ * @param response_info response info
  */
-int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  // register rpc
-  STARTUP_PRINT( "Setup rpc handler\r\n" )
-  if ( !rpc_init() ) {
-    STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
-    return -1;
-  }
-
-  // print something
-  STARTUP_PRINT( "usb hid hid processing!\r\n" )
-  return -1;
+void rpc_hid_detach(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
 }
