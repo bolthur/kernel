@@ -534,6 +534,7 @@ MAX_RELEASE_CHECK_RATE   default: 4095 unless not HAVE_MMAP
 #include <errno.h>
 #include "../../bolthur/kernel/mm/heap.h"
 #include "../../bolthur/kernel/panic.h"
+#include "../../bolthur/kernel/lib/string.h"
 // configuration part for kernel
 #define LACKS_UNISTD_H
 #define LACKS_FCNTL_H

@@ -191,6 +191,11 @@ static uintptr_t map_temporary( uintptr_t start, size_t size ) {
 
   // stop here if not initialized
   if ( true != virt_init_get() ) {
+    // map initially
+    for ( size_t i = start; i < start + size; i += PAGE_SIZE ) {
+      virt_startup_map( i, i );
+    }
+    // return start address
     return start;
   }
 

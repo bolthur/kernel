@@ -217,6 +217,11 @@ static uintptr_t map_temporary( uint64_t start, size_t size ) {
 
   // stop here if not initialized
   if ( true != virt_init_get() ) {
+    // map initially
+    for ( size_t i = ( size_t )start; i < start + size; i += PAGE_SIZE ) {
+      virt_startup_map( i, i );
+    }
+    // return start address
     return ( uintptr_t )start;
   }
 
@@ -484,14 +489,14 @@ static uint64_t get_temporary_mapping( uintptr_t addr ) {
  * @param table set to non zero for destroying a table
  * @return address to new table or 0 if it was used for free up
  */
-static uint64_t get_new_table( uint64_t table ) {
+static uint64_t get_new_table( const uint64_t table ) {
   // handle free only if set
   if ( 0 != table ) {
     phys_free_page( table );
     return 0;
   }
   // get new page
-  uint64_t addr = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
+  const uint64_t addr = phys_find_free_page( PAGE_SIZE, PHYS_MEMORY_TYPE_NORMAL );
   // debug output
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT( "addr = %#"PRIx64"\r\n", addr )
