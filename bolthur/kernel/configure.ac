@@ -335,6 +335,8 @@ AC_DEFINE_UNQUOTED(
 AM_CONDITIONAL([IS32], [test $executable_format -eq 32])
 AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 
+AM_CONDITIONAL([HAS_SANITIZER], [test "x$with_debug_symbols" == "xyes"])
+
 AC_CONFIG_FILES([
   Makefile
   arch/Makefile

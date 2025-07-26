@@ -31,11 +31,9 @@ libtarget_la_DEPENDENCIES = \
   ${abs_top_builddir}/libkernel.la \
   ${abs_top_builddir}/lib/atag/libatag.la \
   ${abs_top_builddir}/lib/libc/libc.la \
-  ${abs_top_builddir}/lib/kasan/libkasan.la \
   ${abs_top_builddir}/lib/tar/libtar.la \
   ${abs_top_builddir}/lib/libduplicate.la \
-  ${abs_top_builddir}/lib/libssp.la \
-  ${abs_top_builddir}/lib/libubsan.la
+  ${abs_top_builddir}/lib/libssp.la
 libtarget_la_SOURCES =
 libtarget_la_LIBADD = \
   ${abs_top_builddir}/../library/collection/list/liblist.la \
@@ -46,23 +44,38 @@ libtarget_la_LIBADD = \
   ${abs_top_builddir}/libkernel.la \
   ${abs_top_builddir}/lib/atag/libatag.la \
   ${abs_top_builddir}/lib/libc/libc.la \
-  ${abs_top_builddir}/lib/kasan/libkasan.la \
   ${abs_top_builddir}/lib/tar/libtar.la \
   ${abs_top_builddir}/lib/libduplicate.la \
-  ${abs_top_builddir}/lib/libssp.la \
-  ${abs_top_builddir}/lib/libubsan.la
+  ${abs_top_builddir}/lib/libssp.la
 libtarget_la_LDFLAGS = -all-static -Wl,-static
+# sanitizer additions
+if HAS_SANITIZER
+  libtarget_la_DEPENDENCIES += \
+    ${abs_top_builddir}/lib/kasan/libkasan.la \
+    ${abs_top_builddir}/lib/libubsan.la
+  libtarget_la_LIBADD += \
+    ${abs_top_builddir}/lib/kasan/libkasan.la \
+    ${abs_top_builddir}/lib/libubsan.la
+endif
 
 # Normal kernel building for physical device
 kernel_elf_SOURCES =
 kernel_elf_DEPENDENCIES = libtarget.la
 kernel_elf_LDFLAGS = \
   -Wl,-L,${top_srcdir}/target \
-  -Wl,-T,${top_srcdir}/target/raspi/physical.${subarch_subdir}.${executable_format}.ld \
   -Wl,-Map,${output_map} \
   -all-static -Wl,-static \
   -Wl,--start-group,-ltarget,-lgcc,-lfdt,--end-group
 kernel_elf_LDADD = -L./.libs
+# sanitizer additions
+if HAS_SANITIZER
+  kernel_elf_LDFLAGS += \
+    -Wl,-T,${top_srcdir}/target/raspi/physical.${subarch_subdir}.${executable_format}.sanitizer.ld
+else
+  kernel_elf_LDFLAGS += \
+    -Wl,-T,${top_srcdir}/target/raspi/physical.${subarch_subdir}.${executable_format}.ld
+endif
+
 
 
 # Normal kernel building for physical device
@@ -70,11 +83,18 @@ kernel_qemu_elf_SOURCES =
 kernel_qemu_elf_DEPENDENCIES = libtarget.la
 kernel_qemu_elf_LDFLAGS = \
   -Wl,-L,${top_srcdir}/target \
-  -Wl,-T,${top_srcdir}/target/raspi/qemu.${subarch_subdir}.${executable_format}.ld \
   -Wl,-Map,${output_map_qemu} \
   -all-static -Wl,-static \
   -Wl,--start-group,-ltarget,-lgcc,-lfdt,--end-group
 kernel_qemu_elf_LDADD = -L./.libs
+# sanitizer additions
+if HAS_SANITIZER
+  kernel_qemu_elf_LDFLAGS += \
+    -Wl,-T,${top_srcdir}/target/raspi/qemu.${subarch_subdir}.${executable_format}.sanitizer.ld
+else
+  kernel_qemu_elf_LDFLAGS += \
+    -Wl,-T,${top_srcdir}/target/raspi/qemu.${subarch_subdir}.${executable_format}.ld
+endif
 
 EXTRA_PROGRAMS = kernel.img kernel7.img kernel8.img kernel_qemu.img kernel7_qemu.img kernel8_qemu.img
 kernel_img_DEPENDENCIES = kernel.elf

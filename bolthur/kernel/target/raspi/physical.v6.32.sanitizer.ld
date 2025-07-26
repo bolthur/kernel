@@ -22,7 +22,7 @@ OUTPUT_ARCH( arm )
 
 ENTRY( startup )
 
-KERNEL_LMA = 0x10000;
+KERNEL_LMA = 0x8000;
 KERNEL_OFFSET = 0xC0000000;
 
 SECTIONS {
@@ -66,6 +66,13 @@ SECTIONS {
     __initial_heap_start = .;
     . += 0x100000;
     __initial_heap_end = .;
+
+    /* align to 4k */
+    . = ALIGN( 4K );
+    /* 16MB for sanitizer heap */
+    __sanitizer_heap_start = .;
+    . += 0x1000000;
+    __sanitizer_heap_end = .;
 
     __bss_end = .;
   }
