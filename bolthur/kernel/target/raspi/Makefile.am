@@ -13,6 +13,7 @@ BUILT_SOURCES = \
   ${abs_top_builddir}/lib/libduplicate.la \
   ${abs_top_builddir}/lib/libssp.la \
   ${abs_top_builddir}/lib/libubsan.la \
+  ${abs_top_builddir}/lib/libasan.la \
   libtarget.la \
   kernel.elf \
   kernel_qemu.elf
@@ -30,6 +31,7 @@ libtarget_la_DEPENDENCIES = \
   ${abs_top_builddir}/libkernel.la \
   ${abs_top_builddir}/lib/atag/libatag.la \
   ${abs_top_builddir}/lib/libc/libc.la \
+  ${abs_top_builddir}/lib/kasan/libkasan.la \
   ${abs_top_builddir}/lib/tar/libtar.la \
   ${abs_top_builddir}/lib/libduplicate.la \
   ${abs_top_builddir}/lib/libssp.la \
@@ -44,6 +46,7 @@ libtarget_la_LIBADD = \
   ${abs_top_builddir}/libkernel.la \
   ${abs_top_builddir}/lib/atag/libatag.la \
   ${abs_top_builddir}/lib/libc/libc.la \
+  ${abs_top_builddir}/lib/kasan/libkasan.la \
   ${abs_top_builddir}/lib/tar/libtar.la \
   ${abs_top_builddir}/lib/libduplicate.la \
   ${abs_top_builddir}/lib/libssp.la \
@@ -60,7 +63,7 @@ kernel_elf_LDFLAGS = \
   -all-static -Wl,-static \
   -Wl,--start-group,-ltarget,-lgcc,-lfdt,--end-group
 kernel_elf_LDADD = -L./.libs
-  
+
 
 # Normal kernel building for physical device
 kernel_qemu_elf_SOURCES =

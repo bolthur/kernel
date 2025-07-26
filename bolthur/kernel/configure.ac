@@ -322,7 +322,7 @@ AC_DEFINE_UNQUOTED(
 )
 AC_DEFINE_UNQUOTED(
   [__bootstrap],
-  [__attribute__((__section__(".text.boot"),__optimize__("O0","no-stack-protector"), no_sanitize("undefined")))],
+  [__attribute__((__section__(".text.boot"),__optimize__("O0","no-stack-protector"), no_sanitize("undefined"), no_sanitize("kernel-address")))],
   [Bootstrap function]
 )
 AC_DEFINE_UNQUOTED(
@@ -345,6 +345,7 @@ AC_CONFIG_FILES([
   lib/Makefile
   lib/atag/Makefile
   lib/libc/Makefile
+  lib/kasan/Makefile
   lib/tar/Makefile
   platform/Makefile
   platform/raspi/Makefile
