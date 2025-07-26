@@ -17,13 +17,12 @@
 # along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import osproc
 import std/os
 import std/strutils
 import std/httpclient
 import zippy/tarballs
 
-const firmware_version = "1.20250430"
+const firmwareVersion = "1.20250430"
 
 proc onProgressChanged(total, progress, speed: BiggestInt): void =
   stdout.write "\rDownloaded ", progress, " of ", total, " - Current rate: ", speed div 1000, "kb/s"
@@ -54,7 +53,7 @@ proc loadFirmwareToBoot*( firmwareType: string ): void =
     if not fileExists( joinPath( cachePath, "firmware.tar.gz" ) ):
       var client = newHttpClient()
       client.onProgressChanged = onProgressChanged
-      client.downloadFile( """https://github.com/raspberrypi/firmware/archive/refs/tags/""" &  firmware_version & """.tar.gz""", joinPath( cachePath, "firmware.tar.gz" ) )
+      client.downloadFile( """https://github.com/raspberrypi/firmware/archive/refs/tags/""" &  firmwareVersion & """.tar.gz""", joinPath( cachePath, "firmware.tar.gz" ) )
       stdout.write "\r\n"
       stdout.flushFile()
     # uncompress firmware if not existing
@@ -62,7 +61,7 @@ proc loadFirmwareToBoot*( firmwareType: string ): void =
       # unzip firmware
       uncompressFirmware( joinPath( cachePath, "firmware.tar.gz" ), joinPath( cachePath, "firmware" ) )
     # copy over to boot
-    let basePath = joinPath( cachePath, "firmware", """firmware-""" & firmware_version, "boot" )
+    let basePath = joinPath( cachePath, "firmware", """firmware-""" & firmwareVersion, "boot" )
     for file in walkDirRec( basePath, { pcFile, pcDir } ):
       let splitted = splitPath( file )
       if splitted.tail.startsWith( "kernel" ):

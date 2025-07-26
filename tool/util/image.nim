@@ -107,11 +107,12 @@ proc createPlainImageFile*( imageType: string, rootPath: string ): void =
   let bootDirectoryPath: string = joinPath( basePath, "partition", "boot" )
   let rootDirectoryPath: string = joinPath( basePath, "partition", "root" )
   let rootEtcDirectoryPath: string = joinPath( rootDirectoryPath, "etc" )
-  # create folder boot, root, ramdisk and etc in root image
+  # create folder boot, root, ramdisk, etc and home user in root image
   createDir( joinPath( rootDirectoryPath, "boot" ) )
   createDir( joinPath( rootDirectoryPath, "ramdisk" ) )
   createDir( rootEtcDirectoryPath )
   createDir( joinPath( rootDirectoryPath, "root" ) )
+  createDir( joinPath( rootDirectoryPath, "home", "user" ) )
   # copy default root folder stuff
   let rootFileStuff: string = joinPath( getCurrentDir(), "file", imageType, "root" )
   for file in walkDirRec( rootFileStuff, { pcFile } ):
