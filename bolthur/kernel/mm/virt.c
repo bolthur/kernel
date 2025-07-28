@@ -106,10 +106,10 @@ void virt_init( void ) {
   #endif
 
   // map initial heap similar to normal heap non cachable
-  uintptr_t phys_bss_start = VIRT_2_PHYS( &__bss_start );
-  uintptr_t phys_bss_end = VIRT_2_PHYS( &__bss_end );
-  uintptr_t phys_data_start = VIRT_2_PHYS( &__data_start );
-  uintptr_t phys_data_end = VIRT_2_PHYS( &__data_end );
+  const uintptr_t phys_bss_start = VIRT_2_PHYS( &__bss_start );
+  const uintptr_t phys_bss_end = VIRT_2_PHYS( &__bss_end );
+  const uintptr_t phys_data_start = VIRT_2_PHYS( &__data_start );
+  const uintptr_t phys_data_end = VIRT_2_PHYS( &__data_end );
 
   // map from start to end addresses as used
   while ( start < end ) {

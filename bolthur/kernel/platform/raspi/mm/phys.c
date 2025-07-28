@@ -106,12 +106,14 @@ bool phys_platform_init( void ) {
   if ( ! phys_bitmap ) {
     return false;
   }
+  memset( phys_bitmap, 0, phys_bitmap_length * sizeof( uint32_t ) );
   phys_bitmap_check = aligned_alloc(
     sizeof( *phys_bitmap ),
     phys_bitmap_length * sizeof( uint32_t ) );
   if ( ! phys_bitmap_check ) {
     return false;
   }
+  memset( phys_bitmap_check, 0, phys_bitmap_length * sizeof( uint32_t ) );
   // debug output
   #if defined( PRINT_MM_PHYS )
     DEBUG_OUTPUT( "total memory amount: %#"PRIx32"\r\n", memory_amount )

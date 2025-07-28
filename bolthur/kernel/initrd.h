@@ -31,5 +31,6 @@ size_t initrd_get_size( void );
 void initrd_set_size( size_t );
 bool initrd_exist( void );
 void initrd_startup_init( void );
+void initrd_unmap( void );
 
 #endif

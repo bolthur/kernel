@@ -46,7 +46,7 @@ void syscall_kernel_putc( void* context ) {
  */
 void syscall_kernel_puts( void* context ) {
   // get parameter
-  char* str = ( char* )syscall_get_parameter( context, 0 );
+  auto char* str = ( char* )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   // debug output
   #if defined( PRINT_SYSCALL )
@@ -66,7 +66,7 @@ void syscall_kernel_puts( void* context ) {
     DEBUG_OUTPUT( "Allocate memory for unsafe copy!\r\n" )
   #endif
   // allocate space for duplicate and check for error
-  char* data_dup = ( char* )malloc( sizeof( char ) * ( len + 1 ) );
+  auto char* data_dup = ( char* )malloc( sizeof( char ) * ( len + 1 ) );
   if ( ! data_dup ) {
     // debug output
     #if defined( PRINT_SYSCALL )
@@ -95,7 +95,7 @@ void syscall_kernel_puts( void* context ) {
     return;
   }
   // print somewhere
-  int written = printf( "%.*s", len, data_dup );
+  const int written = printf( "%.*s", len, data_dup );
   // free data_dup and return written amount
   free( data_dup );
   // print until end of string or len

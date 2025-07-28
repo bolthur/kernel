@@ -29,6 +29,9 @@
 #include "../mm/heap.h"
 #include "../panic.h"
 #include "../debug/debug.h"
+#if defined( HAS_SANITIZER )
+  #include "../lib/kasan/kasan.h"
+#endif
 
 void* dlmemalign( size_t, size_t );
 void dlfree( void* );
@@ -46,6 +49,15 @@ heap_manager_t* kernel_heap = NULL;
  */
 bool heap_init_get( void ) {
   return ( bool )kernel_heap;
+}
+
+/**
+ * @fn heap_init_state_t heap_get_state(void)
+ * @brief Wrapper to get init state
+ * @return
+ */
+heap_init_state_t heap_get_state( void ) {
+  return kernel_heap->state;
 }
 
 /**
@@ -91,6 +103,13 @@ void heap_init( heap_init_state_t state ) {
         VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
       ) )
     }
+    // init kasan
+    #if defined( HAS_SANITIZER )
+      #if defined( PRINT_MM_HEAP )
+        DEBUG_OUTPUT( "Initializing kasan\r\n" )
+      #endif
+      kasan_init();
+    #endif
     // set state
     kernel_heap->state = state;
     // skip rest
@@ -469,8 +488,11 @@ void* heap_sbrk( intptr_t increment ) {
         #endif
         return ( void* )-1;
       }
-      // clear area
-      memset( ( void* )addr, 0, PAGE_SIZE );
+      // sanitizer stuff
+      #if defined( HAS_SANITIZER )
+        // poison area
+        kasan_poison_shadow( addr, PAGE_SIZE, ASAN_SHADOW_RESERVED_MAGIC, true );
+      #endif
       // update max heap address
       min_heap += PAGE_SIZE;
     }

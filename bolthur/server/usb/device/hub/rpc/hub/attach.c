@@ -24,6 +24,7 @@
 // local includes
 #include "../../hub.h"
 #include "../../rpc.h"
+#include "../../global.h"
 #include "../../../../../libusbd.h"
 #include "../../../../../../library/usb/usb.h"
 
@@ -597,6 +598,17 @@ void rpc_hub_attach(
     _syscall_rpc_cleanup();
     return;
   }
+
+  // validate origin
+  if (
+    origin != allowed_rpc_origin
+    && ! bolthur_rpc_validate_origin( origin, data_info )
+  ) {
+    STARTUP_PRINT( "INVALID ORIGIN!\r\n" )
+    _syscall_rpc_cleanup();
+    return;
+  }
+
   // get data from mailbox
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
@@ -606,6 +618,7 @@ void rpc_hub_attach(
     _syscall_rpc_cleanup();
     return;
   }
+
   // allocate space for pull_request
   const usb_generic_attach_t* message = ( usb_generic_attach_t* )request->container;
 

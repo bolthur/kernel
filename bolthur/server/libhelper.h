@@ -30,6 +30,71 @@
 #include <sys/bolthur.h>
 
 /**
+ * @fn int get_file_handler(const char*)
+ * @brief Wrapper to get file handler
+ * @param path
+ * @return
+ */
+[[maybe_unused]] static int get_file_handler( const char* path ) {
+  // variables
+  vfs_stat_request_t* request = malloc( sizeof( vfs_stat_request_t ) );
+  if ( ! request ) {
+    errno = ENOMEM;
+    return -1;
+  }
+  // clear message structures
+  memset( request, 0, sizeof( vfs_stat_request_t ) );
+  // copy stuff to message
+  strncpy( request->file_path, path, PATH_MAX - 1 );
+  // raise rpc and wait for return
+  const size_t response_id = bolthur_rpc_raise(
+    RPC_VFS_STAT,
+    VFS_DAEMON_ID,
+    request,
+    sizeof( vfs_stat_request_t ),
+    NULL,
+    RPC_VFS_STAT,
+    request,
+    sizeof( vfs_stat_request_t ),
+    0,
+    0,
+    NULL,
+    false
+  );
+  // handle error
+  if ( 0 == response_id ) {
+    free( request );
+    return -1;
+  }
+  size_t data_size;
+  vfs_stat_response_t* response = bolthur_rpc_fetch_from_mailbox(
+    response_id,
+    &data_size,
+    true,
+    NULL
+  );
+  // handle error
+  if ( ! response ) {
+    free( request );
+    return -1;
+  }
+  // handle failure
+  if ( ! response->success ) {
+    free( request );
+    free( response );
+    errno = EIO;
+    return -1;
+  }
+  // cache handler
+  const int handler = response->handler;
+  // free request and response
+  free( request );
+  free( response );
+  // return handler
+  return handler;
+}
+
+/**
  * @fn void send_vfs_add_request(vfs_add_request_t*, size_t, unsigned int)
  * @brief Helper to send add request with wait for response
  *

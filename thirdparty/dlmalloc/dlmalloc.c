@@ -2731,7 +2731,7 @@ static struct malloc_state _gm_;
   ((char*)(A) >= S->base && (char*)(A) < S->base + S->size)
 
 /* Return segment holding given address */
-static msegmentptr segment_holding(mstate m, char* addr) {
+__attribute__((no_sanitize("kernel-address"))) static msegmentptr segment_holding(mstate m, char* addr) {
   msegmentptr sp = &m->seg;
   for (;;) {
     if (addr >= sp->base && addr < sp->base + sp->size)
@@ -2742,7 +2742,7 @@ static msegmentptr segment_holding(mstate m, char* addr) {
 }
 
 /* Return true if segment contains a segment link */
-static int has_segment_link(mstate m, msegmentptr ss) {
+__attribute__((no_sanitize("kernel-address"))) static int has_segment_link(mstate m, msegmentptr ss) {
   msegmentptr sp = &m->seg;
   for (;;) {
     if ((char*)sp >= ss->base && (char*)sp < ss->base + ss->size)
@@ -3132,7 +3132,7 @@ static void post_fork_child(void)  { INITIAL_LOCK(&(gm)->mutex); }
 #endif /* LOCK_AT_FORK */
 
 /* Initialize mparams */
-static int init_mparams(void) {
+__attribute__((no_sanitize("kernel-address"))) static int init_mparams(void) {
 #ifdef NEED_GLOBAL_LOCK_INIT
   if (malloc_global_mutex_status <= 0)
     init_malloc_global_mutex();
@@ -3222,7 +3222,7 @@ static int init_mparams(void) {
 }
 
 /* support for mallopt */
-static int change_mparam(int param_number, int value) {
+__attribute__((no_sanitize("kernel-address"))) static int change_mparam(int param_number, int value) {
   size_t val;
   ensure_initialization();
   val = (value == -1)? MAX_SIZE_T : (size_t)value;
@@ -3517,7 +3517,7 @@ static void do_check_malloc_state(mstate m) {
 /* ----------------------------- statistics ------------------------------ */
 
 #if !NO_MALLINFO
-static struct mallinfo internal_mallinfo(mstate m) {
+__attribute__((no_sanitize("kernel-address"))) static struct mallinfo internal_mallinfo(mstate m) {
   struct mallinfo nm = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
   ensure_initialization();
   if (!PREACTION(m)) {
@@ -3856,7 +3856,7 @@ static void internal_malloc_stats(mstate m) {
 */
 
 /* Malloc using mmap */
-static void* mmap_alloc(mstate m, size_t nb) {
+__attribute__((no_sanitize("kernel-address"))) static void* mmap_alloc(mstate m, size_t nb) {
   size_t mmsize = mmap_align(nb + SIX_SIZE_T_SIZES + CHUNK_ALIGN_MASK);
   if (m->footprint_limit != 0) {
     size_t fp = m->footprint + mmsize;
@@ -3888,7 +3888,7 @@ static void* mmap_alloc(mstate m, size_t nb) {
 }
 
 /* Realloc using mmap */
-static mchunkptr mmap_resize(mstate m, mchunkptr oldp, size_t nb, int flags) {
+__attribute__((no_sanitize("kernel-address"))) static mchunkptr mmap_resize(mstate m, mchunkptr oldp, size_t nb, int flags) {
   size_t oldsize = chunksize(oldp);
   (void)flags; /* placate people compiling -Wunused */
   if (is_small(nb)) /* Can't shrink mmap regions below small size */
@@ -3926,7 +3926,7 @@ static mchunkptr mmap_resize(mstate m, mchunkptr oldp, size_t nb, int flags) {
 /* -------------------------- mspace management -------------------------- */
 
 /* Initialize top chunk and its size */
-static void init_top(mstate m, mchunkptr p, size_t psize) {
+__attribute__((no_sanitize("kernel-address"))) static void init_top(mstate m, mchunkptr p, size_t psize) {
   /* Ensure alignment */
   size_t offset = align_offset(chunk2mem(p));
   p = (mchunkptr)((char*)p + offset);
@@ -3941,7 +3941,7 @@ static void init_top(mstate m, mchunkptr p, size_t psize) {
 }
 
 /* Initialize bins for a new mstate that is otherwise zeroed out */
-static void init_bins(mstate m) {
+__attribute__((no_sanitize("kernel-address"))) static void init_bins(mstate m) {
   /* Establish circular links for smallbins */
   bindex_t i;
   for (i = 0; i < NSMALLBINS; ++i) {
@@ -3970,7 +3970,7 @@ static void reset_on_error(mstate m) {
 #endif /* PROCEED_ON_ERROR */
 
 /* Allocate chunk and prepend remainder with chunk in successor base. */
-static void* prepend_alloc(mstate m, char* newbase, char* oldbase,
+__attribute__((no_sanitize("kernel-address"))) static void* prepend_alloc(mstate m, char* newbase, char* oldbase,
                            size_t nb) {
   mchunkptr p = align_as_chunk(newbase);
   mchunkptr oldfirst = align_as_chunk(oldbase);
@@ -4012,7 +4012,7 @@ static void* prepend_alloc(mstate m, char* newbase, char* oldbase,
 }
 
 /* Add a segment to hold a new noncontiguous region */
-static void add_segment(mstate m, char* tbase, size_t tsize, flag_t mmapped) {
+__attribute__((no_sanitize("kernel-address"))) static void add_segment(mstate m, char* tbase, size_t tsize, flag_t mmapped) {
   /* Determine locations and sizes of segment, fenceposts, old top */
   char* old_top = (char*)m->top;
   msegmentptr oldsp = segment_holding(m, old_top);
@@ -4067,7 +4067,7 @@ static void add_segment(mstate m, char* tbase, size_t tsize, flag_t mmapped) {
 /* -------------------------- System allocation -------------------------- */
 
 /* Get memory from system using MORECORE or MMAP */
-static void* sys_alloc(mstate m, size_t nb) {
+__attribute__((no_sanitize("kernel-address"))) static void* sys_alloc(mstate m, size_t nb) {
   char* tbase = CMFAIL;
   size_t tsize = 0;
   flag_t mmap_flag = 0;
@@ -4278,7 +4278,7 @@ static void* sys_alloc(mstate m, size_t nb) {
 /* -----------------------  system deallocation -------------------------- */
 
 /* Unmap and unlink any mmapped segments that don't contain used chunks */
-static size_t release_unused_segments(mstate m) {
+__attribute__((no_sanitize("kernel-address"))) static size_t release_unused_segments(mstate m) {
   size_t released = 0;
   int nsegs = 0;
   msegmentptr pred = &m->seg;
@@ -4325,7 +4325,7 @@ static size_t release_unused_segments(mstate m) {
   return released;
 }
 
-static int sys_trim(mstate m, size_t pad) {
+__attribute__((no_sanitize("kernel-address"))) static int sys_trim(mstate m, size_t pad) {
   size_t released = 0;
   ensure_initialization();
   if (pad < MAX_REQUEST && is_initialized(m)) {
@@ -4393,7 +4393,7 @@ static int sys_trim(mstate m, size_t pad) {
 /* Consolidate and bin a chunk. Differs from exported versions
    of free mainly in that the chunk need not be marked as inuse.
 */
-static void dispose_chunk(mstate m, mchunkptr p, size_t psize) {
+__attribute__((no_sanitize("kernel-address"))) static void dispose_chunk(mstate m, mchunkptr p, size_t psize) {
   mchunkptr next = chunk_plus_offset(p, psize);
   if (!pinuse(p)) {
     mchunkptr prev;
@@ -4464,7 +4464,7 @@ static void dispose_chunk(mstate m, mchunkptr p, size_t psize) {
 /* ---------------------------- malloc --------------------------- */
 
 /* allocate a large request from the best fitting chunk in a treebin */
-static void* tmalloc_large(mstate m, size_t nb) {
+__attribute__((no_sanitize("kernel-address"))) static void* tmalloc_large(mstate m, size_t nb) {
   tchunkptr v = 0;
   size_t rsize = -nb; /* Unsigned negation */
   tchunkptr t;
@@ -4535,7 +4535,7 @@ static void* tmalloc_large(mstate m, size_t nb) {
 }
 
 /* allocate a small request from the best fitting chunk in a treebin */
-static void* tmalloc_small(mstate m, size_t nb) {
+__attribute__((no_sanitize("kernel-address"))) static void* tmalloc_small(mstate m, size_t nb) {
   tchunkptr t, v;
   size_t rsize;
   bindex_t i;
@@ -4574,7 +4574,7 @@ static void* tmalloc_small(mstate m, size_t nb) {
 
 #if !ONLY_MSPACES
 
-void* dlmalloc(size_t bytes) {
+__attribute__((no_sanitize("kernel-address"))) void* dlmalloc(size_t bytes) {
   /*
      Basic algorithm:
      If a small request (< 256 bytes minus per-chunk overhead):
@@ -4712,7 +4712,7 @@ void* dlmalloc(size_t bytes) {
 
 /* ---------------------------- free --------------------------- */
 
-void dlfree(void* mem) {
+__attribute__((no_sanitize("kernel-address"))) void dlfree(void* mem) {
   /*
      Consolidate freed chunks with preceeding or succeeding bordering
      free chunks, if they exist, and then place in a bin.  Intermixed
@@ -4821,7 +4821,7 @@ void dlfree(void* mem) {
 #endif /* FOOTERS */
 }
 
-void* dlcalloc(size_t n_elements, size_t elem_size) {
+__attribute__((no_sanitize("kernel-address"))) void* dlcalloc(size_t n_elements, size_t elem_size) {
   void* mem;
   size_t req = 0;
   if (n_elements != 0) {
@@ -4841,7 +4841,7 @@ void* dlcalloc(size_t n_elements, size_t elem_size) {
 /* ------------ Internal support for realloc, memalign, etc -------------- */
 
 /* Try to realloc; only in-place unless can_move true */
-static mchunkptr try_realloc_chunk(mstate m, mchunkptr p, size_t nb,
+__attribute__((no_sanitize("kernel-address"))) static mchunkptr try_realloc_chunk(mstate m, mchunkptr p, size_t nb,
                                    int can_move) {
   mchunkptr newp = 0;
   size_t oldsize = chunksize(p);
@@ -4920,7 +4920,7 @@ static mchunkptr try_realloc_chunk(mstate m, mchunkptr p, size_t nb,
   return newp;
 }
 
-static void* internal_memalign(mstate m, size_t alignment, size_t bytes) {
+__attribute__((no_sanitize("kernel-address"))) static void* internal_memalign(mstate m, size_t alignment, size_t bytes) {
   void* mem = 0;
   if (alignment <  MIN_CHUNK_SIZE) /* must be at least a minimum chunk size */
     alignment = MIN_CHUNK_SIZE;
@@ -5001,7 +5001,7 @@ static void* internal_memalign(mstate m, size_t alignment, size_t bytes) {
     bit 0 set if all elements are same size (using sizes[0])
     bit 1 set if elements should be zeroed
 */
-static void** ialloc(mstate m,
+__attribute__((no_sanitize("kernel-address"))) static void** ialloc(mstate m,
                      size_t n_elements,
                      size_t* sizes,
                      int opts,
@@ -5127,7 +5127,7 @@ static void** ialloc(mstate m,
    chunks before freeing, which will occur often if allocated
    with ialloc or the array is sorted.
 */
-static size_t internal_bulk_free(mstate m, void* array[], size_t nelem) {
+__attribute__((no_sanitize("kernel-address"))) static size_t internal_bulk_free(mstate m, void* array[], size_t nelem) {
   size_t unfreed = 0;
   if (!PREACTION(m)) {
     void** a;
@@ -5215,7 +5215,7 @@ static void internal_inspect_all(mstate m,
 
 #if !ONLY_MSPACES
 
-void* dlrealloc(void* oldmem, size_t bytes) {
+__attribute__((no_sanitize("kernel-address"))) void* dlrealloc(void* oldmem, size_t bytes) {
   void* mem = 0;
   if (oldmem == 0) {
     mem = dlmalloc(bytes);
@@ -5260,7 +5260,7 @@ void* dlrealloc(void* oldmem, size_t bytes) {
   return mem;
 }
 
-void* dlrealloc_in_place(void* oldmem, size_t bytes) {
+__attribute__((no_sanitize("kernel-address"))) void* dlrealloc_in_place(void* oldmem, size_t bytes) {
   void* mem = 0;
   if (oldmem != 0) {
     if (bytes >= MAX_REQUEST) {
@@ -5291,14 +5291,14 @@ void* dlrealloc_in_place(void* oldmem, size_t bytes) {
   return mem;
 }
 
-void* dlmemalign(size_t alignment, size_t bytes) {
+__attribute__((no_sanitize("kernel-address"))) void* dlmemalign(size_t alignment, size_t bytes) {
   if (alignment <= MALLOC_ALIGNMENT) {
     return dlmalloc(bytes);
   }
   return internal_memalign(gm, alignment, bytes);
 }
 
-int dlposix_memalign(void** pp, size_t alignment, size_t bytes) {
+__attribute__((no_sanitize("kernel-address"))) int dlposix_memalign(void** pp, size_t alignment, size_t bytes) {
   void* mem = 0;
   if (alignment == MALLOC_ALIGNMENT)
     mem = dlmalloc(bytes);
@@ -5321,32 +5321,32 @@ int dlposix_memalign(void** pp, size_t alignment, size_t bytes) {
   }
 }
 
-void* dlvalloc(size_t bytes) {
+__attribute__((no_sanitize("kernel-address"))) void* dlvalloc(size_t bytes) {
   size_t pagesz;
   ensure_initialization();
   pagesz = mparams.page_size;
   return dlmemalign(pagesz, bytes);
 }
 
-void* dlpvalloc(size_t bytes) {
+__attribute__((no_sanitize("kernel-address"))) void* dlpvalloc(size_t bytes) {
   size_t pagesz;
   ensure_initialization();
   pagesz = mparams.page_size;
   return dlmemalign(pagesz, (bytes + pagesz - SIZE_T_ONE) & ~(pagesz - SIZE_T_ONE));
 }
 
-void** dlindependent_calloc(size_t n_elements, size_t elem_size,
+__attribute__((no_sanitize("kernel-address"))) void** dlindependent_calloc(size_t n_elements, size_t elem_size,
                             void* chunks[]) {
   size_t sz = elem_size; /* serves as 1-element array */
   return ialloc(gm, n_elements, &sz, 3, chunks);
 }
 
-void** dlindependent_comalloc(size_t n_elements, size_t sizes[],
+__attribute__((no_sanitize("kernel-address"))) void** dlindependent_comalloc(size_t n_elements, size_t sizes[],
                               void* chunks[]) {
   return ialloc(gm, n_elements, sizes, 0, chunks);
 }
 
-size_t dlbulk_free(void* array[], size_t nelem) {
+__attribute__((no_sanitize("kernel-address"))) size_t dlbulk_free(void* array[], size_t nelem) {
   return internal_bulk_free(gm, array, nelem);
 }
 
@@ -5364,7 +5364,7 @@ void dlmalloc_inspect_all(void(*handler)(void *start,
 }
 #endif /* MALLOC_INSPECT_ALL */
 
-int dlmalloc_trim(size_t pad) {
+__attribute__((no_sanitize("kernel-address"))) int dlmalloc_trim(size_t pad) {
   int result = 0;
   ensure_initialization();
   if (!PREACTION(gm)) {
@@ -5374,20 +5374,20 @@ int dlmalloc_trim(size_t pad) {
   return result;
 }
 
-size_t dlmalloc_footprint(void) {
+__attribute__((no_sanitize("kernel-address"))) size_t dlmalloc_footprint(void) {
   return gm->footprint;
 }
 
-size_t dlmalloc_max_footprint(void) {
+__attribute__((no_sanitize("kernel-address"))) size_t dlmalloc_max_footprint(void) {
   return gm->max_footprint;
 }
 
-size_t dlmalloc_footprint_limit(void) {
+__attribute__((no_sanitize("kernel-address"))) size_t dlmalloc_footprint_limit(void) {
   size_t maf = gm->footprint_limit;
   return maf == 0 ? MAX_SIZE_T : maf;
 }
 
-size_t dlmalloc_set_footprint_limit(size_t bytes) {
+__attribute__((no_sanitize("kernel-address"))) size_t dlmalloc_set_footprint_limit(size_t bytes) {
   size_t result;  /* invert sense of 0 */
   if (bytes == 0)
     result = granularity_align(1); /* Use minimal size */
@@ -5410,11 +5410,11 @@ void dlmalloc_stats() {
 }
 #endif /* NO_MALLOC_STATS */
 
-int dlmallopt(int param_number, int value) {
+__attribute__((no_sanitize("kernel-address"))) int dlmallopt(int param_number, int value) {
   return change_mparam(param_number, value);
 }
 
-size_t dlmalloc_usable_size(void* mem) {
+__attribute__((no_sanitize("kernel-address"))) size_t dlmalloc_usable_size(void* mem) {
   if (mem != 0) {
     mchunkptr p = mem2chunk(mem);
     if (is_inuse(p))

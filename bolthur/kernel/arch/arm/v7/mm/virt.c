@@ -278,8 +278,8 @@ virt_context_t* virt_create_context( virt_context_type_t type ) {
       return NULL;
     }
     // allocate bitmap for lookup
-    uintptr_t min = virt_get_context_min_address( context );
-    uintptr_t max = virt_get_context_max_address( context );
+    const uintptr_t min = virt_get_context_min_address( context );
+    const uintptr_t max = virt_get_context_max_address( context );
     context->bitmap_length = ( max - min ) / PAGE_SIZE / VIRT_PAGE_PER_ENTRY;
     context->bitmap = aligned_alloc(
       sizeof( *( context->bitmap ) ),
@@ -300,8 +300,8 @@ virt_context_t* virt_create_context( virt_context_type_t type ) {
       return NULL;
     }
     // allocate bitmap for lookup
-    uintptr_t min = virt_get_context_min_address( context );
-    uintptr_t max = virt_get_context_max_address( context );
+    const uintptr_t min = virt_get_context_min_address( context );
+    const uintptr_t max = virt_get_context_max_address( context );
     context->bitmap_length = ( max - min ) / PAGE_SIZE / VIRT_PAGE_PER_ENTRY;
     context->bitmap = aligned_alloc(
       sizeof( *( context->bitmap ) ),

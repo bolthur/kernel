@@ -19,6 +19,9 @@
 
 #include "../../stdlib.h"
 #include "../../../mm/heap.h"
+#if defined( HAS_SANITIZER )
+  #include "../../kasan/kasan.h"
+#endif
 
 /**
  * @fn void free(void*)
@@ -27,5 +30,11 @@
  * @param ptr ptr to address to free
  */
 void free( void* ptr ) {
-  heap_free( ptr );
+  // sanitizer stuff
+  #if defined( HAS_SANITIZER )
+    kasan_free_hook( ptr );
+  // non sanitizer stuff
+  #else
+    heap_free( ptr );
+  #endif
 }

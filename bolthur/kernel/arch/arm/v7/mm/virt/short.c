@@ -1179,11 +1179,13 @@ virt_context_t* v7_short_create_context( virt_context_type_t type ) {
   // reserve space for context
   uint64_t phys;
   if ( !virt_init_get() ) {
-    phys = ( uintptr_t )aligned_alloc( alignment, size );
+    void* tmp = aligned_alloc( alignment, size );
     // handle error
-    if ( ! phys ) {
+    if ( ! tmp ) {
       return NULL;
     }
+    memset( tmp, 0, size );
+    phys = ( uintptr_t )tmp;
     phys = VIRT_2_PHYS( phys );
   } else {
     phys = phys_find_free_page_range( alignment, size, PHYS_MEMORY_TYPE_NORMAL );

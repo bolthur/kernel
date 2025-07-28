@@ -17,32 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include "../../stdlib.h"
-#include "../../../mm/heap.h"
-#if defined( HAS_SANITIZER )
-  #include "../../kasan/kasan.h"
-#endif
+#ifndef _GLOBAL_H
+#define _GLOBAL_H
 
-/**
- * @fn void aligned_alloc*(size_t, size_t)
- * @brief aligned memory allocation
- *
- * @param alignment alignment
- * @param size size to allocate
- * @return void* reserved memory
- */
-__allocator void* aligned_alloc( size_t alignment, size_t size ) {
-  // standard conformance
-  if ( 0 == size ) {
-    return NULL;
-  }
-  // sanitizer stuff
-  #if defined( HAS_SANITIZER )
-    return kasan_aligned_alloc_hook( alignment, size );
-  // no sanitizer stuff
-  #else
-    // use heap allocation
-    return heap_allocate( alignment, size );
-  #endif
-}
+#include <sys/types.h>
+
+extern pid_t allowed_rpc_origin;
+
+#endif

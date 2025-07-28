@@ -31,6 +31,11 @@
 #include "../../../../library/usb/usb.h"
 
 /**
+ * @brief Allowed rpc origin
+ */
+pid_t allowed_rpc_origin;
+
+/**
  * @fn int main(int, char*[])
  * @brief main entry point
  *
@@ -51,6 +56,13 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   int result = usb_init();
   if ( 0 != result ) {
     STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    return -1;
+  }
+
+  // query allowed rpc origin
+  allowed_rpc_origin = get_file_handler( USBD_DEVICE_PATH );
+  if ( -1 == allowed_rpc_origin ) {
+    STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
     return -1;
   }
 

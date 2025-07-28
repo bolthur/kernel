@@ -54,6 +54,7 @@ void mailbox_property_init( void ) {
   if ( ! ptb_buffer ) {
     ptb_buffer = aligned_alloc( PAGE_SIZE, PAGE_SIZE );
     assert( ptb_buffer )
+    memset( ptb_buffer, 0, PAGE_SIZE );
     ptb_buffer_phys = ( int32_t* )VIRT_2_PHYS( ptb_buffer );
   }
   // clear out buffer

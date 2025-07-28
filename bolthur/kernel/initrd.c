@@ -21,6 +21,10 @@
 #include <stddef.h>
 #include "initrd.h"
 
+#include "../application/usr/lib/ld-bolthur/tmp/_dl-int.h"
+#include "lib/assert.h"
+#include "mm/virt.h"
+
 /**
  * @brief internal initrd load address
  */
@@ -45,7 +49,7 @@ uintptr_t initrd_get_start_address( void ) {
  *
  * @param address
  */
-void initrd_set_start_address( uintptr_t address ) {
+void initrd_set_start_address( const uintptr_t address ) {
   initrd_address = address;
 }
 
@@ -72,7 +76,7 @@ size_t initrd_get_size( void ) {
  *
  * @param size
  */
-void initrd_set_size( size_t size ) {
+void initrd_set_size( const size_t size ) {
   initrd_size = size;
 }
 
@@ -84,4 +88,26 @@ void initrd_set_size( size_t size ) {
  */
 bool initrd_exist( void ) {
   return 0 < initrd_size;
+}
+
+/**
+ * @fn void initrd_unmap(void)
+ * @brief Helper to unmap initrd
+ */
+void initrd_unmap( void ) {
+  // skip in case no initrd is existing
+  if ( ! initrd_exist() ) {
+    return;
+  }
+  // get start address rounded up since it may be mapped directly behind
+  // the kernel
+  uintptr_t start = ROUND_UP_TO_FULL_PAGE( initrd_address );
+  const uintptr_t end = initrd_address + initrd_size;
+  while ( start < end ) {
+    // unmap with free of physical space
+    assert( virt_unmap_address( virt_current_kernel_context, start, true ) );
+    // get to next page
+    start += PAGE_SIZE;
+  }
+  /// FIXME: IMPLEMENT
 }

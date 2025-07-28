@@ -17,32 +17,30 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stddef.h>
-#include "../../stdlib.h"
-#include "../../../mm/heap.h"
-#if defined( HAS_SANITIZER )
-  #include "../../kasan/kasan.h"
-#endif
+#include "kasan.h"
 
 /**
- * @fn void aligned_alloc*(size_t, size_t)
- * @brief aligned memory allocation
- *
- * @param alignment alignment
- * @param size size to allocate
- * @return void* reserved memory
+ * @fn void kasan_free_hook(void*)
+ * @brief kasan free hook
+ * @param ptr
  */
-__allocator void* aligned_alloc( size_t alignment, size_t size ) {
-  // standard conformance
-  if ( 0 == size ) {
-    return NULL;
+__no_sanitize void kasan_free_hook( void* ptr ) {
+  // handle invalid address
+  if ( ! ptr ) {
+    return;
   }
-  // sanitizer stuff
-  #if defined( HAS_SANITIZER )
-    return kasan_aligned_alloc_hook( alignment, size );
-  // no sanitizer stuff
-  #else
-    // use heap allocation
-    return heap_allocate( alignment, size );
-  #endif
+  // for early heap skip asan
+  if ( heap_get_state() == HEAP_INIT_EARLY ) {
+    heap_free( ptr );
+    return;
+  }
+  // translate to kasan heap header
+  kasan_heap_header_t* kasan_heap_header = ( kasan_heap_header_t* )(
+    ( uintptr_t )ptr - KASAN_HEAP_HEAD_REDZONE_SIZE );
+  // extract aligned size
+  const size_t aligned_size = kasan_heap_header->aligned_size;
+  // free address
+  heap_free( kasan_heap_header );
+  // poison shadow
+  kasan_poison_shadow( ( uintptr_t )ptr, aligned_size, ASAN_SHADOW_HEAP_FREE_MAGIC, false );
 }

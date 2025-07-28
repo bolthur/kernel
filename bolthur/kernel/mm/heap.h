@@ -29,9 +29,19 @@
   #define HEAP_MAX_SIZE 0xFFFFFFF
   #define HEAP_MIN_SIZE 0x10000
   #define HEAP_EXTENSION 0x1000
+  #if defined( HAS_SANITIZER )
+    #define KASAN_SHADOW_MEMORY_OFFSET 0xC6000000
+    #define KASAN_SHADOW_MEMORY_MAP_OFFSET 0x10000000
+    #define KASAN_SHADOW_MEMORY_START 0xE0000000
+    #define KASAN_SHADOW_MEMORY_MIN_SIZE 0x10000
+    #define KASAN_SHADOW_MEMORY_MAX_SIZE 0xFFFFFFF
+  #endif
 #elif defined( ELF64 )
   #error "Heap not ready for x64"
 #endif
+
+extern uintptr_t __initial_heap_start;
+extern uintptr_t __initial_heap_end;
 
 typedef enum {
   HEAP_INIT_EARLY = 0,
@@ -58,10 +68,8 @@ typedef struct {
   heap_block_t* free;
 } heap_manager_t;
 
-extern uintptr_t __initial_heap_start;
-extern uintptr_t __initial_heap_end;
-
 bool heap_init_get( void );
+heap_init_state_t heap_get_state( void );
 void heap_init( heap_init_state_t );
 void* heap_allocate( size_t, size_t );
 void heap_free( void* );

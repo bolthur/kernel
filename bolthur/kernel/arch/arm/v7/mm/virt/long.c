@@ -1154,11 +1154,13 @@ virt_context_t* v7_long_create_context( virt_context_type_t type ) {
   // reserve space for context
   uint64_t ctx;
   if ( !virt_init_get() ) {
-    ctx = ( uintptr_t )aligned_alloc( PAGE_SIZE, sizeof( ld_global_page_directory_t ) );
+    void* tmp = aligned_alloc( PAGE_SIZE, sizeof( ld_global_page_directory_t ) );
     // handle error
-    if ( ! ctx ) {
+    if ( ! tmp ) {
       return NULL;
     }
+    memset( tmp, 0, sizeof( ld_global_page_directory_t ) );
+    ctx = ( uintptr_t )tmp;
     ctx = VIRT_2_PHYS( ctx );
   } else {
     ctx = phys_find_free_page_range( PAGE_SIZE, sizeof( ld_global_page_directory_t ), PHYS_MEMORY_TYPE_NORMAL );
