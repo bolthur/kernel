@@ -62,7 +62,7 @@ int hid_init( void ) {
 int hid_register_handler( const libhid_interface_type_t type ) {
   const pid_t pid = getpid();
   // debug message
-  #if defined( LIBUSB_ENABLE_DEBUG )
+  #if defined( LIBHID_ENABLE_DEBUG )
     STARTUP_PRINT( "Registering pid %d for type %d\r\n", pid, type )
   #endif
   // allocate device
@@ -70,7 +70,7 @@ int hid_register_handler( const libhid_interface_type_t type ) {
   // handle error
   if ( ! request ) {
     // debug output
-    #if defined( LIBUSB_ENABLE_DEBUG )
+    #if defined( LIBHID_ENABLE_DEBUG )
       STARTUP_PRINT( "Unable to allocate request\r\n" )
     #endif
     // return nomem
@@ -94,7 +94,7 @@ int hid_register_handler( const libhid_interface_type_t type ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( LIBUSB_ENABLE_DEBUG )
+    #if defined( LIBHID_ENABLE_DEBUG )
       STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
     #endif
     // free request

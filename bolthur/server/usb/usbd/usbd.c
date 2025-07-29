@@ -1201,7 +1201,6 @@ libusb_device_t* usbd_get_root_hub( void ) {
   return head;
 }
 
-
 /**
  * @fn int usbd_init(void)
  * @brief Method to init usbd
@@ -1269,6 +1268,13 @@ int usbd_init_handler( void ) {
   return 0;
 }
 
+/**
+ * @fn int usbd_register_handler(libusb_interface_class_t, pid_t)
+ * @brief Method to register a handöer
+ * @param type
+ * @param handler
+ * @return
+ */
 int usbd_register_handler( const libusb_interface_class_t type, const pid_t handler ) {
   // handle not initialized
   if ( ! class_handler ) {
@@ -1294,6 +1300,13 @@ int usbd_register_handler( const libusb_interface_class_t type, const pid_t hand
   return 0;
 }
 
+/**
+ * @fn int usbd_unregister_handler(libusb_interface_class_t, pid_t)
+ * @brief Unregister a handler
+ * @param type
+ * @param handler
+ * @return
+ */
 int usbd_unregister_handler( const libusb_interface_class_t type, const pid_t handler ) {
   // handle not initialized
   if ( ! class_handler ) {
@@ -1319,6 +1332,13 @@ int usbd_unregister_handler( const libusb_interface_class_t type, const pid_t ha
   return 0;
 }
 
+/**
+ * @fn int usbd_get_handler(libusb_interface_class_t, pid_t*)
+ * @brief Method to get a bound handler
+ * @param type
+ * @param handler
+ * @return
+ */
 int usbd_get_handler( const libusb_interface_class_t type, pid_t* handler ) {
   // handle not initialized
   if ( ! class_handler ) {

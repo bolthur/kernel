@@ -19,6 +19,8 @@
 
 #include <stdio.h>
 #include <sys/bolthur.h>
+
+#include "handler.h"
 #include "rpc.h"
 #include "../../../../libhelper.h"
 #include "../../../../libusbd.h"
@@ -45,9 +47,17 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
+  // initialize handler management
+  STARTUP_PRINT( "Setup handler management\r\n" )
+  int result = handler_init();
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to init handler management: %s\r\n", strerror( result ) )
+    return -1;
+  }
+
   // initialize usb library
   STARTUP_PRINT( "Setup usb library\r\n" )
-  int result = usb_init();
+  result = usb_init();
   if ( 0 != result ) {
     STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
     return -1;
@@ -62,7 +72,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // registering handler
   STARTUP_PRINT( "Registering handler at usbd\r\n" )
-  result = usb_register_handler( LIBUSB_INTERFACE_CLASS_HUB );
+  result = usb_register_handler( LIBUSB_INTERFACE_CLASS_HID );
   if ( 0 != result ) {
     STARTUP_PRINT( "Unable to register handler at usbd\r\n" )
     return -1;
