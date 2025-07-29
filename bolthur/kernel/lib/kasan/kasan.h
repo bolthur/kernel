@@ -24,6 +24,12 @@
 #include <stdbool.h>
 #include "../../mm/heap.h"
 
+#if defined( ELF32 )
+  #define KASAN_SHADOW_MEMORY_OFFSET 0xC6000000
+#elif defined( ELF64 )
+  #error "Shadow memory offset not defined for 64 bit"
+#endif
+
 #define KASAN_CALLER_PC ( ( uintptr_t )__builtin_return_address( 0 ) )
 
 #define KASAN_SHADOW_SHIFT 3
@@ -36,6 +42,9 @@
 #define ASAN_SHADOW_HEAP_HEAD_REDZONE_MAGIC 0xfa
 #define ASAN_SHADOW_HEAP_TAIL_REDZONE_MAGIC 0xfb
 #define ASAN_SHADOW_HEAP_FREE_MAGIC 0xfd
+
+extern uintptr_t kasan_shadow_memory_start;
+extern uintptr_t kasan_shadow_memory_end;
 
 typedef struct {
   size_t aligned_size;

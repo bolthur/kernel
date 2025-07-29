@@ -350,6 +350,11 @@ typedef enum {
   LIBUSB_TRANSFER_ERROR_PROCESSING = 1 << 10,
 } libusb_transfer_error_t;
 
+typedef enum {
+  LIBHID_INTERFACE_TYPE_MOUSE = 2,
+  LIBHID_INTERFACE_TYPE_KEYBOARD = 6,
+} libhid_interface_type_t;
+
 typedef struct {
   uint32_t device_driver;
   uint32_t data_size;

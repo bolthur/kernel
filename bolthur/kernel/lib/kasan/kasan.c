@@ -25,6 +25,9 @@
 #include "../../debug/debug.h"
 #include "../../mm/virt.h"
 
+uintptr_t kasan_shadow_memory_start = 0;
+uintptr_t kasan_shadow_memory_end = 0;
+
 /**
  * @fn uintptr_t kasan_get_poisoned_shadow_address(uintptr_t, size_t)
  * @brief Wrapper to get poisoned shadow address
@@ -91,6 +94,11 @@ void kasan_poison_shadow(
   const size_t shadow_length = shadow_end - shadow_start;
   // perform map if set
   if ( map ) {
+    // set start if not set
+    if ( kasan_shadow_memory_start == 0 ) {
+      kasan_shadow_memory_start = ROUND_DOWN_TO_FULL_PAGE( shadow_start );
+    }
+    // map it
     for (
       uintptr_t map_addr = ROUND_DOWN_TO_FULL_PAGE( shadow_start );
       map_addr < shadow_end;
@@ -107,6 +115,8 @@ void kasan_poison_shadow(
         VIRT_MEMORY_TYPE_NORMAL_NC,
         VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
       ) );
+      // adjust end
+      kasan_shadow_memory_end = map_addr + PAGE_SIZE;
     }
   }
   memset( ( void* )shadow_start, val, shadow_length );
@@ -170,6 +180,7 @@ int kasan_check_memory(
  * @brief Kasan init method
  */
 void kasan_init( void ) {
+  // poison heap
   kasan_poison_shadow(
     HEAP_START,
     HEAP_MIN_SIZE,

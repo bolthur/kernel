@@ -26,8 +26,6 @@
 // library includes
 #include "../../../libhelper.h"
 #include "../../../libusbd.h"
-#include "../../../libusbd.h"
-#include "../../../libusbd.h"
 #include "../../../../library/usb/usb.h"
 
 /**
@@ -51,7 +49,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  // intialize usb library
+  // initialize usb library
   STARTUP_PRINT( "Setup usb library\r\n" )
   int result = usb_init();
   if ( 0 != result ) {

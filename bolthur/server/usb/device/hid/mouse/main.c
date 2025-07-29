@@ -19,6 +19,16 @@
 
 #include <stdio.h>
 #include <sys/bolthur.h>
+#include "rpc.h"
+#include "../../../../libhelper.h"
+#include "../../../../libusbd.h"
+#include "../../../../../library/usb/usb.h"
+#include "../../../../../library/hid/hid.h"
+
+/**
+ * @brief Allowed rpc origin
+ */
+pid_t allowed_rpc_origin;
 
 /**
  * @fn int main(int, char*[])
@@ -29,7 +39,62 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  // print something
-  STARTUP_PRINT( "usb hid mouse processing!\r\n" )
-  return -1;
+  // register rpc
+  STARTUP_PRINT( "Setup rpc handler\r\n" )
+  if ( !rpc_init() ) {
+    STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    return -1;
+  }
+
+  // initialize usb library
+  STARTUP_PRINT( "Setup usb library\r\n" )
+  int result = usb_init();
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    return -1;
+  }
+
+  // initialize hid library
+  STARTUP_PRINT( "Setup hid library\r\n" )
+  result = hid_init();
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    return -1;
+  }
+
+  // query allowed rpc origin
+  allowed_rpc_origin = get_file_handler( HID_DEVICE_PATH );
+  if ( -1 == allowed_rpc_origin ) {
+    STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
+    return -1;
+  }
+
+  // registering handler
+  STARTUP_PRINT( "Registering handler at hid\r\n" )
+  result = hid_register_handler( LIBHID_INTERFACE_TYPE_MOUSE );
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to register handler at hid\r\n" )
+    return -1;
+  }
+
+  // enable rpc
+  STARTUP_PRINT( "Enable rpc\r\n" )
+  _syscall_rpc_set_ready( true );
+
+  // add device file
+  STARTUP_PRINT( "Sending device to vfs\r\n" )
+  uint32_t device_info[] = {
+    GENERIC_ATTACH,
+    GENERIC_DETACH,
+    GENERIC_DEALLOCATE,
+  };
+  if ( !dev_add_file( MOUSE_DEVICE_PATH, device_info, 3 ) ) {
+    STARTUP_PRINT( "Unable to add dev usbd\r\n" )
+    return -1;
+  }
+
+  // wait for rpc
+  STARTUP_PRINT( "Wait for rpc\r\n" )
+  bolthur_rpc_wait_block();
+  return 0;
 }

@@ -29,13 +29,6 @@
   #define HEAP_MAX_SIZE 0xFFFFFFF
   #define HEAP_MIN_SIZE 0x10000
   #define HEAP_EXTENSION 0x1000
-  #if defined( HAS_SANITIZER )
-    #define KASAN_SHADOW_MEMORY_OFFSET 0xC6000000
-    #define KASAN_SHADOW_MEMORY_MAP_OFFSET 0x10000000
-    #define KASAN_SHADOW_MEMORY_START 0xE0000000
-    #define KASAN_SHADOW_MEMORY_MIN_SIZE 0x10000
-    #define KASAN_SHADOW_MEMORY_MAX_SIZE 0xFFFFFFF
-  #endif
 #elif defined( ELF64 )
   #error "Heap not ready for x64"
 #endif

@@ -2,6 +2,10 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"usb/device/hid/hid\"
 
 bin_PROGRAMS = hid
+hid_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/usb/libusb.la
+hid_LDADD = \
+  ${abs_top_builddir}/../library/usb/libusb.la
 hid_SOURCES = \
   rpc/handler/register.c \
   rpc/handler/unregister.c \

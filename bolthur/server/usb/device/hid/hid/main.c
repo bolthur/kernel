@@ -20,6 +20,14 @@
 #include <stdio.h>
 #include <sys/bolthur.h>
 #include "rpc.h"
+#include "../../../../libhelper.h"
+#include "../../../../libusbd.h"
+#include "../../../../../library/usb/usb.h"
+
+/**
+ * @brief Allowed rpc origin
+ */
+pid_t allowed_rpc_origin;
 
 /**
  * @fn int main(int, char*[])
@@ -37,7 +45,49 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  // print something
-  STARTUP_PRINT( "usb hid hid processing!\r\n" )
-  return -1;
+  // initialize usb library
+  STARTUP_PRINT( "Setup usb library\r\n" )
+  int result = usb_init();
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to bind usb library: %s\r\n", strerror( result ) );
+    return -1;
+  }
+
+  // query allowed rpc origin
+  allowed_rpc_origin = get_file_handler( USBD_DEVICE_PATH );
+  if ( -1 == allowed_rpc_origin ) {
+    STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
+    return -1;
+  }
+
+  // registering handler
+  STARTUP_PRINT( "Registering handler at usbd\r\n" )
+  result = usb_register_handler( LIBUSB_INTERFACE_CLASS_HUB );
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to register handler at usbd\r\n" )
+    return -1;
+  }
+
+  // enable rpc
+  STARTUP_PRINT( "Enable rpc\r\n" )
+  _syscall_rpc_set_ready( true );
+
+  // add device file
+  STARTUP_PRINT( "Sending device to vfs\r\n" )
+  uint32_t device_info[] = {
+    GENERIC_ATTACH,
+    GENERIC_DETACH,
+    GENERIC_DEALLOCATE,
+    HID_REGISTER_HANDLER,
+    HID_UNREGISTER_HANDLER,
+  };
+  if ( !dev_add_file( HID_DEVICE_PATH, device_info, 5 ) ) {
+    STARTUP_PRINT( "Unable to add dev usbd\r\n" )
+    return -1;
+  }
+
+  // wait for rpc
+  STARTUP_PRINT( "Wait for rpc\r\n" )
+  bolthur_rpc_wait_block();
+  return 0;
 }

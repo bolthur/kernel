@@ -139,6 +139,7 @@ AC_CONFIG_FILES([
   collection/list/Makefile
   framebuffer/Makefile
   handle/Makefile
+  hid/Makefile
   usb/Makefile
 ])
 # FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO

@@ -26,6 +26,9 @@
 // device paths
 #define USBD_DEVICE_PATH "/dev/usb/usbd"
 #define HUB_DEVICE_PATH "/dev/usb/hub"
+#define HID_DEVICE_PATH "/dev/usb/hid"
+#define KEYBOARD_DEVICE_PATH "/dev/usb/keyboard"
+#define MOUSE_DEVICE_PATH "/dev/usb/mouse"
 
 // generic rpc
 #define GENERIC_ATTACH RPC_CUSTOM_START
@@ -59,6 +62,17 @@ typedef struct {
   uint32_t device_number;
   uint32_t interface_number;
 } usb_generic_attach_t;
+
+// hid rpc structures
+typedef struct {
+  libhid_interface_type_t type;
+  pid_t handler;
+} hid_register_device_handler_t;
+
+typedef struct {
+  libhid_interface_type_t type;
+  pid_t handler;
+} hid_unregister_device_handler_t;
 
 // usbd rpc structures
 typedef struct {

@@ -55,7 +55,7 @@ static int32_t lookup_process( const list_item_t* a, const void* b ) {
 
 /**
  * @fn void cleanup_process(list_item_t*)
- * @brief Helper to cleanup process list
+ * @brief Helper to clean up process list
  *
  * @param a
  */
