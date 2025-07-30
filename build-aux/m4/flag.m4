@@ -115,7 +115,11 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
     AS_IF([test "x$with_debug_symbols" == "xyes"], [
       # debug symbols and sanitizer
       AX_APPEND_COMPILE_FLAGS([-g -Og])
+    ])
+    AS_IF([test "x$with_ubsan_enabled" == "xyes"], [
       AX_APPEND_COMPILE_FLAGS([-fsanitize=undefined])
+    ])
+    AS_IF([test "x$with_asan_enabled" == "xyes"], [
       AX_APPEND_COMPILE_FLAGS([-fsanitize=kernel-address])
     ])
     # optimization level

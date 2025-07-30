@@ -23,8 +23,54 @@
 #include <sys/bolthur.h>
 // local includes
 #include "../../rpc.h"
+#include "../../global.h"
 #include "../../../../../../libusbd.h"
 #include "../../../../../../../library/usb/usb.h"
+
+/**
+ * @fn int hid_set_protocol(uint32_t, uint16_t, uint8_t)
+ * @brief Set hid protocol
+ * @param device_number
+ * @param interface
+ * @param protocol
+ * @return
+ */
+static int hid_set_protocol(
+  const uint32_t device_number,
+  const uint16_t interface,
+  const uint8_t protocol
+) {
+  uint32_t last_transfer;
+  libusb_transfer_error_t error;
+  // perform control message
+  const int result = usb_control_message(
+    device_number,
+    LIBUSB_TRANSFER_CONTROL,
+    LIBUSB_DIRECTION_OUT,
+    NULL,
+    0,
+    &( libusb_device_request_t ){
+      .request = LIBUSB_DEVICE_REQUEST_SET_PROTOCOL,
+      .type = 0x21,
+      .index = interface,
+      .value = protocol,
+      .length = 0,
+    },
+    10, /// FIXME: REPLACE WITH CONSTANT
+    &error,
+    &last_transfer
+  );
+  // handle error
+  if ( 0 != result ) {
+    return result;
+  }
+  // handle error
+  if ( error != LIBUSB_TRANSFER_ERROR_NO_ERROR ) {
+    return EIO;
+  }
+  // return success
+  return 0;
+}
 
 /**
  * @fn void rpc_hid_attach(size_t, pid_t, size_t, size_t)
@@ -36,8 +82,183 @@
  */
 void rpc_hid_attach(
   [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
+  pid_t origin,
+  size_t data_info,
   [[maybe_unused]] size_t response_info
-) {
+  ) {
+  // handle no data
+  if( ! data_info ) {
+    STARTUP_PRINT( "NO DATA PASSED!\r\n" )
+    _syscall_rpc_cleanup();
+    return;
+  }
+
+  // validate origin
+  if (
+    origin != allowed_rpc_origin
+    && ! bolthur_rpc_validate_origin( origin, data_info )
+  ) {
+    STARTUP_PRINT( "INVALID ORIGIN!\r\n" )
+    _syscall_rpc_cleanup();
+    return;
+  }
+
+  // get data from mailbox
+  size_t data_size;
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
+    data_info, &data_size, true, NULL );
+  if ( ! request ) {
+    STARTUP_PRINT( "ERROR WHILE FETCHING DATA: %s!\r\n", strerror( errno ) )
+    _syscall_rpc_cleanup();
+    return;
+  }
+
+  // allocate space for pull_request
+  const usb_generic_attach_t* message = ( usb_generic_attach_t* )request->container;
+
+  // get interface information
+  libusb_interface_descriptor_t interface_descriptor;
+  int result = usb_get_interface(
+    message->device_number, message->interface_number, &interface_descriptor );
+  // handle error
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to get interface data\r\n" )
+    _syscall_rpc_cleanup();
+    free( request );
+    return;
+  }
+  // get endpoint information
+  libusb_endpoint_descriptor_t endpoint_descriptor;
+  result = usb_get_endpoint(
+    message->device_number, message->interface_number, 0, &endpoint_descriptor );
+  // handle error
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to get endpoint information\r\n" )
+    _syscall_rpc_cleanup();
+    free( request );
+    return;
+  }
+  // validate class
+  if ( interface_descriptor.class != LIBUSB_INTERFACE_CLASS_HID ) {
+    STARTUP_PRINT( "Invalid interfacae class\r\n" )
+    _syscall_rpc_cleanup();
+    free( request );
+    return;
+  }
+  // validate interface endpoint
+  if ( interface_descriptor.endpoint_count < 1 ) {
+    STARTUP_PRINT( "Invalid hid device with fewer than one endpoint\r\n" )
+    _syscall_rpc_cleanup();
+    free( request );
+    return;
+  }
+  // validate endpoint
+  if (
+    endpoint_descriptor.endpoint_address.direction != LIBUSB_DIRECTION_IN
+    || endpoint_descriptor.attributes.transfer != LIBUSB_TRANSFER_INTERRUPT
+  ) {
+    STARTUP_PRINT( "Invalid hid device with unusual endpoints\r\n" )
+    _syscall_rpc_cleanup();
+    free( request );
+    return;
+  }
+  // fetch device status
+  libusb_device_status_t status;
+  result = usb_get_status( message->device_number, &status );
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to get device status\r\n" )
+    _syscall_rpc_cleanup();
+    free( request );
+    return;
+  }
+  // ensure it's configured
+  if ( status != LIBUSB_DEVICE_STATUS_CONFIGURED ) {
+    STARTUP_PRINT( "Device not configured\r\n" )
+    _syscall_rpc_cleanup();
+    free( request );
+    return;
+  }
+  // check for boot device
+  if ( interface_descriptor.subclass == 1 ) {
+    if ( interface_descriptor.protocol == 1 ) {
+      STARTUP_PRINT( "Boot keyboard detected\r\n" )
+    } else if ( interface_descriptor.protocol == 2 ) {
+      STARTUP_PRINT( "Boot mouse detected\r\n" )
+    } else {
+      STARTUP_PRINT( "Unknown boot device detected\r\n" )
+    }
+
+    // switch protocol from boot to report mode
+    STARTUP_PRINT( "Reverting from boot to normal hid mode\r\n" )
+    result = hid_set_protocol(
+      message->device_number, ( uint16_t )message->interface_number, 1 );
+    if ( 0 != result ) {
+      STARTUP_PRINT( "Could not revert to report mode\r\n" )
+      _syscall_rpc_cleanup();
+      free( request );
+      return;
+    }
+  }
+
+  // fetch configuration
+  libusb_descriptor_header_t* header;
+  result = usb_get_configuration( message->device_number, ( void** )&header );
+  // handle error
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to fetch usb device configuration: %s\r\n",
+      strerror( result ) )
+    _syscall_rpc_cleanup();
+    free( request );
+    return;
+  }
+  // find descriptor of hid
+  const libusb_hid_descriptor_t* descriptor = NULL;
+  uint32_t current_interface = message->interface_number + 1;
+  do {
+    // handle end reached
+    if ( ! header->descriptor_length ) {
+      break;
+    }
+    // switch descriptor type
+    switch ( header->descriptor_type ) {
+      case LIBUSB_DESCRIPTOR_INTERFACE:
+        current_interface = ( ( libusb_interface_descriptor_t* )header )->number;
+        break;
+      case LIBUSB_DESCRIPTOR_HID:
+        if ( current_interface == message->interface_number ) {
+          descriptor = ( libusb_hid_descriptor_t* )header;
+        }
+        break;
+      default:
+        break;
+    }
+    // some debug output
+    STARTUP_PRINT( "Descriptor %d with length %"PRIu8". Interface: %"PRIu32"\r\n",
+      header->descriptor_type, header->descriptor_length, current_interface )
+    // handle descriptor found
+    if ( descriptor ) {
+      break;
+    }
+    // go to next header
+    header = ( libusb_descriptor_header_t* )( ( uint8_t* )header + header->descriptor_length );
+  } while ( true );
+  // validate hid descriptor
+  if ( ! descriptor ) {
+    STARTUP_PRINT( "No hid descriptor in %s with interface %"PRIu32". Cannot be a hid device\r\n",
+      usb_get_description(message->device_number), message->interface_number + 1 )
+    _syscall_rpc_cleanup();
+    free( request );
+    return;
+  }
+  // check for hid version
+  if ( descriptor->hid_version > 0x111 ) {
+    STARTUP_PRINT( "Unsupported hid version: %"PRIx16".%"PRIx16"\r\n",
+      descriptor->hid_version >> 8, descriptor->hid_version & 0xff )
+    _syscall_rpc_cleanup();
+    free( request );
+    return;
+  }
+  // some debug output
+  STARTUP_PRINT( "Detected hid device: %"PRIx16".%"PRIx16"\r\n",
+    descriptor->hid_version >> 8, descriptor->hid_version & 0xff )
 }

@@ -65,8 +65,10 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     USBD_CONTROL_MESSAGE,
     USBD_GET_ROOTHUB,
     USBD_ATTACH_DEVICE,
+    USBD_GET_CONFIGURATION,
+    USBD_GET_STATUS,
   };
-  if ( !dev_add_file( USBD_DEVICE_PATH, device_info, 9 ) ) {
+  if ( !dev_add_file( USBD_DEVICE_PATH, device_info, 11 ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

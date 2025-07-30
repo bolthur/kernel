@@ -431,6 +431,59 @@ typedef struct __packed {
   uint8_t data[];
 } libusb_hub_descriptor_t;
 
+typedef enum {
+  LIBUSB_HID_COUNTRY_NOT_SUPPORTED = 0,
+  LIBUSB_HID_COUNTRY_ARABIC = 1,
+  LIBUSB_HID_COUNTRY_BELGIAN = 2,
+  LIBUSB_HID_COUNTRY_CANADIAN_BILINGUAL = 3,
+  LIBUSB_HID_COUNTRY_CANADIAN_FRENCH = 4,
+  LIBUSB_HID_COUNTRY_CZECH_REPUBLIC = 5,
+  LIBUSB_HID_COUNTRY_DANISH = 6,
+  LIBUSB_HID_COUNTRY_FINNISH = 7,
+  LIBUSB_HID_COUNTRY_FRENCH = 8,
+  LIBUSB_HID_COUNTRY_GERMAN = 9,
+  LIBUSB_HID_COUNTRY_GREEK = 10,
+  LIBUSB_HID_COUNTRY_HEBREW = 11,
+  LIBUSB_HID_COUNTRY_HUNGARY = 12,
+  LIBUSB_HID_COUNTRY_INTERNATIONAL = 13,
+  LIBUSB_HID_COUNTRY_ITALIAN = 14,
+  LIBUSB_HID_COUNTRY_JAPAN = 15,
+  LIBUSB_HID_COUNTRY_KOREAN = 16,
+  LIBUSB_HID_COUNTRY_LATIN_AMERICAN = 17,
+  LIBUSB_HID_COUNTRY_DUTCH = 18,
+  LIBUSB_HID_COUNTRY_NORWEGIAN = 19,
+  LIBUSB_HID_COUNTRY_PERSIAN = 20,
+  LIBUSB_HID_COUNTRY_POLAND = 21,
+  LIBUSB_HID_COUNTRY_PORTUGUESE = 22,
+  LIBUSB_HID_COUNTRY_RUSSIAN = 23,
+  LIBUSB_HID_COUNTRY_SLOVAKIAN = 24,
+  LIBUSB_HID_COUNTRY_SPANISH = 25,
+  LIBUSB_HID_COUNTRY_SWEDISH = 26,
+  LIBUSB_HID_COUNTRY_SWISS_FRENCH = 27,
+  LIBUSB_HID_COUNTRY_SWISS_GERMAN = 28,
+  LIBUSB_HID_COUNTRY_SWITZERLAND = 29,
+  LIBUSB_HID_COUNTRY_TAIWAN = 30,
+  LIBUSB_HID_COUNTRY_TURKISH_Q = 31,
+  LIBUSB_HID_COUNTRY_ENGLISH_UK = 32,
+  LIBUSB_HID_COUNTRY_ENGLISH_US = 33,
+  LIBUSB_HID_COUNTRY_YUGOSLAVIAN = 34,
+  LIBUSB_HID_COUNTRY_TURKISH_F = 35,
+} libusb_hid_country_t;
+
+typedef struct __packed {
+  libusb_descriptor_type_t descriptor_type;
+  uint16_t length;
+} libusb_hid_optional_descriptor_t;
+
+typedef struct __packed {
+  uint8_t descriptor_length;
+  libusb_descriptor_type_t descriptor_type : 8;
+  uint16_t hid_version;
+  libusb_hid_country_t hid_country : 8;
+  uint8_t descriptor_count;
+  libusb_hid_optional_descriptor_t optional[];
+} libusb_hid_descriptor_t;
+
 typedef struct __packed {
   bool local_power : 1;
   bool over_current : 1;

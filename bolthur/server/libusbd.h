@@ -55,6 +55,8 @@
 #define USBD_CONTROL_MESSAGE USBD_GET_DESCRIPTION + 1
 #define USBD_ATTACH_DEVICE USBD_CONTROL_MESSAGE + 1
 #define USBD_GET_ROOTHUB USBD_ATTACH_DEVICE + 1
+#define USBD_GET_CONFIGURATION USBD_GET_ROOTHUB + 1
+#define USBD_GET_STATUS USBD_GET_CONFIGURATION + 1
 
 // generic usb rpc structures
 typedef struct {
@@ -148,4 +150,15 @@ typedef struct {
   uint8_t buffer[];
 } usb_control_message_t;
 
-#endif //LIBUSBD_H
+typedef struct {
+  uint32_t device_number;
+  uint32_t configuration_length;
+  size_t shm_id;
+} usbd_get_configuration_t;
+
+typedef struct {
+  uint32_t device_number;
+  libusb_device_status_t status;
+} usbd_get_status_t;
+
+#endif

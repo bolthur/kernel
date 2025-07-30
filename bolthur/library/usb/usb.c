@@ -658,3 +658,167 @@ int usb_get_interface(
   // return success
   return 0;
 }
+
+/**
+ * @fn int usb_get_configuration(uint32_t, void**)
+ * @brief Method to get usb device configuration
+ * @param device_number
+ * @param target_buffer
+ * @return
+ */
+int usb_get_configuration( const uint32_t device_number, void** target_buffer ) {
+  // debug output
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "firing usb get descriptor\r\n" )
+  #endif
+  // allocate shared memory
+  const size_t shm_id = _syscall_memory_shared_create( 0x1000 );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  // attach shared memory
+  const void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  // allocate request
+  usbd_get_configuration_t* control_request = malloc( sizeof( *control_request ) );
+  if ( ! control_request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // return error
+    return ENOMEM;
+  }
+  // clear out everything
+  memset( control_request, 0, sizeof( *control_request ) );
+  // populate shm_id
+  control_request->shm_id = shm_id;
+  control_request->device_number = device_number;
+  // perform request
+  const int result = ioctl(
+    fd_usbd,
+    IOCTL_BUILD_REQUEST(
+      USBD_GET_CONFIGURATION,
+      sizeof( *control_request ),
+      IOCTL_RDWR
+    ),
+    control_request
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // free request
+    free( control_request );
+    // return eio
+    return EIO;
+  }
+  // allocate space for buffer
+  *target_buffer = malloc( control_request->configuration_length );
+  if ( ! *target_buffer ) {
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to space for configuration\r\n" )
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // free request
+    free( control_request );
+    // return eio
+    return ENOMEM;
+  }
+  // clear space
+  memset( *target_buffer, 0, control_request->configuration_length );
+  // copy over from shared memory
+  memcpy( *target_buffer, shm_addr, control_request->configuration_length );
+  // detach shared memory
+  _syscall_memory_shared_detach( shm_id );
+  // free control message
+  free( control_request );
+  // return result
+  return result;
+}
+
+/**
+ * @fn int usb_get_status(uint32_t, libusb_device_status_t*)
+ * @brief Method to get usb device status
+ * @param device_number
+ * @param status
+ * @return
+ */
+int usb_get_status( const uint32_t device_number, libusb_device_status_t* status ) {
+  // validate parameter
+  if ( ! status ) {
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Invalid status parameter passed\r\n" )
+    #endif
+    // return einval
+    return EINVAL;
+  }
+  // debug output
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "firing usb get descriptor\r\n" )
+  #endif
+  // allocate request
+  usbd_get_status_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out everything
+  memset( request, 0, sizeof( *request ) );
+  // populate shm_id
+  request->device_number = device_number;
+  // perform request
+  const int result = ioctl(
+    fd_usbd,
+    IOCTL_BUILD_REQUEST(
+      USBD_GET_STATUS,
+      sizeof( *request ),
+      IOCTL_RDWR
+    ),
+    request
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+    #endif
+    // free request
+    free( request );
+    // return eio
+    return EIO;
+  }
+  // set status
+  *status = request->status;
+  // free control message
+  free( request );
+  // return result
+  return result;
+}

@@ -59,7 +59,7 @@ int call_attach( libusb_device_t* dev, const uint32_t interface_number ) {
   dev->device_child_reset_handler = handler;
   dev->device_check_connection_handler = handler;
   /// FIXME: GENERATE CORRECT REQUEST
-  const size_t request_size = sizeof( vfs_ioctl_perform_request_t )
+  constexpr size_t request_size = sizeof( vfs_ioctl_perform_request_t )
     + sizeof( usb_generic_attach_t );
   vfs_ioctl_perform_request_t* request = malloc( request_size );
   if ( ! request ) {

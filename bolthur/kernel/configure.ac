@@ -223,6 +223,24 @@ AC_ARG_WITH(
   [with_debug_debug_symbols=yes]
 )
 
+AC_ARG_WITH(
+  [ubsan],
+  AS_HELP_STRING(
+    [--with-ubsan],
+    [compile with ubsan enabled]
+  ),
+  [with_ubsan_enabled=yes]
+)
+
+AC_ARG_WITH(
+  [asan],
+  AS_HELP_STRING(
+    [--with-asan],
+    [compile with asan enabled]
+  ),
+  [with_asan_enabled=yes]
+)
+
 # enable output and enable remote debugging together is not allowed
 AS_IF([test "x$enable_output" == "xyes" && test "x$enable_remote_debug" == "xyes"], [
   AC_MSG_ERROR([Enabled kernel output and remote debug are not possible at the same time])

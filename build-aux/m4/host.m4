@@ -121,7 +121,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_HOST], [
     AC_DEFINE([PRINT_SSP],[1])
   ])
 
-  AS_IF([test "x$with_debug_symbols" == "xyes"], [
+  AS_IF([test "x$with_asan_enabled" == "xyes"], [
     AC_DEFINE([HAS_SANITIZER],[1])
   ])
 

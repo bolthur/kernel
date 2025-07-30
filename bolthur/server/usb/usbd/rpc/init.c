@@ -83,5 +83,17 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register unregister device handler!\r\n" )
     return false;
   }
+  // register handler get configuration
+  bolthur_rpc_bind( USBD_GET_CONFIGURATION, rpc_get_configuration, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register get configuration handler!\r\n" )
+    return false;
+  }
+  // register handler get status
+  bolthur_rpc_bind( USBD_GET_STATUS, rpc_get_status, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register get status handler!\r\n" )
+    return false;
+  }
   return true;
 }
