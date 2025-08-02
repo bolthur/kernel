@@ -29,14 +29,14 @@
 #include "../../../../../../libusbd.h"
 
 /**
- * @fn void rpc_get_driver(size_t, pid_t, size_t, size_t)
- * @brief Register rpc handler get driver
+ * @fn void rpc_get_report_count(size_t, pid_t, size_t, size_t)
+ * @brief Register rpc handler get report count
  * @param type message type
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
  */
-void rpc_get_driver(
+void rpc_get_report_count(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
@@ -61,7 +61,7 @@ void rpc_get_driver(
     return;
   }
   // allocate space for pull_request
-  hid_get_driver_t* message = ( hid_get_driver_t* )request->container;
+  hid_get_report_count_t* message = ( hid_get_report_count_t* )request->container;
   // get device
   libusb_hid_device_t* dev;
   const int result = hid_get( message->device_number, &dev );
@@ -72,7 +72,7 @@ void rpc_get_driver(
     return;
   }
   // push into message
-  message->device_driver = dev->header.device_driver;
+  message->report_count = dev->parser_result->report_count;
   // calculate request size
   const size_t request_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate response

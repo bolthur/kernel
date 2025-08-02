@@ -545,6 +545,7 @@ int hid_parse_report_descriptor(
     result->report[ idx ]->type = report_field->data[ idx ].report_type;
     result->report[ idx ]->report_length = 0;
     result->report[ idx ]->report_buffer = NULL;
+    result->report[ idx ]->fields_length = report_field->data[ idx ].field_count;
   }
   // free again report fields
   free( report_field );

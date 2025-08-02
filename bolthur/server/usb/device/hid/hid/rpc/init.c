@@ -64,5 +64,23 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register get driver!\r\n" )
     return false;
   }
+  // register get application
+  bolthur_rpc_bind( HID_GET_APPLICATION, rpc_get_application, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register get application!\r\n" )
+    return false;
+  }
+  // register get report count
+  bolthur_rpc_bind( HID_GET_REPORT_COUNT, rpc_get_report_count, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register get report count!\r\n" )
+    return false;
+  }
+  // register get report
+  bolthur_rpc_bind(HID_GET_REPORT, rpc_get_report, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register get report!\r\n" )
+    return false;
+  }
   return true;
 }

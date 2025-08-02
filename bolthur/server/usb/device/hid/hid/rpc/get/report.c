@@ -29,14 +29,14 @@
 #include "../../../../../../libusbd.h"
 
 /**
- * @fn void rpc_get_driver(size_t, pid_t, size_t, size_t)
- * @brief Register rpc handler get driver
+ * @fn void rpc_get_report(size_t, pid_t, size_t, size_t)
+ * @brief Register rpc handler get report
  * @param type message type
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
  */
-void rpc_get_driver(
+void rpc_get_report(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
@@ -61,7 +61,7 @@ void rpc_get_driver(
     return;
   }
   // allocate space for pull_request
-  hid_get_driver_t* message = ( hid_get_driver_t* )request->container;
+  hid_get_report_t* message = ( hid_get_report_t* )request->container;
   // get device
   libusb_hid_device_t* dev;
   const int result = hid_get( message->device_number, &dev );
@@ -71,8 +71,24 @@ void rpc_get_driver(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
-  // push into message
-  message->device_driver = dev->header.device_driver;
+  // handle report greater than report count
+  if ( message->report > dev->parser_result->report_count ) {
+    error.status = -EINVAL;
+    free( request );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    return;
+  }
+  // attach shared memory
+  void* shm_addr = _syscall_memory_shared_attach( message->shm_id, ( uintptr_t )NULL  );
+  if ( errno ) {
+    error.status = -errno;
+    free( request );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    return;
+  }
+  // copy over parser
+  memcpy( shm_addr, dev->parser_result->report[ message->report ], sizeof( libusb_hid_parser_report_t )
+    + dev->parser_result->report[ message->report ]->fields_length * sizeof( libusb_hid_parser_fields_t ) );
   // calculate request size
   const size_t request_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate response
@@ -81,6 +97,7 @@ void rpc_get_driver(
   // handle error
   if ( ! response ) {
     error.status = -ENOMEM;
+    _syscall_memory_shared_detach( message->shm_id );
     free( request );
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;

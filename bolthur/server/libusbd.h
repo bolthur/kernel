@@ -39,6 +39,9 @@
 #define HID_REGISTER_HANDLER GENERIC_DEALLOCATE + 1
 #define HID_UNREGISTER_HANDLER HID_REGISTER_HANDLER + 1
 #define HID_GET_DRIVER HID_UNREGISTER_HANDLER + 1
+#define HID_GET_APPLICATION HID_GET_DRIVER + 1
+#define HID_GET_REPORT_COUNT HID_GET_APPLICATION + 1
+#define HID_GET_REPORT HID_GET_REPORT_COUNT + 1
 
 // hub rpc
 #define HUB_CHECK_CHANGE GENERIC_DEALLOCATE + 1
@@ -81,6 +84,22 @@ typedef struct {
   uint32_t device_number;
   uint32_t device_driver;
 } hid_get_driver_t;
+
+typedef struct {
+  uint32_t device_number;
+  libusb_hid_full_usage_t application;
+} hid_get_application_t;
+
+typedef struct {
+  uint32_t device_number;
+  uint8_t report_count;
+} hid_get_report_count_t;
+
+typedef struct {
+  uint32_t device_number;
+  uint8_t report;
+  size_t shm_id;
+} hid_get_report_t;
 
 // usbd rpc structures
 typedef struct {

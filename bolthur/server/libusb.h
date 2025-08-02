@@ -776,6 +776,7 @@ typedef struct {
   libusb_hid_report_type_t type;
   uint8_t report_length;
   uint8_t* report_buffer;
+  size_t fields_length;
   libusb_hid_parser_fields_t fields[] __aligned(4);
 } libusb_hid_parser_report_t;
 

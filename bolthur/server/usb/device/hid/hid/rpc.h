@@ -23,7 +23,10 @@
 #include <stdbool.h>
 #include <sys/bolthur.h>
 
+void rpc_get_application( size_t, pid_t, size_t, size_t );
 void rpc_get_driver( size_t, pid_t, size_t, size_t );
+void rpc_get_report( size_t, pid_t, size_t, size_t );
+void rpc_get_report_count( size_t, pid_t, size_t, size_t );
 void rpc_handler_register( size_t, pid_t, size_t, size_t );
 void rpc_handler_unregister( size_t, pid_t, size_t, size_t );
 void rpc_hid_attach( size_t, pid_t, size_t, size_t );

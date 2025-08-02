@@ -91,8 +91,11 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     HID_REGISTER_HANDLER,
     HID_UNREGISTER_HANDLER,
     HID_GET_DRIVER,
+    HID_GET_APPLICATION,
+    HID_GET_REPORT_COUNT,
+    HID_GET_REPORT,
   };
-  if ( !dev_add_file( HID_DEVICE_PATH, device_info, 6 ) ) {
+  if ( !dev_add_file( HID_DEVICE_PATH, device_info, 9 ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

@@ -27,3 +27,7 @@
   - setup rpc handler
   - do basic initialization of dwhci
   - provide /dev/usb/hcd
+
+## To be done
+
+- Use interrupts in hcd server

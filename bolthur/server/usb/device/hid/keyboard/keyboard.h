@@ -25,5 +25,8 @@
 #define KEYBOARD_ENABLE_DEBUG 1
 
 void keyboard_append( libusb_keyboard_device_t* );
+void keyboard_destroy( libusb_keyboard_device_t* );
+int keyboard_new_index( uint32_t* );
+int keyboard_duplicate_report( libusb_hid_parser_fields_t**, const libusb_hid_parser_fields_t* );
 
 #endif

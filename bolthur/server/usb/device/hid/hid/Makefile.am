@@ -9,7 +9,10 @@ hid_LDADD = \
   ${abs_top_builddir}/../library/usb/libusb.la \
   ${abs_top_builddir}/../library/collection/avl/libavl.la
 hid_SOURCES = \
+  rpc/get/application.c \
   rpc/get/driver.c \
+  rpc/get/report.c \
+  rpc/get/report_count.c \
   rpc/handler/register.c \
   rpc/handler/unregister.c \
   rpc/hid/attach.c \

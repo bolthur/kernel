@@ -17,6 +17,10 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <math.h>
 #include "keyboard.h"
 
 libusb_keyboard_device_t* keyboard_head = NULL;
@@ -44,4 +48,79 @@ void keyboard_append( libusb_keyboard_device_t* keyboard ) {
   // attach to list
   found->next = keyboard;
   keyboard->prev = found;
+}
+
+/**
+ * @fn void keyboard_destroy(libusb_keyboard_device_t*)
+ * @brief Method to destroy keyboard device
+ * @param device
+ */
+void keyboard_destroy( libusb_keyboard_device_t* device ) {
+  // handle no device
+  if ( ! device ) {
+    return;
+  }
+  // free up key fields
+  for ( size_t idx = 0; idx < 9; idx++ ) {
+    if ( device->key_field[ idx ] ) {
+      free( device->key_field[ idx ] );
+    }
+  }
+  // free up led fields
+  for ( size_t idx = 0; idx < 8; idx++ ) {
+    if ( device->led_field[ idx ] ) {
+      free( device->led_field[ idx ] );
+    }
+  }
+  // free device itself
+  free( device );
+}
+
+/**
+ * @fn int keyboard_new_index(uint32_t*);
+ * @brief Function to get new index
+ * @param index
+ * @return
+ */
+int keyboard_new_index( uint32_t* index ) {
+  // validate parameters
+  if ( ! index ) {
+    return EINVAL;
+  }
+  // initialize max index
+  uint32_t max_index = 0;
+  // loop through list and collect max index
+  const libusb_keyboard_device_t* current = keyboard_head;
+  while ( current ) {
+    // determine max index
+    max_index = ( uint32_t )fmax( max_index, current->index );
+    // go to next
+    current = current->next;
+  }
+  // populate index
+  *index = max_index;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn int keyboard_duplicate_report(libusb_hid_parser_fields_t**, libusb_hid_parser_fields_t*)
+ * @brief Function to duplicate report
+ * @param destination
+ * @param source
+ * @return
+ */
+int keyboard_duplicate_report(
+  libusb_hid_parser_fields_t** destination,
+  const libusb_hid_parser_fields_t* source
+) {
+  // allocate space
+  *destination = malloc( sizeof( libusb_hid_parser_fields_t ) );
+  if ( ! *destination ) {
+    return ENOMEM;
+  }
+  // copy over content
+  memcpy( *destination, source, sizeof( libusb_hid_parser_fields_t ) );
+  // return success
+  return 0;
 }
