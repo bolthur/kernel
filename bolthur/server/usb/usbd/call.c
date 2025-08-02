@@ -80,12 +80,12 @@ int call_attach( libusb_device_t* dev, const uint32_t interface_number ) {
   }
   // attach is defined as first custom message
   bolthur_rpc_raise_generic(
-    RPC_CUSTOM_START,
+    GENERIC_ATTACH,
     handler,
     request,
     request_size,
     NULL,
-    RPC_CUSTOM_START,
+    GENERIC_ATTACH,
     request,
     request_size,
     0,

@@ -826,8 +826,8 @@ void rpc_hub_attach(
     STARTUP_PRINT( "Checking port %"PRIu8"\r\n", port )
     attach_hub_check_connection( message->device_number, hub, descriptor, port );
   }
-  // free hub
-  free( hub );
+  // store hub in linked list
+  hub_append( hub );
   // free request
   free( request );
   // cleanup rpc

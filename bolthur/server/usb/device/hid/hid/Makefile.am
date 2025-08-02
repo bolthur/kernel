@@ -16,5 +16,6 @@ hid_SOURCES = \
   rpc/hid/detach.c \
   rpc/init.c \
   handler.c \
+  hid.c \
   main.c
 hid_LDFLAGS = -all-static --static

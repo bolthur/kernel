@@ -23,6 +23,6 @@
 #include "../../server/libusb.h"
 
 int hid_init( void );
-int hid_register_handler( libhid_interface_type_t );
+int hid_register_handler( libusb_hid_usage_page_desktop_t );
 
 #endif

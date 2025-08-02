@@ -32,8 +32,9 @@ typedef struct {
   ( pid_container_t* )( ( uint8_t* )n - offsetof( pid_container_t, node ) )
 
 int handler_init( void );
-int handler_register( libhid_interface_type_t, pid_t );
-int handler_unregister( libhid_interface_type_t, pid_t );
-int handler_get( libhid_interface_type_t, pid_t* );
+int handler_register( libusb_hid_usage_page_desktop_t, pid_t );
+int handler_unregister( libusb_hid_usage_page_desktop_t, pid_t );
+int handler_get( libusb_hid_usage_page_desktop_t, pid_t* );
+int handler_call_attach( libusb_hid_usage_page_desktop_t, libusb_hid_device_t*, uint32_t, uint32_t );
 
 #endif

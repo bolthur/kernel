@@ -15,5 +15,6 @@ hub_SOURCES = \
   rpc/hub/deallocate.c \
   rpc/hub/detach.c \
   rpc/init.c \
+  hub.c \
   main.c
 hub_LDFLAGS = -all-static --static

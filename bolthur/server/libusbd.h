@@ -67,12 +67,12 @@ typedef struct {
 
 // hid rpc structures
 typedef struct {
-  libhid_interface_type_t type;
+  libusb_hid_usage_page_desktop_t type;
   pid_t handler;
 } hid_register_device_handler_t;
 
 typedef struct {
-  libhid_interface_type_t type;
+  libusb_hid_usage_page_desktop_t type;
   pid_t handler;
 } hid_unregister_device_handler_t;
 

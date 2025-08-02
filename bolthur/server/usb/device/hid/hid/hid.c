@@ -17,13 +17,31 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _HUB_H
-#define _HUB_H
+#include "hid.h"
 
-#include "../../../libusb.h"
+libusb_hid_device_t* hid_head = NULL;
 
-#define HUB_ENABLE_DEBUG 1
-
-void hub_append( libusb_hub_device_t* );
-
-#endif
+/**
+ * @fn void hid_append(libusb_hid_device_t*)
+ * @brief Append hid to handled devices
+ * @param hid
+ */
+void hid_append( libusb_hid_device_t* hid ) {
+  // loop to last one
+  libusb_hid_device_t* current = hid_head;
+  libusb_hid_device_t* found = NULL;
+  while ( current ) {
+    found = current;
+    current = current->next;
+  }
+  // handle empty
+  if ( ! found ) {
+    hid_head = hid;
+    hid->prev = NULL;
+    hid->next = NULL;
+    return;
+  }
+  // attach to list
+  found->next = hid;
+  hid->prev = found;
+}

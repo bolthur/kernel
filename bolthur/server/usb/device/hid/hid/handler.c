@@ -20,7 +20,9 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/bolthur.h>
 #include "handler.h"
+#include "../../../../libusbd.h"
 #include "../../../../../library/collection/avl/avl.h"
 
 static avl_tree_t* management_tree;
@@ -38,14 +40,14 @@ static int32_t compare_container(
   const avl_node_t* node_a,
   const avl_node_t* node_b
 ) {
-  const pid_container_t* container_a = PID_HANDLER_GET_ENTRY( node_a );
-  const pid_container_t* container_b = PID_HANDLER_GET_ENTRY( node_b );
+  const libusb_hid_usage_page_desktop_t value_a = (libusb_hid_usage_page_desktop_t)node_a->data;
+  const libusb_hid_usage_page_desktop_t value_b = (libusb_hid_usage_page_desktop_t)node_b->data;
   // return 0 if equal
-  if ( container_a->handler == container_b->handler ) {
+  if ( value_a == value_b ) {
     return 0;
   }
   // return -1 or 1 depending on what is greater
-  return container_a->handler > container_b->handler ? -1 : 1;
+  return value_a > value_b ? -1 : 1;
 }
 
 /**
@@ -60,14 +62,14 @@ static int32_t lookup_container(
   const avl_node_t* node,
   const void* value
 ) {
-  pid_t handler = ( pid_t )value;
-  pid_container_t* container = PID_HANDLER_GET_ENTRY( node );
+  const libusb_hid_usage_page_desktop_t type = ( libusb_hid_usage_page_desktop_t )value;
+  const libusb_hid_usage_page_desktop_t node_type = ( libusb_hid_usage_page_desktop_t )node->data;
   // return 0 if equal
-  if ( container->handler == handler ) {
+  if ( node_type == type ) {
     return 0;
   }
   // return -1 or 1 depending on what is greater
-  return container->handler > handler ? -1 : 1;
+  return node_type > type ? -1 : 1;
 }
 
 /**
@@ -103,19 +105,19 @@ int handler_init( void ) {
 }
 
 /**
- * @fn int handler_register(libhid_interface_type_t, pid_t)
+ * @fn int handler_register(libusb_hid_usage_page_desktop_t, pid_t)
  * @brief Method to register a handler
  * @param type
  * @param handler
  * @return
  */
-int handler_register( const libhid_interface_type_t type, const pid_t handler ) {
+int handler_register( const libusb_hid_usage_page_desktop_t type, const pid_t handler ) {
   // validate
   if ( ! management_tree ) {
     return EINVAL;
   }
   // try to find possible handler
-  const avl_node_t* found = avl_find_by_data( management_tree, ( void* )handler );
+  const avl_node_t* found = avl_find_by_data( management_tree, ( void* )type );
   // handle found
   if ( found ) {
     return EINVAL;
@@ -141,13 +143,13 @@ int handler_register( const libhid_interface_type_t type, const pid_t handler ) 
 }
 
 /**
- * @fn int handler_unregister(libhid_interface_type_t, pid_t)
+ * @fn int handler_unregister(libusb_hid_usage_page_desktop_t, pid_t)
  * @brief Unregister a handler
  * @param type
  * @param handler
  * @return
  */
-int handler_unregister( const libhid_interface_type_t type, const pid_t handler ) {
+int handler_unregister( const libusb_hid_usage_page_desktop_t type, const pid_t handler ) {
   // validate
   if ( ! management_tree ) {
     return EINVAL;
@@ -160,7 +162,7 @@ int handler_unregister( const libhid_interface_type_t type, const pid_t handler 
   }
   // compare handlers
   pid_container_t* item = PID_HANDLER_GET_ENTRY( found );
-  // handle no matcj
+  // handle no match
   if ( item->handler != handler ) {
     return EINVAL;
   }
@@ -173,13 +175,13 @@ int handler_unregister( const libhid_interface_type_t type, const pid_t handler 
 }
 
 /**
- * @fn int handler_get(libhid_interface_type_t, pid_t*)
+ * @fn int handler_get(libusb_hid_usage_page_desktop_t, pid_t*)
  * @brief Get a handler
  * @param type
  * @param handler
  * @return
  */
-int handler_get( const libhid_interface_type_t type, pid_t* handler ) {
+int handler_get( const libusb_hid_usage_page_desktop_t type, pid_t* handler ) {
   // validate
   if ( ! handler || ! management_tree ) {
     return EINVAL;
@@ -188,12 +190,85 @@ int handler_get( const libhid_interface_type_t type, pid_t* handler ) {
   const avl_node_t* found = avl_find_by_data( management_tree, ( void* )type );
   // handle not found
   if ( ! found ) {
-    *handler = 0;
+    *handler = -1;
   // handle found
   } else {
-    pid_container_t* container = PID_HANDLER_GET_ENTRY( found );
+    const pid_container_t* container = PID_HANDLER_GET_ENTRY( found );
     *handler = container->handler;
   }
+  // return success
+  return 0;
+}
+
+/**
+ * @fn int handler_call_attach(libusb_hid_usage_page_desktop_t, libusb_hid_device_t*, uint32_t, uint32_t)
+ * @brief Wrapper to call attach
+ * @param type
+ * @param device
+ * @param device_number
+ * @param interface_number
+ * @return
+ */
+int handler_call_attach(
+  const libusb_hid_usage_page_desktop_t type,
+  libusb_hid_device_t* device,
+  const uint32_t device_number,
+  const uint32_t interface_number
+) {
+  // get handler
+  pid_t handler;
+  const int result = handler_get( type, &handler );
+  // handle error
+  if ( result != 0 ) {
+    return result;
+  }
+  // handle success but no handler bound => return success
+  if ( -1 == handler ) {
+    STARTUP_PRINT( "No handler found for type %d\r\n", type );
+    return 0;
+  }
+  // set handler pids for device
+  device->device_deallocate_handler = handler;
+  device->device_detached_handler = handler;
+  // generate request
+  const size_t request_size = sizeof( vfs_ioctl_perform_request_t ) + sizeof( usb_generic_attach_t );
+  vfs_ioctl_perform_request_t* request = malloc( request_size );
+  if ( ! request ) {
+    // return nomem
+    return ENOMEM;
+  }
+  // clear out
+  memset( request, 0, request_size );
+  // populate container
+  ( ( usb_generic_attach_t* )request->container )->device_number = device_number;
+  ( ( usb_generic_attach_t* )request->container)->interface_number = interface_number;
+  // attach is defined as first custom message
+  bolthur_rpc_raise_generic(
+    GENERIC_ATTACH,
+    handler,
+    request,
+    request_size,
+    NULL,
+    GENERIC_ATTACH,
+    request,
+    request_size,
+    0,
+    0,
+    NULL,
+    true,
+    false
+  );
+  // handle error
+  if ( errno ) {
+    // cache errno
+    const int e = errno;
+    // free request
+    free( request );
+    // return error
+    return e;
+  }
+  // free request
+  free( request );
   // return success
   return 0;
 }

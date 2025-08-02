@@ -54,12 +54,12 @@ int hid_init( void ) {
 }
 
 /**
- * @fn int hid_register_handler(libhid_interface_type_t)
+ * @fn int hid_register_handler(libusb_hid_usage_page_desktop_t)
  * @brief Method to attach a new discovered device
  * @param type
  * @return
  */
-int hid_register_handler( const libhid_interface_type_t type ) {
+int hid_register_handler( const libusb_hid_usage_page_desktop_t type ) {
   const pid_t pid = getpid();
   // debug message
   #if defined( LIBHID_ENABLE_DEBUG )

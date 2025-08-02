@@ -71,7 +71,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // registering handler
   STARTUP_PRINT( "Registering handler at hid\r\n" )
-  result = hid_register_handler( LIBHID_INTERFACE_TYPE_MOUSE );
+  result = hid_register_handler( LIBUSB_HID_USAGE_PAGE_DESKTOP_MOUSE );
   if ( 0 != result ) {
     STARTUP_PRINT( "Unable to register handler at hid\r\n" )
     return -1;

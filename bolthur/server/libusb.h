@@ -350,11 +350,6 @@ typedef enum {
   LIBUSB_TRANSFER_ERROR_PROCESSING = 1 << 10,
 } libusb_transfer_error_t;
 
-typedef enum {
-  LIBHID_INTERFACE_TYPE_MOUSE = 2,
-  LIBHID_INTERFACE_TYPE_KEYBOARD = 6,
-} libhid_interface_type_t;
-
 typedef struct {
   uint32_t device_driver;
   uint32_t data_size;
@@ -553,19 +548,254 @@ typedef enum {
   DEVICE_DRIVER_MOUSE = 0x4b424431,
 } device_driver_t;
 
-typedef struct {
+typedef struct libusb_hub_device libusb_hub_device_t;
+typedef struct libusb_hub_device {
   libusb_driver_data_header header;
   libusb_hub_full_status_t status;
   libusb_hub_descriptor_t* descriptor;
   uint32_t max_children;
   libusb_hub_port_full_status_t port_status[ 255 ];
   uint32_t children[ 255 ];
+  libusb_hub_device_t* next;
+  libusb_hub_device_t* prev;
 } libusb_hub_device_t;
 
 typedef enum {
   LIBUSB_HUB_FEATURE_POWER = 0,
   LIBUSB_HUB_FEATURE_OVER_CURRENT = 1,
 } libusb_hub_feature_t;
+
+typedef enum {
+  LIBUSB_HID_REPORT_TAG_MAIN_INPUT = 0x20,
+  LIBUSB_HID_REPORT_TAG_MAIN_OUTPUT = 0x24,
+  LIBUSB_HID_REPORT_TAG_MAIN_FEATURE = 0x2c,
+  LIBUSB_HID_REPORT_TAG_MAIN_COLLECTION = 0x28,
+  LIBUSB_HID_REPORT_TAG_MAIN_END_COLLECTION = 0x30,
+  LIBUSB_HID_REPORT_TAG_GLOBAL_USAGE_PAGE = 0x1,
+  LIBUSB_HID_REPORT_TAG_GLOBAL_LOGICAL_MINIMUM = 0x5,
+  LIBUSB_HID_REPORT_TAG_GLOBAL_LOGICAL_MAXIMUM = 0x9,
+  LIBUSB_HID_REPORT_TAG_GLOBAL_PHYSICAL_MINIMUM = 0xd,
+  LIBUSB_HID_REPORT_TAG_GLOBAL_PHYSICAL_MAXIMUM = 0x11,
+  LIBUSB_HID_REPORT_TAG_GLOBAL_UNIT_EXPONENT = 0x15,
+  LIBUSB_HID_REPORT_TAG_GLOBAL_UNIT = 0x19,
+  LIBUSB_HID_REPORT_TAG_GLOBAL_REPORT_SIZE = 0x1d,
+  LIBUSB_HID_REPORT_TAG_GLOBAL_REPORT_ID = 0x21,
+  LIBUSB_HID_REPORT_TAG_GLOBAL_REPORT_COUNT = 0x25,
+  LIBUSB_HID_REPORT_TAG_GLOBAL_PUSH = 0x29,
+  LIBUSB_HID_REPORT_TAG_GLOBAL_POP = 0x2d,
+  LIBUSB_HID_REPORT_TAG_LOCAL_USAGE = 0x2,
+  LIBUSB_HID_REPORT_TAG_LOCAL_USAGE_MINIMUM = 0x6,
+  LIBUSB_HID_REPORT_TAG_LOCAL_USAGE_MAXIMUM = 0xa,
+  LIBUSB_HID_REPORT_TAG_LOCAL_DESIGNATOR_INDEX = 0xe,
+  LIBUSB_HID_REPORT_TAG_LOCAL_DESIGNATOR_MINIMUM = 0x12,
+  LIBUSB_HID_REPORT_TAG_LOCAL_DESIGNATOR_MAXIMUM = 0x16,
+  LIBUSB_HID_REPORT_TAG_LOCAL_STRING_INDEX = 0x1e,
+  LIBUSB_HID_REPORT_TAG_LOCAL_STRING_MINIMUM = 0x22,
+  LIBUSB_HID_REPORT_TAG_LOCAL_STRING_MAXIMUM = 0x26,
+  LIBUSB_HID_REPORT_TAG_LOCAL_DELIMITER = 0x2a,
+  LIBUSB_HID_REPORT_TAG_LONG = 0x3f,
+} libusb_hid_report_tag_t;
+
+typedef struct __packed {
+  uint8_t size : 2;
+  libusb_hid_report_tag_t tag : 6;
+} libusb_hid_report_item_t;
+
+typedef struct __packed {
+  bool constant : 1;
+  bool variable : 1;
+  bool relative : 1;
+  bool wrap : 1;
+  bool non_linear : 1;
+  bool no_preferred : 1;
+  bool hull : 1;
+  bool _volatile : 1;
+  bool buffered_bytes : 1;
+  uint32_t reserved : 23;
+} libusb_hid_main_item_t;
+
+typedef enum {
+  LIBUSB_HID_MAIN_COLLECTION_PHYSICAL = 0,
+  LIBUSB_HID_MAIN_COLLECTION_APPLICATION = 1,
+  LIBUSB_HID_MAIN_COLLECTION_LOGICAL = 2,
+  LIBUSB_HID_MAIN_COLLECTION_REPORT = 3,
+  LIBUSB_HID_MAIN_COLLECTION_NAMED_ARRAY = 4,
+  LIBUSB_HID_MAIN_COLLECTION_USAGE_SWITCH = 5,
+  LIBUSB_HID_MAIN_COLLECTION_USAGE_MODIFIER = 6,
+} libusb_hid_main_collection_t;
+
+typedef enum {
+  LIBUSB_HID_USAGE_PAGE_UNDEFINED = 0,
+  LIBUSB_HID_USAGE_PAGE_GENERIC_DESKTOP_CONTROL = 1,
+  LIBUSB_HID_USAGE_PAGE_SIMULATION_CONTROL = 2,
+  LIBUSB_HID_USAGE_PAGE_VR_CONTROL = 3,
+  LIBUSB_HID_USAGE_PAGE_SPORT_CONTROL = 4,
+  LIBUSB_HID_USAGE_PAGE_GAME_CONTROL = 5,
+  LIBUSB_HID_USAGE_PAGE_GENERIC_DEVICE_CONTROL = 6,
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_CONTROL = 7,
+  LIBUSB_HID_USAGE_PAGE_LED = 8,
+  LIBUSB_HID_USAGE_PAGE_BUTTON = 9,
+  LIBUSB_HID_USAGE_PAGE_ORDINAL = 10,
+  LIBUSB_HID_USAGE_PAGE_TELEPHONY = 11,
+  LIBUSB_HID_USAGE_PAGE_CONSUMER = 12,
+  LIBUSB_HID_USAGE_PAGE_DIGITIZER = 13,
+  LIBUSB_HID_USAGE_PAGE_PID_PAGE = 15,
+  LIBUSB_HID_USAGE_PAGE_UNICODE = 16,
+  LIBUSB_HID_USAGE_PAGE_USAGE_PAGE = 0xffff,
+} libusb_hid_usage_page_t;
+
+typedef enum {
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_POINT = 0,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_MOUSE = 1,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_JOYSTICK = 4,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_GAMEPAD = 5,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_KEYBOARD = 6,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_KEYPAD = 7,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_MULTI_AXIS_CONTROLLER = 8,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_TABLE_PC_CONTROL = 9,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_X = 0x30,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_Y = 0x31,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_Z = 0x32,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_RX = 0x33,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_RY = 0x34,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_RZ = 0x35,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_SLIDER = 0x36,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_DIAL = 0x37,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_WHEEL = 0x38,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_HAT_SWITCH = 0x39,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_COUNTED_BUFFER = 0x3a,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_BYTE_COUNT = 0x3b,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_MOTION_WAKE_UP = 0x3c,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_START = 0x3d,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_SELECT = 0x3e,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_VX = 0x40,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_VY = 0x41,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_VZ = 0x42,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_VBR_X = 0x43,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_VBR_Y = 0x44,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_VBR_Z = 0x45,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_VNO = 0x46,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_FEATURE_NOTIFICATION = 0x47,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_RESOLUTION_MULTIPLIER = 0x48,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_DUMMY = 0xffff,
+} libusb_hid_usage_page_desktop_t;
+
+typedef enum {
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_ERROR_ROLL_OVER = 1,
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_POST_FAIL = 2,
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_ERROR_UNDEFINED = 3,
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_LEFT_CONTROL = 0xe0,
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_LEFT_SHIFT = 0xe1,
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_LEFT_ALT = 0xe2,
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_LEFT_GUI = 0xe3,
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_RIGHT_CONTROL = 0xe4,
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_RIGHT_SHIFT = 0xe5,
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_RIGHT_ALT = 0xe6,
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_RIGHT_GUI = 0xe7,
+  LIBUSB_HID_USAGE_PAGE_KEYBOARD_DUMMY = 0xffff,
+} libusb_hid_usage_page_keyboard_t;
+
+typedef enum {
+  LIBUSB_HID_USAGE_PAGE_LED_NUMBER_LOCK = 1,
+  LIBUSB_HID_USAGE_PAGE_LED_CAPSLOCK = 2,
+  LIBUSB_HID_USAGE_PAGE_LED_SCROLL_LOCK = 3,
+  LIBUSB_HID_USAGE_PAGE_LED_COMPOSE = 4,
+  LIBUSB_HID_USAGE_PAGE_LED_KANA = 5,
+  LIBUSB_HID_USAGE_PAGE_LED_POWER = 6,
+  LIBUSB_HID_USAGE_PAGE_LED_SHIFT = 7,
+  LIBUSB_HID_USAGE_PAGE_LED_MUTE = 9,
+  LIBUSB_HID_USAGE_PAGE_LED_DUMMY = 0xffff,
+} libusb_hid_usage_page_led_t;
+
+typedef enum {
+  LIBUSB_HID_REPORT_TYPE_INPUT = 1,
+  LIBUSB_HID_REPORT_TYPE_OUTPUT = 2,
+  LIBUSB_HID_REPORT_TYPE_FEATURE = 3,
+} libusb_hid_report_type_t;
+
+typedef struct __packed {
+  union {
+    libusb_hid_usage_page_desktop_t desktop : 16;
+    libusb_hid_usage_page_keyboard_t keyboard : 16;
+    libusb_hid_usage_page_led_t led : 16;
+  };
+  libusb_hid_usage_page_t page : 16;
+} libusb_hid_full_usage_t;
+
+typedef enum {
+  LIBUSB_HID_UNIT_SYSTEM_NONE = 0,
+  LIBUSB_HID_UNIT_SYSTEM_STANDARD_LINEAR = 1,
+  LIBUSB_HID_UNIT_SYSTEM_STANDARD_ROTATION = 2,
+  LIBUSB_HID_UNIT_SYSTEM_ENGLISH_LINEAR = 3,
+  LIBUSB_HID_UNIT_SYSTEM_ENGLISH_ROTATION = 4,
+} libusb_hid_unit_system_t;
+
+typedef struct __packed {
+  libusb_hid_unit_system_t system : 4;
+  int8_t length : 4;
+  int8_t mass : 4;
+  int8_t time : 4;
+  int8_t temperature : 4;
+  int8_t current : 4;
+  int8_t luminous_intensity : 4;
+  uint8_t reserved : 4;
+} libusb_hid_unit_t;
+
+typedef struct {
+  uint8_t size;
+  uint8_t offset;
+  uint8_t count;
+  libusb_hid_main_item_t attribute __aligned(4);
+  libusb_hid_full_usage_t usage;
+  libusb_hid_full_usage_t physical_usage;
+  int32_t logical_minimum;
+  int32_t logical_maximum;
+  int32_t physical_minimum;
+  int32_t physical_maximum;
+  libusb_hid_unit_t unit;
+  int32_t unit_exponent;
+  union {
+    uint8_t u8;
+    int8_t i8;
+    uint16_t u16;
+    int16_t i16;
+    uint32_t u32;
+    int32_t i32;
+    bool _bool;
+    void* ptr;
+  } value;
+} libusb_hid_parser_fields_t;
+
+typedef struct {
+  uint8_t index;
+  uint8_t field_count;
+  uint8_t id;
+  libusb_hid_report_type_t type;
+  uint8_t report_length;
+  uint8_t* report_buffer;
+  libusb_hid_parser_fields_t fields[] __aligned(4);
+} libusb_hid_parser_report_t;
+
+typedef struct {
+  libusb_hid_full_usage_t application;
+  uint8_t report_count;
+  uint8_t interface;
+  libusb_hid_parser_report_t* report[] __aligned(4);
+} libusb_hid_parser_result_t;
+
+typedef struct libusb_hid_device libusb_hid_device_t;
+typedef struct libusb_hid_device {
+  libusb_driver_data_header header;
+  libusb_hid_descriptor_t* descriptor;
+  libusb_hid_parser_result_t* parser_result;
+  libusb_driver_data_header* driver_data;
+
+  pid_t device_detached_handler;
+  pid_t device_deallocate_handler;
+
+  libusb_hid_device_t* next;
+  libusb_hid_device_t* prev;
+} libusb_hid_device_t;
 
 // enable warnings again
 #pragma GCC diagnostic pop
