@@ -622,3 +622,29 @@ void hid_append( libusb_hid_device_t* hid ) {
   found->next = hid;
   hid->prev = found;
 }
+
+/**
+ * @fn int hid_get(uint32_t, libusb_hid_device_t**)
+ * @brief Function to get hid device
+ * @param device_number
+ * @param hid
+ * @return
+ */
+int hid_get( const uint32_t device_number, libusb_hid_device_t** hid ) {
+  // setup current
+  libusb_hid_device_t* current = hid_head;
+  // loop while there is an entry
+  while ( current ) {
+    // handle match
+    if ( current->device_number == device_number ) {
+      // set pointer
+      *hid = current;
+      // return success
+      return 0;
+    }
+    // go to next
+    current = current->next;
+  }
+  // return error
+  return ENOENT;
+}

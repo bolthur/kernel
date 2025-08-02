@@ -58,5 +58,11 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register unregister device handler!\r\n" )
     return false;
   }
+  // register get driver
+  bolthur_rpc_bind( HID_GET_DRIVER, rpc_get_driver, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register get driver!\r\n" )
+    return false;
+  }
   return true;
 }

@@ -42,7 +42,7 @@ void rpc_hid_attach(
   pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
-  ) {
+) {
   // handle no data
   if( ! data_info ) {
     STARTUP_PRINT( "NO DATA PASSED!\r\n" )
@@ -232,6 +232,8 @@ void rpc_hid_attach(
   memset( device, 0, sizeof( *device ) );
   // populate device
   device->device_number = message->device_number;
+  device->header.device_driver = DEVICE_DRIVER_HID;
+  device->header.data_size = sizeof( *device );
   // allocate report descriptor
   void* report_descriptor = malloc( descriptor->optional[ 0 ].length );
   if ( ! report_descriptor ) {

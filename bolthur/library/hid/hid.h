@@ -24,5 +24,6 @@
 
 int hid_init( void );
 int hid_register_handler( libusb_hid_usage_page_desktop_t );
+int hid_get_driver( uint32_t, uint32_t* );
 
 #endif

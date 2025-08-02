@@ -25,6 +25,7 @@
 #include "../../rpc.h"
 #include "../../global.h"
 #include "../../../../../../libusbd.h"
+#include "../../../../../../../library/hid/hid.h"
 #include "../../../../../../../library/usb/usb.h"
 
 /**
@@ -66,7 +67,24 @@ void rpc_keyboard_attach(
     return;
   }
   // allocate space for pull_request
-  //const usb_generic_attach_t* message = ( usb_generic_attach_t* )request->container;
+  const usb_generic_attach_t* message = ( usb_generic_attach_t* )request->container;
+  // get hid driver
+  uint32_t device_driver;
+  int result = hid_get_driver( message->device_number, &device_driver );
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Error while fetching driver: %s\r\n", strerror( result ) )
+    free( request );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // handle invalid device driver
+  if ( device_driver != DEVICE_DRIVER_HID ) {
+    STARTUP_PRINT( "\"%s\" is not a hid device. Keyboard driver is build upon hid driver\r\n",
+      usb_get_description( message->device_number ) )
+    free( request );
+    _syscall_rpc_cleanup();
+    return;
+  }
   /// FIXME: IMPLEMENT
   STARTUP_PRINT( "KEYBOARD ATTACH FOLLOWING!\r\n" )
   free( request );

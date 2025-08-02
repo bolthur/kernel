@@ -106,3 +106,62 @@ int hid_register_handler( const libusb_hid_usage_page_desktop_t type ) {
   // return success
   return 0;
 }
+
+/**
+ * @fn int hid_get_driver(uint32_t, uint32_t*)
+ * @brief Hid get driver
+ * @param device_number
+ * @param device_driver
+ * @return
+ */
+int hid_get_driver( uint32_t device_number, uint32_t* device_driver ) {
+  // validate parameters
+  if ( ! device_driver ) {
+    return EINVAL;
+  }
+  // debug message
+  #if defined( LIBHID_ENABLE_DEBUG )
+    STARTUP_PRINT( "Get driver for %"PRIu32"\r\n", device_number )
+  #endif
+  // allocate device
+  hid_get_driver_t* request = malloc( sizeof( *request ) );
+  // handle error
+  if ( ! request ) {
+    // debug output
+    #if defined( LIBHID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // return nomem
+    return ENOMEM;
+  }
+  // clear out
+  memset( request, 0, sizeof( *request ) );
+  // copy over necessary data
+  request->device_number = device_number;
+  // perform request
+  const int result = ioctl(
+    fd_hid,
+    IOCTL_BUILD_REQUEST(
+      HID_GET_DRIVER,
+      sizeof( *request ),
+      IOCTL_RDWR
+    ),
+    request
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    #if defined( LIBHID_ENABLE_DEBUG )
+      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+    #endif
+    // free request
+    free( request );
+    return EIO;
+  }
+  // return device driver
+  *device_driver = request->device_driver;
+  // free request
+  free( request );
+  // return success
+  return 0;
+}

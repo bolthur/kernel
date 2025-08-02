@@ -144,6 +144,8 @@ void rpc_hub_attach(
     return;
   }
   // populate hub max children and device number
+  hub->header.device_driver = DEVICE_DRIVER_HUB;
+  hub->header.data_size = sizeof( *hub );
   hub->descriptor = descriptor;
   hub->max_children = hub->descriptor->port_count;
   hub->device_number = message->device_number;
