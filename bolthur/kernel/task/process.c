@@ -39,6 +39,7 @@
 #include "process.h"
 #include "thread.h"
 #include "stack.h"
+#include "../entry.h"
 #include "../rpc/data.h"
 #include "../rpc/queue.h"
 #include "../rpc/generic.h"
@@ -802,6 +803,55 @@ void task_process_prepare_kill( void* context, task_process_t* proc ) {
 }
 
 /**
+ * @fn void unmap_replace_random(size_t)
+ * @brief Unmap replace random area
+ * @param size
+ */
+static void unmap_replace_random( const size_t size ) {
+  // allocate space
+  const uintptr_t end = KERNEL_AREA_PROCESS_REPLACE_START + size;
+  for (
+    uintptr_t start = KERNEL_AREA_PROCESS_REPLACE_START;
+    start < end;
+    start += PAGE_SIZE
+  ) {
+    virt_unmap_address( virt_current_kernel_context, start, true );
+  }
+}
+
+/**
+ * @fn int map_replace_random(size_t)
+ * @brief Map replace random area
+ * @param size
+ * @return
+ */
+static int map_replace_random( const size_t size ) {
+  // allocate space
+  const uintptr_t end = KERNEL_AREA_PROCESS_REPLACE_START + size;
+  for (
+    uintptr_t start = KERNEL_AREA_PROCESS_REPLACE_START;
+    start < end;
+    start += PAGE_SIZE
+  ) {
+    // map address
+    const bool result = virt_map_address_random(
+      virt_current_kernel_context,
+      start,
+      VIRT_MEMORY_TYPE_NORMAL_NC,
+      VIRT_PAGE_TYPE_READ | VIRT_PAGE_TYPE_WRITE
+    );
+    // handle failure
+    if ( ! result ) {
+      // unmap random
+      unmap_replace_random( KERNEL_AREA_PROCESS_REPLACE_START - start );
+      // return nomem
+      return -ENOMEM;
+    }
+  }
+  return 0;
+}
+
+/**
  * @fn int task_process_replace(task_process_t*, uintptr_t, const char**, const char**, void*)
  * @brief Replace current process with elf image
  *
@@ -811,8 +861,6 @@ void task_process_prepare_kill( void* context, task_process_t* proc ) {
  * @param env
  * @param context
  * @return
- *
- * @todo don't allocate kernel heap for elf application
  */
 int task_process_replace(
   task_process_t* proc,
@@ -821,7 +869,7 @@ int task_process_replace(
   const char** env,
   void* context
 ) {
-  bool replace_current_thread = task_thread_current_thread->process == proc;
+  const bool replace_current_thread = task_thread_current_thread->process == proc;
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT(
       "task_thread_current_thread->process = %p, proc = %p\r\n",
@@ -854,13 +902,16 @@ int task_process_replace(
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "image_size = %#zx\r\n", image_size )
   #endif
-  void* image = malloc( sizeof( char ) * image_size );
-  // handle error
-  if ( ! image ) {
+  // map random place for image
+  const int result = map_replace_random( image_size );
+  if ( 0 != result ) {
     free( tmp_argv );
     free( tmp_env );
-    return -ENOMEM;
+    return result;
   }
+  // set image
+  auto void* image = ( void* )KERNEL_AREA_PROCESS_REPLACE_START;
+  // copy over image
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "image = %p\r\n", image )
   #endif
@@ -870,7 +921,7 @@ int task_process_replace(
   if ( ! shared_memory_cleanup_process( proc ) ) {
     free( tmp_argv );
     free( tmp_env );
-    free( image );
+    unmap_replace_random( image_size );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -879,7 +930,7 @@ int task_process_replace(
   if ( ! virt_destroy_context( proc->virtual_context, true ) ) {
     free( tmp_argv );
     free( tmp_env );
-    free( image );
+    unmap_replace_random( image_size );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -908,7 +959,7 @@ int task_process_replace(
   if ( ! proc->thread_manager ) {
     free( tmp_argv );
     free( tmp_env );
-    free( image );
+    unmap_replace_random( image_size );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -916,7 +967,7 @@ int task_process_replace(
   if ( ! proc->thread_stack_manager ) {
     free( tmp_argv );
     free( tmp_env );
-    free( image );
+    unmap_replace_random( image_size );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -924,11 +975,11 @@ int task_process_replace(
   proc->current_thread_id = 0;
 
   // load elf image
-  uintptr_t init_entry = elf_load( ( uintptr_t )image, proc );
+  const uintptr_t init_entry = elf_load( ( uintptr_t )image, proc );
   if ( ! init_entry ) {
     free( tmp_argv );
     free( tmp_env );
-    free( image );
+    unmap_replace_random( image_size );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -938,6 +989,7 @@ int task_process_replace(
   if ( ! new_current ) {
     free( tmp_argv );
     free( tmp_env );
+    unmap_replace_random( image_size );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
@@ -952,12 +1004,13 @@ int task_process_replace(
   if ( ! task_thread_push_arguments( new_current, tmp_argv, tmp_env ) ) {
     free( tmp_argv );
     free( tmp_env );
+    unmap_replace_random( image_size );
     task_process_prepare_kill( context, proc );
     return -ENOMEM;
   }
 
   // free temporary stuff
-  free( image );
+  unmap_replace_random( image_size );
   free( tmp_argv );
   free( tmp_env );
 
