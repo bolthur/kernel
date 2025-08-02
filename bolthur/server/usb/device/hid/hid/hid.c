@@ -17,9 +17,44 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <stdlib.h>
 #include "hid.h"
 
 libusb_hid_device_t* hid_head = NULL;
+
+/**
+ * @fn void hid_destroy_device(libusb_hid_device_t*)
+ * @brief Helper to destroy hid device
+ * @param device
+ */
+void hid_destroy_device( libusb_hid_device_t* device ) {
+  // handle invalid device
+  if ( ! device ) {
+    return;
+  }
+  // remove from list
+  if ( device->prev ) {
+    device->prev->next = device->next;
+  }
+  if ( device->next ) {
+    device->next->prev = device->prev;
+  }
+  // handle parser result set
+  if ( device->parser_result ) {
+    // free possible reports
+    for ( size_t idx = 0; idx < device->parser_result->report_count; idx++ ) {
+      // handle report allocated
+      if ( device->parser_result->report[ idx ] ) {
+        // free report
+        free( device->parser_result->report[ idx ] );
+      }
+    }
+    // free parser result
+    free( device->parser_result );
+  }
+  // free device
+  free( device );
+}
 
 /**
  * @fn void hid_append(libusb_hid_device_t*)

@@ -13,5 +13,6 @@ mouse_SOURCES = \
   rpc/mouse/deallocate.c \
   rpc/mouse/detach.c \
   rpc/init.c \
-  main.c
+  main.c \
+  mouse.c
 mouse_LDFLAGS = -all-static --static

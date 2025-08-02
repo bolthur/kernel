@@ -29,65 +29,6 @@
 #include "../../../../../../libusbd.h"
 #include "../../../../../../../library/usb/usb.h"
 
-typedef struct {
-  uint8_t count;
-  uint8_t indent;
-  bool input;
-  bool output;
-  bool feature;
-} hid_report_action_count_t;
-
-typedef struct {
-  uint8_t report_id;
-  uint8_t field_count;
-  libusb_hid_report_type_t report_type;
-} hid_report_field_data_t;
-
-typedef struct {
-  uint32_t count;
-  uint8_t current;
-  uint8_t report;
-  hid_report_field_data_t data[];
-} hid_report_field_t;
-
-typedef struct {
-  libusb_hid_parser_result_t* result;
-  uint32_t count;
-  uint32_t size;
-  libusb_hid_full_usage_t* usage;
-  libusb_hid_full_usage_t physical;
-  int32_t logical_minimum;
-  int32_t logical_maximum;
-  int32_t physical_minimum;
-  int32_t physical_maximum;
-  libusb_hid_unit_t unit;
-  int32_t unit_exponent;
-  libusb_hid_usage_page_t page;
-  uint8_t report;
-} hid_field_t;
-
-typedef void( *hid_report_action_t )( void* data, libusb_hid_report_tag_t tag, uint32_t value );
-
-/**
- * @fn void hid_destroy_device(libusb_hid_device_t*)
- * @brief Helper to destroy hid device
- * @param device
- */
-static void hid_destroy_device( libusb_hid_device_t* device ) {
-  if ( ! device ) {
-    return;
-  }
-  if ( device->parser_result ) {
-    for ( size_t idx = 0; idx < device->parser_result->report_count; idx++ ) {
-      if ( device->parser_result->report[ idx ] ) {
-        free( device->parser_result->report[ idx ] );
-      }
-    }
-    free( device->parser_result );
-  }
-  free( device );
-}
-
 /**
  * @fn int hid_set_protocol(uint32_t, uint16_t, uint8_t)
  * @brief Set hid protocol
@@ -825,6 +766,8 @@ void rpc_hid_attach(
   }
   // clear out stuff
   memset( device, 0, sizeof( *device ) );
+  // populate device
+  device->device_number = message->device_number;
   // allocate report descriptor
   void* report_descriptor = malloc( descriptor->optional[ 0 ].length );
   if ( ! report_descriptor ) {

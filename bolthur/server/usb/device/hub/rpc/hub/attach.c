@@ -28,6 +28,11 @@
 #include "../../../../../libusbd.h"
 #include "../../../../../../library/usb/usb.h"
 
+/**
+ * @fn void custom_nanosleep(const struct timespec*)
+ * @brief Custom nanosleep implementation
+ * @param rqtp
+ */
 static void custom_nanosleep( const struct timespec* rqtp ) {
   if ( 0 > rqtp->tv_nsec ) {
     errno = EINVAL;
@@ -54,6 +59,13 @@ static void custom_nanosleep( const struct timespec* rqtp ) {
   //#endif
 }
 
+/**
+ * @fn int attach_hub_read_descriptor(uint32_t, void**)
+ * @brief Read up descriptor
+ * @param device_number
+ * @param descriptor
+ * @return
+ */
 static int attach_hub_read_descriptor( const uint32_t device_number, void** descriptor ) {
   // debug output
   #if defined ( HUB_ENABLE_DEBUG )
@@ -108,6 +120,13 @@ static int attach_hub_read_descriptor( const uint32_t device_number, void** desc
   return 0;
 }
 
+/**
+ * @fn int attach_hub_get_status(uint32_t, libusb_hub_device_t*)
+ * @brief Function to get hub status
+ * @param device_number
+ * @param hub_device
+ * @return
+ */
 static int attach_hub_get_status(
   const uint32_t device_number,
   libusb_hub_device_t* hub_device
@@ -153,6 +172,15 @@ static int attach_hub_get_status(
   return 0;
 }
 
+/**
+ * @fn int attach_hub_change_port_feature(uint32_t, libusb_hub_port_feature_t, uint8_t, bool)
+ * @brief Method to change port feature
+ * @param device_number
+ * @param feature
+ * @param port
+ * @param set
+ * @return
+ */
 static int attach_hub_change_port_feature(
   const uint32_t device_number,
   const libusb_hub_port_feature_t feature,
@@ -181,10 +209,16 @@ static int attach_hub_change_port_feature(
   );
 }
 
+/**
+ * @fn int attach_hub_power_on(uint32_t, libusb_hub_device_t*)
+ * @brief Function to power on hub
+ * @param device_number
+ * @param hub_device
+ * @return
+ */
 static int attach_hub_power_on(
   const uint32_t device_number,
-  const libusb_hub_device_t* hub_device,
-  const libusb_hub_descriptor_t* descriptor
+  const libusb_hub_device_t* hub_device
 ) {
   // debug output
   #if defined ( HUB_ENABLE_DEBUG )
@@ -212,7 +246,7 @@ static int attach_hub_power_on(
     }
   }
   // milliseconds to sleep
-  const long milliseconds = descriptor->power_good_delay * 2;
+  const long milliseconds = hub_device->descriptor->power_good_delay * 2;
   STARTUP_PRINT( "sleeping %ld milliseconds\r\n", milliseconds )
   // sleep a bit
   custom_nanosleep( &(struct timespec){
@@ -223,6 +257,14 @@ static int attach_hub_power_on(
   return 0;
 }
 
+/**
+ * @fn int attach_hub_get_port_status(uint32_t, libusb_hub_device_t*, uint8_t)
+ * @brief Function to get port status of hub
+ * @param device_number
+ * @param hub
+ * @param port
+ * @return
+ */
 static int attach_hub_get_port_status(
   const uint32_t device_number,
   libusb_hub_device_t* hub,
@@ -269,6 +311,14 @@ static int attach_hub_get_port_status(
   return 0;
 }
 
+/**
+ * @fn int attach_hub_port_reset(uint32_t, libusb_hub_device_t*, uint8_t)
+ * @brief Method to reset hub port
+ * @param device_number
+ * @param device_data
+ * @param port
+ * @return
+ */
 static int attach_hub_port_reset(
   const uint32_t device_number,
   libusb_hub_device_t* device_data,
@@ -366,6 +416,14 @@ static int attach_hub_port_reset(
   return 0;
 }
 
+/**
+ * @fn int attach_hub_port_connection_changed(uint32_t, libusb_hub_device_t*, uint8_t)
+ * @brief Method to handle connection change of port
+ * @param device_number
+ * @param device_data
+ * @param port
+ * @return
+ */
 static int attach_hub_port_connection_changed(
   const uint32_t device_number,
   libusb_hub_device_t* device_data,
@@ -451,10 +509,17 @@ static int attach_hub_port_connection_changed(
   return 0;
 }
 
+/**
+ * @fn int attach_hub_check_connection(uint32_t, libusb_hub_device_t*, uint8_t)
+ * @brief Function to check hub connection
+ * @param device_number
+ * @param device_data
+ * @param port
+ * @return
+ */
 static int attach_hub_check_connection(
   const uint32_t device_number,
   libusb_hub_device_t* device_data,
-  const libusb_hub_descriptor_t* descriptor,
   const uint8_t port
 ) {
   // cache hub device
@@ -550,7 +615,7 @@ static int attach_hub_check_connection(
       #endif
     }
     // power on hub
-    result = attach_hub_power_on( device_number, device_data, descriptor );
+    result = attach_hub_power_on( device_number, device_data );
     // handle error
     if ( 0 != result ) {
       // debug output
@@ -588,7 +653,7 @@ static int attach_hub_check_connection(
  */
 void rpc_hub_attach(
   [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
+  pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
@@ -693,29 +758,32 @@ void rpc_hub_attach(
     free( request );
     return;
   }
-  // populate hub max children
-  hub->max_children = descriptor->port_count;
+  // populate hub max children and device number
+  hub->descriptor = descriptor;
+  hub->max_children = hub->descriptor->port_count;
+  hub->device_number = message->device_number;
   STARTUP_PRINT( "hub->max_children = %"PRIu32"\r\n", hub->max_children )
   // validate power switching mode
   if (
-    LIBUSB_HUB_PORT_CONTROL_GLOBAL != descriptor->attributes.power_switching_mode
-    && LIBUSB_HUB_PORT_CONTROL_INDIVIDUAL != descriptor->attributes.power_switching_mode
-    && LIBUSB_HUB_PORT_CONTROL_NO_POWER_SWITCHING != descriptor->attributes.power_switching_mode
+    LIBUSB_HUB_PORT_CONTROL_GLOBAL != hub->descriptor->attributes.power_switching_mode
+    && LIBUSB_HUB_PORT_CONTROL_INDIVIDUAL != hub->descriptor->attributes.power_switching_mode
+    && LIBUSB_HUB_PORT_CONTROL_NO_POWER_SWITCHING != hub->descriptor->attributes.power_switching_mode
   ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
       STARTUP_PRINT( "Unknown power type %d on %s\r\n",
-        descriptor->attributes.power_switching_mode,
+        hub->descriptor->attributes.power_switching_mode,
         usb_get_description( message->device_number ) )
     #endif
     _syscall_rpc_cleanup();
+    free( descriptor );
     free( hub );
     free( request );
     return;
   }
   // some debug output
   #if defined( HUB_ENABLE_DEBUG )
-    switch ( descriptor->attributes.power_switching_mode ) {
+    switch ( hub->descriptor->attributes.power_switching_mode ) {
       case LIBUSB_HUB_PORT_CONTROL_GLOBAL:
         STARTUP_PRINT( "Power mode is global\r\n" )
         break;
@@ -726,7 +794,7 @@ void rpc_hub_attach(
         STARTUP_PRINT( "Power mode is no power switching supported\r\n" )
         break;
     }
-    if ( descriptor->attributes.compound ) {
+    if ( hub->descriptor->attributes.compound ) {
       STARTUP_PRINT( "Hub nature is compound\r\n" )
     } else {
       STARTUP_PRINT( "Hub nature is standalone\r\n" )
@@ -734,24 +802,25 @@ void rpc_hub_attach(
   #endif
   // validate over current protection
   if (
-    LIBUSB_HUB_PORT_CONTROL_GLOBAL != descriptor->attributes.over_current_protection
-    && LIBUSB_HUB_PORT_CONTROL_INDIVIDUAL != descriptor->attributes.over_current_protection
-    && LIBUSB_HUB_PORT_CONTROL_NO_POWER_SWITCHING != descriptor->attributes.over_current_protection
+    LIBUSB_HUB_PORT_CONTROL_GLOBAL != hub->descriptor->attributes.over_current_protection
+    && LIBUSB_HUB_PORT_CONTROL_INDIVIDUAL != hub->descriptor->attributes.over_current_protection
+    && LIBUSB_HUB_PORT_CONTROL_NO_POWER_SWITCHING != hub->descriptor->attributes.over_current_protection
   ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
       STARTUP_PRINT( "Unknown hub over current type %d on %s\r\n",
-        descriptor->attributes.power_switching_mode,
+        hub->descriptor->attributes.power_switching_mode,
         usb_get_description( message->device_number ) )
     #endif
     _syscall_rpc_cleanup();
+    free( descriptor );
     free( hub );
     free( request );
     return;
   }
   // some debug output
   #if defined( HUB_ENABLE_DEBUG )
-    switch ( descriptor->attributes.over_current_protection ) {
+    switch ( hub->descriptor->attributes.over_current_protection ) {
       case LIBUSB_HUB_PORT_CONTROL_GLOBAL:
         STARTUP_PRINT( "Hub over current protection is global\r\n" )
         break;
@@ -762,9 +831,9 @@ void rpc_hub_attach(
         STARTUP_PRINT( "Hub has no over current protection\r\n" )
         break;
     }
-    STARTUP_PRINT( "Hub power to good: %"PRIu8"ms\r\n", descriptor->power_good_delay * 2 )
-    STARTUP_PRINT( "Hub current required: %"PRIu8"mA.\r\n", descriptor->maximum_hub_power * 2 )
-    STARTUP_PRINT( "Hub ports: %"PRIu8"\r\n", descriptor->port_count )
+    STARTUP_PRINT( "Hub power to good: %"PRIu8"ms\r\n", hub->descriptor->power_good_delay * 2 )
+    STARTUP_PRINT( "Hub current required: %"PRIu8"mA.\r\n", hub->descriptor->maximum_hub_power * 2 )
+    STARTUP_PRINT( "Hub ports: %"PRIu8"\r\n", hub->descriptor->port_count )
   #endif
   // retrieve status
   result = attach_hub_get_status( message->device_number, hub );
@@ -776,6 +845,7 @@ void rpc_hub_attach(
         usb_get_description( message->device_number ), strerror( result ) )
     #endif
     _syscall_rpc_cleanup();
+    free( descriptor );
     free( hub );
     free( request );
     return;
@@ -790,13 +860,14 @@ void rpc_hub_attach(
       !status->status.over_current ? "No" : "Yes" )
   #endif
   // power on hub
-  result = attach_hub_power_on( message->device_number, hub, descriptor );
+  result = attach_hub_power_on( message->device_number, hub );
   if ( 0 != result ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
       STARTUP_PRINT( "Unable to power on hub!\r\n" )
     #endif
     _syscall_rpc_cleanup();
+    free( descriptor );
     free( hub );
     free( request );
     return;
@@ -810,6 +881,7 @@ void rpc_hub_attach(
         usb_get_description( message->device_number ), strerror( result ) )
     #endif
     _syscall_rpc_cleanup();
+    free( descriptor );
     free( hub );
     free( request );
     return;
@@ -822,9 +894,9 @@ void rpc_hub_attach(
       !status->status.over_current ? "No" : "Yes" )
   #endif
   // check for connection
-  for ( uint8_t port = 0; port < hub->max_children; port++ ) {
-    STARTUP_PRINT( "Checking port %"PRIu8"\r\n", port )
-    attach_hub_check_connection( message->device_number, hub, descriptor, port );
+  for ( uint32_t port = 0; port < hub->max_children; port++ ) {
+    STARTUP_PRINT( "Checking port %"PRIu32"\r\n", port )
+    attach_hub_check_connection( message->device_number, hub, ( uint8_t )port );
   }
   // store hub in linked list
   hub_append( hub );

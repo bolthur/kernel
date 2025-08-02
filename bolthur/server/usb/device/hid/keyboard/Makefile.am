@@ -13,5 +13,6 @@ keyboard_SOURCES = \
   rpc/keyboard/deallocate.c \
   rpc/keyboard/detach.c \
   rpc/init.c \
+  keyboard.c \
   main.c
 keyboard_LDFLAGS = -all-static --static

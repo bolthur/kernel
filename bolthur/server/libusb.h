@@ -556,6 +556,9 @@ typedef struct libusb_hub_device {
   uint32_t max_children;
   libusb_hub_port_full_status_t port_status[ 255 ];
   uint32_t children[ 255 ];
+
+  uint32_t device_number;
+
   libusb_hub_device_t* next;
   libusb_hub_device_t* prev;
 } libusb_hub_device_t;
@@ -645,8 +648,8 @@ typedef enum {
 } libusb_hid_usage_page_t;
 
 typedef enum {
-  LIBUSB_HID_USAGE_PAGE_DESKTOP_POINT = 0,
-  LIBUSB_HID_USAGE_PAGE_DESKTOP_MOUSE = 1,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_POINT = 1,
+  LIBUSB_HID_USAGE_PAGE_DESKTOP_MOUSE = 2,
   LIBUSB_HID_USAGE_PAGE_DESKTOP_JOYSTICK = 4,
   LIBUSB_HID_USAGE_PAGE_DESKTOP_GAMEPAD = 5,
   LIBUSB_HID_USAGE_PAGE_DESKTOP_KEYBOARD = 6,
@@ -793,9 +796,78 @@ typedef struct libusb_hid_device {
   pid_t device_detached_handler;
   pid_t device_deallocate_handler;
 
+  uint32_t device_number;
+
   libusb_hid_device_t* next;
   libusb_hid_device_t* prev;
 } libusb_hid_device_t;
+
+typedef struct __packed {
+  bool left_control : 1;
+  bool left_shift : 1;
+  bool left_alt : 1;
+  bool left_gui : 1;
+  bool right_control : 1;
+  bool right_shift : 1;
+  bool right_alt : 1;
+  bool right_gui : 1;
+} libusb_keyboard_modifier_t;
+
+typedef struct __packed {
+  bool num_lock : 1;
+  bool caps_lock : 1;
+  bool scroll_lock : 1;
+  bool compose : 1;
+  bool kana : 1;
+  bool power : 1;
+  bool mute : 1;
+  bool shift : 1;
+} libusb_keyboard_led_t;
+
+typedef struct libusb_keyboard_device libusb_keyboard_device_t;
+typedef struct libusb_keyboard_device {
+  libusb_driver_data_header header;
+  uint32_t index;
+  uint32_t key_count;
+  uint16_t max_key_down[ 6 ];
+  libusb_keyboard_modifier_t modifier;
+  libusb_keyboard_led_t led;
+  libusb_hid_parser_fields_t* led_field[ 8 ];
+  libusb_hid_parser_fields_t* key_field[ 8 + 1 ];
+  libusb_hid_parser_report_t* led_report;
+  libusb_hid_parser_report_t* key_report;
+
+  uint32_t device_number;
+
+  libusb_keyboard_device_t* next;
+  libusb_keyboard_device_t* prev;
+} libusb_keyboard_device_t;
+
+typedef enum {
+  LIBUSB_MOUSE_DEVICE_BUTTON_LEFT,
+  LIBUSB_MOUSE_DEVICE_BUTTON_RIGHT,
+  LIBUSB_MOUSE_DEVICE_BUTTON_MIDDLE,
+  LIBUSB_MOUSE_DEVICE_BUTTON_SIDE,
+  LIBUSB_MOUSE_DEVICE_BUTTON_EXTRA,
+} libusb_mouse_device_button_t;
+
+typedef struct libusb_mouse_device libusb_mouse_device_t;
+typedef struct libusb_mouse_device {
+  libusb_driver_data_header header;
+  uint32_t index;
+
+  uint8_t button_state;
+  int16_t mouse_x;
+  int16_t mouse_y;
+  int16_t wheel;
+
+  libusb_hid_parser_report_t* mouse_report;
+
+  uint32_t device_number;
+
+  libusb_mouse_device_t* next;
+  libusb_mouse_device_t* prev;
+} libusb_mouse_device_t;
 
 // enable warnings again
 #pragma GCC diagnostic pop
