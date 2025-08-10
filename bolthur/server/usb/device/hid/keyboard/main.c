@@ -87,10 +87,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  // enable rpc
-  STARTUP_PRINT( "Enable rpc\r\n" )
-  _syscall_rpc_set_ready( true );
-
   // add device file
   STARTUP_PRINT( "Sending device to vfs\r\n" )
   uint32_t device_info[] = {
@@ -102,6 +98,10 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }
+
+  // enable rpc
+  STARTUP_PRINT( "Enable rpc\r\n" )
+  _syscall_rpc_set_ready( true );
 
   // debug message
   STARTUP_PRINT( "Starting polling loop\r\n" )

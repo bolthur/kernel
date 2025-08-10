@@ -870,6 +870,9 @@ typedef struct libusb_mouse_device {
   libusb_hid_parser_report_t* mouse_report;
 
   uint32_t device_number;
+  libusb_endpoint_descriptor_t descriptor;
+  size_t last_poll;
+  uint8_t* buffer;
 
   libusb_mouse_device_t* next;
   libusb_mouse_device_t* prev;

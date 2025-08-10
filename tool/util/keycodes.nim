@@ -18,7 +18,28 @@
 #
 
 import std/os
+import std/streams
+
+# import keymap type
+from keycodes/base import KeyMap
+# import keycode generators
+from keycodes/de import getAndFillKeyMapDe
+from keycodes/us import getAndFillKeyMapUs
 
 proc generateKeycodesForImage*( imageType: string ): void =
   # get destination directory
   let destinationDirectory: string = joinPath( getCurrentDir(), "file", imageType, "root", "usr", "share", "kbd" )
+  # de
+  let deCodes:KeyMap = getAndFillKeyMapDe()
+  var f = newFileStream( joinPath( destinationDirectory, "de.dat" ), fmWrite )
+  if not isNil(f):
+    f.write( deCodes )
+    f.flush()
+    f.close()
+  # us
+  let usCodes:KeyMap = getAndFillKeyMapUs()
+  f = newFileStream( joinPath( destinationDirectory, "us.dat" ), fmWrite )
+  if not isNil(f):
+    f.write( usCodes )
+    f.flush()
+    f.close()

@@ -17,7 +17,95 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
+#include <sys/bolthur.h>
+#include <confini.h>
 #include "keymap.h"
+
+/**
+ * @brief Flag indicating whether keymap is loaded or not
+ */
+static bool keymap_loaded;
+
+/**
+ * @brief Keymap populated during runtime
+ */
+static uint16_t keymap[ KEYMAP_PHY_MAX_CODE + 1 ][ KEYMAP_ALTSHIFTTAB + 1 ];
+
+/**
+ * @fn int confini_callback(IniDispatch*, void*)
+ * @brief Confini load callback
+ * @param dispatch
+ * @param other
+ * @return
+ */
+static int confini_callback(
+  IniDispatch* dispatch,
+  [[maybe_unused]] void* other
+) {
+  const char* name = dispatch->data;
+  const char* value = dispatch->value;
+  // handle keymap
+  if ( 0 == strcmp( name, "KEYMAP" ) ) {
+    // debug output
+    STARTUP_PRINT( "Allocate space for path for fopen\r\n" )
+    // allocate space for path
+    char* path = malloc( sizeof( char ) * PATH_MAX );
+    // handle allocation error
+    if ( ! path ) {
+      STARTUP_PRINT( "Unable to allocate path\r\n" )
+      return 1;
+    }
+    // clear out
+    memset( path, 0, sizeof( char ) * PATH_MAX );
+    // build path to keymap
+    snprintf( path, PATH_MAX, "/usr/share/kbd/%s.dat", value );
+    // debug output
+    STARTUP_PRINT( "Opening %s\r\n", path )
+    // open keymap
+    FILE* f = fopen( path, "rb" );
+    // handle error
+    if ( ! f ) {
+      // debug output
+      STARTUP_PRINT( "Unable to open %s\r\n", path )
+      // free path
+      free( path );
+      // return error
+      return 1;
+    }
+    // debug output
+    STARTUP_PRINT( "Reading binary data into keymap array\r\n" )
+    // load binary into array
+    for ( size_t i = 0; i < KEYMAP_PHY_MAX_CODE + 1; ++i ) {
+      // read into keymap
+      const size_t read = fread(
+        &keymap[ i ],
+        sizeof( uint16_t ),
+        KEYMAP_ALTSHIFTTAB + 1,
+        f
+      );
+      // check read amount
+      if ( read != KEYMAP_ALTSHIFTTAB + 1 ) {
+        // debug output
+        STARTUP_PRINT( "Unable to read keymap entry %zu\r\n", i )
+        // close file
+        fclose( f );
+        // free path
+        free( path );
+        // return error
+        return 1;
+      }
+    }
+    // close file again
+    fclose( f );
+    // free path again
+    free( path );
+    // set loaded flag
+    keymap_loaded = true;
+  }
+  // return success
+  return 0;
+}
 
 /**
  * @fn int keymap_init(void)
@@ -25,5 +113,33 @@
  * @return
  */
 int keymap_init( void ) {
+  // set loaded to false
+  keymap_loaded = false;
+  // open console configuration
+  FILE* vconsole = fopen( "/etc/vconsole.conf", "r" );
+  // handle error
+  if ( ! vconsole ) {
+    const int e = errno;
+    STARTUP_PRINT( "Unable to open /etc/vconsole.conf: %s\r\n", strerror( e ) );
+    return e;
+  }
+  // parse ini
+  if ( load_ini_file(
+    vconsole,
+    INI_DEFAULT_FORMAT,
+    NULL,
+    confini_callback,
+    NULL
+  ) ) {
+    EARLY_STARTUP_PRINT( "Cannot load console configuration file!\r\n" )
+    return false;
+  }
+  // close ini file again
+  fclose( vconsole );
+  // handle not loaded
+  if ( ! keymap_loaded ) {
+    return EINVAL;
+  }
+  // return success
   return 0;
 }

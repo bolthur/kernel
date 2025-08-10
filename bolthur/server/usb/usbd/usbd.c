@@ -22,6 +22,7 @@
 #include <inttypes.h>
 #include <math.h>
 #include <stddef.h>
+#include <wchar.h>
 #include <sys/_default_fcntl.h>
 #include <sys/bolthur.h>
 #include <sys/ioctl.h>
@@ -29,8 +30,6 @@
 #include "usbd.h"
 #include "call.h"
 // driver includes
-#include <wchar.h>
-
 #include "../../libusbd.h"
 #include "../../libhcd.h"
 

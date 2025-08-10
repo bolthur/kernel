@@ -20,6 +20,13 @@
 #ifndef _KEYMAP_H
 #define _KEYMAP_H
 
+#define KEYMAP_PHY_MAX_CODE 127
+
+#define KEYMAP_NORMTAB 0
+#define KEYMAP_SHIFTTAB 1
+#define KEYMAP_ALTTAB 2
+#define KEYMAP_ALTSHIFTTAB 3
+
 int keymap_init( void );
 
 #endif
