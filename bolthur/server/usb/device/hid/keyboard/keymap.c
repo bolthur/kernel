@@ -17,19 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _KEYBOARD_H
-#define _KEYBOARD_H
+#include "keymap.h"
 
-#include "../../../../libusb.h"
-
-#define KEYBOARD_ENABLE_DEBUG 1
-
-extern libusb_keyboard_device_t* keyboard_head;
-
-void keyboard_append( libusb_keyboard_device_t* );
-void keyboard_destroy( libusb_keyboard_device_t* );
-int keyboard_new_index( uint32_t* );
-int keyboard_duplicate_report( libusb_hid_parser_fields_t**, const libusb_hid_parser_fields_t* );
-int keyboard_start_polling( libusb_keyboard_device_t* );
-
-#endif
+/**
+ * @fn int keymap_init(void)
+ * @brief Function to initialize keymap
+ * @return
+ */
+int keymap_init( void ) {
+  return 0;
+}

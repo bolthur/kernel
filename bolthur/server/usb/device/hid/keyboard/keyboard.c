@@ -124,3 +124,19 @@ int keyboard_duplicate_report(
   // return success
   return 0;
 }
+
+/**
+ * @fn int keyboard_start_polling(libusb_keyboard_device_t*)
+ * @brief Function to start keyboard polling
+ * @param device
+ * @return
+ */
+int keyboard_start_polling( libusb_keyboard_device_t* device ) {
+  // handle invalid parameter
+  if ( ! device ) {
+    return EINVAL;
+  }
+  /// FIXME: START POLLING
+  // return success
+  return 0;
+}

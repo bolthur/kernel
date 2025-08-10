@@ -351,7 +351,18 @@ void rpc_keyboard_attach(
     // free report again
     free( report );
   }
-  // append device to list
+  // allocate report buffer
+  device->buffer = malloc( KEYBOARD_REPORT_SIZE );
+  if ( ! device->buffer ) {
+    STARTUP_PRINT( "Unable to allocate buffer\r\n" )
+    free( request );
+    keyboard_destroy( device );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // clear it out
+  memset( device->buffer, 0, KEYBOARD_REPORT_SIZE );
+  // finally append device to list
   keyboard_append( device );
   STARTUP_PRINT( "endpoint_descriptor.endpoint_address.number = %"PRIu8"\r\n",
     endpoint_descriptor.endpoint_address.number );

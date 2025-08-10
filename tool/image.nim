@@ -24,6 +24,7 @@ import std/strutils
 from util/scan import scanDirectory
 from util/boot import copyFileToBoot, loadFirmwareToBoot
 from util/image import createPlainImageFile
+from util/keycodes import generateKeycodesForImage
 
 # remove tmp dir again
 removeDir( "tmp" )
@@ -51,6 +52,9 @@ let font: string = joinPath( rootPath, "thirdparty", "font" )
 let application: string = joinPath( buildPath, "bolthur", "application" )
 let server: string = joinPath( buildPath, "bolthur", "server" )
 let bosl: string = joinPath( rootPath, "bosl" )
+
+echo "re-generate keycode binaries"
+generateKeycodesForImage( firmwareType )
 
 echo "scanning directories to prepare content of boot, root and ramdisk"
 # scan directories and populate image and ramdisk folders

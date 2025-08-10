@@ -825,6 +825,8 @@ typedef struct __packed {
   bool shift : 1;
 } libusb_keyboard_led_t;
 
+#define KEYBOARD_REPORT_SIZE 8
+
 typedef struct libusb_keyboard_device libusb_keyboard_device_t;
 typedef struct libusb_keyboard_device {
   libusb_driver_data_header header;
@@ -841,6 +843,7 @@ typedef struct libusb_keyboard_device {
   uint32_t device_number;
   libusb_endpoint_descriptor_t descriptor;
   size_t last_poll;
+  uint8_t* buffer;
 
   libusb_keyboard_device_t* next;
   libusb_keyboard_device_t* prev;

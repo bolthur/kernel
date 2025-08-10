@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <sys/bolthur.h>
 #include "keyboard.h"
+#include "keymap.h"
 #include "rpc.h"
 #include "../../../../libhelper.h"
 #include "../../../../libusbd.h"
@@ -78,6 +79,14 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
+  // load keymap
+  STARTUP_PRINT( "Loading configured keymap\r\n" )
+  result = keymap_init();
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to load keymap\r\n" )
+    return -1;
+  }
+
   // enable rpc
   STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
@@ -99,7 +108,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // endless loop to start polling and finally wait for rpc
   while ( true ) {
     // start with head
-    const libusb_keyboard_device_t* current = keyboard_head;
+    libusb_keyboard_device_t* current = keyboard_head;
     // loop while there is something
     while ( current != NULL ) {
       // handle already polling
@@ -109,7 +118,11 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
         // skip rest
         continue;
       }
-      /// FIXME: START ASYNC POLLING
+      // start keyboard polling
+      if ( 0 == keyboard_start_polling( current ) ) {
+        // set last poll to tick count
+        current->last_poll = _syscall_timer_tick_count();
+      }
       // go to next
       current = current->next;
     }
