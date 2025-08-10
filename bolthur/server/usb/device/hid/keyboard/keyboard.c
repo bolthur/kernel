@@ -21,9 +21,32 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <inttypes.h>
+#include <sys/bolthur.h>
 #include "keyboard.h"
+#include "../../../../../library/usb/usb.h"
 
+/**
+ * @brief Head of keyboard device list
+ */
 libusb_keyboard_device_t* keyboard_head = NULL;
+
+/**
+ * @fn void keyboard_rpc_handler(size_t, pid_t, size_t, size_t)
+ * @brief Keyboard rpc handler callback
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+static void keyboard_rpc_handler(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+  EARLY_STARTUP_PRINT( "GOT RESPONSE, NEEDS IMPLEMENTATION!\r\n" )
+}
 
 /**
  * @fn void keyboard_append(libusb_keyboard_device_t*)
@@ -59,6 +82,14 @@ void keyboard_destroy( libusb_keyboard_device_t* device ) {
   // handle no device
   if ( ! device ) {
     return;
+  }
+  // free key report field
+  if ( device->key_report ) {
+    free( device->key_report );
+  }
+  // free led report field
+  if ( device->led_report ) {
+    free( device->led_report );
   }
   // free up key fields
   for ( size_t idx = 0; idx < 9; idx++ ) {
@@ -104,13 +135,38 @@ int keyboard_new_index( uint32_t* index ) {
 }
 
 /**
- * @fn int keyboard_duplicate_report(libusb_hid_parser_fields_t**, libusb_hid_parser_fields_t*)
- * @brief Function to duplicate report
+ * @fn int keyboard_duplicate_report(libusb_hid_parser_report_t**, const libusb_hid_parser_report_t*, size_t)
+ * @brief Method to duplicate report
+ * @param destination
+ * @param source
+ * @param size
+ * @return
+ */
+int keyboard_duplicate_report(
+  libusb_hid_parser_report_t** destination,
+  const libusb_hid_parser_report_t* source,
+  size_t size
+) {
+  // allocate space
+  *destination = malloc( size );
+  // handle error
+  if ( ! *destination ) {
+    return ENOMEM;
+  }
+  // copy over content
+  memcpy( *destination, source, size );
+  // return success
+  return 0;
+}
+
+/**
+ * @fn int keyboard_duplicate_report_field(libusb_hid_parser_fields_t**, libusb_hid_parser_fields_t*)
+ * @brief Function to duplicate report field
  * @param destination
  * @param source
  * @return
  */
-int keyboard_duplicate_report(
+int keyboard_duplicate_report_field(
   libusb_hid_parser_fields_t** destination,
   const libusb_hid_parser_fields_t* source
 ) {
@@ -136,7 +192,23 @@ int keyboard_start_polling( libusb_keyboard_device_t* device ) {
   if ( ! device ) {
     return EINVAL;
   }
-  /// FIXME: START POLLING
-  // return success
-  return 0;
+  // debug output
+  STARTUP_PRINT( "Start polling of device %"PRIu32"\r\n", device->device_number )
+  // return result of async control message
+  return usb_control_message_async(
+    device->device_number,
+    LIBUSB_TRANSFER_CONTROL,
+    LIBUSB_DIRECTION_IN,
+    device->buffer,
+    KEYBOARD_REPORT_SIZE,
+    &( libusb_device_request_t ){
+      .request = LIBUSB_DEVICE_REQUEST_GET_REPORT,
+      .type = 0xa1,
+      .index = device->key_report->index,
+      .value = ( uint16_t)( device->key_report->type << 8 | device->key_report->id ),
+      .length = KEYBOARD_REPORT_SIZE,
+    },
+    10, /// FIXME: REPLACE WITH CONSTANT
+    keyboard_rpc_handler
+  );
 }

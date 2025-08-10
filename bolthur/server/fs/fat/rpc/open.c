@@ -86,7 +86,7 @@ void rpc_handle_open(
     return;
   }
   // cache fs
-  auto const fat_fs_t* fs = ( fat_fs_t* )mp->fs;
+  auto const fs = ( fat_fs_t* )mp->fs;
   // start transaction
   int result = common_transaction_begin( fs->bdev );
   if ( EOK != result ) {

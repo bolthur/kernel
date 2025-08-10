@@ -531,7 +531,7 @@ void framebuffer_handle_surface_render(
     return;
   }
   // allocate  structure
-  auto const framebuffer_surface_render_t* info = ( framebuffer_surface_render_t* )
+  auto const info = ( framebuffer_surface_render_t* )
     request->container;
   // get item
   list_item_t* item = list_lookup_data( memory_list, ( void* )info->surface_id );
@@ -586,8 +586,7 @@ void framebuffer_handle_surface_allocate(
     return;
   }
   // allocate space for data
-  auto framebuffer_surface_allocate_t* info = ( framebuffer_surface_allocate_t* )
-    request->container;
+  auto const info = ( framebuffer_surface_allocate_t* )request->container;
   // calculated line length
   const uint32_t allocate_pitch = info->width * ( info->depth / CHAR_BIT );
   const size_t memory_size = allocate_pitch * info->height;

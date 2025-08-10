@@ -119,7 +119,7 @@ void hid_enumerate_action_count_report(
   const libusb_hid_report_tag_t tag,
   [[maybe_unused]] uint32_t value
 ) {
-  auto hid_report_action_count_t* report = ( hid_report_action_count_t* )data;
+  auto const report = ( hid_report_action_count_t* )data;
   // handle tag
   switch ( tag ) {
     case LIBUSB_HID_REPORT_TAG_MAIN_INPUT:
@@ -195,7 +195,7 @@ void hid_enumerate_action_count_field(
   const libusb_hid_report_tag_t tag,
   const uint32_t value
 ) {
-  auto hid_report_field_t* field = ( hid_report_field_t* )data;
+  auto const field = ( hid_report_field_t* )data;
   switch ( tag ) {
     case LIBUSB_HID_REPORT_TAG_MAIN_FEATURE:
       hid_enumerate_action_count_field_process( field, value, LIBUSB_HID_REPORT_TYPE_FEATURE );
@@ -312,7 +312,7 @@ void hid_enumerate_action_add_field(
   const libusb_hid_report_tag_t tag,
   const uint32_t value
 ) {
-  auto hid_field_t* field = ( hid_field_t* )data;
+  auto const field = ( hid_field_t* )data;
 
   switch ( tag ) {
     case LIBUSB_HID_REPORT_TAG_MAIN_FEATURE:
@@ -422,7 +422,7 @@ void hid_enumerate_report(
   const hid_report_action_t action,
   void* data
 ) {
-  auto libusb_hid_report_item_t* item = ( libusb_hid_report_item_t* )descriptor;
+  auto item = ( libusb_hid_report_item_t* )descriptor;
   libusb_hid_report_item_t* current = NULL;
   size_t parsed_length = 0;
   size_t current_index;

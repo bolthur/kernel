@@ -58,7 +58,7 @@ size_t strlen_unsafe( const char* str ) {
   }
   // variables
   uintptr_t last_check = ROUND_DOWN_TO_FULL_PAGE( str );
-  auto const char* next_check = ( const char* )( last_check + PAGE_SIZE );
+  auto next_check = ( char* )( last_check + PAGE_SIZE );
   const char* start = str;
   // loop until end is reached or some memory is not mapped
   do {
@@ -73,13 +73,13 @@ size_t strlen_unsafe( const char* str ) {
     // handle page boundary reached
     if ( str == next_check ) {
       last_check = ( uintptr_t )next_check;
-      next_check = ( const char* )( last_check + PAGE_SIZE );
+      next_check = ( char* )( last_check + PAGE_SIZE );
       continue;
     }
     // handle page boundary reached
     if ( str == next_check ) {
       last_check = ( uintptr_t )next_check;
-      next_check = ( const char* )( last_check + PAGE_SIZE );
+      next_check = ( char* )( last_check + PAGE_SIZE );
       continue;
     }
     // return difference

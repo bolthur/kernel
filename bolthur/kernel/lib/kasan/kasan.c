@@ -136,7 +136,7 @@ void kasan_unpoison_shadow( const uintptr_t address, const size_t size ) {
     false
   );
   if (size & KASAN_SHADOW_MASK) {
-    auto uint8_t *shadow = ( uint8_t* )KASAN_MEM_TO_SHADOW( address + size );
+    auto const shadow = ( uint8_t* )KASAN_MEM_TO_SHADOW( address + size );
     *shadow = size & KASAN_SHADOW_MASK;
   }
 }

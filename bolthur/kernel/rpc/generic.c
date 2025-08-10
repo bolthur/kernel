@@ -44,8 +44,8 @@ static avl_tree_t* origin_tree = NULL;
  */
 static int32_t compare_callback( const avl_node_t* a, const avl_node_t* b ) {
   // get blocks
-  auto const rpc_origin_source_t* block_a = RPC_GET_ORIGIN_SOURCE( a );
-  auto const rpc_origin_source_t* block_b = RPC_GET_ORIGIN_SOURCE( b );
+  auto const block_a = RPC_GET_ORIGIN_SOURCE( a );
+  auto const block_b = RPC_GET_ORIGIN_SOURCE( b );
   // -1 if address of a->type is greater than address of b->type
   if ( block_a->rpc_id > block_b->rpc_id ) {
     return -1;
@@ -102,7 +102,7 @@ static int32_t lookup_callback(
  */
 static void cleanup_callback( avl_node_t* a ) {
   // get block from node
-  auto rpc_origin_source_t* block = RPC_GET_ORIGIN_SOURCE( a );
+  auto block = RPC_GET_ORIGIN_SOURCE( a );
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "removing block %p!\r\n", block )

@@ -60,7 +60,7 @@ void rpc_custom_handle_start(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
-  auto dev_command_start_t* command = ( dev_command_start_t* )request->container;
+  auto const command = ( dev_command_start_t* )request->container;
   if ( ! command ) {
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );

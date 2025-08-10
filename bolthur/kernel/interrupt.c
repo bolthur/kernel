@@ -49,8 +49,8 @@ static int32_t compare_interrupt_callback(
   const avl_node_t* b
 ) {
   // get blocks
-  auto const interrupt_block_t* block_a = INTERRUPT_GET_BLOCK( a );
-  auto const interrupt_block_t* block_b = INTERRUPT_GET_BLOCK( b );
+  auto const block_a = INTERRUPT_GET_BLOCK( a );
+  auto const block_b = INTERRUPT_GET_BLOCK( b );
   // -1 if address of a->interrupt is greater than address of b->interrupt
   if ( block_a->interrupt > block_b->interrupt ) {
     return -1;
@@ -525,7 +525,7 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context ) 
     return;
   }
   // get interrupt block
-  auto const interrupt_block_t* block = INTERRUPT_GET_BLOCK( node );
+  auto const block = INTERRUPT_GET_BLOCK( node );
 
   // get first element of normal handler
   list_item_t* current = block->handler->first;
@@ -561,7 +561,7 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context ) 
       continue;
     }
     // get thread
-    auto task_thread_t* thread = TASK_THREAD_GET_BLOCK( first );
+    auto thread = TASK_THREAD_GET_BLOCK( first );
     #if defined( PRINT_INTERRUPT )
       DEBUG_OUTPUT( "Raising interrupt handler %"PRIu8" for %d\r\n",
         num, thread->process->id )

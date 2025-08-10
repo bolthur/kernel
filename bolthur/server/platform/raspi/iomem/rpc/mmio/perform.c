@@ -231,7 +231,7 @@ void rpc_handle_mmio_perform(
   // clear request
   memset( response, 0, response_size );
   // transform data into contiguous array
-  auto iomem_mmio_entry_array_t* mmio_request = ( iomem_mmio_entry_array_t* )request_data;
+  auto mmio_request = ( iomem_mmio_entry_array_t* )request_data;
   // entry count
   size_t entry_count = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) / sizeof( iomem_mmio_entry_t );
   // loop through entries and validate

@@ -185,6 +185,20 @@ void rpc_keyboard_attach(
           report->fields[ inner ].usage.page == LIBUSB_HID_USAGE_PAGE_KEYBOARD_CONTROL
           || report->fields[ inner ].usage.page == LIBUSB_HID_USAGE_PAGE_UNDEFINED
         ) {
+          // duplicate report
+          result = keyboard_duplicate_report(
+            &device->key_report,
+            report,
+            sizeof( libusb_hid_parser_report_t ) + report->field_count * sizeof( libusb_hid_parser_fields_t )
+          );
+          // handle error
+          if ( 0 != result ) {
+            STARTUP_PRINT( "Unable to duplicate report\r\n" )
+            free( request );
+            keyboard_destroy( device );
+            _syscall_rpc_cleanup();
+            return;
+          }
           if ( report->fields[ inner ].attribute.variable ) {
             if (
               report->fields[ inner ].usage.keyboard >= LIBUSB_HID_USAGE_PAGE_KEYBOARD_LEFT_CONTROL
@@ -198,7 +212,7 @@ void rpc_keyboard_attach(
               )
               // allocate space
               const size_t key_field_index = report->fields[ inner ].usage.keyboard - LIBUSB_HID_USAGE_PAGE_KEYBOARD_LEFT_CONTROL;
-              result = keyboard_duplicate_report( &device->key_field[ key_field_index ], &report->fields[ inner ] );
+              result = keyboard_duplicate_report_field( &device->key_field[ key_field_index ], &report->fields[ inner ] );
               // handle error
               if ( 0 != result ) {
                 STARTUP_PRINT( "Unable to duplicate report\r\n" )
@@ -210,7 +224,7 @@ void rpc_keyboard_attach(
             }
           } else {
             STARTUP_PRINT( "Key input detected\r\n" )
-            result = keyboard_duplicate_report( &device->key_field[ 8 ], &report->fields[ inner ] );
+            result = keyboard_duplicate_report_field( &device->key_field[ 8 ], &report->fields[ inner ] );
             // handle error
             if ( 0 != result ) {
               STARTUP_PRINT( "Unable to duplicate report\r\n" )
@@ -223,6 +237,20 @@ void rpc_keyboard_attach(
         }
       }
     } else if ( report->type == LIBUSB_HID_REPORT_TYPE_OUTPUT && ! device->led_report ) {
+      // duplicate report
+      result = keyboard_duplicate_report(
+        &device->led_report,
+        report,
+        sizeof( libusb_hid_parser_report_t ) + report->field_count * sizeof( libusb_hid_parser_fields_t )
+      );
+      // handle error
+      if ( 0 != result ) {
+        STARTUP_PRINT( "Unable to duplicate report\r\n" )
+        free( request );
+        keyboard_destroy( device );
+        _syscall_rpc_cleanup();
+        return;
+      }
       // data->LedReport = parse->Report[i];
       for ( uint8_t inner = 0; inner < report->field_count; ++inner ) {
         // skip non led stuff
@@ -234,7 +262,7 @@ void rpc_keyboard_attach(
           case LIBUSB_HID_USAGE_PAGE_LED_NUMBER_LOCK:
             STARTUP_PRINT( "Number lock led detected\r\n")
             // duplicate report
-            result = keyboard_duplicate_report( &device->led_field[ 0 ], &report->fields[ inner ] );
+            result = keyboard_duplicate_report_field( &device->led_field[ 0 ], &report->fields[ inner ] );
             if ( 0 != result ) {
               STARTUP_PRINT( "Unable to duplicate report\r\n" )
               free( request );
@@ -248,7 +276,7 @@ void rpc_keyboard_attach(
           case LIBUSB_HID_USAGE_PAGE_LED_CAPSLOCK:
             STARTUP_PRINT( "Capslock lock led detected\r\n")
             // duplicate report
-            result = keyboard_duplicate_report( &device->led_field[ 1 ], &report->fields[ inner ] );
+            result = keyboard_duplicate_report_field( &device->led_field[ 1 ], &report->fields[ inner ] );
             if ( 0 != result ) {
               STARTUP_PRINT( "Unable to duplicate report\r\n" )
               free( request );
@@ -262,7 +290,7 @@ void rpc_keyboard_attach(
           case LIBUSB_HID_USAGE_PAGE_LED_SCROLL_LOCK:
             STARTUP_PRINT( "Scroll lock led detected\r\n")
             // duplicate report
-            result = keyboard_duplicate_report( &device->led_field[ 2 ], &report->fields[ inner ] );
+            result = keyboard_duplicate_report_field( &device->led_field[ 2 ], &report->fields[ inner ] );
             if ( 0 != result ) {
               STARTUP_PRINT( "Unable to duplicate report\r\n" )
               free( request );
@@ -276,7 +304,7 @@ void rpc_keyboard_attach(
           case LIBUSB_HID_USAGE_PAGE_LED_COMPOSE:
             STARTUP_PRINT( "Compose led detected\r\n")
             // duplicate report
-            result = keyboard_duplicate_report( &device->led_field[ 3 ], &report->fields[ inner ] );
+            result = keyboard_duplicate_report_field( &device->led_field[ 3 ], &report->fields[ inner ] );
             if ( 0 != result ) {
               STARTUP_PRINT( "Unable to duplicate report\r\n" )
               free( request );
@@ -290,7 +318,7 @@ void rpc_keyboard_attach(
           case LIBUSB_HID_USAGE_PAGE_LED_KANA:
             STARTUP_PRINT( "Kana led detected\r\n")
             // duplicate report
-            result = keyboard_duplicate_report( &device->led_field[ 4 ], &report->fields[ inner ] );
+            result = keyboard_duplicate_report_field( &device->led_field[ 4 ], &report->fields[ inner ] );
             if ( 0 != result ) {
               STARTUP_PRINT( "Unable to duplicate report\r\n" )
               free( request );
@@ -304,7 +332,7 @@ void rpc_keyboard_attach(
           case LIBUSB_HID_USAGE_PAGE_LED_POWER:
             STARTUP_PRINT( "Power led detected\r\n")
             // duplicate report
-            result = keyboard_duplicate_report( &device->led_field[ 5 ], &report->fields[ inner ] );
+            result = keyboard_duplicate_report_field( &device->led_field[ 5 ], &report->fields[ inner ] );
             if ( 0 != result ) {
               STARTUP_PRINT( "Unable to duplicate report\r\n" )
               free( request );
@@ -318,7 +346,7 @@ void rpc_keyboard_attach(
           case LIBUSB_HID_USAGE_PAGE_LED_SHIFT:
             STARTUP_PRINT( "Shift led detected\r\n")
             // duplicate report
-            result = keyboard_duplicate_report( &device->led_field[ 6 ], &report->fields[ inner ] );
+            result = keyboard_duplicate_report_field( &device->led_field[ 6 ], &report->fields[ inner ] );
             if ( 0 != result ) {
               STARTUP_PRINT( "Unable to duplicate report\r\n" )
               free( request );
@@ -332,7 +360,7 @@ void rpc_keyboard_attach(
           case LIBUSB_HID_USAGE_PAGE_LED_MUTE:
             STARTUP_PRINT( "Mute led detected\r\n")
             // duplicate report
-            result = keyboard_duplicate_report( &device->led_field[ 7 ], &report->fields[ inner ] );
+            result = keyboard_duplicate_report_field( &device->led_field[ 7 ], &report->fields[ inner ] );
             if ( 0 != result ) {
               STARTUP_PRINT( "Unable to duplicate report\r\n" )
               free( request );

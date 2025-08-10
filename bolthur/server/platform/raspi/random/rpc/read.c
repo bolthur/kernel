@@ -108,7 +108,7 @@ void rpc_handle_read(
     free( response );
     return;
   }
-  auto uint32_t* buf = ( uint32_t* )shm_addr;
+  auto const buf = ( uint32_t* )shm_addr;
   // loop until max num words
   for ( uint32_t num = 0; num < max_word; num++ ) {
     // extract rng status

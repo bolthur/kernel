@@ -47,7 +47,7 @@
  */
 void syscall_memory_acquire( void* context ) {
   // get parameter
-  auto void* addr = ( void* )syscall_get_parameter( context, 0 );
+  auto addr = ( void* )syscall_get_parameter( context, 0 );
   size_t len = ( size_t )syscall_get_parameter( context, 1 );
   int protection = ( int )syscall_get_parameter( context, 2 );
   int flag = ( int )syscall_get_parameter( context, 3 );

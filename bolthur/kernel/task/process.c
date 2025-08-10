@@ -599,13 +599,13 @@ void task_process_cleanup(
   // loop
   while ( current ) {
     // get process from item
-    auto task_process_t* proc = ( task_process_t* )current->data;
+    auto const proc = ( task_process_t* )current->data;
     // check for running thread
     avl_node_t* current_thread = avl_iterate_first( proc->thread_manager );
     bool skip = false;
     while ( current_thread ) {
       // get thread
-      auto const task_thread_t* thread = TASK_THREAD_GET_BLOCK( current_thread );
+      auto const thread = TASK_THREAD_GET_BLOCK( current_thread );
       // check for active
       if ( thread->state != TASK_THREAD_STATE_KILL ) {
         skip = true;
@@ -910,7 +910,7 @@ int task_process_replace(
     return result;
   }
   // set image
-  auto void* image = ( void* )KERNEL_AREA_PROCESS_REPLACE_START;
+  auto image = ( void* )KERNEL_AREA_PROCESS_REPLACE_START;
   // copy over image
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "image = %p\r\n", image )
@@ -1046,7 +1046,7 @@ void task_unblock_threads(
   // loop until there is no more thread
   while ( current_thread_node ) {
     // get thread
-    auto task_thread_t* possible_thread_to_unblock = TASK_THREAD_GET_BLOCK(
+    auto const possible_thread_to_unblock = TASK_THREAD_GET_BLOCK(
       current_thread_node );
     // try to unblock if blocked
     task_thread_unblock(

@@ -114,6 +114,144 @@ const char* usb_get_description( const uint32_t device_number ) {
 }
 
 /**
+ * @fn int usb_control_message(uint32_t, libusb_transfer_t, libusb_direction_t, void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t)
+ * @brief Wrapper to perform usb control message
+ * @param device_number
+ * @param transfer
+ * @param direction
+ * @param buffer
+ * @param buffer_length
+ * @param request
+ * @param timeout
+ * @param callback
+ * @return
+ */
+int usb_control_message_async(
+  const uint32_t device_number,
+  const libusb_transfer_t transfer,
+  const libusb_direction_t direction,
+  const void* buffer,
+  const size_t buffer_length,
+  const libusb_device_request_t* request,
+  const size_t timeout,
+  rpc_handler_t callback
+) {
+  // debug output
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "firing async usb control message\r\n" )
+  #endif
+  // allocate shared memory
+  const size_t data_size = sizeof ( usb_control_message_t ) + buffer_length + 1;
+  const size_t shm_id = _syscall_memory_shared_create( data_size );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  // attach shared memory
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  auto const message = ( usb_control_message_t* )shm_addr;
+  // populate real message in shared memory
+  message->device_number = device_number;
+  message->transfer = transfer;
+  message->direction = direction;
+  message->buffer_length = buffer_length;
+  memcpy( &message->request, request, sizeof( *request ) );
+  message->buffer_length = buffer_length;
+  message->timeout = timeout;
+  if ( LIBUSB_DIRECTION_OUT == direction && buffer ) {
+    memcpy( &message->buffer, buffer, buffer_length );
+  }
+  // allocate request
+  usbd_control_message_t* control_request = malloc( sizeof( *control_request ) );
+  if ( ! control_request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // return error
+    return ENOMEM;
+  }
+  // clear out everything
+  memset( control_request, 0, sizeof( *control_request ) );
+  // populate shm_id
+  control_request->shm_id = shm_id;
+  // calculate rpc request size
+  constexpr size_t rpc_request_size = sizeof( vfs_ioctl_perform_request_t )
+    + sizeof( *control_request );
+  // allocate rpc structures
+  vfs_ioctl_perform_request_t* rpc_request = malloc( rpc_request_size );
+  if ( ! rpc_request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // free control request
+    free( control_request );
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // return error
+    return ENOMEM;
+  }
+  // clear rpc structures
+  memset( rpc_request, 0, rpc_request_size );
+  // populate structure
+  rpc_request->handle = fd_usbd;
+  rpc_request->command = USBD_CONTROL_MESSAGE;
+  rpc_request->type = IOCTL_RDWR;
+  // copy over data
+  memcpy( rpc_request->container, control_request, sizeof( *control_request ) );
+  // raise rpc and wait for return
+  const size_t response_id = bolthur_rpc_raise(
+    RPC_VFS_IOCTL,
+    VFS_DAEMON_ID,
+    rpc_request,
+    rpc_request_size,
+    callback,
+    RPC_VFS_IOCTL,
+    rpc_request,
+    rpc_request_size,
+    0,
+    0,
+    NULL,
+    false
+  );
+  if ( ! response_id ) {
+    // free request data
+    free( rpc_request );
+    // free control request
+    free( control_request );
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // return io error
+    return EIO;
+  }
+  // free request data
+  free( rpc_request );
+  // free control request
+  free( control_request );
+  // return success
+  return 0;
+}
+
+/**
  * @fn int usb_control_message(uint32_t, libusb_transfer_t, libusb_direction_t, void*, size_t, const libusb_device_request_t*, size_t, libusb_transfer_error_t*, uint32_t*)
  * @brief Wrapper to perform usb control message
  * @param device_number
@@ -167,7 +305,7 @@ int usb_control_message(
     // return error
     return e;
   }
-  usb_control_message_t* message = ( usb_control_message_t* )shm_addr;
+  auto const message = ( usb_control_message_t* )shm_addr;
   // populate real message in shared memory
   message->device_number = device_number;
   message->transfer = transfer;

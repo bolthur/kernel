@@ -42,7 +42,7 @@ void* memset( void* buf, const int value, size_t size ) {
     kasan_check_memory( ( uintptr_t )buf, size, 1, KASAN_CALLER_PC );
   #endif
 
-  auto uint8_t* u8_buf = ( uint8_t* )buf;
+  auto u8_buf = ( uint8_t* )buf;
   const uint8_t u8_value = ( uint8_t )value;
 
   // set until alignment fits
@@ -67,7 +67,7 @@ void* memset( void* buf, const int value, size_t size ) {
       | ( uint64_t )u8_value << 8
       | ( uint64_t )u8_value;
     // set pointer
-    auto uint64_t* u64_buf = ( uint64_t* )u8_buf;
+    auto u64_buf = ( uint64_t* )u8_buf;
     // set as much as possible at once
     while ( size >= U64_BLOCK_SIZE * 4 ) {
       *u64_buf++ = u64_value;

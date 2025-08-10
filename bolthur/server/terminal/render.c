@@ -259,7 +259,7 @@ ssize_t render_terminal( terminal_t* term, const char* s ) {
   if ( 32 != term->bpp ) {
     return -ENOSYS;
   }
-  auto char* p = ( char* )s;
+  auto const p = ( char* )s;
   // push to terminal
   const uint32_t character_rendered = terminal_push( term, p );
 

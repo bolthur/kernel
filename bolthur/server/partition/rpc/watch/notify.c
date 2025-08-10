@@ -112,8 +112,8 @@ void rpc_handle_watch_notify(
   }
   // loop through partitions and print type
   for ( uint32_t i = 0; i < PARTITION_TABLE_NUMBER; i++ ) {
-    auto mbr_table_entry_t* entry = ( mbr_table_entry_t* )(
-      mbr + PARTITION_TABLE_OFFSET + ( i * sizeof( *entry ) ) );
+    auto const entry = ( mbr_table_entry_t* )(
+      mbr + PARTITION_TABLE_OFFSET + ( i * sizeof( mbr_table_entry_t ) ) );
     // handle invalid
     if ( 0 == entry->data.system_id ) {
       continue;

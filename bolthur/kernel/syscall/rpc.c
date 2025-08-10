@@ -271,7 +271,7 @@ void syscall_rpc_raise( void* context ) {
  */
 void syscall_rpc_ret( void* context ) {
   size_t type = syscall_get_parameter( context, 0 );
-  auto void* data = ( void* )syscall_get_parameter( context, 1 );
+  auto data = ( void* )syscall_get_parameter( context, 1 );
   size_t length = syscall_get_parameter( context, 2 );
   size_t original_rpc_id = syscall_get_parameter( context, 3 );
   #if defined( PRINT_SYSCALL )
@@ -399,7 +399,7 @@ void syscall_rpc_ret( void* context ) {
       // loop until usable thread has been found
       while ( current && ! target ) {
         // get thread
-        auto task_thread_t* tmp = TASK_THREAD_GET_BLOCK( current );
+        auto tmp = TASK_THREAD_GET_BLOCK( current );
         // FIXME: CHECK IF ACTIVE
         target = tmp;
         // get next thread

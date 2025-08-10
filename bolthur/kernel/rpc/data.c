@@ -115,7 +115,7 @@ int rpc_data_queue_add(
     return EINVAL;
   }
   // set pointer to beginning
-  auto rpc_data_mailbox_entry_t* entry = ( rpc_data_mailbox_entry_t* )mailbox;
+  auto entry = ( rpc_data_mailbox_entry_t* )mailbox;
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "Mailbox temporarily mapped to 0x%"PRIxPTR", looking for free space \r\n", mailbox )
   #endif

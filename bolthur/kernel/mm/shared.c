@@ -44,7 +44,7 @@ avl_tree_t* shared_tree = NULL;
  */
 static int32_t lookup_process( const list_item_t* a, const void* b ) {
   // get blocks
-  auto const shared_memory_entry_mapped_t* item = ( const shared_memory_entry_mapped_t* )
+  auto const item = ( const shared_memory_entry_mapped_t* )
     a->data;
   // compare process structures
   if ( item->process == ( task_process_t* )b ) {
@@ -61,7 +61,7 @@ static int32_t lookup_process( const list_item_t* a, const void* b ) {
  */
 static void cleanup_process( list_item_t* a ) {
   // get blocks
-  auto const shared_memory_entry_mapped_t* item = ( const shared_memory_entry_mapped_t* )a->data;
+  auto const item = ( const shared_memory_entry_mapped_t* )a->data;
   // set start and end
   uintptr_t start = item->start;
   const uintptr_t end = start + item->size;
@@ -327,7 +327,7 @@ uintptr_t shared_memory_attach(
   // handle already attached
   if ( process_list_item ) {
     // transform to mapped entry
-    auto const shared_memory_entry_mapped_t* mapped = ( const shared_memory_entry_mapped_t* )
+    auto const mapped = ( const shared_memory_entry_mapped_t* )
       process_list_item->data;
     // debug output
     #if defined( PRINT_MM_SHARED )
@@ -492,7 +492,7 @@ size_t shared_memory_size( task_process_t* process, size_t id ) {
     #endif
     return 0;
   }
-  auto shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
+  auto entry = SHARED_ENTRY_GET_BLOCK( node );
   // debug output
   #if defined( PRINT_MM_SHARED )
     DEBUG_OUTPUT( "node = %p, entry = %p\r\n", node, entry )
@@ -548,7 +548,7 @@ bool shared_memory_detach( task_process_t* process, size_t id ) {
     #endif
     return true;
   }
-  auto shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
+  auto const entry = SHARED_ENTRY_GET_BLOCK( node );
   // lookup process
   list_item_t* process_list_item = list_lookup_data(
     entry->process_mapping, process );
@@ -615,7 +615,7 @@ bool shared_memory_phys_is_shared(
   // loop until end
   while ( NULL != node ) {
     // get mapped entry
-    auto const shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
+    auto const entry = SHARED_ENTRY_GET_BLOCK( node );
     // lookup process
     const list_item_t* process_list_item = list_lookup_data(
       entry->process_mapping, process );
@@ -704,14 +704,14 @@ bool shared_memory_fork(
   // loop until end
   while ( NULL != node ) {
     // get mapped entry
-    auto const shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
+    auto const entry = SHARED_ENTRY_GET_BLOCK( node );
     // lookup process
     const list_item_t* process_list_item = list_lookup_data(
       entry->process_mapping, process_to_fork );
     // handle attached
     if ( process_list_item ) {
       // transform to mapped entry
-      auto const shared_memory_entry_mapped_t* mapped_to_fork = ( const shared_memory_entry_mapped_t* )
+      auto const mapped_to_fork = ( const shared_memory_entry_mapped_t* )
         process_list_item->data;
       // reserve space for fork
       shared_memory_entry_mapped_t* mapped_fork = malloc( sizeof( *mapped_fork ) );
@@ -750,7 +750,7 @@ bool shared_memory_cleanup_process( task_process_t* proc ) {
   // loop until end
   while ( NULL != node ) {
     // get mapped entry
-    auto const shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
+    auto const entry = SHARED_ENTRY_GET_BLOCK( node );
     // detach shared memory
     if ( ! shared_memory_detach( proc, entry->id ) ) {
       return false;

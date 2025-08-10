@@ -60,7 +60,7 @@ void rpc_custom_handle_release(
     return;
   }
   // get request
-  auto const partition_release_t* command = ( const partition_release_t* )request->container;
+  auto const command = ( const partition_release_t* )request->container;
   // try to remove handler by filesystem
   if ( 0 != handler_remove( command->filesystem ) ) {
     error.status = -EAGAIN;
