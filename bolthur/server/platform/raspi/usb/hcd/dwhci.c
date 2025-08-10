@@ -1868,6 +1868,78 @@ response_t dwhci_init( void ) {
   }
   // free sequence
   free( sequence );
+  // register interrupt
+  _syscall_interrupt_acquire( ARM_IRQ_USB );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to acquire interrupt %d: %s\r\n",
+        ARM_IRQ_USB, strerror( e ) )
+    #endif
+    // return error
+    return e;
+  }
+  // enable all interrupts
+  sequence = util_prepare_mmio_sequence( 6, &sequence_size );
+  if ( ! sequence ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to prepare mmio_sequence\r\n" )
+    #endif
+    // close file descriptor
+    close( fd_iomem );
+    // return memory error
+    return HCD_RESPONSE_ERROR_MEMORY;
+  }
+  // mask all pending interrupts
+  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
+  sequence[ 0 ].offset = PERIPHERAL_DWHCI_CORE_INT_STAT;
+  sequence[ 0 ].value = ( uint32_t )-1;
+  // enable core interrupts
+  sequence[ 1 ].type = IOMEM_MMIO_ACTION_READ_OR;
+  sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
+  sequence[ 1 ].value = HCD_DWHCI_CORE_AHB_CFG_GLOBAL_INTERRUPT_MASK;
+  sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ;
+  sequence[ 2 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
+  // enable host interrupts
+  sequence[ 3 ].type = IOMEM_MMIO_ACTION_WRITE;
+  sequence[ 3 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
+  sequence[ 3 ].value = 0;
+  sequence[ 4 ].type = IOMEM_MMIO_ACTION_READ;
+  sequence[ 4 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
+  sequence[ 5 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
+  sequence[ 5 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
+  sequence[ 5 ].value = HCD_DWHCI_CORE_INT_MASK_HC_INTR
+    | HCD_DWHCI_CORE_INT_MASK_PORT_INTR
+    | HCD_DWHCI_CORE_INT_MASK_DISCONNECT
+    | HCD_DWHCI_CORE_INT_MASK_USB_SUSPEND;
+  // perform request
+  result = ioctl(
+    fd_iomem,
+    IOCTL_BUILD_REQUEST(
+      IOMEM_RPC_MMIO_PERFORM,
+      sequence_size,
+      IOCTL_RDWR
+    ),
+    sequence
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Enable of interrupts failed\r\n" )
+    #endif
+    // close file descriptor
+    close( fd_iomem );
+    // free sequence
+    free( sequence );
+    // return error
+    return HCD_RESPONSE_ERROR_IO;
+  }
+  // free sequence
+  free( sequence );
   // return success, we're done
   return HCD_RESPONSE_OK;
 }

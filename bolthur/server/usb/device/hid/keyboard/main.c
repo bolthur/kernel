@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <sys/bolthur.h>
+#include "keyboard.h"
 #include "rpc.h"
 #include "../../../../libhelper.h"
 #include "../../../../libusbd.h"
@@ -93,8 +94,26 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  // wait for rpc
-  STARTUP_PRINT( "Wait for rpc\r\n" )
-  bolthur_rpc_wait_block();
-  return 0;
+  // debug message
+  STARTUP_PRINT( "Starting polling loop\r\n" )
+  // endless loop to start polling and finally wait for rpc
+  while ( true ) {
+    // start with head
+    const libusb_keyboard_device_t* current = keyboard_head;
+    // loop while there is something
+    while ( current != NULL ) {
+      // handle already polling
+      if ( 0 != current->last_poll ) {
+        // go to next
+        current = current->next;
+        // skip rest
+        continue;
+      }
+      /// FIXME: START ASYNC POLLING
+      // go to next
+      current = current->next;
+    }
+    // wait for call
+    _syscall_rpc_wait_for_call();
+  }
 }

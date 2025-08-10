@@ -49,17 +49,16 @@ static int32_t compare_interrupt_callback(
   const avl_node_t* b
 ) {
   // get blocks
-  interrupt_block_t* block_a = INTERRUPT_GET_BLOCK( a );
-  interrupt_block_t* block_b = INTERRUPT_GET_BLOCK( b );
-
+  auto const interrupt_block_t* block_a = INTERRUPT_GET_BLOCK( a );
+  auto const interrupt_block_t* block_b = INTERRUPT_GET_BLOCK( b );
   // -1 if address of a->interrupt is greater than address of b->interrupt
   if ( block_a->interrupt > block_b->interrupt ) {
     return -1;
+  }
   // 1 if address of b->interrupt is greater than address of a->interrupt
-  } else if ( block_b->interrupt > block_a->interrupt ) {
+  if ( block_b->interrupt > block_a->interrupt ) {
     return 1;
   }
-
   // equal => return 0
   return 0;
 }
@@ -141,6 +140,7 @@ static avl_tree_t* tree_by_type( interrupt_type_t type ) {
  * @fn int32_t block_list_lookup(const list_item_t*, const void*)
  * @brief interrupt block list cleanup helper
  * @param a
+ * @param data
  */
 static int32_t kernel_block_list_lookup( const list_item_t* a, const void* data ) {
   // get callback from data
@@ -169,6 +169,7 @@ static void kernel_block_list_cleanup( list_item_t* a ) {
  * @fn int32_t block_list_lookup(const list_item_t*, const void*)
  * @brief interrupt block list cleanup helper
  * @param a
+ * @param data
  */
 static int32_t process_block_list_lookup( const list_item_t* a, const void* data ) {
   // get callback from data
@@ -479,7 +480,7 @@ bool interrupt_register_handler(
  * @param type interrupt type
  * @param context interrupt context
  */
-void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
+void interrupt_handle( size_t num, const interrupt_type_t type, void* context ) {
   // handle no interrupt manager as not bound
   if ( ! interrupt_manager ) {
     return;
@@ -524,7 +525,7 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
     return;
   }
   // get interrupt block
-  interrupt_block_t* block = INTERRUPT_GET_BLOCK( node );
+  auto const interrupt_block_t* block = INTERRUPT_GET_BLOCK( node );
 
   // get first element of normal handler
   list_item_t* current = block->handler->first;
@@ -560,7 +561,11 @@ void interrupt_handle( size_t num, interrupt_type_t type, void* context ) {
       continue;
     }
     // get thread
-    task_thread_t* thread = TASK_THREAD_GET_BLOCK( first );
+    auto task_thread_t* thread = TASK_THREAD_GET_BLOCK( first );
+    #if defined( PRINT_INTERRUPT )
+      DEBUG_OUTPUT( "Raising interrupt handler %"PRIu8" for %d\r\n",
+        num, thread->process->id )
+    #endif
     // try to raise rpc without data
     rpc_backup_t* rpc = rpc_generic_raise(
       thread,
@@ -679,7 +684,7 @@ void interrupt_toggle( interrupt_toggle_state_t state ) {
  * @param context
  * @param fast
  */
-void interrupt_handle_possible( void* context, bool fast ) {
+void interrupt_handle_possible( void* context, const bool fast ) {
   int8_t interrupt_bit;
   // get pending interrupt
   while( -1 != ( interrupt_bit = interrupt_get_pending( fast ) ) ) {

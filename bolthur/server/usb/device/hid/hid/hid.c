@@ -232,9 +232,9 @@ void hid_enumerate_action_add_field_process(
   // try to find report from result
   libusb_hid_parser_report_t* report = NULL;
   for ( uint32_t idx = 0; idx < field->result->report_count; idx++ ) {
-    EARLY_STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->id = %"PRIu8"\r\n",
+    STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->id = %"PRIu8"\r\n",
       idx, field->result->report[ idx ]->id )
-    EARLY_STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->type = %d\r\n",
+    STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->type = %d\r\n",
       idx, field->result->report[ idx ]->type )
     if (
       field->result->report[ idx ]->id == field->report

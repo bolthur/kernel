@@ -118,6 +118,17 @@ void rpc_keyboard_attach(
     _syscall_rpc_cleanup();
     return;
   }
+  // get endpoint information
+  libusb_endpoint_descriptor_t endpoint_descriptor;
+  result = usb_get_endpoint(
+    message->device_number, message->interface_number, 0, &endpoint_descriptor );
+  // handle error
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to get endpoint information\r\n" )
+    _syscall_rpc_cleanup();
+    free( request );
+    return;
+  }
   // check report count
   if ( 0 >= report_count ) {
     STARTUP_PRINT( "\"%s\" does not have enough outputs to be a keyboard\r\n",
@@ -139,6 +150,8 @@ void rpc_keyboard_attach(
   // populate header
   device->header.device_driver = DEVICE_DRIVER_KEYBOARD;
   device->header.data_size = sizeof( *device );
+  memcpy( &device->descriptor, &endpoint_descriptor, sizeof( endpoint_descriptor ) );
+  device->last_poll = 0;
   // determine new index
   result = keyboard_new_index( &device->index );
   // handle error
@@ -335,12 +348,15 @@ void rpc_keyboard_attach(
         }
       }
     }
-    /// FIXME: IMPLEMENT
     // free report again
     free( report );
   }
   // append device to list
   keyboard_append( device );
+  STARTUP_PRINT( "endpoint_descriptor.endpoint_address.number = %"PRIu8"\r\n",
+    endpoint_descriptor.endpoint_address.number );
+  STARTUP_PRINT( "endpoint_descriptor.interval = %"PRIu8"\r\n",
+    endpoint_descriptor.interval );
   // free request and cleanup
   free( request );
   _syscall_rpc_cleanup();

@@ -17,8 +17,6 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define PRINT_SYSCALL
-
 #include <errno.h>
 #include "../task/process.h"
 #include "../task/thread.h"
@@ -62,6 +60,7 @@ void syscall_interrupt_acquire( void* context ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
+  // register interrupt
   if ( ! interrupt_register_handler(
     num,
     NULL,
@@ -73,6 +72,9 @@ void syscall_interrupt_acquire( void* context ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }
+  // enable interrupt
+  interrupt_mask_specific( ( int8_t )num );
+  // return success
   syscall_populate_success( context, 0 );
 }
 
@@ -109,6 +111,7 @@ void syscall_interrupt_release( void* context ) {
     syscall_populate_error( context, ( size_t )-EINVAL );
     return;
   }
+  // remove registered interrupt handler
   if ( ! interrupt_unregister_handler(
     num,
     NULL,
@@ -120,5 +123,6 @@ void syscall_interrupt_release( void* context ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }
+  // return success
   syscall_populate_success( context, 0 );
 }

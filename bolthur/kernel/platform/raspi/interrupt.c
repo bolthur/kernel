@@ -25,6 +25,7 @@
 #include "peripheral.h"
 #include "../../debug/debug.h"
 #include "interrupt.h"
+#include "timer.h"
 
 /**
  * @fn bool interrupt_validate_number(size_t)
@@ -36,7 +37,7 @@
  */
 bool interrupt_validate_number( const size_t num ) {
   return ! (
-    num != IRQ_MAILBOX && num != 8
+    num != IRQ_MAILBOX && num != SYSTEM_TIMER_3_INTERRUPT
     && num != IRQ_USB && num != IRQ_AUX
     && num != IRQ_I2C_SPI && num != IRQ_PWA0
     && num != IRQ_PWA1 && num != IRQ_SMI
@@ -132,7 +133,6 @@ void interrupt_unmask_specific( const int8_t num ) {
  */
 int8_t interrupt_get_pending( const bool fast ) {
   const uintptr_t base = ( uint32_t )peripheral_base_get( PERIPHERAL_GPIO );
-
   // normal interrupt
   if ( ! fast ) {
     const uint32_t pending1 = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
@@ -160,6 +160,6 @@ int8_t interrupt_get_pending( const bool fast ) {
     // return interrupt
     return ( int8_t )interrupt;
   }
-
+  // return no interrupt
   return -1;
 }

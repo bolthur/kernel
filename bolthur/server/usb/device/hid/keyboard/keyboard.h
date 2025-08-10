@@ -24,6 +24,8 @@
 
 #define KEYBOARD_ENABLE_DEBUG 1
 
+extern libusb_keyboard_device_t* keyboard_head;
+
 void keyboard_append( libusb_keyboard_device_t* );
 void keyboard_destroy( libusb_keyboard_device_t* );
 int keyboard_new_index( uint32_t* );

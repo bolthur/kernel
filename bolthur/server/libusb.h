@@ -839,6 +839,8 @@ typedef struct libusb_keyboard_device {
   libusb_hid_parser_report_t* key_report;
 
   uint32_t device_number;
+  libusb_endpoint_descriptor_t descriptor;
+  size_t last_poll;
 
   libusb_keyboard_device_t* next;
   libusb_keyboard_device_t* prev;

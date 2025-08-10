@@ -220,7 +220,7 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     return true;
   }
   // get register context
-  task_process_t* proc = backup->thread->process;
+  const task_process_t* proc = backup->thread->process;
   cpu_register_context_t* cpu = backup->thread->current_context;
   if ( ! list_lookup_data( proc->rpc_queue, backup ) ) {
     // debug output

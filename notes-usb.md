@@ -30,4 +30,7 @@
 
 ## To be done
 
-- Use interrupts in hcd server
+- [ ] Use interrupts in hcd server for transfer
+- [ ] Add polling of keyboard to keyboard server after setup
+- [ ] Implement mouse driver with polling
+- [ ] Reduce usb driver output once implemented
