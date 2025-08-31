@@ -311,7 +311,7 @@ uintptr_t shared_memory_attach(
     #endif
     return 0;
   }
-  shared_memory_entry_t* entry = SHARED_ENTRY_GET_BLOCK( node );
+  auto entry = SHARED_ENTRY_GET_BLOCK( node );
   // debug output
   #if defined( PRINT_MM_SHARED )
     DEBUG_OUTPUT( "node = %p, entry = %p\r\n", node, entry )

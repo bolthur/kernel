@@ -24,6 +24,8 @@
 #include <inttypes.h>
 #include <sys/bolthur.h>
 #include "keyboard.h"
+
+#include "../../../../libusbd.h"
 #include "../../../../../library/usb/usb.h"
 
 /**
@@ -38,14 +40,57 @@ libusb_keyboard_device_t* keyboard_head = NULL;
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo validate origin
  */
 static void keyboard_rpc_handler(
   [[maybe_unused]] size_t type,
   [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
+  size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "GOT RESPONSE, NEEDS IMPLEMENTATION!\r\n" )
+  // handle no data
+  if( ! data_info ) {
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // get data from mailbox
+  size_t data_size;
+  vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  if ( ! response ) {
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // get message
+  auto const control_message = ( usbd_control_message_t* )response->container;
+  // attach shared memory
+  void* shm_addr = _syscall_memory_shared_attach( control_message->shm_id, ( uintptr_t )NULL );
+  // handle error
+  if ( errno ) {
+    free( response );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // transform shared memory into message
+  auto const message = ( usb_control_message_t* )shm_addr;
+  // handle error
+  if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+    STARTUP_PRINT( "Message to %s timeout reached\r\n", usb_get_description( message->device_number ) )
+    _syscall_memory_shared_detach( control_message->shm_id );
+    free( response );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // handle not enough transferred
+  if ( message->last_transfer != KEYBOARD_REPORT_SIZE ) {
+    STARTUP_PRINT( "Unable to read %d byte status of device %s\r\n",
+      KEYBOARD_REPORT_SIZE, usb_get_description( message->device_number ) )
+    _syscall_memory_shared_detach( control_message->shm_id );
+    free( response );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  EARLY_STARTUP_PRINT( "READ ENOUGH DATA, CONTINUE IMPLEMENTATION HERE\r\n" )
 }
 
 /**
@@ -145,7 +190,7 @@ int keyboard_new_index( uint32_t* index ) {
 int keyboard_duplicate_report(
   libusb_hid_parser_report_t** destination,
   const libusb_hid_parser_report_t* source,
-  size_t size
+  const size_t size
 ) {
   // allocate space
   *destination = malloc( size );
@@ -186,6 +231,8 @@ int keyboard_duplicate_report_field(
  * @brief Function to start keyboard polling
  * @param device
  * @return
+ *
+ * @todo switch from transfer control to interrupt
  */
 int keyboard_start_polling( libusb_keyboard_device_t* device ) {
   // handle invalid parameter
