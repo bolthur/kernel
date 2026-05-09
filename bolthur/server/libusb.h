@@ -29,6 +29,8 @@
 #define MAX_INTERFACES_PER_DEVICE 8
 #define MAX_ENDPOINTS_PER_DEVICE 16
 
+#define USB_TIMEOUT_VALUE 10
+
 // disable a bunch of warnings necessary to build packed structures
 // for usb communication
 #pragma GCC diagnostic push

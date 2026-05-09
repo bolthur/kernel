@@ -196,7 +196,7 @@ int keyboard_start_polling( libusb_keyboard_device_t* device ) {
       .value = ( uint16_t)( device->key_report->type << 8 | device->key_report->id ),
       .length = KEYBOARD_REPORT_SIZE,
     },
-    10, /// FIXME: REPLACE WITH CONSTANT
+    USB_TIMEOUT_VALUE,
     rpc_keyboard_key
   );
 }
@@ -250,7 +250,7 @@ void keyboard_bit_set(
       const uint32_t mask = ( uint32_t )( ( 1 << ( ( offset % 8 ) + length ) ) - 1 );
       buffer[ i ] = ( uint8_t )( ( buffer[ i ] & ~mask ) | ( ( value >> j ) & mask ) );
     } else {
-      buffer[ i ] = ( value >> j ) & 0xff;
+      buffer[ i ] = (uint8_t)(( value >> j ) & 0xff);
       j += 8;
     }
   }
@@ -288,7 +288,7 @@ uint32_t keyboard_bit_get_unsigned( const uint8_t* buffer, const uint32_t offset
       result = ( buffer[ i ] & mask ) >> ( offset % 8 );
     } else if ( i == offset / 8 ) {
       const uint32_t mask = ( uint32_t )( 0x100 - ( 1 << ( offset % 8 ) ) );
-      j += 8 - offset % 8;
+      j += 8 - (offset % 8);
       result = ( ( buffer[ i ] & mask ) >> ( offset % 8 ) ) << ( length - j );
     } else if ( i == ( offset + length - 1 ) / 8 ) {
       const uint32_t mask = ( uint32_t )( ( 1 << ( offset % 8 + length ) ) - 1 );

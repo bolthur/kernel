@@ -113,7 +113,6 @@ void rpc_keyboard_key(
     }
     // loop through field count
     for ( size_t j = 0; j < field->count; j++ ) {
-      STARTUP_PRINT("i = %zu, j = %zu, field->count = %"PRIu8"\r\n", i, j, field->count )
       keyboard_bit_set(
         field->value.ptr,
         j * field->size,
@@ -170,7 +169,8 @@ void rpc_keyboard_key(
         i++
       ) {
         // extract whether key is down or not
-        dev->max_key_down[ i ] = ( uint16_t )keyboard_bit_get_value( dev->key_field[ 8 ], i );
+        dev->max_key_down[ i ] = ( uint16_t )keyboard_bit_get_value(
+          dev->key_field[ 8 ], i );
         // check if key is down
         if ( dev->max_key_down[ i ] + ( uint16_t )dev->key_field[ 8 ]->usage.keyboard != 0 ) {
           // increment key count

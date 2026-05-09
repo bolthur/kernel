@@ -91,7 +91,7 @@ int hid_set_protocol(
       .value = protocol,
       .length = 0,
     },
-    10, /// FIXME: REPLACE WITH CONSTANT
+    USB_TIMEOUT_VALUE,
     &error,
     &last_transfer
   );

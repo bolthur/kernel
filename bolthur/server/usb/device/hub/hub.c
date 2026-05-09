@@ -169,7 +169,7 @@ int hub_get_status(
       .type = 0xa0,
       .length = sizeof( libusb_hub_full_status_t ),
     },
-    10, /// FIXME: REPLACE WITH CONSTANT
+    USB_TIMEOUT_VALUE,
     &error,
     &last_transfer
     );
@@ -226,7 +226,7 @@ int hub_change_port_feature(
       .value = ( uint16_t )feature,
       .index = port + 1,
     },
-    10, /// FIXME: REPLACE WITH CONSTANT
+    USB_TIMEOUT_VALUE,
     &error,
     &last_transfer
   );
@@ -307,7 +307,7 @@ int hub_get_port_status(
       .index = port + 1,
       .length = sizeof( libusb_hub_port_full_status_t ),
     },
-    10, /// FIXME: REPLACE WITH CONSTANT
+    USB_TIMEOUT_VALUE,
     &error,
     &last_transfer
   );
