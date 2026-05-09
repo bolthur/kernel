@@ -26,6 +26,7 @@
 #include "keyboard.h"
 
 #include "../../../../libusbd.h"
+#include "../../../../../library/hid/hid.h"
 #include "../../../../../library/usb/usb.h"
 
 /**
@@ -90,7 +91,112 @@ static void keyboard_rpc_handler(
     _syscall_rpc_cleanup();
     return;
   }
-  EARLY_STARTUP_PRINT( "READ ENOUGH DATA, CONTINUE IMPLEMENTATION HERE\r\n" )
+  // try to get device by number
+  libusb_keyboard_device_t* dev = keyboard_get_device( message->device_number );
+  // handle no device found
+  if ( ! dev ) {
+    STARTUP_PRINT( "Unable to get device %s\r\n",
+      usb_get_description( message->device_number ) )
+    _syscall_memory_shared_detach( control_message->shm_id );
+    free( response );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // iterate through reports
+  for (size_t i = 0; i < dev->key_report->field_count; i++) {
+    // get current field
+    libusb_hid_parser_fields_t* field = &dev->key_report->fields[ i ];
+    // handle variable
+    if (field->attribute.variable) {
+      // set value depending on minimum
+      if (field->logical_minimum < 0) {
+        field->value.i32 = keyboard_bit_get_signed(
+          message->buffer, field->offset, field->size );
+      } else {
+        field->value.u32 = keyboard_bit_get_unsigned(
+          message->buffer, field->offset, field->size );
+      }
+      // skip rest
+      continue;
+    }
+    // handle no ptr
+    if (!field->value.ptr) {
+      continue;
+    }
+    // loop through field count
+    for ( size_t j = 0; j < field->count; j++ ) {
+      keyboard_bit_set(
+        field->value.ptr,
+        j * field->size,
+        field->size,
+        field->logical_minimum < 0
+          ? ( uint32_t )keyboard_bit_get_signed(
+            message->buffer,
+            field->offset + j * field->size,
+            field->size
+          ) : keyboard_bit_get_unsigned(
+            message->buffer,
+            field->offset + j * field->size,
+            field->size
+          )
+      );
+    }
+  }
+  // set modifiers
+  if ( dev->key_field[ 0 ] ) {
+    dev->modifier.left_control = dev->key_field[ 0 ]->value._bool;
+  }
+  if ( dev->key_field[ 1 ] ) {
+    dev->modifier.left_shift = dev->key_field[ 1 ]->value._bool;
+  }
+  if ( dev->key_field[ 2 ] ) {
+    dev->modifier.left_alt = dev->key_field[ 2 ]->value._bool;
+  }
+  if ( dev->key_field[ 3 ] ) {
+    dev->modifier.left_gui = dev->key_field[ 3 ]->value._bool;
+  }
+  if ( dev->key_field[ 4 ] ) {
+    dev->modifier.right_control = dev->key_field[ 4 ]->value._bool;
+  }
+  if ( dev->key_field[ 5 ] ) {
+    dev->modifier.right_shift = dev->key_field[ 5 ]->value._bool;
+  }
+  if ( dev->key_field[ 6 ] ) {
+    dev->modifier.right_alt = dev->key_field[ 6 ]->value._bool;
+  }
+  if ( dev->key_field[ 7 ] ) {
+    dev->modifier.right_gui = dev->key_field[ 7 ]->value._bool;
+  }
+  if ( dev->key_field[ 8 ] ) {
+    // get first value
+    const int32_t val = keyboard_bit_get_value( dev->key_field[ 8 ], 0 );
+    // handle no error
+    if ( val != LIBUSB_HID_USAGE_PAGE_KEYBOARD_ERROR_ROLL_OVER ) {
+      // reset key count
+      dev->key_count = 0;
+      // iterate over max possible keys
+      for (
+        size_t i = 0;
+        i < KEYBOARD_MAX_KEYS && i < dev->key_field[ 8 ]->count;
+        i++
+      ) {
+        // extract whether key is down or not
+        dev->max_key_down[ i ] = ( uint16_t )keyboard_bit_get_value(
+          dev->key_field[ 8 ], i);
+        // check if key is down
+        if ( dev->max_key_down[ i ] + ( uint16_t )dev->key_field[ 8 ]->usage.keyboard != 0 ) {
+          // increment key count
+          dev->key_count++;
+        }
+      }
+      // debug output
+      for ( size_t i = 0; i < dev->key_count; i++ ) {
+        STARTUP_PRINT( "key: %"PRIu16"\r\n", dev->max_key_down[ i ] );
+      }
+    }
+  }
+  // reset last poll
+  dev->last_poll = 0;
 }
 
 /**
@@ -130,23 +236,11 @@ void keyboard_destroy( libusb_keyboard_device_t* device ) {
   }
   // free key report field
   if ( device->key_report ) {
-    free( device->key_report );
+    hid_destroy_report( device->key_report );
   }
   // free led report field
   if ( device->led_report ) {
-    free( device->led_report );
-  }
-  // free up key fields
-  for ( size_t idx = 0; idx < 9; idx++ ) {
-    if ( device->key_field[ idx ] ) {
-      free( device->key_field[ idx ] );
-    }
-  }
-  // free up led fields
-  for ( size_t idx = 0; idx < 8; idx++ ) {
-    if ( device->led_field[ idx ] ) {
-      free( device->led_field[ idx ] );
-    }
+    hid_destroy_report( device->led_report );
   }
   // free device itself
   free( device );
@@ -200,28 +294,40 @@ int keyboard_duplicate_report(
   }
   // copy over content
   memcpy( *destination, source, size );
-  // return success
-  return 0;
-}
-
-/**
- * @fn int keyboard_duplicate_report_field(libusb_hid_parser_fields_t**, libusb_hid_parser_fields_t*)
- * @brief Function to duplicate report field
- * @param destination
- * @param source
- * @return
- */
-int keyboard_duplicate_report_field(
-  libusb_hid_parser_fields_t** destination,
-  const libusb_hid_parser_fields_t* source
-) {
-  // allocate space
-  *destination = malloc( sizeof( libusb_hid_parser_fields_t ) );
-  if ( ! *destination ) {
-    return ENOMEM;
+  // duplicate report addresses
+  for (size_t i = 0; i < source->fields_length; i++ ) {
+    // skip variables or no ptr set
+    if (
+      source->fields[ i ].attribute.variable
+      || ! source->fields[ i ].value.ptr
+    ) {
+      continue;
+    }
+    // cache ptr
+    const uint8_t* ptr = source->fields[ i ].value.ptr;
+    const size_t ptr_size = ( size_t )( source->fields[ i ].size * source->fields[ i ].count / 8 );
+    void* new_ptr = malloc( ptr_size );
+    // handle allocation error
+    if ( ! new_ptr ) {
+      // free up allocated stuff
+      for ( size_t inner = 0; inner < i; inner++ ) {
+        // skip variables or when no ptr is set
+        if (
+          source->fields[ inner ].attribute.variable
+          || ! source->fields[ inner ].value.ptr
+        ) {
+          continue;
+        }
+        // free space
+        free( (*destination)->fields[ inner ].value.ptr );
+      }
+      return ENOMEM;
+    }
+    // copy over stuff
+    memcpy( new_ptr, ptr, ptr_size );
+    // overwrite ptr
+    (*destination)->fields[ i ].value.ptr = new_ptr;
   }
-  // copy over content
-  memcpy( *destination, source, sizeof( libusb_hid_parser_fields_t ) );
   // return success
   return 0;
 }
@@ -231,8 +337,6 @@ int keyboard_duplicate_report_field(
  * @brief Function to start keyboard polling
  * @param device
  * @return
- *
- * @todo switch from transfer control to interrupt
  */
 int keyboard_start_polling( libusb_keyboard_device_t* device ) {
   // handle invalid parameter
@@ -258,4 +362,118 @@ int keyboard_start_polling( libusb_keyboard_device_t* device ) {
     10, /// FIXME: REPLACE WITH CONSTANT
     keyboard_rpc_handler
   );
+}
+
+/**
+ * @fn libusb_keyboard_device_t* keyboard_get_device(const uint32_t)
+ * @brief Method to get device by number
+ * @param device_number
+ * @return
+ */
+libusb_keyboard_device_t* keyboard_get_device(const uint32_t device_number) {
+  // start with head
+  libusb_keyboard_device_t* current = keyboard_head;
+  // loop while there is something
+  while ( current ) {
+    // handle device number match
+    if ( current->device_number == device_number ) {
+      // return current
+      return current;
+    }
+    // switch to next
+    current = current->next;
+  }
+  // return null
+  return nullptr;
+}
+
+/**
+ * @fn void keyboard_bit_set(uint8_t*, const uint32_t, const uint32_t, const uint32_t)
+ * @brief
+ * @param buffer
+ * @param offset
+ * @param length
+ * @param value
+ */
+void keyboard_bit_set(
+  uint8_t* buffer,
+  const uint32_t offset,
+  const uint32_t length,
+  const uint32_t value
+) {
+  STARTUP_PRINT( "%"PRIxPTR", %"PRIu32", %"PRIu32", %"PRIu32"\r\n",
+    ( uintptr_t )buffer, offset, length, value )
+  for ( size_t i = offset / 8, j = 0; i < ( offset + length + 7 ) / 8; i++ ) {
+    if ( offset / 8 == ( offset + length - 1 ) / 8 ) {
+      const uint32_t mask = ( uint32_t )( ( 1 << ( offset % 8 + length ) ) - ( 1 << ( offset % 8 ) ) );
+      buffer[ i ] = ( uint8_t )( ( buffer[ i ] & ~mask ) | ( ( value << ( offset % 8 ) ) & mask ) );
+    } else if ( i == offset / 8 ) {
+      const uint32_t mask = ( uint32_t )( 0x100 - ( 1 << ( offset % 8 ) ) );
+      buffer[ i ] = ( uint8_t )( ( buffer[ i ] & ~mask ) | ( ( value << ( offset % 8 ) ) & mask ) );
+      j += 8 - ( offset % 8 );
+    } else if ( i == ( offset + length - 1 ) / 8 ) {
+      const uint32_t mask = ( uint32_t )( ( 1 << ( ( offset % 8 ) + length ) ) - 1 );
+      buffer[ i ] = ( uint8_t )( ( buffer[ i ] & ~mask ) | ( ( value >> j ) & mask ) );
+    } else {
+      buffer[ i ] = ( value >> j ) & 0xff;
+      j += 8;
+    }
+  }
+}
+
+/**
+ * @fn int32_t keyboard_bit_get_signed(const uint8_t*, const uint32_t, const uint32_t)
+ * @brief
+ * @param buffer
+ * @param offset
+ * @param length
+ * @return
+ */
+int32_t keyboard_bit_get_signed( const uint8_t* buffer, const uint32_t offset, const uint32_t length ) {
+  uint32_t result = keyboard_bit_get_unsigned( buffer, offset, length );
+  if (result & 1 << (length - 1)) {
+    result |= 0xffffffff - ( uint32_t )( ( 1 << length ) - 1 );
+  }
+  return ( int32_t )result;
+}
+
+/**
+ * @fn uint32_t keyboard_bit_get_unsigned(const uint8_t*, const uint32_t, const uint32_t)
+ * @brief
+ * @param buffer
+ * @param offset
+ * @param length
+ * @return
+ */
+uint32_t keyboard_bit_get_unsigned( const uint8_t* buffer, const uint32_t offset, const uint32_t length ) {
+  uint32_t result = 0;
+  for ( size_t i = offset / 8, j = 0; i < (offset + length + 7) / 8; i++) {
+    if ( offset / 8 == ( offset + length - 1 ) / 8 ) {
+      const uint32_t mask = ( uint32_t )( ( 1 << ( ( offset % 8 ) + length ) ) - ( 1 << ( offset % 8 ) ) );
+      result = ( buffer[ i ] & mask ) >> ( offset % 8 );
+    } else if ( i == offset / 8 ) {
+      const uint32_t mask = ( uint32_t )( 0x100 - ( 1 << ( offset % 8 ) ) );
+      j += 8 - offset % 8;
+      result = ( ( buffer[ i ] & mask ) >> ( offset % 8 ) ) << ( length - j );
+    } else if ( i == ( offset + length - 1 ) / 8 ) {
+      const uint32_t mask = ( uint32_t )( ( 1 << ( offset % 8 + length ) ) - 1 );
+      result |= buffer[ i ] & mask;
+    } else {
+      j += 8;
+      result |= ( uint32_t )( buffer[ i ] << ( length - j ) );
+    }
+  }
+  return result;
+}
+
+/**
+ * @fn int32_t keyboard_bit_get_value(const libusb_hid_parser_fields_t*, const uint32_t)
+ * @brief
+ * @param field
+ * @param index
+ * @return
+ */
+int32_t keyboard_bit_get_value( const libusb_hid_parser_fields_t* field, const uint32_t index ) {
+  return keyboard_bit_get_signed(
+    field->value.ptr, index * field->size, field->size );
 }

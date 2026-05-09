@@ -30,7 +30,11 @@ void keyboard_append( libusb_keyboard_device_t* );
 void keyboard_destroy( libusb_keyboard_device_t* );
 int keyboard_new_index( uint32_t* );
 int keyboard_duplicate_report( libusb_hid_parser_report_t**, const libusb_hid_parser_report_t*, size_t );
-int keyboard_duplicate_report_field( libusb_hid_parser_fields_t**, const libusb_hid_parser_fields_t* );
 int keyboard_start_polling( libusb_keyboard_device_t* );
+libusb_keyboard_device_t* keyboard_get_device(uint32_t);
+void keyboard_bit_set( uint8_t*, uint32_t, uint32_t, uint32_t );
+int32_t keyboard_bit_get_signed( const uint8_t*, uint32_t, uint32_t );
+uint32_t keyboard_bit_get_unsigned( const uint8_t*, uint32_t, uint32_t );
+int32_t keyboard_bit_get_value( const libusb_hid_parser_fields_t*, uint32_t );
 
 #endif

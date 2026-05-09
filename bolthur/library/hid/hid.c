@@ -288,6 +288,40 @@ int hid_get_report_count( uint32_t device_number, uint8_t* report_count ) {
 }
 
 /**
+ * @fn hid_destroy_report(libusb_hid_parser_report_t* report)
+ * @brief Wrapper to destroy a report object
+ * @param report
+ */
+void hid_destroy_report( libusb_hid_parser_report_t* report ) {
+  // handle no valid report
+  if ( ! report ) {
+    return;
+  }
+  // some debug output
+  #if defined( LIBHID_ENABLE_DEBUG )
+    STARTUP_PRINT( "Freeing report\r\n" )
+  #endif
+  // free allocated resources
+  for ( size_t i = 0; i < report->fields_length; i++ ) {
+    // skip variables or when no ptr is set
+    if (
+      report->fields[ i ].attribute.variable
+      || ! report->fields[ i ].value.ptr
+    ) {
+      continue;
+    }
+    // some debug output
+    #if defined( LIBHID_ENABLE_DEBUG )
+    STARTUP_PRINT( "Freeing %p\r\n", report->fields[ i ].value.ptr )
+    #endif
+    // free allocated pointer
+    free( report->fields[ i ].value.ptr );
+  }
+  // free report itself
+  free( report );
+}
+
+/**
  * @fn int hid_get_report(uint32_t, uint8_t, libusb_hid_parser_report_t**)
  * @brief Function to get hid report
  * @param device_number
@@ -369,9 +403,14 @@ int hid_get_report(
     return EIO;
   }
   // pointer to result
-  libusb_hid_parser_report_t* parser = ( libusb_hid_parser_report_t* )shm_addr;
+  auto const parser = ( libusb_hid_parser_report_t* )shm_addr;
+  #if defined( LIBHID_ENABLE_DEBUG )
+    STARTUP_PRINT( "Field length = %zu, field count = %zu\r\n", parser->fields_length, parser->field_count )
+  #endif
+  // calculate result size
+  const size_t result_size = sizeof( libusb_hid_parser_report_t ) + parser->fields_length * sizeof( libusb_hid_parser_fields_t );
   // allocate space
-  *result = malloc( sizeof( *result ) + parser->fields_length *  sizeof( libusb_hid_parser_fields_t ) );
+  *result = malloc( result_size );
   if ( ! *result ) {
     #if defined( LIBHID_ENABLE_DEBUG )
       STARTUP_PRINT( "Unable to allocate report fields\r\n" )
@@ -383,7 +422,62 @@ int hid_get_report(
     return ENOMEM;
   }
   // copy over content
-  memcpy( *result, parser, sizeof( *result ) + parser->fields_length * sizeof( libusb_hid_parser_fields_t ) );
+  memcpy( *result, parser, result_size );
+  #if defined( LIBHID_ENABLE_DEBUG )
+    STARTUP_PRINT( "Field length = %zu, field count = %zu\r\n", (*result)->fields_length, (*result)->field_count )
+  #endif
+  // copy over ptr stuff
+  for ( size_t i = 0; i < (*result)->fields_length; i++ ) {
+    // overwrite ptr
+    #if defined( LIBHID_ENABLE_DEBUG )
+      STARTUP_PRINT( "(*result)->fields[ %zu ].value.ptr = %"PRIxPTR"\r\n", i, ( uintptr_t )(*result)->fields[ i ].value.ptr )
+      STARTUP_PRINT( "parser->fields[ %zu ].value.ptr = %"PRIxPTR"\r\n", i, ( uintptr_t )parser->fields[ i ].value.ptr )
+    #endif
+    // skip variables or when no ptr is set
+    if (
+      (*result)->fields[ i ].attribute.variable
+      || ! (*result)->fields[ i ].value.ptr
+    ) {
+      continue;
+    }
+    // cache ptr
+    const uint8_t* ptr = (*result)->fields[ i ].value.ptr;
+    const size_t ptr_size = ( size_t )( (*result)->fields[ i ].size * (*result)->fields[ i ].count / 8 );
+    void* new_ptr = malloc( ptr_size );
+    // handle allocation error
+    if ( ! new_ptr ) {
+      #if defined( LIBHID_ENABLE_DEBUG )
+        STARTUP_PRINT( "Unable to allocate report fields\r\n" )
+      #endif
+      // free up allocated stuff
+      for ( size_t inner = 0; inner < i; inner++ ) {
+        // skip variables or no ptr
+        if (
+          (*result)->fields[ inner ].attribute.variable
+          || ! (*result)->fields[ inner ].value.ptr
+        ) {
+          continue;
+        }
+        // free space
+        free( (*result)->fields[ inner ].value.ptr );
+      }
+      // detach shared memory
+      _syscall_memory_shared_detach( shm_id );
+      // free request
+      free( request );
+      return ENOMEM;
+    }
+    // copy over stuff
+    memcpy( new_ptr, ( void* )( ( uintptr_t )ptr + ( uintptr_t )shm_addr), ptr_size );
+    // overwrite ptr
+    #if defined( LIBHID_ENABLE_DEBUG )
+      STARTUP_PRINT( "(*result)->fields[ %zu ].value.ptr = %"PRIxPTR", %zu\r\n", i, ( uintptr_t )(*result)->fields[ i ].value.ptr, ptr_size )
+    #endif
+    (*result)->fields[ i ].value.ptr = new_ptr;
+    #if defined( LIBHID_ENABLE_DEBUG )
+      STARTUP_PRINT( "(*result)->fields[ %zu ].value.ptr = %"PRIxPTR", %zu\r\n", i, ( uintptr_t )(*result)->fields[ i ].value.ptr, ptr_size )
+    #endif
+  }
   // detach shared memory
   _syscall_memory_shared_detach( shm_id );
   // free request

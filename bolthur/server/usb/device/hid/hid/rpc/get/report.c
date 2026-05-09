@@ -87,8 +87,32 @@ void rpc_get_report(
     return;
   }
   // copy over parser
-  memcpy( shm_addr, dev->parser_result->report[ message->report ], sizeof( libusb_hid_parser_report_t )
-    + dev->parser_result->report[ message->report ]->fields_length * sizeof( libusb_hid_parser_fields_t ) );
+  const size_t initial_size = sizeof( libusb_hid_parser_report_t )
+    + dev->parser_result->report[ message->report ]->fields_length * sizeof( libusb_hid_parser_fields_t );
+  size_t offset = initial_size;
+  memcpy( shm_addr, dev->parser_result->report[ message->report ], initial_size );
+  // loop through report fields
+  libusb_hid_parser_report_t* report_parser_to_return = shm_addr;
+  for ( size_t i = 0; i < report_parser_to_return->fields_length; i++ ) {
+    // skip variables
+    if ( report_parser_to_return->fields[ i ].attribute.variable ) {
+      continue;
+    }
+    // handle no ptr set
+    if ( ! report_parser_to_return->fields[ i ].value.ptr ) {
+      continue;
+    }
+    // calculate ptr size
+    const size_t ptr_size = ( size_t )report_parser_to_return->fields[ i ].size * report_parser_to_return->fields[ i ].count / 8;
+    // adjust ptr to local one
+    auto void* new_ptr = ( void* )( ( uintptr_t )shm_addr + offset );
+    // copy over stuff
+    memcpy(new_ptr, report_parser_to_return->fields[ i ].value.ptr, ptr_size);
+    // set relative new ptr
+    report_parser_to_return->fields[ i ].value.ptr = ( void* )( ( uintptr_t )new_ptr - ( uintptr_t )shm_addr );
+    // increment offset
+    offset += ptr_size;
+  }
   // calculate request size
   const size_t request_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate response

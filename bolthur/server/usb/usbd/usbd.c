@@ -1208,7 +1208,7 @@ libusb_device_t* usbd_get_root_hub( void ) {
 int usbd_init( void ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Init usdb\r\n" )
+    STARTUP_PRINT( "Init usbd\r\n" )
   #endif
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
