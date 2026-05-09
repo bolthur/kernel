@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -312,7 +312,7 @@ void hid_destroy_report( libusb_hid_parser_report_t* report ) {
     }
     // some debug output
     #if defined( LIBHID_ENABLE_DEBUG )
-    STARTUP_PRINT( "Freeing %p\r\n", report->fields[ i ].value.ptr )
+      STARTUP_PRINT( "Freeing %p\r\n", report->fields[ i ].value.ptr )
     #endif
     // free allocated pointer
     free( report->fields[ i ].value.ptr );

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -22,8 +22,8 @@
 
 #include <sys/bolthur.h>
 
-#define FRAMEBUFFER_SCREEN_WIDTH 1024
-#define FRAMEBUFFER_SCREEN_HEIGHT 768
+#define FRAMEBUFFER_SCREEN_WIDTH 1280
+#define FRAMEBUFFER_SCREEN_HEIGHT 1024
 #define FRAMEBUFFER_SCREEN_DEPTH 32
 #define BYTE_PER_PIXEL ( FRAMEBUFFER_SCREEN_DEPTH / CHAR_BIT )
 

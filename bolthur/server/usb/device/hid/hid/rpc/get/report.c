@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2018 - 2025 bolthur project.
+ * Copyright (C) 2018 - 2026 bolthur project.
  *
  * This file is part of bolthur/kernel.
  *
@@ -94,12 +94,11 @@ void rpc_get_report(
   // loop through report fields
   libusb_hid_parser_report_t* report_parser_to_return = shm_addr;
   for ( size_t i = 0; i < report_parser_to_return->fields_length; i++ ) {
-    // skip variables
-    if ( report_parser_to_return->fields[ i ].attribute.variable ) {
-      continue;
-    }
-    // handle no ptr set
-    if ( ! report_parser_to_return->fields[ i ].value.ptr ) {
+    // skip variables or if no ptr is set
+    if (
+      report_parser_to_return->fields[ i ].attribute.variable
+      || ! report_parser_to_return->fields[ i ].value.ptr
+    ) {
       continue;
     }
     // calculate ptr size
@@ -107,9 +106,10 @@ void rpc_get_report(
     // adjust ptr to local one
     auto void* new_ptr = ( void* )( ( uintptr_t )shm_addr + offset );
     // copy over stuff
-    memcpy(new_ptr, report_parser_to_return->fields[ i ].value.ptr, ptr_size);
+    memcpy( new_ptr, report_parser_to_return->fields[ i ].value.ptr, ptr_size );
     // set relative new ptr
     report_parser_to_return->fields[ i ].value.ptr = ( void* )( ( uintptr_t )new_ptr - ( uintptr_t )shm_addr );
+    STARTUP_PRINT( "i = %zu / %p\r\n", i, report_parser_to_return->fields[ i ].value.ptr )
     // increment offset
     offset += ptr_size;
   }
