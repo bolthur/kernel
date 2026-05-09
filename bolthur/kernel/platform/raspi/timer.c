@@ -96,7 +96,7 @@ static void timer_clear( void* context ) {
  * @brief Initialize timer
  */
 void timer_platform_init( void ) {
-  // initialise timer ticks
+  // initialize timer ticks
   timer_tick_count = 0;
 
   // get peripheral base

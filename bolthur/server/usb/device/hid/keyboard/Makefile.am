@@ -14,6 +14,7 @@ keyboard_SOURCES = \
   rpc/keyboard/attach.c \
   rpc/keyboard/deallocate.c \
   rpc/keyboard/detach.c \
+  rpc/keyboard/key.c \
   rpc/init.c \
   keyboard.c \
   keymap.c \

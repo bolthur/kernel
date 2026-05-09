@@ -171,9 +171,8 @@ int usb_control_message_async(
   message->transfer = transfer;
   message->direction = direction;
   message->buffer_length = buffer_length;
-  memcpy( &message->request, request, sizeof( *request ) );
-  message->buffer_length = buffer_length;
   message->timeout = timeout;
+  memcpy( &message->request, request, sizeof( *request ) );
   if ( LIBUSB_DIRECTION_OUT == direction && buffer ) {
     memcpy( &message->buffer, buffer, buffer_length );
   }
@@ -311,9 +310,8 @@ int usb_control_message(
   message->transfer = transfer;
   message->direction = direction;
   message->buffer_length = buffer_length;
-  memcpy( &message->request, request, sizeof( *request ) );
-  message->buffer_length = buffer_length;
   message->timeout = timeout;
+  memcpy( &message->request, request, sizeof( *request ) );
   if ( LIBUSB_DIRECTION_OUT == direction && buffer ) {
     memcpy( &message->buffer, buffer, buffer_length );
   }
