@@ -131,7 +131,7 @@ void rpc_submit_control_message(
     // push request into data buffer
     memcpy( databuffer, &message->request, sizeof( libusb_device_request_t ) );
     // setup channel
-    int result = dwhci_channel_send_wait(
+    response_t result = dwhci_channel_send_wait(
       message->parent_device_number,
       message->port_number,
       &message->error,

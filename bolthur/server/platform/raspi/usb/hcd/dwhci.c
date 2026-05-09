@@ -1838,7 +1838,7 @@ response_t dwhci_init( void ) {
   sequence[ 2 ].type = IOMEM_MMIO_ACTION_SLEEP;
   sequence[ 2 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
   sequence[ 2 ].sleep = 100;
-  // reset reset flag
+  // reset flag
   sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ_AND;
   sequence[ 3 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
   sequence[ 3 ].value = ( uint32_t )~HCD_DWHCI_HOST_PORT_RESET;
@@ -1911,10 +1911,16 @@ response_t dwhci_init( void ) {
   sequence[ 4 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
   sequence[ 5 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
   sequence[ 5 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
-  sequence[ 5 ].value = HCD_DWHCI_CORE_INT_MASK_HC_INTR
+  sequence[ 5 ].value = (uint32_t)(HCD_DWHCI_CORE_INT_MASK_HC_INTR
     | HCD_DWHCI_CORE_INT_MASK_PORT_INTR
     | HCD_DWHCI_CORE_INT_MASK_DISCONNECT
-    | HCD_DWHCI_CORE_INT_MASK_USB_SUSPEND;
+    | HCD_DWHCI_CORE_INT_MASK_USB_SUSPEND
+    | HCD_DHWCI_CORE_INT_MASK_OTG_INTR
+    | HCD_DWHCI_CORE_INT_MASK_SOF_INTR
+    | HCD_DWHCI_CORE_INT_MASK_RX_STS_Q_LVL
+    | HCD_DWHCI_CORE_INT_MASK_CON_ID_STS_CHNG
+    | HCD_DWHCI_CORE_INT_MASK_SESS_REQ_INTR
+    | HCD_DWHCI_CORE_INT_MASK_WKUP_INTR);
   // perform request
   result = ioctl(
     fd_iomem,

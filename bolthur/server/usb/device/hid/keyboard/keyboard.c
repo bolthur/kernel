@@ -178,10 +178,10 @@ int keyboard_start_polling( libusb_keyboard_device_t* device ) {
   if ( ! device ) {
     return EINVAL;
   }
-  // clear out buffer
-  memset( device->buffer, 0, KEYBOARD_REPORT_SIZE );
   // set running poll
   device->running_poll = _syscall_timer_tick_count();
+  // clear out buffer
+  memset( device->buffer, 0, KEYBOARD_REPORT_SIZE );
   // return result of async control message
   return usb_control_message_async(
     device->device_number,
