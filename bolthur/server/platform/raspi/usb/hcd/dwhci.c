@@ -45,6 +45,11 @@ int fd_iomem = -1;
 void* databuffer = nullptr;
 
 /**
+ * @brief DWHCI configuration object
+ */
+dwhci_configuration_t configuration;
+
+/**
  * @fn response_t dwhci_read_port(uint32_t, uint32_t*)
  * @brief Helper to read a port
  * @param port
@@ -711,6 +716,55 @@ response_t dwhci_prepare_channel(
 }
 
 /**
+ * @fn response_t dwhci_allocate_channel(uint8_t*)
+ * @brief Method to allocate a channel
+ * @param channel_out out pointer where channel is stored
+ */
+response_t dwhci_allocate_channel( uint8_t* channel_out ) {
+  // space for channel mask
+  uint32_t mask = 1;
+  // iterate through channels
+  for (uint32_t channel = 0; channel < configuration.channel.count; channel++) {
+    // handle channel not allocated
+    if (!(configuration.channel.allocated & mask)) {
+      // mark it as allocated
+      configuration.channel.allocated |= mask;
+      // push channel to out field
+      *channel_out = (uint8_t)channel;
+      // return success
+      return HCD_RESPONSE_OK;
+    }
+    // shift mask to right for check of next channel
+    mask <<= 1;
+  }
+  // return no channel
+  return HCD_RESPONSE_ERROR_NO_CHANNEL;
+}
+
+/**
+ * @fn response_t dwhci_free_channel(uint8_t)
+ * @brief Helper to free allocated channel
+ * @param channel channel to free
+ * @return
+ */
+response_t dwhci_free_channel( uint8_t channel ) {
+  // check channel
+  if ( channel >= configuration.channel.count ) {
+    return HCD_RESPONSE_ERROR_EINVAL;
+  }
+  // build mask to apply
+  const uint32_t mask = 1 << channel;
+  // ensure channel is allocated
+  if (!(configuration.channel.allocated & mask)) {
+    return HCD_RESPONSE_ERROR_NO_CHANNEL;
+  }
+  // deallocate channel
+  configuration.channel.allocated &= ~mask;
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
  * @fn response_t dwhci_channel_send_wait(uint32_t, uint32_t, libusb_transfer_error_t*, libusb_pipe_address_t*, uint8_t, void*, size_t, dwhci_channel_state_t, uint32_t*)
  * @brief Send command to channel and wait
  * @param parent_device_number
@@ -1097,6 +1151,8 @@ response_t dwhci_init( void ) {
     // return error response
     return HCD_RESPONSE_ERROR_IO;
   }
+  // clear out configuration object
+  memset( &configuration, 0, sizeof( configuration ) );
   // allocate data buffer
   databuffer = mmap( NULL, 0x1000, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS | MAP_DEVICE , -1, 0 );
   if ( MAP_FAILED == databuffer ) {
@@ -1692,9 +1748,9 @@ response_t dwhci_init( void ) {
       return HCD_RESPONSE_ERROR_MEMORY;
     }
     // extract channel count
-    const uint32_t channel_count = HCD_DWHCI_CORE_HW_CFG2_NUM_HOST_CHANNELS( hw_cfg2 );
+    configuration.channel.count = HCD_DWHCI_CORE_HW_CFG2_NUM_HOST_CHANNELS( hw_cfg2 );
     // loop over channels
-    for ( uint32_t channel = 0; channel < channel_count; ++channel ) {
+    for ( uint32_t channel = 0; channel < configuration.channel.count; ++channel ) {
       sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
       sequence[ 0 ].offset = PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel );
       sequence[ 0 ].value = ( uint32_t )~(
@@ -1741,7 +1797,7 @@ response_t dwhci_init( void ) {
       return HCD_RESPONSE_ERROR_MEMORY;
     }
     // loop through channels again
-    for ( uint32_t channel = 0; channel < channel_count; ++channel ) {
+    for ( uint32_t channel = 0; channel < configuration.channel.count; ++channel ) {
       // read channel
       sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
       sequence[ 0 ].offset = PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( channel );

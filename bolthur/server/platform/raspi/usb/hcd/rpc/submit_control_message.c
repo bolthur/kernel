@@ -62,8 +62,7 @@ void rpc_submit_control_message(
   }
   const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate space for pull_request
-  const hcd_submit_control_message_t* submit_control_message =
-    ( hcd_submit_control_message_t* )request->container;
+  auto const submit_control_message = ( hcd_submit_control_message_t* )request->container;
   // attach shared memory
   void* shm_addr = _syscall_memory_shared_attach(
     submit_control_message->shm_id, ( uintptr_t )NULL );
@@ -78,7 +77,7 @@ void rpc_submit_control_message(
     return;
   }
   // transform shared memory into message
-  hcd_control_message_t* message = ( hcd_control_message_t* )shm_addr;
+  auto const message = ( hcd_control_message_t* )shm_addr;
   // allocate response structure
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* response = malloc( response_size );
@@ -146,7 +145,7 @@ void rpc_submit_control_message(
     if ( 0 != result ) {
       STARTUP_PRINT( "Setup failed with %s\r\n", response_error( result ) )
       // set error
-      error.status = -result;
+      error.status = (int)-result;
       // detach shared memory
       _syscall_memory_shared_detach( submit_control_message->shm_id );
       // free request
@@ -186,7 +185,7 @@ void rpc_submit_control_message(
       if ( 0 != result ) {
         STARTUP_PRINT( "Data failed with %s\r\n", response_error( result ) )
         // set error
-        error.status = -result;
+        error.status = (int)-result;
         // detach shared memory
         _syscall_memory_shared_detach( submit_control_message->shm_id );
         // free request
@@ -234,7 +233,7 @@ void rpc_submit_control_message(
     if ( 0 != result ) {
       STARTUP_PRINT( "Final transmit failed with %s\r\n", response_error( result ) )
       // set error
-      error.status = -result;
+      error.status = (int)-result;
       // detach shared memory
       _syscall_memory_shared_detach( submit_control_message->shm_id );
       // free request

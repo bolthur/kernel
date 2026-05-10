@@ -26,9 +26,6 @@
 
 //#define DWHCI_ENABLE_DEBUG 1
 
-extern int fd_iomem;
-extern void* databuffer;
-
 typedef enum {
   DWHCI_CHANNEL_STATE_DATA0 = 0,
   DWHCI_CHANNEL_STATE_DATA1 = 2,
@@ -37,9 +34,22 @@ typedef enum {
   DWHCI_CHANNEL_STATE_SETUP = 3,
 } dwhci_channel_state_t;
 
+typedef struct {
+  struct {
+    uint32_t count;
+    uint32_t allocated;
+  } channel;
+} dwhci_configuration_t;
+
+extern int fd_iomem;
+extern void* databuffer;
+extern dwhci_configuration_t configuration;
+
 response_t dwhci_channel_interrupt_to_error( libusb_transfer_error_t*, uint8_t, bool );
 response_t dwhci_transmit_channel( uint8_t, void* );
 response_t dwhci_prepare_channel( uint32_t, uint32_t, uint8_t, uint32_t, dwhci_channel_state_t, libusb_pipe_address_t* );
+response_t dwhci_allocate_channel( uint8_t* );
+response_t dwhci_free_channel( uint8_t );
 response_t dwhci_channel_send_wait_one( libusb_transfer_error_t*, uint8_t, void*, uint32_t, libusb_speed_t );
 response_t dwhci_channel_send_wait( uint32_t, uint32_t, libusb_transfer_error_t*, libusb_pipe_address_t*, uint8_t, void*, size_t, dwhci_channel_state_t, uint32_t* );
 response_t dwhci_read_port( uint32_t, uint32_t* );
