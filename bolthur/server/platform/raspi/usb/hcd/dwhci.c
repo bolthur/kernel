@@ -52,8 +52,8 @@ dwhci_configuration_t configuration;
 /**
  * @fn response_t dwhci_read_port(uint32_t, uint32_t*)
  * @brief Helper to read a port
- * @param port
- * @param value
+ * @param port port to read
+ * @param value value output variable
  * @return
  */
 response_t dwhci_read_port( const uint32_t port, uint32_t* value ) {
@@ -116,8 +116,8 @@ response_t dwhci_read_port( const uint32_t port, uint32_t* value ) {
 /**
  * @fn response_t dwhci_write_port(uint32_t, uint32_t)
  * @brief Helper to write to a port
- * @param port
- * @param value
+ * @param port port to write
+ * @param value value to write
  * @return
  */
 response_t dwhci_write_port( const uint32_t port, const uint32_t value ) {
@@ -170,8 +170,8 @@ response_t dwhci_write_port( const uint32_t port, const uint32_t value ) {
 /**
  * @fn response_t dwhci_transmit_channel(uint8_t, void*)
  * @brief Transmit channel operation
- * @param channel
- * @param buffer
+ * @param channel channel to transmit
+ * @param buffer buffer
  * @return
  */
 response_t dwhci_transmit_channel( const uint8_t channel, void* buffer ) {
@@ -245,9 +245,9 @@ response_t dwhci_transmit_channel( const uint8_t channel, void* buffer ) {
 /**
  * @fn response_t dwhci_channel_interrupt_to_error(libusb_transfer_error_t*, uint8_t, bool)
  * @brief Translate channel interrupt to error
- * @param error
- * @param channel
- * @param completed
+ * @param error error output variable
+ * @param channel channel to transform interrupt to error
+ * @param completed completed flag
  * @return
  */
 response_t dwhci_channel_interrupt_to_error( libusb_transfer_error_t* error, const uint8_t channel, const bool completed ) {
@@ -362,11 +362,11 @@ static void custom_nanosleep( const struct timespec* rqtp ) {
 /**
  * @fn response_t dwhci_channel_send_wait_one(libusb_transfer_error_t*, uint8_t, void*, uint32_t, libusb_speed_t)
  * @brief Send on channel one and wait for response
- * @param error
- * @param channel
- * @param buffer
- * @param buffer_offset
- * @param speed
+ * @param error error output variable
+ * @param channel channel to use
+ * @param buffer buffer for read / write
+ * @param buffer_offset buffer offset
+ * @param speed speed
  * @return
  */
 response_t dwhci_channel_send_wait_one(
@@ -607,12 +607,12 @@ response_t dwhci_channel_send_wait_one(
 /**
  * @fn response_t dwhci_prepare_channel(uint32_t, uint32_t, uint8_t, uint32_t, dwhci_channel_state_t, libusb_pipe_address_t*)
  * @brief Prepare channel for transfer
- * @param parent_device_number
- * @param port_number
- * @param channel
- * @param buffer_length
- * @param packet_id
- * @param pipe
+ * @param parent_device_number parent device number
+ * @param port_number port number
+ * @param channel channel to prepare
+ * @param buffer_length buffer length
+ * @param packet_id packet id
+ * @param pipe pipe to use
  * @return
  */
 response_t dwhci_prepare_channel(
@@ -725,6 +725,11 @@ response_t dwhci_allocate_channel( uint8_t* channel_out ) {
   uint32_t mask = 1;
   // iterate through channels
   for (uint32_t channel = 0; channel < configuration.channel.count; channel++) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "configuration.channel.allocated = %#"PRIx32", mask = %#"PRIx32"\r\n",
+        configuration.channel.allocated, mask )
+    #endif
     // handle channel not allocated
     if (!(configuration.channel.allocated & mask)) {
       // mark it as allocated
@@ -765,13 +770,14 @@ response_t dwhci_free_channel( const uint8_t channel ) {
 }
 
 /**
- * @fn response_t dwhci_queue_add_entry(void*, uint8_t)
+ * @fn response_t dwhci_queue_add_entry(void*, uint8_t, channel_queue_entry_t**)
  * @brief Entry to add to queue
  * @param data data for queue
  * @param channel channel that is used
+ * @param out pointer to pass object out
  * @return
  */
-response_t dwhci_queue_add_entry( void* data, const uint8_t channel ) {
+response_t dwhci_queue_add_entry( void* data, const uint8_t channel, channel_queue_entry_t** out ) {
   // allocate entry
   channel_queue_entry_t* entry = malloc(sizeof(*entry));
   if (!entry) {
@@ -801,6 +807,10 @@ response_t dwhci_queue_add_entry( void* data, const uint8_t channel ) {
     // insert element
     current->next = entry;
     entry->prev = current;
+  }
+  // handle push to out
+  if ( out ) {
+    *out = entry;
   }
   // return success
   return HCD_RESPONSE_OK;
@@ -848,17 +858,86 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
 }
 
 /**
- * @fn response_t dwhci_channel_send_wait(uint32_t, uint32_t, libusb_transfer_error_t*, libusb_pipe_address_t*, uint8_t, void*, size_t, dwhci_channel_state_t, uint32_t*)
- * @brief Send command to channel and wait
+ * @fn response_t dwhci_channel_send_async(uint32_t, uint32_t, libusb_transfer_error_t*, libusb_pipe_address_t*, void*, size_t, dwhci_channel_state_t, uint32_t*, void*);
+ * @brief Wrapper to perform async channel send
  * @param parent_device_number
  * @param port_number
  * @param error
  * @param pipe
- * @param channel
  * @param buffer
  * @param buffer_length
  * @param packet_id
  * @param transfer_out
+ * @param data
+ * @return
+ */
+response_t dwhci_channel_send_async(
+  [[maybe_unused]] const uint32_t parent_device_number,
+  [[maybe_unused]] const uint32_t port_number,
+  [[maybe_unused]] libusb_transfer_error_t* error,
+  [[maybe_unused]] libusb_pipe_address_t* pipe,
+  [[maybe_unused]] void* buffer,
+  [[maybe_unused]] const size_t buffer_length,
+  [[maybe_unused]] const dwhci_channel_state_t packet_id,
+  [[maybe_unused]] uint32_t* transfer_out,
+  void* data
+) {
+  // try to allocate a channel
+  uint8_t channel = 0;
+  response_t result = dwhci_allocate_channel( &channel );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate a channel\r\n" )
+    #endif
+    // return error
+    return result;
+  }
+  // push data with channel to queue
+  channel_queue_entry_t* entry = NULL;
+  result = dwhci_queue_add_entry( data, channel, &entry );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to add request to queue\r\n" )
+    #endif
+    // free channel
+    dwhci_free_channel( channel );
+    // return result
+    return result;
+  }
+  // prepare channel
+  result = dwhci_prepare_channel( parent_device_number, port_number, channel,
+    buffer_length, packet_id, pipe );
+  // handle error
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to prepare allocated channel\r\n" )
+    #endif
+    // free channel again
+    dwhci_free_channel( channel );
+    // remove from queue again
+    dwhci_queue_remove_entry( entry );
+    // return result
+    return result;
+  }
+  /// FIXME: IMPLEMENT FURTHER
+  // return not implemented for now
+  return HCD_RESPONSE_ERROR_NOT_IMPLEMENTED;
+}
+
+/**
+ * @fn response_t dwhci_channel_send_wait(uint32_t, uint32_t, libusb_transfer_error_t*, libusb_pipe_address_t*, void*, size_t, dwhci_channel_state_t, uint32_t*)
+ * @brief Send command to channel and wait
+ * @param parent_device_number parent device number
+ * @param port_number port number
+ * @param error error output variable
+ * @param pipe pipe to be used
+ * @param buffer buffer for send / receive
+ * @param buffer_length buffer lenght
+ * @param packet_id packet id
+ * @param transfer_out transfer amount output variable
  * @return
  */
 response_t dwhci_channel_send_wait(
@@ -866,7 +945,7 @@ response_t dwhci_channel_send_wait(
   const uint32_t port_number,
   libusb_transfer_error_t* error,
   libusb_pipe_address_t* pipe,
-  const uint8_t channel,
+  uint8_t channel,
   void* buffer,
   const size_t buffer_length,
   const dwhci_channel_state_t packet_id,
@@ -1818,8 +1897,8 @@ response_t dwhci_init( void ) {
     // return error
     return result;
   }
-  // put channels into known states
-  if ( host_cfg & HCD_DWHCI_HOST_CFG_ENABLE_DMA_DESCRIPTOR ) {
+  // put channels into known states if no dma descriptor is enabled
+  if ( ! ( host_cfg & HCD_DWHCI_HOST_CFG_ENABLE_DMA_DESCRIPTOR ) ) {
     // prepare sequence
     sequence = util_prepare_mmio_sequence( 2, &sequence_size );
     if ( ! sequence ) {
@@ -1832,6 +1911,10 @@ response_t dwhci_init( void ) {
     }
     // extract channel count
     configuration.channel.count = HCD_DWHCI_CORE_HW_CFG2_NUM_HOST_CHANNELS( hw_cfg2 );
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "configuration.channel.count = %"PRIu32"\r\n", configuration.channel.count )
+    #endif
     // loop over channels
     for ( uint32_t channel = 0; channel < configuration.channel.count; ++channel ) {
       sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;

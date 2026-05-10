@@ -18,6 +18,7 @@
  */
 
 #include "../../rpc.h"
+#include "../../dwhci.h"
 
 /**
  * @fn void rpc_interrupt_handle(size_t, pid_t, size_t, size_t)

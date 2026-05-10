@@ -30,6 +30,7 @@ static response_message_entry_t response_error_message[] = {
   { "Timeout while waiting for completion" },
   { "Unknown error" },
   { "Driver incompatible" },
+  { "No free channel found" },
   { "Retry operation" },
 };
 

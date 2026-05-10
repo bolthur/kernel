@@ -114,6 +114,22 @@ void rpc_submit_control_message(
       return;
     }
   } else {
+    // allocate channel
+    uint8_t channel;
+    response_t result = dwhci_allocate_channel( &channel );
+    if ( HCD_RESPONSE_OK != result ) {
+      STARTUP_PRINT( "Failed to allocate channel: %s\r\n", response_error( result ) )
+      // set error
+      error.status = (int)-result;
+      // detach shared memory
+      _syscall_memory_shared_detach( submit_control_message->shm_id );
+      // free request
+      free( request );
+      free( response );
+      // return from rpc
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      return;
+    }
     // setup device error and last transfer
     message->error = LIBUSB_TRANSFER_ERROR_PROCESSING;
     message->last_transfer = 0;
@@ -130,12 +146,12 @@ void rpc_submit_control_message(
     // push request into data buffer
     memcpy( databuffer, &message->request, sizeof( libusb_device_request_t ) );
     // setup channel
-    response_t result = dwhci_channel_send_wait(
+    result = dwhci_channel_send_wait(
       message->parent_device_number,
       message->port_number,
       &message->error,
       &temporary_pipe,
-      0,
+      channel,
       databuffer,
       sizeof( libusb_device_request_t ),
       DWHCI_CHANNEL_STATE_SETUP,
@@ -146,6 +162,8 @@ void rpc_submit_control_message(
       STARTUP_PRINT( "Setup failed with %s\r\n", response_error( result ) )
       // set error
       error.status = (int)-result;
+      // free channel
+      dwhci_free_channel( channel );
       // detach shared memory
       _syscall_memory_shared_detach( submit_control_message->shm_id );
       // free request
@@ -175,7 +193,7 @@ void rpc_submit_control_message(
         message->port_number,
         &message->error,
         &temporary_pipe,
-        0,
+        channel,
         databuffer,
         message->buffer_length,
         DWHCI_CHANNEL_STATE_DATA1,
@@ -186,6 +204,8 @@ void rpc_submit_control_message(
         STARTUP_PRINT( "Data failed with %s\r\n", response_error( result ) )
         // set error
         error.status = (int)-result;
+        // free channel
+        dwhci_free_channel( channel );
         // detach shared memory
         _syscall_memory_shared_detach( submit_control_message->shm_id );
         // free request
@@ -223,7 +243,7 @@ void rpc_submit_control_message(
       message->port_number,
       &message->error,
       &temporary_pipe,
-      0,
+      channel,
       databuffer,
       0,
       DWHCI_CHANNEL_STATE_DATA1,
@@ -234,6 +254,8 @@ void rpc_submit_control_message(
       STARTUP_PRINT( "Final transmit failed with %s\r\n", response_error( result ) )
       // set error
       error.status = (int)-result;
+      // free channel
+      dwhci_free_channel( channel );
       // detach shared memory
       _syscall_memory_shared_detach( submit_control_message->shm_id );
       // free request
@@ -249,6 +271,8 @@ void rpc_submit_control_message(
     }
     // set error to no error
     message->error = LIBUSB_TRANSFER_ERROR_NO_ERROR;
+    // free channel
+    dwhci_free_channel( channel );
   }
   // detach shared memory
   _syscall_memory_shared_detach( submit_control_message->shm_id );
