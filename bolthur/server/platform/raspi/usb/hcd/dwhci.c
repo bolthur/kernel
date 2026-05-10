@@ -747,7 +747,7 @@ response_t dwhci_allocate_channel( uint8_t* channel_out ) {
  * @param channel channel to free
  * @return
  */
-response_t dwhci_free_channel( uint8_t channel ) {
+response_t dwhci_free_channel( const uint8_t channel ) {
   // check channel
   if ( channel >= configuration.channel.count ) {
     return HCD_RESPONSE_ERROR_EINVAL;
@@ -760,6 +760,89 @@ response_t dwhci_free_channel( uint8_t channel ) {
   }
   // deallocate channel
   configuration.channel.allocated &= ~mask;
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn response_t dwhci_queue_add_entry(void*, uint8_t)
+ * @brief Entry to add to queue
+ * @param data data for queue
+ * @param channel channel that is used
+ * @return
+ */
+response_t dwhci_queue_add_entry( void* data, const uint8_t channel ) {
+  // allocate entry
+  channel_queue_entry_t* entry = malloc(sizeof(*entry));
+  if (!entry) {
+    // some debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate entry for queue\r\n" )
+    #endif
+    // return memory error
+    return HCD_RESPONSE_ERROR_MEMORY;
+  }
+  // clear out everything
+  memset(entry, 0, sizeof(*entry));
+  // prepare entry
+  entry->data = data;
+  entry->channel = channel;
+  // insert into queue
+  if ( ! configuration.list ) {
+    // list is empty, so just set list
+    configuration.list = entry;
+  } else {
+    // start with beginning
+    auto current = configuration.list;
+    // loop till end
+    while ( current->next ) {
+      current = current->next;
+    }
+    // insert element
+    current->next = entry;
+    entry->prev = current;
+  }
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn response_t dwhci_queue_remove_entry(channel_queue_entry_t*)
+ * @brief Remove given entry from queue
+ * @param entry entry to remove
+ * @return
+ */
+response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
+  // validate data
+  if ( ! entry ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Invalid entry passed for removal\r\n" )
+    #endif
+    // return einval
+    return HCD_RESPONSE_ERROR_EINVAL;
+  }
+  // handle first element
+  if ( entry == configuration.list ) {
+    // set list to next
+    configuration.list = entry->next;
+    // handle list valid
+    if ( configuration.list ) {
+      // set prev of list to null
+      configuration.list->prev = NULL;
+    }
+  } else {
+    // handle next existing
+    if ( entry->next ) {
+      // adjust prev pointer of next to prev
+      entry->next->prev = entry->prev;
+    }
+    // handle prev existing
+    if ( entry->prev ) {
+      // adjust next pointer of prev to next
+      entry->prev->next = entry->next;
+    }
+  }
   // return success
   return HCD_RESPONSE_OK;
 }

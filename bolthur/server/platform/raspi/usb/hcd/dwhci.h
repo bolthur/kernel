@@ -34,11 +34,35 @@ typedef enum {
   DWHCI_CHANNEL_STATE_SETUP = 3,
 } dwhci_channel_state_t;
 
+/**
+ * @brief Channel queue entry
+ */
+typedef struct channel_queue_entry {
+  /** queue entry data */
+  void* data;
+  /** channel that was used by queue entry */
+  uint8_t channel;
+  /** pointer to next entry */
+  struct channel_queue_entry* next;
+  /** pointer to previous entry */
+  struct channel_queue_entry* prev;
+} channel_queue_entry_t;
+
+/**
+ * @brief Configuration object
+ */
 typedef struct {
+  /**
+   * @brief Channel object
+   */
   struct {
+    /** channel count */
     uint32_t count;
+    /** allocated channels */
     uint32_t allocated;
   } channel;
+  /** queue entry list */
+  channel_queue_entry_t* list;
 } dwhci_configuration_t;
 
 extern int fd_iomem;
@@ -50,6 +74,8 @@ response_t dwhci_transmit_channel( uint8_t, void* );
 response_t dwhci_prepare_channel( uint32_t, uint32_t, uint8_t, uint32_t, dwhci_channel_state_t, libusb_pipe_address_t* );
 response_t dwhci_allocate_channel( uint8_t* );
 response_t dwhci_free_channel( uint8_t );
+response_t dwhci_queue_add_entry( void*, uint8_t );
+response_t dwhci_queue_remove_entry( channel_queue_entry_t* );
 response_t dwhci_channel_send_wait_one( libusb_transfer_error_t*, uint8_t, void*, uint32_t, libusb_speed_t );
 response_t dwhci_channel_send_wait( uint32_t, uint32_t, libusb_transfer_error_t*, libusb_pipe_address_t*, uint8_t, void*, size_t, dwhci_channel_state_t, uint32_t* );
 response_t dwhci_read_port( uint32_t, uint32_t* );
