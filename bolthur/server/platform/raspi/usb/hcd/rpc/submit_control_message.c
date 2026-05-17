@@ -41,6 +41,7 @@ void rpc_submit_control_message(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "rpc_submit_control_message( %zu, %d, %zu, %zu )\r\n", type, origin, data_info, response_info )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -126,7 +127,7 @@ void rpc_submit_control_message(
     return;
   }
   // send async
-  const response_t result = dwhci_channel_send_async( message );
+  const response_t result = dwhci_channel_send_async( message, submit_control_message, response_info );
   if ( HCD_RESPONSE_OK != result ) {
     STARTUP_PRINT( "Failed to start async send: %s\r\n", response_error( result ) )
     // set error

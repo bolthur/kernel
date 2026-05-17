@@ -877,6 +877,34 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
 }
 
 /**
+ * @fn response_t dwhci_queue_get_active_by_channel(uint8_t, channel_queue_entry_t**)
+ * @brief Function to get active queue entry by channel
+ * @param channel channel to lookup
+ * @param entry output entry
+ * @return
+ */
+response_t dwhci_queue_get_active_by_channel( uint8_t channel, channel_queue_entry_t** entry ) {
+  // start with queue
+  channel_queue_entry_t* current = configuration.list;
+  // loop while there is something
+  while ( current ) {
+    // handle channel match and not status pending
+    if (
+      current->channel == channel
+      && current->status != DWHCI_QUEUE_STATUS_PENDING
+    ) {
+      // set entry and return success
+      *entry = current;
+      return HCD_RESPONSE_OK;
+    }
+    // go to next
+    current = current->next;
+  }
+  // return einval
+  return HCD_RESPONSE_ERROR_EINVAL;
+}
+
+/**
  * @fn response_t dwhci_enable_channel_interrupt(uint8_t)
  * @brief Method to enable channel interrupt
  * @param channel channel to enable interrupt for
@@ -987,23 +1015,9 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     // return result
     return result;
   }
-  //TDWHCIFrameScheduler *pFrameScheduler = DWHCITransferStageDataGetFrameScheduler (pStageData);
-  //if (pFrameScheduler != 0)
-  //{
-  //  pFrameScheduler->WaitForFrame (pFrameScheduler);
-  //
-  //  if (pFrameScheduler->IsOddFrame (pFrameScheduler))
-  //  {
-  //    DWHCIRegisterOr (&Character, DWHCI_HOST_CHAN_CHARACTER_PER_ODD_FRAME);
-  //  }
-  //  else
-  //  {
-  //    DWHCIRegisterAnd (&Character, ~DWHCI_HOST_CHAN_CHARACTER_PER_ODD_FRAME);
-  //  }
-  //}
   // debug output
   #if defined ( DWHCI_ENABLE_DEBUG )
-    STARTUP_PRINT( "MAsk channel interrupts\r\n" )
+    STARTUP_PRINT( "Mask channel interrupts\r\n" )
   #endif
   // read channel interrupt mask
   uint32_t channel_interrupt_mask;
@@ -1061,7 +1075,65 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     // return result
     return result;
   }
-  //return dwhci_transmit_channel( entry->channel, entry->buffer );
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn response_t dwhci_channel_send_async_stop_channel(const channel_queue_entry_t*)
+ * @brief
+ * @param entry
+ * @return
+ */
+response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t* entry ) {
+  // debug output
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Disable channel via characteristics\r\n" )
+  #endif
+  // read channel character
+  uint32_t characteristics;
+  response_t result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), &characteristics );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to read channel characteristics\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // enable channel
+  characteristics &= ( uint32_t )~HCD_DWHCI_CHAN_CHARACTER_ENABLE( true );
+  characteristics |= ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_DISABLE( true );
+  // write back characteristics
+  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), characteristics );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to write back characteristics\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // disable interrupts for channel
+  result = dwhci_disable_channel_interrupt( entry->channel );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to disable channel %"PRIu8"\r\n", entry->channel )
+    #endif
+    // return result
+    return result;
+  }
+  // free channel again
+  result = dwhci_free_channel( entry->channel );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to free channel %"PRIu8"\r\n", entry->channel )
+    #endif
+    // return result
+    return result;
+  }
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -1078,7 +1150,7 @@ response_t dwhci_channel_send_async_setup( channel_queue_entry_t* entry ) {
     STARTUP_PRINT( "Starting setup request\r\n" )
   #endif
   // create temporary pipe
-  libusb_pipe_address_t setup_pipe = {
+  const libusb_pipe_address_t setup_pipe = {
     .speed = entry->data->pipe_address.speed,
     .device = entry->data->pipe_address.device,
     .end_point = entry->data->pipe_address.end_point,
@@ -1136,7 +1208,7 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
     memcpy( entry->buffer, entry->data->buffer, entry->data->buffer_length );
   }
   // create temporary pipe
-  libusb_pipe_address_t data_pipe = {
+  const libusb_pipe_address_t data_pipe = {
     .speed = entry->data->pipe_address.speed,
     .device = entry->data->pipe_address.device,
     .end_point = entry->data->pipe_address.end_point,
@@ -1149,7 +1221,7 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
     entry->data->parent_device_number,
     entry->data->port_number,
     entry->channel,
-    sizeof( libusb_device_request_t ),
+    entry->data->buffer_length,
     DWHCI_CHANNEL_STATE_DATA1,
     &data_pipe );
   // handle error
@@ -1188,7 +1260,7 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
     entry->data->last_transfer = entry->data->buffer_length;
   }
   // create temporary pipe
-  libusb_pipe_address_t ack_pipe = {
+  const libusb_pipe_address_t ack_pipe = {
     .speed = entry->data->pipe_address.speed,
     .device = entry->data->pipe_address.device,
     .end_point = entry->data->pipe_address.end_point,
@@ -1206,7 +1278,7 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
     entry->data->parent_device_number,
     entry->data->port_number,
     entry->channel,
-    sizeof( libusb_device_request_t ),
+    0,
     DWHCI_CHANNEL_STATE_DATA1,
     &ack_pipe );
   // handle error
@@ -1240,9 +1312,37 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
       STARTUP_PRINT( "Warning non zero status transfer: %"PRIu32"\r\n", entry->transferred )
     #endif
   }
-  /// FIXME: FREE CHANNEL AGAIN
-  /// FIXME: Response result to possible rpc
-  return HCD_RESPONSE_OK;
+  // stop transmission
+  const response_t result = dwhci_channel_send_async_stop_channel( entry );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to stop channel\r\n")
+    #endif
+  }
+  // finally set no error
+  entry->data->error = LIBUSB_TRANSFER_ERROR_NO_ERROR;
+  // allocate response structure
+  constexpr size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( hcd_submit_control_message_t );
+  vfs_ioctl_perform_response_t* response = malloc( response_size );
+  if ( ! response ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate memory for response\r\n" )
+    #endif
+    // return error
+    return HCD_RESPONSE_ERROR_MEMORY;
+  }
+  _syscall_memory_shared_detach( entry->message->shm_id );
+  // populate status and just copy over data from request
+  response->status = 0;
+  memcpy( response->container, entry->message, sizeof( hcd_submit_control_message_t ) );
+  // return from rpc
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, entry->response_info );
+  // free entry
+  free( response );
+  // destroy queue entry
+  return dwhci_queue_remove_entry( entry );
 }
 
 /**
@@ -1263,6 +1363,9 @@ response_t dwhci_channel_send_async_continue_pending( [[maybe_unused]] channel_q
  * @return
  */
 response_t dwhci_channel_send_async_continue( channel_queue_entry_t* entry ) {
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Continuing with channel %"PRIu8"\r\n", entry->channel )
+  #endif
   // continue channel depending on status
   switch ( entry->status ) {
     case DWHCI_QUEUE_STATUS_SETUP:
@@ -1281,12 +1384,14 @@ response_t dwhci_channel_send_async_continue( channel_queue_entry_t* entry ) {
 }
 
 /**
- * @fn response_t dwhci_channel_send_async(hcd_control_message_t*);
+ * @fn response_t dwhci_channel_send_async(hcd_control_message_t*, size_t);
  * @brief Wrapper to perform async channel send
- * @param data
+ * @param data data to send
+ * @param message original message
+ * @param response_info where to respond result to
  * @return
  */
-response_t dwhci_channel_send_async( hcd_control_message_t* data ) {
+response_t dwhci_channel_send_async( hcd_control_message_t* data, hcd_submit_control_message_t* message, const size_t response_info ) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
     STARTUP_PRINT("Channel send async\r\n")
@@ -1302,6 +1407,9 @@ response_t dwhci_channel_send_async( hcd_control_message_t* data ) {
     // return result
     return result;
   }
+  // populate response info
+  entry->response_info = response_info;
+  entry->message = message;
   // try to allocate a channel
   uint8_t channel = 0;
   result = dwhci_allocate_channel( &channel );

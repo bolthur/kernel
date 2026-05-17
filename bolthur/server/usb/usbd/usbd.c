@@ -635,6 +635,10 @@ int usbd_read_device_descriptor( libusb_device_t* dev ) {
  * @return
  */
 int usbd_set_address( libusb_device_t* dev, const uint8_t address ) {
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Set address\r\n" )
+  #endif
   // validate
   if ( LIBUSB_DEVICE_STATUS_DEFAULT != dev->status ) {
     // debug output
@@ -671,7 +675,6 @@ int usbd_set_address( libusb_device_t* dev, const uint8_t address ) {
   if ( 0 != result ) {
     return result;
   }
-  // MicroDelay(10000); // Allows the address to propagate.
   // populate address and status
   dev->number = address;
   dev->status = LIBUSB_DEVICE_STATUS_ADDRESSED;

@@ -56,6 +56,10 @@ typedef struct channel_queue_entry {
   void* buffer;
   /** transferred data */
   uint32_t transferred;
+  /** response info */
+  size_t response_info;
+  /** message */
+  hcd_submit_control_message_t* message;
   /** pointer to next entry */
   struct channel_queue_entry* next;
   /** pointer to previous entry */
@@ -90,16 +94,18 @@ response_t dwhci_allocate_channel( uint8_t* );
 response_t dwhci_free_channel( uint8_t );
 response_t dwhci_queue_add_entry( void*, dwhci_queue_status_t, channel_queue_entry_t** );
 response_t dwhci_queue_remove_entry( channel_queue_entry_t* );
+response_t dwhci_queue_get_active_by_channel( uint8_t, channel_queue_entry_t** );
 response_t dwhci_enable_channel_interrupt( uint8_t );
 response_t dwhci_disable_channel_interrupt( uint8_t );
 response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* );
+response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t* );
 response_t dwhci_channel_send_async_setup( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_data( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_ack( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_done( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_continue_pending( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_continue( channel_queue_entry_t* );
-response_t dwhci_channel_send_async( hcd_control_message_t* );
+response_t dwhci_channel_send_async( hcd_control_message_t*, hcd_submit_control_message_t*, size_t );
 response_t dwhci_channel_send_wait_one( libusb_transfer_error_t*, uint8_t, void*, uint32_t, libusb_speed_t );
 response_t dwhci_channel_send_wait( uint32_t, uint32_t, libusb_transfer_error_t*, const libusb_pipe_address_t*, uint8_t, void*, size_t, dwhci_channel_state_t, uint32_t* );
 response_t dwhci_read_port( uint32_t, uint32_t* );
