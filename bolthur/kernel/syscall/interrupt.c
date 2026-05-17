@@ -72,8 +72,6 @@ void syscall_interrupt_acquire( void* context ) {
     syscall_populate_error( context, ( size_t )-EAGAIN );
     return;
   }
-  // enable interrupt
-  interrupt_mask_specific( ( int8_t )num );
   // return success
   syscall_populate_success( context, 0 );
 }

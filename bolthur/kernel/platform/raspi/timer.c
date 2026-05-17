@@ -77,11 +77,8 @@ static void timer_clear( void* context ) {
   #endif
   io_out32( base + SYSTEM_TIMER_COMPARE_3, next_count );
 
-  // get pending interrupt from memory clear timer and overwrite
-  // should not be necessary but better safe than sorry
-  uint32_t interrupt_line = io_in32( base + INTERRUPT_IRQ_PENDING_1 );
-  interrupt_line &= ( uint32_t )( ~( SYSTEM_TIMER_3_INTERRUPT ) );
-  io_out32( base + INTERRUPT_IRQ_PENDING_1, interrupt_line );
+  // clear handled interrupt
+  interrupt_clear( SYSTEM_TIMER_3_INTERRUPT );
 
   // increment tick count by interval
   timer_tick_count += timer_get_interval();

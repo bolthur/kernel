@@ -33,7 +33,7 @@ typedef enum {
   EVENT_PROCESS = 1,
   EVENT_SERIAL,
   EVENT_DEBUG,
-  EVENT_INTERRUPT_CLEANUP
+  EVENT_INTERRUPT_CLEANUP,
 } event_type_t;
 
 typedef enum {

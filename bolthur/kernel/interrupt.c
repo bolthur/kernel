@@ -316,16 +316,21 @@ bool interrupt_register_handler(
   bool enable
 ) {
   if ( ! heap_init_get() ) {
+    #if defined( PRINT_INTERRUPT )
+      DEBUG_OUTPUT( "No heap initialized!\r\n" )
+    #endif
     return false;
   }
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT(
-      "Called interrupt_register_handler( %zu, %#"PRIxPTR", %d, %s )\r\n",
+      "Called interrupt_register_handler( %zu, %#"PRIxPTR", %#"PRIxPTR", %d, %s, %s )\r\n",
       num,
       ( uintptr_t )callback,
+      ( uintptr_t )process,
       type,
-      post ? "true" : "false"
+      post ? "true" : "false",
+      enable ? "true" : "false"
     )
   #endif
 
@@ -436,41 +441,48 @@ bool interrupt_register_handler(
     match = list_lookup_data( list, ( void* )( ( uintptr_t )callback ) );
   }
   // if already existing, just return success
-  if ( match ) {
+  if ( ! match ) {
     // debug output
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Callback already bound, returning success\r\n" )
+      DEBUG_OUTPUT( "Callback not yet bound\r\n" )
     #endif
-    return true;
-  }
-  void* data = NULL;
-  if ( process ) {
-    // set data to process
-    data = process;
-  } else {
-    // create wrapper
-    interrupt_callback_wrapper_t* wrapper = malloc( sizeof( *wrapper ) );
-    // check
-    if ( ! wrapper ) {
-      return false;
+    auto data = NULL;
+    if ( process ) {
+      // set data to process
+      data = process;
+      // push to list
+      if ( ! list_push_back_data( list, data ) ) {
+        return false;
+      }
+    } else {
+      // create wrapper
+      interrupt_callback_wrapper_t* wrapper = malloc( sizeof( *wrapper ) );
+      // check
+      if ( ! wrapper ) {
+        return false;
+      }
+      // prepare memory
+      memset( wrapper, 0, sizeof( interrupt_callback_wrapper_t ) );
+      // populate wrapper
+      wrapper->callback = callback;
+      // debug output
+      #if defined( PRINT_INTERRUPT )
+        DEBUG_OUTPUT( "Created wrapper container at %p\r\n", wrapper )
+      #endif
+      // set data to wrapper
+      data = ( void* )wrapper;
+      // push to list
+      if ( ! list_push_back_data( list, data ) ) {
+        free( wrapper );
+        return false;
+      }
     }
-    // prepare memory
-    memset( wrapper, 0, sizeof( interrupt_callback_wrapper_t ) );
-    // populate wrapper
-    wrapper->callback = callback;
-    // debug output
-    #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Created wrapper container at %p\r\n", wrapper )
-    #endif
-    // set data to wrapper
-    data = ( void* )wrapper;
   }
   // enable interrupt if set
   if ( type == INTERRUPT_NORMAL && enable ) {
     interrupt_mask_specific( ( int8_t )num );
   }
-  // push to list
-  return list_push_back_data( list, data );
+  return true;
 }
 
 /**
@@ -479,8 +491,9 @@ bool interrupt_register_handler(
  * @param num interrupt number
  * @param type interrupt type
  * @param context interrupt context
+ * @param disable disable pending interrupt
  */
-void interrupt_handle( size_t num, const interrupt_type_t type, void* context ) {
+void interrupt_handle( size_t num, const interrupt_type_t type, void* context, const bool disable ) {
   // handle no interrupt manager as not bound
   if ( ! interrupt_manager ) {
     return;
@@ -561,7 +574,7 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context ) 
       continue;
     }
     // get thread
-    auto thread = TASK_THREAD_GET_BLOCK( first );
+    auto const thread = TASK_THREAD_GET_BLOCK( first );
     #if defined( PRINT_INTERRUPT )
       DEBUG_OUTPUT( "Raising interrupt handler %"PRIu8" for %d\r\n",
         num, thread->process->id )
@@ -614,6 +627,10 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context ) 
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Handling of callbacks finished!\r\n" )
   #endif
+  if ( disable ) {
+    // disable interrupt to prevent it firing all along
+    interrupt_disable_after_handling( ( int8_t )num );
+  }
 }
 
 /**
@@ -646,7 +663,7 @@ void interrupt_init( void ) {
  *
  * @param state
  */
-void interrupt_toggle( interrupt_toggle_state_t state ) {
+void interrupt_toggle( const interrupt_toggle_state_t state ) {
   // static status flag
   static bool enabled = false;
 
@@ -688,17 +705,12 @@ void interrupt_handle_possible( void* context, const bool fast ) {
   int8_t interrupt_bit;
   // get pending interrupt
   while( -1 != ( interrupt_bit = interrupt_get_pending( fast ) ) ) {
-    // transform bit to interrupt
-    uint32_t interrupt = ( 1U << interrupt_bit );
-    // debug output
-    #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "pending interrupt: %#"PRIx32"\r\n", interrupt )
-    #endif
     // call interrupt handler
     interrupt_handle(
-      interrupt,
+      ( size_t )interrupt_bit,
       fast ? INTERRUPT_FAST : INTERRUPT_NORMAL,
-      context
+      context,
+      true
     );
   }
 }
@@ -714,7 +726,7 @@ void interrupt_unregister_process( task_process_t* process ) {
   // get first entry
   avl_node_t* avl_list = avl_iterate_first( tree );
   while ( avl_list ) {
-    interrupt_block_t* block = INTERRUPT_GET_BLOCK( avl_list );
+    auto const block = INTERRUPT_GET_BLOCK( avl_list );
     // try to find process
     list_item_t* match = list_lookup_data(
       block->process,

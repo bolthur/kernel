@@ -83,7 +83,7 @@ void vector_svc_handler( cpu_register_context_t* cpu ) {
     DEBUG_OUTPUT( "cpsr = %#"PRIx32"\r\n", cpsr )
   #endif
   // handle bound interrupt handlers
-  interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu );
+  interrupt_handle( ( uint8_t )svc_num, INTERRUPT_SOFTWARE, cpu, false );
   // enqueue cleanup
   event_enqueue( EVENT_INTERRUPT_CLEANUP, origin );
   // debug output

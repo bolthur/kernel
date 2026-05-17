@@ -111,8 +111,8 @@ void rpc_hid_attach(
   }
   // validate endpoint
   if (
-    endpoint_descriptor.endpoint_address.direction != LIBUSB_DIRECTION_IN
-    || endpoint_descriptor.attributes.transfer != LIBUSB_TRANSFER_INTERRUPT
+    LIBUSB_DIRECTION_IN != endpoint_descriptor.endpoint_address.direction
+    || LIBUSB_TRANSFER_INTERRUPT != endpoint_descriptor.attributes.transfer
   ) {
     STARTUP_PRINT( "Invalid hid device with unusual endpoints\r\n" )
     _syscall_rpc_cleanup();

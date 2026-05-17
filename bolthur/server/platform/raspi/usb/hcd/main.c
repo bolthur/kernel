@@ -44,6 +44,11 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
+  // enable rpc ( needs to be done at this point, because of interrupt driven
+  // dwhci implementation )
+  STARTUP_PRINT( "Enable rpc\r\n" )
+  _syscall_rpc_set_ready( true );
+
   // setup hcd interface
   STARTUP_PRINT( "Setup hcd interface!\r\n" )
   const response_t result = dwhci_init();
@@ -51,10 +56,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     STARTUP_PRINT( "Unable to init dwhci: %s\r\n", response_error( result ) );
     return -1;
   }
-
-  // enable rpc
-  STARTUP_PRINT( "Enable rpc\r\n" )
-  _syscall_rpc_set_ready( true );
 
   // add device file
   STARTUP_PRINT( "Sending device to vfs\r\n" )

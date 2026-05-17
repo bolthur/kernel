@@ -113,8 +113,40 @@ void rpc_submit_control_message(
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
       return;
     }
-  } else {
-    // allocate channel
+    // detach shared memory
+    _syscall_memory_shared_detach( submit_control_message->shm_id );
+    // populate status and just copy over data from request
+    response->status = 0;
+    memcpy( response->container, request->container, container_size );
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
+    // free up memory
+    free( request );
+    free( response );
+    return;
+  }
+  // send async
+  const response_t result = dwhci_channel_send_async( message );
+  if ( HCD_RESPONSE_OK != result ) {
+    STARTUP_PRINT( "Failed to start async send: %s\r\n", response_error( result ) )
+    // set error
+    error.status = (int)-result;
+    // detach shared memory
+    _syscall_memory_shared_detach( submit_control_message->shm_id );
+    // free request
+    free( request );
+    free( response );
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    return;
+  }
+  // free response since we've to wait for an interrupt transfer
+  free( response );
+  free( request );
+  _syscall_rpc_cleanup();
+
+
+    /*// allocate channel
     uint8_t channel;
     response_t result = dwhci_allocate_channel( &channel );
     if ( HCD_RESPONSE_OK != result ) {
@@ -272,16 +304,5 @@ void rpc_submit_control_message(
     // set error to no error
     message->error = LIBUSB_TRANSFER_ERROR_NO_ERROR;
     // free channel
-    dwhci_free_channel( channel );
-  }
-  // detach shared memory
-  _syscall_memory_shared_detach( submit_control_message->shm_id );
-  // populate status and just copy over data from request
-  response->status = 0;
-  memcpy( response->container, request->container, container_size );
-  // return from rpc
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
-  // free up memory
-  free( request );
-  free( response );
+    dwhci_free_channel( channel );*/
 }

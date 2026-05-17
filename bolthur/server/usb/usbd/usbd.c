@@ -251,7 +251,7 @@ int usbd_control_message(
     // return error
     return e;
   }
-  hcd_control_message_t* message = ( hcd_control_message_t* )shm_addr;
+  auto const message = ( hcd_control_message_t* )shm_addr;
   // populate real message in shared memory
   message->device_number = dev->number;
   message->parent_device_number = dev->parent ? dev->parent->number : 0;

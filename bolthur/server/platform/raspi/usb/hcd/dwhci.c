@@ -26,7 +26,6 @@
 #include "util.h"
 #include "response.h"
 // driver includes
-#include <iso646.h>
 #include <sys/mman.h>
 
 #include "../../libhcd.h"
@@ -59,7 +58,7 @@ dwhci_configuration_t configuration;
 response_t dwhci_read_port( const uint32_t port, uint32_t* value ) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
-    STARTUP_PRINT( "Query port information\r\n" )
+    STARTUP_PRINT( "Query port information from %#"PRIx32"\r\n", port )
   #endif
   // validate parameter
   if ( ! value ) {
@@ -123,7 +122,7 @@ response_t dwhci_read_port( const uint32_t port, uint32_t* value ) {
 response_t dwhci_write_port( const uint32_t port, const uint32_t value ) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
-    STARTUP_PRINT( "Query port information\r\n" )
+    STARTUP_PRINT( "write value %#"PRIx32" to port %#"PRIx32"\r\n", value, port )
   #endif
   // allocate sequence
   size_t sequence_size;
@@ -175,6 +174,9 @@ response_t dwhci_write_port( const uint32_t port, const uint32_t value ) {
  * @return
  */
 response_t dwhci_transmit_channel( const uint8_t channel, void* buffer ) {
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Transmit channel!\r\n" )
+  #endif
   // translate buffer to physical bus address
   const uintptr_t phys = _syscall_memory_translate_bus( ( uintptr_t )buffer, 1 );
   if ( errno ) {
@@ -438,7 +440,7 @@ response_t dwhci_channel_send_wait_one(
         break;
       }
 
-      const long milliseconds = 1;
+      constexpr long milliseconds = 1;
       custom_nanosleep( &(struct timespec){
         .tv_sec = milliseconds / 1000,
         .tv_nsec = ( milliseconds % 1000 ) * 1000000,
@@ -527,7 +529,7 @@ response_t dwhci_channel_send_wait_one(
               break;
             }
 
-            const long milliseconds = 1;
+            constexpr long milliseconds = 1;
             custom_nanosleep( &(struct timespec){
               .tv_sec = milliseconds / 1000,
               .tv_nsec = ( milliseconds % 1000 ) * 1000000,
@@ -540,7 +542,7 @@ response_t dwhci_channel_send_wait_one(
         }
 
         if ( tries == 3 ) {
-          const long milliseconds = 25;
+          constexpr long milliseconds = 25;
           custom_nanosleep( &(struct timespec){
             .tv_sec = milliseconds / 1000,
             .tv_nsec = ( milliseconds % 1000 ) * 1000000,
@@ -549,7 +551,7 @@ response_t dwhci_channel_send_wait_one(
         }
         if ( interrupt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT ) {
           global_tries--;
-          const long milliseconds = 25;
+          constexpr long milliseconds = 25;
           custom_nanosleep( &(struct timespec){
             .tv_sec = milliseconds / 1000,
             .tv_nsec = ( milliseconds % 1000 ) * 1000000,
@@ -557,7 +559,7 @@ response_t dwhci_channel_send_wait_one(
           continue;
         }
         if ( interrupt & HCD_CHANNEL_INTERRUPT_TRANSACTION_ERROR ) {
-          const long milliseconds = 25;
+          constexpr long milliseconds = 25;
           custom_nanosleep( &(struct timespec){
             .tv_sec = milliseconds / 1000,
             .tv_nsec = ( milliseconds % 1000 ) * 1000000,
@@ -571,14 +573,14 @@ response_t dwhci_channel_send_wait_one(
         }
       } else if ( interrupt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT ) {
         global_tries--;
-        const long milliseconds = 25;
+        constexpr long milliseconds = 25;
         custom_nanosleep( &(struct timespec){
           .tv_sec = milliseconds / 1000,
           .tv_nsec = ( milliseconds % 1000 ) * 1000000,
         } );
         continue;
       } else if ( interrupt & HCD_CHANNEL_INTERRUPT_TRANSACTION_ERROR ) {
-        const long milliseconds = 25;
+        constexpr long milliseconds = 25;
         custom_nanosleep( &(struct timespec){
           .tv_sec = milliseconds / 1000,
           .tv_nsec = ( milliseconds % 1000 ) * 1000000,
@@ -621,11 +623,11 @@ response_t dwhci_prepare_channel(
   const uint8_t channel,
   const uint32_t buffer_length,
   const dwhci_channel_state_t packet_id,
-  libusb_pipe_address_t* pipe
+  const libusb_pipe_address_t* pipe
 ) {
-  #if defined ( DWHCI_ENABLE_DEBUG )
+  #if defined( DWHCI_ENABLE_DEBUG )
     STARTUP_PRINT( "%d / %d / %"PRIu8" / %"PRIu8" / %d / %d\r\n",
-      pipe->max_size, pipe->speed, pipe->end_point, pipe->device, pipe->type, pipe->direction
+      pipe->max_size, pipe->speed, pipe->end_point, pipe->device, pipe->type, pipe->direction )
   #endif
   // prepare characteristic
   const uint32_t characteristic = HCD_DWHCI_CHAN_CHARACTER_DEVICE_ADDRESS( pipe->device )
@@ -770,14 +772,14 @@ response_t dwhci_free_channel( const uint8_t channel ) {
 }
 
 /**
- * @fn response_t dwhci_queue_add_entry(void*, uint8_t, channel_queue_entry_t**)
+ * @fn response_t dwhci_queue_add_entry(void*, dwhci_queue_status_t, channel_queue_entry_t**)
  * @brief Entry to add to queue
  * @param data data for queue
- * @param channel channel that is used
+ * @param status queue status
  * @param out pointer to pass object out
  * @return
  */
-response_t dwhci_queue_add_entry( void* data, const uint8_t channel, channel_queue_entry_t** out ) {
+response_t dwhci_queue_add_entry( void* data, const dwhci_queue_status_t status, channel_queue_entry_t** out ) {
   // allocate entry
   channel_queue_entry_t* entry = malloc(sizeof(*entry));
   if (!entry) {
@@ -792,7 +794,20 @@ response_t dwhci_queue_add_entry( void* data, const uint8_t channel, channel_que
   memset(entry, 0, sizeof(*entry));
   // prepare entry
   entry->data = data;
-  entry->channel = channel;
+  entry->status = status;
+  // map buffer
+  entry->buffer = mmap( NULL, 0x1000, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS | MAP_DEVICE , -1, 0 );
+  // handle map failed
+  if ( MAP_FAILED == entry->buffer ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate buffer\r\n" )
+    #endif
+    // free entry again
+    free( entry );
+    // return memory error
+    return HCD_RESPONSE_ERROR_MEMORY;
+  }
   // insert into queue
   if ( ! configuration.list ) {
     // list is empty, so just set list
@@ -832,6 +847,10 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
     // return einval
     return HCD_RESPONSE_ERROR_EINVAL;
   }
+  // handle buffer
+  if ( entry->buffer ) {
+    munmap( entry->buffer, 0x1000 );
+  }
   // handle first element
   if ( entry == configuration.list ) {
     // set list to next
@@ -839,7 +858,7 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
     // handle list valid
     if ( configuration.list ) {
       // set prev of list to null
-      configuration.list->prev = NULL;
+      configuration.list->prev = nullptr;
     }
   } else {
     // handle next existing
@@ -858,62 +877,451 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
 }
 
 /**
- * @fn response_t dwhci_channel_send_async(uint32_t, uint32_t, libusb_transfer_error_t*, libusb_pipe_address_t*, void*, size_t, dwhci_channel_state_t, uint32_t*, void*);
- * @brief Wrapper to perform async channel send
- * @param parent_device_number
- * @param port_number
- * @param error
- * @param pipe
- * @param buffer
- * @param buffer_length
- * @param packet_id
- * @param transfer_out
- * @param data
+ * @fn response_t dwhci_enable_channel_interrupt(uint8_t)
+ * @brief Method to enable channel interrupt
+ * @param channel channel to enable interrupt for
  * @return
  */
-response_t dwhci_channel_send_async(
-  [[maybe_unused]] const uint32_t parent_device_number,
-  [[maybe_unused]] const uint32_t port_number,
-  [[maybe_unused]] libusb_transfer_error_t* error,
-  [[maybe_unused]] libusb_pipe_address_t* pipe,
-  [[maybe_unused]] void* buffer,
-  [[maybe_unused]] const size_t buffer_length,
-  [[maybe_unused]] const dwhci_channel_state_t packet_id,
-  [[maybe_unused]] uint32_t* transfer_out,
-  void* data
-) {
-  // try to allocate a channel
-  uint8_t channel = 0;
-  response_t result = dwhci_allocate_channel( &channel );
+response_t dwhci_enable_channel_interrupt( const uint8_t channel ) {
+  // read interrupt mask
+  uint32_t status;
+  response_t result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, &status );
   if ( HCD_RESPONSE_OK != result ) {
-    // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to allocate a channel\r\n" )
+      STARTUP_PRINT( "Unable to read channel interrupt\r\n" )
     #endif
-    // return error
     return result;
   }
-  // push data with channel to queue
-  channel_queue_entry_t* entry = NULL;
-  result = dwhci_queue_add_entry( data, channel, &entry );
+  // enable channel
+  status |= 1 << channel;
+  // write back
+  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, status );
+  // handle error
+  if ( HCD_RESPONSE_OK != result ) {
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
+    #endif
+    return result;
+  }
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn response_t dwhci_disable_channel_interrupt(uint8_t)
+ * @brief Method to enable channel interrupt
+ * @param channel channel to enable interrupt for
+ * @return
+ */
+response_t dwhci_disable_channel_interrupt( const uint8_t channel ) {
+  // read interrupt mask
+  uint32_t status;
+  response_t result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, &status );
+  if ( HCD_RESPONSE_OK != result ) {
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to read channel interrupt\r\n" )
+    #endif
+    return result;
+  }
+  // enable channel
+  status &= ( uint32_t )~( 1 << channel );
+  // write back
+  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, status );
+  // handle error
+  if ( HCD_RESPONSE_OK != result ) {
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
+    #endif
+    return result;
+  }
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn response_t dwhci_channel_send_async_start_channel(channel_queue_entry_t*)
+ * @brief Function to start prepared channel
+ * @param entry
+ * @return
+ */
+response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* entry ) {
+  // debug output
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Reset interrupts of channel\r\n" )
+  #endif
+  // reset all interrupts of channel
+  response_t result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT( entry->channel ), ( uint32_t )-1 );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to add request to queue\r\n" )
+      STARTUP_PRINT( "Unable to clear channel interrupts\r\n" )
     #endif
-    // free channel
-    dwhci_free_channel( channel );
     // return result
     return result;
   }
+  // debug output
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Translate buffer to physical\r\n" )
+  #endif
+  // translate buffer to physical bus address
+  const uintptr_t phys = _syscall_memory_translate_bus( ( uintptr_t )entry->buffer, 1 );
+  if ( errno ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to translate buffer to phys\r\n" )
+    #endif
+    // return result
+    return HCD_RESPONSE_ERROR_IO;
+  }
+  // debug output
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Writing channel dma address\r\n" )
+  #endif
+  // set dma address for channel
+  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_HOST_CHAN_DMA_ADDR( entry->channel ), phys );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to write DMA address\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  //TDWHCIFrameScheduler *pFrameScheduler = DWHCITransferStageDataGetFrameScheduler (pStageData);
+  //if (pFrameScheduler != 0)
+  //{
+  //  pFrameScheduler->WaitForFrame (pFrameScheduler);
+  //
+  //  if (pFrameScheduler->IsOddFrame (pFrameScheduler))
+  //  {
+  //    DWHCIRegisterOr (&Character, DWHCI_HOST_CHAN_CHARACTER_PER_ODD_FRAME);
+  //  }
+  //  else
+  //  {
+  //    DWHCIRegisterAnd (&Character, ~DWHCI_HOST_CHAN_CHARACTER_PER_ODD_FRAME);
+  //  }
+  //}
+  // debug output
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "MAsk channel interrupts\r\n" )
+  #endif
+  // read channel interrupt mask
+  uint32_t channel_interrupt_mask;
+  result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ), &channel_interrupt_mask );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to read host channel interrupt mask\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // set mask bits
+  channel_interrupt_mask |= HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE
+    | HCD_CHANNEL_INTERRUPT_HALT
+    | HCD_CHANNEL_INTERRUPT_ERROR_MASK
+    /// FIXME: ONLY FOR SPLIT OR PREIODIC STUFF
+    | HCD_CHANNEL_INTERRUPT_ACKNOWLEDGEMENT
+    | HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT
+    | HCD_CHANNEL_INTERRUPT_NOT_YET;
+  // write back interrupt mask
+  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ), channel_interrupt_mask );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Unable to write host channel interrupt mask\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // debug output
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Enable channel via characteristics\r\n" )
+  #endif
+  // read channel character
+  uint32_t characteristics;
+  result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), &characteristics );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to read channel characteristics\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // enable channel
+  characteristics |= ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_ENABLE( true );
+  // write back characteristics
+  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), characteristics );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to write back characteristics\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  //return dwhci_transmit_channel( entry->channel, entry->buffer );
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn response_t dwhci_channel_send_async_setup(channel_queue_entry_t*)
+ * @brief Method to start entry transfer with setup packet
+ * @param entry
+ * @return
+ */
+response_t dwhci_channel_send_async_setup( channel_queue_entry_t* entry ) {
+  // debug output
+  #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Starting setup request\r\n" )
+  #endif
+  // create temporary pipe
+  libusb_pipe_address_t setup_pipe = {
+    .speed = entry->data->pipe_address.speed,
+    .device = entry->data->pipe_address.device,
+    .end_point = entry->data->pipe_address.end_point,
+    .max_size = entry->data->pipe_address.max_size,
+    .type = LIBUSB_TRANSFER_CONTROL,
+    .direction = LIBUSB_DIRECTION_OUT,
+  };
+  // push request into data buffer
+  memcpy( entry->buffer, &entry->data->request, sizeof( libusb_device_request_t ) );
   // prepare channel
-  result = dwhci_prepare_channel( parent_device_number, port_number, channel,
-    buffer_length, packet_id, pipe );
+  const response_t result = dwhci_prepare_channel(
+    entry->data->parent_device_number,
+    entry->data->port_number,
+    entry->channel,
+    sizeof( libusb_device_request_t ),
+    DWHCI_CHANNEL_STATE_SETUP,
+    &setup_pipe );
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       STARTUP_PRINT( "Unable to prepare allocated channel\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // start send setup packet
+  return dwhci_channel_send_async_start_channel( entry );
+}
+
+/**
+ * @fn response_t dwhci_channel_send_async_data(channel_queue_entry_t*)
+ * @brief Method to start entry transfer with state data
+ * @param entry
+ * @return
+ */
+response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
+  // debug output
+  #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Starting data request\r\n" )
+  #endif
+  // handle no data to transmit or receive
+  if (0 >= entry->data->buffer_length ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "No data to send continue with ack\r\n" )
+    #endif
+    // switch to next state
+    entry->status = DWHCI_QUEUE_STATUS_ACK;
+    // continue directly
+    return dwhci_channel_send_async_continue( entry );
+  }
+  // handle out
+  if ( LIBUSB_DIRECTION_OUT == entry->data->pipe_address.direction ) {
+    memcpy( entry->buffer, entry->data->buffer, entry->data->buffer_length );
+  }
+  // create temporary pipe
+  libusb_pipe_address_t data_pipe = {
+    .speed = entry->data->pipe_address.speed,
+    .device = entry->data->pipe_address.device,
+    .end_point = entry->data->pipe_address.end_point,
+    .max_size = entry->data->pipe_address.max_size,
+    .type = LIBUSB_TRANSFER_CONTROL,
+    .direction = entry->data->pipe_address.direction,
+  };
+  // prepare channel
+  const response_t result = dwhci_prepare_channel(
+    entry->data->parent_device_number,
+    entry->data->port_number,
+    entry->channel,
+    sizeof( libusb_device_request_t ),
+    DWHCI_CHANNEL_STATE_DATA1,
+    &data_pipe );
+  // handle error
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to prepare allocated channel\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // start send data packet
+  return dwhci_channel_send_async_start_channel( entry );
+}
+
+/**
+ * @fn response_t dwhci_channel_send_async_ack(channel_queue_entry_t*)
+ * @brief Method to start entry transfer with state ack
+ * @param entry
+ * @return
+ */
+response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
+  // debug output
+  #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Starting ack request\r\n" )
+  #endif
+  // populate last transfer
+  if ( LIBUSB_DIRECTION_IN == entry->data->pipe_address.direction ) {
+    entry->data->last_transfer = entry->data->buffer_length;
+    if ( entry->transferred <= entry->data->buffer_length ) {
+      entry->data->last_transfer = entry->data->buffer_length - entry->transferred;
+    }
+    // copy back data
+    memcpy( entry->data->buffer, entry->buffer, entry->data->last_transfer );
+  } else {
+    entry->data->last_transfer = entry->data->buffer_length;
+  }
+  // create temporary pipe
+  libusb_pipe_address_t ack_pipe = {
+    .speed = entry->data->pipe_address.speed,
+    .device = entry->data->pipe_address.device,
+    .end_point = entry->data->pipe_address.end_point,
+    .max_size = entry->data->pipe_address.max_size,
+    .type = LIBUSB_TRANSFER_CONTROL,
+    .direction = entry->data->buffer_length == 0
+      || entry->data->pipe_address.direction == LIBUSB_DIRECTION_OUT
+        ? LIBUSB_DIRECTION_IN
+        : LIBUSB_DIRECTION_OUT,
+  };
+  // push request into data buffer
+  memcpy( entry->buffer, &entry->data->request, sizeof( libusb_device_request_t ) );
+  // prepare channel
+  const response_t result = dwhci_prepare_channel(
+    entry->data->parent_device_number,
+    entry->data->port_number,
+    entry->channel,
+    sizeof( libusb_device_request_t ),
+    DWHCI_CHANNEL_STATE_DATA1,
+    &ack_pipe );
+  // handle error
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to prepare allocated channel\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // start send ack packet
+  return dwhci_channel_send_async_start_channel( entry );
+}
+
+/**
+ * @fn response_t dwhci_channel_send_async_done(channel_queue_entry_t*)
+ * @brief Method to finish entry transfer after ack
+ * @param entry
+ * @return
+ */
+response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
+  // debug output
+  #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Handling finished request\r\n" )
+  #endif
+  // handle transfer size not null
+  if ( entry->transferred ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Warning non zero status transfer: %"PRIu32"\r\n", entry->transferred )
+    #endif
+  }
+  /// FIXME: FREE CHANNEL AGAIN
+  /// FIXME: Response result to possible rpc
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn response_t dwhci_channel_send_async_continue_pending(channel_queue_entry_t*)
+ * @brief Method to start entry transfer with state pending
+ * @param entry
+ * @return
+ */
+response_t dwhci_channel_send_async_continue_pending( [[maybe_unused]] channel_queue_entry_t* entry ) {
+  /// FIXME: TAKE NEXT PENDING ENTRY FROM LIST
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn response_t dwhci_channel_send_async_continue(channel_queue_entry_t*)
+ * @brief Method to start entry transfer depending on status
+ * @param entry
+ * @return
+ */
+response_t dwhci_channel_send_async_continue( channel_queue_entry_t* entry ) {
+  // continue channel depending on status
+  switch ( entry->status ) {
+    case DWHCI_QUEUE_STATUS_SETUP:
+      return dwhci_channel_send_async_setup( entry );
+    case DWHCI_QUEUE_STATUS_DATA:
+      return dwhci_channel_send_async_data( entry );
+    case DWHCI_QUEUE_STATUS_ACK:
+      return dwhci_channel_send_async_ack( entry );
+    case DWHCI_QUEUE_STATUS_DONE:
+      return dwhci_channel_send_async_done( entry );
+    case DWHCI_QUEUE_STATUS_PENDING:
+      return dwhci_channel_send_async_continue_pending( entry );
+    default:
+      return HCD_RESPONSE_ERROR_UNKNOWN;
+  }
+}
+
+/**
+ * @fn response_t dwhci_channel_send_async(hcd_control_message_t*);
+ * @brief Wrapper to perform async channel send
+ * @param data
+ * @return
+ */
+response_t dwhci_channel_send_async( hcd_control_message_t* data ) {
+  // debug output
+  #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT("Channel send async\r\n")
+  #endif
+  // push data with channel to queue
+  channel_queue_entry_t* entry = nullptr;
+  response_t result = dwhci_queue_add_entry( data, DWHCI_QUEUE_STATUS_PENDING, &entry );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to add request to queue\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // try to allocate a channel
+  uint8_t channel = 0;
+  result = dwhci_allocate_channel( &channel );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate a channel, entry is queued\r\n" )
+    #endif
+    // return error
+    return HCD_RESPONSE_OK;
+  }
+  // set allocated channel
+  entry->channel = channel;
+  entry->status = DWHCI_QUEUE_STATUS_SETUP;
+  // enable channel interrupt
+  result = dwhci_enable_channel_interrupt( channel );
+  // handle error
+  if ( HCD_RESPONSE_OK != result ) {
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
     #endif
     // free channel again
     dwhci_free_channel( channel );
@@ -922,18 +1330,18 @@ response_t dwhci_channel_send_async(
     // return result
     return result;
   }
-  /// FIXME: IMPLEMENT FURTHER
-  // return not implemented for now
-  return HCD_RESPONSE_ERROR_NOT_IMPLEMENTED;
+  // continue async
+  return dwhci_channel_send_async_continue( entry );
 }
 
 /**
- * @fn response_t dwhci_channel_send_wait(uint32_t, uint32_t, libusb_transfer_error_t*, libusb_pipe_address_t*, void*, size_t, dwhci_channel_state_t, uint32_t*)
+ * @fn response_t dwhci_channel_send_wait(uint32_t, uint32_t, libusb_transfer_error_t*, libusb_pipe_address_t*, uint8_t, void*, size_t, dwhci_channel_state_t, uint32_t*)
  * @brief Send command to channel and wait
  * @param parent_device_number parent device number
  * @param port_number port number
  * @param error error output variable
  * @param pipe pipe to be used
+ * @param channel channel to use
  * @param buffer buffer for send / receive
  * @param buffer_length buffer lenght
  * @param packet_id packet id
@@ -944,8 +1352,8 @@ response_t dwhci_channel_send_wait(
   const uint32_t parent_device_number,
   const uint32_t port_number,
   libusb_transfer_error_t* error,
-  libusb_pipe_address_t* pipe,
-  uint8_t channel,
+  const libusb_pipe_address_t* pipe,
+  const uint8_t channel,
   void* buffer,
   const size_t buffer_length,
   const dwhci_channel_state_t packet_id,
@@ -1483,9 +1891,9 @@ response_t dwhci_init( void ) {
   // free sequence
   free( sequence );
   // power on usb hub
-  result = dwhci_power_on();
+  response_t dwhci_result = dwhci_power_on();
   // handle error
-  if ( 0 != result ) {
+  if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       STARTUP_PRINT( "Unable to power on hub\r\n" )
@@ -1493,11 +1901,11 @@ response_t dwhci_init( void ) {
     // close file descriptor
     close( fd_iomem );
     // return error
-    return HCD_RESPONSE_ERROR_IO;
+    return dwhci_result;
   }
   // debug output
   #if defined ( DWHCI_ENABLE_DEBUG )
-    STARTUP_PRINT( "Disable pulse and vbus and perform initial resetr\r\n" )
+    STARTUP_PRINT( "Disable pulse and vbus and perform initial reset\r\n" )
   #endif
   // allocate sequence
   sequence = util_prepare_mmio_sequence( 7, &sequence_size );
@@ -1685,13 +2093,13 @@ response_t dwhci_init( void ) {
   #endif
   // query standalone register
   uint32_t usb_cfg;
-  result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, &usb_cfg );
-  if ( HCD_RESPONSE_OK != result ) {
+  dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, &usb_cfg );
+  if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       STARTUP_PRINT( "Read port failed\r\n" )
     #endif
-    return result;
+    return dwhci_result;
   }
   if (
     HCD_DWHCI_CORE_HW_CFG2_HS_PHY_TYPE( hw_cfg2 ) == HCD_DWHCI_CORE_HW_CFG2_HS_PHY_TYPE_ULPI
@@ -1699,19 +2107,18 @@ response_t dwhci_init( void ) {
   ) {
     // enable configuration
     usb_cfg |= HCD_DWHCI_CORE_USB_CFG_ULPI_FSLS | HCD_DWHCI_CORE_USB_CFG_ULPI_CLK_SUS_M;
-  }
-  else {
+  } else {
     // disable configuration
     usb_cfg &= (uint32_t)~( HCD_DWHCI_CORE_USB_CFG_ULPI_FSLS | HCD_DWHCI_CORE_USB_CFG_ULPI_CLK_SUS_M );
   }
   // write back value
-  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, usb_cfg );
-  if ( HCD_RESPONSE_OK != result ) {
+  dwhci_result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, usb_cfg );
+  if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       STARTUP_PRINT( "Write port failed\r\n" )
     #endif
-    return result;
+    return dwhci_result;
   }
 
   // debug output
@@ -1759,12 +2166,12 @@ response_t dwhci_init( void ) {
   free( sequence );
 
   // query usb port again
-  result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, &usb_cfg );
-  if ( HCD_RESPONSE_OK != result ) {
+  dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, &usb_cfg );
+  if ( HCD_RESPONSE_OK != dwhci_result ) {
     #if defined( DWHCI_ENABLE_DEBUG )
       STARTUP_PRINT( "Read port failed\r\n" )
     #endif
-    return result;
+    return dwhci_result;
   }
   switch ( HCD_DWHCI_CORE_HW_CFG2_OP_MODE( hw_cfg2 ) ) {
     case HCD_DWHCI_CORE_HW_CFG2_OP_MODE_HNP_SRP_CAPABLE:
@@ -1784,12 +2191,12 @@ response_t dwhci_init( void ) {
       usb_cfg &= (uint32_t)~HCD_DWHCI_CORE_USB_CFG_SRP_CAPABLE;
       break;
   }
-  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, usb_cfg );
-  if ( HCD_RESPONSE_OK != result ) {
+  dwhci_result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, usb_cfg );
+  if ( HCD_RESPONSE_OK != dwhci_result ) {
     #if defined( DWHCI_ENABLE_DEBUG )
       STARTUP_PRINT( "Write port failed\r\n" )
     #endif
-    return result;
+    return dwhci_result;
   }
 
   // debug output
@@ -1868,34 +2275,34 @@ response_t dwhci_init( void ) {
   }
   free( sequence );
 
-  result = dwhci_core_flush_tx_fifo( 16 );
-  if ( HCD_RESPONSE_OK != result ) {
+  dwhci_result = dwhci_core_flush_tx_fifo( 16 );
+  if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
     #if defined ( DWHCI_ENABLE_DEBUG )
       STARTUP_PRINT( "Flushing tx fifo failed\r\n" )
     #endif
-    return result;
+    return dwhci_result;
   }
 
-  result = dwhci_core_flush_rx_fifo();
-  if ( HCD_RESPONSE_OK != result ) {
+  dwhci_result = dwhci_core_flush_rx_fifo();
+  if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       STARTUP_PRINT( "Flushing rx fifo failed\r\n" )
     #endif
-    return result;
+    return dwhci_result;
   }
 
 
   // read out host config
-  result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CFG, &host_cfg );
-  if ( HCD_RESPONSE_OK != result ) {
+  dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CFG, &host_cfg );
+  if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
-      STARTUP_PRINT( "Read of host cfg failed: %s\r\n", response_error( result ) )
+      STARTUP_PRINT( "Read of host cfg failed: %s\r\n", response_error( dwhci_result ) )
     #endif
     // return error
-    return result;
+    return dwhci_result;
   }
   // put channels into known states if no dma descriptor is enabled
   if ( ! ( host_cfg & HCD_DWHCI_HOST_CFG_ENABLE_DMA_DESCRIPTOR ) ) {
@@ -2014,25 +2421,25 @@ response_t dwhci_init( void ) {
   }
 
   uint32_t host_port;
-  result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_PORT, &host_port );
-  if ( HCD_RESPONSE_OK != result ) {
+  dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_PORT, &host_port );
+  if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       STARTUP_PRINT( "host port read failed\r\n" )
     #endif
-    return result;
+    return dwhci_result;
   }
   if ( ! ( host_port & HCD_DWHCI_HOST_PORT_POWER ) ) {
     #if defined( DWHCI_ENABLE_DEBUG )
       STARTUP_PRINT( "Power up host port\r\n" )
     #endif
     host_port |= HCD_DWHCI_HOST_PORT_POWER;
-    result = dwhci_write_port( PERIPHERAL_DWHCI_HOST_PORT, host_port );
-    if ( HCD_RESPONSE_OK != result ) {
+    dwhci_result = dwhci_write_port( PERIPHERAL_DWHCI_HOST_PORT, host_port );
+    if ( HCD_RESPONSE_OK != dwhci_result ) {
       #if defined( DWHCI_ENABLE_DEBUG )
         STARTUP_PRINT( "host port write failed\r\n" )
       #endif
-      return result;
+      return dwhci_result;
     }
   }
 
@@ -2090,6 +2497,10 @@ response_t dwhci_init( void ) {
   }
   // free sequence
   free( sequence );
+  // debug output
+  #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Acquiring interrupt %d\r\n", ARM_IRQ_USB )
+  #endif
   // register interrupt
   _syscall_interrupt_acquire( ARM_IRQ_USB );
   // handle error
@@ -2101,8 +2512,12 @@ response_t dwhci_init( void ) {
         ARM_IRQ_USB, strerror( e ) )
     #endif
     // return error
-    return e;
+    return HCD_RESPONSE_ERROR_UNKNOWN;
   }
+  // debug output
+  #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Enabling interrupts\r\n" )
+  #endif
   // enable all interrupts
   sequence = util_prepare_mmio_sequence( 6, &sequence_size );
   if ( ! sequence ) {
@@ -2115,16 +2530,16 @@ response_t dwhci_init( void ) {
     // return memory error
     return HCD_RESPONSE_ERROR_MEMORY;
   }
-  // mask all pending interrupts
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_WRITE;
-  sequence[ 0 ].offset = PERIPHERAL_DWHCI_CORE_INT_STAT;
-  sequence[ 0 ].value = ( uint32_t )-1;
   // enable core interrupts
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_READ_OR;
+  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_OR;
+  sequence[ 0 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
+  sequence[ 0 ].value = HCD_DWHCI_CORE_AHB_CFG_GLOBAL_INTERRUPT_MASK;
+  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ;
   sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
-  sequence[ 1 ].value = HCD_DWHCI_CORE_AHB_CFG_GLOBAL_INTERRUPT_MASK;
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ;
-  sequence[ 2 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
+  // mask all pending interrupts
+  sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE;
+  sequence[ 2 ].offset = PERIPHERAL_DWHCI_CORE_INT_STAT;
+  sequence[ 2 ].value = ( uint32_t )-1;
   // enable host interrupts
   sequence[ 3 ].type = IOMEM_MMIO_ACTION_WRITE;
   sequence[ 3 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
@@ -2133,7 +2548,7 @@ response_t dwhci_init( void ) {
   sequence[ 4 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
   sequence[ 5 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
   sequence[ 5 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
-  sequence[ 5 ].value = (uint32_t)(HCD_DWHCI_CORE_INT_MASK_HC_INTR
+  sequence[ 5 ].value = (uint32_t)(HCD_DWHCI_CORE_INT_MASK_HC_INTR/*
     | HCD_DWHCI_CORE_INT_MASK_PORT_INTR
     | HCD_DWHCI_CORE_INT_MASK_DISCONNECT
     | HCD_DWHCI_CORE_INT_MASK_USB_SUSPEND
@@ -2142,7 +2557,7 @@ response_t dwhci_init( void ) {
     | HCD_DWHCI_CORE_INT_MASK_RX_STS_Q_LVL
     | HCD_DWHCI_CORE_INT_MASK_CON_ID_STS_CHNG
     | HCD_DWHCI_CORE_INT_MASK_SESS_REQ_INTR
-    | HCD_DWHCI_CORE_INT_MASK_WKUP_INTR);
+    | HCD_DWHCI_CORE_INT_MASK_WKUP_INTR*/);
   // perform request
   result = ioctl(
     fd_iomem,

@@ -33,9 +33,9 @@
 #define SYSTEM_TIMER_MATCH_3 ( 1 << 3 )
 
 // timer interrupts
-#define SYSTEM_TIMER_0_INTERRUPT ( 1 << 0 )
-#define SYSTEM_TIMER_1_INTERRUPT ( 1 << 1 )
-#define SYSTEM_TIMER_2_INTERRUPT ( 1 << 2 )
-#define SYSTEM_TIMER_3_INTERRUPT ( 1 << 3 )
+#define SYSTEM_TIMER_0_INTERRUPT 0 // ( 1 << 0 )
+#define SYSTEM_TIMER_1_INTERRUPT 1 // ( 1 << 1 )
+#define SYSTEM_TIMER_2_INTERRUPT 2 // ( 1 << 2 )
+#define SYSTEM_TIMER_3_INTERRUPT 3 // ( 1 << 3 )
 
 #endif
