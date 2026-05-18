@@ -95,5 +95,11 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register get status handler!\r\n" )
     return false;
   }
+  // register handler poll interrupt
+  bolthur_rpc_bind( USBD_POLL_INTERRUPT, rpc_interrupt_poll, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register poll interrupt handler!\r\n" )
+    return false;
+  }
   return true;
 }

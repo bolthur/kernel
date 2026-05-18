@@ -358,6 +358,160 @@ int usbd_control_message(
 }
 
 /**
+ * @fn int usbd_poll_interrupt(const libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t);
+ * @brief Wrapper to perform usbd control message
+ * @param dev
+ * @param pipe
+ * @param buffer
+ * @param buffer_length
+ * @param request
+ * @param timeout
+ * @return
+ */
+int usbd_poll_interrupt(
+  libusb_device_t* dev,
+  const libusb_pipe_address_t pipe,
+  void* buffer,
+  const size_t buffer_length,
+  const libusb_device_request_t* request,
+  const size_t timeout
+) {
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    STARTUP_PRINT( "firing hcd poll interrupt message\r\n" )
+  #endif
+  // allocate shared memory
+  const size_t data_size = sizeof ( hcd_control_message_t ) + buffer_length + 1;
+  const size_t shm_id = _syscall_memory_shared_create( data_size );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  // attach shared memory
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  auto const message = ( hcd_control_message_t* )shm_addr;
+  // populate real message in shared memory
+  message->device_number = dev->number;
+  message->parent_device_number = dev->parent ? dev->parent->number : 0;
+  message->port_number = dev->port_number;
+  memcpy( &message->pipe_address, &pipe, sizeof( pipe ) );
+  memcpy( &message->request, request, sizeof( *request ) );
+  message->buffer_length = buffer_length;
+  message->timeout = timeout;
+  if ( LIBUSB_DIRECTION_OUT == pipe.direction && buffer ) {
+    memcpy( &message->buffer, buffer, buffer_length );
+  }
+  // allocate request
+  hcd_submit_control_message_t* control_request = malloc( sizeof( *control_request ) );
+  if ( ! control_request ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // return error
+    return ENOMEM;
+  }
+  // clear out everything
+  memset( control_request, 0, sizeof( *control_request ) );
+  // populate shm_id
+  control_request->shm_id = shm_id;
+  // perform request
+  int result = ioctl(
+    fd_hcd,
+    IOCTL_BUILD_REQUEST(
+      HCD_POLL_INTERRUPT,
+      sizeof( *control_request ),
+      IOCTL_RDWR
+    ),
+    control_request
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // free request
+    free( control_request );
+    // return eio
+    return EIO;
+  }
+  // response is equal to input
+  if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Message to %s timeout reached\r\n", usbd_get_description( dev ) )
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // free control_request
+    free( control_request );
+    // return timeout
+    return ETIMEDOUT;
+  }
+  // handle error
+  if ( message->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+    // handle check for connection
+    if ( dev->parent && dev->parent->device_check_connection ) {
+      // debug output
+      #if defined( USBD_ENABLE_DEBUG )
+        STARTUP_PRINT( "Verifying %s is still connected\r\n", usbd_get_description( dev ) )
+      #endif
+      // check connection
+      result = dev->parent->device_check_connection( dev->parent, ( libusb_device_t* )dev );
+      // handle error
+      if ( 0 != result ) {
+        // detach shared memory
+        _syscall_memory_shared_detach( shm_id );
+        // free control_request
+        free( control_request );
+        // return no link
+        return ENOLINK;
+      }
+      // debug output
+      #if defined( USBD_ENABLE_DEBUG )
+        STARTUP_PRINT( "%s is still connected\r\n", usbd_get_description( dev ) )
+      #endif
+      // set result to error
+      result = EIO;
+    }
+  }
+  // copy over data
+  if ( LIBUSB_DIRECTION_IN == pipe.direction && buffer ) {
+    memcpy( buffer, message->buffer, buffer_length );
+  }
+  // copy over static fields into device populated via shared memory
+  dev->error = message->error;
+  dev->last_transfer = message->last_transfer;
+  // detach shared memory
+  _syscall_memory_shared_detach( shm_id );
+  // free control message
+  free( control_request );
+  // return result
+  return result;
+}
+
+/**
  * @fn int usbd_get_descriptor(libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t);
  * @brief Get usb descriptor
  * @param dev

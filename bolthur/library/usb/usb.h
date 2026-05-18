@@ -27,6 +27,7 @@
 int usb_init( void );
 int usb_control_message( uint32_t, libusb_transfer_t, libusb_direction_t, void*, size_t, const libusb_device_request_t*, size_t, libusb_transfer_error_t*, uint32_t* );
 int usb_control_message_async( uint32_t, libusb_transfer_t, libusb_direction_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t );
+int usb_interrupt_poll_async( uint32_t, libusb_transfer_t, libusb_direction_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t );
 const char* usb_get_description( uint32_t );
 int usb_get_descriptor( uint32_t, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t );
 int usb_attach_device( uint32_t, uint32_t, libusb_speed_t );

@@ -134,7 +134,7 @@ int usb_control_message_async(
   const size_t buffer_length,
   const libusb_device_request_t* request,
   const size_t timeout,
-  rpc_handler_t callback
+  const rpc_handler_t callback
 ) {
   // debug output
   #if defined( LIBUSB_ENABLE_DEBUG )
@@ -957,4 +957,141 @@ int usb_get_status( const uint32_t device_number, libusb_device_status_t* status
   free( request );
   // return result
   return result;
+}
+
+/**
+ * @fn int usb_interrupt_poll_async(uint32_t, libusb_transfer_t, libusb_direction_t, void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t)
+ * @brief Wrapper to perform async interrupt poll
+ * @param device_number
+ * @param transfer
+ * @param direction
+ * @param buffer
+ * @param buffer_length
+ * @param request
+ * @param timeout
+ * @param callback
+ * @return
+ */
+int usb_interrupt_poll_async(
+  const uint32_t device_number,
+  const libusb_transfer_t transfer,
+  const libusb_direction_t direction,
+  const void* buffer,
+  const size_t buffer_length,
+  const libusb_device_request_t* request,
+  const size_t timeout,
+  const rpc_handler_t callback
+) {
+  // debug output
+  //#if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "firing async usb poll interrupt message\r\n" )
+  //#endif
+  // allocate shared memory
+  const size_t data_size = sizeof ( usb_control_message_t ) + buffer_length + 1;
+  const size_t shm_id = _syscall_memory_shared_create( data_size );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  // attach shared memory
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  auto const message = ( usb_control_message_t* )shm_addr;
+  // populate real message in shared memory
+  message->device_number = device_number;
+  message->transfer = transfer;
+  message->direction = direction;
+  message->buffer_length = buffer_length;
+  message->timeout = timeout;
+  memcpy( &message->request, request, sizeof( *request ) );
+  if ( LIBUSB_DIRECTION_OUT == direction && buffer ) {
+    memcpy( &message->buffer, buffer, buffer_length );
+  }
+  // allocate request
+  usbd_control_message_t* control_request = malloc( sizeof( *control_request ) );
+  if ( ! control_request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // return error
+    return ENOMEM;
+  }
+  // clear out everything
+  memset( control_request, 0, sizeof( *control_request ) );
+  // populate shm_id
+  control_request->shm_id = shm_id;
+  // calculate rpc request size
+  constexpr size_t rpc_request_size = sizeof( vfs_ioctl_perform_request_t )
+    + sizeof( *control_request );
+  // allocate rpc structures
+  vfs_ioctl_perform_request_t* rpc_request = malloc( rpc_request_size );
+  if ( ! rpc_request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // free control request
+    free( control_request );
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // return error
+    return ENOMEM;
+  }
+  // clear rpc structures
+  memset( rpc_request, 0, rpc_request_size );
+  // populate structure
+  rpc_request->handle = fd_usbd;
+  rpc_request->command = USBD_POLL_INTERRUPT;
+  rpc_request->type = IOCTL_RDWR;
+  // copy over data
+  memcpy( rpc_request->container, control_request, sizeof( *control_request ) );
+  // raise rpc and wait for return
+  const size_t response_id = bolthur_rpc_raise(
+    RPC_VFS_IOCTL,
+    VFS_DAEMON_ID,
+    rpc_request,
+    rpc_request_size,
+    callback,
+    RPC_VFS_IOCTL,
+    rpc_request,
+    rpc_request_size,
+    0,
+    0,
+    NULL,
+    false
+  );
+  if ( ! response_id ) {
+    // free request data
+    free( rpc_request );
+    // free control request
+    free( control_request );
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // return io error
+    return EIO;
+  }
+  // free request data
+  free( rpc_request );
+  // free control request
+  free( control_request );
+  // return success
+  return 0;
 }

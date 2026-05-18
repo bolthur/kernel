@@ -26,6 +26,7 @@
 #define HCD_DEVICE_PATH "/dev/usb/hcd"
 
 #define HCD_SUBMIT_CONTROL_MESSAGE RPC_CUSTOM_START
+#define HCD_POLL_INTERRUPT HCD_SUBMIT_CONTROL_MESSAGE + 1
 
 typedef struct {
   size_t shm_id;

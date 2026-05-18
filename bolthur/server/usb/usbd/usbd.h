@@ -30,6 +30,7 @@ extern libusb_device_t* head;
 void usbd_deallocate_device( libusb_device_t* );
 int usbd_allocate_device( libusb_device_t**, bool );
 int usbd_control_message( libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t );
+int usbd_poll_interrupt( libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t );
 int usbd_get_descriptor( libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t );
 int usbd_get_string( libusb_device_t*, uint8_t, uint16_t, void*, size_t );
 int usbd_read_string_lang( libusb_device_t*, uint8_t, uint16_t, void*, size_t );
