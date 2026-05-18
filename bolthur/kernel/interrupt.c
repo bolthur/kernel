@@ -589,6 +589,7 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context, c
       NULL,
       false,
       0,
+      true,
       true
     );
     // handle error by skip

@@ -275,6 +275,7 @@ task_thread_t* task_thread_fork(
   thread->priority = thread_to_fork->priority;
   thread->stack_virtual = thread_to_fork->stack_virtual;
   thread->entry = thread_to_fork->entry;
+  thread->handling_interrupt = thread_to_fork->handling_interrupt;
   thread->stack_physical = virt_get_mapped_address_in_context(
     thread->process->virtual_context,
     thread->stack_virtual

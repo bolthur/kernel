@@ -239,11 +239,27 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     TASK_THREAD_STATE_RPC_QUEUED == backup->thread->state
     || TASK_THREAD_STATE_RPC_ACTIVE == backup->thread->state
     || TASK_THREAD_STATE_RPC_HALT_SWITCH == backup->thread->state
+    // for interrupts treat also wait for return as "blocking" to prevent
+    // stack underruns
+    || (
+      TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN == backup->thread->state
+      && backup->is_interrupt
+    )
   ) {
     // debug output
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT( "backup->thread->state = %d, pid = %d\r\n", backup->thread->state,
         backup->thread->process->id )
+    #endif
+    // return success
+    return true;
+  }
+  // skip enqueue in case an interrupt is handled
+  if ( backup->thread->handling_interrupt ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "backup->thread->handling_interrupt = %d for %d / %d\r\n",
+        backup->thread->handling_interrupt, backup->thread->process->id, backup->thread->id )
     #endif
     // return success
     return true;
@@ -311,6 +327,7 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   }
   backup->prepared = true;
   backup->active = true;
+  backup->thread->handling_interrupt = backup->is_interrupt;
   // debug output
   #if defined( PRINT_RPC )
     DUMP_REGISTER( cpu )

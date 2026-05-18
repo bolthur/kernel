@@ -38,33 +38,84 @@ void rpc_interrupt_handle(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "Interrupt handler called\r\n" )
+  #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Interrupt handler called\r\n" )
+  #endif
   // read interrupt register
   uint32_t interrupt;
   response_t result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_INT_STAT, &interrupt );
   if ( HCD_RESPONSE_OK != result ) {
-    EARLY_STARTUP_PRINT( "Unable to read interrupt status register!\r\n" )
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to read interrupt status register!\r\n" )
+    #endif
     return;
   }
-  EARLY_STARTUP_PRINT( "interrupt = %#"PRIx32"\r\n", interrupt )
-  // handle interrupt
+  #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "interrupt = %#"PRIx32"\r\n", interrupt )
+  #endif
+  // mask pending interrupts
+  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_INT_STAT, interrupt );
+  if ( HCD_RESPONSE_OK != result ) {
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to write interrupt status register!\r\n" )
+    #endif
+    return;
+  }
+  uint32_t channel_interrupt;
+  uint32_t channel_mask = 1;
   if ( interrupt & HCD_DWHCI_CORE_INT_MASK_HC_INTR ) {
     // read channel interrupts
-    uint32_t channel_interrupt;
     result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT, &channel_interrupt );
     if ( HCD_RESPONSE_OK != result ) {
-      EARLY_STARTUP_PRINT( "Unable to read all channel interrupt status register!\r\n" )
+      #if defined( DWHCI_ENABLE_DEBUG )
+        STARTUP_PRINT( "Unable to read all channel interrupt status register!\r\n" )
+      #endif
       return;
     }
-    EARLY_STARTUP_PRINT( "channel_interrupt = %#"PRIx32"\r\n", channel_interrupt )
-    // write back value
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "channel_interrupt = %#"PRIx32"\r\n", channel_interrupt )
+    #endif
+    // mask channel interrupts
     result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT, channel_interrupt );
     if ( HCD_RESPONSE_OK != result ) {
-      EARLY_STARTUP_PRINT( "Unable to write back all channel interrupt status register!\r\n" )
+      #if defined( DWHCI_ENABLE_DEBUG )
+        STARTUP_PRINT( "Unable to write back all channel interrupt status register!\r\n" )
+      #endif
       return;
     }
     // iterate over channels
-    uint32_t channel_mask = 1;
+    for ( uint32_t channel = 0; channel < configuration.channel.count; channel++ ) {
+      // handle channel interrupt
+      if ( channel_interrupt & channel_mask ) {
+        // reset channel interrupts
+        result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( channel ), 0 );
+        if ( HCD_RESPONSE_OK != result ) {
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Unable to reset channel interrupt\r\n" )
+          #endif
+        }
+      }
+      // assign channel
+      channel_mask <<= 1;
+    }
+  }
+  // fire handle done
+  #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Mark interrupts as handled\r\n" )
+  #endif
+  _syscall_interrupt_handled();
+  // acquire interrupt again
+  #if defined( DWHCI_ENABLE_DEBUG )
+    STARTUP_PRINT( "Acquiring interrupt again\r\n" )
+  #endif
+  _syscall_interrupt_acquire( ARM_IRQ_USB );
+  // handle interrupt itself
+  if ( interrupt & HCD_DWHCI_CORE_INT_MASK_HC_INTR ) {
+    #if defined( DWHCI_ENABLE_DEBUG )
+      STARTUP_PRINT( "Handling now channel interrupts ( interruptable sequence )\r\n" )
+    #endif
+    // iterate over channels
+    channel_mask = 1;
     for ( uint32_t channel = 0; channel < configuration.channel.count; channel++ ) {
       // handle channel interrupt
       if ( channel_interrupt & channel_mask ) {
@@ -72,57 +123,89 @@ void rpc_interrupt_handle(
         channel_queue_entry_t* entry;
         result = dwhci_queue_get_active_by_channel( ( uint8_t )channel, &entry );
         if ( HCD_RESPONSE_OK != result ) {
-          EARLY_STARTUP_PRINT( "No queued entry found for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "No queued entry found for channel %"PRIu32"\r\n", channel )
+          #endif
           continue;
         }
         // get channel interrupt
         uint32_t cipt;
         result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT( channel ), &cipt );
         if ( HCD_RESPONSE_OK != result ) {
-          EARLY_STARTUP_PRINT( "Unable to read channel interrupt status register!\r\n" )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Unable to read channel interrupt status register!\r\n" )
+          #endif
           continue;
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE ) {
-          EARLY_STARTUP_PRINT( "Transfer complete for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Transfer complete for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_HALT ) {
-          EARLY_STARTUP_PRINT( "Halt for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Halt for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_AHB_ERROR ) {
-          EARLY_STARTUP_PRINT( "AHB Error for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "AHB Error for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_STALL ) {
-          EARLY_STARTUP_PRINT( "Stall for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Stall for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT ) {
-          EARLY_STARTUP_PRINT( "Nack for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Nack for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_ACKNOWLEDGEMENT ) {
-          EARLY_STARTUP_PRINT( "Ack for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Ack for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_NOT_YET ) {
-          EARLY_STARTUP_PRINT( "Not yet for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Not yet for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_TRANSACTION_ERROR ) {
-          EARLY_STARTUP_PRINT( "Transaction error for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Transaction error for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_BABBLE_ERROR ) {
-          EARLY_STARTUP_PRINT( "Babble error for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Babble error for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_FRAME_OVERRUN ) {
-          EARLY_STARTUP_PRINT( "Frame overrun for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Frame overrun for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_DATA_TOGGLE_ERROR ) {
-          EARLY_STARTUP_PRINT( "Data toggle error for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Data toggle error for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_BUFFER_NOT_AVAILABLE ) {
-          EARLY_STARTUP_PRINT( "Buffer not available for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Buffer not available for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_EXCESSIVE_TRANSMISSION ) {
-          EARLY_STARTUP_PRINT( "Excessive transmission for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Excessive transmission for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_FRAME_LIST_ROLLOVER ) {
-          EARLY_STARTUP_PRINT( "Rollover for channel %"PRIu32"\r\n", channel )
+          #if defined( DWHCI_ENABLE_DEBUG )
+            STARTUP_PRINT( "Rollover for channel %"PRIu32"\r\n", channel )
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE ) {
           uint32_t transfer_size;
@@ -131,7 +214,9 @@ void rpc_interrupt_handle(
             &transfer_size
           );
           if ( HCD_RESPONSE_OK != result ) {
-            EARLY_STARTUP_PRINT( "Unable to read transfer size register!\r\n" )
+            #if defined( DWHCI_ENABLE_DEBUG )
+              STARTUP_PRINT( "Unable to read transfer size register!\r\n" )
+            #endif
             continue;
           }
           entry->transferred = HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_TRANSFER_SIZE( transfer_size );
@@ -148,7 +233,9 @@ void rpc_interrupt_handle(
             entry->status = DWHCI_QUEUE_STATUS_DONE;
             break;
           default:
-            EARLY_STARTUP_PRINT( "Unknown status request for channel %"PRIu32"\r\n", channel )
+            #if defined( DWHCI_ENABLE_DEBUG )
+              STARTUP_PRINT( "Unknown status request for channel %"PRIu32"\r\n", channel )
+            #endif
             continue;
         }
         // continue with new step
@@ -158,12 +245,4 @@ void rpc_interrupt_handle(
       channel_mask <<= 1;
     }
   }
-  // mask all pending interrupts
-  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_INT_STAT, interrupt );
-  if ( HCD_RESPONSE_OK != result ) {
-    EARLY_STARTUP_PRINT( "Unable to write interrupt status register!\r\n" )
-    return;
-  }
-  // acquire interrupt again
-  _syscall_interrupt_acquire( ARM_IRQ_USB );
 }

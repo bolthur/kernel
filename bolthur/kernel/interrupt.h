@@ -76,6 +76,7 @@ void interrupt_disable( void );
 void interrupt_enable( void );
 bool interrupt_enabled( void );
 bool interrupt_validate_number( size_t );
+bool interrupt_validate_number_rpc( size_t );
 void interrupt_init( void );
 void interrupt_arch_init( void );
 void interrupt_post_init( void );

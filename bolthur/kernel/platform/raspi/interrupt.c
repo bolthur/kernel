@@ -53,6 +53,18 @@ bool interrupt_validate_number( const size_t num ) {
 }
 
 /**
+ * @fn bool interrupt_validate_number_rpc(size_t)
+ * @brief Function to validate number for rpc
+ * @param num number to validate
+ * @return
+ */
+bool interrupt_validate_number_rpc( const size_t num ) {
+  return interrupt_validate_number( num ) && !(
+    num != IRQ_USB
+  );
+}
+
+/**
  * @fn void interrupt_clear(int8_t)
  * @brief Method to clear interrupt
  * @param num interrupt number to clear

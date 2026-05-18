@@ -31,18 +31,32 @@ typedef struct task_process task_process_t;
 typedef struct task_priority_queue task_priority_queue_t;
 
 typedef struct  task_thread {
+  /** current context */
   void* current_context;
+  /** avl management node */
   avl_node_t node_id;
+  /** thread id */
   pid_t id;
+  /** thread priority */
   size_t priority;
+  /** virtual stack address */
   uintptr_t stack_virtual;
+  /** physical stack address */
   uint64_t stack_physical;
+  /** stack size */
   size_t stack_size;
+  /** root entry point */
   uintptr_t entry;
+  /** current thread state */
   task_thread_state_t state;
+  /** thread state backup */
   task_thread_state_t state_backup;
+  /** thread state data */
   task_state_data_t state_data;
+  /** pointer to process structure */
   task_process_t* process;
+  /** flag indicating thread is handling an interrupt */
+  bool handling_interrupt;
 } task_thread_t;
 
 extern task_thread_t* task_thread_current_thread;

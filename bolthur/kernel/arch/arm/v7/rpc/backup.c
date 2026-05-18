@@ -29,7 +29,7 @@
 #endif
 
 /**
- * @fn rpc_backup_t* rpc_backup_create(task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool)
+ * @fn rpc_backup_t* rpc_backup_create(task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool, bool)
  * @brief Helper to create rpc backup
  *
  * @param source
@@ -41,6 +41,7 @@
  * @param sync
  * @param origin_data_id
  * @param disable_data
+ * @param is_interrupt
  * @return
  */
 rpc_backup_t* rpc_backup_create(
@@ -52,7 +53,8 @@ rpc_backup_t* rpc_backup_create(
   task_thread_t* target_thread,
   bool sync,
   size_t origin_data_id,
-  bool disable_data
+  bool disable_data,
+  bool is_interrupt
 ) {
   // get first inactive thread
   avl_node_t* current = avl_iterate_first( target->thread_manager );
@@ -113,10 +115,12 @@ rpc_backup_t* rpc_backup_create(
       DEBUG_OUTPUT( "process = %d, tmp->active = %d, tmp->thread = %p, thread = %p, tmp->data_id = %zu, thread->state = %d\r\n",
         tmp->thread->process->id, tmp->active ? 1 : 0, tmp->thread, thread, tmp->data_id, thread->state )
     #endif
-    // handle not active, different thread or wait for return
+    // handle not active, different thread, wait for return
+    // or executing interrupt
     if ( ! tmp->active || tmp->thread != thread
       || thread->state == TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN
       || thread->state == TASK_THREAD_STATE_RPC_HALT_SWITCH
+      || thread->handling_interrupt
     ) {
       // get to next item
       current_list = current_list->next;
@@ -244,6 +248,7 @@ rpc_backup_t* rpc_backup_create(
   backup->sync_return_data_id = 0;
   backup->sync_return_blocked_data_id = 0;
   backup->sync_return_on_end = false;
+  backup->is_interrupt = is_interrupt;
   // return created backup
   return backup;
 }

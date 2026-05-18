@@ -52,7 +52,7 @@ void rpc_generic_destroy( task_process_t* );
 bool rpc_generic_ready( task_process_t* );
 bool rpc_generic_restore( task_thread_t* );
 bool rpc_generic_prepare_invoke( rpc_backup_t* );
-rpc_backup_t* rpc_generic_raise( task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool );
+rpc_backup_t* rpc_generic_raise( task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool, bool );
 bool rpc_generic_setup_mailbox( task_process_t* );
 void rpc_generic_destroy_mailbox( task_process_t* );
 

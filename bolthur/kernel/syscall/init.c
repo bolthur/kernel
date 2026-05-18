@@ -80,6 +80,7 @@ bool syscall_init( void ) {
   if (
     ! SYSCALL_BIND( SYSCALL_INTERRUPT_ACQUIRE, syscall_interrupt_acquire )
     || ! SYSCALL_BIND( SYSCALL_INTERRUPT_RELEASE, syscall_interrupt_release )
+    || ! SYSCALL_BIND( SYSCALL_INTERRUPT_HANDLED, syscall_interrupt_handled )
   ) {
     return false;
   }

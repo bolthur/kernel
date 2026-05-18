@@ -370,6 +370,8 @@ static void custom_nanosleep( const struct timespec* rqtp ) {
  * @param buffer_offset buffer offset
  * @param speed speed
  * @return
+ *
+ * @todo remove
  */
 response_t dwhci_channel_send_wait_one(
   libusb_transfer_error_t* error,
@@ -1455,6 +1457,8 @@ response_t dwhci_channel_send_async( hcd_control_message_t* data, hcd_submit_con
  * @param packet_id packet id
  * @param transfer_out transfer amount output variable
  * @return
+ *
+ * @todo remove
  */
 response_t dwhci_channel_send_wait(
   const uint32_t parent_device_number,
@@ -2613,9 +2617,9 @@ response_t dwhci_init( void ) {
   _syscall_interrupt_acquire( ARM_IRQ_USB );
   // handle error
   if ( errno ) {
-    const int e = errno;
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
+      const int e = errno;
       STARTUP_PRINT( "Unable to acquire interrupt %d: %s\r\n",
         ARM_IRQ_USB, strerror( e ) )
     #endif

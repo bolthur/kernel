@@ -235,7 +235,8 @@ void timer_handle_callback( void ) {
       entry->thread,
       false,
       entry->id,
-      true
+      true,
+      false
     );
     // handle error by skip
     if ( ! rpc ) {

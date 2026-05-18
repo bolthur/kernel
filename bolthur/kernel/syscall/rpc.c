@@ -191,6 +191,7 @@ void syscall_rpc_raise( void* context ) {
     NULL,
     synchronous,
     origin_rpc_data_id,
+    false,
     false
   );
   // free duplicate again
@@ -522,6 +523,7 @@ void syscall_rpc_ret( void* context ) {
       NULL,
       true,
       blocked_data_id,
+      false,
       false
     );
     #if defined( PRINT_SYSCALL )

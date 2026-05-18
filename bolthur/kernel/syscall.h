@@ -59,6 +59,7 @@
 
 #define SYSCALL_INTERRUPT_ACQUIRE 40
 #define SYSCALL_INTERRUPT_RELEASE 41
+#define SYSCALL_INTERRUPT_HANDLED 42
 
 #define SYSCALL_TIMER_TICK_COUNT 51
 #define SYSCALL_TIMER_FREQUENCY 52
@@ -97,6 +98,7 @@ void syscall_memory_translate_bus( void* );
 
 void syscall_interrupt_acquire( void* );
 void syscall_interrupt_release( void* );
+void syscall_interrupt_handled( void* );
 
 void syscall_rpc_set_handler( void* );
 void syscall_rpc_raise( void* );
