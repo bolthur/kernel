@@ -358,13 +358,12 @@ int usbd_control_message(
 }
 
 /**
- * @fn int usbd_poll_interrupt(const libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t);
+ * @fn int usbd_poll_interrupt(const libusb_device_t*, libusb_pipe_address_t, void*, size_t, size_t);
  * @brief Wrapper to perform usbd control message
  * @param dev
  * @param pipe
  * @param buffer
  * @param buffer_length
- * @param request
  * @param timeout
  * @return
  */
@@ -373,7 +372,6 @@ int usbd_poll_interrupt(
   const libusb_pipe_address_t pipe,
   void* buffer,
   const size_t buffer_length,
-  const libusb_device_request_t* request,
   const size_t timeout
 ) {
   // debug output
@@ -381,7 +379,7 @@ int usbd_poll_interrupt(
     STARTUP_PRINT( "firing hcd poll interrupt message\r\n" )
   #endif
   // allocate shared memory
-  const size_t data_size = sizeof ( hcd_control_message_t ) + buffer_length + 1;
+  const size_t data_size = sizeof ( hcd_interrupt_poll_t ) + buffer_length + 1;
   const size_t shm_id = _syscall_memory_shared_create( data_size );
   // handle error
   if ( errno ) {
@@ -405,20 +403,19 @@ int usbd_poll_interrupt(
     // return error
     return e;
   }
-  auto const message = ( hcd_control_message_t* )shm_addr;
+  auto const message = ( hcd_interrupt_poll_t* )shm_addr;
   // populate real message in shared memory
   message->device_number = dev->number;
   message->parent_device_number = dev->parent ? dev->parent->number : 0;
   message->port_number = dev->port_number;
   memcpy( &message->pipe_address, &pipe, sizeof( pipe ) );
-  memcpy( &message->request, request, sizeof( *request ) );
   message->buffer_length = buffer_length;
   message->timeout = timeout;
   if ( LIBUSB_DIRECTION_OUT == pipe.direction && buffer ) {
     memcpy( &message->buffer, buffer, buffer_length );
   }
   // allocate request
-  hcd_submit_control_message_t* control_request = malloc( sizeof( *control_request ) );
+  hcd_submit_interrupt_poll_t* control_request = malloc( sizeof( *control_request ) );
   if ( ! control_request ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )

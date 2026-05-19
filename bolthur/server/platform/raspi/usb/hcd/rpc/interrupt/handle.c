@@ -221,16 +221,24 @@ void rpc_interrupt_handle(
           }
           entry->transferred = HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_TRANSFER_SIZE( transfer_size );
         }
+        /// FIXNE; RESTART TRANSACTION ON HALT, WHEN NO COMPLETE WAS FIRED AND TRANSFER SIZE ISN'T REACHED
+        /// FIXME: SWITCH TO NEXT STATE WHEN COMPLETE INTERRUPT IS RAISED OR HALT WITHOUT COMPLETE BUT COMPLETE TRANSFERSIZE
         // evaluate next state
         switch ( entry->status ) {
-          case DWHCI_QUEUE_STATUS_SETUP:
-            entry->status = DWHCI_QUEUE_STATUS_DATA;
+          case DWHCI_QUEUE_CHANNEL_STATUS_SETUP:
+            entry->status = DWHCI_QUEUE_CHANNEL_STATUS_DATA;
             break;
-          case DWHCI_QUEUE_STATUS_DATA:
-            entry->status = DWHCI_QUEUE_STATUS_ACK;
+          case DWHCI_QUEUE_CHANNEL_STATUS_DATA:
+            entry->status = DWHCI_QUEUE_CHANNEL_STATUS_ACK;
             break;
-          case DWHCI_QUEUE_STATUS_ACK:
-            entry->status = DWHCI_QUEUE_STATUS_DONE;
+          case DWHCI_QUEUE_CHANNEL_STATUS_ACK:
+            entry->status = DWHCI_QUEUE_CHANNEL_STATUS_DONE;
+            break;
+          case DWHCI_QUEUE_POLL_STATUS_DATA:
+            entry->status = DWHCI_QUEUE_POLL_STATUS_ACK;
+            break;
+          case DWHCI_QUEUE_POLL_STATUS_ACK:
+            entry->status = DWHCI_QUEUE_POLL_STATUS_DONE;
             break;
           default:
             #if defined( DWHCI_ENABLE_DEBUG )

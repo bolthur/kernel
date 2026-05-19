@@ -33,6 +33,10 @@ typedef struct {
 } hcd_submit_control_message_t;
 
 typedef struct {
+  size_t shm_id;
+} hcd_submit_interrupt_poll_t;
+
+typedef struct {
   uint32_t device_number;
   uint32_t parent_device_number;
   uint32_t port_number;
@@ -44,5 +48,17 @@ typedef struct {
   size_t timeout;
   uint8_t buffer[];
 } hcd_control_message_t;
+
+typedef struct {
+  uint32_t device_number;
+  uint32_t parent_device_number;
+  uint32_t port_number;
+  uint32_t last_transfer;
+  libusb_transfer_error_t error;
+  libusb_pipe_address_t pipe_address;
+  size_t buffer_length;
+  size_t timeout;
+  uint8_t buffer[];
+} hcd_interrupt_poll_t;
 
 #endif

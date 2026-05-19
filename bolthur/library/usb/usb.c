@@ -960,14 +960,14 @@ int usb_get_status( const uint32_t device_number, libusb_device_status_t* status
 }
 
 /**
- * @fn int usb_interrupt_poll_async(uint32_t, libusb_transfer_t, libusb_direction_t, void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t)
+ * @fn int usb_interrupt_poll_async(uint32_t, libusb_transfer_t, uint32_t. libusb_direction_t, void*, size_t, size_t, rpc_handler_t)
  * @brief Wrapper to perform async interrupt poll
  * @param device_number
  * @param transfer
+ * @param endpoint_number
  * @param direction
  * @param buffer
  * @param buffer_length
- * @param request
  * @param timeout
  * @param callback
  * @return
@@ -975,10 +975,10 @@ int usb_get_status( const uint32_t device_number, libusb_device_status_t* status
 int usb_interrupt_poll_async(
   const uint32_t device_number,
   const libusb_transfer_t transfer,
+  const uint32_t endpoint_number,
   const libusb_direction_t direction,
   const void* buffer,
   const size_t buffer_length,
-  const libusb_device_request_t* request,
   const size_t timeout,
   const rpc_handler_t callback
 ) {
@@ -987,7 +987,7 @@ int usb_interrupt_poll_async(
     STARTUP_PRINT( "firing async usb poll interrupt message\r\n" )
   //#endif
   // allocate shared memory
-  const size_t data_size = sizeof ( usb_control_message_t ) + buffer_length + 1;
+  const size_t data_size = sizeof ( usb_interrupt_poll_t ) + buffer_length + 1;
   const size_t shm_id = _syscall_memory_shared_create( data_size );
   // handle error
   if ( errno ) {
@@ -1011,19 +1011,19 @@ int usb_interrupt_poll_async(
     // return error
     return e;
   }
-  auto const message = ( usb_control_message_t* )shm_addr;
+  auto const message = ( usb_interrupt_poll_t* )shm_addr;
   // populate real message in shared memory
   message->device_number = device_number;
+  message->endpoint = endpoint_number;
   message->transfer = transfer;
   message->direction = direction;
   message->buffer_length = buffer_length;
   message->timeout = timeout;
-  memcpy( &message->request, request, sizeof( *request ) );
   if ( LIBUSB_DIRECTION_OUT == direction && buffer ) {
     memcpy( &message->buffer, buffer, buffer_length );
   }
   // allocate request
-  usbd_control_message_t* control_request = malloc( sizeof( *control_request ) );
+  usbd_interrupt_message_t* control_request = malloc( sizeof( *control_request ) );
   if ( ! control_request ) {
     // debug output
     #if defined( LIBUSB_ENABLE_DEBUG )

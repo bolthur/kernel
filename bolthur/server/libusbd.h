@@ -155,6 +155,10 @@ typedef struct {
 } usbd_control_message_t;
 
 typedef struct {
+  size_t shm_id;
+} usbd_interrupt_message_t;
+
+typedef struct {
   uint32_t device_number;
 } usbd_get_roothub_t;
 
@@ -175,6 +179,18 @@ typedef struct {
   libusb_transfer_error_t error;
   uint8_t buffer[];
 } usb_control_message_t;
+
+typedef struct {
+  uint32_t device_number;
+  uint32_t endpoint;
+  libusb_transfer_t transfer;
+  libusb_direction_t direction;
+  size_t buffer_length;
+  size_t timeout;
+  uint32_t last_transfer;
+  libusb_transfer_error_t error;
+  uint8_t buffer[];
+} usb_interrupt_poll_t;
 
 typedef struct {
   uint32_t device_number;

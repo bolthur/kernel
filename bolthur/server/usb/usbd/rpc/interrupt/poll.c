@@ -63,8 +63,7 @@ void rpc_interrupt_poll(
   }
   const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate space for pull_request
-  const usbd_control_message_t* control_message =
-    ( usbd_control_message_t* )request->container;
+  auto const control_message = ( usbd_interrupt_message_t* )request->container;
   // attach shared memory
   void* shm_addr = _syscall_memory_shared_attach(
     control_message->shm_id, ( uintptr_t )NULL );
@@ -79,7 +78,7 @@ void rpc_interrupt_poll(
     return;
   }
   // transform shared memory into message
-  auto const message = ( usb_control_message_t* )shm_addr;
+  auto const message = ( usb_interrupt_poll_t* )shm_addr;
   // allocate response structure
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* response = malloc( response_size );
@@ -118,7 +117,7 @@ void rpc_interrupt_poll(
     ( libusb_pipe_address_t ) {
       .type = message->transfer,
       .speed = device->speed,
-      .end_point = 0,
+      .end_point = ( uint8_t )( message->endpoint & 0xF ),
       .device = ( uint8_t )device->number,
       .direction = message->direction,
       .max_size = usb_packet_size_from_number(
@@ -127,7 +126,6 @@ void rpc_interrupt_poll(
     },
     message->buffer_length ? message->buffer : nullptr,
     message->buffer_length,
-    &message->request,
     message->timeout
   );
   // set last error and transfer

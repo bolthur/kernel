@@ -183,20 +183,14 @@ int keyboard_start_polling( libusb_keyboard_device_t* device ) {
   // clear out buffer
   memset( device->buffer, 0, KEYBOARD_REPORT_SIZE );
   // return result of async control message
-  return usb_control_message_async(
+  return usb_interrupt_poll_async(
     device->device_number,
-    LIBUSB_TRANSFER_CONTROL,
-    LIBUSB_DIRECTION_IN,
+    device->descriptor.attributes.transfer,
+    device->descriptor.endpoint_address.number,
+    device->descriptor.endpoint_address.direction,
     device->buffer,
     KEYBOARD_REPORT_SIZE,
-    &( libusb_device_request_t ){
-      .request = LIBUSB_DEVICE_REQUEST_GET_REPORT,
-      .type = 0xa1,
-      .index = device->key_report->index,
-      .value = ( uint16_t)( device->key_report->type << 8 | device->key_report->id ),
-      .length = KEYBOARD_REPORT_SIZE,
-    },
-    USB_TIMEOUT_VALUE,
+    device->descriptor.interval,
     rpc_keyboard_key
   );
 }

@@ -35,11 +35,16 @@ typedef enum {
 } dwhci_channel_state_t;
 
 typedef enum {
-  DWHCI_QUEUE_STATUS_PENDING = 0,
-  DWHCI_QUEUE_STATUS_SETUP = 1,
-  DWHCI_QUEUE_STATUS_DATA = 2,
-  DWHCI_QUEUE_STATUS_ACK = 3,
-  DWHCI_QUEUE_STATUS_DONE = 4,
+  DWHCI_QUEUE_CHANNEL_STATUS_PENDING = 0,
+  DWHCI_QUEUE_CHANNEL_STATUS_SETUP = 1,
+  DWHCI_QUEUE_CHANNEL_STATUS_DATA = 2,
+  DWHCI_QUEUE_CHANNEL_STATUS_ACK = 3,
+  DWHCI_QUEUE_CHANNEL_STATUS_DONE = 4,
+
+  DWHCI_QUEUE_POLL_STATUS_PENDING = 5,
+  DWHCI_QUEUE_POLL_STATUS_DATA = 6,
+  DWHCI_QUEUE_POLL_STATUS_ACK = 7,
+  DWHCI_QUEUE_POLL_STATUS_DONE = 8,
 } dwhci_queue_status_t;
 
 /**
@@ -47,7 +52,7 @@ typedef enum {
  */
 typedef struct channel_queue_entry {
   /** queue entry data */
-  hcd_control_message_t* data;
+  void* data;
   /** channel that was used by queue entry */
   uint8_t channel;
   /** queue status */
@@ -59,7 +64,7 @@ typedef struct channel_queue_entry {
   /** response info */
   size_t response_info;
   /** message */
-  hcd_submit_control_message_t* message;
+  void* message;
   /** pointer to next entry */
   struct channel_queue_entry* next;
   /** pointer to previous entry */
@@ -106,7 +111,10 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_continue_pending( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_continue( channel_queue_entry_t* );
 response_t dwhci_channel_send_async( hcd_control_message_t*, hcd_submit_control_message_t*, size_t );
-response_t dwhci_channel_poll_async( hcd_control_message_t*, hcd_submit_control_message_t*, size_t );
+response_t dwhci_channel_poll_async_data( channel_queue_entry_t* );
+response_t dwhci_channel_poll_async_ack( channel_queue_entry_t* );
+response_t dwhci_channel_poll_async_done( channel_queue_entry_t* );
+response_t dwhci_channel_poll_async( hcd_interrupt_poll_t*, hcd_submit_interrupt_poll_t*, size_t );
 response_t dwhci_read_port( uint32_t, uint32_t* );
 response_t dwhci_write_port( uint32_t, uint32_t );
 response_t dwhci_power_on( void );
