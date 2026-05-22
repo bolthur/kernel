@@ -22,7 +22,7 @@
 
 #include "../../../libusb.h"
 
-#define HUB_ENABLE_DEBUG 1
+//#define HUB_ENABLE_DEBUG 1
 
 void hub_append( libusb_hub_device_t* );
 int hub_read_descriptor( uint32_t, void** );

@@ -44,7 +44,6 @@ void rpc_mouse_attach(
   ) {
   // handle no data
   if( ! data_info ) {
-    STARTUP_PRINT( "NO DATA PASSED!\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
@@ -53,7 +52,6 @@ void rpc_mouse_attach(
     origin != allowed_rpc_origin
     && ! bolthur_rpc_validate_origin( origin, data_info )
   ) {
-    STARTUP_PRINT( "INVALID ORIGIN!\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
@@ -62,7 +60,6 @@ void rpc_mouse_attach(
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, NULL );
   if ( ! request ) {
-    STARTUP_PRINT( "ERROR WHILE FETCHING DATA: %s!\r\n", strerror( errno ) )
     _syscall_rpc_cleanup();
     return;
   }
@@ -72,15 +69,12 @@ void rpc_mouse_attach(
   uint32_t device_driver;
   int result = hid_get_driver( message->device_number, &device_driver );
   if ( 0 != result ) {
-    STARTUP_PRINT( "Error while fetching driver: %s\r\n", strerror( result ) )
     free( request );
     _syscall_rpc_cleanup();
     return;
   }
   // handle invalid device driver
   if ( device_driver != DEVICE_DRIVER_HID ) {
-    STARTUP_PRINT( "\"%s\" is not a hid device. Mouse driver is build upon hid driver\r\n",
-      usb_get_description( message->device_number ) )
     free( request );
     _syscall_rpc_cleanup();
     return;

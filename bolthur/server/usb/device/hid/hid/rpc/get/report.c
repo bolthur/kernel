@@ -109,7 +109,9 @@ void rpc_get_report(
     memcpy( new_ptr, report_parser_to_return->fields[ i ].value.ptr, ptr_size );
     // set relative new ptr
     report_parser_to_return->fields[ i ].value.ptr = ( void* )( ( uintptr_t )new_ptr - ( uintptr_t )shm_addr );
-    STARTUP_PRINT( "i = %zu / %p\r\n", i, report_parser_to_return->fields[ i ].value.ptr )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "i = %zu / %p\r\n", i, report_parser_to_return->fields[ i ].value.ptr )
+    #endif
     // increment offset
     offset += ptr_size;
   }

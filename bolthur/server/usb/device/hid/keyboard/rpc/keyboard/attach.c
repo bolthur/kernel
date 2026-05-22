@@ -47,7 +47,6 @@ void rpc_keyboard_attach(
 ) {
   // handle no data
   if( ! data_info ) {
-    STARTUP_PRINT( "NO DATA PASSED!\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
@@ -56,7 +55,6 @@ void rpc_keyboard_attach(
     origin != allowed_rpc_origin
     && ! bolthur_rpc_validate_origin( origin, data_info )
   ) {
-    STARTUP_PRINT( "INVALID ORIGIN!\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
@@ -65,7 +63,6 @@ void rpc_keyboard_attach(
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, NULL );
   if ( ! request ) {
-    STARTUP_PRINT( "ERROR WHILE FETCHING DATA: %s!\r\n", strerror( errno ) )
     _syscall_rpc_cleanup();
     return;
   }
@@ -75,15 +72,12 @@ void rpc_keyboard_attach(
   uint32_t device_driver;
   int result = hid_get_driver( message->device_number, &device_driver );
   if ( 0 != result ) {
-    STARTUP_PRINT( "Error while fetching driver: %s\r\n", strerror( result ) )
     free( request );
     _syscall_rpc_cleanup();
     return;
   }
   // handle invalid device driver
   if ( device_driver != DEVICE_DRIVER_HID ) {
-    STARTUP_PRINT( "\"%s\" is not a hid device. Keyboard driver is build upon hid driver\r\n",
-      usb_get_description( message->device_number ) )
     free( request );
     _syscall_rpc_cleanup();
     return;
@@ -92,7 +86,6 @@ void rpc_keyboard_attach(
   libusb_hid_full_usage_t application;
   result = hid_get_application( message->device_number, &application );
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to get application data: %s\r\n", strerror( result ) )
     free( request );
     _syscall_rpc_cleanup();
     return;
@@ -104,8 +97,6 @@ void rpc_keyboard_attach(
       && application.page != LIBUSB_HID_USAGE_PAGE_UNDEFINED
     ) || application.desktop != LIBUSB_HID_USAGE_PAGE_DESKTOP_KEYBOARD
   ) {
-    STARTUP_PRINT( "\"%s\" does not seem to be a keyboard\r\n",
-      usb_get_description( message->device_number ) )
     free( request );
     _syscall_rpc_cleanup();
     return;
@@ -114,8 +105,6 @@ void rpc_keyboard_attach(
   uint8_t report_count;
   result = hid_get_report_count( message->device_number, &report_count );
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to get report count of device: %s\r\n",
-      strerror( result ) )
     free( request );
     _syscall_rpc_cleanup();
     return;
@@ -127,30 +116,30 @@ void rpc_keyboard_attach(
       message->device_number, message->interface_number, index, &descriptor );
     // handle error
     if ( 0 != result ) {
-      STARTUP_PRINT( "Unable to get endpoint information\r\n" )
       _syscall_rpc_cleanup();
       free( request );
       return;
     }
-    EARLY_STARTUP_PRINT( "descriptor.endpoint_address.number = %"PRIu8", descriptor.endpoint_address.direction = %d\r\n",
-      descriptor.endpoint_address.number, descriptor.endpoint_address.direction)
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "descriptor.endpoint_address.number = %"PRIu8", descriptor.endpoint_address.direction = %d\r\n",
+        descriptor.endpoint_address.number, descriptor.endpoint_address.direction)
+    #endif
   }
-  EARLY_STARTUP_PRINT( "report_count = %"PRIu8"\r\n", report_count )
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "report_count = %"PRIu8"\r\n", report_count )
+  #endif
   // get endpoint information
   libusb_endpoint_descriptor_t endpoint_descriptor;
   result = usb_get_endpoint(
     message->device_number, message->interface_number, 0, &endpoint_descriptor );
   // handle error
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to get endpoint information\r\n" )
     _syscall_rpc_cleanup();
     free( request );
     return;
   }
   // check report count
   if ( 0 >= report_count ) {
-    STARTUP_PRINT( "\"%s\" does not have enough outputs to be a keyboard\r\n",
-      usb_get_description( message->device_number ) )
     free( request );
     _syscall_rpc_cleanup();
     return;
@@ -158,7 +147,6 @@ void rpc_keyboard_attach(
   // allocate device
   libusb_keyboard_device_t* device = malloc( sizeof( *device ) );
   if ( ! device ) {
-    STARTUP_PRINT( "Unable to allocate memory for device\r\n" )
     free( request );
     _syscall_rpc_cleanup();
     return;
@@ -176,7 +164,6 @@ void rpc_keyboard_attach(
   result = keyboard_new_index( &device->index );
   // handle error
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to determine new index: %s\r\n", strerror( result ) )
     free( request );
     keyboard_destroy( device );
     _syscall_rpc_cleanup();
@@ -189,15 +176,16 @@ void rpc_keyboard_attach(
     result = hid_get_report( message->device_number, idx, &report );
     // handle error
     if ( 0 != result ) {
-      STARTUP_PRINT( "Unable to get report %"PRIu8" from hid\r\n", idx )
       free( request );
       keyboard_destroy( device );
       _syscall_rpc_cleanup();
       return;
     }
     // some debug output
-    STARTUP_PRINT( "type = %x, report = %"PRIu8", fields = %"PRIu8"\r\n",
-      report->type, idx, report->field_count )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "type = %x, report = %"PRIu8", fields = %"PRIu8"\r\n",
+        report->type, idx, report->field_count )
+    #endif
     // handle input
     if ( report->type == LIBUSB_HID_REPORT_TYPE_INPUT && ! device->key_report ) {
       // duplicate report
@@ -208,7 +196,6 @@ void rpc_keyboard_attach(
       );
       // handle error
       if ( 0 != result ) {
-        STARTUP_PRINT( "Unable to duplicate report\r\n" )
         free( request );
         hid_destroy_report( report );
         keyboard_destroy( device );
@@ -217,7 +204,9 @@ void rpc_keyboard_attach(
       }
       // loop through reports
       for ( uint8_t inner = 0; inner < report->field_count; ++inner ) {
-        STARTUP_PRINT( "inner = %"PRIu8" / %#x\r\n", inner, report->fields[ inner ].usage.page )
+        #if defined( KEYBOARD_ENABLE_DEBUG )
+          STARTUP_PRINT( "inner = %"PRIu8" / %#x\r\n", inner, report->fields[ inner ].usage.page )
+        #endif
         // handle report field usage page
         if (
           report->fields[ inner ].usage.page == LIBUSB_HID_USAGE_PAGE_KEYBOARD_CONTROL
@@ -228,19 +217,23 @@ void rpc_keyboard_attach(
               report->fields[ inner ].usage.keyboard >= LIBUSB_HID_USAGE_PAGE_KEYBOARD_LEFT_CONTROL
               && report->fields[ inner ].usage.keyboard <= LIBUSB_HID_USAGE_PAGE_KEYBOARD_RIGHT_CONTROL
             ) {
-              STARTUP_PRINT(
-                "Modifier %d detected. Offset = %"PRIx8", size = %"PRIx8"\r\n",
-                report->fields[ inner ].usage.keyboard,
-                report->fields[ inner ].offset,
-                report->fields[ inner ].size
-              )
+              #if defined( KEYBOARD_ENABLE_DEBUG )
+                STARTUP_PRINT(
+                  "Modifier %d detected. Offset = %"PRIx8", size = %"PRIx8"\r\n",
+                  report->fields[ inner ].usage.keyboard,
+                  report->fields[ inner ].offset,
+                  report->fields[ inner ].size
+                )
+              #endif
               // allocate space
               const size_t key_field_index = report->fields[ inner ].usage.keyboard - LIBUSB_HID_USAGE_PAGE_KEYBOARD_LEFT_CONTROL;
               device->key_field[ key_field_index ] = &device->key_report->fields[ inner ];
             }
           } else {
-            STARTUP_PRINT( "Key input detected: %p / %p / %"PRIu8" / %#x\r\n", (void*)&device->key_report->fields[ inner ],
-              device->key_report->fields[ inner ].value.ptr, inner, report->fields[ inner ].usage.page )
+            #if defined( KEYBOARD_ENABLE_DEBUG )
+              STARTUP_PRINT( "Key input detected: %p / %p / %"PRIu8" / %#x\r\n", (void*)&device->key_report->fields[ inner ],
+                device->key_report->fields[ inner ].value.ptr, inner, report->fields[ inner ].usage.page )
+            #endif
             device->key_field[ 8 ] = &device->key_report->fields[ inner ];
           }
         }
@@ -254,7 +247,6 @@ void rpc_keyboard_attach(
       );
       // handle error
       if ( 0 != result ) {
-        STARTUP_PRINT( "Unable to duplicate report\r\n" )
         free( request );
         hid_destroy_report( report );
         keyboard_destroy( device );
@@ -269,49 +261,65 @@ void rpc_keyboard_attach(
         // handle led page
         switch ( report->fields[ inner ].usage.led ) {
           case LIBUSB_HID_USAGE_PAGE_LED_NUMBER_LOCK:
-            STARTUP_PRINT( "Number lock led detected\r\n")
+            #if defined( KEYBOARD_ENABLE_DEBUG )
+              STARTUP_PRINT( "Number lock led detected\r\n")
+            #endif
             device->led_field[ 0 ] = &device->key_report->fields[ inner ];
             // set supported flag
             device->led.num_lock = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_CAPSLOCK:
-            STARTUP_PRINT( "Capslock lock led detected\r\n")
+            #if defined( KEYBOARD_ENABLE_DEBUG )
+              STARTUP_PRINT( "Capslock lock led detected\r\n")
+            #endif
             device->led_field[ 1 ] = &device->key_report->fields[ inner ];
             // set supported flag
             device->led.caps_lock = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_SCROLL_LOCK:
-            STARTUP_PRINT( "Scroll lock led detected\r\n")
+            #if defined( KEYBOARD_ENABLE_DEBUG )
+              STARTUP_PRINT( "Scroll lock led detected\r\n")
+            #endif
             device->led_field[ 2 ] = &device->key_report->fields[ inner ];
             // set supported flag
             device->led.scroll_lock = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_COMPOSE:
-            STARTUP_PRINT( "Compose led detected\r\n")
+            #if defined( KEYBOARD_ENABLE_DEBUG )
+              STARTUP_PRINT( "Compose led detected\r\n")
+            #endif
             device->led_field[ 3 ] = &device->key_report->fields[ inner ];
             // set supported flag
             device->led.compose = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_KANA:
-            STARTUP_PRINT( "Kana led detected\r\n")
+            #if defined( KEYBOARD_ENABLE_DEBUG )
+              STARTUP_PRINT( "Kana led detected\r\n")
+            #endif
             device->led_field[ 4 ] = &device->key_report->fields[ inner ];
             // set supported flag
             device->led.kana = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_POWER:
-            STARTUP_PRINT( "Power led detected\r\n")
+            #if defined( KEYBOARD_ENABLE_DEBUG )
+              STARTUP_PRINT( "Power led detected\r\n")
+            #endif
             device->led_field[ 5 ] = &device->key_report->fields[ inner ];
             // set supported flag
             device->led.power = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_SHIFT:
-            STARTUP_PRINT( "Shift led detected\r\n")
+            #if defined( KEYBOARD_ENABLE_DEBUG )
+              STARTUP_PRINT( "Shift led detected\r\n")
+            #endif
             device->led_field[ 6 ] = &device->key_report->fields[ inner ];
             // set supported flag
             device->led.shift = true;
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_MUTE:
-            STARTUP_PRINT( "Mute led detected\r\n")
+            #if defined( KEYBOARD_ENABLE_DEBUG )
+              STARTUP_PRINT( "Mute led detected\r\n")
+            #endif
             device->led_field[ 7 ] = &device->key_report->fields[ inner ];
             // set supported flag
             device->led.mute = true;
@@ -321,29 +329,36 @@ void rpc_keyboard_attach(
         }
       }
     }
-    STARTUP_PRINT( "Freeing report\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "Freeing report\r\n" )
+    #endif
     // free report again
     hid_destroy_report( report );
   }
-  STARTUP_PRINT( "Allocate report buffer\r\n" )
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Allocate report buffer\r\n" )
+  #endif
   // allocate report buffer
   device->buffer = malloc( KEYBOARD_REPORT_SIZE );
   if ( ! device->buffer ) {
-    STARTUP_PRINT( "Unable to allocate buffer\r\n" )
     free( request );
     keyboard_destroy( device );
     _syscall_rpc_cleanup();
     return;
   }
-  STARTUP_PRINT( "Clear allocated buffer\r\n" )
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    STARTUP_PRINT( "Clear allocated buffer\r\n" )
+  #endif
   // clear it out
   memset( device->buffer, 0, KEYBOARD_REPORT_SIZE );
   // finally append device to list
   keyboard_append( device );
-  STARTUP_PRINT( "endpoint_descriptor.endpoint_address.number = %"PRIu8"\r\n",
-    endpoint_descriptor.endpoint_address.number );
-  STARTUP_PRINT( "endpoint_descriptor.interval = %"PRIu8"\r\n",
-    endpoint_descriptor.interval );
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    STARTUP_PRINT( "endpoint_descriptor.endpoint_address.number = %"PRIu8"\r\n",
+      endpoint_descriptor.endpoint_address.number );
+    STARTUP_PRINT( "endpoint_descriptor.interval = %"PRIu8"\r\n",
+      endpoint_descriptor.interval );
+  #endif
   // free request and cleanup
   free( request );
   _syscall_rpc_cleanup();

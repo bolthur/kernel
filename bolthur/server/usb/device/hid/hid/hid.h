@@ -22,6 +22,8 @@
 
 #include "../../../../libusb.h"
 
+//#define HID_ENABLE_DEBUG 1
+
 // Protocol IDs
 typedef enum {
   HID_PROTOCOL_BOOT = 0,

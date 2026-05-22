@@ -279,10 +279,12 @@ void hid_enumerate_action_add_field_process(
   // try to find report from result
   libusb_hid_parser_report_t* report = NULL;
   for ( uint32_t idx = 0; idx < field->result->report_count; idx++ ) {
-    STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->id = %"PRIu8"\r\n",
-      idx, field->result->report[ idx ]->id )
-    STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->type = %d\r\n",
-      idx, field->result->report[ idx ]->type )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->id = %"PRIu8"\r\n",
+        idx, field->result->report[ idx ]->id )
+      STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->type = %d\r\n",
+        idx, field->result->report[ idx ]->type )
+    #endif
     if (
       field->result->report[ idx ]->id == field->report
       && field->result->report[ idx ]->type == type
@@ -293,8 +295,10 @@ void hid_enumerate_action_add_field_process(
   }
   // handle no report found
   if ( ! report ) {
-    STARTUP_PRINT( "Report not found for %"PRIu8" / %d\r\n",
-      field->report, type )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Report not found for %"PRIu8" / %d\r\n",
+        field->report, type )
+    #endif
     return;
   }
   // loop while field count is greater than 0
@@ -543,12 +547,16 @@ int hid_parse_report_descriptor(
 
   // enumerate action count
   hid_enumerate_report( descriptor, length, hid_enumerate_action_count_report, &header );
-  STARTUP_PRINT( "Found %"PRIu8" reports!\r\n", header.count )
+  #if defined( HID_ENABLE_DEBUG )
+    STARTUP_PRINT( "Found %"PRIu8" reports!\r\n", header.count )
+  #endif
   // allocate space
   libusb_hid_parser_result_t* result = malloc(
     sizeof( libusb_hid_parser_result_t ) + sizeof( libusb_hid_parser_report_t* ) * header.count );
   if ( ! result ) {
-    STARTUP_PRINT( "Unable to allocate memory for parser result\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate memory for parser result\r\n" )
+    #endif
     return ENOMEM;
   }
   // clear out
@@ -556,7 +564,9 @@ int hid_parse_report_descriptor(
   // allocate space for report field
   report_field = malloc( sizeof( hid_report_field_t ) + sizeof( hid_report_field_data_t ) * header.count );
   if ( ! report_field ) {
-    STARTUP_PRINT( "Unable to allocate memory for report field\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate memory for report field\r\n" )
+    #endif
     free( result );
     return ENOMEM;
   }
@@ -573,7 +583,9 @@ int hid_parse_report_descriptor(
       sizeof( libusb_hid_parser_report_t ) + sizeof( libusb_hid_parser_fields_t ) * report_field->data[ idx ].field_count );
     // handle error
     if ( ! result->report[ idx ] ) {
-      STARTUP_PRINT( "Unable to allocate space for report\r\n" )
+      #if defined( HID_ENABLE_DEBUG )
+        STARTUP_PRINT( "Unable to allocate space for report\r\n" )
+      #endif
       // free possible reports
       for ( size_t free_idx = 0; free_idx < header.count; free_idx++ ) {
         if ( result->report[ free_idx ] ) {
@@ -600,7 +612,9 @@ int hid_parse_report_descriptor(
   // allocate space for field
   field = malloc( sizeof( hid_field_t ) );
   if ( ! field ) {
-    STARTUP_PRINT( "Unable to allocate space for report\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate space for report\r\n" )
+    #endif
     // free possible reports
     for ( size_t free_idx = 0; free_idx < header.count; free_idx++ ) {
       if ( result->report[ free_idx ] ) {
@@ -615,7 +629,9 @@ int hid_parse_report_descriptor(
   // set fields usage
   field->usage = calloc(16, sizeof( libusb_hid_full_usage_t* ) );
   if ( ! field->usage ) {
-    STARTUP_PRINT( "Unable to allocate space for report\r\n" )
+    #if defined( HID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate space for report\r\n" )
+    #endif
     // free possible reports
     for ( size_t free_idx = 0; free_idx < header.count; free_idx++ ) {
       if ( result->report[ free_idx ] ) {

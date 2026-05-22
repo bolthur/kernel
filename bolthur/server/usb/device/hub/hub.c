@@ -270,7 +270,9 @@ int hub_power_on(
   }
   // milliseconds to sleep
   const long milliseconds = hub_device->descriptor->power_good_delay * 2;
-  STARTUP_PRINT( "sleeping %ld milliseconds\r\n", milliseconds )
+  #if defined ( HUB_ENABLE_DEBUG )
+    STARTUP_PRINT( "sleeping %ld milliseconds\r\n", milliseconds )
+  #endif
   // sleep a bit
   custom_nanosleep( &(struct timespec){
     .tv_sec = milliseconds / 1000,
@@ -570,23 +572,31 @@ int hub_check_connection(
   // cache full status
   libusb_hub_port_full_status_t* port_status = &device_data->port_status[ port ];
   // handle connected to root device
-  STARTUP_PRINT( "device_number = %"PRIu32" connected = %d, previously_connected = %d\r\n",
-    device_number, port_status->status.connected ? 1 : 0, previously_connected ? 1 : 0 )
+  #if defined ( HUB_ENABLE_DEBUG )
+    STARTUP_PRINT( "device_number = %"PRIu32" connected = %d, previously_connected = %d\r\n",
+      device_number, port_status->status.connected ? 1 : 0, previously_connected ? 1 : 0 )
+  #endif
   // handle directly connected to root hub
   if (
     device_number == roothub_device_number
     && port_status->status.connected != previously_connected
   ) {
-    STARTUP_PRINT( "Root hub which is connected and was previously not or vice versa\r\n" )
+    #if defined ( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Root hub which is connected and was previously not or vice versa\r\n" )
+    #endif
     port_status->change.connected_changed = true;
   }
   // handle connection changed
   if ( port_status->change.connected_changed ) {
-    STARTUP_PRINT( "Connected changed!\r\n" )
+    #if defined ( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Connected changed!\r\n" )
+    #endif
     hub_port_connection_changed( device_number, device_data, port );
   }
   if ( port_status->change.enabled_changed ) {
-    STARTUP_PRINT( "ENABLED CHANGED!\r\n" )
+    #if defined ( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "ENABLED CHANGED!\r\n" )
+    #endif
     // clear enable change flag
     result = hub_change_port_feature(
       device_number, LIBUSB_HUB_PORT_FEATURE_ENABLE_CHANGE, port, false );
@@ -611,7 +621,9 @@ int hub_check_connection(
     }
   }
   if ( port_status->status.suspended ) {
-    STARTUP_PRINT( "SUSPENDED!\r\n" )
+    #if defined ( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "SUSPENDED!\r\n" )
+    #endif
     // clear enable change flag
     result = hub_change_port_feature(
       device_number, LIBUSB_HUB_PORT_FEATURE_SUSPEND, port, false );
@@ -649,7 +661,9 @@ int hub_check_connection(
     }
   }
   if ( port_status->change.reset_changed ) {
-    STARTUP_PRINT( "RESET CHANGED!\r\n" )
+    #if defined ( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "RESET CHANGED!\r\n" )
+    #endif
     // clear enable change flag
     result = hub_change_port_feature(
       device_number, LIBUSB_HUB_PORT_FEATURE_RESET_CHANGE, port, false );

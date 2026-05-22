@@ -224,7 +224,6 @@ int handler_call_attach(
   }
   // handle success but no handler bound => return success
   if ( -1 == handler ) {
-    STARTUP_PRINT( "No handler found for type %d\r\n", type );
     return 0;
   }
   // set handler pids for device

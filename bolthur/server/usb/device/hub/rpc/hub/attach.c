@@ -44,7 +44,6 @@ void rpc_hub_attach(
 ) {
   // handle no data
   if( ! data_info ) {
-    STARTUP_PRINT( "NO DATA PASSED!\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
@@ -54,7 +53,6 @@ void rpc_hub_attach(
     origin != allowed_rpc_origin
     && ! bolthur_rpc_validate_origin( origin, data_info )
   ) {
-    STARTUP_PRINT( "INVALID ORIGIN!\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
@@ -64,7 +62,6 @@ void rpc_hub_attach(
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, NULL );
   if ( ! request ) {
-    STARTUP_PRINT( "ERROR WHILE FETCHING DATA: %s!\r\n", strerror( errno ) )
     _syscall_rpc_cleanup();
     return;
   }
@@ -73,8 +70,10 @@ void rpc_hub_attach(
   const usb_generic_attach_t* message = ( usb_generic_attach_t* )request->container;
 
   // print
-  STARTUP_PRINT( "Attach called for %"PRIu32" with interface %"PRIu32"\r\n",
-    message->device_number, message->interface_number )
+  #if defined ( HUB_ENABLE_DEBUG )
+    STARTUP_PRINT( "Attach called for %"PRIu32" with interface %"PRIu32"\r\n",
+      message->device_number, message->interface_number )
+  #endif
 
   // get interface information
   libusb_interface_descriptor_t interface_descriptor;
@@ -82,7 +81,6 @@ void rpc_hub_attach(
     message->device_number, message->interface_number, &interface_descriptor );
   // handle error
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to get interface data\r\n" )
     _syscall_rpc_cleanup();
     free( request );
     return;
@@ -93,7 +91,6 @@ void rpc_hub_attach(
     message->device_number, message->interface_number, 0, &endpoint_descriptor );
   // handle error
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to get endpoint information\r\n" )
     _syscall_rpc_cleanup();
     free( request );
     return;
@@ -101,22 +98,18 @@ void rpc_hub_attach(
 
   // check for multiple endpoints
   if ( interface_descriptor.endpoint_count != 1 ) {
-    STARTUP_PRINT( "Cannot enumerate hub with multiple endpoints: %"PRIu8"\r\n",
-      interface_descriptor.endpoint_count )
     _syscall_rpc_cleanup();
     free( request );
     return;
   }
   // handle only one output
   if ( LIBUSB_DIRECTION_OUT == endpoint_descriptor.endpoint_address.direction ) {
-    STARTUP_PRINT( "Cannot enumerate hub with only one output endpoint\r\n" )
     _syscall_rpc_cleanup();
     free( request );
     return;
   }
   // handle no interrupt endpoint
   if ( LIBUSB_TRANSFER_INTERRUPT != endpoint_descriptor.attributes.transfer ) {
-    STARTUP_PRINT( "Cannot enumerate hub without interrupt endpoint\r\n" )
     _syscall_rpc_cleanup();
     free( request );
     return;
@@ -125,7 +118,6 @@ void rpc_hub_attach(
   // allocate driver data
   libusb_hub_device_t* hub = malloc( sizeof( *hub ) );
   if ( ! hub ) {
-    STARTUP_PRINT( "Unable to allocate driver data\r\n" )
     _syscall_rpc_cleanup();
     free( request );
     return;
@@ -137,7 +129,6 @@ void rpc_hub_attach(
   result = hub_read_descriptor( message->device_number, ( void** )&descriptor );
   // handle error
   if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to read hub descriptor\r\n" )
     _syscall_rpc_cleanup();
     free( hub );
     free( request );
@@ -149,7 +140,9 @@ void rpc_hub_attach(
   hub->descriptor = descriptor;
   hub->max_children = hub->descriptor->port_count;
   hub->device_number = message->device_number;
-  STARTUP_PRINT( "hub->max_children = %"PRIu32"\r\n", hub->max_children )
+  #if defined ( HUB_ENABLE_DEBUG )
+    STARTUP_PRINT( "hub->max_children = %"PRIu32"\r\n", hub->max_children )
+  #endif
   // validate power switching mode
   if (
     LIBUSB_HUB_PORT_CONTROL_GLOBAL != hub->descriptor->attributes.power_switching_mode
@@ -237,10 +230,10 @@ void rpc_hub_attach(
     free( request );
     return;
   }
-  // cache status locally
-  const libusb_hub_full_status_t* status = &hub->status;
   // some debug output
   #if defined ( HUB_ENABLE_DEBUG )
+    // cache status locally
+    const libusb_hub_full_status_t* status = &hub->status;
     STARTUP_PRINT( "Hub power: %s\r\n",
       !status->status.local_power ? "Good" : "Lost")
     STARTUP_PRINT( "Hub over current condition: %s\r\n",
@@ -282,7 +275,9 @@ void rpc_hub_attach(
   #endif
   // check for connection
   for ( uint32_t port = 0; port < hub->max_children; port++ ) {
-    STARTUP_PRINT( "Checking port %"PRIu32"\r\n", port )
+    #if defined ( HUB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Checking port %"PRIu32"\r\n", port )
+    #endif
     hub_check_connection( message->device_number, hub, ( uint8_t )port );
   }
   // store hub in linked list

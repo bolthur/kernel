@@ -43,7 +43,7 @@ void rpc_keyboard_key(
   [[maybe_unused]] size_t response_info
 ) {
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     _syscall_rpc_cleanup();
     return;
   }
@@ -68,7 +68,6 @@ void rpc_keyboard_key(
   const usb_interrupt_poll_t* message = ( usb_interrupt_poll_t* )shm_addr;
   // handle error
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
-    STARTUP_PRINT( "Message to %s timeout reached\r\n", usb_get_description( message->device_number ) )
     _syscall_memory_shared_detach( control_message->shm_id );
     free( response );
     _syscall_rpc_cleanup();
@@ -78,8 +77,6 @@ void rpc_keyboard_key(
   libusb_keyboard_device_t* dev = keyboard_get_device( message->device_number );
   // handle no device found
   if ( ! dev ) {
-    STARTUP_PRINT( "Unable to get device %s\r\n",
-      usb_get_description( message->device_number ) )
     _syscall_memory_shared_detach( control_message->shm_id );
     free( response );
     _syscall_rpc_cleanup();
@@ -134,43 +131,67 @@ void rpc_keyboard_key(
   // set modifiers
   if ( dev->key_field[ 0 ] ) {
     dev->modifier.left_control = dev->key_field[ 0 ]->value._bool;
-    if (dev->modifier.left_control)
-      STARTUP_PRINT( "Left control\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      if (dev->modifier.left_control) {
+        STARTUP_PRINT( "Left control\r\n" )
+      }
+    #endif
   }
   if ( dev->key_field[ 1 ] ) {
     dev->modifier.left_shift = dev->key_field[ 1 ]->value._bool;
-    if (dev->modifier.left_shift)
-      STARTUP_PRINT( "Left shift\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      if (dev->modifier.left_shift) {
+        STARTUP_PRINT( "Left shift\r\n" )
+      }
+    #endif
   }
   if ( dev->key_field[ 2 ] ) {
     dev->modifier.left_alt = dev->key_field[ 2 ]->value._bool;
-    if (dev->modifier.left_alt)
-      STARTUP_PRINT( "Left alt\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      if (dev->modifier.left_alt) {
+        STARTUP_PRINT( "Left alt\r\n" )
+      }
+    #endif
   }
   if ( dev->key_field[ 3 ] ) {
     dev->modifier.left_gui = dev->key_field[ 3 ]->value._bool;
-    if (dev->modifier.left_gui)
-      STARTUP_PRINT( "Left gui\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      if (dev->modifier.left_gui) {
+        STARTUP_PRINT( "Left gui\r\n" )
+      }
+    #endif
   }
   if ( dev->key_field[ 4 ] ) {
     dev->modifier.right_control = dev->key_field[ 4 ]->value._bool;
-    if (dev->modifier.right_control)
-      STARTUP_PRINT( "Right control\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      if (dev->modifier.right_control) {
+        STARTUP_PRINT( "Right control\r\n" )
+      }
+    #endif
   }
   if ( dev->key_field[ 5 ] ) {
     dev->modifier.right_shift = dev->key_field[ 5 ]->value._bool;
-    if (dev->modifier.right_shift)
-      STARTUP_PRINT( "Right shift\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      if (dev->modifier.right_shift) {
+        STARTUP_PRINT( "Right shift\r\n" )
+      }
+    #endif
   }
   if ( dev->key_field[ 6 ] ) {
     dev->modifier.right_alt = dev->key_field[ 6 ]->value._bool;
-    if (dev->modifier.right_alt)
-      STARTUP_PRINT( "Right alt\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      if (dev->modifier.right_alt) {
+        STARTUP_PRINT( "Right alt\r\n" )
+      }
+    #endif
   }
   if ( dev->key_field[ 7 ] ) {
     dev->modifier.right_gui = dev->key_field[ 7 ]->value._bool;
-    if (dev->modifier.right_gui)
-      STARTUP_PRINT( "Right gui\r\n" )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      if (dev->modifier.right_gui) {
+        STARTUP_PRINT( "Right gui\r\n" )
+      }
+    #endif
   }
   if ( dev->key_field[ 8 ] ) {
     // get first value
@@ -195,9 +216,11 @@ void rpc_keyboard_key(
         }
       }
       // debug output
-      for ( size_t i = 0; i < dev->key_count; i++ ) {
-        STARTUP_PRINT( "key: %"PRIu16"\r\n", dev->max_key_down[ i ] );
-      }
+      //#if defined( KEYBOARD_ENABLE_DEBUG )
+        for ( size_t i = 0; i < dev->key_count; i++ ) {
+          STARTUP_PRINT( "key: %"PRIu16"\r\n", dev->max_key_down[ i ] );
+        }
+      //#endif
     }
   }
   // reset last poll
