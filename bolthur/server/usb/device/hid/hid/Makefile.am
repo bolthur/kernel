@@ -18,6 +18,8 @@ hid_SOURCES = \
   rpc/hid/attach.c \
   rpc/hid/deallocate.c \
   rpc/hid/detach.c \
+  rpc/set/idle.c \
+  rpc/set/report.c \
   rpc/init.c \
   handler.c \
   hid.c \

@@ -82,5 +82,17 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register get report!\r\n" )
     return false;
   }
+  // register set report
+  bolthur_rpc_bind(HID_SET_REPORT, rpc_set_report, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register get report!\r\n" )
+    return false;
+  }
+  // register set report
+  bolthur_rpc_bind(HID_SET_IDLE, rpc_set_idle, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register get report!\r\n" )
+    return false;
+  }
   return true;
 }

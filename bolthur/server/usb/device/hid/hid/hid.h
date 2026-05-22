@@ -79,5 +79,6 @@ void hid_enumerate_report( void*, size_t, hid_report_action_t, void* );
 int hid_parse_report_descriptor( libusb_hid_device_t*, void*, size_t );
 void hid_append( libusb_hid_device_t* );
 int hid_get( uint32_t, libusb_hid_device_t** );
+int hid_set( uint32_t, void*, size_t );
 
 #endif

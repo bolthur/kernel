@@ -485,3 +485,143 @@ int hid_get_report(
   // return success
   return 0;
 }
+
+/**
+ * @fn int hid_set_report(uint32_t, uint8_t, uint8_t, uint8_t, void*, size_t)
+ * @brief Function to set hid report
+ * @param device_number device number
+ * @param report_type report type
+ * @param report_id report id
+ * @param buffer buffer to send
+ * @param buffer_size buffer size
+ * @return
+ */
+int hid_set_report( const uint32_t device_number, const uint8_t report_type, const uint8_t report_id, void* buffer, const size_t buffer_size) {
+  // validate parameter
+  if ( ! buffer || ! buffer_size ) {
+    return EINVAL;
+  }
+  // allocate shared memory
+  const size_t shm_id = _syscall_memory_shared_create( 0x1000 );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( LIBHID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  // attach it
+  // attach shared memory
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  // allocate request
+  hid_set_report_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    #if defined( LIBHID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // return enomem
+    return ENOMEM;
+  }
+  // clear out request
+  memset( request, 0, sizeof( *request ) );
+  // populate request
+  request->device_number = device_number;
+  request->report_type = report_type;
+  request->report_id = report_id;
+  request->shm_id = shm_id;
+  request->buffer_size = buffer_size;
+  memcpy( shm_addr, buffer, buffer_size );
+  // perform request
+  const int ioctl_result = ioctl(
+    fd_hid,
+    IOCTL_BUILD_REQUEST(
+      HID_SET_REPORT,
+      sizeof( *request ),
+      IOCTL_RDWR
+    ),
+    request
+  );
+  // handle ioctl error
+  if ( -1 == ioctl_result ) {
+    // debug output
+    #if defined( LIBHID_ENABLE_DEBUG )
+      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // free request
+    free( request );
+    return EIO;
+  }
+  // detach shared memory
+  _syscall_memory_shared_detach( shm_id );
+  // free request
+  free( request );
+  // return success
+  return 0;
+}
+
+/**
+ * @fn int hid_set_idle(uint32_t, uint8_t, uint8_t, uint8_t, void*, size_t)
+ * @brief Function to set hid idle
+ * @param device_number device number
+ * @param report_id report id
+ * @param duration duration
+ * @return
+ */
+int hid_set_idle( const uint32_t device_number, const uint8_t report_id, const uint8_t duration) {
+  // allocate request
+  hid_set_idle_t* request = malloc( sizeof( *request ) );
+  if ( ! request ) {
+    #if defined( LIBHID_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // return enomem
+    return ENOMEM;
+  }
+  // clear out request
+  memset( request, 0, sizeof( *request ) );
+  // populate request
+  request->device_number = device_number;
+  request->duration = duration;
+  request->report_id = report_id;
+  // perform request
+  const int ioctl_result = ioctl(
+    fd_hid,
+    IOCTL_BUILD_REQUEST(
+      HID_SET_IDLE,
+      sizeof( *request ),
+      IOCTL_RDWR
+    ),
+    request
+  );
+  // handle ioctl error
+  if ( -1 == ioctl_result ) {
+    // debug output
+    #if defined( LIBHID_ENABLE_DEBUG )
+      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+    #endif
+    // free request
+    free( request );
+    return EIO;
+  }
+  // free request
+  free( request );
+  // return success
+  return 0;
+}

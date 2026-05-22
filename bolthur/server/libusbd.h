@@ -42,6 +42,8 @@
 #define HID_GET_APPLICATION HID_GET_DRIVER + 1
 #define HID_GET_REPORT_COUNT HID_GET_APPLICATION + 1
 #define HID_GET_REPORT HID_GET_REPORT_COUNT + 1
+#define HID_SET_REPORT HID_GET_REPORT + 1
+#define HID_SET_IDLE HID_SET_REPORT + 1
 
 // hub rpc
 #define HUB_CHECK_CHANGE GENERIC_DEALLOCATE + 1
@@ -101,6 +103,20 @@ typedef struct {
   uint8_t report;
   size_t shm_id;
 } hid_get_report_t;
+
+typedef struct {
+  uint32_t device_number;
+  uint8_t report_type;
+  uint8_t report_id;
+  size_t shm_id;
+  size_t buffer_size;
+} hid_set_report_t;
+
+typedef struct {
+  uint32_t device_number;
+  uint8_t duration;
+  uint8_t report_id;
+} hid_set_idle_t;
 
 // usbd rpc structures
 typedef struct {

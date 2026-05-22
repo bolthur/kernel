@@ -32,6 +32,8 @@ void rpc_handler_unregister( size_t, pid_t, size_t, size_t );
 void rpc_hid_attach( size_t, pid_t, size_t, size_t );
 void rpc_hid_deallocate( size_t, pid_t, size_t, size_t );
 void rpc_hid_detach( size_t, pid_t, size_t, size_t );
+void rpc_set_idle( size_t, pid_t, size_t, size_t );
+void rpc_set_report( size_t, pid_t, size_t, size_t );
 bool rpc_init( void );
 
 #endif
