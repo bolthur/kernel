@@ -55,7 +55,7 @@ void rpc_keyboard_key(
     return;
   }
   // get message
-  const usbd_control_message_t* control_message = ( usbd_control_message_t* )response->container;
+  const usbd_interrupt_message_t* control_message = ( usbd_interrupt_message_t* )response->container;
   // attach shared memory
   void* shm_addr = _syscall_memory_shared_attach( control_message->shm_id, ( uintptr_t )NULL );
   // handle error
@@ -134,35 +134,43 @@ void rpc_keyboard_key(
   // set modifiers
   if ( dev->key_field[ 0 ] ) {
     dev->modifier.left_control = dev->key_field[ 0 ]->value._bool;
-    STARTUP_PRINT( "Left control\r\n" )
+    if (dev->modifier.left_control)
+      STARTUP_PRINT( "Left control\r\n" )
   }
   if ( dev->key_field[ 1 ] ) {
     dev->modifier.left_shift = dev->key_field[ 1 ]->value._bool;
-    STARTUP_PRINT( "Left shift\r\n" )
+    if (dev->modifier.left_shift)
+      STARTUP_PRINT( "Left shift\r\n" )
   }
   if ( dev->key_field[ 2 ] ) {
     dev->modifier.left_alt = dev->key_field[ 2 ]->value._bool;
-    STARTUP_PRINT( "Left alt\r\n" )
+    if (dev->modifier.left_alt)
+      STARTUP_PRINT( "Left alt\r\n" )
   }
   if ( dev->key_field[ 3 ] ) {
     dev->modifier.left_gui = dev->key_field[ 3 ]->value._bool;
-    STARTUP_PRINT( "Left gui\r\n" )
+    if (dev->modifier.left_gui)
+      STARTUP_PRINT( "Left gui\r\n" )
   }
   if ( dev->key_field[ 4 ] ) {
     dev->modifier.right_control = dev->key_field[ 4 ]->value._bool;
-    STARTUP_PRINT( "Right control\r\n" )
+    if (dev->modifier.right_control)
+      STARTUP_PRINT( "Right control\r\n" )
   }
   if ( dev->key_field[ 5 ] ) {
     dev->modifier.right_shift = dev->key_field[ 5 ]->value._bool;
-    STARTUP_PRINT( "Right shift\r\n" )
+    if (dev->modifier.right_shift)
+      STARTUP_PRINT( "Right shift\r\n" )
   }
   if ( dev->key_field[ 6 ] ) {
     dev->modifier.right_alt = dev->key_field[ 6 ]->value._bool;
-    STARTUP_PRINT( "Right alt\r\n" )
+    if (dev->modifier.right_alt)
+      STARTUP_PRINT( "Right alt\r\n" )
   }
   if ( dev->key_field[ 7 ] ) {
     dev->modifier.right_gui = dev->key_field[ 7 ]->value._bool;
-    STARTUP_PRINT( "Right gui\r\n" )
+    if (dev->modifier.right_gui)
+      STARTUP_PRINT( "Right gui\r\n" )
   }
   if ( dev->key_field[ 8 ] ) {
     // get first value

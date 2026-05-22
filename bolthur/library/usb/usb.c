@@ -1026,7 +1026,9 @@ int usb_interrupt_poll_async(
   message->last_usb_pid = last_usb_pid;
   message->last_packet_transfer = last_packet_transfer;
   if ( LIBUSB_DIRECTION_OUT == direction && buffer ) {
-    memcpy( &message->buffer, buffer, buffer_length );
+    memcpy( &message->buffer[0], buffer, buffer_length );
+  } else {
+    memset( &message->buffer[0], 0, buffer_length );
   }
   // allocate request
   usbd_interrupt_message_t* control_request = malloc( sizeof( *control_request ) );
