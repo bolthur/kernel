@@ -65,19 +65,10 @@ void rpc_keyboard_key(
     return;
   }
   // transform shared memory into message
-  const usb_control_message_t* message = ( usb_control_message_t* )shm_addr;
+  const usb_interrupt_poll_t* message = ( usb_interrupt_poll_t* )shm_addr;
   // handle error
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     STARTUP_PRINT( "Message to %s timeout reached\r\n", usb_get_description( message->device_number ) )
-    _syscall_memory_shared_detach( control_message->shm_id );
-    free( response );
-    _syscall_rpc_cleanup();
-    return;
-  }
-  // handle not enough transferred
-  if ( message->last_transfer != KEYBOARD_REPORT_SIZE ) {
-    STARTUP_PRINT( "Unable to read %d byte status of device %s\r\n",
-      KEYBOARD_REPORT_SIZE, usb_get_description( message->device_number ) )
     _syscall_memory_shared_detach( control_message->shm_id );
     free( response );
     _syscall_rpc_cleanup();
@@ -92,6 +83,16 @@ void rpc_keyboard_key(
     _syscall_memory_shared_detach( control_message->shm_id );
     free( response );
     _syscall_rpc_cleanup();
+    return;
+  }
+  dev->last_usb_pid = message->last_usb_pid;
+  dev->last_packet_count = message->last_packet_transfer;
+  // handle not enough transferred
+  if ( message->last_transfer != KEYBOARD_REPORT_SIZE ) {
+    _syscall_memory_shared_detach( control_message->shm_id );
+    free( response );
+    _syscall_rpc_cleanup();
+    dev->running_poll = 0;
     return;
   }
   // iterate through reports
@@ -133,27 +134,35 @@ void rpc_keyboard_key(
   // set modifiers
   if ( dev->key_field[ 0 ] ) {
     dev->modifier.left_control = dev->key_field[ 0 ]->value._bool;
+    STARTUP_PRINT( "Left control\r\n" )
   }
   if ( dev->key_field[ 1 ] ) {
     dev->modifier.left_shift = dev->key_field[ 1 ]->value._bool;
+    STARTUP_PRINT( "Left shift\r\n" )
   }
   if ( dev->key_field[ 2 ] ) {
     dev->modifier.left_alt = dev->key_field[ 2 ]->value._bool;
+    STARTUP_PRINT( "Left alt\r\n" )
   }
   if ( dev->key_field[ 3 ] ) {
     dev->modifier.left_gui = dev->key_field[ 3 ]->value._bool;
+    STARTUP_PRINT( "Left gui\r\n" )
   }
   if ( dev->key_field[ 4 ] ) {
     dev->modifier.right_control = dev->key_field[ 4 ]->value._bool;
+    STARTUP_PRINT( "Right control\r\n" )
   }
   if ( dev->key_field[ 5 ] ) {
     dev->modifier.right_shift = dev->key_field[ 5 ]->value._bool;
+    STARTUP_PRINT( "Right shift\r\n" )
   }
   if ( dev->key_field[ 6 ] ) {
     dev->modifier.right_alt = dev->key_field[ 6 ]->value._bool;
+    STARTUP_PRINT( "Right alt\r\n" )
   }
   if ( dev->key_field[ 7 ] ) {
     dev->modifier.right_gui = dev->key_field[ 7 ]->value._bool;
+    STARTUP_PRINT( "Right gui\r\n" )
   }
   if ( dev->key_field[ 8 ] ) {
     // get first value

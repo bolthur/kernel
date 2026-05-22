@@ -189,6 +189,8 @@ typedef struct {
   size_t timeout;
   uint32_t last_transfer;
   libusb_transfer_error_t error;
+  uint8_t last_usb_pid;
+  uint32_t last_packet_transfer;
   uint8_t buffer[];
 } usb_interrupt_poll_t;
 

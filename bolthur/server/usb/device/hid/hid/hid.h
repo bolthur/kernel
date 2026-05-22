@@ -20,8 +20,13 @@
 #ifndef _HID_H
 #define _HID_H
 
-#include <stdbool.h>
 #include "../../../../libusb.h"
+
+// Protocol IDs
+typedef enum {
+  HID_PROTOCOL_BOOT = 0,
+  HID_PROTOCOL_REPORT = 1,
+} hid_protocol_t;
 
 typedef struct {
   uint8_t count;
@@ -63,7 +68,8 @@ typedef struct {
 typedef void( *hid_report_action_t )( void* data, libusb_hid_report_tag_t tag, uint32_t value );
 
 void hid_destroy_device( libusb_hid_device_t* );
-int hid_set_protocol( uint32_t, uint16_t, uint8_t );
+int hid_set_protocol( uint32_t, uint16_t, hid_protocol_t );
+int hid_set_idle( uint32_t, uint16_t, uint8_t, uint8_t );
 void hid_enumerate_action_count_report( void*, libusb_hid_report_tag_t, uint32_t );
 void hid_enumerate_action_count_field_process( hid_report_field_t*, uint32_t, libusb_hid_report_type_t );
 void hid_enumerate_action_count_field( void*, libusb_hid_report_tag_t, uint32_t );

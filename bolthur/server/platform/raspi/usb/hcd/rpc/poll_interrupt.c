@@ -41,7 +41,6 @@ void rpc_poll_interrupt(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "rpc_poll_interrupt\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -63,10 +62,10 @@ void rpc_poll_interrupt(
   }
   const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate space for pull_request
-  auto const submit_control_message = ( hcd_submit_interrupt_poll_t* )request->container;
+  auto const poll_message = ( hcd_submit_interrupt_poll_t* )request->container;
   // attach shared memory
   void* shm_addr = _syscall_memory_shared_attach(
-    submit_control_message->shm_id, ( uintptr_t )NULL );
+    poll_message->shm_id, ( uintptr_t )NULL );
   // handle error
   if ( errno ) {
     // set error
@@ -91,14 +90,12 @@ void rpc_poll_interrupt(
     return;
   }
   // send async
-  EARLY_STARTUP_PRINT( "START SENGING ASYNC\r\n" )
-  const response_t result = dwhci_channel_poll_async( message, submit_control_message, response_info );
+  const response_t result = dwhci_channel_poll_async( message, poll_message, response_info );
   if ( HCD_RESPONSE_OK != result ) {
-    STARTUP_PRINT( "Failed to start async send: %s\r\n", response_error( result ) )
     // set error
     error.status = (int)-result;
     // detach shared memory
-    _syscall_memory_shared_detach( submit_control_message->shm_id );
+    _syscall_memory_shared_detach( poll_message->shm_id );
     // free request
     free( request );
     free( response );

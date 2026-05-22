@@ -137,6 +137,7 @@ void rpc_interrupt_handle(
           #endif
           continue;
         }
+        //EARLY_STARTUP_PRINT( "cipt = %#"PRIx32"\r\n", cipt )
         if ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE ) {
           #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Transfer complete for channel %"PRIu32"\r\n", channel )
@@ -148,64 +149,75 @@ void rpc_interrupt_handle(
           #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_AHB_ERROR ) {
-          //#if defined( DWHCI_ENABLE_DEBUG )
+          #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "AHB Error for channel %"PRIu32"\r\n", channel )
-          //#endif
+          #endif
+          entry->error |= LIBUSB_TRANSFER_ERROR_AHB_ERROR;
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_STALL ) {
-          //#if defined( DWHCI_ENABLE_DEBUG )
+          #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Stall for channel %"PRIu32"\r\n", channel )
-          //#endif
+          #endif
+          entry->error |= LIBUSB_TRANSFER_ERROR_STALL;
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT ) {
-          //#if defined( DWHCI_ENABLE_DEBUG )
+          #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Nack for channel %"PRIu32"\r\n", channel )
-          //#endif
+          #endif
+          entry->error |= LIBUSB_TRANSFER_ERROR_NO_ACKNOWLEDGE;
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_ACKNOWLEDGEMENT ) {
-          //#if defined( DWHCI_ENABLE_DEBUG )
+          #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Ack for channel %"PRIu32"\r\n", channel )
-          //#endif
+          #endif
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_NOT_YET ) {
-          //#if defined( DWHCI_ENABLE_DEBUG )
+          #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Not yet for channel %"PRIu32"\r\n", channel )
-          //#endif
+          #endif
+          entry->error |= LIBUSB_TRANSFER_ERROR_NOT_YET_ERROR;
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_TRANSACTION_ERROR ) {
-          //#if defined( DWHCI_ENABLE_DEBUG )
+          #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Transaction error for channel %"PRIu32"\r\n", channel )
-          //#endif
+          #endif
+          entry->error |= LIBUSB_TRANSFER_ERROR_TRANSACTION;
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_BABBLE_ERROR ) {
-          //#if defined( DWHCI_ENABLE_DEBUG )
+          #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Babble error for channel %"PRIu32"\r\n", channel )
-          //#endif
+          #endif
+          entry->error |= LIBUSB_TRANSFER_ERROR_BABBLE;
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_FRAME_OVERRUN ) {
-          //#if defined( DWHCI_ENABLE_DEBUG )
+          #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Frame overrun for channel %"PRIu32"\r\n", channel )
-          //#endif
+          #endif
+          entry->error |= LIBUSB_TRANSFER_ERROR_FRAME_OVERRUN;
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_DATA_TOGGLE_ERROR ) {
-          //#if defined( DWHCI_ENABLE_DEBUG )
+          #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Data toggle error for channel %"PRIu32"\r\n", channel )
-          //#endif
+          #endif
+          entry->error |= LIBUSB_TRANSFER_ERROR_DATA_TOGGLE;
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_BUFFER_NOT_AVAILABLE ) {
-          //#if defined( DWHCI_ENABLE_DEBUG )
+          #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Buffer not available for channel %"PRIu32"\r\n", channel )
-          //#endif
+          #endif
+          entry->error |= LIBUSB_TRANSFER_ERROR_BUFFER_NOT_AVAILABLE;
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_EXCESSIVE_TRANSMISSION ) {
-          //#if defined( DWHCI_ENABLE_DEBUG )
+          #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Excessive transmission for channel %"PRIu32"\r\n", channel )
-          //#endif
+          #endif
+          entry->error |= LIBUSB_TRANSFER_ERROR_BUFFER_EXCESSIVE_TRANSMISSION;
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_FRAME_LIST_ROLLOVER ) {
-          //#if defined( DWHCI_ENABLE_DEBUG )
+          #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Rollover for channel %"PRIu32"\r\n", channel )
-          //#endif
+          #endif
+          entry->error |= LIBUSB_TRANSFER_ERROR_LIST_ROLLOVER;
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE ) {
           uint32_t transfer_size;
@@ -220,6 +232,13 @@ void rpc_interrupt_handle(
             continue;
           }
           entry->transferred = HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_TRANSFER_SIZE( transfer_size );
+          entry->packet_transferred = HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT( transfer_size );
+          // debug output
+          #if defined( DWHCI_ENABLE_DEBUG )
+            if (entry->status == DWHCI_QUEUE_POLL_STATUS_DATA) {
+              EARLY_STARTUP_PRINT( "entry->transferred: %"PRIu32"\r\n", entry->transferred )
+            }
+          #endif
         }
         /// FIXNE; RESTART TRANSACTION ON HALT, WHEN NO COMPLETE WAS FIRED AND TRANSFER SIZE ISN'T REACHED
         /// FIXME: SWITCH TO NEXT STATE WHEN COMPLETE INTERRUPT IS RAISED OR HALT WITHOUT COMPLETE BUT COMPLETE TRANSFERSIZE

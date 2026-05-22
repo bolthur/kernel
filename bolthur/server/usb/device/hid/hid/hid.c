@@ -63,7 +63,7 @@ void hid_destroy_device( libusb_hid_device_t* device ) {
 }
 
 /**
- * @fn int hid_set_protocol(uint32_t, uint16_t, uint8_t)
+ * @fn int hid_set_protocol(uint32_t, uint16_t, hid_protocol_t)
  * @brief Set hid protocol
  * @param device_number
  * @param interface
@@ -73,7 +73,7 @@ void hid_destroy_device( libusb_hid_device_t* device ) {
 int hid_set_protocol(
   const uint32_t device_number,
   const uint16_t interface,
-  const uint8_t protocol
+  const hid_protocol_t protocol
 ) {
   uint32_t last_transfer;
   libusb_transfer_error_t error;
@@ -88,7 +88,54 @@ int hid_set_protocol(
       .request = LIBUSB_DEVICE_REQUEST_SET_PROTOCOL,
       .type = 0x21,
       .index = interface,
-      .value = protocol,
+      .value = ( uint8_t )protocol,
+      .length = 0,
+    },
+    USB_TIMEOUT_VALUE,
+    &error,
+    &last_transfer
+  );
+  // handle error
+  if ( 0 != result ) {
+    return result;
+  }
+  // handle error
+  if ( error != LIBUSB_TRANSFER_ERROR_NO_ERROR ) {
+    return EIO;
+  }
+  // return success
+  return 0;
+}
+
+/**
+ * @fn int hid_set_idle(uint32_t, uint16_t, uint8_t, uint8_t)
+ * @brief Set hid protocol
+ * @param device_number
+ * @param interface
+ * @param report_id
+ * @param duration
+ * @return
+ */
+int hid_set_idle(
+  const uint32_t device_number,
+  const uint16_t interface,
+  const uint8_t report_id,
+  const uint8_t duration
+) {
+  uint32_t last_transfer;
+  libusb_transfer_error_t error;
+  // perform control message
+  const int result = usb_control_message(
+    device_number,
+    LIBUSB_TRANSFER_CONTROL,
+    LIBUSB_DIRECTION_OUT,
+    NULL,
+    0,
+    &( libusb_device_request_t ){
+      .request = LIBUSB_DEVICE_REQUEST_SET_IDLE,
+      .type = 0x21,
+      .index = interface,
+      .value = (uint16_t)(duration << 8) | report_id,
       .length = 0,
     },
     USB_TIMEOUT_VALUE,

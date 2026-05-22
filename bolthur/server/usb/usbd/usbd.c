@@ -358,13 +358,15 @@ int usbd_control_message(
 }
 
 /**
- * @fn int usbd_poll_interrupt(const libusb_device_t*, libusb_pipe_address_t, void*, size_t, size_t);
+ * @fn int usbd_poll_interrupt(const libusb_device_t*, libusb_pipe_address_t, void*, size_t, size_t, uint8_t, uint32_t);
  * @brief Wrapper to perform usbd control message
  * @param dev
  * @param pipe
  * @param buffer
  * @param buffer_length
  * @param timeout
+ * @param last_usb_pid
+ * @param last_packet_transfer
  * @return
  */
 int usbd_poll_interrupt(
@@ -372,7 +374,9 @@ int usbd_poll_interrupt(
   const libusb_pipe_address_t pipe,
   void* buffer,
   const size_t buffer_length,
-  const size_t timeout
+  const size_t timeout,
+  const uint8_t last_usb_pid,
+  const uint32_t last_packet_transfer
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
@@ -410,6 +414,8 @@ int usbd_poll_interrupt(
   message->port_number = dev->port_number;
   memcpy( &message->pipe_address, &pipe, sizeof( pipe ) );
   message->buffer_length = buffer_length;
+  message->last_usb_pid = last_usb_pid;
+  message->previous_transferred_packet = last_packet_transfer;
   message->timeout = timeout;
   if ( LIBUSB_DIRECTION_OUT == pipe.direction && buffer ) {
     memcpy( &message->buffer, buffer, buffer_length );

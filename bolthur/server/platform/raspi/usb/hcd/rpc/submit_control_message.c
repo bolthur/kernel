@@ -128,7 +128,6 @@ void rpc_submit_control_message(
   // send async
   const response_t result = dwhci_channel_send_async( message, submit_control_message, response_info );
   if ( HCD_RESPONSE_OK != result ) {
-    STARTUP_PRINT( "Failed to start async send: %s\r\n", response_error( result ) )
     // set error
     error.status = (int)-result;
     // detach shared memory

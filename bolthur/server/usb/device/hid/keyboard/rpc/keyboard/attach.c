@@ -120,6 +120,22 @@ void rpc_keyboard_attach(
     _syscall_rpc_cleanup();
     return;
   }
+  for (uint8_t index = 0; index < report_count; index++ ) {
+    // get endpoint information
+    libusb_endpoint_descriptor_t descriptor;
+    result = usb_get_endpoint(
+      message->device_number, message->interface_number, index, &descriptor );
+    // handle error
+    if ( 0 != result ) {
+      STARTUP_PRINT( "Unable to get endpoint information\r\n" )
+      _syscall_rpc_cleanup();
+      free( request );
+      return;
+    }
+    EARLY_STARTUP_PRINT( "descriptor.endpoint_address.number = %"PRIu8", descriptor.endpoint_address.direction = %d\r\n",
+      descriptor.endpoint_address.number, descriptor.endpoint_address.direction)
+  }
+  EARLY_STARTUP_PRINT( "report_count = %"PRIu8"\r\n", report_count )
   // get endpoint information
   libusb_endpoint_descriptor_t endpoint_descriptor;
   result = usb_get_endpoint(

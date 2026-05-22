@@ -187,10 +187,12 @@ int keyboard_start_polling( libusb_keyboard_device_t* device ) {
     device->device_number,
     device->descriptor.attributes.transfer,
     device->descriptor.endpoint_address.number,
-    device->descriptor.endpoint_address.direction,
+    LIBUSB_DIRECTION_IN,
     device->buffer,
     KEYBOARD_REPORT_SIZE,
     device->descriptor.interval,
+    device->last_usb_pid,
+    device->last_packet_count,
     rpc_keyboard_key
   );
 }

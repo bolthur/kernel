@@ -960,7 +960,7 @@ int usb_get_status( const uint32_t device_number, libusb_device_status_t* status
 }
 
 /**
- * @fn int usb_interrupt_poll_async(uint32_t, libusb_transfer_t, uint32_t. libusb_direction_t, void*, size_t, size_t, rpc_handler_t)
+ * @fn int usb_interrupt_poll_async(uint32_t, libusb_transfer_t, uint32_t. libusb_direction_t, void*, size_t, size_t, uint8_t, uint32_t, rpc_handler_t)
  * @brief Wrapper to perform async interrupt poll
  * @param device_number
  * @param transfer
@@ -969,6 +969,8 @@ int usb_get_status( const uint32_t device_number, libusb_device_status_t* status
  * @param buffer
  * @param buffer_length
  * @param timeout
+ * @param last_usb_pid
+ * @param last_packet_transfer
  * @param callback
  * @return
  */
@@ -980,12 +982,14 @@ int usb_interrupt_poll_async(
   const void* buffer,
   const size_t buffer_length,
   const size_t timeout,
+  const uint8_t last_usb_pid,
+  const uint32_t last_packet_transfer,
   const rpc_handler_t callback
 ) {
   // debug output
-  //#if defined( LIBUSB_ENABLE_DEBUG )
+  #if defined( LIBUSB_ENABLE_DEBUG )
     STARTUP_PRINT( "firing async usb poll interrupt message\r\n" )
-  //#endif
+  #endif
   // allocate shared memory
   const size_t data_size = sizeof ( usb_interrupt_poll_t ) + buffer_length + 1;
   const size_t shm_id = _syscall_memory_shared_create( data_size );
@@ -1019,6 +1023,8 @@ int usb_interrupt_poll_async(
   message->direction = direction;
   message->buffer_length = buffer_length;
   message->timeout = timeout;
+  message->last_usb_pid = last_usb_pid;
+  message->last_packet_transfer = last_packet_transfer;
   if ( LIBUSB_DIRECTION_OUT == direction && buffer ) {
     memcpy( &message->buffer, buffer, buffer_length );
   }

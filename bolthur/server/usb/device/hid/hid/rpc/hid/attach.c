@@ -84,17 +84,6 @@ void rpc_hid_attach(
     free( request );
     return;
   }
-  // get endpoint information
-  libusb_endpoint_descriptor_t endpoint_descriptor;
-  result = usb_get_endpoint(
-    message->device_number, message->interface_number, 0, &endpoint_descriptor );
-  // handle error
-  if ( 0 != result ) {
-    STARTUP_PRINT( "Unable to get endpoint information\r\n" )
-    _syscall_rpc_cleanup();
-    free( request );
-    return;
-  }
   // validate class
   if ( interface_descriptor.class != LIBUSB_INTERFACE_CLASS_HID ) {
     STARTUP_PRINT( "Invalid interfacae class\r\n" )
@@ -105,6 +94,17 @@ void rpc_hid_attach(
   // validate interface endpoint
   if ( interface_descriptor.endpoint_count < 1 ) {
     STARTUP_PRINT( "Invalid hid device with fewer than one endpoint\r\n" )
+    _syscall_rpc_cleanup();
+    free( request );
+    return;
+  }
+  // get endpoint information
+  libusb_endpoint_descriptor_t endpoint_descriptor;
+  result = usb_get_endpoint(
+    message->device_number, message->interface_number, 0, &endpoint_descriptor );
+  // handle error
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to get endpoint information\r\n" )
     _syscall_rpc_cleanup();
     free( request );
     return;
@@ -148,7 +148,8 @@ void rpc_hid_attach(
     // switch protocol from boot to report mode
     STARTUP_PRINT( "Reverting from boot to normal hid mode\r\n" )
     result = hid_set_protocol(
-      message->device_number, ( uint16_t )message->interface_number, 1 );
+      message->device_number, ( uint16_t )message->interface_number,
+      HID_PROTOCOL_REPORT );
     if ( 0 != result ) {
       STARTUP_PRINT( "Could not revert to report mode\r\n" )
       _syscall_rpc_cleanup();
@@ -283,7 +284,20 @@ void rpc_hid_attach(
     free( report_descriptor );
     return;
   }
-
+  // change to idle state
+  result = hid_set_idle( message->device_number,
+    ( uint16_t )message->interface_number, 0,
+    0 ); //endpoint_descriptor.interval / 2 );
+  if ( 0 != result ) {
+    STARTUP_PRINT( "Unable to put hid into idle mode: %s\r\n",
+      strerror( result ) )
+    _syscall_rpc_cleanup();
+    free( request );
+    hid_destroy_device( device );
+    free( original_header );
+    free( report_descriptor );
+    return;
+  }
   // populate device
   device->parser_result->interface = ( uint8_t )message->interface_number;
   // try to attach

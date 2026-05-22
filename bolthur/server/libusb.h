@@ -349,7 +349,13 @@ typedef enum {
   LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR = 1 << 7,
   LIBUSB_TRANSFER_ERROR_AHB_ERROR = 1 << 8,
   LIBUSB_TRANSFER_ERROR_NOT_YET_ERROR = 1 << 9,
-  LIBUSB_TRANSFER_ERROR_PROCESSING = 1 << 10,
+  LIBUSB_TRANSFER_ERROR_TRANSACTION = 1 << 10,
+  LIBUSB_TRANSFER_ERROR_DATA_TOGGLE = 1 << 11,
+  LIBUSB_TRANSFER_ERROR_BUFFER_NOT_AVAILABLE = 1 << 12,
+  LIBUSB_TRANSFER_ERROR_FRAME_OVERRUN = 1 << 13,
+  LIBUSB_TRANSFER_ERROR_BUFFER_EXCESSIVE_TRANSMISSION = 1 << 14,
+  LIBUSB_TRANSFER_ERROR_LIST_ROLLOVER = 1 << 15,
+  LIBUSB_TRANSFER_ERROR_PROCESSING = 1 << 16,
 } libusb_transfer_error_t;
 
 typedef struct {
@@ -848,6 +854,9 @@ typedef struct libusb_keyboard_device {
   size_t last_poll;
   size_t running_poll;
   uint8_t* buffer;
+
+  uint8_t last_usb_pid;
+  uint32_t last_packet_count;
 
   libusb_keyboard_device_t* next;
   libusb_keyboard_device_t* prev;

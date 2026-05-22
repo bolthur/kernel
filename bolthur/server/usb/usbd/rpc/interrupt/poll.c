@@ -41,7 +41,6 @@ void rpc_interrupt_poll(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "rpc_interrupt_poll\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -126,7 +125,9 @@ void rpc_interrupt_poll(
     },
     message->buffer_length ? message->buffer : nullptr,
     message->buffer_length,
-    message->timeout
+    message->timeout,
+    message->last_usb_pid,
+    message->last_packet_transfer
   );
   // set last error and transfer
   message->error = device->error;
