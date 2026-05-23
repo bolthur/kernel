@@ -752,7 +752,9 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     EARLY_STARTUP_PRINT( "Reset interrupts of channel\r\n" )
   #endif
   // reset all interrupts of channel
-  response_t result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT( entry->channel ), ( uint32_t )-1 );
+  response_t result = dwhci_write_port(
+    ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT( entry->channel ),
+    ( uint32_t )-1 );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -766,7 +768,8 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     EARLY_STARTUP_PRINT( "Translate buffer to physical\r\n" )
   #endif
   // translate buffer to physical bus address
-  const uintptr_t phys = _syscall_memory_translate_bus( ( uintptr_t )entry->buffer, 0x1000 );
+  const uintptr_t phys = _syscall_memory_translate_bus(
+    ( uintptr_t )entry->buffer, 0x1000 );
   if ( errno ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -780,7 +783,9 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     EARLY_STARTUP_PRINT( "Writing channel dma address\r\n" )
   #endif
   // set dma address for channel
-  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_HOST_CHAN_DMA_ADDR( entry->channel ), phys );
+  result = dwhci_write_port(
+    ( uint32_t )PERIPHERAL_DWHCI_HOST_HOST_CHAN_DMA_ADDR( entry->channel ),
+    phys + entry->buffer_offset );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -795,7 +800,9 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
   #endif
   // read channel interrupt mask
   uint32_t channel_interrupt_mask;
-  result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ), &channel_interrupt_mask );
+  result = dwhci_read_port(
+    ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ),
+    &channel_interrupt_mask );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -813,7 +820,9 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     | HCD_CHANNEL_INTERRUPT_NEGATIVE_ACKNOWLEDGEMENT
     | HCD_CHANNEL_INTERRUPT_NOT_YET;
   // write back interrupt mask
-  result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ), channel_interrupt_mask );
+  result = dwhci_write_port(
+    ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_INT_MASK( entry->channel ),
+    channel_interrupt_mask );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -940,9 +949,11 @@ response_t dwhci_channel_send_async_setup( channel_queue_entry_t* entry ) {
     entry_data->parent_device_number,
     entry_data->port_number,
     entry->channel,
-    sizeof( libusb_device_request_t ),
+    sizeof( libusb_device_request_t ) - entry->buffer_offset,
     DWHCI_CHANNEL_STATE_SETUP,
     &setup_pipe );
+  // set buffer size
+  entry->buffer_size_to_transfer = sizeof( libusb_device_request_t ) - entry->buffer_offset;
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
@@ -1010,9 +1021,11 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
     entry_data->parent_device_number,
     entry_data->port_number,
     entry->channel,
-    entry_data->buffer_length,
+    entry_data->buffer_length - entry->buffer_offset,
     next_usb_pid,
     &data_pipe );
+  // set buffer size
+  entry->buffer_size_to_transfer = entry_data->buffer_length - entry->buffer_offset;
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
@@ -1097,6 +1110,8 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
     0,
     next_usb_pid,
     &ack_pipe );
+  // set buffer size
+  entry->buffer_size_to_transfer = 0;
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
@@ -1337,9 +1352,11 @@ response_t dwhci_channel_poll_async_data( channel_queue_entry_t* entry ) {
     entry_data->parent_device_number,
     entry_data->port_number,
     entry->channel,
-    entry_data->buffer_length,
+    entry_data->buffer_length - entry->buffer_offset,
     next_usb_pid,
     &data_pipe );
+  // set buffer size
+  entry->buffer_size_to_transfer = entry_data->buffer_length - entry->buffer_offset;
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output

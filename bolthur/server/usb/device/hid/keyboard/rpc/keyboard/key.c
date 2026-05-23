@@ -20,6 +20,8 @@
 #include <sys/bolthur.h>
 #include <inttypes.h>
 #include <errno.h>
+
+#include "keymap.h"
 #include "../../rpc.h"
 #include "../../keyboard.h"
 
@@ -216,12 +218,26 @@ void rpc_keyboard_key(
         }
       }
       // debug output
-      //#if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_DEBUG )
         for ( size_t i = 0; i < dev->key_count; i++ ) {
           STARTUP_PRINT( "key: %"PRIu16"\r\n", dev->max_key_down[ i ] );
         }
-      //#endif
+      #endif
     }
+  }
+  // loop through keys and translate them to characters
+  for ( size_t i = 0; i < dev->key_count; i++ ) {
+    // translate key code
+    uint16_t key;
+    keymap_translate( dev->max_key_down[ i ], dev, &key );
+    // debug print physical key and key code
+    #if defined ( KEYBOARD_ENABLE_DEBUG )
+      STARTUP_PRINT( "key: %02"PRIx16" / %02"PRIx16" / %c\r\n",
+        dev->max_key_down[ i ], key, (uint8_t)key );
+    #endif
+    /// FIXME: WRITE KEY TO STDIN
+    printf( "%c", ( char )key );
+    fflush( stdout );
   }
   // reset last poll
   dev->running_poll = 0;

@@ -147,6 +147,32 @@ void rpc_interrupt_handle(
           #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Halt for channel %"PRIu32"\r\n", channel )
           #endif
+          // handle halt without transfer complete by checking for possible complete
+          if ( ! ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE ) ) {
+            uint32_t transfer_size;
+            result = dwhci_read_port(
+              ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( channel ),
+              &transfer_size
+            );
+            if ( HCD_RESPONSE_OK != result ) {
+              #if defined( DWHCI_ENABLE_DEBUG )
+                EARLY_STARTUP_PRINT( "Unable to read transfer size register!\r\n" )
+              #endif
+              continue;
+            }
+            if ( HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_TRANSFER_SIZE( transfer_size ) == entry->buffer_size_to_transfer ) {
+              cipt |= HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE;
+              #if defined( DWHCI_ENABLE_DEBUG )
+                EARLY_STARTUP_PRINT( "Interrupt halt without complete, setting complete manually\r\n" )
+              #endif
+            } else {
+              #if defined( DWHCI_ENABLE_DEBUG )
+                EARLY_STARTUP_PRINT( "Transmission halted, restart with offset\r\n" )
+              #endif
+              // increment buffer offset
+              entry->buffer_offset += HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_TRANSFER_SIZE( transfer_size );
+            }
+          }
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_AHB_ERROR ) {
           #if defined( DWHCI_ENABLE_DEBUG )
@@ -233,37 +259,36 @@ void rpc_interrupt_handle(
           }
           entry->transferred = HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_TRANSFER_SIZE( transfer_size );
           entry->packet_transferred = HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT( transfer_size );
+          entry->buffer_offset = 0;
           // debug output
           #if defined( DWHCI_ENABLE_DEBUG )
             if (entry->status == DWHCI_QUEUE_POLL_STATUS_DATA) {
               EARLY_STARTUP_PRINT( "entry->transferred: %"PRIu32"\r\n", entry->transferred )
             }
           #endif
-        }
-        /// FIXNE; RESTART TRANSACTION ON HALT, WHEN NO COMPLETE WAS FIRED AND TRANSFER SIZE ISN'T REACHED
-        /// FIXME: SWITCH TO NEXT STATE WHEN COMPLETE INTERRUPT IS RAISED OR HALT WITHOUT COMPLETE BUT COMPLETE TRANSFERSIZE
-        // evaluate next state
-        switch ( entry->status ) {
-          case DWHCI_QUEUE_CHANNEL_STATUS_SETUP:
-            entry->status = DWHCI_QUEUE_CHANNEL_STATUS_DATA;
-            break;
-          case DWHCI_QUEUE_CHANNEL_STATUS_DATA:
-            entry->status = DWHCI_QUEUE_CHANNEL_STATUS_ACK;
-            break;
-          case DWHCI_QUEUE_CHANNEL_STATUS_ACK:
-            entry->status = DWHCI_QUEUE_CHANNEL_STATUS_DONE;
-            break;
-          case DWHCI_QUEUE_POLL_STATUS_DATA:
-            entry->status = DWHCI_QUEUE_POLL_STATUS_ACK;
-            break;
-          case DWHCI_QUEUE_POLL_STATUS_ACK:
-            entry->status = DWHCI_QUEUE_POLL_STATUS_DONE;
-            break;
-          default:
-            #if defined( DWHCI_ENABLE_DEBUG )
-              EARLY_STARTUP_PRINT( "Unknown status request for channel %"PRIu32"\r\n", channel )
-            #endif
-            continue;
+          // evaluate next state
+          switch ( entry->status ) {
+            case DWHCI_QUEUE_CHANNEL_STATUS_SETUP:
+              entry->status = DWHCI_QUEUE_CHANNEL_STATUS_DATA;
+              break;
+            case DWHCI_QUEUE_CHANNEL_STATUS_DATA:
+              entry->status = DWHCI_QUEUE_CHANNEL_STATUS_ACK;
+              break;
+            case DWHCI_QUEUE_CHANNEL_STATUS_ACK:
+              entry->status = DWHCI_QUEUE_CHANNEL_STATUS_DONE;
+              break;
+            case DWHCI_QUEUE_POLL_STATUS_DATA:
+              entry->status = DWHCI_QUEUE_POLL_STATUS_ACK;
+              break;
+            case DWHCI_QUEUE_POLL_STATUS_ACK:
+              entry->status = DWHCI_QUEUE_POLL_STATUS_DONE;
+              break;
+            default:
+              #if defined( DWHCI_ENABLE_DEBUG )
+                EARLY_STARTUP_PRINT( "Unknown status request for channel %"PRIu32"\r\n", channel )
+              #endif
+              continue;
+          }
         }
         // continue with new step
         dwhci_channel_send_async_continue( entry );

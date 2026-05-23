@@ -25,12 +25,12 @@
 /**
  * @brief Flag indicating whether keymap is loaded or not
  */
-static bool keymap_loaded;
+static bool keymap_loaded = false;
 
 /**
  * @brief Keymap populated during runtime
  */
-static uint16_t keymap[ KEYMAP_PHY_MAX_CODE + 1 ][ KEYMAP_ALTSHIFTTAB + 1 ];
+static keymap_t map;
 
 /**
  * @fn int confini_callback(IniDispatch*, void*)
@@ -79,7 +79,7 @@ static int confini_callback(
     for ( size_t i = 0; i < KEYMAP_PHY_MAX_CODE + 1; ++i ) {
       // read into keymap
       const size_t read = fread(
-        &keymap[ i ],
+        &map.keymap[ i ],
         sizeof( uint16_t ),
         KEYMAP_ALTSHIFTTAB + 1,
         f
@@ -113,8 +113,12 @@ static int confini_callback(
  * @return
  */
 int keymap_init( void ) {
-  // set loaded to false
-  keymap_loaded = false;
+  // handle loaded
+  if ( keymap_loaded ) {
+    return 0;
+  }
+  // clear out map
+  memset( &map, 0, sizeof( map ) );
   // open console configuration
   FILE* vconsole = fopen( "/etc/vconsole.conf", "r" );
   // handle error
@@ -132,7 +136,7 @@ int keymap_init( void ) {
     NULL
   ) ) {
     EARLY_STARTUP_PRINT( "Cannot load console configuration file!\r\n" )
-    return false;
+    return EIO;
   }
   // close ini file again
   fclose( vconsole );
@@ -140,6 +144,45 @@ int keymap_init( void ) {
   if ( ! keymap_loaded ) {
     return EINVAL;
   }
+  // return success
+  return 0;
+}
+
+/**
+ * @fn int keymap_translate(uint16_t, const libusb_keyboard_device_t*, uint16_t*)
+ * @brief Translate physical key code
+ * @param physical_code
+ * @param dev
+ * @param output
+ * @return
+ */
+int keymap_translate( const uint16_t physical_code, const libusb_keyboard_device_t* dev, uint16_t* output ) {
+  // validate loaded and output
+  if ( ! keymap_loaded || ! output ) {
+    return EINVAL;
+  }
+  // handle no translation
+  if ( physical_code > KEYMAP_PHY_MAX_CODE ) {
+    *output = KEYMAP_SPECIAL_KEY_NONE;
+    return 0;
+  }
+  // determine table to be used
+  uint8_t table = KEYMAP_NORMTAB;
+  if ( KEYPAD_FIRST <= physical_code && physical_code <= KEYPAD_LAST ) {
+    if ( map.num_lock ) {
+      table = KEYMAP_SHIFTTAB;
+    }
+  } else if ( dev->modifier.right_alt ) {
+    if ( dev->modifier.left_shift || dev->modifier.right_shift ) {
+      table = KEYMAP_ALTSHIFTTAB;
+    } else {
+      table = KEYMAP_ALTTAB;
+    }
+  } else if ( dev->modifier.left_shift || dev->modifier.right_shift ) {
+    table = KEYMAP_SHIFTTAB;
+  }
+  // get key code from keymap and store it in output
+  *output = map.keymap[ physical_code ][ table ];
   // return success
   return 0;
 }

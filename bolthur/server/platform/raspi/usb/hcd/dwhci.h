@@ -59,6 +59,10 @@ typedef struct channel_queue_entry {
   dwhci_queue_status_t status;
   /** data buffer */
   void* buffer;
+  /** transfer buffer size */
+  uint32_t buffer_size_to_transfer;
+  /** buffer offset for transfer */
+  uint32_t buffer_offset;
   /** transferred data */
   uint32_t transferred;
   /** transferred packet count */
