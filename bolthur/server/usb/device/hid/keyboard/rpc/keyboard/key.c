@@ -65,13 +65,6 @@ void rpc_keyboard_key(
   }
   // transform shared memory into message
   const usb_interrupt_poll_t* message = ( usb_interrupt_poll_t* )shm_addr;
-  // handle error
-  if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
-    _syscall_memory_shared_detach( control_message->shm_id );
-    free( response );
-    _syscall_rpc_cleanup();
-    return;
-  }
   // try to get device by number
   libusb_keyboard_device_t* dev = keyboard_get_device( message->device_number );
   // handle no device found
@@ -83,6 +76,19 @@ void rpc_keyboard_key(
   }
   dev->last_usb_pid = message->last_usb_pid;
   dev->last_packet_count = message->last_packet_transfer;
+  // handle error
+  if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+    // handle stall by clearing stall bit
+    if ( message->error & LIBUSB_TRANSFER_ERROR_STALL ) {
+      /// FIXME: IMPLEMENT STALL RESET
+      dev->running_poll = 0;
+    }
+    // cleanup everything and return
+    _syscall_memory_shared_detach( control_message->shm_id );
+    free( response );
+    _syscall_rpc_cleanup();
+    return;
+  }
   // handle not enough transferred
   if ( message->last_transfer != KEYBOARD_REPORT_SIZE ) {
     _syscall_memory_shared_detach( control_message->shm_id );
