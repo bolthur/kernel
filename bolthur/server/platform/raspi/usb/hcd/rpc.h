@@ -20,12 +20,11 @@
 #ifndef _RPC_H
 #define _RPC_H
 
-#include <stdbool.h>
 #include <sys/bolthur.h>
 
 bool rpc_init( void );
 void rpc_interrupt_handle( size_t, pid_t, size_t, size_t );
 void rpc_poll_interrupt( size_t, pid_t, size_t, size_t );
-void rpc_submit_control_message( size_t, pid_t, size_t, size_t );
+void rpc_submit_message( size_t, pid_t, size_t, size_t );
 
 #endif

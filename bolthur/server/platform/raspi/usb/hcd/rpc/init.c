@@ -38,7 +38,7 @@ bool rpc_init( void ) {
     return false;
   }
   // bind rpc handler for communication
-  bolthur_rpc_bind( HCD_SUBMIT_CONTROL_MESSAGE, rpc_submit_control_message, true );
+  bolthur_rpc_bind( HCD_SUBMIT_CONTROL_MESSAGE, rpc_submit_message, true );
   if ( errno ) {
     STARTUP_PRINT( "Unable to register handler submit control message!\r\n" )
     return false;

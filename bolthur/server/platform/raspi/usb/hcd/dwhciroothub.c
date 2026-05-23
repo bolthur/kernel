@@ -19,13 +19,10 @@
 
 #include <errno.h>
 #include <math.h>
-#include <stdbool.h>
 #include <sys/bolthur.h>
+#include <sys/ioctl.h>
 #include "dwhci.h"
 #include "dwhciroothub.h"
-
-#include <sys/ioctl.h>
-
 #include "../../libhcd.h"
 #include "../../libiomem.h"
 #include "../../libperipheral.h"

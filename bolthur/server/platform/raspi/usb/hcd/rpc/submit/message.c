@@ -20,22 +20,20 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <sys/bolthur.h>
-#include "../rpc.h"
-#include "../dwhci.h"
-#include "../dwhciroothub.h"
-#include "../../../libhcd.h"
-#include "../../../libperipheral.h"
-#include "../../../../../libhcd.h"
+#include "../../rpc.h"
+#include "../../dwhci.h"
+#include "../../dwhciroothub.h"
+#include "../../../../../../libhcd.h"
 
 /**
- * @fn void rpc_poll_interrupt(size_t, pid_t, size_t, size_t)
+ * @fn void rpc_submit_message(size_t, pid_t, size_t, size_t)
  * @brief Interrupt handler
  * @param type message type
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
  */
-void rpc_poll_interrupt(
+void rpc_submit_message(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
@@ -62,10 +60,10 @@ void rpc_poll_interrupt(
   }
   const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate space for pull_request
-  auto const poll_message = ( hcd_submit_interrupt_poll_t* )request->container;
+  auto const submit_control_message = ( hcd_submit_control_message_t* )request->container;
   // attach shared memory
   void* shm_addr = _syscall_memory_shared_attach(
-    poll_message->shm_id, ( uintptr_t )NULL );
+    submit_control_message->shm_id, ( uintptr_t )NULL );
   // handle error
   if ( errno ) {
     // set error
@@ -77,7 +75,7 @@ void rpc_poll_interrupt(
     return;
   }
   // transform shared memory into message
-  auto const message = ( hcd_interrupt_poll_t* )shm_addr;
+  auto const message = ( hcd_control_message_t* )shm_addr;
   // allocate response structure
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* response = malloc( response_size );
@@ -89,13 +87,49 @@ void rpc_poll_interrupt(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
+  // handle root hub device
+  if ( dwhciroothub_root_hub_device_number == message->pipe_address.device ) {
+    // try to process root hub
+    const int result = dwhciroothub_process(
+      &message->error,
+      &message->last_transfer,
+      message->pipe_address,
+      message->buffer,
+      message->buffer_length,
+      &message->request
+    );
+    // handle error
+    if ( result != 0 ) {
+      // set error
+      error.status = -result;
+      // detach shared memory
+      _syscall_memory_shared_detach( submit_control_message->shm_id );
+      // free request
+      free( request );
+      free( response );
+      // return from rpc
+      bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      return;
+    }
+    // detach shared memory
+    _syscall_memory_shared_detach( submit_control_message->shm_id );
+    // populate status and just copy over data from request
+    response->status = 0;
+    memcpy( response->container, request->container, container_size );
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
+    // free up memory
+    free( request );
+    free( response );
+    return;
+  }
   // send async
-  const response_t result = dwhci_channel_poll_async( message, poll_message, response_info );
+  const response_t result = dwhci_channel_send_async( message, submit_control_message, response_info );
   if ( HCD_RESPONSE_OK != result ) {
     // set error
     error.status = (int)-result;
     // detach shared memory
-    _syscall_memory_shared_detach( poll_message->shm_id );
+    _syscall_memory_shared_detach( submit_control_message->shm_id );
     // free request
     free( request );
     free( response );

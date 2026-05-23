@@ -20,13 +20,10 @@
 #include <sys/bolthur.h>
 #include <inttypes.h>
 #include <errno.h>
-
 #include "keymap.h"
 #include "../../rpc.h"
 #include "../../keyboard.h"
-
 #include "../../../../../../libusbd.h"
-#include "../../../../../../../library/usb/usb.h"
 
 /**
  * @fn void rpc_keyboard_key(size_t, pid_t, size_t, size_t)

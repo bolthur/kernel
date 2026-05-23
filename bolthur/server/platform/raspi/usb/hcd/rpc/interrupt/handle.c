@@ -18,7 +18,6 @@
  */
 
 #include <inttypes.h>
-
 #include "../../rpc.h"
 #include "../../dwhci.h"
 #include "../../../../libhcd.h"
