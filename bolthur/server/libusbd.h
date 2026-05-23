@@ -114,6 +114,7 @@ typedef struct {
 
 typedef struct {
   uint32_t device_number;
+  uint32_t interface_number;
   uint8_t duration;
   uint8_t report_id;
 } hid_set_idle_t;

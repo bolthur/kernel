@@ -188,6 +188,27 @@ void rpc_keyboard_attach(
     #endif
     // handle input
     if ( report->type == LIBUSB_HID_REPORT_TYPE_INPUT && ! device->key_report ) {
+      // change idle state to only on key change
+      #if defined( HID_ENABLE_DEBUG )
+        STARTUP_PRINT( "Setting idle to 0 for %"PRIu32" / %"PRIu32" / %"PRIu8"\r\n",
+          message->device_number, message->interface_number, report->id )
+      #endif
+      result = hid_set_idle( message->device_number, message->interface_number, report->id, 0);
+      if ( 0 != result ) {
+        #if defined( HID_ENABLE_DEBUG )
+          STARTUP_PRINT( "Unable to put hid into idle mode: %s\r\n",
+            strerror( result ) )
+        #endif
+        free( request );
+        hid_destroy_report( report );
+        keyboard_destroy( device );
+        _syscall_rpc_cleanup();
+        return;
+      }
+      #if defined( HID_ENABLE_DEBUG )
+        STARTUP_PRINT( "Setting idle to 0 for %"PRIu32" / %"PRIu32" / %"PRIu8" done\r\n",
+          message->device_number, message->interface_number, report->id )
+      #endif
       // duplicate report
       result = keyboard_duplicate_report(
         &device->key_report,

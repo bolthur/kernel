@@ -319,22 +319,6 @@ void rpc_hid_attach(
     free( report_descriptor );
     return;
   }
-  // change to idle state
-  result = hid_set_idle( message->device_number,
-    ( uint16_t )message->interface_number, 0,
-    0 ); //endpoint_descriptor.interval / 2 );
-  if ( 0 != result ) {
-    #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to put hid into idle mode: %s\r\n",
-        strerror( result ) )
-    #endif
-    _syscall_rpc_cleanup();
-    free( request );
-    hid_destroy_device( device );
-    free( original_header );
-    free( report_descriptor );
-    return;
-  }
   // populate device
   device->parser_result->interface = ( uint8_t )message->interface_number;
   // try to attach

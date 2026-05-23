@@ -71,7 +71,7 @@ void rpc_set_idle(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
-  result = hid_set_idle( dev->device_number, dev->parser_result->interface, message->report_id, message->duration );
+  result = hid_set_idle( dev->device_number, ( uint16_t )message->interface_number, message->report_id, message->duration );
   if ( 0 != result ) {
     error.status = -result;
     free( request );

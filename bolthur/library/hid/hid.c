@@ -577,14 +577,15 @@ int hid_set_report( const uint32_t device_number, const uint8_t report_type, con
 }
 
 /**
- * @fn int hid_set_idle(uint32_t, uint8_t, uint8_t, uint8_t, void*, size_t)
+ * @fn int hid_set_idle(uint32_t, uint32_t, uint8_t, uint8_t, uint8_t, void*, size_t)
  * @brief Function to set hid idle
  * @param device_number device number
+ * @param interface_number interface number
  * @param report_id report id
  * @param duration duration
  * @return
  */
-int hid_set_idle( const uint32_t device_number, const uint8_t report_id, const uint8_t duration) {
+int hid_set_idle( const uint32_t device_number, const uint32_t interface_number, const uint8_t report_id, const uint8_t duration) {
   // allocate request
   hid_set_idle_t* request = malloc( sizeof( *request ) );
   if ( ! request ) {
@@ -598,6 +599,7 @@ int hid_set_idle( const uint32_t device_number, const uint8_t report_id, const u
   memset( request, 0, sizeof( *request ) );
   // populate request
   request->device_number = device_number;
+  request->interface_number = interface_number;
   request->duration = duration;
   request->report_id = report_id;
   // perform request

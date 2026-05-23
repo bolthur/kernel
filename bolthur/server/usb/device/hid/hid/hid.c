@@ -135,7 +135,7 @@ int hid_set_idle(
       .request = LIBUSB_DEVICE_REQUEST_SET_IDLE,
       .type = 0x21,
       .index = interface,
-      .value = (uint16_t)(duration << 8) | report_id,
+      .value = ( uint16_t )( duration << 8 ) | report_id,
       .length = 0,
     },
     USB_TIMEOUT_VALUE,
