@@ -59,6 +59,7 @@ generateKeycodesForImage( firmwareType )
 echo "scanning directories to prepare content of boot, root and ramdisk"
 # scan directories and populate image and ramdisk folders
 scanDirectory( joinPath( sysroot, "lib" ), "LSB shared object", "", sysroot, false )
+scanDirectory( joinPath( sysroot, "bin" ), "ELF", "executable", sysroot, false )
 scanDirectory( font, "PC Screen Font", "", sysroot, false )
 scanDirectory( server, "ELF", "executable", sysroot, false )
 scanDirectory( application, "ELF", "executable", sysroot, false )

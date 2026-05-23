@@ -142,4 +142,5 @@ proc scanDirectory*( path: string, fileType: string, additionalInfo: string, sys
           createDir( basePath )
           createSymlink( symlinkSrc, joinPath( basePath, executable ) )
         else:
+          createDir( basePath )
           copyFile( file, joinPath( basePath, executable ) )
