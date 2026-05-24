@@ -20,10 +20,6 @@
 #ifndef _LIBCONSOLE_H
 #define _LIBCONSOLE_H
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <errno.h>
 #include <sys/bolthur.h>
 
 #define CONSOLE_ADD RPC_CUSTOM_START

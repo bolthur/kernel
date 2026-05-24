@@ -114,12 +114,7 @@ bool terminal_init( void ) {
   // push terminals
   for ( uint32_t current = 0; current < TERMINAL_MAX_NUM; current++ ) {
     // prepare device path
-    snprintf(
-      tty_path,
-      PATH_MAX,
-      TERMINAL_BASE_PATH"%"PRIu32,
-      current
-    );
+    snprintf( tty_path, PATH_MAX, TERMINAL_BASE_PATH"%"PRIu32, current );
     // add device file
     uint32_t device_info[] = { in, out, err, };
     if ( !dev_add_file( tty_path, device_info, 3 ) ) {

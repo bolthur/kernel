@@ -60,9 +60,9 @@ void rpc_custom_handle_console_add(
     return;
   }
   // allocate for data fetching
-  console_command_add_t* command = ( console_command_add_t* )request->container;
+  auto const command = ( console_command_add_t* )request->container;
   // try to lookup by name
-  list_item_t* container_item = list_lookup_data(
+  const list_item_t* container_item = list_lookup_data(
     console_list,
     command->terminal
   );

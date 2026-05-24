@@ -20,8 +20,7 @@
 #ifndef _CONSOLE_H
 #define _CONSOLE_H
 
-#include <stdbool.h>
-#include <unistd.h>
+#include <sys/bolthur.h>
 #include "../../library/collection/list/list.h"
 
 typedef struct console {

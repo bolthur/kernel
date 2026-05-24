@@ -116,6 +116,7 @@ configuration_node_t* by_name( const char* name ) {
  * @brief Parse and handle configuration
  *
  * @param path
+ * @param bootarg
  * @return
  */
 bool configuration_handle( const char* path, const char* bootarg ) {
