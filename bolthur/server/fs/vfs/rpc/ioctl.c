@@ -109,7 +109,7 @@ void rpc_handle_ioctl(
   // get handle
   handle_node_t* handle_container;
   // try to get handle information
-  int result = handle_get( &handle_container, origin, request->handle );
+  const int result = handle_get( &handle_container, origin, request->handle );
   // handle error
   if ( 0 > result ) {
     err_response.status = result;
@@ -117,7 +117,7 @@ void rpc_handle_ioctl(
     free( request );
     return;
   }
-  mountpoint_node_t* node = handle_container->data;
+  const mountpoint_node_t* node = handle_container->data;
   if ( vfs_pid != node->pid ) {
     // set handler and redirect request
     request->target_process = handle_container->handler;

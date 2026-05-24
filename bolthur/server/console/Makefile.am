@@ -16,5 +16,6 @@ console_SOURCES = \
   rpc/init.c \
   rpc/write.c \
   console.c \
+  handler.c \
   main.c
 console_LDFLAGS = -all-static --static

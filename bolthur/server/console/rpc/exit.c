@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../handler.h"
 
 /**
  * @fn void rpc_handle_exit(size_t, pid_t, size_t, size_t)
@@ -51,8 +52,8 @@ void rpc_handle_exit(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  // return success
-  response.result = 0;
+  // remove possible console handling
+  response.result = handler_remove( request->origin );
   bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
   // free request
   free( request );

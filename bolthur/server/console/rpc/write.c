@@ -23,10 +23,10 @@
 #include <sys/bolthur.h>
 #include <fcntl.h>
 #include "../../libterminal.h"
-#include "../../libconsole.h"
 #include "../rpc.h"
 #include "../../../library/collection/list/list.h"
 #include "../console.h"
+#include "../handler.h"
 
 /**
  * @fn void rpc_handle_write(size_t, pid_t, size_t, size_t)
@@ -62,18 +62,30 @@ void rpc_handle_write(
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
-  // get current active console
-  console_t* console = console_get_active();
-  if ( ! console ) {
-    response.len = -EIO;
+  pid_t root_origin = request->origin;
+  handler_node_t* handler = handler_extract( root_origin, true );
+  if ( ! handler ) {
+    response.len = -ENOMEM;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
-    free( request );
     return;
+  }
+  // set console if not set
+  if ( ! handler->console ) {
+    // get current active console
+    console_t* console = console_get_active();
+    if ( ! console ) {
+      response.len = -EIO;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      free( request );
+      return;
+    }
+    // set console
+    handler->console = console;
   }
   // get rpc to raise
   const size_t rpc_num = 0 == strcmp( "/dev/stdout", request->file_path )
-    ? console->out
-    : console->err;
+    ? handler->console->out
+    : handler->console->err;
   // build terminal command
   const size_t terminal_size = sizeof( terminal_write_request_t ) + request->len;
   terminal_write_request_t* terminal = malloc( terminal_size );
@@ -86,13 +98,13 @@ void rpc_handle_write(
   memset( terminal, 0, terminal_size );
   terminal->len = request->len;
   terminal->shm_id = request->shm_id;
-  strncpy( terminal->terminal, console->path, PATH_MAX - 1 );
-  if ( 0 == console->fd ) {
+  strncpy( terminal->terminal, handler->console->path, PATH_MAX - 1 );
+  if ( 0 == handler->console->fd ) {
     // open path
-    const int fd = open( console->path, O_RDWR );
+    const int fd = open( handler->console->path, O_RDWR );
     // handle error
     if ( -1 == fd ) {
-      EARLY_STARTUP_PRINT( "Unable to open %s\r\n", console->path )
+      EARLY_STARTUP_PRINT( "Unable to open %s\r\n", handler->console->path )
       response.len = -EIO;
       bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
       free( terminal );
@@ -100,11 +112,11 @@ void rpc_handle_write(
       return;
     }
     // push back file handle
-    console->fd = fd;
+    handler->console->fd = fd;
   }
   // raise write request
   const int result = ioctl(
-    console->fd,
+    handler->console->fd,
     IOCTL_BUILD_REQUEST(
       rpc_num,
       terminal_size,

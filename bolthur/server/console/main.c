@@ -23,6 +23,7 @@
 #include "../libconsole.h"
 #include "../../library/collection/list/list.h"
 #include "console.h"
+#include "handler.h"
 #include "rpc.h"
 
 list_manager_t* console_list = NULL;
@@ -70,6 +71,13 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   if ( ! console_list ) {
     return -1;
   }
+
+  // setup handler
+  EARLY_STARTUP_PRINT( "Setup handler tree\r\n" )
+  if ( ! handler_setup() ) {
+    return -1;
+  }
+
   // register rpc handler
   EARLY_STARTUP_PRINT( "Setup rpc handler\r\n" )
   if ( ! rpc_init() ) {

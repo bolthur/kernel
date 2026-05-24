@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
+#include "../handler.h"
 
 /**
  * @fn void rpc_handle_fork(size_t, pid_t, size_t, size_t)
@@ -50,6 +51,36 @@ void rpc_handle_fork(
     response.status = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
+  }
+  // create new handler
+  handler_node_t* handler = handler_extract( request->process, true );
+  if ( ! handler ) {
+    response.status = -ENOMEM;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    return;
+  }
+  // get parent
+  handler_node_t* parent = handler_extract( request->parent, true );
+  if ( ! parent ) {
+    handler_remove( request->process );
+    response.status = -EIO;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    return;
+  }
+  // set console of parent
+  handler->console = parent->console;
+  // set current active one if nothing was set
+  if ( ! handler->console ) {
+    // get current active console
+    console_t* console = console_get_active();
+    if ( ! console ) {
+      response.status = -EIO;
+      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      free( request );
+      return;
+    }
+    // set both to current console
+    handler->console = parent->console = console;
   }
   // return success
   response.status = 0;
