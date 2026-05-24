@@ -94,17 +94,16 @@ bool terminal_init( void ) {
     return false;
   }
   // base path
-  char *tty_path = malloc( sizeof(char) * PATH_MAX);
+  char *tty_path = malloc( sizeof( char ) * PATH_MAX );
   if ( ! tty_path ) {
     free( command_select );
     free( command_add );
     list_destruct( terminal_list );
     return false;
   }
-  size_t in = RPC_CUSTOM_START;
-  size_t out = RPC_CUSTOM_START + 1;
-  size_t err = RPC_CUSTOM_START + 2;
-
+  size_t in = TERMINAL_IN_START;
+  size_t out = TERMINAL_OUT_START;
+  size_t err = TERMINAL_ERR_START;
   framebuffer_surface_allocate_t tmp = {
     .width = resolution_data.width,
     .height = resolution_data.height,
@@ -278,7 +277,7 @@ bool terminal_init( void ) {
   // prepare structure
   strncpy( command_select->path, "/dev/tty0", PATH_MAX - 1 );
   // call console select
-  int result = ioctl(
+  const int result = ioctl(
     console_manager_fd,
     IOCTL_BUILD_REQUEST(
       CONSOLE_SELECT,
@@ -294,7 +293,7 @@ bool terminal_init( void ) {
     list_destruct( terminal_list );
     return false;
   }
-  int response = *( ( int* )command_select );
+  const int response = *( ( int* )command_select );
   // free again
   free( tty_path );
   free( command_add );

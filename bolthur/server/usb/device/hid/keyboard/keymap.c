@@ -33,6 +33,64 @@ static bool keymap_loaded = false;
 static keymap_t map;
 
 /**
+ * @brief special key strings, order must match special key beginning at space
+ */
+static const char* special_key_strings[ KEYMAP_SPECIAL_KEY_MAX_CODE - KEYMAP_SPECIAL_KEY_SPACE ] =
+{
+  " ", // space
+  "\x1b", // escape
+  "\x7f", // backspace
+  "\t", // tabulator
+  "\r\n", // return
+  "\x1b[2~", // insert
+  "\x1b[1~", // home
+  "\x1b[5~", // page up
+  "\x1b[3~", // delete
+  "\x1b[4~", // end
+  "\x1b[6~", // page down
+  "\x1b[A", // up
+  "\x1b[B", // down
+  "\x1b[D", // left
+  "\x1b[C", // right
+  "\x1b[[A", // f1
+  "\x1b[[B", // f2
+  "\x1b[[C", // f3
+  "\x1b[[D", // f4
+  "\x1b[[E", // f5
+  "\x1b[17~", // f6
+  "\x1b[18~", // f7
+  "\x1b[19~", // f8
+  "\x1b[20~", // f9
+  nullptr, // f10
+  nullptr, // f11
+  nullptr, // f12
+  nullptr, // application
+  nullptr, // capslock
+  nullptr, // print screen
+  nullptr, // scroll lock
+  nullptr, // pause
+  nullptr, // num lock
+  "/", // keypad divide
+  "*", // keypad multiply
+  "-", // keypad subtract
+  "+", // keypad add
+  "\r\n", // keypad enter
+  "1", // keypad 1
+  "2", // keypad 2
+  "3", // keypad 3
+  "4", // keypad 4
+  "5", // keypad 5
+  "6", // keypad 6
+  "7", // keypad 7
+  "8", // keypad 8
+  "9", // keypad 9
+  "0", // keypad 0
+  "\x1b[G", // keypad center
+  ",", // keypad comma
+  "." // keypad period
+};
+
+/**
  * @fn int confini_callback(IniDispatch*, void*)
  * @brief Confini load callback
  * @param dispatch
@@ -184,5 +242,34 @@ int keymap_translate( const uint16_t physical_code, const libusb_keyboard_device
   // get key code from keymap and store it in output
   *output = map.keymap[ physical_code ][ table ];
   // return success
+  return 0;
+}
+
+/**
+ * @fn int keymap_to_string(const uint16_t, char*)
+ * @brief Function to convert keymap to string
+ * @param key_code
+ * @param output
+ * @return
+ */
+int keymap_to_string(const uint16_t key_code, char* output ) {
+  if ( ! keymap_loaded || ! output) {
+    return EINVAL;
+  }
+  // handle no printable key
+  if ( key_code <= ' ' || key_code >= KEYMAP_SPECIAL_KEY_MAX_CODE ) {
+    *output = '\0';
+    return 0;
+  }
+  // handle special key
+  if ( key_code >= KEYMAP_SPECIAL_KEY_SPACE && key_code < KEYMAP_SPECIAL_KEY_MAX_CODE ) {
+    if ( special_key_strings[ key_code - KEYMAP_SPECIAL_KEY_SPACE ] ) {
+      strcpy( output, special_key_strings[ key_code - KEYMAP_SPECIAL_KEY_SPACE ] );
+    }
+    return 0;
+  }
+  // else translate key code into character
+  output[ 0 ] = ( char )key_code;
+  output[ 1 ] = '\0';
   return 0;
 }

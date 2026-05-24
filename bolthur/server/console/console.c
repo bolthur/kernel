@@ -44,7 +44,7 @@ void console_destroy( console_t* console ) {
  * @return
  */
 console_t* console_get_active( void ) {
-  list_item_t* current = console_list->first;
+  const list_item_t* current = console_list->first;
   while ( current ) {
     console_t* found = current->data;
     if ( found->active ) {
@@ -52,7 +52,7 @@ console_t* console_get_active( void ) {
     }
     current = current->next;
   }
-  return NULL;
+  return nullptr;
 }
 
 /**
@@ -63,7 +63,7 @@ console_t* console_get_active( void ) {
  * @return
  */
 console_t* console_get_by_path( const char* path ) {
-  list_item_t* current = console_list->first;
+  const list_item_t* current = console_list->first;
   while ( current ) {
     console_t* found = current->data;
     if ( 0 == strcmp( found->path, path ) ) {
@@ -71,5 +71,5 @@ console_t* console_get_by_path( const char* path ) {
     }
     current = current->next;
   }
-  return NULL;
+  return nullptr;
 }

@@ -99,5 +99,6 @@ typedef struct {
 
 int keymap_init( void );
 int keymap_translate( uint16_t, const libusb_keyboard_device_t*, uint16_t* );
+int keymap_to_string( uint16_t, char* );
 
 #endif

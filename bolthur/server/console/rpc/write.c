@@ -83,12 +83,10 @@ void rpc_handle_write(
     free( request );
     return;
   }
-
   memset( terminal, 0, terminal_size );
   terminal->len = request->len;
   terminal->shm_id = request->shm_id;
   strncpy( terminal->terminal, console->path, PATH_MAX - 1 );
-
   if ( 0 == console->fd ) {
     // open path
     const int fd = open( console->path, O_RDWR );

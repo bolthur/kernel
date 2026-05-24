@@ -228,18 +228,26 @@ void rpc_keyboard_key(
       #endif
     }
   }
+  char tmpBuffer[10];
   // loop through keys and translate them to characters
   for ( size_t i = 0; i < dev->key_count; i++ ) {
     // translate key code
     uint16_t key;
-    keymap_translate( dev->max_key_down[ i ], dev, &key );
+    if ( 0 != keymap_translate( dev->max_key_down[ i ], dev, &key ) ) {
+      continue;
+    }
     // debug print physical key and key code
     #if defined ( KEYBOARD_ENABLE_DEBUG )
       STARTUP_PRINT( "key: %02"PRIx16" / %02"PRIx16" / %c\r\n",
         dev->max_key_down[ i ], key, (uint8_t)key );
     #endif
+    // clear buffer and translate to string
+    memset( tmpBuffer, 0, sizeof( tmpBuffer ) );
+    if ( 0 != keymap_to_string( key, tmpBuffer ) ) {
+      continue;
+    }
     /// FIXME: WRITE KEY TO STDIN
-    printf( "%c", ( char )key );
+    printf( "%s", tmpBuffer );
     fflush( stdout );
   }
   // reset last poll
