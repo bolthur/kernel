@@ -20,7 +20,6 @@
 #ifndef _MAIN_H
 #define _MAIN_H
 
-#define CONSOLE_MANAGER "/dev/console"
 #define OUTPUT_DRIVER "/dev/framebuffer"
 
 extern int output_driver_fd;

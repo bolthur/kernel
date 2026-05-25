@@ -20,17 +20,18 @@
 // system includes
 #include <errno.h>
 #include <inttypes.h>
-#include <math.h>
 #include <stddef.h>
 #include <wchar.h>
 #include <sys/_default_fcntl.h>
 #include <sys/bolthur.h>
 #include <sys/ioctl.h>
+// library includes
+#include  "../../../library/util/min.h"
+#include "../../../library/util/max.h"
 // local includes
 #include "usbd.h"
 #include "call.h"
 // driver includes
-#include "../../libusbd.h"
 #include "../../libhcd.h"
 
 /**
@@ -168,7 +169,7 @@ int usbd_allocate_device( libusb_device_t** dev, bool insert_head ) {
     // loop until end
     while ( current ) {
       // increment number
-      number = ( uint32_t )fmax( current->number, number );
+      number = uint32_max( current->number, number );
       // save previous
       prev = current;
       // go to next
@@ -649,7 +650,7 @@ int usbd_read_string_lang(
 ) {
   // get string length
   const int result = usbd_get_string( dev, string_index, lang_id, buffer,
-    ( size_t )fmin( 2, buffer_length ) );
+    size_min( 2, buffer_length ) );
   // handle error
   if ( 0 != result || dev->last_transfer == buffer_length ) {
     return result;
@@ -657,7 +658,7 @@ int usbd_read_string_lang(
   // read string
   return usbd_get_string(
     dev, string_index, lang_id, buffer,
-    ( size_t )fmin( ( ( uint8_t* )buffer )[ 0 ], buffer_length ) );
+    size_min( ( ( uint8_t* )buffer )[ 0 ], buffer_length ) );
 }
 
 /**

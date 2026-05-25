@@ -17,21 +17,18 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RPC_H
-#define _RPC_H
+#include "max.h"
 
-#include <stdbool.h>
-#include <unistd.h>
-#include "../../library/collection/list/list.h"
-
-bool rpc_init( void );
-
-void rpc_handle_exec( size_t, pid_t,size_t, size_t );
-void rpc_handle_exit( size_t, pid_t,size_t, size_t );
-void rpc_handle_fork( size_t, pid_t, size_t, size_t );
-void rpc_handle_write( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_console_add( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_input( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_console_select( size_t, pid_t, size_t, size_t );
-
-#endif
+/**
+ * @fn uint32_t uint32_max( uint32_t, uint32_t )
+ * @brief uint32 max implementation
+ * @param a
+ * @param b
+ * @return
+ */
+uint32_t uint32_max( const uint32_t a, const uint32_t b ) {
+  if ( a < b ) {
+    return b;
+  }
+  return a;
+}

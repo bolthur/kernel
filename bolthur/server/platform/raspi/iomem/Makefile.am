@@ -2,6 +2,10 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"iomem\"
 
 bin_PROGRAMS = iomem
+iomem_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/util/libutil.la
+iomem_LDADD = \
+  ${abs_top_builddir}/../library/util/libutil.la
 iomem_SOURCES = \
   rpc/gpio/detect.c \
   rpc/gpio/event.c \

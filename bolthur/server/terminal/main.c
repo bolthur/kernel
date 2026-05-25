@@ -18,6 +18,7 @@
  */
 
 #include <unistd.h>
+#include <paths.h>
 #include <sys/bolthur.h>
 
 #include <stdio.h>
@@ -26,7 +27,6 @@
 #include <fcntl.h>
 
 #include "rpc.h"
-#include "../libconsole.h"
 #include "../libhelper.h"
 #include "psf.h"
 #include "output.h"
@@ -58,7 +58,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   EARLY_STARTUP_PRINT( "Open console manager device\r\n" )
   // open file to console manager device
-  console_manager_fd = open( CONSOLE_MANAGER, O_RDWR );
+  console_manager_fd = open( _PATH_CONSOLE, O_RDWR );
   if ( -1 == console_manager_fd ) {
     close( output_driver_fd );
     return -1;

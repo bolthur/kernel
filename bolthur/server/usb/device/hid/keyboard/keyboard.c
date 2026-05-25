@@ -20,7 +20,6 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <inttypes.h>
 #include <sys/bolthur.h>
 #include "keyboard.h"
@@ -28,6 +27,7 @@
 
 #include "../../../../../library/hid/hid.h"
 #include "../../../../../library/usb/usb.h"
+#include "../../../../../library/util/max.h"
 
 /**
  * @brief Head of keyboard device list
@@ -98,7 +98,7 @@ int keyboard_new_index( uint32_t* index ) {
   const libusb_keyboard_device_t* current = keyboard_head;
   while ( current ) {
     // determine max index
-    max_index = ( uint32_t )fmax( max_index, current->index );
+    max_index = uint32_max( max_index, current->index );
     // go to next
     current = current->next;
   }

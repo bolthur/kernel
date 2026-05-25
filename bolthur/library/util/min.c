@@ -17,21 +17,32 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RPC_H
-#define _RPC_H
+#include "min.h"
 
-#include <stdbool.h>
-#include <unistd.h>
-#include "../../library/collection/list/list.h"
+/**
+ * @fn uint32_t uint32_min( uint32_t, uint32_t )
+ * @brief uint32 min implementation
+ * @param a
+ * @param b
+ * @return
+ */
+uint32_t uint32_min( const uint32_t a, const uint32_t b ) {
+  if ( a < b ) {
+    return a;
+  }
+  return b;
+}
 
-bool rpc_init( void );
-
-void rpc_handle_exec( size_t, pid_t,size_t, size_t );
-void rpc_handle_exit( size_t, pid_t,size_t, size_t );
-void rpc_handle_fork( size_t, pid_t, size_t, size_t );
-void rpc_handle_write( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_console_add( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_input( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_console_select( size_t, pid_t, size_t, size_t );
-
-#endif
+/**
+ * @fn size_t size_min( size_t, size_t )
+ * @brief size min implementation
+ * @param a
+ * @param b
+ * @return
+ */
+size_t size_min( const size_t a, const size_t b ) {
+  if ( a < b ) {
+    return a;
+  }
+  return b;
+}

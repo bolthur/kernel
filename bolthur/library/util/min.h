@@ -17,21 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RPC_H
-#define _RPC_H
+#ifndef _MIN_H
+#define _MIN_H
 
-#include <stdbool.h>
-#include <unistd.h>
-#include "../../library/collection/list/list.h"
+#include <stdint.h>
+#include <stddef.h>
 
-bool rpc_init( void );
-
-void rpc_handle_exec( size_t, pid_t,size_t, size_t );
-void rpc_handle_exit( size_t, pid_t,size_t, size_t );
-void rpc_handle_fork( size_t, pid_t, size_t, size_t );
-void rpc_handle_write( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_console_add( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_input( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_console_select( size_t, pid_t, size_t, size_t );
+uint32_t uint32_min( uint32_t, uint32_t );
+size_t size_min( size_t, size_t );
 
 #endif

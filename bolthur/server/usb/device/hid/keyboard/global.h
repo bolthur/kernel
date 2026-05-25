@@ -23,5 +23,6 @@
 #include <sys/types.h>
 
 extern pid_t allowed_rpc_origin;
+extern int console_fd;
 
 #endif

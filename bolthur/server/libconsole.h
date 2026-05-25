@@ -24,6 +24,7 @@
 
 #define CONSOLE_ADD RPC_CUSTOM_START
 #define CONSOLE_SELECT CONSOLE_ADD + 1
+#define CONSOLE_INPUT CONSOLE_SELECT + 1
 
 typedef struct console_command_add {
   char terminal[ PATH_MAX ];
@@ -35,15 +36,10 @@ typedef struct console_command_add {
 
 typedef struct {
   char path[ PATH_MAX ];
-} console_command_remove_t;
-
-typedef struct {
-  char path[ PATH_MAX ];
 } console_command_select_t;
 
 typedef struct {
-  char terminal_path[ PATH_MAX ];
-  char destination_path[ PATH_MAX ];
-} console_command_change_t;
+  char input[ 10 ];
+} console_command_input_t;
 
 #endif

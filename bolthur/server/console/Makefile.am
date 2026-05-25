@@ -9,6 +9,7 @@ console_LDADD = \
   ${abs_top_builddir}/../library/collection/list/liblist.la
 console_SOURCES = \
   rpc/custom/add.c \
+  rpc/custom/input.c \
   rpc/custom/select.c \
   rpc/exec.c \
   rpc/exit.c \

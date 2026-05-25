@@ -17,7 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <paths.h>
 #include <stdio.h>
+#include <fcntl.h>
 #include <sys/bolthur.h>
 #include "keyboard.h"
 #include "keymap.h"
@@ -33,6 +35,11 @@
 pid_t allowed_rpc_origin;
 
 /**
+ * @brief Console file descriptor used for pushing input
+ */
+int console_fd;
+
+/**
  * @fn int main(int, char*[])
  * @brief main entry point
  *
@@ -45,6 +52,13 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   STARTUP_PRINT( "Setup rpc handler\r\n" )
   if ( !rpc_init() ) {
     STARTUP_PRINT( "Unable to bind rpc handler\r\n" );
+    return -1;
+  }
+
+  // open console
+  console_fd = open( _PATH_CONSOLE, O_RDWR );
+  if ( -1 == console_fd ) {
+    STARTUP_PRINT( "Unable to open console\r\n" )
     return -1;
   }
 

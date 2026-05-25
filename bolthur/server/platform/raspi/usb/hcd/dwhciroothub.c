@@ -18,11 +18,11 @@
  */
 
 #include <errno.h>
-#include <math.h>
 #include <sys/bolthur.h>
 #include <sys/ioctl.h>
 #include "dwhci.h"
 #include "dwhciroothub.h"
+#include "../../../../../library/util/min.h"
 #include "../../libhcd.h"
 #include "../../libiomem.h"
 #include "../../libperipheral.h"
@@ -513,21 +513,21 @@ int dwhciroothub_process(
         case 0x80:
           switch ( ( libusb_descriptor_type_t )( ( request->value >> 8 ) & 0xFF ) ) {
             case LIBUSB_DESCRIPTOR_DEVICE:
-              reply_length = ( uint32_t )fmin( sizeof( descriptor ), buffer_length );
+              reply_length = uint32_min( sizeof( descriptor ), buffer_length );
               memcpy( buffer, &descriptor, reply_length );
               break;
             case LIBUSB_DESCRIPTOR_CONFIGURATION:
-              reply_length = ( uint32_t )fmin( sizeof( configuration_descriptor ), buffer_length );
+              reply_length = uint32_min( sizeof( configuration_descriptor ), buffer_length );
               memcpy( buffer, &configuration_descriptor, reply_length );
               break;
             case LIBUSB_DESCRIPTOR_STRING:
               switch ( request->value & 0xFF ) {
                 case 0:
-                  reply_length = ( uint32_t )fmin( string0.descriptor_length, buffer_length );
+                  reply_length = uint32_min( string0.descriptor_length, buffer_length );
                   memcpy( buffer, &string0, reply_length );
                   break;
                 case 1:
-                  reply_length = ( uint32_t )fmin( string1.descriptor_length, buffer_length );
+                  reply_length = uint32_min( string1.descriptor_length, buffer_length );
                   memcpy( buffer, &string1, reply_length );
                   break;
                 default:
@@ -539,7 +539,7 @@ int dwhciroothub_process(
           }
           break;
         case 0xa0:
-          reply_length = ( uint32_t )fmin( hub_descriptor.descriptor_length, buffer_length );
+          reply_length = uint32_min( hub_descriptor.descriptor_length, buffer_length );
           memcpy( buffer, &hub_descriptor, reply_length );
           break;
         default:

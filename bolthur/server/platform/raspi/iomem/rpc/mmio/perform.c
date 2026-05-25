@@ -23,7 +23,6 @@
 #include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 #include <sys/bolthur.h>
 #include "../../mmio.h"
 #include "../../rpc.h"
@@ -33,6 +32,7 @@
 #include "../../../libsdhost.h"
 #include "../../dma.h"
 #include "../../generic.h"
+#include "../../../../../../library/util/min.h"
 #if defined( RPC_ENABLE_DEBUG )
   #include <inttypes.h>
 #endif
@@ -678,9 +678,9 @@ void rpc_handle_mmio_perform(
           #if defined( RPC_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "physical = %#"PRIxPTR", virtual = %#"PRIxPTR"\r\n",
               physical, ( uintptr_t )( ( uintptr_t )dma_block + size ) )
-            EARLY_STARTUP_PRINT( "reading %#"PRIx32"\r\n", ( uint32_t )fmin(
-              ( double )( *mmio_request )[ i ].dma_copy_size - size,
-              ( double )PAGE_SIZE
+            EARLY_STARTUP_PRINT( "reading %#"PRIx32"\r\n", uint32_min(
+              ( *mmio_request )[ i ].dma_copy_size - size,
+              PAGE_SIZE
             ) )
           #endif
           // set block address
@@ -696,9 +696,9 @@ void rpc_handle_mmio_perform(
           }
           // set transfer length, stride and next
           if ( 0 != dma_block_set_transfer_length(
-            ( uint32_t )fmin(
-              ( double )( *mmio_request )[ i ].dma_copy_size - size,
-              ( double )PAGE_SIZE
+            uint32_min(
+              ( *mmio_request )[ i ].dma_copy_size - size,
+              PAGE_SIZE
             )
           ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );
@@ -895,9 +895,9 @@ void rpc_handle_mmio_perform(
           #if defined( RPC_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "physical = %#"PRIxPTR", virtual = %#"PRIxPTR"\r\n",
               physical, ( uintptr_t )( ( uintptr_t )dma_block + size ) )
-            EARLY_STARTUP_PRINT( "writing %#"PRIx32"\r\n", ( uint32_t )fmin(
-              ( double )( *mmio_request )[ i ].dma_copy_size - size,
-              ( double )PAGE_SIZE
+            EARLY_STARTUP_PRINT( "writing %#"PRIx32"\r\n", uint32_min(
+              ( *mmio_request )[ i ].dma_copy_size - size,
+              PAGE_SIZE
             ) )
           #endif
           // set block address
@@ -913,9 +913,9 @@ void rpc_handle_mmio_perform(
           }
           // set transfer length, stride and next
           if ( 0 != dma_block_set_transfer_length(
-            ( uint32_t )fmin(
-              ( double )( *mmio_request )[ i ].dma_copy_size - size,
-              ( double )PAGE_SIZE
+            uint32_min(
+              ( *mmio_request )[ i ].dma_copy_size - size,
+              PAGE_SIZE
             )
           ) ) {
             dma_free_memory( dma_block, ( *mmio_request )[ i ].dma_copy_size );

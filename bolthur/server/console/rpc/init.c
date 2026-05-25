@@ -53,6 +53,11 @@ bool rpc_init( void ) {
     EARLY_STARTUP_PRINT( "Unable to register handler console add!\r\n" )
     return false;
   }
+  bolthur_rpc_bind( CONSOLE_INPUT, rpc_custom_handle_input, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler console input!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( CONSOLE_SELECT, rpc_custom_handle_console_select, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler console select!\r\n" )

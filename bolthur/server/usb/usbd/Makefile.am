@@ -2,6 +2,10 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"usb/usbd\"
 
 bin_PROGRAMS = usbd
+usbd_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/util/libutil.la
+usbd_LDADD = \
+  ${abs_top_builddir}/../library/util/libutil.la
 usbd_SOURCES = \
   rpc/attach/device.c \
   rpc/control/message.c \
