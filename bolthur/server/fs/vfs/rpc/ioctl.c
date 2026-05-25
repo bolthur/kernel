@@ -117,6 +117,9 @@ void rpc_handle_ioctl(
     free( request );
     return;
   }
+  // populate origin
+  request->origin = origin;
+  // route depending on pid
   const mountpoint_node_t* node = handle_container->data;
   if ( vfs_pid != node->pid ) {
     // set handler and redirect request

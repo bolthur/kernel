@@ -115,7 +115,7 @@ void rpc_handle_ioctl(
   }
   if ( getpid() == request->target_process ) {
     // get local handler
-    rpc_handler_t handler = bolthur_rpc_get( request->command );
+    const rpc_handler_t handler = bolthur_rpc_get( request->command );
     if ( ! handler ) {
       err_response.status = -EIO;
       bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
