@@ -43,6 +43,11 @@ bool rpc_init( void ) {
     EARLY_STARTUP_PRINT( "Unable to register handler fork!\r\n" )
     return false;
   }
+  bolthur_rpc_bind( RPC_VFS_READ, rpc_handle_read, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler read!\r\n" )
+    return false;
+  }
   bolthur_rpc_bind( RPC_VFS_WRITE, rpc_handle_write, true );
   if ( errno ) {
     EARLY_STARTUP_PRINT( "Unable to register handler write!\r\n" )

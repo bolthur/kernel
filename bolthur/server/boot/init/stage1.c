@@ -77,7 +77,7 @@ void init_stage1( void ) {
 
   // get vfs image
   size_t vfs_size;
-  void* vfs_image = ramdisk_lookup( disk, "ramdisk/server/fs/vfs", &vfs_size );
+  void* vfs_image = ramdisk_lookup( disk, "ramdisk/bin/server/fs/vfs", &vfs_size );
   if ( ! vfs_image ) {
     EARLY_STARTUP_PRINT( "VFS not found!\r\n" );
     exit( -1 );
@@ -96,7 +96,7 @@ void init_stage1( void ) {
     // start /dev
     EARLY_STARTUP_PRINT( "Starting for dev server...\r\n" )
     size_t dev_size;
-    void* dev_image = ramdisk_lookup( disk, "ramdisk/server/fs/dev", &dev_size );
+    void* dev_image = ramdisk_lookup( disk, "ramdisk/bin/server/fs/dev", &dev_size );
     if ( ! dev_image ) {
       EARLY_STARTUP_PRINT( "dev server not found!\r\n" )
       exit( -1 );
@@ -129,7 +129,7 @@ void init_stage1( void ) {
       EARLY_STARTUP_PRINT( "waiting for vfs and dev!\r\n" )
       vfs_wait_for_path( ":/vfs" );
       // start /dev/ramdisk
-      void* ramdisk_image = ramdisk_lookup( disk, "ramdisk/server/fs/ramdisk", NULL );
+      void* ramdisk_image = ramdisk_lookup( disk, "ramdisk/bin/server/fs/ramdisk", NULL );
       if ( ! ramdisk_image ) {
         EARLY_STARTUP_PRINT( "ramdisk server not found!\r\n" )
         exit( -1 );
@@ -158,7 +158,7 @@ void init_stage1( void ) {
       // start /dev/authentication
       void* authentication_image = ramdisk_lookup(
         disk,
-        "ramdisk/server/authentication",
+        "ramdisk/bin/server/authentication",
         NULL
       );
       if ( ! authentication_image ) {

@@ -17,19 +17,22 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdio.h>
 #include <sys/bolthur.h>
+#include "../rpc.h"
 
 /**
- * @fn int main(int, char*[])
- * @brief main entry point
+ * @fn void rpc_handle_read(size_t, pid_t, size_t, size_t)
+ * @brief Handle read request
  *
- * @param argc
- * @param argv
- * @return
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
  */
-int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  // print something
-  STARTUP_PRINT( "login processing!\r\n" )
-  return -1;
+void rpc_handle_read(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
 }

@@ -15,6 +15,7 @@ console_SOURCES = \
   rpc/exit.c \
   rpc/fork.c \
   rpc/init.c \
+  rpc/read.c \
   rpc/write.c \
   console.c \
   handler.c \

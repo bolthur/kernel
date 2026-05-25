@@ -165,7 +165,6 @@ AC_CONFIG_FILES([
   fs/fat/Makefile
   fs/ramdisk/Makefile
   fs/vfs/Makefile
-  login/Makefile
   mount/Makefile
   partition/Makefile
   platform/Makefile

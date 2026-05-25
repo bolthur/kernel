@@ -46,7 +46,7 @@
     // build command
     char* cmd[] = { "login", NULL, };
     // exec to replace
-    if ( -1 == execv( "/server/login", cmd ) ) {
+    if ( -1 == execv( "/bin/login", cmd ) ) {
       exit( 1 );
     }
   }

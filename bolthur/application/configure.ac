@@ -151,6 +151,8 @@ AM_CONDITIONAL([IS64], [test $executable_format -eq 64])
 
 AC_CONFIG_FILES([
   Makefile
+  bin/Makefile
+  bin/login/Makefile
   usr/Makefile
   usr/lib/Makefile
   usr/lib/ld-bolthur/Makefile

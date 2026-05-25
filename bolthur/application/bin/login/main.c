@@ -17,22 +17,25 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RPC_H
-#define _RPC_H
+#include <stdio.h>
+#include <sys/bolthur.h>
+#include <sys/unistd.h>
 
-#include <stdbool.h>
-#include <unistd.h>
-#include "../../library/collection/list/list.h"
-
-bool rpc_init( void );
-
-void rpc_handle_exec( size_t, pid_t,size_t, size_t );
-void rpc_handle_exit( size_t, pid_t,size_t, size_t );
-void rpc_handle_fork( size_t, pid_t, size_t, size_t );
-void rpc_handle_read( size_t, pid_t, size_t, size_t );
-void rpc_handle_write( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_console_add( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_input( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_console_select( size_t, pid_t, size_t, size_t );
-
-#endif
+/**
+ * @fn int main(int, char*[])
+ * @brief main entry point
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
+int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
+  // print something
+  STARTUP_PRINT( "login processing!\r\n" )
+  // endless loop to prevent halting system as soon as login application was
+  // started
+  while ( true ) {
+    sleep( 5 );
+  }
+  return -1;
+}
