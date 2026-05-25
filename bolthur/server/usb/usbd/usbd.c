@@ -68,16 +68,36 @@ void usbd_deallocate_device( libusb_device_t* dev ) {
     return;
   }
   // detach callback
-  if ( dev->device_detached ) {
-    dev->device_detached( dev );
+  int result = call_detached( dev );
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "unable to call detached handler\r\n" )
+    #endif
+    // skip rest
+    return;
   }
   // deallocate callback
-  if ( dev->device_deallocate ) {
-    dev->device_deallocate( dev );
+  result = call_deallocate( dev );
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      STARTUP_PRINT( "unable to call deallocate handler\r\n" )
+    #endif
+    // skip rest
+    return;
   }
   // child detach
-  if ( dev->parent && dev->parent->device_child_detached ) {
-    dev->parent->device_child_detached( dev->parent, dev );
+  if ( dev->parent ) {
+    result = call_child_detached( dev->parent, dev );
+    if ( 0 != result ) {
+      // debug output
+      #if defined( USBD_ENABLE_DEBUG )
+        STARTUP_PRINT( "unable to call child detached handler\r\n" )
+      #endif
+      // skip rest
+      return;
+    }
   }
   // remove from list
   if (
@@ -186,12 +206,6 @@ int usbd_allocate_device( libusb_device_t** dev, bool insert_head ) {
   ( *dev )->driver_data = nullptr;
   ( *dev )->full_configuration = nullptr;
   ( *dev )->configuration_index = 0xff;
-  ( *dev )->device_deallocate = nullptr;
-  ( *dev )->device_detached = nullptr;
-  ( *dev )->device_check_connection = nullptr;
-  ( *dev )->device_check_for_change = nullptr;
-  ( *dev )->device_child_detached = nullptr;
-  ( *dev )->device_child_reset = nullptr;
   // setup handlers with invalid pid
   ( *dev )->device_detached_handler = -1;
   ( *dev )->device_deallocate_handler = -1;
@@ -318,13 +332,13 @@ int usbd_control_message(
   // handle error
   if ( message->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // handle check for connection
-    if ( dev->parent && dev->parent->device_check_connection ) {
+    if ( dev->parent ) {
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
         STARTUP_PRINT( "Verifying %s is still connected\r\n", usbd_get_description( dev ) )
       #endif
       // check connection
-      result = dev->parent->device_check_connection( dev->parent, ( libusb_device_t* )dev );
+      result = call_child_check_connection( dev->parent, dev );
       // handle error
       if ( 0 != result ) {
         // detach shared memory
@@ -475,13 +489,13 @@ int usbd_poll_interrupt(
   // handle error
   if ( message->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // handle check for connection
-    if ( dev->parent && dev->parent->device_check_connection ) {
+    if ( dev->parent ) {
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
         STARTUP_PRINT( "Verifying %s is still connected\r\n", usbd_get_description( dev ) )
       #endif
       // check connection
-      result = dev->parent->device_check_connection( dev->parent, ( libusb_device_t* )dev );
+      result = call_child_check_connection( dev->parent, dev );
       // handle error
       if ( 0 != result ) {
         // detach shared memory
@@ -1174,9 +1188,9 @@ int usbd_attach_device( libusb_device_t* dev ) {
   // set device status to default
   dev->status = LIBUSB_DEVICE_STATUS_DEFAULT;
   // handle parent set with device child reset
-  if ( dev->parent && dev->parent->device_child_reset ) {
+  if ( dev->parent ) {
     // perform child reset
-    result = dev->parent->device_child_reset(dev->parent, dev );
+    result = call_child_reset( dev->parent, dev );
     // handle error
     if ( 0 != result ) {
       // debug output

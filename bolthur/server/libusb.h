@@ -374,6 +374,7 @@ typedef struct libusb_device {
   libusb_transfer_error_t error __aligned( 4 );
 
   // processes responsible for generic detach and deallocate
+  pid_t device_attached_handler;
   pid_t device_detached_handler;
   pid_t device_deallocate_handler;
   // processes responsible for hub actions check for change, child detached
@@ -382,20 +383,6 @@ typedef struct libusb_device {
   pid_t device_child_detached_handler;
   pid_t device_child_reset_handler;
   pid_t device_check_connection_handler;
-
-  /// FIXME: REPLACE POINTER TO FUNCTIONS BY PID CALLS
-  /** Handler for detaching the device. The device driver should not issue further requests to the device. */
-  void ( *device_detached )( libusb_device_t* device ) __aligned( 4 );
-  /** Handler for deallocation of the device. All memory in use by the device driver should be deallocated. */
-  void ( *device_deallocate )( libusb_device_t* device );
-  /** Handler for checking for changes to the USB device tree. Only hubs need handle with this. */
-  void ( *device_check_for_change )( libusb_device_t* device );
-  /** Handler for removing a child device from this device. Only hubs need handle with this. */
-  void ( *device_child_detached )( libusb_device_t* device, libusb_device_t* child );
-  /** Handler for resetting a child device of this device. Only hubs need handle with this. */
-  int ( *device_child_reset )( libusb_device_t* device, libusb_device_t* child );
-  /** Handler for resetting a child device of this device. Only hubs need handle with this. */
-  int ( *device_check_connection )( libusb_device_t* device, libusb_device_t* child );
 
   libusb_device_descriptor_t descriptor __aligned( 4 );
   libusb_configuration_descriptor_t configuration __aligned( 4 );

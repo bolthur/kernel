@@ -25,5 +25,11 @@
 #define CALL_ENABLE_DEBUG 1
 
 int call_attach( libusb_device_t*, uint32_t );
+int call_detached( const libusb_device_t* );
+int call_deallocate( const libusb_device_t* );
+int call_check_for_change( const libusb_device_t* );
+int call_child_detached( const libusb_device_t*, const libusb_device_t* );
+int call_child_reset( const libusb_device_t*, const libusb_device_t* );
+int call_child_check_connection( const libusb_device_t*, const libusb_device_t* );
 
 #endif

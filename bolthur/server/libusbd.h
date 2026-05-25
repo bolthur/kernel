@@ -34,9 +34,13 @@
 #define GENERIC_ATTACH RPC_CUSTOM_START
 #define GENERIC_DETACH GENERIC_ATTACH + 1
 #define GENERIC_DEALLOCATE GENERIC_DETACH + 1
+#define GENERIC_CHECK_FOR_CHANGE GENERIC_DEALLOCATE + 1
+#define GENERIC_CHILD_DETACHED GENERIC_CHECK_FOR_CHANGE + 1
+#define GENERIC_CHILD_RESET GENERIC_CHILD_DETACHED + 1
+#define GENERIC_CHILD_CHECK_CONNECTION GENERIC_CHILD_RESET + 1
 
 // hid rpc
-#define HID_REGISTER_HANDLER GENERIC_DEALLOCATE + 1
+#define HID_REGISTER_HANDLER GENERIC_CHILD_CHECK_CONNECTION + 1
 #define HID_UNREGISTER_HANDLER HID_REGISTER_HANDLER + 1
 #define HID_GET_DRIVER HID_UNREGISTER_HANDLER + 1
 #define HID_GET_APPLICATION HID_GET_DRIVER + 1
@@ -44,12 +48,6 @@
 #define HID_GET_REPORT HID_GET_REPORT_COUNT + 1
 #define HID_SET_REPORT HID_GET_REPORT + 1
 #define HID_SET_IDLE HID_SET_REPORT + 1
-
-// hub rpc
-#define HUB_CHECK_CHANGE GENERIC_DEALLOCATE + 1
-#define HUB_CHILD_DETACH HUB_CHECK_CHANGE + 1
-#define HUB_CHILD_RESET HUB_CHILD_DETACH + 1
-#define HUB_CHECK_CONNECTION HUB_CHILD_RESET + 1
 
 // usbd rpc
 #define USBD_REGISTER_HANDLER RPC_CUSTOM_START
@@ -72,7 +70,35 @@ typedef struct {
   uint32_t interface_number;
 } usb_generic_attach_t;
 
+typedef struct {
+  uint32_t device_number;
+} usb_generic_detached_t;
+
+typedef struct {
+  uint32_t device_number;
+} usb_generic_deallocate_t;
+
+typedef struct {
+  uint32_t device_number;
+} usb_generic_check_for_change_t;
+
+typedef struct {
+  uint32_t parent_device_number;
+  uint32_t device_number;
+} usb_generic_child_detached_t;
+
+typedef struct {
+  uint32_t parent_device_number;
+  uint32_t device_number;
+} usb_generic_child_reset_t;
+
+typedef struct {
+  uint32_t parent_device_number;
+  uint32_t device_number;
+} usb_generic_child_check_connection_t;
+
 // hid rpc structures
+
 typedef struct {
   libusb_hid_usage_page_desktop_t type;
   pid_t handler;

@@ -48,25 +48,25 @@ bool rpc_init( void ) {
     return false;
   }
   // register check change handler
-  bolthur_rpc_bind( HUB_CHECK_CHANGE, rpc_hub_check_change, true );
+  bolthur_rpc_bind( GENERIC_CHECK_FOR_CHANGE, rpc_hub_check_change, true );
   if ( errno ) {
     STARTUP_PRINT( "Unable to register check change!\r\n" )
     return false;
   }
   // register child detach handler
-  bolthur_rpc_bind( HUB_CHILD_DETACH, rpc_hub_child_detach, true );
+  bolthur_rpc_bind( GENERIC_CHILD_DETACHED, rpc_hub_child_detach, true );
   if ( errno ) {
     STARTUP_PRINT( "Unable to register child detach!\r\n" )
     return false;
   }
   // register child reset handler
-  bolthur_rpc_bind( HUB_CHILD_RESET, rpc_hub_child_reset, true );
+  bolthur_rpc_bind( GENERIC_CHILD_RESET, rpc_hub_child_reset, true );
   if ( errno ) {
     STARTUP_PRINT( "Unable to register child reset!\r\n" )
     return false;
   }
   // register check connection handler
-  bolthur_rpc_bind( HUB_CHECK_CONNECTION, rpc_hub_check_connection, true );
+  bolthur_rpc_bind( GENERIC_CHILD_CHECK_CONNECTION, rpc_hub_check_connection, true );
   if ( errno ) {
     STARTUP_PRINT( "Unable to register check connection!\r\n" )
     return false;
