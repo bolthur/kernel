@@ -20,9 +20,13 @@
 #include <sys/bolthur.h>
 #include <inttypes.h>
 #include <errno.h>
+#include <sys/ioctl.h>
+
+#include "global.h"
 #include "../../keymap.h"
 #include "../../rpc.h"
 #include "../../keyboard.h"
+#include "../../../../../../libconsole.h"
 #include "../../../../../../libusbd.h"
 
 /**
@@ -228,7 +232,8 @@ void rpc_keyboard_key(
       #endif
     }
   }
-  char tmpBuffer[10];
+  char tmp_buffer[10];
+  char* input_buffer = nullptr;
   // loop through keys and translate them to characters
   for ( size_t i = 0; i < dev->key_count; i++ ) {
     // translate key code
@@ -242,14 +247,71 @@ void rpc_keyboard_key(
         dev->max_key_down[ i ], key, (uint8_t)key );
     #endif
     // clear buffer and translate to string
-    memset( tmpBuffer, 0, sizeof( tmpBuffer ) );
-    if ( 0 != keymap_to_string( key, tmpBuffer ) ) {
+    memset( tmp_buffer, 0, sizeof( tmp_buffer ) );
+    if ( 0 != keymap_to_string( key, tmp_buffer ) ) {
       continue;
     }
-    /// FIXME: WRITE KEY TO STDIN
-    printf( "%s", tmpBuffer );
-    fflush( stdout );
+    // try to allocate input buffer
+    if ( ! input_buffer ) {
+      // allocate and skip on error
+      input_buffer = malloc( sizeof( char ) * ( strlen( tmp_buffer ) + 1 ) );
+      if ( ! input_buffer ) {
+        continue;
+      }
+      // copy over tmp buffer
+      strcpy( input_buffer, tmp_buffer );
+    } else {
+      char* new_input_buffer = realloc( input_buffer, sizeof( char ) * ( strlen( input_buffer ) + strlen( tmp_buffer ) + 1 ) );
+      if ( ! new_input_buffer ) {
+        // skip rest
+        continue;
+      }
+      input_buffer = new_input_buffer;
+      // concatenate buffers
+      strcat( input_buffer, tmp_buffer );
+    }
   }
   // reset last poll
   dev->running_poll = 0;
+  // handle input buffer
+  if ( input_buffer && strlen( input_buffer ) ) {
+    // allocate input command
+    console_command_input_t* input_command = malloc( sizeof( *input_command ) );
+    if ( ! input_command ) {
+      // cleanup everything and return
+      _syscall_memory_shared_detach( control_message->shm_id );
+      free( response );
+      free( input_buffer );
+      _syscall_rpc_cleanup();
+      return;
+    }
+    // clear out input commend
+    memset( input_command, 0, sizeof( *input_command ) );
+    // copy over
+    strncpy( input_command->input, input_buffer, CONSOLE_MAX_INPUT_SEQUENCE - 1 );
+    // raise write request
+    const int result = ioctl(
+      console_fd,
+      IOCTL_BUILD_REQUEST(
+        CONSOLE_INPUT,
+        sizeof( *input_command ),
+        IOCTL_WRONLY
+      ),
+      input_command
+    );
+    // handle ioctl error
+    if ( -1 == result ) {
+      // debug output
+      #if defined( KEYBOARD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Pushing input to console failed\r\n" )
+      #endif
+    }
+  }
+  if ( input_buffer ) {
+    free( input_buffer );
+  }
+  // cleanup everything and return
+  _syscall_memory_shared_detach( control_message->shm_id );
+  free( response );
+  _syscall_rpc_cleanup();
 }

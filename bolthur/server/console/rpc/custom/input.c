@@ -59,7 +59,7 @@ void rpc_custom_handle_input(
     return;
   }
   // allocate for data fetching
-  //auto const command = ( console_command_input_t* )request->container;
+  auto const command = ( console_command_input_t* )request->container;
   // get active console and deactivate
   console_t* console = console_get_active();
   if ( ! console ) {
@@ -67,6 +67,8 @@ void rpc_custom_handle_input(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
+  // PRINT BUFFER
+  EARLY_STARTUP_PRINT( "%s\r\n", command->input );
   /// FIXME: ROUTE TO CONSOLE INPUT LISTENERS
   // free all used temporary structures
   free( request );

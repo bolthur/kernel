@@ -26,6 +26,8 @@
 #define CONSOLE_SELECT CONSOLE_ADD + 1
 #define CONSOLE_INPUT CONSOLE_SELECT + 1
 
+#define CONSOLE_MAX_INPUT_SEQUENCE 25
+
 typedef struct console_command_add {
   char terminal[ PATH_MAX ];
   size_t in;
@@ -39,7 +41,7 @@ typedef struct {
 } console_command_select_t;
 
 typedef struct {
-  char input[ 10 ];
+  char input[ CONSOLE_MAX_INPUT_SEQUENCE ];
 } console_command_input_t;
 
 #endif
