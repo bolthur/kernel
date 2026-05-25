@@ -13,10 +13,15 @@ BUILT_SOURCES = \
   ${abs_top_builddir}/lib/libduplicate.la \
   ${abs_top_builddir}/lib/libssp.la \
   ${abs_top_builddir}/lib/libubsan.la \
-  ${abs_top_builddir}/lib/libasan.la \
   libtarget.la \
   kernel.elf \
   kernel_qemu.elf
+# add kasan and ubsan to built sources when has sanitizer is set
+if HAS_SANITIZER
+  BUILT_SOURCES += \
+    ${abs_top_builddir}/lib/kasan/libkasan.la \
+    ${abs_top_builddir}/lib/libubsan.la
+endif
 
 # no installable programs
 noinst_PROGRAMS = kernel.elf kernel_qemu.elf ${output_img} ${output_img_qemu}

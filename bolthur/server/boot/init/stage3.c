@@ -26,6 +26,7 @@
 
 #include "../configuration.h"
 #include "../init.h"
+#include "../global.h"
 
 /**
  * @fn void init_stage1(void)
@@ -37,12 +38,23 @@
     EARLY_STARTUP_PRINT( "Something went wrong with stage3 startup!\r\n" )
     exit( 1 );
   }
+  // close device manager since everythig was fired up
+  close( fd_dev_manager );
+  // fork for starting the login shell
+  pid_t forked = fork();
+  if ( forked == 0 ) {
+    // build command
+    char* cmd[] = { "login", NULL, };
+    // exec to replace
+    if ( -1 == execv( "/server/login", cmd ) ) {
+      exit( 1 );
+    }
+  }
 
   while ( true ) {
     sleep( 10 );
     __asm__ __volatile__( "nop" );
   }
-
   /// FIXME: Kill unnecessary ramdisk server again
   /// FIXME: Start USB driver with all attached devices
   /// FIXME: Start login console
