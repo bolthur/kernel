@@ -21,15 +21,11 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-#include <errno.h>
 #include <sys/bolthur.h>
 #include <sys/unistd.h>
 
-#include "configuration.h"
-#include "../ramdisk.h"
+#include "../configuration.h"
 #include "../init.h"
-#include "../util.h"
-#include "../global.h"
 
 /**
  * @fn void init_stage1(void)

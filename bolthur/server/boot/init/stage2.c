@@ -24,8 +24,6 @@
 #include <sys/bolthur.h>
 #include <mntent.h>
 #include "../init.h"
-#include "../util.h"
-#include "../global.h"
 #include "../configuration.h"
 #include "../../libhelper.h"
 

@@ -119,6 +119,7 @@ int rpc_data_queue_add(
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "Mailbox temporarily mapped to 0x%"PRIxPTR", looking for free space \r\n", mailbox )
   #endif
+  // cppcheck-suppress-begin duplicateCondition
   // handle empty
   if ( entry->id ) {
     // debug output
@@ -140,7 +141,7 @@ int rpc_data_queue_add(
         #if defined( PRINT_RPC )
           DEBUG_OUTPUT(
             "entry: %#"PRIxPTR", offset = %#"PRIxPTR", "
-            "sizeof( rpc_data_mailbox_entry_t ) - offset = %#"PRIx32"\r\n",
+            "sizeof( rpc_data_mailbox_entry_t ) - offset = %#zx\r\n",
             (uintptr_t)entry, offset, sizeof( rpc_data_mailbox_entry_t ) - offset )
         #endif
         entry = ( rpc_data_mailbox_entry_t* )( ( uintptr_t )entry + ( sizeof( rpc_data_mailbox_entry_t ) - offset ) );
@@ -160,7 +161,7 @@ int rpc_data_queue_add(
       #if defined( PRINT_RPC )
         DEBUG_OUTPUT(
           "entry: %#"PRIxPTR", offset = %#"PRIxPTR", "
-          "sizeof( rpc_data_mailbox_entry_t ) = %#"PRIx32"\r\n",
+          "sizeof( rpc_data_mailbox_entry_t ) = %#zx\r\n",
           (uintptr_t)entry, offset, sizeof( rpc_data_mailbox_entry_t ) )
       #endif
     }
@@ -179,6 +180,7 @@ int rpc_data_queue_add(
     #endif
     return ENOMEM;
   }
+  // cppcheck-suppress-end duplicateCondition
   // debug output
   #if defined( PRINT_RPC )
     DEBUG_OUTPUT( "data_length = %#zx, max = %#zx!\r\n", data_length, PAGE_SIZE - ( ( uintptr_t )entry - mailbox - sizeof( rpc_data_mailbox_entry_t ) ) )

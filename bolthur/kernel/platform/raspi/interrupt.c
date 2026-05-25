@@ -27,9 +27,6 @@
 #include "../../debug/debug.h"
 #include "interrupt.h"
 #include "timer.h"
-#if defined( PRINT_INTERRUPT )
-  #include "debug/debug.h"
-#endif
 
 /**
  * @fn bool interrupt_validate_number(size_t)
@@ -120,20 +117,20 @@ void interrupt_mask_specific( const int8_t num ) {
   // get and set interrupt enable
   uint32_t interrupt_line = io_in32( interrupt_to_enable );
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Interrupt line %#"PRIxPTR"\r\n", interrupt_line )
+    DEBUG_OUTPUT( "Interrupt line %#"PRIx32"\r\n", interrupt_line )
   #endif
   // stop if already set
   if ( ! ( interrupt_line & interrupt ) ) {
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Interrupt %"PRIu8" not yet enabled\r\n", num )
+      DEBUG_OUTPUT( "Interrupt %"PRId8" not yet enabled\r\n", num )
     #endif
     interrupt_line |= interrupt;
     // write changes
     io_out32( interrupt_to_enable, interrupt_line );
   }
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Clearing interrupt %"PRIu8"\r\n", num )
-    DEBUG_OUTPUT( "Interrupt line %#"PRIxPTR"\r\n", interrupt_line )
+    DEBUG_OUTPUT( "Clearing interrupt %"PRId8"\r\n", num )
+    DEBUG_OUTPUT( "Interrupt line %#"PRIx32"\r\n", interrupt_line )
   #endif
   // get and clear pending interrupt from memory
   interrupt_line = io_in32( interrupt_pending );
@@ -169,7 +166,7 @@ void interrupt_unmask_specific( const int8_t num ) {
   interrupt = 1 << interrupt;
   // get and clear interrupt enable
   #if defined( PRINT_INTERRUPT )
-    DEBUG_OUTPUT( "Disabling interrupt %"PRIu8"\r\n", num )
+    DEBUG_OUTPUT( "Disabling interrupt %"PRId8"\r\n", num )
   #endif
   // write changes
   io_out32( interrupt_to_disable, interrupt );

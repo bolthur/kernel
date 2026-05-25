@@ -196,7 +196,7 @@ response_t dwhci_transmit_channel( const uint8_t channel, void* buffer ) {
   // read split control with unset of complete split
   sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_AND;
   sequence[ 0 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_SPLIT_CTRL( channel );
-  sequence[ 0 ].value = ( uint32_t )~( HCD_DWHCI_CHAN_SPLIT_CONTROL_COMPLETE_SPLIT( true ) );
+  sequence[ 0 ].value = ( uint32_t )~( HCD_DWHCI_CHAN_SPLIT_CONTROL_COMPLETE_SPLIT( 1 ) );
   // write back previous read to split control
   sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ;
   sequence[ 1 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_SPLIT_CTRL( channel );
@@ -357,15 +357,15 @@ response_t dwhci_prepare_channel(
   const uint32_t characteristic = HCD_DWHCI_CHAN_CHARACTER_DEVICE_ADDRESS( pipe->device )
     | HCD_DWHCI_CHAN_CHARACTER_END_POINT_NUMBER( pipe->end_point )
     | HCD_DWHCI_CHAN_CHARACTER_END_POINT_DIRECTION( pipe->direction )
-    | HCD_DWHCI_CHAN_CHARACTER_LOW_SPEED( pipe->speed == LIBUSB_SPEED_LOW ? true : false )
+    | HCD_DWHCI_CHAN_CHARACTER_LOW_SPEED( ( pipe->speed == LIBUSB_SPEED_LOW ? 1 : 0 ) )
     | HCD_DWHCI_CHAN_CHARACTER_TYPE( pipe->type )
     | HCD_DWHCI_CHAN_CHARACTER_MAXIMUM_PACKET_SIZE( usb_number_from_packet_size( pipe->max_size ) )
-    | HCD_DWHCI_CHAN_CHARACTER_ENABLE( false )
-    | HCD_DWHCI_CHAN_CHARACTER_DISABLE( false );
+    | HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 )
+    | HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 );
   // prepare split control
   uint32_t split_control = 0;
   if ( LIBUSB_SPEED_HIGH != pipe->speed ) {
-    split_control = ( uint32_t )HCD_DWHCI_CHAN_SPLIT_CONTROL_SPLIT_ENABLE( true )
+    split_control = ( uint32_t )HCD_DWHCI_CHAN_SPLIT_CONTROL_SPLIT_ENABLE( 1 )
       | HCD_DWHCI_CHAN_SPLIT_CONTROL_HUB_ADDRESS( parent_device_number )
       | HCD_DWHCI_CHAN_SPLIT_CONTROL_PORT_ADDRESS( port_number );
   }
@@ -847,7 +847,7 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     return result;
   }
   // enable channel
-  characteristics |= ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_ENABLE( true );
+  characteristics |= ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
   // write back characteristics
   result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), characteristics );
   if ( HCD_RESPONSE_OK != result ) {
@@ -885,8 +885,8 @@ response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t* e
     return result;
   }
   // enable channel
-  characteristics &= ( uint32_t )~HCD_DWHCI_CHAN_CHARACTER_ENABLE( true );
-  characteristics |= ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_DISABLE( true );
+  characteristics &= ( uint32_t )~HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
+  characteristics |= ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 );
   // write back characteristics
   result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), characteristics );
   if ( HCD_RESPONSE_OK != result ) {
@@ -982,7 +982,7 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
   #endif
   const hcd_control_message_t* entry_data = entry->data;
   // handle no data to transmit or receive
-  if (0 >= entry_data->buffer_length ) {
+  if (0 == entry_data->buffer_length ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "No data to send continue with ack\r\n" )
@@ -1312,7 +1312,7 @@ response_t dwhci_channel_poll_async_data( channel_queue_entry_t* entry ) {
   #endif
   const hcd_interrupt_poll_t* entry_data = entry->data;
   // handle no data to transmit or receive
-  if (0 >= entry_data->buffer_length ) {
+  if (0 == entry_data->buffer_length ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "No data to send continue with ack\r\n" )

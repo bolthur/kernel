@@ -1950,13 +1950,13 @@ static emmc_response_t sd_command( uint32_t command, const uint32_t argument ) {
     command = EMMC_APP_CMD_TO_CMD( command );
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      STARTUP_PRINT( "Issue command ACMD%"PRId32"\r\n", command )
+      STARTUP_PRINT( "Issue command ACMD%"PRIu32"\r\n", command )
     #endif
     // handle invalid commands
     if ( EMMC_CMD_IS_RESERVED( emmc_app_command_list[ command ] ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        STARTUP_PRINT( "Command ACMD%"PRId32" is invalid\r\n", command )
+        STARTUP_PRINT( "Command ACMD%"PRIu32" is invalid\r\n", command )
       #endif
       // return error
       return EMMC_RESPONSE_INVALID_COMMAND;
@@ -1994,7 +1994,7 @@ static emmc_response_t sd_command( uint32_t command, const uint32_t argument ) {
     }
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      STARTUP_PRINT( "Issue command ACMD%"PRId32"\r\n", command )
+      STARTUP_PRINT( "Issue command ACMD%"PRIu32"\r\n", command )
     #endif
     // set last command and argument of acmd
     device->last_command = EMMC_CMD_TO_APP_CMD( command );
@@ -2008,7 +2008,7 @@ static emmc_response_t sd_command( uint32_t command, const uint32_t argument ) {
     if ( response != EMMC_RESPONSE_OK ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        STARTUP_PRINT( "Command ACMD%"PRId32" failed\r\n", command )
+        STARTUP_PRINT( "Command ACMD%"PRIu32" failed\r\n", command )
       #endif
       // return response
       return response;
@@ -2017,13 +2017,13 @@ static emmc_response_t sd_command( uint32_t command, const uint32_t argument ) {
   } else {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      STARTUP_PRINT( "Issue command CMD%"PRId32"\r\n", command )
+      STARTUP_PRINT( "Issue command CMD%"PRIu32"\r\n", command )
     #endif
     // handle invalid commands
     if ( EMMC_CMD_IS_RESERVED( emmc_command_list[ command ] ) ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        STARTUP_PRINT( "Command CMD%"PRId32" is invalid\r\n", command )
+        STARTUP_PRINT( "Command CMD%"PRIu32" is invalid\r\n", command )
       #endif
       // return error
       return EMMC_RESPONSE_INVALID_COMMAND;
@@ -2040,7 +2040,7 @@ static emmc_response_t sd_command( uint32_t command, const uint32_t argument ) {
     if ( response != EMMC_RESPONSE_OK ) {
       // debug output
       #if defined( EMMC_ENABLE_DEBUG )
-        STARTUP_PRINT( "Command CMD%"PRId32" failed\r\n", command )
+        STARTUP_PRINT( "Command CMD%"PRIu32" failed\r\n", command )
       #endif
       // return response
       return response;
@@ -2768,7 +2768,7 @@ emmc_response_t emmc_init( void ) {
   if ( 3 != status && 4 != status ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
-      STARTUP_PRINT( "Invalid status received: %"PRId32"\r\n", status )
+      STARTUP_PRINT( "Invalid status received: %"PRIu32"\r\n", status )
     #endif
     // return error
     return EMMC_RESPONSE_UNKNOWN;
@@ -2912,7 +2912,7 @@ emmc_response_t emmc_init( void ) {
       be32toh( device->card_scr[ 1 ] )
     )
     STARTUP_PRINT(
-      "card version: %"PRId32", bus width: %"PRId32"\r\n",
+      "card version: %"PRIu32", bus width: %"PRIu32"\r\n",
       device->card_version,
       device->card_bus_width
     )
@@ -3221,16 +3221,16 @@ emmc_response_t emmc_transfer_block(
   }
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    STARTUP_PRINT( "block_number = %ld\r\n", block_number )
+    STARTUP_PRINT( "block_number = %"PRIu32"\r\n", block_number )
     STARTUP_PRINT( "buffer_size = %zu\r\n", buffer_size )
-    STARTUP_PRINT( "block_size = %ld\r\n", device->block_size )
+    STARTUP_PRINT( "block_size = %"PRIu32"\r\n", device->block_size )
   #endif
   // Minimum transfer size is one block ( HCSS 3.7.2.1 )
   if ( buffer_size < device->block_size ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       STARTUP_PRINT(
-        "Data command called with buffer size %zu less than block size %"PRId32"\r\n",
+        "Data command called with buffer size %zu less than block size %"PRIu32"\r\n",
         buffer_size, device->block_size
       )
     #endif
@@ -3242,7 +3242,7 @@ emmc_response_t emmc_transfer_block(
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       STARTUP_PRINT(
-        "Data command called with buffer size %zu not a multiple of block size %"PRId32"\r\n",
+        "Data command called with buffer size %zu not a multiple of block size %"PRIu32"\r\n",
         buffer_size, device->block_size
       )
     #endif
@@ -3255,8 +3255,8 @@ emmc_response_t emmc_transfer_block(
   device->shm_id = shm_id;
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
-    STARTUP_PRINT( "device->block_count = %ld\r\n", device->block_count )
-    STARTUP_PRINT( "device->block_size = %ld\r\n", device->block_size )
+    STARTUP_PRINT( "device->block_count = %"PRIu32"\r\n", device->block_count )
+    STARTUP_PRINT( "device->block_size = %"PRIu32"\r\n", device->block_size )
   #endif
   // debug output
   #if defined( EMMC_ENABLE_DEBUG )
@@ -3280,7 +3280,7 @@ emmc_response_t emmc_transfer_block(
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       STARTUP_PRINT(
-        "Try to send command, attempt %"PRId32"\r\n",
+        "Try to send command, attempt %"PRIu32"\r\n",
         current_try
       )
     #endif
@@ -3298,7 +3298,7 @@ emmc_response_t emmc_transfer_block(
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       STARTUP_PRINT(
-        "CMD%"PRId32" failed with error %#"PRIx32". Trying again...\r\n",
+        "CMD%"PRIu32" failed with error %#"PRIx32". Trying again...\r\n",
         command,
         device->last_error
       )

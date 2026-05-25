@@ -616,7 +616,6 @@ dl_image_handle_ptr_t dl_load_entry(
 
   // Load headers ( either one or two )
   char* memory = NULL;
-  char* data = NULL;
   if ( 1 == phdr_load_count ) {
     offset = ( off_t )ROUND_DOWN_TO_FULL_PAGE( load_header[ 0 ].p_offset );
     // FIXME: MAP SECTION IN CASE OF DEPENDENCY INTO SHARED AREA
@@ -700,7 +699,7 @@ dl_image_handle_ptr_t dl_load_entry(
     )
     // map data section again with only file size
     // FIXME: MAP SECTION IN CASE OF DEPENDENCY INTO SHARED AREA
-    data = dl_map_load_section(
+    char* data = dl_map_load_section(
       ( void* )( memory + data_address - text_address ),
       data_file_size,
       load_header[ 1 ].p_flags,

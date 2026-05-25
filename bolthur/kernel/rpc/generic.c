@@ -150,7 +150,7 @@ void rpc_generic_destroy_source_info( rpc_origin_source_t* info ) {
   }
   // debug output
   #if defined( PRINT_RPC )
-    DEBUG_OUTPUT( "Trying to remove source info %d!\r\n", info->rpc_id )
+    DEBUG_OUTPUT( "Trying to remove source info %zu!\r\n", info->rpc_id )
     avl_print( origin_tree, NULL );
   #endif
   // remove from tree
@@ -230,7 +230,7 @@ bool rpc_generic_setup_mailbox( task_process_t* proc ) {
     #if defined( PRINT_RPC )
       DEBUG_OUTPUT(
         "mapping %#"PRIx64" to address %#"PRIxPTR
-        " with type %d, flag %"PRIu32" and len %zx for process %d\r\n",
+        " with type %d, flag %"PRIu32" and len %x for process %d\r\n",
         proc->rpc_mailbox,
         proc->rpc_mailbox_virt,
         map_type,

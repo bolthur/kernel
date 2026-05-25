@@ -213,18 +213,18 @@ int dwhciroothub_process(
           libusb_hub_port_full_status_t status = {
             .status = {
               // populate response
-              .connected = host_port & HCD_DWHCI_HOST_PORT_CONNECT ? 1 : 0,
-              .enabled = host_port & HCD_DWHCI_HOST_PORT_ENABLE ? 1 : 0,
-              .suspended = host_port & HCD_DWHCI_HOST_PORT_SUSPEND ? 1 : 0,
-              .over_current = host_port & HCD_DWHCI_HOST_PORT_OVERCURRENT ? 1 : 0,
-              .reset = host_port & HCD_DWHCI_HOST_PORT_RESET ? 1 : 0,
-              .power = host_port & HCD_DWHCI_HOST_PORT_POWER ? 1 : 0,
+              .connected = ( host_port & HCD_DWHCI_HOST_PORT_CONNECT ) ? 1 : 0,
+              .enabled = ( host_port & HCD_DWHCI_HOST_PORT_ENABLE ) ? 1 : 0,
+              .suspended = ( host_port & HCD_DWHCI_HOST_PORT_SUSPEND ) ? 1 : 0,
+              .over_current = ( host_port & HCD_DWHCI_HOST_PORT_OVERCURRENT ) ? 1 : 0,
+              .reset = ( host_port & HCD_DWHCI_HOST_PORT_RESET ) ? 1 : 0,
+              .power = ( host_port & HCD_DWHCI_HOST_PORT_POWER ) ? 1 : 0,
               .test_mode = HCD_DWHCI_HOST_PORT_TEST_CONTROL( host_port ) ? 1 : 0,
             },
             .change = {
-              .connected_changed = host_port & HCD_DWHCI_HOST_PORT_CONNECT_CHANGED ? 1 : 0,
-              .enabled_changed = host_port & HCD_DWHCI_HOST_PORT_ENABLE_CHANGED ? 1 : 0,
-              .over_current_changed = host_port & HCD_DWHCI_HOST_PORT_OVERCURRENT_CHANGED ? 1 : 0,
+              .connected_changed = ( host_port & HCD_DWHCI_HOST_PORT_CONNECT_CHANGED ) ? 1 : 0,
+              .enabled_changed = ( host_port & HCD_DWHCI_HOST_PORT_ENABLE_CHANGED ) ? 1 : 0,
+              .over_current_changed = ( host_port & HCD_DWHCI_HOST_PORT_OVERCURRENT_CHANGED ) ? 1 : 0,
               .reset_changed = true,
             },
           };

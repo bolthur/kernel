@@ -21,7 +21,7 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 // local includes
-#include "handler.h"
+#include "../../handler.h"
 #include "../../rpc.h"
 #include "../../../../../../libusbd.h"
 

@@ -63,29 +63,23 @@ void rpc_handle_boot_init(
   // ORDER NECESSARY HERE DUE TO THE DEFINES
   // reroute stdin
   EARLY_STARTUP_PRINT( "Rerouting stdin to %s\r\n", request->in )
-  FILE* fpin = freopen( request->in, "r", stdin );
-  if ( ! fpin ) {
+  if ( ! freopen( request->in, "r", stdin ) ) {
     EARLY_STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) )
     EARLY_STARTUP_PRINT( "Unable to reroute stdin\r\n" )
     exit( 1 );
   }
   // reroute stdout
-  EARLY_STARTUP_PRINT( "stdin fileno = %d\r\n", fpin->_file )
   EARLY_STARTUP_PRINT( "Rerouting stdout to %s\r\n", request->out )
-  FILE* fpout = freopen( request->out, "w", stdout );
-  if ( ! fpout ) {
+  if ( ! freopen( request->out, "w", stdout ) ) {
     EARLY_STARTUP_PRINT( "Unable to reroute stdout\r\n" )
     exit( 1 );
   }
   // reroute stderr
-  EARLY_STARTUP_PRINT( "stdout fileno = %d\r\n", fpout->_file )
   EARLY_STARTUP_PRINT( "Rerouting stderr to %s\r\n", request->err )
-  FILE* fperr = freopen( request->err, "w", stderr );
-  if ( ! fperr ) {
+  if ( ! freopen( request->err, "w", stderr ) ) {
     EARLY_STARTUP_PRINT( "Unable to reroute stderr\r\n" )
     exit( 1 );
   }
-  EARLY_STARTUP_PRINT( "stderr fileno = %d\r\n", fperr->_file )
 
   // FIXME: ROUTE THROUGH TO CHILD PROCESSES
 

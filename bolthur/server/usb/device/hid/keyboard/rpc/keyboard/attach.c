@@ -102,18 +102,18 @@ void rpc_keyboard_attach(
     return;
   }
   // get report count
-  uint8_t report_count;
+  uint8_t report_count = 0;
   result = hid_get_report_count( message->device_number, &report_count );
   if ( 0 != result ) {
     free( request );
     _syscall_rpc_cleanup();
     return;
   }
-  for (uint8_t index = 0; index < report_count; index++ ) {
+  for (uint8_t i = 0; i < report_count; i++ ) {
     // get endpoint information
     libusb_endpoint_descriptor_t descriptor;
     result = usb_get_endpoint(
-      message->device_number, message->interface_number, index, &descriptor );
+      message->device_number, message->interface_number, i, &descriptor );
     // handle error
     if ( 0 != result ) {
       _syscall_rpc_cleanup();
@@ -139,7 +139,7 @@ void rpc_keyboard_attach(
     return;
   }
   // check report count
-  if ( 0 >= report_count ) {
+  if ( 0 == report_count ) {
     free( request );
     _syscall_rpc_cleanup();
     return;

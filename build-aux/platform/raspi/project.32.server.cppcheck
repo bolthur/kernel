@@ -42,6 +42,7 @@
     <define name="__UINT8_MAX__=0xff" />
     <define name="__arm__=1" />
     <define name="__ARMEL__=1" />
+    <define name="PROGRAM_NAME=program" />
   </defines>
   <suppressions>
     <suppression>constParameterPointer</suppression>

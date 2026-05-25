@@ -389,7 +389,7 @@ uintptr_t virt_find_free_page_range(
   #endif
   for ( uint32_t idx = index; idx < ctx->bitmap_length && !stop; idx++ ) {
     #if defined( PRINT_MM_VIRT )
-      DEBUG_OUTPUT( "ctx->bitmap[ %d ] = %#"PRIx32"\r\n", idx, ctx->bitmap[ idx ] )
+      DEBUG_OUTPUT( "ctx->bitmap[ %"PRIu32" ] = %#"PRIx32"\r\n", idx, ctx->bitmap[ idx ] )
     #endif
     // skip completely used entries
     if ( PHYS_ALL_PAGES_OF_INDEX_USED == ctx->bitmap[ idx ] ) {

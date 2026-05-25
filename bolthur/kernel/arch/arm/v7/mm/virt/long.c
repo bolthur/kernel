@@ -134,24 +134,20 @@ __bootstrap void v7_long_startup_setup( void ) {
  * @param phys physical address
  * @param virt virtual address
  */
-__bootstrap void v7_long_startup_map( uint64_t phys, uintptr_t virt ) {
+__bootstrap void v7_long_startup_map( const uint64_t phys, const uintptr_t virt ) {
   // determine index for getting middle directory
-  uint32_t pmd_index = LD_VIRTUAL_PMD_INDEX( virt );
+  const uint32_t pmd_index = LD_VIRTUAL_PMD_INDEX( virt );
   // determine index for getting table directory
-  uint32_t tbl_index = LD_VIRTUAL_TABLE_INDEX( virt );
+  const uint32_t tbl_index = LD_VIRTUAL_TABLE_INDEX( virt );
 
   // skip if already set
   if ( 0 != initial_middle_directory[ pmd_index ].raw[ tbl_index ] ) {
     return;
   }
-
-  ld_context_block_level2_t* section = &initial_middle_directory[ pmd_index ]
-    .section[ tbl_index ];
-
   // set section
-  section->raw = LD_PHYSICAL_SECTION_L2_ADDRESS( phys );
-  section->data.type = LD_TYPE_SECTION;
-  section->data.lower_attr_access = 1;
+  initial_middle_directory[ pmd_index ].section[ tbl_index ].raw = LD_PHYSICAL_SECTION_L2_ADDRESS( phys );
+  initial_middle_directory[ pmd_index ].section[ tbl_index ].data.type = LD_TYPE_SECTION;
+  initial_middle_directory[ pmd_index ].section[ tbl_index ].data.lower_attr_access = 1;
 }
 
 /**
@@ -272,7 +268,7 @@ static uintptr_t map_temporary( uint64_t start, size_t size ) {
       if ( 0 == found_amount ) {
           #if defined( PRINT_MM_VIRT )
             DEBUG_OUTPUT(
-              "TEMPORARY_SPACE_START = %#x, current_table * PAGE_SIZE * 512 = %#x, ( PAGE_SIZE * idx ) = %#x\r\n",
+              "TEMPORARY_SPACE_START = %#x, current_table * PAGE_SIZE * 512 = %#"PRIx32", ( PAGE_SIZE * idx ) = %#"PRIx32"\r\n",
               TEMPORARY_SPACE_START, current_table * PAGE_SIZE * 512, PAGE_SIZE * idx )
           #endif
         start_address = TEMPORARY_SPACE_START + (
@@ -550,7 +546,7 @@ uint64_t v7_long_create_table(
   #if defined( PRINT_MM_VIRT )
     DEBUG_OUTPUT(
       "create long descriptor table for address %#"PRIxPTR" for context %#"PRIxPTR"\r\n",
-      addr, ctx
+      addr, ( uintptr_t )ctx
     )
     DEBUG_OUTPUT( "pmd_idx = %"PRIu32", tbl_idx = %"PRIu32"\r\n", pmd_idx, tbl_idx )
   #endif

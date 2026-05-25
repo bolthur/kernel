@@ -363,12 +363,15 @@ bool interrupt_register_handler(
   // try to find node
   avl_node_t* node = avl_find_by_data( tree, ( void* )num );
   interrupt_block_t* block;
+  bool allocated = false;
   // debug output
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Found node %p\r\n", node )
   #endif
   // handle not yet added
   if ( ! node ) {
+    // set allocated to true
+    allocated = true;
     // reserve block
     block = malloc( sizeof( *block ) );
     // check
@@ -452,6 +455,13 @@ bool interrupt_register_handler(
       data = process;
       // push to list
       if ( ! list_push_back_data( list, data ) ) {
+        if ( allocated ) {
+          avl_remove_by_node( tree, &block->node );
+          list_destruct( block->process );
+          list_destruct( block->post );
+          list_destruct( block->handler );
+          free( block );
+        }
         return false;
       }
     } else {
@@ -459,6 +469,13 @@ bool interrupt_register_handler(
       interrupt_callback_wrapper_t* wrapper = malloc( sizeof( *wrapper ) );
       // check
       if ( ! wrapper ) {
+        if ( allocated ) {
+          avl_remove_by_node( tree, &block->node );
+          list_destruct( block->process );
+          list_destruct( block->post );
+          list_destruct( block->handler );
+          free( block );
+        }
         return false;
       }
       // prepare memory
@@ -474,6 +491,13 @@ bool interrupt_register_handler(
       // push to list
       if ( ! list_push_back_data( list, data ) ) {
         free( wrapper );
+        if ( allocated ) {
+          avl_remove_by_node( tree, &block->node );
+          list_destruct( block->process );
+          list_destruct( block->post );
+          list_destruct( block->handler );
+          free( block );
+        }
         return false;
       }
     }
@@ -482,6 +506,7 @@ bool interrupt_register_handler(
   if ( type == INTERRUPT_NORMAL && enable ) {
     interrupt_mask_specific( ( int8_t )num );
   }
+  // cppcheck-suppress memleak
   return true;
 }
 
@@ -576,7 +601,7 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context, c
     // get thread
     auto const thread = TASK_THREAD_GET_BLOCK( first );
     #if defined( PRINT_INTERRUPT )
-      DEBUG_OUTPUT( "Raising interrupt handler %"PRIu8" for %d\r\n",
+      DEBUG_OUTPUT( "Raising interrupt handler %zu for %d\r\n",
         num, thread->process->id )
     #endif
     // try to raise rpc without data

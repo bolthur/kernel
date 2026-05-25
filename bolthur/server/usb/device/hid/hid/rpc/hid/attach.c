@@ -22,7 +22,7 @@
 #include <inttypes.h>
 #include <sys/bolthur.h>
 // local includes
-#include "hid.h"
+#include "../../hid.h"
 #include "../../handler.h"
 #include "../../rpc.h"
 #include "../../global.h"
@@ -236,7 +236,8 @@ void rpc_hid_attach(
   if ( descriptor->hid_version > 0x111 ) {
     #if defined( HID_ENABLE_DEBUG )
       STARTUP_PRINT( "Unsupported hid version: %"PRIx16".%"PRIx16"\r\n",
-        descriptor->hid_version >> 8, descriptor->hid_version & 0xff )
+        ( uint16_t )( descriptor->hid_version >> 8 ),
+        ( uint16_t )( descriptor->hid_version & 0xff ) )
     #endif
     _syscall_rpc_cleanup();
     free( request );
@@ -245,7 +246,8 @@ void rpc_hid_attach(
   // some debug output
   #if defined( HID_ENABLE_DEBUG )
     STARTUP_PRINT( "Detected hid device: %"PRIx16".%"PRIx16"\r\n",
-      descriptor->hid_version >> 8, descriptor->hid_version & 0xff )
+      ( uint16_t )( descriptor->hid_version >> 8 ),
+      ( uint16_t )( descriptor->hid_version & 0xff ) )
     #endif
   // allocate hid device
   libusb_hid_device_t* device = malloc( sizeof( *device ) );

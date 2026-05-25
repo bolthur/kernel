@@ -266,6 +266,8 @@ int hub_power_on(
         STARTUP_PRINT( "Unable to power on port %"PRIu32" of %s: %s\r\n",
           child, usb_get_description( device_number ), strerror( result ) )
       #endif
+      // return result
+      return result;
     }
   }
   // milliseconds to sleep
@@ -326,7 +328,7 @@ int hub_get_port_status(
   if ( last_transfer != sizeof( libusb_hub_port_full_status_t ) ) {
     // debug output
     #if defined( HUB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Failed to read port %"PRIu8" status for %s. Received %"PRIu32" but expected %d\r\n",
+      STARTUP_PRINT( "Failed to read port %"PRIu8" status for %s. Received %"PRIu32" but expected %zu\r\n",
         port, usb_get_description( device_number ), last_transfer, sizeof( libusb_hub_port_full_status_t ) )
     #endif
     // return io error
@@ -463,7 +465,7 @@ int hub_port_connection_changed(
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
       STARTUP_PRINT( "Failed to get status (2) for %s with port %"PRIu8"\r\n",
-        usb_get_description( device_number ), port + 1 )
+        usb_get_description( device_number ), ( uint8_t )( port + 1 ) )
     #endif
     // return result
     return result;
@@ -475,7 +477,7 @@ int hub_port_connection_changed(
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
       STARTUP_PRINT( "Failed to clear connection change on %s with port %"PRIu8"\r\n",
-        usb_get_description( device_number ), port + 1 )
+        usb_get_description( device_number ), ( uint8_t )( port + 1 ) )
     #endif
     // return result
     return result;
@@ -485,7 +487,7 @@ int hub_port_connection_changed(
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
       STARTUP_PRINT( "Disconnected %s with port %"PRIu8"\r\n",
-        usb_get_description( device_number ), port + 1 )
+        usb_get_description( device_number ), ( uint8_t )( port + 1 ) )
     #endif
     /// FIXME: HANDLE!
   }
@@ -496,7 +498,7 @@ int hub_port_connection_changed(
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
       STARTUP_PRINT( "Could not reset port %"PRIu8" of %s for new device\r\n",
-        port + 1, usb_get_description( device_number ) )
+        ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
     #endif
     // return result
     return result;
@@ -508,7 +510,7 @@ int hub_port_connection_changed(
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
       STARTUP_PRINT( "Failed to get status (3) for %s with port %"PRIu8"\r\n",
-        usb_get_description( device_number ), port + 1 )
+        usb_get_description( device_number ), ( uint8_t )( port + 1 ) )
     #endif
     // return result
     return result;
@@ -605,7 +607,7 @@ int hub_check_connection(
       // debug output
       #if defined ( HUB_ENABLE_DEBUG )
         STARTUP_PRINT( "Failed to clear enable change for port %"PRIu8" for %s\r\n",
-          port + 1, usb_get_description( device_number ) )
+          ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
       #endif
     }
 
@@ -632,7 +634,7 @@ int hub_check_connection(
       // debug output
       #if defined ( HUB_ENABLE_DEBUG )
         STARTUP_PRINT( "Failed to suspend port %"PRIu8" for %s\r\n",
-          port + 1, usb_get_description( device_number ) )
+          ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
       #endif
     }
   }
@@ -646,7 +648,7 @@ int hub_check_connection(
       // debug output
       #if defined ( HUB_ENABLE_DEBUG )
         STARTUP_PRINT( "Failed to clear over current for port %"PRIu8" for %s\r\n",
-          port + 1, usb_get_description( device_number ) )
+          ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
       #endif
     }
     // power on hub
@@ -672,7 +674,7 @@ int hub_check_connection(
       // debug output
       #if defined ( HUB_ENABLE_DEBUG )
         STARTUP_PRINT( "Failed to clear reset for port %"PRIu8" for %s\r\n",
-          port + 1, usb_get_description( device_number ) )
+          ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
       #endif
     }
   }

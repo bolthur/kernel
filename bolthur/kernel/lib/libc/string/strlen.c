@@ -76,12 +76,6 @@ size_t strlen_unsafe( const char* str ) {
       next_check = ( char* )( last_check + PAGE_SIZE );
       continue;
     }
-    // handle page boundary reached
-    if ( str == next_check ) {
-      last_check = ( uintptr_t )next_check;
-      next_check = ( char* )( last_check + PAGE_SIZE );
-      continue;
-    }
     // return difference
     return ( size_t )( str - start );
   } while( true );

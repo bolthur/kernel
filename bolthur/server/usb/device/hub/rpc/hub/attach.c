@@ -211,8 +211,8 @@ void rpc_hub_attach(
         STARTUP_PRINT( "Hub has no over current protection\r\n" )
         break;
     }
-    STARTUP_PRINT( "Hub power to good: %"PRIu8"ms\r\n", hub->descriptor->power_good_delay * 2 )
-    STARTUP_PRINT( "Hub current required: %"PRIu8"mA.\r\n", hub->descriptor->maximum_hub_power * 2 )
+    STARTUP_PRINT( "Hub power to good: %"PRIu8"ms\r\n", ( uint8_t )( hub->descriptor->power_good_delay * 2 ) )
+    STARTUP_PRINT( "Hub current required: %"PRIu8"mA.\r\n", ( uint8_t )( hub->descriptor->maximum_hub_power * 2 ) )
     STARTUP_PRINT( "Hub ports: %"PRIu8"\r\n", hub->descriptor->port_count )
   #endif
   // retrieve status

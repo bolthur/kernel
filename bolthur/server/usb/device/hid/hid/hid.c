@@ -627,7 +627,8 @@ int hid_parse_report_descriptor(
   // clear out
   memset( field, 0, sizeof( hid_field_t ) );
   // set fields usage
-  field->usage = calloc(16, sizeof( libusb_hid_full_usage_t* ) );
+  // cppcheck-suppress pointerSize
+  field->usage = calloc( 16, sizeof( libusb_hid_full_usage_t* ) );
   if ( ! field->usage ) {
     #if defined( HID_ENABLE_DEBUG )
       STARTUP_PRINT( "Unable to allocate space for report\r\n" )
@@ -644,7 +645,7 @@ int hid_parse_report_descriptor(
   }
   // populate field
   constexpr uint32_t val = 0xffffffff;
-  memcpy( field->usage, &val, sizeof( libusb_hid_full_usage_t ) );
+  memcpy( &field->usage[ 0 ], &val, sizeof( libusb_hid_full_usage_t ) );
   field->result = result;
   // cache usage field
   void* usage = field->usage;

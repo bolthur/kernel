@@ -124,15 +124,13 @@ __bootstrap void v7_short_startup_setup( void ) {
  * @param phys physical address
  * @param virt virtual address
  */
-__bootstrap void v7_short_startup_map( uintptr_t phys, uintptr_t virt ) {
-  uint32_t x = virt >> 20;
-  uint32_t y = phys >> 20;
-
-  sd_context_section_t* sec = &initial_context.section[ x ];
-  sec->data.type = SD_TTBR_TYPE_SECTION;
-  sec->data.execute_never = 0;
-  sec->data.access_permission_0 = SD_MAC_APX0_PRIVILEGED_RW;
-  sec->data.frame = y & 0xFFF;
+__bootstrap void v7_short_startup_map( const uintptr_t phys, const uintptr_t virt ) {
+  const uint32_t x = virt >> 20;
+  const uint32_t y = phys >> 20;
+  initial_context.section[ x ].data.type = SD_TTBR_TYPE_SECTION;
+  initial_context.section[ x ].data.execute_never = 0;
+  initial_context.section[ x ].data.access_permission_0 = SD_MAC_APX0_PRIVILEGED_RW;
+  initial_context.section[ x ].data.frame = y & 0xFFF;
 }
 
 /**

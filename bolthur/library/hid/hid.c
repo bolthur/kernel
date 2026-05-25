@@ -424,7 +424,7 @@ int hid_get_report(
   // copy over content
   memcpy( *result, parser, result_size );
   #if defined( LIBHID_ENABLE_DEBUG )
-    STARTUP_PRINT( "Field length = %zu, field count = %zu\r\n", (*result)->fields_length, (*result)->field_count )
+    STARTUP_PRINT( "Field length = %zu, field count = %"PRIu8"\r\n", (*result)->fields_length, (*result)->field_count )
   #endif
   // copy over ptr stuff
   for ( size_t i = 0; i < (*result)->fields_length; i++ ) {

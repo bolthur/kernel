@@ -20,7 +20,7 @@
 #include <sys/bolthur.h>
 #include <inttypes.h>
 #include <errno.h>
-#include "keymap.h"
+#include "../../keymap.h"
 #include "../../rpc.h"
 #include "../../keyboard.h"
 #include "../../../../../../libusbd.h"

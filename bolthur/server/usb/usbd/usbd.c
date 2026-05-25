@@ -1220,7 +1220,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
     STARTUP_PRINT( "Attach Device %s. Address:%"PRIu8" Class:%d Subclass:%"PRIu8
       " USB:%"PRIx16".%"PRIx16". %"PRIu8" configurations, %"PRIu8" interfaces.\n",
       usbd_get_description( dev ), address, dev->descriptor.class, dev->descriptor.subclass,
-      dev->descriptor.usb_version >> 8, dev->descriptor.usb_version >> 4,
+      ( uint16_t )( dev->descriptor.usb_version >> 8 ), ( uint16_t )( dev->descriptor.usb_version >> 4 ),
       dev->descriptor.configuration_count, dev->configuration.interface_count )
     STARTUP_PRINT( "Device Attached: %s\r\n", usbd_get_description( dev ) )
   #endif
@@ -1258,9 +1258,9 @@ int usbd_attach_device( libusb_device_t* dev ) {
   }
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT("-VIID:PID: %"PRIx16":%"PRIx16" v%"PRId16":%"PRIx16"\r\n",
+    STARTUP_PRINT("-VIID:PID: %"PRIx16":%"PRIx16" v%"PRIu16":%"PRIx16"\r\n",
       dev->descriptor.vendor_id, dev->descriptor.product_id,
-      dev->descriptor.version >> 8, dev->descriptor.version & 0xff )
+      ( uint16_t )( dev->descriptor.version >> 8 ), ( uint16_t )( dev->descriptor.version & 0xff ) )
   #endif
   // configure device
   result = usbd_configure( dev, 0 );

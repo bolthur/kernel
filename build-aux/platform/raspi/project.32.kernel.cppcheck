@@ -47,7 +47,6 @@
     <suppression>constParameterPointer</suppression>
     <suppression>constVariablePointer</suppression>
     <suppression>constParameterCallback</suppression>
-    <suppression>unusedStructMember</suppression>
     <suppression>unusedFunction</suppression>
   </suppressions>
 </project>

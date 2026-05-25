@@ -86,7 +86,7 @@ void rpc_handle_boot_init_async(
     return;
   }
   // transform original origin to string
-  snprintf( str, sizeof( *str ) * 256, "%zu", async_data->original_origin );
+  snprintf( str, sizeof( *str ) * 256, "%d", async_data->original_origin );
   // get table
   ht_t* table = ht_get( boot_hash_table, str );
   if ( ! table ) {
@@ -101,7 +101,7 @@ void rpc_handle_boot_init_async(
     return;
   }
   // transform current origin to string
-  snprintf( str, sizeof( *str ) * 256, "%zu", origin );
+  snprintf( str, sizeof( *str ) * 256, "%d", origin );
   // unset entry
   ht_unset( table, str );
   // destroyed flag
@@ -109,7 +109,7 @@ void rpc_handle_boot_init_async(
   // handle length 0
   if ( ! table->length ) {
     // get original origin
-    snprintf( str, sizeof( *str ) * 256, "%zu", async_data->original_origin );
+    snprintf( str, sizeof( *str ) * 256, "%d", async_data->original_origin );
     // unset table
     ht_unset( boot_hash_table, str );
     // destroy hash table
@@ -118,7 +118,7 @@ void rpc_handle_boot_init_async(
     finished = true;
   }
   // get finished table
-  snprintf( str, sizeof( *str ) * 256, "%zu", async_data->original_origin );
+  snprintf( str, sizeof( *str ) * 256, "%d", async_data->original_origin );
   int* data = ht_get( finished_table, str );
   if ( ! data ) {
     // free string
@@ -152,7 +152,7 @@ void rpc_handle_boot_init_async(
   // handle finished
   if ( finished ) {
     // transform origin
-    snprintf( str, sizeof( *str ) * 256, "%zu", async_data->original_origin );
+    snprintf( str, sizeof( *str ) * 256, "%d", async_data->original_origin );
     // unset finished table entry
     ht_unset( finished_table, str );
     // populate result
@@ -246,13 +246,14 @@ void rpc_handle_boot_init(
     return;
   }
   // transform origin into string
-  snprintf( str, sizeof( *str ) * 256, "%zu", origin );
+  snprintf( str, sizeof( *str ) * 256, "%d", origin );
   int* data = malloc( sizeof( int ) );
   if ( ! data ) {
     // set result
     response.result = -ENOMEM;
     // free request
     free( request );
+    free( str );
     // return error
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     // return execution
@@ -266,6 +267,7 @@ void rpc_handle_boot_init(
     response.result = -EIO;
     // free request
     free( request );
+    free( str );
     free( data );
     // return error
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
@@ -281,6 +283,7 @@ void rpc_handle_boot_init(
     free( request );
     // remove entry from finished table
     ht_unset( finished_table, str );
+    free( str );
     free( data );
     // return error
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );

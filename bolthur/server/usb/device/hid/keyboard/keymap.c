@@ -262,7 +262,7 @@ int keymap_to_string(const uint16_t key_code, char* output ) {
     return 0;
   }
   // handle special key
-  if ( key_code >= KEYMAP_SPECIAL_KEY_SPACE && key_code < KEYMAP_SPECIAL_KEY_MAX_CODE ) {
+  if ( key_code >= KEYMAP_SPECIAL_KEY_SPACE ) {
     if ( special_key_strings[ key_code - KEYMAP_SPECIAL_KEY_SPACE ] ) {
       strcpy( output, special_key_strings[ key_code - KEYMAP_SPECIAL_KEY_SPACE ] );
     }

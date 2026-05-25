@@ -26,7 +26,7 @@
 #include "../rpc.h"
 #include "../mountpoint/node.h"
 #include "../../../../library/handle/process.h"
-#include "handler/node.h"
+#include "../handler/node.h"
 
 /**
  * @fn void rpc_handle_umount_async(size_t, pid_t, size_t, size_t)
