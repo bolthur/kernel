@@ -32,7 +32,7 @@
  */
 void rpc_handle_exit(
   size_t type,
-  [[maybe_unused]]  pid_t origin,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {

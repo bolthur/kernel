@@ -89,12 +89,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  // add alias to current tty
-  if ( !dev_add_file( TERMINAL_BASE_PATH, NULL, 0 ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
-    return -1;
-  }
-
   // enable rpc
   EARLY_STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );

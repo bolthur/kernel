@@ -32,10 +32,38 @@
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // print something
   STARTUP_PRINT( "login processing!\r\n" )
-  // endless loop to prevent halting system as soon as login application was
-  // started
+  // endlessly looping login shell
   while ( true ) {
-    sleep( 5 );
+    char* username = malloc( sizeof( char ) * 1024 );
+    if ( ! username ) {
+      STARTUP_PRINT( "Unable to allocate memory for username!\r\n" )
+      return -1;
+    }
+
+    // read username
+    printf( "username: " );
+    fflush( stdout );
+    fgets( username, 1024, stdin );
+    username[ strlen( username ) - 1 ] = '\0';
+    printf( "%s\r\n", username );
+
+    // read password
+    char* password = getpass( "password: " );
+    password[ strlen( password ) - 1 ] = '\0';
+
+    // debug output
+    STARTUP_PRINT( "username: %s\r\npassword: %s\r\n", username, password );
+    // debug endless loop
+    while ( true ) {
+      __asm__ __volatile__ ( "nop" );
+    }
+
+    // FIXME: check user and password
+    // FIXME: When user and password are not matching, free username and password and continue loop
+    // FIXME: fork process and start shell from /etc/passwd and prepare environment variables from /etc/passwd
+
+    free( username );
   }
-  return -1;
+  // exit with success
+  return 0;
 }
