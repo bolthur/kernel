@@ -87,7 +87,7 @@ void rpc_handle_write(
     ? handler->console->out
     : handler->console->err;
   // build terminal command
-  const size_t terminal_size = sizeof( terminal_write_request_t ) + request->len;
+  constexpr size_t terminal_size = sizeof( terminal_write_request_t );
   terminal_write_request_t* terminal = malloc( terminal_size );
   if ( ! terminal ) {
     response.len = -EIO;

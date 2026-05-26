@@ -25,6 +25,7 @@
 #include "console.h"
 #include "handler.h"
 #include "rpc.h"
+#include "queue.h"
 
 list_manager_t* console_list = NULL;
 
@@ -75,6 +76,12 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // setup handler
   EARLY_STARTUP_PRINT( "Setup handler tree\r\n" )
   if ( ! handler_setup() ) {
+    return -1;
+  }
+
+  // setup queue
+  EARLY_STARTUP_PRINT( "Startup queue\r\n" )
+  if ( ! queue_setup() ) {
     return -1;
   }
 

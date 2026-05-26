@@ -32,9 +32,48 @@
  * @param response_info
  */
 void rpc_handle_open(
-  [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
+  size_t type,
+  pid_t origin,
+  size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  vfs_open_response_t response = { .handle = -EINVAL };
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    return;
+  }
+  // handle no data
+  if ( ! data_info ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    return;
+  }
+  size_t data_size;
+  vfs_open_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  if ( ! request ) {
+    response.handle = -errno;
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    return;
+  }
+  // get handler
+  handler_node_t* handler = handler_extract( request->origin, true );
+  if ( ! handler ) {
+    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    free( request );
+    return;
+  }
+  // copy over stuff, return and free
+  if ( 0 == strcmp( request->path, "/dev/stdin" ) ) {
+    response.handle = STDIN_FILENO;
+    handler->stdin_opened = true;
+  } else if ( 0 == strcmp( request->path, "/dev/stdout" ) ) {
+    response.handle = STDOUT_FILENO;
+    handler->stdout_opened = true;
+  } else {
+    response.handle = STDERR_FILENO;
+    handler->stderr_opened = true;
+  }
+  response.handler = getpid();
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  free( request );
 }

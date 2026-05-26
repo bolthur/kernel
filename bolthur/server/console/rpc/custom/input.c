@@ -23,6 +23,8 @@
 #include "../../../libconsole.h"
 #include "../../rpc.h"
 #include "../../console.h"
+#include "../../queue.h"
+#include "../../../libterminal.h"
 
 /**
  * @fn void rpc_custom_handle_input(size_t, pid_t, size_t, size_t)
@@ -69,7 +71,9 @@ void rpc_custom_handle_input(
   }
   // PRINT BUFFER
   EARLY_STARTUP_PRINT( "%s\r\n", command->input );
-  /// FIXME: ROUTE TO CONSOLE INPUT LISTENERS
+  // route to listening process
+  queue_handle( "/dev/stdin", command->input );
+  /// FIXME: ROUTE TO TERMINAL OUT
   // free all used temporary structures
   free( request );
   // set success flag and return

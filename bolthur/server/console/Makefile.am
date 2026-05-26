@@ -11,6 +11,7 @@ console_SOURCES = \
   rpc/custom/add.c \
   rpc/custom/input.c \
   rpc/custom/select.c \
+  rpc/close.c \
   rpc/exec.c \
   rpc/exit.c \
   rpc/fork.c \
@@ -20,5 +21,6 @@ console_SOURCES = \
   rpc/write.c \
   console.c \
   handler.c \
-  main.c
+  main.c \
+  queue.c
 console_LDFLAGS = -all-static --static

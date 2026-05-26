@@ -84,6 +84,9 @@
 typedef struct handler_node {
   pid_t process;
   console_t* console;
+  bool stdin_opened;
+  bool stdout_opened;
+  bool stderr_opened;
   SPLAY_ENTRY( handler_node ) node;
 } handler_node_t;
 

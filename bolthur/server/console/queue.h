@@ -17,24 +17,27 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RPC_H
-#define _RPC_H
+#ifndef _QUEUE_H
+#define _QUEUE_H
 
-#include <stdbool.h>
-#include <unistd.h>
-#include "../../library/collection/list/list.h"
+#include <sys/bolthur.h>
+#include <sys/queue.h>
+#include "handler.h"
 
-bool rpc_init( void );
+typedef struct queue_node {
+  size_t return_type;
+  size_t response_info;
+  vfs_read_request_t* request;
+  size_t read_amount;
+  handler_node_t* handler;
+  TAILQ_ENTRY( queue_node ) node;
+} queue_node_t;
 
-void rpc_handle_close( size_t, pid_t, size_t, size_t );
-void rpc_handle_exec( size_t, pid_t, size_t, size_t );
-void rpc_handle_exit( size_t, pid_t, size_t, size_t );
-void rpc_handle_fork( size_t, pid_t, size_t, size_t );
-void rpc_handle_open( size_t, pid_t, size_t, size_t );
-void rpc_handle_read( size_t, pid_t, size_t, size_t );
-void rpc_handle_write( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_console_add( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_input( size_t, pid_t, size_t, size_t );
-void rpc_custom_handle_console_select( size_t, pid_t, size_t, size_t );
+typedef TAILQ_HEAD( queue_head, queue_node ) queue_head_t;
+
+// generic stuff
+bool queue_setup( void );
+bool queue_push( size_t, size_t, vfs_read_request_t*, handler_node_t* );
+void queue_handle( const char*, const char* );
 
 #endif

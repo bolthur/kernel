@@ -19,41 +19,39 @@
 
 #include <errno.h>
 #include <sys/bolthur.h>
-
-#include "queue.h"
 #include "../rpc.h"
 #include "../handler.h"
 
 /**
- * @fn void rpc_handle_read(size_t, pid_t, size_t, size_t)
- * @brief Handle read request
+ * @fn void rpc_handle_fork(size_t, pid_t, size_t, size_t)
+ * @brief handle fork request
  *
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_handle_read(
+void rpc_handle_close(
   size_t type,
   pid_t origin,
   size_t data_info,
-  size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
-  vfs_read_response_t response = { .len = -EINVAL };
+  vfs_close_response_t response = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   // handle no data
-  if ( ! data_info ) {
+  if( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
   size_t data_size;
-  vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_close_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
-    response.len = -errno;
+    response.status = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }
@@ -64,6 +62,15 @@ void rpc_handle_read(
     free( request );
     return;
   }
-  // push to queue
-  queue_push( type, response_info, request, handler );
+  // copy over stuff, return and free
+  if (request->handle == STDIN_FILENO) {
+    handler->stdin_opened = false;
+  } else if (request->handle == STDOUT_FILENO) {
+    handler->stdout_opened = false;
+  } else {
+    handler->stderr_opened = false;
+  }
+  response.status = 0;
+  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  free( request );
 }
