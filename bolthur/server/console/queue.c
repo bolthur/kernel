@@ -72,33 +72,32 @@ void queue_handle( const char* file, const char* data ) {
   queue_node_t* e = NULL;
   queue_node_t* next = NULL;
   TAILQ_FOREACH_SAFE( e, &management_queue, node, next ) {
-    // handle path match
-    EARLY_STARTUP_PRINT( "file: %s, data: %s\r\n", file, data )
+    // handle path match and active console
     if ( e->handler->console->active && 0 == strcmp( e->request->file_path, file ) ) {
       char* area = _syscall_memory_shared_attach( e->request->shm_id, ( uintptr_t )NULL );
       if ( area ) {
-
         // get total len and evaluate to read
         const size_t len = strlen( data );
         size_t to_read = len;
         if ( to_read > e->request->len - e->read_amount ) {
           to_read = e->request->len - e->read_amount;
         }
-        EARLY_STARTUP_PRINT( "len = %zu, to_read = %zu, request->len = %zu\r\n",
-          len, to_read, e->request->len );
+        // check for newline
         const char* newline = strstr( data, "\r\n" );
+        // subtract carriage return and newline
         if ( newline ) {
           to_read -= 2;
         }
-        // copy over
-        memcpy( area + e->read_amount, data, to_read );
+        // copy over if there is something
+        if ( to_read ) {
+          memcpy( area + e->read_amount, data, to_read );
+        }
         // increment read amount
         e->read_amount += to_read;
         // handle newline by set fulfilled
         if ( newline ) {
           ( area + e->read_amount )[ 0 ] = '\n';
           ( area + e->read_amount )[ 1 ] = '\0';
-          EARLY_STARTUP_PRINT( "area = %s\r\n", area )
           e->request->len = e->read_amount;
         } else {
           ( area + e->read_amount )[ 0 ] = '\0';

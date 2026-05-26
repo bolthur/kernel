@@ -69,7 +69,7 @@ void rpc_handle_read_async(
   }
   handle_node_t* container;
   // try to get handle information
-  int result = handle_get(
+  const int result = handle_get(
     &container,
     async_data->original_origin,
     request->handle
@@ -81,8 +81,8 @@ void rpc_handle_read_async(
     free( response );
     return;
   }
-  // update offsets and return
-  if ( 0 < response->len ) {
+  // update offsets if not stdin and return
+  if ( 0 < response->len && container->handle != STDIN_FILENO ) {
     container->pos += ( off_t )response->len;
   }
   bolthur_rpc_return( type, response, sizeof( *response ), async_data, 0 );
@@ -128,7 +128,7 @@ void rpc_handle_read(
   size_t data_size;
   vfs_read_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
-    response->len= -errno;
+    response->len = -errno;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;

@@ -69,14 +69,16 @@ void rpc_custom_handle_input(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
-  // PRINT BUFFER
+  // set success flag and return before handling anything else
+  error.status = 0;
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  // clean up rpc
+  _syscall_rpc_cleanup();
+  // debug print buffer
   EARLY_STARTUP_PRINT( "%s\r\n", command->input );
   // route to listening process
   queue_handle( "/dev/stdin", command->input );
   /// FIXME: ROUTE TO TERMINAL OUT
   // free all used temporary structures
   free( request );
-  // set success flag and return
-  error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
 }
