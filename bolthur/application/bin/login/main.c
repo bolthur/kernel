@@ -46,6 +46,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     fgets( username, 1024, stdin );
     username[ strlen( username ) - 1 ] = '\0';
     printf( "%s\r\n", username );
+    fflush( stdout );
 
     // read password
     char* password = getpass( "password: " );

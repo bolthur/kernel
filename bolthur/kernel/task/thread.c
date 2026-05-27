@@ -572,7 +572,7 @@ task_thread_t* task_thread_get_blocked(
   avl_node_t* avl_proc = avl_iterate_first( process_manager->process_id );
   while ( avl_proc ) {
     // get process container
-    task_process_t* proc = TASK_PROCESS_GET_BLOCK_ID( avl_proc );
+    auto const proc = TASK_PROCESS_GET_BLOCK_ID( avl_proc );
     // debug output
     #if defined( PRINT_PROCESS )
       DEBUG_OUTPUT( "proc->id = %d\r\n", proc->id )
@@ -581,7 +581,7 @@ task_thread_t* task_thread_get_blocked(
     avl_node_t* avl_thread = avl_iterate_first( proc->thread_manager );
     while ( avl_thread ) {
       // get thread
-      task_thread_t* thread = TASK_THREAD_GET_BLOCK( avl_thread );
+      auto const thread = TASK_THREAD_GET_BLOCK( avl_thread );
       // debug output
       #if defined( PRINT_PROCESS )
         DEBUG_OUTPUT(

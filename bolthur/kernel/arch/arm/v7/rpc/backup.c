@@ -29,7 +29,7 @@
 #endif
 
 /**
- * @fn rpc_backup_t* rpc_backup_create(task_thread_t*, task_process_t*, size_t, void*, size_t, task_thread_t*, bool, size_t, bool, bool)
+ * @fn rpc_backup_t* rpc_backup_create(task_thread_t*, const task_process_t*, size_t, const void*, size_t, task_thread_t*, bool, size_t, bool, bool)
  * @brief Helper to create rpc backup
  *
  * @param source
@@ -46,15 +46,15 @@
  */
 rpc_backup_t* rpc_backup_create(
   task_thread_t* source,
-  task_process_t* target,
-  size_t type,
-  void* data,
-  size_t data_size,
+  const task_process_t* target,
+  const size_t type,
+  const void* data,
+  const size_t data_size,
   task_thread_t* target_thread,
-  bool sync,
-  size_t origin_data_id,
-  bool disable_data,
-  bool is_interrupt
+  const bool sync,
+  const size_t origin_data_id,
+  const bool disable_data,
+  const bool is_interrupt
 ) {
   // get first inactive thread
   avl_node_t* current = avl_iterate_first( target->thread_manager );
@@ -62,7 +62,7 @@ rpc_backup_t* rpc_backup_create(
   // loop until usable thread has been found
   while ( current && ! thread ) {
     // get thread
-    task_thread_t* tmp = TASK_THREAD_GET_BLOCK( current );
+    auto const tmp = TASK_THREAD_GET_BLOCK( current );
     // FIXME: CHECK IF ACTIVE
     thread = tmp;
     // get next thread
@@ -103,7 +103,7 @@ rpc_backup_t* rpc_backup_create(
   #endif
 
   // variables
-  list_item_t* current_list = target->rpc_queue->first;
+  const list_item_t* current_list = target->rpc_queue->first;
   rpc_backup_t* active = NULL;
   // try to find matching rpc
   while( current_list ) {
@@ -167,7 +167,7 @@ rpc_backup_t* rpc_backup_create(
   backup->data_id = 0;
   if ( ! disable_data ) {
     if ( data && data_size ) {
-      int err = rpc_data_queue_add(
+      const int err = rpc_data_queue_add(
         thread->process->id,
         data,
         data_size,
@@ -190,8 +190,8 @@ rpc_backup_t* rpc_backup_create(
         )
       #endif
     } else {
-      char dummy = '\0';
-      int err = rpc_data_queue_add(
+      constexpr char dummy = '\0';
+      const int err = rpc_data_queue_add(
         thread->process->id,
         &dummy,
         sizeof( char ),

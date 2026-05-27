@@ -347,8 +347,13 @@ void syscall_rpc_ret( void* context ) {
   rpc_origin_source_t* info = rpc_generic_source_info(
     original_rpc_id ? original_rpc_id : active->data_id );
   #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "active->sync = %d, info->sync = %d\r\n", active->sync ? 1 : 0,
-        info->sync ? 1 : 0 )
+    DEBUG_OUTPUT( "active->sync = %d, info->sync = %d, rpc_id: %zu, source: %d, origin_rpc_id: %zu, type: %zu\r\n",
+        active->sync ? 1 : 0,
+        info->sync ? 1 : 0,
+        info->rpc_id,
+        info->source_process,
+        info->origin_rpc_id,
+        info->type )
   #endif
   if ( ! active->sync || original_rpc_id ) {
     // overwrite blocked data id
@@ -357,6 +362,14 @@ void syscall_rpc_ret( void* context ) {
       TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN,
       ( task_state_data_t ){ .data_size = blocked_data_id }
     );
+    // in case we have an original rpc id a valid target and a valid info object
+    // we need to overwrite sync and blocked_data_id similar to when no target
+    // was initially found
+    if ( original_rpc_id && target && info ) {
+      // reset sync to one from info
+      active->sync = info->sync;
+      blocked_data_id = info->rpc_id;
+    }
     // handle no target
     if ( ! target ) {
       if ( ! info ) {
@@ -374,9 +387,12 @@ void syscall_rpc_ret( void* context ) {
       }
       #if defined( PRINT_SYSCALL )
         DEBUG_OUTPUT(
-          "rpc_id: %zu, source: %d\r\n",
+          "rpc_id: %zu, source: %d, sync: %d, origin_rpc_id: %zu, type: %zu\r\n",
           info->rpc_id,
-          info->source_process
+          info->source_process,
+          info->sync ? 1 : 0,
+          info->origin_rpc_id,
+          info->type
         )
       #endif
       // try to get pid
