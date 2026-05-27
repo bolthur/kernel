@@ -49,7 +49,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
   bool further_rpc_enqueued = false;
   // get backup for restore
   for (
-    list_item_t* current = thread->process->rpc_queue->first;
+    const list_item_t* current = thread->process->rpc_queue->first;
     current;
     current = current->next
   ) {

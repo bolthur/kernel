@@ -47,14 +47,12 @@ void rpc_keyboard_key(
 ) {
   // handle no data
   if ( ! data_info ) {
-    _syscall_rpc_cleanup();
     return;
   }
   // get data from mailbox
   size_t data_size;
   vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! response ) {
-    _syscall_rpc_cleanup();
     return;
   }
   // get message
@@ -64,7 +62,6 @@ void rpc_keyboard_key(
   // handle error
   if ( errno ) {
     free( response );
-    _syscall_rpc_cleanup();
     return;
   }
   // transform shared memory into message
@@ -75,7 +72,6 @@ void rpc_keyboard_key(
   if ( ! dev ) {
     _syscall_memory_shared_detach( control_message->shm_id );
     free( response );
-    _syscall_rpc_cleanup();
     return;
   }
   dev->last_usb_pid = message->last_usb_pid;
@@ -90,14 +86,12 @@ void rpc_keyboard_key(
     // cleanup everything and return
     _syscall_memory_shared_detach( control_message->shm_id );
     free( response );
-    _syscall_rpc_cleanup();
     return;
   }
   // handle not enough transferred
   if ( message->last_transfer != KEYBOARD_REPORT_SIZE ) {
     _syscall_memory_shared_detach( control_message->shm_id );
     free( response );
-    _syscall_rpc_cleanup();
     dev->running_poll = 0;
     return;
   }
@@ -256,6 +250,7 @@ void rpc_keyboard_key(
       // allocate and skip on error
       input_buffer = malloc( sizeof( char ) * ( strlen( tmp_buffer ) + 1 ) );
       if ( ! input_buffer ) {
+        // skip rest
         continue;
       }
       // copy over tmp buffer
@@ -282,13 +277,14 @@ void rpc_keyboard_key(
       _syscall_memory_shared_detach( control_message->shm_id );
       free( response );
       free( input_buffer );
-      _syscall_rpc_cleanup();
       return;
     }
     // clear out input commend
     memset( input_command, 0, sizeof( *input_command ) );
     // copy over
     strncpy( input_command->input, input_buffer, CONSOLE_MAX_INPUT_SEQUENCE - 1 );
+    printf( "%s", input_command->input );
+    fflush( stdout );
     // raise write request
     const int result = ioctl(
       console_fd,
@@ -302,10 +298,12 @@ void rpc_keyboard_key(
     // handle ioctl error
     if ( -1 == result ) {
       // debug output
-      #if defined( KEYBOARD_ENABLE_DEBUG )
+      //#if defined( KEYBOARD_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Pushing input to console failed\r\n" )
-      #endif
+      //#endif
     }
+    // free up input command
+    free( input_command );
   }
   if ( input_buffer ) {
     free( input_buffer );
@@ -313,5 +311,4 @@ void rpc_keyboard_key(
   // cleanup everything and return
   _syscall_memory_shared_detach( control_message->shm_id );
   free( response );
-  _syscall_rpc_cleanup();
 }

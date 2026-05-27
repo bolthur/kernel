@@ -118,7 +118,7 @@ static void cleanup_callback( avl_node_t* a ) {
  * @param id
  * @return
  */
-rpc_origin_source_t* rpc_generic_source_info( size_t id ) {
+rpc_origin_source_t* rpc_generic_source_info( const size_t id ) {
   // try to find node by data
   avl_node_t* node = avl_find_by_data( origin_tree, ( void* )id );
   if ( ! node ) {
@@ -308,7 +308,7 @@ rpc_backup_t* rpc_generic_raise(
   task_process_t* target,
   const size_t type,
   void* data,
-  size_t length,
+  const size_t length,
   task_thread_t* target_thread,
   const bool sync,
   const size_t origin_data_id,

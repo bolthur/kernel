@@ -66,6 +66,4 @@ void rpc_handle_read(
   }
   // push to queue
   queue_push( type, response_info, request, handler );
-  // cleanup
-  _syscall_rpc_cleanup();
 }

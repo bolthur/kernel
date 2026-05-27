@@ -72,8 +72,6 @@ void rpc_custom_handle_input(
   // set success flag and return before handling anything else
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
-  // clean up rpc
-  _syscall_rpc_cleanup();
   // debug print buffer
   EARLY_STARTUP_PRINT( "%s\r\n", command->input );
   // route to listening process

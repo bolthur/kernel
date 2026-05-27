@@ -34,4 +34,5 @@ void rpc_hub_check_change(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  _syscall_rpc_cleanup();
 }

@@ -69,7 +69,7 @@ rpc_backup_t* rpc_backup_get_active( task_thread_t* thread, size_t data_id ) {
     DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
   #endif
   // variables
-  list_item_t* current = thread->process->rpc_queue->first;
+  const list_item_t* current = thread->process->rpc_queue->first;
   rpc_backup_t* found = NULL;
   // handle data id set
   if ( data_id ) {

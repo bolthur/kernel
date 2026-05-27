@@ -39,7 +39,7 @@
  * @param context
  */
 void syscall_rpc_set_handler( void* context ) {
-  uintptr_t handler = ( uintptr_t )syscall_get_parameter( context, 0 );
+  const uintptr_t handler = ( uintptr_t )syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT( "syscall_rpc_set_handler( %#"PRIxPTR" )\r\n", handler )
@@ -66,14 +66,14 @@ void syscall_rpc_set_handler( void* context ) {
  * @param context
  */
 void syscall_rpc_raise( void* context ) {
-  size_t type = syscall_get_parameter( context, 0 );
-  pid_t process = ( pid_t )syscall_get_parameter( context, 1 );
-  void* data = ( void* )syscall_get_parameter( context, 2 );
-  size_t length = syscall_get_parameter( context, 3 );
-  size_t origin_rpc_data_id = syscall_get_parameter( context, 4 );
-  bool synchronous = ( bool )syscall_get_parameter( context, 5 );
-  bool no_return = ( bool )syscall_get_parameter( context, 6 );
-  bool cleanup_current_id = ( bool )syscall_get_parameter( context, 7 );
+  const size_t type = syscall_get_parameter( context, 0 );
+  const pid_t process = ( pid_t )syscall_get_parameter( context, 1 );
+  auto const data = ( void* )syscall_get_parameter( context, 2 );
+  const size_t length = syscall_get_parameter( context, 3 );
+  const size_t origin_rpc_data_id = syscall_get_parameter( context, 4 );
+  const bool synchronous = ( bool )syscall_get_parameter( context, 5 );
+  const bool no_return = ( bool )syscall_get_parameter( context, 6 );
+  const bool cleanup_current_id = ( bool )syscall_get_parameter( context, 7 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
@@ -271,10 +271,10 @@ void syscall_rpc_raise( void* context ) {
  * @param context
  */
 void syscall_rpc_ret( void* context ) {
-  size_t type = syscall_get_parameter( context, 0 );
-  auto data = ( void* )syscall_get_parameter( context, 1 );
-  size_t length = syscall_get_parameter( context, 2 );
-  size_t original_rpc_id = syscall_get_parameter( context, 3 );
+  const size_t type = syscall_get_parameter( context, 0 );
+  auto const data = ( void* )syscall_get_parameter( context, 1 );
+  const size_t length = syscall_get_parameter( context, 2 );
+  const size_t original_rpc_id = syscall_get_parameter( context, 3 );
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
       "syscall_rpc_ret( %zu, %p, %#zx, %zu ) from %d\r\n",
@@ -400,7 +400,7 @@ void syscall_rpc_ret( void* context ) {
       // loop until usable thread has been found
       while ( current && ! target ) {
         // get thread
-        auto tmp = TASK_THREAD_GET_BLOCK( current );
+        auto const tmp = TASK_THREAD_GET_BLOCK( current );
         // FIXME: CHECK IF ACTIVE
         target = tmp;
         // get next thread
@@ -682,7 +682,7 @@ void syscall_rpc_end( void* context ) {
  */
 void syscall_rpc_wait_for_ready( void* context ) {
   // get parameter
-  pid_t process = ( pid_t )syscall_get_parameter( context, 0 );
+  const pid_t process = ( pid_t )syscall_get_parameter( context, 0 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
