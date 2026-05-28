@@ -82,6 +82,9 @@ void rpc_keyboard_key(
     if ( message->error & LIBUSB_TRANSFER_ERROR_STALL ) {
       /// FIXME: IMPLEMENT STALL RESET
       dev->running_poll = 0;
+    // handle nack ( nothing there ) by just resetting running poll
+    } else if ( message->error & LIBUSB_TRANSFER_ERROR_NO_ACKNOWLEDGE ) {
+      dev->running_poll = 0;
     }
     // cleanup everything and return
     _syscall_memory_shared_detach( control_message->shm_id );
@@ -298,9 +301,9 @@ void rpc_keyboard_key(
     // handle ioctl error
     if ( -1 == result ) {
       // debug output
-      //#if defined( KEYBOARD_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_ERROR )
         EARLY_STARTUP_PRINT( "Pushing input to console failed\r\n" )
-      //#endif
+      #endif
     }
     // free up input command
     free( input_command );

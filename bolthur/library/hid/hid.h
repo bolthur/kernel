@@ -20,6 +20,9 @@
 #ifndef _HID_H
 #define _HID_H
 
+//#define LIBHID_ENABLE_DEBUG
+#define LIBHID_ENABLE_ERROR
+
 #include "../../server/libusb.h"
 
 int hid_init( void );

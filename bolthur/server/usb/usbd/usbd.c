@@ -307,7 +307,7 @@ int usbd_control_message(
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_ERROR )
       STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
     #endif
     // detach shared memory
@@ -320,8 +320,8 @@ int usbd_control_message(
   // response is equal to input
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Message to %s timeout reached\r\n", usbd_get_description( dev ) )
+    #if defined( USBD_ENABLE_ERROR )
+      STARTUP_PRINT( "error = %#x\r\n", message->error )
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -464,7 +464,7 @@ int usbd_poll_interrupt(
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( USBD_ENABLE_DEBUG )
+    #if defined( USBD_ENABLE_ERROR )
       STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
     #endif
     // detach shared memory
@@ -478,7 +478,7 @@ int usbd_poll_interrupt(
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Message to %s timeout reached\r\n", usbd_get_description( dev ) )
+      STARTUP_PRINT( "error = %#x\r\n", message->error )
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );

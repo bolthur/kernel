@@ -94,7 +94,7 @@ int hid_register_handler( const libusb_hid_usage_page_desktop_t type ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( LIBHID_ENABLE_DEBUG )
+    #if defined( LIBHID_ENABLE_ERROR )
       STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
     #endif
     // free request
@@ -151,7 +151,7 @@ int hid_get_driver( uint32_t device_number, uint32_t* device_driver ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( LIBHID_ENABLE_DEBUG )
+    #if defined( LIBHID_ENABLE_ERROR )
       STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
     #endif
     // free request
@@ -213,7 +213,7 @@ int hid_get_application(
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( LIBHID_ENABLE_DEBUG )
+    #if defined( LIBHID_ENABLE_ERROR )
       STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
     #endif
     // free request
@@ -272,7 +272,7 @@ int hid_get_report_count( uint32_t device_number, uint8_t* report_count ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( LIBHID_ENABLE_DEBUG )
+    #if defined( LIBHID_ENABLE_ERROR )
       STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
     #endif
     // free request
@@ -393,7 +393,7 @@ int hid_get_report(
   // handle ioctl error
   if ( -1 == ioctl_result ) {
     // debug output
-    #if defined( LIBHID_ENABLE_DEBUG )
+    #if defined( LIBHID_ENABLE_ERROR )
       STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
     #endif
     // detach shared memory
@@ -559,7 +559,7 @@ int hid_set_report( const uint32_t device_number, const uint8_t report_type, con
   // handle ioctl error
   if ( -1 == ioctl_result ) {
     // debug output
-    #if defined( LIBHID_ENABLE_DEBUG )
+    #if defined( LIBHID_ENABLE_ERROR )
       STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
     #endif
     // detach shared memory
@@ -615,7 +615,7 @@ int hid_set_idle( const uint32_t device_number, const uint32_t interface_number,
   // handle ioctl error
   if ( -1 == ioctl_result ) {
     // debug output
-    #if defined( LIBHID_ENABLE_DEBUG )
+    #if defined( LIBHID_ENABLE_ERROR )
       STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
     #endif
     // free request
