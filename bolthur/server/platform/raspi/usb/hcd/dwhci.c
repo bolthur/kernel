@@ -382,6 +382,7 @@ response_t dwhci_allocate_channel( uint8_t* channel_out ) {
     // shift mask to right for check of next channel
     mask <<= 1;
   }
+  EARLY_STARTUP_PRINT( "No free channel found\r\n" )
   // return no channel
   return HCD_RESPONSE_ERROR_NO_CHANNEL;
 }

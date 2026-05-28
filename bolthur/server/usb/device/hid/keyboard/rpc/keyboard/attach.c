@@ -118,7 +118,7 @@ void rpc_keyboard_attach(
       return;
     }
     #if defined( KEYBOARD_ENABLE_DEBUG )
-      STARTUP_PRINT( "descriptor.endpoint_address.number = %"PRIu8", descriptor.endpoint_address.direction = %d\r\n",
+      EARLY_STARTUP_PRINT( "descriptor.endpoint_address.number = %"PRIu8", descriptor.endpoint_address.direction = %d\r\n",
         descriptor.endpoint_address.number, descriptor.endpoint_address.direction)
     #endif
   }
@@ -180,20 +180,20 @@ void rpc_keyboard_attach(
     }
     // some debug output
     #if defined( KEYBOARD_ENABLE_DEBUG )
-      STARTUP_PRINT( "type = %x, report = %"PRIu8", fields = %"PRIu8"\r\n",
+      EARLY_STARTUP_PRINT( "type = %x, report = %"PRIu8", fields = %"PRIu8"\r\n",
         report->type, idx, report->field_count )
     #endif
     // handle input
     if ( report->type == LIBUSB_HID_REPORT_TYPE_INPUT && ! device->key_report ) {
       // change idle state to only on key change
       #if defined( HID_ENABLE_DEBUG )
-        STARTUP_PRINT( "Setting idle to 0 for %"PRIu32" / %"PRIu32" / %"PRIu8"\r\n",
+        EARLY_STARTUP_PRINT( "Setting idle to 0 for %"PRIu32" / %"PRIu32" / %"PRIu8"\r\n",
           message->device_number, message->interface_number, report->id )
       #endif
       result = hid_set_idle( message->device_number, message->interface_number, report->id, 0);
       if ( 0 != result ) {
         #if defined( HID_ENABLE_DEBUG )
-          STARTUP_PRINT( "Unable to put hid into idle mode: %s\r\n",
+          EARLY_STARTUP_PRINT( "Unable to put hid into idle mode: %s\r\n",
             strerror( result ) )
         #endif
         free( request );
@@ -203,7 +203,7 @@ void rpc_keyboard_attach(
         return;
       }
       #if defined( HID_ENABLE_DEBUG )
-        STARTUP_PRINT( "Setting idle to 0 for %"PRIu32" / %"PRIu32" / %"PRIu8" done\r\n",
+        EARLY_STARTUP_PRINT( "Setting idle to 0 for %"PRIu32" / %"PRIu32" / %"PRIu8" done\r\n",
           message->device_number, message->interface_number, report->id )
       #endif
       // duplicate report
@@ -223,7 +223,7 @@ void rpc_keyboard_attach(
       // loop through reports
       for ( uint8_t inner = 0; inner < report->field_count; ++inner ) {
         #if defined( KEYBOARD_ENABLE_DEBUG )
-          STARTUP_PRINT( "inner = %"PRIu8" / %#x\r\n", inner, report->fields[ inner ].usage.page )
+          EARLY_STARTUP_PRINT( "inner = %"PRIu8" / %#x\r\n", inner, report->fields[ inner ].usage.page )
         #endif
         // handle report field usage page
         if (
@@ -236,7 +236,7 @@ void rpc_keyboard_attach(
               && report->fields[ inner ].usage.keyboard <= LIBUSB_HID_USAGE_PAGE_KEYBOARD_RIGHT_CONTROL
             ) {
               #if defined( KEYBOARD_ENABLE_DEBUG )
-                STARTUP_PRINT(
+                EARLY_STARTUP_PRINT(
                   "Modifier %d detected. Offset = %"PRIx8", size = %"PRIx8"\r\n",
                   report->fields[ inner ].usage.keyboard,
                   report->fields[ inner ].offset,
@@ -249,7 +249,7 @@ void rpc_keyboard_attach(
             }
           } else {
             #if defined( KEYBOARD_ENABLE_DEBUG )
-              STARTUP_PRINT( "Key input detected: %p / %p / %"PRIu8" / %#x\r\n", (void*)&device->key_report->fields[ inner ],
+              EARLY_STARTUP_PRINT( "Key input detected: %p / %p / %"PRIu8" / %#x\r\n", (void*)&device->key_report->fields[ inner ],
                 device->key_report->fields[ inner ].value.ptr, inner, report->fields[ inner ].usage.page )
             #endif
             device->key_field[ 8 ] = &device->key_report->fields[ inner ];
@@ -280,7 +280,7 @@ void rpc_keyboard_attach(
         switch ( report->fields[ inner ].usage.led ) {
           case LIBUSB_HID_USAGE_PAGE_LED_NUMBER_LOCK:
             #if defined( KEYBOARD_ENABLE_DEBUG )
-              STARTUP_PRINT( "Number lock led detected\r\n")
+              EARLY_STARTUP_PRINT( "Number lock led detected\r\n")
             #endif
             device->led_field[ 0 ] = &device->key_report->fields[ inner ];
             // set supported flag
@@ -288,7 +288,7 @@ void rpc_keyboard_attach(
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_CAPSLOCK:
             #if defined( KEYBOARD_ENABLE_DEBUG )
-              STARTUP_PRINT( "Capslock lock led detected\r\n")
+              EARLY_STARTUP_PRINT( "Capslock lock led detected\r\n")
             #endif
             device->led_field[ 1 ] = &device->key_report->fields[ inner ];
             // set supported flag
@@ -296,7 +296,7 @@ void rpc_keyboard_attach(
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_SCROLL_LOCK:
             #if defined( KEYBOARD_ENABLE_DEBUG )
-              STARTUP_PRINT( "Scroll lock led detected\r\n")
+              EARLY_STARTUP_PRINT( "Scroll lock led detected\r\n")
             #endif
             device->led_field[ 2 ] = &device->key_report->fields[ inner ];
             // set supported flag
@@ -304,7 +304,7 @@ void rpc_keyboard_attach(
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_COMPOSE:
             #if defined( KEYBOARD_ENABLE_DEBUG )
-              STARTUP_PRINT( "Compose led detected\r\n")
+              EARLY_STARTUP_PRINT( "Compose led detected\r\n")
             #endif
             device->led_field[ 3 ] = &device->key_report->fields[ inner ];
             // set supported flag
@@ -312,7 +312,7 @@ void rpc_keyboard_attach(
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_KANA:
             #if defined( KEYBOARD_ENABLE_DEBUG )
-              STARTUP_PRINT( "Kana led detected\r\n")
+              EARLY_STARTUP_PRINT( "Kana led detected\r\n")
             #endif
             device->led_field[ 4 ] = &device->key_report->fields[ inner ];
             // set supported flag
@@ -320,7 +320,7 @@ void rpc_keyboard_attach(
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_POWER:
             #if defined( KEYBOARD_ENABLE_DEBUG )
-              STARTUP_PRINT( "Power led detected\r\n")
+              EARLY_STARTUP_PRINT( "Power led detected\r\n")
             #endif
             device->led_field[ 5 ] = &device->key_report->fields[ inner ];
             // set supported flag
@@ -328,7 +328,7 @@ void rpc_keyboard_attach(
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_SHIFT:
             #if defined( KEYBOARD_ENABLE_DEBUG )
-              STARTUP_PRINT( "Shift led detected\r\n")
+              EARLY_STARTUP_PRINT( "Shift led detected\r\n")
             #endif
             device->led_field[ 6 ] = &device->key_report->fields[ inner ];
             // set supported flag
@@ -336,7 +336,7 @@ void rpc_keyboard_attach(
             break;
           case LIBUSB_HID_USAGE_PAGE_LED_MUTE:
             #if defined( KEYBOARD_ENABLE_DEBUG )
-              STARTUP_PRINT( "Mute led detected\r\n")
+              EARLY_STARTUP_PRINT( "Mute led detected\r\n")
             #endif
             device->led_field[ 7 ] = &device->key_report->fields[ inner ];
             // set supported flag
@@ -348,13 +348,13 @@ void rpc_keyboard_attach(
       }
     }
     #if defined( KEYBOARD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Freeing report\r\n" )
+      EARLY_STARTUP_PRINT( "Freeing report\r\n" )
     #endif
     // free report again
     hid_destroy_report( report );
   }
   #if defined( KEYBOARD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Allocate report buffer\r\n" )
+    EARLY_STARTUP_PRINT( "Allocate report buffer\r\n" )
   #endif
   // allocate report buffer
   device->buffer = malloc( KEYBOARD_REPORT_SIZE );
@@ -365,16 +365,16 @@ void rpc_keyboard_attach(
     return;
   }
   #if defined( KEYBOARD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Clear allocated buffer\r\n" )
+    EARLY_STARTUP_PRINT( "Clear allocated buffer\r\n" )
   #endif
   // clear it out
   memset( device->buffer, 0, KEYBOARD_REPORT_SIZE );
   // finally append device to list
   keyboard_append( device );
   #if defined( KEYBOARD_ENABLE_DEBUG )
-    STARTUP_PRINT( "endpoint_descriptor.endpoint_address.number = %"PRIu8"\r\n",
+    EARLY_STARTUP_PRINT( "endpoint_descriptor.endpoint_address.number = %"PRIu8"\r\n",
       endpoint_descriptor.endpoint_address.number );
-    STARTUP_PRINT( "endpoint_descriptor.interval = %"PRIu8"\r\n",
+    EARLY_STARTUP_PRINT( "endpoint_descriptor.interval = %"PRIu8"\r\n",
       endpoint_descriptor.interval );
   #endif
   // free request and cleanup

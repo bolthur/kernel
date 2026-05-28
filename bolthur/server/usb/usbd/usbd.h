@@ -22,7 +22,7 @@
 
 #include "../../libusbd.h"
 
-//#define USBD_ENABLE_DEBUG 1
+#define USBD_ENABLE_DEBUG 1
 #define USBD_ENABLE_ERROR 1
 
 extern int fd_hcd;

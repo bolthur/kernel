@@ -68,7 +68,7 @@ void rpc_hub_attach(
 
   // print
   #if defined ( HUB_ENABLE_DEBUG )
-    STARTUP_PRINT( "Attach called for %"PRIu32" with interface %"PRIu32"\r\n",
+    EARLY_STARTUP_PRINT( "Attach called for %"PRIu32" with interface %"PRIu32"\r\n",
       message->device_number, message->interface_number )
   #endif
 
@@ -138,7 +138,7 @@ void rpc_hub_attach(
   hub->max_children = hub->descriptor->port_count;
   hub->device_number = message->device_number;
   #if defined ( HUB_ENABLE_DEBUG )
-    STARTUP_PRINT( "hub->max_children = %"PRIu32"\r\n", hub->max_children )
+    EARLY_STARTUP_PRINT( "hub->max_children = %"PRIu32"\r\n", hub->max_children )
   #endif
   // validate power switching mode
   if (
@@ -148,7 +148,7 @@ void rpc_hub_attach(
   ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unknown power type %d on %s\r\n",
+      EARLY_STARTUP_PRINT( "Unknown power type %d on %s\r\n",
         hub->descriptor->attributes.power_switching_mode,
         usb_get_description( message->device_number ) )
     #endif
@@ -162,19 +162,19 @@ void rpc_hub_attach(
   #if defined( HUB_ENABLE_DEBUG )
     switch ( hub->descriptor->attributes.power_switching_mode ) {
       case LIBUSB_HUB_PORT_CONTROL_GLOBAL:
-        STARTUP_PRINT( "Power mode is global\r\n" )
+        EARLY_STARTUP_PRINT( "Power mode is global\r\n" )
         break;
       case LIBUSB_HUB_PORT_CONTROL_INDIVIDUAL:
-        STARTUP_PRINT( "Power mode is individual\r\n" )
+        EARLY_STARTUP_PRINT( "Power mode is individual\r\n" )
         break;
       case LIBUSB_HUB_PORT_CONTROL_NO_POWER_SWITCHING:
-        STARTUP_PRINT( "Power mode is no power switching supported\r\n" )
+        EARLY_STARTUP_PRINT( "Power mode is no power switching supported\r\n" )
         break;
     }
     if ( hub->descriptor->attributes.compound ) {
-      STARTUP_PRINT( "Hub nature is compound\r\n" )
+      EARLY_STARTUP_PRINT( "Hub nature is compound\r\n" )
     } else {
-      STARTUP_PRINT( "Hub nature is standalone\r\n" )
+      EARLY_STARTUP_PRINT( "Hub nature is standalone\r\n" )
     }
   #endif
   // validate over current protection
@@ -185,7 +185,7 @@ void rpc_hub_attach(
   ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unknown hub over current type %d on %s\r\n",
+      EARLY_STARTUP_PRINT( "Unknown hub over current type %d on %s\r\n",
         hub->descriptor->attributes.power_switching_mode,
         usb_get_description( message->device_number ) )
     #endif
@@ -199,18 +199,18 @@ void rpc_hub_attach(
   #if defined( HUB_ENABLE_DEBUG )
     switch ( hub->descriptor->attributes.over_current_protection ) {
       case LIBUSB_HUB_PORT_CONTROL_GLOBAL:
-        STARTUP_PRINT( "Hub over current protection is global\r\n" )
+        EARLY_STARTUP_PRINT( "Hub over current protection is global\r\n" )
         break;
       case LIBUSB_HUB_PORT_CONTROL_INDIVIDUAL:
-        STARTUP_PRINT( "Hub over current protection is individual\r\n" )
+        EARLY_STARTUP_PRINT( "Hub over current protection is individual\r\n" )
         break;
       case LIBUSB_HUB_PORT_CONTROL_NO_POWER_SWITCHING:
-        STARTUP_PRINT( "Hub has no over current protection\r\n" )
+        EARLY_STARTUP_PRINT( "Hub has no over current protection\r\n" )
         break;
     }
-    STARTUP_PRINT( "Hub power to good: %"PRIu8"ms\r\n", ( uint8_t )( hub->descriptor->power_good_delay * 2 ) )
-    STARTUP_PRINT( "Hub current required: %"PRIu8"mA.\r\n", ( uint8_t )( hub->descriptor->maximum_hub_power * 2 ) )
-    STARTUP_PRINT( "Hub ports: %"PRIu8"\r\n", hub->descriptor->port_count )
+    EARLY_STARTUP_PRINT( "Hub power to good: %"PRIu8"ms\r\n", ( uint8_t )( hub->descriptor->power_good_delay * 2 ) )
+    EARLY_STARTUP_PRINT( "Hub current required: %"PRIu8"mA.\r\n", ( uint8_t )( hub->descriptor->maximum_hub_power * 2 ) )
+    EARLY_STARTUP_PRINT( "Hub ports: %"PRIu8"\r\n", hub->descriptor->port_count )
   #endif
   // retrieve status
   result = hub_get_status( message->device_number, hub );
@@ -218,7 +218,7 @@ void rpc_hub_attach(
   if ( 0 != result ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to fetch hub status for %s: %s\r\n",
+      EARLY_STARTUP_PRINT( "Unable to fetch hub status for %s: %s\r\n",
         usb_get_description( message->device_number ), strerror( result ) )
     #endif
     _syscall_rpc_cleanup();
@@ -231,9 +231,9 @@ void rpc_hub_attach(
   #if defined ( HUB_ENABLE_DEBUG )
     // cache status locally
     const libusb_hub_full_status_t* status = &hub->status;
-    STARTUP_PRINT( "Hub power: %s\r\n",
+    EARLY_STARTUP_PRINT( "Hub power: %s\r\n",
       !status->status.local_power ? "Good" : "Lost")
-    STARTUP_PRINT( "Hub over current condition: %s\r\n",
+    EARLY_STARTUP_PRINT( "Hub over current condition: %s\r\n",
       !status->status.over_current ? "No" : "Yes" )
   #endif
   // power on hub
@@ -241,7 +241,7 @@ void rpc_hub_attach(
   if ( 0 != result ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to power on hub!\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to power on hub!\r\n" )
     #endif
     _syscall_rpc_cleanup();
     free( descriptor );
@@ -254,7 +254,7 @@ void rpc_hub_attach(
   if ( 0 != result ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to get hub status for %s: %s\r\n",
+      EARLY_STARTUP_PRINT( "Unable to get hub status for %s: %s\r\n",
         usb_get_description( message->device_number ), strerror( result ) )
     #endif
     _syscall_rpc_cleanup();
@@ -265,15 +265,15 @@ void rpc_hub_attach(
   }
   // some debug output
   #if defined ( HUB_ENABLE_DEBUG )
-    STARTUP_PRINT( "Hub power: %s\r\n",
+    EARLY_STARTUP_PRINT( "Hub power: %s\r\n",
       !status->status.local_power ? "Good" : "Lost")
-    STARTUP_PRINT( "Hub over current condition: %s\r\n",
+    EARLY_STARTUP_PRINT( "Hub over current condition: %s\r\n",
       !status->status.over_current ? "No" : "Yes" )
   #endif
   // check for connection
   for ( uint32_t port = 0; port < hub->max_children; port++ ) {
     #if defined ( HUB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Checking port %"PRIu32"\r\n", port )
+      EARLY_STARTUP_PRINT( "Checking port %"PRIu32"\r\n", port )
     #endif
     hub_check_connection( message->device_number, hub, ( uint8_t )port );
   }

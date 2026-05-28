@@ -74,7 +74,7 @@ void rpc_hid_attach(
   // handle error
   if ( 0 != result ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to get interface data\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to get interface data\r\n" )
     #endif
     _syscall_rpc_cleanup();
     free( request );
@@ -83,7 +83,7 @@ void rpc_hid_attach(
   // validate class
   if ( interface_descriptor.class != LIBUSB_INTERFACE_CLASS_HID ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Invalid interfacae class\r\n" )
+      EARLY_STARTUP_PRINT( "Invalid interfacae class\r\n" )
     #endif
     _syscall_rpc_cleanup();
     free( request );
@@ -92,7 +92,7 @@ void rpc_hid_attach(
   // validate interface endpoint
   if ( interface_descriptor.endpoint_count < 1 ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Invalid hid device with fewer than one endpoint\r\n" )
+      EARLY_STARTUP_PRINT( "Invalid hid device with fewer than one endpoint\r\n" )
     #endif
     _syscall_rpc_cleanup();
     free( request );
@@ -105,7 +105,7 @@ void rpc_hid_attach(
   // handle error
   if ( 0 != result ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to get endpoint information\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to get endpoint information\r\n" )
     #endif
     _syscall_rpc_cleanup();
     free( request );
@@ -117,7 +117,7 @@ void rpc_hid_attach(
     || LIBUSB_TRANSFER_INTERRUPT != endpoint_descriptor.attributes.transfer
   ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Invalid hid device with unusual endpoints\r\n" )
+      EARLY_STARTUP_PRINT( "Invalid hid device with unusual endpoints\r\n" )
     #endif
     _syscall_rpc_cleanup();
     free( request );
@@ -128,7 +128,7 @@ void rpc_hid_attach(
   result = usb_get_status( message->device_number, &status );
   if ( 0 != result ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to get device status\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to get device status\r\n" )
     #endif
     _syscall_rpc_cleanup();
     free( request );
@@ -137,7 +137,7 @@ void rpc_hid_attach(
   // ensure it's configured
   if ( status != LIBUSB_DEVICE_STATUS_CONFIGURED ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Device not configured\r\n" )
+      EARLY_STARTUP_PRINT( "Device not configured\r\n" )
     #endif
     _syscall_rpc_cleanup();
     free( request );
@@ -147,24 +147,24 @@ void rpc_hid_attach(
   if ( interface_descriptor.subclass == 1 ) {
     #if defined( HID_ENABLE_DEBUG )
       if ( interface_descriptor.protocol == 1 ) {
-        STARTUP_PRINT( "Boot keyboard detected\r\n" )
+        EARLY_STARTUP_PRINT( "Boot keyboard detected\r\n" )
       } else if ( interface_descriptor.protocol == 2 ) {
-        STARTUP_PRINT( "Boot mouse detected\r\n" )
+        EARLY_STARTUP_PRINT( "Boot mouse detected\r\n" )
       } else {
-        STARTUP_PRINT( "Unknown boot device detected\r\n" )
+        EARLY_STARTUP_PRINT( "Unknown boot device detected\r\n" )
       }
     #endif
 
     // switch protocol from boot to report mode
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Reverting from boot to normal hid mode\r\n" )
+      EARLY_STARTUP_PRINT( "Reverting from boot to normal hid mode\r\n" )
     #endif
     result = hid_set_protocol(
       message->device_number, ( uint16_t )message->interface_number,
       HID_PROTOCOL_REPORT );
     if ( 0 != result ) {
       #if defined( HID_ENABLE_DEBUG )
-        STARTUP_PRINT( "Could not revert to report mode\r\n" )
+        EARLY_STARTUP_PRINT( "Could not revert to report mode\r\n" )
       #endif
       _syscall_rpc_cleanup();
       free( request );
@@ -178,7 +178,7 @@ void rpc_hid_attach(
   // handle error
   if ( 0 != result ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to fetch usb device configuration: %s\r\n",
+      EARLY_STARTUP_PRINT( "Unable to fetch usb device configuration: %s\r\n",
         strerror( result ) )
     #endif
     _syscall_rpc_cleanup();
@@ -209,7 +209,7 @@ void rpc_hid_attach(
     }
     // some debug output
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Descriptor %d with length %"PRIu8". Interface: %"PRIu32"\r\n",
+      EARLY_STARTUP_PRINT( "Descriptor %d with length %"PRIu8". Interface: %"PRIu32"\r\n",
         header->descriptor_type, header->descriptor_length, interface_number )
     #endif
     // handle descriptor found
@@ -222,7 +222,7 @@ void rpc_hid_attach(
   // validate hid descriptor
   if ( ! descriptor ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "No hid descriptor in %s with interface %"PRIu32". Cannot be a hid device\r\n",
+      EARLY_STARTUP_PRINT( "No hid descriptor in %s with interface %"PRIu32". Cannot be a hid device\r\n",
         usb_get_description(message->device_number), message->interface_number + 1 )
     #endif
     _syscall_rpc_cleanup();
@@ -232,7 +232,7 @@ void rpc_hid_attach(
   // check for hid version
   if ( descriptor->hid_version > 0x111 ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unsupported hid version: %"PRIx16".%"PRIx16"\r\n",
+      EARLY_STARTUP_PRINT( "Unsupported hid version: %"PRIx16".%"PRIx16"\r\n",
         ( uint16_t )( descriptor->hid_version >> 8 ),
         ( uint16_t )( descriptor->hid_version & 0xff ) )
     #endif
@@ -242,7 +242,7 @@ void rpc_hid_attach(
   }
   // some debug output
   #if defined( HID_ENABLE_DEBUG )
-    STARTUP_PRINT( "Detected hid device: %"PRIx16".%"PRIx16"\r\n",
+    EARLY_STARTUP_PRINT( "Detected hid device: %"PRIx16".%"PRIx16"\r\n",
       ( uint16_t )( descriptor->hid_version >> 8 ),
       ( uint16_t )( descriptor->hid_version & 0xff ) )
     #endif
@@ -250,7 +250,7 @@ void rpc_hid_attach(
   libusb_hid_device_t* device = malloc( sizeof( *device ) );
   if ( ! device ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Could not allocate device structure\r\n" )
+      EARLY_STARTUP_PRINT( "Could not allocate device structure\r\n" )
     #endif
     _syscall_rpc_cleanup();
     free( request );
@@ -267,7 +267,7 @@ void rpc_hid_attach(
   void* report_descriptor = malloc( descriptor->optional[ 0 ].length );
   if ( ! report_descriptor ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Could not allocate reportDescriptor\r\n" )
+      EARLY_STARTUP_PRINT( "Could not allocate reportDescriptor\r\n" )
     #endif
     _syscall_rpc_cleanup();
     free( request );
@@ -293,7 +293,7 @@ void rpc_hid_attach(
   // handle error
   if ( 0 != result ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to get hid report descriptor: %s\r\n",
+      EARLY_STARTUP_PRINT( "Unable to get hid report descriptor: %s\r\n",
         strerror( result ) )
     #endif
     _syscall_rpc_cleanup();
@@ -308,7 +308,7 @@ void rpc_hid_attach(
     device, report_descriptor, descriptor->optional[ 0 ].length );
   if ( 0 != result ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to parse hid report descriptor: %s\r\n",
+      EARLY_STARTUP_PRINT( "Unable to parse hid report descriptor: %s\r\n",
         strerror( result ) )
     #endif
     _syscall_rpc_cleanup();
@@ -330,7 +330,7 @@ void rpc_hid_attach(
   // handle error
   if ( 0 != result ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to call attach device: %s\r\n",
+      EARLY_STARTUP_PRINT( "Unable to call attach device: %s\r\n",
         strerror( result ) )
     #endif
     _syscall_rpc_cleanup();

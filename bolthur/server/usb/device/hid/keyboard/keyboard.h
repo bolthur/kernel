@@ -22,7 +22,7 @@
 
 #include "../../../../libusb.h"
 
-//#define KEYBOARD_ENABLE_DEBUG 1
+#define KEYBOARD_ENABLE_DEBUG 1
 #define KEYBOARD_ENABLE_ERROR 1
 
 extern libusb_keyboard_device_t* keyboard_head;

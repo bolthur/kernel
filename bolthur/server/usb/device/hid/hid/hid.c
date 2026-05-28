@@ -280,9 +280,9 @@ void hid_enumerate_action_add_field_process(
   libusb_hid_parser_report_t* report = NULL;
   for ( uint32_t idx = 0; idx < field->result->report_count; idx++ ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->id = %"PRIu8"\r\n",
+      EARLY_STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->id = %"PRIu8"\r\n",
         idx, field->result->report[ idx ]->id )
-      STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->type = %d\r\n",
+      EARLY_STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->type = %d\r\n",
         idx, field->result->report[ idx ]->type )
     #endif
     if (
@@ -296,7 +296,7 @@ void hid_enumerate_action_add_field_process(
   // handle no report found
   if ( ! report ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Report not found for %"PRIu8" / %d\r\n",
+      EARLY_STARTUP_PRINT( "Report not found for %"PRIu8" / %d\r\n",
         field->report, type )
     #endif
     return;
@@ -548,14 +548,14 @@ int hid_parse_report_descriptor(
   // enumerate action count
   hid_enumerate_report( descriptor, length, hid_enumerate_action_count_report, &header );
   #if defined( HID_ENABLE_DEBUG )
-    STARTUP_PRINT( "Found %"PRIu8" reports!\r\n", header.count )
+    EARLY_STARTUP_PRINT( "Found %"PRIu8" reports!\r\n", header.count )
   #endif
   // allocate space
   libusb_hid_parser_result_t* result = malloc(
     sizeof( libusb_hid_parser_result_t ) + sizeof( libusb_hid_parser_report_t* ) * header.count );
   if ( ! result ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to allocate memory for parser result\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to allocate memory for parser result\r\n" )
     #endif
     return ENOMEM;
   }
@@ -565,7 +565,7 @@ int hid_parse_report_descriptor(
   report_field = malloc( sizeof( hid_report_field_t ) + sizeof( hid_report_field_data_t ) * header.count );
   if ( ! report_field ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to allocate memory for report field\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to allocate memory for report field\r\n" )
     #endif
     free( result );
     return ENOMEM;
@@ -584,7 +584,7 @@ int hid_parse_report_descriptor(
     // handle error
     if ( ! result->report[ idx ] ) {
       #if defined( HID_ENABLE_DEBUG )
-        STARTUP_PRINT( "Unable to allocate space for report\r\n" )
+        EARLY_STARTUP_PRINT( "Unable to allocate space for report\r\n" )
       #endif
       // free possible reports
       for ( size_t free_idx = 0; free_idx < header.count; free_idx++ ) {
@@ -613,7 +613,7 @@ int hid_parse_report_descriptor(
   field = malloc( sizeof( hid_field_t ) );
   if ( ! field ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to allocate space for report\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for report\r\n" )
     #endif
     // free possible reports
     for ( size_t free_idx = 0; free_idx < header.count; free_idx++ ) {
@@ -631,7 +631,7 @@ int hid_parse_report_descriptor(
   field->usage = calloc( 16, sizeof( libusb_hid_full_usage_t* ) );
   if ( ! field->usage ) {
     #if defined( HID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to allocate space for report\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for report\r\n" )
     #endif
     // free possible reports
     for ( size_t free_idx = 0; free_idx < header.count; free_idx++ ) {

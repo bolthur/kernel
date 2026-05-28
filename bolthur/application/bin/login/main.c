@@ -49,13 +49,10 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       free( username );
       continue;
     }
+    // append end of string
     username[ strlen( username ) - 1 ] = '\0';
-    printf( "%s\r\n", username );
-    fflush( stdout );
-
     // read password
     char* password = getpass( "password: " );
-    password[ strlen( password ) - 1 ] = '\0';
 
     // debug output
     STARTUP_PRINT( "username: %s\r\npassword: %s\r\n", username, password );

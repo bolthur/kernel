@@ -158,7 +158,7 @@ int dwhciroothub_process(
   if ( LIBUSB_TRANSFER_INTERRUPT == pipe.type ) {
     // debug output
     #if defined ( DWHCI_ENABLE_DEBUG )
-      STARTUP_PRINT( "Root hub does not support irq pipes\r\n" )
+      EARLY_STARTUP_PRINT( "Root hub does not support irq pipes\r\n" )
     #endif
     // set error
     *error = LIBUSB_TRANSFER_ERROR_STALL;
@@ -207,7 +207,7 @@ int dwhciroothub_process(
             break;
           }
           #if defined( DWHCI_ENABLE_DEBUG )
-            STARTUP_PRINT( "host_port = %"PRIx32"\r\n", host_port )
+            EARLY_STARTUP_PRINT( "host_port = %"PRIx32"\r\n", host_port )
           #endif
           // push to local variable
           libusb_hub_port_full_status_t status = {
@@ -234,7 +234,7 @@ int dwhciroothub_process(
             status.status.low_speed_attached = true;
           }
           // copy over to buffer
-          const uint32_t val = 0;
+          constexpr uint32_t val = 0;
           memcpy( buffer, &val, sizeof( val ) );
           memcpy( buffer, &status, sizeof( status ) );
           reply_length = 4;
@@ -253,7 +253,7 @@ int dwhciroothub_process(
           switch ( ( libusb_hub_port_feature_t)request->value ) {
             case LIBUSB_HUB_PORT_FEATURE_ENABLE:
               #if defined( DWHCI_ENABLE_DEBUG )
-                STARTUP_PRINT( "roothub port feature enable!\r\n" )
+                EARLY_STARTUP_PRINT( "roothub port feature enable!\r\n" )
               #endif
               // read host port
               dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_PORT, &host_port );
@@ -272,7 +272,7 @@ int dwhciroothub_process(
               break;
             case LIBUSB_HUB_PORT_FEATURE_SUSPEND:
               #if defined( DWHCI_ENABLE_DEBUG )
-                STARTUP_PRINT( "roothub port feature suspend!\r\n" )
+                EARLY_STARTUP_PRINT( "roothub port feature suspend!\r\n" )
               #endif
               // allocate sequence
               sequence = util_prepare_mmio_sequence( 7, &sequence_size );
@@ -330,7 +330,7 @@ int dwhciroothub_process(
               break;
             case LIBUSB_HUB_PORT_FEATURE_POWER:
               #if defined( DWHCI_ENABLE_DEBUG )
-                STARTUP_PRINT( "roothub port feature power!\r\n" )
+                EARLY_STARTUP_PRINT( "roothub port feature power!\r\n" )
               #endif
               // read host port
               dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_PORT, &host_port );
@@ -349,7 +349,7 @@ int dwhciroothub_process(
               break;
             case LIBUSB_HUB_PORT_FEATURE_CONNECTION_CHANGE:
               #if defined( DWHCI_ENABLE_DEBUG )
-                STARTUP_PRINT( "roothub port feature connection change!\r\n" )
+                EARLY_STARTUP_PRINT( "roothub port feature connection change!\r\n" )
               #endif
               // read host port
               dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_PORT, &host_port );
@@ -368,7 +368,7 @@ int dwhciroothub_process(
               break;
             case LIBUSB_HUB_PORT_FEATURE_ENABLE_CHANGE:
               #if defined( DWHCI_ENABLE_DEBUG )
-                STARTUP_PRINT( "roothub port feature enable change!\r\n" )
+                EARLY_STARTUP_PRINT( "roothub port feature enable change!\r\n" )
               #endif
               // read host port
               dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_PORT, &host_port );
@@ -387,7 +387,7 @@ int dwhciroothub_process(
               break;
             case LIBUSB_HUB_PORT_FEATURE_OVER_CURRENT_CHANGE:
               #if defined( DWHCI_ENABLE_DEBUG )
-                STARTUP_PRINT( "roothub port feature over current change!\r\n" )
+                EARLY_STARTUP_PRINT( "roothub port feature over current change!\r\n" )
               #endif
               // read host port
               dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_PORT, &host_port );
@@ -419,7 +419,7 @@ int dwhciroothub_process(
           switch ( ( libusb_hub_port_feature_t )request->value ) {
             case LIBUSB_HUB_PORT_FEATURE_RESET:
               #if defined( DWHCI_ENABLE_DEBUG )
-                STARTUP_PRINT( "roothub port feature reset!\r\n" )
+                EARLY_STARTUP_PRINT( "roothub port feature reset!\r\n" )
               #endif
               // allocate sequence
               sequence = util_prepare_mmio_sequence( 8, &sequence_size );
@@ -479,7 +479,7 @@ int dwhciroothub_process(
               break;
             case LIBUSB_HUB_PORT_FEATURE_POWER:
               #if defined( DWHCI_ENABLE_DEBUG )
-                STARTUP_PRINT( "roothub port feature power!\r\n" )
+                EARLY_STARTUP_PRINT( "roothub port feature power!\r\n" )
               #endif
               // read host port
               dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_PORT, &host_port );

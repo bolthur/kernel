@@ -36,7 +36,7 @@ int call_attach( libusb_device_t* dev, const uint32_t interface_number ) {
   if ( 0 != result ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while fetching handler for %d: %s\r\n",
+      EARLY_STARTUP_PRINT( "Error while fetching handler for %d: %s\r\n",
         dev->interfaces[ 0 ].class, strerror( result ) )
     #endif
     // return result
@@ -46,7 +46,7 @@ int call_attach( libusb_device_t* dev, const uint32_t interface_number ) {
   if ( -1 == handler ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "No handler found for %d\r\n", dev->interfaces[ 0 ].class )
+      EARLY_STARTUP_PRINT( "No handler found for %d\r\n", dev->interfaces[ 0 ].class )
     #endif
     // return success
     return 0;
@@ -66,7 +66,7 @@ int call_attach( libusb_device_t* dev, const uint32_t interface_number ) {
   if ( ! request ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while allocating rpc request\r\n" )
+      EARLY_STARTUP_PRINT( "Error while allocating rpc request\r\n" )
     #endif
     // return nomem
     return ENOMEM;
@@ -101,7 +101,7 @@ int call_attach( libusb_device_t* dev, const uint32_t interface_number ) {
     const int e = errno;
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
+      EARLY_STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
         strerror( e ) )
     #endif
     // free request
@@ -126,7 +126,7 @@ int call_detached( const libusb_device_t* dev ) {
   if ( ! dev->device_detached_handler ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "No handler found for %d\r\n", dev->interfaces[ 0 ].class )
+      EARLY_STARTUP_PRINT( "No handler found for %d\r\n", dev->interfaces[ 0 ].class )
     #endif
     // return success
     return 0;
@@ -138,7 +138,7 @@ int call_detached( const libusb_device_t* dev ) {
   if ( ! request ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while allocating rpc request\r\n" )
+      EARLY_STARTUP_PRINT( "Error while allocating rpc request\r\n" )
     #endif
     // return nomem
     return ENOMEM;
@@ -169,7 +169,7 @@ int call_detached( const libusb_device_t* dev ) {
     const int e = errno;
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
+      EARLY_STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
         strerror( e ) )
     #endif
     // free request
@@ -194,7 +194,7 @@ int call_deallocate( const libusb_device_t* dev ) {
   if ( ! dev->device_deallocate_handler ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "No handler found for %d\r\n", dev->interfaces[ 0 ].class )
+      EARLY_STARTUP_PRINT( "No handler found for %d\r\n", dev->interfaces[ 0 ].class )
     #endif
     // return success
     return 0;
@@ -206,7 +206,7 @@ int call_deallocate( const libusb_device_t* dev ) {
   if ( ! request ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while allocating rpc request\r\n" )
+      EARLY_STARTUP_PRINT( "Error while allocating rpc request\r\n" )
     #endif
     // return nomem
     return ENOMEM;
@@ -237,7 +237,7 @@ int call_deallocate( const libusb_device_t* dev ) {
     const int e = errno;
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
+      EARLY_STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
         strerror( e ) )
     #endif
     // free request
@@ -262,7 +262,7 @@ int call_check_for_change( const libusb_device_t* dev ) {
   if ( ! dev->device_check_for_change_handler ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "No handler found for %d\r\n", dev->interfaces[ 0 ].class )
+      EARLY_STARTUP_PRINT( "No handler found for %d\r\n", dev->interfaces[ 0 ].class )
     #endif
     // return success
     return 0;
@@ -274,7 +274,7 @@ int call_check_for_change( const libusb_device_t* dev ) {
   if ( ! request ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while allocating rpc request\r\n" )
+      EARLY_STARTUP_PRINT( "Error while allocating rpc request\r\n" )
     #endif
     // return nomem
     return ENOMEM;
@@ -305,7 +305,7 @@ int call_check_for_change( const libusb_device_t* dev ) {
     const int e = errno;
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
+      EARLY_STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
         strerror( e ) )
     #endif
     // free request
@@ -331,7 +331,7 @@ int call_child_detached( const libusb_device_t* parent, const libusb_device_t* c
   if ( ! parent->device_child_detached_handler ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "No handler found for %d\r\n", parent->interfaces[ 0 ].class )
+      EARLY_STARTUP_PRINT( "No handler found for %d\r\n", parent->interfaces[ 0 ].class )
     #endif
     // return success
     return 0;
@@ -343,7 +343,7 @@ int call_child_detached( const libusb_device_t* parent, const libusb_device_t* c
   if ( ! request ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while allocating rpc request\r\n" )
+      EARLY_STARTUP_PRINT( "Error while allocating rpc request\r\n" )
     #endif
     // return nomem
     return ENOMEM;
@@ -375,7 +375,7 @@ int call_child_detached( const libusb_device_t* parent, const libusb_device_t* c
     const int e = errno;
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
+      EARLY_STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
         strerror( e ) )
     #endif
     // free request
@@ -401,7 +401,7 @@ int call_child_reset( const libusb_device_t* parent, const libusb_device_t* chil
   if ( ! parent->device_child_reset_handler ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "No handler found for %d\r\n", parent->interfaces[ 0 ].class )
+      EARLY_STARTUP_PRINT( "No handler found for %d\r\n", parent->interfaces[ 0 ].class )
     #endif
     // return success
     return 0;
@@ -413,7 +413,7 @@ int call_child_reset( const libusb_device_t* parent, const libusb_device_t* chil
   if ( ! request ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while allocating rpc request\r\n" )
+      EARLY_STARTUP_PRINT( "Error while allocating rpc request\r\n" )
     #endif
     // return nomem
     return ENOMEM;
@@ -445,7 +445,7 @@ int call_child_reset( const libusb_device_t* parent, const libusb_device_t* chil
     const int e = errno;
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
+      EARLY_STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
         strerror( e ) )
     #endif
     // free request
@@ -471,7 +471,7 @@ int call_child_check_connection( const libusb_device_t* parent, const libusb_dev
   if ( ! parent->device_check_connection_handler ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "No handler found for %d\r\n", parent->interfaces[ 0 ].class )
+      EARLY_STARTUP_PRINT( "No handler found for %d\r\n", parent->interfaces[ 0 ].class )
     #endif
     // return success
     return 0;
@@ -483,7 +483,7 @@ int call_child_check_connection( const libusb_device_t* parent, const libusb_dev
   if ( ! request ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while allocating rpc request\r\n" )
+      EARLY_STARTUP_PRINT( "Error while allocating rpc request\r\n" )
     #endif
     // return nomem
     return ENOMEM;
@@ -515,7 +515,7 @@ int call_child_check_connection( const libusb_device_t* parent, const libusb_dev
     const int e = errno;
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
+      EARLY_STARTUP_PRINT( "Error while sending request to handler: %s\r\n",
         strerror( e ) )
     #endif
     // free request

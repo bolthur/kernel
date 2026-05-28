@@ -139,7 +139,7 @@ void rpc_keyboard_key(
     dev->modifier.left_control = dev->key_field[ 0 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_DEBUG )
       if (dev->modifier.left_control) {
-        STARTUP_PRINT( "Left control\r\n" )
+        EARLY_STARTUP_PRINT( "Left control\r\n" )
       }
     #endif
   }
@@ -147,7 +147,7 @@ void rpc_keyboard_key(
     dev->modifier.left_shift = dev->key_field[ 1 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_DEBUG )
       if (dev->modifier.left_shift) {
-        STARTUP_PRINT( "Left shift\r\n" )
+        EARLY_STARTUP_PRINT( "Left shift\r\n" )
       }
     #endif
   }
@@ -155,7 +155,7 @@ void rpc_keyboard_key(
     dev->modifier.left_alt = dev->key_field[ 2 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_DEBUG )
       if (dev->modifier.left_alt) {
-        STARTUP_PRINT( "Left alt\r\n" )
+        EARLY_STARTUP_PRINT( "Left alt\r\n" )
       }
     #endif
   }
@@ -163,7 +163,7 @@ void rpc_keyboard_key(
     dev->modifier.left_gui = dev->key_field[ 3 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_DEBUG )
       if (dev->modifier.left_gui) {
-        STARTUP_PRINT( "Left gui\r\n" )
+        EARLY_STARTUP_PRINT( "Left gui\r\n" )
       }
     #endif
   }
@@ -171,7 +171,7 @@ void rpc_keyboard_key(
     dev->modifier.right_control = dev->key_field[ 4 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_DEBUG )
       if (dev->modifier.right_control) {
-        STARTUP_PRINT( "Right control\r\n" )
+        EARLY_STARTUP_PRINT( "Right control\r\n" )
       }
     #endif
   }
@@ -179,7 +179,7 @@ void rpc_keyboard_key(
     dev->modifier.right_shift = dev->key_field[ 5 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_DEBUG )
       if (dev->modifier.right_shift) {
-        STARTUP_PRINT( "Right shift\r\n" )
+        EARLY_STARTUP_PRINT( "Right shift\r\n" )
       }
     #endif
   }
@@ -187,7 +187,7 @@ void rpc_keyboard_key(
     dev->modifier.right_alt = dev->key_field[ 6 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_DEBUG )
       if (dev->modifier.right_alt) {
-        STARTUP_PRINT( "Right alt\r\n" )
+        EARLY_STARTUP_PRINT( "Right alt\r\n" )
       }
     #endif
   }
@@ -195,7 +195,7 @@ void rpc_keyboard_key(
     dev->modifier.right_gui = dev->key_field[ 7 ]->value._bool;
     #if defined( KEYBOARD_ENABLE_DEBUG )
       if (dev->modifier.right_gui) {
-        STARTUP_PRINT( "Right gui\r\n" )
+        EARLY_STARTUP_PRINT( "Right gui\r\n" )
       }
     #endif
   }
@@ -224,7 +224,7 @@ void rpc_keyboard_key(
       // debug output
       #if defined( KEYBOARD_ENABLE_DEBUG )
         for ( size_t i = 0; i < dev->key_count; i++ ) {
-          STARTUP_PRINT( "key: %"PRIu16"\r\n", dev->max_key_down[ i ] );
+          EARLY_STARTUP_PRINT( "key: %"PRIu16"\r\n", dev->max_key_down[ i ] );
         }
       #endif
     }
@@ -240,7 +240,7 @@ void rpc_keyboard_key(
     }
     // debug print physical key and key code
     #if defined ( KEYBOARD_ENABLE_DEBUG )
-      STARTUP_PRINT( "key: %02"PRIx16" / %02"PRIx16" / %c\r\n",
+      EARLY_STARTUP_PRINT( "key: %02"PRIx16" / %02"PRIx16" / %c\r\n",
         dev->max_key_down[ i ], key, (uint8_t)key );
     #endif
     // clear buffer and translate to string

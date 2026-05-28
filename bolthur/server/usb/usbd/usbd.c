@@ -62,7 +62,7 @@ pid_t* class_handler;
 void usbd_deallocate_device( libusb_device_t* dev ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Deallocating device\r\n" )
+    EARLY_STARTUP_PRINT( "Deallocating device\r\n" )
   #endif
   // handle invalid parameter
   if ( ! dev ) {
@@ -73,7 +73,7 @@ void usbd_deallocate_device( libusb_device_t* dev ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "unable to call detached handler\r\n" )
+      EARLY_STARTUP_PRINT( "unable to call detached handler\r\n" )
     #endif
     // skip rest
     return;
@@ -83,7 +83,7 @@ void usbd_deallocate_device( libusb_device_t* dev ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "unable to call deallocate handler\r\n" )
+      EARLY_STARTUP_PRINT( "unable to call deallocate handler\r\n" )
     #endif
     // skip rest
     return;
@@ -94,7 +94,7 @@ void usbd_deallocate_device( libusb_device_t* dev ) {
     if ( 0 != result ) {
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
-        STARTUP_PRINT( "unable to call child detached handler\r\n" )
+        EARLY_STARTUP_PRINT( "unable to call child detached handler\r\n" )
       #endif
       // skip rest
       return;
@@ -146,7 +146,7 @@ void usbd_deallocate_device( libusb_device_t* dev ) {
 int usbd_allocate_device( libusb_device_t** dev, bool insert_head ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Allocating device\r\n" )
+    EARLY_STARTUP_PRINT( "Allocating device\r\n" )
   #endif
   // validate parameter
   if ( ! dev ) {
@@ -239,7 +239,7 @@ int usbd_control_message(
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "firing hcd control message\r\n" )
+    EARLY_STARTUP_PRINT( "firing hcd control message\r\n" )
   #endif
   // allocate shared memory
   const size_t data_size = sizeof ( hcd_control_message_t ) + buffer_length + 1;
@@ -249,7 +249,7 @@ int usbd_control_message(
     const int e = errno;
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
     #endif
     // return error
     return e;
@@ -261,7 +261,7 @@ int usbd_control_message(
     const int e = errno;
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
     #endif
     // return error
     return e;
@@ -283,7 +283,7 @@ int usbd_control_message(
   if ( ! control_request ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to allocate request\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to allocate request\r\n" )
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -309,7 +309,7 @@ int usbd_control_message(
     // debug output
     #if defined( USBD_ENABLE_ERROR )
       const int e = errno;
-      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
+      EARLY_STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -322,7 +322,7 @@ int usbd_control_message(
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
     #if defined( USBD_ENABLE_ERROR )
-      STARTUP_PRINT( "error = %#x\r\n", message->error )
+      EARLY_STARTUP_PRINT( "error = %#x\r\n", message->error )
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -337,7 +337,7 @@ int usbd_control_message(
     if ( dev->parent ) {
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
-        STARTUP_PRINT( "Verifying %s is still connected\r\n", usbd_get_description( dev ) )
+        EARLY_STARTUP_PRINT( "Verifying %s is still connected\r\n", usbd_get_description( dev ) )
       #endif
       // check connection
       result = call_child_check_connection( dev->parent, dev );
@@ -352,7 +352,7 @@ int usbd_control_message(
       }
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
-        STARTUP_PRINT( "%s is still connected\r\n", usbd_get_description( dev ) )
+        EARLY_STARTUP_PRINT( "%s is still connected\r\n", usbd_get_description( dev ) )
       #endif
       // set result to error
       result = EIO;
@@ -396,7 +396,7 @@ int usbd_poll_interrupt(
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "firing hcd poll interrupt message\r\n" )
+    EARLY_STARTUP_PRINT( "firing hcd poll interrupt message\r\n" )
   #endif
   // allocate shared memory
   const size_t data_size = sizeof ( hcd_interrupt_poll_t ) + buffer_length + 1;
@@ -406,7 +406,7 @@ int usbd_poll_interrupt(
     const int e = errno;
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
     #endif
     // return error
     return e;
@@ -418,7 +418,7 @@ int usbd_poll_interrupt(
     const int e = errno;
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
     #endif
     // return error
     return e;
@@ -441,7 +441,7 @@ int usbd_poll_interrupt(
   if ( ! control_request ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to allocate request\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to allocate request\r\n" )
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -467,7 +467,7 @@ int usbd_poll_interrupt(
     // debug output
     #if defined( USBD_ENABLE_ERROR )
       const int e = errno;
-      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
+      EARLY_STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -480,7 +480,7 @@ int usbd_poll_interrupt(
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "error = %#x\r\n", message->error )
+      EARLY_STARTUP_PRINT( "error = %#x\r\n", message->error )
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -495,7 +495,7 @@ int usbd_poll_interrupt(
     if ( dev->parent ) {
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
-        STARTUP_PRINT( "Verifying %s is still connected\r\n", usbd_get_description( dev ) )
+        EARLY_STARTUP_PRINT( "Verifying %s is still connected\r\n", usbd_get_description( dev ) )
       #endif
       // check connection
       result = call_child_check_connection( dev->parent, dev );
@@ -510,7 +510,7 @@ int usbd_poll_interrupt(
       }
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
-        STARTUP_PRINT( "%s is still connected\r\n", usbd_get_description( dev ) )
+        EARLY_STARTUP_PRINT( "%s is still connected\r\n", usbd_get_description( dev ) )
       #endif
       // set result to error
       result = EIO;
@@ -582,7 +582,7 @@ int usbd_get_descriptor(
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Failed to get descriptor: %#x:%#"PRIx8" for device: %s. Result: %s\r\n",
+      EARLY_STARTUP_PRINT( "Failed to get descriptor: %#x:%#"PRIx8" for device: %s. Result: %s\r\n",
         type, index, usbd_get_description( dev ), strerror( result ) )
     #endif
     // return result
@@ -592,7 +592,7 @@ int usbd_get_descriptor(
   if ( dev->last_transfer < minimum_length ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unexpectedly short descriptor (%"PRIu32"/%zu) %#x:%#"PRIx8" for device %s. Result: %#x\r\n",
+      EARLY_STARTUP_PRINT( "Unexpectedly short descriptor (%"PRIu32"/%zu) %#x:%#"PRIx8" for device %s. Result: %#x\r\n",
         dev->last_transfer, minimum_length, type, index, usbd_get_description( dev ), result )
     #endif
     // return protocol error
@@ -690,7 +690,7 @@ int usbd_read_string(
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error getting languages for %s: %s\r\n",
+      EARLY_STARTUP_PRINT( "Error getting languages for %s: %s\r\n",
         usbd_get_description( dev ), strerror( result ) )
     #endif
     // return result
@@ -699,7 +699,7 @@ int usbd_read_string(
   // handle invalid transfer
   if ( dev->last_transfer < 4 ) {
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unexpectedly short language list from %s\r\n",
+      EARLY_STARTUP_PRINT( "Unexpectedly short language list from %s\r\n",
         usbd_get_description( dev ) )
     #endif
     // return error
@@ -713,7 +713,7 @@ int usbd_read_string(
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Error getting languages for %s: %s\r\n",
+      EARLY_STARTUP_PRINT( "Error getting languages for %s: %s\r\n",
         usbd_get_description( dev ), strerror( result ) )
     #endif
     // return error
@@ -744,7 +744,7 @@ int usbd_read_string(
 int usbd_read_device_descriptor( libusb_device_t* dev ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Read device descriptor\r\n" )
+    EARLY_STARTUP_PRINT( "Read device descriptor\r\n" )
   #endif
 
   if ( LIBUSB_SPEED_LOW == dev->speed ) {
@@ -811,13 +811,13 @@ int usbd_read_device_descriptor( libusb_device_t* dev ) {
 int usbd_set_address( libusb_device_t* dev, const uint8_t address ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Set address\r\n" )
+    EARLY_STARTUP_PRINT( "Set address\r\n" )
   #endif
   // validate
   if ( LIBUSB_DEVICE_STATUS_DEFAULT != dev->status ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
+      EARLY_STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
         usbd_get_description( dev ), dev->status )
     #endif
     // return error
@@ -868,7 +868,7 @@ int usbd_set_configuration( libusb_device_t* dev, const uint8_t configuration ) 
   if ( LIBUSB_DEVICE_STATUS_ADDRESSED != dev->status ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
+      EARLY_STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
         usbd_get_description( dev ), dev->status )
     #endif
     // return error
@@ -920,7 +920,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
   if ( LIBUSB_DEVICE_STATUS_ADDRESSED != dev->status ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
+      EARLY_STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
         usbd_get_description( dev ), dev->status )
     #endif
     // return error
@@ -935,7 +935,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Failed to retrieve configuration descriptor %#"PRIx8" for device %s\r\n",
+      EARLY_STARTUP_PRINT( "Failed to retrieve configuration descriptor %#"PRIx8" for device %s\r\n",
         configuration, usbd_get_description( dev ) )
     #endif
     // return error
@@ -946,7 +946,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
   if ( ! full_descriptor ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Failed to allocate full descriptor for device %s\r\n",
+      EARLY_STARTUP_PRINT( "Failed to allocate full descriptor for device %s\r\n",
         usbd_get_description( dev ) )
     #endif
     // return error
@@ -960,7 +960,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
   // handle error
   if ( 0 != result ) {
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Failed to retrieve full configuration descriptor %#"PRIx8" for device %s\r\n",
+      EARLY_STARTUP_PRINT( "Failed to retrieve full configuration descriptor %#"PRIx8" for device %s\r\n",
         configuration, usbd_get_description( dev ) )
     #endif
     // free memory again
@@ -1014,7 +1014,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
         ) {
           // debug output
           #if defined (USBD_ENABLE_DEBUG )
-            STARTUP_PRINT( "Unexpected endpoint descriptor in %s.Interface: %"PRIu32,
+            EARLY_STARTUP_PRINT( "Unexpected endpoint descriptor in %s.Interface: %"PRIu32,
               usbd_get_description( dev ), last_interface + 1 )
           #endif
           // stop here
@@ -1037,7 +1037,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
     }
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Descriptor %"PRIu8" length %"PRIu8", interface %"PRIu32"\r\n",
+      EARLY_STARTUP_PRINT( "Descriptor %"PRIu8" length %"PRIu8", interface %"PRIu32"\r\n",
         header->descriptor_type, header->descriptor_length, last_interface )
     #endif
   }
@@ -1047,7 +1047,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to set configuration for device %s: %s\r\n",
+      EARLY_STARTUP_PRINT( "Unable to set configuration for device %s: %s\r\n",
         usbd_get_description( dev ), strerror( result ) )
     #endif
     // free memory again
@@ -1057,7 +1057,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
   }
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT(
+    EARLY_STARTUP_PRINT(
       "%s configuration %"PRIu8", class: %"PRIu8", subclass: %"PRIu8"\r\n",
       usbd_get_description( dev ), configuration,
       dev->interfaces[ 0 ].class, dev->interfaces[ 0 ].subclass )
@@ -1173,7 +1173,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
   dev->number = 0;
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Scanning %"PRIu8". %s.\r\n", address, usb_speed_to_string( dev->speed ) )
+    EARLY_STARTUP_PRINT( "Scanning %"PRIu8". %s.\r\n", address, usb_speed_to_string( dev->speed ) )
   #endif
   // read device descriptor
   int result = usbd_read_device_descriptor( dev );
@@ -1181,7 +1181,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Reading device descriptor failed: %s\r\n", strerror( result ) )
+      EARLY_STARTUP_PRINT( "Reading device descriptor failed: %s\r\n", strerror( result ) )
     #endif
     // restore number
     dev->number = address;
@@ -1198,7 +1198,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
     if ( 0 != result ) {
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
-        STARTUP_PRINT( "Reset child device failed: %s\r\n", strerror( result ) )
+        EARLY_STARTUP_PRINT( "Reset child device failed: %s\r\n", strerror( result ) )
       #endif
       // restore number
       dev->number = address;
@@ -1212,7 +1212,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Set address failed: %s\r\n", strerror( result ) )
+      EARLY_STARTUP_PRINT( "Set address failed: %s\r\n", strerror( result ) )
     #endif
     // restore number
     dev->number = address;
@@ -1227,19 +1227,19 @@ int usbd_attach_device( libusb_device_t* dev ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Reading device descriptor failed: %s\r\n", strerror( result ) )
+      EARLY_STARTUP_PRINT( "Reading device descriptor failed: %s\r\n", strerror( result ) )
     #endif
     // return result
     return result;
   }
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Attach Device %s. Address:%"PRIu8" Class:%d Subclass:%"PRIu8
+    EARLY_STARTUP_PRINT( "Attach Device %s. Address:%"PRIu8" Class:%d Subclass:%"PRIu8
       " USB:%"PRIx16".%"PRIx16". %"PRIu8" configurations, %"PRIu8" interfaces.\n",
       usbd_get_description( dev ), address, dev->descriptor.class, dev->descriptor.subclass,
       ( uint16_t )( dev->descriptor.usb_version >> 8 ), ( uint16_t )( dev->descriptor.usb_version >> 4 ),
       dev->descriptor.configuration_count, dev->configuration.interface_count )
-    STARTUP_PRINT( "Device Attached: %s\r\n", usbd_get_description( dev ) )
+    EARLY_STARTUP_PRINT( "Device Attached: %s\r\n", usbd_get_description( dev ) )
   #endif
   // allocate buffer for printing
   char* buffer = malloc( 1024 );
@@ -1249,7 +1249,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
     if ( 0 == result ) {
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
-        STARTUP_PRINT( "-Product: %s\r\n", buffer )
+        EARLY_STARTUP_PRINT( "-Product: %s\r\n", buffer )
       #endif
     }
   }
@@ -1259,7 +1259,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
     if ( 0 == result ) {
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
-        STARTUP_PRINT( "-Manufacturer: %s\r\n", buffer )
+        EARLY_STARTUP_PRINT( "-Manufacturer: %s\r\n", buffer )
       #endif
     }
   }
@@ -1269,13 +1269,13 @@ int usbd_attach_device( libusb_device_t* dev ) {
     if ( 0 == result ) {
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
-        STARTUP_PRINT( "-Serial number: %s\r\n", buffer )
+        EARLY_STARTUP_PRINT( "-Serial number: %s\r\n", buffer )
       #endif
     }
   }
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT("-VIID:PID: %"PRIx16":%"PRIx16" v%"PRIu16":%"PRIx16"\r\n",
+    EARLY_STARTUP_PRINT("-VIID:PID: %"PRIx16":%"PRIx16" v%"PRIu16":%"PRIx16"\r\n",
       dev->descriptor.vendor_id, dev->descriptor.product_id,
       ( uint16_t )( dev->descriptor.version >> 8 ), ( uint16_t )( dev->descriptor.version & 0xff ) )
   #endif
@@ -1284,7 +1284,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Configure failed: %s\r\n", strerror( result ) )
+      EARLY_STARTUP_PRINT( "Configure failed: %s\r\n", strerror( result ) )
     #endif
     // return error
     return result;
@@ -1296,7 +1296,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
     if ( 0 == result ) {
       // debug ouptut
       #if defined( USBD_ENABLE_DEBUG )
-        STARTUP_PRINT( "-Configuration: %s\r\n", buffer )
+        EARLY_STARTUP_PRINT( "-Configuration: %s\r\n", buffer )
       #endif
     }
   }
@@ -1306,7 +1306,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
   }
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "dev->interfaces[ 0 ].class = %d\r\n", dev->interfaces[ 0 ].class )
+    EARLY_STARTUP_PRINT( "dev->interfaces[ 0 ].class = %d\r\n", dev->interfaces[ 0 ].class )
   #endif
   // call to attach the device
   result = call_attach( dev, 0 );
@@ -1314,7 +1314,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Failed calling attach: %s\r\n", strerror( result ) )
+      EARLY_STARTUP_PRINT( "Failed calling attach: %s\r\n", strerror( result ) )
     #endif
     // return result
     return result;
@@ -1331,7 +1331,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
 int usbd_attach_root_hub( void ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Attaching root hob\r\n" )
+    EARLY_STARTUP_PRINT( "Attaching root hob\r\n" )
   #endif
   // space for root hub
   libusb_device_t* root_hub = nullptr;
@@ -1345,7 +1345,7 @@ int usbd_attach_root_hub( void ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Allocating root hub failed: %s\r\n", strerror( result ) )
+      EARLY_STARTUP_PRINT( "Allocating root hub failed: %s\r\n", strerror( result ) )
     #endif
     // return result
     return result;
@@ -1358,7 +1358,7 @@ int usbd_attach_root_hub( void ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Attaching root hub failed: %s\r\n", strerror( result ) )
+      EARLY_STARTUP_PRINT( "Attaching root hub failed: %s\r\n", strerror( result ) )
     #endif
     // return result
     return result;
@@ -1385,24 +1385,24 @@ libusb_device_t* usbd_get_root_hub( void ) {
 int usbd_init( void ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Init usbd\r\n" )
+    EARLY_STARTUP_PRINT( "Init usbd\r\n" )
   #endif
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Opening device %s\r\n", HCD_DEVICE_PATH )
+    EARLY_STARTUP_PRINT( "Opening device %s\r\n", HCD_DEVICE_PATH )
   #endif
   // open file descriptor for mmio actions
   if ( -1 == ( fd_hcd = open( HCD_DEVICE_PATH, O_RDWR ) ) ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to open device\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to open device\r\n" )
     #endif
     // return error response
     return ENXIO;
   }
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    STARTUP_PRINT( "Attaching root hub\r\n" )
+    EARLY_STARTUP_PRINT( "Attaching root hub\r\n" )
   #endif
   // try to attach root hub
   const int result = usbd_attach_root_hub();
@@ -1410,7 +1410,7 @@ int usbd_init( void ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Allocating root hub failed: %s\r\n", strerror( result ) )
+      EARLY_STARTUP_PRINT( "Allocating root hub failed: %s\r\n", strerror( result ) )
     #endif
     // return result
     return result;
@@ -1431,7 +1431,7 @@ int usbd_init_handler( void ) {
   if ( ! class_handler ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to allocate memory\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to allocate memory\r\n" )
     #endif
     // return nomem
     return ENOMEM;
@@ -1456,7 +1456,7 @@ int usbd_register_handler( const libusb_interface_class_t type, const pid_t hand
   if ( ! class_handler ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Handler data not initialized\r\n" )
+      EARLY_STARTUP_PRINT( "Handler data not initialized\r\n" )
     #endif
     // return protocol error
     return EPROTO;
@@ -1465,7 +1465,7 @@ int usbd_register_handler( const libusb_interface_class_t type, const pid_t hand
   if ( -1 != class_handler[ type ] ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Handler already registered\r\n" )
+      EARLY_STARTUP_PRINT( "Handler already registered\r\n" )
     #endif
     // return exist
     return EEXIST;
@@ -1488,7 +1488,7 @@ int usbd_unregister_handler( const libusb_interface_class_t type, const pid_t ha
   if ( ! class_handler ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Handler data not initialized\r\n" )
+      EARLY_STARTUP_PRINT( "Handler data not initialized\r\n" )
     #endif
     // return protocol error
     return EPROTO;
@@ -1497,7 +1497,7 @@ int usbd_unregister_handler( const libusb_interface_class_t type, const pid_t ha
   if ( handler != class_handler[ type ] ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Handler already registered\r\n" )
+      EARLY_STARTUP_PRINT( "Handler already registered\r\n" )
     #endif
     // return exist
     return EINVAL;
@@ -1520,7 +1520,7 @@ int usbd_get_handler( const libusb_interface_class_t type, pid_t* handler ) {
   if ( ! class_handler ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Handler data not initialized\r\n" )
+      EARLY_STARTUP_PRINT( "Handler data not initialized\r\n" )
     #endif
     // return protocol error
     return EPROTO;
@@ -1529,7 +1529,7 @@ int usbd_get_handler( const libusb_interface_class_t type, pid_t* handler ) {
   if ( ! handler ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      STARTUP_PRINT( "Invalid handler passed\r\n" )
+      EARLY_STARTUP_PRINT( "Invalid handler passed\r\n" )
     #endif
     // return protocol error
     return EPROTO;
