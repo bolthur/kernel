@@ -76,6 +76,8 @@ static int fstat_handler( int file, struct stat* st, pid_t* handler ) {
   // copy over stat content
   memcpy( st, &response->info, sizeof( struct stat ) );
   *handler = response->handler;
+  free( request );
+  free( response );
   return 0;
 }
 

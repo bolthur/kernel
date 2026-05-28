@@ -28,58 +28,6 @@
 #include "../partition.h"
 #include "../handler.h"
 
-static int lstat_handler( const char* pathname, struct stat* buf, pid_t* handler ) {
-  // variables
-  vfs_stat_request_t* request = malloc( sizeof( vfs_stat_request_t ) );
-  if ( ! request ) {
-    errno = ENOMEM;
-    return -1;
-  }
-  // clear message structures
-  memset( request, 0, sizeof( vfs_stat_request_t ) );
-  // copy stuff to message
-  strncpy( request->file_path, pathname, PATH_MAX - 1 );
-  // raise rpc and wait for return
-  const size_t response_id = bolthur_rpc_raise(
-    RPC_VFS_STAT,
-    VFS_DAEMON_ID,
-    request,
-    sizeof( vfs_stat_request_t ),
-    NULL,
-    RPC_VFS_STAT,
-    request,
-    sizeof( vfs_stat_request_t ),
-    0,
-    0,
-    NULL,
-    false
-  );
-  // handle error
-  if ( 0 == response_id ) {
-    free( request );
-    return -1;
-  }
-  // get response
-  size_t data_size;
-  vfs_stat_response_t* response = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
-  // handle error
-  if ( ! response ) {
-    free( request );
-    return -1;
-  }
-  // handle failure
-  if ( ! response->success ) {
-    free( request );
-    free( response );
-    errno = EIO;
-    return -1;
-  }
-  // copy over stat content
-  memcpy( buf, &response->info, sizeof( struct stat ) );
-  *handler = response->handler;
-  return 0;
-}
-
 /**
  * @fn void rpc_handle_mount_async(size_t, pid_t, size_t, size_t)
  * @brief Internal helper to continue asynchronous started mount point
@@ -171,20 +119,10 @@ void rpc_handle_mount(
     rpc_handle_mount_async( type, origin, data_info, response_info );
     return;
   }
-  vfs_mount_response_t response = { .result = -ENOMEM };
-  // query stat and handler from mount device
-  struct stat st;
-  pid_t mount_pid;
-  if ( 0 != lstat_handler( MOUNT_DEVICE, &st, &mount_pid ) ) {
-    response.result = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
-    return;
-  }
+  vfs_mount_response_t response = { .result = -EINVAL };
   // validate origin
-  if (
-    ! bolthur_rpc_validate_origin( origin, data_info )
-    && mount_pid != origin
-  ) {
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    EARLY_STARTUP_PRINT( "1\r\n" )
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }

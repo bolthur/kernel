@@ -17,9 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _GLOBAL_H
-#define _GLOBAL_H
+#ifndef _LSTAT_H
+#define _LSTAT_H
 
-#include <sys/types.h>
+#include <unistd.h>
+#include <sys/bolthur.h>
 
-#endif
+int lstat_handler( const char*, struct stat*, pid_t* );
+
+#endif //_LSTAT_H

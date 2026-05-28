@@ -26,11 +26,6 @@
 #include "../../../../../library/hid/hid.h"
 
 /**
- * @brief Allowed rpc origin
- */
-pid_t allowed_rpc_origin;
-
-/**
  * @fn int main(int, char*[])
  * @brief main entry point
  *
@@ -63,9 +58,15 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   }
 
   // query allowed rpc origin
-  allowed_rpc_origin = get_file_handler( HID_DEVICE_PATH );
+  const pid_t allowed_rpc_origin = get_file_handler( HID_DEVICE_PATH );
   if ( -1 == allowed_rpc_origin ) {
-    STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
+    STARTUP_PRINT( "Unable to get handler id of %s\r\n", HID_DEVICE_PATH )
+    return -1;
+  }
+
+  // push to valid origin
+  if ( ! bolthur_rpc_origin_push_valid( allowed_rpc_origin ) ) {
+    STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
     return -1;
   }
 

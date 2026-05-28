@@ -51,10 +51,7 @@ void rpc_keyboard_attach(
     return;
   }
   // validate origin
-  if (
-    origin != allowed_rpc_origin
-    && ! bolthur_rpc_validate_origin( origin, data_info )
-  ) {
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     _syscall_rpc_cleanup();
     return;
   }

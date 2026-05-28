@@ -26,6 +26,7 @@
 #include "partition.h"
 #include "handler.h"
 #include "mount.h"
+#include "lstat.h"
 #include "../libhelper.h"
 #include "../libpartition.h"
 
@@ -59,6 +60,17 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   STARTUP_PRINT( "bind rpc handler!\r\n" )
   if ( ! rpc_init() ) {
     STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
+    return -1;
+  }
+  struct stat st;
+  pid_t mount_pid;
+  if ( 0 != lstat_handler( MOUNT_DEVICE, &st, &mount_pid ) ) {
+    STARTUP_PRINT( "Unable to query mount device pid\r\n" )
+    return -1;
+  }
+  // push to valid origin
+  if ( ! bolthur_rpc_origin_push_valid( mount_pid ) ) {
+    STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
     return -1;
   }
   // enable rpc

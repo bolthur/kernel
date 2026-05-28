@@ -9,6 +9,7 @@ partition_SOURCES = \
   rpc/init.c \
   rpc/mount.c \
   handler.c \
+  lstat.c \
   main.c \
   mount.c \
   partition.c
