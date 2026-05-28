@@ -39,7 +39,7 @@ void rpc_handle_add(
 ) {
   vfs_add_response_t response = { .status = -EINVAL, .handler = 0 };
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }

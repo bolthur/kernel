@@ -41,9 +41,9 @@ void rpc_mouse_attach(
   pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
-  ) {
+) {
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     _syscall_rpc_cleanup();
     return;
   }

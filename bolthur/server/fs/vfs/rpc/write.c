@@ -54,7 +54,7 @@ void rpc_handle_write_async(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     return;
   }
   response.len = -ENOMEM;
@@ -125,7 +125,7 @@ void rpc_handle_write(
   // switch error return
   response.len = -EINVAL;
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }

@@ -45,7 +45,7 @@ void rpc_handle_watch_notify(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     return;
   }
   size_t data_size;

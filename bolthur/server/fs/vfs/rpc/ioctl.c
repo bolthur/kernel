@@ -54,7 +54,7 @@ void rpc_handle_ioctl_async(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     return;
   }
   // get message and data size
@@ -94,7 +94,7 @@ void rpc_handle_ioctl(
   // dummy error response
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &err_response, sizeof( err_response ), NULL, 0 );
     return;
   }

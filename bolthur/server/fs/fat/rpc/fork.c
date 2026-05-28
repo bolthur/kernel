@@ -39,7 +39,7 @@ void rpc_handle_fork(
   // dummy error response
   vfs_fork_response_t response = { .status = -EINVAL };
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }

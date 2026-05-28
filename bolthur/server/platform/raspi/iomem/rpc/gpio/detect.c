@@ -52,7 +52,7 @@ void rpc_handle_gpio_set_detect(
   }
   // handle no data
   error.status = -EINVAL;
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }

@@ -42,7 +42,7 @@ void rpc_handle_handler_register(
 ) {
   vfs_register_handler_response_t response = { .result = -EINVAL };
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     response.result = -ENODATA;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;

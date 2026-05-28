@@ -39,7 +39,7 @@ void rpc_handle_seek(
 ) {
   vfs_seek_response_t response = { .position = -EINVAL };
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }

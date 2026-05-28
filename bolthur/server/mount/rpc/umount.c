@@ -47,7 +47,7 @@ void rpc_handle_umount(
   EARLY_STARTUP_PRINT( "umount\r\n" )
   vfs_mount_response_t response = { .result = -ENOTSUP };
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }

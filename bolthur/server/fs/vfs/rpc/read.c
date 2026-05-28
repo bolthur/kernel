@@ -53,7 +53,7 @@ void rpc_handle_read_async(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     return;
   }
   // original request
@@ -119,7 +119,7 @@ void rpc_handle_read(
   handle_node_t* container;
   response->len = -EINVAL;
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );
     return;

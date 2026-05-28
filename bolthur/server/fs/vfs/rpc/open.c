@@ -157,7 +157,7 @@ void rpc_handle_open_async(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( RPC_VFS_OPEN, &response, sizeof( response ), async_data, 0 );
     return;
   }
@@ -227,7 +227,7 @@ void rpc_handle_open(
   // variables
   vfs_open_response_t response = { .handle = -EINVAL };
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }

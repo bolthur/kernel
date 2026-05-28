@@ -308,7 +308,8 @@ int usbd_control_message(
   if ( -1 == result ) {
     // debug output
     #if defined( USBD_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -465,7 +466,8 @@ int usbd_poll_interrupt(
   if ( -1 == result ) {
     // debug output
     #if defined( USBD_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );

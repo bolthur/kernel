@@ -98,7 +98,8 @@ const char* usb_get_description( const uint32_t device_number ) {
   if ( -1 == result ) {
     // debug output
     #if defined( LIBUSB_ENABLE_DEBUG )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // free request
     free( request );
@@ -345,7 +346,8 @@ int usb_control_message(
   if ( -1 == result ) {
     // debug output
     #if defined( LIBUSB_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -426,7 +428,8 @@ int usb_get_root_hub( uint32_t* device_number ) {
   if ( -1 == result ) {
     // debug output
     #if defined( LIBUSB_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // free request
     free( request );
@@ -535,7 +538,8 @@ int usb_get_descriptor(
   if ( -1 == result ) {
     // debug output
     #if defined( LIBUSB_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -603,7 +607,8 @@ int usb_attach_device( const uint32_t parent_number, const uint32_t port_number,
   if ( -1 == result ) {
     // debug output
     #if defined( LIBUSB_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // free request
     free( request );
@@ -657,7 +662,8 @@ int usb_register_handler( const libusb_interface_class_t type ) {
   if ( -1 == result ) {
     // debug output
     #if defined( LIBUSB_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // free request
     free( request );
@@ -719,7 +725,8 @@ int usb_get_endpoint(
   if ( -1 == result ) {
     // debug output
     #if defined( LIBUSB_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // free request
     free( request );
@@ -780,7 +787,8 @@ int usb_get_interface(
   if ( -1 == result ) {
     // debug output
     #if defined( LIBUSB_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // free request
     free( request );
@@ -861,7 +869,8 @@ int usb_get_configuration( const uint32_t device_number, void** target_buffer ) 
   if ( -1 == result ) {
     // debug output
     #if defined( LIBUSB_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -943,7 +952,8 @@ int usb_get_status( const uint32_t device_number, libusb_device_status_t* status
   if ( -1 == result ) {
     // debug output
     #if defined( LIBUSB_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // free request
     free( request );

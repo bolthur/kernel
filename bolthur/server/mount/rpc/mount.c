@@ -101,7 +101,7 @@ void rpc_handle_mount(
   EARLY_STARTUP_PRINT( "mount mounting\r\n" )
   vfs_mount_response_t response = { .result = -ENOTSUP };
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }

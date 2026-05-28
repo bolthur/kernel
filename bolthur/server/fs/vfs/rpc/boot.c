@@ -56,7 +56,7 @@ void rpc_handle_boot_init_async(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
@@ -187,7 +187,7 @@ void rpc_handle_boot_init(
   // default response
   vfs_boot_init_response_t response = { .result = -EINVAL };
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }

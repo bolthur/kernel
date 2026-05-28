@@ -50,7 +50,7 @@ void rpc_handle_stat_async(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), async_data, 0 );
     return;
   }
@@ -94,7 +94,7 @@ void rpc_handle_stat(
 
   vfs_stat_response_t response = { .success = false };
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;
   }

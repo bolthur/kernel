@@ -48,7 +48,7 @@ void rpc_handle_watch_release(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     response.result = -ENODATA;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     return;

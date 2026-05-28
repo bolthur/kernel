@@ -95,7 +95,8 @@ int hid_register_handler( const libusb_hid_usage_page_desktop_t type ) {
   if ( -1 == result ) {
     // debug output
     #if defined( LIBHID_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // free request
     free( request );
@@ -152,7 +153,8 @@ int hid_get_driver( uint32_t device_number, uint32_t* device_driver ) {
   if ( -1 == result ) {
     // debug output
     #if defined( LIBHID_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // free request
     free( request );
@@ -214,7 +216,8 @@ int hid_get_application(
   if ( -1 == result ) {
     // debug output
     #if defined( LIBHID_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // free request
     free( request );
@@ -273,7 +276,8 @@ int hid_get_report_count( uint32_t device_number, uint8_t* report_count ) {
   if ( -1 == result ) {
     // debug output
     #if defined( LIBHID_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // free request
     free( request );
@@ -394,7 +398,8 @@ int hid_get_report(
   if ( -1 == ioctl_result ) {
     // debug output
     #if defined( LIBHID_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -560,7 +565,8 @@ int hid_set_report( const uint32_t device_number, const uint8_t report_type, con
   if ( -1 == ioctl_result ) {
     // debug output
     #if defined( LIBHID_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
@@ -616,7 +622,8 @@ int hid_set_idle( const uint32_t device_number, const uint32_t interface_number,
   if ( -1 == ioctl_result ) {
     // debug output
     #if defined( LIBHID_ENABLE_ERROR )
-      STARTUP_PRINT( "errno = %s\r\n", strerror( errno ) );
+      const int e = errno;
+      STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
     // free request
     free( request );

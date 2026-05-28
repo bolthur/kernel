@@ -53,7 +53,7 @@ void rpc_handle_getdents_async(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     return;
   }
   // get message and data size
@@ -118,7 +118,7 @@ void rpc_handle_getdents(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     response->result = -EINVAL;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );

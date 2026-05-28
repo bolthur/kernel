@@ -46,7 +46,7 @@ void rpc_keyboard_attach(
   [[maybe_unused]] size_t response_info
 ) {
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     _syscall_rpc_cleanup();
     return;
   }

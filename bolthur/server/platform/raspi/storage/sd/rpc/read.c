@@ -56,7 +56,7 @@ void rpc_handle_read(
     return;
   }
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     response->len = -EINVAL;
     bolthur_rpc_return( type, response, sizeof( *response ), NULL, 0 );
     free( response );

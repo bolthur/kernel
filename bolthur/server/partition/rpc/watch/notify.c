@@ -53,7 +53,7 @@ void rpc_handle_watch_notify(
   }
   STARTUP_PRINT( "Checking data info!\r\n" )
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     STARTUP_PRINT( "No data passed!\r\n" )
     return;
   }

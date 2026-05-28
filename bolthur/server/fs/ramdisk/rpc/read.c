@@ -76,7 +76,7 @@ void rpc_handle_read(
   }
   memset( response, 0, sizeof( vfs_read_response_t ) );
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     response->len = -EINVAL;
     bolthur_rpc_return( type, response, sizeof( vfs_read_response_t ), NULL, 0 );
     free( response );

@@ -41,7 +41,7 @@ void rpc_handle_watch_notify(
   [[maybe_unused]] size_t response_info
 ) {
   // handle no data
-  if( ! data_info ) {
+  if ( ! data_info ) {
     return;
   }
   // get message and data size
