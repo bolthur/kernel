@@ -53,12 +53,12 @@ int call_attach( libusb_device_t* dev, const uint32_t interface_number ) {
   }
   // set handler pids for device
   dev->device_attached_handler = handler;
-  dev->device_detached_handler = handler;
-  dev->device_deallocate_handler = handler;
-  dev->device_check_for_change_handler = handler;
-  dev->device_child_detached_handler = handler;
-  dev->device_child_reset_handler = handler;
-  dev->device_check_connection_handler = handler;
+  //dev->device_detached_handler = handler;
+  //dev->device_deallocate_handler = handler;
+  //dev->device_check_for_change_handler = handler;
+  //dev->device_child_detached_handler = handler;
+  //dev->device_child_reset_handler = handler;
+  //dev->device_check_connection_handler = handler;
   // allocate request
   constexpr size_t request_size = sizeof( vfs_ioctl_perform_request_t )
     + sizeof( usb_generic_attach_t );

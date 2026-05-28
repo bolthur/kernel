@@ -41,6 +41,7 @@ void rpc_get_roothub(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "GET ROOTHUB\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {

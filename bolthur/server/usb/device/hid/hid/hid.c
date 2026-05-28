@@ -162,33 +162,33 @@ int hid_set_idle(
  * @param value
  */
 void hid_enumerate_action_count_report(
-  void* data,
+  void** data,
   const libusb_hid_report_tag_t tag,
   [[maybe_unused]] uint32_t value
 ) {
-  auto const report = ( hid_report_action_count_t* )data;
+  auto const report = ( hid_report_action_count_t** )data;
   // handle tag
   switch ( tag ) {
     case LIBUSB_HID_REPORT_TAG_MAIN_INPUT:
-      if ( !report->input ) {
-        report->count++;
-        report->input = true;
+      if ( !(*report)->input ) {
+        (*report)->count++;
+        (*report)->input = true;
       }
       break;
     case LIBUSB_HID_REPORT_TAG_MAIN_OUTPUT:
-      if ( !report->output ) {
-        report->count++;
-        report->output = true;
+      if ( !(*report)->output ) {
+        (*report)->count++;
+        (*report)->output = true;
       }
       break;
     case LIBUSB_HID_REPORT_TAG_MAIN_FEATURE:
-      if ( !report->feature ) {
-        report->count++;
-        report->feature = true;
+      if ( !(*report)->feature ) {
+        (*report)->count++;
+        (*report)->feature = true;
       }
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_REPORT_ID:
-      report->input = report->output = report->feature = false;
+      (*report)->input = (*report)->output = (*report)->feature = false;
     default:
       break;
   }
@@ -202,29 +202,34 @@ void hid_enumerate_action_count_report(
  * @param type
  */
 void hid_enumerate_action_count_field_process(
-  hid_report_field_t* field,
+  hid_report_field_t** field,
   uint32_t value,
   const libusb_hid_report_type_t type
 ) {
   hid_report_field_data_t* field_data = NULL;
-  for ( size_t idx = 0; idx < field->current; idx++ ) {
+  for ( size_t idx = 0; idx < (*field)->current; idx++ ) {
     if (
-      field->data[ idx ].report_id == field->report
-      && field->data[ idx ].report_type == type
+      (*field)->data[ idx ].report_id == (*field)->report
+      && (*field)->data[ idx ].report_type == type
     ) {
-      field_data = &field->data[ idx ];
+      field_data = &(*field)->data[ idx ];
       break;
     }
   }
   if ( ! field_data ) {
-    field_data = &field->data[ field->current++ ];
-    field_data->report_id = field->report;
+    hid_report_field_t* new_field = realloc( *field, sizeof( hid_report_field_t ) + sizeof( hid_report_field_data_t ) * (*field)->current + 1 );
+    if ( ! new_field ) {
+      return;
+    }
+    *field = new_field;
+    field_data = &(*field)->data[ (*field)->current++ ];
+    field_data->report_id = (*field)->report;
     field_data->field_count = 0;
     field_data->report_type = type;
   }
   void* v = &value;
   if ( ( ( libusb_hid_main_item_t* )v )->variable ) {
-    field_data->field_count += ( uint8_t )field->count;
+    field_data->field_count += ( uint8_t )(*field)->count;
   } else {
     field_data->field_count++;
   }
@@ -238,11 +243,11 @@ void hid_enumerate_action_count_field_process(
  * @param value
  */
 void hid_enumerate_action_count_field(
-  void* data,
+  void** data,
   const libusb_hid_report_tag_t tag,
   const uint32_t value
 ) {
-  auto const field = ( hid_report_field_t* )data;
+  auto field = ( hid_report_field_t** )data;
   switch ( tag ) {
     case LIBUSB_HID_REPORT_TAG_MAIN_FEATURE:
       hid_enumerate_action_count_field_process( field, value, LIBUSB_HID_REPORT_TYPE_FEATURE );
@@ -254,10 +259,10 @@ void hid_enumerate_action_count_field(
       hid_enumerate_action_count_field_process( field, value, LIBUSB_HID_REPORT_TYPE_INPUT );
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_REPORT_COUNT:
-      field->count = value;
+      (*field)->count = value;
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_REPORT_ID:
-      field->report = ( uint8_t )value;
+      (*field)->report = ( uint8_t )value;
       break;
     default:
       break;
@@ -272,24 +277,24 @@ void hid_enumerate_action_count_field(
  * @param type
  */
 void hid_enumerate_action_add_field_process(
-  hid_field_t* field,
+  hid_field_t** field,
   const uint32_t value,
   const libusb_hid_report_type_t type
 ) {
   // try to find report from result
   libusb_hid_parser_report_t* report = NULL;
-  for ( uint32_t idx = 0; idx < field->result->report_count; idx++ ) {
+  for ( uint32_t idx = 0; idx < (*field)->result->report_count; idx++ ) {
     #if defined( HID_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->id = %"PRIu8"\r\n",
-        idx, field->result->report[ idx ]->id )
+        idx, (*field)->result->report[ idx ]->id )
       EARLY_STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->type = %d\r\n",
-        idx, field->result->report[ idx ]->type )
+        idx, (*field)->result->report[ idx ]->type )
     #endif
     if (
-      field->result->report[ idx ]->id == field->report
-      && field->result->report[ idx ]->type == type
+      (*field)->result->report[ idx ]->id == (*field)->report
+      && (*field)->result->report[ idx ]->type == type
     ) {
-      report = field->result->report[ idx ];
+      report = (*field)->result->report[ idx ];
       break;
     }
   }
@@ -297,58 +302,58 @@ void hid_enumerate_action_add_field_process(
   if ( ! report ) {
     #if defined( HID_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Report not found for %"PRIu8" / %d\r\n",
-        field->report, type )
+        (*field)->report, type )
     #endif
     return;
   }
   // loop while field count is greater than 0
-  while ( field->count > 0 ) {
+  while ( (*field)->count > 0 ) {
     // extract val
     uint32_t val;
-    memcpy( &val, field->usage, sizeof( val ) );
+    memcpy( &val, (*field)->usage, sizeof( val ) );
     // handle first iteration
     if ( val == 0xffffffff ) {
-      field->usage++;
+      (*field)->usage++;
     }
     memcpy( &report->fields[ report->field_count ].attribute, &value, sizeof( uint32_t ) );
-    report->fields[ report->field_count ].count = ( uint8_t)( report->fields[ report->field_count ].attribute.variable ? 1 : field->count );
-    report->fields[ report->field_count ].logical_maximum = field->logical_maximum;
-    report->fields[ report->field_count ].logical_minimum = field->logical_minimum;
+    report->fields[ report->field_count ].count = ( uint8_t)( report->fields[ report->field_count ].attribute.variable ? 1 : (*field)->count );
+    report->fields[ report->field_count ].logical_maximum = (*field)->logical_maximum;
+    report->fields[ report->field_count ].logical_minimum = (*field)->logical_minimum;
     report->fields[ report->field_count ].offset = report->report_length;
-    report->fields[ report->field_count ].physical_maximum = field->physical_maximum;
-    report->fields[ report->field_count ].physical_minimum = field->physical_minimum;
-    memcpy( &report->fields[ report->field_count ].physical_usage, &field->physical, sizeof( field->physical ) );
-    report->fields[ report->field_count ].size = ( uint8_t )field->size;
-    memcpy( &report->fields[ report->field_count ].unit, &field->unit, sizeof( field->unit ) );
-    report->fields[ report->field_count ].unit_exponent = field->unit_exponent;
-    if ( ( uint16_t )field->usage->page == LIBUSB_HID_USAGE_PAGE_USAGE_PAGE ) {
-      memcpy( &report->fields[ report->field_count ].usage, &field->usage[ -1 ], sizeof( uint32_t ) );
+    report->fields[ report->field_count ].physical_maximum = (*field)->physical_maximum;
+    report->fields[ report->field_count ].physical_minimum = (*field)->physical_minimum;
+    memcpy( &report->fields[ report->field_count ].physical_usage, &(*field)->physical, sizeof( (*field)->physical ) );
+    report->fields[ report->field_count ].size = ( uint8_t )(*field)->size;
+    memcpy( &report->fields[ report->field_count ].unit, &(*field)->unit, sizeof( (*field)->unit ) );
+    report->fields[ report->field_count ].unit_exponent = (*field)->unit_exponent;
+    if ( ( uint16_t )(*field)->usage->page == LIBUSB_HID_USAGE_PAGE_USAGE_PAGE ) {
+      memcpy( &report->fields[ report->field_count ].usage, &(*field)->usage[ -1 ], sizeof( uint32_t ) );
       if (
-        field->usage->desktop == field->usage[ -1 ].desktop
+        (*field)->usage->desktop == (*field)->usage[ -1 ].desktop
         || ! report->fields[ report->field_count ].attribute.variable
       ) {
-        field->usage -= 2;
+        (*field)->usage -= 2;
       } else {
-        field->usage[ -1 ].desktop++;
+        (*field)->usage[ -1 ].desktop++;
       }
     } else {
-      memcpy( &report->fields[ report->field_count ].usage, field->usage--, sizeof( uint32_t ) );
+      memcpy( &report->fields[ report->field_count ].usage, (*field)->usage--, sizeof( uint32_t ) );
     }
     if (report->fields[ report->field_count ].attribute.variable ) {
-      field->count--;
+      (*field)->count--;
       report->report_length += report->fields[ report->field_count ].size;
       report->fields[ report->field_count ].value.u32 = 0;
     } else {
-      field->count = 0;
+      (*field)->count = 0;
       report->report_length += ( uint8_t )( report->fields[ report->field_count ].size * report->fields[ report->field_count ].count );
       report->fields[ report->field_count ].value.ptr = malloc(
         ( size_t )( report->fields[ report->field_count ].size * report->fields[ report->field_count ].count / 8 ) );
     }
     report->field_count++;
   }
-  // set field usage 1 to 0
+  // set (*field) usage 1 to 0
   constexpr uint32_t val = 0;
-  memcpy( &field->usage[ 1 ], &val, sizeof( uint32_t ) );
+  memcpy( &(*field)->usage[ 1 ], &val, sizeof( uint32_t ) );
 }
 
 /**
@@ -359,11 +364,11 @@ void hid_enumerate_action_add_field_process(
  * @param value
  */
 void hid_enumerate_action_add_field(
-  void* data,
+  void** data,
   const libusb_hid_report_tag_t tag,
   const uint32_t value
 ) {
-  auto const field = ( hid_field_t* )data;
+  auto const field = ( hid_field_t** )data;
 
   switch ( tag ) {
     case LIBUSB_HID_REPORT_TAG_MAIN_FEATURE:
@@ -377,16 +382,16 @@ void hid_enumerate_action_add_field(
       break;
     case LIBUSB_HID_REPORT_TAG_MAIN_COLLECTION:
       uint32_t val;
-      memcpy( &val, field->usage, sizeof( uint32_t ) );
+      memcpy( &val, (*field)->usage, sizeof( uint32_t ) );
       if ( 0xffffffff == val ) {
-        field->usage++;
+        (*field)->usage++;
       }
       switch ( ( libusb_hid_main_collection_t )value ) {
         case LIBUSB_HID_MAIN_COLLECTION_APPLICATION:
-          memcpy( &field->result->application, field->usage, sizeof( uint32_t ) );
+          memcpy( &(*field)->result->application, (*field)->usage, sizeof( uint32_t ) );
           break;
         case LIBUSB_HID_MAIN_COLLECTION_PHYSICAL:
-          memcpy( &field->physical, field->usage, sizeof( uint32_t ) );
+          memcpy( &(*field)->physical, (*field)->usage, sizeof( uint32_t ) );
           break;
         default:
           break;
@@ -395,64 +400,64 @@ void hid_enumerate_action_add_field(
     case LIBUSB_HID_REPORT_TAG_MAIN_END_COLLECTION:
       switch ( ( libusb_hid_main_collection_t )value ) {
         case LIBUSB_HID_MAIN_COLLECTION_PHYSICAL:
-          memset( &field->physical, 0, sizeof( uint32_t ) );
+          memset( &(*field)->physical, 0, sizeof( uint32_t ) );
           break;
         default:
           break;
       }
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_USAGE_PAGE:
-      field->page = ( libusb_hid_usage_page_t )value;
+      (*field)->page = ( libusb_hid_usage_page_t )value;
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_LOGICAL_MINIMUM:
-      field->logical_minimum = ( int32_t )value;
+      (*field)->logical_minimum = ( int32_t )value;
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_LOGICAL_MAXIMUM:
-      field->logical_maximum = ( int32_t )value;
+      (*field)->logical_maximum = ( int32_t )value;
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_PHYSICAL_MINIMUM:
-      field->physical_minimum = ( int32_t )value;
+      (*field)->physical_minimum = ( int32_t )value;
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_PHYSICAL_MAXIMUM:
-      field->physical_maximum = ( int32_t )value;
+      (*field)->physical_maximum = ( int32_t )value;
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_UNIT_EXPONENT:
-      field->unit_exponent = ( int32_t )value;
+      (*field)->unit_exponent = ( int32_t )value;
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_UNIT:
-      memcpy( &field->unit, &value, sizeof( uint32_t ) );
+      memcpy( &(*field)->unit, &value, sizeof( uint32_t ) );
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_REPORT_SIZE:
-      field->size = value;
+      (*field)->size = value;
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_REPORT_ID:
-      field->report = ( uint8_t )value;
+      (*field)->report = ( uint8_t )value;
       break;
     case LIBUSB_HID_REPORT_TAG_GLOBAL_REPORT_COUNT:
-      field->count = value;
+      (*field)->count = value;
       break;
     case LIBUSB_HID_REPORT_TAG_LOCAL_USAGE:
-      field->usage++;
+      (*field)->usage++;
       if ( value & 0xffff0000 ) {
-        memcpy( &field->usage, &value, sizeof( uint32_t ) );
+        memcpy( &(*field)->usage, &value, sizeof( uint32_t ) );
       } else {
-        field->usage->desktop = ( libusb_hid_usage_page_desktop_t )value;
-        field->usage->page = field->page;
+        (*field)->usage->desktop = ( libusb_hid_usage_page_desktop_t )value;
+        (*field)->usage->page = (*field)->page;
       }
       break;
     case LIBUSB_HID_REPORT_TAG_LOCAL_USAGE_MINIMUM:
-      field->usage++;
+      (*field)->usage++;
       if ( value & 0xffff0000 ) {
-        memcpy( &field->usage, &value, sizeof( uint32_t ) );
+        memcpy( &(*field)->usage, &value, sizeof( uint32_t ) );
       } else {
-        field->usage->desktop = ( libusb_hid_usage_page_desktop_t )value;
-        field->usage->page = field->page;
+        (*field)->usage->desktop = ( libusb_hid_usage_page_desktop_t )value;
+        (*field)->usage->page = (*field)->page;
       }
       break;
     case LIBUSB_HID_REPORT_TAG_LOCAL_USAGE_MAXIMUM:
-      field->usage++;
-      field->usage->desktop = ( libusb_hid_usage_page_desktop_t )value;
-      field->usage->page = LIBUSB_HID_USAGE_PAGE_USAGE_PAGE;
+      (*field)->usage++;
+      (*field)->usage->desktop = ( libusb_hid_usage_page_desktop_t )value;
+      (*field)->usage->page = LIBUSB_HID_USAGE_PAGE_USAGE_PAGE;
       break;
     default:
       break;
@@ -471,7 +476,7 @@ void hid_enumerate_report(
   void* descriptor,
   const size_t length,
   const hid_report_action_t action,
-  void* data
+  void** data
 ) {
   auto item = ( libusb_hid_report_item_t* )descriptor;
   libusb_hid_report_item_t* current = NULL;
@@ -546,7 +551,8 @@ int hid_parse_report_descriptor(
   hid_field_t* field = NULL;
 
   // enumerate action count
-  hid_enumerate_report( descriptor, length, hid_enumerate_action_count_report, &header );
+  hid_report_action_count_t* ptr = &header;
+  hid_enumerate_report( descriptor, length, hid_enumerate_action_count_report, (void**)&ptr );
   #if defined( HID_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Found %"PRIu8" reports!\r\n", header.count )
   #endif
@@ -576,7 +582,7 @@ int hid_parse_report_descriptor(
   result->report_count = header.count;
 
   // enumerate report fields
-  hid_enumerate_report( descriptor, length, hid_enumerate_action_count_field, report_field );
+  hid_enumerate_report( descriptor, length, hid_enumerate_action_count_field, (void**)&report_field );
   for ( size_t idx = 0; idx < header.count; idx++ ) {
     // allocate space for report
     result->report[ idx ] = malloc(
@@ -650,7 +656,7 @@ int hid_parse_report_descriptor(
   // cache usage field
   void* usage = field->usage;
   // enumerate fields
-  hid_enumerate_report( descriptor, length, hid_enumerate_action_add_field, field );
+  hid_enumerate_report( descriptor, length, hid_enumerate_action_add_field, (void**)&field );
 
   // populate result to device
   device->parser_result = result;

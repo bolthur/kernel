@@ -34,4 +34,5 @@ void rpc_hid_deallocate(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "HID DEALLOCATE\r\n" )
 }

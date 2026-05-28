@@ -22,8 +22,8 @@
 
 #include "../../../../libusb.h"
 
-#define HID_ENABLE_DEBUG 1
-#define HID_ENABLE_ERROR 1
+//#define HID_ENABLE_DEBUG 1
+//#define HID_ENABLE_ERROR 1
 
 // Protocol IDs
 typedef enum {
@@ -68,17 +68,17 @@ typedef struct {
   uint8_t report;
 } hid_field_t;
 
-typedef void( *hid_report_action_t )( void* data, libusb_hid_report_tag_t tag, uint32_t value );
+typedef void( *hid_report_action_t )( void** data, libusb_hid_report_tag_t tag, uint32_t value );
 
 void hid_destroy_device( libusb_hid_device_t* );
 int hid_set_protocol( uint32_t, uint16_t, hid_protocol_t );
 int hid_set_idle( uint32_t, uint16_t, uint8_t, uint8_t );
-void hid_enumerate_action_count_report( void*, libusb_hid_report_tag_t, uint32_t );
-void hid_enumerate_action_count_field_process( hid_report_field_t*, uint32_t, libusb_hid_report_type_t );
-void hid_enumerate_action_count_field( void*, libusb_hid_report_tag_t, uint32_t );
-void hid_enumerate_action_add_field_process( hid_field_t*, uint32_t, libusb_hid_report_type_t );
-void hid_enumerate_action_add_field( void* data, libusb_hid_report_tag_t, uint32_t );
-void hid_enumerate_report( void*, size_t, hid_report_action_t, void* );
+void hid_enumerate_action_count_report( void**, libusb_hid_report_tag_t, uint32_t );
+void hid_enumerate_action_count_field_process( hid_report_field_t**, uint32_t, libusb_hid_report_type_t );
+void hid_enumerate_action_count_field( void**, libusb_hid_report_tag_t, uint32_t );
+void hid_enumerate_action_add_field_process( hid_field_t**, uint32_t, libusb_hid_report_type_t );
+void hid_enumerate_action_add_field( void** data, libusb_hid_report_tag_t, uint32_t );
+void hid_enumerate_report( void*, size_t, hid_report_action_t, void** );
 int hid_parse_report_descriptor( libusb_hid_device_t*, void*, size_t );
 void hid_append( libusb_hid_device_t* );
 int hid_get( uint32_t, libusb_hid_device_t** );

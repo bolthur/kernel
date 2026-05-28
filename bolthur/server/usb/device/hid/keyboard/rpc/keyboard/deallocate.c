@@ -34,4 +34,5 @@ void rpc_keyboard_deallocate(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "KEYBOARD DEALLOCATE\r\n" )
 }

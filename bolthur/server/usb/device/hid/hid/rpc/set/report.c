@@ -43,6 +43,7 @@ void rpc_set_report(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "SET REPORT\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {

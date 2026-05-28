@@ -42,6 +42,7 @@ void rpc_set_idle(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "SET IDLE\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {

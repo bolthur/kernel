@@ -253,7 +253,7 @@ int hub_power_on(
       EARLY_STARTUP_PRINT( "Power up port %"PRIu32" of %s\r\n", child, usb_get_description( device_number ) )
     #endif
     // try to change port feature
-    [[maybe_unused]] const int result = hub_change_port_feature(
+    const int result = hub_change_port_feature(
       device_number,
       LIBUSB_HUB_PORT_FEATURE_POWER,
       ( uint8_t )child,

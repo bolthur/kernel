@@ -34,5 +34,6 @@ void rpc_hub_deallocate(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "HUB DEALLOCATE\r\n" )
   _syscall_rpc_cleanup();
 }
