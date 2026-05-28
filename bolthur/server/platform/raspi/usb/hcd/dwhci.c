@@ -1097,6 +1097,9 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
     // return error
     return HCD_RESPONSE_ERROR_MEMORY;
   }
+  // clear out memory
+  memset( response, 0, response_size );
+  // detach shared memory
   _syscall_memory_shared_detach( ( ( hcd_submit_control_message_t* )entry->message )->shm_id );
   // populate status and just copy over data from request
   response->status = 0;
@@ -1359,6 +1362,9 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
     // return error
     return HCD_RESPONSE_ERROR_MEMORY;
   }
+  // clear out memory
+  memset( response, 0, response_size );
+  // detach shared memory
   _syscall_memory_shared_detach( ( ( hcd_submit_interrupt_poll_t* )entry->message )->shm_id );
   // populate status and just copy over data from request
   response->status = 0;

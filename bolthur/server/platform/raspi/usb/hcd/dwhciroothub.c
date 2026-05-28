@@ -179,7 +179,7 @@ int dwhciroothub_process(
       switch ( request->type ) {
         case 0x80: //
           {
-            const uint16_t val = 1;
+            constexpr uint16_t val = 1;
             memcpy(buffer, &val, sizeof( val ) );
             reply_length = 2;
           }
@@ -187,14 +187,14 @@ int dwhciroothub_process(
         case 0x81: // interface
         case 0x82: // endpoint
           {
-            const uint16_t val = 1;
+            constexpr uint16_t val = 1;
             memcpy(buffer, &val, sizeof( val ) );
             reply_length = 2;
           }
           break;
         case 0xa0: // class
           {
-            const uint32_t val = 1;
+            constexpr uint32_t val = 1;
             memcpy(buffer, &val, sizeof( val ) );
             reply_length = 4;
           }

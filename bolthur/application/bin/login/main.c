@@ -31,8 +31,9 @@
  * @return
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
-  // print something
-  STARTUP_PRINT( "login processing!\r\n" )
+  /// FIXME: IMPLEMENT gethostname
+  printf( "%s login!\r\n", "bolthur" );
+  fflush( stdout );
   // endlessly looping login shell
   while ( true ) {
     char* username = malloc( sizeof( char ) * 1024 );
@@ -45,12 +46,18 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     printf( "username: " );
     fflush( stdout );
     if ( ! fgets( username, 1024, stdin ) ) {
-      STARTUP_PRINT( "Unable to read username: %s!\r\n", strerror( errno ) )
+      printf( "Login failed\r\n" );
+      fflush( stdout );
       free( username );
       continue;
     }
-    // append end of string
-    username[ strlen( username ) - 1 ] = '\0';
+    // strip out newline from username
+    if ( strlen( username ) ) {
+      username[ strlen( username ) - 1 ] = '\0';
+    }
+    // drain out newline from stdin
+    char drain[2];
+    fgets( drain, 2, stdin );
     // read password
     char* password = getpass( "password: " );
 

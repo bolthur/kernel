@@ -79,7 +79,6 @@ void queue_handle( const char* file, const char* data ) {
         // get total len and evaluate to read
         const size_t len = strlen( data );
         size_t to_read = len;
-        EARLY_STARTUP_PRINT( "e->request->len = %zu\r\n", e->request->len )
         if ( to_read > e->request->len - e->read_amount ) {
           to_read = e->request->len - e->read_amount;
         }

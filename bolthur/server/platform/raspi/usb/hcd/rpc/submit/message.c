@@ -39,6 +39,7 @@ void rpc_submit_message(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "SUBMIT MESSAGE\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -87,6 +88,8 @@ void rpc_submit_message(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
+  // clear out memory
+  memset( response, 0, response_size );
   // handle root hub device
   if ( dwhciroothub_root_hub_device_number == message->pipe_address.device ) {
     // try to process root hub
@@ -100,6 +103,7 @@ void rpc_submit_message(
     );
     // handle error
     if ( result != 0 ) {
+      EARLY_STARTUP_PRINT( "result = %d\r\n", result )
       // set error
       error.status = -result;
       // detach shared memory
@@ -126,6 +130,7 @@ void rpc_submit_message(
   // send async
   const response_t result = dwhci_channel_send_async( message, submit_control_message, response_info );
   if ( HCD_RESPONSE_OK != result ) {
+    EARLY_STARTUP_PRINT( "result = %d\r\n", result )
     // set error
     error.status = (int)-result;
     // detach shared memory
