@@ -365,10 +365,27 @@ void syscall_rpc_ret( void* context ) {
     // in case we have an original rpc id a valid target and a valid info object
     // we need to overwrite sync and blocked_data_id similar to when no target
     // was initially found
-    if ( original_rpc_id && target && info ) {
+    if ( original_rpc_id && target && info && active->type != type ) {
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT(
+          "rpc_id: %zu, source: %d, sync: %d, origin_rpc_id: %zu, type: %zu\r\n",
+          info->rpc_id,
+          info->source_process,
+          info->sync ? 1 : 0,
+          info->origin_rpc_id,
+          info->type
+        )
+        DEBUG_OUTPUT(
+          "sync = %d, data_id: %zu, original_data_id: %zu, type: %zu / %zu\r\n",
+          active->sync ? 1 : 0,
+          active->data_id,
+          active->origin_data_id,
+          active->type,
+          type
+        )
+      #endif
       // reset sync to one from info
       active->sync = info->sync;
-      blocked_data_id = info->rpc_id;
     }
     // handle no target
     if ( ! target ) {

@@ -98,6 +98,7 @@ void queue_handle( const char* file, const char* data ) {
         if ( newline ) {
           ( area + e->read_amount )[ 0 ] = '\n';
           ( area + e->read_amount )[ 1 ] = '\0';
+          e->read_amount += 2;
           e->request->len = e->read_amount;
         } else {
           ( area + e->read_amount )[ 0 ] = '\0';
