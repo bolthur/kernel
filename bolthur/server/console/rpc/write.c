@@ -86,6 +86,7 @@ void rpc_handle_write(
   const size_t rpc_num = 0 == strcmp( "/dev/stdout", request->file_path )
     ? handler->console->out
     : handler->console->err;
+  /// FIXME: CALL HANDLER DIRECTLY
   // build terminal command
   constexpr size_t terminal_size = sizeof( terminal_write_request_t );
   terminal_write_request_t* terminal = malloc( terminal_size );

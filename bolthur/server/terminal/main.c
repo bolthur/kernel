@@ -72,6 +72,14 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
+  // setup valid origin
+  const pid_t endpoint = get_file_handler( _PATH_CONSOLE );
+  if ( ! bolthur_rpc_origin_push_valid( endpoint ) ) {
+    close( console_manager_fd );
+    close( output_driver_fd );
+    return -1;
+  }
+
   EARLY_STARTUP_PRINT( "Setup pc screen font\r\n" )
   // psf init
   // FIXME: MOVE TO OUTPUT?

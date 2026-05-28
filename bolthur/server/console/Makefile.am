@@ -22,5 +22,6 @@ console_SOURCES = \
   console.c \
   handler.c \
   main.c \
-  queue.c
+  queue.c \
+  terminal.c
 console_LDFLAGS = -all-static --static

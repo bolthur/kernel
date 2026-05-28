@@ -26,7 +26,6 @@
 #include "partition.h"
 #include "handler.h"
 #include "mount.h"
-#include "lstat.h"
 #include "../libhelper.h"
 #include "../libpartition.h"
 
@@ -62,9 +61,8 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
     return -1;
   }
-  struct stat st;
-  pid_t mount_pid;
-  if ( 0 != lstat_handler( MOUNT_DEVICE, &st, &mount_pid ) ) {
+  const pid_t mount_pid = get_file_handler( MOUNT_DEVICE );
+  if ( -1 == mount_pid ) {
     STARTUP_PRINT( "Unable to query mount device pid\r\n" )
     return -1;
   }

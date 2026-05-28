@@ -17,12 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LSTAT_H
-#define _LSTAT_H
+#include "terminal.h"
 
-#include <unistd.h>
-#include <sys/bolthur.h>
-
-int lstat_handler( const char*, struct stat*, pid_t* );
-
-#endif //_LSTAT_H
+/**
+ * @fn void terminal_push_data(const char*)
+ * @brief Push to terminal with fire and forget
+ * @param data
+ */
+void terminal_push_data( [[maybe_unused]] const char* data ) {
+}

@@ -19,7 +19,9 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include "queue.h"
 #include "console.h"
+#include "handler.h"
 
 /**
  * @fn void console_destroy(console_t*)
@@ -31,9 +33,15 @@ void console_destroy( console_t* console ) {
   if ( ! console ) {
     return;
   }
+  // cleanup possible listeners
+  queue_cleanup( console );
+  // free console path
   if ( console->path ) {
     free( console->path );
   }
+  // remove from handler tree
+  handler_remove( console->handler );
+  // free console itself
   free( console );
 }
 

@@ -125,3 +125,23 @@ void queue_handle( const char* file, const char* data ) {
     }
   }
 }
+
+/**
+ * @fn void queue_cleanup(const console_t*)
+ * @brief Cleanup queued input handlers for console
+ * @param console console to be cleaned up
+ */
+void queue_cleanup( const console_t* console ) {
+  queue_node_t* e = NULL;
+  queue_node_t* next = NULL;
+  TAILQ_FOREACH_SAFE( e, &management_queue, node, next ) {
+    // handle path match and active console
+    if ( e->handler->console == console ) {
+      // remove from node
+      TAILQ_REMOVE(&management_queue, e, node);
+      // free up request and queue entry
+      free( e->request );
+      free( e );
+    }
+  }
+}

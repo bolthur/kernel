@@ -18,6 +18,7 @@
  */
 
 #include <stdio.h>
+#include <sys/errno.h>
 #include <sys/bolthur.h>
 #include <sys/unistd.h>
 
@@ -43,7 +44,11 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     // read username
     printf( "username: " );
     fflush( stdout );
-    fgets( username, 1024, stdin );
+    if ( ! fgets( username, 1024, stdin ) ) {
+      STARTUP_PRINT( "Unable to read username: %s!\r\n", strerror( errno ) )
+      free( username );
+      continue;
+    }
     username[ strlen( username ) - 1 ] = '\0';
     printf( "%s\r\n", username );
     fflush( stdout );
