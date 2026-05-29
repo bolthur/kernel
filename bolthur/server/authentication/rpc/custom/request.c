@@ -39,17 +39,14 @@ void rpc_custom_handle_request(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "AUTHENTICATION REQUEST IOCTL %zu / %zu\r\n", RPC_VFS_IOCTL, type )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "Invalid origin\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "No data\r\n" )
     error.status = -ENOMSG;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
@@ -58,7 +55,6 @@ void rpc_custom_handle_request(
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
-    EARLY_STARTUP_PRINT( "No data\r\n" )
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
@@ -70,7 +66,6 @@ void rpc_custom_handle_request(
     authentication_request->shm_id, (uintptr_t)NULL );
   if ( errno ) {
     error.status = -errno;
-    EARLY_STARTUP_PRINT( "Unable to attach shared memory\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
@@ -79,7 +74,6 @@ void rpc_custom_handle_request(
   struct passwd* pw = getpwnam( data->user );
   // handle error
   if ( ! pw ) {
-    EARLY_STARTUP_PRINT( "No pwent entry found for user\r\n" )
     error.status = -EIO;
     _syscall_memory_shared_detach( authentication_request->shm_id );
     free( request );
@@ -89,7 +83,6 @@ void rpc_custom_handle_request(
   // verify password
   char* hash = crypt( data->password, pw->pw_passwd );
   if ( ! hash ) {
-    EARLY_STARTUP_PRINT( "crypt returned no hash => failed\r\n" )
     error.status = -EIO;
     _syscall_memory_shared_detach( authentication_request->shm_id );
     free( request );
@@ -97,7 +90,6 @@ void rpc_custom_handle_request(
     return;
   }
   if ( 0 != strcmp( hash, pw->pw_passwd ) ) {
-    EARLY_STARTUP_PRINT( "Hashes not matching\r\n" )
     error.status = -EIO;
     _syscall_memory_shared_detach( authentication_request->shm_id );
     free( request );
@@ -108,7 +100,6 @@ void rpc_custom_handle_request(
   pid_node_remove( authentication_request->process );
   // try to add it again with changed user id
   if ( ! pid_node_add( authentication_request->process, pw->pw_uid ) ) {
-    EARLY_STARTUP_PRINT( "Unable to add pid node again after removal\r\n" )
     error.status = -EIO;
     _syscall_memory_shared_detach( authentication_request->shm_id );
     free( request );

@@ -132,3 +132,9 @@ The files can be specified by using the parameter `-x`.
 ```
 
 When starting remote debugging, you need to specify the target, e.g. `target /dev/ttyUSB0` to connect to the running instance. Furthermore, you need to configure the project with option `--enable-debug`.
+
+### Users
+
+Following users are pre generated with image generation:
+- `user` with password `user`
+- `root` with password `root`
