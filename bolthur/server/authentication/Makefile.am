@@ -2,6 +2,7 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"authentication\"
 
 bin_PROGRAMS = authentication
+authentication_LDADD = -lcrypt
 authentication_SOURCES = \
   pid/node.c \
   rpc/custom/fetch.c \

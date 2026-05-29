@@ -31,14 +31,18 @@
 #define AUTHENTICATE_RELOAD AUTHENTICATE_FETCH + 1
 
 typedef struct {
-  char user[ PATH_MAX ];
-  char password[ PATH_MAX ];
+  size_t shm_id;
   pid_t process;
 } authentication_request_request_t;
 
 typedef struct {
-  int result;
-} authentication_request_response_t;
+  char user[ PATH_MAX ];
+  char password[ PATH_MAX ];
+  // used for return
+  char pw_user[ PATH_MAX ];
+  char pw_home[ PATH_MAX ];
+  char pw_shell[ PATH_MAX ];
+} authentication_request_request_data_t;
 
 typedef struct {
   pid_t process;

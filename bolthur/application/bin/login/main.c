@@ -17,10 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <fcntl.h>
 #include <stdio.h>
-#include <sys/errno.h>
 #include <sys/bolthur.h>
+#include <sys/ioctl.h>
 #include <sys/unistd.h>
+#include "../../../server/libauthentication.h"
 
 /**
  * @fn int main(int, char*[])
@@ -36,12 +38,13 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   fflush( stdout );
   // endlessly looping login shell
   while ( true ) {
+    // allocate space for username
     char* username = malloc( sizeof( char ) * 1024 );
+    // handle error
     if ( ! username ) {
       STARTUP_PRINT( "Unable to allocate memory for username!\r\n" )
       return -1;
     }
-
     // read username
     printf( "username: " );
     fflush( stdout );
@@ -59,21 +62,85 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     char drain[2];
     fgets( drain, 2, stdin );
     // read password
-    char* password = getpass( "password: " );
-
-    // debug output
-    STARTUP_PRINT( "username: %s\r\npassword: %s\r\n", username, password );
-    // debug endless loop
+    const char* password = getpass( "password: " );
+    // open authentication device
+    const int fd = open( AUTHENTICATION_DEVICE, O_RDWR );
+    if ( -1 == fd ) {
+      printf( "Login failed\r\n" );
+      fflush( stdout );
+      free( username );
+      continue;
+    }
+    // allocate shared memory
+    const size_t shm_id = _syscall_memory_shared_create( sizeof( authentication_request_request_data_t ) );
+    if ( errno ) {
+      printf( "Login failed\r\n" );
+      fflush( stdout );
+      free( username );
+      close( fd );
+      continue;
+    }
+    // attach shared memory
+    authentication_request_request_data_t *request_data;
+    do {
+      request_data = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+      if ( errno ) {
+        continue;
+      }
+      break;
+    } while( true );
+    // allocate request
+    authentication_request_request_t* request = malloc( sizeof( authentication_request_request_t ) );
+    if ( ! request ) {
+      printf( "Login failed\r\n" );
+      fflush( stdout );
+      free( username );
+      close( fd );
+      continue;
+    }
+    // clear out
+    memset( request, 0, sizeof( authentication_request_request_t ) );
+    // copy over stuff
+    strncpy( request_data->user, username, 1023 );
+    strncpy( request_data->password, password, 127 );
+    request->process = getpid();
+    request->shm_id = shm_id;
+    // perform request
+    const int result = ioctl(
+      fd,
+      IOCTL_BUILD_REQUEST(
+        AUTHENTICATE_REQUEST,
+        sizeof( authentication_request_request_t ),
+        IOCTL_RDWR
+      ),
+      request
+    );
+    // handle error
+    if ( -1 == result ) {
+      const int e = errno;
+      printf( "Login failed: %s\r\n", strerror( e ) );
+      fflush( stdout );
+      free( username );
+      free( request );
+      close( fd );
+      _syscall_memory_shared_detach( shm_id );
+      continue;
+    }
+    printf( "pw_name: %s\r\npw_home = %s\r\npw_shell = %s\r\n",
+      request_data->pw_user, request_data->pw_home, request_data->pw_shell );
+    fflush( stdout );
     while ( true ) {
       __asm__ __volatile__ ( "nop" );
     }
-
-    // FIXME: check user and password
-    // FIXME: When user and password are not matching, free username and password and continue loop
-    // FIXME: fork process and start shell from /etc/passwd and prepare environment variables from /etc/passwd
-
+    // free resources
     free( username );
+    free( request );
+    close( fd );
+    _syscall_memory_shared_detach( shm_id );
+    /// FIXME: FORK PROCESS AND EXEC DASH
+    // wait for rpc
+    _syscall_rpc_wait_for_call();
   }
-  // exit with success
+  // exit success
   return 0;
 }
