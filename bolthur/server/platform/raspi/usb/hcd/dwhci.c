@@ -39,11 +39,6 @@
 int fd_iomem = -1;
 
 /**
- * @brief Data buffer used for data transfer
- */
-void* databuffer = nullptr;
-
-/**
  * @brief DWHCI configuration object
  */
 dwhci_configuration_t configuration;
@@ -430,14 +425,15 @@ response_t dwhci_free_channel( const uint8_t channel ) {
 }
 
 /**
- * @fn response_t dwhci_queue_add_entry(void*, dwhci_queue_status_t, channel_queue_entry_t**)
+ * @fn response_t dwhci_queue_add_entry(void*, size_t, dwhci_queue_status_t, channel_queue_entry_t**)
  * @brief Entry to add to queue
  * @param data data for queue
+ * @param size data size
  * @param status queue status
  * @param out pointer to pass object out
  * @return
  */
-response_t dwhci_queue_add_entry( void* data, const dwhci_queue_status_t status, channel_queue_entry_t** out ) {
+response_t dwhci_queue_add_entry( void* data, const size_t size, const dwhci_queue_status_t status, channel_queue_entry_t** out ) {
   // allocate entry
   channel_queue_entry_t* entry = malloc(sizeof(*entry));
   if (!entry) {
@@ -452,11 +448,11 @@ response_t dwhci_queue_add_entry( void* data, const dwhci_queue_status_t status,
   memset(entry, 0, sizeof(*entry));
   // prepare entry
   entry->data = data;
+  entry->data_size = size;
   entry->status = status;
   entry->error = LIBUSB_TRANSFER_ERROR_NO_ERROR;
   // map buffer
-  /// FIXME: REPLACE 0x1000 by data size
-  entry->buffer = mmap( NULL, 0x1000, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS | MAP_DEVICE , -1, 0 );
+  entry->buffer = mmap( NULL, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS | MAP_DEVICE , -1, 0 );
   // handle map failed
   if ( MAP_FAILED == entry->buffer ) {
     // debug output
@@ -509,7 +505,7 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
   }
   // handle buffer
   if ( entry->buffer ) {
-    munmap( entry->buffer, 0x1000 );
+    munmap( entry->buffer, entry->data_size );
   }
   // handle first element
   if ( entry == configuration.list ) {
@@ -710,9 +706,8 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     EARLY_STARTUP_PRINT( "Translate buffer to physical\r\n" )
   #endif
   // translate buffer to physical bus address
-  /// FIXME: REPLACE 0x1000 by buffer size
   const uintptr_t phys = _syscall_memory_translate_bus(
-    ( uintptr_t )entry->buffer, 0x1000 );
+    ( uintptr_t )entry->buffer, entry->data_size );
   if ( errno ) {
     // debug output
     #if defined( DWHCI_ERROR_OUTPUT )
@@ -1187,21 +1182,22 @@ response_t dwhci_channel_send_async_continue( channel_queue_entry_t* entry ) {
 }
 
 /**
- * @fn response_t dwhci_channel_send_async(hcd_control_message_t*, size_t);
+ * @fn response_t dwhci_channel_send_async(hcd_control_message_t*, size_t, hcd_submit_control_message_t*, size_t);
  * @brief Wrapper to perform async channel send
  * @param data data to send
+ * @param data_size data size
  * @param message original message
  * @param response_info where to respond result to
  * @return
  */
-response_t dwhci_channel_send_async( hcd_control_message_t* data, hcd_submit_control_message_t* message, const size_t response_info ) {
+response_t dwhci_channel_send_async( hcd_control_message_t* data, size_t data_size, hcd_submit_control_message_t* message, const size_t response_info ) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT("Channel send async\r\n")
   #endif
   // push data with channel to queue
   channel_queue_entry_t* entry = nullptr;
-  response_t result = dwhci_queue_add_entry( data, DWHCI_QUEUE_CHANNEL_STATUS_PENDING, &entry );
+  response_t result = dwhci_queue_add_entry( data, data_size, DWHCI_QUEUE_CHANNEL_STATUS_PENDING, &entry );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ERROR_OUTPUT )
@@ -1406,21 +1402,22 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
 }
 
 /**
- * @fn response_t dwhci_channel_poll_async(hcd_interrupt_poll_t*, hcd_submit_interrupt_poll_t*, size_t);
+ * @fn response_t dwhci_channel_poll_async(hcd_interrupt_poll_t*, size_t, hcd_submit_interrupt_poll_t*, size_t);
  * @brief Wrapper to perform async channel polling
  * @param data data to send
+ * @param data_size data size
  * @param message original message
  * @param response_info where to respond result to
  * @return
  */
-response_t dwhci_channel_poll_async( hcd_interrupt_poll_t* data, hcd_submit_interrupt_poll_t* message, const size_t response_info ) {
+response_t dwhci_channel_poll_async( hcd_interrupt_poll_t* data, size_t data_size, hcd_submit_interrupt_poll_t* message, const size_t response_info ) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT("Channel send async\r\n")
   #endif
   // push data with channel to queue
   channel_queue_entry_t* entry = nullptr;
-  response_t result = dwhci_queue_add_entry( data, DWHCI_QUEUE_POLL_STATUS_PENDING, &entry );
+  response_t result = dwhci_queue_add_entry( data, data_size, DWHCI_QUEUE_POLL_STATUS_PENDING, &entry );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ERROR_OUTPUT )
@@ -1724,18 +1721,6 @@ response_t dwhci_init( void ) {
   }
   // clear out configuration object
   memset( &configuration, 0, sizeof( configuration ) );
-  // allocate data buffer
-  databuffer = mmap( NULL, 0x1000, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS | MAP_DEVICE , -1, 0 );
-  if ( MAP_FAILED == databuffer ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate data buffer\r\n" )
-    #endif
-    // close file descriptor
-    close( fd_iomem );
-    // return memory error
-    return HCD_RESPONSE_ERROR_MEMORY;
-  }
   // query vendor and hardware information
   size_t sequence_size;
   iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 7, &sequence_size );

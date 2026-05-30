@@ -88,7 +88,7 @@ void rpc_poll_interrupt(
     return;
   }
   // send async
-  const response_t result = dwhci_channel_poll_async( message, poll_message, response_info );
+  const response_t result = dwhci_channel_poll_async( message, sizeof( *message ) + message->buffer_length, poll_message, response_info );
   if ( HCD_RESPONSE_OK != result ) {
     // set error
     error.status = (int)-result;
