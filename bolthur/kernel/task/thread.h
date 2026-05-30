@@ -74,7 +74,7 @@ task_thread_t* task_thread_create( uintptr_t, task_process_t*, size_t );
 task_thread_t* task_thread_fork( task_process_t*, task_thread_t* );
 task_thread_t* task_thread_next( void );
 [[noreturn]] void task_thread_switch_to( uintptr_t );
-bool task_thread_push_arguments( task_thread_t*, char**, char** );
+bool task_thread_push_arguments( const task_thread_t*, char**, char** );
 void task_thread_cleanup( event_origin_t, void* );
 void task_thread_block( task_thread_t*, task_thread_state_t, task_state_data_t );
 void task_thread_unblock( task_thread_t*, task_thread_state_t, task_state_data_t );

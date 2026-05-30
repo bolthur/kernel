@@ -25,6 +25,29 @@
 #include "../../../server/libauthentication.h"
 
 /**
+ * @brief Child pid
+ */
+pid_t child = 0;
+
+/**
+ * @fn static char* build_env(const char*, const char*)
+ * @brief Helper to build env
+ * @param value environment value
+ * @param prefix prefix
+ * @return
+ */
+static char* build_env( const char* value, const char* prefix ) {
+  const size_t env_len = strlen( value ) + strlen( prefix ) + 1;
+  char* home_env = malloc( env_len );
+  if ( ! home_env ) {
+    return NULL;
+  }
+  memset( home_env, 0, env_len );
+  sprintf( home_env, "%s=%s", prefix, value );
+  return home_env;
+}
+
+/**
  * @fn int main(int, char*[])
  * @brief main entry point
  *
@@ -126,20 +149,53 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       _syscall_memory_shared_detach( shm_id );
       continue;
     }
-    printf( "pw_name: %s\r\npw_home = %s\r\npw_shell = %s\r\n",
-      request_data->pw_user, request_data->pw_home, request_data->pw_shell );
-    fflush( stdout );
-    while ( true ) {
-      __asm__ __volatile__ ( "nop" );
+    // fork process
+    child = fork();
+    // handle error
+    if ( 0 > child ) {
+      const int e = errno;
+      printf( "Login failed: %s\r\n", strerror( e ) );
+      fflush( stdout );
+      free( username );
+      free( request );
+      close( fd );
+      _syscall_memory_shared_detach( shm_id );
+      continue;
     }
+    // child only
+    if ( 0 == child ) {
+      char* base = basename( request_data->pw_shell );
+      if ( ! base ) {
+        exit( 1 );
+      }
+      // build command
+      char* cmd[] = { base, NULL, };
+      // build home env
+      char* home_env = build_env( request_data->pw_home, "HOME=" );
+      if ( ! home_env ) {
+        exit( 1 );
+      }
+      // build shell env
+      char* shell_env = build_env( request_data->pw_shell, "SHELL=" );
+      if ( ! shell_env ) {
+        exit( 1 );
+      }
+      char* env[] = { home_env, shell_env, NULL };
+      // exec to replace
+      if ( -1 == execve( request_data->pw_shell, cmd, env ) ) {
+        exit( 1 );
+      }
+    }
+
     // free resources
     free( username );
     free( request );
     close( fd );
     _syscall_memory_shared_detach( shm_id );
-    /// FIXME: FORK PROCESS AND EXEC DASH
-    // wait for rpc
-    _syscall_rpc_wait_for_call();
+    // wait for rpc while child is existing
+    while ( child ) {
+      _syscall_rpc_wait_for_call();
+    }
   }
   // exit success
   return 0;

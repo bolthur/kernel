@@ -351,10 +351,11 @@ task_thread_t* task_thread_fork(
  *
  * @param thread
  * @param parameter
+ * @param environment
  * @return
  */
 bool task_thread_push_arguments(
-  task_thread_t* thread,
+  const task_thread_t* thread,
   char** parameter,
   char** environment
 ) {
@@ -390,7 +391,7 @@ bool task_thread_push_arguments(
     DEBUG_OUTPUT( "%"PRIx64" | %#x\r\n", thread->stack_physical, STACK_SIZE)
   #endif
   // map stack temporarily
-  uintptr_t stack_tmp = virt_map_temporary(
+  const uintptr_t stack_tmp = virt_map_temporary(
     thread->stack_physical,
     STACK_SIZE
   );
@@ -398,8 +399,7 @@ bool task_thread_push_arguments(
     return false;
   }
   // get stack offset
-  cpu_register_context_t* cpu =
-    ( cpu_register_context_t* )thread->current_context;
+  auto const cpu = ( cpu_register_context_t* )thread->current_context;
   size_t offset = cpu->reg.sp - thread->stack_virtual;
   // debug output
   #if defined( PRINT_PROCESS )

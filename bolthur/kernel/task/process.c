@@ -898,7 +898,7 @@ int task_process_replace(
     DEBUG_OUTPUT( "Preparing to load image\r\n" )
   #endif
   // save image temporary
-  size_t image_size = elf_image_size( ( uintptr_t )elf );
+  const size_t image_size = elf_image_size( ( uintptr_t )elf );
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "image_size = %#zx\r\n", image_size )
   #endif
@@ -910,7 +910,7 @@ int task_process_replace(
     return result;
   }
   // set image
-  auto image = ( void* )KERNEL_AREA_PROCESS_REPLACE_START;
+  auto const image = ( void* )KERNEL_AREA_PROCESS_REPLACE_START;
   // copy over image
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "image = %p\r\n", image )
