@@ -17,12 +17,14 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _UTIL_H
-#define _UTIL_H
+#ifndef _PLATFORM_RASPI_IOMEM_MAILBOX_H
+#define _PLATFORM_RASPI_IOMEM_MAILBOX_H
 
 #include <stddef.h>
 
-void* util_prepare_mmio_sequence( size_t, size_t* );
-void* util_prepare_mailbox( size_t, size_t* );
+#define MAILBOX_ERROR_OUTPUT 1
+
+void* iomem_prepare_mailbox( size_t, size_t* );
+int iomem_execute_mailbox( int, const void*, size_t );
 
 #endif

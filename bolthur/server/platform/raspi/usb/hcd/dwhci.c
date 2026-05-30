@@ -18,20 +18,24 @@
  */
 
 // system includes
+#include <errno.h>
 #include <sys/bolthur.h>
 #include <sys/ioctl.h>
 #include <sys/_default_fcntl.h>
 // local includes
 #include "dwhci.h"
-#include "util.h"
 #include "response.h"
+#include "rpc.h"
 // driver includes
 #include <sys/mman.h>
-
+// shared includes
 #include "../../libhcd.h"
-#include "../../libiomem.h"
-#include "../../libperipheral.h"
-#include "../../libmailbox.h"
+// library includes
+#include "../../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../../library/platform/raspi/iomem/libperipheral.h"
+#include "../../../../../library/platform/raspi/iomem/libmailbox.h"
+#include "../../../../../library/platform/raspi/iomem/sequence.h"
+#include "../../../../../library/platform/raspi/iomem/mailbox.h"
 
 /**
  * @brief file descriptor for iomem operations
@@ -66,7 +70,7 @@ response_t dwhci_read_port( const uint32_t port, uint32_t* value ) {
   }
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -122,7 +126,7 @@ response_t dwhci_write_port( const uint32_t port, const uint32_t value ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -181,7 +185,7 @@ response_t dwhci_transmit_channel( const uint8_t channel, void* buffer ) {
   }
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 5, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 5, &sequence_size );
   if ( ! sequence ) {
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Sequence memory allocation failed\r\n" )
@@ -306,7 +310,7 @@ response_t dwhci_prepare_channel(
   #endif
   // allocate mmio sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 3, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 3, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined ( DWHCI_ENABLE_DEBUG )
@@ -795,6 +799,25 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     #endif
     // return result
     return result;
+  }
+  // proactive fetch interrupt for the case it wasn't fired and finished
+  // immediately
+  uint32_t interrupt;
+  result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_INT_STAT, &interrupt );
+  if ( HCD_RESPONSE_OK != result ) {
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to read interrupt status register!\r\n" )
+    #endif
+    return result;
+  }
+  // handle interrupt
+  if ( interrupt & HCD_DWHCI_CORE_INT_MASK_HC_INTR ) {
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Interrupt detected\r\n" )
+    #endif
+    // calling handler manually
+    rpc_interrupt_handle(0, 0, 0, 0);
   }
   // return success
   return HCD_RESPONSE_OK;
@@ -1473,7 +1496,7 @@ response_t dwhci_power_on( void ) {
   #endif
   // allocate buffer
   size_t request_size;
-  int32_t* request = util_prepare_mailbox( 8, &request_size );
+  int32_t* request = iomem_prepare_mailbox( 8, &request_size );
   if ( ! request ) {
     return HCD_RESPONSE_ERROR_MEMORY;
   }
@@ -1574,7 +1597,7 @@ response_t dwhci_core_flush_tx_fifo( const uint32_t num_fifo ) {
 
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 2, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -1645,7 +1668,7 @@ response_t dwhci_core_flush_rx_fifo( void ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 2, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -1723,7 +1746,7 @@ response_t dwhci_init( void ) {
   memset( &configuration, 0, sizeof( configuration ) );
   // query vendor and hardware information
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 7, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 7, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -1834,7 +1857,7 @@ response_t dwhci_init( void ) {
     return HCD_RESPONSE_ERROR_INCOMPATIBLE;
   }*/
   // disable interrupts
-  sequence = util_prepare_mmio_sequence( 3, &sequence_size );
+  sequence = iomem_prepare_mmio_sequence( 3, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -1898,7 +1921,7 @@ response_t dwhci_init( void ) {
     EARLY_STARTUP_PRINT( "Disable pulse and vbus and perform initial reset\r\n" )
   #endif
   // allocate sequence
-  sequence = util_prepare_mmio_sequence( 7, &sequence_size );
+  sequence = iomem_prepare_mmio_sequence( 7, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -1991,7 +2014,7 @@ response_t dwhci_init( void ) {
     EARLY_STARTUP_PRINT( "Phy initialization with reset\r\n" )
   #endif
   // allocate sequence
-  sequence = util_prepare_mmio_sequence( 7, &sequence_size );
+  sequence = iomem_prepare_mmio_sequence( 7, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -2118,7 +2141,7 @@ response_t dwhci_init( void ) {
     EARLY_STARTUP_PRINT( "Preparing dma configuration\r\n" )
   #endif
   // prepare sequence
-  sequence = util_prepare_mmio_sequence( 2, &sequence_size );
+  sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -2197,7 +2220,7 @@ response_t dwhci_init( void ) {
     EARLY_STARTUP_PRINT( "Preparing host startup\r\n" )
   #endif
   // prepare sequence
-  sequence = util_prepare_mmio_sequence( 10, &sequence_size );
+  sequence = iomem_prepare_mmio_sequence( 10, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -2301,7 +2324,7 @@ response_t dwhci_init( void ) {
   // put channels into known states if no dma descriptor is enabled
   if ( ! ( host_cfg & HCD_DWHCI_HOST_CFG_ENABLE_DMA_DESCRIPTOR ) ) {
     // prepare sequence
-    sequence = util_prepare_mmio_sequence( 2, &sequence_size );
+    sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
     if ( ! sequence ) {
       // debug output
       #if defined( DWHCI_ENABLE_DEBUG )
@@ -2355,7 +2378,7 @@ response_t dwhci_init( void ) {
     // free sequence again
     free( sequence );
     // prepare sequence
-    sequence = util_prepare_mmio_sequence( 3, &sequence_size );
+    sequence = iomem_prepare_mmio_sequence( 3, &sequence_size );
     if ( ! sequence ) {
       // debug output
       #if defined( DWHCI_ENABLE_DEBUG )
@@ -2443,7 +2466,7 @@ response_t dwhci_init( void ) {
     EARLY_STARTUP_PRINT( "Resetting host port\r\n" )
   #endif
   // prepare sequence
-  sequence = util_prepare_mmio_sequence( 5, &sequence_size );
+  sequence = iomem_prepare_mmio_sequence( 5, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -2516,7 +2539,7 @@ response_t dwhci_init( void ) {
     EARLY_STARTUP_PRINT( "Enabling interrupts\r\n" )
   #endif
   // enable all interrupts
-  sequence = util_prepare_mmio_sequence( 6, &sequence_size );
+  sequence = iomem_prepare_mmio_sequence( 6, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )

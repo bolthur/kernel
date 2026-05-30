@@ -158,6 +158,9 @@ AC_CONFIG_FILES([
   framebuffer/Makefile
   handle/Makefile
   hid/Makefile
+  platform/Makefile
+  platform/raspi/Makefile
+  platform/raspi/iomem/Makefile
   usb/Makefile
   util/Makefile
 ])

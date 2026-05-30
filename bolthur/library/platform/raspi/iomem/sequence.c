@@ -17,19 +17,19 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// local includes
-#include "util.h"
-// driver includes
-#include "../../libiomem.h"
+#include <errno.h>
+#include <sys/bolthur.h>
+#include <sys/ioctl.h>
+#include "sequence.h"
+#include "libiomem.h"
 
 /**
- * @fn void util_prepare_mmio_sequence*(size_t, size_t*)
+ * @fn void* iomem_prepare_mmio_sequence(size_t, size_t*)
  * @brief Prepare mmio sequence
- *
- * @param count
- * @param total
+ * @param count amount of entries
+ * @param total output variable for total size
  */
-void* util_prepare_mmio_sequence( const size_t count, size_t* total ) {
+void* iomem_prepare_mmio_sequence( const size_t count, size_t* total ) {
   if ( 0 == count ) {
     return NULL;
   }
@@ -56,28 +56,31 @@ void* util_prepare_mmio_sequence( const size_t count, size_t* total ) {
 }
 
 /**
- * @fn void* util_prepare_mailbox*(size_t, size_t*)
- * @brief Helper to allocate and clear mailbox property array
- *
- * @param count
- * @param total
+ * @fn int iomem_execute_sequence(int, const void*, size_t)
+ * @brief Function to execute a sequence
+ * @param fd file descriptor
+ * @param data data
+ * @param size data size
+ * @return
  */
-void* util_prepare_mailbox( const size_t count, size_t* total ) {
-  if ( 0 == count ) {
-    return NULL;
+int iomem_execute_sequence( int fd, const void* data, const size_t size ) {
+  // execute sequence
+  const int result = ioctl(
+    fd,
+    IOCTL_BUILD_REQUEST( IOMEM_RPC_MMIO_PERFORM, size, IOCTL_RDWR ),
+    data
+  );
+  // handle error
+  if ( result != 0 ) {
+    // error output
+    #if defined( SEQUENCE_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Unable to execute mmio sequence: %s\r\n",
+        strerror( e ) );
+    #endif
+    // return result
+    return result;
   }
-  // allocate
-  const size_t tmp_total = count * sizeof( uint32_t );
-  iomem_mmio_entry_t* tmp = malloc( tmp_total );
-  if ( ! tmp ) {
-    return NULL;
-  }
-  // erase
-  memset( tmp, 0, tmp_total );
-  // set total if not null
-  if ( total ) {
-    *total = tmp_total;
-  }
-  // return
-  return tmp;
+  // return success
+  return 0;
 }

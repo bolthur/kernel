@@ -3,9 +3,11 @@ AM_CFLAGS = -DPROGRAM_NAME=\"usb/hcd\"
 
 bin_PROGRAMS = hcd
 hcd_DEPENDENCIES = \
-  ${abs_top_builddir}/../library/util/libutil.la
+  ${abs_top_builddir}/../library/util/libutil.la \
+  ${abs_top_builddir}/../library/platform/raspi/iomem/libiomem.la
 hcd_LDADD = \
-  ${abs_top_builddir}/../library/util/libutil.la
+  ${abs_top_builddir}/../library/util/libutil.la \
+  ${abs_top_builddir}/../library/platform/raspi/iomem/libiomem.la
 hcd_SOURCES = \
   rpc/interrupt/handle.c \
   rpc/poll/interrupt.c \
@@ -14,6 +16,5 @@ hcd_SOURCES = \
   dwhci.c \
   dwhciroothub.c \
   main.c \
-  response.c \
-  util.c
+  response.c
 hcd_LDFLAGS = -all-static --static

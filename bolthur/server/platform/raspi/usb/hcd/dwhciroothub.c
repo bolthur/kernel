@@ -22,11 +22,14 @@
 #include <sys/ioctl.h>
 #include "dwhci.h"
 #include "dwhciroothub.h"
-#include "../../../../../library/util/min.h"
+// shared includes
 #include "../../libhcd.h"
-#include "../../libiomem.h"
-#include "../../libperipheral.h"
-#include "../../storage/sd/util.h"
+// library includes
+#include "../../../../../library/util/min.h"
+#include "../../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../../library/platform/raspi/iomem/libperipheral.h"
+#include "../../../../../library/platform/raspi/iomem/sequence.h"
+
 
 uint32_t dwhciroothub_root_hub_device_number = 0;
 
@@ -275,7 +278,7 @@ int dwhciroothub_process(
                 EARLY_STARTUP_PRINT( "roothub port feature suspend!\r\n" )
               #endif
               // allocate sequence
-              sequence = util_prepare_mmio_sequence( 7, &sequence_size );
+              sequence = iomem_prepare_mmio_sequence( 7, &sequence_size );
               if ( ! sequence ) {
                 *error = LIBUSB_TRANSFER_ERROR_BUFFER_ERROR;
                 break;
@@ -422,7 +425,7 @@ int dwhciroothub_process(
                 EARLY_STARTUP_PRINT( "roothub port feature reset!\r\n" )
               #endif
               // allocate sequence
-              sequence = util_prepare_mmio_sequence( 8, &sequence_size );
+              sequence = iomem_prepare_mmio_sequence( 8, &sequence_size );
               if ( ! sequence ) {
                 *error = LIBUSB_TRANSFER_ERROR_BUFFER_ERROR;
                 break;
