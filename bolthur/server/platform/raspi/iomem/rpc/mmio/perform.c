@@ -71,7 +71,7 @@ static void custom_nanosleep( const struct timespec* rqtp ) {
 }
 
 /**
- * @fn uint32_t apply_shift(uint32_t, uint32_t, uint32_t)
+ * @fn uint32_t apply_shift(uint32_t, const uint32_t, const uint32_t)
  * @brief Helper to apply shift operation
  *
  * @param value
@@ -81,8 +81,8 @@ static void custom_nanosleep( const struct timespec* rqtp ) {
  */
 static uint32_t apply_shift(
   uint32_t value,
-  mmio_shift_t shift_type,
-  uint32_t shift_value
+  const mmio_shift_t shift_type,
+  const uint32_t shift_value
 ) {
   // apply possible shift
   if ( 0 < shift_value && IOMEM_MMIO_SHIFT_LEFT == shift_type ) {
@@ -95,7 +95,7 @@ static uint32_t apply_shift(
 }
 
 /**
- * @fn uint32_t read_helper(iomem_mmio_entry_t*, uint32_t*)
+ * @fn uint32_t read_helper(const iomem_mmio_entry_t*, uint32_t*)
  * @brief read helper
  *
  * @param request
@@ -136,7 +136,7 @@ static uint32_t read_helper( const iomem_mmio_entry_t* request, uint32_t* val ) 
  *
  * @todo replace custom nanosleep with nanosleep when timers are working in activ rpc
  */
-static void apply_sleep( mmio_sleep_t sleep_type, uint32_t sleep_value ) {
+static void apply_sleep(const mmio_sleep_t sleep_type, const uint32_t sleep_value ) {
   // variables
   struct timespec ts;
   //int res;
@@ -193,29 +193,33 @@ void rpc_handle_mmio_perform(
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    EARLY_STARTUP_PRINT( "Invalid origin\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // handle no data
   error.status = -EINVAL;
   if ( ! data_info ) {
+    EARLY_STARTUP_PRINT( "No data\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
+    EARLY_STARTUP_PRINT( "Unable to fetch data\r\n" )
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
   // allocate space for request
-  const uint8_t* request_data = ( const uint8_t* )request->container;
+  auto request_data = ( const uint8_t* )request->container;
   // allocate space for response
   vfs_ioctl_perform_response_t* response;
   size_t response_size = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) * sizeof( char ) + sizeof( *response );
   response = malloc( response_size );
   if ( ! response ) {
+    EARLY_STARTUP_PRINT( "unable to allocate response\r\n" )
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );

@@ -96,8 +96,9 @@ response_t dwhci_read_port( const uint32_t port, uint32_t* value ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Querying vendor information failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Read port faild: %s\r\n", strerror( e ) )
     #endif
     // free sequence
     free( sequence );
@@ -152,8 +153,9 @@ response_t dwhci_write_port( const uint32_t port, const uint32_t value ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Querying vendor information failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Writing to port failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
     free( sequence );
@@ -230,8 +232,10 @@ response_t dwhci_transmit_channel( const uint8_t channel, void* buffer ) {
   // handle error
   if ( -1 == result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Transmit channel sequence failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Transmit channel sequence failed: %s\r\n",
+        strerror( e ) )
     #endif
     // free sequence
     free( sequence );
@@ -341,8 +345,10 @@ response_t dwhci_prepare_channel(
   // handle error
   if ( -1 == result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Transmit channel sequence failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Prepare channel sequence failed: %s\r\n",
+        strerror( e ) )
     #endif
     // free sequence
     free( sequence );
@@ -382,7 +388,10 @@ response_t dwhci_allocate_channel( uint8_t* channel_out ) {
     // shift mask to right for check of next channel
     mask <<= 1;
   }
-  EARLY_STARTUP_PRINT( "No free channel found\r\n" )
+  // error output
+  #if defined( DWHCI_ERROR_OUTPUT )
+    EARLY_STARTUP_PRINT( "No free channel found\r\n" )
+  #endif
   // return no channel
   return HCD_RESPONSE_ERROR_NO_CHANNEL;
 }
@@ -396,12 +405,22 @@ response_t dwhci_allocate_channel( uint8_t* channel_out ) {
 response_t dwhci_free_channel( const uint8_t channel ) {
   // check channel
   if ( channel >= configuration.channel.count ) {
+    // error output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Invalid channel number\r\n" )
+    #endif
+    // return error
     return HCD_RESPONSE_ERROR_EINVAL;
   }
   // build mask to apply
   const uint32_t mask = 1 << channel;
   // ensure channel is allocated
   if (!(configuration.channel.allocated & mask)) {
+    // error output
+    #if defined( DWHCI_ERROR_OUTPUT )
+        EARLY_STARTUP_PRINT( "Channel not allocated\r\n" )
+    #endif
+    // return error
     return HCD_RESPONSE_ERROR_NO_CHANNEL;
   }
   // deallocate channel
@@ -436,11 +455,12 @@ response_t dwhci_queue_add_entry( void* data, const dwhci_queue_status_t status,
   entry->status = status;
   entry->error = LIBUSB_TRANSFER_ERROR_NO_ERROR;
   // map buffer
+  /// FIXME: REPLACE 0x1000 by data size
   entry->buffer = mmap( NULL, 0x1000, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_BUS | MAP_DEVICE , -1, 0 );
   // handle map failed
   if ( MAP_FAILED == entry->buffer ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate buffer\r\n" )
     #endif
     // free entry again
@@ -481,7 +501,7 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
   // validate data
   if ( ! entry ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Invalid entry passed for removal\r\n" )
     #endif
     // return einval
@@ -523,7 +543,10 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
  * @param entry output entry
  * @return
  */
-response_t dwhci_queue_get_active_by_channel( uint8_t channel, channel_queue_entry_t** entry ) {
+response_t dwhci_queue_get_active_by_channel(
+  const uint8_t channel,
+  channel_queue_entry_t** entry
+) {
   // start with queue
   channel_queue_entry_t* current = configuration.list;
   // loop while there is something
@@ -541,6 +564,10 @@ response_t dwhci_queue_get_active_by_channel( uint8_t channel, channel_queue_ent
     // go to next
     current = current->next;
   }
+  // error output
+  #if defined( DWHCI_ERROR_OUTPUT )
+    EARLY_STARTUP_PRINT( "Invalid channel number\r\n" )
+  #endif
   // return einval
   return HCD_RESPONSE_ERROR_EINVAL;
 }
@@ -555,9 +582,9 @@ response_t dwhci_queue_get_active_by_channel( uint8_t channel, channel_queue_ent
  */
 response_t dwhci_next_usb_pid( const dwhci_channel_state_t last_usb_pid, const uint32_t packet_transferred, uint8_t* output ) {
   // validate output
-  if (!output) {
+  if ( ! output ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Invalid output passed for Next USB PID\r\n" )
     #endif
     // return error
@@ -584,7 +611,7 @@ response_t dwhci_next_usb_pid( const dwhci_channel_state_t last_usb_pid, const u
       break;
     default:
       // debug output
-      #if defined( DWHCI_ENABLE_DEBUG )
+      #if defined( DWHCI_ERROR_OUTPUT )
         EARLY_STARTUP_PRINT( "Invalid channel passed for Next USB PID\r\n" )
       #endif
       // return einval
@@ -604,7 +631,7 @@ response_t dwhci_enable_channel_interrupt( const uint8_t channel ) {
   uint32_t status;
   response_t result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, &status );
   if ( HCD_RESPONSE_OK != result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to read channel interrupt\r\n" )
     #endif
     return result;
@@ -615,7 +642,7 @@ response_t dwhci_enable_channel_interrupt( const uint8_t channel ) {
   result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, status );
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
     #endif
     return result;
@@ -635,7 +662,7 @@ response_t dwhci_disable_channel_interrupt( const uint8_t channel ) {
   uint32_t status;
   response_t result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, &status );
   if ( HCD_RESPONSE_OK != result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to read channel interrupt\r\n" )
     #endif
     return result;
@@ -646,8 +673,8 @@ response_t dwhci_disable_channel_interrupt( const uint8_t channel ) {
   result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT_MASK, status );
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to disable channel interrupt\r\n" )
     #endif
     return result;
   }
@@ -672,7 +699,7 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     ( uint32_t )-1 );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to clear channel interrupts\r\n" )
     #endif
     // return result
@@ -683,11 +710,12 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     EARLY_STARTUP_PRINT( "Translate buffer to physical\r\n" )
   #endif
   // translate buffer to physical bus address
+  /// FIXME: REPLACE 0x1000 by buffer size
   const uintptr_t phys = _syscall_memory_translate_bus(
     ( uintptr_t )entry->buffer, 0x1000 );
   if ( errno ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to translate buffer to phys\r\n" )
     #endif
     // return result
@@ -703,7 +731,7 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     phys + entry->buffer_offset );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to write DMA address\r\n" )
     #endif
     // return result
@@ -720,7 +748,7 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     &channel_interrupt_mask );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to read host channel interrupt mask\r\n" )
     #endif
     // return result
@@ -740,8 +768,8 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     channel_interrupt_mask );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Unable to write host channel interrupt mask\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to write host channel interrupt mask\r\n" )
     #endif
     // return result
     return result;
@@ -755,7 +783,7 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
   result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), &characteristics );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to read channel characteristics\r\n" )
     #endif
     // return result
@@ -767,7 +795,7 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
   result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), characteristics );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to write back characteristics\r\n" )
     #endif
     // return result
@@ -793,7 +821,7 @@ response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t* e
   response_t result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), &characteristics );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to read channel characteristics\r\n" )
     #endif
     // return result
@@ -806,7 +834,7 @@ response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t* e
   result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), characteristics );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to write back characteristics\r\n" )
     #endif
     // return result
@@ -816,7 +844,7 @@ response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t* e
   result = dwhci_disable_channel_interrupt( entry->channel );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to disable channel %"PRIu8"\r\n", entry->channel )
     #endif
     // return result
@@ -826,7 +854,7 @@ response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t* e
   result = dwhci_free_channel( entry->channel );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to free channel %"PRIu8"\r\n", entry->channel )
     #endif
     // return result
@@ -872,7 +900,7 @@ response_t dwhci_channel_send_async_setup( channel_queue_entry_t* entry ) {
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to prepare allocated channel\r\n" )
     #endif
     // return result
@@ -925,7 +953,7 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
   response_t result = dwhci_next_usb_pid( ( ( hcd_control_message_t* )entry->data )->last_usb_pid, entry->packet_transferred, &next_usb_pid );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to get next usb pid\r\n" )
     #endif
     // return result
@@ -944,7 +972,7 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to prepare allocated channel\r\n" )
     #endif
     // return result
@@ -957,7 +985,7 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
   result = dwhci_channel_send_async_start_channel( entry );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to start async channel\r\n" )
     #endif
     // reset pid change
@@ -1011,7 +1039,7 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
   response_t result = dwhci_next_usb_pid( ( ( hcd_control_message_t* )entry->data )->last_usb_pid, entry->packet_transferred, &next_usb_pid );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to get next usb pid\r\n" )
     #endif
     // return result
@@ -1030,7 +1058,7 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to prepare allocated channel\r\n" )
     #endif
     // return result
@@ -1043,7 +1071,7 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
   result = dwhci_channel_send_async_start_channel( entry );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to start async channel\r\n" )
     #endif
     // reset pid change
@@ -1077,7 +1105,7 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
   const response_t result = dwhci_channel_send_async_stop_channel( entry );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to stop channel\r\n")
     #endif
   }
@@ -1091,7 +1119,7 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
   vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate memory for response\r\n" )
     #endif
     // return error
@@ -1176,7 +1204,7 @@ response_t dwhci_channel_send_async( hcd_control_message_t* data, hcd_submit_con
   response_t result = dwhci_queue_add_entry( data, DWHCI_QUEUE_CHANNEL_STATUS_PENDING, &entry );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to add request to queue\r\n" )
     #endif
     // return result
@@ -1190,7 +1218,7 @@ response_t dwhci_channel_send_async( hcd_control_message_t* data, hcd_submit_con
   result = dwhci_allocate_channel( &channel );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate a channel, entry is queued\r\n" )
     #endif
     // return error
@@ -1203,7 +1231,7 @@ response_t dwhci_channel_send_async( hcd_control_message_t* data, hcd_submit_con
   result = dwhci_enable_channel_interrupt( channel );
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
     #endif
     // free channel again
@@ -1259,7 +1287,7 @@ response_t dwhci_channel_poll_async_data( channel_queue_entry_t* entry ) {
     ( ( hcd_interrupt_poll_t* )entry->data )->previous_transferred_packet, &next_usb_pid );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to get next usb pid\r\n" )
     #endif
     // return result
@@ -1278,7 +1306,7 @@ response_t dwhci_channel_poll_async_data( channel_queue_entry_t* entry ) {
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to prepare allocated channel\r\n" )
     #endif
     // return result
@@ -1342,7 +1370,7 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   const response_t result = dwhci_channel_send_async_stop_channel( entry );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to stop channel\r\n")
     #endif
   }
@@ -1356,7 +1384,7 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate memory for response\r\n" )
     #endif
     // return error
@@ -1395,7 +1423,7 @@ response_t dwhci_channel_poll_async( hcd_interrupt_poll_t* data, hcd_submit_inte
   response_t result = dwhci_queue_add_entry( data, DWHCI_QUEUE_POLL_STATUS_PENDING, &entry );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to add request to queue\r\n" )
     #endif
     // return result
@@ -1409,7 +1437,7 @@ response_t dwhci_channel_poll_async( hcd_interrupt_poll_t* data, hcd_submit_inte
   result = dwhci_allocate_channel( &channel );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to allocate a channel, entry is queued\r\n" )
     #endif
     // return error
@@ -1422,7 +1450,7 @@ response_t dwhci_channel_poll_async( hcd_interrupt_poll_t* data, hcd_submit_inte
   result = dwhci_enable_channel_interrupt( channel );
   // handle error
   if ( HCD_RESPONSE_OK != result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
     #endif
     // free channel again
@@ -1488,7 +1516,7 @@ response_t dwhci_power_on( void ) {
   // handle not successful
   if ( MAILBOX_REQUEST_SUCCESSFUL != ( uint32_t )request[ 1 ] ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Request not successful: %#"PRIx32"\r\n",
         ( uint32_t )request[ 1 ] )
     #endif
@@ -1500,7 +1528,7 @@ response_t dwhci_power_on( void ) {
   // handle invalid device id returned
   if ( MAILBOX_POWER_STATE_DEVICE_USB_HCD != request[ 5 ] ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT(
         "Invalid device id returned, expected %#x but received %#"PRIX32"\r\n",
         MAILBOX_POWER_STATE_DEVICE_USB_HCD, request[ 5 ] )
@@ -1513,7 +1541,7 @@ response_t dwhci_power_on( void ) {
   // check for powered on correctly
   if ( ( request[ 6 ] & 0x3 ) != MAILBOX_SET_POWER_STATE_ON ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT(
         "Device not powered on successfully: %#"PRIx32"\r\n",
         request[ 6 ] & 0x3 )
@@ -1582,8 +1610,9 @@ response_t dwhci_core_flush_tx_fifo( const uint32_t num_fifo ) {
   // handle ioctl error
   if ( -1 == ioctl_result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Phy power reset failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Phy power reset failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
     free( sequence );
@@ -1652,8 +1681,9 @@ response_t dwhci_core_flush_rx_fifo( void ) {
   // handle ioctl error
   if ( -1 == ioctl_result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Phy power reset failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Phy power reset failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
     free( sequence );
@@ -1747,8 +1777,10 @@ response_t dwhci_init( void ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Querying vendor information failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Querying vendor information failed: %s\r\n",
+        strerror( e ) )
     #endif
     // close file descriptor
     close( fd_iomem );
@@ -1849,8 +1881,10 @@ response_t dwhci_init( void ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Disable of interrupts failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Disable of interrupts failed: %s\r\n",
+        strerror( e ) )
     #endif
     // close file descriptor
     close( fd_iomem );
@@ -1866,7 +1900,7 @@ response_t dwhci_init( void ) {
   // handle error
   if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to power on hub\r\n" )
     #endif
     // close file descriptor
@@ -1933,8 +1967,9 @@ response_t dwhci_init( void ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Reset sequence failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
     free( sequence );
@@ -2025,8 +2060,9 @@ response_t dwhci_init( void ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Reset sequence failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
     free( sequence );
@@ -2067,7 +2103,7 @@ response_t dwhci_init( void ) {
   dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, &usb_cfg );
   if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Read port failed\r\n" )
     #endif
     return dwhci_result;
@@ -2086,7 +2122,7 @@ response_t dwhci_init( void ) {
   dwhci_result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, usb_cfg );
   if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Write port failed\r\n" )
     #endif
     return dwhci_result;
@@ -2126,8 +2162,9 @@ response_t dwhci_init( void ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Reset sequence failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
     free( sequence );
@@ -2139,7 +2176,7 @@ response_t dwhci_init( void ) {
   // query usb port again
   dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, &usb_cfg );
   if ( HCD_RESPONSE_OK != dwhci_result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Read port failed\r\n" )
     #endif
     return dwhci_result;
@@ -2164,7 +2201,7 @@ response_t dwhci_init( void ) {
   }
   dwhci_result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_USB_CFG, usb_cfg );
   if ( HCD_RESPONSE_OK != dwhci_result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Write port failed\r\n" )
     #endif
     return dwhci_result;
@@ -2236,8 +2273,9 @@ response_t dwhci_init( void ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "host config sequence failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "host config sequence failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
     free( sequence );
@@ -2249,7 +2287,7 @@ response_t dwhci_init( void ) {
   dwhci_result = dwhci_core_flush_tx_fifo( 16 );
   if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
-    #if defined ( DWHCI_ENABLE_DEBUG )
+    #if defined ( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Flushing tx fifo failed\r\n" )
     #endif
     return dwhci_result;
@@ -2258,7 +2296,7 @@ response_t dwhci_init( void ) {
   dwhci_result = dwhci_core_flush_rx_fifo();
   if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Flushing rx fifo failed\r\n" )
     #endif
     return dwhci_result;
@@ -2269,7 +2307,7 @@ response_t dwhci_init( void ) {
   dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CFG, &host_cfg );
   if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Read of host cfg failed: %s\r\n", response_error( dwhci_result ) )
     #endif
     // return error
@@ -2319,8 +2357,9 @@ response_t dwhci_init( void ) {
       // handle ioctl error
       if ( -1 == result ) {
         // debug output
-        #if defined( DWHCI_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "host config sequence failed\r\n" )
+        #if defined( DWHCI_ERROR_OUTPUT )
+          const int e = errno;
+          EARLY_STARTUP_PRINT( "host config sequence failed: %s\r\n", strerror( e ) )
         #endif
         // free sequence
         free( sequence );
@@ -2371,8 +2410,9 @@ response_t dwhci_init( void ) {
       // handle ioctl error
       if ( -1 == result ) {
         // debug output
-        #if defined( DWHCI_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "host config sequence failed\r\n" )
+        #if defined( DWHCI_ERROR_OUTPUT )
+          const int e = errno;
+          EARLY_STARTUP_PRINT( "host config sequence failed: %s\r\n", strerror( e ) )
         #endif
         // free sequence
         free( sequence );
@@ -2395,7 +2435,7 @@ response_t dwhci_init( void ) {
   dwhci_result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_PORT, &host_port );
   if ( HCD_RESPONSE_OK != dwhci_result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "host port read failed\r\n" )
     #endif
     return dwhci_result;
@@ -2407,7 +2447,7 @@ response_t dwhci_init( void ) {
     host_port |= HCD_DWHCI_HOST_PORT_POWER;
     dwhci_result = dwhci_write_port( PERIPHERAL_DWHCI_HOST_PORT, host_port );
     if ( HCD_RESPONSE_OK != dwhci_result ) {
-      #if defined( DWHCI_ENABLE_DEBUG )
+      #if defined( DWHCI_ERROR_OUTPUT )
         EARLY_STARTUP_PRINT( "host port write failed\r\n" )
       #endif
       return dwhci_result;
@@ -2458,8 +2498,9 @@ response_t dwhci_init( void ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "host config sequence failed: %s\r\n", strerror( errno ) )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "host config sequence failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
     free( sequence );
@@ -2477,7 +2518,7 @@ response_t dwhci_init( void ) {
   // handle error
   if ( errno ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ERROR_OUTPUT )
       const int e = errno;
       EARLY_STARTUP_PRINT( "Unable to acquire interrupt %d: %s\r\n",
         ARM_IRQ_USB, strerror( e ) )
@@ -2542,8 +2583,9 @@ response_t dwhci_init( void ) {
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Enable of interrupts failed\r\n" )
+    #if defined( DWHCI_ERROR_OUTPUT )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "Enable of interrupts failed: %s\r\n", strerror( e ) )
     #endif
     // close file descriptor
     close( fd_iomem );
