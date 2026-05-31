@@ -343,16 +343,6 @@ rpc_backup_t* rpc_generic_raise(
     // skip if backup could not be created
     return NULL;
   }
-  // prepare thread
-  if ( ! rpc_generic_prepare_invoke( backup ) ) {
-    // debug output
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Error while preparing target %d\r\n", target->id )
-    #endif
-    rpc_backup_destroy( backup );
-    // skip if error occurred during rpc invoke
-    return NULL;
-  }
   // allocate new structure for tree
   if ( backup->data_id ) {
     rpc_origin_source_t* rpc_info = malloc( sizeof( *rpc_info ) );
@@ -386,6 +376,16 @@ rpc_backup_t* rpc_generic_raise(
     }
     // cache rpc info structure
     backup->rpc_info = rpc_info;
+  }
+  // prepare thread
+  if ( ! rpc_generic_prepare_invoke( backup ) ) {
+    // debug output
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "Error while preparing target %d\r\n", target->id )
+    #endif
+    rpc_backup_destroy( backup );
+    // skip if error occurred during rpc invoke
+    return NULL;
   }
   // return created backup
   return backup;

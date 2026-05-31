@@ -108,7 +108,7 @@ _\name\()_entry_unprivileged:
   get_thread_context lr
 
   // save registers
-  stmia lr, { r0 - r14 }^
+  stm lr, { r0 - r14 }^
   push_fpu_register lr
 
   // get pushed lr and fill it into struct
@@ -149,7 +149,7 @@ _\name\()_entry_privileged:
   // allocate space for context structure
   sub sp, #STACK_FRAME_SIZE
   // save registers to stack
-  stmia sp, { r0 - r12 }
+  stm sp, { r0 - r12 }
   push_fpu_register sp
   // get pushed lr and fill it into struct
   ldr r0, [ sp, #PRIVILEGED_PC_OFFSET ]
@@ -304,11 +304,11 @@ _\name\()_exit_finished:
     // start with first fpu registers
     add \register, #NEON_REGISTER_START
     // backup fpu registers
-    vstmia \register!, { d0 - d15 }
-    vstmia \register!, { d16 - d31 }
-    // restore passed register to point to begin
-    sub \register, #STACK_FRAME_SIZE
+    vstmia.64 \register!, { d0 - d15 }
+    vstmia.64 \register!, { d16 - d31 }
   #endif
+  // restore passed register to point to begin
+  sub \register, #STACK_FRAME_SIZE
 .endm
 
 .macro pop_fpu_register register:req
@@ -319,9 +319,9 @@ _\name\()_exit_finished:
     // start with first fpu registers
     add \register, #NEON_REGISTER_START
     // restore fpu registers
-    vldmia \register!, { d0 - d15 }
-    vldmia \register!, { d16 - d31 }
-    // restore passed register to point to begin
-    sub \register, #STACK_FRAME_SIZE
+    vldmia.64 \register!, { d0 - d15 }
+    vldmia.64 \register!, { d16 - d31 }
   #endif
+  // restore passed register to point to begin
+  sub \register, #STACK_FRAME_SIZE
 .endm

@@ -27,7 +27,7 @@
  */
 #define DEBUG_OUTPUT( ... ) \
   { \
-    const char* f = __func__; \
+    const char* f = ( const char* )__func__; \
     if ( f ) { \
       printf( "[ %s:%4d ] ", f, __LINE__ ); \
       printf( __VA_ARGS__ ); \

@@ -63,9 +63,13 @@ bool rpc_generic_restore( task_thread_t* thread ) {
       backup = tmp;
       // debug output
       #if defined( PRINT_RPC )
-        DEBUG_OUTPUT( "backup = %p\r\n", backup )
+        DEBUG_OUTPUT( "backup = %p / %d\r\n", backup, backup->thread->process->id )
       #endif
     } else {
+      // debug output
+      #if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "backup = %p / %d\r\n", backup, backup->thread->process->id )
+      #endif
       further_rpc_enqueued = true;
     }
   }
@@ -143,7 +147,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
   // handle enqueued stuff
   if ( further_rpc_enqueued ) {
     // get first list item
-    const list_item_t* item = thread->process->rpc_queue->first;
+    auto item = thread->process->rpc_queue->first;
     // initialize next backup
     rpc_backup_t* next = NULL;
     // loop through next
@@ -220,8 +224,8 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     return true;
   }
   // get register context
-  const task_process_t* proc = backup->thread->process;
-  cpu_register_context_t* cpu = backup->thread->current_context;
+  auto const proc = backup->thread->process;
+  // handle not in queue
   if ( ! list_lookup_data( proc->rpc_queue, backup ) ) {
     // debug output
     #if defined( PRINT_RPC )
@@ -232,19 +236,38 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
       return false;
     }
   }
-  // get active rpc
-  const rpc_backup_t* existing = rpc_backup_get_active( backup->thread, 0 );
+  // evaluate wait for return block
+  bool wait_for_return_block = false;
+  if ( TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN == backup->thread->state ) {
+    const rpc_origin_source_t* rpc_backup = nullptr;
+    if ( backup->origin_data_id ) {
+      rpc_backup = rpc_generic_source_info( backup->origin_data_id );
+      while ( rpc_backup->origin_rpc_id ) {
+        rpc_backup = rpc_generic_source_info( rpc_backup->origin_rpc_id );
+      }
+    }
+    // wait for return is blocked when it's an interrupt, has no rpc backup (
+    // fired directly asynchronous ) or when pid is not backup source process (
+    // nested are only allowed within themselves )
+    wait_for_return_block = backup->is_interrupt
+      || ! rpc_backup
+      || backup->thread->process->id != rpc_backup->source_process;
+    // when an interrupt is running, block it
+    if ( backup->thread->handling_interrupt ) {
+      wait_for_return_block = true;
+    }
+    #if defined( PRINT_RPC )
+      if ( wait_for_return_block ) {
+        DEBUG_OUTPUT( "%d is blocked\r\n", backup->thread->process->id )
+      }
+    #endif
+  }
   // enqueue only when state is set
   if (
     TASK_THREAD_STATE_RPC_QUEUED == backup->thread->state
     || TASK_THREAD_STATE_RPC_ACTIVE == backup->thread->state
     || TASK_THREAD_STATE_RPC_HALT_SWITCH == backup->thread->state
-    // for interrupts treat also wait for return as "blocking" to prevent
-    // stack underruns
-    || (
-      TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN == backup->thread->state
-      && backup->is_interrupt
-    )
+    || wait_for_return_block
   ) {
     // debug output
     #if defined( PRINT_RPC )
@@ -265,37 +288,7 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     return true;
   }
 
-  // handle rpc active
-  if ( existing ) {
-    // traverse source up to initiating process
-    const rpc_origin_source_t* rpc_source = existing->rpc_info;
-    while ( rpc_source && rpc_source->origin_rpc_id ) {
-      rpc_source = rpc_generic_source_info( rpc_source->origin_rpc_id );
-    }
-    // traverse current up to initiating process
-    const rpc_origin_source_t* rpc_backup = NULL;
-    if ( backup->origin_data_id ) {
-      rpc_backup = rpc_generic_source_info( backup->origin_data_id );
-      while ( rpc_backup->origin_rpc_id ) {
-        rpc_backup = rpc_generic_source_info( rpc_backup->origin_rpc_id );
-      }
-    }
-    // allow recursive rpc only for same process
-    if (
-      rpc_source
-      && rpc_backup
-      && rpc_source->source_process != rpc_backup->source_process
-      && rpc_backup->source_process != backup->thread->process->id
-    ) {
-      // debug output
-      #if defined( PRINT_RPC )
-        DEBUG_OUTPUT( "Nested not allowed!\r\n" )
-      #endif
-      // return success
-      return true;
-    }
-  }
-
+  cpu_register_context_t* cpu = backup->thread->current_context;
   // debug output
   #if defined( PRINT_RPC )
     DUMP_REGISTER( cpu )

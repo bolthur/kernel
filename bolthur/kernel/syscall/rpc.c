@@ -690,6 +690,9 @@ void syscall_rpc_end( void* context ) {
     #endif
     return;
   }
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "restore %d\r\n", task_thread_current_thread->process->id )
+  #endif
   // try to restore
   if ( ! rpc_generic_restore( task_thread_current_thread ) ) {
     // debug output
@@ -784,11 +787,14 @@ void syscall_rpc_cleanup( void* context ) {
     )
   #endif
   // get current active rpc
-  const rpc_backup_t* active = rpc_backup_get_active( task_thread_current_thread, 0 );
+  auto const active = rpc_backup_get_active( task_thread_current_thread, 0 );
   // cleanup if active
   if ( active ) {
     rpc_generic_destroy_source_info( rpc_generic_source_info( active->data_id ) );
   }
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT( "cleanup %d\r\n", task_thread_current_thread->process->id )
+  #endif
   // populate dummy success
   syscall_populate_success( context, 0 );
 }

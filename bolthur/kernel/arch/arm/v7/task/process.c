@@ -138,12 +138,12 @@ void task_process_schedule( [[maybe_unused]] event_origin_t origin, void* contex
   }
 
   // convert context into cpu pointer
-  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
+  auto cpu = ( cpu_register_context_t* )context;
   // get context
   cpu = interrupt_get_context( cpu );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "cpu register context: %p\r\n", cpu )
+    DEBUG_OUTPUT( "cpu register context: %p\r\n", ( void* )cpu )
     DUMP_REGISTER( cpu )
     DEBUG_OUTPUT(
       "process id = %d\r\n",
