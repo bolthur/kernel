@@ -89,7 +89,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     IOMEM_RPC_GPIO_UNLOCK,
   };
   // add device file
-  if ( !dev_add_file( IOMEM_DEVICE_PATH, device_info, 11 ) ) {
+  if ( ! dev_add_file( IOMEM_DEVICE_PATH, device_info, 11, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

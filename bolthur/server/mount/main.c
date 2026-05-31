@@ -58,7 +58,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // wait for device
   vfs_wait_for_path( "/dev/manager/device" );
   // add device file
-  if ( !dev_add_file( "/dev/mount", NULL, 0 ) ) {
+  if ( ! dev_add_file( "/dev/mount", NULL, 0, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add mount device file\r\n" )
     return -1;
   }

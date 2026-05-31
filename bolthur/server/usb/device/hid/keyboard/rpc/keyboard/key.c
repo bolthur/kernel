@@ -286,9 +286,8 @@ void rpc_keyboard_key(
     memset( input_command, 0, sizeof( *input_command ) );
     // copy over
     strncpy( input_command->input, input_buffer, CONSOLE_MAX_INPUT_SEQUENCE - 1 );
-    printf( "%s", input_command->input );
-    fflush( stdout );
-    // raise write request
+    // raise input request
+    /// FIXME: RAISE ASYNC WITHOUT WAITING FOR RETURN
     const int result = ioctl(
       console_fd,
       IOCTL_BUILD_REQUEST(

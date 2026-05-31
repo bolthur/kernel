@@ -102,6 +102,7 @@ AC_DEFUN([BOLTHUR_KERNEL_SET_FLAG], [
   AX_APPEND_COMPILE_FLAGS([-Wsuggest-attribute=noreturn])
   AX_APPEND_COMPILE_FLAGS([-Wsuggest-attribute=malloc])
   AX_APPEND_COMPILE_FLAGS([-Wsuggest-attribute=format -Wsuggest-attribute=cold])
+  AX_APPEND_COMPILE_FLAGS([-Wno-builtin-declaration-mismatch])
   # generic
   AX_APPEND_COMPILE_FLAGS([-fno-exceptions -nodefaultlibs -std=c23])
   AX_APPEND_COMPILE_FLAGS([-fomit-frame-pointer -fno-builtin])

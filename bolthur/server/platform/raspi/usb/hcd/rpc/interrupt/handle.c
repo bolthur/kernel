@@ -37,16 +37,16 @@ void rpc_interrupt_handle(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  #if defined( DWHCI_ENABLE_DEBUG )
+  //#if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Interrupt handler called\r\n" )
-  #endif
+  //#endif
   // read interrupt register
   uint32_t interrupt;
   response_t result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_INT_STAT, &interrupt );
   if ( HCD_RESPONSE_OK != result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
+    //#if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to read interrupt status register!\r\n" )
-    #endif
+    //#endif
     return;
   }
   #if defined( DWHCI_ENABLE_DEBUG )
@@ -55,9 +55,9 @@ void rpc_interrupt_handle(
   // mask pending interrupts
   result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_INT_STAT, interrupt );
   if ( HCD_RESPONSE_OK != result ) {
-    #if defined( DWHCI_ENABLE_DEBUG )
+    //#if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to write interrupt status register!\r\n" )
-    #endif
+    //#endif
     return;
   }
   uint32_t channel_interrupt;
@@ -66,9 +66,9 @@ void rpc_interrupt_handle(
     // read channel interrupts
     result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT, &channel_interrupt );
     if ( HCD_RESPONSE_OK != result ) {
-      #if defined( DWHCI_ENABLE_DEBUG )
+      //#if defined( DWHCI_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to read all channel interrupt status register!\r\n" )
-      #endif
+      //#endif
       return;
     }
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -77,9 +77,9 @@ void rpc_interrupt_handle(
     // mask channel interrupts
     result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT, channel_interrupt );
     if ( HCD_RESPONSE_OK != result ) {
-      #if defined( DWHCI_ENABLE_DEBUG )
+      //#if defined( DWHCI_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to write back all channel interrupt status register!\r\n" )
-      #endif
+      //#endif
       return;
     }
     // iterate over channels

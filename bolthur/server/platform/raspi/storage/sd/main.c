@@ -122,7 +122,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   strncpy( msg->file_path, "/dev/storage/sd", PATH_MAX - 1 );
   STARTUP_PRINT( "Sending device \"%s\" to vfs\r\n", msg->file_path )
   // perform add request
-  send_vfs_add_request( msg, 0, 0 );
+  send_vfs_add_request( msg, 0, 0, nullptr );
   // free again
   free( msg );
 

@@ -42,7 +42,7 @@ framebuffer_resolution_t resolution_data;
  */
 bool output_init( void ) {
   // acquire stuff
-  int result = ioctl(
+  const int result = ioctl(
     output_driver_fd,
     IOCTL_BUILD_REQUEST(
       FRAMEBUFFER_GET_RESOLUTION,
@@ -69,10 +69,10 @@ bool output_init( void ) {
  * @param response_info
  */
 void output_handle_out(
-  __unused size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle no data
@@ -143,10 +143,10 @@ void output_handle_out(
  * @param response_info
  */
 void output_handle_err(
-  __unused size_t type,
-  __unused pid_t origin,
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
   size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle no data
@@ -176,7 +176,7 @@ void output_handle_err(
     return;
   }
   // attach shared area
-  void* shm_addr = _syscall_memory_shared_attach( terminal->shm_id, ( uintptr_t )NULL );
+  const void* shm_addr = _syscall_memory_shared_attach( terminal->shm_id, ( uintptr_t )NULL );
   if ( errno ) {
     error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
@@ -201,6 +201,7 @@ void output_handle_err(
   const vfs_write_response_t dummy = { .len = ( ssize_t )strlen( shm_addr ) };
   memcpy( response->container, &dummy, sizeof( dummy ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
+  // detach shared memory again
   _syscall_memory_shared_detach( terminal->shm_id );
   // free terminal structure again
   free( request );
@@ -219,10 +220,10 @@ void output_handle_err(
  * @todo add logic
  */
 void output_handle_in(
-  __unused size_t type,
-  __unused pid_t origin,
-  __unused size_t data_info,
-  __unused size_t response_info
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -ENOSYS };
   bolthur_rpc_return( RPC_VFS_READ, &error, sizeof( error ), NULL, 0 );

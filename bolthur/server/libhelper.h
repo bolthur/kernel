@@ -95,24 +95,26 @@
 }
 
 /**
- * @fn void send_vfs_add_request(vfs_add_request_t*, size_t, unsigned int)
+ * @fn void send_vfs_add_request(vfs_add_request_t*, const size_t, const unsigned int, const rpc_handler_t)
  * @brief Helper to send add request with wait for response
  *
  * @param msg message to send
  * @param size message size or 0
  * @param wait amount of seconds to sleep on rpc raise error
+ * @param handler
  */
 [[maybe_unused]] static void send_vfs_add_request(
   vfs_add_request_t* msg,
-  size_t size,
-  unsigned int wait
+  const size_t size,
+  const unsigned int wait,
+  const rpc_handler_t handler
 ) {
   if ( ! msg ) {
     exit( -1 );
   }
   // push in current pid
   msg->handler = getpid();
-  size_t size_to_use = size ? size : sizeof( *msg );
+  const size_t size_to_use = size ? size : sizeof( *msg );
   // response id
   size_t response_id = 0;
   // try to send until it worked
@@ -123,7 +125,7 @@
       VFS_DAEMON_ID,
       msg,
       size_to_use,
-      NULL,
+      handler,
       RPC_VFS_ADD,
       msg,
       size_to_use,
@@ -140,33 +142,37 @@
     }
     break;
   }
-  // get message and data size
-  size_t data_size;
-  vfs_add_response_t* response = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
-  if ( ! response ) {
-    EARLY_STARTUP_PRINT( "%s\r\n", strerror(errno) )
-    exit( -1 );
+  // fetch message only when no handler was passed
+  if ( ! handler ) {
+    // get message and data size
+    size_t data_size;
+    vfs_add_response_t* response = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
+    if ( ! response ) {
+      EARLY_STARTUP_PRINT( "%s\r\n", strerror(errno) )
+      exit( -1 );
+    }
+    // stop on success
+    if ( VFS_ADD_SUCCESS != response->status ) {
+      EARLY_STARTUP_PRINT( "Unable to add: %d\r\n", response->status )
+      exit( -1 );
+    }
+    // free up response
+    free( response );
   }
-  // stop on success
-  if ( VFS_ADD_SUCCESS != response->status ) {
-    EARLY_STARTUP_PRINT( "Unable to add: %d\r\n", response->status )
-    exit( -1 );
-  }
-  // free up response
-  free( response );
 }
 
 /**
- * @fn void send_vfs_add_request(vfs_add_request_t*, size_t, unsigned int)
+ * @fn void send_vfs_add_request(vfs_add_request_t*, const unsigned int, const rpc_handler_t)
  * @brief Helper to send add request with wait for response
  *
  * @param msg message to send
- * @param size message size or 0
  * @param wait amount of seconds to sleep on rpc raise error
+ * @param handler callback
  */
 [[maybe_unused]] static void send_vfs_remove_request(
   vfs_remove_request_t* msg,
-  unsigned int wait
+  const unsigned int wait,
+  const rpc_handler_t handler
 ) {
   if ( ! msg ) {
     exit( -1 );
@@ -181,7 +187,7 @@
       VFS_DAEMON_ID,
       msg,
       sizeof( *msg ),
-      NULL,
+      handler,
       RPC_VFS_ADD,
       msg,
       sizeof( *msg ),
@@ -198,19 +204,22 @@
     }
     break;
   }
-  // get message and data size
-  size_t data_size;
-  vfs_remove_response_t* response = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
-  if ( ! response ) {
-    EARLY_STARTUP_PRINT( "%s\r\n", strerror(errno) )
-    exit( -1 );
+  // fetch message only when no handler was passed
+  if ( ! handler ) {
+    // get message and data size
+    size_t data_size;
+    vfs_remove_response_t* response = bolthur_rpc_fetch_from_mailbox( response_id, &data_size, true, NULL );
+    if ( ! response ) {
+      EARLY_STARTUP_PRINT( "%s\r\n", strerror(errno) )
+      exit( -1 );
+    }
+    // stop on success
+    if ( 0 != response->status ) {
+      exit( -1 );
+    }
+    // free up response
+    free( response );
   }
-  // stop on success
-  if ( 0 != response->status ) {
-    exit( -1 );
-  }
-  // free up response
-  free( response );
 }
 
 /**
@@ -227,18 +236,18 @@
 }
 
 /**
- * @fn bool dev_add_folder_file_stat(const char*, struct stat* )
+ * @fn bool dev_add_folder_file_stat(const char*, const struct stat*, const rpc_handler_t)
  * @brief Helper to add a subfolder or file
  *
  * @param path
- * @param device_info
- * @param count
- * @param mode
+ * @param stat
+ * @param handler
  * @return
  */
 [[maybe_unused]] static bool dev_add_folder_file_stat(
   const char* path,
-  struct stat* stat
+  struct stat* stat,
+  const rpc_handler_t handler
 ) {
   // allocate memory for add request
   size_t msg_size = sizeof( vfs_add_request_t ) + 0 * sizeof( size_t );
@@ -254,30 +263,32 @@
   memcpy( &msg->info, stat, sizeof( struct stat ) );
   strncpy( msg->file_path, path, PATH_MAX - 1 );
   // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
+  send_vfs_add_request( msg, msg_size, 0, handler );
   // free stuff
   free( msg );
   return true;
 }
 
 /**
- * @fn bool dev_add_folder_file(const char*, uint32_t*, size_t, mode_t)
+ * @fn bool dev_add_folder_file(const char*, const uint32_t*, const size_t, const mode_t, const rpc_handler_t)
  * @brief Helper to add a subfolder or file
  *
  * @param path
  * @param device_info
  * @param count
  * @param mode
+ * @param handler
  * @return
  */
 [[maybe_unused]] static bool dev_add_folder_file(
   const char* path,
-  uint32_t* device_info,
-  size_t count,
-  mode_t mode
+  const uint32_t* device_info,
+  const size_t count,
+  const mode_t mode,
+  const rpc_handler_t handler
 ) {
   // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t ) + count * sizeof( size_t );
+  const size_t msg_size = sizeof( vfs_add_request_t ) + count * sizeof( size_t );
   vfs_add_request_t* msg = malloc( msg_size );
   if ( ! msg ) {
     return false;
@@ -296,44 +307,48 @@
     }
   }
   // perform add request
-  send_vfs_add_request( msg, msg_size, 0 );
+  send_vfs_add_request( msg, msg_size, 0, handler );
   // free stuff
   free( msg );
   return true;
 }
 
 /**
- * @fn bool dev_add_file(const char*, uint32_t*, size_t)
+ * @fn bool dev_add_file(const char*, const uint32_t*, const size_t, const rpc_handler_t)
  * @brief Wrapper to add a file
  *
  * @param path
  * @param device_info
  * @param count
+ * @oaram handler
  * @return
  */
 [[maybe_unused]] static bool dev_add_file(
   const char* path,
-  uint32_t* device_info,
-  size_t count
+  const uint32_t* device_info,
+  const size_t count,
+  const rpc_handler_t handler
 ) {
-  return dev_add_folder_file( path, device_info, count, S_IFCHR );
+  return dev_add_folder_file( path, device_info, count, S_IFCHR, handler );
 }
 
 /**
- * @fn bool dev_add_folder(const char*, uint32_t*, size_t)
+ * @fn bool dev_add_folder(const char*, const uint32_t*, const size_t, const rpc_handler_t)
  * @brief Wrapper to add a folder
  *
  * @param path
  * @param device_info
  * @param count
+ * @param handler
  * @return
  */
 [[maybe_unused]] static bool dev_add_folder(
   const char* path,
-  uint32_t* device_info,
-  size_t count
+  const uint32_t* device_info,
+  const size_t count,
+  const rpc_handler_t handler
 ) {
-  return dev_add_folder_file( path, device_info, count, S_IFCHR /*| S_IFDIR*/ );
+  return dev_add_folder_file( path, device_info, count, S_IFCHR /*| S_IFDIR*/, handler );
 }
 
 #endif

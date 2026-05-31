@@ -39,7 +39,7 @@ static void rpc_handle_exec_table(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
-  [[maybe_unused]] size_t response_info
+  size_t response_info
 ) {
   // response object
   vfs_exec_response_t response = { .result = -EINVAL };

@@ -33,6 +33,41 @@
 #include "watch.h"
 
 /**
+ * @fn void on_folder_file_added(size_t, pid_t, size_t, size_t)
+ * @brief On file or folder added callback
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+static void on_folder_file_added(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+  // handle no data
+  if ( ! data_info ) {
+    EARLY_STARTUP_PRINT( "No data info found!\r\n" )
+    exit( -1 );
+  }
+  // get message and data size
+  size_t data_size;
+  vfs_add_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  if ( ! response ) {
+    const int e = errno;
+    EARLY_STARTUP_PRINT( "Unable to fetch response: %s\r\n", strerror( e ) )
+    exit( -1 );
+  }
+  // stop on success
+  if ( VFS_ADD_SUCCESS != response->status ) {
+    EARLY_STARTUP_PRINT( "Unable to add: %d\r\n", response->status )
+    exit( -1 );
+  }
+  free( response );
+}
+
+/**
  * @fn int main(int, char*[])
  * @brief main entry point
  *
@@ -96,22 +131,22 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   uint32_t device_info[] = { DEV_START, DEV_KILL, };
 
   // add manager subfolder
-  if ( !dev_add_folder( "/dev/manager", NULL, 0 ) ) {
+  if ( ! dev_add_folder( "/dev/manager", nullptr, 0, on_folder_file_added ) ) {
     EARLY_STARTUP_PRINT( "Unable to add manager subfolder\r\n" )
     return -1;
   }
   // add storage subfolder
-  if ( !dev_add_folder( "/dev/storage", NULL, 0 ) ) {
+  if ( ! dev_add_folder( "/dev/storage", nullptr, 0, on_folder_file_added ) ) {
     EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
     return -1;
   }
   // add usb subfolder
-  if ( ! dev_add_folder( "/dev/usb", NULL, 0 ) ) {
+  if ( ! dev_add_folder( "/dev/usb", nullptr, 0, on_folder_file_added ) ) {
     EARLY_STARTUP_PRINT( "Unable to add USB subfolder\r\n" )
     return -1;
   }
   // add device file
-  if ( !dev_add_file( "/dev/manager/device", device_info, 2 ) ) {
+  if ( ! dev_add_file( "/dev/manager/device", device_info, 2, on_folder_file_added ) ) {
     EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
     return -1;
   }

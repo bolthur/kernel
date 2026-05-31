@@ -543,6 +543,7 @@ void framebuffer_handle_surface_render(
   }
   // get memory item
   const framebuffer_memory_t* mem = item->data;
+  // copy to current back buffer
   memcpy( current_back, mem->address, size );
   // flip it
   framebuffer_flip();

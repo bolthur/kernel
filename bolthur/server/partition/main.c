@@ -86,7 +86,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     PARTITION_RELEASE_HANDLER,
   };
   // add device file
-  if ( !dev_add_file( "/dev/partition", device_info, 2 ) ) {
+  if ( ! dev_add_file( "/dev/partition", device_info, 2, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

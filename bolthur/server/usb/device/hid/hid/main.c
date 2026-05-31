@@ -98,7 +98,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     HID_SET_REPORT,
     HID_SET_IDLE,
   };
-  if ( !dev_add_file( HID_DEVICE_PATH, device_info, 11 ) ) {
+  if ( ! dev_add_file( HID_DEVICE_PATH, device_info, 11, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

@@ -97,7 +97,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   STARTUP_PRINT( "register result: %d\r\n", result )
 
   // add device file
-  if ( !dev_add_file( "/dev/fat", NULL, 0 ) ) {
+  if ( ! dev_add_file( "/dev/fat", NULL, 0, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev fs\r\n" )
     free( reg );
     close( fd );

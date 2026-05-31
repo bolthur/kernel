@@ -66,7 +66,7 @@ int main( int argc, char* argv[] ) {
     FRAMEBUFFER_SURFACE_ALLOCATE,
   };
   // add device file
-  if ( !dev_add_file( "/dev/framebuffer", device_info, 4 ) ) {
+  if ( ! dev_add_file( "/dev/framebuffer", device_info, 4, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

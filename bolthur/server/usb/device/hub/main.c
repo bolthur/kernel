@@ -88,7 +88,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     GENERIC_CHILD_RESET,
     GENERIC_CHILD_CHECK_CONNECTION,
   };
-  if ( !dev_add_file( HUB_DEVICE_PATH, device_info, 7 ) ) {
+  if ( ! dev_add_file( HUB_DEVICE_PATH, device_info, 7, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

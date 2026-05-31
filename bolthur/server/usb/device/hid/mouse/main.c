@@ -89,7 +89,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     GENERIC_DETACH,
     GENERIC_DEALLOCATE,
   };
-  if ( !dev_add_file( MOUSE_DEVICE_PATH, device_info, 3 ) ) {
+  if ( ! dev_add_file( MOUSE_DEVICE_PATH, device_info, 3, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }
