@@ -22,7 +22,7 @@
 
 #include "../../server/libusb.h"
 
-//#define LIBUSB_ENABLE_DEBUG 1
+#define LIBUSB_ENABLE_DEBUG 1
 #define LIBUSB_ENABLE_ERROR 1
 
 int usb_init( void );

@@ -84,7 +84,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // add device file
   STARTUP_PRINT( "Sending device to vfs\r\n" )
-  uint32_t device_info[] = {
+  constexpr uint32_t device_info[] = {
     GENERIC_ATTACH,
     GENERIC_DETACH,
     GENERIC_DEALLOCATE,

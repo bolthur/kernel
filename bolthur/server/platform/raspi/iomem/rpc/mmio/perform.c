@@ -46,6 +46,7 @@
  */
 static void custom_nanosleep( const struct timespec* rqtp ) {
   if ( 0 > rqtp->tv_nsec ) {
+    EARLY_STARTUP_PRINT( "Invalid nanosleep\r\n" )
     errno = EINVAL;
     return;
   }
@@ -255,6 +256,7 @@ void rpc_handle_mmio_perform(
         )
       )
     ) {
+      EARLY_STARTUP_PRINT( "Validation failed\r\n" )
       error.status = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
       free( request );
@@ -281,6 +283,7 @@ void rpc_handle_mmio_perform(
       && IOMEM_MMIO_SDHOST_DATA_READ != ( *mmio_request )[ i ].type
       && IOMEM_MMIO_SDHOST_DATA_WRITE != ( *mmio_request )[ i ].type
     ) {
+      EARLY_STARTUP_PRINT( "type not valid\r\n" )
       error.status = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
       free( request );
@@ -289,6 +292,7 @@ void rpc_handle_mmio_perform(
     }
     // validate offsets to be in range
     if ( ! mmio_validate_offset( ( *mmio_request )[ i ].offset, sizeof( uint32_t ) ) ) {
+      EARLY_STARTUP_PRINT( "Invalid offset\r\n" )
       error.status = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
       free( request );

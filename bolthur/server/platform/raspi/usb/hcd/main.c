@@ -59,7 +59,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // add device file
   STARTUP_PRINT( "Sending device to vfs\r\n" )
-  uint32_t device_info[] = { HCD_SUBMIT_CONTROL_MESSAGE, HCD_POLL_INTERRUPT, };
+  constexpr uint32_t device_info[] = { HCD_SUBMIT_CONTROL_MESSAGE, HCD_POLL_INTERRUPT, };
   STARTUP_PRINT( "HCD_SUBMIT_CONTROL_MESSAGE = %d\r\n", HCD_SUBMIT_CONTROL_MESSAGE )
   STARTUP_PRINT( "HCD_POLL_INTERRUPT = %d\r\n", HCD_POLL_INTERRUPT )
   if ( ! dev_add_file( HCD_DEVICE_PATH, device_info, 2, nullptr ) ) {

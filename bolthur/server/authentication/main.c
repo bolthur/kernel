@@ -69,7 +69,7 @@ int main( int argc, char* argv[] ) {
   // wait for device
   vfs_wait_for_path( "/dev/manager/device" );
   // add device file
-  uint32_t device_info[] = { AUTHENTICATE_REQUEST, AUTHENTICATE_FETCH, AUTHENTICATE_RELOAD, };
+  constexpr uint32_t device_info[] = { AUTHENTICATE_REQUEST, AUTHENTICATE_FETCH, AUTHENTICATE_RELOAD, };
   EARLY_STARTUP_PRINT( "AUTHENTICATE_REQUEST = %d, AUTHENTICATE_FETCH = %d, AUTHENTICATE_RELOAD = %d\r\n",
     AUTHENTICATE_REQUEST, AUTHENTICATE_FETCH, AUTHENTICATE_RELOAD )
   if ( ! dev_add_file( AUTHENTICATION_DEVICE, device_info, 3, nullptr ) ) {

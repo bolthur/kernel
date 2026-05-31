@@ -75,7 +75,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   _syscall_rpc_set_ready( true );
 
   // device info data
-  uint32_t device_info[] = {
+  constexpr uint32_t device_info[] = {
     IOMEM_RPC_MAILBOX,
     IOMEM_RPC_MMIO_LOCK,
     IOMEM_RPC_MMIO_PERFORM,

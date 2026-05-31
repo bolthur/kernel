@@ -113,7 +113,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   _syscall_rpc_set_ready( true );
 
   // console device
-  uint32_t device_info[] = { CONSOLE_ADD, CONSOLE_SELECT, CONSOLE_INPUT, };
+  constexpr uint32_t device_info[] = { CONSOLE_ADD, CONSOLE_SELECT, CONSOLE_INPUT, };
   if ( ! dev_add_file( "/dev/console", device_info, 3, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;

@@ -24,7 +24,7 @@
 #include "../../../../libhcd.h"
 #include "response.h"
 
-//#define DWHCI_ENABLE_DEBUG 1
+#define DWHCI_ENABLE_DEBUG 1
 #define DWHCI_ERROR_OUTPUT 1
 
 typedef enum {

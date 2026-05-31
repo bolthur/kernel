@@ -144,7 +144,8 @@ void rpc_handle_write(
     ? handler->console->out
     : handler->console->err;
   // build terminal command
-  constexpr size_t terminal_size = sizeof( terminal_write_request_t );
+  const size_t terminal_size = sizeof( terminal_write_request_t ) +
+    sizeof( char ) * ( strlen(handler->console->path) + 1 );
   terminal_write_request_t* terminal = malloc( terminal_size );
   if ( ! terminal ) {
     response.len = -ENOMEM;
@@ -158,7 +159,8 @@ void rpc_handle_write(
   // populate terminal
   terminal->len = request->len;
   terminal->shm_id = request->shm_id;
-  strncpy( terminal->terminal, handler->console->path, PATH_MAX - 1 );
+  strcpy( terminal->terminal, handler->console->path );
+  // handle not yet opened
   if ( 0 == handler->console->fd ) {
     // open path
     const int fd = open( handler->console->path, O_RDWR );
@@ -213,8 +215,9 @@ void rpc_handle_write(
   );
   // handle error
   if ( errno ) {
-    // return written amount
-    response.len = -errno;
+    const int e = errno;
+    EARLY_STARTUP_PRINT( "Failed to invoke rpc: %s\r\n", strerror( e ) );
+    response.len = -e;
     bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
     _syscall_memory_shared_detach( request->shm_id );
     free( request );

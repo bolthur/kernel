@@ -77,6 +77,7 @@ void output_handle_out(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
+    EARLY_STARTUP_PRINT( "no data info\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
@@ -85,6 +86,7 @@ void output_handle_out(
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
     error.status = -errno;
+    EARLY_STARTUP_PRINT( "no request\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
@@ -96,6 +98,7 @@ void output_handle_out(
     terminal->terminal
   );
   if ( ! found ) {
+    EARLY_STARTUP_PRINT( "no terminal\r\n" )
     error.status = -ENODEV;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
@@ -105,6 +108,7 @@ void output_handle_out(
   const void* shm_addr = _syscall_memory_shared_attach( terminal->shm_id, ( uintptr_t )NULL );
   if ( errno ) {
     error.status = -errno;
+    EARLY_STARTUP_PRINT( "unable to attach shared memory %zu\r\n", terminal->shm_id )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
     return;
@@ -114,6 +118,7 @@ void output_handle_out(
   constexpr size_t response_size = sizeof( vfs_write_response_t ) + sizeof( *response );
   response = malloc( response_size );
   if ( ! response ) {
+    EARLY_STARTUP_PRINT( "unable to allocate response\r\n" )
     _syscall_memory_shared_detach( terminal->shm_id );
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
@@ -124,7 +129,7 @@ void output_handle_out(
   // render
   render_terminal( found->data, shm_addr );
   // fill dummy return
-  vfs_write_response_t dummy = { .len = ( ssize_t )strlen( shm_addr ) };
+  const vfs_write_response_t dummy = { .len = ( ssize_t )strlen( shm_addr ) };
   _syscall_memory_shared_detach( terminal->shm_id );
   memcpy( response->container, &dummy, sizeof( dummy ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
@@ -151,6 +156,7 @@ void output_handle_err(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
+    EARLY_STARTUP_PRINT( "no data info\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
@@ -158,6 +164,7 @@ void output_handle_err(
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! request ) {
+    EARLY_STARTUP_PRINT( "no request\r\n" )
     error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
@@ -170,6 +177,7 @@ void output_handle_err(
     terminal->terminal
   );
   if ( ! found ) {
+    EARLY_STARTUP_PRINT( "no terminal\r\n" )
     error.status = -ENODEV;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
@@ -178,6 +186,7 @@ void output_handle_err(
   // attach shared area
   const void* shm_addr = _syscall_memory_shared_attach( terminal->shm_id, ( uintptr_t )NULL );
   if ( errno ) {
+    EARLY_STARTUP_PRINT( "unable to attach shared memory\r\n" )
     error.status = -errno;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     free( request );
@@ -188,6 +197,7 @@ void output_handle_err(
   constexpr size_t response_size = sizeof( vfs_write_response_t ) + sizeof( *response );
   response = malloc( response_size );
   if ( ! response ) {
+    EARLY_STARTUP_PRINT( "unable to allocate response\r\n" )
     _syscall_memory_shared_detach( terminal->shm_id );
     error.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );

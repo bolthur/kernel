@@ -156,7 +156,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
       rpc_backup_t* tmp = item->data;
       // debug output
       #if defined( PRINT_RPC )
-        DEBUG_OUTPUT( "tmp = %p, tmp->active = %d\r\n", ( void* )tmp, tmp->active ? 1 : 0 )
+        DEBUG_OUTPUT( "%d: tmp = %p, tmp->active = %d\r\n", tmp->thread->process->id, ( void* )tmp, tmp->active ? 1 : 0 )
       #endif
       // handle not active
       if ( ! tmp->active ) {
@@ -287,7 +287,36 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     // return success
     return true;
   }
-
+  // we've to go through the list of rpc and use the first rpc with same thread
+  // when it's not equal to current backup to preserve correct order of rpc
+  rpc_backup_t* to_replace = nullptr;
+  auto current_backup_entry = backup->thread->process->rpc_queue->first;
+  while ( current_backup_entry && ! to_replace ) {
+    // get backup entry
+    rpc_backup_t* tmp = current_backup_entry->data;
+    // skip active stuff
+    if ( tmp->active ) {
+      current_backup_entry = current_backup_entry->next;
+      continue;
+    }
+    // handle same thread and not same entry
+    if (
+      tmp->thread == backup->thread
+      && tmp != backup
+      && backup->data_id > tmp->data_id
+    ) {
+      to_replace = tmp;
+    }
+    // get to next
+    current_backup_entry = current_backup_entry->next;
+  }
+  // handle something in queue before
+  if ( to_replace ) {
+    #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "Replace %d with %d\r\n", backup->data_id, to_replace->data_id )
+    #endif
+    backup = to_replace;
+  }
   cpu_register_context_t* cpu = backup->thread->current_context;
   // debug output
   #if defined( PRINT_RPC )

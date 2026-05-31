@@ -27,9 +27,9 @@
 #define TERMINAL_ERR_START TERMINAL_OUT_START + 1
 
 typedef struct {
-  char terminal[ PATH_MAX ];
   size_t len;
   size_t shm_id;
+  char terminal[];
 } terminal_write_request_t;
 
 #endif

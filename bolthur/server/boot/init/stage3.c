@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/bolthur.h>
+#include <sys/errno.h>
 #include <sys/unistd.h>
 
 #include "../configuration.h"
@@ -41,15 +42,19 @@
   // close device manager since everythig was fired up
   close( fd_dev_manager );
   // fork for starting the login shell
-  pid_t forked = fork();
+  /*pid_t forked = fork();
   if ( forked == 0 ) {
     // build command
     char* cmd[] = { "login", NULL, };
     // exec to replace
     if ( -1 == execv( "/bin/login", cmd ) ) {
+      EARLY_STARTUP_PRINT( "Error during exec, exiting: %s\r\n", strerror( errno ) )
       exit( 1 );
     }
   }
+  if ( forked > 0 ) {
+    EARLY_STARTUP_PRINT( "Error while forking: %s\r\n", strerror( -forked ) )
+  }*/
 
   while ( true ) {
     sleep( 10 );

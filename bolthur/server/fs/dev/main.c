@@ -128,7 +128,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   _syscall_rpc_set_ready( true );
 
   // device info data
-  uint32_t device_info[] = { DEV_START, DEV_KILL, };
+  constexpr uint32_t device_info[] = { DEV_START, DEV_KILL, };
 
   // add manager subfolder
   if ( ! dev_add_folder( "/dev/manager", nullptr, 0, on_folder_file_added ) ) {

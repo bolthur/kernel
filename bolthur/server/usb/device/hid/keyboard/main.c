@@ -93,18 +93,18 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     STARTUP_PRINT( "Unable to register handler at hid\r\n" )
     return -1;
   }
-
+/*
   // load keymap
   STARTUP_PRINT( "Loading configured keymap\r\n" )
   result = keymap_init();
   if ( 0 != result ) {
     STARTUP_PRINT( "Unable to load keymap\r\n" )
     return -1;
-  }
+  }*/
 
   // add device file
   STARTUP_PRINT( "Sending device to vfs\r\n" )
-  uint32_t device_info[] = {
+  constexpr uint32_t device_info[] = {
     GENERIC_ATTACH,
     GENERIC_DETACH,
     GENERIC_DEALLOCATE,

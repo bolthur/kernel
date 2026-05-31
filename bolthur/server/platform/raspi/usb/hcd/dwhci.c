@@ -790,6 +790,10 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
   }
   // enable channel
   characteristics |= ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
+  // debug output
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Write back characteristics\r\n" )
+  #endif
   // write back characteristics
   result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_CHARACTER( entry->channel ), characteristics );
   if ( HCD_RESPONSE_OK != result ) {
@@ -800,6 +804,10 @@ response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* 
     // return result
     return result;
   }
+  // debug output
+  #if defined ( DWHCI_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Checking directly for interrupt\r\n" )
+  #endif
   // proactive fetch interrupt for the case it wasn't fired and finished
   // immediately
   uint32_t interrupt;
@@ -2257,7 +2265,7 @@ response_t dwhci_init( void ) {
   // write nper fifo size
   sequence[ 6 ].type = IOMEM_MMIO_ACTION_WRITE;
   sequence[ 6 ].offset = PERIPHERAL_DWHCI_CORE_NPER_FIFO_SIZ;
-  sequence[ 6 ].value = HCD_DWHCI_CFG_HOST_RX_FIFO_SIZE | ( HCD_DWHCI_CFG_HOST_NPER_TX_FIFO_SIZE << 16 );;
+  sequence[ 6 ].value = HCD_DWHCI_CFG_HOST_RX_FIFO_SIZE | ( HCD_DWHCI_CFG_HOST_NPER_TX_FIFO_SIZE << 16 );
   sequence[ 7 ].type = IOMEM_MMIO_ACTION_WRITE;
   sequence[ 7 ].offset = PERIPHERAL_DWHCI_CORE_HOST_PER_TX_FIFO_SZ;
   sequence[ 7 ].value = ( HCD_DWHCI_CFG_HOST_RX_FIFO_SIZE + HCD_DWHCI_CFG_HOST_NPER_TX_FIFO_SIZE )
@@ -2463,10 +2471,10 @@ response_t dwhci_init( void ) {
   }
 
   #if defined ( DWHCI_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Resetting host port\r\n" )
+    EARLY_STARTUP_PRINT( "Enable root port\r\n" )
   #endif
   // prepare sequence
-  sequence = iomem_prepare_mmio_sequence( 5, &sequence_size );
+  sequence = iomem_prepare_mmio_sequence( 8, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -2475,24 +2483,41 @@ response_t dwhci_init( void ) {
     // return error
     return HCD_RESPONSE_ERROR_MEMORY;
   }
-  // set host port reset flag and write it back
-  sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ_OR;
+  // wait until port connect is gone
+  sequence[ 0 ].type = IOMEM_MMIO_ACTION_LOOP_FALSE;
   sequence[ 0 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-  sequence[ 0 ].value = HCD_DWHCI_HOST_PORT_RESET;
-  sequence[ 1 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 1 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-  sequence[ 1 ].value = 0x100;
-  // delay 100 ms
-  sequence[ 2 ].type = IOMEM_MMIO_ACTION_SLEEP;
-  sequence[ 2 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
-  sequence[ 2 ].sleep = 100;
-  // reset flag
-  sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ_AND;
+  sequence[ 0 ].loop_and = ( uint32_t )HCD_DWHCI_HOST_PORT_CONNECT;
+  sequence[ 0 ].loop_max_iteration = 10;
+  sequence[ 0 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
+  sequence[ 0 ].sleep = 10;
+  // delay 100ms
+  sequence[ 1 ].type = IOMEM_MMIO_ACTION_SLEEP;
+  sequence[ 1 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
+  sequence[ 1 ].sleep = 100;
+  // read host port
+  sequence[ 2 ].type = IOMEM_MMIO_ACTION_READ_AND;
+  sequence[ 2 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
+  sequence[ 2 ].value = ~HCD_DWHCI_HOST_PORT_DEFAULT_MASK;
+  // write back "orred" with reset
+  sequence[ 3 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
   sequence[ 3 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-  sequence[ 3 ].value = ( uint32_t )~HCD_DWHCI_HOST_PORT_RESET;
-  sequence[ 4 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
-  sequence[ 4 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
-  sequence[ 4 ].value = 0x100;
+  sequence[ 3 ].value = HCD_DWHCI_HOST_PORT_RESET;
+  // delay 50 to 60ms
+  sequence[ 4 ].type = IOMEM_MMIO_ACTION_SLEEP;
+  sequence[ 4 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
+  sequence[ 4 ].sleep = 60;
+  // read host port again
+  sequence[ 5 ].type = IOMEM_MMIO_ACTION_READ_AND;
+  sequence[ 5 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
+  sequence[ 5 ].value = ~HCD_DWHCI_HOST_PORT_DEFAULT_MASK;
+  // write back "anded" without reset
+  sequence[ 6 ].type = IOMEM_MMIO_ACTION_WRITE_AND_PREVIOUS_READ;
+  sequence[ 6 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
+  sequence[ 6 ].value = ~HCD_DWHCI_HOST_PORT_RESET;
+  // delay again for 20ms
+  sequence[ 7 ].type = IOMEM_MMIO_ACTION_SLEEP;
+  sequence[ 7 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
+  sequence[ 7 ].sleep = 20;
   // perform request
   result = ioctl(
     fd_iomem,
@@ -2514,6 +2539,17 @@ response_t dwhci_init( void ) {
     free( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
+  }
+  // check for timeout
+  if ( IOMEM_MMIO_ABORT_TYPE_TIMEOUT == sequence[ 0 ].abort_type ) {
+    // debug output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Enable of root port timed out\r\n" )
+    #endif
+    // free sequence
+    free( sequence );
+    // return error
+    return HCD_RESPONSE_ERROR_TIMEOUT;
   }
   // free sequence
   free( sequence );
@@ -2568,7 +2604,7 @@ response_t dwhci_init( void ) {
   sequence[ 4 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
   sequence[ 5 ].type = IOMEM_MMIO_ACTION_WRITE_OR_PREVIOUS_READ;
   sequence[ 5 ].offset = PERIPHERAL_DWHCI_CORE_INT_MASK;
-  sequence[ 5 ].value = (uint32_t)(HCD_DWHCI_CORE_INT_MASK_HC_INTR/*
+  sequence[ 5 ].value = (HCD_DWHCI_CORE_INT_MASK_HC_INTR/*
     | HCD_DWHCI_CORE_INT_MASK_PORT_INTR
     | HCD_DWHCI_CORE_INT_MASK_DISCONNECT
     | HCD_DWHCI_CORE_INT_MASK_USB_SUSPEND

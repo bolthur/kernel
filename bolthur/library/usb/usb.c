@@ -755,7 +755,7 @@ int usb_get_interface(
 ) {
   // debug message
   #if defined( LIBUSB_ENABLE_DEBUG )
-    STARTUP_PRINT( "Get interface" )
+    STARTUP_PRINT( "Get interface\r\n" )
   #endif
   // allocate device
   usbd_get_interface_t* request = malloc( sizeof( *request ) );

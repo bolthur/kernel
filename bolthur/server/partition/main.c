@@ -81,7 +81,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
   // device info array
-  uint32_t device_info[] = {
+  constexpr uint32_t device_info[] = {
     PARTITION_REGISTER_HANDLER,
     PARTITION_RELEASE_HANDLER,
   };

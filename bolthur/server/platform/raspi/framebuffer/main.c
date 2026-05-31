@@ -59,7 +59,7 @@ int main( int argc, char* argv[] ) {
   _syscall_rpc_set_ready( true );
 
   // device info array
-  uint32_t device_info[] = {
+  constexpr uint32_t device_info[] = {
     FRAMEBUFFER_GET_RESOLUTION,
     FRAMEBUFFER_CLEAR,
     FRAMEBUFFER_SURFACE_RENDER,

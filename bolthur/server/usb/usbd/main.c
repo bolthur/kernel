@@ -55,7 +55,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // add device file
   STARTUP_PRINT( "Sending device to vfs\r\n" )
-  uint32_t device_info[] = {
+  constexpr uint32_t device_info[] = {
     USBD_REGISTER_HANDLER,
     USBD_UNREGISTER_HANDLER,
     USBD_GET_DESCRIPTOR,
