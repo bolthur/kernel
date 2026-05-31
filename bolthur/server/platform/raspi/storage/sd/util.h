@@ -24,8 +24,6 @@
 #include <stdbool.h>
 
 uint32_t util_min( uint32_t, uint32_t );
-void* util_prepare_mmio_sequence( size_t, size_t* );
-void* util_prepare_mailbox( size_t, size_t* );
 bool util_update_card_detect( int, bool*, bool* );
 
 #endif

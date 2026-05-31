@@ -28,7 +28,7 @@
 #include "mmio.h"
 #include "rpc.h"
 #include "dma.h"
-#include "../libiomem.h"
+#include "../../../../library/platform/raspi/iomem/libiomem.h"
 #include "../../../libhelper.h"
 
 /**

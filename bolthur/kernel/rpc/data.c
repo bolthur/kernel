@@ -62,7 +62,7 @@ bool rpc_data_queue_ready( task_process_t* proc ) {
 int rpc_data_queue_add(
   const pid_t target,
   const char* data,
-  size_t data_length,
+  const size_t data_length,
   size_t* rpc_data_queue_id
 ) {
   // get process by pid
@@ -106,7 +106,7 @@ int rpc_data_queue_add(
     return EINVAL;
   }
   // map mailbox temporarily
-  uintptr_t mailbox = virt_map_temporary( target_process->rpc_mailbox, PAGE_SIZE );
+  const uintptr_t mailbox = virt_map_temporary( target_process->rpc_mailbox, PAGE_SIZE );
   if ( ! mailbox ) {
     // debug output
     #if defined( PRINT_RPC )
@@ -117,6 +117,7 @@ int rpc_data_queue_add(
   // set pointer to beginning
   auto entry = ( rpc_data_mailbox_entry_t* )mailbox;
   #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "===================================> %d <================================\r\n", target )
     DEBUG_OUTPUT( "Mailbox temporarily mapped to 0x%"PRIxPTR", looking for free space \r\n", mailbox )
   #endif
   // cppcheck-suppress-begin duplicateCondition

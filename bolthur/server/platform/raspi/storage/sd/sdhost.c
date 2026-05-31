@@ -34,6 +34,8 @@
 #include "../../libiomem.h"
 #include "../../libmailbox.h"
 #include "../../libdma.h"
+#include "../../../../../library/platform/raspi/iomem/mailbox.h"
+#include "../../../../../library/platform/raspi/iomem/sequence.h"
 
 /*
  * Add and use interrupt routine. This interrupt is listed in a more complete
@@ -201,7 +203,7 @@ static sdhost_message_entry_t sdhost_error_message[] = {
  */
 static sdhost_response_t enable_interrupt( void ) {
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 2, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -232,15 +234,7 @@ static sdhost_response_t enable_interrupt( void ) {
       | SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_DATA;
   #endif
   // perform request
-  if ( -1 == ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  ) ) {
+  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       STARTUP_PRINT( "Change transfer width in control0 failed\r\n" )
@@ -580,7 +574,7 @@ static sdhost_response_t interrupt_mark_handled( uint32_t mask ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -594,15 +588,7 @@ static sdhost_response_t interrupt_mark_handled( uint32_t mask ) {
   sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
   sequence[ 0 ].value = mask;
   // perform request
-  int result = ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
   // free sequence
   free( sequence );
   // handle ioctl error
@@ -632,7 +618,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -645,15 +631,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
   sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ 0 ].offset = PERIPHERAL_SDHOST_HOST_STATUS;
   // perform request
-  int result = ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -689,7 +667,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence(
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence(
     1, &sequence_size );
   if ( ! sequence ) {
     // debug output
@@ -703,15 +681,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
   sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ 0 ].offset = PERIPHERAL_SDHOST_DEBUG;
   // perform request
-  int result = ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -838,7 +808,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
         memset( shm_addr, 0, device->block_count * device->block_size );
       }
       // allocate sequence
-      sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+      sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
       if ( ! sequence ) {
         // debug output
         #if defined( SDHOST_ENABLE_DEBUG )
@@ -854,15 +824,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
       sequence[ 0 ].dma_copy_size = block_size * block_count;
       sequence[ 0 ].value = shm_id;
       // perform request
-      int result = ioctl(
-        device->fd_iomem,
-        IOCTL_BUILD_REQUEST(
-          IOMEM_RPC_MMIO_PERFORM,
-          sequence_size,
-          IOCTL_RDWR
-        ),
-        sequence
-      );
+      const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
       // handle ioctl error
       if ( -1 == result ) {
         // debug output
@@ -910,7 +872,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
       STARTUP_PRINT( "Sending stop transmission finally\r\n" )
     #endif
     // allocate sequence
-    sequence = util_prepare_mmio_sequence( 3, &sequence_size );
+    sequence = iomem_prepare_mmio_sequence( 3, &sequence_size );
     // handle error
     if ( ! sequence ) {
       // debug output
@@ -939,15 +901,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
     sequence[ 2 ].failure_condition = IOMEM_MMIO_FAILURE_CONDITION_ON;
     sequence[ 2 ].failure_value = SDHOST_COMMAND_FLAG_FAILED;
     // perform request
-    if ( -1 == ioctl(
-      device->fd_iomem,
-      IOCTL_BUILD_REQUEST(
-        IOMEM_RPC_MMIO_PERFORM,
-        sequence_size,
-        IOCTL_RDWR
-      ),
-      sequence
-    ) ) {
+    if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
       // debug output
       #if defined( SDHOST_ENABLE_DEBUG )
         STARTUP_PRINT( "Issue data read sequence failed\r\n" )
@@ -1041,7 +995,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
   }
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence(
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence(
     sequence_entry_count,
     &sequence_size
   );
@@ -1211,15 +1165,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
   }
 
   // perform request
-  if ( -1 == ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  ) ) {
+  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       STARTUP_PRINT( "Issue SD Command sequence failed\r\n" )
@@ -1667,7 +1613,7 @@ static sdhost_response_t clock_frequency( uint32_t frequency ) {
   // if to small set to max val of divisor
   if ( 100000 > frequency ) {
     // allocate sequence
-    sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+    sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
     if ( ! sequence ) {
       // debug output
       #if defined( SDHOST_ENABLE_DEBUG )
@@ -1704,7 +1650,7 @@ static sdhost_response_t clock_frequency( uint32_t frequency ) {
     // recalculate frequency for timeout
     frequency = device->max_clock / ( divisor + 2 );
     // allocate sequence
-    sequence = util_prepare_mmio_sequence( 2, &sequence_size );
+    sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
     if ( ! sequence ) {
       // debug output
       #if defined( SDHOST_ENABLE_DEBUG )
@@ -1732,16 +1678,7 @@ static sdhost_response_t clock_frequency( uint32_t frequency ) {
     #endif
   }
   // handle ioctl error
-  if ( -1 == ioctl(
-      device->fd_iomem,
-      IOCTL_BUILD_REQUEST(
-        IOMEM_RPC_MMIO_PERFORM,
-        sequence_size,
-        IOCTL_RDWR
-      ),
-      sequence
-    )
-  ) {
+  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       STARTUP_PRINT( "Change clock sequence failed\r\n" )
@@ -1771,7 +1708,7 @@ static sdhost_response_t max_clock_frequency( void ) {
     STARTUP_PRINT( "Fetch max clock property\r\n" )
   #endif
   // allocate buffer
-  request = util_prepare_mailbox( 8, &request_size );
+  request = iomem_prepare_mailbox( 8, &request_size );
   if ( ! request ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -1865,7 +1802,7 @@ static sdhost_response_t reset( void ) {
     return response;
   }
 
-  sequence = util_prepare_mmio_sequence( 19, &sequence_size );
+  sequence = iomem_prepare_mmio_sequence( 19, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -1952,16 +1889,7 @@ static sdhost_response_t reset( void ) {
   sequence[ 18 ].offset = PERIPHERAL_SDHOST_HOST_CONFIG;
   sequence[ 18 ].value = SDHOST_HOST_CONFIG_INTERRUPT_ENABLE_BUSY;
   // handle ioctl error
-  if ( -1 == ioctl(
-      device->fd_iomem,
-      IOCTL_BUILD_REQUEST(
-        IOMEM_RPC_MMIO_PERFORM,
-        sequence_size,
-        IOCTL_RDWR
-      ),
-      sequence
-    )
-  ) {
+  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       STARTUP_PRINT( "Reset sequence failed\r\n" )
@@ -2394,7 +2322,7 @@ sdhost_response_t sdhost_init( void ) {
   #endif
   // set block size in register
   size_t sequence_count;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence(
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence(
     1, &sequence_count
   );
   if ( ! sequence ) {
@@ -2409,15 +2337,7 @@ sdhost_response_t sdhost_init( void ) {
   sequence[ 0 ].offset = PERIPHERAL_SDHOST_BLOCKSIZE;
   sequence[ 0 ].value = 512;
   // perform request
-  if ( -1 == ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_count,
-      IOCTL_RDWR
-    ),
-    sequence
-  ) ) {
+  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_count ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       STARTUP_PRINT( "Populating block size count register failed\r\n" )
@@ -2526,7 +2446,7 @@ sdhost_response_t sdhost_init( void ) {
     STARTUP_PRINT( "Finalize host status\r\n" )
   #endif
   // allocate sequence to change the bit mode for host
-  sequence = util_prepare_mmio_sequence( 2, &sequence_count );
+  sequence = iomem_prepare_mmio_sequence( 2, &sequence_count );
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -2545,15 +2465,7 @@ sdhost_response_t sdhost_init( void ) {
     sequence[ 1 ].value |= SDHOST_HOST_CONFIG_EXTBUS_4BIT;
   }
   // perform request
-  if ( -1 == ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_count,
-      IOCTL_RDWR
-    ),
-    sequence
-  ) ) {
+  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_count ) ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
       STARTUP_PRINT( "Change host status failed\r\n" )

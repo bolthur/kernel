@@ -38,6 +38,8 @@
 #include "../../libiomem.h"
 #include "../../libdma.h"
 #include "../../libmailbox.h"
+#include "../../../../../library/platform/raspi/iomem/mailbox.h"
+#include "../../../../../library/platform/raspi/iomem/sequence.h"
 
 /*
  * Add and use interrupt routine instead of polling. This interrupt is listed in
@@ -204,7 +206,7 @@ static emmc_message_entry_t emmc_error_message[] = {
 static emmc_response_t controller_shutdown( void ) {
   // allocate buffer
   size_t request_size;
-  int32_t* request = util_prepare_mailbox( 8, &request_size );
+  int32_t* request = iomem_prepare_mailbox( 8, &request_size );
   if ( ! request ) {
     return EMMC_RESPONSE_MEMORY;
   }
@@ -225,15 +227,7 @@ static emmc_response_t controller_shutdown( void ) {
   // end tag
   request[ 7 ] = 0;
   // perform request
-  const int result = ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MAILBOX,
-      request_size,
-      IOCTL_RDWR
-    ),
-    request
-  );
+  const int result = iomem_execute_sequence( device->fd_iomem, request, request_size );
   // handle ioctl error
   if ( -1 == result ) {
     free( request );
@@ -291,7 +285,7 @@ static emmc_response_t controller_shutdown( void ) {
 static emmc_response_t controller_startup( void ) {
   // allocate buffer
   size_t request_size;
-  int32_t* request = util_prepare_mailbox( 8, &request_size );
+  int32_t* request = iomem_prepare_mailbox( 8, &request_size );
   if ( ! request ) {
     return EMMC_RESPONSE_MEMORY;
   }
@@ -734,7 +728,7 @@ static emmc_response_t gather_version_info( void ) {
   #endif
   // fetch host version
   size_t sequence_size;
-  iomem_mmio_entry_t* host_version_sequence = util_prepare_mmio_sequence(
+  iomem_mmio_entry_t* host_version_sequence = iomem_prepare_mmio_sequence(
     1, &sequence_size );
   if ( ! host_version_sequence ) {
     return EMMC_RESPONSE_MEMORY;
@@ -743,16 +737,7 @@ static emmc_response_t gather_version_info( void ) {
   host_version_sequence->type = IOMEM_MMIO_ACTION_READ;
   host_version_sequence->offset = PERIPHERAL_EMMC_SLOTISR_VER;
   // handle ioctl error
-  if ( -1 == ioctl(
-      device->fd_iomem,
-      IOCTL_BUILD_REQUEST(
-        IOMEM_RPC_MMIO_PERFORM,
-        sequence_size,
-        IOCTL_RDWR
-      ),
-      host_version_sequence
-    )
-  ) {
+  if ( -1 == iomem_execute_sequence( device->fd_iomem, host_version_sequence, sequence_size ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       STARTUP_PRINT( "mmio rpc failed\r\n" )
@@ -885,7 +870,7 @@ static emmc_response_t clock_frequency( const uint32_t frequency ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 10, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 10, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -935,17 +920,7 @@ static emmc_response_t clock_frequency( const uint32_t frequency ) {
   sequence[ 9 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
   sequence[ 9 ].sleep = 10;
   // perform request
-  if (
-    -1 == ioctl(
-      device->fd_iomem,
-      IOCTL_BUILD_REQUEST(
-        IOMEM_RPC_MMIO_PERFORM,
-        sequence_size,
-        IOCTL_RDWR
-      ),
-      sequence
-    )
-  ) {
+  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       STARTUP_PRINT( "Clock frequency change sequence failed\r\n" )
@@ -997,7 +972,7 @@ static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -1011,15 +986,7 @@ static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
   sequence[ 0 ].offset = PERIPHERAL_EMMC_INTERRUPT;
   sequence[ 0 ].value = mask;
   // perform request
-  const int result = ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
   // free sequence
   free( sequence );
   // handle ioctl error
@@ -1105,7 +1072,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence(
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence(
     sequence_entry_count,
     &sequence_size
   );
@@ -1262,15 +1229,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
     STARTUP_PRINT( "Executing command sequence with ioctl\r\n" )
   #endif
   // perform request
-  int result = ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -1454,7 +1413,7 @@ static emmc_response_t get_interrupt_status( uint32_t* destination ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 1, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 1, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -1467,15 +1426,7 @@ static emmc_response_t get_interrupt_status( uint32_t* destination ) {
   sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ 0 ].offset = PERIPHERAL_EMMC_INTERRUPT;
   // perform request
-  const int result = ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -1510,7 +1461,7 @@ static emmc_response_t reset_command( void ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 4, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 4, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -1537,15 +1488,7 @@ static emmc_response_t reset_command( void ) {
   sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ 3 ].offset = PERIPHERAL_EMMC_CONTROL1;
   // perform request
-  const int result = ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -1598,7 +1541,7 @@ static emmc_response_t reset_data( void ) {
   #endif
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 4, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 4, &sequence_size );
   if ( ! sequence ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
@@ -1625,15 +1568,7 @@ static emmc_response_t reset_data( void ) {
   sequence[ 3 ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ 3 ].offset = PERIPHERAL_EMMC_CONTROL1;
   // perform request
-  const int result = ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -2276,7 +2211,7 @@ static emmc_response_t reset( void ) {
   emmc_response_t response;
   // allocate sequence
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence( 7, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence( 7, &sequence_size );
   if ( ! sequence ) {
     return EMMC_RESPONSE_MEMORY;
   }
@@ -2306,17 +2241,7 @@ static emmc_response_t reset( void ) {
   sequence[ 6 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
   sequence[ 6 ].sleep = 10;
   // perform request
-  if (
-    -1 == ioctl(
-      device->fd_iomem,
-      IOCTL_BUILD_REQUEST(
-        IOMEM_RPC_MMIO_PERFORM,
-        sequence_size,
-        IOCTL_RDWR
-      ),
-      sequence
-    )
-  ) {
+  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       STARTUP_PRINT( "mmio rpc to reset circuit failed\r\n" )
@@ -2349,7 +2274,7 @@ static emmc_response_t reset( void ) {
     return response;
   }
   // allocate sequence
-  sequence = util_prepare_mmio_sequence( 2, &sequence_size );
+  sequence = iomem_prepare_mmio_sequence( 2, &sequence_size );
   if ( ! sequence ) {
     return EMMC_RESPONSE_MEMORY;
   }
@@ -2362,17 +2287,7 @@ static emmc_response_t reset( void ) {
   sequence[ 1 ].offset = PERIPHERAL_EMMC_IRPT_MASK;
   sequence[ 1 ].value = 0xFFFFFFFF;
   // perform request
-  if (
-    -1 == ioctl(
-      device->fd_iomem,
-      IOCTL_BUILD_REQUEST(
-        IOMEM_RPC_MMIO_PERFORM,
-        sequence_size,
-        IOCTL_RDWR
-      ),
-      sequence
-    )
-  ) {
+  if ( -1 == iomem_execute_sequence( device->fd_iomem, sequence, sequence_size ) ) {
     // debug output
     #if defined( EMMC_ENABLE_DEBUG )
       STARTUP_PRINT( "mmio rpc to enable interrupts failed\r\n" )
@@ -2801,7 +2716,7 @@ emmc_response_t emmc_init( void ) {
   #endif
   // set block size in register
   size_t sequence_count;
-  iomem_mmio_entry_t* sequence = util_prepare_mmio_sequence(
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence(
     2, &sequence_count
   );
   if ( ! sequence ) {
@@ -2819,15 +2734,7 @@ emmc_response_t emmc_init( void ) {
   sequence[ 1 ].offset = PERIPHERAL_EMMC_BLKSIZECNT;
   sequence[ 1 ].value = 0x200;
   // perform request
-  int result = ioctl(
-    device->fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_count,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_count );
   // free sequence
   free( sequence );
   // handle ioctl error
@@ -2935,7 +2842,7 @@ emmc_response_t emmc_init( void ) {
         STARTUP_PRINT( "Change transfer width in control0 register\r\n" )
       #endif
       // allocate sequence to change the bit mode for host
-      sequence = util_prepare_mmio_sequence( 2, &sequence_count );
+      sequence = iomem_prepare_mmio_sequence( 2, &sequence_count );
       if ( ! sequence ) {
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
@@ -2950,15 +2857,7 @@ emmc_response_t emmc_init( void ) {
       sequence[ 1 ].offset = PERIPHERAL_EMMC_CONTROL0;
       sequence[ 1 ].value = 0x2;
       // perform request
-      result = ioctl(
-        device->fd_iomem,
-        IOCTL_BUILD_REQUEST(
-          IOMEM_RPC_MMIO_PERFORM,
-          sequence_count,
-          IOCTL_RDWR
-        ),
-        sequence
-      );
+      result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_count );
       // handle ioctl error
       if ( -1 == result ) {
         // debug output

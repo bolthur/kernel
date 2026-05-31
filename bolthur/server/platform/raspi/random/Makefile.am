@@ -2,6 +2,10 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"random\"
 
 bin_PROGRAMS = random
+random_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/platform/raspi/iomem/libiomem.la
+random_LDADD = \
+  ${abs_top_builddir}/../library/platform/raspi/iomem/libiomem.la
 random_SOURCES = \
   rpc/init.c \
   rpc/read.c \

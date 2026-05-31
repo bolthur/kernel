@@ -22,7 +22,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include "../libiomem.h"
+#include "../../../../library/platform/raspi/iomem/libiomem.h"
 
 typedef struct dma_control_block {
   uint32_t transfer_information;

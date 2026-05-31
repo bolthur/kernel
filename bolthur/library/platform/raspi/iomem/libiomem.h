@@ -114,6 +114,11 @@ typedef struct iomem_mmio_entry iomem_mmio_entry_t;
 typedef struct iomem_mmio_entry iomem_mmio_entry_array_t[];
 
 typedef struct {
+  size_t shm_id;
+  size_t length;
+} iomem_mmio_perform_t;
+
+typedef struct {
   iomem_gpio_enum_pin_t pin;
   iomem_gpio_enum_function_t function;
 } iomem_gpio_function_t;

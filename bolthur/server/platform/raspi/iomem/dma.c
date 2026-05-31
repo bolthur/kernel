@@ -25,8 +25,8 @@
 #include "dma.h"
 #include "mmio.h"
 #include "../libdma.h"
-#include "../libperipheral.h"
-#include "../libiomem.h"
+#include "../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../library/platform/raspi/iomem/libperipheral.h"
 
 static dma_control_block_t* block = NULL;
 static int last_error = 0;

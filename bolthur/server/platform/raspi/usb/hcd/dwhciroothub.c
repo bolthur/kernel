@@ -314,15 +314,7 @@ int dwhciroothub_process(
               sequence[ 6 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
               sequence[ 6 ].value = 0xc0;
               // execute sequence
-              ioctl_result = ioctl(
-                fd_iomem,
-                IOCTL_BUILD_REQUEST(
-                  IOMEM_RPC_MMIO_PERFORM,
-                  sequence_size,
-                  IOCTL_RDWR
-                ),
-                sequence
-              );
+              ioctl_result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
               // free sequence
               free( sequence );
               // handle ioctl error
@@ -463,15 +455,7 @@ int dwhciroothub_process(
               sequence[ 7 ].offset = PERIPHERAL_DWHCI_HOST_PORT;
               sequence[ 7 ].value = 0x1000;
               // execute sequence
-              ioctl_result = ioctl(
-                fd_iomem,
-                IOCTL_BUILD_REQUEST(
-                  IOMEM_RPC_MMIO_PERFORM,
-                  sequence_size,
-                  IOCTL_RDWR
-                ),
-                sequence
-              );
+              ioctl_result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
               // free sequence
               free( sequence );
               // handle ioctl error

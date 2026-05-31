@@ -271,6 +271,7 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   ) {
     // debug output
     #if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "%d is blocked\r\n", backup->thread->process->id )
       DEBUG_OUTPUT( "backup->thread->state = %d, pid = %d\r\n", backup->thread->state,
         backup->thread->process->id )
     #endif

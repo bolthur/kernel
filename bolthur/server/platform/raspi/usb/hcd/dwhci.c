@@ -83,15 +83,7 @@ response_t dwhci_read_port( const uint32_t port, uint32_t* value ) {
   sequence[ 0 ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ 0 ].offset = port;
   // perform request
-  const int result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -140,15 +132,7 @@ response_t dwhci_write_port( const uint32_t port, const uint32_t value ) {
   sequence[ 0 ].offset = port;
   sequence[ 0 ].value = value;
   // perform request
-  const int result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -219,15 +203,7 @@ response_t dwhci_transmit_channel( const uint8_t channel, void* buffer ) {
   sequence[ 4 ].value = ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_PACKETS_PER_FRAME( 1 )
     | ( uint32_t )HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 );
   // write to io
-  const int result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle error
   if ( -1 == result ) {
     // debug output
@@ -332,15 +308,7 @@ response_t dwhci_prepare_channel(
   sequence[ 2 ].offset = ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( channel );
   sequence[ 2 ].value = transfer_data;
   // write to io
-  const int result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle error
   if ( -1 == result ) {
     // debug output
@@ -1626,15 +1594,7 @@ response_t dwhci_core_flush_tx_fifo( const uint32_t num_fifo ) {
   sequence[ 1 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
   sequence[ 1 ].sleep = 1;
   // perform request
-  const int ioctl_result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int ioctl_result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == ioctl_result ) {
     // debug output
@@ -1697,15 +1657,7 @@ response_t dwhci_core_flush_rx_fifo( void ) {
   sequence[ 1 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
   sequence[ 1 ].sleep = 10;
   // perform request
-  const int ioctl_result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  const int ioctl_result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == ioctl_result ) {
     // debug output
@@ -1781,15 +1733,7 @@ response_t dwhci_init( void ) {
   sequence[ 6 ].type = IOMEM_MMIO_ACTION_READ;
   sequence[ 6 ].offset = PERIPHERAL_DWHCI_HOST_CFG;
   // perform request
-  int result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  int result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -1885,15 +1829,7 @@ response_t dwhci_init( void ) {
   sequence[ 2 ].type = IOMEM_MMIO_ACTION_WRITE_PREVIOUS_READ;
   sequence[ 2 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
   // perform request
-  result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -1971,15 +1907,7 @@ response_t dwhci_init( void ) {
   sequence[ 6 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
   sequence[ 6 ].sleep = 100;
   // perform request
-  result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -2064,15 +1992,7 @@ response_t dwhci_init( void ) {
   sequence[ 6 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
   sequence[ 6 ].sleep = 100;
   // perform request
-  result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -2166,15 +2086,7 @@ response_t dwhci_init( void ) {
   sequence[ 1 ].offset = PERIPHERAL_DWHCI_CORE_AHB_CFG;
   sequence[ 1 ].value = HCD_DWHCI_CORE_AHB_CFG_GLOBAL_DMA_ENABLE;
   // perform request
-  result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -2277,15 +2189,7 @@ response_t dwhci_init( void ) {
   sequence[ 9 ].offset = PERIPHERAL_DWHCI_CORE_CTRL;
   sequence[ 9 ].value = HCD_DWHCI_CORE_CTRL_HOST_SET_NP_ENABLE;
   // perform request
-  result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -2361,15 +2265,7 @@ response_t dwhci_init( void ) {
       sequence[ 1 ].value = HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 )
         | HCD_DWHCI_CHAN_CHARACTER_END_POINT_DIRECTION( 1 );
       // perform request
-      result = ioctl(
-        fd_iomem,
-        IOCTL_BUILD_REQUEST(
-          IOMEM_RPC_MMIO_PERFORM,
-          sequence_size,
-          IOCTL_RDWR
-        ),
-        sequence
-      );
+      result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
       // handle ioctl error
       if ( -1 == result ) {
         // debug output
@@ -2414,15 +2310,7 @@ response_t dwhci_init( void ) {
       sequence[ 2 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
       sequence[ 2 ].sleep = 10;
       // perform request
-      result = ioctl(
-        fd_iomem,
-        IOCTL_BUILD_REQUEST(
-          IOMEM_RPC_MMIO_PERFORM,
-          sequence_size,
-          IOCTL_RDWR
-        ),
-        sequence
-      );
+      result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
       // handle ioctl error
       if ( -1 == result ) {
         // debug output
@@ -2519,15 +2407,7 @@ response_t dwhci_init( void ) {
   sequence[ 7 ].sleep_type = IOMEM_MMIO_SLEEP_MILLISECONDS;
   sequence[ 7 ].sleep = 20;
   // perform request
-  result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -2615,15 +2495,7 @@ response_t dwhci_init( void ) {
     | HCD_DWHCI_CORE_INT_MASK_SESS_REQ_INTR
     | HCD_DWHCI_CORE_INT_MASK_WKUP_INTR*/);
   // perform request
-  result = ioctl(
-    fd_iomem,
-    IOCTL_BUILD_REQUEST(
-      IOMEM_RPC_MMIO_PERFORM,
-      sequence_size,
-      IOCTL_RDWR
-    ),
-    sequence
-  );
+  result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output

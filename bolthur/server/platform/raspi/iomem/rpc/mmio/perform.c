@@ -27,11 +27,11 @@
 #include "../../mmio.h"
 #include "../../rpc.h"
 #include "../../delay.h"
-#include "../../../libiomem.h"
-#include "../../../libperipheral.h"
 #include "../../../libsdhost.h"
 #include "../../dma.h"
 #include "../../generic.h"
+#include "../../../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "../../../../../../library/util/min.h"
 #if defined( RPC_ENABLE_DEBUG )
   #include <inttypes.h>
@@ -213,11 +213,20 @@ void rpc_handle_mmio_perform(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
-  // allocate space for request
-  auto request_data = ( const uint8_t* )request->container;
+  // get perform entry
+  auto perform = ( iomem_mmio_perform_t* )request->container;
+  // attach shared memory
+  void* request_data = _syscall_memory_shared_attach( perform->shm_id, ( uintptr_t )NULL );
+  if ( errno ) {
+    error.status = -errno;
+    EARLY_STARTUP_PRINT( "Unable to attach shared memory\r\n" )
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    free( request );
+    return;
+  }
   // allocate space for response
   vfs_ioctl_perform_response_t* response;
-  size_t response_size = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) * sizeof( char ) + sizeof( *response );
+  size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( iomem_mmio_perform_t );
   response = malloc( response_size );
   if ( ! response ) {
     EARLY_STARTUP_PRINT( "unable to allocate response\r\n" )
@@ -235,10 +244,11 @@ void rpc_handle_mmio_perform(
   #endif
   // clear request
   memset( response, 0, response_size );
+  memcpy( response->container, request->container, sizeof( iomem_mmio_perform_t ) );
   // transform data into contiguous array
   auto mmio_request = ( iomem_mmio_entry_array_t* )request_data;
   // entry count
-  size_t entry_count = ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) / sizeof( iomem_mmio_entry_t );
+  size_t entry_count = perform->length / sizeof( iomem_mmio_entry_t );
   // loop through entries and validate
   for ( size_t i = 0; i < entry_count; i++ ) {
     // ensure that for write with or of previous read the previous is valid
@@ -259,6 +269,7 @@ void rpc_handle_mmio_perform(
       EARLY_STARTUP_PRINT( "Validation failed\r\n" )
       error.status = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      _syscall_memory_shared_detach( perform->shm_id );
       free( request );
       free( response );
       return;
@@ -286,6 +297,7 @@ void rpc_handle_mmio_perform(
       EARLY_STARTUP_PRINT( "type not valid\r\n" )
       error.status = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      _syscall_memory_shared_detach( perform->shm_id );
       free( request );
       free( response );
       return;
@@ -295,6 +307,7 @@ void rpc_handle_mmio_perform(
       EARLY_STARTUP_PRINT( "Invalid offset\r\n" )
       error.status = -EINVAL;
       bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+      _syscall_memory_shared_detach( perform->shm_id );
       free( request );
       free( response );
       return;
@@ -1199,12 +1212,9 @@ void rpc_handle_mmio_perform(
       );
     }
   }
-  //EARLY_STARTUP_PRINT( "copy over data\r\n" )
-  // copy over data
-  memcpy( response->container, request_data, ( data_size - sizeof( vfs_ioctl_perform_request_t ) ) );
-  //EARLY_STARTUP_PRINT( "returning\r\n" )
   // return data and finish with free
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
+  _syscall_memory_shared_detach( perform->shm_id );
   // free request data
   free( request );
   free( response );
