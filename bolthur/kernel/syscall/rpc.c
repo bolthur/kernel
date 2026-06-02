@@ -138,6 +138,7 @@ void syscall_rpc_raise( void* context ) {
     // early exit
     return;
   }
+  // FIXME: handle possible kill
   // validate addresses
   if ( data && length && ! syscall_validate_address( ( uintptr_t )data, length ) ) {
     // debug output
@@ -181,6 +182,12 @@ void syscall_rpc_raise( void* context ) {
       return;
     }
   }
+  #if defined( PRINT_SYSCALL )
+    DEBUG_OUTPUT(
+      "calling process %d!\r\n",
+      target->id
+    )
+  #endif
   // call rpc
   rpc_backup_t* rpc = rpc_generic_raise(
     task_thread_current_thread,
@@ -537,6 +544,9 @@ void syscall_rpc_ret( void* context ) {
         ( task_state_data_t ){ .data_size = blocked_data_id }
       );
     } else {
+      #if defined( PRINT_SYSCALL )
+        DEBUG_OUTPUT( "sync return to %d on end!\r\n", target_active->thread->process->id )
+      #endif
       target_active->sync_return_on_end = true;
       target_active->sync_return_blocked_data_id = blocked_data_id;
       target_active->sync_return_data_id = data_id;
@@ -619,7 +629,7 @@ void syscall_rpc_wait_for_call( void* context ) {
     return;
   }
   // set state
-  task_thread_current_thread->state = TASK_THREAD_STATE_RPC_WAIT_FOR_CALL;
+  task_thread_set_state( task_thread_current_thread, TASK_THREAD_STATE_RPC_WAIT_FOR_CALL );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(

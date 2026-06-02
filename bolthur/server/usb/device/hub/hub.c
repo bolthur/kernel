@@ -593,7 +593,14 @@ int hub_check_connection(
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Connected changed!\r\n" )
     #endif
-    hub_port_connection_changed( device_number, device_data, port );
+    result = hub_port_connection_changed( device_number, device_data, port );
+    if ( 0 != result ) {
+      #if defined ( HUB_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Unable to check for connection changed\r\n" )
+      #endif
+      // return result
+      return result;
+    }
   }
   if ( port_status->change.enabled_changed ) {
     #if defined ( HUB_ENABLE_DEBUG )
@@ -609,6 +616,8 @@ int hub_check_connection(
         EARLY_STARTUP_PRINT( "Failed to clear enable change for port %"PRIu8" for %s\r\n",
           ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
       #endif
+      // return result
+      return result;
     }
 
     if ( ! port_status->status.enabled && port_status->status.connected && device_data->children[ port ] ) {
@@ -619,7 +628,14 @@ int hub_check_connection(
           usb_get_description( device_number ), port + 1 )
       #endif
       // call connection changed
-      hub_port_connection_changed( device_number, device_data, port );
+      result = hub_port_connection_changed( device_number, device_data, port );
+      if ( 0 != result ) {
+        #if defined ( HUB_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Unable to check for connection changed\r\n" )
+        #endif
+        // return result
+        return result;
+      }
     }
   }
   if ( port_status->status.suspended ) {
@@ -636,6 +652,8 @@ int hub_check_connection(
         EARLY_STARTUP_PRINT( "Failed to suspend port %"PRIu8" for %s\r\n",
           ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
       #endif
+      // return result
+      return result;
     }
   }
   if ( port_status->change.over_current_changed ) {
@@ -650,6 +668,8 @@ int hub_check_connection(
         EARLY_STARTUP_PRINT( "Failed to clear over current for port %"PRIu8" for %s\r\n",
           ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
       #endif
+      // return result
+      return result;
     }
     // power on hub
     result = hub_power_on( device_number, device_data );
@@ -660,6 +680,8 @@ int hub_check_connection(
         EARLY_STARTUP_PRINT( "Unable to power on device %s: %s\r\n",
           usb_get_description( device_number ), strerror( result ) )
       #endif
+      // return result
+      return result;
     }
   }
   if ( port_status->change.reset_changed ) {
@@ -676,6 +698,8 @@ int hub_check_connection(
         EARLY_STARTUP_PRINT( "Failed to clear reset for port %"PRIu8" for %s\r\n",
           ( uint8_t )( port + 1 ), usb_get_description( device_number ) )
       #endif
+      // return result
+      return result;
     }
   }
   // return success

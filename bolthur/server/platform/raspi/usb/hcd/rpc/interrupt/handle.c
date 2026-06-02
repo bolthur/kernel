@@ -37,16 +37,16 @@ void rpc_interrupt_handle(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  //#if defined( DWHCI_ENABLE_DEBUG )
+  #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Interrupt handler called\r\n" )
-  //#endif
+  #endif
   // read interrupt register
   uint32_t interrupt;
   response_t result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_INT_STAT, &interrupt );
   if ( HCD_RESPONSE_OK != result ) {
-    //#if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to read interrupt status register!\r\n" )
-    //#endif
+    #endif
     return;
   }
   #if defined( DWHCI_ENABLE_DEBUG )
@@ -55,9 +55,9 @@ void rpc_interrupt_handle(
   // mask pending interrupts
   result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_CORE_INT_STAT, interrupt );
   if ( HCD_RESPONSE_OK != result ) {
-    //#if defined( DWHCI_ENABLE_DEBUG )
+    #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to write interrupt status register!\r\n" )
-    //#endif
+    #endif
     return;
   }
   uint32_t channel_interrupt;
@@ -66,9 +66,9 @@ void rpc_interrupt_handle(
     // read channel interrupts
     result = dwhci_read_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT, &channel_interrupt );
     if ( HCD_RESPONSE_OK != result ) {
-      //#if defined( DWHCI_ENABLE_DEBUG )
+      #if defined( DWHCI_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to read all channel interrupt status register!\r\n" )
-      //#endif
+      #endif
       return;
     }
     #if defined( DWHCI_ENABLE_DEBUG )
@@ -77,9 +77,9 @@ void rpc_interrupt_handle(
     // mask channel interrupts
     result = dwhci_write_port( ( uint32_t )PERIPHERAL_DWHCI_HOST_ALLCHAN_INT, channel_interrupt );
     if ( HCD_RESPONSE_OK != result ) {
-      //#if defined( DWHCI_ENABLE_DEBUG )
+      #if defined( DWHCI_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to write back all channel interrupt status register!\r\n" )
-      //#endif
+      #endif
       return;
     }
     // iterate over channels
@@ -146,32 +146,6 @@ void rpc_interrupt_handle(
           #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Halt for channel %"PRIu32"\r\n", channel )
           #endif
-          // handle halt without transfer complete by checking for possible complete
-          if ( ! ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE ) ) {
-            uint32_t transfer_size;
-            result = dwhci_read_port(
-              ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( channel ),
-              &transfer_size
-            );
-            if ( HCD_RESPONSE_OK != result ) {
-              #if defined( DWHCI_ENABLE_DEBUG )
-                EARLY_STARTUP_PRINT( "Unable to read transfer size register!\r\n" )
-              #endif
-              continue;
-            }
-            if ( HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_TRANSFER_SIZE( transfer_size ) == entry->buffer_size_to_transfer ) {
-              cipt |= HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE;
-              #if defined( DWHCI_ENABLE_DEBUG )
-                EARLY_STARTUP_PRINT( "Interrupt halt without complete, setting complete manually\r\n" )
-              #endif
-            } else {
-              #if defined( DWHCI_ENABLE_DEBUG )
-                EARLY_STARTUP_PRINT( "Transmission halted, restart with offset\r\n" )
-              #endif
-              // increment buffer offset
-              entry->buffer_offset += HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_TRANSFER_SIZE( transfer_size );
-            }
-          }
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_AHB_ERROR ) {
           #if defined( DWHCI_ENABLE_DEBUG )
@@ -244,7 +218,12 @@ void rpc_interrupt_handle(
           #endif
           entry->error |= LIBUSB_TRANSFER_ERROR_LIST_ROLLOVER;
         }
-        if ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE ) {
+        // handle halt without transfer complete by checking for possible complete
+        bool switch_to_next_state = false;
+        if (
+          ( cipt & HCD_CHANNEL_INTERRUPT_HALT )
+          || ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE )
+        ) {
           uint32_t transfer_size;
           result = dwhci_read_port(
             ( uint32_t )PERIPHERAL_DWHCI_HOST_CHAN_XFER_SIZE( channel ),
@@ -256,15 +235,44 @@ void rpc_interrupt_handle(
             #endif
             continue;
           }
-          entry->transferred = HCD_DWHCI_CHAN_XFER_SIZE_EXTRACT_TRANSFER_SIZE( transfer_size );
+          // set transferred and packet transferred
+          uint32_t transferred = HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE( transfer_size );
           entry->packet_transferred = HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT( transfer_size );
-          entry->buffer_offset = 0;
-          // debug output
-          #if defined( DWHCI_ENABLE_DEBUG )
-            if (entry->status == DWHCI_QUEUE_POLL_STATUS_DATA) {
-              EARLY_STARTUP_PRINT( "entry->transferred: %"PRIu32"\r\n", entry->transferred )
+          // handle finished
+          if (
+            entry->status == DWHCI_QUEUE_CHANNEL_STATUS_SETUP // treat setup as finished where 0 transfers may happen
+            || entry->status == DWHCI_QUEUE_POLL_STATUS_DATA // treat data polling as finished where 0 transfers may happen
+            || entry->buffer_size_to_transfer == 0 // treat non data actions as finished
+            || transferred == entry->buffer_size_to_transfer // handle enough transferred
+          ) {
+            // debug output
+            #if defined( DWHCI_ENABLE_DEBUG )
+              EARLY_STARTUP_PRINT( "Continue with next state\r\n" )
+            #endif
+            // toggle switch to next state
+            switch_to_next_state = true;
+            // set final transferred size
+            if (
+              entry->status == DWHCI_QUEUE_CHANNEL_STATUS_DATA
+              || entry->status == DWHCI_QUEUE_CHANNEL_STATUS_ACK
+              || entry->status == DWHCI_QUEUE_POLL_STATUS_DATA
+            ) {
+              entry->transferred = entry->buffer_offset + transferred;
             }
-          #endif
+            // reset buffer offset
+            entry->buffer_offset = 0;
+          } else {
+            // debug output
+            #if defined( DWHCI_ENABLE_DEBUG )
+              EARLY_STARTUP_PRINT( "Restart current state with offset, %"PRIu32" / %"PRIu32"\r\n",
+                transferred, entry->buffer_size_to_transfer )
+            #endif
+            // increase buffer offset
+            entry->buffer_offset += transferred;
+          }
+        }
+        // handle switch to next
+        if ( switch_to_next_state ) {
           // evaluate next state
           switch ( entry->status ) {
             case DWHCI_QUEUE_CHANNEL_STATUS_SETUP:

@@ -112,7 +112,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
       backup->thread->process->id, backup->thread->state, backup->thread_state )
   #endif
   // set correct state
-  backup->thread->state = backup->thread_state;
+  task_thread_set_state( backup->thread, backup->thread_state );
   memcpy( &thread->state_data, &backup->thread->state_data, sizeof( task_state_data_t ) );
 
   // handle sync return on end
@@ -344,9 +344,9 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   }
   // set correct state ( set directly to active if it's the current thread )
   if ( backup->thread == task_thread_current_thread ) {
-    backup->thread->state = TASK_THREAD_STATE_RPC_ACTIVE;
+    task_thread_set_state( backup->thread, TASK_THREAD_STATE_RPC_ACTIVE );
   } else {
-    backup->thread->state = TASK_THREAD_STATE_RPC_QUEUED;
+    task_thread_set_state( backup->thread, TASK_THREAD_STATE_RPC_QUEUED );
   }
   backup->prepared = true;
   backup->active = true;

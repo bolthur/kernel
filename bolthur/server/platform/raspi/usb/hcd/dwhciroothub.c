@@ -129,7 +129,7 @@ static libusb_hub_descriptor_t hub_descriptor = {
     .think_time = 0,
     .indicators = false,
   },
-  .power_good_delay = 0,
+  .power_good_delay = 100,
   .maximum_hub_power = 0,
   .data = { 0x01, 0xff, },
 };

@@ -165,9 +165,9 @@ void task_process_schedule( [[maybe_unused]] event_origin_t origin, void* contex
     running_queue->last_handled = running_thread;
     // update running task to halt due to switch
     if ( TASK_THREAD_STATE_ACTIVE == running_thread->state ) {
-      running_thread->state = TASK_THREAD_STATE_HALT_SWITCH;
+      task_thread_set_state( running_thread, TASK_THREAD_STATE_HALT_SWITCH );
     } else if ( TASK_THREAD_STATE_RPC_ACTIVE == running_thread->state ) {
-      running_thread->state = TASK_THREAD_STATE_RPC_HALT_SWITCH;
+      task_thread_set_state( running_thread, TASK_THREAD_STATE_RPC_HALT_SWITCH );
     }
   }
 
@@ -206,6 +206,9 @@ void task_process_schedule( [[maybe_unused]] event_origin_t origin, void* contex
       #endif
       // handle no next thread
       if ( ! next_thread ) {
+        #if defined( PRINT_PROCESS )
+          DEBUG_OUTPUT( "No further threads to schedule to, halting\r\n" )
+        #endif
         // enable interrupts and set flag
         if ( ! halt_set ) {
           interrupt_enable();
@@ -252,9 +255,9 @@ void task_process_schedule( [[maybe_unused]] event_origin_t origin, void* contex
   if ( running_thread ) {
     // reset state to ready
     if ( TASK_THREAD_STATE_HALT_SWITCH == running_thread->state ) {
-      running_thread->state = TASK_THREAD_STATE_READY;
+      task_thread_set_state( running_thread, TASK_THREAD_STATE_READY );
     } else if ( TASK_THREAD_STATE_RPC_HALT_SWITCH == running_thread->state ) {
-      running_thread->state = TASK_THREAD_STATE_RPC_QUEUED;
+      task_thread_set_state( running_thread, TASK_THREAD_STATE_RPC_QUEUED );
     }
   }
   // overwrite current running thread

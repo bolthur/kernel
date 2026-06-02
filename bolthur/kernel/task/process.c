@@ -790,7 +790,7 @@ void task_process_prepare_kill( void* context, task_process_t* proc ) {
     // get thread
     task_thread_t* thread = TASK_THREAD_GET_BLOCK( current );
     // set process state
-    thread->state = TASK_THREAD_STATE_KILL;
+    task_thread_set_state( thread, TASK_THREAD_STATE_KILL );
     // get next thread
     current = avl_iterate_next( proc->thread_manager, current );
   }
@@ -1023,7 +1023,7 @@ int task_process_replace(
     // replace current thread pointer
     task_thread_current_thread = new_current;
     // switch thread state to active
-    task_thread_current_thread->state = TASK_THREAD_STATE_ACTIVE;
+    task_thread_set_state( task_thread_current_thread, TASK_THREAD_STATE_ACTIVE );
   }
   return 0;
 }

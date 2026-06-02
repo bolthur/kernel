@@ -57,6 +57,9 @@ rpc_backup_t* rpc_backup_create(
   const bool is_interrupt
 ) {
   // get first inactive thread
+  #if defined( PRINT_RPC )
+    DEBUG_OUTPUT( "%d: target->thread_manager = %p\r\n", target->id, target->thread_manager )
+  #endif
   avl_node_t* current = avl_iterate_first( target->thread_manager );
   task_thread_t* thread = target_thread;
   // loop until usable thread has been found

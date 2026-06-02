@@ -82,5 +82,6 @@ task_thread_t* task_thread_get_blocked( task_thread_state_t, task_state_data_t )
 void task_thread_kill( task_thread_t*, bool, void* );
 bool task_thread_is_ready( task_thread_t* );
 bool task_thread_is_active( task_thread_t* );
+void task_thread_set_state( task_thread_t*, task_thread_state_t );
 
 #endif

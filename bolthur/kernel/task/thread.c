@@ -153,10 +153,12 @@ bool task_thread_set_current(
   // update queue current
   queue->current = thread;
   // set state
-  task_thread_current_thread->state =
+  task_thread_set_state(
+    task_thread_current_thread,
     task_thread_current_thread->state == TASK_THREAD_STATE_RPC_QUEUED
       ? TASK_THREAD_STATE_RPC_ACTIVE
-      : TASK_THREAD_STATE_ACTIVE;
+      : TASK_THREAD_STATE_ACTIVE
+  );
   return true;
 }
 
@@ -170,9 +172,9 @@ void task_thread_reset_current( void ) {
   // set state
   if ( task_thread_current_thread ) {
     if ( TASK_THREAD_STATE_HALT_SWITCH == task_thread_current_thread->state ) {
-      task_thread_current_thread->state = TASK_THREAD_STATE_READY;
+      task_thread_set_state( task_thread_current_thread, TASK_THREAD_STATE_READY );
     } else if ( TASK_THREAD_STATE_RPC_HALT_SWITCH == task_thread_current_thread->state ) {
-      task_thread_current_thread->state = TASK_THREAD_STATE_RPC_QUEUED;
+      task_thread_set_state( task_thread_current_thread, TASK_THREAD_STATE_RPC_QUEUED );
     }
   }
   // unset current thread
@@ -397,8 +399,8 @@ void task_thread_kill( task_thread_t* thread, bool schedule, void* context ) {
     )
   #endif
   // set thread state and push thread to clean up list
-  thread->state = TASK_THREAD_STATE_KILL;
-    list_push_back_data( process_manager->thread_to_cleanup, thread->process );
+  task_thread_set_state( thread, TASK_THREAD_STATE_KILL );
+  list_push_back_data( process_manager->thread_to_cleanup, thread->process );
   // trigger schedule if necessary
   if ( schedule ) {
     event_enqueue( EVENT_PROCESS, EVENT_DETERMINE_ORIGIN( context ) );
@@ -490,7 +492,7 @@ void task_thread_block(
     thread->state_backup = TASK_THREAD_STATE_RPC_QUEUED;
   }
   // set state and data
-  thread->state = state;
+  task_thread_set_state( thread, state );
   thread->state_data = data;
   #if defined( PRINT_PROCESS )
     DEBUG_OUTPUT( "thread->state_backup = %d\r\n", thread->state_backup )
@@ -541,15 +543,27 @@ void task_thread_unblock(
     #endif
     return;
   }
+  // validate data size
+  if ( thread->state_data.data_size != necessary_data.data_size ) {
+    // debug output
+    #if defined( PRINT_PROCESS )
+      DEBUG_OUTPUT(
+        "invalid data size attribute %zu / %zu\r\n",
+        thread->state_data.data_size,
+        necessary_data.data_size
+      )
+    #endif
+    return;
+  }
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
+    DEBUG_OUTPUT( "%d: thread->state = %d\r\n", thread->process->id, thread->state )
   #endif
   // set back to back up again
-  thread->state = thread->state_backup;
+  task_thread_set_state( thread, thread->state_backup );
   // debug output
   #if defined( PRINT_PROCESS )
-    DEBUG_OUTPUT( "thread->state = %d\r\n", thread->state )
+    DEBUG_OUTPUT( "%d: thread->state = %d\r\n", thread->process->id, thread->state )
   #endif
 }
 
@@ -599,6 +613,7 @@ task_thread_t* task_thread_get_blocked(
       if (
         thread->state == necessary_thread_state
         && thread->state_data.data_ptr == necessary_thread_data.data_ptr
+        && thread->state_data.data_size == necessary_thread_data.data_size
       ) {
         return thread;
       }
@@ -609,4 +624,23 @@ task_thread_t* task_thread_get_blocked(
     avl_proc = avl_iterate_next( process_manager->process_id, avl_proc );
   }
   return NULL;
+}
+
+/**
+ * @fn void task_thread_set_state(task_thread_t*, task_thread_state_t)
+ * @brief Wrapper to set thread state
+ * @param thread
+ * @param state
+ */
+void task_thread_set_state( task_thread_t* thread, const task_thread_state_t state ) {
+  if ( ! thread ) {
+    return;
+  }
+  #if defined( PRINT_PROCESS )
+    void* returnAddress = __builtin_return_address(0);
+    DEBUG_OUTPUT( "change thread for pid %d from %d to %d. Return address is: %p\r\n",
+      thread->process ? thread->process->id : 0, thread->state, state,
+      returnAddress )
+  #endif
+  thread->state = state;
 }

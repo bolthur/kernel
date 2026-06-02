@@ -200,7 +200,7 @@ task_thread_t* task_thread_create(
   }
 
   // populate thread data
-  thread->state = TASK_THREAD_STATE_READY;
+  task_thread_set_state( thread, TASK_THREAD_STATE_READY );
   thread->entry = entry;
   thread->id = task_thread_generate_id( process );
   thread->priority = priority;
@@ -282,7 +282,7 @@ task_thread_t* task_thread_fork(
   );
 
   thread->stack_size = thread_to_fork->stack_size;
-  thread->state = TASK_THREAD_STATE_READY;
+  task_thread_set_state( thread, TASK_THREAD_STATE_READY );
   // copy register context data
   memcpy(
     thread->current_context,

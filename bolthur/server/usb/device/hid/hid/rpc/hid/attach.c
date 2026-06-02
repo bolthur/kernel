@@ -173,6 +173,9 @@ void rpc_hid_attach(
     }
   }
 
+  #if defined( HID_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Fetching usb configuration\r\n" )
+  #endif
   // fetch configuration
   libusb_descriptor_header_t* header;
   result = usb_get_configuration( message->device_number, ( void** )&header );

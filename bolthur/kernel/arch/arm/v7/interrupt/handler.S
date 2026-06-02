@@ -109,6 +109,7 @@ _\name\()_entry_unprivileged:
 
   // save registers
   stm lr, { r0 - r14 }^
+  // push fpu register
   push_fpu_register lr
 
   // get pushed lr and fill it into struct
@@ -149,7 +150,8 @@ _\name\()_entry_privileged:
   // allocate space for context structure
   sub sp, #STACK_FRAME_SIZE
   // save registers to stack
-  stm sp, { r0 - r12 }
+  stmia sp!, { r0 - r12 }
+  sub sp, #SP_OFFSET
   push_fpu_register sp
   // get pushed lr and fill it into struct
   ldr r0, [ sp, #PRIVILEGED_PC_OFFSET ]

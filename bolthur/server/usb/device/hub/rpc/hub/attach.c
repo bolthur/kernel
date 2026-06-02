@@ -286,12 +286,24 @@ void rpc_hub_attach(
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Checking port %"PRIu32"\r\n", port )
     #endif
-    hub_check_connection( message->device_number, hub, ( uint8_t )port );
+    result = hub_check_connection( message->device_number, hub, ( uint8_t )port );
+    if ( 0 != result ) {
+      #if defined ( HUB_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Unable to check connection for port: %"PRIu8"\r\n",
+          ( uint8_t )port)
+      #endif
+      _syscall_rpc_cleanup();
+      free( descriptor );
+      free( hub );
+      free( request );
+      return;
+    }
   }
   // store hub in linked list
   hub_append( hub );
   // free request
   free( request );
+  EARLY_STARTUP_PRINT( "HUB ATTACH DONE\r\n" )
   // cleanup rpc
   _syscall_rpc_cleanup();
 }
