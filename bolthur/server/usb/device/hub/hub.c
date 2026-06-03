@@ -269,17 +269,17 @@ int hub_power_on(
       // return result
       return result;
     }
+    // milliseconds to sleep
+    const long milliseconds = hub_device->descriptor->power_good_delay * 2;
+    #if defined ( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "sleeping %ld milliseconds\r\n", milliseconds )
+    #endif
+    // sleep a bit
+    custom_nanosleep( &(struct timespec){
+      .tv_sec = milliseconds / 1000,
+      .tv_nsec = ( milliseconds % 1000 ) * 1000000,
+    } );
   }
-  // milliseconds to sleep
-  const long milliseconds = hub_device->descriptor->power_good_delay * 2;
-  #if defined ( HUB_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "sleeping %ld milliseconds\r\n", milliseconds )
-  #endif
-  // sleep a bit
-  custom_nanosleep( &(struct timespec){
-    .tv_sec = milliseconds / 1000,
-    .tv_nsec = ( milliseconds % 1000 ) * 1000000,
-  } );
   // return success
   return 0;
 }
@@ -378,7 +378,7 @@ int hub_port_reset(
     uint32_t timeout = 0;
     do {
       // delay 20 milliseconds
-      const long milliseconds = 20;
+      constexpr long milliseconds = 20;
       custom_nanosleep( &(struct timespec){
         .tv_sec = milliseconds / 1000,
         .tv_nsec = ( milliseconds % 1000 ) * 1000000,
@@ -577,17 +577,24 @@ int hub_check_connection(
   #if defined ( HUB_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "device_number = %"PRIu32" connected = %d, previously_connected = %d\r\n",
       device_number, port_status->status.connected ? 1 : 0, previously_connected ? 1 : 0 )
+
+    EARLY_STARTUP_PRINT( "port_status->status.connected = %d\r\n", port_status->status.connected ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->status.enabled = %d\r\n", port_status->status.enabled ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->status.suspended = %d\r\n", port_status->status.suspended ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->status.over_current = %d\r\n", port_status->status.over_current ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->status.reset = %d\r\n", port_status->status.reset ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->status.power = %d\r\n", port_status->status.power ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->status.low_speed_attached = %d\r\n", port_status->status.low_speed_attached ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->status.high_speed_attached = %d\r\n", port_status->status.high_speed_attached ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->status.test_mode = %d\r\n", port_status->status.test_mode ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->status.indicator_control = %d\r\n", port_status->status.indicator_control ? 1 : 0 )
+
+    EARLY_STARTUP_PRINT( "port_status->change.connected_changed = %d\r\n", port_status->change.connected_changed ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->change.enabled_changed = %d\r\n", port_status->change.enabled_changed ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->change.over_current_changed = %d\r\n", port_status->change.over_current_changed ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->change.reset_changed = %d\r\n", port_status->change.reset_changed ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status->change.suspend_changed = %d\r\n", port_status->change.suspended_changed ? 1 : 0 )
   #endif
-  // handle directly connected to root hub
-  if (
-    device_number == roothub_device_number
-    && port_status->status.connected != previously_connected
-  ) {
-    #if defined ( HUB_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Root hub which is connected and was previously not or vice versa\r\n" )
-    #endif
-    port_status->change.connected_changed = true;
-  }
   // handle connection changed
   if ( port_status->change.connected_changed ) {
     #if defined ( HUB_ENABLE_DEBUG )
@@ -602,7 +609,11 @@ int hub_check_connection(
       return result;
     }
   }
-  if ( port_status->change.enabled_changed ) {
+  // enabled change only in case it's not the root hub
+  if (
+    port_status->change.enabled_changed
+    && roothub_device_number != device_number
+  ) {
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "ENABLED CHANGED!\r\n" )
     #endif
@@ -638,7 +649,11 @@ int hub_check_connection(
       }
     }
   }
-  if ( port_status->status.suspended ) {
+  // suspended only in case it's not the roothub
+  if (
+    port_status->status.suspended
+    && roothub_device_number != device_number
+  ) {
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "SUSPENDED!\r\n" )
     #endif
@@ -684,7 +699,11 @@ int hub_check_connection(
       return result;
     }
   }
-  if ( port_status->change.reset_changed ) {
+  // reset changed only in case it's not the roothub
+  if (
+    port_status->change.reset_changed
+    && roothub_device_number != device_number
+  ) {
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "RESET CHANGED!\r\n" )
     #endif

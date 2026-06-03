@@ -245,18 +245,38 @@ void rpc_hub_attach(
       !status->status.over_current ? "No" : "Yes" )
   #endif
   EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
-  // power on hub
-  result = hub_power_on( message->device_number, hub );
+  // get root port number
+  uint32_t roothub_device_number;
+  result = usb_get_root_hub( &roothub_device_number );
   if ( 0 != result ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to power on hub!\r\n" )
+      EARLY_STARTUP_PRINT( "Unable to retrieve root hub: %s\r\n", strerror( result ) )
     #endif
     _syscall_rpc_cleanup();
     free( descriptor );
     free( hub );
     free( request );
     return;
+  }
+  // power on in case it's not the root hub
+  if ( message->device_number != roothub_device_number ) {
+      #if defined ( HUB_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Power on hub!\r\n" )
+      #endif
+    // power on hub
+    result = hub_power_on( message->device_number, hub );
+    if ( 0 != result ) {
+      // debug output
+      #if defined ( HUB_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Unable to power on hub!\r\n" )
+      #endif
+      _syscall_rpc_cleanup();
+      free( descriptor );
+      free( hub );
+      free( request );
+      return;
+    }
   }
   EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
   // fetch status again

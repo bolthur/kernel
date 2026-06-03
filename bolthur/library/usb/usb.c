@@ -166,6 +166,8 @@ int usb_control_message_async(
     // return error
     return e;
   }
+  // clear out
+  memset( shm_addr, 0, data_size );
   auto const message = ( usb_control_message_t* )shm_addr;
   // populate real message in shared memory
   message->device_number = device_number;
@@ -305,6 +307,8 @@ int usb_control_message(
     // return error
     return e;
   }
+  // clear out
+  memset( shm_addr, 0, data_size );
   auto const message = ( usb_control_message_t* )shm_addr;
   // populate real message in shared memory
   message->device_number = device_number;
@@ -496,6 +500,8 @@ int usb_get_descriptor(
     // return error
     return e;
   }
+  // clear out
+  memset( shm_addr, 0, data_size );
   usb_descriptor_message_t* message = ( usb_descriptor_message_t* )shm_addr;
   // populate real message in shared memory
   message->device_number = device_number;
@@ -812,7 +818,7 @@ int usb_get_interface(
 int usb_get_configuration( const uint32_t device_number, void** target_buffer ) {
   // debug output
   #if defined( LIBUSB_ENABLE_DEBUG )
-    STARTUP_PRINT( "firing usb get descriptor\r\n" )
+    STARTUP_PRINT( "firing usb get configuration\r\n" )
   #endif
   // allocate shared memory
   const size_t shm_id = _syscall_memory_shared_create( 0x1000 );
@@ -827,7 +833,7 @@ int usb_get_configuration( const uint32_t device_number, void** target_buffer ) 
     return e;
   }
   // attach shared memory
-  const void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -838,6 +844,8 @@ int usb_get_configuration( const uint32_t device_number, void** target_buffer ) 
     // return error
     return e;
   }
+  // clear out
+  memset( shm_addr, 0, 0x1000 );
   // allocate request
   usbd_get_configuration_t* control_request = malloc( sizeof( *control_request ) );
   if ( ! control_request ) {
@@ -1024,6 +1032,8 @@ int usb_interrupt_poll_async(
     // return error
     return e;
   }
+  // clear out
+  memset( shm_addr, 0, data_size );
   auto const message = ( usb_interrupt_poll_t* )shm_addr;
   // populate real message in shared memory
   message->device_number = device_number;
