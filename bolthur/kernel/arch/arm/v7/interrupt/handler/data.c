@@ -60,7 +60,7 @@ static uint32_t nested_data_abort = 0;
     DEBUG_OUTPUT( "cpu = %p\r\n", cpu )
   #endif
   // get event origin
-  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  const event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "origin = %d\r\n", origin )
@@ -81,9 +81,12 @@ static uint32_t nested_data_abort = 0;
       )
     )
     if (EVENT_ORIGIN_USER == origin) {
-      DEBUG_OUTPUT("thread context = %p, global user context = %p\r\n",
-        (void*)task_thread_current_thread->process->virtual_context,
-        (void*)virt_current_user_context)
+      DEBUG_OUTPUT( "thread context = %p, global user context = %p\r\n",
+        ( void* )task_thread_current_thread->process->virtual_context,
+        ( void* )virt_current_user_context )
+      DEBUG_OUTPUT( "task_thread_current_thread->stack_virtual = %"PRIxPTR" / %zx\r\n",
+        task_thread_current_thread->stack_virtual,
+        task_thread_current_thread->stack_size )
     }
     // dump context
     DUMP_REGISTER( interrupt_get_context( cpu ) )

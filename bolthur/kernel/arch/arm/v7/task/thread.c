@@ -107,8 +107,7 @@ task_thread_t* task_thread_create(
   }
 
   // cache locally
-  cpu_register_context_t* current_context =
-    ( cpu_register_context_t* )thread->current_context;
+  auto current_context = ( cpu_register_context_t* )thread->current_context;
   // prepare area
   memset( ( void* )current_context, 0, sizeof( cpu_register_context_t ) );
   // set content

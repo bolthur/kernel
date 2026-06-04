@@ -42,7 +42,7 @@
   // close device manager since everythig was fired up
   close( fd_dev_manager );
   // fork for starting the login shell
-  /*pid_t forked = fork();
+  pid_t forked = fork();
   if ( forked == 0 ) {
     // build command
     char* cmd[] = { "login", NULL, };
@@ -54,7 +54,7 @@
   }
   if ( 0 > forked ) {
     EARLY_STARTUP_PRINT( "Error while forking: %s\r\n", strerror( -forked ) )
-  }*/
+  }
 
   while ( true ) {
     sleep( 10 );

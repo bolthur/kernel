@@ -177,27 +177,17 @@ int keymap_init( void ) {
   }
   // clear out map
   memset( &map, 0, sizeof( map ) );
-  // open console configuration
-  FILE* vconsole = fopen( "/etc/vconsole.conf", "r" );
-  // handle error
-  if ( ! vconsole ) {
-    const int e = errno;
-    STARTUP_PRINT( "Unable to open /etc/vconsole.conf: %s\r\n", strerror( e ) );
-    return e;
-  }
-  // parse ini
-  if ( load_ini_file(
-    vconsole,
+  // use load_ini_path
+  if ( load_ini_path(
+    "/etc/vconsole.conf",
     INI_DEFAULT_FORMAT,
-    NULL,
+    nullptr,
     confini_callback,
-    NULL
+    nullptr
   ) ) {
-    EARLY_STARTUP_PRINT( "Cannot load console configuration file!\r\n" )
+    EARLY_STARTUP_PRINT( "Cannot load or parse console configuration\r\n" );
     return EIO;
   }
-  // close ini file again
-  fclose( vconsole );
   // handle not loaded
   if ( ! keymap_loaded ) {
     return EINVAL;
