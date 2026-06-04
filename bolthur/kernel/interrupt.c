@@ -292,7 +292,7 @@ bool interrupt_unregister_handler(
     interrupt_unmask_specific( ( int8_t )num );
   }
   // remove element
-  return list_remove_item( list, match );
+  return list_remove_item( list, match, true );
 }
 
 /**
@@ -594,7 +594,7 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context, c
     // handle no thread with removal and skip
     if ( ! first ) {
       list_item_t* next = current->next;
-      list_remove_item( block->process, current );
+      list_remove_item( block->process, current, true );
       current = next;
       continue;
     }
@@ -760,7 +760,7 @@ void interrupt_unregister_process( task_process_t* process ) {
     );
     // remove if there is a match
     if ( match ) {
-      list_remove_item( block->process, match );
+      list_remove_item( block->process, match, true );
     }
     // get next list
     avl_list = avl_iterate_next( tree, avl_list );

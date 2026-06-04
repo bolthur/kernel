@@ -130,30 +130,31 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // device info data
   constexpr uint32_t device_info[] = { DEV_START, DEV_KILL, };
 
-  // add manager subfolder
+  // add manager subfolder with wait for path
   if ( ! dev_add_folder( "/dev/manager", nullptr, 0, on_folder_file_added ) ) {
     EARLY_STARTUP_PRINT( "Unable to add manager subfolder\r\n" )
     return -1;
   }
   vfs_wait_for_path( "/dev/manager" );
-  // add storage subfolder
+  // add storage subfolder with wait for path
   if ( ! dev_add_folder( "/dev/storage", nullptr, 0, on_folder_file_added ) ) {
     EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
     return -1;
   }
   vfs_wait_for_path( "/dev/storage" );
-  // add usb subfolder
+  // add usb subfolder with wait for path
   if ( ! dev_add_folder( "/dev/usb", nullptr, 0, on_folder_file_added ) ) {
     EARLY_STARTUP_PRINT( "Unable to add USB subfolder\r\n" )
     return -1;
   }
   vfs_wait_for_path( "/dev/usb" );
-  // add device file
+  // add device file without wait for file since everything else is blocked
+  // in early stage by /dev/manager/device and a wait for path would result
+  // in possible locked up dev daemon
   if ( ! dev_add_file( "/dev/manager/device", device_info, 2, on_folder_file_added ) ) {
     EARLY_STARTUP_PRINT( "Unable to add storage subfolder\r\n" )
     return -1;
   }
-  vfs_wait_for_path( "/dev/manager/device" );
 
   // wait for rpc
   EARLY_STARTUP_PRINT( "Wait for rpc\r\n" )

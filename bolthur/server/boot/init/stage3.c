@@ -52,7 +52,7 @@
       exit( 1 );
     }
   }
-  if ( forked > 0 ) {
+  if ( 0 > forked ) {
     EARLY_STARTUP_PRINT( "Error while forking: %s\r\n", strerror( -forked ) )
   }*/
 

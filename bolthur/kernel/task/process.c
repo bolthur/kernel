@@ -631,7 +631,7 @@ void task_process_cleanup(
     // head over to next
     current = current->next;
     // remove list item
-    list_remove_item( process_manager->process_to_cleanup, remove );
+    list_remove_item( process_manager->process_to_cleanup, remove, true );
   }
 }
 

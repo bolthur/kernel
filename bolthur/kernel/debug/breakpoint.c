@@ -101,7 +101,7 @@ bool debug_breakpoint_remove_step( void ) {
     // handle only stepping breakpoints
     if ( entry->step ) {
       // remove from breakpoint manager list
-      if ( ! list_remove_item( debug_breakpoint_manager, current ) ) {
+      if ( ! list_remove_item( debug_breakpoint_manager, current, true ) ) {
         return false;
       }
       // free stuff
@@ -139,7 +139,7 @@ bool debug_breakpoint_remove( uintptr_t address, bool remove ) {
       return false;
     }
     // remove from list
-    if ( ! list_remove_item( debug_breakpoint_manager, item ) ) {
+    if ( ! list_remove_item( debug_breakpoint_manager, item, true ) ) {
       return false;
     }
     // free stuff

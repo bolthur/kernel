@@ -103,7 +103,7 @@ static void thread_destroy_callback( avl_node_t* node ) {
   // get thread queue by priority
   task_priority_queue_t* queue = task_queue_get_queue(
     process_manager, proc->priority );
-  while( queue && ! list_remove_data( queue->thread_list, thread ) ) {
+  while( queue && ! list_remove_data( queue->thread_list, thread, true ) ) {
     // loop until successfully removed
   }
   // remove from stack address from manager
@@ -456,7 +456,7 @@ void task_thread_cleanup(
       }
     }
     // remove list item
-    list_remove_item( process_manager->thread_to_cleanup, remove );
+    list_remove_item( process_manager->thread_to_cleanup, remove, true );
   }
 }
 

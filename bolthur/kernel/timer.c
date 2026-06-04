@@ -189,7 +189,7 @@ bool timer_unregister_callback( size_t id ) {
     return true;
   }
   // remove item
-  return list_remove_item( timer_list, item );
+  return list_remove_item( timer_list, item, true );
 }
 
 /**
@@ -252,7 +252,7 @@ void timer_handle_callback( void ) {
     // switch to next
     current = current->next;
     // remove from list
-    if ( ! list_remove_item( timer_list, to_remove ) ) {
+    if ( ! list_remove_item( timer_list, to_remove, true ) ) {
       // debug output
       #if defined( PRINT_TIMER )
         DEBUG_OUTPUT( "Error while removing timer from list\r\n" )

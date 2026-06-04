@@ -477,7 +477,7 @@ int usbd_poll_interrupt(
     return EIO;
   }
   // response is equal to input
-  if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+  if ( message->error & LIBUSB_TRANSFER_ERROR_TIMEOUT ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "error = %#x\r\n", message->error )
@@ -489,35 +489,11 @@ int usbd_poll_interrupt(
     // return timeout
     return ETIMEDOUT;
   }
-  // handle error
-  if ( message->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
-    // handle check for connection
-    if ( dev->parent ) {
-      // debug output
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Verifying %s is still connected\r\n", usbd_get_description( dev ) )
-      #endif
-      // check connection
-      result = call_child_check_connection( dev->parent, dev );
-      // handle error
-      if ( 0 != result ) {
-        // detach shared memory
-        _syscall_memory_shared_detach( shm_id );
-        // free control_request
-        free( control_request );
-        // return no link
-        return ENOLINK;
-      }
-      // debug output
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "%s is still connected\r\n", usbd_get_description( dev ) )
-      #endif
-      // set result to error
-      result = EIO;
-    }
-  }
   // copy over data
-  if ( LIBUSB_DIRECTION_IN == pipe.direction && buffer ) {
+  if (
+    LIBUSB_DIRECTION_IN == pipe.direction
+    && buffer && message->last_transfer == buffer_length
+  ) {
     memcpy( buffer, message->buffer, buffer_length );
   }
   // copy over static fields into device populated via shared memory

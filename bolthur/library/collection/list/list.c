@@ -508,10 +508,11 @@ bool list_push_back_data( list_manager_t* list, void* data ) {
  *
  * @param list
  * @param item
+ * @param cleanup
  * @return true
  * @return false
  */
-bool list_remove_item( list_manager_t* list, list_item_t* item ) {
+bool list_remove_item( list_manager_t* list, list_item_t* item, const bool cleanup ) {
   // handle invalid parameter
   if ( !list || !item ) {
     return false;
@@ -541,20 +542,25 @@ bool list_remove_item( list_manager_t* list, list_item_t* item ) {
   }
 
   // free list item
+  if ( cleanup ) {
   list->cleanup( item );
+  } else {
+    free( item );
+  }
   return true;
 }
 
 /**
- * @fn bool list_remove_data(list_manager_t*, void*)
+ * @fn bool list_remove_data(list_manager_t*, void*, bool)
  * @brief Remove list item
  *
  * @param list
  * @param data
+ * @param cleanup
  * @return true
  * @return false
  */
-bool list_remove_data( list_manager_t* list, void* data ) {
+bool list_remove_data( list_manager_t* list, void* data, const bool cleanup ) {
   // handle invalid parameter
   if ( !list || !data ) {
     return false;
@@ -586,7 +592,11 @@ bool list_remove_data( list_manager_t* list, void* data ) {
   }
 
   // free list item
+  if ( cleanup ) {
   list->cleanup( item );
+  } else {
+    free( item );
+  }
   return true;
 }
 

@@ -66,12 +66,16 @@ void rpc_hub_attach(
   // allocate space for pull_request
   const usb_generic_attach_t* message = ( usb_generic_attach_t* )request->container;
 
-  // print
+  // debug output
   #if defined ( HUB_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Attach called for %"PRIu32" with interface %"PRIu32"\r\n",
       message->device_number, message->interface_number )
   #endif
 
+  // debug output
+  #if defined( HUB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Fetching interface descriptor\r\n" )
+  #endif
   // get interface information
   libusb_interface_descriptor_t interface_descriptor;
   int result = usb_get_interface(
@@ -82,6 +86,11 @@ void rpc_hub_attach(
     free( request );
     return;
   }
+
+  // debug output
+  #if defined( HUB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Fetching endpoint descriptor\r\n" )
+  #endif
   // get endpoint information
   libusb_endpoint_descriptor_t endpoint_descriptor;
   result = usb_get_endpoint(
@@ -93,6 +102,10 @@ void rpc_hub_attach(
     return;
   }
 
+  // debug output
+  #if defined( HUB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Checking endpoint count\r\n" )
+  #endif
   // check for multiple endpoints
   if ( interface_descriptor.endpoint_count != 1 ) {
     _syscall_rpc_cleanup();
@@ -121,6 +134,11 @@ void rpc_hub_attach(
   }
   // clear out
   memset( hub, 0, sizeof( *hub ) );
+
+  // debug output
+  #if defined( HUB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Reading hub descriptor into memory\r\n" )
+  #endif
   // read descriptor
   libusb_hub_descriptor_t* descriptor = nullptr;
   result = hub_read_descriptor( message->device_number, ( void** )&descriptor );
@@ -229,12 +247,10 @@ void rpc_hub_attach(
   }
   // some debug output
   #if defined ( HUB_ENABLE_DEBUG )
-    // cache status locally
-    const libusb_hub_full_status_t* status = &hub->status;
     EARLY_STARTUP_PRINT( "Hub power: %s\r\n",
-      !status->status.local_power ? "Good" : "Lost")
+      !hub->status.status.local_power ? "Good" : "Lost")
     EARLY_STARTUP_PRINT( "Hub over current condition: %s\r\n",
-      !status->status.over_current ? "No" : "Yes" )
+      !hub->status.status.over_current ? "No" : "Yes" )
   #endif
   // get root port number
   uint32_t roothub_device_number;
@@ -269,6 +285,10 @@ void rpc_hub_attach(
       return;
     }
   }
+  // debug output
+  #if defined( HUB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Fetching hub status\r\n" )
+  #endif
   // fetch status again
   result = hub_get_status( message->device_number, hub );
   if ( 0 != result ) {
@@ -286,9 +306,9 @@ void rpc_hub_attach(
   // some debug output
   #if defined ( HUB_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Hub power: %s\r\n",
-      !status->status.local_power ? "Good" : "Lost")
+      !hub->status.status.local_power ? "Good" : "Lost")
     EARLY_STARTUP_PRINT( "Hub over current condition: %s\r\n",
-      !status->status.over_current ? "No" : "Yes" )
+      !hub->status.status.over_current ? "No" : "Yes" )
   #endif
   // check for connection
   for ( uint32_t port = 0; port < hub->max_children; port++ ) {

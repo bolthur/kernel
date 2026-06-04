@@ -66,8 +66,8 @@ void* list_peek_front_data( list_manager_t* );
 void* list_peek_back_data( list_manager_t* );
 bool list_insert_data( list_manager_t*, void* );
 bool list_insert_data_before( list_manager_t*, list_item_t*, void* );
-bool list_remove_item( list_manager_t*, list_item_t* );
-bool list_remove_data( list_manager_t*, void* );
+bool list_remove_item( list_manager_t*, list_item_t*, bool );
+bool list_remove_data( list_manager_t*, void*, bool );
 size_t list_count_item( list_manager_t* );
 list_item_t* list_get_item_at_pos( list_manager_t*, size_t );
 

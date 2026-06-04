@@ -75,13 +75,13 @@ void rpc_handle_add_async(
     return;
   }
   // get original request
-  vfs_add_request_t* request = async_data->original_data;
+  const vfs_add_request_t* request = async_data->original_data;
   // handle device info stuff if is device
   if (
     sizeof( vfs_add_request_t ) < async_data->length
     && S_ISCHR( request->info.st_mode )
   ) {
-    size_t idx_max =
+    const size_t idx_max =
       ( async_data->length - sizeof( vfs_add_request_t ) ) / sizeof( size_t );
     for ( size_t idx = 0; idx < idx_max; idx++ ) {
       while ( true ) {
@@ -165,7 +165,9 @@ void rpc_handle_add(
     request,
     data_size,
     origin,
-    data_info,
+    // don't push back data info when handler and origin are the same to prevent
+    // async callback in target process to kick in
+    mount_point->pid == origin ? 0 : data_info,
     NULL,
     false
   );

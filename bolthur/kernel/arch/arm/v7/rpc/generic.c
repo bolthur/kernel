@@ -143,7 +143,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
     )
   #endif
   // finally remove found entry
-  list_remove_data( thread->process->rpc_queue, backup );
+  list_remove_data( thread->process->rpc_queue, backup, true );
   // handle enqueued stuff
   if ( further_rpc_enqueued ) {
     // get first list item

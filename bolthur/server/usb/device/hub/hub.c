@@ -357,6 +357,7 @@ int hub_port_reset(
   int result;
   // debug output
   #if defined ( HUB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Resetting port %"PRIu8" of %"PRIu32"\r\n", port, device_number )
     EARLY_STARTUP_PRINT( "Resetting port %"PRIu8" of device %s\r\n", port, usb_get_description( device_number ) )
   #endif
   // retry three times
@@ -521,6 +522,11 @@ int hub_port_connection_changed(
   } else if ( full_status->status.low_speed_attached ) {
     speed = LIBUSB_SPEED_LOW;
   }
+  // debug output
+  #if defined( HUB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Attaching device %"PRIu8" to %"PRIu32"\r\n",
+        port, device_number )
+  #endif
   // attach new device
   result = usb_attach_device( device_number, port, speed );
   // handle error

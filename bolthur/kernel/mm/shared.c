@@ -562,7 +562,7 @@ bool shared_memory_detach( task_process_t* process, size_t id ) {
     return true;
   }
   // remove from list with destruction of item
-  if ( ! list_remove_item( entry->process_mapping, process_list_item ) ) {
+  if ( ! list_remove_item( entry->process_mapping, process_list_item, true ) ) {
     // debug output
     #if defined( PRINT_MM_SHARED )
       DEBUG_OUTPUT( "Remove of process from mapping list failed\r\n" )

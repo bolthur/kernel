@@ -136,7 +136,9 @@ void rpc_interrupt_handle(
           #endif
           continue;
         }
-        //EARLY_STARTUP_PRINT( "cipt = %#"PRIx32"\r\n", cipt )
+        #if defined( DWHCI_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "cipt = %#"PRIx32"\r\n", cipt )
+        #endif
         if ( cipt & HCD_CHANNEL_INTERRUPT_TRANSFER_COMPLETE ) {
           #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Transfer complete for channel %"PRIu32"\r\n", channel )
@@ -240,10 +242,14 @@ void rpc_interrupt_handle(
           entry->packet_transferred = HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT( transfer_size );
           // handle finished
           if (
-            entry->status == DWHCI_QUEUE_CHANNEL_STATUS_SETUP // treat setup as finished where 0 transfers may happen
-            || entry->status == DWHCI_QUEUE_POLL_STATUS_DATA // treat data polling as finished where 0 transfers may happen
-            || entry->buffer_size_to_transfer == 0 // treat non data actions as finished
-            || transferred == entry->buffer_size_to_transfer // handle enough transferred
+            // treat setup as finished where 0 transfers may happen
+            entry->status == DWHCI_QUEUE_CHANNEL_STATUS_SETUP
+            // treat data polling as finished
+            || entry->status == DWHCI_QUEUE_POLL_STATUS_DATA
+            // treat non data actions as finished
+            || entry->buffer_size_to_transfer == 0
+            // handle enough transferred
+            || transferred == entry->buffer_size_to_transfer
           ) {
             // debug output
             #if defined( DWHCI_ENABLE_DEBUG )
@@ -259,6 +265,10 @@ void rpc_interrupt_handle(
             ) {
               entry->transferred = entry->buffer_offset + transferred;
             }
+            // debug output
+            #if defined( DWHCI_ENABLE_DEBUG )
+              EARLY_STARTUP_PRINT( "entry->transferred = %"PRIu32"\r\n", entry->transferred )
+            #endif
             // reset buffer offset
             entry->buffer_offset = 0;
           } else {
