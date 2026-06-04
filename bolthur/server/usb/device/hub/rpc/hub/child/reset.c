@@ -34,6 +34,5 @@ void rpc_hub_child_reset(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "CHILD RESET\r\n" )
   _syscall_rpc_cleanup();
 }

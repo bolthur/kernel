@@ -43,7 +43,6 @@ void rpc_hid_attach(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "HID ATTACH\r\n" )
   // handle no data
   if ( ! data_info ) {
     _syscall_rpc_cleanup();

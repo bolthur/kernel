@@ -34,5 +34,4 @@ void rpc_keyboard_detach(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "KEYBOARD DETACH\r\n" )
 }

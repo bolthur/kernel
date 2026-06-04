@@ -22,8 +22,8 @@
 
 #include "../../server/libusb.h"
 
-#define LIBUSB_ENABLE_DEBUG 1
-#define LIBUSB_ENABLE_ERROR 1
+//#define LIBUSB_ENABLE_DEBUG 1
+//#define LIBUSB_ENABLE_ERROR 1
 
 int usb_init( void );
 int usb_control_message( uint32_t, libusb_transfer_t, libusb_direction_t, void*, size_t, const libusb_device_request_t*, size_t, libusb_transfer_error_t*, uint32_t* );

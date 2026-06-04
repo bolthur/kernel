@@ -80,7 +80,9 @@ int call_attach( libusb_device_t* dev, const uint32_t interface_number ) {
   if ( dev->parent ) {
     ( ( usb_generic_attach_t* )request->container )->parent_device_number = dev->parent->number;
   }
-  EARLY_STARTUP_PRINT( "Attaching %"PRIu32" with %"PRIu32"\r\n", dev->number, interface_number );
+  #if defined( CALL_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Attaching %"PRIu32" with %"PRIu32"\r\n", dev->number, interface_number );
+  #endif
   // attach is defined as first custom message
   bolthur_rpc_raise_generic(
     GENERIC_ATTACH,

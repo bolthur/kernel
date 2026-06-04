@@ -22,7 +22,7 @@
 
 #include "../../libusbd.h"
 
-#define CALL_ENABLE_DEBUG 1
+//#define CALL_ENABLE_DEBUG 1
 
 int call_attach( libusb_device_t*, uint32_t );
 int call_detached( const libusb_device_t* );

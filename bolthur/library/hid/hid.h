@@ -21,7 +21,7 @@
 #define _HID_H
 
 //#define LIBHID_ENABLE_DEBUG
-#define LIBHID_ENABLE_ERROR
+//#define LIBHID_ENABLE_ERROR
 
 #include "../../server/libusb.h"
 

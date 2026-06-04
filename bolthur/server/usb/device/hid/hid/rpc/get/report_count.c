@@ -42,7 +42,6 @@ void rpc_get_report_count(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "GET REPORT COUNT\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {

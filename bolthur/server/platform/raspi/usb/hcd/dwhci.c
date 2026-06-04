@@ -1333,9 +1333,11 @@ response_t dwhci_channel_poll_async_ack( channel_queue_entry_t* entry ) {
       EARLY_STARTUP_PRINT( "DIRECTION IN POLL ASYNC ACK\r\n" )
     #endif
     entry_data->last_transfer = entry_data->buffer_length;
+    EARLY_STARTUP_PRINT( "entry_data->last_transfer = %"PRIu32"\r\n", entry_data->last_transfer )
     if ( entry->transferred <= entry_data->buffer_length ) {
-      entry_data->last_transfer = entry_data->buffer_length - entry->transferred;
+      entry_data->last_transfer -= ( entry_data->buffer_length - entry->transferred );
     }
+    EARLY_STARTUP_PRINT( "entry_data->last_transfer = %"PRIu32"\r\n", entry_data->last_transfer )
     // copy back data
     memcpy( entry_data->buffer, entry->buffer, entry_data->last_transfer );
   } else {
@@ -1357,13 +1359,6 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Handling finished request\r\n" )
   #endif
-  // handle transfer size not null
-  if ( entry->transferred ) {
-    // debug output
-    #if defined( DWHCI_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Warning non zero status transfer: %"PRIu32"\r\n", entry->transferred )
-    #endif
-  }
   // stop transmission
   const response_t result = dwhci_channel_send_async_stop_channel( entry );
   if ( HCD_RESPONSE_OK != result ) {

@@ -320,7 +320,7 @@
  * @param path
  * @param device_info
  * @param count
- * @oaram handler
+ * @param handler
  * @return
  */
 [[maybe_unused]] static bool dev_add_file(

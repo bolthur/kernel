@@ -550,7 +550,7 @@ int hub_check_connection(
   const uint8_t port
 ) {
   // cache hub device
-  const bool previously_connected = device_data->port_status[ port ].status.connected;
+  [[maybe_unused]] const bool previously_connected = device_data->port_status[ port ].status.connected;
   uint32_t roothub_device_number;
   int result = usb_get_root_hub( &roothub_device_number );
   if ( 0 != result ) {

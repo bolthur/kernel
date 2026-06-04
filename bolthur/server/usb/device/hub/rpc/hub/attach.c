@@ -42,21 +42,18 @@ void rpc_hub_attach(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
   // handle no data
   if ( ! data_info ) {
     _syscall_rpc_cleanup();
     return;
   }
 
-  EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     _syscall_rpc_cleanup();
     return;
   }
 
-  EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
   // get data from mailbox
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
@@ -66,7 +63,6 @@ void rpc_hub_attach(
     return;
   }
 
-  EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
   // allocate space for pull_request
   const usb_generic_attach_t* message = ( usb_generic_attach_t* )request->container;
 
@@ -76,7 +72,6 @@ void rpc_hub_attach(
       message->device_number, message->interface_number )
   #endif
 
-  EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
   // get interface information
   libusb_interface_descriptor_t interface_descriptor;
   int result = usb_get_interface(
@@ -87,7 +82,6 @@ void rpc_hub_attach(
     free( request );
     return;
   }
-  EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
   // get endpoint information
   libusb_endpoint_descriptor_t endpoint_descriptor;
   result = usb_get_endpoint(
@@ -127,7 +121,6 @@ void rpc_hub_attach(
   }
   // clear out
   memset( hub, 0, sizeof( *hub ) );
-  EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
   // read descriptor
   libusb_hub_descriptor_t* descriptor = nullptr;
   result = hub_read_descriptor( message->device_number, ( void** )&descriptor );
@@ -219,7 +212,6 @@ void rpc_hub_attach(
     EARLY_STARTUP_PRINT( "Hub current required: %"PRIu8"mA.\r\n", ( uint8_t )( hub->descriptor->maximum_hub_power * 2 ) )
     EARLY_STARTUP_PRINT( "Hub ports: %"PRIu8"\r\n", hub->descriptor->port_count )
   #endif
-  EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
   // retrieve status
   result = hub_get_status( message->device_number, hub );
   // handle error
@@ -244,7 +236,6 @@ void rpc_hub_attach(
     EARLY_STARTUP_PRINT( "Hub over current condition: %s\r\n",
       !status->status.over_current ? "No" : "Yes" )
   #endif
-  EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
   // get root port number
   uint32_t roothub_device_number;
   result = usb_get_root_hub( &roothub_device_number );
@@ -278,7 +269,6 @@ void rpc_hub_attach(
       return;
     }
   }
-  EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
   // fetch status again
   result = hub_get_status( message->device_number, hub );
   if ( 0 != result ) {
@@ -300,7 +290,6 @@ void rpc_hub_attach(
     EARLY_STARTUP_PRINT( "Hub over current condition: %s\r\n",
       !status->status.over_current ? "No" : "Yes" )
   #endif
-  EARLY_STARTUP_PRINT( "HUB ATTACH\r\n" )
   // check for connection
   for ( uint32_t port = 0; port < hub->max_children; port++ ) {
     #if defined ( HUB_ENABLE_DEBUG )
@@ -323,7 +312,6 @@ void rpc_hub_attach(
   hub_append( hub );
   // free request
   free( request );
-  EARLY_STARTUP_PRINT( "HUB ATTACH DONE\r\n" )
   // cleanup rpc
   _syscall_rpc_cleanup();
 }
