@@ -21,7 +21,6 @@
 #define _LIB_TAR_H
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <stddef.h>
 
 #define TAR_HEADER_SIZE 512

@@ -20,7 +20,6 @@
 #ifndef _RPC_H
 #define _RPC_H
 
-#include <stdbool.h>
 #include <sys/bolthur.h>
 
 extern pid_t vfs_pid;

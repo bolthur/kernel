@@ -21,7 +21,6 @@
 #define _UTIL_H
 
 #include <stddef.h>
-#include <stdbool.h>
 
 uint32_t util_min( uint32_t, uint32_t );
 bool util_update_card_detect( int, bool*, bool* );

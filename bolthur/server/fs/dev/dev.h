@@ -20,7 +20,6 @@
 #ifndef _DEV_H
 #define _DEV_H
 
-#include <stdbool.h>
 #include <sys/bolthur.h>
 
 #define MOUNT_POINT_DESTINATION "/dev"

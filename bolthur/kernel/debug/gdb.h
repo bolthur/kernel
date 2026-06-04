@@ -20,7 +20,6 @@
 #ifndef _DEBUG_GDB_H
 #define _DEBUG_GDB_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include "../../library/collection/list/list.h"
 #include "../event.h"

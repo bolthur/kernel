@@ -21,7 +21,6 @@
 #define _MM_SHARED_H
 
 #include <stddef.h>
-#include <stdbool.h>
 #include "../../library/collection/list/list.h"
 #include "../../library/collection/avl/avl.h"
 #include "../task/process.h"

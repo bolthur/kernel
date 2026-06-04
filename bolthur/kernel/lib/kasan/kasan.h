@@ -21,7 +21,6 @@
 #define _LIB_KASAN_KASAN_H
 
 #include <stdint.h>
-#include <stdbool.h>
 #include "../../mm/heap.h"
 
 #if defined( ELF32 )

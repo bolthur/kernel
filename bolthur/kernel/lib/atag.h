@@ -22,7 +22,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
 
 typedef struct atag_header atag_header_t;
 typedef struct atag_core atag_core_t;

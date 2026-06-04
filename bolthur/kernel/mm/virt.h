@@ -21,7 +21,6 @@
 #define _MM_VIRT_H
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <stddef.h>
 
 // forward declarations

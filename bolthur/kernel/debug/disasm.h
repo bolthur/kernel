@@ -20,7 +20,6 @@
 #ifndef _DEBUG_DISASM_H
 #define _DEBUG_DISASM_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #define DEBUG_DISASM_MAX_INSTRUCTION 2

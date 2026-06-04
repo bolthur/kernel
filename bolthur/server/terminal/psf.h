@@ -21,7 +21,6 @@
 #define _PSF_H
 
 #include <stdint.h>
-#include <stdbool.h>
 
 // v1 magic
 #define PSF1_MAGIC0 0x36

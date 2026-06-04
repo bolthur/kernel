@@ -20,7 +20,6 @@
 #ifndef _DMA_H
 #define _DMA_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include "../../../../library/platform/raspi/iomem/libiomem.h"
 

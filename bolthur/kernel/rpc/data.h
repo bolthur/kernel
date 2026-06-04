@@ -20,7 +20,6 @@
 #ifndef _RPC_DATA_H
 #define _RPC_DATA_H
 
-#include <stdbool.h>
 #include "../../library/collection/list/list.h"
 #include "../task/process.h"
 #include "../task/thread.h"

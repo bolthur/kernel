@@ -20,7 +20,6 @@
 #ifndef _SERIAL_H
 #define _SERIAL_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
 #define SERIAL_BAUD_RATE 115200

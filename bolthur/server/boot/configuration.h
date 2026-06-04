@@ -20,7 +20,6 @@
 #ifndef _CONFIGURATION_H
 #define _CONFIGURATION_H
 
-#include <stdbool.h>
 #include <sys/queue.h>
 #include <confini.h>
 

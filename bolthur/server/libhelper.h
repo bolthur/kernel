@@ -22,7 +22,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <malloc.h>
 #include <errno.h>
 #include <unistd.h>

@@ -20,7 +20,6 @@
 #ifndef _STACK_H
 #define _STACK_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
 bool stack_is_kernel( uintptr_t );

@@ -22,7 +22,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
 #include "../library/collection/avl/avl.h"
 #include "../library/collection/list/list.h"
 #include "task/thread.h"

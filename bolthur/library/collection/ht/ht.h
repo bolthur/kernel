@@ -20,7 +20,6 @@
 #ifndef _HT_H
 #define _HT_H
 
-#include <stdbool.h>
 #include <stddef.h>
 
 #define INITIAL_CAPACITY 16

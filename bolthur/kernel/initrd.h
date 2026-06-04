@@ -20,7 +20,6 @@
 #ifndef _INITRD_H
 #define _INITRD_H
 
-#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 

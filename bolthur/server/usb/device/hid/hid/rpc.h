@@ -20,7 +20,6 @@
 #ifndef _RPC_H
 #define _RPC_H
 
-#include <stdbool.h>
 #include <sys/bolthur.h>
 
 void rpc_get_application( size_t, pid_t, size_t, size_t );

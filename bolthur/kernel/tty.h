@@ -20,7 +20,6 @@
 #ifndef _TTY_H
 #define _TTY_H
 
-#include <stdbool.h>
 #include <stdint.h>
 
 void tty_init( void );

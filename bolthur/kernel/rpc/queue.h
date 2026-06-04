@@ -20,7 +20,6 @@
 #ifndef _RPC_QUEUE_H
 #define _RPC_QUEUE_H
 
-#include <stdbool.h>
 #include "../../library/collection/list/list.h"
 #include "../task/process.h"
 #include "../task/thread.h"

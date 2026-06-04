@@ -22,7 +22,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
 #include "interrupt.h"
 
 #define SYSCALL_BIND( id, handler ) interrupt_register_handler( id, handler, NULL, INTERRUPT_SOFTWARE, false, false )

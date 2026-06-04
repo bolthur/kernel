@@ -20,7 +20,6 @@
 #ifndef _EVENT_H
 #define _EVENT_H
 
-#include <stdbool.h>
 #include "../library/collection/list/list.h"
 #include "../library/collection/avl/avl.h"
 #include "stack.h"

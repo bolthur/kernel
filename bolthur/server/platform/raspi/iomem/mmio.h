@@ -20,7 +20,6 @@
 #ifndef _MMIO_H
 #define _MMIO_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <sys/bolthur.h>
 

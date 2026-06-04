@@ -20,8 +20,6 @@
 #ifndef _ARCH_ARM_V7_DEBUG_DEBUG_H
 #define _ARCH_ARM_V7_DEBUG_DEBUG_H
 
-#include <stdbool.h>
-
 bool debug_check_data_fault_status( void );
 bool debug_check_instruction_fault( void );
 bool debug_is_debug_exception( void );

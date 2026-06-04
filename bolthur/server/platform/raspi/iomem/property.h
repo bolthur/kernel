@@ -21,7 +21,6 @@
 #define _PROPERTY_H
 
 #include <stdint.h>
-#include <stdbool.h>
 
 typedef enum {
   // videocore

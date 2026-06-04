@@ -20,7 +20,6 @@
 #ifndef _SD_H
 #define _SD_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include "sdhost.h"
 #include "emmc.h"

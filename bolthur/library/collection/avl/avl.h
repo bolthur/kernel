@@ -22,7 +22,6 @@
 
 #include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
 
 // forward declarations
 typedef struct avl_node avl_node_t;

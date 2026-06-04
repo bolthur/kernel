@@ -21,7 +21,6 @@
 #define _MM_HEAP_H
 
 #include <stddef.h>
-#include <stdbool.h>
 #include "../entry.h"
 
 #if defined( ELF32 )

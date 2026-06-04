@@ -21,7 +21,6 @@
 #define _DEBUG_BREAKPOINT_H
 
 #include <stdint.h>
-#include <stdbool.h>
 #include "../../library/collection/list/list.h"
 
 typedef struct {

@@ -21,7 +21,6 @@
 #define _LIB_STDLIB_H
 
 #include <stdint.h>
-#include <stdbool.h>
 #include <stddef.h>
 
 [[noreturn]] void abort( void );

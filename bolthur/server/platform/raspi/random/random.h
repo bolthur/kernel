@@ -20,7 +20,6 @@
 #ifndef _RANDOM_H
 #define _RANDOM_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include <sys/bolthur.h>
 

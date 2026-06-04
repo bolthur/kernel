@@ -20,7 +20,6 @@
 #ifndef _RPC_GENERIC_H
 #define _RPC_GENERIC_H
 
-#include <stdbool.h>
 #include "../../library/collection/avl/avl.h"
 #include "../task/process.h"
 #include "../task/thread.h"

@@ -22,7 +22,6 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <stdbool.h>
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "libgpio.h"

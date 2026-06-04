@@ -23,7 +23,6 @@
 #include <limits.h>
 #include <stdint.h>
 #include <stddef.h>
-#include <stdbool.h>
 
 #define PAGE_PER_ENTRY ( sizeof( phys_bitmap_length ) * CHAR_BIT )
 #define PAGE_INDEX( address ) ( address / PAGE_PER_ENTRY )

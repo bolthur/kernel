@@ -19,7 +19,6 @@
 
 // FIXME: RESTRICT TO COMPILING NEWLIB ONLY IF NECESSARY
 
-#include <stdbool.h>
 #include <elf.h>
 #include <dlfcn.h>
 

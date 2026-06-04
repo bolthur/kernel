@@ -20,7 +20,6 @@
 #ifndef _SDHOST_H
 #define _SDHOST_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include "../../libiomem.h"
 #include "../../libperipheral.h"

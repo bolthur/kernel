@@ -20,7 +20,6 @@
 #ifndef _RPC_H
 #define _RPC_H
 
-#include <stdbool.h>
 #include <unistd.h>
 #include "../../library/collection/list/list.h"
 

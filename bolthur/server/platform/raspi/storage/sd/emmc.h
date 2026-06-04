@@ -20,7 +20,6 @@
 #ifndef _EMMC_H
 #define _EMMC_H
 
-#include <stdbool.h>
 #include <stdint.h>
 #include "../../libiomem.h"
 #include "../../libperipheral.h"
