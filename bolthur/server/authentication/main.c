@@ -22,6 +22,7 @@
 #include <sys/bolthur.h>
 #include "rpc.h"
 #include "pid/node.h"
+#include "../../library/vfs/wait.h"
 #include "../libhelper.h"
 #include "../libauthentication.h"
 

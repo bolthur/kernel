@@ -1,4 +1,4 @@
 
 ACLOCAL_AMFLAGS = -I ../../build-aux/m4
 
-SUBDIRS = collection framebuffer handle hid platform usb util
+SUBDIRS = collection framebuffer handle hid platform usb util vfs

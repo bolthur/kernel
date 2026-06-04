@@ -28,6 +28,7 @@
 #include "ioctl/handler.h"
 #include "../../libhelper.h"
 #include "../../libdev.h"
+#include "../../../library/vfs/wait.h"
 #include "../../../library/collection/list/list.h"
 #include "dev.h"
 #include "watch.h"

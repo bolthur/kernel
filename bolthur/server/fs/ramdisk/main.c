@@ -26,6 +26,7 @@
 #include <sys/mount.h>
 #include "ramdisk.h"
 #include "rpc.h"
+#include "../../../library/vfs/wait.h"
 #include "../../libhelper.h"
 
 extern TAR* disk;

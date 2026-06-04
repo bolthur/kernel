@@ -163,6 +163,7 @@ AC_CONFIG_FILES([
   platform/raspi/iomem/Makefile
   usb/Makefile
   util/Makefile
+  vfs/Makefile
 ])
 # FIXME: REPLACE WITH SUBMODULE WHEN MOVING TO OWN REPO
 

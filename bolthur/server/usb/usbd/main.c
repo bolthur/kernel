@@ -23,6 +23,7 @@
 #include "usbd.h"
 #include "rpc.h"
 #include "../../libhcd.h"
+#include "../../../library/vfs/wait.h"
 #include "../../libhelper.h"
 
 /**

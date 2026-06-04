@@ -27,6 +27,7 @@
 #include "../init.h"
 #include "../util.h"
 #include "../global.h"
+#include "../../../library/vfs/wait.h"
 #include "../../libhelper.h"
 
 pid_t vfs_pid = 2;

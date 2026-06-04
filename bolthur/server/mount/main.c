@@ -19,6 +19,7 @@
 
 #include <sys/bolthur.h>
 #include "rpc.h"
+#include "../../library/vfs/wait.h"
 #include "../libhelper.h"
 
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {

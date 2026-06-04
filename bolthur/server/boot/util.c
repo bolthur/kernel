@@ -22,6 +22,7 @@
 #include <sys/bolthur.h>
 #include "util.h"
 #include "global.h"
+#include "../../library/vfs/wait.h"
 #include "../libdev.h"
 #include "../libhelper.h"
 

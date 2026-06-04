@@ -2,7 +2,10 @@
 AM_CFLAGS = -DPROGRAM_NAME=\"authentication\"
 
 bin_PROGRAMS = authentication
-authentication_LDADD = -lcrypt
+authentication_LDADD = -lcrypt \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
+authentication_DEPENDENCIES = \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 authentication_SOURCES = \
   pid/node.c \
   rpc/custom/fetch.c \

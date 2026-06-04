@@ -25,6 +25,7 @@
 #include <mntent.h>
 #include "../init.h"
 #include "../configuration.h"
+#include "../../../library/vfs/wait.h"
 #include "../../libhelper.h"
 
 /**
