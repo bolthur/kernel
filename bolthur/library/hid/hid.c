@@ -307,19 +307,21 @@ void hid_destroy_report( libusb_hid_parser_report_t* report ) {
   #endif
   // free allocated resources
   for ( size_t i = 0; i < report->fields_length; i++ ) {
+    // field for access
+    auto field = report->fields[ i ];
     // skip variables or when no ptr is set
     if (
-      report->fields[ i ].attribute.variable
-      || ! report->fields[ i ].value.ptr
+      field.attribute.variable
+      || ! field.value.ptr
     ) {
       continue;
     }
     // some debug output
     #if defined( LIBHID_ENABLE_DEBUG )
-      STARTUP_PRINT( "Freeing %p\r\n", report->fields[ i ].value.ptr )
+      STARTUP_PRINT( "Freeing %p\r\n", field.value.ptr )
     #endif
     // free allocated pointer
-    free( report->fields[ i ].value.ptr );
+    free( field.value.ptr );
   }
   // free report itself
   free( report );

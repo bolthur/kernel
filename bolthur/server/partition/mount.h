@@ -20,6 +20,8 @@
 #ifndef _MOUNT_H
 #define _MOUNT_H
 
+#define __PERMIT_DEPRECATED_SYS_TREE_H 1
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>

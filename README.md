@@ -52,8 +52,8 @@ autoreconf -iv
 mkdir build
 cd build
 ### configure with one of the following commands
-../configure --host=arm-raspi2b_r1-bolthur-eabi --enable-device=raspi2b_r1 --enable-output --enable-silent-rules --with-debug-symbols
-../configure --host=arm-raspi0_1-bolthur-eabi --enable-device=raspi0_1 --enable-output --enable-silent-rules --with-debug-symbols
+../configure --host=arm-raspi2b_r1-bolthur-eabi --enable-device=raspi2b_r1 --enable-output --enable-silent-rules --with-debug-symbols --with-asan --with-ubsan
+../configure --host=arm-raspi0_1-bolthur-eabi --enable-device=raspi0_1 --enable-output --enable-silent-rules --with-debug-symbols --with-asan --with-ubsan
 ```
 
 Possible additional parameters to `--host` and `--enable-device`:

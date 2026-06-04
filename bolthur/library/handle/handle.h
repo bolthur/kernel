@@ -20,6 +20,8 @@
 #ifndef _HANDLE_H
 #define _HANDLE_H
 
+#define __PERMIT_DEPRECATED_SYS_TREE_H 1
+
 #include <sys/syslimits.h>
 #include <sys/types.h>
 #include <sys/stat.h>

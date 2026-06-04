@@ -207,6 +207,12 @@ AC_DEFUN([BOLTHUR_SERVER_SET_FLAG], [
       # -fsanitize=undefined
       AX_APPEND_COMPILE_FLAGS([-g -Og])
     ])
+    #AS_IF([test "x$with_ubsan_enabled" == "xyes"], [
+    #  AX_APPEND_COMPILE_FLAGS([-fsanitize=undefined])
+    #])
+    #AS_IF([test "x$with_asan_enabled" == "xyes"], [
+    #  AX_APPEND_COMPILE_FLAGS([-fsanitize=address])
+    #])
     # optimization level
     case "${with_optimization_level}" in
       no | 0)

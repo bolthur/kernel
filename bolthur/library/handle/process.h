@@ -20,6 +20,8 @@
 #ifndef _PROCESS_H
 #define _PROCESS_H
 
+#define __PERMIT_DEPRECATED_SYS_TREE_H 1
+
 #include <stdbool.h>
 #include <sys/syslimits.h>
 #include <sys/types.h>

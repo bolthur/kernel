@@ -20,6 +20,8 @@
 #ifndef _PARTITION_H
 #define _PARTITION_H
 
+#define __PERMIT_DEPRECATED_SYS_TREE_H 1
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <unistd.h>
