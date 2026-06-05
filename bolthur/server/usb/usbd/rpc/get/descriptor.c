@@ -23,6 +23,7 @@
 #include <sys/bolthur.h>
 // local includes
 #include "../../rpc.h"
+#include "../../libusbd/descriptor.h"
 // driver includes
 #include "../../usbd.h"
 #include "../../../../libusbd.h"
@@ -113,7 +114,7 @@ void rpc_get_descriptor(
     return;
   }
   // perform get descriptor
-  const int result = usbd_get_descriptor(
+  const int result = usbd_descriptor_get(
     device,
     message->type,
     message->index,

@@ -20,7 +20,7 @@
 #include <errno.h>
 #include <wchar.h>
 #include "string.h"
-#include "../usbd.h"
+#include "descriptor.h"
 // library includes
 #include  "../../../../library/util/min.h"
 
@@ -43,7 +43,7 @@ int usbd_string_get(
 ) {
   for ( size_t i = 0; i < 3; i++ ) {
     // fetch descriptor
-    const int result = usbd_get_descriptor(
+    const int result = usbd_descriptor_get(
       dev, LIBUSB_DESCRIPTOR_STRING, string_index, lang_id, buffer,
       buffer_length, buffer_length, 0 );
     // handle success

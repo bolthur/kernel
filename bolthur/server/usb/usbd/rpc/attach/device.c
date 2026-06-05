@@ -25,6 +25,7 @@
 #include "../../rpc.h"
 // driver includes
 #include "../../libusbd/allocate.h"
+#include "../../libusbd/attach.h"
 #include "../../usbd.h"
 #include "../../../../libusbd.h"
 

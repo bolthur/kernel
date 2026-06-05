@@ -33,6 +33,7 @@
 #include "libusbd/control.h"
 #include "libusbd/string.h"
 #include "libusbd/roothub.h"
+#include "libusbd/descriptor.h"
 // driver includes
 #include "../../libhcd.h"
 
@@ -45,148 +46,6 @@ int fd_hcd = -1;
  * @brief Head of device list
  */
 libusb_device_t* head = nullptr;
-
-/**
- * @brief Default timeout for control messages
- */
-#define CONTROL_MESSAGE_TIMEOUT 10
-
-/**
- * @fn int usbd_get_descriptor(libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t);
- * @brief Get usb descriptor
- * @param dev
- * @param type
- * @param index
- * @param lang_id
- * @param buffer
- * @param buffer_length
- * @param minimum_length
- * @param recipient
- * @return
- */
-int usbd_get_descriptor(
-  libusb_device_t* dev,
-  const libusb_descriptor_type_t type,
-  const uint8_t index,
-  const uint16_t lang_id,
-  void* buffer,
-  const size_t buffer_length,
-  const size_t minimum_length,
-  const uint8_t recipient
-) {
-  // perform control message
-  const int result = usbd_control_message(
-    dev,
-    (libusb_pipe_address_t) {
-      .type = LIBUSB_TRANSFER_CONTROL,
-      .speed = dev->speed,
-      .end_point = 0,
-      .device = ( uint8_t )dev->number,
-      .direction = LIBUSB_DIRECTION_IN,
-      .max_size = usb_packet_size_from_number(
-        dev->descriptor.max_packet_size0
-      )
-    },
-    buffer,
-    buffer_length,
-    & ( libusb_device_request_t ){
-      .request = LIBUSB_DEVICE_REQUEST_GET_DESCRIPTOR,
-      .type = 0x80 | recipient,
-      .value = ( uint16_t )type << 8 | index,
-      .index = lang_id,
-      .length = ( uint16_t )buffer_length
-    },
-    CONTROL_MESSAGE_TIMEOUT
-  );
-  // handle error
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Failed to get descriptor: %#x:%#"PRIx8" for device: %s. Result: %s\r\n",
-        type, index, usbd_description_get( dev ), strerror( result ) )
-    #endif
-    // return result
-    return result;
-  }
-  // handle not enough transferred
-  if ( dev->last_transfer < minimum_length ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unexpectedly short descriptor (%"PRIu32"/%zu) %#x:%#"PRIx8" for device %s. Result: %#x\r\n",
-        dev->last_transfer, minimum_length, type, index, usbd_description_get( dev ), result )
-    #endif
-    // return protocol error
-    return EPROTO;
-  }
-  // return success
-  return 0;
-}
-
-/**
- * @fn int usbd_read_device_descriptor(libusb_device_t*)
- * @brief Read usb device descriptor
- * @param dev
- * @return
- */
-int usbd_read_device_descriptor( libusb_device_t* dev ) {
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Read device descriptor\r\n" )
-  #endif
-
-  if ( LIBUSB_SPEED_LOW == dev->speed ) {
-    // set max packet size
-    dev->descriptor.max_packet_size0 = 8;
-    // get usb descriptor
-    const int result = usbd_get_descriptor(
-      dev, LIBUSB_DESCRIPTOR_DEVICE, 0, 0,
-      ( void* )&dev->descriptor,
-      sizeof( dev->descriptor ), 8, 0 );
-    // handle error
-    if ( 0 != result ) {
-      return result;
-    }
-    // handle fully transferred
-    if ( dev->last_transfer == sizeof( libusb_device_descriptor_t ) ) {
-      return result;
-    }
-    // read again
-    return usbd_get_descriptor(
-      dev, LIBUSB_DESCRIPTOR_DEVICE, 0, 0,
-      ( void* )&dev->descriptor, sizeof( dev->descriptor ),
-      sizeof( dev->descriptor ), 0 );
-  }
-
-  if ( LIBUSB_SPEED_FULL == dev->speed ) {
-    // set packet size
-    dev->descriptor.max_packet_size0 = 64;
-    // get usb descriptor
-    const int result = usbd_get_descriptor(
-      dev, LIBUSB_DESCRIPTOR_DEVICE, 0, 0,
-      ( void* )&dev->descriptor,
-      sizeof( dev->descriptor ), 8, 0 );
-    // handle error
-    if ( 0 != result ) {
-      return result;
-    }
-    // handle fully transferred
-    if ( dev->last_transfer == sizeof( libusb_device_descriptor_t ) ) {
-      return result;
-    }
-    // read again
-    return usbd_get_descriptor(
-      dev, LIBUSB_DESCRIPTOR_DEVICE, 0, 0,
-      ( void* )&dev->descriptor, sizeof( dev->descriptor ),
-      sizeof( dev->descriptor ), 0 );
-  }
-
-  // set packet size
-  dev->descriptor.max_packet_size0 = 64;
-  return usbd_get_descriptor(
-    dev, LIBUSB_DESCRIPTOR_DEVICE, 0, 0,
-    ( void* )&dev->descriptor, sizeof( dev->descriptor ),
-    sizeof( dev->descriptor ), 0 );
-}
 
 /**
  * @fn int usbd_set_address(libusb_device_t*, const uint8_t)
@@ -314,7 +173,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
     return EINVAL;
   }
   // get configuration
-  int result = usbd_get_descriptor(
+  int result = usbd_descriptor_get(
     dev, LIBUSB_DESCRIPTOR_CONFIGURATION, configuration, 0,
     ( void* )&dev->configuration, sizeof( dev->configuration ),
     sizeof( dev->configuration ), 0 );
@@ -340,7 +199,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
     return ENOMEM;
   }
   // get descriptor
-  result = usbd_get_descriptor(
+  result = usbd_descriptor_get(
     dev, LIBUSB_DESCRIPTOR_CONFIGURATION, configuration, 0,
     full_descriptor, dev->configuration.total_length,
     dev->configuration.total_length, 0 );
@@ -451,169 +310,6 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
   #endif
   // populate full descriptor
   dev->full_configuration = full_descriptor;
-  // return success
-  return 0;
-}
-
-/**
- * @fn int usbd_attach_device(libusb_device_t*)
- * @brief Wrapper to attach device
- * @param dev device to attach
- * @return 0 on success else errno
- */
-int usbd_attach_device( libusb_device_t* dev ) {
-  // cache device number
-  const uint8_t address = ( uint8_t )dev->number;
-  // reset device number
-  dev->number = 0;
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Scanning %"PRIu8". %s.\r\n", address, usb_speed_to_string( dev->speed ) )
-  #endif
-  // read device descriptor
-  int result = usbd_read_device_descriptor( dev );
-  // handle error
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Reading device descriptor failed: %s\r\n", strerror( result ) )
-    #endif
-    // restore number
-    dev->number = address;
-    // return result
-    return result;
-  }
-  // set device status to default
-  dev->status = LIBUSB_DEVICE_STATUS_DEFAULT;
-  // handle parent set with device child reset
-  if ( dev->parent ) {
-    // perform child reset
-    result = call_child_reset( dev->parent, dev );
-    // handle error
-    if ( 0 != result ) {
-      // debug output
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Reset child device failed: %s\r\n", strerror( result ) )
-      #endif
-      // restore number
-      dev->number = address;
-      // return result
-      return result;
-    }
-  }
-  // set address
-  result = usbd_set_address( dev, address );
-  // handle error
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Set address failed: %s\r\n", strerror( result ) )
-    #endif
-    // restore number
-    dev->number = address;
-    // return result
-    return result;
-  }
-  // overwrite number again
-  dev->number = address;
-  // re-read device descriptor
-  result = usbd_read_device_descriptor( dev );
-  // handle error
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Reading device descriptor failed: %s\r\n", strerror( result ) )
-    #endif
-    // return result
-    return result;
-  }
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Attach Device %s. Address:%"PRIu8" Class:%d Subclass:%"PRIu8
-      " USB:%"PRIx16".%"PRIx16". %"PRIu8" configurations, %"PRIu8" interfaces.\n",
-      usbd_description_get( dev ), address, dev->descriptor.class, dev->descriptor.subclass,
-      ( uint16_t )( dev->descriptor.usb_version >> 8 ), ( uint16_t )( dev->descriptor.usb_version >> 4 ),
-      dev->descriptor.configuration_count, dev->configuration.interface_count )
-    EARLY_STARTUP_PRINT( "Device Attached: %s\r\n", usbd_description_get( dev ) )
-  #endif
-  // allocate buffer for printing
-  char* buffer = malloc( 1024 );
-  // read product if set
-  if ( dev->descriptor.product && buffer ) {
-    result = usbd_string_read( dev, dev->descriptor.product, buffer, 1024 );
-    if ( 0 == result ) {
-      // debug output
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "-Product: %s\r\n", buffer )
-      #endif
-    }
-  }
-  // read manufacturer
-  if ( dev->descriptor.manufacturer && buffer ) {
-    result = usbd_string_read( dev, dev->descriptor.manufacturer, buffer, 1024 );
-    if ( 0 == result ) {
-      // debug output
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "-Manufacturer: %s\r\n", buffer )
-      #endif
-    }
-  }
-  // read serial number
-  if ( dev->descriptor.serial_number && buffer ) {
-    result = usbd_string_read( dev, dev->descriptor.serial_number, buffer, 1024 );
-    if ( 0 == result ) {
-      // debug output
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "-Serial number: %s\r\n", buffer )
-      #endif
-    }
-  }
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT("-VIID:PID: %"PRIx16":%"PRIx16" v%"PRIu16":%"PRIx16"\r\n",
-      dev->descriptor.vendor_id, dev->descriptor.product_id,
-      ( uint16_t )( dev->descriptor.version >> 8 ), ( uint16_t )( dev->descriptor.version & 0xff ) )
-  #endif
-  // configure device
-  result = usbd_configure( dev, 0 );
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Configure failed: %s\r\n", strerror( result ) )
-    #endif
-    // return error
-    return result;
-  }
-
-  // print configuration
-  if ( dev->configuration.string_index && buffer ) {
-    result = usbd_string_read( dev, dev->configuration.string_index, buffer, 1024 );
-    if ( 0 == result ) {
-      // debug ouptut
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "-Configuration: %s\r\n", buffer )
-      #endif
-    }
-  }
-  // free buffer again
-  if ( buffer ) {
-    free( buffer );
-  }
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "dev->interfaces[ 0 ].class = %d\r\n", dev->interfaces[ 0 ].class )
-  #endif
-  // call to attach the device
-  result = call_attach( dev, 0 );
-  // handle error
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Failed calling attach: %s\r\n", strerror( result ) )
-    #endif
-    // return result
-    return result;
-  }
   // return success
   return 0;
 }

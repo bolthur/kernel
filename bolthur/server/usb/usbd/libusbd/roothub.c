@@ -20,6 +20,7 @@
 #include "roothub.h"
 #include "allocate.h"
 #include "deallocate.h"
+#include "attach.h"
 #include "../usbd.h"
 
 /**

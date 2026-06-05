@@ -10,9 +10,11 @@ usbd_LDADD = \
   ${abs_top_builddir}/../library/vfs/libvfs.la
 usbd_SOURCES = \
   libusbd/allocate.c \
+  libusbd/attach.c \
   libusbd/control.c \
   libusbd/deallocate.c \
   libusbd/description.c \
+  libusbd/descriptor.c \
   libusbd/handler.c \
   libusbd/interrupt.c \
   libusbd/roothub.c \
