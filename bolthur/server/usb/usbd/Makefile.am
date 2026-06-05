@@ -37,5 +37,6 @@ usbd_SOURCES = \
   rpc/interrupt/poll.c \
   rpc/init.c \
   call.c \
+  ioctl_wrapper.c \
   main.c
 usbd_LDFLAGS = -all-static --static
