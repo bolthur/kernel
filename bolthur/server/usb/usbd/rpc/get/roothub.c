@@ -24,7 +24,7 @@
 // local includes
 #include "../../rpc.h"
 // driver includes
-#include "../../usbd.h"
+#include "../../libusbd/roothub.h"
 #include "../../../../libusbd.h"
 
 /**
@@ -73,7 +73,7 @@ void rpc_get_roothub(
     return;
   }
   // get root hub
-  libusb_device_t* roothub = usbd_get_root_hub();
+  libusb_device_t* roothub = usbd_roothub_get();
   if ( ! roothub ) {
     error.status = -EIO;
     // free request

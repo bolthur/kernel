@@ -15,25 +15,15 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
- */
+*/
 
-#ifndef USBD_H
-#define USBD_H
+#ifndef _LIBUSBD_STRING_H
+#define _LIBUSBD_STRING_H
 
-#include "../../libusbd.h"
+#include "../../../libusb.h"
 
-//#define USBD_ENABLE_DEBUG 1
-//#define USBD_ENABLE_ERROR 1
-
-extern int fd_hcd;
-extern libusb_device_t* head;
-
-int usbd_get_descriptor( libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t );
-int usbd_read_device_descriptor( libusb_device_t* );
-int usbd_set_address( libusb_device_t*, uint8_t );
-int usbd_set_configuration( libusb_device_t*, uint8_t );
-int usbd_configure( libusb_device_t*, uint8_t );
-int usbd_attach_device( libusb_device_t* );
-int usbd_init( void );
+int usbd_string_get( libusb_device_t*, uint8_t, uint16_t, void*, size_t );
+int usbd_string_read_lang( libusb_device_t*, uint8_t, uint16_t, void*, size_t );
+int usbd_string_read( libusb_device_t*, uint8_t, void*, size_t );
 
 #endif

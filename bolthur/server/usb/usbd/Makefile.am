@@ -15,6 +15,8 @@ usbd_SOURCES = \
   libusbd/description.c \
   libusbd/handler.c \
   libusbd/interrupt.c \
+  libusbd/roothub.c \
+  libusbd/string.c \
   rpc/attach/device.c \
   rpc/control/message.c \
   rpc/get/configuration.c \

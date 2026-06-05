@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef _LIBUSBD_CONTROL_H
-#define _LIBUSBD_CONTROL_H
+#ifndef _LIBUSBD_INTERRUPT_H
+#define _LIBUSBD_INTERRUPT_H
 
 #include "../../../libusb.h"
 
