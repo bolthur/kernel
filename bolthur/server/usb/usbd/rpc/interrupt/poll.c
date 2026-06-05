@@ -23,6 +23,7 @@
 #include <sys/bolthur.h>
 // local includes
 #include "../../rpc.h"
+#include "../../libusbd/interrupt.h"
 // driver includes
 #include "../../usbd.h"
 #include "../../../../libusbd.h"
@@ -111,7 +112,7 @@ void rpc_interrupt_poll(
     return;
   }
   // perform hcd control message
-  const int result = usbd_poll_interrupt(
+  const int result = usbd_interrupt_poll(
     device,
     ( libusb_pipe_address_t ) {
       .type = message->transfer,

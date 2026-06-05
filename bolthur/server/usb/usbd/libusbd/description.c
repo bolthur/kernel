@@ -18,6 +18,7 @@
  */
 
 #include "description.h"
+#include "../usbd.h"
 
 /**
  * @fn const char* usbd_description_get(const libusb_device_t*)
@@ -32,7 +33,7 @@ const char* usbd_description_get( const libusb_device_t* dev ) {
   if ( LIBUSB_DEVICE_STATUS_POWERED == dev->status ) {
     return "Unknown device (not ready)";
   }
-  if ( 1 == dev->number ) {
+  if ( dev == head ) {
     return "USB root hub";
   }
 
