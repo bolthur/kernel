@@ -45,7 +45,7 @@ void vector_undefined_instruction_handler( cpu_register_context_t* cpu ) {
   nested_undefined++;
   assert( nested_undefined < INTERRUPT_NESTED_MAX )
   // get event origin
-  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  const event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
   cpu = interrupt_get_context( cpu );
   // debug output
@@ -65,7 +65,7 @@ void vector_undefined_instruction_handler( cpu_register_context_t* cpu ) {
   if ( EVENT_ORIGIN_KERNEL == origin ) {
     PANIC( "Undefined instruction from kernel" )
   // try to restore from rpc call
-  } else if ( EVENT_ORIGIN_USER == origin ) {
+  } else {
     // debug output
     #if defined( PRINT_EXCEPTION )
       DEBUG_OUTPUT( "Undefined instruction within thread -> kill!\r\n" )

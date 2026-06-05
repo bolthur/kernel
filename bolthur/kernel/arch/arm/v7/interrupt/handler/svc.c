@@ -46,7 +46,7 @@ void vector_svc_handler( cpu_register_context_t* cpu ) {
     DEBUG_OUTPUT( "cpu = %p\r\n", cpu )
   #endif
   // get event origin
-  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  const event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // debug output
   #if defined( PRINT_EXCEPTION )
     DEBUG_OUTPUT( "origin = %d\r\n", origin )

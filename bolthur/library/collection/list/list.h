@@ -59,6 +59,7 @@ list_item_t* list_lookup_data( list_manager_t*, void* );
 list_item_t* list_lookup_item( list_manager_t*, const list_item_t* );
 bool list_push_front_data( list_manager_t*, void* );
 bool list_push_back_data( list_manager_t*, void* );
+bool list_push_after_data( struct list_manager*, void*, void* );
 void* list_pop_front_data( list_manager_t* );
 void* list_pop_back_data( list_manager_t* );
 void* list_peek_front_data( list_manager_t* );

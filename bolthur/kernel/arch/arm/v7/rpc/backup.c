@@ -252,6 +252,7 @@ rpc_backup_t* rpc_backup_create(
   backup->sync_return_blocked_data_id = 0;
   backup->sync_return_on_end = false;
   backup->is_interrupt = is_interrupt;
+  backup->state_to_use = TASK_THREAD_STATE_RPC_QUEUED;
   // return created backup
   return backup;
 }

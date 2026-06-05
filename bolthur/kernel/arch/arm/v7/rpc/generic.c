@@ -342,11 +342,15 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     // add thumb mode to spsr
     cpu->reg.spsr |= CPSR_THUMB;
   }
-  // set correct state ( set directly to active if it's the current thread )
-  if ( backup->thread == task_thread_current_thread ) {
+  // set correct state ( set directly to active if it's the current thread
+  // and state is rpc queued )
+  if (
+    backup->thread == task_thread_current_thread
+    && backup->state_to_use == TASK_THREAD_STATE_RPC_QUEUED
+  ) {
     task_thread_set_state( backup->thread, TASK_THREAD_STATE_RPC_ACTIVE );
   } else {
-    task_thread_set_state( backup->thread, TASK_THREAD_STATE_RPC_QUEUED );
+    task_thread_set_state( backup->thread, backup->state_to_use );
   }
   backup->prepared = true;
   backup->active = true;

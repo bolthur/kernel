@@ -45,7 +45,7 @@ void vector_interrupt_handler( cpu_register_context_t* cpu ) {
   nested_interrupt++;
   assert( nested_interrupt < INTERRUPT_NESTED_MAX )
   // get event origin
-  event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
+  const event_origin_t origin = EVENT_DETERMINE_ORIGIN( cpu );
   // get context
   cpu = interrupt_get_context( cpu );
   // debug output

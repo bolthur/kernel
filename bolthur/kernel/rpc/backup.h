@@ -39,6 +39,8 @@ typedef struct {
   task_state_data_t thread_state_data;
   /** source thread */
   task_thread_t* source;
+  /** thread state to use */
+  task_thread_state_t state_to_use;
   /** flag whether backup has been prepared */
   bool prepared;
   /** active flag */

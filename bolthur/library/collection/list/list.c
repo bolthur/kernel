@@ -503,7 +503,42 @@ bool list_push_back_data( list_manager_t* list, void* data ) {
 }
 
 /**
- * @fn bool list_remove_item(list_manager_t*, list_item_t*)
+ * @fn bool list_push_after_data(struct list_manager*, void*, void*)
+ * @brief Function to insert data after data element if found
+ * @param list list to manipulate
+ * @param after data where new data shall be added as next
+ * @param data data to be added
+ * @return
+ */
+bool list_push_after_data( struct list_manager* list, void* after, void* data ) {
+  // handle invalid parameter
+  if ( ! list || ! data || ! after ) {
+    return false;
+  }
+  // get item where to insert
+  list_item_t* after_item = list_lookup_data( list, after );
+  // handle not found
+  if ( ! after_item ) {
+    return false;
+  }
+  // create new node
+  list_item_t* node = list_item_create( data );
+  // handle error
+  if ( !node ) {
+    return false;
+  }
+  // insert after found item
+  node->next = after_item->next;
+  if ( after_item->next ) {
+    after_item->next->previous = node;
+  }
+  node->previous = after_item;
+  after_item->next = node;
+  return true;
+}
+
+/**
+ * @fn bool list_remove_item(list_manager_t*, list_item_t*, bool)
  * @brief Remove list item
  *
  * @param list
@@ -543,7 +578,7 @@ bool list_remove_item( list_manager_t* list, list_item_t* item, const bool clean
 
   // free list item
   if ( cleanup ) {
-  list->cleanup( item );
+    list->cleanup( item );
   } else {
     free( item );
   }
@@ -593,7 +628,7 @@ bool list_remove_data( list_manager_t* list, void* data, const bool cleanup ) {
 
   // free list item
   if ( cleanup ) {
-  list->cleanup( item );
+    list->cleanup( item );
   } else {
     free( item );
   }

@@ -57,17 +57,10 @@ static void delay( size_t sec ) {
 /**
  * @fn void init_stage1(void)
  * @brief Stage 1 init with start of necessary stuff ( VFS, DEV, and RAMDISK )
- *
- * @todo 1. start vfs and dev like it's done now
- * @todo 2. wait in non fork for vfs and dev
- * @todo 3. start mount server using dev
- * @todo 4. start authentication server using dev
- * @todo 5. start ramdisk server using dev
- * @todo 6. wait for ramdisk mount
  */
 void init_stage1( void ) {
   // transform number to string
-  int len = snprintf( NULL, 0, "%zu", ramdisk_shared_id ) + 1;
+  int len = snprintf( nullptr, 0, "%zu", ramdisk_shared_id ) + 1;
   char* shm_id_str = malloc( sizeof( char ) * ( size_t )len );
   if ( ! shm_id_str ) {
     EARLY_STARTUP_PRINT( "Unable to allocate space for parameter\r\n" )
@@ -114,7 +107,7 @@ void init_stage1( void ) {
     // call for vfs replace
     if ( 0 != inner_forked_process ) {
       EARLY_STARTUP_PRINT( "Replacing fork with vfs image %p!\r\n", vfs_image );
-      _syscall_process_replace( vfs_image, NULL, NULL );
+      _syscall_process_replace( vfs_image, nullptr, nullptr );
       if ( errno ) {
         EARLY_STARTUP_PRINT( "Unable to replace process with image\r\n" )
         EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
@@ -130,7 +123,7 @@ void init_stage1( void ) {
       EARLY_STARTUP_PRINT( "waiting for vfs and dev!\r\n" )
       vfs_wait_for_path( ":/vfs" );
       // start /dev/ramdisk
-      void* ramdisk_image = ramdisk_lookup( disk, "ramdisk/bin/server/fs/ramdisk", NULL );
+      void* ramdisk_image = ramdisk_lookup( disk, "ramdisk/bin/server/fs/ramdisk", nullptr );
       if ( ! ramdisk_image ) {
         EARLY_STARTUP_PRINT( "ramdisk server not found!\r\n" )
         exit( -1 );
@@ -146,9 +139,9 @@ void init_stage1( void ) {
       if ( 0 == inner_forked_process ) {
         EARLY_STARTUP_PRINT( "Replacing fork with ramdisk image %p!\r\n", ramdisk_image )
         // build command
-        char* ramdisk_cmd[] = { "ramdisk", shm_id_str, NULL, };
+        char* ramdisk_cmd[] = { "ramdisk", shm_id_str, nullptr, };
         // call for replace and handle error
-        _syscall_process_replace( ramdisk_image, ramdisk_cmd, NULL );
+        _syscall_process_replace( ramdisk_image, ramdisk_cmd, nullptr );
         if ( errno ) {
           EARLY_STARTUP_PRINT( "Unable to replace process with image\r\n" )
           EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
@@ -160,7 +153,7 @@ void init_stage1( void ) {
       void* authentication_image = ramdisk_lookup(
         disk,
         "ramdisk/bin/server/authentication",
-        NULL
+        nullptr
       );
       if ( ! authentication_image ) {
         EARLY_STARTUP_PRINT( "authentication server not found!\r\n" )
@@ -177,9 +170,9 @@ void init_stage1( void ) {
       if ( 0 == inner_forked_process ) {
         EARLY_STARTUP_PRINT( "Replacing fork with authentication image %p!\r\n", authentication_image )
         // build command
-        char* authentication_cmd[] = { "authentication", "1", "2", "3", "4", "5", NULL, };
+        char* authentication_cmd[] = { "authentication", "1", "2", "3", "4", "5", nullptr, };
         // call for replace and handle error
-        _syscall_process_replace( authentication_image, authentication_cmd, NULL );
+        _syscall_process_replace( authentication_image, authentication_cmd, nullptr );
         if ( errno ) {
           EARLY_STARTUP_PRINT( "Unable to replace process with image\r\n" )
           EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
@@ -195,9 +188,9 @@ void init_stage1( void ) {
         _syscall_rpc_wait_for_ready( forked_process );
         EARLY_STARTUP_PRINT( "Replacing fork with dev image %p!\r\n", dev_image )
         // build command
-        char* dev_cmd[] = { "dev", NULL, };
+        char* dev_cmd[] = { "dev", nullptr, };
         // call for replace and handle error
-        _syscall_process_replace( dev_image, dev_cmd, NULL );
+        _syscall_process_replace( dev_image, dev_cmd, nullptr );
         if ( errno ) {
           EARLY_STARTUP_PRINT( "Unable to replace process with image\r\n" )
           EARLY_STARTUP_PRINT( "%s\r\n", strerror( errno ) )
@@ -225,6 +218,6 @@ void init_stage1( void ) {
     exit( -1 );
   }
   // unset disk
-  disk = NULL;
+  disk = nullptr;
   free( shm_id_str );
 }
