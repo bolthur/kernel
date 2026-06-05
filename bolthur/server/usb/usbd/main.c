@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <sys/bolthur.h>
+#include "libusbd/handler.h"
 #include "usbd.h"
 #include "rpc.h"
 #include "../../libhcd.h"
@@ -44,7 +45,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // initialize usbd handler
   STARTUP_PRINT( "Setup handler array\r\n" )
-  int result = usbd_init_handler();
+  int result = usbd_handler_init();
   if ( 0 != result ) {
     STARTUP_PRINT( "Unable to setup handler: %s\r\n", strerror( result ) );
     return -1;

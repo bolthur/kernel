@@ -23,6 +23,7 @@
 #include <sys/bolthur.h>
 // local includes
 #include "../../rpc.h"
+#include "../../libusbd/description.h"
 // driver includes
 #include "../../usbd.h"
 #include "../../../../libusbd.h"
@@ -78,7 +79,7 @@ void rpc_get_description(
     return;
   }
   // get description with dummy device
-  const char* desc = usbd_get_description( dev );
+  const char* desc = usbd_description_get( dev );
   // allocate response structure
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t )
     + sizeof(char) * ( strlen( desc ) + 1 );

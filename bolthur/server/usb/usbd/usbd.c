@@ -31,6 +31,7 @@
 // local includes
 #include "usbd.h"
 #include "call.h"
+#include "libusbd/description.h"
 // driver includes
 #include "../../libhcd.h"
 
@@ -43,11 +44,6 @@ int fd_hcd = -1;
  * @brief Head of device list
  */
 libusb_device_t* head = nullptr;
-
-/**
- * @brief Array of class handlers
- */
-pid_t* class_handler;
 
 /**
  * @brief Default timeout for control messages
@@ -337,7 +333,7 @@ int usbd_control_message(
     if ( dev->parent ) {
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Verifying %s is still connected\r\n", usbd_get_description( dev ) )
+        EARLY_STARTUP_PRINT( "Verifying %s is still connected\r\n", usbd_description_get( dev ) )
       #endif
       // check connection
       result = call_child_check_connection( dev->parent, dev );
@@ -352,7 +348,7 @@ int usbd_control_message(
       }
       // debug output
       #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "%s is still connected\r\n", usbd_get_description( dev ) )
+        EARLY_STARTUP_PRINT( "%s is still connected\r\n", usbd_description_get( dev ) )
       #endif
       // set result to error
       result = EIO;
@@ -384,6 +380,8 @@ int usbd_control_message(
  * @param last_usb_pid
  * @param last_packet_transfer
  * @return
+ *
+ * @todo fire ioctl manually with handler callback
  */
 int usbd_poll_interrupt(
   libusb_device_t* dev,
@@ -559,7 +557,7 @@ int usbd_get_descriptor(
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Failed to get descriptor: %#x:%#"PRIx8" for device: %s. Result: %s\r\n",
-        type, index, usbd_get_description( dev ), strerror( result ) )
+        type, index, usbd_description_get( dev ), strerror( result ) )
     #endif
     // return result
     return result;
@@ -569,7 +567,7 @@ int usbd_get_descriptor(
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unexpectedly short descriptor (%"PRIu32"/%zu) %#x:%#"PRIx8" for device %s. Result: %#x\r\n",
-        dev->last_transfer, minimum_length, type, index, usbd_get_description( dev ), result )
+        dev->last_transfer, minimum_length, type, index, usbd_description_get( dev ), result )
     #endif
     // return protocol error
     return EPROTO;
@@ -667,7 +665,7 @@ int usbd_read_string(
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Error getting languages for %s: %s\r\n",
-        usbd_get_description( dev ), strerror( result ) )
+        usbd_description_get( dev ), strerror( result ) )
     #endif
     // return result
     return result;
@@ -676,7 +674,7 @@ int usbd_read_string(
   if ( dev->last_transfer < 4 ) {
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unexpectedly short language list from %s\r\n",
-        usbd_get_description( dev ) )
+        usbd_description_get( dev ) )
     #endif
     // return error
     return EPROTO;
@@ -690,7 +688,7 @@ int usbd_read_string(
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Error getting languages for %s: %s\r\n",
-        usbd_get_description( dev ), strerror( result ) )
+        usbd_description_get( dev ), strerror( result ) )
     #endif
     // return error
     return result;
@@ -794,7 +792,7 @@ int usbd_set_address( libusb_device_t* dev, const uint8_t address ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
-        usbd_get_description( dev ), dev->status )
+        usbd_description_get( dev ), dev->status )
     #endif
     // return error
     return EINVAL;
@@ -845,7 +843,7 @@ int usbd_set_configuration( libusb_device_t* dev, const uint8_t configuration ) 
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
-        usbd_get_description( dev ), dev->status )
+        usbd_description_get( dev ), dev->status )
     #endif
     // return error
     return EINVAL;
@@ -897,7 +895,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
-        usbd_get_description( dev ), dev->status )
+        usbd_description_get( dev ), dev->status )
     #endif
     // return error
     return EINVAL;
@@ -912,7 +910,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Failed to retrieve configuration descriptor %#"PRIx8" for device %s\r\n",
-        configuration, usbd_get_description( dev ) )
+        configuration, usbd_description_get( dev ) )
     #endif
     // return error
     return result;
@@ -923,7 +921,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Failed to allocate full descriptor for device %s\r\n",
-        usbd_get_description( dev ) )
+        usbd_description_get( dev ) )
     #endif
     // return error
     return ENOMEM;
@@ -937,7 +935,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
   if ( 0 != result ) {
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Failed to retrieve full configuration descriptor %#"PRIx8" for device %s\r\n",
-        configuration, usbd_get_description( dev ) )
+        configuration, usbd_description_get( dev ) )
     #endif
     // free memory again
     free( full_descriptor );
@@ -991,7 +989,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
           // debug output
           #if defined (USBD_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Unexpected endpoint descriptor in %s.Interface: %"PRIu32,
-              usbd_get_description( dev ), last_interface + 1 )
+              usbd_description_get( dev ), last_interface + 1 )
           #endif
           // stop here
           break;
@@ -1024,7 +1022,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to set configuration for device %s: %s\r\n",
-        usbd_get_description( dev ), strerror( result ) )
+        usbd_description_get( dev ), strerror( result ) )
     #endif
     // free memory again
     free( full_descriptor );
@@ -1035,105 +1033,13 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT(
       "%s configuration %"PRIu8", class: %"PRIu8", subclass: %"PRIu8"\r\n",
-      usbd_get_description( dev ), configuration,
+      usbd_description_get( dev ), configuration,
       dev->interfaces[ 0 ].class, dev->interfaces[ 0 ].subclass )
   #endif
   // populate full descriptor
   dev->full_configuration = full_descriptor;
   // return success
   return 0;
-}
-
-/**
- * @fn const char* usbd_get_description(const libusb_device_t*)
- * @brief Get usb description
- * @param dev
- * @return
- */
-const char* usbd_get_description( const libusb_device_t* dev ) {
-  if ( LIBUSB_DEVICE_STATUS_ATTACHED == dev->status ) {
-    return "New device (not ready)";
-  }
-  if ( LIBUSB_DEVICE_STATUS_POWERED == dev->status ) {
-    return "Unknown device (not ready)";
-  }
-  if ( dev == head ) {
-    return "USB root hub";
-  }
-
-  switch ( dev->descriptor.class ) {
-    // hubs
-    case LIBUSB_DEVICE_CLASS_HUB:
-      if ( dev->descriptor.usb_version == 0x210 ) {
-        return "USB 2.1 Hub";
-      }
-      if ( dev->descriptor.usb_version == 0x200 ) {
-        return "USB 2.0 Hub";
-      }
-      if ( dev->descriptor.usb_version == 0x110 ) {
-        return "USB 1.1 Hub";
-      }
-      if ( dev->descriptor.usb_version == 0x100 ) {
-        return "USB 1.0 Hub";
-      }
-      return "USB Hub";
-    // vendor specific
-    case LIBUSB_DEVICE_CLASS_VENDOR_SPECIFIC:
-      if ( dev->descriptor.vendor_id == 0x424 && dev->descriptor.product_id == 0xec00 ) {
-        return "SMSC LAN9512";
-      }
-      // qemu cdc ethernet adapter
-      if ( dev->descriptor.vendor_id == 0x525 && dev->descriptor.product_id == 0xa4a2 ) {
-        return "QEMU CDC LAN";
-      }
-      return "Vendor specific";
-    // interfaces
-    case LIBUSB_DEVICE_CLASS_IN_INTERFACE:
-      if ( LIBUSB_DEVICE_STATUS_CONFIGURED == dev->status ) {
-        switch ( dev->interfaces[ 0 ].class ) {
-          case LIBUSB_INTERFACE_CLASS_AUDIO: return "USB Audio device";
-          case LIBUSB_INTERFACE_CLASS_COMMUNICATIONS: return "USB CDC device";
-          case LIBUSB_INTERFACE_CLASS_HID:
-            switch ( dev->interfaces[ 0 ].protocol ) {
-              case 1: return "USB Keyboard";
-              case 2: return "USB Mouse";
-              default: return "USB HID";
-            }
-          case LIBUSB_INTERFACE_CLASS_PHYSICAL: return "USB Physical device";
-          case LIBUSB_INTERFACE_CLASS_IMAGE: return "USB Imaging device";
-          case LIBUSB_INTERFACE_CLASS_PRINTER: return "USB Printer device";
-          case LIBUSB_INTERFACE_CLASS_MASS_STORAGE: return "USB Mass storage device";
-          case LIBUSB_INTERFACE_CLASS_HUB:
-            if ( dev->descriptor.usb_version == 0x210 ) {
-              return "USB 2.1 Hub";
-            }
-            if ( dev->descriptor.usb_version == 0x200 ) {
-              return "USB 2.0 Hub";
-            }
-            if ( dev->descriptor.usb_version == 0x110 ) {
-              return "USB 1.1 Hub";
-            }
-            if ( dev->descriptor.usb_version == 0x100 ) {
-              return "USB 1.0 Hub";
-            }
-            return "USB Hub";
-          case LIBUSB_INTERFACE_CLASS_CDC_DATA: return "USB CDC device";
-          case LIBUSB_INTERFACE_CLASS_SMART_CARD: return "USB Smart card";
-          case LIBUSB_INTERFACE_CLASS_CONTENT_SECURITY: return "USB Content security";
-          case LIBUSB_INTERFACE_CLASS_VIDEO: return "USB Video";
-          case LIBUSB_INTERFACE_CLASS_PERSONAL_HEALTHCARE: return "USB Personal health care";
-          case LIBUSB_INTERFACE_CLASS_AUDIO_VIDEO: return "USB AV device";
-          case LIBUSB_INTERFACE_CLASS_DIAGNOSTIC_DEVICE: return "USB Diagnostic device";
-          case LIBUSB_INTERFACE_CLASS_WIRELESS_CONTROLLER: return "USB Wireless controller";
-          case LIBUSB_INTERFACE_CLASS_MISCELLANEOUS: return "USB Miscellaneous device";
-          case LIBUSB_DEVICE_CLASS_VENDOR_SPECIFIC: return "Vendor Specific";
-          default: return "Generic device";
-        }
-      } else {
-        return "Unconfigured device";
-      }
-    default: return "Generic device";
-  }
 }
 
 /**
@@ -1212,10 +1118,10 @@ int usbd_attach_device( libusb_device_t* dev ) {
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Attach Device %s. Address:%"PRIu8" Class:%d Subclass:%"PRIu8
       " USB:%"PRIx16".%"PRIx16". %"PRIu8" configurations, %"PRIu8" interfaces.\n",
-      usbd_get_description( dev ), address, dev->descriptor.class, dev->descriptor.subclass,
+      usbd_description_get( dev ), address, dev->descriptor.class, dev->descriptor.subclass,
       ( uint16_t )( dev->descriptor.usb_version >> 8 ), ( uint16_t )( dev->descriptor.usb_version >> 4 ),
       dev->descriptor.configuration_count, dev->configuration.interface_count )
-    EARLY_STARTUP_PRINT( "Device Attached: %s\r\n", usbd_get_description( dev ) )
+    EARLY_STARTUP_PRINT( "Device Attached: %s\r\n", usbd_description_get( dev ) )
   #endif
   // allocate buffer for printing
   char* buffer = malloc( 1024 );
@@ -1391,127 +1297,6 @@ int usbd_init( void ) {
     // return result
     return result;
   }
-  // return success
-  return 0;
-}
-
-/**
- * @fn int usbd_init_handler(void)
- * @brief Init handler
- * @return
- */
-int usbd_init_handler( void ) {
-  // allocate handler
-  class_handler = calloc( 256, sizeof( pid_t ) );
-  // handle error
-  if ( ! class_handler ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate memory\r\n" )
-    #endif
-    // return nomem
-    return ENOMEM;
-  }
-  // clear out
-  for ( size_t i = 0; i < 256; i++ ) {
-    class_handler[i] = -1;
-  }
-  // return success
-  return 0;
-}
-
-/**
- * @fn int usbd_register_handler(libusb_interface_class_t, pid_t)
- * @brief Method to register a handöer
- * @param type
- * @param handler
- * @return
- */
-int usbd_register_handler( const libusb_interface_class_t type, const pid_t handler ) {
-  // handle not initialized
-  if ( ! class_handler ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Handler data not initialized\r\n" )
-    #endif
-    // return protocol error
-    return EPROTO;
-  }
-  // handle already set
-  if ( -1 != class_handler[ type ] ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Handler already registered\r\n" )
-    #endif
-    // return exist
-    return EEXIST;
-  }
-  // set handler
-  class_handler[ type ] = handler;
-  // return success
-  return 0;
-}
-
-/**
- * @fn int usbd_unregister_handler(libusb_interface_class_t, pid_t)
- * @brief Unregister a handler
- * @param type
- * @param handler
- * @return
- */
-int usbd_unregister_handler( const libusb_interface_class_t type, const pid_t handler ) {
-  // handle not initialized
-  if ( ! class_handler ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Handler data not initialized\r\n" )
-    #endif
-    // return protocol error
-    return EPROTO;
-  }
-  // handle already set
-  if ( handler != class_handler[ type ] ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Handler already registered\r\n" )
-    #endif
-    // return exist
-    return EINVAL;
-  }
-  // clear handler
-  class_handler[ type ] = -1;
-  // return success
-  return 0;
-}
-
-/**
- * @fn int usbd_get_handler(libusb_interface_class_t, pid_t*)
- * @brief Method to get a bound handler
- * @param type
- * @param handler
- * @return
- */
-int usbd_get_handler( const libusb_interface_class_t type, pid_t* handler ) {
-  // handle not initialized
-  if ( ! class_handler ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Handler data not initialized\r\n" )
-    #endif
-    // return protocol error
-    return EPROTO;
-  }
-  // handle no handler
-  if ( ! handler ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Invalid handler passed\r\n" )
-    #endif
-    // return protocol error
-    return EPROTO;
-  }
-  // set handler
-  *handler = class_handler[ type ];
   // return success
   return 0;
 }

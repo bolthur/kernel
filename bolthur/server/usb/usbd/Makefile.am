@@ -9,6 +9,8 @@ usbd_LDADD = \
   ${abs_top_builddir}/../library/util/libutil.la \
   ${abs_top_builddir}/../library/vfs/libvfs.la
 usbd_SOURCES = \
+  libusbd/description.c \
+  libusbd/handler.c \
   rpc/attach/device.c \
   rpc/control/message.c \
   rpc/get/configuration.c \

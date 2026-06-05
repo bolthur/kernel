@@ -22,8 +22,8 @@
 #include <sys/bolthur.h>
 // local includes
 #include "../../rpc.h"
+#include "../../libusbd/handler.h"
 // driver includes
-#include "../../usbd.h"
 #include "../../../../libusbd.h"
 
 /**
@@ -64,7 +64,7 @@ void rpc_handler_unregister(
   // allocate space for pull_request
   const usbd_unregister_device_handler_t* message = ( usbd_unregister_device_handler_t* )request->container;
   // unregister handler
-  const int result = usbd_unregister_handler( message->type, message->handler );
+  const int result = usbd_handler_unregister( message->type, message->handler );
   // handle error
   if ( 0 != result ) {
     error.status = -result;

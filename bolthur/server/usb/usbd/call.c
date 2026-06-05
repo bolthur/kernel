@@ -21,6 +21,7 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 #include "call.h"
+#include "libusbd/handler.h"
 #include "usbd.h"
 
 /**
@@ -33,7 +34,7 @@
 int call_attach( libusb_device_t* dev, const uint32_t interface_number ) {
   // get handler for attaching root hub
   pid_t handler;
-  const int result = usbd_get_handler( dev->interfaces[ 0 ].class, &handler );
+  const int result = usbd_handler_get( dev->interfaces[ 0 ].class, &handler );
   if ( 0 != result ) {
     // debug output
     #if defined( CALL_ENABLE_DEBUG )
