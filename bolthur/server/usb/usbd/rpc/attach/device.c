@@ -26,7 +26,7 @@
 // driver includes
 #include "../../libusbd/allocate.h"
 #include "../../libusbd/attach.h"
-#include "../../usbd.h"
+#include "../../libusbd/init.h"
 #include "../../../../libusbd.h"
 
 /**

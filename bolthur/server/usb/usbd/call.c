@@ -22,7 +22,7 @@
 #include <sys/bolthur.h>
 #include "call.h"
 #include "libusbd/handler.h"
-#include "usbd.h"
+#include "libusbd/init.h"
 
 /**
  * @fn int call_attach( libusb_device_t* dev, uint32_t );

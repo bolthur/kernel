@@ -21,7 +21,7 @@
 #include "allocate.h"
 #include "deallocate.h"
 #include "attach.h"
-#include "../usbd.h"
+#include "init.h"
 
 /**
  * @fn libusb_device_t* usbd_get_root_hub(void)

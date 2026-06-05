@@ -20,8 +20,10 @@
 #include "attach.h"
 #include "descriptor.h"
 #include "string.h"
+#include "address.h"
+#include "device.h"
 #include "../call.h"
-#include "../usbd.h"
+#include "init.h"
 
 /**
  * @fn int usbd_attach_device(libusb_device_t*)
@@ -70,7 +72,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
     }
   }
   // set address
-  result = usbd_set_address( dev, address );
+  result = usbd_address_set( dev, address );
   // handle error
   if ( 0 != result ) {
     // debug output
@@ -143,7 +145,7 @@ int usbd_attach_device( libusb_device_t* dev ) {
       ( uint16_t )( dev->descriptor.version >> 8 ), ( uint16_t )( dev->descriptor.version & 0xff ) )
   #endif
   // configure device
-  result = usbd_configure( dev, 0 );
+  result = usbd_device_configure( dev, 0 );
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )

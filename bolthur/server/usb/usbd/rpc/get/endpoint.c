@@ -24,7 +24,7 @@
 // local includes
 #include "../../rpc.h"
 // driver includes
-#include "../../usbd.h"
+#include "../../libusbd/init.h"
 #include "../../../../libusbd.h"
 
 /**

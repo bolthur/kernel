@@ -9,13 +9,17 @@ usbd_LDADD = \
   ${abs_top_builddir}/../library/util/libutil.la \
   ${abs_top_builddir}/../library/vfs/libvfs.la
 usbd_SOURCES = \
+  libusbd/address.c \
   libusbd/allocate.c \
   libusbd/attach.c \
+  libusbd/configuration.c \
   libusbd/control.c \
   libusbd/deallocate.c \
   libusbd/description.c \
   libusbd/descriptor.c \
+  libusbd/device.c \
   libusbd/handler.c \
+  libusbd/init.c \
   libusbd/interrupt.c \
   libusbd/roothub.c \
   libusbd/string.c \
@@ -33,6 +37,5 @@ usbd_SOURCES = \
   rpc/interrupt/poll.c \
   rpc/init.c \
   call.c \
-  main.c \
-  usbd.c
+  main.c
 usbd_LDFLAGS = -all-static --static

@@ -22,7 +22,7 @@
 #include <stdlib.h>
 // local includes
 #include "handler.h"
-#include "../usbd.h"
+#include "init.h"
 
 /**
  * @brief Array of class handlers

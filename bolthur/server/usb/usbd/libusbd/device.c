@@ -17,151 +17,21 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// system includes
 #include <errno.h>
-#include <inttypes.h>
-#include <stddef.h>
-#include <wchar.h>
-#include <sys/_default_fcntl.h>
-#include <sys/bolthur.h>
-#include <sys/ioctl.h>
-// local includes
-#include "usbd.h"
-#include "call.h"
-#include "libusbd/description.h"
-#include "libusbd/allocate.h"
-#include "libusbd/control.h"
-#include "libusbd/string.h"
-#include "libusbd/roothub.h"
-#include "libusbd/descriptor.h"
-// driver includes
-#include "../../libhcd.h"
+#include <stdlib.h>
+#include <string.h>
+#include "device.h"
+#include "configuration.h"
+#include "descriptor.h"
 
 /**
- * @brief Static file descriptor for hcd operations
- */
-int fd_hcd = -1;
-
-/**
- * @brief Head of device list
- */
-libusb_device_t* head = nullptr;
-
-/**
- * @fn int usbd_set_address(libusb_device_t*, const uint8_t)
- * @brief Set usb device address
- * @param dev
- * @param address
- * @return
- */
-int usbd_set_address( libusb_device_t* dev, const uint8_t address ) {
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Set address\r\n" )
-  #endif
-  // validate
-  if ( LIBUSB_DEVICE_STATUS_DEFAULT != dev->status ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
-        usbd_description_get( dev ), dev->status )
-    #endif
-    // return error
-    return EINVAL;
-  }
-  // perform control message
-  const int result = usbd_control_message(
-    dev,
-    ( libusb_pipe_address_t ){
-      .type = LIBUSB_TRANSFER_CONTROL,
-      .speed = dev->speed,
-      .end_point = 0,
-      .device = 0,
-      .direction = LIBUSB_DIRECTION_OUT,
-      .max_size = usb_packet_size_from_number(
-        dev->descriptor.max_packet_size0
-      ),
-    },
-    NULL,
-    0,
-    &( libusb_device_request_t ){
-      .request = LIBUSB_DEVICE_REQUEST_SET_ADDRESS,
-      .type = 0,
-      .value = address,
-    },
-    CONTROL_MESSAGE_TIMEOUT
-  );
-  // handle error
-  if ( 0 != result ) {
-    return result;
-  }
-  // populate address and status
-  dev->number = address;
-  dev->status = LIBUSB_DEVICE_STATUS_ADDRESSED;
-  // return success
-  return 0;
-}
-
-/**
- * @fn int usbd_set_configuration(libusb_device_t*, const uint8_t)
- * @brief Set usb device configuration
- * @param dev
- * @param configuration
- * @return
- */
-int usbd_set_configuration( libusb_device_t* dev, const uint8_t configuration ) {
-  // validate
-  if ( LIBUSB_DEVICE_STATUS_ADDRESSED != dev->status ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Illegal attempt to configure device %s with status %d\r\n",
-        usbd_description_get( dev ), dev->status )
-    #endif
-    // return error
-    return EINVAL;
-  }
-
-  // perform control message
-  const int result = usbd_control_message(
-    dev,
-    ( libusb_pipe_address_t ){
-      .type = LIBUSB_TRANSFER_CONTROL,
-      .speed = dev->speed,
-      .end_point = 0,
-      .device = ( uint8_t )dev->number,
-      .direction = LIBUSB_DIRECTION_OUT,
-      .max_size = usb_packet_size_from_number(
-        dev->descriptor.max_packet_size0
-      ),
-    },
-    NULL,
-    0,
-    &( libusb_device_request_t ){
-      .request = LIBUSB_DEVICE_REQUEST_SET_CONFIGURATION,
-      .type = 0,
-      .value = configuration,
-    },
-    CONTROL_MESSAGE_TIMEOUT
-  );
-  // handle error
-  if ( 0 != result ) {
-    return result;
-  }
-  // populate configuration index and status
-  dev->configuration_index = configuration;
-  dev->status = LIBUSB_DEVICE_STATUS_CONFIGURED;
-  // return success
-  return 0;
-}
-
-/**
- * @fn int usbd_configure(libusb_device_t*, uint8_t)
+ * @fn int usbd_device_configure(libusb_device_t*, uint8_t)
  * @brief Configure usb device
  * @param dev
  * @param configuration
  * @return
  */
-int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
+int usbd_device_configure( libusb_device_t* dev, uint8_t configuration ) {
   // validate
   if ( LIBUSB_DEVICE_STATUS_ADDRESSED != dev->status ) {
     // debug output
@@ -288,7 +158,7 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
     #endif
   }
   // configure usb device
-  result = usbd_set_configuration( dev, configuration );
+  result = usbd_configuration_set( dev, configuration );
   // handle error
   if ( 0 != result ) {
     // debug output
@@ -310,48 +180,6 @@ int usbd_configure( libusb_device_t* dev, uint8_t configuration ) {
   #endif
   // populate full descriptor
   dev->full_configuration = full_descriptor;
-  // return success
-  return 0;
-}
-
-/**
- * @fn int usbd_init(void)
- * @brief Method to init usbd
- * @return 0 on success, else errno code
- */
-int usbd_init( void ) {
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Init usbd\r\n" )
-  #endif
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Opening device %s\r\n", HCD_DEVICE_PATH )
-  #endif
-  // open file descriptor for mmio actions
-  if ( -1 == ( fd_hcd = open( HCD_DEVICE_PATH, O_RDWR ) ) ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to open device\r\n" )
-    #endif
-    // return error response
-    return ENXIO;
-  }
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Attaching root hub\r\n" )
-  #endif
-  // try to attach root hub
-  const int result = usbd_roothub_attach();
-  // handle error
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocating root hub failed: %s\r\n", strerror( result ) )
-    #endif
-    // return result
-    return result;
-  }
   // return success
   return 0;
 }
