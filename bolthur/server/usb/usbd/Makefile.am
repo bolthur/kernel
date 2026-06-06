@@ -16,6 +16,7 @@ usbd_SOURCES = \
   call/child_reset.c \
   call/deallocate.c \
   call/detached.c \
+  ioctl/wrapper.c \
   libusbd/address.c \
   libusbd/allocate.c \
   libusbd/attach.c \
@@ -43,6 +44,5 @@ usbd_SOURCES = \
   rpc/handler/unregister.c \
   rpc/interrupt/poll.c \
   rpc/init.c \
-  ioctl_wrapper.c \
   main.c
 usbd_LDFLAGS = -all-static --static

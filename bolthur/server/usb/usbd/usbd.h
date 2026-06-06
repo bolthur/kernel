@@ -30,6 +30,18 @@
 extern int fd_hcd;
 extern libusb_device_t* head;
 
+/**
+ * @brief usbd async context structure
+ */
+typedef struct {
+  /** callback to be invoked once finished */
+  rpc_handler_t callback;
+  /** rpc type used for return */
+  size_t type;
+  /** original response info */
+  size_t response_info;
+} usbd_async_context_t;
+
 int usbd_init( void );
 
 #endif

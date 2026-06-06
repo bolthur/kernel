@@ -21,7 +21,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
-#include "ioctl_wrapper.h"
+#include "wrapper.h"
 
 /**
  * @fn int ioctl_wrapper(int, uint64_t, void*, rpc_handler_t, size_t, size_t);
