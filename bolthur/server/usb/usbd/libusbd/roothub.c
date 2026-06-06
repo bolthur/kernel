@@ -17,11 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "roothub.h"
-#include "allocate.h"
-#include "deallocate.h"
-#include "attach.h"
-#include "../usbd.h"
+#include "../libusbd.h"
 
 /**
  * @fn libusb_device_t* usbd_get_root_hub(void)

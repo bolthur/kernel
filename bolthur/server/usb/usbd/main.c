@@ -20,8 +20,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <sys/bolthur.h>
-#include "libusbd/handler.h"
-#include "usbd.h"
+#include "libusbd.h"
 #include "rpc.h"
 #include "../../libhcd.h"
 #include "../../../library/vfs/wait.h"

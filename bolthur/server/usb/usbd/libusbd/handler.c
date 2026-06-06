@@ -21,8 +21,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 // local includes
-#include "handler.h"
-#include "../usbd.h"
+#include "../libusbd.h"
 
 /**
  * @brief Array of class handlers

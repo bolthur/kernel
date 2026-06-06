@@ -19,8 +19,7 @@
 
 #include <errno.h>
 #include <sys/ioctl.h>
-#include "interrupt.h"
-#include "../usbd.h"
+#include "../libusbd.h"
 #include "../../../libhcd.h"
 
 /**

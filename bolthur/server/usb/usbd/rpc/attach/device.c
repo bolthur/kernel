@@ -23,10 +23,8 @@
 #include <sys/bolthur.h>
 // local includes
 #include "../../rpc.h"
+#include "../../libusbd.h"
 // driver includes
-#include "../../libusbd/allocate.h"
-#include "../../libusbd/attach.h"
-#include "../../usbd.h"
 #include "../../../../libusbd.h"
 
 /**

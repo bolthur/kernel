@@ -17,13 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "attach.h"
-#include "descriptor.h"
-#include "string.h"
-#include "address.h"
-#include "device.h"
 #include "../call.h"
-#include "../usbd.h"
+#include "../libusbd.h"
 
 /**
  * @fn int usbd_attach_device(libusb_device_t*)

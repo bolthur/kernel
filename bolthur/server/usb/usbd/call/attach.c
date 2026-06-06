@@ -18,7 +18,7 @@
  */
 
 #include <errno.h>
-#include "../libusbd/handler.h"
+#include "../libusbd.h"
 #include "../call.h"
 
 /**

@@ -18,9 +18,7 @@
 */
 
 #include <errno.h>
-#include "descriptor.h"
-#include "control.h"
-#include "../usbd.h"
+#include "../libusbd.h"
 
 /**
  * @fn int usbd_get_descriptor(libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t);

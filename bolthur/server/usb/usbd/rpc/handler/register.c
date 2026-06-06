@@ -22,7 +22,7 @@
 #include <sys/bolthur.h>
 // local includes
 #include "../../rpc.h"
-#include "../../libusbd/handler.h"
+#include "../../libusbd.h"
 // driver includes
 #include "../../../../libusbd.h"
 

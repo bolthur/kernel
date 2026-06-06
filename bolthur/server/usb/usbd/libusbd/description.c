@@ -17,8 +17,7 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "description.h"
-#include "../usbd.h"
+#include "../libusbd.h"
 
 /**
  * @fn const char* usbd_description_get(const libusb_device_t*)

@@ -21,8 +21,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "../../../../library/util/max.h"
-#include "allocate.h"
-#include "../usbd.h"
+#include "../libusbd.h"
 
 /**
  * @fn int usbd_allocate_device(libusb_device_t**, bool)

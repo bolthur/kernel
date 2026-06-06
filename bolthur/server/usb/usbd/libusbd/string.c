@@ -19,8 +19,7 @@
 
 #include <errno.h>
 #include <wchar.h>
-#include "string.h"
-#include "descriptor.h"
+#include "../libusbd.h"
 // library includes
 #include  "../../../../library/util/min.h"
 

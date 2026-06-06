@@ -17,9 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "deallocate.h"
 #include "../call.h"
-#include "../usbd.h"
+#include "../libusbd.h"
 
 /**
  * @fn void usbd_deallocate_device(libusb_device_t*)

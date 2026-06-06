@@ -20,9 +20,7 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
-#include "device.h"
-#include "configuration.h"
-#include "descriptor.h"
+#include "../libusbd.h"
 
 /**
  * @fn int usbd_device_configure(libusb_device_t*, uint8_t)

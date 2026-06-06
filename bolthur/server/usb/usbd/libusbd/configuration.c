@@ -18,9 +18,7 @@
 */
 
 #include <errno.h>
-#include "control.h"
-#include "configuration.h"
-#include "../usbd.h"
+#include "../libusbd.h"
 
 /**
  * @fn int usbd_configuration_set(libusb_device_t*, const uint8_t)

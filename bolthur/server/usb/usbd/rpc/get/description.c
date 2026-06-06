@@ -23,9 +23,8 @@
 #include <sys/bolthur.h>
 // local includes
 #include "../../rpc.h"
-#include "../../libusbd/description.h"
+#include "../../libusbd.h"
 // driver includes
-#include "../../usbd.h"
 #include "../../../../libusbd.h"
 
 /**

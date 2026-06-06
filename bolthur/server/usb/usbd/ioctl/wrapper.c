@@ -24,7 +24,7 @@
 #include "wrapper.h"
 
 /**
- * @fn int ioctl_wrapper(int, uint64_t, void*, rpc_handler_t, size_t, size_t);
+ * @fn int ioctl_wrapper(int, uint64_t, void*, rpc_handler_t, size_t, size_t, size_t);
  * @brief ioctl wrapper
  * @param file file handle
  * @param request request information
@@ -32,6 +32,7 @@
  * @param callback callback for continuation
  * @param origin origin of possible rpc ( use 0 if not available )
  * @param data_id data id of possible rpc ( use 0 if not available )
+ * @param context context data to push in ( use nullptr if not available )
  * @return
  */
 int ioctl_wrapper(
@@ -40,14 +41,15 @@ int ioctl_wrapper(
   void* data,
   const rpc_handler_t callback,
   const pid_t origin,
-  const size_t data_id
+  const size_t data_id,
+  void* context
 ) {
   // handle no callback
   if ( ! callback ) {
     errno = EINVAL;
     return -1;
   }
-  // extract size and request from request ( 16 bit each )
+  // extract size and request from request
   const uint32_t command = IOCTL_REQUEST_GET_COMMAND( request );
   const uint32_t data_size = IOCTL_REQUEST_GET_SIZE( request );
   const uint32_t type = IOCTL_REQUEST_GET_TYPE( request );
@@ -90,7 +92,7 @@ int ioctl_wrapper(
     rpc_request_size,
     origin,
     data_id,
-    NULL,
+    context,
     false
   );
   if ( ! response_id ) {
