@@ -1009,9 +1009,12 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
   // populate last transfer
   if ( LIBUSB_DIRECTION_IN == entry_data->pipe_address.direction ) {
     entry_data->last_transfer = entry_data->buffer_length;
-    EARLY_STARTUP_PRINT(
-      "entry->transferred = %"PRIu32", entry_data->buffer_length = %zu\r\n",
-      entry->transferred, entry_data->buffer_length );
+    // debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT(
+        "entry->transferred = %"PRIu32", entry_data->buffer_length = %zu\r\n",
+        entry->transferred, entry_data->buffer_length );
+    #endif
     if ( entry->transferred <= entry_data->buffer_length ) {
       entry_data->last_transfer -= ( entry_data->buffer_length - entry->transferred );
     }
@@ -1129,8 +1132,7 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
   memset( response, 0, response_size );
   // detach shared memory
   _syscall_memory_shared_detach( ( ( hcd_submit_control_message_t* )entry->message )->shm_id );
-  // populate status and just copy over data from request
-  response->status = 0;
+  // populate response
   memcpy( response->container, entry->message, sizeof( hcd_submit_control_message_t ) );
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, entry->response_info );
@@ -1400,8 +1402,7 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   memset( response, 0, response_size );
   // detach shared memory
   _syscall_memory_shared_detach( ( ( hcd_submit_interrupt_poll_t* )entry->message )->shm_id );
-  // populate status and just copy over data from request
-  response->status = 0;
+  // populate response
   memcpy( response->container, entry->message, sizeof( hcd_submit_interrupt_poll_t ) );
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, entry->response_info );

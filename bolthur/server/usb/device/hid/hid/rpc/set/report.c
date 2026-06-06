@@ -119,8 +119,8 @@ void rpc_set_report(
   // calculate request size
   const size_t request_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate response
-  vfs_ioctl_perform_response_t* response = malloc(
-    sizeof( vfs_ioctl_perform_response_t ) + request_size );
+  const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + request_size;
+  vfs_ioctl_perform_response_t* response = malloc( response_size );
   // handle error
   if ( ! response ) {
     error.status = -ENOMEM;
@@ -129,8 +129,8 @@ void rpc_set_report(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
+  memset( response, 0, response_size );
   // populate response
-  response->status = 0;
   memcpy( response->container, message, request_size );
   // return
   bolthur_rpc_return( RPC_VFS_IOCTL, response, request_size + sizeof( vfs_ioctl_perform_response_t ), NULL, 0 );

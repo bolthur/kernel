@@ -116,8 +116,7 @@ void rpc_submit_message(
     }
     // detach shared memory
     _syscall_memory_shared_detach( submit_control_message->shm_id );
-    // populate status and just copy over data from request
-    response->status = 0;
+    // populate response
     memcpy( response->container, request->container, container_size );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
