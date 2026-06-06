@@ -25,7 +25,7 @@
 #include "../../rpc.h"
 #include "../../libusbd/descriptor.h"
 // driver includes
-#include "../../libusbd/init.h"
+#include "../../usbd.h"
 #include "../../../../libusbd.h"
 
 /**

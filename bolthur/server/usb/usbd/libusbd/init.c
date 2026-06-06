@@ -25,7 +25,7 @@
 #include <sys/_default_fcntl.h>
 #include <sys/bolthur.h>
 // local includes
-#include "init.h"
+#include "../usbd.h"
 #include "allocate.h"
 #include "roothub.h"
 #include "../../../libhcd.h"

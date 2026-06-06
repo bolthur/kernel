@@ -25,7 +25,7 @@
 #include "../../rpc.h"
 #include "../../libusbd/interrupt.h"
 // driver includes
-#include "../../libusbd/init.h"
+#include "../../usbd.h"
 #include "../../../../libusbd.h"
 
 /**

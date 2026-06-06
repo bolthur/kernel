@@ -23,7 +23,7 @@
 #include "address.h"
 #include "device.h"
 #include "../call.h"
-#include "init.h"
+#include "../usbd.h"
 
 /**
  * @fn int usbd_attach_device(libusb_device_t*)

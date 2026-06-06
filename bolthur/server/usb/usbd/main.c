@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <sys/bolthur.h>
 #include "libusbd/handler.h"
-#include "libusbd/init.h"
+#include "usbd.h"
 #include "rpc.h"
 #include "../../libhcd.h"
 #include "../../../library/vfs/wait.h"

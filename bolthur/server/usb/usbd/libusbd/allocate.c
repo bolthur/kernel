@@ -22,7 +22,7 @@
 #include <string.h>
 #include "../../../../library/util/max.h"
 #include "allocate.h"
-#include "init.h"
+#include "../usbd.h"
 
 /**
  * @fn int usbd_allocate_device(libusb_device_t**, bool)

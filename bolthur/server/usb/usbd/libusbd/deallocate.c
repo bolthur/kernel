@@ -19,7 +19,7 @@
 
 #include "deallocate.h"
 #include "../call.h"
-#include "init.h"
+#include "../usbd.h"
 
 /**
  * @fn void usbd_deallocate_device(libusb_device_t*)

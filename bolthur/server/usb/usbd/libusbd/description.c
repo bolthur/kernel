@@ -18,7 +18,7 @@
  */
 
 #include "description.h"
-#include "init.h"
+#include "../usbd.h"
 
 /**
  * @fn const char* usbd_description_get(const libusb_device_t*)

@@ -20,7 +20,7 @@
 #include <errno.h>
 #include "address.h"
 #include "control.h"
-#include "init.h"
+#include "../usbd.h"
 
 /**
  * @fn int usbd_address_set(libusb_device_t*, const uint8_t)
