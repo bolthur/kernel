@@ -23,6 +23,6 @@
 #include <stdint.h>
 #include <sys/bolthur.h>
 
-int ioctl_wrapper( int, uint64_t, void*, rpc_handler_t, pid_t, size_t, void* );
+int ioctl_wrapper( int, uint64_t, void*, rpc_handler_t, pid_t, size_t, void*, size_t, void* );
 
 #endif

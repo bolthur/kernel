@@ -25,10 +25,15 @@
 //#define USBD_ENABLE_DEBUG 1
 //#define USBD_ENABLE_ERROR 1
 
-#define CONTROL_MESSAGE_TIMEOUT 10
+// if one of both is defined include inttypes for printing stuff
+#if defined( USBD_ENABLE_DEBUG ) || defined( USBD_ENABLE_ERROR )
+  #include <inttypes.h>
+#endif
 
-extern int fd_hcd;
-extern libusb_device_t* head;
+/**
+ * @brief Control message timeout in milliseconds
+ */
+#define CONTROL_MESSAGE_TIMEOUT 10
 
 /**
  * @brief usbd async context structure
@@ -69,7 +74,7 @@ int usbd_handler_get( libusb_interface_class_t, pid_t* );
 // init
 int usbd_init( void );
 // interrupt
-int usbd_interrupt_poll( libusb_device_t*, libusb_pipe_address_t, void*, size_t, size_t, uint8_t, uint32_t );
+int usbd_interrupt_poll( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, size_t, uint8_t, uint32_t, rpc_handler_t, pid_t, size_t, void*, size_t );
 // roothub
 libusb_device_t* usbd_roothub_get( void );
 int usbd_roothub_attach( void );
@@ -77,5 +82,9 @@ int usbd_roothub_attach( void );
 int usbd_string_get( libusb_device_t*, uint8_t, uint16_t, void*, size_t );
 int usbd_string_read_lang( libusb_device_t*, uint8_t, uint16_t, void*, size_t );
 int usbd_string_read( libusb_device_t*, uint8_t, void*, size_t );
+
+// global variables from init
+extern int fd_hcd;
+extern libusb_device_t* head;
 
 #endif

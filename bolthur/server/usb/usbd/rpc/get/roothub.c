@@ -72,6 +72,7 @@ void rpc_get_roothub(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
+  memset( response, 0, response_size );
   // get root hub
   libusb_device_t* roothub = usbd_roothub_get();
   if ( ! roothub ) {
@@ -83,8 +84,7 @@ void rpc_get_roothub(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
-  // populate status and just copy over data
-  response->status = 0;
+  // populate response
   memcpy( response->container, &roothub->number, sizeof( uint32_t ) );
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );

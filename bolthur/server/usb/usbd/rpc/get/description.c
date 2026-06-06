@@ -94,7 +94,6 @@ void rpc_get_description(
   // clear out
   memset( response, 0, response_size );
   // copy over description
-  response->status = 0;
   strcpy( response->container, desc );
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );

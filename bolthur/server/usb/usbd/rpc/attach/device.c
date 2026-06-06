@@ -74,6 +74,7 @@ void rpc_attach_device(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
+  memset( response, 0, response_size );
   // find device
   libusb_device_t* device = head;
   while ( device ) {
@@ -115,8 +116,7 @@ void rpc_attach_device(
   // allocate new device
   // perform hcd control message
   result = usbd_attach_device( new_device );
-  // populate status and just copy over data from request
-  response->status = -result;
+  // populate response
   memcpy( response->container, request->container, container_size );
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );

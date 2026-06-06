@@ -24,7 +24,7 @@
 #include "wrapper.h"
 
 /**
- * @fn int ioctl_wrapper(int, uint64_t, void*, rpc_handler_t, size_t, size_t, size_t);
+ * @fn int ioctl_wrapper(int, uint64_t, void*, rpc_handler_t, size_t, size_t, void*, size_t, void*);
  * @brief ioctl wrapper
  * @param file file handle
  * @param request request information
@@ -32,6 +32,8 @@
  * @param callback callback for continuation
  * @param origin origin of possible rpc ( use 0 if not available )
  * @param data_id data id of possible rpc ( use 0 if not available )
+ * @param original_request original request to save ( use nullptr if not available )
+ * @param original_request_size size of original request to save ( use 0 if not available )
  * @param context context data to push in ( use nullptr if not available )
  * @return
  */
@@ -42,6 +44,8 @@ int ioctl_wrapper(
   const rpc_handler_t callback,
   const pid_t origin,
   const size_t data_id,
+  void* original_request,
+  const size_t original_request_size,
   void* context
 ) {
   // handle no callback
@@ -88,8 +92,8 @@ int ioctl_wrapper(
     rpc_request_size,
     callback,
     RPC_VFS_IOCTL,
-    rpc_request,
-    rpc_request_size,
+    original_request,
+    original_request_size,
     origin,
     data_id,
     context,

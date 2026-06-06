@@ -74,6 +74,7 @@ void rpc_get_interface(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
+  memset( response, 0, response_size );
   // find device
   libusb_device_t* device = head;
   while ( device ) {
@@ -93,7 +94,6 @@ void rpc_get_interface(
     return;
   }
   // populate response
-  response->status = 0;
   memcpy( response->container, &device->interfaces[ control_message->interface_number ],
     sizeof( libusb_endpoint_descriptor_t ) );
   // return from rpc

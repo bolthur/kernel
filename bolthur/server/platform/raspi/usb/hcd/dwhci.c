@@ -488,6 +488,9 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
   if ( entry->buffer ) {
     munmap( entry->buffer, entry->data_size );
   }
+  if ( entry->message ) {
+    free( entry->message );
+  }
   // handle first element
   if ( entry == configuration.list ) {
     // set list to next
@@ -1208,9 +1211,18 @@ response_t dwhci_channel_send_async( hcd_control_message_t* data, size_t data_si
     // return result
     return result;
   }
+  // duplicate message
+  hcd_submit_control_message_t* dup_message = malloc( sizeof( *dup_message ) );
+  if ( ! dup_message ) {
+    // clear entry again
+    dwhci_queue_remove_entry( entry );
+    // return no memory
+    return HCD_RESPONSE_ERROR_MEMORY;
+  }
+  memcpy( dup_message, message, sizeof( *dup_message ) );
   // populate response info
   entry->response_info = response_info;
-  entry->message = message;
+  entry->message = dup_message;
   // try to allocate a channel
   uint8_t channel = 0;
   result = dwhci_allocate_channel( &channel );
@@ -1408,7 +1420,12 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
  * @param response_info where to respond result to
  * @return
  */
-response_t dwhci_channel_poll_async( hcd_interrupt_poll_t* data, size_t data_size, hcd_submit_interrupt_poll_t* message, const size_t response_info ) {
+response_t dwhci_channel_poll_async(
+  hcd_interrupt_poll_t* data,
+  const size_t data_size,
+  hcd_submit_interrupt_poll_t* message,
+  const size_t response_info
+) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT("Channel send async\r\n")
@@ -1424,9 +1441,18 @@ response_t dwhci_channel_poll_async( hcd_interrupt_poll_t* data, size_t data_siz
     // return result
     return result;
   }
+  // duplicate message
+  hcd_submit_interrupt_poll_t* dup_message = malloc( sizeof( *dup_message ) );
+  if ( ! dup_message ) {
+    // clear entry again
+    dwhci_queue_remove_entry( entry );
+    // return no memory
+    return HCD_RESPONSE_ERROR_MEMORY;
+  }
+  memcpy( dup_message, message, sizeof( *dup_message ) );
   // populate response info
   entry->response_info = response_info;
-  entry->message = message;
+  entry->message = dup_message;
   // try to allocate a channel
   uint8_t channel = 0;
   result = dwhci_allocate_channel( &channel );

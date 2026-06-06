@@ -58,7 +58,6 @@ void rpc_poll_interrupt(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
-  const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate space for pull_request
   auto const poll_message = ( hcd_submit_interrupt_poll_t* )request->container;
   // attach shared memory
@@ -76,17 +75,6 @@ void rpc_poll_interrupt(
   }
   // transform shared memory into message
   auto const message = ( hcd_interrupt_poll_t* )shm_addr;
-  // allocate response structure
-  const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
-  vfs_ioctl_perform_response_t* response = malloc( response_size );
-  if ( ! response ) {
-    error.status = -ENOMEM;
-    // free request
-    free( request );
-    // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
-    return;
-  }
   // send async
   const response_t result = dwhci_channel_poll_async( message, sizeof( *message ) + message->buffer_length, poll_message, response_info );
   if ( HCD_RESPONSE_OK != result ) {
@@ -96,13 +84,11 @@ void rpc_poll_interrupt(
     _syscall_memory_shared_detach( poll_message->shm_id );
     // free request
     free( request );
-    free( response );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
   }
-  // free response since we've to wait for an interrupt transfer
-  free( response );
+  // we're waiting for an interrupt starting here
   free( request );
   _syscall_rpc_cleanup();
 }

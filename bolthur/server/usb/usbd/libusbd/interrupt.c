@@ -20,30 +20,41 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include "../libusbd.h"
+#include "../ioctl/wrapper.h"
 #include "../../../libhcd.h"
 
 /**
- * @fn int usbd_interrupt_poll(const libusb_device_t*, libusb_pipe_address_t, void*, size_t, size_t, uint8_t, uint32_t);
+ * @fn int usbd_interrupt_poll(const libusb_device_t*, libusb_pipe_address_t, void*, size_t, size_t, uint8_t, uint32_t, rpc_handler_t, pid_t, size_t, void*, size_t);
  * @brief Wrapper to perform usbd control message
- * @param dev
- * @param pipe
- * @param buffer
- * @param buffer_length
- * @param timeout
- * @param last_usb_pid
- * @param last_packet_transfer
+ * @param dev device information
+ * @param pipe pipe to use
+ * @param buffer buffer to transfer
+ * @param buffer_length buffer transfer length
+ * @param timeout poll timeout
+ * @param last_usb_pid last used usb pid
+ * @param last_packet_transfer last packet transfer
+ * @param callback callback invoked on finish
+ * @param origin origin info to be used for ioctl
+ * @param data_info date info to be used for ioctl
+ * @param original_request original request
+ * @param original_request_size original request size
  * @return
  *
  * @todo fire ioctl manually with handler callback
  */
 int usbd_interrupt_poll(
-  libusb_device_t* dev,
+  const libusb_device_t* dev,
   const libusb_pipe_address_t pipe,
-  void* buffer,
+  const void* buffer,
   const size_t buffer_length,
   const size_t timeout,
   const uint8_t last_usb_pid,
-  const uint32_t last_packet_transfer
+  const uint32_t last_packet_transfer,
+  const rpc_handler_t callback,
+  const pid_t origin,
+  const size_t data_info,
+  void* original_request,
+  const size_t original_request_size
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
@@ -88,8 +99,8 @@ int usbd_interrupt_poll(
     memcpy( &message->buffer, buffer, buffer_length );
   }
   // allocate request
-  hcd_submit_interrupt_poll_t* control_request = malloc( sizeof( *control_request ) );
-  if ( ! control_request ) {
+  hcd_submit_interrupt_poll_t* interrupt_request = malloc( sizeof( *interrupt_request ) );
+  if ( ! interrupt_request ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to allocate request\r\n" )
@@ -100,18 +111,24 @@ int usbd_interrupt_poll(
     return ENOMEM;
   }
   // clear out everything
-  memset( control_request, 0, sizeof( *control_request ) );
+  memset( interrupt_request, 0, sizeof( *interrupt_request ) );
   // populate shm_id
-  control_request->shm_id = shm_id;
+  interrupt_request->shm_id = shm_id;
   // perform request
-  int result = ioctl(
+  const int result = ioctl_wrapper(
     fd_hcd,
     IOCTL_BUILD_REQUEST(
       HCD_POLL_INTERRUPT,
-      sizeof( *control_request ),
+      sizeof( *interrupt_request ),
       IOCTL_RDWR
     ),
-    control_request
+    interrupt_request,
+    callback,
+    origin,
+    data_info,
+    original_request,
+    original_request_size,
+    nullptr
   );
   // handle ioctl error
   if ( -1 == result ) {
@@ -123,37 +140,12 @@ int usbd_interrupt_poll(
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
     // free request
-    free( control_request );
+    free( interrupt_request );
     // return eio
     return EIO;
   }
-  // response is equal to input
-  if ( message->error & LIBUSB_TRANSFER_ERROR_TIMEOUT ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "error = %#x\r\n", message->error )
-    #endif
-    // detach shared memory
-    _syscall_memory_shared_detach( shm_id );
-    // free control_request
-    free( control_request );
-    // return timeout
-    return ETIMEDOUT;
-  }
-  // copy over data
-  if (
-    LIBUSB_DIRECTION_IN == pipe.direction
-    && buffer && message->last_transfer == buffer_length
-  ) {
-    memcpy( buffer, message->buffer, buffer_length );
-  }
-  // copy over static fields into device populated via shared memory
-  dev->error = message->error;
-  dev->last_transfer = message->last_transfer;
-  // detach shared memory
-  _syscall_memory_shared_detach( shm_id );
-  // free control message
-  free( control_request );
-  // return result
-  return result;
+  // free interrupt request again
+  free( interrupt_request );
+  // return success
+  return 0;
 }

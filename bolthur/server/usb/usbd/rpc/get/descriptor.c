@@ -78,7 +78,7 @@ void rpc_get_descriptor(
     return;
   }
   // transform shared memory into message
-  usb_descriptor_message_t* message = ( usb_descriptor_message_t* )shm_addr;
+  auto const message = ( usb_descriptor_message_t* )shm_addr;
   // allocate response structure
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* response = malloc( response_size );
