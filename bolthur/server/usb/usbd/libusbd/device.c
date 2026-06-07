@@ -23,6 +23,39 @@
 #include "../libusbd.h"
 
 /**
+ * @fn int usbd_device_get_by_number(uint32_t, libusb_device_t**)
+ * @brief Function to get device by number
+ * @param device_number device number to lookup
+ * @param output address of pointer to manipulate
+ * @return
+ */
+int usbd_device_get_by_number( const uint32_t device_number, libusb_device_t** output ) {
+  // validate output
+  if ( ! output ) {
+    return EINVAL;
+  }
+  // try to find device by number
+  auto device = head;
+  // loop until end of devices
+  while ( device ) {
+    // handle match
+    if ( device->number == device_number ) {
+      break;
+    }
+    // go to next device
+    device = device->next;
+  }
+  // handle no device
+  if ( ! device ) {
+    return ENODEV;
+  }
+  // populate output
+  *output = device;
+  // return success
+  return 0;
+}
+
+/**
  * @fn int usbd_device_configure(libusb_device_t*, uint8_t)
  * @brief Configure usb device
  * @param dev

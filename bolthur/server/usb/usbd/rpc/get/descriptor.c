@@ -62,11 +62,10 @@ void rpc_get_descriptor(
   }
   const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate space for pull_request
-  const usbd_get_descriptor_t* control_message =
-    ( usbd_get_descriptor_t* )request->container;
+  auto const descriptor_message = ( usbd_get_descriptor_t* )request->container;
   // attach shared memory
   void* shm_addr = _syscall_memory_shared_attach(
-    control_message->shm_id, ( uintptr_t )NULL );
+    descriptor_message->shm_id, ( uintptr_t )NULL );
   // handle error
   if ( errno ) {
     // set error
@@ -85,7 +84,7 @@ void rpc_get_descriptor(
   if ( ! response ) {
     error.status = -ENOMEM;
     // detach shared memory
-    _syscall_memory_shared_detach( control_message->shm_id );
+    _syscall_memory_shared_detach( descriptor_message->shm_id );
     // free request
     free( request );
     // return from rpc
@@ -93,18 +92,12 @@ void rpc_get_descriptor(
     return;
   }
   // find device
-  libusb_device_t* device = head;
-  while ( device ) {
-    if ( device->number == message->device_number ) {
-      break;
-    }
-    device = device->next;
-  }
-  // handle not found
-  if ( ! device ) {
-    error.status = -ENODATA;
+  libusb_device_t* device;
+  int result = usbd_device_get_by_number( message->device_number, &device );
+  if ( 0 != result ) {
+    error.status = -result;
     // detach shared memory
-    _syscall_memory_shared_detach( control_message->shm_id );
+    _syscall_memory_shared_detach( descriptor_message->shm_id );
     // free request
     free( request );
     free( response );
@@ -113,7 +106,7 @@ void rpc_get_descriptor(
     return;
   }
   // perform get descriptor
-  const int result = usbd_descriptor_get(
+  result = usbd_descriptor_get(
     device,
     message->type,
     message->index,
@@ -124,7 +117,7 @@ void rpc_get_descriptor(
     message->recipient
   );
   // detach shared memory
-  _syscall_memory_shared_detach( control_message->shm_id );
+  _syscall_memory_shared_detach( descriptor_message->shm_id );
   // populate status and just copy over data from request
   response->status = -result;
   memcpy( response->container, request->container, container_size );

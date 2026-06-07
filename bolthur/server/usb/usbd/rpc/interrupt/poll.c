@@ -114,21 +114,16 @@ static void rpc_interrupt_poll_finished(
   }
   auto const usb_interrupt_poll = ( usb_interrupt_poll_t* )shm_addr_message;
   // find device
-  libusb_device_t* device = head;
-  while ( device ) {
-    if ( device->number == usb_interrupt_poll->device_number ) {
-      break;
-    }
-    device = device->next;
-  }
-  if ( ! device ) {
+  libusb_device_t* device;
+  const int result = usbd_device_get_by_number( usb_interrupt_poll->device_number, &device );
+  if ( 0 != result ) {
     // detach both since both are attached already
     _syscall_memory_shared_detach( interrupt_message->shm_id );
     _syscall_memory_shared_detach( hcd_poll_command->shm_id );
     // free up stuff
     free( poll_response );
     // return from rpc
-    err_response.status = -ENODEV;
+    err_response.status = -result;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // skip rest
     return;
@@ -242,15 +237,10 @@ void rpc_interrupt_poll(
   // transform shared memory into message
   auto const message = ( usb_interrupt_poll_t* )shm_addr;
   // find device
-  libusb_device_t* device = head;
-  while ( device ) {
-    if ( device->number == message->device_number ) {
-      break;
-    }
-    device = device->next;
-  }
-  if ( ! device ) {
-    error.status = -ENODEV;
+  libusb_device_t* device;
+  int result = usbd_device_get_by_number( message->device_number, &device );
+  if ( 0 != result ) {
+    error.status = -result;
     // detach shared memory
     _syscall_memory_shared_detach( interrupt_message->shm_id );
     // free request
@@ -260,7 +250,7 @@ void rpc_interrupt_poll(
     return;
   }
   // perform hcd control message
-  const int result = usbd_interrupt_poll(
+  result = usbd_interrupt_poll(
     device,
     ( libusb_pipe_address_t ) {
       .type = message->transfer,

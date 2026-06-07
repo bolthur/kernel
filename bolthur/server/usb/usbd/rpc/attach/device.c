@@ -76,18 +76,10 @@ void rpc_attach_device(
   }
   memset( response, 0, response_size );
   // find device
-  libusb_device_t* device = head;
-  while ( device ) {
-    // handle found
-    if ( device->number == message->parent_number ) {
-      break;
-    }
-    // go to next device
-    device = device->next;
-  }
-  // handle no device found
-  if ( ! device ) {
-    error.status = -EINVAL;
+  libusb_device_t* device;
+  int result = usbd_device_get_by_number( message->parent_number, &device );
+  if ( 0 != result ) {
+    error.status = -result;
     // free request
     free( request );
     free( response );
@@ -97,7 +89,7 @@ void rpc_attach_device(
   }
   libusb_device_t* new_device;
   // allocate new device
-  int result = usbd_allocate_device( &new_device, false );
+  result = usbd_allocate_device( &new_device, false );
   // handle error
   if ( 0 != result ) {
     error.status = -result;

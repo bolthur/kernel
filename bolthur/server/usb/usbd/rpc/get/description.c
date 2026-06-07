@@ -63,16 +63,10 @@ void rpc_get_description(
   // allocate space for pull_request
   const usbd_get_description_t* description = ( usbd_get_description_t* )request->container;
   // find device
-  const libusb_device_t* dev = head;
-  while ( dev ) {
-    if ( dev->number == description->device_number ) {
-      break;
-    }
-    dev = dev->next;
-  }
-  // handle no device
-  if ( ! dev ) {
-    error.status = -EIO;
+  libusb_device_t* dev;
+  const int result = usbd_device_get_by_number( description->device_number, &dev );
+  if ( 0 != result ) {
+    error.status = -result;
     free( request );
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;
@@ -81,7 +75,7 @@ void rpc_get_description(
   const char* desc = usbd_description_get( dev );
   // allocate response structure
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t )
-    + sizeof(char) * ( strlen( desc ) + 1 );
+    + sizeof( char ) * ( strlen( desc ) + 1 );
   vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
     error.status = -ENOMEM;

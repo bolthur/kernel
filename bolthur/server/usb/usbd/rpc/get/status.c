@@ -62,18 +62,12 @@ void rpc_get_status(
   }
   const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // get status request
-  usbd_get_status_t* status = ( usbd_get_status_t* )request->container;
+  auto const status = ( usbd_get_status_t* )request->container;
   // find device
-  const libusb_device_t* dev = head;
-  while ( dev ) {
-    if ( dev->number == status->device_number ) {
-      break;
-    }
-    dev = dev->next;
-  }
-  // handle no device
-  if ( ! dev ) {
-    error.status = -EIO;
+  libusb_device_t* dev;
+  const int result = usbd_device_get_by_number( status->device_number, &dev );
+  if ( 0 != result ) {
+    error.status = -result;
     free( request );
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
     return;

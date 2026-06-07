@@ -113,23 +113,18 @@
     // skip rest
     return;
   }
-  auto const usb_interrupt_poll = ( usb_control_message_t* )shm_addr_message;
+  auto const usbd_submit_message = ( usb_control_message_t* )shm_addr_message;
   // find device
-  libusb_device_t* device = head;
-  while ( device ) {
-    if ( device->number == usb_interrupt_poll->device_number ) {
-      break;
-    }
-    device = device->next;
-  }
-  if ( ! device ) {
+  libusb_device_t* device;
+  int result = usbd_device_get_by_number( usbd_submit_message->device_number, &device );
+  if ( 0 != result ) {
     // detach both since both are attached already
     _syscall_memory_shared_detach( submit_message->shm_id );
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
     // free up stuff
     free( poll_response );
     // return from rpc
-    err_response.status = -ENODEV;
+    err_response.status = -result;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // skip rest
     return;
@@ -148,7 +143,7 @@
     return;
   }
   // success result
-  int result = 0;
+  result = 0;
   // handle error and parent is set
   if ( hcd_submit->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING && device->parent ) {
     // check connection
@@ -172,22 +167,22 @@
   }
   // handle direction in with last transfer equal to buffer length
   if (
-    LIBUSB_DIRECTION_IN == usb_interrupt_poll->direction
-    && hcd_submit->last_transfer == usb_interrupt_poll->buffer_length
+    LIBUSB_DIRECTION_IN == usbd_submit_message->direction
+    && hcd_submit->last_transfer == usbd_submit_message->buffer_length
   ) {
     // copy over from hcd poll buffer into usb interrupt buffer
     memcpy(
-      usb_interrupt_poll->buffer,
+      usbd_submit_message->buffer,
       hcd_submit->buffer,
-      usb_interrupt_poll->buffer_length
+      usbd_submit_message->buffer_length
     );
   }
   // copy over error and last transfer into device
   device->error = hcd_submit->error;
   device->last_transfer = hcd_submit->last_transfer;
   // populate usb interrupt poll error and last transfer
-  usb_interrupt_poll->error = device->error;
-  usb_interrupt_poll->last_transfer = device->last_transfer;
+  usbd_submit_message->error = device->error;
+  usbd_submit_message->last_transfer = device->last_transfer;
   // finally detach shared memory
   _syscall_memory_shared_detach( submit_message->shm_id );
   _syscall_memory_shared_detach( hcd_submit_command->shm_id );
@@ -269,15 +264,10 @@ void rpc_control_message(
   // transform shared memory into message
   auto const message = ( usb_control_message_t* )shm_addr;
   // find device
-  libusb_device_t* device = head;
-  while ( device ) {
-    if ( device->number == message->device_number ) {
-      break;
-    }
-    device = device->next;
-  }
-  if ( ! device ) {
-    error.status = -ENODEV;
+  libusb_device_t* device;
+  int result = usbd_device_get_by_number( message->device_number, &device );
+  if ( 0 != result ) {
+    error.status = -result;
     // detach shared memory
     _syscall_memory_shared_detach( control_message->shm_id );
     // free request
@@ -287,7 +277,7 @@ void rpc_control_message(
     return;
   }
   // perform hcd control message
-  const int result = usbd_control_message_async(
+  result = usbd_control_message_async(
     device,
     ( libusb_pipe_address_t ) {
       .type = message->transfer,

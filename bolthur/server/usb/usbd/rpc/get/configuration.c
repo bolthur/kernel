@@ -62,11 +62,10 @@ void rpc_get_configuration(
   }
   const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate space for pull_request
-  usbd_get_configuration_t* control_message =
-    ( usbd_get_configuration_t* )request->container;
+  auto const configuration_message = ( usbd_get_configuration_t* )request->container;
   // attach shared memory
   void* shm_addr = _syscall_memory_shared_attach(
-    control_message->shm_id, ( uintptr_t )NULL );
+    configuration_message->shm_id, ( uintptr_t )NULL );
   // handle error
   if ( errno ) {
     // set error
@@ -83,7 +82,7 @@ void rpc_get_configuration(
   if ( ! response ) {
     error.status = -ENOMEM;
     // detach shared memory
-    _syscall_memory_shared_detach( control_message->shm_id );
+    _syscall_memory_shared_detach( configuration_message->shm_id );
     // free request
     free( request );
     // return from rpc
@@ -92,18 +91,12 @@ void rpc_get_configuration(
   }
   memset( response, 0, response_size );
   // find device
-  libusb_device_t* device = head;
-  while ( device ) {
-    if ( device->number == control_message->device_number ) {
-      break;
-    }
-    device = device->next;
-  }
-  // handle not found
-  if ( ! device ) {
-    error.status = -ENODATA;
+  libusb_device_t* device;
+  const int result = usbd_device_get_by_number( configuration_message->device_number, &device );
+  if ( 0 != result ) {
+    error.status = -result;
     // detach shared memory
-    _syscall_memory_shared_detach( control_message->shm_id );
+    _syscall_memory_shared_detach( configuration_message->shm_id );
     // free request
     free( request );
     free( response );
@@ -114,9 +107,9 @@ void rpc_get_configuration(
   // copy over full configuration
   memcpy( shm_addr, device->full_configuration, device->configuration.total_length );
   // populate return fields
-  control_message->configuration_length = device->configuration.total_length;
+  configuration_message->configuration_length = device->configuration.total_length;
   // detach shared memory
-  _syscall_memory_shared_detach( control_message->shm_id );
+  _syscall_memory_shared_detach( configuration_message->shm_id );
   // populate response
   memcpy( response->container, request->container, container_size );
   // return from rpc

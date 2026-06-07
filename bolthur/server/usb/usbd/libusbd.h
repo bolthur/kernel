@@ -67,6 +67,7 @@ int usbd_descriptor_get( libusb_device_t*, libusb_descriptor_type_t, uint8_t, ui
 int usbd_descriptor_read_device( libusb_device_t* );
 // device
 int usbd_device_configure( libusb_device_t*, uint8_t );
+int usbd_device_get_by_number( uint32_t, libusb_device_t** );
 // handler
 int usbd_handler_init( void );
 int usbd_handler_register( libusb_interface_class_t, pid_t );

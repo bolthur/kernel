@@ -62,7 +62,7 @@ void rpc_get_interface(
   }
   const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate space for pull_request
-  const usbd_get_endpoint_t* control_message = ( usbd_get_endpoint_t* )request->container;
+  const usbd_get_endpoint_t* endpoint_message = ( usbd_get_endpoint_t* )request->container;
   // allocate response structure
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* response = malloc( response_size );
@@ -76,16 +76,10 @@ void rpc_get_interface(
   }
   memset( response, 0, response_size );
   // find device
-  libusb_device_t* device = head;
-  while ( device ) {
-    if ( device->number == control_message->device_number ) {
-      break;
-    }
-    device = device->next;
-  }
-  // handle not found
-  if ( ! device ) {
-    error.status = -ENODATA;
+  libusb_device_t* device;
+  const int result = usbd_device_get_by_number( endpoint_message->device_number, &device );
+  if ( 0 != result ) {
+    error.status = -result;
     // free request
     free( request );
     free( response );
@@ -94,7 +88,7 @@ void rpc_get_interface(
     return;
   }
   // populate response
-  memcpy( response->container, &device->interfaces[ control_message->interface_number ],
+  memcpy( response->container, &device->interfaces[ endpoint_message->interface_number ],
     sizeof( libusb_endpoint_descriptor_t ) );
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, 0 );
