@@ -78,8 +78,7 @@
   // get poll response
   auto const hcd_submit_command = ( hcd_submit_control_message_t* )submit_response->container;
   // attach shared memory from poll command
-  void* shm_addr_hcd_poll = _syscall_memory_shared_attach(
-    hcd_submit_command->shm_id, ( uintptr_t )NULL );
+  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( hcd_submit_command->shm_id, 0 );
   if ( errno ) {
     const int e = errno;
     // free up stuff
@@ -96,8 +95,7 @@
   // get interrupt message
   auto const get_descriptor = ( usbd_get_descriptor_t* )original_request->container;
   // "attach" shared memory again
-  void* shm_addr_message = _syscall_memory_shared_attach(
-    get_descriptor->shm_id, ( uintptr_t )NULL );
+  void* shm_addr_message = _syscall_memory_shared_attach( get_descriptor->shm_id, 0 );
   if ( errno ) {
     const int e = errno;
     // detach both since both are attached already
@@ -233,27 +231,26 @@ void rpc_get_descriptor(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get data from mailbox
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // allocate space for pull_request
   auto const descriptor_message = ( usbd_get_descriptor_t* )request->container;
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach(
-    descriptor_message->shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( descriptor_message->shm_id, 0 );
   // handle error
   if ( errno ) {
     // set error
@@ -261,7 +258,7 @@ void rpc_get_descriptor(
     // free request
     free( request );
     // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // transform shared memory into message
@@ -276,7 +273,7 @@ void rpc_get_descriptor(
     // free request
     free( request );
     // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // perform get descriptor
@@ -301,7 +298,7 @@ void rpc_get_descriptor(
     // free request
     free( request );
     // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // free up memory

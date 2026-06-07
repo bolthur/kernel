@@ -78,8 +78,7 @@
   // get poll response
   auto const hcd_submit_command = ( hcd_submit_control_message_t* )submit_response->container;
   // attach shared memory from poll command
-  void* shm_addr_hcd_poll = _syscall_memory_shared_attach(
-    hcd_submit_command->shm_id, ( uintptr_t )NULL );
+  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( hcd_submit_command->shm_id, 0 );
   if ( errno ) {
     const int e = errno;
     // free up stuff
@@ -96,8 +95,7 @@
   // get interrupt message
   auto const submit_message = ( usbd_interrupt_message_t* )original_request->container;
   // "attach" shared memory again
-  void* shm_addr_message = _syscall_memory_shared_attach(
-    submit_message->shm_id, ( uintptr_t )NULL );
+  void* shm_addr_message = _syscall_memory_shared_attach( submit_message->shm_id, 0 );
   if ( errno ) {
     const int e = errno;
     // detach both since both are attached already
@@ -246,8 +244,7 @@ void rpc_control_message(
   const usbd_control_message_t* control_message =
     ( usbd_control_message_t* )request->container;
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach(
-    control_message->shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( control_message->shm_id, 0 );
   // handle error
   if ( errno ) {
     // set error

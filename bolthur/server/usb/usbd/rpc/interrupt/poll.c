@@ -69,7 +69,7 @@ static void rpc_interrupt_poll_finished(
   // get message and data size
   size_t data_size;
   vfs_ioctl_perform_response_t* poll_response = bolthur_rpc_fetch_from_mailbox(
-    data_info, &data_size, true, NULL );
+    data_info, &data_size, true, nullptr );
   if ( ! poll_response ) {
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
@@ -79,8 +79,7 @@ static void rpc_interrupt_poll_finished(
   // get poll response
   auto const hcd_poll_command = ( hcd_submit_interrupt_poll_t* )poll_response->container;
   // attach shared memory from poll command
-  void* shm_addr_hcd_poll = _syscall_memory_shared_attach(
-    hcd_poll_command->shm_id, ( uintptr_t )NULL );
+  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( hcd_poll_command->shm_id, 0 );
   if ( errno ) {
     const int e = errno;
     // free up stuff
@@ -97,8 +96,7 @@ static void rpc_interrupt_poll_finished(
   // get interrupt message
   auto const interrupt_message = ( usbd_interrupt_message_t* )original_request->container;
   // "attach" shared memory again
-  void* shm_addr_message = _syscall_memory_shared_attach(
-    interrupt_message->shm_id, ( uintptr_t )NULL );
+  void* shm_addr_message = _syscall_memory_shared_attach( interrupt_message->shm_id, 0 );
   if ( errno ) {
     const int e = errno;
     // detach both since both are attached already
@@ -222,8 +220,7 @@ void rpc_interrupt_poll(
   // allocate space for pull_request
   auto const interrupt_message = ( usbd_interrupt_message_t* )request->container;
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach(
-    interrupt_message->shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( interrupt_message->shm_id, 0 );
   // handle error
   if ( errno ) {
     // set error
