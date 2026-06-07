@@ -316,7 +316,7 @@ int dwhciroothub_process(
               // execute sequence
               ioctl_result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
               // free sequence
-              free( sequence );
+              iomem_release_mmio_sequence( sequence );
               // handle ioctl error
               if ( -1 == ioctl_result ) {
                 *error = LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR;
@@ -457,7 +457,7 @@ int dwhciroothub_process(
               // execute sequence
               ioctl_result = iomem_execute_sequence( fd_iomem, sequence, sequence_size );
               // free sequence
-              free( sequence );
+              iomem_release_mmio_sequence( sequence );
               // handle ioctl error
               if ( -1 == ioctl_result ) {
                 *error = LIBUSB_TRANSFER_ERROR_CONNECTION_ERROR;

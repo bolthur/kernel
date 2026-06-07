@@ -29,7 +29,7 @@
  * @param count amount of entries
  * @param total output variable for total size
  */
-void* iomem_prepare_mmio_sequence( const size_t count, size_t* total ) {
+__attribute__((__malloc__)) void* iomem_prepare_mmio_sequence( const size_t count, size_t* total ) {
   if ( 0 == count ) {
     // error output
     #if defined( SEQUENCE_ERROR_OUTPUT )

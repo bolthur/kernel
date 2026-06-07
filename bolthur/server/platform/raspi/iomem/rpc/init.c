@@ -23,7 +23,7 @@
 #include <string.h>
 #include <sys/bolthur.h>
 #include "../rpc.h"
-#include "../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../../library/platform/raspi/iomem/libiomem.h"
 
 /**
  * @fn bool rpc_init(void)

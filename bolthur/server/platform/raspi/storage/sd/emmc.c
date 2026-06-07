@@ -745,14 +745,14 @@ static emmc_response_t gather_version_info( void ) {
       STARTUP_PRINT( "mmio rpc failed\r\n" )
     #endif
     // free
-    free( host_version_sequence );
+    iomem_release_mmio_sequence( host_version_sequence );
     // return error
     return EMMC_RESPONSE_IO;
   }
   // cache value
   const uint32_t version_value = host_version_sequence[ 0 ].value;
   // free sequence
-  free( host_version_sequence );
+  iomem_release_mmio_sequence( host_version_sequence );
   // populate properties
   device->version_vendor = SLOTISR_VER_VENDOR( version_value );
   device->version_host_controller = SLOTISR_VER_SDVERSION( version_value );
@@ -928,7 +928,7 @@ static emmc_response_t clock_frequency( const uint32_t frequency ) {
       STARTUP_PRINT( "Clock frequency change sequence failed\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return EMMC_RESPONSE_IO;
   }
@@ -939,7 +939,7 @@ static emmc_response_t clock_frequency( const uint32_t frequency ) {
       STARTUP_PRINT( "Wait for cmd done timed out\r\n" )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return failure
     return EMMC_RESPONSE_TIMEOUT;
   }
@@ -950,12 +950,12 @@ static emmc_response_t clock_frequency( const uint32_t frequency ) {
       STARTUP_PRINT( "Wait for clock ready timed out\r\n" )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return failure
     return EMMC_RESPONSE_TIMEOUT;
   }
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return EMMC_RESPONSE_OK;
 }
@@ -990,7 +990,7 @@ static emmc_response_t interrupt_mark_handled( uint32_t mask ) {
   // perform request
   const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -1104,7 +1104,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       shm_id = _syscall_memory_shared_create(
         device->block_count * device->block_size );
       if ( errno ) {
-        free( sequence );
+        iomem_release_mmio_sequence( sequence );
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
           STARTUP_PRINT( "Request shared area failed\r\n" )
@@ -1115,7 +1115,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       // attach it
       shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
       if ( errno ) {
-        free( sequence );
+        iomem_release_mmio_sequence( sequence );
         // debug output
         #if defined( EMMC_ENABLE_DEBUG )
           STARTUP_PRINT( "Request shared area failed\r\n" )
@@ -1260,6 +1260,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
     ) ) {
       __asm__ __volatile__( "nop" );
     }
+    iomem_release_mmio_sequence( sequence );
     // return failure
     return EMMC_RESPONSE_TIMEOUT;
   }
@@ -1299,6 +1300,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
       #if defined( EMMC_ENABLE_DEBUG )
         STARTUP_PRINT( "dma copy timed out\r\n" )
       #endif
+      iomem_release_mmio_sequence( sequence );
       // return failure
       return EMMC_RESPONSE_IO;
     }
@@ -1320,6 +1322,7 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
         #if defined( EMMC_ENABLE_DEBUG )
           STARTUP_PRINT( "detach shared area failed\r\n" )
         #endif
+        iomem_release_mmio_sequence( sequence );
         // return failure
         return EMMC_RESPONSE_IO;
       }
@@ -1355,11 +1358,13 @@ static emmc_response_t issue_sd_command( uint32_t command, uint32_t argument ) {
         ) ) {
           __asm__ __volatile__( "nop" );
         }
+        iomem_release_mmio_sequence( sequence );
         // return failure
         return EMMC_RESPONSE_TIMEOUT;
       }
     }
   }
+  iomem_release_mmio_sequence( sequence );
   // return success
   return EMMC_RESPONSE_OK;
 }
@@ -1436,7 +1441,7 @@ static emmc_response_t get_interrupt_status( uint32_t* destination ) {
       STARTUP_PRINT( "Get interrupt status sequence failed\r\n" )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return EMMC_RESPONSE_IO;
   }
@@ -1445,7 +1450,7 @@ static emmc_response_t get_interrupt_status( uint32_t* destination ) {
     *destination = sequence[ 0 ].value;
   }
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return EMMC_RESPONSE_OK;
 }
@@ -1498,7 +1503,7 @@ static emmc_response_t reset_command( void ) {
       STARTUP_PRINT( "Reset command sequence failed\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return EMMC_RESPONSE_IO;
   }
@@ -1509,7 +1514,7 @@ static emmc_response_t reset_command( void ) {
       STARTUP_PRINT( "Wait for command reset timed out\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return EMMC_RESPONSE_TIMEOUT;
   }
@@ -1520,12 +1525,12 @@ static emmc_response_t reset_command( void ) {
       STARTUP_PRINT( "Command reset failed\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return EMMC_RESPONSE_UNKNOWN;
   }
   // free
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return EMMC_RESPONSE_OK;
 }
@@ -1578,7 +1583,7 @@ static emmc_response_t reset_data( void ) {
       STARTUP_PRINT( "Reset command sequence failed\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return EMMC_RESPONSE_IO;
   }
@@ -1589,7 +1594,7 @@ static emmc_response_t reset_data( void ) {
       STARTUP_PRINT( "Wait for command reset timed out\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return EMMC_RESPONSE_TIMEOUT;
   }
@@ -1600,12 +1605,12 @@ static emmc_response_t reset_data( void ) {
       STARTUP_PRINT( "Command reset failed\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return EMMC_RESPONSE_UNKNOWN;
   }
   // free
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return EMMC_RESPONSE_OK;
 }
@@ -2249,7 +2254,7 @@ static emmc_response_t reset( void ) {
       STARTUP_PRINT( "mmio rpc to reset circuit failed\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return EMMC_RESPONSE_IO;
   }
@@ -2260,12 +2265,12 @@ static emmc_response_t reset( void ) {
       STARTUP_PRINT( "Wait for EMMC_CONTROL1 to finish failed\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return timeout
     return EMMC_RESPONSE_TIMEOUT;
   }
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // change clock frequency
   if ( EMMC_RESPONSE_OK != ( response = clock_frequency( EMMC_CLOCK_FREQUENCY_LOW ) ) ) {
     // debug output
@@ -2295,10 +2300,12 @@ static emmc_response_t reset( void ) {
       STARTUP_PRINT( "mmio rpc to enable interrupts failed\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return EMMC_RESPONSE_IO;
   }
+  // free sequence
+  iomem_release_mmio_sequence( sequence );
   // reset internal data structures
   device->card_ocr = 0;
   memset( device->card_cid, 0, sizeof( uint32_t ) * 4 );
@@ -2738,7 +2745,7 @@ emmc_response_t emmc_init( void ) {
   // perform request
   int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_count );
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -2866,10 +2873,10 @@ emmc_response_t emmc_init( void ) {
         #if defined( EMMC_ENABLE_DEBUG )
           STARTUP_PRINT( "Change transfer width in control0 failed\r\n" )
         #endif
-        free( sequence );
+        iomem_release_mmio_sequence( sequence );
         return EMMC_RESPONSE_IO;
       }
-      free( sequence );
+      iomem_release_mmio_sequence( sequence );
     }
   }
   // debug output

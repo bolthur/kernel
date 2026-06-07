@@ -24,7 +24,7 @@
 
 #define MAILBOX_ERROR_OUTPUT 1
 
-void* iomem_prepare_mailbox( size_t, size_t* );
+__attribute__((__malloc__)) void* iomem_prepare_mailbox( size_t, size_t* );
 int iomem_execute_mailbox( int, const void*, size_t );
 
 #endif

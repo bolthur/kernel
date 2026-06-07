@@ -242,12 +242,12 @@ static sdhost_response_t enable_interrupt( void ) {
       STARTUP_PRINT( "Change transfer width in control0 failed\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return SDHOST_RESPONSE_IO;
   }
   // free
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   return SDHOST_RESPONSE_OK;
 }
 
@@ -592,7 +592,7 @@ static sdhost_response_t interrupt_mark_handled( uint32_t mask ) {
   // perform request
   const int result = iomem_execute_sequence( device->fd_iomem, sequence, sequence_size );
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
@@ -641,7 +641,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
       STARTUP_PRINT( "Get interrupt status sequence failed\r\n" )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return SDHOST_RESPONSE_IO;
   }
@@ -650,7 +650,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
     *destination = sequence[ 0 ].value;
   }
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return SDHOST_RESPONSE_OK;
 }
@@ -691,7 +691,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
       STARTUP_PRINT( "Get interrupt status sequence failed\r\n" )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return SDHOST_RESPONSE_IO;
   }
@@ -700,7 +700,7 @@ static sdhost_response_t get_interrupt_status( uint32_t* destination ) {
     *destination = sequence[ 0 ].value;
   }
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return SDHOST_RESPONSE_OK;
 }
@@ -834,7 +834,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
           STARTUP_PRINT( "ioctl for transfer sequence failed\r\n" )
         #endif
         // free sequence
-        free( sequence );
+        iomem_release_mmio_sequence( sequence );
         // return error
         return SDHOST_RESPONSE_IO;
       }
@@ -844,7 +844,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
           STARTUP_PRINT( "Perform ioctl transfer failed\r\n" )
         #endif
         // free sequence
-        free( sequence );
+        iomem_release_mmio_sequence( sequence );
         // return error
         return SDHOST_RESPONSE_IO;
       }
@@ -861,10 +861,13 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
           #if defined( SDHOST_ENABLE_DEBUG )
             STARTUP_PRINT( "detach shared area failed\r\n" )
           #endif
+          iomem_release_mmio_sequence( sequence );
           // return failure
           return SDHOST_RESPONSE_IO;
         }
       }
+      // release sequence again
+      iomem_release_mmio_sequence( sequence );
     }
   #endif
   // handle stop command
@@ -909,7 +912,7 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
         STARTUP_PRINT( "Issue data read sequence failed\r\n" )
       #endif
       // free
-      free( sequence );
+      iomem_release_mmio_sequence( sequence );
       // return error
       return SDHOST_RESPONSE_IO;
     }
@@ -938,12 +941,12 @@ static sdhost_response_t finish_sd_data_command( uint32_t command ) {
         usleep( 10 );
       }
       // free
-      free( sequence );
+      iomem_release_mmio_sequence( sequence );
       // return failure
       return SDHOST_RESPONSE_TIMEOUT;
     }
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
   }
   // return success
   return SDHOST_RESPONSE_OK;
@@ -1173,7 +1176,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
       STARTUP_PRINT( "Issue SD Command sequence failed\r\n" )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return SDHOST_RESPONSE_IO;
   }
@@ -1198,6 +1201,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
     ) ) {
       usleep( 10 );
     }
+    iomem_release_mmio_sequence( sequence );
     // return failure
     return SDHOST_RESPONSE_TIMEOUT;
   }
@@ -1223,7 +1227,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
       usleep( 10 );
     }
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return failure
     return SDHOST_RESPONSE_TIMEOUT;
   }
@@ -1268,6 +1272,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
         #if defined( SDHOST_ENABLE_DEBUG )
           STARTUP_PRINT( "dma copy timed out\r\n" )
         #endif
+        iomem_release_mmio_sequence( sequence );
         // return failure
         return SDHOST_RESPONSE_IO;
       }
@@ -1285,6 +1290,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
           #if defined( SDHOST_ENABLE_DEBUG )
             STARTUP_PRINT( "detach shared area failed\r\n" )
           #endif
+          iomem_release_mmio_sequence( sequence );
           // return failure
           return SDHOST_RESPONSE_IO;
         }
@@ -1320,7 +1326,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
         usleep( 10 );
       }
       // free sequence
-      free( sequence );
+      iomem_release_mmio_sequence( sequence );
       // return failure
       return SDHOST_RESPONSE_TIMEOUT;
     }
@@ -1335,7 +1341,7 @@ static sdhost_response_t issue_sd_command( uint32_t command, uint32_t argument )
     );
   #endif
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // finish sd data command
   if ( is_data ) {
     // debug output
@@ -1686,12 +1692,12 @@ static sdhost_response_t clock_frequency( uint32_t frequency ) {
       STARTUP_PRINT( "Change clock sequence failed\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return SDHOST_RESPONSE_IO;
   }
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return SDHOST_RESPONSE_OK;
 }
@@ -1791,7 +1797,6 @@ static sdhost_response_t reset( void ) {
     STARTUP_PRINT( "Reset sdhost controller\r\n" )
   #endif
   size_t sequence_size;
-  iomem_mmio_entry_t* sequence;
 
   // fetch max clock
   sdhost_response_t response = max_clock_frequency();
@@ -1804,7 +1809,7 @@ static sdhost_response_t reset( void ) {
     return response;
   }
 
-  sequence = iomem_prepare_mmio_sequence( 19, &sequence_size );
+  iomem_mmio_entry_t* sequence = iomem_prepare_mmio_sequence(19, &sequence_size);
   if ( ! sequence ) {
     // debug output
     #if defined( SDHOST_ENABLE_DEBUG )
@@ -1897,12 +1902,12 @@ static sdhost_response_t reset( void ) {
       STARTUP_PRINT( "Reset sequence failed\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return SDHOST_RESPONSE_IO;
   }
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // setup clock frequency
   if ( SDHOST_RESPONSE_OK != ( response = clock_frequency(
     SDHOST_CLOCK_FREQUENCY_LOW
@@ -2345,12 +2350,12 @@ sdhost_response_t sdhost_init( void ) {
       STARTUP_PRINT( "Populating block size count register failed\r\n" )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return SDHOST_RESPONSE_IO;
   }
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
 
   // prepare for getting card scr
   device->block_size = 8;
@@ -2473,12 +2478,12 @@ sdhost_response_t sdhost_init( void ) {
       STARTUP_PRINT( "Change host status failed\r\n" )
     #endif
     // free
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return SDHOST_RESPONSE_IO;
   }
   // free
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
 
   // enable interrupts
   if ( SDHOST_RESPONSE_OK != ( response = enable_interrupt() ) ) {

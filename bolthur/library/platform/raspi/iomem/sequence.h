@@ -24,7 +24,7 @@
 
 #define SEQUENCE_ERROR_OUTPUT 1
 
-void* iomem_prepare_mmio_sequence( size_t, size_t* );
+__attribute__((__malloc__)) void* iomem_prepare_mmio_sequence( size_t, size_t* );
 void iomem_release_mmio_sequence( void* );
 int iomem_execute_sequence( int, void*, size_t );
 int iomem_execute_sequence_static( int, void*, size_t );

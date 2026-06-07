@@ -20,9 +20,7 @@
 #include <libgen.h>
 #include <errno.h>
 #include <sys/bolthur.h>
-#include "../../mailbox.h"
 #include "../../rpc.h"
-#include "../../../../library/platform/raspi/iomem/libiomem.h"
 
 /**
  * @fn void rpc_handle_mmio_unlock(size_t, pid_t, size_t, size_t)

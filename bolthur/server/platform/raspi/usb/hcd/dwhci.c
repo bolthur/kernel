@@ -95,14 +95,14 @@ response_t dwhci_read_port( const uint32_t port, uint32_t* value ) {
       EARLY_STARTUP_PRINT( "Read port faild: %s\r\n", strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
   // push read value into destination
   *value = sequence[ 0 ].value;
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -147,12 +147,12 @@ response_t dwhci_write_port( const uint32_t port, const uint32_t value ) {
       EARLY_STARTUP_PRINT( "Writing to port failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -219,12 +219,12 @@ response_t dwhci_transmit_channel( const uint8_t channel, void* buffer ) {
         strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return io error
     return HCD_RESPONSE_ERROR_IO;
   }
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -324,12 +324,12 @@ response_t dwhci_prepare_channel(
         strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return io error
     return HCD_RESPONSE_ERROR_IO;
   }
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -1629,7 +1629,7 @@ response_t dwhci_core_flush_tx_fifo( const uint32_t num_fifo ) {
       EARLY_STARTUP_PRINT( "Flush tx fifo failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
@@ -1640,12 +1640,12 @@ response_t dwhci_core_flush_tx_fifo( const uint32_t num_fifo ) {
       EARLY_STARTUP_PRINT( "Flushing tx fifo timed out\r\n" )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_TIMEOUT;
   }
   // free sequence again
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -1692,7 +1692,7 @@ response_t dwhci_core_flush_rx_fifo( void ) {
       EARLY_STARTUP_PRINT( "flush rx fifo failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
@@ -1703,12 +1703,12 @@ response_t dwhci_core_flush_rx_fifo( void ) {
       EARLY_STARTUP_PRINT( "Flushing tx fifo timed out\r\n" )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_TIMEOUT;
   }
   // free sequence again
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // return success
   return HCD_RESPONSE_OK;
 }
@@ -1771,7 +1771,7 @@ response_t dwhci_init( void ) {
     // close file descriptor
     close( fd_iomem );
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
@@ -1784,7 +1784,7 @@ response_t dwhci_init( void ) {
   [[maybe_unused]] const uint32_t hw_cfg4 = sequence[ 5 ].value;
   uint32_t host_cfg = sequence[ 6 ].value;
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // check fetched vendor
   if ( ( vendor & 0xfffff000 ) != 0x4F542000 ) {
     // debug output
@@ -1867,12 +1867,12 @@ response_t dwhci_init( void ) {
     // close file descriptor
     close( fd_iomem );
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
   // free sequence
-  free( sequence );
+  iomem_release_mmio_sequence( sequence );
   // power on usb hub
   response_t dwhci_result = dwhci_power_on();
   // handle error
@@ -1949,7 +1949,7 @@ response_t dwhci_init( void ) {
       EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
@@ -1960,7 +1960,7 @@ response_t dwhci_init( void ) {
       EARLY_STARTUP_PRINT( "Wait for idle timed out\r\n" )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return timeout
     return HCD_RESPONSE_ERROR_TIMEOUT;
   }
@@ -1971,7 +1971,7 @@ response_t dwhci_init( void ) {
       EARLY_STARTUP_PRINT( "Wait for reset timed out\r\n" )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return timeout
     return HCD_RESPONSE_ERROR_TIMEOUT;
   }
@@ -2045,7 +2045,7 @@ response_t dwhci_init( void ) {
       EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
@@ -2085,7 +2085,7 @@ response_t dwhci_init( void ) {
       EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
@@ -2123,7 +2123,7 @@ response_t dwhci_init( void ) {
       EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
@@ -2166,7 +2166,7 @@ response_t dwhci_init( void ) {
       EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
@@ -2224,7 +2224,7 @@ response_t dwhci_init( void ) {
       EARLY_STARTUP_PRINT( "Reset sequence failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
@@ -2289,7 +2289,7 @@ response_t dwhci_init( void ) {
           EARLY_STARTUP_PRINT( "host config sequence failed: %s\r\n", strerror( e ) )
         #endif
         // free sequence
-        free( sequence );
+        iomem_release_mmio_sequence( sequence );
         // return error
         return HCD_RESPONSE_ERROR_IO;
       }
@@ -2417,7 +2417,7 @@ response_t dwhci_init( void ) {
     // close file descriptor
     close( fd_iomem );
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
@@ -2481,7 +2481,7 @@ response_t dwhci_init( void ) {
       EARLY_STARTUP_PRINT( "host config sequence failed: %s\r\n", strerror( e ) )
     #endif
     // free sequence
-    free( sequence );
+    iomem_release_mmio_sequence( sequence );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }

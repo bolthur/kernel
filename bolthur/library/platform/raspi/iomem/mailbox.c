@@ -29,7 +29,7 @@
  * @param count amount of entries
  * @param total output variable for total size
  */
-void* iomem_prepare_mailbox( const size_t count, size_t* total ) {
+__attribute__((__malloc__)) void* iomem_prepare_mailbox( const size_t count, size_t* total ) {
   if ( 0 == count ) {
     return NULL;
   }
