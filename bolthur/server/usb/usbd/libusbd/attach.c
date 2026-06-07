@@ -25,6 +25,8 @@
  * @brief Wrapper to attach device
  * @param dev device to attach
  * @return 0 on success else errno
+ *
+ * @todo rework async
  */
 int usbd_attach_device( libusb_device_t* dev ) {
   // cache device number
@@ -101,44 +103,6 @@ int usbd_attach_device( libusb_device_t* dev ) {
       dev->descriptor.configuration_count, dev->configuration.interface_count )
     EARLY_STARTUP_PRINT( "Device Attached: %s\r\n", usbd_description_get( dev ) )
   #endif
-  // allocate buffer for printing
-  char* buffer = malloc( 1024 );
-  // read product if set
-  if ( dev->descriptor.product && buffer ) {
-    result = usbd_string_read( dev, dev->descriptor.product, buffer, 1024 );
-    if ( 0 == result ) {
-      // debug output
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "-Product: %s\r\n", buffer )
-      #endif
-    }
-  }
-  // read manufacturer
-  if ( dev->descriptor.manufacturer && buffer ) {
-    result = usbd_string_read( dev, dev->descriptor.manufacturer, buffer, 1024 );
-    if ( 0 == result ) {
-      // debug output
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "-Manufacturer: %s\r\n", buffer )
-      #endif
-    }
-  }
-  // read serial number
-  if ( dev->descriptor.serial_number && buffer ) {
-    result = usbd_string_read( dev, dev->descriptor.serial_number, buffer, 1024 );
-    if ( 0 == result ) {
-      // debug output
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "-Serial number: %s\r\n", buffer )
-      #endif
-    }
-  }
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT("-VIID:PID: %"PRIx16":%"PRIx16" v%"PRIu16":%"PRIx16"\r\n",
-      dev->descriptor.vendor_id, dev->descriptor.product_id,
-      ( uint16_t )( dev->descriptor.version >> 8 ), ( uint16_t )( dev->descriptor.version & 0xff ) )
-  #endif
   // configure device
   result = usbd_device_configure( dev, 0 );
   if ( 0 != result ) {
@@ -146,21 +110,6 @@ int usbd_attach_device( libusb_device_t* dev ) {
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Configure failed: %s\r\n", strerror( result ) )
     #endif
-  }
-
-  // print configuration
-  if ( dev->configuration.string_index && buffer ) {
-    result = usbd_string_read( dev, dev->configuration.string_index, buffer, 1024 );
-    if ( 0 == result ) {
-      // debug ouptut
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "-Configuration: %s\r\n", buffer )
-      #endif
-    }
-  }
-  // free buffer again
-  if ( buffer ) {
-    free( buffer );
   }
   // debug output
   #if defined( USBD_ENABLE_DEBUG )

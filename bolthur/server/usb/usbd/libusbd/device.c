@@ -61,6 +61,8 @@ int usbd_device_get_by_number( const uint32_t device_number, libusb_device_t** o
  * @param dev
  * @param configuration
  * @return
+ *
+ * @todo rework async
  */
 int usbd_device_configure( libusb_device_t* dev, uint8_t configuration ) {
   // validate

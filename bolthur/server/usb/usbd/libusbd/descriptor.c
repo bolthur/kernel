@@ -170,6 +170,8 @@ int usbd_descriptor_get(
  * @brief Read usb device descriptor
  * @param dev
  * @return
+ *
+ * @todo rework async
  */
 int usbd_descriptor_read_device( libusb_device_t* dev ) {
   // debug output

@@ -26,6 +26,8 @@
  * @param dev
  * @param address
  * @return
+ *
+ * @todo rework async
  */
 int usbd_address_set( libusb_device_t* dev, const uint8_t address ) {
   // debug output
