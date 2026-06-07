@@ -314,7 +314,7 @@ AC_DEFINE_UNQUOTED(
 # Some compiler dependent features.
 AC_DEFINE_UNQUOTED(
   [__allocator],
-  [__attribute__((malloc))],
+  [__attribute__((__malloc__))],
   [Keyword for mark something as allocator.]
 )
 AC_DEFINE_UNQUOTED(
