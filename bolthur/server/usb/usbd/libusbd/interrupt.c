@@ -39,8 +39,6 @@
  * @param original_request original request
  * @param original_request_size original request size
  * @return
- *
- * @todo fire ioctl manually with handler callback
  */
 int usbd_interrupt_poll(
   const libusb_device_t* dev,

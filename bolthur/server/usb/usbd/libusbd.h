@@ -57,6 +57,7 @@ int usbd_attach_device( libusb_device_t* );
 int usbd_configuration_set( libusb_device_t*, uint8_t );
 // control
 int usbd_control_message( libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t );
+int usbd_control_message_async( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t );
 // deallocate
 void usbd_deallocate_device( libusb_device_t* );
 // description

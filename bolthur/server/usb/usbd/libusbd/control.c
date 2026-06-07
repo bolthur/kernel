@@ -21,6 +21,7 @@
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
 #include "../call.h"
+#include "../ioctl/wrapper.h"
 #include "../libusbd.h"
 #include "../../../libhcd.h"
 
@@ -177,4 +178,125 @@ int usbd_control_message(
   free( control_request );
   // return result
   return result;
+}
+
+/**
+ * @fn int usbd_control_message(const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t);
+ * @brief Wrapper to perform async usbd control message
+ * @param dev device to use for control message
+ * @param pipe pipe to use
+ * @param buffer buffer for transfer in / out
+ * @param buffer_length buffer length
+ * @param request device request
+ * @param timeout timeout
+ * @param callback callback invoked on finish
+ * @param origin origin info to be used for ioctl
+ * @param data_info date info to be used for ioctl
+ * @param original_request original request
+ * @param original_request_size original request size
+ * @return
+ */
+int usbd_control_message_async(
+  const libusb_device_t* dev,
+  const libusb_pipe_address_t pipe,
+  const void* buffer,
+  const size_t buffer_length,
+  const libusb_device_request_t* request,
+  const size_t timeout,
+  const rpc_handler_t callback,
+  const pid_t origin,
+  const size_t data_info,
+  void* original_request,
+  const size_t original_request_size
+) {
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "firing hcd control message\r\n" )
+  #endif
+  // allocate shared memory
+  const size_t data_size = sizeof ( hcd_control_message_t ) + buffer_length + 1;
+  const size_t shm_id = _syscall_memory_shared_create( data_size );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  // attach shared memory
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  // handle error
+  if ( errno ) {
+    const int e = errno;
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
+    #endif
+    // return error
+    return e;
+  }
+  auto const message = ( hcd_control_message_t* )shm_addr;
+  // populate real message in shared memory
+  message->device_number = dev->number;
+  message->parent_device_number = dev->parent ? dev->parent->number : 0;
+  message->port_number = dev->port_number;
+  memcpy( &message->pipe_address, &pipe, sizeof( pipe ) );
+  memcpy( &message->request, request, sizeof( *request ) );
+  message->buffer_length = buffer_length;
+  message->timeout = timeout;
+  if ( LIBUSB_DIRECTION_OUT == pipe.direction && buffer ) {
+    memcpy( &message->buffer, buffer, buffer_length );
+  }
+  // allocate request
+  hcd_submit_control_message_t* control_request = malloc( sizeof( *control_request ) );
+  if ( ! control_request ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // return error
+    return ENOMEM;
+  }
+  // clear out everything
+  memset( control_request, 0, sizeof( *control_request ) );
+  // populate shm_id
+  control_request->shm_id = shm_id;
+  // perform request
+  const int result = ioctl_wrapper(
+    fd_hcd,
+    IOCTL_BUILD_REQUEST(
+      HCD_SUBMIT_CONTROL_MESSAGE,
+      sizeof( *control_request ),
+      IOCTL_RDWR
+    ),
+    control_request,
+    callback,
+    origin,
+    data_info,
+    original_request,
+    original_request_size,
+    nullptr
+  );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    #if defined( USBD_ENABLE_ERROR )
+      const int e = errno;
+      EARLY_STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
+    #endif
+    // detach shared memory
+    _syscall_memory_shared_detach( shm_id );
+    // free request
+    free( control_request );
+    // return eio
+    return EIO;
+  }
+  free( control_request );
+  // return success
+  return 0;
 }

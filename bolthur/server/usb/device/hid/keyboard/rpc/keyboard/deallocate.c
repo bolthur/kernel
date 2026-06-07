@@ -34,4 +34,6 @@ void rpc_keyboard_deallocate(
   [[maybe_unused]] size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  vfs_ioctl_perform_response_t response = { .status = 0 };
+  bolthur_rpc_return( RPC_VFS_IOCTL, &response, sizeof( response ), nullptr, 0 );
 }
