@@ -29,7 +29,7 @@
  * @param count amount of entries
  * @param total output variable for total size
  */
-__attribute__((__malloc__)) void* iomem_prepare_mailbox( const size_t count, size_t* total ) {
+__attribute__((__malloc__(iomem_mailbox_release, 1))) void* iomem_prepare_mailbox( const size_t count, size_t* total ) {
   if ( 0 == count ) {
     return NULL;
   }
@@ -76,4 +76,15 @@ int iomem_execute_mailbox( int fd, const void* data, size_t size ) {
   }
   // return success
   return 0;
+}
+
+/**
+ * @fn void iomem_mailbox_release(void*)
+ * @brief Function to free up mailbox stuff
+ * @param address
+ */
+void iomem_mailbox_release( void* address ) {
+  if ( address ) {
+    free( address );
+  }
 }

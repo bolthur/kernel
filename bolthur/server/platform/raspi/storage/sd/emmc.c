@@ -232,7 +232,7 @@ static emmc_response_t controller_shutdown( void ) {
   const int result = iomem_execute_sequence( device->fd_iomem, request, request_size );
   // handle ioctl error
   if ( -1 == result ) {
-    free( request );
+    iomem_mailbox_release( request );
     return EMMC_RESPONSE_IO;
   }
   // handle not successful
@@ -243,7 +243,7 @@ static emmc_response_t controller_shutdown( void ) {
         ( uint32_t )request[ 1 ] )
     #endif
     // free request
-    free( request );
+    iomem_mailbox_release( request );
     // return error
     return EMMC_RESPONSE_MAILBOX;
   }
@@ -254,7 +254,7 @@ static emmc_response_t controller_shutdown( void ) {
       STARTUP_PRINT( "Invalid device id returned\r\n" )
     #endif
     // free request
-    free( request );
+    iomem_mailbox_release( request );
     // return error
     return EMMC_RESPONSE_MAILBOX;
   }
@@ -268,12 +268,12 @@ static emmc_response_t controller_shutdown( void ) {
       )
     #endif
     // free request
-    free( request );
+    iomem_mailbox_release( request );
     // return error
     return EMMC_RESPONSE_MAILBOX;
   }
   // free request
-  free( request );
+  iomem_mailbox_release( request );
   // return ok
   return EMMC_RESPONSE_OK;
 }
@@ -319,7 +319,7 @@ static emmc_response_t controller_startup( void ) {
   );
   // handle ioctl error
   if ( -1 == result ) {
-    free( request );
+    iomem_mailbox_release( request );
     return EMMC_RESPONSE_IO;
   }
   // handle not successful
@@ -330,7 +330,7 @@ static emmc_response_t controller_startup( void ) {
         ( uint32_t )request[ 1 ] )
     #endif
     // free request
-    free( request );
+    iomem_mailbox_release( request );
     // return error
     return EMMC_RESPONSE_MAILBOX;
   }
@@ -341,7 +341,7 @@ static emmc_response_t controller_startup( void ) {
       STARTUP_PRINT( "Invalid device id returned\r\n" )
     #endif
     // free
-    free( request );
+    iomem_mailbox_release( request );
     // return error
     return EMMC_RESPONSE_MAILBOX;
   }
@@ -355,12 +355,12 @@ static emmc_response_t controller_startup( void ) {
       )
     #endif
     // free
-    free( request );
+    iomem_mailbox_release( request );
     // return error
     return EMMC_RESPONSE_MAILBOX;
   }
   // free
-  free( request );
+  iomem_mailbox_release( request );
   // return success
   return EMMC_RESPONSE_OK;
 }

@@ -1758,7 +1758,7 @@ static sdhost_response_t max_clock_frequency( void ) {
       STARTUP_PRINT( "Mailbox request error\r\n" )
     #endif
     // free request
-    free( request );
+    iomem_mailbox_release( request );
     // return error
     return SDHOST_RESPONSE_IO;
   }
@@ -1769,7 +1769,7 @@ static sdhost_response_t max_clock_frequency( void ) {
       STARTUP_PRINT( "Invalid device id returned\r\n" )
     #endif
     // free request
-    free( request );
+    iomem_mailbox_release( request );
     // return error
     return SDHOST_RESPONSE_MAILBOX;
   }
@@ -1780,7 +1780,7 @@ static sdhost_response_t max_clock_frequency( void ) {
   // set max clock
   device->max_clock = ( uint32_t )request[ 6 ];
   // free request
-  free( request );
+  iomem_mailbox_release( request );
   // return success
   return SDHOST_RESPONSE_OK;
 }

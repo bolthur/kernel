@@ -1531,7 +1531,7 @@ response_t dwhci_power_on( void ) {
   // handle ioctl error
   if ( -1 == result ) {
     // free request
-    free( request );
+    iomem_mailbox_release( request );
     // return error
     return HCD_RESPONSE_ERROR_IO;
   }
@@ -1543,7 +1543,7 @@ response_t dwhci_power_on( void ) {
         ( uint32_t )request[ 1 ] )
     #endif
     // free request
-    free( request );
+    iomem_mailbox_release( request );
     // return error
     return HCD_RESPONSE_ERROR_MAILBOX;
   }
@@ -1556,7 +1556,7 @@ response_t dwhci_power_on( void ) {
         MAILBOX_POWER_STATE_DEVICE_USB_HCD, request[ 5 ] )
     #endif
     // free
-    free( request );
+    iomem_mailbox_release( request );
     // return error
     return HCD_RESPONSE_ERROR_MAILBOX;
   }
@@ -1569,12 +1569,12 @@ response_t dwhci_power_on( void ) {
         request[ 6 ] & 0x3 )
     #endif
     // free
-    free( request );
+    iomem_mailbox_release( request );
     // return error
     return HCD_RESPONSE_ERROR_MAILBOX;
   }
   // free
-  free( request );
+  iomem_mailbox_release( request );
   // return success
   return HCD_RESPONSE_OK;
 }
