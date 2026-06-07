@@ -18,7 +18,7 @@
  */
 
 #include <errno.h>
-#include "../libperipheral.h"
+#include "../../../../library/platform/raspi/iomem/libperipheral.h"
 #include "mailbox.h"
 #include "mmio.h"
 

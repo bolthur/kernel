@@ -23,7 +23,7 @@
 #include <sys/ioctl.h>
 #include "util.h"
 // from iomem
-#include "../../libiomem.h"
+#include "../../../../../library/platform/raspi/iomem/libiomem.h"
 
 /**
  * @fn bool util_update_card_detect(int, bool*, bool*)

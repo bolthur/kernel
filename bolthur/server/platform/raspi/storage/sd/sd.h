@@ -23,8 +23,6 @@
 #include <stdint.h>
 #include "sdhost.h"
 #include "emmc.h"
-#include "../../libiomem.h"
-#include "../../libperipheral.h"
 
 //#define SD_ENABLE_DEBUG 1
 /*#undef RASPI

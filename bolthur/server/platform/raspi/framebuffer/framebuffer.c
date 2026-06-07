@@ -28,7 +28,7 @@
 #include <sys/bolthur.h>
 #include "framebuffer.h"
 #include "../../../../library/collection/list/list.h"
-#include "../libiomem.h"
+#include "../../../../library/platform/raspi/iomem/libiomem.h"
 #include "../../../libframebuffer.h"
 
 static size_t memory_counter = 1;

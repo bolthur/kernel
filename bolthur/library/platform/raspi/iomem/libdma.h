@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _PLATFORM_RASPI_LIBDMA_H
-#define _PLATFORM_RASPI_LIBDMA_H
+#ifndef _LIBDMA_H
+#define _LIBDMA_H
 
 // control and status
 #define LIBDMA_CS_ACTIVE ( 1U << 0 )

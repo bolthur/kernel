@@ -18,7 +18,6 @@
  */
 
 #include "../rpc.h"
-#include "../../libiomem.h"
 
 /**
  * @fn bool rpc_init(void)

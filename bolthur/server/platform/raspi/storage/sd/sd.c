@@ -23,7 +23,7 @@
 #include <sys/mman.h>
 #include "sd.h"
 // from iomem
-#include "../../libiomem.h"
+#include "../../../../../library/platform/raspi/iomem/libiomem.h"
 
 static sd_device_t* device;
 

@@ -21,7 +21,7 @@
 #include "../../rpc.h"
 #include "../../dwhci.h"
 #include "../../../../libhcd.h"
-#include "../../../../libperipheral.h"
+#include "../../../../../library/platform/raspi/iomem/libperipheral.h"
 
 /**
  * @fn void rpc_interrupt_handle(size_t, pid_t, size_t, size_t)

@@ -21,8 +21,6 @@
 #define _EMMC_H
 
 #include <stdint.h>
-#include "../../libiomem.h"
-#include "../../libperipheral.h"
 
 //#define EMMC_ENABLE_DEBUG 1
 

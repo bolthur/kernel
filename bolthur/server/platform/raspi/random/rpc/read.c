@@ -25,7 +25,6 @@
 #include <sys/bolthur.h>
 #include "../random.h"
 #include "../rpc.h"
-#include "../../libiomem.h"
 
 static vfs_read_response_t read_error_response;
 

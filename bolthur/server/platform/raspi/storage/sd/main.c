@@ -20,7 +20,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <unistd.h>
+#include <errno.h>
 #include <sys/bolthur.h>
 #include <inttypes.h>
 #include "rpc.h"

@@ -28,6 +28,7 @@
 #include <inttypes.h>
 #include <unistd.h>
 #include <endian.h>
+#include <errno.h>
 #include <sys/fcntl.h>
 #include <sys/ioctl.h>
 #include <sys/bolthur.h>
@@ -35,9 +36,10 @@
 #include "util.h"
 // from iomem
 #include "../../libemmc.h"
-#include "../../libiomem.h"
-#include "../../libdma.h"
-#include "../../libmailbox.h"
+#include "../../../../../library/platform/raspi/iomem/libdma.h"
+#include "../../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../../library/platform/raspi/iomem/libperipheral.h"
+#include "../../../../../library/platform/raspi/iomem/libmailbox.h"
 #include "../../../../../library/platform/raspi/iomem/mailbox.h"
 #include "../../../../../library/platform/raspi/iomem/sequence.h"
 

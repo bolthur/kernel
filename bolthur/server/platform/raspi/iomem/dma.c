@@ -24,7 +24,7 @@
 #include <sys/bolthur.h>
 #include "dma.h"
 #include "mmio.h"
-#include "../libdma.h"
+#include "../../../../library/platform/raspi/iomem/libdma.h"
 #include "../../../../library/platform/raspi/iomem/libiomem.h"
 #include "../../../../library/platform/raspi/iomem/libperipheral.h"
 

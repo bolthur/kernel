@@ -21,8 +21,6 @@
 #define _SDHOST_H
 
 #include <stdint.h>
-#include "../../libiomem.h"
-#include "../../libperipheral.h"
 
 //#define SDHOST_ENABLE_DEBUG 1
 //#define SDHOST_ENABLE_DMA 1

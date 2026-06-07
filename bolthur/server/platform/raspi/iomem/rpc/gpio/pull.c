@@ -26,8 +26,8 @@
 #include "../../mmio.h"
 #include "../../rpc.h"
 #include "../../delay.h"
-#include "../../../libiomem.h"
-#include "../../../libperipheral.h"
+#include "../../../../library/platform/raspi/iomem/libiomem.h"
+#include "../../../../library/platform/raspi/iomem/libperipheral.h"
 
 /**
  * @fn void rpc_handle_gpio_set_pull(size_t, pid_t, size_t, size_t)
