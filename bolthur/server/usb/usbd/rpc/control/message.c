@@ -62,30 +62,28 @@
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     return;
   }
-  EARLY_STARTUP_PRINT( "CONTROL MESSAGE FINISHED\r\n" )
   // get message and data size
   size_t data_size;
-  vfs_ioctl_perform_response_t* poll_response = bolthur_rpc_fetch_from_mailbox(
+  vfs_ioctl_perform_response_t* submit_response = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, nullptr );
-  if ( ! poll_response ) {
+  if ( ! submit_response ) {
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // skip rest
     return;
   }
   // get poll response
-  auto const hcd_submit_command = ( hcd_submit_control_message_t* )poll_response->container;
+  auto const hcd_submit_command = ( hcd_submit_control_message_t* )submit_response->container;
   // attach shared memory from poll command
   void* shm_addr_hcd_poll = _syscall_memory_shared_attach(
     hcd_submit_command->shm_id, ( uintptr_t )NULL );
   if ( errno ) {
     const int e = errno;
     // free up stuff
-    free( poll_response );
+    free( submit_response );
     // return from rpc
     err_response.status = -e;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
@@ -106,7 +104,7 @@
     _syscall_memory_shared_detach( submit_message->shm_id );
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
     // free up stuff
-    free( poll_response );
+    free( submit_response );
     // return from rpc
     err_response.status = -e;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
@@ -122,7 +120,7 @@
     _syscall_memory_shared_detach( submit_message->shm_id );
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
     // free up stuff
-    free( poll_response );
+    free( submit_response );
     // return from rpc
     err_response.status = -result;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
@@ -135,7 +133,7 @@
     _syscall_memory_shared_detach( submit_message->shm_id );
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
     // free up stuff
-    free( poll_response );
+    free( submit_response );
     // return from rpc
     err_response.status = -ETIMEDOUT;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
@@ -155,7 +153,7 @@
       _syscall_memory_shared_detach( submit_message->shm_id );
       _syscall_memory_shared_detach( hcd_submit_command->shm_id );
       // free up stuff
-      free( poll_response );
+      free( submit_response );
       // return from rpc
       err_response.status = -ENOLINK;
       bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
@@ -192,7 +190,7 @@
   vfs_ioctl_perform_response_t* real_response = malloc( response_size );
   if ( ! real_response ) {
     // free up stuff
-    free( poll_response );
+    free( submit_response );
     // return from rpc
     err_response.status = -ENOMEM;
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
@@ -207,7 +205,7 @@
   // actually return
   bolthur_rpc_return( RPC_VFS_IOCTL, real_response, response_size, async_data, 0 );
   // free up structures
-  free( poll_response );
+  free( submit_response );
   free( real_response );
 }
 
@@ -225,7 +223,6 @@ void rpc_control_message(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "CONTROL MESSAGE\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
@@ -301,7 +298,6 @@ void rpc_control_message(
   );
   // handle error
   if ( -1 == result ) {
-    EARLY_STARTUP_PRINT( "ERROR\r\n" )
     error.status = -EIO;
     // detach shared memory
     _syscall_memory_shared_detach( control_message->shm_id );

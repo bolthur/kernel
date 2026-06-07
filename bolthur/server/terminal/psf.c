@@ -40,13 +40,13 @@ psf_font_t* font = NULL;
  */
 static bool psf_load_font( psf_font_t* f ) {
   // open executable
-  int fd = open( "/ramdisk/font/zap-vga09.psf", O_RDONLY );
+  const int fd = open( "/ramdisk/font/zap-vga09.psf", O_RDONLY );
   // check file descriptor return
   if ( -1 == fd ) {
     return false;
   }
   // get to end of file
-  off_t position = lseek( fd, 0, SEEK_END );
+  const off_t position = lseek( fd, 0, SEEK_END );
   if ( -1 == position ) {
     close( fd );
     return false;
@@ -64,7 +64,7 @@ static bool psf_load_font( psf_font_t* f ) {
     return false;
   }
   // read whole file
-  ssize_t n = read( fd, f->font_buffer, f->font_buffer_size );
+  const ssize_t n = read( fd, f->font_buffer, f->font_buffer_size );
   // handle error
   if ( -1 == n ) {
     free( f->font_buffer );
@@ -176,7 +176,7 @@ bool psf_init( void ) {
     // loop until end has been reached
     while ( table < end ) {
       // fetch unicode for mapping
-      uint16_t uc = *table;
+      const uint16_t uc = *table;
       // handle next glyph
       if ( PSF1_SEPARATOR == uc ) {
         glyph++;
@@ -316,7 +316,7 @@ uint8_t* psf_char_to_glyph( uint32_t c ) {
   } else if ( PSF_FONT_HEADER_TYPE_V2 == font->type ) {
     header_size = sizeof( font->header.v2 );
   } else {
-    return NULL;
+    return nullptr;
   }
 
   // overwrite glyph if mapping exists
@@ -324,7 +324,7 @@ uint8_t* psf_char_to_glyph( uint32_t c ) {
     c = font->unicode[ c ];
   }
   if ( ! c ) {
-    return NULL;
+    return nullptr;
   }
 
   // determine glyph

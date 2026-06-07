@@ -21,6 +21,80 @@
 #include "../libusbd.h"
 
 /**
+ * @fn int usbd_descriptor_get_async( const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t )
+ * @brief Get usb descriptor
+ * @param dev
+ * @param type
+ * @param index
+ * @param lang_id
+ * @param buffer
+ * @param buffer_length
+ * @param recipient
+ * @param callback
+ * @param origin
+ * @param data_info
+ * @param original_request
+ * @param original_request_size
+ * @return
+ */
+int usbd_descriptor_get_async(
+  const libusb_device_t* dev,
+  const libusb_descriptor_type_t type,
+  const uint8_t index,
+  const uint16_t lang_id,
+  const void* buffer,
+  const size_t buffer_length,
+  const uint8_t recipient,
+  const rpc_handler_t callback,
+  const pid_t origin,
+  const size_t data_info,
+  void* original_request,
+  const size_t original_request_size
+) {
+  // perform control message
+  const int result = usbd_control_message_async(
+    dev,
+    (libusb_pipe_address_t) {
+      .type = LIBUSB_TRANSFER_CONTROL,
+      .speed = dev->speed,
+      .end_point = 0,
+      .device = ( uint8_t )dev->number,
+      .direction = LIBUSB_DIRECTION_IN,
+      .max_size = usb_packet_size_from_number(
+        dev->descriptor.max_packet_size0
+      )
+    },
+    buffer,
+    buffer_length,
+    & ( libusb_device_request_t ){
+      .request = LIBUSB_DEVICE_REQUEST_GET_DESCRIPTOR,
+      .type = 0x80 | recipient,
+      .value = ( uint16_t )type << 8 | index,
+      .index = lang_id,
+      .length = ( uint16_t )buffer_length
+    },
+    CONTROL_MESSAGE_TIMEOUT,
+    callback,
+    origin,
+    data_info,
+    original_request,
+    original_request_size
+  );
+  // handle error
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Failed to get descriptor: %#x:%#"PRIx8" for device: %s. Result: %s\r\n",
+        type, index, usbd_description_get( dev ), strerror( result ) )
+    #endif
+    // return result
+    return result;
+  }
+  // return success
+  return 0;
+}
+
+/**
  * @fn int usbd_get_descriptor(libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t);
  * @brief Get usb descriptor
  * @param dev
