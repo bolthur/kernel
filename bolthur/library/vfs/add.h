@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _ADD_H
-#define _ADD_H
+#ifndef _LIBVFS_ADD_H
+#define _LIBVFS_ADD_H
 
 #include <sys/bolthur.h>
 

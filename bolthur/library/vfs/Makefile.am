@@ -5,5 +5,6 @@ noinst_LTLIBRARIES = libvfs.la
 libvfs_la_SOURCES = \
   add.c \
   dev.c \
+  handler.c \
   remove.c \
   wait.c

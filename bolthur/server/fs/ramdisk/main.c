@@ -22,12 +22,13 @@
 #include <unistd.h>
 #include <inttypes.h>
 #include <libtar.h>
+#include <errno.h>
 #include <sys/bolthur.h>
 #include <sys/mount.h>
 #include "ramdisk.h"
 #include "rpc.h"
 #include "../../../library/vfs/wait.h"
-#include "../../libhelper.h"
+#include "../../../library/vfs/dev.h"
 
 extern TAR* disk;
 
@@ -69,7 +70,7 @@ int main( int argc, char* argv[] ) {
   vfs_wait_for_path( "/dev/manager/device" );
 
   // add device file
-  if ( ! dev_add_file( "/dev/ramdisk", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/ramdisk", NULL, 0, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

@@ -26,7 +26,6 @@
 #include "../init.h"
 #include "../configuration.h"
 #include "../../../library/vfs/wait.h"
-#include "../../libhelper.h"
 
 /**
  * @fn void init_stage2(const char*)

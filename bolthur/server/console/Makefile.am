@@ -4,9 +4,11 @@ AM_CFLAGS = -DPROGRAM_NAME=\"console\"
 
 bin_PROGRAMS = console
 console_DEPENDENCIES = \
-  ${abs_top_builddir}/../library/collection/list/liblist.la
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 console_LDADD = \
-  ${abs_top_builddir}/../library/collection/list/liblist.la
+  ${abs_top_builddir}/../library/collection/list/liblist.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 console_SOURCES = \
   rpc/custom/add.c \
   rpc/custom/input.c \

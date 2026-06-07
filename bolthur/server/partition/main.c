@@ -26,8 +26,9 @@
 #include "partition.h"
 #include "handler.h"
 #include "mount.h"
-#include "../libhelper.h"
 #include "../libpartition.h"
+#include "../../library/vfs/dev.h"
+#include "../../library/vfs/handler.h"
 
 /**
  * @fn int main(int, char*[])
@@ -61,7 +62,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     STARTUP_PRINT( "Unable to setup rpc callbacks!\r\n" )
     return -1;
   }
-  const pid_t mount_pid = get_file_handler( MOUNT_DEVICE );
+  const pid_t mount_pid = vfs_get_file_handler( MOUNT_DEVICE );
   if ( -1 == mount_pid ) {
     STARTUP_PRINT( "Unable to query mount device pid\r\n" )
     return -1;
@@ -86,7 +87,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     PARTITION_RELEASE_HANDLER,
   };
   // add device file
-  if ( ! dev_add_file( "/dev/partition", device_info, 2, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/partition", device_info, 2, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

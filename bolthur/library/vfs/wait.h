@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _WAIT_H
-#define _WAIT_H
+#ifndef _LIBVFS_WAIT_H
+#define _LIBVFS_WAIT_H
 
 void vfs_wait_for_path( const char* );
 

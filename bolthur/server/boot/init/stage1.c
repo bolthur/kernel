@@ -28,7 +28,6 @@
 #include "../util.h"
 #include "../global.h"
 #include "../../../library/vfs/wait.h"
-#include "../../libhelper.h"
 
 pid_t vfs_pid = 2;
 pid_t dev_pid = 3;

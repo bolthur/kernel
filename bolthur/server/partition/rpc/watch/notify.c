@@ -28,7 +28,7 @@
 #include "../../rpc.h"
 #include "../../partition.h"
 #include "../../../libmbr.h"
-#include "../../../libhelper.h"
+#include "../../../../library/vfs/dev.h"
 
 /**
  * @fn void rpc_handle_watch_notify(size_t, pid_t, size_t, size_t)
@@ -137,7 +137,7 @@ void rpc_handle_watch_notify(
     STARTUP_PRINT("st_size = %#llx\r\n", st.st_size)
     STARTUP_PRINT("st_blksize = %#lx\r\n", st.st_blksize)
     // add device
-    if ( ! dev_add_folder_file_stat( path, &st, nullptr ) ) {
+    if ( ! vfs_dev_add_folder_file_stat( path, &st, nullptr ) ) {
       STARTUP_PRINT( "Unable to add device file\r\n" )
       partition_remove( path );
       close( fd );

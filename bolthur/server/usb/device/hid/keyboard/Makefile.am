@@ -6,12 +6,14 @@ keyboard_CFLAGS = \
 keyboard_DEPENDENCIES = \
   ${abs_top_builddir}/../library/hid/libhid.la \
   ${abs_top_builddir}/../library/usb/libusb.la \
-  ${abs_top_builddir}/../library/util/libutil.la
+  ${abs_top_builddir}/../library/util/libutil.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 keyboard_LDADD = \
   ${abs_top_builddir}/../library/hid/libhid.la \
   ${abs_top_builddir}/../library/usb/libusb.la \
   ${abs_top_builddir}/../library/util/libutil.la \
-  $(CONFINI_LIBS)
+  $(CONFINI_LIBS) \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 keyboard_SOURCES = \
   rpc/keyboard/attach.c \
   rpc/keyboard/deallocate.c \

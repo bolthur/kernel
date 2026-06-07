@@ -3,9 +3,11 @@ AM_CFLAGS = -DPROGRAM_NAME=\"usb/device/hub\"
 
 bin_PROGRAMS = hub
 hub_DEPENDENCIES = \
-  ${abs_top_builddir}/../library/usb/libusb.la
+  ${abs_top_builddir}/../library/usb/libusb.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 hub_LDADD = \
-  ${abs_top_builddir}/../library/usb/libusb.la
+  ${abs_top_builddir}/../library/usb/libusb.la \
+  ${abs_top_builddir}/../library/vfs/libvfs.la
 hub_SOURCES = \
   rpc/hub/check/change.c \
   rpc/hub/check/connection.c \

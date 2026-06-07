@@ -24,9 +24,9 @@
 #include <sys/bolthur.h>
 #include "rpc.h"
 #include "stat.h"
-#include "../../libhelper.h"
 #include "../../libpartition.h"
 #include "../../../library/handle/process.h"
+#include "../../../library/vfs/dev.h"
 
 /**
  * @fn int main(int, char*[])
@@ -113,7 +113,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   }
 
   // add device file
-  if ( ! dev_add_file( "/dev/ext", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/ext", NULL, 0, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev fs\r\n" )
     free( reg );
     close( fd );

@@ -19,9 +19,9 @@
 
 #include <sys/bolthur.h>
 #include "../libterminal.h"
-#include "../libhelper.h"
 #include "../libconsole.h"
 #include "../../library/collection/list/list.h"
+#include "../../library/vfs/dev.h"
 #include "console.h"
 #include "handler.h"
 #include "rpc.h"
@@ -93,17 +93,17 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   }
 
   // stdin device
-  if ( ! dev_add_file( "/dev/stdin", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/stdin", NULL, 0, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
   // stdout device
-  if ( ! dev_add_file( "/dev/stdout", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/stdout", NULL, 0, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
   // stderr device
-  if ( ! dev_add_file( "/dev/stderr", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/stderr", NULL, 0, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
@@ -114,7 +114,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
 
   // console device
   constexpr uint32_t device_info[] = { CONSOLE_ADD, CONSOLE_SELECT, CONSOLE_INPUT, };
-  if ( ! dev_add_file( "/dev/console", device_info, 3, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/console", device_info, 3, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

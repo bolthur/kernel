@@ -17,15 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _LIBVFS_DEV_H
-#define _LIBVFS_DEV_H
+#ifndef _LIBVFS_HANDLER_H
+#define _LIBVFS_HANDLER_H
 
-#include <stdint.h>
-#include <stddef.h>
-#include <sys/bolthur.h>
+#include <unistd.h>
 
-bool vfs_dev_add_file( const char*, const uint32_t*, size_t, rpc_handler_t );
-bool vfs_dev_add_folder( const char*, const uint32_t*, size_t, rpc_handler_t );
-bool vfs_dev_add_folder_file_stat( const char*, const struct stat*, rpc_handler_t );
+pid_t vfs_get_file_handler( const char* );
 
 #endif

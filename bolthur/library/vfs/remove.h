@@ -17,8 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _REMOVE_H
-#define _REMOVE_H
+#ifndef _LIBVFS_REMOVE_H
+#define _LIBVFS_REMOVE_H
 
 #include <sys/bolthur.h>
 

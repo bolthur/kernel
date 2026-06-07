@@ -22,9 +22,10 @@
 
 #include "handler.h"
 #include "rpc.h"
-#include "../../../../libhelper.h"
 #include "../../../../libusbd.h"
 #include "../../../../../library/usb/usb.h"
+#include "../../../../../library/vfs/dev.h"
+#include "../../../../../library/vfs/handler.h"
 
 /**
  * @fn int main(int, char*[])
@@ -59,7 +60,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   }
 
   // query allowed rpc origin
-  const pid_t allowed_rpc_origin = get_file_handler( USBD_DEVICE_PATH );
+  const pid_t allowed_rpc_origin = vfs_get_file_handler( USBD_DEVICE_PATH );
   if ( -1 == allowed_rpc_origin ) {
     STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
     return -1;
@@ -98,7 +99,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     HID_SET_REPORT,
     HID_SET_IDLE,
   };
-  if ( ! dev_add_file( HID_DEVICE_PATH, device_info, 11, nullptr ) ) {
+  if ( ! vfs_dev_add_file( HID_DEVICE_PATH, device_info, 11, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

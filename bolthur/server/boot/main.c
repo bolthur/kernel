@@ -32,7 +32,6 @@
 #include "ramdisk.h"
 #include "util.h"
 #include "init.h"
-#include "../libhelper.h"
 #include "../libdev.h"
 
 uintptr_t ramdisk_compressed;

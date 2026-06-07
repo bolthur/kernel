@@ -24,9 +24,10 @@
 // local includes
 #include "rpc.h"
 // library includes
-#include "../../../libhelper.h"
 #include "../../../libusbd.h"
 #include "../../../../library/usb/usb.h"
+#include "../../../../library/vfs/dev.h"
+#include "../../../../library/vfs/handler.h"
 
 /**
  * @fn int main(int, char*[])
@@ -53,7 +54,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   }
 
   // query allowed rpc origin
-  const pid_t allowed_rpc_origin = get_file_handler( USBD_DEVICE_PATH );
+  const pid_t allowed_rpc_origin = vfs_get_file_handler( USBD_DEVICE_PATH );
   if ( -1 == allowed_rpc_origin ) {
     STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
     return -1;
@@ -88,7 +89,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     GENERIC_CHILD_RESET,
     GENERIC_CHILD_CHECK_CONNECTION,
   };
-  if ( ! dev_add_file( HUB_DEVICE_PATH, device_info, 7, nullptr ) ) {
+  if ( ! vfs_dev_add_file( HUB_DEVICE_PATH, device_info, 7, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

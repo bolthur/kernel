@@ -22,10 +22,10 @@
 #include <stdint.h>
 #include <sys/bolthur.h>
 #include <inttypes.h>
-#include "../../../libhelper.h"
 #include "../../../libframebuffer.h"
 #include "framebuffer.h"
 #include "rpc.h"
+#include "../../../../library/vfs/dev.h"
 
 /**
  * @fn int main(int, char*[])
@@ -66,7 +66,7 @@ int main( int argc, char* argv[] ) {
     FRAMEBUFFER_SURFACE_ALLOCATE,
   };
   // add device file
-  if ( ! dev_add_file( "/dev/framebuffer", device_info, 4, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/framebuffer", device_info, 4, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

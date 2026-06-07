@@ -17,10 +17,11 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include <sys/bolthur.h>
 #include "rpc.h"
 #include "../../library/vfs/wait.h"
-#include "../libhelper.h"
+#include "../../library/vfs/dev.h"
 
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // print something
@@ -59,7 +60,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // wait for device
   vfs_wait_for_path( "/dev/manager/device" );
   // add device file
-  if ( ! dev_add_file( "/dev/mount", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/mount", NULL, 0, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add mount device file\r\n" )
     return -1;
   }

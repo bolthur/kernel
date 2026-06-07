@@ -24,7 +24,7 @@
 #include "rpc.h"
 #include "../../libhcd.h"
 #include "../../../library/vfs/wait.h"
-#include "../../libhelper.h"
+#include "../../../library/vfs/dev.h"
 
 /**
  * @fn int main(int, char*[])
@@ -70,7 +70,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     USBD_GET_STATUS,
     USBD_POLL_INTERRUPT,
   };
-  if ( ! dev_add_file( USBD_DEVICE_PATH, device_info, 12, nullptr ) ) {
+  if ( ! vfs_dev_add_file( USBD_DEVICE_PATH, device_info, 12, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

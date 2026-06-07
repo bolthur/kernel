@@ -24,7 +24,6 @@
 #include "global.h"
 #include "../../library/vfs/wait.h"
 #include "../libdev.h"
-#include "../libhelper.h"
 
 /**
  * @fn pid_t util_execute_device_server(const char*, const char*, const char*)

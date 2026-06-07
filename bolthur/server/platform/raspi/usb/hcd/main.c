@@ -26,7 +26,7 @@
 #include "rpc.h"
 // driver includes
 #include "../../../../libhcd.h"
-#include "../../../../libhelper.h"
+#include "../../../../../library/vfs/dev.h"
 
 /**
  * @fn int main(int, char*[])
@@ -62,7 +62,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   constexpr uint32_t device_info[] = { HCD_SUBMIT_CONTROL_MESSAGE, HCD_POLL_INTERRUPT, };
   STARTUP_PRINT( "HCD_SUBMIT_CONTROL_MESSAGE = %d\r\n", HCD_SUBMIT_CONTROL_MESSAGE )
   STARTUP_PRINT( "HCD_POLL_INTERRUPT = %d\r\n", HCD_POLL_INTERRUPT )
-  if ( ! dev_add_file( HCD_DEVICE_PATH, device_info, 2, nullptr ) ) {
+  if ( ! vfs_dev_add_file( HCD_DEVICE_PATH, device_info, 2, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev hcd\r\n" )
     return -1;
   }

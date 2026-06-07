@@ -22,9 +22,9 @@
 #include <sys/bolthur.h>
 #include "rpc.h"
 #include "pid/node.h"
-#include "../../library/vfs/wait.h"
-#include "../libhelper.h"
 #include "../libauthentication.h"
+#include "../../library/vfs/wait.h"
+#include "../../library/vfs/dev.h"
 
 /**
  * @fn int main(int, char*[])
@@ -73,7 +73,7 @@ int main( int argc, char* argv[] ) {
   constexpr uint32_t device_info[] = { AUTHENTICATE_REQUEST, AUTHENTICATE_FETCH, AUTHENTICATE_RELOAD, };
   EARLY_STARTUP_PRINT( "AUTHENTICATE_REQUEST = %d, AUTHENTICATE_FETCH = %d, AUTHENTICATE_RELOAD = %d\r\n",
     AUTHENTICATE_REQUEST, AUTHENTICATE_FETCH, AUTHENTICATE_RELOAD )
-  if ( ! dev_add_file( AUTHENTICATION_DEVICE, device_info, 3, nullptr ) ) {
+  if ( ! vfs_dev_add_file( AUTHENTICATION_DEVICE, device_info, 3, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev authenticate\r\n" )
     return -1;
   }

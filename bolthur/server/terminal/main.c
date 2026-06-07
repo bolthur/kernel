@@ -27,11 +27,13 @@
 #include <fcntl.h>
 
 #include "rpc.h"
-#include "../libhelper.h"
 #include "psf.h"
 #include "output.h"
 #include "terminal.h"
 #include "main.h"
+
+#include "../../library/vfs/dev.h"
+#include "../../library/vfs/handler.h"
 
 int output_driver_fd = 0;
 int console_manager_fd = 0;
@@ -73,7 +75,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   }
 
   // setup valid origin
-  const pid_t endpoint = get_file_handler( _PATH_CONSOLE );
+  const pid_t endpoint = vfs_get_file_handler( _PATH_CONSOLE );
   if ( ! bolthur_rpc_origin_push_valid( endpoint ) ) {
     close( console_manager_fd );
     close( output_driver_fd );
@@ -102,7 +104,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   _syscall_rpc_set_ready( true );
 
   // push terminal device as indicator init is done
-  if ( ! dev_add_file( "/dev/terminal", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/terminal", NULL, 0, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

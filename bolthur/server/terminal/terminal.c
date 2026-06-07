@@ -28,7 +28,7 @@
 #include "utf8.h"
 #include "main.h"
 #include "../libconsole.h"
-#include "../libhelper.h"
+#include "../../library/vfs/dev.h"
 
 list_manager_t* terminal_list;
 
@@ -117,7 +117,7 @@ bool terminal_init( void ) {
     snprintf( tty_path, PATH_MAX, TERMINAL_BASE_PATH"%"PRIu32, current );
     // add device file
     uint32_t device_info[] = { in, out, err, };
-    if ( ! dev_add_file( tty_path, device_info, 3, nullptr ) ) {
+    if ( ! vfs_dev_add_file( tty_path, device_info, 3, nullptr ) ) {
       EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
       list_destruct( terminal_list );
       free( tty_path );
