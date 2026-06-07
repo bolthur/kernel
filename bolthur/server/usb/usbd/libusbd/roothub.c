@@ -33,6 +33,8 @@ libusb_device_t* usbd_roothub_get( void ) {
  * @fn int usbd_roothub_attach(void)
  * @brief Wrapper to attach root hub
  * @return 0 on success else errno
+ *
+ * @todo rework to async in case of deallocation becomes necessary
  */
 int usbd_roothub_attach( void ) {
   // debug output
@@ -59,7 +61,7 @@ int usbd_roothub_attach( void ) {
   // set device to powered on
   root_hub->status = LIBUSB_DEVICE_STATUS_POWERED;
   // attach usb device
-  result = usbd_attach_device( root_hub );
+  result = usbd_attach_device( root_hub, nullptr, 0, 0, nullptr, 0 );
   // handle error
   if ( 0 != result ) {
     // debug output

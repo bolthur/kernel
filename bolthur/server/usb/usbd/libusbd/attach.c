@@ -17,28 +17,214 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <sys/errno.h>
+
 #include "../call.h"
 #include "../libusbd.h"
 
 /**
- * @fn int usbd_attach_device(libusb_device_t*)
+ * @fn void destroy_context(usbd_attach_context_t*)
+ * @brief Helper to destroy created context
+ * @param ctx
+ */
+static void destroy_context( usbd_attach_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  if ( ctx->request ) {
+    free( ctx->request );
+  }
+  free( ctx );
+}
+
+/**
+ * @fn int prepare_context(rpc_handler_t, pid_t, size_t, const void*, size_t, usbd_attach_context_t**)
+ * @brief Helper to allocate context
+ * @param callback
+ * @param origin
+ * @param data_info
+ * @param original_request
+ * @param original_request_size
+ * @param ctx
+ * @return
+ */
+static int prepare_context(
+  const rpc_handler_t callback,
+  const pid_t origin,
+  const size_t data_info,
+  const void* original_request,
+  const size_t original_request_size,
+  usbd_attach_context_t** ctx
+) {
+  // allocate additional context
+  *ctx = malloc( sizeof( usbd_attach_context_t ) );
+  // handle error
+  if ( ! *ctx ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out context
+  memset( *ctx, 0, sizeof( usbd_attach_context_t ) );
+  // duplicate request
+  void* req = malloc( original_request_size );
+  if ( ! req ) {
+    // free context
+    destroy_context( *ctx );
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // copy over request
+  memcpy( req, original_request, original_request_size );
+  // populate context
+  (*ctx)->data_info = data_info;
+  (*ctx)->origin = origin;
+  (*ctx)->request = req;
+  (*ctx)->request_size = original_request_size;
+  (*ctx)->handler = callback;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn void attach_attach_finished(size_t, pid_t, size_t, size_t)
+ * @brief Final callback for attach was finished
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+[[maybe_unused]] static void attach_attach_finished(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+}
+
+/**
+ * @fn void attach_configure_finished(size_t, pid_t, size_t, size_t)
+ * @brief Callback for configure was finished
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+[[maybe_unused]] static void attach_configure_finished(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+}
+
+/**
+ * @fn void attach_read_device_finished_2(size_t, pid_t, size_t, size_t)
+ * @brief Callback for second read device finished
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+[[maybe_unused]] static void attach_read_device_finished_2(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+}
+
+/**
+ * @fn void attach_set_address_finished(size_t, pid_t, size_t, size_t)
+ * @brief Callback for set address done
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+[[maybe_unused]] static void attach_set_address_finished(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+}
+
+/**
+ * @fn void attach_read_device_finished_1(size_t, pid_t, size_t, size_t)
+ * @brief Callback for first read of device finished
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+[[maybe_unused]] static void attach_read_device_finished_1(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+}
+
+/**
+ * @fn int usbd_attach_device(libusb_device_t*, rpc_handler_t, pid_t, size_t, void*, size_t)
  * @brief Wrapper to attach device
  * @param dev device to attach
+ * @param callback callback to be invoked ( set to nullptr if not there )
+ * @param origin origin process ( set to 0 if not there )
+ * @param data_info original rpc id ( set to 0 if not there )
+ * @param original_request original request ( set to nullptr if not there )
+ * @param original_request_size original request size ( set to 0 if not there )
  * @return 0 on success else errno
  *
  * @todo rework async
  */
-int usbd_attach_device( libusb_device_t* dev ) {
+int usbd_attach_device(
+  libusb_device_t* dev,
+  const rpc_handler_t callback,
+  const pid_t origin,
+  const size_t data_info,
+  const void* original_request,
+  const size_t original_request_size
+) {
   // cache device number
   const uint8_t address = ( uint8_t )dev->number;
   // reset device number
   dev->number = 0;
+  // create context for async chain
+  usbd_attach_context_t* ctx;
+  int result = prepare_context(
+    callback,
+    origin,
+    data_info,
+    original_request,
+    original_request_size,
+    &ctx
+  );
+  // handle error
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Failed to allocate context for async chain\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  /// FIXME: DO SOMETHING WITH REQUEST
+  destroy_context( ctx );
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Scanning %"PRIu8". %s.\r\n", address, usb_speed_to_string( dev->speed ) )
   #endif
   // read device descriptor
-  int result = usbd_descriptor_read_device( dev );
+  result = usbd_descriptor_read_device( dev );
   // handle error
   if ( 0 != result ) {
     // debug output

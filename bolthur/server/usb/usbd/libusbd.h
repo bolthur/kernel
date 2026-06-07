@@ -36,23 +36,27 @@
 #define CONTROL_MESSAGE_TIMEOUT 10
 
 /**
- * @brief usbd async context structure
+ * @brief usbd attach context for async attach
  */
 typedef struct {
-  /** callback to be invoked once finished */
-  rpc_handler_t callback;
-  /** rpc type used for return */
-  size_t type;
-  /** original response info */
-  size_t response_info;
-} usbd_async_context_t;
+  /** original request */
+  void* request;
+  /** request size */
+  size_t request_size;
+  /** origin */
+  pid_t origin;
+  /** data info */
+  size_t data_info;
+  /** handler to be called on finish */
+  rpc_handler_t handler;
+} usbd_attach_context_t;
 
 // address
 int usbd_address_set( libusb_device_t*, uint8_t );
 // allocate
 int usbd_allocate_device( libusb_device_t**, bool );
 // attach
-int usbd_attach_device( libusb_device_t* );
+int usbd_attach_device( libusb_device_t*, rpc_handler_t, pid_t, size_t, const void*, size_t );
 // configuration
 int usbd_configuration_set( libusb_device_t*, uint8_t );
 // control

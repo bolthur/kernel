@@ -28,6 +28,24 @@
 #include "../../../../libusbd.h"
 
 /**
+ * @fn void rpc_attach_device_finished(size_t, pid_t, size_t, size_t)
+ * @brief Attach device finished callback
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ *
+ * @todo implement
+ */
+static void rpc_attach_device_finished(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+}
+
+/**
  * @fn void rpc_attach_device(size_t, pid_t, size_t, size_t)
  * @brief Register rpc handler for attaching device
  * @param type message type
@@ -109,7 +127,14 @@ void rpc_attach_device(
   new_device->port_number = device->port_number;
   // allocate new device
   // perform hcd control message
-  result = usbd_attach_device( new_device );
+  result = usbd_attach_device(
+    new_device,
+    rpc_attach_device_finished,
+    origin,
+    data_info,
+    request,
+    data_size
+  );
   // populate response
   response->status = -result;
   memcpy( response->container, request->container, container_size );
