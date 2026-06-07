@@ -453,7 +453,7 @@ int usb_get_root_hub( uint32_t* device_number ) {
  * @brief Wrapper to get usb descriptor
  * @param device_number
  * @param type
- * @param index
+ * @param idx
  * @param lang_id
  * @param buffer
  * @param buffer_length
@@ -464,7 +464,7 @@ int usb_get_root_hub( uint32_t* device_number ) {
 int usb_get_descriptor(
   const uint32_t device_number,
   const libusb_descriptor_type_t type,
-  const uint8_t index,
+  const uint8_t idx,
   const uint16_t lang_id,
   void* buffer,
   const size_t buffer_length,
@@ -506,7 +506,7 @@ int usb_get_descriptor(
   // populate real message in shared memory
   message->device_number = device_number;
   message->type = type;
-  message->index = index;
+  message->index = idx;
   message->lang_id = lang_id;
   message->buffer_length = buffer_length;
   message->minimum_length = minimum_length;

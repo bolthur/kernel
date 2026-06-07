@@ -237,7 +237,7 @@ response_t dwhci_transmit_channel( const uint8_t channel, void* buffer ) {
  * @param channel channel to prepare
  * @param buffer_length buffer length
  * @param packet_id packet id
- * @param pipe pipe to use
+ * @param usb_pipe pipe to use
  * @return
  */
 response_t dwhci_prepare_channel(
@@ -246,24 +246,24 @@ response_t dwhci_prepare_channel(
   const uint8_t channel,
   const uint32_t buffer_length,
   const dwhci_channel_state_t packet_id,
-  const libusb_pipe_address_t* pipe
+  const libusb_pipe_address_t* usb_pipe
 ) {
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "%d / %d / %"PRIu8" / %"PRIu8" / %d / %d\r\n",
-      pipe->max_size, pipe->speed, pipe->end_point, pipe->device, pipe->type, pipe->direction )
+      usb_pipe->max_size, usb_pipe->speed, usb_pipe->end_point, usb_pipe->device, usb_pipe->type, usb_pipe->direction )
   #endif
   // prepare characteristic
-  const uint32_t characteristic = HCD_DWHCI_CHAN_CHARACTER_DEVICE_ADDRESS( pipe->device )
-    | HCD_DWHCI_CHAN_CHARACTER_END_POINT_NUMBER( pipe->end_point )
-    | HCD_DWHCI_CHAN_CHARACTER_END_POINT_DIRECTION( pipe->direction )
-    | HCD_DWHCI_CHAN_CHARACTER_LOW_SPEED( ( pipe->speed == LIBUSB_SPEED_LOW ? 1 : 0 ) )
-    | HCD_DWHCI_CHAN_CHARACTER_TYPE( pipe->type )
-    | HCD_DWHCI_CHAN_CHARACTER_MAXIMUM_PACKET_SIZE( usb_number_from_packet_size( pipe->max_size ) )
+  const uint32_t characteristic = HCD_DWHCI_CHAN_CHARACTER_DEVICE_ADDRESS( usb_pipe->device )
+    | HCD_DWHCI_CHAN_CHARACTER_END_POINT_NUMBER( usb_pipe->end_point )
+    | HCD_DWHCI_CHAN_CHARACTER_END_POINT_DIRECTION( usb_pipe->direction )
+    | HCD_DWHCI_CHAN_CHARACTER_LOW_SPEED( ( usb_pipe->speed == LIBUSB_SPEED_LOW ? 1 : 0 ) )
+    | HCD_DWHCI_CHAN_CHARACTER_TYPE( usb_pipe->type )
+    | HCD_DWHCI_CHAN_CHARACTER_MAXIMUM_PACKET_SIZE( usb_number_from_packet_size( usb_pipe->max_size ) )
     | HCD_DWHCI_CHAN_CHARACTER_ENABLE( 1 )
     | HCD_DWHCI_CHAN_CHARACTER_DISABLE( 1 );
   // prepare split control
   uint32_t split_control = 0;
-  if ( LIBUSB_SPEED_HIGH != pipe->speed ) {
+  if ( LIBUSB_SPEED_HIGH != usb_pipe->speed ) {
     split_control = ( uint32_t )HCD_DWHCI_CHAN_SPLIT_CONTROL_SPLIT_ENABLE( 1 )
       | HCD_DWHCI_CHAN_SPLIT_CONTROL_HUB_ADDRESS( parent_device_number )
       | HCD_DWHCI_CHAN_SPLIT_CONTROL_PORT_ADDRESS( port_number );
@@ -278,9 +278,9 @@ response_t dwhci_prepare_channel(
     EARLY_STARTUP_PRINT( "characteristic = %#"PRIx32", split_control = %#"PRIx32", transfer_data = %#"PRIx32", packet_count = %#"PRIx32"\r\n",
     characteristic, split_control, transfer_data, packet_count )
   #endif
-  if ( LIBUSB_SPEED_LOW != pipe->speed ) {
+  if ( LIBUSB_SPEED_LOW != usb_pipe->speed ) {
     packet_count = (
-      buffer_length + usb_number_from_packet_size( pipe->max_size ) - 1 ) / usb_number_from_packet_size( pipe->max_size );
+      buffer_length + usb_number_from_packet_size( usb_pipe->max_size ) - 1 ) / usb_number_from_packet_size( usb_pipe->max_size );
   }
   if ( 0 == packet_count ) {
     packet_count = 1;

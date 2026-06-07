@@ -216,7 +216,7 @@ void rpc_handle_mount(
   STARTUP_PRINT( "request->source = %s\r\n", request->source )
   STARTUP_PRINT( "request->target = %s\r\n", request->target )
   STARTUP_PRINT( "request->type = %s\r\n", request->type )
-  STARTUP_PRINT( "request->flags = %"PRIx32"\r\n", request->flags )
+  STARTUP_PRINT( "request->flags = %lx\r\n", request->flags )
   STARTUP_PRINT( "device = %s\r\n", device )
   STARTUP_PRINT( "partition_index = %"PRIu32"\r\n", partition_index )
 

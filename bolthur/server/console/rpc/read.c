@@ -20,7 +20,7 @@
 #include <errno.h>
 #include <sys/bolthur.h>
 
-#include "queue.h"
+#include "../queue.h"
 #include "../rpc.h"
 #include "../handler.h"
 

@@ -141,7 +141,7 @@ static libusb_hub_descriptor_t hub_descriptor = {
  * @fn int dwhciroothub_process(libusb_transfer_error_t*, uint32_t, libusb_pipe_address_t, void*, size_t, libusb_device_request_t*)
  * @brief Process root hub request
  * @param error
- * @param pipe
+ * @param usb_pipe
  * @param buffer
  * @param buffer_length
  * @param request
@@ -150,15 +150,15 @@ static libusb_hub_descriptor_t hub_descriptor = {
 int dwhciroothub_process(
   libusb_transfer_error_t* error,
   uint32_t* last_transfer,
-  const libusb_pipe_address_t pipe,
+  const libusb_pipe_address_t usb_pipe,
   void* buffer,
   const size_t buffer_length,
   libusb_device_request_t* request
 ) {
   // set device to processing
   *error = LIBUSB_TRANSFER_ERROR_PROCESSING;
-  // check for interrupt pipe on root hub => not supported
-  if ( LIBUSB_TRANSFER_INTERRUPT == pipe.type ) {
+  // check for interrupt usb_pipe on root hub => not supported
+  if ( LIBUSB_TRANSFER_INTERRUPT == usb_pipe.type ) {
     // debug output
     #if defined ( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Root hub does not support irq pipes\r\n" )

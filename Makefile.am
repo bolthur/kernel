@@ -8,27 +8,27 @@ SUBDIRS = bolthur
 cppcheck:
 	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
 		--platform=$(CPPCHECK_PLATFORM) \
-		--include=$(CPPCHECK_KERNEL_INCLUDE) \
 		--project=$(CPPCHECK_KERNEL_PROJECT) \
+		--include=$(CPPCHECK_KERNEL_INCLUDE) \
 		-U__CYGWIN__ -U__APPLE__ -U__GNU_VISIBLE -UASSEMBLER_FILE -UVMS \
 		-v -j4 --force --max-configs=12 \
 		--check-level=exhaustive
 	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
 		--platform=$(CPPCHECK_PLATFORM) \
-		--include=$(CPPCHECK_LIBRARY_INCLUDE) \
 		--project=$(CPPCHECK_LIBRARY_PROJECT) \
+		--include=$(CPPCHECK_LIBRARY_INCLUDE) \
 		-U__CYGWIN__ -U__APPLE__ -UVMS -v -j4 --force --max-configs=12 \
 		--check-level=exhaustive
 	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
 		--platform=$(CPPCHECK_PLATFORM) \
-		--include=$(CPPCHECK_SERVER_INCLUDE) \
 		--project=$(CPPCHECK_SERVER_PROJECT) \
+		--include=$(CPPCHECK_SERVER_INCLUDE) \
 		-U__CYGWIN__ -U__APPLE__ -UVMS -v -j4 --force --max-configs=12 \
 		--check-level=exhaustive
 	cppcheck --quiet -UCMC --inline-suppr --enable=all --force \
 		--platform=$(CPPCHECK_PLATFORM) \
-		--include=$(CPPCHECK_APPLICATION_INCLUDE) \
 		--project=$(CPPCHECK_APPLICATION_PROJECT) \
+		--include=$(CPPCHECK_APPLICATION_INCLUDE) \
 		-U__CYGWIN__ -U__APPLE__ -UVMS -v -j4 --force --max-configs=12 \
 		--check-level=exhaustive
 

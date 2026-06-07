@@ -230,7 +230,7 @@ int handler_call_attach(
   device->device_deallocate_handler = handler;
   device->device_detached_handler = handler;
   // generate request
-  const size_t request_size = sizeof( vfs_ioctl_perform_request_t ) + sizeof( usb_generic_attach_t );
+  constexpr size_t request_size = sizeof( vfs_ioctl_perform_request_t ) + sizeof( usb_generic_attach_t );
   vfs_ioctl_perform_request_t* request = malloc( request_size );
   if ( ! request ) {
     // return nomem

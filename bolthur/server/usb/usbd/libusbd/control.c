@@ -29,7 +29,7 @@
  * @fn int usbd_control_message(const libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t);
  * @brief Wrapper to perform usbd control message
  * @param dev
- * @param pipe
+ * @param usb_pipe
  * @param buffer
  * @param buffer_length
  * @param request
@@ -38,7 +38,7 @@
  */
 int usbd_control_message(
   libusb_device_t* dev,
-  const libusb_pipe_address_t pipe,
+  const libusb_pipe_address_t usb_pipe,
   void* buffer,
   const size_t buffer_length,
   const libusb_device_request_t* request,
@@ -78,11 +78,11 @@ int usbd_control_message(
   message->device_number = dev->number;
   message->parent_device_number = dev->parent ? dev->parent->number : 0;
   message->port_number = dev->port_number;
-  memcpy( &message->pipe_address, &pipe, sizeof( pipe ) );
+  memcpy( &message->pipe_address, &usb_pipe, sizeof( usb_pipe ) );
   memcpy( &message->request, request, sizeof( *request ) );
   message->buffer_length = buffer_length;
   message->timeout = timeout;
-  if ( LIBUSB_DIRECTION_OUT == pipe.direction && buffer ) {
+  if ( LIBUSB_DIRECTION_OUT == usb_pipe.direction && buffer ) {
     memcpy( &message->buffer, buffer, buffer_length );
   }
   // allocate request
@@ -166,7 +166,7 @@ int usbd_control_message(
     }
   }
   // copy over data
-  if ( LIBUSB_DIRECTION_IN == pipe.direction && buffer ) {
+  if ( LIBUSB_DIRECTION_IN == usb_pipe.direction && buffer ) {
     memcpy( buffer, message->buffer, buffer_length );
   }
   // copy over static fields into device populated via shared memory
@@ -184,7 +184,7 @@ int usbd_control_message(
  * @fn int usbd_control_message(const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t);
  * @brief Wrapper to perform async usbd control message
  * @param dev device to use for control message
- * @param pipe pipe to use
+ * @param usb_pipe pipe to use
  * @param buffer buffer for transfer in / out
  * @param buffer_length buffer length
  * @param request device request
@@ -198,7 +198,7 @@ int usbd_control_message(
  */
 int usbd_control_message_async(
   const libusb_device_t* dev,
-  const libusb_pipe_address_t pipe,
+  const libusb_pipe_address_t usb_pipe,
   const void* buffer,
   const size_t buffer_length,
   const libusb_device_request_t* request,
@@ -243,11 +243,11 @@ int usbd_control_message_async(
   message->device_number = dev->number;
   message->parent_device_number = dev->parent ? dev->parent->number : 0;
   message->port_number = dev->port_number;
-  memcpy( &message->pipe_address, &pipe, sizeof( pipe ) );
+  memcpy( &message->pipe_address, &usb_pipe, sizeof( usb_pipe ) );
   memcpy( &message->request, request, sizeof( *request ) );
   message->buffer_length = buffer_length;
   message->timeout = timeout;
-  if ( LIBUSB_DIRECTION_OUT == pipe.direction && buffer ) {
+  if ( LIBUSB_DIRECTION_OUT == usb_pipe.direction && buffer ) {
     memcpy( &message->buffer, buffer, buffer_length );
   }
   // allocate request

@@ -84,26 +84,26 @@ void keyboard_destroy( libusb_keyboard_device_t* device ) {
 /**
  * @fn int keyboard_new_index(uint32_t*);
  * @brief Function to get new index
- * @param index
+ * @param idx
  * @return
  */
-int keyboard_new_index( uint32_t* index ) {
+int keyboard_new_index( uint32_t* idx ) {
   // validate parameters
-  if ( ! index ) {
+  if ( ! idx ) {
     return EINVAL;
   }
-  // initialize max index
+  // initialize max idx
   uint32_t max_index = 0;
-  // loop through list and collect max index
+  // loop through list and collect max idx
   const libusb_keyboard_device_t* current = keyboard_head;
   while ( current ) {
-    // determine max index
+    // determine max idx
     max_index = uint32_max( max_index, current->index );
     // go to next
     current = current->next;
   }
-  // populate index
-  *index = max_index;
+  // populate idx
+  *idx = max_index;
   // return success
   return 0;
 }
@@ -301,10 +301,10 @@ uint32_t keyboard_bit_get_unsigned( const uint8_t* buffer, const uint32_t offset
  * @fn int32_t keyboard_bit_get_value(const libusb_hid_parser_fields_t*, const uint32_t)
  * @brief
  * @param field
- * @param index
+ * @param idx
  * @return
  */
-int32_t keyboard_bit_get_value( const libusb_hid_parser_fields_t* field, const uint32_t index ) {
+int32_t keyboard_bit_get_value( const libusb_hid_parser_fields_t* field, const uint32_t idx ) {
   return keyboard_bit_get_signed(
-    field->value.ptr, index * field->size, field->size );
+    field->value.ptr, idx * field->size, field->size );
 }

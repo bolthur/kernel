@@ -34,6 +34,8 @@
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
+ *
+ * @todo make sync request async
  */
 void rpc_attach_device(
   [[maybe_unused]] size_t type,

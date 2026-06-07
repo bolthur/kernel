@@ -506,7 +506,6 @@ bool interrupt_register_handler(
   if ( type == INTERRUPT_NORMAL && enable ) {
     interrupt_mask_specific( ( int8_t )num );
   }
-  // cppcheck-suppress memleak
   return true;
 }
 

@@ -141,7 +141,7 @@
   // success result
   result = 0;
   // handle error and parent is set
-  if ( hcd_submit->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING && device->parent ) {
+  if ( device->parent && hcd_submit->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // check connection
     /// FIXME: NEEDS TO BE ASYNC AS WELL AS CONTROL MESSAGE
     result = call_child_check_connection( device->parent, device );
@@ -198,7 +198,7 @@
   // clear out
   memset( real_response, 0, response_size );
   // populate container
-  real_response->status = -result;
+  real_response->status = result ? -result : 0;
   memcpy( real_response->container, original_request->container, container_size );
   // actually return
   bolthur_rpc_return( RPC_VFS_IOCTL, real_response, response_size, async_data, 0 );

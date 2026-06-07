@@ -27,7 +27,7 @@
  * @fn int usbd_interrupt_poll(const libusb_device_t*, libusb_pipe_address_t, void*, size_t, size_t, uint8_t, uint32_t, rpc_handler_t, pid_t, size_t, void*, size_t);
  * @brief Wrapper to perform usbd control message
  * @param dev device information
- * @param pipe pipe to use
+ * @param usb_pipe pipe to use
  * @param buffer buffer to transfer
  * @param buffer_length buffer transfer length
  * @param timeout poll timeout
@@ -42,7 +42,7 @@
  */
 int usbd_interrupt_poll(
   const libusb_device_t* dev,
-  const libusb_pipe_address_t pipe,
+  const libusb_pipe_address_t usb_pipe,
   const void* buffer,
   const size_t buffer_length,
   const size_t timeout,
@@ -88,12 +88,12 @@ int usbd_interrupt_poll(
   message->device_number = dev->number;
   message->parent_device_number = dev->parent ? dev->parent->number : 0;
   message->port_number = dev->port_number;
-  memcpy( &message->pipe_address, &pipe, sizeof( pipe ) );
+  memcpy( &message->pipe_address, &usb_pipe, sizeof( usb_pipe ) );
   message->buffer_length = buffer_length;
   message->last_usb_pid = last_usb_pid;
   message->previous_transferred_packet = last_packet_transfer;
   message->timeout = timeout;
-  if ( LIBUSB_DIRECTION_OUT == pipe.direction && buffer ) {
+  if ( LIBUSB_DIRECTION_OUT == usb_pipe.direction && buffer ) {
     memcpy( &message->buffer, buffer, buffer_length );
   }
   // allocate request

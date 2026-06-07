@@ -23,15 +23,14 @@
 #endif
 
 /**
+ * @fn bool elf_arch_check(uintptr_t)
  * @brief Check elf header for execution
- *
  * @param elf header address to check
  * @return true elf header valid
  * @return false elf header invalid
  */
-bool elf_arch_check( uintptr_t elf ) {
-  Elf32_Ehdr* header = ( Elf32_Ehdr* )elf;
-
+bool elf_arch_check( const uintptr_t elf ) {
+  auto const header = ( Elf32_Ehdr* )elf;
   // check machine to match kernel
   #if defined( ELF32 )
     if ( EM_ARM != header->e_machine ) {
@@ -60,7 +59,6 @@ bool elf_arch_check( uintptr_t elf ) {
       return false;
     }
   #endif
-
   // return success
   return true;
 }

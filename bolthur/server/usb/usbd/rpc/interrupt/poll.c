@@ -26,7 +26,7 @@
 #include "../../libusbd.h"
 // driver includes
 #include "../../../../libusbd.h"
-#include "../../libhcd.h"
+#include "../../../../libhcd.h"
 
 /**
  * @fn void rpc_interrupt_poll_finished( size_t, pid_t, size_t, size_t )

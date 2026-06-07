@@ -25,7 +25,7 @@
  * @brief Get usb descriptor
  * @param dev
  * @param type
- * @param index
+ * @param idx
  * @param lang_id
  * @param buffer
  * @param buffer_length
@@ -40,7 +40,7 @@
 int usbd_descriptor_get_async(
   const libusb_device_t* dev,
   const libusb_descriptor_type_t type,
-  const uint8_t index,
+  const uint8_t idx,
   const uint16_t lang_id,
   const void* buffer,
   const size_t buffer_length,
@@ -69,7 +69,7 @@ int usbd_descriptor_get_async(
     & ( libusb_device_request_t ){
       .request = LIBUSB_DEVICE_REQUEST_GET_DESCRIPTOR,
       .type = 0x80 | recipient,
-      .value = ( uint16_t )type << 8 | index,
+      .value = ( uint16_t )type << 8 | idx,
       .index = lang_id,
       .length = ( uint16_t )buffer_length
     },
@@ -85,7 +85,7 @@ int usbd_descriptor_get_async(
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Failed to get descriptor: %#x:%#"PRIx8" for device: %s. Result: %s\r\n",
-        type, index, usbd_description_get( dev ), strerror( result ) )
+        type, idx, usbd_description_get( dev ), strerror( result ) )
     #endif
     // return result
     return result;
@@ -99,7 +99,7 @@ int usbd_descriptor_get_async(
  * @brief Get usb descriptor
  * @param dev
  * @param type
- * @param index
+ * @param idx
  * @param lang_id
  * @param buffer
  * @param buffer_length
@@ -110,7 +110,7 @@ int usbd_descriptor_get_async(
 int usbd_descriptor_get(
   libusb_device_t* dev,
   const libusb_descriptor_type_t type,
-  const uint8_t index,
+  const uint8_t idx,
   const uint16_t lang_id,
   void* buffer,
   const size_t buffer_length,
@@ -135,7 +135,7 @@ int usbd_descriptor_get(
     & ( libusb_device_request_t ){
       .request = LIBUSB_DEVICE_REQUEST_GET_DESCRIPTOR,
       .type = 0x80 | recipient,
-      .value = ( uint16_t )type << 8 | index,
+      .value = ( uint16_t )type << 8 | idx,
       .index = lang_id,
       .length = ( uint16_t )buffer_length
     },
@@ -146,7 +146,7 @@ int usbd_descriptor_get(
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Failed to get descriptor: %#x:%#"PRIx8" for device: %s. Result: %s\r\n",
-        type, index, usbd_description_get( dev ), strerror( result ) )
+        type, idx, usbd_description_get( dev ), strerror( result ) )
     #endif
     // return result
     return result;
@@ -156,7 +156,7 @@ int usbd_descriptor_get(
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unexpectedly short descriptor (%"PRIu32"/%zu) %#x:%#"PRIx8" for device %s. Result: %#x\r\n",
-        dev->last_transfer, minimum_length, type, index, usbd_description_get( dev ), result )
+        dev->last_transfer, minimum_length, type, idx, usbd_description_get( dev ), result )
     #endif
     // return protocol error
     return EPROTO;

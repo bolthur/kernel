@@ -22,7 +22,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 
-#include "global.h"
+#include "../../global.h"
 #include "../../keymap.h"
 #include "../../rpc.h"
 #include "../../keyboard.h"

@@ -222,21 +222,21 @@
 }
 
 /**
- * @fn bool dev_add_folder_file_stat(const char*, const struct stat*, const rpc_handler_t)
+ * @fn bool dev_add_folder_file_stat(const char*, const struct st*, const rpc_handler_t)
  * @brief Helper to add a subfolder or file
  *
  * @param path
- * @param stat
+ * @param st
  * @param handler
  * @return
  */
 [[maybe_unused]] static bool dev_add_folder_file_stat(
   const char* path,
-  struct stat* stat,
+  struct stat* st,
   const rpc_handler_t handler
 ) {
   // allocate memory for add request
-  size_t msg_size = sizeof( vfs_add_request_t ) + 0 * sizeof( size_t );
+  constexpr size_t msg_size = sizeof( vfs_add_request_t ) + 0 * sizeof( size_t );
   vfs_add_request_t* msg = malloc( msg_size );
   if ( ! msg ) {
     return false;
@@ -246,7 +246,7 @@
   // debug output
   EARLY_STARTUP_PRINT( "Sending \"%s\" to vfs\r\n", path )
   // prepare message structure
-  memcpy( &msg->info, stat, sizeof( struct stat ) );
+  memcpy( &msg->info, st, sizeof( struct stat ) );
   strncpy( msg->file_path, path, PATH_MAX - 1 );
   // perform add request
   send_vfs_add_request( msg, msg_size, 0, handler );
