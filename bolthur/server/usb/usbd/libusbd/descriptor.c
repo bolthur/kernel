@@ -21,7 +21,7 @@
 #include "../libusbd.h"
 
 /**
- * @fn int usbd_descriptor_get_async( const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t )
+ * @fn int usbd_descriptor_get_async( const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void* )
  * @brief Get usb descriptor
  * @param dev
  * @param type
@@ -35,6 +35,7 @@
  * @param data_info
  * @param original_request
  * @param original_request_size
+ * @param context
  * @return
  */
 int usbd_descriptor_get_async(
@@ -49,7 +50,8 @@ int usbd_descriptor_get_async(
   const pid_t origin,
   const size_t data_info,
   void* original_request,
-  const size_t original_request_size
+  const size_t original_request_size,
+  void* context
 ) {
   // perform control message
   const int result = usbd_control_message_async(
@@ -78,7 +80,8 @@ int usbd_descriptor_get_async(
     origin,
     data_info,
     original_request,
-    original_request_size
+    original_request_size,
+    context
   );
   // handle error
   if ( 0 != result ) {
@@ -166,14 +169,52 @@ int usbd_descriptor_get(
 }
 
 /**
- * @fn int usbd_descriptor_read_device(libusb_device_t*)
+ * @fn void descriptor_read_device_finished(size_t, pid_t, size_t, size_t)
+ * @brief Callback read device finished
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+[[maybe_unused]] static void descriptor_read_device_finished(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+}
+
+/**
+ * @fn void descriptor_read_device_step_1(size_t, pid_t, size_t, size_t)
+ * @brief Callback for first read device step finished
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+[[maybe_unused]] static void descriptor_read_device_step_1(
+  [[maybe_unused]] size_t type,
+  [[maybe_unused]] pid_t origin,
+  [[maybe_unused]] size_t data_info,
+  [[maybe_unused]] size_t response_info
+) {
+}
+
+/**
+ * @fn int usbd_descriptor_read_device(libusb_device_t*, rpc_handler_t, void*)
  * @brief Read usb device descriptor
- * @param dev
+ * @param dev device to read descriptor for
+ * @param callback callback to be executed once finished
+ * @param context context to be passed through
  * @return
  *
  * @todo rework async
  */
-int usbd_descriptor_read_device( libusb_device_t* dev ) {
+int usbd_descriptor_read_device(
+  libusb_device_t* dev,
+  [[maybe_unused]] rpc_handler_t callback,
+  [[maybe_unused]] void* context
+) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Read device descriptor\r\n" )

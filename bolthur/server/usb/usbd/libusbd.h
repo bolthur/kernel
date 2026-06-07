@@ -51,6 +51,13 @@ typedef struct {
   rpc_handler_t handler;
 } usbd_attach_context_t;
 
+typedef struct {
+  /** original context */
+  void* context;
+  /** handler to be called once finished */
+  rpc_handler_t handler;
+} usbd_descriptor_context_t;
+
 // address
 int usbd_address_set( libusb_device_t*, uint8_t );
 // allocate
@@ -59,17 +66,22 @@ int usbd_allocate_device( libusb_device_t**, bool );
 int usbd_attach_device( libusb_device_t*, rpc_handler_t, pid_t, size_t, const void*, size_t );
 // configuration
 int usbd_configuration_set( libusb_device_t*, uint8_t );
+// context
+int context_attach_create( rpc_handler_t, pid_t, size_t, const void*, size_t, usbd_attach_context_t** );
+void context_attach_destroy( usbd_attach_context_t* );
+int context_descriptor_create( rpc_handler_t, void*, usbd_descriptor_context_t** );
+void context_descriptor_destroy( usbd_attach_context_t* );
 // control
 int usbd_control_message( libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t );
-int usbd_control_message_async( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t );
+int usbd_control_message_async( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t, void* );
 // deallocate
 void usbd_deallocate_device( libusb_device_t* );
 // description
 const char* usbd_description_get( const libusb_device_t* );
 // descriptor
 int usbd_descriptor_get( libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t );
-int usbd_descriptor_get_async( const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t );
-int usbd_descriptor_read_device( libusb_device_t* );
+int usbd_descriptor_get_async( const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void* );
+int usbd_descriptor_read_device( libusb_device_t*, rpc_handler_t, void* );
 // device
 int usbd_device_configure( libusb_device_t*, uint8_t );
 int usbd_device_get_by_number( uint32_t, libusb_device_t** );

@@ -21,6 +21,7 @@ usbd_SOURCES = \
   libusbd/allocate.c \
   libusbd/attach.c \
   libusbd/configuration.c \
+  libusbd/context.c \
   libusbd/control.c \
   libusbd/deallocate.c \
   libusbd/description.c \

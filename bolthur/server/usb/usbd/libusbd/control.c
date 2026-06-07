@@ -181,7 +181,7 @@ int usbd_control_message(
 }
 
 /**
- * @fn int usbd_control_message(const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t);
+ * @fn int usbd_control_message(const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*);
  * @brief Wrapper to perform async usbd control message
  * @param dev device to use for control message
  * @param usb_pipe pipe to use
@@ -194,6 +194,7 @@ int usbd_control_message(
  * @param data_info date info to be used for ioctl
  * @param original_request original request
  * @param original_request_size original request size
+ * @param context additional context stuff ( use nullptr if not available )
  * @return
  */
 int usbd_control_message_async(
@@ -207,7 +208,8 @@ int usbd_control_message_async(
   const pid_t origin,
   const size_t data_info,
   void* original_request,
-  const size_t original_request_size
+  const size_t original_request_size,
+  void* context
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
@@ -280,7 +282,7 @@ int usbd_control_message_async(
     data_info,
     original_request,
     original_request_size,
-    nullptr
+    context
   );
   // handle ioctl error
   if ( -1 == result ) {

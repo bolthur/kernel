@@ -289,7 +289,8 @@ void rpc_get_descriptor(
     origin,
     data_info,
     request,
-    data_size
+    data_size,
+    nullptr
   );
   if ( 0 != result ) {
     error.status = -EIO;

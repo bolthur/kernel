@@ -23,77 +23,6 @@
 #include "../libusbd.h"
 
 /**
- * @fn void destroy_context(usbd_attach_context_t*)
- * @brief Helper to destroy created context
- * @param ctx
- */
-static void destroy_context( usbd_attach_context_t* ctx ) {
-  if ( ! ctx ) {
-    return;
-  }
-  if ( ctx->request ) {
-    free( ctx->request );
-  }
-  free( ctx );
-}
-
-/**
- * @fn int prepare_context(rpc_handler_t, pid_t, size_t, const void*, size_t, usbd_attach_context_t**)
- * @brief Helper to allocate context
- * @param callback
- * @param origin
- * @param data_info
- * @param original_request
- * @param original_request_size
- * @param ctx
- * @return
- */
-static int prepare_context(
-  const rpc_handler_t callback,
-  const pid_t origin,
-  const size_t data_info,
-  const void* original_request,
-  const size_t original_request_size,
-  usbd_attach_context_t** ctx
-) {
-  // allocate additional context
-  *ctx = malloc( sizeof( usbd_attach_context_t ) );
-  // handle error
-  if ( ! *ctx ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
-    #endif
-    // return error
-    return ENOMEM;
-  }
-  // clear out context
-  memset( *ctx, 0, sizeof( usbd_attach_context_t ) );
-  // duplicate request
-  void* req = malloc( original_request_size );
-  if ( ! req ) {
-    // free context
-    destroy_context( *ctx );
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
-    #endif
-    // return error
-    return ENOMEM;
-  }
-  // copy over request
-  memcpy( req, original_request, original_request_size );
-  // populate context
-  (*ctx)->data_info = data_info;
-  (*ctx)->origin = origin;
-  (*ctx)->request = req;
-  (*ctx)->request_size = original_request_size;
-  (*ctx)->handler = callback;
-  // return success
-  return 0;
-}
-
-/**
  * @fn void attach_attach_finished(size_t, pid_t, size_t, size_t)
  * @brief Final callback for attach was finished
  * @param type
@@ -200,7 +129,7 @@ int usbd_attach_device(
   dev->number = 0;
   // create context for async chain
   usbd_attach_context_t* ctx;
-  int result = prepare_context(
+  int result = context_attach_create(
     callback,
     origin,
     data_info,
@@ -217,14 +146,16 @@ int usbd_attach_device(
     // return result
     return result;
   }
-  /// FIXME: DO SOMETHING WITH REQUEST
-  destroy_context( ctx );
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Scanning %"PRIu8". %s.\r\n", address, usb_speed_to_string( dev->speed ) )
   #endif
   // read device descriptor
-  result = usbd_descriptor_read_device( dev );
+  result = usbd_descriptor_read_device(
+    dev,
+    attach_read_device_finished_1,
+    ctx
+  );
   // handle error
   if ( 0 != result ) {
     // debug output
@@ -233,6 +164,8 @@ int usbd_attach_device(
     #endif
     // restore number
     dev->number = address;
+    // destroy context
+    context_attach_destroy( ctx );
     // return result
     return result;
   }
@@ -270,13 +203,19 @@ int usbd_attach_device(
   // overwrite number again
   dev->number = address;
   // re-read device descriptor
-  result = usbd_descriptor_read_device( dev );
+  result = usbd_descriptor_read_device(
+    dev,
+    attach_read_device_finished_2,
+    ctx
+  );
   // handle error
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Reading device descriptor failed: %s\r\n", strerror( result ) )
     #endif
+    // destroy context
+    context_attach_destroy( ctx );
     // return result
     return result;
   }
@@ -312,6 +251,8 @@ int usbd_attach_device(
     // return result
     return result;
   }
+  // destroy context
+  context_attach_destroy( ctx );
   // return success
   return 0;
 }
