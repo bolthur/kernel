@@ -111,6 +111,7 @@ void rpc_attach_device(
   // perform hcd control message
   result = usbd_attach_device( new_device );
   // populate response
+  response->status = -result;
   memcpy( response->container, request->container, container_size );
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
