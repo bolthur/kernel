@@ -292,7 +292,8 @@ void rpc_control_message(
     data_info,
     request,
     data_size,
-    nullptr
+    nullptr,
+    0
   );
   // handle error
   if ( -1 == result ) {

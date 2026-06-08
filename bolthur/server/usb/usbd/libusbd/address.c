@@ -19,6 +19,149 @@
 
 #include <errno.h>
 #include "../libusbd.h"
+#include "../../../libhcd.h"
+#include "../../../../kernel/lib/assert.h"
+
+/**
+ * @fn void attach_set_address_finished(size_t, pid_t, size_t, size_t)
+ * @brief Callback for set address done
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+static void set_address_finished(
+  size_t type,
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Set address finished finished\r\n" )
+  #endif
+  // peek matching async data without destroy for call chain
+  bolthur_async_data_t* async_data = bolthur_rpc_peek_async(
+    RPC_VFS_IOCTL, response_info );
+  // handle no async data
+  if ( ! async_data ) {
+    // cleanup
+    _syscall_rpc_cleanup();
+    // skip rest
+    return;
+  }
+  // get contexts
+  usbd_address_context_t* ctx = async_data->context;
+  usbd_attach_context_t* attach_context = ctx->context;
+  assert( ctx && attach_context );
+  // dummy error response
+  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
+  // handle no data
+  if ( ! data_info ) {
+    // return
+    if ( ctx->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_address_destroy( ctx );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    // return
+    if ( ctx->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_address_destroy( ctx );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // get message and data size
+  size_t data_size;
+  vfs_ioctl_perform_response_t* submit_response = bolthur_rpc_fetch_from_mailbox(
+    data_info, &data_size, true, nullptr );
+  if ( ! submit_response ) {
+    // return
+    if ( ctx->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_address_destroy( ctx );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // get poll response
+  auto const hcd_submit_command = ( hcd_submit_control_message_t* )submit_response->container;
+  // attach shared memory from poll command
+  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( hcd_submit_command->shm_id, 0 );
+  if ( errno ) {
+    const int e = errno;
+    // free up stuff
+    free( submit_response );
+    // return
+    if ( ctx->with_return ) {
+      err_response.status = -e;
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_address_destroy( ctx );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // get result
+  auto const hcd_submit = ( hcd_control_message_t* )shm_addr_hcd_poll;
+  // response is equal to input
+  if ( hcd_submit->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+    // debug output
+    #if defined( USBD_ENABLE_ERROR )
+      EARLY_STARTUP_PRINT( "error = %#x\r\n", hcd_submit->error )
+    #endif
+    // free up stuff
+    _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+    free( submit_response );
+    // return
+    if ( ctx->with_return ) {
+      err_response.status = -EPROTO;
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_address_destroy( ctx );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // populate last transfer and error
+  attach_context->device->last_transfer = hcd_submit->last_transfer;
+  attach_context->device->error = hcd_submit->error;
+  // populate address
+  attach_context->device->number = ctx->address;
+  attach_context->device->status = LIBUSB_DEVICE_STATUS_ADDRESSED;
+  // detach hcd submit
+  _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+  // destroy async data
+  bolthur_rpc_destroy_async( async_data );
+  // adjust origin and data info
+  ctx->context->origin = origin;
+  ctx->context->data_info = data_info;
+  // invoke callback
+  ctx->handler( type, origin, data_info, response_info );
+}
 
 /**
  * @fn int usbd_address_set(libusb_device_t*, const uint8_t)
@@ -29,7 +172,13 @@
  *
  * @todo rework async
  */
-int usbd_address_set( libusb_device_t* dev, const uint8_t address ) {
+int usbd_address_set(
+  libusb_device_t* dev,
+  const uint8_t address,
+  const rpc_handler_t callback,
+  const bool with_return,
+  usbd_attach_context_t* context
+) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Set address\r\n" )
@@ -44,8 +193,20 @@ int usbd_address_set( libusb_device_t* dev, const uint8_t address ) {
     // return error
     return EINVAL;
   }
+  // allocate context
+  usbd_address_context_t* ctx;
+  int result = usbd_context_address_create(
+    callback,
+    context,
+    address,
+    with_return,
+    &ctx
+  );
+  if ( 0 != result ) {
+    return result;
+  }
   // perform control message
-  const int result = usbd_control_message(
+  result = usbd_control_message_async(
     dev,
     ( libusb_pipe_address_t ){
       .type = LIBUSB_TRANSFER_CONTROL,
@@ -64,15 +225,19 @@ int usbd_address_set( libusb_device_t* dev, const uint8_t address ) {
       .type = 0,
       .value = address,
     },
-    CONTROL_MESSAGE_TIMEOUT
+    CONTROL_MESSAGE_TIMEOUT,
+    set_address_finished,
+    context->origin,
+    context->data_info,
+    context->request,
+    context->request_size,
+    ctx,
+    0
   );
   // handle error
   if ( 0 != result ) {
+    usbd_context_address_destroy( ctx );
     return result;
   }
-  // populate address and status
-  dev->number = address;
-  dev->status = LIBUSB_DEVICE_STATUS_ADDRESSED;
-  // return success
   return 0;
 }

@@ -107,5 +107,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // wait for rpc
   STARTUP_PRINT( "Wait for rpc\r\n" )
   bolthur_rpc_wait_block();
+  STARTUP_PRINT( "Exiting\r\n" )
   return 0;
 }

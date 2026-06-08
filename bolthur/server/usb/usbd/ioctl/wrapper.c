@@ -48,6 +48,7 @@ int ioctl_wrapper(
   const size_t original_request_size,
   void* context
 ) {
+  EARLY_STARTUP_PRINT( "callback = %"PRIxPTR"\r\n", ( uintptr_t )callback )
   // handle no callback
   if ( ! callback ) {
     errno = EINVAL;
@@ -99,13 +100,8 @@ int ioctl_wrapper(
     context,
     false
   );
-  if ( ! response_id ) {
-    // free request data
-    free( rpc_request );
-    return -1;
-  }
   // free request and stuff
   free( rpc_request );
-  // return success
-  return 0;
+  // return depending on response id
+  return ! response_id ? -1 : 0;
 }

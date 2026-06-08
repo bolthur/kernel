@@ -37,19 +37,20 @@
  * @param response_info response info
  */
 void rpc_mouse_attach(
-  [[maybe_unused]] size_t type,
+  size_t type,
   pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };
   // handle no data
   if ( ! data_info ) {
-    _syscall_rpc_cleanup();
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    _syscall_rpc_cleanup();
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get data from mailbox
@@ -57,7 +58,8 @@ void rpc_mouse_attach(
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, NULL );
   if ( ! request ) {
-    _syscall_rpc_cleanup();
+    err_response.status = -ENOMSG;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // allocate space for pull_request
@@ -67,17 +69,19 @@ void rpc_mouse_attach(
   int result = hid_get_driver( message->device_number, &device_driver );
   if ( 0 != result ) {
     free( request );
-    _syscall_rpc_cleanup();
+    err_response.status = -result;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // handle invalid device driver
   if ( device_driver != DEVICE_DRIVER_HID ) {
     free( request );
-    _syscall_rpc_cleanup();
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   /// FIXME: IMPLEMENT
   STARTUP_PRINT( "MOUSE ATTACH FOLLOWING!\r\n" )
   free( request );
-  _syscall_rpc_cleanup();
+  memset( &err_response, 0, sizeof( err_response ) );
+  bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
 }

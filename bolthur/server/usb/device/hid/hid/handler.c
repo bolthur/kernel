@@ -201,19 +201,25 @@ int handler_get( const libusb_hid_usage_page_desktop_t type, pid_t* handler ) {
 }
 
 /**
- * @fn int handler_call_attach(libusb_hid_usage_page_desktop_t, libusb_hid_device_t*, uint32_t, uint32_t)
+ * @fn int handler_call_attach(libusb_hid_usage_page_desktop_t, libusb_hid_device_t*, uint32_t, uint32_t, rpc_handler_t, pid_t, size_t)
  * @brief Wrapper to call attach
  * @param type
  * @param device
  * @param device_number
  * @param interface_number
+ * @param callback
+ * @param origin
+ * @param data_info
  * @return
  */
 int handler_call_attach(
   const libusb_hid_usage_page_desktop_t type,
   libusb_hid_device_t* device,
   const uint32_t device_number,
-  const uint32_t interface_number
+  const uint32_t interface_number,
+  const rpc_handler_t callback,
+  const pid_t origin,
+  const size_t data_info
 ) {
   // get handler
   pid_t handler;
@@ -242,31 +248,25 @@ int handler_call_attach(
   ( ( usb_generic_attach_t* )request->container )->device_number = device_number;
   ( ( usb_generic_attach_t* )request->container)->interface_number = interface_number;
   // attach is defined as first custom message
-  bolthur_rpc_raise_generic(
+  const size_t response_id = bolthur_rpc_raise(
     GENERIC_ATTACH,
     handler,
     request,
     request_size,
-    NULL,
+    callback,
     GENERIC_ATTACH,
     request,
     request_size,
-    0,
-    0,
-    NULL,
-    true,
+    origin,
+    data_info,
+    nullptr,
     false
   );
   // handle error
-  if ( errno ) {
-    // cache errno
-    const int e = errno;
-    // free request
+  if ( ! response_id ) {
     free( request );
-    // return error
-    return e;
+    return EIO;
   }
-  // free request
   free( request );
   // return success
   return 0;

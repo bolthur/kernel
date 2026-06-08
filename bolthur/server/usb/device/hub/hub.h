@@ -22,7 +22,21 @@
 
 #include "../../../libusb.h"
 
-//#define HUB_ENABLE_DEBUG 1
+#define HUB_ENABLE_DEBUG 1
+
+/**
+ * @brief Hub attach context
+ */
+typedef struct {
+  /** attach count */
+  uint32_t to_attach;
+  /** rpc type */
+  size_t type;
+  /** data info */
+  size_t data_info;
+  /** response info */
+  size_t response_info;
+} hub_attach_context_t;
 
 void hub_append( libusb_hub_device_t* );
 int hub_read_descriptor( uint32_t, void** );
@@ -31,7 +45,8 @@ int hub_change_port_feature( uint32_t, libusb_hub_port_feature_t, uint8_t, bool 
 int hub_power_on( uint32_t, const libusb_hub_device_t* );
 int hub_get_port_status( uint32_t, libusb_hub_device_t*, uint8_t );
 int hub_port_reset( uint32_t, libusb_hub_device_t*, uint8_t );
-int hub_port_connection_changed( uint32_t, libusb_hub_device_t*, uint8_t );
-int hub_check_connection( uint32_t, libusb_hub_device_t*, uint8_t );
+int hub_port_connection_changed( uint32_t, libusb_hub_device_t*, uint8_t, void* );
+int hub_shall_to_attach( uint32_t, libusb_hub_device_t*, uint8_t, bool* );
+int hub_check_connection( uint32_t, libusb_hub_device_t*, uint8_t, void* );
 
 #endif

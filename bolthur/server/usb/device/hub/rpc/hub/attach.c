@@ -42,15 +42,16 @@ void rpc_hub_attach(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };
   // handle no data
   if ( ! data_info ) {
-    _syscall_rpc_cleanup();
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
 
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    _syscall_rpc_cleanup();
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
 
@@ -59,7 +60,7 @@ void rpc_hub_attach(
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, NULL );
   if ( ! request ) {
-    _syscall_rpc_cleanup();
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
 
@@ -82,8 +83,9 @@ void rpc_hub_attach(
     message->device_number, message->interface_number, &interface_descriptor );
   // handle error
   if ( 0 != result ) {
-    _syscall_rpc_cleanup();
     free( request );
+    err_response.status = -result;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
 
@@ -97,7 +99,8 @@ void rpc_hub_attach(
     message->device_number, message->interface_number, 0, &endpoint_descriptor );
   // handle error
   if ( 0 != result ) {
-    _syscall_rpc_cleanup();
+    err_response.status = -result;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -108,19 +111,22 @@ void rpc_hub_attach(
   #endif
   // check for multiple endpoints
   if ( interface_descriptor.endpoint_count != 1 ) {
-    _syscall_rpc_cleanup();
+    err_response.status = -EIO;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
   // handle only one output
   if ( LIBUSB_DIRECTION_OUT == endpoint_descriptor.endpoint_address.direction ) {
-    _syscall_rpc_cleanup();
+    err_response.status = -EIO;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
   // handle no interrupt endpoint
   if ( LIBUSB_TRANSFER_INTERRUPT != endpoint_descriptor.attributes.transfer ) {
-    _syscall_rpc_cleanup();
+    err_response.status = -EIO;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -128,7 +134,8 @@ void rpc_hub_attach(
   // allocate driver data
   libusb_hub_device_t* hub = malloc( sizeof( *hub ) );
   if ( ! hub ) {
-    _syscall_rpc_cleanup();
+    err_response.status = -ENOMEM;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -144,7 +151,8 @@ void rpc_hub_attach(
   result = hub_read_descriptor( message->device_number, ( void** )&descriptor );
   // handle error
   if ( 0 != result ) {
-    _syscall_rpc_cleanup();
+    err_response.status = -result;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     free( hub );
     free( request );
     return;
@@ -170,10 +178,11 @@ void rpc_hub_attach(
         hub->descriptor->attributes.power_switching_mode,
         usb_get_description( message->device_number ) )
     #endif
-    _syscall_rpc_cleanup();
     free( descriptor );
     free( hub );
     free( request );
+    err_response.status = -EIO;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // some debug output
@@ -207,10 +216,11 @@ void rpc_hub_attach(
         hub->descriptor->attributes.power_switching_mode,
         usb_get_description( message->device_number ) )
     #endif
-    _syscall_rpc_cleanup();
     free( descriptor );
     free( hub );
     free( request );
+    err_response.status = -EIO;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // some debug output
@@ -239,10 +249,11 @@ void rpc_hub_attach(
       EARLY_STARTUP_PRINT( "Unable to fetch hub status for %s: %s\r\n",
         usb_get_description( message->device_number ), strerror( result ) )
     #endif
-    _syscall_rpc_cleanup();
     free( descriptor );
     free( hub );
     free( request );
+    err_response.status = -result;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // some debug output
@@ -260,10 +271,11 @@ void rpc_hub_attach(
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to retrieve root hub: %s\r\n", strerror( result ) )
     #endif
-    _syscall_rpc_cleanup();
     free( descriptor );
     free( hub );
     free( request );
+    err_response.status = -result;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // power on in case it's not the root hub
@@ -278,10 +290,11 @@ void rpc_hub_attach(
       #if defined ( HUB_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to power on hub!\r\n" )
       #endif
-      _syscall_rpc_cleanup();
       free( descriptor );
       free( hub );
       free( request );
+      err_response.status = -result;
+      bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
       return;
     }
   }
@@ -297,10 +310,11 @@ void rpc_hub_attach(
       EARLY_STARTUP_PRINT( "Unable to get hub status for %s: %s\r\n",
         usb_get_description( message->device_number ), strerror( result ) )
     #endif
-    _syscall_rpc_cleanup();
     free( descriptor );
     free( hub );
     free( request );
+    err_response.status = -result;
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // some debug output
@@ -310,21 +324,67 @@ void rpc_hub_attach(
     EARLY_STARTUP_PRINT( "Hub over current condition: %s\r\n",
       !hub->status.status.over_current ? "No" : "Yes" )
   #endif
+  // determine attach count
+  uint32_t attach_count = 0;
+  // loop over children
+  for ( uint32_t port = 0; port < hub->max_children; port++ ) {
+    // get shall attach value
+    bool shall_attach = false;
+    result = hub_shall_to_attach( message->device_number, hub, ( uint8_t )port, &shall_attach );
+    if ( 0 != result ) {
+      #if defined ( HUB_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Unable to check for shall attach of port %"PRIu8"\r\n",
+          ( uint8_t )port)
+      #endif
+      free( descriptor );
+      free( hub );
+      free( request );
+      err_response.status = -result;
+      bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+      return;
+    }
+    // increase attach count if port shall be attached
+    if ( shall_attach ) {
+      attach_count++;
+    }
+  }
+  // allocate context
+  hub_attach_context_t* ctx = malloc( sizeof( *ctx ) );
+  if ( ! ctx ) {
+      #if defined ( HUB_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Unable to allocate memory for context\r\n" )
+      #endif
+      free( descriptor );
+      free( hub );
+      free( request );
+      err_response.status = -ENOMEM;
+      bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+      return;
+  }
+  // clear out
+  memset( ctx, 0, sizeof( *ctx ) );
+  // populate
+  ctx->to_attach = attach_count;
+  ctx->type = type;
+  ctx->response_info = response_info;
+  ctx->data_info = data_info;
   // check for connection
   for ( uint32_t port = 0; port < hub->max_children; port++ ) {
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Checking port %"PRIu32"\r\n", port )
     #endif
-    result = hub_check_connection( message->device_number, hub, ( uint8_t )port );
+    result = hub_check_connection( message->device_number, hub, ( uint8_t )port, ctx );
     if ( 0 != result ) {
       #if defined ( HUB_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to check connection for port: %"PRIu8"\r\n",
           ( uint8_t )port)
       #endif
-      _syscall_rpc_cleanup();
+      free( ctx );
       free( descriptor );
       free( hub );
       free( request );
+      err_response.status = -result;
+      bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
       return;
     }
   }
@@ -332,6 +392,14 @@ void rpc_hub_attach(
   hub_append( hub );
   // free request
   free( request );
-  // cleanup rpc
-  _syscall_rpc_cleanup();
+  // handle nothing to attach
+  if ( 0 == attach_count ) {
+    // free generated context again
+    free( ctx );
+    // return success
+    memset( &err_response, 0, sizeof( err_response ) );
+    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    EARLY_STARTUP_PRINT( "done\r\n" )
+  }
+  EARLY_STARTUP_PRINT( "done\r\n" )
 }

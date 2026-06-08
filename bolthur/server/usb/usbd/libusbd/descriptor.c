@@ -17,11 +17,13 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <assert.h>
 #include <errno.h>
 #include "../libusbd.h"
+#include "../../../libhcd.h"
 
 /**
- * @fn int usbd_descriptor_get_async( const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void* )
+ * @fn int usbd_descriptor_get_async(const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t)
  * @brief Get usb descriptor
  * @param dev
  * @param type
@@ -36,6 +38,7 @@
  * @param original_request
  * @param original_request_size
  * @param context
+ * @param minimum_length
  * @return
  */
 int usbd_descriptor_get_async(
@@ -51,8 +54,13 @@ int usbd_descriptor_get_async(
   const size_t data_info,
   void* original_request,
   const size_t original_request_size,
-  void* context
+  void* context,
+  const size_t minimum_length
 ) {
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "USB DESCRIPTOR GET ASYNC\r\n" )
+  #endif
   // perform control message
   const int result = usbd_control_message_async(
     dev,
@@ -81,7 +89,8 @@ int usbd_descriptor_get_async(
     data_info,
     original_request,
     original_request_size,
-    context
+    context,
+    minimum_length
   );
   // handle error
   if ( 0 != result ) {
@@ -176,100 +185,233 @@ int usbd_descriptor_get(
  * @param data_info
  * @param response_info
  */
-[[maybe_unused]] static void descriptor_read_device_finished(
-  [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  [[maybe_unused]] size_t response_info
+static void descriptor_read_device_finished(
+  size_t type,
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
 ) {
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Read device descriptor finished\r\n" )
+  #endif
+  // peek matching async data without destroy for call chain
+  bolthur_async_data_t* async_data = bolthur_rpc_peek_async(
+    RPC_VFS_IOCTL, response_info );
+  // handle no async data
+  if ( ! async_data ) {
+    // cleanup
+    _syscall_rpc_cleanup();
+    // skip rest
+    return;
+  }
+  // get contexts
+  usbd_descriptor_context_t* ctx = async_data->context;
+  usbd_attach_context_t* attach_context = ctx->context;
+  assert( ctx && attach_context );
+  // dummy error response
+  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
+  // handle no data
+  if ( ! data_info ) {
+    // return
+    if ( ctx->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_descriptor_destroy( ctx );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    // return
+    if ( ctx->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_descriptor_destroy( ctx );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // get message and data size
+  size_t data_size;
+  vfs_ioctl_perform_response_t* submit_response = bolthur_rpc_fetch_from_mailbox(
+    data_info, &data_size, true, nullptr );
+  if ( ! submit_response ) {
+    // return
+    if ( ctx->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_descriptor_destroy( ctx );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // get poll response
+  auto const hcd_submit_command = ( hcd_submit_control_message_t* )submit_response->container;
+  // attach shared memory from poll command
+  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( hcd_submit_command->shm_id, 0 );
+  if ( errno ) {
+    const int e = errno;
+    // free up stuff
+    free( submit_response );
+    // return
+    if ( ctx->with_return ) {
+      err_response.status = -e;
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_descriptor_destroy( ctx );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // get result
+  auto const hcd_submit = ( hcd_control_message_t* )shm_addr_hcd_poll;
+  // check transfer
+  if ( hcd_submit->last_transfer != sizeof( libusb_device_descriptor_t ) ) {
+    // free up stuff
+    _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+    free( submit_response );
+    // return
+    if ( ctx->with_return ) {
+      err_response.status = -EPROTO;
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_descriptor_destroy( ctx );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // response is equal to input
+  if ( hcd_submit->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+    // debug output
+    #if defined( USBD_ENABLE_ERROR )
+      EARLY_STARTUP_PRINT( "error = %#x\r\n", hcd_submit->error )
+    #endif
+    // free up stuff
+    _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+    free( submit_response );
+    // return
+    if ( ctx->with_return ) {
+      err_response.status = -EPROTO;
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_descriptor_destroy( ctx );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // handle direction in with last transfer equal to buffer length
+  if ( hcd_submit->last_transfer == hcd_submit->buffer_length ) {
+    // copy over from hcd poll buffer into device descriptor
+    memcpy(
+      &(attach_context->device->descriptor),
+      hcd_submit->buffer,
+      hcd_submit->buffer_length
+    );
+  }
+  // populate last transfer and error
+  attach_context->device->last_transfer = hcd_submit->last_transfer;
+  attach_context->device->error = hcd_submit->error;
+  // detach hcd submit
+  _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+  // destroy async data
+  bolthur_rpc_destroy_async( async_data );
+  // update ctx
+  ctx->context->origin = origin;
+  ctx->context->data_info = data_info;
+  // invoke callback
+  ctx->handler( type, origin, data_info, response_info );
 }
 
 /**
- * @fn void descriptor_read_device_step_1(size_t, pid_t, size_t, size_t)
- * @brief Callback for first read device step finished
- * @param type
- * @param origin
- * @param data_info
- * @param response_info
- */
-[[maybe_unused]] static void descriptor_read_device_step_1(
-  [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  [[maybe_unused]] size_t response_info
-) {
-}
-
-/**
- * @fn int usbd_descriptor_read_device(libusb_device_t*, rpc_handler_t, void*)
+ * @fn int usbd_descriptor_read_device(libusb_device_t*, rpc_handler_t, bool, usbd_attach_context_t*)
  * @brief Read usb device descriptor
  * @param dev device to read descriptor for
  * @param callback callback to be executed once finished
+ * @param with_return rpc return flag
  * @param context context to be passed through
  * @return
- *
- * @todo rework async
  */
 int usbd_descriptor_read_device(
   libusb_device_t* dev,
-  [[maybe_unused]] rpc_handler_t callback,
-  [[maybe_unused]] void* context
+  const rpc_handler_t callback,
+  const bool with_return,
+  usbd_attach_context_t* context
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Read device descriptor\r\n" )
   #endif
-
+  // determine descriptor speed
   if ( LIBUSB_SPEED_LOW == dev->speed ) {
-    // set max packet size
     dev->descriptor.max_packet_size0 = 8;
-    // get usb descriptor
-    const int result = usbd_descriptor_get(
-      dev, LIBUSB_DESCRIPTOR_DEVICE, 0, 0,
-      ( void* )&dev->descriptor,
-      sizeof( dev->descriptor ), 8, 0 );
-    // handle error
-    if ( 0 != result ) {
-      return result;
-    }
-    // handle fully transferred
-    if ( dev->last_transfer == sizeof( libusb_device_descriptor_t ) ) {
-      return result;
-    }
-    // read again
-    return usbd_descriptor_get(
-      dev, LIBUSB_DESCRIPTOR_DEVICE, 0, 0,
-      ( void* )&dev->descriptor, sizeof( dev->descriptor ),
-      sizeof( dev->descriptor ), 0 );
-  }
-
-  if ( LIBUSB_SPEED_FULL == dev->speed ) {
-    // set packet size
+  } else if ( LIBUSB_SPEED_FULL == dev->speed || LIBUSB_SPEED_HIGH == dev->speed ) {
     dev->descriptor.max_packet_size0 = 64;
-    // get usb descriptor
-    const int result = usbd_descriptor_get(
-      dev, LIBUSB_DESCRIPTOR_DEVICE, 0, 0,
-      ( void* )&dev->descriptor,
-      sizeof( dev->descriptor ), 8, 0 );
-    // handle error
-    if ( 0 != result ) {
-      return result;
-    }
-    // handle fully transferred
-    if ( dev->last_transfer == sizeof( libusb_device_descriptor_t ) ) {
-      return result;
-    }
-    // read again
-    return usbd_descriptor_get(
-      dev, LIBUSB_DESCRIPTOR_DEVICE, 0, 0,
-      ( void* )&dev->descriptor, sizeof( dev->descriptor ),
-      sizeof( dev->descriptor ), 0 );
   }
-
-  // set packet size
-  dev->descriptor.max_packet_size0 = 64;
-  return usbd_descriptor_get(
-    dev, LIBUSB_DESCRIPTOR_DEVICE, 0, 0,
-    ( void* )&dev->descriptor, sizeof( dev->descriptor ),
-    sizeof( dev->descriptor ), 0 );
+  // allocate context
+  usbd_descriptor_context_t* ctx;
+  int result = usbd_context_descriptor_create(
+    callback,
+    context,
+    with_return,
+    &ctx
+  );
+  // handle error
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to allocate context\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // invoke async
+  result = usbd_descriptor_get_async(
+    dev,
+    LIBUSB_DESCRIPTOR_DEVICE,
+    0,
+    0,
+    ( void* )&dev->descriptor,
+    sizeof( dev->descriptor ),
+    0,
+    descriptor_read_device_finished,
+    context->origin,
+    context->data_info,
+    context->request,
+    context->request_size,
+    ctx,
+    DESCRIPTOR_READ_MIN_LENGTH
+  );
+  // handle error
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to get descriptor async\r\n" )
+    #endif
+    // destroy context
+    usbd_context_descriptor_destroy( ctx );
+    // return result
+    return result;
+  }
+  // return success
+  return 0;
 }

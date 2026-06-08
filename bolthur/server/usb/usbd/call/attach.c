@@ -22,13 +22,20 @@
 #include "../call.h"
 
 /**
- * @fn int call_attach( libusb_device_t* dev, uint32_t );
+ * @fn int call_attach( libusb_device_t* dev, uint32_t, rpc_handler_t, usbd_attach_context_t* );
  * @brief Method to call actual attach method
  * @param dev
  * @param interface_number
+ * @param callback
+ * @param context
  * @return
  */
-int call_attach( libusb_device_t* dev, const uint32_t interface_number ) {
+int call_attach(
+  libusb_device_t* dev,
+  const uint32_t interface_number,
+  const rpc_handler_t callback,
+  usbd_attach_context_t* context
+) {
   // get handler for attaching root hub
   pid_t handler;
   const int result = usbd_handler_get( dev->interfaces[ 0 ].class, &handler );
@@ -82,19 +89,18 @@ int call_attach( libusb_device_t* dev, const uint32_t interface_number ) {
     EARLY_STARTUP_PRINT( "Attaching %"PRIu32" with %"PRIu32"\r\n", dev->number, interface_number );
   #endif
   // attach is defined as first custom message
-  bolthur_rpc_raise_generic(
+  bolthur_rpc_raise(
     GENERIC_ATTACH,
     handler,
     request,
     request_size,
-    NULL,
+    callback,
     GENERIC_ATTACH,
     request,
     request_size,
-    0,
-    0,
-    NULL,
-    true,
+    context->origin,
+    context->data_info,
+    context,
     false
   );
   // handle error

@@ -42,6 +42,8 @@ libusb_device_t* head = nullptr;
  * @fn int usbd_init(void)
  * @brief Method to init usbd
  * @return 0 on success, else errno code
+ *
+ * @todo fire roothub attach rpc to prevent race conditions
  */
 int usbd_init( void ) {
   // debug output
@@ -71,7 +73,7 @@ int usbd_init( void ) {
   if ( 0 != result ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Allocating root hub failed: %s\r\n", strerror( result ) )
+      EARLY_STARTUP_PRINT( "Attaching root hub failed: %s\r\n", strerror( result ) )
     #endif
     // return result
     return result;

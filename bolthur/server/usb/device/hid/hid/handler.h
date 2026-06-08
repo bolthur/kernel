@@ -35,6 +35,6 @@ int handler_init( void );
 int handler_register( libusb_hid_usage_page_desktop_t, pid_t );
 int handler_unregister( libusb_hid_usage_page_desktop_t, pid_t );
 int handler_get( libusb_hid_usage_page_desktop_t, pid_t* );
-int handler_call_attach( libusb_hid_usage_page_desktop_t, libusb_hid_device_t*, uint32_t, uint32_t );
+int handler_call_attach( libusb_hid_usage_page_desktop_t, libusb_hid_device_t*, uint32_t, uint32_t, rpc_handler_t, pid_t, size_t );
 
 #endif

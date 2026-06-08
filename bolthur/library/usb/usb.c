@@ -47,7 +47,7 @@ int usb_init( void ) {
   fd_usbd = open( USBD_DEVICE_PATH, O_RDWR );
   // handle error
   if ( fd_usbd == -1 ) {
-    return errno;
+    return EIO;
   }
   // return success
   return 0;
@@ -567,16 +567,22 @@ int usb_get_descriptor(
 }
 
 /**
- * @fn int usb_attach_device(uint32_t, uint32_t, libusb_speed_t)
+ * @fn int usb_attach_device(uint32_t, uint32_t, libusb_speed_t, rpc_handler_t, void*)
  * @brief Method to attach a new discovered device
- * @param parent_number
- * @param port_number
- * @param speed
+ * @param parent_number parent device number
+ * @param port_number port number
+ * @param speed detected speed
+ * @param callback callback to be invoked on finish
+ * @param context context
  * @return
- *
- * @todo return child id
  */
-int usb_attach_device( const uint32_t parent_number, const uint32_t port_number, const libusb_speed_t speed ) {
+int usb_attach_device(
+  const uint32_t parent_number,
+  const uint32_t port_number,
+  const libusb_speed_t speed,
+  const rpc_handler_t callback,
+  void* context
+) {
   // debug message
   #if defined( LIBUSB_ENABLE_DEBUG )
     STARTUP_PRINT( "Attaching device %"PRIu32" to %"PRIu32"\r\n",
@@ -599,28 +605,60 @@ int usb_attach_device( const uint32_t parent_number, const uint32_t port_number,
   request->parent_number = parent_number;
   request->port_number = port_number;
   request->speed = speed;
-  // perform request
-  const int result = ioctl(
-    fd_usbd,
-    IOCTL_BUILD_REQUEST(
-      USBD_ATTACH_DEVICE,
-      sizeof( *request ),
-      IOCTL_RDWR
-    ),
-    request
+  // calculate rpc request size
+  constexpr size_t rpc_request_size = sizeof( vfs_ioctl_perform_request_t )
+    + sizeof( *request );
+  // allocate rpc structures
+  vfs_ioctl_perform_request_t* rpc_request = malloc( rpc_request_size );
+  if ( ! rpc_request ) {
+    // debug output
+    #if defined( LIBUSB_ENABLE_DEBUG )
+      STARTUP_PRINT( "Unable to allocate request\r\n" )
+    #endif
+    // free control request
+    free( request );
+    // return error
+    return ENOMEM;
+  }
+  // clear rpc structures
+  memset( rpc_request, 0, rpc_request_size );
+  // populate structure
+  rpc_request->handle = fd_usbd;
+  rpc_request->command = USBD_ATTACH_DEVICE;
+  rpc_request->type = IOCTL_RDWR;
+  // copy over data
+  memcpy( rpc_request->container, request, sizeof( *request ) );
+  // raise rpc and wait for return
+  const size_t response_id = bolthur_rpc_raise(
+    RPC_VFS_IOCTL,
+    VFS_DAEMON_ID,
+    rpc_request,
+    rpc_request_size,
+    callback,
+    RPC_VFS_IOCTL,
+    rpc_request,
+    rpc_request_size,
+    0,
+    0,
+    context,
+    false
   );
-  // handle ioctl error
-  if ( -1 == result ) {
+  if ( ! response_id ) {
     // debug output
     #if defined( LIBUSB_ENABLE_ERROR )
       const int e = errno;
       STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
-    // free request
+    // free request data
+    free( rpc_request );
+    // free control request
     free( request );
+    // return io error
     return EIO;
   }
-  // free request
+  // free request data
+  free( rpc_request );
+  // free control request
   free( request );
   // return success
   return 0;
@@ -761,6 +799,7 @@ int usb_get_interface(
 ) {
   // debug message
   #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "fd_usbd = %d\r\n", fd_usbd );
     STARTUP_PRINT( "Get interface\r\n" )
   #endif
   // allocate device
@@ -774,6 +813,10 @@ int usb_get_interface(
     // return nomem
     return ENOMEM;
   }
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "fd_usbd = %d\r\n", fd_usbd );
+    STARTUP_PRINT( "Get interface\r\n" )
+  #endif
   // clear out
   memset( request, 0, sizeof( *request ) );
   // copy over necessary data
@@ -792,18 +835,26 @@ int usb_get_interface(
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    #if defined( LIBUSB_ENABLE_ERROR )
+    //#if defined( LIBUSB_ENABLE_ERROR )
       const int e = errno;
       STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
-    #endif
+    //#endif
     // free request
     free( request );
     return EIO;
   }
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "fd_usbd = %d\r\n", fd_usbd );
+    STARTUP_PRINT( "Get interface\r\n" )
+  #endif
   // copy over data
   memcpy( descriptor, request, sizeof( *descriptor ) );
   // free request
   free( request );
+  #if defined( LIBUSB_ENABLE_DEBUG )
+    STARTUP_PRINT( "fd_usbd = %d\r\n", fd_usbd );
+    STARTUP_PRINT( "Get interface\r\n" )
+  #endif
   // return success
   return 0;
 }

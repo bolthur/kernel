@@ -17,6 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <assert.h>
+#include <stdnoreturn.h>
 #include <sys/errno.h>
 
 #include "../call.h"
@@ -30,12 +32,64 @@
  * @param data_info
  * @param response_info
  */
-[[maybe_unused]] static void attach_attach_finished(
-  [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  [[maybe_unused]] size_t response_info
+static void attach_attach_finished(
+  size_t type,
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "Attach call finished\r\n" )
+  // peek matching async data without destroy for call chain
+  bolthur_async_data_t* async_data = bolthur_rpc_peek_async(
+    GENERIC_ATTACH, response_info );
+  // handle no async data
+  if ( ! async_data ) {
+    EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
+    // cleanup
+    _syscall_rpc_cleanup();
+    // skip rest
+    return;
+  }
+  // get contexts
+  usbd_attach_context_t* ctx = async_data->context;
+  assert( ctx );
+  // dummy error response
+  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
+  // handle no data
+  if ( ! data_info ) {
+    EARLY_STARTUP_PRINT( "NO DATA\r\n" )
+    // return
+    if ( ctx->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_attach_destroy( ctx );
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
+    // return
+    if ( ctx->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_attach_destroy( ctx );
+    return;
+  }
+  // adjust origin and data info
+  ctx->origin = origin;
+  ctx->data_info = data_info;
+  // invoke handler
+  ctx->handler( type, origin, data_info, response_info );
+  // finally destroy attach context
+  usbd_context_attach_destroy( ctx );
 }
 
 /**
@@ -46,12 +100,96 @@
  * @param data_info
  * @param response_info
  */
-[[maybe_unused]] static void attach_configure_finished(
+static void attach_configure_finished(
   [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  [[maybe_unused]] size_t response_info
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "Attach configure finished\r\n" )
+  // peek matching async data without destroy for call chain
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
+    RPC_VFS_IOCTL, response_info );
+  // handle no async data
+  if ( ! async_data ) {
+    // cleanup
+    _syscall_rpc_cleanup();
+    // skip rest
+    return;
+  }
+  // get contexts
+  usbd_configuration_context_t* ctx = async_data->context;
+  usbd_configure_context_t* configure_context = ctx->context;
+  usbd_attach_context_t* attach_context = configure_context->context;
+  assert( ctx && configure_context && attach_context );
+  // dummy error response
+  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
+  // handle no data
+  if ( ! data_info ) {
+    // return
+    if ( ctx->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+      // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_configuration_destroy( ctx );
+    usbd_context_configure_destroy( configure_context );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    // return
+    if ( ctx->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+      // just cleanup
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    usbd_context_configuration_destroy( ctx );
+    usbd_context_configure_destroy( configure_context );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "dev->interfaces[ 0 ].class = %d\r\n", attach_context->device->interfaces[ 0 ].class )
+  #endif
+  // call to attach the device
+  const int result = call_attach(
+    attach_context->device,
+    0,
+    attach_attach_finished,
+    attach_context
+  );
+  // handle error
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Failed calling attach: %s\r\n", strerror( result ) )
+    #endif
+    // return nodev
+    if ( attach_context->with_return ) {
+      err_response.status = -result;
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    // destroy contexts
+    usbd_context_configuration_destroy( ctx );
+    usbd_context_configure_destroy( configure_context );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // destroy contexts
+  usbd_context_configuration_destroy( ctx );
+  usbd_context_configure_destroy( configure_context );
+  bolthur_rpc_destroy_async( async_data );
+  EARLY_STARTUP_PRINT( "DONE\r\n" )
 }
 
 /**
@@ -62,12 +200,95 @@
  * @param data_info
  * @param response_info
  */
-[[maybe_unused]] static void attach_read_device_finished_2(
+static void attach_read_device_finished_2(
   [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  [[maybe_unused]] size_t response_info
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
 ) {
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Second read finished\r\n" )
+  #endif
+  // peek matching async data
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
+    RPC_VFS_IOCTL, response_info );
+  // handle no async data
+  if ( ! async_data ) {
+    // cleanup
+    _syscall_rpc_cleanup();
+    // skip rest
+    return;
+  }
+  // get context out of context
+  usbd_descriptor_context_t* descriptor_context = async_data->context;
+  usbd_attach_context_t* attach_context = descriptor_context->context;
+  assert( descriptor_context && attach_context );
+  // dummy error response
+  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
+  // handle no data
+  if ( ! data_info ) {
+    if ( attach_context->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    // cleanup contexts
+    usbd_context_descriptor_destroy( descriptor_context );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    if ( attach_context->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    // cleanup contexts
+    usbd_context_descriptor_destroy( descriptor_context );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Attach Device %s. Address:%"PRIu8" Class:%d Subclass:%"PRIu8
+      " USB:%"PRIx16".%"PRIx16". %"PRIu8" configurations, %"PRIu8" interfaces.\n",
+      usbd_description_get( attach_context->device ), attach_context->address, attach_context->device->descriptor.class, attach_context->device->descriptor.subclass,
+      ( uint16_t )( attach_context->device->descriptor.usb_version >> 8 ), ( uint16_t )( attach_context->device->descriptor.usb_version >> 4 ),
+      attach_context->device->descriptor.configuration_count, attach_context->device->configuration.interface_count )
+    EARLY_STARTUP_PRINT( "Device Attached: %s\r\n", usbd_description_get( attach_context->device ) )
+  #endif
+  // configure device
+  const int result = usbd_device_configure(
+    attach_context->device,
+    0,
+    attach_configure_finished,
+    attach_context->with_return,
+    attach_context
+  );
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Configure failed: %s\r\n", strerror( result ) )
+    #endif
+    // return nodev
+    if ( attach_context->with_return ) {
+      err_response.status = -result;
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    // cleanup contexts
+    usbd_context_descriptor_destroy( descriptor_context );
+    usbd_context_attach_destroy( attach_context );
+  }
+  // destroy descriptor context
+  usbd_context_descriptor_destroy( descriptor_context );
+  bolthur_rpc_destroy_async( async_data );
 }
 
 /**
@@ -78,12 +299,83 @@
  * @param data_info
  * @param response_info
  */
-[[maybe_unused]] static void attach_set_address_finished(
+static void attach_set_address_finished(
   [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  [[maybe_unused]] size_t response_info
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
 ) {
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "SET ADDRESS FINISHED\r\n")
+  #endif
+  // pop matching async data
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
+    RPC_VFS_IOCTL, response_info );
+  // handle no async data
+  if ( ! async_data ) {
+    // cleanup
+    _syscall_rpc_cleanup();
+    // skip rest
+    return;
+  }
+  // dummy error response
+  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
+  // get context out of context
+  usbd_address_context_t* address_context = async_data->context;
+  usbd_attach_context_t* attach_context = address_context->context;
+  assert( address_context && attach_context );
+  // handle no data
+  if ( ! data_info ) {
+    if ( attach_context->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    // cleanup contexts
+    usbd_context_address_destroy( address_context );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    if ( attach_context->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    // cleanup contexts
+    usbd_context_address_destroy( address_context );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // overwrite number again
+  attach_context->device->number = attach_context->address;
+  // re-read device descriptor
+  const int result = usbd_descriptor_read_device(
+    attach_context->device,
+    attach_read_device_finished_2,
+    attach_context->with_return,
+    attach_context
+  );
+  // handle error
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Reading device descriptor failed: %s\r\n", strerror( result ) )
+    #endif
+    // cleanup contexts
+    usbd_context_address_destroy( address_context );
+    usbd_context_attach_destroy( attach_context );
+    // return nodev
+    err_response.status = -ENODEV;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    return;
+  }
+  // destroy descriptor context
+  usbd_context_address_destroy( address_context );
+  bolthur_rpc_destroy_async( async_data );
 }
 
 /**
@@ -94,16 +386,120 @@
  * @param data_info
  * @param response_info
  */
-[[maybe_unused]] static void attach_read_device_finished_1(
+static void attach_read_device_finished_1(
   [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  [[maybe_unused]] size_t response_info
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
 ) {
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Attaching device first read finished\r\n" )
+  #endif
+  // peek matching async data
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
+    RPC_VFS_IOCTL, response_info );
+  // handle no async data
+  if ( ! async_data ) {
+    // cleanup
+    _syscall_rpc_cleanup();
+    // skip rest
+    return;
+  }
+  // dummy error response
+  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
+  // get context out of context
+  usbd_descriptor_context_t* descriptor_context = async_data->context;
+  usbd_attach_context_t* attach_context = descriptor_context->context;
+  assert( descriptor_context && attach_context );
+  // handle no data
+  if ( ! data_info ) {
+    if ( attach_context->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    // cleanup contexts
+    usbd_context_descriptor_destroy( descriptor_context );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    if ( attach_context->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    // cleanup contexts
+    usbd_context_descriptor_destroy( descriptor_context );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // get device again by address
+  // set device status to default
+  attach_context->device->status = LIBUSB_DEVICE_STATUS_DEFAULT;
+  // handle parent set with device child reset
+  if ( attach_context->device->parent ) {
+    // perform child reset
+    /// FIXME: INTEGRATE INTO RECURSIVE CHAIN
+    const int result = call_child_reset( attach_context->device->parent, attach_context->device );
+    // handle error
+    if ( 0 != result ) {
+      // debug output
+      #if defined( USBD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Reset child device failed: %s\r\n", strerror( result ) )
+      #endif
+      // restore number
+      attach_context->device->number = attach_context->address;
+      if ( attach_context->with_return ) {
+        bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+      } else {
+        _syscall_rpc_cleanup();
+        bolthur_rpc_destroy_async( async_data );
+      }
+      // cleanup contexts
+      usbd_context_descriptor_destroy( descriptor_context );
+      usbd_context_attach_destroy( attach_context );
+      return;
+    }
+  }
+  // set address
+  const int result = usbd_address_set(
+    attach_context->device,
+    attach_context->address,
+    attach_set_address_finished,
+    attach_context->with_return,
+    attach_context
+  );
+  // handle error
+  if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Set address failed: %s\r\n", strerror( result ) )
+    #endif
+    // restore number
+    attach_context->device->number = attach_context->address;
+    if ( attach_context->with_return ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+    } else {
+      _syscall_rpc_cleanup();
+      bolthur_rpc_destroy_async( async_data );
+    }
+    // cleanup contexts
+    usbd_context_descriptor_destroy( descriptor_context );
+    usbd_context_attach_destroy( attach_context );
+    return;
+  }
+  // destroy descriptor context
+  usbd_context_descriptor_destroy( descriptor_context );
+  bolthur_rpc_destroy_async( async_data );
 }
 
 /**
- * @fn int usbd_attach_device(libusb_device_t*, rpc_handler_t, pid_t, size_t, void*, size_t)
+ * @fn int usbd_attach_device(libusb_device_t*, rpc_handler_t, pid_t, size_t, void*, size_t, size_t, bool)
  * @brief Wrapper to attach device
  * @param dev device to attach
  * @param callback callback to be invoked ( set to nullptr if not there )
@@ -111,9 +507,9 @@
  * @param data_info original rpc id ( set to 0 if not there )
  * @param original_request original request ( set to nullptr if not there )
  * @param original_request_size original request size ( set to 0 if not there )
+ * @param response_info original response info ( set to 0 if not there )
+ * @param with_return flag whether it shall return rpc or not
  * @return 0 on success else errno
- *
- * @todo rework async
  */
 int usbd_attach_device(
   libusb_device_t* dev,
@@ -121,20 +517,40 @@ int usbd_attach_device(
   const pid_t origin,
   const size_t data_info,
   const void* original_request,
-  const size_t original_request_size
+  const size_t original_request_size,
+  const size_t response_info,
+  const bool with_return
 ) {
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Attaching device\r\n" )
+  #endif
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "dev->number = %"PRIu32" device\r\n", dev->number )
+  #endif
   // cache device number
   const uint8_t address = ( uint8_t )dev->number;
   // reset device number
   dev->number = 0;
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "address = %"PRIu8", dev->number = %"PRIu32" device\r\n",
+      address, dev->number )
+  #endif
   // create context for async chain
   usbd_attach_context_t* ctx;
-  int result = context_attach_create(
+  int result = usbd_context_attach_create(
     callback,
     origin,
     data_info,
+    response_info,
     original_request,
     original_request_size,
+    address,
+    (uint8_t)dev->number,
+    dev,
+    with_return,
     &ctx
   );
   // handle error
@@ -154,6 +570,7 @@ int usbd_attach_device(
   result = usbd_descriptor_read_device(
     dev,
     attach_read_device_finished_1,
+    with_return,
     ctx
   );
   // handle error
@@ -165,94 +582,10 @@ int usbd_attach_device(
     // restore number
     dev->number = address;
     // destroy context
-    context_attach_destroy( ctx );
+    usbd_context_attach_destroy( ctx );
     // return result
     return result;
   }
-  // set device status to default
-  dev->status = LIBUSB_DEVICE_STATUS_DEFAULT;
-  // handle parent set with device child reset
-  if ( dev->parent ) {
-    // perform child reset
-    result = call_child_reset( dev->parent, dev );
-    // handle error
-    if ( 0 != result ) {
-      // debug output
-      #if defined( USBD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "Reset child device failed: %s\r\n", strerror( result ) )
-      #endif
-      // restore number
-      dev->number = address;
-      // return result
-      return result;
-    }
-  }
-  // set address
-  result = usbd_address_set( dev, address );
-  // handle error
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Set address failed: %s\r\n", strerror( result ) )
-    #endif
-    // restore number
-    dev->number = address;
-    // return result
-    return result;
-  }
-  // overwrite number again
-  dev->number = address;
-  // re-read device descriptor
-  result = usbd_descriptor_read_device(
-    dev,
-    attach_read_device_finished_2,
-    ctx
-  );
-  // handle error
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Reading device descriptor failed: %s\r\n", strerror( result ) )
-    #endif
-    // destroy context
-    context_attach_destroy( ctx );
-    // return result
-    return result;
-  }
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Attach Device %s. Address:%"PRIu8" Class:%d Subclass:%"PRIu8
-      " USB:%"PRIx16".%"PRIx16". %"PRIu8" configurations, %"PRIu8" interfaces.\n",
-      usbd_description_get( dev ), address, dev->descriptor.class, dev->descriptor.subclass,
-      ( uint16_t )( dev->descriptor.usb_version >> 8 ), ( uint16_t )( dev->descriptor.usb_version >> 4 ),
-      dev->descriptor.configuration_count, dev->configuration.interface_count )
-    EARLY_STARTUP_PRINT( "Device Attached: %s\r\n", usbd_description_get( dev ) )
-  #endif
-  // configure device
-  result = usbd_device_configure( dev, 0 );
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Configure failed: %s\r\n", strerror( result ) )
-    #endif
-  }
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "dev->interfaces[ 0 ].class = %d\r\n", dev->interfaces[ 0 ].class )
-  #endif
-  // call to attach the device
-  result = call_attach( dev, 0 );
-  // handle error
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Failed calling attach: %s\r\n", strerror( result ) )
-    #endif
-    // return result
-    return result;
-  }
-  // destroy context
-  context_attach_destroy( ctx );
   // return success
   return 0;
 }

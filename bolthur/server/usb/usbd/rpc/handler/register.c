@@ -72,6 +72,8 @@ void rpc_handler_register(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
+  // set as allowed origin for return
+  bolthur_rpc_origin_push_valid( message->handler );
   // return success without data
   error.status = 0;
   bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );

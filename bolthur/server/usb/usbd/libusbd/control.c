@@ -181,7 +181,7 @@ int usbd_control_message(
 }
 
 /**
- * @fn int usbd_control_message(const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*);
+ * @fn int usbd_control_message(const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t);
  * @brief Wrapper to perform async usbd control message
  * @param dev device to use for control message
  * @param usb_pipe pipe to use
@@ -195,6 +195,7 @@ int usbd_control_message(
  * @param original_request original request
  * @param original_request_size original request size
  * @param context additional context stuff ( use nullptr if not available )
+ * @param minimum_length minimum length to read ( use 0 if not available )
  * @return
  */
 int usbd_control_message_async(
@@ -209,7 +210,8 @@ int usbd_control_message_async(
   const size_t data_info,
   void* original_request,
   const size_t original_request_size,
-  void* context
+  void* context,
+  size_t minimum_length
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
@@ -249,6 +251,7 @@ int usbd_control_message_async(
   memcpy( &message->request, request, sizeof( *request ) );
   message->buffer_length = buffer_length;
   message->timeout = timeout;
+  message->minimum_length = minimum_length;
   if ( LIBUSB_DIRECTION_OUT == usb_pipe.direction && buffer ) {
     memcpy( &message->buffer, buffer, buffer_length );
   }

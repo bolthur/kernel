@@ -48,6 +48,7 @@ typedef struct {
   uint8_t last_usb_pid;
   uint32_t previous_transferred_packet;
   size_t timeout;
+  size_t minimum_length;
   uint8_t buffer[];
 } hcd_control_message_t;
 

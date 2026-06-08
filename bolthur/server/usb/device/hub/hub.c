@@ -22,9 +22,10 @@
 #include <sys/bolthur.h>
 #include "hub.h"
 #include "../../../libusb.h"
+#include "../../../libusbd.h"
 #include "../../../../library/usb/usb.h"
 
-libusb_hub_device_t* hub_head = NULL;
+libusb_hub_device_t* hub_head = nullptr;
 
 /**
  * @fn void custom_nanosleep(const struct timespec*)
@@ -65,7 +66,7 @@ static void custom_nanosleep( const struct timespec* rqtp ) {
 void hub_append( libusb_hub_device_t* hub ) {
   // loop to last one
   libusb_hub_device_t* current = hub_head;
-  libusb_hub_device_t* found = NULL;
+  libusb_hub_device_t* found = nullptr;
   while ( current ) {
     found = current;
     current = current->next;
@@ -73,8 +74,8 @@ void hub_append( libusb_hub_device_t* hub ) {
   // handle empty
   if ( ! found ) {
     hub_head = hub;
-    hub->prev = NULL;
-    hub->next = NULL;
+    hub->prev = nullptr;
+    hub->next = nullptr;
     return;
   }
   // attach to list
@@ -216,7 +217,7 @@ int hub_change_port_feature(
     device_number,
     LIBUSB_TRANSFER_CONTROL,
     LIBUSB_DIRECTION_OUT,
-    NULL,
+    nullptr,
     0,
     &( libusb_device_request_t ) {
       .request = set
@@ -445,17 +446,106 @@ int hub_port_reset(
 }
 
 /**
- * @fn int hub_port_connection_changed(uint32_t, libusb_hub_device_t*, uint8_t)
+ * @fn void hub_attach_finished( size_t, pid_t, size_t, size_t )
+ * @brief Single port attach finished callback
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+static void hub_attach_finished(
+  [[maybe_unused]] size_t type,
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  // debug output
+  #if defined( HUB_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Attach of one port finished\r\n" )
+  #endif
+  // peek matching async data without destroy for call chain
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
+    RPC_VFS_IOCTL, response_info );
+  // handle no async data
+  if ( ! async_data ) {
+    // debug output
+    #if defined( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "No async data\r\n" )
+    #endif
+    // cleanup
+    _syscall_rpc_cleanup();
+    // skip rest
+    return;
+  }
+  // get contexts
+  hub_attach_context_t* ctx = async_data->context;
+  // decrement to attach amount
+  ctx->to_attach--;
+  // handle no data
+  if ( ! data_info ) {
+    #if defined ( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "No data\r\n" )
+    #endif
+    _syscall_rpc_cleanup();
+    if ( !ctx->to_attach ) {
+      free( ctx );
+    }
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    #if defined ( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "invalid origin\r\n" )
+    #endif
+    _syscall_rpc_cleanup();
+    if ( !ctx->to_attach ) {
+      free( ctx );
+    }
+    return;
+  }
+  // get attach response
+  size_t data_size;
+  vfs_ioctl_perform_response_t* attach_response = bolthur_rpc_fetch_from_mailbox(
+    data_info, &data_size, true, nullptr );
+  if ( ! attach_response ) {
+    #if defined ( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "nothing in mailbox\r\n" )
+    #endif
+    _syscall_rpc_cleanup();
+    if ( !ctx->to_attach ) {
+      free( ctx );
+    }
+    return;
+  }
+  // handle nothing more to attach
+  if ( ! ctx->to_attach ) {
+    // debug output
+    #if defined( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Successfully attached the hub %zu\r\n", ctx->response_info )
+    #endif
+    vfs_ioctl_perform_response_t err_response = { .status = 0 };
+    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, ctx->data_info );
+  }
+  _syscall_rpc_cleanup();
+  if ( !ctx->to_attach ) {
+    free( ctx );
+  }
+}
+
+/**
+ * @fn int hub_port_connection_changed(uint32_t, libusb_hub_device_t*, uint8_t, void*)
  * @brief Method to handle connection change of port
  * @param device_number
  * @param device_data
  * @param port
+ * @param context
  * @return
  */
 int hub_port_connection_changed(
   const uint32_t device_number,
   libusb_hub_device_t* device_data,
-  const uint8_t port
+  const uint8_t port,
+  void* context
 ) {
   // cache status
   const libusb_hub_port_full_status_t* full_status = &device_data->port_status[ port ];
@@ -528,7 +618,7 @@ int hub_port_connection_changed(
         port, device_number )
   #endif
   // attach new device
-  result = usb_attach_device( device_number, port, speed );
+  result = usb_attach_device( device_number, port, speed, hub_attach_finished, context );
   // handle error
   if ( 0 != result ) {
     // debug output
@@ -543,17 +633,78 @@ int hub_port_connection_changed(
 }
 
 /**
- * @fn int hub_check_connection(uint32_t, libusb_hub_device_t*, uint8_t)
+ * @fn int hub_evaluate_to_attach( uint32_t, libusb_hub_device_t*, uint8_t, bool* )
+ * @brief Function to evaluate attach amount
+ * @param device_number device number
+ * @param device_data device data
+ * @param port port to attach
+ * @param to_attach output variable
+ * @return
+ */
+int hub_shall_to_attach(
+  const uint32_t device_number,
+  libusb_hub_device_t* device_data,
+  const uint8_t port,
+  bool* to_attach
+) {
+  // cache hub device
+  [[maybe_unused]] const bool previously_connected = device_data->port_status[ port ].status.connected;
+  uint32_t roothub_device_number;
+  int result = usb_get_root_hub( &roothub_device_number );
+  if ( 0 != result ) {
+    // debug output
+    #if defined ( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to retrieve root hub: %s\r\n", strerror( result ) )
+    #endif
+    // return result
+    return result;
+  }
+  // get port status
+  result = hub_get_port_status( device_number, device_data, port );
+  if ( 0 != result ) {
+    // debug output
+    #if defined ( HUB_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to retrieve port status: %s\r\n", strerror( result ) )
+    #endif
+    // return result
+    return result;
+  }
+  // cache full status
+  const libusb_hub_port_full_status_t* port_status = &device_data->port_status[ port ];
+  // handle connection changed
+  if ( port_status->change.connected_changed ) {
+    *to_attach = true;
+    return 0;
+  }
+  // enabled change only in case it's not the root hub with connected
+  if (
+    port_status->change.enabled_changed
+    && roothub_device_number != device_number
+    && ! port_status->status.enabled
+    && port_status->status.connected
+    && device_data->children[ port ]
+  ) {
+     *to_attach = true;
+    return 0;
+  }
+  // return success
+  return 0;
+}
+
+/**
+ * @fn int hub_check_connection(uint32_t, libusb_hub_device_t*, uint8_t, void*)
  * @brief Function to check hub connection
  * @param device_number
  * @param device_data
  * @param port
+ * @param context
  * @return
  */
 int hub_check_connection(
   const uint32_t device_number,
   libusb_hub_device_t* device_data,
-  const uint8_t port
+  const uint8_t port,
+  void* context
 ) {
   // cache hub device
   [[maybe_unused]] const bool previously_connected = device_data->port_status[ port ].status.connected;
@@ -606,7 +757,7 @@ int hub_check_connection(
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Connected changed!\r\n" )
     #endif
-    result = hub_port_connection_changed( device_number, device_data, port );
+    result = hub_port_connection_changed( device_number, device_data, port, context );
     if ( 0 != result ) {
       #if defined ( HUB_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to check for connection changed\r\n" )
@@ -645,7 +796,7 @@ int hub_check_connection(
           usb_get_description( device_number ), port + 1 )
       #endif
       // call connection changed
-      result = hub_port_connection_changed( device_number, device_data, port );
+      result = hub_port_connection_changed( device_number, device_data, port, context );
       if ( 0 != result ) {
         #if defined ( HUB_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Unable to check for connection changed\r\n" )

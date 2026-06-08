@@ -17,6 +17,8 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <sys/unistd.h>
+
 #include "../libusbd.h"
 
 /**
@@ -27,6 +29,66 @@
 libusb_device_t* usbd_roothub_get( void ) {
   // return first device or null if not set
   return head;
+}
+
+/**
+ * @fn attach_roothub_finished( size_t, pid_t, size_t, size_t )
+ * @brief Attach roothub finished callback
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+static void attach_roothub_finished(
+  [[maybe_unused]] size_t type,
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  EARLY_STARTUP_PRINT( "ROOTHUB ATTACH FINISHED\r\n" )
+  // peek matching async data without destroy for call chain
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
+    GENERIC_ATTACH, response_info );
+  // handle no async data
+  if ( ! async_data ) {
+    EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
+    // cleanup
+    _syscall_rpc_cleanup();
+    // skip rest
+    return;
+  }
+  // handle no data
+  if ( ! data_info ) {
+    EARLY_STARTUP_PRINT( "NO DATA\r\n" )
+    bolthur_rpc_destroy_async( async_data );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
+    bolthur_rpc_destroy_async( async_data );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // get data from mailbox
+  size_t data_size;
+  vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
+  if ( ! response ) {
+    EARLY_STARTUP_PRINT( "NO DATA\r\n" )
+    bolthur_rpc_destroy_async( async_data );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // handle result
+  if ( 0 > response->status ) {
+    EARLY_STARTUP_PRINT( "Attach of roothub failed: %s\r\n", strerror( -response->status ) )
+  } else {
+    EARLY_STARTUP_PRINT( "Roothub successfully attached\r\n" )
+  }
+  free( response );
+  bolthur_rpc_destroy_async( async_data );
+  _syscall_rpc_cleanup();
 }
 
 /**
@@ -61,7 +123,7 @@ int usbd_roothub_attach( void ) {
   // set device to powered on
   root_hub->status = LIBUSB_DEVICE_STATUS_POWERED;
   // attach usb device
-  result = usbd_attach_device( root_hub, nullptr, 0, 0, nullptr, 0 );
+  result = usbd_attach_device( root_hub, attach_roothub_finished, getpid(), 0, nullptr, 0, 0, false );
   // handle error
   if ( 0 != result ) {
     // debug output

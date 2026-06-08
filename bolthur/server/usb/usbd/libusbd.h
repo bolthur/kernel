@@ -22,8 +22,8 @@
 
 #include "../../libusbd.h"
 
-//#define USBD_ENABLE_DEBUG 1
-//#define USBD_ENABLE_ERROR 1
+#define USBD_ENABLE_DEBUG 1
+#define USBD_ENABLE_ERROR 1
 
 // if one of both is defined include inttypes for printing stuff
 #if defined( USBD_ENABLE_DEBUG ) || defined( USBD_ENABLE_ERROR )
@@ -36,6 +36,11 @@
 #define CONTROL_MESSAGE_TIMEOUT 10
 
 /**
+ * @brief Min descriptor read length
+ */
+#define DESCRIPTOR_READ_MIN_LENGTH 8
+
+/**
  * @brief usbd attach context for async attach
  */
 typedef struct {
@@ -43,47 +48,100 @@ typedef struct {
   void* request;
   /** request size */
   size_t request_size;
-  /** origin */
+  /** origin modified in call chain */
   pid_t origin;
-  /** data info */
+  /** data info modified in call chain */
   size_t data_info;
+  /** original response info */
+  size_t original_response_info;
   /** handler to be called on finish */
   rpc_handler_t handler;
+  /** device */
+  uint8_t device_number;
+  /** address to use */
+  uint8_t address;
+  /** device itself to attach */
+  libusb_device_t* device;
+  /** return flag */
+  bool with_return;
 } usbd_attach_context_t;
 
 typedef struct {
   /** original context */
-  void* context;
+  usbd_attach_context_t* context;
   /** handler to be called once finished */
   rpc_handler_t handler;
+  /** return flag */
+  bool with_return;
 } usbd_descriptor_context_t;
 
+typedef struct {
+  /** original context */
+  usbd_attach_context_t* context;
+  /** handler to be called once finished */
+  rpc_handler_t handler;
+  /** address that is going to be set */
+  uint8_t address;
+  /** return flag */
+  bool with_return;
+} usbd_address_context_t;
+
+typedef struct {
+  /** original context */
+  usbd_attach_context_t* context;
+  /** handler to be called once finished */
+  rpc_handler_t handler;
+  /** configuration */
+  uint8_t configuration;
+  /** full configuration descriptor */
+  void* full_descriptor;
+  /** return flag */
+  bool with_return;
+} usbd_configure_context_t;
+
+typedef struct {
+  /** original context */
+  usbd_configure_context_t* context;
+  /** handler to be called once finished */
+  rpc_handler_t handler;
+  /** configuration */
+  uint8_t configuration;
+  /** return flag */
+  bool with_return;
+} usbd_configuration_context_t;
+
 // address
-int usbd_address_set( libusb_device_t*, uint8_t );
+int usbd_address_set( libusb_device_t*, uint8_t, rpc_handler_t, bool, usbd_attach_context_t* );
 // allocate
 int usbd_allocate_device( libusb_device_t**, bool );
 // attach
-int usbd_attach_device( libusb_device_t*, rpc_handler_t, pid_t, size_t, const void*, size_t );
+int usbd_attach_device( libusb_device_t*, rpc_handler_t, pid_t, size_t, const void*, size_t, size_t, bool );
 // configuration
-int usbd_configuration_set( libusb_device_t*, uint8_t );
+int usbd_configuration_set( libusb_device_t*, uint8_t, rpc_handler_t, bool, usbd_configure_context_t* );
 // context
-int context_attach_create( rpc_handler_t, pid_t, size_t, const void*, size_t, usbd_attach_context_t** );
-void context_attach_destroy( usbd_attach_context_t* );
-int context_descriptor_create( rpc_handler_t, void*, usbd_descriptor_context_t** );
-void context_descriptor_destroy( usbd_attach_context_t* );
+int usbd_context_attach_create( rpc_handler_t, pid_t, size_t, size_t, const void*, size_t, uint8_t, uint8_t, libusb_device_t*, bool, usbd_attach_context_t**);
+void usbd_context_attach_destroy( usbd_attach_context_t* );
+int usbd_context_descriptor_create( rpc_handler_t, void*, bool, usbd_descriptor_context_t** );
+void usbd_context_descriptor_destroy( usbd_descriptor_context_t* );
+int usbd_context_address_create( rpc_handler_t, void*, uint8_t, bool, usbd_address_context_t** );
+void usbd_context_address_destroy( usbd_address_context_t* );
+int usbd_context_configure_create( rpc_handler_t callback, void* context, uint8_t address, bool with_return, usbd_configure_context_t** );
+void usbd_context_configure_destroy( usbd_configure_context_t* );
+int usbd_context_configuration_create( rpc_handler_t, void*, uint8_t, bool, usbd_configuration_context_t** );
+void usbd_context_configuration_destroy( usbd_configuration_context_t* );
 // control
 int usbd_control_message( libusb_device_t*, libusb_pipe_address_t, void*, size_t, const libusb_device_request_t*, size_t );
-int usbd_control_message_async( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t, void* );
+int usbd_control_message_async( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, const libusb_device_request_t*, size_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t );
 // deallocate
 void usbd_deallocate_device( libusb_device_t* );
 // description
 const char* usbd_description_get( const libusb_device_t* );
 // descriptor
 int usbd_descriptor_get( libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, void*, size_t, size_t, uint8_t );
-int usbd_descriptor_get_async( const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void* );
-int usbd_descriptor_read_device( libusb_device_t*, rpc_handler_t, void* );
+int usbd_descriptor_get_async( const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t );
+int usbd_descriptor_read_device( libusb_device_t*, rpc_handler_t, bool, usbd_attach_context_t* );
 // device
-int usbd_device_configure( libusb_device_t*, uint8_t );
+int usbd_device_configure( libusb_device_t*, uint8_t, rpc_handler_t, bool, usbd_attach_context_t* );
 int usbd_device_get_by_number( uint32_t, libusb_device_t** );
 // handler
 int usbd_handler_init( void );

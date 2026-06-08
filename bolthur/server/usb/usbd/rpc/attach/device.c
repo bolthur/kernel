@@ -25,6 +25,8 @@
 #include "../../rpc.h"
 #include "../../libusbd.h"
 // driver includes
+#include <assert.h>
+
 #include "../../../../libusbd.h"
 
 /**
@@ -39,10 +41,69 @@
  */
 static void rpc_attach_device_finished(
   [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
-  [[maybe_unused]] size_t response_info
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "device finished\r\n" )
+  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
+  // peek matching async data without destroy for call chain
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
+    GENERIC_ATTACH, response_info );
+  if ( ! async_data ) {
+    EARLY_STARTUP_PRINT( "NO ASYNC DATA!\r\n" )
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // get contexts
+  const usbd_attach_context_t* ctx = async_data->context;
+  assert( ctx );
+  // just destroy it
+  bolthur_rpc_destroy_async( async_data );
+  // handle no data
+  if ( ! data_info ) {
+  EARLY_STARTUP_PRINT( "device finished\r\n" )
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
+    return;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+  EARLY_STARTUP_PRINT( "device finished\r\n" )
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
+    return;
+  }
+  // get data from mailbox
+  size_t data_size;
+  vfs_ioctl_perform_response_t* attach_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
+  if ( ! attach_response ) {
+  EARLY_STARTUP_PRINT( "device finished\r\n" )
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
+    return;
+  }
+  // get original request
+  const vfs_ioctl_perform_request_t* request = async_data->original_data;
+  // calculate container size
+  const size_t container_size = async_data->length - sizeof( vfs_ioctl_perform_request_t );
+  // allocate response structure
+  const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
+  vfs_ioctl_perform_response_t* response = malloc( response_size );
+  if ( ! response ) {
+  EARLY_STARTUP_PRINT( "device finished\r\n" )
+    error.status = -ENOMEM;
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
+    return;
+  }
+  EARLY_STARTUP_PRINT( "device finished\r\n" )
+  // clear memory
+  memset( response, 0, response_size );
+  // copy over result
+  response->status = attach_response->status;
+  memcpy( response->container, request->container, container_size );
+  // return from rpc
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, ctx->original_response_info );
+  // free response
+  free( response );
 }
 
 /**
@@ -52,8 +113,6 @@ static void rpc_attach_device_finished(
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
- *
- * @todo make sync request async
  */
 void rpc_attach_device(
   [[maybe_unused]] size_t type,
@@ -80,21 +139,8 @@ void rpc_attach_device(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate space for pull_request
   const usbd_attach_device_t* message = ( usbd_attach_device_t* )request->container;
-  // allocate response structure
-  const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
-  vfs_ioctl_perform_response_t* response = malloc( response_size );
-  if ( ! response ) {
-    error.status = -ENOMEM;
-    // free request
-    free( request );
-    // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
-    return;
-  }
-  memset( response, 0, response_size );
   // find device
   libusb_device_t* device;
   int result = usbd_device_get_by_number( message->parent_number, &device );
@@ -102,7 +148,6 @@ void rpc_attach_device(
     error.status = -result;
     // free request
     free( request );
-    free( response );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
@@ -115,7 +160,6 @@ void rpc_attach_device(
     error.status = -result;
     // free request
     free( request );
-    free( response );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
@@ -133,14 +177,19 @@ void rpc_attach_device(
     origin,
     data_info,
     request,
-    data_size
+    data_size,
+    response_info,
+    true
   );
-  // populate response
-  response->status = -result;
-  memcpy( response->container, request->container, container_size );
-  // return from rpc
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
+  // handle error
+  if ( 0 != result ) {
+    error.status = -result;
+    // free request
+    free( request );
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    return;
+  }
   // free up memory
   free( request );
-  free( response );
 }

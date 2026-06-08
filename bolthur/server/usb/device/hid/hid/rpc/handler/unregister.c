@@ -44,20 +44,20 @@ void rpc_handler_unregister(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get data from mailbox
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // allocate space for pull_request
@@ -67,11 +67,14 @@ void rpc_handler_unregister(
   // handle error
   if ( 0 != result ) {
     error.status = -result;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
+  // set as allowed origin for return
+  /// FIXME: REMOVE AS VALID ORIGIN
+  //bolthur_rpc_origin_push_valid( message->handler );
   // return success
   error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
   free( request );
 }
