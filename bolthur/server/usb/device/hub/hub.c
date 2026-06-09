@@ -524,7 +524,7 @@ static void hub_attach_finished(
       EARLY_STARTUP_PRINT( "Successfully attached the hub %zu\r\n", ctx->response_info )
     #endif
     vfs_ioctl_perform_response_t err_response = { .status = 0 };
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, ctx->data_info );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, ctx->data_info );
   }
   _syscall_rpc_cleanup();
   if ( !ctx->to_attach ) {

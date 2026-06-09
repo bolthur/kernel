@@ -33,6 +33,7 @@ usbd_SOURCES = \
   libusbd/roothub.c \
   libusbd/string.c \
   rpc/attach/device.c \
+  rpc/attach/roothub.c \
   rpc/control/message.c \
   rpc/get/configuration.c \
   rpc/get/description.c \

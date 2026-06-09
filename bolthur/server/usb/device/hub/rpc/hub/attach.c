@@ -366,7 +366,7 @@ void rpc_hub_attach(
   // populate
   ctx->to_attach = attach_count;
   ctx->type = type;
-  ctx->response_info = response_info;
+  ctx->response_info = data_info;
   ctx->data_info = data_info;
   // check for connection
   for ( uint32_t port = 0; port < hub->max_children; port++ ) {

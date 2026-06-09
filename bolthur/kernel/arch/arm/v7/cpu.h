@@ -104,7 +104,7 @@
   } cpu_register_map_t;
 
   #if defined( ARM_CPU_HAS_NEON )
-    #define DUMP_REGISTER( context ) \
+    #define DUMP_REGISTER( context ) { \
       DEBUG_OUTPUT( "CPU register dump:\r\n" ) \
       DEBUG_OUTPUT( "  r0: %#"PRIx32", r1: %#"PRIx32",  r2: %#"PRIx32", r3: %#"PRIx32"\r\n", ( ( cpu_register_context_t* )context )->reg.r0, ( ( cpu_register_context_t* )context )->reg.r1,  ( ( cpu_register_context_t* )context )->reg.r2, ( ( cpu_register_context_t* )context )->reg.r3 ) \
       DEBUG_OUTPUT( "  r4: %#"PRIx32", r5: %#"PRIx32",  r6: %#"PRIx32", r7: %#"PRIx32"\r\n", ( ( cpu_register_context_t* )context )->reg.r4, ( ( cpu_register_context_t* )context )->reg.r5,  ( ( cpu_register_context_t* )context )->reg.r6, ( ( cpu_register_context_t* )context )->reg.r7 ) \
@@ -128,7 +128,7 @@
       DEBUG_OUTPUT( "d24: %#"PRIx64", d25: %#"PRIx64"\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 24 ], ( ( cpu_register_context_t* )context )->reg.neon[ 25 ] ) \
       DEBUG_OUTPUT( "d26: %#"PRIx64", d27: %#"PRIx64"\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 26 ], ( ( cpu_register_context_t* )context )->reg.neon[ 27 ] ) \
       DEBUG_OUTPUT( "d28: %#"PRIx64", d29: %#"PRIx64"\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 28 ], ( ( cpu_register_context_t* )context )->reg.neon[ 29 ] ) \
-      DEBUG_OUTPUT( "d30: %#"PRIx64", d31: %#"PRIx64"\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 30 ], ( ( cpu_register_context_t* )context )->reg.neon[ 31 ] )
+      DEBUG_OUTPUT( "d30: %#"PRIx64", d31: %#"PRIx64"\r\n", ( ( cpu_register_context_t* )context )->reg.neon[ 30 ], ( ( cpu_register_context_t* )context )->reg.neon[ 31 ] ) }
   #else
     #define DUMP_REGISTER( context ) \
       DEBUG_OUTPUT( \

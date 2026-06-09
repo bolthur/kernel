@@ -49,17 +49,17 @@ static void rpc_hid_attach_finished(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // peek matching async data without destroy for call chain
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
-    GENERIC_ATTACH, response_info );
+    RPC_VFS_IOCTL, response_info );
   // handle no data
   if ( ! data_info ) {
   EARLY_STARTUP_PRINT( "hid attach finished\r\n" )
-    bolthur_rpc_return( GENERIC_ATTACH, &error, sizeof( error ), async_data, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
   EARLY_STARTUP_PRINT( "hid attach finished\r\n" )
-    bolthur_rpc_return( GENERIC_ATTACH, &error, sizeof( error ), async_data, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
   // get data from mailbox
@@ -67,7 +67,7 @@ static void rpc_hid_attach_finished(
   vfs_ioctl_perform_response_t* attach_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! attach_response ) {
   EARLY_STARTUP_PRINT( "hid attach finished\r\n" )
-    bolthur_rpc_return( GENERIC_ATTACH, &error, sizeof( error ), async_data, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
   // get original request
@@ -81,7 +81,7 @@ static void rpc_hid_attach_finished(
   EARLY_STARTUP_PRINT( "hid attach finished\r\n" )
     error.status = -ENOMEM;
     // return from rpc
-    bolthur_rpc_return( GENERIC_ATTACH, &error, sizeof( error ), async_data, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
   EARLY_STARTUP_PRINT( "hid attach finished %p\r\n", ( void* )async_data )
@@ -91,7 +91,7 @@ static void rpc_hid_attach_finished(
   response->status = attach_response->status;
   memcpy( response->container, request->container, container_size );
   // return from rpc
-  bolthur_rpc_return( GENERIC_ATTACH, response, response_size, async_data, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, async_data, 0 );
   // free response
   free( response );
 }
@@ -117,14 +117,14 @@ void rpc_hid_attach(
   // handle no data
   if ( ! data_info ) {
     EARLY_STARTUP_PRINT( "NO DATA\r\n" )
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
 
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
 
@@ -135,7 +135,7 @@ void rpc_hid_attach(
   if ( ! request ) {
     EARLY_STARTUP_PRINT( "NO MESSAGE\r\n" )
     err_response.status = -ENOMEM;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
 
@@ -155,7 +155,7 @@ void rpc_hid_attach(
       EARLY_STARTUP_PRINT( "Unable to get interface data\r\n" )
     #endif
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -164,7 +164,7 @@ void rpc_hid_attach(
     #if defined( HID_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Invalid interfacae class\r\n" )
     #endif
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -173,7 +173,7 @@ void rpc_hid_attach(
     #if defined( HID_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Invalid hid device with fewer than one endpoint\r\n" )
     #endif
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -188,7 +188,7 @@ void rpc_hid_attach(
       EARLY_STARTUP_PRINT( "Unable to get endpoint information\r\n" )
     #endif
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -201,7 +201,7 @@ void rpc_hid_attach(
     #if defined( HID_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Invalid hid device with unusual endpoints\r\n" )
     #endif
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -214,7 +214,7 @@ void rpc_hid_attach(
       EARLY_STARTUP_PRINT( "Unable to get device status\r\n" )
     #endif
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -224,7 +224,7 @@ void rpc_hid_attach(
     #if defined( HID_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Device not configured\r\n" )
     #endif
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -253,7 +253,7 @@ void rpc_hid_attach(
         EARLY_STARTUP_PRINT( "Could not revert to report mode\r\n" )
       #endif
       err_response.status = -result;
-      bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
       free( request );
       return;
     }
@@ -272,7 +272,7 @@ void rpc_hid_attach(
         strerror( result ) )
     #endif
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -316,7 +316,7 @@ void rpc_hid_attach(
       EARLY_STARTUP_PRINT( "No hid descriptor in %s with interface %"PRIu32". Cannot be a hid device\r\n",
         usb_get_description(message->device_number), message->interface_number + 1 )
     #endif
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -327,7 +327,7 @@ void rpc_hid_attach(
         ( uint16_t )( descriptor->hid_version >> 8 ),
         ( uint16_t )( descriptor->hid_version & 0xff ) )
     #endif
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -344,7 +344,7 @@ void rpc_hid_attach(
       EARLY_STARTUP_PRINT( "Could not allocate device structure\r\n" )
     #endif
     err_response.status = -ENOMEM;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     free( original_header );
     return;
@@ -362,7 +362,7 @@ void rpc_hid_attach(
       EARLY_STARTUP_PRINT( "Could not allocate reportDescriptor\r\n" )
     #endif
     err_response.status = -ENOMEM;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     hid_destroy_device( device );
     free( original_header );
@@ -390,7 +390,7 @@ void rpc_hid_attach(
         strerror( result ) )
     #endif
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     hid_destroy_device( device );
     free( original_header );
@@ -406,7 +406,7 @@ void rpc_hid_attach(
         strerror( result ) )
     #endif
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     hid_destroy_device( device );
     free( original_header );
@@ -432,7 +432,7 @@ void rpc_hid_attach(
         strerror( result ) )
     #endif
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     hid_destroy_device( device );
     free( original_header );

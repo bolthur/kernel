@@ -35,6 +35,12 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register attach device handler!\r\n" )
     return false;
   }
+  // register handler attaching roothub
+  bolthur_rpc_bind( USBD_ATTACH_ROOTHUB, rpc_attach_roothub, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register attach device handler!\r\n" )
+    return false;
+  }
   // register handler control message
   bolthur_rpc_bind( USBD_CONTROL_MESSAGE, rpc_control_message, true );
   if ( errno ) {

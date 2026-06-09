@@ -24,6 +24,7 @@
 
 bool rpc_init( void );
 void rpc_attach_device( size_t, pid_t, size_t, size_t );
+void rpc_attach_roothub( size_t, pid_t, size_t, size_t );
 void rpc_control_message( size_t, pid_t, size_t, size_t );
 void rpc_get_configuration( size_t, pid_t, size_t, size_t );
 void rpc_get_description( size_t, pid_t, size_t, size_t );

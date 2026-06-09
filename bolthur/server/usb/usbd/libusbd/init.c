@@ -42,8 +42,6 @@ libusb_device_t* head = nullptr;
  * @fn int usbd_init(void)
  * @brief Method to init usbd
  * @return 0 on success, else errno code
- *
- * @todo fire roothub attach rpc to prevent race conditions
  */
 int usbd_init( void ) {
   // debug output
@@ -65,10 +63,10 @@ int usbd_init( void ) {
   }
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "Attaching root hub\r\n" )
+    EARLY_STARTUP_PRINT( "Attaching root hub async\r\n" )
   #endif
   // try to attach root hub
-  const int result = usbd_roothub_attach();
+  const int result = usbd_roothub_fire_attach();
   // handle error
   if ( 0 != result ) {
     // debug output

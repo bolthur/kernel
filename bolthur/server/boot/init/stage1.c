@@ -208,7 +208,9 @@ void init_stage1( void ) {
   // delay necessary to not interrupt other startup
   delay( 20 );
   // enough to wait here for ramdisk and authentication, since both need dev server
+  EARLY_STARTUP_PRINT( "Waiting for authentication device\r\n" )
   vfs_wait_for_path( AUTHENTICATION_DEVICE );
+  EARLY_STARTUP_PRINT( "Waiting for ramdisk\r\n" )
   vfs_wait_for_path( "/dev/ramdisk" );
   // close ramdisk
   EARLY_STARTUP_PRINT( "Closing early ramdisk\r\n" );

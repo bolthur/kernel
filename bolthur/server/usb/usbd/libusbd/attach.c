@@ -41,7 +41,7 @@ static void attach_attach_finished(
   EARLY_STARTUP_PRINT( "Attach call finished\r\n" )
   // peek matching async data without destroy for call chain
   bolthur_async_data_t* async_data = bolthur_rpc_peek_async(
-    GENERIC_ATTACH, response_info );
+    RPC_VFS_IOCTL, response_info );
   // handle no async data
   if ( ! async_data ) {
     EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
@@ -518,7 +518,7 @@ int usbd_attach_device(
   const size_t data_info,
   const void* original_request,
   const size_t original_request_size,
-  const size_t response_info,
+  [[maybe_unused]] const size_t response_info,
   const bool with_return
 ) {
   // debug output
@@ -544,7 +544,7 @@ int usbd_attach_device(
     callback,
     origin,
     data_info,
-    response_info,
+    data_info,
     original_request,
     original_request_size,
     address,

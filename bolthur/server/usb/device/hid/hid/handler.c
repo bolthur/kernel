@@ -254,7 +254,7 @@ int handler_call_attach(
     request,
     request_size,
     callback,
-    GENERIC_ATTACH,
+    RPC_VFS_IOCTL,
     request,
     request_size,
     origin,

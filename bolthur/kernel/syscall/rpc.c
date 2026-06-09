@@ -85,7 +85,7 @@ void syscall_rpc_raise( void* context ) {
       origin_rpc_data_id,
       synchronous ? 1 : 0,
       no_return ? 1 : 0,
-      cleanup ? 1 : 0,
+      no_return ? 1 : 0,
       task_thread_current_thread->process->id
     )
   #endif
@@ -259,8 +259,13 @@ void syscall_rpc_raise( void* context ) {
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "rpc->data_id = %zu\r\n", rpc->data_id )
     #endif
-    // populate data id
+    // populate data id in backup in case it's in current thread and already active
+    if ( rpc->thread == task_thread_current_thread && rpc->active ) {
+      syscall_populate_success( rpc->context, rpc->data_id );
+    // populate regular success via context
+    } else {
     syscall_populate_success( context, rpc->data_id );
+  }
   }
   // switch it
   if ( task_thread_current_thread != rpc->thread ) {
@@ -464,7 +469,9 @@ void syscall_rpc_ret( void* context ) {
   // destroy found info
   rpc_generic_destroy_source_info( info );
   // find and destroy possible info for current if original rpc id is set
-  if ( original_rpc_id ) {
+  // in case it's an interrupt it is not possible to clean up active context
+  // since we might have multiple returns
+  if ( original_rpc_id && ! active->is_interrupt ) {
     rpc_generic_destroy_source_info( rpc_generic_source_info( active->data_id ) );
   }
   #if defined( PRINT_SYSCALL )

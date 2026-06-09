@@ -45,7 +45,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
     return false;
   }
   // variables
-  rpc_backup_t* backup = NULL;
+  rpc_backup_t* backup = nullptr;
   bool further_rpc_enqueued = false;
   // get backup for restore
   for (
@@ -149,7 +149,7 @@ bool rpc_generic_restore( task_thread_t* thread ) {
     // get first list item
     auto item = thread->process->rpc_queue->first;
     // initialize next backup
-    rpc_backup_t* next = NULL;
+    rpc_backup_t* next = nullptr;
     // loop through next
     while ( item ) {
       // get current item
@@ -238,11 +238,12 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   }
   // evaluate wait for return block
   bool wait_for_return_block = false;
+  [[maybe_unused]] bool deactivate_current_active_rpc = false;
   if ( TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN == backup->thread->state ) {
     const rpc_origin_source_t* rpc_backup = nullptr;
     if ( backup->origin_data_id ) {
       rpc_backup = rpc_generic_source_info( backup->origin_data_id );
-      while ( rpc_backup->origin_rpc_id ) {
+      while ( rpc_backup && rpc_backup->origin_rpc_id ) {
         rpc_backup = rpc_generic_source_info( rpc_backup->origin_rpc_id );
       }
     }
@@ -253,9 +254,11 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
       || ! rpc_backup
       || backup->thread->process->id != rpc_backup->source_process;
     // when an interrupt is running, block it
-    if ( backup->thread->handling_interrupt ) {
+    if ( backup->thread->handling_interrupt && ! wait_for_return_block ) {
       wait_for_return_block = true;
     }
+    // deactivation of current active rpc is bound to wait for return block
+    deactivate_current_active_rpc = ! wait_for_return_block;
     #if defined( PRINT_RPC )
       if ( wait_for_return_block ) {
         DEBUG_OUTPUT( "%d is blocked\r\n", backup->thread->process->id )
@@ -288,36 +291,57 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     // return success
     return true;
   }
-  // we've to go through the list of rpc and use the first rpc with same thread
-  // when it's not equal to current backup to preserve correct order of rpc
-  rpc_backup_t* to_replace = nullptr;
-  auto current_backup_entry = backup->thread->process->rpc_queue->first;
-  while ( current_backup_entry && ! to_replace ) {
-    // get backup entry
-    rpc_backup_t* tmp = current_backup_entry->data;
-    // skip active stuff
-    if ( tmp->active ) {
-      current_backup_entry = current_backup_entry->next;
-      continue;
+  /*// handle deactivation of current rpc
+  if ( deactivate_current_active_rpc ) {
+    // Get entry marked as active, which might be waiting for rpc
+    rpc_backup_t* active = nullptr;
+    auto active_entry = backup->thread->process->rpc_queue->first;
+    while ( active_entry ) {
+      // handle active set
+      if ( ((rpc_backup_t*)active_entry->data)->active ) {
+        active = active_entry->data;
+        break;
+      }
+      // get to next
+      active_entry = active_entry->next;
     }
-    // handle same thread and not same entry
-    if (
-      tmp->thread == backup->thread
-      && tmp != backup
-      && backup->data_id > tmp->data_id
-    ) {
-      to_replace = tmp;
+    // debug output
+    //#if defined( PRINT_RPC )
+      DEBUG_OUTPUT( "active = %p\r\n", (void*)active )
+    //#endif
+    // handle active existing
+    if ( active ) {
+      // debug output
+      //#if defined( PRINT_RPC )
+        DEBUG_OUTPUT( "Active rpc to push back to inactive\r\n" )
+      //#endif
+      // adjust thread state to use so that on next invoke the correct thread
+      // state is used
+      active->state_to_use = task_thread_current_thread->state;
+      // overwrite context of backup to activate
+      memcpy(
+        backup->context,
+        active->thread->current_context,
+        sizeof( cpu_register_context_t )
+      );
+      // mark state as inactive
+      active->active = false;
+      // remove current backup from list without cleanup
+      if ( ! list_remove_data( active->thread->process->rpc_queue, active, false ) ) {
+        #if defined( PRINT_RPC )
+          DEBUG_OUTPUT( "Unable to remove active from list without cleanup\r\n" )
+        #endif
+        return false;
+      }
+      // insert after current rpc
+      if ( ! list_push_after_data( active->thread->process->rpc_queue, backup, active ) ) {
+        #if defined( PRINT_RPC )
+          DEBUG_OUTPUT( "Unable to push active after backup in list\r\n" )
+        #endif
+        return false;
+      }
     }
-    // get to next
-    current_backup_entry = current_backup_entry->next;
-  }
-  // handle something in queue before
-  if ( to_replace ) {
-    #if defined( PRINT_RPC )
-      DEBUG_OUTPUT( "Replace %d with %d\r\n", backup->data_id, to_replace->data_id )
-    #endif
-    backup = to_replace;
-  }
+  }*/
   cpu_register_context_t* cpu = backup->thread->current_context;
   // debug output
   #if defined( PRINT_RPC )

@@ -120,7 +120,7 @@ static int32_t timer_lookup(
   const list_item_t* a,
   const void* data
 ) {
-  timer_callback_entry_t* entry = a->data;
+  const timer_callback_entry_t* entry = a->data;
   return entry->id == ( size_t )data ? 0 : 1;
 }
 
@@ -147,13 +147,13 @@ void timer_init( void ) {
  */
 timer_callback_entry_t* timer_register_callback(
   task_thread_t* thread,
-  size_t rpc_num,
-  size_t timeout
+  const size_t rpc_num,
+  const size_t timeout
 ) {
   // reserve new entry structure
   timer_callback_entry_t* entry = malloc( sizeof( *entry ) );
   if ( ! entry ) {
-    return NULL;
+    return nullptr;
   }
   // clear out
   memset( entry, 0, sizeof( *entry ) );
@@ -169,7 +169,7 @@ timer_callback_entry_t* timer_register_callback(
       DEBUG_OUTPUT( "Timer insert failed!\r\n" )
     #endif
     free( entry );
-    return NULL;
+    return nullptr;
   }
   // return structure
   return entry;
@@ -202,12 +202,11 @@ void timer_handle_callback( void ) {
     return;
   }
   // get current tick
-  size_t tick = timer_get_tick();
+  const size_t tick = timer_get_tick();
   list_item_t* current = timer_list->first;
   // loop through handles
   while( current ) {
-    timer_callback_entry_t* entry =
-      ( timer_callback_entry_t* )current->data;
+    auto const entry = ( timer_callback_entry_t* )current->data;
     // debug output
     #if defined( PRINT_TIMER )
       DEBUG_OUTPUT( "tick = %zu, entry->expire = %zu\r\n", tick, entry->expire )
@@ -230,11 +229,11 @@ void timer_handle_callback( void ) {
       entry->thread,
       entry->thread->process,
       entry->rpc,
-      NULL,
+      nullptr,
       0,
       entry->thread,
       false,
-      entry->id,
+      0, // pass 0 as origin data id to prevent possibly matching origin
       true,
       false
     );

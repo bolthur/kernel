@@ -28,11 +28,11 @@
  * @param context
  * @param value
  */
-void syscall_populate_success( void* context, size_t value ) {
+void syscall_populate_success( void* context, const size_t value ) {
   // get context
   context = interrupt_get_context( context );
   // get cpu context
-  cpu_register_context_t* cpu = ( cpu_register_context_t* )context ;
+  auto const cpu = ( cpu_register_context_t* )context ;
   // set return values
   cpu->reg.r0 = value;
   cpu->reg.r1 = 0;
@@ -45,11 +45,11 @@ void syscall_populate_success( void* context, size_t value ) {
  * @param context
  * @param error
  */
-void syscall_populate_error( void* context, size_t error ) {
+void syscall_populate_error( void* context, const size_t error ) {
   // get context
   context = interrupt_get_context( context );
   // get cpu context
-  cpu_register_context_t* cpu = ( cpu_register_context_t* )context ;
+  auto const cpu = ( cpu_register_context_t* )context ;
   // set return values
   cpu->reg.r0 = 0;
   cpu->reg.r1 = error;
@@ -63,11 +63,11 @@ void syscall_populate_error( void* context, size_t error ) {
  * @param num
  * @return
  */
-size_t syscall_get_parameter( void* context, size_t num ) {
+size_t syscall_get_parameter( void* context, const size_t num ) {
   // get context
   context = interrupt_get_context( context );
   // transform to cpu structure
-  cpu_register_context_t* cpu = ( cpu_register_context_t* )context;
+  auto const cpu = ( cpu_register_context_t* )context;
   // number sanitize
   assert( num <= CPSR )
   // return value

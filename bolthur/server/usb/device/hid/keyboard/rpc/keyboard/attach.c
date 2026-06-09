@@ -49,12 +49,12 @@ void rpc_keyboard_attach(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get data from mailbox
@@ -63,7 +63,7 @@ void rpc_keyboard_attach(
     data_info, &data_size, true, NULL );
   if ( ! request ) {
     err_response.status = -ENOMSG;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // allocate space for pull_request
@@ -73,14 +73,14 @@ void rpc_keyboard_attach(
   int result = hid_get_driver( message->device_number, &device_driver );
   if ( 0 != result ) {
     err_response.status = -ENODEV;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
   // handle invalid device driver
   if ( device_driver != DEVICE_DRIVER_HID ) {
     free( request );
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // get application
@@ -88,7 +88,7 @@ void rpc_keyboard_attach(
   result = hid_get_application( message->device_number, &application );
   if ( 0 != result ) {
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -100,7 +100,7 @@ void rpc_keyboard_attach(
     ) || application.desktop != LIBUSB_HID_USAGE_PAGE_DESKTOP_KEYBOARD
   ) {
     err_response.status = -EBADMSG;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -109,7 +109,7 @@ void rpc_keyboard_attach(
   result = hid_get_report_count( message->device_number, &report_count );
   if ( 0 != result ) {
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -121,7 +121,7 @@ void rpc_keyboard_attach(
     // handle error
     if ( 0 != result ) {
       err_response.status = -result;
-      bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
       free( request );
       return;
     }
@@ -140,7 +140,7 @@ void rpc_keyboard_attach(
   // handle error
   if ( 0 != result ) {
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -148,7 +148,7 @@ void rpc_keyboard_attach(
   if ( 0 == report_count ) {
     free( request );
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // allocate device
@@ -156,7 +156,7 @@ void rpc_keyboard_attach(
   if ( ! device ) {
     free( request );
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // clear out keyboard driver space
@@ -175,7 +175,7 @@ void rpc_keyboard_attach(
     free( request );
     keyboard_destroy( device );
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // iterate over reports
@@ -188,7 +188,7 @@ void rpc_keyboard_attach(
       free( request );
       keyboard_destroy( device );
       err_response.status = -result;
-      bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
       return;
     }
     // some debug output
@@ -213,7 +213,7 @@ void rpc_keyboard_attach(
         hid_destroy_report( report );
         keyboard_destroy( device );
         err_response.status = -result;
-        bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+        bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
         return;
       }
       #if defined( HID_ENABLE_DEBUG )
@@ -232,7 +232,7 @@ void rpc_keyboard_attach(
         hid_destroy_report( report );
         keyboard_destroy( device );
         err_response.status = -result;
-        bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+        bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
         return;
       }
       // loop through reports
@@ -284,7 +284,7 @@ void rpc_keyboard_attach(
         hid_destroy_report( report );
         keyboard_destroy( device );
         err_response.status = -result;
-        bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+        bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
         return;
       }
       for ( uint8_t inner = 0; inner < report->field_count; ++inner ) {
@@ -378,7 +378,7 @@ void rpc_keyboard_attach(
     free( request );
     keyboard_destroy( device );
     err_response.status = -result;
-    bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   #if defined( KEYBOARD_ENABLE_DEBUG )
@@ -398,5 +398,5 @@ void rpc_keyboard_attach(
   free( request );
   // return success
   memset( &err_response, 0, sizeof( err_response ) );
-  bolthur_rpc_return( GENERIC_ATTACH, &err_response, sizeof( err_response ), nullptr, 0 );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
 }

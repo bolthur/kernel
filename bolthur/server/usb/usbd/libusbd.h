@@ -154,7 +154,8 @@ int usbd_init( void );
 int usbd_interrupt_poll( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, size_t, uint8_t, uint32_t, rpc_handler_t, pid_t, size_t, void*, size_t );
 // roothub
 libusb_device_t* usbd_roothub_get( void );
-int usbd_roothub_attach( void );
+int usbd_roothub_attach( rpc_handler_t, pid_t, size_t, size_t );
+int usbd_roothub_fire_attach( void );
 // string
 int usbd_string_get( libusb_device_t*, uint8_t, uint16_t, void*, size_t );
 int usbd_string_read_lang( libusb_device_t*, uint8_t, uint16_t, void*, size_t );

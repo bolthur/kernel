@@ -29,8 +29,8 @@
 #include "../../../../libusbd.h"
 
 /**
- * @fn void rpc_attach_device_finished(size_t, pid_t, size_t, size_t)
- * @brief Attach device finished callback
+ * @fn void rpc_attach_roothub_finished(size_t, pid_t, size_t, size_t)
+ * @brief Attach roothub finished callback
  * @param type
  * @param origin
  * @param data_info
@@ -38,13 +38,13 @@
  *
  * @todo implement
  */
-static void rpc_attach_device_finished(
+static void rpc_attach_roothub_finished(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "device finished\r\n" )
+  EARLY_STARTUP_PRINT( "roothub finished\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // peek matching async data without destroy for call chain
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
@@ -61,13 +61,13 @@ static void rpc_attach_device_finished(
   bolthur_rpc_destroy_async( async_data );
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "device finished\r\n" )
+    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "device finished\r\n" )
+    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
     return;
   }
@@ -75,7 +75,7 @@ static void rpc_attach_device_finished(
   size_t data_size;
   vfs_ioctl_perform_response_t* attach_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! attach_response ) {
-    EARLY_STARTUP_PRINT( "device finished\r\n" )
+    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
     return;
   }
@@ -87,13 +87,13 @@ static void rpc_attach_device_finished(
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
-    EARLY_STARTUP_PRINT( "device finished\r\n" )
+    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
     error.status = -ENOMEM;
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
     return;
   }
-  EARLY_STARTUP_PRINT( "device finished\r\n" )
+  EARLY_STARTUP_PRINT( "roothub finished\r\n" )
   // clear memory
   memset( response, 0, response_size );
   // copy over result
@@ -106,89 +106,69 @@ static void rpc_attach_device_finished(
 }
 
 /**
- * @fn void rpc_attach_device(size_t, pid_t, size_t, size_t)
- * @brief Register rpc handler for attaching device
+ * @fn void rpc_attach_roothub(size_t, pid_t, size_t, size_t)
+ * @brief Register rpc handler for attaching roothub
  * @param type message type
  * @param origin origin of the message
  * @param data_info data id
  * @param response_info response info
  */
-void rpc_attach_device(
+void rpc_attach_roothub(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
-  // validate origin
+  // handle invalid origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    EARLY_STARTUP_PRINT( "Invalid origin\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
+    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get data from mailbox
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
-  if ( ! request ) {
-    error.status = -EIO;
+  char* dummy = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
+  if ( ! dummy ) {
+    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  // allocate space for pull_request
-  const usbd_attach_device_t* message = ( usbd_attach_device_t* )request->container;
-  // find device
-  libusb_device_t* device;
-  int result = usbd_device_get_by_number( message->parent_number, &device );
-  if ( 0 != result ) {
-    error.status = -result;
-    // free request
-    free( request );
-    // return from rpc
+  // free again
+  free( dummy );
+  // handle already attached
+  if ( head ) {
+    EARLY_STARTUP_PRINT( "attach already done\r\n" )
+    error.status = -EADDRINUSE;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  libusb_device_t* new_device;
-  // allocate new device
-  result = usbd_allocate_device( &new_device, false );
-  // handle error
-  if ( 0 != result ) {
-    error.status = -result;
-    // free request
-    free( request );
-    // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
-    return;
-  }
-  // populate speed into new device
-  new_device->speed = message->speed;
-  // set parent and port number
-  new_device->parent = device;
-  new_device->port_number = device->port_number;
-  // allocate new device
-  // perform hcd control message
-  result = usbd_attach_device(
-    new_device,
-    rpc_attach_device_finished,
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Attaching root hub\r\n" )
+  #endif
+  // try to attach root hub
+  const int result = usbd_roothub_attach(
+    rpc_attach_roothub_finished,
     origin,
     data_info,
-    request,
-    data_size,
-    data_info,
-    true
+    data_info
   );
   // handle error
   if ( 0 != result ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Attaching root hub failed: %s\r\n", strerror( result ) )
+    #endif
+    // return result
     error.status = -result;
-    // free request
-    free( request );
-    // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  // free up memory
-  free( request );
 }

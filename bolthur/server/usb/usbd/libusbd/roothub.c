@@ -48,7 +48,7 @@ static void attach_roothub_finished(
   EARLY_STARTUP_PRINT( "ROOTHUB ATTACH FINISHED\r\n" )
   // peek matching async data without destroy for call chain
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
-    GENERIC_ATTACH, response_info );
+    USBD_ATTACH_ROOTHUB, response_info );
   // handle no async data
   if ( ! async_data ) {
     EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
@@ -92,13 +92,20 @@ static void attach_roothub_finished(
 }
 
 /**
- * @fn int usbd_roothub_attach(void)
+ * @fn int usbd_roothub_attach(rpc_handler_t, pid_t, size_t, size_t)
  * @brief Wrapper to attach root hub
+ * @param callback callback to be invoked
+ * @param origin origin
+ * @param data_info data info
+ * @param response_info response info
  * @return 0 on success else errno
- *
- * @todo rework to async in case of deallocation becomes necessary
  */
-int usbd_roothub_attach( void ) {
+int usbd_roothub_attach(
+  const rpc_handler_t callback,
+  const pid_t origin,
+  const size_t data_info,
+  const size_t response_info
+) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Attaching root hob\r\n" )
@@ -123,7 +130,16 @@ int usbd_roothub_attach( void ) {
   // set device to powered on
   root_hub->status = LIBUSB_DEVICE_STATUS_POWERED;
   // attach usb device
-  result = usbd_attach_device( root_hub, attach_roothub_finished, getpid(), 0, nullptr, 0, 0, false );
+  result = usbd_attach_device(
+    root_hub,
+    callback,
+    origin,
+    data_info,
+    nullptr,
+    0,
+    response_info,
+    true
+  );
   // handle error
   if ( 0 != result ) {
     // debug output
@@ -135,4 +151,33 @@ int usbd_roothub_attach( void ) {
   }
   // return success
   return 0;
+}
+
+/**
+ * @fn int usbd_roothub_fire_attach
+ * @brief Function to fire roothub attach
+ * @return
+ */
+int usbd_roothub_fire_attach( void ) {
+  // get current process id
+  const pid_t target = getpid();
+  char dummy;
+  // raise rpc
+  EARLY_STARTUP_PRINT( "RAISING RPC %d\r\n", USBD_ATTACH_ROOTHUB )
+  const size_t response_id = bolthur_rpc_raise(
+    USBD_ATTACH_ROOTHUB,
+    target,
+    &dummy,
+    sizeof( dummy ),
+    attach_roothub_finished,
+    RPC_VFS_IOCTL,
+    &dummy,
+    sizeof( dummy ),
+    0,
+    0,
+    nullptr,
+    false
+  );
+  // return success depending on response id
+  return 0 < response_id ? 0 : -1;
 }
