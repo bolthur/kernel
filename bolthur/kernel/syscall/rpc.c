@@ -71,9 +71,9 @@ void syscall_rpc_raise( void* context ) {
   auto const data = ( void* )syscall_get_parameter( context, 2 );
   const size_t length = syscall_get_parameter( context, 3 );
   const size_t origin_rpc_data_id = syscall_get_parameter( context, 4 );
-  const bool synchronous = ( bool )syscall_get_parameter( context, 5 );
-  const bool no_return = ( bool )syscall_get_parameter( context, 6 );
-  const bool cleanup_current_id = ( bool )syscall_get_parameter( context, 7 );
+  const bool synchronous = syscall_get_parameter( context, 5 );
+  const bool no_return = syscall_get_parameter( context, 6 );
+  const bool cleanup_current_id = syscall_get_parameter( context, 7 );
   // debug output
   #if defined( PRINT_SYSCALL )
     DEBUG_OUTPUT(
@@ -101,7 +101,7 @@ void syscall_rpc_raise( void* context ) {
     return;
   }
   // handle invalid type
-  if ( type <= UINT8_MAX  ) {
+  if ( type <= UINT8_MAX ) {
     // debug output
     #if defined( PRINT_SYSCALL )
       DEBUG_OUTPUT( "Interrupts are not allowed to be raised!\r\n" )
@@ -264,8 +264,8 @@ void syscall_rpc_raise( void* context ) {
       syscall_populate_success( rpc->context, rpc->data_id );
     // populate regular success via context
     } else {
-    syscall_populate_success( context, rpc->data_id );
-  }
+      syscall_populate_success( context, rpc->data_id );
+    }
   }
   // switch it
   if ( task_thread_current_thread != rpc->thread && synchronous ) {
@@ -657,7 +657,7 @@ void syscall_rpc_wait_for_call( void* context ) {
  * @param context
  */
 void syscall_rpc_set_ready( void* context ) {
-  const bool ready = ( bool )syscall_get_parameter( context, 0 );
+  const bool ready = syscall_get_parameter( context, 0 );
   // cache process
   task_process_t* process = task_thread_current_thread->process;
   // set ready flag
@@ -805,13 +805,17 @@ void syscall_rpc_cleanup( void* context ) {
   #endif
   // get current active rpc
   auto const active = rpc_backup_get_active( task_thread_current_thread, 0 );
+  #if defined( PRINT_SYSCALL )
+    if ( active ) {
+      DEBUG_OUTPUT( "cleanup %zu of %d\r\n", active->data_id, task_thread_current_thread->process->id )
+    } else {
+      DEBUG_OUTPUT( "cleanup %d\r\n", task_thread_current_thread->process->id )
+    }
+  #endif
   // cleanup if active
   if ( active ) {
     rpc_generic_destroy_source_info( rpc_generic_source_info( active->data_id ) );
   }
-  #if defined( PRINT_SYSCALL )
-    DEBUG_OUTPUT( "cleanup %d\r\n", task_thread_current_thread->process->id )
-  #endif
   // populate dummy success
   syscall_populate_success( context, 0 );
 }
