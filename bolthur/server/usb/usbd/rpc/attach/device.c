@@ -36,7 +36,7 @@
  * @param data_info
  * @param response_info
  *
- * @todo implement
+ * @todo add error retry
  */
 static void rpc_attach_device_finished(
   [[maybe_unused]] size_t type,
@@ -57,18 +57,16 @@ static void rpc_attach_device_finished(
   // get contexts
   const usbd_attach_context_t* ctx = async_data->context;
   assert( ctx );
-  // just destroy it
-  bolthur_rpc_destroy_async( async_data );
   // handle no data
   if ( ! data_info ) {
     EARLY_STARTUP_PRINT( "device finished\r\n" )
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     EARLY_STARTUP_PRINT( "device finished\r\n" )
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
   // get data from mailbox
@@ -76,7 +74,7 @@ static void rpc_attach_device_finished(
   vfs_ioctl_perform_response_t* attach_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! attach_response ) {
     EARLY_STARTUP_PRINT( "device finished\r\n" )
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
   // get original request
@@ -90,7 +88,7 @@ static void rpc_attach_device_finished(
     EARLY_STARTUP_PRINT( "device finished\r\n" )
     error.status = -ENOMEM;
     // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
   EARLY_STARTUP_PRINT( "device finished\r\n" )
@@ -100,7 +98,7 @@ static void rpc_attach_device_finished(
   response->status = attach_response->status;
   memcpy( response->container, request->container, container_size );
   // return from rpc
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, ctx->original_response_info );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, async_data, 0 );
   // free response
   free( response );
 }
@@ -177,8 +175,7 @@ void rpc_attach_device(
     data_info,
     request,
     data_size,
-    data_info,
-    true
+    response_info
   );
   // handle error
   if ( 0 != result ) {

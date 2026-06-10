@@ -38,6 +38,7 @@
  * @param response_info
  *
  * @todo validate origin
+ * @todo clear async data
  */
 void rpc_keyboard_key(
   [[maybe_unused]] size_t type,

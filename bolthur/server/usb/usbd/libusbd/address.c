@@ -59,13 +59,7 @@ static void set_address_finished(
   // handle no data
   if ( ! data_info ) {
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_address_destroy( ctx );
     usbd_context_attach_destroy( attach_context );
     return;
@@ -73,13 +67,7 @@ static void set_address_finished(
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_address_destroy( ctx );
     usbd_context_attach_destroy( attach_context );
     return;
@@ -90,13 +78,7 @@ static void set_address_finished(
     data_info, &data_size, true, nullptr );
   if ( ! submit_response ) {
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_address_destroy( ctx );
     usbd_context_attach_destroy( attach_context );
     return;
@@ -109,15 +91,8 @@ static void set_address_finished(
     const int e = errno;
     // free up stuff
     free( submit_response );
-    // return
-    if ( ctx->with_return ) {
-      err_response.status = -e;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    err_response.status = -e;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_address_destroy( ctx );
     usbd_context_attach_destroy( attach_context );
     return;
@@ -134,14 +109,8 @@ static void set_address_finished(
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
     free( submit_response );
     // return
-    if ( ctx->with_return ) {
-      err_response.status = -EPROTO;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    err_response.status = -EPROTO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_address_destroy( ctx );
     usbd_context_attach_destroy( attach_context );
     return;
@@ -156,9 +125,6 @@ static void set_address_finished(
   _syscall_memory_shared_detach( hcd_submit_command->shm_id );
   // destroy async data
   bolthur_rpc_destroy_async( async_data );
-  // adjust origin and data info
-  ctx->context->origin = origin;
-  ctx->context->data_info = data_info;
   // invoke callback
   ctx->handler( type, origin, data_info, response_info );
 }
@@ -168,15 +134,14 @@ static void set_address_finished(
  * @brief Set usb device address
  * @param dev
  * @param address
+ * @param callback
+ * @param context
  * @return
- *
- * @todo rework async
  */
 int usbd_address_set(
   libusb_device_t* dev,
   const uint8_t address,
   const rpc_handler_t callback,
-  const bool with_return,
   usbd_attach_context_t* context
 ) {
   // debug output
@@ -199,7 +164,6 @@ int usbd_address_set(
     callback,
     context,
     address,
-    with_return,
     &ctx
   );
   if ( 0 != result ) {

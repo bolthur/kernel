@@ -59,13 +59,7 @@ static void attach_attach_finished(
   if ( ! data_info ) {
     EARLY_STARTUP_PRINT( "NO DATA\r\n" )
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_attach_destroy( ctx );
     return;
   }
@@ -73,19 +67,10 @@ static void attach_attach_finished(
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_attach_destroy( ctx );
     return;
   }
-  // adjust origin and data info
-  ctx->origin = origin;
-  ctx->data_info = data_info;
   // invoke handler
   ctx->handler( type, origin, data_info, response_info );
   // finally destroy attach context
@@ -127,13 +112,7 @@ static void attach_configure_finished(
   // handle no data
   if ( ! data_info ) {
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-      // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
     usbd_context_attach_destroy( attach_context );
@@ -142,13 +121,7 @@ static void attach_configure_finished(
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-      // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
     usbd_context_attach_destroy( attach_context );
@@ -172,13 +145,8 @@ static void attach_configure_finished(
       EARLY_STARTUP_PRINT( "Failed calling attach: %s\r\n", strerror( result ) )
     #endif
     // return nodev
-    if ( attach_context->with_return ) {
-      err_response.status = -result;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    err_response.status = -result;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // destroy contexts
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
@@ -228,12 +196,7 @@ static void attach_read_device_finished_2(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    if ( attach_context->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_descriptor_destroy( descriptor_context );
     usbd_context_attach_destroy( attach_context );
@@ -241,12 +204,7 @@ static void attach_read_device_finished_2(
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    if ( attach_context->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_descriptor_destroy( descriptor_context );
     usbd_context_attach_destroy( attach_context );
@@ -266,7 +224,6 @@ static void attach_read_device_finished_2(
     attach_context->device,
     0,
     attach_configure_finished,
-    attach_context->with_return,
     attach_context
   );
   if ( 0 != result ) {
@@ -275,16 +232,12 @@ static void attach_read_device_finished_2(
       EARLY_STARTUP_PRINT( "Configure failed: %s\r\n", strerror( result ) )
     #endif
     // return nodev
-    if ( attach_context->with_return ) {
-      err_response.status = -result;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    err_response.status = -result;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_descriptor_destroy( descriptor_context );
     usbd_context_attach_destroy( attach_context );
+    return;
   }
   // destroy descriptor context
   usbd_context_descriptor_destroy( descriptor_context );
@@ -326,12 +279,7 @@ static void attach_set_address_finished(
   assert( address_context && attach_context );
   // handle no data
   if ( ! data_info ) {
-    if ( attach_context->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_address_destroy( address_context );
     usbd_context_attach_destroy( attach_context );
@@ -339,12 +287,7 @@ static void attach_set_address_finished(
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    if ( attach_context->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_address_destroy( address_context );
     usbd_context_attach_destroy( attach_context );
@@ -356,7 +299,6 @@ static void attach_set_address_finished(
   const int result = usbd_descriptor_read_device(
     attach_context->device,
     attach_read_device_finished_2,
-    attach_context->with_return,
     attach_context
   );
   // handle error
@@ -411,15 +353,11 @@ static void attach_read_device_finished_1(
   // get context out of context
   usbd_descriptor_context_t* descriptor_context = async_data->context;
   usbd_attach_context_t* attach_context = descriptor_context->context;
+  EARLY_STARTUP_PRINT( "async_data->original_rpc_id = %zu\r\n", async_data->original_rpc_id )
   assert( descriptor_context && attach_context );
   // handle no data
   if ( ! data_info ) {
-    if ( attach_context->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_descriptor_destroy( descriptor_context );
     usbd_context_attach_destroy( attach_context );
@@ -427,12 +365,7 @@ static void attach_read_device_finished_1(
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    if ( attach_context->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_descriptor_destroy( descriptor_context );
     usbd_context_attach_destroy( attach_context );
@@ -454,12 +387,7 @@ static void attach_read_device_finished_1(
       #endif
       // restore number
       attach_context->device->number = attach_context->address;
-      if ( attach_context->with_return ) {
-        bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-      } else {
-        _syscall_rpc_cleanup();
-        bolthur_rpc_destroy_async( async_data );
-      }
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
       // cleanup contexts
       usbd_context_descriptor_destroy( descriptor_context );
       usbd_context_attach_destroy( attach_context );
@@ -471,7 +399,6 @@ static void attach_read_device_finished_1(
     attach_context->device,
     attach_context->address,
     attach_set_address_finished,
-    attach_context->with_return,
     attach_context
   );
   // handle error
@@ -482,12 +409,7 @@ static void attach_read_device_finished_1(
     #endif
     // restore number
     attach_context->device->number = attach_context->address;
-    if ( attach_context->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // cleanup contexts
     usbd_context_descriptor_destroy( descriptor_context );
     usbd_context_attach_destroy( attach_context );
@@ -499,7 +421,7 @@ static void attach_read_device_finished_1(
 }
 
 /**
- * @fn int usbd_attach_device(libusb_device_t*, rpc_handler_t, pid_t, size_t, void*, size_t, size_t, bool)
+ * @fn int usbd_attach_device(libusb_device_t*, rpc_handler_t, pid_t, size_t, void*, size_t, size_t)
  * @brief Wrapper to attach device
  * @param dev device to attach
  * @param callback callback to be invoked ( set to nullptr if not there )
@@ -508,7 +430,6 @@ static void attach_read_device_finished_1(
  * @param original_request original request ( set to nullptr if not there )
  * @param original_request_size original request size ( set to 0 if not there )
  * @param response_info original response info ( set to 0 if not there )
- * @param with_return flag whether it shall return rpc or not
  * @return 0 on success else errno
  */
 int usbd_attach_device(
@@ -518,8 +439,7 @@ int usbd_attach_device(
   const size_t data_info,
   const void* original_request,
   const size_t original_request_size,
-  [[maybe_unused]] const size_t response_info,
-  const bool with_return
+  const size_t response_info
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
@@ -544,13 +464,12 @@ int usbd_attach_device(
     callback,
     origin,
     data_info,
-    data_info,
+    response_info,
     original_request,
     original_request_size,
     address,
     (uint8_t)dev->number,
     dev,
-    with_return,
     &ctx
   );
   // handle error
@@ -570,7 +489,6 @@ int usbd_attach_device(
   result = usbd_descriptor_read_device(
     dev,
     attach_read_device_finished_1,
-    with_return,
     ctx
   );
   // handle error

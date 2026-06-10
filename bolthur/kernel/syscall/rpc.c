@@ -151,7 +151,7 @@ void syscall_rpc_raise( void* context ) {
     return;
   }
   // create data duplicate
-  char* dup_data = NULL;
+  char* dup_data = nullptr;
   if ( data && length ) {
     dup_data = malloc( sizeof( char ) * length );
     if ( ! dup_data ) {
@@ -195,7 +195,7 @@ void syscall_rpc_raise( void* context ) {
     type,
     dup_data,
     length,
-    NULL,
+    nullptr,
     synchronous,
     origin_rpc_data_id,
     false,
@@ -268,7 +268,7 @@ void syscall_rpc_raise( void* context ) {
   }
   }
   // switch it
-  if ( task_thread_current_thread != rpc->thread ) {
+  if ( task_thread_current_thread != rpc->thread && synchronous ) {
     // enqueue scheduler
     task_thread_try_switch_to = rpc->thread;
     // enqueue process event
@@ -441,7 +441,7 @@ void syscall_rpc_ret( void* context ) {
       // in case there is no target, use source and treat it as async
       // use first possible process
       avl_node_t* current = avl_iterate_first( proc->thread_manager );
-      target = NULL;
+      target = nullptr;
       // loop until usable thread has been found
       while ( current && ! target ) {
         // get thread
@@ -520,7 +520,7 @@ void syscall_rpc_ret( void* context ) {
     #endif
 
     // get possible active target backup
-    rpc_backup_t* target_active = NULL;
+    rpc_backup_t* target_active = nullptr;
     if ( target != task_thread_current_thread ) {
       // get current active rpc
       target_active = rpc_backup_get_active( target, blocked_data_id );
@@ -570,7 +570,7 @@ void syscall_rpc_ret( void* context ) {
       type,
       dup_data,
       length,
-      NULL,
+      nullptr,
       true,
       blocked_data_id,
       false,

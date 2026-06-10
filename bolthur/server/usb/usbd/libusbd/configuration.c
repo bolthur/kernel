@@ -60,13 +60,7 @@ static void set_configuration_finished(
   // handle no data
   if ( ! data_info ) {
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
     usbd_context_attach_destroy( attach_context );
@@ -75,13 +69,7 @@ static void set_configuration_finished(
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
     usbd_context_attach_destroy( attach_context );
@@ -93,13 +81,7 @@ static void set_configuration_finished(
     data_info, &data_size, true, nullptr );
   if ( ! submit_response ) {
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
     usbd_context_attach_destroy( attach_context );
@@ -114,14 +96,8 @@ static void set_configuration_finished(
     // free up stuff
     free( submit_response );
     // return
-    if ( ctx->with_return ) {
-      err_response.status = -e;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    err_response.status = -e;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
     usbd_context_attach_destroy( attach_context );
@@ -139,14 +115,8 @@ static void set_configuration_finished(
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
     free( submit_response );
     // return
-    if ( ctx->with_return ) {
-      err_response.status = -EPROTO;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    err_response.status = -EPROTO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_configuration_destroy( ctx );
     usbd_context_configure_destroy( configure_context );
     usbd_context_attach_destroy( attach_context );
@@ -162,25 +132,23 @@ static void set_configuration_finished(
   // populate configuration index and status
   attach_context->device->configuration_index = ctx->configuration;
   attach_context->device->status = LIBUSB_DEVICE_STATUS_CONFIGURED;
-  // update ctx
-  ctx->context->context->origin = origin;
-  ctx->context->context->data_info = data_info;
   // invoke callback
   ctx->handler( type, origin, data_info, response_info );
 }
 
 /**
- * @fn int usbd_configuration_set(libusb_device_t*, const uint8_t, rpc_handler_t, bool, usbd_configure_context_t*)
+ * @fn int usbd_configuration_set(libusb_device_t*, const uint8_t, rpc_handler_t, usbd_configure_context_t*)
  * @brief Set usb device configuration
  * @param dev
  * @param configuration
+ * @param callback
+ * @param context
  * @return
  */
 int usbd_configuration_set(
   libusb_device_t* dev,
   const uint8_t configuration,
   const rpc_handler_t callback,
-  const bool with_return,
   usbd_configure_context_t* context
 ) {
   // validate
@@ -203,7 +171,6 @@ int usbd_configuration_set(
     callback,
     context,
     configuration,
-    with_return,
     &ctx
   );
   // handle error

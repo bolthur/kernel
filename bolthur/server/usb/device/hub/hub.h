@@ -30,12 +30,18 @@
 typedef struct {
   /** attach count */
   uint32_t to_attach;
-  /** rpc type */
-  size_t type;
+  /** origin process */
+  pid_t origin;
   /** data info */
   size_t data_info;
-  /** response info */
-  size_t response_info;
+  /** hub data */
+  libusb_hub_device_t* hub;
+  /** root hub device number */
+  uint32_t roothub;
+  /** last port checked */
+  uint32_t port_number;
+  /** hub device number */
+  uint32_t device_number;
 } hub_attach_context_t;
 
 void hub_append( libusb_hub_device_t* );
@@ -45,8 +51,8 @@ int hub_change_port_feature( uint32_t, libusb_hub_port_feature_t, uint8_t, bool 
 int hub_power_on( uint32_t, const libusb_hub_device_t* );
 int hub_get_port_status( uint32_t, libusb_hub_device_t*, uint8_t );
 int hub_port_reset( uint32_t, libusb_hub_device_t*, uint8_t );
-int hub_port_connection_changed( uint32_t, libusb_hub_device_t*, uint8_t, void* );
+int hub_port_connection_changed( uint32_t, libusb_hub_device_t*, uint8_t, hub_attach_context_t* );
 int hub_shall_to_attach( uint32_t, libusb_hub_device_t*, uint8_t, bool* );
-int hub_check_connection( uint32_t, libusb_hub_device_t*, uint8_t, void* );
+int hub_check_connection( uint32_t, libusb_hub_device_t*, uint8_t, hub_attach_context_t* );
 
 #endif

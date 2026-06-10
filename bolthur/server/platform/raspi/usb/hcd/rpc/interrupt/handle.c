@@ -314,6 +314,4 @@ void rpc_interrupt_handle(
       channel_mask <<= 1;
     }
   }
-  // cleanup
-  _syscall_rpc_cleanup();
 }

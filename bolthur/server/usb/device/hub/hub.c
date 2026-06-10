@@ -452,6 +452,8 @@ int hub_port_reset(
  * @param origin
  * @param data_info
  * @param response_info
+ *
+ * @todo add error return
  */
 static void hub_attach_finished(
   [[maybe_unused]] size_t type,
@@ -459,6 +461,7 @@ static void hub_attach_finished(
   size_t data_info,
   size_t response_info
 ) {
+  vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // debug output
   #if defined( HUB_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Attach of one port finished\r\n" )
@@ -486,9 +489,11 @@ static void hub_attach_finished(
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "No data\r\n" )
     #endif
-    _syscall_rpc_cleanup();
-    if ( !ctx->to_attach ) {
+    if ( ! ctx->to_attach ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
       free( ctx );
+    } else {
+      _syscall_rpc_cleanup();
     }
     return;
   }
@@ -497,9 +502,11 @@ static void hub_attach_finished(
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "invalid origin\r\n" )
     #endif
-    _syscall_rpc_cleanup();
-    if ( !ctx->to_attach ) {
+    if ( ! ctx->to_attach ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
       free( ctx );
+    } else {
+      _syscall_rpc_cleanup();
     }
     return;
   }
@@ -511,24 +518,55 @@ static void hub_attach_finished(
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "nothing in mailbox\r\n" )
     #endif
-    _syscall_rpc_cleanup();
-    if ( !ctx->to_attach ) {
+    if ( ! ctx->to_attach ) {
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
       free( ctx );
+    } else {
+      _syscall_rpc_cleanup();
     }
     return;
+  }
+  // further attachments
+  if ( ++ctx->port_number < ctx->hub->max_children ) {
+    // check for connection
+    for ( uint32_t port = ctx->port_number; port < ctx->hub->max_children; port++ ) {
+      #if defined ( HUB_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Checking port %"PRIu32"\r\n", port )
+      #endif
+      const int result = hub_check_connection( ctx->device_number, ctx->hub, ( uint8_t )port, ctx );
+      // handle queued
+      if ( EAGAIN == result ) {
+        // debug output
+        #if defined ( HUB_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Attach needs to continue async\r\n" )
+        #endif
+        // cleanup and wait for next response
+        _syscall_rpc_cleanup();
+        return;
+      }
+      // handle general error
+      if ( 0 != result ) {
+        #if defined ( HUB_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "Unable to check connection for port: %"PRIu8"\r\n",
+            ( uint8_t )port)
+        #endif
+        err_response.status = -result;
+        bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
+        return;
+      }
+    }
   }
   // handle nothing more to attach
   if ( ! ctx->to_attach ) {
     // debug output
     #if defined( HUB_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Successfully attached the hub %zu\r\n", ctx->response_info )
+      EARLY_STARTUP_PRINT( "Successfully attached the hub\r\n")
     #endif
-    vfs_ioctl_perform_response_t err_response = { .status = 0 };
-    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, ctx->data_info );
-  }
-  _syscall_rpc_cleanup();
-  if ( !ctx->to_attach ) {
+    memset( &err_response, 0, sizeof( err_response ) );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     free( ctx );
+  } else {
+    _syscall_rpc_cleanup();
   }
 }
 
@@ -545,7 +583,7 @@ int hub_port_connection_changed(
   const uint32_t device_number,
   libusb_hub_device_t* device_data,
   const uint8_t port,
-  void* context
+  hub_attach_context_t* context
 ) {
   // cache status
   const libusb_hub_port_full_status_t* full_status = &device_data->port_status[ port ];
@@ -618,7 +656,15 @@ int hub_port_connection_changed(
         port, device_number )
   #endif
   // attach new device
-  result = usb_attach_device( device_number, port, speed, hub_attach_finished, context );
+  result = usb_attach_device(
+    device_number,
+    port,
+    speed,
+    hub_attach_finished,
+    context,
+    context ? context->origin : 0,
+    context ? context->data_info : 0
+  );
   // handle error
   if ( 0 != result ) {
     // debug output
@@ -628,8 +674,8 @@ int hub_port_connection_changed(
     // return result
     return result;
   }
-  // return success
-  return 0;
+  // return EAGAIN to tell logic to continue asynchronously
+  return EAGAIN;
 }
 
 /**
@@ -648,7 +694,6 @@ int hub_shall_to_attach(
   bool* to_attach
 ) {
   // cache hub device
-  [[maybe_unused]] const bool previously_connected = device_data->port_status[ port ].status.connected;
   uint32_t roothub_device_number;
   int result = usb_get_root_hub( &roothub_device_number );
   if ( 0 != result ) {
@@ -692,7 +737,7 @@ int hub_shall_to_attach(
 }
 
 /**
- * @fn int hub_check_connection(uint32_t, libusb_hub_device_t*, uint8_t, void*)
+ * @fn int hub_check_connection(uint32_t, libusb_hub_device_t*, uint8_t, hub_attach_context_t*)
  * @brief Function to check hub connection
  * @param device_number
  * @param device_data
@@ -704,22 +749,13 @@ int hub_check_connection(
   const uint32_t device_number,
   libusb_hub_device_t* device_data,
   const uint8_t port,
-  void* context
+  hub_attach_context_t* context
 ) {
-  // cache hub device
-  [[maybe_unused]] const bool previously_connected = device_data->port_status[ port ].status.connected;
-  uint32_t roothub_device_number;
-  int result = usb_get_root_hub( &roothub_device_number );
-  if ( 0 != result ) {
-    // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to retrieve root hub: %s\r\n", strerror( result ) )
-    #endif
-    // return result
-    return result;
-  }
+  // push port into hub
+  context->port_number = port;
   // get port status
-  result = hub_get_port_status( device_number, device_data, port );
+  EARLY_STARTUP_PRINT( "FETCHING PORT STATUS\r\n" )
+  int result = hub_get_port_status( device_number, device_data, port );
   if ( 0 != result ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )
@@ -728,34 +764,36 @@ int hub_check_connection(
     // return result
     return result;
   }
+  EARLY_STARTUP_PRINT( "CHECKING\r\n" )
   // cache full status
-  libusb_hub_port_full_status_t* port_status = &device_data->port_status[ port ];
+  libusb_hub_port_full_status_t port_status;
+  memcpy( &port_status, &device_data->port_status[ port ], sizeof( libusb_hub_port_full_status_t ) );
   // handle connected to root device
   #if defined ( HUB_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "device_number = %"PRIu32" connected = %d, previously_connected = %d\r\n",
-      device_number, port_status->status.connected ? 1 : 0, previously_connected ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "device_number = %"PRIu32" connected = %d\r\n",
+      device_number, port_status.status.connected ? 1 : 0 )
 
-    EARLY_STARTUP_PRINT( "port_status->status.connected = %d\r\n", port_status->status.connected ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->status.enabled = %d\r\n", port_status->status.enabled ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->status.suspended = %d\r\n", port_status->status.suspended ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->status.over_current = %d\r\n", port_status->status.over_current ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->status.reset = %d\r\n", port_status->status.reset ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->status.power = %d\r\n", port_status->status.power ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->status.low_speed_attached = %d\r\n", port_status->status.low_speed_attached ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->status.high_speed_attached = %d\r\n", port_status->status.high_speed_attached ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->status.test_mode = %d\r\n", port_status->status.test_mode ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->status.indicator_control = %d\r\n", port_status->status.indicator_control ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.status.connected = %d\r\n", port_status.status.connected ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.status.enabled = %d\r\n", port_status.status.enabled ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.status.suspended = %d\r\n", port_status.status.suspended ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.status.over_current = %d\r\n", port_status.status.over_current ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.status.reset = %d\r\n", port_status.status.reset ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.status.power = %d\r\n", port_status.status.power ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.status.low_speed_attached = %d\r\n", port_status.status.low_speed_attached ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.status.high_speed_attached = %d\r\n", port_status.status.high_speed_attached ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.status.test_mode = %d\r\n", port_status.status.test_mode ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.status.indicator_control = %d\r\n", port_status.status.indicator_control ? 1 : 0 )
 
-    EARLY_STARTUP_PRINT( "port_status->change.connected_changed = %d\r\n", port_status->change.connected_changed ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->change.enabled_changed = %d\r\n", port_status->change.enabled_changed ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->change.over_current_changed = %d\r\n", port_status->change.over_current_changed ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->change.reset_changed = %d\r\n", port_status->change.reset_changed ? 1 : 0 )
-    EARLY_STARTUP_PRINT( "port_status->change.suspend_changed = %d\r\n", port_status->change.suspended_changed ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.change.connected_changed = %d\r\n", port_status.change.connected_changed ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.change.enabled_changed = %d\r\n", port_status.change.enabled_changed ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.change.over_current_changed = %d\r\n", port_status.change.over_current_changed ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.change.reset_changed = %d\r\n", port_status.change.reset_changed ? 1 : 0 )
+    EARLY_STARTUP_PRINT( "port_status.change.suspend_changed = %d\r\n", port_status.change.suspended_changed ? 1 : 0 )
   #endif
   // handle connection changed
-  if ( port_status->change.connected_changed ) {
+  if ( port_status.change.connected_changed ) {
     #if defined ( HUB_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Connected changed!\r\n" )
+      EARLY_STARTUP_PRINT( "----------------> Connected changed of port %"PRIu8"!\r\n", port )
     #endif
     result = hub_port_connection_changed( device_number, device_data, port, context );
     if ( 0 != result ) {
@@ -768,11 +806,11 @@ int hub_check_connection(
   }
   // enabled change only in case it's not the root hub
   if (
-    port_status->change.enabled_changed
-    && roothub_device_number != device_number
+    port_status.change.enabled_changed
+    && context->roothub != device_number
   ) {
     #if defined ( HUB_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "ENABLED CHANGED!\r\n" )
+      EARLY_STARTUP_PRINT( "----------------> Enabled changed of port %"PRIu8"!\r\n", port )
     #endif
     // clear enable change flag
     result = hub_change_port_feature(
@@ -788,7 +826,7 @@ int hub_check_connection(
       return result;
     }
 
-    if ( ! port_status->status.enabled && port_status->status.connected && device_data->children[ port ] ) {
+    if ( ! port_status.status.enabled && port_status.status.connected && device_data->children[ port ] ) {
       // debug output
       #if defined ( HUB_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT(
@@ -808,11 +846,11 @@ int hub_check_connection(
   }
   // suspended only in case it's not the roothub
   if (
-    port_status->status.suspended
-    && roothub_device_number != device_number
+    port_status.status.suspended
+    && context->roothub != device_number
   ) {
     #if defined ( HUB_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "SUSPENDED!\r\n" )
+      EARLY_STARTUP_PRINT( "----------------> Suspended of port %"PRIu8"!\r\n", port )
     #endif
     // clear enable change flag
     result = hub_change_port_feature(
@@ -828,8 +866,8 @@ int hub_check_connection(
       return result;
     }
   }
-  if ( port_status->change.over_current_changed ) {
-    EARLY_STARTUP_PRINT( "OVER CURRENT CHANGED!\r\n" )
+  if ( port_status.change.over_current_changed ) {
+      EARLY_STARTUP_PRINT( "----------------> Over current changed of port %"PRIu8"!\r\n", port )
     // clear enable change flag
     result = hub_change_port_feature(
       device_number, LIBUSB_HUB_PORT_FEATURE_OVER_CURRENT_CHANGE, port, false );
@@ -858,8 +896,8 @@ int hub_check_connection(
   }
   // reset changed only in case it's not the roothub
   if (
-    port_status->change.reset_changed
-    && roothub_device_number != device_number
+    port_status.change.reset_changed
+    && context->roothub != device_number
   ) {
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "RESET CHANGED!\r\n" )

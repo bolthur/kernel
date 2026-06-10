@@ -567,13 +567,15 @@ int usb_get_descriptor(
 }
 
 /**
- * @fn int usb_attach_device(uint32_t, uint32_t, libusb_speed_t, rpc_handler_t, void*)
+ * @fn int usb_attach_device(uint32_t, uint32_t, libusb_speed_t, rpc_handler_t, void*, origin, data_info)
  * @brief Method to attach a new discovered device
  * @param parent_number parent device number
  * @param port_number port number
  * @param speed detected speed
  * @param callback callback to be invoked on finish
- * @param context context
+ * @param context context ( use nullptr if not available
+ * @param origin origin process ( use 0 if not available )
+ * @param data_info data info ( use 0 if not available )
  * @return
  */
 int usb_attach_device(
@@ -581,7 +583,9 @@ int usb_attach_device(
   const uint32_t port_number,
   const libusb_speed_t speed,
   const rpc_handler_t callback,
-  void* context
+  void* context,
+  const pid_t origin,
+  const size_t data_info
 ) {
   // debug message
   #if defined( LIBUSB_ENABLE_DEBUG )
@@ -628,6 +632,7 @@ int usb_attach_device(
   rpc_request->type = IOCTL_RDWR;
   // copy over data
   memcpy( rpc_request->container, request, sizeof( *request ) );
+  EARLY_STARTUP_PRINT( "origin = %d, data_info = %zu\r\n", origin, data_info )
   // raise rpc and wait for return
   const size_t response_id = bolthur_rpc_raise(
     RPC_VFS_IOCTL,
@@ -638,8 +643,8 @@ int usb_attach_device(
     RPC_VFS_IOCTL,
     rpc_request,
     rpc_request_size,
-    0,
-    0,
+    origin,
+    data_info,
     context,
     false
   );

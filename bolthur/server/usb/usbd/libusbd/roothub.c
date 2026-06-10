@@ -28,7 +28,7 @@
  */
 libusb_device_t* usbd_roothub_get( void ) {
   // return first device or null if not set
-  return head;
+  return head && head->number == 1 ? head : nullptr;
 }
 
 /**
@@ -48,7 +48,7 @@ static void attach_roothub_finished(
   EARLY_STARTUP_PRINT( "ROOTHUB ATTACH FINISHED\r\n" )
   // peek matching async data without destroy for call chain
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
-    USBD_ATTACH_ROOTHUB, response_info );
+    RPC_VFS_IOCTL, response_info );
   // handle no async data
   if ( ! async_data ) {
     EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
@@ -86,25 +86,33 @@ static void attach_roothub_finished(
   } else {
     EARLY_STARTUP_PRINT( "Roothub successfully attached\r\n" )
   }
+  EARLY_STARTUP_PRINT( "DONE\r\n" )
   free( response );
+  EARLY_STARTUP_PRINT( "DONE\r\n" )
   bolthur_rpc_destroy_async( async_data );
+  EARLY_STARTUP_PRINT( "DONE\r\n" )
   _syscall_rpc_cleanup();
+  EARLY_STARTUP_PRINT( "DONE\r\n" )
 }
 
 /**
- * @fn int usbd_roothub_attach(rpc_handler_t, pid_t, size_t, size_t)
+ * @fn int usbd_roothub_attach(rpc_handler_t, pid_t, size_t, size_t, const void*, size_t)
  * @brief Wrapper to attach root hub
  * @param callback callback to be invoked
  * @param origin origin
  * @param data_info data info
  * @param response_info response info
+ * @param request original request
+ * @param request_size request size
  * @return 0 on success else errno
  */
 int usbd_roothub_attach(
   const rpc_handler_t callback,
   const pid_t origin,
   const size_t data_info,
-  const size_t response_info
+  const size_t response_info,
+  const void* request,
+  const size_t request_size
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
@@ -113,6 +121,7 @@ int usbd_roothub_attach(
   // space for root hub
   libusb_device_t* root_hub = nullptr;
   // handle existing by freeing up
+  /// FIXME: MAKE ASYNC AND INTEGRATE INTO CALL CHAIN
   if ( head && 1 == head->number ) {
     usbd_deallocate_device( head );
   }
@@ -135,10 +144,9 @@ int usbd_roothub_attach(
     callback,
     origin,
     data_info,
-    nullptr,
-    0,
-    response_info,
-    true
+    request,
+    request_size,
+    response_info
   );
   // handle error
   if ( 0 != result ) {

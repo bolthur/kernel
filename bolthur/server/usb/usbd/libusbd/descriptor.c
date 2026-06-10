@@ -214,13 +214,7 @@ static void descriptor_read_device_finished(
   // handle no data
   if ( ! data_info ) {
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_descriptor_destroy( ctx );
     usbd_context_attach_destroy( attach_context );
     return;
@@ -228,13 +222,7 @@ static void descriptor_read_device_finished(
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_descriptor_destroy( ctx );
     usbd_context_attach_destroy( attach_context );
     return;
@@ -245,13 +233,7 @@ static void descriptor_read_device_finished(
     data_info, &data_size, true, nullptr );
   if ( ! submit_response ) {
     // return
-    if ( ctx->with_return ) {
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_descriptor_destroy( ctx );
     usbd_context_attach_destroy( attach_context );
     return;
@@ -265,14 +247,8 @@ static void descriptor_read_device_finished(
     // free up stuff
     free( submit_response );
     // return
-    if ( ctx->with_return ) {
-      err_response.status = -e;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    err_response.status = -e;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_descriptor_destroy( ctx );
     usbd_context_attach_destroy( attach_context );
     return;
@@ -285,14 +261,8 @@ static void descriptor_read_device_finished(
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
     free( submit_response );
     // return
-    if ( ctx->with_return ) {
-      err_response.status = -EPROTO;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    err_response.status = -EPROTO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_descriptor_destroy( ctx );
     usbd_context_attach_destroy( attach_context );
     return;
@@ -307,14 +277,8 @@ static void descriptor_read_device_finished(
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
     free( submit_response );
     // return
-    if ( ctx->with_return ) {
-      err_response.status = -EPROTO;
-      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
-    // just cleanup
-    } else {
-      _syscall_rpc_cleanup();
-      bolthur_rpc_destroy_async( async_data );
-    }
+    err_response.status = -EPROTO;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     usbd_context_descriptor_destroy( ctx );
     usbd_context_attach_destroy( attach_context );
     return;
@@ -335,26 +299,21 @@ static void descriptor_read_device_finished(
   _syscall_memory_shared_detach( hcd_submit_command->shm_id );
   // destroy async data
   bolthur_rpc_destroy_async( async_data );
-  // update ctx
-  ctx->context->origin = origin;
-  ctx->context->data_info = data_info;
   // invoke callback
   ctx->handler( type, origin, data_info, response_info );
 }
 
 /**
- * @fn int usbd_descriptor_read_device(libusb_device_t*, rpc_handler_t, bool, usbd_attach_context_t*)
+ * @fn int usbd_descriptor_read_device(libusb_device_t*, rpc_handler_t, usbd_attach_context_t*)
  * @brief Read usb device descriptor
  * @param dev device to read descriptor for
  * @param callback callback to be executed once finished
- * @param with_return rpc return flag
  * @param context context to be passed through
  * @return
  */
 int usbd_descriptor_read_device(
   libusb_device_t* dev,
   const rpc_handler_t callback,
-  const bool with_return,
   usbd_attach_context_t* context
 ) {
   // debug output
@@ -372,7 +331,6 @@ int usbd_descriptor_read_device(
   int result = usbd_context_descriptor_create(
     callback,
     context,
-    with_return,
     &ctx
   );
   // handle error

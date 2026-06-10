@@ -34,9 +34,9 @@
  * @param type
  * @param origin
  * @param data_info
- * @param response_info
+* @param response_info
  *
- * @todo implement
+ * @todo add error retry
  */
 static void rpc_attach_roothub_finished(
   [[maybe_unused]] size_t type,
@@ -57,18 +57,16 @@ static void rpc_attach_roothub_finished(
   // get contexts
   const usbd_attach_context_t* ctx = async_data->context;
   assert( ctx );
-  // just destroy it
-  bolthur_rpc_destroy_async( async_data );
   // handle no data
   if ( ! data_info ) {
     EARLY_STARTUP_PRINT( "roothub finished\r\n" )
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     EARLY_STARTUP_PRINT( "roothub finished\r\n" )
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
   // get data from mailbox
@@ -76,33 +74,14 @@ static void rpc_attach_roothub_finished(
   vfs_ioctl_perform_response_t* attach_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! attach_response ) {
     EARLY_STARTUP_PRINT( "roothub finished\r\n" )
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
-    return;
-  }
-  // get original request
-  const vfs_ioctl_perform_request_t* request = async_data->original_data;
-  // calculate container size
-  const size_t container_size = async_data->length - sizeof( vfs_ioctl_perform_request_t );
-  // allocate response structure
-  const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
-  vfs_ioctl_perform_response_t* response = malloc( response_size );
-  if ( ! response ) {
-    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
-    error.status = -ENOMEM;
-    // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, ctx->original_response_info );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
   EARLY_STARTUP_PRINT( "roothub finished\r\n" )
   // clear memory
-  memset( response, 0, response_size );
-  // copy over result
-  response->status = attach_response->status;
-  memcpy( response->container, request->container, container_size );
+  memset( &error, 0, sizeof( error ) );
   // return from rpc
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, ctx->original_response_info );
-  // free response
-  free( response );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
 }
 
 /**
@@ -140,10 +119,10 @@ void rpc_attach_roothub(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  // free again
-  free( dummy );
   // handle already attached
   if ( head ) {
+    // free again
+    free( dummy );
     EARLY_STARTUP_PRINT( "attach already done\r\n" )
     error.status = -EADDRINUSE;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
@@ -158,8 +137,12 @@ void rpc_attach_roothub(
     rpc_attach_roothub_finished,
     origin,
     data_info,
-    data_info
+    response_info,
+    dummy,
+    data_size
   );
+  // free again
+  free( dummy );
   // handle error
   if ( 0 != result ) {
     // debug output

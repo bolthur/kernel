@@ -32,7 +32,6 @@
  * @param address
  * @param device_number
  * @param dev
- * @param with_return
  * @param ctx
  * @return
  */
@@ -46,7 +45,6 @@ int usbd_context_attach_create(
   const uint8_t address,
   const uint8_t device_number,
   libusb_device_t* dev,
-  const bool with_return,
   usbd_attach_context_t** ctx
 ) {
   // allocate additional context
@@ -86,7 +84,6 @@ int usbd_context_attach_create(
   ( *ctx )->device_number = device_number;
   ( *ctx )->device = dev;
   ( *ctx )->address = address;
-  ( *ctx )->with_return = with_return;
   // return success
   return 0;
 }
@@ -104,23 +101,20 @@ void usbd_context_attach_destroy( usbd_attach_context_t* ctx ) {
   if ( ctx->request ) {
     free( ctx->request );
   }
-  EARLY_STARTUP_PRINT( "Destroy attach context %p\r\n", ( void* )ctx )
   free( ctx );
 }
 
 /**
- * @fn int usbd_context_descriptor_create(rpc_handler_t, void*, usbd_attach_context_t**)
+ * @fn int usbd_context_descriptor_create(rpc_handler_t, void*, usbd_descriptor_context_t**)
  * @brief Helper to allocate context
  * @param callback
  * @param context
- * @param with_return
  * @param ctx
  * @return
  */
 int usbd_context_descriptor_create(
   const rpc_handler_t callback,
   void* context,
-  bool with_return,
   usbd_descriptor_context_t** ctx
 ) {
   // allocate additional context
@@ -139,7 +133,6 @@ int usbd_context_descriptor_create(
   // populate context
   ( *ctx )->context = context;
   ( *ctx )->handler = callback;
-  ( *ctx )->with_return = with_return;
   // return success
   return 0;
 }
@@ -158,12 +151,11 @@ void usbd_context_descriptor_destroy( usbd_descriptor_context_t* ctx ) {
 }
 
 /**
- * @fn int usbd_context_address_create(rpc_handler_t, void*, usbd_attach_context_t**)
+ * @fn int usbd_context_address_create(rpc_handler_t, void*, usbd_address_context_t**)
  * @brief Helper to allocate context
  * @param callback
  * @param context
  * @param address
- * @param with_return
  * @param ctx
  * @return
  */
@@ -171,7 +163,6 @@ int usbd_context_address_create(
   const rpc_handler_t callback,
   void* context,
   uint8_t address,
-  bool with_return,
   usbd_address_context_t** ctx
 ) {
   // allocate additional context
@@ -191,7 +182,6 @@ int usbd_context_address_create(
   ( *ctx )->context = context;
   ( *ctx )->handler = callback;
   ( *ctx )->address = address;
-  ( *ctx )->with_return = with_return;
   // return success
   return 0;
 }
@@ -215,7 +205,6 @@ void usbd_context_address_destroy( usbd_address_context_t* ctx ) {
  * @param callback
  * @param context
  * @param configuration
- * @param with_return
  * @param ctx
  * @return
  */
@@ -223,7 +212,6 @@ int usbd_context_configure_create(
   const rpc_handler_t callback,
   void* context,
   uint8_t configuration,
-  bool with_return,
   usbd_configure_context_t** ctx
 ) {
   // allocate additional context
@@ -243,7 +231,6 @@ int usbd_context_configure_create(
   ( *ctx )->context = context;
   ( *ctx )->handler = callback;
   ( *ctx )->configuration = configuration;
-  ( *ctx )->with_return = with_return;
   // return success
   return 0;
 }
@@ -267,7 +254,6 @@ void usbd_context_configure_destroy( usbd_configure_context_t* ctx ) {
  * @param callback
  * @param context
  * @param configuration
- * @param with_return
  * @param ctx
  * @return
  */
@@ -275,7 +261,6 @@ int usbd_context_configuration_create(
   const rpc_handler_t callback,
   void* context,
   uint8_t configuration,
-  bool with_return,
   usbd_configuration_context_t** ctx
 ) {
   // allocate additional context
@@ -295,7 +280,6 @@ int usbd_context_configuration_create(
   ( *ctx )->context = context;
   ( *ctx )->handler = callback;
   ( *ctx )->configuration = configuration;
-  ( *ctx )->with_return = with_return;
   // return success
   return 0;
 }

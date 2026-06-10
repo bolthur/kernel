@@ -45,13 +45,13 @@ void rpc_hub_attach(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL, };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
 
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
 
@@ -60,7 +60,7 @@ void rpc_hub_attach(
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, NULL );
   if ( ! request ) {
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
 
@@ -85,7 +85,7 @@ void rpc_hub_attach(
   if ( 0 != result ) {
     free( request );
     err_response.status = -result;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
 
@@ -100,7 +100,7 @@ void rpc_hub_attach(
   // handle error
   if ( 0 != result ) {
     err_response.status = -result;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -112,21 +112,21 @@ void rpc_hub_attach(
   // check for multiple endpoints
   if ( interface_descriptor.endpoint_count != 1 ) {
     err_response.status = -EIO;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
   // handle only one output
   if ( LIBUSB_DIRECTION_OUT == endpoint_descriptor.endpoint_address.direction ) {
     err_response.status = -EIO;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
   // handle no interrupt endpoint
   if ( LIBUSB_TRANSFER_INTERRUPT != endpoint_descriptor.attributes.transfer ) {
     err_response.status = -EIO;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -135,7 +135,7 @@ void rpc_hub_attach(
   libusb_hub_device_t* hub = malloc( sizeof( *hub ) );
   if ( ! hub ) {
     err_response.status = -ENOMEM;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -152,7 +152,7 @@ void rpc_hub_attach(
   // handle error
   if ( 0 != result ) {
     err_response.status = -result;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     free( hub );
     free( request );
     return;
@@ -182,7 +182,7 @@ void rpc_hub_attach(
     free( hub );
     free( request );
     err_response.status = -EIO;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // some debug output
@@ -220,7 +220,7 @@ void rpc_hub_attach(
     free( hub );
     free( request );
     err_response.status = -EIO;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // some debug output
@@ -253,7 +253,7 @@ void rpc_hub_attach(
     free( hub );
     free( request );
     err_response.status = -result;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // some debug output
@@ -275,7 +275,7 @@ void rpc_hub_attach(
     free( hub );
     free( request );
     err_response.status = -result;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // power on in case it's not the root hub
@@ -294,7 +294,7 @@ void rpc_hub_attach(
       free( hub );
       free( request );
       err_response.status = -result;
-      bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
       return;
     }
   }
@@ -314,7 +314,7 @@ void rpc_hub_attach(
     free( hub );
     free( request );
     err_response.status = -result;
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     return;
   }
   // some debug output
@@ -340,7 +340,7 @@ void rpc_hub_attach(
       free( hub );
       free( request );
       err_response.status = -result;
-      bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
       return;
     }
     // increase attach count if port shall be attached
@@ -358,22 +358,34 @@ void rpc_hub_attach(
       free( hub );
       free( request );
       err_response.status = -ENOMEM;
-      bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
       return;
   }
   // clear out
   memset( ctx, 0, sizeof( *ctx ) );
   // populate
   ctx->to_attach = attach_count;
-  ctx->type = type;
-  ctx->response_info = data_info;
+  ctx->origin = origin;
   ctx->data_info = data_info;
+  ctx->hub = hub;
+  ctx->roothub = roothub_device_number;
+  ctx->device_number = message->device_number;
   // check for connection
   for ( uint32_t port = 0; port < hub->max_children; port++ ) {
     #if defined ( HUB_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Checking port %"PRIu32"\r\n", port )
     #endif
     result = hub_check_connection( message->device_number, hub, ( uint8_t )port, ctx );
+    // handle queued
+    if ( EAGAIN == result ) {
+      // debug output
+      #if defined ( HUB_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Attach needs to continue async\r\n" )
+      #endif
+      // exit loop
+      break;
+    }
+    // handle general error
     if ( 0 != result ) {
       #if defined ( HUB_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to check connection for port: %"PRIu8"\r\n",
@@ -384,7 +396,7 @@ void rpc_hub_attach(
       free( hub );
       free( request );
       err_response.status = -result;
-      bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+      bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
       return;
     }
   }
@@ -398,7 +410,7 @@ void rpc_hub_attach(
     free( ctx );
     // return success
     memset( &err_response, 0, sizeof( err_response ) );
-    bolthur_rpc_return( type, &err_response, sizeof( err_response ), nullptr, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
     EARLY_STARTUP_PRINT( "done\r\n" )
   }
   EARLY_STARTUP_PRINT( "done\r\n" )
