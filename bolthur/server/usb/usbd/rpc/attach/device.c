@@ -173,8 +173,7 @@ void rpc_attach_device(
     origin,
     data_info,
     request,
-    data_size,
-    response_info
+    data_size
   );
   // handle error
   if ( 0 != result ) {

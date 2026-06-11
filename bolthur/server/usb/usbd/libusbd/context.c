@@ -21,12 +21,11 @@
 #include "../libusbd.h"
 
 /**
- * @fn int context_attach_create(rpc_handler_t, pid_t, size_t, size_t, const void*, size_t, bool, libusb_device_t*, usbd_attach_context_t**)
+ * @fn int context_attach_create(rpc_handler_t, pid_t, size_t, const void*, size_t, bool, libusb_device_t*, usbd_attach_context_t**)
  * @brief Helper to allocate context
  * @param callback
  * @param origin
  * @param data_info
- * @param response_info
  * @param original_request
  * @param original_request_size
  * @param address
@@ -39,7 +38,6 @@ int usbd_context_attach_create(
   const rpc_handler_t callback,
   const pid_t origin,
   const size_t data_info,
-  const size_t response_info,
   const void* original_request,
   const size_t original_request_size,
   const uint8_t address,
@@ -77,7 +75,6 @@ int usbd_context_attach_create(
   // populate context
   ( *ctx )->data_info = data_info;
   ( *ctx )->origin = origin;
-  ( *ctx )->original_response_info = response_info;
   ( *ctx )->request = req;
   ( *ctx )->request_size = original_request_size;
   ( *ctx )->handler = callback;

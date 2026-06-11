@@ -421,7 +421,7 @@ static void attach_read_device_finished_1(
 }
 
 /**
- * @fn int usbd_attach_device(libusb_device_t*, rpc_handler_t, pid_t, size_t, void*, size_t, size_t)
+ * @fn int usbd_attach_device(libusb_device_t*, rpc_handler_t, pid_t, size_t, void*, size_t)
  * @brief Wrapper to attach device
  * @param dev device to attach
  * @param callback callback to be invoked ( set to nullptr if not there )
@@ -429,7 +429,6 @@ static void attach_read_device_finished_1(
  * @param data_info original rpc id ( set to 0 if not there )
  * @param original_request original request ( set to nullptr if not there )
  * @param original_request_size original request size ( set to 0 if not there )
- * @param response_info original response info ( set to 0 if not there )
  * @return 0 on success else errno
  */
 int usbd_attach_device(
@@ -438,8 +437,7 @@ int usbd_attach_device(
   const pid_t origin,
   const size_t data_info,
   const void* original_request,
-  const size_t original_request_size,
-  const size_t response_info
+  const size_t original_request_size
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
@@ -464,7 +462,6 @@ int usbd_attach_device(
     callback,
     origin,
     data_info,
-    response_info,
     original_request,
     original_request_size,
     address,

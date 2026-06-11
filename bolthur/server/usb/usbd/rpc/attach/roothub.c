@@ -116,10 +116,10 @@ void rpc_attach_roothub(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
+  // free again
+  free( dummy );
   // handle already attached
   if ( head ) {
-    // free again
-    free( dummy );
     error.status = -EADDRINUSE;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
@@ -132,13 +132,8 @@ void rpc_attach_roothub(
   const int result = usbd_roothub_attach(
     rpc_attach_roothub_finished,
     origin,
-    data_info,
-    response_info,
-    dummy,
-    data_size
+    data_info
   );
-  // free again
-  free( dummy );
   // handle error
   if ( 0 != result ) {
     // debug output

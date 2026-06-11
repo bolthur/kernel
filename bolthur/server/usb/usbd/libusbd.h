@@ -52,8 +52,6 @@ typedef struct {
   pid_t origin;
   /** data info modified in call chain */
   size_t data_info;
-  /** original response info */
-  size_t original_response_info;
   /** handler to be called on finish */
   rpc_handler_t handler;
   /** device */
@@ -127,11 +125,11 @@ int usbd_address_set( libusb_device_t*, uint8_t, rpc_handler_t, usbd_attach_cont
 // allocate
 int usbd_allocate_device( libusb_device_t**, bool );
 // attach
-int usbd_attach_device( libusb_device_t*, rpc_handler_t, pid_t, size_t, const void*, size_t, size_t );
+int usbd_attach_device( libusb_device_t*, rpc_handler_t, pid_t, size_t, const void*, size_t );
 // configuration
 int usbd_configuration_set( libusb_device_t*, uint8_t, rpc_handler_t, usbd_configure_context_t* );
 // context
-int usbd_context_attach_create( rpc_handler_t, pid_t, size_t, size_t, const void*, size_t, uint8_t, uint8_t, libusb_device_t*, usbd_attach_context_t**);
+int usbd_context_attach_create( rpc_handler_t, pid_t, size_t, const void*, size_t, uint8_t, uint8_t, libusb_device_t*, usbd_attach_context_t**);
 void usbd_context_attach_destroy( usbd_attach_context_t* );
 int usbd_context_descriptor_create( rpc_handler_t, void*, usbd_descriptor_context_t** );
 void usbd_context_descriptor_destroy( usbd_descriptor_context_t* );
@@ -171,7 +169,7 @@ int usbd_init( void );
 int usbd_interrupt_poll( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, size_t, uint8_t, uint32_t, rpc_handler_t, pid_t, size_t, void*, size_t );
 // roothub
 libusb_device_t* usbd_roothub_get( void );
-int usbd_roothub_attach( rpc_handler_t, pid_t, size_t, size_t, const void*, size_t );
+int usbd_roothub_attach( rpc_handler_t, pid_t, size_t );
 int usbd_roothub_fire_attach( void );
 // string
 int usbd_string_get( libusb_device_t*, uint8_t, uint16_t, void*, size_t );
