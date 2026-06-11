@@ -96,7 +96,6 @@ void rpc_keyboard_key(
       }
       // detach shared memory if existing
       _syscall_memory_shared_detach( original_interrupt_message->shm_id );
-      EARLY_STARTUP_PRINT( "EAGAIN\r\n" )
       dev->running_poll = 0;
     }
     free( response );
@@ -355,7 +354,9 @@ void rpc_keyboard_key(
       input_buffer,
       size_min( strlen( input_buffer ) + 1, CONSOLE_MAX_INPUT_SEQUENCE - 1 )
     );
-    EARLY_STARTUP_PRINT( "input_buffer = %s\r\n", input_buffer )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "input_buffer = %s\r\n", input_buffer )
+    #endif
     // raise input request
     /// FIXME: RAISE ASYNC WITHOUT WAITING FOR RETURN
     const int result = ioctl(

@@ -118,14 +118,14 @@ int usbd_roothub_attach(
     EARLY_STARTUP_PRINT( "Attaching root hob\r\n" )
   #endif
   // space for root hub
-  libusb_device_t* root_hub = nullptr;
+  libusb_device_t* roothub = nullptr;
   // handle existing by freeing up
   /// FIXME: MAKE ASYNC AND INTEGRATE INTO CALL CHAIN
   if ( head && 1 == head->number ) {
     usbd_deallocate_device( head );
   }
   // allocate device
-  int result = usbd_allocate_device( &root_hub, true );
+  int result = usbd_allocate_device( &roothub, true );
   // handle error
   if ( 0 != result ) {
     // debug output
@@ -136,10 +136,10 @@ int usbd_roothub_attach(
     return result;
   }
   // set device to powered on
-  root_hub->status = LIBUSB_DEVICE_STATUS_POWERED;
+  roothub->status = LIBUSB_DEVICE_STATUS_POWERED;
   // attach usb device
   result = usbd_attach_device(
-    root_hub,
+    roothub,
     callback,
     origin,
     data_info,
@@ -170,7 +170,6 @@ int usbd_roothub_fire_attach( void ) {
   const pid_t target = getpid();
   char dummy;
   // raise rpc
-  EARLY_STARTUP_PRINT( "RAISING RPC %d\r\n", USBD_ATTACH_ROOTHUB )
   const size_t response_id = bolthur_rpc_raise(
     USBD_ATTACH_ROOTHUB,
     target,

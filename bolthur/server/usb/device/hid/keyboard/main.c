@@ -146,7 +146,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
         // calculate real sleep time
         const long real_sleep_time = (long)(expected_sleep_time -
           (((double)tick_count - (double)current->last_poll) / frequency) * 1000);
-        EARLY_STARTUP_PRINT( "real_sleep_time %ld\r\n", real_sleep_time )
+        #if defined( KEYBOARD_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "real_sleep_time %ld\r\n", real_sleep_time )
+        #endif
         // handle sleep
         if (
           real_sleep_time > 0
@@ -166,11 +168,20 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
           continue;
         }
       }
-      EARLY_STARTUP_PRINT( "START POLLING\r\n" )
+      #if defined( KEYBOARD_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "START POLLING\r\n" )
+      #endif
       // start keyboard polling
       if ( 0 == keyboard_start_polling( current ) ) {
         // set last poll to tick count
         current->last_poll = _syscall_timer_tick_count();
+        // set proper sleep time when it's 0 or greater interval
+        if (
+          0 == sleep_time
+          || sleep_time > current->descriptor.interval
+        ) {
+          sleep_time = current->descriptor.interval;
+        }
       }
       // go to next
       current = current->next;

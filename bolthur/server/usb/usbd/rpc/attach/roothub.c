@@ -44,13 +44,14 @@ static void rpc_attach_roothub_finished(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "roothub finished\r\n" )
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
+  #endif
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // peek matching async data without destroy for call chain
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
     RPC_VFS_IOCTL, response_info );
   if ( ! async_data ) {
-    EARLY_STARTUP_PRINT( "NO ASYNC DATA!\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
@@ -59,13 +60,11 @@ static void rpc_attach_roothub_finished(
   assert( ctx );
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
@@ -73,11 +72,12 @@ static void rpc_attach_roothub_finished(
   size_t data_size;
   vfs_ioctl_perform_response_t* attach_response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! attach_response ) {
-    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), async_data, 0 );
     return;
   }
-  EARLY_STARTUP_PRINT( "roothub finished\r\n" )
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
+  #endif
   // clear memory
   memset( &error, 0, sizeof( error ) );
   // return from rpc
@@ -101,13 +101,11 @@ void rpc_attach_roothub(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // handle invalid origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "Invalid origin\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
@@ -115,7 +113,6 @@ void rpc_attach_roothub(
   size_t data_size;
   char* dummy = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! dummy ) {
-    EARLY_STARTUP_PRINT( "roothub finished\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
@@ -123,7 +120,6 @@ void rpc_attach_roothub(
   if ( head ) {
     // free again
     free( dummy );
-    EARLY_STARTUP_PRINT( "attach already done\r\n" )
     error.status = -EADDRINUSE;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;

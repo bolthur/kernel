@@ -43,13 +43,11 @@
   size_t data_info,
   size_t response_info
 ) {
-   EARLY_STARTUP_PRINT( "FINISHED\r\n" )
   // get matching async data
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
     RPC_VFS_IOCTL, response_info );
   // handle no async data
   if ( ! async_data ) {
-    EARLY_STARTUP_PRINT( "no async data\r\n" )
     // cleanup
     _syscall_rpc_cleanup();
     // skip rest
@@ -59,13 +57,11 @@
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "no data\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "invalid originr\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     return;
   }
@@ -74,7 +70,6 @@
   vfs_ioctl_perform_response_t* submit_response = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, nullptr );
   if ( ! submit_response ) {
-    EARLY_STARTUP_PRINT( "no response\r\n" )
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // skip rest
@@ -86,7 +81,6 @@
   void* shm_addr_hcd_poll = _syscall_memory_shared_attach( hcd_submit_command->shm_id, 0 );
   if ( errno ) {
     const int e = errno;
-    EARLY_STARTUP_PRINT( "shared memory: %s\r\n", strerror( e ) )
     // free up stuff
     free( submit_response );
     // return from rpc
@@ -104,7 +98,6 @@
   void* shm_addr_message = _syscall_memory_shared_attach( submit_message->shm_id, 0 );
   if ( errno ) {
     const int e = errno;
-    EARLY_STARTUP_PRINT( "shared memory: %s\r\n", strerror( e ) )
     // detach both since both are attached already
     _syscall_memory_shared_detach( submit_message->shm_id );
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
@@ -121,7 +114,6 @@
   libusb_device_t* device;
   int result = usbd_device_get_by_number( usbd_submit_message->device_number, &device );
   if ( 0 != result ) {
-    EARLY_STARTUP_PRINT( "no device: %s\r\n", strerror( result ) )
     // detach both since both are attached already
     _syscall_memory_shared_detach( submit_message->shm_id );
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
@@ -135,7 +127,6 @@
   }
   // handle timeout
   if ( hcd_submit->error & LIBUSB_TRANSFER_ERROR_TIMEOUT ) {
-    EARLY_STARTUP_PRINT( "timeout\r\n" )
     // detach both since both are attached already
     _syscall_memory_shared_detach( submit_message->shm_id );
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
@@ -149,7 +140,6 @@
   }
   // handle error and parent is set
   if ( device->parent && hcd_submit->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
-    EARLY_STARTUP_PRINT( "error: %x\r\n", hcd_submit->error )
     // check connection
     /// FIXME: NEEDS TO BE ASYNC AS WELL AS CONTROL MESSAGE
     result = call_child_check_connection( device->parent, device );
@@ -170,7 +160,6 @@
     result = EIO;
   }
   // handle direction in with last transfer equal to buffer length
-    EARLY_STARTUP_PRINT( "%"PRIu32" / %zu\r\n", hcd_submit->last_transfer, usbd_submit_message->buffer_length )
   if (
     LIBUSB_DIRECTION_IN == usbd_submit_message->direction
     && hcd_submit->last_transfer == usbd_submit_message->buffer_length
@@ -196,7 +185,6 @@
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* real_response = malloc( response_size );
   if ( ! real_response ) {
-    EARLY_STARTUP_PRINT( "mem error\r\n" )
     // free up stuff
     free( submit_response );
     // return from rpc
@@ -233,7 +221,6 @@ void rpc_control_message(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "START\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
