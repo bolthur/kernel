@@ -217,6 +217,28 @@ void rpc_interrupt_poll(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
+  // get enumeration status
+  bool enumerating;
+  int result = usbd_enumerating_get( &enumerating );
+  if ( 0 != result ) {
+    // free up stuff
+    free( request );
+    // return from rpc
+    error.status = -result;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    // skip rest
+    return;
+  }
+  // handle enumerating in process
+  if ( enumerating ) {
+    // free up stuff
+    free( request );
+    // return from rpc
+    error.status = -EAGAIN;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    // skip rest
+    return;
+  }
   // allocate space for pull_request
   auto const interrupt_message = ( usbd_interrupt_message_t* )request->container;
   // attach shared memory
@@ -235,7 +257,7 @@ void rpc_interrupt_poll(
   auto const message = ( usb_interrupt_poll_t* )shm_addr;
   // find device
   libusb_device_t* device;
-  int result = usbd_device_get_by_number( message->device_number, &device );
+  result = usbd_device_get_by_number( message->device_number, &device );
   if ( 0 != result ) {
     error.status = -result;
     // detach shared memory

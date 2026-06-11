@@ -27,6 +27,7 @@ usbd_SOURCES = \
   libusbd/description.c \
   libusbd/descriptor.c \
   libusbd/device.c \
+  libusbd/enumerating.c \
   libusbd/handler.c \
   libusbd/init.c \
   libusbd/interrupt.c \

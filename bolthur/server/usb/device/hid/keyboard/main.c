@@ -38,7 +38,6 @@ int console_fd;
 /**
  * @fn int main(int, char*[])
  * @brief main entry point
- *
  * @param argc
  * @param argv
  * @return
@@ -147,6 +146,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
         // calculate real sleep time
         const long real_sleep_time = (long)(expected_sleep_time -
           (((double)tick_count - (double)current->last_poll) / frequency) * 1000);
+        EARLY_STARTUP_PRINT( "real_sleep_time %ld\r\n", real_sleep_time )
         // handle sleep
         if (
           real_sleep_time > 0
@@ -166,6 +166,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
           continue;
         }
       }
+      EARLY_STARTUP_PRINT( "START POLLING\r\n" )
       // start keyboard polling
       if ( 0 == keyboard_start_polling( current ) ) {
         // set last poll to tick count
@@ -176,12 +177,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     }
     // handle waiting for rpc
     if (0 == sleep_time) {
-      // wait for rpc
-      _syscall_rpc_wait_for_call();
-      // skip sleep after rpc
-      continue;
+      sleep_time = 1000;
     }
-    STARTUP_PRINT( "sleep_time = %ld\r\n", sleep_time )
+    EARLY_STARTUP_PRINT( "sleep_time = %ld\r\n", sleep_time )
     // sleep till next poll
     nanosleep( &(struct timespec){
       .tv_sec = sleep_time / 1000,

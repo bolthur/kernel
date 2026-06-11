@@ -211,7 +211,7 @@ int usbd_control_message_async(
   void* original_request,
   const size_t original_request_size,
   void* context,
-  size_t minimum_length
+  const size_t minimum_length
 ) {
   // debug output
   #if defined( USBD_ENABLE_DEBUG )

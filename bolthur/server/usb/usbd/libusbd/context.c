@@ -296,3 +296,44 @@ void usbd_context_configuration_destroy( usbd_configuration_context_t* ctx ) {
   EARLY_STARTUP_PRINT( "Destroy configuration context %p\r\n", ( void* )ctx )
   free( ctx );
 }
+
+/**
+ * @fn int usbd_context_control_create(rpc_handler_t, void*, usbd_control_context_t**)
+ * @brief Create control context
+ * @param callback handler to be called
+ * @param context different context
+ * @param ctx output context
+ * @return
+ */
+int usbd_context_control_create( rpc_handler_t callback, void* context, usbd_control_context_t** ctx ) {
+  // allocate additional context
+  *ctx = malloc( sizeof( usbd_control_context_t ) );
+  // handle error
+  if ( ! *ctx ) {
+    // debug output
+    #if defined( USBD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to allocate space for context\r\n" )
+    #endif
+    // return error
+    return ENOMEM;
+  }
+  // clear out context
+  memset( *ctx, 0, sizeof( usbd_control_context_t ) );
+  // populate context
+  ( *ctx )->context = context;
+  ( *ctx )->handler = callback;
+  // return success
+  return 0;
+}
+
+/**
+ * @fn void usbd_context_control_destroy(usbd_control_context_t*)
+ * @brief Destroy control context
+ * @param ctx
+ */
+void usbd_context_control_destroy( usbd_control_context_t* ctx ) {
+  if ( ! ctx ) {
+    return;
+  }
+  free( ctx );
+}

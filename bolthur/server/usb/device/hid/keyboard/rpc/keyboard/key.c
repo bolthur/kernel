@@ -28,6 +28,7 @@
 #include "../../keyboard.h"
 #include "../../../../../../libconsole.h"
 #include "../../../../../../libusbd.h"
+#include "../../../../../../../library/util/min.h"
 
 /**
  * @fn void rpc_keyboard_key(size_t, pid_t, size_t, size_t)
@@ -36,25 +37,76 @@
  * @param origin
  * @param data_info
  * @param response_info
- *
- * @todo validate origin
- * @todo clear async data
  */
 void rpc_keyboard_key(
   [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
+  pid_t origin,
   size_t data_info,
-  [[maybe_unused]] size_t response_info
+  size_t response_info
 ) {
+  // get async data
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async( RPC_VFS_IOCTL, response_info );
+  // get original interrupt message
+  usbd_interrupt_message_t* original_interrupt_message = nullptr;
+  if ( async_data ) {
+    vfs_ioctl_perform_request_t* original_request = async_data->original_data;
+    original_interrupt_message = ( usbd_interrupt_message_t* )original_request->container;
+  }
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    bolthur_rpc_destroy_async( async_data );
+    _syscall_rpc_cleanup();
+    return;
+  }
   // handle no data
   if ( ! data_info ) {
+    bolthur_rpc_destroy_async( async_data );
+    _syscall_rpc_cleanup();
     return;
   }
   // get data from mailbox
   size_t data_size;
   vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! response ) {
+    bolthur_rpc_destroy_async( async_data );
+    _syscall_rpc_cleanup();
     return;
+  }
+  // handle enumerating
+  if ( response->status == -EAGAIN ) {
+    // handle valid original interrupt message
+    if ( original_interrupt_message ) {
+      // attach shared memory
+      void* shm_addr = _syscall_memory_shared_attach( original_interrupt_message->shm_id, ( uintptr_t )NULL );
+      if ( errno ) {
+        free( response );
+        _syscall_rpc_cleanup();
+        return;
+      }
+      // transform shared memory into message
+      const usb_interrupt_poll_t* message = ( usb_interrupt_poll_t* )shm_addr;
+      // try to get device by number
+      libusb_keyboard_device_t* dev = keyboard_get_device( message->device_number );
+      // handle no device found
+      if ( ! dev ) {
+        _syscall_memory_shared_detach( original_interrupt_message->shm_id );
+        free( response );
+        _syscall_rpc_cleanup();
+        return;
+      }
+      // detach shared memory if existing
+      _syscall_memory_shared_detach( original_interrupt_message->shm_id );
+      EARLY_STARTUP_PRINT( "EAGAIN\r\n" )
+      dev->running_poll = 0;
+    }
+    free( response );
+    bolthur_rpc_destroy_async( async_data );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // destroy it if existing
+  if ( async_data ) {
+    bolthur_rpc_destroy_async( async_data );
   }
   // get message
   const usbd_interrupt_message_t* control_message = ( usbd_interrupt_message_t* )response->container;
@@ -63,6 +115,7 @@ void rpc_keyboard_key(
   // handle error
   if ( errno ) {
     free( response );
+    _syscall_rpc_cleanup();
     return;
   }
   // transform shared memory into message
@@ -73,6 +126,7 @@ void rpc_keyboard_key(
   if ( ! dev ) {
     _syscall_memory_shared_detach( control_message->shm_id );
     free( response );
+    _syscall_rpc_cleanup();
     return;
   }
   dev->last_usb_pid = message->last_usb_pid;
@@ -90,6 +144,7 @@ void rpc_keyboard_key(
     // cleanup everything and return
     _syscall_memory_shared_detach( control_message->shm_id );
     free( response );
+    _syscall_rpc_cleanup();
     return;
   }
   // handle not enough transferred
@@ -97,6 +152,7 @@ void rpc_keyboard_key(
     _syscall_memory_shared_detach( control_message->shm_id );
     free( response );
     dev->running_poll = 0;
+    _syscall_rpc_cleanup();
     return;
   }
   // iterate through reports
@@ -231,7 +287,17 @@ void rpc_keyboard_key(
     }
   }
   char tmp_buffer[10];
-  char* input_buffer = nullptr;
+  size_t input_length = sizeof( char ) * 10;
+  char* input_buffer = malloc( input_length );
+  // handle allocation issue
+  if ( ! input_buffer ) {
+    _syscall_memory_shared_detach( control_message->shm_id );
+    free( response );
+    dev->running_poll = 0;
+    _syscall_rpc_cleanup();
+    return;
+  }
+  memset( input_buffer, 0, input_length );
   // loop through keys and translate them to characters
   for ( size_t i = 0; i < dev->key_count; i++ ) {
     // translate key code
@@ -249,31 +315,28 @@ void rpc_keyboard_key(
     if ( 0 != keymap_to_string( key, tmp_buffer ) ) {
       continue;
     }
-    // try to allocate input buffer
-    if ( ! input_buffer ) {
-      // allocate and skip on error
-      input_buffer = malloc( sizeof( char ) * ( strlen( tmp_buffer ) + 1 ) );
-      if ( ! input_buffer ) {
-        // skip rest
-        continue;
-      }
-      // copy over tmp buffer
-      strcpy( input_buffer, tmp_buffer );
-    } else {
-      char* new_input_buffer = realloc( input_buffer, sizeof( char ) * ( strlen( input_buffer ) + strlen( tmp_buffer ) + 1 ) );
+    // calculate new length
+    size_t tmp_length = ( strlen( input_buffer ) + strlen( tmp_buffer ) + 1 ) * sizeof( char );
+    // handle length exceed
+    if ( tmp_length > input_length ) {
+      // set new length
+      input_length = tmp_length;
+      // allocate new buffer
+      char* new_input_buffer = realloc( input_buffer, input_length );
+      // handle error
       if ( ! new_input_buffer ) {
-        // skip rest
         continue;
       }
+      // overwrite input
       input_buffer = new_input_buffer;
-      // concatenate buffers
-      strcat( input_buffer, tmp_buffer );
     }
+    // concatenate buffers
+    strcat( input_buffer, tmp_buffer );
   }
   // reset last poll
   dev->running_poll = 0;
   // handle input buffer
-  if ( input_buffer && strlen( input_buffer ) ) {
+  if ( strlen( input_buffer ) ) {
     // allocate input command
     console_command_input_t* input_command = malloc( sizeof( *input_command ) );
     if ( ! input_command ) {
@@ -281,12 +344,17 @@ void rpc_keyboard_key(
       _syscall_memory_shared_detach( control_message->shm_id );
       free( response );
       free( input_buffer );
+      _syscall_rpc_cleanup();
       return;
     }
     // clear out input commend
     memset( input_command, 0, sizeof( *input_command ) );
     // copy over
-    strncpy( input_command->input, input_buffer, CONSOLE_MAX_INPUT_SEQUENCE - 1 );
+    strncpy(
+      input_command->input,
+      input_buffer,
+      size_min( strlen( input_buffer ) + 1, CONSOLE_MAX_INPUT_SEQUENCE - 1 )
+    );
     EARLY_STARTUP_PRINT( "input_buffer = %s\r\n", input_buffer )
     // raise input request
     /// FIXME: RAISE ASYNC WITHOUT WAITING FOR RETURN
@@ -309,10 +377,9 @@ void rpc_keyboard_key(
     // free up input command
     free( input_command );
   }
-  if ( input_buffer ) {
-    free( input_buffer );
-  }
   // cleanup everything and return
   _syscall_memory_shared_detach( control_message->shm_id );
+  free( input_buffer );
   free( response );
+  _syscall_rpc_cleanup();
 }

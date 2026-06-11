@@ -39,7 +39,8 @@
     EARLY_STARTUP_PRINT( "Something went wrong with stage3 startup!\r\n" )
     exit( 1 );
   }
-  // close device manager since everythig was fired up
+  EARLY_STARTUP_PRINT( "Starting login process\r\n" )
+/*  // close device manager since everythig was fired up
   close( fd_dev_manager );
   // fork for starting the login shell
   pid_t forked = fork();
@@ -54,8 +55,9 @@
   }
   if ( 0 > forked ) {
     EARLY_STARTUP_PRINT( "Error while forking: %s\r\n", strerror( -forked ) )
-  }
+  }*/
 
+  EARLY_STARTUP_PRINT( "Looping till death\r\n" )
   while ( true ) {
     sleep( 10 );
     __asm__ __volatile__( "nop" );

@@ -45,29 +45,26 @@ static void attach_roothub_finished(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "ROOTHUB ATTACH FINISHED\r\n" )
-  // peek matching async data without destroy for call chain
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "ROOTHUB ATTACH FINISHED\r\n" )
+  #endif
+  // get matching async data without destroy for call chain
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
     RPC_VFS_IOCTL, response_info );
   // handle no async data
   if ( ! async_data ) {
-    EARLY_STARTUP_PRINT( "NO ASYNC DATA\r\n" )
-    // cleanup
     _syscall_rpc_cleanup();
-    // skip rest
     return;
   }
+  // just destroy it
+  bolthur_rpc_destroy_async( async_data );
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "NO DATA\r\n" )
-    bolthur_rpc_destroy_async( async_data );
     _syscall_rpc_cleanup();
     return;
   }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    EARLY_STARTUP_PRINT( "INVALID ORIGIN\r\n" )
-    bolthur_rpc_destroy_async( async_data );
     _syscall_rpc_cleanup();
     return;
   }
@@ -75,24 +72,26 @@ static void attach_roothub_finished(
   size_t data_size;
   vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! response ) {
-    EARLY_STARTUP_PRINT( "NO DATA\r\n" )
-    bolthur_rpc_destroy_async( async_data );
     _syscall_rpc_cleanup();
     return;
   }
   // handle result
-  if ( 0 > response->status ) {
-    EARLY_STARTUP_PRINT( "Attach of roothub failed: %s\r\n", strerror( -response->status ) )
-  } else {
-    EARLY_STARTUP_PRINT( "Roothub successfully attached\r\n" )
-  }
-  EARLY_STARTUP_PRINT( "DONE\r\n" )
+  #if defined( USBD_ENABLE_DEBUG )
+    if ( 0 > response->status ) {
+      EARLY_STARTUP_PRINT( "Attach of roothub failed: %s\r\n", strerror( -response->status ) )
+    } else {
+      EARLY_STARTUP_PRINT( "Roothub successfully attached\r\n" )
+    }
+  #endif
+  // debug output
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Stopping enumeration to enable polling\r\n" )
+  #endif
+  // disable enumeration mode
+  usbd_enumerating_set( false );
+  // free response
   free( response );
-  EARLY_STARTUP_PRINT( "DONE\r\n" )
-  bolthur_rpc_destroy_async( async_data );
-  EARLY_STARTUP_PRINT( "DONE\r\n" )
   _syscall_rpc_cleanup();
-  EARLY_STARTUP_PRINT( "DONE\r\n" )
 }
 
 /**
