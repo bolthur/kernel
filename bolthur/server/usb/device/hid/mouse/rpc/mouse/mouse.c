@@ -73,6 +73,7 @@ void rpc_mouse_mouse(
   }
   // handle enumerating
   if ( response->status == -EAGAIN ) {
+    enumerating = true;
     // handle valid original interrupt message
     if ( original_interrupt_message ) {
       // attach shared memory

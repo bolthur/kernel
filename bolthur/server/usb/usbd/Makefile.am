@@ -40,6 +40,7 @@ usbd_SOURCES = \
   rpc/get/description.c \
   rpc/get/descriptor.c \
   rpc/get/endpoint.c \
+  rpc/get/enumerating.c \
   rpc/get/interface.c \
   rpc/get/roothub.c \
   rpc/get/status.c \

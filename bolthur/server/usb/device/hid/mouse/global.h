@@ -20,6 +20,6 @@
 #ifndef _GLOBAL_H
 #define _GLOBAL_H
 
-#include <sys/types.h>
+extern bool enumerating;
 
 #endif

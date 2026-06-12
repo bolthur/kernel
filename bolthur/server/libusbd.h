@@ -63,6 +63,7 @@
 #define USBD_GET_CONFIGURATION USBD_GET_ROOTHUB + 1
 #define USBD_GET_STATUS USBD_GET_CONFIGURATION + 1
 #define USBD_POLL_INTERRUPT USBD_GET_STATUS + 1
+#define USBD_GET_ENUMERATING USBD_POLL_INTERRUPT + 1
 
 // generic usb rpc structures
 typedef struct {
@@ -248,5 +249,9 @@ typedef struct {
   uint32_t device_number;
   libusb_device_status_t status;
 } usbd_get_status_t;
+
+typedef struct {
+  bool enumerating;
+} usbd_get_enumerating_t;
 
 #endif

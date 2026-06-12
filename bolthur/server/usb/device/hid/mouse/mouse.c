@@ -175,7 +175,7 @@ int mouse_start_polling( libusb_mouse_device_t* device ) {
   // clear out buffer
   memset( device->buffer, 0, MOUSE_REPORT_SIZE );
   // return result of async control message
-  return usb_interrupt_poll_async(
+  const int result = usb_interrupt_poll_async(
     device->device_number,
     device->descriptor.attributes.transfer,
     device->descriptor.endpoint_address.number,
@@ -187,6 +187,11 @@ int mouse_start_polling( libusb_mouse_device_t* device ) {
     device->last_packet_count,
     rpc_mouse_mouse
   );
+  // handle error
+  if ( 0 != result ) {
+    device->running_poll = 0;
+  }
+  return result;
 }
 
 /**

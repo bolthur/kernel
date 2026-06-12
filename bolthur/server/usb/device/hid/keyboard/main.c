@@ -36,6 +36,11 @@
 int console_fd;
 
 /**
+ * @brief Enumerating flag
+ */
+bool enumerating = true;
+
+/**
  * @fn int main(int, char*[])
  * @brief main entry point
  * @param argc
@@ -171,8 +176,17 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
       #if defined( KEYBOARD_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "START POLLING\r\n" )
       #endif
+      // query polling
+      if ( enumerating ) {
+        result = usb_get_enumerating( &enumerating );
+        if ( 0 != result ) {
+          #if defined( KEYBOARD_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "Failed to get enumerating status\r\n" )
+          #endif
+        }
+      }
       // start keyboard polling
-      if ( 0 == keyboard_start_polling( current ) ) {
+      if ( ! enumerating && 0 == keyboard_start_polling( current ) ) {
         // set last poll to tick count
         current->last_poll = _syscall_timer_tick_count();
         // set proper sleep time when it's 0 or greater interval

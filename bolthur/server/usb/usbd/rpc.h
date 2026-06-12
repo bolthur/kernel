@@ -36,5 +36,6 @@ void rpc_get_status( size_t, pid_t, size_t, size_t );
 void rpc_handler_register( size_t, pid_t, size_t, size_t );
 void rpc_handler_unregister( size_t, pid_t, size_t, size_t );
 void rpc_interrupt_poll( size_t, pid_t, size_t, size_t );
+void rpc_get_enumerating( size_t, pid_t, size_t, size_t );
 
 #endif

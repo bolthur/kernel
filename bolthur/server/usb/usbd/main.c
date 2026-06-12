@@ -70,8 +70,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     USBD_GET_CONFIGURATION,
     USBD_GET_STATUS,
     USBD_POLL_INTERRUPT,
+    USBD_GET_ENUMERATING,
   };
-  if ( ! vfs_dev_add_file( USBD_DEVICE_PATH, device_info, 13, nullptr ) ) {
+  if ( ! vfs_dev_add_file( USBD_DEVICE_PATH, device_info, 14, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

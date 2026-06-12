@@ -20,8 +20,7 @@
 #ifndef _GLOBAL_H
 #define _GLOBAL_H
 
-#include <sys/types.h>
-
 extern int console_fd;
+extern bool enumerating;
 
 #endif
