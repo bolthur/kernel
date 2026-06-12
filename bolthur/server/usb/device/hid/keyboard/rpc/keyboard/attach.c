@@ -199,13 +199,13 @@ void rpc_keyboard_attach(
     // handle input
     if ( report->type == LIBUSB_HID_REPORT_TYPE_INPUT && ! device->key_report ) {
       // change idle state to only on key change
-      #if defined( HID_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Setting idle to 0 for %"PRIu32" / %"PRIu32" / %"PRIu8"\r\n",
           message->device_number, message->interface_number, report->id )
       #endif
       result = hid_set_idle( message->device_number, message->interface_number, report->id, 0);
       if ( 0 != result ) {
-        #if defined( HID_ENABLE_DEBUG )
+        #if defined( KEYBOARD_ENABLE_DEBUG )
           EARLY_STARTUP_PRINT( "Unable to put hid into idle mode: %s\r\n",
             strerror( result ) )
         #endif
@@ -216,7 +216,7 @@ void rpc_keyboard_attach(
         bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
         return;
       }
-      #if defined( HID_ENABLE_DEBUG )
+      #if defined( KEYBOARD_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Setting idle to 0 for %"PRIu32" / %"PRIu32" / %"PRIu8" done\r\n",
           message->device_number, message->interface_number, report->id )
       #endif

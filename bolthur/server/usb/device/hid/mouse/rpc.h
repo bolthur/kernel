@@ -25,6 +25,7 @@
 void rpc_mouse_attach( size_t, pid_t, size_t, size_t );
 void rpc_mouse_deallocate( size_t, pid_t, size_t, size_t );
 void rpc_mouse_detach( size_t, pid_t, size_t, size_t );
+void rpc_mouse_mouse( size_t, pid_t, size_t, size_t );
 bool rpc_init( void );
 
 #endif

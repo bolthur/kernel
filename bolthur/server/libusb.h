@@ -850,6 +850,8 @@ typedef struct libusb_keyboard_device {
   libusb_keyboard_device_t* prev;
 } libusb_keyboard_device_t;
 
+#define MOUSE_REPORT_SIZE 4
+
 typedef enum {
   LIBUSB_MOUSE_DEVICE_BUTTON_LEFT,
   LIBUSB_MOUSE_DEVICE_BUTTON_RIGHT,
@@ -873,7 +875,11 @@ typedef struct libusb_mouse_device {
   uint32_t device_number;
   libusb_endpoint_descriptor_t descriptor;
   size_t last_poll;
+  size_t running_poll;
   uint8_t* buffer;
+
+  uint8_t last_usb_pid;
+  uint32_t last_packet_count;
 
   libusb_mouse_device_t* next;
   libusb_mouse_device_t* prev;

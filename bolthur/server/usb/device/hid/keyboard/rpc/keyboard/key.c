@@ -49,9 +49,9 @@ void rpc_keyboard_key(
   // get async data
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async( RPC_VFS_IOCTL, response_info );
   // get original interrupt message
-  usbd_interrupt_message_t* original_interrupt_message = nullptr;
+  const usbd_interrupt_message_t* original_interrupt_message = nullptr;
   if ( async_data ) {
-    vfs_ioctl_perform_request_t* original_request = async_data->original_data;
+    const vfs_ioctl_perform_request_t* original_request = async_data->original_data;
     original_interrupt_message = ( usbd_interrupt_message_t* )original_request->container;
   }
   // validate origin

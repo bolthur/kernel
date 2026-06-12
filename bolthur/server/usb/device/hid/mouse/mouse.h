@@ -22,8 +22,13 @@
 
 #include "../../../../libusb.h"
 
-//#define MOUSE_ENABLE_DEBUG 1
+#define MOUSE_ENABLE_DEBUG 1
 
 void mouse_append( libusb_mouse_device_t* );
+int mouse_new_index( uint32_t* );
+void mouse_destroy( libusb_mouse_device_t* );
+int mouse_duplicate_report( libusb_hid_parser_report_t**, const libusb_hid_parser_report_t*, size_t );
+int mouse_start_polling( libusb_mouse_device_t* );
+libusb_mouse_device_t* mouse_get_device( uint32_t );
 
 #endif
