@@ -79,12 +79,22 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   }
 
   // query allowed rpc origin
-  const pid_t allowed_rpc_origin = vfs_get_file_handler( HID_DEVICE_PATH );
+  pid_t allowed_rpc_origin = vfs_get_file_handler( HID_DEVICE_PATH );
   if ( -1 == allowed_rpc_origin ) {
     STARTUP_PRINT( "Unable to get handler id of %s\r\n", HID_DEVICE_PATH )
     return -1;
   }
-
+  // push to valid origin
+  if ( ! bolthur_rpc_origin_push_valid( allowed_rpc_origin ) ) {
+    STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
+    return -1;
+  }
+  // query allowed rpc origin
+  allowed_rpc_origin = vfs_get_file_handler( USBD_DEVICE_PATH );
+  if ( -1 == allowed_rpc_origin ) {
+    STARTUP_PRINT( "Unable to get handler id of %s\r\n", USBD_DEVICE_PATH )
+    return -1;
+  }
   // push to valid origin
   if ( ! bolthur_rpc_origin_push_valid( allowed_rpc_origin ) ) {
     STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
@@ -113,8 +123,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     GENERIC_ATTACH,
     GENERIC_DETACH,
     GENERIC_DEALLOCATE,
+    GENERIC_POLL_INTERRUPT,
   };
-  if ( ! vfs_dev_add_file( KEYBOARD_DEVICE_PATH, device_info, 3, nullptr ) ) {
+  if ( ! vfs_dev_add_file( KEYBOARD_DEVICE_PATH, device_info, 4, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }
@@ -123,94 +134,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   STARTUP_PRINT( "Enable rpc\r\n" )
   _syscall_rpc_set_ready( true );
 
-  // debug message
-  STARTUP_PRINT( "Starting polling loop\r\n" )
-  // get clock frequency
-  const double frequency = _syscall_timer_frequency();
-  // endless loop to start polling and finally wait for rpc
-  while ( true ) {
-    // start with head
-    libusb_keyboard_device_t* current = keyboard_head;
-    // variable for min sleep time
-    long sleep_time = 0;
-    // loop while there is something
-    while ( current != NULL ) {
-      // handle already polling
-      if ( 0 != current->running_poll ) {
-        // go to next
-        current = current->next;
-        // skip rest
-        continue;
-      }
-      // handle already polling
-      if ( 0 != current->last_poll ) {
-        // get expected sleep time in seconds
-        const long expected_sleep_time = current->descriptor.interval;
-        // get current timer tick count
-        const size_t tick_count = _syscall_timer_tick_count();
-        // calculate real sleep time
-        const long real_sleep_time = (long)(expected_sleep_time -
-          (((double)tick_count - (double)current->last_poll) / frequency) * 1000);
-        #if defined( KEYBOARD_ENABLE_DEBUG )
-          EARLY_STARTUP_PRINT( "real_sleep_time %ld\r\n", real_sleep_time )
-        #endif
-        // handle sleep
-        if (
-          real_sleep_time > 0
-          && (
-            0 == sleep_time
-            || sleep_time > real_sleep_time
-          )
-        ) {
-          // set sleep time
-          sleep_time = real_sleep_time;
-        }
-        // handle sleep
-        if ( real_sleep_time > 0 ) {
-          // go to next
-          current = current->next;
-          // skip rest
-          continue;
-        }
-      }
-      #if defined( KEYBOARD_ENABLE_DEBUG )
-        EARLY_STARTUP_PRINT( "START POLLING\r\n" )
-      #endif
-      // query polling
-      if ( enumerating ) {
-        result = usb_get_enumerating( &enumerating );
-        if ( 0 != result ) {
-          #if defined( KEYBOARD_ENABLE_DEBUG )
-            EARLY_STARTUP_PRINT( "Failed to get enumerating status\r\n" )
-          #endif
-        }
-      }
-      // start keyboard polling
-      if ( ! enumerating && 0 == keyboard_start_polling( current ) ) {
-        // set last poll to tick count
-        current->last_poll = _syscall_timer_tick_count();
-        // set proper sleep time when it's 0 or greater interval
-        if (
-          0 == sleep_time
-          || sleep_time > current->descriptor.interval
-        ) {
-          sleep_time = current->descriptor.interval;
-        }
-      }
-      // go to next
-      current = current->next;
-    }
-    // handle waiting for rpc
-    if (0 == sleep_time) {
-      sleep_time = 1000;
-    }
-    #if defined( KEYBOARD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "sleep_time = %ld\r\n", sleep_time )
-    #endif
-    // sleep till next poll
-    nanosleep( &(struct timespec){
-      .tv_sec = sleep_time / 1000,
-      .tv_nsec = ( sleep_time % 1000 ) * 1000000,
-    }, NULL );
-  }
+  // wait for rpc
+  bolthur_rpc_wait_block();
+  return 0;
 }

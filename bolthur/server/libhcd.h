@@ -60,9 +60,8 @@ typedef struct {
   libusb_transfer_error_t error;
   libusb_pipe_address_t pipe_address;
   size_t buffer_length;
-  uint8_t last_usb_pid;
-  uint32_t previous_transferred_packet;
   size_t timeout;
+  uint32_t interval;
   uint8_t buffer[];
 } hcd_interrupt_poll_t;
 

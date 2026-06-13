@@ -24,15 +24,14 @@
 #include "../../../libhcd.h"
 
 /**
- * @fn int usbd_interrupt_poll(const libusb_device_t*, libusb_pipe_address_t, void*, size_t, size_t, uint8_t, uint32_t, rpc_handler_t, pid_t, size_t, void*, size_t);
+ * @fn int usbd_interrupt_poll(const libusb_device_t*, libusb_pipe_address_t, void*, size_t, size_t, uint32_t, rpc_handler_t, pid_t, size_t, void*, size_t);
  * @brief Wrapper to perform usbd control message
  * @param dev device information
  * @param usb_pipe pipe to use
  * @param buffer buffer to transfer
  * @param buffer_length buffer transfer length
  * @param timeout poll timeout
- * @param last_usb_pid last used usb pid
- * @param last_packet_transfer last packet transfer
+ * @param interval poll interval
  * @param callback callback invoked on finish
  * @param origin origin info to be used for ioctl
  * @param data_info date info to be used for ioctl
@@ -46,8 +45,7 @@ int usbd_interrupt_poll(
   const void* buffer,
   const size_t buffer_length,
   const size_t timeout,
-  const uint8_t last_usb_pid,
-  const uint32_t last_packet_transfer,
+  const uint32_t interval,
   const rpc_handler_t callback,
   const pid_t origin,
   const size_t data_info,
@@ -90,8 +88,7 @@ int usbd_interrupt_poll(
   message->port_number = dev->port_number;
   memcpy( &message->pipe_address, &usb_pipe, sizeof( usb_pipe ) );
   message->buffer_length = buffer_length;
-  message->last_usb_pid = last_usb_pid;
-  message->previous_transferred_packet = last_packet_transfer;
+  message->interval = interval;
   message->timeout = timeout;
   if ( LIBUSB_DIRECTION_OUT == usb_pipe.direction && buffer ) {
     memcpy( &message->buffer, buffer, buffer_length );

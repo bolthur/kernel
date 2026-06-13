@@ -107,6 +107,12 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register poll interrupt handler!\r\n" )
     return false;
   }
+  // register handler poll interrupt
+  bolthur_rpc_bind( GENERIC_POLL_INTERRUPT, rpc_interrupt_generic, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register poll interrupt handler!\r\n" )
+    return false;
+  }
   // register handler enumerating
   bolthur_rpc_bind( USBD_GET_ENUMERATING, rpc_get_enumerating, true );
   if ( errno ) {

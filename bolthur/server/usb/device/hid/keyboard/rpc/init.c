@@ -46,5 +46,11 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register deallocate handler!\r\n" )
     return false;
   }
+  // register handler poll interrupt
+  bolthur_rpc_bind( GENERIC_POLL_INTERRUPT, rpc_keyboard_key, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register poll interrupt handler!\r\n" )
+    return false;
+  }
   return true;
 }

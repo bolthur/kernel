@@ -72,6 +72,12 @@ typedef struct channel_queue_entry {
   uint32_t packet_transferred;
   /** response info */
   size_t response_info;
+  /** origin */
+  pid_t origin;
+  /** channel prepared flag */
+  bool prepared;
+  /** interval */
+  uint32_t interval;
   /** message */
   void* message;
   /** error */
@@ -104,7 +110,7 @@ extern void* databuffer;
 extern dwhci_configuration_t configuration;
 
 response_t dwhci_transmit_channel( uint8_t, void* );
-response_t dwhci_prepare_channel( uint32_t, uint32_t, uint8_t, uint32_t, dwhci_channel_state_t, const libusb_pipe_address_t* );
+response_t dwhci_prepare_channel( uint32_t, uint32_t, uint8_t, uint32_t, dwhci_channel_state_t, const libusb_pipe_address_t*, uint32_t, bool );
 response_t dwhci_allocate_channel( uint8_t* );
 response_t dwhci_free_channel( uint8_t );
 response_t dwhci_queue_add_entry( void*, size_t, dwhci_queue_status_t, channel_queue_entry_t** );
@@ -124,7 +130,7 @@ response_t dwhci_channel_send_async( hcd_control_message_t*, size_t, hcd_submit_
 response_t dwhci_channel_poll_async_data( channel_queue_entry_t* );
 response_t dwhci_channel_poll_async_ack( channel_queue_entry_t* );
 response_t dwhci_channel_poll_async_done( channel_queue_entry_t* );
-response_t dwhci_channel_poll_async( hcd_interrupt_poll_t*, size_t, hcd_submit_interrupt_poll_t*, size_t );
+response_t dwhci_channel_poll_async( hcd_interrupt_poll_t*, size_t, hcd_submit_interrupt_poll_t*, pid_t );
 response_t dwhci_next_usb_pid( dwhci_channel_state_t, uint32_t, uint8_t* );
 response_t dwhci_read_port( uint32_t, uint32_t* );
 response_t dwhci_write_port( uint32_t, uint32_t );

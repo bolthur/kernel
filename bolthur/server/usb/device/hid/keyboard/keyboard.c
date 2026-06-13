@@ -190,13 +190,12 @@ int keyboard_start_polling( libusb_keyboard_device_t* device ) {
     LIBUSB_DIRECTION_IN,
     device->buffer,
     KEYBOARD_REPORT_SIZE,
-    device->descriptor.interval,
-    device->last_usb_pid,
-    device->last_packet_count,
-    rpc_keyboard_key
+    device->descriptor.interval
   );
   // handle error
   if ( 0 != result ) {
+    const int e = errno;
+    EARLY_STARTUP_PRINT( "ERROR: %s\r\n", strerror( e ) );
     device->running_poll = 0;
   }
   return result;

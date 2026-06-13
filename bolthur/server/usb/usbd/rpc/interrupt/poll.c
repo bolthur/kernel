@@ -198,14 +198,17 @@ void rpc_interrupt_poll(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
+  EARLY_STARTUP_PRINT( "POLLING\r\n" )
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    EARLY_STARTUP_PRINT("1\r\n");
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
+    EARLY_STARTUP_PRINT("1\r\n");
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
@@ -213,30 +216,9 @@ void rpc_interrupt_poll(
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
+    EARLY_STARTUP_PRINT("1\r\n");
     error.status = -EIO;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
-    return;
-  }
-  // get enumeration status
-  bool enumerating;
-  int result = usbd_enumerating_get( &enumerating );
-  if ( 0 != result ) {
-    // free up stuff
-    free( request );
-    // return from rpc
-    error.status = -result;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
-    // skip rest
-    return;
-  }
-  // handle enumerating in process
-  if ( enumerating ) {
-    // free up stuff
-    free( request );
-    // return from rpc
-    error.status = -EAGAIN;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
-    // skip rest
     return;
   }
   // allocate space for pull_request
@@ -247,6 +229,7 @@ void rpc_interrupt_poll(
   if ( errno ) {
     // set error
     error.status = -errno;
+    EARLY_STARTUP_PRINT("1\r\n");
     // free request
     free( request );
     // return from rpc
@@ -257,8 +240,9 @@ void rpc_interrupt_poll(
   auto const message = ( usb_interrupt_poll_t* )shm_addr;
   // find device
   libusb_device_t* device;
-  result = usbd_device_get_by_number( message->device_number, &device );
+  int result = usbd_device_get_by_number( message->device_number, &device );
   if ( 0 != result ) {
+    EARLY_STARTUP_PRINT("1\r\n");
     error.status = -result;
     // detach shared memory
     _syscall_memory_shared_detach( interrupt_message->shm_id );
@@ -268,6 +252,24 @@ void rpc_interrupt_poll(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
+  // return
+  const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
+  const size_t response_size = container_size + sizeof( vfs_ioctl_perform_response_t );
+  vfs_ioctl_perform_response_t* response = malloc( response_size );
+  if ( ! response ) {
+    EARLY_STARTUP_PRINT("1\r\n");
+    error.status = -ENOMEM;
+    // detach shared memory
+    _syscall_memory_shared_detach( interrupt_message->shm_id );
+    // free request
+    free( request );
+    // return from rpc
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    return;
+  }
+  memset( response, 0, response_size );
+  memcpy( response->container, request->container, container_size );
+  EARLY_STARTUP_PRINT( "POLLING\r\n" )
   // perform hcd control message
   result = usbd_interrupt_poll(
     device,
@@ -284,8 +286,7 @@ void rpc_interrupt_poll(
     message->buffer_length ? message->buffer : nullptr,
     message->buffer_length,
     message->timeout,
-    message->last_usb_pid,
-    message->last_packet_transfer,
+    message->interval,
     rpc_interrupt_poll_finished,
     origin,
     data_info,
@@ -294,16 +295,21 @@ void rpc_interrupt_poll(
   );
   // handle error
   if ( -1 == result ) {
+    EARLY_STARTUP_PRINT("1\r\n");
     error.status = -EIO;
     // detach shared memory
     _syscall_memory_shared_detach( interrupt_message->shm_id );
     // free request
     free( request );
+    free( response );
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     // skip rest
     return;
   }
+  EARLY_STARTUP_PRINT("1\r\n");
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size + sizeof( vfs_ioctl_perform_response_t ), nullptr, 0 );
   // free request
   free( request );
+  free( response );
 }

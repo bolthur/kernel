@@ -46,6 +46,7 @@ usbd_SOURCES = \
   rpc/get/status.c \
   rpc/handler/register.c \
   rpc/handler/unregister.c \
+  rpc/interrupt/generic.c \
   rpc/interrupt/poll.c \
   rpc/init.c \
   main.c

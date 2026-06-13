@@ -155,7 +155,7 @@ int usb_control_message_async(
     return e;
   }
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, 0 );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -232,7 +232,7 @@ int usb_control_message_async(
     rpc_request_size,
     0,
     0,
-    NULL,
+    nullptr,
     false
   );
   if ( ! response_id ) {
@@ -296,7 +296,7 @@ int usb_control_message(
     return e;
   }
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, 0 );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -489,7 +489,7 @@ int usb_get_descriptor(
     return e;
   }
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, 0 );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -889,7 +889,7 @@ int usb_get_configuration( const uint32_t device_number, void** target_buffer ) 
     return e;
   }
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, 0 );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -1033,7 +1033,7 @@ int usb_get_status( const uint32_t device_number, libusb_device_status_t* status
 }
 
 /**
- * @fn int usb_interrupt_poll_async(uint32_t, libusb_transfer_t, uint32_t. libusb_direction_t, void*, size_t, size_t, uint8_t, uint32_t, rpc_handler_t)
+ * @fn int usb_interrupt_poll_async(uint32_t, libusb_transfer_t, uint32_t. libusb_direction_t, void*, size_t, size_t)
  * @brief Wrapper to perform async interrupt poll
  * @param device_number
  * @param transfer
@@ -1042,9 +1042,6 @@ int usb_get_status( const uint32_t device_number, libusb_device_status_t* status
  * @param buffer
  * @param buffer_length
  * @param timeout
- * @param last_usb_pid
- * @param last_packet_transfer
- * @param callback
  * @return
  */
 int usb_interrupt_poll_async(
@@ -1054,10 +1051,7 @@ int usb_interrupt_poll_async(
   const libusb_direction_t direction,
   const void* buffer,
   const size_t buffer_length,
-  const size_t timeout,
-  const uint8_t last_usb_pid,
-  const uint32_t last_packet_transfer,
-  const rpc_handler_t callback
+  const size_t timeout
 ) {
   // debug output
   #if defined( LIBUSB_ENABLE_DEBUG )
@@ -1077,7 +1071,7 @@ int usb_interrupt_poll_async(
     return e;
   }
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, 0 );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -1098,12 +1092,10 @@ int usb_interrupt_poll_async(
   message->direction = direction;
   message->buffer_length = buffer_length;
   message->timeout = timeout;
-  message->last_usb_pid = last_usb_pid;
-  message->last_packet_transfer = last_packet_transfer;
   if ( LIBUSB_DIRECTION_OUT == direction && buffer ) {
-    memcpy( &message->buffer[0], buffer, buffer_length );
+    memcpy( &message->buffer[ 0 ], buffer, buffer_length );
   } else {
-    memset( &message->buffer[0], 0, buffer_length );
+    memset( &message->buffer[ 0 ], 0, buffer_length );
   }
   // allocate request
   usbd_interrupt_message_t* control_request = malloc( sizeof( *control_request ) );
@@ -1121,62 +1113,34 @@ int usb_interrupt_poll_async(
   memset( control_request, 0, sizeof( *control_request ) );
   // populate shm_id
   control_request->shm_id = shm_id;
-  // calculate rpc request size
-  constexpr size_t rpc_request_size = sizeof( vfs_ioctl_perform_request_t )
-    + sizeof( *control_request );
-  // allocate rpc structures
-  vfs_ioctl_perform_request_t* rpc_request = malloc( rpc_request_size );
-  if ( ! rpc_request ) {
-    // debug output
-    #if defined( LIBUSB_ENABLE_DEBUG )
-      STARTUP_PRINT( "Unable to allocate request\r\n" )
-    #endif
-    // free control request
-    free( control_request );
-    // detach shared memory
-    _syscall_memory_shared_detach( shm_id );
-    // return error
-    return ENOMEM;
-  }
-  // clear rpc structures
-  memset( rpc_request, 0, rpc_request_size );
-  // populate structure
-  rpc_request->handle = fd_usbd;
-  rpc_request->command = USBD_POLL_INTERRUPT;
-  rpc_request->type = IOCTL_RDWR;
-  // copy over data
-  memcpy( rpc_request->container, control_request, sizeof( *control_request ) );
-  // raise rpc and wait for return
-  const size_t response_id = bolthur_rpc_raise(
-    RPC_VFS_IOCTL,
-    VFS_DAEMON_ID,
-    rpc_request,
-    rpc_request_size,
-    callback,
-    RPC_VFS_IOCTL,
-    rpc_request,
-    rpc_request_size,
-    0,
-    0,
-    NULL,
-    false
+  // perform request
+  const int result = ioctl(
+    fd_usbd,
+    IOCTL_BUILD_REQUEST(
+      USBD_POLL_INTERRUPT,
+      sizeof( *control_request ),
+      IOCTL_RDWR
+    ),
+    control_request
   );
-  if ( ! response_id ) {
-    // free request data
-    free( rpc_request );
-    // free control request
-    free( control_request );
+  // handle ioctl error
+  if ( -1 == result ) {
+    // debug output
+    //#if defined( LIBUSB_ENABLE_ERROR )
+      const int e = errno;
+      STARTUP_PRINT("e = %d, errno = %s\r\n", e, strerror( e ));
+    //#endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
-    // return io error
-    return EIO;
+    // free request
+    free( control_request );
+    // return eio
+    return e ? e : EIO;
   }
-  // free request data
-  free( rpc_request );
-  // free control request
+  // free control message
   free( control_request );
-  // return success
-  return 0;
+  // return result
+  return result;
 }
 
 /**

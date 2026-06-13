@@ -76,7 +76,7 @@ void rpc_poll_interrupt(
   // transform shared memory into message
   auto const message = ( hcd_interrupt_poll_t* )shm_addr;
   // send async
-  const response_t result = dwhci_channel_poll_async( message, sizeof( *message ) + message->buffer_length, poll_message, response_info );
+  const response_t result = dwhci_channel_poll_async( message, sizeof( *message ) + message->buffer_length, poll_message, request->origin );
   if ( HCD_RESPONSE_OK != result ) {
     // set error
     error.status = (int)-result;

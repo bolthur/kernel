@@ -843,9 +843,6 @@ typedef struct libusb_keyboard_device {
   size_t running_poll;
   uint8_t* buffer;
 
-  uint8_t last_usb_pid;
-  uint32_t last_packet_count;
-
   libusb_keyboard_device_t* next;
   libusb_keyboard_device_t* prev;
 } libusb_keyboard_device_t;
@@ -877,9 +874,6 @@ typedef struct libusb_mouse_device {
   size_t last_poll;
   size_t running_poll;
   uint8_t* buffer;
-
-  uint8_t last_usb_pid;
-  uint32_t last_packet_count;
 
   libusb_mouse_device_t* next;
   libusb_mouse_device_t* prev;

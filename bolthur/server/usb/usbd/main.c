@@ -25,6 +25,7 @@
 #include "../../libhcd.h"
 #include "../../../library/vfs/wait.h"
 #include "../../../library/vfs/dev.h"
+#include "../../../library/vfs/handler.h"
 
 /**
  * @fn int main(int, char*[])
@@ -71,14 +72,27 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     USBD_GET_STATUS,
     USBD_POLL_INTERRUPT,
     USBD_GET_ENUMERATING,
+    GENERIC_POLL_INTERRUPT,
   };
-  if ( ! vfs_dev_add_file( USBD_DEVICE_PATH, device_info, 14, nullptr ) ) {
+  if ( ! vfs_dev_add_file( USBD_DEVICE_PATH, device_info, 15, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }
 
   // wait for hcd to be populated
   vfs_wait_for_path( HCD_DEVICE_PATH );
+
+  // query allowed rpc origin
+  const pid_t allowed_rpc_origin = vfs_get_file_handler( HCD_DEVICE_PATH );
+  if ( -1 == allowed_rpc_origin ) {
+    STARTUP_PRINT( "Unable to get handler id of %s\r\n", HCD_DEVICE_PATH )
+    return -1;
+  }
+  // push to valid origin
+  if ( ! bolthur_rpc_origin_push_valid( allowed_rpc_origin ) ) {
+    STARTUP_PRINT( "Unable to push mount pid to valid origin list!\r\n" )
+    return -1;
+  }
 
   // setup usbd interface
   STARTUP_PRINT( "Setup usbd\r\n" )

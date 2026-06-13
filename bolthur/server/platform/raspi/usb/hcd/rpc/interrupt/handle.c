@@ -238,7 +238,7 @@ void rpc_interrupt_handle(
             continue;
           }
           // set transferred and packet transferred
-          uint32_t transferred = HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE( transfer_size );
+          const uint32_t transferred = HCD_DWHCI_CHAN_XFER_SIZE_TRANSFER_SIZE( transfer_size );
           entry->packet_transferred = HCD_DWHCI_CHAN_XFER_SIZE_PACKET_COUNT( transfer_size );
           // handle finished
           if (

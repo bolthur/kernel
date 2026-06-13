@@ -128,8 +128,6 @@ void rpc_mouse_mouse(
     _syscall_rpc_cleanup();
     return;
   }
-  dev->last_usb_pid = message->last_usb_pid;
-  dev->last_packet_count = message->last_packet_transfer;
   // handle error
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // handle stall by clearing stall bit

@@ -34,7 +34,8 @@
 #define GENERIC_ATTACH RPC_CUSTOM_START
 #define GENERIC_DETACH GENERIC_ATTACH + 1
 #define GENERIC_DEALLOCATE GENERIC_DETACH + 1
-#define GENERIC_CHECK_FOR_CHANGE GENERIC_DEALLOCATE + 1
+#define GENERIC_POLL_INTERRUPT GENERIC_DEALLOCATE + 1
+#define GENERIC_CHECK_FOR_CHANGE GENERIC_POLL_INTERRUPT + 1
 #define GENERIC_CHILD_DETACHED GENERIC_CHECK_FOR_CHANGE + 1
 #define GENERIC_CHILD_RESET GENERIC_CHILD_DETACHED + 1
 #define GENERIC_CHILD_CHECK_CONNECTION GENERIC_CHILD_RESET + 1
@@ -50,7 +51,7 @@
 #define HID_SET_IDLE HID_SET_REPORT + 1
 
 // usbd rpc
-#define USBD_REGISTER_HANDLER RPC_CUSTOM_START
+#define USBD_REGISTER_HANDLER GENERIC_CHILD_CHECK_CONNECTION + 1
 #define USBD_UNREGISTER_HANDLER USBD_REGISTER_HANDLER + 1
 #define USBD_GET_DESCRIPTOR USBD_UNREGISTER_HANDLER + 1
 #define USBD_GET_ENDPOINT USBD_GET_DESCRIPTOR + 1
@@ -232,10 +233,9 @@ typedef struct {
   libusb_direction_t direction;
   size_t buffer_length;
   size_t timeout;
+  uint32_t interval;
   uint32_t last_transfer;
   libusb_transfer_error_t error;
-  uint8_t last_usb_pid;
-  uint32_t last_packet_transfer;
   uint8_t buffer[];
 } usb_interrupt_poll_t;
 

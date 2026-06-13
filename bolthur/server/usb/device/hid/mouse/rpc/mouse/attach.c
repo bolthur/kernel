@@ -256,6 +256,8 @@ void rpc_mouse_attach(
   #endif
   // free request
   free( request );
+  // start polling
+  mouse_start_polling( device );
   // return success
   memset( &err_response, 0, sizeof( err_response ) );
   bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
