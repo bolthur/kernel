@@ -866,9 +866,9 @@ typedef struct libusb_mouse_device {
   uint32_t index;
 
   uint8_t button_state;
-  int16_t mouse_x;
-  int16_t mouse_y;
-  int16_t wheel;
+  int8_t mouse_x;
+  int8_t mouse_y;
+  int8_t wheel;
 
   libusb_hid_parser_report_t* mouse_report;
 

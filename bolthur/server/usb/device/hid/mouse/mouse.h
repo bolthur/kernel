@@ -31,4 +31,6 @@ int mouse_duplicate_report( libusb_hid_parser_report_t**, const libusb_hid_parse
 int mouse_start_polling( libusb_mouse_device_t* );
 libusb_mouse_device_t* mouse_get_device( uint32_t );
 
+extern libusb_mouse_device_t* mouse_head;
+
 #endif

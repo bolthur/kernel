@@ -154,9 +154,17 @@ void rpc_mouse_mouse(
     _syscall_rpc_cleanup();
     return;
   }
-  /// FIXME: IMPLEMENT
-  // cleanup everything and return
+  // copy over buffer
+  memcpy( dev->buffer, message->buffer, MOUSE_REPORT_SIZE );
+  // detach shared memory
   _syscall_memory_shared_detach( control_message->shm_id );
+  // populate states
+  dev->button_state = dev->buffer[ 0 ];
+  dev->mouse_x = ( int8_t )dev->buffer[ 0 ];
+  dev->mouse_y = ( int8_t )dev->buffer[ 0 ];
+  dev->wheel = ( int8_t )dev->buffer[ 0 ];
+  /// FIXME: PUSH TO LISTENER
+  // free up stuff and exit
   free( response );
   _syscall_rpc_cleanup();
 }

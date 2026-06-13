@@ -157,6 +157,10 @@ void rpc_keyboard_key(
     _syscall_rpc_cleanup();
     return;
   }
+  // copy over buffer
+  memcpy( dev->buffer, message->buffer, KEYBOARD_REPORT_SIZE );
+  // detach shared memory
+  _syscall_memory_shared_detach( control_message->shm_id );
   // iterate through reports
   for (size_t i = 0; i < dev->key_report->field_count; i++) {
     // get current field
@@ -166,10 +170,10 @@ void rpc_keyboard_key(
       // set value depending on minimum
       if (field->logical_minimum < 0) {
         field->value.i32 = keyboard_bit_get_signed(
-          message->buffer, field->offset, field->size );
+          dev->buffer, field->offset, field->size );
       } else {
         field->value.u32 = keyboard_bit_get_unsigned(
-          message->buffer, field->offset, field->size );
+          dev->buffer, field->offset, field->size );
       }
       // skip rest
       continue;
@@ -182,11 +186,11 @@ void rpc_keyboard_key(
         field->size,
         field->logical_minimum < 0
           ? ( uint32_t )keyboard_bit_get_signed(
-            message->buffer,
+            dev->buffer,
             field->offset + j * field->size,
             field->size
           ) : keyboard_bit_get_unsigned(
-            message->buffer,
+            dev->buffer,
             field->offset + j * field->size,
             field->size
           )
@@ -293,7 +297,6 @@ void rpc_keyboard_key(
   char* input_buffer = malloc( input_length );
   // handle allocation issue
   if ( ! input_buffer ) {
-    _syscall_memory_shared_detach( control_message->shm_id );
     free( response );
     dev->running_poll = 0;
     _syscall_rpc_cleanup();
@@ -343,7 +346,6 @@ void rpc_keyboard_key(
     console_command_input_t* input_command = malloc( sizeof( *input_command ) );
     if ( ! input_command ) {
       // cleanup everything and return
-      _syscall_memory_shared_detach( control_message->shm_id );
       free( response );
       free( input_buffer );
       _syscall_rpc_cleanup();
@@ -382,7 +384,6 @@ void rpc_keyboard_key(
     free( input_command );
   }
   // cleanup everything and return
-  _syscall_memory_shared_detach( control_message->shm_id );
   free( input_buffer );
   free( response );
   _syscall_rpc_cleanup();

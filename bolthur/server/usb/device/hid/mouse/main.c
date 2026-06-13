@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <sys/bolthur.h>
 #include "rpc.h"
+#include "mouse.h"
 #include "../../../../libusbd.h"
 #include "../../../../../library/usb/usb.h"
 #include "../../../../../library/hid/hid.h"
@@ -100,8 +101,92 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     return -1;
   }
 
-  // wait for rpc
-  STARTUP_PRINT( "Wait for rpc\r\n" )
-  bolthur_rpc_wait_block();
-  return 0;
+  // debug message
+  STARTUP_PRINT( "Starting polling loop\r\n" )
+  // get clock frequency
+  const double frequency = _syscall_timer_frequency();
+  // endless loop to start polling and finally wait for rpc
+  while ( true ) {
+    // start with head
+    libusb_mouse_device_t* current = mouse_head;
+    // variable for min sleep time
+    long sleep_time = 0;
+    // loop while there is something
+    while ( current != NULL ) {
+      // handle already polling
+      if ( 0 != current->running_poll ) {
+        // go to next
+        current = current->next;
+        // skip rest
+        continue;
+      }
+      // handle already polling
+      if ( 0 != current->last_poll ) {
+        // get expected sleep time in seconds
+        const long expected_sleep_time = current->descriptor.interval;
+        // get current timer tick count
+        const size_t tick_count = _syscall_timer_tick_count();
+        // calculate real sleep time
+        const long real_sleep_time = (long)(expected_sleep_time -
+          (((double)tick_count - (double)current->last_poll) / frequency) * 1000);
+        #if defined( MOUSE_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "real_sleep_time %ld\r\n", real_sleep_time )
+        #endif
+        // handle sleep
+        if (
+          real_sleep_time > 0
+          && (
+            0 == sleep_time
+            || sleep_time > real_sleep_time
+          )
+        ) {
+          // set sleep time
+          sleep_time = real_sleep_time;
+        }
+        // handle sleep
+        if ( real_sleep_time > 0 ) {
+          // go to next
+          current = current->next;
+          // skip rest
+          continue;
+        }
+      }
+      #if defined( MOUSE_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "START POLLING\r\n" )
+      #endif
+      // query polling
+      if ( enumerating ) {
+        result = usb_get_enumerating( &enumerating );
+        if ( 0 != result ) {
+          #if defined( MOUSE_ENABLE_DEBUG )
+            EARLY_STARTUP_PRINT( "Failed to get enumerating status\r\n" )
+          #endif
+        }
+      }
+      // start mouse polling
+      if ( ! enumerating && 0 == mouse_start_polling( current ) ) {
+        // set last poll to tick count
+        current->last_poll = _syscall_timer_tick_count();
+        // set proper sleep time when it's 0 or greater interval
+        if (
+          0 == sleep_time
+          || sleep_time > current->descriptor.interval
+        ) {
+          sleep_time = current->descriptor.interval;
+        }
+      }
+      // go to next
+      current = current->next;
+    }
+    // handle waiting for rpc
+    if (0 == sleep_time) {
+      sleep_time = 1000;
+    }
+    EARLY_STARTUP_PRINT( "sleep_time = %ld\r\n", sleep_time )
+    // sleep till next poll
+    nanosleep( &(struct timespec){
+      .tv_sec = sleep_time / 1000,
+      .tv_nsec = ( sleep_time % 1000 ) * 1000000,
+    }, NULL );
+  }
 }

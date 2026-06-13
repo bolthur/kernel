@@ -28,6 +28,9 @@
 #include "../../../../../library/usb/usb.h"
 #include "../../../../../library/hid/hid.h"
 
+/**
+ * @brief Mouse list
+ */
 libusb_mouse_device_t* mouse_head = nullptr;
 
 /**
