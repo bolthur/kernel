@@ -22,8 +22,8 @@
 
 #include "../../libusbd.h"
 
-#define USBD_ENABLE_DEBUG 1
-#define USBD_ENABLE_ERROR 1
+//#define USBD_ENABLE_DEBUG 1
+//#define USBD_ENABLE_ERROR 1
 
 // if one of both is defined include inttypes for printing stuff
 #if defined( USBD_ENABLE_DEBUG ) || defined( USBD_ENABLE_ERROR )

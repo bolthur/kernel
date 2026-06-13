@@ -230,8 +230,11 @@ rpc_backup_t* rpc_backup_create(
     DEBUG_OUTPUT( "pid: %d, backup->thread_state = %d, thread->state = %d\r\n",
       thread->process->id, backup->thread_state, thread->state )
   #endif
+  // save thread state and state data
   backup->thread_state = thread->state;
   memcpy( &backup->thread_state_data, &thread->state_data, sizeof( task_state_data_t ) );
+  // in case thread state is rpc wait for call we need to go back to active
+  // after rpc, because it may be a sleep that is active
   if ( TASK_THREAD_STATE_RPC_WAIT_FOR_CALL == backup->thread_state ) {
     backup->thread_state = TASK_THREAD_STATE_ACTIVE;
   }

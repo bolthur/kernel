@@ -43,13 +43,11 @@ static void rpc_get_descriptor_finished(
   size_t data_info,
   size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
   // get matching async data
   bolthur_async_data_t* async_data = bolthur_rpc_pop_async(
     RPC_VFS_IOCTL, response_info );
   // handle no async data
   if ( ! async_data ) {
-    EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
     // cleanup
     _syscall_rpc_cleanup();
     // skip rest
@@ -59,7 +57,6 @@ static void rpc_get_descriptor_finished(
   vfs_ioctl_perform_response_t err_response = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     return;
   }
@@ -73,7 +70,6 @@ static void rpc_get_descriptor_finished(
   vfs_ioctl_perform_response_t* submit_response = bolthur_rpc_fetch_from_mailbox(
     data_info, &data_size, true, nullptr );
   if ( ! submit_response ) {
-    EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
     // return from rpc
     bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), async_data, 0 );
     // skip rest
@@ -85,7 +81,6 @@ static void rpc_get_descriptor_finished(
   void* shm_addr_hcd_poll = _syscall_memory_shared_attach( hcd_submit_command->shm_id, 0 );
   if ( errno ) {
     const int e = errno;
-    EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
     // free up stuff
     free( submit_response );
     // return from rpc
@@ -103,7 +98,6 @@ static void rpc_get_descriptor_finished(
   void* shm_addr_message = _syscall_memory_shared_attach( get_descriptor->shm_id, 0 );
   if ( errno ) {
     const int e = errno;
-    EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
     // detach both since both are attached already
     _syscall_memory_shared_detach( get_descriptor->shm_id );
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
@@ -120,7 +114,6 @@ static void rpc_get_descriptor_finished(
   libusb_device_t* device;
   int result = usbd_device_get_by_number( usbd_descriptor_message->device_number, &device );
   if ( 0 != result ) {
-    EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
     // detach both since both are attached already
     _syscall_memory_shared_detach( get_descriptor->shm_id );
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
@@ -134,7 +127,6 @@ static void rpc_get_descriptor_finished(
   }
   // handle timeout
   if ( hcd_submit->error & LIBUSB_TRANSFER_ERROR_TIMEOUT ) {
-    EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
     // detach both since both are attached already
     _syscall_memory_shared_detach( get_descriptor->shm_id );
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
@@ -148,7 +140,6 @@ static void rpc_get_descriptor_finished(
   }
   // handle not enough transferred
   if ( hcd_submit->last_transfer < usbd_descriptor_message->minimum_length ) {
-    EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
     // detach both since both are attached already
     _syscall_memory_shared_detach( get_descriptor->shm_id );
     _syscall_memory_shared_detach( hcd_submit_command->shm_id );
@@ -162,7 +153,6 @@ static void rpc_get_descriptor_finished(
   }
   // handle error and parent is set
   if ( device->parent && hcd_submit->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
-    EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
     // check connection
     /// FIXME: NEEDS TO BE ASYNC AS WELL AS CONTROL MESSAGE
     result = call_child_check_connection( device->parent, device );
@@ -182,11 +172,12 @@ static void rpc_get_descriptor_finished(
     // set result to error
     result = EIO;
   }
-  EARLY_STARTUP_PRINT( "hcd_submit->last_transfer = %"PRIu32", buffer_length = %zu\r\n",
-    hcd_submit->last_transfer, usbd_descriptor_message->buffer_length );
+  #if defined( USBD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "hcd_submit->last_transfer = %"PRIu32", buffer_length = %zu\r\n",
+      hcd_submit->last_transfer, usbd_descriptor_message->buffer_length );
+  #endif
   // handle direction in with last transfer equal to buffer length
   if ( hcd_submit->last_transfer == usbd_descriptor_message->buffer_length ) {
-    EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
     // copy over from hcd poll buffer into usb interrupt buffer
     memcpy(
       usbd_descriptor_message->buffer,
@@ -200,7 +191,6 @@ static void rpc_get_descriptor_finished(
   // finally detach shared memory
   _syscall_memory_shared_detach( get_descriptor->shm_id );
   _syscall_memory_shared_detach( hcd_submit_command->shm_id );
-  EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
   // allocate response structure
   const size_t container_size = async_data->length - sizeof( vfs_ioctl_perform_request_t );
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
@@ -214,14 +204,12 @@ static void rpc_get_descriptor_finished(
     // skip rest
     return;
   }
-  EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
   // clear out
   memset( real_response, 0, response_size );
   // populate container
   if ( result ) {
     real_response->status = -result;
   }
-  EARLY_STARTUP_PRINT( "rpc_get_descriptor_finished\r\n" )
   memcpy( real_response->container, original_request->container, container_size );
   // actually return
   bolthur_rpc_return( RPC_VFS_IOCTL, real_response, response_size, async_data, 0 );

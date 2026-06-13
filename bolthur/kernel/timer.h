@@ -27,6 +27,7 @@ typedef struct {
   size_t id;
   size_t expire;
   task_thread_t* thread;
+  bool handled;
   size_t rpc;
 } timer_callback_entry_t;
 
@@ -40,5 +41,6 @@ size_t timer_generate_id( void );
 timer_callback_entry_t* timer_register_callback( task_thread_t*, size_t, size_t );
 bool timer_unregister_callback( size_t );
 void timer_handle_callback( void );
+timer_callback_entry_t* timer_get_by_process_id( pid_t );
 
 #endif

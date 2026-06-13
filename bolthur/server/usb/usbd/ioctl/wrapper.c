@@ -48,7 +48,9 @@ int ioctl_wrapper(
   const size_t original_request_size,
   void* context
 ) {
-  EARLY_STARTUP_PRINT( "callback = %"PRIxPTR"\r\n", ( uintptr_t )callback )
+  #if defined( IOCTL_WRAPPER_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "callback = %"PRIxPTR"\r\n", ( uintptr_t )callback )
+  #endif
   // handle no callback
   if ( ! callback ) {
     errno = EINVAL;

@@ -218,27 +218,30 @@ void timer_handle_callback( void ) {
         entry->thread->process
       )
     #endif
-    // raise rpc without data
-    rpc_backup_t* rpc = rpc_generic_raise(
-      entry->thread,
-      entry->thread->process,
-      entry->rpc,
-      nullptr,
-      0,
-      entry->thread,
-      false,
-      0, // pass 0 as origin data id to prevent possibly matching origin
-      true,
-      false
-    );
-    // handle error by skip
-    if ( ! rpc ) {
-      // debug output
-      #if defined( PRINT_TIMER )
-        DEBUG_OUTPUT( "Unable to raise rpc\r\n" )
-      #endif
-      current = current->next;
-      continue;
+    // raise rpc without data if not handled
+    if ( ! entry->handled ) {
+      // raise rpc
+      rpc_backup_t* rpc = rpc_generic_raise(
+        entry->thread,
+        entry->thread->process,
+        entry->rpc,
+        nullptr,
+        0,
+        entry->thread,
+        false,
+        0, // pass 0 as origin data id to prevent possibly matching origin
+        true,
+        false
+      );
+      // handle error by skip
+      if ( ! rpc ) {
+        // debug output
+        #if defined( PRINT_TIMER )
+          DEBUG_OUTPUT( "Unable to raise rpc\r\n" )
+        #endif
+        current = current->next;
+        continue;
+      }
     }
     // cache current and set to next
     list_item_t* to_remove = current;
@@ -253,4 +256,31 @@ void timer_handle_callback( void ) {
       // FIXME: remove 'rpc'
     }
   }
+}
+
+/**
+ * @fn timer_callback_entry_t* timer_get_by_process_id(pid_t)
+ * @brief Method to get possible timer by process id
+ * @param pid process id to lookup
+ * @return
+ */
+timer_callback_entry_t* timer_get_by_process_id( const pid_t pid ) {
+  // skip if list is empty
+  if ( list_empty( timer_list ) ) {
+    return nullptr;
+  }
+  // get current tick
+  auto current = timer_list->first;
+  // loop through handles
+  while( current ) {
+    // get entry
+    auto const entry = ( timer_callback_entry_t* )current->data;
+    // check for match
+    if ( entry->thread->process->id == pid ) {
+      return entry;
+    }
+    // switch to next
+    current = current->next;
+  }
+  return nullptr;
 }

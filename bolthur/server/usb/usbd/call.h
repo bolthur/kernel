@@ -22,7 +22,11 @@
 
 #include "libusbd.h"
 
-#define CALL_ENABLE_DEBUG 1
+//#define CALL_ENABLE_DEBUG 1
+// if call debug is defined include inttypes for printing stuff
+#if defined( CALL_ENABLE_DEBUG )
+  #include <inttypes.h>
+#endif
 
 int call_attach( libusb_device_t*, uint32_t, rpc_handler_t, usbd_attach_context_t* );
 int call_detached( const libusb_device_t* );

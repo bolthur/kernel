@@ -139,6 +139,8 @@ void rpc_mouse_mouse(
     // handle nack ( nothing there ) by just resetting running poll
     } else if ( message->error & LIBUSB_TRANSFER_ERROR_NO_ACKNOWLEDGE ) {
       dev->running_poll = 0;
+    } else {
+      EARLY_STARTUP_PRINT( "ERROR: %x\r\n", message->error );
     }
     // cleanup everything and return
     _syscall_memory_shared_detach( control_message->shm_id );
@@ -163,6 +165,11 @@ void rpc_mouse_mouse(
   dev->mouse_x = ( int8_t )dev->buffer[ 0 ];
   dev->mouse_y = ( int8_t )dev->buffer[ 0 ];
   dev->wheel = ( int8_t )dev->buffer[ 0 ];
+  // debug output
+  #if defined( MOUSE_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "dev->mouse_x = %"PRId8", dev->mouse_y = %"PRId8"\r\n",
+      dev->mouse_x, dev->mouse_y )
+  #endif
   /// FIXME: PUSH TO LISTENER
   // free up stuff and exit
   free( response );

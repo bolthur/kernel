@@ -22,6 +22,7 @@
 #include "../../../../mm/virt.h"
 #include "../../../../rpc/generic.h"
 #include "../../../../syscall.h"
+#include "../../../../timer.h"
 #include "../../../../rpc/backup.h"
 #include "../../../../rpc/data.h"
 #if defined( PRINT_RPC )
@@ -291,6 +292,17 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     // return success
     return true;
   }
+  // get possible sleep timer
+  timer_callback_entry_t* timer = timer_get_by_process_id(
+    backup->thread->process->id );
+  // handle timer
+  if ( timer ) {
+    // mark as handled to prevent raise of rpc
+    timer->handled = true;
+    // adjust previous state
+    backup->thread_state = TASK_THREAD_STATE_ACTIVE;
+  }
+
   /*// handle deactivation of current rpc
   if ( deactivate_current_active_rpc ) {
     // Get entry marked as active, which might be waiting for rpc

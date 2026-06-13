@@ -22,7 +22,7 @@
 
 #include "../../../../libusb.h"
 
-#define MOUSE_ENABLE_DEBUG 1
+//#define MOUSE_ENABLE_DEBUG 1
 
 void mouse_append( libusb_mouse_device_t* );
 int mouse_new_index( uint32_t* );

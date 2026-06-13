@@ -31,6 +31,45 @@
 #include "../../../../../../../library/util/min.h"
 
 /**
+ * @fn void console_complete(size_t, pid_t, size_t, size_t)
+ * @brief Console transfer complete command
+ * @param type
+ * @param origin
+ * @param data_info
+ * @param response_info
+ */
+static void console_complete(
+  [[maybe_unused]] size_t type,
+  pid_t origin,
+  size_t data_info,
+  size_t response_info
+) {
+  // get async data and destroy it directly
+  bolthur_async_data_t* async_data = bolthur_rpc_pop_async( RPC_VFS_IOCTL, response_info );
+  bolthur_rpc_destroy_async( async_data );
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // handle no data
+  if ( ! data_info ) {
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // get data from mailbox
+  size_t data_size;
+  vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  if ( ! response ) {
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // free response and cleanup
+  free( response );
+  _syscall_rpc_cleanup();
+}
+
+/**
  * @fn void rpc_keyboard_key(size_t, pid_t, size_t, size_t)
  * @brief Key rpc handler callback
  * @param type
@@ -142,6 +181,8 @@ void rpc_keyboard_key(
     // handle nack ( nothing there ) by just resetting running poll
     } else if ( message->error & LIBUSB_TRANSFER_ERROR_NO_ACKNOWLEDGE ) {
       dev->running_poll = 0;
+    } else {
+      EARLY_STARTUP_PRINT( "ERROR: %x\r\n", message->error );
     }
     // cleanup everything and return
     _syscall_memory_shared_detach( control_message->shm_id );
@@ -362,25 +403,56 @@ void rpc_keyboard_key(
     #if defined( KEYBOARD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "input_buffer = %s\r\n", input_buffer )
     #endif
-    // raise input request
-    /// FIXME: RAISE ASYNC WITHOUT WAITING FOR RETURN
-    const int result = ioctl(
-      console_fd,
-      IOCTL_BUILD_REQUEST(
-        CONSOLE_INPUT,
-        sizeof( *input_command ),
-        IOCTL_WRONLY
-      ),
-      input_command
+    // raise input request async
+    // calculate rpc request size
+    constexpr size_t rpc_request_size = sizeof( vfs_ioctl_perform_request_t )
+      + sizeof( *input_command );
+    // allocate rpc structures
+    vfs_ioctl_perform_request_t* rpc_request = malloc( rpc_request_size );
+    if ( ! rpc_request ) {
+      free( input_command );
+      free( response );
+      free( input_buffer );
+      _syscall_rpc_cleanup();
+      return;
+    }
+    // clear rpc structures
+    memset( rpc_request, 0, rpc_request_size );
+    // populate structure
+    rpc_request->handle = console_fd;
+    rpc_request->command = CONSOLE_INPUT;
+    rpc_request->type = IOCTL_RDWR;
+    // copy over data
+    memcpy( rpc_request->container, input_command, sizeof( *input_command ) );
+    // raise rpc and wait for return
+    const size_t response_id = bolthur_rpc_raise(
+      RPC_VFS_IOCTL,
+      VFS_DAEMON_ID,
+      rpc_request,
+      rpc_request_size,
+      console_complete,
+      RPC_VFS_IOCTL,
+      rpc_request,
+      rpc_request_size,
+      origin,
+      data_info,
+      NULL,
+      false
     );
-    // handle ioctl error
-    if ( -1 == result ) {
+    // handle response issue
+    if ( ! response_id ) {
       // debug output
-      #if defined( KEYBOARD_ENABLE_ERROR )
+      #if defined( KEYBOARD_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Pushing input to console failed\r\n" )
       #endif
+      free( rpc_request );
+      free( input_command );
+      free( response );
+      free( input_buffer );
+      _syscall_rpc_cleanup();
+      return;
     }
-    // free up input command
+    free( rpc_request );
     free( input_command );
   }
   // cleanup everything and return

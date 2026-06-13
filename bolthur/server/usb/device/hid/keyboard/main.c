@@ -204,7 +204,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     if (0 == sleep_time) {
       sleep_time = 1000;
     }
-    EARLY_STARTUP_PRINT( "sleep_time = %ld\r\n", sleep_time )
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "sleep_time = %ld\r\n", sleep_time )
+    #endif
     // sleep till next poll
     nanosleep( &(struct timespec){
       .tv_sec = sleep_time / 1000,
