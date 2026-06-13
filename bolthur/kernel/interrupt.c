@@ -35,11 +35,11 @@
 /**
  * @brief Interrupt management structure
  */
-interrupt_manager_t* interrupt_manager = NULL;
+interrupt_manager_t* interrupt_manager = nullptr;
 
 /**
+ * @fn int32_t compare_interrupt_callback(const avl_node_t*, const avl_node_t*)
  * @brief Compare interrupt callback necessary for avl tree
- *
  * @param a node a
  * @param b node b
  * @return int32_t
@@ -64,15 +64,15 @@ static int32_t compare_interrupt_callback(
 }
 
 /**
+ * @fn avl_tree_t* tree_by_type(interrupt_type_t)
  * @brief Helper to get interrupt manager tree by type
- *
  * @param type type to get tree from
  * @return avl_tree_t*
  */
 static avl_tree_t* tree_by_type( interrupt_type_t type ) {
   // check heap existence
   if ( ! heap_init_get() ) {
-    return NULL;
+    return nullptr;
   }
   // debug output
   #if defined( PRINT_INTERRUPT )
@@ -84,34 +84,34 @@ static avl_tree_t* tree_by_type( interrupt_type_t type ) {
     interrupt_manager = malloc( sizeof( *interrupt_manager ) );
     // check
     if ( ! interrupt_manager ) {
-      return NULL;
+      return nullptr;
     }
     // prepare memory
     memset( ( void* )interrupt_manager, 0, sizeof( *interrupt_manager ) );
     // create trees for interrupt types
     interrupt_manager->normal_interrupt = avl_create_tree(
-      compare_interrupt_callback, NULL, NULL );
+      compare_interrupt_callback, nullptr, nullptr );
     // check
     if ( ! interrupt_manager->normal_interrupt ) {
       free( interrupt_manager );
-      return NULL;
+      return nullptr;
     }
     interrupt_manager->fast_interrupt = avl_create_tree(
-      compare_interrupt_callback, NULL, NULL );
+      compare_interrupt_callback, nullptr, nullptr );
     // check
     if ( ! interrupt_manager->fast_interrupt ) {
       free( interrupt_manager->normal_interrupt );
       free( interrupt_manager );
-      return NULL;
+      return nullptr;
     }
     interrupt_manager->software_interrupt = avl_create_tree(
-      compare_interrupt_callback, NULL, NULL );
+      compare_interrupt_callback, nullptr, nullptr );
     // check
     if ( ! interrupt_manager->software_interrupt ) {
       free( interrupt_manager->normal_interrupt );
       free( interrupt_manager->fast_interrupt );
       free( interrupt_manager );
-      return NULL;
+      return nullptr;
     }
     // debug output
     #if defined( PRINT_INTERRUPT )
@@ -132,7 +132,7 @@ static avl_tree_t* tree_by_type( interrupt_type_t type ) {
       return interrupt_manager->software_interrupt;
     // default: invalid
     default:
-      return NULL;
+      return nullptr;
   }
 }
 
@@ -183,9 +183,8 @@ static int32_t process_block_list_lookup( const list_item_t* a, const void* data
 }
 
 /**
- * @fn bool interrupt_unregister_handler(size_t, interrupt_callback_t, task_process_t*, interrupt_type_t, bool, bool)
+ * @fn bool interrupt_unregister_handler(size_t, interrupt_callback_t, const task_process_t*, interrupt_type_t, bool, bool)
  * @brief Unregister interrupt handler
- *
  * @param num interrupt to unbind
  * @param callback Callback to unbind
  * @param process optional process if user handler
@@ -198,11 +197,11 @@ static int32_t process_block_list_lookup( const list_item_t* a, const void* data
  */
 bool interrupt_unregister_handler(
   size_t num,
-  interrupt_callback_t callback,
-  task_process_t* process,
+  const interrupt_callback_t callback,
+  const task_process_t* process,
   interrupt_type_t type,
-  bool post,
-  bool disable
+  const bool post,
+  const bool disable
 ) {
   if ( ! heap_init_get() ) {
     return false;
@@ -262,8 +261,8 @@ bool interrupt_unregister_handler(
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Checking for not bound interrupt callback\r\n" )
   #endif
-  list_manager_t* list = NULL;
-  list_item_t* match = NULL;
+  list_manager_t* list = nullptr;
+  list_item_t* match = nullptr;
   // get matching element
   if ( process ) {
     list = block->process;
@@ -298,7 +297,6 @@ bool interrupt_unregister_handler(
 /**
  * @fn bool interrupt_register_handler(size_t, interrupt_callback_t, task_process_t*, interrupt_type_t, bool, bool)
  * @brief Register interrupt handler
- *
  * @param num Interrupt to bind
  * @param callback Callback to bind
  * @param process optional process if user handler
@@ -309,11 +307,11 @@ bool interrupt_unregister_handler(
  */
 bool interrupt_register_handler(
   size_t num,
-  interrupt_callback_t callback,
+  const interrupt_callback_t callback,
   task_process_t* process,
   interrupt_type_t type,
-  bool post,
-  bool enable
+  const bool post,
+  const bool enable
 ) {
   if ( ! heap_init_get() ) {
     #if defined( PRINT_INTERRUPT )
@@ -389,7 +387,7 @@ bool interrupt_register_handler(
     block->handler = list_construct(
       kernel_block_list_lookup,
       kernel_block_list_cleanup,
-      NULL
+      nullptr
     );
     // check list
     if ( ! block->handler ) {
@@ -399,7 +397,7 @@ bool interrupt_register_handler(
     block->post = list_construct(
       kernel_block_list_lookup,
       kernel_block_list_cleanup,
-      NULL
+      nullptr
     );
     // check list
     if ( ! block->post ) {
@@ -407,7 +405,7 @@ bool interrupt_register_handler(
       free( block );
       return false;
     }
-    block->process = list_construct( process_block_list_lookup, NULL, NULL );
+    block->process = list_construct( process_block_list_lookup, nullptr, nullptr );
     // check list
     if ( ! block->process ) {
       list_destruct( block->post );
@@ -433,8 +431,8 @@ bool interrupt_register_handler(
   #if defined( PRINT_INTERRUPT )
     DEBUG_OUTPUT( "Checking for already bound interrupt callback\r\n" )
   #endif
-  list_manager_t* list = NULL;
-  list_item_t* match = NULL;
+  list_manager_t* list = nullptr;
+  list_item_t* match = nullptr;
   // try to find matching element
   if ( process ) {
     list = block->process;
@@ -449,7 +447,7 @@ bool interrupt_register_handler(
     #if defined( PRINT_INTERRUPT )
       DEBUG_OUTPUT( "Callback not yet bound\r\n" )
     #endif
-    auto data = NULL;
+    task_process_t* data = nullptr;
     if ( process ) {
       // set data to process
       data = process;
@@ -510,8 +508,8 @@ bool interrupt_register_handler(
 }
 
 /**
+ * @fn void interrupt_handle(size_t, interrupt_type_t, void*, bool)
  * @brief Handle interrupt
- *
  * @param num interrupt number
  * @param type interrupt type
  * @param context interrupt context
@@ -608,9 +606,9 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context, c
       thread,
       process,
       num,
-      NULL,
+      nullptr,
       0,
-      NULL,
+      nullptr,
       false,
       0,
       true,
@@ -659,6 +657,7 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context, c
 }
 
 /**
+ * @fn void interrupt_init(void)
  * @brief Generic interrupt init method
  */
 void interrupt_init( void ) {
@@ -684,8 +683,8 @@ void interrupt_init( void ) {
 }
 
 /**
+ * @fn void interrupt_toggle(interrupt_toggle_state_t)
  * @brief Toggle interrupt on / off
- *
  * @param state
  */
 void interrupt_toggle( const interrupt_toggle_state_t state ) {
@@ -722,7 +721,6 @@ void interrupt_toggle( const interrupt_toggle_state_t state ) {
 /**
  * @fn void interrupt_handle_possible(void*, bool)
  * @brief Method to enqueue possible interrupt handler
- *
  * @param context
  * @param fast
  */
@@ -743,7 +741,6 @@ void interrupt_handle_possible( void* context, const bool fast ) {
 /**
  * @fn void interrupt_unregister_process(task_process_t*)
  * @brief Unregister process completely
- *
  * @param process
  */
 void interrupt_unregister_process( task_process_t* process ) {
@@ -769,7 +766,6 @@ void interrupt_unregister_process( task_process_t* process ) {
 /**
  * @fn void interrupt_get_context*(void*)
  * @brief Method to get interrupt context
- *
  * @param context
  */
 void* interrupt_get_context( void* context ) {

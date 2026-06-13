@@ -62,7 +62,6 @@ void syscall_rpc_set_handler( void* context ) {
 /**
  * @fn void syscall_rpc_raise(void*)
  * @brief Raise rpc system call
- *
  * @param context
  */
 void syscall_rpc_raise( void* context ) {
@@ -279,7 +278,6 @@ void syscall_rpc_raise( void* context ) {
 /**
  * @fn void syscall_rpc_ret(void*)
  * @brief Return rpc data
- *
  * @param context
  */
 void syscall_rpc_ret( void* context ) {
@@ -612,7 +610,6 @@ void syscall_rpc_ret( void* context ) {
 /**
  * @fn void syscall_rpc_wait_for_call(void*)
  * @brief Halt thread and wait for rpc call
- *
  * @param context
  */
 void syscall_rpc_wait_for_call( void* context ) {
@@ -653,7 +650,6 @@ void syscall_rpc_wait_for_call( void* context ) {
 /**
  * @fn void syscall_process_rpc_ready(void*)
  * @brief System call to set rpc ready flag
- *
  * @param context
  */
 void syscall_rpc_set_ready( void* context ) {
@@ -688,7 +684,6 @@ void syscall_rpc_set_ready( void* context ) {
 /**
  * @fn void syscall_rpc_end(void*)
  * @brief RPC ended, return to previous execution or next rpc if queued
- *
  * @param context
  */
 void syscall_rpc_end( void* context ) {
@@ -730,7 +725,6 @@ void syscall_rpc_end( void* context ) {
 /**
  * @fn void syscall_rpc_wait_for_ready(void*)
  * @brief Wait for pid to be ready for rpc
- *
  * @param context
  */
 void syscall_rpc_wait_for_ready( void* context ) {

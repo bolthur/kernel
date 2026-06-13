@@ -35,7 +35,6 @@ list_manager_t* timer_list;
 /**
  * @fn size_t timer_generate_id(void)
  * @brief generate new callback id
- *
  * @return
  */
 size_t timer_generate_id( void ) {
@@ -48,7 +47,6 @@ size_t timer_generate_id( void ) {
 /**
  * @fn bool timer_insert(list_manager_t*, void*)
  * @brief Timer insert callback
- *
  * @param list
  * @param data
  * @return
@@ -62,11 +60,11 @@ static bool timer_insert(
     return list_push_back_data( list, data );
   }
   // get entry to add
-  timer_callback_entry_t* entry_to_add = ( timer_callback_entry_t* )data;
+  auto const entry_to_add = ( timer_callback_entry_t* )data;
   list_item_t* item = list->first;
   while ( item ) {
     // get pointer to current entry
-    timer_callback_entry_t* entry = ( timer_callback_entry_t* )item->data;
+    auto const entry = ( timer_callback_entry_t* )item->data;
     // debug output
     #if defined( PRINT_TIMER )
       DEBUG_OUTPUT(
@@ -96,7 +94,6 @@ static bool timer_insert(
 /**
  * @fn void timer_cleanup(list_item_t*)
  * @brief timer cleanup callback
- *
  * @param item
  */
 static void timer_cleanup( list_item_t* item ) {
@@ -110,8 +107,7 @@ static void timer_cleanup( list_item_t* item ) {
 
 /**
  * @fn int32_t timer_lookup(const list_item_t*, const void*)
- * @brief
- *
+ * @brief lookup a timer
  * @param a
  * @param data
  * @return
@@ -139,7 +135,6 @@ void timer_init( void ) {
 /**
  * @fn timer_callback_entry_t* timer_register_callback(task_thread_t*, size_t, size_t)
  * @brief Register timer callback
- *
  * @param thread
  * @param rpc_num
  * @param timeout
@@ -178,11 +173,10 @@ timer_callback_entry_t* timer_register_callback(
 /**
  * @fn bool timer_unregister_callback(size_t)
  * @brief Unregister timer callback by id
- *
  * @param id
  * @return
  */
-bool timer_unregister_callback( size_t id ) {
+bool timer_unregister_callback( const size_t id ) {
   // try to find item
   list_item_t* item = list_lookup_data( timer_list, ( void* ) id );
   if ( ! item ) {
