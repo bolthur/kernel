@@ -22,6 +22,7 @@
 
 #include "../../../../libusb.h"
 #include "../../../../libhcd.h"
+#include "../../../../libusbd.h"
 #include "response.h"
 
 //#define DWHCI_ENABLE_DEBUG 1
@@ -119,7 +120,7 @@ response_t dwhci_queue_get_active_by_channel( uint8_t, channel_queue_entry_t** )
 response_t dwhci_enable_channel_interrupt( uint8_t );
 response_t dwhci_disable_channel_interrupt( uint8_t );
 response_t dwhci_channel_send_async_start_channel( const channel_queue_entry_t* );
-response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t* );
+response_t dwhci_channel_send_async_stop_channel( const channel_queue_entry_t*, bool );
 response_t dwhci_channel_send_async_setup( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_data( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_ack( channel_queue_entry_t* );
@@ -130,7 +131,7 @@ response_t dwhci_channel_send_async( hcd_control_message_t*, size_t, hcd_submit_
 response_t dwhci_channel_poll_async_data( channel_queue_entry_t* );
 response_t dwhci_channel_poll_async_ack( channel_queue_entry_t* );
 response_t dwhci_channel_poll_async_done( channel_queue_entry_t* );
-response_t dwhci_channel_poll_async( hcd_interrupt_poll_t*, size_t, hcd_submit_interrupt_poll_t*, pid_t );
+response_t dwhci_channel_poll_async( usb_interrupt_poll_t*, size_t, const hcd_submit_interrupt_poll_t*, pid_t );
 response_t dwhci_next_usb_pid( dwhci_channel_state_t, uint32_t, uint8_t* );
 response_t dwhci_read_port( uint32_t, uint32_t* );
 response_t dwhci_write_port( uint32_t, uint32_t );

@@ -83,25 +83,17 @@ void rpc_keyboard_key(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
-  size_t response_info
+  [[maybe_unused]] size_t response_info
 ) {
-  // get async data
-  bolthur_async_data_t* async_data = bolthur_rpc_pop_async( RPC_VFS_IOCTL, response_info );
-  // get original interrupt message
-  const usbd_interrupt_message_t* original_interrupt_message = nullptr;
-  if ( async_data ) {
-    const vfs_ioctl_perform_request_t* original_request = async_data->original_data;
-    original_interrupt_message = ( usbd_interrupt_message_t* )original_request->container;
-  }
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_destroy_async( async_data );
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_destroy_async( async_data );
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
@@ -109,45 +101,9 @@ void rpc_keyboard_key(
   size_t data_size;
   vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! response ) {
-    bolthur_rpc_destroy_async( async_data );
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     _syscall_rpc_cleanup();
     return;
-  }
-  // handle enumerating
-  if ( response->status == -EAGAIN ) {
-    enumerating = true;
-    // handle valid original interrupt message
-    if ( original_interrupt_message ) {
-      // attach shared memory
-      void* shm_addr = _syscall_memory_shared_attach( original_interrupt_message->shm_id, ( uintptr_t )NULL );
-      if ( errno ) {
-        free( response );
-        _syscall_rpc_cleanup();
-        return;
-      }
-      // transform shared memory into message
-      const usb_interrupt_poll_t* message = ( usb_interrupt_poll_t* )shm_addr;
-      // try to get device by number
-      libusb_keyboard_device_t* dev = keyboard_get_device( message->device_number );
-      // handle no device found
-      if ( ! dev ) {
-        _syscall_memory_shared_detach( original_interrupt_message->shm_id );
-        free( response );
-        _syscall_rpc_cleanup();
-        return;
-      }
-      // detach shared memory if existing
-      _syscall_memory_shared_detach( original_interrupt_message->shm_id );
-      dev->running_poll = 0;
-    }
-    free( response );
-    bolthur_rpc_destroy_async( async_data );
-    _syscall_rpc_cleanup();
-    return;
-  }
-  // destroy it if existing
-  if ( async_data ) {
-    bolthur_rpc_destroy_async( async_data );
   }
   // get message
   const usbd_interrupt_message_t* control_message = ( usbd_interrupt_message_t* )response->container;
@@ -155,6 +111,7 @@ void rpc_keyboard_key(
   void* shm_addr = _syscall_memory_shared_attach( control_message->shm_id, ( uintptr_t )NULL );
   // handle error
   if ( errno ) {
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     free( response );
     _syscall_rpc_cleanup();
     return;
@@ -165,41 +122,34 @@ void rpc_keyboard_key(
   libusb_keyboard_device_t* dev = keyboard_get_device( message->device_number );
   // handle no device found
   if ( ! dev ) {
-    _syscall_memory_shared_detach( control_message->shm_id );
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     free( response );
     _syscall_rpc_cleanup();
     return;
   }
   // handle error
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     // handle stall by clearing stall bit
     if ( message->error & LIBUSB_TRANSFER_ERROR_STALL ) {
       /// FIXME: IMPLEMENT STALL RESET
-      dev->running_poll = 0;
-    // handle nack ( nothing there ) by just resetting running poll
-    } else if ( message->error & LIBUSB_TRANSFER_ERROR_NO_ACKNOWLEDGE ) {
-      dev->running_poll = 0;
     } else {
       EARLY_STARTUP_PRINT( "ERROR: %x\r\n", message->error );
     }
     // cleanup everything and return
-    _syscall_memory_shared_detach( control_message->shm_id );
     free( response );
     _syscall_rpc_cleanup();
     return;
   }
   // handle not enough transferred
   if ( message->last_transfer != KEYBOARD_REPORT_SIZE ) {
-    _syscall_memory_shared_detach( control_message->shm_id );
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     free( response );
-    dev->running_poll = 0;
     _syscall_rpc_cleanup();
     return;
   }
   // copy over buffer
   memcpy( dev->buffer, message->buffer, KEYBOARD_REPORT_SIZE );
-  // detach shared memory
-  _syscall_memory_shared_detach( control_message->shm_id );
   // iterate through reports
   for (size_t i = 0; i < dev->key_report->field_count; i++) {
     // get current field
@@ -337,7 +287,6 @@ void rpc_keyboard_key(
   // handle allocation issue
   if ( ! input_buffer ) {
     free( response );
-    dev->running_poll = 0;
     _syscall_rpc_cleanup();
     return;
   }
@@ -377,8 +326,6 @@ void rpc_keyboard_key(
     // concatenate buffers
     strcat( input_buffer, tmp_buffer );
   }
-  // reset last poll
-  dev->running_poll = 0;
   // handle input buffer
   if ( strlen( input_buffer ) ) {
     // allocate input command

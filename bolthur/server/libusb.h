@@ -394,6 +394,8 @@ typedef struct libusb_device {
   libusb_driver_data_header* driver_data;
   uint32_t last_transfer;
 
+  pid_t poll_origin;
+
   // pointer to next usb device
   libusb_device_t* next;
   libusb_device_t* prev;
@@ -839,8 +841,6 @@ typedef struct libusb_keyboard_device {
 
   uint32_t device_number;
   libusb_endpoint_descriptor_t descriptor;
-  size_t last_poll;
-  size_t running_poll;
   uint8_t* buffer;
 
   libusb_keyboard_device_t* next;
@@ -871,8 +871,6 @@ typedef struct libusb_mouse_device {
 
   uint32_t device_number;
   libusb_endpoint_descriptor_t descriptor;
-  size_t last_poll;
-  size_t running_poll;
   uint8_t* buffer;
 
   libusb_mouse_device_t* next;

@@ -24,14 +24,12 @@
 #include "../../../libhcd.h"
 
 /**
- * @fn int usbd_interrupt_poll(const libusb_device_t*, libusb_pipe_address_t, void*, size_t, size_t, uint32_t, rpc_handler_t, pid_t, size_t, void*, size_t);
+ * @fn int usbd_interrupt_poll(const libusb_device_t*, libusb_pipe_address_t, usb_interrupt_poll_t*, usbd_interrupt_message_t*, rpc_handler_t, pid_t, size_t, void*, size_t);
  * @brief Wrapper to perform usbd control message
  * @param dev device information
  * @param usb_pipe pipe to use
- * @param buffer buffer to transfer
- * @param buffer_length buffer transfer length
- * @param timeout poll timeout
- * @param interval poll interval
+ * @param poll interrupt poll message
+ * @param message interrupt message
  * @param callback callback invoked on finish
  * @param origin origin info to be used for ioctl
  * @param data_info date info to be used for ioctl
@@ -42,57 +40,19 @@
 int usbd_interrupt_poll(
   const libusb_device_t* dev,
   const libusb_pipe_address_t usb_pipe,
-  const void* buffer,
-  const size_t buffer_length,
-  const size_t timeout,
-  const uint32_t interval,
+  usb_interrupt_poll_t* poll,
+  usbd_interrupt_message_t* message,
   const rpc_handler_t callback,
   const pid_t origin,
   const size_t data_info,
   void* original_request,
   const size_t original_request_size
 ) {
-  // debug output
-  #if defined( USBD_ENABLE_DEBUG )
-    EARLY_STARTUP_PRINT( "firing hcd poll interrupt message\r\n" )
-  #endif
-  // allocate shared memory
-  const size_t data_size = sizeof ( hcd_interrupt_poll_t ) + buffer_length + 1;
-  const size_t shm_id = _syscall_memory_shared_create( data_size );
-  // handle error
-  if ( errno ) {
-    const int e = errno;
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to acquire shared memory!\r\n" )
-    #endif
-    // return error
-    return e;
-  }
-  // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
-  // handle error
-  if ( errno ) {
-    const int e = errno;
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to attach shared memory!\r\n" )
-    #endif
-    // return error
-    return e;
-  }
-  auto const message = ( hcd_interrupt_poll_t* )shm_addr;
   // populate real message in shared memory
-  message->device_number = dev->number;
-  message->parent_device_number = dev->parent ? dev->parent->number : 0;
-  message->port_number = dev->port_number;
-  memcpy( &message->pipe_address, &usb_pipe, sizeof( usb_pipe ) );
-  message->buffer_length = buffer_length;
-  message->interval = interval;
-  message->timeout = timeout;
-  if ( LIBUSB_DIRECTION_OUT == usb_pipe.direction && buffer ) {
-    memcpy( &message->buffer, buffer, buffer_length );
-  }
+  poll->device_number = dev->number;
+  poll->parent_device_number = dev->parent ? dev->parent->number : 0;
+  poll->port_number = dev->port_number;
+  memcpy( &poll->pipe_address, &usb_pipe, sizeof( usb_pipe ) );
   // allocate request
   hcd_submit_interrupt_poll_t* interrupt_request = malloc( sizeof( *interrupt_request ) );
   if ( ! interrupt_request ) {
@@ -100,15 +60,13 @@ int usbd_interrupt_poll(
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to allocate request\r\n" )
     #endif
-    // detach shared memory
-    _syscall_memory_shared_detach( shm_id );
     // return error
     return ENOMEM;
   }
   // clear out everything
   memset( interrupt_request, 0, sizeof( *interrupt_request ) );
   // populate shm_id
-  interrupt_request->shm_id = shm_id;
+  interrupt_request->shm_id = message->shm_id;
   // perform request
   const int result = ioctl_wrapper(
     fd_hcd,
@@ -132,8 +90,6 @@ int usbd_interrupt_poll(
       const int e = errno;
       EARLY_STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
-    // detach shared memory
-    _syscall_memory_shared_detach( shm_id );
     // free request
     free( interrupt_request );
     // return eio

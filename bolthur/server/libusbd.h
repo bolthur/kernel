@@ -223,6 +223,12 @@ typedef struct {
   size_t timeout;
   uint32_t last_transfer;
   libusb_transfer_error_t error;
+  // filled internally for hcd server
+  uint32_t parent_device_number;
+  uint32_t port_number;
+  libusb_pipe_address_t pipe_address;
+  size_t minimum_length;
+  // space for buffer
   uint8_t buffer[];
 } usb_control_message_t;
 
@@ -236,6 +242,11 @@ typedef struct {
   uint32_t interval;
   uint32_t last_transfer;
   libusb_transfer_error_t error;
+  // filled internally for hcd server
+  uint32_t parent_device_number;
+  uint32_t port_number;
+  libusb_pipe_address_t pipe_address;
+  // space for buffer
   uint8_t buffer[];
 } usb_interrupt_poll_t;
 

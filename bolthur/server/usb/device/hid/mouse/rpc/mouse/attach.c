@@ -155,8 +155,6 @@ void rpc_mouse_attach(
   device->header.device_driver = DEVICE_DRIVER_KEYBOARD;
   device->header.data_size = sizeof( *device );
   memcpy( &device->descriptor, &endpoint_descriptor, sizeof( endpoint_descriptor ) );
-  device->last_poll = 0;
-  device->running_poll = 0;
   device->device_number = message->device_number;
   // determine new index
   result = mouse_new_index( &device->index );

@@ -178,8 +178,6 @@ int keyboard_start_polling( libusb_keyboard_device_t* device ) {
   if ( ! device ) {
     return EINVAL;
   }
-  // set running poll
-  device->running_poll = _syscall_timer_tick_count();
   // clear out buffer
   memset( device->buffer, 0, KEYBOARD_REPORT_SIZE );
   // return result of async control message
@@ -196,7 +194,6 @@ int keyboard_start_polling( libusb_keyboard_device_t* device ) {
   if ( 0 != result ) {
     const int e = errno;
     EARLY_STARTUP_PRINT( "ERROR: %s\r\n", strerror( e ) );
-    device->running_poll = 0;
   }
   return result;
 }

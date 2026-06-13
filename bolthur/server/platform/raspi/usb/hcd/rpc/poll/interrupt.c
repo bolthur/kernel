@@ -24,6 +24,7 @@
 #include "../../dwhci.h"
 #include "../../dwhciroothub.h"
 #include "../../../../../../libhcd.h"
+#include "../../../../../../libusbd.h"
 
 /**
  * @fn void rpc_poll_interrupt(size_t, pid_t, size_t, size_t)
@@ -42,27 +43,26 @@ void rpc_poll_interrupt(
   vfs_ioctl_perform_response_t error = { .status = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // get data from mailbox
   size_t data_size;
-  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     error.status = -EIO;
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // allocate space for pull_request
   auto const poll_message = ( hcd_submit_interrupt_poll_t* )request->container;
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach(
-    poll_message->shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( poll_message->shm_id, 0 );
   // handle error
   if ( errno ) {
     // set error
@@ -70,11 +70,11 @@ void rpc_poll_interrupt(
     // free request
     free( request );
     // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // transform shared memory into message
-  auto const message = ( hcd_interrupt_poll_t* )shm_addr;
+  auto const message = ( usb_interrupt_poll_t* )shm_addr;
   // send async
   const response_t result = dwhci_channel_poll_async( message, sizeof( *message ) + message->buffer_length, poll_message, request->origin );
   if ( HCD_RESPONSE_OK != result ) {
@@ -85,10 +85,12 @@ void rpc_poll_interrupt(
     // free request
     free( request );
     // return from rpc
-    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), NULL, 0 );
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
   // we're waiting for an interrupt starting here
   free( request );
-  _syscall_rpc_cleanup();
+  // return from rpc
+  memset( &error, 0, sizeof( error ) );
+  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
 }

@@ -17,7 +17,9 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include "../../rpc.h"
+#include "../../libusbd.h"
 
 /**
  * @fn void rpc_interrupt_generic( size_t, pid_t, size_t, size_t )
@@ -29,9 +31,71 @@
  */
 void rpc_interrupt_generic(
   [[maybe_unused]] size_t type,
-  [[maybe_unused]] pid_t origin,
-  [[maybe_unused]] size_t data_info,
+  pid_t origin,
+  size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "GENERIC INTERRUPT CHANGE RECEIVED\r\n" )
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
+  // validate origin
+  if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // handle no data
+  if ( ! data_info ) {
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // get data from mailbox
+  size_t data_size;
+  vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
+  if ( ! response ) {
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
+    _syscall_rpc_cleanup();
+    return;
+  }
+  EARLY_STARTUP_PRINT( "interrupt generic\r\n" )
+  // allocate space for pull_request
+  auto const interrupt_message = ( usbd_interrupt_message_t* )response->container;
+  // attach shared memory
+  void* shm_addr = _syscall_memory_shared_attach( interrupt_message->shm_id, 0 );
+  // handle error
+  if ( errno ) {
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
+    free( response );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // transform shared memory into message
+  auto const message = ( usb_interrupt_poll_t* )shm_addr;
+  // find device
+  libusb_device_t* device;
+  const int result = usbd_device_get_by_number( message->device_number, &device );
+  if ( 0 != result ) {
+  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
+    free( response );
+    _syscall_rpc_cleanup();
+    return;
+  }
+  // call poll origin with fire and forget
+  bolthur_rpc_raise_generic(
+    GENERIC_POLL_INTERRUPT,
+    device->poll_origin,
+    response,
+    data_size,
+    nullptr,
+    GENERIC_POLL_INTERRUPT,
+    nullptr,
+    0,
+    0,
+    0,
+    nullptr,
+    true,
+    true
+  );
+  // free up and return
+  free( response );
+  _syscall_rpc_cleanup();
 }

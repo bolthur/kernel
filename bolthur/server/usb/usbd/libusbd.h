@@ -166,7 +166,7 @@ int usbd_handler_get( libusb_interface_class_t, pid_t* );
 // init
 int usbd_init( void );
 // interrupt
-int usbd_interrupt_poll( const libusb_device_t*, libusb_pipe_address_t, const void*, size_t, size_t, uint32_t, rpc_handler_t, pid_t, size_t, void*, size_t );
+int usbd_interrupt_poll( const libusb_device_t*, libusb_pipe_address_t, usb_interrupt_poll_t*, usbd_interrupt_message_t*, rpc_handler_t, pid_t, size_t, void*, size_t );
 // roothub
 libusb_device_t* usbd_roothub_get( void );
 int usbd_roothub_attach( rpc_handler_t, pid_t, size_t );

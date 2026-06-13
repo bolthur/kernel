@@ -118,6 +118,9 @@ void rpc_interrupt_handle(
     for ( uint32_t channel = 0; channel < configuration.channel.count; channel++ ) {
       // handle channel interrupt
       if ( channel_interrupt & channel_mask ) {
+        #if defined( DWHCI_ENABLE_DEBUG )
+          EARLY_STARTUP_PRINT( "channel = %"PRIu32"\r\n", channel )
+        #endif
         // get queue entry matching to channel
         channel_queue_entry_t* entry;
         result = dwhci_queue_get_active_by_channel( ( uint8_t )channel, &entry );
