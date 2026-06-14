@@ -936,7 +936,7 @@ response_t dwhci_channel_send_async_setup( channel_queue_entry_t* entry ) {
     EARLY_STARTUP_PRINT( "Starting setup request: %"PRIu32"\r\n",
       entry->buffer_offset )
   #endif
-  const hcd_control_message_t* entry_data = entry->data;
+  const usb_control_message_t* entry_data = entry->data;
   // create temporary pipe
   const libusb_pipe_address_t setup_pipe = {
     .speed = entry_data->pipe_address.speed,
@@ -970,8 +970,6 @@ response_t dwhci_channel_send_async_setup( channel_queue_entry_t* entry ) {
     // return result
     return result;
   }
-  // set last pid to set up
-  ( ( hcd_control_message_t* )entry->data )->last_usb_pid = DWHCI_CHANNEL_STATE_SETUP;
   // start send setup packet
   return dwhci_channel_send_async_start_channel( entry );
 }
@@ -987,7 +985,7 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Starting data request\r\n" )
   #endif
-  const hcd_control_message_t* entry_data = entry->data;
+  const usb_control_message_t* entry_data = entry->data;
   // handle no data to transmit or receive
   if (0 == entry_data->buffer_length ) {
     // debug output
@@ -1012,24 +1010,13 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
     .type = LIBUSB_TRANSFER_CONTROL,
     .direction = entry_data->pipe_address.direction,
   };
-  // get next usb pid
-  uint8_t next_usb_pid;
-  response_t result = dwhci_next_usb_pid( ( ( hcd_control_message_t* )entry->data )->last_usb_pid, entry->packet_transferred, &next_usb_pid );
-  if ( HCD_RESPONSE_OK != result ) {
-    // debug output
-    #if defined( DWHCI_ERROR_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to get next usb pid\r\n" )
-    #endif
-    // return result
-    return result;
-  }
   // prepare channel
-  result = dwhci_prepare_channel(
+  response_t result = dwhci_prepare_channel(
     entry_data->parent_device_number,
     entry_data->port_number,
     entry->channel,
     entry_data->buffer_length - entry->buffer_offset,
-    next_usb_pid,
+    DWHCI_CHANNEL_STATE_DATA1,
     &data_pipe,
     0,
     false
@@ -1045,9 +1032,6 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
     // return result
     return result;
   }
-  // set last pid to next pid
-  const uint8_t previous_usb_pid = ( ( hcd_control_message_t* )entry->data )->last_usb_pid;
-  ( ( hcd_control_message_t* )entry->data )->last_usb_pid = next_usb_pid;
   // start send data packet
   result = dwhci_channel_send_async_start_channel( entry );
   if ( HCD_RESPONSE_OK != result ) {
@@ -1055,8 +1039,6 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
     #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to start async channel\r\n" )
     #endif
-    // reset pid change
-    ( ( hcd_control_message_t* )entry->data )->last_usb_pid = previous_usb_pid;
     // return result
     return result;
   }
@@ -1075,7 +1057,7 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Starting ack request\r\n" )
   #endif
-  hcd_control_message_t* entry_data = entry->data;
+  usb_control_message_t* entry_data = entry->data;
   // populate last transfer
   if ( LIBUSB_DIRECTION_IN == entry_data->pipe_address.direction ) {
     entry_data->last_transfer = entry_data->buffer_length;
@@ -1107,24 +1089,13 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
   };
   // push request into data buffer
   memcpy( entry->buffer, &entry_data->request, sizeof( libusb_device_request_t ) );
-  // get next usb pid
-  uint8_t next_usb_pid;
-  response_t result = dwhci_next_usb_pid( ( ( hcd_control_message_t* )entry->data )->last_usb_pid, entry->packet_transferred, &next_usb_pid );
-  if ( HCD_RESPONSE_OK != result ) {
-    // debug output
-    #if defined( DWHCI_ERROR_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to get next usb pid\r\n" )
-    #endif
-    // return result
-    return result;
-  }
   // prepare channel
-  result = dwhci_prepare_channel(
+  response_t result = dwhci_prepare_channel(
     entry_data->parent_device_number,
     entry_data->port_number,
     entry->channel,
     0,
-    next_usb_pid,
+    DWHCI_CHANNEL_STATE_DATA1,
     &ack_pipe,
     0,
     false
@@ -1140,9 +1111,6 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
     // return result
     return result;
   }
-  // set last pid to next pid
-  const uint8_t previous_usb_pid = ( ( hcd_control_message_t* )entry->data )->last_usb_pid;
-  ( ( hcd_control_message_t* )entry->data )->last_usb_pid = next_usb_pid;
   // start send data packet
   result = dwhci_channel_send_async_start_channel( entry );
   if ( HCD_RESPONSE_OK != result ) {
@@ -1150,8 +1118,6 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* entry ) {
     #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to start async channel\r\n" )
     #endif
-    // reset pid change
-    ( ( hcd_control_message_t* )entry->data )->last_usb_pid = previous_usb_pid;
     // return result
     return result;
   }
@@ -1177,8 +1143,8 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
       EARLY_STARTUP_PRINT( "Warning non zero status transfer: %"PRIu32"\r\n", entry->transferred )
     #endif
   }
-  auto const message = ( hcd_submit_control_message_t* )entry->message;
-  auto const entry_data = ( hcd_control_message_t* )entry->data;
+  auto const message = ( usbd_control_message_t* )entry->message;
+  auto const entry_data = ( usb_control_message_t* )entry->data;
   // attach shared memory
   void* shm = _syscall_memory_shared_attach( message->shm_id, 0 );
   if ( errno ) {
@@ -1205,7 +1171,7 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
   // copy over to shared memory
   memcpy( shm, entry->data, entry->data_size );
   // allocate response structure
-  constexpr size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( hcd_submit_control_message_t );
+  constexpr size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( usbd_control_message_t );
   vfs_ioctl_perform_response_t* response = malloc( response_size );
   if ( ! response ) {
     // debug output
@@ -1220,7 +1186,7 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
   // detach shared memory
   _syscall_memory_shared_detach( message->shm_id );
   // populate response
-  memcpy( response->container, entry->message, sizeof( hcd_submit_control_message_t ) );
+  memcpy( response->container, entry->message, sizeof( usbd_control_message_t ) );
   // return from rpc
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, entry->response_info );
   // free entry
@@ -1276,7 +1242,7 @@ response_t dwhci_channel_send_async_continue( channel_queue_entry_t* entry ) {
 }
 
 /**
- * @fn response_t dwhci_channel_send_async(hcd_control_message_t*, size_t, hcd_submit_control_message_t*, size_t);
+ * @fn response_t dwhci_channel_send_async(usb_control_message_t*, size_t, usbd_control_message_t*, size_t);
  * @brief Wrapper to perform async channel send
  * @param data data to send
  * @param data_size data size
@@ -1284,7 +1250,7 @@ response_t dwhci_channel_send_async_continue( channel_queue_entry_t* entry ) {
  * @param response_info where to respond result to
  * @return
  */
-response_t dwhci_channel_send_async( hcd_control_message_t* data, size_t data_size, hcd_submit_control_message_t* message, const size_t response_info ) {
+response_t dwhci_channel_send_async( usb_control_message_t* data, size_t data_size, usbd_control_message_t* message, const size_t response_info ) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT("Channel send async\r\n")
@@ -1301,7 +1267,7 @@ response_t dwhci_channel_send_async( hcd_control_message_t* data, size_t data_si
     return result;
   }
   // duplicate message
-  hcd_submit_control_message_t* dup_message = malloc( sizeof( *dup_message ) );
+  usbd_control_message_t* dup_message = malloc( sizeof( *dup_message ) );
   if ( ! dup_message ) {
     // clear entry again
     dwhci_queue_remove_entry( entry );

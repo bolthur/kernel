@@ -127,7 +127,7 @@ response_t dwhci_channel_send_async_ack( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_done( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_continue_pending( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_continue( channel_queue_entry_t* );
-response_t dwhci_channel_send_async( hcd_control_message_t*, size_t, hcd_submit_control_message_t*, size_t );
+response_t dwhci_channel_send_async( usb_control_message_t*, size_t, usbd_control_message_t*, size_t );
 response_t dwhci_channel_poll_async_data( channel_queue_entry_t* );
 response_t dwhci_channel_poll_async_ack( channel_queue_entry_t* );
 response_t dwhci_channel_poll_async_done( channel_queue_entry_t* );

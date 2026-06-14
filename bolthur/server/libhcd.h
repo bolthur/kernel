@@ -20,32 +20,9 @@
 #ifndef _LIBHCD_H
 #define _LIBHCD_H
 
-#include <sys/bolthur.h>
-#include "libusb.h"
-
 #define HCD_DEVICE_PATH "/dev/usb/hcd"
 
 #define HCD_SUBMIT_CONTROL_MESSAGE RPC_CUSTOM_START
 #define HCD_POLL_INTERRUPT HCD_SUBMIT_CONTROL_MESSAGE + 1
-
-typedef struct {
-  size_t shm_id;
-} hcd_submit_control_message_t;
-
-typedef struct {
-  uint32_t device_number;
-  uint32_t parent_device_number;
-  uint32_t port_number;
-  uint32_t last_transfer;
-  libusb_transfer_error_t error;
-  libusb_pipe_address_t pipe_address;
-  libusb_device_request_t request;
-  size_t buffer_length;
-  uint8_t last_usb_pid;
-  uint32_t previous_transferred_packet;
-  size_t timeout;
-  size_t minimum_length;
-  uint8_t buffer[];
-} hcd_control_message_t;
 
 #endif

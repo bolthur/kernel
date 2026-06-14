@@ -60,7 +60,7 @@ void rpc_submit_message(
   }
   const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
   // allocate space for pull_request
-  auto const submit_control_message = ( hcd_submit_control_message_t* )request->container;
+  auto const submit_control_message = ( usbd_control_message_t* )request->container;
   // attach shared memory
   void* shm_addr = _syscall_memory_shared_attach(
     submit_control_message->shm_id, ( uintptr_t )NULL );
@@ -75,7 +75,7 @@ void rpc_submit_message(
     return;
   }
   // transform shared memory into message
-  auto const message = ( hcd_control_message_t* )shm_addr;
+  auto const message = ( usb_control_message_t* )shm_addr;
   // allocate response structure
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;
   vfs_ioctl_perform_response_t* response = malloc( response_size );

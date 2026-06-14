@@ -35,6 +35,8 @@
  * @param request
  * @param timeout
  * @return
+ *
+ * @todo adjust
  */
 int usbd_control_message(
   libusb_device_t* dev,
@@ -49,7 +51,7 @@ int usbd_control_message(
     EARLY_STARTUP_PRINT( "firing hcd control message\r\n" )
   #endif
   // allocate shared memory
-  const size_t data_size = sizeof ( hcd_control_message_t ) + buffer_length + 1;
+  const size_t data_size = sizeof ( usb_control_message_t ) + buffer_length + 1;
   const size_t shm_id = _syscall_memory_shared_create( data_size );
   // handle error
   if ( errno ) {
@@ -73,7 +75,7 @@ int usbd_control_message(
     // return error
     return e;
   }
-  auto const message = ( hcd_control_message_t* )shm_addr;
+  auto const message = ( usb_control_message_t* )shm_addr;
   // populate real message in shared memory
   message->device_number = dev->number;
   message->parent_device_number = dev->parent ? dev->parent->number : 0;
@@ -86,7 +88,7 @@ int usbd_control_message(
     memcpy( &message->buffer, buffer, buffer_length );
   }
   // allocate request
-  hcd_submit_control_message_t* control_request = malloc( sizeof( *control_request ) );
+  usbd_control_message_t* control_request = malloc( sizeof( *control_request ) );
   if ( ! control_request ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
@@ -197,6 +199,8 @@ int usbd_control_message(
  * @param context additional context stuff ( use nullptr if not available )
  * @param minimum_length minimum length to read ( use 0 if not available )
  * @return
+ *
+ * @todo adjust
  */
 int usbd_control_message_async(
   const libusb_device_t* dev,
@@ -218,7 +222,7 @@ int usbd_control_message_async(
     EARLY_STARTUP_PRINT( "firing hcd control message\r\n" )
   #endif
   // allocate shared memory
-  const size_t data_size = sizeof ( hcd_control_message_t ) + buffer_length + 1;
+  const size_t data_size = sizeof ( usb_control_message_t ) + buffer_length + 1;
   const size_t shm_id = _syscall_memory_shared_create( data_size );
   // handle error
   if ( errno ) {
@@ -242,7 +246,7 @@ int usbd_control_message_async(
     // return error
     return e;
   }
-  auto const message = ( hcd_control_message_t* )shm_addr;
+  auto const message = ( usb_control_message_t* )shm_addr;
   // populate real message in shared memory
   message->device_number = dev->number;
   message->parent_device_number = dev->parent ? dev->parent->number : 0;
@@ -256,7 +260,7 @@ int usbd_control_message_async(
     memcpy( &message->buffer, buffer, buffer_length );
   }
   // allocate request
-  hcd_submit_control_message_t* control_request = malloc( sizeof( *control_request ) );
+  usbd_control_message_t* control_request = malloc( sizeof( *control_request ) );
   if ( ! control_request ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )

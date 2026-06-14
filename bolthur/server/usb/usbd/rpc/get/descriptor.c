@@ -76,9 +76,9 @@ static void rpc_get_descriptor_finished(
     return;
   }
   // get poll response
-  auto const hcd_submit_command = ( hcd_submit_control_message_t* )submit_response->container;
+  auto const usbd_control_message = ( usbd_control_message_t* )submit_response->container;
   // attach shared memory from poll command
-  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( hcd_submit_command->shm_id, 0 );
+  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( usbd_control_message->shm_id, 0 );
   if ( errno ) {
     const int e = errno;
     // free up stuff
@@ -89,7 +89,7 @@ static void rpc_get_descriptor_finished(
     // skip rest
     return;
   }
-  auto const hcd_submit = ( hcd_control_message_t* )shm_addr_hcd_poll;
+  auto const usb_control_message = ( usb_control_message_t* )shm_addr_hcd_poll;
   // get original request
   const vfs_ioctl_perform_request_t* original_request = async_data->original_data;
   // get interrupt message
@@ -100,7 +100,7 @@ static void rpc_get_descriptor_finished(
     const int e = errno;
     // detach both since both are attached already
     _syscall_memory_shared_detach( get_descriptor->shm_id );
-    _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+    _syscall_memory_shared_detach( usbd_control_message->shm_id );
     // free up stuff
     free( submit_response );
     // return from rpc
@@ -116,7 +116,7 @@ static void rpc_get_descriptor_finished(
   if ( 0 != result ) {
     // detach both since both are attached already
     _syscall_memory_shared_detach( get_descriptor->shm_id );
-    _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+    _syscall_memory_shared_detach( usbd_control_message->shm_id );
     // free up stuff
     free( submit_response );
     // return from rpc
@@ -126,10 +126,10 @@ static void rpc_get_descriptor_finished(
     return;
   }
   // handle timeout
-  if ( hcd_submit->error & LIBUSB_TRANSFER_ERROR_TIMEOUT ) {
+  if ( usb_control_message->error & LIBUSB_TRANSFER_ERROR_TIMEOUT ) {
     // detach both since both are attached already
     _syscall_memory_shared_detach( get_descriptor->shm_id );
-    _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+    _syscall_memory_shared_detach( usbd_control_message->shm_id );
     // free up stuff
     free( submit_response );
     // return from rpc
@@ -139,10 +139,10 @@ static void rpc_get_descriptor_finished(
     return;
   }
   // handle not enough transferred
-  if ( hcd_submit->last_transfer < usbd_descriptor_message->minimum_length ) {
+  if ( usb_control_message->last_transfer < usbd_descriptor_message->minimum_length ) {
     // detach both since both are attached already
     _syscall_memory_shared_detach( get_descriptor->shm_id );
-    _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+    _syscall_memory_shared_detach( usbd_control_message->shm_id );
     // free up stuff
     free( submit_response );
     // return from rpc
@@ -152,7 +152,7 @@ static void rpc_get_descriptor_finished(
     return;
   }
   // handle error and parent is set
-  if ( device->parent && hcd_submit->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+  if ( device->parent && usb_control_message->error & ( uint32_t )~LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // check connection
     /// FIXME: NEEDS TO BE ASYNC AS WELL AS CONTROL MESSAGE
     result = call_child_check_connection( device->parent, device );
@@ -160,7 +160,7 @@ static void rpc_get_descriptor_finished(
     if ( 0 != result ) {
       // detach both since both are attached already
       _syscall_memory_shared_detach( get_descriptor->shm_id );
-      _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+      _syscall_memory_shared_detach( usbd_control_message->shm_id );
       // free up stuff
       free( submit_response );
       // return from rpc
@@ -174,23 +174,23 @@ static void rpc_get_descriptor_finished(
   }
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "hcd_submit->last_transfer = %"PRIu32", buffer_length = %zu\r\n",
-      hcd_submit->last_transfer, usbd_descriptor_message->buffer_length );
+      usb_control_message->last_transfer, usbd_descriptor_message->buffer_length );
   #endif
   // handle direction in with last transfer equal to buffer length
-  if ( hcd_submit->last_transfer == usbd_descriptor_message->buffer_length ) {
+  if ( usb_control_message->last_transfer == usbd_descriptor_message->buffer_length ) {
     // copy over from hcd poll buffer into usb interrupt buffer
     memcpy(
       usbd_descriptor_message->buffer,
-      hcd_submit->buffer,
+      usb_control_message->buffer,
       usbd_descriptor_message->buffer_length
     );
   }
   // copy over error and last transfer into device
-  device->error = hcd_submit->error;
-  device->last_transfer = hcd_submit->last_transfer;
+  device->error = usb_control_message->error;
+  device->last_transfer = usb_control_message->last_transfer;
   // finally detach shared memory
   _syscall_memory_shared_detach( get_descriptor->shm_id );
-  _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+  _syscall_memory_shared_detach( usbd_control_message->shm_id );
   // allocate response structure
   const size_t container_size = async_data->length - sizeof( vfs_ioctl_perform_request_t );
   const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + container_size;

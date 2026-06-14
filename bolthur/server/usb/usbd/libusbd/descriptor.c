@@ -239,9 +239,9 @@ static void descriptor_read_device_finished(
     return;
   }
   // get poll response
-  auto const hcd_submit_command = ( hcd_submit_control_message_t* )submit_response->container;
+  auto const usbd_control_message = ( usbd_control_message_t* )submit_response->container;
   // attach shared memory from poll command
-  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( hcd_submit_command->shm_id, 0 );
+  void* shm_addr_hcd_poll = _syscall_memory_shared_attach( usbd_control_message->shm_id, 0 );
   if ( errno ) {
     const int e = errno;
     // free up stuff
@@ -254,11 +254,11 @@ static void descriptor_read_device_finished(
     return;
   }
   // get result
-  auto const hcd_submit = ( hcd_control_message_t* )shm_addr_hcd_poll;
+  auto const usb_control_message = ( usb_control_message_t* )shm_addr_hcd_poll;
   // check transfer
-  if ( hcd_submit->last_transfer != sizeof( libusb_device_descriptor_t ) ) {
+  if ( usb_control_message->last_transfer != sizeof( libusb_device_descriptor_t ) ) {
     // free up stuff
-    _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+    _syscall_memory_shared_detach( usbd_control_message->shm_id );
     free( submit_response );
     // return
     err_response.status = -EPROTO;
@@ -268,13 +268,13 @@ static void descriptor_read_device_finished(
     return;
   }
   // response is equal to input
-  if ( hcd_submit->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
+  if ( usb_control_message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // debug output
     #if defined( USBD_ENABLE_ERROR )
-      EARLY_STARTUP_PRINT( "error = %#x\r\n", hcd_submit->error )
+      EARLY_STARTUP_PRINT( "error = %#x\r\n", usb_control_message->error )
     #endif
     // free up stuff
-    _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+    _syscall_memory_shared_detach( usbd_control_message->shm_id );
     free( submit_response );
     // return
     err_response.status = -EPROTO;
@@ -284,19 +284,19 @@ static void descriptor_read_device_finished(
     return;
   }
   // handle direction in with last transfer equal to buffer length
-  if ( hcd_submit->last_transfer == hcd_submit->buffer_length ) {
+  if ( usb_control_message->last_transfer == usb_control_message->buffer_length ) {
     // copy over from hcd poll buffer into device descriptor
     memcpy(
       &(attach_context->device->descriptor),
-      hcd_submit->buffer,
-      hcd_submit->buffer_length
+      usb_control_message->buffer,
+      usb_control_message->buffer_length
     );
   }
   // populate last transfer and error
-  attach_context->device->last_transfer = hcd_submit->last_transfer;
-  attach_context->device->error = hcd_submit->error;
+  attach_context->device->last_transfer = usb_control_message->last_transfer;
+  attach_context->device->error = usb_control_message->error;
   // detach hcd submit
-  _syscall_memory_shared_detach( hcd_submit_command->shm_id );
+  _syscall_memory_shared_detach( usbd_control_message->shm_id );
   // destroy async data
   bolthur_rpc_destroy_async( async_data );
   // invoke callback
