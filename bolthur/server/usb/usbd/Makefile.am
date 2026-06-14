@@ -27,7 +27,6 @@ usbd_SOURCES = \
   libusbd/description.c \
   libusbd/descriptor.c \
   libusbd/device.c \
-  libusbd/enumerating.c \
   libusbd/handler.c \
   libusbd/init.c \
   libusbd/interrupt.c \
@@ -40,7 +39,6 @@ usbd_SOURCES = \
   rpc/get/description.c \
   rpc/get/descriptor.c \
   rpc/get/endpoint.c \
-  rpc/get/enumerating.c \
   rpc/get/interface.c \
   rpc/get/roothub.c \
   rpc/get/status.c \

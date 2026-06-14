@@ -36,11 +36,6 @@
 int console_fd;
 
 /**
- * @brief Enumerating flag
- */
-bool enumerating = true;
-
-/**
  * @fn int main(int, char*[])
  * @brief main entry point
  * @param argc

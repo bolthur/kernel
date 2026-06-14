@@ -23,7 +23,6 @@
 #include <sys/bolthur.h>
 // local includes
 #include "../../rpc.h"
-#include "../../global.h"
 #include "../../keyboard.h"
 #include "../../../../../../libusbd.h"
 #include "../../../../../../../library/hid/hid.h"

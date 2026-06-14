@@ -155,9 +155,6 @@ int usbd_descriptor_read_device( libusb_device_t*, rpc_handler_t, usbd_attach_co
 // device
 int usbd_device_configure( libusb_device_t*, uint8_t, rpc_handler_t, usbd_attach_context_t* );
 int usbd_device_get_by_number( uint32_t, libusb_device_t** );
-// enumerating
-int usbd_enumerating_get( bool* );
-int usbd_enumerating_set( bool );
 // handler
 int usbd_handler_init( void );
 int usbd_handler_register( libusb_interface_class_t, pid_t );

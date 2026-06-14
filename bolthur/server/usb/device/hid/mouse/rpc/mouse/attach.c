@@ -22,9 +22,8 @@
 #include <inttypes.h>
 #include <sys/bolthur.h>
 // local includes
-#include "mouse.h"
+#include "../../mouse.h"
 #include "../../rpc.h"
-#include "../../global.h"
 #include "../../../../../../libusbd.h"
 #include "../../../../../../../library/hid/hid.h"
 #include "../../../../../../../library/usb/usb.h"

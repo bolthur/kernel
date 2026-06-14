@@ -21,6 +21,5 @@
 #define _GLOBAL_H
 
 extern int console_fd;
-extern bool enumerating;
 
 #endif

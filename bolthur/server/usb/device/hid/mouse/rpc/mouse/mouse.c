@@ -19,10 +19,7 @@
 
 #include <sys/bolthur.h>
 #include <inttypes.h>
-#include <errno.h>
 #include <sys/ioctl.h>
-
-#include "../../global.h"
 #include "../../rpc.h"
 #include "../../mouse.h"
 #include "../../../../../../libusbd.h"

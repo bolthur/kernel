@@ -35,8 +35,6 @@
  * @param request
  * @param timeout
  * @return
- *
- * @todo adjust
  */
 int usbd_control_message(
   libusb_device_t* dev,
@@ -64,7 +62,7 @@ int usbd_control_message(
     return e;
   }
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, 0 );
   // handle error
   if ( errno ) {
     const int e = errno;
@@ -199,8 +197,6 @@ int usbd_control_message(
  * @param context additional context stuff ( use nullptr if not available )
  * @param minimum_length minimum length to read ( use 0 if not available )
  * @return
- *
- * @todo adjust
  */
 int usbd_control_message_async(
   const libusb_device_t* dev,
@@ -235,7 +231,7 @@ int usbd_control_message_async(
     return e;
   }
   // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( shm_id, ( uintptr_t )NULL );
+  void* shm_addr = _syscall_memory_shared_attach( shm_id, 0 );
   // handle error
   if ( errno ) {
     const int e = errno;

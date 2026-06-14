@@ -34,26 +34,6 @@ pid_t dev_pid = 3;
 pid_t ramdisk_pid = 4;
 
 /**
- * @fn void delay(size_t)
- * @brief delay method without necessity of rpc enabled
- *
- * @param sec
- */
-static void delay( size_t sec ) {
-  // get clock frequency
-  size_t frequency = _syscall_timer_frequency();
-  // calculate second timeout
-  size_t timeout = ( size_t )( sec * frequency );
-  size_t tick;
-  // add tick count to get an end time
-  timeout += _syscall_timer_tick_count();
-  // loop until timeout is reached
-  while ( ( tick = _syscall_timer_tick_count() ) < timeout ) {
-    __asm__ __volatile__( "nop" );
-  }
-}
-
-/**
  * @fn void init_stage1(void)
  * @brief Stage 1 init with start of necessary stuff ( VFS, DEV, and RAMDISK )
  */
@@ -180,8 +160,6 @@ void init_stage1( void ) {
       }
 
       if ( 0 != inner_forked_process ) {
-        // wait a few seconds
-        delay( 2 );
         EARLY_STARTUP_PRINT( "waiting for parent to be ready!\r\n" )
         // wait for parent process to be ready
         _syscall_rpc_wait_for_ready( forked_process );
@@ -205,8 +183,6 @@ void init_stage1( void ) {
   }
   // enable rpc and wait for process to be ready
   _syscall_rpc_set_ready( true );
-  // delay necessary to not interrupt other startup
-  delay( 20 );
   // enough to wait here for ramdisk and authentication, since both need dev server
   EARLY_STARTUP_PRINT( "Waiting for authentication device\r\n" )
   vfs_wait_for_path( AUTHENTICATION_DEVICE );

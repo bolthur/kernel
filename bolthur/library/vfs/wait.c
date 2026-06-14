@@ -28,7 +28,7 @@
  */
 void vfs_wait_for_path( const char* path ) {
   struct stat buffer;
-  do {
+  while( 0 != stat( path, &buffer ) ) {
     sleep( 1 );
-  } while( 0 != stat( path, &buffer ) );
+  }
 }

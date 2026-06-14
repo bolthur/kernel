@@ -87,8 +87,6 @@ static void attach_roothub_finished(
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Stopping enumeration to enable polling\r\n" )
   #endif
-  // disable enumeration mode
-  usbd_enumerating_set( false );
   // free response
   free( response );
   _syscall_rpc_cleanup();

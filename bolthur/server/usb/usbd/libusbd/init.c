@@ -65,22 +65,12 @@ int usbd_init( void ) {
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Starting enumeration\r\n" )
   #endif
-  // set enumerating flag
-  int result = usbd_enumerating_set( true );
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to set enumerating: %s\r\n", strerror( result ) )
-    #endif
-    // return result
-    return result;
-  }
   // debug output
   #if defined( USBD_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Attaching root hub async\r\n" )
   #endif
   // try to attach root hub
-  result = usbd_roothub_fire_attach();
+  const int result = usbd_roothub_fire_attach();
   // handle error
   if ( 0 != result ) {
     // debug output

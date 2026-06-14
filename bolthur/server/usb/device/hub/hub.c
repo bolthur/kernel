@@ -679,11 +679,12 @@ int hub_port_connection_changed(
 }
 
 /**
- * @fn int hub_evaluate_to_attach( uint32_t, libusb_hub_device_t*, uint8_t, bool* )
+ * @fn int hub_evaluate_to_attach( uint32_t, libusb_hub_device_t*, uint8_t, uint32_t, bool* )
  * @brief Function to evaluate attach amount
  * @param device_number device number
  * @param device_data device data
  * @param port port to attach
+ * @param roothub_device_number device number of roothub
  * @param to_attach output variable
  * @return
  */
@@ -691,21 +692,11 @@ int hub_shall_to_attach(
   const uint32_t device_number,
   libusb_hub_device_t* device_data,
   const uint8_t port,
+  const uint32_t roothub_device_number,
   bool* to_attach
 ) {
-  // cache hub device
-  uint32_t roothub_device_number;
-  int result = usb_get_root_hub( &roothub_device_number );
-  if ( 0 != result ) {
-    // debug output
-    #if defined ( HUB_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to retrieve root hub: %s\r\n", strerror( result ) )
-    #endif
-    // return result
-    return result;
-  }
   // get port status
-  result = hub_get_port_status( device_number, device_data, port );
+  const int result = hub_get_port_status( device_number, device_data, port );
   if ( 0 != result ) {
     // debug output
     #if defined ( HUB_ENABLE_DEBUG )

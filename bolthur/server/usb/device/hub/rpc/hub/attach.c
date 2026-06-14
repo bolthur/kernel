@@ -330,7 +330,7 @@ void rpc_hub_attach(
   for ( uint32_t port = 0; port < hub->max_children; port++ ) {
     // get shall attach value
     bool shall_attach = false;
-    result = hub_shall_to_attach( message->device_number, hub, ( uint8_t )port, &shall_attach );
+    result = hub_shall_to_attach( message->device_number, hub, ( uint8_t )port, roothub_device_number, &shall_attach );
     if ( 0 != result ) {
       #if defined ( HUB_ENABLE_DEBUG )
         EARLY_STARTUP_PRINT( "Unable to check for shall attach of port %"PRIu8"\r\n",
