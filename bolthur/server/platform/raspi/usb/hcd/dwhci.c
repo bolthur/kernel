@@ -455,7 +455,7 @@ response_t dwhci_free_channel( const uint8_t channel ) {
 response_t dwhci_queue_add_entry( void* data, const size_t size, const dwhci_queue_status_t status, channel_queue_entry_t** out ) {
   // allocate entry
   channel_queue_entry_t* entry = malloc( sizeof( *entry ) );
-  if (!entry) {
+  if ( ! entry ) {
     // some debug output
     #if defined( DWHCI_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "Unable to allocate entry for queue\r\n" )
@@ -465,8 +465,23 @@ response_t dwhci_queue_add_entry( void* data, const size_t size, const dwhci_que
   }
   // clear out everything
   memset( entry, 0, sizeof( *entry ) );
+  // duplicate data
+  void* dup_data = malloc( size );
+  if ( ! dup_data ) {
+    // some debug output
+    #if defined( DWHCI_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Unable to duplicate data\r\n" )
+    #endif
+    // free entry
+    free( entry );
+    // return memory error
+    return HCD_RESPONSE_ERROR_MEMORY;
+  }
+  // clear out dup data and copy over co
+  memset( dup_data, 0, size );
+  memcpy( dup_data, data, size );
   // prepare entry
-  entry->data = data;
+  entry->data = dup_data;
   entry->data_size = size;
   entry->status = status;
   entry->error = LIBUSB_TRANSFER_ERROR_NO_ERROR;
@@ -481,6 +496,7 @@ response_t dwhci_queue_add_entry( void* data, const size_t size, const dwhci_que
     #endif
     // free entry again
     free( entry );
+    free( dup_data );
     // return memory error
     return HCD_RESPONSE_ERROR_MEMORY;
   }
@@ -531,6 +547,10 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
   }
   if ( entry->message ) {
     free( entry->message );
+  }
+  // handle data
+  if ( entry->data ) {
+    free( entry->data );
   }
   // handle first element
   if ( entry == configuration.list ) {
@@ -1157,6 +1177,17 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
       EARLY_STARTUP_PRINT( "Warning non zero status transfer: %"PRIu32"\r\n", entry->transferred )
     #endif
   }
+  auto const message = ( hcd_submit_control_message_t* )entry->message;
+  auto const entry_data = ( hcd_control_message_t* )entry->data;
+  // attach shared memory
+  void* shm = _syscall_memory_shared_attach( message->shm_id, 0 );
+  if ( errno ) {
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to attach shared memory again\r\n" )
+    #endif
+    // return error
+    return HCD_RESPONSE_ERROR_IO;
+  }
   // stop transmission
   const response_t result = dwhci_channel_send_async_stop_channel( entry, true );
   if ( HCD_RESPONSE_OK != result ) {
@@ -1169,7 +1200,10 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
   if ( entry->error ) {
     entry->error |= LIBUSB_TRANSFER_ERROR_PROCESSING;
   }
-  ( ( hcd_control_message_t* )entry->data )->error = entry->error;
+  // populate error
+  entry_data->error = entry->error;
+  // copy over to shared memory
+  memcpy( shm, entry->data, entry->data_size );
   // allocate response structure
   constexpr size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( hcd_submit_control_message_t );
   vfs_ioctl_perform_response_t* response = malloc( response_size );
@@ -1184,11 +1218,11 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
   // clear out memory
   memset( response, 0, response_size );
   // detach shared memory
-  _syscall_memory_shared_detach( ( ( hcd_submit_control_message_t* )entry->message )->shm_id );
+  _syscall_memory_shared_detach( message->shm_id );
   // populate response
   memcpy( response->container, entry->message, sizeof( hcd_submit_control_message_t ) );
   // return from rpc
-  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, NULL, entry->response_info );
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, entry->response_info );
   // free entry
   free( response );
   // destroy queue entry
@@ -1421,12 +1455,17 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   if ( entry->error ) {
     entry->error |= LIBUSB_TRANSFER_ERROR_PROCESSING;
   }
-  ( ( usb_interrupt_poll_t* )entry->data )->error = entry->error;
+  usb_interrupt_poll_t* entry_data = entry->data;
+  entry_data->error = entry->error;
   // only send on not nack
   if ( ! ( entry->error & LIBUSB_TRANSFER_ERROR_NO_ACKNOWLEDGE ) ) {
-    EARLY_STARTUP_PRINT( "DATA\r\n" )
+    // debug output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "DATA\r\n" )
+    #endif
     // allocate response structure
-    constexpr size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( hcd_submit_interrupt_poll_t );
+    const size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( usbd_interrupt_return_t )
+      + sizeof( char ) * entry_data->last_transfer;
     vfs_ioctl_perform_response_t* response = malloc( response_size );
     if ( ! response ) {
       // debug output
@@ -1439,8 +1478,11 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
     // clear out memory
     memset( response, 0, response_size );
     // populate container
-    ( ( hcd_submit_interrupt_poll_t* ) response->container )->shm_id =
-      ( ( hcd_submit_interrupt_poll_t* )entry->message )->shm_id;
+    auto const container = ( usbd_interrupt_return_t* )response->container;
+    container->device_number = entry_data->device_number;
+    container->length = sizeof( char ) * entry_data->last_transfer;
+    container->error = entry->error;
+    memcpy( container->buffer, entry->buffer, entry_data->last_transfer );
     // raise async with fire and forget
     bolthur_rpc_raise_generic(
       GENERIC_POLL_INTERRUPT,
@@ -1463,8 +1505,8 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   // reset entry partly
   entry->prepared = true;
   entry->buffer_offset = 0;
-  entry->buffer_size_to_transfer = ( ( usb_interrupt_poll_t* )entry->data )->buffer_length;
-  memset( entry->buffer, 0, ( ( usb_interrupt_poll_t* )entry->data )->buffer_length );
+  entry->buffer_size_to_transfer = entry_data->buffer_length;
+  memset( entry->buffer, 0, entry_data->buffer_length );
   entry->error = 0;
   // next step is poll data
   entry->status = DWHCI_QUEUE_POLL_STATUS_DATA;
@@ -1473,7 +1515,7 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
 }
 
 /**
- * @fn response_t dwhci_channel_poll_async(usb_interrupt_poll_t*, size_t, hcd_submit_interrupt_poll_t*, size_t);
+ * @fn response_t dwhci_channel_poll_async(usb_interrupt_poll_t*, size_t, usbd_interrupt_message_t*, size_t);
  * @brief Wrapper to perform async channel polling
  * @param data data to be used for polling
  * @param data_size data size
@@ -1484,7 +1526,7 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
 response_t dwhci_channel_poll_async(
   usb_interrupt_poll_t* data,
   const size_t data_size,
-  const hcd_submit_interrupt_poll_t* message,
+  const usbd_interrupt_message_t* message,
   const pid_t origin
 ) {
   // debug output
@@ -1503,7 +1545,7 @@ response_t dwhci_channel_poll_async(
     return result;
   }
   // duplicate message
-  hcd_submit_interrupt_poll_t* dup_message = malloc( sizeof( *dup_message ) );
+  usbd_interrupt_message_t* dup_message = malloc( sizeof( *dup_message ) );
   if ( ! dup_message ) {
     // clear entry again
     dwhci_queue_remove_entry( entry );

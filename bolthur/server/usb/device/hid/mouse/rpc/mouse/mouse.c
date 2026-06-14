@@ -45,13 +45,11 @@ void rpc_mouse_mouse(
 ) {
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
   // handle no data
   if ( ! data_info ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
@@ -59,28 +57,15 @@ void rpc_mouse_mouse(
   size_t data_size;
   vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! response ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
   // get message
-  const usbd_interrupt_message_t* control_message = ( usbd_interrupt_message_t* )response->container;
-  // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( control_message->shm_id, 0 );
-  // handle error
-  if ( errno ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
-    free( response );
-    _syscall_rpc_cleanup();
-    return;
-  }
-  // transform shared memory into message
-  const usb_interrupt_poll_t* message = ( usb_interrupt_poll_t* )shm_addr;
+  auto message = ( usbd_interrupt_return_t* )response->container;
   // try to get device by number
   libusb_mouse_device_t* dev = mouse_get_device( message->device_number );
   // handle no device found
   if ( ! dev ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     free( response );
     _syscall_rpc_cleanup();
     return;
@@ -99,8 +84,7 @@ void rpc_mouse_mouse(
     return;
   }
   // handle not enough transferred
-  if ( message->last_transfer != MOUSE_REPORT_SIZE ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
+  if ( message->length != MOUSE_REPORT_SIZE ) {
     free( response );
     _syscall_rpc_cleanup();
     return;

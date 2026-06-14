@@ -53,29 +53,15 @@ int usbd_interrupt_poll(
   poll->parent_device_number = dev->parent ? dev->parent->number : 0;
   poll->port_number = dev->port_number;
   memcpy( &poll->pipe_address, &usb_pipe, sizeof( usb_pipe ) );
-  // allocate request
-  hcd_submit_interrupt_poll_t* interrupt_request = malloc( sizeof( *interrupt_request ) );
-  if ( ! interrupt_request ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "Unable to allocate request\r\n" )
-    #endif
-    // return error
-    return ENOMEM;
-  }
-  // clear out everything
-  memset( interrupt_request, 0, sizeof( *interrupt_request ) );
-  // populate shm_id
-  interrupt_request->shm_id = message->shm_id;
   // perform request
   const int result = ioctl_wrapper(
     fd_hcd,
     IOCTL_BUILD_REQUEST(
       HCD_POLL_INTERRUPT,
-      sizeof( *interrupt_request ),
+      sizeof( *message ),
       IOCTL_RDWR
     ),
-    interrupt_request,
+    message,
     callback,
     origin,
     data_info,
@@ -90,13 +76,9 @@ int usbd_interrupt_poll(
       const int e = errno;
       EARLY_STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
     #endif
-    // free request
-    free( interrupt_request );
     // return eio
     return EIO;
   }
-  // free interrupt request again
-  free( interrupt_request );
   // return success
   return 0;
 }

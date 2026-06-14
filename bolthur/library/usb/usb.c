@@ -840,10 +840,10 @@ int usb_get_interface(
   // handle ioctl error
   if ( -1 == result ) {
     // debug output
-    //#if defined( LIBUSB_ENABLE_ERROR )
+    #if defined( LIBUSB_ENABLE_ERROR )
       const int e = errno;
       STARTUP_PRINT( "e = %d, errno = %s\r\n", e, strerror( e ) );
-    //#endif
+    #endif
     // free request
     free( request );
     return EIO;
@@ -1043,6 +1043,8 @@ int usb_get_status( const uint32_t device_number, libusb_device_status_t* status
  * @param buffer_length
  * @param timeout
  * @return
+ *
+ * @todo detach shared memory on return
  */
 int usb_interrupt_poll_async(
   const uint32_t device_number,
@@ -1125,11 +1127,11 @@ int usb_interrupt_poll_async(
   );
   // handle ioctl error
   if ( -1 == result ) {
+    const int e = errno;
     // debug output
-    //#if defined( LIBUSB_ENABLE_ERROR )
-      const int e = errno;
+    #if defined( LIBUSB_ENABLE_ERROR )
       STARTUP_PRINT("e = %d, errno = %s\r\n", e, strerror( e ));
-    //#endif
+    #endif
     // detach shared memory
     _syscall_memory_shared_detach( shm_id );
     // free request
@@ -1139,6 +1141,8 @@ int usb_interrupt_poll_async(
   }
   // free control message
   free( control_request );
+  // detach shared memory again
+  _syscall_memory_shared_detach( shm_id );
   // return result
   return result;
 }

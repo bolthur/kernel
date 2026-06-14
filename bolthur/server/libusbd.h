@@ -206,6 +206,13 @@ typedef struct {
 
 typedef struct {
   uint32_t device_number;
+  libusb_transfer_error_t error;
+  size_t length;
+  char buffer[];
+} usbd_interrupt_return_t;
+
+typedef struct {
+  uint32_t device_number;
 } usbd_get_roothub_t;
 
 typedef struct {

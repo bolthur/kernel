@@ -60,7 +60,7 @@ void rpc_poll_interrupt(
     return;
   }
   // allocate space for pull_request
-  auto const poll_message = ( hcd_submit_interrupt_poll_t* )request->container;
+  auto const poll_message = ( usbd_interrupt_message_t* )request->container;
   // attach shared memory
   void* shm_addr = _syscall_memory_shared_attach( poll_message->shm_id, 0 );
   // handle error
@@ -88,6 +88,8 @@ void rpc_poll_interrupt(
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
+  // detach shared memory
+  _syscall_memory_shared_detach( poll_message->shm_id );
   // we're waiting for an interrupt starting here
   free( request );
   // return from rpc

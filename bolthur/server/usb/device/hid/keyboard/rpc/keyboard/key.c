@@ -87,13 +87,11 @@ void rpc_keyboard_key(
 ) {
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
   // handle no data
   if ( ! data_info ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
@@ -101,35 +99,21 @@ void rpc_keyboard_key(
   size_t data_size;
   vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
   if ( ! response ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
   // get message
-  const usbd_interrupt_message_t* control_message = ( usbd_interrupt_message_t* )response->container;
-  // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( control_message->shm_id, ( uintptr_t )NULL );
-  // handle error
-  if ( errno ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
-    free( response );
-    _syscall_rpc_cleanup();
-    return;
-  }
-  // transform shared memory into message
-  const usb_interrupt_poll_t* message = ( usb_interrupt_poll_t* )shm_addr;
+  auto const message = ( usbd_interrupt_return_t* )response->container;
   // try to get device by number
   libusb_keyboard_device_t* dev = keyboard_get_device( message->device_number );
   // handle no device found
   if ( ! dev ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     free( response );
     _syscall_rpc_cleanup();
     return;
   }
   // handle error
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     // handle stall by clearing stall bit
     if ( message->error & LIBUSB_TRANSFER_ERROR_STALL ) {
       /// FIXME: IMPLEMENT STALL RESET
@@ -142,8 +126,7 @@ void rpc_keyboard_key(
     return;
   }
   // handle not enough transferred
-  if ( message->last_transfer != KEYBOARD_REPORT_SIZE ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
+  if ( message->length != KEYBOARD_REPORT_SIZE ) {
     free( response );
     _syscall_rpc_cleanup();
     return;

@@ -33,10 +33,6 @@ typedef struct {
 } hcd_submit_control_message_t;
 
 typedef struct {
-  size_t shm_id;
-} hcd_submit_interrupt_poll_t;
-
-typedef struct {
   uint32_t device_number;
   uint32_t parent_device_number;
   uint32_t port_number;

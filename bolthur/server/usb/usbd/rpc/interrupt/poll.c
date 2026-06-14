@@ -76,6 +76,12 @@ static void rpc_interrupt_poll_finished(
     // skip rest
     return;
   }
+  // get original request
+  const vfs_ioctl_perform_request_t* original_request = async_data->original_data;
+  // get base interrupt message in container
+  auto const interrupt_message = ( usbd_interrupt_message_t* )original_request->container;
+  // detach shared memory
+  _syscall_memory_shared_detach( interrupt_message->shm_id );
   // actually return
   bolthur_rpc_return( RPC_VFS_IOCTL, poll_response, data_size, async_data, 0 );
   // free up structures

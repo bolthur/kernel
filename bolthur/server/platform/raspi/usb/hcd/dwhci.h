@@ -131,7 +131,7 @@ response_t dwhci_channel_send_async( hcd_control_message_t*, size_t, hcd_submit_
 response_t dwhci_channel_poll_async_data( channel_queue_entry_t* );
 response_t dwhci_channel_poll_async_ack( channel_queue_entry_t* );
 response_t dwhci_channel_poll_async_done( channel_queue_entry_t* );
-response_t dwhci_channel_poll_async( usb_interrupt_poll_t*, size_t, const hcd_submit_interrupt_poll_t*, pid_t );
+response_t dwhci_channel_poll_async( usb_interrupt_poll_t*, size_t, const usbd_interrupt_message_t*, pid_t );
 response_t dwhci_next_usb_pid( dwhci_channel_state_t, uint32_t, uint8_t* );
 response_t dwhci_read_port( uint32_t, uint32_t* );
 response_t dwhci_write_port( uint32_t, uint32_t );

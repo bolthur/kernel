@@ -35,16 +35,13 @@ void rpc_interrupt_generic(
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
   // handle no data
   if ( ! data_info ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
@@ -52,29 +49,15 @@ void rpc_interrupt_generic(
   size_t data_size;
   vfs_ioctl_perform_response_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! response ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     _syscall_rpc_cleanup();
     return;
   }
-  EARLY_STARTUP_PRINT( "interrupt generic\r\n" )
-  // allocate space for pull_request
-  auto const interrupt_message = ( usbd_interrupt_message_t* )response->container;
-  // attach shared memory
-  void* shm_addr = _syscall_memory_shared_attach( interrupt_message->shm_id, 0 );
-  // handle error
-  if ( errno ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
-    free( response );
-    _syscall_rpc_cleanup();
-    return;
-  }
-  // transform shared memory into message
-  auto const message = ( usb_interrupt_poll_t* )shm_addr;
+  // get message
+  auto const message = ( usbd_interrupt_return_t* )response->container;
   // find device
   libusb_device_t* device;
   const int result = usbd_device_get_by_number( message->device_number, &device );
   if ( 0 != result ) {
-  EARLY_STARTUP_PRINT( "GENERIC\r\n" )
     free( response );
     _syscall_rpc_cleanup();
     return;
