@@ -502,6 +502,22 @@ response_t dwhci_queue_add_entry( void* data, const size_t size, const dwhci_que
   }
   // clear out buffer
   memset( entry->buffer, 0, size );
+  // queue entry
+  dwhci_queue_queue_entry( entry );
+  // handle push to out
+  if ( out ) {
+    *out = entry;
+  }
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn void dwhci_queue_queue_entry(channel_queue_entry_t*)
+ * @brief Push entry into queue
+ * @param entry
+ */
+void dwhci_queue_queue_entry( channel_queue_entry_t* entry ) {
   // insert into queue
   if ( ! configuration.list ) {
     // list is empty, so just set list
@@ -517,21 +533,16 @@ response_t dwhci_queue_add_entry( void* data, const size_t size, const dwhci_que
     current->next = entry;
     entry->prev = current;
   }
-  // handle push to out
-  if ( out ) {
-    *out = entry;
-  }
-  // return success
-  return HCD_RESPONSE_OK;
 }
 
 /**
- * @fn response_t dwhci_queue_remove_entry(channel_queue_entry_t*)
+ * @fn response_t dwhci_queue_remove_entry(channel_queue_entry_t*, bool)
  * @brief Remove given entry from queue
  * @param entry entry to remove
+ * @param free_up free up space
  * @return
  */
-response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
+response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry, const bool free_up ) {
   // validate data
   if ( ! entry ) {
     // debug output
@@ -541,16 +552,19 @@ response_t dwhci_queue_remove_entry( channel_queue_entry_t* entry ) {
     // return einval
     return HCD_RESPONSE_ERROR_EINVAL;
   }
-  // handle buffer
-  if ( entry->buffer ) {
-    munmap( entry->buffer, entry->data_size );
-  }
-  if ( entry->message ) {
-    free( entry->message );
-  }
-  // handle data
-  if ( entry->data ) {
-    free( entry->data );
+  // handle free of memo
+  if ( free_up ) {
+    // handle buffer
+    if ( entry->buffer ) {
+      munmap( entry->buffer, entry->data_size );
+    }
+    if ( entry->message ) {
+      free( entry->message );
+    }
+    // handle data
+    if ( entry->data ) {
+      free( entry->data );
+    }
   }
   // handle first element
   if ( entry == configuration.list ) {
@@ -1155,12 +1169,14 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
     return HCD_RESPONSE_ERROR_IO;
   }
   // stop transmission
-  const response_t result = dwhci_channel_send_async_stop_channel( entry, true );
+  response_t result = dwhci_channel_send_async_stop_channel( entry, true );
   if ( HCD_RESPONSE_OK != result ) {
     // debug output
     #if defined( DWHCI_ERROR_OUTPUT )
       EARLY_STARTUP_PRINT( "Unable to stop channel\r\n")
     #endif
+    // return result
+    return result;
   }
   // finally set no error
   if ( entry->error ) {
@@ -1192,17 +1208,58 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
   // free entry
   free( response );
   // destroy queue entry
-  return dwhci_queue_remove_entry( entry );
-}
-
-/**
- * @fn response_t dwhci_channel_send_async_continue_pending(channel_queue_entry_t*)
- * @brief Method to start entry transfer with state pending
- * @param entry
- * @return
- */
-response_t dwhci_channel_send_async_continue_pending( [[maybe_unused]] channel_queue_entry_t* entry ) {
-  /// FIXME: TAKE NEXT PENDING ENTRY FROM LIST
+  result = dwhci_queue_remove_entry( entry, true );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to remove entry\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // get next entry
+  channel_queue_entry_t* out;
+  result = dwhci_get_next_channel_poll_entry( &out );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to get next entry\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // handle out
+  if ( out ) {
+    // try to allocate a channel
+    uint8_t channel = 0;
+    result = dwhci_allocate_channel( &channel );
+    if ( HCD_RESPONSE_OK != result ) {
+      // debug output
+      #if defined( DWHCI_ERROR_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to allocate a channel, entry is queued\r\n" )
+      #endif
+      // return error
+      return result;
+    }
+    // prepare out
+    out->channel = channel;
+    out->status = DWHCI_QUEUE_CHANNEL_STATUS_SETUP;
+    // enable channel interrupt
+    result = dwhci_enable_channel_interrupt( channel );
+    // handle error
+    if ( HCD_RESPONSE_OK != result ) {
+      #if defined( DWHCI_ERROR_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
+      #endif
+      // free channel again
+      dwhci_free_channel( channel );
+      // return result
+      return result;
+    }
+    // continue with new entry stored in out
+    return dwhci_channel_send_async_continue( out );
+  }
+  // return success
   return HCD_RESPONSE_OK;
 }
 
@@ -1226,16 +1283,12 @@ response_t dwhci_channel_send_async_continue( channel_queue_entry_t* entry ) {
       return dwhci_channel_send_async_ack( entry );
     case DWHCI_QUEUE_CHANNEL_STATUS_DONE:
       return dwhci_channel_send_async_done( entry );
-    case DWHCI_QUEUE_CHANNEL_STATUS_PENDING:
-      return dwhci_channel_send_async_continue_pending( entry );
     case DWHCI_QUEUE_POLL_STATUS_DATA:
       return dwhci_channel_poll_async_data( entry );
     case DWHCI_QUEUE_POLL_STATUS_ACK:
       return dwhci_channel_poll_async_ack( entry );
     case DWHCI_QUEUE_POLL_STATUS_DONE:
       return dwhci_channel_poll_async_done( entry );
-    case DWHCI_QUEUE_POLL_STATUS_PENDING:
-      return dwhci_channel_send_async_continue_pending( entry );
     default:
       return HCD_RESPONSE_ERROR_UNKNOWN;
   }
@@ -1270,7 +1323,7 @@ response_t dwhci_channel_send_async( usb_control_message_t* data, size_t data_si
   usbd_control_message_t* dup_message = malloc( sizeof( *dup_message ) );
   if ( ! dup_message ) {
     // clear entry again
-    dwhci_queue_remove_entry( entry );
+    dwhci_queue_remove_entry( entry, true );
     // return no memory
     return HCD_RESPONSE_ERROR_MEMORY;
   }
@@ -1302,7 +1355,7 @@ response_t dwhci_channel_send_async( usb_control_message_t* data, size_t data_si
     // free channel again
     dwhci_free_channel( channel );
     // remove from queue again
-    dwhci_queue_remove_entry( entry );
+    dwhci_queue_remove_entry( entry, true );
     // return result
     return result;
   }
@@ -1476,6 +1529,39 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   entry->error = 0;
   // next step is poll data
   entry->status = DWHCI_QUEUE_POLL_STATUS_DATA;
+  // get next entry
+  channel_queue_entry_t* out;
+  response_t result = dwhci_get_next_channel_poll_entry( &out );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to get next entry\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // handle out
+  if ( out ) {
+    // push current to pending
+    entry->status = DWHCI_QUEUE_POLL_STATUS_PENDING;
+    // remove entry from queue
+    result = dwhci_queue_remove_entry( entry, false );
+    if ( HCD_RESPONSE_OK != result ) {
+      // debug output
+      #if defined( DWHCI_ERROR_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to remove entry from list\r\n" )
+      #endif
+      // return result
+      return result;
+    }
+    // queue again at the end
+    dwhci_queue_queue_entry( entry );
+    // set status of out and channel
+    out->status = DWHCI_QUEUE_POLL_STATUS_DATA;
+    out->channel = entry->channel;
+    // continue with it
+    return dwhci_channel_send_async_continue( out );
+  }
   // return with async continue again
   return dwhci_channel_send_async_continue( entry );
 }
@@ -1569,7 +1655,7 @@ response_t dwhci_channel_poll_async(
   usbd_interrupt_message_t* dup_message = malloc( sizeof( *dup_message ) );
   if ( ! dup_message ) {
     // clear entry again
-    dwhci_queue_remove_entry( entry );
+    dwhci_queue_remove_entry( entry, true );
     // return no memory
     return HCD_RESPONSE_ERROR_MEMORY;
   }
@@ -1602,12 +1688,51 @@ response_t dwhci_channel_poll_async(
     // free channel again
     dwhci_free_channel( channel );
     // remove from queue again
-    dwhci_queue_remove_entry( entry );
+    dwhci_queue_remove_entry( entry, true );
     // return result
     return result;
   }
   // continue async
   return dwhci_channel_send_async_continue( entry );
+}
+
+/**
+ * @fn response_t dwhci_get_next_channel_poll_entry(channel_queue_entry_t**)
+ * @brief Function to get next entry to execute
+ * @param out out pointer
+ * @return
+ */
+response_t dwhci_get_next_channel_poll_entry( channel_queue_entry_t** out ) {
+  // validate parameter
+  if ( ! out ) {
+    return HCD_RESPONSE_ERROR_EINVAL;
+  }
+  // try to get next queued setup entry
+  auto current = configuration.list;
+  // loop through list
+  while ( current ) {
+    // handle pending setup
+    if ( DWHCI_QUEUE_CHANNEL_STATUS_PENDING == current->status ) {
+      *out = current;
+      return HCD_RESPONSE_OK;
+    }
+    // go to next
+    current = current->next;
+  }
+  // reset current
+  current = configuration.list;
+  // loop through list
+  while ( current ) {
+    if ( DWHCI_QUEUE_POLL_STATUS_PENDING == current->status ) {
+      *out = current;
+      return HCD_RESPONSE_OK;
+    }
+    // go to next
+    current = current->next;
+  }
+  // nothing to continue with
+  *out = nullptr;
+  return HCD_RESPONSE_OK;
 }
 
 /**
