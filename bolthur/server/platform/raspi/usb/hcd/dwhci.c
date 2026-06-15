@@ -1499,6 +1499,61 @@ response_t dwhci_channel_poll_async(
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT("Channel send async\r\n")
   #endif
+  // check if already in
+  auto current = configuration.list;
+  while ( current ) {
+    // get entry data
+    const usb_interrupt_poll_t* entry_data = current->data;
+    // handle already in
+    if (
+      entry_data->device_number == data->device_number
+      && entry_data->parent_device_number == data->parent_device_number
+      && entry_data->direction == data->direction
+      && entry_data->pipe_address.end_point == data->pipe_address.end_point
+    ) {
+      // allocate response structure
+      constexpr size_t response_size = sizeof( vfs_ioctl_perform_response_t )
+        + sizeof( usbd_interrupt_return_t );
+      // allocate space for return
+      vfs_ioctl_perform_response_t* response = malloc( response_size );
+      if ( ! response ) {
+        // debug output
+        #if defined( DWHCI_ERROR_OUTPUT )
+          EARLY_STARTUP_PRINT( "Unable to allocate memory for response\r\n" )
+        #endif
+        // return error
+        return HCD_RESPONSE_ERROR_MEMORY;
+      }
+      // clear out memory
+      memset( response, 0, response_size );
+      // populate container
+      auto const container = ( usbd_interrupt_return_t* )response->container;
+      container->device_number = entry_data->device_number;
+      container->length = 0;
+      container->error = data->error;
+      response->status = -EALREADY;
+      // raise async with fire and forget
+      bolthur_rpc_raise_generic(
+        GENERIC_POLL_INTERRUPT,
+        origin,
+        response,
+        response_size,
+        nullptr,
+        GENERIC_POLL_INTERRUPT,
+        response,
+        response_size,
+        0,
+        0,
+        nullptr,
+        true,
+        true
+      );
+      // return success
+      return HCD_RESPONSE_OK;
+    }
+    // switch to next
+    current = current->next;
+  }
   // push data with channel to queue
   channel_queue_entry_t* entry = nullptr;
   response_t result = dwhci_queue_add_entry( data, data_size, DWHCI_QUEUE_POLL_STATUS_PENDING, &entry );
