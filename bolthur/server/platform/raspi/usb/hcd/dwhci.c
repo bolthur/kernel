@@ -1410,7 +1410,7 @@ response_t dwhci_channel_poll_async_data( channel_queue_entry_t* entry ) {
     entry_data->port_number,
     entry->channel,
     entry_data->buffer_length - entry->buffer_offset,
-    DWHCI_CHANNEL_STATE_DATA0,
+    entry->poll_state,
     &data_pipe,
     entry_data->interval,
     entry->prepared
@@ -1549,6 +1549,8 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   if ( out ) {
     // push current to pending
     entry->status = DWHCI_QUEUE_POLL_STATUS_PENDING;
+    // reset prepared entry
+    entry->prepared = false;
     // remove entry from queue
     result = dwhci_queue_remove_entry( entry, false );
     if ( HCD_RESPONSE_OK != result ) {
@@ -1665,10 +1667,11 @@ response_t dwhci_channel_poll_async(
     return HCD_RESPONSE_ERROR_MEMORY;
   }
   memcpy( dup_message, message, sizeof( *dup_message ) );
-  // populate response info
+  // populate entry
   entry->origin = origin;
   entry->message = dup_message;
   entry->interval = data->interval;
+  entry->poll_state = DWHCI_CHANNEL_STATE_DATA0;
   // try to allocate a channel
   uint8_t channel = 0;
   result = dwhci_allocate_channel( &channel );

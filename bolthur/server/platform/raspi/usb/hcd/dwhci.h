@@ -83,6 +83,8 @@ typedef struct channel_queue_entry {
   void* message;
   /** error */
   libusb_transfer_error_t error;
+  /** poll channel state */
+  dwhci_channel_state_t poll_state;
   /** pointer to next entry */
   struct channel_queue_entry* next;
   /** pointer to previous entry */

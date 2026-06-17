@@ -146,6 +146,11 @@ void rpc_interrupt_handle(
           #if defined( DWHCI_ENABLE_DEBUG )
             EARLY_STARTUP_PRINT( "Transfer complete for channel %"PRIu32"\r\n", channel )
           #endif
+          // toggle poll state
+          if ( DWHCI_QUEUE_POLL_STATUS_DATA == entry->status ) {
+            entry->poll_state = DWHCI_CHANNEL_STATE_DATA0 == entry->poll_state
+              ? DWHCI_CHANNEL_STATE_DATA1 : DWHCI_CHANNEL_STATE_DATA0;
+          }
         }
         if ( cipt & HCD_CHANNEL_INTERRUPT_HALT ) {
           #if defined( DWHCI_ENABLE_DEBUG )
