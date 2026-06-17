@@ -1295,7 +1295,7 @@ response_t dwhci_channel_send_async_continue( channel_queue_entry_t* entry ) {
 }
 
 /**
- * @fn response_t dwhci_channel_send_async(usb_control_message_t*, size_t, usbd_control_message_t*, size_t);
+ * @fn response_t dwhci_channel_send_async(usb_control_message_t*, size_t, const usbd_control_message_t*, size_t);
  * @brief Wrapper to perform async channel send
  * @param data data to send
  * @param data_size data size
@@ -1303,7 +1303,12 @@ response_t dwhci_channel_send_async_continue( channel_queue_entry_t* entry ) {
  * @param response_info where to respond result to
  * @return
  */
-response_t dwhci_channel_send_async( usb_control_message_t* data, size_t data_size, usbd_control_message_t* message, const size_t response_info ) {
+response_t dwhci_channel_send_async(
+  usb_control_message_t* data,
+  const size_t data_size,
+  const usbd_control_message_t* message,
+  const size_t response_info
+) {
   // debug output
   #if defined( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT("Channel send async\r\n")

@@ -612,7 +612,8 @@ void interrupt_handle( size_t num, const interrupt_type_t type, void* context, c
       false,
       0,
       true,
-      true
+      true,
+      false
     );
     // handle error by skip
     if ( ! rpc ) {

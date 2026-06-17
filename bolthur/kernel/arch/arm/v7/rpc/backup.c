@@ -29,9 +29,8 @@
 #endif
 
 /**
- * @fn rpc_backup_t* rpc_backup_create(task_thread_t*, const task_process_t*, size_t, const void*, size_t, task_thread_t*, bool, size_t, bool, bool)
+ * @fn rpc_backup_t* rpc_backup_create(task_thread_t*, const task_process_t*, size_t, const void*, size_t, task_thread_t*, bool, size_t, bool, bool, bool)
  * @brief Helper to create rpc backup
- *
  * @param source
  * @param target
  * @param type
@@ -42,6 +41,7 @@
  * @param origin_data_id
  * @param disable_data
  * @param is_interrupt
+ * @param is_timer
  * @return
  */
 rpc_backup_t* rpc_backup_create(
@@ -54,7 +54,8 @@ rpc_backup_t* rpc_backup_create(
   const bool sync,
   const size_t origin_data_id,
   const bool disable_data,
-  const bool is_interrupt
+  const bool is_interrupt,
+  const bool is_timer
 ) {
   // get first inactive thread
   #if defined( PRINT_RPC )
@@ -255,6 +256,7 @@ rpc_backup_t* rpc_backup_create(
   backup->sync_return_blocked_data_id = 0;
   backup->sync_return_on_end = false;
   backup->is_interrupt = is_interrupt;
+  backup->is_timer = is_timer;
   backup->state_to_use = TASK_THREAD_STATE_RPC_QUEUED;
   // return created backup
   return backup;

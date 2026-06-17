@@ -288,9 +288,8 @@ void rpc_generic_destroy_mailbox( task_process_t* proc ) {
 }
 
 /**
- * @fn rpc_backup_t* rpc_generic_raise(task_thread_t*, task_process_t*, const size_t, void*, size_t, task_thread_t*, const bool, const size_t, const bool, const bool)
+ * @fn rpc_backup_t* rpc_generic_raise(task_thread_t*, task_process_t*, const size_t, void*, size_t, task_thread_t*, const bool, const size_t, const bool, const bool, const bool)
  * @brief Raise a rpc in target from source
- *
  * @param source
  * @param target
  * @param type
@@ -301,6 +300,7 @@ void rpc_generic_destroy_mailbox( task_process_t* proc ) {
  * @param origin_data_id
  * @param disable_data
  * @param is_interrupt
+ * @param is_timer
  * @return
  */
 rpc_backup_t* rpc_generic_raise(
@@ -313,7 +313,8 @@ rpc_backup_t* rpc_generic_raise(
   const bool sync,
   const size_t origin_data_id,
   const bool disable_data,
-  const bool is_interrupt
+  const bool is_interrupt,
+  const bool is_timer
 ) {
   // debug output
   #if defined( PRINT_RPC )
@@ -333,7 +334,8 @@ rpc_backup_t* rpc_generic_raise(
     sync,
     origin_data_id,
     disable_data,
-    is_interrupt
+    is_interrupt,
+    is_timer
   );
   if ( ! backup ) {
     // debug output

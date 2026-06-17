@@ -242,7 +242,7 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
   [[maybe_unused]] bool deactivate_current_active_rpc = false;
   if ( TASK_THREAD_STATE_RPC_WAIT_FOR_RETURN == backup->thread->state ) {
     const rpc_origin_source_t* rpc_backup = nullptr;
-    if ( backup->origin_data_id ) {
+    if ( backup->origin_data_id && ! backup->is_timer ) {
       rpc_backup = rpc_generic_source_info( backup->origin_data_id );
       while ( rpc_backup && rpc_backup->origin_rpc_id ) {
         rpc_backup = rpc_generic_source_info( rpc_backup->origin_rpc_id );
@@ -252,6 +252,7 @@ bool rpc_generic_prepare_invoke( rpc_backup_t* backup ) {
     // fired directly asynchronous ) or when pid is not backup source process (
     // nested are only allowed within themselves )
     wait_for_return_block = backup->is_interrupt
+      || backup->is_timer
       || ! rpc_backup
       || backup->thread->process->id != rpc_backup->source_process;
     // when an interrupt is running, block it

@@ -229,9 +229,10 @@ void timer_handle_callback( void ) {
         0,
         entry->thread,
         false,
-        0, // pass 0 as origin data id to prevent possibly matching origin
+        entry->id,
         true,
-        false
+        false,
+        true
       );
       // handle error by skip
       if ( ! rpc ) {
