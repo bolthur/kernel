@@ -21,7 +21,6 @@
 #include <inttypes.h>
 #include <errno.h>
 #include <sys/ioctl.h>
-
 #include "../../global.h"
 #include "../../keymap.h"
 #include "../../rpc.h"
@@ -116,7 +115,34 @@ void rpc_keyboard_key(
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // handle stall by clearing stall bit
     if ( message->error & LIBUSB_TRANSFER_ERROR_STALL ) {
-      /// FIXME: IMPLEMENT STALL RESET
+      libusb_transfer_error_t error;
+      uint32_t last_transfer;
+      const int result = usb_control_message(
+        message->device_number,
+        LIBUSB_TRANSFER_CONTROL,
+        LIBUSB_DIRECTION_OUT,
+        nullptr,
+        0,
+        &( libusb_device_request_t ){
+          .request = LIBUSB_DEVICE_REQUEST_CLEAR_FEATURE,
+          .type = 0x02,
+          .index = dev->descriptor.endpoint_address.number,
+          .value = 0,
+          .length = 0,
+        },
+        USB_TIMEOUT_VALUE,
+        &error,
+        &last_transfer
+      );
+      // handle error
+      if ( 0 != result ) {
+        EARLY_STARTUP_PRINT( "Unable to clear feature\r\n" )
+        free( response );
+        _syscall_rpc_cleanup();
+        return;
+      }
+      // restart polling
+      keyboard_start_polling( dev );
     } else {
       EARLY_STARTUP_PRINT( "ERROR: %x\r\n", message->error );
     }

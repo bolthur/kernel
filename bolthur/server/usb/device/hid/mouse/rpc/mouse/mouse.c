@@ -23,6 +23,7 @@
 #include "../../rpc.h"
 #include "../../mouse.h"
 #include "../../../../../../libusbd.h"
+#include "../../../../../../../library/usb/usb.h"
 
 /**
  * @fn void rpc_keyboard_key(size_t, pid_t, size_t, size_t)
@@ -58,7 +59,7 @@ void rpc_mouse_mouse(
     return;
   }
   // get message
-  auto message = ( usbd_interrupt_return_t* )response->container;
+  auto const message = ( usbd_interrupt_return_t* )response->container;
   // try to get device by number
   libusb_mouse_device_t* dev = mouse_get_device( message->device_number );
   // handle no device found
@@ -71,7 +72,34 @@ void rpc_mouse_mouse(
   if ( message->error & LIBUSB_TRANSFER_ERROR_PROCESSING ) {
     // handle stall by clearing stall bit
     if ( message->error & LIBUSB_TRANSFER_ERROR_STALL ) {
-      /// FIXME: IMPLEMENT STALL RESET
+      libusb_transfer_error_t error;
+      uint32_t last_transfer;
+      const int result = usb_control_message(
+        message->device_number,
+        LIBUSB_TRANSFER_CONTROL,
+        LIBUSB_DIRECTION_OUT,
+        nullptr,
+        0,
+        &( libusb_device_request_t ){
+          .request = LIBUSB_DEVICE_REQUEST_CLEAR_FEATURE,
+          .type = 0x02,
+          .index = dev->descriptor.endpoint_address.number,
+          .value = 0,
+          .length = 0,
+        },
+        USB_TIMEOUT_VALUE,
+        &error,
+        &last_transfer
+      );
+      // handle error
+      if ( 0 != result ) {
+        EARLY_STARTUP_PRINT( "Unable to clear feature\r\n" )
+        free( response );
+        _syscall_rpc_cleanup();
+        return;
+      }
+      // restart polling
+      mouse_start_polling( dev );
     } else {
       EARLY_STARTUP_PRINT( "ERROR: %x\r\n", message->error );
     }

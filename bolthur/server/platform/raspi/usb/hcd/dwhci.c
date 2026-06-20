@@ -1635,6 +1635,10 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   entry->error = 0;
   // next step is poll data
   entry->status = DWHCI_QUEUE_POLL_STATUS_DATA;
+  // handle stall by cancelling
+  if ( entry->error & LIBUSB_TRANSFER_ERROR_STALL ) {
+    entry->status = DWHCI_QUEUE_CANCEL;
+  }
   // continue with next
   return dwhci_continue_next( entry );
 }
