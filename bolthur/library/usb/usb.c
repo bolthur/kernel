@@ -1206,3 +1206,52 @@ int usb_get_enumerating( bool* out ) {
   // return result
   return result;
 }
+
+/**
+ * @fn libusb_packet_size_t usb_packet_size_from_number(uint32_t)
+ * @brief Get packet size from number
+ * @param size
+ * @return
+ */
+libusb_packet_size_t usb_packet_size_from_number( const uint32_t size ) {
+  if (size <= 8) {
+    return LIBUSB_PACKET_SIZE_BITS_8;
+  }
+  if (size <= 16) {
+    return LIBUSB_PACKET_SIZE_BITS_16;
+  }
+  if (size <= 32) {
+    return LIBUSB_PACKET_SIZE_BITS_32;
+  }
+  return LIBUSB_PACKET_SIZE_BITS_64;
+}
+
+/**
+ * @fn uint32_t usb_number_from_packet_size(libusb_packet_size_t
+ * @brief Transform size to number
+ * @param size
+ * @return
+ */
+uint32_t usb_number_from_packet_size( const libusb_packet_size_t size ) {
+  switch ( size ) {
+    case LIBUSB_PACKET_SIZE_BITS_8: return 8;
+    case LIBUSB_PACKET_SIZE_BITS_16: return 16;
+    case LIBUSB_PACKET_SIZE_BITS_32: return 32;
+    default: return 64;
+  }
+}
+
+/**
+ * @fn char* usb_speed_to_string(libusb_speed_t)
+ * @brief Small function to turn speed into string for printing purposes
+ * @param speed speed to translate
+ * @return translated speed
+ */
+char* usb_speed_to_string( const libusb_speed_t speed ) {
+  switch ( speed ) {
+    case LIBUSB_SPEED_HIGH: return "480 Mb/s";
+    case LIBUSB_SPEED_LOW: return "1.5 Mb/s";
+    case LIBUSB_SPEED_FULL: return "12 Mb/s";
+    default: return "Unknown Mb/s";
+  }
+}

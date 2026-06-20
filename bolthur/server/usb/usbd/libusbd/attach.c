@@ -18,11 +18,10 @@
 */
 
 #include <assert.h>
-#include <stdnoreturn.h>
 #include <sys/errno.h>
-
 #include "../call.h"
 #include "../libusbd.h"
+#include "../../../../library/usb/usb.h"
 
 /**
  * @fn void attach_attach_finished(size_t, pid_t, size_t, size_t)

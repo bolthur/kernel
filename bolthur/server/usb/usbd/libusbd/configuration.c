@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <errno.h>
 #include "../libusbd.h"
-#include "../../../libhcd.h"
+#include "../../../../library/usb/usb.h"
 
 /**
  * @fn void set_configuration_finished(size_t, pid_t, size_t, size_t)

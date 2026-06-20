@@ -38,6 +38,7 @@
 #include "../../../../../library/platform/raspi/iomem/libmailbox.h"
 #include "../../../../../library/platform/raspi/iomem/sequence.h"
 #include "../../../../../library/platform/raspi/iomem/mailbox.h"
+#include "../../../../../library/usb/usb.h"
 
 /**
  * @brief file descriptor for iomem operations

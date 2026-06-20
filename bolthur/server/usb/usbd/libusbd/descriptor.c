@@ -20,7 +20,7 @@
 #include <assert.h>
 #include <errno.h>
 #include "../libusbd.h"
-#include "../../../libhcd.h"
+#include "../../../../library/usb/usb.h"
 
 /**
  * @fn int usbd_descriptor_get_async(const libusb_device_t*, libusb_descriptor_type_t, uint8_t, uint16_t, const void*, size_t, uint8_t, rpc_handler_t, pid_t, size_t, void*, size_t, void*, size_t)

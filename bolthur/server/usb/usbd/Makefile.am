@@ -4,10 +4,12 @@ AM_CFLAGS = -DPROGRAM_NAME=\"usb/usbd\"
 bin_PROGRAMS = usbd
 usbd_DEPENDENCIES = \
   ${abs_top_builddir}/../library/util/libutil.la \
-  ${abs_top_builddir}/../library/vfs/libvfs.la
+  ${abs_top_builddir}/../library/vfs/libvfs.la \
+  ${abs_top_builddir}/../library/usb/libusb.la
 usbd_LDADD = \
   ${abs_top_builddir}/../library/util/libutil.la \
-  ${abs_top_builddir}/../library/vfs/libvfs.la
+  ${abs_top_builddir}/../library/vfs/libvfs.la \
+  ${abs_top_builddir}/../library/usb/libusb.la
 usbd_SOURCES = \
   call/attach.c \
   call/check_for_change.c \

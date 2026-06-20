@@ -18,9 +18,9 @@
 */
 
 #include <errno.h>
+#include <assert.h>
 #include "../libusbd.h"
-#include "../../../libhcd.h"
-#include "../../../../kernel/lib/assert.h"
+#include "../../../../library/usb/usb.h"
 
 /**
  * @fn void attach_set_address_finished(size_t, pid_t, size_t, size_t)

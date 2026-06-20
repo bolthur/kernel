@@ -24,8 +24,6 @@
 #include <sys/types.h>
 
 // internal usb declarations
-
-#define MAX_CHILDREN_PER_DEVICE 10
 #define MAX_INTERFACES_PER_DEVICE 8
 #define MAX_ENDPOINTS_PER_DEVICE 16
 
@@ -230,65 +228,11 @@ typedef enum {
   LIBUSB_PACKET_SIZE_BITS_64,
 } libusb_packet_size_t;
 
-/**
- * @brief Get packet size from number
- * @param size
- * @return
- */
-[[maybe_unused]] static libusb_packet_size_t usb_packet_size_from_number(
-  const uint32_t size
-) {
-  if (size <= 8) {
-    return LIBUSB_PACKET_SIZE_BITS_8;
-  }
-  if (size <= 16) {
-    return LIBUSB_PACKET_SIZE_BITS_16;
-  }
-  if (size <= 32) {
-    return LIBUSB_PACKET_SIZE_BITS_32;
-  }
-  return LIBUSB_PACKET_SIZE_BITS_64;
-}
-
-/**
- * @brief Transform size to number
- * @param size
- * @return
- */
-[[maybe_unused]] static uint32_t usb_number_from_packet_size(
-  const libusb_packet_size_t size
-) {
-  switch ( size ) {
-    case LIBUSB_PACKET_SIZE_BITS_8: return 8;
-    case LIBUSB_PACKET_SIZE_BITS_16: return 16;
-    case LIBUSB_PACKET_SIZE_BITS_32: return 32;
-    default: return 64;
-  }
-}
-
 typedef enum {
   LIBUSB_SPEED_HIGH = 0,
   LIBUSB_SPEED_FULL = 1,
   LIBUSB_SPEED_LOW = 2,
 } libusb_speed_t;
-
-/**
- * @brief Small static function to turn speed into string for printing purposes
- * @param speed speed to translate
- * @return translated speed
- */
-[[maybe_unused]] static char* usb_speed_to_string( const libusb_speed_t speed ) {
-  if ( LIBUSB_SPEED_HIGH == speed ) {
-    return "480 Mb/s";
-  }
-  if ( LIBUSB_SPEED_LOW == speed ) {
-    return "1.5 Mb/s";
-  }
-  if ( LIBUSB_SPEED_FULL == speed ) {
-    return "12 Mb/s";
-  }
-  return "Unknown Mb/s";
-}
 
 typedef struct __packed {
   libusb_packet_size_t max_size : 2;

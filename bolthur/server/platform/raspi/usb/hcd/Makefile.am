@@ -5,11 +5,13 @@ bin_PROGRAMS = hcd
 hcd_DEPENDENCIES = \
   ${abs_top_builddir}/../library/util/libutil.la \
   ${abs_top_builddir}/../library/platform/raspi/iomem/libiomem.la \
-  ${abs_top_builddir}/../library/vfs/libvfs.la
+  ${abs_top_builddir}/../library/vfs/libvfs.la \
+  ${abs_top_builddir}/../library/usb/libusb.la
 hcd_LDADD = \
   ${abs_top_builddir}/../library/util/libutil.la \
   ${abs_top_builddir}/../library/platform/raspi/iomem/libiomem.la \
-  ${abs_top_builddir}/../library/vfs/libvfs.la
+  ${abs_top_builddir}/../library/vfs/libvfs.la \
+  ${abs_top_builddir}/../library/usb/libusb.la
 hcd_SOURCES = \
   rpc/default/timer.c \
   rpc/interrupt/handle.c \
