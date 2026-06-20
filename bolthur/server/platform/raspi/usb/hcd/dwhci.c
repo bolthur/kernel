@@ -1216,6 +1216,13 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, entry->response_info );
   // free entry
   free( response );
+  // return with next entry
+  result = dwhci_continue_next( entry );
+  if ( HCD_RESPONSE_OK != result ) {
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to continue with next request\r\n" )
+    #endif
+  }
   // destroy queue entry
   result = dwhci_queue_remove_entry( entry, true );
   if ( HCD_RESPONSE_OK != result ) {
@@ -1225,48 +1232,6 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
     #endif
     // return result
     return result;
-  }
-  // get next entry
-  channel_queue_entry_t* out;
-  result = dwhci_get_next_channel_poll_entry( &out );
-  if ( HCD_RESPONSE_OK != result ) {
-    // debug output
-    #if defined( DWHCI_ERROR_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to get next entry\r\n" )
-    #endif
-    // return result
-    return result;
-  }
-  // handle out
-  if ( out ) {
-    // try to allocate a channel
-    uint8_t channel = 0;
-    result = dwhci_allocate_channel( &channel );
-    if ( HCD_RESPONSE_OK != result ) {
-      // debug output
-      #if defined( DWHCI_ERROR_OUTPUT )
-        EARLY_STARTUP_PRINT( "Unable to allocate a channel, entry is queued\r\n" )
-      #endif
-      // return error
-      return result;
-    }
-    // prepare out
-    out->channel = channel;
-    out->status = DWHCI_QUEUE_CHANNEL_STATUS_SETUP;
-    // enable channel interrupt
-    result = dwhci_enable_channel_interrupt( channel );
-    // handle error
-    if ( HCD_RESPONSE_OK != result ) {
-      #if defined( DWHCI_ERROR_OUTPUT )
-        EARLY_STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
-      #endif
-      // free channel again
-      dwhci_free_channel( channel );
-      // return result
-      return result;
-    }
-    // continue with new entry stored in out
-    return dwhci_channel_async_continue( out );
   }
   // return success
   return HCD_RESPONSE_OK;
@@ -1349,6 +1314,16 @@ response_t dwhci_channel_send_cancel_done( channel_queue_entry_t* entry ) {
   bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, entry->response_info );
   // free entry
   free( response );
+  // continue with next one
+  result = dwhci_continue_next( entry );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to continue with next request\r\n" )
+    #endif
+    // return result
+    return result;
+  }
   // destroy queue entry
   result = dwhci_queue_remove_entry( entry, true );
   if ( HCD_RESPONSE_OK != result ) {
@@ -1358,48 +1333,6 @@ response_t dwhci_channel_send_cancel_done( channel_queue_entry_t* entry ) {
     #endif
     // return result
     return result;
-  }
-  // get next entry
-  channel_queue_entry_t* out;
-  result = dwhci_get_next_channel_poll_entry( &out );
-  if ( HCD_RESPONSE_OK != result ) {
-    // debug output
-    #if defined( DWHCI_ERROR_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to get next entry\r\n" )
-    #endif
-    // return result
-    return result;
-  }
-  // handle out
-  if ( out ) {
-    // try to allocate a channel
-    uint8_t channel = 0;
-    result = dwhci_allocate_channel( &channel );
-    if ( HCD_RESPONSE_OK != result ) {
-      // debug output
-      #if defined( DWHCI_ERROR_OUTPUT )
-        EARLY_STARTUP_PRINT( "Unable to allocate a channel, entry is queued\r\n" )
-      #endif
-      // return error
-      return result;
-    }
-    // prepare out
-    out->channel = channel;
-    out->status = DWHCI_QUEUE_CHANNEL_STATUS_SETUP;
-    // enable channel interrupt
-    result = dwhci_enable_channel_interrupt( channel );
-    // handle error
-    if ( HCD_RESPONSE_OK != result ) {
-      #if defined( DWHCI_ERROR_OUTPUT )
-        EARLY_STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
-      #endif
-      // free channel again
-      dwhci_free_channel( channel );
-      // return result
-      return result;
-    }
-    // continue with new entry stored in out
-    return dwhci_channel_async_continue( out );
   }
   // return success
   return HCD_RESPONSE_OK;
@@ -1701,43 +1634,8 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
   entry->error = 0;
   // next step is poll data
   entry->status = DWHCI_QUEUE_POLL_STATUS_DATA;
-  // get next entry
-  channel_queue_entry_t* out;
-  response_t result = dwhci_get_next_channel_poll_entry( &out );
-  if ( HCD_RESPONSE_OK != result ) {
-    // debug output
-    #if defined( DWHCI_ERROR_OUTPUT )
-      EARLY_STARTUP_PRINT( "Unable to get next entry\r\n" )
-    #endif
-    // return result
-    return result;
-  }
-  // handle out
-  if ( out ) {
-    // push current to pending
-    entry->status = DWHCI_QUEUE_POLL_STATUS_PENDING;
-    // reset prepared entry
-    entry->prepared = false;
-    // remove entry from queue
-    result = dwhci_queue_remove_entry( entry, false );
-    if ( HCD_RESPONSE_OK != result ) {
-      // debug output
-      #if defined( DWHCI_ERROR_OUTPUT )
-        EARLY_STARTUP_PRINT( "Unable to remove entry from list\r\n" )
-      #endif
-      // return result
-      return result;
-    }
-    // queue again at the end
-    dwhci_queue_queue_entry( entry );
-    // set status of out and channel
-    out->status = DWHCI_QUEUE_POLL_STATUS_DATA;
-    out->channel = entry->channel;
-    // continue with it
-    return dwhci_channel_async_continue( out );
-  }
-  // return with async continue again
-  return dwhci_channel_async_continue( entry );
+  // continue with next
+  return dwhci_continue_next( entry );
 }
 
 /**
@@ -1872,12 +1770,109 @@ response_t dwhci_channel_poll_async(
 }
 
 /**
- * @fn response_t dwhci_get_next_channel_poll_entry(channel_queue_entry_t**)
+ * @fn response_t dwhci_continue_next(channel_queue_entry_t*)
+ * @brief Continue with next entry
+ * @param current current command / poll sequence
+ * @return
+ */
+response_t dwhci_continue_next( channel_queue_entry_t* current ) {
+  // get next entry
+  channel_queue_entry_t* out;
+  response_t result = dwhci_get_next_entry( &out );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to get next entry\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // handle out
+  if ( out ) {
+    // push current to pending
+    if ( DWHCI_QUEUE_POLL_STATUS_DATA == current->status ) {
+      // set status back to pending and prepared to false
+      current->status = DWHCI_QUEUE_POLL_STATUS_PENDING;
+      current->prepared = false;
+      // remove entry from queue
+      result = dwhci_queue_remove_entry( current, false );
+      if ( HCD_RESPONSE_OK != result ) {
+        // debug output
+        #if defined( DWHCI_ERROR_OUTPUT )
+          EARLY_STARTUP_PRINT( "Unable to remove entry from list\r\n" )
+        #endif
+        // return result
+        return result;
+      }
+      // queue again at the end
+      dwhci_queue_queue_entry( current );
+      // free channel for uniform startup of poll / command
+      result = dwhci_free_channel( current->channel );
+      // handle error
+      if ( HCD_RESPONSE_OK != result ) {
+        // debug output
+        #if defined( DWHCI_ERROR_OUTPUT )
+          EARLY_STARTUP_PRINT( "Unable to free channel\r\n" )
+        #endif
+        // return result
+        return result;
+      }
+    }
+    // try to allocate a channel
+    uint8_t channel = 0;
+    result = dwhci_allocate_channel( &channel );
+    if ( HCD_RESPONSE_OK != result ) {
+      // debug output
+      #if defined( DWHCI_ERROR_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to allocate a channel, entry is queued\r\n" )
+      #endif
+      // return error
+      return result;
+    }
+    // set status of out and channel
+    out->status = DWHCI_QUEUE_POLL_STATUS_PENDING == out->status
+      ? DWHCI_QUEUE_POLL_STATUS_DATA
+      : DWHCI_QUEUE_CHANNEL_STATUS_SETUP;
+    // set channel of out
+    out->channel = channel;
+    // enable channel interrupt for setup commands
+    if ( DWHCI_QUEUE_POLL_STATUS_PENDING != current->status ) {
+      // enable channel interrupt
+      result = dwhci_enable_channel_interrupt( channel );
+      // handle error
+      if ( HCD_RESPONSE_OK != result ) {
+        #if defined( DWHCI_ERROR_OUTPUT )
+          EARLY_STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
+        #endif
+        // free channel again
+        dwhci_free_channel( channel );
+        // set back to pending
+        out->status = DWHCI_QUEUE_CHANNEL_STATUS_SETUP == out->status
+          ? DWHCI_QUEUE_CHANNEL_STATUS_PENDING
+          : DWHCI_QUEUE_POLL_STATUS_PENDING;
+        // return result
+        return result;
+      }
+    }
+    // continue with it
+    return dwhci_channel_async_continue( out );
+  }
+  // handle polling => just continue
+  if ( DWHCI_QUEUE_POLL_STATUS_DATA == current->status ) {
+    // continue polling
+    return dwhci_channel_async_continue( current );
+  }
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn response_t dwhci_get_next_entry(channel_queue_entry_t**)
  * @brief Function to get next entry to execute
  * @param out out pointer
  * @return
  */
-response_t dwhci_get_next_channel_poll_entry( channel_queue_entry_t** out ) {
+response_t dwhci_get_next_entry( channel_queue_entry_t** out ) {
   // validate parameter
   if ( ! out ) {
     return HCD_RESPONSE_ERROR_EINVAL;
