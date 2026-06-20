@@ -309,3 +309,72 @@ int32_t keyboard_bit_get_value( const libusb_hid_parser_fields_t* field, const u
   return keyboard_bit_get_signed(
     field->value.ptr, idx * field->size, field->size );
 }
+
+/**
+ * @fn int keyboard_set_led(libusb_keyboard_device_t*, libusb_keyboard_led_t*)
+ * @brief set keyboard leds
+ * @param dev
+ * @param led
+ * @return
+ */
+int keyboard_set_led( const libusb_keyboard_device_t* dev, const libusb_keyboard_led_t* led ) {
+  // set led fields depending on support
+  if ( dev->led.num_lock ) {
+    dev->led_field[ 0 ]->value._bool = led->num_lock;
+  }
+  if ( dev->led.caps_lock ) {
+    dev->led_field[ 1 ]->value._bool = led->caps_lock;
+  }
+  if ( dev->led.scroll_lock ) {
+    dev->led_field[ 2 ]->value._bool = led->scroll_lock;
+  }
+  if ( dev->led.compose ) {
+    dev->led_field[ 3 ]->value._bool = led->compose;
+  }
+  if ( dev->led.kana ) {
+    dev->led_field[ 4 ]->value._bool = led->kana;
+  }
+  if ( dev->led.power ) {
+    dev->led_field[ 5 ]->value._bool = led->power;
+  }
+  if ( dev->led.shift ) {
+    dev->led_field[ 6 ]->value._bool = led->shift;
+  }
+  if ( dev->led.mute ) {
+    dev->led_field[ 7 ]->value._bool = led->mute;
+  }
+  // populate buffer
+  memset( dev->buffer, 0, KEYBOARD_REPORT_SIZE );
+  for ( size_t i = 0 ; i < dev->led_report->field_count ; i++ ) {
+    auto const field = &dev->led_report->fields[ i ];
+    if ( field->attribute.variable ) {
+      keyboard_bit_set(
+        dev->buffer,
+        field->offset,
+        field->size,
+        field->value.u32
+      );
+    } else {
+      for (size_t j = 0; j < field->count; j++) {
+        keyboard_bit_set(
+          dev->buffer,
+          field->offset,
+          field->size,
+          (uint32_t)keyboard_bit_get_signed(
+            field->value.ptr,
+            j * field->size,
+            field->size
+          )
+        );
+      }
+    }
+  }
+  // return set report
+  return hid_set_report(
+    dev->device_number,
+    ( uint8_t )dev->led_report->type,
+    dev->led_report->id,
+    dev->buffer,
+    dev->led_report->report_length
+  );
+}

@@ -26,7 +26,7 @@
 #include "../../../../libusbd.h"
 #include "../../../../../library/usb/usb.h"
 
-libusb_hid_device_t* hid_head = NULL;
+libusb_hid_device_t* hid_head = nullptr;
 
 /**
  * @fn void hid_destroy_device(libusb_hid_device_t*)
@@ -82,7 +82,7 @@ int hid_set_protocol(
     device_number,
     LIBUSB_TRANSFER_CONTROL,
     LIBUSB_DIRECTION_OUT,
-    NULL,
+    nullptr,
     0,
     &( libusb_device_request_t ){
       .request = LIBUSB_DEVICE_REQUEST_SET_PROTOCOL,
@@ -129,7 +129,7 @@ int hid_set_idle(
     device_number,
     LIBUSB_TRANSFER_CONTROL,
     LIBUSB_DIRECTION_OUT,
-    NULL,
+    nullptr,
     0,
     &( libusb_device_request_t ){
       .request = LIBUSB_DEVICE_REQUEST_SET_IDLE,
@@ -206,7 +206,7 @@ void hid_enumerate_action_count_field_process(
   uint32_t value,
   const libusb_hid_report_type_t type
 ) {
-  hid_report_field_data_t* field_data = NULL;
+  hid_report_field_data_t* field_data = nullptr;
   for ( size_t idx = 0; idx < (*field)->current; idx++ ) {
     if (
       (*field)->data[ idx ].report_id == (*field)->report
@@ -282,7 +282,7 @@ void hid_enumerate_action_add_field_process(
   const libusb_hid_report_type_t type
 ) {
   // try to find report from result
-  libusb_hid_parser_report_t* report = NULL;
+  libusb_hid_parser_report_t* report = nullptr;
   for ( uint32_t idx = 0; idx < (*field)->result->report_count; idx++ ) {
     #if defined( HID_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "field->result->report[ %"PRIu32" ]->id = %"PRIu8"\r\n",
@@ -479,7 +479,7 @@ void hid_enumerate_report(
   void** data
 ) {
   auto item = ( libusb_hid_report_item_t* )descriptor;
-  libusb_hid_report_item_t* current = NULL;
+  libusb_hid_report_item_t* current = nullptr;
   size_t parsed_length = 0;
   size_t current_index;
   size_t current_length;
@@ -494,7 +494,7 @@ void hid_enumerate_report(
       value = 0;
       tag = current->tag;
       if ( current_length == 0 ) {
-        current = NULL;
+        current = nullptr;
       }
     } else {
       if ( current->tag == LIBUSB_HID_REPORT_TAG_LONG && current_index < 2 ) {
@@ -507,7 +507,7 @@ void hid_enumerate_report(
         value |= ( uint32_t )( *( uint8_t* )item << ( 8 * current_index ) );
       }
       if ( ++current_index == current_length ) {
-        current = NULL;
+        current = nullptr;
       }
     }
 
@@ -547,8 +547,8 @@ int hid_parse_report_descriptor(
     .output = false,
     .feature = false,
   };
-  hid_report_field_t* report_field = NULL;
-  hid_field_t* field = NULL;
+  hid_report_field_t* report_field = nullptr;
+  hid_field_t* field = nullptr;
 
   // enumerate action count
   hid_report_action_count_t* ptr = &header;
@@ -609,7 +609,7 @@ int hid_parse_report_descriptor(
     result->report[ idx ]->id = report_field->data[ idx ].report_id;
     result->report[ idx ]->type = report_field->data[ idx ].report_type;
     result->report[ idx ]->report_length = 0;
-    result->report[ idx ]->report_buffer = NULL;
+    result->report[ idx ]->report_buffer = nullptr;
     result->report[ idx ]->fields_length = report_field->data[ idx ].field_count;
   }
   // free again report fields
@@ -677,7 +677,7 @@ int hid_parse_report_descriptor(
 void hid_append( libusb_hid_device_t* hid ) {
   // loop to last one
   libusb_hid_device_t* current = hid_head;
-  libusb_hid_device_t* found = NULL;
+  libusb_hid_device_t* found = nullptr;
   while ( current ) {
     found = current;
     current = current->next;
@@ -685,8 +685,8 @@ void hid_append( libusb_hid_device_t* hid ) {
   // handle empty
   if ( ! found ) {
     hid_head = hid;
-    hid->prev = NULL;
-    hid->next = NULL;
+    hid->prev = nullptr;
+    hid->next = nullptr;
     return;
   }
   // attach to list

@@ -295,7 +295,7 @@ void rpc_keyboard_attach(
             #if defined( KEYBOARD_ENABLE_DEBUG )
               EARLY_STARTUP_PRINT( "Number lock led detected\r\n")
             #endif
-            device->led_field[ 0 ] = &device->key_report->fields[ inner ];
+            device->led_field[ 0 ] = &device->led_report->fields[ inner ];
             // set supported flag
             device->led.num_lock = true;
             break;
@@ -303,7 +303,7 @@ void rpc_keyboard_attach(
             #if defined( KEYBOARD_ENABLE_DEBUG )
               EARLY_STARTUP_PRINT( "Capslock lock led detected\r\n")
             #endif
-            device->led_field[ 1 ] = &device->key_report->fields[ inner ];
+            device->led_field[ 1 ] = &device->led_report->fields[ inner ];
             // set supported flag
             device->led.caps_lock = true;
             break;
@@ -311,7 +311,7 @@ void rpc_keyboard_attach(
             #if defined( KEYBOARD_ENABLE_DEBUG )
               EARLY_STARTUP_PRINT( "Scroll lock led detected\r\n")
             #endif
-            device->led_field[ 2 ] = &device->key_report->fields[ inner ];
+            device->led_field[ 2 ] = &device->led_report->fields[ inner ];
             // set supported flag
             device->led.scroll_lock = true;
             break;
@@ -319,7 +319,7 @@ void rpc_keyboard_attach(
             #if defined( KEYBOARD_ENABLE_DEBUG )
               EARLY_STARTUP_PRINT( "Compose led detected\r\n")
             #endif
-            device->led_field[ 3 ] = &device->key_report->fields[ inner ];
+            device->led_field[ 3 ] = &device->led_report->fields[ inner ];
             // set supported flag
             device->led.compose = true;
             break;
@@ -327,7 +327,7 @@ void rpc_keyboard_attach(
             #if defined( KEYBOARD_ENABLE_DEBUG )
               EARLY_STARTUP_PRINT( "Kana led detected\r\n")
             #endif
-            device->led_field[ 4 ] = &device->key_report->fields[ inner ];
+            device->led_field[ 4 ] = &device->led_report->fields[ inner ];
             // set supported flag
             device->led.kana = true;
             break;
@@ -335,7 +335,7 @@ void rpc_keyboard_attach(
             #if defined( KEYBOARD_ENABLE_DEBUG )
               EARLY_STARTUP_PRINT( "Power led detected\r\n")
             #endif
-            device->led_field[ 5 ] = &device->key_report->fields[ inner ];
+            device->led_field[ 5 ] = &device->led_report->fields[ inner ];
             // set supported flag
             device->led.power = true;
             break;
@@ -343,7 +343,7 @@ void rpc_keyboard_attach(
             #if defined( KEYBOARD_ENABLE_DEBUG )
               EARLY_STARTUP_PRINT( "Shift led detected\r\n")
             #endif
-            device->led_field[ 6 ] = &device->key_report->fields[ inner ];
+            device->led_field[ 6 ] = &device->led_report->fields[ inner ];
             // set supported flag
             device->led.shift = true;
             break;
@@ -351,7 +351,7 @@ void rpc_keyboard_attach(
             #if defined( KEYBOARD_ENABLE_DEBUG )
               EARLY_STARTUP_PRINT( "Mute led detected\r\n")
             #endif
-            device->led_field[ 7 ] = &device->key_report->fields[ inner ];
+            device->led_field[ 7 ] = &device->led_report->fields[ inner ];
             // set supported flag
             device->led.mute = true;
             break;
@@ -393,6 +393,30 @@ void rpc_keyboard_attach(
   #endif
   // free request
   free( request );
+  #if defined( KEYBOARD_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Setting keyboard leds initially\r\n" )
+  #endif
+  // set leds initially
+  result = keyboard_set_led( device, &(const libusb_keyboard_led_t){
+    .num_lock = device->led.num_lock ? device->led_field[ 0 ]->value._bool : false,
+    .caps_lock = device->led.caps_lock ? device->led_field[ 1 ]->value._bool : false,
+    .scroll_lock = device->led.scroll_lock ? device->led_field[ 2 ]->value._bool : false,
+    .compose = device->led.compose ? device->led_field[ 3 ]->value._bool : false,
+    .kana = device->led.kana ? device->led_field[ 4 ]->value._bool : false,
+    .power = device->led.power ? device->led_field[ 5 ]->value._bool : false,
+    .shift = device->led.shift ? device->led_field[ 6 ]->value._bool : false,
+    .mute = device->led.mute ? device->led_field[ 7 ]->value._bool : false,
+  });
+  // handle error
+  if ( 0 != result ) {
+    #if defined( KEYBOARD_ENABLE_DEBUG )
+      EARLY_STARTUP_PRINT( "Failed to set keyboard leds\r\n" )
+    #endif
+    keyboard_destroy( device );
+    err_response.status = -result;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &err_response, sizeof( err_response ), nullptr, 0 );
+    return;
+  }
   // start polling
   keyboard_start_polling( device );
   // return success

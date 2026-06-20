@@ -176,7 +176,7 @@ int hid_get_driver( uint32_t device_number, uint32_t* device_driver ) {
  * @return
  */
 int hid_get_application(
-  uint32_t device_number,
+  const uint32_t device_number,
   libusb_hid_full_usage_t* application
 ) {
   // validate parameters

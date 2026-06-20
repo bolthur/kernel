@@ -36,5 +36,6 @@ void keyboard_bit_set( uint8_t*, uint32_t, uint32_t, uint32_t );
 int32_t keyboard_bit_get_signed( const uint8_t*, uint32_t, uint32_t );
 uint32_t keyboard_bit_get_unsigned( const uint8_t*, uint32_t, uint32_t );
 int32_t keyboard_bit_get_value( const libusb_hid_parser_fields_t*, uint32_t );
+int keyboard_set_led( const libusb_keyboard_device_t*, const libusb_keyboard_led_t* );
 
 #endif
