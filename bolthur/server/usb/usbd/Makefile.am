@@ -16,7 +16,6 @@ usbd_SOURCES = \
   call/child_check_connection.c \
   call/child_detached.c \
   call/child_reset.c \
-  call/deallocate.c \
   call/detached.c \
   ioctl/wrapper.c \
   libusbd/address.c \

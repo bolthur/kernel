@@ -24,6 +24,8 @@
  * @fn void usbd_deallocate_device(libusb_device_t*)
  * @brief Wrapper to deallocate an usb device
  * @param dev device to deallocate
+ *
+ * @todo make asynchron
  */
 void usbd_deallocate_device( libusb_device_t* dev ) {
   // debug output
@@ -40,16 +42,6 @@ void usbd_deallocate_device( libusb_device_t* dev ) {
     // debug output
     #if defined( USBD_ENABLE_DEBUG )
       EARLY_STARTUP_PRINT( "unable to call detached handler\r\n" )
-    #endif
-    // skip rest
-    return;
-  }
-  // deallocate callback
-  result = call_deallocate( dev );
-  if ( 0 != result ) {
-    // debug output
-    #if defined( USBD_ENABLE_DEBUG )
-      EARLY_STARTUP_PRINT( "unable to call deallocate handler\r\n" )
     #endif
     // skip rest
     return;

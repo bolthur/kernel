@@ -40,12 +40,6 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register detach handler!\r\n" )
     return false;
   }
-  // register handler deallocate
-  bolthur_rpc_bind( GENERIC_DEALLOCATE, rpc_hid_deallocate, true );
-  if ( errno ) {
-    STARTUP_PRINT( "Unable to register deallocate handler!\r\n" )
-    return false;
-  }
   // register handler register
   bolthur_rpc_bind( HID_REGISTER_HANDLER, rpc_handler_register, true );
   if ( errno ) {

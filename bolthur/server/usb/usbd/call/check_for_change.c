@@ -54,12 +54,12 @@ int call_check_for_change( const libusb_device_t* dev ) {
   ( ( usb_generic_check_for_change_t* )request->container )->device_number = dev->number;
   // attach is defined as first custom message
   bolthur_rpc_raise_generic(
-    GENERIC_DEALLOCATE,
+    GENERIC_CHECK_FOR_CHANGE,
     dev->device_check_for_change_handler,
     request,
     request_size,
     NULL,
-    GENERIC_DEALLOCATE,
+    GENERIC_CHECK_FOR_CHANGE,
     request,
     request_size,
     0,

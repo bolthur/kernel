@@ -14,7 +14,6 @@ hub_SOURCES = \
   rpc/hub/child/detach.c \
   rpc/hub/child/reset.c \
   rpc/hub/attach.c \
-  rpc/hub/deallocate.c \
   rpc/hub/detach.c \
   rpc/init.c \
   hub.c \

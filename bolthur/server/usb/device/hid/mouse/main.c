@@ -99,10 +99,9 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   constexpr uint32_t device_info[] = {
     GENERIC_ATTACH,
     GENERIC_DETACH,
-    GENERIC_DEALLOCATE,
     GENERIC_POLL_INTERRUPT,
   };
-  if ( ! vfs_dev_add_file( MOUSE_DEVICE_PATH, device_info, 4, nullptr ) ) {
+  if ( ! vfs_dev_add_file( MOUSE_DEVICE_PATH, device_info, 3, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

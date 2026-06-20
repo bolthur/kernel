@@ -89,7 +89,6 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   constexpr uint32_t device_info[] = {
     GENERIC_ATTACH,
     GENERIC_DETACH,
-    GENERIC_DEALLOCATE,
     HID_REGISTER_HANDLER,
     HID_UNREGISTER_HANDLER,
     HID_GET_DRIVER,
@@ -99,7 +98,7 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
     HID_SET_REPORT,
     HID_SET_IDLE,
   };
-  if ( ! vfs_dev_add_file( HID_DEVICE_PATH, device_info, 11, nullptr ) ) {
+  if ( ! vfs_dev_add_file( HID_DEVICE_PATH, device_info, 10, nullptr ) ) {
     STARTUP_PRINT( "Unable to add dev usbd\r\n" )
     return -1;
   }

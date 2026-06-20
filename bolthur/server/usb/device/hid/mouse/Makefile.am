@@ -14,7 +14,6 @@ mouse_LDADD = \
   ${abs_top_builddir}/../library/util/libutil.la
 mouse_SOURCES = \
   rpc/mouse/attach.c \
-  rpc/mouse/deallocate.c \
   rpc/mouse/detach.c \
   rpc/mouse/mouse.c \
   rpc/init.c \

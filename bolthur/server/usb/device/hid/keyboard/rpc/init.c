@@ -40,12 +40,6 @@ bool rpc_init( void ) {
     STARTUP_PRINT( "Unable to register detach handler!\r\n" )
     return false;
   }
-  // register handler deallocate
-  bolthur_rpc_bind( GENERIC_DEALLOCATE, rpc_keyboard_deallocate, true );
-  if ( errno ) {
-    STARTUP_PRINT( "Unable to register deallocate handler!\r\n" )
-    return false;
-  }
   // register handler poll interrupt
   bolthur_rpc_bind( GENERIC_POLL_INTERRUPT, rpc_keyboard_key, true );
   if ( errno ) {

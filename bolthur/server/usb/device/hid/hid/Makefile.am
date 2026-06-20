@@ -18,7 +18,6 @@ hid_SOURCES = \
   rpc/handler/register.c \
   rpc/handler/unregister.c \
   rpc/hid/attach.c \
-  rpc/hid/deallocate.c \
   rpc/hid/detach.c \
   rpc/set/idle.c \
   rpc/set/report.c \

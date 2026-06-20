@@ -16,7 +16,6 @@ keyboard_LDADD = \
   ${abs_top_builddir}/../library/vfs/libvfs.la
 keyboard_SOURCES = \
   rpc/keyboard/attach.c \
-  rpc/keyboard/deallocate.c \
   rpc/keyboard/detach.c \
   rpc/keyboard/key.c \
   rpc/init.c \

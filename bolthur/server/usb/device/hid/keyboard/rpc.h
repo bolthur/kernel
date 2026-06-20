@@ -23,7 +23,6 @@
 #include <sys/bolthur.h>
 
 void rpc_keyboard_attach( size_t, pid_t, size_t, size_t );
-void rpc_keyboard_deallocate( size_t, pid_t, size_t, size_t );
 void rpc_keyboard_detach( size_t, pid_t, size_t, size_t );
 void rpc_keyboard_key( size_t, pid_t, size_t, size_t );
 bool rpc_init( void );
