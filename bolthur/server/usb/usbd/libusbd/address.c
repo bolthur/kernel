@@ -189,7 +189,7 @@ int usbd_address_set(
       .type = 0,
       .value = address,
     },
-    CONTROL_MESSAGE_TIMEOUT,
+    USB_TIMEOUT_VALUE,
     set_address_finished,
     context->origin,
     context->data_info,

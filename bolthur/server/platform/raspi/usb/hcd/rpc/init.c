@@ -31,6 +31,12 @@
  * @return
  */
 bool rpc_init( void ) {
+  // default handler
+  bolthur_rpc_bind( RPC_TIMER, rpc_default_timer, true );
+  if ( errno ) {
+    STARTUP_PRINT( "Unable to register handler timer!\r\n" )
+    return false;
+  }
   // bind interrupt handler
   bolthur_rpc_bind( ARM_IRQ_USB, rpc_interrupt_handle, true );
   if ( errno ) {

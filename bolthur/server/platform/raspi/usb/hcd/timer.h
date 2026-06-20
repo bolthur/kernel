@@ -17,15 +17,12 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RPC_H
-#define _RPC_H
+#ifndef _TIMER_H
+#define _TIMER_H
 
-#include <sys/bolthur.h>
+#include <stddef.h>
+#include <stdint.h>
 
-bool rpc_init( void );
-void rpc_default_timer( size_t, pid_t, size_t, size_t );
-void rpc_interrupt_handle( size_t, pid_t, size_t, size_t );
-void rpc_poll_interrupt( size_t, pid_t, size_t, size_t );
-void rpc_submit_message( size_t, pid_t, size_t, size_t );
+size_t timer_acquire( uint32_t );
 
-#endif
+#endif //_TIMER_H

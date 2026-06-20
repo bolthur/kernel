@@ -254,6 +254,8 @@ void rpc_interrupt_handle(
             entry->status == DWHCI_QUEUE_CHANNEL_STATUS_SETUP
             // treat data polling as finished
             || entry->status == DWHCI_QUEUE_POLL_STATUS_DATA
+            // treat cancellation as finished
+            || entry->status == DWHCI_QUEUE_CANCEL
             // treat non data actions as finished
             || entry->buffer_size_to_transfer == 0
             // handle enough transferred
@@ -308,6 +310,9 @@ void rpc_interrupt_handle(
             case DWHCI_QUEUE_POLL_STATUS_ACK:
               entry->status = DWHCI_QUEUE_POLL_STATUS_DONE;
               break;
+            case DWHCI_QUEUE_CANCEL:
+              entry->status = DWHCI_QUEUE_CANCEL_DONE;
+              break;
             default:
               #if defined( DWHCI_ENABLE_DEBUG )
                 EARLY_STARTUP_PRINT( "Unknown status request for channel %"PRIu32"\r\n", channel )
@@ -316,7 +321,7 @@ void rpc_interrupt_handle(
           }
         }
         // continue with new step
-        dwhci_channel_send_async_continue( entry );
+        dwhci_channel_async_continue( entry );
       }
       // assign channel
       channel_mask <<= 1;

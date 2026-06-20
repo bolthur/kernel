@@ -83,7 +83,7 @@ int usbd_descriptor_get_async(
       .index = lang_id,
       .length = ( uint16_t )buffer_length
     },
-    CONTROL_MESSAGE_TIMEOUT,
+    USB_TIMEOUT_VALUE,
     callback,
     origin,
     data_info,
@@ -151,7 +151,7 @@ int usbd_descriptor_get(
       .index = lang_id,
       .length = ( uint16_t )buffer_length
     },
-    CONTROL_MESSAGE_TIMEOUT
+    USB_TIMEOUT_VALUE
   );
   // handle error
   if ( 0 != result ) {

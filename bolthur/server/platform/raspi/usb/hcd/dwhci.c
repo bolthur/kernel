@@ -31,6 +31,7 @@
 // shared includes
 #include "../../libhcd.h"
 // library includes
+#include "timer.h"
 #include "../../../../libusbd.h"
 #include "../../../../../library/platform/raspi/iomem/libiomem.h"
 #include "../../../../../library/platform/raspi/iomem/libperipheral.h"
@@ -1009,7 +1010,7 @@ response_t dwhci_channel_send_async_data( channel_queue_entry_t* entry ) {
     // switch to next state
     entry->status = DWHCI_QUEUE_CHANNEL_STATUS_ACK;
     // continue directly
-    return dwhci_channel_send_async_continue( entry );
+    return dwhci_channel_async_continue( entry );
   }
   // handle out
   if ( LIBUSB_DIRECTION_OUT == entry_data->pipe_address.direction ) {
@@ -1159,6 +1160,14 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
   }
   auto const message = ( usbd_control_message_t* )entry->message;
   auto const entry_data = ( usb_control_message_t* )entry->data;
+  // handle timer
+  if ( entry->timer ) {
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Clearing timeout\r\n" )
+    #endif
+    // clear tim
+    _syscall_timer_release( entry->timer );
+  }
   // attach shared memory
   void* shm = _syscall_memory_shared_attach( message->shm_id, 0 );
   if ( errno ) {
@@ -1257,24 +1266,158 @@ response_t dwhci_channel_send_async_done( channel_queue_entry_t* entry ) {
       return result;
     }
     // continue with new entry stored in out
-    return dwhci_channel_send_async_continue( out );
+    return dwhci_channel_async_continue( out );
   }
   // return success
   return HCD_RESPONSE_OK;
 }
 
 /**
- * @fn response_t dwhci_channel_send_async_continue(channel_queue_entry_t*)
+ * @fn response_t dwhci_channel_send_cancel(const channel_queue_entry_t*)
+ * @brief initiates cancellation of entry
+ * @param entry
+ * @return
+ */
+response_t dwhci_channel_send_cancel( const channel_queue_entry_t* entry ) {
+  // handle not correct status
+  if (
+    entry->status != DWHCI_QUEUE_CHANNEL_STATUS_SETUP
+    && entry->status != DWHCI_QUEUE_CHANNEL_STATUS_DATA
+    && entry->status != DWHCI_QUEUE_CHANNEL_STATUS_ACK
+  ) {
+    return HCD_RESPONSE_ERROR_EINVAL;
+  }
+  // stop transmission
+  const response_t result = dwhci_channel_send_async_stop_channel( entry, false );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to stop channel\r\n")
+    #endif
+    // return result
+    return result;
+  }
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn response_t dwhci_channel_send_cancel_done(channel_queue_entry_t*)
+ * @brief send cancellation done
+ * @param entry
+ * @return
+ */
+response_t dwhci_channel_send_cancel_done( channel_queue_entry_t* entry ) {
+  // debug output
+  #if defined( DWHCI_ENABLE_DEBUG )
+    EARLY_STARTUP_PRINT( "Handling cancellation done \r\n" )
+  #endif
+  auto const message = ( usbd_control_message_t* )entry->message;
+  auto const entry_data = ( usb_control_message_t* )entry->data;
+  // stop transmission
+  response_t result = dwhci_channel_send_async_stop_channel( entry, true );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to stop channel\r\n")
+    #endif
+    // return result
+    return result;
+  }
+  // set error
+  entry->error = LIBUSB_TRANSFER_ERROR_TIMEOUT | LIBUSB_TRANSFER_ERROR_PROCESSING;
+  // populate error
+  entry_data->error = entry->error;
+  // allocate response structure
+  constexpr size_t response_size = sizeof( vfs_ioctl_perform_response_t ) + sizeof( usbd_control_message_t );
+  vfs_ioctl_perform_response_t* response = malloc( response_size );
+  if ( ! response ) {
+    // debug output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to allocate memory for response\r\n" )
+    #endif
+    // return error
+    return HCD_RESPONSE_ERROR_MEMORY;
+  }
+  // clear out memory
+  memset( response, 0, response_size );
+  // detach shared memory
+  _syscall_memory_shared_detach( message->shm_id );
+  // populate response
+  memcpy( response->container, entry->message, sizeof( usbd_control_message_t ) );
+  // return from rpc
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, entry->response_info );
+  // free entry
+  free( response );
+  // destroy queue entry
+  result = dwhci_queue_remove_entry( entry, true );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to remove entry\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // get next entry
+  channel_queue_entry_t* out;
+  result = dwhci_get_next_channel_poll_entry( &out );
+  if ( HCD_RESPONSE_OK != result ) {
+    // debug output
+    #if defined( DWHCI_ERROR_OUTPUT )
+      EARLY_STARTUP_PRINT( "Unable to get next entry\r\n" )
+    #endif
+    // return result
+    return result;
+  }
+  // handle out
+  if ( out ) {
+    // try to allocate a channel
+    uint8_t channel = 0;
+    result = dwhci_allocate_channel( &channel );
+    if ( HCD_RESPONSE_OK != result ) {
+      // debug output
+      #if defined( DWHCI_ERROR_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to allocate a channel, entry is queued\r\n" )
+      #endif
+      // return error
+      return result;
+    }
+    // prepare out
+    out->channel = channel;
+    out->status = DWHCI_QUEUE_CHANNEL_STATUS_SETUP;
+    // enable channel interrupt
+    result = dwhci_enable_channel_interrupt( channel );
+    // handle error
+    if ( HCD_RESPONSE_OK != result ) {
+      #if defined( DWHCI_ERROR_OUTPUT )
+        EARLY_STARTUP_PRINT( "Unable to enable channel interrupt\r\n" )
+      #endif
+      // free channel again
+      dwhci_free_channel( channel );
+      // return result
+      return result;
+    }
+    // continue with new entry stored in out
+    return dwhci_channel_async_continue( out );
+  }
+  // return success
+  return HCD_RESPONSE_OK;
+}
+
+/**
+ * @fn response_t dwhci_channel_async_continue(channel_queue_entry_t*)
  * @brief Method to start entry transfer depending on status
  * @param entry
  * @return
  */
-response_t dwhci_channel_send_async_continue( channel_queue_entry_t* entry ) {
+response_t dwhci_channel_async_continue( channel_queue_entry_t* entry ) {
   #if defined ( DWHCI_ENABLE_DEBUG )
     EARLY_STARTUP_PRINT( "Continuing with channel %"PRIu8"\r\n", entry->channel )
   #endif
   // continue channel depending on status
   switch ( entry->status ) {
+    // control packages
     case DWHCI_QUEUE_CHANNEL_STATUS_SETUP:
       return dwhci_channel_send_async_setup( entry );
     case DWHCI_QUEUE_CHANNEL_STATUS_DATA:
@@ -1283,12 +1426,18 @@ response_t dwhci_channel_send_async_continue( channel_queue_entry_t* entry ) {
       return dwhci_channel_send_async_ack( entry );
     case DWHCI_QUEUE_CHANNEL_STATUS_DONE:
       return dwhci_channel_send_async_done( entry );
+    // polling related
     case DWHCI_QUEUE_POLL_STATUS_DATA:
       return dwhci_channel_poll_async_data( entry );
     case DWHCI_QUEUE_POLL_STATUS_ACK:
       return dwhci_channel_poll_async_ack( entry );
     case DWHCI_QUEUE_POLL_STATUS_DONE:
       return dwhci_channel_poll_async_done( entry );
+    // cancellation
+    case DWHCI_QUEUE_CANCEL:
+      return dwhci_channel_send_cancel( entry );
+    case DWHCI_QUEUE_CANCEL_DONE:
+      return dwhci_channel_send_cancel_done( entry );
     default:
       return HCD_RESPONSE_ERROR_UNKNOWN;
   }
@@ -1364,8 +1513,26 @@ response_t dwhci_channel_send_async(
     // return result
     return result;
   }
+  // kickstart timeout if set
+  if ( data->timeout ) {
+    // acquire timeout
+    entry->timer = timer_acquire( data->timeout );
+    // handle error
+    if ( errno ) {
+      // debug output
+      #if defined( DWHCI_ENABLE_DEBUG )
+        EARLY_STARTUP_PRINT( "Unable to acquire timeout\r\n" )
+      #endif
+      // free channel again
+      dwhci_free_channel( channel );
+      // remove from queue again
+      dwhci_queue_remove_entry( entry, true );
+      // return error
+      return HCD_RESPONSE_ERROR_IO;
+    }
+  }
   // continue async
-  return dwhci_channel_send_async_continue( entry );
+  return dwhci_channel_async_continue( entry );
 }
 
 /**
@@ -1389,7 +1556,7 @@ response_t dwhci_channel_poll_async_data( channel_queue_entry_t* entry ) {
     // switch to next state
     entry->status = DWHCI_QUEUE_CHANNEL_STATUS_ACK;
     // continue directly
-    return dwhci_channel_send_async_continue( entry );
+    return dwhci_channel_async_continue( entry );
   }
   // handle out
   if ( LIBUSB_DIRECTION_OUT == entry_data->pipe_address.direction ) {
@@ -1461,7 +1628,7 @@ response_t dwhci_channel_poll_async_ack( channel_queue_entry_t* entry ) {
     entry_data->last_transfer = entry_data->buffer_length;
   }
   entry->status = DWHCI_QUEUE_POLL_STATUS_DONE;
-  return dwhci_channel_send_async_continue( entry );
+  return dwhci_channel_async_continue( entry );
 }
 
 /**
@@ -1567,10 +1734,10 @@ response_t dwhci_channel_poll_async_done( channel_queue_entry_t* entry ) {
     out->status = DWHCI_QUEUE_POLL_STATUS_DATA;
     out->channel = entry->channel;
     // continue with it
-    return dwhci_channel_send_async_continue( out );
+    return dwhci_channel_async_continue( out );
   }
   // return with async continue again
-  return dwhci_channel_send_async_continue( entry );
+  return dwhci_channel_async_continue( entry );
 }
 
 /**
@@ -1701,7 +1868,7 @@ response_t dwhci_channel_poll_async(
     return result;
   }
   // continue async
-  return dwhci_channel_send_async_continue( entry );
+  return dwhci_channel_async_continue( entry );
 }
 
 /**

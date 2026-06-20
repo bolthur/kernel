@@ -47,6 +47,9 @@ typedef enum {
   DWHCI_QUEUE_POLL_STATUS_DATA = 6,
   DWHCI_QUEUE_POLL_STATUS_ACK = 7,
   DWHCI_QUEUE_POLL_STATUS_DONE = 8,
+
+  DWHCI_QUEUE_CANCEL = 9,
+  DWHCI_QUEUE_CANCEL_DONE = 10,
 } dwhci_queue_status_t;
 
 /**
@@ -81,6 +84,8 @@ typedef struct channel_queue_entry {
   uint32_t interval;
   /** message */
   void* message;
+  /** registered timer */
+  size_t timer;
   /** error */
   libusb_transfer_error_t error;
   /** poll channel state */
@@ -128,7 +133,9 @@ response_t dwhci_channel_send_async_setup( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_data( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_ack( channel_queue_entry_t* );
 response_t dwhci_channel_send_async_done( channel_queue_entry_t* );
-response_t dwhci_channel_send_async_continue( channel_queue_entry_t* );
+response_t dwhci_channel_send_cancel( const channel_queue_entry_t* );
+response_t dwhci_channel_send_cancel_done( channel_queue_entry_t* );
+response_t dwhci_channel_async_continue( channel_queue_entry_t* );
 response_t dwhci_channel_send_async( usb_control_message_t*, size_t, const usbd_control_message_t*, size_t );
 response_t dwhci_channel_poll_async_data( channel_queue_entry_t* );
 response_t dwhci_channel_poll_async_ack( channel_queue_entry_t* );

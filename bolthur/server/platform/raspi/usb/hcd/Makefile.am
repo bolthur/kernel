@@ -11,6 +11,7 @@ hcd_LDADD = \
   ${abs_top_builddir}/../library/platform/raspi/iomem/libiomem.la \
   ${abs_top_builddir}/../library/vfs/libvfs.la
 hcd_SOURCES = \
+  rpc/default/timer.c \
   rpc/interrupt/handle.c \
   rpc/poll/interrupt.c \
   rpc/submit/message.c \
@@ -18,5 +19,6 @@ hcd_SOURCES = \
   dwhci.c \
   dwhciroothub.c \
   main.c \
-  response.c
+  response.c \
+  timer.c
 hcd_LDFLAGS = -all-static --static

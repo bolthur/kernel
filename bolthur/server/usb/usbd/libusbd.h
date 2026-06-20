@@ -31,11 +31,6 @@
 #endif
 
 /**
- * @brief Control message timeout in milliseconds
- */
-#define CONTROL_MESSAGE_TIMEOUT 10
-
-/**
  * @brief Min descriptor read length
  */
 #define DESCRIPTOR_READ_MIN_LENGTH 8

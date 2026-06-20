@@ -202,7 +202,7 @@ int usbd_configuration_set(
       .type = 0,
       .value = configuration,
     },
-    CONTROL_MESSAGE_TIMEOUT,
+    USB_TIMEOUT_VALUE,
     set_configuration_finished,
     context->context->origin,
     context->context->data_info,

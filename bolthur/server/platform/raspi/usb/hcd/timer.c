@@ -17,15 +17,25 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef _RPC_H
-#define _RPC_H
-
 #include <sys/bolthur.h>
+#include "timer.h"
 
-bool rpc_init( void );
-void rpc_default_timer( size_t, pid_t, size_t, size_t );
-void rpc_interrupt_handle( size_t, pid_t, size_t, size_t );
-void rpc_poll_interrupt( size_t, pid_t, size_t, size_t );
-void rpc_submit_message( size_t, pid_t, size_t, size_t );
-
-#endif
+/**
+ * @fn size_t timer_acquire(uint32_t)
+ * @brief Acquire timer with delay of milliseconds
+ * @param milliseconds milliseconds to wait
+ * @return timer id
+ * @exception EAGAIN in case timer was not possible to acquire
+ */
+size_t timer_acquire( const uint32_t milliseconds ) {
+  // get clock frequency
+  const size_t frequency = _syscall_timer_frequency();
+  // translate into seconds
+  const double seconds = (double)milliseconds / 1000.0;
+  // calculate second timeout
+  size_t timeout = ( size_t )( seconds * frequency );
+  // add tick count to get an end time
+  timeout += _syscall_timer_tick_count();
+  // register timer
+  return _syscall_timer_acquire( RPC_TIMER, timeout );
+}
