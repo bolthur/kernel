@@ -61,7 +61,7 @@ static void rpc_handle_write_cleanup(
   }
   // get message and data size
   size_t data_size;
-  vfs_ioctl_perform_request_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_ioctl_perform_request_t* response = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! response ) {
     // cleanup
     bolthur_rpc_destroy_async( async_data );
@@ -95,27 +95,27 @@ void rpc_handle_write(
   vfs_write_response_t response = { .len = -EINVAL };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_write_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_write_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response.len = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   const pid_t root_origin = request->origin;
   handler_node_t* handler = handler_extract( root_origin, true );
   if ( ! handler ) {
     response.len = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // set console if not set
@@ -124,7 +124,7 @@ void rpc_handle_write(
     console_t* console = console_get_active();
     if ( ! console ) {
       response.len = -EIO;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
     }
@@ -132,10 +132,10 @@ void rpc_handle_write(
     handler->console = console;
   }
   // get output stuff
-  const char* toWrite = _syscall_memory_shared_attach( request->shm_id, ( uintptr_t )NULL );
+  const char* toWrite = _syscall_memory_shared_attach( request->shm_id, 0 );
   if ( errno ) {
     response.len = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     free( request );
     return;
   }
@@ -149,7 +149,7 @@ void rpc_handle_write(
   terminal_write_request_t* terminal = malloc( terminal_size );
   if ( ! terminal ) {
     response.len = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     _syscall_memory_shared_detach( request->shm_id );
     free( request );
     return;
@@ -167,7 +167,7 @@ void rpc_handle_write(
     // handle error
     if ( -1 == fd ) {
       response.len = -EIO;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       _syscall_memory_shared_detach( request->shm_id );
       free( terminal );
       free( request );
@@ -184,7 +184,7 @@ void rpc_handle_write(
   vfs_ioctl_perform_request_t* rpc_request = malloc( rpc_request_size );
   if ( ! rpc_request ) {
     response.len = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( terminal );
@@ -210,7 +210,7 @@ void rpc_handle_write(
     data_size,
     0,
     0,
-    NULL,
+    nullptr,
     false
   );
   // handle error
@@ -218,7 +218,7 @@ void rpc_handle_write(
     const int e = errno;
     EARLY_STARTUP_PRINT( "Failed to invoke rpc: %s\r\n", strerror( e ) );
     response.len = -e;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     _syscall_memory_shared_detach( request->shm_id );
     free( request );
     free( terminal );
@@ -227,7 +227,7 @@ void rpc_handle_write(
   }
   // return written amount
   response.len = ( ssize_t )strlen( toWrite );
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   // free up stuff
   free( terminal );
   free( request );

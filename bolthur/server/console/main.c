@@ -27,7 +27,7 @@
 #include "rpc.h"
 #include "queue.h"
 
-list_manager_t* console_list = NULL;
+list_manager_t* console_list = nullptr;
 
 /**
  * @fn int32_t console_lookup(const list_item_t*, const void*)
@@ -68,7 +68,7 @@ static void console_cleanup( list_item_t* a ) {
  */
 int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   // create console list
-  console_list = list_construct( console_lookup, console_cleanup, NULL );
+  console_list = list_construct( console_lookup, console_cleanup, nullptr );
   if ( ! console_list ) {
     return -1;
   }
@@ -93,17 +93,17 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   }
 
   // stdin device
-  if ( ! vfs_dev_add_file( "/dev/stdin", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/stdin", nullptr, 0, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
   // stdout device
-  if ( ! vfs_dev_add_file( "/dev/stdout", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/stdout", nullptr, 0, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
   // stderr device
-  if ( ! vfs_dev_add_file( "/dev/stderr", NULL, 0, nullptr ) ) {
+  if ( ! vfs_dev_add_file( "/dev/stderr", nullptr, 0, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }
@@ -113,8 +113,14 @@ int main( [[maybe_unused]] int argc, [[maybe_unused]] char* argv[] ) {
   _syscall_rpc_set_ready( true );
 
   // console device
-  constexpr uint32_t device_info[] = { CONSOLE_ADD, CONSOLE_SELECT, CONSOLE_INPUT, };
-  if ( ! vfs_dev_add_file( "/dev/console", device_info, 3, nullptr ) ) {
+  constexpr uint32_t device_info[] = {
+    CONSOLE_ADD,
+    CONSOLE_SELECT,
+    CONSOLE_INPUT,
+    RPC_VFS_IOCTL_TERMIOS_GET,
+    RPC_VFS_IOCTL_TERMIOS_SET,
+  };
+  if ( ! vfs_dev_add_file( "/dev/console", device_info, 5, nullptr ) ) {
     EARLY_STARTUP_PRINT( "Unable to add dev fs\r\n" )
     return -1;
   }

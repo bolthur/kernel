@@ -41,22 +41,22 @@ void rpc_handle_fork(
   vfs_fork_response_t response = { .status = -EINVAL };
   // handle no data
   if ( ! data_info ) {
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get message and data size
   size_t data_size;
-  vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, NULL );
+  vfs_fork_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
     response.status = -errno;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // create new handler
   handler_node_t* handler = handler_extract( request->process, true );
   if ( ! handler ) {
     response.status = -ENOMEM;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // get parent
@@ -64,7 +64,7 @@ void rpc_handle_fork(
   if ( ! parent ) {
     handler_remove( request->process );
     response.status = -EIO;
-    bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+    bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
     return;
   }
   // set console of parent
@@ -75,7 +75,7 @@ void rpc_handle_fork(
     console_t* console = console_get_active();
     if ( ! console ) {
       response.status = -EIO;
-      bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+      bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
       free( request );
       return;
     }
@@ -84,7 +84,7 @@ void rpc_handle_fork(
   }
   // return success
   response.status = 0;
-  bolthur_rpc_return( type, &response, sizeof( response ), NULL, 0 );
+  bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   // free request
   free( request );
 }

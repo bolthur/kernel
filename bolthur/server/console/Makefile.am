@@ -13,6 +13,8 @@ console_SOURCES = \
   rpc/custom/add.c \
   rpc/custom/input.c \
   rpc/custom/select.c \
+  rpc/termios/get.c \
+  rpc/termios/set.c \
   rpc/close.c \
   rpc/exec.c \
   rpc/exit.c \

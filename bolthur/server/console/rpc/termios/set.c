@@ -17,31 +17,26 @@
  * along with bolthur/kernel.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <stdlib.h>
 #include <errno.h>
 #include <sys/bolthur.h>
-#include "../../../libconsole.h"
 #include "../../rpc.h"
-#include "../../console.h"
-#include "../../queue.h"
-#include "../../../libterminal.h"
+#include "../../handler.h"
 
 /**
- * @fn void rpc_custom_handle_input(size_t, pid_t, size_t, size_t)
- * @brief Console handle input command handler
- *
+ * @fn void rpc_termios_set( size_t, pid_t, size_t, size_t )
+ * @brief Termios set function
  * @param type
  * @param origin
  * @param data_info
  * @param response_info
  */
-void rpc_custom_handle_input(
+void rpc_termios_set(
   [[maybe_unused]] size_t type,
   pid_t origin,
   size_t data_info,
   [[maybe_unused]] size_t response_info
 ) {
-  vfs_ioctl_perform_response_t error = { .status = -EINVAL };
+  vfs_ioctl_perform_response_t error = { .status = -EINVAL, };
   // validate origin
   if ( ! bolthur_rpc_validate_origin( origin, data_info ) ) {
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
@@ -49,34 +44,43 @@ void rpc_custom_handle_input(
   }
   // handle no data
   if ( ! data_info ) {
+    error.status = -ENODATA;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  // get message and data size
   size_t data_size;
   vfs_ioctl_perform_request_t* request = bolthur_rpc_fetch_from_mailbox( data_info, &data_size, true, nullptr );
   if ( ! request ) {
-    error.status = -errno;
+    error.status = -ENOMSG;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
     return;
   }
-  // allocate for data fetching
-  auto const command = ( console_command_input_t* )request->container;
-  // get active console and deactivate
-  console_t* console = console_get_active();
-  if ( ! console ) {
-    error.status = -errno;
+  // get handler
+  handler_node_t* handler = handler_extract( request->origin, true );
+  if ( ! handler ) {
+    error.status = ENODEV;
     bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    free( request );
     return;
   }
-  // set success flag and return before handling anything else
-  error.status = 0;
-  bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
-  // debug print buffer
-  EARLY_STARTUP_PRINT( "%s\r\n", command->input );
-  // route to listening process
-  queue_handle( "/dev/stdin", command->input );
-  /// FIXME: ROUTE TO TERMINAL OUT
-  // free all used temporary structures
+  // allocate response
+  const size_t container_size = data_size - sizeof( vfs_ioctl_perform_request_t );
+  const size_t response_size = container_size + sizeof( vfs_ioctl_perform_request_t );
+  vfs_ioctl_perform_response_t* response = malloc( response_size );
+  if ( ! response ) {
+    error.status = -ENOMEM;
+    bolthur_rpc_return( RPC_VFS_IOCTL, &error, sizeof( error ), nullptr, 0 );
+    free( request );
+    return;
+  }
+  // clear out
+  memset( response, 0, response_size );
+  // overwrite console ios
+  memcpy( &handler->console->ios, request->container, sizeof( struct termios ) );
+  // copy back into response container
+  memcpy( response->container, &handler->console->ios, sizeof( struct termios ) );
+  // return and free
+  bolthur_rpc_return( RPC_VFS_IOCTL, response, response_size, nullptr, 0 );
   free( request );
+  free( response );
 }

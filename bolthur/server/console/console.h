@@ -21,16 +21,47 @@
 #define _CONSOLE_H
 
 #include <sys/bolthur.h>
+#include <sys/termios.h>
 #include "../../library/collection/list/list.h"
 
-typedef struct console {
+/**
+ * @brief Console ring buffer
+ */
+typedef struct {
+  /** buffer */
+  char buffer[ LINE_MAX ];
+  /** head */
+  size_t head;
+  /** tail */
+  size_t tail;
+  /** count */
+  size_t count;
+} console_buffer_t;
+
+/**
+ * @brief console structure
+ */
+typedef struct {
+  /** indicates whether console is active */
   bool active;
+  /** console handler */
   pid_t handler;
+  /** console path */
   char* path;
+  /** in rpc number */
   size_t in;
+  /** out rpc number */
   size_t out;
+  /** err rpc number */
   size_t err;
+  /** file descriptor */
   int fd;
+  /** termios configuration */
+  struct termios ios;
+  /** raw buffer */
+  console_buffer_t raw;
+  /** cooked buffer */
+  console_buffer_t cooked;
 } console_t;
 
 extern list_manager_t* console_list;

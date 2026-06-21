@@ -69,7 +69,7 @@ handler_node_t* handler_extract( const pid_t process, const bool create ) {
   handler_node_t* node = malloc( sizeof( *node ) );
   // handle error
   if ( ! node ) {
-    return NULL;
+    return nullptr;
   }
   // clear out node
   memset( node, 0, sizeof( *node ) );
@@ -81,11 +81,11 @@ handler_node_t* handler_extract( const pid_t process, const bool create ) {
   if ( ! found ) {
     if ( ! create ) {
       free( node );
-      return NULL;
+      return nullptr;
     }
     if ( handler_node_tree_insert( &management_tree, node ) ) {
       free( node );
-      return NULL;
+      return nullptr;
     }
     return handler_node_tree_find( &management_tree, node );
   }

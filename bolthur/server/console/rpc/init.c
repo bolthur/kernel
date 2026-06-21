@@ -78,5 +78,15 @@ bool rpc_init( void ) {
     EARLY_STARTUP_PRINT( "Unable to register handler console select!\r\n" )
     return false;
   }
+  bolthur_rpc_bind( RPC_VFS_IOCTL_TERMIOS_GET, rpc_termios_get, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler termios get!\r\n" )
+    return false;
+  }
+  bolthur_rpc_bind( RPC_VFS_IOCTL_TERMIOS_SET, rpc_termios_set, true );
+  if ( errno ) {
+    EARLY_STARTUP_PRINT( "Unable to register handler termios set!\r\n" )
+    return false;
+  }
   return true;
 }

@@ -69,12 +69,12 @@ bool queue_push( const size_t type, const size_t response_info, vfs_read_request
  * @return
  */
 void queue_handle( const char* file, const char* data ) {
-  queue_node_t* e = NULL;
-  queue_node_t* next = NULL;
+  queue_node_t* e = nullptr;
+  queue_node_t* next = nullptr;
   TAILQ_FOREACH_SAFE( e, &management_queue, node, next ) {
     // handle path match and active console
     if ( e->handler->console->active && 0 == strcmp( e->request->file_path, file ) ) {
-      char* area = _syscall_memory_shared_attach( e->request->shm_id, ( uintptr_t )NULL );
+      char* area = _syscall_memory_shared_attach( e->request->shm_id, 0 );
       if ( area ) {
         // get total len and evaluate to read
         const size_t len = strlen( data );
@@ -113,7 +113,7 @@ void queue_handle( const char* file, const char* data ) {
             e->return_type,
             &response,
             sizeof( response ),
-            NULL,
+            nullptr,
             e->response_info
           );
           // remove from node
@@ -133,8 +133,8 @@ void queue_handle( const char* file, const char* data ) {
  * @param console console to be cleaned up
  */
 void queue_cleanup( const console_t* console ) {
-  queue_node_t* e = NULL;
-  queue_node_t* next = NULL;
+  queue_node_t* e = nullptr;
+  queue_node_t* next = nullptr;
   TAILQ_FOREACH_SAFE( e, &management_queue, node, next ) {
     // handle path match and active console
     if ( e->handler->console == console ) {

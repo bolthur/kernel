@@ -35,5 +35,7 @@ void rpc_handle_write( size_t, pid_t, size_t, size_t );
 void rpc_custom_handle_console_add( size_t, pid_t, size_t, size_t );
 void rpc_custom_handle_input( size_t, pid_t, size_t, size_t );
 void rpc_custom_handle_console_select( size_t, pid_t, size_t, size_t );
+void rpc_termios_get( size_t, pid_t, size_t, size_t );
+void rpc_termios_set( size_t, pid_t, size_t, size_t );
 
 #endif
