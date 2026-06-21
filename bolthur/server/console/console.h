@@ -24,12 +24,14 @@
 #include <sys/termios.h>
 #include "../../library/collection/list/list.h"
 
+#define MAX_BUFFER_SIZE 4096
+
 /**
  * @brief Console ring buffer
  */
 typedef struct {
   /** buffer */
-  char buffer[ LINE_MAX ];
+  char buffer[ MAX_BUFFER_SIZE ];
   /** head */
   size_t head;
   /** tail */
@@ -69,5 +71,7 @@ extern list_manager_t* console_list;
 void console_destroy( console_t* );
 console_t* console_get_active( void );
 console_t* console_get_by_path( const char* );
+void console_buffer_push( console_buffer_t*, char );
+char console_buffer_pop( console_buffer_t* );
 
 #endif

@@ -137,6 +137,12 @@ static uint32_t terminal_push( terminal_t* term, char* s ) {
         s++;
       }
     }
+    // handle delete by reducing column if greater 0
+    if ( '\b' == *s || 0x7f == *s ) {
+      if ( term->col > 0 ) {
+        term->col--;
+      }
+    }
     // handle end of row reached
     if ( term->max_col <= term->col ) {
       term->col = 0;
@@ -164,9 +170,19 @@ static uint32_t terminal_push( terminal_t* term, char* s ) {
       case '\r':
         term->col = 0;
         break;
+      // handle tab
       case '\t':
         // insert 4 spaces
         terminal_push( term, "    " );
+        ++rendered;
+        break;
+      // handle backspace by overwriting character with space
+      case '\b':
+      case 0x7f:
+        terminal_push( term, " " );
+        if ( term->col > 0 ) {
+          term->col--;
+        }
         ++rendered;
         break;
       default:

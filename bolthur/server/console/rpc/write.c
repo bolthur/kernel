@@ -132,7 +132,7 @@ void rpc_handle_write(
     handler->console = console;
   }
   // get output stuff
-  const char* toWrite = _syscall_memory_shared_attach( request->shm_id, 0 );
+  const char* to_write = _syscall_memory_shared_attach( request->shm_id, 0 );
   if ( errno ) {
     response.len = -errno;
     bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
@@ -226,7 +226,7 @@ void rpc_handle_write(
     return;
   }
   // return written amount
-  response.len = ( ssize_t )strlen( toWrite );
+  response.len = ( ssize_t )strlen( to_write );
   bolthur_rpc_return( type, &response, sizeof( response ), nullptr, 0 );
   // free up stuff
   free( terminal );

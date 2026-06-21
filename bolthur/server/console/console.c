@@ -81,3 +81,36 @@ console_t* console_get_by_path( const char* path ) {
   }
   return nullptr;
 }
+
+/**
+ * @fn void console_buffer_push(console_buffer_t*, char)
+ * @brief Push to buffer
+ * @param buffer
+ * @param c
+ */
+void console_buffer_push( console_buffer_t* buffer, char c ) {
+  // handle buffer full
+  if ( buffer->count >= MAX_BUFFER_SIZE ) {
+    return;
+  }
+  // push into buffer
+  buffer->buffer[ buffer->head ] = c;
+  buffer->head = ( buffer->head + 1 ) % MAX_BUFFER_SIZE;
+  buffer->count++;
+}
+
+/**
+ * @fn char console_buffer_pop(console_buffer_t*)
+ * @brief Pop a character from buffer
+ * @param buffer
+ * @return
+ */
+char console_buffer_pop( console_buffer_t* buffer ) {
+  if ( buffer->count == 0 ) {
+    return 0;
+  }
+  const char c = buffer->buffer[ buffer->tail ];
+  buffer->tail = ( buffer->tail + 1 ) % MAX_BUFFER_SIZE;
+  buffer->count--;
+  return c;
+}
